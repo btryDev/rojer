@@ -10,6 +10,7 @@
 // mêmes faits — un registre qui annoncerait une fiche que le calendrier ignore
 // serait un troisième avis sur la même question.
 
+import { trierParCategorie } from "@/lib/equipements/labels";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -94,7 +95,9 @@ export const composerRegistreDeLEtablissement = cache(
         equipements: {
           where: { actif: true },
           select: { id: true, libelle: true, categorie: true },
-          orderBy: [{ categorie: "asc" }, { createdAt: "asc" }],
+          // Idem : le tri par catégorie est posé après la lecture, l'ordre de
+          // l'enum en base n'étant pas celui de `CATEGORIES_EQUIPEMENT`.
+          orderBy: [{ createdAt: "asc" }],
         },
         updatedAt: true,
         fichesRegistre: {
@@ -120,7 +123,7 @@ export const composerRegistreDeLEtablissement = cache(
         manipuleMatieresR422722: etab.manipuleMatieresR422722,
         comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
       },
-      etab.equipements.map((eq) => ({
+      trierParCategorie(etab.equipements).map((eq) => ({
         id: eq.id,
         libelle: eq.libelle,
         categorie: eq.categorie,

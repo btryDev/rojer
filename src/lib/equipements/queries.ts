@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import { trierParCategorie } from "./labels";
 
 /**
  * Lectures du parc d'équipements.
@@ -31,18 +32,23 @@ export async function listerEquipementsDeLEtablissement(
   etablissementId: string,
 ) {
   const user = await requireUser();
-  return prisma.equipement.findMany({
+  return trierParCategorie(
+    await prisma.equipement.findMany({
     where: {
       etablissementId,
       actif: true,
       etablissement: { entreprise: { userId: user.id } },
     },
-    orderBy: [{ categorie: "asc" }, { createdAt: "asc" }],
+    // Le tri par catégorie se fait après la lecture, sur `ordreCategorie` :
+    // en SQL, `categorie: "asc"` suit l'ordre de l'ENUM PostgreSQL, qui a
+    // divergé de la liste TypeScript le 2026-08-25. Cf. `labels.ts`.
+    orderBy: [{ createdAt: "asc" }],
     // Le bâtiment voyage avec l'équipement (ADR-019) : le parc, le calendrier
     // et le tableau de bord en ont besoin pour regrouper ou filtrer, sans
     // refaire une jointure chacun de leur côté.
     include: { batiment: { select: { id: true, nom: true, ordre: true } } },
-  });
+    }),
+  );
 }
 
 /**
@@ -52,14 +58,16 @@ export async function listerEquipementsDeLEtablissement(
  */
 export async function listerEquipementsDesactives(etablissementId: string) {
   const user = await requireUser();
-  return prisma.equipement.findMany({
-    where: {
-      etablissementId,
-      actif: false,
-      etablissement: { entreprise: { userId: user.id } },
-    },
-    orderBy: [{ categorie: "asc" }, { updatedAt: "desc" }],
-  });
+  return trierParCategorie(
+    await prisma.equipement.findMany({
+      where: {
+        etablissementId,
+        actif: false,
+        etablissement: { entreprise: { userId: user.id } },
+      },
+      orderBy: [{ updatedAt: "desc" }],
+    }),
+  );
 }
 
 export type EquipementListe = Awaited<

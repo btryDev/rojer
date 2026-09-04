@@ -1,4 +1,7 @@
-import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import {
+  CATEGORIES_EQUIPEMENT,
+  type CategorieEquipement,
+} from "@/lib/referentiels/types-communs";
 
 /**
  * Libellés FR des catégories d'équipement, affichables tel quel en UI.
@@ -79,3 +82,60 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   EPI: "Ce qu'une personne porte pour se protéger : harnais antichute et sa longe, casque, gants, chaussures de sécurité, protections auditives, masque. Pas les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent.",
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * L'ORDRE DES CATÉGORIES SE LIT ICI, PAS EN BASE
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * LE DÉFAUT (relevé le 2026-09-04). Quatre requêtes triaient par
+ * `orderBy: { categorie: "asc" }`. Sur une colonne d'énumération, PostgreSQL ne
+ * trie pas par ordre alphabétique : il trie **dans l'ordre de l'enum**. Et cet
+ * ordre-là n'est pas celui de `CATEGORIES_EQUIPEMENT` — la migration du
+ * 2026-08-25 a ajouté `RIA` avec un `ADD VALUE` sans `BEFORE 'AUTRE'`, donc en
+ * DERNIER. Les robinets d'incendie armés se rangeaient après « Autre
+ * équipement » dans le parc, dans le registre de sécurité et dans le serveur
+ * MCP, quand le code les place en troisième position.
+ *
+ * PERSONNE NE POUVAIT LE VOIR EN LISANT LE CODE : `orderBy: { categorie: "asc" }`
+ * se lit comme un tri par catégorie, et il en est un — dans un ordre qui vit
+ * ailleurs.
+ *
+ * TROIS COMMENTAIRES DE MIGRATION AFFIRMENT LE CONTRAIRE, ET ILS ONT TORT —
+ * `20260821090000_categorie_installation_frigorifique`,
+ * `20260902120000_categorie_compacteur_presse_dechets` et
+ * `20260904120000_categorie_epi` écrivent que « l'ordre de l'enum gouverne
+ * l'ordre d'affichage du sélecteur ». Le sélecteur parcourt
+ * `CATEGORIES_EQUIPEMENT` (`EquipementForm`), pas l'enum. La croyance était
+ * plausible et elle a coûté cher : elle envoyait chercher le symptôme dans un
+ * formulaire où il n'était pas, pendant qu'il était dans trois listes.
+ *
+ * Ces trois fichiers ne sont pas corrigés, et c'est délibéré : une migration
+ * appliquée porte son empreinte en base, la retoucher ferait échouer le
+ * déploiement suivant. L'histoire ne se réécrit pas — la correction vit ici,
+ * à l'endroit qui gouverne.
+ *
+ * POURQUOI CE N'EST PAS UNE MIGRATION QUI RÉPARE ÇA. Remettre `RIA` à sa place
+ * dans l'enum PostgreSQL réalignerait deux copies une fois, et laisserait la
+ * prochaine valeur ajoutée les désaligner de nouveau — en silence, puisque rien
+ * ne les compare. L'ordre n'a qu'une source, et c'est la liste TypeScript ; la
+ * base n'a plus à l'exprimer. Le tri se fait donc APRÈS la lecture, sur
+ * `ordreCategorie`, et l'ordre de l'enum en base devient sans effet.
+ */
+export function ordreCategorie(c: CategorieEquipement): number {
+  return CATEGORIES_EQUIPEMENT.indexOf(c);
+}
+
+/**
+ * Trie une liste d'équipements par catégorie, en conservant l'ordre déjà
+ * obtenu à l'intérieur d'une même catégorie.
+ *
+ * `Array.prototype.sort` est stable depuis ES2019 : le second critère reste
+ * donc celui que la requête a demandé — date de création, libellé —, il n'a pas
+ * à être répété ici.
+ */
+export function trierParCategorie<T extends { categorie: CategorieEquipement }>(
+  liste: T[],
+): T[] {
+  return [...liste].sort((a, b) => ordreCategorie(a.categorie) - ordreCategorie(b.categorie));
+}
