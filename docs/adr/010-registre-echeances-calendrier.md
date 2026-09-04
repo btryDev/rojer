@@ -99,14 +99,23 @@ injectée), conformément au principe zéro-IA / déterminisme.
   elle ne se répète jamais — l'objet est éliminé, il n'a pas de rendez-vous
   suivant. Elle n'ouvre donc aucune périodicité et n'est pas une source.
 
-  Ce que le droit en fait est différent de ce qu'une échéance en ferait : le 3°
-  de l'article 2 de l'arrêté du 19 mars 1993 demande au **vérificateur** de
-  constater, pendant la vérification générale périodique, l'élimination des
-  équipements de protection arrivés à péremption. La conséquence est donc déjà
-  portée — par `epi-verification-generale-periodique` —, et poser en plus une
-  ligne « remplacer l'équipement » l'aurait dédoublée. Sur les autres
-  catégories, aucun texte relevé n'attache de conséquence à cette date : lui en
-  donner une aurait inventé une règle (règle n°6 du projet).
+  Ce que le droit en fait est différent de ce qu'une échéance en ferait — et
+  l'écart est plus grand que ne le disait la première rédaction de ce
+  paragraphe. Le 3° de l'article 2 de l'arrêté du 19 mars 1993 impose de
+  « prendre les mesures nécessaires » pour que les équipements périmés « soient
+  éliminés **en temps utile** » : une action, à la charge de l'employeur, et une
+  exigence de moment. Ce n'est pas un constat annuel du vérificateur, comme on
+  l'avait écrit — une péremption qui tombe entre deux visites n'est pas traitée
+  « en temps utile » par la visite suivante.
+
+  L'outil ne pose pourtant pas d'échéance, pour deux raisons qui tiennent : une
+  péremption ne se répète pas — l'objet part, il n'a pas de rendez-vous suivant
+  —, et le produit ne sait pas constater qu'une élimination a eu lieu, donc la
+  ligne ne se solderait jamais. Ce qu'il fait à la place est de rendre le fait
+  VISIBLE en permanence : la fiche affiche « Périmé depuis mars 2024 », sans
+  attendre une visite. Sur les autres catégories, aucun texte relevé n'attache
+  de conséquence à cette date : lui en donner une aurait inventé une règle
+  (règle n°6 du projet).
 
   La fiche d'un équipement l'affiche — « Péremption mars 2031 », ou « Périmé
   depuis mars 2024 » quand elle est passée — et le formulaire dit en toutes

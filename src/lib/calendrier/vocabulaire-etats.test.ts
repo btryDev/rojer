@@ -286,14 +286,19 @@ describe("aucun écran ne rouvre un second vocabulaire", () => {
     // table passé en propriété. Il n'a pas de liste à tenir à jour, et les mots
     // qu'il refuse se relèvent de la table — pas d'une copie.
     //
-    // CE QU'IL NE VOIT PAS, ET IL FAUT LE SAVOIR : un mot que la table N'A
-    // PLUS. Éprouvé en réinjectant `libelle="à venir"` — le test reste vert,
-    // parce que « à venir » n'est plus un mot de la table. C'est précisément le
-    // défaut d'origine, et ce qui l'attrape est l'autre moitié de cette garde,
-    // `SYNONYMES_REFUSES`, qui liste les mots écartés — mais sur des surfaces
-    // énumérées. Les deux moitiés se complètent et aucune ne couvre l'autre :
-    // celle-ci voit toutes les surfaces et les seuls mots actuels, celle-là
-    // voit les mots écartés sur les seules surfaces inscrites.
+    // CE QU'IL NE VOIT PAS, ET UNE RELECTURE A CORRIGÉ CE QUE J'EN DISAIS. Il
+    // ne voit qu'un mot que la table porte AUJOURD'HUI. Éprouvé en réinjectant
+    // `libelle="à venir"` dans `VueParEquipement` : vert — « à venir » n'est
+    // plus un mot de la table, et ne figure pas non plus dans
+    // `SYNONYMES_REFUSES`.
+    //
+    // J'avais écrit que l'autre moitié de cette garde l'attrapait. C'EST FAUX,
+    // et c'est `tsc` qui l'attrape : `Compte` et `Cle` n'acceptent plus de
+    // propriété `libelle`, donc l'injection ne compile pas. La signature des
+    // composants est la vraie garantie sur ce point, et ces deux tests ne la
+    // remplacent pas — ils couvrent ce qu'elle ne peut pas voir, les mots posés
+    // ailleurs qu'en propriété. Trois garanties, pas deux, et il fallait le
+    // dire plutôt que d'en créditer une de ce que fait une autre.
     const motifs = MOTS_DE_LA_TABLE.map(
       (m) => new RegExp(`\\b(libelle|label|titre|texte)\\s*=\\s*[{"']*["']${
         m.replace(/[.*+?^$()|[\]\\]/g, "\\$&")

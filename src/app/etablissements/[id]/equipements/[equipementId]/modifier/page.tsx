@@ -130,6 +130,7 @@ export default async function ModifierEquipementPage({
               batimentId: eq.batimentId,
               localisation: eq.localisation,
               dateMiseEnService: eq.dateMiseEnService,
+              datePeremption: eq.datePeremption,
               nombre: caracs.nombre ?? null,
               aGroupeElectrogene: caracs.aGroupeElectrogene,
               estLocalPollutionSpecifique: caracs.estLocalPollutionSpecifique,

@@ -32,7 +32,6 @@ import {
   CHAMP_ETAT,
   compteEtat,
   ENCRE_ETAT,
-  LIBELLE_ETAT,
   type EtatEcheance,
 } from "@/lib/calendrier/etats";
 
@@ -297,7 +296,7 @@ function Cle({
   /** Le solde de l'état sur l'année affichée. */
   valeur: number;
 }) {
-  const libelle = LIBELLE_ETAT[etat].plusieurs;
+
   return (
     <span className="flex items-center gap-2 text-[12px] text-[color:var(--board-slate-mid)]">
       <span
@@ -306,7 +305,11 @@ function Cle({
       >
         {valeur}
       </span>
-      {libelle}
+      {/* `compteEtat` et non `LIBELLE_ETAT[…].plusieurs` : la première version
+          du correctif posait le pluriel à côté du badge, ce qui rendait
+          « 1dépassées » — sans espace, et au mauvais nombre. Le mot ET son
+          accord viennent de la même fonction que partout ailleurs. */}
+      {compteEtat(valeur, etat).replace(/^\d+/, "").trim()}
     </span>
   );
 }

@@ -298,7 +298,7 @@ export function EquipementForm({
             label="Date de péremption"
             type="date"
             defaultValue={toIsoDate(valeursInitiales?.datePeremption)}
-            aide="Facultatif. La fin de vie indiquée par le fabricant, quand il en fixe une — un harnais antichute a souvent dix ans. Rojer ne vous alerte pas à cette date : il la conserve pour que la personne qui vérifie l'équipement puisse la constater."
+            aide="Facultatif. La fin de vie indiquée par le fabricant, quand il en fixe une — un harnais antichute a souvent dix ans. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée."
             erreur={err("datePeremption")}
           />
         </div>

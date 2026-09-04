@@ -82,13 +82,40 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // sélecteur, un harnais si. Les trois exemples cités sont ceux de la
   // question déjà posée sur la fiche établissement, pour que le dirigeant
   // retrouve d'un écran à l'autre le mot qu'il a lu.
+  // « pour appareils de protection respiratoire », sans autre qualification :
+  // le texte ne réserve PAS les cartouches aux deux familles ci-dessus. Une
+  // première rédaction écrivait « qui les alimentent », ce qui excluait un
+  // stock de cartouches antigaz servant un demi-masque à cartouches — produit
+  // d'entretien, chlore, peinture —, pourtant dans le champ par la lettre.
+  // L'exclusion du masque JETABLE reste juste : sans cartouche, il n'y a rien
+  // à vérifier.
   EPI_RESPIRATOIRE:
-    "L'appareil respiratoire isolant autonome d'évacuation, l'équipement complet d'intervention en milieu hostile, et les stocks de cartouches filtrantes antigaz qui les alimentent. Vérification par une personne qualifiée tous les douze mois, en service comme en stock. Pas le masque de confort ni le demi-masque jetable, qui ne se vérifient pas.",
+    "L'appareil respiratoire isolant autonome d'évacuation, l'équipement complet d'intervention en milieu hostile, et tout stock de cartouches filtrantes antigaz pour appareil respiratoire — y compris celles d'un demi-masque à cartouches. Vérification par une personne qualifiée tous les douze mois, en service comme en stock. Pas le masque de confort ni le masque jetable sans cartouche, qui ne se vérifient pas.",
   EPI_GILET_SAUVETAGE:
     "Le gilet de sauvetage GONFLABLE — celui dont la cartouche et le déclencheur doivent fonctionner le jour venu. Vérification par une personne qualifiée tous les douze mois. Le gilet en mousse, qui ne se gonfle pas, n'en relève pas.",
+  // « SYSTÈMES de protection individuelle contre les chutes de hauteur », dit
+  // l'arrêté — un genre plus large que l'arrêt de chute. La retenue et le
+  // maintien au travail, qui EMPÊCHENT la chute au lieu de l'arrêter, en sont.
+  // Une première rédaction n'énumérait que l'arrêt, et rétrécissait l'assiette.
+  //
+  // L'exclusion du point d'ancrage tient, et elle est fondée par l'arrêté
+  // lui-même : son article 2 borne la vérification de cette famille à « l'état
+  // général des coutures et des modes de fixation » — des pièces textiles
+  // portées, pas un ancrage de bâtiment. Mais on ne dit plus qu'il « se déclare
+  // ailleurs » : aucune catégorie ne l'accueille aujourd'hui, et l'annoncer
+  // enverrait le dirigeant chercher une case qui n'existe pas.
   EPI_ANTICHUTE:
-    "Le harnais, sa longe, l'antichute mobile ou à rappel automatique, le connecteur : tout ce qui retient une personne qui tombe. Une vérification par une personne qualifiée est due tous les douze mois — en service comme en stock. Le point d'ancrage, lui, appartient au bâtiment et non à la personne : il se déclare ailleurs.",
-  EPI: "Ce qu'une personne porte pour se protéger : harnais antichute et sa longe, casque, gants, chaussures de sécurité, protections auditives, masque. Pas les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent.",
+    "Ce qu'une personne porte pour ne pas chuter de hauteur : le harnais et sa longe, l'antichute mobile ou à rappel automatique, le connecteur, mais aussi les systèmes de retenue et de maintien au travail, qui empêchent la chute au lieu de l'arrêter. Une vérification par une personne qualifiée est due tous les douze mois — en service comme en stock. Le point d'ancrage scellé dans le bâtiment n'en fait pas partie : l'arrêté borne cette vérification aux coutures et aux modes de fixation de l'équipement porté.",
+  // LE HARNAIS A ÉTÉ RETIRÉ DE CETTE DESCRIPTION LE 2026-09-04, et c'est une
+  // correction, pas un ajustement de style. Il en était le PREMIER exemple, et
+  // cette catégorie ne porte aucune obligation : un dirigeant qui lisait le
+  // sélecteur y déclarait son harnais sans faute de sa part, et le produit ne
+  // lui réclamait jamais les douze mois. Une sur-application se voit ; une
+  // sous-application de cette forme-là ne se voit par personne.
+  //
+  // La description renvoie donc explicitement vers les catégories vérifiables,
+  // et n'énumère plus que ce qui reste vraiment ici.
+  EPI: "Ce qu'une personne porte pour se protéger et qu'aucun texte ne soumet à vérification périodique : casque, gants, chaussures de sécurité, lunettes, protections auditives, masque de confort. Un harnais antichute, un appareil respiratoire ou un gilet de sauvetage gonflable ne se déclarent PAS ici — ils ont leur propre catégorie, parce qu'ils se vérifient tous les douze mois. Pas non plus les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent.",
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 

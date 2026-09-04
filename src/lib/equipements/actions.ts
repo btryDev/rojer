@@ -87,7 +87,6 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     batimentId: raw.batimentId || undefined,
     localisation: raw.localisation,
     dateMiseEnService: raw.dateMiseEnService,
-    datePeremption: raw.datePeremption,
     nombre: raw.nombre,
     aGroupeElectrogene: bool("aGroupeElectrogene"),
     estLocalPollutionSpecifique: bool("estLocalPollutionSpecifique"),

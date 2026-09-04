@@ -108,13 +108,13 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 274 | 93 % |
-| divergente | 1 | 0 % |
+| ancrée | 275 | 93 % |
+| divergente | 0 | 0 % |
 | jamais constatée | 20 | 7 % |
 
 **11 obligations sur 152 (7 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
-**1 obligation déclare une version que le corpus contredit** : `epi-etablissement-consigne-utilisation`. À trancher, pas à relire.
+**Aucune divergence** entre la version qu'une obligation déclare avoir constatée et celle que le corpus déclare avoir lue. Les deux moitiés du dépôt disent la même chose partout où elles parlent toutes les deux.
 
 ---
 
@@ -674,12 +674,12 @@ refaire pour la contredire.
 | `prevention-etablissement-liste-personnes-qualifiees` | contexte 1 | R. 4323-23 (article qui institue la vérification générale périodique et en renvoie la périodicité à des arrêtés) | R. 4323-23 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `information-etablissement-affichages-obligatoires` | fondement | D. 4711-1 (affichage de l'adresse et du numéro d'appel du service de santé au travail, des secours d'urgence et de l'inspection du travail) | D. 4711-1 | code-travail-information-travailleurs | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `information-etablissement-avis-acces-duerp` | fondement | R. 4121-4 dernier alinéa (avis affiché indiquant les modalités d'accès des travailleurs au document unique) | R. 4121-4 | code-travail-information-travailleurs | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2022-03-31 | 2022-03-31 | 4 · agent + verbatim | ancrée |
-| `epi-etablissement-consigne-utilisation` | fondement | R. 4323-105 (consigne d'utilisation des équipements de protection individuelle) | R. 4323-105 | code-travail-epi | retenu | 2026-09-04 | premiere_main | ✓ | ✓ | 2018-01-01 | 2008-05-01 | 5 · première main | divergente |
+| `epi-etablissement-consigne-utilisation` | fondement | R. 4323-105 (consigne d'utilisation des équipements de protection individuelle) | R. 4323-105 | code-travail-epi | retenu | 2026-09-04 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
 | `epi-etablissement-consigne-utilisation` | contexte 1 | R. 4323-104 (contenu de l'information dont la consigne est la reprise écrite) | R. 4323-104 | code-travail-epi | sans_objet | 2026-09-04 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `epi-verification-generale-periodique` | fondement | Arrêté du 19 mars 1993, art. 1er (liste des EPI soumis à vérification et périodicité de douze mois) | Arrêté 1993-03-19 (EPI) art. 1er | arrete-1993-03-19-epi | retenu | 2026-09-04 | premiere_main | ✓ | ✓ | 1993-12-01 | 1993-12-01 | 5 · première main | ancrée |
 | `epi-verification-generale-periodique` | contexte 1 | R. 4323-99 (article habilitant) | R. 4323-99 | code-travail-epi | sans_objet | 2026-09-04 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `epi-verification-generale-periodique` | contexte 2 | Arrêté du 19 mars 1993, art. 2 (contenu de la vérification) | Arrêté 1993-03-19 (EPI) art. 2 | arrete-1993-03-19-epi | sans_objet | 2026-09-04 | premiere_main | ✓ | ✓ | 1993-12-01 | 1993-12-01 | 5 · première main | ancrée |
-| `epi-verification-generale-periodique` | contexte 3 | R. 4323-100 (qualification du vérificateur) | R. 4323-100 | code-travail-epi | sans_objet | 2026-09-04 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
+| `epi-verification-generale-periodique` | contexte 3 | R. 4323-100 (qualification du vérificateur) | R. 4323-100 | code-travail-epi | retenu | 2026-09-04 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `epi-verification-generale-periodique` | contexte 4 | R. 4323-101 à R. 4323-103 (consignation et conservation) | R. 4323-101 | code-travail-epi | sans_objet | 2026-09-04 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `locaux-etablissement-installations-sanitaires` | fondement | R. 4228-1 (moyens d'assurer la propreté individuelle : vestiaires, lavabos, cabinets d'aisance et, le cas échéant, douches) | R. 4228-1 | code-travail-locaux-sociaux | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `locaux-etablissement-eau-potable` | fondement | R. 4225-2 (mise à disposition d'eau potable et fraîche pour se désaltérer et se rafraîchir) | R. 4225-2 | code-travail-locaux-sociaux | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
