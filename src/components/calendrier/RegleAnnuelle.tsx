@@ -30,7 +30,9 @@
 
 import {
   CHAMP_ETAT,
+  compteEtat,
   ENCRE_ETAT,
+  LIBELLE_ETAT,
   type EtatEcheance,
 } from "@/lib/calendrier/etats";
 
@@ -71,7 +73,7 @@ export function totalDuMois(m: MoisRegle): number {
 
 /**
  * Découpe la barre d'un mois en segments empilés. L'ordre de rendu va du
- * haut vers le bas : faite, à venir, proche, en retard — le plus urgent
+ * haut vers le bas : faite, lointain, proche, enRetard — le plus urgent
  * porte la base, comme la pile d'une frise.
  */
 function segmentsDuMois(m: MoisRegle, maxTotal: number): Segment[] {
@@ -146,7 +148,9 @@ export function RegleAnnuelle({
             vide
               ? "aucune échéance"
               : `${nb} échéance${nb > 1 ? "s" : ""}` +
-                (m.enRetard > 0 ? `, dont ${m.enRetard} en retard` : "")
+                (m.enRetard > 0
+                  ? `, dont ${compteEtat(m.enRetard, "enRetard")}`
+                  : "")
           }`;
           return (
             <button
@@ -249,10 +253,10 @@ export function RegleAnnuelle({
       {/* La légende. Elle nomme les champs : sans elle, trois couleurs
           côte à côte se lisent comme une échelle de gravité continue. */}
       <div className="mt-3.5 flex flex-wrap items-center gap-x-9 gap-y-2.5 border-t border-[color:var(--board-slate-line)] pt-4">
-        <Cle etat="enRetard" libelle="en retard" valeur={totaux.enRetard} />
-        <Cle etat="proche" libelle="sous 30 jours" valeur={totaux.proche} />
-        <Cle etat="lointain" libelle="à venir" valeur={totaux.lointain} />
-        <Cle etat="faite" libelle="faite" valeur={totaux.faite} />
+        <Cle etat="enRetard" valeur={totaux.enRetard} />
+        <Cle etat="proche" valeur={totaux.proche} />
+        <Cle etat="lointain" valeur={totaux.lointain} />
+        <Cle etat="faite" valeur={totaux.faite} />
         {/* « Hors année » n'a plus de badge : les flèches du cadran font
             le voyage que le badge se contentait d'annoncer. Le badge « à
             planifier » parle, lui, le vocabulaire des pastilles de statut
@@ -272,16 +276,28 @@ export function RegleAnnuelle({
  * l'état — la pastille et la valeur ne font qu'un, le chiffre est SUR sa
  * couleur, et l'œil n'a plus à apparier deux petits objets.
  */
+/**
+ * Une entrée de légende : le champ de l'état, son solde, son mot.
+ *
+ * **`libelle` A ÉTÉ RETIRÉ DE CETTE SIGNATURE (2026-09-04).** La légende
+ * écrivait ses quatre mots à la main — et c'est la légende, c'est-à-dire
+ * l'endroit qui NOMME les couleurs. Elle disait « en retard », un synonyme que
+ * la table refuse depuis que quatre écrans ont nommé le même état de quatre
+ * façons ; et « à venir », le mot englobant remplacé partout ailleurs par
+ * « au-delà de 30 jours ». Une légende qui ne parle pas la langue de ce qu'elle
+ * légende explique une couleur avec un autre mot que l'écran d'à côté.
+ *
+ * Le composant n'accepte plus de mot : l'état entre, la table rend le mot.
+ */
 function Cle({
   etat,
-  libelle,
   valeur,
 }: {
   etat: EtatEcheance;
-  libelle: string;
   /** Le solde de l'état sur l'année affichée. */
   valeur: number;
 }) {
+  const libelle = LIBELLE_ETAT[etat].plusieurs;
   return (
     <span className="flex items-center gap-2 text-[12px] text-[color:var(--board-slate-mid)]">
       <span

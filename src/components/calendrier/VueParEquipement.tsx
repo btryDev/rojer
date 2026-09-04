@@ -47,7 +47,9 @@ import { MentionContractuelle } from "@/components/prescriptions/MentionContract
 import { MOIS_FR, MOIS_FR_COURT } from "@/lib/calendrier/labels";
 import {
   CHAMP_ETAT,
+  compteEtat,
   ENCRE_ETAT,
+  libelleEtatCourtCapitale,
   type EtatEcheance,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
@@ -255,11 +257,11 @@ function GroupeCategorie({
             {g.lignes.length > 1 ? "s" : ""}
           </span>
           <span className="ml-auto flex flex-wrap items-center gap-2">
-            <Compte n={g.enRetard} libelle="dépassée" registre="enRetard" />
-            <Compte n={g.proche} libelle="sous 30 j" registre="proche" />
-            <Compte n={g.lointain} libelle="à venir" registre="lointain" />
-            <Compte n={g.faite} libelle="faite" registre="faite" />
-            <Compte n={g.aPlanifier} libelle="à planifier" registre={null} />
+            <Compte n={g.enRetard} cle="enRetard" />
+            <Compte n={g.proche} cle="proche" />
+            <Compte n={g.lointain} cle="lointain" />
+            <Compte n={g.faite} cle="faite" />
+            <Compte n={g.aPlanifier} cle="aPlanifier" />
           </span>
           {/* La même pastille que les cartes-mois : collé aux pilules, le
               chevron se lisait comme une de plus. Détaché et cerclé, il
@@ -456,11 +458,11 @@ function CarteEquipement({
             carte qui ne dirait que « dépassée de 103 j » tairait qu'il y
             en a quatre. */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Compte n={l.enRetard} libelle="dépassée" registre="enRetard" />
-          <Compte n={l.proche} libelle="sous 30 j" registre="proche" />
-          <Compte n={l.lointain} libelle="à venir" registre="lointain" />
-          <Compte n={l.faite} libelle="faite" registre="faite" />
-          <Compte n={l.aPlanifier} libelle="à planifier" registre={null} />
+          <Compte n={l.enRetard} cle="enRetard" />
+          <Compte n={l.proche} cle="proche" />
+          <Compte n={l.lointain} cle="lointain" />
+          <Compte n={l.faite} cle="faite" />
+          <Compte n={l.aPlanifier} cle="aPlanifier" />
           {l.horsAnnee > 0 ? (
             <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-[color:var(--board-slate-soft)]">
               +{l.horsAnnee} hors {annee}
@@ -508,7 +510,7 @@ function CarteEquipement({
                         <BadgeStatut statut={o.statut} />
                       ) : o.etat === "enRetard" ? (
                         <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
-                          En retard
+                          {libelleEtatCourtCapitale("enRetard")}
                         </span>
                       ) : null}
                   </LienProvenance>
@@ -540,26 +542,32 @@ function CarteEquipement({
   );
 }
 
-function Compte({
-  n,
-  libelle,
-  registre,
-}: {
-  n: number;
-  libelle: string;
-  /** `null` : « à planifier », qui n'est pas un état de la même famille. */
-  registre: EtatEcheance | null;
-}) {
+/**
+ * Un compte et son mot.
+ *
+ * **`libelle` A DISPARU DE CETTE SIGNATURE, ET C'EST LE CORRECTIF.** Les dix
+ * appels de ce fichier — cinq états × deux emplacements — écrivaient leur mot
+ * à la main. Quatre coïncidaient encore avec `LIBELLE_ETAT` par habitude ; le
+ * cinquième, `lointain`, ne coïncidait plus depuis que « à venir » a été
+ * remplacé par « au-delà de 30 jours ». Sur `/calendrier?vue=equipement`, le
+ * dirigeant lisait donc « 1 sous 30 j » et « 11 à venir » côte à côte — la
+ * paire englobante exacte que le lot venait de supprimer ailleurs, intacte sur
+ * l'écran où les deux comptes se lisent ENSEMBLE.
+ *
+ * Tant que le composant acceptait un mot, un appelant pouvait en écrire un.
+ * Il n'en accepte plus : la clé d'état entre, `compteEtat` rend le mot ET son
+ * accord. L'accord aussi était réécrit ici (`n > 1 && libelle.endsWith("e")`),
+ * une seconde règle qui tombait juste par chance sur les cinq mots du jour.
+ */
+function Compte({ n, cle }: { n: number; cle: RegistreLigne }) {
   if (n === 0) return null;
-  const cle: RegistreLigne = registre ?? "aPlanifier";
   return (
     <span
       className="inline-flex items-center gap-1.5 rounded-full px-3 py-[6px] text-[12px] font-semibold leading-none"
       style={{ background: CHAMP_ETAT[cle], color: ENCRE_ETAT[cle] }}
     >
       <span className="tabular-nums">{n}</span>
-      {libelle}
-      {n > 1 && libelle.endsWith("e") ? "s" : ""}
+      {compteEtat(n, cle).replace(/^\d+\s/, "")}
     </span>
   );
 }
