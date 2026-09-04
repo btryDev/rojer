@@ -62,6 +62,11 @@ import { CODE_TRAVAIL_ECLAIRAGE } from "./code-travail-eclairage";
 import { CODE_TRAVAIL_BRUIT_VIBRATIONS } from "./code-travail-bruit-vibrations";
 import { CODE_TRAVAIL_MATIERES_INFLAMMABLES } from "./code-travail-matieres-inflammables";
 import { ARRETE_1993_03_19_TRAVAUX_DANGEREUX } from "./arrete-1993-03-19-travaux-dangereux";
+import { ARRETE_1993_03_19_EPI } from "./arrete-1993-03-19-epi";
+import {
+  CODE_TRAVAIL_EPI,
+  CODE_TRAVAIL_EPI_AMONT,
+} from "./code-travail-epi";
 import {
   ARRETE_2017_04_19_REGISTRE_ACCESSIBILITE,
   CASF_DEFINITION_HANDICAP,
@@ -291,6 +296,40 @@ export const CORPUS: readonly Corpus[] = [
   // modèle : `GHTC`, `GHW1` et `GHW2` manquaient, et un `GHW` que `R. 146-4`
   // n'écrit nulle part figurait en trop.
   CCH_CLASSEMENT_ERP_IGH,
+  // Lot « EPI », 2026-09-04 — les trois textes que la catégorie
+  // `CategorieEquipement.EPI` attendait pour ne pas naître fausse. Elle est
+  // entrée la veille SANS obligation, et son commentaire disait pourquoi : « il
+  // ne faut PAS en attacher une avant d'avoir lu R. 4323-95 à R. 4323-99 et
+  // l'arrêté qui fixe la liste des EPI soumis à vérification ». Voici la
+  // lecture, et elle donne raison à la prudence.
+  //
+  // LE RÉSULTAT TIENT EN UNE LIGNE : douze mois, et cinq familles nommées. La
+  // périodicité n'est nulle part dans le Code — `R. 4323-99` est un article
+  // d'habilitation qui ne chiffre rien —, elle est dans l'arrêté du 19 mars
+  // 1993, et cet arrêté procède par liste NOMINATIVE et FERMÉE. Un casque, des
+  // gants, des chaussures de sécurité ne s'y trouvent pas et ne sont soumis à
+  // aucune vérification générale périodique : ils relèvent de `R. 4322-1`
+  // (maintien en état de conformité) et de `R. 4323-95` (entretien,
+  // réparations, remplacements « nécessaires »), qui sont des ÉTATS et non des
+  // rendez-vous. Le guide commercial que `etablissements/parametrage.ts`
+  // mentionnait depuis le 2026-09-01 avait le bon chiffre et la mauvaise
+  // assiette.
+  //
+  // AUCUNE OBLIGATION N'EST ENCODÉE PAR CE LOT, et c'est délibéré : la seule
+  // famille de l'arrêté qui touche les secteurs cibles est le harnais
+  // antichute, et la porter suppose de trancher ce que devient la catégorie
+  // `EPI` — une décision de modèle, donc une migration, donc pas un lot de
+  // dépouillement. Les termes du choix sont dans le `bloquePar` de l'article
+  // 1er de l'arrêté et au journal des vérifications.
+  //
+  // ⚠ DEUX ARRÊTÉS DU 19 MARS 1993 COEXISTENT DÉSORMAIS DANS CE FICHIER, de
+  // même date et de même signataires, sur des objets sans rapport : les
+  // travaux dangereux du plan de prévention, et les EPI. Leurs refs d'articles
+  // se distinguent par un « (EPI) », faute de quoi `corpus.test.ts` les
+  // verrait comme un seul article portant deux statuts.
+  CODE_TRAVAIL_EPI,
+  CODE_TRAVAIL_EPI_AMONT,
+  ARRETE_1993_03_19_EPI,
 ];
 
 export function couvertureParCorpus(): CouvertureCorpus[] {

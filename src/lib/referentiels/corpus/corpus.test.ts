@@ -1258,6 +1258,48 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // déclenchement suppose le cinquième déclencheur de l'ADR-022,
       // « activité réellement exercée », non implémenté.
       "R. 4227-26",
+      // ── Lot « EPI », 2026-09-04. Trois entrées pour vingt-deux articles lus
+      // (section 9 du chapitre III, deux articles d'amont, l'arrêté du 19 mars
+      // 1993 en entier), et c'est le rapport qu'il faut lire : la section 9 est
+      // presque tout entière faite d'exigences de FOND et d'ÉTATS, dont rien ne
+      // se date. Aucune obligation n'est encodée par ce lot.
+      //
+      // R. 4323-105 : la consigne d'utilisation, seul écrit de toute la section
+      // 9. Porteur établissement, état permanent, `periodicite: "autre"` — la
+      // forme exacte de la notice des points d'ancrage de R. 4323-61. Rien de
+      // technique ne la bloque, et surtout PAS la scission de la catégorie
+      // `EPI` : elle ne se porte pas par équipement. Ce qui manque est
+      // l'encodage, plus une décision de périmètre sur la seconde pièce de
+      // l'article — une « documentation relative à la réglementation
+      // applicable » tenue à disposition du CSE, genre de pièce que le produit
+      // n'a jamais tranché s'il portait.
+      "R. 4323-105",
+      // R. 4323-106 : formation au port de l'équipement, avec entraînement « en
+      // tant que de besoin ». Nominative, donc porteur salarié — qui existe. Ce
+      // qui n'existe pas, c'est la périodicité : « renouvelée aussi souvent que
+      // nécessaire pour que l'équipement soit utilisé conformément à la consigne
+      // d'utilisation » indexe le renouvellement sur un RÉSULTAT, pas sur une
+      // durée. Lui donner trois ans par analogie avec une formation voisine
+      // fabriquerait une échéance que personne ne peut opposer — c'est le même
+      // refus que pour R. 4323-69, où les « cinq ans » venaient d'une
+      // recommandation CNAM et non d'un texte.
+      "R. 4323-106",
+      // Arrêté du 19 mars 1993 (EPI) art. 1er : LA VÉRIFICATION GÉNÉRALE
+      // PÉRIODIQUE À DOUZE MOIS, pour cinq familles nommées et pour elles
+      // seules. Une seule touche les secteurs cibles — « systèmes de protection
+      // individuelle contre les chutes de hauteur », c'est-à-dire le harnais.
+      //
+      // Bloquée par une décision de MODÈLE, la seule de cette liste à l'être :
+      // `CategorieEquipement.EPI` est une famille et non un régime, et son
+      // libellé de formulaire le dit — « harnais antichute et sa longe, casque,
+      // gants, chaussures de sécurité, protections auditives, masque ». Y
+      // attacher cette obligation réclamerait une vérification annuelle par
+      // personne qualifiée à qui a déclaré une boîte de gants : le défaut exact
+      // que le nom de `COMPACTEUR_PRESSE_DECHETS_MOTORISE` a été écrit pour
+      // éviter. La ligne de partage se lit dans l'arrêté, verbatim, et elle
+      // passe entre des NOMS D'OBJETS — pas entre des propriétés d'équipement,
+      // que le texte ne nomme nulle part.
+      "Arrêté 1993-03-19 (EPI) art. 1er",
     ]);
   });
 

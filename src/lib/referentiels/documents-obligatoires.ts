@@ -319,7 +319,7 @@ export const DOCUMENTS_OBLIGATOIRES: readonly DocumentObligatoire[] = [
     ceQueLeTexteDemande:
       "Faire vérifier périodiquement les équipements de protection individuelle que des arrêtés désignent, et consigner le résultat sur le registre de sécurité.",
     quandIlEstDu:
-      "Pour les seuls équipements que les arrêtés du ministre chargé du travail ou de l'agriculture désignent — les autres ne sont pas soumis à vérification périodique.",
+      "Pour les seuls équipements que les arrêtés du ministre chargé du travail ou de l'agriculture désignent — les autres ne sont pas soumis à vérification périodique. L'arrêté du 19 mars 1993, lu à la source le 4 septembre 2026, en nomme cinq et cinq seulement : appareils de protection respiratoire autonomes destinés à l'évacuation ; appareils de protection respiratoire et équipements complets destinés à des interventions accidentelles en milieu hostile ; gilets de sauvetage gonflables ; systèmes de protection individuelle contre les chutes de hauteur — le harnais antichute et sa longe ; stocks de cartouches filtrantes antigaz. Un casque, des gants, des chaussures de sécurité, des lunettes, des protections auditives n'y figurent pas : aucun rendez-vous périodique ne leur est demandé. Le rythme n'est pas « une fois par an » mais « depuis moins de douze mois au moment de leur utilisation », en service comme en stock — il se compte à l'instant de l'usage, pas à la date de la dernière visite.",
     produitParRojer: false,
     ouLeTrouver:
       "Le registre de sécurité existe dans Rojer, mais l'outil n'engendre aucune échéance de vérification d'équipement de protection individuelle : ces appareils ne sont pas au référentiel, et rien ne vous rappellera la date. La consignation se tient donc à part, et les rapports du vérificateur s'annexent au registre comme les autres.",
@@ -332,6 +332,17 @@ export const DOCUMENTS_OBLIGATOIRES: readonly DocumentObligatoire[] = [
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531296",
         versionConstatee: "2008-05-01",
         luLe: "2026-09-01",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 19 mars 1993, art. 1er (liste des équipements de protection individuelle soumis à vérification générale périodique, depuis moins de douze mois au moment de leur utilisation)",
+        article: "Arrêté 1993-03-19 (EPI) art. 1er",
+        url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006930405",
+        citationCle:
+          "Sans préjudice de la vérification à chaque utilisation du maintien en état de conformité des équipements de protection individuelle faite en application de l'article R. 233-1-1 du code du travail, les équipements de protection individuelle suivants, en service ou en stock, doivent avoir fait l'objet, depuis moins de douze mois au moment de leur utilisation, de la vérification générale périodique prévue à l'article R. 233-42-2 du code du travail : - appareils de protection respiratoire autonomes destinés à l'évacuation ; - appareils de protection respiratoire et équipements complets destinés à des interventions accidentelles en milieu hostile ; - gilets de sauvetage gonflables ; - systèmes de protection individuelle contre les chutes de hauteur ; - stocks de cartouches filtrantes antigaz pour appareils de protection respiratoire.",
+        versionConstatee: "1993-12-01",
+        luLe: "2026-09-04",
       },
       {
         source: "CODE_TRAVAIL",
