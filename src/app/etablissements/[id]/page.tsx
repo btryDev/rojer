@@ -228,7 +228,7 @@ export default async function EtablissementPage({
       id: "epi",
       titre: "Dire si vous fournissez des équipements de protection",
       pourquoi:
-        "Harnais, casques, gants, chaussures de sécurité, protections auditives. La réponse est consignée dans votre dossier : à ce stade Rojer ne calcule aucune échéance à partir d'elle, et ne vous en annoncera aucune tant que les textes qui la fonderaient n'auront pas été dépouillés.",
+        "Harnais, casques, gants, chaussures de sécurité, protections auditives. Depuis le 4 septembre 2026, vous pouvez aussi les déclarer un par un dans vos équipements, avec leur marque et leur lieu. Rojer ne calcule encore aucune échéance à partir d'eux, et ne vous en annoncera aucune tant que les textes qui la fonderaient n'auront pas été dépouillés : ce que vous déclarez ici est conservé, pas interprété.",
       faite: questionRepondue(etab.epiPresents),
       question: (
         <QuestionParametrage

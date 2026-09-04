@@ -26,6 +26,7 @@ import {
   FireExtinguisher,
   Forklift,
   Gauge,
+  HardHat,
   Lightbulb,
   Package,
   Refrigerator,
@@ -65,6 +66,10 @@ type Picto = ComponentType<{
  * dessin ne se distinguent plus dans une liste triée par catégorie.
  */
 export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
+  // Le casque : le seul objet de la famille que tout le monde reconnaît de
+  // loin. Il dit « ce qu'on porte », ce qui est exactement la ligne de partage
+  // de cette catégorie — la protection collective reste à l'ouvrage.
+  EPI: HardHat,
   INSTALLATION_ELECTRIQUE: Zap,
   INSTALLATION_FRIGORIFIQUE: Refrigerator,
   EXTINCTEUR: FireExtinguisher,

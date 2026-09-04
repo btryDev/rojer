@@ -515,6 +515,12 @@ enum CategorieEquipement {
   EQUIPEMENT_LEVAGE
   INSTALLATION_FRIGORIFIQUE
   COMPACTEUR_PRESSE_DECHETS_MOTORISE
+  // Famille, pas régime : un harnais antichute se vérifie, un casque non.
+  // Aucune obligation n'y est rattachée tant que R. 4323-95 à -99 et l'arrêté
+  // qui fixe la liste des EPI vérifiables n'ont pas été dépouillés — et le
+  // dépouillement dira peut-être de la scinder. Voir la migration
+  // 20260904120000_categorie_epi.
+  EPI
   AUTRE
 }
 

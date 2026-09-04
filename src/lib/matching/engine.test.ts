@@ -1076,6 +1076,22 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
       vides: [
         // Soupape de saisie : aucune obligation ne la cite, par construction.
         "AUTRE",
+        // EPI, ajoutée le 2026-09-04 : déclarable et volontairement sans
+        // obligation. Le dirigeant pouvait DIRE qu'il fournit des équipements
+        // de protection — la question `epiPresents` de la fiche
+        // établissement — et n'en déclarer aucun. Il le peut désormais ; ce
+        // qu'aucune lecture n'autorise encore, c'est d'en tirer une échéance.
+        // R. 4323-95 à R. 4323-99 et l'arrêté qui fixe la liste des EPI
+        // soumis à vérification ne sont pas dépouillés, et ce dépôt n'encode
+        // pas sur un texte que personne n'a ouvert.
+        //
+        // La ligne ne sortira PAS de cette liste par un simple rattachement :
+        // « EPI » est une famille et non un régime. Un harnais antichute se
+        // vérifie, un casque non — viser la catégorie entière réclamerait un
+        // rendez-vous annuel à qui a déclaré des gants, le défaut même que la
+        // catégorie du compacteur a été écrite pour éviter. La lecture de
+        // l'arrêté décidera peut-être de la scinder en deux.
+        "EPI",
         // Réglementations ERP pures : rien ne les vise chez un employeur seul.
         "DESENFUMAGE",
         "APPAREIL_CUISSON_ERP",
@@ -1121,7 +1137,25 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
     {
       nom: "restaurant ERP type N catégorie 5",
       etab: etabRestoErpCat5(),
-      vides: ["AUTRE"],
+      vides: [
+        "AUTRE",
+        // EPI, ajoutée le 2026-09-04 : déclarable et volontairement sans
+        // obligation. Le dirigeant pouvait DIRE qu'il fournit des équipements
+        // de protection — la question `epiPresents` de la fiche
+        // établissement — et n'en déclarer aucun. Il le peut désormais ; ce
+        // qu'aucune lecture n'autorise encore, c'est d'en tirer une échéance.
+        // R. 4323-95 à R. 4323-99 et l'arrêté qui fixe la liste des EPI
+        // soumis à vérification ne sont pas dépouillés, et ce dépôt n'encode
+        // pas sur un texte que personne n'a ouvert.
+        //
+        // La ligne ne sortira PAS de cette liste par un simple rattachement :
+        // « EPI » est une famille et non un régime. Un harnais antichute se
+        // vérifie, un casque non — viser la catégorie entière réclamerait un
+        // rendez-vous annuel à qui a déclaré des gants, le défaut même que la
+        // catégorie du compacteur a été écrite pour éviter. La lecture de
+        // l'arrêté décidera peut-être de la scinder en deux.
+        "EPI",
+      ],
     },
   ];
 

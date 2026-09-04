@@ -31,6 +31,7 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   // déclare et se voit réclamer quatre rendez-vous par an qu'il ne doit pas.
   COMPACTEUR_PRESSE_DECHETS_MOTORISE:
     "Compacteur à déchets ou presse à cartons (motorisé)",
+  EPI: "Équipement de protection individuelle",
   AUTRE: "Autre équipement",
 };
 
@@ -71,5 +72,10 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // local à poubelles, et la presse actionnée au bras.
   COMPACTEUR_PRESSE_DECHETS_MOTORISE:
     "La machine du local à déchets ou du quai de livraison dans laquelle on charge à la main cartons, films plastiques ou déchets pour les tasser ou les mettre en balles : compacteur-presse à cartons, presse à balles, compacteur à déchets. Ni le local à poubelles lui-même, ni la benne du camion de collecte, ni une presse actionnée à la seule force du bras.",
+  // On nomme des objets, pas la notion : « EPI » ne se reconnaît pas dans un
+  // sélecteur, un harnais si. Les trois exemples cités sont ceux de la
+  // question déjà posée sur la fiche établissement, pour que le dirigeant
+  // retrouve d'un écran à l'autre le mot qu'il a lu.
+  EPI: "Ce qu'une personne porte pour se protéger : harnais antichute et sa longe, casque, gants, chaussures de sécurité, protections auditives, masque. Pas les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent.",
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };

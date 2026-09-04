@@ -1,0 +1,41 @@
+-- ============================================================================
+-- Nouvelle catégorie d'équipement : EPI — 2026-09-04
+--
+-- Le dirigeant pouvait DIRE qu'il fournit des équipements de protection
+-- individuelle — une question de la fiche établissement, `epiPresents`, avec
+-- un texte libre facultatif — et ne pouvait en DÉCLARER aucun. Un harnais
+-- antichute, un casque, une paire de chaussures de sécurité n'avaient pas de
+-- place dans le parc : les dix-neuf catégories existantes vont de
+-- l'installation électrique au compacteur à déchets, et aucune n'est un
+-- équipement porté par une personne.
+--
+-- CE QUE CETTE MIGRATION NE FAIT PAS, ET C'EST DÉLIBÉRÉ. Elle n'attache
+-- AUCUNE obligation à la catégorie. Les textes qui la fonderaient —
+-- R. 4323-95 à R. 4323-99 du code du travail, et l'arrêté qui fixe la liste
+-- des EPI soumis à vérification périodique — ne sont pas dépouillés, et ce
+-- dépôt s'interdit d'encoder sur un texte que personne n'a ouvert. Un EPI
+-- déclaré se rangera donc sous « Hors référentiel », avec la phrase que le
+-- produit dit déjà dans ce cas : « Cela ne veut pas dire qu'aucune
+-- vérification ne lui est due. »
+--
+-- ET VOICI LE PIÈGE À NE PAS TENDRE AU SUIVANT. « EPI » est une FAMILLE, pas
+-- un régime. Un harnais antichute relève d'une vérification périodique ; un
+-- casque de chantier n'en relève pas. Le jour où le dépouillement aura eu
+-- lieu, rattacher l'obligation à cette catégorie entière réclamerait un
+-- rendez-vous annuel au commerçant qui a déclaré des gants — exactement le
+-- défaut que la catégorie COMPACTEUR_PRESSE_DECHETS_MOTORISE a été écrite
+-- pour éviter (« le commerçant qui possède une presse à levier se voit
+-- réclamer quatre rendez-vous par an qu'il ne doit pas »). La ligne de
+-- partage se lit dans l'arrêté, pas dans l'intuition : elle doit être établie
+-- AVANT qu'une obligation vise cette catégorie, et elle décidera peut-être de
+-- la scinder en deux.
+--
+-- La valeur est insérée AVANT 'AUTRE' pour que l'ordre de l'enum PostgreSQL
+-- reste le reflet exact de `CATEGORIES_EQUIPEMENT` (src/lib/referentiels/
+-- types-communs.ts) : cet ordre gouverne le sélecteur du formulaire, une
+-- divergence se verrait à l'écran.
+--
+-- Ajout pur : aucune ligne existante n'est touchée, aucune valeur retirée.
+-- ============================================================================
+
+ALTER TYPE "CategorieEquipement" ADD VALUE IF NOT EXISTS 'EPI' BEFORE 'AUTRE';
