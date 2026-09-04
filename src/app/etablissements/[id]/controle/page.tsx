@@ -76,7 +76,7 @@ export default async function ControlePage({
         : "Aucune version figée. Créez-en une depuis le DUERP.",
       present: !!duerpVersion,
       etat: duerpVersion ? "a_jour" : "a_planifier",
-      reference: "Art. R4121-1 CT",
+      reference: "Art. R. 4121-1 CT",
     },
     {
       titre: "Registre de sécurité",
@@ -100,7 +100,7 @@ export default async function ControlePage({
           : "Aucune action en cours.",
       present: true,
       etat: dashboard.compteurs.actionsEnRetard > 0 ? "en_retard" : "a_jour",
-      reference: "Art. L4121-2 CT",
+      reference: "Art. L. 4121-2 CT",
     },
     {
       titre: "Registre d'accessibilité ERP",
@@ -131,7 +131,7 @@ export default async function ControlePage({
           : prestatairesAlertes > 0
             ? "en_retard"
             : "a_jour",
-      reference: "Art. L8222-1 CT",
+      reference: "Art. L. 8222-1 CT",
     },
   ];
 

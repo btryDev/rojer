@@ -189,7 +189,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
       </section>
 
 
-      {/* -------- Vigilance L8222-1 -------- */}
+      {/* -------- Vigilance L. 8222-1 -------- */}
       <section className="space-y-5">
         <header className="space-y-3">
           <h2 className="board-titre m-0 text-[17px]">Obligation de vigilance</h2>

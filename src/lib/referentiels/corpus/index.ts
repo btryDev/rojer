@@ -65,6 +65,7 @@ import { ARRETE_1993_03_19_TRAVAUX_DANGEREUX } from "./arrete-1993-03-19-travaux
 import {
   ARRETE_2017_04_19_REGISTRE_ACCESSIBILITE,
   CASF_DEFINITION_HANDICAP,
+  CCH_REGISTRE_ACCESSIBILITE,
 } from "./accessibilite-handicap";
 import {
   couverture,
@@ -273,6 +274,7 @@ export const CORPUS: readonly Corpus[] = [
   // resterait une affirmation ; avec lui, c'est une propriété vérifiée sur le
   // texte par `handicap-accessible.test.ts`.
   ARRETE_2017_04_19_REGISTRE_ACCESSIBILITE,
+  CCH_REGISTRE_ACCESSIBILITE,
   // Lot « listes fermées », 2026-09-03 — le second corpus du dépôt qui ne sert
   // AUCUNE obligation, après `arrete-1980-livre-1.ts`. Il porte les trois
   // articles du CCH qui CLASSENT : `R. 143-19` (les cinq catégories d'ERP),

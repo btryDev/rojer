@@ -194,7 +194,7 @@ export default async function PlanPreventionListePage({
           <div className="mt-4 flex flex-wrap gap-2">
             <LegalBadge
               charte="board"
-              reference="Art. R4512-6 à R4512-12 CT"
+              reference="Art. R. 4512-6 à R. 4512-12 CT"
               href="https://www.legifrance.gouv.fr/codes/id/LEGISCTA000018529787/"
             />
             {/* Ici se tenait « Décret 92-158 », sans lien. Relu à la source

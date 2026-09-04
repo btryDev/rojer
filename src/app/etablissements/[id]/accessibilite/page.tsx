@@ -175,7 +175,7 @@ export default async function AccessibilitePage({
           tonalite={registre?.publie ? "ok" : "info"}
         >
           {/* Deux erreurs, relues à la source le 2026-08-28.
-              — `D111-19-33` n'institue pas le registre public
+              — `D. 111-19-33` n'institue pas le registre public
                 d'accessibilité : R. 111-19-33 portait l'attestation
                 d'accessibilité, et il est abrogé depuis 2021. Le registre
                 vient de R. 111-19-60, devenu **R. 164-6 CCH** à la
