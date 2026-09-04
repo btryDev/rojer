@@ -87,6 +87,7 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     batimentId: raw.batimentId || undefined,
     localisation: raw.localisation,
     dateMiseEnService: raw.dateMiseEnService,
+    datePeremption: raw.datePeremption,
     nombre: raw.nombre,
     aGroupeElectrogene: bool("aGroupeElectrogene"),
     estLocalPollutionSpecifique: bool("estLocalPollutionSpecifique"),
@@ -136,6 +137,7 @@ export async function creerEquipement(
       categorie: parsed.data.categorie,
       localisation: parsed.data.localisation,
       dateMiseEnService: parsed.data.dateMiseEnService,
+      datePeremption: parsed.data.datePeremption,
       caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });
@@ -200,6 +202,7 @@ export async function modifierEquipement(
       categorie: parsed.data.categorie,
       localisation: parsed.data.localisation,
       dateMiseEnService: parsed.data.dateMiseEnService,
+      datePeremption: parsed.data.datePeremption,
       caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });

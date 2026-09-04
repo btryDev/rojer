@@ -156,7 +156,7 @@ export const obligationsConformite: Obligation[] = [
 // ventilation (`CH 39 § 3`). Toutes deux sont bornées aux ERP des quatre
 // premières catégories : aucun calendrier existant ne les porte, et un parc de
 // 5ᵉ catégorie n'en voit rien.
-export const REFERENTIEL_VERSION = "2026-09-04.3";
+export const REFERENTIEL_VERSION = "2026-09-04.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -59,6 +59,7 @@ type Valeurs = {
   batimentId?: string;
   localisation?: string | null;
   dateMiseEnService?: Date | null;
+  datePeremption?: Date | null;
   nombre?: number | null;
   familleEsp?: string | null;
   pressionMaxAdmissibleBar?: number | null;
@@ -284,6 +285,21 @@ export function EquipementForm({
             defaultValue={toIsoDate(valeursInitiales?.dateMiseEnService)}
             aide="Facultatif. Si vous ne la connaissez pas, laissez vide — l'outil se calera sur la première vérification à venir."
             erreur={err("dateMiseEnService")}
+          />
+
+          {/* La péremption n'est pas une échéance : c'est une caractéristique
+              de l'objet, que le fabricant fixe. L'outil ne la surveille pas —
+              il la garde pour que le vérificateur la constate, ce que le 3° de
+              l'article 2 de l'arrêté du 19 mars 1993 lui demande de faire. Le
+              dire dans l'aide évite qu'un dirigeant croie être averti. */}
+          <ChampBoard
+            id="datePeremption"
+            name="datePeremption"
+            label="Date de péremption"
+            type="date"
+            defaultValue={toIsoDate(valeursInitiales?.datePeremption)}
+            aide="Facultatif. La fin de vie indiquée par le fabricant, quand il en fixe une — un harnais antichute a souvent dix ans. Rojer ne vous alerte pas à cette date : il la conserve pour que la personne qui vérifie l'équipement puisse la constater."
+            erreur={err("datePeremption")}
           />
         </div>
 

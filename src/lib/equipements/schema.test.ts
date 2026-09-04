@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { depuisCleJourCivil } from "@/lib/dates";
+import { join } from "node:path";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import {
   CATEGORIES_TRI_ETAT,
@@ -375,5 +378,105 @@ describe("cohérence schéma ↔ référentiel d'obligations", () => {
         );
       }
     }
+  });
+});
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * LA CHAÎNE DE SAISIE VA JUSQU'AU BOUT
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * CE QUI M'A FAIT ÉCRIRE CECI (2026-09-04). En ajoutant `datePeremption`, j'ai
+ * retiré sa ligne de `normaliserFormDataEquipement` pour voir ce qui tomberait.
+ * **Rien.** `tsc` reste muet : la fonction rend un `Record<string, unknown>`,
+ * donc une clé absente n'est pas une erreur de type ; le champ serait resté à
+ * l'écran, l'utilisateur l'aurait rempli, et la valeur serait tombée entre le
+ * formulaire et le schéma sans qu'aucun test ne s'en aperçoive.
+ *
+ * C'est le trou de garantie d'un maillon entier : ce fichier vérifiait le
+ * schéma, `actions.test.ts` vérifie les actions, personne ne vérifiait le
+ * PASSAGE du formulaire au schéma. La forme du défaut est générique — elle
+ * guette toute propriété d'équipement ajoutée après coup, et l'en-tête de
+ * `schema.ts` promet justement que « toute nouvelle propriété s'ajoute dans ce
+ * fichier ».
+ *
+ * LA GARDE NE TIENT PAS UNE LISTE DE CHAMPS. Elle relève les `name=` du
+ * formulaire — la source de ce que le navigateur envoie — et exige de chacun
+ * qu'il ressorte de `normaliserFormDataEquipement`. Une liste écrite ici se
+ * serait réparée en y ajoutant une ligne, donc aurait cessé de mesurer.
+ */
+describe("du formulaire au schéma, sans perte", () => {
+  const RACINE = process.cwd();
+
+  /** Les `name` que le formulaire d'équipement envoie réellement. */
+  function champsDuFormulaire(): string[] {
+    const source = readFileSync(
+      join(RACINE, "src/components/equipements/EquipementForm.tsx"),
+      "utf8",
+    );
+    const noms = [...source.matchAll(/\bname="([a-zA-Z][\w]*)"/g)].map(
+      (m) => m[1],
+    );
+    return [...new Set(noms)];
+  }
+
+  it("chaque champ du formulaire ressort de la normalisation", () => {
+    const champs = champsDuFormulaire();
+    expect(
+      champs.length,
+      "Aucun `name=` relevé dans le formulaire : le motif ne mesure plus rien.",
+    ).toBeGreaterThan(5);
+
+    // Un FormData où chaque champ porte une valeur plausible : c'est le seul
+    // moyen de distinguer « la clé n'est pas lue » de « la clé vaut vide ».
+    const fd = new FormData();
+    for (const c of champs) fd.set(c, "2024-03-15");
+    fd.set("libelle", "Harnais du quai");
+    fd.set("categorie", "EPI_ANTICHUTE");
+
+    const out = normaliserFormDataEquipement(fd);
+    const perdus = champs.filter((c) => !(c in out));
+    expect(
+      perdus,
+      "Ces champs sont affichés à l'utilisateur, remplis par lui, et " +
+        "`normaliserFormDataEquipement` ne les lit pas : leur valeur tombe " +
+        "entre le formulaire et le schéma. `tsc` ne le voit pas — la fonction " +
+        "rend un Record<string, unknown>, où une clé manquante n'est pas une " +
+        "erreur de type.",
+    ).toEqual([]);
+  });
+
+  it("la date de péremption traverse la normalisation ET le schéma", () => {
+    // Le champ qui a révélé le trou, éprouvé de bout en bout : ce n'est pas
+    // sa présence dans un objet qui compte, c'est la Date qui en sort.
+    const fd = new FormData();
+    fd.set("libelle", "Harnais du quai");
+    fd.set("categorie", "EPI_ANTICHUTE");
+    fd.set("datePeremption", "2031-03-15");
+
+    const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
+    expect(res.success, JSON.stringify(res.error?.issues)).toBe(true);
+    if (!res.success) return;
+    expect(res.data.datePeremption).toBeInstanceOf(Date);
+    // Comparée au jour civil du dépôt, pas à une chaîne ISO : `toISOString`
+    // reculerait d'un jour à Paris, et le test dirait « la date est fausse »
+    // là où c'est l'assertion qui l'est.
+    expect(res.data.datePeremption?.getTime()).toBe(
+      depuisCleJourCivil("2031-03-15").getTime(),
+    );
+  });
+
+  it("une péremption vide reste indéterminée, elle ne devient pas une date", () => {
+    // « Je ne sais pas » doit rester distinct de « pas de péremption » : un
+    // équipement sans date connue ne doit pas se voir attribuer aujourd'hui.
+    const fd = new FormData();
+    fd.set("libelle", "Casque");
+    fd.set("categorie", "EPI");
+    fd.set("datePeremption", "");
+
+    const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+    expect(res.data.datePeremption).toBeUndefined();
   });
 });

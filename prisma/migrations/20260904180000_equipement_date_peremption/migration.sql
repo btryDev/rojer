@@ -1,0 +1,33 @@
+-- ============================================================================
+-- Date de péremption d'un équipement — 2026-09-04
+--
+-- CE QUE LE TEXTE IMPOSE ET QUE LE MODÈLE NE SAVAIT PAS DIRE. Le 3° de
+-- l'article 2 de l'arrêté du 19 mars 1993 fait porter la vérification générale
+-- périodique des EPI, entre autres, sur « l'élimination des équipements de
+-- protection individuelle arrivés à la date de péremption fixée par le
+-- fabricant ». Cette date existe, elle est écrite sur l'objet ou sur sa notice
+-- — un harnais antichute a typiquement dix ans —, et aucun champ ne la
+-- stockait. L'outil ne pouvait donc ni la rappeler, ni signaler un équipement
+-- devenu inutilisable. C'était une réserve comptée au corpus depuis sa lecture.
+--
+-- POURQUOI SUR `Equipement` ET NON SUR LES SEULS EPI. La péremption n'est pas
+-- une notion propre aux équipements de protection : une cartouche filtrante,
+-- un extincteur, un déclencheur de gilet ont tous une fin de vie fixée par le
+-- fabricant. Un champ réservé aux EPI aurait obligé à en créer un second au
+-- premier autre besoin, et les deux auraient divergé. C'est une CARACTÉRISTIQUE
+-- de l'objet, au même titre que sa date de mise en service, qui vit déjà ici.
+--
+-- CE QUE CETTE COLONNE NE FAIT PAS, ET IL FAUT LE SAVOIR. Elle ne crée aucune
+-- obligation et ne produit aucune échéance par elle-même. Seul l'arrêté du
+-- 19 mars 1993 fonde aujourd'hui une conséquence, et elle est portée par la
+-- vérification périodique des EPI : le vérificateur constate la péremption
+-- pendant son contrôle. Poser une échéance « remplacer l'équipement » sur tout
+-- équipement daté aurait inventé une règle pour les catégories qu'aucun texte
+-- lu ne vise — exactement ce que ce dépôt s'interdit.
+--
+-- NULLABLE, ET SANS DÉFAUT. Le non-renseigné doit rester distinguable du
+-- renseigné : un équipement dont on ignore la péremption n'est pas un
+-- équipement sans péremption. Aucune ligne existante n'est touchée.
+-- ============================================================================
+
+ALTER TABLE "Equipement" ADD COLUMN IF NOT EXISTS "datePeremption" TIMESTAMP(3);

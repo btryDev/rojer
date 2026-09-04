@@ -483,6 +483,15 @@ model Equipement {
   libelle           String
   localisation      String?
   dateMiseEnService DateTime?
+  // Fin de vie fixée par le FABRICANT, pas par un texte : un harnais antichute
+  // a typiquement dix ans, une cartouche filtrante bien moins. Le 3° de
+  // l'article 2 de l'arrêté du 19 mars 1993 fait constater l'élimination des
+  // EPI périmés pendant la vérification périodique — c'est la seule
+  // conséquence qu'un texte lu attache aujourd'hui à cette date. La colonne ne
+  // produit donc aucune échéance par elle-même : la remplir renseigne, elle ne
+  // prescrit pas. Nullable sans défaut, pour que « je ne sais pas » reste
+  // distinct de « pas de péremption ».
+  datePeremption    DateTime?
   caracteristiques  Json?
   actif             Boolean             @default(true)
 

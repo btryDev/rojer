@@ -94,6 +94,30 @@ injectée), conformément au principe zéro-IA / déterminisme.
   date orphelin non documenté » que la dernière ligne de cet ADR qualifie de
   bug de revue. La règle a fini par s'appliquer à elle-même.
 
+- **Péremption d'un équipement** (`Equipement.datePeremption`) : **une fin de
+  vie, pas un rythme.** Elle est fixée par le FABRICANT, pas par un texte, et
+  elle ne se répète jamais — l'objet est éliminé, il n'a pas de rendez-vous
+  suivant. Elle n'ouvre donc aucune périodicité et n'est pas une source.
+
+  Ce que le droit en fait est différent de ce qu'une échéance en ferait : le 3°
+  de l'article 2 de l'arrêté du 19 mars 1993 demande au **vérificateur** de
+  constater, pendant la vérification générale périodique, l'élimination des
+  équipements de protection arrivés à péremption. La conséquence est donc déjà
+  portée — par `epi-verification-generale-periodique` —, et poser en plus une
+  ligne « remplacer l'équipement » l'aurait dédoublée. Sur les autres
+  catégories, aucun texte relevé n'attache de conséquence à cette date : lui en
+  donner une aurait inventé une règle (règle n°6 du projet).
+
+  La fiche d'un équipement l'affiche — « Péremption mars 2031 », ou « Périmé
+  depuis mars 2024 » quand elle est passée — et le formulaire dit en toutes
+  lettres que Rojer n'alerte pas à cette date. Un fait daté qu'on montre n'est
+  pas une échéance qu'on réclame, et la nuance est écrite là où le dirigeant la
+  lit.
+
+  *Ajoutée le 2026-09-04*, avec la colonne, et non après : c'est la réserve
+  qu'un dépouillement avait comptée sur l'arrêté du 19 mars 1993 — la
+  péremption existait dans le texte et nulle part dans le modèle.
+
 ## Conséquences
 
 - Un futur module (ex. visites médicales) livre sa source avec sa

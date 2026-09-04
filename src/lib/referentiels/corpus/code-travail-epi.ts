@@ -55,12 +55,24 @@
 // affirmer « il n'y en a pas » sur cette base serait une lecture incertaine
 // annoncée comme sûre. La question reste ouverte.
 //
-// De même, l'énumération des arrêtés pris sur `R. 4323-99` n'est pas garantie
-// exhaustive. Un seul a été établi et lu à la source — celui du 19 mars 1993 —,
-// plus un texte voisin ouvert et écarté (arrêté du 22 octobre 2009, voir
-// l'en-tête de `arrete-1993-03-19-epi.ts`). L'article vise « les ministres
-// chargés du travail OU de l'agriculture » : un jumeau agricole existe
-// peut-être, comme il existe pour `R. 4323-23`, et il n'a pas été trouvé.
+// L'ÉNUMÉRATION DES ARRÊTÉS PRIS SUR `R. 4323-99` EST ÉTABLIE, et elle tient en
+// un texte : celui du 19 mars 1993. La première lecture avait laissé la
+// question ouverte, en soupçonnant un jumeau agricole comme il en existe un
+// pour `R. 4323-23`. Le second passage l'a tranchée, et la raison est
+// structurelle : cet arrêté est **cosigné** par le ministre du travail ET le
+// ministre de l'agriculture — ses visas portent les deux avis consultatifs. Le
+// « travail OU agriculture » de l'article est donc satisfait par un texte
+// unique, là où `R. 4323-23` a reçu deux arrêtés mono-signés. Le jumeau
+// soupçonné, l'arrêté du 24 juin 1993, a été lu : il ne vise que les
+// équipements de TRAVAIL, et aucun EPI.
+//
+// LE MOYEN, PARCE QU'IL RESSERVIRA. Le panneau « textes d'application » de
+// Légifrance reste illisible — JavaScript. Mais ses pages de RÉSULTATS DE
+// RECHERCHE sont rendues côté serveur et se lisent : `/search/all?...&query=`.
+// Et ce qui rend l'absence concluante n'est pas la recherche elle-même, c'est
+// son TEST DE CONTRÔLE : la même requête sur `R. 233-11` rend les deux arrêtés
+// de 1993, dont l'agricole. Le moteur sait voir ce qu'on lui demande ; il n'y a
+// rien à voir sur `R. 233-42-2`.
 //
 // Lecture : `premiere_main`, Légifrance le 2026-09-04, sur les pages d'article
 // (`article_lc`) et sur la page de section 9, rendues côté serveur. Les dates
@@ -266,7 +278,7 @@ export const CODE_TRAVAIL_EPI: Corpus = {
         "Des arrêtés des ministres chargés du travail ou de l'agriculture déterminent les équipements de protection individuelle et catégories d'équipement de protection individuelle pour lesquels l'employeur procède ou fait procéder à des vérifications générales périodiques afin que soit décelé en temps utile toute défectuosité susceptible d'être à l'origine de situations dangereuses ou tout défaut d'accessibilité contraire aux conditions de mise à disposition ou d'utilisation déterminées en application de l'article R. 4323-97. Ces arrêtés précisent la périodicité des vérifications et, en tant que de besoin, leur nature et leur contenu.",
       statut: "sans_objet",
       motif:
-        "RENVOI, ET RIEN D'AUTRE — le statut est celui d'un article qui ne produit aucune échéance par lui-même. Toute la substance est dans l'arrêté : c'est lui qui nomme les équipements et pose les douze mois, et c'est là que le manque est compté, une fois et pas deux (`arrete-1993-03-19-epi`, art. 1er, `obligation_manquante`). Le même partage qu'entre R. 4323-23 et l'arrêté du 5 mars 1993, à ceci près que R. 4323-23 est `retenu` parce que des obligations existent, et que celui-ci n'en a aucune. ⚠ L'ÉNUMÉRATION DES ARRÊTÉS N'EST PAS GARANTIE EXHAUSTIVE, et c'est la faute type nommée en tête de `types.ts` : un seul arrêté a été établi et lu à la source, celui du 19 mars 1993. L'article vise « les ministres chargés du travail OU de l'agriculture » — un jumeau agricole existe peut-être, comme pour R. 4323-23 (arrêté du 24 juin 1993), et il n'a pas été trouvé ; les panneaux « textes d'application » de Légifrance sont chargés en JavaScript et l'outil de lecture ne les rend pas. Un texte voisin a été ouvert et écarté, l'arrêté du 22 octobre 2009 : voir l'en-tête de `arrete-1993-03-19-epi.ts`.",
+        "RENVOI, ET RIEN D'AUTRE — le statut est celui d'un article qui ne produit aucune échéance par lui-même. Toute la substance est dans l'arrêté : c'est lui qui nomme les équipements et pose les douze mois, et c'est là que le manque est compté, une fois et pas deux (`arrete-1993-03-19-epi`, art. 1er, `obligation_manquante`). Le même partage qu'entre R. 4323-23 et l'arrêté du 5 mars 1993, à ceci près que R. 4323-23 est `retenu` parce que des obligations existent, et que celui-ci n'en a aucune. L'ÉNUMÉRATION DES ARRÊTÉS EST ÉTABLIE, ET LE DOUTE EST LEVÉ (2026-09-04, second passage). Il n'existe qu'UN arrêté d'application de R. 4323-99, celui du 19 mars 1993, et la raison est STRUCTURELLE et non accidentelle : il est COSIGNÉ par le ministre du travail ET le ministre de l'agriculture, ses visas portant les deux avis consultatifs — Conseil supérieur de la prévention des risques professionnels du 25 janvier 1993, Commission nationale d'hygiène et de sécurité du travail en agriculture du 25 février 1993. Le « travail OU agriculture » de l'article est donc satisfait par un texte unique, là où R. 4323-23 a reçu deux arrêtés mono-signés. Le jumeau agricole soupçonné, l'arrêté du 24 juin 1993, a été lu : il ne vise que les équipements de TRAVAIL et l'article R. 233-11 ; R. 233-42-2 n'y figure nulle part et sa liste ne contient aucun EPI.\n\nCOMMENT LE NÉGATIF A ÉTÉ RENDU DÉFENDABLE. Le panneau « textes d'application » de Légifrance reste illisible — chargé en JavaScript. La liste a été reconstituée par la recherche plein texte de Légifrance, dont les pages de RÉSULTATS sont rendues côté serveur et se lisent, elles : `/search/all?...&query=...`. C'est un déblocage qui vaut pour toute la veille. Une recherche sur « R. 233-42-2 » — la numérotation d'avant 2008 — rend six résultats, un seul arrêté. Et le TEST DE CONTRÔLE est ce qui rend l'absence concluante : la même recherche sur « R. 233-11 » rend 69 résultats et y trouve LES DEUX arrêtés de 1993, dont l'agricole. Le moteur sait donc voir ce qu'on cherche ; il n'y a rien à voir ici.\n\nCE QUI RESTE HORS DE PORTÉE, ET C'EST ÉTROIT : un arrêté pris puis abrogé avant d'entrer au fonds consolidé, ou un texte agricole imposant la même chose sur une base du code rural — qui ne serait alors pas un arrêté d'application de R. 4323-99. Si le panneau devient lisible, recouper.\n\nUN TEXTE CONNEXE À NE PAS COMPTER : l'arrêté du 22 octobre 2009 (EPI d'occasion loués ou mis à disposition de façon réitérée) VISE R. 4323-99 et remonte donc dans toute recherche, mais il est pris sur R. 4313-16, ne désigne aucun EPI et ne fixe aucune périodicité.",
     },
     {
       ref: "R. 4323-100",
@@ -392,8 +404,6 @@ export const CODE_TRAVAIL_EPI: Corpus = {
         "L'employeur élabore une consigne d'utilisation reprenant de manière compréhensible les informations mentionnées aux 1° et 2° de l'article R. 4323-104. Il tient cette consigne à la disposition des membres du comité social et économique, ainsi qu'une documentation relative à la réglementation applicable à la mise à disposition et à l'utilisation des équipements de protection individuelle concernant les travailleurs de l'établissement.",
       statut: "retenu",
       obligations: ["epi-etablissement-consigne-utilisation"],
-      reserve:
-        "LA SECONDE PIÈCE DE L'ARTICLE N'EST PAS PORTÉE. Il impose DEUX choses : la consigne d'utilisation, encodée, ET « une documentation relative à la réglementation applicable à la mise à disposition et à l'utilisation des équipements de protection individuelle », tenue elle aussi à la disposition du CSE. La seconde est une étagère documentaire, pas un acte daté : lui donner sa propre obligation aurait produit une ligne que rien ne permet de constater faite. Elle est nommée dans la description de `epi-etablissement-consigne-utilisation` pour que le dirigeant sache qu'elle existe, et comptée ici pour qu'on ne la croie pas couverte.\n\nLe produit n'a jamais tranché s'il porte ce genre de pièce — une documentation réglementaire tenue à disposition, sans date ni renouvellement. La question dépasse cet article.",
     },
     {
       ref: "R. 4323-106",
