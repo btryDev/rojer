@@ -521,6 +521,14 @@ enum CategorieEquipement {
   // dépouillement dira peut-être de la scinder. Voir la migration
   // 20260904120000_categorie_epi.
   EPI
+  // Les trois catégories que l'arrêté du 19 mars 1993 soumet à vérification —
+  // douze mois, personne qualifiée, en service ou en stock. Séparées d'`EPI`
+  // parce que le casque et les gants, qui y restent, ne relèvent d'aucune
+  // vérification périodique. Les cartouches filtrantes antigaz sont rangées
+  // avec l'appareil respiratoire qu'elles alimentent.
+  EPI_ANTICHUTE
+  EPI_RESPIRATOIRE
+  EPI_GILET_SAUVETAGE
   AUTRE
 }
 

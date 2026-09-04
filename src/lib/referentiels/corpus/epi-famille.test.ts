@@ -1,244 +1,191 @@
-// « EPI » est une famille, pas un régime — et tant que le corpus le dit,
-// aucune obligation ne s'y attache.
+// « EPI » est une famille, pas un régime — et l'obligation ne vise que la
+// moitié que l'arrêté nomme.
 //
-// ── LE DÉFAUT QUE CETTE GARDE INTERDIT ─────────────────────────────────────
+// ── CE QUE CETTE GARDE INTERDIT ────────────────────────────────────────────
 //
-// L'arrêté du 19 mars 1993 soumet à vérification générale périodique — douze
-// mois, par personne qualifiée — CINQ familles d'équipements de protection
-// individuelle nommément désignées, et cinq seulement. La catégorie
-// `CategorieEquipement.EPI` en couvre bien davantage : son propre libellé
-// d'aide, dans `equipements/labels.ts`, annonce « harnais antichute et sa
-// longe, casque, gants, chaussures de sécurité, protections auditives,
-// masque ». Une obligation posée sur cette catégorie réclamerait donc le
-// rendez-vous annuel du harnais au commerçant qui a déclaré une boîte de
-// gants.
+// L'arrêté du 19 mars 1993 soumet à vérification générale périodique — moins
+// de douze mois au moment de l'utilisation, par personne qualifiée, en service
+// ou en stock — CINQ familles d'équipements de protection individuelle
+// nommément désignées, et cinq seulement. La catégorie `CategorieEquipement.EPI`
+// en couvre bien davantage : son libellé d'aide annonce « harnais antichute et
+// sa longe, casque, gants, chaussures de sécurité, protections auditives,
+// masque ». Une obligation posée sur cette catégorie réclamerait le rendez-vous
+// annuel du harnais au commerçant qui a déclaré une boîte de gants.
 //
 // Ce n'est pas une inquiétude théorique : c'est le défaut exact que le nom de
-// `COMPACTEUR_PRESSE_DECHETS_MOTORISE` a été écrit pour éviter, et son
-// commentaire le raconte — « une catégorie de ce nom attirerait le pétrin, le
-// laminoir, la trancheuse — que l'arrêté ne vise pas —, et leur réclamerait
-// tous les trois mois une vérification de criticité 5 ».
+// `COMPACTEUR_PRESSE_DECHETS_MOTORISE` a été écrit pour éviter — « une
+// catégorie de ce nom attirerait le pétrin, le laminoir, la trancheuse — que
+// l'arrêté ne vise pas —, et leur réclamerait tous les trois mois une
+// vérification de criticité 5 ».
 //
-// ── CE QUE LA GARDE VÉRIFIE, ET POURQUOI ELLE NE SE RÉPARE PAS EN RECOPIANT ─
+// ── CE QUE LA PREMIÈRE VERSION TENAIT, ET POURQUOI ELLE A ÉTÉ RÉÉCRITE ──────
 //
-// Elle ne tient AUCUNE liste d'équipements vérifiables ou non vérifiables :
-// une telle liste se réparerait en y ajoutant une ligne, donc cesserait de
-// vérifier. Elle tient une IMPLICATION entre deux endroits du dépôt qui ne se
-// parlent pas :
+// Écrite le 2026-09-04 au matin, elle tenait une IMPLICATION : tant que le
+// corpus déclarait `obligation_manquante` la vérification des EPI, aucune
+// obligation ne pouvait viser `EPI`. Elle prévoyait sa propre fin — « si la
+// vérification a été encodée, c'est normal, mais alors ce fichier entier est à
+// relire, pas à réparer ». La scission a été décidée l'après-midi même,
+// l'obligation encodée, l'article passé à `retenu` : la condition est tombée,
+// et le fichier a été relu.
 //
-//   tant que le corpus déclare `obligation_manquante` la vérification
-//   périodique des EPI, aucune obligation portée par équipement ne peut viser
-//   la catégorie `EPI`.
+// ── CE QU'ELLE TIENT MAINTENANT ────────────────────────────────────────────
 //
-// Les deux moitiés viennent de sources différentes — le dépouillement d'un
-// côté, le référentiel de l'autre — et il n'y a qu'une façon de les faire
-// s'accorder : décider. Soit on scinde la catégorie et on encode la
-// vérification sur la moitié que l'arrêté nomme, auquel cas l'entrée de corpus
-// passe à `retenu` et cette garde s'ouvre d'elle-même ; soit on n'encode rien.
-// Retirer la garde serait la troisième voie, et c'est celle qu'elle rend
-// visible.
+// Deux propriétés, et aucune n'est une liste recopiée :
 //
-// LA DÉCISION EST UNE MIGRATION, ET ELLE N'EST PAS PRISE. Les termes du choix
-// sont dans le `bloquePar` de `Arrêté 1993-03-19 (EPI) art. 1er` et au journal
-// des vérifications, à la date du 2026-09-04.
+//   1. L'ARRÊTÉ NOMME CINQ FAMILLES. Le compte se RELÈVE dans le verbatim de
+//      l'article, pas ici. Le jour où une sixième y apparaît — parce que le
+//      texte a changé, ou parce que quelqu'un a corrigé une omission de
+//      lecture —, ce test tombe et force à décider où elle se range. Une liste
+//      écrite ici se serait réparée en la recopiant, donc aurait cessé de
+//      mesurer.
+//
+//   2. CHAQUE FAMILLE A UNE CATÉGORIE, ET `EPI` N'EN EST JAMAIS UNE. Le
+//      rangement est déclaré — cinq entrées de texte vers trois catégories —
+//      et chaque clé doit se retrouver TELLE QUELLE dans le verbatim : une
+//      reformulation de l'arrêté fait tomber le test au lieu de laisser un
+//      rangement pointer dans le vide.
+//
+// La troisième propriété est la conséquence des deux premières et se vérifie
+// à part : aucune obligation portée par équipement ne cite `EPI`.
 
 import { describe, expect, it } from "vitest";
-import { CORPUS, type Corpus } from "./index";
+import { CORPUS } from "./index";
 import { obligationsConformite } from "../conformite";
-import {
-  estPorteeParEquipement,
-  type Obligation,
-} from "../conformite/types";
+import { estPorteeParEquipement } from "../conformite/types";
 import type { CategorieEquipement } from "../types-communs";
 
 /** La ref de l'article qui porte la liste et les douze mois. */
 const ARTICLE_DE_LA_LISTE = "Arrêté 1993-03-19 (EPI) art. 1er";
 
-/**
- * La catégorie du modèle qui mélange les deux côtés de cette liste.
- *
- * Écrite en `CategorieEquipement` et non en `string` : le jour où la scission
- * est décidée et où cette valeur disparaît de l'enum, ce fichier NE COMPILE
- * PLUS. C'est voulu — la garde doit être rouverte par quelqu'un qui sait ce
- * qu'il fait, pas contournée par un `filter` qui ne trouve plus rien.
- */
-const FAMILLE_NON_SCINDEE: CategorieEquipement = "EPI";
+/** L'obligation qui en découle depuis le 2026-09-04. */
+const OBLIGATION = "epi-verification-generale-periodique";
 
 /**
- * La contradiction, s'il y en a une, entre le dépouillement et le référentiel.
+ * La catégorie qui reste du côté NON vérifiable de la liste.
  *
- * Extraite pour que la garantie et sa contre-épreuve emploient **le même**
- * prédicat — c'est la leçon de `lecturesSansTexteModificateur` dans
- * `corpus.test.ts` et de `renvoisMorts` dans `transmission.test.ts` : une
- * contre-épreuve qui recopie la logique reste verte quand on neutralise la
- * garantie, puisqu'elles ne partagent plus rien.
- *
- * Rend les identifiants des obligations fautives. Vide si le corpus a cessé de
- * déclarer le manque — auquel cas la vérification a été encodée, et viser la
- * catégorie n'est plus une faute mais une conséquence.
+ * Écrite en `CategorieEquipement` et non en `string` : le jour où cette valeur
+ * disparaîtrait de l'enum, ce fichier NE COMPILE PLUS. C'est voulu — la garde
+ * doit être rouverte par quelqu'un qui sait ce qu'il fait, pas contournée par
+ * un `filter` qui ne trouve plus rien.
  */
-export function obligationsSurUneFamilleNonScindee(
-  corpus: readonly Corpus[],
-  obligations: readonly Obligation[],
-  categorie: CategorieEquipement,
-  refArticle: string,
-): string[] {
-  const manqueEncoreDeclare = corpus.some((c) =>
-    c.articles.some(
-      (a) => a.ref === refArticle && a.statut === "obligation_manquante",
-    ),
+const FAMILLE_NON_VERIFIABLE: CategorieEquipement = "EPI";
+
+/**
+ * Où se range chacune des cinq entrées de l'arrêté.
+ *
+ * Les clés sont des FRAGMENTS DU VERBATIM, et le test exige de chacune qu'elle
+ * s'y retrouve mot pour mot : c'est ce qui empêche ce rangement de survivre à
+ * une reformulation du texte. Trois catégories pour cinq entrées — les deux
+ * appareils respiratoires et les cartouches qui les alimentent partagent acte,
+ * rythme, réalisateur et détenteur.
+ */
+const RANGEMENT: Record<string, CategorieEquipement> = {
+  "appareils de protection respiratoire autonomes destinés à l'évacuation":
+    "EPI_RESPIRATOIRE",
+  "appareils de protection respiratoire et équipements complets destinés à des interventions accidentelles en milieu hostile":
+    "EPI_RESPIRATOIRE",
+  "gilets de sauvetage gonflables": "EPI_GILET_SAUVETAGE",
+  "systèmes de protection individuelle contre les chutes de hauteur":
+    "EPI_ANTICHUTE",
+  "stocks de cartouches filtrantes antigaz pour appareils de protection respiratoire":
+    "EPI_RESPIRATOIRE",
+};
+
+function articleDeLaListe() {
+  const article = CORPUS.flatMap((c) => c.articles).find(
+    (a) => a.ref === ARTICLE_DE_LA_LISTE,
   );
-  if (!manqueEncoreDeclare) return [];
+  if (!article) {
+    throw new Error(
+      `${ARTICLE_DE_LA_LISTE} a disparu du corpus. C'est lui qui porte la ` +
+        "liste des équipements soumis à vérification et les douze mois : sans " +
+        "lui, l'obligation encodée ne repose sur aucun texte lu.",
+    );
+  }
+  return article;
+}
 
-  return obligations
-    .filter(estPorteeParEquipement)
-    .filter((o) => o.categoriesEquipement.includes(categorie))
-    .map((o) => o.id);
+/** Les familles énumérées par le verbatim, relevées et non recopiées. */
+function famillesDeLArrete(): string[] {
+  const verbatim = articleDeLaListe().citationCle ?? "";
+  const apresLeDeuxPoints = verbatim.slice(verbatim.indexOf(" : ") + 3);
+  return apresLeDeuxPoints
+    .split(";")
+    .map((f) => f.replace(/^\s*[-–—]\s*/, "").replace(/\s*\.\s*$/, "").trim())
+    .filter((f) => f.length > 0);
 }
 
 describe("EPI — une famille, pas un régime", () => {
-  it("le dépouillement déclare toujours la vérification périodique manquante", () => {
-    // La moitié qui donne son sens à la garde. Sans elle, l'implication serait
-    // vraie par vacuité le jour où quelqu'un supprimerait l'entrée du corpus :
-    // plus de manque déclaré, donc plus rien à interdire, et la garde
-    // passerait au vert en ayant cessé de mesurer quoi que ce soit.
-    const article = CORPUS.flatMap((c) => c.articles).find(
-      (a) => a.ref === ARTICLE_DE_LA_LISTE,
+  it("l'arrêté énumère cinq familles, et le compte se lit dans le texte", () => {
+    const familles = famillesDeLArrete();
+    expect(
+      familles,
+      "Le verbatim de l'arrêté n'énumère plus cinq familles. Si le texte a " +
+        "changé, ou si une omission de lecture a été corrigée, il faut " +
+        "décider où la nouvelle famille se range — `RANGEMENT` ci-dessus — et " +
+        "non ajuster ce compte.",
+    ).toHaveLength(5);
+  });
+
+  it("chaque entrée du rangement se retrouve mot pour mot dans le verbatim", () => {
+    // Ce qui empêche le rangement de pointer dans le vide après une
+    // reformulation : il n'est pas une copie du texte, il s'y raccroche.
+    const familles = famillesDeLArrete();
+    const orphelines = Object.keys(RANGEMENT).filter(
+      (cle) => !familles.some((f) => f === cle),
     );
     expect(
-      article,
-      `${ARTICLE_DE_LA_LISTE} a disparu du corpus. Si la vérification des EPI ` +
-        `a été encodée, c'est normal — mais alors ce fichier entier est à ` +
-        `relire, pas à réparer.`,
-    ).toBeDefined();
-    expect(article!.statut).toBe("obligation_manquante");
-  });
-
-  it("aucune obligation ne vise la catégorie tant qu'elle mélange les deux régimes", () => {
+      orphelines,
+      "Ces clés de rangement ne correspondent à aucune famille du verbatim : " +
+        "le texte a été reformulé, ou la clé a été écrite de mémoire.",
+    ).toEqual([]);
     expect(
-      obligationsSurUneFamilleNonScindee(
-        CORPUS,
-        obligationsConformite,
-        FAMILLE_NON_SCINDEE,
-        ARTICLE_DE_LA_LISTE,
-      ),
-      `Une obligation vise « ${FAMILLE_NON_SCINDEE} » alors que le corpus ` +
-        `déclare encore la vérification périodique des EPI manquante. La ` +
-        `catégorie couvre des équipements que l'arrêté du 19 mars 1993 ne ` +
-        `nomme pas — casque, gants, chaussures de sécurité — et leur ` +
-        `réclamerait un rendez-vous qu'ils ne doivent pas. Deux remèdes, ` +
-        `jamais un troisième : scinder la catégorie et encoder sur la moitié ` +
-        `que l'arrêté nomme (l'entrée de corpus passe alors à « retenu » et ` +
-        `cette garde s'ouvre seule), ou ne rien encoder. Retirer ce test n'en ` +
-        `est pas un.`,
+      familles.filter((f) => !(f in RANGEMENT)),
+      "Ces familles de l'arrêté ne sont rangées nulle part.",
     ).toEqual([]);
   });
 
-  it("la garde mord sur ce qu'elle vise, et sur rien d'autre", () => {
-    // CONTRE-ÉPREUVE. Le test ci-dessus est vert parce que le dépôt est en
-    // règle, ce qui est indistinguable — sur le seul dépôt — d'une garde qui
-    // ne mordrait sur rien. C'est le mode de panne exact de ce genre de garde,
-    // et il est arrivé plusieurs fois ici. Les cas fabriqués la font mordre,
-    // et exercent les trois frontières qui la définissent : la catégorie
-    // visée, l'état du dépouillement, et le porteur.
-    const corpusTemoin = (statut: "obligation_manquante" | "retenu"): Corpus[] => [
-      {
-        id: "temoin",
-        intitule: "Corpus témoin",
-        url: "https://example.invalid/",
-        portee: "Cas fabriqués pour éprouver la garde.",
-        etendue: "articles_cites",
-        articles: [
-          statut === "obligation_manquante"
-            ? {
-                ref: ARTICLE_DE_LA_LISTE,
-                luLe: "2026-09-04",
-                lecture: "premiere_main",
-                statut: "obligation_manquante",
-                motif: "Motif de test, assez long pour tenir les autres contrôles.",
-              }
-            : {
-                ref: ARTICLE_DE_LA_LISTE,
-                luLe: "2026-09-04",
-                lecture: "premiere_main",
-                statut: "retenu",
-                obligations: ["epi-temoin"],
-              },
-        ],
-      },
-    ];
-
-    const parEquipement = (
-      id: string,
-      categories: [CategorieEquipement, ...CategorieEquipement[]],
-    ) =>
-      ({
-        id,
-        categoriesEquipement: categories,
-      }) as unknown as Obligation;
-
-    const etablissement = (id: string, contexte: CategorieEquipement[]) =>
-      ({
-        id,
-        porteur: "etablissement",
-        equipementsEnContexte: contexte,
-      }) as unknown as Obligation;
-
-    // LE CAS VISÉ : le manque est déclaré, une obligation d'équipement vise la
-    // famille. Attrapé, et nommé.
+  it("l'obligation vise exactement les catégories du rangement", () => {
+    const obligation = obligationsConformite.find((o) => o.id === OBLIGATION);
+    expect(obligation, `${OBLIGATION} a disparu du référentiel.`).toBeDefined();
+    if (!obligation || !estPorteeParEquipement(obligation)) {
+      throw new Error(`${OBLIGATION} n'est plus portée par un équipement.`);
+    }
+    const attendues = [...new Set(Object.values(RANGEMENT))].sort();
     expect(
-      obligationsSurUneFamilleNonScindee(
-        corpusTemoin("obligation_manquante"),
-        [parEquipement("epi-temoin", ["EPI"])],
-        FAMILLE_NON_SCINDEE,
-        ARTICLE_DE_LA_LISTE,
-      ),
-    ).toEqual(["epi-temoin"]);
+      [...obligation.categoriesEquipement].sort(),
+      "Les catégories visées par l'obligation ne sont plus celles où les " +
+        "familles de l'arrêté se rangent.",
+    ).toEqual(attendues);
+  });
 
-    // BORNE HAUTE : le jour où la vérification est encodée, l'entrée de corpus
-    // cesse d'être « manquante » et la MÊME obligation devient légitime. Sans
-    // ce cas, la garde pourrait interdire pour toujours ce qu'elle ne doit
-    // interdire que pour l'instant, et le seul moyen de livrer serait de la
-    // supprimer.
+  it("aucune obligation ne vise la famille non vérifiable", () => {
+    // La propriété qui protège le dirigeant : le casque, les gants et les
+    // chaussures restent en `EPI`, et rien ne leur réclame de rendez-vous.
+    const fautives = obligationsConformite
+      .filter(estPorteeParEquipement)
+      .filter((o) =>
+        (o.categoriesEquipement as readonly string[]).includes(
+          FAMILLE_NON_VERIFIABLE,
+        ),
+      )
+      .map((o) => o.id);
     expect(
-      obligationsSurUneFamilleNonScindee(
-        corpusTemoin("retenu"),
-        [parEquipement("epi-temoin", ["EPI"])],
-        FAMILLE_NON_SCINDEE,
-        ARTICLE_DE_LA_LISTE,
-      ),
+      fautives,
+      `Ces obligations visent \`${FAMILLE_NON_VERIFIABLE}\`, qui couvre le ` +
+        "casque, les gants et les chaussures de sécurité — que l'arrêté du " +
+        "19 mars 1993 ne soumet à aucune vérification. Visez les catégories " +
+        "que l'arrêté nomme, ou n'encodez rien.",
     ).toEqual([]);
+  });
 
-    // COUCHE VOISINE, ET C'EST TOUT L'ENJEU DU LOT : une obligation posée sur
-    // une catégorie qui ne mélange PAS les deux régimes ne doit rien
-    // déclencher. C'est ce que fait déjà `COMPACTEUR_PRESSE_DECHETS_MOTORISE`,
-    // dont le nom porte le champ de son arrêté ; c'est ce que ferait une
-    // catégorie d'EPI issue de la scission. Sans ce cas, une garde qui
-    // crierait sur toute obligation d'équipement passerait pour juste.
-    expect(
-      obligationsSurUneFamilleNonScindee(
-        corpusTemoin("obligation_manquante"),
-        [parEquipement("voisine", ["COMPACTEUR_PRESSE_DECHETS_MOTORISE"])],
-        FAMILLE_NON_SCINDEE,
-        ARTICLE_DE_LA_LISTE,
-      ),
-    ).toEqual([]);
-
-    // LIMITE ASSUMÉE, PAS UN OUBLI : le porteur. La garde ne regarde que les
-    // obligations portées par ÉQUIPEMENT, celles qui produisent une ligne de
-    // calendrier par appareil déclaré. `equipementsEnContexte`, sur un porteur
-    // établissement, est un affichage indicatif — l'obligation existe même si
-    // rien n'est déclaré, et nommer « EPI » à ce titre ne réclame aucun
-    // rendez-vous à personne. Le harnais et les gants y figureraient sans
-    // dommage. Ce cas fige la frontière : l'élargir serait une décision, pas
-    // un effet de bord.
-    expect(
-      obligationsSurUneFamilleNonScindee(
-        corpusTemoin("obligation_manquante"),
-        [etablissement("contexte-seul", ["EPI"])],
-        FAMILLE_NON_SCINDEE,
-        ARTICLE_DE_LA_LISTE,
-      ),
-    ).toEqual([]);
+  it("l'article est retenu, et il nomme l'obligation qui en découle", () => {
+    // La moitié qui empêche les deux endroits de dériver : le corpus dit d'où
+    // vient l'obligation, le référentiel dit ce qu'elle exige, et chacun
+    // nomme l'autre.
+    const article = articleDeLaListe();
+    expect(article.statut).toBe("retenu");
+    if (article.statut !== "retenu") return;
+    expect(article.obligations).toContain(OBLIGATION);
   });
 });

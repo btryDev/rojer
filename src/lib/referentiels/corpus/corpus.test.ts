@@ -1258,22 +1258,16 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // déclenchement suppose le cinquième déclencheur de l'ADR-022,
       // « activité réellement exercée », non implémenté.
       "R. 4227-26",
-      // ── Lot « EPI », 2026-09-04. Trois entrées pour vingt-deux articles lus
-      // (section 9 du chapitre III, deux articles d'amont, l'arrêté du 19 mars
-      // 1993 en entier), et c'est le rapport qu'il faut lire : la section 9 est
-      // presque tout entière faite d'exigences de FOND et d'ÉTATS, dont rien ne
-      // se date. Aucune obligation n'est encodée par ce lot.
-      //
-      // R. 4323-105 : la consigne d'utilisation, seul écrit de toute la section
-      // 9. Porteur établissement, état permanent, `periodicite: "autre"` — la
-      // forme exacte de la notice des points d'ancrage de R. 4323-61. Rien de
-      // technique ne la bloque, et surtout PAS la scission de la catégorie
-      // `EPI` : elle ne se porte pas par équipement. Ce qui manque est
-      // l'encodage, plus une décision de périmètre sur la seconde pièce de
-      // l'article — une « documentation relative à la réglementation
-      // applicable » tenue à disposition du CSE, genre de pièce que le produit
-      // n'a jamais tranché s'il portait.
-      "R. 4323-105",
+      // R. 4323-105 A QUITTÉ CETTE LISTE LE 2026-09-04, l'après-midi du jour
+      // où elle l'avait rejointe. Le matin, son `bloquePar` disait « rien de
+      // technique » — et c'était vrai : la consigne d'utilisation se porte par
+      // ÉTABLISSEMENT, la scission de la catégorie `EPI` n'était donc pas un
+      // préalable. Il ne manquait que l'encodage, fait dans la foulée
+      // (`epi-etablissement-consigne-utilisation`). L'article garde une
+      // réserve, comptée à part : la « documentation relative à la
+      // réglementation applicable » tenue à disposition du CSE est une étagère
+      // documentaire, pas un acte daté, et le produit n'a jamais tranché s'il
+      // porte ce genre de pièce.
       // R. 4323-106 : formation au port de l'équipement, avec entraînement « en
       // tant que de besoin ». Nominative, donc porteur salarié — qui existe. Ce
       // qui n'existe pas, c'est la périodicité : « renouvelée aussi souvent que
@@ -1299,7 +1293,12 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // éviter. La ligne de partage se lit dans l'arrêté, verbatim, et elle
       // passe entre des NOMS D'OBJETS — pas entre des propriétés d'équipement,
       // que le texte ne nomme nulle part.
-      "Arrêté 1993-03-19 (EPI) art. 1er",
+      // « Arrêté 1993-03-19 (EPI) art. 1er » A QUITTÉ CETTE LISTE LE MÊME
+      // JOUR, et c'est le lot entier qui se résume là : lu le matin, il
+      // déclarait un manque que la catégorie `EPI` empêchait d'encoder — elle
+      // mélangeait le harnais qui se vérifie et les gants qui ne se vérifient
+      // pas. Trois catégories ouvertes l'après-midi, et
+      // `epi-verification-generale-periodique` porte les douze mois.
     ]);
   });
 

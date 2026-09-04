@@ -39,7 +39,7 @@ const DOCUMENTS: Document[] = [
     // Compté sur `obligationsConformite` (src/lib/referentiels/conformite).
     // À recompter quand le référentiel s'étend — un chiffre faux sur une
     // page publique se paie plus cher que pas de chiffre du tout.
-    reperes: ["150 obligations · 20 domaines", "Sources Légifrance et INRS"],
+    reperes: ["152 obligations · 21 domaines", "Sources Légifrance et INRS"],
   },
   {
     numero: "02",

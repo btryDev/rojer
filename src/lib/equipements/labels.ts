@@ -35,6 +35,9 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   COMPACTEUR_PRESSE_DECHETS_MOTORISE:
     "Compacteur à déchets ou presse à cartons (motorisé)",
   EPI: "Équipement de protection individuelle",
+  EPI_ANTICHUTE: "Harnais antichute et systèmes d'arrêt de chute",
+  EPI_RESPIRATOIRE: "Appareil de protection respiratoire",
+  EPI_GILET_SAUVETAGE: "Gilet de sauvetage gonflable",
   AUTRE: "Autre équipement",
 };
 
@@ -79,6 +82,12 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // sélecteur, un harnais si. Les trois exemples cités sont ceux de la
   // question déjà posée sur la fiche établissement, pour que le dirigeant
   // retrouve d'un écran à l'autre le mot qu'il a lu.
+  EPI_RESPIRATOIRE:
+    "L'appareil respiratoire isolant autonome d'évacuation, l'équipement complet d'intervention en milieu hostile, et les stocks de cartouches filtrantes antigaz qui les alimentent. Vérification par une personne qualifiée tous les douze mois, en service comme en stock. Pas le masque de confort ni le demi-masque jetable, qui ne se vérifient pas.",
+  EPI_GILET_SAUVETAGE:
+    "Le gilet de sauvetage GONFLABLE — celui dont la cartouche et le déclencheur doivent fonctionner le jour venu. Vérification par une personne qualifiée tous les douze mois. Le gilet en mousse, qui ne se gonfle pas, n'en relève pas.",
+  EPI_ANTICHUTE:
+    "Le harnais, sa longe, l'antichute mobile ou à rappel automatique, le connecteur : tout ce qui retient une personne qui tombe. Une vérification par une personne qualifiée est due tous les douze mois — en service comme en stock. Le point d'ancrage, lui, appartient au bâtiment et non à la personne : il se déclare ailleurs.",
   EPI: "Ce qu'une personne porte pour se protéger : harnais antichute et sa longe, casque, gants, chaussures de sécurité, protections auditives, masque. Pas les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent.",
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };

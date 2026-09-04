@@ -1266,6 +1266,18 @@ describe("référentiel conformité — version et empreinte", () => {
   // — `COMPACTEUR_PRESSE_DECHETS_MOTORISE` — porte le proviso du I, ce qui
   // évite d'inventer un attribut d'équipement pour la motorisation.
   //
+  // 152 depuis le 2026-09-04, lot « protection individuelle ». Deux lignes de
+  // plus, sur le premier domaine dont AUCUNE obligation ne s'est déduite d'un
+  // équipement existant : le dépouillement de la section 9 a créé la catégorie
+  // avant l'obligation, et non l'inverse.
+  //  * `epi-etablissement-consigne-utilisation` (`R. 4323-105`) — le seul écrit
+  //    de toute la section, dû dès qu'un travailleur porte un équipement de
+  //    protection, gants compris ; état permanent, porteur établissement ;
+  //  * `epi-verification-generale-periodique` (arrêté du 19 mars 1993, art. 1er)
+  //    — douze mois, personne qualifiée, sur les TROIS catégories que l'arrêté
+  //    nomme et pas sur `EPI`, qui garde le casque et les gants. C'est la
+  //    scission qui a permis d'encoder sans sur-appliquer.
+  //
   // 150 depuis le 2026-09-04, lot « les sept articles du Livre II ». Quatre
   // lignes de plus, et elles ne se ressemblent pas :
   //  * `eclairage-etablissement-regles-entretien` (`R. 4223-11`) — le document
@@ -1285,7 +1297,7 @@ describe("référentiel conformité — version et empreinte", () => {
   // 3ᵉ catégorie recevait jusqu'ici moins d'obligations qu'un de 5ᵉ, parce que
   // le Livre II n'était dépouillé qu'à moitié quand le Livre III l'était en
   // entier.
-  const EMPREINTE_ATTENDUE = "150-8cb9a3b49692ed58";
+  const EMPREINTE_ATTENDUE = "152-5277ad47345f6e0d";
 
   it("l'empreinte du contenu correspond à la version déclarée", () => {
     expect(
@@ -1403,7 +1415,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour — ainsi que `EMPREINTE_ATTENDUE` et `.claude/CLAUDE.md`, qui " +
         "l'annoncent tous les deux.",
-    ).toBe(150);
+    ).toBe(152);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

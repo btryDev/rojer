@@ -229,6 +229,19 @@ export const DOMAINES_PRESTATAIRE_ATTENDUS: Record<
   // les prestataires de ce domaine. Le même bâtiment, deux textes, deux
   // domaines — et un seul des deux attend un tiers.
   eclairage: AUCUN_TIERS_ATTENDU,
+  // `epi` N'EST PAS `aucun_tiers_attendu`, et la nuance est celle que ce
+  // fichier existe pour tenir. `R. 4323-100` dit « des personnes qualifiées,
+  // APPARTENANT OU NON à l'établissement » : le vérificateur peut parfaitement
+  // être un tiers, et l'est en pratique dès que l'employeur n'a personne de
+  // compétent sous la main. Ce que le texte n'exige pas, c'est un organisme
+  // ACCRÉDITÉ — d'où l'absence de `bureau_controle`, qui ferait chercher au
+  // dirigeant une accréditation que l'arrêté ne réclame nulle part.
+  //
+  // `entretien_general` est la catégorie d'annuaire qui reçoit ce vérificateur
+  // sans lui prêter un agrément : c'est ce que fait déjà `porte_portail` pour
+  // les vérifications de `R. 4224-17`, où le Code demande de même une personne
+  // compétente et rien de plus.
+  epi: ["entretien_general"],
 };
 
 /**

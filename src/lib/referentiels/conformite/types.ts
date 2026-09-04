@@ -233,6 +233,27 @@ export const DOMAINES_OBLIGATION = [
    * fixe les règles » — pas un repli.
    */
   "eclairage",
+
+  /**
+   * Protection individuelle — `R. 4323-91` à `R. 4323-106`, arrêté du
+   * 19 mars 1993.
+   *
+   * POURQUOI UN DOMAINE À LUI, ET PAS UN RANGEMENT DANS UN VOISIN. Deux
+   * candidats se présentaient, et chacun aurait rabattu quelque chose. Sous
+   * `formation_securite`, la vérification annuelle du harnais serait devenue
+   * une affaire de formation, quand c'est un contrôle d'objet. Sous
+   * `information_travailleurs`, la consigne d'utilisation aurait rejoint des
+   * affichages muraux, quand c'est un écrit remis au CSE. Le domaine sert à
+   * grouper ce qu'un dirigeant lit dans son calendrier : « Protection
+   * individuelle » lui dit de quoi il s'agit, aucun des deux autres ne le
+   * ferait.
+   *
+   * SON PRESTATAIRE ATTENDU. `R. 4323-100` dit « personnes qualifiées,
+   * appartenant ou NON à l'établissement » : aucun organisme accrédité n'est
+   * exigé, à la différence des équipements sous pression. Le domaine ne
+   * réclame donc pas un tiers d'une catégorie particulière.
+   */
+  "epi",
 ] as const;
 
 export type DomaineObligation = (typeof DOMAINES_OBLIGATION)[number];

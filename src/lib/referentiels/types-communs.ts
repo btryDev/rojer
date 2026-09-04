@@ -484,6 +484,15 @@ export const CATEGORIES_EQUIPEMENT = [
   // vérification : le faire réclamerait un rendez-vous annuel à qui a déclaré
   // des gants. La lecture dira peut-être de scinder cette valeur en deux.
   "EPI",
+  // Les trois catégories vérifiables, scindées le 2026-09-04 après lecture de
+  // l'arrêté du 19 mars 1993 : lui seul nomme les EPI soumis à vérification, et
+  // il le fait par des NOMS D'OBJETS, jamais par un critère technique — d'où
+  // des catégories et non une propriété. Ses cinq entrées se rangent en trois
+  // valeurs : les deux appareils respiratoires et leurs cartouches partagent
+  // acte, rythme, réalisateur et détenteur.
+  "EPI_ANTICHUTE",
+  "EPI_RESPIRATOIRE",
+  "EPI_GILET_SAUVETAGE",
   "AUTRE",
 ] as const;
 
