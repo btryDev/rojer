@@ -983,3 +983,64 @@ remonter.
 - **Migrer `GHW` vers `GHW1`** « parce que c'est le cas le plus fréquent » :
   inscrirait au dossier une hauteur que personne n'a constatée. Une erreur
   invisible plutôt qu'une donnée manquante visible.
+
+---
+
+## 10. Le cycle de contre-signature du plan de prévention — DÉCIDÉ, à faire après
+
+**Décidé par la propriétaire le 2026-09-07 : le processus de signature et de
+contre-signature du plan de prévention est à mettre en place dans Rojer, une fois
+finies les corrections en cours** sur le contenu minimal de `R. 4512-8`. Ce n'est
+donc pas une question ouverte : c'est un chantier accepté, ordonnancé après.
+
+**Il existe un précédent qui tourne**, dans un autre dépôt de la propriétaire
+(`~/Documents/GestBAT`, module plan de prévention, relu en sécurité). Il est une
+**référence à lire, jamais à copier** — les deux produits n'ont ni la même cible
+ni le même périmètre : Rojer sert des TPE, l'autre gère des bâtiments, et un
+mécanisme justifié là-bas peut être disproportionné ici. Ce qui suit décrit donc
+les GARANTIES à obtenir, pas une implémentation à porter. **Aucune écriture dans
+ce dépôt-là, sous aucun prétexte.**
+
+### Ce que le processus garantit, et que Rojer ne garantit pas
+
+- **Une signature est liée à une VERSION du document, pas au document.** Chaque
+  signature emporte l'empreinte de ce que le signataire avait sous les yeux. Rojer
+  calcule bien une empreinte (`src/lib/signatures/hash-objet.ts`), mais elle ne
+  couvre pas tout ce que la fiche affiche — voir le chantier du sceau, ouvert le
+  même jour.
+- **Le lien de signature lui-même est lié à cette version.** Un lien émis pour une
+  version du plan refuse la signature si le contenu a bougé entre l'envoi et le
+  clic. C'est la garantie que Rojer n'a nulle part aujourd'hui.
+- **L'entreprise extérieure peut DEMANDER une correction au lieu de signer.** La
+  demande est une pièce datée, avec ce qui est proposé, qui l'a demandé, et
+  l'empreinte de la version sur laquelle elle porte. Aujourd'hui, dans Rojer, une
+  entreprise extérieure qui n'est pas d'accord n'a que le refus ou le téléphone.
+- **Repasser en modification révoque les signatures déjà recueillies, sans les
+  effacer.** Elles sont marquées révoquées et restent interrogeables — nom du
+  signataire, horodatage, adresse IP, empreinte de la version signée. Une
+  signature ne doit jamais disparaître : elle a été donnée, c'est un fait.
+- **La transition vers « signé » est atomique et ne peut pas être écrasée.** Une
+  demande de correction arrivant pendant qu'une signature se termine ne doit pas
+  défaire l'état signé, et réciproquement.
+- **Le document probant est figé une fois pour toutes au moment de la signature**,
+  pas régénéré à chaque téléchargement — un document régénéré ne peut pas avoir
+  la même empreinte, ne serait-ce qu'à cause de la date d'édition en pied de page.
+  Rojer produit aujourd'hui son ZIP de contrôle à la volée.
+
+### Ce qui se décide AVANT de commencer
+
+- **Jusqu'où va la preuve.** Le précédent horodate l'empreinte chez un tiers de
+  confiance (RFC 3161) et stocke le document scellé. C'est le point le plus lourd,
+  et le plus discutable pour la cible de Rojer : à trancher explicitement, pas à
+  reconduire parce que l'autre le fait.
+- **Comment le tiers s'authentifie.** Le précédent envoie un code à usage unique
+  par courriel et ne stocke que l'empreinte du jeton, jamais le jeton en clair.
+  Rojer a déjà des `AccessToken` : leur niveau de protection est à mesurer avant
+  d'en rajouter, pas après.
+- **Ce que le porteur du lien voit.** Un lien de signature circule par courriel et
+  ouvre des données d'entreprise sans mot de passe : c'est la surface la plus
+  exposée du produit.
+- **L'ordre de bataille.** Ce chantier suppose un chemin de modification d'un plan,
+  qui n'existe pas non plus (§ 6 bis). Les deux se tiennent : une contre-signature
+  sans modification possible n'a rien à corriger, et une modification sans
+  révocation des signatures est précisément le défaut qu'on cherche à éviter.
