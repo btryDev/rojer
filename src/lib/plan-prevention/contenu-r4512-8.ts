@@ -72,7 +72,8 @@ const rempli = (v: string | null | undefined): boolean =>
  *
  *  - 2° et 5° : les deux moitiés sont dans le titre. Rien à faire.
  *  - 1° : le titre tronque « et des moyens de prévention spécifiques
- *    correspondants », MAIS le ZIP imprime « → moyens : » sous chaque phase.
+ *    correspondants », MAIS le ZIP imprime « → Moyens de prévention : » sous
+ *    chaque phase.
  *    La seconde moitié est matériellement là, sous une autre forme.
  *  - 3° : l'alinéa n'a qu'une moitié.
  *  - 4° : le titre tronquait, et RIEN ne rattrapait ailleurs. Sous
@@ -89,11 +90,18 @@ export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
   {
     numero: 1,
     // Titre volontairement court : voir le critère ci-dessus — le ZIP rend la
-    // seconde moitié par les « → moyens : » de chaque phase.
+    // seconde moitié par les « → Moyens de prévention : » de chaque phase.
     titre: "Phases d'activité dangereuses",
     verbatim:
       "La définition des phases d'activité dangereuses et des moyens de prévention spécifiques correspondants",
-    renseignee: (p) => p.phasesDangereuses.some((f) => rempli(f.phase)),
+    // UN DES DEUX CHAMPS SUFFIT, ET C'EST P7 QUI L'A IMPOSÉ. Tant que la
+    // rubrique ne comptait que `phase`, une ligne en base dont la phase était
+    // blanche et les moyens renseignés faisait imprimer « 1° … : NON
+    // RENSEIGNÉE » — et les moyens stockés DISPARAISSAIENT du dossier. Ce
+    // module promet qu'une rubrique vide s'imprime ; il doit d'abord promettre
+    // qu'une rubrique remplie ne s'efface pas.
+    renseignee: (p) =>
+      p.phasesDangereuses.some((f) => rempli(f.phase) || rempli(f.moyensPrevention)),
   },
   {
     numero: 2,
@@ -168,38 +176,72 @@ function texteRubrique(plan: ContenuPlan, numero: number): string | null {
  * Le formatage vit ici, avec la liste, pour la même raison qu'elle : le jour
  * où une sixième rubrique apparaîtrait, il n'y a qu'un endroit à corriger.
  */
-/** Le retrait des lignes de rubrique. Rien d'autre ne s'écrit à ce niveau. */
+/** Le retrait des lignes de rubrique. */
 const RANG_RUBRIQUE = "    ";
-/** Le retrait de tout ce que l'utilisateur a saisi. Toujours plus profond. */
-const RANG_SAISIE = "       ";
+/** Le retrait des lignes de structure INTERNES au 1° : phase, moyens. */
+const RANG_PHASE = "       ";
+/** Le retrait des lignes qui portent du texte saisi. */
+const RANG_SAISIE = "         ";
+/**
+ * LA MARQUE QUI FERME LA CONTREFAÇON, ET ELLE VAUT À TOUTE PROFONDEUR.
+ *
+ * Toute ligne portant du texte que l'utilisateur a tapé commence par elle ;
+ * aucune ligne produite par le module ne la porte. Un retrait supplémentaire
+ * n'aurait fait que repousser le problème d'un cran — c'est d'ailleurs
+ * exactement ce qui s'est passé : la première correction séparait les rubriques
+ * de la saisie, et la saisie s'est mise à contrefaire la structure INTERNE du
+ * 1° (« · phase », « → moyens : »), d'un rang plus bas. La marque ne dépend
+ * d'aucun niveau : elle dit « ceci est cité », et c'est vrai du premier au
+ * dernier caractère saisi.
+ */
+const MARQUE_SAISIE = "> ";
 
 /**
  * Une saisie utilisateur, rendue sans qu'aucune de ses lignes ne puisse se lire
  * comme une ligne de structure.
  *
- * CE QUE ÇA CORRIGE, ET C'EST UN DÉFAUT RÉEL. Les champs 2° à 5° sont des
- * `textarea` : leur contenu porte des retours à la ligne. La version d'avant
- * n'indentait que la PREMIÈRE ligne, si bien qu'une saisie contenant
- * « 3° Instructions à donner aux travailleurs : Rien à signaler » ressortait
- * dans le dossier de contrôle à la colonne des rubriques, indiscernable d'une
- * ligne produite par le module. Le document remis à un inspecteur pouvait donc
- * porter une rubrique que personne n'avait remplie. Reproduit avant correction.
+ * CE QUE ÇA CORRIGE, ET IL A FALLU S'Y REPRENDRE À DEUX FOIS. Les champs 2° à
+ * 5° et `moyensPrevention` sont des `textarea` : leur contenu porte des retours
+ * à la ligne. La première version n'indentait que la PREMIÈRE ligne, si bien
+ * qu'une saisie contenant « 3° Instructions à donner aux travailleurs : Rien à
+ * signaler » ressortait à la colonne des rubriques, indiscernable d'une ligne
+ * du module. Le document remis à un inspecteur portait alors une rubrique que
+ * personne n'avait remplie.
  *
- * Toute ligne de saisie est désormais poussée à `RANG_SAISIE`, et les lignes de
- * rubrique sont les seules à `RANG_RUBRIQUE`. Rien n'est retiré ni réécrit du
- * texte de l'utilisateur : on ne censure pas ce qu'il a écrit, on l'empêche
- * d'occuper la place de la structure.
+ * LA CORRECTION PAR LE RETRAIT A DÉPLACÉ LE DÉFAUT D'UN CRAN, ELLE NE L'A PAS
+ * FERMÉ. Pousser toute saisie plus profond que les rubriques laissait intacte
+ * la structure INTERNE du 1° — « · phase », « → moyens : » —, écrite au même
+ * rang que la saisie. Un `moyensPrevention` valant
+ * « Permis de feu\\n· Phase inventée\\n  → moyens : néant » fabriquait donc une
+ * SECONDE phase d'activité dangereuse, avec ses moyens, dans un dossier de
+ * contrôle où une seule était déclarée. Plus lourd que le cas des rubriques :
+ * une fausse rubrique dit « rien à signaler » sur un contenu absent, une
+ * fausse phase AJOUTE une déclaration de danger et de mesure que les deux
+ * employeurs n'ont jamais arrêtée d'un commun accord.
  *
- * LA LIMITE, ET ELLE EST PLUS LARGE QUE CE MODULE. Le retrait distingue les
- * deux niveaux, il ne les rend pas infalsifiables : trois espaces ne sautent
- * pas aux yeux d'un lecteur pressé. Et surtout, le reste de
- * `07_Plans_de_prevention.txt` a la même propriété — `lieux` et
- * `naturesTravaux` s'impriment aussi en clair sur leur ligne. C'est une
- * propriété du format plat de ce fichier, antérieure à ce lot ; ce module
- * cesse d'y contribuer, il ne la corrige pas pour les autres.
+ * D'OÙ UNE MARQUE PLUTÔT QU'UN TROISIÈME RANG. Un rang de plus aurait rejoué
+ * le même correctif un niveau plus bas, et l'argument qui a produit celui-ci
+ * aurait valu encore au suivant. `MARQUE_SAISIE` ne dépend d'aucune
+ * profondeur : toute ligne de texte saisi la porte, aucune ligne du module ne
+ * la porte, et les libellés de structure vivent seuls sur leur ligne pour
+ * qu'aucune valeur ne partage la leur. Rien n'est retiré ni réécrit du texte du
+ * dirigeant — on ne censure pas ce qu'il a écrit, on l'empêche d'occuper la
+ * place de la structure.
+ *
+ * CE QUI RESTE, ET QUI DÉBORDE CE MODULE. Le reste de
+ * `07_Plans_de_prevention.txt` a exactement la même propriété : `lieux` et
+ * `naturesTravaux` — quatre mille caractères, multiligne — s'impriment en clair
+ * sur leur ligne, et le fichier n'est pas le seul du ZIP dans ce cas. C'est une
+ * propriété du format plat, antérieure à ce lot. Ce module cesse d'y
+ * contribuer ; il ne la corrige pour personne d'autre.
  */
-function saisieIndentee(valeur: string): string[] {
-  return valeur.split("\n").map((ligne) => `${RANG_SAISIE}${ligne}`);
+function citer(valeur: string): string[] {
+  // `\r?\n` et non `\n` : un `<textarea>` est posté en CRLF, et découper sur le
+  // seul saut de ligne laissait un `\r` à la fin de chaque ligne intermédiaire
+  // du fichier remis.
+  return valeur
+    .split(/\r?\n/)
+    .map((ligne) => `${RANG_SAISIE}${MARQUE_SAISIE}${ligne}`);
 }
 
 export function contenuR4512_8(plan: ContenuPlan): string[] {
@@ -211,16 +253,26 @@ export function contenuR4512_8(plan: ContenuPlan): string[] {
       out.push(`${RANG_RUBRIQUE}${r.numero}° ${r.titre} : NON RENSEIGNÉE`);
       continue;
     }
+    out.push(`${RANG_RUBRIQUE}${r.numero}° ${r.titre} :`);
+
+    // AUCUNE VALEUR SAISIE N'EST ÉCRITE SUR UNE LIGNE DE STRUCTURE, et c'est
+    // la règle qui rend la marque efficace. Tant que « · <phase> » mettait le
+    // texte du dirigeant sur la ligne du puce, un retour à la ligne dans ce
+    // texte fabriquait une deuxième puce. Les libellés vivent seuls sur leur
+    // ligne ; les valeurs vivent seules sur les leurs, citées.
     if (r.numero === 1) {
-      out.push(`${RANG_RUBRIQUE}1° ${r.titre} :`);
       for (const f of plan.phasesDangereuses) {
-        out.push(...saisieIndentee(`· ${f.phase}`));
-        out.push(...saisieIndentee(`  → moyens : ${f.moyensPrevention || "—"}`));
+        out.push(`${RANG_PHASE}· Phase :`);
+        out.push(...citer(f.phase));
+        out.push(`${RANG_PHASE}  → Moyens de prévention :`);
+        // `rempli` et non `||` : une valeur faite d'espaces est vraie pour
+        // JavaScript, et la ligne s'imprimait sans contenu NI tiret (P5).
+        out.push(...citer(rempli(f.moyensPrevention) ? f.moyensPrevention! : "—"));
       }
       continue;
     }
-    out.push(`${RANG_RUBRIQUE}${r.numero}° ${r.titre} :`);
-    out.push(...saisieIndentee(texteRubrique(plan, r.numero) ?? ""));
+    const valeur = texteRubrique(plan, r.numero);
+    out.push(...citer(rempli(valeur) ? valeur! : "—"));
   }
   return out;
 }

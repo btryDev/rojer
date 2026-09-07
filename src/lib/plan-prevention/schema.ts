@@ -86,7 +86,11 @@ export type LigneInput = z.infer<typeof ligneSchema>;
  * aurait fait écrire n'importe quoi pour pouvoir enregistrer.
  */
 export const phaseSchema = z.object({
-  phase: z.string().trim().min(3, "Décrire la phase").max(500),
+  phase: z
+    .string()
+    .trim()
+    .min(3, "Décrire la phase d'activité dangereuse, ou vider aussi ses moyens")
+    .max(500),
   moyensPrevention: optionalTrimmed(500),
 });
 

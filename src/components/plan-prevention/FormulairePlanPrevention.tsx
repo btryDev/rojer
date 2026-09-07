@@ -25,13 +25,36 @@ type PrestataireLite = {
   siret: string | null;
 };
 
+/**
+ * POURQUOI CES DEUX RÉPÉTEURS SONT CONTRÔLÉS, ET POURQUOI ILS PORTENT UNE CLÉ.
+ *
+ * Ils ne l'étaient pas : `key={i}`, `defaultValue`, et un état jamais mis à
+ * jour à la frappe. React réconcilie alors par POSITION — retirer le rang 0 de
+ * trois rangs conserve les nœuds 0 et 1 avec le texte qu'ils portaient et
+ * démonte le 2. L'utilisateur clique « Retirer » sur la PREMIÈRE phase et perd
+ * la TROISIÈME, la première restant sous ses yeux. Sur un formulaire dont le
+ * produit n'offre aucun chemin d'édition, ce qui est perdu là ne se rattrape
+ * jamais.
+ *
+ * Une clé stable par rang, et la valeur tenue par l'état : le nœud suit la
+ * donnée au lieu de suivre son rang.
+ *
+ * Le répéteur des risques d'interférence avait le même défaut depuis toujours.
+ * Il est corrigé du même geste : ce lot en installait une seconde instance sur
+ * le même écran, et laisser les deux se comporter différemment aurait fait de
+ * la correction une bizarrerie plutôt qu'une règle.
+ */
 type LigneState = {
+  cle: string;
   risque: string;
   mesureEntrepriseUtilisatrice: string;
   mesureEntrepriseExterieure: string;
 };
 
-type PhaseState = { phase: string; moyensPrevention: string };
+type PhaseState = { cle: string; phase: string; moyensPrevention: string };
+
+let compteurRang = 0;
+const nouvelleCle = () => `rang-${(compteurRang += 1)}`;
 
 /** Les quatre rubriques de `R. 4512-8` qui sont un bloc de texte — le 1° est
  *  une liste appariée, il a son propre répéteur. L'ordre et le libellé
@@ -92,12 +115,17 @@ export function FormulairePlanPrevention({
     [dureeHeures, travauxDangereux],
   );
 
-  const [lignes, setLignes] = useState<LigneState[]>([
-    { risque: "", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "" },
+  const [lignes, setLignes] = useState<LigneState[]>(() => [
+    {
+      cle: nouvelleCle(),
+      risque: "",
+      mesureEntrepriseUtilisatrice: "",
+      mesureEntrepriseExterieure: "",
+    },
   ]);
 
-  const [phases, setPhases] = useState<PhaseState[]>([
-    { phase: "", moyensPrevention: "" },
+  const [phases, setPhases] = useState<PhaseState[]>(() => [
+    { cle: nouvelleCle(), phase: "", moyensPrevention: "" },
   ]);
 
   useEffect(() => {
@@ -114,20 +142,36 @@ export function FormulairePlanPrevention({
   function ajouterLigne() {
     setLignes((l) => [
       ...l,
-      { risque: "", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "" },
+      {
+        cle: nouvelleCle(),
+        risque: "",
+        mesureEntrepriseUtilisatrice: "",
+        mesureEntrepriseExterieure: "",
+      },
     ]);
   }
 
-  function retirerLigne(i: number) {
-    setLignes((l) => (l.length === 1 ? l : l.filter((_, idx) => idx !== i)));
+  function retirerLigne(cle: string) {
+    setLignes((l) => (l.length === 1 ? l : l.filter((x) => x.cle !== cle)));
+  }
+
+  function majLigne(cle: string, champ: keyof Omit<LigneState, "cle">, v: string) {
+    setLignes((l) => l.map((x) => (x.cle === cle ? { ...x, [champ]: v } : x)));
   }
 
   function ajouterPhase() {
-    setPhases((p) => [...p, { phase: "", moyensPrevention: "" }]);
+    setPhases((p) => [
+      ...p,
+      { cle: nouvelleCle(), phase: "", moyensPrevention: "" },
+    ]);
   }
 
-  function retirerPhase(i: number) {
-    setPhases((p) => (p.length === 1 ? p : p.filter((_, idx) => idx !== i)));
+  function retirerPhase(cle: string) {
+    setPhases((p) => (p.length === 1 ? p : p.filter((x) => x.cle !== cle)));
+  }
+
+  function majPhase(cle: string, champ: keyof Omit<PhaseState, "cle">, v: string) {
+    setPhases((p) => p.map((x) => (x.cle === cle ? { ...x, [champ]: v } : x)));
   }
 
   return (
@@ -442,7 +486,7 @@ export function FormulairePlanPrevention({
             ainsi, ou pas du tout — il n'a pas de pointillé. */}
         {lignes.map((l, i) => (
           <div
-            key={i}
+            key={l.cle}
             className="flex flex-col gap-4 border-t border-[color:var(--board-slate-line)] pt-5 first:border-t-0 first:pt-0"
           >
             <div className="flex items-baseline justify-between gap-3">
@@ -452,7 +496,7 @@ export function FormulairePlanPrevention({
               {lignes.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => retirerLigne(i)}
+                  onClick={() => retirerLigne(l.cle)}
                   className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
                 >
                   Retirer
@@ -461,37 +505,52 @@ export function FormulairePlanPrevention({
             </div>
 
             <ChampBoard
-              id={`risque-${i}`}
+              id={`risque-${l.cle}`}
               name={`lignes[${i}].risque`}
               label="Description du risque"
               requis
-              defaultValue={l.risque}
+              value={l.risque}
+              onChange={(e) => majLigne(l.cle, "risque", e.target.value)}
               maxLength={500}
               placeholder="Ex : chute de hauteur depuis la toiture sans garde-corps"
             />
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
-                <label className="label-board" htmlFor={`mesureEU-${i}`}>
+                <label className="label-board" htmlFor={`mesureEU-${l.cle}`}>
                   Votre mesure (entreprise utilisatrice)
                 </label>
                 <textarea
-                  id={`mesureEU-${i}`}
+                  id={`mesureEU-${l.cle}`}
                   name={`lignes[${i}].mesureEntrepriseUtilisatrice`}
-                  defaultValue={l.mesureEntrepriseUtilisatrice}
+                  value={l.mesureEntrepriseUtilisatrice}
+                  onChange={(e) =>
+                    majLigne(
+                      l.cle,
+                      "mesureEntrepriseUtilisatrice",
+                      e.target.value,
+                    )
+                  }
                   rows={2}
                   maxLength={500}
                   className={`${TEXTAREA} min-h-[72px]`}
                 />
               </div>
               <div>
-                <label className="label-board" htmlFor={`mesureEE-${i}`}>
+                <label className="label-board" htmlFor={`mesureEE-${l.cle}`}>
                   Mesure EE (entreprise extérieure)
                 </label>
                 <textarea
-                  id={`mesureEE-${i}`}
+                  id={`mesureEE-${l.cle}`}
                   name={`lignes[${i}].mesureEntrepriseExterieure`}
-                  defaultValue={l.mesureEntrepriseExterieure}
+                  value={l.mesureEntrepriseExterieure}
+                  onChange={(e) =>
+                    majLigne(
+                      l.cle,
+                      "mesureEntrepriseExterieure",
+                      e.target.value,
+                    )
+                  }
                   rows={2}
                   maxLength={500}
                   className={`${TEXTAREA} min-h-[72px]`}
@@ -544,7 +603,7 @@ export function FormulairePlanPrevention({
 
         {phases.map((f, i) => (
           <div
-            key={i}
+            key={f.cle}
             className="flex flex-col gap-4 border-t border-[color:var(--board-slate-line)] pt-5"
           >
             <div className="flex items-baseline justify-between gap-3">
@@ -554,7 +613,7 @@ export function FormulairePlanPrevention({
               {phases.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => retirerPhase(i)}
+                  onClick={() => retirerPhase(f.cle)}
                   className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
                 >
                   Retirer
@@ -564,21 +623,25 @@ export function FormulairePlanPrevention({
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <ChampBoard
-                id={`phase-${i}`}
+                id={`phase-${f.cle}`}
                 name={`phases[${i}].phase`}
                 label="Phase d'activité dangereuse"
-                defaultValue={f.phase}
+                value={f.phase}
+                onChange={(e) => majPhase(f.cle, "phase", e.target.value)}
                 maxLength={500}
                 placeholder="Ex : découpe au chalumeau en toiture"
               />
               <div>
-                <label className="label-board" htmlFor={`moyens-${i}`}>
+                <label className="label-board" htmlFor={`moyens-${f.cle}`}>
                   Moyens de prévention spécifiques correspondants
                 </label>
                 <textarea
-                  id={`moyens-${i}`}
+                  id={`moyens-${f.cle}`}
                   name={`phases[${i}].moyensPrevention`}
-                  defaultValue={f.moyensPrevention}
+                  value={f.moyensPrevention}
+                  onChange={(e) =>
+                    majPhase(f.cle, "moyensPrevention", e.target.value)
+                  }
                   rows={2}
                   maxLength={500}
                   className={`${TEXTAREA} min-h-[72px]`}
@@ -589,7 +652,7 @@ export function FormulairePlanPrevention({
           </div>
         ))}
 
-        <div>
+        <div className="flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={ajouterPhase}
@@ -600,6 +663,14 @@ export function FormulairePlanPrevention({
           >
             Ajouter une phase
           </button>
+          {/* `extrairePhases` remonte désormais au schéma tout rang dont un
+              champ porte quelque chose. Sans cet affichage, son erreur
+              n'arriverait nulle part et la saisie semblerait avalée. */}
+          {err("phases") && (
+            <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+              {err("phases")}
+            </p>
+          )}
         </div>
 
         {RUBRIQUES_TEXTE.map((r) => {

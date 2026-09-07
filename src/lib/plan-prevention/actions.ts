@@ -8,10 +8,8 @@ import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import {
   ligneSchema,
-  phaseSchema,
   planPreventionSchema,
   type LigneInput,
-  type PhaseInput,
 } from "./schema";
 import { nextNumeroPlan } from "./queries";
 
@@ -64,23 +62,30 @@ function extraireLignes(formData: FormData): LigneInput[] {
  * Les phases d'activité dangereuses du 1° de `R. 4512-8`, postées sous la même
  * forme indicée que les lignes.
  *
- * Une phase VIDE est écartée, une phase renseignée sans ses moyens est GARDÉE.
- * Ce n'est pas symétrique et c'est voulu : le rang vide n'est qu'un champ que
- * l'utilisateur n'a pas rempli, tandis qu'une phase sans moyen de prévention
- * est une information — elle s'affiche « À compléter » sur la fiche, là où la
- * jeter l'aurait fait disparaître sans que personne le sache.
+ * ON NE JETTE QUE LES RANGS ENTIÈREMENT VIDES, ET RIEN D'AUTRE. La première
+ * version validait chaque rang par `phaseSchema` et ne gardait que les succès,
+ * SANS `else` — trois saisies disparaissaient alors sans un mot : une phase de
+ * moins de trois caractères, une phase mal formée, et surtout un rang dont
+ * l'utilisateur avait rempli les MOYENS en oubliant la phase, qui perdait les
+ * deux. Le filtre étant posé avant `zod`, `fieldErrors.phases` ne pouvait même
+ * pas exister : aucune erreur n'était rendue à l'écran, et le dirigeant croyait
+ * avoir enregistré ce qu'il venait de taper.
+ *
+ * Un rang dont au moins un champ porte quelque chose remonte donc TEL QUEL au
+ * schéma, qui décide et dont l'erreur, elle, s'affiche. Le rang vide, lui, n'est
+ * qu'un champ que personne n'a rempli — il n'y a rien à en dire.
  */
-function extrairePhases(formData: FormData): PhaseInput[] {
-  const out: PhaseInput[] = [];
+function extrairePhases(formData: FormData): unknown[] {
+  const out: unknown[] = [];
   let i = 0;
   while (true) {
     const phase = formData.get(`phases[${i}].phase`);
     if (phase === null) break;
-    const parsed = phaseSchema.safeParse({
-      phase,
-      moyensPrevention: formData.get(`phases[${i}].moyensPrevention`),
-    });
-    if (parsed.success) out.push(parsed.data);
+    const moyensPrevention = formData.get(`phases[${i}].moyensPrevention`);
+    const vide =
+      String(phase ?? "").trim() === "" &&
+      String(moyensPrevention ?? "").trim() === "";
+    if (!vide) out.push({ phase, moyensPrevention });
     i++;
   }
   return out;

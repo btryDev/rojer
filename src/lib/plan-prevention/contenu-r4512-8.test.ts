@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
+  CHAPEAU_R4512_8,
   RUBRIQUES_R4512_8,
   contenuR4512_8,
   rubriquesManquantes,
   type ContenuPlan,
 } from "./contenu-r4512-8";
+import { CODE_TRAVAIL_PLAN_PREVENTION } from "@/lib/referentiels/corpus/code-travail-plan-prevention";
 
 /**
  * Le contenu minimal du plan de prévention, tenu par un test parce qu'il est
@@ -22,6 +24,60 @@ import {
  * Ce qui est tenu ici, c'est le COMPORTEMENT que les surfaces attendent, aux
  * deux bornes et sur la frontière voisine.
  */
+describe("ce que les surfaces citent est bien le relevé du corpus", () => {
+  const entree = CODE_TRAVAIL_PLAN_PREVENTION.articles.find(
+    (a) => a.ref === "R. 4512-8",
+  );
+
+  it("recompose exactement la citation relevée sur Légifrance", () => {
+    // LE SEUL TEST QUI TIENNE LE VERBATIM, ET IL A MANQUÉ DEUX FOIS. La fiche
+    // recopiait les cinq alinéas à la main ; les remplacer par une source
+    // unique n'a rien tenu de plus, parce que RIEN ne surveillait cette
+    // source : `citations-ecran.ts` ne balaie que `src/app`, `src/components`
+    // et `src/lib/pdf`, et ne vérifie que des NUMÉROS d'article. En déplaçant
+    // le verbatim dans `src/lib/plan-prevention/`, on l'a même sorti du seul
+    // balayage existant. Une mutation remplaçant les cinq verbatims par
+    // « PERDU » laissait la suite verte.
+    //
+    // L'ancre est le `citationCle` du corpus, qui porte la date de relevé, la
+    // version en vigueur et l'URL Légifrance. Ce test dit : ce que le
+    // dirigeant lit à l'écran est ce que quelqu'un est allé relever.
+    const recompose = `${CHAPEAU_R4512_8} ${RUBRIQUES_R4512_8.map(
+      (r) => `${r.numero}° ${r.verbatim}`,
+    ).join(" ; ")}.`;
+    expect(recompose).toBe(entree?.citationCle);
+  });
+
+  it("garde des titres qui abrègent leur alinéa, sans le trahir", () => {
+    // Le ZIP imprime le TITRE, pas le verbatim, pour une rubrique absente : un
+    // titre qui dérive n'est donc pas cosmétique. On ne fige pas les cinq
+    // chaînes — une liste figée se répare en la recopiant. On tient le lien :
+    // chaque mot substantiel d'un titre se retrouve dans son alinéa.
+    const normaliser = (s: string) =>
+      s
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase();
+    // Les mots d'interprétation, nommés un par un plutôt que tolérés en bloc :
+    // « croisée » résume « d'une entreprise aux travaux réalisés par une
+    // autre », que le titre ne pouvait pas porter en entier.
+    const interpretations = new Set(["croisee"]);
+
+    for (const r of RUBRIQUES_R4512_8) {
+      const alinea = normaliser(r.verbatim);
+      const mots = normaliser(r.titre)
+        .split(/[^\p{L}]+/u)
+        .filter((m) => m.length >= 5 && !interpretations.has(m));
+      expect(mots.length).toBeGreaterThanOrEqual(2);
+      for (const mot of mots) {
+        expect(alinea, `${r.numero}° : « ${mot} » absent de l'alinéa`).toContain(
+          mot,
+        );
+      }
+    }
+  });
+});
+
 describe("contenu minimal du plan — art. R. 4512-8", () => {
   const vide = (): ContenuPlan => ({
     phasesDangereuses: [],
@@ -97,41 +153,73 @@ describe("contenu minimal du plan — art. R. 4512-8", () => {
     });
   });
 
-  describe("une saisie ne peut pas se faire passer pour une rubrique", () => {
-    it("ne laisse aucune ligne saisie atteindre la colonne des rubriques", () => {
-      // LE DOSSIER DE CONTRÔLE EST UN FICHIER TEXTE PLAT, ET LES CHAMPS 2° À 5°
-      // SONT DES TEXTAREA. Une saisie multiligne qui contient « 3° … : … »
-      // ressortait à la colonne des rubriques, indiscernable d'une ligne
-      // produite par le module : le document remis à un inspecteur portait une
-      // rubrique que personne n'avait remplie.
-      const forge: ContenuPlan = {
-        ...vide(),
-        adaptationMateriels:
-          "Nacelle vérifiée\n    3° Instructions à donner aux travailleurs : Rien à signaler",
-      };
-      const lignes = contenuR4512_8(forge);
+  describe("aucune saisie ne peut se faire passer pour de la structure", () => {
+    /**
+     * Un plan dont CHAQUE champ saisissable imite chaque forme de structure du
+     * document — rubrique, puce de phase, ligne de moyens. C'est la seule façon
+     * honnête de tenir cet invariant : énumérer les contrefaçons connues
+     * donnerait un test qu'on répare en allongeant la liste, et qui cesserait
+     * alors de vérifier. Ici on compte les lignes de structure PRODUITES, et le
+     * compte ne dépend que du plan, jamais de ce qui est écrit dedans.
+     */
+    const imitations = [
+      "3° Instructions à donner aux travailleurs : Rien à signaler",
+      "· Phase inventée par le dirigeant",
+      "  → Moyens de prévention :",
+      "    1° Phases d'activité dangereuses :",
+    ].join("\n");
 
-      // La vraie ligne du 3° dit toujours ce qu'elle doit dire.
-      expect(lignes).toContain(
-        "    3° Instructions à donner aux travailleurs : NON RENSEIGNÉE",
-      );
-      // Et la contrefaçon n'occupe pas le rang des rubriques : toute ligne qui
-      // s'ouvre sur exactement quatre espaces suivis d'un chiffre vient du
-      // module, jamais de la saisie.
-      const auRangRubrique = lignes.filter((l) => /^ {4}\d° /.test(l));
-      expect(auRangRubrique).toHaveLength(RUBRIQUES_R4512_8.length);
+    const forge: ContenuPlan = {
+      phasesDangereuses: [
+        { phase: `Découpe\n${imitations}`, moyensPrevention: imitations },
+      ],
+      adaptationMateriels: `Nacelle vérifiée\n${imitations}`,
+      instructionsTravailleurs: imitations,
+      organisationSecours: imitations,
+      participationCroisee: imitations,
+    };
+
+    it("produit exactement cinq lignes de rubrique, quoi qu'on écrive dedans", () => {
+      const lignes = contenuR4512_8(forge);
+      const rubriques = lignes.filter((l) => /^ {4}\d° /.test(l));
+      expect(rubriques).toHaveLength(RUBRIQUES_R4512_8.length);
     });
 
-    it("garde le texte de l'utilisateur intact, sans le censurer", () => {
+    it("ne déclare qu'une phase quand le plan n'en porte qu'une", () => {
+      // LE CAS LE PLUS LOURD, ET IL EST APPARU APRÈS LA PREMIÈRE CORRECTION :
+      // une fausse rubrique dit « rien à signaler » sur un contenu absent, une
+      // fausse PHASE ajoute au dossier une déclaration de danger et de mesure
+      // que les deux employeurs n'ont jamais arrêtée d'un commun accord.
+      const lignes = contenuR4512_8(forge);
+      expect(lignes.filter((l) => /^ {7}· Phase :$/.test(l))).toHaveLength(1);
+      expect(
+        lignes.filter((l) => /^ {7} {2}→ Moyens de prévention :$/.test(l)),
+      ).toHaveLength(1);
+    });
+
+    it("marque toute ligne qui porte du texte saisi", () => {
+      // L'invariant qui ferme la contrefaçon à TOUTE profondeur, et qui
+      // remplace le retrait : une ligne du module ne porte jamais la marque,
+      // une ligne de saisie la porte toujours. Un rang de retrait de plus
+      // n'aurait fait que déplacer le défaut une fois de plus.
+      for (const ligne of contenuR4512_8(forge)) {
+        const structure =
+          /^ {2}Contenu minimal/.test(ligne) ||
+          /^ {4}\d° /.test(ligne) ||
+          /^ {7}· Phase :$/.test(ligne) ||
+          /^ {7} {2}→ Moyens de prévention :$/.test(ligne);
+        if (!structure) expect(ligne).toMatch(/^ {9}> /);
+      }
+    });
+
+    it("garde le texte du dirigeant intact, sans le censurer", () => {
       // On empêche la saisie d'occuper la place de la structure ; on ne retire
-      // rien de ce que le dirigeant a écrit.
-      const forge: ContenuPlan = {
-        ...vide(),
-        adaptationMateriels: "Ligne A\n3° faux : contenu",
-      };
+      // rien de ce qu'il a écrit, et il doit pouvoir le relire en entier.
       const texte = contenuR4512_8(forge).join("\n");
-      expect(texte).toContain("Ligne A");
-      expect(texte).toContain("3° faux : contenu");
+      for (const ligne of imitations.split("\n")) {
+        expect(texte).toContain(ligne);
+      }
+      expect(texte).toContain("Nacelle vérifiée");
     });
   });
 
@@ -149,16 +237,36 @@ describe("contenu minimal du plan — art. R. 4512-8", () => {
       expect(rubriquesManquantes(partiel)).toHaveLength(0);
       const texte = contenuR4512_8(partiel).join("\n");
       expect(texte).toContain("Travail en espace confiné");
-      expect(texte).toContain("→ moyens : —");
+      expect(texte).toContain("> —");
     });
 
     it("ne prend pas des espaces pour une réponse", () => {
       const blanc: ContenuPlan = {
         ...complet(),
         organisationSecours: "   \n  ",
-        phasesDangereuses: [{ phase: "  ", moyensPrevention: "x" }],
+        phasesDangereuses: [],
       };
       expect(rubriquesManquantes(blanc).map((r) => r.numero)).toEqual([1, 4]);
+    });
+
+    it("n'efface pas des moyens stockés sous une phase restée blanche", () => {
+      // LE CAS QUI A CHANGÉ LA RÈGLE DU 1°. Une phase en base dont le libellé
+      // est blanc mais dont les moyens sont écrits faisait imprimer
+      // « 1° … : NON RENSEIGNÉE », et le contenu stocké DISPARAISSAIT du
+      // document remis. Ce module promet qu'une rubrique vide s'imprime ; il
+      // doit d'abord promettre qu'une rubrique remplie ne s'efface pas.
+      const bancal: ContenuPlan = {
+        ...vide(),
+        phasesDangereuses: [
+          { phase: "  ", moyensPrevention: "Consignation électrique" },
+        ],
+      };
+      expect(rubriquesManquantes(bancal).map((r) => r.numero)).toEqual([
+        2, 3, 4, 5,
+      ]);
+      expect(contenuR4512_8(bancal).join("\n")).toContain(
+        "Consignation électrique",
+      );
     });
   });
 });

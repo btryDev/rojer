@@ -319,7 +319,12 @@ export default async function PlanPreventionDetailPage({
                       Aucune phase d&apos;activité dangereuse enregistrée. « {r.verbatim}. »
                     </p>
                   )
-                ) : texteRubrique[r.numero] ? (
+                ) : /* `r.renseignee(plan)` et non la véracité brute de la
+                       valeur : la pastille se décidait avec `.trim()`, le corps
+                       sans. Sur une valeur faite d'espaces, la carte affichait
+                       « Non renseignée » ET un paragraphe blanc, au lieu de la
+                       phrase qui dit ce que l'article demande. Un seul juge. */
+                r.renseignee(plan) ? (
                   <p className="m-0 whitespace-pre-wrap text-[14px] leading-[1.6]">
                     {texteRubrique[r.numero]}
                   </p>
