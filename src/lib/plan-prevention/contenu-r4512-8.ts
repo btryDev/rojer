@@ -57,9 +57,39 @@ export type RubriqueR4512_8 = {
 const rempli = (v: string | null | undefined): boolean =>
   typeof v === "string" && v.trim().length > 0;
 
+/**
+ * CE QUI DÉCIDE DE LA LONGUEUR D'UN `titre`, ET CE N'EST PAS LA SYMÉTRIE.
+ *
+ * Quatre titres portent les deux moitiés de leur alinéa, un seul en porte une.
+ * Ce n'est pas un oubli, et il ne faut ni allonger le 1° ni raccourcir le 4°
+ * pour aligner la colonne.
+ *
+ * Le critère est : **la seconde moitié de l'alinéa atteint-elle le lecteur du
+ * ZIP ?** Ce fichier-là est le plus pauvre des quatre surfaces — il écrit
+ * `<n>° <titre> : NON RENSEIGNÉE` et n'imprime jamais le `verbatim` —, et son
+ * destinataire est un inspecteur, un assureur ou un acquéreur, à qui personne
+ * ne répétera ce que le texte demande. Rubrique par rubrique :
+ *
+ *  - 2° et 5° : les deux moitiés sont dans le titre. Rien à faire.
+ *  - 1° : le titre tronque « et des moyens de prévention spécifiques
+ *    correspondants », MAIS le ZIP imprime « → moyens : » sous chaque phase.
+ *    La seconde moitié est matériellement là, sous une autre forme.
+ *  - 3° : l'alinéa n'a qu'une moitié.
+ *  - 4° : le titre tronquait, et RIEN ne rattrapait ailleurs. Sous
+ *    « Organisation des premiers secours », le lecteur du dossier n'apprenait
+ *    jamais que le texte demande AUSSI « la description du dispositif mis en
+ *    place à cet effet par l'entreprise utilisatrice ». C'était le seul des
+ *    cinq où la troncature mordait ; c'est le seul qu'on a allongé.
+ *
+ * Autrement dit : on juge chaque rubrique sur ce qui arrive au lecteur, pas
+ * sur ce à quoi la liste ressemble. Aligner les cinq par ressemblance ferait
+ * perdre au 4° la moitié qu'on vient de lui rendre.
+ */
 export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
   {
     numero: 1,
+    // Titre volontairement court : voir le critère ci-dessus — le ZIP rend la
+    // seconde moitié par les « → moyens : » de chaque phase.
     titre: "Phases d'activité dangereuses",
     verbatim:
       "La définition des phases d'activité dangereuses et des moyens de prévention spécifiques correspondants",
@@ -80,15 +110,8 @@ export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
   },
   {
     numero: 4,
-    // LE TITRE PORTE LES DEUX MOITIÉS DE L'ALINÉA, ET C'EST LE SEUL DES CINQ
-    // OÙ ÇA SE JOUE. Les surfaces n'impriment pas toutes le `verbatim` — le
-    // ZIP écrit « 4° <titre> : NON RENSEIGNÉE » et rien d'autre. Or le texte
-    // demande DEUX choses : l'organisation, ET « la description du dispositif
-    // mis en place à cet effet par l'entreprise utilisatrice ». Sous le titre
-    // court « Organisation des premiers secours », le destinataire du dossier
-    // de contrôle n'apprenait jamais qu'il en fallait deux. Le 2° et le 5°
-    // portent déjà leurs deux moitiés ; le 1° tronque aussi, mais le ZIP
-    // imprime « → moyens : » sous chaque phase, ce qui les rend.
+    // Le seul titre qu'on ait allongé, et le critère est ci-dessus : sa
+    // seconde moitié n'atteignait le lecteur du ZIP par aucun autre chemin.
     titre:
       "Organisation des premiers secours et description du dispositif de l'entreprise utilisatrice",
     verbatim:
