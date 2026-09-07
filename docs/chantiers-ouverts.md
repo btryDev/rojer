@@ -153,9 +153,16 @@ blanc : `0 à créer · 0 à modifier · 0 à supprimer · 36 inchangées`. Ouvr
 `/calendrier` ne le déplace donc pas — ce qui est ce qu'il faut, l'ouverture de
 cet écran écrivant (§ 7).
 
-**Ce qui reste** : la passe elle-même, sur les sept écrans que personne n'a
+~~**Ce qui reste** : la passe elle-même, sur les sept écrans que personne n'a
 jamais pu regarder avec des données — `/equipe`, `/duerp`, `/permis-feu`,
-`/plan-prevention`, `/carnet-sanitaire`, `/accessibilite`, `/plan-actions`.
+`/plan-prevention`, `/carnet-sanitaire`, `/accessibilite`, `/plan-actions`.~~
+
+> **À JOUR AU 2026-09-07 : il en reste trois** — `/permis-feu`,
+> `/plan-prevention`, `/carnet-sanitaire`. Les quatre autres ont été ouverts avec
+> des données les 09-04 à 09-06 (détail au § 7). **Cette ligne a fait commander
+> deux fois la même lecture** : une session s'est appuyée dessus pour redemander
+> les sept, cinq jours après que quatre eurent été faits. Une liste de « ce qui
+> reste » qu'on ne raye pas devient une liste de ce qu'on refera.
 
 Deux choses ne seront pas jugeables et ce n'est pas un défaut : les rapports de
 vérification, signatures et jetons d'accès ne sont pas semés — ils exigent un
@@ -200,7 +207,20 @@ l'ADR-027 disant qu'une déclaration se coche et ne se sème pas.
 
 Passe faite sur `42df046` par une session distante, sur un dossier construit à
 la main : **6 corrections confirmées à l'écran, 2 défauts toujours là, 11 constats
-neufs.** Aucun n'est corrigé.
+neufs.** ~~Aucun n'est corrigé.~~
+
+> **AUDITÉ CONTRE LE CODE LE 2026-09-07 : sept des onze sont clos, et aucun
+> n'était barré.** L'audit vient de la session distante ; quatre de ses sept
+> constats ont été rouverts indépendamment dans le dépôt et tiennent. Chaque
+> entrée ci-dessous porte désormais son état et de quoi le recontrôler.
+>
+> **Ce paragraphe est la leçon, et elle a coûté cher :** un document de constats
+> que personne ne barre au fur et à mesure fait refaire le travail. Entre le
+> 2026-09-04 et le 2026-09-06, quatre des sept écrans du § 5 ont été ouverts par
+> une session, pendant qu'une autre les commandait à nouveau sur la foi de ce
+> document. Voir aussi la note qui clôt le § 7 : un `grep` naïf trouve encore la
+> phrase fautive de `/equipements`, dans les commentaires qui racontent sa
+> correction.
 
 **Le contrôle n'est pas un second œil indépendant, et l'agent l'a dit lui-même** :
 ses seize constats de la veille étaient dans sa fenêtre, il ne pouvait pas les
@@ -216,12 +236,23 @@ défilement intermédiaire, on lit « Dépassée depuis lundi · 6 appareils » 
 travers* la barre de navigation, et la photo du héros transparaît sur sa moitié
 gauche. Sur la page de vente. Demi-correction, pas correction.
 
-**`/equipements` tranche une ambiguïté du mauvais côté.** Sous les compteurs :
+> **TRAITÉ, RESTE À CONFIRMER À L'ŒIL.** L'opacité est passée de 58 % à **88 %**
+> de blanc (`globals.css:682`), calculée sur le pire fond pour tenir 4,5:1. Il
+> reste 12 % de transparence : c'est un chiffre, pas un jugement, et seul un
+> regard à la bonne position de défilement dit si ça suffit.
+
+~~**`/equipements` tranche une ambiguïté du mauvais côté.** Sous les compteurs :
 « Les chiffres ci-dessus et les familles ci-dessous portent sur tout
 l'établissement. » C'est faux — ils portent sur les équipements seuls. La phrase
-existe pour lever la confusion et elle la scelle à l'envers. L'écart est
+existe pour lever la confusion et elle la scelle à l'envers.~~ L'écart est
 exactement la répartition du référentiel : 86 obligations portées par un
 équipement, 45 par l'établissement, 14 par un salarié.
+
+> **CLOS.** La phrase n'existe plus comme chaîne vivante. Elle ne subsiste que
+> dans **deux commentaires qui documentent sa correction** — `BandeauParc.tsx:23`
+> et `porteurs-comptes.ts:6` —, ce qui en fait le meilleur piège du document :
+> un `grep "portent sur tout l'établissement"` la trouve encore et fait conclure
+> qu'elle est toujours à l'écran. Rouvrir le fichier, pas le `grep`.
 
 **Quatre comptes divergents pour le même dossier** : 22 dépassées au tableau de
 bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
@@ -244,8 +275,11 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
 
 ### Les autres
 
-- `J−3` affiché sur une ligne « en retard » : le signe est inversé, et il se lit
-  « dans trois jours » à qui a déjà dépassé.
+- ~~`J−3` affiché sur une ligne « en retard » : le signe est inversé, et il se lit
+  « dans trois jours » à qui a déjà dépassé.~~ **CLOS.** `temps.ts:142` et `:152`
+  (`src/components/dashboard/widgets/`) rendent `` `${-j} j de retard` `` ;
+  `:163` porte la même légende sur le compte à rebours. Rouvert dans le dépôt le
+  2026-09-07.
 - ~~« 22 échéances à traiter cette semaine » au-dessus de « 22 dépassées · 0 sous
   30 j » : le titre annonce un délai que ses propres chiffres démentent.~~
   **CLOS LE 2026-09-04.** Le titre dit désormais « N échéances ont dépassé leur
@@ -256,19 +290,35 @@ bord, 19 sur la carte de zone, « 22 datées · 5 à planifier » au calendrier,
   quatre mois. Le titre du dossier calme est passé de « cette semaine » à
   « dans les trente jours » avec la même cause : sa branche n'est atteinte que
   si `sous30j` est nul.
-- Deux espaces manquantes après un `<strong>` : « couvertespar l'application »
+- ~~Deux espaces manquantes après un `<strong>` : « couvertespar l'application »
   (`/registre`, dans un H2) et « tous les six mois**l'attestation** »
-  (`/prestataires`). Deux pages, donc un `grep` plutôt que deux correctifs.
-- La troisième carte de zone est tranchée en plein glyphe : « At », « 0 équ »,
-  une pastille réduite à un « À ».
-- « À jour » affiché sur une zone à **zéro équipement** — on certifie à jour un
-  lieu où rien n'a jamais été déclaré.
-- Pastille ambre « Engagement d'assurance » absente du widget « À faire », alors
-  que la ligne a de la place.
-- Le guide reste à « étape 4 sur 6 » alors que l'étape 5 paraît satisfaite ; un
-  bouton primaire y est indiscernable d'un choix déjà fait.
-- Le héros de la page d'accueil reste un aplat noir ~4 s avant que la photo
-  arrive. Pas cassé, lent — sur la première image d'une page de vente.
+  (`/prestataires`). Deux pages, donc un `grep` plutôt que deux correctifs.~~
+  **CLOS, et mieux que demandé.** `JaugeRegistre.tsx:102` et
+  `prestataires/page.tsx:154` portent leur `{" "}` — mais surtout la famille est
+  fermée **structurellement** : `src/lib/rendu/espaces-avalees.test.ts` balaie
+  tout `src` par `readdirSync`, il n'y a pas de liste de fichiers à tenir à jour.
+  C'est la différence entre un correctif et une garde. Rouvert le 2026-09-07.
+- ~~La troisième carte de zone est tranchée en plein glyphe : « At », « 0 équ »,
+  une pastille réduite à un « À ».~~ **CLOS** — `hero-batiments.tsx:85`,
+  `LARGEUR_PLANCHER = 116` et une prop `souple`. Relevé par la session distante,
+  non rouvert ici.
+- ~~« À jour » affiché sur une zone à **zéro équipement** — on certifie à jour un
+  lieu où rien n'a jamais été déclaré.~~ **CLOS.** `lib/batiments/etat-charge.ts`
+  pose trois états fermés et `:75` retourne `sansObjet` **avant tout comptage** :
+  il n'existe plus de chemin qui mène à `aJour` avec un parc vide. Rouvert le
+  2026-09-07.
+- ~~Pastille ambre « Engagement d'assurance » absente du widget « À faire », alors
+  que la ligne a de la place.~~ **TRAITÉ, reste à confirmer à l'œil** —
+  `echeances.tsx:154` et `:288`. Qu'elle existe dans le code ne dit pas qu'elle
+  s'affiche là où on la cherche.
+- **TOUJOURS OUVERT, non vérifié.** Le guide reste à « étape 4 sur 6 » alors que
+  l'étape 5 paraît satisfaite ; un bouton primaire y est indiscernable d'un choix
+  déjà fait.
+- **TOUJOURS OUVERT, non vérifié — et il ne se mesure pas en `next dev`.** Le
+  héros de la page d'accueil reste un aplat noir ~4 s avant que la photo arrive.
+  Pas cassé, lent — sur la première image d'une page de vente. À juger sur un
+  `next build`, faute de quoi on relèvera la compilation à la demande comme un
+  défaut de produit.
 
 ### Et un fait de conception, découvert en le cherchant
 
@@ -281,10 +331,53 @@ la base de production. À savoir avant de refaire regarder un dossier réel.
 
 ### Ce qui reste injugeable sans le seed du § 5
 
-`/equipe`, `/duerp`, `/permis-feu`, `/plan-prevention`, `/carnet-sanitaire`,
-`/accessibilite` et `/plan-actions` s'affichent vides — un écran vide ne prouve
+~~`/equipe`, `/duerp`, `/permis-feu`, `/plan-prevention`, `/carnet-sanitaire`,
+`/accessibilite` et `/plan-actions` s'affichent vides~~ — un écran vide ne prouve
 rien sur une correction de charte. S'y ajoutent tout l'onboarding, le refus de la
 4ᵉ zone et le reset du formulaire de prescription : ce sont des écritures.
+
+> **Quatre des sept ont été ouverts avec des données**, les 2026-09-04 à 09-06,
+> sur la machine distante : `/equipe` (liste et fiche salarié), `/duerp` (unités,
+> risques, import, synthèse), `/accessibilite` (page publique des deux
+> établissements et affiche A4) et `/plan-actions` (fiche d'action). Une
+> quinzaine de constats en sont sortis, dont plusieurs déjà corrigés depuis.
+>
+> **Réellement jamais ouverts, et c'est tout ce qui reste :** `/permis-feu`,
+> `/plan-prevention`, `/carnet-sanitaire`.
+
+### Comment la session s'ouvre, et pourquoi ça ne s'improvise pas
+
+**La propriétaire se connecte elle-même**, dans son navigateur, sur
+`localhost:3000/login` ; son gestionnaire de mots de passe préremplit, elle
+clique. L'agent ne soumet jamais le formulaire — ce n'est pas son mot de passe.
+Le dossier local est rattaché à son UUID Supabase par le `--user` du seed, et
+tout s'ouvre. C'est la voie employée depuis le 2026-09-04.
+
+**C'est exactement là que le lot du 2026-09-03 a dérapé** : il a cherché à
+*fabriquer* une session au lieu de *demander* qu'on lui en ouvre une, et il a
+créé `controle-visuel-seed@btry.fr` sur le Supabase de production (§ 6). La
+règle qui en sort : **si un lot n'a pas la propriétaire sous la main, la réponse
+n'est ni « projet Supabase local » ni « contournement de session en dev » —
+c'est que ce lot ne fait pas de contrôle visuel.** Les deux contournements ont
+été proposés le 2026-09-07 dans un brief, et refusés par l'agent qui les
+recevait.
+
+### Trois choses qu'un brief de contrôle visuel doit porter
+
+Relevées le 2026-09-07, chacune parce qu'elle a manqué :
+
+1. **« Base vide et migrée » ne s'écrit pas, ça se vérifie** —
+   `prisma migrate status`. Trois migrations manquaient à la base distante, et
+   sans elles les écrans du parc rendaient une erreur de colonne absente qu'on
+   aurait relevée comme un défaut d'interface. Appliquer par
+   `prisma migrate deploy`, **jamais** `migrate dev`, qui vide la base de
+   `DIRECT_URL` — c'est ce qui a effacé la production le 2026-08-27.
+2. **Ne pas spécifier les détails locaux d'une machine qu'on ne connaît pas.**
+   Un brief a prescrit le port 5433 en recopiant l'autre machine ; la bonne
+   valeur était 5435. De même, aucun `git remote set-url` n'est nécessaire après
+   un renommage de dépôt : GitHub redirige.
+3. **Demander l'observable, pas le verdict.** « Le bandeau dit *N* et la carte
+   dit *M* », pas « le compteur est faux ».
 
 ---
 
