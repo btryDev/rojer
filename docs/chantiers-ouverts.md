@@ -157,12 +157,18 @@ cet écran écrivant (§ 7).
 jamais pu regarder avec des données — `/equipe`, `/duerp`, `/permis-feu`,
 `/plan-prevention`, `/carnet-sanitaire`, `/accessibilite`, `/plan-actions`.~~
 
-> **À JOUR AU 2026-09-07 : il en reste trois** — `/permis-feu`,
-> `/plan-prevention`, `/carnet-sanitaire`. Les quatre autres ont été ouverts avec
-> des données les 09-04 à 09-06 (détail au § 7). **Cette ligne a fait commander
-> deux fois la même lecture** : une session s'est appuyée dessus pour redemander
-> les sept, cinq jours après que quatre eurent été faits. Une liste de « ce qui
-> reste » qu'on ne raye pas devient une liste de ce qu'on refera.
+> ~~**À JOUR AU 2026-09-07 : il en reste trois** — `/permis-feu`,
+> `/plan-prevention`, `/carnet-sanitaire`.~~ **IL N'EN RESTE AUCUN.** Les trois
+> derniers ont été ouverts avec des données le 2026-09-07 même, sur le dossier
+> semé `cmtko3ynv0002circ3350z6v0`, session ouverte par la propriétaire ; les
+> quatre autres l'avaient été les 09-04 à 09-06 (détail au § 7). Le relevé
+> intégral est dans `docs/revues/journal-controle-visuel-2026-09-07.md`, ce
+> qu'il a rendu est au § 6 bis.
+>
+> **Cette ligne a fait commander deux fois la même lecture** : une session s'est
+> appuyée dessus pour redemander les sept, cinq jours après que quatre eurent
+> été faits. Une liste de « ce qui reste » qu'on ne raye pas devient une liste
+> de ce qu'on refera — d'où la rature ci-dessus plutôt qu'une réécriture.
 
 Deux choses ne seront pas jugeables et ce n'est pas un défaut : les rapports de
 vérification, signatures et jetons d'accès ne sont pas semés — ils exigent un
@@ -200,6 +206,74 @@ l'ADR-027 disant qu'une déclaration se coche et ne se sème pas.
   cette interdiction explicitement**, l'auth vivant chez Supabase et non en base
   (ADR-005) : un `.env` qui pointe une base locale peut parfaitement écrire dans
   l'auth de production.
+
+---
+
+## 6 bis. Ce que la passe du 2026-09-07 a rendu — six constats, un corrigé
+
+Relevés à l'écran sur `/permis-feu`, `/plan-prevention` et `/carnet-sanitaire`,
+les trois derniers écrans jamais ouverts avec des données (§ 5). Le journal
+complet, avec ce qui s'affichait et où, est dans
+`docs/revues/journal-controle-visuel-2026-09-07.md` ; ce qui suit est la part
+qui reste à faire. **Ils sont ici et pas seulement dans le journal parce qu'un
+constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
+
+- ~~**`/plan-prevention` énonçait un fondement faux** : « seuil des 400 h
+  franchi » sous « Durée estimée · 22 h », la note étant tirée de
+  `ecritObligatoire` (le OU des deux branches de `R. 4512-7`) au lieu de
+  `seuil400`.~~ **CORRIGÉ le 2026-09-07** (`0fe6643`) : `seuil400` exposé à part
+  dans `schema.ts`, et la raison affichée depuis `raisons[]`, qui la calculait
+  déjà. Trois cas de test, éprouvés en réinjectant le défaut.
+
+- **La carte « Cycle de vie » n'offre que la suppression**, sur les deux fiches.
+  L'énumération compte six états, la carte en sert trois : le plan en
+  `inspection_faite` et le permis en `attente_signatures` à 0 signature n'ont
+  sous ce titre qu'un bouton **Supprimer**. La condition
+  `signatures.length >= 2` est juste, mais rien ne dit ce qui débloque — alors
+  que la branche `en_cours` du permis, elle, explique son attente. Un titre qui
+  promet un cycle et ne propose que le geste destructif.
+  (`plan-prevention/[planId]/page.tsx:236`, `permis-feu/[permisFeuId]/page.tsx:266`)
+
+- **Le carnet sanitaire affiche du vert sur une donnée de 34 jours** : « Dans la
+  plage » et « 100% dans la plage » sur un relevé du 4 août, sans que rien ne
+  dise quand le suivant est dû ni que le suivi a cessé. Le vert porte sur la
+  dernière valeur mesurée, il se lit comme un état courant. Même famille que
+  « À jour sur une zone à zéro équipement », corrigé le 2026-09-04 — et cette
+  famille-là a déjà sa forme de correction : trois états fermés dont un
+  `sansObjet` évalué avant tout comptage (`lib/batiments/etat-charge.ts`).
+
+- **Trois écritures d'une même unité sur une seule carte** (`/carnet-sanitaire`,
+  « Retour de boucle ») : `SEUIL MIN 50°C`, la valeur `55.0°`, l'axe
+  `60°/50°/45°`, et `100%` sans espace. Le français écrit « 55,0 °C » et
+  « 100 % » — et le produit écrit « 5 % » et « 80 % » ailleurs : la convention
+  existe, elle n'est pas tenue ici.
+
+- **La même statistique écrite de deux façons** : « 80 % des incendies »
+  (`permis-feu/page.tsx:120`) contre « 80% des incendies »
+  (`lib/permis-feu/referentiel.ts:140`).
+
+- **Deux idiomes de navigation pour trois registres frères** : retour
+  (« ← LE COMPTOIR DES HALLES ») sur `/permis-feu` et `/plan-prevention`, fil
+  d'Ariane sur `/carnet-sanitaire`. L'ADR-014 sépare les deux assertions ; ici
+  elles désignent la même relation.
+
+**Un septième constat a été proposé et ne tient pas** :
+« `SupprimerEtablissementButton` n'est monté sur aucun écran ». Contre-vérifié
+le 2026-09-07 : il l'est, sur `/etablissements/[id]/modifier`
+(`page.tsx:7` et `:100`). Rien à faire — c'est consigné ici pour que personne ne
+le reprenne une troisième fois.
+
+**Ce que la passe a confirmé sans le corriger** : le contenu minimal de
+`R. 4512-8` (§ 6) passe de « mesuré » à « constaté à l'écran » — la fiche d'un
+plan porte la nature des travaux, l'inspection commune, les risques
+d'interférence et les signatures, mais ni premiers secours, ni instructions aux
+travailleurs, ni organisation du commandement. Et Rojer émet le document.
+
+**Ce qui est bon et mérite d'être dit** : la check-list INRS ED 6030 du permis
+(14 points, trois groupes, « 1 obligatoire non cochée » en rouge), le tableau
+risque ↔ mesure en vis-à-vis des deux entreprises du plan de prévention, et les
+graphiques du carnet avec leur bande rouge sous le seuil se lisent sans effort
+et ne trichent pas.
 
 ---
 
