@@ -80,7 +80,17 @@ export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
   },
   {
     numero: 4,
-    titre: "Organisation des premiers secours",
+    // LE TITRE PORTE LES DEUX MOITIÉS DE L'ALINÉA, ET C'EST LE SEUL DES CINQ
+    // OÙ ÇA SE JOUE. Les surfaces n'impriment pas toutes le `verbatim` — le
+    // ZIP écrit « 4° <titre> : NON RENSEIGNÉE » et rien d'autre. Or le texte
+    // demande DEUX choses : l'organisation, ET « la description du dispositif
+    // mis en place à cet effet par l'entreprise utilisatrice ». Sous le titre
+    // court « Organisation des premiers secours », le destinataire du dossier
+    // de contrôle n'apprenait jamais qu'il en fallait deux. Le 2° et le 5°
+    // portent déjà leurs deux moitiés ; le 1° tronque aussi, mais le ZIP
+    // imprime « → moyens : » sous chaque phase, ce qui les rend.
+    titre:
+      "Organisation des premiers secours et description du dispositif de l'entreprise utilisatrice",
     verbatim:
       "L'organisation mise en place pour assurer les premiers secours en cas d'urgence et la description du dispositif mis en place à cet effet par l'entreprise utilisatrice",
     renseignee: (p) => rempli(p.organisationSecours),

@@ -337,19 +337,16 @@ export default async function PlanPreventionDetailPage({
                 reference="Art. R. 4512-8 CT"
                 href={URL_R4512_8}
               >
-                {CHAPEAU_R4512_8} 1° La définition des phases d&apos;activité
-                dangereuses et des moyens de prévention spécifiques
-                correspondants ; 2° L&apos;adaptation des matériels,
-                installations et dispositifs à la nature des opérations à
-                réaliser ainsi que la définition de leurs conditions
-                d&apos;entretien ; 3° Les instructions à donner aux travailleurs ;
-                4° L&apos;organisation mise en place pour assurer les premiers
-                secours en cas d&apos;urgence et la description du dispositif mis
-                en place à cet effet par l&apos;entreprise utilisatrice ; 5° Les
-                conditions de la participation des travailleurs d&apos;une
-                entreprise aux travaux réalisés par une autre en vue
-                d&apos;assurer la coordination nécessaire au maintien de la
-                sécurité et, notamment, de l&apos;organisation du commandement.
+                {/* LE VERBATIM SE COMPOSE, IL NE SE RECOPIE PAS. Les cinq
+                    alinéas étaient réécrits à la main ici, à trois lignes de
+                    l'import de `RUBRIQUES_R4512_8` — une troisième copie que
+                    rien ne surveille, dans un dépôt qui a déjà perdu trois mots
+                    entre guillemets sur R. 4512-2. `citations-ecran.ts` ne
+                    vérifie que des NUMÉROS d'article, jamais des verbatims :
+                    cette copie aurait pu diverger sans qu'aucun test bronche. */}
+                {`${CHAPEAU_R4512_8} ${RUBRIQUES_R4512_8.map(
+                  (r) => `${r.numero}° ${r.verbatim}`,
+                ).join(" ; ")}.`}
               </LegalBadge>
             </div>
           </>
