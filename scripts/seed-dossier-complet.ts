@@ -1289,6 +1289,40 @@ async function main(): Promise<void> {
       inspectionParticipants:
         "Gérant (entreprise utilisatrice), M. Diallo (entreprise extérieure), cheffe de cuisine.",
       statut: "inspection_faite",
+      // Les cinq rubriques du contenu minimal — art. R. 4512-8. Semées parce
+      // que ce dossier sert aux passes de contrôle visuel : un plan dont les
+      // cinq rubriques sont vides montrerait la carte « non renseignée », pas
+      // la carte renseignée, et c'est celle-là qu'on n'a jamais pu regarder.
+      adaptationMateriels:
+        "Groupe frigorifique livré sur diable à sangles, chariot de manutention de l'établissement mis à disposition et vérifié le 04-02-2026. Chalumeau et bouteilles de l'entreprise extérieure, contrôle visuel des flexibles chaque matin ; entretien du matériel à la charge de l'entreprise extérieure.",
+      instructionsTravailleurs:
+        "Accueil sécurité du chef d'équipe à l'arrivée. Interdiction d'intervenir en cuisine avant 15 h. Coupure du fluide frigorigène signalée au gérant avant toute reprise de réseau. Évacuation par la cour, point de rassemblement devant le 12 de la rue.",
+      organisationSecours:
+        "Trousse de secours en cuisine, au-dessus du poste de plonge. Deux sauveteurs secouristes du travail présents en service (la cheffe de cuisine et le second). Téléphone d'alerte au comptoir, plan d'accès pompiers affiché en réserve, accès par la cour laissé libre pendant toute la durée des travaux.",
+      participationCroisee:
+        "Aucun salarié de l'établissement ne participe aux travaux. Le chef d'équipe de l'entreprise extérieure commande seul son personnel et rend compte au gérant chaque matin avant le service ; le gérant reste seul à décider de l'ouverture ou de la fermeture de la cuisine.",
+      phasesDangereuses: {
+        create: [
+          {
+            ordre: 0,
+            phase: "Point chaud au chalumeau sur le réseau d'extraction de la hotte",
+            moyensPrevention:
+              "Permis de feu, dégraissage préalable du conduit, extincteur à eau pulvérisée en poste, surveillance deux heures après l'arrêt.",
+          },
+          {
+            ordre: 1,
+            phase: "Manutention du groupe frigorifique dans l'escalier de réserve",
+            moyensPrevention:
+              "Intervention à deux opérateurs, sangles de portage, palier et couloir dégagés avant la descente.",
+          },
+          {
+            ordre: 2,
+            phase: "Manipulation du fluide frigorigène en local technique fermé",
+            moyensPrevention:
+              "Porte du local maintenue ouverte et ventilation forcée pendant le transfert, détecteur de fuite de l'entreprise extérieure, aucun point chaud simultané.",
+          },
+        ],
+      },
       lignes: {
         create: [
           {
@@ -1318,7 +1352,55 @@ async function main(): Promise<void> {
       },
     },
   });
-  console.log("  1 permis de feu, 1 plan de prévention (3 lignes de risques)");
+  // UN SECOND PLAN, VOLONTAIREMENT INCOMPLET, ET C'EST LE PLUS UTILE DES DEUX.
+  // Le plan ci-dessus a reçu ses cinq rubriques, donc le dossier semé ne montre
+  // plus que l'état PLEIN — alors que l'objet même de ce lot est de rendre le
+  // manque visible. Ni « N rubriques sur 5 non renseignées » sur la fiche, ni
+  // les « NON RENSEIGNÉE » du ZIP n'étaient plus atteignables sans vider des
+  // colonnes à la main, ce qu'une passe de contrôle visuel a dû faire.
+  //
+  // Celui-ci reste en brouillon, avec ses cinq rubriques nulles et ses risques
+  // d'interférence renseignés : c'est exactement la forme qu'avait tout plan du
+  // produit avant le 2026-09-07, et celle qu'aura tout plan créé sans remplir
+  // la nouvelle section.
+  await prisma.planPrevention.create({
+    data: {
+      etablissementId: etablissement.id,
+      numero: 2,
+      entrepriseExterieureRaison: "Vitrerie des Deux Ponts",
+      efChefNom: "Mme Roussel",
+      efChefEmail: "contact@vitrerie-deux-ponts.fr",
+      efEffectifIntervenant: 1,
+      euChefNom: "Direction du Comptoir des Halles",
+      euChefFonction: "Gérant",
+      dateDebut: jours(20),
+      dateFin: jours(21),
+      dureeHeuresEstimee: 6,
+      lieux: "Vitrine sur rue",
+      batimentId: zoneParNom.get(NOM_BATIMENT_PRINCIPAL),
+      naturesTravaux:
+        "Remplacement d'un vitrage feuilleté de vitrine fissuré, dépose par ventouses depuis le trottoir.",
+      travauxDangereux: false,
+      statut: "brouillon",
+      lignes: {
+        create: [
+          {
+            ordre: 0,
+            risque:
+              "Circulation des clients sur le trottoir pendant la dépose du vitrage",
+            mesureEntrepriseUtilisatrice:
+              "Fermeture de la terrasse et balisage du cheminement piéton pendant l'intervention.",
+            mesureEntrepriseExterieure:
+              "Pose de barrières, manutention à deux opérateurs, ventouses vérifiées.",
+          },
+        ],
+      },
+    },
+  });
+
+  console.log(
+    "  1 permis de feu, 2 plans de prévention (1 complet, 1 sans aucune des cinq rubriques de R. 4512-8)",
+  );
 
   // -------------------------------------------------------------------------
   // 7. Carnet sanitaire — points de relevé et relevés de température.

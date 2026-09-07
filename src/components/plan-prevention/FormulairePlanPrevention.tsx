@@ -11,6 +11,11 @@ import {
   type PlanActionState,
 } from "@/lib/plan-prevention/actions";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
+import {
+  CHAPEAU_R4512_8,
+  RUBRIQUES_R4512_8,
+  URL_R4512_8,
+} from "@/lib/plan-prevention/contenu-r4512-8";
 
 type PrestataireLite = {
   id: string;
@@ -20,11 +25,55 @@ type PrestataireLite = {
   siret: string | null;
 };
 
+/**
+ * POURQUOI CES DEUX RÉPÉTEURS SONT CONTRÔLÉS, ET POURQUOI ILS PORTENT UNE CLÉ.
+ *
+ * Ils ne l'étaient pas : `key={i}`, `defaultValue`, et un état jamais mis à
+ * jour à la frappe. React réconcilie alors par POSITION — retirer le rang 0 de
+ * trois rangs conserve les nœuds 0 et 1 avec le texte qu'ils portaient et
+ * démonte le 2. L'utilisateur clique « Retirer » sur la PREMIÈRE phase et perd
+ * la TROISIÈME, la première restant sous ses yeux. Sur un formulaire dont le
+ * produit n'offre aucun chemin d'édition, ce qui est perdu là ne se rattrape
+ * jamais.
+ *
+ * Une clé stable par rang, et la valeur tenue par l'état : le nœud suit la
+ * donnée au lieu de suivre son rang.
+ *
+ * Le répéteur des risques d'interférence avait le même défaut depuis toujours.
+ * Il est corrigé du même geste : ce lot en installait une seconde instance sur
+ * le même écran, et laisser les deux se comporter différemment aurait fait de
+ * la correction une bizarrerie plutôt qu'une règle.
+ */
 type LigneState = {
+  cle: string;
   risque: string;
   mesureEntrepriseUtilisatrice: string;
   mesureEntrepriseExterieure: string;
 };
+
+type PhaseState = { cle: string; phase: string; moyensPrevention: string };
+
+let compteurRang = 0;
+const nouvelleCle = () => `rang-${(compteurRang += 1)}`;
+
+/** Les quatre rubriques de `R. 4512-8` qui sont un bloc de texte — le 1° est
+ *  une liste appariée, il a son propre répéteur. L'ordre et le libellé
+ *  viennent de `contenu-r4512-8.ts` : les nommer ici en aurait fait une
+ *  deuxième liste, à côté de celle que la fiche et le ZIP servent déjà. */
+const RUBRIQUES_TEXTE = [
+  { numero: 2, name: "adaptationMateriels", rows: 3,
+    placeholder:
+      "Ex : nacelle élévatrice conforme et vérifiée du 12-03-2026, contrôle quotidien avant usage ; groupe électrogène EE raccordé sur le tableau de chantier, entretien à la charge de l'EE." },
+  { numero: 3, name: "instructionsTravailleurs", rows: 3,
+    placeholder:
+      "Ex : accueil sécurité à l'arrivée, port du harnais obligatoire en toiture, interdiction de fumer, consignes d'évacuation remises au chef d'équipe." },
+  { numero: 4, name: "organisationSecours", rows: 3,
+    placeholder:
+      "Ex : trousse de secours en cuisine, deux SST présents en journée (M. Dupond, Mme Martin), défibrillateur dans le hall, téléphone d'alerte au comptoir, accès pompiers par la cour." },
+  { numero: 5, name: "participationCroisee", rows: 3,
+    placeholder:
+      "Ex : aucun salarié de l'établissement ne participe aux travaux ; le chef d'équipe EE commande seul son personnel et rend compte au gérant chaque matin." },
+] as const;
 
 /** Même pilule que le formulaire jumeau du permis de feu : un choix retenu
  *  est bleu glacier, jamais rouge — le papier peignait la sélection en
@@ -66,8 +115,17 @@ export function FormulairePlanPrevention({
     [dureeHeures, travauxDangereux],
   );
 
-  const [lignes, setLignes] = useState<LigneState[]>([
-    { risque: "", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "" },
+  const [lignes, setLignes] = useState<LigneState[]>(() => [
+    {
+      cle: nouvelleCle(),
+      risque: "",
+      mesureEntrepriseUtilisatrice: "",
+      mesureEntrepriseExterieure: "",
+    },
+  ]);
+
+  const [phases, setPhases] = useState<PhaseState[]>(() => [
+    { cle: nouvelleCle(), phase: "", moyensPrevention: "" },
   ]);
 
   useEffect(() => {
@@ -84,12 +142,36 @@ export function FormulairePlanPrevention({
   function ajouterLigne() {
     setLignes((l) => [
       ...l,
-      { risque: "", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "" },
+      {
+        cle: nouvelleCle(),
+        risque: "",
+        mesureEntrepriseUtilisatrice: "",
+        mesureEntrepriseExterieure: "",
+      },
     ]);
   }
 
-  function retirerLigne(i: number) {
-    setLignes((l) => (l.length === 1 ? l : l.filter((_, idx) => idx !== i)));
+  function retirerLigne(cle: string) {
+    setLignes((l) => (l.length === 1 ? l : l.filter((x) => x.cle !== cle)));
+  }
+
+  function majLigne(cle: string, champ: keyof Omit<LigneState, "cle">, v: string) {
+    setLignes((l) => l.map((x) => (x.cle === cle ? { ...x, [champ]: v } : x)));
+  }
+
+  function ajouterPhase() {
+    setPhases((p) => [
+      ...p,
+      { cle: nouvelleCle(), phase: "", moyensPrevention: "" },
+    ]);
+  }
+
+  function retirerPhase(cle: string) {
+    setPhases((p) => (p.length === 1 ? p : p.filter((x) => x.cle !== cle)));
+  }
+
+  function majPhase(cle: string, champ: keyof Omit<PhaseState, "cle">, v: string) {
+    setPhases((p) => p.map((x) => (x.cle === cle ? { ...x, [champ]: v } : x)));
   }
 
   return (
@@ -404,7 +486,7 @@ export function FormulairePlanPrevention({
             ainsi, ou pas du tout — il n'a pas de pointillé. */}
         {lignes.map((l, i) => (
           <div
-            key={i}
+            key={l.cle}
             className="flex flex-col gap-4 border-t border-[color:var(--board-slate-line)] pt-5 first:border-t-0 first:pt-0"
           >
             <div className="flex items-baseline justify-between gap-3">
@@ -414,7 +496,7 @@ export function FormulairePlanPrevention({
               {lignes.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => retirerLigne(i)}
+                  onClick={() => retirerLigne(l.cle)}
                   className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
                 >
                   Retirer
@@ -423,37 +505,52 @@ export function FormulairePlanPrevention({
             </div>
 
             <ChampBoard
-              id={`risque-${i}`}
+              id={`risque-${l.cle}`}
               name={`lignes[${i}].risque`}
               label="Description du risque"
               requis
-              defaultValue={l.risque}
+              value={l.risque}
+              onChange={(e) => majLigne(l.cle, "risque", e.target.value)}
               maxLength={500}
               placeholder="Ex : chute de hauteur depuis la toiture sans garde-corps"
             />
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
-                <label className="label-board" htmlFor={`mesureEU-${i}`}>
+                <label className="label-board" htmlFor={`mesureEU-${l.cle}`}>
                   Votre mesure (entreprise utilisatrice)
                 </label>
                 <textarea
-                  id={`mesureEU-${i}`}
+                  id={`mesureEU-${l.cle}`}
                   name={`lignes[${i}].mesureEntrepriseUtilisatrice`}
-                  defaultValue={l.mesureEntrepriseUtilisatrice}
+                  value={l.mesureEntrepriseUtilisatrice}
+                  onChange={(e) =>
+                    majLigne(
+                      l.cle,
+                      "mesureEntrepriseUtilisatrice",
+                      e.target.value,
+                    )
+                  }
                   rows={2}
                   maxLength={500}
                   className={`${TEXTAREA} min-h-[72px]`}
                 />
               </div>
               <div>
-                <label className="label-board" htmlFor={`mesureEE-${i}`}>
+                <label className="label-board" htmlFor={`mesureEE-${l.cle}`}>
                   Mesure EE (entreprise extérieure)
                 </label>
                 <textarea
-                  id={`mesureEE-${i}`}
+                  id={`mesureEE-${l.cle}`}
                   name={`lignes[${i}].mesureEntrepriseExterieure`}
-                  defaultValue={l.mesureEntrepriseExterieure}
+                  value={l.mesureEntrepriseExterieure}
+                  onChange={(e) =>
+                    majLigne(
+                      l.cle,
+                      "mesureEntrepriseExterieure",
+                      e.target.value,
+                    )
+                  }
                   rows={2}
                   maxLength={500}
                   className={`${TEXTAREA} min-h-[72px]`}
@@ -479,6 +576,146 @@ export function FormulairePlanPrevention({
               {err("lignes")}
             </p>
           )}
+        </div>
+      </SectionChamps>
+
+      {/* LES CINQ RUBRIQUES QUE LE PLAN ÉMIS NE PORTAIT PAS. R. 4512-8 écrit
+          que les mesures du plan « comportent AU MOINS » cinq dispositions ;
+          le formulaire n'en collectait aucune, et le ZIP remis à un tiers
+          citait l'article en en-tête. Aucune n'est requise à la saisie : le
+          produit n'a pas de porte de validation sur les plans, et en poser une
+          au seul point de création aurait bloqué ici sans rien exiger à la
+          clôture. Ce qui est vide se lit vide, sur la fiche comme dans le ZIP. */}
+      <SectionChamps
+        titre="Contenu minimal du plan"
+        chapeau={`Art. R. 4512-8 : « ${CHAPEAU_R4512_8} » Ce que vous laissez vide est signalé comme manquant sur la fiche du plan et dans le dossier de contrôle — rien ne vous empêche d'enregistrer.`}
+      >
+        <div>
+          <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+            1° — {RUBRIQUES_R4512_8[0].titre}
+          </p>
+          <p className="m-0 mt-1.5 max-w-[70ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            « {RUBRIQUES_R4512_8[0].verbatim}. » À distinguer des risques
+            d&apos;interférence ci-dessus : ceux-là naissent de la co-activité,
+            les phases dangereuses sont celles de l&apos;opération elle-même.
+          </p>
+        </div>
+
+        {phases.map((f, i) => (
+          <div
+            key={f.cle}
+            className="flex flex-col gap-4 border-t border-[color:var(--board-slate-line)] pt-5"
+          >
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+                Phase #{i + 1}
+              </p>
+              {phases.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => retirerPhase(f.cle)}
+                  className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <ChampBoard
+                id={`phase-${f.cle}`}
+                name={`phases[${i}].phase`}
+                label="Phase d'activité dangereuse"
+                value={f.phase}
+                onChange={(e) => majPhase(f.cle, "phase", e.target.value)}
+                maxLength={500}
+                placeholder="Ex : découpe au chalumeau en toiture"
+              />
+              <div>
+                <label className="label-board" htmlFor={`moyens-${f.cle}`}>
+                  Moyens de prévention spécifiques correspondants
+                </label>
+                <textarea
+                  id={`moyens-${f.cle}`}
+                  name={`phases[${i}].moyensPrevention`}
+                  value={f.moyensPrevention}
+                  onChange={(e) =>
+                    majPhase(f.cle, "moyensPrevention", e.target.value)
+                  }
+                  rows={2}
+                  maxLength={500}
+                  className={`${TEXTAREA} min-h-[72px]`}
+                  placeholder="Ex : permis de feu, extincteur à poste, surveillance 2 h après arrêt"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={ajouterPhase}
+            className={buttonVariants({
+              variant: "boardClair",
+              size: "boardSm",
+            })}
+          >
+            Ajouter une phase
+          </button>
+          {/* `extrairePhases` remonte désormais au schéma tout rang dont un
+              champ porte quelque chose. Sans cet affichage, son erreur
+              n'arriverait nulle part et la saisie semblerait avalée. */}
+          {err("phases") && (
+            <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+              {err("phases")}
+            </p>
+          )}
+        </div>
+
+        {RUBRIQUES_TEXTE.map((r) => {
+          const rubrique = RUBRIQUES_R4512_8.find(
+            (x) => x.numero === r.numero,
+          )!;
+          return (
+            <div
+              key={r.name}
+              className="border-t border-[color:var(--board-slate-line)] pt-5"
+            >
+              <label className="label-board" htmlFor={r.name}>
+                {r.numero}° — {rubrique.titre}
+              </label>
+              <p className="m-0 mb-2 mt-1 max-w-[70ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                « {rubrique.verbatim}. »
+              </p>
+              <textarea
+                id={r.name}
+                name={r.name}
+                rows={r.rows}
+                maxLength={4000}
+                className={`${TEXTAREA} min-h-[88px]`}
+                placeholder={r.placeholder}
+                aria-invalid={Boolean(err(r.name))}
+                aria-describedby={err(r.name) ? `${r.name}-erreur` : undefined}
+              />
+              {err(r.name) && (
+                <p
+                  id={`${r.name}-erreur`}
+                  className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]"
+                >
+                  {err(r.name)}
+                </p>
+              )}
+            </div>
+          );
+        })}
+
+        <div>
+          <LegalBadge
+            charte="board"
+            reference="Art. R. 4512-8 CT"
+            href={URL_R4512_8}
+          />
         </div>
       </SectionChamps>
 

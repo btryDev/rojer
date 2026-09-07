@@ -28,6 +28,45 @@ import type { ObjetSignable } from "@prisma/client";
  * « pas trouvé » (objet DB absent / fichier binaire absent) sont
  * remontés proprement jusqu'à l'UI.
  */
+/**
+ * LA VERSION DE LA FORME D'ENTRÉE, ET POURQUOI L'EMPREINTE LA PORTE.
+ *
+ * Comparer deux empreintes n'a de sens qu'à l'intérieur d'une même forme
+ * d'entrée. Le 2026-09-07, la représentation canonique du plan de prévention a
+ * gagné les cinq rubriques de `R. 4512-8` — les phases d'activité dangereuses
+ * et les quatre champs de contenu — qu'elle ne portait pas. Sans marque de
+ * version, ce seul ajout aurait fait dire à la page publique de vérification
+ * « Signature invalide — document modifié » sur TOUTES les signatures
+ * antérieures : une accusation de falsification, adressée à un tiers, pour un
+ * document que personne n'a touché.
+ *
+ * Les lignes écrites avant portent donc une empreinte SANS préfixe — la v1 —
+ * et restent des témoins honnêtes de ce qui a été signé ce jour-là. C'est à la
+ * VÉRIFICATION de refuser de les comparer à une empreinte v2, et non au calcul
+ * de faire semblant qu'elles sont d'une autre forme
+ * (`verifierIntegriteSignature`).
+ *
+ * Le préfixe ne vaut que pour `plan_prevention` : la forme d'entrée est propre
+ * à chaque type d'objet, et celles du permis de feu et du rapport de
+ * vérification n'ont pas changé. Le jour où l'une d'elles changera, elle
+ * prendra sa propre marque.
+ *
+ * Idée reprise du module homologue de GestBAT, relu en lecture seule le
+ * 2026-09-07 — l'idée, pas le code : ce que l'empreinte doit capturer se
+ * déduit de ce que CE document-ci affiche.
+ */
+export const VERSION_HASH_PLAN_PREVENTION = "v2:";
+
+/**
+ * La version que porte une empreinte. Une empreinte sans préfixe est de la
+ * première forme, celle d'avant toute marque — d'où `"v1"` plutôt qu'une
+ * chaîne vide, qui se serait comparée par accident.
+ */
+export function versionDeHash(hash: string): string {
+  const i = hash.indexOf(":");
+  return i === -1 ? "v1" : hash.slice(0, i + 1);
+}
+
 export type HashResult =
   | { ok: true; hash: string; nomDocument: string | null }
   | {
@@ -63,9 +102,19 @@ export async function calculerHashObjet(
   if (objetType === "plan_prevention") {
     const plan = await prisma.planPrevention.findFirst({
       where: { id: objetId, etablissementId },
-      include: { lignes: { orderBy: { ordre: "asc" } } },
+      include: {
+        lignes: { orderBy: { ordre: "asc" } },
+        phasesDangereuses: { orderBy: { ordre: "asc" } },
+      },
     });
     if (!plan) return { ok: false, raison: "objet_introuvable" };
+    // LE TRI EST REFAIT ICI, ET PAS SEULEMENT DEMANDÉ À LA REQUÊTE. Une
+    // empreinte qui dépend de l'ordre dans lequel Postgres a rendu les lignes
+    // n'est pas stable, et le jour où quelqu'un retire un `orderBy` en croyant
+    // ne toucher qu'à l'affichage, c'est la preuve qui tombe — sans que rien
+    // ne le dise. Ce qui fonde une signature ne se délègue pas à l'appelant.
+    const parOrdre = <T extends { ordre: number }>(xs: T[]): T[] =>
+      [...xs].sort((a, b) => a.ordre - b.ordre);
     const canonique = JSON.stringify({
       numero: plan.numero,
       entrepriseExterieureRaison: plan.entrepriseExterieureRaison,
@@ -77,21 +126,43 @@ export async function calculerHashObjet(
       euChefFonction: plan.euChefFonction,
       dateDebut: plan.dateDebut,
       dateFin: plan.dateFin,
+      // LA DURÉE MANQUAIT, ET ELLE NE VAUT PAS QUE POUR ELLE-MÊME. Elle
+      // s'imprime dans le ZIP (« Période : … · 22 h ») et sur la fiche, mais
+      // surtout elle COMMANDE le seuil de R. 4512-7 : c'est d'elle que
+      // `diagnostiquerPlan` tire la pastille « Plan écrit obligatoire » que le
+      // signataire a sous les yeux. La changer après signature ne change pas
+      // seulement ce que le document dit, mais ce que le texte exige de lui —
+      // faire passer 400 h à 399 retire le fondement affiché sans toucher à
+      // une empreinte qui l'ignorait.
+      dureeHeuresEstimee: plan.dureeHeuresEstimee,
       lieux: plan.lieux,
       naturesTravaux: plan.naturesTravaux,
       travauxDangereux: plan.travauxDangereux,
       inspectionDate: plan.inspectionDate,
       inspectionParticipants: plan.inspectionParticipants,
-      lignes: plan.lignes.map((l) => ({
+      lignes: parOrdre(plan.lignes).map((l) => ({
         ordre: l.ordre,
         risque: l.risque,
         mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
         mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
       })),
+      // ── Les cinq rubriques de R. 4512-8, entrées dans le sceau le
+      // 2026-09-07 (v2). Elles s'affichent sur la fiche que le chef de
+      // l'entreprise extérieure a sous les yeux quand il signe ; les laisser
+      // dehors faisait sceller un document qui affirmait plus qu'il ne tenait.
+      phasesDangereuses: parOrdre(plan.phasesDangereuses).map((f) => ({
+        ordre: f.ordre,
+        phase: f.phase,
+        moyensPrevention: f.moyensPrevention,
+      })),
+      adaptationMateriels: plan.adaptationMateriels,
+      instructionsTravailleurs: plan.instructionsTravailleurs,
+      organisationSecours: plan.organisationSecours,
+      participationCroisee: plan.participationCroisee,
     });
     return {
       ok: true,
-      hash: sha256Hex(canonique),
+      hash: VERSION_HASH_PLAN_PREVENTION + sha256Hex(canonique),
       nomDocument: `Plan de prévention PP-${String(plan.numero).padStart(3, "0")}`,
     };
   }

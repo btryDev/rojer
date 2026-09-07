@@ -19,7 +19,13 @@ export async function getPlanPrevention(
   const { etablissement } = await requireEtablissement(etablissementId);
   const plan = await prisma.planPrevention.findFirst({
     where: { id: planId, etablissementId: etablissement.id },
-    include: { lignes: { orderBy: { ordre: "asc" } } },
+    include: {
+      lignes: { orderBy: { ordre: "asc" } },
+      // Le 1° de `R. 4512-8`, à ne pas confondre avec `lignes` ci-dessus, qui
+      // porte l'analyse d'interférence de `R. 4512-6` — voir
+      // `contenu-r4512-8.ts`.
+      phasesDangereuses: { orderBy: { ordre: "asc" } },
+    },
   });
   if (!plan) return null;
   const signatures = await listSignatures("plan_prevention", plan.id);

@@ -58,6 +58,39 @@ function extraireLignes(formData: FormData): LigneInput[] {
   return out;
 }
 
+/**
+ * Les phases d'activité dangereuses du 1° de `R. 4512-8`, postées sous la même
+ * forme indicée que les lignes.
+ *
+ * ON NE JETTE QUE LES RANGS ENTIÈREMENT VIDES, ET RIEN D'AUTRE. La première
+ * version validait chaque rang par `phaseSchema` et ne gardait que les succès,
+ * SANS `else` — trois saisies disparaissaient alors sans un mot : une phase de
+ * moins de trois caractères, une phase mal formée, et surtout un rang dont
+ * l'utilisateur avait rempli les MOYENS en oubliant la phase, qui perdait les
+ * deux. Le filtre étant posé avant `zod`, `fieldErrors.phases` ne pouvait même
+ * pas exister : aucune erreur n'était rendue à l'écran, et le dirigeant croyait
+ * avoir enregistré ce qu'il venait de taper.
+ *
+ * Un rang dont au moins un champ porte quelque chose remonte donc TEL QUEL au
+ * schéma, qui décide et dont l'erreur, elle, s'affiche. Le rang vide, lui, n'est
+ * qu'un champ que personne n'a rempli — il n'y a rien à en dire.
+ */
+function extrairePhases(formData: FormData): unknown[] {
+  const out: unknown[] = [];
+  let i = 0;
+  while (true) {
+    const phase = formData.get(`phases[${i}].phase`);
+    if (phase === null) break;
+    const moyensPrevention = formData.get(`phases[${i}].moyensPrevention`);
+    const vide =
+      String(phase ?? "").trim() === "" &&
+      String(moyensPrevention ?? "").trim() === "";
+    if (!vide) out.push({ phase, moyensPrevention });
+    i++;
+  }
+  return out;
+}
+
 export async function creerPlanPrevention(
   etablissementId: string,
   _prev: PlanActionState,
@@ -66,6 +99,7 @@ export async function creerPlanPrevention(
   await assertEtablissementOwnership(etablissementId);
 
   const lignes = extraireLignes(formData);
+  const phases = extrairePhases(formData);
 
   const parsed = planPreventionSchema.safeParse({
     prestataireId: formData.get("prestataireId"),
@@ -86,6 +120,12 @@ export async function creerPlanPrevention(
     inspectionDate: formData.get("inspectionDate"),
     inspectionParticipants: formData.get("inspectionParticipants"),
     lignes,
+    // Les cinq rubriques de `R. 4512-8` — cf. `contenu-r4512-8.ts`.
+    phases,
+    adaptationMateriels: formData.get("adaptationMateriels"),
+    instructionsTravailleurs: formData.get("instructionsTravailleurs"),
+    organisationSecours: formData.get("organisationSecours"),
+    participationCroisee: formData.get("participationCroisee"),
   });
 
   if (!parsed.success) {
@@ -133,7 +173,19 @@ export async function creerPlanPrevention(
       travauxDangereux: parsed.data.travauxDangereux,
       inspectionDate: parsed.data.inspectionDate,
       inspectionParticipants: parsed.data.inspectionParticipants,
+      adaptationMateriels: parsed.data.adaptationMateriels,
+      instructionsTravailleurs: parsed.data.instructionsTravailleurs,
+      organisationSecours: parsed.data.organisationSecours,
+      participationCroisee: parsed.data.participationCroisee,
       statut: "attente_signatures",
+      phasesDangereuses: {
+        create: parsed.data.phases.map((f, ordre) => ({
+          id: `pha_${randomUUID()}`,
+          ordre,
+          phase: f.phase,
+          moyensPrevention: f.moyensPrevention,
+        })),
+      },
       lignes: {
         create: parsed.data.lignes.map((l, ordre) => ({
           id: `lig_${randomUUID()}`,

@@ -75,6 +75,27 @@ export const ligneSchema = z.object({
 
 export type LigneInput = z.infer<typeof ligneSchema>;
 
+/**
+ * Le 1° de `R. 4512-8` : « La définition des phases d'activité dangereuses et
+ * des moyens de prévention spécifiques **correspondants**. »
+ *
+ * Une paire, et non deux listes : c'est la correspondance que le texte demande
+ * d'écrire, et un bloc de prose l'aurait perdue. `moyensPrevention` reste
+ * facultatif pour la même raison que les mesures d'une `ligneSchema` — une
+ * phase nommée sans son moyen se voit à l'écran, là où un champ obligatoire
+ * aurait fait écrire n'importe quoi pour pouvoir enregistrer.
+ */
+export const phaseSchema = z.object({
+  phase: z
+    .string()
+    .trim()
+    .min(3, "Décrire la phase d'activité dangereuse, ou vider aussi ses moyens")
+    .max(500),
+  moyensPrevention: optionalTrimmed(500),
+});
+
+export type PhaseInput = z.infer<typeof phaseSchema>;
+
 export const planPreventionSchema = z
   .object({
     prestataireId: z.preprocess(
@@ -118,6 +139,21 @@ export const planPreventionSchema = z
     lignes: z
       .array(ligneSchema)
       .min(1, "Ajoutez au moins un risque identifié"),
+
+    // ── Contenu minimal du plan — `R. 4512-8` ──────────────────────────
+    // Les cinq rubriques que « les mesures prévues par le plan de prévention
+    // comportent AU MOINS ». Aucune n'est requise ici, et ce n'est pas un
+    // oubli : le produit n'a aucune porte de validation sur les plans, et en
+    // poser une au seul point de création aurait bloqué la saisie sans rien
+    // exiger de la clôture ni des plans déjà en base. Le manque est rendu
+    // VISIBLE — fiche et ZIP nomment la rubrique vide —, il n'est pas rendu
+    // bloquant. Voir `rubriquesManquantes` plus bas, qui est la lecture
+    // partagée par ces surfaces.
+    phases: z.array(phaseSchema).optional().default([]),
+    adaptationMateriels: optionalTrimmed(4000),
+    instructionsTravailleurs: optionalTrimmed(4000),
+    organisationSecours: optionalTrimmed(4000),
+    participationCroisee: optionalTrimmed(4000),
   })
   .refine((v) => v.dateFin > v.dateDebut, {
     message: "La date de fin doit être après la date de début",

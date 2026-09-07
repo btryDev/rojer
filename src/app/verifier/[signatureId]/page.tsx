@@ -34,6 +34,76 @@ export default async function VerifierSignaturePage({
     );
   }
 
+  // NI « VALIDE », NI « MODIFIÉ », ET C'EST TOUT LE POINT. L'empreinte de cette
+  // signature a été calculée sur une forme du document que le produit n'écrit
+  // plus — le plan de prévention a gagné les cinq rubriques de R. 4512-8 le
+  // 2026-09-07. La comparer à l'empreinte d'aujourd'hui rendrait un écart
+  // certain, et annoncer « document modifié » à un inspecteur serait une
+  // accusation de falsification fabriquée par une mise à jour du logiciel.
+  // Annoncer « valide » serait le mensonge inverse, et le pire des deux sur un
+  // outil de preuve. Cette page rend donc un ton neutre : la signature est un
+  // témoin authentique, le contrôle automatique ne peut pas s'exercer.
+  if (res.ok === false && res.raison === "version_anterieure") {
+    const s = res.signature;
+    return (
+      <main className="mx-auto max-w-2xl px-6 py-14 sm:px-10">
+        <nav>
+          <Link
+            href="/"
+            className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]"
+          >
+            ← Accueil
+          </Link>
+        </nav>
+        <header className="mt-6 space-y-3">
+          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            Vérification publique d&apos;intégrité
+          </p>
+          <h1 className="text-[1.5rem] font-semibold tracking-[-0.02em]">
+            Signature authentique — comparaison automatique impossible
+          </h1>
+          <div className="space-y-2 text-[0.9rem] text-[color:var(--muted-foreground)]">
+            <p>
+              Cette signature est bien enregistrée, avec son signataire, son
+              horodatage et l&apos;empreinte du document tel qu&apos;il se
+              présentait au moment où elle a été apposée.
+            </p>
+            <p>
+              Depuis, la façon dont ce type de document est mis en forme pour le
+              calcul d&apos;empreinte a changé. Une empreinte ne se compare
+              qu&apos;à une empreinte de la même forme : le recalcul
+              d&apos;aujourd&apos;hui ne peut donc ni confirmer ni infirmer que
+              le document a été modifié.{" "}
+              <strong>
+                Ce n&apos;est pas l&apos;indice d&apos;une modification
+              </strong>{" "}
+              — c&apos;est la conséquence d&apos;une mise à jour du logiciel.
+            </p>
+          </div>
+        </header>
+
+        <div className="mt-8">
+          <SignatureBlock
+            charte="board"
+            signataireNom={s.signataireNom}
+            signataireRole={s.signataireRole}
+            signataireEmail={s.signataireEmail}
+            horodatageIso={s.horodatageIso}
+            methode={s.methode}
+            hashDocument={s.hashDocument}
+            nomDocument={s.nomDocument}
+            signatureId={s.id}
+          />
+        </div>
+
+        <footer className="mt-8 font-mono text-[0.72rem] uppercase tracking-[0.1em] text-[color:var(--board-slate-soft)]">
+          Fondement légal : art. 1366-1367 Code civil, règlement eIDAS (UE)
+          910/2014 · niveau simple.
+        </footer>
+      </main>
+    );
+  }
+
   if (res.ok === false) {
     const titre =
       res.raison === "document_modifie"
