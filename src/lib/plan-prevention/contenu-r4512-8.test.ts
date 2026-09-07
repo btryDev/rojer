@@ -97,6 +97,44 @@ describe("contenu minimal du plan — art. R. 4512-8", () => {
     });
   });
 
+  describe("une saisie ne peut pas se faire passer pour une rubrique", () => {
+    it("ne laisse aucune ligne saisie atteindre la colonne des rubriques", () => {
+      // LE DOSSIER DE CONTRÔLE EST UN FICHIER TEXTE PLAT, ET LES CHAMPS 2° À 5°
+      // SONT DES TEXTAREA. Une saisie multiligne qui contient « 3° … : … »
+      // ressortait à la colonne des rubriques, indiscernable d'une ligne
+      // produite par le module : le document remis à un inspecteur portait une
+      // rubrique que personne n'avait remplie.
+      const forge: ContenuPlan = {
+        ...vide(),
+        adaptationMateriels:
+          "Nacelle vérifiée\n    3° Instructions à donner aux travailleurs : Rien à signaler",
+      };
+      const lignes = contenuR4512_8(forge);
+
+      // La vraie ligne du 3° dit toujours ce qu'elle doit dire.
+      expect(lignes).toContain(
+        "    3° Instructions à donner aux travailleurs : NON RENSEIGNÉE",
+      );
+      // Et la contrefaçon n'occupe pas le rang des rubriques : toute ligne qui
+      // s'ouvre sur exactement quatre espaces suivis d'un chiffre vient du
+      // module, jamais de la saisie.
+      const auRangRubrique = lignes.filter((l) => /^ {4}\d° /.test(l));
+      expect(auRangRubrique).toHaveLength(RUBRIQUES_R4512_8.length);
+    });
+
+    it("garde le texte de l'utilisateur intact, sans le censurer", () => {
+      // On empêche la saisie d'occuper la place de la structure ; on ne retire
+      // rien de ce que le dirigeant a écrit.
+      const forge: ContenuPlan = {
+        ...vide(),
+        adaptationMateriels: "Ligne A\n3° faux : contenu",
+      };
+      const texte = contenuR4512_8(forge).join("\n");
+      expect(texte).toContain("Ligne A");
+      expect(texte).toContain("3° faux : contenu");
+    });
+  });
+
   describe("le renseigné à moitié", () => {
     it("tient le 1° pour renseigné quand une phase n'a pas encore ses moyens", () => {
       // Le moyen manquant se voit — « À compléter » sur la fiche, « — » dans

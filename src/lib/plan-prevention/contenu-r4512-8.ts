@@ -168,27 +168,59 @@ function texteRubrique(plan: ContenuPlan, numero: number): string | null {
  * Le formatage vit ici, avec la liste, pour la même raison qu'elle : le jour
  * où une sixième rubrique apparaîtrait, il n'y a qu'un endroit à corriger.
  */
+/** Le retrait des lignes de rubrique. Rien d'autre ne s'écrit à ce niveau. */
+const RANG_RUBRIQUE = "    ";
+/** Le retrait de tout ce que l'utilisateur a saisi. Toujours plus profond. */
+const RANG_SAISIE = "       ";
+
+/**
+ * Une saisie utilisateur, rendue sans qu'aucune de ses lignes ne puisse se lire
+ * comme une ligne de structure.
+ *
+ * CE QUE ÇA CORRIGE, ET C'EST UN DÉFAUT RÉEL. Les champs 2° à 5° sont des
+ * `textarea` : leur contenu porte des retours à la ligne. La version d'avant
+ * n'indentait que la PREMIÈRE ligne, si bien qu'une saisie contenant
+ * « 3° Instructions à donner aux travailleurs : Rien à signaler » ressortait
+ * dans le dossier de contrôle à la colonne des rubriques, indiscernable d'une
+ * ligne produite par le module. Le document remis à un inspecteur pouvait donc
+ * porter une rubrique que personne n'avait remplie. Reproduit avant correction.
+ *
+ * Toute ligne de saisie est désormais poussée à `RANG_SAISIE`, et les lignes de
+ * rubrique sont les seules à `RANG_RUBRIQUE`. Rien n'est retiré ni réécrit du
+ * texte de l'utilisateur : on ne censure pas ce qu'il a écrit, on l'empêche
+ * d'occuper la place de la structure.
+ *
+ * LA LIMITE, ET ELLE EST PLUS LARGE QUE CE MODULE. Le retrait distingue les
+ * deux niveaux, il ne les rend pas infalsifiables : trois espaces ne sautent
+ * pas aux yeux d'un lecteur pressé. Et surtout, le reste de
+ * `07_Plans_de_prevention.txt` a la même propriété — `lieux` et
+ * `naturesTravaux` s'impriment aussi en clair sur leur ligne. C'est une
+ * propriété du format plat de ce fichier, antérieure à ce lot ; ce module
+ * cesse d'y contribuer, il ne la corrige pas pour les autres.
+ */
+function saisieIndentee(valeur: string): string[] {
+  return valeur.split("\n").map((ligne) => `${RANG_SAISIE}${ligne}`);
+}
+
 export function contenuR4512_8(plan: ContenuPlan): string[] {
   const out: string[] = [
     `  Contenu minimal (art. R. 4512-8) — ${CHAPEAU_R4512_8}`,
   ];
   for (const r of RUBRIQUES_R4512_8) {
     if (!r.renseignee(plan)) {
-      out.push(`    ${r.numero}° ${r.titre} : NON RENSEIGNÉE`);
+      out.push(`${RANG_RUBRIQUE}${r.numero}° ${r.titre} : NON RENSEIGNÉE`);
       continue;
     }
     if (r.numero === 1) {
-      out.push(`    1° ${r.titre} :`);
+      out.push(`${RANG_RUBRIQUE}1° ${r.titre} :`);
       for (const f of plan.phasesDangereuses) {
-        out.push(
-          `       · ${f.phase}\n` +
-            `         → moyens : ${f.moyensPrevention ?? "—"}`,
-        );
+        out.push(...saisieIndentee(`· ${f.phase}`));
+        out.push(...saisieIndentee(`  → moyens : ${f.moyensPrevention || "—"}`));
       }
       continue;
     }
-    out.push(`    ${r.numero}° ${r.titre} :`);
-    out.push(`       ${texteRubrique(plan, r.numero) ?? ""}`);
+    out.push(`${RANG_RUBRIQUE}${r.numero}° ${r.titre} :`);
+    out.push(...saisieIndentee(texteRubrique(plan, r.numero) ?? ""));
   }
   return out;
 }
