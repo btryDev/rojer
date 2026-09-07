@@ -257,11 +257,21 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   d'Ariane sur `/carnet-sanitaire`. L'ADR-014 sépare les deux assertions ; ici
   elles désignent la même relation.
 
-**Un septième constat a été proposé et ne tient pas** :
-« `SupprimerEtablissementButton` n'est monté sur aucun écran ». Contre-vérifié
-le 2026-09-07 : il l'est, sur `/etablissements/[id]/modifier`
-(`page.tsx:7` et `:100`). Rien à faire — c'est consigné ici pour que personne ne
-le reprenne une troisième fois.
+- ~~**`SupprimerEtablissementButton` n'est monté sur aucun écran**, donc il
+  n'existe aucun endroit d'où supprimer un établissement.~~ **RÉSOLU le
+  2026-09-04 par `94e2f78`**, le commit qui répondait aux quatre constats de la
+  passe précédente — celui-ci en était un. Le bouton est monté sur
+  `/etablissements/[id]/modifier` (`page.tsx:7` et `:100`) ; à `7985c09`
+  (09-04 12:39) le fichier existait sans le monter, à `94e2f78` (09-04 15:00) il
+  le monte.
+
+  **Il a pourtant été resservi au présent le 2026-09-07**, comme « toujours
+  consigné nulle part », par la session qui l'avait relevé — un constat daté,
+  rendu sans être rouvert sur `main`. Une première rédaction de cette liste l'a
+  alors classé « réfuté », ce qui est le second mauvais mot : le contrôle ne
+  s'était pas trompé, et quelque chose avait bien été fait. **Une liste qu'on ne
+  raye pas fait refaire le travail ; une liste qu'on raye du mauvais mot en fait
+  perdre la trace.** D'où la rature et la date, ici, plutôt qu'un retrait.
 
 **Ce que la passe a confirmé sans le corriger** : le contenu minimal de
 `R. 4512-8` (§ 6) passe de « mesuré » à « constaté à l'écran » — la fiche d'un
