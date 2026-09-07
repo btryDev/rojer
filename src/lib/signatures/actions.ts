@@ -43,7 +43,16 @@ import type { MethodeSignature, ObjetSignable } from "@prisma/client";
  * `/acces/[token]`.
  *
  * L'autorisation est portée par `emettreAccessToken`, qui exige un user
- * connecté propriétaire de `etablissementId`.
+ * connecté propriétaire de `etablissementId` **et** que `objetId` s'y
+ * trouve — les deux paramètres arrivent du même appel, et l'un ne dit rien
+ * de l'autre.
+ *
+ * **Rien de ce qui permet de signer ne revient ici** — ni le lien, ni le
+ * code. Le retour est un accusé de réception, et c'est le point : le
+ * demandeur ne doit pas tenir ce qui n'est adressé qu'au signataire, sans
+ * quoi il signe à sa place. Le raisonnement complet, ce que ce retrait
+ * emporte, et le chemin qui sert le besoin d'essai en local, sont dans
+ * `@/lib/access-tokens/actions`.
  */
 export async function demanderSignature(params: {
   etablissementId: string;
@@ -54,8 +63,8 @@ export async function demanderSignature(params: {
   signataireRole?: string;
   prestataireId?: string;
   libelleDocument: string;
-}): Promise<{ accessTokenId: string; urlAcces: string; otpClair: string | null }> {
-  const r = await emettreAccessToken({
+}): Promise<{ ok: true }> {
+  await emettreAccessToken({
     etablissementId: params.etablissementId,
     scope: "signature",
     objetType: params.objetType,
@@ -70,11 +79,9 @@ export async function demanderSignature(params: {
       `Cette signature a la même valeur probatoire qu'une signature manuscrite ` +
       `(art. 1366-1367 du Code civil, règlement eIDAS niveau simple).`,
   });
-  return {
-    accessTokenId: r.accessTokenId,
-    urlAcces: r.urlAcces,
-    otpClair: r.otpClair,
-  };
+  // Un accusé de réception, rien d'autre. Aucun appelant n'a besoin de
+  // l'identifiant du jeton, et ce qui n'est pas rendu ne peut pas fuir.
+  return { ok: true };
 }
 
 /**
