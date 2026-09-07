@@ -1323,7 +1323,31 @@ model PlanPrevention {
   inspectionDate         DateTime?
   inspectionParticipants String?   @db.Text
 
-  // Lignes risques-mesures (relation 1-N)
+  // ── Contenu minimal du plan — art. R. 4512-8 ────────────────────────
+  // « Les mesures prévues par le plan de prévention comportent AU MOINS les
+  // dispositions suivantes », suivi de cinq rubriques. Le modèle n'en portait
+  // aucune : les `lignes` ci-dessous sont l'analyse d'interférence de
+  // R. 4512-6 al. 2, pas le 1° de R. 4512-8. Rojer ÉMET le document, et le
+  // ZIP de contrôle citait « R. 4512-6 à R. 4512-12 » en en-tête d'un plan
+  // qui n'en servait pas le contenu.
+  //
+  // Le 1° est une RELATION et non un champ de texte : « les phases d'activité
+  // dangereuses ET les moyens de prévention spécifiques CORRESPONDANTS » est
+  // un appariement, et un bloc de prose en perdrait la correspondance.
+  //
+  // Les quatre autres sont nullables et sans défaut : le non-renseigné doit
+  // rester distinguable du renseigné, sans quoi les surfaces ne peuvent pas
+  // montrer au dirigeant ce qui manque à son propre document.
+  phasesDangereuses        PhaseDangereuse[] // 1°
+  adaptationMateriels      String?           @db.Text // 2°
+  instructionsTravailleurs String?           @db.Text // 3°
+  organisationSecours      String?           @db.Text // 4°
+  participationCroisee     String?           @db.Text // 5°
+
+  // Lignes risques-mesures (relation 1-N) — analyse d'interférence,
+  // R. 4512-6 al. 2. À ne pas confondre avec le 1° de R. 4512-8 ci-dessus :
+  // l'une porte sur l'interférence entre deux activités, l'autre sur les
+  // phases dangereuses de l'opération elle-même.
   lignes LignePlanPrevention[]
 
   // Cycle de vie
@@ -1346,6 +1370,27 @@ model LignePlanPrevention {
   risque                       String
   mesureEntrepriseUtilisatrice String?
   mesureEntrepriseExterieure   String?
+
+  @@index([planPreventionId, ordre])
+}
+
+/**
+ * Le 1° de R. 4512-8 : « La définition des phases d'activité dangereuses et
+ * des moyens de prévention spécifiques correspondants. »
+ *
+ * `moyensPrevention` est nullable comme les mesures d'une `LignePlanPrevention`
+ * — une phase nommée sans son moyen se voit à l'écran (« À compléter ») là où
+ * un champ obligatoire aurait fait écrire n'importe quoi pour pouvoir
+ * enregistrer.
+ */
+model PhaseDangereuse {
+  id               String         @id @default(cuid())
+  planPreventionId String
+  plan             PlanPrevention @relation(fields: [planPreventionId], references: [id], onDelete: Cascade)
+
+  ordre            Int     @default(0)
+  phase            String
+  moyensPrevention String?
 
   @@index([planPreventionId, ordre])
 }

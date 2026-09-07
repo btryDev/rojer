@@ -11,7 +11,7 @@
 
 - **Registre de sécurité** : le prestataire (installateur extincteurs, bureau de contrôle électrique, etc.) signe son rapport de vérification pour en attester la véracité, puis le donneur d'ordre contresigne pour acter la réception.
 - **Permis de feu** (à venir) : signature croisée donneur d'ordre / prestataire avant travaux par point chaud.
-- **Plan de prévention** (à venir) : signature du chef de l'entreprise utilisatrice et du chef de l'entreprise extérieure (art. R4512-8 CT).
+- **Plan de prévention** (à venir) : signature du chef de l'entreprise utilisatrice et du chef de l'entreprise extérieure (art. R. 4512-6 CT — les employeurs « arrêtent d'un commun accord, avant le début des travaux, un plan de prévention » ; aucun article du chapitre n'exige de signature, c'est l'accord commun qui est écrit. La citation portait `R. 4512-8`, qui est le contenu minimal du plan et ne dit rien des signataires — corrigé le 2026-09-07 sur le verbatim du corpus).
 - **Registre d'accessibilité** (à venir) : attestation de conformité du responsable d'ERP.
 - **DUERP** (éventuellement) : validation par le dirigeant à la création d'une version.
 

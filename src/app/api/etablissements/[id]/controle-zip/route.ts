@@ -23,6 +23,7 @@ import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
 import { PlanActionsDocument } from "@/lib/pdf/PlanActionsDocument";
 import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
+import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
@@ -246,7 +247,10 @@ export async function GET(
       dateDebut: { gte: ilYaUnAn },
       statut: { notIn: ["brouillon", "annule"] },
     },
-    include: { lignes: { orderBy: { ordre: "asc" } } },
+    include: {
+      lignes: { orderBy: { ordre: "asc" } },
+      phasesDangereuses: { orderBy: { ordre: "asc" } },
+    },
     orderBy: { numero: "desc" },
   });
   if (plansList.length > 0) {
@@ -267,13 +271,21 @@ export async function GET(
         p.inspectionDate
           ? `  Inspection commune : ${formaterDateFr(p.inspectionDate)}`
           : `  Inspection commune : NON RÉALISÉE`,
-        `  Risques identifiés (${p.lignes.length}) :`,
+        `  Risques d'interférence identifiés (art. R. 4512-6, ${p.lignes.length}) :`,
         ...p.lignes.map(
           (l, i) =>
             `    ${i + 1}. ${l.risque}\n` +
             `       → EU : ${l.mesureEntrepriseUtilisatrice ?? "—"}\n` +
             `       → EE : ${l.mesureEntrepriseExterieure ?? "—"}`,
         ),
+        // LE CONTENU MINIMAL, IMPRIMÉ RUBRIQUE PAR RUBRIQUE — Y COMPRIS CELLES
+        // QUI MANQUENT. Ce fichier porte en en-tête « Art. R. 4512-6 à
+        // R. 4512-12 » et n'imprimait rien de R. 4512-8 : il citait l'article
+        // dont il ne servait pas le contenu. Une rubrique vide s'imprime
+        // « NON RENSEIGNÉE » plutôt que de disparaître — le destinataire de ce
+        // ZIP est un inspecteur, un assureur ou un acquéreur, et une omission
+        // silencieuse lui ferait lire un plan complet.
+        ...contenuR4512_8(p),
         "",
       ]),
     ].join("\n");

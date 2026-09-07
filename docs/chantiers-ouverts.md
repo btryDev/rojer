@@ -180,10 +180,33 @@ l'ADR-027 disant qu'une déclaration se coche et ne se sème pas.
 
 - **30 URL de section** au lieu d'URL d'article au corpus, sous cliquet
   (`PLAFOND_URLS_DE_SECTION`), aucune corrigée.
-- **`R. 4512-8`** — le contenu minimal du plan de prévention compte cinq
+- ~~**`R. 4512-8`** — le contenu minimal du plan de prévention compte cinq
   rubriques, le produit n'en porte qu'une. Ni premiers secours, ni instructions
   aux travailleurs, ni organisation du commandement — alors que Rojer **émet** le
-  document. Le corpus dit que ce n'est « qu'un formulaire à quatre champs près ».
+  document. Le corpus dit que ce n'est « qu'un formulaire à quatre champs près ».~~
+
+  > **CORRIGÉ LE 2026-09-07** — les cinq rubriques sont au modèle, au formulaire,
+  > à la fiche et au ZIP de contrôle. `PhaseDangereuse` porte le 1° (une relation :
+  > le texte apparie les phases « ET les moyens de prévention spécifiques
+  > **correspondants** »), quatre colonnes de texte portent les 2° à 5°. Migration
+  > additive `20260907120000_plan_prevention_contenu_r4512_8`, liste et formatage
+  > partagés dans `src/lib/plan-prevention/contenu-r4512-8.ts`, corpus repassé de
+  > `obligation_manquante` à `sans_objet`.
+  >
+  > **Le compte était de quatre, il est de cinq**, et c'est une décision et non
+  > une correction de calcul : les lignes risque ↔ mesures transcrivent le second
+  > alinéa de `R. 4512-6` — l'**interférence** entre deux activités —, pas les
+  > « phases d'activité dangereuses » de l'opération, qui existent sans
+  > co-activité. Les tenir pour le 1° aurait fait porter à une rubrique le
+  > contenu d'une autre.
+  >
+  > **Ce qui n'est pas fait, et qui ne se déduit pas de cette ligne** : rien
+  > n'est bloquant. Une rubrique vide est *nommée* — la fiche la compte et cite
+  > son alinéa, le ZIP écrit « NON RENSEIGNÉE » — mais aucune garde n'empêche
+  > d'enregistrer ni de clore un plan vide, faute de porte de validation sur les
+  > plans (§ 6 bis, états morts). Et le 4° ne se pré-remplit pas : aucun champ
+  > d'`Etablissement` ne décrit le dispositif de secours, `R. 4224-16` est
+  > détenu par le dirigeant et pas par la base.
 - **Le seuil des 400 heures ne se recalcule pas en cours d'exécution**, alors que
   `R. 4512-7` le déclenche « dès lors qu'il apparaît » qu'elles seront atteintes.
   Depuis le 2026-09-02, l'aide de saisie le dit au dirigeant ; le module ne le
@@ -278,6 +301,10 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
 plan porte la nature des travaux, l'inspection commune, les risques
 d'interférence et les signatures, mais ni premiers secours, ni instructions aux
 travailleurs, ni organisation du commandement. Et Rojer émet le document.
+
+> **Corrigé le jour même**, quelques heures après ce constat : voir la rature du
+> § 6. Le constat visuel est ce qui l'a fait décider — il avait été *mesuré* le
+> 2026-09-02 et n'avait bougé personne pendant cinq jours.
 
 **Ce qui est bon et mérite d'être dit** : la check-list INRS ED 6030 du permis
 (14 points, trois groupes, « 1 obligatoire non cochée » en rouge), le tableau

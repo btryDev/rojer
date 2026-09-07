@@ -20,6 +20,12 @@ import {
 } from "@/components/plan-prevention/PlanActionsButtons";
 import { getPlanPrevention } from "@/lib/plan-prevention/queries";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
+import {
+  CHAPEAU_R4512_8,
+  RUBRIQUES_R4512_8,
+  URL_R4512_8,
+  rubriquesManquantes,
+} from "@/lib/plan-prevention/contenu-r4512-8";
 import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
 import {
   FUSEAU_REFERENCE,
@@ -60,6 +66,18 @@ export default async function PlanPreventionDetailPage({
     dureeHeuresEstimee: plan.dureeHeuresEstimee,
     travauxDangereux: plan.travauxDangereux,
   });
+
+  // Les cinq rubriques de `R. 4512-8`, et celles que CE plan ne porte pas.
+  // Le calcul vit dans `contenu-r4512-8.ts` : la fiche et le ZIP de contrôle
+  // doivent dire la même chose du même plan, et deux copies de la liste
+  // auraient divergé.
+  const manquantes = rubriquesManquantes(plan);
+  const texteRubrique: Record<number, string | null> = {
+    2: plan.adaptationMateriels,
+    3: plan.instructionsTravailleurs,
+    4: plan.organisationSecours,
+    5: plan.participationCroisee,
+  };
 
   const signatureEU = plan.signatures.find(
     (s) => s.signataireEmail !== plan.efChefEmail,
@@ -228,6 +246,112 @@ export default async function PlanPreventionDetailPage({
                 </div>
               </article>
             ))}
+
+            {/* LE CONTENU QUE R. 4512-8 IMPOSE, ET CE QUE CE PLAN N'EN PORTE
+                PAS. La fiche montrait la nature des travaux, l'inspection
+                commune, les risques d'interférence et les signatures — jamais
+                les cinq rubriques que l'article exige, alors que Rojer émet le
+                document et que la pastille du bas cite « R. 4512-6 à
+                R. 4512-12 ». Une rubrique vide se dit ici plutôt que de
+                s'omettre : c'est le dirigeant qui remet ce plan, et lui seul a
+                une chance de s'apercevoir qu'il lui manque quelque chose. */}
+            <TitreSection
+              surtitre="Contenu minimal · art. R. 4512-8"
+              titre={
+                manquantes.length === 0
+                  ? "Les cinq rubriques sont renseignées"
+                  : `${manquantes.length} rubrique${
+                      manquantes.length > 1 ? "s" : ""
+                    } sur 5 non renseignée${manquantes.length > 1 ? "s" : ""}`
+              }
+            />
+
+            {manquantes.length > 0 && (
+              <CarteFiche titre="Ce que ce plan ne dit pas encore">
+                <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                  {CHAPEAU_R4512_8}
+                </p>
+                <ul className="m-0 mt-3 flex list-disc flex-col gap-1.5 pl-5 text-[14px] leading-[1.6]">
+                  {manquantes.map((r) => (
+                    <li key={r.numero}>
+                      <strong>
+                        {r.numero}° {r.titre}
+                      </strong>{" "}
+                      — « {r.verbatim}. »
+                    </li>
+                  ))}
+                </ul>
+              </CarteFiche>
+            )}
+
+            {RUBRIQUES_R4512_8.map((r) => (
+              <CarteFiche
+                key={r.numero}
+                titre={`${r.numero}° ${r.titre}`}
+                droite={
+                  r.renseignee(plan) ? (
+                    <PastilleFiche ton="fait">Renseignée</PastilleFiche>
+                  ) : (
+                    <PastilleFiche ton="neutre">Non renseignée</PastilleFiche>
+                  )
+                }
+              >
+                {r.numero === 1 ? (
+                  plan.phasesDangereuses.length > 0 ? (
+                    <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                      {plan.phasesDangereuses.map((f) => (
+                        <li key={f.id}>
+                          <p className="m-0 text-[14px] font-semibold leading-[1.4]">
+                            {f.phase}
+                          </p>
+                          <p className="m-0 mt-1 whitespace-pre-wrap text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                            {f.moyensPrevention || (
+                              <span className="text-[color:var(--board-slate-soft)]">
+                                Moyens de prévention à compléter
+                              </span>
+                            )}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                      Aucune phase d&apos;activité dangereuse enregistrée. « {r.verbatim}. »
+                    </p>
+                  )
+                ) : texteRubrique[r.numero] ? (
+                  <p className="m-0 whitespace-pre-wrap text-[14px] leading-[1.6]">
+                    {texteRubrique[r.numero]}
+                  </p>
+                ) : (
+                  <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                    Non renseigné. « {r.verbatim}. »
+                  </p>
+                )}
+              </CarteFiche>
+            ))}
+
+            <div className="pt-1">
+              <LegalBadge
+                charte="board"
+                reference="Art. R. 4512-8 CT"
+                href={URL_R4512_8}
+              >
+                {CHAPEAU_R4512_8} 1° La définition des phases d&apos;activité
+                dangereuses et des moyens de prévention spécifiques
+                correspondants ; 2° L&apos;adaptation des matériels,
+                installations et dispositifs à la nature des opérations à
+                réaliser ainsi que la définition de leurs conditions
+                d&apos;entretien ; 3° Les instructions à donner aux travailleurs ;
+                4° L&apos;organisation mise en place pour assurer les premiers
+                secours en cas d&apos;urgence et la description du dispositif mis
+                en place à cet effet par l&apos;entreprise utilisatrice ; 5° Les
+                conditions de la participation des travailleurs d&apos;une
+                entreprise aux travaux réalisés par une autre en vue
+                d&apos;assurer la coordination nécessaire au maintien de la
+                sécurité et, notamment, de l&apos;organisation du commandement.
+              </LegalBadge>
+            </div>
           </>
         }
         cote={

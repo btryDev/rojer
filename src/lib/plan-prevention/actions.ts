@@ -8,8 +8,10 @@ import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import {
   ligneSchema,
+  phaseSchema,
   planPreventionSchema,
   type LigneInput,
+  type PhaseInput,
 } from "./schema";
 import { nextNumeroPlan } from "./queries";
 
@@ -58,6 +60,32 @@ function extraireLignes(formData: FormData): LigneInput[] {
   return out;
 }
 
+/**
+ * Les phases d'activité dangereuses du 1° de `R. 4512-8`, postées sous la même
+ * forme indicée que les lignes.
+ *
+ * Une phase VIDE est écartée, une phase renseignée sans ses moyens est GARDÉE.
+ * Ce n'est pas symétrique et c'est voulu : le rang vide n'est qu'un champ que
+ * l'utilisateur n'a pas rempli, tandis qu'une phase sans moyen de prévention
+ * est une information — elle s'affiche « À compléter » sur la fiche, là où la
+ * jeter l'aurait fait disparaître sans que personne le sache.
+ */
+function extrairePhases(formData: FormData): PhaseInput[] {
+  const out: PhaseInput[] = [];
+  let i = 0;
+  while (true) {
+    const phase = formData.get(`phases[${i}].phase`);
+    if (phase === null) break;
+    const parsed = phaseSchema.safeParse({
+      phase,
+      moyensPrevention: formData.get(`phases[${i}].moyensPrevention`),
+    });
+    if (parsed.success) out.push(parsed.data);
+    i++;
+  }
+  return out;
+}
+
 export async function creerPlanPrevention(
   etablissementId: string,
   _prev: PlanActionState,
@@ -66,6 +94,7 @@ export async function creerPlanPrevention(
   await assertEtablissementOwnership(etablissementId);
 
   const lignes = extraireLignes(formData);
+  const phases = extrairePhases(formData);
 
   const parsed = planPreventionSchema.safeParse({
     prestataireId: formData.get("prestataireId"),
@@ -86,6 +115,12 @@ export async function creerPlanPrevention(
     inspectionDate: formData.get("inspectionDate"),
     inspectionParticipants: formData.get("inspectionParticipants"),
     lignes,
+    // Les cinq rubriques de `R. 4512-8` — cf. `contenu-r4512-8.ts`.
+    phases,
+    adaptationMateriels: formData.get("adaptationMateriels"),
+    instructionsTravailleurs: formData.get("instructionsTravailleurs"),
+    organisationSecours: formData.get("organisationSecours"),
+    participationCroisee: formData.get("participationCroisee"),
   });
 
   if (!parsed.success) {
@@ -133,7 +168,19 @@ export async function creerPlanPrevention(
       travauxDangereux: parsed.data.travauxDangereux,
       inspectionDate: parsed.data.inspectionDate,
       inspectionParticipants: parsed.data.inspectionParticipants,
+      adaptationMateriels: parsed.data.adaptationMateriels,
+      instructionsTravailleurs: parsed.data.instructionsTravailleurs,
+      organisationSecours: parsed.data.organisationSecours,
+      participationCroisee: parsed.data.participationCroisee,
       statut: "attente_signatures",
+      phasesDangereuses: {
+        create: parsed.data.phases.map((f, ordre) => ({
+          id: `pha_${randomUUID()}`,
+          ordre,
+          phase: f.phase,
+          moyensPrevention: f.moyensPrevention,
+        })),
+      },
       lignes: {
         create: parsed.data.lignes.map((l, ordre) => ({
           id: `lig_${randomUUID()}`,

@@ -60,11 +60,16 @@
 // `DOMAINES.co_activite` le dit en toutes lettres : le plan de prévention est
 // porté par le module `PlanPrevention`, pas par une `Obligation`. AUCUN
 // article de ce corpus ne peut donc être `retenu` — il n'y a pas d'obligation
-// à nommer. Les onze articles que le module et ses écrans servent sont
-// `sans_objet` ; les cinq qui imposent quelque chose que ni le module ni le
+// à nommer. Les articles que le module et ses écrans servent sont
+// `sans_objet` ; ceux qui imposent quelque chose que ni le module ni le
 // référentiel ne portent sont `obligation_manquante`. Confondre les deux
-// aurait soit fait disparaître cinq manques réels, soit compté seize fois une
+// aurait soit fait disparaître des manques réels, soit compté seize fois une
 // décision de produit prise une fois.
+//
+// LE COMPTE A CHANGÉ LE 2026-09-07 : douze `sans_objet` et quatre
+// `obligation_manquante`, contre onze et cinq à la lecture du 2026-09-02.
+// `R. 4512-8` a basculé parce que le module porte désormais les cinq rubriques
+// du contenu minimal — voir son entrée, et `plan-prevention/contenu-r4512-8.ts`.
 //
 // LE CHAPITRE V NE S'Y AJOUTE PAS, IL L'EXCLUT. `R. 4515-1` déroge
 // expressément aux articles `R. 4512-2` à `R. 4512-11` pour les opérations de
@@ -143,7 +148,7 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
         "Au cours de l'inspection commune préalable, le chef de l'entreprise utilisatrice : 1° Délimite le secteur de l'intervention des entreprises extérieures ; 2° Matérialise les zones de ce secteur qui peuvent présenter des dangers pour les travailleurs ; 3° Indique les voies de circulation que pourront emprunter ces travailleurs ainsi que les véhicules et engins de toute nature appartenant aux entreprises extérieures ; 4° Définit les voies d'accès de ces travailleurs aux locaux et installations à l'usage des entreprises extérieures prévus à l'article R. 4513-8.",
       statut: "sans_objet",
       motif:
-        "Article de CONTENU de l'inspection que R. 4512-2 impose, et non un acte distinct : il énumère les quatre gestes du chef d'établissement pendant la visite, tous accomplis le même jour, dans le même déplacement. Aucune échéance propre, aucune pièce à produire. Ce que le module ne collecte pas — la délimitation du secteur, la matérialisation des zones dangereuses — n'est pas perdu pour autant : c'est le même écart de contenu que porte l'entrée `obligation_manquante` de R. 4512-8, à qui le texte confie l'énumération de ce que le plan doit écrire. Le dédoubler ici aurait compté deux fois un seul manque.",
+        "Article de CONTENU de l'inspection que R. 4512-2 impose, et non un acte distinct : il énumère les quatre gestes du chef d'établissement pendant la visite, tous accomplis le même jour, dans le même déplacement. Aucune échéance propre, aucune pièce à produire. Ce que le module ne collecte pas — la délimitation du secteur, la matérialisation des zones dangereuses — n'est pas perdu pour autant : c'est le même écart de contenu que porte l'entrée de R. 4512-8, à qui le texte confie l'énumération de ce que le plan doit écrire, et que le module sert depuis le 2026-09-07. Le dédoubler ici aurait compté deux fois un seul manque.",
     },
     {
       ref: "R. 4512-4",
@@ -216,9 +221,9 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
         "Le plan comporte au moins cinq rubriques : phases d'activité dangereuses et moyens de prévention, adaptation des matériels et conditions d'entretien, instructions aux travailleurs, organisation des premiers secours, et conditions de participation des travailleurs d'une entreprise aux travaux d'une autre.",
       citationCle:
         "Les mesures prévues par le plan de prévention comportent au moins les dispositions suivantes : 1° La définition des phases d'activité dangereuses et des moyens de prévention spécifiques correspondants ; 2° L'adaptation des matériels, installations et dispositifs à la nature des opérations à réaliser ainsi que la définition de leurs conditions d'entretien ; 3° Les instructions à donner aux travailleurs ; 4° L'organisation mise en place pour assurer les premiers secours en cas d'urgence et la description du dispositif mis en place à cet effet par l'entreprise utilisatrice ; 5° Les conditions de la participation des travailleurs d'une entreprise aux travaux réalisés par une autre en vue d'assurer la coordination nécessaire au maintien de la sécurité et, notamment, de l'organisation du commandement.",
-      statut: "obligation_manquante",
+      statut: "sans_objet",
       motif:
-        "LE MANQUE LE PLUS OPPOSABLE DU LOT, parce que Rojer ÉMET le document : un plan produit par l'outil et présenté à un inspecteur doit porter les cinq rubriques, et il n'en porte qu'une. Le modèle `LignePlanPrevention` couvre le 1° — risque, mesure de chaque entreprise. Les quatre autres n'ont aucun champ, et un balayage de `src/lib/plan-prevention/`, `src/components/plan-prevention/` et de l'écran ne rend aucune occurrence de « premiers secours », d'« instructions aux travailleurs » ni d'« organisation du commandement ». Le 4° est le plus voyant : le texte demande la description du dispositif de secours MIS EN PLACE PAR L'ENTREPRISE UTILISATRICE, c'est-à-dire par l'utilisateur du produit, qui détient déjà cette information ailleurs (R. 4224-16, corpus `code-travail-secours`). Ce n'est donc pas un attribut qui manque, ni un déclencheur : c'est un formulaire à quatre champs près. À distinguer de R. 4515-5 à R. 4515-7 du protocole de sécurité, classés `sans_objet` parce que leurs rubriques sont reprises dans la description de l'obligation qui les porte — ici, aucune surface ne les dit au dirigeant.",
+        `${PORTE_PAR_LE_MODULE} PORTÉ DEPUIS LE 2026-09-07, ET IL NE L'ÉTAIT PAS DU TOUT AVANT. C'était le manque le plus opposable du lot, parce que Rojer ÉMET le document : un plan produit par l'outil et présenté à un inspecteur doit porter les cinq rubriques, et le modèle n'en portait AUCUNE. Le module collecte désormais les cinq — \`PhaseDangereuse\` pour le 1° (une relation, parce que le texte apparie les phases « ET les moyens de prévention spécifiques CORRESPONDANTS », qu'un bloc de prose aurait dissociés), et quatre colonnes de texte pour les 2° à 5°. Le formulaire les saisit, la fiche les rend, et le fichier \`07_Plans_de_prevention.txt\` du ZIP de contrôle les imprime.\n\nCINQ ET NON QUATRE, ET C'EST UNE DÉCISION, PAS UNE ÉVIDENCE. La première lecture de ce corpus, le 2026-09-02, comptait le 1° comme couvert par les lignes risque ↔ mesures et n'appelait qu'« un formulaire à quatre champs près ». La lecture stricte a été retenue le 2026-09-07 : ces lignes transcrivent le second alinéa de R. 4512-6 — les risques « pouvant résulter de l'INTERFÉRENCE entre les activités » —, quand le 1° de R. 4512-8 vise les phases dangereuses de l'opération elle-même, qui existent sans co-activité. Les compter pour une seule rubrique aurait fait porter à l'une le contenu de l'autre.\n\nCE QUI RESTE, ET QUI N'EST PAS UN DÉFAUT DE CE CORPUS. Aucune rubrique n'est exigée à la saisie : le produit n'a pas de porte de validation sur les plans — toutes les écritures de statut de \`plan-prevention/actions.ts\` écrivent sans lire l'état courant —, et en poser une au seul point de création aurait bloqué la création sans rien exiger de la clôture ni des plans déjà en base. Le manque est rendu VISIBLE : la fiche compte les rubriques non renseignées et les nomme avec leur verbatim, le ZIP écrit « NON RENSEIGNÉE ». Le 4° ne se pré-remplit pas non plus, faute de source : aucun champ de \`Etablissement\` ne décrit le dispositif de secours, et R. 4224-16 est détenu par le dirigeant, pas par la base.`,
     },
     {
       ref: "R. 4512-9",

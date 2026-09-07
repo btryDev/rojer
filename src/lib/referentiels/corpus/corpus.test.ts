@@ -1073,29 +1073,29 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // pour la raison écrite par le lot D1 — il se retirera d'un coup le jour
       // où cette énumération disparaîtra.
       //
-      // CES CINQ ENTRÉES NE SONT PAS CINQ OBLIGATIONS ABSENTES DU RÉFÉRENTIEL
-      // AU SENS ORDINAIRE, et c'est la particularité du lot. Le plan de
-      // prévention n'est pas dans le référentiel d'obligations : il est porté
-      // par le module `PlanPrevention`, décision inscrite au domaine
-      // `co_activite` de `conformite/types.ts`. Onze des seize articles sont
+      // CES QUATRE ENTRÉES NE SONT PAS QUATRE OBLIGATIONS ABSENTES DU
+      // RÉFÉRENTIEL AU SENS ORDINAIRE, et c'est la particularité du lot. Le
+      // plan de prévention n'est pas dans le référentiel d'obligations : il est
+      // porté par le module `PlanPrevention`, décision inscrite au domaine
+      // `co_activite` de `conformite/types.ts`. Douze des seize articles sont
       // donc `sans_objet` — le module les sert, ou ils s'adressent au chef de
-      // l'entreprise extérieure. Les cinq qui suivent sont ceux que NI le
+      // l'entreprise extérieure. Les quatre qui suivent sont ceux que NI le
       // module NI le référentiel ne portent, et les compter tous les seize
       // aurait fait passer une décision de produit prise une fois pour seize
       // manques.
+      //
+      // ELLES ÉTAIENT CINQ JUSQU'AU 2026-09-07. `R. 4512-8` — le contenu
+      // minimal du plan — en est sorti le jour où le module a ouvert ses cinq
+      // rubriques : phases d'activité dangereuses appariées à leurs moyens,
+      // adaptation des matériels, instructions aux travailleurs, organisation
+      // des premiers secours, participation croisée et commandement. C'était le
+      // manque le plus opposable du lot, parce que Rojer ÉMET le document.
       //
       // R. 4512-1 : le recours à de nouveaux sous-traitants après le début de
       // l'intervention rend toute la procédure applicable à nouveau. Le modèle
       // ne connaît qu'UNE entreprise extérieure par plan, et rien à l'écran ne
       // laisse deviner qu'une question se pose. Événementiel ET structurel.
       "R. 4512-1",
-      // R. 4512-8 : le contenu minimal du plan, cinq rubriques. Rojer ÉMET le
-      // document et n'en porte qu'une — les phases d'activité dangereuses. Ni
-      // premiers secours, ni instructions aux travailleurs, ni organisation du
-      // commandement, balayage du module le 2026-09-02. Le 4° est le plus
-      // voyant : il demande le dispositif de secours de l'entreprise
-      // UTILISATRICE, que le produit détient déjà sous R. 4224-16.
-      "R. 4512-8",
       // R. 4512-9 : la liste des postes relevant du suivi individuel renforcé,
       // que le texte fait FIGURER dans le plan. Aucun champ, et le blocage est
       // celui qu'a déjà rencontré R. 4624-28-2 — le produit ne rattache aucun

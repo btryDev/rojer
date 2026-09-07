@@ -11,6 +11,11 @@ import {
   type PlanActionState,
 } from "@/lib/plan-prevention/actions";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
+import {
+  CHAPEAU_R4512_8,
+  RUBRIQUES_R4512_8,
+  URL_R4512_8,
+} from "@/lib/plan-prevention/contenu-r4512-8";
 
 type PrestataireLite = {
   id: string;
@@ -25,6 +30,27 @@ type LigneState = {
   mesureEntrepriseUtilisatrice: string;
   mesureEntrepriseExterieure: string;
 };
+
+type PhaseState = { phase: string; moyensPrevention: string };
+
+/** Les quatre rubriques de `R. 4512-8` qui sont un bloc de texte — le 1° est
+ *  une liste appariée, il a son propre répéteur. L'ordre et le libellé
+ *  viennent de `contenu-r4512-8.ts` : les nommer ici en aurait fait une
+ *  deuxième liste, à côté de celle que la fiche et le ZIP servent déjà. */
+const RUBRIQUES_TEXTE = [
+  { numero: 2, name: "adaptationMateriels", rows: 3,
+    placeholder:
+      "Ex : nacelle élévatrice conforme et vérifiée du 12-03-2026, contrôle quotidien avant usage ; groupe électrogène EE raccordé sur le tableau de chantier, entretien à la charge de l'EE." },
+  { numero: 3, name: "instructionsTravailleurs", rows: 3,
+    placeholder:
+      "Ex : accueil sécurité à l'arrivée, port du harnais obligatoire en toiture, interdiction de fumer, consignes d'évacuation remises au chef d'équipe." },
+  { numero: 4, name: "organisationSecours", rows: 3,
+    placeholder:
+      "Ex : trousse de secours en cuisine, deux SST présents en journée (M. Dupond, Mme Martin), défibrillateur dans le hall, téléphone d'alerte au comptoir, accès pompiers par la cour." },
+  { numero: 5, name: "participationCroisee", rows: 3,
+    placeholder:
+      "Ex : aucun salarié de l'établissement ne participe aux travaux ; le chef d'équipe EE commande seul son personnel et rend compte au gérant chaque matin." },
+] as const;
 
 /** Même pilule que le formulaire jumeau du permis de feu : un choix retenu
  *  est bleu glacier, jamais rouge — le papier peignait la sélection en
@@ -70,6 +96,10 @@ export function FormulairePlanPrevention({
     { risque: "", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "" },
   ]);
 
+  const [phases, setPhases] = useState<PhaseState[]>([
+    { phase: "", moyensPrevention: "" },
+  ]);
+
   useEffect(() => {
     if (state.status === "success") {
       router.push(
@@ -90,6 +120,14 @@ export function FormulairePlanPrevention({
 
   function retirerLigne(i: number) {
     setLignes((l) => (l.length === 1 ? l : l.filter((_, idx) => idx !== i)));
+  }
+
+  function ajouterPhase() {
+    setPhases((p) => [...p, { phase: "", moyensPrevention: "" }]);
+  }
+
+  function retirerPhase(i: number) {
+    setPhases((p) => (p.length === 1 ? p : p.filter((_, idx) => idx !== i)));
   }
 
   return (
@@ -479,6 +517,134 @@ export function FormulairePlanPrevention({
               {err("lignes")}
             </p>
           )}
+        </div>
+      </SectionChamps>
+
+      {/* LES CINQ RUBRIQUES QUE LE PLAN ÉMIS NE PORTAIT PAS. R. 4512-8 écrit
+          que les mesures du plan « comportent AU MOINS » cinq dispositions ;
+          le formulaire n'en collectait aucune, et le ZIP remis à un tiers
+          citait l'article en en-tête. Aucune n'est requise à la saisie : le
+          produit n'a pas de porte de validation sur les plans, et en poser une
+          au seul point de création aurait bloqué ici sans rien exiger à la
+          clôture. Ce qui est vide se lit vide, sur la fiche comme dans le ZIP. */}
+      <SectionChamps
+        titre="Contenu minimal du plan"
+        chapeau={`Art. R. 4512-8 : « ${CHAPEAU_R4512_8} » Ce que vous laissez vide est signalé comme manquant sur la fiche du plan et dans le dossier de contrôle — rien ne vous empêche d'enregistrer.`}
+      >
+        <div>
+          <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+            1° — {RUBRIQUES_R4512_8[0].titre}
+          </p>
+          <p className="m-0 mt-1.5 max-w-[70ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            « {RUBRIQUES_R4512_8[0].verbatim}. » À distinguer des risques
+            d&apos;interférence ci-dessus : ceux-là naissent de la co-activité,
+            les phases dangereuses sont celles de l&apos;opération elle-même.
+          </p>
+        </div>
+
+        {phases.map((f, i) => (
+          <div
+            key={i}
+            className="flex flex-col gap-4 border-t border-[color:var(--board-slate-line)] pt-5"
+          >
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+                Phase #{i + 1}
+              </p>
+              {phases.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => retirerPhase(i)}
+                  className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <ChampBoard
+                id={`phase-${i}`}
+                name={`phases[${i}].phase`}
+                label="Phase d'activité dangereuse"
+                defaultValue={f.phase}
+                maxLength={500}
+                placeholder="Ex : découpe au chalumeau en toiture"
+              />
+              <div>
+                <label className="label-board" htmlFor={`moyens-${i}`}>
+                  Moyens de prévention spécifiques correspondants
+                </label>
+                <textarea
+                  id={`moyens-${i}`}
+                  name={`phases[${i}].moyensPrevention`}
+                  defaultValue={f.moyensPrevention}
+                  rows={2}
+                  maxLength={500}
+                  className={`${TEXTAREA} min-h-[72px]`}
+                  placeholder="Ex : permis de feu, extincteur à poste, surveillance 2 h après arrêt"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <div>
+          <button
+            type="button"
+            onClick={ajouterPhase}
+            className={buttonVariants({
+              variant: "boardClair",
+              size: "boardSm",
+            })}
+          >
+            Ajouter une phase
+          </button>
+        </div>
+
+        {RUBRIQUES_TEXTE.map((r) => {
+          const rubrique = RUBRIQUES_R4512_8.find(
+            (x) => x.numero === r.numero,
+          )!;
+          return (
+            <div
+              key={r.name}
+              className="border-t border-[color:var(--board-slate-line)] pt-5"
+            >
+              <label className="label-board" htmlFor={r.name}>
+                {r.numero}° — {rubrique.titre}
+              </label>
+              <p className="m-0 mb-2 mt-1 max-w-[70ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                « {rubrique.verbatim}. »
+              </p>
+              <textarea
+                id={r.name}
+                name={r.name}
+                rows={r.rows}
+                maxLength={4000}
+                className={`${TEXTAREA} min-h-[88px]`}
+                placeholder={r.placeholder}
+                aria-invalid={Boolean(err(r.name))}
+                aria-describedby={err(r.name) ? `${r.name}-erreur` : undefined}
+              />
+              {err(r.name) && (
+                <p
+                  id={`${r.name}-erreur`}
+                  className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]"
+                >
+                  {err(r.name)}
+                </p>
+              )}
+            </div>
+          );
+        })}
+
+        <div>
+          <LegalBadge
+            charte="board"
+            reference="Art. R. 4512-8 CT"
+            href={URL_R4512_8}
+          />
         </div>
       </SectionChamps>
 
