@@ -22,7 +22,7 @@ import {
   renvoiOtpAutorise,
   verifyOtp,
 } from "./otp";
-import { calculerHashObjet } from "./hash-objet";
+import { calculerHashObjet, versionDeHash } from "./hash-objet";
 import type { MethodeSignature, ObjetSignable } from "@prisma/client";
 
 /**
@@ -372,6 +372,7 @@ export async function verifierIntegriteSignature(
   | { ok: false; raison: "inexistante" }
   | { ok: false; raison: "document_modifie"; hashAttendu: string; hashActuel: string }
   | { ok: false; raison: "document_introuvable" }
+  | { ok: false; raison: "version_anterieure"; signature: PreuveSignature }
 > {
   const signature = await prisma.signature.findUnique({
     where: { id: signatureId },
@@ -384,6 +385,27 @@ export async function verifierIntegriteSignature(
     signature.etablissementId,
   );
   if (!h.ok) return { ok: false, raison: "document_introuvable" };
+
+  // DEUX EMPREINTES DE FORMES DIFFÉRENTES NE SE COMPARENT PAS, ET LE DIRE EST
+  // LE CŒUR DE CE CORRECTIF. Le 2026-09-07, la forme d'entrée du plan de
+  // prévention a gagné les cinq rubriques de R. 4512-8. Comparer une empreinte
+  // v1 à une empreinte v2 rend forcément un écart — et la page publique aurait
+  // annoncé « document modifié » à un inspecteur, sur des plans que personne
+  // n'a touchés. Une accusation de falsification par effet de bord.
+  //
+  // On ne fait pas non plus semblant que la vérification a réussi : ce serait
+  // le mensonge symétrique, et le plus grave des deux sur un outil de preuve.
+  // On rend un troisième état, qui dit la vérité — la signature est un témoin
+  // authentique de ce qui a été signé ce jour-là, et le recalcul ne peut pas
+  // l'éprouver parce que le document ne s'écrit plus de la même façon.
+  if (versionDeHash(h.hash) !== versionDeHash(signature.hashDocument)) {
+    return {
+      ok: false,
+      raison: "version_anterieure",
+      signature: enPreuve(signature),
+    };
+  }
+
   if (h.hash !== signature.hashDocument) {
     return {
       ok: false,
@@ -393,17 +415,36 @@ export async function verifierIntegriteSignature(
     };
   }
 
+  return { ok: true, signature: enPreuve(signature) };
+}
+
+/**
+ * La signature réduite à ce qui sert la preuve, et rien de plus.
+ *
+ * Extrait pour que les deux sorties qui rendent une signature — la
+ * vérification réussie et la version antérieure — ne divergent pas : c'est
+ * ici, et nulle part ailleurs, que se décide ce qu'un tiers sans compte peut
+ * voir. L'adresse IP, le user-agent, l'établissement et l'objet signé restent
+ * dehors.
+ */
+function enPreuve(signature: {
+  id: string;
+  signataireNom: string;
+  signataireEmail: string;
+  signataireRole: string | null;
+  horodatageIso: Date;
+  methode: MethodeSignature;
+  hashDocument: string;
+  nomDocument: string | null;
+}): PreuveSignature {
   return {
-    ok: true,
-    signature: {
-      id: signature.id,
-      signataireNom: signature.signataireNom,
-      signataireEmail: signature.signataireEmail,
-      signataireRole: signature.signataireRole,
-      horodatageIso: signature.horodatageIso,
-      methode: signature.methode,
-      hashDocument: signature.hashDocument,
-      nomDocument: signature.nomDocument,
-    },
+    id: signature.id,
+    signataireNom: signature.signataireNom,
+    signataireEmail: signature.signataireEmail,
+    signataireRole: signature.signataireRole,
+    horodatageIso: signature.horodatageIso,
+    methode: signature.methode,
+    hashDocument: signature.hashDocument,
+    nomDocument: signature.nomDocument,
   };
 }
