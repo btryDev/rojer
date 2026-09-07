@@ -60,7 +60,11 @@ export default async function AccesParTokenPage({
   });
   if (!etablissement) notFound();
 
-  const libelleObjet = await libelleObjetSignable(t.objetType, t.objetId);
+  const libelleObjet = await libelleObjetSignable(
+    t.objetType,
+    t.objetId,
+    t.etablissementId,
+  );
 
   if (t.scope === "signature") {
     return (
@@ -130,10 +134,29 @@ export default async function AccesParTokenPage({
   );
 }
 
-async function libelleObjetSignable(objetType: string, objetId: string) {
+/**
+ * Libellé de l'objet visé, pour dire au porteur du lien ce qu'il signe.
+ *
+ * **`etablissementId` est un paramètre obligatoire**, et il vient du jeton,
+ * jamais de l'URL. Cette fonction lisait le rapport sur son seul identifiant :
+ * elle rendait alors le nom du fichier, la date et l'obligation d'un rapport
+ * appartenant à n'importe quel établissement. L'émission d'un jeton borne
+ * désormais `objetId` à l'établissement (`lib/signatures/appartenance.ts`),
+ * mais un jeton émis avant ce garde reste en base jusqu'à son expiration —
+ * et c'est ici que se joue ce qu'il donne à lire.
+ *
+ * Un objet hors du périmètre du jeton est traité comme inexistant : on
+ * retombe sur le libellé générique, exactement comme pour un type d'objet
+ * qu'on ne sait pas encore nommer.
+ */
+async function libelleObjetSignable(
+  objetType: string,
+  objetId: string,
+  etablissementId: string,
+) {
   if (objetType === "rapport_verification") {
-    const r = await prisma.rapportVerification.findUnique({
-      where: { id: objetId },
+    const r = await prisma.rapportVerification.findFirst({
+      where: { id: objetId, etablissementId },
       select: {
         fichierNomOriginal: true,
         dateRapport: true,
