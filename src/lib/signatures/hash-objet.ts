@@ -126,6 +126,15 @@ export async function calculerHashObjet(
       euChefFonction: plan.euChefFonction,
       dateDebut: plan.dateDebut,
       dateFin: plan.dateFin,
+      // LA DURÉE MANQUAIT, ET ELLE NE VAUT PAS QUE POUR ELLE-MÊME. Elle
+      // s'imprime dans le ZIP (« Période : … · 22 h ») et sur la fiche, mais
+      // surtout elle COMMANDE le seuil de R. 4512-7 : c'est d'elle que
+      // `diagnostiquerPlan` tire la pastille « Plan écrit obligatoire » que le
+      // signataire a sous les yeux. La changer après signature ne change pas
+      // seulement ce que le document dit, mais ce que le texte exige de lui —
+      // faire passer 400 h à 399 retire le fondement affiché sans toucher à
+      // une empreinte qui l'ignorait.
+      dureeHeuresEstimee: plan.dureeHeuresEstimee,
       lieux: plan.lieux,
       naturesTravaux: plan.naturesTravaux,
       travauxDangereux: plan.travauxDangereux,
