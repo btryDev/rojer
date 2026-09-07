@@ -115,24 +115,44 @@ export function ChampsFiche({ children }: { children: ReactNode }) {
  * grandeurs distinctes portent le nom `criticite` dans ce dépôt ; une échelle
  * par défaut les rend indiscernables à l'affichage. L'appelant nomme la sienne
  * — `CRITICITE_ACTION_MAX` pour le plan d'actions.
+ *
+ * **NOMMER L'ÉCHELLE NE BORNE PAS LA VALEUR, et les deux ne se corrigent pas au
+ * même endroit.** Le lot du 2026-09-04 a fermé la porte d'entrée — le schéma
+ * Zod des deux écrivains, et le seed qui recopiait une criticité de risque dans
+ * un champ d'action. Il n'a rien changé aux lignes DÉJÀ en base : tout dossier
+ * antérieur porte encore ses valeurs hors échelle, et cet écran continuait d'en
+ * dessiner **cinq points tous pleins** sous le texte « 6 sur 5 ».
+ *
+ * Les points mentaient là où le texte disait vrai : une rangée pleine se lit
+ * « au maximum », c'est-à-dire une valeur DANS l'échelle, quand la valeur est
+ * précisément hors d'elle. Écrêter à 5 aurait été pire — le texte aurait dit
+ * « 5 sur 5 » et plus rien n'aurait signalé l'anomalie à qui la subit.
+ *
+ * Une valeur hors échelle ne se dessine donc pas : le texte, qui est exact, la
+ * porte seul. C'est le parti de tout ce dépôt — un manque se nomme, il ne se
+ * comble pas d'une approximation. La correction des données existantes est une
+ * décision sur des dossiers réels, pas un défaut d'affichage.
  */
 export function Cotation({ valeur, sur }: { valeur: number; sur: number }) {
+  const dansLEchelle = valeur >= 0 && valeur <= sur;
   return (
     <span className="inline-flex items-center gap-3 align-middle">
-      <span aria-hidden className="inline-flex items-center gap-[5px]">
-        {Array.from({ length: sur }, (_, i) => (
-          <span
-            key={i}
-            className="size-[9px] rounded-full"
-            style={{
-              background:
-                i < valeur
-                  ? "var(--board-signal-line)"
-                  : "var(--board-slate-line)",
-            }}
-          />
-        ))}
-      </span>
+      {dansLEchelle ? (
+        <span aria-hidden className="inline-flex items-center gap-[5px]">
+          {Array.from({ length: sur }, (_, i) => (
+            <span
+              key={i}
+              className="size-[9px] rounded-full"
+              style={{
+                background:
+                  i < valeur
+                    ? "var(--board-signal-line)"
+                    : "var(--board-slate-line)",
+              }}
+            />
+          ))}
+        </span>
+      ) : null}
       <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
         {valeur} sur {sur}
       </span>

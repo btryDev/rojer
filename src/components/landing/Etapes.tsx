@@ -134,8 +134,8 @@ export function Etapes({
               retrait : à l'aplomb du corps de texte, elle se lisait comme
               une quatrième ligne de l'étape 3. */}
           <p className="mt-9 font-mono text-[0.68rem] uppercase leading-[1.8] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
-            Référentiel construit depuis Légifrance et l&apos;INRS · 150
-            obligations sur 20 domaines · source citée pour chacune
+            Référentiel construit depuis Légifrance et l&apos;INRS · 152
+            obligations sur 21 domaines · source citée pour chacune
           </p>
 
           <Reveal delai={300}>

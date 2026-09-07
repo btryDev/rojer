@@ -121,14 +121,43 @@ export const ENCRE_ETAT: Record<RegistreLigne, string> = {
  * pendant que le bandeau du parc comptait « N sous 30 j » sur `proche` seul :
  * les deux mots se ressemblaient parce que les deux nombres ne comptaient pas
  * la même chose. Le remède est de séparer le compte, pas d'unifier le mot.
+ *
+ * SÉPARER LE COMPTE N'A PAS SUFFI, ET LE MOT RESTANT DISAIT ENCORE LE CONTRAIRE
+ * (2026-09-04, seconde passe). Les comptes séparés, la carte d'un appareil
+ * affichait « 2 sous 30 jours » et « 1 à venir » côte à côte — deux nombres
+ * justes, et pourtant illisibles ensemble : « à venir » est le terme générique
+ * qui CONTIENT « sous 30 jours », et rien ne disait au lecteur si le 1
+ * s'ajoutait aux 2 ou les incluait. La table venait de se donner la règle « un
+ * mot par état » ; elle l'avait respectée à la lettre — deux mots distincts —
+ * en manquant ce qu'elle protégeait, car deux mots distincts dont l'un englobe
+ * l'autre nomment toujours mal deux ensembles disjoints.
+ *
+ * `proche` et `lointain` PARTAGENT UNE BORNE : ils partitionnent l'avenir en
+ * deux, de part et d'autre de `JOURS_HORIZON_PROCHE`. Leurs deux mots la
+ * nomment donc tous les deux — « sous 30 jours » / « au-delà de 30 jours » —
+ * et l'un ne peut plus se lire comme contenant l'autre : la disjonction est
+ * dans les mots, pas seulement dans le calcul. C'est aussi pourquoi le nombre
+ * n'y est plus écrit à la main : la borne affichée EST la constante, et
+ * l'ancien « sous 30 jours » littéral serait devenu faux le jour où quelqu'un
+ * aurait porté l'horizon à 45.
+ *
+ * Le type, lui, refusait déjà « aVenir » comme IDENTIFIANT de `lointain` (voir
+ * `EtatEcheance`, qui explique pourquoi) — et l'affichait quand même comme
+ * MOT. Les deux moitiés disent enfin la même chose.
  */
 export const LIBELLE_ETAT: Record<
   RegistreLigne,
   { readonly un: string; readonly plusieurs: string }
 > = {
   enRetard: { un: "dépassée", plusieurs: "dépassées" },
-  proche: { un: "sous 30 jours", plusieurs: "sous 30 jours" },
-  lointain: { un: "à venir", plusieurs: "à venir" },
+  proche: {
+    un: `sous ${JOURS_HORIZON_PROCHE} jours`,
+    plusieurs: `sous ${JOURS_HORIZON_PROCHE} jours`,
+  },
+  lointain: {
+    un: `au-delà de ${JOURS_HORIZON_PROCHE} jours`,
+    plusieurs: `au-delà de ${JOURS_HORIZON_PROCHE} jours`,
+  },
   faite: { un: "faite", plusieurs: "faites" },
   aPlanifier: { un: "à planifier", plusieurs: "à planifier" },
 };
@@ -142,8 +171,8 @@ export const LIBELLE_ETAT: Record<
  */
 export const LIBELLE_ETAT_COURT: Record<RegistreLigne, string> = {
   enRetard: "dépassées",
-  proche: "sous 30 j",
-  lointain: "à venir",
+  proche: `sous ${JOURS_HORIZON_PROCHE} j`,
+  lointain: "au-delà",
   faite: "faites",
   aPlanifier: "à planif.",
 };

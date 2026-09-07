@@ -94,6 +94,56 @@ export const CASF_DEFINITION_HANDICAP: Corpus = {
   ],
 };
 
+/**
+ * L'article du code qui INSTITUE le registre public d'accessibilité.
+ *
+ * POURQUOI IL ARRIVE APRÈS LES AUTRES, ET CE QUE ÇA DIT. L'en-tête de ce
+ * fichier annonce depuis le 2026-09-03 avoir ouvert « `R. 164-6` qui institue
+ * le registre » — et l'article n'était nulle part au corpus. Le relevé avait
+ * bien eu lieu, sa TRACE n'avait pas été écrite : seul l'arrêté d'application
+ * l'avait été. Le produit citait donc au dirigeant, sur l'écran du registre ET
+ * dans le ZIP remis à l'inspecteur, l'article fondateur de tout le module, sans
+ * qu'aucune entrée n'en porte le verbatim ni la date de lecture.
+ *
+ * PERSONNE NE POUVAIT LE VOIR. La garde `citations-ecran` n'admettait que les
+ * numérotations à QUATRE chiffres ; le code de la construction numérote sur
+ * trois. `R. 164-6` lui était invisible, comme tout ce que le CCH fonde. Le
+ * compteur affichait zéro parce qu'il ne regardait pas.
+ *
+ * Relu à la source le 2026-09-04 : le verbatim que l'écran affiche entre
+ * guillemets est le premier alinéa, mot pour mot. L'article en compte six, et
+ * les cinq autres sont ici — c'est le sixième qui renvoie à l'arrêté du
+ * 19 avril 2017, déjà dépouillé ci-dessous.
+ */
+export const CCH_REGISTRE_ACCESSIBILITE: Corpus = {
+  id: "cch-registre-accessibilite",
+  intitule:
+    "Code de la construction et de l'habitation — le registre public d'accessibilité",
+  url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819305",
+  etendue: "articles_cites",
+  portee:
+    "L'article unique qui institue le registre public d'accessibilité et en fixe le contenu minimal, renvoyant à un arrêté pour le détail. Les deux articles qu'il cite — `R. 143-2` pour la définition de l'ERP, `L. 164-1` pour l'obligation légale dont il est pris — ne sont pas relevés ici : ils ne sont pas cités par le produit pour eux-mêmes, ils apparaissent dans le verbatim de celui-ci.",
+  articles: [
+    {
+      ref: "CCH R. 164-6",
+      intitule: "Registre public d'accessibilité",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819305",
+      versionEnVigueur: "2021-07-01",
+      modifiePar: { texte: "Décret n° 2021-872 du 30 juin 2021" },
+      luLe: "2026-09-04",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Tout exploitant d'ERP élabore un registre public d'accessibilité précisant les dispositions prises pour que chacun bénéficie des prestations de l'établissement. Trois contenus imposés par le code : une information complète sur les prestations, la liste des pièces administratives et techniques relatives à l'accessibilité, et la description des actions de formation des personnels chargés de l'accueil des personnes handicapées avec leurs justificatifs. Deux modalités : mise à disposition de l'ensemble du public, et mise à jour régulière. État permanent — l'article ne fixe aucune périodicité, et « régulière » n'en est pas une.",
+      citationCle:
+        "L'exploitant de tout établissement recevant du public au sens de l'article R. 143-2 élabore le registre public d'accessibilité prévu à l'article L. 164-1. Celui-ci précise les dispositions prises pour permettre à tous, notamment aux personnes handicapées, quel que soit leur handicap, de bénéficier des prestations en vue desquelles cet établissement a été conçu. Le registre contient : 1° Une information complète sur les prestations fournies dans l'établissement ; 2° La liste des pièces administratives et techniques relatives à l'accessibilité de l'établissement aux personnes handicapées ; 3° La description des actions de formation des personnels chargés de l'accueil des personnes handicapées et leurs justificatifs. Les modalités du registre portent sur sa mise à disposition de l'ensemble du public et sur sa mise à jour régulière. Pour les points d'arrêt des services de transport collectif relevant du régime des établissements recevant du public et qui sont soumis aux dispositions de l'article L. 164-1, le registre public d'accessibilité peut porter sur l'ensemble d'une ligne ou d'un réseau. Un arrêté du ministre chargé de la construction et, le cas échéant, du ministre chargé des transports, précise le contenu et les modalités du registre public d'accessibilité, selon la catégorie et le type de l'établissement, en distinguant, d'une part, les catégories 1 à 4, d'autre part, la catégorie 5.",
+      statut: "sans_objet",
+      motif:
+        PORTE_PAR_LE_MODULE +
+        "\n\nCE QUE LA RELECTURE A CONFIRMÉ, ET QUI N'EST PAS ANODIN. L'article ne nomme aucune famille de handicap : « à tous, notamment aux personnes handicapées, quel que soit leur handicap ». Il dit donc la même chose que l'arrêté et que le reste de la chaîne — et c'est ce qui fonde le refus, écrit en tête de fichier, de tirer une nomenclature du droit de l'accessibilité. Quatre textes lus, aucune famille.\n\nSon alinéa 3° impose la description des actions de formation des personnels d'accueil POUR TOUT ERP, là où l'arrêté ne réclame l'attestation annuelle signée qu'en 1ʳᵉ à 4ᵉ catégorie. Le code exige la description, l'arrêté ajoute la forme. La différence n'est pas exploitée aujourd'hui ; elle est relevée pour qu'on ne la redécouvre pas.",
+    },
+  ],
+};
+
 export const ARRETE_2017_04_19_REGISTRE_ACCESSIBILITE: Corpus = {
   id: "arrete-2017-04-19-registre-accessibilite",
   intitule:

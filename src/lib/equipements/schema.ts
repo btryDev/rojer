@@ -259,6 +259,17 @@ export const equipementSchema = z
         .optional()
         .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
     ),
+    // La fin de vie fixée par le FABRICANT — même forme que la mise en
+    // service, et sans borne haute : un harnais se périme à dix ans, un
+    // extincteur bien plus tard, et rien dans le droit ne plafonne cette date.
+    datePeremption: z.preprocess(
+      (v) => (v === "" || v === null ? undefined : v),
+      z
+        .string()
+        .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+        .optional()
+        .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
+    ),
     nombre: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
       z.coerce.number().int().min(1).max(9999).optional(),
@@ -402,6 +413,7 @@ export function normaliserFormDataEquipement(
     batimentId: raw.batimentId || undefined,
     localisation: raw.localisation,
     dateMiseEnService: raw.dateMiseEnService,
+    datePeremption: raw.datePeremption,
     nombre: raw.nombre,
     aGroupeElectrogene: caseCochee("aGroupeElectrogene"),
     estLocalPollutionSpecifique: caseCochee("estLocalPollutionSpecifique"),

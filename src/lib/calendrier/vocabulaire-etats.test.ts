@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
   LIBELLE_ETAT,
@@ -8,6 +8,7 @@ import {
   libelleEtatCourtCapitale,
   type RegistreLigne,
 } from "./etats";
+import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
 import { etatCharge, libelleCharge } from "@/lib/batiments/etat-charge";
 import { resumerEquipement } from "@/lib/equipements/etat-verifications";
 
@@ -78,6 +79,34 @@ describe("un mot par état", () => {
     }
   });
 
+  it("les deux états qui se partagent l'horizon nomment tous deux la borne", () => {
+    // POURQUOI CE TEST EXISTE. « Un mot par état » a été respecté à la lettre
+    // — « sous 30 jours » et « à venir » sont bien deux mots — et le lecteur y
+    // perdait quand même : « à venir » est le terme générique qui CONTIENT
+    // « sous 30 jours », et les deux comptes affichés côte à côte sur la carte
+    // d'un appareil ne se lisaient plus comme disjoints. Compter juste ne
+    // suffisait pas ; il fallait que les MOTS soient disjoints eux aussi.
+    //
+    // Ce que ce test tient, et qu'aucune règle d'unicité ne tenait : `proche`
+    // et `lointain` partagent une borne, donc chacun doit la NOMMER. Le jour
+    // où l'un des deux redevient un terme vague — « à venir », « plus tard »,
+    // « bientôt » —, ce test échoue.
+    //
+    // Et il exige le nombre de la CONSTANTE, pas un 30 littéral : un horizon
+    // porté à 45 jours doit changer les deux phrases, sinon elles mentent.
+    const borne = String(JOURS_HORIZON_PROCHE);
+    for (const e of ["proche", "lointain"] as const) {
+      for (const mot of [LIBELLE_ETAT[e].un, LIBELLE_ETAT[e].plusieurs]) {
+        expect(
+          mot.includes(borne),
+          `« ${mot} » ne nomme pas la borne des ${borne} jours. ` +
+            "`proche` et `lointain` se partagent cet horizon : un mot qui ne " +
+            "le dit pas se lit comme englobant l'autre état.",
+        ).toBe(true);
+      }
+    }
+  });
+
   it("aucun mot n'est vide, ni ne traîne d'espace", () => {
     for (const e of ETATS) {
       for (const mot of [
@@ -103,7 +132,9 @@ describe("un mot par état", () => {
       );
     }
     expect(libelleEtatCourtCapitale("enRetard")).toBe("Dépassées");
-    expect(libelleEtatCourtCapitale("proche")).toBe("Sous 30 j");
+    expect(libelleEtatCourtCapitale("proche")).toBe(
+      `Sous ${JOURS_HORIZON_PROCHE} j`,
+    );
   });
 });
 
@@ -197,12 +228,129 @@ function codeSansCommentaires(chemin: string): string {
  */
 const SYNONYMES_REFUSES = ["à traiter", "en retard", "En retard", "EN RETARD"];
 
+/** Les mots de la table, tels qu'un littéral les écrirait. Relevés, pas listés. */
+const MOTS_DE_LA_TABLE = [
+  ...new Set(
+    ETATS.flatMap((e) => [
+      LIBELLE_ETAT[e].un,
+      LIBELLE_ETAT[e].plusieurs,
+      LIBELLE_ETAT_COURT[e],
+    ]),
+  ),
+];
+
 describe("aucun écran ne rouvre un second vocabulaire", () => {
+  /**
+   * LA LISTE DE QUATRE FICHIERS QUI VIVAIT ICI A MANQUÉ LE PRINCIPAL.
+   *
+   * Elle était écrite à la main, et `VueParEquipement.tsx` n'y figurait pas —
+   * alors que c'est le fichier qui écrit LE PLUS de mots d'état du produit :
+   * dix libellés en dur, cinq états × deux emplacements. Le 2026-09-04, quand
+   * « à venir » est devenu « au-delà de 30 jours », neuf de ces dix mots ont
+   * continué de coïncider avec la table par habitude et le dixième a divergé.
+   * Sur `/calendrier?vue=equipement`, le dirigeant a lu « 1 sous 30 j » à côté
+   * de « 11 à venir » — la paire englobante exacte que ce lot venait de
+   * supprimer ailleurs. La garde était verte.
+   *
+   * **Une garde par énumération manque précisément ce que personne n'a pensé à
+   * y inscrire**, et son silence ne se distingue pas d'un succès. Les fichiers
+   * se RELÈVENT donc : tout ce qui, sous `src`, écrit un mot d'état hors
+   * commentaire est examiné — la liste ne peut plus être en retard sur le
+   * dépôt.
+   */
+  function sources(): string[] {
+    const trouves: string[] = [];
+    const descendre = (d: string) => {
+      for (const entree of readdirSync(d)) {
+        const p = join(d, entree);
+        if (statSync(p).isDirectory()) descendre(p);
+        else if (/\.tsx?$/.test(p) && !/\.test\./.test(p)) trouves.push(p);
+      }
+    };
+    descendre(join(process.cwd(), "src"));
+    return trouves;
+  }
+
+  it("aucun composant ne reçoit un mot d'état en propriété", () => {
+    // LA FORME EXACTE DU DÉFAUT, et elle s'est répétée deux fois.
+    // `<Compte libelle="à venir">` et `<Cle libelle="sous 30 jours">` : un
+    // composant qui ACCEPTE un mot laisse chaque appelant en écrire un. Neuf
+    // des dix mots de `VueParEquipement` coïncidaient encore avec la table par
+    // habitude, et le dixième a divergé le jour où « à venir » est devenu
+    // « au-delà de 30 jours » — la garde d'alors était verte, parce qu'elle
+    // balayait une liste de quatre fichiers écrite à la main où ce fichier ne
+    // figurait pas. Une garde par énumération manque ce que personne n'a pensé
+    // à y inscrire, et son silence ressemble à un succès.
+    //
+    // Ce test ne cherche donc plus DES FICHIERS mais UNE FORME : un mot de la
+    // table passé en propriété. Il n'a pas de liste à tenir à jour, et les mots
+    // qu'il refuse se relèvent de la table — pas d'une copie.
+    //
+    // CE QU'IL NE VOIT PAS, ET UNE RELECTURE A CORRIGÉ CE QUE J'EN DISAIS. Il
+    // ne voit qu'un mot que la table porte AUJOURD'HUI. Éprouvé en réinjectant
+    // `libelle="à venir"` dans `VueParEquipement` : vert — « à venir » n'est
+    // plus un mot de la table, et ne figure pas non plus dans
+    // `SYNONYMES_REFUSES`.
+    //
+    // J'avais écrit que l'autre moitié de cette garde l'attrapait. C'EST FAUX,
+    // et c'est `tsc` qui l'attrape : `Compte` et `Cle` n'acceptent plus de
+    // propriété `libelle`, donc l'injection ne compile pas. La signature des
+    // composants est la vraie garantie sur ce point, et ces deux tests ne la
+    // remplacent pas — ils couvrent ce qu'elle ne peut pas voir, les mots posés
+    // ailleurs qu'en propriété. Trois garanties, pas deux, et il fallait le
+    // dire plutôt que d'en créditer une de ce que fait une autre.
+    const motifs = MOTS_DE_LA_TABLE.map(
+      (m) => new RegExp(`\\b(libelle|label|titre|texte)\\s*=\\s*[{"']*["']${
+        m.replace(/[.*+?^$()|[\]\\]/g, "\\$&")
+      }["']`, "u"),
+    );
+    const fautifs: string[] = [];
+    const racine = process.cwd() + "/";
+    for (const fichier of sources()) {
+      const code = codeSansCommentaires(fichier.slice(racine.length));
+      if (motifs.some((r) => r.test(code))) fautifs.push(fichier.slice(racine.length));
+    }
+    expect(
+      fautifs,
+      "Un mot d'état y est passé en propriété à un composant. Le composant doit " +
+        "recevoir l'ÉTAT et prendre le mot dans `LIBELLE_ETAT` : tant qu'il " +
+        "accepte un mot, un appelant peut en écrire un, et il divergera le jour " +
+        "où la table changera — c'est ce qui est arrivé à `VueParEquipement` et " +
+        "à la légende de `RegleAnnuelle` le 2026-09-04.",
+    ).toEqual([]);
+  });
+
+  /**
+   * CE QUE LE BALAYAGE ÉLARGI A TROUVÉ, ET POURQUOI IL N'EST PAS ICI.
+   *
+   * Le 2026-09-04, j'ai remplacé cette liste par un relevé — « tout fichier qui
+   * importe le vocabulaire d'état ne doit écrire aucun synonyme du
+   * dépassement ». Il a sorti **neuf fichiers**, et ce ne sont pas des faux
+   * positifs : « En retard » s'affiche encore, en toutes lettres, sur le
+   * tableau de bord (`board`, `kpis`, `bars`, `groupes`), la page calendrier,
+   * la vue par équipement, la section de mois, la vue annuelle, la page des
+   * actions, la pastille de fiche, la pilule de statut, le badge de statut et
+   * jusqu'au manifeste de la page de vente — quinze emplacements au moins.
+   *
+   * Le mot de cet état est « dépassée », et le motif de ce choix est écrit dans
+   * `etats.ts` : « en retard » se rapproche du jugement sur celui qui lit,
+   * quand le produit ne dit que des faits datés. Le renommer partout est un
+   * changement de LANGUE DU PRODUIT sur une quinzaine d'écrans, dont la page de
+   * vente — une décision, pas un correctif à glisser dans un test.
+   *
+   * Le relevé n'est donc pas retenu : il serait rouge, et un test rouge qu'on
+   * laisse rouge n'apprend plus rien à personne. La liste explicite revient,
+   * **avec ce qu'elle ne couvre pas écrit noir sur blanc** — et le test de
+   * forme ci-dessus, lui, couvre le cas général : aucun composant ne peut plus
+   * RECEVOIR un mot d'état, quel qu'il soit.
+   */
   const SURFACES = [
     "src/lib/batiments/etat-charge.ts",
     "src/lib/equipements/etat-verifications.ts",
     "src/components/equipements/BandeauParc.tsx",
     "src/components/equipements/VitrineEquipement.tsx",
+    "src/components/calendrier/VueParEquipement.tsx",
+    "src/components/calendrier/RegleAnnuelle.tsx",
   ];
 
   it.each(SURFACES)("%s n'écrit aucun synonyme du dépassement", (fichier) => {

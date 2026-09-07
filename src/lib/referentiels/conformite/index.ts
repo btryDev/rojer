@@ -30,6 +30,7 @@ import { obligationsSanteTravail } from "./sante-travail";
 import { obligationsSecours } from "./secours";
 import { obligationsOrganisationPrevention } from "./organisation-prevention";
 import { obligationsInformationTravailleurs } from "./information-travailleurs";
+import { obligationsEpi } from "./epi";
 import { obligationsLocauxSociaux } from "./locaux-sociaux";
 import { obligationsCoActivite } from "./co-activite";
 import { obligationsSignalisation } from "./signalisation";
@@ -52,6 +53,7 @@ export {
   obligationsSecours,
   obligationsOrganisationPrevention,
   obligationsInformationTravailleurs,
+  obligationsEpi,
   obligationsLocauxSociaux,
   obligationsCoActivite,
   obligationsSignalisation,
@@ -80,6 +82,7 @@ export const obligationsConformite: Obligation[] = [
   // sans équipement, et ce que l'effectif ajoute aux seuils 11 et 50.
   ...obligationsOrganisationPrevention,
   ...obligationsInformationTravailleurs,
+  ...obligationsEpi,
   ...obligationsLocauxSociaux,
   ...obligationsCoActivite,
   // Lot signalisation (2026-09-02) — l'arrêté du 4 novembre 1993, jamais
@@ -153,7 +156,7 @@ export const obligationsConformite: Obligation[] = [
 // ventilation (`CH 39 § 3`). Toutes deux sont bornées aux ERP des quatre
 // premières catégories : aucun calendrier existant ne les porte, et un parc de
 // 5ᵉ catégorie n'en voit rien.
-export const REFERENTIEL_VERSION = "2026-09-04.2";
+export const REFERENTIEL_VERSION = "2026-09-04.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

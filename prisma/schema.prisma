@@ -483,6 +483,15 @@ model Equipement {
   libelle           String
   localisation      String?
   dateMiseEnService DateTime?
+  // Fin de vie fixée par le FABRICANT, pas par un texte : un harnais antichute
+  // a typiquement dix ans, une cartouche filtrante bien moins. Le 3° de
+  // l'article 2 de l'arrêté du 19 mars 1993 fait constater l'élimination des
+  // EPI périmés pendant la vérification périodique — c'est la seule
+  // conséquence qu'un texte lu attache aujourd'hui à cette date. La colonne ne
+  // produit donc aucune échéance par elle-même : la remplir renseigne, elle ne
+  // prescrit pas. Nullable sans défaut, pour que « je ne sais pas » reste
+  // distinct de « pas de péremption ».
+  datePeremption    DateTime?
   caracteristiques  Json?
   actif             Boolean             @default(true)
 
@@ -515,6 +524,20 @@ enum CategorieEquipement {
   EQUIPEMENT_LEVAGE
   INSTALLATION_FRIGORIFIQUE
   COMPACTEUR_PRESSE_DECHETS_MOTORISE
+  // Famille, pas régime : un harnais antichute se vérifie, un casque non.
+  // Aucune obligation n'y est rattachée tant que R. 4323-95 à -99 et l'arrêté
+  // qui fixe la liste des EPI vérifiables n'ont pas été dépouillés — et le
+  // dépouillement dira peut-être de la scinder. Voir la migration
+  // 20260904120000_categorie_epi.
+  EPI
+  // Les trois catégories que l'arrêté du 19 mars 1993 soumet à vérification —
+  // douze mois, personne qualifiée, en service ou en stock. Séparées d'`EPI`
+  // parce que le casque et les gants, qui y restent, ne relèvent d'aucune
+  // vérification périodique. Les cartouches filtrantes antigaz sont rangées
+  // avec l'appareil respiratoire qu'elles alimentent.
+  EPI_ANTICHUTE
+  EPI_RESPIRATOIRE
+  EPI_GILET_SAUVETAGE
   AUTRE
 }
 

@@ -305,10 +305,22 @@ const outilActions: OutilMcp<typeof schemaActions> = {
 // ---------------------------------------------------------------------
 
 /** Catégories du référentiel, rendues lisibles sans les traduire. */
-const LIBELLE_CATEGORIE: Record<string, string> = {
+// LA SEULE TABLE DU DÉPÔT INDEXÉE PAR `string` ET NON PAR `CategorieEquipement`,
+// et c'est ce qui l'a fait manquer quatre fois de suite : `tsc` ne peut pas
+// signaler une clé absente d'un `Record<string, …>`. Les quatre catégories de
+// protection individuelle ouvertes le 2026-09-04 sortaient donc en
+// « epi_antichute » au client MCP, par le repli `?? c.toLowerCase()`.
+//
+// Le repli est gardé — un serveur qui parle à un modèle ne doit pas casser sur
+// une valeur neuve —, mais il n'excuse rien : il rend l'oubli SILENCIEUX.
+export const LIBELLE_CATEGORIE: Record<string, string> = {
   INSTALLATION_ELECTRIQUE: "installation électrique",
   EXTINCTEUR: "extincteur",
   RIA: "robinet d'incendie armé",
+  EPI: "équipement de protection individuelle",
+  EPI_ANTICHUTE: "harnais antichute ou système d'arrêt de chute",
+  EPI_RESPIRATOIRE: "appareil de protection respiratoire",
+  EPI_GILET_SAUVETAGE: "gilet de sauvetage gonflable",
   BAES: "bloc autonome d'éclairage de sécurité",
   ALARME_INCENDIE: "alarme incendie",
   DESENFUMAGE: "désenfumage",

@@ -573,6 +573,166 @@ réserve au corpus, chacun sous son article.
 
 ---
 
+### C14 · 2026-09-04 — Les EPI : douze mois, cinq familles nommées, et une catégorie qui en couvre bien plus
+
+**Pourquoi ce lot** — la veille, la catégorie `EPI` était entrée dans
+`CategorieEquipement` **sans aucune obligation**, et son commentaire disait
+pourquoi : « il ne faut PAS en attacher une avant d'avoir lu R. 4323-95 à
+R. 4323-99 et l'arrêté qui fixe la liste des EPI soumis à vérification : le
+faire réclamerait un rendez-vous annuel à qui a déclaré des gants ».
+`etablissements/parametrage.ts` portait la même mise en garde depuis le
+2026-09-01, et nommait déjà le texte à ouvrir. Ce lot est cette lecture.
+
+**Ce qui a été ouvert** — vingt-deux articles, tous en **première main** sur
+Légifrance, pages d'article une par une :
+
+- la **section 9 du chapitre III** en entier, `R. 4323-91` à `R. 4323-106` —
+  seize articles, trois sous-sections. Corpus `code-travail-epi`, `integral` ;
+- les **deux articles d'amont** que la section et l'arrêté désignent
+  nommément : `R. 4321-4` (mise à disposition) et `R. 4322-1` (maintien en état
+  de conformité, cité par l'arrêté sous son ancien numéro `R. 233-1-1`). Corpus
+  `code-travail-epi-amont`, `articles_cites` ;
+- l'**arrêté du 19 mars 1993** en entier, quatre articles. Corpus
+  `arrete-1993-03-19-epi`, `integral`.
+
+**Le résultat, en une ligne : douze mois, cinq familles nommées, rien d'autre.**
+
+Le brief nommait `R. 4323-95` en premier ; cet article **ne parle pas de
+vérification périodique**. Il impose la fourniture gratuite, le bon
+fonctionnement et le maintien en état hygiénique « par les entretiens,
+réparations et remplacements **nécessaires** » — un état continu dont rien ne
+chiffre la fréquence. La périodicité est **plus loin, et pas dans le Code** :
+`R. 4323-99` est un article d'habilitation jumeau de `R. 4323-23`, il renvoie
+la liste ET le rythme à des arrêtés.
+
+**L'arrêté du 19 mars 1993, art. 1er, et sa liste NOMINATIVE ET FERMÉE** —
+« les équipements de protection individuelle suivants, **en service ou en
+stock**, doivent avoir fait l'objet, **depuis moins de douze mois au moment de
+leur utilisation**, de la vérification générale périodique » :
+
+1. appareils de protection respiratoire autonomes destinés à l'évacuation ;
+2. appareils de protection respiratoire et équipements complets destinés à des
+   interventions accidentelles en milieu hostile ;
+3. gilets de sauvetage gonflables ;
+4. **systèmes de protection individuelle contre les chutes de hauteur** ;
+5. stocks de cartouches filtrantes antigaz pour appareils de protection
+   respiratoire.
+
+**Une seule de ces cinq touche les trois secteurs cibles : la quatrième** — le
+harnais antichute et sa longe, qu'on rencontre pour un accès en toiture, une
+mezzanine de réserve, une trémie de monte-charge.
+
+**Ce que le texte NE dit PAS, et qui est la moitié du résultat.** Casque,
+gants, chaussures de sécurité, lunettes, écran facial, protections auditives,
+masque, vêtement de travail : **aucun n'est soumis à vérification générale
+périodique**, par ce texte ni par aucun autre que ce lot ait trouvé. Ils
+relèvent d'un autre régime, permanent et non périodique — `R. 4322-1` (maintien
+en état de conformité) et `R. 4323-95` (entretien). Le guide commercial que
+`parametrage.ts` mentionnait avait donc **le bon chiffre et la mauvaise
+assiette**, exactement comme celui de la signalisation le 2026-09-02.
+
+**La formule n'est pas « tous les ans ».** « Depuis moins de douze mois **au
+moment de leur utilisation** » mesure l'échéance à l'instant de l'usage, pas à
+la date de la dernière visite — même patron que l'arrêté du 5 mars 1993. Le
+réalisateur est à `R. 4323-100` : **personne qualifiée, appartenant ou non à
+l'établissement**. Aucun organisme accrédité n'est exigé par le Code.
+
+| Article | Ce qu'il porte | Périodicité | Sort |
+|---|---|---|---|
+| `R. 4323-91` à `-94`, `-96`, `-98` | Adéquation au risque, exposition résiduelle, compatibilité, protection oculaire, usage personnel, usage conforme | **aucune** | `sans_objet` — règles de fond sans récurrence ni écrit |
+| **`R. 4323-95`** | Fourniture gratuite, bon fonctionnement, état hygiénique, entretiens/réparations/remplacements « nécessaires ». Champ TOTAL, gants compris | **aucune** | `sans_objet` — un état, pas un rendez-vous |
+| `R. 4323-97` | L'employeur détermine les conditions de mise à disposition et de port, après consultation du CSE | **aucune** | `sans_objet` — une décision, sans forme écrite imposée. À ne pas confondre avec `R. 4323-105` |
+| **`R. 4323-99`** | Habilitation : des arrêtés désignent les EPI vérifiables et fixent la périodicité | **aucune, il renvoie** | `sans_objet` — la substance et le manque sont comptés sur l'arrêté |
+| `R. 4323-100` | Personne qualifiée, appartenant ou non à l'établissement ; **liste tenue à disposition de l'inspection** | aucune | `sans_objet` — *voir le constat ci-dessous* |
+| `R. 4323-101` à `-103` | Consignation au registre, annexion des rapports, tenue sur tout support | aucune propre | `sans_objet` — suivent la vérification |
+| `R. 4323-104` | Information des travailleurs, quatre points | aucune | `sans_objet` — sans forme ni rythme |
+| **`R. 4323-105`** | **Consigne d'utilisation écrite**, plus une documentation réglementaire tenue à disposition du CSE | aucune | **`obligation_manquante`** — le seul écrit de la section |
+| **`R. 4323-106`** | Formation au port, entraînement « en tant que de besoin », renouvelée « **aussi souvent que nécessaire** » | **aucune** | **`obligation_manquante`** — le renouvellement est indexé sur un résultat, pas sur une durée |
+| `R. 4321-4`, `R. 4322-1` | Mise à disposition ; maintien en état de conformité | aucune | `sans_objet` — le régime de tout ce que l'arrêté ne nomme pas |
+| **Arrêté 19-03-1993 art. 1er** | Cinq familles nommées, **en service ou en stock** | **douze mois au moment de l'utilisation** | **`obligation_manquante`** |
+| Arrêté 19-03-1993 art. 2 | Contenu de la vérification, indexé sur la notice du fabricant ; élimination à péremption | aucune | `sans_objet` — article de contenu |
+| Arrêté 19-03-1993 art. 3, 4 | Date d'application ; clause d'exécution | aucune | `sans_objet` · `hors_perimetre` |
+
+**Aucune obligation n'est encodée par ce lot, et c'est la question posée à la
+propriétaire.** `CategorieEquipement.EPI` est une **famille, pas un régime** :
+son propre libellé d'aide annonce « harnais antichute et sa longe, casque,
+gants, chaussures de sécurité, protections auditives, masque ». Y attacher la
+vérification annuelle réclamerait un rendez-vous de tiers au commerçant qui a
+déclaré une boîte de gants — le défaut exact que le nom de
+`COMPACTEUR_PRESSE_DECHETS_MOTORISE` a été écrit pour éviter. **La décision est
+une migration ; elle n'est pas prise.** Les trois voies, et ce qui plaide :
+
+1. **Scinder la catégorie.** La ligne de partage est lisible et verbatim : cinq
+   noms d'objets d'un côté, tout le reste de l'autre. Contre : la scission doit
+   se nommer dans les mots du dirigeant, pas dans ceux de l'arrêté — « harnais
+   et systèmes antichute » est déclarable, « EPI soumis à vérification générale
+   périodique » ne l'est pas ; et seule la quatrième famille concerne
+   réellement la cible, ce qui plaide pour une catégorie **de l'objet** plutôt
+   que pour un couple vérifiable / non vérifiable.
+2. **Une propriété d'équipement (`ConditionApplication`).** **L'arrêté ne la
+   fonde pas** : il ne nomme aucune propriété — ni « antichute », ni
+   « respiratoire », ni un seuil — il nomme des **objets**. Une condition
+   booléenne « soumis à vérification » ferait déclarer par le dirigeant la
+   conclusion juridique qu'on est censé calculer pour lui.
+3. **Ne rien porter et le déclarer.** C'est l'état actuel, et il est tenable :
+   la liste des documents obligatoires porte déjà `verifications-epi` en
+   « non produit par Rojer », enrichie ce jour de la liste verbatim des cinq
+   familles et de la formule des douze mois.
+
+**Une garde a été posée, et éprouvée deux fois.**
+`corpus/epi-famille.test.ts` : *tant que le corpus déclare `obligation_manquante`
+la vérification périodique des EPI, aucune obligation portée par équipement ne
+peut viser la catégorie `EPI`.* Ce n'est pas une liste — il n'y a rien à y
+recopier —, c'est une **implication** entre le dépouillement et le référentiel,
+qui s'ouvre d'elle-même le jour où la vérification est encodée. Les deux modes
+de panne ont été réinjectés, l'injection vérifiée présente avant lecture du
+résultat :
+
+- ajouter `"EPI"` aux `categoriesEquipement` de
+  `compactage-dechets-vgp-trimestrielle` → **rouge**, l'obligation nommée ;
+- faire passer l'article 1er de l'arrêté de `obligation_manquante` à
+  `sans_objet` — la réparation-par-effacement que ce journal redoute — →
+  **rouge** aussi, par le premier des trois cas.
+
+**Trois constats laissés ouverts, faute de décision et non faute de lecture.**
+
+- **`R. 4323-100` est le jumeau EPI de `R. 4323-24`**, et personne ne le cite.
+  L'obligation `prevention-etablissement-liste-personnes-qualifiees`, encodée
+  la veille, porte bien « la liste tenue à la disposition de l'inspection du
+  travail » — mais fondée sur `R. 4323-23` et `-24`, les équipements de
+  **travail**. Ce n'est pas une obligation manquante (la pièce est la même, et
+  une seconde ligne ferait doublon) : c'est une **citation manquante**, qui se
+  solde en ajoutant `R. 4323-100` aux `referencesLegales` et en passant
+  l'entrée de corpus à `retenu`. Modifier une obligation livrée sort du
+  périmètre d'un lot de dépouillement.
+- **`R. 4323-105` — la consigne d'utilisation — ne dépend d'aucune décision de
+  catégorie**, puisqu'elle se porte par **établissement**. C'est le manque le
+  plus directement encodable du lot : porteur établissement, `etat_permanent`,
+  `periodicite: "autre"`, `realisateurs: ["exploitant"]` — la forme exacte de
+  la notice des points d'ancrage de `R. 4323-61`. Seule sa **seconde pièce**
+  (« une documentation relative à la réglementation applicable » tenue à
+  disposition du CSE) pose une question de périmètre non tranchée.
+- **`R. 4323-92` est un article d'habilitation lu SANS énumérer les arrêtés
+  qu'il habilite** — la troisième famille de manques listée en tête de
+  `corpus/types.ts`, celle qui avait laissé une moitié de `R. 4323-23` hors du
+  dépôt. Même limite, plus faible, sur `R. 4323-99` : **un seul** arrêté a été
+  établi et lu, alors que l'article vise « les ministres chargés du travail
+  **ou de l'agriculture** » et qu'un jumeau agricole existe pour `R. 4323-23`.
+  Cause de fait : les panneaux « textes d'application » de Légifrance sont
+  chargés en JavaScript et la lecture automatique ne les rend pas ; la
+  recherche plein texte n'a rendu que l'arrêté du 22 octobre 2009, écarté (il
+  s'adresse au **loueur** d'EPI d'occasion, et ne fixe ni liste ni
+  périodicité). **Ne pas lire ce silence comme « il n'y en a pas ».**
+
+**Un piège de nommage, neuf, et à connaître.** Il existe **deux arrêtés du
+19 mars 1993**, de mêmes signataires, sur des objets sans rapport : les travaux
+dangereux du plan de prévention (dépouillé le 2026-09-03) et les EPI (celui-ci).
+Les refs d'articles du second portent « **(EPI)** » — sans quoi
+`corpus.test.ts` aurait vu un seul article recevant deux statuts, et les deux
+lectures se seraient contredites en silence.
+
+---
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

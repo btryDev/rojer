@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { repartirParEquipement, resumerEquipement } from "./etat-verifications";
+import { compteEtat } from "@/lib/calendrier/etats";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 
 /**
@@ -255,7 +256,15 @@ describe("resumerEquipement", () => {
 
     const r = resumerEquipement(e);
     expect(r.etat).toBe("lointain");
-    expect(r.signaux.map((s) => s.libelle)).toEqual(["1 à venir", "1 faite"]);
+    // Les mots viennent de la table, jamais recopiés ici : ce test vérifie
+    // l'ACCORD et l'ORDRE des signaux, pas le vocabulaire — qui a son propre
+    // gardien (`calendrier/vocabulaire-etats`). Recopiés, ils auraient à être
+    // réparés à chaque reformulation, et cesseraient de mesurer quoi que ce
+    // soit d'autre qu'une opération de copier-coller.
+    expect(r.signaux.map((s) => s.libelle)).toEqual([
+      compteEtat(1, "lointain"),
+      compteEtat(1, "faite"),
+    ]);
   });
 
   it("annonce les échéances simplement planifiées", () => {
@@ -270,7 +279,9 @@ describe("resumerEquipement", () => {
     // « 2 à venir » et peignait le tout en bleu « lointain », pendant que le
     // bandeau du parc comptait la moitié proche sous le nom « sous 30 j ».
     // Deux mots voisins pour deux ensembles différents — c'est ce qui faisait
-    // douter des deux nombres.
+    // douter des deux nombres. Séparer les comptes n'a d'ailleurs pas suffi :
+    // « à venir » englobait encore « sous 30 jours » dans la langue, et les
+    // deux états nomment désormais la borne qu'ils se partagent.
     const e = etatDe([
       verif("eq1", "2026-08-20"),
       verif("eq1", "2027-03-01"),
@@ -281,8 +292,8 @@ describe("resumerEquipement", () => {
     const r = resumerEquipement(e);
     expect(r.signaux.map((s) => s.cle)).toEqual(["proche", "lointain"]);
     expect(r.signaux.map((s) => s.libelle)).toEqual([
-      "1 sous 30 jours",
-      "1 à venir",
+      compteEtat(1, "proche"),
+      compteEtat(1, "lointain"),
     ]);
     // La somme des deux signaux est le compte d'avant, jamais un de plus :
     // `proches` est un sous-ensemble de `aVenir`, pas un second comptage.

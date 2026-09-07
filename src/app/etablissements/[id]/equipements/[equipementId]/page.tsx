@@ -281,6 +281,23 @@ export default async function EquipementDetailPage({
                   En service depuis {formaterMoisAnneeFr(eq.dateMiseEnService)}
                 </PastilleFiche>
               )}
+              {/* LA PÉREMPTION SE MONTRE, ELLE NE S'ALERTE PAS. Aucun texte lu
+                  n'attache d'échéance à cette date : le 3° de l'article 2 de
+                  l'arrêté du 19 mars 1993 demande au VÉRIFICATEUR de constater
+                  l'élimination des équipements périmés, pas au produit de la
+                  réclamer. Un ton « retard » ferait donc croire à une échéance
+                  dépassée là où il n'y en a aucune — c'est un fait daté, pas
+                  une non-conformité, et le mot le dit : « périmé depuis »
+                  quand la date est passée, sinon la date seule. */}
+              {eq.datePeremption && (
+                <PastilleFiche
+                  ton={eq.datePeremption < maintenant ? "retard" : "neutre"}
+                >
+                  {eq.datePeremption < maintenant
+                    ? `Périmé depuis ${formaterMoisAnneeFr(eq.datePeremption)}`
+                    : `Péremption ${formaterMoisAnneeFr(eq.datePeremption)}`}
+                </PastilleFiche>
+              )}
               <PastilleFiche ton="neutre">
                 {`${obligationsCitees.length} obligation${obligationsCitees.length > 1 ? "s" : ""}`}
               </PastilleFiche>

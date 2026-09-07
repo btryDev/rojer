@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { depuisCleJourCivil } from "@/lib/dates";
+import { join } from "node:path";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import {
   CATEGORIES_TRI_ETAT,
@@ -375,5 +378,182 @@ describe("cohérence schéma ↔ référentiel d'obligations", () => {
         );
       }
     }
+  });
+});
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * LA CHAÎNE DE SAISIE VA JUSQU'AU BOUT
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * CE QUI M'A FAIT ÉCRIRE CECI (2026-09-04). En ajoutant `datePeremption`, j'ai
+ * retiré sa ligne de `normaliserFormDataEquipement` pour voir ce qui tomberait.
+ * **Rien.** `tsc` reste muet : la fonction rend un `Record<string, unknown>`,
+ * donc une clé absente n'est pas une erreur de type ; le champ serait resté à
+ * l'écran, l'utilisateur l'aurait rempli, et la valeur serait tombée entre le
+ * formulaire et le schéma sans qu'aucun test ne s'en aperçoive.
+ *
+ * C'est le trou de garantie d'un maillon entier : ce fichier vérifiait le
+ * schéma, `actions.test.ts` vérifie les actions, personne ne vérifiait le
+ * PASSAGE du formulaire au schéma. La forme du défaut est générique — elle
+ * guette toute propriété d'équipement ajoutée après coup, et l'en-tête de
+ * `schema.ts` promet justement que « toute nouvelle propriété s'ajoute dans ce
+ * fichier ».
+ *
+ * LA GARDE NE TIENT PAS UNE LISTE DE CHAMPS. Elle relève les `name=` du
+ * formulaire — la source de ce que le navigateur envoie — et exige de chacun
+ * qu'il ressorte de `normaliserFormDataEquipement`. Une liste écrite ici se
+ * serait réparée en y ajoutant une ligne, donc aurait cessé de mesurer.
+ */
+describe("du formulaire au schéma, sans perte", () => {
+  const RACINE = process.cwd();
+
+  /** Les `name` que le formulaire d'équipement envoie réellement. */
+  function champsDuFormulaire(): string[] {
+    const source = readFileSync(
+      join(RACINE, "src/components/equipements/EquipementForm.tsx"),
+      "utf8",
+    );
+    const noms = [...source.matchAll(/\bname="([a-zA-Z][\w]*)"/g)].map(
+      (m) => m[1],
+    );
+    return [...new Set(noms)];
+  }
+
+  it("chaque champ du formulaire ressort de la normalisation", () => {
+    const champs = champsDuFormulaire();
+    expect(
+      champs.length,
+      "Aucun `name=` relevé dans le formulaire : le motif ne mesure plus rien.",
+    ).toBeGreaterThan(5);
+
+    // Un FormData où chaque champ porte une valeur plausible : c'est le seul
+    // moyen de distinguer « la clé n'est pas lue » de « la clé vaut vide ».
+    const fd = new FormData();
+    for (const c of champs) fd.set(c, "2024-03-15");
+    fd.set("libelle", "Harnais du quai");
+    fd.set("categorie", "EPI_ANTICHUTE");
+
+    const out = normaliserFormDataEquipement(fd);
+    // LA VALEUR, PAS LA CLÉ. La première version de ce test faisait
+    // `!(c in out)` — et une clé posée à `undefined` satisfait `in`. Le mode de
+    // panne réaliste passait donc au vert : une faute de frappe sur la clé
+    // BRUTE (`raw.localisatoin`) produit `localisation: undefined`, la valeur
+    // saisie tombe entre le formulaire et le schéma, `raw` étant un
+    // `Record<string, FormDataEntryValue>` où `tsc` ne voit rien. C'est
+    // exactement le défaut que ce test annonce empêcher.
+    const perdus = champs.filter((c) => out[c] === undefined);
+    expect(
+      perdus,
+      "Ces champs sont affichés à l'utilisateur, remplis par lui, et " +
+        "`normaliserFormDataEquipement` n'en ressort aucune valeur : soit la " +
+        "clé n'est pas lue, soit elle est lue sous un autre nom (une faute de " +
+        "frappe sur `raw.xxx` suffit). Leur valeur tombe entre le formulaire " +
+        "et le schéma, et `tsc` ne le voit pas — `raw` est indexé par chaîne.",
+    ).toEqual([]);
+  });
+
+  it("la date de péremption traverse la normalisation ET le schéma", () => {
+    // Le champ qui a révélé le trou, éprouvé de bout en bout : ce n'est pas
+    // sa présence dans un objet qui compte, c'est la Date qui en sort.
+    const fd = new FormData();
+    fd.set("libelle", "Harnais du quai");
+    fd.set("categorie", "EPI_ANTICHUTE");
+    fd.set("datePeremption", "2031-03-15");
+
+    const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
+    expect(res.success, JSON.stringify(res.error?.issues)).toBe(true);
+    if (!res.success) return;
+    expect(res.data.datePeremption).toBeInstanceOf(Date);
+    // Comparée au jour civil du dépôt, pas à une chaîne ISO : `toISOString`
+    // reculerait d'un jour à Paris, et le test dirait « la date est fausse »
+    // là où c'est l'assertion qui l'est.
+    expect(res.data.datePeremption?.getTime()).toBe(
+      depuisCleJourCivil("2031-03-15").getTime(),
+    );
+  });
+
+  it("une péremption vide reste indéterminée, elle ne devient pas une date", () => {
+    // « Je ne sais pas » doit rester distinct de « pas de péremption » : un
+    // équipement sans date connue ne doit pas se voir attribuer aujourd'hui.
+    const fd = new FormData();
+    fd.set("libelle", "Casque");
+    fd.set("categorie", "EPI");
+    fd.set("datePeremption", "");
+
+    const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+    expect(res.data.datePeremption).toBeUndefined();
+  });
+});
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ET LE RETOUR : DE LA BASE AU FORMULAIRE
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * LE MAILLON QUE LE TEST PRÉCÉDENT NE VOIT PAS, et qui a cédé le même jour.
+ * `datePeremption` traversait bien le formulaire vers la base — et ne revenait
+ * pas. `modifier/page.tsx` construit `valeursInitiales` **à la main**, propriété
+ * par propriété ; la colonne neuve n'y a pas été ajoutée. Conséquence : la
+ * fiche affichait « Péremption mars 2031 », le formulaire d'édition du même
+ * appareil affichait un champ vide, et — le champ vide valant `undefined`, que
+ * Prisma ignore — la date était devenue **ineffaçable**.
+ *
+ * `tsc` ne voit rien : `valeursInitiales` a toutes ses propriétés optionnelles,
+ * en omettre une est légal. Le commentaire de `modifier/page.tsx` raconte
+ * précisément ce défaut pour les questions à trois états — « la page recopiait
+ * à la main la liste des propriétés » — et le lot l'a reproduit sur la colonne
+ * suivante. Une leçon écrite au bon endroit n'empêche rien tant qu'aucun test
+ * ne la tient.
+ *
+ * CE QUE LA GARDE RELÈVE : les champs que le formulaire AFFICHE et qui doivent
+ * donc pouvoir être relus. Elle ne tient pas de liste — elle lit les deux
+ * fichiers, la source de ce qui est montré et la source de ce qui est repassé.
+ */
+describe("de la base au formulaire, sans perte", () => {
+  const RACINE = process.cwd();
+
+  it("chaque champ affiché est repassé en valeur initiale", () => {
+    const form = readFileSync(
+      join(RACINE, "src/components/equipements/EquipementForm.tsx"),
+      "utf8",
+    );
+    const page = readFileSync(
+      join(
+        RACINE,
+        "src/app/etablissements/[id]/equipements/[equipementId]/modifier/page.tsx",
+      ),
+      "utf8",
+    );
+
+    // Ce que le formulaire relit d'une valeur initiale : `valeursInitiales?.x`.
+    const relus = [
+      ...new Set(
+        [...form.matchAll(/valeursInitiales\?\.(\w+)/g)].map((m) => m[1]),
+      ),
+    ];
+    expect(
+      relus.length,
+      "Aucun `valeursInitiales?.x` relevé : le motif ne mesure plus rien.",
+    ).toBeGreaterThan(5);
+
+    // Ce que la page d'édition repasse. Le bloc est un littéral d'objet : on
+    // relève ses clés, sans supposer leur ordre ni leur forme.
+    const bloc = page.slice(page.indexOf("valeursInitiales={{"));
+    const repassees = new Set(
+      [...bloc.matchAll(/^\s{14}(\w+):/gm)].map((m) => m[1]),
+    );
+
+    const oublies = relus.filter((c) => !repassees.has(c));
+    expect(
+      oublies,
+      "Ces champs sont affichés dans le formulaire d'édition et la page ne " +
+        "leur repasse aucune valeur : le champ s'ouvre vide sur un appareil " +
+        "qui en porte une, et — un champ vide valant `undefined`, que Prisma " +
+        "ignore — la valeur devient ineffaçable. `tsc` ne le voit pas : " +
+        "`valeursInitiales` a toutes ses propriétés optionnelles.",
+    ).toEqual([]);
   });
 });

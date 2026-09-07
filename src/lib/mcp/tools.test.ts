@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { LIBELLE_CATEGORIE } from "./tools";
+import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 
 /**
  * Serveur MCP — ce qui est vérifié ici est d'abord une propriété de
@@ -381,5 +383,63 @@ describe("provenance de la réponse", () => {
     const texte = await outil("plan_actions").executer(ctx, {});
     expect(texte).not.toContain("Établissement :");
     expect(texte).toContain("Aucune action");
+  });
+});
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * AUCUNE CATÉGORIE NE SORT EN CLÉ BRUTE
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * LE DÉFAUT (2026-09-04). `LIBELLE_CATEGORIE` est la SEULE table du dépôt
+ * indexée par `string` et non par `CategorieEquipement` — les quatre autres
+ * (`ICONE_CATEGORIE`, `LABEL_CATEGORIE_EQUIPEMENT`, `DESCRIPTION_CATEGORIE`,
+ * `PICTO_CATEGORIE_EQUIPEMENT`) sont typées, et `tsc` refuse d'en compiler une
+ * incomplète. Celle-ci ne peut rien signaler : une clé manquante n'est pas une
+ * erreur de type sur un `Record<string, …>`.
+ *
+ * Résultat, quatre catégories ouvertes le même jour sortaient en
+ * « epi_antichute » et « epi_gilet_sauvetage » au client MCP, par le repli
+ * `?? c.toLowerCase()`. Le repli est bon — un serveur qui parle à un modèle ne
+ * doit pas casser sur une valeur neuve — mais il rend l'oubli SILENCIEUX, et
+ * c'est très exactement pourquoi ce test existe : il rend au repli son rôle de
+ * filet, en lui retirant celui de couverture.
+ *
+ * Pourquoi ne pas simplement typer la table en `Record<CategorieEquipement, …>` :
+ * parce que `categorieLisible` reçoit ce que la base rend, et qu'une valeur
+ * d'enum ajoutée par migration existe en base avant d'exister dans le type
+ * généré. Le repli doit rester possible ; c'est son emploi comme excuse qui ne
+ * doit plus l'être.
+ */
+describe("le serveur MCP nomme toutes les catégories", () => {
+  it("chaque catégorie du modèle a un libellé, aucune ne tombe sur le repli", () => {
+    const sansLibelle = CATEGORIES_EQUIPEMENT.filter(
+      (c) => !(c in LIBELLE_CATEGORIE),
+    );
+    expect(
+      sansLibelle,
+      "Ces catégories sortiraient du serveur MCP en clé brute — " +
+        "« epi_antichute » plutôt que « harnais antichute ». `tsc` ne peut pas " +
+        "le voir : la table est indexée par `string`.",
+    ).toEqual([]);
+  });
+
+  it("aucune clé COMPOSÉE n'est rendue par sa seule mise en minuscules", () => {
+    // Le second mode de panne : une entrée ajoutée pour faire taire le test
+    // ci-dessus, en recopiant la clé. Elle passerait le `in` sans rien nommer.
+    //
+    // RESTREINT AUX CLÉS COMPOSÉES, et la première rédaction ne l'était pas :
+    // elle dénonçait EXTINCTEUR, ASCENSEUR et AUTRE, dont la minuscule est le
+    // mot français juste. Un test qui accuse le code d'avoir raison est pire
+    // qu'un test absent — celui-ci ne regarde donc que les clés à underscore,
+    // où « epi_gilet_sauvetage » n'est jamais une façon de parler.
+    const paresseux = CATEGORIES_EQUIPEMENT.filter(
+      (c) => c.includes("_") && LIBELLE_CATEGORIE[c] === c.toLowerCase(),
+    );
+    expect(
+      paresseux,
+      "Ces libellés sont la clé en minuscules, underscores compris : c'est ce " +
+        "que le repli fait déjà, et le dirigeant n'y lit pas un objet.",
+    ).toEqual([]);
   });
 });

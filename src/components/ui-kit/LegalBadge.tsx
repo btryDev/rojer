@@ -69,7 +69,7 @@ const LIEN: Record<Charte, string> = {
 };
 
 type SocleLegalBadge = {
-  /** Référence courte, ex: "Art. R4224-17 CT" */
+  /** Référence courte, ex: "Art. R. 4224-17 CT" */
   reference: string;
   className?: string;
   defaultOpen?: boolean;

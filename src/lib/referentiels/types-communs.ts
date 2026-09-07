@@ -476,6 +476,23 @@ export const CATEGORIES_EQUIPEMENT = [
   // compacteur et sa presse. Les scinder aurait produit deux lignes de
   // calendrier là où il y a une machine.
   "COMPACTEUR_PRESSE_DECHETS_MOTORISE",
+  // Une famille, et non un régime — c'est ce qui la distingue de toutes les
+  // autres entrées de cette liste. Un harnais antichute relève d'une
+  // vérification périodique, un casque de chantier n'en relève pas. Aucune
+  // obligation ne la vise, et il ne faut PAS en attacher une avant d'avoir lu
+  // R. 4323-95 à R. 4323-99 et l'arrêté qui fixe la liste des EPI soumis à
+  // vérification : le faire réclamerait un rendez-vous annuel à qui a déclaré
+  // des gants. La lecture dira peut-être de scinder cette valeur en deux.
+  "EPI",
+  // Les trois catégories vérifiables, scindées le 2026-09-04 après lecture de
+  // l'arrêté du 19 mars 1993 : lui seul nomme les EPI soumis à vérification, et
+  // il le fait par des NOMS D'OBJETS, jamais par un critère technique — d'où
+  // des catégories et non une propriété. Ses cinq entrées se rangent en trois
+  // valeurs : les deux appareils respiratoires et leurs cartouches partagent
+  // acte, rythme, réalisateur et détenteur.
+  "EPI_ANTICHUTE",
+  "EPI_RESPIRATOIRE",
+  "EPI_GILET_SAUVETAGE",
   "AUTRE",
 ] as const;
 

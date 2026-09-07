@@ -136,6 +136,7 @@ export async function creerEquipement(
       categorie: parsed.data.categorie,
       localisation: parsed.data.localisation,
       dateMiseEnService: parsed.data.dateMiseEnService,
+      datePeremption: parsed.data.datePeremption,
       caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });
@@ -200,6 +201,7 @@ export async function modifierEquipement(
       categorie: parsed.data.categorie,
       localisation: parsed.data.localisation,
       dateMiseEnService: parsed.data.dateMiseEnService,
+      datePeremption: parsed.data.datePeremption,
       caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });

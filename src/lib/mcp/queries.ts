@@ -20,6 +20,7 @@
 //
 // Lecture seule : aucune fonction d'écriture n'a sa place dans ce fichier.
 
+import { trierParCategorie } from "@/lib/equipements/labels";
 import type { CategorieEquipement, StatutAction } from "@prisma/client";
 import { evaluerEtatDuerp, type EtatDuerp } from "@/lib/dashboard/duerp";
 import {
@@ -357,9 +358,12 @@ export async function listerEquipements(
   etablissementId: string,
   now: Date,
 ): Promise<EquipementLu[]> {
-  const equipements = await prismaMcp.equipement.findMany({
+  const equipements = trierParCategorie(
+    await prismaMcp.equipement.findMany({
     where: { etablissementId },
-    orderBy: [{ categorie: "asc" }, { libelle: "asc" }],
+    // Voir `equipements/labels.ts` : l'ordre des catégories n'est pas celui de
+    // l'enum PostgreSQL, il se pose après la lecture.
+    orderBy: [{ libelle: "asc" }],
     select: {
       libelle: true,
       categorie: true,
@@ -370,7 +374,8 @@ export async function listerEquipements(
         select: { statut: true, datePrevue: true, dateRealisee: true },
       },
     },
-  });
+    }),
+  );
 
   return equipements.map((e) => {
     const etats = e.verifications.map((v) => etatDe(v, now));

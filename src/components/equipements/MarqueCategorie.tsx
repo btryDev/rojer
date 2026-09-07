@@ -16,6 +16,7 @@
 
 import {
   AirVent,
+  Anchor,
   Barrel,
   BellElectric,
   CloudFog,
@@ -26,10 +27,13 @@ import {
   FireExtinguisher,
   Forklift,
   Gauge,
+  HardHat,
   Lightbulb,
+  LifeBuoy,
   Package,
   Refrigerator,
   Shredder,
+  Wind,
   Zap,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -65,6 +69,15 @@ type Picto = ComponentType<{
  * dessin ne se distinguent plus dans une liste triée par catégorie.
  */
 export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
+  // Le casque : le seul objet de la famille que tout le monde reconnaît de
+  // loin. Il dit « ce qu'on porte », ce qui est exactement la ligne de partage
+  // de cette catégorie — la protection collective reste à l'ouvrage.
+  EPI: HardHat,
+  // L'ancre pour l'antichute : ce qui retient une chute. Le casque reste à la
+  // famille voisine, celle qui ne se vérifie pas.
+  EPI_ANTICHUTE: Anchor,
+  EPI_RESPIRATOIRE: Wind,
+  EPI_GILET_SAUVETAGE: LifeBuoy,
   INSTALLATION_ELECTRIQUE: Zap,
   INSTALLATION_FRIGORIFIQUE: Refrigerator,
   EXTINCTEUR: FireExtinguisher,

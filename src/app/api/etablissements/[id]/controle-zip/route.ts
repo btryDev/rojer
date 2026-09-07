@@ -252,7 +252,7 @@ export async function GET(
   if (plansList.length > 0) {
     const txt = [
       `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
-      `Art. R4512-6 à R4512-12 du code du travail.`,
+      `Art. R. 4512-6 à R. 4512-12 du code du travail.`,
       "",
       "────────────────────────────────────────────────────────────",
       ...plansList.flatMap((p) => [
@@ -329,7 +329,7 @@ export async function GET(
   if (carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0)) {
     const txt = [
       `CARNET SANITAIRE EAU`,
-      `Arrêté du 1er février 2010 · art. R1321-23 CSP.`,
+      `Arrêté du 1er février 2010 · art. R. 1321-23 CSP.`,
       "",
       `Points de relevé actifs : ${carnetSan.pointsReleve.length}`,
       "────────────────────────────────────────────────────────────",
@@ -429,7 +429,7 @@ function genererReadme(args: {
       ? ` 06_Permis_de_feu.txt          ${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`
       : " 06_Permis_de_feu.txt          Aucun permis émis sur 12 mois",
     args.nbPlansPrevention > 0
-      ? ` 07_Plans_de_prevention.txt    ${args.nbPlansPrevention} plan(s) (art. R4512-6 CT)`
+      ? ` 07_Plans_de_prevention.txt    ${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`
       : " 07_Plans_de_prevention.txt    Aucun plan actif",
     args.aCarnetSanitaire
       ? " 08_Carnet_sanitaire.txt       Relevés ECS + analyses légionelles (arrêté 01-02-2010)"
@@ -457,15 +457,15 @@ function genererReadme(args: {
     " CADRE LÉGAL DES OBLIGATIONS",
     "────────────────────────────────────────────────────────────",
     "",
-    " DUERP :                    art. R4121-1 à R4121-4 Code du travail",
-    " Vérifications :            art. R4226-16 et s. Code du travail",
-    " Registre de sécurité :     art. L4711-5 Code du travail",
-    " Accessibilité ERP :        art. R164-6 CCH · arrêté 19-04-2017",
-    " Vigilance donneur d'ordre : art. L8222-1 Code du travail",
-    " Permis de feu :            art. R4224-17 Code du travail",
-    " Plan de prévention :       art. R4512-6 à R4512-12 CT",
-    " Carnet sanitaire eau :     arrêté 01-02-2010 · art. R1321-23 CSP",
-    " Maintien en conformité :   art. R4224-17 Code du travail",
+    " DUERP :                    art. R. 4121-1 à R. 4121-4 Code du travail",
+    " Vérifications :            art. R. 4226-16 et s. Code du travail",
+    " Registre de sécurité :     art. L. 4711-5 Code du travail",
+    " Accessibilité ERP :        art. R. 164-6 CCH · arrêté 19-04-2017",
+    " Vigilance donneur d'ordre : art. L. 8222-1 Code du travail",
+    " Permis de feu :            art. R. 4224-17 Code du travail",
+    " Plan de prévention :       art. R. 4512-6 à R. 4512-12 CT",
+    " Carnet sanitaire eau :     arrêté 01-02-2010 · art. R. 1321-23 CSP",
+    " Maintien en conformité :   art. R. 4224-17 Code du travail",
     "",
     // APSAD R43 et l'INRS ED 6030 figuraient dans la liste ci-dessus, entre
     // deux articles de code, sous le titre « CADRE LÉGAL ». Ce document est

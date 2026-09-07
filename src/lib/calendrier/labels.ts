@@ -75,6 +75,9 @@ export const LABEL_DOMAINE: Record<DomaineObligation, string> = {
   co_activite: "Co-activité",
   signalisation: "Signalisation de sécurité",
   compactage_dechets: "Compactage des déchets",
+  // « Protection individuelle » et non « EPI » : le sigle est celui du droit
+  // et des préventeurs, pas celui du dirigeant qui lit son calendrier.
+  epi: "Protection individuelle",
   // « des lieux de travail », et les quatre mots comptent : « Éclairage » tout
   // court se confondrait avec l'éclairage de sécurité, dont les obligations
   // vivent en domaine « Incendie / sécurité ». Deux objets, deux textes, deux

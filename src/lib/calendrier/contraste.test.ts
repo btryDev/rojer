@@ -131,6 +131,49 @@ describe("contraste des couples champ/encre", () => {
     expect(c, "cerne de la puce « à planifier »").toBeGreaterThanOrEqual(3);
   });
 
+  it("la puce de la vitrine d'un appareil existe pour les cinq états", () => {
+    // LE DÉFAUT, RETROUVÉ AILLEURS (2026-09-04). Ce fichier savait déjà que
+    // `CHAMP_ETAT.aPlanifier` VAUT la surface creuse, et le calendrier en avait
+    // tiré un cerne. `VitrineEquipement` posait la même puce sur la même
+    // surface SANS cerne : la puce de « à planifier » y était peinte de la
+    // couleur exacte de son fond — 1,00:1 —, et sur une carte à cinq signaux le
+    // dirigeant lisait quatre points et une étiquette nue. Sur l'état qui dit
+    // précisément qu'aucune date n'est convenue.
+    //
+    // Le fond de la pastille se RELÈVE dans le composant, il n'est pas recopié
+    // ici : recopié, il cesserait de mesurer l'écran le jour où l'écran change.
+    const source = readFileSync(
+      join(RACINE, "src", "components", "equipements", "VitrineEquipement.tsx"),
+      "utf8",
+    );
+    const fond = source.match(/bg-\[color:var\((--board-[\w-]+)\)\]/);
+    if (!fond) throw new Error("fond de la pastille introuvable dans la vitrine");
+    const hexaFond = table[fond[1]];
+    expect(hexaFond, `jeton ${fond[1]}`).toBeDefined();
+
+    // Ce qui rend le cerne indispensable, mesuré et non supposé : au moins un
+    // état a une puce indiscernable de ce fond.
+    const invisibles = etats.filter(
+      (e) => contraste(resoudre(CHAMP_ETAT[e], table), hexaFond) < 3,
+    );
+    expect(invisibles.length, "aucun état n'aurait besoin du cerne").toBeGreaterThan(0);
+
+    // Donc la puce en porte un, pris à l'encre de l'état.
+    expect(
+      /boxShadow:\s*`inset 0 0 0 1px \$\{ENCRE_ETAT\[etat\]\}`/.test(source),
+      "la puce de la vitrine n'a plus de cerne : l'état « à planifier » y " +
+        "redevient invisible sur son propre fond.",
+    ).toBe(true);
+
+    // Et ce cerne tient pour les cinq, pas seulement pour celui qui a saigné.
+    for (const e of etats) {
+      expect(
+        contraste(resoudre(ENCRE_ETAT[e], table), hexaFond),
+        `${e} : cerne de la puce sur le fond de la pastille`,
+      ).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("`--board-slate` ne conviendrait PAS comme cerne — la faute d'origine", () => {
     const c = contraste(table["--board-slate"], table["--board-slate-pale"]);
     expect(c).toBeLessThan(3);

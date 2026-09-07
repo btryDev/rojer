@@ -1,0 +1,53 @@
+-- ============================================================================
+-- Scission de la catégorie EPI — les familles que l'arrêté du 19 mars 1993
+-- soumet à vérification. 2026-09-04
+--
+-- L'arrêté (art. 1er) soumet à vérification générale périodique — moins de
+-- douze mois au moment de l'utilisation, par personne qualifiée, en service
+-- OU EN STOCK — cinq familles nommément désignées, et cinq seulement :
+--
+--   1. appareils de protection respiratoire autonomes destinés à l'évacuation
+--   2. appareils de protection respiratoire et équipements complets destinés
+--      à des interventions accidentelles en milieu hostile
+--   3. gilets de sauvetage gonflables
+--   4. systèmes de protection individuelle contre les chutes de hauteur
+--   5. stocks de cartouches filtrantes antigaz pour appareils de protection
+--      respiratoire
+--
+-- Casque, gants, chaussures, lunettes, protections auditives, masque de
+-- confort n'y figurent pas et ne relèvent d'aucune vérification périodique :
+-- ils restent en `EPI`, sous le régime de l'entretien de `R. 4323-95`, qui est
+-- un ÉTAT et non un rendez-vous.
+--
+-- POURQUOI TROIS VALEURS POUR CINQ ENTRÉES. Les deux entrées respiratoires et
+-- les cartouches qui les alimentent portent le même acte, la même périodicité,
+-- le même réalisateur et le même contenu de vérification ; et le détenteur d'un
+-- appareil respiratoire détient ses cartouches. Les scinder aurait produit trois
+-- rendez-vous là où il y a un équipement et un vérificateur — le raisonnement
+-- exact de COMPACTEUR_PRESSE_DECHETS_MOTORISE, qui réunit deux entrées de
+-- l'arrêté du 5 mars 1993 sous une catégorie.
+--
+-- AUCUNE FAMILLE N'EST ÉCARTÉE POUR RARETÉ. Un premier jet n'ouvrait que
+-- l'antichute et déclarait les quatre autres « hors secteurs servis » : c'était
+-- interpréter le texte à travers une clientèle supposée. La réglementation
+-- s'applique, le produit ne la restreint pas.
+--
+-- POURQUOI DES CATÉGORIES ET NON UNE PROPRIÉTÉ. L'arrêté n'écrit AUCUN critère
+-- technique : ni « antichute », ni « respiratoire », ni un seuil. Il écrit des
+-- NOMS D'OBJETS. Il n'y a donc rien à dériver d'un attribut, et une case
+-- « soumis à vérification » ferait déclarer au dirigeant la conclusion
+-- juridique que l'outil est censé calculer pour lui.
+--
+-- LES NOMS SONT CEUX DES OBJETS, PAS DU RÉGIME. « Harnais antichute » se
+-- reconnaît par un dirigeant ; « EPI soumis à VGP » lui demanderait de savoir
+-- ce que le produit doit lui dire.
+--
+-- Ajout pur, inséré avant 'AUTRE'. Aucune ligne existante n'est touchée : un
+-- harnais déjà déclaré en 'EPI' y reste, et son détenteur le rebasculera s'il
+-- le souhaite — reclasser d'office la donnée d'un client sur la foi d'un
+-- libellé libre serait décider à sa place.
+-- ============================================================================
+
+ALTER TYPE "CategorieEquipement" ADD VALUE IF NOT EXISTS 'EPI_ANTICHUTE' BEFORE 'AUTRE';
+ALTER TYPE "CategorieEquipement" ADD VALUE IF NOT EXISTS 'EPI_RESPIRATOIRE' BEFORE 'AUTRE';
+ALTER TYPE "CategorieEquipement" ADD VALUE IF NOT EXISTS 'EPI_GILET_SAUVETAGE' BEFORE 'AUTRE';

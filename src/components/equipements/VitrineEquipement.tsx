@@ -31,10 +31,23 @@ function Signal({ signal }: { signal: SignalEquipement }) {
       className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--board-slate-pale)] px-2.5 py-[5px] text-[11.5px] font-semibold"
       style={{ color: ENCRE_ETAT[etat] }}
     >
+      {/* Le cerne n'est pas une bordure décorative : `CHAMP_ETAT.aPlanifier`
+          VAUT `--board-slate-pale`, le fond de cette pastille. Sans lui, la
+          puce de « à planifier » est peinte exactement de la couleur sur
+          laquelle elle est posée — 1,00:1 — et le dirigeant lit quatre
+          signaux colorés et une étiquette nue, sur l'état qui dit justement
+          qu'aucune date n'est convenue. Le calendrier avait déjà rencontré
+          ce défaut et l'avait réglé par un cerne (cf. contraste.test.ts) ;
+          cet écran-ci ne l'avait pas repris. L'encre de l'état porte donc
+          le cerne : la garde mesure qu'elle atteint le seuil graphique sur
+          ce fond, pour les cinq états. */}
       <span
         aria-hidden
         className="size-[7px] flex-none rounded-full"
-        style={{ background: CHAMP_ETAT[etat] }}
+        style={{
+          background: CHAMP_ETAT[etat],
+          boxShadow: `inset 0 0 0 1px ${ENCRE_ETAT[etat]}`,
+        }}
       />
       {signal.libelle}
     </span>
