@@ -96,3 +96,50 @@ describe("sous le seuil, ce qui reste dû", () => {
     ).not.toContain("litige");
   });
 });
+
+/**
+ * Le fondement affiché doit être CELUI QUI S'APPLIQUE.
+ *
+ * Constaté à l'écran le 2026-09-07 sur la fiche PP-001 : sous « Durée estimée
+ * 22 h », l'écran écrivait « seuil des 400 h franchi ». 22 h ne franchit pas
+ * 400 h. L'écrit était bien obligatoire — mais par l'autre branche, les travaux
+ * figurant sur la liste dangereuse de l'arrêté du 19 mars 1993.
+ *
+ * La cause : `ecritObligatoire` est un OU, et l'écran s'en servait pour annoter
+ * la DURÉE. Un agrégat ne peut pas justifier l'un de ses termes. `seuil400` est
+ * donc exposé à part, et ces trois cas tiennent la distinction — ils échouent
+ * si on la réduit à nouveau à `ecritObligatoire`.
+ *
+ * Ce n'est pas de la cosmétique : c'est l'écran qui dit au dirigeant au titre
+ * de quoi son document est dû, sur une pièce qu'un inspecteur peut demander.
+ */
+describe("le fondement affiché est celui qui s'applique", () => {
+  const diag = (heures: number | null, dangereux = false) =>
+    diagnostiquerPlan({
+      dureeHeuresEstimee: heures,
+      travauxDangereux: dangereux,
+    });
+
+  it("22 h sur des travaux dangereux : l'écrit est dû, mais pas par le seuil", () => {
+    const d = diag(22, true);
+    expect(d.ecritObligatoire).toBe(true);
+    expect(d.seuil400).toBe(false);
+  });
+
+  it("le seuil ne se déduit jamais de l'obligation d'écrit", () => {
+    // La borne haute du même piège : 400 h SANS travaux dangereux. Si
+    // `seuil400` était recopié d'`ecritObligatoire`, ce cas passerait quand
+    // même — c'est le précédent qui casse. Les deux sont là pour que la
+    // distinction soit tenue des deux côtés, pas seulement là où elle se voit.
+    const d = diag(400, false);
+    expect(d.ecritObligatoire).toBe(true);
+    expect(d.seuil400).toBe(true);
+  });
+
+  it("la raison énoncée nomme la liste dangereuse, pas les 400 heures", () => {
+    const raisons = diag(22, true).raisons;
+    expect(raisons).toHaveLength(1);
+    expect(raisons[0]).toContain("liste dangereuse");
+    expect(raisons.join(" ")).not.toContain("400");
+  });
+});

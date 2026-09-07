@@ -86,7 +86,7 @@ export default async function PlanPreventionDetailPage({
     {
       cle: "Durée estimée",
       valeur: plan.dureeHeuresEstimee ? `${plan.dureeHeuresEstimee} h` : "—",
-      note: diag.ecritObligatoire ? "seuil des 400 h franchi" : undefined,
+      note: diag.seuil400 ? "seuil des 400 h franchi" : undefined,
     },
     { cle: "Effectif intervenant", valeur: String(plan.efEffectifIntervenant) },
   ];
@@ -121,6 +121,23 @@ export default async function PlanPreventionDetailPage({
       <CorpsFiche
         principal={
           <>
+            {/* LE FONDEMENT, ET NON PAS SEULEMENT LE VERDICT. `raisons` était
+                calculé par `diagnostiquerPlan` puis jeté : l'écran annonçait
+                « Plan écrit obligatoire » sans dire au titre de quoi, et la
+                seule mention de fondement qu'il portait — sur la durée — était
+                tirée du OU, donc fausse dès que l'écrit venait de la liste
+                dangereuse. Un dirigeant à qui l'on demande un document doit
+                pouvoir lire sur quoi il est dû ; c'est aussi ce qui lui permet
+                de contester. */}
+            {diag.ecritObligatoire && (
+              <CarteFiche titre="Pourquoi l'écrit est obligatoire">
+                <ul className="m-0 flex list-disc flex-col gap-1.5 pl-5 text-[14.5px] leading-[1.6]">
+                  {diag.raisons.map((raison) => (
+                    <li key={raison}>{raison}</li>
+                  ))}
+                </ul>
+              </CarteFiche>
+            )}
             <CarteFiche titre="Nature des travaux">
               <p className="m-0 whitespace-pre-wrap text-[14.5px] leading-[1.6]">
                 {plan.naturesTravaux}

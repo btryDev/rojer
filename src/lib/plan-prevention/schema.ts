@@ -132,6 +132,20 @@ export type PlanPreventionInput = z.infer<typeof planPreventionSchema>;
  */
 export type ResultatDiagnostic = {
   ecritObligatoire: boolean;
+  /**
+   * Le seuil de `R. 4512-7` est-il atteint — et lui seul.
+   *
+   * Exposé à part parce qu'`ecritObligatoire` est un **OU** : il vaut aussi
+   * pour les travaux de la liste dangereuse, qui n'ont pas de durée. Un écran
+   * qui lisait `ecritObligatoire` pour annoter la DURÉE écrivait donc « seuil
+   * des 400 h franchi » sous « 22 h » — constaté à l'écran le 2026-09-07 sur
+   * la fiche PP-001. Le fondement affiché n'était pas celui qui s'appliquait,
+   * sur un document qu'un inspecteur peut demander.
+   *
+   * La règle qui en sort : **ce qui annote un fait se déduit de ce fait-là,
+   * jamais d'un agrégat qui le contient.**
+   */
+  seuil400: boolean;
   raisons: string[];
   recommandation: string;
 };
@@ -163,6 +177,7 @@ export function diagnostiquerPlan(params: {
   const ecritObligatoire = seuil400 || params.travauxDangereux;
   return {
     ecritObligatoire,
+    seuil400,
     raisons,
     recommandation: ecritObligatoire
       ? "Un plan de prévention ÉCRIT est obligatoire avant démarrage des travaux."
