@@ -610,6 +610,32 @@ Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse 
 8. **Pas de conseil juridique automatisé.** L'outil aide à structurer et rappelle les obligations, il ne dit jamais « vous êtes conforme ».
 9. **RGPD** : hébergement UE, politique de rétention explicite, export et suppression possibles à tout moment.
 10. **Conservation 40 ans** pour les versions de DUERP (obligation légale).
+11. **Une tâche faite se RAYE, dans le même geste que la correction.** Toute
+    entrée de `docs/chantiers-ouverts.md`, de `notesInternes` ou d'un motif de
+    corpus qui cesse d'être vraie se barre (`~~…~~`) **et se date**, avec le
+    commit qui l'a close. On ne réécrit pas, on ne retire pas : la rature garde
+    visible ce que la ligne disait hier, et c'est ce qui permet de voir qu'elle
+    a été traitée plutôt que de la redécouvrir.
+
+    **Ce n'est pas de la tenue de registre, c'est un coût mesuré.** Trois fois
+    dans la semaine du 2026-09-07, une ligne non rayée a coûté : quatre écrans
+    relus deux fois (§ 5), sept constats clos redemandés comme ouverts (§ 7), et
+    un défaut mort — le type ERP `J` — **rapporté deux fois à la propriétaire
+    quatre jours après sa correction** (§ 4). Le troisième est le plus cher :
+    les deux premiers faisaient refaire du travail, celui-là a failli faire
+    prendre une décision sur un problème qui n'existait plus.
+
+    Le corollaire vaut autant : **une raison de non-encodage est une ligne comme
+    une autre.** Une `notesInternes` qui dit « l'attribut n'existe pas » reste
+    vraie dans le texte longtemps après avoir cessé de l'être dans le code — et
+    elle bloque alors un encodage que plus rien ne bloque. Deux cas en deux
+    jours : `R. 4512-3`, dont le motif renvoyait à une case devenue vide, et la
+    visite triennale de 4ᵉ catégorie, dont le blocage était levé depuis
+    trois semaines.
+
+    Corollaire opératoire : **avant de rapporter un manque, rouvrir le code.**
+    Le document a toujours quelques heures de retard, et il ne vaut que ce que
+    vaut sa dernière rature.
 
 ## Ce qu'il ne faut pas faire
 
