@@ -116,12 +116,56 @@ est un ensemble fermé de quatre motifs, et **aucun ne dit « RH non-SST »**.
 `L. 8221-5` a dû être classé `sans_objet`, qui dit autre chose. Son commentaire
 prévoit qu'une exclusion « se discute et s'ajoute là ».
 
-**Le type ERP `J` n'existe pas dans l'enum**, et `R` n'est pas subdivisé en
-`R(1)` / `R(2)`. Un EHPAD ne peut pas se déclarer pour ce qu'il est. Origine
+~~**Le type ERP `J` n'existe pas dans l'enum**, et `R` n'est pas subdivisé en
+`R(1)` / `R(2)`. Un EHPAD ne peut pas se déclarer pour ce qu'il est.~~ Origine
 établie : la liste d'`ADR-004` a été écrite une fois avec la mention « ~20
-valeurs » et jamais reconfrontée à la nomenclature. Migration.
+valeurs » et jamais reconfrontée à la nomenclature.
 
-**Les 55 `obligation_manquante` du corpus ne sont pas une liste de tâches.** La
+> **`J` EST FAIT DEPUIS LE 2026-09-03** (`4467e79`, migration
+> `20260903120000_type_erp_structures_accueil`, `ADD VALUE IF NOT EXISTS 'J'
+> BEFORE 'PA'`). Un EHPAD peut se déclarer pour ce qu'il est. Les quatre copies
+> sont alignées — `enum TypeErp`, `TYPES_ERP`, `TYPE_ERP`, `LABEL_TYPE_ERP` —,
+> `GN 1` est dépouillé au corpus, et `types-erp.test.ts` **dérive** sa liste
+> attendue du verbatim au lieu de la recopier : la cause est traitée, pas le
+> symptôme.
+>
+> **Cette ligne a été lue comme ouverte le 2026-09-08**, quatre jours après sa
+> correction, et rendue telle quelle à la propriétaire — deux fois. Troisième
+> occurrence de la même faute cette semaine, après le § 5 et le § 7. Une liste
+> qu'on ne raye pas fait refaire le travail ; ici elle a fait *rapporter* un
+> défaut qui n'existait plus.
+
+**`R` RESTE NON SUBDIVISÉ, ET LA LETTRE LE VEUT.** `GN 1 § 1` n'écrit qu'un seul
+`R` ; les deux colonnes de `GE 4` sont deux régimes d'une même ligne, séparés par
+l'hébergement (`GN 1 § 4`). L'encodage actuel met tout `R` de 4ᵉ catégorie à
+trois ans (`incendie.ts`, `incendie-erp-visite-commission-cat4-triennale`), là où
+le tableau met `R` sans hébergement à cinq : **sur-application assumée, du côté
+court, seule des six colonnes.**
+
+**Ce qui a changé sans que la note le sache, et c'est le point à trancher.** La
+`notesInternes` de cette ligne dit que le manque à combler « n'existe pas » et
+que le poser serait une migration. **Il existe depuis le 2026-09-01** :
+`Etablissement.comporteLocauxSommeilPublic`, dont le libellé — « pour le public,
+des locaux à sommeil : chambres d'hôtel, chambres d'hôtes, hébergement » — est la
+définition même du § 4 de `GN 1`. Et le critère existe côté obligation
+(`TypologieApplication.locauxSommeilPublic`), avec exactement les deux
+sémantiques qu'il faut : critère vrai et attribut non renseigné ⇒ obligation
+**retenue « à confirmer »** ; critère faux et attribut non renseigné ⇒
+allègement **refusé**.
+
+La partition est donc expressible **sans inventer de type ni migrer**, en
+scindant la ligne triennale : `R` avec locaux à sommeil déclarés ⇒ trois ans (un
+`R` non renseigné y reste, par la première sémantique) ; `R` sans ⇒ cinq ans
+(l'allègement n'arrive que déclaré, par la seconde). Les autres colonnes de la
+ligne — `J`, `O`, `U` — doivent alors sortir sur une ligne sans critère de
+sommeil, sans quoi il les contraindrait aussi.
+
+**À vérifier avant d'encoder** : l'attribut n'apparaît qu'au formulaire de
+modification. Rien n'établit que le parcours d'accueil pose la question, donc
+qu'un `R` puisse y répondre. Un allègement qui ne se déclenche que sur un écran
+que personne n'ouvre est un allègement qui n'existe pas.
+
+**Les `obligation_manquante` du corpus ne sont pas une liste de tâches.** La
 plupart demandent un attribut de modèle, et dans le cadre arrêté le 2026-09-02
 elles se **déclarent**, elles ne s'encodent pas.
 
