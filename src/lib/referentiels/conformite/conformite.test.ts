@@ -393,14 +393,25 @@ describe("référentiel conformité — anti-doublon", () => {
    * sur de vrais doublons.
    */
   function typologiesErpDisjointes(a: Obligation, b: Obligation): boolean {
-    const seulementErp = (o: Obligation) =>
-      Object.keys(o.typologies).length === 1 &&
+    // LES CRITÈRES QUE CETTE SONDE SAIT PARCOURIR, et elle refuse de conclure
+    // sur les autres. Deux obligations ne sont déclarées disjointes que si
+    // AUCUN établissement du domaine sondé ne les reçoit toutes deux ; le
+    // domaine doit donc couvrir tout ce dont elles dépendent. `erp` était seul
+    // jusqu'au 2026-09-08 ; `locauxSommeilPublic` l'a rejoint le jour où deux
+    // lignes de GE 4 § 1 s'en sont servies pour se partager la colonne R.
+    // Élargir la sonde est la seule façon honnête de les comparer : les
+    // déclarer « paire connue » aurait éteint le contrôle au lieu de le
+    // passer.
+    const CRITERES_SONDES = new Set(["erp", "locauxSommeilPublic"]);
+    const dansLeDomaineSonde = (o: Obligation) =>
+      Object.keys(o.typologies).every((c) => CRITERES_SONDES.has(c)) &&
       typeof o.typologies.erp === "object";
-    if (!seulementErp(a) || !seulementErp(b)) return false;
+    if (!dansLeDomaineSonde(a) || !dansLeDomaineSonde(b)) return false;
 
     const sonde = (
       categorieErp: EtablissementMatching["categorieErp"],
       typeErp: EtablissementMatching["typeErp"],
+      comporteLocauxSommeilPublic: boolean | null,
     ): EtablissementMatching => ({
       id: "sonde",
       effectifSurSite: 10,
@@ -412,22 +423,27 @@ describe("référentiel conformité — anti-doublon", () => {
       categorieErp,
       classeIgh: null,
       familleHabitation: null,
-      comporteLocauxSommeilPublic: null,
+      comporteLocauxSommeilPublic,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     });
 
-    // `null` figure dans les deux axes : c'est l'établissement qui n'a pas
-    // précisé sa catégorie ou son type, et c'est précisément là que deux
-    // lignes complémentaires peuvent se recouvrir sans qu'on le voie.
+    // `null` figure dans les TROIS axes : c'est l'établissement qui n'a pas
+    // précisé sa catégorie, son type ou son hébergement, et c'est précisément
+    // là que deux lignes complémentaires peuvent se recouvrir sans qu'on le
+    // voie. Le silence sur l'hébergement est le cas critique : une paire
+    // `true` / `false` ne se partage proprement un type que si l'une des deux
+    // retient le muet et l'autre le laisse.
     for (const cat of [...CATEGORIES_ERP, null] as const) {
       for (const type of [...TYPES_ERP, null] as const) {
-        const etab = sonde(cat, type);
-        if (
-          matchTypologie(a.typologies, etab).ok &&
-          matchTypologie(b.typologies, etab).ok
-        ) {
-          return false;
+        for (const heb of [true, false, null] as const) {
+          const etab = sonde(cat, type, heb);
+          if (
+            matchTypologie(a.typologies, etab).ok &&
+            matchTypologie(b.typologies, etab).ok
+          ) {
+            return false;
+          }
         }
       }
     }
@@ -1297,7 +1313,7 @@ describe("référentiel conformité — version et empreinte", () => {
   // 3ᵉ catégorie recevait jusqu'ici moins d'obligations qu'un de 5ᵉ, parce que
   // le Livre II n'était dépouillé qu'à moitié quand le Livre III l'était en
   // entier.
-  const EMPREINTE_ATTENDUE = "152-717a159c56be1d0e";
+  const EMPREINTE_ATTENDUE = "154-5af740612719ff11";
 
   it("l'empreinte du contenu correspond à la version déclarée", () => {
     expect(
@@ -1415,7 +1431,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour — ainsi que `EMPREINTE_ATTENDUE` et `.claude/CLAUDE.md`, qui " +
         "l'annoncent tous les deux.",
-    ).toBe(152);
+    ).toBe(154);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -1931,32 +1947,50 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
    *
    * `type` porte la valeur de `TypeErp` par laquelle un tel établissement se
    * déclare dans le produit, `null` quand il n'en existe aucune.
+   *
+   * `hebergement` porte la SEULE colonne que le tableau dédouble : R (1) et
+   * R (2) ne sont pas deux types — GN 1 § 1 n'écrit qu'un seul R — mais deux
+   * régimes d'une même ligne, séparés par le fait d'héberger au sens du § 4
+   * (« les seuls locaux destinés au sommeil du public la nuit »). `null` pour
+   * les quatorze autres colonnes : le tableau ne les fait pas dépendre de ce
+   * fait, et leur périodicité ne doit donc jamais en dépendre non plus.
    */
   const TABLEAU: {
     colonne: string;
     type: (typeof TYPES_ERP)[number] | null;
+    hebergement: boolean | null;
     ans: [number, number, number, number];
   }[] = [
-    { colonne: "J", type: "J", ans: [3, 3, 3, 3] },
-    { colonne: "L", type: "L", ans: [3, 3, 3, 5] },
-    { colonne: "M", type: "M", ans: [3, 3, 5, 5] },
-    { colonne: "N", type: "N", ans: [3, 3, 5, 5] },
-    { colonne: "O", type: "O", ans: [3, 3, 3, 3] },
-    { colonne: "P", type: "P", ans: [3, 3, 3, 5] },
-    { colonne: "R (1) avec hébergement", type: "R", ans: [3, 3, 3, 3] },
-    { colonne: "R (2) sans hébergement", type: "R", ans: [3, 3, 3, 5] },
-    { colonne: "S", type: "S", ans: [3, 3, 5, 5] },
-    { colonne: "T", type: "T", ans: [3, 3, 5, 5] },
-    { colonne: "U", type: "U", ans: [3, 3, 3, 3] },
-    { colonne: "V", type: "V", ans: [5, 5, 5, 5] },
-    { colonne: "W", type: "W", ans: [3, 3, 5, 5] },
-    { colonne: "X", type: "X", ans: [3, 3, 5, 5] },
-    { colonne: "Y", type: "Y", ans: [3, 3, 5, 5] },
+    { colonne: "J", type: "J", hebergement: null, ans: [3, 3, 3, 3] },
+    { colonne: "L", type: "L", hebergement: null, ans: [3, 3, 3, 5] },
+    { colonne: "M", type: "M", hebergement: null, ans: [3, 3, 5, 5] },
+    { colonne: "N", type: "N", hebergement: null, ans: [3, 3, 5, 5] },
+    { colonne: "O", type: "O", hebergement: null, ans: [3, 3, 3, 3] },
+    { colonne: "P", type: "P", hebergement: null, ans: [3, 3, 3, 5] },
+    {
+      colonne: "R (1) avec hébergement",
+      type: "R",
+      hebergement: true,
+      ans: [3, 3, 3, 3],
+    },
+    {
+      colonne: "R (2) sans hébergement",
+      type: "R",
+      hebergement: false,
+      ans: [3, 3, 3, 5],
+    },
+    { colonne: "S", type: "S", hebergement: null, ans: [3, 3, 5, 5] },
+    { colonne: "T", type: "T", hebergement: null, ans: [3, 3, 5, 5] },
+    { colonne: "U", type: "U", hebergement: null, ans: [3, 3, 3, 3] },
+    { colonne: "V", type: "V", hebergement: null, ans: [5, 5, 5, 5] },
+    { colonne: "W", type: "W", hebergement: null, ans: [3, 3, 5, 5] },
+    { colonne: "X", type: "X", hebergement: null, ans: [3, 3, 5, 5] },
+    { colonne: "Y", type: "Y", hebergement: null, ans: [3, 3, 5, 5] },
   ];
 
   const CATEGORIES_DU_TABLEAU = ["N1", "N2", "N3", "N4"] as const;
 
-  /** Les six lignes qui portent le tableau, et rien d'autre. */
+  /** Les sept lignes qui portent le tableau, et rien d'autre. */
   const LIGNES_GE4 = [
     "incendie-erp-visite-commission-cat1-2-triennale",
     "incendie-erp-visite-commission-cat1-2-quinquennale",
@@ -1964,11 +1998,24 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
     "incendie-erp-visite-commission-cat3-quinquennale",
     "incendie-erp-visite-commission-cat4-triennale",
     "incendie-erp-visite-commission-cat4-quinquennale",
+    // Les deux régimes de la colonne R en 4ᵉ catégorie (2026-09-08). La
+    // septième ligne ne vient pas d'un bloc de plus du tableau, mais de la
+    // seule colonne qu'il dédouble.
+    "incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale",
+    "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale",
   ];
+
+  /**
+   * TROIS ÉTATS, PAS DEUX, et c'est le troisième qui porte la garantie : un
+   * établissement qui n'a pas répondu n'est pas un établissement qui a
+   * répondu « non ». Toutes les boucles ci-dessous parcourent les trois.
+   */
+  const ETATS_HEBERGEMENT = [true, false, null] as const;
 
   function erpSonde(
     categorieErp: EtablissementMatching["categorieErp"],
     typeErp: EtablissementMatching["typeErp"],
+    comporteLocauxSommeilPublic: boolean | null = null,
   ): EtablissementMatching {
     return {
       id: "sonde-ge4",
@@ -1981,7 +2028,7 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       categorieErp,
       classeIgh: null,
       familleHabitation: null,
-      comporteLocauxSommeilPublic: null,
+      comporteLocauxSommeilPublic,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };
@@ -1996,16 +2043,21 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
   function visitesRendues(
     categorieErp: EtablissementMatching["categorieErp"],
     typeErp: EtablissementMatching["typeErp"],
-  ): { id: string; ans: number }[] {
-    return determineObligationsApplicables(erpSonde(categorieErp, typeErp), [])
+    hebergement: boolean | null = null,
+  ): { id: string; ans: number; raisons: string[] }[] {
+    return determineObligationsApplicables(
+      erpSonde(categorieErp, typeErp, hebergement),
+      [],
+    )
       .filter((a) => LIGNES_GE4.includes(a.obligation.id))
       .map((a) => ({
         id: a.obligation.id,
         ans: Math.round(PERIODICITE_EN_JOURS[a.obligation.periodicite]! / 365),
+        raisons: a.raisons,
       }));
   }
 
-  it("les six lignes du tableau existent, et elles sont six", () => {
+  it("les sept lignes du tableau existent, et elles sont sept", () => {
     for (const id of LIGNES_GE4) expect(obligationParId(id), id).toBeDefined();
     // Sur l'article FONDATEUR (`referencesLegales[0]`) : GE 4 est aussi cité
     // par `incendie-erp-5-visite-commission`, en second, pour montrer
@@ -2044,27 +2096,38 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
 
   it("chaque établissement reçoit EXACTEMENT une ligne de visite", () => {
     // Borne haute et borne basse à la fois, et c'est ce qui fait tenir le
-    // découpage en six : les six typologies forment une partition des
+    // découpage en sept : les sept typologies forment une partition des
     // 1ʳᵉ à 4ᵉ catégories. Deux lignes, et le dirigeant voit deux fois la même
     // visite à deux dates ; zéro ligne, et il ne voit rien du tout.
     //
-    // `null` est dans les deux boucles À DESSEIN. Le type non renseigné est le
-    // cas que l'énumération des types aurait perdu en silence : c'est pour lui
-    // que `typesExclus` existe.
+    // `null` est dans les TROIS boucles À DESSEIN. Le type non renseigné est le
+    // cas que l'énumération des types aurait perdu en silence — c'est pour lui
+    // que `typesExclus` existe —, et l'hébergement non renseigné est celui que
+    // la scission du 2026-09-08 aurait pu perdre : une paire de lignes dont
+    // l'une exige `true` et l'autre `false` ne couvre pas le silence, sauf à
+    // ce que celle qui exige `true` le retienne. C'est ce que fait
+    // `evaluerLocauxSommeil`, et c'est ici qu'on l'éprouve.
     for (const cat of CATEGORIES_DU_TABLEAU) {
       for (const type of [...TYPES_ERP, null] as const) {
-        const rendues = visitesRendues(cat, type);
-        expect(
-          rendues.map((r) => r.id),
-          `${cat} / type ${type ?? "non renseigné"}`,
-        ).toHaveLength(1);
+        for (const heb of ETATS_HEBERGEMENT) {
+          const rendues = visitesRendues(cat, type, heb);
+          expect(
+            rendues.map((r) => r.id),
+            `${cat} / type ${type ?? "non renseigné"} / hébergement ${heb ?? "non renseigné"}`,
+          ).toHaveLength(1);
+        }
       }
     }
     // Hors du tableau, aucune ligne : ni la 5ᵉ catégorie (Livre II écarté par
     // PE 1 § 1), ni l'ERP dont la catégorie n'est pas renseignée.
     for (const type of [...TYPES_ERP, null] as const) {
-      expect(visitesRendues("N5", type), `N5 / ${type}`).toEqual([]);
-      expect(visitesRendues(null, type), `cat. inconnue / ${type}`).toEqual([]);
+      for (const heb of ETATS_HEBERGEMENT) {
+        expect(visitesRendues("N5", type, heb), `N5 / ${type}`).toEqual([]);
+        expect(
+          visitesRendues(null, type, heb),
+          `cat. inconnue / ${type}`,
+        ).toEqual([]);
+      }
     }
   });
 
@@ -2077,7 +2140,10 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
     for (const colonne of TABLEAU) {
       if (colonne.type === null) continue;
       CATEGORIES_DU_TABLEAU.forEach((cat, i) => {
-        const rendues = visitesRendues(cat, colonne.type);
+        // Chaque colonne est sondée DANS SON PROPRE RÉGIME d'hébergement :
+        // c'est ce qui rend les deux colonnes R distinguables. Les quatorze
+        // autres sont sondées à `null`, comme un dossier qui n'a pas répondu.
+        const rendues = visitesRendues(cat, colonne.type, colonne.hebergement);
         for (const r of rendues) {
           if (r.ans > colonne.ans[i]) {
             allongees.push(
@@ -2095,15 +2161,22 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
     ).toEqual([]);
   });
 
-  it("les cases raccourcies sont exactement les deux que le modèle ne sait pas porter", () => {
-    // L'autre sens, celui qui se voit. Il est autorisé, mais pas au hasard :
-    // deux manques nommés le produisent, et aucun troisième ne doit s'y
-    // glisser sans être écrit.
+  it("plus aucune case n'est raccourcie quand le régime d'hébergement est déclaré", () => {
+    // L'AUTRE SENS, celui qui se voit — il avance une date au lieu de
+    // l'allonger. Il était autorisé tant qu'un manque nommé le produisait ;
+    // il ne l'est plus, parce qu'il n'en reste aucun.
+    //
+    // Les deux manques de l'encodage du 2026-09-02 sont levés : le type J est
+    // entré dans `TypeErp` le 2026-09-03 (il ne déplaçait aucune case, mais un
+    // EHPAD ne pouvait pas se déclarer), et la distinction R (1) / R (2) est
+    // encodée depuis le 2026-09-08 — non par une lettre de plus, que GN 1 § 1
+    // n'écrit pas, mais par le croisement du type R avec l'attribut
+    // d'établissement `comporteLocauxSommeilPublic`.
     const raccourcies: string[] = [];
     for (const colonne of TABLEAU) {
       if (colonne.type === null) continue;
       CATEGORIES_DU_TABLEAU.forEach((cat, i) => {
-        for (const r of visitesRendues(cat, colonne.type)) {
+        for (const r of visitesRendues(cat, colonne.type, colonne.hebergement)) {
           if (r.ans < colonne.ans[i]) {
             raccourcies.push(`${colonne.colonne} en ${cat}`);
           }
@@ -2112,30 +2185,68 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
     }
     expect(
       raccourcies,
-      "Une case est encodée plus courte que le tableau sans que le manque qui " +
-        "l'explique soit nommé. Le seul admis est R sans hébergement en " +
-        "4ᵉ catégorie : `TypeErp` ne connaît qu'un seul R et rien ne dit si " +
-        "l'établissement héberge, donc tout R garde trois ans.",
-    ).toEqual(["R (2) sans hébergement en N4"]);
+      "Une case est encodée plus courte que le tableau alors que le régime " +
+        "d'hébergement est déclaré. Il n'existe plus de manque de modèle pour " +
+        "l'expliquer : c'est un défaut d'encodage.",
+    ).toEqual([]);
 
-    // IL N'Y EN A PLUS QU'UN, ET C'EST LE BON QUI RESTE. Le second manque
-    // — « le type J n'existe pas dans l'énumération » — a été levé le
-    // 2026-09-03 : GN 1 § 1 le porte, `TypeErp` aussi désormais. Il ne
-    // déplaçait aucune case (J est à trois ans dans les quatre catégories, et
-    // les lignes triennales sont écrites en complément), mais il empêchait un
-    // EHPAD de se déclarer pour ce qu'il est.
-    //
-    // Celui qui reste ne se lève PAS de la même façon, et la différence est
-    // dans le texte : « R (1) avec hébergement » et « R (2) sans hébergement »
-    // ne sont pas deux types de la nomenclature — GN 1 § 1 n'écrit qu'un seul
-    // R. Ce sont deux régimes d'une même ligne de tableau, séparés par un fait
-    // que le § 4 du même article définit (« les seuls locaux destinés au
-    // sommeil du public la nuit »). Ajouter une lettre inventerait un type ;
-    // ce qu'il faudrait est un croisement avec un attribut d'établissement.
     expect(TABLEAU.filter((c) => c.type === null)).toEqual([]);
     // Toute colonne du tableau se déclare désormais dans le produit, et
     // chaque valeur nommée existe bien dans l'énumération.
     for (const c of TABLEAU) expect(TYPES_ERP, c.colonne).toContain(c.type);
+  });
+
+  it("le silence sur l'hébergement garde le rythme COURT, et le dit", () => {
+    // LA GARANTIE DE LA SCISSION, et la seule qui vaille d'être cassée pour
+    // être crue. Deux lignes se partagent la colonne R de 4ᵉ catégorie : trois
+    // ans avec hébergement, cinq sans. Un dossier qui n'a pas répondu n'est
+    // dans aucun des deux cas — et c'est le rythme COURT qu'il doit recevoir,
+    // parce qu'un allègement pris sur un silence ne se voit de nulle part.
+    const silence = visitesRendues("N4", "R", null);
+    expect(silence.map((r) => r.ans)).toEqual([3]);
+    expect(silence[0].id).toBe(
+      "incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale",
+    );
+    // Et il le DIT : la raison est affichée au guide (`ChezVous`), ce qui fait
+    // de cette ligne l'endroit où la question se pose à quelqu'un qui a une
+    // raison d'y répondre. Sans cette phrase, l'allègement resterait hors de
+    // portée d'un dossier né du parcours d'accueil, qui ne pose pas la
+    // question.
+    expect(silence[0].raisons.join(" · ")).toContain("à confirmer");
+
+    // LES DEUX RÉPONSES EXPLICITES, dans les deux sens. Sans elles, la ligne
+    // ci-dessus passerait encore si la scission n'avait rien scindé du tout.
+    expect(visitesRendues("N4", "R", true).map((r) => r.ans)).toEqual([3]);
+    expect(visitesRendues("N4", "R", false).map((r) => r.ans)).toEqual([5]);
+    expect(visitesRendues("N4", "R", false)[0].id).toBe(
+      "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale",
+    );
+  });
+
+  it("la scission ne déborde pas de la 4ᵉ catégorie", () => {
+    // BORNE HAUTE DE LA SCISSION. Le tableau ne sépare les deux R qu'en
+    // 4ᵉ catégorie ; en 1ʳᵉ, 2ᵉ et 3ᵉ il les met tous deux à trois ans.
+    // Répondre « je n'héberge pas » ne doit donc RIEN changer ailleurs — sans
+    // ce test, une ligne mal bornée allongerait à cinq ans un centre de
+    // formation de 3ᵉ catégorie, du côté que le référentiel refuse.
+    for (const cat of ["N1", "N2", "N3"] as const) {
+      for (const heb of ETATS_HEBERGEMENT) {
+        expect(
+          visitesRendues(cat, "R", heb).map((r) => r.ans),
+          `R en ${cat} / hébergement ${heb ?? "non renseigné"}`,
+        ).toEqual([3]);
+      }
+    }
+    // Et les autres types de 4ᵉ catégorie ne dépendent pas de l'hébergement :
+    // le tableau ne le leur demande pas. Un hôtel (O) qui déclare des chambres
+    // et un magasin (M) qui n'en déclare pas gardent chacun leur rythme.
+    for (const type of TYPES_ERP.filter((t) => t !== "R")) {
+      const parEtat = ETATS_HEBERGEMENT.map((heb) =>
+        visitesRendues("N4", type, heb).map((r) => r.ans),
+      );
+      expect(parEtat[0], `${type} en N4`).toEqual(parEtat[1]);
+      expect(parEtat[1], `${type} en N4`).toEqual(parEtat[2]);
+    }
   });
 
   it("les huit types spéciaux gardent trois ans, faute de colonne au tableau", () => {
@@ -2169,12 +2280,27 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       const erp = o.typologies.erp;
       expect(typeof erp === "object" && erp.types, id).toBeDefined();
       const typologie = erp as { categories?: string[]; types?: string[] };
+      // La ligne peut restreindre le RÉGIME d'hébergement ; alors elle ne
+      // répond que de la colonne correspondante. C'est ce qui autorise cinq
+      // ans sur R (2) sans autoriser cinq ans sur R.
+      const heb = o.typologies.locauxSommeilPublic;
       for (const cat of typologie.categories!) {
         const i = CATEGORIES_DU_TABLEAU.indexOf(
           cat as (typeof CATEGORIES_DU_TABLEAU)[number],
         );
         for (const type of typologie.types!) {
-          const colonnes = TABLEAU.filter((c) => c.type === type);
+          const colonnes = TABLEAU.filter(
+            (c) =>
+              c.type === type &&
+              (heb === undefined || c.hebergement === null || c.hebergement === heb),
+          );
+          // GARDE-FOU : un filtre qui ne rend rien ferait passer le `every`
+          // ci-dessous à vide, donc à `true`. La ligne doit désigner au moins
+          // une case réelle du tableau.
+          expect(
+            colonnes.length,
+            `${id} : ${type} / hébergement ${heb ?? "indifférent"} ne désigne aucune colonne du tableau`,
+          ).toBeGreaterThan(0);
           expect(
             colonnes.every((c) => c.ans[i] === 5),
             `${id} : ${type} en ${cat} n'est pas à cinq ans au tableau`,

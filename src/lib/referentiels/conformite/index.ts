@@ -156,7 +156,14 @@ export const obligationsConformite: Obligation[] = [
 // ventilation (`CH 39 § 3`). Toutes deux sont bornées aux ERP des quatre
 // premières catégories : aucun calendrier existant ne les porte, et un parc de
 // 5ᵉ catégorie n'en voit rien.
-export const REFERENTIEL_VERSION = "2026-09-04.4";
+// `.1` le 2026-09-08 : la colonne R du tableau de GE 4 § 1 se dédouble en
+// 4ᵉ catégorie. Deux obligations entrent, et l'une ALLONGE un délai — un
+// établissement d'enseignement de 4ᵉ catégorie ayant DÉCLARÉ ne pas héberger
+// passe de trois ans à cinq, ce que le tableau dit depuis 2014. Les
+// calendriers existants sont concernés, et c'est le premier lot dans ce cas :
+// tant que la question d'hébergement n'a pas de réponse, rien ne bouge, mais
+// une réponse « non » déplace une échéance déjà engendrée.
+export const REFERENTIEL_VERSION = "2026-09-08.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
