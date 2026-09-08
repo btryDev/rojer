@@ -1,0 +1,43 @@
+# La suite de tests, exécutée à chaque poussée.
+#
+# Motivation — au 2026-09-08 le dépôt portait 188 fichiers et 2442 tests, dont
+# une part sont des gardes (cloisonnement entre clients, dérive du corpus,
+# frontière médicale RGPD) et aucun job ne les lançait : le seul workflow était
+# la comparaison migrations ↔ schéma. Une garde que personne n'est tenu de
+# faire passer avant un merge ne garde rien — elle est vraie sur le poste de
+# qui pense à la lancer, et `main` part en production sur Vercel.
+#
+# Aucune base, aucun secret : les tests simulent Prisma. Les deux variables
+# ci-dessous ne servent qu'à `prisma generate`, que `postinstall` déclenche et
+# qui refuse un schéma dont un `env()` est vide.
+
+name: Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  vitest:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aucune
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/aucune
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Lancer la suite
+        run: pnpm test:run
