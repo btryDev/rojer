@@ -20,6 +20,10 @@ const { prismaMock, requireUserMock } = vi.hoisted(() => ({
   prismaMock: {
     verification: {
       findMany: vi.fn().mockResolvedValue([]),
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
+    etablissement: {
+      findFirst: vi.fn().mockResolvedValue(null),
     },
   },
   requireUserMock: vi.fn(),
@@ -31,8 +35,11 @@ vi.mock("@/lib/auth/require-user", () => ({
   getOptionalUser: vi.fn(),
 }));
 
+import { REFERENTIEL_VERSION } from "@/lib/referentiels/conformite";
 import {
+  calendrierDesynchronise,
   compterEtatCalendrier,
+  getVerification,
   grouperParMois,
   listerVerifications,
   type VerificationListee,
@@ -49,6 +56,8 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
   prismaMock.verification.findMany.mockClear().mockResolvedValue([]);
+  prismaMock.verification.findFirst.mockClear().mockResolvedValue(null);
+  prismaMock.etablissement.findFirst.mockClear().mockResolvedValue(null);
   requireUserMock.mockResolvedValue({ id: "user-1" });
 });
 
@@ -271,5 +280,99 @@ describe("grouperParMois", () => {
     ]);
     expect([...map.keys()]).toEqual(["2026-08", "2026-09"]);
     expect(map.get("2026-08")).toHaveLength(3);
+  });
+});
+
+/**
+ * Le cloisonnement des trois autres lectures du fichier (ADR-005).
+ *
+ * `listerVerifications` avait le sien depuis toujours ; `compterEtatCalendrier`,
+ * `getVerification` et `calendrierDesynchronise` ne l'avaient pas — leur
+ * `entreprise: { userId }` pouvait être retiré sans qu'aucun test ne bouge,
+ * alors que ce sont les trois lectures qui alimentent l'en-tête du calendrier,
+ * la fiche d'une échéance et le déclencheur de régénération.
+ *
+ * Comme au-dessus : on éprouve la **clause envoyée**, parce que c'est là que
+ * vit la règle. Aucune RLS ne la rattrape en base.
+ */
+describe("cloisonnement des lectures par entreprise (ADR-005)", () => {
+  it("compterEtatCalendrier scope sur l'entreprise du user", async () => {
+    await compterEtatCalendrier("etab-1", NOW);
+    expect(clause("etablissement")?.etablissement).toEqual({
+      entreprise: { userId: "user-1" },
+    });
+  });
+
+  it("compterEtatCalendrier garde le scope sous filtre par bâtiment", async () => {
+    // Deux conditions indépendantes, dont l'une pose un `OR` : c'est
+    // exactement la collision qui a fait disparaître le filtre par bâtiment
+    // de `listerVerifications`. Le scope ne doit pas s'y perdre non plus.
+    await compterEtatCalendrier("etab-1", NOW, { batimentId: "bat-1" });
+    expect(clause("etablissement")?.etablissement).toEqual({
+      entreprise: { userId: "user-1" },
+    });
+    expect(
+      clausesDe(dernierWhere()).find((c) =>
+        JSON.stringify(c).includes("batimentId"),
+      ),
+    ).toBeDefined();
+  });
+
+  it("getVerification scope sur l'entreprise du user", async () => {
+    await getVerification("verif-1");
+    expect(
+      prismaMock.verification.findFirst.mock.calls.at(-1)![0].where,
+    ).toEqual({
+      id: "verif-1",
+      etablissement: { entreprise: { userId: "user-1" } },
+    });
+  });
+
+  it("getVerification ne rend rien pour la vérification d'un autre client", async () => {
+    // La base ne renvoie rien parce que la clause l'exclut : la fonction rend
+    // `null`, et l'appelant fait son 404. Sans la clause, elle rendrait la
+    // fiche du dossier d'en face.
+    prismaMock.verification.findFirst.mockResolvedValue(null);
+    expect(await getVerification("verif-d-un-autre")).toBeNull();
+  });
+
+  it("calendrierDesynchronise scope sur l'entreprise du user", async () => {
+    await calendrierDesynchronise("etab-1");
+    expect(
+      prismaMock.etablissement.findFirst.mock.calls.at(-1)![0].where,
+    ).toEqual({ id: "etab-1", entreprise: { userId: "user-1" } });
+  });
+});
+
+describe("calendrierDesynchronise — la comparaison de version", () => {
+  it("dit « désynchronisé » quand la version en base est antérieure", async () => {
+    prismaMock.etablissement.findFirst.mockResolvedValue({
+      referentielVersionCalendrier: "2000-01-01.1",
+    });
+    expect(await calendrierDesynchronise("etab-1")).toBe(true);
+  });
+
+  it("dit « désynchronisé » quand aucune version n'a jamais été écrite", async () => {
+    // `null` = jamais réconcilié depuis l'introduction du mécanisme. Ces
+    // établissements sont rattrapés au premier affichage ; les tenir pour à
+    // jour les laisserait avec un calendrier vide indéfiniment.
+    prismaMock.etablissement.findFirst.mockResolvedValue({
+      referentielVersionCalendrier: null,
+    });
+    expect(await calendrierDesynchronise("etab-1")).toBe(true);
+  });
+
+  it("dit « à jour » quand la version en base est la version courante", async () => {
+    prismaMock.etablissement.findFirst.mockResolvedValue({
+      referentielVersionCalendrier: REFERENTIEL_VERSION,
+    });
+    expect(await calendrierDesynchronise("etab-1")).toBe(false);
+  });
+
+  it("ne relance pas la régénération sur un établissement introuvable", async () => {
+    // Introuvable, ici, veut dire « pas au user » aussi bien que « supprimé ».
+    // Rendre `true` ferait boucler la page sur une régénération qui échouera.
+    prismaMock.etablissement.findFirst.mockResolvedValue(null);
+    expect(await calendrierDesynchronise("etab-inconnu")).toBe(false);
   });
 });
