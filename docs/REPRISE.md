@@ -63,6 +63,75 @@ le faux Prisma des tests qui ignore les `where`, et les fixtures qui pré-filtre
 ce que le code devrait filtrer. Corriger avant, c'est valider avec des tests
 aveugles.
 
+## Ce qui reste, en dehors du réconciliateur
+
+Le § 11 est le sujet du moment, **ce n'est pas la liste entière**. `docs/chantiers-ouverts.md`
+en porte douze autres, et les lire évite de redécouvrir ce qui est déjà tranché.
+Ce sommaire est un aiguillage, jamais un substitut : chaque entrée porte son
+observable et sa raison, et plusieurs ont été rayées depuis.
+
+**Prêt à prendre, rien ne bloque :**
+- **§ 2 — la date de remise de l'attestation de vigilance.** Le compteur des six
+  mois de `D. 8222-5` repart **à chaque écriture** sur la fiche du prestataire :
+  la borne n'arrive jamais, l'écran reste vert indéfiniment. Il le *dit* depuis le
+  2026-09-02 — c'est le palliatif, pas le remède. Un champ, donc une migration.
+- **§ 8 — `GH 61 § 5`**, la vérification quinquennale de la charge calorifique que
+  le texte met à la charge des **occupants** d'un IGH, c'est-à-dire l'utilisateur
+  même du produit. Le corpus en donnait une raison de non-encodage **fausse**.
+
+**Décisions, pas développement (§ 4) :**
+- **La vigilance prestataires est servie et hors périmètre déclaré** : le produit a
+  un module entier et vingt citations dessus, alors que le chapitre relève du
+  travail illégal. L'assumer, ou déclarer le module hors référentiel.
+- **Le type `R` n'est pas subdivisé**, et la lettre le veut. L'encodage met tout `R`
+  de 4ᵉ catégorie à trois ans là où le tableau met `R` sans hébergement à cinq :
+  **sur-application assumée, du côté court**. Le blocage invoqué est levé depuis le
+  2026-09-02 ; la branche `worktree-ge4-r-hebergement` porte le correctif et ne doit
+  pas être fusionnée avant le lot 2 du § 11.
+- **Les 60 `obligation_manquante` du corpus.** Le § 4 les range comme « pas une
+  liste de tâches » — la plupart demandent un attribut de modèle et se *déclarent*.
+  **La propriétaire a demandé le 2026-09-08 qu'on s'en occupe** : ce cadrage est donc
+  à rouvrir, il n'est plus l'état de la décision.
+
+**Le plus gros, et il n'est pas de l'encodage (§ 8) :**
+- **Plus l'établissement est grand, plus la couverture est mince — et rien ne le dit
+  au dirigeant.** Un ERP de 3ᵉ catégorie reçoit 28 obligations, un de 5ᵉ en reçoit 32.
+  En droit c'est correct ; mais le Livre III (5ᵉ catégorie) est au corpus en
+  **intégral, 59 articles**, quand le Livre II (catégories 1 à 4) n'y est qu'en
+  **18 articles cités**. Un restaurant de 3ᵉ catégorie voit un dossier qui a l'air
+  complet. **Premier geste : mesurer le dénominateur du Livre II** — on sait qu'on en
+  cite dix-huit, on ne sait pas combien il en compte.
+
+**Décidé, pas commencé :**
+- **§ 10 — le cycle de signature et de contre-signature du plan de prévention.**
+  Tranché le 2026-09-07, ordonnancé après les corrections en cours. Six garanties
+  à obtenir y sont écrites, dont trois que Rojer ne tient nulle part. Il suppose un
+  chemin de modification d'un plan, qui n'existe pas non plus (§ 6 bis).
+- **Éclaircir les trous « mécaniques ».** Demandé le 2026-09-08. Les trous de
+  *couverture réglementaire* sont bien signalés — 60 obligations marquées au corpus,
+  quatre clés d'exclusion, une page dans le produit. Les trous de *mécanique*, non :
+  celui du réconciliateur ne vivait que dans un paragraphe d'ADR, écrit par le lot
+  qui l'avait créé. Il manque un endroit unique où un lot déclare le manque qu'il
+  laisse.
+
+**Bas de liste :**
+- **§ 1** — `manipuleMatieresR422722` absent lu « non ». Ne retire rien aujourd'hui.
+- **§ 6** — trente adresses de section au lieu d'adresses d'article au corpus ;
+  deux comptes de test gardés volontairement en production, un troisième créé par
+  erreur et à supprimer.
+- **§ 7** — quatre constats visuels sur onze restent ouverts, dont deux jamais
+  vérifiés (le guide bloqué à « étape 4 sur 6 », un aplat noir sur la page d'accueil
+  qui **ne se mesure pas en développement**).
+- **§ 7 bis** — les équipements de protection : un dirigeant ne peut déclarer ni
+  casque, ni harnais, ni chaussures de sécurité.
+- **§ 9 bis** — `GHW`, une classe d'immeuble qui n'existe pas au CCH ; retrait
+  préparé, en attente d'un comptage en production.
+
+**Ce qui est clos et qu'il ne faut pas rouvrir** : le § 3, le § 5 (le contrôle
+visuel est terminé, plus aucun écran n'est resté sans données), le § 9 (les sept
+listes fermées ont été confrontées à leur texte, trois étaient fausses, corrigées
+et tenues par des tests).
+
 ## L'état des branches au 2026-09-09
 
 | branche | état |
