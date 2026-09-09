@@ -6,13 +6,25 @@ le code, c'est le code qui a raison.**
 
 ## À faire en premier sur une machine qui reprend
 
-1. **Vérifier le nom du dossier.** Le dépôt a été renommé le 2026-09-07 :
-   `Documents/duerp_outils/testDuerp` → `Documents/rojer-outils/rojer`. Si le
-   vôtre porte encore l'ancien nom, **la mémoire de projet de Claude Code sera
-   invisible** — elle est indexée sur le chemin du dossier de travail, et il y a
-   quarante-quatre entrées à perdre. Renommez, ou posez un lien symbolique de
-   `~/.claude/projects/-Users-<vous>-Documents-duerp-outils` vers
-   `…-rojer-outils`.
+1. **Ne renommez rien avant d'avoir vérifié que la mémoire se charge.**
+   ⚠ **Ce point disait le contraire jusqu'au 2026-09-09, et le conseil était
+   dangereux.** Il tenait pour acquis que toutes les machines portaient
+   l'arborescence `duerp_outils/testDuerp`, renommée ce jour-là en
+   `rojer-outils/rojer`. **C'est faux** : un second poste porte le dépôt en
+   `~/Documents/duerp`, chemin qui n'a jamais changé — y appliquer le renommage
+   ou le lien symbolique aurait rendu sa mémoire **invisible au lieu de la sauver**.
+
+   La règle juste : **la mémoire de projet de Claude Code est indexée sur le chemin
+   du dossier de travail, quel qu'il soit.** Comptez d'abord les entrées de votre
+   `MEMORY.md`. Si vous en voyez, ne touchez à rien. Si vous en voyez zéro **et**
+   que votre dossier a été renommé, alors seulement posez un lien symbolique de
+   l'ancien chemin vers le nouveau.
+
+   **Et sachez que les mémoires ne voyagent pas** : elles vivent hors du dépôt, un
+   `git pull` n'en apporte aucune. Le poste d'origine en portait quarante-quatre,
+   un second quinze — ce sont deux jeux distincts, et il n'existe aucun moyen de
+   les réunir depuis l'un ou l'autre. Ce qui doit survivre à une machine s'écrit
+   **dans le dépôt**, c'est la raison d'être de cette note.
 2. **Le remote**, si besoin — GitHub redirige un dépôt renommé, donc l'ancien
    fonctionne encore :
    `git remote set-url origin git@github.com-pro:btryDev/rojer.git`

@@ -1151,7 +1151,20 @@ garantie avant de la tenir.**
 Plusieurs constats partagent une cause. Les corriger dans le désordre en rouvre
 d'autres.
 
-#### Lot 0 — Le harnais de test. **Prérequis absolu, rien ne démarre avant.**
+#### ~~Lot 0 — Le harnais de test. **Prérequis absolu, rien ne démarre avant.**~~ FAIT LE 2026-09-09 ()
+
+> **Les seize mutations rougissent désormais**, chacune sur un test qui NOMME la
+> garantie retirée. Le faux client Prisma honore les `where` et **fait échouer le
+> test sur toute clause qu'il ne sait pas interpréter** ; `$transaction` est
+> séquentielle et atomique ; les fixtures rendent le monde complet ; le
+> référentiel n'est plus simulé ; et le calendrier a enfin une suite qui tente la
+> traversée entre clients. 188 fichiers, 2463 tests verts.
+>
+> **Une correction au passage** : elles étaient **quinze** aveugles, pas seize —
+> `M12` était déjà tenue.
+>
+> **Les lots 1 à 5 sont donc débloqués.** Ce qui suit décrit l'état d'avant, gardé
+> pour que le lecteur sache ce qui a été réparé et pourquoi c'était bloquant.
 
 Seize garanties sur trente-deux restent vertes quand on retire ce qu'elles
 prétendent vérifier — dont `assertEtablissementOwnership` et le scoping
