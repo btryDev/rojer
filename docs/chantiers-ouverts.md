@@ -1115,3 +1115,172 @@ ce dépôt-là, sous aucun prétexte.**
   qui n'existe pas non plus (§ 6 bis). Les deux se tiennent : une contre-signature
   sans modification possible n'a rien à corriger, et une modification sans
   révocation des signatures est précisément le défaut qu'on cherche à éviter.
+
+---
+
+## 11. Le réconciliateur de calendrier — seize constats, un plan ordonné
+
+**Trois passes le 2026-09-09** : une revue à froid, deux contre-expertises, un
+audit, et une passe sur base réelle. **C'est le premier audit de cette pièce** :
+sur une quarantaine de revues, aucune ne l'avait prise pour sujet, alors que le
+moteur de matching a été audité quatre fois. On avait beaucoup vérifié *ce qui
+s'applique*, et jamais *ce que devient une ligne déjà posée*.
+
+**Le verdict d'ensemble, et il compte autant que la liste : pas de refonte.** Le
+cœur — la logique qui décide garder / créer / archiver / supprimer — est juste et
+tenu : dix garde-fous purs sur onze rougissent quand on les casse, l'idempotence
+tient à partir du 3ᵉ passage, `cleDeLigne` est la seule construction des deux
+côtés, les contraintes SQL sont posées et vérifiées. Deux contre-expertises
+indépendantes ont refusé d'y voir un défaut de conception, et aucun constat ne
+demande de migration.
+
+**Ce qui cède, ce sont les bords** : le câblage (comment on l'appelle et comment
+on écrit son résultat), la lecture (deux classifieurs sur la même ligne), et les
+tests (montés sur un faux Prisma qui ignore les `where`).
+
+**Et le vrai défaut de qualité n'est pas le code, c'est l'écart entre le code et
+ce qu'on a écrit de lui.** Au moins six promesses d'ADR sont plus larges que ce
+que le code tient — dont une qui déclare impossible exactement ce qui a été
+reproduit sur base réelle. C'est ce qui a fait passer cette pièce pour sûre :
+elle était bien documentée, et la documentation était en avance sur la réalité.
+**Le point à surveiller n'est pas le réconciliateur, c'est l'habitude d'écrire la
+garantie avant de la tenir.**
+
+### L'ordre, et pourquoi il n'est pas celui de la gravité
+
+Plusieurs constats partagent une cause. Les corriger dans le désordre en rouvre
+d'autres.
+
+#### Lot 0 — Le harnais de test. **Prérequis absolu, rien ne démarre avant.**
+
+Seize garanties sur trente-deux restent vertes quand on retire ce qu'elles
+prétendent vérifier — dont `assertEtablissementOwnership` et le scoping
+`entreprise.userId` de trois lectures. Le **code est juste** ; c'est le faux
+Prisma qui ignore les `where` et les fixtures qui pré-filtrent ce que le code
+devrait filtrer.
+
+Deux gestes : faire honorer les `where` au faux Prisma, et **appeler le vrai
+référentiel au lieu de le simuler**. Le second est ce qui aurait empêché le
+constat du mauvais grain d'exister : avec le vrai matching, écrire le test
+« un équipement désactivé ne génère plus d'obligation » aurait exigé un
+établissement dont le matching produit l'obligation, et la question « et s'il
+reste un deuxième extincteur ? » se serait posée d'elle-même.
+
+Et le calendrier n'a **aucune suite qui tente la traversée entre clients**, alors
+que six existent ailleurs dans le dépôt. À poser ici.
+
+#### Lot 1 — L'écriture aveugle. Le plus grave, et le moins cher.
+
+**Deux pertes de données, reproduites sur base réelle**, une seule cause : le plan
+est calculé sur une lecture (`actions.ts:199`) puis écrit sans revérifier
+(`update` par id `:337-349`, `deleteMany` par id `:305-307`). Aucun verrou nulle
+part.
+
+- un rapport déposé pendant une régénération **perd sa réalisation** : la ligne
+  repasse `dateRealisee: null, statut: depassee` par-dessus, et rien ne redérive
+  la réalisation depuis `rapports`. « Dépassée » avec un rapport conforme joint, à
+  perpétuité ;
+- une action corrective créée pendant une régénération qui supprime la ligne
+  **disparaît par cascade** — mot pour mot ce que l'ADR-012 déclare impossible.
+
+Correctif : écritures conditionnées sur ce que le plan a lu, compteurs comparés au
+plan, relance si écart — la régénération est idempotente, relancer est gratuit.
+**`actions.ts` seul, plus un test qui injecte l'écriture entre la lecture et la
+transaction.**
+
+Dans le même lot : le try/catch manquant sur `rapports/actions.ts:192,253` et
+`prescriptions/actions.ts` — un échec de régénération fait échouer une action
+serveur dont le rapport est **déjà commité**, l'utilisateur redépose et obtient
+deux rapports.
+
+#### Lot 2 — Le grain de la clé. **Une décision de la propriétaire, avant de coder.**
+
+Le garde-fou d'applicabilité teste `obligationId` (`generateur.ts:877-881`) quand
+une ligne existe par obligation **et porteur**. Deux symptômes, un défaut :
+
+- la ligne d'un porteur disparu est **gelée** si l'obligation vit ailleurs : ni
+  archivée, ni supprimée, ni relancée, comptée en retard indéfiniment — alors que
+  le bouton de suppression promet « ne génère plus d'échéance » ;
+- un identifiant qui change (scission, fusion, renommage) **casse la continuité** :
+  archivage plus ligne neuve urgente, état acquis non reporté.
+
+**À trancher avant de commencer** : quand N lignes d'équipement sont absorbées par
+une ligne d'établissement, **laquelle garde l'état ?** L'ADR-022 dit lui-même que
+ce n'est pas tranché. Sans réponse, ce lot ne démarre pas.
+
+**Piège** : raisonner « par porteur » au lieu de « par clé » casserait la garantie
+de l'ADR-023 — un test existant le montre.
+
+#### Lot 3 — Un seul classifieur.
+
+Trois constats, une cause : `repartirVerifications` et `lecturesCalendrier`
+classent la même ligne et se contredisent.
+
+- un contrôle dont la période est écoulée : **0 en retard** à l'en-tête et au
+  score, **un rendez-vous rouge** dans la grille ;
+- une échéance à vingt jours : « proche » sur trois surfaces, absente sur deux ;
+- une ligne **archivée** : muette partout sauf sur sa fiche et dans le MCP, qui la
+  disent « en retard » sur une obligation qui ne s'applique plus. Le marqueur
+  d'archivage est lu par deux lecteurs sur cinq.
+
+L'ADR-011 promet déjà que toutes les surfaces affichent le même compte.
+
+#### Lot 4 — L'arithmétique des dates.
+
+- **dérive d'un jour** sur les périodicités longues : annuelle depuis 2023-03-01 →
+  2024-02-29 ; quadriennale toujours un jour trop tôt. ADR-011 promet l'inverse ;
+- **deux règles de retard selon le porteur** le jour de l'échéance : une
+  attestation de salarié est « en retard » le matin où elle expire, pas un
+  équipement — contre la règle fondatrice de `retard.ts`.
+
+Le dépôt a **déjà** un module de dates qui porte la bonne règle ; le calendrier ne
+s'en sert pas et recalcule avec ses propres fonctions locales, en violation de la
+règle 1 de l'ADR-011. **Le lot consiste à supprimer les fonctions locales, pas à
+les corriger.**
+
+#### Lot 5 — Ce qui n'est jamais relancé. Dépend des lots 3 et 4.
+
+- **régime établi** : la page ne régénère que si le calendrier est vide ou
+  désynchronisé, donc un dossier immobile garde « conforme » indéfiniment ;
+- **ligne « mise en service »** : créée `a_planifier`, passée `depassee` par la
+  régénération suivante — le jour même —, et comptée en retard dès le premier
+  passage (4170 jours pour une MES de 2015). Idempotence rompue entre le passage 1
+  et le 2.
+
+### Le code mort, vérifié
+
+Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisser.
+
+- **`Verification.referentielVersion`** (`schema.prisma:602`) : **aucun écrivain**
+  dans tout `src/`. La colonne existe pour une resynchronisation jamais écrite.
+- **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
+  service de la tête du calendrier change un champ que personne ne lit.
+- **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors
+  tests.
+- La branche `datePrevueFaisantFoi` à statut réalisé (`generateur.ts:791`) :
+  aucun chemin de production ne l'atteint.
+- L'écriture `a_planifier` d'`uploadRapport:151-156`, réécrite `planifiee` par la
+  régénération qui suit.
+
+### Deux points mineurs, à prendre au fil
+
+- une **action ouverte compte comme preuve** (`actions.ts:228`) alors qu'elle
+  n'atteste d'aucun contrôle : ligne gelée « dépassée », comptée en retard ;
+- « régime établi = zéro écriture » (ADR-012) est faux : le repère de version est
+  toujours poussé, `Etablissement.updatedAt` bouge à chaque régénération et cesse
+  de vouloir dire « modifié par l'utilisateur ».
+
+### Les écarts ADR
+
+Au moins six promesses plus larges que le code. **À reprendre dans le lot qui
+corrige chacune, jamais dans une passe de ménage séparée** — sinon on réécrit une
+promesse sans savoir si elle est tenue, ce qui est exactement le geste qui a créé
+l'écart.
+
+### Ce qui est sain, nommément
+
+Idempotence à partir du 3ᵉ passage ; deux régénérations simultanées sur base vide
+(0 doublon) ; `cleDeLigne` unique des deux côtés ; `porteeBatiment` à quatre sites
+exactement ; les contraintes SQL (`NULLS NOT DISTINCT`, `porteur_xor`) posées et
+gardées ; `empreinteReferentiel` couvre `premierDelai` ; le cloisonnement de la
+régénération dans le code ; le salarié inactif traité conformément à `docs/rgpd.md`.
