@@ -1151,7 +1151,7 @@ garantie avant de la tenir.**
 Plusieurs constats partagent une cause. Les corriger dans le désordre en rouvre
 d'autres.
 
-#### ~~Lot 0 — Le harnais de test. **Prérequis absolu, rien ne démarre avant.**~~ FAIT LE 2026-09-09 ()
+#### ~~Lot 0 — Le harnais de test. **Prérequis absolu, rien ne démarre avant.**~~ FAIT LE 2026-09-09 (`3b92a85`)
 
 > **Les seize mutations rougissent désormais**, chacune sur un test qui NOMME la
 > garantie retirée. Le faux client Prisma honore les `where` et **fait échouer le
