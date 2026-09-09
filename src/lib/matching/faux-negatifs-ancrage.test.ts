@@ -58,6 +58,23 @@ function bureauSansRien(
   };
 }
 
+/**
+ * ERP de 5ᵉ catégorie de type O — l'hôtel, qui n'a rien déclaré non plus.
+ *
+ * IL EXISTE DEPUIS LE 2026-09-09 ET IL A UNE RAISON PRÉCISE. Les trois cas
+ * ci-dessous parlaient d'un « hôtel » en passant un fixture de type N : le
+ * type ne décidait de rien, la ligne ne tenait qu'au critère de sommeil, et le
+ * nom du test était de la prose. Depuis la borne du 2026-09-09, il décide — les
+ * quatre lignes de locaux à sommeil ne visent plus que J, O, U et R. Un test
+ * nommé « hôtel » qui passe un restaurant ne tomberait plus pour la raison
+ * qu'il annonce.
+ */
+function hotelErpCat5SansRien(
+  over: Partial<EtablissementMatching> = {},
+): EtablissementMatching {
+  return restoErpCat5SansRien({ id: "etab-hotel-nu", typeErp: "O", ...over });
+}
+
 /** ERP de 5ᵉ catégorie — le restaurateur du brief, qui n'a rien déclaré. */
 function restoErpCat5SansRien(
   over: Partial<EtablissementMatching> = {},
@@ -245,25 +262,63 @@ describe("visite de commission — le faux négatif est corrigé (2026-09-01)", 
   it("un hôtel de 5ᵉ catégorie sans aucun équipement déclaré reçoit la visite", () => {
     expect(
       idsSansAucunEquipement(
-        restoErpCat5SansRien({ comporteLocauxSommeilPublic: true }),
+        hotelErpCat5SansRien({ comporteLocauxSommeilPublic: true }),
       ),
     ).toContain(VISITE);
   });
 
-  it("un commerce de 5ᵉ catégorie qui a répondu « non » ne la reçoit pas", () => {
+  it("un hôtel de 5ᵉ catégorie qui a répondu « non » ne la reçoit pas", () => {
     expect(
       idsSansAucunEquipement(
-        restoErpCat5SansRien({ comporteLocauxSommeilPublic: false }),
+        hotelErpCat5SansRien({ comporteLocauxSommeilPublic: false }),
       ),
     ).not.toContain(VISITE);
   });
 
-  it("un dossier qui n'a pas répondu la reçoit quand même — l'incertitude ne réduit pas la couverture", () => {
-    // C'est le prix assumé de la règle du non-renseigné, et il est plus large
-    // qu'avant : la ligne tombe désormais chez tout ERP de 5ᵉ catégorie muet,
-    // alarme déclarée ou non. Elle est visible au calendrier et se retire
-    // d'une réponse ; l'oubli d'un hôtel, lui, ne se voyait de nulle part.
-    expect(idsSansAucunEquipement(restoErpCat5SansRien())).toContain(VISITE);
+  it("un hôtel qui n'a pas répondu la reçoit quand même — l'incertitude ne réduit pas la couverture", () => {
+    // C'est le prix assumé de la règle du non-renseigné. Depuis le 2026-09-09
+    // il est BORNÉ AUX QUATRE TYPES : la ligne ne tombe plus chez tout ERP de
+    // 5ᵉ catégorie muet, seulement chez ceux que la borne admet. Elle reste
+    // visible au calendrier et se retire d'une réponse ; l'oubli d'un hôtel,
+    // lui, ne se voyait de nulle part.
+    expect(idsSansAucunEquipement(hotelErpCat5SansRien())).toContain(VISITE);
+  });
+
+  it("le restaurant muet ne la reçoit plus — la borne de type du 2026-09-09", () => {
+    // Le pendant du test précédent, et la mesure de ce que la borne retire.
+    // C'est la sur-application « deux restaurants sur deux » du 2026-09-01 qui
+    // disparaît — sans qu'on ait écrit « non » à la place de personne : la
+    // colonne du restaurant reste `null`.
+    expect(idsSansAucunEquipement(restoErpCat5SansRien())).not.toContain(
+      VISITE,
+    );
+  });
+
+  it("le restaurant qui déclare héberger ne la reçoit PAS NON PLUS — réserve nommée, non corrigée", () => {
+    // LE TEST LE PLUS DÉSAGRÉABLE DU FICHIER, et il est écrit pour ça. Ici
+    // quelqu'un a pris la peine de DÉCLARER qu'il fait dormir du public — une
+    // auberge, une chambre d'hôtes au-dessus de la salle — et le produit n'en
+    // tire rien : la borne de type et le critère de sommeil se lisent en ET.
+    // Ce n'est pas un silence mal interprété, c'est un fait déclaré ignoré.
+    //
+    // Il est épinglé plutôt que tu, pour que le jour où la borne cède devant
+    // une déclaration explicite, ce test tombe et nomme ce qui change. Le
+    // supprimer pour « faire passer » reviendrait à effacer la réserve.
+    expect(
+      idsSansAucunEquipement(
+        restoErpCat5SansRien({ comporteLocauxSommeilPublic: true }),
+      ),
+    ).not.toContain(VISITE);
+  });
+
+  it("l'ERP de 5ᵉ qui n'a pas déclaré son type la reçoit — une exclusion invérifiable ne s'applique pas", () => {
+    // C'EST CE QUI SÉPARE `typesExclus` DE `types`, et la raison du choix.
+    // Avec `types: [J, O, U, R]`, cet établissement aurait perdu ses quatre
+    // lignes en silence, pour n'avoir pas rempli un champ. Avec `typesExclus`,
+    // il les garde « à confirmer ». Ne pas savoir ne retire jamais une ligne.
+    expect(
+      idsSansAucunEquipement(restoErpCat5SansRien({ typeErp: null })),
+    ).toContain(VISITE);
   });
 
   it("un employeur non-ERP ne la reçoit pas, même en déclarant des locaux à sommeil", () => {

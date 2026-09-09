@@ -3,6 +3,7 @@ import {
   CATEGORIES_ERP,
   EFFECTIF_MAX,
   TYPE_ERP,
+  TYPES_ERP_QUESTION_LOCAUX_SOMMEIL,
 } from "@/lib/etablissements/schema";
 
 // Réexportée : la validation client du wizard la lit ici, au plus près du
@@ -79,6 +80,29 @@ export const onboardingSchema = z
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(CATEGORIES_ERP).optional(),
     ),
+    // ─── Locaux à sommeil pour le public (2026-09-09) ───────
+    //
+    // Posée au parcours depuis ce jour, et seulement aux quatre types de
+    // `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`. Trois réponses comme sur la fiche :
+    // « je ne sais pas encore » (vide), « oui », « non ».
+    //
+    // `undefined` EST UNE RÉPONSE VALIDE ET C'EST LE CŒUR DU CHAMP. Il traverse
+    // jusqu'à la server action, qui n'écrit alors rien : la colonne reste
+    // `null`, c'est-à-dire « pas encore répondu ». La question ne bloque donc
+    // aucune création — c'est ce que le recadrage du 2026-09-01 exigeait en
+    // sortant deux questions de technicien du parcours — et rien n'est inscrit
+    // au dossier que personne n'a déclaré.
+    comporteLocauxSommeilPublic: z.preprocess(
+      (v) =>
+        v === "oui"
+          ? true
+          : v === "non"
+            ? false
+            : v === true || v === false
+              ? v
+              : undefined,
+      z.boolean().optional(),
+    ),
     // `classeIgh` et `familleHabitation` ont quitté ce schéma le 2026-09-03
     // avec les deux questions du parcours qui les posaient. Voir le bloc en
     // tête de `@/lib/etablissements/schema`.
@@ -134,6 +158,36 @@ export const onboardingSchema = z
       }
     }
 
+    // La réponse aux locaux à sommeil n'est acceptée QUE des quatre types à qui
+    // le parcours pose la question. Même forme que les deux gardes ci-dessus,
+    // et même raison : un champ qui n'est pas à l'écran ne doit pas pouvoir
+    // être posté depuis un client trafiqué. Ce qui serait écrit ici est un fait
+    // que personne n'a été invité à déclarer.
+    //
+    // Ce refus n'enferme personne : la question reste posée sur la fiche
+    // établissement à TOUT ERP, et un exploitant de type N qui comporte des
+    // chambres peut y répondre. Sa réponse ne déclenche cependant aucune des
+    // quatre obligations, la borne de type et le critère de sommeil se lisant
+    // en ET — réserve nommée dans `NOTE_BORNE_TYPES_SOMMEIL`
+    // (`referentiels/conformite/incendie.ts`), non corrigée à ce jour.
+    if (
+      val.comporteLocauxSommeilPublic !== undefined &&
+      !(
+        val.estERP &&
+        val.typeErp !== undefined &&
+        (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
+          val.typeErp,
+        )
+      )
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["comporteLocauxSommeilPublic"],
+        message:
+          "La question des locaux à sommeil n'est posée qu'aux types J, O, U et R.",
+      });
+    }
+
     // Le seul cumul refusé (ADR-025 § 1) : un ERP en IGH relève du règlement
     // de sécurité des IGH, jamais dépouillé. L'IGH seul reste servi — un
     // employeur locataire d'une tour de bureaux relève du Code du travail, que
@@ -187,4 +241,5 @@ export const onboardingValeursInitiales = {
   estHabitation: false,
   typeErp: "" as string | undefined,
   categorieErp: "" as string | undefined,
+  comporteLocauxSommeilPublic: "" as string,
 };

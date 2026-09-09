@@ -413,14 +413,37 @@ export function EtablissementForm({
                   />
 
                   {/* Locaux à sommeil — arrêté du 25 juin 1980, Livre III.
-                      La question est ici et NON au wizard d'onboarding : le
+
+                      ~~La question est ici et NON au wizard d'onboarding : le
                       recadrage vient d'en retirer deux questions de
                       technicien, et celle-ci n'a pas à barrer la route d'une
-                      création de dossier. Elle est en revanche posée à
-                      l'endroit où le dirigeant vient déclarer ce que son
-                      établissement est, et elle est visible en permanence —
-                      tant qu'il n'y a pas répondu, quatre lignes lui sont
-                      servies « à confirmer ». */}
+                      création de dossier.~~ RAYÉ LE 2026-09-09. Elle est
+                      désormais posée AUSSI au parcours d'accueil
+                      (`StepTypologie`), aux types J, O, U et R. Le motif
+                      d'origine n'a pas été réfuté, il a été satisfait
+                      autrement : la question ne barre la route de personne
+                      parce qu'elle est facultative — « Je ne sais pas encore »
+                      est sa valeur par défaut là-bas comme ici, et laisse la
+                      colonne à `null`.
+
+                      CE QUI RESTE VRAI, ET QUI EST LA RAISON D'ÊTRE DE CE
+                      CHAMP-CI : la question est posée à l'endroit où le
+                      dirigeant vient déclarer ce que son établissement est, et
+                      elle est visible en permanence. Elle l'est pour TOUT ERP,
+                      sans borne de type — un exploitant qui découvre après coup
+                      qu'il héberge doit pouvoir le dire, quel que soit son
+                      type.
+
+                      LA RÉSERVE QUI VA AVEC, ET ELLE EST DÉSAGRÉABLE : depuis
+                      la borne du 2026-09-09, les quatre obligations ne visent
+                      que les types J, O, U et R. Un exploitant de type N ou M
+                      qui répond « oui » ici voit sa réponse ENREGISTRÉE ET SANS
+                      EFFET — la borne de type et le critère de sommeil se
+                      lisent en ET. L'aide ci-dessous ne lui promet donc plus
+                      les quatre lignes. Nommé dans
+                      `NOTE_BORNE_TYPES_SOMMEIL` (`referentiels/conformite/
+                      incendie.ts`), non corrigé, à reprendre avec la
+                      propriétaire. */}
                   <div className="sm:col-span-2">
                     <label
                       className="label-board"
@@ -455,9 +478,13 @@ export function EtablissementForm({
                       un commerce ou un bureau sans hébergement : répondez
                       «&nbsp;non&nbsp;». Un logement de fonction occupé par
                       vous ou par un salarié ne compte pas : le texte vise le
-                      sommeil du public. Si oui, s&apos;ajoutent un contrat
-                      annuel d&apos;entretien de la détection incendie, des
-                      consignes et des plans affichés, et une visite de la
+                      sommeil du public. Si oui, s&apos;ajoutent — pour les
+                      hôtels et pensions de famille, les structures
+                      d&apos;accueil de personnes âgées ou handicapées, les
+                      établissements sanitaires et les établissements
+                      d&apos;enseignement, de formation ou de vacances — un
+                      contrat annuel d&apos;entretien de la détection incendie,
+                      des consignes et des plans affichés, et une visite de la
                       commission de sécurité tous les cinq ans (arrêté du
                       25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37).
                     </p>

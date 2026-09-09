@@ -1,6 +1,10 @@
 "use client";
 
-import { CATEGORIES_ERP, TYPE_ERP } from "@/lib/etablissements/schema";
+import {
+  CATEGORIES_ERP,
+  TYPE_ERP,
+  TYPES_ERP_QUESTION_LOCAUX_SOMMEIL,
+} from "@/lib/etablissements/schema";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
@@ -45,6 +49,16 @@ export function StepTypologie({
   const messagePour = (champ: string) =>
     (blocage?.champ === champ ? blocage.message : undefined) ??
     errors?.[champ];
+
+  /**
+   * La question des locaux à sommeil n'est posée qu'à quatre types (décision
+   * du 2026-09-09, cf. `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`). Elle apparaît donc
+   * SOUS le type, dans la même étape, et pas ailleurs : elle a besoin de la
+   * réponse au type pour savoir si elle doit exister.
+   */
+  const poseLocauxSommeil = (
+    TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]
+  ).includes(state.typeErp);
 
   return (
     <div className="flex flex-col gap-[22px]">
@@ -98,6 +112,11 @@ export function StepTypologie({
                     estERP: false,
                     typeErp: "",
                     categorieErp: "",
+                    // Une réponse sur les locaux à sommeil donnée avant de
+                    // décocher l'ERP n'a plus de question : la garder ferait
+                    // poster un champ que le schéma refuse hors des quatre
+                    // types.
+                    comporteLocauxSommeilPublic: "",
                   })
                 }
               />
@@ -123,7 +142,22 @@ export function StepTypologie({
                     id="typeErp"
                     aria-label="Type d'ERP"
                     value={state.typeErp}
-                    onChange={(e) => update({ typeErp: e.currentTarget.value })}
+                    onChange={(e) => {
+                      const t = e.currentTarget.value;
+                      update({
+                        typeErp: t,
+                        // Changer de type pour un type hors liste retire la
+                        // question : la réponse déjà donnée part avec elle.
+                        // La laisser en état ferait poster, depuis un écran qui
+                        // ne montre plus rien, une déclaration sur un
+                        // établissement qui n'est plus celui-là.
+                        ...((
+                          TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]
+                        ).includes(t)
+                          ? {}
+                          : { comporteLocauxSommeilPublic: "" }),
+                      });
+                    }}
                     /* Pleine largeur de la colonne, et non `max-w-md`.
                        448 px tranchaient « L · Salle d'audition, de conférence,
                        de réunion, de specta » sans ellipse — trois des
@@ -178,6 +212,54 @@ export function StepTypologie({
                     </p>
                   )}
                 </div>
+
+                {/* Locaux à sommeil — posée au parcours depuis le 2026-09-09,
+                    et seulement aux types J, O, U et R. Elle est ici, sous le
+                    type, parce qu'elle a besoin de sa réponse pour savoir si
+                    elle doit exister : c'est la seule question du parcours dont
+                    la PRÉSENCE dépend d'une autre.
+
+                    Elle ne bloque pas : « Je ne sais pas encore » est la valeur
+                    par défaut et laisse la colonne à `null`. Le recadrage du
+                    2026-09-01 a sorti deux questions de technicien de ce
+                    parcours ; celle-ci y revient sans en reprendre le défaut,
+                    parce qu'elle ne barre la route de personne.
+
+                    Le libellé et l'aide sont ceux de la fiche établissement,
+                    au mot près. Deux formulations pour une même question, ce
+                    sont deux questions pour qui les lit — et la réponse donnée
+                    ici est celle que la fiche rouvrira. */}
+                {poseLocauxSommeil && (
+                  <div className="flex flex-col gap-3">
+                    <SousQuestion
+                      question="Votre établissement héberge-t-il du public pour la nuit ?"
+                      aide="Chambres d'hôtel, chambres d'hôtes, gîte, hébergement — des locaux où le public dort. Un logement de fonction occupé par vous ou par un salarié ne compte pas : le texte vise le sommeil du public. Si oui, s'ajoutent un contrat annuel d'entretien de la détection incendie, des consignes et des plans affichés, et une visite de la commission de sécurité tous les cinq ans (arrêté du 25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37)."
+                    />
+                    <select
+                      id="comporteLocauxSommeilPublic"
+                      aria-label="Hébergement du public pour la nuit"
+                      value={state.comporteLocauxSommeilPublic}
+                      onChange={(e) =>
+                        update({
+                          comporteLocauxSommeilPublic: e.currentTarget.value,
+                        })
+                      }
+                      className="champ-board"
+                      aria-invalid={Boolean(
+                        messagePour("comporteLocauxSommeilPublic"),
+                      )}
+                    >
+                      <option value="">Je ne sais pas encore</option>
+                      <option value="oui">Oui</option>
+                      <option value="non">Non</option>
+                    </select>
+                    {messagePour("comporteLocauxSommeilPublic") && (
+                      <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                        {messagePour("comporteLocauxSommeilPublic")}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </section>

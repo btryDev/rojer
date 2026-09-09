@@ -62,6 +62,9 @@ export async function finaliserOnboarding(
     estHabitation: raw.estHabitation === "true",
     typeErp: raw.typeErp || undefined,
     categorieErp: raw.categorieErp || undefined,
+    // Vide = « je ne sais pas encore », et le vide ne se coerce pas en `false` :
+    // le schéma le rend `undefined`, et l'écriture ci-dessous est alors omise.
+    comporteLocauxSommeilPublic: raw.comporteLocauxSommeilPublic,
   };
 
   const parsed = onboardingSchema.safeParse(input);
@@ -113,6 +116,20 @@ export async function finaliserOnboarding(
         estHabitation: d.estHabitation,
         typeErp: d.typeErp,
         categorieErp: d.categorieErp,
+        // Locaux à sommeil (2026-09-09). LE SPREAD CONDITIONNEL EST LE POINT :
+        // sans lui, Prisma recevrait `comporteLocauxSommeilPublic: undefined`,
+        // ce qui laisse bien `null` en base aujourd'hui — mais l'écrire ainsi
+        // ne dirait pas POURQUOI. La question n'est posée qu'à quatre types, et
+        // pour tous les autres — comme pour qui a laissé « je ne sais pas
+        // encore » — la colonne doit rester `null`, c'est-à-dire « personne n'a
+        // répondu ». Écrire `false` à leur place inscrirait au dossier un fait
+        // que nul n'a constaté : c'est ce que la migration `_locaux_sommeil`
+        // interdit à un DEFAULT, et ce que « L'onboarding cesse de deviner »
+        // (2026-09-01) interdit au parcours. La borne des quatre types vit dans
+        // le référentiel, sur les obligations ; elle ne vit pas dans la donnée.
+        ...(d.comporteLocauxSommeilPublic === undefined
+          ? {}
+          : { comporteLocauxSommeilPublic: d.comporteLocauxSommeilPublic }),
         // `classeIgh` et `familleHabitation` ne sont plus écrites : les deux
         // questions ont été retirées du parcours le 2026-09-03. Les colonnes
         // restent en base et gardent leurs valeurs sur les dossiers anciens ;

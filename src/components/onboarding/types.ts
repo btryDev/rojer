@@ -27,6 +27,12 @@ export type OnboardingState = {
 
   typeErp: string;
   categorieErp: string;
+
+  // Locaux à sommeil pour le public — posée depuis le 2026-09-09, et seulement
+  // aux quatre types de `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`. Trois valeurs :
+  // "" (« je ne sais pas encore »), "oui", "non". La chaîne vide n'est pas un
+  // trou de saisie, c'est une réponse : elle laisse la colonne à `null`.
+  comporteLocauxSommeilPublic: string;
   // `classeIgh` et `familleHabitation` ont quitté l'état du wizard le
   // 2026-09-03 : les deux sous-questions qui les remplissaient ont été
   // retirées, aucune obligation du référentiel ne dépendant de l'une ni de
@@ -47,6 +53,7 @@ export const VALEURS_INITIALES: OnboardingState = {
   estHabitation: false,
   typeErp: "",
   categorieErp: "",
+  comporteLocauxSommeilPublic: "",
 };
 
 export type StepProps = {

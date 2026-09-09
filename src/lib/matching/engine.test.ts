@@ -58,6 +58,21 @@ function etabRestoErpCat5(
   };
 }
 
+/**
+ * Le même établissement, en type O — l'hôtel.
+ *
+ * Depuis la borne du 2026-09-09, les quatre lignes de locaux à sommeil ne
+ * visent que les types J, O, U et R. Les tests qui parlaient d'un « hôtel » en
+ * passant un type N ne tombaient plus pour la raison qu'ils annonçaient : le
+ * fixture porte désormais le type que son nom promet.
+ */
+function etabHotelErpCat5(
+  over: Partial<EtablissementMatching> = {},
+): EtablissementMatching {
+  return etabRestoErpCat5({ id: "etab-hotel", typeErp: "O", ...over });
+}
+
+
 function etabErpCat3(): EtablissementMatching {
   return {
     id: "etab-centre-comm",
@@ -321,13 +336,22 @@ describe("moteur matching — typologie ERP", () => {
     expect(ids).not.toContain("incendie-erp-pe4-entretien-installations-techniques");
   });
 
+  // Les deux tests ci-dessous isolent la CATÉGORIE, et il a fallu les
+  // retoucher le 2026-09-09 pour qu'ils continuent de le faire : depuis la
+  // borne par type, un fixture de type N ne recevait plus la ligne, et la
+  // paire aurait passé au vert pour la mauvaise raison. Les deux portent
+  // maintenant le même type — O, admis par la borne — et ne diffèrent que par
+  // la catégorie.
   it("ERP cat 5 → visite commission PE locaux à sommeil (typologie cat N5)", () => {
-    const res = determineObligationsApplicables(etabRestoErpCat5(), [alarme()]);
+    const res = determineObligationsApplicables(etabHotelErpCat5(), [alarme()]);
     expect(idsObligations(res)).toContain("incendie-erp-5-visite-commission");
   });
 
   it("ERP cat 3 → PAS de visite PE (limitée aux cat N5)", () => {
-    const res = determineObligationsApplicables(etabErpCat3(), [alarme()]);
+    const res = determineObligationsApplicables(
+      etabHotelErpCat5({ categorieErp: "N3" }),
+      [alarme()],
+    );
     expect(idsObligations(res)).not.toContain("incendie-erp-5-visite-commission");
   });
 
@@ -1780,7 +1804,7 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
     // Le faux négatif que l'ancrage sur l'alarme produisait : PE 37 vise
     // l'établissement, pas son SSI.
     const res = determineObligationsApplicables(
-      etabRestoErpCat5({ comporteLocauxSommeilPublic: true }),
+      etabHotelErpCat5({ comporteLocauxSommeilPublic: true }),
       [],
     );
     expect(idsObligations(res)).toContain(VISITE);
@@ -1788,7 +1812,7 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
 
   it("ne s'applique plus quand le dirigeant répond « non », même avec une alarme déclarée", () => {
     const res = determineObligationsApplicables(
-      etabRestoErpCat5({ comporteLocauxSommeilPublic: false }),
+      etabHotelErpCat5({ comporteLocauxSommeilPublic: false }),
       [alarme()],
     );
     expect(idsObligations(res)).not.toContain(VISITE);
@@ -1797,7 +1821,33 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
   it("reste affichée tant que personne n'a répondu (opt-out)", () => {
     // Criticité 4 sur une obligation déjà publiée : aucun établissement
     // existant ne doit perdre la ligne en silence à la régénération.
-    const res = determineObligationsApplicables(etabRestoErpCat5(), []);
+    const res = determineObligationsApplicables(etabHotelErpCat5(), []);
+    expect(idsObligations(res)).toContain(VISITE);
+  });
+
+  it("ne s'applique pas au restaurant, quoi qu'il réponde — la borne de type", () => {
+    // Les deux réponses sont vérifiées ENSEMBLE parce qu'elles disent deux
+    // choses différentes. Le silence : la sur-application mesurée le
+    // 2026-09-01 disparaît. Le « oui » : un fait DÉCLARÉ reste sans effet, et
+    // c'est la réserve nommée dans `NOTE_BORNE_TYPES_SOMMEIL` — épinglée ici
+    // pour que le jour où la borne cède devant une déclaration, ce test tombe.
+    for (const reponse of [null, true] as const) {
+      const res = determineObligationsApplicables(
+        etabRestoErpCat5({ comporteLocauxSommeilPublic: reponse }),
+        [],
+      );
+      expect(idsObligations(res), String(reponse)).not.toContain(VISITE);
+    }
+  });
+
+  it("s'applique à l'ERP de 5ᵉ dont le type n'est pas déclaré", () => {
+    // `typesExclus` et non `types` : une exclusion qu'on ne peut pas vérifier
+    // ne s'applique pas. Sans cette asymétrie, un champ non rempli retirerait
+    // quatre lignes d'un calendrier sans que personne ne le voie.
+    const res = determineObligationsApplicables(
+      etabRestoErpCat5({ typeErp: null }),
+      [],
+    );
     expect(idsObligations(res)).toContain(VISITE);
   });
 
@@ -1830,7 +1880,7 @@ describe("moteur matching — les trois autres lignes du chapitre III (locaux à
   it("sont servies à l'hôtel qui a répondu « oui », sans aucun équipement déclaré", () => {
     const ids = idsObligations(
       determineObligationsApplicables(
-        etabRestoErpCat5({ comporteLocauxSommeilPublic: true }),
+        etabHotelErpCat5({ comporteLocauxSommeilPublic: true }),
         [],
       ),
     );
@@ -1840,7 +1890,7 @@ describe("moteur matching — les trois autres lignes du chapitre III (locaux à
   it("disparaissent toutes les trois quand le dirigeant répond « non »", () => {
     const ids = idsObligations(
       determineObligationsApplicables(
-        etabRestoErpCat5({ comporteLocauxSommeilPublic: false }),
+        etabHotelErpCat5({ comporteLocauxSommeilPublic: false }),
         [alarme()],
       ),
     );
@@ -1848,7 +1898,7 @@ describe("moteur matching — les trois autres lignes du chapitre III (locaux à
   });
 
   it("sont servies « à confirmer » tant que personne n'a répondu", () => {
-    const res = determineObligationsApplicables(etabRestoErpCat5(), []);
+    const res = determineObligationsApplicables(etabHotelErpCat5(), []);
     for (const id of LIGNES) {
       const ligne = res.find((o) => o.obligation.id === id);
       expect(ligne, id).toBeDefined();
@@ -1858,11 +1908,42 @@ describe("moteur matching — les trois autres lignes du chapitre III (locaux à
     }
   });
 
+  it("sont servies à l'ERP de 5ᵉ dont le type n'est pas déclaré", () => {
+    // LE PENDANT, POUR LES TROIS AUTRES LIGNES, DU TEST ÉCRIT PLUS HAUT SUR LA
+    // VISITE. Il a été ajouté après avoir cassé la garde : remplacer le
+    // `typesExclus` d'UNE de ces trois lignes par un `types` laissait toute la
+    // suite au vert, parce que le seul test d'asymétrie portait sur la
+    // quatrième. Une garantie vérifiée sur une ligne sur quatre n'est pas
+    // vérifiée.
+    const ids = idsObligations(
+      determineObligationsApplicables(
+        etabRestoErpCat5({ typeErp: null }),
+        [],
+      ),
+    );
+    for (const id of LIGNES) expect(ids, id).toContain(id);
+  });
+
+  it("ne sont servies à aucun restaurant, muet ou déclarant — la borne de type", () => {
+    // Le symétrique : ce que la borne retire aux trois lignes. Le « oui » est
+    // testé avec le silence pour la même raison qu'au bloc précédent — un fait
+    // déclaré ignoré n'est pas la même chose qu'un silence borné.
+    for (const reponse of [null, true] as const) {
+      const ids = idsObligations(
+        determineObligationsApplicables(
+          etabRestoErpCat5({ comporteLocauxSommeilPublic: reponse }),
+          [],
+        ),
+      );
+      for (const id of LIGNES) expect(ids, `${id} / ${reponse}`).not.toContain(id);
+    }
+  });
+
   it("produisent UNE ligne chacune, quel que soit le parc déclaré", () => {
     // Porteur établissement (ADR-022) : une alarme de plus ne dédouble pas
     // le contrat d'entretien.
     const res = determineObligationsApplicables(
-      etabRestoErpCat5({ comporteLocauxSommeilPublic: true }),
+      etabHotelErpCat5({ comporteLocauxSommeilPublic: true }),
       [alarme(), { ...alarme(), id: "eq-alarme-2" }],
     );
     for (const id of LIGNES) {
@@ -2288,15 +2369,36 @@ describe("moteur matching — visite de commission : GE 4 en 1ʳᵉ–4ᵉ, PE 3
     // tableau en six lignes, le second cas dangereux est en 1ʳᵉ à 4ᵉ : deux
     // lignes de GE 4 qui se recouvriraient donneraient deux dates au même
     // établissement pour la même visite.
+    // Le type est O depuis le 2026-09-09 : c'en est un que les DEUX régimes
+    // servent — GE 4 en 1ʳᵉ à 4ᵉ, PE 37 en 5ᵉ. Avec le type M du fixture
+    // d'origine, la 5ᵉ catégorie ne rendait plus aucune visite depuis la borne,
+    // et « exactement une » se serait relâché en « au plus une » : la borne
+    // haute que ce test garde aurait cessé d'être éprouvée sur le seul cas
+    // dangereux.
     for (const cat of ["N1", "N2", "N3", "N4", "N5"] as const) {
       const ids = idsObligations(
-        determineObligationsApplicables(erp(cat), [
+        determineObligationsApplicables({ ...erp(cat), typeErp: "O" }, [
           { id: "eq-a", libelle: "Alarme", categorie: "ALARME_INCENDIE" as const, caracteristiques: null },
         ]),
       );
       const visites = [...CAT14, CAT5].filter((id) => ids.includes(id));
       expect(visites, cat).toHaveLength(1);
     }
+  });
+
+  it("un ERP de 5ᵉ catégorie hors des quatre types ne reçoit AUCUNE visite de commission", () => {
+    // CE QUE LA BORNE DU 2026-09-09 CREUSE, ET IL FAUT LE VOIR PLUTÔT QUE LE
+    // DÉDUIRE. GE 4 ne couvre pas la 5ᵉ catégorie (Livre II, écarté par
+    // PE 1 § 1) et PE 37 ne vise plus que J, O, U et R : un centre commercial
+    // de 5ᵉ catégorie n'a désormais plus aucune ligne de visite périodique, là
+    // où il en portait une « à confirmer » jusqu'au 2026-09-08.
+    //
+    // Ce n'est pas un défaut du moteur, c'est le prix de la borne, et il est
+    // épinglé pour qu'on ne le redécouvre pas en le prenant pour un bug.
+    const ids = idsObligations(
+      determineObligationsApplicables(erp("N5"), []),
+    );
+    expect([...CAT14, CAT5].filter((id) => ids.includes(id))).toEqual([]);
   });
 
   it("un ERP dont le type n'est pas renseigné garde sa visite, et une seule", () => {

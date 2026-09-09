@@ -206,3 +206,91 @@ describe("onboardingSchema", () => {
     expect(res.success).toBe(true);
   });
 });
+
+describe("locaux à sommeil au parcours (2026-09-09)", () => {
+  const hotel = {
+    ...base,
+    estERP: true,
+    typeErp: "O",
+    categorieErp: "N5",
+  };
+
+  it("accepte « oui » d'un type de la question", () => {
+    const res = onboardingSchema.safeParse({
+      ...hotel,
+      comporteLocauxSommeilPublic: "oui",
+    });
+    expect(res.success).toBe(true);
+    if (res.success) expect(res.data.comporteLocauxSommeilPublic).toBe(true);
+  });
+
+  it("accepte « non » d'un type de la question", () => {
+    const res = onboardingSchema.safeParse({
+      ...hotel,
+      comporteLocauxSommeilPublic: "non",
+    });
+    expect(res.success).toBe(true);
+    if (res.success) expect(res.data.comporteLocauxSommeilPublic).toBe(false);
+  });
+
+  it("rend `undefined` sur « je ne sais pas encore », JAMAIS `false`", () => {
+    // LE TEST QUI PORTE TOUT CE BLOC. `false` et `undefined` sont deux choses
+    // différentes en base : l'un retire quatre obligations, l'autre les laisse
+    // « à confirmer ». Un `z.coerce.boolean()` posé ici par inadvertance
+    // rendrait `false` sur la chaîne vide et répondrait « non » à la place du
+    // dirigeant, sur chaque dossier créé.
+    for (const vide of ["", undefined, null]) {
+      const res = onboardingSchema.safeParse({
+        ...hotel,
+        comporteLocauxSommeilPublic: vide,
+      });
+      expect(res.success, String(vide)).toBe(true);
+      if (res.success)
+        expect(res.data.comporteLocauxSommeilPublic, String(vide)).toBeUndefined();
+    }
+  });
+
+  it("accepte les quatre types de la question, et eux seuls", () => {
+    // Les deux moitiés sont écrites ensemble parce qu'aucune ne vaut sans
+    // l'autre : la première seule passerait avec un contrôle absent, la
+    // seconde seule passerait avec un contrôle qui refuse tout.
+    for (const t of ["J", "O", "U", "R"]) {
+      const res = onboardingSchema.safeParse({
+        ...hotel,
+        typeErp: t,
+        comporteLocauxSommeilPublic: "oui",
+      });
+      expect(res.success, t).toBe(true);
+    }
+    for (const t of ["N", "M", "W", "REF", "OA", "EF"]) {
+      const res = onboardingSchema.safeParse({
+        ...hotel,
+        typeErp: t,
+        comporteLocauxSommeilPublic: "oui",
+      });
+      expect(res.success, t).toBe(false);
+    }
+  });
+
+  it("refuse la réponse d'un établissement qui n'est pas ERP", () => {
+    // Le champ n'est à l'écran que dans le bloc ERP : le poster hors de lui
+    // ne peut venir que d'un client trafiqué.
+    const res = onboardingSchema.safeParse({
+      ...base,
+      comporteLocauxSommeilPublic: "oui",
+    });
+    expect(res.success).toBe(false);
+  });
+
+  it("laisse passer un type hors question tant qu'il ne répond pas", () => {
+    // La borne ne barre pas la création d'un restaurant : elle borne la
+    // RÉPONSE, pas le dossier.
+    const res = onboardingSchema.safeParse({
+      ...hotel,
+      typeErp: "N",
+      comporteLocauxSommeilPublic: "",
+    });
+    expect(res.success).toBe(true);
+    if (res.success) expect(res.data.comporteLocauxSommeilPublic).toBeUndefined();
+  });
+});

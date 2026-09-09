@@ -156,7 +156,16 @@ export const obligationsConformite: Obligation[] = [
 // ventilation (`CH 39 § 3`). Toutes deux sont bornées aux ERP des quatre
 // premières catégories : aucun calendrier existant ne les porte, et un parc de
 // 5ᵉ catégorie n'en voit rien.
-export const REFERENTIEL_VERSION = "2026-09-04.4";
+// `2026-09-09` : la borne par type sur les quatre lignes de locaux à sommeil.
+// CETTE VERSION-CI RETIRE DES LIGNES DÉJÀ ENGENDRÉES, et c'est la première du
+// lot à le faire dans ce sens : tout ERP de 5ᵉ catégorie dont le type n'est ni
+// J, ni O, ni U, ni R perd les quatre lignes qu'il portait « à confirmer » —
+// la visite de commission quinquennale, le contrat d'entretien du SDI, la
+// consigne dans les chambres et les plans affichés. C'est la sur-application
+// mesurée le 2026-09-01 (« deux restaurants sur deux ») qui disparaît. Les
+// calendriers existants se réconcilient sur cette version ; sans elle, ils
+// garderaient des échéances que le référentiel ne fonde plus.
+export const REFERENTIEL_VERSION = "2026-09-09.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

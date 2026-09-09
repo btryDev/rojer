@@ -29,6 +29,81 @@ export const TYPE_ERP = [
 export const CATEGORIES_ERP = ["N1", "N2", "N3", "N4", "N5"] as const;
 
 /**
+ * LES QUATRE TYPES AUXQUELS LA QUESTION DES LOCAUX À SOMMEIL EST POSÉE.
+ *
+ * DÉCISION DE PRODUIT DU 2026-09-09, ET ELLE N'EST PAS UNE LECTURE DU TEXTE.
+ * Aucun article ne rattache un type d'exploitation à la présence de locaux à
+ * sommeil, et ce n'est pas faute d'avoir cherché : `GN 1 § 1` est la
+ * nomenclature des vingt-deux types et ne dit rien de l'hébergement ; son § 4
+ * en donne la définition — « les seuls locaux destinés au sommeil du public la
+ * nuit » — et rien de plus. La liste vient d'un spécialiste consulté par la
+ * propriétaire, arbitrée le 2026-09-09 en connaissance de cette absence de
+ * fondement textuel. Elle est une BORNE DE PÉRIMÈTRE, pas une déduction : le
+ * produit ne suppose pas qu'une boulangerie ne fait pas dormir, il décide que
+ * les obligations de locaux à sommeil ne visent que ces quatre types.
+ *
+ * CE QUE CETTE BORNE RENVERSE, ET IL FAUT LE LIRE AVANT DE LA TOUCHER. Le
+ * dépôt avait tranché deux fois dans l'AUTRE sens :
+ *   — `docs/carto-obligations-hors-equipement.md` § « Décisions tranchées »
+ *     point 3 : « attribut DÉCLARÉ, pas dérivé », au motif que « la dérivation
+ *     depuis `typeErp` est incomplète des deux côtés — un type N peut comporter
+ *     des chambres à l'étage, un type R sans internat n'en comporte pas » ;
+ *   — la note de `incendie-erp-visite-commission-cat5-quinquennale` : « encoder
+ *     une liste de types équivaudrait à trancher, sans source article par
+ *     article, quels types d'exploitation comportent des locaux à sommeil — ce
+ *     que la règle n°6 interdit ».
+ * Les deux ont été relues et remontées avant l'arbitrage. Elles restent vraies
+ * comme lecture du texte ; elles sont écartées comme règle de produit. Ce qui
+ * les écarte est une décision, pas une réfutation — d'où cette note plutôt
+ * qu'une suppression.
+ *
+ * CE QU'ELLE COÛTE, NOMMÉ PLUTÔT QUE TU. Trois cas perdent les quatre lignes :
+ * le refuge de montagne (REF) et l'hôtel-restaurant d'altitude (OA), dont les
+ * libellés de GN 1 nomment pourtant l'hébergement ; et le type N ou M qui
+ * comporte des chambres à l'étage — l'auberge, la chambre d'hôtes au-dessus du
+ * restaurant —, que `typeErp` ne sait pas distinguer parce qu'il ne stocke
+ * qu'un type par établissement et que `GN 2` et `GN 3`, qui règlent le
+ * classement des exploitations à types multiples, ne sont pas dépouillés au
+ * corpus. Ces trois cas ont été soumis à l'arbitrage et écartés avec lui.
+ *
+ * L'ORDRE EST CELUI DE `TYPE_ERP`, lui-même celui de `GN 1 § 1`.
+ */
+export const TYPES_ERP_QUESTION_LOCAUX_SOMMEIL = [
+  "O",
+  "R",
+  "U",
+  "J",
+] as const;
+
+export type TypeErpQuestionLocauxSommeil =
+  (typeof TYPES_ERP_QUESTION_LOCAUX_SOMMEIL)[number];
+
+/**
+ * Le complément de la liste ci-dessus, dérivé plutôt que recopié.
+ *
+ * C'est cette forme-là que le référentiel encode, en `typesExclus` : celui-ci
+ * retient l'ERP dont le type n'est pas renseigné, là où `types` le rejette. Un
+ * ERP de 5ᵉ catégorie qui n'a pas déclaré son type garde donc ses quatre
+ * lignes, « à confirmer » — la borne ne creuse pas de faux négatif muet chez
+ * qui n'a rien précisé.
+ *
+ * LE RÉFÉRENTIEL NE L'IMPORTE PAS : il écrit la liste en clair, parce que ce
+ * module est le schéma Zod des formulaires et que `src/lib/referentiels/` ne
+ * doit pas en dépendre. C'est `locaux-sommeil-borne-types.test.ts` qui tient
+ * les deux ensemble, comme `categories-erp.test.ts` le fait déjà pour les
+ * catégories. Une divergence se voit le jour où elle s'écrit, au lieu de se
+ * découvrir dans un calendrier.
+ *
+ * Dérivée et non écrite à la main : une lettre ajoutée à `TYPE_ERP` entre
+ * automatiquement dans le complément, donc DANS le champ des obligations, et
+ * jamais dehors par oubli. C'est le sens d'erreur qui se voit.
+ */
+export const TYPES_ERP_HORS_QUESTION_LOCAUX_SOMMEIL = TYPE_ERP.filter(
+  (t) =>
+    !(TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(t),
+);
+
+/**
  * LA CLASSE D'IGH ET LA FAMILLE D'HABITATION NE SE DÉCLARENT PLUS (2026-09-03).
  *
  * Deux listes vivaient ici — `CLASSES_IGH` (dix valeurs de R. 146-4) et
