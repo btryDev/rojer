@@ -29,14 +29,16 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
  * On ne relance pas l'exception pour autant : la mutation, elle, a réussi et
  * ne doit pas être présentée comme un échec. L'appelant transforme le
  * `message` en avertissement explicite avec la marche à suivre.
+ *
+ * **Le corps vit désormais dans `calendrier/regeneration-sure`.** Il était ici,
+ * et il n'y avait qu'ici : les six autres appelants de `genererCalendrier`
+ * régénéraient à nu, et une régénération qui échouait y faisait échouer une
+ * action serveur dont la mutation était déjà commitée. Ce qui reste ici est la
+ * mise en forme du refus pour cet appelant-là.
  */
 async function regenererCalendrier(
   etablissementId: string,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  // Le corps de cette fonction vit désormais dans `calendrier/regeneration-sure`
-  // — il était ici, et il n'y avait qu'ici : les cinq autres appelants de
-  // `genererCalendrier` régénéraient à nu, et une régénération qui échouait y
-  // faisait échouer une action serveur dont la mutation était déjà commitée.
   const ok = await regenererApresMutation(etablissementId, "equipements");
   return ok ? { ok: true } : { ok: false, message: MESSAGE_REGEN_ECHEC };
 }
