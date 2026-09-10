@@ -1600,9 +1600,17 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     );
   });
 
-  it("un absorbant d'équipement hérite quand le porteur est LE MÊME", () => {
-    // Le pendant du test précédent : même appareil des deux côtés, l'héritage
-    // passe. C'est le cas d'un simple changement de nom d'obligation.
+  it("même porteur des deux côtés : la ligne est ADOPTÉE, pas recréée", () => {
+    // Le pendant du test précédent, et il a changé de réponse en cours de
+    // route — pour mieux. Même appareil des deux côtés, donc ce n'est pas un
+    // héritage d'échéance mais une ADOPTION : la rangée continue, avec son
+    // identifiant, ses rapports et ses actions, et seul son identifiant
+    // d'obligation est réécrit. C'est le cas du simple changement de nom.
+    //
+    // La première rédaction attendait une ligne CRÉÉE portant l'échéance
+    // héritée. Ça marchait, mais laissait la preuve sur une ligne barrée
+    // pendant que la ligne vivante affichait une date qu'elle ne pouvait pas
+    // justifier.
     const absorbant = fakeObligation({
       id: "tout-equip",
       periodicite: "annuelle",
@@ -1613,13 +1621,18 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
       { now: NOW },
     );
 
+    // Réalisation du 2026-06-01 : à un an, la suivante tombe en 2027, donc le
+    // CYCLE EST ENCORE OUVERT au 2026-08-11. C'est ce qu'il faut pour éprouver
+    // la conservation — sur un cycle écoulé, `dateRealisee` est remise à
+    // `null` par la règle ordinaire du nouveau cycle, et ce n'est pas une
+    // perte : les rapports restent attachés à la rangée.
     const plan = reconcilierCalendrier(
       [
         ligneExistante({
           id: "v-frag-1",
           obligationId: "frag-vmc",
           equipementId: "eq-1",
-          dateRealisee: new Date("2025-06-01T00:00:00Z"),
+          dateRealisee: new Date("2026-06-01T00:00:00Z"),
           statut: "realisee_conforme",
           porteUnePreuve: true,
         }),
@@ -1628,14 +1641,25 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
       { now: NOW, successions: new Map([["frag-vmc", "tout-equip"]]) },
     );
 
-    const parEquipement = new Map(
-      plan.aCreer.map((v) => [v.equipementId, v.datePrevue]),
-    );
-    // eq-1 hérite, eq-2 non : c'est toute la différence.
-    expect(parEquipement.get("eq-1")).toEqual(new Date("2026-06-01T00:00:00Z"));
-    expect(parEquipement.get("eq-2")).not.toEqual(
-      new Date("2026-06-01T00:00:00Z"),
-    );
+    // eq-1 : la ligne d'origine, reprise en place.
+    expect(plan.aMettreAJour).toHaveLength(1);
+    const adoptee = plan.aMettreAJour[0];
+    expect(
+      adoptee.id,
+      "la rangée a changé : ce n'est plus une adoption mais une recréation",
+    ).toBe("v-frag-1");
+    expect(adoptee.obligationId).toBe("tout-equip");
+    expect(
+      adoptee.dateRealisee,
+      "la réalisation a été perdue : une adoption doit garder ce que la ligne prouvait",
+    ).toEqual(new Date("2026-06-01T00:00:00Z"));
+    expect(adoptee.datePrevue).toEqual(new Date("2027-06-01T00:00:00Z"));
+
+    // Rien n'est barré, et seul eq-2 — qui n'avait pas de ligne — est créé.
+    expect(plan.aArchiver).toEqual([]);
+    expect(plan.aSupprimer).toEqual([]);
+    expect(plan.aCreer).toHaveLength(1);
+    expect(plan.aCreer[0].equipementId).toBe("eq-2");
   });
 
   it("sans table de successions, rien n'est repris — le comportement d'avant", () => {

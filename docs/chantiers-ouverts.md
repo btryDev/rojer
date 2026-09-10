@@ -1265,9 +1265,15 @@ deux rapports.
 > jamais dérivée** (ADR-024) : rien ne devine qu'une obligation en remplace une
 > autre par ressemblance.
 >
-> **Le report porte l'ÉCHÉANCE, pas la réalisation.** Écrire `dateRealisee` sur
-> la ligne absorbante lui ferait attester un contrôle dont elle ne porte aucun
-> rapport — la pièce est restée sur la ligne archivée, qui la conserve.
+> **DEUX MÉCANISMES, ET LE PREMIER PREND LE PAS.** L'ADOPTION quand le porteur
+> est le même des deux côtés : la rangée continue, avec son identifiant, ses
+> rapports et ses actions, et seul son identifiant d'obligation est réécrit.
+> C'est le cas d'un renommage ou d'une scission, et c'est le bon — la preuve
+> reste sur la ligne vivante. LE REPORT D'ÉCHÉANCE quand les porteurs sont
+> fondus (N lignes d'équipement pour une ligne d'établissement), où une rangée
+> neuve est inévitable : elle naît datée, et la ligne d'origine est archivée
+> avec sa preuve. Écrire `dateRealisee` sur celle-là lui ferait attester un
+> contrôle dont elle ne porte aucun rapport.
 >
 > **LA RÈGLE DE FUSION EST POSÉE À « LA PLUS ANCIENNE », ET C'EST UNE DÉDUCTION.**
 > La veille du 2026-09-10 l'a cherchée aux sources primaires et ne l'a pas

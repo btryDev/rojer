@@ -701,6 +701,17 @@ export type OccurrenceExistante = {
  *  cible d'écriture : il est stable par construction. */
 export type MiseAJourOccurrence = {
   id: string;
+  /**
+   * L'identifiant d'obligation À ÉCRIRE. Il ne bouge que dans un cas : une
+   * ligne ADOPTÉE, dont l'obligation a changé de nom (scission, renommage).
+   * Partout ailleurs il vaut celui que la ligne portait déjà, et le réécrire
+   * ne coûte rien.
+   *
+   * Aucun risque de collision avec la contrainte d'unicité : si une rangée
+   * existait déjà à la clé cible, la réconciliation l'aurait trouvée par sa
+   * clé et n'aurait adopté personne.
+   */
+  obligationId: string;
   libelleObligation: string;
   periodicite: Periodicite;
   realisateurRequis: Realisateur[];
@@ -806,6 +817,23 @@ function reprendreLaRealisation(
 }
 
 /**
+ * La même règle, appliquée à deux LIGNES plutôt qu'à deux dates : sert à
+ * départager plusieurs prédécesseurs candidats à l'adoption.
+ *
+ * Une ligne sans réalisation ne l'emporte jamais sur une ligne qui en porte
+ * une — elle n'atteste de rien, et adopter la vide ferait perdre la seule date
+ * connue.
+ */
+function plusAncienne(
+  candidate: OccurrenceExistante,
+  retenue: OccurrenceExistante,
+): boolean {
+  if (candidate.dateRealisee === null) return false;
+  if (retenue.dateRealisee === null) return true;
+  return candidate.dateRealisee < retenue.dateRealisee;
+}
+
+/**
  * Ce que les obligations retirées lèguent à celles qui les absorbent.
  *
  * DEUX TABLES, ET LA RAISON D'ÊTRE DE LA SECONDE. Une ligne est identifiée par
@@ -878,13 +906,73 @@ export function reconcilierCalendrier(
     inchangees: 0,
   };
   const vues = new Set<string>();
+  // Les clés des lignes ADOPTÉES : elles ont changé d'identifiant d'obligation,
+  // donc leur ancienne clé ne sera jamais « vue » par une ligne générée. Sans
+  // ce second registre, la boucle finale les prendrait pour des orphelines et
+  // les barrerait — celles-là mêmes qu'on vient de sauver.
+  const adoptees = new Set<string>();
 
   // Ce que les obligations retirées lèguent à celles qui les absorbent :
   // identifiant absorbant → réalisation reprise.
   const heritage = heritageDesRetirees(existantes, options.successions);
 
+  // L'inverse de la table de successions : à qui succède-t-on. Un identifiant
+  // peut avoir PLUSIEURS prédécesseurs — c'est le cas d'une fusion.
+  const predecesseurs = new Map<string, string[]>();
+  for (const [ancien, nouveau] of options.successions ?? []) {
+    const liste = predecesseurs.get(nouveau) ?? [];
+    liste.push(ancien);
+    predecesseurs.set(nouveau, liste);
+  }
+
+  /**
+   * La ligne existante que cette ligne générée CONTINUE, s'il y en a une.
+   *
+   * Condition stricte : même porteur. Une ligne d'équipement ne peut continuer
+   * que la ligne du même appareil, une ligne d'établissement que la ligne
+   * d'établissement — sans quoi on ferait migrer une rangée d'un porteur à un
+   * autre, ce qu'aucune succession déclarée ne dit et que la contrainte
+   * d'unicité ne pardonnerait pas.
+   *
+   * Quand plusieurs prédécesseurs sont candidats — une fusion dont les
+   * fragments partagent le porteur de l'absorbant —, c'est la réalisation la
+   * plus ancienne qui l'emporte, comme partout ailleurs dans ce fichier. Les
+   * autres suivent le chemin ordinaire : archivées avec leur preuve.
+   */
+  function adopter(g: VerificationGenere): OccurrenceExistante | undefined {
+    const preds = predecesseurs.get(g.obligationId);
+    if (preds === undefined) return undefined;
+
+    let cleRetenue: string | undefined;
+    let retenue: OccurrenceExistante | undefined;
+    for (const pred of preds) {
+      const cle = cleDeLigne(pred, {
+        equipementId: g.equipementId,
+        salarieId: g.salarieId,
+      });
+      if (adoptees.has(cle)) continue;
+      const candidate = parCle.get(cle);
+      if (candidate === undefined) continue;
+
+      if (retenue === undefined || plusAncienne(candidate, retenue)) {
+        cleRetenue = cle;
+        retenue = candidate;
+      }
+    }
+
+    if (cleRetenue === undefined) return undefined;
+    adoptees.add(cleRetenue);
+    return retenue;
+  }
+
   for (const g of aGenerer) {
-    const ex = parCle.get(g.cleUnique);
+    // ADOPTION AVANT TOUT. Une ligne dont l'obligation a changé de nom n'est
+    // pas une ligne perdue : c'est la même ligne, et elle doit rester la même
+    // RANGÉE — avec son identifiant, ses rapports et ses actions attachés.
+    // Reporter seulement l'échéance sur une ligne neuve marcherait aussi, mais
+    // laisserait la preuve sur une ligne barrée pendant que la ligne vivante
+    // affiche une date qu'elle ne peut pas justifier.
+    const ex = parCle.get(g.cleUnique) ?? adopter(g);
     // Le porteur d'abord — une ligne hérite de la ligne du même appareil.
     // À défaut, et SEULEMENT si cette ligne est celle de l'établissement, la
     // fusion : N porteurs fondus en un, qui est seul par construction.
@@ -1004,6 +1092,7 @@ export function reconcilierCalendrier(
 
     const cible: MiseAJourOccurrence = {
       id: ex.id,
+      obligationId: g.obligationId,
       libelleObligation: g.libelleObligation,
       periodicite: g.periodicite,
       realisateurRequis: g.realisateurRequis,
@@ -1014,6 +1103,7 @@ export function reconcilierCalendrier(
     };
 
     const identique =
+      cible.obligationId === ex.obligationId &&
       cible.libelleObligation === ex.libelleObligation &&
       cible.periodicite === ex.periodicite &&
       memeListe(cible.realisateurRequis, ex.realisateurRequis) &&
@@ -1038,7 +1128,10 @@ export function reconcilierCalendrier(
   // `triennale` à `autre` (ADR-023 § 6).
   const encoreApplicables = options.obligationsEncoreApplicables;
   for (const [cle, ex] of parCle) {
-    if (vues.has(cle)) continue;
+    // `adoptees` : ces lignes ont changé d'identifiant d'obligation, donc leur
+    // ancienne clé n'a été vue par aucune ligne générée. Elles ne sont pas
+    // orphelines pour autant — elles CONTINUENT sous un autre nom.
+    if (vues.has(cle) || adoptees.has(cle)) continue;
     // `dateRealisee` compte comme une trace au même titre qu'un rapport : elle
     // atteste qu'un contrôle a eu lieu, même si la pièce jointe a depuis été
     // retirée du registre.

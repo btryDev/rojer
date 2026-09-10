@@ -461,6 +461,11 @@ async function regenererUnePasse(
           statut: lu.statut,
         },
         data: {
+          // Il ne bouge que pour une ligne ADOPTÉE — une obligation qui a
+          // changé de nom. La rangée continue avec ses rapports et ses
+          // actions, au lieu d'être barrée pendant qu'une ligne neuve
+          // apparaît à côté.
+          obligationId: m.obligationId,
           libelleObligation: m.libelleObligation,
           periodicite: m.periodicite,
           realisateurRequis: m.realisateurRequis as Realisateur[],
