@@ -176,6 +176,30 @@ export type OptionsGenerateur = {
    * Absent = comportement antérieur : tout ce qui manque est réputé retiré.
    */
   obligationsEncoreApplicables?: Set<string>;
+  /**
+   * Les équipements encore en service, par identifiant.
+   *
+   * Sert à une question que `obligationsEncoreApplicables` ne sait pas poser :
+   * une ligne est identifiée par une obligation ET UN PORTEUR, et l'obligation
+   * peut parfaitement vivre chez un AUTRE porteur que celui de cette ligne.
+   *
+   * Le cas : deux extincteurs, l'un retiré. L'obligation reste applicable —
+   * le second la porte —, donc la ligne du premier était classée « rien à
+   * faire » et restait en base avec son statut, comptée en retard
+   * indéfiniment. Ni archivée, ni supprimée, ni relancée, pour un appareil qui
+   * n'existe plus. Le bouton de suppression promet pourtant « ne génère plus
+   * d'échéance ».
+   *
+   * **Seul le porteur ÉQUIPEMENT est concerné**, et c'est délibéré. Un porteur
+   * établissement ne disparaît jamais. Un porteur salarié disparaît, mais
+   * l'ADR-023 a tranché que sa ligne n'est PAS barrée pour autant : c'est la
+   * personne qui est partie, pas l'obligation qui cesse — et la ligne atteste
+   * qu'elle détenait son titre au moment où elle opérait.
+   *
+   * Absent = comportement antérieur : un porteur disparu ne se distingue pas
+   * d'un porteur vivant.
+   */
+  equipementsEnService?: Set<string>;
 };
 
 /** Un titre déclaré, réduit à ce dont le générateur a besoin (ADR-023). */
@@ -870,11 +894,25 @@ export function reconcilierCalendrier(
     // retirée du registre.
     const porteUneTrace = ex.porteUnePreuve || ex.dateRealisee !== null;
 
-    // L'obligation vit encore : la ligne n'a simplement plus de rendez-vous.
+    // LE PORTEUR DE CETTE LIGNE-CI EXISTE-T-IL ENCORE ? La question n'est pas
+    // celle de l'applicabilité de l'obligation : une ligne est identifiée par
+    // une obligation ET un porteur, et l'obligation peut vivre chez un autre
+    // appareil que celui-ci. Deux extincteurs, l'un retiré : l'obligation
+    // s'applique toujours, mais pas à l'appareil retiré.
+    //
+    // Seul l'équipement se teste. Le porteur établissement ne disparaît pas ;
+    // le porteur salarié disparaît sans que sa ligne soit barrée (ADR-023).
+    const porteurDisparu =
+      ex.equipementId !== null &&
+      options.equipementsEnService !== undefined &&
+      !options.equipementsEnService.has(ex.equipementId);
+
+    // L'obligation vit encore ET son porteur aussi : la ligne n'a simplement
+    // plus de rendez-vous.
     // Sans preuve, elle ne dit plus rien et disparaît — elle n'aurait jamais dû
     // porter de date. Avec une preuve, elle reste telle quelle : c'est le
     // constat d'un contrôle qui a eu lieu, et rien ne justifie de le barrer.
-    if (encoreApplicables?.has(ex.obligationId)) {
+    if (encoreApplicables?.has(ex.obligationId) && !porteurDisparu) {
       if (porteUneTrace) plan.inchangees += 1;
       else plan.aSupprimer.push(ex.id);
       continue;

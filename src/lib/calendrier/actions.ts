@@ -332,6 +332,9 @@ async function regenererUnePasse(
   const plan = reconcilierCalendrier(existantes, aGenerer, {
     now,
     obligationsEncoreApplicables,
+    // `etab.equipements` est déjà filtré sur `actif: true` par la lecture du
+    // point 1 : c'est exactement l'ensemble des porteurs encore en service.
+    equipementsEnService: new Set(etab.equipements.map((eq) => eq.id)),
   });
 
   // 5. Application du plan — tout ou rien. Un calendrier à moitié régénéré

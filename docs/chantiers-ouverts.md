@@ -1240,7 +1240,24 @@ Dans le même lot : le try/catch manquant sur `rapports/actions.ts:192,253` et
 serveur dont le rapport est **déjà commité**, l'utilisateur redépose et obtient
 deux rapports.
 
-#### Lot 2 — Le grain de la clé. **Une décision de la propriétaire, avant de coder.**
+#### Lot 2 — Le grain de la clé. **Premier symptôme FAIT LE 2026-09-10 ; le second attend une décision.**
+
+> **La ligne gelée est corrigée** (commit portant cette note). Le garde-fou
+> interroge désormais le porteur de LA LIGNE, et non la seule applicabilité de
+> l'obligation : un appareil désactivé dont l'obligation vit chez son voisin voit
+> sa ligne archivée si elle porte une preuve, supprimée sinon. Retirer le
+> correctif fait rougir le test qui le nomme.
+>
+> **Le piège annoncé plus bas s'est révélé plus fin que « par porteur ».** Seul le
+> porteur ÉQUIPEMENT se teste. Le porteur établissement ne disparaît jamais, et le
+> porteur salarié disparaît sans que sa ligne soit barrée — l'ADR-023 l'a tranché,
+> un test existant le tient, et le constat qui rangeait « salarié désactivé » parmi
+> les lignes gelées à tort visait autre chose : non pas l'archivage, mais le fait
+> qu'elle reste comptée en retard. **Ce point-là n'est PAS corrigé** ; il relève du
+> statut, donc du lot 3.
+>
+> **Le second symptôme — la continuité d'identifiant — reste entier**, et sa règle
+> de fusion attend toujours la propriétaire. Ce qui suit décrit l'état d'avant.
 
 Le garde-fou d'applicabilité teste `obligationId` (`generateur.ts:877-881`) quand
 une ligne existe par obligation **et porteur**. Deux symptômes, un défaut :

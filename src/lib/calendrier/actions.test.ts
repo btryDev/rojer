@@ -439,6 +439,77 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
       .toBe("Registre de sécurité");
   });
 
+  it("l'appareil retiré perd sa ligne alors que l'obligation vit chez son voisin", async () => {
+    // LE CAS QUI A FAIT LE LOT 2. Deux appareils électriques, l'un désactivé.
+    // L'obligation reste applicable — le second la porte —, donc le garde-fou
+    // d'applicabilité, qui ne teste que l'identifiant d'obligation, classait la
+    // ligne du premier « rien à faire ». Elle restait en base avec son statut
+    // `depassee`, comptée en retard indéfiniment, pour un appareil retiré du
+    // parc. Le bouton de suppression promet pourtant « ne génère plus
+    // d'échéance ».
+    //
+    // Une ligne est identifiée par une obligation ET UN PORTEUR : c'est le
+    // porteur de CETTE ligne qui doit être interrogé, pas l'obligation.
+    poserEtablissement([
+      { id: "eq-retire", actif: false },
+      { id: "eq-actif", actif: true },
+    ]);
+    db.verifications = [
+      ligne({
+        id: "v-retire",
+        equipementId: "eq-retire",
+        obligationId: ELEC_ANNUELLE,
+        dateRealisee: new Date("2025-01-01T00:00:00Z"),
+        statut: "realisee_conforme",
+        nbRapports: 1,
+      }),
+    ];
+
+    const res = await genererCalendrier(ETAB_ID);
+
+    // Porteuse d'une preuve : archivée, jamais supprimée (ADR-012).
+    expect(
+      res.archived,
+      "la ligne de l'appareil retiré est restée gelée : le garde-fou teste encore l'obligation seule",
+    ).toBe(1);
+    const retiree = db.verifications.find((v) => v.id === "v-retire");
+    expect(retiree?.nbRapports).toBe(1);
+    expect(retiree?.libelleObligation).toContain("Ne s'applique plus");
+
+    // Et l'appareil encore en service, lui, a bien sa ligne.
+    const vivantes = db.verifications.filter(
+      (v) => v.equipementId === "eq-actif",
+    );
+    expect(vivantes.length).toBeGreaterThan(0);
+  });
+
+  // CE TEST NE ROUGIT PAS SI L'ON RETIRE LE CORRECTIF, et il faut le dire :
+  // sans preuve, l'ancienne branche supprimait déjà. Il ne garde donc aucune
+  // garantie neuve — il décrit le versant de la règle qui était juste, pour
+  // qu'on ne le casse pas en réparant l'autre. Un test qui ne peut pas échouer
+  // se signale, sinon il se compte comme une protection qu'il n'est pas.
+  it("l'appareil retiré sans preuve voit sa ligne supprimée, pas gelée", async () => {
+    poserEtablissement([
+      { id: "eq-retire", actif: false },
+      { id: "eq-actif", actif: true },
+    ]);
+    db.verifications = [
+      ligne({
+        id: "v-retire-vide",
+        equipementId: "eq-retire",
+        obligationId: ELEC_ANNUELLE,
+        statut: "a_planifier",
+      }),
+    ];
+
+    const res = await genererCalendrier(ETAB_ID);
+
+    expect(res.deleted).toBe(1);
+    expect(
+      db.verifications.find((v) => v.id === "v-retire-vide"),
+    ).toBeUndefined();
+  });
+
   it("un titre déclaré par erreur sur une obligation d'équipement n'entre pas au garde-fou", async () => {
     // `TitreSalarie.obligationId` n'a pas de clé étrangère : rien n'empêche de
     // déclarer un titre sur une obligation d'ÉQUIPEMENT. Si le filtre
