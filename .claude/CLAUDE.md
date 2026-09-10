@@ -498,10 +498,13 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     jamais du droit : marquage obligatoire sur les neuf surfaces qui l'affichent
 33. **033** — Le DUERP est borné à cinq unités de travail, hors « Risques
     transverses »
-34. **034** — Une vérification est une occurrence ; le suivi d'une obligation
-    est autre chose (**proposée le 2026-09-10, à trancher** — amende l'ADR-012 :
-    une rangée par occurrence, un modèle `SuiviVerification` porteur de
-    l'identité stable)
+34. **034** — Une ligne de suivi ne porte que l'échéance ouverte ; l'historique,
+    ce sont les rapports (**acceptée le 2026-09-10**, amende l'ADR-012). Au dépôt
+    d'un rapport la ligne roule, le rapport garde l'échéance qu'il honorait,
+    `archiveLe` remplace le marqueur texte. La variante « une rangée par
+    occurrence » — la pratique dominante des GMAO — est écartée avec ce qui la
+    justifierait, et le passage y est mécanique. Le nom du fichier date de la
+    proposition
 
 **Six ADR ont été déplacées le 2026-09-01**, chacune portant en tête le renvoi
 vers celle qui la remplace ou l'amende : **001** redevient effective (028) ·

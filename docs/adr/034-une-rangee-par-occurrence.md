@@ -1,22 +1,30 @@
-# ADR-034 — Une vérification est une occurrence ; le suivi d'une obligation est autre chose
+# ADR-034 — Une ligne de suivi ne porte que l'échéance ouverte ; l'historique, ce sont les rapports
 
-- **Statut** : proposée le 2026-09-10, **à trancher par la propriétaire**. Rien
-  n'est codé.
-- **Portée** : `prisma/schema.prisma` (`Verification`, nouveau modèle
-  `SuiviVerification`), `src/lib/calendrier/generateur.ts` (la moitié
-  « écriture » de la réconciliation), `src/lib/calendrier/actions.ts`,
-  `src/lib/rapports/actions.ts`, `src/lib/dates/retard.ts`,
-  `src/lib/calendrier/etats.ts`, `src/lib/pdf/etat-verifications.ts`, et les
-  seize lecteurs de `Verification` recensés au § 6
-- **Amende** l'ADR-012 (conservation et idempotence), dont elle garde toutes les
-  promesses et renverse la décision de modèle qui les portait
-- **Dépend de** l'ADR-022 (porteur), l'ADR-023 (salarié), l'ADR-026 (nature
-  d'une obligation), l'ADR-027 (états permanents)
-- **Fondée sur** deux lectures exhaustives du code faites le 2026-09-10 — l'une
-  des lecteurs de `Verification`, l'autre de ses écrivains — dont les constats
-  sont repris ici chemin:ligne. Rien de ce qui suit n'est de mémoire.
+- **Statut** : **acceptée le 2026-09-10**, dans sa variante « une ligne ouverte »
+  (option 2 ci-dessous), après débat entre deux sessions et deux lectures de
+  sources. Proposée le même jour dans une variante plus large (une rangée par
+  occurrence), **écartée pour l'instant** — elle est conservée au § 5 avec ce qui
+  la justifierait. Le nom du fichier date de la proposition ; il n'est pas
+  renommé pour ne pas casser les renvois du § 11 et du `CLAUDE.md`.
+- **Portée** : `prisma/schema.prisma` (`Verification.archiveLe`,
+  `RapportVerification.echeanceHonoree`), `src/lib/rapports/actions.ts` (le dépôt
+  fait rouler la ligne), `src/lib/calendrier/generateur.ts` (la branche « cycle
+  soldé » disparaît), `src/lib/dates/retard.ts`, `src/lib/calendrier/etats.ts`,
+  `src/lib/pdf/etat-verifications.ts`, et les lecteurs recensés au § 6
+- **Amende** l'ADR-012 (conservation et idempotence) : elle en garde toutes les
+  promesses et retire à la ligne de suivi le rôle de porteur d'historique, que
+  l'ADR-012 lui avait confié en le sachant coûteux (`:227-237`)
+- **Dépend de** l'ADR-011 (prédicats de retard centralisés), l'ADR-022 (porteur),
+  l'ADR-023 (salarié), l'ADR-026 (nature d'une obligation)
+- **Fondée sur** : deux lectures exhaustives du code le 2026-09-10 (lecteurs et
+  écrivains de `Verification`, chemin:ligne) ; une lecture en LECTURE SEULE du
+  modèle d'échéances de GestBAT, l'autre produit de la propriétaire ; une revue de
+  sources d'autorité (sept GMAO/EAM, RFC 5545, Google Calendar API, Fowler,
+  PostgreSQL, Microsoft) ; et un débat contradictoire avec la session GestBAT, qui
+  a fait tomber l'argument central de la proposition initiale. Rien n'est de
+  mémoire.
 
-## Le problème
+## 1. Le problème
 
 ### Une rangée qui joue deux rôles
 
@@ -25,314 +33,256 @@ cycle en cycle** : quand un contrôle est fait, elle garde `dateRealisee`,
 avance `datePrevue` au rendez-vous suivant, et les rapports s'y accumulent.
 C'était la réponse à un vrai désastre — la régénération faisait
 `delete` + `create` et emportait les rapports par cascade —, et la réponse a
-tenu : plus aucune preuve ne disparaît. L'ADR le dit lui-même
-(`docs/adr/012-conservation-et-idempotence.md:112-114`) :
+tenu. L'ADR le dit lui-même (`docs/adr/012-conservation-et-idempotence.md:112-114`) :
 
 > Depuis la contrainte `@@unique`, une `Verification` n'est plus « une
 > occurrence » mais **la ligne de suivi** durable d'une obligation sur un
 > équipement.
 
-Et il en avait vu le prix, écrit dans ses limites (`:227-237`) : `dateRealisee`
-« change de sens », le compteur « réalisées sur 12 mois » « sous-compte », « le
-comptage juste se fait sur `RapportVerification.dateRapport` », et « le
-basculement de cycle a lieu à la régénération, pas à la seconde près ».
+Et il en avait vu le prix (`:227-237`) : `dateRealisee` « change de sens », le
+compteur « réalisées sur 12 mois » « sous-compte », « le comptage juste se fait
+sur `RapportVerification.dateRapport` », « le basculement de cycle a lieu à la
+régénération, pas à la seconde près ».
 
-Un mois plus tard, ce prix a été payé sur toutes les surfaces du produit. La
-même rangée dit deux choses — « fait le 15 mars 2025 » et « dû le 15 mars
-2026 » — et chaque lecteur choisit laquelle il lit :
+Un mois plus tard, ce prix a été payé sur toutes les surfaces. La même rangée
+dit deux choses — « fait le 15 mars 2025 » et « dû le 15 mars 2026 » — et
+chaque lecteur choisit laquelle il lit :
 
-- **Les compteurs lisent le fait.** Les trois prédicats de `retard.ts`
-  s'arrêtent sur `dateRealisee !== null` : une ligne réalisée dont le rendez-vous
-  suivant est passé n'est ni en retard, ni à venir, et si sa réalisation a plus
-  de douze mois elle n'est **nulle part** — `total = 0`, donc hors du
-  dénominateur du score, qui monte. Mesuré deux fois le 2026-09-10.
-- **La grille lit le rendez-vous.** `lecturesCalendrier`
-  (`src/lib/calendrier/etats.ts:381`) déplie la rangée en deux événements et
-  peint le second en rouge. Deux réponses contradictoires sur le même écran.
-- **La fiche lisait les deux et se trompait.** Elle posait la date du
-  rendez-vous avec l'état de la ligne — une tuile verte « faite » sur une
-  échéance à venir. Corrigé le 2026-09-10 par `etatDuRendezVous`, c'est-à-dire
-  par une **troisième** fonction dont l'unique raison d'être est que la rangée
-  dit deux choses.
-- **Le statut ne peut pas dire « archivée »**, faute de valeur dans l'enum, donc
-  il reste gelé et le marqueur vit dans le libellé — que sept surfaces ne
-  lisaient pas.
-- **Rien ne relance un dossier immobile** : l'occurrence suivante n'existe pas
-  comme rangée, c'est une date avancée *si* une passe de réconciliation a lieu.
-  Constat n°1 de l'audit du 2026-09-09.
+- **les compteurs lisent le fait** : les trois prédicats de `retard.ts`
+  s'arrêtent sur `dateRealisee !== null`. Une ligne réalisée dont le rendez-vous
+  suivant est passé n'est ni en retard ni à venir, et si sa réalisation a plus de
+  douze mois elle n'est **nulle part** — `total = 0`, hors du dénominateur du
+  score, qui monte. Mesuré deux fois ;
+- **la grille lit le rendez-vous** : `lecturesCalendrier` déplie la rangée en
+  deux événements et peint le second en rouge. Deux réponses sur un écran ;
+- **la fiche lisait les deux et se trompait** : tuile verte « faite » sur une
+  échéance à venir, corrigée par une **troisième** fonction de classement ;
+- **le statut ne sait pas dire « archivée »**, faute de valeur dans l'enum : il
+  reste gelé, et le marqueur vit dans le libellé — que huit surfaces ne lisaient
+  pas ;
+- **rien ne relance un dossier immobile** : l'occurrence suivante n'est pas une
+  rangée, c'est une date avancée *si* une passe de réconciliation a lieu.
 
-Le § 11 de `docs/chantiers-ouverts.md` recense seize constats sur le
-réconciliateur. **Tous ceux du lot 3, une part du lot 2 et la moitié du lot 5
-descendent de cette seule décision.** Les corriger un par un, c'est ce qu'on a
-fait le 2026-09-10 pour la moitié du lot 3 — et c'est en le faisant qu'on a vu
-qu'on posait une couche de compensation sur un modèle connu faux.
+Tous les constats du lot 3 du § 11, une part du lot 2 et la moitié du lot 5 en
+descendent. Les corriger un par un, c'est ce qu'on a fait le 2026-09-10 pour un
+tiers du lot 3 — et c'est en le faisant qu'on a vu qu'on posait une couche de
+compensation sur un modèle connu faux.
 
-### La règle de fond ne dépend pas du modèle
+### Ce que la réglementation tranche, et ce qu'elle ne tranche pas
 
-L'arrêté du 8 octobre 1987, art. 3.2 : « **au minimum une fois par an**, les
-opérations suivantes doivent être effectuées ». L'obligation est l'intervalle,
-pas le souvenir. Une ligne dont l'échéance suivante est passée **est en retard**,
-quelle que soit la solidité du contrôle précédent. Le score baissera pour ces
-dossiers ; il était faux.
+**Elle tranche le fond.** Arrêté du 8 octobre 1987, art. 3.2 : « **au minimum
+une fois par an** ». L'obligation est l'intervalle, pas le souvenir : une ligne
+dont l'échéance suivante est passée **est en retard**, quelle que soit la
+solidité du contrôle précédent.
 
-### Ce que la réglementation ne dit pas
+**Elle tranche aussi ce qui doit être conservé, et c'est décisif pour ce qui
+suit.** `D. 4711-3` : l'employeur conserve « les documents concernant […] les
+vérifications et contrôles […] des cinq dernières années et, en tout état de
+cause, ceux des deux derniers contrôles ». `R. 4323-25` fait consigner le
+résultat ; `R. 4323-26` fait annexer les rapports au registre, ou y porter la
+date du contrôle et la date de remise ; `R. 4323-27` autorise tout support.
+**Ce que la loi fait tenir, c'est la série des rapports datés avec leur
+résultat.** Aucun texte ne demande d'enregistrer la date à laquelle un contrôle
+*aurait dû* avoir lieu.
 
-Rien sur un score, un compteur, un dénominateur. Le *comment compter* est à nous.
+**Elle ne tranche pas le modèle.** Rien sur un score, un compteur, ni sur la
+façon de ranger les échéances à venir.
 
-## La décision proposée
+## 2. Les quatre modélisations, et ce que les sources en disent
 
-### 1. Deux objets, parce qu'il y a deux choses
+| | Modèle | Qui le fait | Verdict |
+|---|---|---|---|
+| **1** | Rangée réutilisée + statut stocké rafraîchi par un cron | Personne parmi les sources d'autorité | **Écarté.** PostgreSQL interdit une colonne calculée dépendant de `now()` ; Fowler nomme la « fenêtre d'incohérence » ; trois anomalies officielles IBM Maximo (IV73784, IV79823, IV85583) documentent des valeurs dérivées stockées qui ont dérivé. Rojer n'a aucune infrastructure de tâche planifiée : ce serait une pièce neuve avec son mode de panne. Et un cron ne règle pas « à venir » : une ligne en cycle valide reste exclue des trois prédicats |
+| **2** | **La rangée représente toujours l'occurrence OUVERTE ; au dépôt elle roule ; l'historique = les rapports** | GestBAT (avec la prochaine date matérialisée au dépôt) ; c'est la règle Infor « un seul ordre de travail ouvert par plan à la fois », vue du côté ouvert | **Retenu** — voir § 3 |
+| **3** | Une définition (`SuiviVerification`) + une rangée par occurrence, ouverte ou close | **Toutes** les GMAO/EAM consultées : IBM Maximo, SAP PM, Infor/HxGN, Oracle Fusion, Fiix, UpKeep, Limble, MaintainX | **La pratique dominante, écartée ici** — voir § 5 pour ce qui la justifierait |
+| **4** | Rien de stocké, tout dérivé à la lecture | Les calendriers (RFC 5545, Google), pour les instances non modifiées ; Oracle pour l'horizon lointain, en prévision régénérable | **Écarté.** RFC 5545 matérialise une instance dès qu'elle est touchée (`RECURRENCE-ID`) ; Oracle matérialise les ordres dès qu'ils entrent dans la fenêtre de travail. Le critère est explicite chez les deux : une occurrence se dérive tant qu'elle n'a pas de vécu propre, se stocke dès qu'elle en a. Un contrôle réglementaire a toujours un vécu propre — date réelle, réalisateur, rapport, résultat |
 
-**`SuiviVerification`** — le suivi d'une obligation sur un porteur. C'est ce
-que l'ADR-012 appelait « la ligne de suivi durable », et c'est **lui** qui porte
-l'identité stable :
+**Sur le statut, convergence complète des sources** : l'état d'une instance
+(ouverte, close, son résultat) est un **fait stocké** ; « en retard » est une
+**comparaison de dates à la lecture**. Ni les GMAO, ni Fowler, ni PostgreSQL, ni
+Microsoft ne soutiennent un statut temporel stocké. Les seuls à l'envisager sont
+des forums, en repli, avec la latence pour prix. C'est déjà la position de
+l'ADR-011 ; elle est confirmée, et elle vaut pour les options 2 et 3 également.
 
-```
-SuiviVerification
-  id, etablissementId, equipementId?, salarieId?          (porteur, XOR conservé)
-  obligationId, libelleObligation, periodicite, realisateurRequis, referentielVersion
-  prescriptionId?
-  archiveLe DateTime?          ← remplace le marqueur dans le libellé
-  @@unique([etablissementId, obligationId, equipementId, salarieId])  NULLS NOT DISTINCT
-```
+## 3. La décision : l'option 2, et pourquoi la pratique dominante n'est pas la bonne réponse ici
 
-**`Verification`** — **une occurrence**, et rien d'autre. Elle garde son nom :
-« une vérification » est un acte, et tous ses lecteurs actuels lisent bien des
-champs d'occurrence.
+### Ce qui est retenu
 
-```
-Verification
-  id, suiviId → SuiviVerification (Cascade)
-  datePrevue, dateRealisee?, statut
-  rapports[], actions[]        (inchangés : ils documentent CETTE occurrence)
-  @@index([suiviId, dateRealisee])
-```
+**Une ligne `Verification` par obligation et porteur, qui ne porte plus que
+l'échéance ouverte.** Au dépôt d'un rapport, dans la même transaction :
 
-**Une occurrence est ouverte** (`dateRealisee IS NULL`) **ou close**. Une rangée
-a une vie. Contrainte : **au plus une occurrence ouverte par suivi** — index
-unique partiel `(suiviId) WHERE "dateRealisee" IS NULL`, en SQL comme les deux
-contraintes existantes que Prisma ne sait pas dire.
+1. le rapport est créé, daté, avec son résultat — c'est lui la réalisation, et
+   c'est lui que `D. 4711-3` fait conserver ;
+2. il reçoit **l'échéance qu'il honorait**, `echeanceHonoree` = la `datePrevue`
+   de la ligne au moment du dépôt — une colonne, aucune table ;
+3. la ligne **roule** : `datePrevue` = date du rapport + périodicité calendaire
+   (`prochaineEcheance`), `statut` = `planifiee` ou `a_planifier` selon qu'une
+   date a été arrêtée, `dateRealisee` n'est plus écrite.
 
-### 2. Ce que ça rend trivial
+Le résultat « non vérifiable » ne fait rien rouler : un rapport est déposé, la
+ligne reste ouverte sur la même échéance — c'est déjà la règle
+(`rapports/actions.ts:145-157`), elle devient évidente.
+
+**`archiveLe DateTime?` sur la ligne** remplace le préfixe « Ne s'applique
+plus — » dans le libellé. Une obligation qui cesse de s'appliquer marque sa
+ligne ; ses rapports ne bougent pas. Les huit surfaces corrigées le 2026-09-10
+lisent un champ au lieu d'un `startsWith`.
+
+### Ce que ça rend trivial
 
 | Question | Aujourd'hui | Après |
 |---|---|---|
-| Cette occurrence est-elle en retard ? | trois prédicats, deux gardes, trois classifieurs qui divergent | `dateRealisee IS NULL && datePrevue < aujourd'hui` |
-| Combien de contrôles faits sur 12 mois ? | `realisees12m` sur la dernière date d'une rangée réutilisée — sous-compte documenté | occurrences closes dans la fenêtre — exact |
-| Combien d'obligations suivies ? | nombre de rangées (correct par accident) | nombre de suivis |
-| Quelle est la prochaine échéance ? | `datePrevue` d'une rangée qui porte aussi un fait passé | `datePrevue` de l'occurrence ouverte |
-| La ligne est-elle archivée ? | préfixe texte dans le libellé, statut gelé | `suivi.archiveLe` |
-| Les quatre compteurs sont-ils disjoints ? | oui, **parce que** les réalisées sont exclues — c'est le défaut | oui, parce qu'une occurrence est ouverte ou close |
+| Cette ligne est-elle en retard ? | trois prédicats, deux gardes, trois classifieurs qui divergent | `archiveLe === null && datePrevue < aujourd'hui` |
+| Combien de contrôles faits sur 12 mois ? | `realisees12m` sur la dernière date d'une rangée réutilisée — sous-compte documenté | rapports datés dans la fenêtre, résultat réalisé — exact, et c'est le comptage que l'ADR-012 désignait déjà comme le juste |
+| Quelle est la prochaine échéance ? | `datePrevue` d'une rangée qui porte aussi un fait passé | `datePrevue`, seule date de la ligne |
+| Un contrôle a-t-il honoré son échéance ? | non reconstituable | `rapport.echeanceHonoree` vs `rapport.dateRapport` |
+| La ligne est-elle archivée ? | préfixe texte, statut gelé | `archiveLe` |
+| Les compteurs sont-ils disjoints ? | oui, **parce que** les réalisées sont exclues — c'est le défaut | oui, parce qu'une ligne est ouverte ou archivée, et un rapport est un rapport |
 
 `lecturesCalendrier`, `etatDuRendezVous`, `classerVerification` dans sa forme
-actuelle, la branche « cycle soldé » du réconciliateur et le marqueur dans le
-libellé **disparaissent**. Pas corrigés : sans objet.
+actuelle, la branche « cycle soldé » du réconciliateur, le marqueur dans le
+libellé et le statut `depassee` **disparaissent**. Pas corrigés : sans objet.
+Le score se corrige de lui-même — il était gonflé par des rendez-vous qu'il ne
+voyait pas, et il baissera pour les dossiers dont une échéance est passée.
 
-### 3. Ce que ça fait aux quatre natures de l'ADR-026
+### Pourquoi pas le modèle complet, alors que sept produits le font
 
-C'est la cohérence qui emporte la décision :
+**Parce que l'argument qui le portait est tombé au débat, et qu'il faut le dire
+plutôt que le laisser deviner.** La proposition initiale faisait de la « trace
+des échéances manquées » la valeur décisive : avec une rangée par occurrence,
+un contrôle annuel sauté en 2025 puis fait en 2026 laisse une occurrence 2025
+« due le 15/03, réalisée le 10/04/2026 ». La session GestBAT a posé la
+question : *quel besoin réel justifie cet historique ?* Réponse, après avoir
+cherché :
 
-- **récurrente** → N occurrences, une ouverte à la fois ;
-- **ponctuelle** (« mise en service ») → exactement une occurrence, jamais de
-  suivante ;
-- **événementielle** → une occurrence par événement, créée quand l'événement
-  est déclaré — aujourd'hui « le produit n'observe aucun de ces faits », le
-  modèle sera prêt le jour où il en observera un ;
-- **état permanent** → **zéro occurrence**. Il a déjà son modèle,
-  `DeclarationEtatPermanent`, une rangée par (établissement, obligation) sans
-  date d'échéance. `SuiviVerification` est son **symétrique** pour les
-  obligations qui ont un rythme.
+- **juridiquement, aucun** — `D. 4711-3`, `R. 4323-25`, `R. 4323-26` font tenir
+  les rapports, jamais les dates prévues ;
+- **le fait est dérivable** : la règle est déterministe (dernière réalisation +
+  périodicité), donc l'état à toute date passée se recalcule depuis les rapports
+  ; un trou de treize mois entre deux rapports *est* l'échéance manquée ;
+- **personne ne le lit** : ni le dossier de conformité PDF, ni la fiche
+  d'équipement, ni le registre n'affichent d'échéance prévue passée ;
+- et le seul fait non dérivable — une date **convenue à la main** avec le
+  prestataire, distincte de la date calculée — tient dans `echeanceHonoree`.
 
-Le modèle actuel confond l'instance en cours avec l'historique. C'est la
-distinction que fait tout système d'échéances récurrentes — plan de maintenance
-et ordres de travail, règle de récurrence et instances d'un agenda — et
-l'ADR-012 la connaissait : il a choisi de ne pas la faire, pour une bonne raison
-qui n'a plus cours.
+**Les GMAO instancient parce que leurs occurrences portent des faits que Rojer
+n'a pas** : un technicien affecté, un coût, des pièces, un temps passé, un ordre
+signé. Chaque occurrence *est* un objet métier. Chez Rojer, l'occurrence n'a
+qu'un fait, le rapport — et le rapport existe déjà comme objet, daté, avec son
+résultat. **L'objet qui mérite une rangée par occurrence, Rojer l'a : c'est
+`RapportVerification`.** GestBAT le montre autrement : ses non-conformités
+(`Reserve`) sont rattachées au document, donc à l'occurrence, sans table
+d'occurrence.
 
-### 4. Ce que devient le réconciliateur
+Le second argument de la proposition — « le prix du dérivé non centralisé »,
+illustré par les quinze implémentations de « en retard » de GestBAT — est de
+l'hygiène de code, pas un argument de modèle. Rojer l'a réglé par l'ADR-011.
+Il est retiré de la balance.
 
-**Sa moitié pure ne bouge pas** : matching, `cleDeLigne`, adoption, héritage
-travaillent sur des **suivis** — c'est-à-dire exactement sur l'objet qu'ils
-croyaient déjà manipuler. `parCle`, `vues`, `adoptees` restent injectifs, parce
-que la clé est celle du suivi.
+### Ce que l'option 2 ne ferme pas, écrit pour ne pas le redécouvrir
 
-**Sa moitié écriture change de nature.** Pour chaque suivi applicable :
+- **Une obligation événementielle** (une occurrence par événement : accident,
+  modification d'un circuit) n'a pas de place naturelle — mais le produit
+  n'observe aucun de ces faits (ADR-026), et le § 5 dit comment y aller.
+- **Un rapport antidaté** — plus ancien que le dernier déposé — ne doit pas faire
+  reculer la ligne. GestBAT le règle en marquant le document inactif sans toucher
+  l'échéance ; Rojer fera pareil : le rapport est conservé et daté, la ligne ne
+  bouge que si le rapport est le plus récent.
+- **Le ré-ancrage d'une périodicité qui change** sur un cycle ouvert reste le
+  constat B de l'audit (`datePrevue` stockée sans son origine) ; il n'est ni
+  aggravé ni réglé ici, et `echeanceHonoree` en fournira la trace.
 
-1. s'il n'existe pas → le créer, et ouvrir sa première occurrence ;
-2. s'il existe et n'a pas d'occurrence ouverte → en ouvrir une, datée de la
-   dernière close + périodicité (ou de la mise en service, ou de maintenant) ;
-3. s'il existe et a une occurrence ouverte → réaligner les attributs de
-   référentiel sur le suivi ; **ne jamais toucher `datePrevue` de l'occurrence
-   ouverte** (la règle « cycle ouvert » de l'ADR-012, inchangée) ;
-4. réaligner `obligationId` sur le suivi adopté — **une rangée**, plus jamais
-   une par cycle.
+## 4. Ce que deviennent les lots du § 11
 
-Pour un suivi qui n'est plus applicable : `archiveLe = now` ; son occurrence
-ouverte est supprimée si elle est vide, conservée sinon ; les closes ne sont
-jamais touchées.
+| Lot | Après cette décision |
+|---|---|
+| 0 harnais | indispensable, inchangé |
+| 1 écriture conditionnée | **conservé** : la ligne ouverte peut être roulée par un dépôt concurrent ; le `deleteMany` garde ses trois clauses ; la garde du `updateMany` se réduit à `datePrevue` et `statut` lus |
+| 2 grain de la clé, adoption, héritage | **conservé** : tout porte déjà sur la ligne unique. L'héritage N→1 date la ligne absorbante depuis le rapport le plus ancien des absorbées — même règle |
+| 3 marqueur d'archivage | **supplanté** par `archiveLe` ; le champ requis `libelleObligation` sur `VerificationDatee` perd sa raison d'être |
+| 3 bis cycle soldé | **dissous** : il n'y a plus de cycle soldé sur la ligne |
+| 4 arithmétique des dates | fait, inchangé — `prochaineEcheance` est ce que le roulement appelle |
+| 5 jamais relancé | **dissous** pour le passage du temps : « en retard » est une fonction de la date. Reste le référentiel qui change, déjà couvert par la version |
 
-**Le dépôt d'un rapport clôt l'occurrence ouverte ET ouvre la suivante, dans la
-même transaction.** C'est ce qui dissout la moitié du lot 5 : la prochaine
-échéance existe à la seconde où le contrôle est enregistré, et « en retard » est
-une fonction pure de la date — il n'y a plus rien à relancer. La suppression du
-dernier rapport d'une occurrence close la **rouvre** (`dateRealisee = null`) et
-supprime l'occurrence ouverte suivante si elle est vide.
+## 5. Ce qui justifierait le modèle complet, et comment y aller sans perte
 
-Le résultat « non vérifiable » ne clôt rien : il pose un rapport sur
-l'occurrence ouverte, qui reste ouverte. C'est déjà la règle
-(`src/lib/rapports/actions.ts:145-157`), elle devient évidente.
+Le jour où l'un de ces besoins existe **avec un écran qui le lit**, l'option 3
+redevient la bonne : une obligation événementielle observée par le produit ; des
+faits propres à l'occurrence autres que le rapport (un prestataire affecté à
+l'avance, un coût, un devis) ; une exigence contractuelle ou d'assureur de
+montrer les échéances manquées et non seulement les contrôles faits.
 
-### 5. Ce que deviennent les lots 1 à 5
+**Le passage sera mécanique, pas une migration à risque**, et c'est
+`echeanceHonoree` qui le garantit : chaque rapport connaît l'échéance qu'il
+honorait, donc les occurrences closes se **reconstruisent par script** depuis
+les rapports, et la ligne actuelle devient l'occurrence ouverte. Rien de ce que
+l'option 2 écrit n'est à défaire. C'est le point que le débat a établi en
+dernier, et il retire le seul coût caché que la proposition initiale prêtait au
+« plus tard ».
 
-| Lot | Aujourd'hui | Après |
-|---|---|---|
-| 0 harnais | fait | **indispensable** : c'est lui qui rend la refonte possible ; le faux client gagne une table |
-| 1 écriture conditionnée | fait | **conservé** : l'occurrence ouverte peut être close par un dépôt concurrent ; `deleteMany` garde ses trois clauses ; la garde `{dateRealisee, statut}` du `updateMany` se réduit à `dateRealisee IS NULL` |
-| 2 grain de la clé, adoption, héritage | fait | **conservé et simplifié** : tout porte sur le suivi. L'héritage N→1 date la première occurrence du suivi absorbant depuis la plus ancienne occurrence close des absorbés — même règle, même fonction |
-| 3 marqueur d'archivage | moitié fait | **superseded** : `archiveLe` remplace le préfixe ; le champ requis `libelleObligation` sur `VerificationDatee` perd sa raison d'être ; les sept surfaces corrigées lisent `suivi.archiveLe` |
-| 3 bis cycle soldé | sorti | **dissous** par construction |
-| 4 arithmétique des dates | à faire | **inchangé** — orthogonal, toujours dû |
-| 5 jamais relancé | à faire | **dissous** pour le passage du temps ; reste le cas du référentiel qui change, déjà couvert par la version |
+## 6. Les lecteurs, d'après la lecture exhaustive du 2026-09-10
 
-### 6. Les lecteurs, un par un
+**Aucun lecteur n'interroge la clé composite** ; la clé, la réconciliation et
+`cleDeLigne` ne bougent pas — c'est ce qui rend l'option 2 bon marché.
 
-D'après la lecture exhaustive du 2026-09-10. **Aucun lecteur n'interroge la clé
-composite** ; toute la dépendance à l'unicité est dans le réconciliateur.
-
-**Simplifiés** — ils dépliaient à la main les deux vies d'une rangée :
-`src/lib/calendrier/etats.ts:381` et `:308` (supprimés), `calendrier/page.tsx:413`
-et `:567` (dont la clé `${v.id}:${lec.lecture}` à `:600` et le statut réécrit à
-`:612`), `dashboard/queries.ts:205`, `:299`, `:389`,
+**Simplifiés** (ils dépliaient à la main les deux vies d'une rangée) :
+`calendrier/etats.ts:381` et `:308` (supprimés), `calendrier/page.tsx:413`,
+`:567`, `:600`, `:612`, `dashboard/queries.ts:205`, `:299`, `:389`,
 `equipements/etat-verifications.ts:138`, `equipements/fiche.ts:145`,
-`verifications/[verificationId]/page.tsx:135-153`, `mcp/queries.ts:340-347` et
+`verifications/[verificationId]/page.tsx:135-153`, `mcp/queries.ts:340-347`,
 `:527-533`, `registre/contenu-ailleurs.ts:174-180`, `pdf/builders.ts:29`,
-`app/etablissements/[id]/page.tsx:108` (le `where` sur les statuts ouverts
-redevient exact).
+`app/etablissements/[id]/page.tsx:108`.
 
-**À reprendre — ils comptent des rangées et le présentent comme des
-obligations** ; après, ils doivent choisir *suivis* ou *occurrences* :
-`app/etablissements/[id]/page.tsx:106` (`nbVerifs` → suivis), et par ricochet
-`score.tsx:155`, `groupes.tsx:129`, `dashboard/obligations.ts:276-279`,
-`page.tsx:182` ; `mcp/queries.ts:78` → `tools.ts:122` et `:411` (→ suivis) ;
-`calendrier/queries.ts:210` `toutesParType` (→ suivis) ;
-`equipements/etat-verifications.ts:130` `periodicites` et
-`equipements/[equipementId]/page.tsx:139` `idsAvecSuivi` (dédoublonnage devenu
-naturel) ; `pdf/etat-verifications.ts:84-96` (`realisees12m` → occurrences
-closes dans la fenêtre, **le score change de valeur**) ;
-`prescriptions/queries.ts:78` (compte affiché → à requalifier).
+**À reprendre** (ils lisent `dateRealisee` sur la ligne ; ils liront les
+rapports) : `pdf/etat-verifications.ts:84-96` `realisees12m`,
+`dashboard/queries.ts:318-326` `derniereRealisee`,
+`equipements/etat-verifications.ts:139-144` `derniere`,
+`equipements/fiche.ts:253-255` (repli sans rapport — devient inutile, un seul
+chemin écrit une réalisation), `verifications/[verificationId]/page.tsx:220`
+« Dernière : … », `mcp/queries.ts:340` `etatDe` « realisee »,
+`dashboard/queries.ts:637-641` (la borne SQL des 12 mois passe sur
+`RapportVerification`). Et les huit lecteurs du marqueur, vers `archiveLe`.
 
-**Indifférents** : `auth/scope.ts:149`, `signatures/appartenance.ts:62`,
-`acces/[token]/page.tsx:163`, `actions/queries.ts:54,87`,
-`rapports/queries.ts:23,77`, `calendrier/echeances.ts:529`,
-`registre/page.tsx:348`, `dates/retard.ts` (prédicats purs),
-`batiments/queries.ts:141`, `calendrier/retards.ts:131,161`,
-`board.tsx:1546` et `echeances.tsx:54` — ces deux derniers forcent déjà
-`dateRealisee: null` : ils étaient écrits comme si la rangée était une
-occurrence ouverte.
+**Indifférents** : `auth/scope.ts`, `signatures/appartenance.ts`,
+`acces/[token]/page.tsx`, `actions/queries.ts`, `rapports/queries.ts`,
+`calendrier/echeances.ts:529`, `registre/page.tsx`, `batiments/queries.ts`,
+`calendrier/retards.ts`, et les compteurs de rangées (`nbVerifs`, MCP, pilules)
+— la rangée reste « une par obligation × porteur », leur sens ne change pas.
 
-### 7. La migration
-
-**Sans données réelles en production** — mesuré, `docs/revues/constats-reconciliateur-2026-09-09.md:3` —,
-elle est gratuite aujourd'hui. Elle ne le sera plus après. Le précédent le plus
-proche est la déduplication gagnante/perdante de
-`prisma/migrations/20260810120000_integrite_et_conservation/migration.sql:40-101`,
-dont celle-ci est l'exact inverse.
-
-1. Créer `SuiviVerification` ; pour chaque `Verification`, **un suivi** portant
-   sa clé, son libellé (sans le préfixe), sa périodicité, ses réalisateurs, sa
-   prescription, et `archiveLe = updatedAt` si le libellé portait le marqueur.
-2. Rattacher chaque `Verification` à son suivi (`suiviId`).
-3. **Scinder** les rangées qui portent les deux vies — `dateRealisee` non nulle
-   et `datePrevue > dateRealisee`, cycliques : la rangée existante devient
-   l'occurrence **close** (`datePrevue := dateRealisee`, ses rapports et
-   actions restent dessus), et une occurrence **ouverte** neuve est créée à
-   l'ancienne `datePrevue`. Les autres rangées sont une occurrence telle
-   quelle.
-4. Retirer le préfixe des libellés ; supprimer les colonnes de référentiel de
-   `Verification` (`obligationId`, `libelleObligation`, `periodicite`,
-   `realisateurRequis`, `referentielVersion`, `prescriptionId`) — après que tous
-   les lecteurs passent par le suivi.
-5. Remplacer l'index unique quadruplet par : unicité sur le suivi
-   (`NULLS NOT DISTINCT`, comme aujourd'hui) + unicité partielle « une seule
-   occurrence ouverte par suivi ». Le CHECK `Verification_porteur_xor` migre sur
-   le suivi. `src/lib/migrations-contraintes.test.ts` garde les trois.
-
-**Perte connue, écrite** : une rangée qui a accumulé N rapports sur N cycles ne
-se scinde qu'en **une** close et une ouverte — les cycles antérieurs ne sont pas
-reconstituables (leurs dates dues ont été écrasées). Leurs rapports restent
-attachés à l'occurrence close, datés, lisibles. Rien n'est perdu ; c'est la
-granularité par cycle qui manque pour l'existant, et l'existant est vide.
-
-### 8. Les alternatives écartées
-
-**Corriger `repartirVerifications` pour qu'il déplie** (la conception « A » du
-2026-09-10). Elle marchait : classer par le rendez-vous quand il y en a un, par
-le passé sinon. Mais elle ajoutait une **quatrième** fonction qui déplie la
-rangée, à côté des trois qui existent, et laissait entiers le statut gelé, le
-marqueur texte, le dossier jamais relancé. Écartée : c'est le geste même dont ce
-document dit qu'il faut cesser.
-
-**Un cinquième compteur** à côté des quatre. Préservait l'historique tel quel au
-prix de deux comptes à tenir cohérents — exactement ce que le lot 3 vient de
-supprimer.
-
-**Garder une seule table et lever l'unicité** (une `Verification` par occurrence,
-sans suivi). Plus petit, mais aucune rangée ne porte plus l'identité stable
-d'une obligation sur un porteur : l'archivage n'a nulle part où vivre, la clé de
-réconciliation devient un prédicat partiel, `nbVerifs` n'a plus de référent. Le
-suivi **est** ce que l'ADR-012 voulait sauver ; il mérite sa table.
-
-**Un calendrier dérivé, rien de stocké** (évoqué le 2026-09-10). Le plus pur en
-théorie ; écarté parce que les occurrences portent des **faits utilisateur non
-dérivables** — une date arrêtée avec le prestataire (`planifiee`), un rapport,
-une action — et que dériver le reste tout en stockant ceux-là revient au modèle
-proposé.
-
-### 9. Ce qui reste ouvert
-
-- ~~**Le nom.** `SuiviVerification` dit ce que c'est ; `LigneDeSuivi` est le mot
-  de l'ADR-012.~~ **Tranché le 2026-09-10 : `SuiviVerification`.**
-- **Où pendent les actions d'un suivi.** Aujourd'hui « à la ligne, pas au
-  rapport » (`equipements/fiche.ts:222-227`). Après : à l'occurrence qui les a
-  fait naître ; la fiche du suivi les agrège. La CHECK `Action_origine_xor`
-  (ADR-002) ne change pas.
-- **`Signature`** — lien mou, sans FK (`schema.prisma:991-1018`) : une signature
-  de rapport reste orpheline si l'occurrence est supprimée. **Défaut antérieur**,
-  indépendant de cette décision, à traiter pour lui-même.
-- **La règle N→1 de l'héritage** (« la plus ancienne ») reste une déduction, pas
-  un texte — inchangé, voir `reprendreLaRealisation`.
-- **`scripts/reprise-ria.ts:181`** réaffecte un porteur par `update` sur une
-  rangée ; après, il réaffecte le suivi. À reprendre avec la migration.
-
-## Le plan, en lots ordonnés
+## 7. Le plan, en lots
 
 Chacun rayé et daté au commit qui le ferme, dans le § 11.
 
-- **M0 — L'ADR tranché**, nom fixé, migration relue sur le précédent de 2026-08-10.
-- **M1 — Le schéma et la migration**, sur base vide puis sur le seed
-  `scripts/seed-dossier-complet.ts` (qui ne crée que des occurrences ouvertes :
-  c'est le cas facile, il faut aussi un seed qui **scinde**). Le faux client des
-  tests gagne `SuiviVerification`. Les trois contraintes SQL gardées par
-  `migrations-contraintes.test.ts`.
-- **M2 — Le réconciliateur**, moitié écriture : suivis, occurrence ouverte,
-  archivage par champ. Les trente-deux garanties du lot 0 rejouées, le banc de
-  mutation rejoué. Lots 1 et 2 reportés sur le suivi.
-- **M3 — Le dépôt de rapport** clôt et ouvre dans la même transaction. Lot 5
-  dissous pour le temps qui passe.
-- **M4 — Les lecteurs** : les seize sites du § 6, dans l'ordre simplifiés →
-  à reprendre → indifférents (vérifiés). `lecturesCalendrier`,
-  `etatDuRendezVous` supprimés. Les compteurs choisissent suivis ou occurrences,
-  et le disent dans leur nom.
-- **M5 — Le nettoyage** : colonnes de référentiel retirées de `Verification`,
-  marqueur texte retiré, `VerificationDatee.libelleObligation` retiré, ADR-012
-  annoté comme amendé.
-- **Lot 4** (arithmétique des dates) se fait **avant ou pendant**, il ne dépend
-  de rien ici et débloque `worktree-ge4-r-hebergement`.
+- **N1 — Le schéma** : `Verification.archiveLe DateTime?`,
+  `RapportVerification.echeanceHonoree DateTime?`. Migration SQL écrite à la
+  main, jouée sur le Postgres Docker local, jamais sur Supabase. Rétro-remplissage
+  : `archiveLe = updatedAt` pour les lignes dont le libellé porte le marqueur ;
+  `echeanceHonoree` laissée nulle pour l'existant, qui est vide.
+- **N2 — Le dépôt fait rouler** : `rapports/actions.ts` écrit `echeanceHonoree`
+  et roule la ligne dans la transaction ; le rapport antidaté ne roule pas ; la
+  suppression du dernier rapport recule la ligne d'un cycle. Le réconciliateur
+  perd sa branche « cycle soldé ». Le harnais du lot 0 rejoué, le banc de
+  mutation rejoué.
+- **N3 — Les prédicats** : `retard.ts` cesse de lire `dateRealisee` ;
+  `estVerificationArchivee` lit `archiveLe` ; `classerVerification` et le
+  vocabulaire perdent `archivee`-par-préfixe. Le préfixe est retiré des libellés
+  par la migration.
+- **N4 — Les lecteurs** : le § 6, dans l'ordre « à reprendre » puis
+  « simplifiés ». `realisees12m` et `derniereRealisee` passent sur les rapports.
+  `lecturesCalendrier` et `etatDuRendezVous` supprimés. Sous-agents par famille
+  de surfaces, fichiers disjoints.
+- **N5 — Le nettoyage** : `dateRealisee` retirée de `Verification` (elle ne sera
+  plus écrite), `depassee` retiré de l'enum ou laissé mort et documenté,
+  `VerificationDatee.libelleObligation` redevenu optionnel, ADR-012 annotée comme
+  amendée. Et l'écran du registre **affiche la durée de conservation** que
+  `D. 4711-3` impose — dette relevée au corpus, sans rapport avec le modèle,
+  fermée au passage.
 
 ## Ce qu'il faudrait mesurer, et qui ne l'a pas été
 
-Le score baissera. **De combien, pour quel dossier type ?** Aucune base réelle ne
-permet de le dire aujourd'hui ; le seed complet peut le simuler si on y ajoute
-des occurrences closes dont l'échéance suivante est passée. C'est le premier
-chiffre à produire avant M4 — pas pour décider si on corrige, ça c'est décidé
-par le texte, mais pour savoir ce que le dirigeant verra changer.
+Le score baissera. De combien, pour quel dossier type ? Le seed complet
+(`scripts/seed-dossier-complet.ts`) ne fabrique que des lignes ouvertes ; il faut
+lui ajouter des rapports datés dont l'échéance suivante est passée pour le
+simuler. C'est le premier chiffre à produire avant N4 — pas pour décider si on
+corrige, ça c'est décidé par le texte, mais pour savoir ce que le dirigeant verra
+changer.
