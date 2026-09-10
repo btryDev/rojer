@@ -87,7 +87,8 @@ repère :
   d'archivage se lit à la racine et ne se contourne plus (champ requis, sept
   surfaces corrigées). L'autre moitié est **sortie du lot** : elle descend d'un
   défaut de MODÈLE — une rangée qui est à la fois une échéance et un historique —
-  et se traite par l'ADR-034 (une rangée par occurrence), pas par un correctif.
+  et se traite par l'ADR-034 (la ligne ne porte plus que l'échéance ouverte,
+  l'historique est dans les rapports), pas par un correctif.
 - **Lot 4, l'arithmétique des dates : fait** (2026-09-10). Les fonctions locales
   du générateur sont supprimées ; `calendrier/periodicite.ts` compose
   `lib/dates` avec une table calendaire. Cinq ans après le 1er juin, c'est le
@@ -193,12 +194,12 @@ continuité est corrigée.
 
 Ne pas les trancher, ne pas les contourner.
 
-0. **L'ADR-034** — une vérification est une occurrence, le suivi d'une
-   obligation est un objet à part (`SuiviVerification`). Proposée le
-   2026-09-10 sur deux lectures exhaustives du code ; amende l'ADR-012. C'est
-   elle qui dissout la seconde moitié du lot 3 et la moitié du lot 5. **Sans
-   réponse, on continue à poser des correctifs sur un modèle qu'on sait faux.**
-   Le lot 4, lui, ne l'attend pas.
+0. ~~**L'ADR-034**~~ — **tranchée le 2026-09-10**, dans sa variante « une ligne
+   ouverte, l'historique dans les rapports », après débat contradictoire avec la
+   session GestBAT et lecture de sept GMAO. La variante « une rangée par
+   occurrence » est écartée : la loi (`D. 4711-3`, `R. 4323-25/26`) fait tenir
+   les rapports, jamais les dates prévues ; l'historique des échéances manquées
+   est dérivable et sans lecteur. Le plan est N1–N5 dans l'ADR.
 1. **Lot 2 du § 11** — quand N lignes d'équipement sont absorbées par une ligne
    d'établissement, laquelle garde l'historique ? L'ADR-022 dit lui-même que ce
    n'est pas tranché. Posé à « la plus ancienne » le 2026-09-10, en déduction

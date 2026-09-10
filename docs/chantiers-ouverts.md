@@ -1436,12 +1436,15 @@ part du lot 2 (continuité) et la moitié du lot 5 (« jamais relancé ») en
 descendent. Ajouter un correctif ici serait poser une quatrième couche de
 compensation sur un modèle qu'on sait faux.
 
-**Ce qui le remplace.** Un modèle à **une rangée par occurrence** — une close est
-de l'historique, une ouverte est une échéance —, planifié dans l'ADR-034. C'est
-la pratique standard des systèmes d'échéances récurrentes ; le modèle actuel
-confond l'instance en cours avec l'historique. La décision est de PLANIFIER
-d'abord, sur pièces : lecture exhaustive des lecteurs et des écrivains de
-`Verification`, coût de migration, ce que deviennent les lots 1 à 5.
+**Ce qui le remplace — TRANCHÉ LE 2026-09-10, ADR-034.** La ligne ne porte plus
+que l'échéance OUVERTE : au dépôt d'un rapport elle roule, dans la même
+transaction ; le rapport garde l'échéance qu'il honorait ; `archiveLe` remplace
+le marqueur texte. L'historique, ce sont les rapports — c'est ce que `D. 4711-3`
+fait conserver. La variante « une rangée par occurrence », pratique dominante
+des sept GMAO lues, a été proposée puis écartée après débat : son seul apport
+propre — la trace des échéances manquées — n'est exigé par aucun texte, se
+dérive des rapports, et n'a aucun lecteur. Le passage y reste mécanique si un
+besoin naît. Plan en cinq lots N1–N5 dans l'ADR.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est
