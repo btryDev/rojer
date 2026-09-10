@@ -156,13 +156,18 @@ et tenues par des tests).
 | branche | état |
 | --- | --- |
 | `main` | à jour, déployée en production par Vercel |
-| `worktree-ge4-r-hebergement` | **ne pas fusionner en l'état** — voir ci-dessous |
+| `worktree-ge4-r-hebergement` | remplacée par `ge4r-succession` — voir ci-dessous |
+| `ge4r-succession` | `ge4-r` + les lots 1 à 4 + la déclaration de succession ; **son test rouge exprès est vert** (6/6), 2509 tests, **fusionnable après relecture** |
 | `worktree-sommeil-parcours` | fini, jamais relu ; attend un arbitrage |
 | `garde-fous-tests-2` | trois lots de garde-fous, à relire et fusionner |
 | `garde-fous-tests` | ancienne branche ; ne diffère que par un commit de règle de conduite, à reposer corrigé sur `main` ou à abandonner |
 
-**`worktree-ge4-r-hebergement` ne doit pas être fusionnée avant le lot 2 du
-§ 11.** Le lot est bon sur tout ce que deux revues ont vérifié, mais il **renomme
+**`worktree-ge4-r-hebergement` ne devait pas être fusionnée avant le lot 2 du
+§ 11 — et, on l'a découvert en chemin, pas avant le lot 4 non plus.** Les deux
+sont faits le 2026-09-10 et intégrés dans `ge4r-succession`, où le test
+`continuite-identite.test.ts` passe au vert sans avoir été touché sur le fond
+(une assertion alignée sur celle de son voisin, rien d'autre). Ce qui suit
+décrit ce qui bloquait. Le lot est bon sur tout ce que deux revues ont vérifié, mais il **renomme
 un identifiant d'obligation**, et le calendrier rapproche ses lignes par cet
 identifiant. Fusionner ferait, pour un internat de 4ᵉ catégorie visité en 2025 :
 ligne barrée « Ne s'applique plus », et ligne neuve « à planifier, urgent,
