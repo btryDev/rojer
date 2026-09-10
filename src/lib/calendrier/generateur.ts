@@ -37,10 +37,10 @@
  */
 
 import {
-  PERIODICITE_EN_JOURS,
   type Periodicite,
   type Realisateur,
 } from "@/lib/referentiels/types-communs";
+import { prochaineEcheance } from "./periodicite";
 import { estEnRetard } from "@/lib/dates/retard";
 import {
   MARQUEUR_NON_APPLICABLE,
@@ -252,21 +252,6 @@ type PorteurDeLigne = {
   libelle: string | null;
 };
 
-function ajouterJours(d: Date, jours: number): Date {
-  const out = new Date(d.getTime());
-  out.setDate(out.getDate() + jours);
-  return out;
-}
-
-function prochaineDate(
-  derniere: Date,
-  periodicite: Periodicite,
-): Date | null {
-  const jours = PERIODICITE_EN_JOURS[periodicite];
-  if (jours === null) return null;
-  return ajouterJours(derniere, jours);
-}
-
 /**
  * Génère la prochaine occurrence de vérification pour chaque couple
  * (obligation applicable × équipement déclencheur).
@@ -388,8 +373,9 @@ export function genererProchainesVerifications(
         // attendant, `null` la place à « à planifier », ce qui est juste.
         const miseEnService =
           eq.id === null ? null : (options.misesEnService?.get(eq.id) ?? null);
-        const aVenir =
-          miseEnService !== null && miseEnService.getTime() >= now.getTime();
+        // Règle civile (ADR-011), et non comparaison d'instants : une mise en
+        // service datée d'aujourd'hui est encore « à venir » toute la journée.
+        const aVenir = miseEnService !== null && !estEnRetard(miseEnService, now);
         out.push({
           cleUnique,
           obligationId: o.id,
@@ -410,9 +396,9 @@ export function genererProchainesVerifications(
       }
 
       if (derniere) {
-        const prochaine = prochaineDate(derniere, periodicite);
+        const prochaine = prochaineEcheance(derniere, periodicite);
         if (!prochaine) continue;
-        const estDepassee = prochaine.getTime() < now.getTime();
+        const estDepassee = estEnRetard(prochaine, now);
         out.push({
           cleUnique,
           obligationId: o.id,
@@ -441,10 +427,11 @@ export function genererProchainesVerifications(
         // fait repartir la récurrence, pas le premier délai : la branche
         // au-dessus, qui part du dernier rapport, ne le lit pas.
         const premiere = miseEnService
-          ? prochaineDate(miseEnService, o.premierDelai ?? o.periodicite)
+          ? prochaineEcheance(miseEnService, o.premierDelai ?? o.periodicite)
           : null;
-        const premiereEncoreAVenir =
-          premiere !== null && premiere.getTime() >= now.getTime();
+        // Règle civile (ADR-011) : une première échéance datée d'aujourd'hui
+        // est encore à venir toute la journée.
+        const premiereEncoreAVenir = premiere !== null && !estEnRetard(premiere, now);
 
         out.push({
           cleUnique,
@@ -522,13 +509,18 @@ export function genererVerificationsDepuisTitres(
     if (!estPorteeParSalarie(o)) continue;
 
     for (const t of liste) {
-      const echeance = t.echeanceLe ?? prochaineDate(t.delivreLe, o.periodicite);
+      const echeance = t.echeanceLe ?? prochaineEcheance(t.delivreLe, o.periodicite);
       // Pas d'échéance calculable : l'obligation n'en porte pas (état
       // permanent). Le titre existe, il n'y a simplement pas de rendez-vous à
       // inscrire — inventer une date serait pire que n'en afficher aucune.
       if (echeance === null) continue;
 
-      const depassee = echeance.getTime() < now.getTime();
+      // La MÊME règle que pour un équipement (ADR-011) : une attestation qui
+      // expire aujourd'hui n'est pas en retard ce matin. Le titre comparait des
+      // instants et la ligne d'un salarié rougissait un jour avant celle d'un
+      // appareil — deux règles de retard selon le porteur, constat n°4 de
+      // l'audit du 2026-09-09.
+      const depassee = estEnRetard(echeance, now);
       out.push({
         cleUnique: cleDeLigne(obligationId, {
           equipementId: null,
@@ -1026,7 +1018,7 @@ export function reconcilierCalendrier(
       // fait faire son contrôle voit apparaître une ligne « à planifier »,
       // urgente, pour un acte accompli — c'est le symptôme que ce report
       // existe pour éteindre.
-      const prochaine = prochaineDate(heritee, g.periodicite);
+      const prochaine = prochaineEcheance(heritee, g.periodicite);
       plan.aCreer.push(
         prochaine === null
           ? g
@@ -1069,7 +1061,7 @@ export function reconcilierCalendrier(
       dateRealisee = ex.dateRealisee;
       statut = estStatutRealise(ex.statut) ? ex.statut : g.statut;
     } else if (ex.dateRealisee !== null) {
-      const prochaine = prochaineDate(ex.dateRealisee, g.periodicite);
+      const prochaine = prochaineEcheance(ex.dateRealisee, g.periodicite);
       if (prochaine === null) {
         // Périodicité sans échéance suivante (`mise_en_service_uniquement`,
         // `autre`) : le one-shot est consommé, plus rien à replanifier.
@@ -1100,7 +1092,7 @@ export function reconcilierCalendrier(
       // rapport n'y est attaché — la pièce est restée sur la ligne archivée,
       // qui la conserve (ADR-012). Une ligne ne doit jamais attester d'un acte
       // dont elle ne porte pas la preuve.
-      const prochaine = prochaineDate(heritee, g.periodicite);
+      const prochaine = prochaineEcheance(heritee, g.periodicite);
       datePrevue = prochaine ?? ex.datePrevue;
       dateRealisee = null;
       statut = statutCycleOuvert(datePrevue, ex.statut, now);

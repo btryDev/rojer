@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { cleJourCivil } from "@/lib/dates";
 import type { ObligationApplicable } from "@/lib/matching";
 import {
   porteurDe,
@@ -264,7 +265,7 @@ describe("générateur calendrier — dernière vérif connue", () => {
     expect(res[0].estUrgent).toBe(true);
   });
 
-  it("périodicité quinquennale → prochaine date + 1825 jours", () => {
+  it("périodicité quinquennale → prochaine date le même jour, cinq ans plus tard", () => {
     const o = fakeObligation({ id: "quinq", periodicite: "quinquennale" });
     const eq = fakeEquipement();
     const derniere = new Date("2024-06-01T00:00:00Z");
@@ -275,9 +276,10 @@ describe("générateur calendrier — dernière vérif connue", () => {
       now,
     });
     expect(res[0].statut).toBe("planifiee");
-    const attendu = new Date(derniere.getTime());
-    attendu.setDate(attendu.getDate() + 1825);
-    expect(res[0].datePrevue.getTime()).toBe(attendu.getTime());
+    // Ce test figeait « + 1825 jours », c'est-à-dire le 31 mai 2029 : il
+    // asserterait la dérive qu'il faut corriger. Cinq ans après le 1er juin,
+    // c'est le 1er juin — 2028 est bissextile, et le texte compte en années.
+    expect(cleJourCivil(res[0].datePrevue)).toBe("2029-06-01");
   });
 });
 

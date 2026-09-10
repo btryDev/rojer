@@ -1314,7 +1314,64 @@ ce n'est pas tranché. Sans réponse, ce lot ne démarre pas.
 **Piège** : raisonner « par porteur » au lieu de « par clé » casserait la garantie
 de l'ADR-023 — un test existant le montre.
 
-#### Lot 3 — Un seul classifieur.
+#### Lot 3 — Un seul classifieur. **MOITIÉ FAITE LE 2026-09-10 ; l'autre moitié est SORTIE du lot le même jour — voir « Lot 3 bis ».**
+
+> **CE QUI EST FAIT : le marqueur d'archivage se lit à la racine, et ne se
+> contourne plus.** `VerificationDatee.libelleObligation` est **requis** —
+> l'oubli ne compile pas —, et les trois prédicats de `retard.ts` s'arrêtent sur
+> l'archivage avant de regarder les dates. `classerVerification` rend un état
+> `archivee`, qui traverse les cinq tables de vocabulaire. Retirer l'une ou
+> l'autre garde fait rougir le test qui la nomme.
+>
+> **SEPT SURFACES CONTOURNAIENT LES CLASSIFIEURS, pas deux.** Le brief en citait
+> deux ; une contre-expertise en a trouvé cinq, une contre-contre-expertise a
+> déclassé l'une d'elles, et j'en ai trouvé une septième que ni l'une ni l'autre
+> n'avait vue — `dashboard/recommandations.ts`, qui alimente le **bandeau brief
+> du tableau de bord par défaut** et titre la recommandation avec le libellé,
+> donc « Ne s'applique plus — … » en tête d'écran. Sont corrigés : la fiche de
+> vérification, le serveur MCP (qui rend désormais `ne_s_applique_plus`, un fait
+> et non une qualification de droit), les deux widgets d'échéances, le bandeau
+> de recommandations, et le **registre de sécurité en PDF** — celui-là imprimait
+> une obligation éteinte sous « en attente » dans un document remis en contrôle,
+> pendant que le dossier de conformité du MÊME ZIP l'écartait déjà.
+>
+> **ET LA FICHE PEIGNAIT EN VERT UNE ÉCHÉANCE À VENIR.** Sur un cycle soldé, la
+> ligne dit deux choses — « fait le … » et « prochaine le … » ;
+> `classerVerification` répond sur la LIGNE, donc « faite », et la fiche posait
+> la date du RENDEZ-VOUS avec cet état-là. Texte juste, couleur fausse. C'est
+> mot pour mot le défaut que `lecturesCalendrier` avait supprimé du calendrier
+> en dépliant la ligne, et que la fiche reproduisait. `etatDuRendezVous` répond
+> désormais sur la DATE.
+>
+> **CE QUI RESTE, ET C'EST LA MOITIÉ LA PLUS LOURDE.** `repartirVerifications`
+> ne déplie pas un cycle soldé. Deux conséquences mesurées :
+>
+>  · une ligne réalisée dont le rendez-vous SUIVANT est passé sort de TOUTES ses
+>    catégories — `total = 0` —, donc même du dénominateur du score, pendant que
+>    la grille affiche un rendez-vous rouge ;
+>  · `aVenir` ne peut contenir que des lignes JAMAIS réalisées, puisque la
+>    réconciliation garde `dateRealisee` en avançant `datePrevue`. La pilule
+>    « sous 30 jours » et le PDF sont donc **structurellement** sous-peuplés, pas
+>    seulement en écart avec le calendrier.
+>
+> **La cause n'est PAS celle que j'avais écrite.** J'avais dit « tout vient du
+> `dateRealisee !== null` qui court-circuite les prédicats » : faux. Il y a DEUX
+> gardes, et pour `aVenir` c'est la seconde — `statut !== "planifiee"` — qui
+> tranche, un cycle soldé portant `realisee_*`. Neutraliser la première ne
+> corrigerait ni l'un ni l'autre cas. La formulation juste : les deux
+> classifieurs ne partagent **aucune** définition de « réalisé » ni de « à
+> venir ». Ils ne partageaient que `estVerificationEnRetard`.
+>
+> **Quatre pistes de l'audit ont été écartées après mesure**, et il vaut mieux
+> les savoir mortes que les redécouvrir : un statut réalisé sans date de
+> réalisation n'est écrit par AUCUN code (état de laboratoire) ; une ligne
+> planifiée au-delà de trente jours hors de tout compteur est une **convention
+> documentée**, pas un défaut ; la garde `dateRealisee` n'est pas redondante —
+> elle décide sur un état que la réconciliation produit ; et des « trois
+> définitions d'urgence », une est du code mort et une autre n'est pas une
+> urgence mais l'exclusion voulue des « à planifier » de la grille.
+>
+> Ce qui suit décrit l'état d'avant.
 
 Trois constats, une cause : `repartirVerifications` et `lecturesCalendrier`
 classent la même ligne et se contredisent.
@@ -1328,7 +1385,78 @@ classent la même ligne et se contredisent.
 
 L'ADR-011 promet déjà que toutes les surfaces affichent le même compte.
 
-#### Lot 4 — L'arithmétique des dates.
+#### Lot 3 bis — Le cycle soldé que les compteurs ne déplient pas. **SORTI du lot 3 le 2026-09-10 ; ne se fait PAS comme un lot.**
+
+C'est la seconde moitié du lot 3, détachée par décision de la propriétaire le
+2026-09-10, et la raison du détachement compte plus que le défaut lui-même.
+
+**Le défaut.** Une rangée `Verification` porte à la fois le fait passé
+(`dateRealisee`) et l'échéance à venir (`datePrevue` avancée par la
+réconciliation). Les compteurs de `repartirVerifications` classent sur le fait
+et ne voient jamais l'échéance : une ligne réalisée dont le rendez-vous suivant
+est passé sort de TOUTES ses catégories — `total = 0`, donc du dénominateur du
+score —, pendant que la grille l'affiche en rouge. Et `aVenir` ne peut contenir
+que du jamais-réalisé. Mesuré deux fois, par deux agents.
+
+**Pourquoi ce n'est pas un lot.** La disjonction des quatre compteurs EST la
+garde qui produit le défaut — « une occurrence réalisée est exclue des trois
+premiers », dit le contrat. Corriger l'un revient à renégocier l'autre. Et la
+racine est plus bas que les compteurs : **une rangée qui joue deux rôles** — une
+échéance en cours ET un porteur d'historique. Tous les symptômes du lot 3, une
+part du lot 2 (continuité) et la moitié du lot 5 (« jamais relancé ») en
+descendent. Ajouter un correctif ici serait poser une quatrième couche de
+compensation sur un modèle qu'on sait faux.
+
+**Ce qui le remplace.** Un modèle à **une rangée par occurrence** — une close est
+de l'historique, une ouverte est une échéance —, planifié dans l'ADR-034. C'est
+la pratique standard des systèmes d'échéances récurrentes ; le modèle actuel
+confond l'instance en cours avec l'historique. La décision est de PLANIFIER
+d'abord, sur pièces : lecture exhaustive des lecteurs et des écrivains de
+`Verification`, coût de migration, ce que deviennent les lots 1 à 5.
+
+**Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
+modèle : la réglementation dit « au minimum une fois par an » — l'obligation est
+l'INTERVALLE, pas le souvenir. Une ligne dont l'échéance suivante est passée est
+en retard, quelle que soit la solidité du contrôle précédent. Le score baissera
+pour ces dossiers ; il était faux.
+
+#### ~~Lot 4 — L'arithmétique des dates.~~ FAIT LE 2026-09-10
+
+> **Les fonctions locales sont supprimées, pas corrigées** — c'est ce que le lot
+> demandait. `generateur.ts` ne porte plus ni `ajouterJours` ni `prochaineDate` ;
+> `src/lib/calendrier/periodicite.ts` compose les primitives de `lib/dates`
+> (`ajouterMois`, `ajouterJours`) avec une table **calendaire** du référentiel,
+> `PERIODICITE_CALENDAIRE` : les rythmes que les textes écrivent en mois ou en
+> ans se comptent en mois — le même jour, écrêté en fin de mois —, ceux qu'ils
+> écrivent en jours ou en semaines restent en jours, où la conversion est exacte.
+> `PERIODICITE_EN_JOURS` **reste**, comme ORDRE : `estPeriodicitePlusStricte`
+> compare deux rythmes avec, et une approximation monotone est juste pour
+> ordonner. Sa docstring dit désormais qu'elle ne date rien.
+>
+> **L'assiette de la dérive était fausse dans le brief**, et la contre-expertise
+> du 2026-09-10 l'a mesurée sur 2020-2110 : `triennale` dérivait **trois fois sur
+> quatre**, pas une ; `quadriennale` et `quinquennale` **toujours** (tout
+> intervalle de quatre ou cinq ans contient un 29 février) ; `decennale` de deux à
+> trois jours. Toujours en avance, donc conservateur — ce qui l'a rendue tolérable
+> un mois de trop.
+>
+> **Les deux règles de retard selon le porteur sont une seule règle.** Les quatre
+> comparaisons d'instants du générateur — trois pour l'équipement, une pour le
+> titre de salarié — passent par `estEnRetard` (ADR-011) : une échéance datée
+> d'aujourd'hui n'est jamais en retard, quel que soit le porteur. Et la borne
+> d'horizon du serveur MCP cesse d'être un `setDate` local.
+>
+> **Un test encodait la dérive** : « prochaine date + 1825 jours ». Il asserte
+> maintenant le 1er juin 2029, cinq ans après le 1er juin 2024 — 2028 est
+> bissextile. Et deux de mes propres tests ont d'abord rougi sur un changement
+> d'heure parce qu'ils comparaient des **instants** : le jour civil était juste,
+> l'assertion refaisait l'erreur que l'ADR-011 a fermée. Ils comparent des jours.
+>
+> Mutation : repasser les rythmes longs en jours fait rougir neuf tests.
+> `frise.ts` garde son `JOUR_MS` — géométrie d'écran documentée comme telle, pas
+> une règle métier.
+>
+> Ce qui suit décrit l'état d'avant.
 
 - **dérive d'un jour** sur les périodicités longues : annuelle depuis 2023-03-01 →
   2024-02-29 ; quadriennale toujours un jour trop tôt. ADR-011 promet l'inverse ;

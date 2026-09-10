@@ -10,6 +10,33 @@ import { calculerScoreDepuisEtat } from "@/lib/dashboard/score";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { repartirVerifications } from "./etat-verifications";
+import { estVerificationArchivee } from "@/lib/dates/retard";
+
+/**
+ * Une ligne « en attente » au sens du registre de sécurité : elle n'a pas
+ * encore de rapport, et son obligation s'applique toujours.
+ *
+ * **Le second membre n'est pas une précaution.** Le filtre ne portait que sur
+ * le statut, et le statut d'une ligne archivée reste GELÉ dans son dernier
+ * état connu (ADR-012) : une obligation qui ne s'applique plus entrait donc
+ * dans un document REMIS EN CONTRÔLE, annoncée « en attente ». Le dossier de
+ * conformité, lui, passe par `repartirVerifications` et l'écartait déjà — les
+ * deux PDF du même ZIP se contredisaient sur la même ligne.
+ *
+ * Exporté pour être éprouvé : le reste de `construireRegistreData` demande une
+ * base, ce prédicat non.
+ */
+export function estEnAttenteDeRapport(v: {
+  statut: string;
+  datePrevue: Date;
+  dateRealisee: Date | null;
+  libelleObligation: string;
+}): boolean {
+  return (
+    ["a_planifier", "planifiee", "depassee"].includes(v.statut) &&
+    !estVerificationArchivee(v)
+  );
+}
 import type { LignePlanActions, PlanActionsData } from "./PlanActionsDocument";
 import type {
   FichePdf,
@@ -237,10 +264,16 @@ export async function construireRegistreData(
 
   // « En attente » = tout ce qui n'a pas encore de rapport, quelle que soit
   // la date : c'est le pendant documentaire des rapports listés au-dessus.
+  //
+  // `estVerificationArchivee` N'EST PAS UN DÉTAIL ICI. Le filtre ne portait
+  // que sur le statut, et le statut d'une ligne archivée reste GELÉ dans son
+  // dernier état connu (ADR-012) : une obligation qui ne s'applique plus
+  // entrait donc dans un document REMIS EN CONTRÔLE, annoncée « en attente ».
+  // Le dossier de conformité, lui, passe par `repartirVerifications` et
+  // l'écartait déjà — les deux PDF du même ZIP se contredisaient sur la même
+  // ligne.
   const verifsEnAttente: LigneVerif[] = verifs
-    .filter((v) =>
-      ["a_planifier", "planifiee", "depassee"].includes(v.statut),
-    )
+    .filter(estEnAttenteDeRapport)
     .map((v) => ligneVerif(v, multiBatiments));
 
   // Le registre, fiche par fiche — ce que le document doit être. Il ne

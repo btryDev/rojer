@@ -16,8 +16,8 @@ import type { ResultatVerification } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import {
-  classerVerification,
   classerDate,
+  estRealisee,
   lecturesCalendrier,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
@@ -209,7 +209,6 @@ function comparerParDate(
 export function lignesHistoire(
   eq: FicheEquipement,
   base: string,
-  maintenant: Date,
 ): LigneHistoire[] {
   const lignes: LigneHistoire[] = [];
 
@@ -246,7 +245,12 @@ export function lignesHistoire(
       continue;
     }
 
-    if (classerVerification(v, maintenant) === "faite") {
+    // `estRealisee` et non `classerVerification(...) === "faite"` : depuis que
+    // l'archivage prend le pas dans le CLASSEMENT, une ligne archivée qui
+    // portait une réalisation sortait de l'historique de l'appareil. Or
+    // l'archivage tait ce qui est ATTENDU, jamais ce qui a EU LIEU — c'est la
+    // règle que `lecturesCalendrier` applique déjà en gardant le fait passé.
+    if (estRealisee(v)) {
       lignes.push({
         cle: `v-${v.id}`,
         date: v.dateRealisee ?? v.datePrevue,

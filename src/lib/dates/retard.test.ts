@@ -7,6 +7,7 @@ import {
   estDansLesProchainsJours,
   estEnRetard,
   estVerificationAPlanifier,
+  estVerificationArchivee,
   estVerificationAVenir,
   estVerificationEnRetard,
   joursDeRetard,
@@ -157,7 +158,14 @@ describe("estDansLesProchainsJours", () => {
 // ---------------------------------------------------------------------
 
 function verif(p: Partial<VerificationDatee> = {}): VerificationDatee {
-  return { statut: "planifiee", datePrevue: AUJOURDHUI, dateRealisee: null, ...p };
+  return {
+    statut: "planifiee",
+    datePrevue: AUJOURDHUI,
+    dateRealisee: null,
+    // Nu = ligne ACTIVE. Les cas archivés passent un libellé marqué.
+    libelleObligation: "Vérification périodique",
+    ...p,
+  };
 }
 
 describe("estVerificationEnRetard", () => {
@@ -398,5 +406,69 @@ describe("horloge injectée", () => {
     // paramètre compte : l'échéance du jour reste à l'heure.
     expect(estEnRetard(AUJOURDHUI, CE_MATIN)).toBe(false);
     expect(estActionEnRetard(action(), CE_SOIR)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------
+// Lignes archivées (ADR-012)
+// ---------------------------------------------------------------------
+// Le marqueur d'archivage vit dans le LIBELLÉ, faute de valeur `archivee`
+// dans l'enum Prisma : le statut d'une ligne archivée reste GELÉ dans son
+// dernier état connu. Une ligne gelée sur `depassee` se lisait donc « en
+// retard » à perpétuité — et le champ qui porte le marqueur était OPTIONNEL,
+// donc silencieusement absent chez les sept surfaces qui ne le
+// sélectionnaient pas : la fiche, le serveur MCP, deux widgets, le bandeau
+// de recommandations, le registre de sécurité en PDF. Il est requis
+// désormais, et les prédicats s'arrêtent dessus avant de regarder les dates.
+
+describe("lignes archivées", () => {
+  const ARCHIVEE = "Ne s'applique plus — Vérification du désenfumage";
+
+  it("une ligne archivée n'est jamais en retard, même gelée sur `depassee`", () => {
+    const v = verif({
+      statut: "depassee",
+      datePrevue: HIER,
+      libelleObligation: ARCHIVEE,
+    });
+    expect(estVerificationArchivee(v)).toBe(true);
+    expect(
+      estVerificationEnRetard(v, AUJOURDHUI),
+      "l'obligation ne s'applique plus : annoncer un retard dessus est un mensonge de dossier",
+    ).toBe(false);
+  });
+
+  it("elle n'est ni à planifier, ni à venir", () => {
+    expect(
+      estVerificationAPlanifier(
+        verif({
+          statut: "a_planifier",
+          datePrevue: DEMAIN,
+          libelleObligation: ARCHIVEE,
+        }),
+        AUJOURDHUI,
+      ),
+    ).toBe(false);
+    expect(
+      estVerificationAVenir(
+        verif({
+          statut: "planifiee",
+          datePrevue: DEMAIN,
+          libelleObligation: ARCHIVEE,
+        }),
+        AUJOURDHUI,
+        JOURS_HORIZON_PROCHE,
+      ),
+    ).toBe(false);
+  });
+
+  it("la même ligne NON archivée, elle, est bien en retard", () => {
+    // Le témoin. Sans lui, les cas ci-dessus passeraient tout autant avec un
+    // prédicat qui rendrait `false` pour tout le monde.
+    expect(
+      estVerificationEnRetard(
+        verif({ statut: "depassee", datePrevue: HIER }),
+        AUJOURDHUI,
+      ),
+    ).toBe(true);
   });
 });

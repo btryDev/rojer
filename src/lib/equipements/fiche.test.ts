@@ -171,7 +171,6 @@ describe("lignesHistoire", () => {
         ],
       }),
       "/base",
-      AUJOURDHUI,
     );
     expect(h.map((l) => l.cle)).toEqual(["r-r2", "r-r1", "mise-en-service"]);
   });
@@ -190,7 +189,6 @@ describe("lignesHistoire", () => {
         ],
       }),
       "/base",
-      AUJOURDHUI,
     );
     expect(h.map((l) => l.cle)).toEqual(["r-r1"]);
     // C'est la date du rapport qui date la ligne, pas la date de réalisation.
@@ -210,7 +208,6 @@ describe("lignesHistoire", () => {
         ],
       }),
       "/base",
-      AUJOURDHUI,
     );
     expect(h.map((l) => l.cle)).toEqual(["v-v1"]);
     expect(h[0].detail).toContain("aucun rapport");
@@ -234,7 +231,6 @@ describe("lignesHistoire", () => {
         ],
       }),
       "/base",
-      AUJOURDHUI,
     );
     expect(h.find((l) => l.cle === "r-recent")?.detail).toContain(
       "2 actions correctives",
@@ -254,7 +250,6 @@ describe("lignesHistoire", () => {
         ],
       }),
       "/base",
-      AUJOURDHUI,
     );
     expect(h[0].resultat).toBe("ecart_majeur");
   });

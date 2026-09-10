@@ -14,6 +14,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import {
   compteEtat,
   lecturesCalendrier,
+  type LectureCalendrier,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import {
@@ -28,7 +29,13 @@ export type EtatEquipement = {
   enRetard: number;
   /** La prochaine échéance non faite, la plus proche. Absente quand
    *  l'appareil n'a aucune occurrence à venir. */
-  prochaine: { date: Date; libelle: string; etat: RegistreLigne } | null;
+  prochaine: {
+    date: Date;
+    libelle: string;
+    /** Vient d'une LECTURE de calendrier : `archivee` en est exclu par
+     *  construction — une ligne archivée n'annonce aucun rendez-vous. */
+    etat: LectureCalendrier["registre"];
+  } | null;
   /** La dernière vérification réalisée. Absente = aucune connue, ce qui
    *  n'est pas la même chose que « à jour ». */
   derniere: Date | null;
@@ -232,8 +239,10 @@ export type SignalEquipement = {
 };
 
 export type ResumeEquipement = {
-  /** L'état dominant : champ de la jauge de catégorie, et rang de tri. */
-  etat: RegistreLigne;
+  /** L'état dominant : champ de la jauge de catégorie, et rang de tri.
+   *  `archivee` en est exclu — il ne sort ni des lectures, ni des littéraux
+   *  ci-dessous —, ce qui évite à l'appelant un cas mort à traiter. */
+  etat: LectureCalendrier["registre"];
   /** Les signaux à afficher, du plus urgent au plus calme. Vide quand
    *  aucune vérification n'est rattachée — l'écran le dit alors en clair. */
   signaux: SignalEquipement[];
@@ -264,7 +273,7 @@ export function resumerEquipement(
   ajouter("lointain", etat.aVenir - etat.proches);
   ajouter("faite", etat.faites);
 
-  const dominant: RegistreLigne =
+  const dominant: LectureCalendrier["registre"] =
     etat.enRetard > 0
       ? "enRetard"
       : etat.prochaine

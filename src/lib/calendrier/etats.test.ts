@@ -37,6 +37,9 @@ describe("classerVerification", () => {
     statut: "planifiee",
     datePrevue,
     dateRealisee: null,
+    // Libellé nu = ligne ACTIVE. Le marqueur d'archivage se lit désormais
+    // dans `classerVerification` lui-même, donc le champ est requis.
+    libelleObligation: "Vérification périodique",
   });
 
   it("suit la fenêtre pour une occurrence planifiée", () => {
@@ -53,7 +56,7 @@ describe("classerVerification", () => {
     // ça ne revienne pas.
     expect(
       classerVerification(
-        { statut: "a_planifier", datePrevue: jours(-40), dateRealisee: null },
+        { statut: "a_planifier", datePrevue: jours(-40), dateRealisee: null, libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe("enRetard");
@@ -61,7 +64,7 @@ describe("classerVerification", () => {
     // de génération ne la classe ni proche ni lointaine.
     expect(
       classerVerification(
-        { statut: "a_planifier", datePrevue: jours(10), dateRealisee: null },
+        { statut: "a_planifier", datePrevue: jours(10), dateRealisee: null, libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe("aPlanifier");
@@ -74,6 +77,7 @@ describe("classerVerification", () => {
           statut: "realisee_conforme",
           datePrevue: jours(-40),
           dateRealisee: jours(-2),
+          libelleObligation: "Vérification périodique",
         },
         NOW,
       ),
@@ -85,6 +89,7 @@ describe("classerVerification", () => {
           statut: "realisee_ecart_majeur",
           datePrevue: jours(-40),
           dateRealisee: null,
+          libelleObligation: "Vérification périodique",
         },
         NOW,
       ),
@@ -96,7 +101,7 @@ describe("classerVerification", () => {
     // soit la date affichée — même règle que `estVerificationEnRetard`.
     expect(
       classerVerification(
-        { statut: "depassee", datePrevue: jours(5), dateRealisee: null },
+        { statut: "depassee", datePrevue: jours(5), dateRealisee: null, libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe("enRetard");
@@ -112,7 +117,7 @@ describe("aUnRendezVous", () => {
     // Sa `datePrevue` est la date de GÉNÉRATION — ici, aujourd'hui même.
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: NOW, dateRealisee: null },
+        { statut: "a_planifier", datePrevue: NOW, dateRealisee: null, libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe(false);
@@ -123,7 +128,7 @@ describe("aUnRendezVous", () => {
     // la fiche se trompait, et pas seulement sur la date du jour.
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: jours(10), dateRealisee: null },
+        { statut: "a_planifier", datePrevue: jours(10), dateRealisee: null, libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe(false);
@@ -134,7 +139,7 @@ describe("aUnRendezVous", () => {
     for (const d of [jours(1), jours(10), jours(200)]) {
       expect(
         aUnRendezVous(
-          { statut: "planifiee", datePrevue: d, dateRealisee: null },
+          { statut: "planifiee", datePrevue: d, dateRealisee: null, libelleObligation: "Vérification périodique" },
           NOW,
         ),
       ).toBe(true);
@@ -146,7 +151,7 @@ describe("aUnRendezVous", () => {
     // classe « enRetard », et la fiche doit continuer d'afficher son retard.
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: jours(-3), dateRealisee: null },
+        { statut: "a_planifier", datePrevue: jours(-3), dateRealisee: null, libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe(true);
@@ -161,6 +166,7 @@ describe("lecturesCalendrier", () => {
           statut: "planifiee",
           datePrevue: jours(10),
           dateRealisee: null,
+          libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
         NOW,
@@ -174,6 +180,7 @@ describe("lecturesCalendrier", () => {
           statut: "a_planifier",
           datePrevue: jours(60),
           dateRealisee: null,
+          libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
         NOW,
@@ -196,6 +203,7 @@ describe("lecturesCalendrier", () => {
           statut: "realisee_conforme",
           datePrevue: jours(300),
           dateRealisee: jours(-65),
+          libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
         NOW,
@@ -212,6 +220,7 @@ describe("lecturesCalendrier", () => {
         statut: "realisee_conforme",
         datePrevue: jours(20),
         dateRealisee: jours(-345),
+        libelleObligation: "Vérification périodique",
         periodicite: "annuelle",
       },
       NOW,
@@ -232,6 +241,7 @@ describe("lecturesCalendrier", () => {
           statut: "realisee_conforme",
           datePrevue: jours(30),
           dateRealisee: jours(-3),
+          libelleObligation: "Vérification périodique",
           periodicite: "mise_en_service_uniquement",
         },
         NOW,
@@ -250,6 +260,7 @@ describe("lecturesCalendrier", () => {
           statut: "realisee_observations",
           datePrevue: jours(-40),
           dateRealisee: null,
+          libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
         NOW,
@@ -330,6 +341,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
           statut: "planifiee",
           datePrevue: jours(10),
           dateRealisee: null,
+          libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
         NOW,

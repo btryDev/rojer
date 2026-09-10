@@ -100,7 +100,10 @@ export default async function EquipementDetailPage({
   const maintenant = new Date();
 
   const aFaire = lignesAFaire(eq, base, maintenant);
-  const histoire = lignesHistoire(eq, base, maintenant);
+  // Plus d'horloge : l'historique ne classe plus, il constate. Depuis que
+  // l'archivage prend le pas dans `classerVerification`, cette liste teste le
+  // FAIT (`estRealisee`) et non l'état du jour.
+  const histoire = lignesHistoire(eq, base);
   const obligations = obligationsDeLEquipement(eq);
 
   // Ce qui vise cet appareil sans jamais tomber à une date. Lu au MOTEUR et

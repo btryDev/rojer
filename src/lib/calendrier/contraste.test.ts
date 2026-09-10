@@ -87,6 +87,8 @@ describe("contraste des couples champ/encre", () => {
     lointain: 3.82, // mesuré 3,8201. Le plus bas des cinq.
     faite: 4.5, // mesuré 6,40
     aPlanifier: 4.5, // mesuré 6,02
+    // Même couple que `aPlanifier` — l'ardoise éteinte —, donc même plancher.
+    archivee: 4.5,
   };
 
   it("chaque encre est lisible sur son propre champ", () => {

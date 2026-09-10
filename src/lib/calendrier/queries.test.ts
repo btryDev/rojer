@@ -180,6 +180,11 @@ describe("compterEtatCalendrier", () => {
     datePrevue: jour(datePrevue),
     dateRealisee: dateRealisee ? jour(dateRealisee) : null,
     salarieId,
+    // Le mock rend la ligne telle quelle : sans ce champ, le prédicat
+    // d'archivage n'a rien à lire et la lecture échoue. C'est voulu — le
+    // `select` de production l'emporte, et un jour où il cesserait de le
+    // faire, ce test le dirait plutôt que de compter faux en silence.
+    libelleObligation: "Vérification périodique",
   });
 
   it("partitionne en quatre ensembles disjoints", async () => {

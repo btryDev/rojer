@@ -26,12 +26,14 @@ import { evaluerEtatDuerp, type EtatDuerp } from "@/lib/dashboard/duerp";
 import {
   estActionEnRetard,
   estVerificationAPlanifier,
+  estVerificationArchivee,
   estVerificationAVenir,
   estVerificationEnRetard,
+  type VerificationDatee,
   joursDeRetard,
   STATUTS_ACTION_OUVERTE,
 } from "@/lib/dates/retard";
-import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
+import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
 import { prismaMcp } from "./prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
@@ -324,12 +326,21 @@ export type EtatVerification =
   | "a_planifier"
   | "a_venir"
   | "realisee"
-  | "planifiee";
+  | "planifiee"
+  /**
+   * L'obligation ne s'applique plus ; la ligne n'est conservée que pour la
+   * preuve qu'elle porte (ADR-012). C'est un FAIT de l'application, pas une
+   * qualification juridique — les instructions du serveur l'interdisent — et
+   * il fallait le rendre : sans lui, une ligne archivée gelée sur `depassee`
+   * était restituée « en retard » à un assistant, qui le répétait au
+   * dirigeant sur une obligation éteinte.
+   */
+  | "ne_s_applique_plus";
 
-function etatDe(
-  v: { statut: string; datePrevue: Date; dateRealisee: Date | null },
-  now: Date,
-): EtatVerification {
+function etatDe(v: VerificationDatee, now: Date): EtatVerification {
+  // EN PREMIER, avant même le réalisé : une ligne archivée peut porter une
+  // réalisation, et « réalisée » laisserait croire qu'elle compte encore.
+  if (estVerificationArchivee(v)) return "ne_s_applique_plus";
   if (v.dateRealisee !== null) return "realisee";
   if (estVerificationEnRetard(v, now)) return "en_retard";
   if (estVerificationAPlanifier(v, now)) return "a_planifier";
@@ -371,7 +382,14 @@ export async function listerEquipements(
       dateMiseEnService: true,
       actif: true,
       verifications: {
-        select: { statut: true, datePrevue: true, dateRealisee: true },
+        // `libelleObligation` sert le marqueur d'archivage, pas l'affichage :
+        // sans lui, `etatDe` lit une ligne éteinte comme une ligne vivante.
+        select: {
+          statut: true,
+          datePrevue: true,
+          dateRealisee: true,
+          libelleObligation: true,
+        },
       },
     },
     }),
@@ -478,7 +496,14 @@ export async function listerVerifications(
     dateRealisee: v.dateRealisee,
     statut: v.statut,
     etat: etatDe(v, now),
-    joursRetard: v.dateRealisee ? 0 : joursDeRetard(v.datePrevue, now),
+    // ZÉRO POUR UNE LIGNE ARCHIVÉE, et pas seulement pour une ligne réalisée.
+    // `etatDe` a été rendu conscient de l'archivage, ce champ-ci ne l'était
+    // pas — et `formaterVerifications` imprime LES DEUX. L'assistant recevait
+    // « Ne s'applique plus — …, ne s'applique plus, 240 jour(s) de retard ».
+    joursRetard:
+      v.dateRealisee || estVerificationArchivee(v)
+        ? 0
+        : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),
   }));
 
@@ -497,9 +522,17 @@ export async function listerVerifications(
   }
 
   if (filtres.horizonJours !== undefined) {
-    const borne = new Date(now);
-    borne.setDate(borne.getDate() + filtres.horizonJours);
-    lues = lues.filter((v) => v.dateRealisee === null && v.datePrevue <= borne);
+    // `ajouterJours` et non `setDate` : la borne est un jour CIVIL à Paris,
+    // pas un instant décalé d'une heure à chaque changement d'heure (ADR-011).
+    const borne = ajouterJours(now, filtres.horizonJours);
+    // Une obligation éteinte n'a pas d'échéance « à venir » : sans ce test,
+    // elle remontait dans les prochaines échéances rendues à l'assistant.
+    lues = lues.filter(
+      (v) =>
+        v.dateRealisee === null &&
+        !estVerificationArchivee(v) &&
+        v.datePrevue <= borne,
+    );
   }
 
   return lues;

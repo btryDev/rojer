@@ -385,6 +385,9 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   a_venir: "à venir",
   planifiee: "planifiée",
   realisee: "réalisée",
+  // Dit ce que l'application constate, sans le qualifier en droit : le
+  // serveur rend des faits, jamais de conclusion (cf. ses instructions).
+  ne_s_applique_plus: "ne s'applique plus",
 };
 
 function formaterVerifications(verifs: VerificationLue[]): string {

@@ -17,6 +17,7 @@
 // `new Date()` ici. Cf. ADR-011.
 
 import { debutDuJour, joursCivilsEntre } from "./index";
+import { estMarqueeNonApplicable } from "@/lib/calendrier/marqueur";
 
 // ---------------------------------------------------------------------
 // Primitives
@@ -72,7 +73,33 @@ export type VerificationDatee = {
   statut: string;
   datePrevue: Date;
   dateRealisee: Date | null;
+  /**
+   * **Requis, et c'est tout l'objet du champ.** Il porte le marqueur
+   * d'archivage (ADR-012) : une ligne dont l'obligation ne s'applique plus
+   * garde son statut GELÉ dans son dernier état connu, faute de valeur
+   * `archivee` dans l'enum Prisma. Sans ce champ, les prédicats ci-dessous
+   * lisent une ligne archivée gelée sur `depassee` comme un retard réel.
+   *
+   * Il était optionnel, et sept surfaces s'en dispensaient — la fiche de
+   * vérification, le serveur MCP, deux widgets, le bandeau de
+   * recommandations, le registre de sécurité en PDF. Chacune annonçait un
+   * retard sur une obligation éteinte, et le PDF l'imprimait dans un
+   * document remis en contrôle. Requis, l'oubli ne compile pas.
+   */
+  libelleObligation: string;
 };
+
+/**
+ * La ligne est-elle ARCHIVÉE, c'est-à-dire conservée pour la preuve qu'elle
+ * porte alors que son obligation ne s'applique plus ?
+ *
+ * Une ligne archivée ne réclame rien : ni retard, ni rendez-vous, ni
+ * planification. Les trois prédicats ci-dessous s'arrêtent dessus, en
+ * premier — avant même de regarder les dates.
+ */
+export function estVerificationArchivee(v: VerificationDatee): boolean {
+  return estMarqueeNonApplicable(v.libelleObligation);
+}
 
 /** Statuts marquant une occurrence comme réalisée — le rapport existe,
  *  l'échéance est purgée quelle que soit la date. */
@@ -109,6 +136,7 @@ export function estVerificationEnRetard(
   v: VerificationDatee,
   now: Date,
 ): boolean {
+  if (estVerificationArchivee(v)) return false;
   if (v.dateRealisee !== null) return false;
   if (STATUTS_REALISES.has(v.statut)) return false;
   if (v.statut === "depassee") return true;
@@ -131,6 +159,7 @@ export function estVerificationAPlanifier(
   v: VerificationDatee,
   now: Date,
 ): boolean {
+  if (estVerificationArchivee(v)) return false;
   if (v.dateRealisee !== null) return false;
   if (v.statut !== "a_planifier") return false;
   return !estEnRetard(v.datePrevue, now);
@@ -147,6 +176,7 @@ export function estVerificationAVenir(
   now: Date,
   jours: number,
 ): boolean {
+  if (estVerificationArchivee(v)) return false;
   if (v.dateRealisee !== null) return false;
   if (v.statut !== "planifiee") return false;
   return estDansLesProchainsJours(v.datePrevue, now, jours);

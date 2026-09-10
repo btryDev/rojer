@@ -24,7 +24,7 @@ import {
   estActionEnRetard,
   estVerificationEnRetard,
 } from "@/lib/dates/retard";
-import { aUnRendezVous, classerVerification } from "@/lib/calendrier/etats";
+import { aUnRendezVous, etatDuRendezVous } from "@/lib/calendrier/etats";
 import {
   FAMILLE_DE_TYPE,
   typeDeVerification,
@@ -146,7 +146,10 @@ export default async function VerificationDetailPage({
    * écrans, deux vérités sur une seule ligne, et c'est la fiche qui avait
    * tort : elle prenait la date de génération pour un rendez-vous.
    */
-  const etat = classerVerification(v, aujourdhui);
+  // `etatDuRendezVous` et non `classerVerification` : la tuile porte la DATE
+  // DU RENDEZ-VOUS, donc l'état de cette date-là. Sur un cycle soldé, la
+  // seconde rend « faite » et peignait en vert une échéance à venir.
+  const etat = etatDuRendezVous(v, aujourdhui);
   const sansRendezVous = !aUnRendezVous(v, aujourdhui);
 
   const urgent =
