@@ -1126,6 +1126,14 @@ sur une quarantaine de revues, aucune ne l'avait prise pour sujet, alors que le
 moteur de matching a été audité quatre fois. On avait beaucoup vérifié *ce qui
 s'applique*, et jamais *ce que devient une ligne déjà posée*.
 
+> **AMENDÉ LE 2026-09-10.** Le verdict ci-dessous porte sur la LOGIQUE du
+> réconciliateur, et il tient. Aucune des quatre passes n'a questionné le MODÈLE
+> qu'il réconcilie — une rangée qui est à la fois une échéance et un historique —
+> d'où descendent tous les constats du lot 3, une part du lot 2 et la moitié du
+> lot 5. L'ADR-034 propose ce changement-là, et il attend la propriétaire.
+> « Pas de refonte » ne veut pas dire « le modèle est bon » : le modèle n'a pas
+> été mesuré.
+
 **Le verdict d'ensemble, et il compte autant que la liste : pas de refonte.** Le
 cœur — la logique qui décide garder / créer / archiver / supprimer — est juste et
 tenu : dix garde-fous purs sur onze rougissent quand on les casse, l'idempotence
