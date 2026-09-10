@@ -13,6 +13,10 @@ function verif(
     statut,
     datePrevue: new Date(datePrevueIso),
     dateRealisee: dateRealiseeIso === null ? null : new Date(dateRealiseeIso),
+    // Requis depuis que le marqueur d'archivage se lit à la racine des
+    // prédicats. Nu = ligne ACTIVE ; le cas archivé a son propre test, qui
+    // passe un libellé marqué.
+    libelleObligation: "Vérification périodique",
   };
 }
 

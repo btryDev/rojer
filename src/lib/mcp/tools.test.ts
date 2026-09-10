@@ -270,9 +270,19 @@ describe("équipements et calendrier", () => {
         actif: true,
         verifications: [
           // Échéance passée, non réalisée : en retard.
-          { statut: "planifiee", datePrevue: jour("2026-07-01"), dateRealisee: null },
+          {
+            statut: "planifiee",
+            datePrevue: jour("2026-07-01"),
+            dateRealisee: null,
+            libelleObligation: "Vérification périodique",
+          },
           // Échéance du jour même : jamais en retard.
-          { statut: "planifiee", datePrevue: jour("2026-08-10"), dateRealisee: null },
+          {
+            statut: "planifiee",
+            datePrevue: jour("2026-08-10"),
+            dateRealisee: null,
+            libelleObligation: "Vérification périodique",
+          },
         ],
       },
     ]);

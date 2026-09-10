@@ -17,10 +17,11 @@
 import {
   estDansLesProchainsJours,
   estEnRetard,
+  estVerificationArchivee,
   estVerificationEnRetard,
+  type VerificationDatee,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
-import { estMarqueeNonApplicable } from "./marqueur";
 import { PERIODICITE_EN_JOURS } from "@/lib/referentiels/types-communs";
 
 /**
@@ -43,7 +44,7 @@ export type EtatEcheance = "enRetard" | "proche" | "lointain" | "faite";
  * (la date qu'il porte est une date de génération, pas un rendez-vous),
  * mais une ligne de liste doit bien l'afficher.
  */
-export type RegistreLigne = EtatEcheance | "aPlanifier";
+export type RegistreLigne = EtatEcheance | "aPlanifier" | "archivee";
 
 /**
  * Urgence relative, pour trancher quand une case ne peut porter qu'un
@@ -65,6 +66,9 @@ export const PRIORITE_ETAT: Record<EtatEcheance, number> = {
 export const TON_REGISTRE: Record<RegistreLigne, "alerte" | "warn" | "ok"> = {
   enRetard: "alerte",
   aPlanifier: "warn",
+  // Archivée : rien à signaler. Ni alerte — l'obligation ne s'applique plus —,
+  // ni warn — il n'y a rien à planifier.
+  archivee: "ok",
   proche: "ok",
   lointain: "ok",
   faite: "ok",
@@ -77,6 +81,10 @@ export const CHAMP_ETAT: Record<RegistreLigne, string> = {
   lointain: "var(--board-blue-soft)",
   faite: "var(--board-green)",
   aPlanifier: "var(--board-slate-pale)",
+  // L'ardoise éteinte, comme « à planifier » : ni vert (ce serait
+  // s'attribuer une conformité), ni rose (ce serait annoncer un retard sur
+  // ce qui n'est plus dû).
+  archivee: "var(--board-slate-pale)",
 };
 
 /** Encre lisible sur le champ correspondant. Jamais de blanc sur le rose. */
@@ -86,6 +94,7 @@ export const ENCRE_ETAT: Record<RegistreLigne, string> = {
   lointain: "var(--board-blue-ink)",
   faite: "var(--board-green-ink)",
   aPlanifier: "var(--board-slate-mid)",
+  archivee: "var(--board-slate-mid)",
 };
 
 /**
@@ -160,6 +169,10 @@ export const LIBELLE_ETAT: Record<
   },
   faite: { un: "faite", plusieurs: "faites" },
   aPlanifier: { un: "à planifier", plusieurs: "à planifier" },
+  archivee: {
+    un: "ne s'applique plus",
+    plusieurs: "ne s'appliquent plus",
+  },
 };
 
 /**
@@ -175,6 +188,7 @@ export const LIBELLE_ETAT_COURT: Record<RegistreLigne, string> = {
   lointain: "au-delà",
   faite: "faites",
   aPlanifier: "à planif.",
+  archivee: "sans objet",
 };
 
 /** « 1 dépassée », « 5 dépassées » — le compte et son mot, accordés. */
@@ -227,9 +241,16 @@ export function classerDate(
  * calendrier contredisait les trois autres surfaces.
  */
 export function classerVerification(
-  v: { statut: string; datePrevue: Date; dateRealisee: Date | null },
+  v: VerificationDatee,
   now: Date,
 ): RegistreLigne {
+  // EN PREMIER, avant même le réalisé. Une ligne archivée ne réclame plus
+  // rien : son obligation ne s'applique plus, on ne la garde que pour la
+  // preuve qu'elle porte. Son statut, lui, reste gelé dans son dernier état
+  // connu (ADR-012), si bien qu'une ligne gelée sur `depassee` se lisait
+  // « en retard » à perpétuité — sur la fiche de la ligne, dans le serveur
+  // MCP, et dans le registre de sécurité remis en contrôle.
+  if (estVerificationArchivee(v)) return "archivee";
   if (v.dateRealisee !== null || v.statut.startsWith("realisee")) {
     return "faite";
   }
@@ -253,11 +274,41 @@ export function classerVerification(
  * « prochaine échéance » à la date de génération et « échéance aujourd'hui ».
  * Chacun avait sa propre lecture de `datePrevue` ; ils n'en ont plus qu'une.
  */
-export function aUnRendezVous(
-  v: { statut: string; datePrevue: Date; dateRealisee: Date | null },
+/**
+ * L'état à peindre À CÔTÉ de `datePrevue` — celui du RENDEZ-VOUS, pas celui
+ * de la ligne.
+ *
+ * LA DISTINCTION N'EST PAS COSMÉTIQUE, et le calendrier l'a déjà payée. Quand
+ * un cycle est soldé, la même ligne dit DEUX choses : « fait le 22/01/2026 »
+ * et « prochaine échéance le 22/01/2027 ». `classerVerification` répond sur la
+ * LIGNE, donc « faite » — et une tuile qui affiche la date du rendez-vous en
+ * la peignant de cet état-là annonce un contrôle fait un an à l'avance.
+ *
+ * C'est mot pour mot le défaut que `lecturesCalendrier` a supprimé du
+ * calendrier en dépliant la ligne en deux événements. La fiche de vérification
+ * ne dépliait pas : elle posait la date du rendez-vous avec l'état de la
+ * ligne, et affichait donc une tuile verte « faite » sur une échéance à venir.
+ * Texte juste, couleur fausse.
+ */
+export function etatDuRendezVous(
+  v: VerificationDatee,
   now: Date,
-): boolean {
-  return classerVerification(v, now) !== "aPlanifier";
+): RegistreLigne {
+  const classe = classerVerification(v, now);
+  if (classe !== "faite") return classe;
+  // Cycle soldé dont la réconciliation a déjà avancé la date : `datePrevue`
+  // est le rendez-vous SUIVANT, et il se classe comme n'importe quelle date.
+  if (v.dateRealisee !== null && v.datePrevue.getTime() > v.dateRealisee.getTime()) {
+    return classerDate(v.datePrevue, now);
+  }
+  return classe;
+}
+
+export function aUnRendezVous(v: VerificationDatee, now: Date): boolean {
+  const classe = classerVerification(v, now);
+  // Une ligne archivée n'a pas de rendez-vous non plus : ce qu'elle porte est
+  // un passé conservé, pas un engagement à venir.
+  return classe !== "aPlanifier" && classe !== "archivee";
 }
 
 /**
@@ -266,7 +317,14 @@ export function aUnRendezVous(
  */
 export type LectureCalendrier = {
   date: Date;
-  registre: RegistreLigne;
+  /**
+   * `archivee` en est exclu, et le type le dit plutôt que de le laisser
+   * deviner : une lecture est un événement à POSER sur un calendrier, et une
+   * ligne archivée n'en produit aucun — `lecturesCalendrier` rend une liste
+   * vide. Sans cette exclusion, cinq écrans devraient traiter un cas qui ne
+   * peut pas leur arriver.
+   */
+  registre: Exclude<RegistreLigne, "archivee">;
   /**
    * `courante` — le cycle n'est pas soldé, la ligne se lit telle quelle ;
    * `realisation` — le contrôle fait, posé au jour où il l'a été ;
@@ -293,16 +351,7 @@ export type LectureCalendrier = {
  * `datePrevue` est l'ancienne échéance, pas un engagement.
  */
 export function lecturesCalendrier(
-  v: {
-    statut: string;
-    datePrevue: Date;
-    dateRealisee: Date | null;
-    periodicite: string;
-    /** Le libellé porte le marqueur d'archivage (ADR-012) quand
-     *  l'obligation ne s'applique plus. Facultatif : les appelants qui ne
-     *  l'ont pas sous la main lisent la ligne comme active. */
-    libelleObligation?: string;
-  },
+  v: VerificationDatee & { periodicite: string },
   now: Date,
 ): LectureCalendrier[] {
   // Une ligne archivée n'annonce plus rien. Son statut est **gelé** dans son
@@ -312,13 +361,25 @@ export function lecturesCalendrier(
   // l'établissement a cessé d'être ERP — affichait « une vérification est
   // attendue dans 120 jours », et la ligne « Ne s'applique plus — » se
   // rangeait sous « À faire ». Le fait passé, lui, reste : c'est une preuve.
-  const archivee = v.libelleObligation
-    ? estMarqueeNonApplicable(v.libelleObligation)
-    : false;
-
+  // Le test d'archivage vit désormais dans `classerVerification`, avec les
+  // autres. Il était ici, et il y était SEUL : les six autres surfaces qui
+  // classent une ligne ne le faisaient pas, et le champ dont il dépend était
+  // optionnel — donc silencieusement absent chez qui ne le sélectionnait pas.
   const classe = classerVerification(v, now);
+  const archivee = classe === "archivee";
+
+  // UNE LIGNE ARCHIVÉE GARDE SON FAIT PASSÉ, et lui seul. Sans réalisation,
+  // elle n'a rien à montrer ; avec, ce qu'elle montre est une PREUVE, et une
+  // preuve ne s'efface pas parce que l'obligation a cessé de s'appliquer.
+  // C'est le seul point où l'archivage ne se contente pas de taire la ligne.
+  if (archivee) {
+    if (v.dateRealisee === null) return [];
+    return [
+      { date: v.dateRealisee, registre: "faite", lecture: "realisation" },
+    ];
+  }
+
   if (classe !== "faite") {
-    if (archivee) return [];
     return [{ date: v.datePrevue, registre: classe, lecture: "courante" }];
   }
 
@@ -334,7 +395,6 @@ export function lecturesCalendrier(
     (PERIODICITE_EN_JOURS as Record<string, number | null>)[v.periodicite] !=
     null;
   if (
-    !archivee &&
     cyclique &&
     v.dateRealisee !== null &&
     v.datePrevue.getTime() > v.dateRealisee.getTime()

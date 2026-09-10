@@ -402,7 +402,9 @@ export default async function CalendrierPage({
         genre: "verif";
         date: Date;
         v: (typeof verifsBruts)[number];
-        registre: RegistreLigne;
+        // Le registre d'une LECTURE, pas d'une ligne : `archivee` en est
+        // exclu par construction (`lecturesCalendrier` n'en produit aucune).
+        registre: LectureCalendrier["registre"];
         lecture: LectureCalendrier["lecture"];
       }
     | { genre: "autre"; date: Date; e: EcheanceCalendrier };

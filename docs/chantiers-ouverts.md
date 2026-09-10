@@ -1314,7 +1314,64 @@ ce n'est pas tranché. Sans réponse, ce lot ne démarre pas.
 **Piège** : raisonner « par porteur » au lieu de « par clé » casserait la garantie
 de l'ADR-023 — un test existant le montre.
 
-#### Lot 3 — Un seul classifieur.
+#### Lot 3 — Un seul classifieur. **MOITIÉ FAITE LE 2026-09-10 ; le cadrage ci-dessous était faux des deux bouts.**
+
+> **CE QUI EST FAIT : le marqueur d'archivage se lit à la racine, et ne se
+> contourne plus.** `VerificationDatee.libelleObligation` est **requis** —
+> l'oubli ne compile pas —, et les trois prédicats de `retard.ts` s'arrêtent sur
+> l'archivage avant de regarder les dates. `classerVerification` rend un état
+> `archivee`, qui traverse les cinq tables de vocabulaire. Retirer l'une ou
+> l'autre garde fait rougir le test qui la nomme.
+>
+> **SEPT SURFACES CONTOURNAIENT LES CLASSIFIEURS, pas deux.** Le brief en citait
+> deux ; une contre-expertise en a trouvé cinq, une contre-contre-expertise a
+> déclassé l'une d'elles, et j'en ai trouvé une septième que ni l'une ni l'autre
+> n'avait vue — `dashboard/recommandations.ts`, qui alimente le **bandeau brief
+> du tableau de bord par défaut** et titre la recommandation avec le libellé,
+> donc « Ne s'applique plus — … » en tête d'écran. Sont corrigés : la fiche de
+> vérification, le serveur MCP (qui rend désormais `ne_s_applique_plus`, un fait
+> et non une qualification de droit), les deux widgets d'échéances, le bandeau
+> de recommandations, et le **registre de sécurité en PDF** — celui-là imprimait
+> une obligation éteinte sous « en attente » dans un document remis en contrôle,
+> pendant que le dossier de conformité du MÊME ZIP l'écartait déjà.
+>
+> **ET LA FICHE PEIGNAIT EN VERT UNE ÉCHÉANCE À VENIR.** Sur un cycle soldé, la
+> ligne dit deux choses — « fait le … » et « prochaine le … » ;
+> `classerVerification` répond sur la LIGNE, donc « faite », et la fiche posait
+> la date du RENDEZ-VOUS avec cet état-là. Texte juste, couleur fausse. C'est
+> mot pour mot le défaut que `lecturesCalendrier` avait supprimé du calendrier
+> en dépliant la ligne, et que la fiche reproduisait. `etatDuRendezVous` répond
+> désormais sur la DATE.
+>
+> **CE QUI RESTE, ET C'EST LA MOITIÉ LA PLUS LOURDE.** `repartirVerifications`
+> ne déplie pas un cycle soldé. Deux conséquences mesurées :
+>
+>  · une ligne réalisée dont le rendez-vous SUIVANT est passé sort de TOUTES ses
+>    catégories — `total = 0` —, donc même du dénominateur du score, pendant que
+>    la grille affiche un rendez-vous rouge ;
+>  · `aVenir` ne peut contenir que des lignes JAMAIS réalisées, puisque la
+>    réconciliation garde `dateRealisee` en avançant `datePrevue`. La pilule
+>    « sous 30 jours » et le PDF sont donc **structurellement** sous-peuplés, pas
+>    seulement en écart avec le calendrier.
+>
+> **La cause n'est PAS celle que j'avais écrite.** J'avais dit « tout vient du
+> `dateRealisee !== null` qui court-circuite les prédicats » : faux. Il y a DEUX
+> gardes, et pour `aVenir` c'est la seconde — `statut !== "planifiee"` — qui
+> tranche, un cycle soldé portant `realisee_*`. Neutraliser la première ne
+> corrigerait ni l'un ni l'autre cas. La formulation juste : les deux
+> classifieurs ne partagent **aucune** définition de « réalisé » ni de « à
+> venir ». Ils ne partageaient que `estVerificationEnRetard`.
+>
+> **Quatre pistes de l'audit ont été écartées après mesure**, et il vaut mieux
+> les savoir mortes que les redécouvrir : un statut réalisé sans date de
+> réalisation n'est écrit par AUCUN code (état de laboratoire) ; une ligne
+> planifiée au-delà de trente jours hors de tout compteur est une **convention
+> documentée**, pas un défaut ; la garde `dateRealisee` n'est pas redondante —
+> elle décide sur un état que la réconciliation produit ; et des « trois
+> définitions d'urgence », une est du code mort et une autre n'est pas une
+> urgence mais l'exclusion voulue des « à planifier » de la grille.
+>
+> Ce qui suit décrit l'état d'avant.
 
 Trois constats, une cause : `repartirVerifications` et `lecturesCalendrier`
 classent la même ligne et se contredisent.

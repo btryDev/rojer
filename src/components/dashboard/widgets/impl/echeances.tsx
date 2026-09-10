@@ -36,15 +36,23 @@ import type { DashboardBundle } from "../types";
 function classifier(
   statut: string,
   datePrevue: Date,
+  libelleObligation: string,
   aujourdhui: Date,
 ): { tone: "alerte" | "warn" | "ok"; libelleDate: string } {
   // Même prédicat que partout ailleurs (ADR-011) : le retard commence à
   // minuit, heure de Paris, du jour qui suit l'échéance — et c'est la
   // date qui le décide, pas le statut. La liste ne porte que des
   // occurrences non réalisées.
+  //
+  // `libelleObligation` n'est pas décoratif : il porte le marqueur
+  // d'archivage. La requête qui alimente ce widget filtre sur le statut et
+  // ne le regarde pas, si bien qu'une ligne archivée gelée sur `depassee`
+  // arrivait ici — et, triée par date croissante, arrivait EN TÊTE, sa date
+  // étant la plus ancienne. Elle s'affichait en alerte, titrée « Ne
+  // s'applique plus — … ».
   if (
     estVerificationEnRetard(
-      { statut, datePrevue, dateRealisee: null },
+      { statut, datePrevue, dateRealisee: null, libelleObligation },
       aujourdhui,
     )
   ) {
@@ -105,7 +113,7 @@ export function WidgetProchainesEcheances({
     >
       <ul className="m-0 mt-1 flex list-none flex-col p-0">
         {prochainesVerifs.map((v, i) => {
-          const c = classifier(v.statut, v.datePrevue, aujourdhui);
+          const c = classifier(v.statut, v.datePrevue, v.libelleObligation, aujourdhui);
           // Les trois états que cette liste sait montrer, pris à la table
           // unique : un couple champ/encre réinventé ici a déjà rendu un
           // « à venir » rose dans un écran sur trois.
@@ -230,7 +238,7 @@ function TimelineEcheances({
         </div>
         {/* Markers des échéances */}
         {verifs.map((v) => {
-          const c = classifier(v.statut, v.datePrevue, aujourdhui);
+          const c = classifier(v.statut, v.datePrevue, v.libelleObligation, aujourdhui);
           const left =
             ((v.datePrevue.getTime() - minPasse) / span) * 100;
           const color =
@@ -266,7 +274,7 @@ function TimelineEcheances({
       {/* Légende / liste compacte */}
       <ul className="flex flex-col gap-1.5">
         {verifs.slice(0, 5).map((v) => {
-          const c = classifier(v.statut, v.datePrevue, aujourdhui);
+          const c = classifier(v.statut, v.datePrevue, v.libelleObligation, aujourdhui);
           const dotColor =
             c.tone === "alerte"
               ? CHAMP_ETAT.enRetard

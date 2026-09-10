@@ -26,8 +26,10 @@ import { evaluerEtatDuerp, type EtatDuerp } from "@/lib/dashboard/duerp";
 import {
   estActionEnRetard,
   estVerificationAPlanifier,
+  estVerificationArchivee,
   estVerificationAVenir,
   estVerificationEnRetard,
+  type VerificationDatee,
   joursDeRetard,
   STATUTS_ACTION_OUVERTE,
 } from "@/lib/dates/retard";
@@ -324,12 +326,21 @@ export type EtatVerification =
   | "a_planifier"
   | "a_venir"
   | "realisee"
-  | "planifiee";
+  | "planifiee"
+  /**
+   * L'obligation ne s'applique plus ; la ligne n'est conservée que pour la
+   * preuve qu'elle porte (ADR-012). C'est un FAIT de l'application, pas une
+   * qualification juridique — les instructions du serveur l'interdisent — et
+   * il fallait le rendre : sans lui, une ligne archivée gelée sur `depassee`
+   * était restituée « en retard » à un assistant, qui le répétait au
+   * dirigeant sur une obligation éteinte.
+   */
+  | "ne_s_applique_plus";
 
-function etatDe(
-  v: { statut: string; datePrevue: Date; dateRealisee: Date | null },
-  now: Date,
-): EtatVerification {
+function etatDe(v: VerificationDatee, now: Date): EtatVerification {
+  // EN PREMIER, avant même le réalisé : une ligne archivée peut porter une
+  // réalisation, et « réalisée » laisserait croire qu'elle compte encore.
+  if (estVerificationArchivee(v)) return "ne_s_applique_plus";
   if (v.dateRealisee !== null) return "realisee";
   if (estVerificationEnRetard(v, now)) return "en_retard";
   if (estVerificationAPlanifier(v, now)) return "a_planifier";
@@ -371,7 +382,14 @@ export async function listerEquipements(
       dateMiseEnService: true,
       actif: true,
       verifications: {
-        select: { statut: true, datePrevue: true, dateRealisee: true },
+        // `libelleObligation` sert le marqueur d'archivage, pas l'affichage :
+        // sans lui, `etatDe` lit une ligne éteinte comme une ligne vivante.
+        select: {
+          statut: true,
+          datePrevue: true,
+          dateRealisee: true,
+          libelleObligation: true,
+        },
       },
     },
     }),
