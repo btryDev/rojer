@@ -174,9 +174,17 @@ continuité est corrigée.
 
 Ne pas les trancher, ne pas les contourner.
 
+0. **L'ADR-034** — une vérification est une occurrence, le suivi d'une
+   obligation est un objet à part (`SuiviVerification`). Proposée le
+   2026-09-10 sur deux lectures exhaustives du code ; amende l'ADR-012. C'est
+   elle qui dissout la seconde moitié du lot 3 et la moitié du lot 5. **Sans
+   réponse, on continue à poser des correctifs sur un modèle qu'on sait faux.**
+   Le lot 4, lui, ne l'attend pas.
 1. **Lot 2 du § 11** — quand N lignes d'équipement sont absorbées par une ligne
    d'établissement, laquelle garde l'historique ? L'ADR-022 dit lui-même que ce
-   n'est pas tranché. **Sans réponse, ce lot ne démarre pas.**
+   n'est pas tranché. Posé à « la plus ancienne » le 2026-09-10, en déduction
+   nommée et non en texte — voir `reprendreLaRealisation`. **Confirmé ou
+   infirmé, c'est une ligne à changer.**
 2. **Lot sommeil** — la consigne disait « la réponse du dirigeant prime ». Elle
    ne prime pas : la borne de type et le critère de sommeil se lisent en ET, donc
    un exploitant de type `N` qui déclare héberger voit sa réponse **enregistrée
