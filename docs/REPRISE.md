@@ -176,7 +176,7 @@ et tenues par des tests).
 | --- | --- |
 | `main` | à jour, déployée en production par Vercel |
 | `worktree-ge4-r-hebergement` | remplacée par `ge4r-succession` — voir ci-dessous |
-| `ge4r-succession` | `ge4-r` + les lots 1 à 4 + la déclaration de succession ; **son test rouge exprès est vert** (6/6), 2509 tests, **fusionnable après relecture** |
+| `ge4r-succession` | `ge4-r` + les lots 1 à 4 + la déclaration de succession, **relue le 2026-09-10** (trois constats, tous corrigés) ; son test rouge exprès est vert (6/6), 2511 tests, **fusionnable** |
 | `worktree-sommeil-parcours` | fini, jamais relu ; attend un arbitrage |
 | `garde-fous-tests-2` | trois lots de garde-fous, à relire et fusionner |
 | `garde-fous-tests` | ancienne branche ; ne diffère que par un commit de règle de conduite, à reposer corrigé sur `main` ou à abandonner |
