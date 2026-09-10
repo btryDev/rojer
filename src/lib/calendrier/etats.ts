@@ -240,6 +240,19 @@ export function classerDate(
  * classifieur court-circuitait `a_planifier` avant le retard, et la page
  * calendrier contredisait les trois autres surfaces.
  */
+/**
+ * La ligne porte-t-elle un fait de réalisation ?
+ *
+ * Distinct de `classerVerification(v) === "faite"` sur un point qui compte :
+ * **l'archivage prend le pas dans le classement, pas dans le fait**. Une ligne
+ * archivée peut parfaitement porter une réalisation, et l'historique d'un
+ * appareil doit continuer de la montrer — une preuve ne s'efface pas parce que
+ * l'obligation a cessé de s'appliquer.
+ */
+export function estRealisee(v: VerificationDatee): boolean {
+  return v.dateRealisee !== null || v.statut.startsWith("realisee");
+}
+
 export function classerVerification(
   v: VerificationDatee,
   now: Date,
@@ -251,9 +264,7 @@ export function classerVerification(
   // « en retard » à perpétuité — sur la fiche de la ligne, dans le serveur
   // MCP, et dans le registre de sécurité remis en contrôle.
   if (estVerificationArchivee(v)) return "archivee";
-  if (v.dateRealisee !== null || v.statut.startsWith("realisee")) {
-    return "faite";
-  }
+  if (estRealisee(v)) return "faite";
   if (estVerificationEnRetard(v, now)) return "enRetard";
   if (v.statut === "a_planifier") return "aPlanifier";
   return classerDate(v.datePrevue, now);
@@ -291,14 +302,31 @@ export function classerVerification(
  * Texte juste, couleur fausse.
  */
 export function etatDuRendezVous(
-  v: VerificationDatee,
+  v: VerificationDatee & { periodicite: string },
   now: Date,
 ): RegistreLigne {
   const classe = classerVerification(v, now);
   if (classe !== "faite") return classe;
-  // Cycle soldé dont la réconciliation a déjà avancé la date : `datePrevue`
-  // est le rendez-vous SUIVANT, et il se classe comme n'importe quelle date.
-  if (v.dateRealisee !== null && v.datePrevue.getTime() > v.dateRealisee.getTime()) {
+
+  // LA PÉRIODICITÉ N'EST PAS UN DÉTAIL, et l'omettre a produit le défaut
+  // symétrique de celui qu'on corrigeait. Une obligation PONCTUELLE — « mise
+  // en service », « autre » — n'a pas de rendez-vous suivant : la
+  // réconciliation laisse sa `datePrevue` sur l'échéance d'origine
+  // (`prochaine === null`). Un contrôle réalisé EN AVANCE satisfait alors
+  // `datePrevue > dateRealisee` sans qu'aucun rendez-vous n'existe, et la
+  // fiche peignait « dépassée » un one-shot accompli — pendant que la même
+  // page, par le prédicat partagé, le disait à jour. Deux lectures
+  // contradictoires sur un écran : exactement ce que ce lot supprime.
+  const cyclique =
+    (PERIODICITE_EN_JOURS as Record<string, number | null>)[v.periodicite] !=
+    null;
+  if (
+    cyclique &&
+    v.dateRealisee !== null &&
+    v.datePrevue.getTime() > v.dateRealisee.getTime()
+  ) {
+    // Cycle soldé dont la réconciliation a déjà avancé la date : `datePrevue`
+    // est le rendez-vous SUIVANT, et il se classe comme n'importe quelle date.
     return classerDate(v.datePrevue, now);
   }
   return classe;

@@ -23,6 +23,7 @@ const soldee = {
   dateRealisee: jours(-245),
   datePrevue: jours(120),
   libelleObligation: "Vérification périodique",
+  periodicite: "annuelle",
 };
 
 describe("etatDuRendezVous", () => {
@@ -54,10 +55,34 @@ describe("etatDuRendezVous", () => {
       dateRealisee: null,
       datePrevue: jours(10),
       libelleObligation: "Vérification périodique",
+      periodicite: "annuelle",
     };
     expect(etatDuRendezVous(ouverte, NOW)).toBe(
       classerVerification(ouverte, NOW),
     );
+  });
+
+  it("ne peint jamais un one-shot accompli en retard", () => {
+    // LE DÉFAUT SYMÉTRIQUE, trouvé en relecture. Une obligation PONCTUELLE —
+    // « mise en service », « autre » — n'a pas de rendez-vous suivant : la
+    // réconciliation laisse sa `datePrevue` sur l'échéance d'origine. Un
+    // contrôle réalisé EN AVANCE satisfait alors `datePrevue > dateRealisee`
+    // sans qu'aucun rendez-vous n'existe, et la fiche peignait « dépassée » un
+    // acte accompli — pendant que la même page, par le prédicat partagé, le
+    // disait à jour. Deux lectures contradictoires sur un écran, c'est-à-dire
+    // exactement ce que ce lot supprime.
+    const oneShot = {
+      statut: "realisee_conforme",
+      dateRealisee: jours(-200),
+      datePrevue: jours(-185),
+      libelleObligation: "Vérification à la mise en service",
+      periodicite: "mise_en_service_uniquement",
+    };
+    expect(classerVerification(oneShot, NOW)).toBe("faite");
+    expect(
+      etatDuRendezVous(oneShot, NOW),
+      "un one-shot accompli n'a pas de rendez-vous suivant : rien à classer en retard",
+    ).toBe("faite");
   });
 
   it("une ligne archivée reste archivée, quelle que soit sa date", () => {

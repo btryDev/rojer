@@ -158,10 +158,7 @@ export function urgenceCategorie(appareils: AppareilListe[]): number {
     // alors que ses cartes annoncent « aucune vérification rattachée ».
     if (a.resume.signaux.length === 0) return max;
     const e = a.resume.etat;
-    // `archivee` ne réclame rien : rang zéro, comme « faite ». Elle ne doit
-    // pas faire remonter une famille d'appareils dans le tri d'urgence.
-    const rang =
-      e === "aPlanifier" ? 1.5 : e === "archivee" ? 0 : PRIORITE_ETAT[e];
+    const rang = e === "aPlanifier" ? 1.5 : PRIORITE_ETAT[e];
     return Math.max(max, rang);
   }, 0);
 }

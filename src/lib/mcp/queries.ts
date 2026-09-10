@@ -496,7 +496,14 @@ export async function listerVerifications(
     dateRealisee: v.dateRealisee,
     statut: v.statut,
     etat: etatDe(v, now),
-    joursRetard: v.dateRealisee ? 0 : joursDeRetard(v.datePrevue, now),
+    // ZÉRO POUR UNE LIGNE ARCHIVÉE, et pas seulement pour une ligne réalisée.
+    // `etatDe` a été rendu conscient de l'archivage, ce champ-ci ne l'était
+    // pas — et `formaterVerifications` imprime LES DEUX. L'assistant recevait
+    // « Ne s'applique plus — …, ne s'applique plus, 240 jour(s) de retard ».
+    joursRetard:
+      v.dateRealisee || estVerificationArchivee(v)
+        ? 0
+        : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),
   }));
 
@@ -517,7 +524,14 @@ export async function listerVerifications(
   if (filtres.horizonJours !== undefined) {
     const borne = new Date(now);
     borne.setDate(borne.getDate() + filtres.horizonJours);
-    lues = lues.filter((v) => v.dateRealisee === null && v.datePrevue <= borne);
+    // Une obligation éteinte n'a pas d'échéance « à venir » : sans ce test,
+    // elle remontait dans les prochaines échéances rendues à l'assistant.
+    lues = lues.filter(
+      (v) =>
+        v.dateRealisee === null &&
+        !estVerificationArchivee(v) &&
+        v.datePrevue <= borne,
+    );
   }
 
   return lues;
