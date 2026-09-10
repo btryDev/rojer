@@ -33,7 +33,7 @@ import {
   joursDeRetard,
   STATUTS_ACTION_OUVERTE,
 } from "@/lib/dates/retard";
-import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
+import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
 import { prismaMcp } from "./prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
@@ -522,8 +522,9 @@ export async function listerVerifications(
   }
 
   if (filtres.horizonJours !== undefined) {
-    const borne = new Date(now);
-    borne.setDate(borne.getDate() + filtres.horizonJours);
+    // `ajouterJours` et non `setDate` : la borne est un jour CIVIL à Paris,
+    // pas un instant décalé d'une heure à chaque changement d'heure (ADR-011).
+    const borne = ajouterJours(now, filtres.horizonJours);
     // Une obligation éteinte n'a pas d'échéance « à venir » : sans ce test,
     // elle remontait dans les prochaines échéances rendues à l'assistant.
     lues = lues.filter(

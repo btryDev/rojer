@@ -40,10 +40,24 @@ export const PERIODICITES = [
 export type Periodicite = (typeof PERIODICITES)[number];
 
 /**
- * Durée approximative d'une périodicité, exprimée en jours. Utilisée par le
- * moteur de génération du calendrier (étape 6) pour calculer la prochaine
- * échéance à partir d'une date connue. Les valeurs sont des approximations
- * métier, pas des durées calendaires exactes.
+ * Durée approximative d'une périodicité, en jours. **Un ORDRE, pas un
+ * calendrier.**
+ *
+ * Elle sert à deux choses, et à deux seulement : comparer deux rythmes
+ * (`estPeriodicitePlusStricte` — une prescription d'assureur renforce-t-elle
+ * le rythme réglementaire ?) et dire si une périodicité a un rythme du tout
+ * (`null` = pas d'échéance suivante). Pour ces deux usages, une approximation
+ * monotone est exacte.
+ *
+ * **Elle ne sert plus à dater une échéance**, et c'est le lot 4 du § 11 qui
+ * l'en a retirée le 2026-09-10. `annuelle = 365` dérive d'un jour une fois sur
+ * quatre, `triennale = 1095` trois fois sur quatre, `quadriennale = 1460` et
+ * `quinquennale = 1825` **toujours** — tout intervalle de quatre ou cinq ans
+ * contient un 29 février. Un contrôle fait le 1er juin 2025, quinquennal,
+ * tombait le 31 mai 2030 ; le texte dit cinq ans, donc le 1er juin. Le sens
+ * de la dérive était conservateur (en avance, jamais en retard), ce qui l'a
+ * rendue tolérable un mois de trop. Dater se fait avec
+ * `PERIODICITE_CALENDAIRE` ci-dessous, par `prochaineEcheance`.
  */
 export const PERIODICITE_EN_JOURS: Record<Periodicite, number | null> = {
   hebdomadaire: 7,
@@ -68,6 +82,45 @@ export const PERIODICITE_EN_JOURS: Record<Periodicite, number | null> = {
   quadriennale: 1460,
   quinquennale: 1825,
   decennale: 3650,
+  mise_en_service_uniquement: null,
+  autre: null,
+};
+
+/**
+ * Ce qu'une périodicité vaut EN CALENDRIER — l'unité que le texte emploie.
+ *
+ * Deux unités, parce que les textes en emploient deux. Les rythmes courts sont
+ * écrits en jours ou en semaines (« tous les quinze jours », EL 18 § 4 ; « un
+ * intervalle maximum de six semaines », arrêté du 18 novembre 2004) : sept
+ * jours font toujours sept jours, la conversion est exacte. Les rythmes longs
+ * sont écrits en mois ou en ans (« au minimum une fois par an », « tous les
+ * cinq ans ») : un an n'est pas 365 jours, c'est le même jour l'année
+ * suivante — écrêté en fin de mois quand il n'existe pas, 29 février compris.
+ *
+ * `null` = pas de rendez-vous suivant : une obligation ponctuelle ou un état
+ * permanent (ADR-026).
+ *
+ * `mensuelle` et `trimestrielle`/`semestrielle` passent en MOIS et non plus
+ * en 30/91/182 jours : « tous les mois » fait le même jour le mois suivant,
+ * pas trente jours plus tard — la différence est d'un à trois jours et se
+ * cumule à chaque cycle.
+ */
+export const PERIODICITE_CALENDAIRE: Record<
+  Periodicite,
+  { jours: number } | { mois: number } | null
+> = {
+  hebdomadaire: { jours: 7 },
+  bimensuelle: { jours: 14 },
+  six_semaines: { jours: 42 },
+  mensuelle: { mois: 1 },
+  trimestrielle: { mois: 3 },
+  semestrielle: { mois: 6 },
+  annuelle: { mois: 12 },
+  biennale: { mois: 24 },
+  triennale: { mois: 36 },
+  quadriennale: { mois: 48 },
+  quinquennale: { mois: 60 },
+  decennale: { mois: 120 },
   mise_en_service_uniquement: null,
   autre: null,
 };

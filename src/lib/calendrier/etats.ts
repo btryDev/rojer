@@ -22,7 +22,8 @@ import {
   type VerificationDatee,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
-import { PERIODICITE_EN_JOURS } from "@/lib/referentiels/types-communs";
+import type { Periodicite } from "@/lib/referentiels/types-communs";
+import { estCyclique } from "./periodicite";
 
 /**
  * Les quatre états qu'une occurrence datée peut prendre. Exclusifs entre
@@ -317,9 +318,7 @@ export function etatDuRendezVous(
   // fiche peignait « dépassée » un one-shot accompli — pendant que la même
   // page, par le prédicat partagé, le disait à jour. Deux lectures
   // contradictoires sur un écran : exactement ce que ce lot supprime.
-  const cyclique =
-    (PERIODICITE_EN_JOURS as Record<string, number | null>)[v.periodicite] !=
-    null;
+  const cyclique = estCyclique(v.periodicite as Periodicite);
   if (
     cyclique &&
     v.dateRealisee !== null &&
@@ -419,9 +418,7 @@ export function lecturesCalendrier(
     },
   ];
 
-  const cyclique =
-    (PERIODICITE_EN_JOURS as Record<string, number | null>)[v.periodicite] !=
-    null;
+  const cyclique = estCyclique(v.periodicite as Periodicite);
   if (
     cyclique &&
     v.dateRealisee !== null &&

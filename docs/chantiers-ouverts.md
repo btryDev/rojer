@@ -1420,7 +1420,43 @@ l'INTERVALLE, pas le souvenir. Une ligne dont l'échéance suivante est passée 
 en retard, quelle que soit la solidité du contrôle précédent. Le score baissera
 pour ces dossiers ; il était faux.
 
-#### Lot 4 — L'arithmétique des dates.
+#### ~~Lot 4 — L'arithmétique des dates.~~ FAIT LE 2026-09-10
+
+> **Les fonctions locales sont supprimées, pas corrigées** — c'est ce que le lot
+> demandait. `generateur.ts` ne porte plus ni `ajouterJours` ni `prochaineDate` ;
+> `src/lib/calendrier/periodicite.ts` compose les primitives de `lib/dates`
+> (`ajouterMois`, `ajouterJours`) avec une table **calendaire** du référentiel,
+> `PERIODICITE_CALENDAIRE` : les rythmes que les textes écrivent en mois ou en
+> ans se comptent en mois — le même jour, écrêté en fin de mois —, ceux qu'ils
+> écrivent en jours ou en semaines restent en jours, où la conversion est exacte.
+> `PERIODICITE_EN_JOURS` **reste**, comme ORDRE : `estPeriodicitePlusStricte`
+> compare deux rythmes avec, et une approximation monotone est juste pour
+> ordonner. Sa docstring dit désormais qu'elle ne date rien.
+>
+> **L'assiette de la dérive était fausse dans le brief**, et la contre-expertise
+> du 2026-09-10 l'a mesurée sur 2020-2110 : `triennale` dérivait **trois fois sur
+> quatre**, pas une ; `quadriennale` et `quinquennale` **toujours** (tout
+> intervalle de quatre ou cinq ans contient un 29 février) ; `decennale` de deux à
+> trois jours. Toujours en avance, donc conservateur — ce qui l'a rendue tolérable
+> un mois de trop.
+>
+> **Les deux règles de retard selon le porteur sont une seule règle.** Les quatre
+> comparaisons d'instants du générateur — trois pour l'équipement, une pour le
+> titre de salarié — passent par `estEnRetard` (ADR-011) : une échéance datée
+> d'aujourd'hui n'est jamais en retard, quel que soit le porteur. Et la borne
+> d'horizon du serveur MCP cesse d'être un `setDate` local.
+>
+> **Un test encodait la dérive** : « prochaine date + 1825 jours ». Il asserte
+> maintenant le 1er juin 2029, cinq ans après le 1er juin 2024 — 2028 est
+> bissextile. Et deux de mes propres tests ont d'abord rougi sur un changement
+> d'heure parce qu'ils comparaient des **instants** : le jour civil était juste,
+> l'assertion refaisait l'erreur que l'ADR-011 a fermée. Ils comparent des jours.
+>
+> Mutation : repasser les rythmes longs en jours fait rougir neuf tests.
+> `frise.ts` garde son `JOUR_MS` — géométrie d'écran documentée comme telle, pas
+> une règle métier.
+>
+> Ce qui suit décrit l'état d'avant.
 
 - **dérive d'un jour** sur les périodicités longues : annuelle depuis 2023-03-01 →
   2024-02-29 ; quadriennale toujours un jour trop tôt. ADR-011 promet l'inverse ;
