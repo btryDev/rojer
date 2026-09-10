@@ -808,25 +808,48 @@ function reprendreLaRealisation(
 /**
  * Ce que les obligations retirées lèguent à celles qui les absorbent.
  *
- * Rend une table `identifiant absorbant → réalisation reprise`. Une obligation
- * absorbante qui n'hérite de rien n'y figure pas.
+ * DEUX TABLES, ET LA RAISON D'ÊTRE DE LA SECONDE. Une ligne est identifiée par
+ * une obligation ET un porteur ; ne retenir que l'obligation ferait, le jour où
+ * un absorbant serait porté par un ÉQUIPEMENT, hériter une seule réalisation à
+ * TOUTES ses lignes. Un contrôle fait sur la VMC daterait la ligne de la hotte
+ * jamais contrôlée, qui naîtrait « planifiée » — exactement le sens d'erreur
+ * que `reprendreLaRealisation` dit éviter.
+ *
+ *  · `parCle` — le porteur est CONSERVÉ : la ligne d'un appareil hérite de la
+ *    ligne du même appareil. C'est le cas d'un simple changement de nom.
+ *  · `parObligation` — les porteurs sont FONDUS : N lignes d'équipement pour
+ *    une ligne d'établissement. Consultée uniquement par une ligne
+ *    d'établissement, qui est seule par construction, donc seule destinataire
+ *    possible d'une fusion.
+ *
+ * Les quatre successions déclarées à ce jour visent toutes un absorbant porté
+ * par l'établissement : c'est `parObligation` qui sert. `parCle` n'a pas
+ * d'utilisateur — elle existe pour que le premier absorbant porté par un
+ * équipement ne se serve pas en silence de la mauvaise table.
  */
 function heritageDesRetirees(
   existantes: OccurrenceExistante[],
   successions: ReadonlyMap<string, string> | undefined,
-): Map<string, Date> {
-  const heritage = new Map<string, Date>();
-  if (successions === undefined) return heritage;
+): { parCle: Map<string, Date>; parObligation: Map<string, Date> } {
+  const parCle = new Map<string, Date>();
+  const parObligation = new Map<string, Date>();
+  if (successions === undefined) return { parCle, parObligation };
 
   for (const ex of existantes) {
     const absorbant = successions.get(ex.obligationId);
     if (absorbant === undefined || ex.dateRealisee === null) continue;
-    heritage.set(
+
+    const cle = cleDeLigne(absorbant, {
+      equipementId: ex.equipementId,
+      salarieId: ex.salarieId ?? null,
+    });
+    parCle.set(cle, reprendreLaRealisation(ex.dateRealisee, parCle.get(cle)));
+    parObligation.set(
       absorbant,
-      reprendreLaRealisation(ex.dateRealisee, heritage.get(absorbant)),
+      reprendreLaRealisation(ex.dateRealisee, parObligation.get(absorbant)),
     );
   }
-  return heritage;
+  return { parCle, parObligation };
 }
 
 export function reconcilierCalendrier(
@@ -862,7 +885,17 @@ export function reconcilierCalendrier(
 
   for (const g of aGenerer) {
     const ex = parCle.get(g.cleUnique);
-    const heritee = heritage.get(g.obligationId) ?? null;
+    // Le porteur d'abord — une ligne hérite de la ligne du même appareil.
+    // À défaut, et SEULEMENT si cette ligne est celle de l'établissement, la
+    // fusion : N porteurs fondus en un, qui est seul par construction.
+    const estLigneEtablissement =
+      g.equipementId === null && g.salarieId === null;
+    const heritee =
+      heritage.parCle.get(g.cleUnique) ??
+      (estLigneEtablissement
+        ? heritage.parObligation.get(g.obligationId)
+        : undefined) ??
+      null;
 
     if (!ex) {
       if (heritee === null) {
@@ -1036,6 +1069,20 @@ export function reconcilierCalendrier(
     }
 
     if (!porteUneTrace) {
+      // CE QUE CETTE SUPPRESSION LAISSE PASSER, et il vaut mieux l'écrire que
+      // le redécouvrir : désactiver puis réactiver un appareil BLANCHIT le
+      // retard accumulé sur ses lignes sans preuve. La ligne est supprimée à la
+      // désactivation, recréée à la réactivation, et sa date repart de la mise
+      // en service ou de maintenant — alors que la branche « cycle ouvert »,
+      // soixante lignes plus haut, dit que repousser `datePrevue` à `now`
+      // efface un retard qu'il faut garder.
+      //
+      // Ce n'est pas un trou ouvert par le porteur : il existait déjà pour le
+      // parc d'un seul appareil, où le retrait rend l'obligation inapplicable
+      // et emporte la ligne par le même chemin. Le lot 2 l'élargit au parc
+      // multiple, il ne l'invente pas. Le refermer voudrait dire archiver une
+      // ligne qui n'atteste de rien, contre la règle — établie et éprouvée —
+      // qu'une ligne sans preuve « ne dit plus rien et disparaît ».
       plan.aSupprimer.push(ex.id);
     } else if (!estMarqueeNonApplicable(ex.libelleObligation)) {
       plan.aArchiver.push({

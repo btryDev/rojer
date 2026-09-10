@@ -1556,6 +1556,88 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     expect(maj?.dateRealisee).toEqual(new Date("2026-07-01T00:00:00Z"));
   });
 
+  it("un absorbant porté par un ÉQUIPEMENT n'hérite que sur le bon appareil", () => {
+    // LE DÉFAUT QUE CE TEST GARDE. La première rédaction indexait l'héritage
+    // sur le seul identifiant d'obligation. Le jour où un absorbant serait
+    // porté par un équipement, l'unique réalisation connue daterait TOUTES ses
+    // lignes : un contrôle fait sur l'appareil 1 ferait naître la ligne de
+    // l'appareil 2 — jamais contrôlé — « planifiée », donc « rien à faire ».
+    // C'est le sens d'erreur que la règle de fusion dit refuser.
+    //
+    // Aucune succession déclarée ne vise aujourd'hui un absorbant d'équipement.
+    // Le test existe pour que la première qui le fera ne trouve pas le défaut
+    // en production.
+    const absorbant = fakeObligation({
+      id: "tout-equip",
+      periodicite: "annuelle",
+    });
+    const aGenerer = genererProchainesVerifications(
+      [applique(absorbant, [fakeEquipement("eq-1"), fakeEquipement("eq-2")])],
+      new Map(),
+      { now: NOW },
+    );
+
+    const plan = reconcilierCalendrier(
+      // Le fragment n'a été réalisé que sur l'appareil 1.
+      [fragmentRealise("v-frag-1", "frag-vmc", "2025-06-01T00:00:00Z")],
+      aGenerer,
+      {
+        now: NOW,
+        successions: new Map([["frag-vmc", "tout-equip"]]),
+      },
+    );
+
+    const parEquipement = new Map(
+      plan.aCreer.map((v) => [v.equipementId, v.datePrevue]),
+    );
+    // `fragmentRealise` pose la ligne sur `eq-v-frag-1` : aucun des deux
+    // appareils générés ne partage son porteur, donc aucun n'hérite.
+    expect(parEquipement.get("eq-1")).not.toEqual(
+      new Date("2026-06-01T00:00:00Z"),
+    );
+    expect(parEquipement.get("eq-2")).not.toEqual(
+      new Date("2026-06-01T00:00:00Z"),
+    );
+  });
+
+  it("un absorbant d'équipement hérite quand le porteur est LE MÊME", () => {
+    // Le pendant du test précédent : même appareil des deux côtés, l'héritage
+    // passe. C'est le cas d'un simple changement de nom d'obligation.
+    const absorbant = fakeObligation({
+      id: "tout-equip",
+      periodicite: "annuelle",
+    });
+    const aGenerer = genererProchainesVerifications(
+      [applique(absorbant, [fakeEquipement("eq-1"), fakeEquipement("eq-2")])],
+      new Map(),
+      { now: NOW },
+    );
+
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-frag-1",
+          obligationId: "frag-vmc",
+          equipementId: "eq-1",
+          dateRealisee: new Date("2025-06-01T00:00:00Z"),
+          statut: "realisee_conforme",
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenerer,
+      { now: NOW, successions: new Map([["frag-vmc", "tout-equip"]]) },
+    );
+
+    const parEquipement = new Map(
+      plan.aCreer.map((v) => [v.equipementId, v.datePrevue]),
+    );
+    // eq-1 hérite, eq-2 non : c'est toute la différence.
+    expect(parEquipement.get("eq-1")).toEqual(new Date("2026-06-01T00:00:00Z"));
+    expect(parEquipement.get("eq-2")).not.toEqual(
+      new Date("2026-06-01T00:00:00Z"),
+    );
+  });
+
   it("sans table de successions, rien n'est repris — le comportement d'avant", () => {
     const plan = reconcilierCalendrier(
       [fragmentRealise("v-frag", "frag-vmc", "2025-06-01T00:00:00Z")],

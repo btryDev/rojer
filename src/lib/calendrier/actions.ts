@@ -425,11 +425,19 @@ async function regenererUnePasse(
         skipDuplicates: true,
       }),
     );
-    // Un compte plus court signifie qu'une régénération concurrente a créé
-    // la même ligne avant nous. La ligne existe, donc rien n'est perdu — mais
-    // elle n'est plus neuve, et c'est à une passe fraîche de dire si elle
-    // demande un réalignement.
-    attendus.push(plan.aCreer.length);
+    // Le compte attendu est celui des clés DISTINCTES, pas des entrées. Si le
+    // plan proposait deux fois la même ligne, `skipDuplicates` en poserait une
+    // et le compte serait court à chaque passe — donc divergence à chaque
+    // passe, trois régénérations complètes, puis calendrier marqué périmé, et
+    // le tout à chaque ouverture de page, indéfiniment. Le plan ne devrait
+    // jamais proposer de doublon ; ce n'est pas une raison pour qu'un doublon
+    // se paie d'une boucle plutôt que d'une ligne posée une seule fois.
+    //
+    // Un compte court avec des clés distinctes, en revanche, dit bien ce qu'il
+    // doit dire : une régénération concurrente a créé la même ligne avant
+    // nous. Rien n'est perdu, mais le monde a bougé, et c'est à une passe
+    // fraîche de dire si cette ligne demande un réalignement.
+    attendus.push(new Set(plan.aCreer.map((v) => v.cleUnique)).size);
   }
 
   for (const m of plan.aMettreAJour) {

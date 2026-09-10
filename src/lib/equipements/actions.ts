@@ -30,11 +30,16 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
  * ne doit pas être présentée comme un échec. L'appelant transforme le
  * `message` en avertissement explicite avec la marche à suivre.
  *
- * **Le corps vit désormais dans `calendrier/regeneration-sure`.** Il était ici,
- * et il n'y avait qu'ici : les six autres appelants de `genererCalendrier`
- * régénéraient à nu, et une régénération qui échouait y faisait échouer une
- * action serveur dont la mutation était déjà commitée. Ce qui reste ici est la
- * mise en forme du refus pour cet appelant-là.
+ * **Le corps vit désormais dans `calendrier/regeneration-sure`**, et tous les
+ * appelants passent par lui. Le compte a été écrit deux fois de travers avant
+ * d'être vérifié, alors il est posé ici une bonne fois : sur les neuf appels à
+ * `genererCalendrier`, **six régénéraient à nu** — les deux de
+ * `rapports/actions.ts` et les quatre de `prescriptions/actions.ts` —, et
+ * **trois avaient déjà un garde, écrit trois fois** : celui-ci, celui de
+ * `salaries/actions.ts` et celui d'`etablissements/actions.ts`. Un appel nu
+ * faisait échouer une action serveur dont la mutation était déjà commitée ; un
+ * garde recopié fait diverger les trois copies. Ce qui reste ici est la seule
+ * chose qui soit propre à cet appelant : la mise en forme du refus.
  */
 async function regenererCalendrier(
   etablissementId: string,
