@@ -1100,8 +1100,14 @@ export function reconcilierCalendrier(
       //
       // La preuve est le seul signal qui SURVIT au roulement de cycle :
       // `dateRealisee` est effacée, les rapports restent attachés. Limite
-      // connue : une ligne marquée réalisée SANS aucun rapport — ce que seuls
-      // les seeds produisent — pourrait hériter une fois de trop.
+      // connue, et ATTEIGNABLE par l'utilisateur — pas seulement par les
+      // seeds, comme une première rédaction l'écrivait : `supprimerRapport`
+      // (`rapports/actions.ts`) supprime physiquement le dernier rapport et
+      // remet `dateRealisee` à `null`, donc `porteUnePreuve` retombe à faux et
+      // la ligne peut hériter une fois de trop. Mesuré : une absorbante roulée
+      // au 2027-02-01 dont on supprime le rapport recule au 2022-01-10. Le sens
+      // d'erreur est « à refaire », cohérent avec la doctrine de ce fichier ;
+      // l'ADR-034 rend le cas sans objet en cessant d'écrire `dateRealisee`.
       //
       // On reporte l'ÉCHÉANCE, pas la réalisation. Écrire `dateRealisee` ici
       // ferait dire à cette ligne « contrôle effectué le … » alors qu'aucun

@@ -163,7 +163,14 @@ export const obligationsConformite: Obligation[] = [
 // calendriers existants sont concernés, et c'est le premier lot dans ce cas :
 // tant que la question d'hébergement n'a pas de réponse, rien ne bouge, mais
 // une réponse « non » déplace une échéance déjà engendrée.
-export const REFERENTIEL_VERSION = "2026-09-08.1";
+// `.1` le 2026-09-11 : RATTRAPAGE. Le 2026-09-10, `succedeA` est entré dans
+// l'empreinte (`5bef50c`) et l'a fait bouger — la constante du test a été mise à
+// jour, la version NON. Une base ayant réconcilié à `2026-09-08.1` se voyait donc
+// synchronisée et ne rejouait jamais la succession de GE 4 § 1 : la ligne d'un
+// internat restait sous l'ancien identifiant. Trouvé en relecture post-fusion.
+// La règle que le test énonce est la bonne, et elle a été lue à moitié : quand
+// l'empreinte change, la version change dans le MÊME commit.
+export const REFERENTIEL_VERSION = "2026-09-11.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

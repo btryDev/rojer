@@ -2335,3 +2335,49 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Les deux déclarations de succession ne se recouvrent pas
+// ---------------------------------------------------------------------------
+// Une obligation retirée nomme son absorbant (`OBLIGATIONS_RETIREES.absorbePar`)
+// ; une obligation qui hérite d'une scission nomme ses prédécesseurs
+// (`succedeA`). Les deux alimentent la même table de prédécesseurs du
+// réconciliateur. Si un même identifiant figurait des deux côtés — retiré ET
+// prédécesseur d'une ligne vivante —, l'adoption dépendrait de l'ORDRE des lignes
+// générées : mesuré en relecture, la première adopte, la seconde naît en plus,
+// deux lignes pour une visite. Aucun cas aujourd'hui ; ce test garde l'absence.
+
+describe("successions déclarées — `succedeA` et `absorbePar` ne se recouvrent pas", () => {
+  const vivants = new Set(obligationsConformite.map((o) => o.id));
+
+  it("chaque prédécesseur nommé par `succedeA` existe encore au référentiel", () => {
+    // C'est la définition d'une scission : le prédécesseur VIT pour les autres
+    // types. S'il était retiré, c'est `absorbePar` qui devrait le porter.
+    for (const o of obligationsConformite) {
+      for (const pred of o.succedeA ?? []) {
+        expect(
+          vivants.has(pred),
+          `${o.id} succède à ${pred}, qui n'existe pas (ou plus) au référentiel — une obligation retirée se déclare par absorbePar, pas par succedeA`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("aucun identifiant n'est à la fois retiré et prédécesseur d'une scission", () => {
+    const retires = new Set(Object.keys(OBLIGATIONS_RETIREES));
+    for (const o of obligationsConformite) {
+      for (const pred of o.succedeA ?? []) {
+        expect(
+          retires.has(pred),
+          `${pred} est retiré ET nommé prédécesseur par ${o.id} : deux déclarations pour le même ancien, l'adoption dépendrait de l'ordre`,
+        ).toBe(false);
+      }
+    }
+  });
+
+  it("une obligation ne succède jamais à elle-même", () => {
+    for (const o of obligationsConformite) {
+      expect((o.succedeA ?? []).includes(o.id), o.id).toBe(false);
+    }
+  });
+});

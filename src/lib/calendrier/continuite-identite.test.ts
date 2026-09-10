@@ -210,12 +210,14 @@ describe("scission de GE 4 § 1 — le dossier déjà suivi ne repart pas de zé
     expect(plan.aArchiver).toEqual([]);
     expect(plan.aSupprimer).toEqual([]);
     expect(plan.aCreer).toEqual([]);
-    // `inchangees + aMettreAJour`, comme le premier test du fichier, et non
-    // `inchangees` seul : la ligne part en mise à jour parce que le libellé de
-    // CETTE FIXTURE diffère de celui du référentiel, ce qui n'a rien à voir
-    // avec la continuité. Ce que ce test garde, c'est qu'une seule ligne sort,
-    // et qu'elle n'est ni barrée ni recréée.
-    expect(plan.inchangees + plan.aMettreAJour.length).toBe(1);
+    // `inchangees` SEUL, et c'est la forme forte : une ligne qui n'a aucune
+    // raison de bouger ne doit pas partir en mise à jour. Cette assertion a été
+    // affaiblie le 2026-09-10 en `inchangees + aMettreAJour` sur un motif FAUX
+    // — « le libellé de la fixture diffère du référentiel » ; il est identique.
+    // La ligne partait en mise à jour à cause de l'arithmétique en jours (lot 4,
+    // depuis corrigé). Rétablie en relecture post-fusion : elle attraperait un
+    // déplacement de date sur une ligne qui ne doit pas bouger.
+    expect(plan.inchangees).toBe(1);
   });
 
   it("la reprise ne fabrique jamais deux lignes pour une seule visite", () => {
