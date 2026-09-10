@@ -1240,7 +1240,7 @@ Dans le même lot : le try/catch manquant sur `rapports/actions.ts:192,253` et
 serveur dont le rapport est **déjà commité**, l'utilisateur redépose et obtient
 deux rapports.
 
-#### Lot 2 — Le grain de la clé. **Premier symptôme FAIT LE 2026-09-10 ; le second attend une décision.**
+#### ~~Lot 2 — Le grain de la clé.~~ FAIT LE 2026-09-10, **sauf une déclaration qui appartient à une autre branche**
 
 > **La ligne gelée est corrigée** (commit portant cette note). Le garde-fou
 > interroge désormais le porteur de LA LIGNE, et non la seule applicabilité de
@@ -1256,8 +1256,41 @@ deux rapports.
 > qu'elle reste comptée en retard. **Ce point-là n'est PAS corrigé** ; il relève du
 > statut, donc du lot 3.
 >
-> **Le second symptôme — la continuité d'identifiant — reste entier**, et sa règle
-> de fusion attend toujours la propriétaire. Ce qui suit décrit l'état d'avant.
+> **Le second symptôme — la continuité d'identifiant — est corrigé aussi.**
+> `OBLIGATIONS_RETIREES.absorbePar` portait la donnée depuis le 2026-08-27 et
+> n'avait **aucun lecteur** ; il en a un. Une ligne dont l'obligation a été
+> absorbée ne produit plus « ligne barrée + ligne neuve urgente » : l'obligation
+> absorbante naît datée de l'héritage, donc en retard s'il y a lieu, tandis que
+> la ligne d'origine est archivée AVEC sa preuve. La succession est **déclarée,
+> jamais dérivée** (ADR-024) : rien ne devine qu'une obligation en remplace une
+> autre par ressemblance.
+>
+> **Le report porte l'ÉCHÉANCE, pas la réalisation.** Écrire `dateRealisee` sur
+> la ligne absorbante lui ferait attester un contrôle dont elle ne porte aucun
+> rapport — la pièce est restée sur la ligne archivée, qui la conserve.
+>
+> **LA RÈGLE DE FUSION EST POSÉE À « LA PLUS ANCIENNE », ET C'EST UNE DÉDUCTION.**
+> La veille du 2026-09-10 l'a cherchée aux sources primaires et ne l'a pas
+> trouvée : `R. 4222-20` ne porte aucun chiffre, l'arrêté du 8 octobre 1987 dit
+> « au minimum une fois par an » sans dire d'où part l'intervalle, l'INRS le
+> reprend sans le préciser. Ce qui est écrit, c'est que l'obligation porte sur
+> « tous les éléments » — donc le plus ancien commande. La règle vit dans une
+> fonction nommée (`reprendreLaRealisation`) : la trancher autrement est une
+> ligne à changer. La propriétaire n'a pas dit le contraire ; elle n'a pas dit
+> oui non plus.
+>
+> **CE QUI RESTE, ET CE N'EST PAS DANS CE DÉPÔT-CI.** Le mécanisme sert deux cas ;
+> un seul a sa déclaration. La FUSION est câblée, parce qu'`absorbePar` existe.
+> La SCISSION — `worktree-ge4-r-hebergement` — n'a **aucune déclaration nulle
+> part** : elle ne retire rien, elle ajoute deux identifiants et en rétrécit un
+> troisième, donc `OBLIGATIONS_RETIREES` ne la voit pas. Il lui faut dire, sur
+> ses deux obligations neuves, à quel identifiant elles succèdent. Cette
+> déclaration appartient à cette branche-là, avec le lot qui crée la scission —
+> l'ajouter ici serait poser un champ sans utilisateur et faire bouger
+> l'empreinte du référentiel pour personne, c'est-à-dire refaire l'habitude que
+> le § 11 désigne comme le vrai défaut : écrire la garantie avant de la tenir.
+>
+> Ce qui suit décrit l'état d'avant.
 
 Le garde-fou d'applicabilité teste `obligationId` (`generateur.ts:877-881`) quand
 une ligne existe par obligation **et porteur**. Deux symptômes, un défaut :

@@ -68,6 +68,13 @@ const ELEC_MISE_EN_SERVICE = "elec-travail-mise-en-service";
 const REGISTRE_SECURITE = "incendie-registre-securite";
 /** Portée par un SALARIÉ (ADR-023) : ne naît que d'un titre déclaré. */
 const TITRE_SALARIE = "elec-salarie-attestation-medicale-voisinage";
+/**
+ * Un vrai couple retiré → absorbant du référentiel (`OBLIGATIONS_RETIREES`).
+ * Le fragment « VMC/CTA » de R. 4222-20 a été retiré le 2026-08-27 au profit de
+ * l'article porté en entier par l'établissement.
+ */
+const AERATION_FRAGMENT_RETIRE = "aeration-travail-entretien-annuel";
+const AERATION_ABSORBANTE = "aeration-controle-installations-r4222-20";
 
 // ---------------------------------------------------------------------------
 // Fixtures — elles rendent le monde tel qu'il est, sans pré-filtrer
@@ -342,6 +349,51 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
     expect(
       db.journal.filter((j) => j.operation === "verification.findMany"),
     ).toHaveLength(2);
+  });
+});
+
+describe("genererCalendrier — continuité par-dessus un identifiant retiré", () => {
+  it("reprend l'échéance du fragment retiré sur l'obligation qui l'absorbe", async () => {
+    // CÂBLAGE RÉEL : ce test n'invente aucune table, il s'appuie sur le vrai
+    // `OBLIGATIONS_RETIREES` du référentiel. Il rougit donc aussi si la
+    // succession cesse d'être passée depuis `actions.ts`, là où les tests purs
+    // du générateur ne verraient rien.
+    //
+    // Le fragment « VMC/CTA » a été contrôlé le 2025-06-01. L'absorbante est
+    // annuelle et portée par l'établissement — due même sans le moindre
+    // appareil déclaré. Sa ligne doit donc naître datée du 2026-06-01, donc en
+    // retard, et NON « à planifier » comme si le contrôle n'avait pas eu lieu.
+    poserEtablissement([]);
+    db.verifications = [
+      ligne({
+        id: "v-fragment",
+        equipementId: "eq-vmc",
+        obligationId: AERATION_FRAGMENT_RETIRE,
+        libelleObligation: "Entretien annuel VMC/CTA",
+        dateRealisee: new Date("2025-06-01T00:00:00Z"),
+        statut: "realisee_conforme",
+        nbRapports: 1,
+      }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    const absorbante = db.verifications.find(
+      (v) => v.obligationId === AERATION_ABSORBANTE,
+    );
+    expect(
+      absorbante,
+      "l'obligation absorbante n'a produit aucune ligne",
+    ).toBeDefined();
+    expect(
+      absorbante?.datePrevue,
+      "la ligne absorbante est repartie de zéro : la succession déclarée n'a pas été lue",
+    ).toEqual(new Date("2026-06-01T00:00:00Z"));
+
+    // Le fragment garde sa preuve et son archivage — rien n'est détruit.
+    const fragment = db.verifications.find((v) => v.id === "v-fragment");
+    expect(fragment?.nbRapports).toBe(1);
+    expect(fragment?.libelleObligation).toContain("Ne s'applique plus");
   });
 });
 

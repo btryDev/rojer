@@ -200,6 +200,24 @@ export type OptionsGenerateur = {
    * d'un porteur vivant.
    */
   equipementsEnService?: Set<string>;
+  /**
+   * Qui reprend le contenu de qui, quand une obligation est retirée du
+   * référentiel : identifiant retiré → identifiant absorbant.
+   *
+   * **La succession est DÉCLARÉE, jamais dérivée** (ADR-024). Rien ici ne
+   * devine qu'une obligation en remplace une autre par ressemblance de
+   * domaine, d'article ou de libellé : la donnée vient de
+   * `OBLIGATIONS_RETIREES.absorbePar`, écrite à la main par qui a fait le
+   * retrait.
+   *
+   * Sans elle, un identifiant qui change casse la continuité : l'ancienne
+   * ligne est barrée « Ne s'applique plus » et une ligne neuve apparaît « à
+   * planifier », urgente, pour un acte que le dirigeant vient de faire faire.
+   *
+   * Absent = comportement antérieur : aucune reprise, chaque identifiant vit
+   * sa vie.
+   */
+  successions?: ReadonlyMap<string, string>;
 };
 
 /** Un titre déclaré, réduit à ce dont le générateur a besoin (ADR-023). */
@@ -750,6 +768,67 @@ function memeInstant(a: Date | null, b: Date | null): boolean {
  * alors prises pour des obligations retirées du référentiel — et archivées à
  * tort.
  */
+/**
+ * LA RÈGLE DE FUSION : quand N lignes sont absorbées par une seule, laquelle
+ * de leurs réalisations la ligne unique reprend-elle ?
+ *
+ * **La PLUS ANCIENNE.** Isolée dans cette fonction pour que la trancher
+ * autrement soit une ligne à changer, pas une chasse dans le fichier.
+ *
+ * POURQUOI LA PLUS ANCIENNE, ET CE QUE CETTE RAISON VAUT. C'est une
+ * **déduction**, pas une phrase de texte — la veille du 2026-09-10 l'a
+ * cherchée aux sources primaires et ne l'a pas trouvée : `R. 4222-20` ne porte
+ * aucun chiffre, l'arrêté du 8 octobre 1987 dit « au minimum une fois par an »
+ * sans dire d'où part l'intervalle, et le focus juridique de l'INRS le reprend
+ * sans le préciser. Ce qui est écrit, en revanche, c'est que l'obligation
+ * absorbante porte sur « l'ensemble des installations » et sur « TOUS les
+ * éléments » : un élément contrôlé il y a plus d'un an la rend non satisfaite,
+ * quoi qu'aient dit les autres. C'est donc le plus ancien qui commande.
+ *
+ * Et c'est le sens d'erreur qu'on veut. Prendre la plus récente ferait
+ * afficher « à jour » un parc contrôlé au tiers ; ne rien reprendre ferait
+ * afficher « à planifier » un acte accompli. La plus ancienne se trompe vers
+ * « à refaire », jamais vers « rien à faire » — cohérent avec l'ADR-022, qui a
+ * déjà tranché que le tout hérite de la criticité la plus HAUTE de ses
+ * fragments.
+ *
+ * UNE LIGNE SANS RÉALISATION NE LÈGUE RIEN, et ne bloque rien non plus : elle
+ * n'atteste d'aucun contrôle, seulement d'une absence d'enregistrement. La
+ * faire primer donnerait une ligne absorbante vierge, donc « à planifier »,
+ * donc le symptôme qu'on répare.
+ */
+function reprendreLaRealisation(
+  candidate: Date,
+  dejaRetenue: Date | undefined,
+): Date {
+  if (dejaRetenue === undefined) return candidate;
+  return candidate < dejaRetenue ? candidate : dejaRetenue;
+}
+
+/**
+ * Ce que les obligations retirées lèguent à celles qui les absorbent.
+ *
+ * Rend une table `identifiant absorbant → réalisation reprise`. Une obligation
+ * absorbante qui n'hérite de rien n'y figure pas.
+ */
+function heritageDesRetirees(
+  existantes: OccurrenceExistante[],
+  successions: ReadonlyMap<string, string> | undefined,
+): Map<string, Date> {
+  const heritage = new Map<string, Date>();
+  if (successions === undefined) return heritage;
+
+  for (const ex of existantes) {
+    const absorbant = successions.get(ex.obligationId);
+    if (absorbant === undefined || ex.dateRealisee === null) continue;
+    heritage.set(
+      absorbant,
+      reprendreLaRealisation(ex.dateRealisee, heritage.get(absorbant)),
+    );
+  }
+  return heritage;
+}
+
 export function reconcilierCalendrier(
   existantes: OccurrenceExistante[],
   aGenerer: VerificationGenere[],
@@ -777,10 +856,33 @@ export function reconcilierCalendrier(
   };
   const vues = new Set<string>();
 
+  // Ce que les obligations retirées lèguent à celles qui les absorbent :
+  // identifiant absorbant → réalisation reprise.
+  const heritage = heritageDesRetirees(existantes, options.successions);
+
   for (const g of aGenerer) {
     const ex = parCle.get(g.cleUnique);
+    const heritee = heritage.get(g.obligationId) ?? null;
+
     if (!ex) {
-      plan.aCreer.push(g);
+      if (heritee === null) {
+        plan.aCreer.push(g);
+        continue;
+      }
+      // La ligne absorbante NAÎT DÉJÀ DATÉE. Sans cela, l'exploitant qui a
+      // fait faire son contrôle voit apparaître une ligne « à planifier »,
+      // urgente, pour un acte accompli — c'est le symptôme que ce report
+      // existe pour éteindre.
+      const prochaine = prochaineDate(heritee, g.periodicite);
+      plan.aCreer.push(
+        prochaine === null
+          ? g
+          : {
+              ...g,
+              datePrevue: prochaine,
+              statut: estEnRetard(prochaine, now) ? "depassee" : "planifiee",
+            },
+      );
       continue;
     }
     vues.add(g.cleUnique);
@@ -834,6 +936,21 @@ export function reconcilierCalendrier(
         dateRealisee = null;
         statut = "depassee";
       }
+    } else if (heritee !== null) {
+      // La ligne absorbante existe mais n'a PAS de réalisation propre : elle
+      // reprend celle des lignes qu'elle absorbe. Placée après la branche
+      // ci-dessus, et c'est délibéré : une réalisation faite SOUS LE NOUVEL
+      // IDENTIFIANT est plus récente que tout héritage et prime toujours.
+      //
+      // On reporte l'ÉCHÉANCE, pas la réalisation. Écrire `dateRealisee` ici
+      // ferait dire à cette ligne « contrôle effectué le … » alors qu'aucun
+      // rapport n'y est attaché — la pièce est restée sur la ligne archivée,
+      // qui la conserve (ADR-012). Une ligne ne doit jamais attester d'un acte
+      // dont elle ne porte pas la preuve.
+      const prochaine = prochaineDate(heritee, g.periodicite);
+      datePrevue = prochaine ?? ex.datePrevue;
+      dateRealisee = null;
+      statut = statutCycleOuvert(datePrevue, ex.statut, now);
     } else if (ex.statut === "a_planifier" && g.statut === "planifiee") {
       // La ligne n'avait qu'un **placeholder** — « à planifier » n'est pas
       // un rendez-vous, c'est son absence — et le générateur sait désormais

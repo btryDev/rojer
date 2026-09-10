@@ -12,6 +12,7 @@ import {
 import {
   estPorteeParSalarie,
   obligationParId,
+  OBLIGATIONS_RETIREES,
   REFERENTIEL_VERSION,
 } from "@/lib/referentiels/conformite";
 import {
@@ -132,6 +133,23 @@ export async function regenererSansInvalider(
  *  passes suffisent à absorber une concurrence ordinaire — deux onglets, un
  *  dépôt de rapport pendant une déclaration d'équipement. */
 const TENTATIVES_MAX = 3;
+
+/**
+ * `OBLIGATIONS_RETIREES` réduit à ce dont la réconciliation a besoin : les
+ * retraits QUI ONT UN ABSORBANT, sous forme de table.
+ *
+ * `absorbePar` portait cette donnée depuis le 2026-08-27 et **aucun code ne la
+ * lisait** — l'ADR-022 le disait de lui-même, « un manque, pas une décision ».
+ * C'est cette ligne qui la branche.
+ *
+ * Calculée une fois : le référentiel est du TypeScript figé à la compilation
+ * (ADR-003), il ne change pas d'un appel à l'autre.
+ */
+const SUCCESSIONS_DECLAREES: ReadonlyMap<string, string> = new Map(
+  Object.entries(OBLIGATIONS_RETIREES).flatMap(([retire, r]) =>
+    r.absorbePar === null ? [] : [[retire, r.absorbePar] as [string, string]],
+  ),
+);
 
 type PasseRegeneration = {
   resultat: GenerationResult;
@@ -335,6 +353,7 @@ async function regenererUnePasse(
     // `etab.equipements` est déjà filtré sur `actif: true` par la lecture du
     // point 1 : c'est exactement l'ensemble des porteurs encore en service.
     equipementsEnService: new Set(etab.equipements.map((eq) => eq.id)),
+    successions: SUCCESSIONS_DECLAREES,
   });
 
   // 5. Application du plan — tout ou rien. Un calendrier à moitié régénéré

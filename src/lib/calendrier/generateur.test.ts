@@ -1423,3 +1423,152 @@ describe("générateur — le plafond du premier cycle (`premierDelai`)", () => 
     expect(res[0].datePrevue?.getUTCFullYear()).toBe(2029);
   });
 });
+
+// ---------------------------------------------------------------------------
+// La continuité quand un identifiant change (lot 2 du § 11)
+// ---------------------------------------------------------------------------
+// `OBLIGATIONS_RETIREES.absorbePar` portait la donnée depuis le 2026-08-27 et
+// AUCUN CODE NE LA LISAIT — l'ADR-022 le disait de lui-même, « un manque, pas
+// une décision ». Sans elle, un identifiant qui change produit : ligne barrée
+// « Ne s'applique plus », plus ligne neuve « à planifier » urgente, pour un
+// acte que le dirigeant vient de faire faire.
+
+describe("réconciliation — report d'historique vers l'obligation absorbante", () => {
+  const SUCCESSIONS = new Map([
+    ["frag-vmc", "tout"],
+    ["frag-cta", "tout"],
+  ]);
+
+  /** Ce que le référentiel produit pour l'obligation absorbante. */
+  function aGenererPourLeTout() {
+    return genererProchainesVerifications(
+      [
+        {
+          obligation: fakeObligationEtablissement({
+            id: "tout",
+            periodicite: "annuelle",
+          }) as Obligation,
+          equipementsConcernes: [],
+          porteur: "etablissement" as const,
+          raisons: ["test"],
+        },
+      ],
+      new Map(),
+      { now: NOW },
+    );
+  }
+
+  /** Un fragment absorbé, réalisé à la date donnée. */
+  function fragmentRealise(id: string, obligationId: string, quand: string) {
+    return ligneExistante({
+      id,
+      obligationId,
+      equipementId: `eq-${id}`,
+      dateRealisee: new Date(quand),
+      statut: "realisee_conforme",
+      porteUnePreuve: true,
+    });
+  }
+
+  it("la ligne absorbante naît datée de l'héritage, pas « à planifier »", () => {
+    // Le fragment a été réalisé le 2025-06-01. L'absorbante est annuelle : sa
+    // prochaine échéance tombe le 2026-06-01, donc DÉPASSÉE au 2026-08-11 —
+    // et non « à planifier » comme si rien n'avait eu lieu.
+    const plan = reconcilierCalendrier(
+      [fragmentRealise("v-frag", "frag-vmc", "2025-06-01T00:00:00Z")],
+      aGenererPourLeTout(),
+      { now: NOW, successions: SUCCESSIONS },
+    );
+
+    expect(plan.aCreer).toHaveLength(1);
+    expect(plan.aCreer[0].datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
+    expect(plan.aCreer[0].statut).toBe("depassee");
+
+    // Le fragment, lui, est archivé avec sa preuve — jamais supprimé.
+    expect(plan.aArchiver).toHaveLength(1);
+    expect(plan.aArchiver[0].id).toBe("v-frag");
+    expect(plan.aSupprimer).toEqual([]);
+  });
+
+  it("de N fragments, la ligne unique reprend la réalisation LA PLUS ANCIENNE", () => {
+    // LA RÈGLE DE FUSION. Deux fragments, l'un contrôlé en juin 2025, l'autre
+    // en mars 2026 : c'est juin 2025 qui commande, parce que l'absorbante
+    // porte sur l'ENSEMBLE et qu'un élément vieux de plus d'un an la rend non
+    // satisfaite, quoi qu'ait dit l'autre.
+    const plan = reconcilierCalendrier(
+      [
+        fragmentRealise("v-recent", "frag-cta", "2026-03-01T00:00:00Z"),
+        fragmentRealise("v-ancien", "frag-vmc", "2025-06-01T00:00:00Z"),
+      ],
+      aGenererPourLeTout(),
+      { now: NOW, successions: SUCCESSIONS },
+    );
+
+    // 2025-06-01 + un an, et non 2026-03-01 + un an, qui serait à venir.
+    expect(plan.aCreer[0].datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
+    expect(plan.aCreer[0].statut).toBe("depassee");
+  });
+
+  it("un fragment sans réalisation ne lègue rien et ne bloque rien", () => {
+    // Il n'atteste d'aucun contrôle, seulement d'une absence d'enregistrement.
+    // Le faire primer rendrait la ligne absorbante vierge — le symptôme même
+    // qu'on répare.
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-jamais",
+          obligationId: "frag-cta",
+          equipementId: "eq-2",
+        }),
+        fragmentRealise("v-fait", "frag-vmc", "2025-06-01T00:00:00Z"),
+      ],
+      aGenererPourLeTout(),
+      { now: NOW, successions: SUCCESSIONS },
+    );
+
+    expect(plan.aCreer[0].datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
+  });
+
+  it("une réalisation faite SOUS LE NOUVEL IDENTIFIANT prime sur l'héritage", () => {
+    // L'exploitant a fait son contrôle après le changement de référentiel : sa
+    // ligne porte déjà une réalisation, plus récente que tout héritage. La
+    // reprise ne doit pas la faire reculer.
+    const plan = reconcilierCalendrier(
+      [
+        fragmentRealise("v-frag", "frag-vmc", "2025-06-01T00:00:00Z"),
+        ligneExistante({
+          id: "v-tout",
+          obligationId: "tout",
+          equipementId: null,
+          dateRealisee: new Date("2026-07-01T00:00:00Z"),
+          statut: "realisee_conforme",
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenererPourLeTout(),
+      { now: NOW, successions: SUCCESSIONS },
+    );
+
+    expect(plan.aCreer).toEqual([]);
+    const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
+    // 2026-07-01 + un an : son cycle propre, pas l'héritage de 2025.
+    expect(maj?.datePrevue).toEqual(new Date("2027-07-01T00:00:00Z"));
+    expect(maj?.dateRealisee).toEqual(new Date("2026-07-01T00:00:00Z"));
+  });
+
+  it("sans table de successions, rien n'est repris — le comportement d'avant", () => {
+    const plan = reconcilierCalendrier(
+      [fragmentRealise("v-frag", "frag-vmc", "2025-06-01T00:00:00Z")],
+      aGenererPourLeTout(),
+      { now: NOW },
+    );
+
+    // Ligne neuve à planifier, et le fragment barré : c'est le défaut que le
+    // lot 2 corrige, gardé ici comme témoin de ce que la table change.
+    expect(plan.aCreer).toHaveLength(1);
+    expect(plan.aCreer[0].datePrevue).not.toEqual(
+      new Date("2026-06-01T00:00:00Z"),
+    );
+    expect(plan.aArchiver).toHaveLength(1);
+  });
+});
