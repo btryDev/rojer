@@ -49,8 +49,17 @@ ligne déjà posée*.
 
 Quatre passes le 2026-09-09 — une revue à froid, deux contre-expertises, un
 audit, une passe sur base réelle — rendent **seize constats**, dont **deux pertes
-de données reproduites**. **Verdict : pas de refonte.** Le cœur est juste ; ce
-sont les bords qui cèdent — le câblage, la lecture, les tests.
+de données reproduites**. Verdict d'alors : **pas de refonte** ; le cœur est
+juste, ce sont les bords qui cèdent — le câblage, la lecture, les tests.
+
+**Ce verdict a été amendé le 2026-09-10, et il faut le lire avec sa limite.** Il
+portait sur la LOGIQUE du réconciliateur, que les quatre passes ont trouvée
+juste — et elle l'est. Aucune n'a questionné le MODÈLE qu'il réconcilie : une
+rangée `Verification` qui est à la fois une échéance en cours et un porteur
+d'historique. C'est de là que descendent tous les constats du lot 3, une part du
+lot 2 et la moitié du lot 5. **L'ADR-034 le propose en refonte** — une rangée par
+occurrence — et attend la propriétaire. Ne pas lire « pas de refonte » comme
+« le modèle est bon » : ce n'est pas ce qui a été mesuré.
 
 - le plan, en six lots ordonnés par dépendance : **`docs/chantiers-ouverts.md` § 11**
 - les constats bruts, avec leurs observables : `docs/revues/constats-reconciliateur-2026-09-09.md`
@@ -67,20 +76,30 @@ repère :
   une relance quand le compte rendu par PostgreSQL est plus court que le plan.
   Le faux client sait désormais écrire ENTRE la lecture et la transaction, donc
   les deux pertes ont un test qui les reproduit.
-- **Lot 2, le grain de la clé : attend une décision** (voir plus bas). Sa
-  MOITIÉ ne l'attend pas — la ligne gelée et la continuité de scission ne
-  demandent aucun arbitrage.
+- **Lot 2, le grain de la clé : fait** (2026-09-10). La ligne gelée d'un appareil
+  retiré est archivée ou supprimée au lieu d'être comptée en retard à
+  perpétuité ; `absorbePar` a enfin un lecteur, et une obligation qui change de
+  nom voit sa rangée REPRISE en place, rapport compris, au lieu d'être barrée
+  pendant qu'une ligne neuve et urgente apparaît. La règle de fusion N→1 est
+  posée à « la plus ancienne » — une déduction nommée, pas un texte : elle
+  attend confirmation, et c'est une ligne à changer.
 - **Lot 3, le classifieur unique : moitié fait** (2026-09-10). Le marqueur
   d'archivage se lit à la racine et ne se contourne plus (champ requis, sept
   surfaces corrigées). L'autre moitié est **sortie du lot** : elle descend d'un
   défaut de MODÈLE — une rangée qui est à la fois une échéance et un historique —
   et se traite par l'ADR-034 (une rangée par occurrence), pas par un correctif.
-- **Lots 4 et 5 : prenables.** Le lot 5 sera en partie dissous par l'ADR-034.
+- **Lot 4, l'arithmétique des dates : fait** (2026-09-10). Les fonctions locales
+  du générateur sont supprimées ; `calendrier/periodicite.ts` compose
+  `lib/dates` avec une table calendaire. Cinq ans après le 1er juin, c'est le
+  1er juin. C'est ce qui a fait passer au vert le test rouge exprès de `ge4r`.
+- **Lot 5 : prenable**, mais à ne pas faire avant l'ADR-034, qui en dissout la
+  moitié (le passage du temps) et ne laisse que le référentiel qui change.
 
-Une remarque à porter avant de reprendre l'ordre du document : le lot 2 bloque
-moins qu'il n'en a l'air. `worktree-ge4-r-hebergement` n'est PAS retenue par la
-décision N→1 — elle ajoute deux identifiants et en rétrécit un troisième, c'est
-une scission (1 → 2), pas une fusion.
+Une remarque sur l'ordre, apprise en chemin : `worktree-ge4-r-hebergement`
+n'était PAS retenue par la décision N→1 — elle ajoute deux identifiants et en
+rétrécit un troisième, c'est une scission, pas une fusion. Elle attendait le
+lot 2 **et** le lot 4, ce que personne n'avait vu ; les deux faits, son test
+rouge exprès est vert. Elle vit désormais dans `ge4r-succession`.
 
 ## Ce qui reste, en dehors du réconciliateur
 

@@ -35,6 +35,7 @@ import { prisma } from "@/lib/prisma";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
+import { MARQUEUR_NON_APPLICABLE } from "@/lib/calendrier/marqueur";
 import {
   porteeBatiment,
   toutesLesConditions,
@@ -110,6 +111,17 @@ export default async function EtablissementPage({
         {
           etablissementId: id,
           statut: { in: ["a_planifier", "planifiee", "depassee"] },
+          // ET NON ARCHIVÉE. Le statut d'une ligne archivée reste GELÉ dans
+          // son dernier état connu (ADR-012) : elle passait donc le filtre
+          // ci-dessus, et comme sa date est la plus ancienne, le tri
+          // croissant la plaçait EN TÊTE. Le widget de compte à rebours
+          // annonçait « Prochaine échéance — Ne s'applique plus — … » sur une
+          // obligation éteinte, et elle consommait une des cinq places.
+          //
+          // Le marqueur vit dans le libellé, faute de valeur `archivee` dans
+          // l'enum : le filtre se fait donc en SQL sur le préfixe. C'est laid
+          // et c'est temporaire — l'ADR-034 le remplace par un champ.
+          NOT: { libelleObligation: { startsWith: MARQUEUR_NON_APPLICABLE } },
         },
         porteeBatiment(batimentFiltre),
       ),

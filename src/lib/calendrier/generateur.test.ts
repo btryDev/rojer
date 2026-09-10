@@ -1664,6 +1664,76 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     expect(plan.aCreer[0].equipementId).toBe("eq-2");
   });
 
+  it("ne rejoue JAMAIS l'héritage sur une ligne qui porte déjà sa preuve", () => {
+    // LE DÉFAUT LE PLUS GRAVE DE CE LOT, trouvé en relecture et reproduit avant
+    // d'être corrigé. Il faisait RECULER une ligne de plusieurs années, à
+    // chaque passe suivant un roulement de cycle.
+    //
+    // Le chemin, en trois temps : (1) le fragment absorbé est archivé AVEC sa
+    // preuve, donc conservé pour toujours (ADR-012) en gardant sa réalisation
+    // de 2021 ; (2) l'absorbante est contrôlée, son cycle expire, et la branche
+    // « période écoulée » remet `dateRealisee` à `null` ; (3) la passe suivante
+    // retombait dans l'héritage — seul `dateRealisee === null` le gardait — et
+    // réécrivait la date depuis 2021.
+    //
+    // Mesuré : une ligne au 2029-02-01 repartait au 2024-01-10. Le dossier
+    // annonçait cinq ans de retard sur un contrôle fait trois ans plus tôt.
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-frag",
+          obligationId: "frag-vmc",
+          equipementId: "eq-1",
+          libelleObligation: "Ne s'applique plus — Fragment",
+          dateRealisee: new Date("2021-01-10T00:00:00Z"),
+          statut: "realisee_conforme",
+          porteUnePreuve: true,
+        }),
+        ligneExistante({
+          id: "v-tout",
+          obligationId: "tout",
+          equipementId: null,
+          datePrevue: new Date("2027-02-01T00:00:00Z"),
+          dateRealisee: null,
+          statut: "depassee",
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenererPourLeTout(),
+      { now: NOW, successions: SUCCESSIONS },
+    );
+
+    const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
+    expect(
+      maj?.datePrevue ?? new Date("2027-02-01T00:00:00Z"),
+      "l'héritage s'est rejoué sur une ligne qui avait déjà sa propre histoire",
+    ).toEqual(new Date("2027-02-01T00:00:00Z"));
+  });
+
+  it("mais l'applique bien à une ligne absorbante encore vierge", () => {
+    // Le témoin : même montage, l'absorbante SANS preuve. Sans lui, la garde
+    // ci-dessus pourrait éteindre la fonction entière sans qu'un test bouge.
+    const plan = reconcilierCalendrier(
+      [
+        fragmentRealise("v-frag", "frag-vmc", "2025-06-01T00:00:00Z"),
+        ligneExistante({
+          id: "v-tout",
+          obligationId: "tout",
+          equipementId: null,
+          datePrevue: new Date("2030-01-01T00:00:00Z"),
+          dateRealisee: null,
+          statut: "a_planifier",
+          porteUnePreuve: false,
+        }),
+      ],
+      aGenererPourLeTout(),
+      { now: NOW, successions: SUCCESSIONS },
+    );
+
+    const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
+    expect(maj?.datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
+  });
+
   it("sans table de successions, rien n'est repris — le comportement d'avant", () => {
     const plan = reconcilierCalendrier(
       [fragmentRealise("v-frag", "frag-vmc", "2025-06-01T00:00:00Z")],
