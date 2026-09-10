@@ -35,7 +35,14 @@ import {
  * `PERIODICITE_EN_JOURS[p] != null` que deux lecteurs faisaient à la main.
  */
 export function estCyclique(periodicite: Periodicite): boolean {
-  return PERIODICITE_CALENDAIRE[periodicite] !== null;
+  // `?? null` et non `!== null` seul : une clé inconnue rend `undefined`, que
+  // `!== null` tient pour vraie — le code inventerait alors un rendez-vous
+  // suivant sur une périodicité qu'il ne connaît pas. L'ancienne écriture,
+  // `!= null`, écartait les deux ; celle-ci fait pareil sans le double égal.
+  // Les deux appelants d'`etats.ts` arrivent ici par un `as Periodicite` sur
+  // une chaîne venue de la base : c'est ce transtypage qui rend le cas
+  // atteignable, et le sens prudent est de traiter l'inconnu comme ponctuel.
+  return (PERIODICITE_CALENDAIRE[periodicite] ?? null) !== null;
 }
 
 /**
@@ -54,7 +61,7 @@ export function prochaineEcheance(
   derniere: Date,
   periodicite: Periodicite,
 ): Date | null {
-  const pas = PERIODICITE_CALENDAIRE[periodicite];
+  const pas = PERIODICITE_CALENDAIRE[periodicite] ?? null;
   if (pas === null) return null;
   return "mois" in pas
     ? ajouterMois(derniere, pas.mois)

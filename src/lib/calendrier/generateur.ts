@@ -1049,11 +1049,27 @@ export function reconcilierCalendrier(
         dateRealisee = null;
         statut = "depassee";
       }
-    } else if (heritee !== null) {
-      // La ligne absorbante existe mais n'a PAS de réalisation propre : elle
-      // reprend celle des lignes qu'elle absorbe. Placée après la branche
-      // ci-dessus, et c'est délibéré : une réalisation faite SOUS LE NOUVEL
-      // IDENTIFIANT est plus récente que tout héritage et prime toujours.
+    } else if (heritee !== null && !ex.porteUnePreuve) {
+      // La ligne absorbante existe mais n'a JAMAIS ÉTÉ RÉALISÉE sous son
+      // propre identifiant : elle reprend la réalisation des lignes qu'elle
+      // absorbe. Placée après la branche ci-dessus, et c'est délibéré : une
+      // réalisation faite SOUS LE NOUVEL IDENTIFIANT prime toujours.
+      //
+      // `!ex.porteUnePreuve` N'EST PAS UNE PRÉCAUTION, c'est ce qui rend
+      // l'héritage NON RÉPÉTABLE — et sans lui il se rejouait à l'infini, en
+      // faisant RECULER la ligne de plusieurs années. Le chemin : la ligne
+      // absorbée est archivée avec sa preuve, donc conservée pour toujours
+      // (ADR-012) et gardant sa réalisation ancienne ; l'absorbante est
+      // contrôlée, puis son cycle expire et la branche « période écoulée »
+      // ci-dessus remet `dateRealisee` à `null` ; la passe suivante retombe
+      // ici et réécrit la date depuis la réalisation de 2021. Reproduit :
+      // une ligne au 2029-02-01 repartait au 2024-01-10, et le dossier
+      // annonçait cinq ans de retard sur un contrôle fait trois ans plus tôt.
+      //
+      // La preuve est le seul signal qui SURVIT au roulement de cycle :
+      // `dateRealisee` est effacée, les rapports restent attachés. Limite
+      // connue : une ligne marquée réalisée SANS aucun rapport — ce que seuls
+      // les seeds produisent — pourrait hériter une fois de trop.
       //
       // On reporte l'ÉCHÉANCE, pas la réalisation. Écrire `dateRealisee` ici
       // ferait dire à cette ligne « contrôle effectué le … » alors qu'aucun

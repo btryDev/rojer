@@ -1283,6 +1283,18 @@ deux rapports.
 > avec sa preuve. Écrire `dateRealisee` sur celle-là lui ferait attester un
 > contrôle dont elle ne porte aucun rapport.
 >
+> **UN DÉFAUT DE CE LOT, TROUVÉ EN RELECTURE ET CORRIGÉ LE MÊME JOUR.**
+> L'héritage se rejouait à l'infini et faisait RECULER la ligne absorbante de
+> plusieurs années. Le chemin : la ligne absorbée est archivée avec sa preuve,
+> donc conservée pour toujours en gardant sa réalisation ancienne ; l'absorbante
+> est contrôlée, son cycle expire, `dateRealisee` repasse à `null` ; la passe
+> suivante retombait dans l'héritage — que seul `dateRealisee === null`
+> gardait — et réécrivait la date depuis l'ancienne réalisation. Mesuré : une
+> ligne au 2029-02-01 repartait au 2024-01-10, cinq ans de retard annoncés sur
+> un contrôle fait trois ans plus tôt. La garde est `!porteUnePreuve` : la
+> preuve est le seul signal qui SURVIT au roulement de cycle, `dateRealisee`
+> étant effacée quand les rapports restent attachés.
+>
 > **LA RÈGLE DE FUSION EST POSÉE À « LA PLUS ANCIENNE », ET C'EST UNE DÉDUCTION.**
 > La veille du 2026-09-10 l'a cherchée aux sources primaires et ne l'a pas
 > trouvée : `R. 4222-20` ne porte aucun chiffre, l'arrêté du 8 octobre 1987 dit
@@ -1330,6 +1342,15 @@ de l'ADR-023 — un test existant le montre.
 > l'archivage avant de regarder les dates. `classerVerification` rend un état
 > `archivee`, qui traverse les cinq tables de vocabulaire. Retirer l'une ou
 > l'autre garde fait rougir le test qui la nomme.
+>
+> **UNE HUITIÈME SURFACE, trouvée en relecture le même jour** : la requête du
+> tableau de bord (`app/etablissements/[id]/page.tsx`) ne filtrait que sur le
+> statut. Une ligne archivée, gelée sur `depassee`, portant donc la date la plus
+> ancienne, arrivait EN TÊTE du tri croissant : le widget de compte à rebours
+> annonçait « Prochaine échéance — Ne s'applique plus — … » et elle consommait
+> une des cinq places. Le premier lot avait dé-rougi ces widgets sans les
+> empêcher d'afficher la ligne. Filtrée en SQL sur le préfixe du libellé —
+> laid et temporaire, l'ADR-034 le remplace par un champ.
 >
 > **SEPT SURFACES CONTOURNAIENT LES CLASSIFIEURS, pas deux.** Le brief en citait
 > deux ; une contre-expertise en a trouvé cinq, une contre-contre-expertise a
