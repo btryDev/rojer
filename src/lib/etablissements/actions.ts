@@ -10,8 +10,7 @@ import {
   assertEntrepriseOwnership,
   assertEtablissementOwnership,
 } from "@/lib/auth/scope";
-import { genererCalendrier } from "@/lib/calendrier/actions";
-import { marquerCalendrierPerime } from "@/lib/calendrier/reconciliation";
+import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
   etablissementCreationSchema,
   etablissementSchema,
@@ -262,20 +261,18 @@ export async function modifierEtablissement(
   revalidatePath(`/etablissements/${id}`);
 
   if (typologieAChange(avant, parsed.data)) {
-    try {
-      await genererCalendrier(id);
+    // Le garde est celui de `calendrier/regeneration-sure`, comme partout
+    // ailleurs. Il était ici recopié à la main — c'est en migrant les six
+    // appels qui n'en avaient AUCUN qu'on a vu que deux autres en avaient un,
+    // écrit deux fois.
+    if (await regenererApresMutation(id, "etablissements")) {
       revalidatePath(`/etablissements/${id}/calendrier`);
-    } catch (err) {
-      console.error(
-        `[etablissements] regen calendrier a échoué pour ${id}`,
-        err,
-      );
-      // Marqué périmé : la prochaine ouverture du calendrier le
-      // recalculera d'elle-même (cf. `marquerCalendrierPerime`).
-      await marquerCalendrierPerime(id);
+    } else {
       return {
         status: "success_avec_avertissement",
         id,
+        // Le message reste PROPRE À CET ÉCRAN : « vos obligations » y dit
+        // mieux ce qui n'a pas bougé que le libellé générique du module.
         message:
           "Fiche enregistrée. Vos obligations n'ont pas pu être recalculées " +
           "à l'instant : elles le seront automatiquement à la prochaine " +

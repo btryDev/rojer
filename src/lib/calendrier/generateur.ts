@@ -176,6 +176,48 @@ export type OptionsGenerateur = {
    * Absent = comportement antérieur : tout ce qui manque est réputé retiré.
    */
   obligationsEncoreApplicables?: Set<string>;
+  /**
+   * Les équipements encore en service, par identifiant.
+   *
+   * Sert à une question que `obligationsEncoreApplicables` ne sait pas poser :
+   * une ligne est identifiée par une obligation ET UN PORTEUR, et l'obligation
+   * peut parfaitement vivre chez un AUTRE porteur que celui de cette ligne.
+   *
+   * Le cas : deux extincteurs, l'un retiré. L'obligation reste applicable —
+   * le second la porte —, donc la ligne du premier était classée « rien à
+   * faire » et restait en base avec son statut, comptée en retard
+   * indéfiniment. Ni archivée, ni supprimée, ni relancée, pour un appareil qui
+   * n'existe plus. Le bouton de suppression promet pourtant « ne génère plus
+   * d'échéance ».
+   *
+   * **Seul le porteur ÉQUIPEMENT est concerné**, et c'est délibéré. Un porteur
+   * établissement ne disparaît jamais. Un porteur salarié disparaît, mais
+   * l'ADR-023 a tranché que sa ligne n'est PAS barrée pour autant : c'est la
+   * personne qui est partie, pas l'obligation qui cesse — et la ligne atteste
+   * qu'elle détenait son titre au moment où elle opérait.
+   *
+   * Absent = comportement antérieur : un porteur disparu ne se distingue pas
+   * d'un porteur vivant.
+   */
+  equipementsEnService?: Set<string>;
+  /**
+   * Qui reprend le contenu de qui, quand une obligation est retirée du
+   * référentiel : identifiant retiré → identifiant absorbant.
+   *
+   * **La succession est DÉCLARÉE, jamais dérivée** (ADR-024). Rien ici ne
+   * devine qu'une obligation en remplace une autre par ressemblance de
+   * domaine, d'article ou de libellé : la donnée vient de
+   * `OBLIGATIONS_RETIREES.absorbePar`, écrite à la main par qui a fait le
+   * retrait.
+   *
+   * Sans elle, un identifiant qui change casse la continuité : l'ancienne
+   * ligne est barrée « Ne s'applique plus » et une ligne neuve apparaît « à
+   * planifier », urgente, pour un acte que le dirigeant vient de faire faire.
+   *
+   * Absent = comportement antérieur : aucune reprise, chaque identifiant vit
+   * sa vie.
+   */
+  successions?: ReadonlyMap<string, string>;
 };
 
 /** Un titre déclaré, réduit à ce dont le générateur a besoin (ADR-023). */
@@ -659,6 +701,17 @@ export type OccurrenceExistante = {
  *  cible d'écriture : il est stable par construction. */
 export type MiseAJourOccurrence = {
   id: string;
+  /**
+   * L'identifiant d'obligation À ÉCRIRE. Il ne bouge que dans un cas : une
+   * ligne ADOPTÉE, dont l'obligation a changé de nom (scission, renommage).
+   * Partout ailleurs il vaut celui que la ligne portait déjà, et le réécrire
+   * ne coûte rien.
+   *
+   * Aucun risque de collision avec la contrainte d'unicité : si une rangée
+   * existait déjà à la clé cible, la réconciliation l'aurait trouvée par sa
+   * clé et n'aurait adopté personne.
+   */
+  obligationId: string;
   libelleObligation: string;
   periodicite: Periodicite;
   realisateurRequis: Realisateur[];
@@ -726,6 +779,107 @@ function memeInstant(a: Date | null, b: Date | null): boolean {
  * alors prises pour des obligations retirées du référentiel — et archivées à
  * tort.
  */
+/**
+ * LA RÈGLE DE FUSION : quand N lignes sont absorbées par une seule, laquelle
+ * de leurs réalisations la ligne unique reprend-elle ?
+ *
+ * **La PLUS ANCIENNE.** Isolée dans cette fonction pour que la trancher
+ * autrement soit une ligne à changer, pas une chasse dans le fichier.
+ *
+ * POURQUOI LA PLUS ANCIENNE, ET CE QUE CETTE RAISON VAUT. C'est une
+ * **déduction**, pas une phrase de texte — la veille du 2026-09-10 l'a
+ * cherchée aux sources primaires et ne l'a pas trouvée : `R. 4222-20` ne porte
+ * aucun chiffre, l'arrêté du 8 octobre 1987 dit « au minimum une fois par an »
+ * sans dire d'où part l'intervalle, et le focus juridique de l'INRS le reprend
+ * sans le préciser. Ce qui est écrit, en revanche, c'est que l'obligation
+ * absorbante porte sur « l'ensemble des installations » et sur « TOUS les
+ * éléments » : un élément contrôlé il y a plus d'un an la rend non satisfaite,
+ * quoi qu'aient dit les autres. C'est donc le plus ancien qui commande.
+ *
+ * Et c'est le sens d'erreur qu'on veut. Prendre la plus récente ferait
+ * afficher « à jour » un parc contrôlé au tiers ; ne rien reprendre ferait
+ * afficher « à planifier » un acte accompli. La plus ancienne se trompe vers
+ * « à refaire », jamais vers « rien à faire » — cohérent avec l'ADR-022, qui a
+ * déjà tranché que le tout hérite de la criticité la plus HAUTE de ses
+ * fragments.
+ *
+ * UNE LIGNE SANS RÉALISATION NE LÈGUE RIEN, et ne bloque rien non plus : elle
+ * n'atteste d'aucun contrôle, seulement d'une absence d'enregistrement. La
+ * faire primer donnerait une ligne absorbante vierge, donc « à planifier »,
+ * donc le symptôme qu'on répare.
+ */
+function reprendreLaRealisation(
+  candidate: Date,
+  dejaRetenue: Date | undefined,
+): Date {
+  if (dejaRetenue === undefined) return candidate;
+  return candidate < dejaRetenue ? candidate : dejaRetenue;
+}
+
+/**
+ * La même règle, appliquée à deux LIGNES plutôt qu'à deux dates : sert à
+ * départager plusieurs prédécesseurs candidats à l'adoption.
+ *
+ * Une ligne sans réalisation ne l'emporte jamais sur une ligne qui en porte
+ * une — elle n'atteste de rien, et adopter la vide ferait perdre la seule date
+ * connue.
+ */
+function plusAncienne(
+  candidate: OccurrenceExistante,
+  retenue: OccurrenceExistante,
+): boolean {
+  if (candidate.dateRealisee === null) return false;
+  if (retenue.dateRealisee === null) return true;
+  return candidate.dateRealisee < retenue.dateRealisee;
+}
+
+/**
+ * Ce que les obligations retirées lèguent à celles qui les absorbent.
+ *
+ * DEUX TABLES, ET LA RAISON D'ÊTRE DE LA SECONDE. Une ligne est identifiée par
+ * une obligation ET un porteur ; ne retenir que l'obligation ferait, le jour où
+ * un absorbant serait porté par un ÉQUIPEMENT, hériter une seule réalisation à
+ * TOUTES ses lignes. Un contrôle fait sur la VMC daterait la ligne de la hotte
+ * jamais contrôlée, qui naîtrait « planifiée » — exactement le sens d'erreur
+ * que `reprendreLaRealisation` dit éviter.
+ *
+ *  · `parCle` — le porteur est CONSERVÉ : la ligne d'un appareil hérite de la
+ *    ligne du même appareil. C'est le cas d'un simple changement de nom.
+ *  · `parObligation` — les porteurs sont FONDUS : N lignes d'équipement pour
+ *    une ligne d'établissement. Consultée uniquement par une ligne
+ *    d'établissement, qui est seule par construction, donc seule destinataire
+ *    possible d'une fusion.
+ *
+ * Les quatre successions déclarées à ce jour visent toutes un absorbant porté
+ * par l'établissement : c'est `parObligation` qui sert. `parCle` n'a pas
+ * d'utilisateur — elle existe pour que le premier absorbant porté par un
+ * équipement ne se serve pas en silence de la mauvaise table.
+ */
+function heritageDesRetirees(
+  existantes: OccurrenceExistante[],
+  successions: ReadonlyMap<string, string> | undefined,
+): { parCle: Map<string, Date>; parObligation: Map<string, Date> } {
+  const parCle = new Map<string, Date>();
+  const parObligation = new Map<string, Date>();
+  if (successions === undefined) return { parCle, parObligation };
+
+  for (const ex of existantes) {
+    const absorbant = successions.get(ex.obligationId);
+    if (absorbant === undefined || ex.dateRealisee === null) continue;
+
+    const cle = cleDeLigne(absorbant, {
+      equipementId: ex.equipementId,
+      salarieId: ex.salarieId ?? null,
+    });
+    parCle.set(cle, reprendreLaRealisation(ex.dateRealisee, parCle.get(cle)));
+    parObligation.set(
+      absorbant,
+      reprendreLaRealisation(ex.dateRealisee, parObligation.get(absorbant)),
+    );
+  }
+  return { parCle, parObligation };
+}
+
 export function reconcilierCalendrier(
   existantes: OccurrenceExistante[],
   aGenerer: VerificationGenere[],
@@ -752,11 +906,104 @@ export function reconcilierCalendrier(
     inchangees: 0,
   };
   const vues = new Set<string>();
+  // Les clés des lignes ADOPTÉES : elles ont changé d'identifiant d'obligation,
+  // donc leur ancienne clé ne sera jamais « vue » par une ligne générée. Sans
+  // ce second registre, la boucle finale les prendrait pour des orphelines et
+  // les barrerait — celles-là mêmes qu'on vient de sauver.
+  const adoptees = new Set<string>();
+
+  // Ce que les obligations retirées lèguent à celles qui les absorbent :
+  // identifiant absorbant → réalisation reprise.
+  const heritage = heritageDesRetirees(existantes, options.successions);
+
+  // L'inverse de la table de successions : à qui succède-t-on. Un identifiant
+  // peut avoir PLUSIEURS prédécesseurs — c'est le cas d'une fusion.
+  const predecesseurs = new Map<string, string[]>();
+  for (const [ancien, nouveau] of options.successions ?? []) {
+    const liste = predecesseurs.get(nouveau) ?? [];
+    liste.push(ancien);
+    predecesseurs.set(nouveau, liste);
+  }
+
+  /**
+   * La ligne existante que cette ligne générée CONTINUE, s'il y en a une.
+   *
+   * Condition stricte : même porteur. Une ligne d'équipement ne peut continuer
+   * que la ligne du même appareil, une ligne d'établissement que la ligne
+   * d'établissement — sans quoi on ferait migrer une rangée d'un porteur à un
+   * autre, ce qu'aucune succession déclarée ne dit et que la contrainte
+   * d'unicité ne pardonnerait pas.
+   *
+   * Quand plusieurs prédécesseurs sont candidats — une fusion dont les
+   * fragments partagent le porteur de l'absorbant —, c'est la réalisation la
+   * plus ancienne qui l'emporte, comme partout ailleurs dans ce fichier. Les
+   * autres suivent le chemin ordinaire : archivées avec leur preuve.
+   */
+  function adopter(g: VerificationGenere): OccurrenceExistante | undefined {
+    const preds = predecesseurs.get(g.obligationId);
+    if (preds === undefined) return undefined;
+
+    let cleRetenue: string | undefined;
+    let retenue: OccurrenceExistante | undefined;
+    for (const pred of preds) {
+      const cle = cleDeLigne(pred, {
+        equipementId: g.equipementId,
+        salarieId: g.salarieId,
+      });
+      if (adoptees.has(cle)) continue;
+      const candidate = parCle.get(cle);
+      if (candidate === undefined) continue;
+
+      if (retenue === undefined || plusAncienne(candidate, retenue)) {
+        cleRetenue = cle;
+        retenue = candidate;
+      }
+    }
+
+    if (cleRetenue === undefined) return undefined;
+    adoptees.add(cleRetenue);
+    return retenue;
+  }
 
   for (const g of aGenerer) {
-    const ex = parCle.get(g.cleUnique);
+    // ADOPTION AVANT TOUT. Une ligne dont l'obligation a changé de nom n'est
+    // pas une ligne perdue : c'est la même ligne, et elle doit rester la même
+    // RANGÉE — avec son identifiant, ses rapports et ses actions attachés.
+    // Reporter seulement l'échéance sur une ligne neuve marcherait aussi, mais
+    // laisserait la preuve sur une ligne barrée pendant que la ligne vivante
+    // affiche une date qu'elle ne peut pas justifier.
+    const ex = parCle.get(g.cleUnique) ?? adopter(g);
+    // Le porteur d'abord — une ligne hérite de la ligne du même appareil.
+    // À défaut, et SEULEMENT si cette ligne est celle de l'établissement, la
+    // fusion : N porteurs fondus en un, qui est seul par construction.
+    const estLigneEtablissement =
+      g.equipementId === null && g.salarieId === null;
+    const heritee =
+      heritage.parCle.get(g.cleUnique) ??
+      (estLigneEtablissement
+        ? heritage.parObligation.get(g.obligationId)
+        : undefined) ??
+      null;
+
     if (!ex) {
-      plan.aCreer.push(g);
+      if (heritee === null) {
+        plan.aCreer.push(g);
+        continue;
+      }
+      // La ligne absorbante NAÎT DÉJÀ DATÉE. Sans cela, l'exploitant qui a
+      // fait faire son contrôle voit apparaître une ligne « à planifier »,
+      // urgente, pour un acte accompli — c'est le symptôme que ce report
+      // existe pour éteindre.
+      const prochaine = prochaineDate(heritee, g.periodicite);
+      plan.aCreer.push(
+        prochaine === null
+          ? g
+          : {
+              ...g,
+              datePrevue: prochaine,
+              statut: estEnRetard(prochaine, now) ? "depassee" : "planifiee",
+            },
+      );
       continue;
     }
     vues.add(g.cleUnique);
@@ -810,6 +1057,21 @@ export function reconcilierCalendrier(
         dateRealisee = null;
         statut = "depassee";
       }
+    } else if (heritee !== null) {
+      // La ligne absorbante existe mais n'a PAS de réalisation propre : elle
+      // reprend celle des lignes qu'elle absorbe. Placée après la branche
+      // ci-dessus, et c'est délibéré : une réalisation faite SOUS LE NOUVEL
+      // IDENTIFIANT est plus récente que tout héritage et prime toujours.
+      //
+      // On reporte l'ÉCHÉANCE, pas la réalisation. Écrire `dateRealisee` ici
+      // ferait dire à cette ligne « contrôle effectué le … » alors qu'aucun
+      // rapport n'y est attaché — la pièce est restée sur la ligne archivée,
+      // qui la conserve (ADR-012). Une ligne ne doit jamais attester d'un acte
+      // dont elle ne porte pas la preuve.
+      const prochaine = prochaineDate(heritee, g.periodicite);
+      datePrevue = prochaine ?? ex.datePrevue;
+      dateRealisee = null;
+      statut = statutCycleOuvert(datePrevue, ex.statut, now);
     } else if (ex.statut === "a_planifier" && g.statut === "planifiee") {
       // La ligne n'avait qu'un **placeholder** — « à planifier » n'est pas
       // un rendez-vous, c'est son absence — et le générateur sait désormais
@@ -830,6 +1092,7 @@ export function reconcilierCalendrier(
 
     const cible: MiseAJourOccurrence = {
       id: ex.id,
+      obligationId: g.obligationId,
       libelleObligation: g.libelleObligation,
       periodicite: g.periodicite,
       realisateurRequis: g.realisateurRequis,
@@ -840,6 +1103,7 @@ export function reconcilierCalendrier(
     };
 
     const identique =
+      cible.obligationId === ex.obligationId &&
       cible.libelleObligation === ex.libelleObligation &&
       cible.periodicite === ex.periodicite &&
       memeListe(cible.realisateurRequis, ex.realisateurRequis) &&
@@ -864,23 +1128,54 @@ export function reconcilierCalendrier(
   // `triennale` à `autre` (ADR-023 § 6).
   const encoreApplicables = options.obligationsEncoreApplicables;
   for (const [cle, ex] of parCle) {
-    if (vues.has(cle)) continue;
+    // `adoptees` : ces lignes ont changé d'identifiant d'obligation, donc leur
+    // ancienne clé n'a été vue par aucune ligne générée. Elles ne sont pas
+    // orphelines pour autant — elles CONTINUENT sous un autre nom.
+    if (vues.has(cle) || adoptees.has(cle)) continue;
     // `dateRealisee` compte comme une trace au même titre qu'un rapport : elle
     // atteste qu'un contrôle a eu lieu, même si la pièce jointe a depuis été
     // retirée du registre.
     const porteUneTrace = ex.porteUnePreuve || ex.dateRealisee !== null;
 
-    // L'obligation vit encore : la ligne n'a simplement plus de rendez-vous.
+    // LE PORTEUR DE CETTE LIGNE-CI EXISTE-T-IL ENCORE ? La question n'est pas
+    // celle de l'applicabilité de l'obligation : une ligne est identifiée par
+    // une obligation ET un porteur, et l'obligation peut vivre chez un autre
+    // appareil que celui-ci. Deux extincteurs, l'un retiré : l'obligation
+    // s'applique toujours, mais pas à l'appareil retiré.
+    //
+    // Seul l'équipement se teste. Le porteur établissement ne disparaît pas ;
+    // le porteur salarié disparaît sans que sa ligne soit barrée (ADR-023).
+    const porteurDisparu =
+      ex.equipementId !== null &&
+      options.equipementsEnService !== undefined &&
+      !options.equipementsEnService.has(ex.equipementId);
+
+    // L'obligation vit encore ET son porteur aussi : la ligne n'a simplement
+    // plus de rendez-vous.
     // Sans preuve, elle ne dit plus rien et disparaît — elle n'aurait jamais dû
     // porter de date. Avec une preuve, elle reste telle quelle : c'est le
     // constat d'un contrôle qui a eu lieu, et rien ne justifie de le barrer.
-    if (encoreApplicables?.has(ex.obligationId)) {
+    if (encoreApplicables?.has(ex.obligationId) && !porteurDisparu) {
       if (porteUneTrace) plan.inchangees += 1;
       else plan.aSupprimer.push(ex.id);
       continue;
     }
 
     if (!porteUneTrace) {
+      // CE QUE CETTE SUPPRESSION LAISSE PASSER, et il vaut mieux l'écrire que
+      // le redécouvrir : désactiver puis réactiver un appareil BLANCHIT le
+      // retard accumulé sur ses lignes sans preuve. La ligne est supprimée à la
+      // désactivation, recréée à la réactivation, et sa date repart de la mise
+      // en service ou de maintenant — alors que la branche « cycle ouvert »,
+      // soixante lignes plus haut, dit que repousser `datePrevue` à `now`
+      // efface un retard qu'il faut garder.
+      //
+      // Ce n'est pas un trou ouvert par le porteur : il existait déjà pour le
+      // parc d'un seul appareil, où le retrait rend l'obligation inapplicable
+      // et emporte la ligne par le même chemin. Le lot 2 l'élargit au parc
+      // multiple, il ne l'invente pas. Le refermer voudrait dire archiver une
+      // ligne qui n'atteste de rien, contre la règle — établie et éprouvée —
+      // qu'une ligne sans preuve « ne dit plus rien et disparaît ».
       plan.aSupprimer.push(ex.id);
     } else if (!estMarqueeNonApplicable(ex.libelleObligation)) {
       plan.aArchiver.push({

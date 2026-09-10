@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { genererCalendrier } from "@/lib/calendrier/actions";
-import { marquerCalendrierPerime } from "@/lib/calendrier/reconciliation";
+import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { salarieSchema, titreSchema } from "./schema";
 import { exclusionsDuTitre, titreParId } from "./catalogue";
 
@@ -39,15 +38,7 @@ export type TitreActionState =
  * ni périmé en version, rien ne le reprendrait.
  */
 async function regenererEtRafraichir(etablissementId: string): Promise<void> {
-  try {
-    await genererCalendrier(etablissementId);
-  } catch (err) {
-    console.error(
-      `[salaries] regen calendrier a échoué pour ${etablissementId}`,
-      err,
-    );
-    await marquerCalendrierPerime(etablissementId);
-  }
+  await regenererApresMutation(etablissementId, "salaries");
 
   // `"layout"` et non le chemin nu : une échéance de titre s'affiche sur CINQ
   // écrans de l'établissement — tableau de bord, calendrier, plan d'actions,

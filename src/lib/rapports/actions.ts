@@ -7,7 +7,7 @@ import type { StatutVerification } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { cleRapport, getStorage } from "@/lib/storage";
-import { genererCalendrier } from "@/lib/calendrier/actions";
+import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { estEnRetard } from "@/lib/dates/retard";
 import {
   estResultatRealise,
@@ -189,7 +189,13 @@ export async function uploadRapport(
   // 7. Régénération du calendrier. Elle est désormais idempotente (ADR-012) :
   // elle recale la prochaine échéance sans supprimer la ligne de suivi, donc
   // sans emporter le rapport qui vient d'être déposé.
-  await genererCalendrier(verif.etablissementId);
+  //
+  // ET ELLE NE PEUT PLUS FAIRE ÉCHOUER LE DÉPÔT. Le rapport est commité et le
+  // fichier est écrit : un recalage qui échoue rendait pourtant une erreur à
+  // l'utilisateur, qui redéposait — et obtenait DEUX rapports pour un seul
+  // contrôle. Le calendrier est marqué périmé, la prochaine ouverture le
+  // reprend, et le dépôt reste ce qu'il est : acquis.
+  await regenererApresMutation(verif.etablissementId, "rapports/upload");
 
   revalidatePath(`/etablissements/${verif.etablissementId}/calendrier`);
   revalidatePath(`/etablissements/${verif.etablissementId}/registre`);
@@ -250,7 +256,9 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
 
   // La base a tranché : on peut libérer le fichier.
   await getStorage().delete(rap.fichierCle).catch(() => {});
-  await genererCalendrier(rap.etablissementId);
+  // La suppression est commitée et le fichier libéré : le recalage ne peut
+  // plus, en échouant, faire remonter une erreur sur une opération faite.
+  await regenererApresMutation(rap.etablissementId, "rapports/suppression");
 
   revalidatePath(`/etablissements/${rap.etablissementId}/calendrier`);
   revalidatePath(`/etablissements/${rap.etablissementId}/registre`);

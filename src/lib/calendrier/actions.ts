@@ -12,6 +12,7 @@ import {
 import {
   estPorteeParSalarie,
   obligationParId,
+  OBLIGATIONS_RETIREES,
   REFERENTIEL_VERSION,
 } from "@/lib/referentiels/conformite";
 import {
@@ -23,6 +24,7 @@ import {
   type StatutVerificationPersiste,
   type TitreDeclare,
 } from "./generateur";
+import { marquerCalendrierPerime } from "./reconciliation";
 
 export type GenerationResult = {
   /** Lignes de suivi nouvellement ouvertes (nouvel équipement, nouvelle
@@ -109,6 +111,71 @@ export async function regenererSansInvalider(
   etablissementId: string,
 ): Promise<GenerationResult> {
   await assertEtablissementOwnership(etablissementId);
+
+  let passe = await regenererUnePasse(etablissementId);
+  let tentative = 1;
+  while (!passe.converge && tentative < TENTATIVES_MAX) {
+    passe = await regenererUnePasse(etablissementId);
+    tentative += 1;
+  }
+
+  // Personne n'a cessé d'écrire pendant toutes les tentatives. On rend la
+  // main plutôt que de boucler — mais la passe qui vient de s'exécuter a
+  // inscrit la version courante du référentiel, ce qui ferait passer le
+  // calendrier pour à jour alors qu'une ligne au moins n'a pas été réalignée.
+  // On efface donc ce repère : la prochaine ouverture régénérera d'elle-même.
+  if (!passe.converge) await marquerCalendrierPerime(etablissementId);
+
+  return passe.resultat;
+}
+
+/** Au-delà, on cesse de réessayer et on marque le calendrier périmé. Trois
+ *  passes suffisent à absorber une concurrence ordinaire — deux onglets, un
+ *  dépôt de rapport pendant une déclaration d'équipement. */
+const TENTATIVES_MAX = 3;
+
+/**
+ * `OBLIGATIONS_RETIREES` réduit à ce dont la réconciliation a besoin : les
+ * retraits QUI ONT UN ABSORBANT, sous forme de table.
+ *
+ * `absorbePar` portait cette donnée depuis le 2026-08-27 et **aucun code ne la
+ * lisait** — l'ADR-022 le disait de lui-même, « un manque, pas une décision ».
+ * C'est cette ligne qui la branche.
+ *
+ * Calculée une fois : le référentiel est du TypeScript figé à la compilation
+ * (ADR-003), il ne change pas d'un appel à l'autre.
+ */
+const SUCCESSIONS_DECLAREES: ReadonlyMap<string, string> = new Map(
+  Object.entries(OBLIGATIONS_RETIREES).flatMap(([retire, r]) =>
+    r.absorbePar === null ? [] : [[retire, r.absorbePar] as [string, string]],
+  ),
+);
+
+type PasseRegeneration = {
+  resultat: GenerationResult;
+  /** `false` dès qu'une écriture a touché MOINS de lignes que le plan n'en
+   *  prévoyait : la base ne ressemblait plus à ce que la lecture avait vu. */
+  converge: boolean;
+};
+
+/**
+ * Une passe : lire, calculer le plan, l'appliquer — et dire si la base a
+ * bougé sous nos pieds.
+ *
+ * **Le plan est calculé sur une lecture, et appliqué plus tard.** Entre les
+ * deux, un prestataire peut déposer un rapport, le dirigeant créer une action
+ * corrective. Les écritures ci-dessous sont donc CONDITIONNÉES sur ce que la
+ * lecture a vu : une ligne qui a changé entre-temps n'est ni écrasée ni
+ * supprimée, elle sort simplement du lot. PostgreSQL rend alors un compte plus
+ * court que le plan, et c'est ce compte qui fait `converge: false`.
+ *
+ * L'écart n'est pas une erreur, c'est le signal que le monde a bougé :
+ * l'appelant recalcule sur une lecture fraîche. La régénération étant
+ * idempotente (ADR-012), relancer ne coûte qu'un aller-retour.
+ */
+async function regenererUnePasse(
+  etablissementId: string,
+): Promise<PasseRegeneration> {
   const now = new Date();
 
   // 1. Lecture établissement + équipements encore en service.
@@ -283,6 +350,10 @@ export async function regenererSansInvalider(
   const plan = reconcilierCalendrier(existantes, aGenerer, {
     now,
     obligationsEncoreApplicables,
+    // `etab.equipements` est déjà filtré sur `actif: true` par la lecture du
+    // point 1 : c'est exactement l'ensemble des porteurs encore en service.
+    equipementsEnService: new Set(etab.equipements.map((eq) => eq.id)),
+    successions: SUCCESSIONS_DECLAREES,
   });
 
   // 5. Application du plan — tout ou rien. Un calendrier à moitié régénéré
@@ -299,13 +370,37 @@ export async function regenererSansInvalider(
   //    repère de version s'écrit dans le lot, l'échec relançait l'opération au
   //    chargement suivant, indéfiniment (P2028).
   const operations: Prisma.PrismaPromise<unknown>[] = [];
+  // Combien de lignes chaque opération doit toucher, dans le même ordre.
+  // `null` = compte non contrôlé : l'écriture du repère de version porte sur
+  // l'établissement, pas sur des lignes de calendrier.
+  const attendus: (number | null)[] = [];
+
+  // Ce que la lecture a vu, ligne par ligne : la référence des écritures
+  // conditionnées ci-dessous.
+  const lues = new Map(existantes.map((e) => [e.id, e]));
 
   if (plan.aSupprimer.length > 0) {
+    // `rapports: none` et `actions: none` REDISENT en SQL ce que le plan a
+    // conclu en mémoire, et c'est tout leur intérêt : entre la lecture et
+    // ici, un prestataire a pu déposer un rapport, le dirigeant créer une
+    // action corrective. Sans ces clauses, le `deleteMany` les emporte par
+    // cascade — mot pour mot ce que l'ADR-012 déclare impossible.
+    //
+    // `dateRealisee: null` complète le trio : le réconciliateur compte la
+    // date de réalisation comme une trace au même titre qu'une pièce jointe
+    // (`porteUneTrace`), donc la condition d'ici doit compter les trois.
     operations.push(
       prisma.verification.deleteMany({
-        where: { id: { in: plan.aSupprimer }, etablissementId },
+        where: {
+          id: { in: plan.aSupprimer },
+          etablissementId,
+          rapports: { none: {} },
+          actions: { none: {} },
+          dateRealisee: null,
+        },
       }),
     );
+    attendus.push(plan.aSupprimer.length);
   }
 
   if (plan.aCreer.length > 0) {
@@ -330,13 +425,47 @@ export async function regenererSansInvalider(
         skipDuplicates: true,
       }),
     );
+    // Le compte attendu est celui des clés DISTINCTES, pas des entrées. Si le
+    // plan proposait deux fois la même ligne, `skipDuplicates` en poserait une
+    // et le compte serait court à chaque passe — donc divergence à chaque
+    // passe, trois régénérations complètes, puis calendrier marqué périmé, et
+    // le tout à chaque ouverture de page, indéfiniment. Le plan ne devrait
+    // jamais proposer de doublon ; ce n'est pas une raison pour qu'un doublon
+    // se paie d'une boucle plutôt que d'une ligne posée une seule fois.
+    //
+    // Un compte court avec des clés distinctes, en revanche, dit bien ce qu'il
+    // doit dire : une régénération concurrente a créé la même ligne avant
+    // nous. Rien n'est perdu, mais le monde a bougé, et c'est à une passe
+    // fraîche de dire si cette ligne demande un réalignement.
+    attendus.push(new Set(plan.aCreer.map((v) => v.cleUnique)).size);
   }
 
   for (const m of plan.aMettreAJour) {
+    const lu = lues.get(m.id);
+    // Inatteignable : le plan ne met à jour que des lignes qu'il vient de
+    // lire. Le `continue` évite d'écrire sans condition si ça cessait d'être
+    // vrai.
+    if (lu === undefined) continue;
     operations.push(
-      prisma.verification.update({
-        where: { id: m.id },
+      prisma.verification.updateMany({
+        where: {
+          id: m.id,
+          etablissementId,
+          // Les deux champs FACTUELS de la ligne — ceux que la régénération
+          // ne calcule pas seule, et qu'un dépôt de rapport modifie. S'ils
+          // ont bougé, le `dateRealisee`/`statut` que porte ce plan a été
+          // calculé sur un passé révolu : l'écrire effacerait la réalisation
+          // qui vient d'être enregistrée, et la ligne afficherait
+          // « dépassée » avec un rapport conforme joint, à perpétuité.
+          dateRealisee: lu.dateRealisee,
+          statut: lu.statut,
+        },
         data: {
+          // Il ne bouge que pour une ligne ADOPTÉE — une obligation qui a
+          // changé de nom. La rangée continue avec ses rapports et ses
+          // actions, au lieu d'être barrée pendant qu'une ligne neuve
+          // apparaît à côté.
+          obligationId: m.obligationId,
           libelleObligation: m.libelleObligation,
           periodicite: m.periodicite,
           realisateurRequis: m.realisateurRequis as Realisateur[],
@@ -347,15 +476,22 @@ export async function regenererSansInvalider(
         },
       }),
     );
+    attendus.push(1);
   }
 
   for (const a of plan.aArchiver) {
+    // L'archivage ne réécrit que le libellé : il ne détruit rien et ne touche
+    // aucun champ factuel, donc il n'a pas à être conditionné sur eux — le
+    // conditionner ferait échouer des archivages parfaitement légitimes.
+    // `etablissementId` reste, lui : une écriture par identifiant seul n'a
+    // pas à exister sur une table scopée.
     operations.push(
-      prisma.verification.update({
-        where: { id: a.id },
+      prisma.verification.updateMany({
+        where: { id: a.id, etablissementId },
         data: { libelleObligation: a.libelleObligation },
       }),
     );
+    attendus.push(1);
   }
 
   // Le calendrier est désormais aligné sur cette version du référentiel.
@@ -368,15 +504,38 @@ export async function regenererSansInvalider(
       data: { referentielVersionCalendrier: REFERENTIEL_VERSION },
     }),
   );
+  attendus.push(null);
 
   // Les opérations s'exécutent dans l'ordre du tableau, en une transaction.
-  await prisma.$transaction(operations);
+  const resultats = await prisma.$transaction(operations);
+
+  // Le plan disait combien de lignes chaque écriture devait toucher ;
+  // PostgreSQL dit combien elle en a touché. Un écart veut dire qu'au moins
+  // une ligne ne ressemblait plus à ce que la lecture avait vu, donc que la
+  // condition l'a écartée — c'est la protection qui a joué, et il faut
+  // recalculer sur une lecture fraîche.
+  let converge = true;
+  for (const [i, attendu] of attendus.entries()) {
+    if (attendu === null) continue;
+    const rendu = resultats[i] as { count?: number } | undefined;
+    if (rendu === undefined || rendu.count !== attendu) {
+      converge = false;
+      break;
+    }
+  }
 
   return {
-    created: plan.aCreer.length,
-    updated: plan.aMettreAJour.length,
-    deleted: plan.aSupprimer.length,
-    archived: plan.aArchiver.length,
-    unchanged: plan.inchangees,
+    // Ces compteurs sont ceux du PLAN. Ils ne valent donc que si la passe a
+    // convergé — auquel cas ils sont exacts par définition, chaque écriture
+    // ayant touché ce qui était prévu. Sinon l'appelant relance, et ce sont
+    // les compteurs de la passe suivante qui seront rendus.
+    resultat: {
+      created: plan.aCreer.length,
+      updated: plan.aMettreAJour.length,
+      deleted: plan.aSupprimer.length,
+      archived: plan.aArchiver.length,
+      unchanged: plan.inchangees,
+    },
+    converge,
   };
 }

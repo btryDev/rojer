@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { genererCalendrier } from "@/lib/calendrier/actions";
+import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { depuisCleJourCivil } from "@/lib/dates";
 import { validerPrescription } from "./schema";
 
@@ -93,7 +93,7 @@ export async function creerPrescription(
     select: { id: true },
   });
 
-  await genererCalendrier(etablissementId);
+  await regenererApresMutation(etablissementId, "prescriptions");
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
   revalidatePath(`/etablissements/${etablissementId}`);
   return { status: "success", prescriptionId: p.id };
@@ -164,7 +164,7 @@ export async function leverPrescription(
     where: { id: prescriptionId, etablissementId },
     data: { dateFin: date },
   });
-  await genererCalendrier(etablissementId);
+  await regenererApresMutation(etablissementId, "prescriptions");
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
   return { status: "success", prescriptionId };
@@ -180,7 +180,7 @@ export async function reactiverPrescription(
     where: { id: prescriptionId, etablissementId },
     data: { dateFin: null, actif: true },
   });
-  await genererCalendrier(etablissementId);
+  await regenererApresMutation(etablissementId, "prescriptions");
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
 }
@@ -216,7 +216,7 @@ export async function supprimerPrescription(
   await prisma.prescriptionParticuliere.delete({
     where: { id: prescriptionId, etablissementId },
   });
-  await genererCalendrier(etablissementId);
+  await regenererApresMutation(etablissementId, "prescriptions");
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
   return { status: "success", prescriptionId };

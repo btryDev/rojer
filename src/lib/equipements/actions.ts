@@ -6,8 +6,10 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { batimentParDefaut } from "@/lib/batiments/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { genererCalendrier } from "@/lib/calendrier/actions";
-import { marquerCalendrierPerime } from "@/lib/calendrier/reconciliation";
+import {
+  MESSAGE_REGEN_ECHEC,
+  regenererApresMutation,
+} from "@/lib/calendrier/regeneration-sure";
 import {
   equipementSchema,
   normaliserFormDataEquipement,
@@ -27,30 +29,23 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
  * On ne relance pas l'exception pour autant : la mutation, elle, a réussi et
  * ne doit pas être présentée comme un échec. L'appelant transforme le
  * `message` en avertissement explicite avec la marche à suivre.
+ *
+ * **Le corps vit désormais dans `calendrier/regeneration-sure`**, et tous les
+ * appelants passent par lui. Le compte a été écrit deux fois de travers avant
+ * d'être vérifié, alors il est posé ici une bonne fois : sur les neuf appels à
+ * `genererCalendrier`, **six régénéraient à nu** — les deux de
+ * `rapports/actions.ts` et les quatre de `prescriptions/actions.ts` —, et
+ * **trois avaient déjà un garde, écrit trois fois** : celui-ci, celui de
+ * `salaries/actions.ts` et celui d'`etablissements/actions.ts`. Un appel nu
+ * faisait échouer une action serveur dont la mutation était déjà commitée ; un
+ * garde recopié fait diverger les trois copies. Ce qui reste ici est la seule
+ * chose qui soit propre à cet appelant : la mise en forme du refus.
  */
-const MESSAGE_REGEN_ECHEC =
-  "Modification enregistrée. Le calendrier des vérifications n'a pas pu être " +
-  "recalculé à l'instant : il le sera automatiquement à la prochaine " +
-  "ouverture de la page « Calendrier ».";
-
 async function regenererCalendrier(
   etablissementId: string,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  try {
-    await genererCalendrier(etablissementId);
-    return { ok: true };
-  } catch (err) {
-    console.error(
-      `[equipements] regen calendrier a échoué pour ${etablissementId}`,
-      err,
-    );
-    // Sans cette marque, l'échec passerait inaperçu : le calendrier n'est
-    // ni vide ni périmé en version, donc l'auto-réparation à l'affichage
-    // ne le reprendrait pas. On le replace dans l'état « désynchronisé »,
-    // que la prochaine ouverture du calendrier corrige d'elle-même.
-    await marquerCalendrierPerime(etablissementId);
-    return { ok: false, message: MESSAGE_REGEN_ECHEC };
-  }
+  const ok = await regenererApresMutation(etablissementId, "equipements");
+  return ok ? { ok: true } : { ok: false, message: MESSAGE_REGEN_ECHEC };
 }
 
 async function resoudreEtablissementId(equipementId: string): Promise<string> {
