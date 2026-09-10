@@ -56,12 +56,26 @@ sont les bords qui cèdent — le câblage, la lecture, les tests.
 - les constats bruts, avec leurs observables : `docs/revues/constats-reconciliateur-2026-09-09.md`
 - le banc qui mesure les garanties : `docs/revues/banc-mutation-reconciliateur.py`
 
-**Le lot 0 — réparer le harnais de test — bloque tous les autres.** Seize
-garanties sur trente-deux restent vertes quand on retire ce qu'elles prétendent
-vérifier, dont le contrôle de propriété entre clients. Le code est juste ; c'est
-le faux Prisma des tests qui ignore les `where`, et les fixtures qui pré-filtrent
-ce que le code devrait filtrer. Corriger avant, c'est valider avec des tests
-aveugles.
+**Où en est le plan, au 2026-09-10** — le § 11 fait foi, ceci n'est qu'un
+repère :
+
+- **Lot 0, le harnais de test : fait** (2026-09-09). C'était le prérequis de
+  tous les autres — quinze garanties restaient vertes quand on retirait ce
+  qu'elles prétendaient vérifier. Elles rougissent.
+- **Lot 1, l'écriture aveugle : fait** (2026-09-10). Les deux pertes de données
+  sont fermées par des écritures conditionnées sur ce que la lecture a vu, plus
+  une relance quand le compte rendu par PostgreSQL est plus court que le plan.
+  Le faux client sait désormais écrire ENTRE la lecture et la transaction, donc
+  les deux pertes ont un test qui les reproduit.
+- **Lot 2, le grain de la clé : attend une décision** (voir plus bas). Sa
+  MOITIÉ ne l'attend pas — la ligne gelée et la continuité de scission ne
+  demandent aucun arbitrage.
+- **Lots 3, 4 et 5 : prenables.**
+
+Une remarque à porter avant de reprendre l'ordre du document : le lot 2 bloque
+moins qu'il n'en a l'air. `worktree-ge4-r-hebergement` n'est PAS retenue par la
+décision N→1 — elle ajoute deux identifiants et en rétrécit un troisième, c'est
+une scission (1 → 2), pas une fusion.
 
 ## Ce qui reste, en dehors du réconciliateur
 

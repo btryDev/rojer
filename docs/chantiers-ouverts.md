@@ -1182,7 +1182,41 @@ reste un deuxième extincteur ? » se serait posée d'elle-même.
 Et le calendrier n'a **aucune suite qui tente la traversée entre clients**, alors
 que six existent ailleurs dans le dépôt. À poser ici.
 
-#### Lot 1 — L'écriture aveugle. Le plus grave, et le moins cher.
+#### ~~Lot 1 — L'écriture aveugle. Le plus grave, et le moins cher.~~ FAIT LE 2026-09-10
+
+> **Les deux pertes de données sont fermées, et chacune a son test.** Le commit
+> qui porte cette rature est celui qui corrige — pas de renvoi à un identifiant,
+> il serait celui d'avant l'écriture de cette ligne.
+>
+> **Les écritures redisent en SQL ce que le plan a conclu en mémoire.** La
+> suppression porte `rapports: { none: {} }`, `actions: { none: {} }` et
+> `dateRealisee: null` ; la mise à jour est passée d'`update` par identifiant à
+> `updateMany` conditionné sur les deux champs FACTUELS de la ligne — ceux
+> qu'un dépôt de rapport modifie et que la régénération ne calcule pas seule.
+> Une ligne qui a changé entre la lecture et la transaction sort du lot au lieu
+> d'être écrasée.
+>
+> **L'écart plan / réel est lu, et il relance.** PostgreSQL rend un compte par
+> écriture ; s'il est plus court que prévu, c'est que la condition a joué, et la
+> passe recommence sur une lecture fraîche (trois au plus). Au-delà, le repère de
+> version est effacé — le calendrier reste marqué périmé plutôt que de passer
+> pour à jour.
+>
+> **Le harnais sait enfin décrire la fenêtre.** Le faux client honore les
+> nouvelles clauses et expose un crochet `apresLecture`, qui écrit ENTRE la
+> lecture et la transaction : c'est ce qui manquait pour qu'un test puisse
+> reproduire les deux pertes. Retirer une clause conditionnelle fait rougir le
+> test qui la nomme — vérifié par mutation, dans les deux sens.
+>
+> **Et la régénération ne fait plus échouer la mutation qui l'a déclenchée.**
+> Sept appels à `genererCalendrier` régénéraient à nu ; un seul, celui des
+> équipements, attrapait l'échec. Le garde est devenu
+> `calendrier/regeneration-sure.ts` et sert les sept — un rapport déposé reste
+> déposé même si le recalage échoue, donc plus de redépôt, donc plus de rapport
+> en double.
+>
+> Ce qui suit décrit l'état d'avant, gardé pour que le lecteur sache ce qui a
+> été réparé.
 
 **Deux pertes de données, reproduites sur base réelle**, une seule cause : le plan
 est calculé sur une lecture (`actions.ts:199`) puis écrit sans revérifier

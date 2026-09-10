@@ -98,6 +98,18 @@ export type Magasin = {
    * sont indiscernables.
    */
   faireEchouer: ((operation: string) => boolean) | null;
+  /**
+   * Appelé juste APRÈS la lecture des lignes de calendrier, et avant que la
+   * transaction ne s'ouvre. C'est la seule façon de reproduire en test la
+   * fenêtre que le code doit tenir : le plan est calculé sur ce qui vient
+   * d'être lu, et quelqu'un d'autre écrit avant qu'il ne s'applique.
+   *
+   * Remis à `null` par le magasin dès qu'il a servi : la régénération relance
+   * une passe quand elle détecte l'écart, et une injection qui se répéterait
+   * à chaque passe ne décrirait plus un dépôt, mais un client qui écrit sans
+   * jamais s'arrêter — ce que la boucle de reprise ne prétend pas absorber.
+   */
+  apresLecture: (() => void) | null;
   /** Journal des clauses reçues, pour les assertions de portée. */
   journal: { operation: string; where: unknown }[];
 };
@@ -109,6 +121,7 @@ export function magasinVide(): Magasin {
     titres: [],
     verifications: [],
     faireEchouer: null,
+    apresLecture: null,
     journal: [],
   };
 }
@@ -120,6 +133,19 @@ function inconnu(operation: string, cles: string[]): never {
       `(${cles.join(", ")}). Le faux client doit l'honorer, sinon la garantie ` +
       `qui en dépend ne serait plus vérifiée par ce test.`,
   );
+}
+
+/**
+ * Égalité de deux instants au sens de PostgreSQL, `null` compris.
+ *
+ * En JavaScript deux `Date` portant la même valeur ne sont pas `===`, et
+ * comparer les objets ferait échouer toutes les conditions portant sur
+ * `dateRealisee` — donc rendre un compte de zéro, donc faire croire à une
+ * écriture conditionnée qui n'a pas pris, indéfiniment.
+ */
+function memeInstant(a: Date | null, b: Date | null): boolean {
+  if (a === null || b === null) return a === b;
+  return a.getTime() === b.getTime();
 }
 
 /** Une écriture paresseuse, à l'image d'une `PrismaPromise`. */
@@ -248,16 +274,38 @@ export function fauxPrisma(db: Magasin) {
         inconnu("verification.findMany", Object.keys(reste));
       }
       db.journal.push({ operation: "verification.findMany", where });
-      return db.verifications
+      const lues = db.verifications
         .filter((v) => v.etablissementId === etablissementId)
         .map((v) => ({
           ...v,
           _count: { rapports: v.nbRapports, actions: v.nbActions },
         }));
+      // La fenêtre : le plan va être calculé sur `lues`, et quelqu'un écrit
+      // avant qu'il ne s'applique. Le crochet ne sert qu'une fois.
+      const crochet = db.apresLecture;
+      if (crochet !== null) {
+        db.apresLecture = null;
+        crochet();
+      }
+      return lues;
     },
 
+    /**
+     * `rapports: { none: {} }` et `actions: { none: {} }` sont les conditions
+     * qui empêchent une suppression d'emporter une preuve déposée APRÈS la
+     * lecture du plan. Le faux client doit donc les honorer sur son propre
+     * compteur (`nbRapports` / `nbActions`), sans quoi le test qui injecte un
+     * dépôt entre la lecture et la transaction passerait au vert sans rien
+     * prouver.
+     */
     deleteMany: (args: {
-      where: { id: { in: string[] }; etablissementId?: string };
+      where: {
+        id: { in: string[] };
+        etablissementId?: string;
+        rapports?: { none: Record<string, never> };
+        actions?: { none: Record<string, never> };
+        dateRealisee?: Date | null;
+      };
     }) =>
       ecriture("verification.deleteMany", () => {
         echouerSiDemande("verification.deleteMany");
@@ -265,9 +313,16 @@ export function fauxPrisma(db: Magasin) {
           operation: "verification.deleteMany",
           where: args.where,
         });
-        const { id, etablissementId, ...reste } = args.where;
+        const { id, etablissementId, rapports, actions, dateRealisee, ...reste } =
+          args.where;
         if (Object.keys(reste).length > 0) {
           inconnu("verification.deleteMany", Object.keys(reste));
+        }
+        if (rapports !== undefined && Object.keys(rapports.none).length > 0) {
+          inconnu("verification.deleteMany", ["rapports.none non vide"]);
+        }
+        if (actions !== undefined && Object.keys(actions.none).length > 0) {
+          inconnu("verification.deleteMany", ["actions.none non vide"]);
         }
         const avant = db.verifications.length;
         db.verifications = db.verifications.filter(
@@ -275,10 +330,53 @@ export function fauxPrisma(db: Magasin) {
             !(
               id.in.includes(v.id) &&
               (etablissementId === undefined ||
-                v.etablissementId === etablissementId)
+                v.etablissementId === etablissementId) &&
+              (rapports === undefined || v.nbRapports === 0) &&
+              (actions === undefined || v.nbActions === 0) &&
+              (dateRealisee === undefined ||
+                memeInstant(v.dateRealisee, dateRealisee))
             ),
         );
         return { count: avant - db.verifications.length };
+      }),
+
+    /**
+     * `updateMany` et non `update` : c'est la forme qui accepte une condition
+     * autre que l'identifiant, et qui rend un COMPTE — les deux propriétés
+     * dont dépend l'écriture conditionnée d'`actions.ts`. Un `update` par id
+     * écrirait sans regarder, et ne dirait pas qu'il a écrasé.
+     */
+    updateMany: (args: {
+      where: {
+        id: string;
+        etablissementId?: string;
+        dateRealisee?: Date | null;
+        statut?: string;
+      };
+      data: Record<string, unknown>;
+    }) =>
+      ecriture("verification.updateMany", () => {
+        echouerSiDemande("verification.updateMany");
+        db.journal.push({
+          operation: "verification.updateMany",
+          where: args.where,
+        });
+        const { id, etablissementId, dateRealisee, statut, ...reste } =
+          args.where;
+        if (Object.keys(reste).length > 0) {
+          inconnu("verification.updateMany", Object.keys(reste));
+        }
+        const cibles = db.verifications.filter(
+          (v) =>
+            v.id === id &&
+            (etablissementId === undefined ||
+              v.etablissementId === etablissementId) &&
+            (dateRealisee === undefined ||
+              memeInstant(v.dateRealisee, dateRealisee)) &&
+            (statut === undefined || v.statut === statut),
+        );
+        for (const v of cibles) Object.assign(v, args.data);
+        return { count: cibles.length };
       }),
 
     createMany: (args: {

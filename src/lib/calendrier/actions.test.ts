@@ -161,6 +161,7 @@ beforeEach(() => {
   db.titres = [];
   db.verifications = [];
   db.faireEchouer = null;
+  db.apresLecture = null;
   db.journal = [];
 });
 
@@ -232,6 +233,115 @@ describe("genererCalendrier — conservation des actions correctives", () => {
     const res = await genererCalendrier(ETAB_ID);
     expect(res.deleted).toBe(1);
     expect(db.verifications.find((v) => v.id === "v-vide")).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// La fenêtre entre la lecture et l'écriture
+// ---------------------------------------------------------------------------
+// Le plan est calculé sur une lecture, puis appliqué. Ces deux tests écrivent
+// DANS l'intervalle, ce qu'aucun test ne faisait : les deux pertes de données
+// du § 11 (lot 1) ont été reproduites ainsi, sur base réelle, avant d'être
+// reproduites ici. Elles rougissent toutes deux si l'on retire une clause
+// conditionnelle d'`actions.ts`.
+
+describe("genererCalendrier — écriture concurrente entre la lecture et le plan", () => {
+  it("un rapport déposé pendant la régénération ne perd pas sa réalisation", async () => {
+    // La ligne est en retard et sans preuve : le plan va la réaligner, donc
+    // écrire `dateRealisee` et `statut`. Entre-temps, un prestataire dépose
+    // son rapport — c'est-à-dire renseigne exactement ces deux champs.
+    poserEtablissement([{ id: "eq-elec" }]);
+    db.verifications = [
+      ligne({
+        id: "v-1",
+        equipementId: "eq-elec",
+        obligationId: ELEC_ANNUELLE,
+        statut: "depassee",
+      }),
+    ];
+
+    const LE_DEPOT = new Date("2026-09-09T10:00:00Z");
+    db.apresLecture = () => {
+      const v = db.verifications.find((x) => x.id === "v-1");
+      if (v === undefined) throw new Error("ligne v-1 disparue avant le dépôt");
+      v.dateRealisee = LE_DEPOT;
+      v.statut = "realisee";
+      v.nbRapports = 1;
+    };
+
+    await genererCalendrier(ETAB_ID);
+
+    const apres = db.verifications.find((v) => v.id === "v-1");
+    // Sans la condition sur `dateRealisee`/`statut`, l'`update` par
+    // identifiant réécrit `dateRealisee: null, statut: depassee` par-dessus le
+    // dépôt : la ligne affiche « dépassée » avec un rapport conforme joint, à
+    // perpétuité, et aucun code ne redérive la réalisation depuis `rapports`.
+    expect(
+      apres?.dateRealisee,
+      "la réalisation déposée pendant la régénération a été écrasée",
+    ).toEqual(LE_DEPOT);
+    expect(apres?.nbRapports).toBe(1);
+  });
+
+  it("une action corrective créée pendant la régénération n'est pas emportée", async () => {
+    // Aucun équipement : la ligne n'est plus applicable et ne porte aucune
+    // preuve, donc le plan la met à SUPPRIMER. Entre-temps, le dirigeant crée
+    // une action corrective dessus — et `Action.verificationId` est en
+    // `onDelete: Cascade`.
+    poserEtablissement([]);
+    db.verifications = [
+      ligne({
+        id: "v-vide",
+        equipementId: "eq-1",
+        obligationId: ELEC_ANNUELLE,
+        statut: "a_planifier",
+      }),
+    ];
+
+    db.apresLecture = () => {
+      const v = db.verifications.find((x) => x.id === "v-vide");
+      if (v === undefined) throw new Error("ligne v-vide disparue avant l'action");
+      v.nbActions = 1;
+    };
+
+    await genererCalendrier(ETAB_ID);
+
+    // C'est mot pour mot ce que l'ADR-012 déclare impossible : « aucune action
+    // corrective, aucun rapport ne peut plus disparaître par effet de bord
+    // d'une régénération ». Tant que la ligne vit, l'action vit.
+    const survivante = db.verifications.find((v) => v.id === "v-vide");
+    expect(
+      survivante,
+      "la ligne a été supprimée, donc l'action corrective est partie en cascade",
+    ).toBeDefined();
+    // La passe suivante l'a relue avec sa preuve : elle est archivée, pas
+    // supprimée.
+    expect(survivante?.libelleObligation).toContain("Ne s'applique plus");
+  });
+
+  it("relance jusqu'à converger, et le compte rendu est celui de la passe qui a convergé", async () => {
+    // Une seule injection, donc une seule divergence : la deuxième passe lit
+    // le monde tel qu'il est devenu et s'applique intégralement.
+    poserEtablissement([]);
+    db.verifications = [
+      ligne({ id: "v-vide", equipementId: "eq-1", statut: "a_planifier" }),
+    ];
+    db.apresLecture = () => {
+      const v = db.verifications.find((x) => x.id === "v-vide");
+      if (v !== undefined) v.nbActions = 1;
+    };
+
+    const res = await genererCalendrier(ETAB_ID);
+
+    // La première passe planifiait une suppression qui n'a pas eu lieu ; la
+    // seconde, lisant la preuve, planifie un archivage — et c'est ce
+    // compte-là qui est rendu.
+    expect(res.deleted).toBe(0);
+    expect(res.archived).toBe(1);
+    // Deux passes, donc deux lectures des lignes.
+    expect(
+      db.journal.filter((j) => j.operation === "verification.findMany"),
+    ).toHaveLength(2);
   });
 });
 
@@ -490,6 +600,13 @@ describe("genererCalendrier — application du plan", () => {
     expect(dernierWhere("verification.deleteMany")).toEqual({
       id: { in: ["v-vide"] },
       etablissementId: ETAB_ID,
+      // Les trois conditions de non-preuve accompagnent désormais la clause
+      // de portée, et pour la même raison : ce que la lecture a conclu doit
+      // être REDIT à l'écriture, sans quoi une preuve déposée entre les deux
+      // est emportée par la cascade.
+      rapports: { none: {} },
+      actions: { none: {} },
+      dateRealisee: null,
     });
   });
 

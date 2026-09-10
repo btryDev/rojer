@@ -6,8 +6,10 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { batimentParDefaut } from "@/lib/batiments/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { genererCalendrier } from "@/lib/calendrier/actions";
-import { marquerCalendrierPerime } from "@/lib/calendrier/reconciliation";
+import {
+  MESSAGE_REGEN_ECHEC,
+  regenererApresMutation,
+} from "@/lib/calendrier/regeneration-sure";
 import {
   equipementSchema,
   normaliserFormDataEquipement,
@@ -28,29 +30,15 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
  * ne doit pas être présentée comme un échec. L'appelant transforme le
  * `message` en avertissement explicite avec la marche à suivre.
  */
-const MESSAGE_REGEN_ECHEC =
-  "Modification enregistrée. Le calendrier des vérifications n'a pas pu être " +
-  "recalculé à l'instant : il le sera automatiquement à la prochaine " +
-  "ouverture de la page « Calendrier ».";
-
 async function regenererCalendrier(
   etablissementId: string,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  try {
-    await genererCalendrier(etablissementId);
-    return { ok: true };
-  } catch (err) {
-    console.error(
-      `[equipements] regen calendrier a échoué pour ${etablissementId}`,
-      err,
-    );
-    // Sans cette marque, l'échec passerait inaperçu : le calendrier n'est
-    // ni vide ni périmé en version, donc l'auto-réparation à l'affichage
-    // ne le reprendrait pas. On le replace dans l'état « désynchronisé »,
-    // que la prochaine ouverture du calendrier corrige d'elle-même.
-    await marquerCalendrierPerime(etablissementId);
-    return { ok: false, message: MESSAGE_REGEN_ECHEC };
-  }
+  // Le corps de cette fonction vit désormais dans `calendrier/regeneration-sure`
+  // — il était ici, et il n'y avait qu'ici : les cinq autres appelants de
+  // `genererCalendrier` régénéraient à nu, et une régénération qui échouait y
+  // faisait échouer une action serveur dont la mutation était déjà commitée.
+  const ok = await regenererApresMutation(etablissementId, "equipements");
+  return ok ? { ok: true } : { ok: false, message: MESSAGE_REGEN_ECHEC };
 }
 
 async function resoudreEtablissementId(equipementId: string): Promise<string> {
