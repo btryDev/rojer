@@ -1313,7 +1313,7 @@ describe("référentiel conformité — version et empreinte", () => {
   // 3ᵉ catégorie recevait jusqu'ici moins d'obligations qu'un de 5ᵉ, parce que
   // le Livre II n'était dépouillé qu'à moitié quand le Livre III l'était en
   // entier.
-  const EMPREINTE_ATTENDUE = "154-5af740612719ff11";
+  const EMPREINTE_ATTENDUE = "154-f79cfff96b4eff09";
 
   it("l'empreinte du contenu correspond à la version déclarée", () => {
     expect(

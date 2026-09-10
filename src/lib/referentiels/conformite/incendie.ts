@@ -1167,6 +1167,7 @@ export const obligationsIncendie: Obligation[] = [
 
   {
     id: "incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale",
+    succedeA: ["incendie-erp-visite-commission-cat4-triennale"],
     domaine: "incendie",
     libelle: "Visite périodique de la commission de sécurité (ERP 1ʳᵉ à 4ᵉ catégorie)",
     description:
@@ -1191,6 +1192,7 @@ export const obligationsIncendie: Obligation[] = [
 
   {
     id: "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale",
+    succedeA: ["incendie-erp-visite-commission-cat4-triennale"],
     domaine: "incendie",
     libelle: "Visite périodique de la commission de sécurité (ERP 1ʳᵉ à 4ᵉ catégorie)",
     description:

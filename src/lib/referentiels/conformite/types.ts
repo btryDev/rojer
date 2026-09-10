@@ -880,6 +880,35 @@ type ObligationCommune = {
    * garde-fou.
    */
   relectureDue?: RelectureDue;
+  /**
+   * Les identifiants d'obligations auxquels celle-ci SUCCÈDE, pour les
+   * établissements qui basculent de l'une vers elle.
+   *
+   * Sert la continuité du calendrier : une ligne déjà suivie sous l'ancien
+   * identifiant est REPRISE par celle-ci — même rangée, même rapport, même
+   * historique —, au lieu d'être barrée « Ne s'applique plus » pendant qu'une
+   * ligne neuve et urgente apparaît à côté pour un acte déjà accompli.
+   *
+   * **À DÉCLARER QUAND UNE OBLIGATION SE SCINDE**, c'est-à-dire quand une part
+   * de sa population change d'identifiant sans que rien ne soit retiré du
+   * référentiel. Le cas symétrique — une obligation RETIRÉE au profit d'une
+   * autre — se déclare de l'autre côté, dans `OBLIGATIONS_RETIREES.absorbePar` :
+   * une obligation qui n'existe plus ne peut rien déclarer d'elle-même.
+   *
+   * Optionnel, contrairement à `transmet`, et la raison tient à ce qu'un oubli
+   * coûte : ne rien déclarer rend le comportement d'avant — archivage plus
+   * ligne neuve —, visible à l'écran au premier dossier concerné. Un `transmet`
+   * oublié, lui, ne se voit jamais.
+   *
+   * La succession est une DONNÉE, jamais une déduction (ADR-024) : rien ne
+   * devine qu'une obligation en remplace une autre par ressemblance de
+   * domaine, d'article ou de libellé.
+   *
+   * Deux obligations peuvent nommer le même prédécesseur — c'est précisément
+   * une scission —, à condition que leurs typologies forment une partition :
+   * un établissement donné n'en reçoit qu'une, donc une seule reprend sa ligne.
+   */
+  succedeA?: string[];
 };
 
 /**

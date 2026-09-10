@@ -309,6 +309,17 @@ export function empreinteReferentiel(
         // entier avec des lignes que le référentiel n'engendre plus.
         porteurDe(o),
         canonique(o.equipementsEnContexte ?? []),
+        // `succedeA` décide de ce que devient une ligne DÉJÀ POSÉE : reprise en
+        // place, ou barrée pendant qu'une ligne neuve apparaît. Il change donc
+        // le contenu du calendrier, ce que `transmet` ne fait pas — d'où le
+        // traitement inverse de celui que la note de `transmet` justifie.
+        //
+        // Et sans lui, un lot qui ne déclarerait QU'une succession ne ferait
+        // bouger aucune empreinte : aucun dossier ne se réconcilierait, et la
+        // reprise ne s'appliquerait jamais. La déclaration serait écrite et
+        // sans effet, ce qui est le défaut qu'on vient de corriger sur
+        // `absorbePar`.
+        canonique(o.succedeA ?? []),
       ].join("|"),
     )
     .sort()

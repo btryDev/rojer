@@ -150,6 +150,13 @@ export type VerificationGenere = {
    * (surcharge) ou de la ligne (sur mesure). `null` = référentiel seul.
    */
   prescriptionId: string | null;
+  /**
+   * Les identifiants auxquels cette obligation succède (`Obligation.succedeA`),
+   * portés jusqu'ici pour que la réconciliation les lise SANS connaître le
+   * référentiel. C'est ce qui garde ce module pur : il ne sait rien des
+   * obligations, il lit ce que la ligne générée lui apporte.
+   */
+  succedeA?: string[];
 };
 
 export type VerificationsPrecedentes = Map<string, Date>;
@@ -395,6 +402,7 @@ export function genererProchainesVerifications(
           statut: aVenir ? "planifiee" : "a_planifier",
           estUrgent: false,
           criticiteObligation: o.criticite,
+          succedeA: o.succedeA,
           raisons,
           prescriptionId,
         });
@@ -417,6 +425,7 @@ export function genererProchainesVerifications(
           statut: estDepassee ? "depassee" : "planifiee",
           estUrgent: estDepassee,
           criticiteObligation: o.criticite,
+          succedeA: o.succedeA,
           raisons,
           prescriptionId,
         });
@@ -449,6 +458,7 @@ export function genererProchainesVerifications(
           statut: premiereEncoreAVenir ? "planifiee" : "a_planifier",
           estUrgent: !premiereEncoreAVenir,
           criticiteObligation: o.criticite,
+          succedeA: o.succedeA,
           raisons,
           prescriptionId,
         });
@@ -534,6 +544,7 @@ export function genererVerificationsDepuisTitres(
         statut: depassee ? "depassee" : "planifiee",
         estUrgent: depassee,
         criticiteObligation: o.criticite,
+        succedeA: o.succedeA,
         raisons: [`titre détenu par ${t.libelle}`],
         // La date vient de la pièce, pas d'un calcul : elle prime sur ce que
         // la réconciliation a déjà écrit.
@@ -916,13 +927,34 @@ export function reconcilierCalendrier(
   // identifiant absorbant → réalisation reprise.
   const heritage = heritageDesRetirees(existantes, options.successions);
 
-  // L'inverse de la table de successions : à qui succède-t-on. Un identifiant
-  // peut avoir PLUSIEURS prédécesseurs — c'est le cas d'une fusion.
+  // À qui succède-t-on. DEUX SOURCES, et il en faut deux :
+  //
+  //  · `g.succedeA` — la SCISSION. L'obligation qui hérite le déclare
+  //    elle-même, et la ligne générée le porte jusqu'ici. Rien n'est retiré du
+  //    référentiel dans ce cas : c'est une part de la population qui change
+  //    d'identifiant, et l'ancienne obligation continue de vivre pour les
+  //    autres. Aucune table de retraits ne peut donc la voir.
+  //
+  //  · `options.successions` — la FUSION. L'obligation retirée nomme celle qui
+  //    l'absorbe (`OBLIGATIONS_RETIREES.absorbePar`), et il faut bien qu'elle
+  //    le fasse de ce côté-là : une obligation qui n'existe plus ne se déclare
+  //    plus rien.
+  //
+  // Un identifiant peut avoir plusieurs prédécesseurs — c'est une fusion —, et
+  // un prédécesseur plusieurs successeurs — c'est une scission.
   const predecesseurs = new Map<string, string[]>();
-  for (const [ancien, nouveau] of options.successions ?? []) {
+  const ajouterPredecesseur = (nouveau: string, ancien: string) => {
     const liste = predecesseurs.get(nouveau) ?? [];
-    liste.push(ancien);
+    if (!liste.includes(ancien)) liste.push(ancien);
     predecesseurs.set(nouveau, liste);
+  };
+  for (const [ancien, nouveau] of options.successions ?? []) {
+    ajouterPredecesseur(nouveau, ancien);
+  }
+  for (const g of aGenerer) {
+    for (const ancien of g.succedeA ?? []) {
+      ajouterPredecesseur(g.obligationId, ancien);
+    }
   }
 
   /**
