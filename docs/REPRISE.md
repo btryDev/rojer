@@ -75,7 +75,12 @@ repère :
   surfaces corrigées). L'autre moitié est **sortie du lot** : elle descend d'un
   défaut de MODÈLE — une rangée qui est à la fois une échéance et un historique —
   et se traite par l'ADR-034 (une rangée par occurrence), pas par un correctif.
-- **Lots 4 et 5 : prenables.** Le lot 5 sera en partie dissous par l'ADR-034.
+- **Lot 4, l'arithmétique des dates : fait** (2026-09-10). Les fonctions locales
+  du générateur sont supprimées ; `calendrier/periodicite.ts` compose
+  `lib/dates` avec une table calendaire. Cinq ans après le 1er juin, c'est le
+  1er juin. C'est ce qui a fait passer au vert le test rouge exprès de `ge4r`.
+- **Lot 5 : prenable**, mais à ne pas faire avant l'ADR-034, qui en dissout la
+  moitié (le passage du temps) et ne laisse que le référentiel qui change.
 
 Une remarque à porter avant de reprendre l'ordre du document : le lot 2 bloque
 moins qu'il n'en a l'air. `worktree-ge4-r-hebergement` n'est PAS retenue par la
