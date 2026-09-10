@@ -290,8 +290,8 @@ proposé.
 
 ### 9. Ce qui reste ouvert
 
-- **Le nom.** `SuiviVerification` dit ce que c'est ; `LigneDeSuivi` est le mot
-  de l'ADR-012. À trancher au premier commit.
+- ~~**Le nom.** `SuiviVerification` dit ce que c'est ; `LigneDeSuivi` est le mot
+  de l'ADR-012.~~ **Tranché le 2026-09-10 : `SuiviVerification`.**
 - **Où pendent les actions d'un suivi.** Aujourd'hui « à la ligne, pas au
   rapport » (`equipements/fiche.ts:222-227`). Après : à l'occurrence qui les a
   fait naître ; la fiche du suivi les agrège. La CHECK `Action_origine_xor`
