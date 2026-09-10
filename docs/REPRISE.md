@@ -70,7 +70,12 @@ repère :
 - **Lot 2, le grain de la clé : attend une décision** (voir plus bas). Sa
   MOITIÉ ne l'attend pas — la ligne gelée et la continuité de scission ne
   demandent aucun arbitrage.
-- **Lots 3, 4 et 5 : prenables.**
+- **Lot 3, le classifieur unique : moitié fait** (2026-09-10). Le marqueur
+  d'archivage se lit à la racine et ne se contourne plus (champ requis, sept
+  surfaces corrigées). L'autre moitié est **sortie du lot** : elle descend d'un
+  défaut de MODÈLE — une rangée qui est à la fois une échéance et un historique —
+  et se traite par l'ADR-034 (une rangée par occurrence), pas par un correctif.
+- **Lots 4 et 5 : prenables.** Le lot 5 sera en partie dissous par l'ADR-034.
 
 Une remarque à porter avant de reprendre l'ordre du document : le lot 2 bloque
 moins qu'il n'en a l'air. `worktree-ge4-r-hebergement` n'est PAS retenue par la

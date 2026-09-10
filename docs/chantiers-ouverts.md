@@ -1314,7 +1314,7 @@ ce n'est pas tranché. Sans réponse, ce lot ne démarre pas.
 **Piège** : raisonner « par porteur » au lieu de « par clé » casserait la garantie
 de l'ADR-023 — un test existant le montre.
 
-#### Lot 3 — Un seul classifieur. **MOITIÉ FAITE LE 2026-09-10 ; le cadrage ci-dessous était faux des deux bouts.**
+#### Lot 3 — Un seul classifieur. **MOITIÉ FAITE LE 2026-09-10 ; l'autre moitié est SORTIE du lot le même jour — voir « Lot 3 bis ».**
 
 > **CE QUI EST FAIT : le marqueur d'archivage se lit à la racine, et ne se
 > contourne plus.** `VerificationDatee.libelleObligation` est **requis** —
@@ -1384,6 +1384,41 @@ classent la même ligne et se contredisent.
   d'archivage est lu par deux lecteurs sur cinq.
 
 L'ADR-011 promet déjà que toutes les surfaces affichent le même compte.
+
+#### Lot 3 bis — Le cycle soldé que les compteurs ne déplient pas. **SORTI du lot 3 le 2026-09-10 ; ne se fait PAS comme un lot.**
+
+C'est la seconde moitié du lot 3, détachée par décision de la propriétaire le
+2026-09-10, et la raison du détachement compte plus que le défaut lui-même.
+
+**Le défaut.** Une rangée `Verification` porte à la fois le fait passé
+(`dateRealisee`) et l'échéance à venir (`datePrevue` avancée par la
+réconciliation). Les compteurs de `repartirVerifications` classent sur le fait
+et ne voient jamais l'échéance : une ligne réalisée dont le rendez-vous suivant
+est passé sort de TOUTES ses catégories — `total = 0`, donc du dénominateur du
+score —, pendant que la grille l'affiche en rouge. Et `aVenir` ne peut contenir
+que du jamais-réalisé. Mesuré deux fois, par deux agents.
+
+**Pourquoi ce n'est pas un lot.** La disjonction des quatre compteurs EST la
+garde qui produit le défaut — « une occurrence réalisée est exclue des trois
+premiers », dit le contrat. Corriger l'un revient à renégocier l'autre. Et la
+racine est plus bas que les compteurs : **une rangée qui joue deux rôles** — une
+échéance en cours ET un porteur d'historique. Tous les symptômes du lot 3, une
+part du lot 2 (continuité) et la moitié du lot 5 (« jamais relancé ») en
+descendent. Ajouter un correctif ici serait poser une quatrième couche de
+compensation sur un modèle qu'on sait faux.
+
+**Ce qui le remplace.** Un modèle à **une rangée par occurrence** — une close est
+de l'historique, une ouverte est une échéance —, planifié dans l'ADR-034. C'est
+la pratique standard des systèmes d'échéances récurrentes ; le modèle actuel
+confond l'instance en cours avec l'historique. La décision est de PLANIFIER
+d'abord, sur pièces : lecture exhaustive des lecteurs et des écrivains de
+`Verification`, coût de migration, ce que deviennent les lots 1 à 5.
+
+**Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
+modèle : la réglementation dit « au minimum une fois par an » — l'obligation est
+l'INTERVALLE, pas le souvenir. Une ligne dont l'échéance suivante est passée est
+en retard, quelle que soit la solidité du contrôle précédent. Le score baissera
+pour ces dossiers ; il était faux.
 
 #### Lot 4 — L'arithmétique des dates.
 
