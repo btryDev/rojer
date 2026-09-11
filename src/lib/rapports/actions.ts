@@ -4,15 +4,19 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { StatutVerification } from "@prisma/client";
+import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { cleRapport, getStorage } from "@/lib/storage";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
+import { estCyclique, prochaineEcheance } from "@/lib/calendrier/periodicite";
 import { estEnRetard } from "@/lib/dates/retard";
 import {
   estResultatRealise,
   rapportMetadataSchema,
+  RESULTATS_REALISES,
   STATUT_DEPUIS_RESULTAT,
+  type ResultatRealise,
 } from "./schema";
 import { validerFichier } from "./validator";
 
@@ -26,19 +30,47 @@ export type UploadRapportState =
   | { status: "success"; rapportId: string };
 
 /**
+ * Levée quand la ligne de suivi a changé entre la lecture et l'écriture — un
+ * dépôt ou une suppression concurrents l'ont fait rouler. La transaction est
+ * annulée ; rien n'est écrit, l'utilisateur recommence sur l'état à jour.
+ */
+export class LigneModifieeEntreTemps extends Error {
+  constructor() {
+    super(
+      "Cette échéance a été modifiée pendant l'enregistrement. Rechargez la page et recommencez.",
+    );
+    this.name = "LigneModifieeEntreTemps";
+  }
+}
+
+/**
  * Server action d'upload d'un rapport sur une vérification.
  *
  * Flux :
  *  1. Valide métadonnées (Zod) et fichier (MIME/taille).
  *  2. Écrit le fichier via l'abstraction `FileStorage`.
- *  3. Crée la ligne `RapportVerification` et met à jour la `Verification`
- *     parente dans une **transaction** ; si la base refuse, le fichier tout
- *     juste écrit est nettoyé (best-effort).
- *  4. Régénère le calendrier pour recalculer la prochaine échéance.
+ *  3. Crée la ligne `RapportVerification` et FAIT ROULER la `Verification`
+ *     parente dans une **transaction** (ADR-034) ; si la base refuse, le
+ *     fichier tout juste écrit est nettoyé (best-effort).
+ *  4. Régénère le calendrier — il ne roule plus rien, il réaligne le reste.
  *
- * Le résultat « non vérifiable » suit un chemin distinct — cf. le commentaire
- * de `STATUT_DEPUIS_RESULTAT` : le contrôle n'a pas eu lieu, donc ni
- * `dateRealisee`, ni report de l'échéance.
+ * CE QUE « ROULER » VEUT DIRE. La ligne ne porte que l'échéance ouverte. Le
+ * rapport reçoit l'échéance qu'il honorait (`echeanceHonoree` = la
+ * `datePrevue` lue), et la ligne passe à l'échéance suivante : date du rapport
+ * + périodicité, statut « planifiée ». Le résultat du contrôle vit sur le
+ * rapport, pas sur la ligne.
+ *
+ * Trois cas ne font pas rouler :
+ *  - « non vérifiable » — le contrôle n'a pas eu lieu, l'échéance qui courait
+ *    court toujours (cf. `STATUT_DEPUIS_RESULTAT`) ;
+ *  - un rapport ANTIDATÉ — plus ancien qu'un rapport réalisé déjà déposé : il
+ *    est conservé et daté, mais la ligne ne recule pas vers un passé qu'un
+ *    rapport plus récent a déjà dépassé (ADR-034 § 3) ;
+ *  - une obligation sans rendez-vous suivant (`mise_en_service_uniquement`,
+ *    `autre`) : le one-shot est consommé, la ligne garde le statut réalisé.
+ *
+ * `dateRealisee` est encore écrite — la date du dernier rapport réalisé — le
+ * temps que les lecteurs passent sur les rapports (N4). N5 la retire.
  */
 export async function uploadRapport(
   verificationId: string,
@@ -78,9 +110,9 @@ export async function uploadRapport(
     };
   }
 
-  // 3. Contexte vérification. `datePrevue` et `statut` sont lus ici car le
-  //    cas « non vérifiable » en dépend : on n'a pas le droit d'inventer une
-  //    nouvelle échéance, on garde celle qui court.
+  // 3. Contexte vérification. `datePrevue` et `statut` sont ce que le
+  //    roulement lit ET ce sur quoi l'écriture est conditionnée (lot 1) ;
+  //    `periodicite` donne le pas.
   const verif = await prisma.verification.findUnique({
     where: { id: verificationId },
     select: {
@@ -88,6 +120,8 @@ export async function uploadRapport(
       etablissementId: true,
       datePrevue: true,
       dateRealisee: true,
+      statut: true,
+      periodicite: true,
       salarieId: true,
     },
   });
@@ -123,7 +157,19 @@ export async function uploadRapport(
     };
   }
 
-  // 4. Lire le fichier en buffer + stocker
+  // 4. Le rapport réalisé le plus récent déjà déposé : c'est lui qui dit si
+  //    celui-ci est antidaté. Lu avant la transaction ; l'écriture
+  //    conditionnée sur la ligne rattrape un dépôt concurrent.
+  const dernierRealise = await prisma.rapportVerification.findFirst({
+    where: {
+      verificationId: verif.id,
+      resultat: { in: [...RESULTATS_REALISES] },
+    },
+    orderBy: { dateRapport: "desc" },
+    select: { dateRapport: true },
+  });
+
+  // 5. Lire le fichier en buffer + stocker
   const buffer = Buffer.from(await fichier.arrayBuffer());
   const rapportId = `rap_${randomUUID()}`;
   const cle = cleRapport(verif.etablissementId, rapportId, fichier.name);
@@ -131,18 +177,16 @@ export async function uploadRapport(
   const storage = getStorage();
   await storage.put(cle, buffer, val.mime);
 
-  // 5. Effet du résultat sur la ligne de suivi.
+  // 6. Effet du résultat sur la ligne de suivi.
   const resultat = parsed.data.resultat;
+  const dateRapport = parsed.data.dateRapport;
+  let echeanceHonoree: Date | null = null;
   let majVerification: {
+    datePrevue?: Date;
     dateRealisee?: Date;
     statut: StatutVerification;
   };
-  if (estResultatRealise(resultat)) {
-    majVerification = {
-      dateRealisee: parsed.data.dateRapport,
-      statut: STATUT_DEPUIS_RESULTAT[resultat],
-    };
-  } else {
+  if (!estResultatRealise(resultat)) {
     // Non vérifiable : le contrôle reste dû. `dateRealisee` n'est jamais
     // écrite — rien n'a été vérifié — et `datePrevue` n'est pas repoussée :
     // l'échéance réglementaire qui courait court toujours. Elle est seulement
@@ -154,41 +198,66 @@ export async function uploadRapport(
           ? "depassee"
           : "a_planifier",
     };
+  } else if (
+    dernierRealise !== null &&
+    dateRapport.getTime() <= dernierRealise.dateRapport.getTime()
+  ) {
+    // Antidaté (ou doublon du même jour) : la pièce entre au registre, la
+    // ligne ne bouge pas. Elle n'honorait aucune échéance connue.
+    majVerification = { statut: verif.statut };
+  } else {
+    echeanceHonoree = verif.datePrevue;
+    majVerification = rouler(
+      verif.datePrevue,
+      verif.periodicite as Periodicite,
+      dateRapport,
+      resultat,
+    );
   }
 
-  // 6. Persistance DB (rapport + mise à jour vérification) dans une
-  // transaction pour éviter un état incohérent si la mise à jour casse.
+  // 7. Persistance DB (rapport + roulement de la ligne) dans une transaction.
+  //    L'écriture sur la ligne est CONDITIONNÉE sur ce qu'on a lu : si un
+  //    autre dépôt l'a fait rouler entre-temps, `echeanceHonoree` et la date
+  //    calculée sont fausses, et on n'écrit rien.
   try {
-    await prisma.$transaction([
-      prisma.rapportVerification.create({
+    await prisma.$transaction(async (tx) => {
+      await tx.rapportVerification.create({
         data: {
           id: rapportId,
           etablissementId: verif.etablissementId,
           verificationId: verif.id,
-          dateRapport: parsed.data.dateRapport,
+          dateRapport,
+          echeanceHonoree,
           organismeVerif: parsed.data.organismeVerif,
-          resultat: parsed.data.resultat,
+          resultat,
           commentaires: parsed.data.commentaires,
           fichierCle: cle,
           fichierNomOriginal: fichier.name,
           fichierMime: val.mime,
           fichierTaille: val.taille,
         },
-      }),
-      prisma.verification.update({
-        where: { id: verif.id },
+      });
+      const { count } = await tx.verification.updateMany({
+        where: {
+          id: verif.id,
+          datePrevue: verif.datePrevue,
+          statut: verif.statut,
+        },
         data: majVerification,
-      }),
-    ]);
+      });
+      if (count !== 1) throw new LigneModifieeEntreTemps();
+    });
   } catch (err) {
     // Nettoyage best-effort du fichier si la DB a échoué.
     await storage.delete(cle).catch(() => {});
+    if (err instanceof LigneModifieeEntreTemps) {
+      return { status: "error", message: err.message };
+    }
     throw err;
   }
 
-  // 7. Régénération du calendrier. Elle est désormais idempotente (ADR-012) :
-  // elle recale la prochaine échéance sans supprimer la ligne de suivi, donc
-  // sans emporter le rapport qui vient d'être déposé.
+  // 8. Régénération du calendrier. Elle est idempotente (ADR-012) et ne roule
+  // rien (ADR-034) : elle réaligne le reste sans toucher au dépôt.
   //
   // ET ELLE NE PEUT PLUS FAIRE ÉCHOUER LE DÉPÔT. Le rapport est commité et le
   // fichier est écrit : un recalage qui échoue rendait pourtant une erreur à
@@ -206,6 +275,29 @@ export async function uploadRapport(
 }
 
 /**
+ * Ce que devient la ligne quand un rapport réalisé, le plus récent, est
+ * déposé : l'échéance suivante s'ouvre. Pour une obligation sans rendez-vous
+ * suivant, la ligne garde son échéance et prend le statut du résultat — c'est
+ * le seul cas où un statut réalisé reste sur la ligne.
+ */
+function rouler(
+  datePrevue: Date,
+  periodicite: Periodicite,
+  dateRapport: Date,
+  resultat: ResultatRealise,
+): { datePrevue: Date; dateRealisee: Date; statut: StatutVerification } {
+  const prochaine = prochaineEcheance(dateRapport, periodicite);
+  if (prochaine === null) {
+    return {
+      datePrevue,
+      dateRealisee: dateRapport,
+      statut: STATUT_DEPUIS_RESULTAT[resultat],
+    };
+  }
+  return { datePrevue: prochaine, dateRealisee: dateRapport, statut: "planifiee" };
+}
+
+/**
  * Retire un rapport du registre.
  *
  * Cinq opérations s'enchaînaient sans transaction : `delete`, suppression du
@@ -217,6 +309,13 @@ export async function uploadRapport(
  * Ordre retenu : tout ce qui touche la base dans une transaction, puis
  * seulement le fichier. Un fichier orphelin se rattrape ; une ligne de
  * registre sans pièce, non.
+ *
+ * LA LIGNE RECULE D'UN CYCLE (ADR-034) si le rapport retiré est celui qui
+ * l'avait fait rouler — le rapport réalisé le plus récent. Elle revient à
+ * l'échéance qu'il honorait (`echeanceHonoree`) ; à défaut — rapport d'avant
+ * N2 —, à l'échéance que le rapport réalisé précédent engendre, ou, s'il n'y
+ * en a pas, elle garde sa date. Un rapport non vérifiable ou antidaté n'avait
+ * rien fait rouler : la ligne ne lui doit rien.
  */
 export async function supprimerRapport(rapportId: string): Promise<void> {
   const rap = await prisma.rapportVerification.findUnique({
@@ -226,7 +325,12 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
       etablissementId: true,
       verificationId: true,
       fichierCle: true,
-      verification: { select: { datePrevue: true } },
+      dateRapport: true,
+      resultat: true,
+      echeanceHonoree: true,
+      verification: {
+        select: { datePrevue: true, statut: true, periodicite: true },
+      },
     },
   });
   if (!rap) return;
@@ -236,22 +340,51 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await tx.rapportVerification.delete({ where: { id: rapportId } });
 
-    // Si c'était le seul rapport lié à la vérification, la réalisation n'est
-    // plus prouvée : la ligne de suivi retourne à un cycle ouvert.
-    const restants = await tx.rapportVerification.count({
-      where: { verificationId: rap.verificationId },
+    if (!estResultatRealise(rap.resultat)) return;
+
+    const dernier = await tx.rapportVerification.findFirst({
+      where: {
+        verificationId: rap.verificationId,
+        resultat: { in: [...RESULTATS_REALISES] },
+      },
+      orderBy: { dateRapport: "desc" },
+      select: { dateRapport: true, resultat: true },
     });
-    if (restants === 0) {
-      await tx.verification.update({
-        where: { id: rap.verificationId },
-        data: {
-          dateRealisee: null,
-          statut: estEnRetard(rap.verification.datePrevue, now)
-            ? "depassee"
-            : "a_planifier",
-        },
-      });
+    // Un rapport réalisé plus récent (ou du même jour) subsiste : le retiré
+    // était antidaté, il n'avait pas fait rouler la ligne.
+    if (dernier !== null && dernier.dateRapport.getTime() >= rap.dateRapport.getTime()) {
+      return;
     }
+
+    const periodicite = rap.verification.periodicite as Periodicite;
+    const cyclique = estCyclique(periodicite);
+    let datePrevue = rap.verification.datePrevue;
+    if (rap.echeanceHonoree !== null) {
+      datePrevue = rap.echeanceHonoree;
+    } else if (dernier !== null && cyclique) {
+      datePrevue =
+        prochaineEcheance(dernier.dateRapport, periodicite) ?? datePrevue;
+    }
+
+    let statut: StatutVerification;
+    if (!cyclique && dernier !== null) {
+      // One-shot : le rapport précédent l'avait déjà consommé.
+      statut = STATUT_DEPUIS_RESULTAT[dernier.resultat as ResultatRealise];
+    } else if (estEnRetard(datePrevue, now)) {
+      statut = "depassee";
+    } else {
+      statut = dernier !== null ? "planifiee" : "a_planifier";
+    }
+
+    const { count } = await tx.verification.updateMany({
+      where: {
+        id: rap.verificationId,
+        datePrevue: rap.verification.datePrevue,
+        statut: rap.verification.statut,
+      },
+      data: { datePrevue, dateRealisee: dernier?.dateRapport ?? null, statut },
+    });
+    if (count !== 1) throw new LigneModifieeEntreTemps();
   });
 
   // La base a tranché : on peut libérer le fichier.

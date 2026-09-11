@@ -1415,7 +1415,7 @@ classent la même ligne et se contredisent.
 
 L'ADR-011 promet déjà que toutes les surfaces affichent le même compte.
 
-#### Lot 3 bis — Le cycle soldé que les compteurs ne déplient pas. **SORTI du lot 3 le 2026-09-10 ; ne se fait PAS comme un lot.**
+#### ~~Lot 3 bis — Le cycle soldé que les compteurs ne déplient pas.~~ **DISSOUS par le lot N2 de l'ADR-034 le 2026-09-11** : il n'y a plus de cycle soldé sur la ligne. Les compteurs se corrigent au N4.
 
 C'est la seconde moitié du lot 3, détachée par décision de la propriétaire le
 2026-09-10, et la raison du détachement compte plus que le défaut lui-même.
@@ -1447,7 +1447,8 @@ propre — la trace des échéances manquées — n'est exigé par aucun texte, 
 dérive des rapports, et n'a aucun lecteur. Le passage y reste mécanique si un
 besoin naît. Plan en cinq lots N1–N5 dans l'ADR. ~~N1~~ fait le 2026-09-11
 (schéma, migration, écriture d'`archiveLe` par la réconciliation) sur
-`adr034-ligne-ouverte` ; N2 à N5 restent.
+`adr034-ligne-ouverte` ; ~~N2~~ fait le même jour (le dépôt roule, la
+suppression recule, le réconciliateur ne roule plus) ; N3 à N5 restent.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est
@@ -1506,8 +1507,10 @@ les corriger.**
 
 #### Lot 5 — Ce qui n'est jamais relancé. Dépend des lots 3 et 4.
 
-- **régime établi** : la page ne régénère que si le calendrier est vide ou
-  désynchronisé, donc un dossier immobile garde « conforme » indéfiniment ;
+- ~~**régime établi**~~ — **dissous par le N2 de l'ADR-034 le 2026-09-11** :
+  la ligne ne porte plus « conforme », elle porte une échéance ouverte, et « en
+  retard » est une fonction de la date. Un dossier immobile passe en retard le
+  jour où son échéance passe, sans qu'aucune régénération soit nécessaire ;
 - **ligne « mise en service »** : créée `a_planifier`, passée `depassee` par la
   régénération suivante — le jour même —, et comptée en retard dès le premier
   passage (4170 jours pour une MES de 2015). Idempotence rompue entre le passage 1

@@ -268,11 +268,37 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   quand une ligne redevient attendue. Sans cela, entre N1 et N3, toute ligne
   archivée entre-temps aurait le préfixe sans la date, et le N3 hériterait d'une
   divergence à rattraper.
-- **N2 — Le dépôt fait rouler** : `rapports/actions.ts` écrit `echeanceHonoree`
-  et roule la ligne dans la transaction ; le rapport antidaté ne roule pas ; la
-  suppression du dernier rapport recule la ligne d'un cycle. Le réconciliateur
-  perd sa branche « cycle soldé ». Le harnais du lot 0 rejoué, le banc de
-  mutation rejoué.
+- ~~**N2 — Le dépôt fait rouler**~~ — **fait le 2026-09-11**. `rapports/actions.ts`
+  écrit `echeanceHonoree` (= la `datePrevue` lue) et roule la ligne dans la
+  transaction : `datePrevue` = date du rapport + périodicité, statut
+  `planifiee` — le résultat vit sur le rapport. L'écriture sur la ligne est
+  conditionnée sur `datePrevue` et `statut` lus (lot 1) ; un dépôt concurrent
+  fait annuler la transaction et rend une erreur à recommencer. Le rapport
+  antidaté — plus ancien **ou du même jour** qu'un rapport réalisé déjà déposé —
+  entre au registre sans `echeanceHonoree` et ne roule pas. La suppression du
+  rapport réalisé le plus récent recule la ligne à son `echeanceHonoree` ; à
+  défaut (rapport d'avant N2) à l'échéance qu'engendre le rapport réalisé
+  précédent ; à défaut elle garde sa date et rouvre son cycle. Retirer un
+  rapport antidaté ou non vérifiable ne touche pas la ligne. Le réconciliateur
+  a perdu sa branche « cycle soldé » ; sept mutations jouées, chacune rouge.
+  **Trois écarts au plan, écrits :**
+  1. `dateRealisee` **reste écrite** — la date du dernier rapport réalisé — le
+     temps que les sept lecteurs du § 6 passent sur les rapports (N4). La
+     retirer ici aurait vidé « dernière réalisation » sur la fiche et le
+     tableau de bord pendant deux lots. N5 la retire.
+  2. Le réconciliateur garde **deux branches** sur une ligne réalisée. Le
+     **rattrapage** d'une ligne d'avant N2 — cyclique au statut réalisé, ce
+     qu'aucune ligne roulée par N2 ne porte plus — la met au modèle en une
+     passe. Et le **ré-ancrage sur changement de périodicité** : sans lui, la
+     ligne du centre de formation de GE 4 § 1 ne reculait plus de 2028 à 2030
+     (`continuite-identite` rouge), et une prescription d'assureur n'aurait eu
+     d'effet qu'au dépôt suivant. La branche ne s'ouvre que si le pas a changé
+     et qu'une réalisation est connue ; N5 lira cette réalisation sur le
+     dernier rapport réalisé.
+  3. Une obligation **sans rendez-vous suivant** garde, seule, un statut réalisé
+     sur sa ligne : il n'y a pas d'échéance suivante à ouvrir. N3 devra en tenir
+     compte dans « en retard » — `datePrevue` passée et statut réalisé n'est pas
+     un retard.
 - **N3 — Les prédicats** : `retard.ts` cesse de lire `dateRealisee` ;
   `estVerificationArchivee` lit `archiveLe` ; `classerVerification` et le
   vocabulaire perdent `archivee`-par-préfixe. Le préfixe est retiré des libellés

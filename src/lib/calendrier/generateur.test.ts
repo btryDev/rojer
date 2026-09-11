@@ -1026,7 +1026,10 @@ describe("réconciliation — un placeholder cède devant une vraie date", () =>
 });
 
 describe("réconciliation — cycles de vérification", () => {
-  it("un contrôle encore valide garde son résultat et reçoit sa prochaine échéance", () => {
+  it("une ligne d'avant N2 au statut réalisé est mise au modèle : échéance suivante, planifiée", () => {
+    // Avant l'ADR-034 elle gardait « réalisée conforme » jusqu'à ce que la
+    // période s'écoule. Depuis, le résultat vit sur le rapport et la ligne ne
+    // dit que l'échéance ouverte : 2027, planifiée.
     const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
     const eq = fakeEquipement("eq-1");
     const aGenerer = genererProchainesVerifications(
@@ -1054,13 +1057,57 @@ describe("réconciliation — cycles de vérification", () => {
 
     expect(plan.aMettreAJour).toHaveLength(1);
     const maj = plan.aMettreAJour[0];
-    expect(maj.statut).toBe("realisee_conforme");
+    expect(maj.statut).toBe("planifiee");
     expect(maj.dateRealisee).toEqual(dateRealisee);
-    // dateRealisee + 365 j
+    // dateRealisee + un an
     expect(maj.datePrevue.getUTCFullYear()).toBe(2027);
   });
 
-  it("un contrôle dont la période est écoulée rouvre un cycle « dépassée »", () => {
+  it("une périodicité qui change ré-ancre l'échéance ouverte sur la réalisation", () => {
+    // Prescription d'assureur qui ramène l'annuelle au semestre : la ligne,
+    // roulée par un dépôt du 2026-03-01 au 2027-03-01, doit passer au
+    // 2026-09-01. Sans cette branche, l'échéance ouverte ne bougerait pas et
+    // la prescription n'aurait d'effet qu'au prochain dépôt.
+    const o = fakeObligation({ id: "o1", periodicite: "semestrielle" });
+    const eq = fakeEquipement("eq-1");
+    const aGenerer = genererProchainesVerifications(
+      [applique(o, [eq])],
+      new Map(),
+      { now: NOW },
+    );
+
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-1",
+          obligationId: "o1",
+          equipementId: "eq-1",
+          periodicite: "annuelle",
+          dateRealisee: new Date("2026-03-01T00:00:00Z"),
+          datePrevue: new Date("2027-03-01T00:00:00Z"),
+          statut: "planifiee",
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenerer,
+      { now: NOW },
+    );
+
+    const maj = plan.aMettreAJour[0];
+    expect(maj?.periodicite).toBe("semestrielle");
+    // En jour civil : l'heure de Paris est conservée à travers le changement
+    // d'heure (ADR-011), donc l'instant UTC bouge d'une heure.
+    expect(cleJourCivil(maj!.datePrevue)).toBe("2026-09-01");
+    // Au 2026-08-11, le 1er septembre est à venir.
+    expect(maj?.statut).toBe("planifiee");
+  });
+
+  it("rattrape une ligne d'avant N2 jamais roulée : un cycle, et il est dépassé", () => {
+    // Ligne écrite quand le dépôt posait la réalisation sans rouler, et dont la
+    // régénération n'a jamais suivi : `datePrevue` n'a pas dépassé
+    // `dateRealisee`. Le générateur la roule d'UN cycle — 2025-01-01 —, qui
+    // est passé au 2026-08-11 : dépassée. Il ne saute pas à 2026 ni 2027 :
+    // l'échéance ouverte est la première non honorée.
     const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
     const eq = fakeEquipement("eq-1");
     const aGenerer = genererProchainesVerifications(
@@ -1090,8 +1137,46 @@ describe("réconciliation — cycles de vérification", () => {
     // L'outil cesse d'afficher « Conforme » sur un contrôle annuel vieux de
     // deux ans — sans détruire les rapports, qui restent sur la même ligne.
     expect(maj.statut).toBe("depassee");
-    expect(maj.dateRealisee).toBeNull();
+    expect(maj.datePrevue).toEqual(new Date("2025-01-01T00:00:00Z"));
+    // `dateRealisee` survit à la transition (ADR-034, N2 → N5) : c'est le dépôt
+    // et la suppression qui l'écrivent, plus la régénération.
+    expect(maj.dateRealisee).toEqual(new Date("2024-01-01T00:00:00Z"));
     expect(maj.id).toBe("v-1");
+  });
+
+  it("ne fait plus rouler une ligne déjà roulée par son dépôt (ADR-034)", () => {
+    // Le cas général depuis N2 : le dépôt du 2026-03-01 a roulé la ligne au
+    // 2027-03-01, statut planifiée. La régénération la trouve et la laisse —
+    // ni « réalisée », ni recalculée, ni relancée.
+    const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
+    const eq = fakeEquipement("eq-1");
+    const aGenerer = genererProchainesVerifications(
+      [applique(o, [eq])],
+      new Map(),
+      { now: NOW },
+    );
+
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-1",
+          obligationId: "o1",
+          equipementId: "eq-1",
+          libelleObligation: "Obligation o1",
+          periodicite: "annuelle",
+          realisateurRequis: o.realisateurs,
+          dateRealisee: new Date("2026-03-01T00:00:00Z"),
+          datePrevue: new Date("2027-03-01T00:00:00Z"),
+          statut: "planifiee",
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenerer,
+      { now: NOW },
+    );
+
+    expect(plan.aMettreAJour).toEqual([]);
+    expect(plan.inchangees).toBe(1);
   });
 
   it("une obligation one-shot déjà réalisée n'est ni archivée ni replanifiée", () => {

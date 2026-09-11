@@ -40,7 +40,7 @@ import {
   type Periodicite,
   type Realisateur,
 } from "@/lib/referentiels/types-communs";
-import { prochaineEcheance } from "./periodicite";
+import { estCyclique, prochaineEcheance } from "./periodicite";
 import { estEnRetard } from "@/lib/dates/retard";
 import {
   MARQUEUR_NON_APPLICABLE,
@@ -627,20 +627,27 @@ export function comparerParUrgence(
 // d'une obligation sur un équipement — un objet durable, dont l'identifiant
 // est stable pour toute la vie de l'équipement.
 //
-// SÉMANTIQUE DE LA LIGNE DE SUIVI
-// -------------------------------
-//   `datePrevue`   : prochaine échéance réglementaire ;
-//   `dateRealisee` : réalisation **du cycle en cours**, `null` tant que le
-//                    cycle n'est pas soldé ;
-//   `statut`       : état du cycle en cours ;
-//   `rapports`     : l'historique complet, cycle après cycle — c'est lui qui
-//                    porte la preuve, jamais le statut.
+// SÉMANTIQUE DE LA LIGNE DE SUIVI (ADR-034, depuis le lot N2 du 2026-09-11)
+// -------------------------------------------------------------------------
+//   `datePrevue`   : l'échéance OUVERTE — la seule date que la ligne porte ;
+//   `statut`       : son état — à planifier, planifiée, dépassée ;
+//   `archiveLe`    : posé quand l'obligation cesse de s'appliquer à une ligne
+//                    qui porte une preuve ;
+//   `rapports`     : l'historique complet — c'est lui qui porte la preuve, et
+//                    chaque rapport garde l'échéance qu'il honorait
+//                    (`echeanceHonoree`).
 //
-// Quand la période s'écoule (`dateRealisee + périodicité` est atteinte), le
-// cycle est **relancé** : `dateRealisee` repasse à `null` et le statut à
-// `depassee`. Rien n'est perdu — les rapports du cycle précédent restent
-// attachés à la même ligne. C'est ce qui permet à l'outil de ne pas continuer
-// d'afficher « Conforme » sur un contrôle annuel réalisé il y a deux ans.
+// La ligne ROULE AU DÉPÔT d'un rapport (`rapports/actions.ts`), dans la même
+// transaction : `datePrevue` = date du rapport + périodicité. La réconciliation
+// ne fait plus rouler personne : elle ne connaît que des cycles ouverts, dont
+// « en retard » est une fonction de la date. Un contrôle annuel fait il y a
+// deux ans a une échéance ouverte vieille d'un an — c'est ce qu'on lit.
+//
+// `dateRealisee` SURVIT LE TEMPS DE LA TRANSITION (N2 → N4) : le dépôt continue
+// de l'écrire — la date du dernier rapport réalisé — parce que sept lecteurs la
+// lisent encore. Le générateur ne s'en sert plus que pour RATTRAPER une ligne
+// écrite avant N2 et jamais roulée ; N4 déplace les lecteurs sur les rapports,
+// N5 retire la colonne.
 // ===========================================================================
 
 /** Statuts que peut porter une ligne en base (miroir de l'enum Prisma
@@ -1060,27 +1067,55 @@ export function reconcilierCalendrier(
       datePrevue = g.datePrevue;
       dateRealisee = ex.dateRealisee;
       statut = estStatutRealise(ex.statut) ? ex.statut : g.statut;
-    } else if (ex.dateRealisee !== null) {
+    } else if (!estCyclique(g.periodicite) && estStatutRealise(ex.statut)) {
+      // Obligation sans rendez-vous suivant (`mise_en_service_uniquement`,
+      // `autre`) et réalisée : le one-shot est consommé, plus rien à
+      // replanifier, jamais. La ligne garde le résultat de son unique
+      // contrôle — c'est le seul cas où un statut réalisé reste sur la ligne.
+      datePrevue = ex.datePrevue;
+      dateRealisee = ex.dateRealisee;
+      statut = ex.statut;
+    } else if (estStatutRealise(ex.statut) && ex.dateRealisee !== null) {
+      // RATTRAPAGE D'UNE LIGNE D'AVANT N2 (ADR-034), et rien d'autre. Une
+      // ligne CYCLIQUE au statut réalisé est, par construction, d'avant N2 :
+      // depuis, le dépôt roule la ligne dans sa transaction et la laisse
+      // « planifiée » — le résultat vit sur le rapport. Avant, le dépôt posait
+      // la réalisation, et c'était CETTE branche — alors « cycle soldé » — qui
+      // faisait rouler la ligne à la régénération suivante, puis la relançait
+      // « dépassée » en effaçant `dateRealisee` quand la période s'écoulait.
+      //
+      // On la met au modèle en une passe : échéance = réalisation +
+      // périodicité, statut d'un cycle ouvert. D'UN cycle, même si la date
+      // obtenue est déjà passée : l'obligation est un intervalle, l'échéance
+      // ouverte est la première non honorée, et « en retard » se lit sur elle.
+      // La passe suivante ne repasse pas ici — le statut n'est plus réalisé.
+      // La branche part avec `dateRealisee` au N5.
       const prochaine = prochaineEcheance(ex.dateRealisee, g.periodicite);
-      if (prochaine === null) {
-        // Périodicité sans échéance suivante (`mise_en_service_uniquement`,
-        // `autre`) : le one-shot est consommé, plus rien à replanifier.
-        datePrevue = ex.datePrevue;
-        dateRealisee = ex.dateRealisee;
-        statut = ex.statut;
-      } else if (!estEnRetard(prochaine, now)) {
-        // Cycle encore valide : on affiche la prochaine échéance sans toucher
-        // au résultat du contrôle déjà réalisé.
-        datePrevue = prochaine;
-        dateRealisee = ex.dateRealisee;
-        statut = estStatutRealise(ex.statut) ? ex.statut : "planifiee";
-      } else {
-        // Période écoulée : nouveau cycle. Les rapports du cycle précédent
-        // restent attachés à cette même ligne — c'est eux, la preuve.
-        datePrevue = prochaine;
-        dateRealisee = null;
-        statut = "depassee";
-      }
+      datePrevue = prochaine ?? ex.datePrevue;
+      dateRealisee = ex.dateRealisee;
+      statut = statutCycleOuvert(datePrevue, "planifiee", now);
+    } else if (
+      ex.periodicite !== g.periodicite &&
+      ex.dateRealisee !== null &&
+      estCyclique(g.periodicite)
+    ) {
+      // LA PÉRIODICITÉ A CHANGÉ — référentiel corrigé, prescription d'assureur
+      // posée ou levée, colonne R de GE 4 § 1 qui se dédouble — et la ligne
+      // porte une réalisation : l'échéance ouverte se RÉ-ANCRE dessus. Un
+      // centre de formation visité en 2025 qui passe de trois à cinq ans doit
+      // voir sa ligne reculer à 2030, pas garder 2028 (`continuite-identite`).
+      //
+      // C'est la seule chose que la régénération sait encore recalculer sur
+      // une ligne réalisée, et c'est délibérément étroit : hors changement de
+      // pas, l'échéance ouverte est ce que le dépôt a écrit, et personne ne la
+      // recalcule. Le constat B de l'audit — `datePrevue` sans son origine —
+      // reste ouvert pour une ligne sans réalisation ; ici l'origine, c'est
+      // la réalisation, et N5 la lira sur le dernier rapport réalisé quand
+      // `dateRealisee` partira.
+      datePrevue =
+        prochaineEcheance(ex.dateRealisee, g.periodicite) ?? ex.datePrevue;
+      dateRealisee = ex.dateRealisee;
+      statut = statutCycleOuvert(datePrevue, "planifiee", now);
     } else if (heritee !== null && !ex.porteUnePreuve) {
       // La ligne absorbante existe mais n'a JAMAIS ÉTÉ RÉALISÉE sous son
       // propre identifiant : elle reprend la réalisation des lignes qu'elle
@@ -1127,12 +1162,14 @@ export function reconcilierCalendrier(
       dateRealisee = null;
       statut = "planifiee";
     } else {
-      // Cycle ouvert : l'échéance réglementaire ne bouge pas parce que
-      // l'utilisateur a déclaré un extincteur de plus. Repousser `datePrevue`
-      // à `now` à chaque régénération — ce que faisait le delete/create —
-      // effaçait le retard accumulé.
+      // Cycle ouvert — le cas général depuis l'ADR-034 : l'échéance
+      // réglementaire ne bouge pas parce que l'utilisateur a déclaré un
+      // extincteur de plus. Repousser `datePrevue` à `now` à chaque
+      // régénération — ce que faisait le delete/create — effaçait le retard
+      // accumulé. `dateRealisee` est recopiée telle quelle : c'est le dépôt qui
+      // l'écrit et la suppression qui l'efface, pas la régénération.
       datePrevue = ex.datePrevue;
-      dateRealisee = null;
+      dateRealisee = ex.dateRealisee;
       statut = statutCycleOuvert(ex.datePrevue, ex.statut, now);
     }
 
