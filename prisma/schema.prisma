@@ -178,7 +178,8 @@ model Etablissement {
 
   /**
    * Version du référentiel de conformité avec laquelle le calendrier de cet
-   * établissement a été généré (cf. `REFERENTIEL_VERSION`, ADR-003).
+   * établissement a été généré : `SCEAU_CALENDRIER`, soit la version ET
+   * l'empreinte du contenu depuis le 2026-09-11 (ADR-003).
    * Le référentiel vit en TypeScript versionné, mais ses effets sont écrits en
    * base : chaque `Verification` fige une périodicité et un libellé. Sans ce
    * repère, une correction du référentiel — périodicité rectifiée, obligation

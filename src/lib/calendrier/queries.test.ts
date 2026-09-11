@@ -368,10 +368,11 @@ describe("calendrierDesynchronise — la comparaison de version", () => {
   });
 
   it("dit « désynchronisé » quand la version est la même mais que le contenu a changé", async () => {
-    // L'incident du 2026-09-10 : `succedeA` entre dans l'empreinte, la version
-    // ne bouge pas, et une base réconciliée se croit à jour — la succession de
-    // GE 4 § 1 ne se rejoue jamais. Le repère porte l'empreinte pour que ce
-    // cas ne dépende plus de la mémoire de qui modifie le référentiel.
+    // Le cas de l'incident du 2026-09-10 — contenu changé, version inchangée —,
+    // vu depuis la COMPARAISON : ce test ne garde pas le contenu du sceau (c'est
+    // `conformite.test.ts` qui le fait), il garde que la comparaison porte sur
+    // le repère entier. Une comparaison réduite au préfixe de version le
+    // ferait rougir.
     prismaMock.etablissement.findFirst.mockResolvedValue({
       referentielVersionCalendrier: `${REFERENTIEL_VERSION}+154-0000000000000000`,
     });

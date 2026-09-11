@@ -24,7 +24,7 @@ export type TitreActionState =
  * commentaire de `rafraichir` affirmait qu'« un titre déclaré crée une ligne » ;
  * `revalidatePath` ne fait qu'invalider un cache de rendu, il ne génère rien.
  * Et la page calendrier ne régénère d'elle-même que si le calendrier est vide
- * ou si `REFERENTIEL_VERSION` a bougé — donc jamais, sur un établissement en
+ * ou si le référentiel a changé (`SCEAU_CALENDRIER`) — donc jamais, sur un établissement en
  * service. Un titre déclaré n'apparaissait au calendrier qu'au prochain
  * événement sans rapport : une mutation d'équipement, un rapport déposé.
  *

@@ -124,9 +124,12 @@ export const obligationsConformite: Obligation[] = [
  * qu'un calendrier a été généré avec un référentiel antérieur, et donc de le
  * réconcilier — les deux sont réunis dans `SCEAU_CALENDRIER`, plus bas.
  *
- * **À incrémenter à CHAQUE modification du référentiel.** Le test
- * `conformite.test.ts` compare une empreinte du contenu à celle enregistrée :
- * l'oubli fait échouer la suite.
+ * **À incrémenter à CHAQUE modification du référentiel.** L'oubli ne fige plus
+ * les calendriers — le sceau porte l'empreinte, un contenu changé les
+ * désynchronise de toute façon —, mais il laisse les documents citer une
+ * version qui ne dit pas quel contenu elle a servi. La suite ne l'attrape que
+ * si l'on AJOUTE une ligne à `HISTORIQUE_EMPREINTES` (`conformite.test.ts`) ;
+ * réécrire la dernière reste vert.
  *
  * SAUF QUAND IL NE LE FAIT PAS, et le lot A du 2026-09-01 l'a établi en
  * corrigeant onze fondements sans que l'empreinte bouge d'un chiffre. C'est

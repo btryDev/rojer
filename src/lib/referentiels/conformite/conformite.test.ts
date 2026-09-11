@@ -1330,7 +1330,8 @@ describe("référentiel conformité — version et empreinte", () => {
    * tout vert. Aucun test ne voit l'historique git ; rien de ce qu'un fichier
    * contient ne se souvient de ce qu'il contenait. La garantie n'est donc plus
    * ici : elle est dans `SCEAU_CALENDRIER`, qui porte l'empreinte elle-même, et
-   * que le dernier test de ce bloc garde. Un contenu changé désynchronise les
+   * que le test « le repère des calendriers porte l'empreinte… », juste
+   * dessous, garde. Un contenu changé désynchronise les
    * calendriers par construction.
    *
    * La table reste, pour ce qu'elle fait bien : obliger à REGARDER la version

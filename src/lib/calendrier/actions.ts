@@ -494,7 +494,8 @@ async function regenererUnePasse(
     attendus.push(1);
   }
 
-  // Le calendrier est désormais aligné sur cette version du référentiel.
+  // Le calendrier est désormais aligné sur ce référentiel — version et contenu,
+  // que `SCEAU_CALENDRIER` réunit.
   // Écrit **dans** la transaction, et en dernier : si le plan échoue,
   // l'établissement reste marqué comme désynchronisé et sera repris au prochain
   // affichage, plutôt que d'être considéré à tort comme à jour.
