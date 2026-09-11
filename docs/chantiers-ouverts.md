@@ -1445,7 +1445,9 @@ fait conserver. La variante « une rangée par occurrence », pratique dominante
 des sept GMAO lues, a été proposée puis écartée après débat : son seul apport
 propre — la trace des échéances manquées — n'est exigé par aucun texte, se
 dérive des rapports, et n'a aucun lecteur. Le passage y reste mécanique si un
-besoin naît. Plan en cinq lots N1–N5 dans l'ADR.
+besoin naît. Plan en cinq lots N1–N5 dans l'ADR. ~~N1~~ fait le 2026-09-11
+(schéma, migration, écriture d'`archiveLe` par la réconciliation) sur
+`adr034-ligne-ouverte` ; N2 à N5 restent.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est

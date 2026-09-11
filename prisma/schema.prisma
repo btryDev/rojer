@@ -613,6 +613,14 @@ model Verification {
   dateRealisee DateTime?
   statut       StatutVerification @default(a_planifier)
 
+  // Date à laquelle l'obligation a cessé de s'appliquer à cette ligne, qu'on
+  // ne pouvait pas supprimer parce qu'elle porte une preuve (ADR-034, qui
+  // amende l'ADR-012). `null` = ligne ouverte. Remplace le préfixe
+  // « Ne s'applique plus — » du libellé, qu'on lisait par `startsWith` : les
+  // deux sont écrits ensemble depuis le 2026-09-11 (lot N1), et les lecteurs
+  // passent sur ce champ au lot N3, qui retire le préfixe.
+  archiveLe DateTime?
+
   rapports RapportVerification[]
   actions  Action[]
 
@@ -781,6 +789,13 @@ model RapportVerification {
   verification    Verification  @relation(fields: [verificationId], references: [id], onDelete: Cascade)
 
   dateRapport    DateTime
+  // L'échéance que ce rapport honorait : la `datePrevue` de la ligne au moment
+  // du dépôt (ADR-034). La ligne, elle, roule sur l'échéance suivante et ne
+  // garde que celle-là — c'est donc ici, et seulement ici, que survit la date
+  // prévue d'un contrôle fait. Elle rend reconstructible par script le modèle
+  // « une rangée par occurrence » si un besoin le justifie un jour (§ 5).
+  // `null` pour les rapports déposés avant le lot N2, qui l'écrit.
+  echeanceHonoree DateTime?
   organismeVerif String?
   resultat       ResultatVerification
   commentaires   String?

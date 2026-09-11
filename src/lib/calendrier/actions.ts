@@ -473,6 +473,12 @@ async function regenererUnePasse(
           dateRealisee: m.dateRealisee,
           statut: m.statut,
           prescriptionId: m.prescriptionId,
+          // Une ligne que le plan met à jour est une ligne ATTENDUE : son
+          // obligation s'applique, et son libellé repart du référentiel, sans
+          // préfixe. Si elle avait été archivée — appareil réactivé, régime
+          // rétabli —, elle ne l'est plus, et la date doit tomber avec le
+          // préfixe (ADR-034, N1).
+          archiveLe: null,
         },
       }),
     );
@@ -485,10 +491,14 @@ async function regenererUnePasse(
     // conditionner ferait échouer des archivages parfaitement légitimes.
     // `etablissementId` reste, lui : une écriture par identifiant seul n'a
     // pas à exister sur une table scopée.
+    //
+    // `archiveLe` est écrit AVEC le préfixe depuis le lot N1 de l'ADR-034 : les
+    // lecteurs lisent encore le préfixe, ils passeront sur la date au N3, et
+    // entre les deux les deux faits ne doivent pas diverger.
     operations.push(
       prisma.verification.updateMany({
         where: { id: a.id, etablissementId },
-        data: { libelleObligation: a.libelleObligation },
+        data: { libelleObligation: a.libelleObligation, archiveLe: new Date() },
       }),
     );
     attendus.push(1);

@@ -224,6 +224,33 @@ describe("genererCalendrier — conservation des actions correctives", () => {
     expect(res.archived).toBe(1);
     const conservee = db.verifications.find((v) => v.id === "v-1");
     expect(conservee?.libelleObligation).toContain("Ne s'applique plus");
+    // ADR-034, N1 : la date d'archivage est écrite avec le préfixe, pour que
+    // les lecteurs puissent passer de l'un à l'autre au N3 sans divergence.
+    expect(conservee?.archiveLe).toBeInstanceOf(Date);
+  });
+
+  it("désarchive une ligne dont l'obligation redevient applicable : préfixe ET date tombent", async () => {
+    // L'appareil a été retiré, sa ligne archivée avec sa preuve ; il est
+    // réactivé. La ligne reprend son libellé du référentiel — et si
+    // `archiveLe` restait posé, les lecteurs du N3 la tiendraient pour
+    // archivée alors que le calendrier la présente comme vivante.
+    poserEtablissement([{ id: "eq-1" }]);
+    db.verifications = [
+      ligne({
+        id: "v-1",
+        equipementId: "eq-1",
+        obligationId: ELEC_ANNUELLE,
+        libelleObligation: "Ne s'applique plus — Vérification électrique",
+        archiveLe: new Date("2026-01-01T00:00:00Z"),
+        nbRapports: 1,
+      }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    const reprise = db.verifications.find((v) => v.id === "v-1");
+    expect(reprise?.libelleObligation).not.toContain("Ne s'applique plus");
+    expect(reprise?.archiveLe).toBeNull();
   });
 
   it("supprime en revanche une ligne devenue inutile et sans preuve", async () => {

@@ -82,6 +82,7 @@ export type LigneFausse = {
   dateRealisee: Date | null;
   statut: string;
   prescriptionId?: string | null;
+  archiveLe?: Date | null;
   nbRapports: number;
   nbActions: number;
 };

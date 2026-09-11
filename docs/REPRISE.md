@@ -179,7 +179,9 @@ et tenues par des tests).
 | --- | --- |
 | `main` | **fusionnée le 2026-09-11** depuis `ge4r-succession`, en avance rapide : les lots 1 à 4, l'ADR-034 tranchée, `ge4-r` et sa déclaration de succession. 192 fichiers, 2511 tests. Déployée en production par Vercel |
 | `worktree-ge4-r-hebergement` | remplacée par `ge4r-succession`, intacte ; à supprimer quand la propriétaire le dira |
-| `ge4r-succession` | **dans `main`**. Reste comme branche de travail ; l'ADR-034 se bâtit sur une branche neuve issue de `main` |
+| `ge4r-succession` | **dans `main`**. Reste comme branche de travail |
+| `fix/post-fusion-relecture` | **dans `main` le 2026-09-11** (`733b890`) : les trois relectures post-fusion, dont `SCEAU_CALENDRIER` — le repère des calendriers porte l'empreinte, un contenu changé les désynchronise sans dépendre du bump de version |
+| `adr034-ligne-ouverte` | **en cours**, issue de `main` : l'ADR-034. N1 fait le 2026-09-11. Base locale Docker (`duerp-a3-db`, port 5437 ; shadow 5438) dans le `.env` du worktree — jamais Supabase |
 | `worktree-lot1-ecriture-conditionnee` | **dans `main`** via `ge4r-succession` |
 | `worktree-sommeil-parcours` | fini, jamais relu ; attend un arbitrage |
 | `garde-fous-tests-2` | trois lots de garde-fous, à relire et fusionner |

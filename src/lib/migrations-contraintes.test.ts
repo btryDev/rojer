@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { MARQUEUR_NON_APPLICABLE } from "@/lib/calendrier/marqueur";
 
 /**
  * Non-régression sur les invariants de base qui ne vivent PAS dans le client
@@ -630,5 +631,38 @@ describe("la famille d'habitation est nullable, et c'est une décision (ADR-025 
     expect(m, "enum FamilleHabitation introuvable").not.toBeNull();
     expect(m![1]).toContain("TROISIEME_A");
     expect(m![1]).toContain("TROISIEME_B");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ADR-034, lot N1 — `archiveLe` et `echeanceHonoree`
+// ---------------------------------------------------------------------------
+describe("la ligne ne porte que l'échéance ouverte (ADR-034, N1)", () => {
+  const schema = readFileSync(join(RACINE, "prisma", "schema.prisma"), "utf8");
+  const migration = lireMigrations().find((m) =>
+    m.nom.endsWith("_ligne_ouverte_archive_echeance_honoree"),
+  );
+
+  it("pose les deux colonnes, nullables, dans une migration dédiée", () => {
+    expect(migration, "La migration du lot N1 a disparu.").toBeDefined();
+    const sql = normaliser(migration!.sql);
+    expect(sql).toContain(
+      'ALTER TABLE "Verification" ADD COLUMN IF NOT EXISTS "archiveLe" TIMESTAMP(3);',
+    );
+    expect(sql).toContain(
+      'ALTER TABLE "RapportVerification" ADD COLUMN IF NOT EXISTS "echeanceHonoree" TIMESTAMP(3);',
+    );
+    expect(schema).toMatch(/\n\s+archiveLe\s+DateTime\?\n/);
+    expect(schema).toMatch(/\n\s+echeanceHonoree\s+DateTime\?\n/);
+  });
+
+  it("rétro-remplit sur le préfixe EXACT du marqueur", () => {
+    // Le SQL recopie le préfixe à la main — une migration ne peut pas importer
+    // de TypeScript. Un tiret simple à la place du cadratin, une espace en
+    // moins, et le rétro-remplissage ne toucherait aucune ligne, sans erreur.
+    const echappe = MARQUEUR_NON_APPLICABLE.replace(/'/g, "''");
+    expect(migration!.sql).toContain(
+      `starts_with("libelleObligation", '${echappe}')`,
+    );
   });
 });

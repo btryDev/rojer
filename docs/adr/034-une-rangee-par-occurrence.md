@@ -253,11 +253,19 @@ chemin écrit une réalisation), `verifications/[verificationId]/page.tsx:220`
 
 Chacun rayé et daté au commit qui le ferme, dans le § 11.
 
-- **N1 — Le schéma** : `Verification.archiveLe DateTime?`,
+- ~~**N1 — Le schéma**~~ — **fait le 2026-09-11**, branche
+  `adr034-ligne-ouverte` : `Verification.archiveLe DateTime?`,
   `RapportVerification.echeanceHonoree DateTime?`. Migration SQL écrite à la
-  main, jouée sur le Postgres Docker local, jamais sur Supabase. Rétro-remplissage
-  : `archiveLe = updatedAt` pour les lignes dont le libellé porte le marqueur ;
-  `echeanceHonoree` laissée nulle pour l'existant, qui est vide.
+  main (`20260911120000_ligne_ouverte_archive_echeance_honoree`), jouée sur le
+  Postgres Docker local, jamais sur Supabase. Rétro-remplissage
+  : `archiveLe = updatedAt` pour les lignes dont le libellé porte le marqueur —
+  vérifié sur base réelle : une ligne au préfixe exact remplie, une ligne
+  ouverte et une ligne au tiret simple laissées nulles ; `echeanceHonoree`
+  laissée nulle pour l'existant. **Un écart au plan, et il est voulu** : la
+  réconciliation écrit déjà `archiveLe` avec le préfixe, et le remet à `null`
+  quand une ligne redevient attendue. Sans cela, entre N1 et N3, toute ligne
+  archivée entre-temps aurait le préfixe sans la date, et le N3 hériterait d'une
+  divergence à rattraper.
 - **N2 — Le dépôt fait rouler** : `rapports/actions.ts` écrit `echeanceHonoree`
   et roule la ligne dans la transaction ; le rapport antidaté ne roule pas ; la
   suppression du dernier rapport recule la ligne d'un cycle. Le réconciliateur
