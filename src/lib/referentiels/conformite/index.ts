@@ -120,8 +120,9 @@ export const obligationsConformite: Obligation[] = [
  * l'occurrence disparaissait silencieusement des filtres du registre et du
  * dossier remis à l'inspecteur.
  *
- * Cette constante est le repère qui permet de détecter qu'un calendrier a été
- * généré avec un référentiel antérieur, et donc de le réconcilier.
+ * Cette constante est, avec l'empreinte, le repère qui permet de détecter
+ * qu'un calendrier a été généré avec un référentiel antérieur, et donc de le
+ * réconcilier — les deux sont réunis dans `SCEAU_CALENDRIER`, plus bas.
  *
  * **À incrémenter à CHAQUE modification du référentiel.** Le test
  * `conformite.test.ts` compare une empreinte du contenu à celle enregistrée :
@@ -342,6 +343,24 @@ export function empreinteReferentiel(
   const taille = obligations.length;
   return `${taille}-${h1.toString(16)}${h2.toString(16)}`;
 }
+
+/**
+ * Le repère posé sur un calendrier réconcilié, et comparé à l'ouverture pour
+ * savoir s'il faut le reprendre. Il porte la version ET l'empreinte.
+ *
+ * La version seule ne suffisait pas, et le 2026-09-10 l'a montré : l'empreinte
+ * a bougé sans elle, et aucun calendrier ne s'est repris. Une table d'historique
+ * dans le test n'y peut rien — réécrire sa dernière ligne au lieu d'en ajouter
+ * une laisse tout vert, et rien de ce qu'un fichier contient ne se souvient de
+ * ce qu'il contenait (relecture du 2026-09-11). Avec l'empreinte dans le repère,
+ * un changement de contenu désynchronise les calendriers par construction,
+ * qu'on ait pensé à la version ou non. La version reste pour ce que l'empreinte
+ * ne voit pas — fondements, descriptions —, et pour les documents qui la citent.
+ *
+ * Calculé une fois, au chargement du module : le référentiel ne change pas
+ * pendant la vie du processus.
+ */
+export const SCEAU_CALENDRIER = `${REFERENTIEL_VERSION}+${empreinteReferentiel()}`;
 
 /**
  * Indexation par id pour lookup O(1) côté moteur de matching et snapshot

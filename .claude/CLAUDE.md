@@ -225,9 +225,10 @@ réellement événementielles recensées sont hors périmètre (déclaration d'A
 accidents bénins) ou déjà servies par le module `PlanPrevention`. L'axe est nommé dans
 l'ADR-022, sans mécanisme.
 
-Répartition au 2026-09-08, après la scission de la colonne R de `GE 4 § 1` :
+Répartition remesurée le 2026-09-11 (inchangée depuis la scission de la
+colonne R de `GE 4 § 1`, le 2026-09-08) :
 **89 équipement, 51 établissement, 14 salarié**
-(total 154) — remesurée en appelant `obligationsConformite` et
+(total 154) — en appelant `obligationsConformite` et
 `porteurDe`, pas au grep. Les quatre entrées du lot sont, dans l'ordre où elles
 apparaissent au référentiel : `aeration-erp-filtres-visite-periodique`
 (`CH 39 § 3`, visite TRIMESTRIELLE des filtres de ventilation par l'utilisateur,

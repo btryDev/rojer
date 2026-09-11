@@ -1,7 +1,8 @@
 // Régénération du calendrier après une mutation DÉJÀ COMMITÉE.
 //
-// LE DÉFAUT QU'ELLE FERME. Neuf appels, dans six modules d'actions serveur,
-// enregistrent une mutation,
+// LE DÉFAUT QU'ELLE FERME. Neuf appels directs, dans cinq modules d'actions
+// serveur — celui des équipements passe par un helper que cinq actions
+// partagent —, enregistrent une mutation,
 // puis appellent `genererCalendrier` pour recaler les échéances. L'appel était
 // nu : une régénération qui échoue faisait échouer l'action serveur ENTIÈRE,
 // alors que le dépôt de rapport, la levée de prescription ou la suppression

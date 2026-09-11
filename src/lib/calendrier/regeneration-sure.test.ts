@@ -1,4 +1,4 @@
-// Le garde commun des neuf appels — six modules d'actions serveur — qui
+// Le garde commun des neuf appels directs — cinq modules d'actions serveur — qui
 // régénèrent le calendrier après une mutation.
 //
 // Il était sans test — relevé en relecture le 2026-09-11 —, alors qu'il porte à

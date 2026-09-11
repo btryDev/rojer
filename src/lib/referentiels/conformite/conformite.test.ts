@@ -27,6 +27,7 @@ import {
   DOMAINES_OBLIGATION,
   OBLIGATIONS_RETIREES,
   REFERENTIEL_VERSION,
+  SCEAU_CALENDRIER,
   SOURCES_LEGALES,
   empreinteReferentiel,
   obligationParId,
@@ -1324,11 +1325,21 @@ describe("référentiel conformité — version et empreinte", () => {
    * rougir sur cette erreur-là, puisqu'elle comparait deux constantes que rien ne
    * reliait. La relecture l'a montré — et son commentaire affirmait l'inverse.
    *
-   * Ici, chaque erreur a son test rouge : une empreinte neuve absente de la table
-   * fait rougir le premier ; l'ajouter sous une version déjà présente fait
-   * rougir l'unicité ; l'ajouter sous une version neuve sans bumper
-   * `REFERENTIEL_VERSION` fait rougir le dernier. La table commence à
-   * `2026-09-08.1` : c'est le premier couple connu avec certitude.
+   * Cette table-ci ne le peut pas davantage, et la seconde relecture l'a montré :
+   * réécrire l'empreinte de sa DERNIÈRE ligne au lieu d'en ajouter une laisse
+   * tout vert. Aucun test ne voit l'historique git ; rien de ce qu'un fichier
+   * contient ne se souvient de ce qu'il contenait. La garantie n'est donc plus
+   * ici : elle est dans `SCEAU_CALENDRIER`, qui porte l'empreinte elle-même, et
+   * que le dernier test de ce bloc garde. Un contenu changé désynchronise les
+   * calendriers par construction.
+   *
+   * La table reste, pour ce qu'elle fait bien : obliger à REGARDER la version
+   * quand l'empreinte bouge, et garder lisible quel contenu chaque version a
+   * servi. Une version n'y figure qu'une fois ; une empreinte peut s'y répéter —
+   * une version bumpée pour un fondement corrigé ne bouge pas l'empreinte
+   * (`index.ts`), et un lot annulé retombe sur une empreinte déjà servie. La
+   * table commence à `2026-09-08.1` : c'est le premier couple connu avec
+   * certitude.
    */
   const HISTORIQUE_EMPREINTES: ReadonlyArray<{
     version: string;
@@ -1346,22 +1357,30 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le contenu du référentiel a changé. AJOUTEZ une ligne à " +
         "`HISTORIQUE_EMPREINTES` avec la valeur reçue ci-dessus et une version " +
         "NEUVE, puis mettez `REFERENTIEL_VERSION` dans `index.ts` à cette même " +
-        "version. Ne modifiez pas la ligne existante : c'est elle qui empêche " +
-        "d'oublier la version. Les calendriers déjà générés seront réconciliés " +
+        "version. Ne modifiez pas la ligne existante : elle dit quel contenu " +
+        "cette version a servi. Les calendriers déjà générés seront réconciliés " +
         "automatiquement.",
     ).toBe(EMPREINTE_ATTENDUE);
   });
 
-  it("chaque version et chaque empreinte n'apparaît qu'une fois dans l'historique", () => {
-    // C'est ce test qui rougit sur l'erreur du 2026-09-10 : ajouter l'empreinte
-    // neuve sous la version déjà en place.
+  it("chaque version n'apparaît qu'une fois dans l'historique", () => {
+    // Rougit sur l'erreur du 2026-09-10 quand elle est faite en AJOUTANT une
+    // ligne : l'empreinte neuve sous la version déjà en place.
     const versions = HISTORIQUE_EMPREINTES.map((l) => l.version);
-    const empreintes = HISTORIQUE_EMPREINTES.map((l) => l.empreinte);
     expect(
       new Set(versions).size,
-      "Deux empreintes différentes portent la même version : le contenu a changé sans que la version change.",
+      "Deux lignes portent la même version : le contenu a changé sans que la version change.",
     ).toBe(versions.length);
-    expect(new Set(empreintes).size).toBe(empreintes.length);
+  });
+
+  it("le repère des calendriers porte l'empreinte du contenu, pas seulement la version", () => {
+    // LA garantie contre l'incident du 2026-09-10, quelle que soit la façon
+    // dont la table ci-dessus a été tenue. Si ce repère redevenait la version
+    // seule, une empreinte mise à jour en place — sans version neuve — laisserait
+    // de nouveau chaque base réconciliée se croire à jour.
+    expect(SCEAU_CALENDRIER).toBe(
+      `${REFERENTIEL_VERSION}+${empreinteReferentiel()}`,
+    );
   });
 
   it("la version déclarée est la dernière de l'historique", () => {
@@ -1476,8 +1495,8 @@ describe("référentiel conformité — version et empreinte", () => {
     expect(
       obligationsConformite.length,
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
-        "jour — ainsi que `EMPREINTE_ATTENDUE` et `.claude/CLAUDE.md`, qui " +
-        "l'annoncent tous les deux.",
+        "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
+        "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
     ).toBe(154);
   });
 

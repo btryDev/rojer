@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import {
-  REFERENTIEL_VERSION,
+  SCEAU_CALENDRIER,
   obligationParId,
 } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
@@ -245,6 +245,10 @@ export function grouperParMois(
  * Le calendrier de cet établissement a-t-il été généré avec une version
  * antérieure du référentiel de conformité ?
  *
+ * « Antérieure » se lit sur `SCEAU_CALENDRIER`, qui porte la version ET
+ * l'empreinte du contenu : un contenu changé sans version changée désynchronise
+ * aussi, ce que la version seule laissait passer le 2026-09-10.
+ *
  * `null` en base signifie « jamais réconcilié depuis l'introduction du
  * mécanisme » : ces établissements sont rattrapés au premier affichage.
  *
@@ -262,5 +266,5 @@ export async function calendrierDesynchronise(
     select: { referentielVersionCalendrier: true },
   });
   if (!etab) return false;
-  return etab.referentielVersionCalendrier !== REFERENTIEL_VERSION;
+  return etab.referentielVersionCalendrier !== SCEAU_CALENDRIER;
 }

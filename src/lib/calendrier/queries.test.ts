@@ -35,7 +35,7 @@ vi.mock("@/lib/auth/require-user", () => ({
   getOptionalUser: vi.fn(),
 }));
 
-import { REFERENTIEL_VERSION } from "@/lib/referentiels/conformite";
+import { REFERENTIEL_VERSION, SCEAU_CALENDRIER } from "@/lib/referentiels/conformite";
 import {
   calendrierDesynchronise,
   compterEtatCalendrier,
@@ -367,9 +367,30 @@ describe("calendrierDesynchronise — la comparaison de version", () => {
     expect(await calendrierDesynchronise("etab-1")).toBe(true);
   });
 
-  it("dit « à jour » quand la version en base est la version courante", async () => {
+  it("dit « désynchronisé » quand la version est la même mais que le contenu a changé", async () => {
+    // L'incident du 2026-09-10 : `succedeA` entre dans l'empreinte, la version
+    // ne bouge pas, et une base réconciliée se croit à jour — la succession de
+    // GE 4 § 1 ne se rejoue jamais. Le repère porte l'empreinte pour que ce
+    // cas ne dépende plus de la mémoire de qui modifie le référentiel.
+    prismaMock.etablissement.findFirst.mockResolvedValue({
+      referentielVersionCalendrier: `${REFERENTIEL_VERSION}+154-0000000000000000`,
+    });
+    expect(await calendrierDesynchronise("etab-1")).toBe(true);
+  });
+
+  it("dit « désynchronisé » sur un repère d'avant l'empreinte (version seule)", async () => {
+    // Ce que porte chaque base au déploiement : une réconciliation par
+    // établissement, à la première ouverture, comme après tout changement de
+    // version. Elle est idempotente (ADR-012).
     prismaMock.etablissement.findFirst.mockResolvedValue({
       referentielVersionCalendrier: REFERENTIEL_VERSION,
+    });
+    expect(await calendrierDesynchronise("etab-1")).toBe(true);
+  });
+
+  it("dit « à jour » quand le repère en base est le repère courant", async () => {
+    prismaMock.etablissement.findFirst.mockResolvedValue({
+      referentielVersionCalendrier: SCEAU_CALENDRIER,
     });
     expect(await calendrierDesynchronise("etab-1")).toBe(false);
   });

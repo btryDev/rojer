@@ -25,7 +25,7 @@
 //     du produit, pas du test (cf. `docs/chantiers-ouverts.md` § 11, lot 2).
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { REFERENTIEL_VERSION } from "@/lib/referentiels/conformite";
+import { SCEAU_CALENDRIER } from "@/lib/referentiels/conformite";
 import type { EquipementFaux, LigneFausse } from "./faux-prisma";
 
 // `vi.hoisted` : les fabriques de `vi.mock` sont remontées en tête de module,
@@ -762,7 +762,7 @@ describe("genererCalendrier — estampille de version du référentiel", () => {
     await genererCalendrier(ETAB_ID);
 
     expect(db.etablissements[0].referentielVersionCalendrier).toBe(
-      REFERENTIEL_VERSION,
+      SCEAU_CALENDRIER,
     );
   });
 
@@ -779,7 +779,7 @@ describe("genererCalendrier — estampille de version du référentiel", () => {
 
     expect(res.created + res.updated + res.deleted + res.archived).toBe(0);
     expect(db.etablissements[0].referentielVersionCalendrier).toBe(
-      REFERENTIEL_VERSION,
+      SCEAU_CALENDRIER,
     );
   });
 });

@@ -13,7 +13,7 @@ import {
   estPorteeParSalarie,
   obligationParId,
   OBLIGATIONS_RETIREES,
-  REFERENTIEL_VERSION,
+  SCEAU_CALENDRIER,
 } from "@/lib/referentiels/conformite";
 import {
   genererProchainesVerifications,
@@ -501,7 +501,7 @@ async function regenererUnePasse(
   operations.push(
     prisma.etablissement.update({
       where: { id: etablissementId },
-      data: { referentielVersionCalendrier: REFERENTIEL_VERSION },
+      data: { referentielVersionCalendrier: SCEAU_CALENDRIER },
     }),
   );
   attendus.push(null);
