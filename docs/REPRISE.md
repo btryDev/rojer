@@ -181,7 +181,7 @@ et tenues par des tests).
 | `worktree-ge4-r-hebergement` | remplacée par `ge4r-succession`, intacte ; à supprimer quand la propriétaire le dira |
 | `ge4r-succession` | **dans `main`**. Reste comme branche de travail |
 | `fix/post-fusion-relecture` | **dans `main` le 2026-09-11** (`733b890`) : les trois relectures post-fusion, dont `SCEAU_CALENDRIER` — le repère des calendriers porte l'empreinte, un contenu changé les désynchronise sans dépendre du bump de version |
-| `adr034-ligne-ouverte` | **en cours**, issue de `main` : l'ADR-034. N1 et N2 faits le 2026-09-11 ; N3 à N5 restent. **Ne pas fusionner avant N4** : entre N2 et N4 la ligne roule mais les prédicats et les lecteurs lisent encore l'ancien modèle. Base locale Docker (`duerp-a3-db`, port 5437 ; shadow 5438) dans le `.env` du worktree — jamais Supabase |
+| `adr034-ligne-ouverte` | **en cours**, issue de `main` : l'ADR-034. N1, N2 et la moitié « à reprendre » de N4 faits le 2026-09-11 (la dernière réalisation se lit sur les rapports) ; restent N3, la moitié « simplifiés » de N4, N5. **Ne pas fusionner avant N4 ni avant d'avoir mesuré la baisse du score** : une échéance passée sur un appareil déjà contrôlé compte désormais en retard. Base locale Docker (`duerp-a3-db`, port 5437 ; shadow 5438) dans le `.env` du worktree — jamais Supabase |
 | `worktree-lot1-ecriture-conditionnee` | **dans `main`** via `ge4r-succession` |
 | `worktree-sommeil-parcours` | fini, jamais relu ; attend un arbitrage |
 | `garde-fous-tests-2` | trois lots de garde-fous, à relire et fusionner |

@@ -1415,7 +1415,7 @@ classent la même ligne et se contredisent.
 
 L'ADR-011 promet déjà que toutes les surfaces affichent le même compte.
 
-#### ~~Lot 3 bis — Le cycle soldé que les compteurs ne déplient pas.~~ **DISSOUS par le lot N2 de l'ADR-034 le 2026-09-11** : il n'y a plus de cycle soldé sur la ligne. Les compteurs se corrigent au N4.
+#### ~~Lot 3 bis — Le cycle soldé que les compteurs ne déplient pas.~~ **DISSOUS par le lot N2 de l'ADR-034 le 2026-09-11** : il n'y a plus de cycle soldé sur la ligne. Les compteurs sont corrigés le même jour (`beac7c9`) : une échéance ouverte passée sur un appareil déjà contrôlé compte en retard, et son rapport compte dans les douze mois.
 
 C'est la seconde moitié du lot 3, détachée par décision de la propriétaire le
 2026-09-10, et la raison du détachement compte plus que le défaut lui-même.
@@ -1448,7 +1448,11 @@ dérive des rapports, et n'a aucun lecteur. Le passage y reste mécanique si un
 besoin naît. Plan en cinq lots N1–N5 dans l'ADR. ~~N1~~ fait le 2026-09-11
 (schéma, migration, écriture d'`archiveLe` par la réconciliation) sur
 `adr034-ligne-ouverte` ; ~~N2~~ fait le même jour (le dépôt roule, la
-suppression recule, le réconciliateur ne roule plus) ; N3 à N5 restent.
+suppression recule, le réconciliateur ne roule plus) ; ~~la moitié « à
+reprendre » de N4~~ faite aussi (`beac7c9`) : `dateRealisee` n'est plus écrite,
+la dernière réalisation se lit sur le dernier rapport. Restent N3, la moitié
+« simplifiés » de N4, N5 — et la **mesure de la baisse du score** que l'ADR
+demande avant de fusionner.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est
