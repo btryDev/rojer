@@ -1130,7 +1130,8 @@ s'applique*, et jamais *ce que devient une ligne déjà posée*.
 > réconciliateur, et il tient. Aucune des quatre passes n'a questionné le MODÈLE
 > qu'il réconcilie — une rangée qui est à la fois une échéance et un historique —
 > d'où descendent tous les constats du lot 3, une part du lot 2 et la moitié du
-> lot 5. L'ADR-034 propose ce changement-là, et il attend la propriétaire.
+> lot 5. L'ADR-034 l'a tranché le 2026-09-10 : la ligne ne porte plus que
+> l'échéance ouverte, l'historique est dans les rapports.
 > « Pas de refonte » ne veut pas dire « le modèle est bon » : le modèle n'a pas
 > été mesuré.
 

@@ -57,9 +57,11 @@ portait sur la LOGIQUE du réconciliateur, que les quatre passes ont trouvée
 juste — et elle l'est. Aucune n'a questionné le MODÈLE qu'il réconcilie : une
 rangée `Verification` qui est à la fois une échéance en cours et un porteur
 d'historique. C'est de là que descendent tous les constats du lot 3, une part du
-lot 2 et la moitié du lot 5. **L'ADR-034 le propose en refonte** — une rangée par
-occurrence — et attend la propriétaire. Ne pas lire « pas de refonte » comme
-« le modèle est bon » : ce n'est pas ce qui a été mesuré.
+lot 2 et la moitié du lot 5. **L'ADR-034 a tranché ce point le 2026-09-10** : la
+ligne ne porte plus que l'échéance ouverte, l'historique est dans les rapports
+(la variante « une rangée par occurrence » a été proposée puis écartée). Ne pas
+lire « pas de refonte » comme « le modèle est bon » : ce n'est pas ce qui a été
+mesuré.
 
 - le plan, en six lots ordonnés par dépendance : **`docs/chantiers-ouverts.md` § 11**
 - les constats bruts, avec leurs observables : `docs/revues/constats-reconciliateur-2026-09-09.md`

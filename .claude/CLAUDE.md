@@ -96,9 +96,12 @@ On refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement.
 ### Référentiel de conformité (vérifications)
 Livré : **154 obligations sur 21 domaines** — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
 
-**88 d'entre elles sont déclenchées par un équipement déclaré, quarante-huit sont
+**88 d'entre elles sont déclenchées par un équipement déclaré, cinquante sont
 portées par l'établissement, quatorze par un salarié** — remesuré en appelant
-`obligationsConformite` et `porteurDe` le 2026-09-04, jamais au grep. Le compte
+`obligationsConformite` et `porteurDe` le 2026-09-08, jamais au grep. Cette
+phrase disait « quarante-huit » quand la répartition, plus bas, disait 50 : elle
+n'avait pas suivi la scission de `GE 4 § 1` (deux obligations d'établissement
+de plus). Corrigée le 2026-09-11 sur une relecture. Le compte
 d'établissement écrit ici disait « quarante-cinq » quand la ligne de répartition, plus
 bas dans ce même fichier, en annonçait quarante-six : deux phrases du même document se
 contredisaient d'une unité, et aucune des deux n'était juste après le lot suivant. La répartition a changé deux fois le

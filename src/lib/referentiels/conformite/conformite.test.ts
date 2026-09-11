@@ -1314,6 +1314,13 @@ describe("référentiel conformité — version et empreinte", () => {
   // le Livre II n'était dépouillé qu'à moitié quand le Livre III l'était en
   // entier.
   const EMPREINTE_ATTENDUE = "154-f79cfff96b4eff09";
+  // La VERSION attendue pour CETTE empreinte. Les deux vont par paire, et c'est
+  // le test qui le tient désormais, pas un commentaire : le 2026-09-10,
+  // l'empreinte a bougé, la constante ci-dessus a été mise à jour, la version
+  // non — et une base déjà réconciliée ne rejouait jamais la succession. Changer
+  // l'empreinte sans changer cette ligne rend le test rouge ; changer cette ligne
+  // sans bumper `REFERENTIEL_VERSION`, aussi.
+  const VERSION_POUR_CETTE_EMPREINTE = "2026-09-11.1";
 
   it("l'empreinte du contenu correspond à la version déclarée", () => {
     expect(
@@ -1323,6 +1330,19 @@ describe("référentiel conformité — version et empreinte", () => {
         "à jour avec la valeur reçue ci-dessus. Les calendriers déjà générés " +
         "seront réconciliés automatiquement à la version suivante.",
     ).toBe(EMPREINTE_ATTENDUE);
+  });
+
+  it("la version déclarée est celle qui va avec CETTE empreinte", () => {
+    // Le lien que le message ci-dessus demandait et qu'aucun test ne tenait.
+    // Mettre `EMPREINTE_ATTENDUE` à jour en oubliant la version laissait les
+    // bases déjà réconciliées se croire synchronisées : c'est arrivé le
+    // 2026-09-10, et rien n'a rougi.
+    expect(
+      REFERENTIEL_VERSION,
+      "L'empreinte a changé mais `REFERENTIEL_VERSION` non (ou l'inverse). " +
+        "Incrémentez la version dans `index.ts` ET mettez " +
+        "`VERSION_POUR_CETTE_EMPREINTE` à la même valeur, dans le même commit.",
+    ).toBe(VERSION_POUR_CETTE_EMPREINTE);
   });
 
   it("la version est datée et incrémentable", () => {
