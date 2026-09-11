@@ -96,12 +96,13 @@ On refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement.
 ### Référentiel de conformité (vérifications)
 Livré : **154 obligations sur 21 domaines** — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
 
-**88 d'entre elles sont déclenchées par un équipement déclaré, cinquante sont
-portées par l'établissement, quatorze par un salarié** — remesuré en appelant
-`obligationsConformite` et `porteurDe` le 2026-09-08, jamais au grep. Cette
-phrase disait « quarante-huit » quand la répartition, plus bas, disait 50 : elle
-n'avait pas suivi la scission de `GE 4 § 1` (deux obligations d'établissement
-de plus). Corrigée le 2026-09-11 sur une relecture. Le compte
+**89 d'entre elles sont déclenchées par un équipement déclaré, cinquante et une
+sont portées par l'établissement, quatorze par un salarié** — remesuré en
+appelant `obligationsConformite` et `porteurDe` le 2026-09-11, jamais au grep.
+Cette phrase disait « 88 / quarante-huit », la répartition plus bas « 88 / 50 »,
+et les deux étaient fausses : 88 + 50 + 14 font 152, pas les 154 annoncés. Une
+première correction, le même jour, avait aligné celle-ci sur celle d'en bas —
+c'est-à-dire recopié une erreur au lieu de la mesurer. La relecture l'a attrapé. Le compte
 d'établissement écrit ici disait « quarante-cinq » quand la ligne de répartition, plus
 bas dans ce même fichier, en annonçait quarante-six : deux phrases du même document se
 contredisaient d'une unité, et aucune des deux n'était juste après le lot suivant. La répartition a changé deux fois le
@@ -188,7 +189,7 @@ Rojer couvre les obligations de **santé-sécurité au travail et de sécurité 
 — Code du travail, CCH, et Code de l'environnement quand il porte sur la sécurité des
 installations ou des personnes. Une obligation y naît de cinq déclencheurs possibles :
 
-1. **Équipement déclaré** — 86 obligations livrées
+1. **Équipement déclaré** — 89 obligations livrées (mesuré le 2026-09-11)
 2. **Statut d'employeur** — dès un salarié. **15 obligations livrées au lot 7**
    (2026-08-31) : formation à la sécurité, information et accès au DUERP, VIP, suivi
    individuel renforcé et sa visite intermédiaire, liste des postes à risques, matériel
@@ -225,7 +226,7 @@ accidents bénins) ou déjà servies par le module `PlanPrevention`. L'axe est n
 l'ADR-022, sans mécanisme.
 
 Répartition au 2026-09-08, après la scission de la colonne R de `GE 4 § 1` :
-**88 équipement, 50 établissement, 14 salarié**
+**89 équipement, 51 établissement, 14 salarié**
 (total 154) — remesurée en appelant `obligationsConformite` et
 `porteurDe`, pas au grep. Les quatre entrées du lot sont, dans l'ordre où elles
 apparaissent au référentiel : `aeration-erp-filtres-visite-periodique`

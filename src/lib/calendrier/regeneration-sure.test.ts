@@ -1,7 +1,8 @@
-// Le garde commun des sept mutations qui régénèrent le calendrier.
+// Le garde commun des neuf appels — six modules d'actions serveur — qui
+// régénèrent le calendrier après une mutation.
 //
 // Il était sans test — relevé en relecture le 2026-09-11 —, alors qu'il porte à
-// lui seul la promesse que ces sept actions serveur tiennent : une mutation
+// lui seul la promesse que ces neuf appels tiennent : une mutation
 // commitée n'est jamais présentée comme un échec parce que le recalage qui la
 // suit a échoué. Sans lui, l'utilisateur voit une erreur, redépose son rapport,
 // et en obtient deux.

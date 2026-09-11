@@ -1313,36 +1313,63 @@ describe("référentiel conformité — version et empreinte", () => {
   // 3ᵉ catégorie recevait jusqu'ici moins d'obligations qu'un de 5ᵉ, parce que
   // le Livre II n'était dépouillé qu'à moitié quand le Livre III l'était en
   // entier.
-  const EMPREINTE_ATTENDUE = "154-f79cfff96b4eff09";
-  // La VERSION attendue pour CETTE empreinte. Les deux vont par paire, et c'est
-  // le test qui le tient désormais, pas un commentaire : le 2026-09-10,
-  // l'empreinte a bougé, la constante ci-dessus a été mise à jour, la version
-  // non — et une base déjà réconciliée ne rejouait jamais la succession. Changer
-  // l'empreinte sans changer cette ligne rend le test rouge ; changer cette ligne
-  // sans bumper `REFERENTIEL_VERSION`, aussi.
-  const VERSION_POUR_CETTE_EMPREINTE = "2026-09-11.1";
+  /**
+   * L'HISTORIQUE des couples (version, empreinte), le plus récent en dernier.
+   * **On AJOUTE une ligne ; on n'en modifie jamais une.**
+   *
+   * C'est ce qui lie enfin l'empreinte à la version. Le 2026-09-10, l'empreinte
+   * a bougé, sa constante a été mise à jour, la version NON — et une base déjà
+   * réconciliée se croyait synchronisée. Une première parade, le 2026-09-11,
+   * posait une constante de version à côté de l'empreinte : elle ne pouvait PAS
+   * rougir sur cette erreur-là, puisqu'elle comparait deux constantes que rien ne
+   * reliait. La relecture l'a montré — et son commentaire affirmait l'inverse.
+   *
+   * Ici, chaque erreur a son test rouge : une empreinte neuve absente de la table
+   * fait rougir le premier ; l'ajouter sous une version déjà présente fait
+   * rougir l'unicité ; l'ajouter sous une version neuve sans bumper
+   * `REFERENTIEL_VERSION` fait rougir le dernier. La table commence à
+   * `2026-09-08.1` : c'est le premier couple connu avec certitude.
+   */
+  const HISTORIQUE_EMPREINTES: ReadonlyArray<{
+    version: string;
+    empreinte: string;
+  }> = [
+    { version: "2026-09-08.1", empreinte: "154-5af740612719ff11" },
+    { version: "2026-09-11.1", empreinte: "154-f79cfff96b4eff09" },
+  ];
+  const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
+  const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
 
-  it("l'empreinte du contenu correspond à la version déclarée", () => {
+  it("l'empreinte du contenu est la dernière de l'historique", () => {
     expect(
       empreinteReferentiel(),
-      "Le contenu du référentiel a changé. Incrémentez " +
-        "`REFERENTIEL_VERSION` dans `index.ts`, puis mettez `EMPREINTE_ATTENDUE` " +
-        "à jour avec la valeur reçue ci-dessus. Les calendriers déjà générés " +
-        "seront réconciliés automatiquement à la version suivante.",
+      "Le contenu du référentiel a changé. AJOUTEZ une ligne à " +
+        "`HISTORIQUE_EMPREINTES` avec la valeur reçue ci-dessus et une version " +
+        "NEUVE, puis mettez `REFERENTIEL_VERSION` dans `index.ts` à cette même " +
+        "version. Ne modifiez pas la ligne existante : c'est elle qui empêche " +
+        "d'oublier la version. Les calendriers déjà générés seront réconciliés " +
+        "automatiquement.",
     ).toBe(EMPREINTE_ATTENDUE);
   });
 
-  it("la version déclarée est celle qui va avec CETTE empreinte", () => {
-    // Le lien que le message ci-dessus demandait et qu'aucun test ne tenait.
-    // Mettre `EMPREINTE_ATTENDUE` à jour en oubliant la version laissait les
-    // bases déjà réconciliées se croire synchronisées : c'est arrivé le
-    // 2026-09-10, et rien n'a rougi.
+  it("chaque version et chaque empreinte n'apparaît qu'une fois dans l'historique", () => {
+    // C'est ce test qui rougit sur l'erreur du 2026-09-10 : ajouter l'empreinte
+    // neuve sous la version déjà en place.
+    const versions = HISTORIQUE_EMPREINTES.map((l) => l.version);
+    const empreintes = HISTORIQUE_EMPREINTES.map((l) => l.empreinte);
+    expect(
+      new Set(versions).size,
+      "Deux empreintes différentes portent la même version : le contenu a changé sans que la version change.",
+    ).toBe(versions.length);
+    expect(new Set(empreintes).size).toBe(empreintes.length);
+  });
+
+  it("la version déclarée est la dernière de l'historique", () => {
     expect(
       REFERENTIEL_VERSION,
-      "L'empreinte a changé mais `REFERENTIEL_VERSION` non (ou l'inverse). " +
-        "Incrémentez la version dans `index.ts` ET mettez " +
-        "`VERSION_POUR_CETTE_EMPREINTE` à la même valeur, dans le même commit.",
-    ).toBe(VERSION_POUR_CETTE_EMPREINTE);
+      "La dernière ligne de `HISTORIQUE_EMPREINTES` porte une version que " +
+        "`REFERENTIEL_VERSION` n'a pas : bumpez-la dans `index.ts`, dans le même commit.",
+    ).toBe(DERNIERE.version);
   });
 
   it("la version est datée et incrémentable", () => {
