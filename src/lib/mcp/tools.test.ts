@@ -243,6 +243,8 @@ describe("équipements et calendrier", () => {
     dateRealisee: null,
     statut: "planifiee",
     equipement: { libelle: "Extincteur hall", categorie: "EXTINCTEUR" },
+    // Le dernier rapport réalisé, tel que la requête le sélectionne (ADR-034).
+    rapports: [],
     ...over,
   });
 
@@ -338,6 +340,22 @@ describe("équipements et calendrier", () => {
       recherche: "ascenseur",
     });
     expect(texte).toContain("Aucune vérification");
+  });
+
+  it("rend à l'assistant le contrôle fait ET l'échéance ouverte d'une ligne roulée", async () => {
+    // ADR-034 : la ligne ne porte que l'échéance ouverte, le contrôle fait se
+    // lit sur son rapport. L'assistant doit recevoir les deux — sans le
+    // premier, il dirait « jamais contrôlé » d'un appareil vérifié en juillet.
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({
+        datePrevue: jour("2027-07-15"),
+        rapports: [{ dateRapport: jour("2026-07-15") }],
+      }),
+    ]);
+
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("dernière réalisation le 15/07/2026");
+    expect(texte).toContain("échéance 15/07/2027");
   });
 });
 

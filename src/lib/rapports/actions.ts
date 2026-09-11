@@ -69,8 +69,8 @@ export class LigneModifieeEntreTemps extends Error {
  *  - une obligation sans rendez-vous suivant (`mise_en_service_uniquement`,
  *    `autre`) : le one-shot est consommé, la ligne garde le statut réalisé.
  *
- * `dateRealisee` est encore écrite — la date du dernier rapport réalisé — le
- * temps que les lecteurs passent sur les rapports (N4). N5 la retire.
+ * `dateRealisee` n'est PLUS écrite : la dernière réalisation se lit sur les
+ * rapports (`derniere-realisation.ts`). La colonne reste gelée jusqu'au N5.
  */
 export async function uploadRapport(
   verificationId: string,
@@ -119,7 +119,6 @@ export async function uploadRapport(
       id: true,
       etablissementId: true,
       datePrevue: true,
-      dateRealisee: true,
       statut: true,
       periodicite: true,
       salarieId: true,
@@ -183,18 +182,22 @@ export async function uploadRapport(
   let echeanceHonoree: Date | null = null;
   let majVerification: {
     datePrevue?: Date;
-    dateRealisee?: Date;
     statut: StatutVerification;
   };
   if (!estResultatRealise(resultat)) {
-    // Non vérifiable : le contrôle reste dû. `dateRealisee` n'est jamais
-    // écrite — rien n'a été vérifié — et `datePrevue` n'est pas repoussée :
-    // l'échéance réglementaire qui courait court toujours. Elle est seulement
-    // requalifiée « à replanifier », ou « dépassée » si la date est passée.
-    const cycleOuvert = verif.dateRealisee === null;
+    // Non vérifiable : le contrôle reste dû. Rien n'a été vérifié, et
+    // `datePrevue` n'est pas repoussée : l'échéance réglementaire qui courait
+    // court toujours. Elle est seulement requalifiée « à replanifier », ou
+    // « dépassée » si la date est passée. Une ligne DÉJÀ soldée — le one-shot
+    // réalisé, seul à garder un statut réalisé (ADR-034) — n'est pas
+    // déclassée par un déplacement sans contrôle.
+    const dejaSoldee = (Object.values(STATUT_DEPUIS_RESULTAT) as string[]).includes(
+      verif.statut,
+    );
     majVerification = {
-      statut:
-        cycleOuvert && estEnRetard(verif.datePrevue, new Date())
+      statut: dejaSoldee
+        ? verif.statut
+        : estEnRetard(verif.datePrevue, new Date())
           ? "depassee"
           : "a_planifier",
     };
@@ -285,16 +288,12 @@ function rouler(
   periodicite: Periodicite,
   dateRapport: Date,
   resultat: ResultatRealise,
-): { datePrevue: Date; dateRealisee: Date; statut: StatutVerification } {
+): { datePrevue: Date; statut: StatutVerification } {
   const prochaine = prochaineEcheance(dateRapport, periodicite);
   if (prochaine === null) {
-    return {
-      datePrevue,
-      dateRealisee: dateRapport,
-      statut: STATUT_DEPUIS_RESULTAT[resultat],
-    };
+    return { datePrevue, statut: STATUT_DEPUIS_RESULTAT[resultat] };
   }
-  return { datePrevue: prochaine, dateRealisee: dateRapport, statut: "planifiee" };
+  return { datePrevue: prochaine, statut: "planifiee" };
 }
 
 /**
@@ -382,7 +381,11 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
         datePrevue: rap.verification.datePrevue,
         statut: rap.verification.statut,
       },
-      data: { datePrevue, dateRealisee: dernier?.dateRapport ?? null, statut },
+      // `dateRealisee: null` n'est pas une écriture de la colonne gelée, c'est
+      // sa mise à mort pour cette ligne : la réconciliation la lit en REPLI
+      // quand aucun rapport réalisé ne reste, et une ligne d'avant l'ADR-034
+      // ressusciterait sinon la réalisation qu'on vient de retirer.
+      data: { datePrevue, dateRealisee: null, statut },
     });
     if (count !== 1) throw new LigneModifieeEntreTemps();
   });

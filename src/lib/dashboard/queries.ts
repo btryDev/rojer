@@ -32,6 +32,8 @@ import {
 } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
 import { TON_REGISTRE, lecturesCalendrier } from "@/lib/calendrier/etats";
+import { WHERE_RAPPORT_REALISE } from "@/lib/rapports/derniere-realisation";
+import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import {
   typeDeVerification,
   type BatimentEcheance,
@@ -202,7 +204,10 @@ export async function listerEvenementsFenetre(
     : verifs;
 
   return retenues.flatMap((v) =>
-    lecturesCalendrier(v, now)
+    // `derniereRealisation: null` est un choix, pas un oubli : cette fenêtre
+    // n'annonce que des échéances et écarte les réalisations juste en
+    // dessous. Les lire coûterait une requête pour les jeter.
+    lecturesCalendrier({ ...v, derniereRealisation: null }, now)
       .filter(
         (lec) =>
           lec.lecture !== "realisation" && lec.date.getTime() <= fin.getTime(),
@@ -250,23 +255,26 @@ export async function compterVerifsParEquipement(
     ajouterMois(now, -MOIS_FENETRE_HISTORIQUE),
   );
 
-  const verifs = await prisma.verification.findMany({
-    where: {
-      etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
-    },
-    select: {
-      equipementId: true,
-      statut: true,
-      datePrevue: true,
-      dateRealisee: true,
-      periodicite: true,
-      // Le libellé porte le marqueur d'archivage (ADR-012) : sans lui,
-      // `lecturesCalendrier` compte encore le rendez-vous suivant d'une
-      // obligation qui ne s'applique plus.
-      libelleObligation: true,
-    },
-  });
+  const verifs = await joindreDernieresRealisations(
+    await prisma.verification.findMany({
+      where: {
+        etablissementId,
+        etablissement: { entreprise: { userId: user.id } },
+      },
+      select: {
+        id: true,
+        equipementId: true,
+        statut: true,
+        datePrevue: true,
+        dateRealisee: true,
+        periodicite: true,
+        // Le libellé porte le marqueur d'archivage (ADR-012) : sans lui,
+        // `lecturesCalendrier` compte encore le rendez-vous suivant d'une
+        // obligation qui ne s'applique plus.
+        libelleObligation: true,
+      },
+    }),
+  );
 
   const map = new Map<string, StatsEquipement>();
   const getStats = (id: string): StatsEquipement => {
@@ -316,12 +324,12 @@ export async function compterVerifsParEquipement(
       }
     }
 
-    if (
-      v.dateRealisee &&
-      v.dateRealisee.getTime() >= debutFenetreHistorique.getTime()
-    ) {
-      if (!s.derniereRealisee || v.dateRealisee > s.derniereRealisee) {
-        s.derniereRealisee = v.dateRealisee;
+    // Lue sur les rapports (ADR-034), la colonne gelée en repli pour une ligne
+    // d'avant que la réconciliation n'a pas encore remise au modèle.
+    const faite = v.derniereRealisation ?? v.dateRealisee;
+    if (faite && faite.getTime() >= debutFenetreHistorique.getTime()) {
+      if (!s.derniereRealisee || faite > s.derniereRealisee) {
+        s.derniereRealisee = faite;
       }
     }
   }
@@ -335,11 +343,11 @@ export async function compterVerifsParEquipement(
  * via la chaîne etablissement.entreprise.userId.
  *
  * Classification :
- *  - `couvert`  : dateRealisee dans le mois (quel que soit le résultat)
+ *  - `couvert`  : dernier rapport réalisé daté dans le mois (ADR-034)
  *  - `retard`   : occurrence en retard au sens des prédicats partagés
  *  - `aVenir`   : le reste des occurrences ouvertes
  *
- * On bucket sur `dateRealisee ?? datePrevue` — un rapport réalisé en mai
+ * On bucket la couverture sur la date du rapport — un rapport réalisé en mai
  * apparaît bien dans le mois de mai, même si la datePrevue était ailleurs.
  * Le mois est lu en heure de Paris, comme partout ailleurs : sur un serveur
  * en UTC, une échéance du 1er du mois à minuit basculait dans le mois
@@ -353,24 +361,36 @@ export async function compterObligationsParMois(
   const debut = instantCivil(annee, 1, 1);
   const fin = instantCivil(annee + 1, 1, 1);
 
-  const verifs = await prisma.verification.findMany({
-    where: {
-      etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
-      OR: [
-        { datePrevue: { gte: debut, lt: fin } },
-        { dateRealisee: { gte: debut, lt: fin } },
-      ],
-    },
-    select: {
-      datePrevue: true,
-      dateRealisee: true,
-      statut: true,
-      periodicite: true,
-      // Cf. ci-dessus : le marqueur d'archivage se lit dans le libellé.
-      libelleObligation: true,
-    },
-  });
+  const verifs = await joindreDernieresRealisations(
+    await prisma.verification.findMany({
+      where: {
+        etablissementId,
+        etablissement: { entreprise: { userId: user.id } },
+        OR: [
+          { datePrevue: { gte: debut, lt: fin } },
+          // Une ligne couverte dans l'année : un rapport réalisé y est daté
+          // (ADR-034 — la réalisation vit sur le rapport, plus sur la ligne).
+          {
+            rapports: {
+              some: {
+                dateRapport: { gte: debut, lt: fin },
+                ...WHERE_RAPPORT_REALISE,
+              },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        datePrevue: true,
+        dateRealisee: true,
+        statut: true,
+        periodicite: true,
+        // Cf. ci-dessus : le marqueur d'archivage se lit dans le libellé.
+        libelleObligation: true,
+      },
+    }),
+  );
 
   const buckets: BarMois[] = Array.from({ length: 12 }, (_, i) => ({
     mois: i,
@@ -635,7 +655,20 @@ export const getDashboardData = cache(async function getDashboardData(
       where: {
         ...scope,
         OR: [
+          // Depuis l'ADR-034 une ligne roulée est ouverte ET porte un rapport
+          // réalisé : les deux clauses se recouvrent, et c'est juste — la
+          // première compte l'échéance, la seconde le fait.
           { dateRealisee: null, statut: { in: [...STATUTS_VERIF_OUVERTE] } },
+          {
+            rapports: {
+              some: {
+                dateRapport: { gte: debutFenetreHistorique },
+                ...WHERE_RAPPORT_REALISE,
+              },
+            },
+          },
+          // Repli : une ligne d'avant, que la réconciliation n'a pas encore
+          // remise au modèle, porte encore sa réalisation dans la colonne.
           { dateRealisee: { gte: debutFenetreHistorique } },
         ],
       },
@@ -709,7 +742,10 @@ export const getDashboardData = cache(async function getDashboardData(
 
   // Répartition unique, partagée avec les documents générés : quatre
   // ensembles disjoints, dont la somme sert de dénominateur au score.
-  const etatVerifs = repartirVerifications(verifications, now);
+  const etatVerifs = repartirVerifications(
+    await joindreDernieresRealisations(verifications),
+    now,
+  );
   const actionsEnRetard = actionsOuvertes.filter((a) =>
     estActionEnRetard(a, now),
   ).length;

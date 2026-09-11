@@ -37,6 +37,10 @@ import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
 import { prismaMcp } from "./prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
+import {
+  derniereRealisation,
+  WHERE_RAPPORT_REALISE,
+} from "@/lib/rapports/derniere-realisation";
 
 // ---------------------------------------------------------------------
 // Fiche établissement
@@ -422,6 +426,9 @@ export type VerificationLue = {
   periodicite: string;
   datePrevue: Date;
   dateRealisee: Date | null;
+  /** La date du dernier rapport réalisé (ADR-034). La ligne ne porte plus que
+   *  l'échéance ouverte : c'est ici que l'assistant lit ce qui a été fait. */
+  derniereRealisation: Date | null;
   statut: string;
   etat: EtatVerification;
   joursRetard: number;
@@ -480,6 +487,16 @@ export async function listerVerifications(
       // `salarieId` seul, jamais le nom : cette requête alimente un
       // assistant hors du produit (cf. `libellePorteurSansNom`).
       salarieId: true,
+      // La date du dernier rapport réalisé, et rien d'autre du rapport
+      // (ADR-034) : ni organisme, ni commentaire, ni fichier. Écrit en clair
+      // et non par `SELECT_DERNIER_RAPPORT_REALISE` : la garde RGPD de ce
+      // serveur relit le source, et une constante lui cacherait ce qui sort.
+      rapports: {
+        where: WHERE_RAPPORT_REALISE,
+        orderBy: { dateRapport: "desc" },
+        take: 1,
+        select: { dateRapport: true },
+      },
     },
   });
 
@@ -494,6 +511,7 @@ export async function listerVerifications(
     periodicite: v.periodicite,
     datePrevue: v.datePrevue,
     dateRealisee: v.dateRealisee,
+    derniereRealisation: derniereRealisation(v.rapports),
     statut: v.statut,
     etat: etatDe(v, now),
     // ZÉRO POUR UNE LIGNE ARCHIVÉE, et pas seulement pour une ligne réalisée.

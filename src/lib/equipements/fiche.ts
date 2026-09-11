@@ -22,6 +22,7 @@ import {
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
+import { derniereRealisation } from "@/lib/rapports/derniere-realisation";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import {
@@ -142,7 +143,11 @@ export function lignesAFaire(
     // échéances d'un appareil à jour, pendant que le calendrier, lui,
     // les affichait. C'est `lecturesCalendrier` qui déplie les deux, et
     // c'est lui que le calendrier utilise (ADR-010).
-    for (const lecture of lecturesCalendrier(v, maintenant)) {
+    // Les réalisations sont écartées juste en dessous : la dernière se lit
+    // quand même sur les rapports déjà chargés, pour que la lecture reste
+    // celle du calendrier (ADR-034).
+    const aLire = { ...v, derniereRealisation: derniereRealisation(v.rapports) };
+    for (const lecture of lecturesCalendrier(aLire, maintenant)) {
       if (lecture.lecture === "realisation") continue;
       const etat = lecture.registre;
       lignes.push({

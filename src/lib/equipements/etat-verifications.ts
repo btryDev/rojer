@@ -11,6 +11,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
+import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import {
   compteEtat,
   lecturesCalendrier,
@@ -74,21 +75,25 @@ export async function etatVerificationsParEquipement(
   now: Date = new Date(),
 ): Promise<Map<string, EtatEquipement>> {
   const user = await requireUser();
-  const verifs = await prisma.verification.findMany({
-    where: {
-      etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
-    },
-    select: {
-      equipementId: true,
-      libelleObligation: true,
-      statut: true,
-      datePrevue: true,
-      dateRealisee: true,
-      periodicite: true,
-    },
-    orderBy: { datePrevue: "asc" },
-  });
+  // Le « fait le … » de chaque ligne se lit sur ses rapports (ADR-034).
+  const verifs = await joindreDernieresRealisations(
+    await prisma.verification.findMany({
+      where: {
+        etablissementId,
+        etablissement: { entreprise: { userId: user.id } },
+      },
+      select: {
+        id: true,
+        equipementId: true,
+        libelleObligation: true,
+        statut: true,
+        datePrevue: true,
+        dateRealisee: true,
+        periodicite: true,
+      },
+      orderBy: { datePrevue: "asc" },
+    }),
+  );
 
   return repartirParEquipement(verifs, now);
 }
@@ -104,6 +109,9 @@ export function repartirParEquipement(
     statut: string;
     datePrevue: Date;
     dateRealisee: Date | null;
+    /** Le dernier rapport réalisé (ADR-034) : c'est lui qui fait `derniere`
+     *  et `faites`, la ligne n'en porte plus. */
+    derniereRealisation: Date | null;
     periodicite: Periodicite;
   }>,
   now: Date,

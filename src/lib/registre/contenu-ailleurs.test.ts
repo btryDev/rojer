@@ -30,6 +30,7 @@ function verif(partial: Partial<VerificationTenue> = {}): VerificationTenue {
     libelleObligation: "Vérification annuelle des extincteurs",
     datePrevue: new Date("2026-11-02T00:00:00Z"),
     dateRealisee: null,
+    derniereRealisation: null,
     statut: "a_planifier",
     equipement: { libelle: "Extincteurs RDC", categorie: "EXTINCTEUR" },
     prescription: null,
@@ -47,6 +48,20 @@ function lignesDe(verifications: VerificationTenue[]) {
   );
   return contenu?.lignes ?? [];
 }
+
+describe("registre — ce qui a été fait, et ce qui vient (ADR-034)", () => {
+  it("une ligne roulée dit la date du dernier rapport, puis l'échéance ouverte", () => {
+    const [ligne] = lignesDe([
+      verif({
+        datePrevue: new Date("2027-06-01T00:00:00Z"),
+        derniereRealisation: new Date("2026-06-01T00:00:00Z"),
+        statut: "planifiee",
+      }),
+    ]);
+    expect(ligne.meta).toContain("faite le 01 juin 2026");
+    expect(ligne.meta).toContain("prochaine le 01 juin 2027");
+  });
+});
 
 describe("registre — marquage des échéances contractuelles", () => {
   it("une échéance née d'une demande d'assureur est marquée", () => {

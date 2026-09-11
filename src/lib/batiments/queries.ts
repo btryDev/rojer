@@ -206,7 +206,16 @@ export function grouperChargeParBatiment<
   }
 
   return batiments.map((b) => {
-    const etat = repartirVerifications(parBatiment.get(b.id) ?? [], now);
+    // `derniereRealisation: null` est un choix : seul `enRetard` est lu
+    // ci-dessous, et il ne dépend pas de ce qui a été fait (ADR-034). Lire les
+    // rapports coûterait une requête pour un compte qu'on jette.
+    const etat = repartirVerifications(
+      (parBatiment.get(b.id) ?? []).map((v) => ({
+        ...v,
+        derniereRealisation: null,
+      })),
+      now,
+    );
     // Seul le retard est rendu : la pastille d'un volume ne dit qu'une
     // chose. `nbSous30j` était calculé, typé et sérialisé jusqu'au client
     // sans qu'aucun écran ne le lise — un compteur en sommeil finit par

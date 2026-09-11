@@ -95,6 +95,7 @@ export type LigneSondee = {
   statut: string;
   datePrevue: Date;
   dateRealisee: Date | null;
+  derniereRealisation: Date | null;
   periodicite: Periodicite;
 };
 
@@ -115,6 +116,7 @@ export function sondes(now: Date): {
     statut: "planifiee",
     datePrevue: hier,
     dateRealisee: null,
+    derniereRealisation: null,
     periodicite: "annuelle" as Periodicite,
   };
   return [

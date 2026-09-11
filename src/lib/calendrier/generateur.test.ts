@@ -1058,8 +1058,10 @@ describe("réconciliation — cycles de vérification", () => {
     expect(plan.aMettreAJour).toHaveLength(1);
     const maj = plan.aMettreAJour[0];
     expect(maj.statut).toBe("planifiee");
-    expect(maj.dateRealisee).toEqual(dateRealisee);
-    // dateRealisee + un an
+    // La colonne gelée est lue en repli — cette ligne n'a pas de rapport dans
+    // la fixture — puis écrite à `null` : la ligne sort de l'ancien modèle.
+    expect(maj.dateRealisee).toBeNull();
+    // réalisation + un an
     expect(maj.datePrevue.getUTCFullYear()).toBe(2027);
   });
 
@@ -1083,7 +1085,8 @@ describe("réconciliation — cycles de vérification", () => {
           obligationId: "o1",
           equipementId: "eq-1",
           periodicite: "annuelle",
-          dateRealisee: new Date("2026-03-01T00:00:00Z"),
+          dateRealisee: null,
+          derniereRealisation: new Date("2026-03-01T00:00:00Z"),
           datePrevue: new Date("2027-03-01T00:00:00Z"),
           statut: "planifiee",
           porteUnePreuve: true,
@@ -1138,10 +1141,41 @@ describe("réconciliation — cycles de vérification", () => {
     // deux ans — sans détruire les rapports, qui restent sur la même ligne.
     expect(maj.statut).toBe("depassee");
     expect(maj.datePrevue).toEqual(new Date("2025-01-01T00:00:00Z"));
-    // `dateRealisee` survit à la transition (ADR-034, N2 → N5) : c'est le dépôt
-    // et la suppression qui l'écrivent, plus la régénération.
-    expect(maj.dateRealisee).toEqual(new Date("2024-01-01T00:00:00Z"));
+    // La colonne gelée a servi de repli, puis elle est éteinte.
+    expect(maj.dateRealisee).toBeNull();
     expect(maj.id).toBe("v-1");
+  });
+
+  it("la réalisation lue sur les rapports prime sur la colonne gelée", () => {
+    // Ligne d'avant N2 dont le dernier rapport est PLUS RÉCENT que la colonne :
+    // un rapport a été retiré puis un autre déposé, ou la colonne n'a jamais
+    // été tenue. C'est le rapport qui fait foi — 2026-03-01 + un an = 2027.
+    const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
+    const aGenerer = genererProchainesVerifications(
+      [applique(o, [fakeEquipement("eq-1")])],
+      new Map(),
+      { now: NOW },
+    );
+
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-1",
+          obligationId: "o1",
+          equipementId: "eq-1",
+          dateRealisee: new Date("2024-01-01T00:00:00Z"),
+          derniereRealisation: new Date("2026-03-01T00:00:00Z"),
+          statut: "realisee_conforme",
+          datePrevue: new Date("2024-01-01T00:00:00Z"),
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenerer,
+      { now: NOW },
+    );
+
+    expect(plan.aMettreAJour[0]?.datePrevue.getUTCFullYear()).toBe(2027);
+    expect(plan.aMettreAJour[0]?.statut).toBe("planifiee");
   });
 
   it("ne fait plus rouler une ligne déjà roulée par son dépôt (ADR-034)", () => {
@@ -1165,7 +1199,8 @@ describe("réconciliation — cycles de vérification", () => {
           libelleObligation: "Obligation o1",
           periodicite: "annuelle",
           realisateurRequis: o.realisateurs,
-          dateRealisee: new Date("2026-03-01T00:00:00Z"),
+          dateRealisee: null,
+          derniereRealisation: new Date("2026-03-01T00:00:00Z"),
           datePrevue: new Date("2027-03-01T00:00:00Z"),
           statut: "planifiee",
           porteUnePreuve: true,
@@ -1204,7 +1239,8 @@ describe("réconciliation — cycles de vérification", () => {
           libelleObligation: "Obligation mes",
           periodicite: "mise_en_service_uniquement",
           datePrevue,
-          dateRealisee: new Date("2025-05-01T00:00:00Z"),
+          dateRealisee: null,
+          derniereRealisation: new Date("2025-05-01T00:00:00Z"),
           statut: "realisee_conforme",
           porteUnePreuve: true,
         }),
@@ -1427,10 +1463,9 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
     expect(plan.aMettreAJour[0]?.datePrevue).toEqual(
       new Date("2031-06-01T00:00:00Z"),
     );
-    // Et la preuve ne bouge pas.
-    expect(plan.aMettreAJour[0]?.dateRealisee).toEqual(
-      new Date("2024-03-01T00:00:00Z"),
-    );
+    // Et le statut réalisé ne bouge pas. La date de réalisation, elle, vit sur
+    // le rapport (ADR-034) : la colonne de la ligne est éteinte au passage.
+    expect(plan.aMettreAJour[0]?.dateRealisee).toBeNull();
     expect(plan.aMettreAJour[0]?.statut).toBe("realisee_conforme");
   });
 
@@ -1551,7 +1586,8 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
       id,
       obligationId,
       equipementId: `eq-${id}`,
-      dateRealisee: new Date(quand),
+      dateRealisee: null,
+      derniereRealisation: new Date(quand),
       statut: "realisee_conforme",
       porteUnePreuve: true,
     });
@@ -1627,7 +1663,8 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           id: "v-tout",
           obligationId: "tout",
           equipementId: null,
-          dateRealisee: new Date("2026-07-01T00:00:00Z"),
+          dateRealisee: null,
+          derniereRealisation: new Date("2026-07-01T00:00:00Z"),
           statut: "realisee_conforme",
           porteUnePreuve: true,
         }),
@@ -1640,7 +1677,6 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
     // 2026-07-01 + un an : son cycle propre, pas l'héritage de 2025.
     expect(maj?.datePrevue).toEqual(new Date("2027-07-01T00:00:00Z"));
-    expect(maj?.dateRealisee).toEqual(new Date("2026-07-01T00:00:00Z"));
   });
 
   it("un absorbant porté par un ÉQUIPEMENT n'hérite que sur le bon appareil", () => {
@@ -1708,18 +1744,18 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
       { now: NOW },
     );
 
-    // Réalisation du 2026-06-01 : à un an, la suivante tombe en 2027, donc le
-    // CYCLE EST ENCORE OUVERT au 2026-08-11. C'est ce qu'il faut pour éprouver
-    // la conservation — sur un cycle écoulé, `dateRealisee` est remise à
-    // `null` par la règle ordinaire du nouveau cycle, et ce n'est pas une
-    // perte : les rapports restent attachés à la rangée.
+    // Réalisation du 2026-06-01 : à un an, la suivante tombe en 2027. La
+    // réalisation vit sur les rapports (ADR-034), qui restent attachés à la
+    // rangée tant que son IDENTIFIANT est conservé : c'est l'identifiant que
+    // l'adoption doit garder, et c'est lui qu'on vérifie.
     const plan = reconcilierCalendrier(
       [
         ligneExistante({
           id: "v-frag-1",
           obligationId: "frag-vmc",
           equipementId: "eq-1",
-          dateRealisee: new Date("2026-06-01T00:00:00Z"),
+          dateRealisee: null,
+          derniereRealisation: new Date("2026-06-01T00:00:00Z"),
           statut: "realisee_conforme",
           porteUnePreuve: true,
         }),
@@ -1737,10 +1773,9 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     ).toBe("v-frag-1");
     expect(adoptee.obligationId).toBe("tout-equip");
     expect(
-      adoptee.dateRealisee,
-      "la réalisation a été perdue : une adoption doit garder ce que la ligne prouvait",
-    ).toEqual(new Date("2026-06-01T00:00:00Z"));
-    expect(adoptee.datePrevue).toEqual(new Date("2027-06-01T00:00:00Z"));
+      adoptee.datePrevue,
+      "la réalisation a été perdue : l'échéance ne part plus du contrôle que la ligne prouvait",
+    ).toEqual(new Date("2027-06-01T00:00:00Z"));
 
     // Rien n'est barré, et seul eq-2 — qui n'avait pas de ligne — est créé.
     expect(plan.aArchiver).toEqual([]);

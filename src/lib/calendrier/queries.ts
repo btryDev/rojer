@@ -6,6 +6,8 @@ import {
 } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { cleJourCivil, debutDuJour } from "@/lib/dates";
+import { derniereRealisation } from "@/lib/rapports/derniere-realisation";
+import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 // Module **pur** : c'est lui qui détient la partition en quatre ensembles
 // disjoints (retard / à planifier / à venir / réalisées 12 mois), déjà
 // utilisée par les documents générés. Le compteur du calendrier passe par
@@ -95,12 +97,13 @@ export async function listerVerifications(
 
   // Filtre par domaine côté TS (le domaine est porté par l'obligation en
   // référentiel, pas en base). Plus simple et évite un enum en base.
-  if (filtres.domaine) {
-    return verifs.filter(
-      (v) => obligationParId(v.obligationId)?.domaine === filtres.domaine,
-    );
-  }
-  return verifs;
+  const retenues = filtres.domaine
+    ? verifs.filter(
+        (v) => obligationParId(v.obligationId)?.domaine === filtres.domaine,
+      )
+    : verifs;
+  // Le « fait le … » de chaque ligne se lit sur ses rapports (ADR-034).
+  return joindreDernieresRealisations(retenues);
 }
 
 export type VerificationListee = Awaited<
@@ -130,7 +133,10 @@ export async function getVerification(id: string) {
       prescription: { select: { source: true, reference: true } },
     },
   });
-  return v;
+  if (v === null) return null;
+  // Tous les rapports sont déjà lus : la dernière réalisation s'en déduit
+  // sans seconde requête (ADR-034).
+  return { ...v, derniereRealisation: derniereRealisation(v.rapports) };
 }
 
 /**
@@ -162,27 +168,30 @@ export async function compterEtatCalendrier(
   filtres: { batimentId?: string } = {},
 ) {
   const user = await requireUser();
-  const verifs = await prisma.verification.findMany({
-    where: toutesLesConditions(
-      {
-        etablissementId,
-        etablissement: { entreprise: { userId: user.id } },
+  const verifs = await joindreDernieresRealisations(
+    await prisma.verification.findMany({
+      where: toutesLesConditions(
+        {
+          etablissementId,
+          etablissement: { entreprise: { userId: user.id } },
+        },
+        porteeBatiment(filtres.batimentId),
+      ),
+      // `libelleObligation` porte le marqueur d'archivage (ADR-012) :
+      // `repartirVerifications` en a besoin pour ne pas compter en retard une
+      // ligne dont l'obligation ne s'applique plus.
+      select: {
+        id: true,
+        statut: true,
+        datePrevue: true,
+        dateRealisee: true,
+        libelleObligation: true,
+        // Le porteur, pour ventiler par famille (ADR-016) : une ligne à
+        // porteur salarié est un titre, pas un contrôle d'appareil.
+        salarieId: true,
       },
-      porteeBatiment(filtres.batimentId),
-    ),
-    // `libelleObligation` porte le marqueur d'archivage (ADR-012) :
-    // `repartirVerifications` en a besoin pour ne pas compter en retard une
-    // ligne dont l'obligation ne s'applique plus.
-    select: {
-      statut: true,
-      datePrevue: true,
-      dateRealisee: true,
-      libelleObligation: true,
-      // Le porteur, pour ventiler par famille (ADR-016) : une ligne à
-      // porteur salarié est un titre, pas un contrôle d'appareil.
-      salarieId: true,
-    },
-  });
+    }),
+  );
 
   const etat = repartirVerifications(verifs, now);
   return {

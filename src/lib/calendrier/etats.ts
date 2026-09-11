@@ -378,9 +378,25 @@ export type LectureCalendrier = {
  * `datePrevue` est l'ancienne échéance, pas un engagement.
  */
 export function lecturesCalendrier(
-  v: VerificationDatee & { periodicite: string },
+  v: VerificationDatee & {
+    periodicite: string;
+    /**
+     * La date du dernier rapport RÉALISÉ de la ligne (ADR-034), ou `null`.
+     * **Requise** : depuis que la ligne roule au dépôt, c'est la seule source
+     * du « fait le … » — la ligne ne porte plus que l'échéance ouverte. Un
+     * lecteur qui l'omettrait ferait disparaître tous les contrôles faits de
+     * son écran ; requise, l'oubli ne compile pas. Se lit avec
+     * `SELECT_DERNIER_RAPPORT_REALISE` et `derniereRealisation`
+     * (`lib/rapports/derniere-realisation.ts`).
+     */
+    derniereRealisation: Date | null;
+  },
   now: Date,
 ): LectureCalendrier[] {
+  // La réalisation connue : le dernier rapport réalisé ; à défaut, la colonne
+  // gelée d'une ligne d'avant l'ADR-034 que la réconciliation n'a pas encore
+  // remise au modèle.
+  const realisation = v.derniereRealisation ?? v.dateRealisee;
   // Une ligne archivée n'annonce plus rien. Son statut est **gelé** dans son
   // dernier état connu (ADR-012 : l'enum Prisma n'a pas de valeur
   // `archivee`), donc un cycle soldé continuait d'en tirer un « prochain
@@ -400,19 +416,32 @@ export function lecturesCalendrier(
   // preuve ne s'efface pas parce que l'obligation a cessé de s'appliquer.
   // C'est le seul point où l'archivage ne se contente pas de taire la ligne.
   if (archivee) {
-    if (v.dateRealisee === null) return [];
-    return [
-      { date: v.dateRealisee, registre: "faite", lecture: "realisation" },
-    ];
+    if (realisation === null) return [];
+    return [{ date: realisation, registre: "faite", lecture: "realisation" }];
   }
 
   if (classe !== "faite") {
-    return [{ date: v.datePrevue, registre: classe, lecture: "courante" }];
+    // LE CAS GÉNÉRAL DEPUIS L'ADR-034 : la ligne roulée ne porte que son
+    // échéance ouverte, classée comme telle — en retard si elle est passée,
+    // ce que l'ancien modèle ne savait pas dire d'une ligne réalisée. Le
+    // contrôle fait qui l'a ouverte se lit sur son rapport, et se pose au jour
+    // où il a eu lieu.
+    const courante: LectureCalendrier = {
+      date: v.datePrevue,
+      registre: classe,
+      lecture: "courante",
+    };
+    return realisation === null
+      ? [courante]
+      : [
+          { date: realisation, registre: "faite", lecture: "realisation" },
+          courante,
+        ];
   }
 
   const lectures: LectureCalendrier[] = [
     {
-      date: v.dateRealisee ?? v.datePrevue,
+      date: realisation ?? v.datePrevue,
       registre: "faite",
       lecture: "realisation",
     },

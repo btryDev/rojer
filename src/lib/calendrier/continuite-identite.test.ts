@@ -81,7 +81,10 @@ function ligneDeja(
     periodicite: "triennale",
     realisateurRequis: ["organisme_agree"],
     datePrevue: new Date("2028-06-01T00:00:00Z"),
-    dateRealisee: new Date("2025-06-01T00:00:00Z"),
+    // La visite de 2025 : sa date vit sur le rapport (ADR-034), la colonne de
+    // la ligne n'est plus tenue.
+    dateRealisee: null,
+    derniereRealisation: new Date("2025-06-01T00:00:00Z"),
     statut: "planifiee",
     porteUnePreuve: true,
     prescriptionId: null,
@@ -146,7 +149,6 @@ describe("scission de GE 4 § 1 — le dossier déjà suivi ne repart pas de zé
     if (cible) {
       expect(cible.id).toBe("v-visite-commission");
       expect(cible.datePrevue).toEqual(new Date("2028-06-01T00:00:00Z"));
-      expect(cible.dateRealisee).toEqual(new Date("2025-06-01T00:00:00Z"));
     }
   });
 
@@ -170,9 +172,7 @@ describe("scission de GE 4 § 1 — le dossier déjà suivi ne repart pas de zé
     expect(plan.aMettreAJour).toHaveLength(1);
     expect(plan.aMettreAJour[0].id).toBe("v-visite-commission");
     expect(plan.aMettreAJour[0].periodicite).toBe("quinquennale");
-    expect(plan.aMettreAJour[0].dateRealisee).toEqual(
-      new Date("2025-06-01T00:00:00Z"),
-    );
+    // 2025 + cinq ans : la date part de la visite, lue sur son rapport.
     expect(plan.aMettreAJour[0].datePrevue).toEqual(
       new Date("2030-06-01T00:00:00Z"),
     );

@@ -166,6 +166,7 @@ describe("lecturesCalendrier", () => {
           statut: "planifiee",
           datePrevue: jours(10),
           dateRealisee: null,
+          derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
@@ -180,6 +181,7 @@ describe("lecturesCalendrier", () => {
           statut: "a_planifier",
           datePrevue: jours(60),
           dateRealisee: null,
+          derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
@@ -203,6 +205,7 @@ describe("lecturesCalendrier", () => {
           statut: "realisee_conforme",
           datePrevue: jours(300),
           dateRealisee: jours(-65),
+          derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
@@ -220,6 +223,7 @@ describe("lecturesCalendrier", () => {
         statut: "realisee_conforme",
         datePrevue: jours(20),
         dateRealisee: jours(-345),
+        derniereRealisation: null,
         libelleObligation: "Vérification périodique",
         periodicite: "annuelle",
       },
@@ -241,6 +245,7 @@ describe("lecturesCalendrier", () => {
           statut: "realisee_conforme",
           datePrevue: jours(30),
           dateRealisee: jours(-3),
+          derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "mise_en_service_uniquement",
         },
@@ -249,6 +254,54 @@ describe("lecturesCalendrier", () => {
     ).toEqual([
       { date: jours(-3), registre: "faite", lecture: "realisation" },
     ]);
+  });
+
+  /**
+   * LE MODÈLE DE L'ADR-034. La ligne a roulé au dépôt : elle ne porte que son
+   * échéance ouverte, « planifiée », et le contrôle fait se lit sur le rapport.
+   * Les deux lectures reviennent — le fait au jour du fait, l'échéance à sa
+   * date —, mais l'échéance est COURANTE, classée comme n'importe quelle date.
+   */
+  it("une ligne roulée pose le fait lu sur le rapport, puis son échéance ouverte", () => {
+    expect(
+      lecturesCalendrier(
+        {
+          statut: "planifiee",
+          datePrevue: jours(300),
+          dateRealisee: null,
+          derniereRealisation: jours(-65),
+          libelleObligation: "Vérification périodique",
+          periodicite: "annuelle",
+        },
+        NOW,
+      ),
+    ).toEqual([
+      { date: jours(-65), registre: "faite", lecture: "realisation" },
+      { date: jours(300), registre: "lointain", lecture: "courante" },
+    ]);
+  });
+
+  it("une échéance ouverte PASSÉE sur un appareil déjà contrôlé se lit en retard", () => {
+    // Le défaut du lot 3 bis, qui disparaît par construction : l'ancien modèle
+    // classait « faite » toute ligne portant une réalisation, et une échéance
+    // suivante dépassée sortait de tous les comptes pendant que la grille la
+    // peignait en rouge.
+    const lectures = lecturesCalendrier(
+      {
+        statut: "planifiee",
+        datePrevue: jours(-10),
+        dateRealisee: null,
+        derniereRealisation: jours(-375),
+        libelleObligation: "Vérification périodique",
+        periodicite: "annuelle",
+      },
+      NOW,
+    );
+    expect(lectures[1]).toEqual({
+      date: jours(-10),
+      registre: "enRetard",
+      lecture: "courante",
+    });
   });
 
   it("un statut réalisé sans dateRealisee reste une seule lecture", () => {
@@ -260,6 +313,7 @@ describe("lecturesCalendrier", () => {
           statut: "realisee_observations",
           datePrevue: jours(-40),
           dateRealisee: null,
+          derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },
@@ -288,6 +342,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
           statut: "realisee_conforme",
           datePrevue: jours(120),
           dateRealisee: jours(-245),
+          derniereRealisation: null,
           periodicite: "annuelle",
           libelleObligation: ARCHIVE,
         },
@@ -307,6 +362,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
           statut: "depassee",
           datePrevue: jours(-30),
           dateRealisee: null,
+          derniereRealisation: null,
           periodicite: "annuelle",
           libelleObligation: ARCHIVE,
         },
@@ -321,6 +377,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
         statut: "realisee_conforme",
         datePrevue: jours(120),
         dateRealisee: jours(-245),
+        derniereRealisation: null,
         periodicite: "annuelle",
         libelleObligation: "Vérification annuelle du désenfumage",
       },
@@ -341,6 +398,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
           statut: "planifiee",
           datePrevue: jours(10),
           dateRealisee: null,
+          derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
         },

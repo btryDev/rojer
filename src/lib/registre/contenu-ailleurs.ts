@@ -48,6 +48,9 @@ export type VerificationTenue = {
   libelleObligation: string;
   datePrevue: Date | null;
   dateRealisee: Date | null;
+  /** Le dernier rapport réalisé (ADR-034) — c'est lui qui dit « faite le »,
+   *  la ligne ne portant plus que l'échéance ouverte. */
+  derniereRealisation: Date | null;
   statut: StatutVerification;
   /** `null` = l'échéance porte sur l'établissement, pas sur un appareil
    *  (ADR-022). Une telle ligne n'a pas de catégorie, donc pas de fiche de
@@ -173,12 +176,20 @@ export function contenuTenuAilleursDepuis(
           titre: v.libelleObligation,
           meta: [
             v.equipement?.libelle,
+            // Le fait, lu sur le dernier rapport (ADR-034)…
+            v.derniereRealisation
+              ? `faite le ${formaterDateCourteFr(v.derniereRealisation)}`
+              : null,
+            // …puis l'échéance ouverte. La colonne gelée d'une ligne d'avant
+            // garde l'ancienne phrase jusqu'à sa remise au modèle.
             v.dateRealisee
               ? `faite le ${formaterDateCourteFr(v.dateRealisee)}`
               : v.datePrevue
-                ? `prévue le ${formaterDateCourteFr(v.datePrevue)}`
+                ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
                 : "à planifier",
-          ].join(" · "),
+          ]
+            .filter(Boolean)
+            .join(" · "),
           href: `${base}/verifications/${v.id}`,
           statut: v.statut,
           contractuelle: estEcheanceContractuelle(v),

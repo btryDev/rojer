@@ -242,14 +242,16 @@ describe("uploadRapport — un rapport réalisé fait ROULER la ligne (ADR-034)"
     expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
   });
 
-  it("écrit encore la date de réalisation, ancrée en date civile (transition N2 → N5)", async () => {
+  it("la réalisation vit sur le rapport, en date civile — la ligne n'en porte plus", async () => {
     await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
 
     // La date saisie est une date **civile** : elle est ancrée à minuit heure
     // de Paris, pas à minuit UTC (ADR-011). `new Date("2026-06-01")` aurait
     // désigné 02:00 du matin heure française — l'écart qui faisait basculer
     // une échéance du jour en « en retard » dès 2 h.
-    expect(h.db.verification?.dateRealisee).toEqual(depuisCleJourCivil("2026-06-01"));
+    expect(h.db.rapports[0].dateRapport).toEqual(depuisCleJourCivil("2026-06-01"));
+    // Et la colonne de la ligne n'est plus écrite (ADR-034) : une seule source.
+    expect(h.db.verification?.dateRealisee).toBeNull();
   });
 
   it("un résultat avec écart roule pareil : le résultat vit sur le rapport", async () => {
@@ -373,7 +375,7 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     // Rapport d'avant N2, sans échéance honorée : la ligne se recalcule depuis
     // le rapport qui reste — mai 2025 + un an, donc dépassée.
     expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2026-05-01"));
-    expect(h.db.verification?.dateRealisee).toEqual(depuisCleJourCivil("2025-05-01"));
+    expect(h.db.verification?.dateRealisee).toBeNull();
     expect(h.db.verification?.statut).toBe("depassee");
   });
 

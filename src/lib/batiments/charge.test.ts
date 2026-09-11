@@ -43,6 +43,7 @@ function verif(datePrevue: string, statut = "planifiee") {
     statut,
     datePrevue: new Date(datePrevue),
     dateRealisee: null,
+    derniereRealisation: null,
     // Requis depuis que le marqueur d'archivage se lit à la racine des
     // prédicats : un libellé nu décrit une ligne ACTIVE, ce qu'éprouvent
     // tous les cas de ce fichier.
@@ -68,6 +69,7 @@ describe("charge d'un bâtiment", () => {
           statut: "realisee_conforme",
           datePrevue: new Date("2026-07-01T00:00:00+02:00"),
           dateRealisee: new Date("2026-07-02T00:00:00+02:00"),
+          derniereRealisation: null,
           libelleObligation: "Vérification périodique",
         },
       ],
@@ -176,7 +178,12 @@ describe("listerBatimentsAvecCharge", () => {
       dateRealisee: Date | null;
       libelleObligation: string;
     }>;
-    expect(somme).toBe(repartirVerifications(toutes, NOW).enRetard.length);
+    expect(somme).toBe(
+      repartirVerifications(
+        toutes.map((v) => ({ ...v, derniereRealisation: null })),
+        NOW,
+      ).enRetard.length,
+    );
   });
 
   it("une ligne archivée ne pèse sur aucune carte", async () => {

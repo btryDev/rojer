@@ -26,8 +26,10 @@
  *      vérifications ont pu avoir lieu sans être saisies. Annoncer un retard
  *      de sept ans serait inventer. → statut = `a_planifier`.
  *   4 ter. Si rien n'est connu → datePrevue = `now`, statut = `a_planifier`.
- *   5. Si dernière vérif connue → datePrevue = `dateRealisee + periodicite`,
- *      statut = `planifiee` si datePrevue ≥ now, `depassee` sinon.
+ *   5. Si dernière vérif connue → datePrevue = `derniere + periodicite`,
+ *      statut = `planifiee` si datePrevue ≥ now, `depassee` sinon. (La
+ *      génération reçoit aujourd'hui une table vide : une ligne existante
+ *      passe par la réconciliation, qui lit ses rapports — ADR-034.)
  *
  * Le statut Prisma `a_planifier` couvre deux réalités UI :
  *   - "à planifier d'urgence" (aucune vérif connue)   → priorité haute
@@ -643,11 +645,10 @@ export function comparerParUrgence(
 // « en retard » est une fonction de la date. Un contrôle annuel fait il y a
 // deux ans a une échéance ouverte vieille d'un an — c'est ce qu'on lit.
 //
-// `dateRealisee` SURVIT LE TEMPS DE LA TRANSITION (N2 → N4) : le dépôt continue
-// de l'écrire — la date du dernier rapport réalisé — parce que sept lecteurs la
-// lisent encore. Le générateur ne s'en sert plus que pour RATTRAPER une ligne
-// écrite avant N2 et jamais roulée ; N4 déplace les lecteurs sur les rapports,
-// N5 retire la colonne.
+// LA RÉALISATION SE LIT SUR LES RAPPORTS (`derniereRealisation`, fourni par
+// `calendrier/actions.ts`). `dateRealisee` n'est plus écrite par personne :
+// la réconciliation ne la lit qu'en REPLI, pour une ligne d'avant l'ADR-034
+// sans rapport, et l'éteint en l'écrivant à `null`. N5 retire la colonne.
 // ===========================================================================
 
 /** Statuts que peut porter une ligne en base (miroir de l'enum Prisma
@@ -696,7 +697,19 @@ export type OccurrenceExistante = {
   periodicite: Periodicite;
   realisateurRequis: Realisateur[];
   datePrevue: Date;
+  /**
+   * COLONNE GELÉE (ADR-034) : plus écrite depuis le 2026-09-11, retirée au N5.
+   * Lue en REPLI seulement, quand `derniereRealisation` manque — une ligne de
+   * démonstration datée sans rapport. Ne pas s'en servir : `realisationConnue`.
+   */
   dateRealisee: Date | null;
+  /**
+   * La date du rapport réalisé le plus récent de la ligne, ou `null`. C'est la
+   * réalisation que la réconciliation connaît — lue sur les rapports par
+   * `calendrier/actions.ts`. Optionnel : les fixtures antérieures n'en ont pas
+   * et retombent sur `dateRealisee`.
+   */
+  derniereRealisation?: Date | null;
   statut: StatutVerificationPersiste;
   /** La ligne porte-t-elle au moins un rapport de vérification ou une action
    *  corrective ? C'est le seul critère qui autorise — ou interdit — la
@@ -726,10 +739,18 @@ export type MiseAJourOccurrence = {
   periodicite: Periodicite;
   realisateurRequis: Realisateur[];
   datePrevue: Date;
-  dateRealisee: Date | null;
+  /** Toujours `null` depuis l'ADR-034 : la colonne est morte, et l'écrire à
+   *  `null` met au modèle, en une passe, les lignes d'avant. Retiré au N5. */
+  dateRealisee: null;
   statut: StatutVerificationPersiste;
   prescriptionId: string | null;
 };
+
+/** La réalisation que la réconciliation connaît pour une ligne : le dernier
+ *  rapport réalisé, ou, à défaut, la colonne gelée (repli, cf. le type). */
+function realisationConnue(ex: OccurrenceExistante): Date | null {
+  return ex.derniereRealisation ?? ex.dateRealisee ?? null;
+}
 
 export type PlanReconciliation = {
   /** Couples (obligation, équipement) sans ligne de suivi : à insérer. */
@@ -838,9 +859,11 @@ function plusAncienne(
   candidate: OccurrenceExistante,
   retenue: OccurrenceExistante,
 ): boolean {
-  if (candidate.dateRealisee === null) return false;
-  if (retenue.dateRealisee === null) return true;
-  return candidate.dateRealisee < retenue.dateRealisee;
+  const c = realisationConnue(candidate);
+  const r = realisationConnue(retenue);
+  if (c === null) return false;
+  if (r === null) return true;
+  return c < r;
 }
 
 /**
@@ -875,16 +898,17 @@ function heritageDesRetirees(
 
   for (const ex of existantes) {
     const absorbant = successions.get(ex.obligationId);
-    if (absorbant === undefined || ex.dateRealisee === null) continue;
+    const realisation = realisationConnue(ex);
+    if (absorbant === undefined || realisation === null) continue;
 
     const cle = cleDeLigne(absorbant, {
       equipementId: ex.equipementId,
       salarieId: ex.salarieId ?? null,
     });
-    parCle.set(cle, reprendreLaRealisation(ex.dateRealisee, parCle.get(cle)));
+    parCle.set(cle, reprendreLaRealisation(realisation, parCle.get(cle)));
     parObligation.set(
       absorbant,
-      reprendreLaRealisation(ex.dateRealisee, parObligation.get(absorbant)),
+      reprendreLaRealisation(realisation, parObligation.get(absorbant)),
     );
   }
   return { parCle, parObligation };
@@ -1046,14 +1070,16 @@ export function reconcilierCalendrier(
     // depuis le référentiel : une obligation qui redevient applicable
     // redevient normale.
     let datePrevue: Date;
-    let dateRealisee: Date | null;
     let statut: StatutVerificationPersiste;
+    // La réalisation que la ligne prouve : son dernier rapport réalisé. Lue sur
+    // les rapports (ADR-034), jamais recalculée ni recopiée sur la ligne.
+    const realisation = realisationConnue(ex);
 
     if (g.datePrevueFaisantFoi === true) {
       // EN PREMIER, et c'est le correctif du correctif. Placée après la
-      // branche `dateRealisee`, elle n'était jamais atteinte dès qu'une ligne
+      // branche de réalisation, elle n'était jamais atteinte dès qu'une ligne
       // de titre portait une réalisation : la date recalculée depuis
-      // `dateRealisee + périodicité` écrasait celle que l'employeur venait de
+      // « réalisation + périodicité » écrasait celle que l'employeur venait de
       // déclarer. Le renouvellement était perdu sur un chemin sur deux.
       //
       // La date d'un titre n'est pas un calcul : elle est écrite sur la pièce
@@ -1061,11 +1087,9 @@ export function reconcilierCalendrier(
       // qu'une réalisation antérieure ferait déduire — c'est la rectification
       // que `docs/rgpd.md` § 5.2 promet (art. 16).
       //
-      // La preuve ne bouge pas : `dateRealisee` et le statut réalisé sont
-      // repris tels quels, et une ligne portant un rapport n'est de toute
-      // façon jamais candidate à la suppression.
+      // Le statut réalisé est repris tel quel, et une ligne portant un rapport
+      // n'est de toute façon jamais candidate à la suppression.
       datePrevue = g.datePrevue;
-      dateRealisee = ex.dateRealisee;
       statut = estStatutRealise(ex.statut) ? ex.statut : g.statut;
     } else if (!estCyclique(g.periodicite) && estStatutRealise(ex.statut)) {
       // Obligation sans rendez-vous suivant (`mise_en_service_uniquement`,
@@ -1073,30 +1097,28 @@ export function reconcilierCalendrier(
       // replanifier, jamais. La ligne garde le résultat de son unique
       // contrôle — c'est le seul cas où un statut réalisé reste sur la ligne.
       datePrevue = ex.datePrevue;
-      dateRealisee = ex.dateRealisee;
       statut = ex.statut;
-    } else if (estStatutRealise(ex.statut) && ex.dateRealisee !== null) {
+    } else if (estStatutRealise(ex.statut) && realisation !== null) {
       // RATTRAPAGE D'UNE LIGNE D'AVANT N2 (ADR-034), et rien d'autre. Une
       // ligne CYCLIQUE au statut réalisé est, par construction, d'avant N2 :
       // depuis, le dépôt roule la ligne dans sa transaction et la laisse
       // « planifiée » — le résultat vit sur le rapport. Avant, le dépôt posait
-      // la réalisation, et c'était CETTE branche — alors « cycle soldé » — qui
-      // faisait rouler la ligne à la régénération suivante, puis la relançait
-      // « dépassée » en effaçant `dateRealisee` quand la période s'écoulait.
+      // la réalisation sur la ligne, et c'était CETTE branche — alors « cycle
+      // soldé » — qui la faisait rouler à la régénération suivante, puis la
+      // relançait « dépassée » quand la période s'écoulait.
       //
       // On la met au modèle en une passe : échéance = réalisation +
       // périodicité, statut d'un cycle ouvert. D'UN cycle, même si la date
       // obtenue est déjà passée : l'obligation est un intervalle, l'échéance
       // ouverte est la première non honorée, et « en retard » se lit sur elle.
       // La passe suivante ne repasse pas ici — le statut n'est plus réalisé.
-      // La branche part avec `dateRealisee` au N5.
-      const prochaine = prochaineEcheance(ex.dateRealisee, g.periodicite);
+      // La branche part avec la colonne `dateRealisee` au N5.
+      const prochaine = prochaineEcheance(realisation, g.periodicite);
       datePrevue = prochaine ?? ex.datePrevue;
-      dateRealisee = ex.dateRealisee;
       statut = statutCycleOuvert(datePrevue, "planifiee", now);
     } else if (
       ex.periodicite !== g.periodicite &&
-      ex.dateRealisee !== null &&
+      realisation !== null &&
       estCyclique(g.periodicite)
     ) {
       // LA PÉRIODICITÉ A CHANGÉ — référentiel corrigé, prescription d'assureur
@@ -1110,48 +1132,39 @@ export function reconcilierCalendrier(
       // pas, l'échéance ouverte est ce que le dépôt a écrit, et personne ne la
       // recalcule. Le constat B de l'audit — `datePrevue` sans son origine —
       // reste ouvert pour une ligne sans réalisation ; ici l'origine, c'est
-      // la réalisation, et N5 la lira sur le dernier rapport réalisé quand
-      // `dateRealisee` partira.
+      // la réalisation, lue sur le dernier rapport réalisé.
       datePrevue =
-        prochaineEcheance(ex.dateRealisee, g.periodicite) ?? ex.datePrevue;
-      dateRealisee = ex.dateRealisee;
+        prochaineEcheance(realisation, g.periodicite) ?? ex.datePrevue;
       statut = statutCycleOuvert(datePrevue, "planifiee", now);
     } else if (heritee !== null && !ex.porteUnePreuve) {
       // La ligne absorbante existe mais n'a JAMAIS ÉTÉ RÉALISÉE sous son
       // propre identifiant : elle reprend la réalisation des lignes qu'elle
-      // absorbe. Placée après la branche ci-dessus, et c'est délibéré : une
+      // absorbe. Placée après les branches ci-dessus, et c'est délibéré : une
       // réalisation faite SOUS LE NOUVEL IDENTIFIANT prime toujours.
       //
       // `!ex.porteUnePreuve` N'EST PAS UNE PRÉCAUTION, c'est ce qui rend
       // l'héritage NON RÉPÉTABLE — et sans lui il se rejouait à l'infini, en
-      // faisant RECULER la ligne de plusieurs années. Le chemin : la ligne
-      // absorbée est archivée avec sa preuve, donc conservée pour toujours
-      // (ADR-012) et gardant sa réalisation ancienne ; l'absorbante est
-      // contrôlée, puis son cycle expire et la branche « période écoulée »
-      // ci-dessus remet `dateRealisee` à `null` ; la passe suivante retombe
-      // ici et réécrit la date depuis la réalisation de 2021. Reproduit :
-      // une ligne au 2029-02-01 repartait au 2024-01-10, et le dossier
-      // annonçait cinq ans de retard sur un contrôle fait trois ans plus tôt.
+      // faisant RECULER la ligne de plusieurs années. Le chemin, du temps où la
+      // ligne portait `dateRealisee` : la ligne absorbée est archivée avec sa
+      // preuve, donc conservée pour toujours (ADR-012) en gardant sa
+      // réalisation ancienne ; l'absorbante est contrôlée, puis son cycle
+      // expire et la branche « période écoulée » remet `dateRealisee` à
+      // `null` ; la passe suivante retombe ici et réécrit la date depuis la
+      // réalisation de 2021. Reproduit : une ligne au 2029-02-01 repartait au
+      // 2024-01-10, et le dossier annonçait cinq ans de retard sur un contrôle
+      // fait trois ans plus tôt.
       //
-      // La preuve est le seul signal qui SURVIT au roulement de cycle :
-      // `dateRealisee` est effacée, les rapports restent attachés. Limite
-      // connue, et ATTEIGNABLE par l'utilisateur — pas seulement par les
-      // seeds, comme une première rédaction l'écrivait : `supprimerRapport`
-      // (`rapports/actions.ts`) supprime physiquement le dernier rapport et
-      // remet `dateRealisee` à `null`, donc `porteUnePreuve` retombe à faux et
-      // la ligne peut hériter une fois de trop. Mesuré : une absorbante roulée
-      // au 2027-02-01 dont on supprime le rapport recule au 2022-01-10. Le sens
-      // d'erreur est « à refaire », cohérent avec la doctrine de ce fichier ;
-      // l'ADR-034 rend le cas sans objet en cessant d'écrire `dateRealisee`.
+      // Depuis l'ADR-034 la réalisation se lit sur les rapports, qui restent
+      // attachés à la ligne : `porteUnePreuve` et `realisation` disent la même
+      // chose, et le cas ne peut plus naître que par une ligne de démonstration
+      // datée sans rapport. La garde reste, parce qu'elle ne coûte rien et
+      // qu'elle a déjà servi.
       //
-      // On reporte l'ÉCHÉANCE, pas la réalisation. Écrire `dateRealisee` ici
-      // ferait dire à cette ligne « contrôle effectué le … » alors qu'aucun
-      // rapport n'y est attaché — la pièce est restée sur la ligne archivée,
-      // qui la conserve (ADR-012). Une ligne ne doit jamais attester d'un acte
-      // dont elle ne porte pas la preuve.
+      // On reporte l'ÉCHÉANCE, pas la réalisation : la pièce est restée sur la
+      // ligne archivée, qui la conserve (ADR-012). Une ligne ne doit jamais
+      // attester d'un acte dont elle ne porte pas la preuve.
       const prochaine = prochaineEcheance(heritee, g.periodicite);
       datePrevue = prochaine ?? ex.datePrevue;
-      dateRealisee = null;
       statut = statutCycleOuvert(datePrevue, ex.statut, now);
     } else if (ex.statut === "a_planifier" && g.statut === "planifiee") {
       // La ligne n'avait qu'un **placeholder** — « à planifier » n'est pas
@@ -1159,17 +1172,14 @@ export function reconcilierCalendrier(
       // en calculer un depuis la mise en service. Poser cette date n'efface
       // aucun retard : il n'y en avait pas à effacer.
       datePrevue = g.datePrevue;
-      dateRealisee = null;
       statut = "planifiee";
     } else {
       // Cycle ouvert — le cas général depuis l'ADR-034 : l'échéance
       // réglementaire ne bouge pas parce que l'utilisateur a déclaré un
       // extincteur de plus. Repousser `datePrevue` à `now` à chaque
       // régénération — ce que faisait le delete/create — effaçait le retard
-      // accumulé. `dateRealisee` est recopiée telle quelle : c'est le dépôt qui
-      // l'écrit et la suppression qui l'efface, pas la régénération.
+      // accumulé.
       datePrevue = ex.datePrevue;
-      dateRealisee = ex.dateRealisee;
       statut = statutCycleOuvert(ex.datePrevue, ex.statut, now);
     }
 
@@ -1180,7 +1190,9 @@ export function reconcilierCalendrier(
       periodicite: g.periodicite,
       realisateurRequis: g.realisateurRequis,
       datePrevue,
-      dateRealisee,
+      // Colonne morte (ADR-034) : écrite à `null` pour mettre au modèle, en une
+      // passe, les lignes d'avant. Retirée au N5.
+      dateRealisee: null,
       statut,
       prescriptionId: g.prescriptionId,
     };
@@ -1218,7 +1230,7 @@ export function reconcilierCalendrier(
     // `dateRealisee` compte comme une trace au même titre qu'un rapport : elle
     // atteste qu'un contrôle a eu lieu, même si la pièce jointe a depuis été
     // retirée du registre.
-    const porteUneTrace = ex.porteUnePreuve || ex.dateRealisee !== null;
+    const porteUneTrace = ex.porteUnePreuve || realisationConnue(ex) !== null;
 
     // LE PORTEUR DE CETTE LIGNE-CI EXISTE-T-IL ENCORE ? La question n'est pas
     // celle de l'applicabilité de l'obligation : une ligne est identifiée par

@@ -282,10 +282,23 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   rapport antidaté ou non vérifiable ne touche pas la ligne. Le réconciliateur
   a perdu sa branche « cycle soldé » ; sept mutations jouées, chacune rouge.
   **Trois écarts au plan, écrits :**
-  1. `dateRealisee` **reste écrite** — la date du dernier rapport réalisé — le
-     temps que les sept lecteurs du § 6 passent sur les rapports (N4). La
-     retirer ici aurait vidé « dernière réalisation » sur la fiche et le
-     tableau de bord pendant deux lots. N5 la retire.
+  1. ~~`dateRealisee` reste écrite jusqu'à N4~~ — **retiré le même jour, sur
+     décision de la propriétaire** : une double vérité pendant deux lots ne
+     valait pas le confort. `dateRealisee` n'est plus écrite ; la dernière
+     réalisation se lit sur le dernier rapport réalisé
+     (`lib/rapports/derniere-realisation.ts`, pur, et
+     `joindre-realisations.ts` pour la jointure en une requête). Les
+     lecteurs « à reprendre » du § 6 sont passés dessus dans le même
+     mouvement : `lecturesCalendrier` et `repartirVerifications` exigent le
+     champ `derniereRealisation` — l'oubli ne compile pas —, et la fiche de
+     vérification, le tableau de bord (pastilles, barres, fenêtre des 12
+     mois), le registre et le serveur MCP le lisent. La colonne n'est plus
+     qu'un **repli** pour une ligne d'avant sans rapport ; la réconciliation
+     l'éteint en l'écrivant à `null`, et la suppression du dernier rapport
+     aussi. **Ce que ça change à l'écran, et c'est le but** : une échéance
+     passée sur un appareil déjà contrôlé se lit en retard — le lot 3 bis —,
+     donc le score bouge. La mesure demandée plus bas reste à produire avant
+     de fusionner.
   2. Le réconciliateur garde **deux branches** sur une ligne réalisée. Le
      **rattrapage** d'une ligne d'avant N2 — cyclique au statut réalisé, ce
      qu'aucune ligne roulée par N2 ne porte plus — la met au modèle en une
@@ -311,7 +324,8 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   `select` et `ex.archiveLe === null` à `identique`, avec le test qui rougit
   sans.
 - **N4 — Les lecteurs** : le § 6, dans l'ordre « à reprendre » puis
-  « simplifiés ». `realisees12m` et `derniereRealisee` passent sur les rapports.
+  « simplifiés ». **La moitié « à reprendre » est faite avec N2** (voir
+  l'écart 1) ; reste la moitié « simplifiés ». `realisees12m` et `derniereRealisee` passent sur les rapports.
   `lecturesCalendrier` et `etatDuRendezVous` supprimés. Sous-agents par famille
   de surfaces, fichiers disjoints.
 - **N5 — Le nettoyage** : `dateRealisee` retirée de `Verification` (elle ne sera

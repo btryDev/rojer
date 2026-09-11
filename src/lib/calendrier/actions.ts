@@ -25,6 +25,10 @@ import {
   type TitreDeclare,
 } from "./generateur";
 import { marquerCalendrierPerime } from "./reconciliation";
+import {
+  indexerDernieresRealisations,
+  WHERE_RAPPORT_REALISE,
+} from "@/lib/rapports/derniere-realisation";
 
 export type GenerationResult = {
   /** Lignes de suivi nouvellement ouvertes (nouvel équipement, nouvelle
@@ -281,6 +285,15 @@ async function regenererUnePasse(
     },
   });
 
+  // La réalisation de chaque ligne se lit sur ses rapports (ADR-034) : une
+  // requête pour tout l'établissement, jamais une par ligne.
+  const dernieresRealisations = indexerDernieresRealisations(
+    await prisma.rapportVerification.findMany({
+      where: { etablissementId, ...WHERE_RAPPORT_REALISE },
+      select: { verificationId: true, dateRapport: true },
+    }),
+  );
+
   const existantes: OccurrenceExistante[] = existantesBrutes.map((v) => ({
     id: v.id,
     obligationId: v.obligationId,
@@ -291,6 +304,7 @@ async function regenererUnePasse(
     realisateurRequis: v.realisateurRequis,
     datePrevue: v.datePrevue,
     dateRealisee: v.dateRealisee,
+    derniereRealisation: dernieresRealisations.get(v.id) ?? null,
     statut: v.statut as StatutVerificationPersiste,
     porteUnePreuve: v._count.rapports > 0 || v._count.actions > 0,
     prescriptionId: v.prescriptionId,
@@ -451,13 +465,12 @@ async function regenererUnePasse(
         where: {
           id: m.id,
           etablissementId,
-          // Les deux champs FACTUELS de la ligne — ceux que la régénération
-          // ne calcule pas seule, et qu'un dépôt de rapport modifie. S'ils
-          // ont bougé, le `dateRealisee`/`statut` que porte ce plan a été
-          // calculé sur un passé révolu : l'écrire effacerait la réalisation
-          // qui vient d'être enregistrée, et la ligne afficherait
-          // « dépassée » avec un rapport conforme joint, à perpétuité.
-          dateRealisee: lu.dateRealisee,
+          // Les deux champs que le DÉPÔT d'un rapport modifie (ADR-034) :
+          // l'échéance ouverte et son statut. S'ils ont bougé depuis la
+          // lecture, ce plan a été calculé sur un passé révolu — l'écrire
+          // ramènerait la ligne à l'échéance qu'un rapport vient d'honorer,
+          // et elle afficherait « dépassée » avec un rapport conforme joint.
+          datePrevue: lu.datePrevue,
           statut: lu.statut,
         },
         data: {

@@ -282,8 +282,9 @@ describe("genererCalendrier — conservation des actions correctives", () => {
 describe("genererCalendrier — écriture concurrente entre la lecture et le plan", () => {
   it("un rapport déposé pendant la régénération ne perd pas sa réalisation", async () => {
     // La ligne est en retard et sans preuve : le plan va la réaligner, donc
-    // écrire `dateRealisee` et `statut`. Entre-temps, un prestataire dépose
-    // son rapport — c'est-à-dire renseigne exactement ces deux champs.
+    // écrire `datePrevue` et `statut`. Entre-temps, un prestataire dépose son
+    // rapport — c'est-à-dire, depuis l'ADR-034, fait ROULER la ligne : il
+    // réécrit exactement ces deux champs.
     poserEtablissement([{ id: "eq-elec" }]);
     db.verifications = [
       ligne({
@@ -295,25 +296,27 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
     ];
 
     const LE_DEPOT = new Date("2026-09-09T10:00:00Z");
+    const ROULEE = new Date("2027-09-09T10:00:00Z");
     db.apresLecture = () => {
       const v = db.verifications.find((x) => x.id === "v-1");
       if (v === undefined) throw new Error("ligne v-1 disparue avant le dépôt");
-      v.dateRealisee = LE_DEPOT;
-      v.statut = "realisee";
+      v.datePrevue = ROULEE;
+      v.statut = "planifiee";
       v.nbRapports = 1;
+      v.rapportsRealises = [LE_DEPOT];
     };
 
     await genererCalendrier(ETAB_ID);
 
     const apres = db.verifications.find((v) => v.id === "v-1");
-    // Sans la condition sur `dateRealisee`/`statut`, l'`update` par
-    // identifiant réécrit `dateRealisee: null, statut: depassee` par-dessus le
-    // dépôt : la ligne affiche « dépassée » avec un rapport conforme joint, à
-    // perpétuité, et aucun code ne redérive la réalisation depuis `rapports`.
+    // Sans la condition sur `datePrevue`/`statut`, l'`update` par identifiant
+    // réécrit l'échéance d'avant, `depassee`, par-dessus le dépôt : la ligne
+    // redemande le contrôle qu'un rapport conforme vient d'honorer.
     expect(
-      apres?.dateRealisee,
-      "la réalisation déposée pendant la régénération a été écrasée",
-    ).toEqual(LE_DEPOT);
+      apres?.datePrevue,
+      "le roulement déposé pendant la régénération a été écrasé",
+    ).toEqual(ROULEE);
+    expect(apres?.statut).toBe("planifiee");
     expect(apres?.nbRapports).toBe(1);
   });
 

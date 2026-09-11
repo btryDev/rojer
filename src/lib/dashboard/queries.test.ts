@@ -32,6 +32,9 @@ type LigneVerif = {
   datePrevue: Date;
   dateRealisee: Date | null;
   libelleObligation: string;
+  /** Les rapports de la ligne (ADR-034), pour la jointure « dernière
+   *  réalisation » et les clauses `rapports: { some }`. */
+  rapports?: { dateRapport: Date; resultat: string }[];
 };
 
 type LigneAction = {
@@ -65,6 +68,18 @@ const h = vi.hoisted(() => {
       if (cle === "OR") {
         const branches = attendu as Record<string, unknown>[];
         if (!branches.some((b) => correspond(ligne, b))) return false;
+        continue;
+      }
+      // `rapports: { some: … }` (ADR-034) : lu sur les rapports que la ligne
+      // factice porte. L'ignorer ferait passer toute ligne — un filtre
+      // fantôme, que le matcher refuse d'être.
+      if (cle === "rapports") {
+        const { some, ...reste } = attendu as { some?: Record<string, unknown> };
+        if (some === undefined || Object.keys(reste).length > 0) {
+          throw new Error(`clause rapports non interprétée : ${JSON.stringify(attendu)}`);
+        }
+        const rapports = (ligne.rapports ?? []) as Record<string, unknown>[];
+        if (!rapports.some((r) => correspond(r, some))) return false;
         continue;
       }
       const valeur = ligne[cle];
@@ -142,7 +157,25 @@ const h = vi.hoisted(() => {
     },
     duerp: { findFirst: async () => db.duerp },
     equipement: { count: async () => db.nbEquipements },
-    rapportVerification: { count: async () => db.nbRapports },
+    rapportVerification: {
+      count: async () => db.nbRapports,
+      /** La jointure « dernière réalisation » (ADR-034) : les rapports que
+       *  portent les lignes factices, filtrés comme en base. */
+      findMany: async (args: { where: Record<string, unknown> }) => {
+        const { verificationId, ...reste } = args.where as {
+          verificationId: { in: string[] };
+        };
+        return db.verifications
+          .filter((v) => verificationId.in.includes(v.id as string))
+          .flatMap((v) =>
+            ((v.rapports ?? []) as Record<string, unknown>[]).map((r) => ({
+              ...r,
+              verificationId: v.id,
+            })),
+          )
+          .filter((r) => correspond(r, reste));
+      },
+    },
   };
 
   return { db, prisma };
@@ -424,6 +457,23 @@ describe("compterVerifsParEquipement", () => {
     const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(0);
     expect(stats.derniereRealisee).toEqual(jour(-28));
+  });
+
+  it("lit la dernière réalisation sur les rapports d'une ligne roulée (ADR-034)", async () => {
+    // La ligne a roulé au dépôt : elle ne porte que son échéance ouverte, et
+    // le contrôle fait vit sur le rapport. C'est lui que la pastille lit.
+    h.db.verifications.push(
+      verif({
+        id: "v1",
+        equipementId: "eq-1",
+        statut: "planifiee",
+        datePrevue: jour(200),
+        dateRealisee: null,
+        rapports: [{ dateRapport: jour(-20), resultat: "conforme" }],
+      }),
+    );
+    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    expect(stats.derniereRealisee).toEqual(jour(-20));
   });
 });
 

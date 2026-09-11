@@ -13,6 +13,10 @@ function verif(
     statut,
     datePrevue: new Date(datePrevueIso),
     dateRealisee: dateRealiseeIso === null ? null : new Date(dateRealiseeIso),
+    // Pas de rapport dans ces fixtures : la réalisation passe par la colonne
+    // gelée, que la répartition lit en repli (ADR-034). Le cas « rapport » a
+    // son propre test plus bas.
+    derniereRealisation: null as Date | null,
     // Requis depuis que le marqueur d'archivage se lit à la racine des
     // prédicats. Nu = ligne ACTIVE ; le cas archivé a son propre test, qui
     // passe un libellé marqué.
@@ -128,5 +132,32 @@ describe("repartirVerifications", () => {
     ];
     expect(new Set(tous).size).toBe(tous.length);
     expect(etat.total).toBe(verifs.length);
+  });
+
+  it("une ligne roulée compte son rapport ET son échéance ouverte (ADR-034)", () => {
+    // Contrôle fait en mars, lu sur le rapport ; la ligne a roulé et son
+    // échéance ouverte tombe dans l'horizon proche. Les deux se comptent : le
+    // fait dans `realisees12m`, l'échéance dans `aVenir`. La disjonction tient
+    // entre la ligne et son rapport, plus sur la ligne.
+    const roulee = {
+      ...verif("planifiee", "2026-05-10T00:00:00Z"),
+      derniereRealisation: new Date("2026-03-02T00:00:00Z"),
+    };
+    const etat = repartirVerifications([roulee], NOW);
+    expect(etat.realisees12m).toHaveLength(1);
+    expect(etat.aVenir).toHaveLength(1);
+    expect(etat.total).toBe(2);
+  });
+
+  it("et une échéance ouverte dépassée sur un appareil contrôlé compte en retard", () => {
+    // Le lot 3 bis : l'ancien modèle sortait cette ligne de TOUS les comptes.
+    const roulee = {
+      ...verif("planifiee", "2026-04-01T00:00:00Z"),
+      derniereRealisation: new Date("2025-04-01T00:00:00Z"),
+    };
+    const etat = repartirVerifications([roulee], NOW);
+    expect(etat.enRetard).toHaveLength(1);
+    // Avril 2025 est à plus de douze mois du 23 avril 2026 : hors fenêtre.
+    expect(etat.realisees12m).toHaveLength(0);
   });
 });

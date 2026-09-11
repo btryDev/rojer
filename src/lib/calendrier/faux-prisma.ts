@@ -83,6 +83,10 @@ export type LigneFausse = {
   statut: string;
   prescriptionId?: string | null;
   archiveLe?: Date | null;
+  /** Dates des rapports RÉALISÉS attachés à la ligne — ce que la
+   *  réconciliation lit pour connaître la dernière réalisation (ADR-034).
+   *  Indépendant de `nbRapports`, qui compte aussi les non vérifiables. */
+  rapportsRealises?: Date[];
   nbRapports: number;
   nbActions: number;
 };
@@ -351,6 +355,7 @@ export function fauxPrisma(db: Magasin) {
       where: {
         id: string;
         etablissementId?: string;
+        datePrevue?: Date;
         dateRealisee?: Date | null;
         statut?: string;
       };
@@ -362,7 +367,7 @@ export function fauxPrisma(db: Magasin) {
           operation: "verification.updateMany",
           where: args.where,
         });
-        const { id, etablissementId, dateRealisee, statut, ...reste } =
+        const { id, etablissementId, datePrevue, dateRealisee, statut, ...reste } =
           args.where;
         if (Object.keys(reste).length > 0) {
           inconnu("verification.updateMany", Object.keys(reste));
@@ -372,6 +377,8 @@ export function fauxPrisma(db: Magasin) {
             v.id === id &&
             (etablissementId === undefined ||
               v.etablissementId === etablissementId) &&
+            (datePrevue === undefined ||
+              memeInstant(v.datePrevue, datePrevue)) &&
             (dateRealisee === undefined ||
               memeInstant(v.dateRealisee, dateRealisee)) &&
             (statut === undefined || v.statut === statut),
@@ -487,10 +494,42 @@ export function fauxPrisma(db: Magasin) {
     },
   };
 
+  const rapportVerification = {
+    /**
+     * `where: { etablissementId, resultat: { in: [...] } }` — la lecture des
+     * réalisations par la réconciliation (ADR-034). Le faux client ne stocke
+     * que les DATES des rapports réalisés, sur la ligne (`rapportsRealises`) :
+     * c'est tout ce que la réconciliation en lit.
+     */
+    findMany: async ({
+      where,
+    }: {
+      where: { etablissementId: string; resultat?: { in: readonly string[] } };
+    }) => {
+      db.journal.push({ operation: "rapportVerification.findMany", where });
+      const { etablissementId, resultat, ...reste } = where;
+      if (Object.keys(reste).length > 0) {
+        inconnu("rapportVerification.findMany", Object.keys(reste));
+      }
+      if (resultat === undefined) {
+        inconnu("rapportVerification.findMany", ["resultat absent"]);
+      }
+      return db.verifications
+        .filter((v) => v.etablissementId === etablissementId)
+        .flatMap((v) =>
+          (v.rapportsRealises ?? []).map((dateRapport) => ({
+            verificationId: v.id,
+            dateRapport,
+          })),
+        );
+    },
+  };
+
   const prisma: Record<string, unknown> = {
     etablissement,
     verification,
     titreSalarie,
+    rapportVerification,
   };
 
   /**

@@ -409,6 +409,13 @@ function formaterVerifications(verifs: VerificationLue[]): string {
         ? `${categorieLisible(v.categorie)} « ${v.equipement} »`
         : v.equipement,
       `périodicité ${v.periodicite}`,
+      // Depuis l'ADR-034 la ligne dit les deux : ce qui a été fait — lu sur le
+      // dernier rapport — ET l'échéance ouverte. Une ligne d'avant, que la
+      // réconciliation n'a pas encore remise au modèle, garde l'ancienne
+      // phrase.
+      v.derniereRealisation
+        ? `dernière réalisation le ${formaterDateFr(v.derniereRealisation)}`
+        : null,
       v.dateRealisee
         ? `réalisée le ${formaterDateFr(v.dateRealisee)}`
         : `échéance ${formaterDateFr(v.datePrevue)}`,

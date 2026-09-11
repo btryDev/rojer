@@ -16,6 +16,9 @@ const verif = (
   o: {
     statut?: string;
     dateRealisee?: string;
+    /** Dernier rapport réalisé (ADR-034). Absent = aucun ; les cas d'avant
+     *  passent par `dateRealisee`, que la lecture prend en repli. */
+    derniereRealisation?: string;
     libelle?: string;
     periodicite?: Periodicite;
   } = {},
@@ -25,6 +28,7 @@ const verif = (
   statut: o.statut ?? "planifiee",
   datePrevue: jour(datePrevue),
   dateRealisee: o.dateRealisee ? jour(o.dateRealisee) : null,
+  derniereRealisation: o.derniereRealisation ? jour(o.derniereRealisation) : null,
   periodicite: o.periodicite ?? ("annuelle" as const),
 });
 

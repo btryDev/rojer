@@ -211,8 +211,9 @@ export default async function VerificationDetailPage({
       : {
           cle: "Prochaine échéance",
           valeur: formatDateCourte(v.datePrevue),
-          note: v.dateRealisee
-            ? `Dernière : ${formatDateCourte(v.dateRealisee)}`
+          // La dernière réalisation se lit sur les rapports (ADR-034).
+          note: v.derniereRealisation
+            ? `Dernière : ${formatDateCourte(v.derniereRealisation)}`
             : undefined,
           alerte: enRetard,
         },

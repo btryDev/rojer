@@ -54,7 +54,10 @@ export type EtatVerifications<T> = {
  * document reproductible et le test possible.
  */
 export function repartirVerifications<
-  T extends VerificationDatee,
+  // `derniereRealisation` — la date du dernier rapport réalisé (ADR-034) —
+  // est REQUISE : c'est elle, et non plus la ligne, qui dit ce qui a été fait
+  // sur la fenêtre. Un appelant qui l'omettrait viderait `realisees12m`.
+  T extends VerificationDatee & { derniereRealisation: Date | null },
 >(verifs: readonly T[], now: Date): EtatVerifications<T> {
   // Borne de la fenêtre d'historique : le **jour civil** situé douze mois en
   // arrière, pris à minuit heure de Paris. Sans `debutDuJour`, la borne
@@ -81,11 +84,21 @@ export function repartirVerifications<
   const aVenir = actives.filter((v) =>
     estVerificationAVenir(v, now, JOURS_HORIZON_PROCHE),
   );
-  const realisees12m = verifs.filter(
-    (v) =>
-      v.dateRealisee !== null &&
-      v.dateRealisee.getTime() >= debutFenetreHistorique.getTime(),
-  );
+  // Lue sur les rapports (ADR-034), avec la colonne gelée en repli pour une
+  // ligne d'avant que la réconciliation n'a pas encore remise au modèle.
+  //
+  // CE QUI CHANGE, ET C'EST VOULU : depuis que la ligne roule au dépôt, une
+  // ligne contrôlée il y a trois mois porte AUSSI son échéance ouverte, qui
+  // compte parmi les trois premiers ensembles quand elle tombe dans l'horizon
+  // ou est dépassée. La disjonction ne tient plus sur la ligne : elle tient
+  // entre la ligne (une échéance) et son rapport (un fait). C'est ce qui fait
+  // enfin compter en retard une échéance passée sur un appareil déjà contrôlé
+  // — le défaut du lot 3 bis — et c'est pourquoi le score bouge (ADR-034, « Ce
+  // qu'il faudrait mesurer »).
+  const realisees12m = verifs.filter((v) => {
+    const faite = v.derniereRealisation ?? v.dateRealisee;
+    return faite !== null && faite.getTime() >= debutFenetreHistorique.getTime();
+  });
 
   return {
     enRetard,

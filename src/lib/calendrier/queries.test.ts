@@ -25,6 +25,11 @@ const { prismaMock, requireUserMock } = vi.hoisted(() => ({
     etablissement: {
       findFirst: vi.fn().mockResolvedValue(null),
     },
+    // La jointure « dernière réalisation » (ADR-034). Ces tests éprouvent les
+    // clauses envoyées sur les lignes ; aucun rapport n'y est posé.
+    rapportVerification: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   },
   requireUserMock: vi.fn(),
 }));
