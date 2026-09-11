@@ -259,8 +259,10 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   main (`20260911120000_ligne_ouverte_archive_echeance_honoree`), jouée sur le
   Postgres Docker local, jamais sur Supabase. Rétro-remplissage
   : `archiveLe = updatedAt` pour les lignes dont le libellé porte le marqueur —
-  vérifié sur base réelle : une ligne au préfixe exact remplie, une ligne
-  ouverte et une ligne au tiret simple laissées nulles ; `echeanceHonoree`
+  vérifié en jouant la migration sur un jeu de lignes inséré dans la base
+  locale (vide par ailleurs) : une ligne au préfixe exact remplie, une ligne
+  ouverte et une ligne au tiret simple laissées nulles ; la relecture l'a
+  rejouée deux fois — la seconde passe ne touche rien. `echeanceHonoree`
   laissée nulle pour l'existant. **Un écart au plan, et il est voulu** : la
   réconciliation écrit déjà `archiveLe` avec le préfixe, et le remet à `null`
   quand une ligne redevient attendue. Sans cela, entre N1 et N3, toute ligne
@@ -274,7 +276,14 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
 - **N3 — Les prédicats** : `retard.ts` cesse de lire `dateRealisee` ;
   `estVerificationArchivee` lit `archiveLe` ; `classerVerification` et le
   vocabulaire perdent `archivee`-par-préfixe. Le préfixe est retiré des libellés
-  par la migration.
+  par la migration. **Et la réconciliation doit lire `archiveLe`** (relecture
+  de N1) : `generateur.ts` ne détecte aujourd'hui une ligne archivée que par
+  son libellé préfixé — dans le `select` de `calendrier/actions.ts` et dans le
+  test `identique` du plan. Le préfixe retiré, une ligne archivée dont
+  l'obligation redevient applicable à champs identiques serait comptée
+  « inchangée » et resterait archivée pour toujours. Ajouter `archiveLe` au
+  `select` et `ex.archiveLe === null` à `identique`, avec le test qui rougit
+  sans.
 - **N4 — Les lecteurs** : le § 6, dans l'ordre « à reprendre » puis
   « simplifiés ». `realisees12m` et `derniereRealisee` passent sur les rapports.
   `lecturesCalendrier` et `etatDuRendezVous` supprimés. Sous-agents par famille
