@@ -417,11 +417,37 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   « inchangée » et resterait archivée pour toujours. Ajouter `archiveLe` au
   `select` et `ex.archiveLe === null` à `identique`, avec le test qui rougit
   sans.
-- **N4 — Les lecteurs** : le § 6, dans l'ordre « à reprendre » puis
-  « simplifiés ». **La moitié « à reprendre » est faite avec N2** (voir
-  l'écart 1) ; reste la moitié « simplifiés ». `realisees12m` et `derniereRealisee` passent sur les rapports.
-  `lecturesCalendrier` et `etatDuRendezVous` supprimés. Sous-agents par famille
-  de surfaces, fichiers disjoints.
+- ~~**N4 — Les lecteurs**~~ — **fait le 2026-09-13**. La moitié « à reprendre »
+  l'était depuis N2 (écart 1) ; c'est la moitié « simplifiés » qui est faite
+  ici. `etatDuRendezVous` est **supprimée** — pas allégée : sa branche utile
+  exigeait « classée faite » ET « cyclique », et depuis le N3 une ligne n'est
+  classée faite que sur un STATUT réalisé, qui ne subsiste que sur une
+  obligation SANS rendez-vous suivant. Les deux conditions ne peuvent plus être
+  vraies ensemble ; la fonction rendait exactement `classerVerification`.
+  `lecturesCalendrier`, elle, **survit et change de forme** : la lecture
+  `prochaine` disparaît du type, et il ne reste que `realisation` (le contrôle
+  fait, lu sur le dernier rapport) et `courante` (l'échéance ouverte, classée
+  comme n'importe quelle date). Les appelants qui dépliaient à la main classent
+  désormais la ligne : la fiche d'équipement, les statistiques par appareil du
+  tableau de bord, la page de vérification.
+  **Deux garanties que rien ne tenait, trouvées par mutation et non par
+  lecture**, toutes deux sur le tableau de bord — la seule des neuf surfaces
+  dont l'exclusion des lignes éteintes ne rougissait aucun test :
+  1. une ligne **archivée** pesait sur les pastilles de la carte d'un appareil.
+     Son statut est gelé sur « dépassée », donc la carte comptait un retard à
+     perpétuité sur une obligation qui ne s'applique plus — le défaut que le
+     registre de sécurité imprimait (`e450ea4`), sur un autre écran ;
+  2. une ligne **sans date arrêtée et future** pouvait être annoncée comme
+     « prochaine échéance ». Le cas passé était couvert par la garde du retard ;
+     le cas futur ne tenait qu'à la lecture du statut, et rien ne la tenait.
+  Six mutations jouées, puis deux de plus après correction : chacune rouge sur
+  le test attendu. 2404 tests.
+  **Trois tests décrivaient un monde disparu** — « le rendez-vous suivant d'un
+  cycle soldé » — et six ont été réécrits sur le modèle neuf, jamais supprimés
+  en silence. L'un d'eux nomme une conséquence qu'il faut connaître : une rangée
+  d'AVANT l'ADR-034, encore gelée sur un statut réalisé avec une `datePrevue`
+  future, ne pose plus que son fait — sa date future sort du calendrier jusqu'à
+  la régénération, qui la ré-ancre. La perte est bornée à cet intervalle.
 - **N5 — Le nettoyage** : `dateRealisee` retirée de `Verification` (elle ne sera
   plus écrite), `depassee` retiré de l'enum ou laissé mort et documenté,
   `VerificationDatee.libelleObligation` redevenu optionnel, ADR-012 annotée comme

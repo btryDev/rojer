@@ -1462,8 +1462,13 @@ sur un dossier à jour. **Relecture de N3** le même jour : le registre de
 sécurité était une neuvième surface — ses fiches imprimaient « En retard » sur
 une obligation éteinte, le préfixe l'ayant signalée jusqu'à la migration —, le
 désarchivage n'avait qu'un chemin sur deux, et la clause d'archivage de la page
-d'établissement n'était tenue par aucun test. Corrigés. Restent la moitié
-« simplifiés » de N4 et N5.
+d'établissement n'était tenue par aucun test. Corrigés. ~~N4~~ fait le
+2026-09-13 : `etatDuRendezVous` supprimée, la lecture `prochaine` retirée du
+type, et les surfaces qui dépliaient à la main classent la ligne. Le banc de
+mutation a trouvé deux garanties que personne ne tenait, toutes deux sur le
+tableau de bord : une ligne éteinte pesait sur les pastilles d'un appareil, et
+une ligne sans date arrêtée pouvait être annoncée comme prochaine échéance.
+**Reste N5.**
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est

@@ -166,14 +166,13 @@ describe("repartirParEquipement — l'horizon proche", () => {
     expect(m.get("eq1")?.proches).toBe(0);
   });
 
-  it("le rendez-vous suivant d'un cycle soldé compte dans l'horizon", () => {
+  it("l'échéance ouverte d'une ligne roulée compte dans l'horizon", () => {
+    // Le dépôt a fait rouler la ligne (ADR-034) : elle repart « planifiée » au
+    // 25/08/2026, et le contrôle du 25/08/2025 se lit sur son rapport. Les deux
+    // comptes doivent tomber — sans le second, un appareil parfaitement suivi
+    // n'affiche aucun signal alors que le calendrier annonce son échéance.
     const m = repartirParEquipement(
-      [
-        verif("eq1", "2026-08-25", {
-          statut: "realisee_conforme",
-          dateRealisee: "2025-08-25",
-        }),
-      ],
+      [verif("eq1", "2026-08-25", { derniereRealisation: "2025-08-25" })],
       AUJOURDHUI,
     );
     expect(m.get("eq1")?.faites).toBe(1);
@@ -244,17 +243,15 @@ describe("resumerEquipement", () => {
     ]);
   });
 
-  it("compte le rendez-vous suivant d'un cycle soldé", () => {
-    // Une ligne soldée dit deux choses : « fait le 10 févr. 2026 » et
-    // « prochaine le 10 févr. 2027 » (ADR-010). Sans elle, un appareil
-    // parfaitement suivi n'affichait aucun signal et la carte du parc
-    // annonçait « aucune vérification rattachée » — pendant que le
-    // calendrier, lui, montrait bien l'échéance.
+  it("compte l'échéance ouverte d'une ligne roulée", () => {
+    // Une ligne roulée dit encore deux choses, mais plus sur la même rangée :
+    // « fait le 10 févr. 2026 », lu sur son dernier rapport, et « échéance le
+    // 10 févr. 2027 », qu'elle porte seule (ADR-034). Sans le second, un
+    // appareil parfaitement suivi n'affichait aucun signal et la carte du parc
+    // annonçait « aucune vérification rattachée » — pendant que le calendrier,
+    // lui, montrait bien l'échéance.
     const e = etatDe([
-      verif("eq1", "2027-02-10", {
-        statut: "realisee_conforme",
-        dateRealisee: "2026-02-10",
-      }),
+      verif("eq1", "2027-02-10", { derniereRealisation: "2026-02-10" }),
     ])!;
     expect(e.faites).toBe(1);
     expect(e.aVenir).toBe(1);

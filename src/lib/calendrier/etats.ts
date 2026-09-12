@@ -298,50 +298,16 @@ export function classerVerification(
  * « prochaine échéance » à la date de génération et « échéance aujourd'hui ».
  * Chacun avait sa propre lecture de `datePrevue` ; ils n'en ont plus qu'une.
  */
-/**
- * L'état à peindre À CÔTÉ de `datePrevue` — celui du RENDEZ-VOUS, pas celui
- * de la ligne.
- *
- * LA DISTINCTION N'EST PAS COSMÉTIQUE, et le calendrier l'a déjà payée. Quand
- * un cycle est soldé, la même ligne dit DEUX choses : « fait le 22/01/2026 »
- * et « prochaine échéance le 22/01/2027 ». `classerVerification` répond sur la
- * LIGNE, donc « faite » — et une tuile qui affiche la date du rendez-vous en
- * la peignant de cet état-là annonce un contrôle fait un an à l'avance.
- *
- * C'est mot pour mot le défaut que `lecturesCalendrier` a supprimé du
- * calendrier en dépliant la ligne en deux événements. La fiche de vérification
- * ne dépliait pas : elle posait la date du rendez-vous avec l'état de la
- * ligne, et affichait donc une tuile verte « faite » sur une échéance à venir.
- * Texte juste, couleur fausse.
- */
-export function etatDuRendezVous(
-  v: VerificationDatee & { periodicite: string },
-  now: Date,
-): RegistreLigne {
-  const classe = classerVerification(v, now);
-  if (classe !== "faite") return classe;
-
-  // LA PÉRIODICITÉ N'EST PAS UN DÉTAIL, et l'omettre a produit le défaut
-  // symétrique de celui qu'on corrigeait. Une obligation PONCTUELLE — « mise
-  // en service », « autre » — n'a pas de rendez-vous suivant : la
-  // réconciliation laisse sa `datePrevue` sur l'échéance d'origine
-  // (`prochaine === null`). Un contrôle réalisé EN AVANCE satisfait alors
-  // `datePrevue > dateRealisee` sans qu'aucun rendez-vous n'existe, et la
-  // fiche peignait « dépassée » un one-shot accompli — pendant que la même
-  // page, par le prédicat partagé, le disait à jour. Deux lectures
-  // contradictoires sur un écran : exactement ce que ce lot supprime.
-  const cyclique = estCyclique(v.periodicite as Periodicite);
-  if (
-    cyclique &&
-    v.dateRealisee !== null &&
-    v.datePrevue.getTime() > v.dateRealisee.getTime()
-  ) {
-    // Cycle soldé dont la réconciliation a déjà avancé la date : `datePrevue`
-    // est le rendez-vous SUIVANT, et il se classe comme n'importe quelle date.
-    return classerDate(v.datePrevue, now);
-  }
-  return classe;
-}
+// `etatDuRendezVous` A DISPARU AU LOT N4 (ADR-034), et c'est le modèle qui l'a
+// tué, pas une simplification de confort. Il servait à distinguer l'état d'une
+// LIGNE de celui de sa DATE quand la première portait deux vies : « faite le
+// 22/01/2026 » et « prochaine le 22/01/2027 ». Sa branche utile exigeait donc
+// « classée faite » ET « cyclique » — or depuis le N3, une ligne n'est classée
+// « faite » que sur un STATUT réalisé, et il n'en subsiste que sur une
+// obligation SANS rendez-vous suivant. Les deux conditions ne peuvent plus être
+// vraies ensemble : la fonction rendait exactement `classerVerification`.
+//
+// Une ligne, une date, un état. Les appelants classent la ligne.
 
 /**
  * La pastille à peindre à côté d'une LECTURE de calendrier.
@@ -359,7 +325,6 @@ export function statutDeLaLecture(
   lecture: LectureCalendrier["lecture"],
   v: { statut: string; dernierResultat?: string | null },
 ): StatutVerification {
-  if (lecture === "prochaine") return "planifiee";
   if (lecture !== "realisation") return v.statut as StatutVerification;
   switch (v.dernierResultat) {
     case "conforme":
@@ -397,11 +362,16 @@ export type LectureCalendrier = {
    */
   registre: Exclude<RegistreLigne, "archivee">;
   /**
-   * `courante` — le cycle n'est pas soldé, la ligne se lit telle quelle ;
-   * `realisation` — le contrôle fait, posé au jour où il l'a été ;
-   * `prochaine` — le rendez-vous suivant d'un cycle soldé.
+   * `courante` — l'échéance ouverte de la ligne, la seule qu'elle porte ;
+   * `realisation` — le contrôle fait, lu sur son dernier rapport et posé au
+   * jour où il a eu lieu.
+   *
+   * `prochaine` a disparu au N4 : il désignait « le rendez-vous suivant d'un
+   * cycle soldé », c'est-à-dire la seconde vie d'une rangée qui n'en a plus
+   * qu'une. Depuis que le dépôt fait rouler la ligne, son échéance ouverte EST
+   * le rendez-vous suivant, et elle se lit `courante`.
    */
-  lecture: "courante" | "realisation" | "prochaine";
+  lecture: "courante" | "realisation";
 };
 
 /**
@@ -483,25 +453,12 @@ export function lecturesCalendrier(
         ];
   }
 
-  const lectures: LectureCalendrier[] = [
-    {
-      date: realisation ?? v.datePrevue,
-      registre: "faite",
-      lecture: "realisation",
-    },
+  // CLASSÉE « FAITE » : depuis le N3, cela ne peut plus vouloir dire qu'une
+  // chose — une obligation SANS rendez-vous suivant, consommée. Elle n'a pas
+  // d'échéance à annoncer, seulement son fait. La branche qui ajoutait ici un
+  // « rendez-vous suivant » exigeait une périodicité cyclique, contradictoire
+  // avec ce classement : elle est partie au N4 avec la lecture `prochaine`.
+  return [
+    { date: realisation ?? v.datePrevue, registre: "faite", lecture: "realisation" },
   ];
-
-  const cyclique = estCyclique(v.periodicite as Periodicite);
-  if (
-    cyclique &&
-    v.dateRealisee !== null &&
-    v.datePrevue.getTime() > v.dateRealisee.getTime()
-  ) {
-    lectures.push({
-      date: v.datePrevue,
-      registre: classerDate(v.datePrevue, now),
-      lecture: "prochaine",
-    });
-  }
-  return lectures;
 }

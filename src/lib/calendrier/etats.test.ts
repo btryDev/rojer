@@ -221,12 +221,21 @@ describe("lecturesCalendrier", () => {
   });
 
   /**
-   * LE cas qui a motivé la fonction : un contrôle annuel soldé porte
-   * `dateRealisee` = jour du contrôle et `datePrevue` = rendez-vous
-   * suivant, un an plus tard. Lu d'un bloc à `datePrevue`, il peignait la
-   * prochaine échéance en vert « faite » — un an trop tôt.
+   * LE cas qui a motivé la fonction — et le monde qu'il décrivait n'existe
+   * plus. Un contrôle annuel soldé portait `dateRealisee` = jour du contrôle
+   * et `datePrevue` = rendez-vous suivant : deux vies sur une rangée, qu'il
+   * fallait déplier pour ne pas peindre la prochaine échéance en vert
+   * « faite », un an trop tôt.
+   *
+   * DEPUIS L'ADR-034 CETTE RANGÉE EST UN VESTIGE : le dépôt fait rouler la
+   * ligne, qui repart « planifiée » avec sa seule échéance ouverte. Ce qui
+   * reste ici est une ligne d'AVANT, que la réconciliation n'a pas encore
+   * remise au modèle — classée « faite » sur son statut, elle ne pose donc
+   * plus que son fait. Sa `datePrevue` future sort du calendrier jusqu'à la
+   * régénération, qui la ré-ancre : la perte est bornée à cet intervalle, et
+   * elle s'écrit ici plutôt que de se découvrir en support.
    */
-  it("un cycle annuel soldé se déplie en fait + prochain rendez-vous", () => {
+  it("une rangée gelée d'avant l'ADR-034 ne pose plus que son fait", () => {
     expect(
       lecturesCalendrier(
         {
@@ -242,18 +251,20 @@ describe("lecturesCalendrier", () => {
       ),
     ).toEqual([
       { date: jours(-65), registre: "faite", lecture: "realisation" },
-      { date: jours(300), registre: "lointain", lecture: "prochaine" },
     ]);
   });
 
-  it("un rendez-vous suivant sous 30 jours est proche", () => {
+  it("une échéance ouverte sous 30 jours est proche", () => {
+    // Même garantie qu'avant le N4 — la fenêtre s'applique à l'échéance que la
+    // ligne annonce —, portée par la ligne roulée qui l'annonce désormais :
+    // statut « planifiée », le fait lu sur son dernier rapport.
     const lectures = lecturesCalendrier(
       {
-        statut: "realisee_conforme",
+        statut: "planifiee",
         datePrevue: jours(20),
-        dateRealisee: jours(-345),
+        dateRealisee: null,
         archiveLe: null,
-        derniereRealisation: null,
+        derniereRealisation: jours(-345),
         libelleObligation: "Vérification périodique",
         periodicite: "annuelle",
       },
@@ -262,7 +273,7 @@ describe("lecturesCalendrier", () => {
     expect(lectures[1]).toEqual({
       date: jours(20),
       registre: "proche",
-      lecture: "prochaine",
+      lecture: "courante",
     });
   });
 
@@ -378,15 +389,16 @@ describe("statutDeLaLecture (ADR-034)", () => {
     ).toBe("realisee_ecart_majeur");
   });
 
-  it("le rendez-vous suivant reste planifié, l'échéance ouverte garde l'état de la ligne", () => {
-    expect(
-      statutDeLaLecture("prochaine", {
-        statut: "realisee_conforme",
-        dernierResultat: "conforme",
-      }),
-    ).toBe("planifiee");
+  it("l'échéance ouverte garde l'état de la ligne", () => {
+    // La lecture `prochaine` a disparu au N4 : elle désignait le rendez-vous
+    // suivant d'un cycle soldé, c'est-à-dire la seconde vie d'une rangée qui
+    // n'en a plus qu'une. L'échéance ouverte EST ce rendez-vous, et elle se lit
+    // `courante`.
     expect(statutDeLaLecture("courante", { statut: "depassee" })).toBe(
       "depassee",
+    );
+    expect(statutDeLaLecture("courante", { statut: "planifiee" })).toBe(
+      "planifiee",
     );
   });
 
@@ -449,11 +461,11 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
   it("une ligne active, elle, annonce toujours ses deux lectures", () => {
     const lectures = lecturesCalendrier(
       {
-        statut: "realisee_conforme",
+        statut: "planifiee",
         datePrevue: jours(120),
-        dateRealisee: jours(-245),
+        dateRealisee: null,
         archiveLe: null,
-        derniereRealisation: null,
+        derniereRealisation: jours(-245),
         periodicite: "annuelle",
         libelleObligation: "Vérification annuelle du désenfumage",
       },
@@ -461,7 +473,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
     );
     expect(lectures.map((l) => l.lecture)).toEqual([
       "realisation",
-      "prochaine",
+      "courante",
     ]);
   });
 

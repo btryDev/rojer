@@ -47,19 +47,21 @@ function fiche(
 }
 
 describe("lignesAFaire", () => {
-  it("garde le rendez-vous suivant d'un cycle soldé", () => {
-    // Le cœur du bug : une `Verification` soldée porte à la fois la
-    // réalisation passée et la prochaine échéance (ADR-010). En écartant
-    // les lignes « faites », la fiche d'un appareil parfaitement suivi
-    // affichait « aucune échéance ouverte » pendant que le calendrier
-    // montrait le rendez-vous de l'an prochain.
+  it("garde l'échéance ouverte d'une ligne déjà contrôlée", () => {
+    // Le cœur du bug, et ce qu'il devient au N4. En écartant les lignes
+    // « faites », la fiche d'un appareil parfaitement suivi affichait « aucune
+    // échéance ouverte » pendant que le calendrier montrait le rendez-vous de
+    // l'an prochain. La rangée qui portait les deux vies n'existe plus
+    // (ADR-034) : le dépôt la fait rouler et elle repart « planifiée ». Mais
+    // elle traîne encore la COLONNE GELÉE `dateRealisee`, tant que le N5 ne
+    // l'a pas retirée — et cette colonne ne classe plus rien : l'échéance
+    // ouverte reste à faire, quoi qu'elle porte.
     const lignes = lignesAFaire(
       fiche([
         {
           id: "v1",
           datePrevue: "2027-01-22",
           dateRealisee: "2026-01-22",
-          statut: "realisee_conforme",
         },
       ]),
       "/etablissements/e1",

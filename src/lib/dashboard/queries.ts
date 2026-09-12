@@ -31,7 +31,11 @@ import {
   joursCivilsEntre,
 } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
-import { TON_REGISTRE, lecturesCalendrier } from "@/lib/calendrier/etats";
+import {
+  classerVerification,
+  TON_REGISTRE,
+  lecturesCalendrier,
+} from "@/lib/calendrier/etats";
 import { WHERE_RAPPORT_REALISE } from "@/lib/rapports/derniere-realisation";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import {
@@ -301,28 +305,26 @@ export async function compterVerifsParEquipement(
     // appareil fantôme.
     if (v.equipementId === null) continue;
     const s = getStats(v.equipementId);
-    // Même dépli que le calendrier : une ligne soldée compte son
-    // rendez-vous suivant dans la charge — un appareil à jour dont le
-    // prochain contrôle tombe sous 30 jours a une pastille et une
-    // « prochaine échéance », plus un silence.
-    for (const lec of lecturesCalendrier(v, now)) {
-      if (lec.lecture === "realisation") continue;
-      if (lec.registre === "enRetard") s.enRetard += 1;
-      else if (lec.registre === "aPlanifier") s.aPlanifier += 1;
-      else if (lec.registre === "proche") s.sous30j += 1;
+    // UNE LIGNE, UNE ÉCHÉANCE (ADR-034, N4) : plus de dépli. La ligne portait
+    // le fait passé et le rendez-vous suivant ; elle ne porte plus que ce
+    // dernier, et les contrôles faits se comptent sur les rapports, juste en
+    // dessous.
+    const etat = classerVerification(v, now);
+    if (etat === "enRetard") s.enRetard += 1;
+    else if (etat === "aPlanifier") s.aPlanifier += 1;
+    else if (etat === "proche") s.sous30j += 1;
 
-      // Prochaine échéance annoncée : seulement une date arrêtée — par le
-      // prestataire (`planifiee`) ou par le cycle soldé — et pas passée.
-      const dateArretee =
-        lec.lecture === "prochaine" ||
-        (lec.lecture === "courante" && v.statut === "planifiee");
-      if (
-        dateArretee &&
-        lec.registre !== "enRetard" &&
-        (!s.prochaineDate || lec.date < s.prochaineDate)
-      ) {
-        s.prochaineDate = lec.date;
-      }
+    // Prochaine échéance annoncée : seulement une date ARRÊTÉE — le
+    // prestataire l'a fixée —, et pas passée. Une ligne « à planifier » porte
+    // une date de génération, pas un rendez-vous.
+    if (
+      v.statut === "planifiee" &&
+      etat !== "enRetard" &&
+      etat !== "archivee" &&
+      etat !== "faite" &&
+      (!s.prochaineDate || v.datePrevue < s.prochaineDate)
+    ) {
+      s.prochaineDate = v.datePrevue;
     }
 
     // Lue sur les rapports (ADR-034), la colonne gelée en repli pour une ligne

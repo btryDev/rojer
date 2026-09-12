@@ -600,6 +600,53 @@ describe("compterVerifsParEquipement", () => {
     expect(stats.derniereRealisee).toEqual(jour(-28));
   });
 
+  it("n'annonce aucun rendez-vous sur une ligne sans date arrêtée", async () => {
+    // TROUVÉ PAR MUTATION AU N4, et personne ne le tenait. La `datePrevue`
+    // d'une ligne « à planifier » est la date où le générateur l'a produite,
+    // pas un rendez-vous convenu (ADR-010) : l'annoncer comme prochaine
+    // échéance sur la carte de l'appareil fabrique un engagement que personne
+    // n'a pris. Le cas passé était couvert — il tombe dans la garde du retard,
+    // deux tests plus haut ; le cas FUTUR n'est retenu que par la lecture du
+    // statut, et rien ne la tenait.
+    h.db.verifications.push(
+      verif({
+        id: "v1",
+        equipementId: "eq-1",
+        statut: "a_planifier",
+        datePrevue: jour(20),
+      }),
+    );
+    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    expect(stats.aPlanifier).toBe(1);
+    expect(stats.prochaineDate).toBeNull();
+  });
+
+  it("une ligne éteinte ne pèse sur aucune pastille (ADR-034)", async () => {
+    // TROUVÉ PAR MUTATION AU N4. Le tableau de bord était la seule des neuf
+    // surfaces dont l'exclusion des lignes archivées ne rougissait aucun test :
+    // son statut est GELÉ dans son dernier état connu — ici « dépassée », l'enum
+    // Prisma n'ayant pas de valeur `archivee` —, donc sans la lecture
+    // d'`archiveLe` la carte de l'appareil compte un retard à perpétuité sur une
+    // obligation qui ne s'applique plus. C'est le même défaut que le registre de
+    // sécurité imprimait (`e450ea4`), sur un autre écran.
+    h.db.verifications.push(
+      verif({
+        id: "eteinte",
+        equipementId: "eq-1",
+        statut: "depassee",
+        datePrevue: jour(-40),
+        archiveLe: jour(-3),
+      }),
+    );
+    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    expect(stats.enRetard).toBe(0);
+    // Ni rangée ailleurs : une ligne éteinte sort des trois comptes, elle ne se
+    // déplace pas de l'un à l'autre.
+    expect(stats.aPlanifier).toBe(0);
+    expect(stats.sous30j).toBe(0);
+    expect(stats.prochaineDate).toBeNull();
+  });
+
   it("lit la dernière réalisation sur les rapports d'une ligne roulée (ADR-034)", async () => {
     // La ligne a roulé au dépôt : elle ne porte que son échéance ouverte, et
     // le contrôle fait vit sur le rapport. C'est lui que la pastille lit.
