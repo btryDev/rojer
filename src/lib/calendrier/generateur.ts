@@ -44,12 +44,6 @@ import {
 } from "@/lib/referentiels/types-communs";
 import { estCyclique, prochaineEcheance } from "./periodicite";
 import { estEnRetard } from "@/lib/dates/retard";
-import {
-  MARQUEUR_NON_APPLICABLE,
-  estMarqueeNonApplicable,
-  marquerNonApplicable,
-  libelleSansMarqueur,
-} from "./marqueur";
 import type {
   ObligationApplicable,
   ObligationSurMesureApplicable,
@@ -682,12 +676,6 @@ export function estStatutRealise(s: string): boolean {
  * dans `marqueur.ts` — il se lit dans des modules qui n'ont pas à dépendre du
  * moteur de matching — et se réexporte ici, où il se pose.
  */
-export {
-  MARQUEUR_NON_APPLICABLE,
-  estMarqueeNonApplicable,
-  marquerNonApplicable,
-  libelleSansMarqueur,
-};
 
 /** Ligne de suivi telle qu'elle existe en base, réduite à ce dont la
  *  réconciliation a besoin. */
@@ -732,6 +720,11 @@ export type OccurrenceExistante = {
    *  corrective ? C'est le seul critère qui autorise — ou interdit — la
    *  suppression physique. */
   porteUnePreuve: boolean;
+  /** Date d'archivage (ADR-034) : `null` = ligne ouverte. Elle remplace le
+   *  préfixe « Ne s'applique plus — » que la réconciliation lisait dans le
+   *  libellé. Optionnel : les fixtures antérieures n'en ont pas, et une ligne
+   *  sans date est ouverte. */
+  archiveLe?: Date | null;
   /** Prescription particulière à l'origine de la ligne ou de sa périodicité
    *  (ADR-014). Optionnel : les fixtures antérieures n'en ont pas. */
   prescriptionId?: string | null;
@@ -810,9 +803,10 @@ export type PlanReconciliation = {
   aCreer: VerificationGenere[];
   /** Lignes existantes dont au moins un champ change. */
   aMettreAJour: MiseAJourOccurrence[];
-  /** Lignes devenues non applicables mais porteuses de preuve : marquées,
-   *  jamais supprimées. */
-  aArchiver: { id: string; libelleObligation: string }[];
+  /** Lignes devenues non applicables mais porteuses de preuve : datées
+   *  (`archiveLe`), jamais supprimées. Le libellé n'y figure plus — c'est un
+   *  champ qui porte l'archivage depuis le N3 de l'ADR-034, plus un préfixe. */
+  aArchiver: { id: string }[];
   /** Lignes devenues non applicables et vides de toute preuve : supprimables
    *  sans perte. */
   aSupprimer: string[];
@@ -1296,7 +1290,21 @@ export function reconcilierCalendrier(
       memeInstant(cible.datePrevue, ex.datePrevue) &&
       memeInstant(cible.dateRealisee, ex.dateRealisee) &&
       cible.statut === ex.statut &&
-      cible.prescriptionId === (ex.prescriptionId ?? null);
+      cible.prescriptionId === (ex.prescriptionId ?? null) &&
+      // UNE LIGNE ARCHIVÉE N'EST JAMAIS « INCHANGÉE », puisqu'on vient de la
+      // regénérer : son obligation s'applique de nouveau, donc `archiveLe` doit
+      // tomber. Et il ne tombe QUE par une mise à jour — `calendrier/actions.ts`
+      // écrit `archiveLe: null` dans le `data` de chaque entrée de
+      // `aMettreAJour`, nulle part ailleurs. Sans cette clause, une ligne dont
+      // tous les autres champs sont déjà alignés repart en `inchangees` et
+      // reste barrée à perpétuité sur une obligation applicable : invisible au
+      // calendrier, absente de tous les comptes.
+      //
+      // Le préfixe de libellé masquait le cas : il vivait dans un champ que
+      // cette comparaison lit, donc une ligne barrée différait toujours du
+      // référentiel. En le déplaçant dans un champ propre (ADR-034, N3), le
+      // désarchivage a cessé d'être un effet de bord du libellé — il se dit ici.
+      (ex.archiveLe ?? null) === null;
 
     if (identique) plan.inchangees += 1;
     else plan.aMettreAJour.push(cible);
@@ -1354,6 +1362,9 @@ export function reconcilierCalendrier(
       continue;
     }
 
+    // L'ARCHIVAGE EST UNE DATE, plus un préfixe de libellé (ADR-034, N3) :
+    // `plan.aArchiver` ne porte donc plus que des identifiants, et la ligne
+    // garde son libellé tel que le référentiel l'a écrit.
     if (!porteUneTrace) {
       // CE QUE CETTE SUPPRESSION LAISSE PASSER, et il vaut mieux l'écrire que
       // le redécouvrir : désactiver puis réactiver un appareil BLANCHIT le
@@ -1370,11 +1381,8 @@ export function reconcilierCalendrier(
       // ligne qui n'atteste de rien, contre la règle — établie et éprouvée —
       // qu'une ligne sans preuve « ne dit plus rien et disparaît ».
       plan.aSupprimer.push(ex.id);
-    } else if (!estMarqueeNonApplicable(ex.libelleObligation)) {
-      plan.aArchiver.push({
-        id: ex.id,
-        libelleObligation: marquerNonApplicable(ex.libelleObligation),
-      });
+    } else if (ex.archiveLe == null) {
+      plan.aArchiver.push({ id: ex.id });
     } else {
       plan.inchangees += 1;
     }

@@ -35,7 +35,6 @@ import { prisma } from "@/lib/prisma";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
-import { MARQUEUR_NON_APPLICABLE } from "@/lib/calendrier/marqueur";
 import {
   porteeBatiment,
   toutesLesConditions,
@@ -118,10 +117,10 @@ export default async function EtablissementPage({
           // annonçait « Prochaine échéance — Ne s'applique plus — … » sur une
           // obligation éteinte, et elle consommait une des cinq places.
           //
-          // Le marqueur vit dans le libellé, faute de valeur `archivee` dans
-          // l'enum : le filtre se fait donc en SQL sur le préfixe. C'est laid
-          // et c'est temporaire — l'ADR-034 le remplace par un champ.
-          NOT: { libelleObligation: { startsWith: MARQUEUR_NON_APPLICABLE } },
+          // Un champ, et le filtre redevient lisible (ADR-034, N3). Il lisait
+          // le préfixe « Ne s'applique plus — » dans le libellé, faute de
+          // valeur `archivee` dans l'enum de statut.
+          archiveLe: null,
         },
         porteeBatiment(batimentFiltre),
       ),
@@ -331,6 +330,11 @@ export default async function EtablissementPage({
       libelleObligation: v.libelleObligation,
       datePrevue: v.datePrevue,
       statut: v.statut,
+      // Le `where` ci-dessus n'en ramène aucune d'archivée ; la projection le
+      // transporte quand même, pour que les widgets classent sur le fait et
+      // non sur la confiance qu'ils font à une clause située trois cents
+      // lignes plus haut (ADR-034).
+      archiveLe: v.archiveLe,
       // La source de la prescription traverse jusqu'au board, sans quoi le
       // marquage contractuel n'y paraît jamais (ADR-032). La requête la
       // chargeait déjà et le type l'acceptait : c'est cette projection, entre

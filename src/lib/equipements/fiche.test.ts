@@ -32,6 +32,13 @@ function fiche(
       statut: v.statut ?? "planifiee",
       datePrevue: jour(v.datePrevue),
       dateRealisee: v.dateRealisee ? jour(v.dateRealisee) : null,
+      // `null` = ligne ouverte (ADR-034), et l'omettre ne se voit PAS : la
+      // fiche est fabriquée par un `as unknown as`, qui rend le champ
+      // manquant invisible au compilateur. À l'exécution, `archiveLe` vaut
+      // alors `undefined`, les prédicats testent `!== null` — et toute ligne
+      // de ce fichier se lisait archivée, donc `lecturesCalendrier` ne rendait
+      // plus rien et la fiche affichait un appareil sans aucune échéance.
+      archiveLe: null,
       periodicite: v.periodicite ?? "annuelle",
       rapports: [],
       actions: [],
@@ -134,6 +141,8 @@ function ficheRiche(o: {
       statut: v.statut ?? "planifiee",
       datePrevue: jour(v.datePrevue),
       dateRealisee: v.dateRealisee ? jour(v.dateRealisee) : null,
+      // Cf. `fiche()` ci-dessus : le cast masque l'omission au compilateur.
+      archiveLe: null,
       periodicite: "annuelle",
       rapports: (v.rapports ?? []).map((r) => ({
         id: r.id,

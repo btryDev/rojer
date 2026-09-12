@@ -120,10 +120,18 @@ export type EntreeRecos = {
     id: string;
     statut: "a_planifier" | "planifiee" | "depassee" | string;
     datePrevue: Date;
-    /** Présente dès qu'un rapport a été déposé. Absente = non réalisée :
-     *  les prédicats partagés en ont besoin pour ne jamais compter en
-     *  retard une occurrence déjà couverte par une preuve. */
+    /** COLONNE GELÉE (ADR-034) : plus écrite, et plus lue par aucun prédicat
+     *  depuis le N3. Restée optionnelle le temps que ses porteurs la lâchent. */
     dateRealisee?: Date | null;
+    /**
+     * `null` = ligne ouverte (ADR-034). **Requis, à la différence de
+     * `dateRealisee`**, et la différence est le tout de ce champ : une entrée
+     * archivée que le moteur prendrait pour active produit une carte
+     * « échéance dépassée » sur une obligation éteinte. Optionnel, il vaudrait
+     * `null` par défaut — c'est-à-dire « pas archivée », le faux négatif muet
+     * que l'ADR supprime. Requis, l'oubli ne compile pas.
+     */
+    archiveLe: Date | null;
     libelleObligation: string;
     equipementLibelle: string;
   }>;
@@ -195,7 +203,8 @@ export function genererRecommandations(
 
   // Les prédicats partagés raisonnent sur une occurrence complète : les
   // entrées qui ne portent pas `dateRealisee` sont, par construction de
-  // l'appelant, des occurrences ouvertes.
+  // l'appelant, des occurrences ouvertes. `archiveLe`, lui, n'a pas de repli —
+  // il est requis à l'entrée, et arrive donc tel que l'appelant l'a lu.
   const verifs = e.verifications.map((v) => ({
     ...v,
     dateRealisee: v.dateRealisee ?? null,

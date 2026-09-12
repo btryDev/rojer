@@ -17,7 +17,6 @@
 // `new Date()` ici. Cf. ADR-011.
 
 import { debutDuJour, joursCivilsEntre } from "./index";
-import { estMarqueeNonApplicable } from "@/lib/calendrier/marqueur";
 
 // ---------------------------------------------------------------------
 // Primitives
@@ -72,20 +71,31 @@ export function joursDeRetard(date: Date, now: Date): number {
 export type VerificationDatee = {
   statut: string;
   datePrevue: Date;
+  /**
+   * COLONNE GELÉE (ADR-034) : plus écrite depuis le 2026-09-11, et plus lue
+   * par aucun prédicat depuis le N3. Elle reste dans le type le temps que les
+   * lecteurs la laissent tomber ; N5 la retire de la base.
+   */
   dateRealisee: Date | null;
   /**
-   * **Requis, et c'est tout l'objet du champ.** Il porte le marqueur
-   * d'archivage (ADR-012) : une ligne dont l'obligation ne s'applique plus
-   * garde son statut GELÉ dans son dernier état connu, faute de valeur
-   * `archivee` dans l'enum Prisma. Sans ce champ, les prédicats ci-dessous
-   * lisent une ligne archivée gelée sur `depassee` comme un retard réel.
+   * **Requis, et c'est tout l'objet du champ.** La date à laquelle
+   * l'obligation a cessé de s'appliquer à cette ligne (ADR-034) ; `null` =
+   * ligne ouverte. Une ligne archivée ne réclame plus rien, et son statut
+   * reste GELÉ dans son dernier état connu — faute de valeur `archivee` dans
+   * l'enum Prisma —, si bien qu'une ligne gelée sur `depassee` se lit « en
+   * retard » à perpétuité quand personne ne regarde ce champ.
    *
-   * Il était optionnel, et sept surfaces s'en dispensaient — la fiche de
-   * vérification, le serveur MCP, deux widgets, le bandeau de
-   * recommandations, le registre de sécurité en PDF. Chacune annonçait un
-   * retard sur une obligation éteinte, et le PDF l'imprimait dans un
-   * document remis en contrôle. Requis, l'oubli ne compile pas.
+   * Il remplace le préfixe « Ne s'applique plus — » que ces prédicats lisaient
+   * dans le libellé : un fait daté qui se lisait par `startsWith`, et que sept
+   * surfaces oubliaient — la fiche de vérification, le serveur MCP, deux
+   * widgets, le bandeau de recommandations, le registre de sécurité en PDF.
+   * Chacune annonçait un retard sur une obligation éteinte, et le PDF
+   * l'imprimait dans un document remis en contrôle. Requis, l'oubli ne
+   * compile pas.
    */
+  archiveLe: Date | null;
+  /** Le libellé recopié du référentiel. Il ne porte plus aucun marqueur
+   *  depuis le N3 : c'est du texte d'affichage, rien d'autre. */
   libelleObligation: string;
 };
 
@@ -98,7 +108,16 @@ export type VerificationDatee = {
  * premier — avant même de regarder les dates.
  */
 export function estVerificationArchivee(v: VerificationDatee): boolean {
-  return estMarqueeNonApplicable(v.libelleObligation);
+  // `!=` ET NON `!==`, et c'est le sens de l'erreur qui décide. Un appelant qui
+  // oublie `archiveLe: true` dans son `select` — ou une fixture fabriquée par
+  // un cast — passe `undefined` : avec l'égalité stricte, TOUTE ligne se lisait
+  // archivée, les trois compteurs tombaient à zéro et l'écran devenait vide
+  // sans un mot. Deux relectures se sont fait prendre le même jour (2026-09-12).
+  //
+  // Avec `!=`, l'absence se lit « ligne ouverte » : la ligne s'affiche, elle
+  // peut compter un retard de trop, et ça se voit. Une garde qui échoue doit
+  // faire du bruit du côté visible, jamais du côté du silence.
+  return v.archiveLe != null;
 }
 
 /** Statuts marquant une occurrence comme réalisée — le rapport existe,
@@ -137,7 +156,12 @@ export function estVerificationEnRetard(
   now: Date,
 ): boolean {
   if (estVerificationArchivee(v)) return false;
-  if (v.dateRealisee !== null) return false;
+  // `dateRealisee` N'EST PLUS LUE (ADR-034, N3). Elle disait « cette ligne est
+  // soldée », ce qui sortait des comptes une ligne roulée dont l'échéance
+  // suivante était pourtant passée — le défaut du lot 3 bis. Depuis que la
+  // ligne ne porte que l'échéance ouverte, seul un statut réalisé purge
+  // l'échéance, et il n'en reste que sur une obligation sans rendez-vous
+  // suivant, consommée.
   if (STATUTS_REALISES.has(v.statut)) return false;
   if (v.statut === "depassee") return true;
   if (v.statut === "planifiee" || v.statut === "a_planifier") {
@@ -160,7 +184,7 @@ export function estVerificationAPlanifier(
   now: Date,
 ): boolean {
   if (estVerificationArchivee(v)) return false;
-  if (v.dateRealisee !== null) return false;
+  if (STATUTS_REALISES.has(v.statut)) return false;
   if (v.statut !== "a_planifier") return false;
   return !estEnRetard(v.datePrevue, now);
 }
@@ -177,7 +201,7 @@ export function estVerificationAVenir(
   jours: number,
 ): boolean {
   if (estVerificationArchivee(v)) return false;
-  if (v.dateRealisee !== null) return false;
+  if (STATUTS_REALISES.has(v.statut)) return false;
   if (v.statut !== "planifiee") return false;
   return estDansLesProchainsJours(v.datePrevue, now, jours);
 }

@@ -151,8 +151,11 @@ export async function listerBatimentsAvecCharge(
       statut: true,
       datePrevue: true,
       dateRealisee: true,
-      // Marqueur d'archivage (ADR-012) : une ligne dont l'obligation ne
-      // s'applique plus ne pèse pas sur la charge d'un bâtiment.
+      // L'archivage (ADR-034) : une ligne dont l'obligation ne s'applique plus
+      // ne pèse pas sur la charge d'un bâtiment. Il se lisait dans le libellé
+      // par `startsWith` ; c'est un champ depuis le N3, et son absence du
+      // `select` ne compile plus.
+      archiveLe: true,
       libelleObligation: true,
       equipement: { select: { batimentId: true, actif: true } },
     },
@@ -189,6 +192,7 @@ export function grouperChargeParBatiment<
     statut: string;
     datePrevue: Date;
     dateRealisee: Date | null;
+    archiveLe: Date | null;
     libelleObligation: string;
     equipement: { batimentId: string; actif: boolean } | null;
   },

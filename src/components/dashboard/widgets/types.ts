@@ -104,6 +104,14 @@ type VerificationLite = {
   libelleObligation: string;
   datePrevue: Date;
   statut: string;
+  /**
+   * `null` = ligne ouverte (ADR-034). Il traverse jusqu'au board bien que la
+   * requête qui alimente `prochainesVerifs` écarte déjà les lignes archivées :
+   * les widgets classent eux-mêmes leurs lignes, et un classement qui reçoit
+   * une forme sans ce champ redevient aveugle le jour où la requête change.
+   * C'est exactement ce qui s'est produit avec le préfixe de libellé.
+   */
+  archiveLe: Date | null;
   equipement: { libelle: string };
   /**
    * La source de la prescription dont la ligne est née, quand elle en a une.

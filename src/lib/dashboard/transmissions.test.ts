@@ -186,6 +186,7 @@ describe("règles 9-10 : une transmission ne passe jamais devant une urgence", (
         dateRealisee: null,
         libelleObligation: "Vérification en retard",
         equipementLibelle: "Tableau",
+        archiveLe: null,
       },
     ],
     actions: [],

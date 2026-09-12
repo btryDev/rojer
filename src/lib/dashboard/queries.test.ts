@@ -31,6 +31,8 @@ type LigneVerif = {
   statut: string;
   datePrevue: Date;
   dateRealisee: Date | null;
+  /** `null` = ligne ouverte (ADR-034). */
+  archiveLe: Date | null;
   libelleObligation: string;
   /** Les rapports de la ligne (ADR-034), pour la jointure « dernière
    *  réalisation » et les clauses `rapports: { some }`. */
@@ -252,6 +254,11 @@ function verif(p: Partial<LigneVerif> & { id: string }): LigneVerif {
     statut: "planifiee",
     datePrevue: jour(10),
     dateRealisee: null,
+    // Le magasin simulé ne sait pas projeter un `select` : il rend la ligne
+    // entière. Sans cette valeur, `archiveLe` arriverait `undefined` aux
+    // prédicats, qui testent `!== null` — chaque ligne du fichier serait alors
+    // lue comme archivée, et tous les compteurs tomberaient à zéro en silence.
+    archiveLe: null,
     libelleObligation: `Obligation ${p.id}`,
     ...p,
   };
@@ -376,6 +383,87 @@ describe("getDashboardData — vérifications réalisées et archivées", () => 
     expect(d.compteurs.verifsEnRetard).toBe(50);
     expect(d.recommandations).toHaveLength(5);
     expect(d.recommandations.every((r) => r.kind === "verif_depassee")).toBe(true);
+  });
+});
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * L'ARCHIVAGE EST UN CHAMP, ET LES COMPTEURS DU BOARD LE LISENT (ADR-034, N3)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Les deux cas de ce bloc sont symétriques, et c'est ce qui les rend utiles
+ * ensemble : l'un est une ligne que TOUT désigne comme un retard sauf le seul
+ * fait qui compte, l'autre une ligne que son passé pourrait faire passer pour
+ * réglée alors que son échéance ouverte est dépassée. Une garde qui ne tiendrait
+ * que le premier se réparerait en excluant trop, et le second l'attrape.
+ */
+describe("getDashboardData — l'archivage est un champ (ADR-034)", () => {
+  it("une ligne archivée ne pèse sur aucun compteur, même gelée sur « dépassée »", async () => {
+    // Son statut reste figé dans son dernier état connu — l'enum Prisma n'a pas
+    // de valeur `archivee` — et sa date est passée depuis quarante jours. Elle
+    // comptait donc un retard à perpétuité, et sa date étant la plus ancienne,
+    // elle passait en tête de la file de propositions.
+    h.db.verifications.push(
+      verif({
+        id: "eteinte",
+        statut: "depassee",
+        datePrevue: jour(-40),
+        archiveLe: jour(-3),
+      }),
+      verif({ id: "vivante", statut: "depassee", datePrevue: jour(-10) }),
+    );
+
+    const d = await getDashboardData(ETAB);
+
+    expect(d.compteurs.verifsEnRetard).toBe(1);
+    // Ni rangée ailleurs : une ligne archivée sort des quatre ensembles, elle
+    // ne se déplace pas de l'un à l'autre.
+    expect(d.compteurs.verifsAPlanifier).toBe(0);
+    expect(d.compteurs.verifsSous30j).toBe(0);
+    expect(d.compteurs.verifsRealisees12m).toBe(0);
+    // Et la file ne la propose pas : le moteur reçoit `archiveLe` et s'arrête
+    // dessus, au lieu de titrer une carte sur une obligation éteinte. On filtre
+    // sur le genre — le dossier de ce fichier n'a pas de DUERP, et l'amorce qui
+    // le dit a toute sa place à côté.
+    expect(
+      d.recommandations
+        .filter((r) => r.kind === "verif_depassee")
+        .map((r) => r.titre),
+    ).toEqual(["Obligation vivante"]);
+  });
+
+  it("une ligne roulée dont l'échéance ouverte est passée compte bien en retard", async () => {
+    // Depuis l'ADR-034 la ligne ne porte QUE son échéance ouverte : au dépôt
+    // d'un rapport elle roule, garde un statut vivant et reçoit la date
+    // suivante — que celle-ci peut avoir dépassée à son tour. Le contrôle fait
+    // vit sur le rapport, et ne met rien à l'abri : c'est le défaut du lot
+    // 3 bis, où une ligne déjà contrôlée ne comptait plus en retard.
+    h.db.verifications.push(
+      verif({
+        id: "roulee",
+        statut: "planifiee",
+        datePrevue: jour(-2),
+        // La colonne gelée porte encore une date : c'est le cas d'une ligne
+        // d'avant que la réconciliation n'a pas remise au modèle, que la
+        // requête traite explicitement en repli. Elle est ici pour que le test
+        // rougisse si un prédicat se remet à la lire — c'était la règle
+        // d'hier, et elle taisait ce retard.
+        dateRealisee: jour(-30),
+        rapports: [{ dateRapport: jour(-30), resultat: "conforme" }],
+      }),
+    );
+
+    const d = await getDashboardData(ETAB);
+
+    expect(d.compteurs.verifsEnRetard).toBe(1);
+    // L'échéance ouverte prime : la ligne est comptée là, et nulle part
+    // ailleurs — sans quoi elle diluerait le retard au dénominateur du score.
+    expect(d.compteurs.verifsRealisees12m).toBe(0);
+    // Le rapport, lui, reste un fait déposé et se compte comme tel.
+    expect(d.compteurs.rapports12m).toBe(1);
+    expect(
+      d.recommandations.filter((r) => r.kind === "verif_depassee"),
+    ).toHaveLength(1);
   });
 });
 

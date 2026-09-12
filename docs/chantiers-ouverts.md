@@ -1453,7 +1453,9 @@ reprendre » de N4~~ faite aussi (`beac7c9`) : `dateRealisee` n'est plus écrite
 la dernière réalisation se lit sur le dernier rapport. **Relecture à trois le
 2026-09-12** : un défaut bloquant (supprimer les rapports du plus ancien au plus
 récent blanchissait le retard) et cinq régressions corrigés, le score tranché —
-une ligne compte une fois, l'échéance ouverte prime. Restent N3, la moitié
+une ligne compte une fois, l'échéance ouverte prime. ~~N3~~ fait le 2026-09-12 :
+l'archivage est un champ (`archiveLe`), les prédicats ne lisent plus la colonne
+gelée, et une migration a retiré le préfixe des libellés. Restent la moitié
 « simplifiés » de N4, N5 — et la **mesure de la baisse du score** que l'ADR
 demande avant de fusionner.
 

@@ -185,10 +185,14 @@ describe("compterEtatCalendrier", () => {
     datePrevue: jour(datePrevue),
     dateRealisee: dateRealisee ? jour(dateRealisee) : null,
     salarieId,
-    // Le mock rend la ligne telle quelle : sans ce champ, le prédicat
-    // d'archivage n'a rien à lire et la lecture échoue. C'est voulu — le
-    // `select` de production l'emporte, et un jour où il cesserait de le
-    // faire, ce test le dirait plutôt que de compter faux en silence.
+    // `null` = ligne OUVERTE. C'est CE champ que lit le prédicat d'archivage
+    // depuis l'ADR-034 (N3), et l'omettre ne se voyait pas : le mock rend la
+    // ligne telle quelle, `undefined !== null` est vrai, donc TOUTES les lignes
+    // passaient pour archivées et les trois compteurs tombaient à zéro pendant
+    // que `realisees12m` et `toutesParType` — calculés hors du filtre — restaient
+    // justes. Un faux vert bien plus discret qu'un rouge.
+    archiveLe: null,
+    // Plus qu'un texte d'affichage : il ne décide plus d'aucun classement.
     libelleObligation: "Vérification périodique",
   });
 
@@ -266,12 +270,32 @@ describe("compterEtatCalendrier", () => {
   });
 
   it("ne tient pas pour en retard une occurrence déjà réalisée", async () => {
+    // Le fait de réalisation se lit sur le STATUT depuis l'ADR-034. L'intention
+    // du test ne bouge pas — un contrôle fait ne compte pas en retard —, sa
+    // fixture si : elle portait `depassee` + une `dateRealisee`, et c'est cette
+    // colonne-là qui la sauvait.
     prismaMock.verification.findMany.mockResolvedValue([
-      verif("depassee", "2026-01-01", "2026-01-15"),
+      verif("realisee_conforme", "2026-01-01", "2026-01-15"),
     ]);
     const etat = await compterEtatCalendrier("etab-1", NOW);
     expect(etat.enRetard).toBe(0);
     expect(etat.realisees12m).toBe(1);
+  });
+
+  it("compte en retard une ligne roulée dont l'échéance ouverte est passée", async () => {
+    // Le pendant, et le défaut du lot 3 bis vu depuis l'en-tête du calendrier :
+    // la ligne porte la réalisation d'un cycle antérieur ET une échéance
+    // ouverte dépassée. Tant que `dateRealisee` était lue, elle sortait des
+    // quatre ensembles — le compteur affichait « 0 en retard » pendant que la
+    // grille peignait la ligne en rouge.
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif("depassee", "2026-01-01", "2025-01-15"),
+    ]);
+    const etat = await compterEtatCalendrier("etab-1", NOW);
+    expect(etat.enRetard).toBe(1);
+    // Et elle n'est comptée qu'UNE fois : l'échéance ouverte prime, donc elle
+    // n'entre pas aussi dans l'historique réalisé.
+    expect(etat.realisees12m).toBe(0);
   });
 });
 

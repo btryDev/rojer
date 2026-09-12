@@ -17,9 +17,10 @@ function verif(
     // gelée, que la répartition lit en repli (ADR-034). Le cas « rapport » a
     // son propre test plus bas.
     derniereRealisation: null as Date | null,
-    // Requis depuis que le marqueur d'archivage se lit à la racine des
-    // prédicats. Nu = ligne ACTIVE ; le cas archivé a son propre test, qui
-    // passe un libellé marqué.
+    // `null` = ligne ACTIVE. L'archivage est un CHAMP depuis l'ADR-034 (N3),
+    // plus un préfixe de libellé : le cas archivé a son propre test, qui pose
+    // une date ici et laisse le libellé intact.
+    archiveLe: null as Date | null,
     libelleObligation: "Vérification périodique",
   };
 }
@@ -105,15 +106,62 @@ describe("repartirVerifications", () => {
     expect(etat.realisees12m).toHaveLength(1);
   });
 
-  it("ne compte jamais une occurrence réalisée comme en retard", () => {
-    // La preuve prime sur l'état : un rapport existe, le statut n'a pas été
-    // rafraîchi, l'échéance est loin derrière.
-    const etat = repartirVerifications(
-      [verif("planifiee", "2026-01-05T00:00:00Z", "2026-01-06T00:00:00Z")],
-      NOW,
-    );
+  it("ne compte jamais une occurrence au statut réalisé comme en retard", () => {
+    // L'INTENTION A SURVÉCU, SA PREMIÈRE RÉDACTION NON. Elle posait une ligne
+    // `planifiee` portant une `dateRealisee` et attendait qu'elle sorte des
+    // retards — « la preuve prime sur l'état ». C'est ce que l'ADR-034 a
+    // retiré : la colonne ne purge plus rien, et le cas « échéance ouverte
+    // dépassée sur un appareil contrôlé », trois tests plus bas, exige
+    // désormais l'inverse sur cette même forme.
+    //
+    // Ce qui reste vrai : une obligation CONSOMMÉE — sans rendez-vous suivant,
+    // donc au statut réalisé — n'est jamais en retard, si loin que soit son
+    // échéance d'origine, et sa réalisation compte dans la fenêtre.
+    const consommee = {
+      ...verif("realisee_conforme", "2026-01-05T00:00:00Z"),
+      derniereRealisation: new Date("2026-01-06T00:00:00Z"),
+    };
+
+    const etat = repartirVerifications([consommee], NOW);
+
     expect(etat.enRetard).toHaveLength(0);
     expect(etat.realisees12m).toHaveLength(1);
+  });
+
+  it("une ligne archivée sort des retards et garde sa preuve (ADR-034)", () => {
+    // LE DOSSIER DE CONFORMITÉ EST REMIS EN CONTRÔLE. Le statut d'une ligne
+    // archivée reste GELÉ dans son dernier état connu — l'enum Prisma n'a pas
+    // de valeur `archivee` —, ici « dépassée » : sans lecture de `archiveLe`,
+    // le document annonce un retard sur une obligation éteinte, et le score
+    // qu'il imprime en tient compte.
+    //
+    // Sa réalisation, elle, reste comptée : une preuve ne s'efface pas parce
+    // que l'obligation a cessé de s'appliquer.
+    const archivee = {
+      ...verif("depassee", "2026-02-01T00:00:00Z"),
+      archiveLe: new Date("2026-03-15T00:00:00Z"),
+      derniereRealisation: new Date("2026-01-20T00:00:00Z"),
+    };
+
+    const etat = repartirVerifications([archivee], NOW);
+
+    expect(etat.enRetard).toHaveLength(0);
+    expect(etat.aPlanifier).toHaveLength(0);
+    expect(etat.aVenir).toHaveLength(0);
+    expect(etat.realisees12m).toHaveLength(1);
+    expect(etat.total).toBe(1);
+  });
+
+  it("et une ligne archivée sans réalisation ne compte nulle part", () => {
+    // Le pendant du cas précédent : rien à prouver, rien à faire. Elle ne doit
+    // pas entrer au dénominateur du score, où elle pèserait sans jamais
+    // pouvoir être satisfaite.
+    const archivee = {
+      ...verif("depassee", "2026-02-01T00:00:00Z"),
+      archiveLe: new Date("2026-03-15T00:00:00Z"),
+    };
+
+    expect(repartirVerifications([archivee], NOW).total).toBe(0);
   });
 
   it("les quatre ensembles restent disjoints (pas de double compte)", () => {

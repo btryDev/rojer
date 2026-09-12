@@ -11,7 +11,12 @@ import { classerVerification, etatDuRendezVous } from "./etats";
 const NOW = new Date("2026-08-19T10:00:00.000Z");
 const jours = (n: number) => new Date(NOW.getTime() + n * 86_400_000);
 
-const ARCHIVEE = "Ne s'applique plus — Vérification périodique";
+/**
+ * L'archivage est une DATE depuis l'ADR-034 (N3), plus un préfixe de libellé :
+ * le jour où l'obligation a cessé de s'appliquer à cette ligne. Le libellé des
+ * fixtures archivées est donc NORMAL — c'est le champ, et lui seul, qui archive.
+ */
+const ARCHIVE_LE = new Date("2026-07-01T00:00:00.000Z");
 
 /**
  * Un cycle SOLDÉ : réalisée il y a 245 jours, prochaine échéance dans 120.
@@ -21,6 +26,7 @@ const ARCHIVEE = "Ne s'applique plus — Vérification périodique";
 const soldee = {
   statut: "realisee_conforme",
   dateRealisee: jours(-245),
+  archiveLe: null,
   datePrevue: jours(120),
   libelleObligation: "Vérification périodique",
   periodicite: "annuelle",
@@ -53,6 +59,7 @@ describe("etatDuRendezVous", () => {
     const ouverte = {
       statut: "planifiee",
       dateRealisee: null,
+      archiveLe: null,
       datePrevue: jours(10),
       libelleObligation: "Vérification périodique",
       periodicite: "annuelle",
@@ -74,6 +81,7 @@ describe("etatDuRendezVous", () => {
     const oneShot = {
       statut: "realisee_conforme",
       dateRealisee: jours(-200),
+      archiveLe: null,
       datePrevue: jours(-185),
       libelleObligation: "Vérification à la mise en service",
       periodicite: "mise_en_service_uniquement",
@@ -87,7 +95,7 @@ describe("etatDuRendezVous", () => {
 
   it("une ligne archivée reste archivée, quelle que soit sa date", () => {
     expect(
-      etatDuRendezVous({ ...soldee, libelleObligation: ARCHIVEE }, NOW),
+      etatDuRendezVous({ ...soldee, archiveLe: ARCHIVE_LE }, NOW),
     ).toBe("archivee");
   });
 });
@@ -104,13 +112,17 @@ describe("classerVerification — lignes archivées", () => {
           statut: "depassee",
           datePrevue: jours(-30),
           dateRealisee: null,
-          libelleObligation: ARCHIVEE,
+          archiveLe: ARCHIVE_LE,
+          libelleObligation: "Vérification périodique",
         },
         NOW,
       ),
     ).toBe("archivee");
   });
 
+  // Le témoin, et il compte double depuis que l'archivage est un champ : les
+  // deux fixtures ne diffèrent plus QUE par `archiveLe`. Un libellé identique
+  // des deux côtés interdit qu'un prédicat retombe sur le texte.
   it("la même ligne NON archivée est bien « enRetard »", () => {
     expect(
       classerVerification(
@@ -118,6 +130,7 @@ describe("classerVerification — lignes archivées", () => {
           statut: "depassee",
           datePrevue: jours(-30),
           dateRealisee: null,
+          archiveLe: null,
           libelleObligation: "Vérification périodique",
         },
         NOW,

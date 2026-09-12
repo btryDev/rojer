@@ -1540,16 +1540,11 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
   // retard. Avec la division par 86 400 000, la carte virait au rouge
   // l'après-midi du jour dit, sans que rien n'ait changé.
   const { nombre, legende } = compteARebours(v.datePrevue, aujourdhui);
-  // `libelleObligation` porte le marqueur d'archivage : sans lui, une ligne
-  // dont l'obligation ne s'applique plus — gelée sur `depassee`, donc la plus
+  // `archiveLe` porte l'archivage (ADR-034) : sans lui, une ligne dont
+  // l'obligation ne s'applique plus — gelée sur `depassee`, donc la plus
   // ancienne, donc première du tri — s'affichait ici en compte à rebours rouge.
   const enRetard = estVerificationEnRetard(
-    {
-      statut: v.statut,
-      datePrevue: v.datePrevue,
-      dateRealisee: null,
-      libelleObligation: v.libelleObligation,
-    },
+    { ...v, dateRealisee: null },
     aujourdhui,
   );
 

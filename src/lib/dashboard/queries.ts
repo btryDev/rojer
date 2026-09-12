@@ -268,9 +268,10 @@ export async function compterVerifsParEquipement(
         datePrevue: true,
         dateRealisee: true,
         periodicite: true,
-        // Le libellé porte le marqueur d'archivage (ADR-012) : sans lui,
-        // `lecturesCalendrier` compte encore le rendez-vous suivant d'une
-        // obligation qui ne s'applique plus.
+        // Sans lui, `lecturesCalendrier` compte encore le rendez-vous suivant
+        // d'une obligation qui ne s'applique plus (ADR-034). Le fait se lisait
+        // dans le libellé, il a maintenant sa colonne.
+        archiveLe: true,
         libelleObligation: true,
       },
     }),
@@ -386,7 +387,9 @@ export async function compterObligationsParMois(
         dateRealisee: true,
         statut: true,
         periodicite: true,
-        // Cf. ci-dessus : le marqueur d'archivage se lit dans le libellé.
+        // Cf. ci-dessus : l'archivage est un champ (ADR-034). Sans lui, une
+        // obligation éteinte continue de peindre des barres.
+        archiveLe: true,
         libelleObligation: true,
       },
     }),
@@ -686,6 +689,10 @@ export const getDashboardData = cache(async function getDashboardData(
         statut: true,
         datePrevue: true,
         dateRealisee: true,
+        // L'archivage (ADR-034). Il décide des quatre compteurs, du score et
+        // de la file de propositions : une ligne éteinte gelée sur `depassee`
+        // les faussait tous les trois d'un coup.
+        archiveLe: true,
         libelleObligation: true,
         // La source de la prescription, pour que le board dise ce qu'une
         // ligne contractuelle est (ADR-032). Le tableau de bord est l'écran
@@ -805,6 +812,7 @@ export const getDashboardData = cache(async function getDashboardData(
           statut: v.statut,
           datePrevue: v.datePrevue,
           dateRealisee: v.dateRealisee,
+          archiveLe: v.archiveLe,
           libelleObligation: v.libelleObligation,
           equipementLibelle: libellePorteur(v),
         })),

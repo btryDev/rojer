@@ -89,6 +89,10 @@ export async function etatVerificationsParEquipement(
         statut: true,
         datePrevue: true,
         dateRealisee: true,
+        // Sans lui, une ligne dont l'obligation ne s'applique plus (ADR-034)
+        // reste comptée sur la carte de son appareil, avec le statut gelé où
+        // l'archivage l'a laissée.
+        archiveLe: true,
         periodicite: true,
       },
       orderBy: { datePrevue: "asc" },
@@ -109,6 +113,9 @@ export function repartirParEquipement(
     statut: string;
     datePrevue: Date;
     dateRealisee: Date | null;
+    /** `null` = ligne ouverte (ADR-034). `lecturesCalendrier` ne rend rien
+     *  d'une ligne archivée, hors la preuve qu'elle porte. */
+    archiveLe: Date | null;
     /** Le dernier rapport réalisé (ADR-034) : c'est lui qui fait `derniere`
      *  et `faites`, la ligne n'en porte plus. */
     derniereRealisation: Date | null;

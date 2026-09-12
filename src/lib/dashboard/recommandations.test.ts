@@ -67,6 +67,7 @@ describe("genererRecommandations — tri par urgence", () => {
           datePrevue: dateDecalee(-10),
           libelleObligation: "Vérification élec",
           equipementLibelle: "TGBT",
+          archiveLe: null,
         },
       ],
       actions: [
@@ -93,6 +94,7 @@ describe("genererRecommandations — tri par urgence", () => {
           datePrevue: dateDecalee(-1),
           libelleObligation: "VMC",
           equipementLibelle: "CTA",
+          archiveLe: null,
         },
         {
           id: "v-ancien",
@@ -100,6 +102,7 @@ describe("genererRecommandations — tri par urgence", () => {
           datePrevue: dateDecalee(-30),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
+          archiveLe: null,
         },
       ],
     };
@@ -114,6 +117,7 @@ describe("genererRecommandations — tri par urgence", () => {
       datePrevue: dateDecalee(-i),
       libelleObligation: `Vérif ${i}`,
       equipementLibelle: "X",
+      archiveLe: null,
     }));
     const e: EntreeRecos = { ...baseEntree(), verifications: verifs };
     const recs = genererRecommandations(e, { now: NOW });
@@ -144,6 +148,7 @@ describe("genererRecommandations — catégories", () => {
           datePrevue: dateDecalee(3),
           libelleObligation: "Contrôle alarme",
           equipementLibelle: "SSI",
+          archiveLe: null,
         },
       ],
     };
@@ -161,6 +166,7 @@ describe("genererRecommandations — catégories", () => {
           datePrevue: dateDecalee(30),
           libelleObligation: "Contrôle",
           equipementLibelle: "X",
+          archiveLe: null,
         },
       ],
     };
@@ -272,6 +278,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(-40),
           libelleObligation: "Vérification élec",
           equipementLibelle: "TGBT",
+          archiveLe: null,
         },
       ],
     };
@@ -290,6 +297,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(-3),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
+          archiveLe: null,
         },
       ],
     };
@@ -312,6 +320,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(-107),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
+          archiveLe: null,
         },
       ],
     };
@@ -332,6 +341,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(-40),
           libelleObligation: "Vérification élec",
           equipementLibelle: "TGBT",
+          archiveLe: null,
         },
       ],
     };
@@ -354,6 +364,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(0),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
+          archiveLe: null,
         },
       ],
     };
@@ -364,7 +375,34 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
     ).toBe(false);
   });
 
-  it("ignore une occurrence déjà réalisée, même datée d'hier", () => {
+  it("ignore une occurrence dont le STATUT dit qu'elle a eu lieu", () => {
+    // Depuis l'ADR-034, c'est le statut — et lui seul — qui purge l'échéance.
+    // Il n'en reste un de réalisé que sur une obligation sans rendez-vous
+    // suivant, consommée.
+    const e: EntreeRecos = {
+      ...baseEntree(),
+      verifications: [
+        {
+          id: "v1",
+          statut: "realisee_conforme",
+          datePrevue: dateDecalee(-1),
+          libelleObligation: "Contrôle fait",
+          equipementLibelle: "TGBT",
+          archiveLe: null,
+        },
+      ],
+    };
+    expect(genererRecommandations(e, { now: NOW })).toHaveLength(0);
+  });
+
+  it("propose une ligne roulée dont l'échéance ouverte est passée, colonne gelée ou non", () => {
+    // CE TEST DISAIT L'INVERSE, et c'était juste sous l'ancien modèle : une
+    // `dateRealisee` renseignée suffisait à sortir la ligne des comptes. Depuis
+    // que la ligne ne porte que son échéance OUVERTE (ADR-034), elle roule au
+    // dépôt d'un rapport et garde un statut vivant ; la colonne est gelée, plus
+    // aucun prédicat ne la lit. Une ligne contrôlée l'an dernier dont
+    // l'échéance suivante est dépassée est un retard — c'est le défaut du lot
+    // 3 bis, qui la taisait.
     const e: EntreeRecos = {
       ...baseEntree(),
       verifications: [
@@ -375,10 +413,13 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           dateRealisee: dateDecalee(-1),
           libelleObligation: "Contrôle fait",
           equipementLibelle: "TGBT",
+          archiveLe: null,
         },
       ],
     };
-    expect(genererRecommandations(e, { now: NOW })).toHaveLength(0);
+    const recs = genererRecommandations(e, { now: NOW });
+    expect(recs).toHaveLength(1);
+    expect(recs[0].kind).toBe("verif_depassee");
   });
 
   it("retient une vérification planifiée aujourd'hui comme « proche »", () => {
@@ -391,6 +432,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(0),
           libelleObligation: "Contrôle alarme",
           equipementLibelle: "SSI",
+          archiveLe: null,
         },
       ],
     };
@@ -454,6 +496,7 @@ describe("genererRecommandations — amorçage (règles 6-8)", () => {
           datePrevue: dateDecalee(60),
           libelleObligation: "Vérif élec",
           equipementLibelle: "TGBT",
+          archiveLe: null,
         },
       ],
     };
@@ -474,6 +517,7 @@ describe("genererRecommandations — amorçage (règles 6-8)", () => {
           datePrevue: dateDecalee(-10),
           libelleObligation: "Vérif élec",
           equipementLibelle: "TGBT",
+          archiveLe: null,
         },
       ],
     };
@@ -510,6 +554,7 @@ describe("genererRecommandations — href", () => {
           datePrevue: dateDecalee(-5),
           libelleObligation: "Test",
           equipementLibelle: "E",
+          archiveLe: null,
         },
       ],
     };

@@ -19,7 +19,6 @@ import {
   estVerificationEnRetard,
   type VerificationDatee,
 } from "@/lib/dates/retard";
-import { estMarqueeNonApplicable } from "@/lib/calendrier/marqueur";
 
 /** Répartition en quatre catégories **disjointes**. */
 export type EtatVerifications<T> = {
@@ -74,15 +73,20 @@ export function repartirVerifications<
   // statut, lui, reste gelé dans son dernier état connu — faute de valeur
   // `archivee` dans l'enum Prisma —, si bien qu'une ligne gelée sur
   // « dépassée » comptait un retard à perpétuité.
-  const actives = verifs.filter(
-    (v) => !("libelleObligation" in v && typeof v.libelleObligation === "string"
-      ? estMarqueeNonApplicable(v.libelleObligation)
-      : false),
-  );
-
-  const enRetard = actives.filter((v) => estVerificationEnRetard(v, now));
-  const aPlanifier = actives.filter((v) => estVerificationAPlanifier(v, now));
-  const aVenir = actives.filter((v) =>
+  // PAS DE FILTRE D'ARCHIVAGE ICI, et son retrait est un constat de relecture
+  // (2026-09-12) : depuis que l'archivage est un champ (ADR-034, N3), les trois
+  // prédicats s'arrêtent dessus eux-mêmes. Le filtre qui vivait ici disait la
+  // même chose une seconde fois — et aucun test ne pouvait le tenir seul, donc
+  // il aurait pu disparaître sans bruit. Une garde qu'aucun test ne tient et
+  // qui n'ajoute rien est un commentaire déguisé : elle part.
+  //
+  // `realisees12m`, plus bas, part bien de `verifs` et NON des lignes
+  // ouvertes : une ligne archivée qui porte une réalisation dans la fenêtre la
+  // garde. Une preuve ne s'efface pas parce que l'obligation a cessé de
+  // s'appliquer.
+  const enRetard = verifs.filter((v) => estVerificationEnRetard(v, now));
+  const aPlanifier = verifs.filter((v) => estVerificationAPlanifier(v, now));
+  const aVenir = verifs.filter((v) =>
     estVerificationAVenir(v, now, JOURS_HORIZON_PROCHE),
   );
   const dejaComptees = new Set<T>([...enRetard, ...aPlanifier, ...aVenir]);

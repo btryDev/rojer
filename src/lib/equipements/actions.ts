@@ -295,9 +295,10 @@ export async function supprimerEquipement(
 
 /**
  * Remet en service un équipement désactivé. Les obligations correspondantes
- * réapparaissent au calendrier, et les lignes de suivi archivées reprennent
- * leur libellé normal (le marqueur « Ne s'applique plus » est réécrit depuis
- * le référentiel par la régénération).
+ * réapparaissent au calendrier, et les lignes de suivi archivées rouvrent : la
+ * régénération remet leur `archiveLe` à `null` (ADR-034, N3). Le libellé, lui,
+ * n'a jamais changé — c'est un préfixe texte qui portait l'archivage jusqu'au
+ * N3, et il a disparu.
  */
 export async function reactiverEquipement(
   id: string,

@@ -339,10 +339,14 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   côté plan comme dans la clause SQL du `deleteMany` ; le serveur MCP, la fiche
   et le registre lisent le **statut** et non la colonne éteinte ; la tuile
   « fait le » porte le résultat de son rapport.
-  **Reste ouvert, à traiter au N3** : une obligation qui passe en
-  `periodicite: "autre"` cesse d'être générée ; sa ligne, roulée, garde une
-  échéance ouverte que plus rien ne solde. Le garde-fou d'applicabilité la
-  laisse telle quelle, et elle passera « en retard » au cycle suivant.
+  **Reste ouvert APRÈS le N3, et il faut le dire puisque le N3 devait s'en
+  charger** : une obligation qui passe en `periodicite: "autre"` cesse d'être
+  générée ; sa ligne, roulée, garde une échéance ouverte que plus rien ne
+  solde. Le garde-fou d'applicabilité la laisse telle quelle, et elle passera
+  « en retard » au cycle suivant. Le N3 a traité l'archivage et les prédicats,
+  pas ce cas — il demande de faire remonter à la réconciliation quelles
+  obligations n'engendrent plus de rendez-vous, ce qu'elle ne sait pas lire
+  aujourd'hui. À prendre au N4 ou dans un lot à lui.
 - **Corrections du 2026-09-12, second tour** — la relecture de contrôle a
   rouvert le défaut bloquant : la transmission au seul successeur, et la règle
   « la plus tardive des deux dates » au moment de rouvrir, PERDAIENT l'échéance
@@ -359,7 +363,33 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   comptent désormais de vrais rapports (`compteurs.rapports12m`), le compte de
   LIGNES qu'elles affichaient tombant à zéro sur un dossier tenu à jour dont
   toutes les échéances sont proches.
-- **N3 — Les prédicats** : `retard.ts` cesse de lire `dateRealisee` ;
+- ~~**N3 — Les prédicats**~~ — **fait le 2026-09-12**, à quatre (trois agents
+  sur des périmètres disjoints, plus le cœur). `VerificationDatee` exige
+  `archiveLe`, `estVerificationArchivee` le lit, et les trois prédicats
+  cessent de lire `dateRealisee` — seul un statut réalisé purge une échéance,
+  et il n'en reste que sur une obligation sans rendez-vous suivant. `estRealisee`
+  suit. La migration `20260912090000_archivage_par_champ` retire le préfixe des
+  libellés, la date d'abord, le texte ensuite ; vérifiée sur la base locale, y
+  compris rejouée. `marqueur.ts` n'est plus qu'une constante, citée par les deux
+  migrations et leur garde. **Quatre trouvailles à garder en tête :**
+  1. **`undefined !== null` est un piège muet** : un `select` qui oublie
+     `archiveLe` faisait lire TOUTE ligne comme archivée — les trois compteurs
+     à zéro, l'écran vide, sans un mot. Deux relectures s'y sont prises le même
+     jour. `estVerificationArchivee` compare donc en `!=` : l'absence se lit
+     « ligne ouverte », un état visible plutôt qu'un silence.
+  2. **Un défaut réel, masqué par le préfixe** : `identique` ne comparait pas
+     l'archivage, et le préfixe vivait dans un champ qu'elle lit. Une ligne
+     redevenue applicable, alignée par ailleurs, repartait « inchangée » et
+     restait barrée à perpétuité. `identique` compare `archiveLe`.
+  3. **Le filtre d'archivage du PDF est parti** : depuis que les prédicats
+     lisent le champ, il redisait la même chose, et aucun test ne pouvait le
+     tenir seul.
+  4. **Trois tests changeaient de réponse** — « une occurrence réalisée n'est
+     jamais en retard » n'est plus vrai d'une ligne roulée. Réécrits sur la
+     règle neuve, commentaire à l'appui, jamais supprimés en silence. Un
+     `describe` entier a disparu : il éprouvait les fonctions du marqueur, qui
+     n'existent plus.
+- **N3, la version d'origine** : `retard.ts` cesse de lire `dateRealisee` ;
   `estVerificationArchivee` lit `archiveLe` ; `classerVerification` et le
   vocabulaire perdent `archivee`-par-préfixe. Le préfixe est retiré des libellés
   par la migration. **Et la réconciliation doit lire `archiveLe`** (relecture

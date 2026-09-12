@@ -241,6 +241,9 @@ describe("équipements et calendrier", () => {
     periodicite: "annuelle",
     datePrevue: jour("2026-07-01"),
     dateRealisee: null,
+    // `null` = ligne ouverte. L'archivage est un champ depuis l'ADR-034 (N3),
+    // et la requête du serveur le sélectionne en clair.
+    archiveLe: null,
     statut: "planifiee",
     equipement: { libelle: "Extincteur hall", categorie: "EXTINCTEUR" },
     // Le dernier rapport réalisé, tel que la requête le sélectionne (ADR-034).
@@ -276,6 +279,7 @@ describe("équipements et calendrier", () => {
             statut: "planifiee",
             datePrevue: jour("2026-07-01"),
             dateRealisee: null,
+            archiveLe: null,
             libelleObligation: "Vérification périodique",
           },
           // Échéance du jour même : jamais en retard.
@@ -283,6 +287,7 @@ describe("équipements et calendrier", () => {
             statut: "planifiee",
             datePrevue: jour("2026-08-10"),
             dateRealisee: null,
+            archiveLe: null,
             libelleObligation: "Vérification périodique",
           },
         ],
@@ -323,16 +328,59 @@ describe("équipements et calendrier", () => {
     expect(texte).toContain("40 jour(s) de retard");
   });
 
-  it("ne compte jamais une occurrence réalisée comme en retard", async () => {
-    // La preuve prime sur l'état : un rapport déposé purge l'échéance,
-    // même si le statut n'a pas été rafraîchi.
+  it("une obligation éteinte ne s'applique plus, malgré son statut gelé", async () => {
+    // Le statut d'une ligne archivée reste GELÉ dans son dernier état connu —
+    // l'enum Prisma n'a pas de valeur `archivee` —, ici « dépassée ». Sans
+    // lecture de `archiveLe`, l'assistant recevait « en retard, 40 jour(s) de
+    // retard » sur une obligation qui ne s'applique plus, et le répétait au
+    // dirigeant sous un en-tête qui, lui, n'en comptait aucune : la ligne et
+    // son total se contredisaient dans la même réponse.
     prismaMock.verification.findMany.mockResolvedValue([
-      verif({ dateRealisee: jour("2026-07-15") }),
+      verif({ statut: "depassee", archiveLe: jour("2026-07-20") }),
     ]);
 
     const texte = await outil("verifications").executer(ctx, {});
+
+    expect(texte).toContain("ne s'applique plus");
     expect(texte).toContain("aucune en retard");
-    expect(texte).toContain("réalisée le 15/07/2026");
+    expect(texte).not.toContain("jour(s) de retard");
+    // Et le libellé sort NU : le marqueur texte a disparu des libellés au N3,
+    // c'est l'état rendu qui porte le fait.
+    expect(texte).not.toContain("Ne s'applique plus —");
+  });
+
+  it("et elle ne ressort pas non plus dans les prochaines échéances", async () => {
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({
+        statut: "depassee",
+        datePrevue: jour("2026-08-20"),
+        archiveLe: jour("2026-07-20"),
+      }),
+    ]);
+
+    const texte = await outil("verifications").executer(ctx, { horizonJours: 30 });
+    expect(texte).toContain("Aucune vérification");
+  });
+
+  it("une ligne roulée rend son contrôle fait ET son échéance dépassée (ADR-034)", async () => {
+    // CE TEST ATTENDAIT L'INVERSE, et son inverse est devenu faux. Il posait
+    // une ligne `planifiee` portant une `dateRealisee` et exigeait « aucune en
+    // retard » : la colonne purgeait l'échéance. Depuis que la ligne roule au
+    // dépôt, elle ne porte plus que l'échéance OUVERTE — une échéance passée
+    // sur un appareil pourtant contrôlé EST un retard, et l'ancien modèle la
+    // sortait de tous les comptes (le défaut du lot 3 bis).
+    //
+    // Ce qui purge encore une échéance est le statut réalisé d'une obligation
+    // consommée : c'est le test « une obligation ponctuelle déjà faite », plus
+    // bas, qui le tient.
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({ rapports: [{ dateRapport: jour("2026-07-15") }] }),
+    ]);
+
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("dont 1 en retard");
+    expect(texte).toContain("dernière réalisation le 15/07/2026");
+    expect(texte).toContain("40 jour(s) de retard");
   });
 
   it("le dit franchement quand rien ne correspond", async () => {

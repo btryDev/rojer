@@ -34,9 +34,7 @@ import type { DashboardBundle } from "../types";
 // une échéance du jour en « J−1 » vers 14 h, heure de Paris.
 
 function classifier(
-  statut: string,
-  datePrevue: Date,
-  libelleObligation: string,
+  v: DashboardBundle["prochainesVerifs"][number],
   aujourdhui: Date,
 ): { tone: "alerte" | "warn" | "ok"; libelleDate: string } {
   // Même prédicat que partout ailleurs (ADR-011) : le retard commence à
@@ -44,24 +42,19 @@ function classifier(
   // date qui le décide, pas le statut. La liste ne porte que des
   // occurrences non réalisées.
   //
-  // `libelleObligation` n'est pas décoratif : il porte le marqueur
-  // d'archivage. La requête qui alimente ce widget filtre sur le statut et
-  // ne le regarde pas, si bien qu'une ligne archivée gelée sur `depassee`
-  // arrivait ici — et, triée par date croissante, arrivait EN TÊTE, sa date
-  // étant la plus ancienne. Elle s'affichait en alerte, titrée « Ne
-  // s'applique plus — … ».
-  if (
-    estVerificationEnRetard(
-      { statut, datePrevue, dateRealisee: null, libelleObligation },
-      aujourdhui,
-    )
-  ) {
-    return { tone: "alerte", libelleDate: formaterDateCourteFr(datePrevue) };
+  // La LIGNE ENTIÈRE est passée au prédicat, et plus trois champs recopiés :
+  // `archiveLe` porte l'archivage depuis l'ADR-034, et une signature qui
+  // énumère ses champs à la main oublie le suivant. C'est ainsi que le
+  // marqueur précédent — un préfixe dans le libellé — s'est perdu ici : une
+  // ligne archivée gelée sur `depassee` arrivait EN TÊTE du tri par date
+  // croissante, sa date étant la plus ancienne, et s'affichait en alerte.
+  if (estVerificationEnRetard({ ...v, dateRealisee: null }, aujourdhui)) {
+    return { tone: "alerte", libelleDate: formaterDateCourteFr(v.datePrevue) };
   }
-  if (statut === "a_planifier") {
+  if (v.statut === "a_planifier") {
     return { tone: "warn", libelleDate: "—" };
   }
-  return { tone: "ok", libelleDate: formaterDateCourteFr(datePrevue) };
+  return { tone: "ok", libelleDate: formaterDateCourteFr(v.datePrevue) };
 }
 
 export function WidgetProchainesEcheances({
@@ -113,7 +106,7 @@ export function WidgetProchainesEcheances({
     >
       <ul className="m-0 mt-1 flex list-none flex-col p-0">
         {prochainesVerifs.map((v, i) => {
-          const c = classifier(v.statut, v.datePrevue, v.libelleObligation, aujourdhui);
+          const c = classifier(v, aujourdhui);
           // Les trois états que cette liste sait montrer, pris à la table
           // unique : un couple champ/encre réinventé ici a déjà rendu un
           // « à venir » rose dans un écran sur trois.
@@ -238,7 +231,7 @@ function TimelineEcheances({
         </div>
         {/* Markers des échéances */}
         {verifs.map((v) => {
-          const c = classifier(v.statut, v.datePrevue, v.libelleObligation, aujourdhui);
+          const c = classifier(v, aujourdhui);
           const left =
             ((v.datePrevue.getTime() - minPasse) / span) * 100;
           const color =
@@ -274,7 +267,7 @@ function TimelineEcheances({
       {/* Légende / liste compacte */}
       <ul className="flex flex-col gap-1.5">
         {verifs.slice(0, 5).map((v) => {
-          const c = classifier(v.statut, v.datePrevue, v.libelleObligation, aujourdhui);
+          const c = classifier(v, aujourdhui);
           const dotColor =
             c.tone === "alerte"
               ? CHAMP_ETAT.enRetard

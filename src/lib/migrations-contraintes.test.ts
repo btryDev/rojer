@@ -656,6 +656,33 @@ describe("la ligne ne porte que l'échéance ouverte (ADR-034, N1)", () => {
     expect(schema).toMatch(/\n\s+echeanceHonoree\s+DateTime\?\n/);
   });
 
+  it("le lot N3 retire le préfixe des libellés, la date d'abord", () => {
+    const n3 = lireMigrations().find((m) =>
+      m.nom.endsWith("_archivage_par_champ"),
+    );
+    expect(n3, "La migration du lot N3 a disparu.").toBeDefined();
+    const sql = normaliser(n3!.sql);
+    const echappe = MARQUEUR_NON_APPLICABLE.replace(/'/g, "''");
+
+    // Le préfixe EXACT, ici aussi : c'est lui qui décide quelles lignes sont
+    // touchées, et un tiret simple à la place du cadratin n'en toucherait
+    // aucune, sans erreur.
+    expect(sql).toContain(`starts_with("libelleObligation", '${echappe}')`);
+    // 21 caractères — le cadratin en occupe UN, pas trois : `substr` compte en
+    // caractères sous PostgreSQL. Couper à 23 mangerait deux lettres du
+    // libellé de chaque ligne archivée du dossier.
+    expect(sql).toContain(
+      `substr("libelleObligation", ${MARQUEUR_NON_APPLICABLE.length + 1})`,
+    );
+    // L'ORDRE : la date d'abord, le texte ensuite. Interrompue entre les deux,
+    // la migration laisse des lignes marquées ET datées — l'état que le code
+    // sait lire. L'ordre inverse laisserait des lignes archivées que plus rien
+    // ne signale.
+    expect(sql.indexOf('SET "archiveLe"')).toBeLessThan(
+      sql.indexOf('SET "libelleObligation"'),
+    );
+  });
+
   it("rétro-remplit sur le préfixe EXACT du marqueur", () => {
     // Le SQL recopie le préfixe à la main — une migration ne peut pas importer
     // de TypeScript. Un tiret simple à la place du cadratin, une espace en

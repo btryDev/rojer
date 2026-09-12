@@ -177,14 +177,19 @@ export async function compterEtatCalendrier(
         },
         porteeBatiment(filtres.batimentId),
       ),
-      // `libelleObligation` porte le marqueur d'archivage (ADR-012) :
+      // `archiveLe` porte l'archivage depuis l'ADR-034 (N3) :
       // `repartirVerifications` en a besoin pour ne pas compter en retard une
-      // ligne dont l'obligation ne s'applique plus.
+      // ligne dont l'obligation ne s'applique plus. Le libellé, lui, n'est plus
+      // qu'un texte d'affichage — il ne décide plus rien, et l'oublier ici ne
+      // fausserait plus aucun compte ; c'est `archiveLe` qui ne se sélectionne
+      // pas sous peine de rouvrir le défaut. Requis dans `VerificationDatee`,
+      // l'oubli ne compile pas.
       select: {
         id: true,
         statut: true,
         datePrevue: true,
         dateRealisee: true,
+        archiveLe: true,
         libelleObligation: true,
         // Le porteur, pour ventiler par famille (ADR-016) : une ligne à
         // porteur salarié est un titre, pas un contrôle d'appareil.

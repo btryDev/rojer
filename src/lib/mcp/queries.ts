@@ -393,12 +393,17 @@ export async function listerEquipements(
       dateMiseEnService: true,
       actif: true,
       verifications: {
-        // `libelleObligation` sert le marqueur d'archivage, pas l'affichage :
-        // sans lui, `etatDe` lit une ligne éteinte comme une ligne vivante.
+        // `archiveLe` porte l'archivage depuis l'ADR-034 (N3) : sans lui,
+        // `etatDe` lit une ligne éteinte comme une ligne vivante et son statut
+        // gelé sur « dépassée » gonfle le compteur de retards de l'appareil.
+        // Écrit en clair, jamais par une constante partagée : la garde RGPD de
+        // ce serveur relit le SOURCE, et une constante lui cacherait ce qui
+        // sort.
         select: {
           statut: true,
           datePrevue: true,
           dateRealisee: true,
+          archiveLe: true,
           libelleObligation: true,
         },
       },
@@ -433,6 +438,15 @@ export type VerificationLue = {
   periodicite: string;
   datePrevue: Date;
   dateRealisee: Date | null;
+  /**
+   * La date à laquelle l'obligation a cessé de s'appliquer à cette ligne
+   * (ADR-034), `null` tant qu'elle est ouverte.
+   *
+   * Portée jusqu'ici parce que les prédicats partagés la lisent : le statut
+   * d'une ligne archivée reste gelé dans son dernier état connu, et sans ce
+   * champ une ligne gelée sur « dépassée » ressort « en retard » à perpétuité.
+   */
+  archiveLe: Date | null;
   /** La date du dernier rapport réalisé (ADR-034). La ligne ne porte plus que
    *  l'échéance ouverte : c'est ici que l'assistant lit ce qui a été fait. */
   derniereRealisation: Date | null;
@@ -486,6 +500,11 @@ export async function listerVerifications(
       periodicite: true,
       datePrevue: true,
       dateRealisee: true,
+      // L'archivage est un CHAMP depuis l'ADR-034 (N3), plus un préfixe de
+      // libellé : c'est lui qui dit qu'une obligation a cessé de s'appliquer.
+      // En clair, et non par une constante partagée, pour la même raison que
+      // `rapports` plus bas — la garde RGPD relit le source de ce serveur.
+      archiveLe: true,
       statut: true,
       equipement: { select: { libelle: true, categorie: true } },
       // La source de la prescription, et rien d'autre d'elle : de quoi dire
@@ -518,6 +537,7 @@ export async function listerVerifications(
     periodicite: v.periodicite,
     datePrevue: v.datePrevue,
     dateRealisee: v.dateRealisee,
+    archiveLe: v.archiveLe,
     derniereRealisation: derniereRealisation(v.rapports),
     statut: v.statut,
     etat: etatDe(v, now),

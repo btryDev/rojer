@@ -12,11 +12,8 @@ import type { EquipementMatching } from "@/lib/matching/types";
 import {
   cleDeLigne,
   comparerParUrgence,
-  estMarqueeNonApplicable,
   genererProchainesVerifications,
   genererVerificationsDepuisTitres,
-  libelleSansMarqueur,
-  MARQUEUR_NON_APPLICABLE,
   reconcilierCalendrier,
   type OccurrenceExistante,
   type VerificationGenere,
@@ -619,10 +616,9 @@ describe("générateur calendrier — porteur établissement (ADR-022)", () => {
 
     const plan = reconcilierCalendrier([existante], [], { now: NOW });
     expect(plan.aSupprimer).toEqual([]);
-    expect(plan.aArchiver).toHaveLength(1);
-    expect(estMarqueeNonApplicable(plan.aArchiver[0].libelleObligation)).toBe(
-      true,
-    );
+    // L'archivage est une DATE que l'exécutant pose (ADR-034, N3) : le plan ne
+    // porte plus qu'un identifiant, et la ligne garde son libellé de référentiel.
+    expect(plan.aArchiver).toEqual([{ id: "v-pe4" }]);
   });
 });
 
@@ -800,10 +796,7 @@ describe("réconciliation — permanent n'est pas retiré (ADR-023)", () => {
       obligationsEncoreApplicables: new Set(["une-autre"]),
     });
 
-    expect(plan.aArchiver).toHaveLength(1);
-    expect(estMarqueeNonApplicable(plan.aArchiver[0].libelleObligation)).toBe(
-      true,
-    );
+    expect(plan.aArchiver).toEqual([{ id: "v-1" }]);
   });
 });
 
@@ -1476,12 +1469,9 @@ describe("réconciliation — obligations devenues non applicables", () => {
     );
 
     expect(plan.aSupprimer).toEqual([]);
-    expect(plan.aArchiver).toEqual([
-      {
-        id: "v-preuve",
-        libelleObligation: `${MARQUEUR_NON_APPLICABLE}Vérification annuelle de l'installation`,
-      },
-    ]);
+    // Le libellé n'entre plus dans le plan (ADR-034, N3) : la ligne conserve
+    // celui du référentiel, et c'est `archiveLe` que l'exécutant date.
+    expect(plan.aArchiver).toEqual([{ id: "v-preuve" }]);
   });
 
   it("une date de réalisation suffit à interdire la suppression", () => {
@@ -1505,21 +1495,41 @@ describe("réconciliation — obligations devenues non applicables", () => {
   });
 
   it("n'archive pas deux fois la même ligne (idempotence de l'archivage)", () => {
-    const dejaMarquee = ligneExistante({
+    const dejaArchivee = ligneExistante({
       id: "v-preuve",
       obligationId: "retiree",
       equipementId: "eq-1",
-      libelleObligation: `${MARQUEUR_NON_APPLICABLE}Vérification annuelle`,
+      libelleObligation: "Vérification annuelle",
+      archiveLe: new Date("2026-07-01T00:00:00Z"),
       porteUnePreuve: true,
     });
 
-    const plan = reconcilierCalendrier([dejaMarquee], [], { now: NOW });
+    const plan = reconcilierCalendrier([dejaArchivee], [], { now: NOW });
     expect(plan.aArchiver).toEqual([]);
     expect(plan.aSupprimer).toEqual([]);
     expect(plan.inchangees).toBe(1);
   });
 
-  it("retire le marqueur si l'obligation redevient applicable", () => {
+  it("désarchive une ligne dont l'obligation redevient applicable", () => {
+    // GARANTIE (b) DU LOT N3, et le cas est plus étroit qu'il n'y paraît.
+    //
+    // `archiveLe` n'est remis à `null` qu'AU FIL D'UNE MISE À JOUR : c'est
+    // `calendrier/actions.ts` qui l'écrit, dans le `data` de chaque entrée de
+    // `aMettreAJour`, et nulle part ailleurs. Une ligne archivée qui retombe
+    // dans `inchangees` n'est donc jamais désarchivée — elle reste barrée à
+    // perpétuité sur une obligation qui s'applique de nouveau, invisible au
+    // calendrier et absente de tous les comptes.
+    //
+    // Du temps du préfixe, le cas ne pouvait pas se produire : le marqueur
+    // vivait dans `libelleObligation`, que la réconciliation compare, donc une
+    // ligne barrée différait TOUJOURS du référentiel et passait par une mise à
+    // jour. En déplaçant l'archivage dans un champ que `identique` ne regarde
+    // pas, le N3 a rendu ce chemin atteignable — d'où cette garde.
+    //
+    // La fixture est alignée sur le référentiel EXPRÈS : tous les champs
+    // comparés sont déjà à leur valeur cible, si bien que `archiveLe` est la
+    // seule chose qui doive encore changer. C'est le cas que le compte
+    // « inchangée » avale.
     const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
     const eq = fakeEquipement("eq-1");
     const aGenerer = genererProchainesVerifications(
@@ -1534,7 +1544,8 @@ describe("réconciliation — obligations devenues non applicables", () => {
           id: "v-1",
           obligationId: "o1",
           equipementId: "eq-1",
-          libelleObligation: `${MARQUEUR_NON_APPLICABLE}Obligation o1`,
+          libelleObligation: "Obligation o1",
+          archiveLe: new Date("2026-07-01T00:00:00Z"),
           porteUnePreuve: true,
         }),
       ],
@@ -1542,21 +1553,14 @@ describe("réconciliation — obligations devenues non applicables", () => {
       { now: NOW },
     );
 
-    expect(plan.aMettreAJour).toHaveLength(1);
     expect(
-      estMarqueeNonApplicable(plan.aMettreAJour[0].libelleObligation),
-    ).toBe(false);
-  });
-});
-
-describe("marqueur de non-applicabilité", () => {
-  it("est idempotent et réversible", () => {
-    const brut = "Vérification quinquennale";
-    const marque = `${MARQUEUR_NON_APPLICABLE}${brut}`;
-    expect(estMarqueeNonApplicable(brut)).toBe(false);
-    expect(estMarqueeNonApplicable(marque)).toBe(true);
-    expect(libelleSansMarqueur(marque)).toBe(brut);
-    expect(libelleSansMarqueur(brut)).toBe(brut);
+      plan.aMettreAJour,
+      "sans mise à jour, personne n'écrit `archiveLe: null` : la ligne reste barrée pour toujours",
+    ).toHaveLength(1);
+    expect(plan.aMettreAJour[0].id).toBe("v-1");
+    expect(plan.inchangees).toBe(0);
+    // Et elle n'est pas ré-archivée dans la foulée : l'obligation est générée.
+    expect(plan.aArchiver).toEqual([]);
   });
 });
 
@@ -1990,7 +1994,8 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           id: "v-frag",
           obligationId: "frag-vmc",
           equipementId: "eq-1",
-          libelleObligation: "Ne s'applique plus — Fragment",
+          libelleObligation: "Fragment",
+          archiveLe: new Date("2021-02-01T00:00:00Z"),
           dateRealisee: new Date("2021-01-10T00:00:00Z"),
           statut: "realisee_conforme",
           porteUnePreuve: true,

@@ -30,6 +30,10 @@ export function estEnAttenteDeRapport(v: {
   statut: string;
   datePrevue: Date;
   dateRealisee: Date | null;
+  /** L'archivage se lit sur ce champ depuis l'ADR-034 (N3), plus sur un
+   *  préfixe de libellé. Requis : l'oubli ne compile pas, là où un libellé
+   *  non marqué se lisait « ligne vivante » sans que rien ne le signale. */
+  archiveLe: Date | null;
   libelleObligation: string;
 }): boolean {
   return (

@@ -254,7 +254,10 @@ export function classerDate(
  * l'obligation a cessé de s'appliquer.
  */
 export function estRealisee(v: VerificationDatee): boolean {
-  return v.dateRealisee !== null || estStatutRealise(v.statut);
+  // Le statut seul (ADR-034, N3) : `dateRealisee` n'est plus écrite, et une
+  // ligne roulée par un dépôt porte « planifiée » — la lire ici classait
+  // « faite » une ligne dont l'échéance ouverte pouvait être dépassée.
+  return estStatutRealise(v.statut);
 }
 
 /** « Ce contrôle a eu lieu », lu sur le seul statut. Écrit ici une fois pour

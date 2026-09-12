@@ -40,8 +40,10 @@ export type GenerationResult = {
   /** Lignes supprimées : uniquement celles qui ne portaient ni rapport, ni
    *  action corrective, ni date de réalisation. */
   deleted: number;
-  /** Lignes devenues non applicables mais porteuses de preuve : marquées
-   *  « Ne s'applique plus », conservées. */
+  /** Lignes devenues non applicables mais porteuses de preuve : datées
+   *  (`archiveLe`), conservées. Le préfixe « Ne s'applique plus — » qui les
+   *  marquait dans le libellé a disparu avec le N3 de l'ADR-034 — c'est
+   *  l'écran qui le dit désormais, à partir du champ. */
   archived: number;
   /** Lignes que la régénération n'a pas eu à toucher. */
   unchanged: number;
@@ -280,6 +282,9 @@ async function regenererUnePasse(
       realisateurRequis: true,
       datePrevue: true,
       dateRealisee: true,
+      // L'archivage (ADR-034, N3) : sans lui, la réconciliation ne sait plus
+      // qu'une ligne est barrée et la ré-archiverait à chaque passe.
+      archiveLe: true,
       statut: true,
       prescriptionId: true,
       _count: { select: { rapports: true, actions: true } },
@@ -307,6 +312,7 @@ async function regenererUnePasse(
     realisateurRequis: v.realisateurRequis,
     datePrevue: v.datePrevue,
     dateRealisee: v.dateRealisee,
+    archiveLe: v.archiveLe,
     derniereRealisation: dernieresRealisations.get(v.id)?.dateRapport ?? null,
     dernierResultat: dernieresRealisations.get(v.id)?.resultat ?? null,
     // Distinct de `porteUnePreuve`, qui compte aussi les actions : celui-ci
@@ -512,19 +518,18 @@ async function regenererUnePasse(
   }
 
   for (const a of plan.aArchiver) {
-    // L'archivage ne réécrit que le libellé : il ne détruit rien et ne touche
-    // aucun champ factuel, donc il n'a pas à être conditionné sur eux — le
-    // conditionner ferait échouer des archivages parfaitement légitimes.
+    // L'archivage ne pose qu'une DATE (ADR-034, N3) : il ne détruit rien et ne
+    // touche aucun champ factuel, donc il n'a pas à être conditionné sur eux —
+    // le conditionner ferait échouer des archivages parfaitement légitimes.
     // `etablissementId` reste, lui : une écriture par identifiant seul n'a
     // pas à exister sur une table scopée.
     //
-    // `archiveLe` est écrit AVEC le préfixe depuis le lot N1 de l'ADR-034 : les
-    // lecteurs lisent encore le préfixe, ils passeront sur la date au N3, et
-    // entre les deux les deux faits ne doivent pas diverger.
+    // Le libellé ne bouge plus : il reste celui du référentiel, et l'écran qui
+    // veut dire « ne s'applique plus » le lit sur `archiveLe`.
     operations.push(
       prisma.verification.updateMany({
         where: { id: a.id, etablissementId },
-        data: { libelleObligation: a.libelleObligation, archiveLe: new Date() },
+        data: { archiveLe: new Date() },
       }),
     );
     attendus.push(1);

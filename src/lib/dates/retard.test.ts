@@ -162,7 +162,9 @@ function verif(p: Partial<VerificationDatee> = {}): VerificationDatee {
     statut: "planifiee",
     datePrevue: AUJOURDHUI,
     dateRealisee: null,
-    // Nu = ligne ACTIVE. Les cas archivés passent un libellé marqué.
+    // `null` = ligne OUVERTE. Les cas archivés passent une date (ADR-034) ; le
+    // libellé, lui, ne décide plus de rien et reste celui du référentiel.
+    archiveLe: null,
     libelleObligation: "Vérification périodique",
     ...p,
   };
@@ -212,13 +214,24 @@ describe("estVerificationEnRetard", () => {
     ).toBe(false);
   });
 
-  it("une occurrence réalisée n'est jamais en retard, même statut depassee", () => {
+  it("une réalisation portée par la ligne ne purge plus l'échéance (ADR-034)", () => {
+    // CE TEST A CHANGÉ DE RÉPONSE, et c'est le lot N3 qui l'a voulu. Il
+    // affirmait « une occurrence réalisée n'est jamais en retard, même statut
+    // depassee » — la preuve primait sur l'état, et `dateRealisee` suffisait à
+    // sortir la ligne des comptes.
+    //
+    // Depuis que la ligne ne porte QUE son échéance ouverte, cette lecture est
+    // devenue fausse : `dateRealisee` est une colonne gelée, plus écrite par
+    // personne, et une ligne roulée par un dépôt porte une réalisation ANCIENNE
+    // à côté d'une échéance qui, elle, peut être dépassée. La lire ici sortait
+    // des comptes un contrôle réellement en retard — le défaut du lot 3 bis.
+    // Seul un statut réalisé purge désormais l'échéance.
     expect(
       estVerificationEnRetard(
         verif({ statut: "depassee", datePrevue: HIER, dateRealisee: HIER }),
         CE_MATIN,
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("les statuts realisee_* ne sont jamais en retard", () => {
@@ -317,9 +330,13 @@ describe("estVerificationAVenir", () => {
   });
 
   it("une occurrence réalisée n'est pas à venir", () => {
+    // Le fait de réalisation se lit sur le STATUT depuis l'ADR-034 : la colonne
+    // `dateRealisee` ne dit plus rien à ce prédicat. L'intention du test ne
+    // change pas — un contrôle fait n'est pas un rendez-vous à venir —, sa
+    // fixture si.
     expect(
       estVerificationAVenir(
-        verif({ datePrevue: DEMAIN, dateRealisee: HIER }),
+        verif({ statut: "realisee_conforme", datePrevue: DEMAIN }),
         CE_MATIN,
         JOURS_HORIZON_PROCHE,
       ),
@@ -410,25 +427,30 @@ describe("horloge injectée", () => {
 });
 
 // ---------------------------------------------------------------------
-// Lignes archivées (ADR-012)
+// Lignes archivées (ADR-012, puis ADR-034)
 // ---------------------------------------------------------------------
-// Le marqueur d'archivage vit dans le LIBELLÉ, faute de valeur `archivee`
-// dans l'enum Prisma : le statut d'une ligne archivée reste GELÉ dans son
-// dernier état connu. Une ligne gelée sur `depassee` se lisait donc « en
-// retard » à perpétuité — et le champ qui porte le marqueur était OPTIONNEL,
-// donc silencieusement absent chez les sept surfaces qui ne le
-// sélectionnaient pas : la fiche, le serveur MCP, deux widgets, le bandeau
-// de recommandations, le registre de sécurité en PDF. Il est requis
-// désormais, et les prédicats s'arrêtent dessus avant de regarder les dates.
+// L'archivage est une DATE, `archiveLe`, depuis le lot N3. Il vivait avant
+// dans le LIBELLÉ, faute de valeur `archivee` dans l'enum Prisma : un fait daté
+// logé dans du texte, qui se lisait par `startsWith`. Huit surfaces devaient y
+// penser, sept l'oubliaient — la fiche, le serveur MCP, deux widgets, le
+// bandeau de recommandations, le registre de sécurité en PDF —, et le champ
+// qui le portait était sélectionnable ou non, donc silencieusement absent.
+//
+// Le statut, lui, reste GELÉ dans son dernier état connu : l'enum n'a toujours
+// pas de valeur `archivee`. Une ligne gelée sur `depassee` se lit donc « en
+// retard » à perpétuité chez qui ne regarde pas `archiveLe` — d'où le fait que
+// le champ soit REQUIS dans `VerificationDatee`, et que les trois prédicats
+// s'arrêtent dessus avant même de regarder les dates.
+
+/** Le jour où l'obligation a cessé de s'appliquer à la ligne. */
+const ARCHIVE_LE = new Date("2026-07-01T00:00:00Z");
 
 describe("lignes archivées", () => {
-  const ARCHIVEE = "Ne s'applique plus — Vérification du désenfumage";
-
   it("une ligne archivée n'est jamais en retard, même gelée sur `depassee`", () => {
     const v = verif({
       statut: "depassee",
       datePrevue: HIER,
-      libelleObligation: ARCHIVEE,
+      archiveLe: ARCHIVE_LE,
     });
     expect(estVerificationArchivee(v)).toBe(true);
     expect(
@@ -443,7 +465,7 @@ describe("lignes archivées", () => {
         verif({
           statut: "a_planifier",
           datePrevue: DEMAIN,
-          libelleObligation: ARCHIVEE,
+          archiveLe: ARCHIVE_LE,
         }),
         AUJOURDHUI,
       ),
@@ -453,7 +475,7 @@ describe("lignes archivées", () => {
         verif({
           statut: "planifiee",
           datePrevue: DEMAIN,
-          libelleObligation: ARCHIVEE,
+          archiveLe: ARCHIVE_LE,
         }),
         AUJOURDHUI,
         JOURS_HORIZON_PROCHE,
@@ -461,14 +483,94 @@ describe("lignes archivées", () => {
     ).toBe(false);
   });
 
+  it("ne réclame rien QUEL QUE SOIT son statut gelé", () => {
+    // GARANTIE (a) DU LOT N3. Les deux cas ci-dessus prennent chacun UN statut ;
+    // celui-ci les prend tous, parce que c'est le statut gelé qui fait le
+    // dégât et qu'on ne choisit pas lequel se fige. Une ligne archivée pendant
+    // qu'elle était `depassee` garde « dépassée » pour toujours — l'enum Prisma
+    // n'ayant pas de valeur `archivee` —, et chaque surface qui lit le statut
+    // sans lire `archiveLe` annonce un retard sur une obligation éteinte. Le
+    // PDF du registre l'imprimait dans un document remis en contrôle.
+    //
+    // Les trois prédicats sont vérifiés ensemble : une ligne archivée sort des
+    // TROIS comptes, pas seulement de celui des retards.
+    for (const statut of [
+      "a_planifier",
+      "planifiee",
+      "depassee",
+      "realisee_conforme",
+      "realisee_observations",
+      "realisee_ecart_majeur",
+    ]) {
+      // La date est passée ET future selon le prédicat visé : on veut que le
+      // refus vienne de l'archivage, jamais d'une date qui l'aurait produit
+      // toute seule.
+      for (const datePrevue of [HIER, AUJOURDHUI, DEMAIN]) {
+        const v = verif({ statut, datePrevue, archiveLe: ARCHIVE_LE });
+        expect(
+          estVerificationEnRetard(v, AUJOURDHUI),
+          `statut gelé « ${statut} » : une ligne archivée n'est pas en retard`,
+        ).toBe(false);
+        expect(estVerificationAPlanifier(v, AUJOURDHUI)).toBe(false);
+        expect(
+          estVerificationAVenir(v, AUJOURDHUI, JOURS_HORIZON_PROCHE),
+        ).toBe(false);
+      }
+    }
+  });
+
   it("la même ligne NON archivée, elle, est bien en retard", () => {
     // Le témoin. Sans lui, les cas ci-dessus passeraient tout autant avec un
-    // prédicat qui rendrait `false` pour tout le monde.
+    // prédicat qui rendrait `false` pour tout le monde. Les deux fixtures ne
+    // diffèrent QUE par `archiveLe` : le libellé est le même des deux côtés,
+    // donc aucun repli sur le texte ne peut plus les départager.
     expect(
       estVerificationEnRetard(
         verif({ statut: "depassee", datePrevue: HIER }),
         AUJOURDHUI,
       ),
     ).toBe(true);
+  });
+});
+
+describe("ligne roulée — l'échéance ouverte prime sur la réalisation", () => {
+  it("une échéance passée sur une ligne déjà contrôlée EST en retard", () => {
+    // GARANTIE (c) DU LOT N3, et c'est le défaut du lot 3 bis pris à la racine.
+    //
+    // Depuis l'ADR-034, un dépôt de rapport ROULE la ligne : elle repart
+    // « planifiée » sur l'échéance suivante, et le contrôle fait vit sur le
+    // rapport. La colonne `dateRealisee` reste peuplée sur les lignes d'avant.
+    // L'ancien prédicat lisait cette colonne et concluait « réalisée, donc rien
+    // à signaler » — si bien qu'un appareil contrôlé en 2025, dont l'échéance
+    // 2026 était passée, sortait de TOUS les comptes pendant que la grille du
+    // calendrier le peignait en rouge. Deux surfaces, deux réponses.
+    const roulee = verif({
+      statut: "planifiee",
+      datePrevue: HIER,
+      // La preuve du cycle PRÉCÉDENT, honoré en son temps.
+      dateRealisee: new Date("2025-08-09T00:00:00Z"),
+    });
+
+    expect(
+      estVerificationEnRetard(roulee, CE_MATIN),
+      "l'échéance ouverte est passée : la réalisation d'un cycle antérieur ne l'efface pas",
+    ).toBe(true);
+    // Et elle n'est pas comptée deux fois : le retard exclut « à planifier ».
+    expect(estVerificationAPlanifier(roulee, CE_MATIN)).toBe(false);
+  });
+
+  it("la même ligne, échéance encore à venir, n'est pas en retard", () => {
+    // Le témoin : c'est bien la DATE qui décide, pas la présence d'une
+    // réalisation ni son absence.
+    expect(
+      estVerificationEnRetard(
+        verif({
+          statut: "planifiee",
+          datePrevue: DEMAIN,
+          dateRealisee: new Date("2025-08-09T00:00:00Z"),
+        }),
+        CE_MATIN,
+      ),
+    ).toBe(false);
   });
 });

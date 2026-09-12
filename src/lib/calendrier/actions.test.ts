@@ -223,24 +223,25 @@ describe("genererCalendrier — conservation des actions correctives", () => {
     expect(res.deleted).toBe(0);
     expect(res.archived).toBe(1);
     const conservee = db.verifications.find((v) => v.id === "v-1");
-    expect(conservee?.libelleObligation).toContain("Ne s'applique plus");
-    // ADR-034, N1 : la date d'archivage est écrite avec le préfixe, pour que
-    // les lecteurs puissent passer de l'un à l'autre au N3 sans divergence.
+    // L'archivage est une DATE (ADR-034, N3) : le libellé reste celui du
+    // référentiel, et c'est l'écran qui dit « ne s'applique plus » à partir du
+    // champ. Il portait un préfixe, qu'il fallait lire par `startsWith`.
     expect(conservee?.archiveLe).toBeInstanceOf(Date);
+    expect(conservee?.libelleObligation).not.toContain("Ne s'applique plus");
   });
 
-  it("désarchive une ligne dont l'obligation redevient applicable : préfixe ET date tombent", async () => {
+  it("désarchive une ligne dont l'obligation redevient applicable", async () => {
     // L'appareil a été retiré, sa ligne archivée avec sa preuve ; il est
-    // réactivé. La ligne reprend son libellé du référentiel — et si
-    // `archiveLe` restait posé, les lecteurs du N3 la tiendraient pour
-    // archivée alors que le calendrier la présente comme vivante.
+    // réactivé. Si `archiveLe` restait posé, tous les lecteurs la tiendraient
+    // pour éteinte alors que le calendrier la présente comme vivante — et
+    // aucun écran ne la réclamerait plus jamais.
     poserEtablissement([{ id: "eq-1" }]);
     db.verifications = [
       ligne({
         id: "v-1",
         equipementId: "eq-1",
         obligationId: ELEC_ANNUELLE,
-        libelleObligation: "Ne s'applique plus — Vérification électrique",
+        libelleObligation: "Vérification électrique",
         archiveLe: new Date("2026-01-01T00:00:00Z"),
         nbRapports: 1,
       }),
@@ -249,7 +250,6 @@ describe("genererCalendrier — conservation des actions correctives", () => {
     await genererCalendrier(ETAB_ID);
 
     const reprise = db.verifications.find((v) => v.id === "v-1");
-    expect(reprise?.libelleObligation).not.toContain("Ne s'applique plus");
     expect(reprise?.archiveLe).toBeNull();
   });
 
@@ -351,9 +351,9 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
       survivante,
       "la ligne a été supprimée, donc l'action corrective est partie en cascade",
     ).toBeDefined();
-    // La passe suivante l'a relue avec sa preuve : elle est archivée, pas
-    // supprimée.
-    expect(survivante?.libelleObligation).toContain("Ne s'applique plus");
+    // La passe suivante l'a relue avec sa preuve : elle est archivée — datée
+    // (ADR-034, N3) —, pas supprimée.
+    expect(survivante?.archiveLe).toBeInstanceOf(Date);
   });
 
   it("relance jusqu'à converger, et le compte rendu est celui de la passe qui a convergé", async () => {
@@ -429,7 +429,7 @@ describe("genererCalendrier — continuité par-dessus un identifiant retiré", 
     // Le fragment garde sa preuve et son archivage — rien n'est détruit.
     const fragment = db.verifications.find((v) => v.id === "v-fragment");
     expect(fragment?.nbRapports).toBe(1);
-    expect(fragment?.libelleObligation).toContain("Ne s'applique plus");
+    expect(fragment?.archiveLe).toBeInstanceOf(Date);
   });
 });
 
@@ -499,7 +499,7 @@ describe("genererCalendrier — équipements désactivés", () => {
 
     const hist = db.verifications.find((v) => v.id === "v-hist");
     expect(hist?.nbRapports).toBe(1);
-    expect(hist?.libelleObligation).toContain("Ne s'applique plus");
+    expect(hist?.archiveLe).toBeInstanceOf(Date);
   });
 });
 
@@ -562,7 +562,7 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
     ).toBe(1);
     const retiree = db.verifications.find((v) => v.id === "v-retire");
     expect(retiree?.nbRapports).toBe(1);
-    expect(retiree?.libelleObligation).toContain("Ne s'applique plus");
+    expect(retiree?.archiveLe).toBeInstanceOf(Date);
 
     // Et l'appareil encore en service, lui, a bien sa ligne.
     const vivantes = db.verifications.filter(
@@ -627,8 +627,8 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
 
     expect(res.archived).toBe(1);
     expect(
-      db.verifications.find((v) => v.id === "v-elec")?.libelleObligation,
-    ).toContain("Ne s'applique plus");
+      db.verifications.find((v) => v.id === "v-elec")?.archiveLe,
+    ).toBeInstanceOf(Date);
   });
 });
 

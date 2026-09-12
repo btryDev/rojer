@@ -19,6 +19,9 @@ const verif = (
     /** Dernier rapport réalisé (ADR-034). Absent = aucun ; les cas d'avant
      *  passent par `dateRealisee`, que la lecture prend en repli. */
     derniereRealisation?: string;
+    /** Le jour où l'obligation a cessé de s'appliquer (ADR-034). Absent =
+     *  ligne ouverte, ce qu'est toute ligne de ce fichier sauf une. */
+    archiveLe?: string;
     libelle?: string;
     periodicite?: Periodicite;
   } = {},
@@ -28,6 +31,7 @@ const verif = (
   statut: o.statut ?? "planifiee",
   datePrevue: jour(datePrevue),
   dateRealisee: o.dateRealisee ? jour(o.dateRealisee) : null,
+  archiveLe: o.archiveLe ? jour(o.archiveLe) : null,
   derniereRealisation: o.derniereRealisation ? jour(o.derniereRealisation) : null,
   periodicite: o.periodicite ?? ("annuelle" as const),
 });
@@ -177,13 +181,11 @@ describe("repartirParEquipement — l'horizon proche", () => {
   });
 
   it("une ligne archivée ne compte dans aucun horizon", () => {
-    // ADR-012 : son obligation ne s'applique plus, son statut reste gelé.
+    // ADR-034 : son obligation ne s'applique plus, son statut reste gelé. Le
+    // fait était un préfixe de libellé, c'est une colonne depuis le N3 — et
+    // c'est elle, seule, que la répartition regarde.
     const m = repartirParEquipement(
-      [
-        verif("eq1", "2026-08-30", {
-          libelle: "Ne s'applique plus — Vérification annuelle",
-        }),
-      ],
+      [verif("eq1", "2026-08-30", { archiveLe: "2026-08-05" })],
       AUJOURDHUI,
     );
     expect(m.get("eq1")?.proches).toBe(0);
