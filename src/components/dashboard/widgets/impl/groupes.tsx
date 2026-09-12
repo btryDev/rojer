@@ -81,7 +81,7 @@ export function WidgetIndicateurs({ bundle }: { bundle: DashboardBundle }) {
     actionsOuvertes,
     actionsEnCours,
     actionsEnRetard,
-    verifsRealisees12m,
+    rapports12m,
   } = bundle.dashboard.compteurs;
   const { nbVerifs } = bundle;
   const totalActions = actionsOuvertes + actionsEnCours;
@@ -123,12 +123,14 @@ export function WidgetIndicateurs({ bundle }: { bundle: DashboardBundle }) {
     },
     {
       k: "Rapports 12 m",
-      v: verifsRealisees12m,
+      // Des rapports déposés, pas des lignes couvertes (ADR-034) : c'est ce
+      // que le libellé promet, et ce que le registre montre.
+      v: rapports12m,
       trend:
         nbVerifs > 0
           ? `sur ${nbVerifs} attendu${nbVerifs > 1 ? "s" : ""}`
           : "aucun attendu",
-      tone: verifsRealisees12m > 0 ? "green" : "neutral",
+      tone: rapports12m > 0 ? "green" : "neutral",
       hint: "déposés au registre",
     },
     {
@@ -247,7 +249,7 @@ export function WidgetActivite({ bundle }: { bundle: DashboardBundle }) {
     actionsOuvertes,
     actionsEnCours,
     actionsEnRetard,
-    verifsRealisees12m,
+    rapports12m,
   } = bundle.dashboard.compteurs;
   const totalActions = actionsOuvertes + actionsEnCours;
   const jourDernier = bundle.jourDernierRapport;
@@ -267,11 +269,7 @@ export function WidgetActivite({ bundle }: { bundle: DashboardBundle }) {
                 : "aucune"
           }
         />
-        <MiniStat
-          label="Rapports 12 m"
-          valeur={verifsRealisees12m}
-          tone="ok"
-        />
+        <MiniStat label="Rapports 12 m" valeur={rapports12m} tone="ok" />
         <MiniStat
           label="Dernier rapport"
           valeur={jourDernier === null ? "—" : `J-${jourDernier}`}

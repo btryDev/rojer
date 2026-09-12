@@ -354,65 +354,71 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
 
     if (!estResultatRealise(rap.resultat)) return;
 
-    const dernier = await tx.rapportVerification.findFirst({
+    // Les rapports réalisés qui restent, du plus ANCIEN au plus récent.
+    // `createdAt` départage deux rapports du même jour : sans lui, ni « le
+    // premier » ni « le dernier » ne sont déterministes, et la ligne en dépend.
+    const restants = await tx.rapportVerification.findMany({
       where: {
         verificationId: rap.verificationId,
         resultat: { in: [...RESULTATS_REALISES] },
       },
-      // `createdAt` départage deux rapports du même jour : sans lui, « le
-      // dernier » n'est pas déterministe, et c'est de lui que dépend le statut
-      // rendu à la ligne.
-      orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
-      select: { id: true, dateRapport: true, resultat: true },
+      orderBy: [{ dateRapport: "asc" }, { createdAt: "asc" }],
+      select: { id: true, dateRapport: true, resultat: true, echeanceHonoree: true },
     });
+
+    // L'ÉCHÉANCE D'ORIGINE NE SE PERD JAMAIS, et c'est tout l'enjeu : elle vit
+    // sur le PLUS ANCIEN rapport réalisé, qui est le seul à pouvoir la porter
+    // quand tous les autres sont partis. Le retiré emportait la sienne ; si
+    // elle est plus ancienne que celle de la tête de chaîne, elle lui est
+    // transmise — quel que soit l'ordre des suppressions.
+    //
+    // La première rédaction ne transmettait qu'au SUCCESSEUR, et gardait « la
+    // plus tardive » des deux dates au moment de rouvrir. Les deux perdaient
+    // l'échéance d'origine dès qu'un rapport ANTIDATÉ traînait dans la chaîne :
+    // en supprimant les trois dans le bon ordre, la ligne finissait sur une
+    // échéance future, sans aucune pièce — le retard blanchi, exactement ce que
+    // la correction précédente prétendait fermer (relecture de contrôle,
+    // 2026-09-12).
+    // La tête plutôt que le successeur : les deux tiennent l'invariant — c'est
+    // « la plus ancienne l'emporte » qui le tient, et l'échéance d'origine
+    // redescend la chaîne à chaque suppression, quel que soit le rapport visé.
+    // Vérifié par mutation : viser le dernier ne fait rougir aucun test, et
+    // c'est honnête de le dire. On écrit sur la tête parce que c'est le
+    // rapport qui restera le plus longtemps, donc le moins d'écritures.
+    const tete = restants[0] ?? null;
+    if (
+      rap.echeanceHonoree !== null &&
+      tete !== null &&
+      (tete.echeanceHonoree === null ||
+        tete.echeanceHonoree.getTime() > rap.echeanceHonoree.getTime())
+    ) {
+      await tx.rapportVerification.update({
+        where: { id: tete.id },
+        data: { echeanceHonoree: rap.echeanceHonoree },
+      });
+    }
+
+    const dernier = restants.length > 0 ? restants[restants.length - 1] : null;
     // Un rapport réalisé plus récent (ou du même jour) subsiste : le retiré
-    // n'avait pas fait rouler la ligne — mais L'ÉCHÉANCE QU'IL HONORAIT SE
-    // TRANSMET, et c'est le défaut bloquant relevé le 2026-09-12. Le rapport
-    // suivant honorait une échéance que le retiré avait engendrée ; elle
-    // n'existe plus. Sans ce report, supprimer deux rapports du plus ancien au
-    // plus récent laissait la ligne sur une échéance future, sans aucune
-    // pièce : le retard était blanchi par l'ordre des suppressions.
+    // n'avait pas fait rouler la ligne, elle ne lui doit rien de plus.
     if (dernier !== null && dernier.dateRapport.getTime() >= rap.dateRapport.getTime()) {
-      if (rap.echeanceHonoree !== null) {
-        // Le successeur immédiat : le plus ANCIEN des réalisés qui restent et
-        // qui ne sont pas antérieurs au retiré.
-        const successeur = await tx.rapportVerification.findFirst({
-          where: {
-            verificationId: rap.verificationId,
-            resultat: { in: [...RESULTATS_REALISES] },
-            dateRapport: { gte: rap.dateRapport },
-          },
-          orderBy: [{ dateRapport: "asc" }, { createdAt: "asc" }],
-          select: { id: true },
-        });
-        if (successeur !== null) {
-          await tx.rapportVerification.update({
-            where: { id: successeur.id },
-            data: { echeanceHonoree: rap.echeanceHonoree },
-          });
-        }
-      }
       return;
     }
 
     const periodicite = rap.verification.periodicite as Periodicite;
     const cyclique = estCyclique(periodicite);
-    // L'échéance qui rouvre : celle que le rapport retiré honorait. Quand un
-    // rapport réalisé plus ANCIEN subsiste, il en engendre une autre — on
-    // garde la PLUS TARDIVE des deux, sinon la ligne annoncerait un retard
-    // qu'un contrôle encore prouvé a déjà levé (relecture du 2026-09-12).
-    const depuisHonoree = rap.echeanceHonoree;
-    const depuisDernier =
-      dernier !== null && cyclique
-        ? prochaineEcheance(dernier.dateRapport, periodicite)
-        : null;
-    const candidates = [depuisHonoree, depuisDernier].filter(
-      (d): d is Date => d !== null,
-    );
-    const datePrevue =
-      candidates.length === 0
-        ? rap.verification.datePrevue
-        : candidates.reduce((a, b) => (a.getTime() >= b.getTime() ? a : b));
+    // L'échéance qui rouvre : celle qu'engendre le dernier contrôle ENCORE
+    // PROUVÉ ; s'il n'en reste aucun, celle que le retiré honorait — c'est-à-dire
+    // l'échéance d'origine, que la transmission ci-dessus a gardée en tête de
+    // chaîne. À défaut des deux, la ligne garde sa date.
+    let datePrevue = rap.verification.datePrevue;
+    if (dernier !== null) {
+      if (cyclique) {
+        datePrevue = prochaineEcheance(dernier.dateRapport, periodicite) ?? datePrevue;
+      }
+    } else if (rap.echeanceHonoree !== null) {
+      datePrevue = rap.echeanceHonoree;
+    }
 
     let statut: StatutVerification;
     if (!cyclique && dernier !== null) {

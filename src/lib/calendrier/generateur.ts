@@ -756,9 +756,16 @@ export type MiseAJourOccurrence = {
   periodicite: Periodicite;
   realisateurRequis: Realisateur[];
   datePrevue: Date;
-  /** Toujours `null` depuis l'ADR-034 : la colonne est morte, et l'écrire à
-   *  `null` met au modèle, en une passe, les lignes d'avant. Retiré au N5. */
-  dateRealisee: null;
+  /**
+   * `null` depuis l'ADR-034 : la colonne est morte, et l'écrire à `null` met
+   * au modèle, en une passe, les lignes d'avant. Retiré au N5.
+   *
+   * UNE exception, et elle est bornée : une obligation sans rendez-vous
+   * suivant, d'avant l'ADR-034, sans rapport, n'a que cette date pour dire
+   * qu'elle a été faite. On la lui laisse — sinon le fait se perd, et la passe
+   * suivante change d'avis faute de le retrouver (relecture du 2026-09-12).
+   */
+  dateRealisee: Date | null;
   statut: StatutVerificationPersiste;
   prescriptionId: string | null;
 };
@@ -1154,9 +1161,13 @@ export function reconcilierCalendrier(
       // contrôle déjà fait serait annoncé « en retard » au cycle suivant. Son
       // statut se relit alors sur le résultat de son dernier rapport.
       datePrevue = ex.datePrevue;
-      statut =
-        statutDepuisResultat(ex.dernierResultat) ??
-        (estStatutRealise(ex.statut) ? ex.statut : g.statut);
+      // `ex.statut` en dernier recours, et NON `g.statut` : sur une ligne
+      // d'avant l'ADR-034 dont la seule trace est la colonne gelée, prendre le
+      // statut fraîchement généré rendait la passe suivante différente — la
+      // colonne éteinte, la branche n'était plus prise, et le statut changeait
+      // une seconde fois. Mesuré sur la base locale : deux écritures pour une
+      // ligne stable (relecture de contrôle, 2026-09-12).
+      statut = statutDepuisResultat(ex.dernierResultat) ?? ex.statut;
     } else if (estStatutRealise(ex.statut) && realisation !== null) {
       // RATTRAPAGE D'UNE LIGNE D'AVANT N2 (ADR-034), et rien d'autre. Une
       // ligne CYCLIQUE au statut réalisé est, par construction, d'avant N2 :
@@ -1261,7 +1272,18 @@ export function reconcilierCalendrier(
       datePrevue,
       // Colonne morte (ADR-034) : écrite à `null` pour mettre au modèle, en une
       // passe, les lignes d'avant. Retirée au N5.
-      dateRealisee: null,
+      //
+      // SAUF quand elle est la SEULE trace : une obligation sans rendez-vous
+      // suivant, d'avant l'ADR-034, sans rapport, n'a que cette date pour dire
+      // qu'elle a été faite — l'éteindre perdrait le fait, et la passe suivante
+      // changerait d'avis faute de le retrouver.
+      dateRealisee:
+        !estCyclique(g.periodicite) &&
+        ex.aDesRapports !== true &&
+        ex.derniereRealisation == null &&
+        ex.dateRealisee != null
+          ? ex.dateRealisee
+          : null,
       statut,
       prescriptionId: g.prescriptionId,
     };

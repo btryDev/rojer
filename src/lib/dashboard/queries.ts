@@ -576,7 +576,15 @@ export type DashboardData = {
     verifsEnRetard: number;
     verifsAPlanifier: number;
     verifsSous30j: number;
+    /** Lignes dont le dernier contrôle tombe dans les douze mois ET dont
+     *  l'échéance ouverte n'est ni dépassée ni proche — le quatrième ensemble
+     *  de `repartirVerifications`, celui qui complète le dénominateur du
+     *  score (ADR-034). Ce n'est PAS un compte de rapports. */
     verifsRealisees12m: number;
+    /** Les RAPPORTS réalisés déposés sur les douze derniers mois. C'est ce que
+     *  les cartes « Rapports 12 m » annoncent, et ce que le registre montre :
+     *  une ligne contrôlée quatre fois dans l'année en compte quatre. */
+    rapports12m: number;
     actionsOuvertes: number;
     actionsEnCours: number;
     actionsEnRetard: number;
@@ -645,6 +653,7 @@ export const getDashboardData = cache(async function getDashboardData(
     transmissions,
     nbRapports,
     etatsPermanents,
+    rapports12m,
   ] = await Promise.all([
     // Un seul passage sur les vérifications qui comptent : les occurrences
     // ouvertes (toutes, sans plafond — leur nombre est borné par le
@@ -738,6 +747,16 @@ export const getDashboardData = cache(async function getDashboardData(
     // entrée que cet écran — deux comptes finiraient par diverger, et c'est le
     // chiffre du tableau de bord qui porterait la version fausse.
     compterEtatsPermanents(etablissementId, user.id),
+    // Les rapports RÉALISÉS de la fenêtre, comptés en base : les cartes
+    // « Rapports 12 m » parlent de pièces déposées, pas de lignes couvertes,
+    // et depuis l'ADR-034 les deux ne coïncident plus.
+    prisma.rapportVerification.count({
+      where: {
+        verification: scope,
+        dateRapport: { gte: debutFenetreHistorique },
+        ...WHERE_RAPPORT_REALISE,
+      },
+    }),
   ]);
 
   // Répartition unique, partagée avec les documents générés : quatre
@@ -812,6 +831,7 @@ export const getDashboardData = cache(async function getDashboardData(
       verifsAPlanifier: etatVerifs.aPlanifier.length,
       verifsSous30j: etatVerifs.aVenir.length,
       verifsRealisees12m: etatVerifs.realisees12m.length,
+      rapports12m,
       actionsOuvertes: compteursActions.ouvertes,
       actionsEnCours: compteursActions.enCours,
       actionsEnRetard,

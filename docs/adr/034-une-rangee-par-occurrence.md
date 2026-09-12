@@ -343,6 +343,22 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   `periodicite: "autre"` cesse d'être générée ; sa ligne, roulée, garde une
   échéance ouverte que plus rien ne solde. Le garde-fou d'applicabilité la
   laisse telle quelle, et elle passera « en retard » au cycle suivant.
+- **Corrections du 2026-09-12, second tour** — la relecture de contrôle a
+  rouvert le défaut bloquant : la transmission au seul successeur, et la règle
+  « la plus tardive des deux dates » au moment de rouvrir, PERDAIENT l'échéance
+  d'origine dès qu'un rapport antidaté traînait dans la chaîne. Trois rapports,
+  six ordres de suppression : deux finissaient sur une échéance de 2027 sans
+  aucune pièce. Désormais l'échéance d'origine **redescend vers le rapport le
+  plus ancien** — celui qui restera le dernier — et la réouverture prend
+  l'échéance qu'engendre le dernier contrôle encore prouvé, à défaut celle que
+  le retiré honorait. L'invariant est éprouvé sur les six ordres.
+  Deux autres corrections : la branche « ponctuelle » d'une ligne d'avant
+  l'ADR-034 **garde sa colonne** — seule trace du fait, faute de rapport — et
+  reprend son propre statut, sinon la régénération écrivait deux fois avant de
+  se stabiliser (mesuré sur la base locale) ; et les cartes **« Rapports 12 m »**
+  comptent désormais de vrais rapports (`compteurs.rapports12m`), le compte de
+  LIGNES qu'elles affichaient tombant à zéro sur un dossier tenu à jour dont
+  toutes les échéances sont proches.
 - **N3 — Les prédicats** : `retard.ts` cesse de lire `dateRealisee` ;
   `estVerificationArchivee` lit `archiveLe` ; `classerVerification` et le
   vocabulaire perdent `archivee`-par-préfixe. Le préfixe est retiré des libellés

@@ -25,6 +25,7 @@ import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { listerVerifications } from "@/lib/calendrier/queries";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
+import { estStatutRealise } from "@/lib/calendrier/etats";
 import type { SectionRegistre } from "./sections";
 
 /**
@@ -187,7 +188,7 @@ export function contenuTenuAilleursDepuis(
             // gelée d'une ligne d'avant garde l'ancienne phrase.
             v.dateRealisee
               ? `faite le ${formaterDateCourteFr(v.dateRealisee)}`
-              : v.statut.startsWith("realisee")
+              : estStatutRealise(v.statut)
                 ? null
                 : v.datePrevue
                   ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`

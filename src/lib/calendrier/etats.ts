@@ -254,7 +254,13 @@ export function classerDate(
  * l'obligation a cessé de s'appliquer.
  */
 export function estRealisee(v: VerificationDatee): boolean {
-  return v.dateRealisee !== null || v.statut.startsWith("realisee");
+  return v.dateRealisee !== null || estStatutRealise(v.statut);
+}
+
+/** « Ce contrôle a eu lieu », lu sur le seul statut. Écrit ici une fois pour
+ *  toutes : trois surfaces le réécrivaient à la main en `startsWith`. */
+export function estStatutRealise(statut: string): boolean {
+  return statut.startsWith("realisee");
 }
 
 export function classerVerification(

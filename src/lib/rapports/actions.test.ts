@@ -14,7 +14,7 @@
 // entière, et faisait détruire le rapport par la régénération qui suivait.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 
 type LigneVerif = {
   id: string;
@@ -78,11 +78,16 @@ const h = vi.hoisted(() => {
           (where.dateRapport?.gte === undefined ||
             r.dateRapport.getTime() >= where.dateRapport.gte.getTime()),
       )
-      .sort(
-        (a, b) =>
-          sens * (a.dateRapport.getTime() - b.dateRapport.getTime()) ||
-          sens * (a.createdAt.getTime() - b.createdAt.getTime()),
-      );
+      .sort((a, b) => {
+        const parDate = sens * (a.dateRapport.getTime() - b.dateRapport.getTime());
+        if (parDate !== 0) return parDate;
+        // Le départage n'est appliqué QUE si la production le demande : sinon
+        // le faux client tranchait à sa place, et retirer `createdAt` du code
+        // ne faisait rougir aucun test (relecture de contrôle, 2026-09-12).
+        const second = orderBy[1]?.createdAt;
+        if (second === undefined) return 0;
+        return (second === "asc" ? 1 : -1) * (a.createdAt.getTime() - b.createdAt.getTime());
+      });
   };
 
   const prisma: Record<string, unknown> = {
@@ -138,6 +143,17 @@ const h = vi.hoisted(() => {
         };
         orderBy?: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[];
       }) => rapportsRealises(where, orderBy)[0] ?? null,
+      findMany: async ({
+        where,
+        orderBy,
+      }: {
+        where: {
+          verificationId: string;
+          resultat?: { in: string[] };
+          dateRapport?: { gte?: Date };
+        };
+        orderBy?: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[];
+      }) => rapportsRealises(where, orderBy),
       update: async ({
         where,
         data,
@@ -607,6 +623,109 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
     await expect(supprimerRapport("rap-b")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
     expect(h.db.verification?.statut).toBe("depassee");
+  });
+
+  it("un contrôle daté d'AUJOURD'HUI est accepté", async () => {
+    // Le pendant du refus ci-dessous, et il garde la borne : reculée d'un
+    // jour, elle refuserait le dépôt le plus banal — le rapport remis sur
+    // place, le jour du contrôle. Aucun test ne le voyait.
+    const aujourdhui = cleJourCivil(new Date());
+
+    const res = await uploadRapport(
+      "v-1",
+      { status: "idle" },
+      formulaire("conforme", aujourdhui),
+    );
+
+    expect(res.status).toBe("success");
+    expect(h.db.rapports).toHaveLength(1);
+  });
+
+  it("l'échéance d'origine survit à TOUS les ordres de suppression, antidaté compris", async () => {
+    // LE DÉFAUT QUE LA RELECTURE DE CONTRÔLE A TROUVÉ. Trois rapports, dont un
+    // antidaté au milieu de la chaîne : selon l'ordre des suppressions, la
+    // ligne finissait sur une échéance de 2027 « à planifier », sans aucune
+    // pièce au registre — le retard blanchi par l'ordre des clics.
+    //
+    // L'invariant, éprouvé sur les six ordres : quand plus aucun rapport
+    // réalisé ne reste, la ligne est revenue à son échéance d'origine, et elle
+    // est dépassée.
+    const ordres = [
+      ["a", "b", "c"],
+      ["a", "c", "b"],
+      ["b", "a", "c"],
+      ["b", "c", "a"],
+      ["c", "a", "b"],
+      ["c", "b", "a"],
+    ];
+
+    for (const ordre of ordres) {
+      h.db.verification = {
+        salarieId: null,
+        id: "v-1",
+        etablissementId: "etab-1",
+        datePrevue: depuisCleJourCivil("2027-06-01"),
+        dateRealisee: null,
+        statut: "planifiee",
+        periodicite: "annuelle",
+      };
+      h.db.rapports = [
+        // a : le premier contrôle, il honore l'échéance d'origine.
+        rapport({
+          id: "a",
+          dateRapport: depuisCleJourCivil("2026-04-01"),
+          echeanceHonoree: ECHEANCE,
+        }),
+        // b : antidaté, déposé après coup — il n'a rien fait rouler.
+        rapport({ id: "b", dateRapport: depuisCleJourCivil("2026-02-01") }),
+        // c : le contrôle suivant, il honore l'échéance qu'« a » avait ouverte.
+        rapport({
+          id: "c",
+          dateRapport: depuisCleJourCivil("2026-06-01"),
+          echeanceHonoree: depuisCleJourCivil("2027-04-01"),
+        }),
+      ];
+
+      for (const id of ordre) {
+        await expect(supprimerRapport(id)).rejects.toThrow("NEXT_REDIRECT");
+      }
+
+      expect(h.db.rapports, `ordre ${ordre.join(" → ")}`).toEqual([]);
+      expect(h.db.verification?.datePrevue, `ordre ${ordre.join(" → ")}`).toEqual(
+        ECHEANCE,
+      );
+      expect(h.db.verification?.statut, `ordre ${ordre.join(" → ")}`).toBe(
+        "depassee",
+      );
+    }
+  });
+
+  it("l'échéance d'origine se transmet à la TÊTE de chaîne, pas au successeur immédiat", async () => {
+    // Ce que l'invariant ci-dessus exige, vu de près : le rapport retiré donne
+    // son échéance au PLUS ANCIEN des rapports restants — c'est le seul qui
+    // sera encore là quand tous les autres seront partis.
+    h.db.verification = {
+      salarieId: null,
+      id: "v-1",
+      etablissementId: "etab-1",
+      datePrevue: depuisCleJourCivil("2027-06-01"),
+      dateRealisee: null,
+      statut: "planifiee",
+      periodicite: "annuelle",
+    };
+    h.db.rapports = [
+      rapport({ id: "ancien", dateRapport: depuisCleJourCivil("2026-02-01") }),
+      rapport({
+        id: "recent",
+        dateRapport: depuisCleJourCivil("2026-06-01"),
+        echeanceHonoree: ECHEANCE,
+      }),
+    ];
+
+    await expect(supprimerRapport("recent")).rejects.toThrow("NEXT_REDIRECT");
+
+    const reste = h.db.rapports.find((r) => r.id === "ancien")!;
+    expect(reste.echeanceHonoree).toEqual(ECHEANCE);
   });
 
   it("un rapport daté dans le futur est refusé", async () => {

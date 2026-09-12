@@ -1301,6 +1301,44 @@ describe("réconciliation — cycles de vérification", () => {
     expect(maj?.statut).toBe("depassee");
   });
 
+  it("une ponctuelle d'avant l'ADR-034 se stabilise en UNE passe", () => {
+    // La première rédaction éteignait sa colonne — sa seule trace, faute de
+    // rapport — et prenait le statut fraîchement généré. La passe suivante ne
+    // retrouvait plus la réalisation, changeait de branche, et réécrivait le
+    // statut : une écriture de trop à chaque première régénération. Mesuré sur
+    // la base locale par la relecture de contrôle (2026-09-12).
+    const o = fakeObligation({
+      id: "mes",
+      periodicite: "mise_en_service_uniquement",
+    });
+    const aGenerer = () =>
+      genererProchainesVerifications([applique(o, [fakeEquipement("eq-1")])], new Map(), {
+        now: NOW,
+      });
+    const ligne = ligneExistante({
+      id: "v-mes",
+      obligationId: "mes",
+      equipementId: "eq-1",
+      libelleObligation: "Obligation mes",
+      periodicite: "mise_en_service_uniquement",
+      datePrevue: new Date("2025-05-01T00:00:00Z"),
+      dateRealisee: new Date("2025-05-01T00:00:00Z"),
+      derniereRealisation: null,
+      aDesRapports: false,
+      statut: "planifiee",
+      porteUnePreuve: false,
+    });
+
+    const passe1 = reconcilierCalendrier([ligne], aGenerer(), { now: NOW });
+    const apres1 = { ...ligne, ...(passe1.aMettreAJour[0] ?? {}) };
+    const passe2 = reconcilierCalendrier([apres1], aGenerer(), { now: NOW });
+
+    expect(passe2.aMettreAJour, "seconde écriture sur une ligne stable").toEqual(
+      [],
+    );
+    expect(passe2.inchangees).toBe(1);
+  });
+
   it("une obligation ponctuelle consommée n'est pas supprimée quand son porteur disparaît", () => {
     // Sa colonne est éteinte et elle n'a plus de rapport : son STATUT est le
     // seul témoignage qu'elle a été faite. La supprimer effacerait la preuve

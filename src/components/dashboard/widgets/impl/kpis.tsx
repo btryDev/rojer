@@ -52,12 +52,10 @@ export function WidgetKpiActions({ bundle }: { bundle: DashboardBundle }) {
 }
 
 export function WidgetKpiRapports({ bundle }: { bundle: DashboardBundle }) {
-  const { verifsRealisees12m } = bundle.dashboard.compteurs;
-  return (
-    <KpiCard
-      label="Rapports 12 mois"
-      value={verifsRealisees12m}
-      tone="ok"
-    />
-  );
+  // `rapports12m` et non `verifsRealisees12m` : la carte annonce des RAPPORTS,
+  // et depuis l'ADR-034 le second compte des LIGNES dont l'échéance ouverte
+  // n'est ni dépassée ni proche — un dossier tenu à jour dont tout arrive sous
+  // trente jours affichait « 0 » pendant que le registre portait ses pièces.
+  const { rapports12m } = bundle.dashboard.compteurs;
+  return <KpiCard label="Rapports 12 mois" value={rapports12m} tone="ok" />;
 }

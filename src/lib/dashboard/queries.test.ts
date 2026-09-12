@@ -158,7 +158,30 @@ const h = vi.hoisted(() => {
     duerp: { findFirst: async () => db.duerp },
     equipement: { count: async () => db.nbEquipements },
     rapportVerification: {
-      count: async () => db.nbRapports,
+      /**
+       * Deux comptes passent par ici : le total des rapports du dossier, et
+       * ceux de la fenêtre de douze mois (`rapports12m`). Le second porte des
+       * clauses — il faut les HONORER, sinon les deux cartes afficheraient le
+       * même chiffre dans les tests quoi qu'il arrive.
+       */
+      count: async (args?: { where?: Record<string, unknown> }) => {
+        const where = args?.where ?? {};
+        const { dateRapport, resultat } = where as {
+          dateRapport?: { gte?: Date };
+          resultat?: { in: string[] };
+        };
+        if (dateRapport === undefined && resultat === undefined) {
+          return db.nbRapports;
+        }
+        return db.verifications
+          .flatMap((v) => (v.rapports ?? []) as { dateRapport: Date; resultat: string }[])
+          .filter(
+            (r) =>
+              (dateRapport?.gte === undefined ||
+                r.dateRapport.getTime() >= dateRapport.gte.getTime()) &&
+              (resultat === undefined || resultat.in.includes(r.resultat)),
+          ).length;
+      },
       /** La jointure « dernière réalisation » (ADR-034) : les rapports que
        *  portent les lignes factices, filtrés comme en base. */
       findMany: async (args: { where: Record<string, unknown> }) => {
@@ -309,6 +332,36 @@ describe("getDashboardData — vérifications réalisées et archivées", () => 
     expect(d.recommandations.filter((r) => r.kind === "verif_depassee")).toHaveLength(
       1,
     );
+  });
+
+  it("« Rapports 12 m » compte les RAPPORTS déposés, pas les lignes couvertes", async () => {
+    // Les deux comptes ont divergé avec l'ADR-034, et la carte du tableau de
+    // bord parle de pièces : une ligne trimestrielle contrôlée quatre fois
+    // dans l'année vaut quatre rapports, et une seule ligne au dénominateur du
+    // score. Branchée sur le compte de lignes, la carte affichait « 0 » sur un
+    // dossier dont le registre était plein.
+    h.db.verifications.push(
+      verif({
+        id: "trimestrielle",
+        statut: "planifiee",
+        datePrevue: jour(-2),
+        rapports: [
+          { dateRapport: jour(-20), resultat: "conforme" },
+          { dateRapport: jour(-110), resultat: "observations_mineures" },
+          // Ni l'un ni l'autre ne compte : le premier n'atteste d'aucun
+          // contrôle, le second est hors fenêtre.
+          { dateRapport: jour(-5), resultat: "non_verifiable" },
+          { dateRapport: jour(-400), resultat: "conforme" },
+        ],
+      }),
+    );
+
+    const d = await getDashboardData(ETAB);
+    expect(d.compteurs.rapports12m).toBe(2);
+    // La même ligne, elle, compte UNE fois — et comme un retard, puisque son
+    // échéance ouverte est passée.
+    expect(d.compteurs.verifsEnRetard).toBe(1);
+    expect(d.compteurs.verifsRealisees12m).toBe(0);
   });
 
   it("compte les retards sur l'ensemble complet, même quand la file est tronquée", async () => {
