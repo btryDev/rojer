@@ -23,6 +23,7 @@
     "seed:complet": "tsx --env-file=.env scripts/seed-dossier-complet.ts",
     "fix:libelles": "tsx scripts/corriger-libelles-demo.ts",
     "etaler:echeances": "tsx scripts/etaler-echeances-demo.ts",
+    "mesure:score": "tsx scripts/mesure-score-adr034.ts",
     "veille": "tsx scripts/veille-worklist.ts",
     "relecture": "tsx scripts/export-relecture.ts",
     "verification": "tsx scripts/export-verification.ts"

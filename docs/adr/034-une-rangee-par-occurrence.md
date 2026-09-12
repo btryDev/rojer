@@ -412,11 +412,33 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   `D. 4711-3` impose — dette relevée au corpus, sans rapport avec le modèle,
   fermée au passage.
 
-## Ce qu'il faudrait mesurer, et qui ne l'a pas été
+## Ce que le score fait, mesuré le 2026-09-12
 
-Le score baissera. De combien, pour quel dossier type ? Le seed complet
-(`scripts/seed-dossier-complet.ts`) ne fabrique que des lignes ouvertes ; il faut
-lui ajouter des rapports datés dont l'échéance suivante est passée pour le
-simuler. C'est le premier chiffre à produire avant N4 — pas pour décider si on
-corrige, ça c'est décidé par le texte, mais pour savoir ce que le dirigeant verra
-changer.
+`pnpm mesure:score` (`scripts/mesure-score-adr034.ts`) fabrique des dossiers en
+mémoire et appelle les fonctions réelles du produit — la partition et le calcul
+du score, celles du tableau de bord et du dossier PDF. Aucune base, donc rien à
+seeder : le seed complet ne fabriquait que des lignes ouvertes, et l'enrichir
+aurait mesuré le seed plutôt que la règle.
+
+Deux « avant », parce qu'une ligne en avait deux : **immobile**, c'est-à-dire le
+dossier d'un dirigeant qui ne rouvre pas son calendrier — la régénération n'a
+pas tourné, la ligne garde `realisee_conforme` avec une échéance dépassée et
+sort de TOUS les ensembles ; **régénéré**, où le cycle a été relancé.
+
+| dossier de dix lignes | avant, immobile | avant, régénéré | après | écart |
+|---|---|---|---|---|
+| tout à jour, contrôles récents | 100 | 100 | 100 | 0 |
+| 3 échéances dépassées, contrôles récents | 100 | 70 | 70 | **−30** |
+| 3 dépassées, dernier contrôle > 12 mois | 100 | 70 | 70 | **−30** |
+| jamais contrôlé, 10 échéances passées | 0 | 0 | 0 | 0 |
+| parc partiellement retiré (4 archivées) | 100 | 50 | 50 | **−50** |
+
+**Ce que le dirigeant verra.** Rien s'il est à jour, rien s'il était déjà à
+zéro. Jusqu'à **trente points** sur un dossier ordinaire dont trois échéances
+sont passées, et **cinquante** sur un parc dont une partie a été retirée — là,
+les lignes archivées quittent le dénominateur, si bien que trois retards pèsent
+sur six lignes au lieu de dix.
+
+La colonne « avant, régénéré » donne déjà la note d'après : le lot ne change pas
+la règle, il la rend vraie sans attendre qu'on rouvre le calendrier. C'est le
+défaut du lot 3 bis, chiffré : **un dossier réellement en retard affichait 100**.

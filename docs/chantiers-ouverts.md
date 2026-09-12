@@ -1455,9 +1455,10 @@ la dernière réalisation se lit sur le dernier rapport. **Relecture à trois le
 récent blanchissait le retard) et cinq régressions corrigés, le score tranché —
 une ligne compte une fois, l'échéance ouverte prime. ~~N3~~ fait le 2026-09-12 :
 l'archivage est un champ (`archiveLe`), les prédicats ne lisent plus la colonne
-gelée, et une migration a retiré le préfixe des libellés. Restent la moitié
-« simplifiés » de N4, N5 — et la **mesure de la baisse du score** que l'ADR
-demande avant de fusionner.
+gelée, et une migration a retiré le préfixe des libellés. ~~La mesure de la
+baisse du score~~ est faite le 2026-09-12 (`pnpm mesure:score`) : jusqu'à
+−30 points sur un dossier ordinaire, −50 sur un parc partiellement retiré, rien
+sur un dossier à jour. Restent la moitié « simplifiés » de N4 et N5.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est
