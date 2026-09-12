@@ -4,6 +4,7 @@ import {
   classerDate,
   classerVerification,
   lecturesCalendrier,
+  statutDeLaLecture,
 } from "./etats";
 
 // L'horloge est injectée partout (ADR-011) : midi à Paris, un jour sans
@@ -325,6 +326,43 @@ describe("lecturesCalendrier", () => {
   });
 });
 
+
+describe("statutDeLaLecture (ADR-034)", () => {
+  it("le FAIT porte le résultat de son rapport, pas l'état de l'échéance ouverte", () => {
+    // Le défaut : une tuile verte « fait le 1er juin » affichait « En retard »
+    // dès que l'échéance suivante de la même ligne était passée.
+    expect(
+      statutDeLaLecture("realisation", {
+        statut: "depassee",
+        dernierResultat: "conforme",
+      }),
+    ).toBe("realisee_conforme");
+    expect(
+      statutDeLaLecture("realisation", {
+        statut: "planifiee",
+        dernierResultat: "ecart_majeur",
+      }),
+    ).toBe("realisee_ecart_majeur");
+  });
+
+  it("le rendez-vous suivant reste planifié, l'échéance ouverte garde l'état de la ligne", () => {
+    expect(
+      statutDeLaLecture("prochaine", {
+        statut: "realisee_conforme",
+        dernierResultat: "conforme",
+      }),
+    ).toBe("planifiee");
+    expect(statutDeLaLecture("courante", { statut: "depassee" })).toBe(
+      "depassee",
+    );
+  });
+
+  it("sans résultat connu — ligne d'avant l'ADR-034 — le statut de la ligne fait foi", () => {
+    expect(
+      statutDeLaLecture("realisation", { statut: "realisee_observations" }),
+    ).toBe("realisee_observations");
+  });
+});
 
 describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
   // Une ligne dont l'obligation ne s'applique plus est marquée, pas

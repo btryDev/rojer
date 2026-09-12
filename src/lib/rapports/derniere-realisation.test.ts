@@ -58,8 +58,20 @@ describe("indexerDernieresRealisations", () => {
       { verificationId: "v-1", dateRapport: j("2026-06-01") },
       { verificationId: "v-1", dateRapport: j("2025-12-01") },
     ]);
-    expect(index.get("v-1")).toEqual(j("2026-06-01"));
-    expect(index.get("v-2")).toEqual(j("2024-01-01"));
+    expect(index.get("v-1")?.dateRapport).toEqual(j("2026-06-01"));
+    expect(index.get("v-2")?.dateRapport).toEqual(j("2024-01-01"));
     expect(index.has("v-3")).toBe(false);
+  });
+
+  it("garde le RÉSULTAT avec la date : il donne son statut à une obligation ponctuelle", () => {
+    const index = indexerDernieresRealisations([
+      { verificationId: "v-1", dateRapport: j("2025-05-01"), resultat: "conforme" },
+      {
+        verificationId: "v-1",
+        dateRapport: j("2026-06-01"),
+        resultat: "ecart_majeur",
+      },
+    ]);
+    expect(index.get("v-1")?.resultat).toBe("ecart_majeur");
   });
 });

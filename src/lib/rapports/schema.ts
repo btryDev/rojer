@@ -1,4 +1,4 @@
-import { depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 import { z } from "zod";
 
 /**
@@ -32,7 +32,20 @@ export const rapportMetadataSchema = z.object({
     .string()
     .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
     .transform((v) => depuisCleJourCivil(v))
-    .refine((d) => !Number.isNaN(d.getTime()), "Date invalide"),
+    .refine((d) => !Number.isNaN(d.getTime()), "Date invalide")
+    // PAS DE CONTRÔLE DANS LE FUTUR, et depuis l'ADR-034 la faute de frappe
+    // ne se corrige plus d'elle-même : la ligne roule sur la date du rapport,
+    // et un rapport plus récent — « 2062 » au lieu de « 2026 » — rend tout
+    // dépôt suivant antidaté, donc sans effet. La ligne resterait figée en
+    // 2063 jusqu'à ce que quelqu'un pense à supprimer la pièce. Avant, le
+    // dépôt suivant réécrivait la date et effaçait la coquille.
+    //
+    // Borne en JOUR CIVIL de Paris (ADR-011) : un contrôle fait aujourd'hui
+    // est accepté toute la journée, y compris depuis un serveur en UTC.
+    .refine(
+      (d) => cleJourCivil(d) <= cleJourCivil(new Date()),
+      "Un rapport ne peut pas être daté dans le futur : c'est la date à laquelle le contrôle a eu lieu.",
+    ),
   organismeVerif: z.preprocess(
     (v) => (typeof v === "string" ? v.trim() || undefined : v),
     z.string().max(200).optional(),

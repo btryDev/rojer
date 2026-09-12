@@ -180,13 +180,18 @@ export function contenuTenuAilleursDepuis(
             v.derniereRealisation
               ? `faite le ${formaterDateCourteFr(v.derniereRealisation)}`
               : null,
-            // …puis l'échéance ouverte. La colonne gelée d'une ligne d'avant
-            // garde l'ancienne phrase jusqu'à sa remise au modèle.
+            // …puis l'échéance ouverte — S'IL Y EN A UNE. Une obligation sans
+            // rendez-vous suivant, déjà faite, garde un statut réalisé et une
+            // `datePrevue` qui n'est que son échéance d'origine : l'annoncer
+            // « prochaine » promet un contrôle que rien n'attend. La colonne
+            // gelée d'une ligne d'avant garde l'ancienne phrase.
             v.dateRealisee
               ? `faite le ${formaterDateCourteFr(v.dateRealisee)}`
-              : v.datePrevue
-                ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
-                : "à planifier",
+              : v.statut.startsWith("realisee")
+                ? null
+                : v.datePrevue
+                  ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
+                  : "à planifier",
           ]
             .filter(Boolean)
             .join(" · "),

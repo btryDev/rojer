@@ -63,6 +63,22 @@ describe("registre — ce qui a été fait, et ce qui vient (ADR-034)", () => {
   });
 });
 
+describe("registre — une obligation ponctuelle consommée n'annonce pas de suite", () => {
+  it("dit ce qui a été fait, sans promettre une prochaine échéance", () => {
+    // Sa `datePrevue` n'est que son échéance d'origine : l'annoncer
+    // « prochaine » promet au dirigeant un contrôle que rien n'attend.
+    const [ligne] = lignesDe([
+      verif({
+        datePrevue: new Date("2026-07-01T00:00:00Z"),
+        derniereRealisation: new Date("2026-06-20T00:00:00Z"),
+        statut: "realisee_conforme",
+      }),
+    ]);
+    expect(ligne.meta).toContain("faite le 20 juin 2026");
+    expect(ligne.meta).not.toContain("prochaine");
+  });
+});
+
 describe("registre — marquage des échéances contractuelles", () => {
   it("une échéance née d'une demande d'assureur est marquée", () => {
     const [ligne] = lignesDe([

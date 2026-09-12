@@ -660,11 +660,17 @@ export type StatutVerificationPersiste =
   | "realisee_observations"
   | "realisee_ecart_majeur";
 
-const STATUTS_REALISES: readonly StatutVerificationPersiste[] = [
+/** Les statuts qui disent « ce contrôle a eu lieu ». Exportés parce que la
+ *  condition SQL du `deleteMany` doit dire la même chose que `porteUneTrace` :
+ *  une obligation sans rendez-vous suivant, consommée, n'a plus que son statut
+ *  pour témoigner (ADR-034). */
+export const STATUTS_REALISES_PERSISTES: readonly StatutVerificationPersiste[] = [
   "realisee_conforme",
   "realisee_observations",
   "realisee_ecart_majeur",
 ];
+
+const STATUTS_REALISES = STATUTS_REALISES_PERSISTES;
 
 export function estStatutRealise(s: string): boolean {
   return (STATUTS_REALISES as readonly string[]).includes(s);
@@ -710,6 +716,17 @@ export type OccurrenceExistante = {
    * et retombent sur `dateRealisee`.
    */
   derniereRealisation?: Date | null;
+  /** Le résultat de ce rapport (`conforme`…). Il donne son statut à une ligne
+   *  sans rendez-vous suivant, seule à en garder un. */
+  dernierResultat?: string | null;
+  /**
+   * La ligne porte-t-elle au moins un rapport, quel qu'en soit le résultat ?
+   *
+   * C'est ce qui BORNE le repli sur `dateRealisee` : une ligne qui a des
+   * rapports mais aucune réalisation — le dernier a été supprimé, ou il est
+   * « non vérifiable » — ne doit pas ressusciter la date d'un contrôle retiré.
+   */
+  aDesRapports?: boolean;
   statut: StatutVerificationPersiste;
   /** La ligne porte-t-elle au moins un rapport de vérification ou une action
    *  corrective ? C'est le seul critère qui autorise — ou interdit — la
@@ -746,10 +763,39 @@ export type MiseAJourOccurrence = {
   prescriptionId: string | null;
 };
 
-/** La réalisation que la réconciliation connaît pour une ligne : le dernier
- *  rapport réalisé, ou, à défaut, la colonne gelée (repli, cf. le type). */
+/**
+ * La réalisation que la réconciliation connaît pour une ligne : la date du
+ * dernier rapport réalisé.
+ *
+ * À défaut, la colonne gelée — mais SEULEMENT si la ligne n'a aucun rapport.
+ * Sinon, supprimer le dernier rapport d'une ligne d'avant l'ADR-034 laissait
+ * le repli ressusciter la date du contrôle retiré, et la réconciliation
+ * recalculait l'échéance dessus : un an de retard effacé (relecture du
+ * 2026-09-12).
+ */
 function realisationConnue(ex: OccurrenceExistante): Date | null {
-  return ex.derniereRealisation ?? ex.dateRealisee ?? null;
+  if (ex.derniereRealisation != null) return ex.derniereRealisation;
+  if (ex.aDesRapports === true) return null;
+  return ex.dateRealisee ?? null;
+}
+
+/** Le statut que porte une ligne dont l'unique contrôle est fait, déduit du
+ *  résultat de son rapport. `null` si le résultat est inconnu ou ne vaut pas
+ *  réalisation — ce module reste pur et ne connaît pas le schéma des
+ *  rapports, il lit une chaîne. */
+function statutDepuisResultat(
+  resultat: string | null | undefined,
+): StatutVerificationPersiste | null {
+  switch (resultat) {
+    case "conforme":
+      return "realisee_conforme";
+    case "observations_mineures":
+      return "realisee_observations";
+    case "ecart_majeur":
+      return "realisee_ecart_majeur";
+    default:
+      return null;
+  }
 }
 
 export type PlanReconciliation = {
@@ -1091,13 +1137,26 @@ export function reconcilierCalendrier(
       // n'est de toute façon jamais candidate à la suppression.
       datePrevue = g.datePrevue;
       statut = estStatutRealise(ex.statut) ? ex.statut : g.statut;
-    } else if (!estCyclique(g.periodicite) && estStatutRealise(ex.statut)) {
+    } else if (
+      !estCyclique(g.periodicite) &&
+      (estStatutRealise(ex.statut) || realisation !== null)
+    ) {
       // Obligation sans rendez-vous suivant (`mise_en_service_uniquement`,
       // `autre`) et réalisée : le one-shot est consommé, plus rien à
       // replanifier, jamais. La ligne garde le résultat de son unique
       // contrôle — c'est le seul cas où un statut réalisé reste sur la ligne.
+      //
+      // `|| realisation !== null` COUVRE LE CHANGEMENT DE PAS, et c'est une
+      // régression de N2 qu'il ferme : une ligne ROULÉE par un dépôt porte
+      // « planifiée », pas un statut réalisé. Le jour où sa périodicité devient
+      // ponctuelle — référentiel corrigé, prescription levée —, elle tombait
+      // en cycle ouvert et gardait une échéance que plus rien n'attend : le
+      // contrôle déjà fait serait annoncé « en retard » au cycle suivant. Son
+      // statut se relit alors sur le résultat de son dernier rapport.
       datePrevue = ex.datePrevue;
-      statut = ex.statut;
+      statut =
+        statutDepuisResultat(ex.dernierResultat) ??
+        (estStatutRealise(ex.statut) ? ex.statut : g.statut);
     } else if (estStatutRealise(ex.statut) && realisation !== null) {
       // RATTRAPAGE D'UNE LIGNE D'AVANT N2 (ADR-034), et rien d'autre. Une
       // ligne CYCLIQUE au statut réalisé est, par construction, d'avant N2 :
@@ -1166,7 +1225,17 @@ export function reconcilierCalendrier(
       const prochaine = prochaineEcheance(heritee, g.periodicite);
       datePrevue = prochaine ?? ex.datePrevue;
       statut = statutCycleOuvert(datePrevue, ex.statut, now);
-    } else if (ex.statut === "a_planifier" && g.statut === "planifiee") {
+    } else if (
+      ex.statut === "a_planifier" &&
+      g.statut === "planifiee" &&
+      // RIEN N'A ÉTÉ CONTRÔLÉ, et cette garde ferme une régression de N2.
+      // Un rapport « non vérifiable » déposé APRÈS un contrôle réel repasse la
+      // ligne en « à planifier » sans toucher sa date — c'est voulu, l'échéance
+      // qui courait court toujours. Sans cette garde, la régénération suivante
+      // remplaçait cette échéance par « mise en service + une période », et le
+      // contrôle réel déjà fait était oublié.
+      realisation === null
+    ) {
       // La ligne n'avait qu'un **placeholder** — « à planifier » n'est pas
       // un rendez-vous, c'est son absence — et le générateur sait désormais
       // en calculer un depuis la mise en service. Poser cette date n'efface
@@ -1230,7 +1299,14 @@ export function reconcilierCalendrier(
     // `dateRealisee` compte comme une trace au même titre qu'un rapport : elle
     // atteste qu'un contrôle a eu lieu, même si la pièce jointe a depuis été
     // retirée du registre.
-    const porteUneTrace = ex.porteUnePreuve || realisationConnue(ex) !== null;
+    // `estStatutRealise` compte comme trace : une obligation sans rendez-vous
+    // suivant, consommée, n'a plus ni rapport ni date sur sa ligne une fois
+    // que la réconciliation a éteint la colonne (ADR-034) — la supprimer
+    // effacerait le seul témoignage qu'elle a été faite.
+    const porteUneTrace =
+      ex.porteUnePreuve ||
+      realisationConnue(ex) !== null ||
+      estStatutRealise(ex.statut);
 
     // LE PORTEUR DE CETTE LIGNE-CI EXISTE-T-IL ENCORE ? La question n'est pas
     // celle de l'applicabilité de l'obligation : une ligne est identifiée par

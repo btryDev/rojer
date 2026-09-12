@@ -134,19 +134,32 @@ describe("repartirVerifications", () => {
     expect(etat.total).toBe(verifs.length);
   });
 
-  it("une ligne roulée compte son rapport ET son échéance ouverte (ADR-034)", () => {
+  it("une ligne roulée compte UNE fois : son échéance ouverte prime (ADR-034)", () => {
     // Contrôle fait en mars, lu sur le rapport ; la ligne a roulé et son
-    // échéance ouverte tombe dans l'horizon proche. Les deux se comptent : le
-    // fait dans `realisees12m`, l'échéance dans `aVenir`. La disjonction tient
-    // entre la ligne et son rapport, plus sur la ligne.
+    // échéance ouverte tombe dans l'horizon proche. Elle compte là, et pas une
+    // seconde fois dans les réalisations : sinon le dénominateur du score
+    // enflerait et un retard coûterait moins cher sur un appareil contrôlé
+    // récemment que sur un autre.
     const roulee = {
       ...verif("planifiee", "2026-05-10T00:00:00Z"),
       derniereRealisation: new Date("2026-03-02T00:00:00Z"),
     };
     const etat = repartirVerifications([roulee], NOW);
-    expect(etat.realisees12m).toHaveLength(1);
     expect(etat.aVenir).toHaveLength(1);
-    expect(etat.total).toBe(2);
+    expect(etat.realisees12m).toHaveLength(0);
+    expect(etat.total).toBe(1);
+  });
+
+  it("la même ligne compte comme réalisée quand son prochain rendez-vous est lointain", () => {
+    // Contrôlée en mars, prochaine échéance en décembre : rien à faire dans
+    // l'horizon, mais le dossier a bien un contrôle à son actif.
+    const roulee = {
+      ...verif("planifiee", "2026-12-10T00:00:00Z"),
+      derniereRealisation: new Date("2026-03-02T00:00:00Z"),
+    };
+    const etat = repartirVerifications([roulee], NOW);
+    expect(etat.realisees12m).toHaveLength(1);
+    expect(etat.total).toBe(1);
   });
 
   it("et une échéance ouverte dépassée sur un appareil contrôlé compte en retard", () => {
@@ -157,7 +170,36 @@ describe("repartirVerifications", () => {
     };
     const etat = repartirVerifications([roulee], NOW);
     expect(etat.enRetard).toHaveLength(1);
-    // Avril 2025 est à plus de douze mois du 23 avril 2026 : hors fenêtre.
     expect(etat.realisees12m).toHaveLength(0);
+    expect(etat.total).toBe(1);
+  });
+
+  it("un retard coûte le même prix, que le dernier contrôle soit récent ou vieux", () => {
+    // LA MESURE QUI A TRANCHÉ (2026-09-12). Dix lignes contrôlées, trois
+    // échéances dépassées. En comptant deux fois une ligne roulée, le même
+    // dossier sortait à 13 éléments quand son dernier rapport datait de trois
+    // mois, et à 10 quand il datait de plus d'un an : le retard était dilué.
+    // Les deux dates tombent dans la fenêtre de douze mois : ce qui les
+    // distingue est la RÉCENCE, et c'est précisément ce qui ne doit rien
+    // changer au prix d'un retard.
+    const recent = new Date("2026-03-20T00:00:00Z");
+    const vieux = new Date("2025-06-20T00:00:00Z");
+    const dossier = (derniere: Date) => [
+      ...Array.from({ length: 3 }, () => ({
+        ...verif("planifiee", "2026-04-01T00:00:00Z"),
+        derniereRealisation: derniere,
+      })),
+      ...Array.from({ length: 7 }, () => ({
+        ...verif("planifiee", "2026-12-01T00:00:00Z"),
+        derniereRealisation: derniere,
+      })),
+    ];
+
+    const a = repartirVerifications(dossier(recent), NOW);
+    const b = repartirVerifications(dossier(vieux), NOW);
+    expect(a.total).toBe(10);
+    expect(b.total).toBe(10);
+    expect(a.enRetard).toHaveLength(3);
+    expect(b.enRetard).toHaveLength(3);
   });
 });

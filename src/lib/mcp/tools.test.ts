@@ -342,6 +342,41 @@ describe("équipements et calendrier", () => {
     expect(texte).toContain("Aucune vérification");
   });
 
+  it("une obligation ponctuelle déjà faite n'est ni « planifiée » ni en retard", async () => {
+    // Le défaut le plus grave de la relecture du 2026-09-12 : depuis que la
+    // réconciliation éteint la colonne, `dateRealisee` ne dit plus qu'un
+    // contrôle de mise en service a eu lieu — seul son statut le dit. Lue sur
+    // la colonne, la garde tombait, et l'assistant recevait « planifiée,
+    // 40 jour(s) de retard » sous un en-tête « aucune en retard ».
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({
+        periodicite: "mise_en_service_uniquement",
+        statut: "realisee_conforme",
+        datePrevue: jour("2026-07-01"),
+        rapports: [{ dateRapport: jour("2026-06-20") }],
+      }),
+    ]);
+
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("aucune en retard");
+    expect(texte).not.toContain("jour(s) de retard");
+    expect(texte).toContain("réalisée");
+  });
+
+  it("et elle ne ressort pas dans les prochaines échéances", async () => {
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({
+        periodicite: "mise_en_service_uniquement",
+        statut: "realisee_conforme",
+        datePrevue: jour("2026-07-01"),
+        rapports: [{ dateRapport: jour("2026-06-20") }],
+      }),
+    ]);
+
+    const texte = await outil("verifications").executer(ctx, { horizonJours: 30 });
+    expect(texte).toContain("Aucune vérification");
+  });
+
   it("rend à l'assistant le contrôle fait ET l'échéance ouverte d'une ligne roulée", async () => {
     // ADR-034 : la ligne ne porte que l'échéance ouverte, le contrôle fait se
     // lit sur son rapport. L'assistant doit recevoir les deux — sans le

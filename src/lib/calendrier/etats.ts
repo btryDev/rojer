@@ -22,6 +22,9 @@ import {
   type VerificationDatee,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
+// Type seul : effacé à la compilation, donc ce module reste utilisable côté
+// client, comme le dit l'en-tête de `VerificationDatee`.
+import type { StatutVerification } from "@prisma/client";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { estCyclique } from "./periodicite";
 
@@ -329,6 +332,38 @@ export function etatDuRendezVous(
     return classerDate(v.datePrevue, now);
   }
   return classe;
+}
+
+/**
+ * La pastille à peindre à côté d'une LECTURE de calendrier.
+ *
+ * Trois lectures, trois réponses (ADR-034) :
+ *  · `prochaine` — le rendez-vous suivant d'un cycle soldé : « planifié », il
+ *    n'hérite pas du badge « Conforme » de la ligne ;
+ *  · `realisation` — le contrôle fait : il porte le RÉSULTAT de son rapport.
+ *    Depuis que la ligne roule au dépôt, son statut est celui de l'échéance
+ *    ouverte : une tuile verte « fait le 1er juin » affichait donc « En
+ *    retard » dès que l'échéance suivante était passée ;
+ *  · `courante` — l'échéance ouverte : l'état de la ligne, tel quel.
+ */
+export function statutDeLaLecture(
+  lecture: LectureCalendrier["lecture"],
+  v: { statut: string; dernierResultat?: string | null },
+): StatutVerification {
+  if (lecture === "prochaine") return "planifiee";
+  if (lecture !== "realisation") return v.statut as StatutVerification;
+  switch (v.dernierResultat) {
+    case "conforme":
+      return "realisee_conforme";
+    case "observations_mineures":
+      return "realisee_observations";
+    case "ecart_majeur":
+      return "realisee_ecart_majeur";
+    default:
+      // Résultat inconnu : une ligne d'avant l'ADR-034, dont la réalisation
+      // vient de la colonne gelée et dont le statut porte encore le résultat.
+      return v.statut as StatutVerification;
+  }
 }
 
 export function aUnRendezVous(v: VerificationDatee, now: Date): boolean {

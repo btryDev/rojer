@@ -22,19 +22,30 @@ import {
  */
 export async function joindreDernieresRealisations<T extends { id: string }>(
   lignes: T[],
-): Promise<Array<T & { derniereRealisation: Date | null }>> {
+): Promise<
+  Array<T & { derniereRealisation: Date | null; dernierResultat: string | null }>
+> {
   if (lignes.length === 0) return [];
+  // Tous les rapports réalisés du lot, et non le dernier de chaque ligne : le
+  // `distinct` de Prisma se fait en mémoire côté moteur, donc il ne
+  // ramènerait pas moins de lignes, et un `groupBy _max(dateRapport)` perdrait
+  // le RÉSULTAT dont le statut d'un one-shot dépend. Deux colonnes par
+  // rapport ; un hebdomadaire en produit une cinquantaine par an.
   const index = indexerDernieresRealisations(
     await prisma.rapportVerification.findMany({
       where: {
         verificationId: { in: lignes.map((l) => l.id) },
         ...WHERE_RAPPORT_REALISE,
       },
-      select: { verificationId: true, dateRapport: true },
+      select: { verificationId: true, dateRapport: true, resultat: true },
     }),
   );
-  return lignes.map((l) => ({
-    ...l,
-    derniereRealisation: index.get(l.id) ?? null,
-  }));
+  return lignes.map((l) => {
+    const derniere = index.get(l.id) ?? null;
+    return {
+      ...l,
+      derniereRealisation: derniere?.dateRapport ?? null,
+      dernierResultat: derniere?.resultat ?? null,
+    };
+  });
 }

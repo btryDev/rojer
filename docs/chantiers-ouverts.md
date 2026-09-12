@@ -1450,7 +1450,10 @@ besoin naît. Plan en cinq lots N1–N5 dans l'ADR. ~~N1~~ fait le 2026-09-11
 `adr034-ligne-ouverte` ; ~~N2~~ fait le même jour (le dépôt roule, la
 suppression recule, le réconciliateur ne roule plus) ; ~~la moitié « à
 reprendre » de N4~~ faite aussi (`beac7c9`) : `dateRealisee` n'est plus écrite,
-la dernière réalisation se lit sur le dernier rapport. Restent N3, la moitié
+la dernière réalisation se lit sur le dernier rapport. **Relecture à trois le
+2026-09-12** : un défaut bloquant (supprimer les rapports du plus ancien au plus
+récent blanchissait le retard) et cinq régressions corrigés, le score tranché —
+une ligne compte une fois, l'échéance ouverte prime. Restent N3, la moitié
 « simplifiés » de N4, N5 — et la **mesure de la baisse du score** que l'ADR
 demande avant de fusionner.
 

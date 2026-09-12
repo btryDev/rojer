@@ -83,10 +83,10 @@ export type LigneFausse = {
   statut: string;
   prescriptionId?: string | null;
   archiveLe?: Date | null;
-  /** Dates des rapports RÉALISÉS attachés à la ligne — ce que la
+  /** Les rapports attachés à la ligne, avec leur résultat — ce que la
    *  réconciliation lit pour connaître la dernière réalisation (ADR-034).
-   *  Indépendant de `nbRapports`, qui compte aussi les non vérifiables. */
-  rapportsRealises?: Date[];
+   *  Indépendant de `nbRapports`, qui est le compte brut. */
+  rapports?: { dateRapport: Date; resultat: string }[];
   nbRapports: number;
   nbActions: number;
 };
@@ -310,6 +310,7 @@ export function fauxPrisma(db: Magasin) {
         rapports?: { none: Record<string, never> };
         actions?: { none: Record<string, never> };
         dateRealisee?: Date | null;
+        statut?: { notIn: readonly string[] };
       };
     }) =>
       ecriture("verification.deleteMany", () => {
@@ -318,8 +319,15 @@ export function fauxPrisma(db: Magasin) {
           operation: "verification.deleteMany",
           where: args.where,
         });
-        const { id, etablissementId, rapports, actions, dateRealisee, ...reste } =
-          args.where;
+        const {
+          id,
+          etablissementId,
+          rapports,
+          actions,
+          dateRealisee,
+          statut,
+          ...reste
+        } = args.where;
         if (Object.keys(reste).length > 0) {
           inconnu("verification.deleteMany", Object.keys(reste));
         }
@@ -339,7 +347,11 @@ export function fauxPrisma(db: Magasin) {
               (rapports === undefined || v.nbRapports === 0) &&
               (actions === undefined || v.nbActions === 0) &&
               (dateRealisee === undefined ||
-                memeInstant(v.dateRealisee, dateRealisee))
+                memeInstant(v.dateRealisee, dateRealisee)) &&
+              // La quatrième condition (ADR-034) : un statut réalisé est une
+              // trace, et la base doit refuser d'emporter la ligne qui le
+              // porte, comme elle refuse d'emporter un rapport.
+              (statut === undefined || !statut.notIn.includes(v.statut))
             ),
         );
         return { count: avant - db.verifications.length };
@@ -498,7 +510,7 @@ export function fauxPrisma(db: Magasin) {
     /**
      * `where: { etablissementId, resultat: { in: [...] } }` — la lecture des
      * réalisations par la réconciliation (ADR-034). Le faux client ne stocke
-     * que les DATES des rapports réalisés, sur la ligne (`rapportsRealises`) :
+     * que les rapports posés sur la ligne (`rapports` : date et résultat) :
      * c'est tout ce que la réconciliation en lit.
      */
     findMany: async ({
@@ -514,14 +526,20 @@ export function fauxPrisma(db: Magasin) {
       if (resultat === undefined) {
         inconnu("rapportVerification.findMany", ["resultat absent"]);
       }
+      // Le filtre sur `resultat` est HONORÉ, pas seulement exigé : les
+      // rapports posés sur une ligne portent le leur, et un « non vérifiable »
+      // ne doit pas ressortir comme une réalisation. Sans cela, retirer le
+      // filtre du code de production ne faisait rougir aucun test.
       return db.verifications
         .filter((v) => v.etablissementId === etablissementId)
         .flatMap((v) =>
-          (v.rapportsRealises ?? []).map((dateRapport) => ({
+          (v.rapports ?? []).map((r) => ({
             verificationId: v.id,
-            dateRapport,
+            dateRapport: r.dateRapport,
+            resultat: r.resultat,
           })),
-        );
+        )
+        .filter((r) => resultat.in.includes(r.resultat));
     },
   };
 

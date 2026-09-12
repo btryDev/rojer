@@ -58,17 +58,34 @@ export function derniereRealisation(
 
 /**
  * Pour un lot de lignes lu d'un coup — la réconciliation lit tous les rapports
- * réalisés d'un établissement en une requête plutôt qu'une par ligne — : la
- * dernière réalisation de chaque ligne, indexée par identifiant de ligne.
+ * réalisés d'un établissement en une requête plutôt qu'une par ligne — : le
+ * dernier rapport réalisé de chaque ligne, indexé par identifiant de ligne.
+ *
+ * Le RÉSULTAT voyage avec la date, et pas par confort : une obligation sans
+ * rendez-vous suivant garde sur sa ligne le statut de son unique contrôle
+ * (`realisee_conforme`…), et c'est le résultat du rapport qui le dit. Sans
+ * lui, la réconciliation devrait inventer un statut ou l'effacer.
  */
+export type DerniereRealisation = { dateRapport: Date; resultat: string | null };
+
 export function indexerDernieresRealisations(
-  rapports: ReadonlyArray<{ verificationId: string; dateRapport: Date }>,
-): Map<string, Date> {
-  const index = new Map<string, Date>();
+  rapports: ReadonlyArray<{
+    verificationId: string;
+    dateRapport: Date;
+    resultat?: string;
+  }>,
+): Map<string, DerniereRealisation> {
+  const index = new Map<string, DerniereRealisation>();
   for (const r of rapports) {
     const connue = index.get(r.verificationId);
-    if (connue === undefined || r.dateRapport.getTime() > connue.getTime()) {
-      index.set(r.verificationId, r.dateRapport);
+    if (
+      connue === undefined ||
+      r.dateRapport.getTime() > connue.dateRapport.getTime()
+    ) {
+      index.set(r.verificationId, {
+        dateRapport: r.dateRapport,
+        resultat: r.resultat ?? null,
+      });
     }
   }
   return index;

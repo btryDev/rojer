@@ -37,6 +37,7 @@ import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
 import { prismaMcp } from "./prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
+import { estRealisee } from "@/lib/calendrier/etats";
 import {
   derniereRealisation,
   WHERE_RAPPORT_REALISE,
@@ -345,7 +346,13 @@ function etatDe(v: VerificationDatee, now: Date): EtatVerification {
   // EN PREMIER, avant même le réalisé : une ligne archivée peut porter une
   // réalisation, et « réalisée » laisserait croire qu'elle compte encore.
   if (estVerificationArchivee(v)) return "ne_s_applique_plus";
-  if (v.dateRealisee !== null) return "realisee";
+  // `estRealisee` lit le STATUT, plus la colonne (ADR-034) : depuis que la
+  // ligne roule au dépôt, seule une obligation SANS rendez-vous suivant garde
+  // un statut réalisé — et sa `dateRealisee` est éteinte. Lue sur la colonne,
+  // la garde tombait : une vérification à la mise en service, faite, ressortait
+  // « planifiée, 40 jours de retard » à l'assistant, sous un en-tête « aucune
+  // en retard ». Relevé en relecture le 2026-09-12.
+  if (estRealisee(v)) return "realisee";
   if (estVerificationEnRetard(v, now)) return "en_retard";
   if (estVerificationAPlanifier(v, now)) return "a_planifier";
   if (estVerificationAVenir(v, now, JOURS_HORIZON_PROCHE)) return "a_venir";
@@ -518,8 +525,9 @@ export async function listerVerifications(
     // `etatDe` a été rendu conscient de l'archivage, ce champ-ci ne l'était
     // pas — et `formaterVerifications` imprime LES DEUX. L'assistant recevait
     // « Ne s'applique plus — …, ne s'applique plus, 240 jour(s) de retard ».
+    // « Réalisée » se lit sur le statut (ADR-034), plus sur la colonne éteinte.
     joursRetard:
-      v.dateRealisee || estVerificationArchivee(v)
+      estRealisee(v) || estVerificationArchivee(v)
         ? 0
         : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),
@@ -545,9 +553,11 @@ export async function listerVerifications(
     const borne = ajouterJours(now, filtres.horizonJours);
     // Une obligation éteinte n'a pas d'échéance « à venir » : sans ce test,
     // elle remontait dans les prochaines échéances rendues à l'assistant.
+    // Une obligation consommée n'a pas d'échéance « à venir » non plus : le
+    // statut le dit, la colonne ne le dit plus (ADR-034).
     lues = lues.filter(
       (v) =>
-        v.dateRealisee === null &&
+        !estRealisee(v) &&
         !estVerificationArchivee(v) &&
         v.datePrevue <= borne,
     );

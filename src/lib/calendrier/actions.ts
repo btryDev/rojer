@@ -20,6 +20,7 @@ import {
   genererVerificationsDepuisTitres,
   genererVerificationsSurMesure,
   reconcilierCalendrier,
+  STATUTS_REALISES_PERSISTES,
   type OccurrenceExistante,
   type StatutVerificationPersiste,
   type TitreDeclare,
@@ -290,7 +291,9 @@ async function regenererUnePasse(
   const dernieresRealisations = indexerDernieresRealisations(
     await prisma.rapportVerification.findMany({
       where: { etablissementId, ...WHERE_RAPPORT_REALISE },
-      select: { verificationId: true, dateRapport: true },
+      // Le résultat voyage avec la date : il donne son statut à une ligne sans
+      // rendez-vous suivant, seule à en garder un (ADR-034).
+      select: { verificationId: true, dateRapport: true, resultat: true },
     }),
   );
 
@@ -304,7 +307,11 @@ async function regenererUnePasse(
     realisateurRequis: v.realisateurRequis,
     datePrevue: v.datePrevue,
     dateRealisee: v.dateRealisee,
-    derniereRealisation: dernieresRealisations.get(v.id) ?? null,
+    derniereRealisation: dernieresRealisations.get(v.id)?.dateRapport ?? null,
+    dernierResultat: dernieresRealisations.get(v.id)?.resultat ?? null,
+    // Distinct de `porteUnePreuve`, qui compte aussi les actions : celui-ci
+    // borne le repli sur la colonne gelée (cf. `realisationConnue`).
+    aDesRapports: v._count.rapports > 0,
     statut: v.statut as StatutVerificationPersiste,
     porteUnePreuve: v._count.rapports > 0 || v._count.actions > 0,
     prescriptionId: v.prescriptionId,
@@ -402,7 +409,7 @@ async function regenererUnePasse(
     //
     // `dateRealisee: null` complète le trio : le réconciliateur compte la
     // date de réalisation comme une trace au même titre qu'une pièce jointe
-    // (`porteUneTrace`), donc la condition d'ici doit compter les trois.
+    // (`porteUneTrace`), donc la condition d'ici doit compter les quatre.
     operations.push(
       prisma.verification.deleteMany({
         where: {
@@ -411,6 +418,12 @@ async function regenererUnePasse(
           rapports: { none: {} },
           actions: { none: {} },
           dateRealisee: null,
+          // ET le statut : depuis l'ADR-034, une obligation sans rendez-vous
+          // suivant, consommée, n'a plus ni rapport ni date sur sa ligne — son
+          // statut réalisé est le seul témoignage qu'elle a été faite, et
+          // `porteUneTrace` le compte comme tel. La clause SQL doit dire la
+          // même chose, sinon un appareil désactivé emporte la preuve.
+          statut: { notIn: [...STATUTS_REALISES_PERSISTES] },
         },
       }),
     );

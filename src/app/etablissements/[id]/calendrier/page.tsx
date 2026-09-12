@@ -7,6 +7,7 @@ import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
+import { statutDeLaLecture } from "@/lib/calendrier/etats";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
@@ -610,9 +611,9 @@ export default async function CalendrierPage({
             (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
           contractuelle: estEcheanceContractuelle(v),
           etat,
-          // Le rendez-vous suivant n'hérite pas du statut réalisé de la
-          // ligne : sa pastille dit ce qu'il est — planifié.
-          statut: lec.lecture === "prochaine" ? "planifiee" : v.statut,
+          // Même règle que la liste mensuelle : le rendez-vous suivant est
+          // planifié, le fait porte le résultat de son rapport (ADR-034).
+          statut: statutDeLaLecture(lec.lecture, v),
         });
       }
     }
@@ -1287,15 +1288,15 @@ export default async function CalendrierPage({
                               }
                               contractuelle={estEcheanceContractuelle(v)}
                               pastille={
-                                // Le rendez-vous suivant d'un cycle soldé
-                                // n'hérite pas du badge « Conforme » : sa
-                                // pastille dit ce qu'il est — planifié.
+                                // Trois lectures, trois pastilles (ADR-034) :
+                                // le rendez-vous suivant est « planifié », le
+                                // FAIT porte le résultat de son rapport, et
+                                // l'échéance ouverte porte l'état de la ligne.
+                                // Sans le cas « realisation », une tuile verte
+                                // « fait le 1er juin » affichait « En retard »
+                                // dès que l'échéance suivante était passée.
                                 <BadgeStatut
-                                  statut={
-                                    ligne.lecture === "prochaine"
-                                      ? "planifiee"
-                                      : v.statut
-                                  }
+                                  statut={statutDeLaLecture(ligne.lecture, v)}
                                 />
                               }
                               registre={ligne.registre}

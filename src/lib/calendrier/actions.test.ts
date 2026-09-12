@@ -303,7 +303,7 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
       v.datePrevue = ROULEE;
       v.statut = "planifiee";
       v.nbRapports = 1;
-      v.rapportsRealises = [LE_DEPOT];
+      v.rapports = [{ dateRapport: LE_DEPOT, resultat: "conforme" }];
     };
 
     await genererCalendrier(ETAB_ID);
@@ -400,7 +400,13 @@ describe("genererCalendrier — continuité par-dessus un identifiant retiré", 
         equipementId: "eq-vmc",
         obligationId: AERATION_FRAGMENT_RETIRE,
         libelleObligation: "Entretien annuel VMC/CTA",
-        dateRealisee: new Date("2025-06-01T00:00:00Z"),
+        // La réalisation vit sur le rapport (ADR-034) : une ligne qui PORTE un
+        // rapport ne se lit plus sur sa colonne, précisément pour qu'un
+        // rapport supprimé ne ressuscite pas.
+        dateRealisee: null,
+        rapports: [
+          { dateRapport: new Date("2025-06-01T00:00:00Z"), resultat: "conforme" },
+        ],
         statut: "realisee_conforme",
         nbRapports: 1,
       }),
@@ -753,13 +759,22 @@ describe("genererCalendrier — application du plan", () => {
     expect(dernierWhere("verification.deleteMany")).toEqual({
       id: { in: ["v-vide"] },
       etablissementId: ETAB_ID,
-      // Les trois conditions de non-preuve accompagnent désormais la clause
+      // Les QUATRE conditions de non-preuve accompagnent désormais la clause
       // de portée, et pour la même raison : ce que la lecture a conclu doit
       // être REDIT à l'écriture, sans quoi une preuve déposée entre les deux
-      // est emportée par la cascade.
+      // est emportée par la cascade. La quatrième vient de l'ADR-034 : une
+      // obligation ponctuelle consommée n'a plus ni rapport ni date, son
+      // statut est sa seule trace.
       rapports: { none: {} },
       actions: { none: {} },
       dateRealisee: null,
+      statut: {
+        notIn: [
+          "realisee_conforme",
+          "realisee_observations",
+          "realisee_ecart_majeur",
+        ],
+      },
     });
   });
 

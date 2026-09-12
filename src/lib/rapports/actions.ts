@@ -164,7 +164,9 @@ export async function uploadRapport(
       verificationId: verif.id,
       resultat: { in: [...RESULTATS_REALISES] },
     },
-    orderBy: { dateRapport: "desc" },
+    // `createdAt` en second : deux rapports du même jour, sinon, ne se
+    // départagent pas.
+    orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
     select: { dateRapport: true },
   });
 
@@ -182,6 +184,7 @@ export async function uploadRapport(
   let echeanceHonoree: Date | null = null;
   let majVerification: {
     datePrevue?: Date;
+    dateRealisee?: null;
     statut: StatutVerification;
   };
   if (!estResultatRealise(resultat)) {
@@ -288,12 +291,21 @@ function rouler(
   periodicite: Periodicite,
   dateRapport: Date,
   resultat: ResultatRealise,
-): { datePrevue: Date; statut: StatutVerification } {
+): { datePrevue: Date; dateRealisee: null; statut: StatutVerification } {
   const prochaine = prochaineEcheance(dateRapport, periodicite);
+  // `dateRealisee: null` ÉTEINT la colonne gelée sur une ligne d'avant
+  // l'ADR-034. Sans cela, une ligne qui vient de rouler gardait une ancienne
+  // date de réalisation, et `estVerificationEnRetard` — qui sort encore sur
+  // `dateRealisee !== null` jusqu'au N3 — la tenait pour jamais en retard,
+  // tant que la régénération n'avait pas tourné.
   if (prochaine === null) {
-    return { datePrevue, statut: STATUT_DEPUIS_RESULTAT[resultat] };
+    return {
+      datePrevue,
+      dateRealisee: null,
+      statut: STATUT_DEPUIS_RESULTAT[resultat],
+    };
   }
-  return { datePrevue: prochaine, statut: "planifiee" };
+  return { datePrevue: prochaine, dateRealisee: null, statut: "planifiee" };
 }
 
 /**
@@ -336,6 +348,7 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
   await assertEtablissementOwnership(rap.etablissementId);
 
   const now = new Date();
+  let conflit = false;
   await prisma.$transaction(async (tx) => {
     await tx.rapportVerification.delete({ where: { id: rapportId } });
 
@@ -346,24 +359,60 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
         verificationId: rap.verificationId,
         resultat: { in: [...RESULTATS_REALISES] },
       },
-      orderBy: { dateRapport: "desc" },
-      select: { dateRapport: true, resultat: true },
+      // `createdAt` départage deux rapports du même jour : sans lui, « le
+      // dernier » n'est pas déterministe, et c'est de lui que dépend le statut
+      // rendu à la ligne.
+      orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+      select: { id: true, dateRapport: true, resultat: true },
     });
     // Un rapport réalisé plus récent (ou du même jour) subsiste : le retiré
-    // était antidaté, il n'avait pas fait rouler la ligne.
+    // n'avait pas fait rouler la ligne — mais L'ÉCHÉANCE QU'IL HONORAIT SE
+    // TRANSMET, et c'est le défaut bloquant relevé le 2026-09-12. Le rapport
+    // suivant honorait une échéance que le retiré avait engendrée ; elle
+    // n'existe plus. Sans ce report, supprimer deux rapports du plus ancien au
+    // plus récent laissait la ligne sur une échéance future, sans aucune
+    // pièce : le retard était blanchi par l'ordre des suppressions.
     if (dernier !== null && dernier.dateRapport.getTime() >= rap.dateRapport.getTime()) {
+      if (rap.echeanceHonoree !== null) {
+        // Le successeur immédiat : le plus ANCIEN des réalisés qui restent et
+        // qui ne sont pas antérieurs au retiré.
+        const successeur = await tx.rapportVerification.findFirst({
+          where: {
+            verificationId: rap.verificationId,
+            resultat: { in: [...RESULTATS_REALISES] },
+            dateRapport: { gte: rap.dateRapport },
+          },
+          orderBy: [{ dateRapport: "asc" }, { createdAt: "asc" }],
+          select: { id: true },
+        });
+        if (successeur !== null) {
+          await tx.rapportVerification.update({
+            where: { id: successeur.id },
+            data: { echeanceHonoree: rap.echeanceHonoree },
+          });
+        }
+      }
       return;
     }
 
     const periodicite = rap.verification.periodicite as Periodicite;
     const cyclique = estCyclique(periodicite);
-    let datePrevue = rap.verification.datePrevue;
-    if (rap.echeanceHonoree !== null) {
-      datePrevue = rap.echeanceHonoree;
-    } else if (dernier !== null && cyclique) {
-      datePrevue =
-        prochaineEcheance(dernier.dateRapport, periodicite) ?? datePrevue;
-    }
+    // L'échéance qui rouvre : celle que le rapport retiré honorait. Quand un
+    // rapport réalisé plus ANCIEN subsiste, il en engendre une autre — on
+    // garde la PLUS TARDIVE des deux, sinon la ligne annoncerait un retard
+    // qu'un contrôle encore prouvé a déjà levé (relecture du 2026-09-12).
+    const depuisHonoree = rap.echeanceHonoree;
+    const depuisDernier =
+      dernier !== null && cyclique
+        ? prochaineEcheance(dernier.dateRapport, periodicite)
+        : null;
+    const candidates = [depuisHonoree, depuisDernier].filter(
+      (d): d is Date => d !== null,
+    );
+    const datePrevue =
+      candidates.length === 0
+        ? rap.verification.datePrevue
+        : candidates.reduce((a, b) => (a.getTime() >= b.getTime() ? a : b));
 
     let statut: StatutVerification;
     if (!cyclique && dernier !== null) {
@@ -387,8 +436,20 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
       // ressusciterait sinon la réalisation qu'on vient de retirer.
       data: { datePrevue, dateRealisee: null, statut },
     });
-    if (count !== 1) throw new LigneModifieeEntreTemps();
+    // CONFLIT : quelqu'un a fait bouger la ligne entre la lecture et ici — un
+    // dépôt concurrent, une autre suppression. On ne LÈVE PAS : la suppression
+    // du rapport, elle, est légitime et déjà faite, et une exception ici
+    // remonterait en page d'erreur, sans le message, pour un retrait qui a
+    // réussi. Le recul est simplement abandonné ; le calendrier est marqué
+    // pour reprise juste après (`regenererApresMutation`), et la ligne sera
+    // recalée depuis les rapports qui restent.
+    if (count !== 1) conflit = true;
   });
+  if (conflit) {
+    console.warn(
+      `[rapports] recul abandonné : la ligne ${rap.verificationId} a changé pendant la suppression du rapport ${rapportId}`,
+    );
+  }
 
   // La base a tranché : on peut libérer le fichier.
   await getStorage().delete(rap.fichierCle).catch(() => {});

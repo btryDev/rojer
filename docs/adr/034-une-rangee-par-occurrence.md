@@ -133,11 +133,27 @@ lisent un champ au lieu d'un `startsWith`.
 | Question | Aujourd'hui | Après |
 |---|---|---|
 | Cette ligne est-elle en retard ? | trois prédicats, deux gardes, trois classifieurs qui divergent | `archiveLe === null && datePrevue < aujourd'hui` |
-| Combien de contrôles faits sur 12 mois ? | `realisees12m` sur la dernière date d'une rangée réutilisée — sous-compte documenté | rapports datés dans la fenêtre, résultat réalisé — exact, et c'est le comptage que l'ADR-012 désignait déjà comme le juste |
+| Combien de contrôles faits sur 12 mois ? | `realisees12m` sur la dernière date d'une rangée réutilisée — sous-compte documenté | la dernière réalisation de chaque ligne, lue sur ses rapports (voir l'amendement du 2026-09-12) |
 | Quelle est la prochaine échéance ? | `datePrevue` d'une rangée qui porte aussi un fait passé | `datePrevue`, seule date de la ligne |
 | Un contrôle a-t-il honoré son échéance ? | non reconstituable | `rapport.echeanceHonoree` vs `rapport.dateRapport` |
 | La ligne est-elle archivée ? | préfixe texte, statut gelé | `archiveLe` |
-| Les compteurs sont-ils disjoints ? | oui, **parce que** les réalisées sont exclues — c'est le défaut | oui, parce qu'une ligne est ouverte ou archivée, et un rapport est un rapport |
+| Les compteurs sont-ils disjoints ? | oui, **parce que** les réalisées sont exclues — c'est le défaut | oui, et c'est l'échéance ouverte qui prime : une ligne compte une fois (amendement du 2026-09-12) |
+
+### Amendement du 2026-09-12 : une ligne compte une fois, et une seule
+
+La rédaction initiale disait « rapports datés dans la fenêtre ». Mesurée, elle
+donnait ceci sur un dossier de dix lignes toutes contrôlées, dont trois
+échéances dépassées : **treize** éléments au dénominateur et un score de 77,
+contre dix éléments et 70 pour le même dossier dont les rapports dataient de
+plus d'un an. **Le même retard coûtait moins cher sur un appareil contrôlé
+récemment** — parce que sa ligne comptait deux fois, une pour son échéance et
+une pour son rapport.
+
+Tranché par la propriétaire : `repartirVerifications` range chaque ligne dans
+**un seul** ensemble, et l'échéance ouverte prime — en retard, sans date, ou à
+venir sous trente jours d'abord ; `realisees12m` recueille le reste. Compter
+les RAPPORTS eux-mêmes a été écarté aussi : une obligation trimestrielle
+pèserait quatre fois une annuelle dans un score qui note des obligations.
 
 `lecturesCalendrier`, `etatDuRendezVous`, `classerVerification` dans sa forme
 actuelle, la branche « cycle soldé » du réconciliateur, le marqueur dans le
@@ -312,6 +328,21 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      sur sa ligne : il n'y a pas d'échéance suivante à ouvrir. N3 devra en tenir
      compte dans « en retard » — `datePrevue` passée et statut réalisé n'est pas
      un retard.
+- **Corrections du 2026-09-12**, après relecture à trois : la suppression d'un
+  rapport qui n'est pas le dernier **transmet son échéance honorée** au suivant
+  (sans quoi supprimer deux rapports du plus ancien au plus récent laissait la
+  ligne sur une échéance future, sans pièce — le retard blanchi) ; un rapport
+  **daté dans le futur** est refusé ; la branche du placeholder ne s'ouvre que
+  si rien n'a été contrôlé ; une périodicité devenue **ponctuelle** solde une
+  ligne roulée au lieu de la laisser courir ; le repli sur la colonne gelée est
+  borné aux lignes **sans rapport** ; un statut réalisé compte comme trace,
+  côté plan comme dans la clause SQL du `deleteMany` ; le serveur MCP, la fiche
+  et le registre lisent le **statut** et non la colonne éteinte ; la tuile
+  « fait le » porte le résultat de son rapport.
+  **Reste ouvert, à traiter au N3** : une obligation qui passe en
+  `periodicite: "autre"` cesse d'être générée ; sa ligne, roulée, garde une
+  échéance ouverte que plus rien ne solde. Le garde-fou d'applicabilité la
+  laisse telle quelle, et elle passera « en retard » au cycle suivant.
 - **N3 — Les prédicats** : `retard.ts` cesse de lire `dateRealisee` ;
   `estVerificationArchivee` lit `archiveLe` ; `classerVerification` et le
   vocabulaire perdent `archivee`-par-préfixe. Le préfixe est retiré des libellés

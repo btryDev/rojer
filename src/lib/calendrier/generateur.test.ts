@@ -1178,6 +1178,154 @@ describe("réconciliation — cycles de vérification", () => {
     expect(plan.aMettreAJour[0]?.statut).toBe("planifiee");
   });
 
+  it("un « non vérifiable » déposé après un contrôle ne renvoie pas la ligne à sa mise en service", () => {
+    // RÉGRESSION DE N2, trouvée en relecture. Le rapport « non vérifiable »
+    // repasse la ligne en « à planifier » sans toucher sa date — l'échéance
+    // qui courait court toujours. La branche du placeholder prenait alors la
+    // main et réécrivait « mise en service + une période », oubliant le
+    // contrôle réel que la ligne prouve.
+    const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
+    const eq = fakeEquipement("eq-1");
+    // La mise en service passe par les OPTIONS : passée en second argument,
+    // elle serait lue comme une « vérification précédente » indexée par clé de
+    // ligne, ne matcherait rien, et la ligne générée sortirait « à planifier »
+    // — le placeholder ne se déclencherait jamais, et ce test ne garderait
+    // rien. Il l'a fait pendant une heure, jusqu'à ce que la mutation reste
+    // verte et le dise.
+    const aGenerer = genererProchainesVerifications([applique(o, [eq])], new Map(), {
+      now: NOW,
+      misesEnService: new Map([["eq-1", new Date("2026-06-12T00:00:00Z")]]),
+    });
+
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-1",
+          obligationId: "o1",
+          equipementId: "eq-1",
+          datePrevue: new Date("2027-08-01T00:00:00Z"),
+          dateRealisee: null,
+          derniereRealisation: new Date("2026-08-01T00:00:00Z"),
+          statut: "a_planifier",
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenerer,
+      { now: NOW },
+    );
+
+    const maj = plan.aMettreAJour[0];
+    expect(maj?.datePrevue ?? new Date("2027-08-01T00:00:00Z")).toEqual(
+      new Date("2027-08-01T00:00:00Z"),
+    );
+  });
+
+  it("une périodicité devenue PONCTUELLE solde une ligne roulée au lieu de la laisser courir", () => {
+    // RÉGRESSION DE N2. Le référentiel corrige le rythme, ou une prescription
+    // est levée : l'obligation n'a plus de rendez-vous suivant. La ligne,
+    // roulée par son dépôt, porte « planifiée » — elle échappait donc à la
+    // branche du one-shot et gardait une échéance que plus rien n'attend.
+    // Elle serait passée « en retard » au cycle suivant, sur un contrôle fait.
+    const o = fakeObligation({
+      id: "o1",
+      periodicite: "mise_en_service_uniquement",
+    });
+    const aGenerer = genererProchainesVerifications(
+      [applique(o, [fakeEquipement("eq-1")])],
+      new Map(),
+      { now: NOW },
+    );
+
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-1",
+          obligationId: "o1",
+          equipementId: "eq-1",
+          periodicite: "annuelle",
+          datePrevue: new Date("2027-03-01T00:00:00Z"),
+          dateRealisee: null,
+          derniereRealisation: new Date("2026-03-01T00:00:00Z"),
+          dernierResultat: "observations_mineures",
+          statut: "planifiee",
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenerer,
+      { now: NOW },
+    );
+
+    const maj = plan.aMettreAJour[0];
+    expect(maj?.statut).toBe("realisee_observations");
+    expect(maj?.datePrevue).toEqual(new Date("2027-03-01T00:00:00Z"));
+  });
+
+  it("le repli sur la colonne gelée ne ressuscite pas un rapport supprimé", () => {
+    // La ligne a des rapports, mais aucun réalisé — le dernier a été retiré, ou
+    // il est « non vérifiable ». Sa vieille colonne ne doit pas faire foi :
+    // sinon la réconciliation recalculait l'échéance sur un contrôle qui
+    // n'existe plus, et effaçait un an de retard.
+    const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
+    const aGenerer = genererProchainesVerifications(
+      [applique(o, [fakeEquipement("eq-1")])],
+      new Map(),
+      { now: NOW },
+    );
+
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-1",
+          obligationId: "o1",
+          equipementId: "eq-1",
+          datePrevue: new Date("2024-01-01T00:00:00Z"),
+          // La colonne d'avant dit « contrôlé le 1er janvier 2024 »…
+          dateRealisee: new Date("2024-01-01T00:00:00Z"),
+          // …mais le rapport qui le prouvait a été retiré : il ne reste qu'un
+          // « non vérifiable », donc des rapports et aucune réalisation.
+          derniereRealisation: null,
+          aDesRapports: true,
+          statut: "realisee_conforme",
+          porteUnePreuve: true,
+        }),
+      ],
+      aGenerer,
+      { now: NOW },
+    );
+
+    // Aucun rattrapage : sans le bornage, la colonne aurait fait rouler la
+    // ligne au 2025-01-01 — un an de retard effacé sur la foi d'un contrôle
+    // dont la pièce n'existe plus. L'échéance de 2024 reste, et le retard avec.
+    const maj = plan.aMettreAJour[0];
+    expect(maj?.datePrevue).toEqual(new Date("2024-01-01T00:00:00Z"));
+    expect(maj?.statut).toBe("depassee");
+  });
+
+  it("une obligation ponctuelle consommée n'est pas supprimée quand son porteur disparaît", () => {
+    // Sa colonne est éteinte et elle n'a plus de rapport : son STATUT est le
+    // seul témoignage qu'elle a été faite. La supprimer effacerait la preuve
+    // d'un contrôle de mise en service.
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-mes",
+          obligationId: "retiree",
+          equipementId: "eq-1",
+          periodicite: "mise_en_service_uniquement",
+          dateRealisee: null,
+          derniereRealisation: null,
+          statut: "realisee_conforme",
+          porteUnePreuve: false,
+        }),
+      ],
+      [],
+      { now: NOW },
+    );
+
+    expect(plan.aSupprimer).toEqual([]);
+    expect(plan.aArchiver).toHaveLength(1);
+  });
+
   it("ne fait plus rouler une ligne déjà roulée par son dépôt (ADR-034)", () => {
     // Le cas général depuis N2 : le dépôt du 2026-03-01 a roulé la ligne au
     // 2027-03-01, statut planifiée. La régénération la trouve et la laisse —

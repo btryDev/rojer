@@ -24,7 +24,11 @@ import {
   estActionEnRetard,
   estVerificationEnRetard,
 } from "@/lib/dates/retard";
-import { aUnRendezVous, etatDuRendezVous } from "@/lib/calendrier/etats";
+import {
+  aUnRendezVous,
+  estRealisee,
+  etatDuRendezVous,
+} from "@/lib/calendrier/etats";
 import {
   FAMILLE_DE_TYPE,
   typeDeVerification,
@@ -155,7 +159,11 @@ export default async function VerificationDetailPage({
   const urgent =
     !sansRendezVous &&
     !enRetard &&
-    !v.dateRealisee &&
+    // Le STATUT, plus la colonne (ADR-034) : une obligation sans rendez-vous
+    // suivant, déjà faite, garde son statut réalisé mais plus de date sur la
+    // ligne. Lue sur la colonne, cette garde affichait « Dans N jours » à côté
+    // du badge « Conforme », sur une échéance d'origine qu'on n'attend plus.
+    !estRealisee(v) &&
     joursRestants >= 0 &&
     joursRestants <= JOURS_HORIZON_PROCHE;
   const aUnRapport = v.rapports.length > 0;

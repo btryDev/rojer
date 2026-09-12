@@ -36,6 +36,8 @@ type RapportFaux = {
   resultat: string;
   echeanceHonoree: Date | null;
   fichierCle: string;
+  /** Départage deux rapports du même jour, comme en base. */
+  createdAt: Date;
 };
 
 const h = vi.hoisted(() => {
@@ -50,17 +52,38 @@ const h = vi.hoisted(() => {
       ? (a ?? null) === (b ?? null)
       : a!.getTime() === b!.getTime();
 
-  const rapportsRealises = (where: {
-    verificationId: string;
-    resultat?: { in: string[] };
-  }) =>
-    db.rapports
+  /**
+   * Le `where` et le `orderBy` sont HONORÉS, et c'est ce qui rend les tests
+   * capables de rougir : la suppression cherche tantôt le dernier réalisé
+   * (ordre décroissant), tantôt le successeur d'un rapport retiré (ordre
+   * croissant, borné par `dateRapport >= …`). Un faux client qui rendrait
+   * toujours le même rapport laisserait passer les deux.
+   */
+  const rapportsRealises = (
+    where: {
+      verificationId: string;
+      resultat?: { in: string[] };
+      dateRapport?: { gte?: Date };
+    },
+    orderBy: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[] = [
+      { dateRapport: "desc" },
+    ],
+  ) => {
+    const sens = orderBy[0]?.dateRapport === "asc" ? 1 : -1;
+    return db.rapports
       .filter(
         (r) =>
           r.verificationId === where.verificationId &&
-          (where.resultat === undefined || where.resultat.in.includes(r.resultat)),
+          (where.resultat === undefined || where.resultat.in.includes(r.resultat)) &&
+          (where.dateRapport?.gte === undefined ||
+            r.dateRapport.getTime() >= where.dateRapport.gte.getTime()),
       )
-      .sort((a, b) => b.dateRapport.getTime() - a.dateRapport.getTime());
+      .sort(
+        (a, b) =>
+          sens * (a.dateRapport.getTime() - b.dateRapport.getTime()) ||
+          sens * (a.createdAt.getTime() - b.createdAt.getTime()),
+      );
+  };
 
   const prisma: Record<string, unknown> = {
     verification: {
@@ -106,9 +129,26 @@ const h = vi.hoisted(() => {
       },
       findFirst: async ({
         where,
+        orderBy,
       }: {
-        where: { verificationId: string; resultat?: { in: string[] } };
-      }) => rapportsRealises(where)[0] ?? null,
+        where: {
+          verificationId: string;
+          resultat?: { in: string[] };
+          dateRapport?: { gte?: Date };
+        };
+        orderBy?: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[];
+      }) => rapportsRealises(where, orderBy)[0] ?? null,
+      update: async ({
+        where,
+        data,
+      }: {
+        where: { id: string };
+        data: Record<string, unknown>;
+      }) => {
+        const r = db.rapports.find((x) => x.id === where.id);
+        if (r) Object.assign(r, data);
+        return r ?? null;
+      },
       delete: async ({ where }: { where: { id: string } }) => {
         const i = db.rapports.findIndex((x) => x.id === where.id);
         return i === -1 ? null : db.rapports.splice(i, 1)[0];
@@ -116,10 +156,23 @@ const h = vi.hoisted(() => {
       count: async () => db.rapports.length,
     },
   };
-  prisma.$transaction = async (arg: unknown) =>
-    typeof arg === "function"
-      ? (arg as (tx: unknown) => Promise<unknown>)(prisma)
-      : Promise.all(arg as Promise<unknown>[]);
+  // La transaction ANNULE, comme en base : sans restauration, un test ne peut
+  // pas affirmer qu'un dépôt refusé ne laisse pas un rapport orphelin — il
+  // décrirait le faux client, pas la garantie.
+  prisma.$transaction = async (arg: unknown) => {
+    if (typeof arg !== "function") return Promise.all(arg as Promise<unknown>[]);
+    const avant = {
+      verification: db.verification ? { ...db.verification } : null,
+      rapports: db.rapports.map((r) => ({ ...r })),
+    };
+    try {
+      return await (arg as (tx: unknown) => Promise<unknown>)(prisma);
+    } catch (e) {
+      db.verification = avant.verification;
+      db.rapports = avant.rapports;
+      throw e;
+    }
+  };
 
   return { db, prisma, stockage, genererCalendrier: vi.fn(async () => ({})) };
 });
@@ -168,6 +221,7 @@ function formulaire(resultat: string, dateRapport: string): FormData {
   return fd;
 }
 
+let horlogeCreation = 0;
 function rapport(partiel: Partial<RapportFaux> & { id: string; dateRapport: Date }): RapportFaux {
   return {
     etablissementId: "etab-1",
@@ -175,6 +229,9 @@ function rapport(partiel: Partial<RapportFaux> & { id: string; dateRapport: Date
     resultat: "conforme",
     echeanceHonoree: null,
     fichierCle: `rapports/etab-1/${partiel.id}-x.pdf`,
+    // Croissant dans l'ordre de pose : deux rapports du même jour se
+    // départagent comme en base.
+    createdAt: new Date(2020, 0, 1, 0, 0, (horlogeCreation += 1)),
     ...partiel,
   };
 }
@@ -478,5 +535,196 @@ describe("uploadRapport — la frontière médicale, tenue côté serveur", () =
       formulaire("conforme", "2026-06-01"),
     );
     expect(res.status === "error" && res.message).toMatch(/personne/i);
+  });
+});
+
+describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
+  it("supprimer les rapports du PLUS ANCIEN au plus récent ne blanchit pas le retard", () => {
+    // LE DÉFAUT BLOQUANT. Deux dépôts sur la même ligne : juin, puis
+    // septembre. On supprime juin, puis septembre. À la fin il ne reste aucune
+    // pièce, et la ligne doit être revenue à l'échéance d'origine, dépassée.
+    // Elle restait à 2027, « à planifier » : le retard disparaissait avec les
+    // pièces qui le prouvaient.
+    return (async () => {
+      h.db.verification = {
+        salarieId: null,
+        id: "v-1",
+        etablissementId: "etab-1",
+        datePrevue: depuisCleJourCivil("2027-09-01"),
+        dateRealisee: null,
+        statut: "planifiee",
+        periodicite: "annuelle",
+      };
+      h.db.rapports = [
+        rapport({
+          id: "rap-juin",
+          dateRapport: depuisCleJourCivil("2026-06-01"),
+          echeanceHonoree: ECHEANCE,
+        }),
+        rapport({
+          id: "rap-sept",
+          dateRapport: depuisCleJourCivil("2026-09-01"),
+          echeanceHonoree: depuisCleJourCivil("2027-06-01"),
+        }),
+      ];
+
+      await expect(supprimerRapport("rap-juin")).rejects.toThrow("NEXT_REDIRECT");
+      // L'échéance que juin honorait est reportée sur septembre, qui l'honore
+      // désormais : c'est elle qui rouvrira quand septembre partira.
+      expect(h.db.rapports[0].echeanceHonoree).toEqual(ECHEANCE);
+
+      await expect(supprimerRapport("rap-sept")).rejects.toThrow("NEXT_REDIRECT");
+      expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+      expect(h.db.verification?.statut).toBe("depassee");
+      expect(h.db.rapports).toEqual([]);
+    })();
+  });
+
+  it("deux rapports du MÊME JOUR : le second n'est pas perdu au retrait du premier", async () => {
+    // Un rapport et sa contre-visite, déposés le même jour. Le premier fait
+    // rouler, le second est traité comme antidaté. Retirer le premier ne doit
+    // pas laisser la ligne sans échéance à rouvrir.
+    h.db.verification = {
+      salarieId: null,
+      id: "v-1",
+      etablissementId: "etab-1",
+      datePrevue: depuisCleJourCivil("2027-06-01"),
+      dateRealisee: null,
+      statut: "planifiee",
+      periodicite: "annuelle",
+    };
+    h.db.rapports = [
+      rapport({
+        id: "rap-a",
+        dateRapport: depuisCleJourCivil("2026-06-01"),
+        echeanceHonoree: ECHEANCE,
+      }),
+      rapport({ id: "rap-b", dateRapport: depuisCleJourCivil("2026-06-01") }),
+    ];
+
+    await expect(supprimerRapport("rap-a")).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.rapports[0].echeanceHonoree).toEqual(ECHEANCE);
+    await expect(supprimerRapport("rap-b")).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+    expect(h.db.verification?.statut).toBe("depassee");
+  });
+
+  it("un rapport daté dans le futur est refusé", async () => {
+    // Depuis que la ligne roule sur la date du rapport, une coquille — 2062 au
+    // lieu de 2026 — rendrait tout dépôt suivant antidaté, donc sans effet :
+    // la ligne resterait figée jusqu'à ce qu'on pense à supprimer la pièce.
+    const res = await uploadRapport(
+      "v-1",
+      { status: "idle" },
+      formulaire("conforme", "2062-06-01"),
+    );
+
+    expect(res.status).toBe("error");
+    expect(h.db.rapports).toEqual([]);
+    expect(h.stockage.fichiers.size).toBe(0);
+    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+  });
+
+  it("le retrait d'un rapport ne recule pas la ligne AVANT ce qu'un rapport restant prouve", async () => {
+    // Échéance de 2026. Un contrôle d'août 2026 fait rouler la ligne à 2027,
+    // puis un antidaté de mai 2026 entre au registre. En retirant celui d'août,
+    // la ligne ne doit pas revenir à janvier 2026 : le rapport de mai, toujours
+    // là, porte l'échéance à mai 2027.
+    h.db.verification = {
+      salarieId: null,
+      id: "v-1",
+      etablissementId: "etab-1",
+      datePrevue: depuisCleJourCivil("2027-08-01"),
+      dateRealisee: null,
+      statut: "planifiee",
+      periodicite: "annuelle",
+    };
+    h.db.rapports = [
+      rapport({ id: "rap-mai", dateRapport: depuisCleJourCivil("2026-05-01") }),
+      rapport({
+        id: "rap-aout",
+        dateRapport: depuisCleJourCivil("2026-08-01"),
+        echeanceHonoree: ECHEANCE,
+      }),
+    ];
+
+    await expect(supprimerRapport("rap-aout")).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-05-01"));
+    expect(h.db.verification?.statut).toBe("planifiee");
+  });
+
+  it("un « non vérifiable » ne déclasse pas une obligation ponctuelle déjà faite", async () => {
+    // Une vérification à la mise en service, faite. Le prestataire repasse et
+    // ne peut rien contrôler : sa pièce entre au registre, mais la ligne ne
+    // redevient pas « à planifier » — il n'y a plus rien à planifier.
+    h.db.verification = {
+      salarieId: null,
+      id: "v-1",
+      etablissementId: "etab-1",
+      datePrevue: ECHEANCE,
+      dateRealisee: null,
+      statut: "realisee_conforme",
+      periodicite: "mise_en_service_uniquement",
+    };
+
+    await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-08-01"));
+
+    expect(h.db.verification?.statut).toBe("realisee_conforme");
+    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+  });
+
+  it("un dépôt éteint la colonne gelée d'une ligne d'avant l'ADR-034", async () => {
+    // Tant qu'elle porte une date de réalisation, les prédicats d'avant N3 la
+    // tiennent pour « jamais en retard ». Le dépôt qui la fait rouler doit
+    // donc l'éteindre, sans attendre la régénération — qui peut échouer.
+    h.db.verification!.dateRealisee = depuisCleJourCivil("2025-06-01");
+
+    await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
+
+    expect(h.db.verification?.dateRealisee).toBeNull();
+  });
+
+  it("un dépôt refusé pour conflit ne laisse aucun rapport orphelin", async () => {
+    // La transaction annule : sans cela, le registre garderait une pièce que
+    // la ligne ne connaît pas.
+    const original = (h.prisma as { verification: { updateMany: unknown } }).verification
+      .updateMany;
+    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
+      async () => ({ count: 0 });
+
+    const res = await uploadRapport(
+      "v-1",
+      { status: "idle" },
+      formulaire("conforme", "2026-06-01"),
+    );
+
+    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
+      original;
+    expect(res.status).toBe("error");
+    expect(h.db.rapports).toEqual([]);
+  });
+
+  it("une suppression concurrente ne fait pas échouer le retrait", async () => {
+    // Le rapport est supprimé, la ligne a bougé entre-temps : on abandonne le
+    // recul plutôt que de lever — l'erreur remonterait en page d'erreur sur un
+    // retrait qui a réussi, et le calendrier est recalé juste après.
+    h.db.rapports = [
+      rapport({
+        id: "rap-1",
+        dateRapport: depuisCleJourCivil("2026-06-01"),
+        echeanceHonoree: ECHEANCE,
+      }),
+    ];
+    const original = (h.prisma as { verification: { updateMany: unknown } }).verification
+      .updateMany;
+    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
+      async () => ({ count: 0 });
+
+    await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
+
+    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
+      original;
+    expect(h.db.rapports).toEqual([]);
+    expect(h.genererCalendrier).toHaveBeenCalled();
   });
 });
