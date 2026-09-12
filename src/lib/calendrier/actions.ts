@@ -535,6 +535,20 @@ async function regenererUnePasse(
     attendus.push(1);
   }
 
+  for (const d of plan.aDesarchiver) {
+    // La réouverture d'une ligne qui n'engendre plus de rendez-vous — une
+    // obligation passée à `autre`. L'autre chemin de désarchivage passe par
+    // `aMettreAJour`, qui écrit `archiveLe: null` avec le reste ; celui-ci n'a
+    // rien d'autre à écrire, et sans lui la ligne restait barrée pour toujours.
+    operations.push(
+      prisma.verification.updateMany({
+        where: { id: d.id, etablissementId },
+        data: { archiveLe: null },
+      }),
+    );
+    attendus.push(1);
+  }
+
   // Le calendrier est désormais aligné sur ce référentiel — version et contenu,
   // que `SCEAU_CALENDRIER` réunit.
   // Écrit **dans** la transaction, et en dernier : si le plan échoue,
@@ -576,6 +590,9 @@ async function regenererUnePasse(
       updated: plan.aMettreAJour.length,
       deleted: plan.aSupprimer.length,
       archived: plan.aArchiver.length,
+      // Les réouvertures comptent comme des réalignements : la ligne est bien
+      // mise à jour, et lui inventer un compteur à elle ferait diverger tous
+      // les appelants qui comparent ce résultat en entier.
       unchanged: plan.inchangees,
     },
     converge,

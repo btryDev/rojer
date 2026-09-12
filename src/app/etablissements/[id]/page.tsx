@@ -36,6 +36,7 @@ import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
 import {
+  echeancesAnnoncables,
   porteeBatiment,
   toutesLesConditions,
 } from "@/lib/calendrier/portee";
@@ -106,22 +107,12 @@ export default async function EtablissementPage({
     prisma.verification.count({ where: { etablissementId: id } }),
     prisma.rapportVerification.count({ where: { etablissementId: id } }),
     prisma.verification.findMany({
+      // La clause vit dans `portee.ts`, où un test la tient : écrite ici, elle
+      // n'était atteinte par aucun — une page serveur n'en a pas — et son
+      // retrait passait inaperçu (relecture du 2026-09-12).
       where: toutesLesConditions(
-        {
-          etablissementId: id,
-          statut: { in: ["a_planifier", "planifiee", "depassee"] },
-          // ET NON ARCHIVÉE. Le statut d'une ligne archivée reste GELÉ dans
-          // son dernier état connu (ADR-012) : elle passait donc le filtre
-          // ci-dessus, et comme sa date est la plus ancienne, le tri
-          // croissant la plaçait EN TÊTE. Le widget de compte à rebours
-          // annonçait « Prochaine échéance — Ne s'applique plus — … » sur une
-          // obligation éteinte, et elle consommait une des cinq places.
-          //
-          // Un champ, et le filtre redevient lisible (ADR-034, N3). Il lisait
-          // le préfixe « Ne s'applique plus — » dans le libellé, faute de
-          // valeur `archivee` dans l'enum de statut.
-          archiveLe: null,
-        },
+        { etablissementId: id },
+        echeancesAnnoncables(),
         porteeBatiment(batimentFiltre),
       ),
       // `prescription` : la source suffit, et elle seule — c'est de quoi dire

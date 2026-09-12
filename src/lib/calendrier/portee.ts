@@ -72,6 +72,27 @@ export function toutesLesConditions(
  *
  * `debut` est le début du jour civil, capturé au bord (ADR-011).
  */
+/**
+ * Les échéances qu'un écran peut ANNONCER : ouvertes, et non éteintes.
+ *
+ * Extraite de la page d'un établissement, où elle alimente le compte à rebours
+ * des cinq prochaines. Elle y était écrite sur place, et deux relectures l'ont
+ * signalée pour la même raison : aucun test ne pouvait la tenir, une page
+ * serveur n'en ayant pas. Ici, elle en a un.
+ *
+ * `archiveLe: null` est la moitié qui compte. Le statut d'une ligne éteinte
+ * reste GELÉ dans son dernier état connu (ADR-012) : elle passe donc le filtre
+ * de statut, et comme sa date est la plus ancienne, le tri croissant la place
+ * EN TÊTE. Le widget annonçait « Prochaine échéance » sur une obligation qui ne
+ * s'applique plus, et elle consommait une des cinq places.
+ */
+export function echeancesAnnoncables(): Prisma.VerificationWhereInput {
+  return {
+    statut: { in: ["a_planifier" as const, "planifiee" as const, "depassee" as const] },
+    archiveLe: null,
+  };
+}
+
 export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
   return {
     dateRealisee: null,

@@ -1458,7 +1458,12 @@ l'archivage est un champ (`archiveLe`), les prédicats ne lisent plus la colonne
 gelée, et une migration a retiré le préfixe des libellés. ~~La mesure de la
 baisse du score~~ est faite le 2026-09-12 (`pnpm mesure:score`) : jusqu'à
 −30 points sur un dossier ordinaire, −50 sur un parc partiellement retiré, rien
-sur un dossier à jour. Restent la moitié « simplifiés » de N4 et N5.
+sur un dossier à jour. **Relecture de N3** le même jour : le registre de
+sécurité était une neuvième surface — ses fiches imprimaient « En retard » sur
+une obligation éteinte, le préfixe l'ayant signalée jusqu'à la migration —, le
+désarchivage n'avait qu'un chemin sur deux, et la clause d'archivage de la page
+d'établissement n'était tenue par aucun test. Corrigés. Restent la moitié
+« simplifiés » de N4 et N5.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est

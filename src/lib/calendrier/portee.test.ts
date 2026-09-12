@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { porteeBatiment, toutesLesConditions, urgenceSeule } from "./portee";
+import {
+  echeancesAnnoncables,
+  porteeBatiment,
+  toutesLesConditions,
+  urgenceSeule,
+} from "./portee";
 
 /**
  * Le défaut que ce fichier verrouille ne casse rien, et c'est ce qui le rend
@@ -180,5 +185,24 @@ describe("toutesLesConditions", () => {
       fautifs,
       "`porteeBatiment` pose une clé `OR`. La diffuser dans un littéral qui en porte une autre l'écrase en silence. Composez avec `toutesLesConditions(...)`.",
     ).toEqual([]);
+  });
+});
+
+describe("echeancesAnnoncables", () => {
+  it("écarte les lignes éteintes, dont le statut reste gelé", () => {
+    // Le compte à rebours de la page d'établissement annonçait « Prochaine
+    // échéance — Ne s'applique plus … » : une ligne archivée garde son statut
+    // (souvent `depassee`), passe donc le filtre de statut, et sa date étant la
+    // plus ancienne, le tri croissant la met EN TÊTE. Elle consommait une des
+    // cinq places. La clause vivait dans la page, où aucun test ne l'atteignait.
+    expect(echeancesAnnoncables().archiveLe).toBeNull();
+  });
+
+  it("retient les trois statuts d'une ligne ouverte, et eux seuls", () => {
+    // Pas les statuts réalisés : une obligation sans rendez-vous suivant, déjà
+    // faite, n'a pas de prochaine échéance à annoncer (ADR-034).
+    expect(echeancesAnnoncables().statut).toEqual({
+      in: ["a_planifier", "planifiee", "depassee"],
+    });
   });
 });

@@ -1332,6 +1332,65 @@ describe("réconciliation — cycles de vérification", () => {
     expect(passe2.inchangees).toBe(1);
   });
 
+  it("rouvre une ligne archivée dont l'obligation n'engendre plus de rendez-vous", () => {
+    // LE CAS QUE `identique` NE VOIT PAS, et le second chemin de désarchivage.
+    // Une habilitation qui passe de triennale à `autre` n'engendre plus de
+    // ligne : elle n'arrive donc jamais par `aMettreAJour`. Barrée pendant que
+    // l'appareil était retiré, elle restait barrée à perpétuité, comptée
+    // « inchangée » (relecture du 2026-09-12).
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-perm",
+          obligationId: "permanente",
+          equipementId: "eq-1",
+          periodicite: "autre",
+          archiveLe: new Date("2026-02-01T00:00:00Z"),
+          statut: "a_planifier",
+          porteUnePreuve: true,
+        }),
+      ],
+      [],
+      {
+        now: NOW,
+        // Elle s'applique toujours — elle n'a simplement plus de rendez-vous.
+        obligationsEncoreApplicables: new Set(["permanente"]),
+        equipementsEnService: new Set(["eq-1"]),
+      },
+    );
+
+    expect(plan.aDesarchiver).toEqual([{ id: "v-perm" }]);
+    expect(plan.aArchiver).toEqual([]);
+    expect(plan.aSupprimer).toEqual([]);
+    expect(plan.inchangees).toBe(0);
+  });
+
+  it("et laisse tranquille la même ligne quand elle n'est pas archivée", () => {
+    // Le témoin : sans lui, on ne saurait pas si la branche distingue quoi que
+    // ce soit — elle pourrait rouvrir tout ce qui passe.
+    const plan = reconcilierCalendrier(
+      [
+        ligneExistante({
+          id: "v-perm",
+          obligationId: "permanente",
+          equipementId: "eq-1",
+          periodicite: "autre",
+          statut: "a_planifier",
+          porteUnePreuve: true,
+        }),
+      ],
+      [],
+      {
+        now: NOW,
+        obligationsEncoreApplicables: new Set(["permanente"]),
+        equipementsEnService: new Set(["eq-1"]),
+      },
+    );
+
+    expect(plan.aDesarchiver).toEqual([]);
+    expect(plan.inchangees).toBe(1);
+  });
+
   it("une obligation ponctuelle consommée n'est pas supprimée quand son porteur disparaît", () => {
     // Sa colonne est éteinte et elle n'a plus de rapport : son STATUT est le
     // seul témoignage qu'elle a été faite. La supprimer effacerait la preuve

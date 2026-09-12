@@ -31,6 +31,9 @@ function verif(partial: Partial<VerificationTenue> = {}): VerificationTenue {
     datePrevue: new Date("2026-11-02T00:00:00Z"),
     dateRealisee: null,
     derniereRealisation: null,
+    /** `null` = ligne OUVERTE. Requis depuis le N3 : c'est ce champ, et non
+     *  plus un préfixe de libellé, qui dit qu'une obligation est éteinte. */
+    archiveLe: null,
     statut: "a_planifier",
     equipement: { libelle: "Extincteurs RDC", categorie: "EXTINCTEUR" },
     prescription: null,
@@ -76,6 +79,40 @@ describe("registre — une obligation ponctuelle consommée n'annonce pas de sui
     ]);
     expect(ligne.meta).toContain("faite le 20 juin 2026");
     expect(ligne.meta).not.toContain("prochaine");
+  });
+});
+
+describe("registre — une obligation éteinte ne se présente pas en retard", () => {
+  /**
+   * LE DOCUMENT QU'ON PRÉSENTE À UNE COMMISSION. Jusqu'au N3, le préfixe
+   * « Ne s'applique plus — » vivait dans le libellé : la fiche se dénonçait
+   * d'elle-même. La migration l'a retiré, et ce module n'avait pas reçu le
+   * champ — la fiche imprimait « En retard », en rose, sur une obligation qui
+   * ne s'applique plus. Neuvième surface, trouvée en relecture le 2026-09-12.
+   */
+  const eteinte = () =>
+    verif({
+      statut: "depassee",
+      datePrevue: new Date("2025-03-01T00:00:00Z"),
+      archiveLe: new Date("2026-02-01T00:00:00Z"),
+      derniereRealisation: new Date("2024-03-01T00:00:00Z"),
+    });
+
+  it("ne porte aucune pastille de statut", () => {
+    const [ligne] = lignesDe([eteinte()]);
+    expect(ligne.statut).toBeUndefined();
+  });
+
+  it("dit qu'elle ne s'applique plus, et n'annonce aucune prochaine échéance", () => {
+    const [ligne] = lignesDe([eteinte()]);
+    expect(ligne.meta).toContain("ne s'applique plus depuis le 01 févr. 2026");
+    expect(ligne.meta).not.toContain("prochaine");
+  });
+
+  it("garde la preuve du contrôle qui a eu lieu", () => {
+    // L'archivage tait ce qui est ATTENDU, jamais ce qui a EU LIEU (ADR-012).
+    const [ligne] = lignesDe([eteinte()]);
+    expect(ligne.meta).toContain("faite le 01 mars 2024");
   });
 });
 

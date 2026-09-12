@@ -339,14 +339,14 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   côté plan comme dans la clause SQL du `deleteMany` ; le serveur MCP, la fiche
   et le registre lisent le **statut** et non la colonne éteinte ; la tuile
   « fait le » porte le résultat de son rapport.
-  **Reste ouvert APRÈS le N3, et il faut le dire puisque le N3 devait s'en
-  charger** : une obligation qui passe en `periodicite: "autre"` cesse d'être
-  générée ; sa ligne, roulée, garde une échéance ouverte que plus rien ne
-  solde. Le garde-fou d'applicabilité la laisse telle quelle, et elle passera
-  « en retard » au cycle suivant. Le N3 a traité l'archivage et les prédicats,
-  pas ce cas — il demande de faire remonter à la réconciliation quelles
-  obligations n'engendrent plus de rendez-vous, ce qu'elle ne sait pas lire
-  aujourd'hui. À prendre au N4 ou dans un lot à lui.
+  ~~**Reste ouvert APRÈS le N3**~~ — **fermé le 2026-09-12** par les
+  corrections de la relecture, ci-dessous : une obligation qui passe en
+  `periodicite: "autre"` cesse d'être générée, donc sa ligne ne repasse jamais
+  par `aMettreAJour`. Elle a désormais son chemin à elle, `plan.aDesarchiver`.
+  Ce qui reste vrai, et qui n'est pas un défaut : une telle ligne garde
+  l'échéance ouverte que son dernier dépôt a posée. Elle n'a plus de rythme,
+  donc plus rien ne la fera rouler ; c'est l'écran « Ce qui doit être en
+  place » qui la porte (ADR-027), pas le calendrier.
 - **Corrections du 2026-09-12, second tour** — la relecture de contrôle a
   rouvert le défaut bloquant : la transmission au seul successeur, et la règle
   « la plus tardive des deux dates » au moment de rouvrir, PERDAIENT l'échéance
@@ -389,6 +389,23 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      règle neuve, commentaire à l'appui, jamais supprimés en silence. Un
      `describe` entier a disparu : il éprouvait les fonctions du marqueur, qui
      n'existent plus.
+- **Corrections de la relecture de N3, le 2026-09-12.** Un bloquant et deux
+  manques, tous trois tenus par des tests neufs (sept mutations, chacune rouge) :
+  1. **Le registre de sécurité était une neuvième surface**, et le lot lui avait
+     retiré son seul signal. Ses 49 fiches — écran et PDF — recevaient le statut
+     GELÉ d'une ligne éteinte, donc « En retard » en rose sur un document remis
+     à une commission. Le préfixe le disait avant la migration ; plus rien ne le
+     disait après. `VerificationTenue` porte `archiveLe`, la fiche annonce
+     « ne s'applique plus depuis le … », ne promet aucune prochaine échéance et
+     ne peint plus de pastille — la preuve du contrôle, elle, reste affichée.
+  2. **Le désarchivage n'avait qu'un chemin.** Une obligation qui n'engendre
+     plus de rendez-vous n'arrive jamais par `aMettreAJour` : sa ligne restait
+     barrée à perpétuité, et le plan la comptait « inchangée ». Elle a désormais
+     `plan.aDesarchiver`, appliqué dans la même transaction.
+  3. **La clause d'archivage de la page d'établissement n'était tenue par aucun
+     test** — une page serveur n'en a pas, et son retrait laissait la suite
+     verte. Elle vit dans `portee.ts` sous le nom `echeancesAnnoncables`, avec
+     deux tests.
 - **N3, la version d'origine** : `retard.ts` cesse de lire `dateRealisee` ;
   `estVerificationArchivee` lit `archiveLe` ; `classerVerification` et le
   vocabulaire perdent `archivee`-par-préfixe. Le préfixe est retiré des libellés

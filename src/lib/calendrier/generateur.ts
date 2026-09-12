@@ -807,6 +807,17 @@ export type PlanReconciliation = {
    *  (`archiveLe`), jamais supprimées. Le libellé n'y figure plus — c'est un
    *  champ qui porte l'archivage depuis le N3 de l'ADR-034, plus un préfixe. */
   aArchiver: { id: string }[];
+  /**
+   * Lignes archivées dont l'obligation REDEVIENT applicable sans engendrer de
+   * rendez-vous — une périodicité passée à `autre`, par exemple une
+   * habilitation qui cesse d'être triennale.
+   *
+   * Elles n'apparaissent pas dans `aGenerer`, donc elles ne passent pas par
+   * `aMettreAJour`, qui est l'autre chemin de désarchivage : sans cette liste,
+   * elles restaient barrées à perpétuité, et le plan les comptait
+   * « inchangées » (relecture du 2026-09-12).
+   */
+  aDesarchiver: { id: string }[];
   /** Lignes devenues non applicables et vides de toute preuve : supprimables
    *  sans perte. */
   aSupprimer: string[];
@@ -983,6 +994,7 @@ export function reconcilierCalendrier(
     aCreer: [],
     aMettreAJour: [],
     aArchiver: [],
+    aDesarchiver: [],
     aSupprimer: [],
     inchangees: 0,
   };
@@ -1357,8 +1369,16 @@ export function reconcilierCalendrier(
     // porter de date. Avec une preuve, elle reste telle quelle : c'est le
     // constat d'un contrôle qui a eu lieu, et rien ne justifie de le barrer.
     if (encoreApplicables?.has(ex.obligationId) && !porteurDisparu) {
-      if (porteUneTrace) plan.inchangees += 1;
-      else plan.aSupprimer.push(ex.id);
+      if (!porteUneTrace) plan.aSupprimer.push(ex.id);
+      // ELLE REDEVIENT APPLICABLE, DONC ELLE SE ROUVRE. Le cas : une obligation
+      // qui passe à `periodicite: "autre"` — une habilitation qui cesse d'être
+      // triennale — n'engendre plus de ligne, donc n'arrive jamais par
+      // `aMettreAJour`, l'autre chemin de désarchivage. Sans ceci, une ligne
+      // barrée pendant que l'appareil était retiré restait barrée à
+      // perpétuité, et le plan la comptait « inchangée » (relecture du
+      // 2026-09-12).
+      else if (ex.archiveLe != null) plan.aDesarchiver.push({ id: ex.id });
+      else plan.inchangees += 1;
       continue;
     }
 

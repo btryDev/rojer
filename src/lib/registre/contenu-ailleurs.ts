@@ -52,6 +52,18 @@ export type VerificationTenue = {
   /** Le dernier rapport réalisé (ADR-034) — c'est lui qui dit « faite le »,
    *  la ligne ne portant plus que l'échéance ouverte. */
   derniereRealisation: Date | null;
+  /**
+   * **Requis, et c'est le registre qui l'exige le plus fort.** Une ligne dont
+   * l'obligation ne s'applique plus garde un statut GELÉ — souvent `depassee` —
+   * et ce document est celui qu'on présente à une commission de sécurité.
+   *
+   * Jusqu'au N3 de l'ADR-034, le préfixe « Ne s'applique plus — » vivait dans
+   * le libellé : la fiche se dénonçait d'elle-même, sans que personne ait à y
+   * penser. La migration l'a retiré, et ce fichier n'a pas reçu le champ dans
+   * la foulée : la fiche imprimait « En retard » en rose sur une obligation
+   * éteinte. Neuvième surface, trouvée en relecture le 2026-09-12.
+   */
+  archiveLe: Date | null;
   statut: StatutVerification;
   /** `null` = l'échéance porte sur l'établissement, pas sur un appareil
    *  (ADR-022). Une telle ligne n'a pas de catégorie, donc pas de fiche de
@@ -177,6 +189,13 @@ export function contenuTenuAilleursDepuis(
           titre: v.libelleObligation,
           meta: [
             v.equipement?.libelle,
+            // L'EXTINCTION EN PREMIER, et elle prend la place de l'échéance :
+            // une obligation qui ne s'applique plus n'annonce pas de prochain
+            // contrôle. La preuve, elle, reste — c'est tout l'objet de la
+            // conservation (ADR-012).
+            v.archiveLe
+              ? `ne s'applique plus depuis le ${formaterDateCourteFr(v.archiveLe)}`
+              : null,
             // Le fait, lu sur le dernier rapport (ADR-034)…
             v.derniereRealisation
               ? `faite le ${formaterDateCourteFr(v.derniereRealisation)}`
@@ -188,7 +207,7 @@ export function contenuTenuAilleursDepuis(
             // gelée d'une ligne d'avant garde l'ancienne phrase.
             v.dateRealisee
               ? `faite le ${formaterDateCourteFr(v.dateRealisee)}`
-              : estStatutRealise(v.statut)
+              : v.archiveLe || estStatutRealise(v.statut)
                 ? null
                 : v.datePrevue
                   ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
@@ -197,7 +216,12 @@ export function contenuTenuAilleursDepuis(
             .filter(Boolean)
             .join(" · "),
           href: `${base}/verifications/${v.id}`,
-          statut: v.statut,
+          // PAS DE PASTILLE sur une ligne éteinte : le statut est gelé dans son
+          // dernier état connu, et `BadgeStatut` peindrait « En retard » en rose
+          // sur une obligation qui ne s'applique plus — dans un document remis
+          // en contrôle. Le `meta` dit ce qu'elle est, ce qui est vrai et
+          // suffisant ; l'enum Prisma n'a pas de valeur « archivée » à peindre.
+          statut: v.archiveLe ? undefined : v.statut,
           contractuelle: estEcheanceContractuelle(v),
         })),
       source: { libelle: "votre calendrier", href: `${base}/calendrier` },

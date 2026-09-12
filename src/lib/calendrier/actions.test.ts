@@ -527,6 +527,27 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
       .toBe("Registre de sécurité");
   });
 
+  it("rouvre en base une ligne permanente archivée dont l'obligation revient", async () => {
+    // Le second chemin de désarchivage, jusqu'au bout : une obligation sans
+    // rendez-vous n'est jamais générée, donc jamais mise à jour — elle serait
+    // restée barrée pour toujours, et aucun écran ne l'aurait plus réclamée.
+    poserEtablissement([{ id: "eq-1" }]);
+    db.verifications = [
+      ligne({
+        id: "v-registre",
+        obligationId: REGISTRE_SECURITE,
+        libelleObligation: "Registre de sécurité",
+        periodicite: "autre",
+        archiveLe: new Date("2026-02-01T00:00:00Z"),
+        nbRapports: 1,
+      }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    expect(db.verifications.find((v) => v.id === "v-registre")?.archiveLe).toBeNull();
+  });
+
   it("l'appareil retiré perd sa ligne alors que l'obligation vit chez son voisin", async () => {
     // LE CAS QUI A FAIT LE LOT 2. Deux appareils électriques, l'un désactivé.
     // L'obligation reste applicable — le second la porte —, donc le garde-fou
