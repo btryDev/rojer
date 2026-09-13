@@ -79,7 +79,6 @@ export type LigneFausse = {
   periodicite: string;
   realisateurRequis: string[];
   datePrevue: Date;
-  dateRealisee: Date | null;
   statut: string;
   prescriptionId?: string | null;
   archiveLe?: Date | null;
@@ -145,7 +144,7 @@ function inconnu(operation: string, cles: string[]): never {
  *
  * En JavaScript deux `Date` portant la même valeur ne sont pas `===`, et
  * comparer les objets ferait échouer toutes les conditions portant sur
- * `dateRealisee` — donc rendre un compte de zéro, donc faire croire à une
+ * `datePrevue` — donc rendre un compte de zéro, donc faire croire à une
  * écriture conditionnée qui n'a pas pris, indéfiniment.
  */
 function memeInstant(a: Date | null, b: Date | null): boolean {
@@ -309,7 +308,6 @@ export function fauxPrisma(db: Magasin) {
         etablissementId?: string;
         rapports?: { none: Record<string, never> };
         actions?: { none: Record<string, never> };
-        dateRealisee?: Date | null;
         statut?: { notIn: readonly string[] };
       };
     }) =>
@@ -324,7 +322,6 @@ export function fauxPrisma(db: Magasin) {
           etablissementId,
           rapports,
           actions,
-          dateRealisee,
           statut,
           ...reste
         } = args.where;
@@ -346,8 +343,6 @@ export function fauxPrisma(db: Magasin) {
                 v.etablissementId === etablissementId) &&
               (rapports === undefined || v.nbRapports === 0) &&
               (actions === undefined || v.nbActions === 0) &&
-              (dateRealisee === undefined ||
-                memeInstant(v.dateRealisee, dateRealisee)) &&
               // La quatrième condition (ADR-034) : un statut réalisé est une
               // trace, et la base doit refuser d'emporter la ligne qui le
               // porte, comme elle refuse d'emporter un rapport.
@@ -368,7 +363,6 @@ export function fauxPrisma(db: Magasin) {
         id: string;
         etablissementId?: string;
         datePrevue?: Date;
-        dateRealisee?: Date | null;
         statut?: string;
         /** `{ not: null }` = « encore archivée » : la condition de la
          *  réouverture, qui sans elle ne détectait aucune écriture
@@ -387,7 +381,6 @@ export function fauxPrisma(db: Magasin) {
           id,
           etablissementId,
           datePrevue,
-          dateRealisee,
           statut,
           archiveLe,
           ...reste
@@ -409,8 +402,6 @@ export function fauxPrisma(db: Magasin) {
               v.etablissementId === etablissementId) &&
             (datePrevue === undefined ||
               memeInstant(v.datePrevue, datePrevue)) &&
-            (dateRealisee === undefined ||
-              memeInstant(v.dateRealisee, dateRealisee)) &&
             (statut === undefined || v.statut === statut) &&
             archiveLeCorrespond(v),
         );
@@ -445,7 +436,6 @@ export function fauxPrisma(db: Magasin) {
           }
           db.verifications.push({
             id: `v-${++seq}`,
-            dateRealisee: null,
             nbRapports: 0,
             nbActions: 0,
             ...(d as object),

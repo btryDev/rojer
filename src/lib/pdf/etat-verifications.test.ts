@@ -7,7 +7,8 @@ const NOW = new Date("2026-04-23T07:00:00Z");
 function verif(
   statut: string,
   datePrevueIso: string,
-  dateRealiseeIso: string | null = null,
+  /** La date du dernier rapport réalisé — la seule source du fait (ADR-034). */
+  derniereRealisationIso: string | null = null,
   /** Cyclique par défaut ; « mise_en_service_uniquement » pour une obligation
    *  consommée, la seule qu'un statut réalisé purge. */
   periodicite: string = "annuelle",
@@ -15,11 +16,9 @@ function verif(
   return {
     statut,
     datePrevue: new Date(datePrevueIso),
-    dateRealisee: dateRealiseeIso === null ? null : new Date(dateRealiseeIso),
-    // Pas de rapport dans ces fixtures : la réalisation passe par la colonne
-    // gelée, que la répartition lit en repli (ADR-034). Le cas « rapport » a
-    // son propre test plus bas.
-    derniereRealisation: null as Date | null,
+    derniereRealisation: (derniereRealisationIso === null
+      ? null
+      : new Date(derniereRealisationIso)) as Date | null,
     // `null` = ligne ACTIVE. L'archivage est un CHAMP depuis l'ADR-034 (N3),
     // plus un préfixe de libellé : le cas archivé a son propre test, qui pose
     // une date ici et laisse le libellé intact.

@@ -27,7 +27,6 @@ const ARCHIVE_LE = new Date("2026-07-01T00:00:00.000Z");
 /** Une ligne ROULÉE par un dépôt : elle ne porte que son échéance ouverte. */
 const roulee = {
   statut: "planifiee",
-  dateRealisee: null,
   archiveLe: null,
   datePrevue: jours(120),
   libelleObligation: "Vérification périodique",
@@ -39,7 +38,6 @@ const roulee = {
  *  tant qu'une migration ne les a pas remises au nouveau. */
 const soldee = {
   statut: "realisee_conforme",
-  dateRealisee: jours(-245),
   archiveLe: null,
   datePrevue: jours(120),
   libelleObligation: "Vérification périodique",
@@ -88,7 +86,6 @@ describe("ce qui ne réclame plus rien", () => {
     // cas où un statut réalisé subsiste sur une ligne (ADR-034).
     const oneShot = {
       statut: "realisee_conforme",
-      dateRealisee: null,
       archiveLe: null,
       datePrevue: jours(-185),
       libelleObligation: "Vérification à la mise en service",

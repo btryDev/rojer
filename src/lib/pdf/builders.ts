@@ -11,7 +11,6 @@ import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { repartirVerifications } from "./etat-verifications";
 import {
-  echeanceOuverte,
   estVerificationArchivee,
   estVerificationRealisee,
   type VerificationDatee,
@@ -203,7 +202,7 @@ export function ligneVerif(
     id: v.id,
     libelleObligation: v.libelleObligation,
     equipementLibelle: libelleEquipementSitue(v, multiBatiments),
-    datePrevue: echeanceOuverte(v),
+    datePrevue: v.datePrevue,
     // `undefined` n'arrive pas : les deux tableaux n'admettent aucune ligne
     // archivée. Le repli garde le type du document.
     statut: statutAffiche(v, now) ?? (v.statut as StatutVerification),

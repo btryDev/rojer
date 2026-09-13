@@ -240,7 +240,6 @@ describe("équipements et calendrier", () => {
     libelleObligation: "Vérification périodique annuelle des extincteurs",
     periodicite: "annuelle",
     datePrevue: jour("2026-07-01"),
-    dateRealisee: null,
     // `null` = ligne ouverte. L'archivage est un champ depuis l'ADR-034 (N3),
     // et la requête du serveur le sélectionne en clair.
     archiveLe: null,
@@ -278,7 +277,6 @@ describe("équipements et calendrier", () => {
           {
             statut: "planifiee",
             datePrevue: jour("2026-07-01"),
-            dateRealisee: null,
             archiveLe: null,
             libelleObligation: "Vérification périodique",
           },
@@ -286,7 +284,6 @@ describe("équipements et calendrier", () => {
           {
             statut: "planifiee",
             datePrevue: jour("2026-08-10"),
-            dateRealisee: null,
             archiveLe: null,
             libelleObligation: "Vérification périodique",
           },
@@ -328,21 +325,20 @@ describe("équipements et calendrier", () => {
     expect(texte).toContain("40 jour(s) de retard");
   });
 
-  it("sur une rangée gelée, l'assistant reçoit la réalisation ET l'échéance ouverte", async () => {
+  it("l'assistant reçoit la dernière réalisation ET l'échéance ouverte", async () => {
     // Relecture externe du 2026-09-13 : l'échéance était écrite en alternative
-    // avec la réalisation, et lue sur la colonne. L'assistant recevait
-    // « réalisée le … » sans pouvoir dire quelle échéance était due. Contrôle
-    // le 20/07/2025, colonne au 01/08/2025 : échéance ouverte le 20/07/2026,
-    // passée de 21 jours au 10/08.
+    // avec la réalisation. L'assistant recevait « réalisée le … » sans pouvoir
+    // dire quelle échéance était due. Contrôle le 20/07/2025, ligne roulée au
+    // 20/07/2026 : passée de 21 jours au 10/08.
     prismaMock.verification.findMany.mockResolvedValue([
       verif({
-        statut: "realisee_conforme",
-        datePrevue: jour("2025-08-01"),
-        dateRealisee: jour("2025-07-20"),
+        statut: "planifiee",
+        datePrevue: jour("2026-07-20"),
+        rapports: [{ dateRapport: jour("2025-07-20"), resultat: "conforme" }],
       }),
     ]);
     const texte = await outil("verifications").executer(ctx, {});
-    expect(texte).toContain("réalisée le 20/07/2025");
+    expect(texte).toContain("dernière réalisation le 20/07/2025");
     expect(texte).toContain("échéance 20/07/2026");
     expect(texte).toContain("21 jour(s) de retard");
   });

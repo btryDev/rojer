@@ -52,7 +52,6 @@
  */
 
 import {
-  echeanceOuverte,
   estActionEnRetard,
   estActionOuverte,
   estDansLesProchainsJours,
@@ -126,12 +125,9 @@ export type EntreeRecos = {
      *  lui, une rangée d'avant l'ADR-034 gelée sur « réalisée » avec une date
      *  passée ne produisait aucune carte « échéance dépassée ». */
     periodicite: string;
-    /** COLONNE GELÉE (ADR-034) : plus écrite, et plus lue par aucun prédicat
-     *  depuis le N3. Restée optionnelle le temps que ses porteurs la lâchent. */
-    dateRealisee?: Date | null;
     /**
-     * `null` = ligne ouverte (ADR-034). **Requis, à la différence de
-     * `dateRealisee`**, et la différence est le tout de ce champ : une entrée
+     * `null` = ligne ouverte (ADR-034). **Requis**, et c'est le tout de ce
+     * champ : une entrée
      * archivée que le moteur prendrait pour active produit une carte
      * « échéance dépassée » sur une obligation éteinte. Optionnel, il vaudrait
      * `null` par défaut — c'est-à-dire « pas archivée », le faux négatif muet
@@ -207,14 +203,10 @@ export function genererRecommandations(
   const etab = e.etablissementId;
   const acc: Recommandation[] = [];
 
-  // Les prédicats partagés raisonnent sur une occurrence complète : les
-  // entrées qui ne portent pas `dateRealisee` sont, par construction de
-  // l'appelant, des occurrences ouvertes. `archiveLe`, lui, n'a pas de repli —
-  // il est requis à l'entrée, et arrive donc tel que l'appelant l'a lu.
-  const verifs = e.verifications.map((v) => ({
-    ...v,
-    dateRealisee: v.dateRealisee ?? null,
-  }));
+  // Les prédicats partagés raisonnent sur la ligne telle que l'appelant l'a
+  // lue : `archiveLe` n'a pas de repli — requis à l'entrée —, et l'échéance
+  // ouverte est `datePrevue` (ADR-034, N5 : plus aucune colonne à concilier).
+  const verifs = e.verifications;
 
   // 1. Vérifications en retard — quel que soit le statut porté en base
   //    (`depassee` n'est écrit qu'à la génération, il ne peut pas servir de
@@ -239,7 +231,7 @@ export function genererRecommandations(
       priorite: 1,
       // L'échéance ouverte : sur une rangée gelée jamais roulée, `datePrevue`
       // est l'échéance déjà honorée, et la carte daterait mal le retard.
-      date: jamaisPlanifiee ? undefined : echeanceOuverte(v),
+      date: jamaisPlanifiee ? undefined : v.datePrevue,
     });
   }
 
@@ -267,7 +259,7 @@ export function genererRecommandations(
       sousTitre: `${v.equipementLibelle} — dans les ${JOURS_VERIF_PROCHE} jours`,
       href: `/etablissements/${etab}/verifications/${v.id}`,
       priorite: 3,
-      date: echeanceOuverte(v),
+      date: v.datePrevue,
     });
   }
 

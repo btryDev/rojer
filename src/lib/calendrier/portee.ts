@@ -78,26 +78,24 @@ export function toutesLesConditions(
  * Une ligne qui PORTE UNE PREUVE — ce qui atteste qu'un contrôle a eu lieu, et
  * qu'aucune suppression ne doit emporter (ADR-012).
  *
- * Quatre témoins, et le quatrième est la raison d'être de cette fonction :
+ * Trois témoins, et le troisième est la raison d'être de cette fonction :
  *  · un rapport ;
  *  · une action corrective ;
- *  · la colonne gelée `dateRealisee` (lignes d'avant l'ADR-034) ;
  *  · un STATUT RÉALISÉ. Une obligation sans rendez-vous suivant, consommée, n'a
- *    parfois plus que lui : sa colonne éteinte, son rapport retiré.
+ *    parfois plus que lui : son rapport retiré.
  *
- * Trois gardes de suppression recopiaient les trois premiers à la main — la
- * suppression d'un équipement, celle d'une prescription et son compte affiché —
- * et aucune ne connaissait le quatrième. Surtout, N5 retire `dateRealisee` :
- * sans le statut, retirer la colonne aurait rendu supprimable un équipement
- * qui porte une preuve, exactement ce que l'ADR-012 existe pour empêcher.
- * C'est la même définition que `porteUneTrace` du réconciliateur.
+ * Trois gardes de suppression recopiaient à la main deux témoins et la colonne
+ * `dateRealisee` — la suppression d'un équipement, celle d'une prescription et
+ * son compte affiché — et aucune ne connaissait le statut. Le N5 a retiré la
+ * colonne : sans le statut, un équipement portant une preuve serait devenu
+ * supprimable, exactement ce que l'ADR-012 existe pour empêcher. C'est la même
+ * définition que `porteUneTrace` du réconciliateur.
  */
 export function portantUnePreuve(): Prisma.VerificationWhereInput {
   return {
     OR: [
       { rapports: { some: {} } },
       { actions: { some: {} } },
-      { dateRealisee: { not: null } },
       { statut: { in: [...STATUTS_REALISES_PERSISTES] } },
     ],
   };
@@ -116,11 +114,6 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
     ],
   };
 }
-// CE QUE LE SQL NE SAIT PAS DIRE. Sur une rangée gelée jamais roulée
-// (`datePrevue` ≤ `dateRealisee`), l'échéance ouverte se CALCULE
-// (`echeanceOuverte`) et peut être à venir : la clause la retient alors à tort.
-// C'est un sur-ensemble, jamais un sous-ensemble — aucun retard n'est perdu —,
-// et `listerVerifications` repasse les lignes retenues au prédicat.
 
 /**
  * Ce qu'une ligne ATTEND encore, côté SQL : le pendant exact de

@@ -582,16 +582,36 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      elle calcule l'échéance des rangées gelées depuis elle. La retirer
      suppose d'abord de remettre ces rangées au modèle — ce qui perd la DATE
      des contrôles sans rapport au dossier (le fait, lui, survit dans le
-     statut). **Décision de la propriétaire, en attente.**
-  **Fait le 2026-09-13, sans dépendre de cette décision :**
+     statut). **Tranché par la propriétaire le 2026-09-13** : les données de
+     production sont fictives, on ne préserve rien — si le code est propre,
+     on re-seed. ~~**La colonne est retirée**~~, migration
+     `20260913120000_ligne_ouverte_retrait_date_realisee` : les rangées gelées
+     sur un statut réalisé avec un rythme (`periodicite` hors
+     `mise_en_service_uniquement` et `autre`) repassent `planifiee` — leur
+     `datePrevue` porte déjà le rendez-vous suivant —, les ponctuelles
+     consommées gardent leur statut, qui est leur seule preuve, puis
+     `DROP COLUMN IF EXISTS`. Rejouée deux fois sur le Docker local avec huit
+     rangées fabriquées : trois mises à jour, cinq intouchées, second passage
+     sans effet. **Avec elle est parti tout ce qui la tolérait** :
+     `echeanceOuverte` et les projections qui la recopiaient (tableau de bord,
+     registre, PDF, MCP, page d'établissement — le tri en SQL et le `take` du
+     top 5 reviennent à `cinqProchaines` après projection, la borne ne dépend
+     plus d'un calcul), la branche « rattrapage » du réconciliateur, le repli
+     sur la colonne dans la suppression d'un rapport, les fixtures et les
+     tests des « rangées d'avant l'ADR-034 » — il n'y en a plus, par
+     construction. `estVerificationRealisee` et `echeanceAttendue` gardent la
+     règle du rythme : elle n'est pas une tolérance, c'est la définition d'une
+     ligne réalisée. `scripts/mesure-score-adr034.ts` garde son propre type
+     avec la colonne, il modélise l'ancien modèle pour le mesurer. 2623 tests.
+  **Fait le 2026-09-13, avant cette décision :**
   ~~la durée de conservation de `D. 4711-3` à l'écran du registre~~ (badge
   légal, citation et lien relus à la source le 2026-09-01) ; ~~l'annotation de
   l'ADR-012~~ ; ~~les trois gardes de suppression~~ — équipement, prescription
   et son compte — recopiaient trois témoins de preuve et ignoraient le statut
   réalisé : elles partagent `portantUnePreuve`, qui le compte, si bien que le
   retrait de la colonne ne rendra supprimable aucun équipement qui porte une
-  preuve. `VerificationDatee.libelleObligation` reste requis tant que la colonne
-  vit : il ne coûte rien et n'est plus lu par aucun prédicat.
+  preuve. `VerificationDatee.libelleObligation` reste requis : il ne coûte rien
+  et n'est plus lu par aucun prédicat.
 
 ## Ce que le score fait, mesuré le 2026-09-12
 

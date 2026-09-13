@@ -282,7 +282,6 @@ async function regenererUnePasse(
       periodicite: true,
       realisateurRequis: true,
       datePrevue: true,
-      dateRealisee: true,
       // L'archivage (ADR-034, N3) : sans lui, la réconciliation ne sait plus
       // qu'une ligne est barrée et la ré-archiverait à chaque passe.
       archiveLe: true,
@@ -312,13 +311,9 @@ async function regenererUnePasse(
     periodicite: v.periodicite,
     realisateurRequis: v.realisateurRequis,
     datePrevue: v.datePrevue,
-    dateRealisee: v.dateRealisee,
     archiveLe: v.archiveLe,
     derniereRealisation: dernieresRealisations.get(v.id)?.dateRapport ?? null,
     dernierResultat: dernieresRealisations.get(v.id)?.resultat ?? null,
-    // Distinct de `porteUnePreuve`, qui compte aussi les actions : celui-ci
-    // borne le repli sur la colonne gelée (cf. `realisationConnue`).
-    aDesRapports: v._count.rapports > 0,
     statut: v.statut as StatutVerificationPersiste,
     porteUnePreuve: v._count.rapports > 0 || v._count.actions > 0,
     prescriptionId: v.prescriptionId,
@@ -416,10 +411,6 @@ async function regenererUnePasse(
     // ici, un prestataire a pu déposer un rapport, le dirigeant créer une
     // action corrective. Sans ces clauses, le `deleteMany` les emporte par
     // cascade — mot pour mot ce que l'ADR-012 déclare impossible.
-    //
-    // `dateRealisee: null` complète le trio : le réconciliateur compte la
-    // date de réalisation comme une trace au même titre qu'une pièce jointe
-    // (`porteUneTrace`), donc la condition d'ici doit compter les quatre.
     operations.push(
       prisma.verification.deleteMany({
         where: {
@@ -427,7 +418,6 @@ async function regenererUnePasse(
           etablissementId,
           rapports: { none: {} },
           actions: { none: {} },
-          dateRealisee: null,
           // ET le statut : depuis l'ADR-034, une obligation sans rendez-vous
           // suivant, consommée, n'a plus ni rapport ni date sur sa ligne — son
           // statut réalisé est le seul témoignage qu'elle a été faite, et
@@ -506,7 +496,6 @@ async function regenererUnePasse(
           periodicite: m.periodicite,
           realisateurRequis: m.realisateurRequis as Realisateur[],
           datePrevue: m.datePrevue,
-          dateRealisee: m.dateRealisee,
           statut: m.statut,
           prescriptionId: m.prescriptionId,
           // Une ligne que le plan met à jour est une ligne ATTENDUE : son

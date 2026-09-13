@@ -15,9 +15,8 @@ const verif = (
   datePrevue: string,
   o: {
     statut?: string;
-    dateRealisee?: string;
-    /** Dernier rapport réalisé (ADR-034). Absent = aucun ; les cas d'avant
-     *  passent par `dateRealisee`, que la lecture prend en repli. */
+    /** Dernier rapport réalisé (ADR-034). Absent = aucun : c'est la seule
+     *  source du fait depuis le N5, sans repli. */
     derniereRealisation?: string;
     /** Le jour où l'obligation a cessé de s'appliquer (ADR-034). Absent =
      *  ligne ouverte, ce qu'est toute ligne de ce fichier sauf une. */
@@ -30,7 +29,6 @@ const verif = (
   libelleObligation: o.libelle ?? "Vérification annuelle",
   statut: o.statut ?? "planifiee",
   datePrevue: jour(datePrevue),
-  dateRealisee: o.dateRealisee ? jour(o.dateRealisee) : null,
   archiveLe: o.archiveLe ? jour(o.archiveLe) : null,
   derniereRealisation: o.derniereRealisation ? jour(o.derniereRealisation) : null,
   periodicite: o.periodicite ?? ("annuelle" as const),
@@ -85,29 +83,19 @@ describe("repartirParEquipement", () => {
   });
 
   it("garde la vérification réalisée la plus récente", () => {
+    // Le fait se lit sur le dernier rapport réalisé de chaque ligne (ADR-034,
+    // N5) : `derniere` est la plus récente des deux.
     const m = repartirParEquipement(
       [
-        verif("eq1", "2025-02-01", {
-          statut: "realisee_conforme",
-          dateRealisee: "2025-02-03",
-        }),
-        verif("eq1", "2026-02-01", {
-          statut: "realisee_conforme",
-          dateRealisee: "2026-02-04",
-        }),
+        verif("eq1", "2025-02-01", { derniereRealisation: "2025-02-03" }),
+        verif("eq1", "2026-02-01", { derniereRealisation: "2026-02-04" }),
       ],
       AUJOURDHUI,
     );
 
     expect(m.get("eq1")?.derniere).toEqual(jour("2026-02-04"));
-    // CES DEUX RANGÉES N'ONT JAMAIS ROULÉ : le contrôle est postérieur à
-    // `datePrevue`, qui est donc l'échéance honorée. Leur échéance ouverte se
-    // calcule (`echeanceOuverte`) : 03/02/2026 pour la première — passée, en
-    // retard —, 04/02/2027 pour la seconde — à venir. Ce test attendait `0`
-    // (lecture par le statut : un appareil en retard « à jour »), puis `2`
-    // (lecture par `datePrevue` : un contrôle de février 2026 « en retard »).
-    // Les deux étaient faux (relectures du 2026-09-13).
-    expect(m.get("eq1")?.enRetard).toBe(1);
+    // Et les deux échéances ouvertes, passées, comptent en retard.
+    expect(m.get("eq1")?.enRetard).toBe(2);
     expect(m.get("eq1")?.faites).toBe(2);
   });
 
@@ -195,26 +183,6 @@ describe("repartirParEquipement — l'horizon proche", () => {
     expect(m.get("eq1")?.proches).toBe(1);
   });
 
-  it("le rendez-vous suivant d'une rangée SOLDÉE d'avant l'ADR-034 compte dans l'horizon", () => {
-    // LA FIXTURE D'ORIGINE, restaurée : statut réalisé, contrôle il y a un an,
-    // rendez-vous suivant dans quinze jours. Le N4 l'avait remplacée par une
-    // ligne roulée, et sur celle-ci `proches` et `aVenir` tombaient à 0 — la
-    // carte du parc revenait à « aucune vérification rattachée ». La règle du
-    // 2026-09-13 lit cette rangée par sa date.
-    const m = repartirParEquipement(
-      [
-        verif("eq1", "2026-08-25", {
-          statut: "realisee_conforme",
-          dateRealisee: "2025-08-25",
-        }),
-      ],
-      AUJOURDHUI,
-    );
-    expect(m.get("eq1")?.faites).toBe(1);
-    expect(m.get("eq1")?.proches).toBe(1);
-    expect(m.get("eq1")?.prochaine?.date).toEqual(jour("2026-08-25"));
-  });
-
   it("une ligne archivée ne compte dans aucun horizon", () => {
     // ADR-034 : son obligation ne s'applique plus, son statut reste gelé. Le
     // fait était un préfixe de libellé, c'est une colonne depuis le N3 — et
@@ -263,7 +231,6 @@ describe("resumerEquipement", () => {
         // ligne serait une rangée gelée en retard, et compterait « dépassée ».
         verif("eq1", "2026-02-10", {
           statut: "realisee_conforme",
-          dateRealisee: "2026-02-10",
           periodicite: "mise_en_service_uniquement",
         }),
         verif("eq1", "2026-06-01"),
@@ -349,7 +316,6 @@ describe("resumerEquipement", () => {
       etatDe([
         verif("eq1", "2026-02-10", {
           statut: "realisee_conforme",
-          dateRealisee: "2026-02-10",
           periodicite: "mise_en_service_uniquement",
         }),
       ]),

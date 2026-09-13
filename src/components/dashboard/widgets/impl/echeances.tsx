@@ -48,7 +48,7 @@ function classifier(
   // marqueur précédent — un préfixe dans le libellé — s'est perdu ici : une
   // ligne archivée gelée sur `depassee` arrivait EN TÊTE du tri par date
   // croissante, sa date étant la plus ancienne, et s'affichait en alerte.
-  if (estVerificationEnRetard({ ...v, dateRealisee: null }, aujourdhui)) {
+  if (estVerificationEnRetard(v, aujourdhui)) {
     return { tone: "alerte", libelleDate: formaterDateCourteFr(v.datePrevue) };
   }
   if (v.statut === "a_planifier") {

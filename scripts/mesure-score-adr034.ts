@@ -44,7 +44,16 @@ type Fait = {
   archivee?: boolean;
 };
 
-type Ligne = VerificationDatee & { derniereRealisation: Date | null };
+/**
+ * Une ligne, dans les DEUX modèles. `dateRealisee` est portée ici, et non par
+ * `VerificationDatee` : le produit ne l'a plus depuis le N5 (la colonne est
+ * retirée), mais ce script rejoue l'ancien modèle pour le comparer au nouveau,
+ * et c'est précisément pour ça qu'il la garde.
+ */
+type Ligne = VerificationDatee & {
+  derniereRealisation: Date | null;
+  dateRealisee: Date | null;
+};
 
 const moisAvant = (n: number) => ajouterMois(MAINTENANT, -n);
 

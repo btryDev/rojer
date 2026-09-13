@@ -11,7 +11,7 @@
 //
 //   - extincteur `aRobinetsIncendieArmes: true`  → un équipement RIA est créé
 //     dans le même établissement, et la ligne de calendrier
-//     `incendie-erp-ria-annuelle` existante (rapports, actions, dateRealisee)
+//     `incendie-erp-ria-annuelle` existante (rapports, actions)
 //     est RÉAFFECTÉE au nouvel équipement — identifiants conservés ;
 //   - extincteur sans réponse (clé absente)      → même reprise : la forme
 //     `non_infirmee` maintenait l'obligation ; le dirigeant pourra désactiver

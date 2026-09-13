@@ -87,7 +87,6 @@ export async function etatVerificationsParEquipement(
         libelleObligation: true,
         statut: true,
         datePrevue: true,
-        dateRealisee: true,
         // Sans lui, une ligne dont l'obligation ne s'applique plus (ADR-034)
         // reste comptée sur la carte de son appareil, avec le statut gelé où
         // l'archivage l'a laissée.
@@ -111,7 +110,6 @@ export function repartirParEquipement(
     libelleObligation: string;
     statut: string;
     datePrevue: Date;
-    dateRealisee: Date | null;
     /** `null` = ligne ouverte (ADR-034). `lecturesCalendrier` ne rend rien
      *  d'une ligne archivée, hors la preuve qu'elle porte. */
     archiveLe: Date | null;

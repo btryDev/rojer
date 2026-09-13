@@ -20,7 +20,6 @@ import {
   estVerificationArchivee,
   estVerificationEnRetard,
   estVerificationRealisee,
-  echeanceOuverte,
   type VerificationDatee,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
@@ -275,7 +274,7 @@ export function classerVerification(
   if (estVerificationRealisee(v)) return "faite";
   if (estVerificationEnRetard(v, now)) return "enRetard";
   if (v.statut === "a_planifier") return "aPlanifier";
-  return classerDate(echeanceOuverte(v), now);
+  return classerDate(v.datePrevue, now);
 }
 
 /**
@@ -314,9 +313,7 @@ function statutDuRegistre(
 }
 
 /**
- * Les cinq lignes aux échéances les plus proches, triées — sur des lignes dont
- * `datePrevue` porte DÉJÀ l'échéance ouverte (une projection passée par
- * `echeanceOuverte`).
+ * Les cinq lignes aux échéances les plus proches, triées après projection.
  *
  * Le SQL ne sait pas calculer l'échéance ouverte : trier `datePrevue` en base
  * et couper à cinq laissait une rangée gelée — colonne en 2026, échéance en
@@ -446,13 +443,9 @@ export type LectureCalendrier = {
  * le fait au jour du fait, l'échéance au jour de l'échéance, classée comme
  * n'importe quelle date, en retard si elle est passée.
  *
- * Une rangée d'avant l'ADR-034 porte encore un statut réalisé avec, dans
- * `datePrevue`, le rendez-vous suivant : `classerVerification` la lit par sa
- * date (`estVerificationRealisee`), donc elle tombe dans le cas général, et
- * son fait se lit sur la colonne gelée à défaut de rapport. Un contrôle sans
- * périodicité (mise en service, « autre ») n'a pas de rendez-vous suivant :
- * sa `datePrevue` est l'ancienne échéance, pas un engagement, et il n'a que
- * son fait à poser.
+ * Un contrôle sans périodicité (mise en service, « autre ») n'a pas de
+ * rendez-vous suivant : sa `datePrevue` est l'ancienne échéance, pas un
+ * engagement, et il n'a que son fait à poser.
  */
 export function lecturesCalendrier(
   v: VerificationDatee & {
@@ -469,10 +462,9 @@ export function lecturesCalendrier(
   },
   now: Date,
 ): LectureCalendrier[] {
-  // La réalisation connue : le dernier rapport réalisé ; à défaut, la colonne
-  // gelée d'une ligne d'avant l'ADR-034 que la réconciliation n'a pas encore
-  // remise au modèle.
-  const realisation = v.derniereRealisation ?? v.dateRealisee;
+  // La réalisation connue : le dernier rapport réalisé, et lui seul (ADR-034,
+  // N5 : la ligne ne porte plus de date de réalisation).
+  const realisation = v.derniereRealisation;
   // Une ligne archivée n'annonce plus rien. Son statut est **gelé** dans son
   // dernier état connu (ADR-012 : l'enum Prisma n'a pas de valeur
   // `archivee`), donc un cycle soldé continuait d'en tirer un « prochain
@@ -504,7 +496,7 @@ export function lecturesCalendrier(
     // où il a eu lieu.
     const courante: LectureCalendrier = {
       // L'échéance OUVERTE, calculée pour une rangée gelée jamais roulée.
-      date: echeanceOuverte(v),
+      date: v.datePrevue,
       registre: classe,
       lecture: "courante",
     };

@@ -42,7 +42,6 @@ function verif(datePrevue: string, statut = "planifiee") {
   return {
     statut,
     datePrevue: new Date(datePrevue),
-    dateRealisee: null,
     derniereRealisation: null,
     // Un rythme cyclique : sur une obligation périodique, la date décide.
     periodicite: "annuelle",
@@ -75,7 +74,6 @@ describe("charge d'un bâtiment", () => {
         {
           statut: "realisee_conforme",
           datePrevue: new Date("2026-07-01T00:00:00+02:00"),
-          dateRealisee: new Date("2026-07-02T00:00:00+02:00"),
           derniereRealisation: null,
           periodicite: "mise_en_service_uniquement",
           archiveLe: null,
@@ -148,13 +146,11 @@ describe("listerBatimentsAvecCharge", () => {
       /** Le jour où l'obligation a cessé de s'appliquer. */
       archiveLe?: string;
       /** La colonne gelée (ADR-034), que plus aucun prédicat ne lit. */
-      dateRealisee?: string;
       actif?: boolean;
     } = {},
   ) => ({
     statut: o.statut ?? "planifiee",
     datePrevue: new Date(datePrevue),
-    dateRealisee: o.dateRealisee ? new Date(o.dateRealisee) : null,
     archiveLe: o.archiveLe ? new Date(o.archiveLe) : null,
     libelleObligation: "Vérification annuelle",
     equipement: { batimentId, actif: o.actif ?? true },
@@ -165,7 +161,6 @@ describe("listerBatimentsAvecCharge", () => {
   const ligneSansEquipement = (datePrevue: string) => ({
     statut: "planifiee",
     datePrevue: new Date(datePrevue),
-    dateRealisee: null,
     archiveLe: null,
     libelleObligation: "Contrôle annuel des installations d'aération",
     equipement: null,
@@ -199,7 +194,6 @@ describe("listerBatimentsAvecCharge", () => {
     const toutes = h.db.verifs as unknown as Array<{
       statut: string;
       datePrevue: Date;
-      dateRealisee: Date | null;
       periodicite: string;
       archiveLe: Date | null;
       libelleObligation: string;
@@ -265,7 +259,6 @@ describe("listerBatimentsAvecCharge", () => {
   it("une ligne roulée dont l'échéance ouverte est passée pèse bien sur sa carte", async () => {
     h.db.verifs = [
       ligne(PRINCIPAL, "2026-08-19T00:00:00+02:00", {
-        dateRealisee: "2026-02-01T00:00:00+01:00",
       }),
     ];
 

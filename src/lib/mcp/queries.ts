@@ -40,7 +40,7 @@ import { libellePorteurSansNom } from "@/lib/calendrier/labels";
 // La règle du réalisé vit avec les autres prédicats (`estVerificationRealisee`) :
 // sur une obligation périodique, la date décide — un statut réalisé d'avant
 // l'ADR-034 ne rend plus « réalisée » une échéance passée à l'assistant.
-import { echeanceOuverte, estVerificationRealisee } from "@/lib/dates/retard";
+import { estVerificationRealisee } from "@/lib/dates/retard";
 import {
   derniereRealisation,
   WHERE_RAPPORT_REALISE,
@@ -349,9 +349,9 @@ function etatDe(v: VerificationDatee, now: Date): EtatVerification {
   // EN PREMIER, avant même le réalisé : une ligne archivée peut porter une
   // réalisation, et « réalisée » laisserait croire qu'elle compte encore.
   if (estVerificationArchivee(v)) return "ne_s_applique_plus";
-  // `estRealisee` lit le STATUT, plus la colonne (ADR-034) : depuis que la
-  // ligne roule au dépôt, seule une obligation SANS rendez-vous suivant garde
-  // un statut réalisé — et sa `dateRealisee` est éteinte. Lue sur la colonne,
+  // `estRealisee` lit le STATUT et le rythme (ADR-034) : depuis que la ligne
+  // roule au dépôt, seule une obligation SANS rendez-vous suivant garde un
+  // statut réalisé. Lue sur l'ancienne colonne de réalisation (retirée au N5),
   // la garde tombait : une vérification à la mise en service, faite, ressortait
   // « planifiée, 40 jours de retard » à l'assistant, sous un en-tête « aucune
   // en retard ». Relevé en relecture le 2026-09-12.
@@ -405,7 +405,6 @@ export async function listerEquipements(
         select: {
           statut: true,
           datePrevue: true,
-          dateRealisee: true,
           periodicite: true,
           archiveLe: true,
           libelleObligation: true,
@@ -441,7 +440,6 @@ export type VerificationLue = {
   categorie: CategorieEquipement | null;
   periodicite: string;
   datePrevue: Date;
-  dateRealisee: Date | null;
   /**
    * La date à laquelle l'obligation a cessé de s'appliquer à cette ligne
    * (ADR-034), `null` tant qu'elle est ouverte.
@@ -503,7 +501,6 @@ export async function listerVerifications(
       libelleObligation: true,
       periodicite: true,
       datePrevue: true,
-      dateRealisee: true,
       // L'archivage est un CHAMP depuis l'ADR-034 (N3), plus un préfixe de
       // libellé : c'est lui qui dit qu'une obligation a cessé de s'appliquer.
       // En clair, et non par une constante partagée, pour la même raison que
@@ -542,8 +539,7 @@ export async function listerVerifications(
     // L'échéance OUVERTE, pas la colonne : sur une rangée gelée jamais roulée,
     // `datePrevue` est l'échéance déjà honorée. L'assistant lit cette date, et
     // les filtres ci-dessous aussi.
-    datePrevue: echeanceOuverte(v),
-    dateRealisee: v.dateRealisee,
+    datePrevue: v.datePrevue,
     archiveLe: v.archiveLe,
     derniereRealisation: derniereRealisation(v.rapports),
     statut: v.statut,
@@ -556,7 +552,7 @@ export async function listerVerifications(
     joursRetard:
       estVerificationRealisee(v) || estVerificationArchivee(v)
         ? 0
-        : joursDeRetard(echeanceOuverte(v), now),
+        : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),
   }));
 

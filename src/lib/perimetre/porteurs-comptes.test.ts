@@ -79,7 +79,6 @@ describe("porteursComptesPar — la sonde", () => {
       "salarie",
     ]);
     for (const { ligne } of s) {
-      expect(ligne.dateRealisee).toBeNull();
       expect(ligne.datePrevue.getTime()).toBeLessThan(now.getTime());
     }
   });

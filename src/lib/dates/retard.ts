@@ -25,10 +25,7 @@ import { debutDuJour, joursCivilsEntre } from "./index";
 // texte (ADR-034 § 1). `periodicite.ts` n'importe que `lib/dates/index` et
 // le référentiel : aucun cycle, et rien de Prisma — ce module reste utilisable
 // côté client.
-import {
-  PERIODICITES_SANS_SUITE,
-  prochaineEcheance,
-} from "@/lib/calendrier/periodicite";
+import { PERIODICITES_SANS_SUITE } from "@/lib/calendrier/periodicite";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 
 // ---------------------------------------------------------------------
@@ -95,11 +92,11 @@ export type VerificationDatee = {
    */
   periodicite: string;
   /**
-   * COLONNE GELÉE (ADR-034) : plus écrite depuis le 2026-09-11, et plus lue
-   * par aucun prédicat depuis le N3. Elle reste dans le type le temps que les
-   * lecteurs la laissent tomber ; N5 la retire de la base.
+   * (Le champ `dateRealisee` qui suivait est parti au lot N5 de l'ADR-034 : le
+   * fait d'un contrôle se lit sur le dernier rapport réalisé, jamais sur la
+   * ligne.)
+   *
    */
-  dateRealisee: Date | null;
   /**
    * **Requis, et c'est tout l'objet du champ.** La date à laquelle
    * l'obligation a cessé de s'appliquer à cette ligne (ADR-034) ; `null` =
@@ -259,52 +256,18 @@ export function estVerificationEnRetard(
   const statut = statutLu(v);
   if (statut === "depassee") return true;
   if (statut === "planifiee" || statut === "a_planifier") {
-    return estEnRetard(echeanceOuverte(v), now);
+    return estEnRetard(v.datePrevue, now);
   }
   return false;
 }
 
-/**
- * La date de l'échéance OUVERTE d'une ligne — celle que tout écran compare et
- * affiche. `datePrevue`, sauf dans un cas, et ce cas se calcule.
- *
- * LE CAS : une rangée d'avant l'ADR-034 au statut réalisé, sur une obligation
- * périodique, avec sa date de réalisation. Son échéance ouverte est
- * `dateRealisee` + le rythme — TOUJOURS, quelle que soit sa `datePrevue`.
- *
- * POURQUOI SANS REGARDER `datePrevue`. C'est exactement ce qu'écrit la branche
- * de RATTRAPAGE du réconciliateur (`generateur.ts`, « réalisation +
- * périodicité ») : lire autre chose ici, c'est une ligne qui change d'état à
- * la première ouverture du calendrier. Et `datePrevue` ne dit rien de fiable
- * sur ces lignes :
- *  · si la régénération a roulé la ligne, elle vaut déjà réalisation + rythme ;
- *  · si elle a échoué après le dépôt, elle vaut l'échéance HONORÉE ;
- *  · si le contrôle a été fait EN AVANCE, elle est postérieure à la
- *    réalisation, et pourtant honorée ;
- *  · si la ligne était « à planifier », elle vaut une date de GÉNÉRATION.
- * Une première version ne calculait que si `datePrevue ≤ dateRealisee` : elle
- * laissait en retard le contrôle fait en avance et la ligne déclarée puis
- * contrôlée (relecture externe du 2026-09-13).
- *
- * Tout autre cas rend `datePrevue` : une ligne roulée ou ouverte (statut non
- * réalisé), une obligation sans suite (rien à calculer), une date de
- * réalisation absente.
- */
-export function echeanceOuverte(
-  v: Pick<VerificationDatee, "statut" | "periodicite" | "datePrevue" | "dateRealisee">,
-): Date {
-  if (
-    STATUTS_REALISES.has(v.statut) &&
-    !estVerificationRealisee(v) &&
-    v.dateRealisee != null
-  ) {
-    return (
-      prochaineEcheance(v.dateRealisee, v.periodicite as Periodicite) ??
-      v.datePrevue
-    );
-  }
-  return v.datePrevue;
-}
+// `echeanceOuverte` A VÉCU ICI du 2026-09-13 au soir du même jour : elle
+// calculait, pour une rangée d'avant l'ADR-034 encore gelée sur un statut
+// réalisé, l'échéance que la régénération aurait écrite. La migration du lot
+// N5 a remis ces rangées au modèle et retiré la colonne `dateRealisee` : une
+// ligne porte UNE date, `datePrevue`, et c'est elle que tout lit. Une tolérance
+// pour deux modèles en base était ce que trois relectures ont trouvé
+// incomplète, trois fois ; il n'y a plus qu'un modèle.
 
 /**
  * Une vérification est **à planifier** quand elle attend une date de
@@ -322,7 +285,7 @@ export function estVerificationAPlanifier(
   if (estVerificationArchivee(v)) return false;
   if (estVerificationRealisee(v)) return false;
   if (v.statut !== "a_planifier") return false;
-  return !estEnRetard(echeanceOuverte(v), now);
+  return !estEnRetard(v.datePrevue, now);
 }
 
 /**
@@ -339,7 +302,7 @@ export function estVerificationAVenir(
   if (estVerificationArchivee(v)) return false;
   if (estVerificationRealisee(v)) return false;
   if (statutLu(v) !== "planifiee") return false;
-  return estDansLesProchainsJours(echeanceOuverte(v), now, jours);
+  return estDansLesProchainsJours(v.datePrevue, now, jours);
 }
 
 // ---------------------------------------------------------------------

@@ -9,8 +9,8 @@
 // réalisation ; un rapport antidaté n'est jamais le plus récent ; un rapport
 // « non vérifiable » ne compte pas, puisqu'il n'atteste d'aucun contrôle.
 //
-// `Verification.dateRealisee` n'est plus écrite depuis ce jour. Elle reste en
-// base, gelée, jusqu'au lot N5 qui la retire.
+// `Verification.dateRealisee` n'est plus écrite depuis ce jour, et le lot N5
+// (2026-09-13) l'a retirée de la base : il n'y a plus de seconde source.
 
 //
 // Module PUR : aucun client de base. La jointure par le client de

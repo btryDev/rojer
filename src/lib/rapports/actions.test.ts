@@ -20,7 +20,6 @@ type LigneVerif = {
   id: string;
   etablissementId: string;
   datePrevue: Date;
-  dateRealisee: Date | null;
   statut: string;
   periodicite: string;
   /** Porteur de la ligne. Non nul = échéance d'une personne, sur laquelle
@@ -267,7 +266,6 @@ beforeEach(() => {
     id: "v-1",
     etablissementId: "etab-1",
     datePrevue: ECHEANCE,
-    dateRealisee: null,
     statut: "a_planifier",
     periodicite: "annuelle",
     archiveLe: null,
@@ -279,7 +277,6 @@ describe("uploadRapport — résultat « non vérifiable »", () => {
     const res = await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
 
     expect(res.status).toBe("success");
-    expect(h.db.verification?.dateRealisee).toBeNull();
   });
 
   it("ne repousse pas l'échéance et la signale comme dépassée", async () => {
@@ -327,8 +324,6 @@ describe("uploadRapport — un rapport réalisé fait ROULER la ligne (ADR-034)"
     // désigné 02:00 du matin heure française — l'écart qui faisait basculer
     // une échéance du jour en « en retard » dès 2 h.
     expect(h.db.rapports[0].dateRapport).toEqual(depuisCleJourCivil("2026-06-01"));
-    // Et la colonne de la ligne n'est plus écrite (ADR-034) : une seule source.
-    expect(h.db.verification?.dateRealisee).toBeNull();
   });
 
   it("un résultat avec écart roule pareil : le résultat vit sur le rapport", async () => {
@@ -348,7 +343,6 @@ describe("uploadRapport — un rapport réalisé fait ROULER la ligne (ADR-034)"
     ];
     h.db.verification!.datePrevue = depuisCleJourCivil("2027-06-01");
     h.db.verification!.statut = "planifiee";
-    h.db.verification!.dateRealisee = depuisCleJourCivil("2026-06-01");
 
     const res = await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2025-05-01"));
 
@@ -357,7 +351,6 @@ describe("uploadRapport — un rapport réalisé fait ROULER la ligne (ADR-034)"
     const antidate = h.db.rapports.find((r) => r.id !== "rap-2026")!;
     expect(antidate.echeanceHonoree).toBeNull();
     expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
-    expect(h.db.verification?.dateRealisee).toEqual(depuisCleJourCivil("2026-06-01"));
     expect(h.db.verification?.statut).toBe("planifiee");
   });
 
@@ -414,7 +407,6 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
       id: "v-1",
       etablissementId: "etab-1",
       datePrevue: depuisCleJourCivil("2027-06-01"),
-      dateRealisee: depuisCleJourCivil("2026-06-01"),
       statut: "planifiee",
       periodicite: "annuelle",
     };
@@ -434,7 +426,6 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     // l'ADR-034 la ligne restait à 2027 : le retard était blanchi par la
     // suppression de la pièce qui le justifiait.
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(h.db.verification?.dateRealisee).toBeNull();
     expect(h.db.verification?.statut).toBe("depassee");
     // Le fichier n'est libéré qu'après le commit.
     expect(h.stockage.fichiers.size).toBe(0);
@@ -452,7 +443,6 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     // Rapport d'avant N2, sans échéance honorée : la ligne se recalcule depuis
     // le rapport qui reste — mai 2025 + un an, donc dépassée.
     expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2026-05-01"));
-    expect(h.db.verification?.dateRealisee).toBeNull();
     expect(h.db.verification?.statut).toBe("depassee");
   });
 
@@ -494,7 +484,6 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
 
     expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
-    expect(h.db.verification?.dateRealisee).toBeNull();
     expect(h.db.verification?.statut).toBe("a_planifier");
   });
 });
@@ -509,7 +498,6 @@ describe("uploadRapport — une obligation éteinte ne reçoit pas de rapport", 
       id: "v-eteinte",
       etablissementId: "etab-1",
       datePrevue: ECHEANCE,
-      dateRealisee: null,
       statut: "planifiee",
       periodicite: "annuelle",
       archiveLe: new Date("2026-02-01T00:00:00Z"),
@@ -558,32 +546,6 @@ describe("uploadRapport — une obligation éteinte ne reçoit pas de rapport", 
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
     expect(h.stockage.fichiers.size).toBe(0);
   });
-
-  it("enregistre l'échéance OUVERTE comme honorée, pas la colonne d'une rangée gelée", () => {
-    // Ligne d'avant l'ADR-034, jamais roulée : contrôle du 10/08/2025, colonne
-    // à l'échéance honorée du 01/08/2025. L'échéance ouverte est le
-    // 10/08/2026. Enregistrer la colonne faisait reculer la ligne d'un an si
-    // l'on supprimait ensuite ce rapport (relecture externe du 2026-09-13).
-    return (async () => {
-      h.db.verification = {
-        salarieId: null,
-        id: "v-gelee",
-        etablissementId: "etab-1",
-        datePrevue: new Date("2025-08-01T00:00:00Z"),
-        dateRealisee: new Date("2025-08-10T00:00:00Z"),
-        statut: "realisee_conforme",
-        periodicite: "annuelle",
-        archiveLe: null,
-      };
-      const res = await uploadRapport(
-        "v-gelee",
-        { status: "idle" },
-        formulaire("conforme", "2026-08-05"),
-      );
-      expect(res.status).toBe("success");
-      expect(h.db.rapports[0].echeanceHonoree).toEqual(new Date("2026-08-10T00:00:00Z"));
-    })();
-  });
 });
 
 describe("uploadRapport — la frontière médicale, tenue côté serveur", () => {
@@ -603,7 +565,6 @@ describe("uploadRapport — la frontière médicale, tenue côté serveur", () =
       id: "v-titre",
       etablissementId: "etab-1",
       datePrevue: ECHEANCE,
-      dateRealisee: null,
       statut: "a_planifier",
       periodicite: "quinquennale",
     };
@@ -658,7 +619,6 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
         id: "v-1",
         etablissementId: "etab-1",
         datePrevue: depuisCleJourCivil("2027-09-01"),
-        dateRealisee: null,
         statut: "planifiee",
         periodicite: "annuelle",
       };
@@ -696,7 +656,6 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
       id: "v-1",
       etablissementId: "etab-1",
       datePrevue: depuisCleJourCivil("2027-06-01"),
-      dateRealisee: null,
       statut: "planifiee",
       periodicite: "annuelle",
     };
@@ -756,7 +715,6 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
         id: "v-1",
         etablissementId: "etab-1",
         datePrevue: depuisCleJourCivil("2027-06-01"),
-        dateRealisee: null,
         statut: "planifiee",
         periodicite: "annuelle",
       };
@@ -800,7 +758,6 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
       id: "v-1",
       etablissementId: "etab-1",
       datePrevue: depuisCleJourCivil("2027-06-01"),
-      dateRealisee: null,
       statut: "planifiee",
       periodicite: "annuelle",
     };
@@ -845,7 +802,6 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
       id: "v-1",
       etablissementId: "etab-1",
       datePrevue: depuisCleJourCivil("2027-08-01"),
-      dateRealisee: null,
       statut: "planifiee",
       periodicite: "annuelle",
     };
@@ -872,7 +828,6 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
       id: "v-1",
       etablissementId: "etab-1",
       datePrevue: ECHEANCE,
-      dateRealisee: null,
       statut: "realisee_conforme",
       periodicite: "mise_en_service_uniquement",
     };
@@ -887,11 +842,9 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
     // Tant qu'elle porte une date de réalisation, les prédicats d'avant N3 la
     // tiennent pour « jamais en retard ». Le dépôt qui la fait rouler doit
     // donc l'éteindre, sans attendre la régénération — qui peut échouer.
-    h.db.verification!.dateRealisee = depuisCleJourCivil("2025-06-01");
 
     await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
 
-    expect(h.db.verification?.dateRealisee).toBeNull();
   });
 
   it("un dépôt refusé pour conflit ne laisse aucun rapport orphelin", async () => {

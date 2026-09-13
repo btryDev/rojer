@@ -94,7 +94,6 @@ export type LigneSondee = {
   libelleObligation: string;
   statut: string;
   datePrevue: Date;
-  dateRealisee: Date | null;
   /** `null` = ligne ouverte (ADR-034). Une sonde archivée ne serait comptée
    *  par aucune agrégation, et la mesure ne dirait plus rien du porteur. */
   archiveLe: Date | null;
@@ -118,7 +117,6 @@ export function sondes(now: Date): {
     libelleObligation: "Sonde de périmètre",
     statut: "planifiee",
     datePrevue: hier,
-    dateRealisee: null,
     archiveLe: null,
     derniereRealisation: null,
     periodicite: "annuelle" as Periodicite,

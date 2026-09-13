@@ -73,7 +73,7 @@ async function etaler(cible: Cible): Promise<void> {
   const etablissementId = ETABLISSEMENTS[cible];
 
   const occurrences = await prisma.verification.findMany({
-    where: { etablissementId, dateRealisee: null },
+    where: { etablissementId },
     select: {
       id: true,
       obligationId: true,
@@ -104,7 +104,7 @@ async function etaler(cible: Cible): Promise<void> {
 async function annuler(cible: Cible): Promise<void> {
   const etablissementId = ETABLISSEMENTS[cible];
   const r = await prisma.verification.updateMany({
-    where: { etablissementId, dateRealisee: null },
+    where: { etablissementId },
     data: { datePrevue: DATE_ORIGINE },
   });
   console.log(`${cible} : ${r.count} échéance(s) ramenée(s) au 10/08/2026.`);

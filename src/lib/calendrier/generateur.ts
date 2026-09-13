@@ -762,29 +762,14 @@ export type OccurrenceExistante = {
   realisateurRequis: Realisateur[];
   datePrevue: Date;
   /**
-   * COLONNE GELÉE (ADR-034) : plus écrite depuis le 2026-09-11, retirée au N5.
-   * Lue en REPLI seulement, quand `derniereRealisation` manque — une ligne de
-   * démonstration datée sans rapport. Ne pas s'en servir : `realisationConnue`.
-   */
-  dateRealisee: Date | null;
-  /**
    * La date du rapport réalisé le plus récent de la ligne, ou `null`. C'est la
-   * réalisation que la réconciliation connaît — lue sur les rapports par
-   * `calendrier/actions.ts`. Optionnel : les fixtures antérieures n'en ont pas
-   * et retombent sur `dateRealisee`.
+   * SEULE réalisation que la réconciliation connaît — lue sur les rapports par
+   * `calendrier/actions.ts` (ADR-034). La ligne n'en porte plus depuis le N5.
    */
   derniereRealisation?: Date | null;
   /** Le résultat de ce rapport (`conforme`…). Il donne son statut à une ligne
    *  sans rendez-vous suivant, seule à en garder un. */
   dernierResultat?: string | null;
-  /**
-   * La ligne porte-t-elle au moins un rapport, quel qu'en soit le résultat ?
-   *
-   * C'est ce qui BORNE le repli sur `dateRealisee` : une ligne qui a des
-   * rapports mais aucune réalisation — le dernier a été supprimé, ou il est
-   * « non vérifiable » — ne doit pas ressusciter la date d'un contrôle retiré.
-   */
-  aDesRapports?: boolean;
   statut: StatutVerificationPersiste;
   /** La ligne porte-t-elle au moins un rapport de vérification ou une action
    *  corrective ? C'est le seul critère qui autorise — ou interdit — la
@@ -823,12 +808,7 @@ export type MiseAJourOccurrence = {
    * `null` depuis l'ADR-034 : la colonne est morte, et l'écrire à `null` met
    * au modèle, en une passe, les lignes d'avant. Retiré au N5.
    *
-   * UNE exception, et elle est bornée : une obligation sans rendez-vous
-   * suivant, d'avant l'ADR-034, sans rapport, n'a que cette date pour dire
-   * qu'elle a été faite. On la lui laisse — sinon le fait se perd, et la passe
-   * suivante change d'avis faute de le retrouver (relecture du 2026-09-12).
    */
-  dateRealisee: Date | null;
   statut: StatutVerificationPersiste;
   prescriptionId: string | null;
 };
@@ -844,9 +824,9 @@ export type MiseAJourOccurrence = {
  * 2026-09-12).
  */
 function realisationConnue(ex: OccurrenceExistante): Date | null {
-  if (ex.derniereRealisation != null) return ex.derniereRealisation;
-  if (ex.aDesRapports === true) return null;
-  return ex.dateRealisee ?? null;
+  // Le dernier rapport réalisé, et rien d'autre (ADR-034, N5) : le repli sur
+  // la colonne de la ligne est parti avec elle.
+  return ex.derniereRealisation ?? null;
 }
 
 /** Le statut que porte une ligne dont l'unique contrôle est fait, déduit du
@@ -1244,24 +1224,10 @@ export function reconcilierCalendrier(
       // une seconde fois. Mesuré sur la base locale : deux écritures pour une
       // ligne stable (relecture de contrôle, 2026-09-12).
       statut = statutDepuisResultat(ex.dernierResultat) ?? ex.statut;
-    } else if (estStatutRealise(ex.statut) && realisation !== null) {
-      // RATTRAPAGE D'UNE LIGNE D'AVANT N2 (ADR-034), et rien d'autre. Une
-      // ligne CYCLIQUE au statut réalisé est, par construction, d'avant N2 :
-      // depuis, le dépôt roule la ligne dans sa transaction et la laisse
-      // « planifiée » — le résultat vit sur le rapport. Avant, le dépôt posait
-      // la réalisation sur la ligne, et c'était CETTE branche — alors « cycle
-      // soldé » — qui la faisait rouler à la régénération suivante, puis la
-      // relançait « dépassée » quand la période s'écoulait.
-      //
-      // On la met au modèle en une passe : échéance = réalisation +
-      // périodicité, statut d'un cycle ouvert. D'UN cycle, même si la date
-      // obtenue est déjà passée : l'obligation est un intervalle, l'échéance
-      // ouverte est la première non honorée, et « en retard » se lit sur elle.
-      // La passe suivante ne repasse pas ici — le statut n'est plus réalisé.
-      // La branche part avec la colonne `dateRealisee` au N5.
-      const prochaine = prochaineEcheance(realisation, g.periodicite);
-      datePrevue = prochaine ?? ex.datePrevue;
-      statut = statutCycleOuvert(datePrevue, "planifiee", now);
+      // (La branche de RATTRAPAGE d'une ligne périodique gelée sur un statut
+      // réalisé vivait ici. Elle est partie au N5 : la migration
+      // `20260913120000_ligne_ouverte_retrait_date_realisee` a remis ces
+      // lignes « planifiées », et le modèle n'en produit plus.)
     } else if (
       ex.periodicite !== g.periodicite &&
       realisation !== null &&
@@ -1346,20 +1312,6 @@ export function reconcilierCalendrier(
       periodicite: g.periodicite,
       realisateurRequis: g.realisateurRequis,
       datePrevue,
-      // Colonne morte (ADR-034) : écrite à `null` pour mettre au modèle, en une
-      // passe, les lignes d'avant. Retirée au N5.
-      //
-      // SAUF quand elle est la SEULE trace : une obligation sans rendez-vous
-      // suivant, d'avant l'ADR-034, sans rapport, n'a que cette date pour dire
-      // qu'elle a été faite — l'éteindre perdrait le fait, et la passe suivante
-      // changerait d'avis faute de le retrouver.
-      dateRealisee:
-        !estCyclique(g.periodicite) &&
-        ex.aDesRapports !== true &&
-        ex.derniereRealisation == null &&
-        ex.dateRealisee != null
-          ? ex.dateRealisee
-          : null,
       statut,
       prescriptionId: g.prescriptionId,
     };
@@ -1370,7 +1322,6 @@ export function reconcilierCalendrier(
       cible.periodicite === ex.periodicite &&
       memeListe(cible.realisateurRequis, ex.realisateurRequis) &&
       memeInstant(cible.datePrevue, ex.datePrevue) &&
-      memeInstant(cible.dateRealisee, ex.dateRealisee) &&
       cible.statut === ex.statut &&
       cible.prescriptionId === (ex.prescriptionId ?? null) &&
       // UNE LIGNE ARCHIVÉE N'EST JAMAIS « INCHANGÉE », puisqu'on vient de la
@@ -1408,9 +1359,8 @@ export function reconcilierCalendrier(
     // ancienne clé n'a été vue par aucune ligne générée. Elles ne sont pas
     // orphelines pour autant — elles CONTINUENT sous un autre nom.
     if (vues.has(cle) || adoptees.has(cle)) continue;
-    // `dateRealisee` compte comme une trace au même titre qu'un rapport : elle
-    // atteste qu'un contrôle a eu lieu, même si la pièce jointe a depuis été
-    // retirée du registre.
+    // Une réalisation connue — le dernier rapport réalisé — compte comme une
+    // trace au même titre qu'un rapport de tout résultat.
     // `estStatutRealise` compte comme trace : une obligation sans rendez-vous
     // suivant, consommée, n'a plus ni rapport ni date sur sa ligne une fois
     // que la réconciliation a éteint la colonne (ADR-034) — la supprimer

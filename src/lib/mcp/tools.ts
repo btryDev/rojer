@@ -417,7 +417,6 @@ function formaterVerifications(verifs: VerificationLue[]): string {
       v.derniereRealisation
         ? `dernière réalisation le ${formaterDateFr(v.derniereRealisation)}`
         : null,
-      v.dateRealisee ? `réalisée le ${formaterDateFr(v.dateRealisee)}` : null,
       // L'ÉCHÉANCE, TOUJOURS — sauf sur une obligation consommée, qui n'en
       // attend plus. Écrite en alternative avec la réalisation, elle
       // disparaissait sur une rangée gelée : l'assistant recevait « réalisée

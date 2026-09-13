@@ -29,7 +29,6 @@ function verif(partial: Partial<VerificationTenue> = {}): VerificationTenue {
     id: "v1",
     libelleObligation: "Vérification annuelle des extincteurs",
     datePrevue: new Date("2026-11-02T00:00:00Z"),
-    dateRealisee: null,
     derniereRealisation: null,
     periodicite: "annuelle",
     /** `null` = ligne OUVERTE. Requis depuis le N3 : c'est ce champ, et non
@@ -95,35 +94,6 @@ describe("registre — ce qui a été fait, et ce qui vient (ADR-034)", () => {
     // tout en rose.
     expect(aVenir.statut).toBe("planifiee");
   });
-
-  it("annonce l'échéance OUVERTE d'une rangée jamais roulée", () => {
-    // Contrôle fait le 10/08/2026 sur une échéance du 01/08 : la ligne n'a pas
-    // roulé, `datePrevue` est l'échéance honorée. La fiche annonce la suivante,
-    // et ne la peint pas en retard (relecture du 2026-09-13).
-    const [ligne] = lignesDe([
-      verif({
-        datePrevue: new Date("2026-08-01T00:00:00Z"),
-        dateRealisee: new Date("2026-08-10T00:00:00Z"),
-        statut: "realisee_conforme",
-      }),
-    ]);
-    expect(ligne.meta).toContain("prochaine le 10 août 2027");
-    expect(ligne.statut).toBe("planifiee");
-  });
-
-  it("n'écrit « faite le » qu'une fois sur une ligne d'avant qui a aussi un rapport", () => {
-    // Écrit en deux membres, le fait se lisait deux fois : « faite le X ·
-    // faite le X » (relecture du 2026-09-13).
-    const [ligne] = lignesDe([
-      verif({
-        datePrevue: new Date("2027-06-01T00:00:00Z"),
-        derniereRealisation: new Date("2026-06-01T00:00:00Z"),
-        dateRealisee: new Date("2026-06-01T00:00:00Z"),
-        statut: "planifiee",
-      }),
-    ]);
-    expect(ligne.meta?.match(/faite le/g)).toHaveLength(1);
-  });
 });
 
 describe("registre — une obligation ponctuelle consommée n'annonce pas de suite", () => {
@@ -151,7 +121,7 @@ describe("registre — une obligation ponctuelle consommée n'annonce pas de sui
     const [ligne] = lignesDe([
       verif({
         datePrevue: new Date("2027-06-20T00:00:00Z"),
-        dateRealisee: new Date("2026-06-20T00:00:00Z"),
+        derniereRealisation: new Date("2026-06-20T00:00:00Z"),
         statut: "realisee_conforme",
         periodicite: "annuelle",
       }),

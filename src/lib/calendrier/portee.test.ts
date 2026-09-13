@@ -269,7 +269,6 @@ describe("urgenceSeule — le pendant SQL d'`estVerificationEnRetard`", () => {
               periodicite,
               datePrevue,
               archiveLe,
-              dateRealisee: null,
               libelleObligation: "x",
             };
             expect(
@@ -346,15 +345,15 @@ describe("echeanceAttendue — le pendant SQL d'`estVerificationRealisee`", () =
  * dans un `where`. Il faut donc lire le source, comme plus haut.
  */
 describe("portantUnePreuve — ce qu'aucune suppression n'emporte (ADR-012)", () => {
-  it("compte quatre témoins, dont le statut réalisé", () => {
-    // Le quatrième est la raison d'être de la fonction : les trois gardes de
-    // suppression recopiaient les trois premiers, et N5 retire `dateRealisee`.
-    // Sans le statut, un équipement portant une obligation consommée dont la
-    // colonne est éteinte devenait supprimable.
+  it("compte trois témoins, dont le statut réalisé", () => {
+    // Le troisième est la raison d'être de la fonction : les trois gardes de
+    // suppression recopiaient deux témoins et la colonne `dateRealisee`, que le
+    // N5 a retirée. Sans le statut, un équipement portant une obligation
+    // consommée sans rapport devenait supprimable.
     const branches = (portantUnePreuve() as { OR: Record<string, unknown>[] }).OR;
+    expect(branches).toHaveLength(3);
     expect(branches).toContainEqual({ rapports: { some: {} } });
     expect(branches).toContainEqual({ actions: { some: {} } });
-    expect(branches).toContainEqual({ dateRealisee: { not: null } });
     expect(branches).toContainEqual({
       statut: { in: ["realisee_conforme", "realisee_observations", "realisee_ecart_majeur"] },
     });
@@ -391,14 +390,14 @@ describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
     expect(source("page.tsx")).toContain("echeancesAnnoncables()");
   });
 
-  it("et les choisit sur l'échéance OUVERTE, pas par un `take` sur la colonne", () => {
-    // Relecture externe du 2026-09-13 : `orderBy datePrevue` + `take: 5`
-    // laissait une rangée gelée occuper une des cinq places.
+  it("et les choisit après projection, pas par un `take` en base", () => {
+    // Relecture externe du 2026-09-13 : `orderBy datePrevue` + `take: 5` en
+    // base coupait avant que la projection ait dit ce qu'elle annonce. Le tri
+    // et la coupe se font sur ce qui est affiché.
     const code = source("page.tsx")
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/^\s*\/\/.*$/gm, "");
     expect(code).toContain("prochainesVerifs: cinqProchaines(prochainesVerifs.map(");
-    expect(code).toContain("datePrevue: echeanceOuverte(v),");
     expect(code).not.toMatch(/take:\s*5/);
   });
 

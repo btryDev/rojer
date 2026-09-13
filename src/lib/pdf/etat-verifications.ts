@@ -114,7 +114,7 @@ export function repartirVerifications<
   // amendée en conséquence.
   const realisees12m = verifs.filter((v) => {
     if (dejaComptees.has(v)) return false;
-    const faite = v.derniereRealisation ?? v.dateRealisee;
+    const faite = v.derniereRealisation;
     return faite !== null && faite.getTime() >= debutFenetreHistorique.getTime();
   });
 

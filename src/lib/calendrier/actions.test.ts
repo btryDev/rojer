@@ -139,7 +139,6 @@ function ligne(partiel: Partial<LigneFausse> & { id: string }): LigneFausse {
     periodicite: "annuelle",
     realisateurRequis: ["personne_qualifiee"],
     datePrevue: new Date("2020-01-01T00:00:00Z"),
-    dateRealisee: null,
     statut: "depassee",
     nbRapports: 0,
     nbActions: 0,
@@ -440,7 +439,6 @@ describe("genererCalendrier — continuité par-dessus un identifiant retiré", 
         // La réalisation vit sur le rapport (ADR-034) : une ligne qui PORTE un
         // rapport ne se lit plus sur sa colonne, précisément pour qu'un
         // rapport supprimé ne ressuscite pas.
-        dateRealisee: null,
         rapports: [
           { dateRapport: new Date("2025-06-01T00:00:00Z"), resultat: "conforme" },
         ],
@@ -526,7 +524,6 @@ describe("genererCalendrier — équipements désactivés", () => {
         id: "v-hist",
         equipementId: "eq-1",
         obligationId: ELEC_ANNUELLE,
-        dateRealisee: new Date("2025-01-01T00:00:00Z"),
         statut: "realisee_conforme",
         nbRapports: 1,
       }),
@@ -609,7 +606,6 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
         id: "v-retire",
         equipementId: "eq-retire",
         obligationId: ELEC_ANNUELLE,
-        dateRealisee: new Date("2025-01-01T00:00:00Z"),
         statut: "realisee_conforme",
         nbRapports: 1,
       }),
@@ -829,7 +825,6 @@ describe("genererCalendrier — application du plan", () => {
       // statut est sa seule trace.
       rapports: { none: {} },
       actions: { none: {} },
-      dateRealisee: null,
       statut: {
         notIn: [
           "realisee_conforme",

@@ -21,7 +21,6 @@ import {
   joursCivilsEntre,
 } from "@/lib/dates";
 import {
-  echeanceOuverte,
   estActionEnRetard,
   estVerificationEnRetard,
   estVerificationRealisee,
@@ -137,11 +136,10 @@ export default async function VerificationDetailPage({
   // Horloge lue une fois pour toute la page : deux appels à `new Date()`
   // séparés par un await peuvent tomber de part et d'autre de minuit.
   const aujourdhui = new Date();
-  // L'échéance OUVERTE : `datePrevue`, sauf sur une rangée gelée jamais
-  // roulée, où elle se calcule (`echeanceOuverte`). Toute date de cette page
-  // la lit, pour que la tuile, le compte à rebours et la pastille de retard
-  // parlent de la même échéance que le classement.
-  const echeance = echeanceOuverte(v);
+  // L'échéance OUVERTE est `datePrevue`, et rien d'autre (ADR-034, N5). Toute
+  // date de cette page la lit, pour que la tuile, le compte à rebours et la
+  // pastille de retard parlent de la même échéance que le classement.
+  const echeance = v.datePrevue;
   const joursRestants = joursCivilsEntre(aujourdhui, echeance);
   const enRetard = estVerificationEnRetard(v, aujourdhui);
 

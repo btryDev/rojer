@@ -1476,8 +1476,16 @@ régénération ne la rattrape hors de la page calendrier. Corrigés par UNE
 règle, écrite dans `retard.ts` et propagée par le compilateur : un statut
 réalisé ne purge une échéance que sans rendez-vous suivant ; sur une
 obligation périodique, la date décide. C'est le modèle de GestBAT, lu en
-lecture seule, qui n'a aucun statut stocké. **Reste N5**, dont la première
-étape est la migration de remise au modèle des rangées gelées.
+lecture seule, qui n'a aucun statut stocké. ~~N5~~ fait le 2026-09-13 : la
+propriétaire a tranché que les données de production sont fictives et qu'on
+re-seed — la colonne `dateRealisee` est retirée (migration
+`20260913120000_ligne_ouverte_retrait_date_realisee`, qui remet d'abord
+« planifiée » les rangées gelées sur un statut réalisé avec un rythme), et
+avec elle `echeanceOuverte`, la branche « rattrapage » du réconciliateur et
+tout ce qui tolérait l'ancienne rangée. `depassee` reste vivant (écrit à la
+génération, lu par le retard) : le retirer est une autre décision. **Les cinq
+lots sont livrés sur `adr034-ligne-ouverte` ; reste la relecture externe du
+N5, puis re-seed et déploiement par la propriétaire.**
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est

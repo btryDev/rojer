@@ -14,7 +14,7 @@
 // vraiment exercé, et pas assez pour devenir un second Prisma.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ajouterJours, ajouterMois, instantCivil } from "@/lib/dates";
+import { ajouterJours, instantCivil } from "@/lib/dates";
 
 /** 10 août 2026, 08:00 heure de Paris — le matin, moment où les règles de
  *  retard comparées à `now` brut basculaient à tort. */
@@ -30,7 +30,6 @@ type LigneVerif = {
   equipementId: string;
   statut: string;
   datePrevue: Date;
-  dateRealisee: Date | null;
   /** Le rythme. Le magasin simulé rend la ligne entière, non typée : l'oubli
    *  ici ne compile pas moins — il se lit `undefined`, et c'est la règle qui
    *  doit y résister (`estVerificationRealisee`), pas la fixture. */
@@ -270,7 +269,6 @@ function verif(p: Partial<LigneVerif> & { id: string }): LigneVerif {
     statut: "planifiee",
     datePrevue: jour(10),
     periodicite: "annuelle",
-    dateRealisee: null,
     // Le magasin simulé ne sait pas projeter un `select` : il rend la ligne
     // entière. Sans cette valeur, `archiveLe` arriverait `undefined` aux
     // prédicats, qui testent `!== null` — chaque ligne du fichier serait alors
@@ -316,7 +314,6 @@ describe("getDashboardData — vérifications réalisées et archivées", () => 
           id: `archive-${i}`,
           statut: "realisee_conforme",
           datePrevue: jour(-700 + i),
-          dateRealisee: jour(-700 + i),
           // Consommées : c'est le sens de « contrôles faits » ici. En
           // « annuelle », trente-cinq rangées gelées à date passée seraient
           // trente-cinq retards — et ce test mesure l'ordre de la requête,
@@ -350,10 +347,11 @@ describe("getDashboardData — vérifications réalisées et archivées", () => 
         id: "faite",
         statut: "realisee_conforme",
         datePrevue: jour(-60),
-        dateRealisee: jour(-58),
         // Consommée : une réalisation qui ne laisse rien à faire. Périodique,
         // sa date passée la rangerait dans le retard, pas dans l'historique.
         periodicite: "mise_en_service_uniquement",
+        // Le fait vit sur le rapport, seule source depuis le N5.
+        rapports: [{ dateRapport: jour(-58), resultat: "conforme" }],
       }),
       verif({ id: "retard", statut: "planifiee", datePrevue: jour(-2) }),
     );
@@ -434,7 +432,6 @@ describe("getDashboardData — une rangée périodique gelée sur « réalisée 
         id: "gelee",
         statut: "realisee_conforme",
         datePrevue: jour(-180),
-        dateRealisee: jour(-545),
       }),
       // Le témoin : la même ligne, consommée — sans rendez-vous suivant. Elle
       // ne réclame rien et ne doit pas passer la clause par sa branche
@@ -443,7 +440,6 @@ describe("getDashboardData — une rangée périodique gelée sur « réalisée 
         id: "consommee",
         statut: "realisee_conforme",
         datePrevue: jour(-180),
-        dateRealisee: jour(-545),
         periodicite: "mise_en_service_uniquement",
       }),
     );
@@ -508,7 +504,6 @@ describe("getDashboardData — l'archivage est un champ (ADR-034)", () => {
         // requête traite explicitement en repli. Elle est ici pour que le test
         // rougisse si un prédicat se remet à la lire — c'était la règle
         // d'hier, et elle taisait ce retard.
-        dateRealisee: jour(-30),
         rapports: [{ dateRapport: jour(-30), resultat: "conforme" }],
       }),
     );
@@ -654,8 +649,8 @@ describe("compterVerifsParEquipement", () => {
         equipementId: "eq-1",
         statut: "realisee_conforme",
         datePrevue: jour(-30),
-        dateRealisee: jour(-28),
         periodicite: "mise_en_service_uniquement",
+        rapports: [{ dateRapport: jour(-28), resultat: "conforme" }],
       }),
     );
     const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
@@ -745,24 +740,6 @@ describe("compterVerifsParEquipement", () => {
     expect(stats.sous30j).toBe(0);
   });
 
-  it("annonce l'échéance CALCULÉE d'une rangée gelée contrôlée en avance", async () => {
-    // Relecture externe du 2026-09-13 : la date de prochaine échéance lue sur
-    // la colonne laissait la suite verte. Contrôle 20 jours avant sa colonne :
-    // l'échéance ouverte est la réalisation + un an.
-    h.db.verifications.push(
-      verif({
-        id: "en-avance",
-        equipementId: "eq-1",
-        statut: "realisee_conforme",
-        datePrevue: jour(-10),
-        dateRealisee: jour(-30),
-      }),
-    );
-    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
-    expect(stats.enRetard).toBe(0);
-    expect(stats.prochaineDate).toEqual(ajouterMois(jour(-30), 12));
-  });
-
   it("compte en retard une rangée périodique gelée sur « réalisée » (d'avant l'ADR-034)", async () => {
     // LE BLOQUANT DES DEUX RELECTURES : contrôle fait, rendez-vous suivant
     // dans `datePrevue`, passé — et la pastille de l'appareil disait 0 en
@@ -775,7 +752,6 @@ describe("compterVerifsParEquipement", () => {
         equipementId: "eq-1",
         statut: "realisee_conforme",
         datePrevue: jour(-180),
-        dateRealisee: jour(-545),
       }),
     );
     const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
@@ -792,7 +768,6 @@ describe("compterVerifsParEquipement", () => {
         equipementId: "eq-1",
         statut: "planifiee",
         datePrevue: jour(200),
-        dateRealisee: null,
         rapports: [{ dateRapport: jour(-20), resultat: "conforme" }],
       }),
     );
@@ -802,23 +777,6 @@ describe("compterVerifsParEquipement", () => {
 });
 
 describe("compterObligationsParMois", () => {
-  it("pose l'échéance calculée d'une rangée gelée dans son mois, même si la colonne est d'une autre année", async () => {
-    // Relecture externe du 2026-09-13 : le préfiltre ne gardait une ligne que
-    // si `datePrevue` tombait dans l'année. Contrôle le 05/10/2025, colonne au
-    // 01/10/2025 : l'échéance ouverte est le 05/10/2026, et octobre 2026 ne
-    // l'affichait pas.
-    h.db.verifications.push(
-      verif({
-        id: "gelee",
-        statut: "realisee_conforme",
-        datePrevue: instantCivil(2025, 10, 1),
-        dateRealisee: instantCivil(2025, 10, 5),
-      }),
-    );
-    const barres = await compterObligationsParMois(ETAB, 2026);
-    expect(barres[9].aVenir).toBe(1);
-  });
-
   it("ne peint pas la barre en rouge le matin de l'échéance", async () => {
     h.db.verifications.push(
       verif({ id: "v1", datePrevue: jour(0) }),
@@ -843,8 +801,10 @@ describe("compterObligationsParMois", () => {
       verif({
         id: "v1",
         statut: "realisee_conforme",
+        periodicite: "mise_en_service_uniquement",
         datePrevue: instantCivil(2026, 3, 12),
-        dateRealisee: instantCivil(2026, 5, 4),
+        // Le fait, sur le rapport : en mai, pas au mois de l'échéance.
+        rapports: [{ dateRapport: instantCivil(2026, 5, 3), resultat: "conforme" }],
       }),
     );
     const barres = await compterObligationsParMois(ETAB, 2026);

@@ -26,7 +26,6 @@ import { listerVerifications } from "@/lib/calendrier/queries";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
-  echeanceOuverte,
   estVerificationRealisee,
 } from "@/lib/dates/retard";
 import { statutAffiche } from "@/lib/calendrier/etats";
@@ -52,7 +51,6 @@ export type VerificationTenue = {
   id: string;
   libelleObligation: string;
   datePrevue: Date | null;
-  dateRealisee: Date | null;
   /** Le dernier rapport réalisé (ADR-034) — c'est lui qui dit « faite le »,
    *  la ligne ne portant plus que l'échéance ouverte. */
   derniereRealisation: Date | null;
@@ -211,8 +209,8 @@ export function contenuTenuAilleursDepuis(
             // colonne gelée d'une ligne d'avant — UNE fois. Écrit en deux
             // membres, une ligne d'avant avec rapport imprimait « faite le X ·
             // faite le X » (relecture du 2026-09-13).
-            (v.derniereRealisation ?? v.dateRealisee)
-              ? `faite le ${formaterDateCourteFr((v.derniereRealisation ?? v.dateRealisee) as Date)}`
+            v.derniereRealisation
+              ? `faite le ${formaterDateCourteFr(v.derniereRealisation)}`
               : null,
             // …puis l'échéance ouverte — S'IL Y EN A UNE. Une obligation sans
             // rendez-vous suivant, déjà faite, garde un statut réalisé et une
@@ -225,7 +223,7 @@ export function contenuTenuAilleursDepuis(
               : v.datePrevue
                   ? // L'échéance OUVERTE : calculée sur une rangée gelée jamais
                     // roulée, dont `datePrevue` est l'échéance déjà honorée.
-                    `prochaine le ${formaterDateCourteFr(echeanceOuverte({ ...v, datePrevue: v.datePrevue }))}`
+                    `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
                   : "à planifier",
           ]
             .filter(Boolean)

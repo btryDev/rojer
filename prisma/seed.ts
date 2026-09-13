@@ -179,7 +179,7 @@ const PRESTATAIRES: {
  */
 async function planifierVerifications(etablissementId: string) {
   const aPlanifier = await prisma.verification.findMany({
-    where: { etablissementId, statut: "a_planifier", dateRealisee: null },
+    where: { etablissementId, statut: "a_planifier" },
     select: { id: true },
     orderBy: { datePrevue: "asc" },
   });

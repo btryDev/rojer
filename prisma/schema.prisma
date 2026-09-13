@@ -609,8 +609,11 @@ model Verification {
   prescriptionId String?
   prescription   PrescriptionParticuliere? @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
 
+  // L'échéance OUVERTE — la seule date que la ligne porte (ADR-034). Le fait
+  // d'un contrôle vit sur `RapportVerification.dateRapport` ; la colonne
+  // `dateRealisee` qui le dupliquait est partie au lot N5, migration
+  // `20260913120000_ligne_ouverte_retrait_date_realisee`.
   datePrevue   DateTime
-  dateRealisee DateTime?
   statut       StatutVerification @default(a_planifier)
 
   // Date à laquelle l'obligation a cessé de s'appliquer à cette ligne, qu'on

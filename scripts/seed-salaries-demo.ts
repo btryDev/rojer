@@ -225,7 +225,6 @@ async function annuler(etablissementId: string): Promise<void> {
     where: {
       salarieId: { in: ids },
       OR: [
-        { dateRealisee: { not: null } },
         { rapports: { some: {} } },
         { actions: { some: {} } },
       ],

@@ -83,7 +83,6 @@ function ligneDeja(
     datePrevue: new Date("2028-06-01T00:00:00Z"),
     // La visite de 2025 : sa date vit sur le rapport (ADR-034), la colonne de
     // la ligne n'est plus tenue.
-    dateRealisee: null,
     derniereRealisation: new Date("2025-06-01T00:00:00Z"),
     statut: "planifiee",
     porteUnePreuve: true,
@@ -187,7 +186,6 @@ describe("scission de GE 4 § 1 — le dossier déjà suivi ne repart pas de zé
       internat(null),
       ligneDeja(ANCIENNE_LIGNE, {
         porteUnePreuve: false,
-        dateRealisee: null,
         statut: "a_planifier",
       }),
     );

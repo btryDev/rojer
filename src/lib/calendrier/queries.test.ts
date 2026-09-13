@@ -63,6 +63,9 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
   prismaMock.verification.findMany.mockClear().mockResolvedValue([]);
   prismaMock.verification.findFirst.mockClear().mockResolvedValue(null);
+  // Le fait d'un contrôle se lit sur les rapports (ADR-034, N5) : les tests
+  // qui en posent un le font ici, et il ne fuit pas vers le suivant.
+  prismaMock.rapportVerification.findMany.mockClear().mockResolvedValue([]);
   prismaMock.etablissement.findFirst.mockClear().mockResolvedValue(null);
   requireUserMock.mockResolvedValue({ id: "user-1" });
 });
@@ -121,39 +124,6 @@ describe("listerVerifications — filtre « urgents »", () => {
     expect(clause("archiveLe")).toEqual(urgenceSeule(DEBUT_DU_JOUR));
   });
 
-  it("repasse les lignes retenues au prédicat : la clause SQL est un sur-ensemble", async () => {
-    // Une rangée gelée JAMAIS ROULÉE : `datePrevue` (l'échéance honorée) est
-    // passée, mais l'échéance ouverte se calcule — contrôle fait il y a dix
-    // jours, suivante dans un an. La clause SQL la retient ; elle n'est pas en
-    // retard, et « En retard seulement » ne doit pas la montrer.
-    prismaMock.verification.findMany.mockResolvedValue([
-      {
-        id: "gelee-non-roulee",
-        obligationId: "x",
-        statut: "realisee_conforme",
-        periodicite: "annuelle",
-        datePrevue: jour("2026-07-20"),
-        dateRealisee: jour("2026-07-31"),
-        archiveLe: null,
-        libelleObligation: "Vérification",
-        rapports: [],
-      },
-      {
-        id: "vraiment-en-retard",
-        obligationId: "x",
-        statut: "planifiee",
-        periodicite: "annuelle",
-        datePrevue: jour("2026-08-01"),
-        dateRealisee: null,
-        archiveLe: null,
-        libelleObligation: "Vérification",
-        rapports: [],
-      },
-    ]);
-    const lues = await listerVerifications("etab-1", { urgentsSeulement: true });
-    expect(lues.map((v) => v.id)).toEqual(["vraiment-en-retard"]);
-  });
-
   /**
    * Le défaut que ce test verrouille était invisible aux trois au-dessus,
    * et c'est ce qui le rend intéressant : chacun d'eux vérifiait **une**
@@ -207,7 +177,6 @@ describe("compterEtatCalendrier", () => {
   const verif = (
     statut: string,
     datePrevue: string,
-    dateRealisee: string | null = null,
     /** Le porteur (ADR-023) : `null` = équipement ou établissement. */
     salarieId: string | null = null,
     /** Cyclique par défaut ; « mise_en_service_uniquement » pour une ligne
@@ -217,8 +186,8 @@ describe("compterEtatCalendrier", () => {
     periodicite: string = "annuelle",
   ) => ({
     statut,
+    id: `${statut}-${datePrevue}-${salarieId ?? "eq"}`,
     datePrevue: jour(datePrevue),
-    dateRealisee: dateRealisee ? jour(dateRealisee) : null,
     salarieId,
     periodicite,
     // `null` = ligne OUVERTE. C'est CE champ que lit le prédicat d'archivage
@@ -248,8 +217,14 @@ describe("compterEtatCalendrier", () => {
       // Historique : consommées, sans rendez-vous suivant. En « annuelle »,
       // ces deux rangées seraient des lignes d'avant l'ADR-034 gelées sur
       // « réalisée » avec une date passée — donc deux retards de plus.
-      verif("realisee_conforme", "2026-02-01", "2026-02-03", null, "mise_en_service_uniquement"),
-      verif("realisee_conforme", "2025-02-01", "2025-02-03", null, "mise_en_service_uniquement"),
+      verif("realisee_conforme", "2026-02-01", null, "mise_en_service_uniquement"),
+      verif("realisee_conforme", "2025-02-01", null, "mise_en_service_uniquement"),
+    ]);
+    // Leur fait, sur leurs rapports : l'un dans la fenêtre de douze mois,
+    // l'autre non.
+    prismaMock.rapportVerification.findMany.mockResolvedValue([
+      { verificationId: "realisee_conforme-2026-02-01-eq", dateRapport: jour("2026-02-03"), resultat: "conforme" },
+      { verificationId: "realisee_conforme-2025-02-01-eq", dateRapport: jour("2025-02-03"), resultat: "conforme" },
     ]);
 
     const etat = await compterEtatCalendrier("etab-1", NOW);
@@ -269,8 +244,8 @@ describe("compterEtatCalendrier", () => {
     // du rattachement de la famille « personnel » (ADR-016, ADR-023).
     prismaMock.verification.findMany.mockResolvedValue([
       verif("depassee", "2026-06-01"),
-      verif("depassee", "2026-06-01", null, "sal-1"),
-      verif("planifiee", "2026-08-10", null, "sal-2"),
+      verif("depassee", "2026-06-01", "sal-1"),
+      verif("planifiee", "2026-08-10", "sal-2"),
     ]);
 
     const etat = await compterEtatCalendrier("etab-1", NOW);
@@ -313,7 +288,10 @@ describe("compterEtatCalendrier", () => {
     // fixture si : elle portait `depassee` + une `dateRealisee`, et c'est cette
     // colonne-là qui la sauvait.
     prismaMock.verification.findMany.mockResolvedValue([
-      verif("realisee_conforme", "2026-01-01", "2026-01-15", null, "mise_en_service_uniquement"),
+      verif("realisee_conforme", "2026-01-01", null, "mise_en_service_uniquement"),
+    ]);
+    prismaMock.rapportVerification.findMany.mockResolvedValue([
+      { verificationId: "realisee_conforme-2026-01-01-eq", dateRapport: jour("2026-01-15"), resultat: "conforme" },
     ]);
     const etat = await compterEtatCalendrier("etab-1", NOW);
     expect(etat.enRetard).toBe(0);
@@ -326,7 +304,7 @@ describe("compterEtatCalendrier", () => {
     // retard affichait 100 (relecture du N4, 2026-09-13). Elle compte une
     // fois, dans le retard : l'échéance ouverte prime.
     prismaMock.verification.findMany.mockResolvedValue([
-      verif("realisee_conforme", "2026-01-01", "2025-01-15"),
+      verif("realisee_conforme", "2026-01-01"),
     ]);
     const etat = await compterEtatCalendrier("etab-1", NOW);
     expect(etat.enRetard).toBe(1);

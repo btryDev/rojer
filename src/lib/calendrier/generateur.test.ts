@@ -466,7 +466,6 @@ function ligneExistante(
     periodicite: "annuelle",
     realisateurRequis: ["personne_qualifiee"],
     datePrevue: new Date("2026-12-01T00:00:00Z"),
-    dateRealisee: null,
     statut: "a_planifier",
     porteUnePreuve: false,
     ...over,
@@ -897,7 +896,6 @@ describe("réconciliation — idempotence et stabilité des identifiants", () =>
       periodicite: v.periodicite,
       realisateurRequis: v.realisateurRequis,
       datePrevue: v.datePrevue,
-      dateRealisee: null,
       statut: v.statut,
       porteUnePreuve: false,
     }));
@@ -1027,45 +1025,6 @@ describe("réconciliation — un placeholder cède devant une vraie date", () =>
 });
 
 describe("réconciliation — cycles de vérification", () => {
-  it("une ligne d'avant N2 au statut réalisé est mise au modèle : échéance suivante, planifiée", () => {
-    // Avant l'ADR-034 elle gardait « réalisée conforme » jusqu'à ce que la
-    // période s'écoule. Depuis, le résultat vit sur le rapport et la ligne ne
-    // dit que l'échéance ouverte : 2027, planifiée.
-    const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
-    const eq = fakeEquipement("eq-1");
-    const aGenerer = genererProchainesVerifications(
-      [applique(o, [eq])],
-      new Map(),
-      { now: NOW },
-    );
-    const dateRealisee = new Date("2026-03-01T00:00:00Z");
-
-    const plan = reconcilierCalendrier(
-      [
-        ligneExistante({
-          id: "v-1",
-          obligationId: "o1",
-          equipementId: "eq-1",
-          dateRealisee,
-          statut: "realisee_conforme",
-          datePrevue: new Date("2026-03-01T00:00:00Z"),
-          porteUnePreuve: true,
-        }),
-      ],
-      aGenerer,
-      { now: NOW },
-    );
-
-    expect(plan.aMettreAJour).toHaveLength(1);
-    const maj = plan.aMettreAJour[0];
-    expect(maj.statut).toBe("planifiee");
-    // La colonne gelée est lue en repli — cette ligne n'a pas de rapport dans
-    // la fixture — puis écrite à `null` : la ligne sort de l'ancien modèle.
-    expect(maj.dateRealisee).toBeNull();
-    // réalisation + un an
-    expect(maj.datePrevue.getUTCFullYear()).toBe(2027);
-  });
-
   it("une périodicité qui change ré-ancre l'échéance ouverte sur la réalisation", () => {
     // Prescription d'assureur qui ramène l'annuelle au semestre : la ligne,
     // roulée par un dépôt du 2026-03-01 au 2027-03-01, doit passer au
@@ -1086,7 +1045,6 @@ describe("réconciliation — cycles de vérification", () => {
           obligationId: "o1",
           equipementId: "eq-1",
           periodicite: "annuelle",
-          dateRealisee: null,
           derniereRealisation: new Date("2026-03-01T00:00:00Z"),
           datePrevue: new Date("2027-03-01T00:00:00Z"),
           statut: "planifiee",
@@ -1104,79 +1062,6 @@ describe("réconciliation — cycles de vérification", () => {
     expect(cleJourCivil(maj!.datePrevue)).toBe("2026-09-01");
     // Au 2026-08-11, le 1er septembre est à venir.
     expect(maj?.statut).toBe("planifiee");
-  });
-
-  it("rattrape une ligne d'avant N2 jamais roulée : un cycle, et il est dépassé", () => {
-    // Ligne écrite quand le dépôt posait la réalisation sans rouler, et dont la
-    // régénération n'a jamais suivi : `datePrevue` n'a pas dépassé
-    // `dateRealisee`. Le générateur la roule d'UN cycle — 2025-01-01 —, qui
-    // est passé au 2026-08-11 : dépassée. Il ne saute pas à 2026 ni 2027 :
-    // l'échéance ouverte est la première non honorée.
-    const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
-    const eq = fakeEquipement("eq-1");
-    const aGenerer = genererProchainesVerifications(
-      [applique(o, [eq])],
-      new Map(),
-      { now: NOW },
-    );
-
-    const plan = reconcilierCalendrier(
-      [
-        ligneExistante({
-          id: "v-1",
-          obligationId: "o1",
-          equipementId: "eq-1",
-          dateRealisee: new Date("2024-01-01T00:00:00Z"),
-          statut: "realisee_conforme",
-          datePrevue: new Date("2024-01-01T00:00:00Z"),
-          porteUnePreuve: true,
-        }),
-      ],
-      aGenerer,
-      { now: NOW },
-    );
-
-    expect(plan.aMettreAJour).toHaveLength(1);
-    const maj = plan.aMettreAJour[0];
-    // L'outil cesse d'afficher « Conforme » sur un contrôle annuel vieux de
-    // deux ans — sans détruire les rapports, qui restent sur la même ligne.
-    expect(maj.statut).toBe("depassee");
-    expect(maj.datePrevue).toEqual(new Date("2025-01-01T00:00:00Z"));
-    // La colonne gelée a servi de repli, puis elle est éteinte.
-    expect(maj.dateRealisee).toBeNull();
-    expect(maj.id).toBe("v-1");
-  });
-
-  it("la réalisation lue sur les rapports prime sur la colonne gelée", () => {
-    // Ligne d'avant N2 dont le dernier rapport est PLUS RÉCENT que la colonne :
-    // un rapport a été retiré puis un autre déposé, ou la colonne n'a jamais
-    // été tenue. C'est le rapport qui fait foi — 2026-03-01 + un an = 2027.
-    const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
-    const aGenerer = genererProchainesVerifications(
-      [applique(o, [fakeEquipement("eq-1")])],
-      new Map(),
-      { now: NOW },
-    );
-
-    const plan = reconcilierCalendrier(
-      [
-        ligneExistante({
-          id: "v-1",
-          obligationId: "o1",
-          equipementId: "eq-1",
-          dateRealisee: new Date("2024-01-01T00:00:00Z"),
-          derniereRealisation: new Date("2026-03-01T00:00:00Z"),
-          statut: "realisee_conforme",
-          datePrevue: new Date("2024-01-01T00:00:00Z"),
-          porteUnePreuve: true,
-        }),
-      ],
-      aGenerer,
-      { now: NOW },
-    );
-
-    expect(plan.aMettreAJour[0]?.datePrevue.getUTCFullYear()).toBe(2027);
-    expect(plan.aMettreAJour[0]?.statut).toBe("planifiee");
   });
 
   it("un « non vérifiable » déposé après un contrôle ne renvoie pas la ligne à sa mise en service", () => {
@@ -1205,7 +1090,6 @@ describe("réconciliation — cycles de vérification", () => {
           obligationId: "o1",
           equipementId: "eq-1",
           datePrevue: new Date("2027-08-01T00:00:00Z"),
-          dateRealisee: null,
           derniereRealisation: new Date("2026-08-01T00:00:00Z"),
           statut: "a_planifier",
           porteUnePreuve: true,
@@ -1245,7 +1129,6 @@ describe("réconciliation — cycles de vérification", () => {
           equipementId: "eq-1",
           periodicite: "annuelle",
           datePrevue: new Date("2027-03-01T00:00:00Z"),
-          dateRealisee: null,
           derniereRealisation: new Date("2026-03-01T00:00:00Z"),
           dernierResultat: "observations_mineures",
           statut: "planifiee",
@@ -1259,85 +1142,6 @@ describe("réconciliation — cycles de vérification", () => {
     const maj = plan.aMettreAJour[0];
     expect(maj?.statut).toBe("realisee_observations");
     expect(maj?.datePrevue).toEqual(new Date("2027-03-01T00:00:00Z"));
-  });
-
-  it("le repli sur la colonne gelée ne ressuscite pas un rapport supprimé", () => {
-    // La ligne a des rapports, mais aucun réalisé — le dernier a été retiré, ou
-    // il est « non vérifiable ». Sa vieille colonne ne doit pas faire foi :
-    // sinon la réconciliation recalculait l'échéance sur un contrôle qui
-    // n'existe plus, et effaçait un an de retard.
-    const o = fakeObligation({ id: "o1", periodicite: "annuelle" });
-    const aGenerer = genererProchainesVerifications(
-      [applique(o, [fakeEquipement("eq-1")])],
-      new Map(),
-      { now: NOW },
-    );
-
-    const plan = reconcilierCalendrier(
-      [
-        ligneExistante({
-          id: "v-1",
-          obligationId: "o1",
-          equipementId: "eq-1",
-          datePrevue: new Date("2024-01-01T00:00:00Z"),
-          // La colonne d'avant dit « contrôlé le 1er janvier 2024 »…
-          dateRealisee: new Date("2024-01-01T00:00:00Z"),
-          // …mais le rapport qui le prouvait a été retiré : il ne reste qu'un
-          // « non vérifiable », donc des rapports et aucune réalisation.
-          derniereRealisation: null,
-          aDesRapports: true,
-          statut: "realisee_conforme",
-          porteUnePreuve: true,
-        }),
-      ],
-      aGenerer,
-      { now: NOW },
-    );
-
-    // Aucun rattrapage : sans le bornage, la colonne aurait fait rouler la
-    // ligne au 2025-01-01 — un an de retard effacé sur la foi d'un contrôle
-    // dont la pièce n'existe plus. L'échéance de 2024 reste, et le retard avec.
-    const maj = plan.aMettreAJour[0];
-    expect(maj?.datePrevue).toEqual(new Date("2024-01-01T00:00:00Z"));
-    expect(maj?.statut).toBe("depassee");
-  });
-
-  it("une ponctuelle d'avant l'ADR-034 se stabilise en UNE passe", () => {
-    // La première rédaction éteignait sa colonne — sa seule trace, faute de
-    // rapport — et prenait le statut fraîchement généré. La passe suivante ne
-    // retrouvait plus la réalisation, changeait de branche, et réécrivait le
-    // statut : une écriture de trop à chaque première régénération. Mesuré sur
-    // la base locale par la relecture de contrôle (2026-09-12).
-    const o = fakeObligation({
-      id: "mes",
-      periodicite: "mise_en_service_uniquement",
-    });
-    const aGenerer = () =>
-      genererProchainesVerifications([applique(o, [fakeEquipement("eq-1")])], new Map(), {
-        now: NOW,
-      });
-    const ligne = ligneExistante({
-      id: "v-mes",
-      obligationId: "mes",
-      equipementId: "eq-1",
-      libelleObligation: "Obligation mes",
-      periodicite: "mise_en_service_uniquement",
-      datePrevue: new Date("2025-05-01T00:00:00Z"),
-      dateRealisee: new Date("2025-05-01T00:00:00Z"),
-      derniereRealisation: null,
-      aDesRapports: false,
-      statut: "planifiee",
-      porteUnePreuve: false,
-    });
-
-    const passe1 = reconcilierCalendrier([ligne], aGenerer(), { now: NOW });
-    const apres1 = { ...ligne, ...(passe1.aMettreAJour[0] ?? {}) };
-    const passe2 = reconcilierCalendrier([apres1], aGenerer(), { now: NOW });
-
-    expect(passe2.aMettreAJour, "seconde écriture sur une ligne stable").toEqual(
-      [],
-    );
-    expect(passe2.inchangees).toBe(1);
   });
 
   it("rouvre une ligne archivée dont l'obligation n'engendre plus de rendez-vous", () => {
@@ -1484,7 +1288,6 @@ describe("réconciliation — cycles de vérification", () => {
           obligationId: "retiree",
           equipementId: "eq-1",
           periodicite: "mise_en_service_uniquement",
-          dateRealisee: null,
           derniereRealisation: null,
           statut: "realisee_conforme",
           porteUnePreuve: false,
@@ -1519,7 +1322,6 @@ describe("réconciliation — cycles de vérification", () => {
           libelleObligation: "Obligation o1",
           periodicite: "annuelle",
           realisateurRequis: o.realisateurs,
-          dateRealisee: null,
           derniereRealisation: new Date("2026-03-01T00:00:00Z"),
           datePrevue: new Date("2027-03-01T00:00:00Z"),
           statut: "planifiee",
@@ -1559,7 +1361,6 @@ describe("réconciliation — cycles de vérification", () => {
           libelleObligation: "Obligation mes",
           periodicite: "mise_en_service_uniquement",
           datePrevue,
-          dateRealisee: null,
           derniereRealisation: new Date("2025-05-01T00:00:00Z"),
           statut: "realisee_conforme",
           porteUnePreuve: true,
@@ -1622,7 +1423,6 @@ describe("réconciliation — obligations devenues non applicables", () => {
           id: "v-realisee",
           obligationId: "retiree",
           equipementId: "eq-1",
-          dateRealisee: new Date("2025-01-01T00:00:00Z"),
           statut: "realisee_conforme",
           porteUnePreuve: false, // rapport retiré du registre depuis
         }),
@@ -1783,7 +1583,6 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
     const plan = reconcilierCalendrier(
       [
         ligneDeTitre({
-          dateRealisee: new Date("2024-03-01T00:00:00Z"),
           statut: "realisee_conforme",
         }),
       ],
@@ -1794,9 +1593,7 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
     expect(plan.aMettreAJour[0]?.datePrevue).toEqual(
       new Date("2031-06-01T00:00:00Z"),
     );
-    // Et le statut réalisé ne bouge pas. La date de réalisation, elle, vit sur
-    // le rapport (ADR-034) : la colonne de la ligne est éteinte au passage.
-    expect(plan.aMettreAJour[0]?.dateRealisee).toBeNull();
+    // Et le statut réalisé ne bouge pas.
     expect(plan.aMettreAJour[0]?.statut).toBe("realisee_conforme");
   });
 
@@ -1917,7 +1714,6 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
       id,
       obligationId,
       equipementId: `eq-${id}`,
-      dateRealisee: null,
       derniereRealisation: new Date(quand),
       statut: "realisee_conforme",
       porteUnePreuve: true,
@@ -1994,9 +1790,11 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           id: "v-tout",
           obligationId: "tout",
           equipementId: null,
-          dateRealisee: null,
+          // Ligne ROULÉE par son dépôt (ADR-034) : le fait sur le rapport,
+          // l'échéance suivante sur la ligne.
           derniereRealisation: new Date("2026-07-01T00:00:00Z"),
-          statut: "realisee_conforme",
+          datePrevue: new Date("2027-07-01T00:00:00Z"),
+          statut: "planifiee",
           porteUnePreuve: true,
         }),
       ],
@@ -2005,9 +1803,11 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     );
 
     expect(plan.aCreer).toEqual([]);
-    const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
-    // 2026-07-01 + un an : son cycle propre, pas l'héritage de 2025.
-    expect(maj?.datePrevue).toEqual(new Date("2027-07-01T00:00:00Z"));
+    // Déjà au modèle, la ligne est INCHANGÉE : son échéance reste 2027-07-01,
+    // son cycle propre, pas l'héritage de 2025. Un héritage rejoué la ferait
+    // reculer — elle apparaîtrait dans `aMettreAJour` avec une date de 2026.
+    expect(plan.aMettreAJour.find((m) => m.id === "v-tout")).toBeUndefined();
+    expect(plan.inchangees).toBe(1);
   });
 
   it("un absorbant porté par un ÉQUIPEMENT n'hérite que sur le bon appareil", () => {
@@ -2085,9 +1885,9 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           id: "v-frag-1",
           obligationId: "frag-vmc",
           equipementId: "eq-1",
-          dateRealisee: null,
           derniereRealisation: new Date("2026-06-01T00:00:00Z"),
-          statut: "realisee_conforme",
+          datePrevue: new Date("2027-06-01T00:00:00Z"),
+          statut: "planifiee",
           porteUnePreuve: true,
         }),
       ],
@@ -2137,7 +1937,6 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           equipementId: "eq-1",
           libelleObligation: "Fragment",
           archiveLe: new Date("2021-02-01T00:00:00Z"),
-          dateRealisee: new Date("2021-01-10T00:00:00Z"),
           statut: "realisee_conforme",
           porteUnePreuve: true,
         }),
@@ -2146,7 +1945,6 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           obligationId: "tout",
           equipementId: null,
           datePrevue: new Date("2027-02-01T00:00:00Z"),
-          dateRealisee: null,
           statut: "depassee",
           porteUnePreuve: true,
         }),
@@ -2173,7 +1971,6 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           obligationId: "tout",
           equipementId: null,
           datePrevue: new Date("2030-01-01T00:00:00Z"),
-          dateRealisee: null,
           statut: "a_planifier",
           porteUnePreuve: false,
         }),

@@ -57,7 +57,6 @@ export default async function ActionDetailPage({
   const dernierRapport = a.verification?.rapports[0] ?? null;
   const dateConstat =
     dernierRapport?.dateRapport ??
-    a.verification?.dateRealisee ??
     a.verification?.datePrevue ??
     null;
   const boundCloture = cloturerAction.bind(null, actionId);

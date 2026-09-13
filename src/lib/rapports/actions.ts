@@ -10,7 +10,7 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { cleRapport, getStorage } from "@/lib/storage";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { estCyclique, prochaineEcheance } from "@/lib/calendrier/periodicite";
-import { echeanceOuverte, estEnRetard } from "@/lib/dates/retard";
+import { estEnRetard } from "@/lib/dates/retard";
 import {
   estResultatRealise,
   rapportMetadataSchema,
@@ -123,8 +123,6 @@ export async function uploadRapport(
       periodicite: true,
       salarieId: true,
       archiveLe: true,
-      // Pour l'échéance ouverte d'une rangée gelée (`echeanceOuverte`).
-      dateRealisee: true,
     },
   });
   if (!verif) {
@@ -203,7 +201,6 @@ export async function uploadRapport(
   let echeanceHonoree: Date | null = null;
   let majVerification: {
     datePrevue?: Date;
-    dateRealisee?: null;
     statut: StatutVerification;
   };
   if (!estResultatRealise(resultat)) {
@@ -237,7 +234,7 @@ export async function uploadRapport(
     // rapport — déposer puis annuler dégradait « à jour » en « en retard »
     // (relecture externe du 2026-09-13). L'écriture conditionnée, elle, garde
     // la valeur brute : elle compare à ce qui est en base.
-    echeanceHonoree = echeanceOuverte(verif);
+    echeanceHonoree = verif.datePrevue;
     majVerification = rouler(
       verif.datePrevue,
       verif.periodicite as Periodicite,
@@ -321,21 +318,15 @@ function rouler(
   periodicite: Periodicite,
   dateRapport: Date,
   resultat: ResultatRealise,
-): { datePrevue: Date; dateRealisee: null; statut: StatutVerification } {
+): { datePrevue: Date; statut: StatutVerification } {
   const prochaine = prochaineEcheance(dateRapport, periodicite);
-  // `dateRealisee: null` ÉTEINT la colonne gelée sur une ligne d'avant
-  // l'ADR-034. Sans cela, une ligne qui vient de rouler gardait une ancienne
-  // date de réalisation, et `estVerificationEnRetard` — qui sort encore sur
-  // `dateRealisee !== null` jusqu'au N3 — la tenait pour jamais en retard,
-  // tant que la régénération n'avait pas tourné.
   if (prochaine === null) {
     return {
       datePrevue,
-      dateRealisee: null,
       statut: STATUT_DEPUIS_RESULTAT[resultat],
     };
   }
-  return { datePrevue: prochaine, dateRealisee: null, statut: "planifiee" };
+  return { datePrevue: prochaine, statut: "planifiee" };
 }
 
 /**
@@ -466,11 +457,9 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
         datePrevue: rap.verification.datePrevue,
         statut: rap.verification.statut,
       },
-      // `dateRealisee: null` n'est pas une écriture de la colonne gelée, c'est
-      // sa mise à mort pour cette ligne : la réconciliation la lit en REPLI
-      // quand aucun rapport réalisé ne reste, et une ligne d'avant l'ADR-034
-      // ressusciterait sinon la réalisation qu'on vient de retirer.
-      data: { datePrevue, dateRealisee: null, statut },
+      // Rien d'autre à éteindre : la réalisation ne vit que sur les rapports
+      // (ADR-034, N5), retirer le plus récent suffit à la faire reculer.
+      data: { datePrevue, statut },
     });
     // CONFLIT : quelqu'un a fait bouger la ligne entre la lecture et ici — un
     // dépôt concurrent, une autre suppression. On ne LÈVE PAS : la suppression

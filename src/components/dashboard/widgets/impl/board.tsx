@@ -1544,7 +1544,7 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
   // l'obligation ne s'applique plus — gelée sur `depassee`, donc la plus
   // ancienne, donc première du tri — s'affichait ici en compte à rebours rouge.
   const enRetard = estVerificationEnRetard(
-    { ...v, dateRealisee: null },
+    v,
     aujourdhui,
   );
 

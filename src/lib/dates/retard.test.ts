@@ -10,7 +10,6 @@ import {
   estVerificationArchivee,
   estVerificationAVenir,
   estVerificationEnRetard,
-  echeanceOuverte,
   joursDeRetard,
   type ActionDatee,
   type VerificationDatee,
@@ -166,7 +165,6 @@ function verif(p: Partial<VerificationDatee> = {}): VerificationDatee {
     // statut réalisé ne purge rien (`estVerificationRealisee`). Les cas
     // « sans rendez-vous suivant » le disent explicitement.
     periodicite: "annuelle",
-    dateRealisee: null,
     // `null` = ligne OUVERTE. Les cas archivés passent une date (ADR-034) ; le
     // libellé, lui, ne décide plus de rien et reste celui du référentiel.
     archiveLe: null,
@@ -226,14 +224,14 @@ describe("estVerificationEnRetard", () => {
     // sortir la ligne des comptes.
     //
     // Depuis que la ligne ne porte QUE son échéance ouverte, cette lecture est
-    // devenue fausse : `dateRealisee` est une colonne gelée, plus écrite par
-    // personne, et une ligne roulée par un dépôt porte une réalisation ANCIENNE
+    // devenue fausse : `dateRealisee` n'était plus écrite par personne (le N5
+    // l'a retirée), et une ligne roulée par un dépôt porte une réalisation ANCIENNE
     // à côté d'une échéance qui, elle, peut être dépassée. La lire ici sortait
     // des comptes un contrôle réellement en retard — le défaut du lot 3 bis.
     // Seul un statut réalisé purge désormais l'échéance.
     expect(
       estVerificationEnRetard(
-        verif({ statut: "depassee", datePrevue: HIER, dateRealisee: HIER }),
+        verif({ statut: "depassee", datePrevue: HIER }),
         CE_MATIN,
       ),
     ).toBe(true);
@@ -268,90 +266,6 @@ describe("estVerificationEnRetard", () => {
         `${statut} annuelle, date à venir`,
       ).toBe(false);
     }
-  });
-
-  it("une rangée gelée JAMAIS ROULÉE lit l'échéance suivante, calculée", () => {
-    // RELECTURE DU 2026-09-13. Avant N2, le dépôt écrivait `dateRealisee` et le
-    // statut, et c'est la régénération qui avançait `datePrevue` ; si elle a
-    // échoué, la ligne garde l'échéance HONORÉE. Lue telle quelle, un contrôle
-    // fait il y a dix jours se disait en retard.
-    const faitIlYaDixJours = verif({
-      statut: "realisee_conforme",
-      datePrevue: new Date("2026-07-20T00:00:00Z"),
-      dateRealisee: new Date("2026-07-31T00:00:00Z"),
-    });
-    expect(echeanceOuverte(faitIlYaDixJours)).toEqual(new Date("2027-07-31T00:00:00Z"));
-    expect(estVerificationEnRetard(faitIlYaDixJours, CE_MATIN)).toBe(false);
-
-    // Et le vrai retard n'est pas caché : fait il y a plus d'un cycle, la
-    // suivante est passée.
-    const faitIlYa14Mois = verif({
-      statut: "realisee_conforme",
-      datePrevue: new Date("2025-06-01T00:00:00Z"),
-      dateRealisee: new Date("2025-06-10T00:00:00Z"),
-    });
-    expect(echeanceOuverte(faitIlYa14Mois)).toEqual(new Date("2026-06-10T00:00:00Z"));
-    expect(estVerificationEnRetard(faitIlYa14Mois, CE_MATIN)).toBe(true);
-  });
-
-  it("et le contrôle fait EN AVANCE, ou sur une date de génération, aussi", () => {
-    // RELECTURE EXTERNE du 2026-09-13 : la première version ne calculait que si
-    // `datePrevue ≤ dateRealisee`. Un contrôle fait avant son échéance, ou une
-    // ligne déclarée le 05/08 puis contrôlée le 15/07, restait lue sur
-    // `datePrevue` — donc en retard — pendant que le réconciliateur, lui,
-    // calcule réalisation + rythme sans condition.
-    const enAvance = verif({
-      statut: "realisee_conforme",
-      datePrevue: new Date("2026-08-01T00:00:00Z"),
-      dateRealisee: new Date("2026-07-20T00:00:00Z"),
-    });
-    expect(echeanceOuverte(enAvance)).toEqual(new Date("2027-07-20T00:00:00Z"));
-    expect(estVerificationEnRetard(enAvance, CE_MATIN)).toBe(false);
-
-    const dateDeGeneration = verif({
-      statut: "realisee_conforme",
-      datePrevue: new Date("2026-08-05T14:32:00Z"),
-      dateRealisee: new Date("2026-07-15T00:00:00Z"),
-    });
-    expect(estVerificationEnRetard(dateDeGeneration, CE_MATIN)).toBe(false);
-
-    // Le contrôle fait le JOUR MÊME de l'échéance.
-    const leJourMeme = verif({
-      statut: "realisee_conforme",
-      datePrevue: new Date("2026-08-01T00:00:00Z"),
-      dateRealisee: new Date("2026-08-01T00:00:00Z"),
-    });
-    expect(echeanceOuverte(leJourMeme)).toEqual(new Date("2027-08-01T00:00:00Z"));
-  });
-
-  it("`echeanceOuverte` rend `datePrevue` dans tous les autres cas", () => {
-    // Une ligne ROULÉE (statut ouvert) : rien à calculer, même si sa
-    // `datePrevue` s'écarte de réalisation + rythme — elle a pu être
-    // réalignée ou convenue depuis.
-    const roulee = verif({
-      statut: "planifiee",
-      datePrevue: new Date("2027-03-15T00:00:00Z"),
-      dateRealisee: new Date("2026-01-10T00:00:00Z"),
-    });
-    expect(echeanceOuverte(roulee)).toEqual(roulee.datePrevue);
-    // Un statut ouvert, même avec une colonne gelée postérieure.
-    const ouverte = verif({
-      datePrevue: HIER,
-      dateRealisee: new Date("2026-08-09T12:00:00Z"),
-    });
-    expect(echeanceOuverte(ouverte)).toEqual(HIER);
-    // Une obligation sans suite : aucune échéance suivante n'existe.
-    const consommee = verif({
-      statut: "realisee_conforme",
-      periodicite: "mise_en_service_uniquement",
-      datePrevue: HIER,
-      dateRealisee: AUJOURDHUI,
-    });
-    expect(echeanceOuverte(consommee)).toEqual(HIER);
-    // Sans date de réalisation, rien à partir de quoi calculer.
-    expect(
-      echeanceOuverte(verif({ statut: "realisee_conforme", datePrevue: HIER })),
-    ).toEqual(HIER);
   });
 
   it("un rythme absent ou inconnu ne purge JAMAIS : le retard reste visible", () => {
@@ -414,7 +328,7 @@ describe("estVerificationAPlanifier", () => {
       verif({ statut: "planifiee", datePrevue: HIER }),
       verif({ statut: "planifiee", datePrevue: DEMAIN }),
       verif({ statut: "depassee", datePrevue: HIER }),
-      verif({ statut: "realisee_conforme", datePrevue: HIER, dateRealisee: HIER }),
+      verif({ statut: "realisee_conforme", datePrevue: HIER }),
     ];
     for (const v of cas) {
       expect(
@@ -681,8 +595,8 @@ describe("ligne roulée — l'échéance ouverte prime sur la réalisation", () 
     //
     // Depuis l'ADR-034, un dépôt de rapport ROULE la ligne : elle repart
     // « planifiée » sur l'échéance suivante, et le contrôle fait vit sur le
-    // rapport. La colonne `dateRealisee` reste peuplée sur les lignes d'avant.
-    // L'ancien prédicat lisait cette colonne et concluait « réalisée, donc rien
+    // rapport. L'ancienne colonne `dateRealisee` (retirée au N5) restait alors
+    // peuplée sur les lignes d'avant ; l'ancien prédicat la lisait et concluait « réalisée, donc rien
     // à signaler » — si bien qu'un appareil contrôlé en 2025, dont l'échéance
     // 2026 était passée, sortait de TOUS les comptes pendant que la grille du
     // calendrier le peignait en rouge. Deux surfaces, deux réponses.
@@ -690,7 +604,6 @@ describe("ligne roulée — l'échéance ouverte prime sur la réalisation", () 
       statut: "planifiee",
       datePrevue: HIER,
       // La preuve du cycle PRÉCÉDENT, honoré en son temps.
-      dateRealisee: new Date("2025-08-09T00:00:00Z"),
     });
 
     expect(
@@ -709,7 +622,6 @@ describe("ligne roulée — l'échéance ouverte prime sur la réalisation", () 
         verif({
           statut: "planifiee",
           datePrevue: DEMAIN,
-          dateRealisee: new Date("2025-08-09T00:00:00Z"),
         }),
         CE_MATIN,
       ),

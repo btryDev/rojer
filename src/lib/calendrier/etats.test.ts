@@ -39,7 +39,6 @@ describe("classerVerification", () => {
   const planifiee = (datePrevue: Date) => ({
     statut: "planifiee",
     datePrevue,
-    dateRealisee: null,
     // `archiveLe: null` = ligne OUVERTE (ADR-034, N3). C'est ce champ, et non
     // plus un préfixe de libellé, que `classerVerification` lit en premier —
     // d'où le fait qu'il soit requis. Le libellé n'est plus qu'un affichage.
@@ -62,7 +61,7 @@ describe("classerVerification", () => {
     // ça ne revienne pas.
     expect(
       classerVerification(
-        { statut: "a_planifier", datePrevue: jours(-40), dateRealisee: null, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: jours(-40), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe("enRetard");
@@ -70,32 +69,10 @@ describe("classerVerification", () => {
     // de génération ne la classe ni proche ni lointaine.
     expect(
       classerVerification(
-        { statut: "a_planifier", datePrevue: jours(10), dateRealisee: null, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: jours(10), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe("aPlanifier");
-  });
-
-  it("la COLONNE GELÉE ne classe plus rien : une ligne d'avant reste en retard", () => {
-    // Une ligne écrite avant l'ADR-034 porte encore une `dateRealisee`, et son
-    // statut dit « planifiée » parce qu'un dépôt l'a fait rouler. Tant que le
-    // classement lisait cette colonne, elle sortait en « faite » — donc hors
-    // de tous les comptes — alors que son échéance ouverte était dépassée.
-    // C'est le défaut du lot 3 bis, et c'est ce que le N3 ferme : seul un
-    // STATUT réalisé purge une échéance.
-    expect(
-      classerVerification(
-        {
-          statut: "planifiee",
-          datePrevue: jours(-40),
-          dateRealisee: jours(-400),
-          archiveLe: null,
-          periodicite: "annuelle",
-          libelleObligation: "Vérification périodique",
-        },
-        NOW,
-      ),
-    ).toBe("enRetard");
   });
 
   it("un statut réalisé ne purge que sans rendez-vous suivant : la date décide sur une périodique", () => {
@@ -108,33 +85,32 @@ describe("classerVerification", () => {
     // le statut, elles étaient « faites » à perpétuité ; lues par la date,
     // elles sont en retard quand la date est passée. C'est GestBAT par
     // construction : son modèle n'a pas de statut, rien n'y éteint la date.
-    // L'échéance d'une rangée gelée périodique est réalisation + rythme
-    // (`echeanceOuverte`, comme le réconciliateur) : c'est la date de
-    // RÉALISATION qui place chaque cas, `datePrevue` suit.
-    const realisee = (periodicite: string, dateRealisee: Date) => ({
+    // Depuis le N5, la migration a remis toute rangée périodique « réalisée »
+    // au modèle : ce cas ne vient plus de la base. La règle reste, comme
+    // INVARIANT — le jour où un chemin d'écriture laisserait un statut réalisé
+    // sur une obligation périodique, la date déciderait toujours.
+    const realisee = (periodicite: string, datePrevue: Date) => ({
       statut: "realisee_conforme",
-      datePrevue: jours(-40),
-      dateRealisee,
+      datePrevue,
       archiveLe: null,
       periodicite,
       libelleObligation: "Vérification périodique",
     });
     // Sans rendez-vous suivant : faite, quelle que soit la date.
     expect(
-      classerVerification(realisee("mise_en_service_uniquement", jours(-400)), NOW),
+      classerVerification(realisee("mise_en_service_uniquement", jours(-40)), NOW),
     ).toBe("faite");
-    // Périodique, contrôle il y a 400 jours : échéance passée, EN RETARD.
-    expect(classerVerification(realisee("annuelle", jours(-400)), NOW)).toBe(
+    // Périodique, date passée : EN RETARD.
+    expect(classerVerification(realisee("annuelle", jours(-40)), NOW)).toBe(
       "enRetard",
     );
-    // Périodique, contrôle il y a 340 jours : échéance sous 30 jours.
-    expect(classerVerification(realisee("annuelle", jours(-340)), NOW)).toBe(
+    // Périodique, date sous 30 jours : proche.
+    expect(classerVerification(realisee("annuelle", jours(20)), NOW)).toBe(
       "proche",
     );
-    // Statut réalisé sans `dateRealisee` : même règle, le rythme décide.
     expect(
       classerVerification(
-        { ...realisee("mise_en_service_uniquement", jours(-40)), statut: "realisee_ecart_majeur", dateRealisee: null },
+        { ...realisee("mise_en_service_uniquement", jours(-40)), statut: "realisee_ecart_majeur" },
         NOW,
       ),
     ).toBe("faite");
@@ -145,7 +121,7 @@ describe("classerVerification", () => {
     // soit la date affichée — même règle que `estVerificationEnRetard`.
     expect(
       classerVerification(
-        { statut: "depassee", datePrevue: jours(5), dateRealisee: null, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "depassee", datePrevue: jours(5), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe("enRetard");
@@ -161,7 +137,7 @@ describe("aUnRendezVous", () => {
     // Sa `datePrevue` est la date de GÉNÉRATION — ici, aujourd'hui même.
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: NOW, dateRealisee: null, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: NOW, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe(false);
@@ -172,7 +148,7 @@ describe("aUnRendezVous", () => {
     // la fiche se trompait, et pas seulement sur la date du jour.
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: jours(10), dateRealisee: null, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: jours(10), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe(false);
@@ -183,7 +159,7 @@ describe("aUnRendezVous", () => {
     for (const d of [jours(1), jours(10), jours(200)]) {
       expect(
         aUnRendezVous(
-          { statut: "planifiee", datePrevue: d, dateRealisee: null, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+          { statut: "planifiee", datePrevue: d, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
           NOW,
         ),
       ).toBe(true);
@@ -195,7 +171,7 @@ describe("aUnRendezVous", () => {
     // classe « enRetard », et la fiche doit continuer d'afficher son retard.
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: jours(-3), dateRealisee: null, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: jours(-3), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe(true);
@@ -209,7 +185,6 @@ describe("lecturesCalendrier", () => {
         {
           statut: "planifiee",
           datePrevue: jours(10),
-          dateRealisee: null,
           archiveLe: null,
           derniereRealisation: null,
           libelleObligation: "Vérification périodique",
@@ -225,7 +200,6 @@ describe("lecturesCalendrier", () => {
         {
           statut: "a_planifier",
           datePrevue: jours(60),
-          dateRealisee: null,
           archiveLe: null,
           derniereRealisation: null,
           libelleObligation: "Vérification périodique",
@@ -254,50 +228,6 @@ describe("lecturesCalendrier", () => {
    * le fait au jour du fait, l'échéance à sa date, en `courante`. Aucune
    * perte, et le test d'origine retrouve son objet.
    */
-  it("une rangée gelée d'avant l'ADR-034 se lit comme une ligne roulée", () => {
-    expect(
-      lecturesCalendrier(
-        {
-          statut: "realisee_conforme",
-          datePrevue: jours(300),
-          dateRealisee: jours(-65),
-          archiveLe: null,
-          derniereRealisation: null,
-          libelleObligation: "Vérification périodique",
-          periodicite: "annuelle",
-        },
-        NOW,
-      ),
-    ).toEqual([
-      { date: jours(-65), registre: "faite", lecture: "realisation" },
-      { date: jours(300), registre: "lointain", lecture: "courante" },
-    ]);
-  });
-
-  it("une rangée gelée dont le rendez-vous est PASSÉ se lit en retard", () => {
-    // Le cas que les deux relectures ont nommé : contrôle le 01/03/2025,
-    // rendez-vous au 01/03/2026, six mois de retard aujourd'hui — et le N4 la
-    // lisait « faite » sur quatre surfaces. Ici : le fait, puis l'échéance
-    // dépassée.
-    expect(
-      lecturesCalendrier(
-        {
-          statut: "realisee_conforme",
-          datePrevue: jours(-180),
-          dateRealisee: jours(-545),
-          archiveLe: null,
-          derniereRealisation: null,
-          libelleObligation: "Vérification périodique",
-          periodicite: "annuelle",
-        },
-        NOW,
-      ),
-    ).toEqual([
-      { date: jours(-545), registre: "faite", lecture: "realisation" },
-      { date: jours(-180), registre: "enRetard", lecture: "courante" },
-    ]);
-  });
-
   it("une échéance ouverte sous 30 jours est proche", () => {
     // Même garantie qu'avant le N4 — la fenêtre s'applique à l'échéance que la
     // ligne annonce —, portée par la ligne roulée qui l'annonce désormais :
@@ -306,7 +236,6 @@ describe("lecturesCalendrier", () => {
       {
         statut: "planifiee",
         datePrevue: jours(20),
-        dateRealisee: null,
         archiveLe: null,
         derniereRealisation: jours(-345),
         libelleObligation: "Vérification périodique",
@@ -329,9 +258,8 @@ describe("lecturesCalendrier", () => {
         {
           statut: "realisee_conforme",
           datePrevue: jours(30),
-          dateRealisee: jours(-3),
           archiveLe: null,
-          derniereRealisation: null,
+          derniereRealisation: jours(-3),
           libelleObligation: "Vérification périodique",
           periodicite: "mise_en_service_uniquement",
         },
@@ -354,7 +282,6 @@ describe("lecturesCalendrier", () => {
         {
           statut: "planifiee",
           datePrevue: jours(300),
-          dateRealisee: null,
           archiveLe: null,
           derniereRealisation: jours(-65),
           libelleObligation: "Vérification périodique",
@@ -377,7 +304,6 @@ describe("lecturesCalendrier", () => {
       {
         statut: "planifiee",
         datePrevue: jours(-10),
-        dateRealisee: null,
         archiveLe: null,
         derniereRealisation: jours(-375),
         libelleObligation: "Vérification périodique",
@@ -396,7 +322,6 @@ describe("lecturesCalendrier", () => {
     const sansDate = (periodicite: string) => ({
       statut: "realisee_observations",
       datePrevue: jours(-40),
-      dateRealisee: null,
       archiveLe: null,
       derniereRealisation: null,
       libelleObligation: "Vérification périodique",
@@ -462,29 +387,6 @@ describe("statutDeLaLecture (ADR-034)", () => {
 });
 
 describe("la date des lectures est l'échéance OUVERTE", () => {
-  it("la lecture courante d'une rangée gelée, contrôlée EN AVANCE, porte la date calculée", () => {
-    // Relecture externe du 2026-09-13 : repasser `lecturesCalendrier` à la
-    // colonne brute laissait la suite verte — la date du calendrier (liste,
-    // barres, vue par équipement, frise) n'était tenue par rien. Contrôle le
-    // 20/07/2026 sur une échéance du 01/08 : la suivante est le 20/07/2027.
-    const lectures = lecturesCalendrier(
-      {
-        statut: "realisee_conforme",
-        datePrevue: new Date("2026-08-01T00:00:00.000Z"),
-        dateRealisee: new Date("2026-07-20T00:00:00.000Z"),
-        archiveLe: null,
-        derniereRealisation: null,
-        periodicite: "annuelle",
-        libelleObligation: "Vérification périodique",
-      },
-      NOW,
-    );
-    expect(lectures).toEqual([
-      { date: new Date("2026-07-20T00:00:00.000Z"), registre: "faite", lecture: "realisation" },
-      { date: new Date("2027-07-20T00:00:00.000Z"), registre: "lointain", lecture: "courante" },
-    ]);
-  });
-
   it("`cinqProchaines` trie sur la date portée et coupe à cinq", () => {
     const d = (iso: string, id: string) => ({ id, datePrevue: new Date(iso) });
     const lignes = [
@@ -503,7 +405,6 @@ describe("statutAffiche — le statut à peindre est celui de l'état du jour", 
   const ligne = (over: Record<string, unknown>) => ({
     statut: "planifiee",
     datePrevue: jours(10),
-    dateRealisee: null,
     archiveLe: null,
     periodicite: "annuelle",
     libelleObligation: "Vérification périodique",
@@ -555,9 +456,8 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
         {
           statut: "realisee_conforme",
           datePrevue: jours(120),
-          dateRealisee: jours(-245),
           archiveLe: ARCHIVE_LE,
-          derniereRealisation: null,
+          derniereRealisation: jours(-245),
           periodicite: "annuelle",
           libelleObligation: "Vérification annuelle du désenfumage",
         },
@@ -576,7 +476,6 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
         {
           statut: "depassee",
           datePrevue: jours(-30),
-          dateRealisee: null,
           archiveLe: ARCHIVE_LE,
           derniereRealisation: null,
           periodicite: "annuelle",
@@ -592,7 +491,6 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
       {
         statut: "planifiee",
         datePrevue: jours(120),
-        dateRealisee: null,
         archiveLe: null,
         derniereRealisation: jours(-245),
         periodicite: "annuelle",
@@ -617,7 +515,6 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
         {
           statut: "planifiee",
           datePrevue: jours(10),
-          dateRealisee: null,
           archiveLe: null,
           derniereRealisation: null,
           libelleObligation: "Vérification périodique",

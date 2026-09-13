@@ -150,7 +150,6 @@ export async function listerBatimentsAvecCharge(
     select: {
       statut: true,
       datePrevue: true,
-      dateRealisee: true,
       // Le rythme : sans lui, un statut réalisé d'avant l'ADR-034 sur une
       // obligation périodique sortirait la ligne de la charge de sa zone
       // (`estVerificationRealisee`). Son absence du `select` ne compile plus.
@@ -195,7 +194,6 @@ export function grouperChargeParBatiment<
   V extends {
     statut: string;
     datePrevue: Date;
-    dateRealisee: Date | null;
     periodicite: string;
     archiveLe: Date | null;
     libelleObligation: string;

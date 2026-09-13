@@ -22,7 +22,6 @@ import {
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import {
-  echeanceOuverte,
   estActionEnRetard,
   estActionOuverte,
 } from "@/lib/dates/retard";
@@ -151,7 +150,7 @@ export function lignesAFaire(
         cle: `v-${v.id}`,
         genre: "verification",
         // L'échéance ouverte, calculée sur une rangée gelée jamais roulée.
-        date: etat === "aPlanifier" ? null : echeanceOuverte(v),
+        date: etat === "aPlanifier" ? null : v.datePrevue,
         etat,
         surtitre: "Vérification",
         libelle: v.libelleObligation,
@@ -256,7 +255,7 @@ export function lignesHistoire(
     if (estStatutRealise(v.statut)) {
       lignes.push({
         cle: `v-${v.id}`,
-        date: v.dateRealisee ?? v.datePrevue,
+        date: v.datePrevue,
         etat: "faite",
         surtitre: "Vérification",
         libelle: v.libelleObligation,

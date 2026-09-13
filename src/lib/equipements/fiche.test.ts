@@ -20,7 +20,6 @@ function fiche(
   verifs: Array<{
     id: string;
     datePrevue: string;
-    dateRealisee?: string;
     statut?: string;
     periodicite?: string;
     /** Le jour où l'obligation a cessé de s'appliquer ; absent = ouverte. */
@@ -33,7 +32,6 @@ function fiche(
       libelleObligation: "Vérification annuelle des extincteurs",
       statut: v.statut ?? "planifiee",
       datePrevue: jour(v.datePrevue),
-      dateRealisee: v.dateRealisee ? jour(v.dateRealisee) : null,
       // `null` = ligne ouverte (ADR-034), et l'omettre ne se voit PAS : la
       // fiche est fabriquée par un `as unknown as`, qui rend le champ
       // manquant invisible au compilateur. À l'exécution, `archiveLe` vaut
@@ -54,16 +52,14 @@ describe("lignesAFaire", () => {
     // « faites », la fiche d'un appareil parfaitement suivi affichait « aucune
     // échéance ouverte » pendant que le calendrier montrait le rendez-vous de
     // l'an prochain. La rangée qui portait les deux vies n'existe plus
-    // (ADR-034) : le dépôt la fait rouler et elle repart « planifiée ». Mais
-    // elle traîne encore la COLONNE GELÉE `dateRealisee`, tant que le N5 ne
-    // l'a pas retirée — et cette colonne ne classe plus rien : l'échéance
-    // ouverte reste à faire, quoi qu'elle porte.
+    // (ADR-034) : le dépôt la fait rouler et elle repart « planifiée », et le
+    // N5 a retiré la colonne qui portait le fait. L'échéance ouverte reste à
+    // faire, quel que soit le rapport qu'elle a derrière elle.
     const lignes = lignesAFaire(
       fiche([
         {
           id: "v1",
           datePrevue: "2027-01-22",
-          dateRealisee: "2026-01-22",
         },
       ]),
       "/etablissements/e1",
@@ -89,7 +85,6 @@ describe("lignesAFaire", () => {
         {
           id: "v1",
           datePrevue: "2027-01-22",
-          dateRealisee: "2026-01-22",
           statut: "realisee_conforme",
         },
       ]),
@@ -100,25 +95,6 @@ describe("lignesAFaire", () => {
     expect(lignes).toHaveLength(1);
     expect(lignes[0].date).toEqual(jour("2027-01-22"));
     expect(lignes[0].etat).toBe("lointain");
-  });
-
-  it("date la ligne à faire d'une rangée gelée contrôlée en avance sur son échéance OUVERTE", () => {
-    // Relecture externe du 2026-09-13 : la fiche lisait la colonne, et une
-    // mutation qui y revenait laissait la suite verte. Contrôle le 10/08/2026
-    // sur une colonne au 01/09 : la suivante est le 10/08/2027.
-    const lignes = lignesAFaire(
-      fiche([
-        {
-          id: "v1",
-          datePrevue: "2026-09-01",
-          dateRealisee: "2026-08-10",
-          statut: "realisee_conforme",
-        },
-      ]),
-      "/etablissements/e1",
-      AUJOURDHUI,
-    );
-    expect(lignes[0].date).toEqual(jour("2027-08-10"));
   });
 
   it("écarte une ligne éteinte, même gelée sur un statut ouvert", () => {
@@ -149,7 +125,6 @@ describe("lignesAFaire", () => {
         {
           id: "v1",
           datePrevue: "2026-01-22",
-          dateRealisee: "2026-01-22",
           statut: "realisee_conforme",
           periodicite: "mise_en_service_uniquement",
         },
@@ -195,7 +170,6 @@ function ficheRiche(o: {
     id: string;
     obligationId?: string;
     datePrevue: string;
-    dateRealisee?: string;
     statut?: string;
     rapports?: Array<{ id: string; date: string; resultat?: string; organisme?: string }>;
     actions?: number;
@@ -209,7 +183,6 @@ function ficheRiche(o: {
       libelleObligation: "Vérification annuelle des extincteurs",
       statut: v.statut ?? "planifiee",
       datePrevue: jour(v.datePrevue),
-      dateRealisee: v.dateRealisee ? jour(v.dateRealisee) : null,
       // Cf. `fiche()` ci-dessus : le cast masque l'omission au compilateur.
       archiveLe: null,
       periodicite: "annuelle",
@@ -260,7 +233,6 @@ describe("lignesHistoire", () => {
           {
             id: "v1",
             datePrevue: "2027-03-01",
-            dateRealisee: "2026-03-01",
             statut: "realisee_conforme",
             rapports: [{ id: "r1", date: "2026-03-02" }],
           },
@@ -280,7 +252,6 @@ describe("lignesHistoire", () => {
           {
             id: "v1",
             datePrevue: "2027-03-01",
-            dateRealisee: "2026-03-01",
             statut: "realisee_conforme",
           },
         ],

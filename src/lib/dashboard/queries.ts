@@ -30,15 +30,13 @@ import {
   instantCivil,
   joursCivilsEntre,
 } from "@/lib/dates";
-import { echeanceOuverte, estActionEnRetard } from "@/lib/dates/retard";
+import { estActionEnRetard } from "@/lib/dates/retard";
 import {
   classerVerification,
   TON_REGISTRE,
   lecturesCalendrier,
 } from "@/lib/calendrier/etats";
 import { WHERE_RAPPORT_REALISE } from "@/lib/rapports/derniere-realisation";
-import { STATUTS_REALISES_PERSISTES } from "@/lib/calendrier/generateur";
-import { PERIODICITES_SANS_SUITE } from "@/lib/calendrier/periodicite";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import {
   typeDeVerification,
@@ -273,7 +271,6 @@ export async function compterVerifsParEquipement(
         equipementId: true,
         statut: true,
         datePrevue: true,
-        dateRealisee: true,
         periodicite: true,
         // Sans lui, une ligne dont l'obligation ne s'applique plus (ADR-034)
         // pèse encore sur les pastilles de son appareil, avec le statut gelé
@@ -325,7 +322,7 @@ export async function compterVerifsParEquipement(
     // Lire l'état, et non le statut stocké : une rangée périodique gelée sur
     // « réalisée » a bien un rendez-vous à venir. La date est l'échéance
     // ouverte, calculée sur une rangée jamais roulée.
-    const echeance = echeanceOuverte(v);
+    const echeance = v.datePrevue;
     if (
       (etat === "proche" || etat === "lointain") &&
       (!s.prochaineDate || echeance < s.prochaineDate)
@@ -335,7 +332,7 @@ export async function compterVerifsParEquipement(
 
     // Lue sur les rapports (ADR-034), la colonne gelée en repli pour une ligne
     // d'avant que la réconciliation n'a pas encore remise au modèle.
-    const faite = v.derniereRealisation ?? v.dateRealisee;
+    const faite = v.derniereRealisation;
     if (faite && faite.getTime() >= debutFenetreHistorique.getTime()) {
       if (!s.derniereRealisee || faite > s.derniereRealisee) {
         s.derniereRealisee = faite;
@@ -390,24 +387,11 @@ export async function compterObligationsParMois(
               },
             },
           },
-          // Une rangée d'avant, sans rapport, dont le fait est sur la colonne.
-          { dateRealisee: { gte: debut, lt: fin } },
-          // Une rangée gelée sur « réalisée » d'une obligation périodique : son
-          // échéance ouverte se CALCULE (`echeanceOuverte`), toujours
-          // postérieure à `datePrevue`. Une colonne en octobre 2025 peut porter
-          // une échéance en octobre 2026 — la clause par `datePrevue` seule
-          // l'excluait de l'année (relecture externe du 2026-09-13).
-          {
-            statut: { in: [...STATUTS_REALISES_PERSISTES] },
-            periodicite: { notIn: [...PERIODICITES_SANS_SUITE] },
-            datePrevue: { lt: fin },
-          },
         ],
       },
       select: {
         id: true,
         datePrevue: true,
-        dateRealisee: true,
         statut: true,
         periodicite: true,
         // Cf. ci-dessus : l'archivage est un champ (ADR-034). Sans lui, une
@@ -691,12 +675,11 @@ export const getDashboardData = cache(async function getDashboardData(
         ...scope,
         OR: [
           // Tout ce qui ATTEND encore — statut ouvert, ou statut réalisé sur
-          // une obligation périodique (rangée d'avant l'ADR-034, dont la date
-          // décide). Depuis l'ADR-034 une ligne roulée est ouverte ET porte un
-          // rapport réalisé : cette clause et la suivante se recouvrent, et
-          // c'est juste — l'une compte l'échéance, l'autre le fait. La clause
-          // `dateRealisee: null` qui vivait ici excluait du tableau de bord
-          // toute rangée gelée avant que le classement ait pu la lire.
+          // une obligation périodique (la migration du N5 les a remises
+          // « planifiée », la clause reste la même que `estVerificationRealisee`).
+          // Depuis l'ADR-034 une ligne roulée est ouverte ET porte un rapport
+          // réalisé : cette clause et la suivante se recouvrent, et c'est juste
+          // — l'une compte l'échéance, l'autre le fait.
           echeanceAttendue(),
           {
             rapports: {
@@ -706,16 +689,12 @@ export const getDashboardData = cache(async function getDashboardData(
               },
             },
           },
-          // Repli : une ligne d'avant, que la réconciliation n'a pas encore
-          // remise au modèle, porte encore sa réalisation dans la colonne.
-          { dateRealisee: { gte: debutFenetreHistorique } },
         ],
       },
       select: {
         id: true,
         statut: true,
         datePrevue: true,
-        dateRealisee: true,
         // Le rythme : c'est lui qui dit si un statut réalisé purge l'échéance
         // (`estVerificationRealisee`) — sur une obligation périodique, non.
         periodicite: true,
@@ -842,7 +821,6 @@ export const getDashboardData = cache(async function getDashboardData(
           statut: v.statut,
           datePrevue: v.datePrevue,
           periodicite: v.periodicite,
-          dateRealisee: v.dateRealisee,
           archiveLe: v.archiveLe,
           libelleObligation: v.libelleObligation,
           equipementLibelle: libellePorteur(v),
