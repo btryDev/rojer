@@ -100,12 +100,25 @@ describe("repartirParEquipement", () => {
     );
 
     expect(m.get("eq1")?.derniere).toEqual(jour("2026-02-04"));
-    expect(m.get("eq1")?.enRetard).toBe(0);
+    // ET LES DEUX COMPTENT EN RETARD. Ce sont des rangées d'avant l'ADR-034 :
+    // statut du contrôle passé, rendez-vous suivant dans `datePrevue` — les
+    // deux passés. Ce test attendait `0`, et c'était la lecture par le statut
+    // qui rendait un appareil en retard « à jour » (2026-09-13).
+    expect(m.get("eq1")?.enRetard).toBe(2);
+    expect(m.get("eq1")?.faites).toBe(2);
   });
 
   it("retombe sur la date prévue quand une occurrence faite n'a pas de date de réalisation", () => {
+    // Sans rendez-vous suivant : c'est le seul cas où un statut réalisé dit
+    // « faite » (`estVerificationRealisee`). En « annuelle », la même ligne
+    // serait une rangée gelée d'avant l'ADR-034, en retard sur sa date.
     const m = repartirParEquipement(
-      [verif("eq1", "2026-02-01", { statut: "realisee_conforme" })],
+      [
+        verif("eq1", "2026-02-01", {
+          statut: "realisee_conforme",
+          periodicite: "mise_en_service_uniquement",
+        }),
+      ],
       AUJOURDHUI,
     );
 
@@ -179,6 +192,26 @@ describe("repartirParEquipement — l'horizon proche", () => {
     expect(m.get("eq1")?.proches).toBe(1);
   });
 
+  it("le rendez-vous suivant d'une rangée SOLDÉE d'avant l'ADR-034 compte dans l'horizon", () => {
+    // LA FIXTURE D'ORIGINE, restaurée : statut réalisé, contrôle il y a un an,
+    // rendez-vous suivant dans quinze jours. Le N4 l'avait remplacée par une
+    // ligne roulée, et sur celle-ci `proches` et `aVenir` tombaient à 0 — la
+    // carte du parc revenait à « aucune vérification rattachée ». La règle du
+    // 2026-09-13 lit cette rangée par sa date.
+    const m = repartirParEquipement(
+      [
+        verif("eq1", "2026-08-25", {
+          statut: "realisee_conforme",
+          dateRealisee: "2025-08-25",
+        }),
+      ],
+      AUJOURDHUI,
+    );
+    expect(m.get("eq1")?.faites).toBe(1);
+    expect(m.get("eq1")?.proches).toBe(1);
+    expect(m.get("eq1")?.prochaine?.date).toEqual(jour("2026-08-25"));
+  });
+
   it("une ligne archivée ne compte dans aucun horizon", () => {
     // ADR-034 : son obligation ne s'applique plus, son statut reste gelé. Le
     // fait était un préfixe de libellé, c'est une colonne depuis le N3 — et
@@ -223,9 +256,12 @@ describe("resumerEquipement", () => {
   it("compte les signaux du plus urgent au plus calme", () => {
     const r = resumerEquipement(
       etatDe([
+        // Faite et sans suite : une mise en service. En « annuelle », cette
+        // ligne serait une rangée gelée en retard, et compterait « dépassée ».
         verif("eq1", "2026-02-10", {
           statut: "realisee_conforme",
           dateRealisee: "2026-02-10",
+          periodicite: "mise_en_service_uniquement",
         }),
         verif("eq1", "2026-06-01"),
         verif("eq1", "2027-01-01", { statut: "a_planifier" }),
@@ -304,11 +340,14 @@ describe("resumerEquipement", () => {
   });
 
   it("retombe sur la dernière preuve quand plus rien n'est attendu", () => {
+    // « Plus rien n'est attendu » = sans rendez-vous suivant, et le rythme le
+    // dit. Un statut réalisé seul ne suffit plus (`estVerificationRealisee`).
     const r = resumerEquipement(
       etatDe([
         verif("eq1", "2026-02-10", {
           statut: "realisee_conforme",
           dateRealisee: "2026-02-10",
+          periodicite: "mise_en_service_uniquement",
         }),
       ]),
     );

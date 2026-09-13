@@ -394,10 +394,11 @@ export default async function CalendrierPage({
   // La liste mensuelle mêle les deux, triés par date dans chaque mois.
   //
   // Une vérification n'est pas posée telle quelle : `lecturesCalendrier`
-  // déplie la ligne de suivi — un cycle soldé donne DEUX événements, le
-  // fait au jour du fait et le rendez-vous suivant à sa date, classé
-  // comme un futur ordinaire. Sans ce dépli, la prochaine échéance d'un
-  // contrôle annuel soldé s'affichait en vert « faite »… un an trop tôt.
+  // rend au plus deux lectures — le contrôle fait, lu sur son dernier
+  // rapport et posé au jour du fait, et l'échéance ouverte à sa date,
+  // classée comme n'importe quelle date (ADR-034). Posée d'un bloc à
+  // `datePrevue`, une rangée d'avant s'affichait en vert « faite »… un an
+  // trop tôt.
   type LigneMois =
     | {
         genre: "verif";

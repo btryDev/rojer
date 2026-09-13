@@ -31,6 +31,10 @@ type LigneVerif = {
   statut: string;
   datePrevue: Date;
   dateRealisee: Date | null;
+  /** Le rythme. Le magasin simulé rend la ligne entière, non typée : l'oubli
+   *  ici ne compile pas moins — il se lit `undefined`, et c'est la règle qui
+   *  doit y résister (`estVerificationRealisee`), pas la fixture. */
+  periodicite: string;
   /** `null` = ligne ouverte (ADR-034). */
   archiveLe: Date | null;
   libelleObligation: string;
@@ -95,8 +99,20 @@ const h = vi.hoisted(() => {
       }
       if (typeof attendu === "object") {
         const filtre = attendu as Record<string, unknown>;
+        // Un opérateur que ce comparateur ne connaît pas serait un FILTRE
+        // FANTÔME : `notIn` était ignoré jusqu'au 2026-09-13, et toute ligne le
+        // passait. Refusé plutôt que deviné, comme `rapports` plus haut.
+        const inconnus = Object.keys(filtre).filter(
+          (k) => !["in", "notIn", "gte", "gt", "lte", "lt"].includes(k),
+        );
+        if (inconnus.length > 0) {
+          throw new Error(`opérateur non interprété sur ${cle} : ${inconnus.join(", ")}`);
+        }
         if ("in" in filtre) {
           if (!(filtre.in as unknown[]).includes(valeur)) return false;
+        }
+        if ("notIn" in filtre) {
+          if ((filtre.notIn as unknown[]).includes(valeur)) return false;
         }
         for (const borne of ["gte", "gt", "lte", "lt"] as const) {
           if (!(borne in filtre)) continue;
@@ -253,6 +269,7 @@ function verif(p: Partial<LigneVerif> & { id: string }): LigneVerif {
     equipementId: "eq-1",
     statut: "planifiee",
     datePrevue: jour(10),
+    periodicite: "annuelle",
     dateRealisee: null,
     // Le magasin simulé ne sait pas projeter un `select` : il rend la ligne
     // entière. Sans cette valeur, `archiveLe` arriverait `undefined` aux
@@ -300,6 +317,11 @@ describe("getDashboardData — vérifications réalisées et archivées", () => 
           statut: "realisee_conforme",
           datePrevue: jour(-700 + i),
           dateRealisee: jour(-700 + i),
+          // Consommées : c'est le sens de « contrôles faits » ici. En
+          // « annuelle », trente-cinq rangées gelées à date passée seraient
+          // trente-cinq retards — et ce test mesure l'ordre de la requête,
+          // pas la règle du rythme.
+          periodicite: "mise_en_service_uniquement",
         }),
       );
     }
@@ -329,6 +351,9 @@ describe("getDashboardData — vérifications réalisées et archivées", () => 
         statut: "realisee_conforme",
         datePrevue: jour(-60),
         dateRealisee: jour(-58),
+        // Consommée : une réalisation qui ne laisse rien à faire. Périodique,
+        // sa date passée la rangerait dans le retard, pas dans l'historique.
+        periodicite: "mise_en_service_uniquement",
       }),
       verif({ id: "retard", statut: "planifiee", datePrevue: jour(-2) }),
     );
@@ -397,6 +422,41 @@ describe("getDashboardData — vérifications réalisées et archivées", () => 
  * réglée alors que son échéance ouverte est dépassée. Une garde qui ne tiendrait
  * que le premier se réparerait en excluant trop, et le second l'attrape.
  */
+describe("getDashboardData — une rangée périodique gelée sur « réalisée » (d'avant l'ADR-034)", () => {
+  it("compte en retard et se propose, le préfiltre SQL ne l'écarte plus", async () => {
+    // LE BLOQUANT DES DEUX RELECTURES, vu depuis l'écran le plus lu : contrôle
+    // fait il y a dix-huit mois, rendez-vous suivant dans `datePrevue`, passé
+    // de six. Le préfiltre SQL ne retenait que les statuts ouverts : la ligne
+    // disparaissait AVANT le classement, et un dossier en retard affichait
+    // zéro. Mutation survivante du banc des corrections (2026-09-13).
+    h.db.verifications.push(
+      verif({
+        id: "gelee",
+        statut: "realisee_conforme",
+        datePrevue: jour(-180),
+        dateRealisee: jour(-545),
+      }),
+      // Le témoin : la même ligne, consommée — sans rendez-vous suivant. Elle
+      // ne réclame rien et ne doit pas passer la clause par sa branche
+      // « périodique ».
+      verif({
+        id: "consommee",
+        statut: "realisee_conforme",
+        datePrevue: jour(-180),
+        dateRealisee: jour(-545),
+        periodicite: "mise_en_service_uniquement",
+      }),
+    );
+
+    const d = await getDashboardData(ETAB);
+
+    expect(d.compteurs.verifsEnRetard).toBe(1);
+    expect(
+      d.recommandations.filter((r) => r.kind === "verif_depassee").map((r) => r.titre),
+    ).toEqual(["Obligation gelee"]);
+  });
+});
+
 describe("getDashboardData — l'archivage est un champ (ADR-034)", () => {
   it("une ligne archivée ne pèse sur aucun compteur, même gelée sur « dépassée »", async () => {
     // Son statut reste figé dans son dernier état connu — l'enum Prisma n'a pas
@@ -585,7 +645,9 @@ describe("compterVerifsParEquipement", () => {
     expect(stats.aPlanifier).toBe(0);
   });
 
-  it("ne compte pas en retard une occurrence déjà réalisée", async () => {
+  it("ne compte pas en retard une occurrence déjà réalisée — sans rendez-vous suivant", async () => {
+    // Le cas périodique, lui, est deux tests plus bas : la même ligne en
+    // « annuelle » compte en retard.
     h.db.verifications.push(
       verif({
         id: "v1",
@@ -593,6 +655,7 @@ describe("compterVerifsParEquipement", () => {
         statut: "realisee_conforme",
         datePrevue: jour(-30),
         dateRealisee: jour(-28),
+        periodicite: "mise_en_service_uniquement",
       }),
     );
     const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
@@ -645,6 +708,61 @@ describe("compterVerifsParEquipement", () => {
     expect(stats.aPlanifier).toBe(0);
     expect(stats.sous30j).toBe(0);
     expect(stats.prochaineDate).toBeNull();
+  });
+
+  it("n'annonce aucun rendez-vous sur une ligne planifiée dont la date est passée", async () => {
+    // MUTATION SURVIVANTE de la relecture du N4 (2026-09-13) : retirer la garde
+    // `etat !== "enRetard"` laissait la suite verte. Le cas passé n'était
+    // couvert que pour `a_planifier`, écartée par le statut ; pour une ligne
+    // « planifiée », cette garde est SEULE — et une date passée s'annonçait
+    // comme prochaine échéance.
+    h.db.verifications.push(
+      verif({ id: "v1", equipementId: "eq-1", datePrevue: jour(-5) }),
+    );
+    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    expect(stats.enRetard).toBe(1);
+    expect(stats.prochaineDate).toBeNull();
+  });
+
+  it("une ligne éteinte gelée sur « planifiée » n'annonce pas non plus de rendez-vous", async () => {
+    // MUTATION SURVIVANTE, la seconde : la fixture éteinte du test voisin est
+    // gelée sur `depassee`, que la garde de statut écarte déjà. Or depuis le
+    // N2 l'état gelé LE PLUS FRÉQUENT est « planifiée » — toute ligne roulée
+    // l'est. Archivée à date future, elle annonçait « prochaine échéance » sur
+    // une obligation éteinte, et seule la garde `etat !== "archivee"` l'en
+    // empêche.
+    h.db.verifications.push(
+      verif({
+        id: "eteinte-planifiee",
+        equipementId: "eq-1",
+        statut: "planifiee",
+        datePrevue: jour(40),
+        archiveLe: jour(-3),
+      }),
+    );
+    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    expect(stats.prochaineDate).toBeNull();
+    expect(stats.sous30j).toBe(0);
+  });
+
+  it("compte en retard une rangée périodique gelée sur « réalisée » (d'avant l'ADR-034)", async () => {
+    // LE BLOQUANT DES DEUX RELECTURES : contrôle fait, rendez-vous suivant
+    // dans `datePrevue`, passé — et la pastille de l'appareil disait 0 en
+    // retard, parce que le statut court-circuitait la date. La règle
+    // `estVerificationRealisee` fait décider la date sur une périodique, et
+    // le préfiltre SQL (`echeanceAttendue`) ne l'écarte plus en amont.
+    h.db.verifications.push(
+      verif({
+        id: "gelee",
+        equipementId: "eq-1",
+        statut: "realisee_conforme",
+        datePrevue: jour(-180),
+        dateRealisee: jour(-545),
+      }),
+    );
+    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    expect(stats.enRetard).toBe(1);
+    expect(stats.derniereRealisee).toBeNull(); // hors fenêtre de douze mois
   });
 
   it("lit la dernière réalisation sur les rapports d'une ligne roulée (ADR-034)", async () => {

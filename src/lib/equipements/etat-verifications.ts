@@ -44,9 +44,8 @@ export type EtatEquipement = {
    *  génération, pas une date choisie (ADR-010). Elles ne peuvent pas se
    *  poser sur un jour, mais l'appareil doit les annoncer. */
   aPlanifier: number;
-  /** Rendez-vous datés encore devant nous. Ils comprennent la prochaine
-   *  échéance d'un cycle déjà soldé : une même ligne de suivi dit « fait
-   *  le 22/01/2026 » et « prochaine le 22/01/2027 » (ADR-010). Sans ce
+  /** Rendez-vous datés encore devant nous — l'échéance ouverte de chaque
+   *  ligne (ADR-034), le contrôle fait se lisant sur son rapport. Sans ce
    *  compte, un appareil parfaitement suivi n'affichait aucun signal, et
    *  la carte du parc annonçait « aucune vérification rattachée ». */
   aVenir: number;
@@ -145,11 +144,9 @@ export function repartirParEquipement(
       courant.periodicites.push(v.periodicite);
     }
 
-    // Une ligne de suivi n'est pas une occurrence : soldée, elle porte à
-    // la fois la réalisation passée et le rendez-vous suivant du cycle.
-    // On la déplie donc comme le fait le calendrier (ADR-010) — sinon un
-    // appareil à jour n'a plus aucune échéance à annoncer, alors que le
-    // calendrier en affiche une.
+    // Les mêmes lectures que le calendrier, prises à la même source : le fait
+    // (sur le dernier rapport) et l'échéance ouverte (ADR-034). Un compte
+    // refait ici à la main divergerait du calendrier au premier ajustement.
     for (const lecture of lecturesCalendrier(v, now)) {
       if (lecture.lecture === "realisation") {
         courant.faites += 1;

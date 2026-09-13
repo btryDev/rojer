@@ -380,6 +380,43 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
       db.journal.filter((j) => j.operation === "verification.findMany"),
     ).toHaveLength(2);
   });
+
+  it("une réouverture déjà faite par ailleurs est vue, et la passe se relance", async () => {
+    // MUTATION SURVIVANTE du banc des corrections (2026-09-13). La réouverture
+    // n'était conditionnée que sur l'identifiant : son compte valait 1 quoi
+    // qu'il soit arrivé à la ligne entre la lecture et l'écriture, et la passe
+    // se croyait convergée sur un monde qu'elle n'avait pas lu. Conditionnée
+    // sur « encore archivée », elle voit qu'une autre écriture l'a précédée.
+    poserEtablissement([{ id: "eq-1" }]);
+    db.verifications = [
+      ligne({
+        id: "v-registre",
+        obligationId: REGISTRE_SECURITE,
+        libelleObligation: "Registre de sécurité",
+        periodicite: "autre",
+        archiveLe: new Date("2026-02-01T00:00:00Z"),
+        nbRapports: 1,
+      }),
+    ];
+    db.apresLecture = () => {
+      const v = db.verifications.find((x) => x.id === "v-registre");
+      if (v !== undefined) v.archiveLe = null;
+    };
+
+    const res = await genererCalendrier(ETAB_ID);
+
+    // La première passe planifiait une réouverture qui n'a rien touché ; la
+    // seconde lit la ligne ouverte et n'a plus rien à faire.
+    expect(
+      db.journal.filter((j) => j.operation === "verification.findMany"),
+      "la réouverture n'a pas détecté l'écriture concurrente",
+    ).toHaveLength(2);
+    // `updated` à 0 : le compte rendu est bien celui de la seconde passe, qui
+    // n'a rien rouvert. (`unchanged` compte aussi les lignes d'établissement
+    // que la première passe a créées — il ne mesure pas ce test.)
+    expect(res.updated).toBe(0);
+    expect(db.verifications.find((v) => v.id === "v-registre")?.archiveLe).toBeNull();
+  });
 });
 
 describe("genererCalendrier — continuité par-dessus un identifiant retiré", () => {
@@ -543,9 +580,13 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
       }),
     ];
 
-    await genererCalendrier(ETAB_ID);
+    const r = await genererCalendrier(ETAB_ID);
 
     expect(db.verifications.find((v) => v.id === "v-registre")?.archiveLe).toBeNull();
+    // ET LA RÉOUVERTURE EST COMPTÉE. Le commentaire du résultat disait « les
+    // réouvertures comptent comme des réalignements » ; `updated` valait 0
+    // sur cette passe (relecture du 2026-09-13). Mesuré ici, pas affirmé.
+    expect(r.updated).toBe(1);
   });
 
   it("l'appareil retiré perd sa ligne alors que l'obligation vit chez son voisin", async () => {

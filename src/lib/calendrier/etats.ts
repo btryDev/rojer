@@ -19,14 +19,13 @@ import {
   estEnRetard,
   estVerificationArchivee,
   estVerificationEnRetard,
+  estVerificationRealisee,
   type VerificationDatee,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
 // Type seul : effacé à la compilation, donc ce module reste utilisable côté
 // client, comme le dit l'en-tête de `VerificationDatee`.
 import type { StatutVerification } from "@prisma/client";
-import type { Periodicite } from "@/lib/referentiels/types-communs";
-import { estCyclique } from "./periodicite";
 
 /**
  * Les quatre états qu'une occurrence datée peut prendre. Exclusifs entre
@@ -229,43 +228,38 @@ export function classerDate(
 }
 
 /**
+ * « Ce contrôle a eu lieu », lu sur le seul statut. Un FAIT sur la ligne.
+ *
+ * À NE PAS CONFONDRE avec `estVerificationRealisee` (`lib/dates/retard`), qui
+ * dit si la ligne n'attend plus rien : sur une obligation périodique, un
+ * contrôle a eu lieu ET le suivant est dû. L'historique d'un appareil et le
+ * « fait le … » du registre lisent ce fait-ci ; le classement lit l'autre.
+ * Deux notions, deux fonctions — les confondre est exactement ce qui faisait
+ * lire « faite » une échéance passée de six mois.
+ *
+ * Écrit ici une fois pour toutes : trois surfaces le réécrivaient à la main
+ * en `startsWith`.
+ */
+export function estStatutRealise(statut: string): boolean {
+  return statut.startsWith("realisee");
+}
+
+/**
  * Classe une vérification périodique. Même forme structurelle que les
  * prédicats de `lib/dates/retard` : utilisable côté client et en test,
  * sans `@prisma/client`.
  *
  * L'ordre des tests est celui de `retard.ts`, et il n'est pas négociable :
- * le réalisé d'abord (une vérification faite n'est jamais en retard — la
- * preuve prime sur l'état), puis le retard, puis seulement « à
- * planifier ». Une `a_planifier` dont la date est passée est donc **en
- * retard**, pas « à planifier » : le contrôle n'a pas été fait dans les
- * temps, rendez-vous pris ou non, et prétendre le contraire minorerait la
- * non-conformité. C'est la convention de `estVerificationEnRetard`, de
- * l'en-tête, du PDF et du serveur MCP — une première version de ce
- * classifieur court-circuitait `a_planifier` avant le retard, et la page
- * calendrier contredisait les trois autres surfaces.
+ * l'archivé, puis le réalisé — au sens d'`estVerificationRealisee` : un
+ * statut réalisé ne purge que sur une obligation sans rendez-vous suivant —,
+ * puis le retard, puis seulement « à planifier ». Une `a_planifier` dont la
+ * date est passée est donc **en retard**, pas « à planifier » : le contrôle
+ * n'a pas été fait dans les temps, rendez-vous pris ou non, et prétendre le
+ * contraire minorerait la non-conformité. C'est la convention de
+ * `estVerificationEnRetard`, de l'en-tête, du PDF et du serveur MCP — une
+ * première version de ce classifieur court-circuitait `a_planifier` avant le
+ * retard, et la page calendrier contredisait les trois autres surfaces.
  */
-/**
- * La ligne porte-t-elle un fait de réalisation ?
- *
- * Distinct de `classerVerification(v) === "faite"` sur un point qui compte :
- * **l'archivage prend le pas dans le classement, pas dans le fait**. Une ligne
- * archivée peut parfaitement porter une réalisation, et l'historique d'un
- * appareil doit continuer de la montrer — une preuve ne s'efface pas parce que
- * l'obligation a cessé de s'appliquer.
- */
-export function estRealisee(v: VerificationDatee): boolean {
-  // Le statut seul (ADR-034, N3) : `dateRealisee` n'est plus écrite, et une
-  // ligne roulée par un dépôt porte « planifiée » — la lire ici classait
-  // « faite » une ligne dont l'échéance ouverte pouvait être dépassée.
-  return estStatutRealise(v.statut);
-}
-
-/** « Ce contrôle a eu lieu », lu sur le seul statut. Écrit ici une fois pour
- *  toutes : trois surfaces le réécrivaient à la main en `startsWith`. */
-export function estStatutRealise(statut: string): boolean {
-  return statut.startsWith("realisee");
-}
-
 export function classerVerification(
   v: VerificationDatee,
   now: Date,
@@ -277,44 +271,32 @@ export function classerVerification(
   // « en retard » à perpétuité — sur la fiche de la ligne, dans le serveur
   // MCP, et dans le registre de sécurité remis en contrôle.
   if (estVerificationArchivee(v)) return "archivee";
-  if (estRealisee(v)) return "faite";
+  if (estVerificationRealisee(v)) return "faite";
   if (estVerificationEnRetard(v, now)) return "enRetard";
   if (v.statut === "a_planifier") return "aPlanifier";
   return classerDate(v.datePrevue, now);
 }
 
-/**
- * La ligne a-t-elle une date ARRÊTÉE, ou seulement une date de génération ?
- *
- * `datePrevue` est non nulle en base pour toute ligne, y compris celles que
- * personne n'a encore datées : le générateur y écrit alors le jour où il l'a
- * produite. Lue comme un rendez-vous, cette date fait dire n'importe quoi —
- * « échéance aujourd'hui » le jour de la génération du calendrier, sur un
- * contrôle que personne n'a programmé.
- *
- * Le prédicat vit ici, avec le classement dont il se déduit, parce que deux
- * écrans se sont déjà contredits dessus : le calendrier comptait la ligne
- * « à planifier » et la marquait « à dater », pendant que sa fiche annonçait
- * « prochaine échéance » à la date de génération et « échéance aujourd'hui ».
- * Chacun avait sa propre lecture de `datePrevue` ; ils n'en ont plus qu'une.
- */
-// `etatDuRendezVous` A DISPARU AU LOT N4 (ADR-034), et c'est le modèle qui l'a
-// tué, pas une simplification de confort. Il servait à distinguer l'état d'une
-// LIGNE de celui de sa DATE quand la première portait deux vies : « faite le
-// 22/01/2026 » et « prochaine le 22/01/2027 ». Sa branche utile exigeait donc
-// « classée faite » ET « cyclique » — or depuis le N3, une ligne n'est classée
-// « faite » que sur un STATUT réalisé, et il n'en subsiste que sur une
-// obligation SANS rendez-vous suivant. Les deux conditions ne peuvent plus être
-// vraies ensemble : la fonction rendait exactement `classerVerification`.
+// `etatDuRendezVous` A DISPARU AU LOT N4 (ADR-034). Elle distinguait l'état
+// d'une LIGNE de celui de sa DATE quand la première portait deux vies : « faite
+// le 22/01/2026 » et « prochaine le 22/01/2027 » — sur une ligne classée faite
+// ET cyclique, elle classait la date.
+//
+// LE N4 A D'ABORD PRÉTENDU qu'elle rendait « exactement `classerVerification` »
+// parce qu'un statut réalisé ne subsisterait plus que sur une obligation sans
+// rendez-vous suivant. C'était vrai des lignes écrites après le N2, et FAUX de
+// toutes celles d'avant — la relecture l'a démontré en exécutant les deux sur
+// la même rangée : « lointain » contre « faite ». Depuis les corrections du
+// 2026-09-13, la règle qu'elle appliquait à la main vit dans
+// `estVerificationRealisee` : sur une obligation périodique, la date décide.
+// C'est SEULEMENT à cette condition que sa suppression est juste.
 //
 // Une ligne, une date, un état. Les appelants classent la ligne.
 
 /**
  * La pastille à peindre à côté d'une LECTURE de calendrier.
  *
- * Trois lectures, trois réponses (ADR-034) :
- *  · `prochaine` — le rendez-vous suivant d'un cycle soldé : « planifié », il
- *    n'hérite pas du badge « Conforme » de la ligne ;
+ * Deux lectures, deux réponses (ADR-034) :
  *  · `realisation` — le contrôle fait : il porte le RÉSULTAT de son rapport.
  *    Depuis que la ligne roule au dépôt, son statut est celui de l'échéance
  *    ouverte : une tuile verte « fait le 1er juin » affichait donc « En
@@ -340,6 +322,21 @@ export function statutDeLaLecture(
   }
 }
 
+/**
+ * La ligne a-t-elle une date ARRÊTÉE, ou seulement une date de génération ?
+ *
+ * `datePrevue` est non nulle en base pour toute ligne, y compris celles que
+ * personne n'a encore datées : le générateur y écrit alors le jour où il l'a
+ * produite. Lue comme un rendez-vous, cette date fait dire n'importe quoi —
+ * « échéance aujourd'hui » le jour de la génération du calendrier, sur un
+ * contrôle que personne n'a programmé.
+ *
+ * Le prédicat vit ici, avec le classement dont il se déduit, parce que deux
+ * écrans se sont déjà contredits dessus : le calendrier comptait la ligne
+ * « à planifier » et la marquait « à dater », pendant que sa fiche annonçait
+ * « prochaine échéance » à la date de génération et « échéance aujourd'hui ».
+ * Chacun avait sa propre lecture de `datePrevue` ; ils n'en ont plus qu'une.
+ */
 export function aUnRendezVous(v: VerificationDatee, now: Date): boolean {
   const classe = classerVerification(v, now);
   // Une ligne archivée n'a pas de rendez-vous non plus : ce qu'elle porte est
@@ -375,25 +372,24 @@ export type LectureCalendrier = {
 };
 
 /**
- * Déplie une ligne de suivi en événements de calendrier.
+ * Les lectures de calendrier d'une ligne de suivi : au plus deux.
  *
- * Une `Verification` n'est pas une occurrence : c'est la ligne de suivi
- * d'une obligation sur un équipement (cf. generateur.ts). Quand un cycle
- * est soldé, la réconciliation avance `datePrevue` au rendez-vous
- * suivant (`dateRealisee + périodicité`) en gardant le statut réalisé —
- * la même ligne dit donc DEUX choses : « fait le 22/01/2026 » et
- * « prochaine échéance le 22/01/2027 ». La poser une seule fois à
- * `datePrevue` peignait la prochaine échéance en vert « faite », un an
- * trop tôt.
+ * Une `Verification` est la ligne de suivi d'une obligation sur un porteur
+ * (cf. generateur.ts), et elle ne porte que son échéance OUVERTE (ADR-034) :
+ * le contrôle fait vit sur son dernier rapport. D'où deux lectures au plus —
+ * le fait au jour du fait, l'échéance au jour de l'échéance, classée comme
+ * n'importe quelle date, en retard si elle est passée.
  *
- * Ici : le fait au jour du fait, le rendez-vous au jour du rendez-vous —
- * classé comme n'importe quelle date future. Un contrôle sans périodicité
- * (mise en service, « autre ») n'a pas de rendez-vous suivant : sa
- * `datePrevue` est l'ancienne échéance, pas un engagement.
+ * Une rangée d'avant l'ADR-034 porte encore un statut réalisé avec, dans
+ * `datePrevue`, le rendez-vous suivant : `classerVerification` la lit par sa
+ * date (`estVerificationRealisee`), donc elle tombe dans le cas général, et
+ * son fait se lit sur la colonne gelée à défaut de rapport. Un contrôle sans
+ * périodicité (mise en service, « autre ») n'a pas de rendez-vous suivant :
+ * sa `datePrevue` est l'ancienne échéance, pas un engagement, et il n'a que
+ * son fait à poser.
  */
 export function lecturesCalendrier(
   v: VerificationDatee & {
-    periodicite: string;
     /**
      * La date du dernier rapport RÉALISÉ de la ligne (ADR-034), ou `null`.
      * **Requise** : depuis que la ligne roule au dépôt, c'est la seule source

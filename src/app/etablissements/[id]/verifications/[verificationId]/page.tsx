@@ -23,12 +23,9 @@ import {
 import {
   estActionEnRetard,
   estVerificationEnRetard,
+  estVerificationRealisee,
 } from "@/lib/dates/retard";
-import {
-  aUnRendezVous,
-  classerVerification,
-  estRealisee,
-} from "@/lib/calendrier/etats";
+import { aUnRendezVous, classerVerification } from "@/lib/calendrier/etats";
 import {
   FAMILLE_DE_TYPE,
   typeDeVerification,
@@ -154,16 +151,23 @@ export default async function VerificationDetailPage({
   // date, donc l'état de la ligne EST celui de sa date. `etatDuRendezVous`
   // distinguait les deux quand une rangée avait deux vies ; il n'en a plus.
   const etat = classerVerification(v, aujourdhui);
-  const sansRendezVous = !aUnRendezVous(v, aujourdhui);
+  // L'OBLIGATION NE S'APPLIQUE PLUS À CETTE LIGNE (ADR-034). C'est la page où
+  // mène le lien « ne s'applique plus depuis le … » du registre, et jusqu'au
+  // 2026-09-13 elle ne lisait pas `archiveLe` : elle annonçait « À planifier —
+  // aucune date arrêtée », peignait la pastille du statut gelé et invitait à
+  // déposer. La relecture du N4 en a fait la dixième surface.
+  const archivee = etat === "archivee";
+  const sansRendezVous = !archivee && !aUnRendezVous(v, aujourdhui);
 
   const urgent =
+    !archivee &&
     !sansRendezVous &&
     !enRetard &&
-    // Le STATUT, plus la colonne (ADR-034) : une obligation sans rendez-vous
-    // suivant, déjà faite, garde son statut réalisé mais plus de date sur la
-    // ligne. Lue sur la colonne, cette garde affichait « Dans N jours » à côté
-    // du badge « Conforme », sur une échéance d'origine qu'on n'attend plus.
-    !estRealisee(v) &&
+    // Une obligation sans rendez-vous suivant, déjà faite, garde son statut
+    // réalisé mais plus de date à attendre : pas de « Dans N jours » à côté du
+    // badge « Conforme ». Sur une obligation périodique, en revanche, un
+    // statut réalisé ne purge rien — la date décide (`estVerificationRealisee`).
+    !estVerificationRealisee(v) &&
     joursRestants >= 0 &&
     joursRestants <= JOURS_HORIZON_PROCHE;
   const aUnRapport = v.rapports.length > 0;
@@ -205,18 +209,27 @@ export default async function VerificationDetailPage({
   const contractuelle = estEcheanceContractuelle(v);
 
   const faits: FaitFiche[] = [
-    // Sans rendez-vous, la ligne n'a pas de « prochaine échéance » à
-    // annoncer : elle a un contrôle dû et pas de date. Écrire la date de
-    // génération sous cette clé, c'est inventer un rendez-vous que personne
-    // n'a pris — et c'est précisément ce que le calendrier refuse de faire
-    // en la comptant « à planifier » hors de ses barres.
-    sansRendezVous
+    // L'extinction d'abord, et elle prend la place de l'échéance : une
+    // obligation qui ne s'applique plus n'annonce ni date ni rendez-vous.
+    // La ligne est gardée pour les rapports qu'elle porte (ADR-012).
+    archivee && v.archiveLe
       ? {
-          cle: "Date",
-          valeur: "À planifier",
-          note: "Aucune date n'est encore arrêtée pour ce contrôle.",
+          cle: "Obligation",
+          valeur: "Ne s'applique plus",
+          note: `Depuis le ${formaterDateCourteFr(v.archiveLe)}. La fiche est conservée pour les rapports qu'elle porte.`,
         }
-      : {
+      : // Sans rendez-vous, la ligne n'a pas de « prochaine échéance » à
+        // annoncer : elle a un contrôle dû et pas de date. Écrire la date de
+        // génération sous cette clé, c'est inventer un rendez-vous que
+        // personne n'a pris — et c'est précisément ce que le calendrier refuse
+        // de faire en la comptant « à planifier » hors de ses barres.
+        sansRendezVous
+        ? {
+            cle: "Date",
+            valeur: "À planifier",
+            note: "Aucune date n'est encore arrêtée pour ce contrôle.",
+          }
+        : {
           cle: "Prochaine échéance",
           valeur: formatDateCourte(v.datePrevue),
           // La dernière réalisation se lit sur les rapports (ADR-034).
@@ -307,7 +320,11 @@ export default async function VerificationDetailPage({
                 compte de jours la remplace alors, plutôt que de s'y
                 ajouter — un retard d'un jour et un retard de six mois
                 n'appellent pas le même geste. */}
-            {v.statut === "depassee" ? null : (
+            {/* Pas de pastille de statut sur une ligne éteinte : le statut y
+                est GELÉ dans son dernier état connu, et « Planifiée » ou
+                « Conforme » y dirait une chose qui n'est plus attendue. Le fait
+                « Ne s'applique plus », au-dessus, dit ce qui est vrai. */}
+            {archivee || v.statut === "depassee" ? null : (
               <BadgeStatut statut={v.statut} />
             )}
             {enRetard ? (

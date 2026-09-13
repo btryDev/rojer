@@ -31,6 +31,7 @@ function verif(partial: Partial<VerificationTenue> = {}): VerificationTenue {
     datePrevue: new Date("2026-11-02T00:00:00Z"),
     dateRealisee: null,
     derniereRealisation: null,
+    periodicite: "annuelle",
     /** `null` = ligne OUVERTE. Requis depuis le N3 : c'est ce champ, et non
      *  plus un préfixe de libellé, qui dit qu'une obligation est éteinte. */
     archiveLe: null,
@@ -41,13 +42,18 @@ function verif(partial: Partial<VerificationTenue> = {}): VerificationTenue {
   };
 }
 
-function lignesDe(verifications: VerificationTenue[]) {
+/** 10 août 2026, 9 h à Paris — l'horloge injectée (ADR-011) : la pastille
+ *  d'une fiche dit l'état du jour, pas le statut stocké. */
+const NOW = new Date("2026-08-10T07:00:00Z");
+
+function lignesDe(verifications: VerificationTenue[], now: Date = NOW) {
   const contenu = contenuTenuAilleursDepuis(
     "etab-1",
     "3.1",
     sectionExtincteurs,
     [],
     verifications,
+    now,
   );
   return contenu?.lignes ?? [];
 }
@@ -64,6 +70,45 @@ describe("registre — ce qui a été fait, et ce qui vient (ADR-034)", () => {
     expect(ligne.meta).toContain("faite le 01 juin 2026");
     expect(ligne.meta).toContain("prochaine le 01 juin 2027");
   });
+
+  it("la pastille dit l'état du jour, pas le statut stocké", () => {
+    // MUTATION SURVIVANTE du banc des corrections (2026-09-13). Une ligne
+    // roulée reste « planifiée » en base après le passage de sa date — rien ne
+    // la réécrit hors régénération —, et la fiche remise en contrôle imprimait
+    // « Planifiée » sur une ligne en retard.
+    const [enRetard, aVenir] = lignesDe([
+      verif({
+        id: "v-retard",
+        datePrevue: new Date("2026-06-01T00:00:00Z"),
+        derniereRealisation: new Date("2025-06-01T00:00:00Z"),
+        statut: "planifiee",
+      }),
+      verif({
+        id: "v-avenir",
+        datePrevue: new Date("2027-06-01T00:00:00Z"),
+        derniereRealisation: new Date("2026-06-01T00:00:00Z"),
+        statut: "planifiee",
+      }),
+    ]);
+    expect(enRetard.statut).toBe("depassee");
+    // Le témoin : une date à venir garde son statut, la pastille ne peint pas
+    // tout en rose.
+    expect(aVenir.statut).toBe("planifiee");
+  });
+
+  it("n'écrit « faite le » qu'une fois sur une ligne d'avant qui a aussi un rapport", () => {
+    // Écrit en deux membres, le fait se lisait deux fois : « faite le X ·
+    // faite le X » (relecture du 2026-09-13).
+    const [ligne] = lignesDe([
+      verif({
+        datePrevue: new Date("2027-06-01T00:00:00Z"),
+        derniereRealisation: new Date("2026-06-01T00:00:00Z"),
+        dateRealisee: new Date("2026-06-01T00:00:00Z"),
+        statut: "planifiee",
+      }),
+    ]);
+    expect(ligne.meta?.match(/faite le/g)).toHaveLength(1);
+  });
 });
 
 describe("registre — une obligation ponctuelle consommée n'annonce pas de suite", () => {
@@ -75,10 +120,29 @@ describe("registre — une obligation ponctuelle consommée n'annonce pas de sui
         datePrevue: new Date("2026-07-01T00:00:00Z"),
         derniereRealisation: new Date("2026-06-20T00:00:00Z"),
         statut: "realisee_conforme",
+        // PONCTUELLE, et le rythme le dit : c'est lui, et non le statut, qui
+        // fait qu'aucune suite n'est due (`estVerificationRealisee`).
+        periodicite: "mise_en_service_uniquement",
       }),
     ]);
     expect(ligne.meta).toContain("faite le 20 juin 2026");
     expect(ligne.meta).not.toContain("prochaine");
+  });
+
+  it("mais une PÉRIODIQUE gelée sur « réalisée » annonce bien sa suite", () => {
+    // La rangée d'avant l'ADR-034 : statut du contrôle passé, rendez-vous
+    // suivant dans `datePrevue`. Lue par le statut, la fiche taisait une
+    // échéance due ; lue par le rythme, elle l'annonce (2026-09-13).
+    const [ligne] = lignesDe([
+      verif({
+        datePrevue: new Date("2027-06-20T00:00:00Z"),
+        dateRealisee: new Date("2026-06-20T00:00:00Z"),
+        statut: "realisee_conforme",
+        periodicite: "annuelle",
+      }),
+    ]);
+    expect(ligne.meta).toContain("faite le 20 juin 2026");
+    expect(ligne.meta).toContain("prochaine le 20 juin 2027");
   });
 });
 

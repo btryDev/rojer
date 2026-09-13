@@ -151,6 +151,10 @@ export async function listerBatimentsAvecCharge(
       statut: true,
       datePrevue: true,
       dateRealisee: true,
+      // Le rythme : sans lui, un statut réalisé d'avant l'ADR-034 sur une
+      // obligation périodique sortirait la ligne de la charge de sa zone
+      // (`estVerificationRealisee`). Son absence du `select` ne compile plus.
+      periodicite: true,
       // L'archivage (ADR-034) : une ligne dont l'obligation ne s'applique plus
       // ne pèse pas sur la charge d'un bâtiment. Il se lisait dans le libellé
       // par `startsWith` ; c'est un champ depuis le N3, et son absence du
@@ -192,6 +196,7 @@ export function grouperChargeParBatiment<
     statut: string;
     datePrevue: Date;
     dateRealisee: Date | null;
+    periodicite: string;
     archiveLe: Date | null;
     libelleObligation: string;
     equipement: { batimentId: string; actif: boolean } | null;

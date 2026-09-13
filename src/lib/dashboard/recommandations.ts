@@ -120,6 +120,11 @@ export type EntreeRecos = {
     id: string;
     statut: "a_planifier" | "planifiee" | "depassee" | string;
     datePrevue: Date;
+    /** Requis : c'est lui qui dit si un statut réalisé purge l'échéance —
+     *  sur une obligation périodique, non (`estVerificationRealisee`). Sans
+     *  lui, une rangée d'avant l'ADR-034 gelée sur « réalisée » avec une date
+     *  passée ne produisait aucune carte « échéance dépassée ». */
+    periodicite: string;
     /** COLONNE GELÉE (ADR-034) : plus écrite, et plus lue par aucun prédicat
      *  depuis le N3. Restée optionnelle le temps que ses porteurs la lâchent. */
     dateRealisee?: Date | null;

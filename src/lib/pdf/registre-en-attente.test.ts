@@ -13,10 +13,15 @@ import { estEnAttenteDeRapport } from "./builders";
 
 const LE_JOUR = new Date("2026-03-01T00:00:00Z");
 
-const ligne = (statut: string, archiveLe: Date | null) => ({
+const ligne = (
+  statut: string,
+  archiveLe: Date | null,
+  periodicite: string = "annuelle",
+) => ({
   statut,
   datePrevue: LE_JOUR,
   dateRealisee: null,
+  periodicite,
   archiveLe,
   // Un libellé NORMAL des deux côtés : depuis l'ADR-034 (N3) il ne porte plus
   // aucun marqueur, et c'est précisément ce que ces cas doivent éprouver.
@@ -42,9 +47,19 @@ describe("registre de sécurité — vérifications en attente", () => {
     ).toBe(false);
   });
 
-  it("écarte les lignes déjà réalisées, comme avant", () => {
-    expect(estEnAttenteDeRapport(ligne("realisee_conforme", ACTIVE))).toBe(
-      false,
-    );
+  it("écarte une ligne réalisée SANS rendez-vous suivant, et elle seule", () => {
+    // Un statut réalisé ne purge que sur une obligation sans rendez-vous
+    // suivant (`estVerificationRealisee`) : la mise en service faite n'attend
+    // plus de rapport.
+    expect(
+      estEnAttenteDeRapport(
+        ligne("realisee_conforme", ACTIVE, "mise_en_service_uniquement"),
+      ),
+    ).toBe(false);
+    // LA MÊME LIGNE EN « ANNUELLE » ATTEND — c'est la rangée d'avant l'ADR-034,
+    // gelée sur « réalisée » avec le rendez-vous suivant dans `datePrevue`. La
+    // liste locale de statuts ouverts qui vivait ici la laissait hors du
+    // tableau « en attente » du registre remis en contrôle (2026-09-13).
+    expect(estEnAttenteDeRapport(ligne("realisee_conforme", ACTIVE))).toBe(true);
   });
 });

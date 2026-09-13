@@ -321,6 +321,10 @@ export default async function EtablissementPage({
       libelleObligation: v.libelleObligation,
       datePrevue: v.datePrevue,
       statut: v.statut,
+      // Le rythme : les widgets classent sur `estVerificationRealisee`, qui en
+      // a besoin — sans lui, un statut réalisé d'avant l'ADR-034 sur une
+      // obligation périodique passait pour « rien à faire ».
+      periodicite: v.periodicite,
       // Le `where` ci-dessus n'en ramène aucune d'archivée ; la projection le
       // transporte quand même, pour que les widgets classent sur le fait et
       // non sur la confiance qu'ils font à une clause située trois cents

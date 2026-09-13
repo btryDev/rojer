@@ -19,6 +19,7 @@ import {
   type VerificationGenere,
   type TitreDeclare,
   type VerificationsPrecedentes,
+  cleApplicabilite,
 } from "./generateur";
 
 // ============================================================================
@@ -771,7 +772,10 @@ describe("réconciliation — permanent n'est pas retiré (ADR-023)", () => {
   it("ne barre pas une obligation qui s'applique toujours", () => {
     const plan = reconcilierCalendrier([ligne({ porteUnePreuve: true })], [], {
       now: NOW,
-      obligationsEncoreApplicables: new Set(["obl-permanente"]),
+      // Par clé obligation × porteur : la ligne est portée par `eq-1`.
+      obligationsEncoreApplicables: new Set([
+        cleApplicabilite("obl-permanente", "eq-1"),
+      ]),
     });
 
     expect(plan.aArchiver).toEqual([]);
@@ -782,7 +786,10 @@ describe("réconciliation — permanent n'est pas retiré (ADR-023)", () => {
   it("supprime en revanche la ligne sans preuve : elle n'aurait jamais dû être datée", () => {
     const plan = reconcilierCalendrier([ligne({ porteUnePreuve: false })], [], {
       now: NOW,
-      obligationsEncoreApplicables: new Set(["obl-permanente"]),
+      // Par clé obligation × porteur : la ligne est portée par `eq-1`.
+      obligationsEncoreApplicables: new Set([
+        cleApplicabilite("obl-permanente", "eq-1"),
+      ]),
     });
 
     expect(plan.aSupprimer).toEqual(["v-1"]);
@@ -1354,7 +1361,9 @@ describe("réconciliation — cycles de vérification", () => {
       {
         now: NOW,
         // Elle s'applique toujours — elle n'a simplement plus de rendez-vous.
-        obligationsEncoreApplicables: new Set(["permanente"]),
+        obligationsEncoreApplicables: new Set([
+          cleApplicabilite("permanente", "eq-1"),
+        ]),
         equipementsEnService: new Set(["eq-1"]),
       },
     );
@@ -1382,13 +1391,59 @@ describe("réconciliation — cycles de vérification", () => {
       [],
       {
         now: NOW,
-        obligationsEncoreApplicables: new Set(["permanente"]),
+        obligationsEncoreApplicables: new Set([
+          cleApplicabilite("permanente", "eq-1"),
+        ]),
         equipementsEnService: new Set(["eq-1"]),
       },
     );
 
     expect(plan.aDesarchiver).toEqual([]);
     expect(plan.inchangees).toBe(1);
+  });
+
+  it("ne rouvre PAS la ligne d'un appareil parce qu'un AUTRE appareil déclenche l'obligation", () => {
+    // LE BLOQUANT DE LA RELECTURE DU N4 (2026-09-13), rejoué sur des obligations
+    // réelles : un groupe froid A reçoit une détection de fuites, l'annuelle
+    // ne s'y applique plus, sa ligne est archivée — juste. Un groupe froid B,
+    // déclaré plus tard sans cette réponse, déclenche l'annuelle. À la passe
+    // suivante, la ligne de A n'était pas générée, l'obligation était « encore
+    // applicable » (par B) et A en service : `aDesarchiver` la rouvrait, avec
+    // son échéance gelée — donc « dépassée » partout, à perpétuité. L'ensemble
+    // d'applicabilité était fait d'identifiants nus ; il est fait de clés
+    // obligation × porteur.
+    const ligneDeA = (over: Partial<OccurrenceExistante> = {}) =>
+      ligneExistante({
+        id: "v-A",
+        obligationId: "froid-controle-etancheite-annuel",
+        equipementId: "eq-A",
+        periodicite: "annuelle",
+        statut: "planifiee",
+        porteUnePreuve: true,
+        ...over,
+      });
+    const applicableParBSeulement = {
+      now: NOW,
+      obligationsEncoreApplicables: new Set([
+        cleApplicabilite("froid-controle-etancheite-annuel", "eq-B"),
+      ]),
+      equipementsEnService: new Set(["eq-A", "eq-B"]),
+    };
+
+    // Archivée, elle le reste.
+    const rouverture = reconcilierCalendrier(
+      [ligneDeA({ archiveLe: new Date("2026-02-01T00:00:00Z") })],
+      [],
+      applicableParBSeulement,
+    );
+    expect(rouverture.aDesarchiver).toEqual([]);
+    expect(rouverture.inchangees).toBe(1);
+
+    // Et le jumeau, antérieur au lot : pas encore archivée, elle doit l'être —
+    // l'obligation ne s'applique plus à A, quoi qu'il en soit de B.
+    const archivage = reconcilierCalendrier([ligneDeA()], [], applicableParBSeulement);
+    expect(archivage.aArchiver).toEqual([{ id: "v-A" }]);
+    expect(archivage.aDesarchiver).toEqual([]);
   });
 
   it("une obligation ponctuelle consommée n'est pas supprimée quand son porteur disparaît", () => {

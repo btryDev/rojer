@@ -44,6 +44,8 @@ function verif(datePrevue: string, statut = "planifiee") {
     datePrevue: new Date(datePrevue),
     dateRealisee: null,
     derniereRealisation: null,
+    // Un rythme cyclique : sur une obligation périodique, la date décide.
+    periodicite: "annuelle",
     // `null` = ligne ouverte, ce qu'est toute ligne de ce bloc. L'archivage
     // se lisait dans un préfixe de libellé ; il a sa colonne depuis l'ADR-034,
     // et les prédicats ne regardent plus qu'elle.
@@ -63,7 +65,11 @@ describe("charge d'un bâtiment", () => {
     expect(etat.enRetard).toHaveLength(1);
   });
 
-  it("ne compte pas une occurrence déjà réalisée", () => {
+  it("ne compte pas une occurrence déjà réalisée — sans rendez-vous suivant", () => {
+    // SANS RENDEZ-VOUS SUIVANT, et le rythme le dit : c'est le seul cas où un
+    // statut réalisé purge l'échéance (`estVerificationRealisee`). La même
+    // ligne en `annuelle` compterait en retard — sa date est passée, et sur
+    // une obligation périodique la date décide.
     const etat = repartirVerifications(
       [
         {
@@ -71,6 +77,7 @@ describe("charge d'un bâtiment", () => {
           datePrevue: new Date("2026-07-01T00:00:00+02:00"),
           dateRealisee: new Date("2026-07-02T00:00:00+02:00"),
           derniereRealisation: null,
+          periodicite: "mise_en_service_uniquement",
           archiveLe: null,
           libelleObligation: "Vérification périodique",
         },
@@ -193,6 +200,7 @@ describe("listerBatimentsAvecCharge", () => {
       statut: string;
       datePrevue: Date;
       dateRealisee: Date | null;
+      periodicite: string;
       archiveLe: Date | null;
       libelleObligation: string;
     }>;

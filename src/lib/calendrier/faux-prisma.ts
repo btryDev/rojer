@@ -370,6 +370,10 @@ export function fauxPrisma(db: Magasin) {
         datePrevue?: Date;
         dateRealisee?: Date | null;
         statut?: string;
+        /** `{ not: null }` = « encore archivée » : la condition de la
+         *  réouverture, qui sans elle ne détectait aucune écriture
+         *  concurrente (relecture du 2026-09-13). */
+        archiveLe?: Date | null | { not: null };
       };
       data: Record<string, unknown>;
     }) =>
@@ -379,11 +383,25 @@ export function fauxPrisma(db: Magasin) {
           operation: "verification.updateMany",
           where: args.where,
         });
-        const { id, etablissementId, datePrevue, dateRealisee, statut, ...reste } =
-          args.where;
+        const {
+          id,
+          etablissementId,
+          datePrevue,
+          dateRealisee,
+          statut,
+          archiveLe,
+          ...reste
+        } = args.where;
         if (Object.keys(reste).length > 0) {
           inconnu("verification.updateMany", Object.keys(reste));
         }
+        const archiveLeCorrespond = (v: { archiveLe?: Date | null }) => {
+          if (archiveLe === undefined) return true;
+          if (archiveLe !== null && typeof archiveLe === "object" && "not" in archiveLe) {
+            return (v.archiveLe ?? null) !== archiveLe.not;
+          }
+          return memeInstant(v.archiveLe ?? null, archiveLe);
+        };
         const cibles = db.verifications.filter(
           (v) =>
             v.id === id &&
@@ -393,7 +411,8 @@ export function fauxPrisma(db: Magasin) {
               memeInstant(v.datePrevue, datePrevue)) &&
             (dateRealisee === undefined ||
               memeInstant(v.dateRealisee, dateRealisee)) &&
-            (statut === undefined || v.statut === statut),
+            (statut === undefined || v.statut === statut) &&
+            archiveLeCorrespond(v),
         );
         for (const v of cibles) Object.assign(v, args.data);
         return { count: cibles.length };

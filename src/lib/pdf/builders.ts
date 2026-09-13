@@ -10,7 +10,11 @@ import { calculerScoreDepuisEtat } from "@/lib/dashboard/score";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { repartirVerifications } from "./etat-verifications";
-import { estVerificationArchivee } from "@/lib/dates/retard";
+import {
+  estVerificationArchivee,
+  estVerificationRealisee,
+  type VerificationDatee,
+} from "@/lib/dates/retard";
 
 /**
  * Une ligne « en attente » au sens du registre de sécurité : elle n'a pas
@@ -26,20 +30,12 @@ import { estVerificationArchivee } from "@/lib/dates/retard";
  * Exporté pour être éprouvé : le reste de `construireRegistreData` demande une
  * base, ce prédicat non.
  */
-export function estEnAttenteDeRapport(v: {
-  statut: string;
-  datePrevue: Date;
-  dateRealisee: Date | null;
-  /** L'archivage se lit sur ce champ depuis l'ADR-034 (N3), plus sur un
-   *  préfixe de libellé. Requis : l'oubli ne compile pas, là où un libellé
-   *  non marqué se lisait « ligne vivante » sans que rien ne le signale. */
-  archiveLe: Date | null;
-  libelleObligation: string;
-}): boolean {
-  return (
-    ["a_planifier", "planifiee", "depassee"].includes(v.statut) &&
-    !estVerificationArchivee(v)
-  );
+export function estEnAttenteDeRapport(v: VerificationDatee): boolean {
+  // « Attend un rapport » = n'est ni éteinte, ni purgée — au sens
+  // d'`estVerificationRealisee` : une rangée périodique gelée sur un statut
+  // réalisé d'avant l'ADR-034 attend bien le contrôle suivant, et la liste
+  // locale de statuts ouverts qui vivait ici la laissait hors du tableau.
+  return !estVerificationArchivee(v) && !estVerificationRealisee(v);
 }
 import type { LignePlanActions, PlanActionsData } from "./PlanActionsDocument";
 import type {
@@ -245,6 +241,9 @@ export async function construireRegistreData(
   const etab = await chargerEtablissementDuUser(etablissementId);
   if (!etab) return null;
   const multiBatiments = etab._count.batiments > 1;
+  // Une horloge pour tout le document (ADR-011) : la pastille des
+  // quarante-neuf fiches et la date de génération se lisent au même instant.
+  const now = new Date();
 
   const [rapports, verifs] = await Promise.all([
     listerRapportsDeLEtablissement(etablissementId),
@@ -312,6 +311,7 @@ export async function construireRegistreData(
         due.section,
         equipements,
         verifs,
+        now,
       );
       completudes.push(completude);
       return ficheDuPdf(
@@ -329,7 +329,7 @@ export async function construireRegistreData(
     entreprise: etab.entreprise.raisonSociale,
     etablissement: etab.raisonDisplay,
     adresse: etab.adresse,
-    genereLe: new Date(),
+    genereLe: now,
     parties,
     bilan: bilanDuRegistre(completudes),
     rapports: lignesRapports,

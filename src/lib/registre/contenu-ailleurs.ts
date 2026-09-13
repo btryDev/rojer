@@ -25,7 +25,10 @@ import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { listerVerifications } from "@/lib/calendrier/queries";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
-import { estStatutRealise } from "@/lib/calendrier/etats";
+import {
+  estVerificationEnRetard,
+  estVerificationRealisee,
+} from "@/lib/dates/retard";
 import type { SectionRegistre } from "./sections";
 
 /**
@@ -52,6 +55,9 @@ export type VerificationTenue = {
   /** Le dernier rapport réalisé (ADR-034) — c'est lui qui dit « faite le »,
    *  la ligne ne portant plus que l'échéance ouverte. */
   derniereRealisation: Date | null;
+  /** Requis : c'est lui qui dit si un statut réalisé purge l'échéance
+   *  (`estVerificationRealisee`) — sur une obligation périodique, non. */
+  periodicite: string;
   /**
    * **Requis, et c'est le registre qui l'exige le plus fort.** Une ligne dont
    * l'obligation ne s'applique plus garde un statut GELÉ — souvent `depassee` —
@@ -140,6 +146,7 @@ export async function lireContenuTenuAilleurs(
     section,
     equipements,
     verifications,
+    new Date(),
   );
 }
 
@@ -153,6 +160,9 @@ export function contenuTenuAilleursDepuis(
   section: SectionRegistre,
   equipements: readonly EquipementTenu[],
   verifications: readonly VerificationTenue[],
+  /** L'horloge, injectée (ADR-011) : la pastille d'une fiche dit l'état du
+   *  jour, et le PDF compose quarante-neuf fiches sur un seul instant. */
+  now: Date,
 ): ContenuAilleurs | null {
   const categories = section.categoriesEquipement;
   if (!categories || categories.length === 0) return null;
@@ -196,20 +206,22 @@ export function contenuTenuAilleursDepuis(
             v.archiveLe
               ? `ne s'applique plus depuis le ${formaterDateCourteFr(v.archiveLe)}`
               : null,
-            // Le fait, lu sur le dernier rapport (ADR-034)…
-            v.derniereRealisation
-              ? `faite le ${formaterDateCourteFr(v.derniereRealisation)}`
+            // Le fait, lu sur le dernier rapport (ADR-034), à défaut sur la
+            // colonne gelée d'une ligne d'avant — UNE fois. Écrit en deux
+            // membres, une ligne d'avant avec rapport imprimait « faite le X ·
+            // faite le X » (relecture du 2026-09-13).
+            (v.derniereRealisation ?? v.dateRealisee)
+              ? `faite le ${formaterDateCourteFr((v.derniereRealisation ?? v.dateRealisee) as Date)}`
               : null,
             // …puis l'échéance ouverte — S'IL Y EN A UNE. Une obligation sans
             // rendez-vous suivant, déjà faite, garde un statut réalisé et une
             // `datePrevue` qui n'est que son échéance d'origine : l'annoncer
-            // « prochaine » promet un contrôle que rien n'attend. La colonne
-            // gelée d'une ligne d'avant garde l'ancienne phrase.
-            v.dateRealisee
-              ? `faite le ${formaterDateCourteFr(v.dateRealisee)}`
-              : v.archiveLe || estStatutRealise(v.statut)
-                ? null
-                : v.datePrevue
+            // « prochaine » promet un contrôle que rien n'attend. Sur une
+            // obligation périodique, en revanche, un statut réalisé d'avant
+            // l'ADR-034 ne tait rien : la date reste due.
+            v.archiveLe || estVerificationRealisee(v)
+              ? null
+              : v.datePrevue
                   ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
                   : "à planifier",
           ]
@@ -221,7 +233,19 @@ export function contenuTenuAilleursDepuis(
           // sur une obligation qui ne s'applique plus — dans un document remis
           // en contrôle. Le `meta` dit ce qu'elle est, ce qui est vrai et
           // suffisant ; l'enum Prisma n'a pas de valeur « archivée » à peindre.
-          statut: v.archiveLe ? undefined : v.statut,
+          //
+          // ET LA PASTILLE DIT L'ÉTAT DU JOUR, PAS LE STATUT STOCKÉ. Depuis le
+          // N2 une ligne roulée reste « planifiée » en base après le passage de
+          // sa date — rien ne la réécrit hors régénération —, et la fiche
+          // remise en contrôle imprimait « Planifiée » sur une ligne en retard.
+          // C'est le même prédicat que partout (`estVerificationEnRetard`), et
+          // « dépassée » est le mot que `BadgeStatut` a pour lui.
+          statut: v.archiveLe
+            ? undefined
+            : v.datePrevue !== null &&
+                estVerificationEnRetard({ ...v, datePrevue: v.datePrevue }, now)
+              ? "depassee"
+              : v.statut,
           contractuelle: estEcheanceContractuelle(v),
         })),
       source: { libelle: "votre calendrier", href: `${base}/calendrier` },

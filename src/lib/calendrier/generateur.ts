@@ -98,6 +98,39 @@ export function cleDeLigne(
   return `${obligationId}::${PORTEUR_ETABLISSEMENT}`;
 }
 
+/**
+ * La clé sous laquelle une ligne demande « mon obligation s'applique-t-elle
+ * encore À MOI ? » — à l'appareil que je porte, pas à l'établissement.
+ *
+ * POURQUOI PAS L'IDENTIFIANT SEUL. `obligationsEncoreApplicables` était un
+ * ensemble d'identifiants d'obligation, valable pour tout l'établissement.
+ * Deux groupes froids A et B : A reçoit une détection de fuites, l'annuelle
+ * ne s'y applique plus, sa ligne est archivée — juste. B, déclaré plus tard
+ * sans cette réponse, déclenche l'annuelle. À la passe suivante, la ligne de
+ * A n'est pas générée, l'obligation est « encore applicable » (par B), A est
+ * en service : `aDesarchiver` la ROUVRAIT, avec son échéance gelée et donc
+ * « dépassée » partout, à perpétuité. Et le jumeau : si B existait déjà, la
+ * ligne de A n'était jamais archivée. Relevé par la relecture du N4
+ * (2026-09-13), rejoué sur des obligations réelles.
+ *
+ * Une ligne d'ÉQUIPEMENT se teste donc par le couple obligation × appareil,
+ * que le matching sait produire (`equipementsConcernes`). Une ligne
+ * d'établissement ou de salarié garde l'identifiant nu : le porteur
+ * établissement ne disparaît pas, et pour le salarié la règle est délibérément
+ * plus large — toute obligation qu'un titre a un jour instanciée reste
+ * applicable, que la personne soit partie ou non (voir `calendrier/actions.ts`).
+ * Les deux formes cohabitent dans le même ensemble sans se confondre : un
+ * identifiant d'obligation ne contient jamais `::`.
+ */
+export function cleApplicabilite(
+  obligationId: string,
+  equipementId: string | null,
+): string {
+  return equipementId === null
+    ? obligationId
+    : `${obligationId}::${equipementId}`;
+}
+
 export type StatutVerificationGen =
   | "a_planifier"
   | "planifiee"
@@ -177,6 +210,13 @@ export type OptionsGenerateur = {
    * « Ne s'applique plus » une obligation qui s'applique toujours.
    *
    * Absent = comportement antérieur : tout ce qui manque est réputé retiré.
+   *
+   * **Les entrées sont des clés d'applicabilité** (`cleApplicabilite`) :
+   * `obligation::equipement` pour une obligation portée par un appareil,
+   * l'identifiant nu pour l'établissement et le salarié. Un identifiant nu
+   * pour une obligation d'équipement ne protège AUCUNE ligne — c'est voulu,
+   * et c'est ce qui a fermé la réouverture d'une ligne dont l'obligation ne
+   * s'appliquait plus qu'à un autre appareil.
    */
   obligationsEncoreApplicables?: Set<string>;
   /**
@@ -1368,7 +1408,12 @@ export function reconcilierCalendrier(
     // Sans preuve, elle ne dit plus rien et disparaît — elle n'aurait jamais dû
     // porter de date. Avec une preuve, elle reste telle quelle : c'est le
     // constat d'un contrôle qui a eu lieu, et rien ne justifie de le barrer.
-    if (encoreApplicables?.has(ex.obligationId) && !porteurDisparu) {
+    // Par clé d'applicabilité — obligation × appareil pour une ligne
+    // d'équipement —, jamais par identifiant nu : voir `cleApplicabilite`.
+    if (
+      encoreApplicables?.has(cleApplicabilite(ex.obligationId, ex.equipementId)) &&
+      !porteurDisparu
+    ) {
       if (!porteUneTrace) plan.aSupprimer.push(ex.id);
       // ELLE REDEVIENT APPLICABLE, DONC ELLE SE ROUVRE. Le cas : une obligation
       // qui passe à `periodicite: "autre"` — une habilitation qui cesse d'être

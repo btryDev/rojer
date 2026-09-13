@@ -189,6 +189,9 @@ export async function compterEtatCalendrier(
         statut: true,
         datePrevue: true,
         dateRealisee: true,
+        // Le rythme, requis par les prédicats : un statut réalisé ne purge
+        // que sur une obligation sans rendez-vous suivant.
+        periodicite: true,
         archiveLe: true,
         libelleObligation: true,
         // Le porteur, pour ventiler par famille (ADR-016) : une ligne à

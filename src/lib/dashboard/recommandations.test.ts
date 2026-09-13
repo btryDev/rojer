@@ -67,6 +67,7 @@ describe("genererRecommandations — tri par urgence", () => {
           datePrevue: dateDecalee(-10),
           libelleObligation: "Vérification élec",
           equipementLibelle: "TGBT",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -94,6 +95,7 @@ describe("genererRecommandations — tri par urgence", () => {
           datePrevue: dateDecalee(-1),
           libelleObligation: "VMC",
           equipementLibelle: "CTA",
+          periodicite: "annuelle",
           archiveLe: null,
         },
         {
@@ -102,6 +104,7 @@ describe("genererRecommandations — tri par urgence", () => {
           datePrevue: dateDecalee(-30),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -117,6 +120,7 @@ describe("genererRecommandations — tri par urgence", () => {
       datePrevue: dateDecalee(-i),
       libelleObligation: `Vérif ${i}`,
       equipementLibelle: "X",
+      periodicite: "annuelle",
       archiveLe: null,
     }));
     const e: EntreeRecos = { ...baseEntree(), verifications: verifs };
@@ -148,6 +152,7 @@ describe("genererRecommandations — catégories", () => {
           datePrevue: dateDecalee(3),
           libelleObligation: "Contrôle alarme",
           equipementLibelle: "SSI",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -166,6 +171,7 @@ describe("genererRecommandations — catégories", () => {
           datePrevue: dateDecalee(30),
           libelleObligation: "Contrôle",
           equipementLibelle: "X",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -278,6 +284,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(-40),
           libelleObligation: "Vérification élec",
           equipementLibelle: "TGBT",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -297,6 +304,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(-3),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -320,6 +328,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(-107),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -341,6 +350,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(-40),
           libelleObligation: "Vérification élec",
           equipementLibelle: "TGBT",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -364,6 +374,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(0),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -375,24 +386,36 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
     ).toBe(false);
   });
 
-  it("ignore une occurrence dont le STATUT dit qu'elle a eu lieu", () => {
-    // Depuis l'ADR-034, c'est le statut — et lui seul — qui purge l'échéance.
-    // Il n'en reste un de réalisé que sur une obligation sans rendez-vous
-    // suivant, consommée.
-    const e: EntreeRecos = {
-      ...baseEntree(),
-      verifications: [
-        {
-          id: "v1",
-          statut: "realisee_conforme",
-          datePrevue: dateDecalee(-1),
-          libelleObligation: "Contrôle fait",
-          equipementLibelle: "TGBT",
-          archiveLe: null,
-        },
-      ],
-    };
-    expect(genererRecommandations(e, { now: NOW })).toHaveLength(0);
+  it("ignore une occurrence réalisée SANS rendez-vous suivant, et elle seule", () => {
+    // Un statut réalisé ne purge l'échéance que sur une obligation sans
+    // rendez-vous suivant (`estVerificationRealisee`) : une mise en service
+    // faite n'a rien à proposer.
+    const faite = (periodicite: string) => ({
+      id: "v1",
+      statut: "realisee_conforme",
+      datePrevue: dateDecalee(-1),
+      libelleObligation: "Contrôle fait",
+      equipementLibelle: "TGBT",
+      periodicite,
+      archiveLe: null,
+    });
+    expect(
+      genererRecommandations(
+        { ...baseEntree(), verifications: [faite("mise_en_service_uniquement")] },
+        { now: NOW },
+      ),
+    ).toHaveLength(0);
+
+    // LA MÊME LIGNE EN « ANNUELLE » EST PROPOSÉE. C'est la rangée d'avant
+    // l'ADR-034, gelée sur « réalisée » avec le rendez-vous suivant dans
+    // `datePrevue` — passé d'un jour ici. Jusqu'au 2026-09-13, le statut
+    // court-circuitait la date et aucune carte ne sortait : un dirigeant qui
+    // n'ouvrait que son tableau de bord ne voyait pas son retard.
+    const recs = genererRecommandations(
+      { ...baseEntree(), verifications: [faite("annuelle")] },
+      { now: NOW },
+    );
+    expect(recs.map((r) => r.kind)).toEqual(["verif_depassee"]);
   });
 
   it("propose une ligne roulée dont l'échéance ouverte est passée, colonne gelée ou non", () => {
@@ -413,6 +436,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           dateRealisee: dateDecalee(-1),
           libelleObligation: "Contrôle fait",
           equipementLibelle: "TGBT",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -432,6 +456,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           datePrevue: dateDecalee(0),
           libelleObligation: "Contrôle alarme",
           equipementLibelle: "SSI",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -496,6 +521,7 @@ describe("genererRecommandations — amorçage (règles 6-8)", () => {
           datePrevue: dateDecalee(60),
           libelleObligation: "Vérif élec",
           equipementLibelle: "TGBT",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -517,6 +543,7 @@ describe("genererRecommandations — amorçage (règles 6-8)", () => {
           datePrevue: dateDecalee(-10),
           libelleObligation: "Vérif élec",
           equipementLibelle: "TGBT",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],
@@ -554,6 +581,7 @@ describe("genererRecommandations — href", () => {
           datePrevue: dateDecalee(-5),
           libelleObligation: "Test",
           equipementLibelle: "E",
+          periodicite: "annuelle",
           archiveLe: null,
         },
       ],

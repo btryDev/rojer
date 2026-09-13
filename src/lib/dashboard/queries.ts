@@ -51,6 +51,8 @@ import { compterEtatsPermanents } from "@/lib/etats-permanents/queries";
 import {
   porteeBatiment,
   toutesLesConditions,
+  echeanceAttendue,
+  urgenceSeule,
 } from "@/lib/calendrier/portee";
 import { libellePorteur } from "@/lib/calendrier/labels";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
@@ -65,7 +67,6 @@ import {
  * registre de sécurité en dépend) et qu'aucune requête d'échéances ne doit
  * ramener.
  */
-const STATUTS_VERIF_OUVERTE = ["a_planifier", "planifiee", "depassee"] as const;
 
 /** Statuts d'un permis de feu / plan de prévention encore ouvert : tout sauf
  *  l'état final ou l'abandon. */
@@ -135,18 +136,16 @@ export type EvenementFenetre = {
  * widgets « Semaine » (7 j) et « Météo » (30 j), et par le flux calendrier.
  *
  * Le classement passe par `lecturesCalendrier` — LA règle, partagée avec
- * la page calendrier : une ligne soldée porte encore le rendez-vous
- * suivant de son cycle (`datePrevue` avancée par la réconciliation), et
- * ce rendez-vous entre dans la fenêtre comme n'importe quel futur. La
- * fenêtre l'ignorait (`dateRealisee: null` en base) : un contrôle annuel
- * fait l'an dernier disparaissait de la « Météo 30 j » jusqu'à la relance
- * du cycle. Les lectures « realisation » (le fait, daté au passé) sont
- * écartées : la fenêtre montre la charge, pas l'historique.
+ * la page calendrier : l'échéance ouverte de chaque ligne (ADR-034) entre
+ * dans la fenêtre comme n'importe quel futur, y compris celle d'une rangée
+ * d'avant gelée sur un statut réalisé, que la date décide désormais. Les
+ * lectures « realisation » (le fait, daté au passé) sont écartées : la
+ * fenêtre montre la charge, pas l'historique.
  *
  * Tons : `TON_REGISTRE` (alerte = en retard, warn = à planifier, ok = le
  * reste). L'id reste celui de la ligne — une ligne n'émet qu'un événement
- * ici (sa lecture courante OU son prochain rendez-vous), et les appelants
- * s'en servent pour la porte `/verifications/{id}`.
+ * ici, sa lecture courante, et les appelants s'en servent pour la porte
+ * `/verifications/{id}`.
  */
 export async function listerEvenementsFenetre(
   etablissementId: string,
@@ -177,9 +176,11 @@ export async function listerEvenementsFenetre(
         datePrevue: { lte: fin },
       },
       porteeBatiment(filtres?.batimentId),
-      filtres?.urgentsSeulement
-        ? { statut: { in: ["a_planifier", "depassee"] } }
-        : {},
+      // La même clause que `listerVerifications`, prise au même endroit : la
+      // liste locale `a_planifier + depassee` datait d'avant le N2 et manquait
+      // toute ligne roulée — « planifiée » à date passée — c'est-à-dire la
+      // forme normale du retard depuis l'ADR-034.
+      filtres?.urgentsSeulement ? urgenceSeule(debutDuJour(now)) : {},
     ),
     include: {
       equipement: {
@@ -272,9 +273,10 @@ export async function compterVerifsParEquipement(
         datePrevue: true,
         dateRealisee: true,
         periodicite: true,
-        // Sans lui, `lecturesCalendrier` compte encore le rendez-vous suivant
-        // d'une obligation qui ne s'applique plus (ADR-034). Le fait se lisait
-        // dans le libellé, il a maintenant sa colonne.
+        // Sans lui, une ligne dont l'obligation ne s'applique plus (ADR-034)
+        // pèse encore sur les pastilles de son appareil, avec le statut gelé
+        // où l'archivage l'a laissée. Le fait se lisait dans le libellé, il a
+        // maintenant sa colonne — et son absence du `select` ne compile plus.
         archiveLe: true,
         libelleObligation: true,
       },
@@ -405,10 +407,10 @@ export async function compterObligationsParMois(
     retard: 0,
   }));
 
-  // Même dépli que le calendrier (`lecturesCalendrier`) : une ligne
-  // soldée pose sa couverture au mois du fait ET son rendez-vous suivant
-  // en charge à venir — la barre ne peint plus la prochaine échéance en
-  // « couvert » un cycle trop tôt.
+  // Les mêmes lectures que le calendrier (`lecturesCalendrier`) : le fait
+  // pose sa couverture au mois du rapport, l'échéance ouverte sa charge à
+  // venir — la barre ne peint plus une échéance en « couvert » un cycle
+  // trop tôt (ADR-034).
   const now = new Date();
   for (const v of verifs) {
     for (const lec of lecturesCalendrier(v, now)) {
@@ -669,10 +671,14 @@ export const getDashboardData = cache(async function getDashboardData(
       where: {
         ...scope,
         OR: [
-          // Depuis l'ADR-034 une ligne roulée est ouverte ET porte un rapport
-          // réalisé : les deux clauses se recouvrent, et c'est juste — la
-          // première compte l'échéance, la seconde le fait.
-          { dateRealisee: null, statut: { in: [...STATUTS_VERIF_OUVERTE] } },
+          // Tout ce qui ATTEND encore — statut ouvert, ou statut réalisé sur
+          // une obligation périodique (rangée d'avant l'ADR-034, dont la date
+          // décide). Depuis l'ADR-034 une ligne roulée est ouverte ET porte un
+          // rapport réalisé : cette clause et la suivante se recouvrent, et
+          // c'est juste — l'une compte l'échéance, l'autre le fait. La clause
+          // `dateRealisee: null` qui vivait ici excluait du tableau de bord
+          // toute rangée gelée avant que le classement ait pu la lire.
+          echeanceAttendue(),
           {
             rapports: {
               some: {
@@ -691,6 +697,9 @@ export const getDashboardData = cache(async function getDashboardData(
         statut: true,
         datePrevue: true,
         dateRealisee: true,
+        // Le rythme : c'est lui qui dit si un statut réalisé purge l'échéance
+        // (`estVerificationRealisee`) — sur une obligation périodique, non.
+        periodicite: true,
         // L'archivage (ADR-034). Il décide des quatre compteurs, du score et
         // de la file de propositions : une ligne éteinte gelée sur `depassee`
         // les faussait tous les trois d'un coup.
@@ -813,6 +822,7 @@ export const getDashboardData = cache(async function getDashboardData(
           id: v.id,
           statut: v.statut,
           datePrevue: v.datePrevue,
+          periodicite: v.periodicite,
           dateRealisee: v.dateRealisee,
           archiveLe: v.archiveLe,
           libelleObligation: v.libelleObligation,

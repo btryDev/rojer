@@ -61,6 +61,10 @@ function ligneApres(f: Fait): Ligne {
     statut: controle === null ? "a_planifier" : "planifiee",
     datePrevue: echeance,
     dateRealisee: null,
+    // Un rythme CYCLIQUE, quel qu'il soit : seule la cyclicité compte pour les
+    // prédicats (`estVerificationRealisee`), et `periodiciteMois` ne sert
+    // qu'à dater l'échéance ci-dessus.
+    periodicite: "annuelle",
     archiveLe: f.archivee ? moisAvant(2) : null,
     derniereRealisation: controle,
     libelleObligation: "Vérification périodique",

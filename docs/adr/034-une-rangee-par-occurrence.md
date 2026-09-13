@@ -441,13 +441,79 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      « prochaine échéance ». Le cas passé était couvert par la garde du retard ;
      le cas futur ne tenait qu'à la lecture du statut, et rien ne la tenait.
   Six mutations jouées, puis deux de plus après correction : chacune rouge sur
-  le test attendu. 2404 tests.
+  le test attendu. ~~2404 tests~~ — **2598** : le chiffre était celui du seul
+  sous-ensemble `src/lib`, publié comme total (relecture).
   **Trois tests décrivaient un monde disparu** — « le rendez-vous suivant d'un
   cycle soldé » — et six ont été réécrits sur le modèle neuf, jamais supprimés
-  en silence. L'un d'eux nomme une conséquence qu'il faut connaître : une rangée
-  d'AVANT l'ADR-034, encore gelée sur un statut réalisé avec une `datePrevue`
-  future, ne pose plus que son fait — sa date future sort du calendrier jusqu'à
-  la régénération, qui la ré-ancre. La perte est bornée à cet intervalle.
+  en silence. ~~L'un d'eux nomme une conséquence qu'il faut connaître : une
+  rangée d'AVANT l'ADR-034, encore gelée sur un statut réalisé avec une
+  `datePrevue` future, ne pose plus que son fait — sa date future sort du
+  calendrier jusqu'à la régénération, qui la ré-ancre. La perte est bornée à
+  cet intervalle.~~ **FAUX, et retiré par les corrections ci-dessous** : la
+  perte n'était bornée par rien — seule la page calendrier régénère —, elle
+  touchait quatre surfaces et non une, et le cas à date PASSÉE, non écrit,
+  rendait « faite » une échéance en retard de six mois. La justification de la
+  suppression d'`etatDuRendezVous` (« elle rendait exactement
+  `classerVerification` ») était fausse sur toute ligne écrite avant N2.
+- **Corrections de la relecture du N4, le 2026-09-13** — deux sessions
+  neutres, angle code et angle tests ; deux bloquants, cinq gardes non tenues,
+  zéro faux positif. Solution choisie par la propriétaire après lecture, en
+  lecture seule, du modèle de GestBAT — qui n'a AUCUN statut stocké : le
+  retard y est `nextDeadline < now`, et rien ne peut l'éteindre.
+  1. **La règle, écrite une fois** (`lib/dates/retard.ts`,
+     `estVerificationRealisee`) : *un statut réalisé ne purge une échéance que
+     sur une obligation SANS rendez-vous suivant*. Sur une obligation
+     périodique, la date décide — « réalisé » y dit qu'un contrôle a eu lieu,
+     jamais que le suivant n'est pas dû. La rangée d'avant l'ADR-034 (statut du
+     contrôle passé, rendez-vous suivant dans `datePrevue`) se lit donc comme
+     une ligne roulée, par sa date, sans attendre qu'une migration la remette
+     au modèle ; et la suppression d'`etatDuRendezVous` devient juste PAR
+     CONSTRUCTION. `periodicite` est requis sur `VerificationDatee` : le
+     compilateur a énuméré les cinquante-neuf lecteurs à mettre à jour, c'est
+     lui la propagation. Deux notions, deux fonctions : `estStatutRealise`
+     (le FAIT — historique, « faite le ») et `estVerificationRealisee` (l'état).
+     Le pendant SQL, `echeanceAttendue()` (`portee.ts`), remplace trois listes
+     locales de statuts (préfiltre du tableau de bord, `urgenceSeule`,
+     `echeancesAnnoncables`), et un test mesure son accord avec le prédicat
+     sur chaque statut × chaque rythme.
+     **Deux trouvailles de la suite, pas de la lecture** : les prédicats ne
+     comparaient la date que sous `planifiee`/`a_planifier` — une rangée
+     gelée y rendait `false` ; `statutLu` la lit « planifiée ». Et le piège
+     `undefined` de N3, sur ce champ : `estCyclique(undefined)` tient
+     l'inconnu pour ponctuel — prudent pour DATER, fatal pour PURGER, un
+     magasin simulé sans `periodicite` faisait purger chaque statut réalisé.
+     Seuls les deux rythmes sans suite, nommément, purgent.
+  2. **Bloquant 1** — `aDesarchiver` rouvrait la ligne archivée d'un appareil
+     dès qu'un AUTRE appareil déclenchait la même obligation :
+     `obligationsEncoreApplicables` était un ensemble d'identifiants valable
+     pour tout l'établissement. Il est fait de clés obligation × porteur
+     (`cleApplicabilite`, via `equipementsConcernes`) ; le jumeau — ligne
+     jamais archivée quand l'autre appareil existait déjà — tombe avec.
+     La réouverture est conditionnée sur « encore archivée », et `updated`
+     la compte, comme son commentaire l'affirmait à tort.
+  3. **Dixième surface** : la fiche de vérification ne lisait pas `archiveLe`
+     — « À planifier », pastille gelée et formulaire de dépôt sur la page où
+     mène le lien « ne s'applique plus depuis le … » du registre. Elle dit
+     l'extinction. La pastille du registre lit l'état du jour, plus le statut
+     stocké ; « faite le X · faite le X » sur une ligne d'avant est corrigé.
+  4. **Tests** : cinq gardes que la mutation ne faisait pas rougir en ont une
+     ; les fixtures d'origine « rangée soldée » reviennent (fiche, parc,
+     calendrier) et passent par la règle ; chaque fixture « réalisée » dit
+     désormais son rythme, et celles qui voulaient dire « consommée » le
+     disent. Deux pages serveur sont tenues par un test qui lit leur source.
+     **2618 tests**, suite complète. Banc de dix-huit mutations : trois
+     survivaient, quatre tests écrits, toutes rouges ; le faux Prisma du
+     tableau de bord ignorait `notIn` et refuse désormais tout opérateur non
+     interprété.
+  5. **Reste ouvert, écrit** : une ligne rouverte par `aDesarchiver` garde sa
+     périodicité, sa date et son statut gelés (relecture, NB4) — réaligner
+     ces lignes dans le réconciliateur plutôt que filtrer chez les lecteurs,
+     ce qui suppose que l'ensemble d'applicabilité porte l'obligation et non
+     sa clé. Cas hypothétique sur ce référentiel, à traiter avec N5. Et la
+     migration de remise au modèle des rangées gelées devient un NETTOYAGE,
+     non une condition : c'est la première étape de N5, avec les exclusions
+     relevées (lignes `datePrevue ≤ dateRealisee` laissées au réconciliateur,
+     non cycliques, archivées, titres salariés, borne au jour civil Paris).
 - **N5 — Le nettoyage** : `dateRealisee` retirée de `Verification` (elle ne sera
   plus écrite), `depassee` retiré de l'enum ou laissé mort et documenté,
   `VerificationDatee.libelleObligation` redevenu optionnel, ADR-012 annotée comme

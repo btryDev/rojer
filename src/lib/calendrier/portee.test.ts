@@ -3,11 +3,13 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  echeanceAttendue,
   echeancesAnnoncables,
   porteeBatiment,
   toutesLesConditions,
   urgenceSeule,
 } from "./portee";
+import { estVerificationRealisee } from "@/lib/dates/retard";
 
 /**
  * Le défaut que ce fichier verrouille ne casse rien, et c'est ce qui le rend
@@ -195,14 +197,92 @@ describe("echeancesAnnoncables", () => {
     // (souvent `depassee`), passe donc le filtre de statut, et sa date étant la
     // plus ancienne, le tri croissant la met EN TÊTE. Elle consommait une des
     // cinq places. La clause vivait dans la page, où aucun test ne l'atteignait.
-    expect(echeancesAnnoncables().archiveLe).toBeNull();
+    expect(echeancesAnnoncables().AND).toContainEqual({ archiveLe: null });
   });
 
-  it("retient les trois statuts d'une ligne ouverte, et eux seuls", () => {
-    // Pas les statuts réalisés : une obligation sans rendez-vous suivant, déjà
-    // faite, n'a pas de prochaine échéance à annoncer (ADR-034).
-    expect(echeancesAnnoncables().statut).toEqual({
-      in: ["a_planifier", "planifiee", "depassee"],
-    });
+  it("annonce tout ce qui attend, et rien de purgé", () => {
+    // Composée de la clause partagée, jamais réécrite : ce qu'elle annonce est
+    // exactement ce qu'`echeanceAttendue` retient.
+    expect(echeancesAnnoncables().AND).toContainEqual(echeanceAttendue());
+  });
+});
+
+describe("echeanceAttendue — le pendant SQL d'`estVerificationRealisee`", () => {
+  /**
+   * Évalue la clause à la main, sur sa forme exacte. Pas un second Prisma :
+   * juste assez pour dire si une ligne (statut, périodicité) la passe, et
+   * mesurer l'ACCORD avec le prédicat TypeScript sur toute la table des cas.
+   * Le jour où l'un des deux bouge sans l'autre, une case rougit.
+   */
+  function passe(statut: string, periodicite: string): boolean {
+    const clause = echeanceAttendue() as {
+      OR: Array<{
+        statut: { in: string[] };
+        periodicite?: { notIn: string[] };
+      }>;
+    };
+    return clause.OR.some(
+      (b) =>
+        b.statut.in.includes(statut) &&
+        (b.periodicite === undefined || !b.periodicite.notIn.includes(periodicite)),
+    );
+  }
+
+  it("dit la même chose que le prédicat, sur chaque statut × chaque rythme", () => {
+    const statuts = [
+      "a_planifier",
+      "planifiee",
+      "depassee",
+      "realisee_conforme",
+      "realisee_observations",
+      "realisee_ecart_majeur",
+    ];
+    const rythmes = [
+      "hebdomadaire",
+      "mensuelle",
+      "annuelle",
+      "quinquennale",
+      "mise_en_service_uniquement",
+      "autre",
+    ];
+    for (const statut of statuts) {
+      for (const periodicite of rythmes) {
+        expect(passe(statut, periodicite), `${statut} × ${periodicite}`).toBe(
+          !estVerificationRealisee({ statut, periodicite }),
+        );
+      }
+    }
+  });
+
+  it("retient une rangée périodique gelée sur « réalisée » — le cas qui manquait", () => {
+    // La rangée d'avant l'ADR-034, que le préfiltre SQL du tableau de bord
+    // faisait disparaître avant même le classement (2026-09-13).
+    expect(passe("realisee_conforme", "annuelle")).toBe(true);
+    expect(passe("realisee_conforme", "mise_en_service_uniquement")).toBe(false);
+  });
+});
+
+/**
+ * Les pages serveur n'ont pas de test, et deux relectures ont montré ce que
+ * ça coûte : une garantie extraite dans une fonction TESTÉE reste invisible
+ * là où elle est EMPLOYÉE — retirer l'appel laissait la suite verte
+ * (mutation E10, 2026-09-13). Le compilateur ne voit pas une clause en moins
+ * dans un `where`. Il faut donc lire le source, comme plus haut.
+ */
+describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
+  const source = (relatif: string) =>
+    readFileSync(join(RACINE, "src", "app", "etablissements", "[id]", relatif), "utf8");
+
+  it("la page d'établissement filtre ses cinq prochaines par `echeancesAnnoncables`", () => {
+    expect(source("page.tsx")).toContain("echeancesAnnoncables()");
+  });
+
+  it("la fiche de vérification lit l'extinction d'une ligne (dixième surface)", () => {
+    // Elle ne lisait pas `archiveLe` : elle annonçait « À planifier », peignait
+    // le statut gelé et invitait à déposer — sur la page même où mène le lien
+    // « ne s'applique plus depuis le … » du registre (relecture du N4).
+    const page = source("verifications/[verificationId]/page.tsx");
+    expect(page).toContain('etat === "archivee"');
+    expect(page).toContain("Ne s'applique plus");
   });
 });

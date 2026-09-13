@@ -8,6 +8,9 @@ function verif(
   statut: string,
   datePrevueIso: string,
   dateRealiseeIso: string | null = null,
+  /** Cyclique par défaut ; « mise_en_service_uniquement » pour une obligation
+   *  consommée, la seule qu'un statut réalisé purge. */
+  periodicite: string = "annuelle",
 ) {
   return {
     statut,
@@ -21,6 +24,7 @@ function verif(
     // plus un préfixe de libellé : le cas archivé a son propre test, qui pose
     // une date ici et laisse le libellé intact.
     archiveLe: null as Date | null,
+    periodicite,
     libelleObligation: "Vérification périodique",
   };
 }
@@ -33,7 +37,14 @@ describe("repartirVerifications", () => {
       verif("a_planifier", "2026-04-10T00:00:00Z"), // échéance passée
       verif("a_planifier", "2026-05-30T00:00:00Z"), // pas encore due
       verif("planifiee", "2026-05-10T00:00:00Z"), // dans 17 jours
-      verif("realisee_conforme", "2026-01-15T00:00:00Z", "2026-01-16T00:00:00Z"),
+      // Consommée : sans rendez-vous suivant. En « annuelle », cette même
+      // ligne serait une rangée gelée d'avant l'ADR-034, en retard.
+      verif(
+        "realisee_conforme",
+        "2026-01-15T00:00:00Z",
+        "2026-01-16T00:00:00Z",
+        "mise_en_service_uniquement",
+      ),
     ];
 
     const etat = repartirVerifications(verifs, NOW);
@@ -96,14 +107,29 @@ describe("repartirVerifications", () => {
   it("borne l'historique à douze mois calendaires", () => {
     const etat = repartirVerifications(
       [
-        // Pile douze mois avant : conservée.
-        verif("realisee_conforme", "2025-04-23T00:00:00Z", "2025-04-23T00:00:00Z"),
+        // Pile douze mois avant : conservée. (Consommées toutes deux : c'est
+        // la FENÊTRE qu'on mesure ici, pas la règle du rythme.)
+        verif("realisee_conforme", "2025-04-23T00:00:00Z", "2025-04-23T00:00:00Z", "mise_en_service_uniquement"),
         // La veille de la borne : sortie de la fenêtre.
-        verif("realisee_conforme", "2025-04-22T00:00:00Z", "2025-04-22T00:00:00Z"),
+        verif("realisee_conforme", "2025-04-22T00:00:00Z", "2025-04-22T00:00:00Z", "mise_en_service_uniquement"),
       ],
       NOW,
     );
     expect(etat.realisees12m).toHaveLength(1);
+  });
+
+  it("compte en retard une rangée PÉRIODIQUE gelée sur « réalisée » dont la date est passée", () => {
+    // La rangée d'avant l'ADR-034 : statut du contrôle passé, rendez-vous
+    // suivant dans `datePrevue`, ici dépassé. Le score la tenait pour « faite »
+    // — un dossier réellement en retard affichait 100 tant que personne ne
+    // rouvrait le calendrier (relecture du N4, 2026-09-13). Elle compte UNE
+    // fois, dans le retard : l'échéance ouverte prime (amendement du
+    // 2026-09-12), et sa réalisation ne la fait pas compter une seconde fois.
+    const gelee = verif("realisee_conforme", "2026-03-01T00:00:00Z", "2025-03-01T00:00:00Z");
+    const etat = repartirVerifications([gelee], NOW);
+    expect(etat.enRetard).toHaveLength(1);
+    expect(etat.realisees12m).toHaveLength(0);
+    expect(etat.total).toBe(1);
   });
 
   it("ne compte jamais une occurrence au statut réalisé comme en retard", () => {
@@ -118,7 +144,7 @@ describe("repartirVerifications", () => {
     // donc au statut réalisé — n'est jamais en retard, si loin que soit son
     // échéance d'origine, et sa réalisation compte dans la fenêtre.
     const consommee = {
-      ...verif("realisee_conforme", "2026-01-05T00:00:00Z"),
+      ...verif("realisee_conforme", "2026-01-05T00:00:00Z", null, "mise_en_service_uniquement"),
       derniereRealisation: new Date("2026-01-06T00:00:00Z"),
     };
 

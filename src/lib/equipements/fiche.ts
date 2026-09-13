@@ -17,12 +17,11 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import {
   classerDate,
-  estRealisee,
   classerVerification,
+  estStatutRealise,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
-import { derniereRealisation } from "@/lib/rapports/derniere-realisation";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import {
@@ -242,12 +241,14 @@ export function lignesHistoire(
       continue;
     }
 
-    // `estRealisee` et non `classerVerification(...) === "faite"` : depuis que
-    // l'archivage prend le pas dans le CLASSEMENT, une ligne archivée qui
-    // portait une réalisation sortait de l'historique de l'appareil. Or
-    // l'archivage tait ce qui est ATTENDU, jamais ce qui a EU LIEU — c'est la
-    // règle que `lecturesCalendrier` applique déjà en gardant le fait passé.
-    if (estRealisee(v)) {
+    // LE FAIT (`estStatutRealise`), pas l'état : l'historique montre ce qui a
+    // EU LIEU. Ni `classerVerification(...) === "faite"` — l'archivage prend le
+    // pas dans le classement et sortait de l'historique une ligne éteinte qui
+    // portait une réalisation —, ni `estVerificationRealisee` — sur une
+    // obligation périodique elle dit « rien n'est purgé », ce qui est vrai de
+    // l'échéance et faux du contrôle passé. L'archivage et le cycle taisent ce
+    // qui est ATTENDU, jamais ce qui a été fait.
+    if (estStatutRealise(v.statut)) {
       lignes.push({
         cle: `v-${v.id}`,
         date: v.dateRealisee ?? v.datePrevue,

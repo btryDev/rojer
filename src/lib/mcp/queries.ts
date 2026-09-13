@@ -37,7 +37,10 @@ import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
 import { prismaMcp } from "./prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
-import { estRealisee } from "@/lib/calendrier/etats";
+// La règle du réalisé vit avec les autres prédicats (`estVerificationRealisee`) :
+// sur une obligation périodique, la date décide — un statut réalisé d'avant
+// l'ADR-034 ne rend plus « réalisée » une échéance passée à l'assistant.
+import { estVerificationRealisee } from "@/lib/dates/retard";
 import {
   derniereRealisation,
   WHERE_RAPPORT_REALISE,
@@ -352,7 +355,7 @@ function etatDe(v: VerificationDatee, now: Date): EtatVerification {
   // la garde tombait : une vérification à la mise en service, faite, ressortait
   // « planifiée, 40 jours de retard » à l'assistant, sous un en-tête « aucune
   // en retard ». Relevé en relecture le 2026-09-12.
-  if (estRealisee(v)) return "realisee";
+  if (estVerificationRealisee(v)) return "realisee";
   if (estVerificationEnRetard(v, now)) return "en_retard";
   if (estVerificationAPlanifier(v, now)) return "a_planifier";
   if (estVerificationAVenir(v, now, JOURS_HORIZON_PROCHE)) return "a_venir";
@@ -403,6 +406,7 @@ export async function listerEquipements(
           statut: true,
           datePrevue: true,
           dateRealisee: true,
+          periodicite: true,
           archiveLe: true,
           libelleObligation: true,
         },
@@ -547,7 +551,7 @@ export async function listerVerifications(
     // « Ne s'applique plus — …, ne s'applique plus, 240 jour(s) de retard ».
     // « Réalisée » se lit sur le statut (ADR-034), plus sur la colonne éteinte.
     joursRetard:
-      estRealisee(v) || estVerificationArchivee(v)
+      estVerificationRealisee(v) || estVerificationArchivee(v)
         ? 0
         : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),
@@ -577,7 +581,7 @@ export async function listerVerifications(
     // statut le dit, la colonne ne le dit plus (ADR-034).
     lues = lues.filter(
       (v) =>
-        !estRealisee(v) &&
+        !estVerificationRealisee(v) &&
         !estVerificationArchivee(v) &&
         v.datePrevue <= borne,
     );

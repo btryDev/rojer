@@ -23,6 +23,8 @@ function fiche(
     dateRealisee?: string;
     statut?: string;
     periodicite?: string;
+    /** Le jour où l'obligation a cessé de s'appliquer ; absent = ouverte. */
+    archiveLe?: string;
   }>,
 ): FicheEquipement {
   return {
@@ -38,7 +40,7 @@ function fiche(
       // alors `undefined`, les prédicats testent `!== null` — et toute ligne
       // de ce fichier se lisait archivée, donc `lecturesCalendrier` ne rendait
       // plus rien et la fiche affichait un appareil sans aucune échéance.
-      archiveLe: null,
+      archiveLe: v.archiveLe ? jour(v.archiveLe) : null,
       periodicite: v.periodicite ?? "annuelle",
       rapports: [],
       actions: [],
@@ -72,6 +74,52 @@ describe("lignesAFaire", () => {
     expect(lignes[0].date).toEqual(jour("2027-01-22"));
     expect(lignes[0].etat).toBe("lointain");
     expect(lignes[0].href).toBe("/etablissements/e1/verifications/v1");
+  });
+
+  it("garde le rendez-vous suivant d'une rangée SOLDÉE d'avant l'ADR-034", () => {
+    // LA FIXTURE D'ORIGINE, restaurée. Le N4 l'avait remplacée par une ligne
+    // roulée, et la relecture a montré ce que ça perdait : sur la rangée qui
+    // porte encore un statut réalisé ET le rendez-vous de l'an prochain, la
+    // fiche affichait de nouveau « aucune échéance ouverte » — pendant que le
+    // calendrier montrait l'échéance. Depuis `estVerificationRealisee`
+    // (2026-09-13), le statut réalisé ne purge plus une obligation périodique,
+    // et cette ligne est à faire, comme elle l'a toujours été.
+    const lignes = lignesAFaire(
+      fiche([
+        {
+          id: "v1",
+          datePrevue: "2027-01-22",
+          dateRealisee: "2026-01-22",
+          statut: "realisee_conforme",
+        },
+      ]),
+      "/etablissements/e1",
+      AUJOURDHUI,
+    );
+
+    expect(lignes).toHaveLength(1);
+    expect(lignes[0].date).toEqual(jour("2027-01-22"));
+    expect(lignes[0].etat).toBe("lointain");
+  });
+
+  it("écarte une ligne éteinte, même gelée sur un statut ouvert", () => {
+    // MUTATION SURVIVANTE de la relecture du N4 (2026-09-13) : retirer
+    // `etat !== "archivee"` laissait la suite verte, parce que le helper de
+    // ce fichier forçait `archiveLe: null` partout. Une obligation qui ne
+    // s'applique plus, gelée sur « dépassée », remontait dans « à faire ».
+    const lignes = lignesAFaire(
+      fiche([
+        {
+          id: "v-eteinte",
+          datePrevue: "2026-06-01",
+          statut: "depassee",
+          archiveLe: "2026-07-01",
+        },
+      ]),
+      "/etablissements/e1",
+      AUJOURDHUI,
+    );
+    expect(lignes).toEqual([]);
   });
 
   it("ne fabrique pas de rendez-vous là où le cycle n'en a pas", () => {

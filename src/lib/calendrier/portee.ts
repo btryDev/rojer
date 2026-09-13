@@ -1,4 +1,6 @@
 import type { Prisma } from "@prisma/client";
+import { STATUTS_REALISES_PERSISTES } from "./generateur";
+import { PERIODICITES_SANS_SUITE } from "./periodicite";
 
 /**
  * Le filtre par bâtiment d'une liste de vérifications (ADR-019, ADR-022).
@@ -72,8 +74,58 @@ export function toutesLesConditions(
  *
  * `debut` est le début du jour civil, capturé au bord (ADR-011).
  */
+export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
+  return {
+    // Une ligne éteinte n'est jamais urgente, quel que soit son statut gelé.
+    archiveLe: null,
+    OR: [
+      { statut: "depassee" as const },
+      {
+        statut: { in: ["planifiee" as const, "a_planifier" as const] },
+        datePrevue: { lt: debut },
+      },
+      // Une ligne périodique gelée sur un statut réalisé (d'avant l'ADR-034) :
+      // sa date décide, comme pour les deux branches du dessus.
+      {
+        statut: { in: [...STATUTS_REALISES_PERSISTES] },
+        periodicite: { notIn: [...PERIODICITES_SANS_SUITE] },
+        datePrevue: { lt: debut },
+      },
+    ],
+  };
+}
+
 /**
- * Les échéances qu'un écran peut ANNONCER : ouvertes, et non éteintes.
+ * Ce qu'une ligne ATTEND encore, côté SQL : le pendant exact de
+ * `!estVerificationRealisee` (`lib/dates/retard`), et il doit le rester.
+ *
+ * Deux formes, parce que le statut n'a pas le même sens selon le rythme :
+ *  · un statut ouvert — la ligne attend, quelle que soit sa périodicité ;
+ *  · un statut réalisé SUR UNE OBLIGATION PÉRIODIQUE — la ligne attend aussi.
+ *    « Réalisé » y dit qu'un contrôle a eu lieu, pas que le suivant n'est pas
+ *    dû ; c'est la rangée d'avant l'ADR-034, gelée avec le rendez-vous suivant
+ *    dans `datePrevue`. Un préfiltre SQL sur les seuls statuts ouverts la
+ *    faisait disparaître du tableau de bord avant même que le classement TS
+ *    ait pu la lire — le classement corrigé ne servait à rien sur elle.
+ *
+ * `PERIODICITES_SANS_SUITE` est dérivée de la table du référentiel : la
+ * clause et le prédicat s'appuient sur la même définition de « cyclique ».
+ * `portee.test.ts` garde l'accord entre les deux sur une table de cas.
+ */
+export function echeanceAttendue(): Prisma.VerificationWhereInput {
+  return {
+    OR: [
+      { statut: { in: ["a_planifier" as const, "planifiee" as const, "depassee" as const] } },
+      {
+        statut: { in: [...STATUTS_REALISES_PERSISTES] },
+        periodicite: { notIn: [...PERIODICITES_SANS_SUITE] },
+      },
+    ],
+  };
+}
+
+/**
+ * Les échéances qu'un écran peut ANNONCER : attendues, et non éteintes.
  *
  * Extraite de la page d'un établissement, où elle alimente le compte à rebours
  * des cinq prochaines. Elle y était écrite sur place, et deux relectures l'ont
@@ -88,20 +140,6 @@ export function toutesLesConditions(
  */
 export function echeancesAnnoncables(): Prisma.VerificationWhereInput {
   return {
-    statut: { in: ["a_planifier" as const, "planifiee" as const, "depassee" as const] },
-    archiveLe: null,
-  };
-}
-
-export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
-  return {
-    dateRealisee: null,
-    OR: [
-      { statut: "depassee" as const },
-      {
-        statut: { in: ["planifiee" as const, "a_planifier" as const] },
-        datePrevue: { lt: debut },
-      },
-    ],
+    AND: [echeanceAttendue(), { archiveLe: null }],
   };
 }

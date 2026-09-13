@@ -34,12 +34,29 @@ const roulee = {
   periodicite: "annuelle",
 };
 
+/** La rangée SOLDÉE d'avant l'ADR-034 : statut du contrôle passé, rendez-vous
+ *  suivant dans `datePrevue`. Toutes les lignes existantes sont de ce modèle
+ *  tant qu'une migration ne les a pas remises au nouveau. */
+const soldee = {
+  statut: "realisee_conforme",
+  dateRealisee: jours(-245),
+  archiveLe: null,
+  datePrevue: jours(120),
+  libelleObligation: "Vérification périodique",
+  periodicite: "annuelle",
+};
+
 describe("l'état d'une ligne roulée est celui de sa date", () => {
-  it("ne peint pas « faite » une échéance à venir", () => {
-    // LE DÉFAUT D'ORIGINE, et il ne peut plus se produire : la ligne portait un
-    // statut réalisé ET une échéance future, si bien que toute surface qui
-    // classait la ligne peignait sa date en vert, un an trop tôt. Depuis
-    // l'ADR-034, un contrôle déposé laisse la ligne « planifiée ».
+  it("ne peint pas « faite » une échéance à venir — sur la rangée SOLDÉE", () => {
+    // LE DÉFAUT D'ORIGINE, sur la fixture d'origine. Le N4 avait remplacé
+    // `soldee` par `roulee` ici, et le test ne pouvait plus échouer pour la
+    // raison qu'il nomme : une ligne « planifiée » se classe par sa date par
+    // construction. C'est la rangée qui porte un statut RÉALISÉ et une date à
+    // venir que toute surface peignait en vert un an trop tôt — et depuis les
+    // corrections du 2026-09-13, c'est `estVerificationRealisee` qui l'en
+    // empêche : sur une obligation périodique, la date décide.
+    expect(classerVerification(soldee, NOW)).toBe("lointain");
+    // Et la ligne roulée, évidemment.
     expect(classerVerification(roulee, NOW)).toBe("lointain");
   });
 

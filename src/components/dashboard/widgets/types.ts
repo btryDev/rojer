@@ -104,6 +104,10 @@ type VerificationLite = {
   libelleObligation: string;
   datePrevue: Date;
   statut: string;
+  /** Le rythme : les widgets classent eux-mêmes leurs lignes, et le
+   *  classement en a besoin pour ne pas croire « réalisée » une obligation
+   *  périodique dont la date est passée (`estVerificationRealisee`). */
+  periodicite: string;
   /**
    * `null` = ligne ouverte (ADR-034). Il traverse jusqu'au board bien que la
    * requête qui alimente `prochainesVerifs` écarte déjà les lignes archivées :

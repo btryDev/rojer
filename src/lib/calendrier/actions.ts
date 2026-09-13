@@ -16,6 +16,7 @@ import {
   SCEAU_CALENDRIER,
 } from "@/lib/referentiels/conformite";
 import {
+  cleApplicabilite,
   genererProchainesVerifications,
   genererVerificationsDepuisTitres,
   genererVerificationsSurMesure,
@@ -327,9 +328,23 @@ async function regenererUnePasse(
   // aucune ligne parce qu'elles sont permanentes (`periodicite: "autre"`).
   // Sans cette liste, la réconciliation prendrait leur absence d'`aGenerer`
   // pour un retrait et barrerait des lignes qui prouvent un contrôle réel.
-  const obligationsEncoreApplicables = new Set(
-    obligations.map((oa) => oa.obligation.id),
-  );
+  //
+  // PAR CLÉ D'APPLICABILITÉ, pas par identifiant nu (`cleApplicabilite`) : une
+  // obligation d'équipement n'est « encore applicable » qu'aux appareils qui la
+  // déclenchent. L'identifiant seul rouvrait la ligne archivée d'un appareil dès
+  // qu'un AUTRE appareil déclenchait la même obligation.
+  const obligationsEncoreApplicables = new Set<string>();
+  for (const oa of obligations) {
+    if (oa.porteur === "equipement") {
+      for (const eq of oa.equipementsConcernes) {
+        obligationsEncoreApplicables.add(
+          cleApplicabilite(oa.obligation.id, eq.id),
+        );
+      }
+    } else {
+      obligationsEncoreApplicables.add(cleApplicabilite(oa.obligation.id, null));
+    }
+  }
 
   // Les obligations à porteur salarié n'y sont JAMAIS par la voie ci-dessus :
   // `evaluerObligation` rend `null` pour ce porteur — rien ne dit au moteur qui
@@ -542,7 +557,11 @@ async function regenererUnePasse(
     // rien d'autre à écrire, et sans lui la ligne restait barrée pour toujours.
     operations.push(
       prisma.verification.updateMany({
-        where: { id: d.id, etablissementId },
+        // Conditionnée sur ce que la lecture a vu — une ligne ENCORE archivée.
+        // Sans cette clause, le compte valait toujours 1 et l'écriture ne
+        // détectait aucune réouverture concurrente, contrairement à ce que
+        // promet l'en-tête de `regenererUnePasse` (relecture du 2026-09-13).
+        where: { id: d.id, etablissementId, archiveLe: { not: null } },
         data: { archiveLe: null },
       }),
     );
@@ -587,12 +606,14 @@ async function regenererUnePasse(
     // les compteurs de la passe suivante qui seront rendus.
     resultat: {
       created: plan.aCreer.length,
-      updated: plan.aMettreAJour.length,
-      deleted: plan.aSupprimer.length,
-      archived: plan.aArchiver.length,
       // Les réouvertures comptent comme des réalignements : la ligne est bien
       // mise à jour, et lui inventer un compteur à elle ferait diverger tous
-      // les appelants qui comparent ce résultat en entier.
+      // les appelants qui comparent ce résultat en entier. Le commentaire
+      // l'affirmait, le code les omettait : `updated` valait 0 sur une passe
+      // qui rouvrait une ligne (relecture du 2026-09-13).
+      updated: plan.aMettreAJour.length + plan.aDesarchiver.length,
+      deleted: plan.aSupprimer.length,
+      archived: plan.aArchiver.length,
       unchanged: plan.inchangees,
     },
     converge,

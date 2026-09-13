@@ -161,6 +161,10 @@ function verif(p: Partial<VerificationDatee> = {}): VerificationDatee {
   return {
     statut: "planifiee",
     datePrevue: AUJOURDHUI,
+    // Un rythme CYCLIQUE par défaut : c'est le cas général, et celui où un
+    // statut réalisé ne purge rien (`estVerificationRealisee`). Les cas
+    // « sans rendez-vous suivant » le disent explicitement.
+    periodicite: "annuelle",
     dateRealisee: null,
     // `null` = ligne OUVERTE. Les cas archivés passent une date (ADR-034) ; le
     // libellé, lui, ne décide plus de rien et reste celui du référentiel.
@@ -234,15 +238,56 @@ describe("estVerificationEnRetard", () => {
     ).toBe(true);
   });
 
-  it("les statuts realisee_* ne sont jamais en retard", () => {
+  it("un statut realisee_* ne purge que sans rendez-vous suivant ; en périodique, la date décide", () => {
+    // LA RÈGLE DU 2026-09-13 (`estVerificationRealisee`). Ce test disait « les
+    // statuts realisee_* ne sont jamais en retard », et c'était vrai sans
+    // rendez-vous suivant seulement. Sur une obligation périodique, la rangée
+    // d'avant l'ADR-034 porte le statut du contrôle passé et le rendez-vous
+    // suivant dans `datePrevue` : lue par le statut, elle était « faite » à
+    // perpétuité — un dossier en retard de six mois affichait 100.
     for (const statut of [
       "realisee_conforme",
       "realisee_observations",
       "realisee_ecart_majeur",
     ]) {
       expect(
-        estVerificationEnRetard(verif({ statut, datePrevue: HIER }), CE_MATIN),
+        estVerificationEnRetard(
+          verif({ statut, datePrevue: HIER, periodicite: "mise_en_service_uniquement" }),
+          CE_MATIN,
+        ),
+        `${statut} sans suite`,
       ).toBe(false);
+      expect(
+        estVerificationEnRetard(verif({ statut, datePrevue: HIER }), CE_MATIN),
+        `${statut} annuelle, date passée`,
+      ).toBe(true);
+      // Et à date future, rien à signaler — comme une ligne planifiée.
+      expect(
+        estVerificationEnRetard(verif({ statut, datePrevue: DEMAIN }), CE_MATIN),
+        `${statut} annuelle, date à venir`,
+      ).toBe(false);
+    }
+  });
+
+  it("un rythme absent ou inconnu ne purge JAMAIS : le retard reste visible", () => {
+    // LE PIÈGE `undefined`, sur ce champ-ci. Le tableau de bord lit ses lignes
+    // par un magasin simulé non typé ; sa fixture n'avait pas de `periodicite`,
+    // et `estCyclique(undefined)` — prudent pour DATER, où l'inconnu se tient
+    // pour ponctuel — rendait « pas de suite » : chaque statut réalisé
+    // purgeait, et la rangée gelée en retard comptait 0. Pour PURGER, la
+    // prudence est inverse : seuls les deux rythmes sans suite, nommément.
+    for (const periodicite of [undefined, null, "", "inconnue"]) {
+      expect(
+        estVerificationEnRetard(
+          verif({
+            statut: "realisee_conforme",
+            datePrevue: HIER,
+            periodicite: periodicite as unknown as string,
+          }),
+          CE_MATIN,
+        ),
+        `periodicite = ${String(periodicite)}`,
+      ).toBe(true);
     }
   });
 });
@@ -329,18 +374,30 @@ describe("estVerificationAVenir", () => {
     ).toBe(false);
   });
 
-  it("une occurrence réalisée n'est pas à venir", () => {
-    // Le fait de réalisation se lit sur le STATUT depuis l'ADR-034 : la colonne
-    // `dateRealisee` ne dit plus rien à ce prédicat. L'intention du test ne
-    // change pas — un contrôle fait n'est pas un rendez-vous à venir —, sa
-    // fixture si.
+  it("une occurrence réalisée SANS suite n'est pas à venir ; en périodique, son rendez-vous l'est", () => {
+    // Un contrôle fait sans rendez-vous suivant n'est pas un rendez-vous à
+    // venir. Mais la rangée périodique d'avant l'ADR-034 porte, dans
+    // `datePrevue`, le rendez-vous SUIVANT — arrêté par l'ancien modèle — et
+    // il est à venir au même titre que celui d'une ligne roulée
+    // (`statutLu`, 2026-09-13).
+    expect(
+      estVerificationAVenir(
+        verif({
+          statut: "realisee_conforme",
+          datePrevue: DEMAIN,
+          periodicite: "mise_en_service_uniquement",
+        }),
+        CE_MATIN,
+        JOURS_HORIZON_PROCHE,
+      ),
+    ).toBe(false);
     expect(
       estVerificationAVenir(
         verif({ statut: "realisee_conforme", datePrevue: DEMAIN }),
         CE_MATIN,
         JOURS_HORIZON_PROCHE,
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 });
 

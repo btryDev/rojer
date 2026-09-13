@@ -1468,7 +1468,16 @@ type, et les surfaces qui dépliaient à la main classent la ligne. Le banc de
 mutation a trouvé deux garanties que personne ne tenait, toutes deux sur le
 tableau de bord : une ligne éteinte pesait sur les pastilles d'un appareil, et
 une ligne sans date arrêtée pouvait être annoncée comme prochaine échéance.
-**Reste N5.**
+**Relecture neutre de N4** le 2026-09-13, à deux sessions : deux bloquants —
+`aDesarchiver` rouvrait la ligne d'un appareil dès qu'un autre déclenchait la
+même obligation ; et une rangée d'avant l'ADR-034 gelée sur « réalisée » se
+lisait « faite » sur quatre surfaces, échéance passée comprise, sans qu'aucune
+régénération ne la rattrape hors de la page calendrier. Corrigés par UNE
+règle, écrite dans `retard.ts` et propagée par le compilateur : un statut
+réalisé ne purge une échéance que sans rendez-vous suivant ; sur une
+obligation périodique, la date décide. C'est le modèle de GestBAT, lu en
+lecture seule, qui n'a aucun statut stocké. **Reste N5**, dont la première
+étape est la migration de remise au modèle des rangées gelées.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est

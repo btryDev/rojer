@@ -46,6 +46,17 @@ export function estCyclique(periodicite: Periodicite): boolean {
 }
 
 /**
+ * Les rythmes qui ne produisent AUCUN rendez-vous suivant — le complément
+ * d'`estCyclique`, sous forme de liste, pour les clauses SQL qui doivent dire
+ * la même chose que lui (`portee.ts`). DÉRIVÉE de la table, jamais écrite à la
+ * main : une périodicité ajoutée au référentiel entre ici toute seule, du bon
+ * côté. Deux valeurs aujourd'hui, `mise_en_service_uniquement` et `autre`.
+ */
+export const PERIODICITES_SANS_SUITE: readonly Periodicite[] = (
+  Object.keys(PERIODICITE_CALENDAIRE) as Periodicite[]
+).filter((p) => !estCyclique(p));
+
+/**
  * La prochaine échéance après `derniere`, ou `null` si le rythme n'en produit
  * pas.
  *

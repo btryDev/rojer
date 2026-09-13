@@ -183,6 +183,7 @@ describe("règles 9-10 : une transmission ne passe jamais devant une urgence", (
         id: "v1",
         statut: "planifiee",
         datePrevue: new Date("2026-01-01T00:00:00Z"),
+        periodicite: "annuelle",
         dateRealisee: null,
         libelleObligation: "Vérification en retard",
         equipementLibelle: "Tableau",

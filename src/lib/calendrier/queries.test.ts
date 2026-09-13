@@ -114,16 +114,26 @@ describe("listerVerifications — lecture documentaire par défaut", () => {
 describe("listerVerifications — filtre « urgents »", () => {
   it("retient le retard réel, pas le statut", async () => {
     await listerVerifications("etab-1", { urgentsSeulement: true });
-    const urgence = clause("dateRealisee")!;
-    // Une occurrence réalisée n'est jamais urgente, quel que soit son statut.
-    expect(urgence.dateRealisee).toBeNull();
-    expect(urgence.OR).toEqual([
+    const urgence = clause("archiveLe")!;
+    // Une ligne éteinte n'est jamais urgente, quel que soit son statut gelé.
+    expect(urgence.archiveLe).toBeNull();
+    const branches = urgence.OR as Array<Record<string, unknown>>;
+    expect(branches.slice(0, 2)).toEqual([
       { statut: "depassee" },
       {
         statut: { in: ["planifiee", "a_planifier"] },
         datePrevue: { lt: DEBUT_DU_JOUR },
       },
     ]);
+    // ET LA RANGÉE PÉRIODIQUE GELÉE SUR « RÉALISÉE » (d'avant l'ADR-034) : sa
+    // date décide, comme pour les deux branches du dessus. La clause
+    // `dateRealisee: null` qui vivait ici l'excluait avant tout classement.
+    expect(branches).toHaveLength(3);
+    expect(branches[2]).toMatchObject({
+      statut: { in: expect.arrayContaining(["realisee_conforme"]) },
+      periodicite: { notIn: expect.arrayContaining(["autre"]) },
+      datePrevue: { lt: DEBUT_DU_JOUR },
+    });
   });
 
   /**
@@ -159,12 +169,12 @@ describe("listerVerifications — filtre « urgents »", () => {
     ]);
 
     // L'urgence est toujours là : on ne troque pas un écrasement contre l'autre.
-    expect(clause("dateRealisee")).toBeDefined();
+    expect(clause("archiveLe")).toBeDefined();
   });
 
   it("borne le retard au début du jour civil, pas à l'heure courante", async () => {
     await listerVerifications("etab-1", { urgentsSeulement: true });
-    const borne = (clause("dateRealisee")!.OR as { datePrevue: { lt: Date } }[])[1]
+    const borne = (clause("archiveLe")!.OR as { datePrevue: { lt: Date } }[])[1]
       .datePrevue.lt;
     // Une occurrence datée d'aujourd'hui (stockée à 00:00 UTC, soit 02:00
     // à Paris) est postérieure à cette borne : elle n'est pas urgente.
@@ -180,11 +190,17 @@ describe("compterEtatCalendrier", () => {
     dateRealisee: string | null = null,
     /** Le porteur (ADR-023) : `null` = équipement ou établissement. */
     salarieId: string | null = null,
+    /** Cyclique par défaut ; « mise_en_service_uniquement » pour une ligne
+     *  consommée — la seule qu'un statut réalisé purge. Explicite, parce que
+     *  le mock rend la ligne telle quelle : absent, le champ se lirait
+     *  `undefined`, et c'est la règle qui doit y résister, pas la fixture. */
+    periodicite: string = "annuelle",
   ) => ({
     statut,
     datePrevue: jour(datePrevue),
     dateRealisee: dateRealisee ? jour(dateRealisee) : null,
     salarieId,
+    periodicite,
     // `null` = ligne OUVERTE. C'est CE champ que lit le prédicat d'archivage
     // depuis l'ADR-034 (N3), et l'omettre ne se voyait pas : le mock rend la
     // ligne telle quelle, `undefined !== null` est vrai, donc TOUTES les lignes
@@ -209,9 +225,11 @@ describe("compterEtatCalendrier", () => {
       verif("planifiee", "2026-09-09"),
       // Hors horizon : ni retard, ni engagement de la période.
       verif("planifiee", "2026-12-01"),
-      // Historique.
-      verif("realisee_conforme", "2026-02-01", "2026-02-03"),
-      verif("realisee_conforme", "2025-02-01", "2025-02-03"),
+      // Historique : consommées, sans rendez-vous suivant. En « annuelle »,
+      // ces deux rangées seraient des lignes d'avant l'ADR-034 gelées sur
+      // « réalisée » avec une date passée — donc deux retards de plus.
+      verif("realisee_conforme", "2026-02-01", "2026-02-03", null, "mise_en_service_uniquement"),
+      verif("realisee_conforme", "2025-02-01", "2025-02-03", null, "mise_en_service_uniquement"),
     ]);
 
     const etat = await compterEtatCalendrier("etab-1", NOW);
@@ -275,11 +293,24 @@ describe("compterEtatCalendrier", () => {
     // fixture si : elle portait `depassee` + une `dateRealisee`, et c'est cette
     // colonne-là qui la sauvait.
     prismaMock.verification.findMany.mockResolvedValue([
-      verif("realisee_conforme", "2026-01-01", "2026-01-15"),
+      verif("realisee_conforme", "2026-01-01", "2026-01-15", null, "mise_en_service_uniquement"),
     ]);
     const etat = await compterEtatCalendrier("etab-1", NOW);
     expect(etat.enRetard).toBe(0);
     expect(etat.realisees12m).toBe(1);
+  });
+
+  it("compte en retard une rangée PÉRIODIQUE gelée sur « réalisée » dont la date est passée", async () => {
+    // La même ligne en « annuelle » : c'est la rangée d'avant l'ADR-034, et
+    // l'en-tête du calendrier la comptait « faite » — un dossier réellement en
+    // retard affichait 100 (relecture du N4, 2026-09-13). Elle compte une
+    // fois, dans le retard : l'échéance ouverte prime.
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif("realisee_conforme", "2026-01-01", "2025-01-15"),
+    ]);
+    const etat = await compterEtatCalendrier("etab-1", NOW);
+    expect(etat.enRetard).toBe(1);
+    expect(etat.realisees12m).toBe(0);
   });
 
   it("compte en retard une ligne roulée dont l'échéance ouverte est passée", async () => {
