@@ -9,7 +9,8 @@
 // contredisaient sur la même ligne.
 
 import { describe, expect, it } from "vitest";
-import { estEnAttenteDeRapport } from "./builders";
+import { estEnAttenteDeRapport, ligneVerif } from "./builders";
+import type { VerificationListee } from "@/lib/calendrier/queries";
 
 const LE_JOUR = new Date("2026-03-01T00:00:00Z");
 
@@ -61,5 +62,61 @@ describe("registre de sécurité — vérifications en attente", () => {
     // liste locale de statuts ouverts qui vivait ici la laissait hors du
     // tableau « en attente » du registre remis en contrôle (2026-09-13).
     expect(estEnAttenteDeRapport(ligne("realisee_conforme", ACTIVE))).toBe(true);
+  });
+});
+
+describe("registre de sécurité — la ligne imprimée dit l'état du jour", () => {
+  /**
+   * RELECTURE DU 2026-09-13, premier bloquant. Le tableau « en attente » du
+   * registre remis en contrôle imprimait la colonne STATUT brute : une rangée
+   * périodique gelée sur « réalisée », échéance dépassée, sortait « Conforme ».
+   * Et une ligne roulée restée « planifiée » après sa date, « Planifiée ».
+   */
+  const NOW = new Date("2026-08-19T10:00:00.000Z");
+  const lue = (over: Record<string, unknown>) =>
+    ({
+      id: "v1",
+      obligationId: "incendie-extincteurs-verification-annuelle",
+      libelleObligation: "Vérification annuelle des extincteurs",
+      periodicite: "annuelle",
+      statut: "planifiee",
+      datePrevue: new Date("2026-03-01T00:00:00Z"),
+      dateRealisee: null,
+      archiveLe: null,
+      salarieId: null,
+      equipement: { libelle: "Extincteurs RDC", batiment: { id: "b1", nom: "Principal" } },
+      salarie: null,
+      prescription: null,
+      derniereRealisation: null,
+      ...over,
+    }) as unknown as VerificationListee;
+
+  it("« dépassée » sur une rangée gelée « réalisée » dont l'échéance est passée", () => {
+    const l = ligneVerif(
+      lue({ statut: "realisee_conforme", dateRealisee: new Date("2025-03-01T00:00:00Z") }),
+      false,
+      NOW,
+    );
+    expect(l.statut).toBe("depassee");
+  });
+
+  it("« dépassée » sur une ligne roulée restée « planifiée » après sa date", () => {
+    expect(ligneVerif(lue({}), false, NOW).statut).toBe("depassee");
+  });
+
+  it("imprime l'échéance OUVERTE d'une rangée jamais roulée, pas l'échéance honorée", () => {
+    // Contrôle fait le 10/08 sur une échéance du 01/08 : la suivante est le
+    // 10/08/2027, et c'est elle que le document doit dater.
+    const l = ligneVerif(
+      lue({
+        statut: "realisee_conforme",
+        datePrevue: new Date("2026-08-01T00:00:00Z"),
+        dateRealisee: new Date("2026-08-10T00:00:00Z"),
+      }),
+      false,
+      NOW,
+    );
+    expect(l.datePrevue).toEqual(new Date("2027-08-10T00:00:00Z"));
+    expect(l.statut).toBe("planifiee");
   });
 });

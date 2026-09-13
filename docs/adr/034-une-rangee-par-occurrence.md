@@ -505,7 +505,41 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      survivaient, quatre tests écrits, toutes rouges ; le faux Prisma du
      tableau de bord ignorait `notIn` et refuse désormais tout opérateur non
      interprété.
-  5. **Reste ouvert, écrit** : une ligne rouverte par `aDesarchiver` garde sa
+  5. **Relecture externe des corrections** (sous-agent neutre, même jour) :
+     trois bloquants, trois majeurs, zéro faux positif après vérification.
+     - **« Conforme » peint à côté d'un retard** sur trois surfaces (registre
+       PDF, ligne du calendrier, fiche de vérification) : elles peignaient le
+       statut STOCKÉ. Une table, `statutDuRegistre` (`etats.ts`) : l'état du
+       jour donne le statut à peindre — `statutAffiche` pour une ligne,
+       `statutDeLaLecture` pour une lecture.
+     - **La rangée gelée JAMAIS ROULÉE** : avant N2, le dépôt n'avançait pas
+       `datePrevue`, la régénération le faisait ; si elle a échoué, la ligne
+       garde l'échéance honorée, et la règle neuve la lisait en retard sur un
+       contrôle fait. Tranché par la propriétaire : son échéance ouverte se
+       CALCULE — `echeanceOuverte` (`retard.ts`), `dateRealisee` + le rythme,
+       exactement ce que la régénération aurait écrit. Lue par les prédicats,
+       le classement, les lectures du calendrier, et par chaque surface qui
+       affiche la date (fiche, parc, widgets, registre, PDF, MCP,
+       recommandations). Le SQL ne sait pas la dire : `urgenceSeule` est un
+       sur-ensemble, que `listerVerifications` repasse au prédicat.
+     - **Dépôt proposé sur une ligne éteinte**, et accepté par le serveur, qui
+       faisait rouler une ligne archivée : refusé dans `uploadRapport`, masqué
+       sur la fiche. Le test qui lisait le source cherchait des sous-chaînes
+       présentes dans un commentaire ; il lit le code, commentaires retirés.
+     - `urgenceSeule` COMPOSE `echeanceAttendue` au lieu de la recopier, et un
+       test mesure son accord avec le prédicat sur 96 cas ; la construction
+       des clés d'applicabilité est une fonction pure, testée.
+     - L'assistant MCP reçoit la réalisation ET l'échéance.
+     Neuf mutations, chacune rouge sur son test, jouées fichier par fichier sur
+     un worker. **2632 tests.**
+     **Laissé ouvert, écrit** : les lignes restées ancrées sur un appareil
+     alors que leur obligation est passée à l'établissement (registre de
+     sécurité, consigne, exercices) seront archivées « ne s'applique plus » à
+     la prochaine régénération — vrai pour l'appareil, et leurs rapports
+     restent visibles, mais la nouvelle ligne d'établissement n'en hérite pas
+     faute de succession par changement de porteur. À instruire avec le lot 2
+     du § 11.
+  6. **Reste ouvert, écrit** : une ligne rouverte par `aDesarchiver` garde sa
      périodicité, sa date et son statut gelés (relecture, NB4) — réaligner
      ces lignes dans le réconciliateur plutôt que filtrer chez les lecteurs,
      ce qui suppose que l'ensemble d'applicabilité porte l'obligation et non

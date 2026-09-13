@@ -11,10 +11,13 @@ import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { repartirVerifications } from "./etat-verifications";
 import {
+  echeanceOuverte,
   estVerificationArchivee,
   estVerificationRealisee,
   type VerificationDatee,
 } from "@/lib/dates/retard";
+import { statutAffiche } from "@/lib/calendrier/etats";
+import type { StatutVerification } from "@prisma/client";
 
 /**
  * Une ligne « en attente » au sens du registre de sécurité : elle n'a pas
@@ -181,13 +184,29 @@ function libelleEquipementSitue(
 /** Projection d'une vérification vers la ligne imprimée. Partagée par le
  *  registre et le dossier de conformité pour que la même occurrence s'y
  *  affiche à l'identique. */
-function ligneVerif(v: VerificationListee, multiBatiments: boolean): LigneVerif {
+/**
+ * Une ligne des tableaux de vérifications des PDF (« en attente » du registre,
+ * « en retard » du dossier de conformité).
+ *
+ * La DATE est l'échéance ouverte et le STATUT celui de l'état du jour
+ * (`statutAffiche`) : le registre remis en contrôle imprimait « Conforme »
+ * dans la colonne statut d'une échéance dépassée (relecture du 2026-09-13).
+ * `now` est l'horloge du document, capturée une fois (ADR-011). Exporté pour
+ * être éprouvé sans base.
+ */
+export function ligneVerif(
+  v: VerificationListee,
+  multiBatiments: boolean,
+  now: Date,
+): LigneVerif {
   return {
     id: v.id,
     libelleObligation: v.libelleObligation,
     equipementLibelle: libelleEquipementSitue(v, multiBatiments),
-    datePrevue: v.datePrevue,
-    statut: v.statut,
+    datePrevue: echeanceOuverte(v),
+    // `undefined` n'arrive pas : les deux tableaux n'admettent aucune ligne
+    // archivée. Le repli garde le type du document.
+    statut: statutAffiche(v, now) ?? (v.statut as StatutVerification),
     domaine: obligationParId(v.obligationId)?.domaine ?? null,
     contractuelle: estEcheanceContractuelle(v),
   };
@@ -277,7 +296,7 @@ export async function construireRegistreData(
   // ligne.
   const verifsEnAttente: LigneVerif[] = verifs
     .filter(estEnAttenteDeRapport)
-    .map((v) => ligneVerif(v, multiBatiments));
+    .map((v) => ligneVerif(v, multiBatiments, now));
 
   // Le registre, fiche par fiche — ce que le document doit être. Il ne
   // portait que les deux tableaux ci-dessus : un extrait du calendrier, pas
@@ -548,7 +567,7 @@ export async function construireDossierConformiteData(
     // Exactement les occurrences comptées juste au-dessus, projetées en
     // lignes de tableau : le nombre annoncé et le détail imprimé ne peuvent
     // plus diverger.
-    verifsEnRetard: etatVerifs.enRetard.map((v) => ligneVerif(v, multiBatiments)),
+    verifsEnRetard: etatVerifs.enRetard.map((v) => ligneVerif(v, multiBatiments, now)),
     actionsEnCours:
       plan?.actions.filter(
         (a) => a.statut === "ouverte" || a.statut === "en_cours",

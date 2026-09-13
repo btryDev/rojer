@@ -614,7 +614,7 @@ export default async function CalendrierPage({
           etat,
           // Même règle que la liste mensuelle : le rendez-vous suivant est
           // planifié, le fait porte le résultat de son rapport (ADR-034).
-          statut: statutDeLaLecture(lec.lecture, v),
+          statut: statutDeLaLecture(lec, v),
         });
       }
     }
@@ -1297,7 +1297,7 @@ export default async function CalendrierPage({
                                 // « fait le 1er juin » affichait « En retard »
                                 // dès que l'échéance suivante était passée.
                                 <BadgeStatut
-                                  statut={statutDeLaLecture(ligne.lecture, v)}
+                                  statut={statutDeLaLecture(ligne, v)}
                                 />
                               }
                               registre={ligne.registre}

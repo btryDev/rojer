@@ -21,7 +21,11 @@ import {
   estStatutRealise,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
-import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
+import {
+  echeanceOuverte,
+  estActionEnRetard,
+  estActionOuverte,
+} from "@/lib/dates/retard";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import {
@@ -146,7 +150,8 @@ export function lignesAFaire(
       lignes.push({
         cle: `v-${v.id}`,
         genre: "verification",
-        date: etat === "aPlanifier" ? null : v.datePrevue,
+        // L'échéance ouverte, calculée sur une rangée gelée jamais roulée.
+        date: etat === "aPlanifier" ? null : echeanceOuverte(v),
         etat,
         surtitre: "Vérification",
         libelle: v.libelleObligation,

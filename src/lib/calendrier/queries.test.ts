@@ -49,6 +49,7 @@ import {
   listerVerifications,
   type VerificationListee,
 } from "./queries";
+import { urgenceSeule } from "./portee";
 
 /** 10 août 2026, 9 h à Paris (07:00 UTC). */
 const NOW = new Date("2026-08-10T07:00:00Z");
@@ -114,26 +115,43 @@ describe("listerVerifications — lecture documentaire par défaut", () => {
 describe("listerVerifications — filtre « urgents »", () => {
   it("retient le retard réel, pas le statut", async () => {
     await listerVerifications("etab-1", { urgentsSeulement: true });
-    const urgence = clause("archiveLe")!;
-    // Une ligne éteinte n'est jamais urgente, quel que soit son statut gelé.
-    expect(urgence.archiveLe).toBeNull();
-    const branches = urgence.OR as Array<Record<string, unknown>>;
-    expect(branches.slice(0, 2)).toEqual([
-      { statut: "depassee" },
+    // La clause est celle de `portee.ts`, prise telle quelle — sa sémantique
+    // (accord avec le prédicat, case par case) est tenue par `portee.test.ts`.
+    // Ici : que la liste l'emploie, bornée au début du jour civil.
+    expect(clause("archiveLe")).toEqual(urgenceSeule(DEBUT_DU_JOUR));
+  });
+
+  it("repasse les lignes retenues au prédicat : la clause SQL est un sur-ensemble", async () => {
+    // Une rangée gelée JAMAIS ROULÉE : `datePrevue` (l'échéance honorée) est
+    // passée, mais l'échéance ouverte se calcule — contrôle fait il y a dix
+    // jours, suivante dans un an. La clause SQL la retient ; elle n'est pas en
+    // retard, et « En retard seulement » ne doit pas la montrer.
+    prismaMock.verification.findMany.mockResolvedValue([
       {
-        statut: { in: ["planifiee", "a_planifier"] },
-        datePrevue: { lt: DEBUT_DU_JOUR },
+        id: "gelee-non-roulee",
+        obligationId: "x",
+        statut: "realisee_conforme",
+        periodicite: "annuelle",
+        datePrevue: jour("2026-07-20"),
+        dateRealisee: jour("2026-07-31"),
+        archiveLe: null,
+        libelleObligation: "Vérification",
+        rapports: [],
+      },
+      {
+        id: "vraiment-en-retard",
+        obligationId: "x",
+        statut: "planifiee",
+        periodicite: "annuelle",
+        datePrevue: jour("2026-08-01"),
+        dateRealisee: null,
+        archiveLe: null,
+        libelleObligation: "Vérification",
+        rapports: [],
       },
     ]);
-    // ET LA RANGÉE PÉRIODIQUE GELÉE SUR « RÉALISÉE » (d'avant l'ADR-034) : sa
-    // date décide, comme pour les deux branches du dessus. La clause
-    // `dateRealisee: null` qui vivait ici l'excluait avant tout classement.
-    expect(branches).toHaveLength(3);
-    expect(branches[2]).toMatchObject({
-      statut: { in: expect.arrayContaining(["realisee_conforme"]) },
-      periodicite: { notIn: expect.arrayContaining(["autre"]) },
-      datePrevue: { lt: DEBUT_DU_JOUR },
-    });
+    const lues = await listerVerifications("etab-1", { urgentsSeulement: true });
+    expect(lues.map((v) => v.id)).toEqual(["vraiment-en-retard"]);
   });
 
   /**
@@ -174,8 +192,10 @@ describe("listerVerifications — filtre « urgents »", () => {
 
   it("borne le retard au début du jour civil, pas à l'heure courante", async () => {
     await listerVerifications("etab-1", { urgentsSeulement: true });
-    const borne = (clause("archiveLe")!.OR as { datePrevue: { lt: Date } }[])[1]
-      .datePrevue.lt;
+    const urgence = clause("archiveLe")! as unknown as {
+      AND: [unknown, { OR: [unknown, { datePrevue: { lt: Date } }] }];
+    };
+    const borne = urgence.AND[1].OR[1].datePrevue.lt;
     // Une occurrence datée d'aujourd'hui (stockée à 00:00 UTC, soit 02:00
     // à Paris) est postérieure à cette borne : elle n'est pas urgente.
     expect(jour("2026-08-10").getTime()).toBeGreaterThan(borne.getTime());

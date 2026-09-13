@@ -26,9 +26,10 @@ import { listerVerifications } from "@/lib/calendrier/queries";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
-  estVerificationEnRetard,
+  echeanceOuverte,
   estVerificationRealisee,
 } from "@/lib/dates/retard";
+import { statutAffiche } from "@/lib/calendrier/etats";
 import type { SectionRegistre } from "./sections";
 
 /**
@@ -222,7 +223,9 @@ export function contenuTenuAilleursDepuis(
             v.archiveLe || estVerificationRealisee(v)
               ? null
               : v.datePrevue
-                  ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
+                  ? // L'échéance OUVERTE : calculée sur une rangée gelée jamais
+                    // roulée, dont `datePrevue` est l'échéance déjà honorée.
+                    `prochaine le ${formaterDateCourteFr(echeanceOuverte({ ...v, datePrevue: v.datePrevue }))}`
                   : "à planifier",
           ]
             .filter(Boolean)
@@ -238,14 +241,14 @@ export function contenuTenuAilleursDepuis(
           // N2 une ligne roulée reste « planifiée » en base après le passage de
           // sa date — rien ne la réécrit hors régénération —, et la fiche
           // remise en contrôle imprimait « Planifiée » sur une ligne en retard.
-          // C'est le même prédicat que partout (`estVerificationEnRetard`), et
-          // « dépassée » est le mot que `BadgeStatut` a pour lui.
-          statut: v.archiveLe
-            ? undefined
-            : v.datePrevue !== null &&
-                estVerificationEnRetard({ ...v, datePrevue: v.datePrevue }, now)
-              ? "depassee"
-              : v.statut,
+          // C'est la table partagée (`statutAffiche`) : la même que le registre
+          // PDF, le calendrier et la fiche de vérification.
+          statut:
+            v.datePrevue === null
+              ? v.archiveLe
+                ? undefined
+                : v.statut
+              : statutAffiche({ ...v, datePrevue: v.datePrevue }, now),
           contractuelle: estEcheanceContractuelle(v),
         })),
       source: { libelle: "votre calendrier", href: `${base}/calendrier` },

@@ -16,7 +16,7 @@ import {
   SCEAU_CALENDRIER,
 } from "@/lib/referentiels/conformite";
 import {
-  cleApplicabilite,
+  clesApplicabilite,
   genererProchainesVerifications,
   genererVerificationsDepuisTitres,
   genererVerificationsSurMesure,
@@ -333,18 +333,7 @@ async function regenererUnePasse(
   // obligation d'équipement n'est « encore applicable » qu'aux appareils qui la
   // déclenchent. L'identifiant seul rouvrait la ligne archivée d'un appareil dès
   // qu'un AUTRE appareil déclenchait la même obligation.
-  const obligationsEncoreApplicables = new Set<string>();
-  for (const oa of obligations) {
-    if (oa.porteur === "equipement") {
-      for (const eq of oa.equipementsConcernes) {
-        obligationsEncoreApplicables.add(
-          cleApplicabilite(oa.obligation.id, eq.id),
-        );
-      }
-    } else {
-      obligationsEncoreApplicables.add(cleApplicabilite(oa.obligation.id, null));
-    }
-  }
+  const obligationsEncoreApplicables = clesApplicabilite(obligations);
 
   // Les obligations à porteur salarié n'y sont JAMAIS par la voie ci-dessus :
   // `evaluerObligation` rend `null` pour ce porteur — rien ne dit au moteur qui

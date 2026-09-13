@@ -33,6 +33,7 @@ import { compterEtatEcheances } from "@/lib/calendrier/retards";
 import { statsActionsEnRetard } from "@/lib/actions/queries";
 import { prisma } from "@/lib/prisma";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
+import { echeanceOuverte } from "@/lib/dates/retard";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
 import {
@@ -319,7 +320,11 @@ export default async function EtablissementPage({
     prochainesVerifs: prochainesVerifs.map((v) => ({
       id: v.id,
       libelleObligation: v.libelleObligation,
-      datePrevue: v.datePrevue,
+      // L'échéance OUVERTE, et non la colonne : sur une rangée gelée jamais
+      // roulée, `datePrevue` est l'échéance déjà honorée. Les widgets trient,
+      // comptent à rebours et classent sur cette date ; la projection la leur
+      // donne juste, une fois, plutôt que de leur faire porter la règle.
+      datePrevue: echeanceOuverte(v),
       statut: v.statut,
       // Le rythme : les widgets classent sur `estVerificationRealisee`, qui en
       // a besoin — sans lui, un statut réalisé d'avant l'ADR-034 sur une

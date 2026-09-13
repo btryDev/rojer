@@ -20,6 +20,7 @@ import {
   type TitreDeclare,
   type VerificationsPrecedentes,
   cleApplicabilite,
+  clesApplicabilite,
 } from "./generateur";
 
 // ============================================================================
@@ -1400,6 +1401,32 @@ describe("réconciliation — cycles de vérification", () => {
 
     expect(plan.aDesarchiver).toEqual([]);
     expect(plan.inchangees).toBe(1);
+  });
+
+  it("l'ensemble d'applicabilité se construit par appareil, et par établissement", () => {
+    // MUTATION SURVIVANTE de la relecture (2026-09-13) : la construction vivait
+    // dans `actions.ts`, et revenir à l'identifiant nu pour le porteur
+    // équipement laissait la suite verte. Extraite, elle est tenue ici.
+    const cles = clesApplicabilite([
+      {
+        obligation: { id: "froid-annuel" },
+        porteur: "equipement",
+        equipementsConcernes: [{ id: "eq-A" }, { id: "eq-B" }],
+      },
+      {
+        obligation: { id: "registre-securite" },
+        porteur: "etablissement",
+        equipementsConcernes: [],
+      },
+    ]);
+    expect([...cles].sort()).toEqual([
+      "froid-annuel::eq-A",
+      "froid-annuel::eq-B",
+      "registre-securite",
+    ]);
+    // Et surtout PAS l'identifiant nu d'une obligation d'équipement : c'est lui
+    // qui rouvrait la ligne d'un appareil pour lequel elle ne vaut plus.
+    expect(cles.has("froid-annuel")).toBe(false);
   });
 
   it("ne rouvre PAS la ligne d'un appareil parce qu'un AUTRE appareil déclenche l'obligation", () => {

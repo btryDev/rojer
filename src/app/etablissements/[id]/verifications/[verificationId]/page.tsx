@@ -21,11 +21,16 @@ import {
   joursCivilsEntre,
 } from "@/lib/dates";
 import {
+  echeanceOuverte,
   estActionEnRetard,
   estVerificationEnRetard,
   estVerificationRealisee,
 } from "@/lib/dates/retard";
-import { aUnRendezVous, classerVerification } from "@/lib/calendrier/etats";
+import {
+  aUnRendezVous,
+  classerVerification,
+  statutAffiche,
+} from "@/lib/calendrier/etats";
 import {
   FAMILLE_DE_TYPE,
   typeDeVerification,
@@ -132,7 +137,12 @@ export default async function VerificationDetailPage({
   // Horloge lue une fois pour toute la page : deux appels à `new Date()`
   // séparés par un await peuvent tomber de part et d'autre de minuit.
   const aujourdhui = new Date();
-  const joursRestants = joursCivilsEntre(aujourdhui, v.datePrevue);
+  // L'échéance OUVERTE : `datePrevue`, sauf sur une rangée gelée jamais
+  // roulée, où elle se calcule (`echeanceOuverte`). Toute date de cette page
+  // la lit, pour que la tuile, le compte à rebours et la pastille de retard
+  // parlent de la même échéance que le classement.
+  const echeance = echeanceOuverte(v);
+  const joursRestants = joursCivilsEntre(aujourdhui, echeance);
   const enRetard = estVerificationEnRetard(v, aujourdhui);
 
   /**
@@ -158,6 +168,12 @@ export default async function VerificationDetailPage({
   // déposer. La relecture du N4 en a fait la dixième surface.
   const archivee = etat === "archivee";
   const sansRendezVous = !archivee && !aUnRendezVous(v, aujourdhui);
+  // `undefined` sur une ligne éteinte : aucun statut à peindre.
+  const statutJour = statutAffiche(v, aujourdhui);
+  // On ne dépose pas sur une obligation qui ne s'applique plus : le dépôt
+  // ferait rouler une ligne éteinte. Le serveur le refuse aussi
+  // (`uploadRapport`) — l'écran ne fait que ne pas le proposer.
+  const depotOuvert = !archivee;
 
   const urgent =
     !archivee &&
@@ -231,7 +247,7 @@ export default async function VerificationDetailPage({
           }
         : {
           cle: "Prochaine échéance",
-          valeur: formatDateCourte(v.datePrevue),
+          valeur: formatDateCourte(echeance),
           // La dernière réalisation se lit sur les rapports (ADR-034).
           note: v.derniereRealisation
             ? `Dernière : ${formatDateCourte(v.derniereRealisation)}`
@@ -292,7 +308,7 @@ export default async function VerificationDetailPage({
         // posé, et poser la date de génération y donnait à lire un jour où
         // rien n'est attendu. La pastille de statut dit « À planifier », et
         // le fait ci-dessus dit qu'aucune date n'est arrêtée.
-        date={sansRendezVous ? null : v.datePrevue}
+        date={sansRendezVous || archivee ? null : echeance}
         etat={etat}
         /* Déduite du porteur, comme partout ailleurs (ADR-016) : la page
            connaît déjà `v.salarie`, qu'elle affiche vingt lignes plus haut.
@@ -324,11 +340,14 @@ export default async function VerificationDetailPage({
                 est GELÉ dans son dernier état connu, et « Planifiée » ou
                 « Conforme » y dirait une chose qui n'est plus attendue. Le fait
                 « Ne s'applique plus », au-dessus, dit ce qui est vrai. */}
-            {archivee || v.statut === "depassee" ? null : (
-              <BadgeStatut statut={v.statut} />
+            {/* L'ÉTAT DU JOUR, pas le statut stocké (`statutAffiche`) : une
+                rangée périodique gelée affichait « Conforme » à côté de la
+                pastille « En retard de N j » (relecture du 2026-09-13). */}
+            {statutJour === undefined || statutJour === "depassee" ? null : (
+              <BadgeStatut statut={statutJour} />
             )}
             {enRetard ? (
-              <PastilleRetard echeance={v.datePrevue} maintenant={aujourdhui} />
+              <PastilleRetard echeance={echeance} maintenant={aujourdhui} />
             ) : urgent ? (
               <PastilleFiche ton="proche">
                 {joursRestants === 0
@@ -454,6 +473,7 @@ export default async function VerificationDetailPage({
             titre="Rapports déposés"
             compte={v.rapports.length}
             droite={
+              depotOuvert ? (
               <details className="group">
                 <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
                   <span className="group-open:hidden">+ Nouveau rapport</span>
@@ -484,6 +504,7 @@ export default async function VerificationDetailPage({
                   </div>
                 </div>
               </details>
+              ) : undefined
             }
           />
 
@@ -589,6 +610,19 @@ export default async function VerificationDetailPage({
             })}
           </ul>
         </>
+      ) : !depotOuvert ? (
+        /* Éteinte et sans rapport : rien n'est attendu, rien ne se dépose. */
+        <CorpsFiche
+          principal={
+            <CarteFiche titre="Aucun rapport au dossier">
+              <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                Cette obligation ne s&apos;applique plus à cette ligne. Aucun
+                contrôle n&apos;y est attendu, et aucun rapport ne s&apos;y
+                dépose.
+              </p>
+            </CarteFiche>
+          }
+        />
       ) : (
         /* Aucun rapport : la fiche dit ce qu'elle attend, et le demande
            dans le même objet — pas un état vide puis un formulaire. */

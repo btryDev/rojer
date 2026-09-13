@@ -9,7 +9,10 @@ import {
   toutesLesConditions,
   urgenceSeule,
 } from "./portee";
-import { estVerificationRealisee } from "@/lib/dates/retard";
+import {
+  estVerificationEnRetard,
+  estVerificationRealisee,
+} from "@/lib/dates/retard";
 
 /**
  * Le défaut que ce fichier verrouille ne casse rien, et c'est ce qui le rend
@@ -207,6 +210,78 @@ describe("echeancesAnnoncables", () => {
   });
 });
 
+describe("urgenceSeule — le pendant SQL d'`estVerificationEnRetard`", () => {
+  /**
+   * Un évaluateur minimal de clause Prisma, sur les seules formes que
+   * `urgenceSeule` emploie : `AND`, `OR`, égalité, `null`, `in`, `notIn`,
+   * `lt`. Tout autre opérateur LÈVE — un opérateur ignoré serait un filtre
+   * fantôme, et ce test ne mesurerait plus rien.
+   */
+  function evaluer(where: Record<string, unknown>, ligne: Record<string, unknown>): boolean {
+    return Object.entries(where).every(([cle, attendu]) => {
+      if (cle === "AND") {
+        return (attendu as Record<string, unknown>[]).every((c) => evaluer(c, ligne));
+      }
+      if (cle === "OR") {
+        return (attendu as Record<string, unknown>[]).some((c) => evaluer(c, ligne));
+      }
+      const valeur = ligne[cle];
+      if (attendu === null) return valeur === null;
+      if (typeof attendu === "object" && !(attendu instanceof Date)) {
+        const f = attendu as Record<string, unknown>;
+        const inconnus = Object.keys(f).filter((k) => !["in", "notIn", "lt"].includes(k));
+        if (inconnus.length > 0) throw new Error(`opérateur non évalué : ${inconnus}`);
+        if ("in" in f && !(f.in as unknown[]).includes(valeur)) return false;
+        if ("notIn" in f && (f.notIn as unknown[]).includes(valeur)) return false;
+        if ("lt" in f && !((valeur as Date).getTime() < (f.lt as Date).getTime())) return false;
+        return true;
+      }
+      return valeur === attendu;
+    });
+  }
+
+  it("dit la même chose que le prédicat, sur chaque statut × rythme × date × archivage", () => {
+    // MUTATION SURVIVANTE de la relecture (2026-09-13) : la troisième branche,
+    // RECOPIÉE, a pu être réduite à un seul statut réalisé sans que rien ne
+    // rougisse. La clause est désormais composée ; ce test mesure l'accord.
+    // Sur des lignes SANS colonne gelée : sur une rangée jamais roulée,
+    // l'échéance ouverte se calcule et le SQL ne sait pas la dire — c'est le
+    // sur-ensemble documenté, que `listerVerifications` repasse au prédicat.
+    const NOW = new Date("2026-08-19T10:00:00.000Z");
+    const DEBUT = new Date("2026-08-18T22:00:00.000Z");
+    const passee = new Date("2026-08-01T00:00:00.000Z");
+    const future = new Date("2026-09-30T00:00:00.000Z");
+    const clause = urgenceSeule(DEBUT) as Record<string, unknown>;
+    for (const statut of [
+      "a_planifier",
+      "planifiee",
+      "depassee",
+      "realisee_conforme",
+      "realisee_observations",
+      "realisee_ecart_majeur",
+    ]) {
+      for (const periodicite of ["mensuelle", "annuelle", "mise_en_service_uniquement", "autre"]) {
+        for (const datePrevue of [passee, future]) {
+          for (const archiveLe of [null, passee]) {
+            const ligne = {
+              statut,
+              periodicite,
+              datePrevue,
+              archiveLe,
+              dateRealisee: null,
+              libelleObligation: "x",
+            };
+            expect(
+              evaluer(clause, ligne),
+              `${statut} × ${periodicite} × ${datePrevue === passee ? "passée" : "future"} × ${archiveLe ? "archivée" : "ouverte"}`,
+            ).toBe(estVerificationEnRetard(ligne, NOW));
+          }
+        }
+      }
+    }
+  });
+});
+
 describe("echeanceAttendue — le pendant SQL d'`estVerificationRealisee`", () => {
   /**
    * Évalue la clause à la main, sur sa forme exacte. Pas un second Prisma :
@@ -281,8 +356,19 @@ describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
     // Elle ne lisait pas `archiveLe` : elle annonçait « À planifier », peignait
     // le statut gelé et invitait à déposer — sur la page même où mène le lien
     // « ne s'applique plus depuis le … » du registre (relecture du N4).
-    const page = source("verifications/[verificationId]/page.tsx");
-    expect(page).toContain('etat === "archivee"');
-    expect(page).toContain("Ne s'applique plus");
+    //
+    // SUR LE CODE, PAS SUR LES COMMENTAIRES. La première version cherchait des
+    // sous-chaînes, et la mutation `etat === "archivee" && false` la laissait
+    // verte : les deux chaînes survivaient, dont une dans un commentaire
+    // (relecture du 2026-09-13). On retire les commentaires, et on exige les
+    // instructions exactes. La garantie de fond — aucun dépôt sur une ligne
+    // éteinte — est tenue côté serveur (`rapports/actions.test.ts`).
+    const code = source("verifications/[verificationId]/page.tsx")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(code).toContain('const archivee = etat === "archivee";');
+    expect(code).toContain("const depotOuvert = !archivee;");
+    expect(code).toContain("const statutJour = statutAffiche(v, aujourdhui);");
+    expect(code).toContain("depotOuvert ? (");
   });
 });

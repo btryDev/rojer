@@ -131,6 +131,36 @@ export function cleApplicabilite(
     : `${obligationId}::${equipementId}`;
 }
 
+/**
+ * L'ensemble d'applicabilité, construit depuis le résultat du matching : une
+ * clé par appareil qui DÉCLENCHE une obligation d'équipement, l'identifiant nu
+ * pour une obligation d'établissement.
+ *
+ * Extraite de `calendrier/actions.ts`, où elle vivait dans une boucle qu'aucun
+ * test n'atteignait : revenir à l'identifiant nu pour le porteur équipement y
+ * laissait la suite verte (relecture du 2026-09-13). Les obligations de salarié
+ * n'y passent pas — le matching ne les rend pas — et l'appelant les ajoute.
+ */
+export function clesApplicabilite(
+  obligations: ReadonlyArray<{
+    obligation: { id: string };
+    porteur: string;
+    equipementsConcernes: ReadonlyArray<{ id: string }>;
+  }>,
+): Set<string> {
+  const cles = new Set<string>();
+  for (const oa of obligations) {
+    if (oa.porteur === "equipement") {
+      for (const eq of oa.equipementsConcernes) {
+        cles.add(cleApplicabilite(oa.obligation.id, eq.id));
+      }
+    } else {
+      cles.add(cleApplicabilite(oa.obligation.id, null));
+    }
+  }
+  return cles;
+}
+
 export type StatutVerificationGen =
   | "a_planifier"
   | "planifiee"

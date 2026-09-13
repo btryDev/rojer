@@ -40,7 +40,7 @@ import { libellePorteurSansNom } from "@/lib/calendrier/labels";
 // La règle du réalisé vit avec les autres prédicats (`estVerificationRealisee`) :
 // sur une obligation périodique, la date décide — un statut réalisé d'avant
 // l'ADR-034 ne rend plus « réalisée » une échéance passée à l'assistant.
-import { estVerificationRealisee } from "@/lib/dates/retard";
+import { echeanceOuverte, estVerificationRealisee } from "@/lib/dates/retard";
 import {
   derniereRealisation,
   WHERE_RAPPORT_REALISE,
@@ -539,7 +539,10 @@ export async function listerVerifications(
     equipement: libellePorteurSansNom(v),
     categorie: v.equipement?.categorie ?? null,
     periodicite: v.periodicite,
-    datePrevue: v.datePrevue,
+    // L'échéance OUVERTE, pas la colonne : sur une rangée gelée jamais roulée,
+    // `datePrevue` est l'échéance déjà honorée. L'assistant lit cette date, et
+    // les filtres ci-dessous aussi.
+    datePrevue: echeanceOuverte(v),
     dateRealisee: v.dateRealisee,
     archiveLe: v.archiveLe,
     derniereRealisation: derniereRealisation(v.rapports),
@@ -553,7 +556,7 @@ export async function listerVerifications(
     joursRetard:
       estVerificationRealisee(v) || estVerificationArchivee(v)
         ? 0
-        : joursDeRetard(v.datePrevue, now),
+        : joursDeRetard(echeanceOuverte(v), now),
     contractuelle: estEcheanceContractuelle(v),
   }));
 

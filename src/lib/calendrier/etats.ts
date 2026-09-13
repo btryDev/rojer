@@ -20,6 +20,7 @@ import {
   estVerificationArchivee,
   estVerificationEnRetard,
   estVerificationRealisee,
+  echeanceOuverte,
   type VerificationDatee,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
@@ -274,7 +275,50 @@ export function classerVerification(
   if (estVerificationRealisee(v)) return "faite";
   if (estVerificationEnRetard(v, now)) return "enRetard";
   if (v.statut === "a_planifier") return "aPlanifier";
-  return classerDate(v.datePrevue, now);
+  return classerDate(echeanceOuverte(v), now);
+}
+
+/**
+ * Le statut à PEINDRE pour un état — une table, et une seule.
+ *
+ * Trois surfaces peignaient le statut STOCKÉ (le registre PDF, la ligne du
+ * calendrier, la fiche de vérification) : « Conforme » à côté d'une tuile
+ * rouge sur une rangée périodique gelée, « Planifiée » sur une ligne roulée
+ * dont la date est passée. Le statut en base est un fait d'écriture, pas l'état
+ * du jour ; la pastille dit l'état du jour (relecture du 2026-09-13).
+ *
+ *  · `archivee` — rien : le statut y est gelé, le fait « ne s'applique plus »
+ *    se dit ailleurs ;
+ *  · `enRetard` — « dépassée » ;
+ *  · `aPlanifier` — « à planifier » ;
+ *  · `proche` / `lointain` — « planifiée » : un rendez-vous arrêté ;
+ *  · `faite` — le statut de la ligne, qui porte alors le résultat.
+ */
+function statutDuRegistre(
+  registre: RegistreLigne,
+  statut: string,
+): StatutVerification | undefined {
+  switch (registre) {
+    case "archivee":
+      return undefined;
+    case "enRetard":
+      return "depassee";
+    case "aPlanifier":
+      return "a_planifier";
+    case "proche":
+    case "lointain":
+      return "planifiee";
+    case "faite":
+      return statut as StatutVerification;
+  }
+}
+
+/** Le statut à peindre pour une ligne, à l'instant `now` — voir la table. */
+export function statutAffiche(
+  v: VerificationDatee,
+  now: Date,
+): StatutVerification | undefined {
+  return statutDuRegistre(classerVerification(v, now), v.statut);
 }
 
 // `etatDuRendezVous` A DISPARU AU LOT N4 (ADR-034). Elle distinguait l'état
@@ -301,13 +345,19 @@ export function classerVerification(
  *    Depuis que la ligne roule au dépôt, son statut est celui de l'échéance
  *    ouverte : une tuile verte « fait le 1er juin » affichait donc « En
  *    retard » dès que l'échéance suivante était passée ;
- *  · `courante` — l'échéance ouverte : l'état de la ligne, tel quel.
+ *  · `courante` — l'échéance ouverte : le statut de l'état qu'elle PORTE
+ *    (`statutDuRegistre`), plus le statut stocké. Sur une rangée périodique
+ *    gelée, celui-ci disait « Conforme » à côté d'une tuile rouge.
  */
 export function statutDeLaLecture(
-  lecture: LectureCalendrier["lecture"],
+  lecture: Pick<LectureCalendrier, "lecture" | "registre">,
   v: { statut: string; dernierResultat?: string | null },
 ): StatutVerification {
-  if (lecture !== "realisation") return v.statut as StatutVerification;
+  if (lecture.lecture !== "realisation") {
+    // `registre` d'une lecture n'est jamais `archivee` (voir le type) : la
+    // table rend donc toujours un statut.
+    return statutDuRegistre(lecture.registre, v.statut) as StatutVerification;
+  }
   switch (v.dernierResultat) {
     case "conforme":
       return "realisee_conforme";
@@ -437,7 +487,8 @@ export function lecturesCalendrier(
     // contrôle fait qui l'a ouverte se lit sur son rapport, et se pose au jour
     // où il a eu lieu.
     const courante: LectureCalendrier = {
-      date: v.datePrevue,
+      // L'échéance OUVERTE, calculée pour une rangée gelée jamais roulée.
+      date: echeanceOuverte(v),
       registre: classe,
       lecture: "courante",
     };

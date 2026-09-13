@@ -100,11 +100,14 @@ describe("repartirParEquipement", () => {
     );
 
     expect(m.get("eq1")?.derniere).toEqual(jour("2026-02-04"));
-    // ET LES DEUX COMPTENT EN RETARD. Ce sont des rangées d'avant l'ADR-034 :
-    // statut du contrôle passé, rendez-vous suivant dans `datePrevue` — les
-    // deux passés. Ce test attendait `0`, et c'était la lecture par le statut
-    // qui rendait un appareil en retard « à jour » (2026-09-13).
-    expect(m.get("eq1")?.enRetard).toBe(2);
+    // CES DEUX RANGÉES N'ONT JAMAIS ROULÉ : le contrôle est postérieur à
+    // `datePrevue`, qui est donc l'échéance honorée. Leur échéance ouverte se
+    // calcule (`echeanceOuverte`) : 03/02/2026 pour la première — passée, en
+    // retard —, 04/02/2027 pour la seconde — à venir. Ce test attendait `0`
+    // (lecture par le statut : un appareil en retard « à jour »), puis `2`
+    // (lecture par `datePrevue` : un contrôle de février 2026 « en retard »).
+    // Les deux étaient faux (relectures du 2026-09-13).
+    expect(m.get("eq1")?.enRetard).toBe(1);
     expect(m.get("eq1")?.faites).toBe(2);
   });
 

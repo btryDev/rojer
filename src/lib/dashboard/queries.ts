@@ -30,7 +30,7 @@ import {
   instantCivil,
   joursCivilsEntre,
 } from "@/lib/dates";
-import { estActionEnRetard } from "@/lib/dates/retard";
+import { echeanceOuverte, estActionEnRetard } from "@/lib/dates/retard";
 import {
   classerVerification,
   TON_REGISTRE,
@@ -316,17 +316,19 @@ export async function compterVerifsParEquipement(
     else if (etat === "aPlanifier") s.aPlanifier += 1;
     else if (etat === "proche") s.sous30j += 1;
 
-    // Prochaine échéance annoncée : seulement une date ARRÊTÉE — le
-    // prestataire l'a fixée —, et pas passée. Une ligne « à planifier » porte
-    // une date de génération, pas un rendez-vous.
+    // Prochaine échéance annoncée : seulement une date ARRÊTÉE et à venir —
+    // c'est exactement ce que disent les états `proche` et `lointain`. Une
+    // ligne « à planifier » porte une date de génération, une ligne en retard
+    // n'a pas de prochaine échéance, une ligne éteinte ou consommée non plus.
+    // Lire l'état, et non le statut stocké : une rangée périodique gelée sur
+    // « réalisée » a bien un rendez-vous à venir. La date est l'échéance
+    // ouverte, calculée sur une rangée jamais roulée.
+    const echeance = echeanceOuverte(v);
     if (
-      v.statut === "planifiee" &&
-      etat !== "enRetard" &&
-      etat !== "archivee" &&
-      etat !== "faite" &&
-      (!s.prochaineDate || v.datePrevue < s.prochaineDate)
+      (etat === "proche" || etat === "lointain") &&
+      (!s.prochaineDate || echeance < s.prochaineDate)
     ) {
-      s.prochaineDate = v.datePrevue;
+      s.prochaineDate = echeance;
     }
 
     // Lue sur les rapports (ADR-034), la colonne gelée en repli pour une ligne

@@ -4,6 +4,7 @@ import {
   classerDate,
   classerVerification,
   lecturesCalendrier,
+  statutAffiche,
   statutDeLaLecture,
 } from "./etats";
 
@@ -412,40 +413,86 @@ describe("lecturesCalendrier", () => {
 
 
 describe("statutDeLaLecture (ADR-034)", () => {
+  const FAIT = { lecture: "realisation", registre: "faite" } as const;
+
   it("le FAIT porte le résultat de son rapport, pas l'état de l'échéance ouverte", () => {
     // Le défaut : une tuile verte « fait le 1er juin » affichait « En retard »
     // dès que l'échéance suivante de la même ligne était passée.
     expect(
-      statutDeLaLecture("realisation", {
-        statut: "depassee",
-        dernierResultat: "conforme",
-      }),
+      statutDeLaLecture(FAIT, { statut: "depassee", dernierResultat: "conforme" }),
     ).toBe("realisee_conforme");
     expect(
-      statutDeLaLecture("realisation", {
-        statut: "planifiee",
-        dernierResultat: "ecart_majeur",
-      }),
+      statutDeLaLecture(FAIT, { statut: "planifiee", dernierResultat: "ecart_majeur" }),
     ).toBe("realisee_ecart_majeur");
   });
 
-  it("l'échéance ouverte garde l'état de la ligne", () => {
-    // La lecture `prochaine` a disparu au N4 : elle désignait le rendez-vous
-    // suivant d'un cycle soldé, c'est-à-dire la seconde vie d'une rangée qui
-    // n'en a plus qu'une. L'échéance ouverte EST ce rendez-vous, et elle se lit
-    // `courante`.
-    expect(statutDeLaLecture("courante", { statut: "depassee" })).toBe(
-      "depassee",
-    );
-    expect(statutDeLaLecture("courante", { statut: "planifiee" })).toBe(
-      "planifiee",
-    );
+  it("l'échéance ouverte porte le statut de SON ÉTAT, pas le statut stocké", () => {
+    // RELECTURE DU 2026-09-13 : sur une rangée périodique gelée, la lecture
+    // courante rendait le statut brut — « Conforme » à côté d'une tuile rouge,
+    // ou sur un rendez-vous encore dû. Le statut peint suit l'état de la
+    // lecture, par la même table que toute l'app (`statutAffiche`).
+    const gelee = { statut: "realisee_conforme" };
+    expect(
+      statutDeLaLecture({ lecture: "courante", registre: "enRetard" }, gelee),
+    ).toBe("depassee");
+    expect(
+      statutDeLaLecture({ lecture: "courante", registre: "lointain" }, gelee),
+    ).toBe("planifiee");
+    expect(
+      statutDeLaLecture({ lecture: "courante", registre: "proche" }, { statut: "planifiee" }),
+    ).toBe("planifiee");
+    expect(
+      statutDeLaLecture({ lecture: "courante", registre: "aPlanifier" }, { statut: "a_planifier" }),
+    ).toBe("a_planifier");
+    // Une ligne ROULÉE restée « planifiée » après sa date : dépassée.
+    expect(
+      statutDeLaLecture({ lecture: "courante", registre: "enRetard" }, { statut: "planifiee" }),
+    ).toBe("depassee");
   });
 
   it("sans résultat connu — ligne d'avant l'ADR-034 — le statut de la ligne fait foi", () => {
     expect(
-      statutDeLaLecture("realisation", { statut: "realisee_observations" }),
+      statutDeLaLecture(FAIT, { statut: "realisee_observations" }),
     ).toBe("realisee_observations");
+  });
+});
+
+describe("statutAffiche — le statut à peindre est celui de l'état du jour", () => {
+  const ligne = (over: Record<string, unknown>) => ({
+    statut: "planifiee",
+    datePrevue: jours(10),
+    dateRealisee: null,
+    archiveLe: null,
+    periodicite: "annuelle",
+    libelleObligation: "Vérification périodique",
+    ...over,
+  });
+
+  it("« dépassée » sur une échéance passée, quel que soit le statut stocké", () => {
+    expect(statutAffiche(ligne({ datePrevue: jours(-5) }), NOW)).toBe("depassee");
+    expect(
+      statutAffiche(ligne({ statut: "realisee_conforme", datePrevue: jours(-40) }), NOW),
+    ).toBe("depassee");
+  });
+
+  it("« planifiée » sur un rendez-vous à venir, même gelé sur « réalisée »", () => {
+    expect(
+      statutAffiche(ligne({ statut: "realisee_conforme", datePrevue: jours(200) }), NOW),
+    ).toBe("planifiee");
+  });
+
+  it("le résultat sur une obligation consommée, rien sur une ligne éteinte", () => {
+    expect(
+      statutAffiche(
+        ligne({ statut: "realisee_observations", periodicite: "mise_en_service_uniquement", datePrevue: jours(-40) }),
+        NOW,
+      ),
+    ).toBe("realisee_observations");
+    expect(statutAffiche(ligne({ archiveLe: jours(-3) }), NOW)).toBeUndefined();
+  });
+
+  it("« à planifier » sur une date de génération à venir", () => {
+    expect(statutAffiche(ligne({ statut: "a_planifier" }), NOW)).toBe("a_planifier");
   });
 });
 

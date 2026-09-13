@@ -26,6 +26,8 @@ type LigneVerif = {
   /** Porteur de la ligne. Non nul = échéance d'une personne, sur laquelle
    *  aucun document ne se dépose (ADR-023 § 2). */
   salarieId: string | null;
+  /** `null` = ligne ouverte ; une date = l'obligation ne s'applique plus. */
+  archiveLe?: Date | null;
 };
 
 type RapportFaux = {
@@ -267,6 +269,7 @@ beforeEach(() => {
     dateRealisee: null,
     statut: "a_planifier",
     periodicite: "annuelle",
+    archiveLe: null,
   };
 });
 
@@ -492,6 +495,37 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
     expect(h.db.verification?.dateRealisee).toBeNull();
     expect(h.db.verification?.statut).toBe("a_planifier");
+  });
+});
+
+describe("uploadRapport — une obligation éteinte ne reçoit pas de rapport", () => {
+  // Le dépôt ferait rouler une ligne archivée en lui laissant `archiveLe` : une
+  // obligation éteinte portant un rendez-vous. La fiche ne propose plus le
+  // formulaire, mais l'action est exposée en RPC (relecture du 2026-09-13).
+  beforeEach(() => {
+    h.db.verification = {
+      salarieId: null,
+      id: "v-eteinte",
+      etablissementId: "etab-1",
+      datePrevue: ECHEANCE,
+      dateRealisee: null,
+      statut: "planifiee",
+      periodicite: "annuelle",
+      archiveLe: new Date("2026-02-01T00:00:00Z"),
+    };
+  });
+
+  it("refuse, avant tout stockage et toute écriture", async () => {
+    const res = await uploadRapport(
+      "v-eteinte",
+      { status: "idle" },
+      formulaire("conforme", "2026-06-01"),
+    );
+    expect(res.status === "error" && res.message).toMatch(/ne s'applique plus/i);
+    expect(h.stockage.fichiers.size).toBe(0);
+    expect(h.db.rapports).toEqual([]);
+    // Et la ligne n'a pas roulé.
+    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
   });
 });
 

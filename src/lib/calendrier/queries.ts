@@ -6,6 +6,7 @@ import {
 } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { cleJourCivil, debutDuJour } from "@/lib/dates";
+import { estVerificationEnRetard } from "@/lib/dates/retard";
 import { derniereRealisation } from "@/lib/rapports/derniere-realisation";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 // Module **pur** : c'est lui qui détient la partition en quatre ensembles
@@ -97,11 +98,17 @@ export async function listerVerifications(
 
   // Filtre par domaine côté TS (le domaine est porté par l'obligation en
   // référentiel, pas en base). Plus simple et évite un enum en base.
-  const retenues = filtres.domaine
+  const parDomaine = filtres.domaine
     ? verifs.filter(
         (v) => obligationParId(v.obligationId)?.domaine === filtres.domaine,
       )
     : verifs;
+  // « En retard seulement » : la clause SQL est un SUR-ENSEMBLE (voir
+  // `urgenceSeule`) — sur une rangée gelée jamais roulée, l'échéance ouverte
+  // se calcule et peut être à venir. Le prédicat tranche, comme partout.
+  const retenues = filtres.urgentsSeulement
+    ? parDomaine.filter((v) => estVerificationEnRetard(v, now))
+    : parDomaine;
   // Le « fait le … » de chaque ligne se lit sur ses rapports (ADR-034).
   return joindreDernieresRealisations(retenues);
 }

@@ -25,7 +25,10 @@ import { debutDuJour, joursCivilsEntre } from "./index";
 // texte (ADR-034 § 1). `periodicite.ts` n'importe que `lib/dates/index` et
 // le référentiel : aucun cycle, et rien de Prisma — ce module reste utilisable
 // côté client.
-import { PERIODICITES_SANS_SUITE } from "@/lib/calendrier/periodicite";
+import {
+  PERIODICITES_SANS_SUITE,
+  prochaineEcheance,
+} from "@/lib/calendrier/periodicite";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 
 // ---------------------------------------------------------------------
@@ -256,9 +259,46 @@ export function estVerificationEnRetard(
   const statut = statutLu(v);
   if (statut === "depassee") return true;
   if (statut === "planifiee" || statut === "a_planifier") {
-    return estEnRetard(v.datePrevue, now);
+    return estEnRetard(echeanceOuverte(v), now);
   }
   return false;
+}
+
+/**
+ * La date de l'échéance OUVERTE d'une ligne — celle que tout écran compare et
+ * affiche. `datePrevue`, sauf dans un cas, et ce cas se calcule.
+ *
+ * LE CAS : une rangée d'avant l'ADR-034 dont le contrôle a été fait SANS que
+ * la ligne ait roulé. Avant N2, le dépôt écrivait `dateRealisee` et le statut,
+ * et c'est la régénération appelée juste après qui avançait `datePrevue` ; si
+ * elle a échoué, la ligne garde l'échéance HONORÉE (`datePrevue` ≤
+ * `dateRealisee`). Lue telle quelle, elle se disait en retard alors que le
+ * contrôle était fait — relevé par la relecture des corrections du N4,
+ * 2026-09-13.
+ *
+ * Son échéance ouverte est donc la suivante : `dateRealisee` + le rythme,
+ * exactement ce que la régénération aurait écrit (`prochaineEcheance`, la même
+ * arithmétique calendaire). Ni faux retard sur un contrôle fait, ni vrai retard
+ * caché sur un contrôle fait il y a plus d'un cycle.
+ *
+ * Tout autre cas rend `datePrevue` : une ligne roulée, une ligne ouverte, une
+ * obligation sans suite (rien à calculer), une date de réalisation absente.
+ */
+export function echeanceOuverte(
+  v: Pick<VerificationDatee, "statut" | "periodicite" | "datePrevue" | "dateRealisee">,
+): Date {
+  if (
+    STATUTS_REALISES.has(v.statut) &&
+    !estVerificationRealisee(v) &&
+    v.dateRealisee != null &&
+    v.datePrevue.getTime() <= v.dateRealisee.getTime()
+  ) {
+    return (
+      prochaineEcheance(v.dateRealisee, v.periodicite as Periodicite) ??
+      v.datePrevue
+    );
+  }
+  return v.datePrevue;
 }
 
 /**
@@ -277,7 +317,7 @@ export function estVerificationAPlanifier(
   if (estVerificationArchivee(v)) return false;
   if (estVerificationRealisee(v)) return false;
   if (v.statut !== "a_planifier") return false;
-  return !estEnRetard(v.datePrevue, now);
+  return !estEnRetard(echeanceOuverte(v), now);
 }
 
 /**
@@ -294,7 +334,7 @@ export function estVerificationAVenir(
   if (estVerificationArchivee(v)) return false;
   if (estVerificationRealisee(v)) return false;
   if (statutLu(v) !== "planifiee") return false;
-  return estDansLesProchainsJours(v.datePrevue, now, jours);
+  return estDansLesProchainsJours(echeanceOuverte(v), now, jours);
 }
 
 // ---------------------------------------------------------------------

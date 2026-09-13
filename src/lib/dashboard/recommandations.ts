@@ -52,6 +52,7 @@
  */
 
 import {
+  echeanceOuverte,
   estActionEnRetard,
   estActionOuverte,
   estDansLesProchainsJours,
@@ -236,7 +237,9 @@ export function genererRecommandations(
         : `${v.equipementLibelle} — échéance dépassée`,
       href: `/etablissements/${etab}/verifications/${v.id}`,
       priorite: 1,
-      date: jamaisPlanifiee ? undefined : v.datePrevue,
+      // L'échéance ouverte : sur une rangée gelée jamais roulée, `datePrevue`
+      // est l'échéance déjà honorée, et la carte daterait mal le retard.
+      date: jamaisPlanifiee ? undefined : echeanceOuverte(v),
     });
   }
 
@@ -264,7 +267,7 @@ export function genererRecommandations(
       sousTitre: `${v.equipementLibelle} — dans les ${JOURS_VERIF_PROCHE} jours`,
       href: `/etablissements/${etab}/verifications/${v.id}`,
       priorite: 3,
-      date: v.datePrevue,
+      date: echeanceOuverte(v),
     });
   }
 

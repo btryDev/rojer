@@ -78,22 +78,20 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
   return {
     // Une ligne éteinte n'est jamais urgente, quel que soit son statut gelé.
     archiveLe: null,
-    OR: [
-      { statut: "depassee" as const },
-      {
-        statut: { in: ["planifiee" as const, "a_planifier" as const] },
-        datePrevue: { lt: debut },
-      },
-      // Une ligne périodique gelée sur un statut réalisé (d'avant l'ADR-034) :
-      // sa date décide, comme pour les deux branches du dessus.
-      {
-        statut: { in: [...STATUTS_REALISES_PERSISTES] },
-        periodicite: { notIn: [...PERIODICITES_SANS_SUITE] },
-        datePrevue: { lt: debut },
-      },
+    // COMPOSÉE d'`echeanceAttendue`, jamais recopiée : la relecture du
+    // 2026-09-13 a réduit la troisième branche recopiée ici à un seul statut
+    // réalisé, et rien n'a rougi. Ce qui attend, ET qui est passé.
+    AND: [
+      echeanceAttendue(),
+      { OR: [{ statut: "depassee" as const }, { datePrevue: { lt: debut } }] },
     ],
   };
 }
+// CE QUE LE SQL NE SAIT PAS DIRE. Sur une rangée gelée jamais roulée
+// (`datePrevue` ≤ `dateRealisee`), l'échéance ouverte se CALCULE
+// (`echeanceOuverte`) et peut être à venir : la clause la retient alors à tort.
+// C'est un sur-ensemble, jamais un sous-ensemble — aucun retard n'est perdu —,
+// et `listerVerifications` repasse les lignes retenues au prédicat.
 
 /**
  * Ce qu'une ligne ATTEND encore, côté SQL : le pendant exact de

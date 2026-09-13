@@ -24,6 +24,7 @@
 import { z } from "zod";
 import type { StatutAction } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
+import { estVerificationRealisee } from "@/lib/dates/retard";
 import { ageEnMois } from "@/lib/dashboard/duerp";
 import {
   getEtatDuerp,
@@ -416,8 +417,15 @@ function formaterVerifications(verifs: VerificationLue[]): string {
       v.derniereRealisation
         ? `dernière réalisation le ${formaterDateFr(v.derniereRealisation)}`
         : null,
-      v.dateRealisee
-        ? `réalisée le ${formaterDateFr(v.dateRealisee)}`
+      v.dateRealisee ? `réalisée le ${formaterDateFr(v.dateRealisee)}` : null,
+      // L'ÉCHÉANCE, TOUJOURS — sauf sur une obligation consommée, qui n'en
+      // attend plus. Écrite en alternative avec la réalisation, elle
+      // disparaissait sur une rangée gelée : l'assistant recevait « réalisée
+      // le 01/03/2025, en retard, 196 jour(s) de retard » sans pouvoir dire
+      // quelle échéance était passée (relecture du 2026-09-13). `datePrevue`
+      // est ici l'échéance ouverte (`mcp/queries.ts`).
+      estVerificationRealisee(v)
+        ? null
         : `échéance ${formaterDateFr(v.datePrevue)}`,
       LIBELLE_ETAT[v.etat],
       v.joursRetard > 0 ? `${v.joursRetard} jour(s) de retard` : null,

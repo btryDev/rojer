@@ -10,6 +10,7 @@ import {
   estVerificationArchivee,
   estVerificationAVenir,
   estVerificationEnRetard,
+  echeanceOuverte,
   joursDeRetard,
   type ActionDatee,
   type VerificationDatee,
@@ -267,6 +268,58 @@ describe("estVerificationEnRetard", () => {
         `${statut} annuelle, date à venir`,
       ).toBe(false);
     }
+  });
+
+  it("une rangée gelée JAMAIS ROULÉE lit l'échéance suivante, calculée", () => {
+    // RELECTURE DU 2026-09-13. Avant N2, le dépôt écrivait `dateRealisee` et le
+    // statut, et c'est la régénération qui avançait `datePrevue` ; si elle a
+    // échoué, la ligne garde l'échéance HONORÉE. Lue telle quelle, un contrôle
+    // fait il y a dix jours se disait en retard.
+    const faitIlYaDixJours = verif({
+      statut: "realisee_conforme",
+      datePrevue: new Date("2026-07-20T00:00:00Z"),
+      dateRealisee: new Date("2026-07-31T00:00:00Z"),
+    });
+    expect(echeanceOuverte(faitIlYaDixJours)).toEqual(new Date("2027-07-31T00:00:00Z"));
+    expect(estVerificationEnRetard(faitIlYaDixJours, CE_MATIN)).toBe(false);
+
+    // Et le vrai retard n'est pas caché : fait il y a plus d'un cycle, la
+    // suivante est passée.
+    const faitIlYa14Mois = verif({
+      statut: "realisee_conforme",
+      datePrevue: new Date("2025-06-01T00:00:00Z"),
+      dateRealisee: new Date("2025-06-10T00:00:00Z"),
+    });
+    expect(echeanceOuverte(faitIlYa14Mois)).toEqual(new Date("2026-06-10T00:00:00Z"));
+    expect(estVerificationEnRetard(faitIlYa14Mois, CE_MATIN)).toBe(true);
+  });
+
+  it("`echeanceOuverte` rend `datePrevue` dans tous les autres cas", () => {
+    // Une ligne ROULÉE (rendez-vous après la réalisation) : rien à calculer.
+    const roulee = verif({
+      statut: "realisee_conforme",
+      datePrevue: new Date("2027-01-10T00:00:00Z"),
+      dateRealisee: new Date("2026-01-10T00:00:00Z"),
+    });
+    expect(echeanceOuverte(roulee)).toEqual(roulee.datePrevue);
+    // Un statut ouvert, même avec une colonne gelée postérieure.
+    const ouverte = verif({
+      datePrevue: HIER,
+      dateRealisee: new Date("2026-08-09T12:00:00Z"),
+    });
+    expect(echeanceOuverte(ouverte)).toEqual(HIER);
+    // Une obligation sans suite : aucune échéance suivante n'existe.
+    const consommee = verif({
+      statut: "realisee_conforme",
+      periodicite: "mise_en_service_uniquement",
+      datePrevue: HIER,
+      dateRealisee: AUJOURDHUI,
+    });
+    expect(echeanceOuverte(consommee)).toEqual(HIER);
+    // Sans date de réalisation, rien à partir de quoi calculer.
+    expect(
+      echeanceOuverte(verif({ statut: "realisee_conforme", datePrevue: HIER })),
+    ).toEqual(HIER);
   });
 
   it("un rythme absent ou inconnu ne purge JAMAIS : le retard reste visible", () => {

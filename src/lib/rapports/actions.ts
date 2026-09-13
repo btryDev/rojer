@@ -122,12 +122,29 @@ export async function uploadRapport(
       statut: true,
       periodicite: true,
       salarieId: true,
+      archiveLe: true,
     },
   });
   if (!verif) {
     return { status: "error", message: "Vérification introuvable" };
   }
   await assertEtablissementOwnership(verif.etablissementId);
+
+  // UNE OBLIGATION QUI NE S'APPLIQUE PLUS NE REÇOIT PAS DE RAPPORT (ADR-034).
+  // Le dépôt ferait ROULER la ligne — date suivante, statut « planifiée » —
+  // en laissant `archiveLe` posé : une ligne éteinte portant un rendez-vous.
+  // La fiche ne proposait plus le formulaire ; cette action est exposée en
+  // RPC, et c'est ici que la règle tient (relecture du 2026-09-13).
+  // `!=` comme `estVerificationArchivee` : un champ absent se lit « ouverte »,
+  // plutôt que de refuser tout dépôt en silence.
+  if (verif.archiveLe != null) {
+    return {
+      status: "error",
+      message:
+        "Cette obligation ne s'applique plus à cette ligne : aucun rapport ne " +
+        "s'y dépose.",
+    };
+  }
 
   // LA FRONTIÈRE MÉDICALE, TENUE ICI ET NON SEULEMENT À L'ÉCRAN.
   //
