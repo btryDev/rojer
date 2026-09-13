@@ -268,21 +268,27 @@ export function estVerificationEnRetard(
  * La date de l'échéance OUVERTE d'une ligne — celle que tout écran compare et
  * affiche. `datePrevue`, sauf dans un cas, et ce cas se calcule.
  *
- * LE CAS : une rangée d'avant l'ADR-034 dont le contrôle a été fait SANS que
- * la ligne ait roulé. Avant N2, le dépôt écrivait `dateRealisee` et le statut,
- * et c'est la régénération appelée juste après qui avançait `datePrevue` ; si
- * elle a échoué, la ligne garde l'échéance HONORÉE (`datePrevue` ≤
- * `dateRealisee`). Lue telle quelle, elle se disait en retard alors que le
- * contrôle était fait — relevé par la relecture des corrections du N4,
- * 2026-09-13.
+ * LE CAS : une rangée d'avant l'ADR-034 au statut réalisé, sur une obligation
+ * périodique, avec sa date de réalisation. Son échéance ouverte est
+ * `dateRealisee` + le rythme — TOUJOURS, quelle que soit sa `datePrevue`.
  *
- * Son échéance ouverte est donc la suivante : `dateRealisee` + le rythme,
- * exactement ce que la régénération aurait écrit (`prochaineEcheance`, la même
- * arithmétique calendaire). Ni faux retard sur un contrôle fait, ni vrai retard
- * caché sur un contrôle fait il y a plus d'un cycle.
+ * POURQUOI SANS REGARDER `datePrevue`. C'est exactement ce qu'écrit la branche
+ * de RATTRAPAGE du réconciliateur (`generateur.ts`, « réalisation +
+ * périodicité ») : lire autre chose ici, c'est une ligne qui change d'état à
+ * la première ouverture du calendrier. Et `datePrevue` ne dit rien de fiable
+ * sur ces lignes :
+ *  · si la régénération a roulé la ligne, elle vaut déjà réalisation + rythme ;
+ *  · si elle a échoué après le dépôt, elle vaut l'échéance HONORÉE ;
+ *  · si le contrôle a été fait EN AVANCE, elle est postérieure à la
+ *    réalisation, et pourtant honorée ;
+ *  · si la ligne était « à planifier », elle vaut une date de GÉNÉRATION.
+ * Une première version ne calculait que si `datePrevue ≤ dateRealisee` : elle
+ * laissait en retard le contrôle fait en avance et la ligne déclarée puis
+ * contrôlée (relecture externe du 2026-09-13).
  *
- * Tout autre cas rend `datePrevue` : une ligne roulée, une ligne ouverte, une
- * obligation sans suite (rien à calculer), une date de réalisation absente.
+ * Tout autre cas rend `datePrevue` : une ligne roulée ou ouverte (statut non
+ * réalisé), une obligation sans suite (rien à calculer), une date de
+ * réalisation absente.
  */
 export function echeanceOuverte(
   v: Pick<VerificationDatee, "statut" | "periodicite" | "datePrevue" | "dateRealisee">,
@@ -290,8 +296,7 @@ export function echeanceOuverte(
   if (
     STATUTS_REALISES.has(v.statut) &&
     !estVerificationRealisee(v) &&
-    v.dateRealisee != null &&
-    v.datePrevue.getTime() <= v.dateRealisee.getTime()
+    v.dateRealisee != null
   ) {
     return (
       prochaineEcheance(v.dateRealisee, v.periodicite as Periodicite) ??

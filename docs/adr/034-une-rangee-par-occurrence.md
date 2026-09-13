@@ -532,6 +532,24 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      - L'assistant MCP reçoit la réalisation ET l'échéance.
      Neuf mutations, chacune rouge sur son test, jouées fichier par fichier sur
      un worker. **2632 tests.**
+     **Seconde relecture externe, sur ces corrections** — un bloquant, quatre
+     points moyens, zéro faux positif :
+     - `echeanceOuverte` ne calculait que si `datePrevue ≤ dateRealisee`, et
+       laissait en retard le contrôle fait EN AVANCE et la ligne déclarée puis
+       contrôlée. Elle calcule désormais réalisation + rythme sur TOUTE rangée
+       réalisée d'une obligation périodique — exactement la branche de
+       rattrapage du réconciliateur, si bien que rien ne change d'état à
+       l'ouverture du calendrier ;
+     - les cinq « Prochaines échéances » se choisissent sur l'échéance ouverte
+       (`cinqProchaines`, plus de `take` sur la colonne) ; les barres par mois
+       ne perdent plus l'échéance calculée d'une colonne d'une autre année ;
+       le registre PDF et la liste MCP sont triés sur l'échéance imprimée ;
+     - le dépôt est conditionné sur `archiveLe: null` à l'écriture (un
+       archivage concurrent passait), et l'échéance honorée enregistrée est
+       l'échéance ouverte, plus la colonne ;
+     - six garanties que la mutation ne faisait pas rougir (dates du
+       calendrier, du MCP, du parc, des cartes, de la fiche, top 5) en ont un.
+     Onze mutations, rouges. **2643 tests.**
      **Laissé ouvert, écrit** : les lignes restées ancrées sur un appareil
      alors que leur obligation est passée à l'établissement (registre de
      sécurité, consigne, exercices) seront archivées « ne s'applique plus » à

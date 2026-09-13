@@ -35,7 +35,10 @@ import { prisma } from "@/lib/prisma";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { echeanceOuverte } from "@/lib/dates/retard";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
-import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
+import {
+  cinqProchaines,
+  libelleEtatCourtCapitale,
+} from "@/lib/calendrier/etats";
 import {
   echeancesAnnoncables,
   porteeBatiment,
@@ -123,8 +126,13 @@ export default async function EtablissementPage({
         salarie: true,
         prescription: { select: { source: true } },
       },
+      // PAS DE `take` : les cinq prochaines se choisissent sur l'échéance
+      // OUVERTE, que le SQL ne sait pas calculer. Un tri `datePrevue` borné à
+      // cinq laissait une rangée gelée — `datePrevue` en 2026, échéance en
+      // 2027 — prendre une des cinq places, et sortir une vraie échéance proche
+      // (relecture externe du 2026-09-13). Le tri et la coupe se font sur la
+      // projection, par `cinqProchaines` plus bas.
       orderBy: { datePrevue: "asc" },
-      take: 5,
     }),
     prisma.rapportVerification.findMany({
       where: { etablissementId: id },
@@ -317,7 +325,8 @@ export default async function EtablissementPage({
     evenementsMois,
     statsRetardActions,
     modulesMatrice,
-    prochainesVerifs: prochainesVerifs.map((v) => ({
+    // Les cinq plus proches SUR L'ÉCHÉANCE OUVERTE, projetée ci-dessous.
+    prochainesVerifs: cinqProchaines(prochainesVerifs.map((v) => ({
       id: v.id,
       libelleObligation: v.libelleObligation,
       // L'échéance OUVERTE, et non la colonne : sur une rangée gelée jamais
@@ -344,7 +353,7 @@ export default async function EtablissementPage({
       equipement: {
         libelle: libellePorteur(v),
       },
-    })),
+    }))),
     rapportsRecents: rapportsRecents.map((r) => ({
       id: r.id,
       verificationId: r.verificationId,

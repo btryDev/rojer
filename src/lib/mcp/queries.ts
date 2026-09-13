@@ -560,6 +560,11 @@ export async function listerVerifications(
     contractuelle: estEcheanceContractuelle(v),
   }));
 
+  // Retriée sur l'échéance OUVERTE projetée : la lecture est triée sur la
+  // colonne, et une rangée gelée s'y rangeait parmi des dates d'un an plus tôt
+  // que la sienne (relecture externe du 2026-09-13).
+  lues.sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime());
+
   if (filtres.recherche) {
     const q = filtres.recherche.toLowerCase();
     lues = lues.filter(

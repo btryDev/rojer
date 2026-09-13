@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ajouterJours, instantCivil } from "@/lib/dates";
+import { ajouterJours, ajouterMois, instantCivil } from "@/lib/dates";
 import { evaluerEtatDuerp } from "./duerp";
 import {
   genererRecommandations,
@@ -384,6 +384,32 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
         (r) => r.kind === "verif_depassee",
       ),
     ).toBe(false);
+  });
+
+  it("date la carte d'une rangée gelée sur son échéance OUVERTE", () => {
+    // Relecture externe du 2026-09-13 : les deux dates des cartes lisaient la
+    // colonne. Contrôle il y a 400 jours, colonne il y a 380 : l'échéance
+    // ouverte est le contrôle + un an, passée d'environ 35 jours.
+    const recs = genererRecommandations(
+      {
+        ...baseEntree(),
+        verifications: [
+          {
+            id: "gelee",
+            statut: "realisee_conforme",
+            datePrevue: dateDecalee(-380),
+            dateRealisee: dateDecalee(-400),
+            libelleObligation: "Contrôle annuel",
+            equipementLibelle: "TGBT",
+            periodicite: "annuelle",
+            archiveLe: null,
+          },
+        ],
+      },
+      { now: NOW },
+    );
+    const carte = recs.find((r) => r.kind === "verif_depassee");
+    expect(carte?.date).toEqual(ajouterMois(dateDecalee(-400), 12));
   });
 
   it("ignore une occurrence réalisée SANS rendez-vous suivant, et elle seule", () => {

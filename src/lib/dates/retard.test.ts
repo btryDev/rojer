@@ -294,11 +294,43 @@ describe("estVerificationEnRetard", () => {
     expect(estVerificationEnRetard(faitIlYa14Mois, CE_MATIN)).toBe(true);
   });
 
-  it("`echeanceOuverte` rend `datePrevue` dans tous les autres cas", () => {
-    // Une ligne ROULÉE (rendez-vous après la réalisation) : rien à calculer.
-    const roulee = verif({
+  it("et le contrôle fait EN AVANCE, ou sur une date de génération, aussi", () => {
+    // RELECTURE EXTERNE du 2026-09-13 : la première version ne calculait que si
+    // `datePrevue ≤ dateRealisee`. Un contrôle fait avant son échéance, ou une
+    // ligne déclarée le 05/08 puis contrôlée le 15/07, restait lue sur
+    // `datePrevue` — donc en retard — pendant que le réconciliateur, lui,
+    // calcule réalisation + rythme sans condition.
+    const enAvance = verif({
       statut: "realisee_conforme",
-      datePrevue: new Date("2027-01-10T00:00:00Z"),
+      datePrevue: new Date("2026-08-01T00:00:00Z"),
+      dateRealisee: new Date("2026-07-20T00:00:00Z"),
+    });
+    expect(echeanceOuverte(enAvance)).toEqual(new Date("2027-07-20T00:00:00Z"));
+    expect(estVerificationEnRetard(enAvance, CE_MATIN)).toBe(false);
+
+    const dateDeGeneration = verif({
+      statut: "realisee_conforme",
+      datePrevue: new Date("2026-08-05T14:32:00Z"),
+      dateRealisee: new Date("2026-07-15T00:00:00Z"),
+    });
+    expect(estVerificationEnRetard(dateDeGeneration, CE_MATIN)).toBe(false);
+
+    // Le contrôle fait le JOUR MÊME de l'échéance.
+    const leJourMeme = verif({
+      statut: "realisee_conforme",
+      datePrevue: new Date("2026-08-01T00:00:00Z"),
+      dateRealisee: new Date("2026-08-01T00:00:00Z"),
+    });
+    expect(echeanceOuverte(leJourMeme)).toEqual(new Date("2027-08-01T00:00:00Z"));
+  });
+
+  it("`echeanceOuverte` rend `datePrevue` dans tous les autres cas", () => {
+    // Une ligne ROULÉE (statut ouvert) : rien à calculer, même si sa
+    // `datePrevue` s'écarte de réalisation + rythme — elle a pu être
+    // réalignée ou convenue depuis.
+    const roulee = verif({
+      statut: "planifiee",
+      datePrevue: new Date("2027-03-15T00:00:00Z"),
       dateRealisee: new Date("2026-01-10T00:00:00Z"),
     });
     expect(echeanceOuverte(roulee)).toEqual(roulee.datePrevue);

@@ -352,6 +352,17 @@ describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
     expect(source("page.tsx")).toContain("echeancesAnnoncables()");
   });
 
+  it("et les choisit sur l'échéance OUVERTE, pas par un `take` sur la colonne", () => {
+    // Relecture externe du 2026-09-13 : `orderBy datePrevue` + `take: 5`
+    // laissait une rangée gelée occuper une des cinq places.
+    const code = source("page.tsx")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(code).toContain("prochainesVerifs: cinqProchaines(prochainesVerifs.map(");
+    expect(code).toContain("datePrevue: echeanceOuverte(v),");
+    expect(code).not.toMatch(/take:\s*5/);
+  });
+
   it("la fiche de vérification lit l'extinction d'une ligne (dixième surface)", () => {
     // Elle ne lisait pas `archiveLe` : elle annonçait « À planifier », peignait
     // le statut gelé et invitait à déposer — sur la page même où mène le lien

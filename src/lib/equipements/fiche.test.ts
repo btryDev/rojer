@@ -102,6 +102,25 @@ describe("lignesAFaire", () => {
     expect(lignes[0].etat).toBe("lointain");
   });
 
+  it("date la ligne à faire d'une rangée gelée contrôlée en avance sur son échéance OUVERTE", () => {
+    // Relecture externe du 2026-09-13 : la fiche lisait la colonne, et une
+    // mutation qui y revenait laissait la suite verte. Contrôle le 10/08/2026
+    // sur une colonne au 01/09 : la suivante est le 10/08/2027.
+    const lignes = lignesAFaire(
+      fiche([
+        {
+          id: "v1",
+          datePrevue: "2026-09-01",
+          dateRealisee: "2026-08-10",
+          statut: "realisee_conforme",
+        },
+      ]),
+      "/etablissements/e1",
+      AUJOURDHUI,
+    );
+    expect(lignes[0].date).toEqual(jour("2027-08-10"));
+  });
+
   it("écarte une ligne éteinte, même gelée sur un statut ouvert", () => {
     // MUTATION SURVIVANTE de la relecture du N4 (2026-09-13) : retirer
     // `etat !== "archivee"` laissait la suite verte, parce que le helper de

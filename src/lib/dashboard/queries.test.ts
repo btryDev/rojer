@@ -14,7 +14,7 @@
 // vraiment exercé, et pas assez pour devenir un second Prisma.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ajouterJours, instantCivil } from "@/lib/dates";
+import { ajouterJours, ajouterMois, instantCivil } from "@/lib/dates";
 
 /** 10 août 2026, 08:00 heure de Paris — le matin, moment où les règles de
  *  retard comparées à `now` brut basculaient à tort. */
@@ -745,6 +745,24 @@ describe("compterVerifsParEquipement", () => {
     expect(stats.sous30j).toBe(0);
   });
 
+  it("annonce l'échéance CALCULÉE d'une rangée gelée contrôlée en avance", async () => {
+    // Relecture externe du 2026-09-13 : la date de prochaine échéance lue sur
+    // la colonne laissait la suite verte. Contrôle 20 jours avant sa colonne :
+    // l'échéance ouverte est la réalisation + un an.
+    h.db.verifications.push(
+      verif({
+        id: "en-avance",
+        equipementId: "eq-1",
+        statut: "realisee_conforme",
+        datePrevue: jour(-10),
+        dateRealisee: jour(-30),
+      }),
+    );
+    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    expect(stats.enRetard).toBe(0);
+    expect(stats.prochaineDate).toEqual(ajouterMois(jour(-30), 12));
+  });
+
   it("compte en retard une rangée périodique gelée sur « réalisée » (d'avant l'ADR-034)", async () => {
     // LE BLOQUANT DES DEUX RELECTURES : contrôle fait, rendez-vous suivant
     // dans `datePrevue`, passé — et la pastille de l'appareil disait 0 en
@@ -784,6 +802,23 @@ describe("compterVerifsParEquipement", () => {
 });
 
 describe("compterObligationsParMois", () => {
+  it("pose l'échéance calculée d'une rangée gelée dans son mois, même si la colonne est d'une autre année", async () => {
+    // Relecture externe du 2026-09-13 : le préfiltre ne gardait une ligne que
+    // si `datePrevue` tombait dans l'année. Contrôle le 05/10/2025, colonne au
+    // 01/10/2025 : l'échéance ouverte est le 05/10/2026, et octobre 2026 ne
+    // l'affichait pas.
+    h.db.verifications.push(
+      verif({
+        id: "gelee",
+        statut: "realisee_conforme",
+        datePrevue: instantCivil(2025, 10, 1),
+        dateRealisee: instantCivil(2025, 10, 5),
+      }),
+    );
+    const barres = await compterObligationsParMois(ETAB, 2026);
+    expect(barres[9].aVenir).toBe(1);
+  });
+
   it("ne peint pas la barre en rouge le matin de l'échéance", async () => {
     h.db.verifications.push(
       verif({ id: "v1", datePrevue: jour(0) }),

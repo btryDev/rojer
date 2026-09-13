@@ -328,6 +328,25 @@ describe("équipements et calendrier", () => {
     expect(texte).toContain("40 jour(s) de retard");
   });
 
+  it("sur une rangée gelée, l'assistant reçoit la réalisation ET l'échéance ouverte", async () => {
+    // Relecture externe du 2026-09-13 : l'échéance était écrite en alternative
+    // avec la réalisation, et lue sur la colonne. L'assistant recevait
+    // « réalisée le … » sans pouvoir dire quelle échéance était due. Contrôle
+    // le 20/07/2025, colonne au 01/08/2025 : échéance ouverte le 20/07/2026,
+    // passée de 21 jours au 10/08.
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({
+        statut: "realisee_conforme",
+        datePrevue: jour("2025-08-01"),
+        dateRealisee: jour("2025-07-20"),
+      }),
+    ]);
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("réalisée le 20/07/2025");
+    expect(texte).toContain("échéance 20/07/2026");
+    expect(texte).toContain("21 jour(s) de retard");
+  });
+
   it("une obligation éteinte ne s'applique plus, malgré son statut gelé", async () => {
     // Le statut d'une ligne archivée reste GELÉ dans son dernier état connu —
     // l'enum Prisma n'a pas de valeur `archivee` —, ici « dépassée ». Sans

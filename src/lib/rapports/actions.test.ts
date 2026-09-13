@@ -100,7 +100,7 @@ const h = vi.hoisted(() => {
         where,
         data,
       }: {
-        where: { id: string; datePrevue?: Date; statut?: string };
+        where: { id: string; datePrevue?: Date; statut?: string; archiveLe?: Date | null };
         data: Record<string, unknown>;
       }) => {
         const v = db.verification;
@@ -108,7 +108,8 @@ const h = vi.hoisted(() => {
           v === null ||
           v.id !== where.id ||
           (where.datePrevue !== undefined && !memeInstant(v.datePrevue, where.datePrevue)) ||
-          (where.statut !== undefined && v.statut !== where.statut)
+          (where.statut !== undefined && v.statut !== where.statut) ||
+          (where.archiveLe !== undefined && !memeInstant(v.archiveLe ?? null, where.archiveLe))
         ) {
           return { count: 0 };
         }
@@ -526,6 +527,62 @@ describe("uploadRapport — une obligation éteinte ne reçoit pas de rapport", 
     expect(h.db.rapports).toEqual([]);
     // Et la ligne n'a pas roulé.
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+  });
+
+  it("refuse aussi si la ligne est archivée ENTRE la lecture et l'écriture", async () => {
+    // L'archivage n'écrit que `archiveLe`. Sans la condition au `where`, une
+    // régénération qui archivait la ligne pendant l'envoi du fichier laissait
+    // passer le roulement (relecture externe du 2026-09-13). On simule
+    // l'archivage juste avant l'écriture conditionnée : la lecture a vu une
+    // ligne ouverte.
+    h.db.verification = { ...h.db.verification!, archiveLe: null };
+    type AvecCreate = { rapportVerification: { create: (a: unknown) => Promise<unknown> } };
+    const create = (h.prisma as AvecCreate).rapportVerification.create;
+    (h.prisma as AvecCreate).rapportVerification.create = async (a) => {
+      h.db.verification = {
+        ...h.db.verification!,
+        archiveLe: new Date("2026-08-19T00:00:00Z"),
+      };
+      return create(a);
+    };
+
+    const res = await uploadRapport(
+      "v-eteinte",
+      { status: "idle" },
+      formulaire("conforme", "2026-06-01"),
+    );
+
+    (h.prisma as AvecCreate).rapportVerification.create = create;
+    expect(res.status).toBe("error");
+    // La ligne archivée n'a pas roulé.
+    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+    expect(h.stockage.fichiers.size).toBe(0);
+  });
+
+  it("enregistre l'échéance OUVERTE comme honorée, pas la colonne d'une rangée gelée", () => {
+    // Ligne d'avant l'ADR-034, jamais roulée : contrôle du 10/08/2025, colonne
+    // à l'échéance honorée du 01/08/2025. L'échéance ouverte est le
+    // 10/08/2026. Enregistrer la colonne faisait reculer la ligne d'un an si
+    // l'on supprimait ensuite ce rapport (relecture externe du 2026-09-13).
+    return (async () => {
+      h.db.verification = {
+        salarieId: null,
+        id: "v-gelee",
+        etablissementId: "etab-1",
+        datePrevue: new Date("2025-08-01T00:00:00Z"),
+        dateRealisee: new Date("2025-08-10T00:00:00Z"),
+        statut: "realisee_conforme",
+        periodicite: "annuelle",
+        archiveLe: null,
+      };
+      const res = await uploadRapport(
+        "v-gelee",
+        { status: "idle" },
+        formulaire("conforme", "2026-08-05"),
+      );
+      expect(res.status).toBe("success");
+      expect(h.db.rapports[0].echeanceHonoree).toEqual(new Date("2026-08-10T00:00:00Z"));
+    })();
   });
 });
 

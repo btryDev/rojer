@@ -10,7 +10,7 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { cleRapport, getStorage } from "@/lib/storage";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { estCyclique, prochaineEcheance } from "@/lib/calendrier/periodicite";
-import { estEnRetard } from "@/lib/dates/retard";
+import { echeanceOuverte, estEnRetard } from "@/lib/dates/retard";
 import {
   estResultatRealise,
   rapportMetadataSchema,
@@ -123,6 +123,8 @@ export async function uploadRapport(
       periodicite: true,
       salarieId: true,
       archiveLe: true,
+      // Pour l'échéance ouverte d'une rangée gelée (`echeanceOuverte`).
+      dateRealisee: true,
     },
   });
   if (!verif) {
@@ -229,7 +231,13 @@ export async function uploadRapport(
     // ligne ne bouge pas. Elle n'honorait aucune échéance connue.
     majVerification = { statut: verif.statut };
   } else {
-    echeanceHonoree = verif.datePrevue;
+    // L'échéance que ce rapport honore est l'échéance OUVERTE, pas la colonne :
+    // sur une rangée gelée, `datePrevue` est l'échéance déjà honorée. La
+    // recopier faisait reculer la ligne d'un an si l'on supprimait ensuite ce
+    // rapport — déposer puis annuler dégradait « à jour » en « en retard »
+    // (relecture externe du 2026-09-13). L'écriture conditionnée, elle, garde
+    // la valeur brute : elle compare à ce qui est en base.
+    echeanceHonoree = echeanceOuverte(verif);
     majVerification = rouler(
       verif.datePrevue,
       verif.periodicite as Periodicite,
@@ -265,6 +273,11 @@ export async function uploadRapport(
           id: verif.id,
           datePrevue: verif.datePrevue,
           statut: verif.statut,
+          // Encore ouverte AU MOMENT D'ÉCRIRE : le refus plus haut ne lit
+          // `archiveLe` qu'à la lecture, et l'archivage n'écrit que ce champ.
+          // Une régénération qui archive la ligne pendant l'envoi du fichier
+          // laissait passer le roulement (relecture externe du 2026-09-13).
+          archiveLe: null,
         },
         data: majVerification,
       });

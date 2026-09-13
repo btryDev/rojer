@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aUnRendezVous,
+  cinqProchaines,
   classerDate,
   classerVerification,
   lecturesCalendrier,
@@ -107,24 +108,27 @@ describe("classerVerification", () => {
     // le statut, elles étaient « faites » à perpétuité ; lues par la date,
     // elles sont en retard quand la date est passée. C'est GestBAT par
     // construction : son modèle n'a pas de statut, rien n'y éteint la date.
-    const realisee = (periodicite: string, datePrevue: Date) => ({
+    // L'échéance d'une rangée gelée périodique est réalisation + rythme
+    // (`echeanceOuverte`, comme le réconciliateur) : c'est la date de
+    // RÉALISATION qui place chaque cas, `datePrevue` suit.
+    const realisee = (periodicite: string, dateRealisee: Date) => ({
       statut: "realisee_conforme",
-      datePrevue,
-      dateRealisee: jours(-400),
+      datePrevue: jours(-40),
+      dateRealisee,
       archiveLe: null,
       periodicite,
       libelleObligation: "Vérification périodique",
     });
     // Sans rendez-vous suivant : faite, quelle que soit la date.
     expect(
-      classerVerification(realisee("mise_en_service_uniquement", jours(-40)), NOW),
+      classerVerification(realisee("mise_en_service_uniquement", jours(-400)), NOW),
     ).toBe("faite");
-    // Périodique, date passée : EN RETARD — la rangée gelée à six mois.
-    expect(classerVerification(realisee("annuelle", jours(-40)), NOW)).toBe(
+    // Périodique, contrôle il y a 400 jours : échéance passée, EN RETARD.
+    expect(classerVerification(realisee("annuelle", jours(-400)), NOW)).toBe(
       "enRetard",
     );
-    // Périodique, date à venir : classée comme n'importe quelle date.
-    expect(classerVerification(realisee("annuelle", jours(10)), NOW)).toBe(
+    // Périodique, contrôle il y a 340 jours : échéance sous 30 jours.
+    expect(classerVerification(realisee("annuelle", jours(-340)), NOW)).toBe(
       "proche",
     );
     // Statut réalisé sans `dateRealisee` : même règle, le rythme décide.
@@ -454,6 +458,44 @@ describe("statutDeLaLecture (ADR-034)", () => {
     expect(
       statutDeLaLecture(FAIT, { statut: "realisee_observations" }),
     ).toBe("realisee_observations");
+  });
+});
+
+describe("la date des lectures est l'échéance OUVERTE", () => {
+  it("la lecture courante d'une rangée gelée, contrôlée EN AVANCE, porte la date calculée", () => {
+    // Relecture externe du 2026-09-13 : repasser `lecturesCalendrier` à la
+    // colonne brute laissait la suite verte — la date du calendrier (liste,
+    // barres, vue par équipement, frise) n'était tenue par rien. Contrôle le
+    // 20/07/2026 sur une échéance du 01/08 : la suivante est le 20/07/2027.
+    const lectures = lecturesCalendrier(
+      {
+        statut: "realisee_conforme",
+        datePrevue: new Date("2026-08-01T00:00:00.000Z"),
+        dateRealisee: new Date("2026-07-20T00:00:00.000Z"),
+        archiveLe: null,
+        derniereRealisation: null,
+        periodicite: "annuelle",
+        libelleObligation: "Vérification périodique",
+      },
+      NOW,
+    );
+    expect(lectures).toEqual([
+      { date: new Date("2026-07-20T00:00:00.000Z"), registre: "faite", lecture: "realisation" },
+      { date: new Date("2027-07-20T00:00:00.000Z"), registre: "lointain", lecture: "courante" },
+    ]);
+  });
+
+  it("`cinqProchaines` trie sur la date portée et coupe à cinq", () => {
+    const d = (iso: string, id: string) => ({ id, datePrevue: new Date(iso) });
+    const lignes = [
+      d("2027-08-10T00:00:00Z", "gelee-projetee"),
+      d("2026-09-01T00:00:00Z", "a"),
+      d("2026-08-25T00:00:00Z", "b"),
+      d("2026-10-01T00:00:00Z", "c"),
+      d("2026-11-01T00:00:00Z", "d"),
+      d("2026-12-01T00:00:00Z", "e"),
+    ];
+    expect(cinqProchaines(lignes).map((l) => l.id)).toEqual(["b", "a", "c", "d", "e"]);
   });
 });
 

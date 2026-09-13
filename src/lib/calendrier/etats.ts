@@ -313,6 +313,22 @@ function statutDuRegistre(
   }
 }
 
+/**
+ * Les cinq lignes aux échéances les plus proches, triées — sur des lignes dont
+ * `datePrevue` porte DÉJÀ l'échéance ouverte (une projection passée par
+ * `echeanceOuverte`).
+ *
+ * Le SQL ne sait pas calculer l'échéance ouverte : trier `datePrevue` en base
+ * et couper à cinq laissait une rangée gelée — colonne en 2026, échéance en
+ * 2027 — occuper une place, et chasser une vraie échéance proche (relecture
+ * externe du 2026-09-13). Le tri se fait donc après la projection.
+ */
+export function cinqProchaines<T extends { datePrevue: Date }>(lignes: T[]): T[] {
+  return [...lignes]
+    .sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime())
+    .slice(0, 5);
+}
+
 /** Le statut à peindre pour une ligne, à l'instant `now` — voir la table. */
 export function statutAffiche(
   v: VerificationDatee,

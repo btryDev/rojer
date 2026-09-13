@@ -37,6 +37,8 @@ import {
   lecturesCalendrier,
 } from "@/lib/calendrier/etats";
 import { WHERE_RAPPORT_REALISE } from "@/lib/rapports/derniere-realisation";
+import { STATUTS_REALISES_PERSISTES } from "@/lib/calendrier/generateur";
+import { PERIODICITES_SANS_SUITE } from "@/lib/calendrier/periodicite";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import {
   typeDeVerification,
@@ -373,6 +375,9 @@ export async function compterObligationsParMois(
       where: {
         etablissementId,
         etablissement: { entreprise: { userId: user.id } },
+        // UN SUR-ENSEMBLE, et il doit le rester : la boucle ci-dessous ne garde
+        // que les lectures datées dans l'année. Ce qui compte est de ne rien
+        // exclure qu'une lecture poserait dans l'année.
         OR: [
           { datePrevue: { gte: debut, lt: fin } },
           // Une ligne couverte dans l'année : un rapport réalisé y est daté
@@ -384,6 +389,18 @@ export async function compterObligationsParMois(
                 ...WHERE_RAPPORT_REALISE,
               },
             },
+          },
+          // Une rangée d'avant, sans rapport, dont le fait est sur la colonne.
+          { dateRealisee: { gte: debut, lt: fin } },
+          // Une rangée gelée sur « réalisée » d'une obligation périodique : son
+          // échéance ouverte se CALCULE (`echeanceOuverte`), toujours
+          // postérieure à `datePrevue`. Une colonne en octobre 2025 peut porter
+          // une échéance en octobre 2026 — la clause par `datePrevue` seule
+          // l'excluait de l'année (relecture externe du 2026-09-13).
+          {
+            statut: { in: [...STATUTS_REALISES_PERSISTES] },
+            periodicite: { notIn: [...PERIODICITES_SANS_SUITE] },
+            datePrevue: { lt: fin },
           },
         ],
       },
