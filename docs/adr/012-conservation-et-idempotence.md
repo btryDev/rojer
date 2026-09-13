@@ -1,7 +1,14 @@
 # ADR-012 — Conservation des preuves : régénération idempotente, suppression logique, refus motivé
 
 - **Date** : 2026-08-11
-- **Statut** : Acceptée
+- **Statut** : Acceptée — **amendée par l'ADR-034** (2026-09-10). Toutes ses
+  promesses tiennent — rien de ce qui prouve un contrôle ne se détruit, la
+  régénération est idempotente, une ligne qui ne s'applique plus est marquée et
+  non supprimée —, mais la ligne de suivi n'est plus le porteur de
+  l'historique : elle ne porte que l'échéance OUVERTE et roule au dépôt ;
+  l'historique, ce sont les `RapportVerification`. Le marqueur texte « Ne
+  s'applique plus — » est remplacé par le champ `archiveLe`. La définition
+  partagée d'une preuve est `portantUnePreuve` (`lib/calendrier/portee.ts`).
 - **Auteur** : Claude Code (sur brief Paloma)
 - **Relatif à** : ADR-002 (Action unifiée), ADR-003 (Référentiels en TS),
   ADR-009 (Boucle tickets ↔ DUERP), ADR-011 (Dates civiles), migration

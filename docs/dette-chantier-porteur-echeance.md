@@ -117,7 +117,7 @@ adosse.
 
 PE 4 et R. 4222-20 **sont sortis** de cette liste avec le lot 1 — c'est ce qui
 a éteint les cinq lignes `FONDEMENT_NON_RETENU` de
-`docs/relecture-depliage-2026-08-27.md`, sans qu'on y touche.
+`docs/relecture-referentiel-par-reference-2026-08-27.md`, sans qu'on y touche.
 
 ### 2.3 Neuf sur-applications assumées — six dans `incendie.ts`, trois dans `electricite.ts`
 

@@ -162,6 +162,23 @@ export default async function RegistrePage({
             à réunir plusieurs registres en un seul, ce que fait cette page.
           </p>
         </LegalBadge>
+        {/* La durée de conservation, que l'écran ne disait nulle part (dette
+            relevée au corpus, `code-travail-incendie.ts`, et close avec le N5
+            de l'ADR-034). Citation et lien relus à la source le 2026-09-01,
+            version en vigueur depuis le 16/03/2009. */}
+        <LegalBadge
+          charte="board"
+          reference="Art. D. 4711-3 CT"
+          href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020398142/"
+          extrait="Sauf dispositions particulières, l'employeur conserve les documents concernant les observations et mises en demeure de l'inspection du travail ainsi que ceux concernant les vérifications et contrôles mis à la charge des employeurs au titre de la santé et de la sécurité au travail des cinq dernières années et, en tout état de cause, ceux des deux derniers contrôles ou vérifications."
+        >
+          <p>
+            La durée de conservation des pièces de vérification : les cinq
+            dernières années, et en tout état de cause les deux derniers
+            contrôles. « Sauf dispositions particulières » : un texte spécial
+            peut exiger plus longtemps.
+          </p>
+        </LegalBadge>
       </div>
     </AideEcran>
   );

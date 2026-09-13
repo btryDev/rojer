@@ -405,6 +405,6 @@ qu'une régénération qui échoue devrait dégrader, pas blanchir un écran.
   le choix a un coût de navigation, et il se rediscutera avec la question du
   double comptage.
 - **Un critère d'acceptation externe existe.** Les cinq lignes
-  `FONDEMENT_NON_RETENU` de `docs/relecture-depliage-2026-08-27.md` portent sur
+  `FONDEMENT_NON_RETENU` de `docs/relecture-referentiel-par-reference-2026-08-27.md` portent sur
   `PE 4` et `R. 4222-20`. Elles doivent s'éteindre d'elles-mêmes. Si elles ne
   s'éteignent pas, le lot est incomplet.

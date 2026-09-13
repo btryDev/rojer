@@ -566,12 +566,32 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      non une condition : c'est la première étape de N5, avec les exclusions
      relevées (lignes `datePrevue ≤ dateRealisee` laissées au réconciliateur,
      non cycliques, archivées, titres salariés, borne au jour civil Paris).
-- **N5 — Le nettoyage** : `dateRealisee` retirée de `Verification` (elle ne sera
-  plus écrite), `depassee` retiré de l'enum ou laissé mort et documenté,
-  `VerificationDatee.libelleObligation` redevenu optionnel, ADR-012 annotée comme
-  amendée. Et l'écran du registre **affiche la durée de conservation** que
-  `D. 4711-3` impose — dette relevée au corpus, sans rapport avec le modèle,
-  fermée au passage.
+- **N5 — Le nettoyage.** Le plan d'origine disait : « `dateRealisee` retirée
+  (elle ne sera plus écrite), `depassee` retiré de l'enum ou laissé mort et
+  documenté, `VerificationDatee.libelleObligation` redevenu optionnel, ADR-012
+  annotée, durée de `D. 4711-3` affichée au registre ». **Deux de ses prémisses
+  étaient fausses**, établies en lisant le code le 2026-09-13 :
+  1. **`depassee` n'est pas mort.** Il est écrit à la génération
+     (`generateur.ts`, trois sites), au dépôt « non vérifiable » et à la
+     suppression d'un rapport, et lu par `estVerificationEnRetard`. Il reste,
+     vivant. Le retirer supposerait que le retard ne se lise plus que sur les
+     dates — une autre décision.
+  2. **`dateRealisee` n'est pas une colonne morte.** Le réconciliateur la
+     PRÉSERVE quand elle est la seule trace d'une obligation consommée sans
+     rapport, et depuis les corrections du N4, `echeanceOuverte` en DÉPEND :
+     elle calcule l'échéance des rangées gelées depuis elle. La retirer
+     suppose d'abord de remettre ces rangées au modèle — ce qui perd la DATE
+     des contrôles sans rapport au dossier (le fait, lui, survit dans le
+     statut). **Décision de la propriétaire, en attente.**
+  **Fait le 2026-09-13, sans dépendre de cette décision :**
+  ~~la durée de conservation de `D. 4711-3` à l'écran du registre~~ (badge
+  légal, citation et lien relus à la source le 2026-09-01) ; ~~l'annotation de
+  l'ADR-012~~ ; ~~les trois gardes de suppression~~ — équipement, prescription
+  et son compte — recopiaient trois témoins de preuve et ignoraient le statut
+  réalisé : elles partagent `portantUnePreuve`, qui le compte, si bien que le
+  retrait de la colonne ne rendra supprimable aucun équipement qui porte une
+  preuve. `VerificationDatee.libelleObligation` reste requis tant que la colonne
+  vit : il ne coûte rien et n'est plus lu par aucun prédicat.
 
 ## Ce que le score fait, mesuré le 2026-09-12
 

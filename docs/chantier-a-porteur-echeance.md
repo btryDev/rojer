@@ -299,6 +299,6 @@ frontière santé ; « une ligne, pas N » — dont l'argument sort **renforcé*
 `PE 2 § 3` en version 2026.
 
 Un critère d'acceptation gratuit, trouvé en chemin : les cinq lignes `FONDEMENT_NON_RETENU` de
-`docs/relecture-depliage-2026-08-27.md` portent sur `PE 4` et `R. 4222-20`. Quand le porteur
+`docs/relecture-referentiel-par-reference-2026-08-27.md` portent sur `PE 4` et `R. 4222-20`. Quand le porteur
 établissement existera, **elles doivent s'éteindre d'elles-mêmes**. Si elles ne s'éteignent pas,
 le lot est incomplet.

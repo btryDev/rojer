@@ -15,7 +15,10 @@
 // paraissent complets alors qu'ils ignorent la moitié du règlement sont pires
 // qu'un refus : le dirigeant s'y fierait devant une commission.
 //
-// ## Six axes, une seule adresse
+// ## Cinq axes, une seule adresse
+//
+// (Le titre disait « Six » : `famille_habitation` est parti le 2026-09-03, et
+// l'union `AxeCouverture` porte cinq membres — relevé le 2026-09-13.)
 //
 // Le régime ERP n'est pas le seul bord du produit, et il n'a jamais été le
 // seul. Trois autres mécanismes disaient déjà, chacun dans son coin, une
@@ -98,7 +101,7 @@ import type { CategorieErp } from "@/lib/referentiels/types-communs";
 export const CATEGORIES_COUVERTES: readonly CategorieErp[] = ["N5"];
 
 /**
- * De quoi le manque parle. Six axes qui ne se confondent ni ne
+ * De quoi le manque parle. Cinq axes qui ne se confondent ni ne
  * s'additionnent — chacun a sa source, et chacun se répare par un geste
  * différent.
  */

@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { batimentParDefaut } from "@/lib/batiments/queries";
+import {
+  portantUnePreuve,
+  toutesLesConditions,
+} from "@/lib/calendrier/portee";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import {
   MESSAGE_REGEN_ECHEC,
@@ -247,15 +251,11 @@ export async function supprimerEquipement(
   await assertEtablissementOwnership(etablissementId);
 
   // Une seule requête : y a-t-il au moins une vérification porteuse de trace ?
+  // La définition partagée d'une preuve (`portantUnePreuve`), jamais recopiée :
+  // celle d'ici ignorait le statut réalisé, seul témoin d'une obligation
+  // consommée dont la colonne est éteinte.
   const nbTraces = await prisma.verification.count({
-    where: {
-      equipementId: id,
-      OR: [
-        { dateRealisee: { not: null } },
-        { rapports: { some: {} } },
-        { actions: { some: {} } },
-      ],
-    },
+    where: toutesLesConditions({ equipementId: id }, portantUnePreuve()),
   });
 
   let resultat: SuppressionEquipementResult;

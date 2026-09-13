@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { cleJourCivil } from "@/lib/dates";
+import { portantUnePreuve } from "@/lib/calendrier/portee";
 import {
   appliquerPrescriptions,
   determineObligationsApplicables,
@@ -75,15 +76,9 @@ export async function chargerPagePrescriptions(
         include: {
           _count: {
             select: {
-              verifications: {
-                where: {
-                  OR: [
-                    { rapports: { some: {} } },
-                    { actions: { some: {} } },
-                    { dateRealisee: { not: null } },
-                  ],
-                },
-              },
+              // Le même critère que la suppression (`portantUnePreuve`) : le
+              // compte affiché doit dire ce que la suppression protégera.
+              verifications: { where: portantUnePreuve() },
             },
           },
         },

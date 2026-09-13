@@ -74,6 +74,35 @@ export function toutesLesConditions(
  *
  * `debut` est le début du jour civil, capturé au bord (ADR-011).
  */
+/**
+ * Une ligne qui PORTE UNE PREUVE — ce qui atteste qu'un contrôle a eu lieu, et
+ * qu'aucune suppression ne doit emporter (ADR-012).
+ *
+ * Quatre témoins, et le quatrième est la raison d'être de cette fonction :
+ *  · un rapport ;
+ *  · une action corrective ;
+ *  · la colonne gelée `dateRealisee` (lignes d'avant l'ADR-034) ;
+ *  · un STATUT RÉALISÉ. Une obligation sans rendez-vous suivant, consommée, n'a
+ *    parfois plus que lui : sa colonne éteinte, son rapport retiré.
+ *
+ * Trois gardes de suppression recopiaient les trois premiers à la main — la
+ * suppression d'un équipement, celle d'une prescription et son compte affiché —
+ * et aucune ne connaissait le quatrième. Surtout, N5 retire `dateRealisee` :
+ * sans le statut, retirer la colonne aurait rendu supprimable un équipement
+ * qui porte une preuve, exactement ce que l'ADR-012 existe pour empêcher.
+ * C'est la même définition que `porteUneTrace` du réconciliateur.
+ */
+export function portantUnePreuve(): Prisma.VerificationWhereInput {
+  return {
+    OR: [
+      { rapports: { some: {} } },
+      { actions: { some: {} } },
+      { dateRealisee: { not: null } },
+      { statut: { in: [...STATUTS_REALISES_PERSISTES] } },
+    ],
+  };
+}
+
 export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
   return {
     // Une ligne éteinte n'est jamais urgente, quel que soit son statut gelé.

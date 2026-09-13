@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   echeanceAttendue,
   echeancesAnnoncables,
+  portantUnePreuve,
   porteeBatiment,
   toutesLesConditions,
   urgenceSeule,
@@ -344,6 +345,44 @@ describe("echeanceAttendue — le pendant SQL d'`estVerificationRealisee`", () =
  * (mutation E10, 2026-09-13). Le compilateur ne voit pas une clause en moins
  * dans un `where`. Il faut donc lire le source, comme plus haut.
  */
+describe("portantUnePreuve — ce qu'aucune suppression n'emporte (ADR-012)", () => {
+  it("compte quatre témoins, dont le statut réalisé", () => {
+    // Le quatrième est la raison d'être de la fonction : les trois gardes de
+    // suppression recopiaient les trois premiers, et N5 retire `dateRealisee`.
+    // Sans le statut, un équipement portant une obligation consommée dont la
+    // colonne est éteinte devenait supprimable.
+    const branches = (portantUnePreuve() as { OR: Record<string, unknown>[] }).OR;
+    expect(branches).toContainEqual({ rapports: { some: {} } });
+    expect(branches).toContainEqual({ actions: { some: {} } });
+    expect(branches).toContainEqual({ dateRealisee: { not: null } });
+    expect(branches).toContainEqual({
+      statut: { in: ["realisee_conforme", "realisee_observations", "realisee_ecart_majeur"] },
+    });
+  });
+
+  it("et les trois gardes l'emploient, au lieu de la recopier", () => {
+    // Une page ou une action serveur n'a pas de test qui exerce son `where` :
+    // le compte y est simulé. On lit le code, commentaires retirés.
+    const code = (relatif: string) =>
+      readFileSync(join(RACINE, "src", "lib", relatif), "utf8")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+    expect(code("equipements/actions.ts")).toContain(
+      "where: toutesLesConditions({ equipementId: id }, portantUnePreuve()),",
+    );
+    expect(code("prescriptions/actions.ts")).toContain(
+      "where: toutesLesConditions({ prescriptionId }, portantUnePreuve()),",
+    );
+    expect(code("prescriptions/queries.ts")).toContain(
+      "verifications: { where: portantUnePreuve() },",
+    );
+    // Et plus aucune recopie de l'ancienne liste de témoins.
+    for (const f of ["equipements/actions.ts", "prescriptions/actions.ts", "prescriptions/queries.ts"]) {
+      expect(code(f), f).not.toContain("dateRealisee: { not: null }");
+    }
+  });
+});
+
 describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
   const source = (relatif: string) =>
     readFileSync(join(RACINE, "src", "app", "etablissements", "[id]", relatif), "utf8");

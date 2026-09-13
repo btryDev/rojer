@@ -5,6 +5,10 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
+import {
+  portantUnePreuve,
+  toutesLesConditions,
+} from "@/lib/calendrier/portee";
 import { depuisCleJourCivil } from "@/lib/dates";
 import { validerPrescription } from "./schema";
 
@@ -108,15 +112,10 @@ export async function creerPrescription(
 async function compterLignesAvecPreuve(
   prescriptionId: string,
 ): Promise<number> {
+  // La définition partagée (`portantUnePreuve`) : la recopie d'ici ignorait
+  // le statut réalisé.
   return prisma.verification.count({
-    where: {
-      prescriptionId,
-      OR: [
-        { rapports: { some: {} } },
-        { actions: { some: {} } },
-        { dateRealisee: { not: null } },
-      ],
-    },
+    where: toutesLesConditions({ prescriptionId }, portantUnePreuve()),
   });
 }
 
