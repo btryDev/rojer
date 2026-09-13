@@ -710,9 +710,8 @@ export function comparerParUrgence(
 // deux ans a une échéance ouverte vieille d'un an — c'est ce qu'on lit.
 //
 // LA RÉALISATION SE LIT SUR LES RAPPORTS (`derniereRealisation`, fourni par
-// `calendrier/actions.ts`). `dateRealisee` n'est plus écrite par personne :
-// la réconciliation ne la lit qu'en REPLI, pour une ligne d'avant l'ADR-034
-// sans rapport, et l'éteint en l'écrivant à `null`. N5 retire la colonne.
+// `calendrier/actions.ts`), et nulle part ailleurs : la colonne qui la
+// dupliquait sur la ligne est partie au N5.
 // ===========================================================================
 
 /** Statuts que peut porter une ligne en base (miroir de l'enum Prisma
@@ -804,28 +803,17 @@ export type MiseAJourOccurrence = {
   periodicite: Periodicite;
   realisateurRequis: Realisateur[];
   datePrevue: Date;
-  /**
-   * `null` depuis l'ADR-034 : la colonne est morte, et l'écrire à `null` met
-   * au modèle, en une passe, les lignes d'avant. Retiré au N5.
-   *
-   */
   statut: StatutVerificationPersiste;
   prescriptionId: string | null;
 };
 
 /**
  * La réalisation que la réconciliation connaît pour une ligne : la date du
- * dernier rapport réalisé.
- *
- * À défaut, la colonne gelée — mais SEULEMENT si la ligne n'a aucun rapport.
- * Sinon, supprimer le dernier rapport d'une ligne d'avant l'ADR-034 laissait
- * le repli ressusciter la date du contrôle retiré, et la réconciliation
- * recalculait l'échéance dessus : un an de retard effacé (relecture du
- * 2026-09-12).
+ * dernier rapport réalisé, et rien d'autre (ADR-034, N5). Le repli sur une
+ * colonne de la ligne est parti avec elle — il avait ressuscité la date d'un
+ * contrôle retiré et effacé un an de retard (relecture du 2026-09-12).
  */
 function realisationConnue(ex: OccurrenceExistante): Date | null {
-  // Le dernier rapport réalisé, et rien d'autre (ADR-034, N5) : le repli sur
-  // la colonne de la ligne est parti avec elle.
   return ex.derniereRealisation ?? null;
 }
 
@@ -1217,12 +1205,11 @@ export function reconcilierCalendrier(
       // contrôle déjà fait serait annoncé « en retard » au cycle suivant. Son
       // statut se relit alors sur le résultat de son dernier rapport.
       datePrevue = ex.datePrevue;
-      // `ex.statut` en dernier recours, et NON `g.statut` : sur une ligne
-      // d'avant l'ADR-034 dont la seule trace est la colonne gelée, prendre le
-      // statut fraîchement généré rendait la passe suivante différente — la
-      // colonne éteinte, la branche n'était plus prise, et le statut changeait
-      // une seconde fois. Mesuré sur la base locale : deux écritures pour une
-      // ligne stable (relecture de contrôle, 2026-09-12).
+      // `ex.statut` en dernier recours, et NON `g.statut` : sur une ligne dont
+      // la seule trace est son statut réalisé, prendre le statut fraîchement
+      // généré rendait la passe suivante différente — deux écritures pour une
+      // ligne stable, mesuré sur la base locale (relecture de contrôle,
+      // 2026-09-12).
       statut = statutDepuisResultat(ex.dernierResultat) ?? ex.statut;
       // (La branche de RATTRAPAGE d'une ligne périodique gelée sur un statut
       // réalisé vivait ici. Elle est partie au N5 : la migration

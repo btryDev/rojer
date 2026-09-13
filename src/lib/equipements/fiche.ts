@@ -149,7 +149,7 @@ export function lignesAFaire(
       lignes.push({
         cle: `v-${v.id}`,
         genre: "verification",
-        // L'échéance ouverte, calculée sur une rangée gelée jamais roulée.
+        // L'échéance ouverte ; « à planifier » n'a pas de date arrêtée.
         date: etat === "aPlanifier" ? null : v.datePrevue,
         etat,
         surtitre: "Vérification",
@@ -253,13 +253,17 @@ export function lignesHistoire(
     // l'échéance et faux du contrôle passé. L'archivage et le cycle taisent ce
     // qui est ATTENDU, jamais ce qui a été fait.
     if (estStatutRealise(v.statut)) {
+      // Sans rapport, la seule date connue est l'ÉCHÉANCE — pas le jour du
+      // contrôle, que rien n'a consigné (N5 : la colonne qui le portait est
+      // partie). Le détail le dit, pour ne pas dater un fait qu'on n'a pas.
       lignes.push({
         cle: `v-${v.id}`,
         date: v.datePrevue,
         etat: "faite",
         surtitre: "Vérification",
         libelle: v.libelleObligation,
-        detail: "Marquée réalisée — aucun rapport au dossier",
+        detail:
+          "Marquée réalisée — aucun rapport au dossier, datée de son échéance",
         resultat: null,
         href,
       });

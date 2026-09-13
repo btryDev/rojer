@@ -71,8 +71,8 @@ export type RapportMetadata = z.infer<typeof rapportMetadataSchema>;
  * un contrôle qui n'a pas pu se faire.
  *
  * Le traitement de « non vérifiable » est donc explicite côté action :
- * le rapport est conservé (c'est une pièce, le prestataire s'est déplacé),
- * `dateRealisee` n'est pas écrite, et l'échéance ne bouge pas.
+ * le rapport est conservé (c'est une pièce, le prestataire s'est déplacé), il
+ * ne compte pas comme réalisation, et l'échéance ne bouge pas.
  */
 import type { StatutVerification } from "@prisma/client";
 

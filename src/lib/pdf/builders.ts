@@ -296,9 +296,8 @@ export async function construireRegistreData(
   const verifsEnAttente: LigneVerif[] = verifs
     .filter(estEnAttenteDeRapport)
     .map((v) => ligneVerif(v, multiBatiments, now))
-    // Retriée sur l'échéance OUVERTE que la ligne imprime : la lecture est
-    // triée sur la colonne, et une rangée gelée — colonne en mars 2026,
-    // échéance en 2027 — s'imprimait au milieu des dates de mars.
+    // Triée sur l'échéance que la ligne imprime, pour que l'ordre du document
+    // ne dépende pas de celui de la lecture.
     .sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime());
 
   // Le registre, fiche par fiche — ce que le document doit être. Il ne

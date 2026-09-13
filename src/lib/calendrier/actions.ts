@@ -418,11 +418,12 @@ async function regenererUnePasse(
           etablissementId,
           rapports: { none: {} },
           actions: { none: {} },
-          // ET le statut : depuis l'ADR-034, une obligation sans rendez-vous
-          // suivant, consommée, n'a plus ni rapport ni date sur sa ligne — son
-          // statut réalisé est le seul témoignage qu'elle a été faite, et
-          // `porteUneTrace` le compte comme tel. La clause SQL doit dire la
-          // même chose, sinon un appareil désactivé emporte la preuve.
+          // ET le statut : une obligation sans rendez-vous suivant, consommée
+          // sans rapport (seed uniquement — le produit rouvre la ligne quand
+          // son dernier rapport part), n'a plus que son statut réalisé pour
+          // témoigner qu'elle a été faite, et `porteUneTrace` le compte comme
+          // tel. La clause SQL doit dire la même chose, sinon un appareil
+          // désactivé emporte la preuve.
           statut: { notIn: [...STATUTS_REALISES_PERSISTES] },
         },
       }),

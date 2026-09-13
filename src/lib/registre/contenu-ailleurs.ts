@@ -205,10 +205,9 @@ export function contenuTenuAilleursDepuis(
             v.archiveLe
               ? `ne s'applique plus depuis le ${formaterDateCourteFr(v.archiveLe)}`
               : null,
-            // Le fait, lu sur le dernier rapport (ADR-034), à défaut sur la
-            // colonne gelée d'une ligne d'avant — UNE fois. Écrit en deux
-            // membres, une ligne d'avant avec rapport imprimait « faite le X ·
-            // faite le X » (relecture du 2026-09-13).
+            // Le fait, lu sur le dernier rapport (ADR-034) — UNE fois. Écrit en
+            // deux membres (rapport, puis repli), une ligne imprimait « faite
+            // le X · faite le X » (relecture du 2026-09-13).
             v.derniereRealisation
               ? `faite le ${formaterDateCourteFr(v.derniereRealisation)}`
               : null,
@@ -216,14 +215,12 @@ export function contenuTenuAilleursDepuis(
             // rendez-vous suivant, déjà faite, garde un statut réalisé et une
             // `datePrevue` qui n'est que son échéance d'origine : l'annoncer
             // « prochaine » promet un contrôle que rien n'attend. Sur une
-            // obligation périodique, en revanche, un statut réalisé d'avant
-            // l'ADR-034 ne tait rien : la date reste due.
+            // obligation périodique, en revanche, un statut réalisé ne tait
+            // rien : la date reste due.
             v.archiveLe || estVerificationRealisee(v)
               ? null
               : v.datePrevue
-                  ? // L'échéance OUVERTE : calculée sur une rangée gelée jamais
-                    // roulée, dont `datePrevue` est l'échéance déjà honorée.
-                    `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
+                  ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
                   : "à planifier",
           ]
             .filter(Boolean)

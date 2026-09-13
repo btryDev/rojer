@@ -536,9 +536,8 @@ export async function listerVerifications(
     equipement: libellePorteurSansNom(v),
     categorie: v.equipement?.categorie ?? null,
     periodicite: v.periodicite,
-    // L'échéance OUVERTE, pas la colonne : sur une rangée gelée jamais roulée,
-    // `datePrevue` est l'échéance déjà honorée. L'assistant lit cette date, et
-    // les filtres ci-dessous aussi.
+    // L'échéance OUVERTE : l'assistant lit cette date, et les filtres
+    // ci-dessous aussi.
     datePrevue: v.datePrevue,
     archiveLe: v.archiveLe,
     derniereRealisation: derniereRealisation(v.rapports),
@@ -556,9 +555,8 @@ export async function listerVerifications(
     contractuelle: estEcheanceContractuelle(v),
   }));
 
-  // Retriée sur l'échéance OUVERTE projetée : la lecture est triée sur la
-  // colonne, et une rangée gelée s'y rangeait parmi des dates d'un an plus tôt
-  // que la sienne (relecture externe du 2026-09-13).
+  // Triée sur l'échéance projetée, pour que l'ordre rendu ne dépende pas de
+  // celui de la lecture (relecture externe du 2026-09-13).
   lues.sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime());
 
   if (filtres.recherche) {

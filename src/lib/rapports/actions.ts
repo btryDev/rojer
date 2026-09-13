@@ -69,8 +69,8 @@ export class LigneModifieeEntreTemps extends Error {
  *  - une obligation sans rendez-vous suivant (`mise_en_service_uniquement`,
  *    `autre`) : le one-shot est consommé, la ligne garde le statut réalisé.
  *
- * `dateRealisee` n'est PLUS écrite : la dernière réalisation se lit sur les
- * rapports (`derniere-realisation.ts`). La colonne reste gelée jusqu'au N5.
+ * La dernière réalisation se lit sur les rapports (`derniere-realisation.ts`) ;
+ * la ligne ne porte plus de date de réalisation depuis le N5.
  */
 export async function uploadRapport(
   verificationId: string,
@@ -228,12 +228,10 @@ export async function uploadRapport(
     // ligne ne bouge pas. Elle n'honorait aucune échéance connue.
     majVerification = { statut: verif.statut };
   } else {
-    // L'échéance que ce rapport honore est l'échéance OUVERTE, pas la colonne :
-    // sur une rangée gelée, `datePrevue` est l'échéance déjà honorée. La
-    // recopier faisait reculer la ligne d'un an si l'on supprimait ensuite ce
-    // rapport — déposer puis annuler dégradait « à jour » en « en retard »
-    // (relecture externe du 2026-09-13). L'écriture conditionnée, elle, garde
-    // la valeur brute : elle compare à ce qui est en base.
+    // L'échéance que ce rapport honore est l'échéance OUVERTE de la ligne, et
+    // c'est elle que la suppression du rapport rendra à la ligne : la lire
+    // ailleurs faisait reculer la ligne d'un an au retrait (relecture externe
+    // du 2026-09-13). L'écriture conditionnée compare à cette même valeur.
     echeanceHonoree = verif.datePrevue;
     majVerification = rouler(
       verif.datePrevue,

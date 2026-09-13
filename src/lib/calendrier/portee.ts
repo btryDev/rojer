@@ -81,15 +81,17 @@ export function toutesLesConditions(
  * Trois témoins, et le troisième est la raison d'être de cette fonction :
  *  · un rapport ;
  *  · une action corrective ;
- *  · un STATUT RÉALISÉ. Une obligation sans rendez-vous suivant, consommée, n'a
- *    parfois plus que lui : son rapport retiré.
+ *  · un STATUT RÉALISÉ sans rapport. Aucun flux du produit ne le produit —
+ *    retirer le dernier rapport d'une ponctuelle la ROUVRE (`rapports/actions`)
+ *    —, seul un seed le fabrique ; mais tant qu'une telle ligne existe, ce
+ *    statut est tout ce qui témoigne qu'elle a été faite.
  *
- * Trois gardes de suppression recopiaient à la main deux témoins et la colonne
- * `dateRealisee` — la suppression d'un équipement, celle d'une prescription et
- * son compte affiché — et aucune ne connaissait le statut. Le N5 a retiré la
- * colonne : sans le statut, un équipement portant une preuve serait devenu
- * supprimable, exactement ce que l'ADR-012 existe pour empêcher. C'est la même
- * définition que `porteUneTrace` du réconciliateur.
+ * Trois gardes de suppression recopiaient à la main deux témoins et l'ancienne
+ * colonne `dateRealisee` — la suppression d'un équipement, celle d'une
+ * prescription et son compte affiché — et aucune ne connaissait le statut. Le
+ * N5 a retiré la colonne : sans le statut, un équipement portant une preuve
+ * serait devenu supprimable, exactement ce que l'ADR-012 existe pour empêcher.
+ * C'est la même définition que `porteUneTrace` du réconciliateur.
  */
 export function portantUnePreuve(): Prisma.VerificationWhereInput {
   return {
@@ -123,10 +125,9 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
  *  · un statut ouvert — la ligne attend, quelle que soit sa périodicité ;
  *  · un statut réalisé SUR UNE OBLIGATION PÉRIODIQUE — la ligne attend aussi.
  *    « Réalisé » y dit qu'un contrôle a eu lieu, pas que le suivant n'est pas
- *    dû ; c'est la rangée d'avant l'ADR-034, gelée avec le rendez-vous suivant
- *    dans `datePrevue`. Un préfiltre SQL sur les seuls statuts ouverts la
- *    faisait disparaître du tableau de bord avant même que le classement TS
- *    ait pu la lire — le classement corrigé ne servait à rien sur elle.
+ *    dû. La migration du N5 a remis ces rangées « planifiée » ; la clause reste
+ *    la définition, pas une tolérance — c'est ce qui garde SQL et TS d'accord
+ *    quoi qu'un seed écrive.
  *
  * `PERIODICITES_SANS_SUITE` est dérivée de la table du référentiel : la
  * clause et le prédicat s'appuient sur la même définition de « cyclique ».

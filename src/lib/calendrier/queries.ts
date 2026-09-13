@@ -36,9 +36,8 @@ export type FiltresCalendrier = {
   domaine?: DomaineObligation;
   /**
    * Ne garder que ce qui est réellement **en retard** : statut `depassee`,
-   * ou `planifiee` / `a_planifier` dont la `datePrevue` est passée, sans
-   * date de réalisation. Même définition que `estVerificationEnRetard`
-   * (ADR-011).
+   * ou une échéance attendue dont la `datePrevue` est passée. Même définition
+   * que `estVerificationEnRetard` (ADR-011), portée en SQL par `urgenceSeule`.
    *
    * L'ancien filtre retenait `a_planifier` **quelle que soit sa date** :
    * une occurrence générée le matin même pour l'an prochain apparaissait

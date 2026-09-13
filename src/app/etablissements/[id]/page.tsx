@@ -125,12 +125,10 @@ export default async function EtablissementPage({
         salarie: true,
         prescription: { select: { source: true } },
       },
-      // PAS DE `take` : les cinq prochaines se choisissent sur l'échéance
-      // OUVERTE, que le SQL ne sait pas calculer. Un tri `datePrevue` borné à
-      // cinq laissait une rangée gelée — `datePrevue` en 2026, échéance en
-      // 2027 — prendre une des cinq places, et sortir une vraie échéance proche
-      // (relecture externe du 2026-09-13). Le tri et la coupe se font sur la
-      // projection, par `cinqProchaines` plus bas.
+      // PAS DE `take` : les cinq prochaines se choisissent après projection,
+      // par `cinqProchaines` plus bas, pour que la borne ne dépende jamais de
+      // ce que le SQL sait ou non calculer (relecture externe du 2026-09-13,
+      // où un `take` en base avait chassé une vraie échéance proche).
       orderBy: { datePrevue: "asc" },
     }),
     prisma.rapportVerification.findMany({
@@ -328,10 +326,8 @@ export default async function EtablissementPage({
     prochainesVerifs: cinqProchaines(prochainesVerifs.map((v) => ({
       id: v.id,
       libelleObligation: v.libelleObligation,
-      // L'échéance OUVERTE, et non la colonne : sur une rangée gelée jamais
-      // roulée, `datePrevue` est l'échéance déjà honorée. Les widgets trient,
-      // comptent à rebours et classent sur cette date ; la projection la leur
-      // donne juste, une fois, plutôt que de leur faire porter la règle.
+      // L'échéance OUVERTE : les widgets trient, comptent à rebours et
+      // classent sur cette date.
       datePrevue: v.datePrevue,
       statut: v.statut,
       // Le rythme : les widgets classent sur `estVerificationRealisee`, qui en

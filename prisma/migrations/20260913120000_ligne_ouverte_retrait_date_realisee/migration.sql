@@ -21,6 +21,15 @@
 -- `autre`) garde son statut réalisé : c'est le seul cas où il en subsiste un
 -- sur une ligne, et c'est tout ce qui témoigne qu'elle a été faite.
 --
+-- L'UPDATE NE FILTRE PAS SUR `archiveLe`, et c'est voulu : une ligne archivée,
+-- périodique, gelée « réalisée » SANS rapport passe « planifiée » elle aussi.
+-- Son statut réalisé était sa seule preuve ; sans lui, la régénération
+-- suivante la SUPPRIME (`porteUneTrace` faux), là où l'ancien modèle la
+-- gardait. Et si `aDesarchiver` la rouvre, elle repart « planifiée » sur une
+-- date ancienne — en retard aussitôt (NB4 de l'ADR-034, déjà ouvert). Les deux
+-- sont acceptés avec la décision de ne rien préserver : ces lignes ne
+-- viennent que du seed.
+--
 -- Le second ordre retire la colonne. Rejouable : le premier UPDATE ne touche
 -- plus rien à la seconde passe, et `DROP COLUMN IF EXISTS` non plus.
 -- ============================================================================

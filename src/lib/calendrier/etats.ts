@@ -379,8 +379,8 @@ export function statutDeLaLecture(
     case "ecart_majeur":
       return "realisee_ecart_majeur";
     default:
-      // Résultat inconnu : une ligne d'avant l'ADR-034, dont la réalisation
-      // vient de la colonne gelée et dont le statut porte encore le résultat.
+      // Résultat inconnu : une ponctuelle consommée sans rapport (seed), dont
+      // le statut porte lui-même le résultat.
       return v.statut as StatutVerification;
   }
 }
@@ -495,7 +495,7 @@ export function lecturesCalendrier(
     // contrôle fait qui l'a ouverte se lit sur son rapport, et se pose au jour
     // où il a eu lieu.
     const courante: LectureCalendrier = {
-      // L'échéance OUVERTE, calculée pour une rangée gelée jamais roulée.
+      // L'échéance OUVERTE : `datePrevue`, et rien d'autre (N5).
       date: v.datePrevue,
       registre: classe,
       lecture: "courante",

@@ -229,8 +229,7 @@ export function genererRecommandations(
         : `${v.equipementLibelle} — échéance dépassée`,
       href: `/etablissements/${etab}/verifications/${v.id}`,
       priorite: 1,
-      // L'échéance ouverte : sur une rangée gelée jamais roulée, `datePrevue`
-      // est l'échéance déjà honorée, et la carte daterait mal le retard.
+      // L'échéance ouverte, celle dont la carte date le retard.
       date: jamaisPlanifiee ? undefined : v.datePrevue,
     });
   }

@@ -603,6 +603,18 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      règle du rythme : elle n'est pas une tolérance, c'est la définition d'une
      ligne réalisée. `scripts/mesure-score-adr034.ts` garde son propre type
      avec la colonne, il modélise l'ancien modèle pour le mesurer. 2623 tests.
+     **Relu par un sous-agent neutre le même jour** (`52a3a1d` + `2d253d5`,
+     accord SQL/TS vérifié cas par cas, tests supprimés confrontés à ce qui
+     les remplace) : rien de bloquant, aucune régression ; trois mineurs
+     corrigés — l'historique d'un appareil date une ponctuelle sans rapport de
+     son ÉCHÉANCE et le dit désormais ; l'en-tête de la migration écrit qu'elle
+     ne filtre pas sur `archiveLe` et ce que ça coûte (une archivée gelée sans
+     rapport devient supprimable à la régénération) ; le troisième témoin de
+     `portantUnePreuve` ne naît d'aucun flux du produit — retirer le dernier
+     rapport d'une ponctuelle la ROUVRE —, seul un seed le fabrique, et les
+     commentaires le disaient à l'envers. Vingt-cinq commentaires qui
+     décrivaient encore la « rangée gelée » au présent sont réécrits, l'ADR-011
+     est amendée (« la preuve prime sur l'état » est barrée).
   **Fait le 2026-09-13, avant cette décision :**
   ~~la durée de conservation de `D. 4711-3` à l'écran du registre~~ (badge
   légal, citation et lien relus à la source le 2026-09-01) ; ~~l'annotation de

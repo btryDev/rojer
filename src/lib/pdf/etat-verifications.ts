@@ -90,8 +90,7 @@ export function repartirVerifications<
     estVerificationAVenir(v, now, JOURS_HORIZON_PROCHE),
   );
   const dejaComptees = new Set<T>([...enRetard, ...aPlanifier, ...aVenir]);
-  // Lue sur les rapports (ADR-034), avec la colonne gelée en repli pour une
-  // ligne d'avant que la réconciliation n'a pas encore remise au modèle.
+  // Lue sur les rapports (ADR-034), et nulle part ailleurs (N5).
   //
   // UNE LIGNE COMPTE UNE FOIS, ET UNE SEULE — tranché par la propriétaire le
   // 2026-09-12, après mesure. Depuis que la ligne roule au dépôt (ADR-034),

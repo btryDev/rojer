@@ -158,8 +158,12 @@ troisième, `estVerificationAVenir`, couvre la fenêtre proche et exclut
 volontairement `a_planifier` — sans date arrêtée avec le prestataire,
 annoncer « prévue le 12 » serait un mensonge d'affichage.
 
-Règle transverse : une occurrence portant une `dateRealisee`, ou un statut
-`realisee_*`, n'est jamais en retard. **La preuve prime sur l'état.**
+~~Règle transverse : une occurrence portant une `dateRealisee`, ou un statut
+`realisee_*`, n'est jamais en retard. **La preuve prime sur l'état.**~~
+Amendée par l'ADR-034 (2026-09-13) : la ligne ne porte plus de date de
+réalisation, et un statut réalisé ne purge l'échéance que sur une obligation
+sans rendez-vous suivant (`estVerificationRealisee`) ; sur une obligation
+périodique, la date décide. **L'échéance ouverte prime sur le souvenir.**
 
 ### 6. Actions correctives
 

@@ -319,9 +319,8 @@ export async function compterVerifsParEquipement(
     // c'est exactement ce que disent les états `proche` et `lointain`. Une
     // ligne « à planifier » porte une date de génération, une ligne en retard
     // n'a pas de prochaine échéance, une ligne éteinte ou consommée non plus.
-    // Lire l'état, et non le statut stocké : une rangée périodique gelée sur
-    // « réalisée » a bien un rendez-vous à venir. La date est l'échéance
-    // ouverte, calculée sur une rangée jamais roulée.
+    // Lire l'état, et non le statut stocké : une ligne roulée reste
+    // « planifiée » en base après sa date. L'échéance est `datePrevue` (N5).
     const echeance = v.datePrevue;
     if (
       (etat === "proche" || etat === "lointain") &&
@@ -330,8 +329,7 @@ export async function compterVerifsParEquipement(
       s.prochaineDate = echeance;
     }
 
-    // Lue sur les rapports (ADR-034), la colonne gelée en repli pour une ligne
-    // d'avant que la réconciliation n'a pas encore remise au modèle.
+    // Lue sur les rapports (ADR-034), et nulle part ailleurs (N5).
     const faite = v.derniereRealisation;
     if (faite && faite.getTime() >= debutFenetreHistorique.getTime()) {
       if (!s.derniereRealisee || faite > s.derniereRealisee) {
