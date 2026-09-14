@@ -601,10 +601,18 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        est celle de la génération ; `planifiee` : une échéance connue, passée
        ou non. Le générateur la suivait déjà ; trois écritures la violaient et
        sont corrigées — un tampon recouvrant un contrôle réel se relit
-       « planifiée » ; un dépôt « non vérifiable » ne touche plus le statut ;
-       une suppression qui rend l'échéance honorée écrit « planifiée ». Les
-       tests de concurrence ont regagné leur assertion de statut. Trois
-       mutations rouges. 2632 tests. **Limite écrite** : un « à planifier »
+       « planifiée » ; un dépôt « non vérifiable » ne touche plus le statut
+       (un tampon s'y relit comme à la régénération, sur le contrôle réel).
+       Les tests de concurrence ont regagné leur assertion de statut.
+       **Relecture de contrôle** : une suppression qui rendait l'échéance
+       honorée l'écrivait « planifiée » — or `echeanceHonoree` ne dit pas si
+       cette date était réelle ou la date de génération d'un « à planifier »
+       roulé, et la carte annonçait alors « échéance dépassée » sur l'âge du
+       dossier. **Quand plus aucun rapport ne reste, la ligne revient « à
+       planifier »**, en retard par sa date : compteurs, score et filtres la
+       comptent, seul l'affichage de la date s'efface ; la garde placeholder
+       l'empêche ensuite de recevoir une date plus tardive. Cinq mutations
+       rouges sur le lot. 2634 tests. **Limite écrite** : un « à planifier »
        dont la date de génération est passée ne reçoit plus la première
        échéance calculée d'une mise en service déclarée après coup — la garde
        ne distingue pas une date de génération d'un rendez-vous manqué, et

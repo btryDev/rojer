@@ -1273,12 +1273,17 @@ export function reconcilierCalendrier(
       // remplaçait cette échéance par « mise en service + une période », et le
       // contrôle réel déjà fait était oublié.
       realisation === null &&
-      // ET SA DATE N'EST PAS PASSÉE. Un « à planifier » dont l'échéance est
-      // passée n'est plus un placeholder : c'est un rendez-vous MANQUÉ, et
-      // remplacer sa date effacerait le retard. Tant que la génération
-      // tamponnait `depassee` le lendemain, le tampon faisait sortir la ligne
-      // de cette branche ; depuis son retrait (phase A), c'est la date qui
-      // l'en fait sortir — la seule source du retard.
+      // ET SA DATE N'EST PAS PASSÉE. Un « à planifier » dont la date est
+      // passée PEUT être un rendez-vous manqué : la suppression de son dernier
+      // rapport rend à la ligne l'échéance qu'il honorait, en « à planifier »,
+      // faute de savoir si elle était réelle (`supprimerRapport`). Remplacer
+      // sa date effacerait alors le retard. Tant que la génération tamponnait
+      // `depassee`, le tampon faisait sortir la ligne de cette branche ;
+      // depuis son retrait (phase A), c'est la date qui l'en fait sortir.
+      // Le prix, écrit : une date de GÉNÉRATION passée ne reçoit plus la
+      // première échéance d'une mise en service déclarée après coup — on ne
+      // sait pas distinguer les deux, et l'incertitude ne réduit jamais la
+      // couverture.
       !estEnRetard(ex.datePrevue, now)
     ) {
       // La ligne n'avait qu'un **placeholder** — « à planifier » n'est pas

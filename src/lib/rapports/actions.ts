@@ -220,12 +220,15 @@ export async function uploadRapport(
     // tampon (phase A), il laissait une échéance réelle se lire comme une
     // date de génération — carte « aucune vérification enregistrée », date
     // masquée au calendrier (relecture de la phase A, 2026-09-14). Une ligne
-    // encore tamponnée `depassee` redevient « à planifier », comme partout.
-    // Une ligne DÉJÀ soldée — le one-shot réalisé — n'est pas déclassée.
+    // encore tamponnée `depassee` se relit comme à la régénération : « planifiée »
+    // si un contrôle réel est derrière elle, « à planifier » sinon. Une ligne
+    // DÉJÀ soldée — le one-shot réalisé — n'est pas déclassée.
     majVerification = {
       statut:
         verif.statut === "depassee"
-          ? "a_planifier"
+          ? dernierRealise !== null
+            ? "planifiee"
+            : "a_planifier"
           : verif.statut,
     };
   } else if (
@@ -463,19 +466,26 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
 
     // Le retard éventuel se lit sur la date rendue à la ligne, pas sur son
     // statut : ce dernier ne dit que « la date est-elle une vraie échéance ? »
-    // (retrait de `depassee`, phase A). Elle l'est quand un contrôle reste,
-    // ET quand la ligne revient à l'échéance que le rapport retiré honorait —
-    // une échéance réglementaire manquée, pas une date de génération.
+    // (retrait de `depassee`, phase A). Elle l'est quand un contrôle reste —
+    // l'échéance suivante est calculée depuis lui.
+    //
+    // QUAND PLUS AUCUN RAPPORT NE RESTE, ON NE SAIT PAS, et on l'écrit. La
+    // ligne revient à l'échéance que le rapport retiré honorait, mais rien ne
+    // dit si c'était une échéance réelle ou la date de génération d'un « à
+    // planifier » qu'on avait roulé : `echeanceHonoree` ne garde que la date.
+    // L'écrire « planifiée » faisait annoncer « échéance dépassée » sur l'âge
+    // du dossier, et une mise en service « urgente » qu'aucun texte ne date
+    // (relecture de contrôle de la phase A, 2026-09-14). « À planifier » est
+    // la lecture qui n'invente rien — et la ligne reste EN RETARD par sa
+    // date : compteurs, score et filtres la comptent ; seul l'affichage de la
+    // date s'efface. La garde « placeholder » du réconciliateur l'empêche
+    // ensuite de recevoir une date plus tardive.
     let statut: StatutVerification;
     if (!cyclique && dernier !== null) {
       // One-shot : le rapport précédent l'avait déjà consommé.
       statut = STATUT_DEPUIS_RESULTAT[dernier.resultat as ResultatRealise];
-    } else if (dernier !== null || retire.echeanceHonoree !== null) {
-      statut = "planifiee";
     } else {
-      // Rapport d'avant N2, sans échéance honorée : la ligne garde une date
-      // que plus rien n'explique.
-      statut = "a_planifier";
+      statut = dernier !== null ? "planifiee" : "a_planifier";
     }
 
     const { count } = await tx.verification.updateMany({
