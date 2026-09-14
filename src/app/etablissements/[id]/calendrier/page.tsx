@@ -10,6 +10,7 @@ import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
   aUnRendezVous,
   LIBELLE_AUCUNE_VERIFICATION,
+  LIBELLE_SANS_ECHEANCE,
   statutDeLaLecture,
 } from "@/lib/calendrier/etats";
 import { getEtablissement } from "@/lib/etablissements/queries";
@@ -174,7 +175,11 @@ function LigneEcheance({
       <span
         className="flex size-[50px] flex-none flex-col items-center justify-center rounded-[17px]"
         style={{ background: CHAMP_ETAT[registre] }}
-        aria-label={date ? undefined : "Date à renseigner"}
+        // « Sans date », et plus « à dater » ni « Date à renseigner » : aucun
+        // écran ne permet de dater une vérification à la main. Seul le dépôt
+        // d'un rapport lui donne une échéance — le mot promettait un geste qui
+        // n'existe pas (relecture des libellés, 2026-09-14).
+        aria-label={date ? undefined : LIBELLE_SANS_ECHEANCE}
       >
         {date ? (
           <>
@@ -194,7 +199,7 @@ function LigneEcheance({
             style={{ color: ENCRE_ETAT[registre] }}
             aria-hidden
           >
-            à<br />dater
+            sans<br />date
           </span>
         )}
       </span>
@@ -1017,9 +1022,10 @@ export default async function CalendrierPage({
       <p className="m-0">
         La règle en tête montre une année d&apos;un bloc : la hauteur
         d&apos;une barre dit le volume du mois, sa couleur l&apos;état le plus
-        urgent, et cliquer un mois ouvre son détail. Les occurrences « à
-        planifier » n&apos;y figurent pas tant qu&apos;aucune date n&apos;est
-        convenue — elles sont comptées à part.
+        urgent, et cliquer un mois ouvre son détail. Une vérification sans
+        échéance connue n&apos;y figure pas : elle est comptée à part, « sans
+        date ». Elle en reçoit une au dépôt du rapport de son dernier
+        contrôle.
       </p>
       <p className="m-0">
         Les flèches changent d&apos;année, et les cartes du dessous suivent :
@@ -1063,9 +1069,10 @@ export default async function CalendrierPage({
           page. */}
       <p className="m-0">
         Le compte en tête de la règle porte sur l&apos;<strong>année
-        affichée</strong>{" "}
-        ; les occurrences « à planifier », qui n&apos;ont pas de date, sont
-        comptées quelle que soit l&apos;année.
+        affichée</strong>, comme les vérifications « sans date » —
+        auxquelles s&apos;ajoutent,
+        sur l&apos;année en cours, celles des années passées restées en
+        retard.
       </p>
       <div className="flex flex-wrap gap-2 pt-1">
         <LegalBadge

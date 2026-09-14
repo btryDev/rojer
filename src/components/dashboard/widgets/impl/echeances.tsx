@@ -22,6 +22,7 @@ import {
   CHAMP_ETAT,
   ENCRE_ETAT,
   LIBELLE_AUCUNE_VERIFICATION,
+  LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { BentoCell } from "@/components/dashboard/BentoCell";
@@ -57,15 +58,19 @@ function classifier(
   // Une ligne sans échéance connue n'a pas de date à montrer, EN RETARD OU
   // NON : sa date est celle de la génération (`aUnRendezVous`). Le widget
   // affichait « 01 sept. · Dépassé » sur la date où la ligne avait été créée.
+  // Là où la date s'afficherait, la phrase partagée, comme aux PDF et à la
+  // fiche : un tiret se lisait « donnée manquante » (relecture des libellés).
   const echeanceConnue = aUnRendezVous(v, aujourdhui);
   if (estVerificationEnRetard(v, aujourdhui)) {
     return {
       tone: "alerte",
-      libelleDate: echeanceConnue ? formaterDateCourteFr(v.datePrevue) : "—",
+      libelleDate: echeanceConnue
+        ? formaterDateCourteFr(v.datePrevue)
+        : LIBELLE_SANS_ECHEANCE,
     };
   }
   if (!echeanceConnue) {
-    return { tone: "warn", libelleDate: "—" };
+    return { tone: "warn", libelleDate: LIBELLE_SANS_ECHEANCE };
   }
   return { tone: "ok", libelleDate: formaterDateCourteFr(v.datePrevue) };
 }
@@ -135,10 +140,14 @@ export function WidgetProchainesEcheances({
               : c.tone === "warn"
                 ? "À planifier"
                 : "Planifié";
+          // Sans échéance connue, la date dit déjà « Sans échéance connue » et
+          // la pastille « À planifier » : le délai n'a rien à ajouter, sauf,
+          // en retard, POURQUOI. Il répétait « À planifier » sous la pastille
+          // qui le disait (relecture des libellés, 2026-09-14).
           const dans = !aUnRendezVous(v, aujourdhui)
             ? c.tone === "alerte"
               ? LIBELLE_AUCUNE_VERIFICATION
-              : "À planifier"
+              : null
             : libelleEcart(v.datePrevue, aujourdhui);
           const dansColor =
             c.tone === "alerte" ? "text-[color:var(--board-signal-ink)]" : "text-[color:var(--board-slate-mid)]";
@@ -184,7 +193,9 @@ export function WidgetProchainesEcheances({
                     {c.libelleDate}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className={"text-[12px] " + dansColor}>{dans}</span>
+                    {dans === null ? null : (
+                      <span className={"text-[12px] " + dansColor}>{dans}</span>
+                    )}
                     <span
                       className="pastille-board flex-none"
                       style={{

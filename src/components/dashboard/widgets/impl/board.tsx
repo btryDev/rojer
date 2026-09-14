@@ -1330,12 +1330,15 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
           elles disparaîtraient sans explication. */}
       {nbSansDate > 0 ? (
         <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
+          {/* « Datez-les au calendrier » promettait un geste qui n'existe
+              pas : aucun écran ne date une vérification à la main. C'est le
+              dépôt du rapport de son dernier contrôle qui lui donne une
+              échéance (relecture des libellés, 2026-09-14). */}
           {nbSansDate > 1
-            ? `${nbSansDate} vérifications à planifier n'ont pas encore de date`
-            : "1 vérification à planifier n'a pas encore de date"}{" "}
-          — <Lien href={hrefCalendrier}>datez-les au calendrier</Lien>{" "}
-          pour
-          qu&apos;elles apparaissent ici.
+            ? `${nbSansDate} vérifications à planifier n'ont pas d'échéance connue`
+            : "1 vérification à planifier n'a pas d'échéance connue"}{" "}
+          — elles apparaîtront ici au dépôt du rapport de leur dernier
+          contrôle. <Lien href={hrefCalendrier}>Voir au calendrier</Lien>.
         </p>
       ) : null}
 

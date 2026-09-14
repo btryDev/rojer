@@ -114,7 +114,7 @@ function AucuneBarre({ nb }: { nb: number }) {
   return (
     <div className="flex h-[160px] items-center justify-center rounded-md border border-dashed border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)]/40 p-6 text-center text-[0.86rem] text-[color:var(--board-slate-mid)]">
       {nb > 0
-        ? `Aucune échéance datée cette année : ${nb} ${nb > 1 ? "lignes attendent" : "ligne attend"} une date.`
+        ? `Aucune échéance datée cette année : ${nb} ${nb > 1 ? "lignes" : "ligne"} sans échéance connue.`
         : "Aucune échéance datée cette année."}
     </div>
   );
@@ -212,7 +212,7 @@ export function DonutStatuts({
         />
         {sansEcheance > 0 ? (
           <li className="pl-5 text-[0.8rem] text-[color:var(--board-slate-mid)]">
-            {`${sansEcheance} de ces échéances sans date connue`}
+            {`dont ${sansEcheance} sans échéance connue`}
           </li>
         ) : null}
         {anterieurs > 0 ? (

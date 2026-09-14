@@ -176,7 +176,7 @@ describe("construireBrief — paragraphe", () => {
       verifsAPlanifier: 1,
     });
     expect(b.paragraphe).toContain(
-      "Il reste 2 vérifications dépassées, 3 corrections en retard, 1 document à renouveler et 1 vérification à programmer.",
+      "Il reste 2 vérifications dépassées, 3 corrections en retard, 1 document à renouveler et 1 vérification à planifier.",
     );
   });
 });

@@ -63,7 +63,7 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
     );
     const texte = container.textContent ?? "";
     expect(texte).toContain("En retard12(100%)");
-    expect(texte).toContain("12 de ces échéances sans date connue");
+    expect(texte).toContain("dont 12 sans échéance connue");
     expect(texte).not.toContain("Le calendrier se remplit");
   });
 
@@ -73,7 +73,7 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
     );
     const texte = container.textContent ?? "";
     expect(texte).not.toContain("Le calendrier se remplit");
-    expect(texte).toContain("12 lignes attendent une date");
+    expect(texte).toContain("12 lignes sans échéance connue");
     expect(texte).toContain("12 sans échéance connue, hors des mois");
   });
 

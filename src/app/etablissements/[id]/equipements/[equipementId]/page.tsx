@@ -545,7 +545,12 @@ export default async function EquipementDetailPage({
                           l.date ? (
                             <TuileDate date={l.date} etat={l.etat} />
                           ) : (
-                            <TuileMuette>à dater</TuileMuette>
+                            // Une correction se date dans l'application ; une
+                            // vérification, non — seul un rapport lui donne
+                            // une échéance. Le même mot que le calendrier.
+                            <TuileMuette>
+                              {l.genre === "action" ? "à dater" : "sans date"}
+                            </TuileMuette>
                           )
                         }
                         titre={l.libelle}

@@ -712,8 +712,20 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        désormais le retard des VÉRIFICATIONS, celui du calendrier ; le
        bandeau y ajoute actions, attestations et autres échéances, et suit le
        filtre de zone : il peut dire davantage, par construction.
-       « À planifier » / « à dater » subsistent pour les lignes non
-       en retard. Trois autres écarts mineurs : ~~l'en-tête du mois du
+       ~~« À planifier » / « à dater » subsistent pour les lignes non
+       en retard~~ — fermé le 2026-09-14. **Aucun écran ne permet de dater une
+       vérification** : seul le dépôt d'un rapport lui donne une échéance. « À
+       dater » (tuile du calendrier et de la fiche équipement), « Date à
+       renseigner » et « datez-les au calendrier » (tableau de bord)
+       promettaient un geste qui n'existe pas. Le vocabulaire tient en trois
+       mots : le STATUT dit « À planifier », une fois, dans sa pastille ou son
+       compteur (« à programmer » et « sans date prévue » s'alignent) ; là où
+       une DATE s'afficherait, « Sans échéance connue », et « sans date » dans
+       une tuile ; en retard, la raison, « Aucune vérification enregistrée ».
+       Le widget « Prochaines échéances » disait « — » à la place de la date
+       puis « À planifier » deux fois ; l'aide du calendrier annonçait encore
+       un compte « quelle que soit l'année ». « À dater » reste pour une
+       correction, qui se date dans l'application. Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni
        « à planifier »)~~ — fermé le même jour : la pastille compte tout ce
        qu'aucune barre ne place et dit « sans date » ; ~~le widget « Prochaine échéance » filtre après la

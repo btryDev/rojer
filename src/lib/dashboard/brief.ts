@@ -319,7 +319,9 @@ function construireParagraphe(e: EntreeBrief): string {
   }
   if (e.verifsAPlanifier > 0) {
     restes.push(
-      `${e.verifsAPlanifier} vérification${e.verifsAPlanifier > 1 ? "s" : ""} à programmer`,
+      // « À planifier », le mot du statut partout ailleurs : « à programmer »
+      // disait la même chose avec un autre mot (relecture des libellés).
+      `${e.verifsAPlanifier} vérification${e.verifsAPlanifier > 1 ? "s" : ""} à planifier`,
     );
   }
 

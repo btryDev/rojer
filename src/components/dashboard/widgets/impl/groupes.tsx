@@ -98,9 +98,9 @@ export function WidgetIndicateurs({ bundle }: { bundle: DashboardBundle }) {
     {
       k: "À planifier",
       v: verifsAPlanifier,
-      trend: verifsAPlanifier === 0 ? "rien à planifier" : "sans date prévue",
+      trend: verifsAPlanifier === 0 ? "rien à planifier" : "sans échéance connue",
       tone: verifsAPlanifier > 0 ? "amber" : "neutral",
-      hint: "sans date prévue",
+      hint: "sans échéance connue",
     },
     {
       k: "Sous 30 j",
