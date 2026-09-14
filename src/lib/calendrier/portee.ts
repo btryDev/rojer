@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import { STATUTS_REALISES_PERSISTES } from "./generateur";
+import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
 import { PERIODICITES_SANS_SUITE } from "./periodicite";
 
 /**

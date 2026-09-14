@@ -141,12 +141,30 @@ export function estVerificationArchivee(v: VerificationDatee): boolean {
 }
 
 /** Statuts qui disent « ce contrôle a eu lieu ». Un FAIT sur la ligne — pas
- *  un état : voir `estVerificationRealisee` pour ce que ce fait purge. */
-const STATUTS_REALISES = new Set([
+ *  un état : voir `estVerificationRealisee` pour ce que ce fait purge.
+ *
+ *  LA liste, et la seule : la clause SQL des gardes de suppression
+ *  (`portee.ts`, `calendrier/actions.ts`) et le réconciliateur la lisent ici.
+ *  Elle vivait en trois exemplaires, dont un en `startsWith("realisee")` qui
+ *  aurait adopté en silence toute valeur d'enum commençant ainsi (revue du
+ *  2026-09-14). */
+export const STATUTS_REALISES_PERSISTES = [
   "realisee_conforme",
   "realisee_observations",
   "realisee_ecart_majeur",
-]);
+] as const;
+
+/**
+ * Un contrôle a-t-il eu lieu sur cette ligne ? Le FAIT, pas l'état.
+ *
+ * À NE PAS CONFONDRE avec `estVerificationRealisee`, qui dit si la ligne
+ * n'attend plus rien : sur une obligation périodique, un contrôle a eu lieu ET
+ * le suivant est dû. L'historique d'un appareil lit ce fait-ci ; le classement
+ * lit l'autre.
+ */
+export function estStatutRealise(statut: string): boolean {
+  return (STATUTS_REALISES_PERSISTES as readonly string[]).includes(statut);
+}
 
 /**
  * La ligne n'attend-elle plus rien ?
@@ -190,7 +208,7 @@ const STATUTS_REALISES = new Set([
  * PDF non. Trouvé par la suite, pas par lecture (2026-09-13).
  */
 function statutLu(v: VerificationDatee): string {
-  return STATUTS_REALISES.has(v.statut) && !estVerificationRealisee(v)
+  return estStatutRealise(v.statut) && !estVerificationRealisee(v)
     ? "planifiee"
     : v.statut;
 }
@@ -212,7 +230,7 @@ export function estVerificationRealisee(
   // C'est le piège `undefined !== null` de l'ADR-034 (N3), sur un autre
   // champ. Seuls les deux rythmes SANS SUITE, nommément, purgent.
   return (
-    STATUTS_REALISES.has(v.statut) &&
+    estStatutRealise(v.statut) &&
     PERIODICITES_SANS_SUITE.includes(v.periodicite as Periodicite)
   );
 }

@@ -10,11 +10,11 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { cleRapport, getStorage } from "@/lib/storage";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { estCyclique, prochaineEcheance } from "@/lib/calendrier/periodicite";
-import { estEnRetard } from "@/lib/dates/retard";
+import { estEnRetard, estStatutRealise } from "@/lib/dates/retard";
+import { WHERE_RAPPORT_REALISE } from "./derniere-realisation";
 import {
   estResultatRealise,
   rapportMetadataSchema,
-  RESULTATS_REALISES,
   STATUT_DEPUIS_RESULTAT,
   type ResultatRealise,
 } from "./schema";
@@ -179,7 +179,7 @@ export async function uploadRapport(
   const dernierRealise = await prisma.rapportVerification.findFirst({
     where: {
       verificationId: verif.id,
-      resultat: { in: [...RESULTATS_REALISES] },
+      ...WHERE_RAPPORT_REALISE,
     },
     // `createdAt` en second : deux rapports du même jour, sinon, ne se
     // départagent pas.
@@ -210,9 +210,7 @@ export async function uploadRapport(
     // « dépassée » si la date est passée. Une ligne DÉJÀ soldée — le one-shot
     // réalisé, seul à garder un statut réalisé (ADR-034) — n'est pas
     // déclassée par un déplacement sans contrôle.
-    const dejaSoldee = (Object.values(STATUT_DEPUIS_RESULTAT) as string[]).includes(
-      verif.statut,
-    );
+    const dejaSoldee = estStatutRealise(verif.statut);
     majVerification = {
       statut: dejaSoldee
         ? verif.statut
@@ -379,7 +377,7 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
     const restants = await tx.rapportVerification.findMany({
       where: {
         verificationId: rap.verificationId,
-        resultat: { in: [...RESULTATS_REALISES] },
+        ...WHERE_RAPPORT_REALISE,
       },
       orderBy: [{ dateRapport: "asc" }, { createdAt: "asc" }],
       select: { id: true, dateRapport: true, resultat: true, echeanceHonoree: true },

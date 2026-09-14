@@ -23,6 +23,7 @@ import {
   type VerificationDatee,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
+import { statutDepuisResultat } from "@/lib/rapports/schema";
 // Type seul : effacé à la compilation, donc ce module reste utilisable côté
 // client, comme le dit l'en-tête de `VerificationDatee`.
 import type { StatutVerification } from "@prisma/client";
@@ -227,22 +228,11 @@ export function classerDate(
     : "lointain";
 }
 
-/**
- * « Ce contrôle a eu lieu », lu sur le seul statut. Un FAIT sur la ligne.
- *
- * À NE PAS CONFONDRE avec `estVerificationRealisee` (`lib/dates/retard`), qui
- * dit si la ligne n'attend plus rien : sur une obligation périodique, un
- * contrôle a eu lieu ET le suivant est dû. L'historique d'un appareil et le
- * « fait le … » du registre lisent ce fait-ci ; le classement lit l'autre.
- * Deux notions, deux fonctions — les confondre est exactement ce qui faisait
- * lire « faite » une échéance passée de six mois.
- *
- * Écrit ici une fois pour toutes : trois surfaces le réécrivaient à la main
- * en `startsWith`.
- */
-export function estStatutRealise(statut: string): boolean {
-  return statut.startsWith("realisee");
-}
+// `estStatutRealise` — « ce contrôle a eu lieu », le FAIT — vit dans
+// `lib/dates/retard.ts` avec la liste des statuts réalisés : une seule
+// définition, que les clauses SQL lisent aussi. Réexporté ici pour les
+// surfaces qui classent déjà par ce module.
+export { estStatutRealise } from "@/lib/dates/retard";
 
 /**
  * Classe une vérification périodique. Même forme structurelle que les
@@ -371,18 +361,11 @@ export function statutDeLaLecture(
     // table rend donc toujours un statut.
     return statutDuRegistre(lecture.registre, v.statut) as StatutVerification;
   }
-  switch (v.dernierResultat) {
-    case "conforme":
-      return "realisee_conforme";
-    case "observations_mineures":
-      return "realisee_observations";
-    case "ecart_majeur":
-      return "realisee_ecart_majeur";
-    default:
-      // Résultat inconnu : une ponctuelle consommée sans rapport (seed), dont
-      // le statut porte lui-même le résultat.
-      return v.statut as StatutVerification;
-  }
+  // Résultat inconnu : une ponctuelle consommée sans rapport (seed), dont le
+  // statut porte lui-même le résultat.
+  return (
+    statutDepuisResultat(v.dernierResultat) ?? (v.statut as StatutVerification)
+  );
 }
 
 /**
@@ -455,8 +438,8 @@ export function lecturesCalendrier(
      * du « fait le … » — la ligne ne porte plus que l'échéance ouverte. Un
      * lecteur qui l'omettrait ferait disparaître tous les contrôles faits de
      * son écran ; requise, l'oubli ne compile pas. Se lit avec
-     * `SELECT_DERNIER_RAPPORT_REALISE` et `derniereRealisation`
-     * (`lib/rapports/derniere-realisation.ts`).
+     * `derniereRealisation` ou `joindreDernieresRealisations`
+     * (`lib/rapports/`).
      */
     derniereRealisation: Date | null;
   },

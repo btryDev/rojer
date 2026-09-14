@@ -516,8 +516,8 @@ export async function listerVerifications(
       salarieId: true,
       // La date du dernier rapport réalisé, et rien d'autre du rapport
       // (ADR-034) : ni organisme, ni commentaire, ni fichier. Écrit en clair
-      // et non par `SELECT_DERNIER_RAPPORT_REALISE` : la garde RGPD de ce
-      // serveur relit le source, et une constante lui cacherait ce qui sort.
+      // et non par une constante partagée : la garde RGPD de ce serveur relit
+      // le source, et une constante lui cacherait ce qui sort.
       rapports: {
         where: WHERE_RAPPORT_REALISE,
         orderBy: { dateRapport: "desc" },

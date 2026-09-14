@@ -15,10 +15,10 @@ import {
  * Joint à des lignes DÉJÀ LUES — et déjà scopées par leur appelant — la date
  * de leur dernier rapport réalisé, en UNE requête pour tout le lot.
  *
- * Préféré à un `rapports: SELECT_DERNIER_RAPPORT_REALISE` dans l'`include`
- * quand la forme de la ligne circule loin : un champ `rapports` réduit à un
- * seul élément, dans un type que le registre ou un PDF réutilisent, serait
- * lu un jour comme la liste complète.
+ * Préféré à un `rapports: { …, take: 1 }` dans l'`include` quand la forme de la
+ * ligne circule loin : un champ `rapports` réduit à un seul élément, dans un
+ * type que le registre ou un PDF réutilisent, serait lu un jour comme la liste
+ * complète.
  */
 export async function joindreDernieresRealisations<T extends { id: string }>(
   lignes: T[],
@@ -37,7 +37,13 @@ export async function joindreDernieresRealisations<T extends { id: string }>(
         verificationId: { in: lignes.map((l) => l.id) },
         ...WHERE_RAPPORT_REALISE,
       },
-      select: { verificationId: true, dateRapport: true, resultat: true },
+      // `createdAt` départage deux rapports du même jour.
+      select: {
+        verificationId: true,
+        dateRapport: true,
+        createdAt: true,
+        resultat: true,
+      },
     }),
   );
   return lignes.map((l) => {

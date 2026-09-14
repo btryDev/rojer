@@ -21,12 +21,12 @@ import {
   genererVerificationsDepuisTitres,
   genererVerificationsSurMesure,
   reconcilierCalendrier,
-  STATUTS_REALISES_PERSISTES,
   type OccurrenceExistante,
   type StatutVerificationPersiste,
   type TitreDeclare,
 } from "./generateur";
 import { marquerCalendrierPerime } from "./reconciliation";
+import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
 import {
   indexerDernieresRealisations,
   WHERE_RAPPORT_REALISE,
@@ -297,8 +297,14 @@ async function regenererUnePasse(
     await prisma.rapportVerification.findMany({
       where: { etablissementId, ...WHERE_RAPPORT_REALISE },
       // Le résultat voyage avec la date : il donne son statut à une ligne sans
-      // rendez-vous suivant, seule à en garder un (ADR-034).
-      select: { verificationId: true, dateRapport: true, resultat: true },
+      // rendez-vous suivant, seule à en garder un (ADR-034). `createdAt`
+      // départage deux rapports du même jour.
+      select: {
+        verificationId: true,
+        dateRapport: true,
+        createdAt: true,
+        resultat: true,
+      },
     }),
   );
 

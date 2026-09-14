@@ -43,7 +43,8 @@ import {
   type Realisateur,
 } from "@/lib/referentiels/types-communs";
 import { estCyclique, prochaineEcheance } from "./periodicite";
-import { estEnRetard } from "@/lib/dates/retard";
+import { estEnRetard, estStatutRealise } from "@/lib/dates/retard";
+import { statutDepuisResultat } from "@/lib/rapports/schema";
 import type {
   ObligationApplicable,
   ObligationSurMesureApplicable,
@@ -723,21 +724,9 @@ export type StatutVerificationPersiste =
   | "realisee_observations"
   | "realisee_ecart_majeur";
 
-/** Les statuts qui disent « ce contrôle a eu lieu ». Exportés parce que la
- *  condition SQL du `deleteMany` doit dire la même chose que `porteUneTrace` :
- *  une obligation sans rendez-vous suivant, consommée, n'a plus que son statut
- *  pour témoigner (ADR-034). */
-export const STATUTS_REALISES_PERSISTES: readonly StatutVerificationPersiste[] = [
-  "realisee_conforme",
-  "realisee_observations",
-  "realisee_ecart_majeur",
-];
-
-const STATUTS_REALISES = STATUTS_REALISES_PERSISTES;
-
-export function estStatutRealise(s: string): boolean {
-  return (STATUTS_REALISES as readonly string[]).includes(s);
-}
+// Les statuts qui disent « ce contrôle a eu lieu » et `estStatutRealise`
+// vivent dans `lib/dates/retard.ts`, en un seul exemplaire : la condition SQL
+// du `deleteMany` doit dire la même chose que `porteUneTrace`.
 
 /**
  * Marqueur d'archivage : une obligation qui cesse de s'appliquer sur une
@@ -815,25 +804,6 @@ export type MiseAJourOccurrence = {
  */
 function realisationConnue(ex: OccurrenceExistante): Date | null {
   return ex.derniereRealisation ?? null;
-}
-
-/** Le statut que porte une ligne dont l'unique contrôle est fait, déduit du
- *  résultat de son rapport. `null` si le résultat est inconnu ou ne vaut pas
- *  réalisation — ce module reste pur et ne connaît pas le schéma des
- *  rapports, il lit une chaîne. */
-function statutDepuisResultat(
-  resultat: string | null | undefined,
-): StatutVerificationPersiste | null {
-  switch (resultat) {
-    case "conforme":
-      return "realisee_conforme";
-    case "observations_mineures":
-      return "realisee_observations";
-    case "ecart_majeur":
-      return "realisee_ecart_majeur";
-    default:
-      return null;
-  }
 }
 
 export type PlanReconciliation = {

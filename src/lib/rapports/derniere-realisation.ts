@@ -24,20 +24,10 @@ export const WHERE_RAPPORT_REALISE = {
   resultat: { in: [...RESULTATS_REALISES] },
 } satisfies Prisma.RapportVerificationWhereInput;
 
-/**
- * À poser dans le `select` d'une `Verification` pour lire sa dernière
- * réalisation : `rapports: SELECT_DERNIER_RAPPORT_REALISE`, puis
- * `derniereRealisation(v.rapports)`.
- */
-export const SELECT_DERNIER_RAPPORT_REALISE = {
-  where: WHERE_RAPPORT_REALISE,
-  orderBy: { dateRapport: "desc" as const },
-  take: 1,
-  select: { dateRapport: true },
-} satisfies Prisma.Verification$rapportsArgs;
-
 /** La date du rapport réalisé le plus récent, ou `null` si aucun. Accepte la
- *  liste complète des rapports comme la liste réduite du `select` ci-dessus. */
+ *  liste complète des rapports comme une liste déjà réduite au plus récent.
+ *  Deux rapports du même jour portent la même date : le départage n'importe
+ *  pas ici, il n'importe que pour le RÉSULTAT (`indexerDernieresRealisations`). */
 export function derniereRealisation(
   rapports: ReadonlyArray<{ dateRapport: Date; resultat?: string }>,
 ): Date | null {
@@ -72,21 +62,31 @@ export function indexerDernieresRealisations(
   rapports: ReadonlyArray<{
     verificationId: string;
     dateRapport: Date;
+    /** REQUIS : il départage deux rapports du même jour. `dateRapport` est un
+     *  jour civil, si bien que deux rapports déposés le même jour portent le
+     *  même instant ; sans départage, « le plus récent » était le premier que
+     *  rendait PostgreSQL, et le statut d'une ponctuelle — qui se lit sur son
+     *  RÉSULTAT — pouvait changer d'une régénération à l'autre (revue du
+     *  2026-09-14). Le dépôt et la suppression départagent déjà ainsi. */
+    createdAt: Date;
     resultat?: string;
   }>,
 ): Map<string, DerniereRealisation> {
-  const index = new Map<string, DerniereRealisation>();
+  const retenus = new Map<string, (typeof rapports)[number]>();
   for (const r of rapports) {
-    const connue = index.get(r.verificationId);
+    const connu = retenus.get(r.verificationId);
     if (
-      connue === undefined ||
-      r.dateRapport.getTime() > connue.dateRapport.getTime()
+      connu === undefined ||
+      r.dateRapport.getTime() > connu.dateRapport.getTime() ||
+      (r.dateRapport.getTime() === connu.dateRapport.getTime() &&
+        r.createdAt.getTime() > connu.createdAt.getTime())
     ) {
-      index.set(r.verificationId, {
-        dateRapport: r.dateRapport,
-        resultat: r.resultat ?? null,
-      });
+      retenus.set(r.verificationId, r);
     }
+  }
+  const index = new Map<string, DerniereRealisation>();
+  for (const [id, r] of retenus) {
+    index.set(id, { dateRapport: r.dateRapport, resultat: r.resultat ?? null });
   }
   return index;
 }

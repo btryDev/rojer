@@ -615,6 +615,28 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      commentaires le disaient à l'envers. Vingt-cinq commentaires qui
      décrivaient encore la « rangée gelée » au présent sont réécrits, l'ADR-011
      est amendée (« la preuve prime sur l'état » est barrée).
+     **Revue indépendante du 2026-09-14** (partielle : la limite de session a
+     arrêté la recherche, quatre vérifications ont abouti) — trois constats
+     confirmés, un réfuté :
+     - deux rapports du MÊME JOUR ne se départageaient pas à la lecture :
+       `dateRapport` est un jour civil, le « plus récent » était le premier
+       rendu par PostgreSQL, et le statut d'une ponctuelle — lu sur ce
+       résultat — pouvait changer d'une régénération à l'autre. `createdAt`
+       départage désormais, comme au dépôt et à la suppression ; requis dans
+       le type, testé dans les deux ordres, mutation rouge ;
+     - `estStatutRealise` existait en deux exports homonymes (dont un en
+       `startsWith`), la table résultat → statut en trois copies, une clause
+       `where` recopiée deux fois, un export sans appelant : une seule
+       définition de chacun (`lib/dates/retard.ts`, `rapports/schema.ts`) ;
+     - **limite écrite, non corrigée** : un rapport déposé AVANT N2 n'a pas
+       d'`echeanceHonoree` (N1 ne l'a pas inventée). Le supprimer quand il est
+       le dernier réalisé laisse la ligne sur la date que l'ancien
+       réconciliateur avait déjà avancée : l'échéance manquée disparaît. Aucun
+       seed ne crée de rapport, et la production est re-seedée : le cas ne
+       peut naître que d'un rapport de l'ancienne base encore présent ;
+     - réfuté : supprimer un rapport sur une ligne archivée la réécrit sans
+       garde — comportement de `main`, les prédicats lisent `archiveLe` en
+       premier et la ligne ne se lit jamais en retard.
   **Fait le 2026-09-13, avant cette décision :**
   ~~la durée de conservation de `D. 4711-3` à l'écran du registre~~ (badge
   légal, citation et lien relus à la source le 2026-09-01) ; ~~l'annotation de

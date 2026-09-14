@@ -97,3 +97,21 @@ export const STATUT_DEPUIS_RESULTAT: Record<
   observations_mineures: "realisee_observations",
   ecart_majeur: "realisee_ecart_majeur",
 };
+
+/**
+ * La même table, lue depuis une chaîne quelconque — le résultat d'un rapport
+ * tel qu'une lecture l'a ramené. `null` si le résultat est absent ou ne vaut
+ * pas réalisation.
+ *
+ * Le réconciliateur et le calendrier réécrivaient chacun cette table en
+ * `switch` : trois copies d'une correspondance qu'un résultat ajouté aurait
+ * désaccordées (revue du 2026-09-14). Module pur, sûr côté client.
+ */
+export function statutDepuisResultat(
+  resultat: string | null | undefined,
+): (typeof STATUT_DEPUIS_RESULTAT)[ResultatRealise] | null {
+  return resultat != null &&
+    (RESULTATS_REALISES as readonly string[]).includes(resultat)
+    ? STATUT_DEPUIS_RESULTAT[resultat as ResultatRealise]
+    : null;
+}
