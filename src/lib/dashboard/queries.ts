@@ -37,6 +37,8 @@ import {
   TON_REGISTRE,
   lecturesCalendrier,
 } from "@/lib/calendrier/etats";
+import { prochaineEcheanceConnue } from "@/lib/calendrier/prochaine-echeance";
+import { repartirParMois, type BarMois } from "./barres-mois";
 import { WHERE_RAPPORT_REALISE } from "@/lib/rapports/derniere-realisation";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import {
@@ -84,13 +86,9 @@ const STATUTS_PLAN_OUVERTS = [
   "valide",
 ] as const;
 
-export type BarMois = {
-  mois: number; // 0-11
-  annee: number;
-  couvert: number;
-  aVenir: number;
-  retard: number;
-};
+// Le type vit avec la répartition pure (`barres-mois.ts`) ; réexporté ici pour
+// les widgets qui le prenaient à ce module.
+export type { BarMois };
 
 /**
  * Raccourcit les libellés d'obligation verbeux pour les cartes
@@ -249,6 +247,8 @@ export type StatsEquipement = {
   aPlanifier: number;
   sous30j: number;
   derniereRealisee: Date | null;
+  /** `prochaineEcheanceConnue` : la plus ancienne échéance connue en attente,
+   *  retard daté compris — la même que la vue du parc. */
   prochaineDate: Date | null;
 };
 
@@ -309,6 +309,7 @@ export async function compterVerifsParEquipement(
     }
     return s;
   };
+  const lignesParEquipement = new Map<string, typeof verifs>();
 
   for (const v of verifs) {
     // Statistiques **par équipement** : une échéance portée par
@@ -327,19 +328,9 @@ export async function compterVerifsParEquipement(
     else if (etat === "aPlanifier") s.aPlanifier += 1;
     else if (etat === "proche") s.sous30j += 1;
 
-    // Prochaine échéance annoncée : seulement une date ARRÊTÉE et à venir —
-    // c'est exactement ce que disent les états `proche` et `lointain`. Une
-    // ligne « à planifier » porte une date de génération, une ligne en retard
-    // n'a pas de prochaine échéance, une ligne éteinte ou consommée non plus.
-    // Lire l'état, et non le statut stocké : une ligne roulée reste
-    // « planifiée » en base après sa date. L'échéance est `datePrevue` (N5).
-    const echeance = v.datePrevue;
-    if (
-      (etat === "proche" || etat === "lointain") &&
-      (!s.prochaineDate || echeance < s.prochaineDate)
-    ) {
-      s.prochaineDate = echeance;
-    }
+    const lignes = lignesParEquipement.get(v.equipementId) ?? [];
+    lignes.push(v);
+    lignesParEquipement.set(v.equipementId, lignes);
 
     // Lue sur les rapports (ADR-034), et nulle part ailleurs (N5).
     const faite = v.derniereRealisation;
@@ -350,6 +341,17 @@ export async function compterVerifsParEquipement(
     }
   }
 
+  // LA PROCHAINE ÉCHÉANCE, PAR LA DÉFINITION PARTAGÉE (`prochaineEcheanceConnue`).
+  // Elle ne retenait ici que `proche` et `lointain` — « une ligne en retard n'a
+  // pas de prochaine échéance » —, quand la vue du parc retenait le retard :
+  // même appareil, deux réponses (relecture système du 2026-09-14). Le retard
+  // DATÉ passe désormais devant une échéance à venir ; une ligne sans échéance
+  // connue ne fournit toujours aucune date.
+  for (const [equipementId, lignes] of lignesParEquipement) {
+    map.get(equipementId)!.prochaineDate =
+      prochaineEcheanceConnue(lignes, now)?.date ?? null;
+  }
+
   return map;
 }
 
@@ -358,16 +360,22 @@ export async function compterVerifsParEquipement(
  * barres du dashboard. Utilisé par `BarsObligations`. Scoping par user
  * via la chaîne etablissement.entreprise.userId.
  *
- * Classification :
- *  - `couvert`  : dernier rapport réalisé daté dans le mois (ADR-034)
- *  - `retard`   : occurrence en retard au sens des prédicats partagés
- *  - `aVenir`   : le reste des occurrences ouvertes
+ * Classification (`repartirParMois`, où elle est testée) :
+ *  - `couvert`  : CHAQUE rapport réalisé daté dans le mois (ADR-034) — pas
+ *    seulement le dernier, qui faisait retomber mars à 0 au dépôt de juin
+ *  - `retard`   : échéance ouverte en retard au sens des prédicats partagés
+ *  - `aVenir`   : le reste des échéances ouvertes
  *
  * On bucket la couverture sur la date du rapport — un rapport réalisé en mai
  * apparaît bien dans le mois de mai, même si la datePrevue était ailleurs.
  * Le mois est lu en heure de Paris, comme partout ailleurs : sur un serveur
  * en UTC, une échéance du 1er du mois à minuit basculait dans le mois
  * précédent.
+ *
+ * UNE SEULE LECTURE : les rapports réalisés viennent avec leurs lignes, par la
+ * relation, et non par une requête par ligne ni par la jointure « dernière
+ * réalisation » — qui ne rend que le plus récent, et coûtait un second
+ * aller-retour.
  */
 export async function compterObligationsParMois(
   etablissementId: string,
@@ -377,67 +385,54 @@ export async function compterObligationsParMois(
   const debut = instantCivil(annee, 1, 1);
   const fin = instantCivil(annee + 1, 1, 1);
 
-  const verifs = await joindreDernieresRealisations(
-    await prisma.verification.findMany({
-      where: {
-        etablissementId,
-        etablissement: { entreprise: { userId: user.id } },
-        // UN SUR-ENSEMBLE, et il doit le rester : la boucle ci-dessous ne garde
-        // que les lectures datées dans l'année. Ce qui compte est de ne rien
-        // exclure qu'une lecture poserait dans l'année.
-        OR: [
-          { datePrevue: { gte: debut, lt: fin } },
-          // Une ligne couverte dans l'année : un rapport réalisé y est daté
-          // (ADR-034 — la réalisation vit sur le rapport, plus sur la ligne).
-          {
-            rapports: {
-              some: {
-                dateRapport: { gte: debut, lt: fin },
-                ...WHERE_RAPPORT_REALISE,
-              },
+  const verifs = await prisma.verification.findMany({
+    where: {
+      etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
+      // UN SUR-ENSEMBLE, et il doit le rester : la répartition ne garde que
+      // les événements datés dans l'année. Ce qui compte est de ne rien
+      // exclure qu'un événement poserait dans l'année.
+      OR: [
+        { datePrevue: { gte: debut, lt: fin } },
+        // Une ligne couverte dans l'année : un rapport réalisé y est daté
+        // (ADR-034 — la réalisation vit sur le rapport, plus sur la ligne).
+        {
+          rapports: {
+            some: {
+              dateRapport: { gte: debut, lt: fin },
+              ...WHERE_RAPPORT_REALISE,
             },
           },
-        ],
+        },
+      ],
+    },
+    select: {
+      id: true,
+      datePrevue: true,
+      statut: true,
+      periodicite: true,
+      // Cf. ci-dessus : l'archivage est un champ (ADR-034). Sans lui, une
+      // obligation éteinte continue de peindre des barres.
+      archiveLe: true,
+      libelleObligation: true,
+      // TOUS les rapports réalisés de la ligne, et pas seulement ceux de
+      // l'année : un rapport hors de l'année suffit à écarter le repli sur
+      // `datePrevue` d'une ponctuelle consommée (`repartirParMois`). Une date
+      // par rapport ; un hebdomadaire en produit une cinquantaine par an.
+      rapports: {
+        where: WHERE_RAPPORT_REALISE,
+        select: { dateRapport: true },
       },
-      select: {
-        id: true,
-        datePrevue: true,
-        statut: true,
-        periodicite: true,
-        // Cf. ci-dessus : l'archivage est un champ (ADR-034). Sans lui, une
-        // obligation éteinte continue de peindre des barres.
-        archiveLe: true,
-        libelleObligation: true,
-      },
-    }),
-  );
+    },
+  });
 
-  const buckets: BarMois[] = Array.from({ length: 12 }, (_, i) => ({
-    mois: i,
+  // Les mêmes lectures que le calendrier (`lecturesCalendrier`) pour
+  // l'échéance ouverte ; tous les rapports pour l'historique.
+  return repartirParMois(
+    verifs.map(({ rapports, ...v }) => ({ ...v, rapportsRealises: rapports })),
     annee,
-    couvert: 0,
-    aVenir: 0,
-    retard: 0,
-  }));
-
-  // Les mêmes lectures que le calendrier (`lecturesCalendrier`) : le fait
-  // pose sa couverture au mois du rapport, l'échéance ouverte sa charge à
-  // venir — la barre ne peint plus une échéance en « couvert » un cycle
-  // trop tôt (ADR-034).
-  const now = new Date();
-  for (const v of verifs) {
-    for (const lec of lecturesCalendrier(v, now)) {
-      const c = composantesCiviles(lec.date);
-      if (c.annee !== annee) continue;
-      const m = c.mois - 1;
-
-      if (lec.registre === "faite") buckets[m].couvert += 1;
-      else if (lec.registre === "enRetard") buckets[m].retard += 1;
-      else buckets[m].aVenir += 1;
-    }
-  }
-
-  return buckets;
+    new Date(),
+  );
 }
 
 /**

@@ -678,9 +678,12 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        planifier » / « à dater » subsistent pour les lignes non en retard. Trois
        autres écarts mineurs, écrits pour un prochain lot : l'en-tête du mois
        du calendrier ne compte pas une ligne en retard sans date (ni « datée »
-       ni « à planifier ») ; le widget « Prochaine échéance » filtre après la
+       ni « à planifier ») ; ~~le widget « Prochaine échéance » filtre après la
        coupe à cinq et peut dire « sans échéance connue » quand cinq lignes
-       sans échéance précèdent une vraie ; la vue par équipement désigne le
+       sans échéance précèdent une vraie~~ — fermé le 2026-09-14 : la page choisit la prochaine échéance
+       connue sur la liste entière, avant la coupe (`echeancesDuTableauDeBord`),
+       et le widget la lit dans le bundle ; les cinq prochaines sont
+       inchangées ; la vue par équipement désigne le
        retard daté, la fiche le retard sans date, pour le même appareil.
        **Laissé ouvert, écrit** — hors du chantier, chacun son lot :
        ~~l'échéance d'un titre de salarié vit en deux endroits
@@ -698,10 +701,18 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        titre d'une personne SORTIE ne réclame plus rien (« archivée », comme
        au calendrier et au badge). Aucune migration. Seul écart restant, assumé
        et testé : un titre dont l'obligation a quitté le référentiel reste échu
-       sur Équipe, sans ligne au calendrier. Encore ouverts : la
+       sur Équipe, sans ligne au calendrier. ~~La
        « prochaine échéance » d'un appareil se calcule deux fois (tableau de
-       bord sans les retards, vue équipement avec) ; la barre « couvert » du
-       tableau de bord ne lit que le dernier rapport. **Décisions possibles,
+       bord sans les retards, vue équipement avec)~~ — fermé le 2026-09-14 :
+       une définition,
+       `prochaineEcheanceConnue` (la plus ancienne échéance CONNUE non réalisée,
+       retard daté compris ; une « à planifier » ne fournit aucune date), lue par
+       les deux ; la vue équipement retenait en plus la date de génération d'une
+       « à planifier » en retard ; ~~la barre « couvert » du tableau de bord ne
+       lit que le dernier rapport~~ — fermée le même jour : chaque rapport
+       réalisé compte au mois de sa `dateRapport` (`repartirParMois`), les
+       segments « à venir » et « retard » inchangés, une seule lecture en base.
+       **Décisions possibles,
        sans effet sur les données** : dériver des rapports le statut réalisé
        des ponctuelles ; marquer au dépôt si l'échéance honorée était réelle ;
        horizon « proche » à 14 ou 30 jours selon le rythme, comme GestBAT.

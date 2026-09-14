@@ -223,7 +223,17 @@ export type DashboardBundle = {
   /** Lignes conditionnelles de la matrice « Vos documents » —
    *  registres complémentaires (accessibilité, permis de feu…). */
   modulesMatrice: ModulesMatrice;
+  /** Les cinq lignes aux dates les plus proches, lignes sans échéance connue
+   *  COMPRISES : le widget « Prochaines échéances » les affiche. */
   prochainesVerifs: VerificationLite[];
+  /**
+   * La prochaine échéance CONNUE (`prochaineEcheanceConnue`), choisie sur la
+   * liste entière — jamais dérivée de `prochainesVerifs`, qui est coupée à
+   * cinq : le widget « Prochaine échéance » y filtrait les lignes sans
+   * échéance APRÈS la coupe, et annonçait « sans échéance connue » quand cinq
+   * « à planifier » précédaient une vraie échéance. `null` = aucune.
+   */
+  prochaineEcheance: VerificationLite | null;
   rapportsRecents: RapportLite[];
   nbVerifs: number;
   nbRapports: number;

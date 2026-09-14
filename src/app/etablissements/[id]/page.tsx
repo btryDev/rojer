@@ -34,10 +34,8 @@ import { statsActionsEnRetard } from "@/lib/actions/queries";
 import { prisma } from "@/lib/prisma";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
-import {
-  cinqProchaines,
-  libelleEtatCourtCapitale,
-} from "@/lib/calendrier/etats";
+import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
+import { echeancesDuTableauDeBord } from "@/lib/calendrier/prochaine-echeance";
 import {
   echeancesAnnoncables,
   porteeBatiment,
@@ -322,8 +320,11 @@ export default async function EtablissementPage({
     evenementsMois,
     statsRetardActions,
     modulesMatrice,
-    // Les cinq plus proches SUR L'ÉCHÉANCE OUVERTE, projetée ci-dessous.
-    prochainesVerifs: cinqProchaines(prochainesVerifs.map((v) => ({
+    // Les cinq plus proches SUR L'ÉCHÉANCE OUVERTE, projetée ci-dessous — et la
+    // prochaine échéance connue, choisie sur la MÊME liste AVANT la coupe à
+    // cinq : choisie après, cinq « à planifier » plus anciennes suffisaient à
+    // cacher une vraie échéance (`echeancesDuTableauDeBord`).
+    ...echeancesDuTableauDeBord(prochainesVerifs.map((v) => ({
       id: v.id,
       libelleObligation: v.libelleObligation,
       // L'échéance OUVERTE : les widgets trient, comptent à rebours et
@@ -348,7 +349,7 @@ export default async function EtablissementPage({
       equipement: {
         libelle: libellePorteur(v),
       },
-    }))),
+    })), aujourdhui),
     rapportsRecents: rapportsRecents.map((r) => ({
       id: r.id,
       verificationId: r.verificationId,

@@ -149,11 +149,25 @@ const h = vi.hoisted(() => {
         where: Record<string, unknown>;
         orderBy?: Record<string, "asc" | "desc">;
         take?: number;
+        select?: { rapports?: { where?: Record<string, unknown> } };
       }) => {
         const out = trier(
           db.verifications.filter((v) => correspond(v, args.where)),
           args.orderBy,
-        ).map((v) => ({ ...v, equipement: { libelle: `Éq. ${v.equipementId}` } }));
+        ).map((v) => ({
+          ...v,
+          equipement: { libelle: `Éq. ${v.equipementId}` },
+          // La relation `rapports` sélectionnée AVEC SA CLAUSE (barres de
+          // l'année) : la rendre brute ferait compter un rapport « non
+          // vérifiable » comme un contrôle fait — un filtre fantôme de plus.
+          ...(args.select?.rapports
+            ? {
+                rapports: ((v.rapports ?? []) as Record<string, unknown>[]).filter(
+                  (r) => correspond(r, args.select!.rapports!.where ?? {}),
+                ),
+              }
+            : {}),
+        }));
         return args.take ? out.slice(0, args.take) : out;
       },
     },
@@ -705,18 +719,36 @@ describe("compterVerifsParEquipement", () => {
     expect(stats.prochaineDate).toBeNull();
   });
 
-  it("n'annonce aucun rendez-vous sur une ligne planifiée dont la date est passée", async () => {
-    // MUTATION SURVIVANTE de la relecture du N4 (2026-09-13) : retirer la garde
-    // `etat !== "enRetard"` laissait la suite verte. Le cas passé n'était
-    // couvert que pour `a_planifier`, écartée par le statut ; pour une ligne
-    // « planifiée », cette garde est SEULE — et une date passée s'annonçait
-    // comme prochaine échéance.
+  it("annonce le retard DATÉ comme prochaine échéance, devant une échéance à venir", async () => {
+    // RETOURNÉ LE 2026-09-14 (lot tableau-de-bord-echeances). Ce test tenait
+    // la garde « une ligne en retard n'a pas de prochaine échéance », pendant
+    // que la vue du parc retenait le retard pour le même appareil : deux
+    // réponses. La définition est désormais UNE (`prochaineEcheanceConnue`) :
+    // un contrôle planifié puis manqué est la date qui engage le dirigeant.
     h.db.verifications.push(
       verif({ id: "v1", equipementId: "eq-1", datePrevue: jour(-5) }),
+      verif({ id: "v2", equipementId: "eq-1", datePrevue: jour(40) }),
     );
     const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
     expect(stats.enRetard).toBe(1);
-    expect(stats.prochaineDate).toBeNull();
+    expect(stats.prochaineDate).toEqual(jour(-5));
+  });
+
+  it("n'annonce jamais la date de génération d'une « à planifier » en retard", async () => {
+    // Le retard SANS date ne fournit aucune échéance : la vraie, à venir, est
+    // la prochaine. Le compteur de retard, lui, ne bouge pas.
+    h.db.verifications.push(
+      verif({
+        id: "generee",
+        equipementId: "eq-1",
+        statut: "a_planifier",
+        datePrevue: jour(-9),
+      }),
+      verif({ id: "vraie", equipementId: "eq-1", datePrevue: jour(66) }),
+    );
+    const stats = (await compterVerifsParEquipement(ETAB)).get("eq-1")!;
+    expect(stats.enRetard).toBe(1);
+    expect(stats.prochaineDate).toEqual(jour(66));
   });
 
   it("une ligne éteinte gelée sur « planifiée » n'annonce pas non plus de rendez-vous", async () => {
@@ -810,5 +842,27 @@ describe("compterObligationsParMois", () => {
     const barres = await compterObligationsParMois(ETAB, 2026);
     expect(barres[4].couvert).toBe(1);
     expect(barres[2].couvert).toBe(0);
+  });
+
+  it("compte chaque rapport réalisé dans son mois, pas seulement le dernier", async () => {
+    // Trimestrielle contrôlée en mars puis en juin : la barre de mars
+    // retombait à 0 au dépôt de juin (relecture système du 2026-09-14). Le
+    // rapport « non vérifiable » d'avril n'atteste d'aucun contrôle.
+    h.db.verifications.push(
+      verif({
+        id: "v1",
+        periodicite: "trimestrielle",
+        datePrevue: instantCivil(2026, 9, 11),
+        rapports: [
+          { dateRapport: instantCivil(2026, 3, 12), resultat: "conforme" },
+          { dateRapport: instantCivil(2026, 4, 2), resultat: "non_verifiable" },
+          { dateRapport: instantCivil(2026, 6, 11), resultat: "conforme" },
+        ],
+      }),
+    );
+    const barres = await compterObligationsParMois(ETAB, 2026);
+    expect(barres.map((b) => b.couvert)).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]);
+    expect(barres[8].aVenir).toBe(1);
+    expect(barres.reduce((n, b) => n + b.retard, 0)).toBe(0);
   });
 });

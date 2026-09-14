@@ -33,7 +33,6 @@ import {
 } from "lucide-react";
 import { construireBrief } from "@/lib/dashboard/brief";
 import {
-  aUnRendezVous,
   LIBELLE_ETAT_COURT,
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
@@ -1516,7 +1515,8 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
 /* ─── 3bis · Prochaine échéance (hors défaut — repris dans « À faire ») ── */
 
 export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
-  const { prochainesVerifs, aujourdhui, etablissementId } = bundle;
+  const { prochainesVerifs, prochaineEcheance, aujourdhui, etablissementId } =
+    bundle;
 
   if (prochainesVerifs.length === 0) {
     return (
@@ -1539,10 +1539,12 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
   // planifier » en retard, la plus ancienne donc première du tri, affichait
   // « 1 sept. · 13 j. de retard » sur sa date de génération (relecture du
   // lot C, 2026-09-14). Elle reste comptée en retard ailleurs sur le board.
-  const trie = prochainesVerifs
-    .filter((x) => aUnRendezVous(x, aujourdhui))
-    .sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime());
-  const v = trie[0];
+  //
+  // CHOISIE PAR LA PAGE, SUR LA LISTE ENTIÈRE — plus ici. Le filtre était
+  // appliqué à `prochainesVerifs`, déjà coupée à cinq : cinq « à planifier »
+  // plus anciennes qu'une vraie échéance au 15/10 remplissaient les places, et
+  // la carte disait « sans échéance connue » (relecture de contrôle du lot C).
+  const v = prochaineEcheance;
   if (!v) {
     return (
       <CarteBoard

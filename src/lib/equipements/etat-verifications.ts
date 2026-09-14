@@ -18,6 +18,7 @@ import {
   type LectureCalendrier,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
+import { prochaineEcheanceConnue } from "@/lib/calendrier/prochaine-echeance";
 import {
   porteursComptesPar,
   type LigneSondee,
@@ -28,8 +29,10 @@ import type { Periodicite } from "@/lib/referentiels/types-communs";
 export type EtatEquipement = {
   /** Vérifications dépassées sur cet appareil. */
   enRetard: number;
-  /** La prochaine échéance non faite, la plus proche. Absente quand
-   *  l'appareil n'a aucune occurrence à venir. */
+  /** La prochaine échéance de l'appareil, au sens de
+   *  `prochaineEcheanceConnue` — la plus ancienne échéance CONNUE qui attend
+   *  encore, retard daté compris. Absente quand aucune ligne n'a d'échéance
+   *  connue en attente : une « à planifier » n'a pas de date à fournir. */
   prochaine: {
     date: Date;
     libelle: string;
@@ -121,6 +124,10 @@ export function repartirParEquipement(
   now: Date,
 ): Map<string, EtatEquipement> {
   const parEquipement = new Map<string, EtatEquipement>();
+  // Les lignes de chaque appareil, gardées pour la prochaine échéance : elle
+  // se choisit sur l'ensemble, par la définition partagée, et non lecture par
+  // lecture dans la boucle des comptes.
+  const lignesParEquipement = new Map<string, typeof verifs>();
 
   for (const v of verifs) {
     // Une échéance d'établissement ne pèse sur aucun appareil : l'attribuer
@@ -160,25 +167,29 @@ export function repartirParEquipement(
         courant.aVenir += 1;
         if (lecture.registre === "proche") courant.proches += 1;
       }
-
-      // Le prochain rendez-vous, c'est le plus proche — pas le premier
-      // rencontré : les réalisations déplient des dates qui ne suivent
-      // pas l'ordre des `datePrevue` d'entrée. Une occurrence « à
-      // planifier » n'est pas un rendez-vous : sa date est une date de
-      // génération.
-      if (
-        lecture.registre !== "aPlanifier" &&
-        (!courant.prochaine || lecture.date < courant.prochaine.date)
-      ) {
-        courant.prochaine = {
-          date: lecture.date,
-          libelle: v.libelleObligation,
-          etat: lecture.registre,
-        };
-      }
     }
 
     parEquipement.set(v.equipementId, courant);
+    const lignes = lignesParEquipement.get(v.equipementId) ?? [];
+    lignes.push(v);
+    lignesParEquipement.set(v.equipementId, lignes);
+  }
+
+  // LA PROCHAINE ÉCHÉANCE N'EST PLUS CHOISIE DANS LA BOUCLE. Elle l'était sur
+  // le registre de la lecture, qui retenait une « à planifier » dont la date
+  // de génération était passée — classée « en retard », elle franchissait la
+  // garde `registre !== "aPlanifier"` — comme un rendez-vous manqué. Et le
+  // tableau de bord, qui calculait la même chose autrement, taisait le retard
+  // daté : deux réponses pour un appareil (2026-09-14). Une définition,
+  // partagée avec lui.
+  for (const [equipementId, lignes] of lignesParEquipement) {
+    const prochaine = prochaineEcheanceConnue(lignes, now);
+    if (prochaine === null) continue;
+    parEquipement.get(equipementId)!.prochaine = {
+      date: prochaine.date,
+      libelle: prochaine.ligne.libelleObligation,
+      etat: prochaine.registre,
+    };
   }
 
   return parEquipement;

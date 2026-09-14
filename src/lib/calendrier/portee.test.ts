@@ -397,7 +397,11 @@ describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
     const code = source("page.tsx")
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/^\s*\/\/.*$/gm, "");
-    expect(code).toContain("prochainesVerifs: cinqProchaines(prochainesVerifs.map(");
+    // `echeancesDuTableauDeBord` coupe à cinq par `cinqProchaines` ET choisit
+    // la prochaine échéance connue sur la liste entière (lot
+    // tableau-de-bord-echeances) : c'est la projection complète qu'elle doit
+    // recevoir, jamais une liste déjà coupée.
+    expect(code).toContain("...echeancesDuTableauDeBord(prochainesVerifs.map(");
     expect(code).not.toMatch(/take:\s*5/);
   });
 

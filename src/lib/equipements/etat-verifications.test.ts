@@ -82,6 +82,25 @@ describe("repartirParEquipement", () => {
     expect(m.get("eq1")?.aPlanifier).toBe(1);
   });
 
+  it("n'annonce pas non plus une « à planifier » EN RETARD : sa date de génération n'est pas un rendez-vous manqué", () => {
+    // TROUVÉ LE 2026-09-14. Classée « en retard », elle franchissait la garde
+    // `registre !== "aPlanifier"` et devenait la prochaine échéance de
+    // l'appareil, datée du jour où le dossier avait été créé — devant sa vraie
+    // échéance. La définition partagée (`prochaineEcheanceConnue`) lit le
+    // statut. Le compteur de retard, lui, ne change pas.
+    const m = repartirParEquipement(
+      [
+        verif("eq1", "2026-08-01", { statut: "a_planifier", libelle: "Générée" }),
+        verif("eq1", "2026-11-01", { libelle: "Vraie" }),
+      ],
+      AUJOURDHUI,
+    );
+
+    expect(m.get("eq1")?.prochaine?.libelle).toBe("Vraie");
+    expect(m.get("eq1")?.prochaine?.date).toEqual(jour("2026-11-01"));
+    expect(m.get("eq1")?.enRetard).toBe(1);
+  });
+
   it("garde la vérification réalisée la plus récente", () => {
     // Le fait se lit sur le dernier rapport réalisé de chaque ligne (ADR-034,
     // N5) : `derniere` est la plus récente des deux.
