@@ -1104,9 +1104,11 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
           {/* Le parc ENTIER : sous un filtre de zone, `equipements` ne porte
               que ceux du lieu, et « aucun équipement n'est encore déclaré »
               aurait menti quand le parc est dans une autre zone. */}
+          {/* Les trois termes sur tout l'établissement : le compte de retards
+              du bandeau suit la zone. */}
           {bundle.equipementsEtablissement.length === 0 &&
           bundle.nbVerifs === 0 &&
-          nbEnRetard === 0 ? (
+          bundle.echeancesEtablissement.retards.total === 0 ? (
             <>
               {/* Le calendrier naît avec l'établissement (génération à la
                   création, réparation à l'affichage) : ce panneau ne dit plus

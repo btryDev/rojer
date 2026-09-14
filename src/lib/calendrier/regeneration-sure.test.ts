@@ -7,7 +7,7 @@
 // suit a échoué. Sans lui, l'utilisateur voit une erreur, redépose son rapport,
 // et en obtient deux.
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const genererCalendrier = vi.fn();
 const regenererSansInvalider = vi.fn();
@@ -21,6 +21,12 @@ vi.mock("./queries", () => ({ calendrierDesynchronise }));
 const { regenererApresMutation, assurerCalendrierAJour } = await import(
   "./regeneration-sure"
 );
+
+// Restaurée même quand une assertion tombe : sinon la variable de preview
+// fuirait dans le test suivant, qui passerait sans rien prouver.
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 beforeEach(() => {
   genererCalendrier.mockReset();
@@ -91,7 +97,6 @@ describe("assurerCalendrierAJour — la réparation à l'affichage", () => {
     await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(false);
     expect(calendrierDesynchronise).not.toHaveBeenCalled();
     expect(regenererSansInvalider).not.toHaveBeenCalled();
-    vi.unstubAllEnvs();
   });
 
   it("un échec de régénération ne fait pas tomber la page : elle s'affiche sur les lignes en base", async () => {

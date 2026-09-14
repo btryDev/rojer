@@ -36,7 +36,14 @@ const h = vi.hoisted(() => {
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    $transaction: async (fn: (tx: typeof h.tx) => Promise<unknown>) => fn(h.tx),
+    // « commit » marque la fin de la transaction : la génération doit venir
+    // APRÈS, sur des lignes validées — placée dans le callback, elle lirait un
+    // établissement que la base ne voit pas encore.
+    $transaction: async (fn: (tx: typeof h.tx) => Promise<unknown>) => {
+      const res = await fn(h.tx);
+      h.ordre.push("commit");
+      return res;
+    },
   },
 }));
 vi.mock("@/lib/auth/require-user", () => ({
@@ -81,7 +88,13 @@ describe("finaliserOnboarding — le calendrier naît avec l'établissement", ()
     ).rejects.toThrow("NEXT_REDIRECT");
 
     expect(h.regenererApresMutation).toHaveBeenCalledWith("etab-1", "onboarding");
-    expect(h.ordre).toEqual(["entreprise", "etablissement", "generation", "redirection"]);
+    expect(h.ordre).toEqual([
+      "entreprise",
+      "etablissement",
+      "commit",
+      "generation",
+      "redirection",
+    ]);
   });
 
   it("ne génère rien quand le formulaire est refusé", async () => {
