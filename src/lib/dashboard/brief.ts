@@ -64,6 +64,11 @@ export type EntreeBrief = {
    * fois le jour où elle bascule.
    */
   verifsAPlanifier: number;
+  /**
+   * Parmi les retards, les vérifications SANS ÉCHÉANCE CONNUE : comptées dans
+   * `retards`, mais sans date dépassée à annoncer (`construireTitre`).
+   */
+  verifsEnRetardSansEcheance: number;
   duerp: DuerpBrief;
   recommandations: RecoBrief[];
   nbRapports: number;
@@ -216,11 +221,28 @@ const TONS_ALERTE: ReadonlySet<RecoBrief["kind"]> = new Set([
 function construireTitre(e: EntreeBrief): string {
   const urgent = e.retards.total;
   if (urgent > 0) {
-    // L'accord porte sur deux mots, pas un : « Une échéance a dépassé SA
-    // date », « Onze échéances ont dépassé LEUR date ».
-    return urgent > 1
-      ? `${enLettres(urgent)} échéances ont dépassé leur date`
-      : `${enLettres(urgent)} échéance a dépassé sa date`;
+    // « ONT DÉPASSÉ LEUR DATE » N'EST VRAI QUE D'UNE ÉCHÉANCE DATÉE. Une
+    // vérification sans échéance connue est comptée dans le retard, mais sa
+    // date n'est qu'une date de génération : « 14 échéances ont dépassé leur
+    // date » en portait cinq qui n'en ont aucune (contrôle visuel en
+    // production, 2026-09-14). Le titre dit alors « sont dues », qui vaut
+    // pour les deux, et nomme la part sans échéance.
+    const sansEcheance = Math.min(e.verifsEnRetardSansEcheance, urgent);
+    if (sansEcheance === 0) {
+      // L'accord porte sur deux mots, pas un : « Une échéance a dépassé SA
+      // date », « Onze échéances ont dépassé LEUR date ».
+      return urgent > 1
+        ? `${enLettres(urgent)} échéances ont dépassé leur date`
+        : `${enLettres(urgent)} échéance a dépassé sa date`;
+    }
+    if (sansEcheance === urgent) {
+      return urgent > 1
+        ? `${enLettres(urgent)} vérifications sont dues, sans échéance connue`
+        : `${enLettres(urgent)} vérification est due, sans échéance connue`;
+    }
+    return `${enLettres(urgent)} échéances sont dues, dont ${enLettres(
+      sansEcheance,
+    ).toLowerCase()} sans échéance connue`;
   }
   const proche = e.sous30j.total;
   if (proche > 0) {
@@ -312,8 +334,25 @@ function construireParagraphe(e: EntreeBrief): string {
 
   const restes: string[] = [];
   for (const famille of ORDRE_FAMILLES) {
-    const n = e.retards.parFamille[famille];
+    let n = e.retards.parFamille[famille];
     if (n === 0) continue;
+    // Les vérifications sans échéance connue ne sont pas « dépassées » : leur
+    // date n'est qu'une date de génération. Même partage que le titre
+    // (contrôle visuel en production, 2026-09-14). Elles vivent dans les
+    // contrôles — un titre de salarié naît avec la date de sa pièce.
+    if (famille === "controle") {
+      const sansEcheance = Math.min(e.verifsEnRetardSansEcheance, n);
+      n -= sansEcheance;
+      if (n > 0) {
+        restes.push(`${n} ${n > 1 ? NOM_RETARD.controle[1] : NOM_RETARD.controle[0]}`);
+      }
+      if (sansEcheance > 0) {
+        restes.push(
+          `${sansEcheance} vérification${sansEcheance > 1 ? "s" : ""} due${sansEcheance > 1 ? "s" : ""} sans échéance connue`,
+        );
+      }
+      continue;
+    }
     const [singulier, pluriel] = NOM_RETARD[famille];
     restes.push(`${n} ${n > 1 ? pluriel : singulier}`);
   }

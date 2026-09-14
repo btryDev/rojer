@@ -229,6 +229,32 @@ export function classerDate(
     : "lointain";
 }
 
+/**
+ * L'état d'une échéance du registre des AUTRES modules (ADR-010) — attestation,
+ * action, permis de feu, plan de prévention, DUERP, carnet sanitaire.
+ *
+ * LE RETARD SE LIT SUR SON TON, JAMAIS SUR SA DATE SEULE. Le ton porte déjà la
+ * règle de sa source (`echeances.ts`). Reclassée sur la date, une opération EN
+ * COURS — permis ou plan démarré, inspection faite, fin non échue — se
+ * peignait « dépassée » parce que sa date de DÉBUT était passée : la règle du
+ * calendrier annonçait « 10 dépassées » au-dessus de cartes qui en comptaient
+ * 9, et la tuile du 12 septembre était rose sans pastille « En retard »
+ * (contrôle visuel en production, 2026-09-14).
+ *
+ * Une date passée sans alerte n'est atteinte que par ces opérations : les
+ * closes ne viennent pas au calendrier, et les autres sources passent en
+ * alerte dès leur date dépassée. Elle se lit « sous 30 jours » — une opération
+ * en cours est l'affaire du moment ; ni « faite », qu'elle n'est pas, ni « au-
+ * delà de 30 jours ».
+ */
+export function etatAutreEcheance(
+  e: { date: Date; tone: "alerte" | "ok" },
+  now: Date,
+): Extract<EtatEcheance, "enRetard" | "proche" | "lointain"> {
+  if (e.tone === "alerte") return "enRetard";
+  return estEnRetard(e.date, now) ? "proche" : classerDate(e.date, now);
+}
+
 // `estStatutRealise` — « ce contrôle a eu lieu », le FAIT — vit dans
 // `lib/dates/retard.ts` avec la liste des statuts réalisés : une seule
 // définition, que les clauses SQL lisent aussi. Réexporté ici pour les

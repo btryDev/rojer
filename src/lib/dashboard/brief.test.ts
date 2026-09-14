@@ -43,6 +43,7 @@ const CALME: EntreeBrief = {
   retards: ventil(),
   sous30j: ventil(),
   verifsAPlanifier: 0,
+  verifsEnRetardSansEcheance: 0,
   duerp: { existe: true, estAJour: true },
   recommandations: [],
   nbRapports: 4,
@@ -57,6 +58,41 @@ describe("construireBrief — titre", () => {
       retards: ventil({ controle: 1, travaux: 1, papiers: 1 }),
     });
     expect(b.titre).toBe("Trois échéances ont dépassé leur date");
+  });
+
+  it("ne dit pas « ont dépassé leur date » d'une vérification sans échéance connue", () => {
+    // Contrôle visuel en production, 2026-09-14 : « 14 échéances ont dépassé
+    // leur date » en portait cinq sans échéance connue — leur date n'est
+    // qu'une date de génération.
+    const mixte = construireBrief({
+      ...CALME,
+      retards: ventil({ controle: 6, travaux: 5, operations: 3 }),
+      verifsEnRetardSansEcheance: 5,
+    });
+    expect(mixte.titre).toBe("14 échéances sont dues, dont cinq sans échéance connue");
+
+    const toutes = construireBrief({
+      ...CALME,
+      retards: ventil({ controle: 3 }),
+      verifsEnRetardSansEcheance: 3,
+    });
+    expect(toutes.titre).toBe("Trois vérifications sont dues, sans échéance connue");
+
+    const une = construireBrief({
+      ...CALME,
+      retards: ventil({ controle: 1 }),
+      verifsEnRetardSansEcheance: 1,
+    });
+    expect(une.titre).toBe("Une vérification est due, sans échéance connue");
+  });
+
+  it("le paragraphe ne compte pas « dépassées » les vérifications sans échéance connue", () => {
+    const b = construireBrief({
+      ...CALME,
+      retards: ventil({ controle: 6 }),
+      verifsEnRetardSansEcheance: 5,
+    });
+    expect(b.paragraphe).toContain("1 vérification dépassée et 5 vérifications dues sans échéance connue");
   });
 
   it("accorde le singulier", () => {

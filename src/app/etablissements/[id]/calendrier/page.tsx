@@ -51,6 +51,7 @@ import {
   ENCRE_ETAT,
   PRIORITE_ETAT,
   classerDate,
+  etatAutreEcheance,
   lecturesCalendrier,
   type EtatEcheance,
   type LectureCalendrier,
@@ -434,9 +435,8 @@ export default async function CalendrierPage({
   // (`lecturesCalendrier`), plus jamais recalculé.
   const etatDeLaLigne = (l: LigneMois): EtatEcheance => {
     if (l.genre !== "verif") {
-      return l.e.tone === "alerte"
-        ? "enRetard"
-        : classerDate(l.date, aujourdhui);
+      // Le ton, jamais la date seule (`etatAutreEcheance`, où c'est testé).
+      return etatAutreEcheance(l.e, aujourdhui);
     }
     // « À planifier » (donc à date future — le classifieur a déjà rangé
     // les dates passées en retard) est écarté des barres par `datable` ;

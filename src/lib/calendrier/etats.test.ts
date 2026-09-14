@@ -4,6 +4,7 @@ import {
   cinqProchaines,
   classerDate,
   classerVerification,
+  etatAutreEcheance,
   lecturesCalendrier,
   statutAffiche,
   statutDeLaLecture,
@@ -15,6 +16,25 @@ import {
 const NOW = new Date("2026-08-19T10:00:00.000Z");
 
 const jours = (n: number) => new Date(NOW.getTime() + n * 86_400_000);
+
+describe("etatAutreEcheance — le ton, jamais la date seule", () => {
+  it("une opération en cours, démarrée sans alerte, n'est pas « dépassée »", () => {
+    // Contrôle visuel en production, 2026-09-14 : un plan de prévention
+    // démarré le 12, inspection faite, était peint « dépassé » par la règle du
+    // calendrier, sans pastille « En retard » sur sa carte.
+    expect(etatAutreEcheance({ date: jours(-2), tone: "ok" }, NOW)).toBe("proche");
+  });
+
+  it("une alerte est en retard, quelle que soit la date", () => {
+    expect(etatAutreEcheance({ date: jours(-2), tone: "alerte" }, NOW)).toBe("enRetard");
+    expect(etatAutreEcheance({ date: jours(10), tone: "alerte" }, NOW)).toBe("enRetard");
+  });
+
+  it("une date à venir se classe comme toute date", () => {
+    expect(etatAutreEcheance({ date: jours(10), tone: "ok" }, NOW)).toBe("proche");
+    expect(etatAutreEcheance({ date: jours(90), tone: "ok" }, NOW)).toBe("lointain");
+  });
+});
 
 describe("classerDate", () => {
   it("hier est en retard, aujourd'hui non", () => {

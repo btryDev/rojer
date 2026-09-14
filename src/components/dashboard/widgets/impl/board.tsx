@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { construireBrief } from "@/lib/dashboard/brief";
 import {
+  LIBELLE_AUCUNE_VERIFICATION,
   LIBELLE_ETAT_COURT,
   LIBELLE_SANS_ECHEANCE,
 } from "@/lib/calendrier/etats";
@@ -295,6 +296,29 @@ function Lien({
   );
 }
 
+/**
+ * Un lien DANS une phrase : souligné, à la taille du texte qui le porte.
+ * `Lien` est un bouton plein — posé en fin de note, il sautait sur sa propre
+ * ligne en gros bouton noir et laissait le point final orphelin sous lui
+ * (contrôle visuel en production, 2026-09-14).
+ */
+function LienDansPhrase({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
+    >
+      {children}
+    </Link>
+  );
+}
+
 /* ─── 1 · Le brief ──────────────────────────────────────────── */
 
 /**
@@ -493,6 +517,7 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
     retards,
     sous30j,
     verifsAPlanifier: echeancesEtablissement.verifsAPlanifier,
+    verifsEnRetardSansEcheance: echeancesEtablissement.verifsEnRetardSansEcheance,
     // `etat` transmis : sans lui le brief se rabattait sur sa formulation de
     // repli et n'annonçait jamais « aucune version validée » — il disait
     // « votre DUERP a plus de douze mois » à quelqu'un qui venait de l'ouvrir.
@@ -1371,7 +1396,7 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
           {nbRetardSansDate > 1
             ? `${nbRetardSansDate} vérifications en retard, sans échéance connue : ni la frise ni la grille ne les placent.`
             : "1 vérification en retard, sans échéance connue : ni la frise ni la grille ne la placent."}{" "}
-          <Lien href={hrefCalendrier}>Voir au calendrier</Lien>.
+          <LienDansPhrase href={hrefCalendrier}>Voir au calendrier</LienDansPhrase>
         </p>
       ) : null}
       {nbSansDate > 0 ? (
@@ -1385,7 +1410,7 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
           {nbSansDate > 1
             ? `${nbSansDate} vérifications à planifier, sans échéance connue : ni la frise ni la grille ne les placent.`
             : "1 vérification à planifier, sans échéance connue : ni la frise ni la grille ne la placent."}{" "}
-          <Lien href={hrefCalendrier}>Voir au calendrier</Lien>.
+          <LienDansPhrase href={hrefCalendrier}>Voir au calendrier</LienDansPhrase>
         </p>
       ) : null}
 
@@ -1489,16 +1514,27 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
             // Écart en jours civils : le badge ne change qu'à minuit,
             // heure de Paris. Avec la division par 86 400 000, une
             // échéance du jour passait de « Auj. » à « J−1 » vers 14 h.
-            const badge = r.date ? badgeEcart(r.date, aujourdhui) : null;
+            // Un retard SANS ÉCHÉANCE CONNUE n'a pas de jours à compter : la
+            // pastille dit « En retard », la méta dit pourquoi. La ligne voisine
+            // affichait « 57 j de retard », celle-ci rien du tout (contrôle
+            // visuel en production, 2026-09-14).
+            const retardSansDate = alerte && !r.date && r.kind === "verif_depassee";
+            const badge = r.date
+              ? badgeEcart(r.date, aujourdhui)
+              : retardSansDate
+                ? "En retard"
+                : null;
             // Méta : le type d'objet d'abord — c'est lui qui lève
             // l'ambiguïté — puis « en retard » ou la date.
             const meta = type
               ? `${type} · ${
-                  alerte
-                    ? "en retard"
-                    : r.date
-                      ? libelleDateCourte(r.date)
-                      : (r.sousTitre ?? "")
+                  retardSansDate
+                    ? LIBELLE_AUCUNE_VERIFICATION.toLowerCase()
+                    : alerte
+                      ? "en retard"
+                      : r.date
+                        ? libelleDateCourte(r.date)
+                        : (r.sousTitre ?? "")
                 }`
               : (r.sousTitre ?? "");
             return (
