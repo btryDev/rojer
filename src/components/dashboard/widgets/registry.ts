@@ -341,9 +341,11 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   meteo: {
     id: "meteo",
-    titre: "Météo · 30 jours",
+    // L'identifiant `meteo` reste : il est la clé des tableaux de bord déjà
+    // personnalisés. Le nom, lui, était trompeur (2026-09-14).
+    titre: "30 prochains jours",
     description:
-      "Heatmap 30 jours glissants, chaque case est un jour coloré selon l'urgence dominante.",
+      "Chaque case est un jour, colorée selon l'échéance la plus urgente qui y tombe.",
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",

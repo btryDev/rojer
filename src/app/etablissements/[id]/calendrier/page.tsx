@@ -1231,7 +1231,17 @@ export default async function CalendrierPage({
                  filtre de famille qui les écarte, le compteur mentirait. */
               sansDate={
                 !filtreFamille || filtreFamille === "controle"
-                  ? etat.aPlanifier
+                  ? // Les « à planifier », ET les retards sans échéance
+                    // connue : ni les uns ni les autres ne sont sur une barre
+                    // (`datable`). Compter les premiers seuls laissait les
+                    // seconds hors de tout compte de la règle.
+                    etat.aPlanifier +
+                    lignes.filter(
+                      (l) =>
+                        l.genre === "verif" &&
+                        l.registre === "enRetard" &&
+                        !datable(l),
+                    ).length
                   : 0
               }
               /* Seulement sur la lecture d'ensemble : sous un filtre, la
@@ -1262,9 +1272,10 @@ export default async function CalendrierPage({
                 ).length,
                 // Ce que la règle ne place pas : la carte le dit, sans
                 // quoi son total et celui de l'instrument se contredisent.
-                nbAPlanifier: liste.filter(
-                  (l) => l.genre === "verif" && l.registre === "aPlanifier",
-                ).length,
+                // `datable` et non le registre : une ligne EN RETARD sans
+                // échéance connue n'est sur aucune barre non plus, et la
+                // pastille ne la comptait nulle part (relecture du lot C).
+                nbSansDate: liste.filter((l) => !datable(l)).length,
                 contenu: (
                   // La clé n'est pas décorative : le contenu du mois est
                   // créé côté serveur puis traverse la frontière client

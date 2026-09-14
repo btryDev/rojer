@@ -116,8 +116,8 @@ export default async function EquipementDetailPage({
   // Le rendez-vous de tête : la première ligne datée de « à faire ». Une
   // occurrence à planifier n'en est pas un — sa date est une date de
   // génération (ADR-010).
-  // SAUF UN RETARD SANS DATE : dû et jamais fait, il passe devant tout
-  // (`lignesAFaire` le range en tête). Le chercher parmi les seules lignes
+  // SAUF UN RETARD, daté ou non : il passe devant tout (`lignesAFaire` le
+  // range en tête, le daté d'abord). Le chercher parmi les seules lignes
   // datées faisait annoncer « attendue dans 182 jours » à côté de la
   // pastille « 1 vérification en retard » (relecture du lot C, 2026-09-14).
   const tete =

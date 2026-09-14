@@ -217,7 +217,7 @@ export type DashboardBundle = {
   evenementsHorizon: EvenementGrille[];
   /** Fenêtre glissante 7 j — widget « Semaine ». */
   evenementsSemaine?: EvenementFenetre[];
-  /** Fenêtre glissante 30 j — widget « Météo ». */
+  /** Fenêtre glissante 30 j — widget « 30 prochains jours ». */
   evenementsMois?: EvenementFenetre[];
   statsRetardActions: StatsRetardActions;
   /** Lignes conditionnelles de la matrice « Vos documents » —

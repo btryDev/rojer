@@ -34,7 +34,12 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
       equipement: string;
     }[]
   >();
-  for (const e of evenementsSemaine) {
+  // Une ligne SANS ÉCHÉANCE CONNUE ne se pose sur aucun jour : sa date est
+  // celle de la génération (`sansEcheance`). Un appareil déclaré aujourd'hui
+  // peignait la colonne du jour d'une « échéance » que rien n'avait fixée
+  // (2026-09-14). Elle reste comptée en retard ailleurs.
+  const datees = evenementsSemaine.filter((e) => !e.sansEcheance);
+  for (const e of datees) {
     const key = cleJourCivil(e.date);
     const arr = eventsParJour.get(key) ?? [];
     arr.push({
@@ -47,6 +52,9 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
     eventsParJour.set(key, arr);
   }
 
+  // Le total reste celui de la fenêtre : il comptait déjà des retards qu'aucune
+  // colonne ne montre (dates passées), et un retard ne se retire pas d'un
+  // compte parce qu'il n'a pas de case.
   const total = evenementsSemaine.length;
 
   return (

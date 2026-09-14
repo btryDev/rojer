@@ -673,18 +673,26 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        réécrite, cinq intouchées). Quatre mutations rouges. 2639 tests.
        **Relecture de contrôle** : tout fermé, aucune régression. Deux
        affirmations ci-dessus sont trop larges et restent OUVERTES, mineures :
-       les widgets Semaine et Météo posent encore une ligne « à planifier » À
-       VENIR sur son jour (antérieur au lot, compteurs justes), et « À
-       planifier » / « à dater » subsistent pour les lignes non en retard. Trois
-       autres écarts mineurs, écrits pour un prochain lot : l'en-tête du mois
-       du calendrier ne compte pas une ligne en retard sans date (ni « datée »
-       ni « à planifier ») ; ~~le widget « Prochaine échéance » filtre après la
+       ~~les widgets Semaine et Météo posent encore une ligne « à planifier » À
+       VENIR sur son jour (antérieur au lot, compteurs justes)~~ — fermé le
+       2026-09-14 : seules les échéances connues colorent une case, les
+       comptes gardent toute la fenêtre ; « Météo », jugé trompeur par la
+       propriétaire, s'appelle « 30 prochains jours » (identifiant `meteo`
+       conservé pour les tableaux déjà personnalisés) ; les barres de l'année
+       du tableau de bord ne posent plus une « à planifier » au mois de sa
+       génération. « À planifier » / « à dater » subsistent pour les lignes non
+       en retard. Trois autres écarts mineurs : ~~l'en-tête du mois du
+       calendrier ne compte pas une ligne en retard sans date (ni « datée » ni
+       « à planifier »)~~ — fermé le même jour : la pastille compte tout ce
+       qu'aucune barre ne place et dit « sans date » ; ~~le widget « Prochaine échéance » filtre après la
        coupe à cinq et peut dire « sans échéance connue » quand cinq lignes
        sans échéance précèdent une vraie~~ — fermé le 2026-09-14 : la page choisit la prochaine échéance
        connue sur la liste entière, avant la coupe (`echeancesDuTableauDeBord`),
        et le widget la lit dans le bundle ; les cinq prochaines sont
-       inchangées. **Toujours ouvert** : la vue par équipement désigne le
-       retard daté, la fiche le retard sans date, pour le même appareil.
+       inchangées. ~~La vue par équipement désigne le retard daté, la fiche le
+       retard sans date, pour le même appareil~~ — fermé le 2026-09-14 : une
+       règle pour les deux, le retard daté d'abord, puis le retard sans date,
+       puis la prochaine échéance.
        **Relecture neutre de ce lot** : aucun compteur ni score ne bouge, mais
        l'anneau « Obligations de l'année » additionnait les contrôles faits —
        désormais un par rapport — aux échéances dans un même total en

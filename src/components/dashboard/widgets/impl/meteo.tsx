@@ -1,8 +1,12 @@
 "use client";
 
-// Widget « Météo du mois ».
-// Heatmap 30 jours glissants. Chaque cellule = un jour, couleur selon
-// la pire urgence du jour (retard > à planifier > OK > rien).
+// Widget « 30 prochains jours » (identifiant technique `meteo`, conservé pour
+// ne pas casser les tableaux de bord déjà personnalisés).
+//
+// Il s'appelait « Météo du mois » : la propriétaire l'a jugé trompeur — le mot
+// ne dit rien de ce que la grille montre (2026-09-14). Trente cases, une par
+// jour ; chaque case prend la couleur de l'échéance la plus urgente qui y
+// tombe (retard > à planifier > planifiée > rien).
 
 import { CHAMP_ETAT } from "@/lib/calendrier/etats";
 import { BentoCell } from "@/components/dashboard/BentoCell";
@@ -24,7 +28,11 @@ export function WidgetMeteo({ bundle }: { bundle: DashboardBundle }) {
   type Tone = "alerte" | "warn" | "ok";
   const tonePriorite: Record<Tone, number> = { alerte: 3, warn: 2, ok: 1 };
   const toneParJour = new Map<string, Tone>();
-  for (const e of evenementsMois) {
+  // Seules les échéances CONNUES colorent une case : une ligne « à planifier »
+  // posait sa date de génération — un appareil déclaré aujourd'hui peignait la
+  // case du jour (2026-09-14). Les comptes ci-dessous, eux, gardent toute la
+  // fenêtre : un retard ne sort pas d'un compte faute de case.
+  for (const e of evenementsMois.filter((x) => !x.sansEcheance)) {
     const key = cleJourCivil(e.date);
     const actuel = toneParJour.get(key);
     const etone = e.tone as Tone;
@@ -41,7 +49,7 @@ export function WidgetMeteo({ bundle }: { bundle: DashboardBundle }) {
 
   return (
     <BentoCell
-      kicker="Météo · 30 jours"
+      kicker="30 prochains jours"
       sub={
         evenementsMois.length === 0
           ? "Aucune tâche"

@@ -16,7 +16,7 @@ export function SectionMois({
   titre,
   nb,
   nbEnRetard = 0,
-  nbAPlanifier = 0,
+  nbSansDate = 0,
   ouvert,
   onToggle,
   ancre,
@@ -27,12 +27,14 @@ export function SectionMois({
   /** Lignes en alerte du mois — affichées sur l'en-tête même replié. */
   nbEnRetard?: number;
   /**
-   * Occurrences « à planifier » du mois. Leur date est une date de
-   * génération, pas un rendez-vous : la règle annuelle les écarte de ses
+   * Lignes du mois SANS ÉCHÉANCE CONNUE — « à planifier », et retards dont la
+   * date n'est qu'une date de génération. La règle annuelle les écarte de ses
    * barres. Sans cette pilule, la carte annoncerait vingt échéances là où
-   * l'instrument en compte dix-neuf, et l'écart resterait une énigme.
+   * l'instrument en compte dix-neuf, et l'écart resterait une énigme. Elle
+   * disait « à planifier » et ne comptait que ceux-là : un retard sans date
+   * quittait les barres sans entrer dans aucun compte (relecture du lot C).
    */
-  nbAPlanifier?: number;
+  nbSansDate?: number;
   ouvert: boolean;
   onToggle: () => void;
   /** `id` HTML de la carte, cible du défilement depuis la règle. */
@@ -65,9 +67,9 @@ export function SectionMois({
               {nbEnRetard} en retard
             </span>
           ) : null}
-          {nbAPlanifier > 0 ? (
+          {nbSansDate > 0 ? (
             <span className="inline-block rounded-full bg-[color:var(--board-slate-pale)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-slate-mid)]">
-              {nbAPlanifier} à planifier
+              {nbSansDate} sans date
             </span>
           ) : null}
           <span

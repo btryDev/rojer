@@ -195,8 +195,8 @@ export function lignesAFaire(
 }
 
 /**
- * Le RETARD d'abord — sans date en tête, dû et jamais fait —, puis les
- * échéances datées dans l'ordre, puis les « à planifier » sans date.
+ * Le RETARD d'abord — daté, puis sans date —, puis les échéances datées dans
+ * l'ordre, puis les « à planifier » sans date.
  *
  * Le tri ne regardait que la date. Depuis qu'une ligne « à planifier » en
  * retard ne montre plus sa date de génération, elle tombait APRÈS toutes les
@@ -209,8 +209,13 @@ function comparerParUrgence(
   a: { date: Date | null; etat: RegistreLigne },
   b: { date: Date | null; etat: RegistreLigne },
 ): number {
+  // Le retard DATÉ d'abord, puis le retard sans date : la même règle que la
+  // vue par équipement du calendrier (« Dépassée de N j », puis « Aucune
+  // vérification enregistrée »). La fiche mettait le retard sans date devant,
+  // et les deux écrans désignaient deux retards différents pour le même
+  // appareil (relecture du lot C, 2026-09-14).
   const rang = (l: { date: Date | null; etat: RegistreLigne }) =>
-    l.etat === "enRetard" ? (l.date ? 1 : 0) : l.date ? 2 : 3;
+    l.etat === "enRetard" ? (l.date ? 0 : 1) : l.date ? 2 : 3;
   const ecart = rang(a) - rang(b);
   if (ecart !== 0) return ecart;
   if (a.date && b.date) return a.date.getTime() - b.date.getTime();

@@ -812,7 +812,7 @@ describe("compterObligationsParMois", () => {
   it("ne peint pas la barre en rouge le matin de l'échéance", async () => {
     h.db.verifications.push(
       verif({ id: "v1", datePrevue: jour(0) }),
-      verif({ id: "v2", statut: "a_planifier", datePrevue: jour(0) }),
+      verif({ id: "v2", datePrevue: jour(0) }),
     );
     const barres = await compterObligationsParMois(ETAB, 2026);
     const aout = barres[7];
@@ -820,12 +820,19 @@ describe("compterObligationsParMois", () => {
     expect(aout.aVenir).toBe(2);
   });
 
-  it("compte en retard une « à planifier » dépassée", async () => {
+  it("une « à planifier » n'occupe aucun mois, dépassée ou non", async () => {
+    // CE TEST A CHANGÉ DE RÉPONSE (2026-09-14). Il affirmait « compte en
+    // retard une à planifier dépassée » — sur sa date de GÉNÉRATION, qui n'est
+    // pas une échéance (`aUnRendezVous`). La barre du calendrier l'écartait
+    // déjà ; celle du tableau de bord suit. La ligne reste comptée en retard
+    // là où le retard se compte (bandeau, pastilles, score).
     h.db.verifications.push(
       verif({ id: "v1", statut: "a_planifier", datePrevue: jour(-3) }),
+      verif({ id: "v2", statut: "a_planifier", datePrevue: jour(5) }),
     );
     const barres = await compterObligationsParMois(ETAB, 2026);
-    expect(barres[7].retard).toBe(1);
+    expect(barres[7].retard).toBe(0);
+    expect(barres[7].aVenir).toBe(0);
   });
 
   it("range une réalisation dans son mois de réalisation", async () => {

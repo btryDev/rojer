@@ -141,7 +141,7 @@ export type EvenementFenetre = {
 /**
  * Liste tous les événements de vérification sur une fenêtre glissante
  * de `joursHorizon` jours à partir d'aujourd'hui. Utilisé par les
- * widgets « Semaine » (7 j) et « Météo » (30 j), et par le flux calendrier.
+ * widgets « Semaine » (7 j) et « 30 prochains jours », et par le flux calendrier.
  *
  * Le classement passe par `lecturesCalendrier` — LA règle, partagée avec
  * la page calendrier : l'échéance ouverte de chaque ligne (ADR-034) entre

@@ -37,7 +37,8 @@ export type SectionMoisData = {
   titre: string;
   nb: number;
   nbEnRetard: number;
-  nbAPlanifier: number;
+  /** Lignes du mois qu'aucune barre ne place (`datable`). */
+  nbSansDate: number;
   contenu: React.ReactNode;
 };
 
@@ -653,7 +654,7 @@ function SectionMoisControlee({
       titre={data.titre}
       nb={data.nb}
       nbEnRetard={data.nbEnRetard}
-      nbAPlanifier={data.nbAPlanifier}
+      nbSansDate={data.nbSansDate}
       ouvert={ouvert}
       onToggle={onToggle}
       ancre={ancreDuMois(data.cle)}

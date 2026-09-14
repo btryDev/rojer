@@ -131,9 +131,11 @@ describe("lignesAFaire", () => {
       "/etablissements/e1",
       AUJOURDHUI,
     );
+    // Le retard DATÉ d'abord, puis le retard sans date : la même règle que la
+    // vue par équipement du calendrier (alignement du 2026-09-14).
     expect(lignes.map((l) => l.cle)).toEqual([
-      "v-v-generee",
       "v-v-retard",
+      "v-v-generee",
       "v-v-lointaine",
       "v-v-a-venir",
     ]);

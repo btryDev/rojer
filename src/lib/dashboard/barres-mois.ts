@@ -4,7 +4,7 @@
 // Module PUR : aucun client Prisma. La lecture vit dans `queries.ts`.
 
 import { composantesCiviles } from "@/lib/dates";
-import { lecturesCalendrier } from "@/lib/calendrier/etats";
+import { aUnRendezVous, lecturesCalendrier } from "@/lib/calendrier/etats";
 import type { VerificationDatee } from "@/lib/dates/retard";
 
 export type BarMois = {
@@ -12,7 +12,8 @@ export type BarMois = {
   annee: number;
   /** Contrôles FAITS dans le mois : un par rapport réalisé daté du mois. */
   couvert: number;
-  /** Échéances ouvertes du mois, non dépassées — « à planifier » comprises. */
+  /** Échéances CONNUES du mois, non dépassées. Une « à planifier » n'y est
+   *  pas : sa date est une date de génération (`aUnRendezVous`). */
   aVenir: number;
   /** Échéances ouvertes du mois, dépassées (la date seule, ADR-011). */
   retard: number;
@@ -90,6 +91,13 @@ export function repartirParMois(
         else for (const r of v.rapportsRealises) poser(r.dateRapport, "couvert");
         continue;
       }
+      // UNE ÉCHÉANCE CONNUE, ET ELLE SEULE, SE POSE SUR UN MOIS. Une ligne
+      // « à planifier » posait sa date de GÉNÉRATION : le mois de création du
+      // dossier portait une barre d'« à venir » ou de « retard » que rien ne
+      // datait — la barre du calendrier, elle, l'écartait déjà (`datable`,
+      // lot C). La ligne reste comptée en retard partout où le retard se
+      // compte ; elle n'occupe simplement aucun mois (2026-09-14).
+      if (!aUnRendezVous(v, now)) continue;
       poser(lec.date, lec.registre === "enRetard" ? "retard" : "aVenir");
     }
   }

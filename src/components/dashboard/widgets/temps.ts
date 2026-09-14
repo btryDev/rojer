@@ -9,7 +9,7 @@
 // échéance » virait au rouge l'après-midi du jour dit, sans que rien
 // n'ait changé dans le dossier.
 //
-// Les colonnes des widgets Semaine et Météo souffraient de la même
+// Les colonnes des widgets Semaine et « 30 prochains jours » souffraient de la même
 // racine, en pire : elles étaient construites à minuit **local**
 // (`setHours(0,0,0,0)`) puis indexées par une clé **UTC**
 // (`toISOString().slice(0,10)`). À Paris, minuit local vaut 22:00 Z la
@@ -33,7 +33,7 @@ import {
 import { joursDeRetard } from "@/lib/dates/retard";
 
 // ---------------------------------------------------------------------
-// Colonnes de jours (widgets Semaine et Météo)
+// Colonnes de jours (widgets Semaine et « 30 prochains jours »)
 // ---------------------------------------------------------------------
 
 const FMT_JOUR_SEMAINE = new Intl.DateTimeFormat("fr-FR", {
