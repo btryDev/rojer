@@ -7,7 +7,8 @@ import {
   TuileMuette,
 } from "@/components/ui-kit";
 import { LABEL_NATURE } from "@/lib/permis-feu/schema";
-import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
+import type { RegistreLigne } from "@/lib/calendrier/etats";
+import { etatPermisFeu } from "@/lib/calendrier/echeances";
 import { formaterDateCourteFr } from "@/lib/dates";
 
 /**
@@ -39,7 +40,7 @@ export function PermisFeuCard({
   const etat: RegistreLigne =
     permis.statut === "termine"
       ? "faite"
-      : classerDate(permis.dateDebut, maintenant);
+      : etatPermisFeu(permis, maintenant);
 
   const natures = permis.naturesTravaux
     .map((n) => LABEL_NATURE[n])

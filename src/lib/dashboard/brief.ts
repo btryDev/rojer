@@ -243,8 +243,8 @@ function construireTitre(e: EntreeBrief): string {
     }
     if (sansEcheance === urgent) {
       return urgent > 1
-        ? `${enLettres(urgent)} vérifications sont dues, sans échéance connue`
-        : `${enLettres(urgent)} vérification est due, sans échéance connue`;
+        ? `${enLettres(urgent)} vérifications sont dues, sans date connue`
+        : `${enLettres(urgent)} vérification est due, sans date connue`;
     }
     return `${enLettres(urgent)} échéances sont dues, dont ${enLettres(
       sansEcheance,
@@ -354,7 +354,7 @@ function construireParagraphe(e: EntreeBrief): string {
       }
       if (sansEcheance > 0) {
         restes.push(
-          `${sansEcheance} vérification${sansEcheance > 1 ? "s" : ""} due${sansEcheance > 1 ? "s" : ""} sans échéance connue`,
+          `${sansEcheance} vérification${sansEcheance > 1 ? "s" : ""} due${sansEcheance > 1 ? "s" : ""} sans date connue`,
         );
       }
       continue;

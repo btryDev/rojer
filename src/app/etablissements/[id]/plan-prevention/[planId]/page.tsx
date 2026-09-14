@@ -26,7 +26,8 @@ import {
   URL_R4512_8,
   rubriquesManquantes,
 } from "@/lib/plan-prevention/contenu-r4512-8";
-import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
+import type { RegistreLigne } from "@/lib/calendrier/etats";
+import { etatPlanPrevention } from "@/lib/calendrier/echeances";
 import {
   FUSEAU_REFERENCE,
   formaterDateCourteFr,
@@ -88,7 +89,7 @@ export default async function PlanPreventionDetailPage({
 
   const aujourdhui = new Date();
   const etat: RegistreLigne =
-    plan.statut === "clos" ? "faite" : classerDate(plan.dateDebut, aujourdhui);
+    plan.statut === "clos" ? "faite" : etatPlanPrevention(plan, aujourdhui);
 
   const faits: FaitFiche[] = [
     {

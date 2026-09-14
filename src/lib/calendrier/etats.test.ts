@@ -37,7 +37,10 @@ describe("etatAutreEcheance — le ton, jamais la date seule", () => {
 
   it("une date à venir, ou en alerte, reste la date en jeu", () => {
     expect(dateEnJeuAutre({ date: jours(5), dateFin: jours(30), tone: "ok" }, NOW)).toEqual(jours(5));
+    // Alerte sur un début manqué, fin à venir : le début.
     expect(dateEnJeuAutre({ date: jours(-5), dateFin: jours(30), tone: "alerte" }, NOW)).toEqual(jours(-5));
+    // Alerte sur une fin dépassée : la fin — « Dépassée de 5 j », pas de 90.
+    expect(dateEnJeuAutre({ date: jours(-90), dateFin: jours(-5), tone: "alerte" }, NOW)).toEqual(jours(-5));
     expect(dateEnJeuAutre({ date: jours(-5), tone: "ok" }, NOW)).toEqual(jours(-5));
   });
 

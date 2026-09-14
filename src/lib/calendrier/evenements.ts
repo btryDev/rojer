@@ -123,6 +123,7 @@ export function fusionnerEvenements({
         id: e.id,
         libelle: e.libelle,
         date: e.date,
+        dateFin: e.dateFin,
         tone: e.tone,
         type: e.type,
         // La grille appelle « equipement » ce qui se lit sous le libellé :

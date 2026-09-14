@@ -9,6 +9,7 @@ import {
   debutDuJour,
 } from "@/lib/dates";
 import { estEnRetard } from "@/lib/dates/retard";
+import { etatAutreEcheance } from "./etats";
 
 /**
  * Registre des sources d'échéances du calendrier — cf. ADR-010.
@@ -477,6 +478,29 @@ export function echeancePlanPrevention(
     href: `/etablissements/${etablissementId}/plan-prevention/${p.id}`,
     batiment: p.batiment ?? null,
   };
+}
+
+/**
+ * L'état d'une opération sur les écrans de SON module (liste, carte, fiche),
+ * par la même règle que le calendrier : le ton de sa source, puis sa date en
+ * jeu (`etatAutreEcheance`). Ces écrans classaient la date de DÉBUT : un permis
+ * `en_cours` démarré le 12 y était rose « dépassé » pendant que le calendrier
+ * ne le comptait plus en retard (relecture, 2026-09-14). Le lien importe peu
+ * ici — seul l'état sert.
+ */
+export function etatPermisFeu(
+  p: Parameters<typeof echeancePermisFeu>[0],
+  now: Date,
+): ReturnType<typeof etatAutreEcheance> {
+  return etatAutreEcheance(echeancePermisFeu(p, now, ""), now);
+}
+
+/** Même règle pour un plan de prévention (voir `etatPermisFeu`). */
+export function etatPlanPrevention(
+  p: Parameters<typeof echeancePlanPrevention>[0],
+  now: Date,
+): ReturnType<typeof etatAutreEcheance> {
+  return etatAutreEcheance(echeancePlanPrevention(p, now, ""), now);
 }
 
 /** Prochaine analyse légionelles : dernière analyse + 1 an. Sans

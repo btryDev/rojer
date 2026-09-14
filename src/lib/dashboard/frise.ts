@@ -21,6 +21,9 @@ export type EvenementFrise = {
   id: string;
   libelle: string;
   date: Date;
+  /** La fin d'une opération (`EcheanceCalendrier.dateFin`) : le marqueur reste
+   *  posé sur le début, mais « sous 30 j » se lit sur ce qui reste à tenir. */
+  dateFin?: Date;
   tone: "alerte" | "warn" | "ok";
   equipement: string;
   /** Ce que c'est (ADR-016). La frise recevait déjà la donnée et la
@@ -269,7 +272,14 @@ export function construireFrise({
       cote: i % 2 === 0 ? "haut" : "bas",
       passe: evenements.every((e) => e.passe),
       proche: groupe.some((e) => {
-        const j = joursEntre(aujourdhui, e.date);
+        // Une opération démarrée sans alerte se lit sur sa fin, comme au
+        // « sous 30 j » du tableau de bord (`dateEnJeuAutre`) : posée sur son
+        // début passé, elle restait grise à dix jours de son terme.
+        const enJeu =
+          e.tone === "ok" && e.dateFin && joursEntre(aujourdhui, e.date) < 0
+            ? e.dateFin
+            : e.date;
+        const j = joursEntre(aujourdhui, enJeu);
         return j >= 0 && j <= JOURS_PROCHE;
       }),
     };

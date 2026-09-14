@@ -76,14 +76,14 @@ describe("construireBrief — titre", () => {
       retards: ventil({ controle: 3 }),
       verifsEnRetardSansEcheance: 3,
     });
-    expect(toutes.titre).toBe("Trois vérifications sont dues, sans échéance connue");
+    expect(toutes.titre).toBe("Trois vérifications sont dues, sans date connue");
 
     const une = construireBrief({
       ...CALME,
       retards: ventil({ controle: 1 }),
       verifsEnRetardSansEcheance: 1,
     });
-    expect(une.titre).toBe("Une vérification est due, sans échéance connue");
+    expect(une.titre).toBe("Une vérification est due, sans date connue");
   });
 
   it("le paragraphe ne compte pas « dépassées » les vérifications sans échéance connue", () => {
@@ -92,7 +92,7 @@ describe("construireBrief — titre", () => {
       retards: ventil({ controle: 6 }),
       verifsEnRetardSansEcheance: 5,
     });
-    expect(b.paragraphe).toContain("1 vérification dépassée et 5 vérifications dues sans échéance connue");
+    expect(b.paragraphe).toContain("1 vérification dépassée et 5 vérifications dues sans date connue");
   });
 
   it("accorde le singulier", () => {

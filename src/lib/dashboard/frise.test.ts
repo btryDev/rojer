@@ -235,6 +235,19 @@ describe("construireFrise — proche", () => {
     expect(frise([ev("a", -5)]).marqueurs[0].proche).toBe(false);
   });
 
+  it("une opération démarrée sans alerte se lit sur sa fin", () => {
+    // Relecture du 2026-09-14 : posée sur son début passé, elle restait grise
+    // à dix jours de son terme, quand le « sous 30 j » du tableau de bord la
+    // comptait.
+    const fin = (n: number) => {
+      const d = new Date(LE_8_AOUT);
+      d.setDate(d.getDate() + n);
+      return d;
+    };
+    expect(frise([{ ...ev("op", -20), dateFin: fin(10) }]).marqueurs[0].proche).toBe(true);
+    expect(frise([{ ...ev("op", -20), dateFin: fin(90) }]).marqueurs[0].proche).toBe(false);
+  });
+
   it("une seule échéance proche suffit à la grappe", () => {
     const f = frise([ev("a", 28), ev("b", 33)]);
     expect(f.marqueurs).toHaveLength(1);

@@ -29,6 +29,8 @@ export type EvenementGrille = {
   id: string;
   libelle: string;
   date: Date;
+  /** La fin d'une opération (`EcheanceCalendrier.dateFin`), pour la frise. */
+  dateFin?: Date;
   tone: "alerte" | "warn" | "ok";
   equipement: string;
   /** Ce que c'est (ADR-016) — absent = vérification (compat board). */

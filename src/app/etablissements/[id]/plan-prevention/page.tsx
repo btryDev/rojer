@@ -14,7 +14,8 @@ import {
 import { requireEtablissement } from "@/lib/auth/scope";
 import { ETAT_PLAN } from "@/lib/plan-prevention/etats";
 import { listPlansPrevention } from "@/lib/plan-prevention/queries";
-import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
+import type { RegistreLigne } from "@/lib/calendrier/etats";
+import { etatPlanPrevention } from "@/lib/calendrier/echeances";
 import { formaterDateCourteFr } from "@/lib/dates";
 
 export const metadata = {
@@ -119,7 +120,7 @@ export default async function PlanPreventionListePage({
                 const etat: RegistreLigne =
                   p.statut === "clos"
                     ? "faite"
-                    : classerDate(p.dateDebut, maintenant);
+                    : etatPlanPrevention(p, maintenant);
                 const nbRisques = p._count.lignes;
                 return (
                   <LigneFiche

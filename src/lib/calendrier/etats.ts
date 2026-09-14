@@ -271,7 +271,12 @@ export function dateEnJeuAutre(
   e: { date: Date; dateFin?: Date; tone: "alerte" | "ok" },
   now: Date,
 ): Date {
-  if (e.tone === "ok" && e.dateFin && estEnRetard(e.date, now)) return e.dateFin;
+  if (!e.dateFin || !estEnRetard(e.date, now)) return e.date;
+  // Démarrée : la fin reste à tenir. En alerte, la fin n'est la date en jeu
+  // que si c'est ELLE qui est dépassée — « Dépassée de 90 j » comptait le
+  // début d'une opération dont la fin n'avait que cinq jours de retard. Une
+  // alerte sur un début manqué, fin à venir, garde le début.
+  if (e.tone === "ok" || estEnRetard(e.dateFin, now)) return e.dateFin;
   return e.date;
 }
 

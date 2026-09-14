@@ -28,7 +28,8 @@ import {
   MESURES_PERMIS_FEU,
   mesuresParGroupe,
 } from "@/lib/permis-feu/referentiel";
-import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
+import type { RegistreLigne } from "@/lib/calendrier/etats";
+import { etatPermisFeu } from "@/lib/calendrier/echeances";
 import { FUSEAU_REFERENCE, formaterDateCourteFr } from "@/lib/dates";
 
 const FMT_HEURE = new Intl.DateTimeFormat("fr-FR", {
@@ -106,7 +107,7 @@ export default async function PermisFeuDetailPage({
   const etat: RegistreLigne =
     permis.statut === "termine"
       ? "faite"
-      : classerDate(permis.dateDebut, aujourdhui);
+      : etatPermisFeu(permis, aujourdhui);
 
   const faits: FaitFiche[] = [
     {
