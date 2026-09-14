@@ -19,26 +19,43 @@ export function WidgetBarsObligations({
   bundle: DashboardBundle;
   variant: string;
 }) {
-  const { barsData, moisCourant } = bundle;
-  const vide = barsData.every(
+  const { barsData, barsSansEcheance, moisCourant } = bundle;
+  // Les lignes sans échéance connue n'occupent aucun mois, mais elles
+  // existent : l'état vide « déclarez vos équipements » ne s'affiche que
+  // quand il n'y a VRAIMENT rien. Il s'affichait sur un dossier neuf dont
+  // les douze appareils étaient en retard (relecture, 2026-09-14).
+  const nbSansEcheance = barsSansEcheance.aVenir + barsSansEcheance.retard;
+  const aucuneBarre = barsData.every(
     (b) => b.couvert + b.aVenir + b.retard === 0,
   );
+  const vide = aucuneBarre && nbSansEcheance === 0;
 
   if (variant === "radial") {
+    // Les comptes gardent TOUTES les échéances de l'année, datées ou non :
+    // « En retard » dit ici le même nombre qu'avant que les lignes sans
+    // échéance quittent les barres.
     const totaux = barsData.reduce(
       (acc, b) => ({
         couvert: acc.couvert + b.couvert,
         aVenir: acc.aVenir + b.aVenir,
         retard: acc.retard + b.retard,
       }),
-      { couvert: 0, aVenir: 0, retard: 0 },
+      {
+        couvert: 0,
+        aVenir: barsSansEcheance.aVenir,
+        retard: barsSansEcheance.retard,
+      },
     );
     return (
       <BentoCell
         kicker={`Obligations ${bundle.aujourdhui.getFullYear()}`}
         sub="Répartition des échéances"
       >
-        {vide ? <EmptyBars /> : <DonutStatuts totaux={totaux} />}
+        {vide ? (
+          <EmptyBars />
+        ) : (
+          <DonutStatuts totaux={totaux} sansEcheance={nbSansEcheance} />
+        )}
       </BentoCell>
     );
   }
@@ -47,10 +64,13 @@ export function WidgetBarsObligations({
   return (
     <BentoCell
       kicker={`Obligations ${bundle.aujourdhui.getFullYear()}`}
+      sub={nbSansEcheance > 0 ? libelleHorsMois(nbSansEcheance) : undefined}
       legend={<LegendeBarsObligations />}
     >
       {vide ? (
         <EmptyBars />
+      ) : aucuneBarre ? (
+        <AucuneBarre nb={nbSansEcheance} />
       ) : (
         <BarsObligations data={barsData} moisCourant={moisCourant} />
       )}
@@ -58,10 +78,24 @@ export function WidgetBarsObligations({
   );
 }
 
+/** Le compte de ce qu'aucune barre ne porte, dit sous le titre du widget. */
+export function libelleHorsMois(n: number): string {
+  return `${n} sans échéance connue, hors des mois`;
+}
+
 function EmptyBars() {
   return (
     <div className="flex h-[160px] items-center justify-center rounded-md border border-dashed border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)]/40 p-6 text-center text-[0.86rem] text-[color:var(--board-slate-mid)]">
       Le calendrier se remplit dès que vous déclarez vos équipements.
+    </div>
+  );
+}
+
+/** Des lignes existent, aucune n'a encore de date : ni vide, ni barres. */
+function AucuneBarre({ nb }: { nb: number }) {
+  return (
+    <div className="flex h-[160px] items-center justify-center rounded-md border border-dashed border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)]/40 p-6 text-center text-[0.86rem] text-[color:var(--board-slate-mid)]">
+      {`Aucune échéance datée cette année : ${nb} ${nb > 1 ? "lignes attendent" : "ligne attend"} une date.`}
     </div>
   );
 }
@@ -80,8 +114,12 @@ function EmptyBars() {
  */
 export function DonutStatuts({
   totaux,
+  sansEcheance = 0,
 }: {
+  /** `aVenir` et `retard` INCLUENT les lignes sans échéance connue. */
   totaux: { couvert: number; aVenir: number; retard: number };
+  /** Combien de ces échéances n'ont pas de date connue — dit, pas soustrait. */
+  sansEcheance?: number;
 }) {
   const total = totaux.aVenir + totaux.retard;
   const circ = 2 * Math.PI * 48;
@@ -148,6 +186,11 @@ export function DonutStatuts({
           value={totaux.retard}
           total={total}
         />
+        {sansEcheance > 0 ? (
+          <li className="pl-5 text-[0.8rem] text-[color:var(--board-slate-mid)]">
+            {`${sansEcheance} de ces échéances sans date connue`}
+          </li>
+        ) : null}
         {/* Compté, jamais en part : un contrôle fait n'est pas une échéance. */}
         <Item
           color="var(--board-ink)"

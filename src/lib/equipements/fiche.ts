@@ -214,7 +214,14 @@ function comparerParUrgence(
   // vérification enregistrée »). La fiche mettait le retard sans date devant,
   // et les deux écrans désignaient deux retards différents pour le même
   // appareil (relecture du lot C, 2026-09-14).
-  const rang = (l: { date: Date | null; etat: RegistreLigne }) =>
+  //
+  // Le rang 0 prend aussi une correction en retard — toujours datée, un
+  // retard d'action se lit sur son échéance. C'est voulu : la vue par
+  // équipement du calendrier ne montre que des vérifications, et entre
+  // vérifications les deux écrans désignent la même ; la fiche, elle, mêle
+  // les corrections, et l'en-tête dit alors « Un écart reste à lever »
+  // (relecture, 2026-09-14).
+  const rang =(l: { date: Date | null; etat: RegistreLigne }) =>
     l.etat === "enRetard" ? (l.date ? 0 : 1) : l.date ? 2 : 3;
   const ecart = rang(a) - rang(b);
   if (ecart !== 0) return ecart;

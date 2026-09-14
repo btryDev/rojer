@@ -68,14 +68,14 @@ describe("ce que la pastille d'année annonce", () => {
     // LE défaut, tel qu'il s'affichait sur un dossier neuf : « 2026 · AUCUNE
     // ÉCHÉANCE » au-dessus d'un chip « 2 à planifier » et d'une carte de mois
     // qui les listait.
-    expect(libelleTotalAnnee(0, 2)).toBe("aucune datée · 2 à planifier");
+    expect(libelleTotalAnnee(0, 2)).toBe("aucune datée · 2 sans date");
     expect(libelleTotalAnnee(0, 2)).not.toContain("aucune échéance");
   });
 
   it("ne masque pas les non datées derrière un total qui les ignore", () => {
     // La forme aggravée, constatée après l'ajout d'un titre daté : « 1
     // échéance » au-dessus de trois lignes.
-    expect(libelleTotalAnnee(1, 2)).toBe("1 datée · 2 à planifier");
+    expect(libelleTotalAnnee(1, 2)).toBe("1 datée · 2 sans date");
   });
 
   it("reste sobre quand il n'y a rien à nuancer", () => {
@@ -87,7 +87,7 @@ describe("ce que la pastille d'année annonce", () => {
   });
 
   it("accorde le pluriel des deux côtés", () => {
-    expect(libelleTotalAnnee(2, 1)).toBe("2 datées · 1 à planifier");
+    expect(libelleTotalAnnee(2, 1)).toBe("2 datées · 1 sans date");
   });
 });
 

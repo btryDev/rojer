@@ -382,8 +382,9 @@ function BarreAnnee({
    *  ressemblerait à un bug. */
   total: number;
   /**
-   * Occurrences « à planifier », hors des barres par construction : leur
-   * `datePrevue` est une date de génération, pas un rendez-vous.
+   * Lignes SANS ÉCHÉANCE CONNUE, en retard ou non, hors des barres par
+   * construction : leur `datePrevue` est une date de génération, pas un
+   * rendez-vous (`aUnRendezVous`).
    *
    * La pastille en a besoin pour ne pas mentir. Elle disait « aucune
    * échéance » dès que `total` valait zéro — ce qui était exact tant que
@@ -423,7 +424,7 @@ function BarreAnnee({
         L&apos;année d&apos;un bloc — {total} échéance{total > 1 ? "s" : ""}{" "}
         datée{total > 1 ? "s" : ""} en {annee}
         {sansDate > 0
-          ? `, et ${sansDate} à planifier, sans date arrêtée`
+          ? `, et ${sansDate} sans échéance connue`
           : ""}
       </h2>
       {montrerCadran ? (

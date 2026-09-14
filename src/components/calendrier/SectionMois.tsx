@@ -33,6 +33,12 @@ export function SectionMois({
    * l'instrument en compte dix-neuf, et l'écart resterait une énigme. Elle
    * disait « à planifier » et ne comptait que ceux-là : un retard sans date
    * quittait les barres sans entrer dans aucun compte (relecture du lot C).
+   *
+   * LES DEUX PILULES SE RECOUVRENT, ET C'EST VOULU : un retard sans date compte
+   * dans « en retard » ET dans « sans date ». Elles répondent à deux questions
+   * — est-ce en retard, est-ce sur une barre — et aucune n'est une partie de
+   * `nb`. Les rendre disjointes ferait sortir un retard de la pilule rouge, que
+   * replier le mois ne doit jamais cacher (relecture, 2026-09-14).
    */
   nbSansDate?: number;
   ouvert: boolean;

@@ -5,8 +5,8 @@
 //
 // Il s'appelait « Météo du mois » : la propriétaire l'a jugé trompeur — le mot
 // ne dit rien de ce que la grille montre (2026-09-14). Trente cases, une par
-// jour ; chaque case prend la couleur de l'échéance la plus urgente qui y
-// tombe (retard > à planifier > planifiée > rien).
+// jour ; chaque case prend la couleur de l'échéance CONNUE la plus urgente qui
+// y tombe (retard > planifiée > rien).
 
 import { CHAMP_ETAT } from "@/lib/calendrier/etats";
 import { BentoCell } from "@/components/dashboard/BentoCell";
@@ -24,27 +24,24 @@ export function WidgetMeteo({ bundle }: { bundle: DashboardBundle }) {
   // Paris, la heatmap peignait chaque jour sur la case du lendemain.
   const jours = colonnesJours(bundle.aujourdhui, 30);
 
-  // Pour chaque jour : tone dominant.
-  type Tone = "alerte" | "warn" | "ok";
-  const tonePriorite: Record<Tone, number> = { alerte: 3, warn: 2, ok: 1 };
-  const toneParJour = new Map<string, Tone>();
   // Seules les échéances CONNUES colorent une case : une ligne « à planifier »
   // posait sa date de génération — un appareil déclaré aujourd'hui peignait la
-  // case du jour (2026-09-14). Les comptes ci-dessous, eux, gardent toute la
-  // fenêtre : un retard ne sort pas d'un compte faute de case.
+  // case du jour (2026-09-14). Il n'y a donc plus de case ambre : le ton `warn`
+  // est celui d'une « à planifier » à venir, toujours sans échéance connue.
+  const alerteParJour = new Map<string, boolean>();
   for (const e of evenementsMois.filter((x) => !x.sansEcheance)) {
     const key = cleJourCivil(e.date);
-    const actuel = toneParJour.get(key);
-    const etone = e.tone as Tone;
-    if (!actuel || tonePriorite[etone] > tonePriorite[actuel]) {
-      toneParJour.set(key, etone);
-    }
+    alerteParJour.set(key, (alerteParJour.get(key) ?? false) || e.tone === "alerte");
   }
 
+  // Les comptes gardent toute la fenêtre : un retard ne sort pas d'un compte
+  // faute de case. « Sans date » compte les lignes sans échéance connue qui
+  // ne sont pas en retard — celles en retard sont déjà dans « retard ».
   const compte = {
     alerte: evenementsMois.filter((e) => e.tone === "alerte").length,
-    warn: evenementsMois.filter((e) => e.tone === "warn").length,
     ok: evenementsMois.filter((e) => e.tone === "ok").length,
+    sansDate: evenementsMois.filter((e) => e.sansEcheance && e.tone !== "alerte")
+      .length,
   };
 
   return (
@@ -58,21 +55,20 @@ export function WidgetMeteo({ bundle }: { bundle: DashboardBundle }) {
     >
       <div className="grid grid-cols-10 gap-1.5">
         {jours.map((jour) => {
-          const tone = toneParJour.get(jour.cle);
-          const bg = tone
-            ? tone === "alerte"
+          const alerte = alerteParJour.get(jour.cle);
+          const occupe = alerte !== undefined;
+          const bg = occupe
+            ? alerte
               ? CHAMP_ETAT.enRetard
-              : tone === "warn"
-                ? CHAMP_ETAT.proche
-                : CHAMP_ETAT.lointain
+              : CHAMP_ETAT.lointain
             : "var(--board-slate-pale)";
           const isToday = jour.estAujourdhui;
           return (
             <div
               key={jour.cle}
               title={
-                tone
-                  ? `${jour.libelleLong} — ${tone === "alerte" ? "retard" : tone === "warn" ? "à planifier" : "planifié"}`
+                occupe
+                  ? `${jour.libelleLong} — ${alerte ? "retard" : "planifié"}`
                   : `${jour.libelleLong} — libre`
               }
               className={
@@ -81,7 +77,7 @@ export function WidgetMeteo({ bundle }: { bundle: DashboardBundle }) {
                   ? "outline outline-2 outline-offset-1 outline-[color:var(--board-ink)]"
                   : "")
               }
-              style={{ background: bg, opacity: tone ? 1 : 0.5 }}
+              style={{ background: bg, opacity: occupe ? 1 : 0.5 }}
             />
           );
         })}
@@ -89,11 +85,9 @@ export function WidgetMeteo({ bundle }: { bundle: DashboardBundle }) {
 
       <div className="mt-auto flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--board-slate-mid)]">
         <LegendePt color={CHAMP_ETAT.enRetard} label={`${compte.alerte} retard`} />
-        <LegendePt
-          color={CHAMP_ETAT.proche}
-          label={`${compte.warn} à planifier`}
-        />
         <LegendePt color={CHAMP_ETAT.lointain} label={`${compte.ok} planifié`} />
+        {/* Sans pastille : aucune case ne porte cette couleur. */}
+        {compte.sansDate > 0 ? <span>{`${compte.sansDate} sans date`}</span> : null}
       </div>
     </BentoCell>
   );

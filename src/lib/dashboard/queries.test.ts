@@ -814,7 +814,7 @@ describe("compterObligationsParMois", () => {
       verif({ id: "v1", datePrevue: jour(0) }),
       verif({ id: "v2", datePrevue: jour(0) }),
     );
-    const barres = await compterObligationsParMois(ETAB, 2026);
+    const barres = (await compterObligationsParMois(ETAB, 2026)).mois;
     const aout = barres[7];
     expect(aout.retard).toBe(0);
     expect(aout.aVenir).toBe(2);
@@ -830,9 +830,11 @@ describe("compterObligationsParMois", () => {
       verif({ id: "v1", statut: "a_planifier", datePrevue: jour(-3) }),
       verif({ id: "v2", statut: "a_planifier", datePrevue: jour(5) }),
     );
-    const barres = await compterObligationsParMois(ETAB, 2026);
-    expect(barres[7].retard).toBe(0);
-    expect(barres[7].aVenir).toBe(0);
+    const { mois: barres, sansEcheance } = await compterObligationsParMois(ETAB, 2026);
+    expect(barres.every((b) => b.retard === 0 && b.aVenir === 0)).toBe(true);
+    // Hors des mois, JAMAIS hors des comptes : le premier jet les retirait de
+    // tout, et l'anneau perdait ses retards (relecture, 2026-09-14).
+    expect(sansEcheance).toEqual({ retard: 1, aVenir: 1 });
   });
 
   it("range une réalisation dans son mois de réalisation", async () => {
@@ -846,7 +848,7 @@ describe("compterObligationsParMois", () => {
         rapports: [{ dateRapport: instantCivil(2026, 5, 3), resultat: "conforme" }],
       }),
     );
-    const barres = await compterObligationsParMois(ETAB, 2026);
+    const barres = (await compterObligationsParMois(ETAB, 2026)).mois;
     expect(barres[4].couvert).toBe(1);
     expect(barres[2].couvert).toBe(0);
   });
@@ -867,7 +869,7 @@ describe("compterObligationsParMois", () => {
         ],
       }),
     );
-    const barres = await compterObligationsParMois(ETAB, 2026);
+    const barres = (await compterObligationsParMois(ETAB, 2026)).mois;
     expect(barres.map((b) => b.couvert)).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]);
     expect(barres[8].aVenir).toBe(1);
     expect(barres.reduce((n, b) => n + b.retard, 0)).toBe(0);

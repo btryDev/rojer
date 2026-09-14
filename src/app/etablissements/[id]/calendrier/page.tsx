@@ -1227,22 +1227,14 @@ export default async function CalendrierPage({
             <AnneeCalendrier
               annee={anneeCourante}
               anneesRegle={anneesRegle}
-              /* « Sans date » ne concerne que les contrôles : sous un
-                 filtre de famille qui les écarte, le compteur mentirait. */
+              /* « Sans date » : ce qu'aucune barre ne place (`datable`), EN
+                 RETARD OU NON, compté sur les lignes AFFICHÉES — le même
+                 périmètre que les cartes de mois. Il additionnait
+                 `etat.aPlanifier`, qui ne suit que le filtre bâtiment : sous
+                 un filtre famille, la règle et les cartes ne comptaient pas
+                 les mêmes lignes (relecture, 2026-09-14). */
               sansDate={
-                !filtreFamille || filtreFamille === "controle"
-                  ? // Les « à planifier », ET les retards sans échéance
-                    // connue : ni les uns ni les autres ne sont sur une barre
-                    // (`datable`). Compter les premiers seuls laissait les
-                    // seconds hors de tout compte de la règle.
-                    etat.aPlanifier +
-                    lignes.filter(
-                      (l) =>
-                        l.genre === "verif" &&
-                        l.registre === "enRetard" &&
-                        !datable(l),
-                    ).length
-                  : 0
+                lignes.filter((l) => l.genre === "verif" && !datable(l)).length
               }
               /* Seulement sur la lecture d'ensemble : sous un filtre, la
                  remarque porterait sur un périmètre qu'elle ne décrit

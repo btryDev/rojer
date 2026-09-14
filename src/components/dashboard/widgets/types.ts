@@ -8,6 +8,7 @@ import type { BatimentCharge } from "@/lib/batiments/queries";
 import type { ComponentType } from "react";
 import type {
   BarMois,
+  BarresAnnee,
   DashboardData,
   EvenementFenetre,
 } from "@/lib/dashboard/queries";
@@ -208,6 +209,11 @@ export type DashboardBundle = {
    */
   equipementsEtablissement: EquipementLite[];
   barsData: BarMois[];
+  /**
+   * Les lignes de l'année SANS ÉCHÉANCE CONNUE : aucune barre ne les porte,
+   * les comptes du widget les gardent (`BarresAnnee`).
+   */
+  barsSansEcheance: BarresAnnee["sansEcheance"];
   /** Date de référence, calculée côté serveur : garantit un rendu
    *  déterministe (pas d'écart d'hydratation) et des tests reproductibles. */
   aujourdhui: Date;

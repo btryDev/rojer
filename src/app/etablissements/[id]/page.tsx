@@ -78,7 +78,7 @@ export default async function EtablissementPage({
     statsEquipements,
     dashboard,
     echeances,
-    barsData,
+    barres,
     evenementsHorizon,
     evenementsSemaine,
     evenementsMois,
@@ -313,7 +313,8 @@ export default async function EtablissementPage({
     equipements: equipementsDuLieu.map(enLite),
     // Le parc entier : le score porte sur l'établissement, sa légende le dit.
     equipementsEtablissement: equipements.map(enLite),
-    barsData,
+    barsData: barres.mois,
+    barsSansEcheance: barres.sansEcheance,
     aujourdhui,
     evenementsHorizon,
     evenementsSemaine,

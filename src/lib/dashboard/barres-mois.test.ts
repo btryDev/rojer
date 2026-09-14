@@ -36,7 +36,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       [ligne({ datePrevue: le(9, 15), rapports: [le(3, 12), le(6, 11)] })],
       2026,
       NOW,
-    );
+    ).mois;
     expect(barres[2].couvert).toBe(1);
     expect(barres[5].couvert).toBe(1);
     // L'échéance ouverte, au 15/09, dans « à venir » — et nulle part ailleurs.
@@ -57,7 +57,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
-    );
+    ).mois;
     expect(segments(barres[8])).toEqual([2, 1, 0]);
   });
 
@@ -66,7 +66,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       [ligne({ datePrevue: le(3, 1, 2027), rapports: [le(12, 1, 2025), le(4, 2)] })],
       2026,
       NOW,
-    );
+    ).mois;
     expect(barres.reduce((n, b) => n + b.couvert, 0)).toBe(1);
     expect(barres[3].couvert).toBe(1);
   });
@@ -78,7 +78,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       [ligne({ datePrevue: le(6, 1), rapports: [le(3, 1)] })],
       2026,
       NOW,
-    );
+    ).mois;
     expect(segments(barres[2])).toEqual([1, 0, 0]);
     expect(segments(barres[5])).toEqual([0, 0, 1]);
   });
@@ -94,7 +94,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
-    );
+    ).mois;
     expect(segments(barres[1])).toEqual([1, 0, 0]);
   });
 
@@ -110,8 +110,26 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
-    );
+    ).mois;
     expect(barres.every((b) => b.couvert === 0)).toBe(true);
+  });
+
+  it("une ligne sans échéance connue n'occupe aucun mois et reste comptée dans son année", () => {
+    const { mois, sansEcheance } = repartirParMois(
+      [
+        ligne({ datePrevue: le(9, 1), statut: "a_planifier" }),
+        ligne({ datePrevue: le(9, 20), statut: "a_planifier" }),
+        // Générée l'an dernier : hors de l'année demandée, hors du compte.
+        ligne({ datePrevue: le(12, 1, 2025), statut: "a_planifier" }),
+        // Une vraie échéance, pour la contre-épreuve.
+        ligne({ datePrevue: le(8, 1) }),
+      ],
+      2026,
+      NOW,
+    );
+    expect(sansEcheance).toEqual({ retard: 1, aVenir: 1 });
+    expect(mois.reduce((n, b) => n + b.aVenir + b.retard, 0)).toBe(1);
+    expect(mois[7].retard).toBe(1);
   });
 
   it("une ligne archivée garde tous ses faits et ne pose aucune échéance", () => {
@@ -125,7 +143,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
-    );
+    ).mois;
     expect(barres[1].couvert).toBe(1);
     expect(barres[4].couvert).toBe(1);
     expect(barres.every((b) => b.aVenir === 0 && b.retard === 0)).toBe(true);

@@ -213,15 +213,20 @@ export function libellePorteurSansNom(v: {
  * pas un défaut qui se stabilise — raison pour laquelle il est corrigé dans le
  * libellé plutôt que laissé à un arbitrage ultérieur.
  */
+/*
+ * Le second compte dit « sans date » depuis le 2026-09-14 : il compte aussi
+ * les retards sans échéance connue, et « 12 à planifier » à côté d'un bandeau
+ * « 12 en retard » laissait croire à deux listes.
+ */
 export function libelleTotalAnnee(total: number, sansDate: number): string {
   const s = (n: number) => (n > 1 ? "s" : "");
   if (total === 0) {
     return sansDate > 0
-      ? `aucune datée · ${sansDate} à planifier`
+      ? `aucune datée · ${sansDate} sans date`
       : "aucune échéance";
   }
   return sansDate > 0
-    ? `${total} datée${s(total)} · ${sansDate} à planifier`
+    ? `${total} datée${s(total)} · ${sansDate} sans date`
     : `${total} échéance${s(total)}`;
 }
 

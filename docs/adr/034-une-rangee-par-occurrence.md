@@ -680,7 +680,20 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        propriétaire, s'appelle « 30 prochains jours » (identifiant `meteo`
        conservé pour les tableaux déjà personnalisés) ; les barres de l'année
        du tableau de bord ne posent plus une « à planifier » au mois de sa
-       génération. « À planifier » / « à dater » subsistent pour les lignes non
+       génération. **Relecture neutre de ce retrait** : un vrai défaut — le
+       premier jet retirait ces lignes de TOUT, et sur un dossier neuf de
+       douze appareils en retard l'anneau passait de « En retard 12 » à l'état
+       vide « Le calendrier se remplit… ». Elles quittent les mois, pas les
+       comptes (`BarresAnnee.sansEcheance`) : l'anneau redit 12, en ajoutant
+       combien sont sans date, et les barres disent pourquoi elles sont vides.
+       Mineurs fermés dans le même lot : la règle d'année disait
+       « 12 à planifier » à côté de « 12 en retard » — elle dit « sans date » et
+       compte les lignes affichées, le périmètre des cartes de mois ; la légende
+       « à planifier » du widget « 30 prochains jours » ne pouvait plus colorer
+       aucune case — elle dit « sans date », sans pastille. Assumés et écrits :
+       les pilules « en retard » et « sans date » d'un mois se recouvrent ; le
+       rang « retard daté » de la fiche prend aussi une correction en retard.
+       « À planifier » / « à dater » subsistent pour les lignes non
        en retard. Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni
        « à planifier »)~~ — fermé le même jour : la pastille compte tout ce

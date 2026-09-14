@@ -20,6 +20,17 @@ export type BarMois = {
 };
 
 /**
+ * Les douze mois, et ce qu'aucun mois ne porte : les lignes SANS ÉCHÉANCE
+ * CONNUE de l'année (`aUnRendezVous`), rangées comme elles l'auraient été sur
+ * une barre. Elles ne se dessinent pas ; elles se comptent — un retard ne
+ * sort pas d'un compte faute de mois.
+ */
+export type BarresAnnee = {
+  mois: BarMois[];
+  sansEcheance: { aVenir: number; retard: number };
+};
+
+/**
  * Répartit sur les douze mois de `annee` ce que chaque ligne pose sur le
  * calendrier.
  *
@@ -59,7 +70,7 @@ export function repartirParMois(
   >,
   annee: number,
   now: Date,
-): BarMois[] {
+): BarresAnnee {
   const buckets: BarMois[] = Array.from({ length: 12 }, (_, i) => ({
     mois: i,
     annee,
@@ -67,6 +78,7 @@ export function repartirParMois(
     aVenir: 0,
     retard: 0,
   }));
+  const sansEcheance = { aVenir: 0, retard: 0 };
 
   const poser = (date: Date, segment: "couvert" | "aVenir" | "retard") => {
     const c = composantesCiviles(date);
@@ -91,16 +103,25 @@ export function repartirParMois(
         else for (const r of v.rapportsRealises) poser(r.dateRapport, "couvert");
         continue;
       }
+      const segment = lec.registre === "enRetard" ? "retard" : "aVenir";
       // UNE ÉCHÉANCE CONNUE, ET ELLE SEULE, SE POSE SUR UN MOIS. Une ligne
       // « à planifier » posait sa date de GÉNÉRATION : le mois de création du
       // dossier portait une barre d'« à venir » ou de « retard » que rien ne
       // datait — la barre du calendrier, elle, l'écartait déjà (`datable`,
-      // lot C). La ligne reste comptée en retard partout où le retard se
-      // compte ; elle n'occupe simplement aucun mois (2026-09-14).
-      if (!aUnRendezVous(v, now)) continue;
-      poser(lec.date, lec.registre === "enRetard" ? "retard" : "aVenir");
+      // lot C). Elle n'occupe plus aucun mois, MAIS ELLE RESTE COMPTÉE : le
+      // premier jet la retirait de tout, et l'anneau passait de « 12 en
+      // retard » à l'état vide « Le calendrier se remplit… » sur un dossier
+      // neuf, sous un bandeau qui annonçait 12 retards (relecture,
+      // 2026-09-14). Même année que si elle avait été posée.
+      if (!aUnRendezVous(v, now)) {
+        if (composantesCiviles(lec.date).annee === annee) {
+          sansEcheance[segment] += 1;
+        }
+        continue;
+      }
+      poser(lec.date, segment);
     }
   }
 
-  return buckets;
+  return { mois: buckets, sansEcheance };
 }

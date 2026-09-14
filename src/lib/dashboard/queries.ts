@@ -38,7 +38,7 @@ import {
   lecturesCalendrier,
 } from "@/lib/calendrier/etats";
 import { prochaineEcheanceConnue } from "@/lib/calendrier/prochaine-echeance";
-import { repartirParMois, type BarMois } from "./barres-mois";
+import { repartirParMois, type BarMois, type BarresAnnee } from "./barres-mois";
 import { WHERE_RAPPORT_REALISE } from "@/lib/rapports/derniere-realisation";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import {
@@ -88,7 +88,7 @@ const STATUTS_PLAN_OUVERTS = [
 
 // Le type vit avec la répartition pure (`barres-mois.ts`) ; réexporté ici pour
 // les widgets qui le prenaient à ce module.
-export type { BarMois };
+export type { BarMois, BarresAnnee };
 
 /**
  * Raccourcit les libellés d'obligation verbeux pour les cartes
@@ -380,7 +380,7 @@ export async function compterVerifsParEquipement(
 export async function compterObligationsParMois(
   etablissementId: string,
   annee: number = composantesCiviles(new Date()).annee,
-): Promise<BarMois[]> {
+): Promise<BarresAnnee> {
   const user = await requireUser();
   const debut = instantCivil(annee, 1, 1);
   const fin = instantCivil(annee + 1, 1, 1);

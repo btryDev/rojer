@@ -257,12 +257,14 @@ export function RegleAnnuelle({
         <Cle etat="lointain" valeur={totaux.lointain} />
         <Cle etat="faite" valeur={totaux.faite} />
         {/* « Hors année » n'a plus de badge : les flèches du cadran font
-            le voyage que le badge se contentait d'annoncer. Le badge « à
-            planifier » parle, lui, le vocabulaire des pastilles de statut
-            — « sans date » disait la même chose avec d'autres mots. */}
+            le voyage que le badge se contentait d'annoncer. Le badge dit
+            « sans date » et non « à planifier » : il compte aussi les
+            retards sans échéance connue, et un « 12 à planifier » à côté
+            d'un bandeau « 12 en retard » se lisait comme deux listes
+            (relecture, 2026-09-14). */}
         {sansDate > 0 ? (
           <span className="ml-auto rounded-full bg-[color:var(--board-card)] px-3 py-1.5 text-[12px] font-semibold text-[color:var(--board-slate-mid)]">
-            {sansDate} à planifier
+            {sansDate} sans date
           </span>
         ) : null}
       </div>

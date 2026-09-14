@@ -56,7 +56,7 @@ describe("colonnesJours", () => {
     ]);
   });
 
-  it("couvre trente jours pour la météo du mois", () => {
+  it("couvre trente jours pour le widget « 30 prochains jours »", () => {
     const cols = colonnesJours(new Date("2026-08-10T09:00:00.000Z"), 30);
     expect(cols).toHaveLength(30);
     expect(cols[29].cle).toBe("2026-09-08");
