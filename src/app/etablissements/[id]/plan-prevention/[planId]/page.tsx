@@ -88,8 +88,14 @@ export default async function PlanPreventionDetailPage({
   );
 
   const aujourdhui = new Date();
+  // Annulé : ardoise, comme la tuile « Annulé » de la liste (voir la fiche du
+  // permis de feu, relecture du 2026-09-14).
   const etat: RegistreLigne =
-    plan.statut === "clos" ? "faite" : etatPlanPrevention(plan, aujourdhui);
+    plan.statut === "clos"
+      ? "faite"
+      : plan.statut === "annule"
+        ? "archivee"
+        : etatPlanPrevention(plan, aujourdhui);
 
   const faits: FaitFiche[] = [
     {

@@ -787,7 +787,6 @@ const CADRAGE_INITIAL = 130;
 type RegistreMarqueur = "chaud" | "proche" | "calme";
 
 function registreMarqueur(m: {
-  passe: boolean;
   tone: string;
   proche: boolean;
 }): RegistreMarqueur {

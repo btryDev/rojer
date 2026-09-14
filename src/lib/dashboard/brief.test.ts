@@ -60,7 +60,7 @@ describe("construireBrief — titre", () => {
     expect(b.titre).toBe("Trois échéances ont dépassé leur date");
   });
 
-  it("ne dit pas « ont dépassé leur date » d'une vérification sans échéance connue", () => {
+  it("ne dit pas « ont dépassé leur date » d'une vérification sans date connue", () => {
     // Contrôle visuel en production, 2026-09-14 : « 14 échéances ont dépassé
     // leur date » en portait cinq sans échéance connue — leur date n'est
     // qu'une date de génération.
@@ -86,7 +86,7 @@ describe("construireBrief — titre", () => {
     expect(une.titre).toBe("Une vérification est due, sans date connue");
   });
 
-  it("le paragraphe ne compte pas « dépassées » les vérifications sans échéance connue", () => {
+  it("le paragraphe ne compte pas « dépassées » les vérifications sans date connue", () => {
     const b = construireBrief({
       ...CALME,
       retards: ventil({ controle: 6 }),

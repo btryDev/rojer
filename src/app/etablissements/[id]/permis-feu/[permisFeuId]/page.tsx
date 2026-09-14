@@ -104,10 +104,15 @@ export default async function PermisFeuDetailPage({
   // La tuile-date porte la date d'ouverture des travaux : c'est le
   // rendez-vous que le calendrier place, donc celui que la fiche doit
   // reprendre. Un permis terminé est un acquis, quelle que soit sa date.
+  // Annulé : ardoise, comme la tuile « Annulé » de la liste — ni un acquis,
+  // ni une échéance. Sans cette garde, sa fin passée le peignait « sous 30 j »
+  // (relecture, 2026-09-14).
   const etat: RegistreLigne =
     permis.statut === "termine"
       ? "faite"
-      : etatPermisFeu(permis, aujourdhui);
+      : permis.statut === "annule"
+        ? "archivee"
+        : etatPermisFeu(permis, aujourdhui);
 
   const faits: FaitFiche[] = [
     {
