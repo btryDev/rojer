@@ -19,9 +19,8 @@ import {
   compterSansObligation,
   equipementsSansEcheance,
 } from "@/lib/equipements/hors-referentiel";
-import { regenererSansInvalider } from "@/lib/calendrier/actions";
+import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
 import {
-  calendrierDesynchronise,
   compterEtatCalendrier,
   listerVerifications,
 } from "@/lib/calendrier/queries";
@@ -258,58 +257,21 @@ export default async function CalendrierPage({
       : undefined;
   const filtreUrgent = urgent === "1";
 
-  // Rattrapage à l'affichage, pour deux motifs distincts :
+  // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
+  // généré, périmé par un échec, ou calculé sur une version antérieure du
+  // référentiel (ADR-003 — ses corrections n'atteignaient les calendriers
+  // qu'au hasard d'une mutation). Un seul repère les distingue, et la même
+  // fonction sert le tableau de bord (`assurerCalendrierAJour`).
   //
-  //  1. **Calendrier vide alors que des équipements sont déclarés** — anciens
-  //     comptes d'avant la génération automatique, ou mutation qui a échoué
-  //     silencieusement à régénérer.
-  //  2. **Calendrier généré avec une version antérieure du référentiel** — le
-  //     référentiel vit en TypeScript (ADR-003) et ses corrections (périodicité
-  //     rectifiée, obligation retirée, libellé reformulé) n'étaient jusqu'ici
-  //     propagées qu'au hasard d'une mutation d'équipement. Deux établissements
-  //     identiques pouvaient afficher deux échéances différentes, et une
-  //     obligation supprimée du référentiel laissait des lignes orphelines
-  //     invisibles des filtres du registre et du dossier de contrôle.
+  // La page comptait ici toutes les lignes pour détecter un calendrier vide,
+  // puis réemployait ce compte à l'affichage. Le repère rend le premier inutile
+  // — il est vide tant que le calendrier n'a jamais été généré — et le compte
+  // se fait désormais une fois, avec les autres lectures.
   //
   // La réconciliation est idempotente et ne détruit jamais une ligne portant un
   // rapport, une action ou une date de réalisation (cf. ADR-012) : la relancer
   // est sans risque, et elle ne réécrit que ce qui a réellement changé.
-  const etat0 = await compterEtatCalendrier(id);
-  const aucuneOccurrenceEnBase =
-    etat0.enRetard === 0 &&
-    etat0.aPlanifier === 0 &&
-    etat0.aVenir === 0 &&
-    etat0.realisees12m === 0;
-
-  // Le garde « au moins un équipement déclaré » a été retiré le 2026-08-27
-  // (ADR-022). Il datait d'un référentiel où toute obligation naissait d'un
-  // équipement : sans équipement, il n'y avait rien à générer, et sauter la
-  // génération évitait d'écrire un repère de version sur un établissement en
-  // cours d'onboarding.
-  //
-  // Ce n'est plus vrai. `PE 4 § 2` et `R. 4222-20` sont dues sans qu'aucun
-  // appareil soit déclaré — c'est exactement la population que le chantier du
-  // porteur existe pour servir. Le garde faisait donc, à lui seul, que ces
-  // deux lignes n'atteignaient jamais la base chez ceux qui en ont le plus
-  // besoin : le premier `if` était pris, la seconde branche jamais atteinte,
-  // et le calendrier restait vide en silence.
-  //
-  // Générer sans équipement est sans effet de bord : le moteur ne rend que ce
-  // qui s'applique, et la réconciliation est idempotente (ADR-012).
-  let regenere = false;
-  if (aucuneOccurrenceEnBase || (await calendrierDesynchronise(id))) {
-    // `regenererSansInvalider` et non `genererCalendrier` : nous sommes DANS
-    // un rendu, et Next refuse `revalidatePath` à cet endroit — « unsupported,
-    // it must always happen outside of renders ». Invalider ici n'aurait
-    // d'ailleurs aucun sens : la page se calcule à l'instant, elle n'a rien à
-    // invalider d'elle-même.
-    //
-    // Le tableau de bord et la fiche établissement se rafraîchissent donc à la
-    // navigation suivante plutôt qu'immédiatement. C'était déjà le
-    // comportement réel — l'appel était ignoré, pas honoré.
-    await regenererSansInvalider(id);
-    regenere = true;
-  }
+  await assurerCalendrierAJour(id);
 
   const [
     verifsBruts,
@@ -324,16 +286,10 @@ export default async function CalendrierPage({
         urgentsSeulement: filtreUrgent,
         batimentId: filtreBatiment,
       }),
-      // Les compteurs viennent d'être calculés trois lignes plus haut : on
-      // ne les refait que si une régénération a changé la donnée entre-temps —
-      // ou si un bâtiment est filtré. `etat0` sert à décider d'une
-      // régénération, donc il porte sur tout l'établissement ; le réemployer
-      // tel quel à l'affichage annonçait les occurrences sans date de tout
-      // l'établissement au-dessus d'une liste restreinte à un bâtiment. Le
-      // même écart avait été soigneusement neutralisé sous le filtre famille.
-      regenere || filtreBatiment
-        ? compterEtatCalendrier(id, new Date(), { batimentId: filtreBatiment })
-        : Promise.resolve(etat0),
+      // Sous le filtre bâtiment : un compte de tout l'établissement annonçait
+      // les occurrences sans date de tout le dossier au-dessus d'une liste
+      // restreinte à un bâtiment.
+      compterEtatCalendrier(id, new Date(), { batimentId: filtreBatiment }),
       listerAutresEcheances(id),
       // Le parc entier, pas seulement les appareils qui portent une
       // échéance : la lecture par équipement doit pouvoir dire combien

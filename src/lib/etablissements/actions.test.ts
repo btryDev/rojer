@@ -175,6 +175,18 @@ describe("creerEtablissement — le second dossier d'un compte (ADR-028)", () =>
     });
   });
 
+  it("génère le calendrier du nouvel établissement avant d'y conduire", async () => {
+    // Revue du 2026-09-14 : le calendrier n'était généré qu'à la première
+    // déclaration d'équipement ou à l'ouverture de la page Calendrier. Un site
+    // sans appareil doit pourtant ses obligations d'établissement (ADR-022), et
+    // son tableau de bord se disait vide en attendant.
+    await expect(
+      creerEtablissement("ent-1", { status: "idle" }, formulaire()),
+    ).rejects.toThrow("NEXT_REDIRECT");
+
+    expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
+  });
+
   it("refuse un formulaire invalide sans rien créer", async () => {
     // La borne basse : lever le verrou n'a pas levé la validation.
     const res = await creerEtablissement(

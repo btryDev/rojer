@@ -104,7 +104,7 @@ export function libelleHorsMois(
 function EmptyBars() {
   return (
     <div className="flex h-[160px] items-center justify-center rounded-md border border-dashed border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)]/40 p-6 text-center text-[0.86rem] text-[color:var(--board-slate-mid)]">
-      Le calendrier se remplit dès que vous déclarez vos équipements.
+      Le calendrier se remplit à partir de la fiche de l&apos;établissement, de ses équipements et de ses salariés.
     </div>
   );
 }

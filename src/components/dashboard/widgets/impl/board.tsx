@@ -1105,12 +1105,18 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
           bundle.nbVerifs === 0 &&
           nbEnRetard === 0 ? (
             <>
+              {/* Le calendrier naît avec l'établissement (génération à la
+                  création, réparation à l'affichage) : ce panneau ne dit plus
+                  « il n'y en a pas encore » d'un calendrier qu'on n'avait pas
+                  généré. Il parlait des seuls équipements, d'avant l'ADR-022 :
+                  la fiche et les salariés en font naître aussi. */}
               <p className="m-0 text-[15px] font-semibold tracking-[-0.015em] text-[color:var(--board-ink)]">
-                Votre calendrier est vide
+                Aucune obligation suivie pour l&apos;instant
               </p>
               <p className="m-0 max-w-[560px] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                Il se remplit tout seul à partir des équipements déclarés — il
-                n&apos;y en a pas encore.
+                Le calendrier se remplit tout seul à partir de la fiche de
+                l&apos;établissement, de ses équipements et de ses salariés.
+                Aucun équipement n&apos;est encore déclaré.
               </p>
               <Lien
                 href={`/etablissements/${bundle.etablissementId}/equipements/nouveau`}

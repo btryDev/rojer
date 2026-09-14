@@ -165,6 +165,11 @@ export async function creerEtablissement(
     },
   });
 
+  // Le calendrier naît avec l'établissement, comme à l'onboarding : sans
+  // équipement, les obligations d'établissement sont dues quand même
+  // (ADR-022). Raté, il reste marqué périmé et le premier affichage le reprend.
+  await regenererApresMutation(etab.id, "etablissements/creation");
+
   revalidatePath(`/entreprises/${entrepriseId}`);
   // On vient de le créer et on y atterrit : c'est lui, l'établissement actif.
   // Sans ce trait, le second établissement se créerait puis l'accueil
@@ -276,7 +281,7 @@ export async function modifierEtablissement(
         message:
           "Fiche enregistrée. Vos obligations n'ont pas pu être recalculées " +
           "à l'instant : elles le seront automatiquement à la prochaine " +
-          "ouverture de la page « Calendrier ».",
+          "ouverture du tableau de bord ou du calendrier.",
       };
     }
   }

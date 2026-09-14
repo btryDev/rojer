@@ -10,16 +10,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const genererCalendrier = vi.fn();
+const regenererSansInvalider = vi.fn();
 const marquerCalendrierPerime = vi.fn();
+const calendrierDesynchronise = vi.fn();
 
-vi.mock("./actions", () => ({ genererCalendrier }));
+vi.mock("./actions", () => ({ genererCalendrier, regenererSansInvalider }));
 vi.mock("./reconciliation", () => ({ marquerCalendrierPerime }));
+vi.mock("./queries", () => ({ calendrierDesynchronise }));
 
-const { regenererApresMutation } = await import("./regeneration-sure");
+const { regenererApresMutation, assurerCalendrierAJour } = await import(
+  "./regeneration-sure"
+);
 
 beforeEach(() => {
   genererCalendrier.mockReset();
+  regenererSansInvalider.mockReset();
   marquerCalendrierPerime.mockReset();
+  calendrierDesynchronise.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -48,5 +55,38 @@ describe("regenererApresMutation", () => {
 
     await regenererApresMutation("etab-1", "test");
     expect(marquerCalendrierPerime).toHaveBeenCalledWith("etab-1");
+  });
+});
+
+describe("assurerCalendrierAJour — la réparation à l'affichage", () => {
+  /**
+   * Revue du 2026-09-14 : le tableau de bord, porte d'entrée du produit,
+   * lisait un calendrier jamais généré ou périmé sans jamais le réparer ; seule
+   * la page Calendrier le faisait. Une fonction pour les deux.
+   */
+  it("ne régénère rien d'un calendrier à jour", async () => {
+    calendrierDesynchronise.mockResolvedValue(false);
+
+    await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(false);
+    expect(regenererSansInvalider).not.toHaveBeenCalled();
+  });
+
+  it("régénère, SANS invalidation, un calendrier jamais généré ou périmé", async () => {
+    // Pendant un rendu, Next refuse `revalidatePath` : c'est la variante sans
+    // invalidation qui doit servir, jamais `genererCalendrier`.
+    calendrierDesynchronise.mockResolvedValue(true);
+    regenererSansInvalider.mockResolvedValue({});
+
+    await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(true);
+    expect(regenererSansInvalider).toHaveBeenCalledWith("etab-1");
+    expect(genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  it("n'échoue JAMAIS : la page s'affiche sur les lignes en base", async () => {
+    // Le repère n'est pas posé : l'affichage suivant retentera de lui-même.
+    calendrierDesynchronise.mockResolvedValue(true);
+    regenererSansInvalider.mockRejectedValue(new Error("base indisponible"));
+
+    await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(false);
   });
 });

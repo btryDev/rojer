@@ -18,7 +18,8 @@
 // n'introduire aucun cycle — `regeneration-sure` → `actions` → `reconciliation`,
 // et `regeneration-sure` → `reconciliation`.
 
-import { genererCalendrier } from "./actions";
+import { genererCalendrier, regenererSansInvalider } from "./actions";
+import { calendrierDesynchronise } from "./queries";
 import { marquerCalendrierPerime } from "./reconciliation";
 
 /**
@@ -29,7 +30,49 @@ import { marquerCalendrierPerime } from "./reconciliation";
 export const MESSAGE_REGEN_ECHEC =
   "Modification enregistrée. Le calendrier des vérifications n'a pas pu être " +
   "recalculé à l'instant : il le sera automatiquement à la prochaine " +
-  "ouverture de la page « Calendrier ».";
+  "ouverture du tableau de bord ou du calendrier.";
+
+/**
+ * Répare À L'AFFICHAGE un calendrier qui n'est pas à jour, et **n'échoue
+ * jamais**. Rend `true` si une régénération a eu lieu.
+ *
+ * UN SEUL REPÈRE SUFFIT. `referentielVersionCalendrier` distingue à lui seul
+ * les trois cas : jamais généré (vide à la création), régénération échouée
+ * (`marquerCalendrierPerime` l'efface), référentiel changé depuis (le sceau
+ * diffère). La page calendrier comptait en plus les lignes pour détecter un
+ * calendrier vide — un comptage complet que le repère rend inutile.
+ *
+ * OÙ L'APPELER : en tête des pages d'ENTRÉE — le tableau de bord, où mènent la
+ * connexion et « Reprendre mon dossier », et le calendrier —, AVANT leurs
+ * lectures. Jamais dans le layout : Next rend le layout et la page EN
+ * PARALLÈLE, la page lirait les anciennes lignes pendant la régénération, et
+ * le layout n'est pas relancé d'une page à l'autre. Pas non plus dans chaque
+ * page ni dans les fonctions de lecture : une page lance ses lectures en
+ * parallèle, et chacune déclencherait sa régénération (revue du 2026-09-14).
+ *
+ * SANS INVALIDATION : Next refuse `revalidatePath` pendant un rendu. Les
+ * pastilles de la barre latérale, rendues par le layout, peuvent garder
+ * l'ancien compte jusqu'au rechargement suivant.
+ *
+ * Un échec est journalisé et laissé tel quel : le repère n'ayant pas été posé,
+ * l'affichage suivant retentera. La page s'affiche sur les lignes en base
+ * plutôt que de tomber en erreur.
+ */
+export async function assurerCalendrierAJour(
+  etablissementId: string,
+): Promise<boolean> {
+  if (!(await calendrierDesynchronise(etablissementId))) return false;
+  try {
+    await regenererSansInvalider(etablissementId);
+    return true;
+  } catch (err) {
+    console.error(
+      `[affichage] regen calendrier a échoué pour ${etablissementId}`,
+      err,
+    );
+    return false;
+  }
+}
 
 /**
  * Régénère, et **n'échoue jamais**.

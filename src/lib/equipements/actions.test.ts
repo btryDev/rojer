@@ -125,7 +125,9 @@ describe("supprimerEquipement", () => {
 
     expect(res.statut).toBe("erreur");
     if (res.statut !== "erreur") return;
-    expect(res.message).toContain("Calendrier");
+    // Le tableau de bord répare aussi à l'affichage depuis le 2026-09-14 : le
+    // message nomme les deux portes, et non plus la seule page Calendrier.
+    expect(res.message).toContain("tableau de bord ou du calendrier");
   });
 
   /**

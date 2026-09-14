@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 import { requireUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
+import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { onboardingSchema } from "./schema";
 
 /**
@@ -14,8 +15,9 @@ import { onboardingSchema } from "./schema";
  * Crée Entreprise + premier Etablissement dans une transaction unique
  * depuis un seul formulaire (saisi une seule fois, sans duplication
  * ressentie). Redirige ensuite vers la déclaration des équipements
- * (`?bienvenue=1` déclenche le bandeau de continuité) : c'est l'étape
- * qui débloque le calendrier, le dashboard vient après.
+ * (`?bienvenue=1` déclenche le bandeau de continuité) : le calendrier des
+ * obligations d'établissement est déjà généré, les équipements y ajoutent
+ * les leurs, le dashboard vient après.
  *
  * Les champs communs (adresse, codeNaf, effectif) sont copiés dans les
  * deux entités — côté Entreprise c'est le siège, côté Etablissement
@@ -125,6 +127,14 @@ export async function finaliserOnboarding(
 
     return etablissement;
   });
+
+  // LE CALENDRIER NAÎT AVEC L'ÉTABLISSEMENT. Il n'était généré qu'à la
+  // première déclaration d'équipement ou à l'ouverture de la page Calendrier :
+  // un bureau sans appareil doit pourtant ses obligations d'établissement
+  // (ADR-022), et son tableau de bord annonçait « Votre calendrier est vide »
+  // en attendant (revue du 2026-09-14). Le recalage n'échoue jamais : raté, il
+  // laisse le calendrier marqué périmé, que le premier affichage reprend.
+  await regenererApresMutation(result.id, "onboarding");
 
   revalidatePath("/");
   revalidatePath(`/entreprises/${result.entrepriseId}`);

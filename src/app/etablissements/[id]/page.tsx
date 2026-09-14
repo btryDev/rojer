@@ -30,6 +30,7 @@ import {
 } from "@/lib/dashboard/queries";
 import { listerEvenementsCalendrier } from "@/lib/calendrier/evenements";
 import { compterEtatEcheances } from "@/lib/calendrier/retards";
+import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
 import { statsActionsEnRetard } from "@/lib/actions/queries";
 import { prisma } from "@/lib/prisma";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
@@ -53,6 +54,15 @@ export default async function EtablissementPage({
   const { batiment } = await searchParams;
   const etab = await getEtablissement(id);
   if (!etab) notFound();
+
+  // Le tableau de bord est la porte d'entrée — la connexion et « Reprendre mon
+  // dossier » y mènent. Il lisait ce qui était en base, sans jamais le
+  // réparer : un dossier jamais généré (bureau sans équipement, créé avant la
+  // génération à la création), un calendrier périmé par un échec ou par un
+  // changement de référentiel s'y affichaient faux tant que personne n'ouvrait
+  // la page Calendrier. Même réparation qu'elle, AVANT la première lecture —
+  // la charge par bâtiment, juste en dessous, lit déjà les lignes.
+  await assurerCalendrierAJour(id);
 
   // Date de référence unique, figée côté serveur : tous les blocs qui
   // calculent un « dans N jours » partent de la même valeur, ce qui évite les
