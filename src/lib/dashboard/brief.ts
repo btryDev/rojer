@@ -208,6 +208,12 @@ const TONS_ALERTE: ReadonlySet<RecoBrief["kind"]> = new Set([
  * leur date. Pas quand, pas depuis combien de temps — le compteur ne le sait
  * pas, et un titre n'a pas à savoir mieux que le nombre qu'il coiffe.
  *
+ * SAUF QUAND DES VÉRIFICATIONS N'ONT PAS D'ÉCHÉANCE CONNUE (2026-09-14) : leur
+ * date n'est qu'une date de génération, et « ont dépassé leur date » y serait
+ * faux. Le titre dit alors « sont dues », qui vaut pour toutes, et nomme la
+ * part sans date. Le relevé « DÉPASSÉES » garde son mot et son nombre : c'est
+ * l'état du registre d'états, compté sur le ton.
+ *
  * IL PORTE LE VERBE DU RELEVÉ QU'IL COIFFE, et pas son adjectif : « Onze
  * échéances dépassées » aurait recopié mot pour mot, à soixante pixels d'écart,
  * ce que « DÉPASSÉES · 11 » affiche déjà. « ont dépassé leur date » ajoute ce
@@ -242,7 +248,7 @@ function construireTitre(e: EntreeBrief): string {
     }
     return `${enLettres(urgent)} échéances sont dues, dont ${enLettres(
       sansEcheance,
-    ).toLowerCase()} sans échéance connue`;
+    ).toLowerCase()} sans date connue`;
   }
   const proche = e.sous30j.total;
   if (proche > 0) {

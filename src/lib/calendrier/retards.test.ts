@@ -164,6 +164,21 @@ describe("repartirSous30j", () => {
     expect(v.total).toBe(2);
   });
 
+  it("lit la FIN d'une opération en cours, pas son début passé", () => {
+    // Relecture du 2026-09-14 : la règle du calendrier classe une opération
+    // démarrée sur sa fin ; le « sous 30 j » du tableau de bord doit compter
+    // la même chose.
+    const enCours = (fin: number): EcheanceCalendrier => ({
+      ...echeance("operations", "ok", dans(-20)),
+      id: `op-${fin}`,
+      type: "plan-prevention",
+      dateFin: dans(fin),
+    });
+    const v = repartirSous30j([enCours(10), enCours(90)], verifs(0), CE_MIDI);
+
+    expect(v.parFamille.operations).toBe(1);
+  });
+
   it("écarte le trente-et-unième jour", () => {
     const v = repartirSous30j(
       [echeance("papiers", "ok", dans(31))],

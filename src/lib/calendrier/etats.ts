@@ -243,16 +243,36 @@ export function classerDate(
  *
  * Une date passée sans alerte n'est atteinte que par ces opérations : les
  * closes ne viennent pas au calendrier, et les autres sources passent en
- * alerte dès leur date dépassée. Elle se lit « sous 30 jours » — une opération
- * en cours est l'affaire du moment ; ni « faite », qu'elle n'est pas, ni « au-
- * delà de 30 jours ».
+ * alerte dès leur date dépassée. L'opération se classe alors sur ce qui reste
+ * à tenir, sa FIN (`dateEnJeuAutre`) — et non « sous 30 jours » d'office : un
+ * premier jet le faisait, et une opération démarrée depuis deux mois, finissant
+ * dans six, s'annonçait « Dans 60 jours » et gonflait le « sous 30 j » de la
+ * règle sans celui du tableau de bord (relecture, 2026-09-14).
  */
 export function etatAutreEcheance(
-  e: { date: Date; tone: "alerte" | "ok" },
+  e: { date: Date; dateFin?: Date; tone: "alerte" | "ok" },
   now: Date,
 ): Extract<EtatEcheance, "enRetard" | "proche" | "lointain"> {
   if (e.tone === "alerte") return "enRetard";
-  return estEnRetard(e.date, now) ? "proche" : classerDate(e.date, now);
+  const enJeu = dateEnJeuAutre(e, now);
+  // Sans fin connue, une date passée sans alerte n'a pas de chemin connu ;
+  // si elle en trouvait un, elle ne se dirait pas « dépassée » pour autant.
+  return estEnRetard(enJeu, now) ? "proche" : classerDate(enJeu, now);
+}
+
+/**
+ * La date qu'une échéance hors vérification tient ENCORE : son début tant
+ * qu'il est à venir ou en alerte, sa fin une fois l'opération démarrée sans
+ * alerte. Lue partout où l'on classe, compte à rebours ou « sous 30 jours » —
+ * la règle et la vue par équipement du calendrier, le « sous 30 j » du tableau
+ * de bord —, pour qu'aucun des trois ne lise un début passé comme un retard.
+ */
+export function dateEnJeuAutre(
+  e: { date: Date; dateFin?: Date; tone: "alerte" | "ok" },
+  now: Date,
+): Date {
+  if (e.tone === "ok" && e.dateFin && estEnRetard(e.date, now)) return e.dateFin;
+  return e.date;
 }
 
 // `estStatutRealise` — « ce contrôle a eu lieu », le FAIT — vit dans

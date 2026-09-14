@@ -51,6 +51,7 @@ import {
   ENCRE_ETAT,
   PRIORITE_ETAT,
   classerDate,
+  dateEnJeuAutre,
   etatAutreEcheance,
   lecturesCalendrier,
   type EtatEcheance,
@@ -734,7 +735,10 @@ export default async function CalendrierPage({
       parFamille.set(e.famille, f);
     }
     const etat = etatDeLaLigne({ genre: "autre", date: e.date, e });
-    f.dates.push({ date: e.date, etat });
+    // La date EN JEU pour la « prochaine » de la famille : une opération en
+    // cours annonçait « Dans 60 jours » sur son début passé (relecture,
+    // 2026-09-14). Le placement dans les mois, lui, garde le début.
+    f.dates.push({ date: dateEnJeuAutre(e, aujourdhui), etat });
     f.compte[etat] += 1;
 
     const c = composantesCiviles(e.date);

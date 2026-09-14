@@ -69,7 +69,7 @@ describe("construireBrief — titre", () => {
       retards: ventil({ controle: 6, travaux: 5, operations: 3 }),
       verifsEnRetardSansEcheance: 5,
     });
-    expect(mixte.titre).toBe("14 échéances sont dues, dont cinq sans échéance connue");
+    expect(mixte.titre).toBe("14 échéances sont dues, dont cinq sans date connue");
 
     const toutes = construireBrief({
       ...CALME,

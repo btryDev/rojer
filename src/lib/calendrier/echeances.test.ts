@@ -402,6 +402,9 @@ describe("echeancePlanPrevention", () => {
     );
     expect(e.tone).toBe("ok");
     expect(e.famille).toBe("operations");
+    // Démarrée, sans alerte : sa fin est ce qui reste à tenir, et elle voyage
+    // avec l'échéance (`dateEnJeuAutre`, relecture du 2026-09-14).
+    expect(e.dateFin).toEqual(jour("2026-08-31"));
   });
 
   it("alerte sur une opération échue non close, inspection faite ou non", () => {

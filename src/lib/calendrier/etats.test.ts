@@ -4,6 +4,7 @@ import {
   cinqProchaines,
   classerDate,
   classerVerification,
+  dateEnJeuAutre,
   etatAutreEcheance,
   lecturesCalendrier,
   statutAffiche,
@@ -18,11 +19,26 @@ const NOW = new Date("2026-08-19T10:00:00.000Z");
 const jours = (n: number) => new Date(NOW.getTime() + n * 86_400_000);
 
 describe("etatAutreEcheance — le ton, jamais la date seule", () => {
-  it("une opération en cours, démarrée sans alerte, n'est pas « dépassée »", () => {
+  it("une opération en cours, démarrée sans alerte, n'est pas « dépassée » : elle se classe sur sa fin", () => {
     // Contrôle visuel en production, 2026-09-14 : un plan de prévention
     // démarré le 12, inspection faite, était peint « dépassé » par la règle du
-    // calendrier, sans pastille « En retard » sur sa carte.
-    expect(etatAutreEcheance({ date: jours(-2), tone: "ok" }, NOW)).toBe("proche");
+    // calendrier, sans pastille « En retard » sur sa carte. Et démarrée depuis
+    // deux mois, finissant dans six, elle ne tombe pas « sous 30 jours ».
+    expect(
+      etatAutreEcheance({ date: jours(-2), dateFin: jours(10), tone: "ok" }, NOW),
+    ).toBe("proche");
+    expect(
+      etatAutreEcheance({ date: jours(-60), dateFin: jours(180), tone: "ok" }, NOW),
+    ).toBe("lointain");
+    expect(
+      dateEnJeuAutre({ date: jours(-60), dateFin: jours(180), tone: "ok" }, NOW),
+    ).toEqual(jours(180));
+  });
+
+  it("une date à venir, ou en alerte, reste la date en jeu", () => {
+    expect(dateEnJeuAutre({ date: jours(5), dateFin: jours(30), tone: "ok" }, NOW)).toEqual(jours(5));
+    expect(dateEnJeuAutre({ date: jours(-5), dateFin: jours(30), tone: "alerte" }, NOW)).toEqual(jours(-5));
+    expect(dateEnJeuAutre({ date: jours(-5), tone: "ok" }, NOW)).toEqual(jours(-5));
   });
 
   it("une alerte est en retard, quelle que soit la date", () => {

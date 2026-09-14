@@ -197,6 +197,14 @@ export type EcheanceCalendrier = {
    *  mot standard, lui, vient du type (ADR-016). */
   origine: string;
   date: Date;
+  /**
+   * La fin d'une OPÉRATION (permis de feu, plan de prévention), dont `date`
+   * est le début. Une fois l'opération démarrée sans alerte, c'est elle qui
+   * reste à tenir : `dateEnJeuAutre` la lit à la place d'un début passé, qui
+   * n'est pas un retard (contrôle visuel en production, 2026-09-14). Absente
+   * pour les autres sources, dont la date est l'échéance elle-même.
+   */
+  dateFin?: Date;
   /** Mêmes tons que la grille : dépassé = alerte, sinon ok. */
   tone: "alerte" | "ok";
   href: string;
@@ -423,6 +431,7 @@ export function echeancePermisFeu(
     libelle: `Permis de feu n°${p.numero} — ${p.lieu}`,
     origine: "travaux par point chaud",
     date: p.dateDebut,
+    dateFin: p.dateFin,
     tone: !clos && (debutManque || finDepassee) ? "alerte" : "ok",
     href: `/etablissements/${etablissementId}/permis-feu/${p.id}`,
     batiment: p.batiment ?? null,
@@ -463,6 +472,7 @@ export function echeancePlanPrevention(
     libelle: `Plan de prévention n°${p.numero} — ${p.entrepriseExterieureRaison}`,
     origine: "opération avec entreprise extérieure",
     date: p.dateDebut,
+    dateFin: p.dateFin,
     tone: !clos && (commenceSansInspection || finDepassee) ? "alerte" : "ok",
     href: `/etablissements/${etablissementId}/plan-prevention/${p.id}`,
     batiment: p.batiment ?? null,

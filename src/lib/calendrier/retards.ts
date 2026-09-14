@@ -32,6 +32,7 @@ import type {
 } from "./echeances";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
 import { estDansLesProchainsJours } from "@/lib/dates/retard";
+import { dateEnJeuAutre } from "./etats";
 
 /** Une ventilation : le détail par famille, et sa somme. */
 export type VentilationEcheances = {
@@ -176,7 +177,10 @@ export function repartirSous30j(
   }
   for (const e of autres) {
     if (e.tone === "alerte") continue;
-    if (estDansLesProchainsJours(e.date, now, JOURS_HORIZON_PROCHE)) {
+    // La date EN JEU : la fin d'une opération en cours, pas son début passé —
+    // la même que la règle du calendrier, pour que les deux « sous 30 j »
+    // comptent la même chose (`dateEnJeuAutre`).
+    if (estDansLesProchainsJours(dateEnJeuAutre(e, now), now, JOURS_HORIZON_PROCHE)) {
       parFamille[e.famille] += 1;
     }
   }

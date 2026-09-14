@@ -791,7 +791,11 @@ function registreMarqueur(m: {
   tone: string;
   proche: boolean;
 }): RegistreMarqueur {
-  if (m.passe || m.tone === "alerte") return "chaud";
+  // Le TON, pas la date passée : tout retard réel porte `alerte`. Une date
+  // passée sans alerte est une opération EN COURS (permis ou plan démarré,
+  // inspection faite), et « passé » la peignait rouge comme un retard
+  // (relecture, 2026-09-14 — même règle que `etatAutreEcheance`).
+  if (m.tone === "alerte") return "chaud";
   if (m.proche) return "proche";
   return "calme";
 }
