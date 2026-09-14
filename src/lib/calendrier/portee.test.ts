@@ -258,7 +258,6 @@ describe("urgenceSeule — le pendant SQL d'`estVerificationEnRetard`", () => {
     for (const statut of [
       "a_planifier",
       "planifiee",
-      "depassee",
       "realisee_conforme",
       "realisee_observations",
       "realisee_ecart_majeur",
@@ -309,7 +308,6 @@ describe("echeanceAttendue — le pendant SQL d'`estVerificationRealisee`", () =
     const statuts = [
       "a_planifier",
       "planifiee",
-      "depassee",
       "realisee_conforme",
       "realisee_observations",
       "realisee_ecart_majeur",

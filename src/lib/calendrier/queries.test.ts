@@ -207,7 +207,7 @@ describe("compterEtatCalendrier", () => {
       // En retard : la date décide, pas le statut (ADR-011).
       verif("a_planifier", "2026-08-01"),
       verif("planifiee", "2026-07-15"),
-      verif("depassee", "2026-06-01"),
+      verif("planifiee", "2026-06-01"),
       // À planifier : pas encore dépassée.
       verif("a_planifier", "2026-09-30"),
       // À venir : dans l'horizon proche.
@@ -244,8 +244,8 @@ describe("compterEtatCalendrier", () => {
     // Le total ne bouge pas, sa ventilation si — c'est toute la promesse
     // du rattachement de la famille « personnel » (ADR-016, ADR-023).
     prismaMock.verification.findMany.mockResolvedValue([
-      verif("depassee", "2026-06-01"),
-      verif("depassee", "2026-06-01", "sal-1"),
+      verif("planifiee", "2026-06-01"),
+      verif("planifiee", "2026-06-01", "sal-1"),
       verif("planifiee", "2026-08-10", "sal-2"),
     ]);
 
@@ -319,7 +319,7 @@ describe("compterEtatCalendrier", () => {
     // quatre ensembles — le compteur affichait « 0 en retard » pendant que la
     // grille peignait la ligne en rouge.
     prismaMock.verification.findMany.mockResolvedValue([
-      verif("depassee", "2026-01-01", "2025-01-15"),
+      verif("planifiee", "2026-01-01", "2025-01-15"),
     ]);
     const etat = await compterEtatCalendrier("etab-1", NOW);
     expect(etat.enRetard).toBe(1);

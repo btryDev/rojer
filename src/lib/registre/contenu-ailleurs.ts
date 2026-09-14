@@ -28,7 +28,7 @@ import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
   estVerificationRealisee,
 } from "@/lib/dates/retard";
-import { statutAffiche } from "@/lib/calendrier/etats";
+import { statutAffiche, type StatutPeint } from "@/lib/calendrier/etats";
 import type { SectionRegistre } from "./sections";
 
 /**
@@ -94,8 +94,9 @@ export type LigneTenue = {
   meta?: string;
   /** La fiche de l'objet. Canonique : l'appelant y ajoute sa provenance. */
   href?: string;
-  /** Le statut d'une vérification, quand la ligne en est une. */
-  statut?: StatutVerification;
+  /** Le statut PEINT d'une vérification, quand la ligne en est une : l'état
+   *  du jour, « en retard » compris (`statutAffiche`). */
+  statut?: StatutPeint;
   /** La ligne naît-elle d'un engagement contractuel (ADR-032) ? Le rendu en
    *  fait une mention à part, jamais un mot noyé dans `meta` — qui est
    *  tronqué. */

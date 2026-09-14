@@ -139,7 +139,7 @@ function ligne(partiel: Partial<LigneFausse> & { id: string }): LigneFausse {
     periodicite: "annuelle",
     realisateurRequis: ["personne_qualifiee"],
     datePrevue: new Date("2020-01-01T00:00:00Z"),
-    statut: "depassee",
+    statut: "planifiee",
     nbRapports: 0,
     nbActions: 0,
     ...partiel,
@@ -290,7 +290,7 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
         id: "v-1",
         equipementId: "eq-elec",
         obligationId: ELEC_ANNUELLE,
-        statut: "depassee",
+        statut: "planifiee",
       }),
     ];
 

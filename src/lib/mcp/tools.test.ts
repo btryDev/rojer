@@ -351,7 +351,7 @@ describe("équipements et calendrier", () => {
     // dirigeant sous un en-tête qui, lui, n'en comptait aucune : la ligne et
     // son total se contredisaient dans la même réponse.
     prismaMock.verification.findMany.mockResolvedValue([
-      verif({ statut: "depassee", archiveLe: jour("2026-07-20") }),
+      verif({ statut: "planifiee", archiveLe: jour("2026-07-20") }),
     ]);
 
     const texte = await outil("verifications").executer(ctx, {});
@@ -367,7 +367,7 @@ describe("équipements et calendrier", () => {
   it("et elle ne ressort pas non plus dans les prochaines échéances", async () => {
     prismaMock.verification.findMany.mockResolvedValue([
       verif({
-        statut: "depassee",
+        statut: "planifiee",
         datePrevue: jour("2026-08-20"),
         archiveLe: jour("2026-07-20"),
       }),

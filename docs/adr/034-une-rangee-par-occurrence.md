@@ -617,11 +617,25 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        échéance calculée d'une mise en service déclarée après coup — la garde
        ne distingue pas une date de génération d'un rendez-vous manqué, et
        préfère ne jamais effacer un retard ;
-     - **phase B**, après le déploiement de A : migration `depassee →
-       planifiee` si la ligne porte un rapport réalisé, `a_planifier` sinon
-       (la même règle que la régénération), et retrait de la valeur de l'enum, le type d'affichage
-       « en retard » séparé du type stocké, puis la relecture du système
-       entier sur le modèle GestBAT.
+     - ~~**phase B**~~ (`lot/retrait-depassee-b`, A déployée en production le
+       2026-09-14, `a7c80fd`) : migration
+       `20260914120000_retrait_statut_depassee` — `depassee → planifiee` si
+       la ligne porte un rapport réalisé, `a_planifier` sinon (un rapport
+       « non vérifiable » seul ne compte pas), puis l'enum recréé à cinq
+       valeurs, dans un bloc qui ne s'exécute que tant que la valeur existe.
+       Rejouée deux fois sur le Docker local, cinq rangées fabriquées :
+       trois réécrites, deux intouchées, second passage sans effet. Le code
+       perd la lecture du tampon (`statutLu`, `statutCycleOuvert`, dépôt
+       « non vérifiable », liste SQL d'`echeanceAttendue`). **Le type
+       d'affichage est séparé du type stocké** : `StatutPeint` =
+       `StatutVerification | "en_retard"` (`etats.ts`) — la pastille, le
+       registre PDF, les fiches tenues ailleurs et la vue par équipement
+       peignent un état du jour, et « en retard » n'a plus de valeur en base
+       pour exister à l'écran. Six tests du tampon retirés — ils éprouvaient
+       des lignes que la migration a fait disparaître —, les fixtures
+       « dépassées » sont des échéances `planifiee` passées. 2628 tests,
+       `next build` vert. Reste la relecture du système entier sur le modèle
+       GestBAT.
   2. **`dateRealisee` n'est pas une colonne morte.** Le réconciliateur la
      PRÉSERVE quand elle est la seule trace d'une obligation consommée sans
      rapport, et depuis les corrections du N4, `echeanceOuverte` en DÉPEND :

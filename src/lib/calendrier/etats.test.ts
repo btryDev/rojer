@@ -116,21 +116,6 @@ describe("classerVerification", () => {
     ).toBe("faite");
   });
 
-  it("un tampon « depassee » ne fait plus le retard : la date décide", () => {
-    // CE TEST A CHANGÉ DE RÉPONSE (retrait de `depassee`, phase A). Il
-    // affirmait que le statut stocké l'emportait sur une date future. Même
-    // règle que `estVerificationEnRetard`, qui a changé avec : le retard est
-    // une fonction de la date, et le tampon se lit « à planifier ».
-    const tamponnee = (datePrevue: Date) => ({
-      statut: "depassee",
-      datePrevue,
-      archiveLe: null,
-      periodicite: "annuelle",
-      libelleObligation: "Vérification périodique",
-    });
-    expect(classerVerification(tamponnee(jours(5)), NOW)).toBe("aPlanifier");
-    expect(classerVerification(tamponnee(jours(-5)), NOW)).toBe("enRetard");
-  });
 });
 
 describe("aUnRendezVous", () => {
@@ -353,7 +338,7 @@ describe("statutDeLaLecture (ADR-034)", () => {
     // Le défaut : une tuile verte « fait le 1er juin » affichait « En retard »
     // dès que l'échéance suivante de la même ligne était passée.
     expect(
-      statutDeLaLecture(FAIT, { statut: "depassee", dernierResultat: "conforme" }),
+      statutDeLaLecture(FAIT, { statut: "planifiee", dernierResultat: "conforme" }),
     ).toBe("realisee_conforme");
     expect(
       statutDeLaLecture(FAIT, { statut: "planifiee", dernierResultat: "ecart_majeur" }),
@@ -368,7 +353,7 @@ describe("statutDeLaLecture (ADR-034)", () => {
     const gelee = { statut: "realisee_conforme" };
     expect(
       statutDeLaLecture({ lecture: "courante", registre: "enRetard" }, gelee),
-    ).toBe("depassee");
+    ).toBe("en_retard");
     expect(
       statutDeLaLecture({ lecture: "courante", registre: "lointain" }, gelee),
     ).toBe("planifiee");
@@ -381,7 +366,7 @@ describe("statutDeLaLecture (ADR-034)", () => {
     // Une ligne ROULÉE restée « planifiée » après sa date : dépassée.
     expect(
       statutDeLaLecture({ lecture: "courante", registre: "enRetard" }, { statut: "planifiee" }),
-    ).toBe("depassee");
+    ).toBe("en_retard");
   });
 
   it("sans résultat connu — ligne d'avant l'ADR-034 — le statut de la ligne fait foi", () => {
@@ -417,10 +402,10 @@ describe("statutAffiche — le statut à peindre est celui de l'état du jour", 
   });
 
   it("« dépassée » sur une échéance passée, quel que soit le statut stocké", () => {
-    expect(statutAffiche(ligne({ datePrevue: jours(-5) }), NOW)).toBe("depassee");
+    expect(statutAffiche(ligne({ datePrevue: jours(-5) }), NOW)).toBe("en_retard");
     expect(
       statutAffiche(ligne({ statut: "realisee_conforme", datePrevue: jours(-40) }), NOW),
-    ).toBe("depassee");
+    ).toBe("en_retard");
   });
 
   it("« planifiée » sur un rendez-vous à venir, même gelé sur « réalisée »", () => {
@@ -479,7 +464,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
     expect(
       lecturesCalendrier(
         {
-          statut: "depassee",
+          statut: "planifiee",
           datePrevue: jours(-30),
           archiveLe: ARCHIVE_LE,
           derniereRealisation: null,

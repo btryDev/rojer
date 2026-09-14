@@ -89,7 +89,7 @@ describe("registre — ce qui a été fait, et ce qui vient (ADR-034)", () => {
         statut: "planifiee",
       }),
     ]);
-    expect(enRetard.statut).toBe("depassee");
+    expect(enRetard.statut).toBe("en_retard");
     // Le témoin : une date à venir garde son statut, la pastille ne peint pas
     // tout en rose.
     expect(aVenir.statut).toBe("planifiee");
@@ -141,7 +141,7 @@ describe("registre — une obligation éteinte ne se présente pas en retard", (
    */
   const eteinte = () =>
     verif({
-      statut: "depassee",
+      statut: "planifiee",
       datePrevue: new Date("2025-03-01T00:00:00Z"),
       archiveLe: new Date("2026-02-01T00:00:00Z"),
       derniereRealisation: new Date("2024-03-01T00:00:00Z"),

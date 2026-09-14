@@ -887,64 +887,7 @@ describe("réconciliation — survie des actions correctives", () => {
     ).toBe(true);
   });
 
-  it("un tampon « depassee » encore en base se réécrit « à planifier », une fois", () => {
-    // Les lignes tamponnées avant la phase A. La régénération les ramène au
-    // modèle — sans toucher la date — et la passe suivante n'écrit plus rien.
-    const o = fakeObligation({ id: "elec", periodicite: "annuelle" });
-    const eq = fakeEquipement("eq-elec");
-    const aGenerer = genererProchainesVerifications([applique(o, [eq])], new Map(), {
-      now: NOW,
-    });
-    const datePrevue = new Date("2026-02-01T00:00:00Z");
-    const ligne = (statut: "depassee" | "a_planifier") =>
-      ligneExistante({
-        id: "v-elec",
-        obligationId: "elec",
-        equipementId: "eq-elec",
-        datePrevue,
-        statut,
-      });
 
-    const premiere = reconcilierCalendrier([ligne("depassee")], aGenerer, { now: NOW });
-    expect(premiere.aMettreAJour).toHaveLength(1);
-    expect(premiere.aMettreAJour[0].statut).toBe("a_planifier");
-    expect(premiere.aMettreAJour[0].datePrevue).toEqual(datePrevue);
-
-    const seconde = reconcilierCalendrier([ligne("a_planifier")], aGenerer, { now: NOW });
-    expect(seconde.aMettreAJour).toEqual([]);
-  });
-
-  it("…mais « planifiée » quand un contrôle réel est derrière lui", () => {
-    // Relecture de la phase A. Le tampon recouvrait une échéance CALCULÉE
-    // depuis un rapport : la réécrire « à planifier » faisait dire « aucune
-    // vérification enregistrée » à la carte, et masquait la date au
-    // calendrier. Le statut dit si la date est une vraie échéance ; elle
-    // l'est. Stable à la passe suivante.
-    const o = fakeObligation({ id: "elec", periodicite: "annuelle" });
-    const eq = fakeEquipement("eq-elec");
-    const aGenerer = genererProchainesVerifications([applique(o, [eq])], new Map(), {
-      now: NOW,
-    });
-    const datePrevue = new Date("2026-02-01T00:00:00Z");
-    const ligne = (statut: "depassee" | "planifiee") =>
-      ligneExistante({
-        id: "v-elec",
-        obligationId: "elec",
-        equipementId: "eq-elec",
-        datePrevue,
-        statut,
-        derniereRealisation: new Date("2025-02-01T00:00:00Z"),
-        porteUnePreuve: true,
-      });
-
-    const premiere = reconcilierCalendrier([ligne("depassee")], aGenerer, { now: NOW });
-    expect(premiere.aMettreAJour).toHaveLength(1);
-    expect(premiere.aMettreAJour[0].statut).toBe("planifiee");
-    expect(premiere.aMettreAJour[0].datePrevue).toEqual(datePrevue);
-
-    const seconde = reconcilierCalendrier([ligne("planifiee")], aGenerer, { now: NOW });
-    expect(seconde.aMettreAJour).toEqual([]);
-  });
 });
 
 describe("réconciliation — idempotence et stabilité des identifiants", () => {

@@ -273,6 +273,17 @@ export function classerVerification(
 }
 
 /**
+ * Ce qu'une pastille PEINT : un statut stocké, ou « en retard ».
+ *
+ * Deux types et non un, depuis le retrait de `depassee` (2026-09-14). Le type
+ * stocké (`StatutVerification`) servait aussi à peindre, si bien que la valeur
+ * « dépassée » devait exister en base pour exister à l'écran — et le tampon
+ * qui la posait était une seconde source du retard. Le retard est un ÉTAT du
+ * jour, calculé sur la date : il n'a sa valeur qu'ici.
+ */
+export type StatutPeint = StatutVerification | "en_retard";
+
+/**
  * Le statut à PEINDRE pour un état — une table, et une seule.
  *
  * Trois surfaces peignaient le statut STOCKÉ (le registre PDF, la ligne du
@@ -283,7 +294,8 @@ export function classerVerification(
  *
  *  · `archivee` — rien : le statut y est gelé, le fait « ne s'applique plus »
  *    se dit ailleurs ;
- *  · `enRetard` — « dépassée » ;
+ *  · `enRetard` — « en retard », une valeur d'AFFICHAGE (`StatutPeint`) : le
+ *    retard n'est pas un statut stocké depuis le retrait de `depassee` ;
  *  · `aPlanifier` — « à planifier » ;
  *  · `proche` / `lointain` — « planifiée » : un rendez-vous arrêté ;
  *  · `faite` — le statut de la ligne, qui porte alors le résultat.
@@ -291,12 +303,12 @@ export function classerVerification(
 function statutDuRegistre(
   registre: RegistreLigne,
   statut: string,
-): StatutVerification | undefined {
+): StatutPeint | undefined {
   switch (registre) {
     case "archivee":
       return undefined;
     case "enRetard":
-      return "depassee";
+      return "en_retard";
     case "aPlanifier":
       return "a_planifier";
     case "proche":
@@ -325,7 +337,7 @@ export function cinqProchaines<T extends { datePrevue: Date }>(lignes: T[]): T[]
 export function statutAffiche(
   v: VerificationDatee,
   now: Date,
-): StatutVerification | undefined {
+): StatutPeint | undefined {
   return statutDuRegistre(classerVerification(v, now), v.statut);
 }
 
@@ -360,11 +372,11 @@ export function statutAffiche(
 export function statutDeLaLecture(
   lecture: Pick<LectureCalendrier, "lecture" | "registre">,
   v: { statut: string; dernierResultat?: string | null },
-): StatutVerification {
+): StatutPeint {
   if (lecture.lecture !== "realisation") {
     // `registre` d'une lecture n'est jamais `archivee` (voir le type) : la
     // table rend donc toujours un statut.
-    return statutDuRegistre(lecture.registre, v.statut) as StatutVerification;
+    return statutDuRegistre(lecture.registre, v.statut) as StatutPeint;
   }
   // Résultat inconnu : une ponctuelle consommée sans rapport (seed), dont le
   // statut porte lui-même le résultat.

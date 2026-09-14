@@ -218,7 +218,7 @@ describe("listerBatimentsAvecCharge", () => {
   it("une ligne archivée ne pèse sur aucune carte, même gelée sur « dépassée »", async () => {
     h.db.verifs = [
       ligne(RESERVE, "2026-08-18T00:00:00+02:00", {
-        statut: "depassee",
+        statut: "planifiee",
         archiveLe: "2026-08-19T00:00:00+02:00",
       }),
     ];

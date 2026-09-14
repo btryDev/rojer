@@ -63,7 +63,7 @@ describe("genererRecommandations — tri par urgence", () => {
       verifications: [
         {
           id: "v1",
-          statut: "depassee",
+          statut: "planifiee",
           datePrevue: dateDecalee(-10),
           libelleObligation: "Vérification élec",
           equipementLibelle: "TGBT",
@@ -91,7 +91,7 @@ describe("genererRecommandations — tri par urgence", () => {
       verifications: [
         {
           id: "v-recent",
-          statut: "depassee",
+          statut: "planifiee",
           datePrevue: dateDecalee(-1),
           libelleObligation: "VMC",
           equipementLibelle: "CTA",
@@ -100,7 +100,7 @@ describe("genererRecommandations — tri par urgence", () => {
         },
         {
           id: "v-ancien",
-          statut: "depassee",
+          statut: "planifiee",
           datePrevue: dateDecalee(-30),
           libelleObligation: "Extincteurs",
           equipementLibelle: "Extincteurs",
@@ -116,7 +116,7 @@ describe("genererRecommandations — tri par urgence", () => {
   it("tronque à 5 items max par défaut", () => {
     const verifs = Array.from({ length: 10 }, (_, i) => ({
       id: `v-${i}`,
-      statut: "depassee" as const,
+      statut: "planifiee" as const,
       datePrevue: dateDecalee(-i),
       libelleObligation: `Vérif ${i}`,
       equipementLibelle: "X",
@@ -538,7 +538,7 @@ describe("genererRecommandations — amorçage (règles 6-8)", () => {
       verifications: [
         {
           id: "v1",
-          statut: "depassee",
+          statut: "planifiee",
           datePrevue: dateDecalee(-10),
           libelleObligation: "Vérif élec",
           equipementLibelle: "TGBT",
@@ -576,7 +576,7 @@ describe("genererRecommandations — href", () => {
       verifications: [
         {
           id: "v-123",
-          statut: "depassee",
+          statut: "planifiee",
           datePrevue: dateDecalee(-5),
           libelleObligation: "Test",
           equipementLibelle: "E",

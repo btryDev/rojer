@@ -1488,8 +1488,10 @@ découverte que tous les builds Vercel échouaient depuis N2 (un `export class`
 dans un module `"use server"`, fusible `src/lib/use-server.test.ts`). La
 propriétaire a renoncé à vider la base : la migration N5 a remis les données
 au modèle. **Retrait de `depassee`** (décidé le 2026-09-14, modèle GestBAT) :
-~~phase A~~ — le retard est la date, plus aucune écriture du statut — ; reste
-la phase B, migration et retrait de l'enum, après le déploiement de A.
+~~phase A~~ (déployée, `a7c80fd`) — le retard est la date, plus aucune
+écriture du statut — ; ~~phase B~~ (`lot/retrait-depassee-b`) — migration,
+enum à cinq valeurs, type d'affichage `StatutPeint` séparé du type stocké.
+Reste la relecture du système entier sur le modèle GestBAT, puis la fusion.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est

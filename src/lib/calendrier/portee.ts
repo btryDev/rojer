@@ -134,7 +134,7 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
 export function echeanceAttendue(): Prisma.VerificationWhereInput {
   return {
     OR: [
-      { statut: { in: ["a_planifier" as const, "planifiee" as const, "depassee" as const] } },
+      { statut: { in: ["a_planifier" as const, "planifiee" as const] } },
       {
         statut: { in: [...STATUTS_REALISES_PERSISTES] },
         periodicite: { notIn: [...PERIODICITES_SANS_SUITE] },

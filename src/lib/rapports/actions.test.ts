@@ -324,13 +324,6 @@ describe("uploadRapport — résultat « non vérifiable »", () => {
     expect(h.db.verification?.statut).toBe("planifiee");
   });
 
-  it("une ligne encore tamponnée « depassee » redevient « à planifier »", async () => {
-    h.db.verification = { ...h.db.verification!, statut: "depassee" };
-    await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
-
-    expect(h.db.verification?.statut).toBe("a_planifier");
-    expect(ligneEnRetard()).toBe(true);
-  });
 
   it("conserve le rapport et son fichier, sans échéance honorée", async () => {
     await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
@@ -748,19 +741,6 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
     expect(ligneEnRetard()).toBe(true);
   });
 
-  it("non vérifiable sur une ligne tamponnée ET contrôlée : « planifiée »", async () => {
-    // S3 de la relecture de contrôle : sans lire le contrôle réel, la ligne
-    // redevenait « à planifier » et la carte disait « aucune vérification
-    // enregistrée » sur un appareil contrôlé.
-    h.db.rapports = [
-      rapport({ id: "rap-2025", dateRapport: depuisCleJourCivil("2025-01-15") }),
-    ];
-    h.db.verification = { ...h.db.verification!, statut: "depassee" };
-    await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
-
-    expect(h.db.verification?.statut).toBe("planifiee");
-    expect(ligneEnRetard()).toBe(true);
-  });
 
   it("un contrôle daté d'AUJOURD'HUI est accepté", async () => {
     // Le pendant du refus ci-dessous, et il garde la borne : reculée d'un

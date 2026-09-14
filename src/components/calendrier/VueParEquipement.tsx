@@ -41,7 +41,7 @@
 import { useState } from "react";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import type { StatutVerification } from "@prisma/client";
+import type { StatutPeint } from "@/lib/calendrier/etats";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MOIS_FR, MOIS_FR_COURT } from "@/lib/calendrier/labels";
@@ -131,8 +131,8 @@ export type OccurrenceEquipement = {
    */
   contractuelle?: boolean;
   etat: RegistreLigne;
-  /** Statut de vérification — absent hors du parc, où il n'existe pas. */
-  statut?: StatutVerification;
+  /** Statut PEINT de vérification — absent hors du parc, où il n'existe pas. */
+  statut?: StatutPeint;
 };
 
 export function VueParEquipement({

@@ -730,13 +730,18 @@ model PrescriptionParticuliere {
   @@index([equipementId])
 }
 
+/// Ce que la ligne PORTE, jamais son état du jour. `a_planifier` : aucune
+/// échéance connue (la date est celle de la génération) ; `planifiee` : une
+/// échéance connue, passée ou non ; `realisee_*` : le fait d'un contrôle, qui
+/// ne purge l'échéance que sans rendez-vous suivant. Le RETARD n'est pas un
+/// statut : il se lit sur `datePrevue` (`lib/dates/retard`). `depassee` a
+/// quitté l'enum le 2026-09-14, migration `20260914120000_retrait_statut_depassee`.
 enum StatutVerification {
   a_planifier
   planifiee
   realisee_conforme
   realisee_observations
   realisee_ecart_majeur
-  depassee
 }
 
 enum Periodicite {

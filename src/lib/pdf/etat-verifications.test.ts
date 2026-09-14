@@ -31,7 +31,7 @@ function verif(
 describe("repartirVerifications", () => {
   it("classe chaque occurrence dans une seule catégorie", () => {
     const verifs = [
-      verif("depassee", "2026-03-01T00:00:00Z"),
+      verif("planifiee", "2026-03-01T00:00:00Z"),
       verif("planifiee", "2026-04-20T00:00:00Z"), // échéance passée
       verif("a_planifier", "2026-04-10T00:00:00Z"), // échéance passée
       verif("a_planifier", "2026-05-30T00:00:00Z"), // pas encore due
@@ -163,7 +163,7 @@ describe("repartirVerifications", () => {
     // Sa réalisation, elle, reste comptée : une preuve ne s'efface pas parce
     // que l'obligation a cessé de s'appliquer.
     const archivee = {
-      ...verif("depassee", "2026-02-01T00:00:00Z"),
+      ...verif("planifiee", "2026-02-01T00:00:00Z"),
       archiveLe: new Date("2026-03-15T00:00:00Z"),
       derniereRealisation: new Date("2026-01-20T00:00:00Z"),
     };
@@ -182,7 +182,7 @@ describe("repartirVerifications", () => {
     // pas entrer au dénominateur du score, où elle pèserait sans jamais
     // pouvoir être satisfaite.
     const archivee = {
-      ...verif("depassee", "2026-02-01T00:00:00Z"),
+      ...verif("planifiee", "2026-02-01T00:00:00Z"),
       archiveLe: new Date("2026-03-15T00:00:00Z"),
     };
 
@@ -191,7 +191,7 @@ describe("repartirVerifications", () => {
 
   it("les quatre ensembles restent disjoints (pas de double compte)", () => {
     const verifs = [
-      verif("depassee", "2026-02-01T00:00:00Z"),
+      verif("planifiee", "2026-02-01T00:00:00Z"),
       verif("a_planifier", "2026-04-25T00:00:00Z"),
       verif("planifiee", "2026-04-24T00:00:00Z"),
       verif("realisee_observations", "2026-03-01T00:00:00Z", "2026-03-02T00:00:00Z"),

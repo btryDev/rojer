@@ -324,7 +324,7 @@ describe("getDashboardData — vérifications réalisées et archivées", () => 
     }
     h.db.verifications.push(
       verif({ id: "r1", statut: "planifiee", datePrevue: jour(-40) }),
-      verif({ id: "r2", statut: "depassee", datePrevue: jour(-20) }),
+      verif({ id: "r2", statut: "planifiee", datePrevue: jour(-20) }),
       verif({ id: "r3", statut: "a_planifier", datePrevue: jour(-5) }),
     );
 
@@ -462,11 +462,11 @@ describe("getDashboardData — l'archivage est un champ (ADR-034)", () => {
     h.db.verifications.push(
       verif({
         id: "eteinte",
-        statut: "depassee",
+        statut: "planifiee",
         datePrevue: jour(-40),
         archiveLe: jour(-3),
       }),
-      verif({ id: "vivante", statut: "depassee", datePrevue: jour(-10) }),
+      verif({ id: "vivante", statut: "planifiee", datePrevue: jour(-10) }),
     );
 
     const d = await getDashboardData(ETAB);
@@ -691,7 +691,7 @@ describe("compterVerifsParEquipement", () => {
       verif({
         id: "eteinte",
         equipementId: "eq-1",
-        statut: "depassee",
+        statut: "planifiee",
         datePrevue: jour(-40),
         archiveLe: jour(-3),
       }),

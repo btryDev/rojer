@@ -15,8 +15,7 @@ import {
   estVerificationRealisee,
   type VerificationDatee,
 } from "@/lib/dates/retard";
-import { statutAffiche } from "@/lib/calendrier/etats";
-import type { StatutVerification } from "@prisma/client";
+import { statutAffiche, type StatutPeint } from "@/lib/calendrier/etats";
 
 /**
  * Une ligne « en attente » au sens du registre de sécurité : elle n'a pas
@@ -205,7 +204,7 @@ export function ligneVerif(
     datePrevue: v.datePrevue,
     // `undefined` n'arrive pas : les deux tableaux n'admettent aucune ligne
     // archivée. Le repli garde le type du document.
-    statut: statutAffiche(v, now) ?? (v.statut as StatutVerification),
+    statut: statutAffiche(v, now) ?? (v.statut as StatutPeint),
     domaine: obligationParId(v.obligationId)?.domaine ?? null,
     contractuelle: estEcheanceContractuelle(v),
   };

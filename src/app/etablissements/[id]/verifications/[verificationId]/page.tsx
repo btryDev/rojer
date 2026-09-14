@@ -341,7 +341,7 @@ export default async function VerificationDetailPage({
             {/* L'ÉTAT DU JOUR, pas le statut stocké (`statutAffiche`) : une
                 rangée périodique gelée affichait « Conforme » à côté de la
                 pastille « En retard de N j » (relecture du 2026-09-13). */}
-            {statutJour === undefined || statutJour === "depassee" ? null : (
+            {statutJour === undefined || statutJour === "en_retard" ? null : (
               <BadgeStatut statut={statutJour} />
             )}
             {enRetard ? (

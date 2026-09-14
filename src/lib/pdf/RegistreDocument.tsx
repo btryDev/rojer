@@ -3,7 +3,8 @@ import { LABEL_RESULTAT } from "@/lib/rapports/schema";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
-import type { ResultatVerification, StatutVerification } from "@prisma/client";
+import type { ResultatVerification } from "@prisma/client";
+import type { StatutPeint } from "@/lib/calendrier/etats";
 import {
   BOARD,
   formatDateCourte,
@@ -28,7 +29,8 @@ export type LigneVerif = {
   libelleObligation: string;
   equipementLibelle: string;
   datePrevue: Date;
-  statut: StatutVerification;
+  /** Le statut PEINT — l'état du jour, « en retard » compris. */
+  statut: StatutPeint;
   domaine: DomaineObligation | null;
   /**
    * La ligne naît-elle d'un engagement contractuel (ADR-032) ? Portée par le
@@ -100,10 +102,10 @@ export type RegistreData = {
   verifsEnAttente: LigneVerif[];
 };
 
-const LIBELLE_STATUT_VERIF: Record<StatutVerification, string> = {
+const LIBELLE_STATUT_VERIF: Record<StatutPeint, string> = {
   a_planifier: "À planifier",
   planifiee: "Planifiée",
-  depassee: "Dépassée",
+  en_retard: "En retard",
   realisee_conforme: "Conforme",
   realisee_observations: "Observations",
   realisee_ecart_majeur: "Écart majeur",

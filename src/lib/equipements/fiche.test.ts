@@ -107,7 +107,7 @@ describe("lignesAFaire", () => {
         {
           id: "v-eteinte",
           datePrevue: "2026-06-01",
-          statut: "depassee",
+          statut: "planifiee",
           archiveLe: "2026-07-01",
         },
       ]),

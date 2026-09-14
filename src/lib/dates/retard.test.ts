@@ -174,23 +174,6 @@ function verif(p: Partial<VerificationDatee> = {}): VerificationDatee {
 }
 
 describe("estVerificationEnRetard", () => {
-  it("le retard est une fonction de la DATE : un statut « depassee » à date future ne l'est pas", () => {
-    // CE TEST A CHANGÉ DE RÉPONSE (retrait de `depassee`, phase A). Il
-    // affirmait « depassee est toujours en retard », date future comprise :
-    // deux sources pour un fait. Le modèle de GestBAT ne stocke aucun statut ;
-    // le retard se lit sur la date. Une ligne qui porte encore le tampon se lit
-    // « à planifier », et c'est sa date qui décide — dans les deux sens.
-    expect(
-      estVerificationEnRetard(verif({ statut: "depassee", datePrevue: DEMAIN }), CE_MATIN),
-    ).toBe(false);
-    expect(
-      estVerificationEnRetard(verif({ statut: "depassee", datePrevue: HIER }), CE_MATIN),
-    ).toBe(true);
-    // Et le tampon ne fait pas une date arrêtée : il se lit « à planifier ».
-    expect(
-      estVerificationAPlanifier(verif({ statut: "depassee", datePrevue: DEMAIN }), CE_MATIN),
-    ).toBe(true);
-  });
 
   it("planifiee dont la date est passée est en retard", () => {
     expect(
@@ -240,7 +223,7 @@ describe("estVerificationEnRetard", () => {
     // Seul un statut réalisé purge désormais l'échéance.
     expect(
       estVerificationEnRetard(
-        verif({ statut: "depassee", datePrevue: HIER }),
+        verif({ statut: "planifiee", datePrevue: HIER }),
         CE_MATIN,
       ),
     ).toBe(true);
@@ -336,7 +319,7 @@ describe("estVerificationAPlanifier", () => {
       verif({ statut: "a_planifier", datePrevue: DEMAIN }),
       verif({ statut: "planifiee", datePrevue: HIER }),
       verif({ statut: "planifiee", datePrevue: DEMAIN }),
-      verif({ statut: "depassee", datePrevue: HIER }),
+      verif({ statut: "planifiee", datePrevue: HIER }),
       verif({ statut: "realisee_conforme", datePrevue: HIER }),
     ];
     for (const v of cas) {
@@ -513,7 +496,7 @@ const ARCHIVE_LE = new Date("2026-07-01T00:00:00Z");
 describe("lignes archivées", () => {
   it("une ligne archivée n'est jamais en retard, même gelée sur `depassee`", () => {
     const v = verif({
-      statut: "depassee",
+      statut: "planifiee",
       datePrevue: HIER,
       archiveLe: ARCHIVE_LE,
     });
@@ -562,7 +545,6 @@ describe("lignes archivées", () => {
     for (const statut of [
       "a_planifier",
       "planifiee",
-      "depassee",
       "realisee_conforme",
       "realisee_observations",
       "realisee_ecart_majeur",
@@ -591,7 +573,7 @@ describe("lignes archivées", () => {
     // donc aucun repli sur le texte ne peut plus les départager.
     expect(
       estVerificationEnRetard(
-        verif({ statut: "depassee", datePrevue: HIER }),
+        verif({ statut: "planifiee", datePrevue: HIER }),
         AUJOURDHUI,
       ),
     ).toBe(true);

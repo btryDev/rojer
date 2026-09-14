@@ -209,14 +209,9 @@ export function estStatutRealise(statut: string): boolean {
  */
 function statutLu(v: VerificationDatee): string {
   if (estStatutRealise(v.statut) && !estVerificationRealisee(v)) return "planifiee";
-  // `depassee` N'EST PLUS UN FAIT (retrait de `depassee`, phase A). Le retard
-  // est une fonction de la date, et de rien d'autre — le modèle de GestBAT,
-  // qui ne stocke aucun statut. Plus aucune écriture ne le pose ; les lignes
-  // qui le portent encore se lisent « à planifier » : le tampon avait écrasé
-  // la seule information qu'il remplaçait — une date arrêtée ou non —, et
-  // « non » est la lecture qui n'invente rien. La migration de la phase B les
-  // réécrit ainsi, et retire la valeur de l'enum.
-  if (v.statut === "depassee") return "a_planifier";
+  // (`depassee` se lisait ici « à planifier » pendant la phase A. Il a quitté
+  // l'enum le 2026-09-14 : le retard est une fonction de la date, et de rien
+  // d'autre — le modèle de GestBAT, qui ne stocke aucun statut de retard.)
   return v.statut;
 }
 

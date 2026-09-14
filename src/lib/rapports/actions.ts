@@ -220,17 +220,8 @@ export async function uploadRapport(
     // tampon (phase A), il laissait une échéance réelle se lire comme une
     // date de génération — carte « aucune vérification enregistrée », date
     // masquée au calendrier (relecture de la phase A, 2026-09-14). Une ligne
-    // encore tamponnée `depassee` se relit comme à la régénération : « planifiée »
-    // si un contrôle réel est derrière elle, « à planifier » sinon. Une ligne
-    // DÉJÀ soldée — le one-shot réalisé — n'est pas déclassée.
-    majVerification = {
-      statut:
-        verif.statut === "depassee"
-          ? dernierRealise !== null
-            ? "planifiee"
-            : "a_planifier"
-          : verif.statut,
-    };
+    // DÉJÀ soldée — le one-shot réalisé — n'est pas déclassée non plus.
+    majVerification = { statut: verif.statut };
   } else if (
     dernierRealise !== null &&
     dateRapport.getTime() <= dernierRealise.dateRapport.getTime()

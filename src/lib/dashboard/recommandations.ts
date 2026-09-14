@@ -118,7 +118,7 @@ export type Recommandation = {
 export type EntreeRecos = {
   verifications: Array<{
     id: string;
-    statut: "a_planifier" | "planifiee" | "depassee" | string;
+    statut: "a_planifier" | "planifiee" | string;
     datePrevue: Date;
     /** Requis : c'est lui qui dit si un statut réalisé purge l'échéance —
      *  sur une obligation périodique, non (`estVerificationRealisee`). Sans

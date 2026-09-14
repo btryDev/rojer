@@ -33,7 +33,7 @@ const ARCHIVEE = new Date("2026-02-10T00:00:00Z");
 
 describe("registre de sécurité — vérifications en attente", () => {
   it("retient les trois statuts sans rapport", () => {
-    for (const statut of ["a_planifier", "planifiee", "depassee"]) {
+    for (const statut of ["a_planifier", "planifiee"]) {
       expect(estEnAttenteDeRapport(ligne(statut, ACTIVE)), statut).toBe(true);
     }
   });
@@ -42,7 +42,7 @@ describe("registre de sécurité — vérifications en attente", () => {
     // Le statut est le MÊME que celui du cas retenu ci-dessus : c'est
     // `archiveLe`, et lui seul, qui doit faire la différence.
     expect(
-      estEnAttenteDeRapport(ligne("depassee", ARCHIVEE)),
+      estEnAttenteDeRapport(ligne("planifiee", ARCHIVEE)),
       "une obligation éteinte était imprimée « en attente » dans un document remis en contrôle",
     ).toBe(false);
   });
@@ -98,10 +98,10 @@ describe("registre de sécurité — la ligne imprimée dit l'état du jour", ()
       false,
       NOW,
     );
-    expect(l.statut).toBe("depassee");
+    expect(l.statut).toBe("en_retard");
   });
 
   it("« dépassée » sur une ligne roulée restée « planifiée » après sa date", () => {
-    expect(ligneVerif(lue({}), false, NOW).statut).toBe("depassee");
+    expect(ligneVerif(lue({}), false, NOW).statut).toBe("en_retard");
   });
 });

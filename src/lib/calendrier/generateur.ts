@@ -726,10 +726,7 @@ export type StatutVerificationPersiste =
   | StatutVerificationGen
   | "realisee_conforme"
   | "realisee_observations"
-  | "realisee_ecart_majeur"
-  // LU, jamais écrit : des lignes le portent encore jusqu'à la migration de
-  // la phase B, qui les réécrit « à planifier » et retire la valeur.
-  | "depassee";
+  | "realisee_ecart_majeur";
 
 // Les statuts qui disent « ce contrôle a eu lieu » et `estStatutRealise`
 // vivent dans `lib/dates/retard.ts`, en un seul exemplaire : la condition SQL
@@ -857,19 +854,11 @@ export type PlanReconciliation = {
  */
 function statutCycleOuvert(
   statutExistant: StatutVerificationPersiste,
-  realisation: Date | null,
 ): StatutVerificationGen {
-  if (statutExistant === "planifiee") return "planifiee";
-  // UN TAMPON `depassee` SE LIT SUR CE QUI LE PRÉCÈDE. Le statut dit
-  // désormais une seule chose : la date est-elle une VRAIE échéance ? Une
-  // ligne tamponnée qui porte un contrôle réel avait une échéance calculée
-  // depuis lui — « planifiée ». Sans contrôle, on ne sait pas : « à
-  // planifier », la lecture qui n'invente rien. La réécrire « à planifier »
-  // en bloc faisait dire « aucune vérification enregistrée » à la carte d'un
-  // appareil contrôlé, et masquait sa date au calendrier (relecture de la
-  // phase A, 2026-09-14).
-  if (statutExistant === "depassee" && realisation !== null) return "planifiee";
-  return "a_planifier";
+  // (Un tampon `depassee` se relisait ici sur le contrôle réel qui le
+  // précédait. La migration `20260914120000_retrait_statut_depassee` a
+  // appliqué cette règle aux lignes qui le portaient, et retiré la valeur.)
+  return statutExistant === "planifiee" ? "planifiee" : "a_planifier";
 }
 
 function memeListe(a: readonly string[], b: readonly string[]): boolean {
@@ -1262,7 +1251,7 @@ export function reconcilierCalendrier(
       // le même héritage. Lire `ex.statut` laissait « à planifier, aucune date
       // convenue » sur une absorbante déjà en base, alors que sa date venait
       // d'être posée (revue du 2026-09-14).
-      statut = prochaine !== null ? "planifiee" : statutCycleOuvert(ex.statut, realisation);
+      statut = prochaine !== null ? "planifiee" : statutCycleOuvert(ex.statut);
     } else if (
       ex.statut === "a_planifier" &&
       g.statut === "planifiee" &&
@@ -1299,7 +1288,7 @@ export function reconcilierCalendrier(
       // régénération — ce que faisait le delete/create — effaçait le retard
       // accumulé.
       datePrevue = ex.datePrevue;
-      statut = statutCycleOuvert(ex.statut, realisation);
+      statut = statutCycleOuvert(ex.statut);
     }
 
     const cible: MiseAJourOccurrence = {
