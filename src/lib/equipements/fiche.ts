@@ -20,8 +20,11 @@ import {
   classerDate,
   classerVerification,
   estStatutRealise,
+  LIBELLE_AUCUNE_VERIFICATION,
+  LIBELLE_SANS_ECHEANCE,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
+import { joursCivilsEntre } from "@/lib/dates";
 import {
   estActionEnRetard,
   estActionOuverte,
@@ -161,8 +164,8 @@ export function lignesAFaire(
         detail: aUnRendezVous(v, maintenant)
           ? "Échéance portée au calendrier"
           : etat === "enRetard"
-            ? "Aucune vérification enregistrée"
-            : "Aucune date convenue — à caler avec votre prestataire",
+            ? LIBELLE_AUCUNE_VERIFICATION
+            : `${LIBELLE_SANS_ECHEANCE} — à caler avec votre prestataire`,
         href: `${base}/verifications/${v.id}`,
       });
     }
@@ -188,18 +191,59 @@ export function lignesAFaire(
     }
   }
 
-  return lignes.sort(comparerParDate);
+  return lignes.sort(comparerParUrgence);
 }
 
-/** Les datées d'abord, dans l'ordre ; les sans-date à la fin. */
-function comparerParDate(
-  a: { date: Date | null },
-  b: { date: Date | null },
+/**
+ * Le RETARD d'abord — sans date en tête, dû et jamais fait —, puis les
+ * échéances datées dans l'ordre, puis les « à planifier » sans date.
+ *
+ * Le tri ne regardait que la date. Depuis qu'une ligne « à planifier » en
+ * retard ne montre plus sa date de génération, elle tombait APRÈS toutes les
+ * lignes datées : l'en-tête de la fiche annonçait « une vérification est
+ * attendue dans 182 jours » à côté de la pastille « 1 vérification en
+ * retard », et au-delà de quatre lignes elle sortait de la carte « À faire »
+ * (relecture du lot C, 2026-09-14).
+ */
+function comparerParUrgence(
+  a: { date: Date | null; etat: RegistreLigne },
+  b: { date: Date | null; etat: RegistreLigne },
 ): number {
+  const rang = (l: { date: Date | null; etat: RegistreLigne }) =>
+    l.etat === "enRetard" ? (l.date ? 1 : 0) : l.date ? 2 : 3;
+  const ecart = rang(a) - rang(b);
+  if (ecart !== 0) return ecart;
   if (a.date && b.date) return a.date.getTime() - b.date.getTime();
-  if (a.date) return -1;
-  if (b.date) return 1;
   return 0;
+}
+
+/**
+ * Le délai d'une ligne « à faire », tel qu'il s'affiche — en fin de ligne
+ * (`forme: "ligne"` : « dans 8 jours », « en retard de 68 jours ») ou dans
+ * la phrase d'en-tête (`forme: "phrase"` : « dans 8 jours », « depuis 68
+ * jours »).
+ *
+ * Sans date, deux cas et deux phrases partagées (`etats.ts`) : en retard,
+ * « aucune vérification enregistrée » ; sinon, « sans échéance connue ».
+ * L'écran disait « sans date convenue » dans les deux cas, en rouge pour le
+ * premier — une ligne due annoncée comme un simple rendez-vous à prendre.
+ */
+export function libelleDelai(
+  l: { date: Date | null; etat: RegistreLigne },
+  maintenant: Date,
+  forme: "ligne" | "phrase",
+): string {
+  if (!l.date) {
+    return (
+      l.etat === "enRetard" ? LIBELLE_AUCUNE_VERIFICATION : LIBELLE_SANS_ECHEANCE
+    ).toLowerCase();
+  }
+  const jours = joursCivilsEntre(maintenant, l.date);
+  if (jours === 0) return "aujourd'hui";
+  if (jours === 1) return "demain";
+  if (jours > 0) return `dans ${jours} jours`;
+  if (forme === "phrase") return jours === -1 ? "depuis hier" : `depuis ${-jours} jours`;
+  return jours === -1 ? "hier" : `en retard de ${-jours} jours`;
 }
 
 /**

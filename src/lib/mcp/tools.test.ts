@@ -334,10 +334,13 @@ describe("équipements et calendrier", () => {
       verif({ statut: "a_planifier" }),
     ]);
     const texte = await outil("verifications").executer(ctx, {});
-    expect(texte).toContain("en retard");
-    expect(texte).toContain("aucune échéance connue");
-    expect(texte).not.toContain("jour(s) de retard");
-    expect(texte).not.toContain("échéance 01/07/2026");
+    // La LIGNE, pas l'en-tête (« dont 1 en retard ») qui satisfaisait déjà
+    // un `toContain("en retard")` sur le texte entier.
+    const ligne = texte.split("\n").find((l) => l.startsWith("•")) ?? "";
+    expect(ligne).toContain("en retard");
+    expect(ligne).toContain("sans échéance connue");
+    expect(ligne).not.toContain("jour(s) de retard");
+    expect(ligne).not.toContain("01/07/2026");
   });
 
   it("l'assistant reçoit la dernière réalisation ET l'échéance ouverte", async () => {

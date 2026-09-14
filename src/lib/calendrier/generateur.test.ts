@@ -844,6 +844,38 @@ describe("réconciliation — survie des actions correctives", () => {
     expect(plan.inchangees).toBe(1);
   });
 
+  it("une ligne « à planifier » qui porte un contrôle réel devient « planifiée », une fois", () => {
+    // Relecture du lot C (2026-09-14). Héritée d'avant la phase A — un « non
+    // vérifiable » requalifiait la ligne —, elle s'affichait « aucune
+    // vérification enregistrée » au-dessus d'un rapport conforme, sa vraie
+    // échéance masquée. Un contrôle réel derrière la ligne, c'est une échéance
+    // connue. La date ne bouge pas ; la passe suivante n'écrit plus rien.
+    const o = fakeObligation({ id: "elec", periodicite: "annuelle" });
+    const eq = fakeEquipement("eq-elec");
+    const aGenerer = genererProchainesVerifications([applique(o, [eq])], new Map(), {
+      now: NOW,
+    });
+    const datePrevue = new Date("2026-02-01T00:00:00Z");
+    const ligne = (statut: "a_planifier" | "planifiee") =>
+      ligneExistante({
+        id: "v-elec",
+        obligationId: "elec",
+        equipementId: "eq-elec",
+        datePrevue,
+        statut,
+        derniereRealisation: new Date("2025-02-01T00:00:00Z"),
+        porteUnePreuve: true,
+      });
+
+    const premiere = reconcilierCalendrier([ligne("a_planifier")], aGenerer, { now: NOW });
+    expect(premiere.aMettreAJour).toHaveLength(1);
+    expect(premiere.aMettreAJour[0].statut).toBe("planifiee");
+    expect(premiere.aMettreAJour[0].datePrevue).toEqual(datePrevue);
+
+    const seconde = reconcilierCalendrier([ligne("planifiee")], aGenerer, { now: NOW });
+    expect(seconde.aMettreAJour).toEqual([]);
+  });
+
   it("ne repousse jamais l'échéance d'un cycle encore ouvert", () => {
     const o = fakeObligation({ id: "elec", periodicite: "annuelle" });
     const eq = fakeEquipement("eq-elec");

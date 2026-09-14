@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  libelleDelai,
   lignesAFaire,
   lignesHistoire,
   obligationsDeclencheesParUnFait,
@@ -108,7 +109,51 @@ describe("lignesAFaire", () => {
     );
     expect(ligne.etat).toBe("enRetard");
     expect(ligne.date).toBeNull();
-    expect(ligne.detail).toBe("Aucune vérification enregistrée");
+    // Ce que la page AFFICHE, et non un champ qu'elle ne rend pas : la
+    // relecture du lot C a trouvé que ce test vérifiait `detail`, jamais lu.
+    expect(libelleDelai(ligne, AUJOURDHUI, "ligne")).toBe(
+      "aucune vérification enregistrée",
+    );
+  });
+
+  it("un retard sans date passe EN TÊTE, devant une échéance lointaine", () => {
+    // Relecture du lot C : triée sur la seule date, la ligne sans date tombait
+    // après la lointaine ; l'en-tête annonçait « attendue dans 182 jours » à
+    // côté de « 1 vérification en retard », et la carte (quatre lignes) la
+    // perdait.
+    const lignes = lignesAFaire(
+      fiche([
+        { id: "v-lointaine", datePrevue: "2027-03-15", statut: "planifiee" },
+        { id: "v-generee", datePrevue: "2026-06-01", statut: "a_planifier" },
+        { id: "v-retard", datePrevue: "2026-07-01", statut: "planifiee" },
+        { id: "v-a-venir", datePrevue: "2026-12-01", statut: "a_planifier" },
+      ]),
+      "/etablissements/e1",
+      AUJOURDHUI,
+    );
+    expect(lignes.map((l) => l.cle)).toEqual([
+      "v-v-generee",
+      "v-v-retard",
+      "v-v-lointaine",
+      "v-v-a-venir",
+    ]);
+  });
+
+  it("dit le délai en jours, et sans date les deux phrases partagées", () => {
+    const l = (date: string | null, etat: "enRetard" | "aPlanifier" | "proche") => ({
+      date: date ? jour(date) : null,
+      etat,
+    });
+    expect(libelleDelai(l("2026-08-28", "proche"), AUJOURDHUI, "ligne")).toBe("dans 8 jours");
+    expect(libelleDelai(l("2026-06-13", "enRetard"), AUJOURDHUI, "ligne")).toBe(
+      "en retard de 68 jours",
+    );
+    expect(libelleDelai(l("2026-06-13", "enRetard"), AUJOURDHUI, "phrase")).toBe(
+      "depuis 68 jours",
+    );
+    expect(libelleDelai(l(null, "aPlanifier"), AUJOURDHUI, "ligne")).toBe(
+      "sans échéance connue",
+    );
   });
 
   it("écarte une ligne éteinte, même gelée sur un statut ouvert", () => {

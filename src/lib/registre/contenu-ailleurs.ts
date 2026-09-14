@@ -30,6 +30,7 @@ import {
 } from "@/lib/dates/retard";
 import {
   aUnRendezVous,
+  LIBELLE_SANS_ECHEANCE,
   statutAffiche,
   type StatutPeint,
 } from "@/lib/calendrier/etats";
@@ -232,7 +233,7 @@ export function contenuTenuAilleursDepuis(
               : v.datePrevue &&
                   aUnRendezVous({ ...v, datePrevue: v.datePrevue }, now)
                 ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
-                : "à planifier",
+                : LIBELLE_SANS_ECHEANCE.toLowerCase(),
           ]
             .filter(Boolean)
             .join(" · "),

@@ -28,6 +28,7 @@ import {
   lignesAFaire,
   lignesHistoire,
   obligationsDeclencheesParUnFait,
+  libelleDelai,
   obligationsDeLEquipement,
 } from "@/lib/equipements/fiche";
 import { caracteristiquesLisibles } from "@/lib/equipements/caracteristiques";
@@ -44,32 +45,12 @@ import {
   formaterDateLongueFr,
   formaterJourMoisFr,
   formaterMoisAnneeFr,
-  joursCivilsEntre,
 } from "@/lib/dates";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
 
-/** Le délai d'une ligne « à faire », dit en jours plutôt qu'en date : un
- *  retard d'un jour et un retard de six mois n'appellent pas le même geste,
- *  et le lecteur ne devrait pas avoir à soustraire deux dates pour le voir. */
-function delai(date: Date | null, maintenant: Date): string {
-  if (!date) return "sans date convenue";
-  const jours = joursCivilsEntre(maintenant, date);
-  if (jours === 0) return "aujourd'hui";
-  if (jours === 1) return "demain";
-  if (jours > 0) return `dans ${jours} jours`;
-  return jours === -1 ? "hier" : `en retard de ${-jours} jours`;
-}
-
-/** Le même délai, tourné pour s'enchâsser dans une phrase : « attendue
- *  depuis 68 jours », « attendue dans 8 jours ». */
-function quand(date: Date | null, maintenant: Date): string {
-  if (!date) return "sans date convenue";
-  const jours = joursCivilsEntre(maintenant, date);
-  if (jours === 0) return "aujourd'hui";
-  if (jours === 1) return "demain";
-  if (jours > 0) return `dans ${jours} jours`;
-  return jours === -1 ? "depuis hier" : `depuis ${-jours} jours`;
-}
+// Le délai d'une ligne se dit en jours plutôt qu'en date (`libelleDelai`,
+// `lib/equipements/fiche`) : un retard d'un jour et un retard de six mois
+// n'appellent pas le même geste. La fonction est pure, donc éprouvée.
 
 export default async function EquipementDetailPage({
   params,
@@ -135,7 +116,14 @@ export default async function EquipementDetailPage({
   // Le rendez-vous de tête : la première ligne datée de « à faire ». Une
   // occurrence à planifier n'en est pas un — sa date est une date de
   // génération (ADR-010).
-  const tete = aFaire.find((l) => l.date !== null) ?? null;
+  // SAUF UN RETARD SANS DATE : dû et jamais fait, il passe devant tout
+  // (`lignesAFaire` le range en tête). Le chercher parmi les seules lignes
+  // datées faisait annoncer « attendue dans 182 jours » à côté de la
+  // pastille « 1 vérification en retard » (relecture du lot C, 2026-09-14).
+  const tete =
+    aFaire[0]?.etat === "enRetard"
+      ? aFaire[0]
+      : (aFaire.find((l) => l.date !== null) ?? null);
   const etatTete: RegistreLigne =
     tete?.etat ?? (aFaire.length > 0 ? "aPlanifier" : "faite");
   // Les deux pastilles portent sur des ensembles **disjoints**. Elles
@@ -176,13 +164,13 @@ export default async function EquipementDetailPage({
       etat: etatDuResultat(h.resultat),
     });
   }
-  if (tete) {
+  if (tete?.date) {
     jalons.push({
       cle: tete.cle,
-      date: tete.date!,
+      date: tete.date,
       // Sur la rangée basse, l'étiquette porte sa propre date : elle est
       // seule de sa ligne et n'a pas le sur-titre mois des autres.
-      libelle: `${formaterJourMoisFr(tete.date!)} · ${
+      libelle: `${formaterJourMoisFr(tete.date)} · ${
         tete.genre === "action" ? "écart à lever" : "vérification"
       }`,
       etat: tete.etat,
@@ -213,8 +201,10 @@ export default async function EquipementDetailPage({
   const chapeau = tete
     ? `${
         tete.genre === "action"
-          ? `Un écart reste à lever ${quand(tete.date, maintenant)}`
-          : `Une vérification est attendue ${quand(tete.date, maintenant)}`
+          ? `Un écart reste à lever ${libelleDelai(tete, maintenant, "phrase")}`
+          : tete.date
+            ? `Une vérification est attendue ${libelleDelai(tete, maintenant, "phrase")}`
+            : `Une vérification est due, et ${libelleDelai(tete, maintenant, "phrase")}`
       }. ${trace}`
     : aFaire.length > 0
       ? `Des vérifications sont rattachées à cet appareil, mais aucune date n'a encore été convenue. ${trace}`
@@ -568,7 +558,7 @@ export default async function EquipementDetailPage({
                                   : undefined,
                             }}
                           >
-                            {delai(l.date, maintenant)}
+                            {libelleDelai(l, maintenant, "ligne")}
                           </span>
                         }
                       />

@@ -646,12 +646,31 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        échéances, fiche équipement, registre, colonne « Échéance » des deux
        PDF, assistant MCP — imprimaient la date de GÉNÉRATION d'une ligne « à
        planifier » en retard comme une échéance manquée (« en retard de 13 j »
-       = l'âge du dossier). `aUnRendezVous` lit désormais le statut, et toutes
-       les surfaces le lisent, calendrier et carte du tableau de bord compris ;
-       la ligne reste EN RETARD, sans date ni jours à montrer (« aucune
-       vérification enregistrée »). Une quinzaine de commentaires qui
-       décrivaient l'ancien modèle au présent sont rectifiés. Une mutation
-       (prédicat relu sur le classement) fait rougir cinq tests.
+       = l'âge du dossier). `aUnRendezVous` lit désormais le statut ; la ligne
+       reste EN RETARD, sans date ni jours à montrer. Une quinzaine de
+       commentaires qui décrivaient l'ancien modèle au présent sont rectifiés.
+       Une mutation (prédicat relu sur le classement) fait rougir cinq tests.
+       **Relecture neutre du lot C** : le premier commit annonçait « sur
+       aucune surface » — c'était faux de quatre. La vue par équipement du
+       calendrier (« Dépassée de 13 j »), les barres de l'année, la frise et
+       la grille (le filtre lisait le ton `warn`, une « à planifier » en retard
+       a le ton `alerte`) et le widget « Prochaine échéance » plaçaient encore
+       la date de génération ; la fiche équipement, triée sur la seule date,
+       rangeait le retard sans date APRÈS une échéance lointaine (« attendue
+       dans 182 jours » à côté de « 1 en retard ») ; cinq formulations
+       différentes pour la même ligne. Corrigé : chaque surface qui place ou
+       décompte une date passe par `aUnRendezVous` (`sansEcheance` sur
+       l'événement de fenêtre) ; la fiche range le retard en tête, sans date
+       d'abord, et son délai est une fonction pure testée (`libelleDelai`) ;
+       deux phrases partagées au lieu de cinq (`LIBELLE_SANS_ECHEANCE`,
+       `LIBELLE_AUCUNE_VERIFICATION`) ; les PDF rangent les lignes sans
+       échéance en tête. **Une règle de données en plus** : une ligne
+       « à planifier » qui porte un rapport réalisé — héritée d'avant la
+       phase A, où un « non vérifiable » requalifiait la ligne — a une
+       échéance connue ; `statutCycleOuvert` la passe « planifiée », et la
+       migration `20260914140000_a_planifier_avec_controle` remet l'existant
+       au modèle (rejouée deux fois sur le Docker local, six rangées : une
+       réécrite, cinq intouchées). Quatre mutations rouges. 2639 tests.
        **Laissé ouvert, écrit** — hors du chantier, chacun son lot :
        l'échéance d'un titre de salarié vit en deux endroits
        (`TitreSalarie.echeanceLe` pour la page Équipe, `Verification.datePrevue`

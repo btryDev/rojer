@@ -9,7 +9,7 @@
 // contredisaient sur la même ligne.
 
 import { describe, expect, it } from "vitest";
-import { estEnAttenteDeRapport, ligneVerif } from "./builders";
+import { estEnAttenteDeRapport, ligneVerif, parEcheanceImprimee } from "./builders";
 import type { VerificationListee } from "@/lib/calendrier/queries";
 
 const LE_JOUR = new Date("2026-03-01T00:00:00Z");
@@ -103,6 +103,22 @@ describe("registre de sécurité — la ligne imprimée dit l'état du jour", ()
 
   it("« dépassée » sur une ligne roulée restée « planifiée » après sa date", () => {
     expect(ligneVerif(lue({}), false, NOW).statut).toBe("en_retard");
+  });
+
+  it("les lignes sans échéance se rangent en tête, pas au milieu des dates", () => {
+    // Relecture du lot C : triées sur `datePrevue` brute, les lignes
+    // « Sans échéance connue » s'intercalaient à la place de leur date de
+    // génération, au milieu d'une colonne de dates.
+    const lignes = [
+      ligneVerif(lue({ id: "v-mars", datePrevue: new Date("2026-03-01T00:00:00Z") }), false, NOW),
+      ligneVerif(
+        lue({ id: "v-generee", statut: "a_planifier", datePrevue: new Date("2026-04-01T00:00:00Z") }),
+        false,
+        NOW,
+      ),
+      ligneVerif(lue({ id: "v-fevrier", datePrevue: new Date("2026-02-01T00:00:00Z") }), false, NOW),
+    ].sort(parEcheanceImprimee);
+    expect(lignes.map((l) => l.id)).toEqual(["v-generee", "v-fevrier", "v-mars"]);
   });
 
   it("une échéance connue s'imprime, une date de génération non", () => {

@@ -58,7 +58,10 @@ import {
   estVerificationAVenir,
   estVerificationEnRetard,
 } from "@/lib/dates/retard";
-import { aUnRendezVous } from "@/lib/calendrier/etats";
+import {
+  aUnRendezVous,
+  LIBELLE_AUCUNE_VERIFICATION,
+} from "@/lib/calendrier/etats";
 import { ageEnMois, type EtatDuerp } from "./duerp";
 import { TIERS_LUI_MEME_OBLIGATOIRE } from "@/lib/prestataires/domaines";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
@@ -229,7 +232,7 @@ export function genererRecommandations(
       cle: `verif-depassee:${v.id}`,
       titre: v.libelleObligation,
       sousTitre: jamaisPlanifiee
-        ? `${v.equipementLibelle} — aucune vérification enregistrée`
+        ? `${v.equipementLibelle} — ${LIBELLE_AUCUNE_VERIFICATION.toLowerCase()}`
         : `${v.equipementLibelle} — échéance dépassée`,
       href: `/etablissements/${etab}/verifications/${v.id}`,
       priorite: 1,

@@ -384,19 +384,39 @@ export function statutDeLaLecture(
 }
 
 /**
- * La ligne a-t-elle une date ARRÊTÉE, ou seulement une date de génération ?
+ * Les deux phrases d'une ligne sans échéance connue — deux, et pas cinq.
  *
- * `datePrevue` est non nulle en base pour toute ligne, y compris celles que
- * personne n'a encore datées : le générateur y écrit alors le jour où il l'a
- * produite. Lue comme un rendez-vous, cette date fait dire n'importe quoi —
- * « échéance aujourd'hui » le jour de la génération du calendrier, sur un
- * contrôle que personne n'a programmé.
+ * La relecture du lot C en a compté cinq pour la même ligne : « aucune
+ * vérification enregistrée », « à planifier », « aucune connue », « aucune
+ * échéance connue », « sans date convenue ». Chacune vraie à peu près, aucune
+ * identique : un dirigeant qui passe du PDF à l'écran croit lire deux faits.
  *
- * Le prédicat vit ici, avec le classement dont il se déduit, parce que deux
- * écrans se sont déjà contredits dessus : le calendrier comptait la ligne
- * « à planifier » et la marquait « à dater », pendant que sa fiche annonçait
- * « prochaine échéance » à la date de génération et « échéance aujourd'hui ».
- * Chacun avait sa propre lecture de `datePrevue` ; ils n'en ont plus qu'une.
+ *  · `LIBELLE_SANS_ECHEANCE` — là où une DATE s'afficherait ;
+ *  · `LIBELLE_AUCUNE_VERIFICATION` — pour dire POURQUOI la ligne est en
+ *    retard sans date. Vraie : une ligne « à planifier » ne porte aucun
+ *    rapport réalisé (`statutCycleOuvert` la passe « planifiée » sinon), et
+ *    un rapport « non vérifiable » atteste justement qu'aucun contrôle n'a eu
+ *    lieu.
+ */
+export const LIBELLE_SANS_ECHEANCE = "Sans échéance connue";
+export const LIBELLE_AUCUNE_VERIFICATION = "Aucune vérification enregistrée";
+
+/**
+ * La `datePrevue` de la ligne est-elle une ÉCHÉANCE CONNUE — et donc une date
+ * qu'un écran peut montrer, poser sur un jour, ou décompter ?
+ *
+ * `datePrevue` est non nulle en base pour toute ligne. Sur une ligne
+ * « à planifier », elle n'est pas une échéance : c'est la date de génération,
+ * la mise en service d'un contrôle unique, ou l'échéance que la suppression
+ * du dernier rapport a rendue sans savoir si elle était réelle. Lue comme un
+ * rendez-vous, elle fait dire « échéance aujourd'hui » ou « en retard de 13 j »
+ * sur l'âge du dossier.
+ *
+ * TOUTE surface qui affiche, place ou décompte une date de vérification passe
+ * par ce prédicat — liste, barres et vue par équipement du calendrier, frise,
+ * widgets, fiches, registre, PDF, assistant. Une ligne sans échéance reste EN
+ * RETARD dans les comptes (`classerVerification`) ; elle n'occupe simplement
+ * aucune date.
  */
 export function aUnRendezVous(v: VerificationDatee, now: Date): boolean {
   // Une ligne archivée n'a pas de rendez-vous non plus : ce qu'elle porte est

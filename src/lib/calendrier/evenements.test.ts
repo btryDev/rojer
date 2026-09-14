@@ -25,6 +25,8 @@ function verif(
     libelle: `Vérification ${id}`,
     date: jour(j),
     tone,
+    // Une échéance connue par défaut ; le cas contraire a son test.
+    sansEcheance: false,
     type: "verification",
     contractuelle: false,
     equipement: "Tableau électrique",
@@ -44,6 +46,7 @@ function titre(
     libelle: `Attestation ${id}`,
     date: jour(j),
     tone,
+    sansEcheance: false,
     type: "titre-salarie",
     contractuelle: false,
     equipement: "Camille Roy",
@@ -110,6 +113,16 @@ describe("fusionnerEvenements — assemblage", () => {
   it("écarte les vérifications à planifier — leur date n'est pas choisie", () => {
     const out = fusion([verif("v1", 20, "warn"), verif("v2", 22)], []);
     expect(out.map((e) => e.id)).toEqual(["v2"]);
+  });
+
+  it("écarte aussi une vérification SANS ÉCHÉANCE en retard — ton alerte compris", () => {
+    // Relecture du lot C (2026-09-14) : le filtre ne lisait que le ton
+    // `warn`, et une « à planifier » en retard (ton `alerte`) passait — la
+    // frise la posait sur sa date de génération. Une vraie échéance en retard,
+    // elle, reste posée.
+    const sansDate = { ...verif("v-generee", -13, "alerte"), sansEcheance: true };
+    const out = fusion([sansDate, verif("v-retard", -20, "alerte")], []);
+    expect(out.map((e) => e.id)).toEqual(["v-retard"]);
   });
 
   it("garde les retards du registre : c'est ce que le board taisait", () => {

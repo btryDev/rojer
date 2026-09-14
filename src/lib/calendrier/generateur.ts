@@ -834,10 +834,11 @@ export type PlanReconciliation = {
  * Statut à porter sur une ligne dont le cycle courant n'est **pas** soldé.
  *
  * Il ne dit qu'une chose : la `datePrevue` est-elle une VRAIE échéance ?
- * `a_planifier` — aucune échéance connue, la date n'est que celle de la
- * génération ; `planifiee` — une échéance connue, calculée, roulée, déclarée
- * ou rendue par une suppression, passée ou non. `planifiee` n'est jamais
- * effacé par la régénération.
+ * `a_planifier` — aucune échéance connue : date de génération, de mise en
+ * service d'un contrôle unique, ou échéance rendue par la suppression du
+ * dernier rapport (on ne sait pas si elle était réelle) ; `planifiee` — une
+ * échéance connue, calculée, roulée ou déclarée, passée ou non. `planifiee`
+ * n'est jamais effacé par la régénération.
  *
  * IL NE DIT PLUS LE RETARD (retrait de `depassee`, phase A). Il le tamponnait
  * le jour où la date passait, en écrasant justement cette information — et une
@@ -847,11 +848,20 @@ export type PlanReconciliation = {
  */
 function statutCycleOuvert(
   statutExistant: StatutVerificationPersiste,
+  realisation: Date | null,
 ): StatutVerificationGen {
-  // (Un tampon `depassee` se relisait ici sur le contrôle réel qui le
-  // précédait. La migration `20260914120000_retrait_statut_depassee` a
-  // appliqué cette règle aux lignes qui le portaient, et retiré la valeur.)
-  return statutExistant === "planifiee" ? "planifiee" : "a_planifier";
+  if (statutExistant === "planifiee") return "planifiee";
+  // UN CONTRÔLE RÉEL DERRIÈRE LA LIGNE, C'EST UNE ÉCHÉANCE CONNUE. Une ligne
+  // de cycle ouvert qui porte un rapport réalisé a vu sa date posée depuis
+  // lui — par le roulement du dépôt. La laisser « à planifier » la faisait
+  // annoncer « aucune vérification enregistrée » au-dessus d'un rapport
+  // conforme, et masquait sa vraie échéance. Ces lignes viennent d'avant la
+  // phase A, où un « non vérifiable » requalifiait la ligne ; la migration
+  // `20260914140000_a_planifier_avec_controle` les a remises au modèle, et
+  // cette branche tient la règle pour ce qu'un seed ou un import écrirait.
+  // (Relecture du lot C, 2026-09-14.)
+  if (realisation !== null) return "planifiee";
+  return "a_planifier";
 }
 
 function memeListe(a: readonly string[], b: readonly string[]): boolean {
@@ -1243,7 +1253,7 @@ export function reconcilierCalendrier(
       // le même héritage. Lire `ex.statut` laissait « à planifier, aucune date
       // convenue » sur une absorbante déjà en base, alors que sa date venait
       // d'être posée (revue du 2026-09-14).
-      statut = prochaine !== null ? "planifiee" : statutCycleOuvert(ex.statut);
+      statut = prochaine !== null ? "planifiee" : statutCycleOuvert(ex.statut, realisation);
     } else if (
       ex.statut === "a_planifier" &&
       g.statut === "planifiee" &&
@@ -1280,7 +1290,7 @@ export function reconcilierCalendrier(
       // régénération — ce que faisait le delete/create — effaçait le retard
       // accumulé.
       datePrevue = ex.datePrevue;
-      statut = statutCycleOuvert(ex.statut);
+      statut = statutCycleOuvert(ex.statut, realisation);
     }
 
     const cible: MiseAJourOccurrence = {

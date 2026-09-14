@@ -17,7 +17,12 @@
 // sur-titres et aux DATES, qui le gardent ici. C'est le libellé d'équipement
 // qui n'y avait pas droit — c'est une méta de ligne, pas une date.
 
-import { aUnRendezVous, CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
+import {
+  aUnRendezVous,
+  CHAMP_ETAT,
+  ENCRE_ETAT,
+  LIBELLE_AUCUNE_VERIFICATION,
+} from "@/lib/calendrier/etats";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { BentoCell } from "@/components/dashboard/BentoCell";
 import { formaterDateCourteFr } from "@/lib/dates";
@@ -46,8 +51,9 @@ function classifier(
   // `archiveLe` porte l'archivage depuis l'ADR-034, et une signature qui
   // énumère ses champs à la main oublie le suivant. C'est ainsi que le
   // marqueur précédent — un préfixe dans le libellé — s'est perdu ici : une
-  // ligne archivée gelée sur `depassee` arrivait EN TÊTE du tri par date
-  // croissante, sa date étant la plus ancienne, et s'affichait en alerte.
+  // ligne archivée arrivait EN TÊTE du tri par date croissante, sa date
+  // étant la plus ancienne, et s'affichait en alerte.
+  //
   // Une ligne sans échéance connue n'a pas de date à montrer, EN RETARD OU
   // NON : sa date est celle de la génération (`aUnRendezVous`). Le widget
   // affichait « 01 sept. · Dépassé » sur la date où la ligne avait été créée.
@@ -131,7 +137,7 @@ export function WidgetProchainesEcheances({
                 : "Planifié";
           const dans = !aUnRendezVous(v, aujourdhui)
             ? c.tone === "alerte"
-              ? "Aucune vérification enregistrée"
+              ? LIBELLE_AUCUNE_VERIFICATION
               : "À planifier"
             : libelleEcart(v.datePrevue, aujourdhui);
           const dansColor =
@@ -211,12 +217,15 @@ function TimelineEcheances({
   // Axe temporel : de aujourd'hui à la dernière date prévue (au moins
   // 30 jours d'horizon pour ne pas écraser si toutes proches).
   const toJour = aujourdhui.getTime();
+  // L'axe se borne sur les ÉCHÉANCES CONNUES seules : une date de génération
+  // l'étirait vers le passé sans rien y poser.
+  const datees = verifs.filter((v) => aUnRendezVous(v, aujourdhui));
   const maxFutur = Math.max(
-    ...verifs.map((v) => v.datePrevue.getTime()),
+    ...datees.map((v) => v.datePrevue.getTime()),
     toJour + 30 * 86_400_000,
   );
   const minPasse = Math.min(
-    ...verifs.map((v) => v.datePrevue.getTime()),
+    ...datees.map((v) => v.datePrevue.getTime()),
     toJour,
   );
   const span = Math.max(1, maxFutur - minPasse);
@@ -238,7 +247,10 @@ function TimelineEcheances({
           </span>
         </div>
         {/* Markers des échéances */}
-        {verifs.map((v) => {
+        {/* Seules les échéances CONNUES se posent sur l'axe : une ligne « à
+            planifier » y occupait sa date de génération, avant « aujourd'hui »
+            (relecture du lot C). Elle reste dans la liste, sans date. */}
+        {datees.map((v) => {
           const c = classifier(v, aujourdhui);
           const left =
             ((v.datePrevue.getTime() - minPasse) / span) * 100;

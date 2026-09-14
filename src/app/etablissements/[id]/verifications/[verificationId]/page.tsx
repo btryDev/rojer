@@ -28,6 +28,8 @@ import {
 import {
   aUnRendezVous,
   classerVerification,
+  LIBELLE_AUCUNE_VERIFICATION,
+  LIBELLE_SANS_ECHEANCE,
   statutAffiche,
 } from "@/lib/calendrier/etats";
 import {
@@ -240,8 +242,8 @@ export default async function VerificationDetailPage({
         sansRendezVous
         ? {
             cle: "Date",
-            valeur: "À planifier",
-            note: "Aucune date n'est encore arrêtée pour ce contrôle.",
+            valeur: LIBELLE_SANS_ECHEANCE,
+            note: "Aucune échéance n'est encore connue pour ce contrôle.",
           }
         : {
           cle: "Prochaine échéance",
@@ -349,7 +351,7 @@ export default async function VerificationDetailPage({
               // depuis la date de génération mesurerait l'âge du dossier, pas
               // un retard (`aUnRendezVous`). Même phrase que la carte du
               // tableau de bord.
-              <PastilleFiche ton="retard">Aucune vérification enregistrée</PastilleFiche>
+              <PastilleFiche ton="retard">{LIBELLE_AUCUNE_VERIFICATION}</PastilleFiche>
             ) : enRetard ? (
               <PastilleRetard echeance={echeance} maintenant={aujourdhui} />
             ) : urgent ? (

@@ -4,7 +4,7 @@ import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import type { ResultatVerification } from "@prisma/client";
-import type { StatutPeint } from "@/lib/calendrier/etats";
+import { LIBELLE_SANS_ECHEANCE, type StatutPeint } from "@/lib/calendrier/etats";
 import {
   BOARD,
   formatDateCourte,
@@ -654,7 +654,7 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                 <Text style={[s.td, { width: "14%" }]}>
                   {/* Une date de génération n'est pas une échéance : on ne
                       l'imprime pas dans cette colonne (`echeanceConnue`). */}
-                  {v.echeanceConnue ? formatDateCourte(v.datePrevue) : "À planifier"}
+                  {v.echeanceConnue ? formatDateCourte(v.datePrevue) : LIBELLE_SANS_ECHEANCE}
                 </Text>
                 <View style={{ width: "40%", paddingRight: 4 }}>
                   <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>

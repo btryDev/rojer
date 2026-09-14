@@ -344,11 +344,14 @@ function rouler(
  *
  * LA LIGNE RECULE D'UN CYCLE (ADR-034) si le rapport retiré est celui qui
  * l'avait fait rouler — le rapport réalisé le plus récent. Si un rapport
- * réalisé reste, elle revient à l'échéance qu'il engendre (« planifiée ») ;
- * sinon, à l'échéance que le retiré honorait (`echeanceHonoree`, « à
- * planifier » — on ne sait pas si c'était une vraie échéance) ; à défaut des
- * deux — rapport d'avant N2 —, elle garde sa date. Un rapport non vérifiable
- * ou antidaté n'avait rien fait rouler : la ligne ne lui doit rien.
+ * réalisé reste : une obligation périodique revient à l'échéance qu'il
+ * engendre (« planifiée ») ; un contrôle unique reprend le statut réalisé de
+ * ce rapport et garde sa date. Si aucun ne reste : la ligne revient à
+ * l'échéance que le retiré honorait (`echeanceHonoree`), à défaut — rapport
+ * d'avant N2 — elle garde sa date ; dans les deux cas « à planifier », parce
+ * qu'on ne sait pas si cette date était une vraie échéance, et elle ne
+ * s'affiche donc plus (`aUnRendezVous`). Un rapport non vérifiable ou
+ * antidaté n'avait rien fait rouler : la ligne ne lui doit rien.
  */
 export async function supprimerRapport(rapportId: string): Promise<void> {
   const rap = await prisma.rapportVerification.findUnique({

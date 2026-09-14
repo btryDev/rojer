@@ -7,7 +7,11 @@ import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
-import { aUnRendezVous, statutDeLaLecture } from "@/lib/calendrier/etats";
+import {
+  aUnRendezVous,
+  LIBELLE_AUCUNE_VERIFICATION,
+  statutDeLaLecture,
+} from "@/lib/calendrier/etats";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
@@ -482,12 +486,17 @@ export default async function CalendrierPage({
       : l.registre;
   };
 
-  // « Datable » : mérite une place sur les barres. Une `a_planifier` qui
-  // attend son rendez-vous n'en a pas (sa date est une date de
-  // génération) ; une `a_planifier` en retard en a une — le mois où elle
-  // est devenue due — comme sur la frise du tableau de bord.
+  // « Datable » : mérite une place sur les barres. Une ligne sans échéance
+  // connue n'en a pas, EN RETARD OU NON : sa date est une date de génération
+  // (`aUnRendezVous`). Ce commentaire disait l'inverse pour une « à
+  // planifier » en retard — « le mois où elle est devenue due » —, et la
+  // barre de septembre portait un segment rouge sur la date de création de
+  // la ligne (relecture du lot C, 2026-09-14). Le fait daté d'un rapport,
+  // lui, garde sa place.
   const datable = (l: LigneMois) =>
-    l.genre !== "verif" || l.registre !== "aPlanifier";
+    l.genre !== "verif" ||
+    (l.registre !== "aPlanifier" &&
+      (l.lecture === "realisation" || aUnRendezVous(l.v, aujourdhui)));
 
   const regleDeLAnnee = (a: number): MoisRegle[] =>
     Array.from({ length: 12 }, (_, i) => {
@@ -534,6 +543,8 @@ export default async function CalendrierPage({
       mois: EtatMois[];
       compte: Record<EtatEcheance, number>;
       aPlanifier: number;
+      /** Lignes en retard SANS échéance connue : comptées, jamais datées. */
+      enRetardSansEcheance: number;
       /** Occurrences datées hors de l'année affichée. */
       horsAnnee: number;
       dates: { date: Date; etat: EtatEcheance }[];
@@ -557,6 +568,7 @@ export default async function CalendrierPage({
         mois: Array.from({ length: 12 }, () => null),
         compte: { enRetard: 0, proche: 0, lointain: 0, faite: 0 },
         aPlanifier: 0,
+        enRetardSansEcheance: 0,
         horsAnnee: 0,
         dates: [],
         occurrences: [],
@@ -572,6 +584,16 @@ export default async function CalendrierPage({
         continue;
       }
       const etat = lec.registre;
+      // SANS ÉCHÉANCE CONNUE, EN RETARD : elle compte, et n'occupe aucune
+      // date (`aUnRendezVous`). Posée sur sa date de génération, elle peignait
+      // une case de septembre et annonçait « Dépassée de 13 j » — l'âge du
+      // dossier — pendant que la liste mensuelle de la même page disait
+      // « à dater » (relecture du lot C, 2026-09-14).
+      if (lec.lecture !== "realisation" && !aUnRendezVous(v, aujourdhui)) {
+        e.compte[etat] += 1;
+        e.enRetardSansEcheance += 1;
+        continue;
+      }
       // `dates` sert la « prochaine échéance », qui n'est bornée par
       // aucune année : une dette de l'an dernier compte toujours.
       e.dates.push({ date: lec.date, etat });
@@ -653,17 +675,22 @@ export default async function CalendrierPage({
         occurrences: [...e.occurrences].sort(
           (a, b) => a.mois - b.mois || a.jour.localeCompare(b.jour),
         ),
-        prochaine: cible
-          ? {
-              etat: cible.etat,
-              libelle:
-                cible.etat === "enRetard"
-                  ? `Dépassée de ${jours} j`
-                  : jours === 0
-                    ? "Aujourd'hui"
-                    : `Dans ${jours} jour${jours > 1 ? "s" : ""}`,
-            }
-          : null,
+        prochaine:
+          cible?.etat === "enRetard"
+            ? { etat: "enRetard" as const, libelle: `Dépassée de ${jours} j` }
+            : // Une dette SANS échéance connue passe avant l'échéance à
+              // venir — sans jours à compter, qui mesureraient l'âge du dossier.
+              e.enRetardSansEcheance > 0
+              ? { etat: "enRetard" as const, libelle: LIBELLE_AUCUNE_VERIFICATION }
+              : cible
+                ? {
+                    etat: cible.etat,
+                    libelle:
+                      jours === 0
+                        ? "Aujourd'hui"
+                        : `Dans ${jours} jour${jours > 1 ? "s" : ""}`,
+                  }
+                : null,
       };
     })
     .sort(

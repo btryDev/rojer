@@ -175,6 +175,29 @@ describe("aUnRendezVous", () => {
     expect(classerVerification(ligne, NOW)).toBe("enRetard");
   });
 
+  it("l'accorde à une ligne réalisée : sa date n'est pas une date de génération", () => {
+    // Relecture du lot C : une mutation `statut === "planifiee"` aurait
+    // masqué les dates des lignes réalisées sans qu'aucun test ne rougisse.
+    const base = { archiveLe: null, libelleObligation: "Vérification périodique" };
+    expect(
+      aUnRendezVous(
+        { ...base, statut: "realisee_conforme", periodicite: "annuelle", datePrevue: jours(40) },
+        NOW,
+      ),
+    ).toBe(true);
+    expect(
+      aUnRendezVous(
+        {
+          ...base,
+          statut: "realisee_ecart_majeur",
+          periodicite: "mise_en_service_uniquement",
+          datePrevue: jours(-40),
+        },
+        NOW,
+      ),
+    ).toBe(true);
+  });
+
   it("l'accorde à une échéance connue passée, et à une ligne archivée jamais", () => {
     const base = { archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" };
     expect(aUnRendezVous({ ...base, statut: "planifiee", datePrevue: jours(-3) }, NOW)).toBe(true);

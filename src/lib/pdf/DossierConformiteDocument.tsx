@@ -5,6 +5,7 @@ import { LABEL_STATUT_ACTION, LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import { LABEL_RESULTAT } from "@/lib/rapports/schema";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
+import { LIBELLE_SANS_ECHEANCE } from "@/lib/calendrier/etats";
 import {
   BOARD,
   formatDateCourte,
@@ -408,7 +409,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                 <Text style={[s.td, { width: "14%" }]}>
                   {/* Une date de génération n'est pas une échéance manquée :
                       l'imprimer ici dirait l'âge du dossier à un assureur. */}
-                  {v.echeanceConnue ? formatDateCourte(v.datePrevue) : "Aucune connue"}
+                  {v.echeanceConnue ? formatDateCourte(v.datePrevue) : LIBELLE_SANS_ECHEANCE}
                 </Text>
                 <View style={{ width: "46%", paddingRight: 4 }}>
                   <Text style={s.td}>{v.libelleObligation}</Text>

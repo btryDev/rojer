@@ -25,6 +25,7 @@ import { z } from "zod";
 import type { StatutAction } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
 import { estVerificationRealisee } from "@/lib/dates/retard";
+import { LIBELLE_SANS_ECHEANCE } from "@/lib/calendrier/etats";
 import { ageEnMois } from "@/lib/dashboard/duerp";
 import {
   getEtatDuerp,
@@ -427,7 +428,7 @@ function formaterVerifications(verifs: VerificationLue[]): string {
         ? null
         : v.echeanceConnue
           ? `échéance ${formaterDateFr(v.datePrevue)}`
-          : "aucune échéance connue",
+          : LIBELLE_SANS_ECHEANCE.toLowerCase(),
       LIBELLE_ETAT[v.etat],
       v.joursRetard > 0 ? `${v.joursRetard} jour(s) de retard` : null,
       // Dit en toutes lettres, et non par une pastille : le destinataire est

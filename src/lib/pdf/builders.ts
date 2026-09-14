@@ -183,9 +183,19 @@ function libelleEquipementSitue(
   return multiBatiments ? `${eq.batiment.nom} — ${eq.libelle}` : eq.libelle;
 }
 
-/** Projection d'une vérification vers la ligne imprimée. Partagée par le
- *  registre et le dossier de conformité pour que la même occurrence s'y
- *  affiche à l'identique. */
+/**
+ * L'ordre des tableaux de vérifications des PDF : les lignes SANS échéance
+ * connue d'abord — dues et jamais faites, elles n'ont pas de date où se
+ * ranger —, puis les échéances par date. Trier sur `datePrevue` brute
+ * intercalait « Sans échéance connue » au milieu d'une colonne de dates, à la
+ * place de sa date de génération (relecture du lot C, 2026-09-14). Exporté
+ * pour être éprouvé.
+ */
+export function parEcheanceImprimee(a: LigneVerif, b: LigneVerif): number {
+  if (a.echeanceConnue !== b.echeanceConnue) return a.echeanceConnue ? 1 : -1;
+  return a.datePrevue.getTime() - b.datePrevue.getTime();
+}
+
 /**
  * Une ligne des tableaux de vérifications des PDF (« en attente » du registre,
  * « en retard » du dossier de conformité).
@@ -301,9 +311,7 @@ export async function construireRegistreData(
   const verifsEnAttente: LigneVerif[] = verifs
     .filter(estEnAttenteDeRapport)
     .map((v) => ligneVerif(v, multiBatiments, now))
-    // Triée sur l'échéance que la ligne imprime, pour que l'ordre du document
-    // ne dépende pas de celui de la lecture.
-    .sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime());
+    .sort(parEcheanceImprimee);
 
   // Le registre, fiche par fiche — ce que le document doit être. Il ne
   // portait que les deux tableaux ci-dessus : un extrait du calendrier, pas
@@ -574,7 +582,9 @@ export async function construireDossierConformiteData(
     // Exactement les occurrences comptées juste au-dessus, projetées en
     // lignes de tableau : le nombre annoncé et le détail imprimé ne peuvent
     // plus diverger.
-    verifsEnRetard: etatVerifs.enRetard.map((v) => ligneVerif(v, multiBatiments, now)),
+    verifsEnRetard: etatVerifs.enRetard
+      .map((v) => ligneVerif(v, multiBatiments, now))
+      .sort(parEcheanceImprimee),
     actionsEnCours:
       plan?.actions.filter(
         (a) => a.statut === "ouverte" || a.statut === "en_cours",

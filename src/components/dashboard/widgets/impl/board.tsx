@@ -32,7 +32,11 @@ import {
   GanttChart,
 } from "lucide-react";
 import { construireBrief } from "@/lib/dashboard/brief";
-import { LIBELLE_ETAT_COURT } from "@/lib/calendrier/etats";
+import {
+  aUnRendezVous,
+  LIBELLE_ETAT_COURT,
+  LIBELLE_SANS_ECHEANCE,
+} from "@/lib/calendrier/etats";
 import {
   illustrationBatiment,
   sourceIllustrationBatiment,
@@ -1531,18 +1535,38 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
     );
   }
 
-  const trie = [...prochainesVerifs].sort(
-    (a, b) => a.datePrevue.getTime() - b.datePrevue.getTime(),
-  );
+  // Le compte à rebours porte sur une ÉCHÉANCE CONNUE : une ligne « à
+  // planifier » en retard, la plus ancienne donc première du tri, affichait
+  // « 1 sept. · 13 j. de retard » sur sa date de génération (relecture du
+  // lot C, 2026-09-14). Elle reste comptée en retard ailleurs sur le board.
+  const trie = prochainesVerifs
+    .filter((x) => aUnRendezVous(x, aujourdhui))
+    .sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime());
   const v = trie[0];
+  if (!v) {
+    return (
+      <CarteBoard
+        ton="sombre"
+        rayon={26}
+        className="justify-center px-[26px] py-6"
+      >
+        <p className="m-0 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[color:var(--board-slate)]">
+          Prochaine échéance
+        </p>
+        <p className="mt-3 text-[15px] text-white/70">
+          {`${LIBELLE_SANS_ECHEANCE} pour l’instant.`}
+        </p>
+      </CarteBoard>
+    );
+  }
   // Le compte à rebours est en jours civils, et le rouge suit le prédicat
   // partagé (ADR-011) : une échéance datée d'aujourd'hui n'est pas en
   // retard. Avec la division par 86 400 000, la carte virait au rouge
   // l'après-midi du jour dit, sans que rien n'ait changé.
   const { nombre, legende } = compteARebours(v.datePrevue, aujourdhui);
   // `archiveLe` porte l'archivage (ADR-034) : sans lui, une ligne dont
-  // l'obligation ne s'applique plus — gelée sur `depassee`, donc la plus
-  // ancienne, donc première du tri — s'affichait ici en compte à rebours rouge.
+  // l'obligation ne s'applique plus — date la plus ancienne, donc première du
+  // tri — s'affichait ici en compte à rebours rouge.
   const enRetard = estVerificationEnRetard(
     v,
     aujourdhui,

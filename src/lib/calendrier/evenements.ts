@@ -42,11 +42,13 @@ export type FiltresEvenements = {
 /**
  * Assemble les deux flux dans le format de la grille, trié par date.
  *
- * Les vérifications « à planifier » (ton `warn`) sont écartées : leur
- * `datePrevue` est une date de génération, pas une date choisie — les
- * poser sur un jour mentirait. Les appelants les signalent à part (le
- * bandeau « à planifier » du board, le compteur « sans date » de la
- * règle annuelle).
+ * Les vérifications SANS ÉCHÉANCE CONNUE sont écartées (`sansEcheance`) :
+ * leur `datePrevue` est une date de génération, pas une échéance — les poser
+ * sur un jour mentirait. Le filtre lisait le ton `warn`, si bien qu'une
+ * « à planifier » EN RETARD (ton `alerte`) passait, et la frise la posait sur
+ * sa date de création (relecture du lot C, 2026-09-14). Les appelants les
+ * signalent à part (le bandeau du board, le compteur « sans date » de la
+ * règle annuelle), et elles restent comptées en retard.
  *
  * C'est **la seule** différence assumée avec la liste mensuelle de la
  * page calendrier, qui les garde parce qu'elle affiche un badge de
@@ -84,7 +86,9 @@ export function fusionnerEvenements({
   const verifsVisibles = filtrerParBatiment(
     verifications.filter(
       (e) =>
-        e.tone !== "warn" && (!famille || famille === FAMILLE_DE_TYPE[e.type]),
+        !e.sansEcheance &&
+        e.tone !== "warn" &&
+        (!famille || famille === FAMILLE_DE_TYPE[e.type]),
     ),
     batimentId,
   );

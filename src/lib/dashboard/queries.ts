@@ -32,6 +32,7 @@ import {
 } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
 import {
+  aUnRendezVous,
   classerVerification,
   TON_REGISTRE,
   lecturesCalendrier,
@@ -112,6 +113,15 @@ export type EvenementFenetre = {
   libelle: string;
   date: Date;
   tone: "alerte" | "warn" | "ok";
+  /**
+   * `true` quand `date` n'est PAS une échéance connue (`aUnRendezVous`) : une
+   * ligne « à planifier », en retard ou non. L'événement compte — le ton le
+   * dit —, mais ne se pose sur aucun jour : la grille et la frise l'écartent
+   * (`fusionnerEvenements`). Sans ce drapeau, une « à planifier » en retard
+   * (ton `alerte`) passait le filtre qui n'écartait que le ton `warn`, et la
+   * frise la plaçait sur sa date de génération (relecture du lot C).
+   */
+  sansEcheance: boolean;
   /** Ce que la ligne **est** (ADR-016), et donc la famille qui s'en déduit.
    *  Ce flux en porte deux depuis l'ADR-023 : la vérification d'un
    *  équipement et l'échéance du titre d'une personne. Requis — l'oublier
@@ -137,10 +147,11 @@ export type EvenementFenetre = {
  *
  * Le classement passe par `lecturesCalendrier` — LA règle, partagée avec
  * la page calendrier : l'échéance ouverte de chaque ligne (ADR-034) entre
- * dans la fenêtre comme n'importe quel futur — la date décide, jamais le
- * statut. Les
- * lectures « realisation » (le fait, daté au passé) sont écartées : la
- * fenêtre montre la charge, pas l'historique.
+ * dans la fenêtre comme n'importe quel futur. Le RETARD se lit sur la date ;
+ * le statut ne dit que si cette date est une échéance connue (`sansEcheance`,
+ * ton `warn` d'une « à planifier » à venir). Les lectures « realisation » (le
+ * fait, daté au passé) sont écartées : la fenêtre montre la charge, pas
+ * l'historique.
  *
  * Tons : `TON_REGISTRE` (alerte = en retard, warn = à planifier, ok = le
  * reste). L'id reste celui de la ligne — une ligne n'émet qu'un événement
@@ -222,6 +233,7 @@ export async function listerEvenementsFenetre(
         libelle: libelleCourt(v.libelleObligation),
         date: lec.date,
         tone: TON_REGISTRE[lec.registre],
+        sansEcheance: !aUnRendezVous(v, now),
         type: typeDeVerification(v),
         contractuelle: estEcheanceContractuelle(v),
         equipement: libellePorteur(v),
