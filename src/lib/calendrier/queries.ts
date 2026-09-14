@@ -125,7 +125,7 @@ export async function getVerification(id: string) {
         },
       },
       rapports: {
-        orderBy: { dateRapport: "desc" },
+        orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
       },
       // Même raison que dans `listerVerifications` : la fiche d'une échéance
       // est l'écran où l'on vient chercher ce qu'elle engage (ADR-032).

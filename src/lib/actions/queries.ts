@@ -89,7 +89,7 @@ export async function getAction(id: string) {
           equipement: true,
           salarie: true,
           rapports: {
-            orderBy: { dateRapport: "desc" },
+            orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
           },
         },
       },

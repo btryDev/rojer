@@ -29,7 +29,7 @@ export async function listerRapportsDeLEtablissement(
         },
       },
     },
-    orderBy: { dateRapport: "desc" },
+    orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
   });
 
   let out = rapports;
@@ -93,6 +93,6 @@ export async function listerRapportsDUneVerification(verificationId: string) {
       verificationId,
       etablissement: { entreprise: { userId: user.id } },
     },
-    orderBy: { dateRapport: "desc" },
+    orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
   });
 }

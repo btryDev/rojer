@@ -472,11 +472,13 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
       // (ADR-034, N5), retirer le plus récent suffit à la faire reculer.
       data: { datePrevue, statut },
     });
-    // Sous le verrou, la ligne ne peut pas avoir bougé depuis sa relecture.
-    // Si elle l'a fait quand même, on ANNULE TOUT — le rapport reste — plutôt
-    // que d'abandonner le recul en silence : un retrait sans recul laisse une
-    // échéance future sans pièce, et rien ne la recalerait ensuite. Une garde
-    // qui échoue fait du bruit du côté visible.
+    // Sous le verrou, la ligne ne peut pas avoir bougé depuis sa relecture :
+    // cette levée n'a aucun chemin connu. Si elle en trouvait un, on ANNULE
+    // TOUT — le rapport reste — plutôt que d'abandonner le recul en silence :
+    // un retrait sans recul laisse une échéance future sans pièce, et rien ne
+    // la recalerait ensuite. Le bouton de suppression ne capture pas l'erreur :
+    // l'utilisateur verrait la page d'erreur générique, pas ce message. C'est
+    // accepté pour un cas sans chemin ; une garde qui échoue fait du bruit.
     if (count !== 1) throw new LigneModifieeEntreTemps();
   });
 

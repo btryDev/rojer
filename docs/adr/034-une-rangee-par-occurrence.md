@@ -660,6 +660,19 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        témoins et pouvait supprimer une ligne dont le statut réalisé était la
        seule : il lit `portantUnePreuve()`.
      Trois mutations, rouges. 2626 tests.
+     **Relecture neutre de ces corrections** : rien de bloquant, aucune
+     régression ; entrelacements suppression/suppression et
+     suppression/dépôt jugés justes sous READ COMMITTED, sans interblocage.
+     Mineurs traités : le départage `createdAt` est posé sur les sept autres
+     lectures « rapports du plus récent au plus ancien » (fiche d'action,
+     fiche d'équipement, page d'établissement, MCP, registre) ; le commentaire
+     de la levée sous verrou dit qu'elle n'a aucun chemin connu et qu'elle
+     afficherait la page d'erreur générique ; celui de l'étalement nomme les
+     deux familles qu'il déplace sans effet durable. Soupçon écarté par
+     exécution : `NOT portantUnePreuve()` produit un `NOT EXISTS` corrélé,
+     insensible aux `NULL` de `Action.verificationId`. Laissé : un dépôt
+     antidaté concurrent d'une suppression sur une ponctuelle, recalé par la
+     régénération qui suit (préexistant).
   **Fait le 2026-09-13, avant cette décision :**
   ~~la durée de conservation de `D. 4711-3` à l'écran du registre~~ (badge
   légal, citation et lien relus à la source le 2026-09-01) ; ~~l'annotation de

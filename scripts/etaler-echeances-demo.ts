@@ -68,7 +68,11 @@ function decalage(cle: string): number {
 
 /**
  * Les seules lignes que l'étalement a le droit de déplacer : ouvertes,
- * attendues, et sans aucune preuve. Leur date n'est qu'une date de génération.
+ * attendues, et sans aucune preuve. Pour la plupart, leur date n'est qu'une
+ * date de génération. Deux familles passent aussi le filtre sans l'être : les
+ * titres de salarié (date déclarée) et les lignes datées par héritage d'une
+ * obligation retirée. La régénération suivante leur rend leur date — le
+ * déplacement ne tient pas, il ne détruit rien.
  *
  * Le filtre d'origine était `dateRealisee: null`. Au retrait de la colonne
  * (ADR-034, N5), il avait été ôté sans être remplacé : l'étalement et

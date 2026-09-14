@@ -134,7 +134,7 @@ export default async function EtablissementPage({
     prisma.rapportVerification.findMany({
       where: { etablissementId: id },
       include: { verification: true },
-      orderBy: { dateRapport: "desc" },
+      orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
       take: 4,
     }),
   ]);

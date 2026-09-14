@@ -520,7 +520,7 @@ export async function listerVerifications(
       // le source, et une constante lui cacherait ce qui sort.
       rapports: {
         where: WHERE_RAPPORT_REALISE,
-        orderBy: { dateRapport: "desc" },
+        orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
         take: 1,
         select: { dateRapport: true },
       },

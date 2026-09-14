@@ -75,7 +75,7 @@ export async function getFicheEquipement(id: string) {
       verifications: {
         orderBy: { datePrevue: "asc" },
         include: {
-          rapports: { orderBy: { dateRapport: "desc" } },
+          rapports: { orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }] },
           actions: true,
         },
       },
