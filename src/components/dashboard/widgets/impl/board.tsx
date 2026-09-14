@@ -1101,7 +1101,10 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
               échéances tombent au-delà de deux ans (une visite quinquennale)
               n'a pas un calendrier vide — la branche finale dit « aucune sur
               cette période », ce qui est vrai. */}
-          {bundle.equipements.length === 0 &&
+          {/* Le parc ENTIER : sous un filtre de zone, `equipements` ne porte
+              que ceux du lieu, et « aucun équipement n'est encore déclaré »
+              aurait menti quand le parc est dans une autre zone. */}
+          {bundle.equipementsEtablissement.length === 0 &&
           bundle.nbVerifs === 0 &&
           nbEnRetard === 0 ? (
             <>

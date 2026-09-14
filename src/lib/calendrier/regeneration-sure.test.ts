@@ -82,7 +82,19 @@ describe("assurerCalendrierAJour — la réparation à l'affichage", () => {
     expect(genererCalendrier).not.toHaveBeenCalled();
   });
 
-  it("n'échoue JAMAIS : la page s'affiche sur les lignes en base", async () => {
+  it("ne répare rien depuis une preview, qui porte le référentiel de sa branche", async () => {
+    // Revue du 2026-09-14 : ouvrir le tableau de bord d'une preview branchée
+    // sur la base de production recalculait les dossiers réels.
+    vi.stubEnv("VERCEL_ENV", "preview");
+    calendrierDesynchronise.mockResolvedValue(true);
+
+    await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(false);
+    expect(calendrierDesynchronise).not.toHaveBeenCalled();
+    expect(regenererSansInvalider).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
+
+  it("un échec de régénération ne fait pas tomber la page : elle s'affiche sur les lignes en base", async () => {
     // Le repère n'est pas posé : l'affichage suivant retentera de lui-même.
     calendrierDesynchronise.mockResolvedValue(true);
     regenererSansInvalider.mockRejectedValue(new Error("base indisponible"));

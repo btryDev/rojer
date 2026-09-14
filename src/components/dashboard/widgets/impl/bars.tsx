@@ -22,8 +22,8 @@ export function WidgetBarsObligations({
   const { barsData, barsSansEcheance, barsRetardsAnterieurs, moisCourant } =
     bundle;
   // Ce qu'aucune barre de l'année ne porte existe pourtant : les lignes sans
-  // échéance connue, et les retards d'années passées. L'état vide « déclarez
-  // vos équipements » ne s'affiche que quand il n'y a VRAIMENT rien. Il
+  // échéance connue, et les retards d'années passées. L'état vide ne
+  // s'affiche que quand il n'y a VRAIMENT rien dans l'année. Il
   // s'affichait sur un dossier neuf dont les douze appareils étaient en
   // retard (relecture, 2026-09-14).
   const nbSansEcheance = barsSansEcheance.aVenir + barsSansEcheance.retard;
@@ -55,7 +55,7 @@ export function WidgetBarsObligations({
     return (
       <BentoCell kicker={`Obligations ${annee}`} sub="Répartition des échéances">
         {vide ? (
-          <EmptyBars />
+          <EmptyBars annee={annee} />
         ) : (
           <DonutStatuts
             totaux={totaux}
@@ -76,7 +76,7 @@ export function WidgetBarsObligations({
       legend={<LegendeBarsObligations />}
     >
       {vide ? (
-        <EmptyBars />
+        <EmptyBars annee={annee} />
       ) : aucuneBarre ? (
         <AucuneBarre nb={nbSansEcheance} />
       ) : (
@@ -101,10 +101,16 @@ export function libelleHorsMois(
   return parts.length === 0 ? null : `${parts.join(" · ")}, hors des mois`;
 }
 
-function EmptyBars() {
+/**
+ * Rien dans l'année : ni échéance, ni contrôle fait, ni retard, ni ligne sans
+ * date. Il disait « le calendrier se remplit… », ce qui laissait croire à un
+ * calendrier vide chez un ERP dont la seule échéance est une visite
+ * quinquennale en 2029 (revue du 2026-09-14). Le fait, borné à l'année.
+ */
+function EmptyBars({ annee }: { annee: number }) {
   return (
     <div className="flex h-[160px] items-center justify-center rounded-md border border-dashed border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)]/40 p-6 text-center text-[0.86rem] text-[color:var(--board-slate-mid)]">
-      Le calendrier se remplit à partir de la fiche de l&apos;établissement, de ses équipements et de ses salariés.
+      {`Aucune échéance ni contrôle en ${annee}.`}
     </div>
   );
 }

@@ -33,8 +33,8 @@ export const MESSAGE_REGEN_ECHEC =
   "ouverture du tableau de bord ou du calendrier.";
 
 /**
- * Répare À L'AFFICHAGE un calendrier qui n'est pas à jour, et **n'échoue
- * jamais**. Rend `true` si une régénération a eu lieu.
+ * Répare À L'AFFICHAGE un calendrier qui n'est pas à jour. Rend `true` si une
+ * régénération a eu lieu.
  *
  * UN SEUL REPÈRE SUFFIT. `referentielVersionCalendrier` distingue à lui seul
  * les trois cas : jamais généré (vide à la création), régénération échouée
@@ -54,13 +54,23 @@ export const MESSAGE_REGEN_ECHEC =
  * pastilles de la barre latérale, rendues par le layout, peuvent garder
  * l'ancien compte jusqu'au rechargement suivant.
  *
- * Un échec est journalisé et laissé tel quel : le repère n'ayant pas été posé,
- * l'affichage suivant retentera. La page s'affiche sur les lignes en base
- * plutôt que de tomber en erreur.
+ * Un échec de RÉGÉNÉRATION est journalisé et laissé tel quel : le repère
+ * n'ayant pas été posé, l'affichage suivant retentera, et la page s'affiche
+ * sur les lignes en base plutôt que de tomber en erreur. La LECTURE du repère,
+ * elle, peut lever — c'est voulu : elle porte la garde de session
+ * (`requireUser`), dont la redirection doit remonter.
+ *
+ * JAMAIS DEPUIS UNE PREVIEW. Un déploiement de prévisualisation porte le
+ * référentiel de sa branche ; s'il écrit dans la base de production, le
+ * simple fait d'y ouvrir le tableau de bord recalculerait les dossiers réels
+ * avec un référentiel non fusionné, que la production recalculerait à son
+ * tour à la visite suivante. Une preview lit, elle ne répare pas — elle écrit
+ * toujours sur les gestes explicites (revue du 2026-09-14).
  */
 export async function assurerCalendrierAJour(
   etablissementId: string,
 ): Promise<boolean> {
+  if (process.env.VERCEL_ENV === "preview") return false;
   if (!(await calendrierDesynchronise(etablissementId))) return false;
   try {
     await regenererSansInvalider(etablissementId);

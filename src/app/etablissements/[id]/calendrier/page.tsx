@@ -1140,14 +1140,18 @@ export default async function CalendrierPage({
                     Le Code du travail et le règlement ERP imposent de vérifier
                     certains équipements à fréquence fixe — extincteurs tous les
                     ans, installation électrique tous les ans, etc. L&apos;outil
-                    calcule ces échéances à partir des équipements que vous avez
-                    déclarés :{" "}
+                    calcule ces échéances à partir de la fiche de
+                    l&apos;établissement, de ses équipements et de ses
+                    salariés.{" "}
+                    {/* Il disait « à partir des équipements déclarés : il n'y
+                        en a pas encore », d'avant l'ADR-022 — la fiche et les
+                        salariés en font naître aussi (revue du 2026-09-14). */}
                     {equipements.length > 0 &&
                     horsReferentiel === equipements.length
                       ? equipements.length === 1
-                        ? "le seul que vous ayez déclaré n'en produit."
-                        : `aucun des ${equipements.length} déclarés n'en produit.`
-                      : "il n'y en a pas encore."}
+                        ? "Le seul équipement déclaré n'en produit aucune."
+                        : `Aucun des ${equipements.length} équipements déclarés n'en produit.`
+                      : "Aucune ne s'applique pour l'instant."}
                   </p>
                   {/* Un parc déclaré et un calendrier vide, ce n'est pas la
                       même situation qu'un parc vide : envoyer « déclarez vos

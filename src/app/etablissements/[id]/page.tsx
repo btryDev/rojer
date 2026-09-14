@@ -193,8 +193,11 @@ export default async function EtablissementPage({
     {
       id: "calendrier",
       titre: "Consulter votre calendrier de vérifications",
+      // « Dès que vos équipements sont déclarés » : le calendrier naît avec
+      // l'établissement depuis le 2026-09-14, et la fiche et les salariés en
+      // font naître aussi. L'étape se coche dès qu'il porte une ligne.
       pourquoi:
-        "Dès que vos équipements sont déclarés, l'outil calcule tout seul les dates des prochaines vérifications obligatoires.",
+        "L'outil calcule tout seul les dates des vérifications dues par votre établissement, ses équipements et ses salariés.",
       faite: nbVerifs > 0,
       href: `/etablissements/${id}/calendrier`,
       cta: nbVerifs === 0 ? "Ouvrir le calendrier" : undefined,

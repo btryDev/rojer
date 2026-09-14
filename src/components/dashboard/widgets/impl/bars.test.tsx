@@ -64,7 +64,7 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
     const texte = container.textContent ?? "";
     expect(texte).toContain("En retard12(100%)");
     expect(texte).toContain("dont 12 sans échéance connue");
-    expect(texte).not.toContain("Le calendrier se remplit");
+    expect(texte).not.toContain("Aucune échéance ni contrôle en 2026.");
   });
 
   it("les barres ne se disent pas vides non plus, et disent pourquoi", () => {
@@ -72,7 +72,7 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
       <WidgetBarsObligations bundle={bundle} variant="bars" />,
     );
     const texte = container.textContent ?? "";
-    expect(texte).not.toContain("Le calendrier se remplit");
+    expect(texte).not.toContain("Aucune échéance ni contrôle en 2026.");
     expect(texte).toContain("12 lignes sans échéance connue");
     expect(texte).toContain("12 sans échéance connue, hors des mois");
   });
@@ -88,7 +88,7 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
     const anneau = render(<WidgetBarsObligations bundle={anterieur} variant="radial" />);
     expect(anneau.container.textContent).toContain("En retard1(100%)");
     expect(anneau.container.textContent).toContain("dont 1 retard d'une année passée");
-    expect(anneau.container.textContent).not.toContain("Le calendrier se remplit");
+    expect(anneau.container.textContent).not.toContain("Aucune échéance ni contrôle en 2026.");
     cleanup();
     const barres = render(<WidgetBarsObligations bundle={anterieur} variant="bars" />);
     expect(barres.container.textContent).toContain("1 retard d'avant 2026, hors des mois");
@@ -116,6 +116,6 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
         variant="radial"
       />,
     );
-    expect(container.textContent).toContain("Le calendrier se remplit");
+    expect(container.textContent).toContain("Aucune échéance ni contrôle en 2026.");
   });
 });
