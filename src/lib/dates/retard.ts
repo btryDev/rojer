@@ -208,9 +208,16 @@ export function estStatutRealise(statut: string): boolean {
  * PDF non. Trouvé par la suite, pas par lecture (2026-09-13).
  */
 function statutLu(v: VerificationDatee): string {
-  return estStatutRealise(v.statut) && !estVerificationRealisee(v)
-    ? "planifiee"
-    : v.statut;
+  if (estStatutRealise(v.statut) && !estVerificationRealisee(v)) return "planifiee";
+  // `depassee` N'EST PLUS UN FAIT (retrait de `depassee`, phase A). Le retard
+  // est une fonction de la date, et de rien d'autre — le modèle de GestBAT,
+  // qui ne stocke aucun statut. Plus aucune écriture ne le pose ; les lignes
+  // qui le portent encore se lisent « à planifier » : le tampon avait écrasé
+  // la seule information qu'il remplaçait — une date arrêtée ou non —, et
+  // « non » est la lecture qui n'invente rien. La migration de la phase B les
+  // réécrit ainsi, et retire la valeur de l'enum.
+  if (v.statut === "depassee") return "a_planifier";
+  return v.statut;
 }
 
 export function estVerificationRealisee(
@@ -237,11 +244,9 @@ export function estVerificationRealisee(
 
 /**
  * Une vérification est **en retard** quand son échéance réglementaire est
- * passée sans qu'elle ait été réalisée :
- *
- *  - statut `depassee` — le passage au statut a déjà été acté ;
- *  - statut `planifiee` dont la `datePrevue` est en retard ;
- *  - statut `a_planifier` dont la `datePrevue` est en retard.
+ * passée sans qu'elle ait été réalisée : sa `datePrevue` est en retard, que
+ * la date ait été arrêtée (`planifiee`) ou non (`a_planifier`). Aucun statut
+ * stocké ne fait le retard — plus de `depassee` (retrait, phase A).
  *
  * **Arbitrage sur `a_planifier`** (les deux camps existaient dans le code) :
  * `src/lib/calendrier/queries.ts` le tenait pour non pénalisant, considérant
@@ -271,8 +276,11 @@ export function estVerificationEnRetard(
   // l'échéance, et il n'en reste que sur une obligation sans rendez-vous
   // suivant, consommée.
   if (estVerificationRealisee(v)) return false;
+  // LA DATE, ET ELLE SEULE. Un statut stocké « dépassée » suffisait à rendre
+  // une ligne en retard, date future comprise : deux sources pour un fait, et
+  // la génération devait réécrire la ligne le jour où sa date passait pour que
+  // les deux restent d'accord. Aucun rythme ne le fait plus.
   const statut = statutLu(v);
-  if (statut === "depassee") return true;
   if (statut === "planifiee" || statut === "a_planifier") {
     return estEnRetard(v.datePrevue, now);
   }
@@ -302,7 +310,7 @@ export function estVerificationAPlanifier(
 ): boolean {
   if (estVerificationArchivee(v)) return false;
   if (estVerificationRealisee(v)) return false;
-  if (v.statut !== "a_planifier") return false;
+  if (statutLu(v) !== "a_planifier") return false;
   return !estEnRetard(v.datePrevue, now);
 }
 

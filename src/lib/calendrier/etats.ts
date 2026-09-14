@@ -17,6 +17,7 @@
 import {
   estDansLesProchainsJours,
   estEnRetard,
+  estVerificationAPlanifier,
   estVerificationArchivee,
   estVerificationEnRetard,
   estVerificationRealisee,
@@ -263,7 +264,11 @@ export function classerVerification(
   if (estVerificationArchivee(v)) return "archivee";
   if (estVerificationRealisee(v)) return "faite";
   if (estVerificationEnRetard(v, now)) return "enRetard";
-  if (v.statut === "a_planifier") return "aPlanifier";
+  // Le prédicat, pas le statut brut : c'est lui qui sait lire une ligne
+  // encore tamponnée `depassee` (« à planifier », retrait phase A). Une
+  // lecture recopiée ici l'annonçait « proche » avec un rendez-vous que
+  // personne n'avait arrêté.
+  if (estVerificationAPlanifier(v, now)) return "aPlanifier";
   return classerDate(v.datePrevue, now);
 }
 

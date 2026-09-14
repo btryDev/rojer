@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cleJourCivil } from "@/lib/dates";
+import { estVerificationEnRetard } from "@/lib/dates/retard";
 import type { ObligationApplicable } from "@/lib/matching";
 import {
   porteurDe,
@@ -248,7 +249,7 @@ describe("générateur calendrier — dernière vérif connue", () => {
     expect(res[0].estUrgent).toBe(false);
   });
 
-  it("dernière vérif ancienne → statut 'depassee' et urgent=true", () => {
+  it("dernière vérif ancienne → date arrêtée, passée, et urgent=true", () => {
     const o = fakeObligation({ id: "annuelle", periodicite: "annuelle" });
     const eq = fakeEquipement();
     const now = new Date("2026-03-01T00:00:00Z");
@@ -260,7 +261,10 @@ describe("générateur calendrier — dernière vérif connue", () => {
       now,
     });
 
-    expect(res[0].statut).toBe("depassee");
+    // Plus de statut « dépassée » (phase A) : la date calculée depuis le
+    // contrôle réel est arrêtée, et c'est elle qui dit le retard.
+    expect(res[0].statut).toBe("planifiee");
+    expect(estVerificationEnRetard({ ...res[0], archiveLe: null }, now)).toBe(true);
     expect(res[0].estUrgent).toBe(true);
   });
 
@@ -825,8 +829,8 @@ describe("réconciliation — survie des actions correctives", () => {
       obligationId: "elec",
       equipementId: "eq-elec",
       libelleObligation: "Obligation elec",
-      datePrevue: new Date("2026-02-01T00:00:00Z"), // passée
-      statut: "depassee",
+      datePrevue: new Date("2026-02-01T00:00:00Z"), // passée : en retard par sa date
+      statut: "a_planifier",
       porteUnePreuve: true, // une action corrective y est rattachée
     });
 
@@ -857,16 +861,57 @@ describe("réconciliation — survie des actions correctives", () => {
           obligationId: "elec",
           equipementId: "eq-elec",
           datePrevue,
-          statut: "a_planifier", // statut à requalifier : la date est passée
+          statut: "a_planifier", // la date est passée
         }),
       ],
       aGenerer,
       { now: NOW },
     );
 
-    expect(plan.aMettreAJour).toHaveLength(1);
-    expect(plan.aMettreAJour[0].datePrevue).toEqual(datePrevue);
-    expect(plan.aMettreAJour[0].statut).toBe("depassee");
+    // Rien à requalifier depuis le retrait de `depassee` : la ligne est
+    // INCHANGÉE — même date, même statut —, et elle est en retard par sa date.
+    // Avant, la régénération la réécrivait le jour où sa date passait.
+    expect(plan.aMettreAJour).toEqual([]);
+    expect(plan.inchangees).toBe(1);
+    expect(
+      estVerificationEnRetard(
+        {
+          statut: "a_planifier",
+          datePrevue,
+          periodicite: "annuelle",
+          archiveLe: null,
+          libelleObligation: "Obligation elec",
+        },
+        NOW,
+      ),
+    ).toBe(true);
+  });
+
+  it("un tampon « depassee » encore en base se réécrit « à planifier », une fois", () => {
+    // Les lignes tamponnées avant la phase A. La régénération les ramène au
+    // modèle — sans toucher la date — et la passe suivante n'écrit plus rien.
+    const o = fakeObligation({ id: "elec", periodicite: "annuelle" });
+    const eq = fakeEquipement("eq-elec");
+    const aGenerer = genererProchainesVerifications([applique(o, [eq])], new Map(), {
+      now: NOW,
+    });
+    const datePrevue = new Date("2026-02-01T00:00:00Z");
+    const ligne = (statut: "depassee" | "a_planifier") =>
+      ligneExistante({
+        id: "v-elec",
+        obligationId: "elec",
+        equipementId: "eq-elec",
+        datePrevue,
+        statut,
+      });
+
+    const premiere = reconcilierCalendrier([ligne("depassee")], aGenerer, { now: NOW });
+    expect(premiere.aMettreAJour).toHaveLength(1);
+    expect(premiere.aMettreAJour[0].statut).toBe("a_planifier");
+    expect(premiere.aMettreAJour[0].datePrevue).toEqual(datePrevue);
+
+    const seconde = reconcilierCalendrier([ligne("a_planifier")], aGenerer, { now: NOW });
+    expect(seconde.aMettreAJour).toEqual([]);
   });
 });
 
@@ -999,11 +1044,17 @@ describe("réconciliation — un placeholder cède devant une vraie date", () =>
     // Une ligne dépassée porte un vrai rendez-vous, manqué. Le générateur ne
     // doit pas pouvoir le repousser — c'est la régression que le
     // delete/create causait autrefois.
+    //
+    // DEPUIS LE RETRAIT DE `depassee` (phase A), la fixture est « à
+    // planifier » à date passée — ce que la ligne porte désormais —, et le
+    // test tient une garde NEUVE : sans le tampon, la branche « placeholder »
+    // prenait cette ligne pour un rendez-vous jamais fixé et lui posait la
+    // date de 2027. La garde sur la date l'en empêche.
     const existante = ligneExistante({
       id: "v-1",
       obligationId: "o-1",
       equipementId: "eq-1",
-      statut: "depassee",
+      statut: "a_planifier",
       datePrevue: new Date("2026-02-01T00:00:00Z"),
     });
     const plan = reconcilierCalendrier(
@@ -1510,7 +1561,7 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
   // à sa création et JAMAIS réécrite. Le générateur produisait bien la nouvelle
   // date après un renouvellement, la réconciliation la jetait — la seule
   // branche qui adoptait `g.datePrevue` exigeait `ex.statut === "a_planifier"`,
-  // or une ligne de titre naît `planifiee` ou `depassee`, jamais `a_planifier`.
+  // or une ligne de titre naît `planifiee`, jamais `a_planifier`.
   // Le calendrier annonçait donc l'attestation dépassée à perpétuité, et la
   // rectification promise par docs/rgpd.md § 5.2 (art. 16) restait invisible.
   const ligneDeTitre = (over: Partial<OccurrenceExistante> = {}) =>
@@ -1522,7 +1573,8 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
       libelleObligation: "Attestation médicale",
       periodicite: "quinquennale",
       datePrevue: new Date("2026-01-10T00:00:00Z"),
-      statut: "depassee",
+      // Une date déclarée, passée : arrêtée — le retard se lit sur elle.
+      statut: "planifiee",
       ...over,
     });
 
@@ -1563,14 +1615,17 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
     // corrige que dans un sens n'est pas une correction.
     const plan = reconcilierCalendrier(
       [ligneDeTitre({ datePrevue: new Date("2036-01-10T00:00:00Z"), statut: "planifiee" })],
-      [{ ...generee("2024-01-10T00:00:00Z"), statut: "depassee" }],
+      [generee("2024-01-10T00:00:00Z")],
       { now: NOW, obligationsEncoreApplicables: new Set(["elec-attestation"]) },
     );
 
     expect(plan.aMettreAJour[0]?.datePrevue).toEqual(
       new Date("2024-01-10T00:00:00Z"),
     );
-    expect(plan.aMettreAJour[0]?.statut).toBe("depassee");
+    // Le retard se lit sur la date adoptée, plus sur un statut.
+    expect(
+      estVerificationEnRetard({ ...plan.aMettreAJour[0]!, archiveLe: null }, NOW),
+    ).toBe(true);
   });
 
   it("adopte l'échéance même quand la ligne porte une réalisation", () => {
@@ -1602,7 +1657,7 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
     // changement de règle générale : déclarer un extincteur de plus ne doit
     // toujours pas effacer un retard accumulé sur une échéance réglementaire.
     const plan = reconcilierCalendrier(
-      [ligneExistante({ id: "v-eq", obligationId: "elec", equipementId: "eq-1", datePrevue: new Date("2026-01-10T00:00:00Z"), statut: "depassee" })],
+      [ligneExistante({ id: "v-eq", obligationId: "elec", equipementId: "eq-1", datePrevue: new Date("2026-01-10T00:00:00Z"), statut: "a_planifier" })],
       [{ ...generee("2031-01-10T00:00:00Z"), cleUnique: "elec::eq-1", obligationId: "elec", equipementId: "eq-1", salarieId: null, datePrevueFaisantFoi: undefined }],
       { now: NOW, obligationsEncoreApplicables: new Set(["elec"]) },
     );
@@ -1732,7 +1787,9 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
 
     expect(plan.aCreer).toHaveLength(1);
     expect(plan.aCreer[0].datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
-    expect(plan.aCreer[0].statut).toBe("depassee");
+    // Datée d'un contrôle réel : arrêtée, et en retard par sa date.
+    expect(plan.aCreer[0].statut).toBe("planifiee");
+    expect(estVerificationEnRetard({ ...plan.aCreer[0], archiveLe: null }, NOW)).toBe(true);
 
     // Le fragment, lui, est archivé avec sa preuve — jamais supprimé.
     expect(plan.aArchiver).toHaveLength(1);
@@ -1756,7 +1813,9 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
 
     // 2025-06-01 + un an, et non 2026-03-01 + un an, qui serait à venir.
     expect(plan.aCreer[0].datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
-    expect(plan.aCreer[0].statut).toBe("depassee");
+    // Datée d'un contrôle réel : arrêtée, et en retard par sa date.
+    expect(plan.aCreer[0].statut).toBe("planifiee");
+    expect(estVerificationEnRetard({ ...plan.aCreer[0], archiveLe: null }, NOW)).toBe(true);
   });
 
   it("un fragment sans réalisation ne lègue rien et ne bloque rien", () => {
@@ -1945,7 +2004,7 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           obligationId: "tout",
           equipementId: null,
           datePrevue: new Date("2027-02-01T00:00:00Z"),
-          statut: "depassee",
+          statut: "planifiee",
           porteUnePreuve: true,
         }),
       ],
@@ -1981,7 +2040,8 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
 
     const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
     expect(maj?.datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
-    expect(maj?.statut).toBe("depassee");
+    expect(maj?.statut).toBe("planifiee");
+    expect(estVerificationEnRetard({ ...maj!, archiveLe: null }, NOW)).toBe(true);
   });
 
   it("une absorbante déjà en base, datée par l'héritage À VENIR, passe « planifiée »", () => {

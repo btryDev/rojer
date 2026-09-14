@@ -1655,7 +1655,8 @@ async function main(): Promise<void> {
           periodicite: v.periodicite as Periodicite,
           realisateurRequis: v.realisateurRequis as Realisateur[],
           datePrevue: jours(decalage),
-          statut: (decalage < 0 ? "depassee" : "planifiee") as StatutVerification,
+          // Une date arrêtée, passée ou non : le retard se lit sur elle.
+          statut: "planifiee" as StatutVerification,
           prescriptionId: null,
         },
       }),
@@ -1714,7 +1715,8 @@ async function main(): Promise<void> {
   //     `verificationId` du XOR — l'autre branche est déjà servie par le DUERP).
   // -------------------------------------------------------------------------
   const enRetard = await prisma.verification.findMany({
-    where: { etablissementId: etablissement.id, statut: "depassee" },
+    // En retard = date passée, pas un statut (retrait de `depassee`).
+    where: { etablissementId: etablissement.id, datePrevue: { lt: jours(0) } },
     orderBy: { datePrevue: "asc" },
     select: { id: true, libelleObligation: true },
     take: 2,

@@ -1482,10 +1482,14 @@ re-seed — la colonne `dateRealisee` est retirée (migration
 `20260913120000_ligne_ouverte_retrait_date_realisee`, qui remet d'abord
 « planifiée » les rangées gelées sur un statut réalisé avec un rythme), et
 avec elle `echeanceOuverte`, la branche « rattrapage » du réconciliateur et
-tout ce qui tolérait l'ancienne rangée. `depassee` reste vivant (écrit à la
-génération, lu par le retard) : le retirer est une autre décision. **Les cinq
-lots sont livrés sur `adr034-ligne-ouverte` ; reste la relecture externe du
-N5, puis re-seed et déploiement par la propriétaire.**
+tout ce qui tolérait l'ancienne rangée. ~~**Les cinq lots sont livrés,
+relus, fusionnés et déployés le 2026-09-14**~~ (`b8de22b`) — après la
+découverte que tous les builds Vercel échouaient depuis N2 (un `export class`
+dans un module `"use server"`, fusible `src/lib/use-server.test.ts`). La
+propriétaire a renoncé à vider la base : la migration N5 a remis les données
+au modèle. **Retrait de `depassee`** (décidé le 2026-09-14, modèle GestBAT) :
+~~phase A~~ — le retard est la date, plus aucune écriture du statut — ; reste
+la phase B, migration et retrait de l'enum, après le déploiement de A.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est
@@ -1548,10 +1552,12 @@ les corriger.**
   la ligne ne porte plus « conforme », elle porte une échéance ouverte, et « en
   retard » est une fonction de la date. Un dossier immobile passe en retard le
   jour où son échéance passe, sans qu'aucune régénération soit nécessaire ;
-- **ligne « mise en service »** : créée `a_planifier`, passée `depassee` par la
+- ~~**ligne « mise en service »** : créée `a_planifier`, passée `depassee` par la
   régénération suivante — le jour même —, et comptée en retard dès le premier
   passage (4170 jours pour une MES de 2015). Idempotence rompue entre le passage 1
-  et le 2.
+  et le 2.~~ **Tombé le 2026-09-14 avec la phase A du retrait de `depassee`** :
+  la régénération ne retamponne plus rien, la ligne reste « à planifier » d'une
+  passe à l'autre. Le retard de 4170 jours, lui, reste compté — il est vrai.
 
 ### Le code mort, vérifié
 

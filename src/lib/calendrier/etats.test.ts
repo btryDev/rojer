@@ -116,15 +116,20 @@ describe("classerVerification", () => {
     ).toBe("faite");
   });
 
-  it("le statut « depassee » l'emporte même sur une date future", () => {
-    // Une occurrence marquée dépassée en base reste un retard, quelle que
-    // soit la date affichée — même règle que `estVerificationEnRetard`.
-    expect(
-      classerVerification(
-        { statut: "depassee", datePrevue: jours(5), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
-        NOW,
-      ),
-    ).toBe("enRetard");
+  it("un tampon « depassee » ne fait plus le retard : la date décide", () => {
+    // CE TEST A CHANGÉ DE RÉPONSE (retrait de `depassee`, phase A). Il
+    // affirmait que le statut stocké l'emportait sur une date future. Même
+    // règle que `estVerificationEnRetard`, qui a changé avec : le retard est
+    // une fonction de la date, et le tampon se lit « à planifier ».
+    const tamponnee = (datePrevue: Date) => ({
+      statut: "depassee",
+      datePrevue,
+      archiveLe: null,
+      periodicite: "annuelle",
+      libelleObligation: "Vérification périodique",
+    });
+    expect(classerVerification(tamponnee(jours(5)), NOW)).toBe("aPlanifier");
+    expect(classerVerification(tamponnee(jours(-5)), NOW)).toBe("enRetard");
   });
 });
 

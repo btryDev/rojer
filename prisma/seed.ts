@@ -206,7 +206,8 @@ async function planifierVerifications(etablissementId: string) {
       where: { id: v.id },
       data: {
         datePrevue: dans(jours),
-        statut: jours < 0 ? "depassee" : "planifiee",
+        // Une date arrêtée, passée ou non : le retard se lit sur elle.
+        statut: "planifiee",
       },
     });
     n += 1;

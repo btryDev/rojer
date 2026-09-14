@@ -174,12 +174,21 @@ function verif(p: Partial<VerificationDatee> = {}): VerificationDatee {
 }
 
 describe("estVerificationEnRetard", () => {
-  it("statut depassee est toujours en retard", () => {
+  it("le retard est une fonction de la DATE : un statut « depassee » à date future ne l'est pas", () => {
+    // CE TEST A CHANGÉ DE RÉPONSE (retrait de `depassee`, phase A). Il
+    // affirmait « depassee est toujours en retard », date future comprise :
+    // deux sources pour un fait. Le modèle de GestBAT ne stocke aucun statut ;
+    // le retard se lit sur la date. Une ligne qui porte encore le tampon se lit
+    // « à planifier », et c'est sa date qui décide — dans les deux sens.
     expect(
-      estVerificationEnRetard(
-        verif({ statut: "depassee", datePrevue: DEMAIN }),
-        CE_MATIN,
-      ),
+      estVerificationEnRetard(verif({ statut: "depassee", datePrevue: DEMAIN }), CE_MATIN),
+    ).toBe(false);
+    expect(
+      estVerificationEnRetard(verif({ statut: "depassee", datePrevue: HIER }), CE_MATIN),
+    ).toBe(true);
+    // Et le tampon ne fait pas une date arrêtée : il se lit « à planifier ».
+    expect(
+      estVerificationAPlanifier(verif({ statut: "depassee", datePrevue: DEMAIN }), CE_MATIN),
     ).toBe(true);
   });
 

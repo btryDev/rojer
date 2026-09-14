@@ -10,7 +10,7 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { cleRapport, getStorage } from "@/lib/storage";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { estCyclique, prochaineEcheance } from "@/lib/calendrier/periodicite";
-import { estEnRetard, estStatutRealise } from "@/lib/dates/retard";
+import { estStatutRealise } from "@/lib/dates/retard";
 import { WHERE_RAPPORT_REALISE } from "./derniere-realisation";
 import {
   estResultatRealise,
@@ -212,17 +212,14 @@ export async function uploadRapport(
   if (!estResultatRealise(resultat)) {
     // Non vérifiable : le contrôle reste dû. Rien n'a été vérifié, et
     // `datePrevue` n'est pas repoussée : l'échéance réglementaire qui courait
-    // court toujours. Elle est seulement requalifiée « à replanifier », ou
-    // « dépassée » si la date est passée. Une ligne DÉJÀ soldée — le one-shot
-    // réalisé, seul à garder un statut réalisé (ADR-034) — n'est pas
-    // déclassée par un déplacement sans contrôle.
+    // court toujours. Elle est seulement requalifiée « à replanifier » : la
+    // date convenue n'a pas tenu. Passée, elle se lit en retard sur sa date —
+    // aucun statut « dépassée » n'est plus écrit (retrait, phase A). Une ligne
+    // DÉJÀ soldée — le one-shot réalisé, seul à garder un statut réalisé
+    // (ADR-034) — n'est pas déclassée par un déplacement sans contrôle.
     const dejaSoldee = estStatutRealise(verif.statut);
     majVerification = {
-      statut: dejaSoldee
-        ? verif.statut
-        : estEnRetard(verif.datePrevue, new Date())
-          ? "depassee"
-          : "a_planifier",
+      statut: dejaSoldee ? verif.statut : "a_planifier",
     };
   } else if (
     dernierRealise !== null &&
@@ -364,7 +361,6 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
   if (!rap) return;
   await assertEtablissementOwnership(rap.etablissementId);
 
-  const now = new Date();
   await prisma.$transaction(async (tx) => {
     // LA LIGNE EST VERROUILLÉE AVANT TOUTE LECTURE, et c'est ce qui rend le
     // recul juste sous concurrence (revue du 2026-09-14). Deux suppressions
@@ -458,12 +454,13 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
       datePrevue = retire.echeanceHonoree;
     }
 
+    // Le retard éventuel se lit sur la date rendue à la ligne, pas sur son
+    // statut : ce dernier ne dit que « date arrêtée ou non » (retrait de
+    // `depassee`, phase A).
     let statut: StatutVerification;
     if (!cyclique && dernier !== null) {
       // One-shot : le rapport précédent l'avait déjà consommé.
       statut = STATUT_DEPUIS_RESULTAT[dernier.resultat as ResultatRealise];
-    } else if (estEnRetard(datePrevue, now)) {
-      statut = "depassee";
     } else {
       statut = dernier !== null ? "planifiee" : "a_planifier";
     }

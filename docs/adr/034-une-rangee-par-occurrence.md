@@ -575,7 +575,27 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      (`generateur.ts`, trois sites), au dépôt « non vérifiable » et à la
      suppression d'un rapport, et lu par `estVerificationEnRetard`. Il reste,
      vivant. Le retirer supposerait que le retard ne se lise plus que sur les
-     dates — une autre décision.
+     dates — une autre décision. **Prise par la propriétaire le 2026-09-14,
+     alignée sur GestBAT (aucun statut stocké), et menée en deux
+     déploiements** — un retrait en base ne passe jamais avant le code qui
+     cesse de lire, le build Vercel migrant avant de compiler :
+     - ~~**phase A**~~ (`lot/retrait-depassee`) : plus aucune écriture ; le
+       retard est la date, et elle seule ; une ligne encore tamponnée se lit
+       « à planifier » (`statutLu`) et la régénération la réécrit ainsi, une
+       fois. Deux lectures recopiées sont tombées en chemin : la clause SQL
+       d'urgence (`statut depassee OR date passée` → date passée) et
+       `classerVerification`, qui relisait le statut brut. **Une garde
+       neuve**, trouvée par un test existant : la branche « placeholder » du
+       réconciliateur remplaçait la date de tout « à planifier » sans
+       réalisation ; le tampon du lendemain l'en faisait sortir, sans lui un
+       rendez-vous MANQUÉ aurait reçu une date future — le retard effacé. Elle
+       exige désormais une date non passée. Le reliquat « mise en service,
+       passage 1 ≠ passage 2 » tombe avec : plus rien à retamponner. Trois
+       mutations rouges. 2630 tests, `next build` vert ;
+     - **phase B**, après le déploiement de A : migration `depassee →
+       a_planifier` et retrait de la valeur de l'enum, le type d'affichage
+       « en retard » séparé du type stocké, puis la relecture du système
+       entier sur le modèle GestBAT.
   2. **`dateRealisee` n'est pas une colonne morte.** Le réconciliateur la
      PRÉSERVE quand elle est la seule trace d'une obligation consommée sans
      rapport, et depuis les corrections du N4, `echeanceOuverte` en DÉPEND :

@@ -109,11 +109,9 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
     archiveLe: null,
     // COMPOSÉE d'`echeanceAttendue`, jamais recopiée : la relecture du
     // 2026-09-13 a réduit la troisième branche recopiée ici à un seul statut
-    // réalisé, et rien n'a rougi. Ce qui attend, ET qui est passé.
-    AND: [
-      echeanceAttendue(),
-      { OR: [{ statut: "depassee" as const }, { datePrevue: { lt: debut } }] },
-    ],
+    // réalisé, et rien n'a rougi. Ce qui attend, ET dont la DATE est passée —
+    // la date seule, comme `estVerificationEnRetard` (retrait de `depassee`).
+    AND: [echeanceAttendue(), { datePrevue: { lt: debut } }],
   };
 }
 

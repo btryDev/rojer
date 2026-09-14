@@ -162,10 +162,11 @@ describe("listerVerifications — filtre « urgents »", () => {
 
   it("borne le retard au début du jour civil, pas à l'heure courante", async () => {
     await listerVerifications("etab-1", { urgentsSeulement: true });
+    // La DATE seule, depuis le retrait de `depassee` : plus de branche statut.
     const urgence = clause("archiveLe")! as unknown as {
-      AND: [unknown, { OR: [unknown, { datePrevue: { lt: Date } }] }];
+      AND: [unknown, { datePrevue: { lt: Date } }];
     };
-    const borne = urgence.AND[1].OR[1].datePrevue.lt;
+    const borne = urgence.AND[1].datePrevue.lt;
     // Une occurrence datée d'aujourd'hui (stockée à 00:00 UTC, soit 02:00
     // à Paris) est postérieure à cette borne : elle n'est pas urgente.
     expect(jour("2026-08-10").getTime()).toBeGreaterThan(borne.getTime());

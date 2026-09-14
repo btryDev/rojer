@@ -162,10 +162,10 @@ export function clesApplicabilite(
   return cles;
 }
 
-export type StatutVerificationGen =
-  | "a_planifier"
-  | "planifiee"
-  | "depassee";
+/** Ce que la génération ÉCRIT. Plus de `depassee` : le retard est une
+ *  fonction de la date (retrait, phase A), aucune ligne n'est plus tamponnée
+ *  le jour où son échéance passe. */
+export type StatutVerificationGen = "a_planifier" | "planifiee";
 
 export type VerificationGenere = {
   /** Clé stable rendue par `cleDeLigne` — jamais reconstruite à la main. */
@@ -475,7 +475,9 @@ export function genererProchainesVerifications(
           periodicite,
           realisateurRequis: o.realisateurs,
           datePrevue: prochaine,
-          statut: estDepassee ? "depassee" : "planifiee",
+          // Une date calculée depuis un contrôle réel est une date arrêtée ;
+          // qu'elle soit passée se lit sur elle, pas sur le statut.
+          statut: "planifiee",
           estUrgent: estDepassee,
           criticiteObligation: o.criticite,
           succedeA: o.succedeA,
@@ -600,7 +602,8 @@ export function genererVerificationsDepuisTitres(
         periodicite: o.periodicite,
         realisateurRequis: o.realisateurs,
         datePrevue: echeance,
-        statut: depassee ? "depassee" : "planifiee",
+        // La date vient de la pièce : arrêtée, passée ou non.
+        statut: "planifiee",
         estUrgent: depassee,
         criticiteObligation: o.criticite,
         succedeA: o.succedeA,
@@ -722,7 +725,10 @@ export type StatutVerificationPersiste =
   | StatutVerificationGen
   | "realisee_conforme"
   | "realisee_observations"
-  | "realisee_ecart_majeur";
+  | "realisee_ecart_majeur"
+  // LU, jamais écrit : des lignes le portent encore jusqu'à la migration de
+  // la phase B, qui les réécrit « à planifier » et retire la valeur.
+  | "depassee";
 
 // Les statuts qui disent « ce contrôle a eu lieu » et `estStatutRealise`
 // vivent dans `lib/dates/retard.ts`, en un seul exemplaire : la condition SQL
@@ -836,17 +842,19 @@ export type PlanReconciliation = {
 /**
  * Statut à porter sur une ligne dont le cycle courant n'est **pas** soldé.
  *
- * Le retard se juge au jour civil (ADR-011) et non à l'horodatage : une
- * échéance datée d'aujourd'hui n'est pas dépassée. `planifiee` n'est conservé
- * que s'il était déjà là — il signifie « une date a été arrêtée avec le
+ * Il ne dit qu'une chose : une date a-t-elle été arrêtée ? `planifiee` n'est
+ * conservé que s'il était déjà là — « une date a été arrêtée avec le
  * prestataire », information que la régénération n'a aucune raison d'effacer.
+ *
+ * IL NE DIT PLUS LE RETARD (retrait de `depassee`, phase A). Il le tamponnait
+ * le jour où la date passait, en écrasant justement cette information — et une
+ * mise en service créée « à planifier » repassait « dépassée » à la
+ * régénération suivante, le jour même : deux passes, deux états, pour une
+ * donnée immobile. Le retard se lit sur la date (ADR-011).
  */
 function statutCycleOuvert(
-  datePrevue: Date,
   statutExistant: StatutVerificationPersiste,
-  now: Date,
 ): StatutVerificationGen {
-  if (estEnRetard(datePrevue, now)) return "depassee";
   return statutExistant === "planifiee" ? "planifiee" : "a_planifier";
 }
 
@@ -1123,7 +1131,8 @@ export function reconcilierCalendrier(
           : {
               ...g,
               datePrevue: prochaine,
-              statut: estEnRetard(prochaine, now) ? "depassee" : "planifiee",
+              statut: "planifiee",
+              estUrgent: estEnRetard(prochaine, now),
             },
       );
       continue;
@@ -1204,7 +1213,7 @@ export function reconcilierCalendrier(
       // la réalisation, lue sur le dernier rapport réalisé.
       datePrevue =
         prochaineEcheance(realisation, g.periodicite) ?? ex.datePrevue;
-      statut = statutCycleOuvert(datePrevue, "planifiee", now);
+      statut = "planifiee";
     } else if (heritee !== null && !ex.porteUnePreuve) {
       // La ligne absorbante existe mais n'a JAMAIS ÉTÉ RÉALISÉE sous son
       // propre identifiant : elle reprend la réalisation des lignes qu'elle
@@ -1239,11 +1248,7 @@ export function reconcilierCalendrier(
       // le même héritage. Lire `ex.statut` laissait « à planifier, aucune date
       // convenue » sur une absorbante déjà en base, alors que sa date venait
       // d'être posée (revue du 2026-09-14).
-      statut = statutCycleOuvert(
-        datePrevue,
-        prochaine !== null ? "planifiee" : ex.statut,
-        now,
-      );
+      statut = prochaine !== null ? "planifiee" : statutCycleOuvert(ex.statut);
     } else if (
       ex.statut === "a_planifier" &&
       g.statut === "planifiee" &&
@@ -1253,7 +1258,14 @@ export function reconcilierCalendrier(
       // qui courait court toujours. Sans cette garde, la régénération suivante
       // remplaçait cette échéance par « mise en service + une période », et le
       // contrôle réel déjà fait était oublié.
-      realisation === null
+      realisation === null &&
+      // ET SA DATE N'EST PAS PASSÉE. Un « à planifier » dont l'échéance est
+      // passée n'est plus un placeholder : c'est un rendez-vous MANQUÉ, et
+      // remplacer sa date effacerait le retard. Tant que la génération
+      // tamponnait `depassee` le lendemain, le tampon faisait sortir la ligne
+      // de cette branche ; depuis son retrait (phase A), c'est la date qui
+      // l'en fait sortir — la seule source du retard.
+      !estEnRetard(ex.datePrevue, now)
     ) {
       // La ligne n'avait qu'un **placeholder** — « à planifier » n'est pas
       // un rendez-vous, c'est son absence — et le générateur sait désormais
@@ -1268,7 +1280,7 @@ export function reconcilierCalendrier(
       // régénération — ce que faisait le delete/create — effaçait le retard
       // accumulé.
       datePrevue = ex.datePrevue;
-      statut = statutCycleOuvert(ex.datePrevue, ex.statut, now);
+      statut = statutCycleOuvert(ex.statut);
     }
 
     const cible: MiseAJourOccurrence = {

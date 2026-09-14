@@ -15,6 +15,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
+import { estVerificationEnRetard } from "@/lib/dates/retard";
 
 type LigneVerif = {
   id: string;
@@ -271,6 +272,23 @@ function rapport(partiel: Partial<RapportFaux> & { id: string; dateRapport: Date
 /** L'échéance de départ de la ligne, déjà passée au moment des tests. */
 const ECHEANCE = new Date("2026-01-15T00:00:00Z");
 
+/**
+ * La ligne est-elle EN RETARD, lue par le prédicat du produit ?
+ *
+ * Ces tests affirmaient `statut === "depassee"`. Depuis le retrait de ce
+ * statut (phase A), le retard est une fonction de la date : l'affirmer sur le
+ * statut ne tiendrait plus aucune garantie. On pose donc la question que
+ * l'écran pose — et le statut écrit, lui, ne dit plus que « date arrêtée ou
+ * non ».
+ */
+function ligneEnRetard(): boolean {
+  const v = h.db.verification!;
+  return estVerificationEnRetard(
+    { ...v, archiveLe: v.archiveLe ?? null, libelleObligation: "Vérification" },
+    new Date(),
+  );
+}
+
 beforeEach(() => {
   h.db.rapports = [];
   h.stockage.fichiers.clear();
@@ -293,11 +311,12 @@ describe("uploadRapport — résultat « non vérifiable »", () => {
     expect(res.status).toBe("success");
   });
 
-  it("ne repousse pas l'échéance et la signale comme dépassée", async () => {
+  it("ne repousse pas l'échéance, qui reste en retard, et la repasse à planifier", async () => {
     await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
 
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(h.db.verification?.statut).toBe("depassee");
+    expect(ligneEnRetard()).toBe(true);
+    expect(h.db.verification?.statut).toBe("a_planifier");
   });
 
   it("conserve le rapport et son fichier, sans échéance honorée", async () => {
@@ -426,7 +445,7 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     };
   }
 
-  it("revient à l'échéance que le rapport honorait, et la signale dépassée", async () => {
+  it("revient à l'échéance que le rapport honorait, en retard", async () => {
     ligneRoulee();
     h.db.rapports = [
       rapport({ id: "rap-1", dateRapport: depuisCleJourCivil("2026-06-01"), echeanceHonoree: ECHEANCE }),
@@ -440,7 +459,9 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     // l'ADR-034 la ligne restait à 2027 : le retard était blanchi par la
     // suppression de la pièce qui le justifiait.
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(h.db.verification?.statut).toBe("depassee");
+    expect(ligneEnRetard()).toBe(true);
+    // Plus aucun contrôle derrière elle : aucune date n'est arrêtée.
+    expect(h.db.verification?.statut).toBe("a_planifier");
     // Le fichier n'est libéré qu'après le commit.
     expect(h.stockage.fichiers.size).toBe(0);
   });
@@ -457,7 +478,9 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     // Rapport d'avant N2, sans échéance honorée : la ligne se recalcule depuis
     // le rapport qui reste — mai 2025 + un an, donc dépassée.
     expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2026-05-01"));
-    expect(h.db.verification?.statut).toBe("depassee");
+    expect(ligneEnRetard()).toBe(true);
+    // Un contrôle reste : son échéance suivante est une date arrêtée.
+    expect(h.db.verification?.statut).toBe("planifiee");
   });
 
   it("retirer un rapport ANTIDATÉ ne touche pas la ligne", async () => {
@@ -656,7 +679,7 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
 
       await expect(supprimerRapport("rap-sept")).rejects.toThrow("NEXT_REDIRECT");
       expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-      expect(h.db.verification?.statut).toBe("depassee");
+      expect(ligneEnRetard()).toBe(true);
       expect(h.db.rapports).toEqual([]);
     })();
   });
@@ -686,7 +709,7 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
     expect(h.db.rapports[0].echeanceHonoree).toEqual(ECHEANCE);
     await expect(supprimerRapport("rap-b")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(h.db.verification?.statut).toBe("depassee");
+    expect(ligneEnRetard()).toBe(true);
   });
 
   it("un contrôle daté d'AUJOURD'HUI est accepté", async () => {
@@ -757,9 +780,7 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
       expect(h.db.verification?.datePrevue, `ordre ${ordre.join(" → ")}`).toEqual(
         ECHEANCE,
       );
-      expect(h.db.verification?.statut, `ordre ${ordre.join(" → ")}`).toBe(
-        "depassee",
-      );
+      expect(ligneEnRetard(), `ordre ${ordre.join(" → ")}`).toBe(true);
     }
   });
 
