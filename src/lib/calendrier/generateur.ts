@@ -1234,7 +1234,16 @@ export function reconcilierCalendrier(
       // attester d'un acte dont elle ne porte pas la preuve.
       const prochaine = prochaineEcheance(heritee, g.periodicite);
       datePrevue = prochaine ?? ex.datePrevue;
-      statut = statutCycleOuvert(datePrevue, ex.statut, now);
+      // « planifiée » dès qu'une échéance est calculée depuis un contrôle réel,
+      // comme la branche de ré-ancrage ci-dessus et comme une ligne CRÉÉE depuis
+      // le même héritage. Lire `ex.statut` laissait « à planifier, aucune date
+      // convenue » sur une absorbante déjà en base, alors que sa date venait
+      // d'être posée (revue du 2026-09-14).
+      statut = statutCycleOuvert(
+        datePrevue,
+        prochaine !== null ? "planifiee" : ex.statut,
+        now,
+      );
     } else if (
       ex.statut === "a_planifier" &&
       g.statut === "planifiee" &&

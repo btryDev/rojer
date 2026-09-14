@@ -1981,6 +1981,53 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
 
     const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
     expect(maj?.datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
+    expect(maj?.statut).toBe("depassee");
+  });
+
+  it("une absorbante déjà en base, datée par l'héritage À VENIR, passe « planifiée »", () => {
+    // Revue du 2026-09-14. La branche lisait `ex.statut` : une absorbante
+    // existante « à planifier » recevait sa date héritée et GARDAIT « à
+    // planifier, aucune date convenue » — quand la même ligne, créée depuis
+    // le même héritage dans la même passe, naît « planifiée ». Fragment
+    // contrôlé le 2026-03-01, annuel : échéance 2027-03-01, à venir.
+    const plan = reconcilierCalendrier(
+      [
+        fragmentRealise("v-frag", "frag-vmc", "2026-03-01T00:00:00Z"),
+        ligneExistante({
+          id: "v-tout",
+          obligationId: "tout",
+          equipementId: null,
+          datePrevue: new Date("2030-01-01T00:00:00Z"),
+          statut: "a_planifier",
+          porteUnePreuve: false,
+        }),
+      ],
+      aGenererPourLeTout(),
+      { now: NOW, successions: SUCCESSIONS },
+    );
+
+    const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
+    expect(maj?.datePrevue).toEqual(new Date("2027-03-01T00:00:00Z"));
+    expect(maj?.statut).toBe("planifiee");
+
+    // Et c'est stable : la passe suivante, sur la ligne réalignée, ne
+    // réécrit rien.
+    const suivante = reconcilierCalendrier(
+      [
+        fragmentRealise("v-frag", "frag-vmc", "2026-03-01T00:00:00Z"),
+        ligneExistante({
+          id: "v-tout",
+          obligationId: "tout",
+          equipementId: null,
+          datePrevue: new Date("2027-03-01T00:00:00Z"),
+          statut: "planifiee",
+          porteUnePreuve: false,
+        }),
+      ],
+      aGenererPourLeTout(),
+      { now: NOW, successions: SUCCESSIONS },
+    );
+    expect(suivante.aMettreAJour.find((m) => m.id === "v-tout")).toBeUndefined();
   });
 
   it("sans table de successions, rien n'est repris — le comportement d'avant", () => {

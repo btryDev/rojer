@@ -637,6 +637,29 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      - réfuté : supprimer un rapport sur une ligne archivée la réécrit sans
        garde — comportement de `main`, les prédicats lisent `archiveLe` en
        premier et la ligne ne se lit jamais en retard.
+     **Revue indépendante complète, le même jour** (`main...HEAD`, 99
+     fichiers) — quatre constats, tous confirmés à la lecture, zéro faux
+     positif :
+     - une absorbante DÉJÀ EN BASE qui reprend l'échéance d'une obligation
+       retirée gardait « à planifier » (la branche relisait `ex.statut`), quand
+       la même ligne créée depuis le même héritage naît « planifiée ». Elle
+       passe « planifiée » dès qu'une date est calculée ; stabilité en une
+       passe testée ;
+     - deux suppressions de rapport CONCURRENTES sur la même ligne : la
+       seconde voyait son écriture conditionnée échouer et abandonnait le
+       recul en silence — la ligne gardait l'échéance future d'un rapport
+       disparu, et rien ne la recalait, contrairement à ce que le commentaire
+       promettait. La ligne est désormais verrouillée (`FOR UPDATE`) avant
+       d'être relue, le rapport relu sous le verrou, et un conflit résiduel
+       annule tout au lieu de se taire. Exécuté sur le Postgres local ;
+     - `etaler-echeances-demo` avait perdu son filtre au retrait de la colonne
+       et réécrivait toutes les lignes, échéances roulées et ponctuelles
+       consommées comprises : il ne déplace plus que les lignes ouvertes sans
+       aucune preuve, composées des clauses de `portee.ts` ;
+     - `seed-salaries-demo --annuler` vérifiait la preuve sur une copie à deux
+       témoins et pouvait supprimer une ligne dont le statut réalisé était la
+       seule : il lit `portantUnePreuve()`.
+     Trois mutations, rouges. 2626 tests.
   **Fait le 2026-09-13, avant cette décision :**
   ~~la durée de conservation de `D. 4711-3` à l'écran du registre~~ (badge
   légal, citation et lien relus à la source le 2026-09-01) ; ~~l'annotation de

@@ -33,6 +33,7 @@
 import { PrismaClient } from "@prisma/client";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { estPorteeParSalarie } from "@/lib/referentiels/conformite/types";
+import { portantUnePreuve } from "@/lib/calendrier/portee";
 
 const prisma = new PrismaClient();
 
@@ -222,13 +223,11 @@ async function annuler(etablissementId: string): Promise<void> {
   const ids = salaries.map((s) => s.id);
 
   const avecPreuve = await prisma.verification.findMany({
-    where: {
-      salarieId: { in: ids },
-      OR: [
-        { rapports: { some: {} } },
-        { actions: { some: {} } },
-      ],
-    },
+    // La définition du produit, jamais une copie : la copie d'ici avait perdu
+    // son témoin de réalisation au retrait de `dateRealisee` sans gagner le
+    // statut réalisé qui le remplace, et le `deleteMany` qui suit emportait
+    // une ligne dont le statut était la seule preuve (revue du 2026-09-14).
+    where: { salarieId: { in: ids }, ...portantUnePreuve() },
     select: { id: true, libelleObligation: true },
   });
   if (avecPreuve.length > 0) {

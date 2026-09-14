@@ -353,23 +353,38 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
       etablissementId: true,
       verificationId: true,
       fichierCle: true,
-      dateRapport: true,
-      resultat: true,
-      echeanceHonoree: true,
-      verification: {
-        select: { datePrevue: true, statut: true, periodicite: true },
-      },
     },
   });
   if (!rap) return;
   await assertEtablissementOwnership(rap.etablissementId);
 
   const now = new Date();
-  let conflit = false;
   await prisma.$transaction(async (tx) => {
+    // LA LIGNE EST VERROUILLÉE AVANT TOUTE LECTURE, et c'est ce qui rend le
+    // recul juste sous concurrence (revue du 2026-09-14). Deux suppressions
+    // sur la même ligne — deux onglets, un double clic — lisaient chacune
+    // l'état d'avant l'autre : la seconde voyait son écriture conditionnée
+    // échouer, abandonnait le recul, et la ligne gardait l'échéance future
+    // d'un rapport qui n'existait plus. Le commentaire promettait que la
+    // régénération recalerait la ligne ; elle ne recalcule rien hors
+    // changement de rythme. Verrouillées, les suppressions s'enchaînent, et
+    // chacune relit ce que la précédente a laissé.
+    await tx.$queryRaw`SELECT 1 FROM "Verification" WHERE "id" = ${rap.verificationId} FOR UPDATE`;
+    const ligne = await tx.verification.findUnique({
+      where: { id: rap.verificationId },
+      select: { datePrevue: true, statut: true, periodicite: true },
+    });
+    // Relu sous le verrou, lui aussi : une suppression concurrente a pu
+    // l'emporter déjà, ou transmettre son échéance d'origine à ce rapport.
+    const retire = await tx.rapportVerification.findUnique({
+      where: { id: rapportId },
+      select: { dateRapport: true, resultat: true, echeanceHonoree: true },
+    });
+    if (ligne === null || retire === null) return;
+
     await tx.rapportVerification.delete({ where: { id: rapportId } });
 
-    if (!estResultatRealise(rap.resultat)) return;
+    if (!estResultatRealise(retire.resultat)) return;
 
     // Les rapports réalisés qui restent, du plus ANCIEN au plus récent.
     // `createdAt` départage deux rapports du même jour : sans lui, ni « le
@@ -404,37 +419,37 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
     // rapport qui restera le plus longtemps, donc le moins d'écritures.
     const tete = restants[0] ?? null;
     if (
-      rap.echeanceHonoree !== null &&
+      retire.echeanceHonoree !== null &&
       tete !== null &&
       (tete.echeanceHonoree === null ||
-        tete.echeanceHonoree.getTime() > rap.echeanceHonoree.getTime())
+        tete.echeanceHonoree.getTime() > retire.echeanceHonoree.getTime())
     ) {
       await tx.rapportVerification.update({
         where: { id: tete.id },
-        data: { echeanceHonoree: rap.echeanceHonoree },
+        data: { echeanceHonoree: retire.echeanceHonoree },
       });
     }
 
     const dernier = restants.length > 0 ? restants[restants.length - 1] : null;
     // Un rapport réalisé plus récent (ou du même jour) subsiste : le retiré
     // n'avait pas fait rouler la ligne, elle ne lui doit rien de plus.
-    if (dernier !== null && dernier.dateRapport.getTime() >= rap.dateRapport.getTime()) {
+    if (dernier !== null && dernier.dateRapport.getTime() >= retire.dateRapport.getTime()) {
       return;
     }
 
-    const periodicite = rap.verification.periodicite as Periodicite;
+    const periodicite = ligne.periodicite as Periodicite;
     const cyclique = estCyclique(periodicite);
     // L'échéance qui rouvre : celle qu'engendre le dernier contrôle ENCORE
     // PROUVÉ ; s'il n'en reste aucun, celle que le retiré honorait — c'est-à-dire
     // l'échéance d'origine, que la transmission ci-dessus a gardée en tête de
     // chaîne. À défaut des deux, la ligne garde sa date.
-    let datePrevue = rap.verification.datePrevue;
+    let datePrevue = ligne.datePrevue;
     if (dernier !== null) {
       if (cyclique) {
         datePrevue = prochaineEcheance(dernier.dateRapport, periodicite) ?? datePrevue;
       }
-    } else if (rap.echeanceHonoree !== null) {
-      datePrevue = rap.echeanceHonoree;
+    } else if (retire.echeanceHonoree !== null) {
+      datePrevue = retire.echeanceHonoree;
     }
 
     let statut: StatutVerification;
@@ -450,27 +465,20 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
     const { count } = await tx.verification.updateMany({
       where: {
         id: rap.verificationId,
-        datePrevue: rap.verification.datePrevue,
-        statut: rap.verification.statut,
+        datePrevue: ligne.datePrevue,
+        statut: ligne.statut,
       },
       // Rien d'autre à éteindre : la réalisation ne vit que sur les rapports
       // (ADR-034, N5), retirer le plus récent suffit à la faire reculer.
       data: { datePrevue, statut },
     });
-    // CONFLIT : quelqu'un a fait bouger la ligne entre la lecture et ici — un
-    // dépôt concurrent, une autre suppression. On ne LÈVE PAS : la suppression
-    // du rapport, elle, est légitime et déjà faite, et une exception ici
-    // remonterait en page d'erreur, sans le message, pour un retrait qui a
-    // réussi. Le recul est simplement abandonné ; le calendrier est marqué
-    // pour reprise juste après (`regenererApresMutation`), et la ligne sera
-    // recalée depuis les rapports qui restent.
-    if (count !== 1) conflit = true;
+    // Sous le verrou, la ligne ne peut pas avoir bougé depuis sa relecture.
+    // Si elle l'a fait quand même, on ANNULE TOUT — le rapport reste — plutôt
+    // que d'abandonner le recul en silence : un retrait sans recul laisse une
+    // échéance future sans pièce, et rien ne la recalerait ensuite. Une garde
+    // qui échoue fait du bruit du côté visible.
+    if (count !== 1) throw new LigneModifieeEntreTemps();
   });
-  if (conflit) {
-    console.warn(
-      `[rapports] recul abandonné : la ligne ${rap.verificationId} a changé pendant la suppression du rapport ${rapportId}`,
-    );
-  }
 
   // La base a tranché : on peut libérer le fichier.
   await getStorage().delete(rap.fichierCle).catch(() => {});

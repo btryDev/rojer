@@ -177,6 +177,14 @@ const h = vi.hoisted(() => {
   // La transaction ANNULE, comme en base : sans restauration, un test ne peut
   // pas affirmer qu'un dépôt refusé ne laisse pas un rapport orphelin — il
   // décrirait le faux client, pas la garantie.
+  /** Le verrou de ligne de `supprimerRapport` : sans concurrence dans un faux
+   *  client, il n'a rien à attendre. Les appels sont comptés, pour qu'un test
+   *  puisse affirmer que la ligne est verrouillée AVANT d'être relue. */
+  const verrous: string[] = [];
+  prisma.$queryRaw = async (morceaux: TemplateStringsArray) => {
+    verrous.push(morceaux.join("?"));
+    return [];
+  };
   prisma.$transaction = async (arg: unknown) => {
     if (typeof arg !== "function") return Promise.all(arg as Promise<unknown>[]);
     const avant = {
@@ -192,7 +200,13 @@ const h = vi.hoisted(() => {
     }
   };
 
-  return { db, prisma, stockage, genererCalendrier: vi.fn(async () => ({})) };
+  return {
+    db,
+    prisma,
+    stockage,
+    verrous,
+    genererCalendrier: vi.fn(async () => ({})),
+  };
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
@@ -838,15 +852,6 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
   });
 
-  it("un dépôt éteint la colonne gelée d'une ligne d'avant l'ADR-034", async () => {
-    // Tant qu'elle porte une date de réalisation, les prédicats d'avant N3 la
-    // tiennent pour « jamais en retard ». Le dépôt qui la fait rouler doit
-    // donc l'éteindre, sans attendre la régénération — qui peut échouer.
-
-    await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
-
-  });
-
   it("un dépôt refusé pour conflit ne laisse aucun rapport orphelin", async () => {
     // La transaction annule : sans cela, le registre garderait une pièce que
     // la ligne ne connaît pas.
@@ -867,10 +872,32 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
     expect(h.db.rapports).toEqual([]);
   });
 
-  it("une suppression concurrente ne fait pas échouer le retrait", async () => {
-    // Le rapport est supprimé, la ligne a bougé entre-temps : on abandonne le
-    // recul plutôt que de lever — l'erreur remonterait en page d'erreur sur un
-    // retrait qui a réussi, et le calendrier est recalé juste après.
+  it("la suppression verrouille la ligne avant de la relire", async () => {
+    // Revue du 2026-09-14. Deux suppressions concurrentes sur la même ligne
+    // lisaient chacune l'état d'avant l'autre ; la seconde abandonnait son
+    // recul, et la ligne gardait l'échéance future d'un rapport disparu. Le
+    // verrou `FOR UPDATE` les enchaîne. Un faux client n'a pas de concurrence :
+    // ce test tient la présence du verrou, sur la bonne table.
+    h.verrous.length = 0;
+    h.db.rapports = [
+      rapport({
+        id: "rap-1",
+        dateRapport: depuisCleJourCivil("2026-06-01"),
+        echeanceHonoree: ECHEANCE,
+      }),
+    ];
+
+    await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
+
+    expect(h.verrous).toHaveLength(1);
+    expect(h.verrous[0]).toContain('FROM "Verification"');
+    expect(h.verrous[0]).toContain("FOR UPDATE");
+  });
+
+  it("si la ligne a bougé malgré le verrou, rien n'est retiré : le rapport reste", async () => {
+    // Le recul abandonné en silence laissait une échéance future sans pièce,
+    // et aucune régénération ne la recalait. Mieux vaut refuser le retrait —
+    // l'utilisateur recommence sur l'état à jour — que perdre un retard.
     h.db.rapports = [
       rapport({
         id: "rap-1",
@@ -883,11 +910,42 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
     (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
       async () => ({ count: 0 });
 
-    await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
+    await expect(supprimerRapport("rap-1")).rejects.toThrow(
+      "Cette échéance a été modifiée",
+    );
 
     (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
       original;
-    expect(h.db.rapports).toEqual([]);
-    expect(h.genererCalendrier).toHaveBeenCalled();
+    expect(h.db.rapports.map((r) => r.id)).toEqual(["rap-1"]);
+  });
+
+  it("un rapport déjà retiré par une suppression concurrente ne fait rien", async () => {
+    // Relu sous le verrou : la suppression arrivée en second trouve le
+    // rapport parti, et ne rejoue ni la suppression ni le recul.
+    h.db.rapports = [
+      rapport({
+        id: "rap-1",
+        dateRapport: depuisCleJourCivil("2026-06-01"),
+        echeanceHonoree: ECHEANCE,
+      }),
+    ];
+    const lecture = (h.prisma as { rapportVerification: { findUnique: unknown } })
+      .rapportVerification.findUnique as (a: unknown) => Promise<unknown>;
+    let appels = 0;
+    (h.prisma as { rapportVerification: { findUnique: unknown } }).rapportVerification.findUnique =
+      async (a: unknown) => {
+        appels += 1;
+        // Première lecture (hors transaction) : le rapport existe. Relecture
+        // sous le verrou : une autre suppression l'a emporté.
+        return appels === 1 ? lecture(a) : null;
+      };
+    const avant = { ...h.db.verification! };
+
+    await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
+
+    (h.prisma as { rapportVerification: { findUnique: unknown } }).rapportVerification.findUnique =
+      lecture;
+    expect(h.db.rapports.map((r) => r.id)).toEqual(["rap-1"]);
+    expect(h.db.verification).toEqual(avant);
   });
 });

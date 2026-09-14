@@ -15,19 +15,23 @@
 // les cartes, et deux exécutions donnent le même dossier — ce qui compte
 // quand on prépare une démonstration qu'on rejouera.
 //
-// Ce que le script ne touche pas : les occurrences **réalisées**. Leur date
-// prévue appartient à l'historique, et le registre de sécurité s'appuie
-// dessus.
+// Ce que le script ne touche pas : toute ligne qui porte une preuve (rapport,
+// action, statut réalisé) ou qui ne s'applique plus. Son échéance ouverte a
+// été posée par un dépôt, ou elle appartient à l'historique (`jamaisControlees`).
 //
-// Réversible : `--annuler` ramène toutes les occurrences non réalisées à la
-// date d'origine, qui est la même pour toutes par construction.
+// Réversible : `--annuler` ramène ces mêmes lignes à la date d'origine, qui
+// est la même pour toutes par construction.
 //
 //   pnpm etaler:echeances maak
 //   pnpm etaler:echeances maak --annuler
 
 import { createHash } from "node:crypto";
-import { PrismaClient } from "@prisma/client";
+import { type Prisma, PrismaClient } from "@prisma/client";
 import { cleDeLigne } from "@/lib/calendrier/generateur";
+import {
+  echeancesAnnoncables,
+  portantUnePreuve,
+} from "@/lib/calendrier/portee";
 
 const ETABLISSEMENTS = {
   paloa: "cmocnriid0002rlti0taekm4y",
@@ -62,6 +66,20 @@ function decalage(cle: string): number {
   return JOUR_MIN + (brut % (JOUR_MAX - JOUR_MIN + 1));
 }
 
+/**
+ * Les seules lignes que l'étalement a le droit de déplacer : ouvertes,
+ * attendues, et sans aucune preuve. Leur date n'est qu'une date de génération.
+ *
+ * Le filtre d'origine était `dateRealisee: null`. Au retrait de la colonne
+ * (ADR-034, N5), il avait été ôté sans être remplacé : l'étalement et
+ * `--annuler` réécrivaient TOUTES les lignes — l'échéance ouverte qu'un dépôt
+ * venait de rouler, et la date d'une ponctuelle consommée, qui est sa seule
+ * date (revue du 2026-09-14). Composé des clauses du produit, jamais recopié.
+ */
+function jamaisControlees(): Prisma.VerificationWhereInput {
+  return { AND: [echeancesAnnoncables(), { NOT: portantUnePreuve() }] };
+}
+
 function auJour(n: number): Date {
   const d = new Date(AUJOURDHUI);
   d.setUTCDate(d.getUTCDate() + n);
@@ -73,7 +91,7 @@ async function etaler(cible: Cible): Promise<void> {
   const etablissementId = ETABLISSEMENTS[cible];
 
   const occurrences = await prisma.verification.findMany({
-    where: { etablissementId },
+    where: { etablissementId, ...jamaisControlees() },
     select: {
       id: true,
       obligationId: true,
@@ -104,7 +122,7 @@ async function etaler(cible: Cible): Promise<void> {
 async function annuler(cible: Cible): Promise<void> {
   const etablissementId = ETABLISSEMENTS[cible];
   const r = await prisma.verification.updateMany({
-    where: { etablissementId },
+    where: { etablissementId, ...jamaisControlees() },
     data: { datePrevue: DATE_ORIGINE },
   });
   console.log(`${cible} : ${r.count} échéance(s) ramenée(s) au 10/08/2026.`);
