@@ -671,6 +671,17 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        migration `20260914140000_a_planifier_avec_controle` remet l'existant
        au modèle (rejouée deux fois sur le Docker local, six rangées : une
        réécrite, cinq intouchées). Quatre mutations rouges. 2639 tests.
+       **Relecture de contrôle** : tout fermé, aucune régression. Deux
+       affirmations ci-dessus sont trop larges et restent OUVERTES, mineures :
+       les widgets Semaine et Météo posent encore une ligne « à planifier » À
+       VENIR sur son jour (antérieur au lot, compteurs justes), et « À
+       planifier » / « à dater » subsistent pour les lignes non en retard. Trois
+       autres écarts mineurs, écrits pour un prochain lot : l'en-tête du mois
+       du calendrier ne compte pas une ligne en retard sans date (ni « datée »
+       ni « à planifier ») ; le widget « Prochaine échéance » filtre après la
+       coupe à cinq et peut dire « sans échéance connue » quand cinq lignes
+       sans échéance précèdent une vraie ; la vue par équipement désigne le
+       retard daté, la fiche le retard sans date, pour le même appareil.
        **Laissé ouvert, écrit** — hors du chantier, chacun son lot :
        l'échéance d'un titre de salarié vit en deux endroits
        (`TitreSalarie.echeanceLe` pour la page Équipe, `Verification.datePrevue`

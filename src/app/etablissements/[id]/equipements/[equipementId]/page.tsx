@@ -204,7 +204,7 @@ export default async function EquipementDetailPage({
           ? `Un écart reste à lever ${libelleDelai(tete, maintenant, "phrase")}`
           : tete.date
             ? `Une vérification est attendue ${libelleDelai(tete, maintenant, "phrase")}`
-            : `Une vérification est due, et ${libelleDelai(tete, maintenant, "phrase")}`
+            : "Une vérification est due, et aucune n'est enregistrée"
       }. ${trace}`
     : aFaire.length > 0
       ? `Des vérifications sont rattachées à cet appareil, mais aucune date n'a encore été convenue. ${trace}`
