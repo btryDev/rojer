@@ -45,6 +45,7 @@ import {
 } from "@/lib/referentiels/types-communs";
 import { estCyclique, prochaineEcheance } from "./periodicite";
 import { estEnRetard, estStatutRealise } from "@/lib/dates/retard";
+import { echeanceDuTitre } from "@/lib/salaries/echeance";
 import { statutDepuisResultat } from "@/lib/rapports/schema";
 import type {
   ObligationApplicable,
@@ -579,7 +580,12 @@ export function genererVerificationsDepuisTitres(
     if (!estPorteeParSalarie(o)) continue;
 
     for (const t of liste) {
-      const echeance = t.echeanceLe ?? prochaineEcheance(t.delivreLe, o.periodicite);
+      // LA définition de l'échéance d'un titre, partagée avec l'écran Équipe
+      // (`salaries/echeance.ts`). Elle était écrite ici en ligne, et la page
+      // Équipe en tenait une autre — `echeanceLe` seul — : une VIP sans date de
+      // fin était en retard au calendrier et « sans terme écrit » sur la fiche
+      // de la personne (relecture système du 2026-09-14).
+      const echeance = echeanceDuTitre(t, o.periodicite);
       // Pas d'échéance calculable : l'obligation n'en porte pas (état
       // permanent). Le titre existe, il n'y a simplement pas de rendez-vous à
       // inscrire — inventer une date serait pire que n'en afficher aucune.

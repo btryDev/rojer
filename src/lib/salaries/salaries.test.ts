@@ -95,15 +95,20 @@ describe("classerTitre", () => {
     // Le cas de l'habilitation électrique : le Code renvoie à des modalités
     // qu'il qualifie lui-même de recommandées (ADR-023 § 6). Le peindre en
     // rouge inventerait une non-conformité.
-    expect(classerTitre(null, now)).toBe("aPlanifier");
+    const delivreLe = new Date("2020-03-03T12:00:00.000Z");
+    expect(classerTitre({ delivreLe, echeanceLe: null }, "autre", now)).toBe("aPlanifier");
   });
 
   it("met en retard une échéance passée", () => {
-    expect(classerTitre(new Date("2026-03-01T12:00:00.000Z"), now)).toBe("enRetard");
+    const delivreLe = new Date("2021-03-01T12:00:00.000Z");
+    const echeanceLe = new Date("2026-03-01T12:00:00.000Z");
+    expect(classerTitre({ delivreLe, echeanceLe }, "autre", now)).toBe("enRetard");
   });
 
   it("laisse au loin une échéance lointaine", () => {
-    expect(classerTitre(new Date("2027-03-03T12:00:00.000Z"), now)).toBe("lointain");
+    const delivreLe = new Date("2022-03-03T12:00:00.000Z");
+    const echeanceLe = new Date("2027-03-03T12:00:00.000Z");
+    expect(classerTitre({ delivreLe, echeanceLe }, "autre", now)).toBe("lointain");
   });
 });
 

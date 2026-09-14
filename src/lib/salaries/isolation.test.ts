@@ -347,6 +347,44 @@ describe("le propriétaire lit son propre dossier", () => {
     expect(await compterTitresEnRetard(ETAB_A, NOW)).toBe(1);
   });
 
+  it("compterTitresEnRetard voit une VIP échue sans date de fin saisie", async () => {
+    // Relecture système du 2026-09-14. Le `where` portait `echeanceLe: { not:
+    // null }` : une visite quinquennale délivrée le 1er juin 2020, sans
+    // « valable jusqu'au », sortait de la requête avant d'être classée, et le
+    // badge du rail valait 0 quand le calendrier la comptait en retard depuis
+    // le 1er juin 2025. L'habilitation voisine, sans durée écrite, doit rester
+    // hors du compte : c'est la contre-épreuve qui empêche de « réparer » en
+    // comptant tout titre sans date.
+    h.db.titres.push(
+      {
+        id: "titre-a-vip",
+        salarieId: "sal-a",
+        obligationId: "sante-travail-salarie-vip",
+        delivreLe: new Date("2020-06-01T12:00:00.000Z"),
+        echeanceLe: null,
+        note: null,
+      },
+      {
+        id: "titre-a-habilitation",
+        salarieId: "sal-a",
+        obligationId: "elec-salarie-habilitation",
+        delivreLe: new Date("2020-06-01T12:00:00.000Z"),
+        echeanceLe: null,
+        note: null,
+      },
+    );
+    expect(await compterTitresEnRetard(ETAB_A, NOW)).toBe(2);
+
+    // Et la fiche dit la même chose que le badge, sur la même personne.
+    const fiche = await getSalarie(ETAB_A, "sal-a", NOW);
+    const etats = new Map(fiche?.titres.map((t) => [t.id, t.etat]));
+    expect(etats.get("titre-a-vip")).toBe("enRetard");
+    expect(etats.get("titre-a-habilitation")).toBe("aPlanifier");
+    expect(fiche?.titres.find((t) => t.id === "titre-a-vip")?.echeance).toEqual(
+      new Date("2025-06-01T12:00:00.000Z"),
+    );
+  });
+
   it("libellesTitresDeclares décrit AUSSI le titre d'une personne partie", async () => {
     // Sans `actif: true`, délibérément (art. 17.3.b) : le traitement se
     // poursuit après le départ, et le texte d'information remis aux salariés

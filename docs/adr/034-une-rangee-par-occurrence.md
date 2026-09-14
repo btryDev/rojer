@@ -683,10 +683,19 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        sans échéance précèdent une vraie ; la vue par équipement désigne le
        retard daté, la fiche le retard sans date, pour le même appareil.
        **Laissé ouvert, écrit** — hors du chantier, chacun son lot :
-       l'échéance d'un titre de salarié vit en deux endroits
+       ~~l'échéance d'un titre de salarié vit en deux endroits
        (`TitreSalarie.echeanceLe` pour la page Équipe, `Verification.datePrevue`
        pour le calendrier et le score : une VIP de 2020 sans date de fin est
-       « en retard » au calendrier et « à planifier » sur Équipe) ; la
+       « en retard » au calendrier et « à planifier » sur Équipe)~~ — fermé
+       sur la branche `lot/echeance-titres-salaries` : une fonction pure,
+       `echeanceDuTitre` (`src/lib/salaries/echeance.ts` — la date saisie, sinon
+       la délivrance plus la périodicité par `prochaineEcheance`, sinon rien),
+       lue par le générateur, par `classerTitre` — qui prend désormais le titre
+       et son rythme, jamais une date nue — et par `compterTitresEnRetard`, dont
+       le filtre SQL `echeanceLe: { not: null }` écartait les VIP du badge du
+       rail ; la fiche d'une personne affiche l'échéance calculée et dit
+       qu'elle l'est. Aucune migration ; la
+       page Équipe, sa carte et le badge disent le retard du calendrier ; la
        « prochaine échéance » d'un appareil se calcule deux fois (tableau de
        bord sans les retards, vue équipement avec) ; la barre « couvert » du
        tableau de bord ne lit que le dernier rapport. **Décisions possibles,

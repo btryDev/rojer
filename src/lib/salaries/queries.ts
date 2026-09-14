@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
+import { estEnRetard } from "@/lib/dates/retard";
+import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { titreParId } from "./catalogue";
+import { echeanceDuTitre, type DatesDuTitre } from "./echeance";
 
 /**
  * Le prédicat d'appartenance des lectures de ce module (ADR-005).
@@ -26,19 +29,39 @@ async function portee() {
  * L'état d'un titre, tel que l'écran l'affiche.
  *
  * `aPlanifier` a ici un sens précis, et il n'est pas « en retard » : un titre
- * sans échéance écrite. L'habilitation électrique en est le cas type — le Code
- * renvoie à des modalités qu'il qualifie lui-même de recommandées, et le
- * produit ne décrète pas un rendez-vous là où le texte n'en pose aucun
- * (ADR-023 § 6). Le peindre en rouge inventerait une non-conformité.
+ * SANS ÉCHÉANCE — ni date de fin saisie, ni durée écrite au texte.
+ * L'habilitation électrique en est le cas type — le Code renvoie à des
+ * modalités qu'il qualifie lui-même de recommandées, et le produit ne décrète
+ * pas un rendez-vous là où le texte n'en pose aucun (ADR-023 § 6). Le peindre
+ * en rouge inventerait une non-conformité.
  */
 export type EtatTitre = RegistreLigne;
 
+/**
+ * Classe un titre sur SON échéance — celle que le calendrier inscrit.
+ *
+ * La signature prend le titre et la périodicité, jamais une date nue, et c'est
+ * délibéré. Elle prenait `echeanceLe` : chaque appelant passait la date saisie,
+ * et une VIP quinquennale délivrée en 2020 sans date de fin sortait « à
+ * planifier » ici quand le générateur, qui calcule `delivreLe + cinq ans`, la
+ * mettait en retard au calendrier et au score (relecture système du
+ * 2026-09-14). Une date nue laisse l'appelant choisir laquelle ; le titre et
+ * son rythme ne laissent que `echeanceDuTitre`, et un appelant qui repasserait
+ * `t.echeanceLe` ne compile plus.
+ *
+ * Le classement lui-même est `classerDate`, la fonction partagée qui repose sur
+ * `estEnRetard` et `estDansLesProchainsJours` (`lib/dates/retard.ts`) : une
+ * échéance datée d'aujourd'hui n'est pas en retard, sur un titre comme sur un
+ * appareil.
+ */
 export function classerTitre(
-  echeanceLe: Date | null,
+  titre: DatesDuTitre,
+  periodicite: Periodicite | undefined,
   now: Date,
 ): EtatTitre {
-  if (echeanceLe === null) return "aPlanifier";
-  return classerDate(echeanceLe, now);
+  const echeance = echeanceDuTitre(titre, periodicite);
+  if (echeance === null) return "aPlanifier";
+  return classerDate(echeance, now);
 }
 
 const SELECTION_TITRE = {
@@ -72,11 +95,14 @@ export async function listerEquipe(etablissementId: string, now: Date) {
 
   return salaries.map((s) => ({
     ...s,
-    titres: s.titres.map((t) => ({
-      ...t,
-      libelle: titreParId(t.obligationId)?.libelle ?? t.obligationId,
-      etat: classerTitre(t.echeanceLe, now),
-    })),
+    titres: s.titres.map((t) => {
+      const o = titreParId(t.obligationId);
+      return {
+        ...t,
+        libelle: o?.libelle ?? t.obligationId,
+        etat: classerTitre(t, o?.periodicite, now),
+      };
+    }),
   }));
 }
 
@@ -116,7 +142,14 @@ export async function getSalarie(
         /** Une pièce médicale ne s'affiche jamais avec un dépôt de fichier. */
         pieceMedicale: o?.pieceMedicale ?? false,
         referencesLegales: o?.referencesLegales ?? [],
-        etat: classerTitre(t.echeanceLe, now),
+        /**
+         * L'échéance que le calendrier inscrit : saisie, ou calculée depuis la
+         * délivrance. `null` = aucune. La fiche l'affiche plutôt que de la
+         * recalculer — et `echeanceLe` reste lisible à côté pour ce qu'il est,
+         * la date de fin portée par la pièce.
+         */
+        echeance: echeanceDuTitre(t, o?.periodicite),
+        etat: classerTitre(t, o?.periodicite, now),
       };
     }),
   };
@@ -125,9 +158,17 @@ export async function getSalarie(
 /**
  * Le compteur du rail : les titres qui appellent un geste.
  *
- * `aPlanifier` n'y entre pas — un titre sans terme écrit n'est pas en attente
+ * `aPlanifier` n'y entre pas — un titre sans échéance n'est pas en attente
  * de quelque chose, il n'a simplement pas de rendez-vous. Le compter
  * afficherait une pastille rouge permanente que rien ne peut éteindre.
+ *
+ * LE FILTRE `echeanceLe: { not: null }` EST PARTI, et c'était lui le défaut.
+ * Il écartait en SQL tous les titres sans date de fin saisie — y compris ceux
+ * dont le texte écrit la durée, et que le calendrier met bel et bien en retard :
+ * le badge du rail valait zéro sur une VIP échue depuis un an. L'échéance ne se
+ * décide pas en base, elle a besoin de la périodicité, qui vit au référentiel
+ * TypeScript (ADR-003). D'où la lecture de `delivreLe` et `obligationId`, et le
+ * filtre en mémoire — quelques titres par établissement.
  */
 export async function compterTitresEnRetard(
   etablissementId: string,
@@ -137,13 +178,13 @@ export async function compterTitresEnRetard(
   const titres = await prisma.titreSalarie.findMany({
     where: {
       salarie: { etablissementId, actif: true, etablissement },
-      echeanceLe: { not: null },
     },
-    select: { echeanceLe: true },
+    select: { obligationId: true, delivreLe: true, echeanceLe: true },
   });
-  return titres.filter(
-    (t) => t.echeanceLe !== null && classerDate(t.echeanceLe, now) === "enRetard",
-  ).length;
+  return titres.filter((t) => {
+    const echeance = echeanceDuTitre(t, titreParId(t.obligationId)?.periodicite);
+    return echeance !== null && estEnRetard(echeance, now);
+  }).length;
 }
 
 export type SalarieDeLaListe = Awaited<ReturnType<typeof listerEquipe>>[number];

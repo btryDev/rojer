@@ -216,9 +216,21 @@ export default async function SalarieDetailPage({
                         </p>
                         <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                           Délivré le {formaterDateLongueFr(t.delivreLe)}
+                          {/* TROIS CAS, ET LE DEUXIÈME MANQUAIT. La ligne
+                              disait « aucune date de fin portée sur le titre »
+                              dès que `echeanceLe` était vide — y compris sur
+                              une VIP dont le calendrier inscrivait bel et bien
+                              la visite suivante, calculée depuis la
+                              délivrance. L'échéance affichée est désormais
+                              celle de `echeanceDuTitre`, la même que le
+                              calendrier, et la phrase dit d'où elle vient :
+                              une date calculée sur un plafond légal ne se
+                              présente pas comme la date de la pièce. */}
                           {t.echeanceLe
                             ? ` · valable jusqu'au ${formaterDateLongueFr(t.echeanceLe)}`
-                            : " · aucune date de fin portée sur le titre"}
+                            : t.echeance
+                              ? ` · aucune date de fin portée sur le titre, échéance calculée au ${formaterDateLongueFr(t.echeance)} d'après la durée écrite dans le texte`
+                              : " · aucune date de fin portée sur le titre"}
                         </p>
                         {t.note && (
                           <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
