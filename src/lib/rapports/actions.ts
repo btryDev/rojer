@@ -33,8 +33,14 @@ export type UploadRapportState =
  * Levée quand la ligne de suivi a changé entre la lecture et l'écriture — un
  * dépôt ou une suppression concurrents l'ont fait rouler. La transaction est
  * annulée ; rien n'est écrit, l'utilisateur recommence sur l'état à jour.
+ *
+ * NON EXPORTÉE, et c'est une contrainte de Next, pas un choix : un module
+ * `"use server"` n'exporte que des fonctions async. L'`export class` posé au
+ * N2 faisait rejeter tout le module par `next build` — « The module has no
+ * exports at all » —, et chaque déploiement échouait depuis le 2026-09-11,
+ * sans que `tsc` ni la suite de tests ne le voient.
  */
-export class LigneModifieeEntreTemps extends Error {
+class LigneModifieeEntreTemps extends Error {
   constructor() {
     super(
       "Cette échéance a été modifiée pendant l'enregistrement. Rechargez la page et recommencez.",
