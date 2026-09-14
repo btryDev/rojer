@@ -214,6 +214,9 @@ export type DashboardBundle = {
    * les comptes du widget les gardent (`BarresAnnee`).
    */
   barsSansEcheance: BarresAnnee["sansEcheance"];
+  /** Les retards DATÉS d'années passées, comptés dans l'année en cours
+   *  (`BarresAnnee`) : aucune barre de l'année ne les porte. */
+  barsRetardsAnterieurs: number;
   /** Date de référence, calculée côté serveur : garantit un rendu
    *  déterministe (pas d'écart d'hydratation) et des tests reproductibles. */
   aujourdhui: Date;

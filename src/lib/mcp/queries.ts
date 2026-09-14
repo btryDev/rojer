@@ -340,7 +340,7 @@ export type EtatVerification =
    * L'obligation ne s'applique plus ; la ligne n'est conservée que pour la
    * preuve qu'elle porte (ADR-012). C'est un FAIT de l'application, pas une
    * qualification juridique — les instructions du serveur l'interdisent — et
-   * il fallait le rendre : sans lui, une ligne archivée gelée sur `depassee`
+   * il fallait le rendre : sans lui, une ligne archivée à date passée
    * était restituée « en retard » à un assistant, qui le répétait au
    * dirigeant sur une obligation éteinte.
    */
@@ -573,11 +573,15 @@ export async function listerVerifications(
   // ÉCHÉANCE CONNUE d'abord, comme aux PDF (`parEcheanceImprimee`) : triées
   // sur `datePrevue` brute, elles s'intercalaient à leur date de génération,
   // que l'assistant ne reçoit pas (relecture système du 2026-09-14).
+  // Une ligne éteinte n'a pas d'échéance connue non plus (`aUnRendezVous`),
+  // mais elle n'est pas « due, jamais faite » : elle garde sa place de date.
+  const enTete = (v: VerificationLue) =>
+    !v.echeanceConnue && v.etat !== "ne_s_applique_plus";
   lues.sort((a, b) =>
-    a.echeanceConnue !== b.echeanceConnue
-      ? a.echeanceConnue
-        ? 1
-        : -1
+    enTete(a) !== enTete(b)
+      ? enTete(a)
+        ? -1
+        : 1
       : a.datePrevue.getTime() - b.datePrevue.getTime(),
   );
 

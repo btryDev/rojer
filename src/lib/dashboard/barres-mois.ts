@@ -20,14 +20,17 @@ export type BarMois = {
 };
 
 /**
- * Les douze mois, et ce qu'aucun mois ne porte : les lignes SANS ÉCHÉANCE
- * CONNUE de l'année (`aUnRendezVous`), rangées comme elles l'auraient été sur
- * une barre. Elles ne se dessinent pas ; elles se comptent — un retard ne
- * sort pas d'un compte faute de mois.
+ * Les douze mois, et ce qu'aucun mois ne porte — qui ne se dessine pas, mais
+ * se compte, car un retard ne sort pas d'un compte faute de mois :
+ *  · `sansEcheance` — les lignes SANS ÉCHÉANCE CONNUE de l'année
+ *    (`aUnRendezVous`), plus, sur l'année en cours, celles d'avant en retard ;
+ *  · `retardsAnterieurs` — sur l'année en cours, les retards DATÉS d'une année
+ *    passée. Zéro pour toute autre année.
  */
 export type BarresAnnee = {
   mois: BarMois[];
   sansEcheance: { aVenir: number; retard: number };
+  retardsAnterieurs: number;
 };
 
 /**
@@ -79,6 +82,7 @@ export function repartirParMois(
     retard: 0,
   }));
   const sansEcheance = { aVenir: 0, retard: 0 };
+  let retardsAnterieurs = 0;
 
   const poser = (date: Date, segment: "couvert" | "aVenir" | "retard") => {
     const c = composantesCiviles(date);
@@ -113,26 +117,30 @@ export function repartirParMois(
       // retard » à l'état vide « Le calendrier se remplit… » sur un dossier
       // neuf, sous un bandeau qui annonçait 12 retards (relecture,
       // 2026-09-14). Même année que si elle avait été posée.
+      // UN RETARD D'UNE ANNÉE PASSÉE EST DÛ MAINTENANT. Vu depuis l'année en
+      // cours, il se compte dans cette année — hors des barres, qui ne
+      // montrent que ses douze mois. Sans ce report, l'anneau disait « 0 en
+      // retard » sous un bandeau « 1 en retard » pour un extincteur dont
+      // l'échéance d'octobre dernier est manquée : le cas le plus courant
+      // d'une ligne roulée (relecture système, 2026-09-14).
+      const anneeLue = composantesCiviles(lec.date).annee;
+      const retardReporte =
+        segment === "retard" &&
+        anneeLue < annee &&
+        annee === composantesCiviles(now).annee;
       if (!aUnRendezVous(v, now)) {
-        // Son année est celle de sa génération… sauf pour un RETARD vu depuis
-        // l'année en cours : sans date, il n'a aucun mois où rester, et il est
-        // dû MAINTENANT. Généré l'an dernier, il n'était compté nulle part —
-        // ni sur les barres d'une année que le widget ne montre pas, ni dans
-        // l'anneau de cette année (relecture système, 2026-09-14). Un retard
-        // DATÉ de l'an dernier, lui, garde son mois.
-        const anneeLue = composantesCiviles(lec.date).annee;
-        const retardReporte =
-          segment === "retard" &&
-          anneeLue < annee &&
-          annee === composantesCiviles(now).annee;
         if (anneeLue === annee || retardReporte) {
           sansEcheance[segment] += 1;
         }
+        continue;
+      }
+      if (retardReporte) {
+        retardsAnterieurs += 1;
         continue;
       }
       poser(lec.date, segment);
     }
   }
 
-  return { mois: buckets, sansEcheance };
+  return { mois: buckets, sansEcheance, retardsAnterieurs };
 }

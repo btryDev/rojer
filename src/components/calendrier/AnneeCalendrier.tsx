@@ -134,8 +134,6 @@ export function AnneeCalendrier({
     anneesRegle.findIndex((a) => a.annee === anneeRegle),
   );
   const regle = anneesRegle[idxRegle];
-  // L'année FEUILLETÉE, comme le total daté voisin (`sansDateDeLAnnee`).
-  const sansDate = sansDateDeLAnnee(regle.mois);
 
   // Les douze mois de l'année affichée, cartes et creux mêlés : un mois
   // sans échéance se dit d'un mot au lieu de disparaître — l'année se lit
@@ -184,6 +182,14 @@ export function AnneeCalendrier({
     (n, m) => n + m.enRetard + (m.retardSansDate ?? 0),
     0,
   );
+  // La pastille « sans date » : l'année FEUILLETÉE, comme le total daté
+  // voisin — et, sur l'année en cours, les retards sans date des années
+  // passées, que la couture ci-dessus remonte sur cette page et que l'anneau
+  // du tableau de bord compte aussi dans l'année en cours (relecture
+  // système, 2026-09-14). Une seule règle pour la même ligne.
+  const sansDate =
+    sansDateDeLAnnee(regle.mois) +
+    moisAnterieursEnRetard.reduce((n, m) => n + (m.retardSansDate ?? 0), 0);
   const nbCartesPassees = elementsPasses.reduce(
     (n, e) => n + (e.type === "carte" ? 1 : 0),
     0,

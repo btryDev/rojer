@@ -394,10 +394,13 @@ export async function compterObligationsParMois(
       // exclure qu'un événement poserait dans l'année.
       OR: [
         { datePrevue: { gte: debut, lt: fin } },
-        // Une ligne SANS ÉCHÉANCE CONNUE générée avant l'année : en retard,
-        // `repartirParMois` la compte dans l'année en cours. Sans cette
-        // branche, la requête l'écartait avant qu'on puisse la compter.
-        { statut: "a_planifier", datePrevue: { lt: debut } },
+        // Un RETARD d'une année passée, daté ou non : `repartirParMois` le
+        // compte dans l'année en cours, où il est dû. Sans cette branche, la
+        // requête l'écartait avant qu'on puisse le compter — et l'anneau
+        // taisait ce que le bandeau annonçait. La clause partagée « attendue,
+        // ouverte, datée avant » (`urgenceSeule`), composée et non recopiée ;
+        // un sur-ensemble, que `repartirParMois` trie.
+        urgenceSeule(debut),
         // Une ligne couverte dans l'année : un rapport réalisé y est daté
         // (ADR-034 — la réalisation vit sur le rapport, plus sur la ligne).
         {

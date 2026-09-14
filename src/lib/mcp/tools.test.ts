@@ -271,6 +271,27 @@ describe("équipements et calendrier", () => {
     expect(rang("Contrôle daté A")).toBeLessThan(rang("Contrôle daté B"));
   });
 
+  it("ne range pas une obligation éteinte en tête avec les lignes sans échéance", async () => {
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({ libelleObligation: "Contrôle daté A", datePrevue: jour("2026-07-01") }),
+      verif({
+        libelleObligation: "Obligation éteinte",
+        datePrevue: jour("2026-07-20"),
+        archiveLe: jour("2026-07-25"),
+      }),
+      verif({
+        libelleObligation: "Contrôle sans date",
+        statut: "a_planifier",
+        datePrevue: jour("2026-07-05"),
+      }),
+    ]);
+
+    const texte = await outil("verifications").executer(ctx, {});
+    const rang = (s: string) => texte.indexOf(s);
+    expect(rang("Contrôle sans date")).toBeLessThan(rang("Contrôle daté A"));
+    expect(rang("Contrôle daté A")).toBeLessThan(rang("Obligation éteinte"));
+  });
+
   it("lit les équipements de l'établissement de la session", async () => {
     await outil("equipements").executer(ctx, {});
     expect(prismaMock.equipement.findMany).toHaveBeenCalledWith(

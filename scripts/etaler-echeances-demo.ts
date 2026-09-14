@@ -19,14 +19,16 @@
 // action, statut réalisé) ou qui ne s'applique plus. Son échéance ouverte a
 // été posée par un dépôt, ou elle appartient à l'historique (`jamaisControlees`).
 //
-// Réversible, à une exception près : `--annuler` ramène ces lignes à la date
-// d'origine, qui est la même pour toutes par construction, et à « à
-// planifier » (voir `lignesDEquipementOuDEtablissement`).
+// Réversible : `--annuler` rend aux lignes déplacées leur date d'origine et
+// « à planifier », d'après le journal que l'étalement a écrit (voir
+// `lignesAEtaler`). À lancer depuis la racine du dépôt.
 //
 //   pnpm etaler:echeances maak
 //   pnpm etaler:echeances maak --annuler
 
 import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { cleDeLigne } from "@/lib/calendrier/generateur";
 import {
@@ -40,10 +42,6 @@ const ETABLISSEMENTS = {
 } as const;
 
 type Cible = keyof typeof ETABLISSEMENTS;
-
-/** Date à laquelle le générateur a posé toutes les premières occurrences.
- *  C'est la valeur vers laquelle `--annuler` ramène. */
-const DATE_ORIGINE = new Date("2026-08-10T00:00:00.000Z");
 
 /** Fenêtre d'étalement, en jours autour d'aujourd'hui. Le bord négatif
  *  laisse quelques retards — un dossier sans aucun retard ne montre pas
@@ -99,15 +97,35 @@ function jamaisControlees(): Prisma.VerificationWhereInput {
  *    d'établissement, et les écrit « planifiée » — la démonstration simule un
  *    planning posé ; les titres de salarié gardent la date que
  *    `echeanceDuTitre` leur calcule ;
- *  - `--annuler` rend « à planifier », au 10/08/2026, les « planifiée » sans
- *    preuve hors titres. Une ligne datée par héritage d'une obligation
- *    retirée y passe aussi et perd sa date : c'est le prix d'un script de
- *    démonstration qui ne garde pas l'état d'avant.
+ *  - `--annuler` ne touche QUE les lignes que l'étalement a déplacées, lues
+ *    dans un journal local (`scripts/.etalement/<cible>.json`, hors git), et
+ *    leur rend leur date et « à planifier ». Il prenait toutes les
+ *    « planifiée » sans preuve : le générateur en pose lui-même — une mise en
+ *    service à venir, une première échéance calculée —, et l'annulation les
+ *    rendait « à planifier » à une date passée, que la régénération ne
+ *    rattrape plus (garde placeholder du réconciliateur). Relecture du
+ *    2026-09-14.
  */
-function lignesDEquipementOuDEtablissement(
-  statut: "a_planifier" | "planifiee",
-): Prisma.VerificationWhereInput {
-  return { AND: [jamaisControlees(), { salarieId: null, statut }] };
+function lignesAEtaler(): Prisma.VerificationWhereInput {
+  return { AND: [jamaisControlees(), { salarieId: null, statut: "a_planifier" }] };
+}
+
+type Journal = Record<string, string>; // id → datePrevue d'origine (ISO)
+
+const DOSSIER_JOURNAL = join(process.cwd(), "scripts", ".etalement");
+
+function cheminJournal(cible: Cible): string {
+  return join(DOSSIER_JOURNAL, `${cible}.json`);
+}
+
+function lireJournal(cible: Cible): Journal {
+  const chemin = cheminJournal(cible);
+  return existsSync(chemin) ? (JSON.parse(readFileSync(chemin, "utf8")) as Journal) : {};
+}
+
+function ecrireJournal(cible: Cible, journal: Journal): void {
+  mkdirSync(DOSSIER_JOURNAL, { recursive: true });
+  writeFileSync(cheminJournal(cible), JSON.stringify(journal, null, 2));
 }
 
 function auJour(n: number): Date {
@@ -121,14 +139,24 @@ async function etaler(cible: Cible): Promise<void> {
   const etablissementId = ETABLISSEMENTS[cible];
 
   const occurrences = await prisma.verification.findMany({
-    where: { etablissementId, ...lignesDEquipementOuDEtablissement("a_planifier") },
+    where: { etablissementId, ...lignesAEtaler() },
     select: {
       id: true,
+      datePrevue: true,
       obligationId: true,
       equipementId: true,
       salarieId: true,
     },
   });
+
+  // Le journal AVANT l'écriture : une coupure en cours de boucle laisse des
+  // lignes déplacées que `--annuler` doit encore retrouver. Une ligne déjà
+  // journalisée garde sa date d'origine, pas celle d'un étalement précédent.
+  const journal = lireJournal(cible);
+  for (const o of occurrences) {
+    journal[o.id] ??= o.datePrevue.toISOString();
+  }
+  ecrireJournal(cible, journal);
 
   let deplacees = 0;
   for (const o of occurrences) {
@@ -151,11 +179,25 @@ async function etaler(cible: Cible): Promise<void> {
 
 async function annuler(cible: Cible): Promise<void> {
   const etablissementId = ETABLISSEMENTS[cible];
-  const r = await prisma.verification.updateMany({
-    where: { etablissementId, ...lignesDEquipementOuDEtablissement("planifiee") },
-    data: { datePrevue: DATE_ORIGINE, statut: "a_planifier" },
-  });
-  console.log(`${cible} : ${r.count} échéance(s) ramenée(s) au 10/08/2026.`);
+  const journal = lireJournal(cible);
+  let ramenees = 0;
+  for (const [id, origine] of Object.entries(journal)) {
+    // Toujours ouverte, sans preuve, et encore « planifiée » : un dépôt de
+    // rapport depuis l'étalement a fait du rendez-vous un fait, qu'on ne
+    // défait pas.
+    const r = await prisma.verification.updateMany({
+      where: {
+        id,
+        etablissementId,
+        statut: "planifiee",
+        ...jamaisControlees(),
+      },
+      data: { datePrevue: new Date(origine), statut: "a_planifier" },
+    });
+    ramenees += r.count;
+  }
+  ecrireJournal(cible, {});
+  console.log(`${cible} : ${ramenees} échéance(s) rendue(s) à leur date d'origine.`);
 }
 
 async function main(): Promise<void> {

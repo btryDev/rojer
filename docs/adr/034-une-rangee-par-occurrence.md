@@ -701,10 +701,16 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        couvre toutes les années, pas l'année feuilletée ; l'anneau
        « Obligations de l'année » ne compte pas une « à planifier » générée
        une année antérieure~~ — fermés le 2026-09-14 : la pastille compte
-       l'année feuilletée (`MoisRegle.sansDate`), et un retard SANS DATE
-       généré avant l'année en cours se compte dans l'anneau de cette année,
-       faute d'un autre mois où l'être. Un retard DATÉ de l'an dernier garde
-       son mois, et reste hors de l'anneau de l'année en cours.
+       l'année feuilletée (`MoisRegle.sansDate`) et, sur l'année en cours,
+       les retards sans date des années passées que sa couture remonte ;
+       l'anneau compte dans l'année en cours TOUT retard d'une année passée,
+       daté ou non (`BarresAnnee.retardsAnterieurs`, requête par
+       `urgenceSeule`), hors des barres, et dit combien. Sa relecture l'a
+       exigé : la première version ne reportait que les retards sans date,
+       et un extincteur manqué en octobre dernier faisait dire « 0 en
+       retard » à l'anneau sous un bandeau « 1 en retard ». Le bandeau suit
+       le filtre de zone, l'anneau non : écart de périmètre antérieur, non
+       traité ici.
        « À planifier » / « à dater » subsistent pour les lignes non
        en retard. Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni

@@ -54,6 +54,7 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
     moisCourant: 8,
     barsData: moisVides,
     barsSansEcheance: { aVenir: 0, retard: 12 },
+    barsRetardsAnterieurs: 0,
   } as unknown as DashboardBundle;
 
   it("l'anneau garde les retards sans date, et ne se dit pas vide", () => {
@@ -74,6 +75,24 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
     expect(texte).not.toContain("Le calendrier se remplit");
     expect(texte).toContain("12 lignes attendent une date");
     expect(texte).toContain("12 sans échéance connue, hors des mois");
+  });
+
+  it("un retard d'une année passée compte dans l'anneau et se dit hors des mois", () => {
+    // Relecture système du 2026-09-14 : l'anneau 2026 disait « 0 en retard »
+    // sous un bandeau « 1 en retard » pour une échéance manquée en 2025.
+    const anterieur = {
+      ...bundle,
+      barsSansEcheance: { aVenir: 0, retard: 0 },
+      barsRetardsAnterieurs: 1,
+    } as unknown as DashboardBundle;
+    const anneau = render(<WidgetBarsObligations bundle={anterieur} variant="radial" />);
+    expect(anneau.container.textContent).toContain("En retard1(100%)");
+    expect(anneau.container.textContent).toContain("dont 1 retard d'une année passée");
+    expect(anneau.container.textContent).not.toContain("Le calendrier se remplit");
+    cleanup();
+    const barres = render(<WidgetBarsObligations bundle={anterieur} variant="bars" />);
+    expect(barres.container.textContent).toContain("1 retard d'avant 2026, hors des mois");
+    expect(barres.container.textContent).toContain("Aucune échéance datée cette année.");
   });
 
   it("l'état vide reste celui d'un dossier sans rien", () => {

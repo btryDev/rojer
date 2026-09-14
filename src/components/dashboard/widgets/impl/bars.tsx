@@ -19,21 +19,25 @@ export function WidgetBarsObligations({
   bundle: DashboardBundle;
   variant: string;
 }) {
-  const { barsData, barsSansEcheance, moisCourant } = bundle;
-  // Les lignes sans échéance connue n'occupent aucun mois, mais elles
-  // existent : l'état vide « déclarez vos équipements » ne s'affiche que
-  // quand il n'y a VRAIMENT rien. Il s'affichait sur un dossier neuf dont
-  // les douze appareils étaient en retard (relecture, 2026-09-14).
+  const { barsData, barsSansEcheance, barsRetardsAnterieurs, moisCourant } =
+    bundle;
+  // Ce qu'aucune barre de l'année ne porte existe pourtant : les lignes sans
+  // échéance connue, et les retards d'années passées. L'état vide « déclarez
+  // vos équipements » ne s'affiche que quand il n'y a VRAIMENT rien. Il
+  // s'affichait sur un dossier neuf dont les douze appareils étaient en
+  // retard (relecture, 2026-09-14).
   const nbSansEcheance = barsSansEcheance.aVenir + barsSansEcheance.retard;
+  const nbHorsMois = nbSansEcheance + barsRetardsAnterieurs;
   const aucuneBarre = barsData.every(
     (b) => b.couvert + b.aVenir + b.retard === 0,
   );
-  const vide = aucuneBarre && nbSansEcheance === 0;
+  const vide = aucuneBarre && nbHorsMois === 0;
+  const annee = bundle.aujourdhui.getFullYear();
 
   if (variant === "radial") {
-    // Les comptes gardent TOUTES les échéances de l'année, datées ou non —
-    // et, sur l'année en cours, les retards sans date générés avant elle,
-    // qui n'ont aucun autre mois où être comptés (`repartirParMois`).
+    // Les comptes gardent TOUTES les échéances dues cette année, datées ou
+    // non, et les retards d'années passées, dus MAINTENANT : « En retard »
+    // dit le nombre du bandeau (`repartirParMois`).
     const totaux = barsData.reduce(
       (acc, b) => ({
         couvert: acc.couvert + b.couvert,
@@ -43,28 +47,30 @@ export function WidgetBarsObligations({
       {
         couvert: 0,
         aVenir: barsSansEcheance.aVenir,
-        retard: barsSansEcheance.retard,
+        retard: barsSansEcheance.retard + barsRetardsAnterieurs,
       },
     );
     return (
-      <BentoCell
-        kicker={`Obligations ${bundle.aujourdhui.getFullYear()}`}
-        sub="Répartition des échéances"
-      >
+      <BentoCell kicker={`Obligations ${annee}`} sub="Répartition des échéances">
         {vide ? (
           <EmptyBars />
         ) : (
-          <DonutStatuts totaux={totaux} sansEcheance={nbSansEcheance} />
+          <DonutStatuts
+            totaux={totaux}
+            sansEcheance={nbSansEcheance}
+            anterieurs={barsRetardsAnterieurs}
+          />
         )}
       </BentoCell>
     );
   }
 
   // Variant "bars" (défaut)
+  const horsMois = libelleHorsMois(nbSansEcheance, barsRetardsAnterieurs, annee);
   return (
     <BentoCell
-      kicker={`Obligations ${bundle.aujourdhui.getFullYear()}`}
-      sub={nbSansEcheance > 0 ? libelleHorsMois(nbSansEcheance) : undefined}
+      kicker={`Obligations ${annee}`}
+      sub={horsMois ?? undefined}
       legend={<LegendeBarsObligations />}
     >
       {vide ? (
@@ -79,8 +85,18 @@ export function WidgetBarsObligations({
 }
 
 /** Le compte de ce qu'aucune barre ne porte, dit sous le titre du widget. */
-export function libelleHorsMois(n: number): string {
-  return `${n} sans échéance connue, hors des mois`;
+export function libelleHorsMois(
+  sansEcheance: number,
+  anterieurs: number,
+  annee: number,
+): string | null {
+  const parts = [
+    sansEcheance > 0 ? `${sansEcheance} sans échéance connue` : null,
+    anterieurs > 0
+      ? `${anterieurs} retard${anterieurs > 1 ? "s" : ""} d'avant ${annee}`
+      : null,
+  ].filter((p) => p !== null);
+  return parts.length === 0 ? null : `${parts.join(" · ")}, hors des mois`;
 }
 
 function EmptyBars() {
@@ -91,11 +107,13 @@ function EmptyBars() {
   );
 }
 
-/** Des lignes existent, aucune n'a encore de date : ni vide, ni barres. */
+/** Des lignes existent, aucune n'est datée dans l'année : ni vide, ni barres. */
 function AucuneBarre({ nb }: { nb: number }) {
   return (
     <div className="flex h-[160px] items-center justify-center rounded-md border border-dashed border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)]/40 p-6 text-center text-[0.86rem] text-[color:var(--board-slate-mid)]">
-      {`Aucune échéance datée cette année : ${nb} ${nb > 1 ? "lignes attendent" : "ligne attend"} une date.`}
+      {nb > 0
+        ? `Aucune échéance datée cette année : ${nb} ${nb > 1 ? "lignes attendent" : "ligne attend"} une date.`
+        : "Aucune échéance datée cette année."}
     </div>
   );
 }
@@ -115,11 +133,15 @@ function AucuneBarre({ nb }: { nb: number }) {
 export function DonutStatuts({
   totaux,
   sansEcheance = 0,
+  anterieurs = 0,
 }: {
-  /** `aVenir` et `retard` INCLUENT les lignes sans échéance connue. */
+  /** `aVenir` et `retard` INCLUENT les lignes sans échéance connue et les
+   *  retards d'années passées. */
   totaux: { couvert: number; aVenir: number; retard: number };
   /** Combien de ces échéances n'ont pas de date connue — dit, pas soustrait. */
   sansEcheance?: number;
+  /** Combien des retards datent d'une année passée — dit, pas soustrait. */
+  anterieurs?: number;
 }) {
   const total = totaux.aVenir + totaux.retard;
   const circ = 2 * Math.PI * 48;
@@ -189,6 +211,11 @@ export function DonutStatuts({
         {sansEcheance > 0 ? (
           <li className="pl-5 text-[0.8rem] text-[color:var(--board-slate-mid)]">
             {`${sansEcheance} de ces échéances sans date connue`}
+          </li>
+        ) : null}
+        {anterieurs > 0 ? (
+          <li className="pl-5 text-[0.8rem] text-[color:var(--board-slate-mid)]">
+            {`dont ${anterieurs} ${anterieurs > 1 ? "retards" : "retard"} d'une année passée`}
           </li>
         ) : null}
         {/* Compté, jamais en part : un contrôle fait n'est pas une échéance. */}

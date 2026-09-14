@@ -133,16 +133,29 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
     expect(mois[7].retard).toBe(1);
   });
 
-  it("un retard sans date d'une année passée ne se reporte que sur l'année en cours", () => {
-    const lignes = [ligne({ datePrevue: le(12, 1, 2025), statut: "a_planifier" })];
+  it("un retard d'une année passée ne se reporte que sur l'année en cours", () => {
+    const sansDate = [ligne({ datePrevue: le(12, 1, 2025), statut: "a_planifier" })];
     // Vue de 2026, l'année de NOW : dû maintenant, compté.
-    expect(repartirParMois(lignes, 2026, NOW).sansEcheance.retard).toBe(1);
+    expect(repartirParMois(sansDate, 2026, NOW).sansEcheance.retard).toBe(1);
     // Vue d'une année future : rien n'y est en retard.
-    expect(repartirParMois(lignes, 2027, NOW).sansEcheance.retard).toBe(0);
-    // Un retard DATÉ de l'an dernier garde son mois, hors de l'année en cours.
-    const datee = [ligne({ datePrevue: le(12, 1, 2025) })];
-    expect(repartirParMois(datee, 2026, NOW).sansEcheance.retard).toBe(0);
-    expect(repartirParMois(datee, 2026, NOW).mois.every((b) => b.retard === 0)).toBe(true);
+    expect(repartirParMois(sansDate, 2027, NOW).sansEcheance.retard).toBe(0);
+  });
+
+  it("un retard DATÉ de l'an dernier compte dans l'année en cours, hors des barres", () => {
+    // Relecture système du 2026-09-14 : un extincteur dont l'échéance
+    // d'octobre dernier est manquée faisait dire « 0 en retard » à l'anneau
+    // 2026, sous un bandeau « 1 en retard ».
+    const datee = [ligne({ datePrevue: le(10, 1, 2025) })];
+    const vue2026 = repartirParMois(datee, 2026, NOW);
+    expect(vue2026.retardsAnterieurs).toBe(1);
+    expect(vue2026.sansEcheance.retard).toBe(0);
+    expect(vue2026.mois.every((b) => b.retard === 0)).toBe(true);
+    // Vue de 2025 : il reste sur son mois, et n'est pas « antérieur ».
+    const vue2025 = repartirParMois(datee, 2025, NOW);
+    expect(vue2025.mois[9].retard).toBe(1);
+    expect(vue2025.retardsAnterieurs).toBe(0);
+    // Vue de 2027 : rien.
+    expect(repartirParMois(datee, 2027, NOW).retardsAnterieurs).toBe(0);
   });
 
   it("une ligne archivée garde tous ses faits et ne pose aucune échéance", () => {

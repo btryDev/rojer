@@ -75,6 +75,13 @@ const h = vi.hoisted(() => {
         if (!branches.some((b) => correspond(ligne, b))) return false;
         continue;
       }
+      // `AND` : la forme que prennent les clauses composées de `portee.ts`
+      // (`urgenceSeule`). Toutes les branches, ou la ligne ne passe pas.
+      if (cle === "AND") {
+        const branches = attendu as Record<string, unknown>[];
+        if (!branches.every((b) => correspond(ligne, b))) return false;
+        continue;
+      }
       // `rapports: { some: … }` (ADR-034) : lu sur les rapports que la ligne
       // factice porte. L'ignorer ferait passer toute ligne — un filtre
       // fantôme, que le matcher refuse d'être.
@@ -837,16 +844,26 @@ describe("compterObligationsParMois", () => {
     expect(sansEcheance).toEqual({ retard: 1, aVenir: 1 });
   });
 
-  it("compte dans l'année en cours une « à planifier » générée l'an dernier", async () => {
-    // Relecture système du 2026-09-14 : la requête l'écartait (date hors de
-    // l'année), et l'anneau taisait un retard que le bandeau annonçait.
+  it("compte dans l'année en cours les retards de l'an dernier, datés ou non", async () => {
+    // Relecture système du 2026-09-14 : la requête les écartait (date hors de
+    // l'année), et l'anneau taisait des retards que le bandeau annonçait.
     h.db.verifications.push(
       verif({ id: "v1", statut: "a_planifier", datePrevue: instantCivil(2025, 11, 3) }),
-      // Contre-épreuve : un retard DATÉ de l'an dernier reste hors de 2026.
       verif({ id: "v2", statut: "planifiee", datePrevue: instantCivil(2025, 11, 3) }),
+      // Contre-épreuve : une ligne éteinte de l'an dernier ne compte pas.
+      verif({
+        id: "v3",
+        statut: "planifiee",
+        datePrevue: instantCivil(2025, 11, 3),
+        archiveLe: instantCivil(2026, 1, 5),
+      }),
     );
-    const { sansEcheance, mois } = await compterObligationsParMois(ETAB, 2026);
+    const { sansEcheance, retardsAnterieurs, mois } = await compterObligationsParMois(
+      ETAB,
+      2026,
+    );
     expect(sansEcheance.retard).toBe(1);
+    expect(retardsAnterieurs).toBe(1);
     expect(mois.every((b) => b.retard === 0)).toBe(true);
   });
 

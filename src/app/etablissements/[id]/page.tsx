@@ -315,6 +315,7 @@ export default async function EtablissementPage({
     equipementsEtablissement: equipements.map(enLite),
     barsData: barres.mois,
     barsSansEcheance: barres.sansEcheance,
+    barsRetardsAnterieurs: barres.retardsAnterieurs,
     aujourdhui,
     evenementsHorizon,
     evenementsSemaine,

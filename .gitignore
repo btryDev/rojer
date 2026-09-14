@@ -73,3 +73,6 @@ docker-compose.override.yml
 # outils en ligne de commande.
 /--detail
 Rojer-*.pdf
+
+# Journal de l'étalement des dossiers de démo : l'état d'une base, pas du code.
+/scripts/.etalement/
