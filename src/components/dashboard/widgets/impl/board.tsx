@@ -924,6 +924,10 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
   // bâtiment, et annonçait des occurrences sans date qui n'étaient pas
   // dans la liste posée juste en dessous.
   const nbSansDate = bundle.echeances.verifsAPlanifier;
+  // Les retards sans échéance connue : comptés dans « N en retard », jamais
+  // posés sur la frise. Sans ce compte, dès que la frise portait d'autres
+  // dates, rien ne disait où ils étaient passés (relecture des libellés).
+  const nbRetardSansDate = bundle.echeances.verifsEnRetardSansEcheance;
 
   return (
     <CarteBoard className="px-[30px] pb-5 pt-[26px]">
@@ -1105,8 +1109,10 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
           ) : nbEnRetard > 0 ? (
             <>
               <p className="m-0 text-[15px] font-semibold tracking-[-0.015em] text-[color:var(--board-ink)]">
-                {nbEnRetard} échéance{nbEnRetard > 1 ? "s" : ""} en
-                retard, aucune à venir
+                {/* « Aucune à venir » était faux au-delà de la fenêtre : une
+                    quinquennale roulée en 2031 existe, la frise ne la charge
+                    pas. La borne est dite (relecture des libellés). */}
+                {`${nbEnRetard} échéance${nbEnRetard > 1 ? "s" : ""} en retard, aucune à venir d'ici deux ans`}
               </p>
               <p className="m-0 max-w-[560px] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                 {/* Deux cas, et la phrase les couvre tous deux : un retard
@@ -1117,8 +1123,9 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
                     (relecture des libellés, 2026-09-14). */}
                 {nbEnRetard > 1 ? "Aucune ne tombe" : "Elle ne tombe pas"}{" "}
                 dans la période affichée — dépassée de plus de trois mois, ou
-                sans échéance connue — et rien n&apos;est programmé ensuite :
-                il n&apos;y a donc rien à poser sur la frise.
+                sans échéance connue — et rien n&apos;est programmé dans les
+                deux ans qui viennent : il n&apos;y a donc rien à poser sur la
+                frise.
               </p>
               <Lien href={hrefCalendrier}>Voir le calendrier</Lien>
             </>
@@ -1333,6 +1340,14 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
           frise ni la grille ne la posent, les y placer à leur date de
           génération mentirait. Même note que la page Calendrier — sinon
           elles disparaîtraient sans explication. */}
+      {nbRetardSansDate > 0 && frise.marqueurs.length > 0 ? (
+        <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
+          {nbRetardSansDate > 1
+            ? `${nbRetardSansDate} vérifications en retard, sans échéance connue : la frise ne les place pas.`
+            : "1 vérification en retard, sans échéance connue : la frise ne la place pas."}{" "}
+          <Lien href={hrefCalendrier}>Voir au calendrier</Lien>.
+        </p>
+      ) : null}
       {nbSansDate > 0 ? (
         <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
           {/* « Datez-les au calendrier » promettait un geste qui n'existe

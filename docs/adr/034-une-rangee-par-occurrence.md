@@ -733,7 +733,14 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        rangée désormais) ; la frise vide affirmait que des retards sans
        échéance « datent d'avant la période ». Trois phrases promettaient
        plus que le code et disent le fait : un dépôt ne donne pas d'échéance
-       à un contrôle unique, il le solde. Trois autres écarts mineurs : ~~l'en-tête du mois du
+       à un contrôle unique, il le solde. Trois imprécisions antérieures
+       fermées dans la foulée, à la demande de la propriétaire : la frise vide
+       disait « aucune à venir » sans borne — une quinquennale au-delà de deux
+       ans existe ; quand la frise porte d'autres dates, les retards sans
+       échéance n'étaient signalés que dans la pastille « N en retard » — une
+       note les nomme (`EtatEcheances.verifsEnRetardSansEcheance`) ; l'aide
+       du calendrier dit qu'un rapport « non vérifiable » ou antidaté ne
+       change rien. Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni
        « à planifier »)~~ — fermé le même jour : la pastille compte tout ce
        qu'aucune barre ne place et dit « sans date » ; ~~le widget « Prochaine échéance » filtre après la

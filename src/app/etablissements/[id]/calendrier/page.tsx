@@ -1025,7 +1025,9 @@ export default async function CalendrierPage({
         urgent, et cliquer un mois ouvre son détail. Une vérification sans
         échéance connue n&apos;y figure pas : elle est comptée à part, « sans
         date ». Le dépôt du rapport de son dernier contrôle lui en donne une
-        — ou la solde, pour un contrôle unique.
+        — ou la solde, pour un contrôle unique. Un rapport « non
+        vérifiable », ou plus ancien qu&apos;un rapport déjà déposé, ne
+        change rien : aucun contrôle nouveau n&apos;est attesté.
       </p>
       <p className="m-0">
         Les flèches changent d&apos;année, et les cartes du dessous suivent :

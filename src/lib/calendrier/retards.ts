@@ -90,6 +90,13 @@ export type EtatEcheances = {
    * les deux ventilations ci-dessus.
    */
   verifsAPlanifier: number;
+  /**
+   * Vérifications EN RETARD sans échéance connue (`aUnRendezVous`) : déjà
+   * comptées dans `retards`, et nommées à part parce qu'aucune frise ni
+   * grille ne peut les poser — sans ce compte, elles n'étaient signalées que
+   * dans la pastille « N en retard » (relecture des libellés, 2026-09-14).
+   */
+  verifsEnRetardSansEcheance: number;
 };
 
 const FAMILLES: FamilleEcheance[] = [
@@ -206,6 +213,7 @@ export async function compterEtatEcheances(
     retards: repartirRetards(autres, etat.enRetardParType),
     sous30j: repartirSous30j(autres, etat.aVenirParType, now),
     verifsAPlanifier: etat.aPlanifier,
+    verifsEnRetardSansEcheance: etat.enRetardSansEcheance,
   };
 }
 

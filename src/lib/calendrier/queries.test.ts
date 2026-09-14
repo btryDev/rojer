@@ -231,6 +231,10 @@ describe("compterEtatCalendrier", () => {
     const etat = await compterEtatCalendrier("etab-1", NOW);
     expect(etat).toEqual({
       enRetard: 3,
+      // Dont la « à planifier » du 1er août : en retard, et sans échéance
+      // connue — aucune frise ne la pose, la note du tableau de bord la
+      // nomme (relecture des libellés, 2026-09-14).
+      enRetardSansEcheance: 1,
       aPlanifier: 1,
       aVenir: 2,
       realisees12m: 1,

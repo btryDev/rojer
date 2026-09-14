@@ -15,6 +15,7 @@ import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisation
 // conformité annoncent nécessairement les mêmes nombres.
 import { repartirVerifications } from "@/lib/pdf/etat-verifications";
 import { porteeBatiment, toutesLesConditions, urgenceSeule } from "./portee";
+import { aUnRendezVous } from "./etats";
 import {
   TYPES_VERIFICATION,
   typeDeVerification,
@@ -202,6 +203,9 @@ export async function compterEtatCalendrier(
   const etat = repartirVerifications(verifs, now);
   return {
     enRetard: etat.enRetard.length,
+    // Le même prédicat que chaque surface qui place une date.
+    enRetardSansEcheance: etat.enRetard.filter((v) => !aUnRendezVous(v, now))
+      .length,
     aPlanifier: etat.aPlanifier.length,
     aVenir: etat.aVenir.length,
     realisees12m: etat.realisees12m.length,
