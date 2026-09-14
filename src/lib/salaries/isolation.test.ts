@@ -347,6 +347,37 @@ describe("le propriétaire lit son propre dossier", () => {
     expect(await compterTitresEnRetard(ETAB_A, NOW)).toBe(1);
   });
 
+  it("listerEquipe classe une VIP sans date de fin sur son échéance CALCULÉE", async () => {
+    // Relecture du lot : aucun test ne lisait l'ÉCRAN sur un titre calculé.
+    // Passer `undefined` comme périodicité dans `listerEquipe` survivait — et
+    // c'est la carte et le compteur d'en-tête de la page Équipe, l'écran même
+    // du défaut corrigé.
+    h.db.titres.push({
+      id: "titre-a-vip-ecran",
+      salarieId: "sal-a",
+      obligationId: "sante-travail-salarie-vip",
+      delivreLe: new Date("2020-06-01T12:00:00.000Z"),
+      echeanceLe: null,
+      note: null,
+    });
+    const [martin] = await listerEquipe(ETAB_A, NOW);
+    const vip = martin.titres.find((t) => t.id === "titre-a-vip-ecran");
+    expect(vip?.etat).toBe("enRetard");
+  });
+
+  it("le titre d'une personne SORTIE ne réclame plus rien — et reste affiché", async () => {
+    // Relecture du lot : le calendrier et le badge ignorent les personnes
+    // parties, la page Équipe les classait. Depuis que l'échéance se calcule,
+    // chaque VIP sans date d'une personne partie virait au rouge pour toujours,
+    // et l'éteindre obligeait à détruire la preuve (`rgpd.md` § 4.3).
+    const equipe = await listerEquipe(ETAB_A, NOW);
+    const partie = equipe.find((s) => !s.actif);
+    expect(partie?.titres.length).toBeGreaterThan(0);
+    expect(partie?.titres.every((t) => t.etat === "archivee")).toBe(true);
+    const fiche = await getSalarie(ETAB_A, "sal-a-partie", NOW);
+    expect(fiche?.titres.every((t) => t.etat === "archivee")).toBe(true);
+  });
+
   it("compterTitresEnRetard voit une VIP échue sans date de fin saisie", async () => {
     // Relecture système du 2026-09-14. Le `where` portait `echeanceLe: { not:
     // null }` : une visite quinquennale délivrée le 1er juin 2020, sans

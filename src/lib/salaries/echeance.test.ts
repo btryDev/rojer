@@ -61,7 +61,7 @@ describe("le scénario de la relecture : une VIP délivrée le 1er juin 2020, sa
     expect(echeanceDuTitre(titre, VIP?.periodicite)).toEqual(civile("2025-06-01"));
   });
 
-  it("l'écran Équipe la dit en retard, comme le calendrier", () => {
+  it("le classement de l'écran Équipe la dit en retard, comme le calendrier", () => {
     // Le cœur du défaut : `classerTitre(null)` rendait « à planifier », et la
     // fiche peignait « Sans terme écrit » une visite échue depuis quinze mois.
     expect(classerTitre(titre, VIP?.periodicite, NOW)).toBe("enRetard");
@@ -73,8 +73,11 @@ describe("le scénario de la relecture : une VIP délivrée le 1er juin 2020, sa
   });
 
   it("le jour de l'échéance, ni l'un ni l'autre ne la dit en retard (ADR-011)", () => {
-    // Le matin du 1er juin 2025 à Paris : l'échéance du jour laisse sa journée.
-    const leJourMeme = new Date("2025-06-01T08:00:00+02:00");
+    // Le 1er juin 2025 à 22 h à Paris — soit 20 h UTC, APRÈS l'échéance
+    // stockée à minuit UTC. À 8 h (6 h UTC), une comparaison d'instants bruts
+    // disait aussi « pas en retard », et la mutation que ce test vise survivait
+    // (relecture du lot, 2026-09-14). Le soir, seul le jour civil la sauve.
+    const leJourMeme = new Date("2025-06-01T22:00:00+02:00");
     expect(classerTitre(titre, VIP?.periodicite, leJourMeme)).toBe("proche");
     expect(
       ligneDuCalendrier("sante-travail-salarie-vip", titre, leJourMeme)[0].estUrgent,
@@ -100,6 +103,12 @@ describe("l'échéance saisie prime sur le calcul", () => {
   it("et reste l'échéance quand l'obligation ne résout plus au référentiel", () => {
     // Un titre déclaré sur une obligation retirée : la pièce n'a pas changé
     // parce que le catalogue a changé.
+    //
+    // DIVERGENCE ASSUMÉE, et c'est le seul cas de ce fichier où le générateur
+    // n'est pas interrogé : il ne produit aucune ligne pour une obligation
+    // qu'il ne connaît plus, quand la page Équipe continue de dire la pièce
+    // échue. Écart antérieur au lot, laissé tel quel : la pièce EST échue, et
+    // l'incertitude ne réduit jamais la couverture (relecture du lot).
     expect(echeanceDuTitre(titre, undefined)).toEqual(civile("2023-06-01"));
   });
 });

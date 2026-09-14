@@ -64,6 +64,28 @@ export function classerTitre(
   return classerDate(echeance, now);
 }
 
+/**
+ * L'état d'un titre tel que l'écran Équipe le peint : celui de `classerTitre`
+ * — sauf pour une personne SORTIE DE L'EFFECTIF, dont le titre ne réclame plus
+ * rien (« archivée »).
+ *
+ * Le calendrier ne génère des lignes que pour les salariés présents, et le
+ * badge du rail ne compte qu'eux. La page Équipe, elle, classait tous les
+ * titres : une VIP de 2019 sans date de fin d'une personne partie en 2022
+ * virait au rouge pour toujours, depuis que l'échéance se calcule, et le seul
+ * moyen d'éteindre le rouge était de retirer le titre — donc la preuve que
+ * `docs/rgpd.md` § 4.3 veut garder (relecture du lot, 2026-09-14). Le titre
+ * reste affiché, sans rien réclamer.
+ */
+export function etatDuTitre(
+  titre: DatesDuTitre,
+  periodicite: Periodicite | undefined,
+  salarieActif: boolean,
+  now: Date,
+): EtatTitre {
+  return salarieActif ? classerTitre(titre, periodicite, now) : "archivee";
+}
+
 const SELECTION_TITRE = {
   id: true,
   obligationId: true,
@@ -100,7 +122,7 @@ export async function listerEquipe(etablissementId: string, now: Date) {
       return {
         ...t,
         libelle: o?.libelle ?? t.obligationId,
-        etat: classerTitre(t, o?.periodicite, now),
+        etat: etatDuTitre(t, o?.periodicite, s.actif, now),
       };
     }),
   }));
@@ -149,7 +171,9 @@ export async function getSalarie(
          * la date de fin portée par la pièce.
          */
         echeance: echeanceDuTitre(t, o?.periodicite),
-        etat: classerTitre(t, o?.periodicite, now),
+        /** Le rythme qui a produit une échéance calculée — la fiche le nomme. */
+        periodicite: o?.periodicite ?? null,
+        etat: etatDuTitre(t, o?.periodicite, s.actif, now),
       };
     }),
   };

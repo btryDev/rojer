@@ -1713,10 +1713,13 @@ model TitreSalarie {
   /// Date de délivrance du titre.
   delivreLe DateTime
 
-  /// Échéance, quand elle est connue ou calculable. `null` = titre sans terme
-  /// écrit dans un texte — l'habilitation électrique en est le cas type, le
-  /// Code renvoyant à des modalités qu'il qualifie lui-même de recommandées
-  /// (ADR-023 § 6).
+  /// La date de fin PORTÉE PAR LA PIÈCE, quand l'employeur la saisit. `null` =
+  /// pas de date de fin sur la pièce — ce qui ne veut pas dire « sans
+  /// échéance » : l'échéance du titre est `echeanceDuTitre`
+  /// (`lib/salaries/echeance.ts`), cette date si elle existe, sinon la
+  /// délivrance plus la durée du texte (une VIP a une échéance même sans
+  /// date saisie). Sans l'une ni l'autre — l'habilitation électrique, dont le
+  /// Code renvoie à des modalités recommandées (ADR-023 § 6) —, aucune.
   echeanceLe DateTime?
 
   /// Note libre de l'employeur (organisme, niveau d'habilitation).

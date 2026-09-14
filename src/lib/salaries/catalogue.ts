@@ -36,10 +36,20 @@ export function cataloguerTitres(): ObligationPorteeParSalarie[] {
     .sort((a, b) => a.libelle.localeCompare(b.libelle, "fr"));
 }
 
+/**
+ * Index des titres par identifiant, construit une fois : le référentiel est du
+ * TypeScript figé à la compilation (ADR-003), il ne change pas d'un appel à
+ * l'autre. `titreParId` refaisait filtre et tri `localeCompare` à chaque titre
+ * — une fois par titre de chaque salarié, à chaque rendu du rail, depuis que le
+ * badge classe en mémoire (relecture du lot, 2026-09-14).
+ */
+let INDEX_TITRES: ReadonlyMap<string, ObligationPorteeParSalarie> | null = null;
+
 export function titreParId(
   obligationId: string,
 ): ObligationPorteeParSalarie | undefined {
-  return cataloguerTitres().find((o) => o.id === obligationId);
+  INDEX_TITRES ??= new Map(cataloguerTitres().map((o) => [o.id, o]));
+  return INDEX_TITRES.get(obligationId);
 }
 
 /**

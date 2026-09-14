@@ -24,6 +24,7 @@ import {
 import { declarerTitre } from "@/lib/salaries/actions";
 import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-evenementielles";
 import { CHAMP_ETAT, ENCRE_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
+import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { Download } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -51,6 +52,20 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   // recommandées (ADR-023 § 6) — décréter une échéance serait inventer une
   // non-conformité.
   aPlanifier: "Sans terme écrit",
+};
+
+/**
+ * Le même mot quand l'échéance est CALCULÉE — aucune date de fin sur la pièce,
+ * la délivrance plus la durée du texte (`echeanceDuTitre`).
+ *
+ * « Déclarée » y était faux, et dans le mauvais sens : la raison du mot est que
+ * la date vient de la pièce et non d'un texte ; sur une VIP sans date de fin,
+ * c'est l'inverse — le dirigeant a précisément déclaré qu'il n'en avait pas, et
+ * la date vient du texte (relecture du lot, 2026-09-14).
+ */
+const MOT_DE_L_ECHEANCE_CALCULEE: Record<"proche" | "enRetard", string> = {
+  proche: "Échéance calculée proche",
+  enRetard: "Échéance calculée dépassée",
 };
 
 // POURQUOI « DÉCLARÉE » DANS LES DEUX MOTS DU MILIEU. Ils disaient « Expire
@@ -225,11 +240,15 @@ export default async function SalarieDetailPage({
                               celle de `echeanceDuTitre`, la même que le
                               calendrier, et la phrase dit d'où elle vient :
                               une date calculée sur un plafond légal ne se
-                              présente pas comme la date de la pièce. */}
+                              présente pas comme la date de la pièce. Et elle
+                              dit le CALCUL, pas « la durée écrite dans le
+                              texte » : pour la formation du membre du CSE,
+                              L. 2315-17 pose une borne liée au mandat, pas une
+                              durée depuis la délivrance (relecture du lot). */}
                           {t.echeanceLe
                             ? ` · valable jusqu'au ${formaterDateLongueFr(t.echeanceLe)}`
-                            : t.echeance
-                              ? ` · aucune date de fin portée sur le titre, échéance calculée au ${formaterDateLongueFr(t.echeance)} d'après la durée écrite dans le texte`
+                            : t.echeance && t.periodicite
+                              ? ` · pas de date de fin sur la pièce · échéance calculée au ${formaterDateLongueFr(t.echeance)} (délivrance + ${LABEL_PERIODICITE[t.periodicite].toLowerCase()})`
                               : " · aucune date de fin portée sur le titre"}
                         </p>
                         {t.note && (
@@ -288,7 +307,10 @@ export default async function SalarieDetailPage({
                           className="size-[7px] flex-none rounded-full"
                           style={{ background: CHAMP_ETAT[t.etat] }}
                         />
-                        {MOT_DE_L_ETAT[t.etat]}
+                        {t.echeanceLe === null &&
+                        (t.etat === "enRetard" || t.etat === "proche")
+                          ? MOT_DE_L_ECHEANCE_CALCULEE[t.etat]
+                          : MOT_DE_L_ETAT[t.etat]}
                       </span>
                     </li>
                   ))}
