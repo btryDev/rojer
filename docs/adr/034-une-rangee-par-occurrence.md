@@ -693,6 +693,15 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        aucune case — elle dit « sans date », sans pastille. Assumés et écrits :
        les pilules « en retard » et « sans date » d'un mois se recouvrent ; le
        rang « retard daté » de la fiche prend aussi une correction en retard.
+       La relecture du correctif a trouvé un défaut plus ancien (lot C) : un
+       retard sans date d'une année révolue n'avait aucune carte atteignable
+       depuis l'année ouverte, la couture « années précédentes » ne lisant que
+       les retards dessinés — fermé (`MoisRegle.retardSansDate`). Restent
+       ouverts, mineurs et antérieurs : le compte « sans date » de la règle
+       couvre toutes les années, pas l'année feuilletée ; l'anneau
+       « Obligations de l'année » ne compte pas une « à planifier » générée
+       une année antérieure, comme il ne compte pas un retard daté de
+       l'an dernier.
        « À planifier » / « à dater » subsistent pour les lignes non
        en retard. Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni

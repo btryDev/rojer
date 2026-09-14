@@ -176,7 +176,7 @@ export function AnneeCalendrier({
     0,
   );
   const nbRetardsAnterieurs = moisAnterieursEnRetard.reduce(
-    (n, m) => n + m.enRetard,
+    (n, m) => n + m.enRetard + (m.retardSansDate ?? 0),
     0,
   );
   const nbCartesPassees = elementsPasses.reduce(
@@ -521,7 +521,7 @@ export function moisEnRetardAvant(
   return anneesRegle
     .filter((a) => a.annee < annee)
     .flatMap((a) => a.mois)
-    .filter((m) => m.enRetard > 0);
+    .filter((m) => m.enRetard + (m.retardSansDate ?? 0) > 0);
 }
 
 /**

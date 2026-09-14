@@ -221,7 +221,7 @@ function comparerParUrgence(
   // vérifications les deux écrans désignent la même ; la fiche, elle, mêle
   // les corrections, et l'en-tête dit alors « Un écart reste à lever »
   // (relecture, 2026-09-14).
-  const rang =(l: { date: Date | null; etat: RegistreLigne }) =>
+  const rang = (l: { date: Date | null; etat: RegistreLigne }) =>
     l.etat === "enRetard" ? (l.date ? 0 : 1) : l.date ? 2 : 3;
   const ecart = rang(a) - rang(b);
   if (ecart !== 0) return ecart;

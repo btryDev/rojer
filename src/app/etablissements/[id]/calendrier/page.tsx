@@ -502,8 +502,13 @@ export default async function CalendrierPage({
     Array.from({ length: 12 }, (_, i) => {
       const cle = `${a}-${String(i + 1).padStart(2, "0")}`;
       const compte = { enRetard: 0, proche: 0, lointain: 0, faite: 0 };
+      let retardSansDate = 0;
       for (const l of parMois.get(cle) ?? []) {
-        if (!datable(l)) continue;
+        if (!datable(l)) {
+          // Pas de barre, mais la couture des années passées doit le trouver.
+          if (l.genre === "verif" && l.registre === "enRetard") retardSansDate += 1;
+          continue;
+        }
         compte[etatDeLaLigne(l)] += 1;
       }
       return {
@@ -511,6 +516,7 @@ export default async function CalendrierPage({
         label: MOIS_FR_COURT[i],
         labelLong: `${MOIS_FR[i]} ${a}`,
         ...compte,
+        retardSansDate,
       };
     });
 
@@ -1229,7 +1235,9 @@ export default async function CalendrierPage({
               anneesRegle={anneesRegle}
               /* « Sans date » : ce qu'aucune barre ne place (`datable`), EN
                  RETARD OU NON, compté sur les lignes AFFICHÉES — le même
-                 périmètre que les cartes de mois. Il additionnait
+                 périmètre que les cartes de mois, TOUTES ANNÉES
+                 confondues (la pastille voisine du millésime ne le borne
+                 pas à l'année feuilletée — écart connu). Il additionnait
                  `etat.aPlanifier`, qui ne suit que le filtre bâtiment : sous
                  un filtre famille, la règle et les cartes ne comptaient pas
                  les mêmes lignes (relecture, 2026-09-14). */

@@ -48,6 +48,14 @@ export type MoisRegle = {
   lointain: number;
   /** Occurrences déjà réalisées — le mois n'est pas qu'une dette. */
   faite: number;
+  /**
+   * Retards SANS ÉCHÉANCE CONNUE rangés dans ce mois (leur date de
+   * génération) : jamais dessinés, mais une dette. Sans ce compte, un retard
+   * sans date d'une année passée n'avait aucune carte atteignable depuis
+   * l'année ouverte — `moisEnRetardAvant` ne lisait que `enRetard`
+   * (relecture, 2026-09-14). Absent = zéro.
+   */
+  retardSansDate?: number;
 };
 
 /** Hauteur de la barre la plus chargée, en pixels. */

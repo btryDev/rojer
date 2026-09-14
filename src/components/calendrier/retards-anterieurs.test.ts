@@ -92,6 +92,19 @@ describe("moisEnRetardAvant", () => {
     ]);
   });
 
+  it("remonte le mois d'un retard sans échéance connue, qu'aucune barre ne dessine", () => {
+    // Relecture du 2026-09-14 : une ligne « à planifier » générée en 2019
+    // (mise en service, aucun rapport) est en retard, comptée au bandeau, et
+    // n'avait aucune carte atteignable depuis 2026 — la couture ne lisait que
+    // les retards dessinés.
+    const regle = [
+      annee(2019, [{ ...mois("2019-05", 0), retardSansDate: 1 }]),
+      annee(2026, [mois("2026-08", 0)]),
+    ];
+
+    expect(moisEnRetardAvant(regle, 2026).map((m) => m.cle)).toEqual(["2019-05"]);
+  });
+
   it("ne rend rien quand aucune année révolue n'a de retard", () => {
     // Le cas ordinaire : la couture ne doit pas s'afficher pour rien.
     expect(moisEnRetardAvant([annee(2026, [mois("2026-08", 3)])], 2026)).toEqual(
