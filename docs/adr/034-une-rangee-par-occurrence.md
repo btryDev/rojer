@@ -683,8 +683,16 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        sans échéance précèdent une vraie~~ — fermé le 2026-09-14 : la page choisit la prochaine échéance
        connue sur la liste entière, avant la coupe (`echeancesDuTableauDeBord`),
        et le widget la lit dans le bundle ; les cinq prochaines sont
-       inchangées ; la vue par équipement désigne le
+       inchangées. **Toujours ouvert** : la vue par équipement désigne le
        retard daté, la fiche le retard sans date, pour le même appareil.
+       **Relecture neutre de ce lot** : aucun compteur ni score ne bouge, mais
+       l'anneau « Obligations de l'année » additionnait les contrôles faits —
+       désormais un par rapport — aux échéances dans un même total en
+       pourcentages : une alarme hebdomadaire à 36 rapports faisait passer le
+       retard de 50 % à 5 %. L'anneau porte désormais les seules échéances,
+       les contrôles faits sont comptés à part, et l'infobulle des barres dit
+       « contrôles faits · échéances à venir · en retard » au lieu de
+       « obligations ». Test de rendu, mutation rouge.
        **Laissé ouvert, écrit** — hors du chantier, chacun son lot :
        ~~l'échéance d'un titre de salarié vit en deux endroits
        (`TitreSalarie.echeanceLe` pour la page Équipe, `Verification.datePrevue`

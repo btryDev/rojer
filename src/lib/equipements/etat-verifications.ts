@@ -36,7 +36,7 @@ export type EtatEquipement = {
   prochaine: {
     date: Date;
     libelle: string;
-    /** Vient d'une LECTURE de calendrier : `archivee` en est exclu par
+    /** Vient de `prochaineEcheanceConnue` : `archivee` en est exclu par
      *  construction — une ligne archivée n'annonce aucun rendez-vous. */
     etat: LectureCalendrier["registre"];
   } | null;

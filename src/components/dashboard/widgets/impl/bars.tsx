@@ -36,7 +36,7 @@ export function WidgetBarsObligations({
     return (
       <BentoCell
         kicker={`Obligations ${bundle.aujourdhui.getFullYear()}`}
-        sub="Répartition par statut"
+        sub="Répartition des échéances"
       >
         {vide ? <EmptyBars /> : <DonutStatuts totaux={totaux} />}
       </BentoCell>
@@ -66,17 +66,28 @@ function EmptyBars() {
   );
 }
 
-function DonutStatuts({
+/**
+ * L'anneau porte les ÉCHÉANCES de l'année — à venir et en retard —, et elles
+ * seules. Les contrôles faits s'affichent à côté, comptés, jamais en part.
+ *
+ * Il additionnait les trois dans un même total en pourcentages. Depuis que
+ * « couvert » compte chaque rapport réalisé, c'était additionner deux unités :
+ * au 10/09, une alarme hebdomadaire à 36 rapports et deux annuelles en retard
+ * donnaient « En retard (5 %) » sur un total de 39, là où la veille on lisait
+ * 50 % sur 4 (relecture, 2026-09-14). Plus une ligne est contrôlée souvent,
+ * plus le retard des autres se diluait. La part du retard se lit désormais
+ * sur les échéances, ce qui ne dépend pas du rythme des contrôles.
+ */
+export function DonutStatuts({
   totaux,
 }: {
   totaux: { couvert: number; aVenir: number; retard: number };
 }) {
-  const total = totaux.couvert + totaux.aVenir + totaux.retard;
+  const total = totaux.aVenir + totaux.retard;
   const circ = 2 * Math.PI * 48;
   const pct = (n: number) => (total === 0 ? 0 : n / total);
   const offRetard = 0;
   const offAVenir = pct(totaux.retard) * circ;
-  const offCouvert = (pct(totaux.retard) + pct(totaux.aVenir)) * circ;
 
   return (
     <div className="flex flex-wrap items-center gap-6">
@@ -114,35 +125,17 @@ function DonutStatuts({
               strokeDashoffset={-offAVenir}
             />
           ) : null}
-          {totaux.couvert > 0 ? (
-            <circle
-              cx="70"
-              cy="70"
-              r="48"
-              fill="none"
-              stroke="var(--board-ink)"
-              strokeWidth="14"
-              strokeDasharray={`${pct(totaux.couvert) * circ} ${circ}`}
-              strokeDashoffset={-offCouvert}
-            />
-          ) : null}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-[1.8rem] font-semibold leading-none tabular-nums">
             {total}
           </span>
           <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--board-slate-mid)]">
-            Au total
+            Échéances
           </span>
         </div>
       </div>
       <ul className="flex flex-1 flex-col gap-2 text-[0.88rem]">
-        <Item
-          color="var(--board-ink)"
-          label="Couvertes"
-          value={totaux.couvert}
-          total={total}
-        />
         <Item
           color={CHAMP_ETAT.lointain}
           label="À venir"
@@ -154,6 +147,12 @@ function DonutStatuts({
           label="En retard"
           value={totaux.retard}
           total={total}
+        />
+        {/* Compté, jamais en part : un contrôle fait n'est pas une échéance. */}
+        <Item
+          color="var(--board-ink)"
+          label="Contrôles faits"
+          value={totaux.couvert}
         />
       </ul>
     </div>
@@ -169,9 +168,11 @@ function Item({
   color: string;
   label: string;
   value: number;
-  total: number;
+  /** Absent = compté sans part (les contrôles faits ne sont pas des échéances). */
+  total?: number;
 }) {
-  const pct = total === 0 ? 0 : Math.round((value / total) * 100);
+  const pct =
+    total === undefined ? null : total === 0 ? 0 : Math.round((value / total) * 100);
   return (
     <li className="flex items-center gap-3">
       <span
@@ -182,7 +183,9 @@ function Item({
       <span className="flex-1 text-[color:var(--board-ink)]">{label}</span>
       <span className="font-mono text-[0.82rem] tabular-nums">
         {value}
-        <span className="ml-1 text-[color:var(--board-slate-mid)]">({pct}%)</span>
+        {pct !== null && (
+          <span className="ml-1 text-[color:var(--board-slate-mid)]">({pct}%)</span>
+        )}
       </span>
     </li>
   );

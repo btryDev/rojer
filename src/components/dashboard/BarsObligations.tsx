@@ -1,15 +1,25 @@
-// Barres mensuelles des obligations de vérification — 12 mois glissants
-// (mois courant mis en évidence). Server component : reçoit les données
-// agrégées depuis `compterObligationsParMois`.
+// Barres mensuelles des vérifications — les douze mois de l'année civile
+// (mois courant mis en évidence). Reçoit les données agrégées par
+// `repartirParMois` (`lib/dashboard/barres-mois.ts`).
+//
+// DEUX UNITÉS DANS UNE BARRE, et l'infobulle les nomme. « Couvert » compte des
+// CONTRÔLES FAITS — un par rapport réalisé, au mois de sa date — ; « à venir »
+// et « retard » comptent des ÉCHÉANCES, une par ligne ouverte. Depuis que
+// chaque rapport compte, une alarme hebdomadaire ajoute environ quatre
+// contrôles faits par mois : les appeler « obligations » faisait lire quatre
+// obligations là où il y en a une (relecture, 2026-09-14).
 
 import { CHAMP_ETAT } from "@/lib/calendrier/etats";
 
 export type BarMois = {
   mois: number; // 0-11 (janv = 0)
   annee: number;
-  couvert: number; // statuts réalisés / planifiés
-  aVenir: number; // à planifier / planifiée > aujourd'hui
-  retard: number; // dépassée / a_planifier avec datePrevue passée
+  /** Contrôles FAITS dans le mois : un par rapport réalisé. */
+  couvert: number;
+  /** Échéances ouvertes du mois, à venir. */
+  aVenir: number;
+  /** Échéances ouvertes du mois, en retard. */
+  retard: number;
 };
 
 const LABELS_MOIS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
@@ -62,7 +72,7 @@ export function BarsObligations({
                 minHeight: total > 0 ? 4 : 0,
                 background: tone,
               }}
-              title={`${total} obligation${total > 1 ? "s" : ""} — ${d.couvert} couvertes, ${d.aVenir} à venir, ${d.retard} en retard`}
+              title={`${d.couvert} contrôle${d.couvert > 1 ? "s" : ""} fait${d.couvert > 1 ? "s" : ""} · ${d.aVenir} échéance${d.aVenir > 1 ? "s" : ""} à venir · ${d.retard} en retard`}
             />
             <span className="font-mono text-[11px] text-[color:var(--board-slate-mid)]">
               {LABELS_MOIS[d.mois]}
@@ -77,7 +87,7 @@ export function BarsObligations({
 export function LegendeBarsObligations() {
   return (
     <span className="flex items-center gap-3 text-[12px] text-[color:var(--board-slate-mid)]">
-      <LegendDot color={CHAMP_ETAT.faite} /> Couvert
+      <LegendDot color={CHAMP_ETAT.faite} /> Contrôles faits
       <LegendDot color={CHAMP_ETAT.proche} /> À venir
       <LegendDot color={CHAMP_ETAT.enRetard} /> Retard
     </span>
