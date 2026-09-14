@@ -1109,11 +1109,16 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
                 retard, aucune à venir
               </p>
               <p className="m-0 max-w-[560px] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                {nbEnRetard > 1 ? "Elles datent" : "Elle date"}{" "}
-                d&apos;avant
-                la période affichée — trois mois en arrière au plus — et rien
-                n&apos;est programmé ensuite : il n&apos;y a donc rien à poser
-                sur la frise.
+                {/* Deux cas, et la phrase les couvre tous deux : un retard
+                    daté d'avant la période, ou un retard SANS ÉCHÉANCE
+                    CONNUE, qui ne date de rien. Elle ne disait que le
+                    premier : un dossier créé le 1er et ouvert le 14 lisait
+                    que ses douze retards « datent d'avant la période »
+                    (relecture des libellés, 2026-09-14). */}
+                {nbEnRetard > 1 ? "Aucune ne tombe" : "Elle ne tombe pas"}{" "}
+                dans la période affichée — dépassée de plus de trois mois, ou
+                sans échéance connue — et rien n&apos;est programmé ensuite :
+                il n&apos;y a donc rien à poser sur la frise.
               </p>
               <Lien href={hrefCalendrier}>Voir le calendrier</Lien>
             </>
@@ -1331,14 +1336,15 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
       {nbSansDate > 0 ? (
         <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
           {/* « Datez-les au calendrier » promettait un geste qui n'existe
-              pas : aucun écran ne date une vérification à la main. C'est le
-              dépôt du rapport de son dernier contrôle qui lui donne une
-              échéance (relecture des libellés, 2026-09-14). */}
+              pas : aucun écran ne date une vérification à la main. Et « elles
+              apparaîtront ici au dépôt du rapport » ne valait ni pour un
+              contrôle unique, que le dépôt solde, ni pour une échéance
+              au-delà de la fenêtre. La note dit le fait, sans promesse
+              (relecture des libellés, 2026-09-14). */}
           {nbSansDate > 1
-            ? `${nbSansDate} vérifications à planifier n'ont pas d'échéance connue`
-            : "1 vérification à planifier n'a pas d'échéance connue"}{" "}
-          — elles apparaîtront ici au dépôt du rapport de leur dernier
-          contrôle. <Lien href={hrefCalendrier}>Voir au calendrier</Lien>.
+            ? `${nbSansDate} vérifications à planifier, sans échéance connue : la frise ne les place pas.`
+            : "1 vérification à planifier, sans échéance connue : la frise ne la place pas."}{" "}
+          <Lien href={hrefCalendrier}>Voir au calendrier</Lien>.
         </p>
       ) : null}
 

@@ -1024,8 +1024,8 @@ export default async function CalendrierPage({
         d&apos;une barre dit le volume du mois, sa couleur l&apos;état le plus
         urgent, et cliquer un mois ouvre son détail. Une vérification sans
         échéance connue n&apos;y figure pas : elle est comptée à part, « sans
-        date ». Elle en reçoit une au dépôt du rapport de son dernier
-        contrôle.
+        date ». Le dépôt du rapport de son dernier contrôle lui en donne une
+        — ou la solde, pour un contrôle unique.
       </p>
       <p className="m-0">
         Les flèches changent d&apos;année, et les cartes du dessous suivent :

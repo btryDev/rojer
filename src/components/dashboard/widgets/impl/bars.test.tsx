@@ -95,6 +95,20 @@ describe("widget « Obligations de l'année » — les lignes sans échéance co
     expect(barres.container.textContent).toContain("Aucune échéance datée cette année.");
   });
 
+  it("le jour de la déclaration, les lignes sans échéance sont dites sous « À venir », pas sous « En retard »", () => {
+    // Relecture des libellés du 2026-09-14 : un seul « dont 12 sans échéance
+    // connue » placé sous « En retard 0 » attribuait au retard les douze
+    // lignes du jour.
+    const { container } = render(
+      <WidgetBarsObligations
+        bundle={{ ...bundle, barsSansEcheance: { aVenir: 12, retard: 0 } }}
+        variant="radial"
+      />,
+    );
+    const texte = container.textContent ?? "";
+    expect(texte).toContain("À venir12(100%)dont 12 sans échéance connueEn retard0(0%)");
+  });
+
   it("l'état vide reste celui d'un dossier sans rien", () => {
     const { container } = render(
       <WidgetBarsObligations

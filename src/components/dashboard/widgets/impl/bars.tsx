@@ -59,7 +59,7 @@ export function WidgetBarsObligations({
         ) : (
           <DonutStatuts
             totaux={totaux}
-            sansEcheance={nbSansEcheance}
+            sansEcheance={barsSansEcheance}
             anterieurs={barsRetardsAnterieurs}
           />
         )}
@@ -134,14 +134,15 @@ function AucuneBarre({ nb }: { nb: number }) {
  */
 export function DonutStatuts({
   totaux,
-  sansEcheance = 0,
+  sansEcheance = { aVenir: 0, retard: 0 },
   anterieurs = 0,
 }: {
   /** `aVenir` et `retard` INCLUENT les lignes sans échéance connue et les
    *  retards d'années passées. */
   totaux: { couvert: number; aVenir: number; retard: number };
-  /** Combien de ces échéances n'ont pas de date connue — dit, pas soustrait. */
-  sansEcheance?: number;
+  /** Combien, dans chaque rangée, n'ont pas d'échéance connue — dit, pas
+   *  soustrait. */
+  sansEcheance?: { aVenir: number; retard: number };
   /** Combien des retards datent d'une année passée — dit, pas soustrait. */
   anterieurs?: number;
 }) {
@@ -198,21 +199,29 @@ export function DonutStatuts({
         </div>
       </div>
       <ul className="flex flex-1 flex-col gap-2 text-[0.88rem]">
+        {/* Chaque « dont » sous SA rangée : un seul « dont N sans échéance
+            connue » sous « En retard » attribuait au retard les lignes du
+            jour, encore à venir (relecture des libellés, 2026-09-14). */}
         <Item
           color={CHAMP_ETAT.lointain}
           label="À venir"
           value={totaux.aVenir}
           total={total}
         />
+        {sansEcheance.aVenir > 0 ? (
+          <li className="pl-5 text-[0.8rem] text-[color:var(--board-slate-mid)]">
+            {`dont ${sansEcheance.aVenir} sans échéance connue`}
+          </li>
+        ) : null}
         <Item
           color={CHAMP_ETAT.enRetard}
           label="En retard"
           value={totaux.retard}
           total={total}
         />
-        {sansEcheance > 0 ? (
+        {sansEcheance.retard > 0 ? (
           <li className="pl-5 text-[0.8rem] text-[color:var(--board-slate-mid)]">
-            {`dont ${sansEcheance} sans échéance connue`}
+            {`dont ${sansEcheance.retard} sans échéance connue`}
           </li>
         ) : null}
         {anterieurs > 0 ? (

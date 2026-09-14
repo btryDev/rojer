@@ -207,7 +207,10 @@ export default async function EquipementDetailPage({
             : "Une vérification est due, et aucune n'est enregistrée"
       }. ${trace}`
     : aFaire.length > 0
-      ? `Des vérifications sont rattachées à cet appareil, mais aucune date n'a encore été convenue. ${trace}`
+      ? // « Aucune date convenue » suggérait un rendez-vous à prendre dans
+        // l'application ; la phrase partagée dit le fait (relecture des
+        // libellés, 2026-09-14).
+        `Des vérifications sont rattachées à cet appareil, sans échéance connue pour l'instant. ${trace}`
       : `Aucune échéance n'est ouverte sur cet appareil à ce jour. ${trace}`;
 
   const realisateurs = realisateursRequis(obligationsCitees);

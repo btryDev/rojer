@@ -725,7 +725,15 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        Le widget « Prochaines échéances » disait « — » à la place de la date
        puis « À planifier » deux fois ; l'aide du calendrier annonçait encore
        un compte « quelle que soit l'année ». « À dater » reste pour une
-       correction, qui se date dans l'application. Trois autres écarts mineurs : ~~l'en-tête du mois du
+       correction, qui se date dans l'application. **Relecture neutre** : le
+       motif tient au sens strict — seule une mise en service déclarée le
+       jour même date encore une ligne, par la régénération. Deux défauts
+       corrigés : l'anneau disait « dont 12 sans échéance connue » sous
+       « En retard 0 » le jour de la déclaration (chaque « dont » sous sa
+       rangée désormais) ; la frise vide affirmait que des retards sans
+       échéance « datent d'avant la période ». Trois phrases promettaient
+       plus que le code et disent le fait : un dépôt ne donne pas d'échéance
+       à un contrôle unique, il le solde. Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni
        « à planifier »)~~ — fermé le même jour : la pastille compte tout ce
        qu'aucune barre ne place et dit « sans date » ; ~~le widget « Prochaine échéance » filtre après la
