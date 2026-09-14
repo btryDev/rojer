@@ -30,6 +30,7 @@ import {
   obligationsDeclencheesParUnFait,
   libelleDelai,
   obligationsDeLEquipement,
+  phraseSansEcheance,
 } from "@/lib/equipements/fiche";
 import { caracteristiquesLisibles } from "@/lib/equipements/caracteristiques";
 import {
@@ -211,15 +212,10 @@ export default async function EquipementDetailPage({
         // l'application ; la phrase dit le fait. Et elle nomme ce qui est
         // ouvert : la seule ligne peut être une CORRECTION non datée, que
         // « des vérifications » taisait (relecture des libellés, 2026-09-14).
-        `${
-          aFaire.every((l) => l.genre === "action")
-            ? aFaire.length > 1
-              ? "Des corrections restent à lever sur cet appareil, sans échéance fixée"
-              : "Une correction reste à lever sur cet appareil, sans échéance fixée"
-            : aFaire.every((l) => l.genre === "verification")
-              ? "Des vérifications sont rattachées à cet appareil, sans échéance connue pour l'instant"
-              : "Des vérifications et des corrections sont ouvertes sur cet appareil, sans échéance pour l'instant"
-        }. ${trace}`
+        `${phraseSansEcheance(
+          aFaire.filter((l) => l.genre === "verification").length,
+          aFaire.filter((l) => l.genre === "action").length,
+        )}. ${trace}`
       : `Aucune échéance n'est ouverte sur cet appareil à ce jour. ${trace}`;
 
   const realisateurs = realisateursRequis(obligationsCitees);

@@ -259,6 +259,27 @@ export function libelleDelai(
 }
 
 /**
+ * Le chapeau d'une fiche dont rien, dans « à faire », n'a de date — ni retard
+ * ni échéance connue. Il nomme ce qui est ouvert, accordé.
+ *
+ * Il disait « aucune date n'a encore été convenue » (un rendez-vous à
+ * prendre dans l'application, qui n'existe pas), puis « des vérifications »
+ * quand la seule ligne était une correction, puis un pluriel pour une seule
+ * vérification (relecture des libellés, 2026-09-14). Sans point final : la
+ * page y ajoute la trace.
+ */
+export function phraseSansEcheance(nbVerifications: number, nbCorrections: number): string {
+  const verifs =
+    nbVerifications > 1 ? "des vérifications" : nbVerifications === 1 ? "une vérification" : null;
+  const corrections =
+    nbCorrections > 1 ? "des corrections" : nbCorrections === 1 ? "une correction" : null;
+  const pluriel = nbVerifications + nbCorrections > 1;
+  const sujet = [verifs, corrections].filter((s) => s !== null).join(" et ");
+  const verbe = pluriel ? "sont ouvertes" : "est ouverte";
+  return `${sujet.charAt(0).toUpperCase()}${sujet.slice(1)} ${verbe} sur cet appareil, sans échéance connue pour l'instant`;
+}
+
+/**
  * Ce qui a été fait, du plus récent au plus ancien.
  *
  * Un rapport déposé fait foi : c'est lui qu'on présente en cas de

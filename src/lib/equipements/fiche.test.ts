@@ -5,8 +5,31 @@ import {
   lignesHistoire,
   obligationsDeclencheesParUnFait,
   obligationsDeLEquipement,
+  phraseSansEcheance,
   type FicheEquipement,
 } from "./fiche";
+
+describe("phraseSansEcheance — le chapeau d'une fiche où rien n'a de date", () => {
+  it("nomme ce qui est ouvert, accordé", () => {
+    // Relecture des libellés du 2026-09-14 : « des vérifications » pour une
+    // seule correction, puis pour une seule vérification.
+    expect(phraseSansEcheance(1, 0)).toBe(
+      "Une vérification est ouverte sur cet appareil, sans échéance connue pour l'instant",
+    );
+    expect(phraseSansEcheance(3, 0)).toBe(
+      "Des vérifications sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+    );
+    expect(phraseSansEcheance(0, 1)).toBe(
+      "Une correction est ouverte sur cet appareil, sans échéance connue pour l'instant",
+    );
+    expect(phraseSansEcheance(1, 1)).toBe(
+      "Une vérification et une correction sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+    );
+    expect(phraseSansEcheance(2, 1)).toBe(
+      "Des vérifications et une correction sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+    );
+  });
+});
 
 /** Dates civiles à minuit UTC, horloge à un instant réel (ADR-011). */
 const jour = (iso: string) => new Date(`${iso}T00:00:00.000Z`);

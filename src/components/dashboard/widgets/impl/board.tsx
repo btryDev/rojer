@@ -1091,7 +1091,15 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
         // Rien à placer sur l'axe : on ne dessine pas une frise déserte de
         // 236 px. On dit ce qui bloque, et on donne la porte de sortie.
         <div className="mt-7 flex flex-col items-start gap-3 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-7">
-          {bundle.equipements.length === 0 ? (
+          {/* « Vide » seulement s'il l'est : un bureau sans équipement doit
+              ses obligations d'établissement, en retard dès le lendemain de
+              leur création. Le panneau les taisait sous « Votre calendrier
+              est vide », et la note des retards sans échéance, masquée sur
+              une frise sans marqueur, ne prenait pas le relais (relecture des
+              libellés, 2026-09-14). */}
+          {bundle.equipements.length === 0 &&
+          nbEnRetard === 0 &&
+          nbSansDate === 0 ? (
             <>
               <p className="m-0 text-[15px] font-semibold tracking-[-0.015em] text-[color:var(--board-ink)]">
                 Votre calendrier est vide
@@ -1340,11 +1348,14 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
           frise ni la grille ne la posent, les y placer à leur date de
           génération mentirait. Même note que la page Calendrier — sinon
           elles disparaîtraient sans explication. */}
-      {nbRetardSansDate > 0 && frise.marqueurs.length > 0 ? (
+      {/* Sur une frise sans marqueur, le panneau « en retard » dit déjà ces
+          lignes ; partout ailleurs — frise garnie, ou vue grille, qui n'a pas
+          ce panneau —, la note les nomme. */}
+      {nbRetardSansDate > 0 && (vue !== "frise" || frise.marqueurs.length > 0) ? (
         <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
           {nbRetardSansDate > 1
-            ? `${nbRetardSansDate} vérifications en retard, sans échéance connue : la frise ne les place pas.`
-            : "1 vérification en retard, sans échéance connue : la frise ne la place pas."}{" "}
+            ? `${nbRetardSansDate} vérifications en retard, sans échéance connue : ni la frise ni la grille ne les placent.`
+            : "1 vérification en retard, sans échéance connue : ni la frise ni la grille ne la placent."}{" "}
           <Lien href={hrefCalendrier}>Voir au calendrier</Lien>.
         </p>
       ) : null}
@@ -1357,8 +1368,8 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
               au-delà de la fenêtre. La note dit le fait, sans promesse
               (relecture des libellés, 2026-09-14). */}
           {nbSansDate > 1
-            ? `${nbSansDate} vérifications à planifier, sans échéance connue : la frise ne les place pas.`
-            : "1 vérification à planifier, sans échéance connue : la frise ne la place pas."}{" "}
+            ? `${nbSansDate} vérifications à planifier, sans échéance connue : ni la frise ni la grille ne les placent.`
+            : "1 vérification à planifier, sans échéance connue : ni la frise ni la grille ne la placent."}{" "}
           <Lien href={hrefCalendrier}>Voir au calendrier</Lien>.
         </p>
       ) : null}

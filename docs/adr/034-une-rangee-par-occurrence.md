@@ -740,7 +740,12 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        échéance n'étaient signalés que dans la pastille « N en retard » — une
        note les nomme (`EtatEcheances.verifsEnRetardSansEcheance`) ; l'aide
        du calendrier dit qu'un rapport « non vérifiable » ou antidaté ne
-       change rien. Trois autres écarts mineurs : ~~l'en-tête du mois du
+       change rien. Leur relecture a trouvé un défaut, corrigé : un bureau
+       sans équipement, dont les obligations d'établissement sont en retard
+       sans échéance, lisait « Votre calendrier est vide » — le panneau ne
+       s'affiche plus que sur un dossier vraiment vide, et la note des
+       retards sans échéance vaut aussi en vue grille. Accords du chapeau de
+       la fiche équipement (`phraseSansEcheance`, testée). Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni
        « à planifier »)~~ — fermé le même jour : la pastille compte tout ce
        qu'aucune barre ne place et dit « sans date » ; ~~le widget « Prochaine échéance » filtre après la
