@@ -344,7 +344,13 @@ export default async function VerificationDetailPage({
             {statutJour === undefined || statutJour === "en_retard" ? null : (
               <BadgeStatut statut={statutJour} />
             )}
-            {enRetard ? (
+            {enRetard && sansRendezVous ? (
+              // Dû et jamais fait, SANS échéance connue : compter des jours
+              // depuis la date de génération mesurerait l'âge du dossier, pas
+              // un retard (`aUnRendezVous`). Même phrase que la carte du
+              // tableau de bord.
+              <PastilleFiche ton="retard">Aucune vérification enregistrée</PastilleFiche>
+            ) : enRetard ? (
               <PastilleRetard echeance={echeance} maintenant={aujourdhui} />
             ) : urgent ? (
               <PastilleFiche ton="proche">

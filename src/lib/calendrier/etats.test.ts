@@ -156,15 +156,34 @@ describe("aUnRendezVous", () => {
     }
   });
 
-  it("l'accorde à une ligne « à planifier » dont la date est passée", () => {
-    // Elle est en retard, pas sans rendez-vous — `classerVerification` la
-    // classe « enRetard », et la fiche doit continuer d'afficher son retard.
+  it("le refuse à une ligne « à planifier » dont la date est passée — elle reste en retard", () => {
+    // CE TEST A CHANGÉ DE RÉPONSE (relecture système du 2026-09-14). Il
+    // l'accordait : « elle est en retard, pas sans rendez-vous ». Depuis le
+    // retrait de `depassee`, « à planifier » dit qu'AUCUNE échéance n'est
+    // connue — la date est celle de la génération, ou d'une ligne dont tous les
+    // rapports ont été retirés. L'accorder faisait annoncer « échéance le
+    // 01/09, en retard de 13 j » sur la date de création de la ligne.
+    const ligne = {
+      statut: "a_planifier",
+      datePrevue: jours(-3),
+      archiveLe: null,
+      periodicite: "annuelle",
+      libelleObligation: "Vérification périodique",
+    };
+    expect(aUnRendezVous(ligne, NOW)).toBe(false);
+    // Le retard, lui, ne bouge pas : un contrôle dû et jamais fait.
+    expect(classerVerification(ligne, NOW)).toBe("enRetard");
+  });
+
+  it("l'accorde à une échéance connue passée, et à une ligne archivée jamais", () => {
+    const base = { archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" };
+    expect(aUnRendezVous({ ...base, statut: "planifiee", datePrevue: jours(-3) }, NOW)).toBe(true);
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: jours(-3), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { ...base, statut: "planifiee", datePrevue: jours(10), archiveLe: jours(-1) },
         NOW,
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 });
 

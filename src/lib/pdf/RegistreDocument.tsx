@@ -29,6 +29,10 @@ export type LigneVerif = {
   libelleObligation: string;
   equipementLibelle: string;
   datePrevue: Date;
+  /** `datePrevue` est-elle une VRAIE échéance (`aUnRendezVous`) ? Sans elle,
+   *  la date est celle de la génération : le document l'imprimait dans la
+   *  colonne « Échéance » (relecture système du 2026-09-14). */
+  echeanceConnue: boolean;
   /** Le statut PEINT — l'état du jour, « en retard » compris. */
   statut: StatutPeint;
   domaine: DomaineObligation | null;
@@ -648,7 +652,9 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             {data.verifsEnAttente.map((v) => (
               <View key={v.id} style={s.row} wrap={false}>
                 <Text style={[s.td, { width: "14%" }]}>
-                  {formatDateCourte(v.datePrevue)}
+                  {/* Une date de génération n'est pas une échéance : on ne
+                      l'imprime pas dans cette colonne (`echeanceConnue`). */}
+                  {v.echeanceConnue ? formatDateCourte(v.datePrevue) : "À planifier"}
                 </Text>
                 <View style={{ width: "40%", paddingRight: 4 }}>
                   <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>

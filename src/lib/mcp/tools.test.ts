@@ -325,6 +325,21 @@ describe("équipements et calendrier", () => {
     expect(texte).toContain("40 jour(s) de retard");
   });
 
+  it("une ligne « à planifier » en retard n'a pas d'échéance ni de jours à compter", async () => {
+    // Relecture système du 2026-09-14 : l'assistant recevait « échéance
+    // 01/07/2026, 40 jour(s) de retard » sur la date de génération de la
+    // ligne — l'âge du dossier. Il reçoit qu'elle est en retard, sans échéance
+    // connue.
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({ statut: "a_planifier" }),
+    ]);
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("en retard");
+    expect(texte).toContain("aucune échéance connue");
+    expect(texte).not.toContain("jour(s) de retard");
+    expect(texte).not.toContain("échéance 01/07/2026");
+  });
+
   it("l'assistant reçoit la dernière réalisation ET l'échéance ouverte", async () => {
     // Relecture externe du 2026-09-13 : l'échéance était écrite en alternative
     // avec la réalisation. L'assistant recevait « réalisée le … » sans pouvoir

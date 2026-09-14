@@ -411,9 +411,7 @@ function formaterVerifications(verifs: VerificationLue[]): string {
         : v.equipement,
       `périodicité ${v.periodicite}`,
       // Depuis l'ADR-034 la ligne dit les deux : ce qui a été fait — lu sur le
-      // dernier rapport — ET l'échéance ouverte. Une ligne d'avant, que la
-      // réconciliation n'a pas encore remise au modèle, garde l'ancienne
-      // phrase.
+      // dernier rapport — ET l'échéance ouverte.
       v.derniereRealisation
         ? `dernière réalisation le ${formaterDateFr(v.derniereRealisation)}`
         : null,
@@ -423,9 +421,13 @@ function formaterVerifications(verifs: VerificationLue[]): string {
       // le 01/03/2025, en retard, 196 jour(s) de retard » sans pouvoir dire
       // quelle échéance était passée (relecture du 2026-09-13). `datePrevue`
       // est ici l'échéance ouverte (`mcp/queries.ts`).
+      // Et SANS ÉCHÉANCE CONNUE, on le dit au lieu d'imprimer la date de
+      // génération comme une échéance (relecture système du 2026-09-14).
       estVerificationRealisee(v)
         ? null
-        : `échéance ${formaterDateFr(v.datePrevue)}`,
+        : v.echeanceConnue
+          ? `échéance ${formaterDateFr(v.datePrevue)}`
+          : "aucune échéance connue",
       LIBELLE_ETAT[v.etat],
       v.joursRetard > 0 ? `${v.joursRetard} jour(s) de retard` : null,
       // Dit en toutes lettres, et non par une pastille : le destinataire est

@@ -58,6 +58,7 @@ import {
   estVerificationAVenir,
   estVerificationEnRetard,
 } from "@/lib/dates/retard";
+import { aUnRendezVous } from "@/lib/calendrier/etats";
 import { ageEnMois, type EtatDuerp } from "./duerp";
 import { TIERS_LUI_MEME_OBLIGATOIRE } from "@/lib/prestataires/domaines";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
@@ -218,7 +219,11 @@ export function genererRecommandations(
     // dossier et non un retard réglementaire. Le fait est qu'aucune
     // vérification n'est enregistrée — on le dit, sans compter des jours
     // qui ne veulent rien dire.
-    const jamaisPlanifiee = v.statut === "a_planifier";
+    // Le prédicat partagé (`aUnRendezVous`), plus une lecture du statut
+    // recopiée : c'est la même question que la fiche, le widget et le PDF
+    // posent, et six surfaces y répondaient autrement (relecture système du
+    // 2026-09-14).
+    const jamaisPlanifiee = !aUnRendezVous(v, now);
     acc.push({
       kind: "verif_depassee",
       cle: `verif-depassee:${v.id}`,

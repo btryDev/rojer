@@ -104,4 +104,14 @@ describe("registre de sécurité — la ligne imprimée dit l'état du jour", ()
   it("« dépassée » sur une ligne roulée restée « planifiée » après sa date", () => {
     expect(ligneVerif(lue({}), false, NOW).statut).toBe("en_retard");
   });
+
+  it("une échéance connue s'imprime, une date de génération non", () => {
+    // Relecture système du 2026-09-14 : la colonne « Échéance » des deux PDF
+    // imprimait la date de création d'une ligne « à planifier » comme une
+    // échéance manquée — l'âge du dossier, sous les yeux d'un assureur.
+    expect(ligneVerif(lue({}), false, NOW).echeanceConnue).toBe(true);
+    const generee = ligneVerif(lue({ statut: "a_planifier" }), false, NOW);
+    expect(generee.echeanceConnue).toBe(false);
+    expect(generee.statut).toBe("en_retard");
+  });
 });

@@ -634,8 +634,35 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        pour exister à l'écran. Six tests du tampon retirés — ils éprouvaient
        des lignes que la migration a fait disparaître —, les fixtures
        « dépassées » sont des échéances `planifiee` passées. 2628 tests,
-       `next build` vert. Reste la relecture du système entier sur le modèle
-       GestBAT.
+       `next build` vert. Fusionnée et déployée le 2026-09-14 (`b4b2eb6`).
+     - **Relecture du système entier sur le modèle GestBAT** (lecture seule de
+       `~/GestBAT`), le même jour. Verdict : ALIGNÉ sur le cœur — une date
+       ouverte, le retard sur la date seule, le dépôt roule, la suppression
+       recule, la réalisation se lit sur les rapports, aucun statut de retard
+       stocké ; Rojer dérive même la dernière réalisation que GestBAT stocke.
+       **Un désalignement, corrigé dans `lot/date-de-generation`** : « la date
+       est-elle une vraie échéance ? » se lisait tantôt sur le statut, tantôt
+       sur le classement, et six surfaces — fiche de vérification, widget des
+       échéances, fiche équipement, registre, colonne « Échéance » des deux
+       PDF, assistant MCP — imprimaient la date de GÉNÉRATION d'une ligne « à
+       planifier » en retard comme une échéance manquée (« en retard de 13 j »
+       = l'âge du dossier). `aUnRendezVous` lit désormais le statut, et toutes
+       les surfaces le lisent, calendrier et carte du tableau de bord compris ;
+       la ligne reste EN RETARD, sans date ni jours à montrer (« aucune
+       vérification enregistrée »). Une quinzaine de commentaires qui
+       décrivaient l'ancien modèle au présent sont rectifiés. Une mutation
+       (prédicat relu sur le classement) fait rougir cinq tests.
+       **Laissé ouvert, écrit** — hors du chantier, chacun son lot :
+       l'échéance d'un titre de salarié vit en deux endroits
+       (`TitreSalarie.echeanceLe` pour la page Équipe, `Verification.datePrevue`
+       pour le calendrier et le score : une VIP de 2020 sans date de fin est
+       « en retard » au calendrier et « à planifier » sur Équipe) ; la
+       « prochaine échéance » d'un appareil se calcule deux fois (tableau de
+       bord sans les retards, vue équipement avec) ; la barre « couvert » du
+       tableau de bord ne lit que le dernier rapport. **Décisions possibles,
+       sans effet sur les données** : dériver des rapports le statut réalisé
+       des ponctuelles ; marquer au dépôt si l'échéance honorée était réelle ;
+       horizon « proche » à 14 ou 30 jours selon le rythme, comme GestBAT.
   2. **`dateRealisee` n'est pas une colonne morte.** Le réconciliateur la
      PRÉSERVE quand elle est la seule trace d'une obligation consommée sans
      rapport, et depuis les corrections du N4, `echeanceOuverte` en DÉPEND :

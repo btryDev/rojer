@@ -732,13 +732,6 @@ export type StatutVerificationPersiste =
 // vivent dans `lib/dates/retard.ts`, en un seul exemplaire : la condition SQL
 // du `deleteMany` doit dire la même chose que `porteUneTrace`.
 
-/**
- * Marqueur d'archivage : une obligation qui cesse de s'appliquer sur une
- * ligne porteuse de preuve est marquée, jamais supprimée (ADR-012). Il vit
- * dans `marqueur.ts` — il se lit dans des modules qui n'ont pas à dépendre du
- * moteur de matching — et se réexporte ici, où il se pose.
- */
-
 /** Ligne de suivi telle qu'elle existe en base, réduite à ce dont la
  *  réconciliation a besoin. */
 export type OccurrenceExistante = {
@@ -1145,9 +1138,8 @@ export function reconcilierCalendrier(
     // Attributs de référentiel : toujours réalignés. C'est ce qui fait
     // qu'une correction de libellé ou de périodicité dans
     // `lib/referentiels/conformite/` se propage sans détruire la ligne.
-    // Le marqueur d'archivage tombe de lui-même puisqu'on réécrit le libellé
-    // depuis le référentiel : une obligation qui redevient applicable
-    // redevient normale.
+    // Une obligation qui redevient applicable redevient normale : l'écriture
+    // de la mise à jour remet `archiveLe` à `null` (`calendrier/actions.ts`).
     let datePrevue: Date;
     let statut: StatutVerificationPersiste;
     // La réalisation que la ligne prouve : son dernier rapport réalisé. Lue sur
@@ -1255,12 +1247,12 @@ export function reconcilierCalendrier(
     } else if (
       ex.statut === "a_planifier" &&
       g.statut === "planifiee" &&
-      // RIEN N'A ÉTÉ CONTRÔLÉ, et cette garde ferme une régression de N2.
-      // Un rapport « non vérifiable » déposé APRÈS un contrôle réel repasse la
-      // ligne en « à planifier » sans toucher sa date — c'est voulu, l'échéance
-      // qui courait court toujours. Sans cette garde, la régénération suivante
-      // remplaçait cette échéance par « mise en service + une période », et le
-      // contrôle réel déjà fait était oublié.
+      // RIEN N'A ÉTÉ CONTRÔLÉ, et cette garde ferme une régression de N2 : une
+      // ligne « à planifier » qui porte un contrôle réel n'est pas un
+      // placeholder, et remplacer sa date par « mise en service + une
+      // période » oublierait ce contrôle. (Le chemin qui la produisait — un
+      // « non vérifiable » qui requalifiait la ligne — ne touche plus le
+      // statut depuis la phase A ; la garde reste pour les données d'avant.)
       realisation === null &&
       // ET SA DATE N'EST PAS PASSÉE. Un « à planifier » dont la date est
       // passée PEUT être un rendez-vous manqué : la suppression de son dernier

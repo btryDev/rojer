@@ -96,6 +96,20 @@ describe("registre — ce qui a été fait, et ce qui vient (ADR-034)", () => {
   });
 });
 
+describe("registre — une date de génération n'est pas une échéance", () => {
+  it("une ligne « à planifier » en retard dit « à planifier », pas « prochaine le »", () => {
+    // Relecture système du 2026-09-14 : la fiche remise en contrôle imprimait
+    // « prochaine le 01 juin 2026 » sur la date de création de la ligne.
+    const [ligne] = lignesDe([
+      verif({ datePrevue: new Date("2026-06-01T00:00:00Z"), statut: "a_planifier" }),
+    ]);
+    expect(ligne.meta).toContain("à planifier");
+    expect(ligne.meta).not.toContain("prochaine");
+    // La pastille, elle, dit le retard : un contrôle dû et jamais fait.
+    expect(ligne.statut).toBe("en_retard");
+  });
+});
+
 describe("registre — une obligation ponctuelle consommée n'annonce pas de suite", () => {
   it("dit ce qui a été fait, sans promettre une prochaine échéance", () => {
     // Sa `datePrevue` n'est que son échéance d'origine : l'annoncer

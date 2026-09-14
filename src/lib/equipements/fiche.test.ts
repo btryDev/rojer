@@ -97,6 +97,20 @@ describe("lignesAFaire", () => {
     expect(lignes[0].etat).toBe("lointain");
   });
 
+  it("une ligne « à planifier » en retard n'expose pas sa date de génération", () => {
+    // Relecture système du 2026-09-14 : la fiche annonçait l'échéance du
+    // 1er juin — la date où la ligne avait été créée — comme un rendez-vous
+    // manqué. Elle reste « en retard » ; elle n'a pas de date à montrer.
+    const [ligne] = lignesAFaire(
+      fiche([{ id: "v-generee", datePrevue: "2026-06-01", statut: "a_planifier" }]),
+      "/etablissements/e1",
+      AUJOURDHUI,
+    );
+    expect(ligne.etat).toBe("enRetard");
+    expect(ligne.date).toBeNull();
+    expect(ligne.detail).toBe("Aucune vérification enregistrée");
+  });
+
   it("écarte une ligne éteinte, même gelée sur un statut ouvert", () => {
     // MUTATION SURVIVANTE de la relecture du N4 (2026-09-13) : retirer
     // `etat !== "archivee"` laissait la suite verte, parce que le helper de

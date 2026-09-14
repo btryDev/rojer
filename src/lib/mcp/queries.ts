@@ -37,6 +37,7 @@ import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
 import { prismaMcp } from "./prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
+import { aUnRendezVous } from "@/lib/calendrier/etats";
 // La règle du réalisé vit avec les autres prédicats (`estVerificationRealisee`) :
 // sur une obligation périodique, la date décide — un statut réalisé d'avant
 // l'ADR-034 ne rend plus « réalisée » une échéance passée à l'assistant.
@@ -397,8 +398,8 @@ export async function listerEquipements(
       actif: true,
       verifications: {
         // `archiveLe` porte l'archivage depuis l'ADR-034 (N3) : sans lui,
-        // `etatDe` lit une ligne éteinte comme une ligne vivante et son statut
-        // gelé sur « dépassée » gonfle le compteur de retards de l'appareil.
+        // `etatDe` lit une ligne éteinte comme une ligne vivante et sa date
+        // passée gonfle le compteur de retards de l'appareil.
         // Écrit en clair, jamais par une constante partagée : la garde RGPD de
         // ce serveur relit le SOURCE, et une constante lui cacherait ce qui
         // sort.
@@ -446,7 +447,7 @@ export type VerificationLue = {
    *
    * Portée jusqu'ici parce que les prédicats partagés la lisent : le statut
    * d'une ligne archivée reste gelé dans son dernier état connu, et sans ce
-   * champ une ligne gelée sur « dépassée » ressort « en retard » à perpétuité.
+   * champ une ligne éteinte à date passée ressort « en retard » à perpétuité.
    */
   archiveLe: Date | null;
   /** La date du dernier rapport réalisé (ADR-034). La ligne ne porte plus que
@@ -454,6 +455,15 @@ export type VerificationLue = {
   derniereRealisation: Date | null;
   statut: string;
   etat: EtatVerification;
+  /**
+   * `datePrevue` est-elle une VRAIE échéance (`aUnRendezVous`) ? `false` sur
+   * une ligne « à planifier » : sa date est celle de la génération, et
+   * l'assistant la restituait « échéance le 01/09, 13 jour(s) de retard » —
+   * l'âge du dossier, pas un retard (relecture système du 2026-09-14).
+   */
+  echeanceConnue: boolean;
+  /** `0` sans échéance connue : on ne compte pas des jours depuis une date de
+   *  génération. La ligne reste « en retard » dans `etat`. */
   joursRetard: number;
   /**
    * `true` quand la ligne naît d'un engagement contractuel — une demande
@@ -548,8 +558,11 @@ export async function listerVerifications(
     // pas — et `formaterVerifications` imprime LES DEUX. L'assistant recevait
     // « Ne s'applique plus — …, ne s'applique plus, 240 jour(s) de retard ».
     // « Réalisée » se lit sur le statut (ADR-034), plus sur la colonne éteinte.
+    echeanceConnue: aUnRendezVous(v, now),
     joursRetard:
-      estVerificationRealisee(v) || estVerificationArchivee(v)
+      estVerificationRealisee(v) ||
+      estVerificationArchivee(v) ||
+      !aUnRendezVous(v, now)
         ? 0
         : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),

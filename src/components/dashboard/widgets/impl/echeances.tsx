@@ -17,7 +17,7 @@
 // sur-titres et aux DATES, qui le gardent ici. C'est le libellé d'équipement
 // qui n'y avait pas droit — c'est une méta de ligne, pas une date.
 
-import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
+import { aUnRendezVous, CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { BentoCell } from "@/components/dashboard/BentoCell";
 import { formaterDateCourteFr } from "@/lib/dates";
@@ -48,10 +48,17 @@ function classifier(
   // marqueur précédent — un préfixe dans le libellé — s'est perdu ici : une
   // ligne archivée gelée sur `depassee` arrivait EN TÊTE du tri par date
   // croissante, sa date étant la plus ancienne, et s'affichait en alerte.
+  // Une ligne sans échéance connue n'a pas de date à montrer, EN RETARD OU
+  // NON : sa date est celle de la génération (`aUnRendezVous`). Le widget
+  // affichait « 01 sept. · Dépassé » sur la date où la ligne avait été créée.
+  const echeanceConnue = aUnRendezVous(v, aujourdhui);
   if (estVerificationEnRetard(v, aujourdhui)) {
-    return { tone: "alerte", libelleDate: formaterDateCourteFr(v.datePrevue) };
+    return {
+      tone: "alerte",
+      libelleDate: echeanceConnue ? formaterDateCourteFr(v.datePrevue) : "—",
+    };
   }
-  if (v.statut === "a_planifier") {
+  if (!echeanceConnue) {
     return { tone: "warn", libelleDate: "—" };
   }
   return { tone: "ok", libelleDate: formaterDateCourteFr(v.datePrevue) };
@@ -122,10 +129,11 @@ export function WidgetProchainesEcheances({
               : c.tone === "warn"
                 ? "À planifier"
                 : "Planifié";
-          const dans =
-            v.statut === "a_planifier"
-              ? "À planifier"
-              : libelleEcart(v.datePrevue, aujourdhui);
+          const dans = !aUnRendezVous(v, aujourdhui)
+            ? c.tone === "alerte"
+              ? "Aucune vérification enregistrée"
+              : "À planifier"
+            : libelleEcart(v.datePrevue, aujourdhui);
           const dansColor =
             c.tone === "alerte" ? "text-[color:var(--board-signal-ink)]" : "text-[color:var(--board-slate-mid)]";
           return (

@@ -16,6 +16,7 @@ import type { ResultatVerification } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import {
+  aUnRendezVous,
   classerDate,
   classerVerification,
   estStatutRealise,
@@ -149,15 +150,19 @@ export function lignesAFaire(
       lignes.push({
         cle: `v-${v.id}`,
         genre: "verification",
-        // L'échéance ouverte ; « à planifier » n'a pas de date arrêtée.
-        date: etat === "aPlanifier" ? null : v.datePrevue,
+        // L'échéance ouverte — seulement si c'en est une (`aUnRendezVous`) :
+        // une ligne « à planifier » EN RETARD gardait sa date de génération,
+        // affichée comme une échéance manquée (relecture système du
+        // 2026-09-14).
+        date: aUnRendezVous(v, maintenant) ? v.datePrevue : null,
         etat,
         surtitre: "Vérification",
         libelle: v.libelleObligation,
-        detail:
-          etat === "aPlanifier"
-            ? "Aucune date convenue — à caler avec votre prestataire"
-            : "Échéance portée au calendrier",
+        detail: aUnRendezVous(v, maintenant)
+          ? "Échéance portée au calendrier"
+          : etat === "enRetard"
+            ? "Aucune vérification enregistrée"
+            : "Aucune date convenue — à caler avec votre prestataire",
         href: `${base}/verifications/${v.id}`,
       });
     }

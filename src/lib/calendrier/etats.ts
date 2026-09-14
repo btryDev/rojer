@@ -264,10 +264,8 @@ export function classerVerification(
   if (estVerificationArchivee(v)) return "archivee";
   if (estVerificationRealisee(v)) return "faite";
   if (estVerificationEnRetard(v, now)) return "enRetard";
-  // Le prédicat, pas le statut brut : c'est lui qui sait lire une ligne
-  // encore tamponnée `depassee` (« à planifier », retrait phase A). Une
-  // lecture recopiée ici l'annonçait « proche » avec un rendez-vous que
-  // personne n'avait arrêté.
+  // Le prédicat, pas le statut brut : une lecture recopiée ici a déjà divergé
+  // de lui une fois (retrait de `depassee`, phase A).
   if (estVerificationAPlanifier(v, now)) return "aPlanifier";
   return classerDate(v.datePrevue, now);
 }
@@ -322,10 +320,10 @@ function statutDuRegistre(
 /**
  * Les cinq lignes aux échéances les plus proches, triées après projection.
  *
- * Le SQL ne sait pas calculer l'échéance ouverte : trier `datePrevue` en base
- * et couper à cinq laissait une rangée gelée — colonne en 2026, échéance en
- * 2027 — occuper une place, et chasser une vraie échéance proche (relecture
- * externe du 2026-09-13). Le tri se fait donc après la projection.
+ * Le tri et la coupe se font sur la projection, et non en SQL : la borne ne
+ * doit dépendre d'aucune lecture que la base ferait autrement que le code (un
+ * `take` en base avait chassé une vraie échéance proche, relecture externe du
+ * 2026-09-13).
  */
 export function cinqProchaines<T extends { datePrevue: Date }>(lignes: T[]): T[] {
   return [...lignes]
@@ -401,10 +399,23 @@ export function statutDeLaLecture(
  * Chacun avait sa propre lecture de `datePrevue` ; ils n'en ont plus qu'une.
  */
 export function aUnRendezVous(v: VerificationDatee, now: Date): boolean {
-  const classe = classerVerification(v, now);
   // Une ligne archivée n'a pas de rendez-vous non plus : ce qu'elle porte est
   // un passé conservé, pas un engagement à venir.
-  return classe !== "aPlanifier" && classe !== "archivee";
+  if (classerVerification(v, now) === "archivee") return false;
+  // LE STATUT, ET NON LE CLASSEMENT. Il dit ce que la date EST : `a_planifier`
+  // — aucune échéance connue, la date est celle de la génération ; tout le
+  // reste — une échéance connue, passée ou non (retrait de `depassee`).
+  //
+  // Lue sur le classement, une ligne « à planifier » dont la date de
+  // génération était passée se classait « en retard » et gagnait un
+  // rendez-vous : six surfaces — cette fiche, le widget des échéances, la
+  // fiche équipement, le registre, le PDF, l'assistant — annonçaient
+  // « échéance le 01/09, en retard de 13 j » sur la date où la ligne avait
+  // été créée, pendant que le calendrier et la carte du tableau de bord
+  // disaient « à dater ». Relecture système du 2026-09-14. La ligne reste EN
+  // RETARD — c'est un contrôle dû et jamais fait — ; elle n'a simplement pas
+  // de date à montrer.
+  return v.statut !== "a_planifier";
 }
 
 /**

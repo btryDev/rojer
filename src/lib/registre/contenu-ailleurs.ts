@@ -28,7 +28,11 @@ import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
   estVerificationRealisee,
 } from "@/lib/dates/retard";
-import { statutAffiche, type StatutPeint } from "@/lib/calendrier/etats";
+import {
+  aUnRendezVous,
+  statutAffiche,
+  type StatutPeint,
+} from "@/lib/calendrier/etats";
 import type { SectionRegistre } from "./sections";
 
 /**
@@ -59,8 +63,9 @@ export type VerificationTenue = {
   periodicite: string;
   /**
    * **Requis, et c'est le registre qui l'exige le plus fort.** Une ligne dont
-   * l'obligation ne s'applique plus garde un statut GELÉ — souvent `depassee` —
-   * et ce document est celui qu'on présente à une commission de sécurité.
+   * l'obligation ne s'applique plus garde un statut GELÉ et une date souvent
+   * passée, et ce document est celui qu'on présente à une commission de
+   * sécurité.
    *
    * Jusqu'au N3 de l'ADR-034, le préfixe « Ne s'applique plus — » vivait dans
    * le libellé : la fiche se dénonçait d'elle-même, sans que personne ait à y
@@ -218,11 +223,16 @@ export function contenuTenuAilleursDepuis(
             // « prochaine » promet un contrôle que rien n'attend. Sur une
             // obligation périodique, en revanche, un statut réalisé ne tait
             // rien : la date reste due.
+            // Et une date « à planifier » n'est pas une échéance : c'est celle
+            // de la génération (`aUnRendezVous`, relecture système du
+            // 2026-09-14). La fiche remise en contrôle imprimait « prochaine
+            // le 01 sept. » sur la date de création de la ligne.
             v.archiveLe || estVerificationRealisee(v)
               ? null
-              : v.datePrevue
-                  ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
-                  : "à planifier",
+              : v.datePrevue &&
+                  aUnRendezVous({ ...v, datePrevue: v.datePrevue }, now)
+                ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
+                : "à planifier",
           ]
             .filter(Boolean)
             .join(" · "),
@@ -235,7 +245,7 @@ export function contenuTenuAilleursDepuis(
           //
           // ET LA PASTILLE DIT L'ÉTAT DU JOUR, PAS LE STATUT STOCKÉ. Depuis le
           // N2 une ligne roulée reste « planifiée » en base après le passage de
-          // sa date — rien ne la réécrit hors régénération —, et la fiche
+          // sa date — le retard n'est pas un statut —, et la fiche
           // remise en contrôle imprimait « Planifiée » sur une ligne en retard.
           // C'est la table partagée (`statutAffiche`) : la même que le registre
           // PDF, le calendrier et la fiche de vérification.

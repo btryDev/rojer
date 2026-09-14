@@ -406,7 +406,9 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             {data.verifsEnRetard.map((v) => (
               <View key={v.id} style={s.row} wrap={false}>
                 <Text style={[s.td, { width: "14%" }]}>
-                  {formatDateCourte(v.datePrevue)}
+                  {/* Une date de génération n'est pas une échéance manquée :
+                      l'imprimer ici dirait l'âge du dossier à un assureur. */}
+                  {v.echeanceConnue ? formatDateCourte(v.datePrevue) : "Aucune connue"}
                 </Text>
                 <View style={{ width: "46%", paddingRight: 4 }}>
                   <Text style={s.td}>{v.libelleObligation}</Text>

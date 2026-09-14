@@ -137,8 +137,8 @@ export type EvenementFenetre = {
  *
  * Le classement passe par `lecturesCalendrier` — LA règle, partagée avec
  * la page calendrier : l'échéance ouverte de chaque ligne (ADR-034) entre
- * dans la fenêtre comme n'importe quel futur, y compris celle d'une rangée
- * d'avant gelée sur un statut réalisé, que la date décide désormais. Les
+ * dans la fenêtre comme n'importe quel futur — la date décide, jamais le
+ * statut. Les
  * lectures « realisation » (le fait, daté au passé) sont écartées : la
  * fenêtre montre la charge, pas l'historique.
  *

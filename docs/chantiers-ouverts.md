@@ -1491,7 +1491,7 @@ au modèle. **Retrait de `depassee`** (décidé le 2026-09-14, modèle GestBAT) 
 ~~phase A~~ (déployée, `a7c80fd`) — le retard est la date, plus aucune
 écriture du statut — ; ~~phase B~~ (`lot/retrait-depassee-b`) — migration,
 enum à cinq valeurs, type d'affichage `StatutPeint` séparé du type stocké.
-Reste la relecture du système entier sur le modèle GestBAT, puis la fusion.
+~~Relecture du système entier sur le modèle GestBAT~~ (2026-09-14) : aligné sur le cœur ; l'affichage de la date d'une ligne « à planifier » en retard est corrigé dans `lot/date-de-generation`. **Restent ouverts** (ADR-034, fin de l'entrée « `depassee` n'est pas mort ») : l'échéance des titres de salariés en deux endroits, la prochaine échéance d'un appareil calculée deux fois, la barre « couvert » qui ne lit que le dernier rapport.
 
 **Ce qui est acquis quoi qu'il arrive.** La règle de fond ne dépend pas du
 modèle : la réglementation dit « au minimum une fois par an » — l'obligation est

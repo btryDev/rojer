@@ -7,7 +7,7 @@ import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
-import { statutDeLaLecture } from "@/lib/calendrier/etats";
+import { aUnRendezVous, statutDeLaLecture } from "@/lib/calendrier/etats";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
@@ -1266,11 +1266,16 @@ export default async function CalendrierPage({
                           <li key={`${v.id}:${ligne.lecture}`} className={sep}>
                             <LigneEcheance
                               href={`/etablissements/${id}/verifications/${v.id}`}
-                              /* Une occurrence jamais planifiée ne porte
-                                 pas de date : la sienne est celle de la
-                                 génération du calendrier. */
+                              /* Une ligne sans échéance connue ne porte pas
+                                 de date : la sienne est celle de la
+                                 génération du calendrier. Même prédicat que
+                                 toutes les surfaces (aUnRendezVous) ; le fait
+                                 daté d'un rapport, lui, garde sa date. */
                               date={
-                                v.statut === "a_planifier" ? null : ligne.date
+                                ligne.lecture === "realisation" ||
+                                aUnRendezVous(v, aujourdhui)
+                                  ? ligne.date
+                                  : null
                               }
                               type={typeDeVerification(v)}
                               titre={v.libelleObligation}

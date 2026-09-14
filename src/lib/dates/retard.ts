@@ -102,8 +102,8 @@ export type VerificationDatee = {
    * l'obligation a cessé de s'appliquer à cette ligne (ADR-034) ; `null` =
    * ligne ouverte. Une ligne archivée ne réclame plus rien, et son statut
    * reste GELÉ dans son dernier état connu — faute de valeur `archivee` dans
-   * l'enum Prisma —, si bien qu'une ligne gelée sur `depassee` se lit « en
-   * retard » à perpétuité quand personne ne regarde ce champ.
+   * l'enum Prisma —, si bien qu'une ligne archivée à date passée se lirait
+   * « en retard » à perpétuité si personne ne regardait ce champ.
    *
    * Il remplace le préfixe « Ne s'applique plus — » que ces prédicats lisaient
    * dans le libellé : un fait daté qui se lisait par `startsWith`, et que sept
@@ -198,14 +198,12 @@ export function estStatutRealise(statut: string): boolean {
  * Le statut sous lequel les prédicats LISENT la ligne.
  *
  * Un statut réalisé sur une obligation périodique — donc non purgé, voir
- * ci-dessous — se lit « planifiée » : c'est la rangée d'avant l'ADR-034, dont
- * `datePrevue` est le rendez-vous suivant, calculé et posé par l'ancien
- * modèle. Ce rendez-vous est ARRÊTÉ au même titre que celui d'une ligne
- * roulée ; il se compare donc à la date comme elle. Sans cette lecture, les
- * prédicats ne comparaient la date que sous `planifiee` et `a_planifier`, et
- * `estVerificationEnRetard` rendait `false` sur la rangée gelée — le
- * classement tombait juste par ricochet, les recommandations et le dossier
- * PDF non. Trouvé par la suite, pas par lecture (2026-09-13).
+ * ci-dessous — se lit « planifiée » : sa `datePrevue` est une échéance connue,
+ * qui se compare à la date comme celle d'une ligne roulée. Les migrations de
+ * N5 et du retrait de `depassee` ont remis les données au modèle ; la lecture
+ * reste la définition, pour qu'aucun seed ni import ne la contourne. Sans
+ * elle, `estVerificationEnRetard` rendait `false` sur une telle ligne
+ * (2026-09-13).
  */
 function statutLu(v: VerificationDatee): string {
   if (estStatutRealise(v.statut) && !estVerificationRealisee(v)) return "planifiee";
@@ -312,8 +310,9 @@ export function estVerificationAPlanifier(
 /**
  * Une vérification est **à venir** quand elle est planifiée et tombe dans
  * la fenêtre courante (par défaut l'horizon proche du produit, 30 jours).
- * Les occurrences `a_planifier` en sont exclues : sans date arrêtée avec le
- * prestataire, annoncer « prévue le 12 » serait un mensonge d'affichage.
+ * Les occurrences `a_planifier` en sont exclues : sans échéance connue — leur
+ * date est celle de la génération —, annoncer « prévue le 12 » serait un
+ * mensonge d'affichage.
  */
 export function estVerificationAVenir(
   v: VerificationDatee,

@@ -15,7 +15,11 @@ import {
   estVerificationRealisee,
   type VerificationDatee,
 } from "@/lib/dates/retard";
-import { statutAffiche, type StatutPeint } from "@/lib/calendrier/etats";
+import {
+  aUnRendezVous,
+  statutAffiche,
+  type StatutPeint,
+} from "@/lib/calendrier/etats";
 
 /**
  * Une ligne « en attente » au sens du registre de sécurité : elle n'a pas
@@ -202,6 +206,7 @@ export function ligneVerif(
     libelleObligation: v.libelleObligation,
     equipementLibelle: libelleEquipementSitue(v, multiBatiments),
     datePrevue: v.datePrevue,
+    echeanceConnue: aUnRendezVous(v, now),
     // `undefined` n'arrive pas : les deux tableaux n'admettent aucune ligne
     // archivée. Le repli garde le type du document.
     statut: statutAffiche(v, now) ?? (v.statut as StatutPeint),
@@ -282,8 +287,9 @@ export async function construireRegistreData(
     commentaires: r.commentaires,
   }));
 
-  // « En attente » = tout ce qui n'a pas encore de rapport, quelle que soit
-  // la date : c'est le pendant documentaire des rapports listés au-dessus.
+  // « En attente » = toute échéance encore attendue — ouverte et non purgée
+  // (`estEnAttenteDeRapport`), rapports passés ou non, quelle que soit la
+  // date : c'est le pendant documentaire des rapports listés au-dessus.
   //
   // `estVerificationArchivee` N'EST PAS UN DÉTAIL ICI. Le filtre ne portait
   // que sur le statut, et le statut d'une ligne archivée reste GELÉ dans son

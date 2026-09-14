@@ -619,9 +619,9 @@ model Verification {
   // Date à laquelle l'obligation a cessé de s'appliquer à cette ligne, qu'on
   // ne pouvait pas supprimer parce qu'elle porte une preuve (ADR-034, qui
   // amende l'ADR-012). `null` = ligne ouverte. Remplace le préfixe
-  // « Ne s'applique plus — » du libellé, qu'on lisait par `startsWith` : les
-  // deux sont écrits ensemble depuis le 2026-09-11 (lot N1), et les lecteurs
-  // passent sur ce champ au lot N3, qui retire le préfixe.
+  // « Ne s'applique plus — » du libellé, qu'on lisait par `startsWith` : écrit
+  // depuis le 2026-09-11 (lot N1), seul lu depuis le lot N3 (2026-09-12), qui
+  // a retiré le préfixe.
   archiveLe DateTime?
 
   rapports RapportVerification[]
