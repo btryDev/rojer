@@ -35,9 +35,11 @@ export function WidgetBarsObligations({
   const annee = bundle.aujourdhui.getFullYear();
 
   if (variant === "radial") {
-    // Les comptes gardent TOUTES les échéances dues cette année, datées ou
-    // non, et les retards d'années passées, dus MAINTENANT : « En retard »
-    // dit le nombre du bandeau (`repartirParMois`).
+    // Les comptes gardent TOUTES les échéances de vérification dues cette
+    // année, datées ou non, et les retards d'années passées, dus MAINTENANT :
+    // « En retard » dit le retard des VÉRIFICATIONS, celui du calendrier
+    // (`repartirParMois`). Le bandeau, lui, ajoute les actions, attestations
+    // et autres échéances en retard : il peut dire davantage.
     const totaux = barsData.reduce(
       (acc, b) => ({
         couvert: acc.couvert + b.couvert,

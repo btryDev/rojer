@@ -708,9 +708,10 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        `urgenceSeule`), hors des barres, et dit combien. Sa relecture l'a
        exigé : la première version ne reportait que les retards sans date,
        et un extincteur manqué en octobre dernier faisait dire « 0 en
-       retard » à l'anneau sous un bandeau « 1 en retard ». Le bandeau suit
-       le filtre de zone, l'anneau non : écart de périmètre antérieur, non
-       traité ici.
+       retard » à l'anneau sous un bandeau « 1 en retard ». L'anneau compte
+       désormais le retard des VÉRIFICATIONS, celui du calendrier ; le
+       bandeau y ajoute actions, attestations et autres échéances, et suit le
+       filtre de zone : il peut dire davantage, par construction.
        « À planifier » / « à dater » subsistent pour les lignes non
        en retard. Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni

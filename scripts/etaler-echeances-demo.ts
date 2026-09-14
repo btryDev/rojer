@@ -195,8 +195,12 @@ async function annuler(cible: Cible): Promise<void> {
       data: { datePrevue: new Date(origine), statut: "a_planifier" },
     });
     ramenees += r.count;
+    // Seules les lignes RAMENÉES quittent le journal. Une ligne sautée —
+    // archivée entre-temps, ou dont un rapport a été déposé puis retiré —
+    // doit rester annulable au prochain passage.
+    if (r.count === 1) delete journal[id];
   }
-  ecrireJournal(cible, {});
+  ecrireJournal(cible, journal);
   console.log(`${cible} : ${ramenees} échéance(s) rendue(s) à leur date d'origine.`);
 }
 
