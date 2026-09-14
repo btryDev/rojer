@@ -114,7 +114,18 @@ export function repartirParMois(
       // neuf, sous un bandeau qui annonçait 12 retards (relecture,
       // 2026-09-14). Même année que si elle avait été posée.
       if (!aUnRendezVous(v, now)) {
-        if (composantesCiviles(lec.date).annee === annee) {
+        // Son année est celle de sa génération… sauf pour un RETARD vu depuis
+        // l'année en cours : sans date, il n'a aucun mois où rester, et il est
+        // dû MAINTENANT. Généré l'an dernier, il n'était compté nulle part —
+        // ni sur les barres d'une année que le widget ne montre pas, ni dans
+        // l'anneau de cette année (relecture système, 2026-09-14). Un retard
+        // DATÉ de l'an dernier, lui, garde son mois.
+        const anneeLue = composantesCiviles(lec.date).annee;
+        const retardReporte =
+          segment === "retard" &&
+          anneeLue < annee &&
+          annee === composantesCiviles(now).annee;
+        if (anneeLue === annee || retardReporte) {
           sansEcheance[segment] += 1;
         }
         continue;

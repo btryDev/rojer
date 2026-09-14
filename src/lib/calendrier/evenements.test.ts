@@ -111,7 +111,14 @@ describe("fusionnerEvenements — assemblage", () => {
   });
 
   it("écarte les vérifications à planifier — leur date n'est pas choisie", () => {
-    const out = fusion([verif("v1", 20, "warn"), verif("v2", 22)], []);
+    // Ton `warn` ET `sansEcheance` : c'est ce que le flux produit pour une
+    // « à planifier » à venir. La fixture posait `warn` sur une échéance
+    // connue, cas impossible, que seul le test du ton rattrapait (relecture
+    // système, 2026-09-14 : le filtre ne lit plus que le drapeau).
+    const out = fusion(
+      [{ ...verif("v1", 20, "warn"), sansEcheance: true }, verif("v2", 22)],
+      [],
+    );
     expect(out.map((e) => e.id)).toEqual(["v2"]);
   });
 

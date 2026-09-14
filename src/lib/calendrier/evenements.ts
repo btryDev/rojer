@@ -86,8 +86,10 @@ export function fusionnerEvenements({
   const verifsVisibles = filtrerParBatiment(
     verifications.filter(
       (e) =>
+        // Le drapeau seul : le ton `warn` est celui d'une « à planifier » à
+        // venir, donc toujours `sansEcheance` — le tester en plus disait
+        // deux règles là où il n'y en a qu'une (relecture système).
         !e.sansEcheance &&
-        e.tone !== "warn" &&
         (!famille || famille === FAMILLE_DE_TYPE[e.type]),
     ),
     batimentId,

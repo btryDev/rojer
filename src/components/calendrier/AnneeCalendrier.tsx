@@ -23,7 +23,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { RegleAnnuelle, totalDuMois, type MoisRegle } from "./RegleAnnuelle";
+import {
+  RegleAnnuelle,
+  sansDateDeLAnnee,
+  totalDuMois,
+  type MoisRegle,
+} from "./RegleAnnuelle";
 import {
   libelleMoisPrecedents,
   libelleTotalAnnee,
@@ -54,7 +59,6 @@ export function AnneeCalendrier({
   annee,
   anneesRegle,
   sections,
-  sansDate,
   moisInitial,
   cleMoisCourant,
   commandes,
@@ -65,7 +69,6 @@ export function AnneeCalendrier({
   /** La règle de chaque année couverte par le dossier, triées. */
   anneesRegle: AnneeRegle[];
   sections: SectionMoisData[];
-  sansDate: number;
   /** Mois déplié au chargement — le premier qui porte quelque chose. */
   moisInitial: string | null;
   /** Clé `AAAA-MM` du mois d'aujourd'hui — la charnière de la liste. */
@@ -131,6 +134,8 @@ export function AnneeCalendrier({
     anneesRegle.findIndex((a) => a.annee === anneeRegle),
   );
   const regle = anneesRegle[idxRegle];
+  // L'année FEUILLETÉE, comme le total daté voisin (`sansDateDeLAnnee`).
+  const sansDate = sansDateDeLAnnee(regle.mois);
 
   // Les douze mois de l'année affichée, cartes et creux mêlés : un mois
   // sans échéance se dit d'un mot au lieu de disparaître — l'année se lit

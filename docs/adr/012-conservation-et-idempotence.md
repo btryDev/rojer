@@ -141,7 +141,9 @@ durable d'une obligation sur un équipement. Sa sémantique est fixée ainsi :
   - cycle soldé et période non écoulée : `datePrevue` = `dateRealisee +
     périodicité`, le résultat du contrôle (`realisee_*`) est conservé ;
   - cycle soldé et période écoulée : nouveau cycle — `dateRealisee` repasse à
-    `null`, statut `depassee`. C'est ce qui empêche l'outil d'afficher
+    `null`, statut `depassee` *(règle remplacée : depuis l'ADR-034 la ligne
+    roule au dépôt d'un rapport, la colonne `dateRealisee` et le statut
+    `depassee` n'existent plus — le retard se lit sur la date)*. C'est ce qui empêche l'outil d'afficher
     « Conforme » sur un contrôle annuel vieux de deux ans. Les rapports du
     cycle précédent restent attachés à la même ligne ;
 - **ligne devenue non applicable** (équipement désactivé, régime modifié,

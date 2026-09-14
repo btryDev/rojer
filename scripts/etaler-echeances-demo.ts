@@ -19,8 +19,9 @@
 // action, statut réalisé) ou qui ne s'applique plus. Son échéance ouverte a
 // été posée par un dépôt, ou elle appartient à l'historique (`jamaisControlees`).
 //
-// Réversible : `--annuler` ramène ces mêmes lignes à la date d'origine, qui
-// est la même pour toutes par construction.
+// Réversible, à une exception près : `--annuler` ramène ces lignes à la date
+// d'origine, qui est la même pour toutes par construction, et à « à
+// planifier » (voir `lignesDEquipementOuDEtablissement`).
 //
 //   pnpm etaler:echeances maak
 //   pnpm etaler:echeances maak --annuler
@@ -84,6 +85,31 @@ function jamaisControlees(): Prisma.VerificationWhereInput {
   return { AND: [echeancesAnnoncables(), { NOT: portantUnePreuve() }] };
 }
 
+/*
+ * LA DATE ET LE STATUT S'ÉCRIVENT ENSEMBLE (relecture système du 2026-09-14).
+ *
+ * Depuis le retrait de `depassee`, le statut dit si une date est une vraie
+ * échéance : « à planifier » = date de génération, jamais affichée
+ * (`aUnRendezVous`). Le script écrivait la date seule : sur une « à
+ * planifier », l'étalement ne se voyait nulle part, et les lignes poussées
+ * dans le futur sortaient du retard sans rien montrer.
+ *
+ * Désormais :
+ *  - l'étalement ne prend que les « à planifier » d'appareil ou
+ *    d'établissement, et les écrit « planifiée » — la démonstration simule un
+ *    planning posé ; les titres de salarié gardent la date que
+ *    `echeanceDuTitre` leur calcule ;
+ *  - `--annuler` rend « à planifier », au 10/08/2026, les « planifiée » sans
+ *    preuve hors titres. Une ligne datée par héritage d'une obligation
+ *    retirée y passe aussi et perd sa date : c'est le prix d'un script de
+ *    démonstration qui ne garde pas l'état d'avant.
+ */
+function lignesDEquipementOuDEtablissement(
+  statut: "a_planifier" | "planifiee",
+): Prisma.VerificationWhereInput {
+  return { AND: [jamaisControlees(), { salarieId: null, statut }] };
+}
+
 function auJour(n: number): Date {
   const d = new Date(AUJOURDHUI);
   d.setUTCDate(d.getUTCDate() + n);
@@ -95,7 +121,7 @@ async function etaler(cible: Cible): Promise<void> {
   const etablissementId = ETABLISSEMENTS[cible];
 
   const occurrences = await prisma.verification.findMany({
-    where: { etablissementId, ...jamaisControlees() },
+    where: { etablissementId, ...lignesDEquipementOuDEtablissement("a_planifier") },
     select: {
       id: true,
       obligationId: true,
@@ -115,7 +141,7 @@ async function etaler(cible: Cible): Promise<void> {
       })));
     await prisma.verification.update({
       where: { id: o.id },
-      data: { datePrevue: nouvelle },
+      data: { datePrevue: nouvelle, statut: "planifiee" },
     });
     deplacees += 1;
   }
@@ -126,8 +152,8 @@ async function etaler(cible: Cible): Promise<void> {
 async function annuler(cible: Cible): Promise<void> {
   const etablissementId = ETABLISSEMENTS[cible];
   const r = await prisma.verification.updateMany({
-    where: { etablissementId, ...jamaisControlees() },
-    data: { datePrevue: DATE_ORIGINE },
+    where: { etablissementId, ...lignesDEquipementOuDEtablissement("planifiee") },
+    data: { datePrevue: DATE_ORIGINE, statut: "a_planifier" },
   });
   console.log(`${cible} : ${r.count} échéance(s) ramenée(s) au 10/08/2026.`);
 }

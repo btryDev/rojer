@@ -503,9 +503,12 @@ export default async function CalendrierPage({
       const cle = `${a}-${String(i + 1).padStart(2, "0")}`;
       const compte = { enRetard: 0, proche: 0, lointain: 0, faite: 0 };
       let retardSansDate = 0;
+      let sansDate = 0;
       for (const l of parMois.get(cle) ?? []) {
         if (!datable(l)) {
-          // Pas de barre, mais la couture des années passées doit le trouver.
+          // Pas de barre. Compté pour la pastille « sans date » de SON année,
+          // et, s'il est en retard, pour la couture des années passées.
+          sansDate += 1;
           if (l.genre === "verif" && l.registre === "enRetard") retardSansDate += 1;
           continue;
         }
@@ -517,6 +520,7 @@ export default async function CalendrierPage({
         labelLong: `${MOIS_FR[i]} ${a}`,
         ...compte,
         retardSansDate,
+        sansDate,
       };
     });
 
@@ -1232,18 +1236,13 @@ export default async function CalendrierPage({
           <div>
             <AnneeCalendrier
               annee={anneeCourante}
+              /* « Sans date » vit désormais dans la règle, mois par mois
+                 (`MoisRegle.sansDate`) : la pastille voisine du millésime
+                 compte l'année FEUILLETÉE, comme le total daté à côté d'elle.
+                 Passé d'un bloc, il comptait toutes les années, et la page
+                 2027 annonçait « 12 sans date » sans aucune carte pour les
+                 porter (relecture système, 2026-09-14). */
               anneesRegle={anneesRegle}
-              /* « Sans date » : ce qu'aucune barre ne place (`datable`), EN
-                 RETARD OU NON, compté sur les lignes AFFICHÉES — le même
-                 périmètre que les cartes de mois, TOUTES ANNÉES
-                 confondues (la pastille voisine du millésime ne le borne
-                 pas à l'année feuilletée — écart connu). Il additionnait
-                 `etat.aPlanifier`, qui ne suit que le filtre bâtiment : sous
-                 un filtre famille, la règle et les cartes ne comptaient pas
-                 les mêmes lignes (relecture, 2026-09-14). */
-              sansDate={
-                lignes.filter((l) => l.genre === "verif" && !datable(l)).length
-              }
               /* Seulement sur la lecture d'ensemble : sous un filtre, la
                  remarque porterait sur un périmètre qu'elle ne décrit
                  pas. */

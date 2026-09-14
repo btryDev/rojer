@@ -167,6 +167,25 @@ export function estStatutRealise(statut: string): boolean {
 }
 
 /**
+ * Le statut sous lequel les prédicats LISENT la ligne.
+ *
+ * Un statut réalisé sur une obligation périodique — donc non purgé, voir
+ * `estVerificationRealisee` — se lit « planifiée » : sa `datePrevue` est une
+ * échéance connue, qui se compare à la date comme celle d'une ligne roulée.
+ * Les migrations de N5 et du retrait de `depassee` ont remis les données au
+ * modèle ; la lecture reste la définition, pour qu'aucun seed ni import ne la
+ * contourne. Sans elle, `estVerificationEnRetard` rendait `false` sur une
+ * telle ligne (2026-09-13).
+ */
+function statutLu(v: VerificationDatee): string {
+  if (estStatutRealise(v.statut) && !estVerificationRealisee(v)) return "planifiee";
+  // (`depassee` se lisait ici « à planifier » pendant la phase A. Il a quitté
+  // l'enum le 2026-09-14 : le retard est une fonction de la date, et de rien
+  // d'autre — le modèle de GestBAT, qui ne stocke aucun statut de retard.)
+  return v.statut;
+}
+
+/**
  * La ligne n'attend-elle plus rien ?
  *
  * **Un statut réalisé ne purge une échéance que sur une obligation SANS
@@ -179,40 +198,18 @@ export function estStatutRealise(statut: string): boolean {
  *
  * POURQUOI CETTE GARDE, ALORS QUE LE DÉPÔT FAIT ROULER LA LIGNE. Depuis le
  * N2, une ligne périodique déposée repart « planifiée » : un statut réalisé
- * n'y subsiste plus. Mais TOUTES les lignes écrites avant l'ADR-034 en portent
- * un, avec la date du rendez-vous suivant dans `datePrevue` — et le
- * classement, en testant le statut avant la date, les lisait « faites » à
- * perpétuité : une échéance passée de six mois devenait verte sur quatre
- * surfaces au déploiement, tant que personne ne rouvrait le calendrier (seule
- * page qui régénère). Relevé par les deux relectures du N4, le 2026-09-13.
- * La règle écrite ici rend ces lignes lisibles JUSTE sans attendre qu'une
- * migration les remette au modèle — et reste vraie après, comme invariant :
- * une ligne périodique n'est jamais « faite », seulement « faite jusqu'au
- * prochain ».
+ * n'y subsiste plus. Mais les lignes écrites avant l'ADR-034 en portaient un,
+ * avec la date du rendez-vous suivant dans `datePrevue` — et le classement,
+ * en testant le statut avant la date, les lisait « faites » à perpétuité
+ * (deux relectures du N4, 2026-09-13). La migration du N5 a remis ces lignes
+ * au modèle ; la règle reste, comme invariant, pour qu'aucun seed ni import
+ * ne la contourne : une ligne périodique n'est jamais « faite », seulement
+ * « faite jusqu'au prochain ».
  *
  * `periodicite` arrive en chaîne depuis la base, d'où le transtypage — le même
  * que chez les autres appelants d'`estCyclique`, qui tient l'inconnu pour
  * ponctuel.
  */
-/**
- * Le statut sous lequel les prédicats LISENT la ligne.
- *
- * Un statut réalisé sur une obligation périodique — donc non purgé, voir
- * ci-dessous — se lit « planifiée » : sa `datePrevue` est une échéance connue,
- * qui se compare à la date comme celle d'une ligne roulée. Les migrations de
- * N5 et du retrait de `depassee` ont remis les données au modèle ; la lecture
- * reste la définition, pour qu'aucun seed ni import ne la contourne. Sans
- * elle, `estVerificationEnRetard` rendait `false` sur une telle ligne
- * (2026-09-13).
- */
-function statutLu(v: VerificationDatee): string {
-  if (estStatutRealise(v.statut) && !estVerificationRealisee(v)) return "planifiee";
-  // (`depassee` se lisait ici « à planifier » pendant la phase A. Il a quitté
-  // l'enum le 2026-09-14 : le retard est une fonction de la date, et de rien
-  // d'autre — le modèle de GestBAT, qui ne stocke aucun statut de retard.)
-  return v.statut;
-}
-
 export function estVerificationRealisee(
   // Les deux seuls champs lus, et le type le dit : un appelant qui n'a pas de
   // date sous la main (une fiche de registre, dont `datePrevue` peut être
@@ -290,8 +287,9 @@ export function estVerificationEnRetard(
 
 /**
  * Une vérification est **à planifier** quand elle attend une date de
- * rendez-vous sans être encore en retard : statut `a_planifier`, échéance
- * aujourd'hui ou plus tard.
+ * rendez-vous sans être encore en retard : statut `a_planifier` (aucune
+ * échéance connue), et une date de GÉNÉRATION qui n'est pas encore dépassée —
+ * en pratique, le jour de sa création. Dès le lendemain, elle est en retard.
  *
  * Volontairement disjoint de `estVerificationEnRetard` : les deux prédicats
  * ne sont jamais vrais ensemble, un compteur « en retard » et un compteur

@@ -31,9 +31,9 @@ export function WidgetBarsObligations({
   const vide = aucuneBarre && nbSansEcheance === 0;
 
   if (variant === "radial") {
-    // Les comptes gardent TOUTES les échéances de l'année, datées ou non :
-    // « En retard » dit ici le même nombre qu'avant que les lignes sans
-    // échéance quittent les barres.
+    // Les comptes gardent TOUTES les échéances de l'année, datées ou non —
+    // et, sur l'année en cours, les retards sans date générés avant elle,
+    // qui n'ont aucun autre mois où être comptés (`repartirParMois`).
     const totaux = barsData.reduce(
       (acc, b) => ({
         couvert: acc.couvert + b.couvert,

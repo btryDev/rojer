@@ -478,7 +478,7 @@ const schemaVerifications = z.object({
     .max(3650)
     .optional()
     .describe(
-      "Ne garder que les vérifications non réalisées dont l'échéance tombe dans ce nombre de jours.",
+      "Ne garder que les vérifications non réalisées dont l'échéance tombe dans ce nombre de jours, échéances dépassées comprises, ainsi que celles sans échéance connue (dues, jamais faites), listées en premier.",
     ),
 });
 

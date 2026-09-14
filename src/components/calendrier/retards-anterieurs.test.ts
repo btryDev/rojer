@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { moisEnRetardAvant, type AnneeRegle } from "./AnneeCalendrier";
-import type { MoisRegle } from "./RegleAnnuelle";
+import { sansDateDeLAnnee, type MoisRegle } from "./RegleAnnuelle";
 
 /**
  * Le défaut que ce fichier verrouille a été trouvé **à l'écran**, par un
@@ -110,5 +110,20 @@ describe("moisEnRetardAvant", () => {
     expect(moisEnRetardAvant([annee(2026, [mois("2026-08", 3)])], 2026)).toEqual(
       [],
     );
+  });
+});
+
+describe("sansDateDeLAnnee", () => {
+  it("compte l'année feuilletée, pas le dossier entier", () => {
+    // Relecture système du 2026-09-14 : passée d'un bloc, la pastille comptait
+    // toutes les années — la page 2027 annonçait « 12 sans date » sans aucune
+    // carte de 2027 pour les porter.
+    const regle = [
+      annee(2026, [{ ...mois("2026-09", 0), sansDate: 12, retardSansDate: 11 }]),
+      annee(2027, [mois("2027-03", 0)]),
+    ];
+
+    expect(sansDateDeLAnnee(regle[0].mois)).toBe(12);
+    expect(sansDateDeLAnnee(regle[1].mois)).toBe(0);
   });
 });

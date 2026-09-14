@@ -200,7 +200,7 @@ describe("echeancesAnnoncables", () => {
   it("écarte les lignes éteintes, dont le statut reste gelé", () => {
     // Le compte à rebours de la page d'établissement annonçait « Prochaine
     // échéance — Ne s'applique plus … » : une ligne archivée garde son statut
-    // (souvent `depassee`), passe donc le filtre de statut, et sa date étant la
+    // (souvent « planifiée »), passe donc le filtre de statut, et sa date étant la
     // plus ancienne, le tri croissant la met EN TÊTE. Elle consommait une des
     // cinq places. La clause vivait dans la page, où aucun test ne l'atteignait.
     expect(echeancesAnnoncables().AND).toContainEqual({ archiveLe: null });

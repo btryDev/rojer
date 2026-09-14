@@ -485,8 +485,9 @@ describe("horloge injectée", () => {
 // qui le portait était sélectionnable ou non, donc silencieusement absent.
 //
 // Le statut, lui, reste GELÉ dans son dernier état connu : l'enum n'a toujours
-// pas de valeur `archivee`. Une ligne gelée sur `depassee` se lit donc « en
-// retard » à perpétuité chez qui ne regarde pas `archiveLe` — d'où le fait que
+// pas de valeur `archivee`. Une ligne gelée sur « planifiée » à date passée se
+// lit donc « en retard » à perpétuité chez qui ne regarde pas `archiveLe` —
+// d'où le fait que
 // le champ soit REQUIS dans `VerificationDatee`, et que les trois prédicats
 // s'arrêtent dessus avant même de regarder les dates.
 
@@ -494,7 +495,7 @@ describe("horloge injectée", () => {
 const ARCHIVE_LE = new Date("2026-07-01T00:00:00Z");
 
 describe("lignes archivées", () => {
-  it("une ligne archivée n'est jamais en retard, même gelée sur `depassee`", () => {
+  it("une ligne archivée n'est jamais en retard, même gelée sur un statut ouvert", () => {
     const v = verif({
       statut: "planifiee",
       datePrevue: HIER,
@@ -534,8 +535,8 @@ describe("lignes archivées", () => {
   it("ne réclame rien QUEL QUE SOIT son statut gelé", () => {
     // GARANTIE (a) DU LOT N3. Les deux cas ci-dessus prennent chacun UN statut ;
     // celui-ci les prend tous, parce que c'est le statut gelé qui fait le
-    // dégât et qu'on ne choisit pas lequel se fige. Une ligne archivée pendant
-    // qu'elle était `depassee` garde « dépassée » pour toujours — l'enum Prisma
+    // dégât et qu'on ne choisit pas lequel se fige. Une ligne archivée garde
+    // son statut pour toujours (du temps de `depassee`, « dépassée ») — l'enum Prisma
     // n'ayant pas de valeur `archivee` —, et chaque surface qui lit le statut
     // sans lire `archiveLe` annonce un retard sur une obligation éteinte. Le
     // PDF du registre l'imprimait dans un document remis en contrôle.

@@ -385,7 +385,10 @@ qu'une régénération qui échoue devrait dégrader, pas blanchir un écran.
   canal de sortie pour les obligations écartées et un écran qui s'en serve ;
   ce n'est pas fait ici.
 - **Les deux lignes naissent « à planifier » et basculent « dépassée » le
-  lendemain, chez tout le monde à la fois.** Sans historique ni mise en
+  lendemain, chez tout le monde à la fois.** *(Depuis le 2026-09-14, plus
+  aucun statut ne bascule : `depassee` a quitté l'enum et la ligne « à
+  planifier » se lit en retard sur sa date dès le lendemain. L'effet décrit
+  ici — tout le parc en retard le même jour — reste exact.)* Sans historique ni mise en
   service — et une obligation d'établissement n'a pas de mise en service —
   le générateur pose `datePrevue = aujourd'hui` et `estUrgent`. À la
   régénération suivante, la date est passée : `depassee`. C'est la convention

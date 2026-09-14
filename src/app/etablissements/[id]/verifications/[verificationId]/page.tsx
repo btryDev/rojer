@@ -331,11 +331,11 @@ export default async function VerificationDetailPage({
         pastilles={
           <>
             {contractuelle && <MentionContractuelle />}
-            {/* Le statut « dépassée » se lit déjà « En retard » : deux
-                pastilles rose côte à côte disaient la même chose. Le
-                compte de jours la remplace alors, plutôt que de s'y
-                ajouter — un retard d'un jour et un retard de six mois
-                n'appellent pas le même geste. */}
+            {/* En retard, la pastille d'état dit déjà « En retard » : une
+                seconde pastille rose aurait dit la même chose. Le compte de
+                jours la remplace alors, plutôt que de s'y ajouter — un retard
+                d'un jour et un retard de six mois n'appellent pas le même
+                geste. */}
             {/* Pas de pastille de statut sur une ligne éteinte : le statut y
                 est GELÉ dans son dernier état connu, et « Planifiée » ou
                 « Conforme » y dirait une chose qui n'est plus attendue. Le fait

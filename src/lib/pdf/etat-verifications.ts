@@ -69,10 +69,7 @@ export function repartirVerifications<
   );
 
   // Une ligne archivée (ADR-012) ne réclame plus rien : son obligation ne
-  // s'applique plus, on ne la garde que pour la preuve qu'elle porte. Son
-  // statut, lui, reste gelé dans son dernier état connu — faute de valeur
-  // `archivee` dans l'enum Prisma —, si bien qu'une ligne gelée sur
-  // « dépassée » comptait un retard à perpétuité.
+  // s'applique plus, on ne la garde que pour la preuve qu'elle porte.
   // PAS DE FILTRE D'ARCHIVAGE ICI, et son retrait est un constat de relecture
   // (2026-09-12) : depuis que l'archivage est un champ (ADR-034, N3), les trois
   // prédicats s'arrêtent dessus eux-mêmes. Le filtre qui vivait ici disait la

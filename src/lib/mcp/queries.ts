@@ -569,8 +569,17 @@ export async function listerVerifications(
   }));
 
   // Triée sur l'échéance projetée, pour que l'ordre rendu ne dépende pas de
-  // celui de la lecture (relecture externe du 2026-09-13).
-  lues.sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime());
+  // celui de la lecture (relecture externe du 2026-09-13). Les lignes SANS
+  // ÉCHÉANCE CONNUE d'abord, comme aux PDF (`parEcheanceImprimee`) : triées
+  // sur `datePrevue` brute, elles s'intercalaient à leur date de génération,
+  // que l'assistant ne reçoit pas (relecture système du 2026-09-14).
+  lues.sort((a, b) =>
+    a.echeanceConnue !== b.echeanceConnue
+      ? a.echeanceConnue
+        ? 1
+        : -1
+      : a.datePrevue.getTime() - b.datePrevue.getTime(),
+  );
 
   if (filtres.recherche) {
     const q = filtres.recherche.toLowerCase();
@@ -594,6 +603,10 @@ export async function listerVerifications(
     // elle remontait dans les prochaines échéances rendues à l'assistant.
     // Une obligation consommée n'a pas d'échéance « à venir » non plus : le
     // statut le dit, la colonne ne le dit plus (ADR-034).
+    // Une ligne SANS ÉCHÉANCE CONNUE passe le filtre, et c'est voulu : due et
+    // jamais faite, elle compte en retard dès le lendemain de sa création.
+    // L'assistant la reçoit nommée « sans échéance connue », jamais datée ; la
+    // description de l'outil le dit (relecture système du 2026-09-14).
     lues = lues.filter(
       (v) =>
         !estVerificationRealisee(v) &&

@@ -696,12 +696,15 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        La relecture du correctif a trouvé un défaut plus ancien (lot C) : un
        retard sans date d'une année révolue n'avait aucune carte atteignable
        depuis l'année ouverte, la couture « années précédentes » ne lisant que
-       les retards dessinés — fermé (`MoisRegle.retardSansDate`). Restent
+       les retards dessinés — fermé (`MoisRegle.retardSansDate`). ~~Restent
        ouverts, mineurs et antérieurs : le compte « sans date » de la règle
        couvre toutes les années, pas l'année feuilletée ; l'anneau
        « Obligations de l'année » ne compte pas une « à planifier » générée
-       une année antérieure, comme il ne compte pas un retard daté de
-       l'an dernier.
+       une année antérieure~~ — fermés le 2026-09-14 : la pastille compte
+       l'année feuilletée (`MoisRegle.sansDate`), et un retard SANS DATE
+       généré avant l'année en cours se compte dans l'anneau de cette année,
+       faute d'un autre mois où l'être. Un retard DATÉ de l'an dernier garde
+       son mois, et reste hors de l'anneau de l'année en cours.
        « À planifier » / « à dater » subsistent pour les lignes non
        en retard. Trois autres écarts mineurs : ~~l'en-tête du mois du
        calendrier ne compte pas une ligne en retard sans date (ni « datée » ni

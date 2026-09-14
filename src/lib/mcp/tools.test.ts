@@ -250,6 +250,27 @@ describe("équipements et calendrier", () => {
     ...over,
   });
 
+  it("range les lignes sans échéance connue en tête, pas à leur date de génération", async () => {
+    // Relecture système du 2026-09-14 : triée sur `datePrevue` brute, une
+    // « à planifier » générée le 05/07 s'intercalait entre deux dates que
+    // l'assistant reçoit, sous un libellé qui n'en porte aucune.
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({ libelleObligation: "Contrôle daté A", datePrevue: jour("2026-07-01") }),
+      verif({
+        libelleObligation: "Contrôle sans date",
+        statut: "a_planifier",
+        datePrevue: jour("2026-07-05"),
+      }),
+      verif({ libelleObligation: "Contrôle daté B", datePrevue: jour("2026-08-20") }),
+    ]);
+
+    const texte = await outil("verifications").executer(ctx, { horizonJours: 30 });
+    const rang = (s: string) => texte.indexOf(s);
+    expect(rang("Contrôle sans date")).toBeGreaterThan(-1);
+    expect(rang("Contrôle sans date")).toBeLessThan(rang("Contrôle daté A"));
+    expect(rang("Contrôle daté A")).toBeLessThan(rang("Contrôle daté B"));
+  });
+
   it("lit les équipements de l'établissement de la session", async () => {
     await outil("equipements").executer(ctx, {});
     expect(prismaMock.equipement.findMany).toHaveBeenCalledWith(

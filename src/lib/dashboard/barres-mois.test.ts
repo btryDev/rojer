@@ -119,7 +119,8 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       [
         ligne({ datePrevue: le(9, 1), statut: "a_planifier" }),
         ligne({ datePrevue: le(9, 20), statut: "a_planifier" }),
-        // Générée l'an dernier : hors de l'année demandée, hors du compte.
+        // Générée l'an dernier : hors de l'année demandée, et pourtant en
+        // retard AUJOURD'HUI — comptée dans l'année en cours.
         ligne({ datePrevue: le(12, 1, 2025), statut: "a_planifier" }),
         // Une vraie échéance, pour la contre-épreuve.
         ligne({ datePrevue: le(8, 1) }),
@@ -127,9 +128,21 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       2026,
       NOW,
     );
-    expect(sansEcheance).toEqual({ retard: 1, aVenir: 1 });
+    expect(sansEcheance).toEqual({ retard: 2, aVenir: 1 });
     expect(mois.reduce((n, b) => n + b.aVenir + b.retard, 0)).toBe(1);
     expect(mois[7].retard).toBe(1);
+  });
+
+  it("un retard sans date d'une année passée ne se reporte que sur l'année en cours", () => {
+    const lignes = [ligne({ datePrevue: le(12, 1, 2025), statut: "a_planifier" })];
+    // Vue de 2026, l'année de NOW : dû maintenant, compté.
+    expect(repartirParMois(lignes, 2026, NOW).sansEcheance.retard).toBe(1);
+    // Vue d'une année future : rien n'y est en retard.
+    expect(repartirParMois(lignes, 2027, NOW).sansEcheance.retard).toBe(0);
+    // Un retard DATÉ de l'an dernier garde son mois, hors de l'année en cours.
+    const datee = [ligne({ datePrevue: le(12, 1, 2025) })];
+    expect(repartirParMois(datee, 2026, NOW).sansEcheance.retard).toBe(0);
+    expect(repartirParMois(datee, 2026, NOW).mois.every((b) => b.retard === 0)).toBe(true);
   });
 
   it("une ligne archivée garde tous ses faits et ne pose aucune échéance", () => {

@@ -56,7 +56,18 @@ export type MoisRegle = {
    * (relecture, 2026-09-14). Absent = zéro.
    */
   retardSansDate?: number;
+  /**
+   * Toutes les lignes SANS ÉCHÉANCE CONNUE rangées dans ce mois, en retard ou
+   * non : jamais dessinées. Leur somme sur l'année est la pastille « sans
+   * date » de CETTE année. Absent = zéro.
+   */
+  sansDate?: number;
 };
+
+/** Ce qu'aucune barre de l'année ne place : la pastille « sans date ». */
+export function sansDateDeLAnnee(mois: MoisRegle[]): number {
+  return mois.reduce((n, m) => n + (m.sansDate ?? 0), 0);
+}
 
 /** Hauteur de la barre la plus chargée, en pixels. */
 const H_MAX = 92;

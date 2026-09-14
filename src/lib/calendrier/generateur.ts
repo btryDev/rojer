@@ -32,11 +32,15 @@
  *      génération reçoit aujourd'hui une table vide : une ligne existante
  *      passe par la réconciliation, qui lit ses rapports — ADR-034.)
  *
- * Le statut Prisma `a_planifier` couvre deux réalités UI :
- *   - "à planifier d'urgence" (aucune vérif connue)   → priorité haute
- *   - "à planifier normalement"
- * La distinction est faite par le champ `estUrgent` du résultat, pas par
- * un enum en base — pour ne pas polluer l'enum Prisma avec de l'UI.
+ * Le statut `a_planifier` veut dire une chose : AUCUNE ÉCHÉANCE CONNUE — la
+ * date posée est une date de génération (`aUnRendezVous`). Le retard se lit
+ * à l'affichage, sur la date (`estVerificationEnRetard`).
+ *
+ * `estUrgent` et `comparerParUrgence` sont une urgence FIGÉE à la génération.
+ * Aucun écran ne les lit plus (relecture système du 2026-09-14) : ils ne
+ * servent qu'aux tests, qui s'en servent comme observable du générateur. Ne
+ * pas les brancher sur une surface — l'urgence d'aujourd'hui n'est pas celle
+ * du jour de la génération.
  */
 
 import {

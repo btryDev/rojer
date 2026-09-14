@@ -17,6 +17,7 @@ import {
 } from "@/lib/actions/queries";
 import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import { formaterDateCourteFr } from "@/lib/dates";
+import { estActionEnRetard } from "@/lib/dates/retard";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
 
 function formatDate(d: Date | null): string {
@@ -305,10 +306,11 @@ export default async function PlanActionsPage({
           <ul className="carte-board m-0 list-none p-0">
             {actions.map((a) => {
               const origine = origineDeLAction(a);
-              const echeanceDepassee =
-                a.echeance &&
-                a.echeance.getTime() < maintenant.getTime() &&
-                (a.statut === "ouverte" || a.statut === "en_cours");
+              // LE prédicat, pas une comparaison d'instants : le jour dit, dès
+              // 2 h à Paris, la pastille disait « En retard » quand le compteur
+              // de la même page ne la comptait pas (ADR-011, relecture système
+              // du 2026-09-14).
+              const echeanceDepassee = estActionEnRetard(a, maintenant);
               return (
                 // Le filet se pose sur la ligne, jamais sur son contenu :
                 // `first:` doit désigner la première ligne de la liste.

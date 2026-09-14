@@ -162,7 +162,7 @@ describe("lignesAFaire", () => {
     // MUTATION SURVIVANTE de la relecture du N4 (2026-09-13) : retirer
     // `etat !== "archivee"` laissait la suite verte, parce que le helper de
     // ce fichier forçait `archiveLe: null` partout. Une obligation qui ne
-    // s'applique plus, gelée sur « dépassée », remontait dans « à faire ».
+    // s'applique plus, gelée sur un statut ouvert, remontait dans « à faire ».
     const lignes = lignesAFaire(
       fiche([
         {

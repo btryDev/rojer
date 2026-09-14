@@ -752,8 +752,8 @@ describe("compterVerifsParEquipement", () => {
   });
 
   it("une ligne éteinte gelée sur « planifiée » n'annonce pas non plus de rendez-vous", async () => {
-    // MUTATION SURVIVANTE, la seconde : la fixture éteinte du test voisin est
-    // gelée sur `depassee`, que la garde de statut écarte déjà. Or depuis le
+    // MUTATION SURVIVANTE, la seconde : la fixture éteinte du test voisin était
+    // gelée sur `depassee` (retiré depuis), que la garde de statut écartait déjà. Or depuis le
     // N2 l'état gelé LE PLUS FRÉQUENT est « planifiée » — toute ligne roulée
     // l'est. Archivée à date future, elle annonçait « prochaine échéance » sur
     // une obligation éteinte, et seule la garde `etat !== "archivee"` l'en
@@ -835,6 +835,19 @@ describe("compterObligationsParMois", () => {
     // Hors des mois, JAMAIS hors des comptes : le premier jet les retirait de
     // tout, et l'anneau perdait ses retards (relecture, 2026-09-14).
     expect(sansEcheance).toEqual({ retard: 1, aVenir: 1 });
+  });
+
+  it("compte dans l'année en cours une « à planifier » générée l'an dernier", async () => {
+    // Relecture système du 2026-09-14 : la requête l'écartait (date hors de
+    // l'année), et l'anneau taisait un retard que le bandeau annonçait.
+    h.db.verifications.push(
+      verif({ id: "v1", statut: "a_planifier", datePrevue: instantCivil(2025, 11, 3) }),
+      // Contre-épreuve : un retard DATÉ de l'an dernier reste hors de 2026.
+      verif({ id: "v2", statut: "planifiee", datePrevue: instantCivil(2025, 11, 3) }),
+    );
+    const { sansEcheance, mois } = await compterObligationsParMois(ETAB, 2026);
+    expect(sansEcheance.retard).toBe(1);
+    expect(mois.every((b) => b.retard === 0)).toBe(true);
   });
 
   it("range une réalisation dans son mois de réalisation", async () => {

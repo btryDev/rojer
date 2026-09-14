@@ -210,12 +210,13 @@ describe("listerBatimentsAvecCharge", () => {
    * L'ARCHIVAGE EST UN CHAMP, ET LA PASTILLE DOIT LE LIRE (ADR-034, lot N3).
    *
    * Le cas est celui d'une ligne où TOUT dit « en retard » sauf le seul fait
-   * qui compte. Son statut est gelé sur `depassee` — l'enum Prisma n'a pas de
-   * valeur `archivee`, la ligne reste donc figée dans son dernier état connu —
-   * et sa `datePrevue` est passée. Un compteur qui ne regarde pas `archiveLe`
-   * annonce donc un retard à perpétuité sur une obligation éteinte.
+   * qui compte. Son statut est gelé sur « planifiée » — l'enum Prisma n'a pas
+   * de valeur `archivee`, la ligne reste donc figée dans son dernier état
+   * connu — et sa `datePrevue` est passée. Un compteur qui ne regarde pas
+   * `archiveLe` annonce donc un retard à perpétuité sur une obligation éteinte.
+   * (Ce test parlait de `depassee`, retiré de l'enum le 2026-09-14.)
    */
-  it("une ligne archivée ne pèse sur aucune carte, même gelée sur « dépassée »", async () => {
+  it("une ligne archivée ne pèse sur aucune carte, même gelée sur un statut ouvert", async () => {
     h.db.verifs = [
       ligne(RESERVE, "2026-08-18T00:00:00+02:00", {
         statut: "planifiee",
