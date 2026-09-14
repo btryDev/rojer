@@ -1097,9 +1097,13 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
               est vide », et la note des retards sans échéance, masquée sur
               une frise sans marqueur, ne prenait pas le relais (relecture des
               libellés, 2026-09-14). */}
+          {/* Et sans aucune ligne de suivi : un bureau dont les seules
+              échéances tombent au-delà de deux ans (une visite quinquennale)
+              n'a pas un calendrier vide — la branche finale dit « aucune sur
+              cette période », ce qui est vrai. */}
           {bundle.equipements.length === 0 &&
-          nbEnRetard === 0 &&
-          nbSansDate === 0 ? (
+          bundle.nbVerifs === 0 &&
+          nbEnRetard === 0 ? (
             <>
               <p className="m-0 text-[15px] font-semibold tracking-[-0.015em] text-[color:var(--board-ink)]">
                 Votre calendrier est vide

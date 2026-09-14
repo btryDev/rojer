@@ -276,7 +276,12 @@ export function phraseSansEcheance(nbVerifications: number, nbCorrections: numbe
   const pluriel = nbVerifications + nbCorrections > 1;
   const sujet = [verifs, corrections].filter((s) => s !== null).join(" et ");
   const verbe = pluriel ? "sont ouvertes" : "est ouverte";
-  return `${sujet.charAt(0).toUpperCase()}${sujet.slice(1)} ${verbe} sur cet appareil, sans échéance connue pour l'instant`;
+  // Une correction se date dans l'application : son échéance n'est pas
+  // « inconnue », elle n'est pas encore fixée. Une vérification, elle, attend
+  // un rapport pour en avoir une.
+  const suite =
+    nbVerifications === 0 ? "sans échéance fixée" : "sans échéance connue pour l'instant";
+  return `${sujet.charAt(0).toUpperCase()}${sujet.slice(1)} ${verbe} sur cet appareil, ${suite}`;
 }
 
 /**

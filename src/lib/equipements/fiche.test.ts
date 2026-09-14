@@ -19,8 +19,12 @@ describe("phraseSansEcheance — le chapeau d'une fiche où rien n'a de date", (
     expect(phraseSansEcheance(3, 0)).toBe(
       "Des vérifications sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
     );
+    // Une correction se date dans l'application : « fixée », pas « connue ».
     expect(phraseSansEcheance(0, 1)).toBe(
-      "Une correction est ouverte sur cet appareil, sans échéance connue pour l'instant",
+      "Une correction est ouverte sur cet appareil, sans échéance fixée",
+    );
+    expect(phraseSansEcheance(0, 2)).toBe(
+      "Des corrections sont ouvertes sur cet appareil, sans échéance fixée",
     );
     expect(phraseSansEcheance(1, 1)).toBe(
       "Une vérification et une correction sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
