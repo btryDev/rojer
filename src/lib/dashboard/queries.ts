@@ -152,7 +152,7 @@ export async function listerEvenementsFenetre(
   joursHorizon: number,
   filtres?: {
     domaine?: DomaineObligation;
-    /** Même sémantique que `listerVerifications` : a_planifier + depassee. */
+    /** Même sémantique que `listerVerifications` : échéance attendue, date passée. */
     urgentsSeulement?: boolean;
     /** Ne garder que les équipements de ce bâtiment (ADR-019). */
     batimentId?: string;

@@ -27,7 +27,8 @@
  *      de sept ans serait inventer. → statut = `a_planifier`.
  *   4 ter. Si rien n'est connu → datePrevue = `now`, statut = `a_planifier`.
  *   5. Si dernière vérif connue → datePrevue = `derniere + periodicite`,
- *      statut = `planifiee` si datePrevue ≥ now, `depassee` sinon. (La
+ *      statut = `planifiee`, passée ou non : le retard se lit sur la date,
+ *      jamais sur le statut (retrait de `depassee`). (La
  *      génération reçoit aujourd'hui une table vide : une ligne existante
  *      passe par la réconciliation, qui lit ses rapports — ADR-034.)
  *
@@ -700,7 +701,7 @@ export function comparerParUrgence(
 // SÉMANTIQUE DE LA LIGNE DE SUIVI (ADR-034, depuis le lot N2 du 2026-09-11)
 // -------------------------------------------------------------------------
 //   `datePrevue`   : l'échéance OUVERTE — la seule date que la ligne porte ;
-//   `statut`       : son état — à planifier, planifiée, dépassée ;
+//   `statut`       : à planifier (aucune échéance connue) ou planifiée ;
 //   `archiveLe`    : posé quand l'obligation cesse de s'appliquer à une ligne
 //                    qui porte une preuve ;
 //   `rapports`     : l'historique complet — c'est lui qui porte la preuve, et
@@ -842,9 +843,11 @@ export type PlanReconciliation = {
 /**
  * Statut à porter sur une ligne dont le cycle courant n'est **pas** soldé.
  *
- * Il ne dit qu'une chose : une date a-t-elle été arrêtée ? `planifiee` n'est
- * conservé que s'il était déjà là — « une date a été arrêtée avec le
- * prestataire », information que la régénération n'a aucune raison d'effacer.
+ * Il ne dit qu'une chose : la `datePrevue` est-elle une VRAIE échéance ?
+ * `a_planifier` — aucune échéance connue, la date n'est que celle de la
+ * génération ; `planifiee` — une échéance connue, calculée, roulée, déclarée
+ * ou rendue par une suppression, passée ou non. `planifiee` n'est jamais
+ * effacé par la régénération.
  *
  * IL NE DIT PLUS LE RETARD (retrait de `depassee`, phase A). Il le tamponnait
  * le jour où la date passait, en écrasant justement cette information — et une
@@ -854,8 +857,19 @@ export type PlanReconciliation = {
  */
 function statutCycleOuvert(
   statutExistant: StatutVerificationPersiste,
+  realisation: Date | null,
 ): StatutVerificationGen {
-  return statutExistant === "planifiee" ? "planifiee" : "a_planifier";
+  if (statutExistant === "planifiee") return "planifiee";
+  // UN TAMPON `depassee` SE LIT SUR CE QUI LE PRÉCÈDE. Le statut dit
+  // désormais une seule chose : la date est-elle une VRAIE échéance ? Une
+  // ligne tamponnée qui porte un contrôle réel avait une échéance calculée
+  // depuis lui — « planifiée ». Sans contrôle, on ne sait pas : « à
+  // planifier », la lecture qui n'invente rien. La réécrire « à planifier »
+  // en bloc faisait dire « aucune vérification enregistrée » à la carte d'un
+  // appareil contrôlé, et masquait sa date au calendrier (relecture de la
+  // phase A, 2026-09-14).
+  if (statutExistant === "depassee" && realisation !== null) return "planifiee";
+  return "a_planifier";
 }
 
 function memeListe(a: readonly string[], b: readonly string[]): boolean {
@@ -1248,7 +1262,7 @@ export function reconcilierCalendrier(
       // le même héritage. Lire `ex.statut` laissait « à planifier, aucune date
       // convenue » sur une absorbante déjà en base, alors que sa date venait
       // d'être posée (revue du 2026-09-14).
-      statut = prochaine !== null ? "planifiee" : statutCycleOuvert(ex.statut);
+      statut = prochaine !== null ? "planifiee" : statutCycleOuvert(ex.statut, realisation);
     } else if (
       ex.statut === "a_planifier" &&
       g.statut === "planifiee" &&
@@ -1280,7 +1294,7 @@ export function reconcilierCalendrier(
       // régénération — ce que faisait le delete/create — effaçait le retard
       // accumulé.
       datePrevue = ex.datePrevue;
-      statut = statutCycleOuvert(ex.statut);
+      statut = statutCycleOuvert(ex.statut, realisation);
     }
 
     const cible: MiseAJourOccurrence = {

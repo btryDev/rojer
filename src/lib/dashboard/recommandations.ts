@@ -208,9 +208,8 @@ export function genererRecommandations(
   // ouverte est `datePrevue` (ADR-034, N5 : plus aucune colonne à concilier).
   const verifs = e.verifications;
 
-  // 1. Vérifications en retard — quel que soit le statut porté en base
-  //    (`depassee` n'est écrit qu'à la génération, il ne peut pas servir de
-  //    seule preuve du retard).
+  // 1. Vérifications en retard — sur leur date, jamais sur un statut (plus
+  //    aucun `depassee` n'est écrit depuis son retrait).
   for (const v of verifs) {
     if (!estVerificationEnRetard(v, now)) continue;
     // Une occurrence restée `a_planifier` n'a jamais eu de rendez-vous : sa

@@ -591,9 +591,27 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        rendez-vous MANQUÉ aurait reçu une date future — le retard effacé. Elle
        exige désormais une date non passée. Le reliquat « mise en service,
        passage 1 ≠ passage 2 » tombe avec : plus rien à retamponner. Trois
-       mutations rouges. 2630 tests, `next build` vert ;
+       mutations rouges. 2630 tests, `next build` vert.
+       **Relecture neutre de la phase A** — une confusion de sens, trouvée par
+       scénario : sans le tampon, `a_planifier` en portait deux, « aucune
+       échéance connue » et « vraie échéance, passée », et trois affichages
+       (carte « aucune vérification enregistrée », date masquée au calendrier,
+       widget des échéances) lisent le premier. **Règle posée : le statut dit
+       si la date est une VRAIE échéance** — `a_planifier` : aucune, la date
+       est celle de la génération ; `planifiee` : une échéance connue, passée
+       ou non. Le générateur la suivait déjà ; trois écritures la violaient et
+       sont corrigées — un tampon recouvrant un contrôle réel se relit
+       « planifiée » ; un dépôt « non vérifiable » ne touche plus le statut ;
+       une suppression qui rend l'échéance honorée écrit « planifiée ». Les
+       tests de concurrence ont regagné leur assertion de statut. Trois
+       mutations rouges. 2632 tests. **Limite écrite** : un « à planifier »
+       dont la date de génération est passée ne reçoit plus la première
+       échéance calculée d'une mise en service déclarée après coup — la garde
+       ne distingue pas une date de génération d'un rendez-vous manqué, et
+       préfère ne jamais effacer un retard ;
      - **phase B**, après le déploiement de A : migration `depassee →
-       a_planifier` et retrait de la valeur de l'enum, le type d'affichage
+       planifiee` si la ligne porte un rapport réalisé, `a_planifier` sinon
+       (la même règle que la régénération), et retrait de la valeur de l'enum, le type d'affichage
        « en retard » séparé du type stocké, puis la relecture du système
        entier sur le modèle GestBAT.
   2. **`dateRealisee` n'est pas une colonne morte.** Le réconciliateur la

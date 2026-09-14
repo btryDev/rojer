@@ -141,8 +141,10 @@ describe("toutesLesConditions", () => {
     expect(JSON.stringify(where)).toContain("batimentId");
 
     // Et l'urgence est là aussi : le correctif ne doit pas troquer un
-    // écrasement contre l'autre.
-    expect(JSON.stringify(where)).toContain("depassee");
+    // écrasement contre l'autre. Depuis le retrait de `depassee`, l'urgence
+    // est la borne de date — c'est elle qu'on cherche, pas un statut que la
+    // liste d'`echeanceAttendue` aurait fait passer tout seul.
+    expect(JSON.stringify(where)).toMatch(/"datePrevue":\{"lt":/);
   });
 
   it("ne perd aucune clé, quelle que soit la condition qui la porte", () => {

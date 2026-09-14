@@ -10,7 +10,6 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { cleRapport, getStorage } from "@/lib/storage";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { estCyclique, prochaineEcheance } from "@/lib/calendrier/periodicite";
-import { estStatutRealise } from "@/lib/dates/retard";
 import { WHERE_RAPPORT_REALISE } from "./derniere-realisation";
 import {
   estResultatRealise,
@@ -212,14 +211,22 @@ export async function uploadRapport(
   if (!estResultatRealise(resultat)) {
     // Non vérifiable : le contrôle reste dû. Rien n'a été vérifié, et
     // `datePrevue` n'est pas repoussée : l'échéance réglementaire qui courait
-    // court toujours. Elle est seulement requalifiée « à replanifier » : la
-    // date convenue n'a pas tenu. Passée, elle se lit en retard sur sa date —
-    // aucun statut « dépassée » n'est plus écrit (retrait, phase A). Une ligne
-    // DÉJÀ soldée — le one-shot réalisé, seul à garder un statut réalisé
-    // (ADR-034) — n'est pas déclassée par un déplacement sans contrôle.
-    const dejaSoldee = estStatutRealise(verif.statut);
+    // court toujours, et son statut NE BOUGE PAS : il dit si la date est une
+    // vraie échéance, et un déplacement sans contrôle n'y change rien.
+    // Passée, elle se lit en retard sur sa date.
+    //
+    // Il la requalifiait « à replanifier ». Tant que la génération tamponnait
+    // `depassee` le lendemain, l'effet s'effaçait ; depuis le retrait du
+    // tampon (phase A), il laissait une échéance réelle se lire comme une
+    // date de génération — carte « aucune vérification enregistrée », date
+    // masquée au calendrier (relecture de la phase A, 2026-09-14). Une ligne
+    // encore tamponnée `depassee` redevient « à planifier », comme partout.
+    // Une ligne DÉJÀ soldée — le one-shot réalisé — n'est pas déclassée.
     majVerification = {
-      statut: dejaSoldee ? verif.statut : "a_planifier",
+      statut:
+        verif.statut === "depassee"
+          ? "a_planifier"
+          : verif.statut,
     };
   } else if (
     dernierRealise !== null &&
@@ -455,14 +462,20 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
     }
 
     // Le retard éventuel se lit sur la date rendue à la ligne, pas sur son
-    // statut : ce dernier ne dit que « date arrêtée ou non » (retrait de
-    // `depassee`, phase A).
+    // statut : ce dernier ne dit que « la date est-elle une vraie échéance ? »
+    // (retrait de `depassee`, phase A). Elle l'est quand un contrôle reste,
+    // ET quand la ligne revient à l'échéance que le rapport retiré honorait —
+    // une échéance réglementaire manquée, pas une date de génération.
     let statut: StatutVerification;
     if (!cyclique && dernier !== null) {
       // One-shot : le rapport précédent l'avait déjà consommé.
       statut = STATUT_DEPUIS_RESULTAT[dernier.resultat as ResultatRealise];
+    } else if (dernier !== null || retire.echeanceHonoree !== null) {
+      statut = "planifiee";
     } else {
-      statut = dernier !== null ? "planifiee" : "a_planifier";
+      // Rapport d'avant N2, sans échéance honorée : la ligne garde une date
+      // que plus rien n'explique.
+      statut = "a_planifier";
     }
 
     const { count } = await tx.verification.updateMany({

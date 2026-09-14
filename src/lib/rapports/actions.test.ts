@@ -311,12 +311,25 @@ describe("uploadRapport — résultat « non vérifiable »", () => {
     expect(res.status).toBe("success");
   });
 
-  it("ne repousse pas l'échéance, qui reste en retard, et la repasse à planifier", async () => {
+  it("ne repousse pas l'échéance, qui reste en retard, et ne touche pas son statut", async () => {
+    // Une échéance RÉELLE, « planifiée » : un déplacement sans contrôle ne la
+    // change pas en date de génération. La requalifier « à planifier » faisait
+    // dire « aucune vérification enregistrée » à la carte d'un appareil suivi,
+    // et masquait sa date au calendrier (relecture de la phase A).
+    h.db.verification = { ...h.db.verification!, statut: "planifiee" };
     await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
 
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
     expect(ligneEnRetard()).toBe(true);
+    expect(h.db.verification?.statut).toBe("planifiee");
+  });
+
+  it("une ligne encore tamponnée « depassee » redevient « à planifier »", async () => {
+    h.db.verification = { ...h.db.verification!, statut: "depassee" };
+    await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
+
     expect(h.db.verification?.statut).toBe("a_planifier");
+    expect(ligneEnRetard()).toBe(true);
   });
 
   it("conserve le rapport et son fichier, sans échéance honorée", async () => {
@@ -460,8 +473,9 @@ describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
     // suppression de la pièce qui le justifiait.
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
     expect(ligneEnRetard()).toBe(true);
-    // Plus aucun contrôle derrière elle : aucune date n'est arrêtée.
-    expect(h.db.verification?.statut).toBe("a_planifier");
+    // Une échéance RÉGLEMENTAIRE manquée, pas une date de génération :
+    // « planifiée », et en retard par sa date.
+    expect(h.db.verification?.statut).toBe("planifiee");
     // Le fichier n'est libéré qu'après le commit.
     expect(h.stockage.fichiers.size).toBe(0);
   });
@@ -680,6 +694,7 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
       await expect(supprimerRapport("rap-sept")).rejects.toThrow("NEXT_REDIRECT");
       expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
       expect(ligneEnRetard()).toBe(true);
+      expect(h.db.verification?.statut).toBe("planifiee");
       expect(h.db.rapports).toEqual([]);
     })();
   });
@@ -710,6 +725,7 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
     await expect(supprimerRapport("rap-b")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
     expect(ligneEnRetard()).toBe(true);
+    expect(h.db.verification?.statut).toBe("planifiee");
   });
 
   it("un contrôle daté d'AUJOURD'HUI est accepté", async () => {
@@ -781,6 +797,7 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
         ECHEANCE,
       );
       expect(ligneEnRetard(), `ordre ${ordre.join(" → ")}`).toBe(true);
+      expect(h.db.verification?.statut, `ordre ${ordre.join(" → ")}`).toBe("planifiee");
     }
   });
 
