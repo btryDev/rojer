@@ -17,6 +17,7 @@ import {
 } from "@/lib/referentiels/conformite";
 import {
   clesApplicabilite,
+  periodicitesEffectives,
   genererProchainesVerifications,
   genererVerificationsDepuisTitres,
   genererVerificationsSurMesure,
@@ -191,7 +192,7 @@ async function regenererUnePasse(
     where: { id: etablissementId },
     include: {
       equipements: { where: { actif: true } },
-      // Prescriptions particulières (ADR-014) : lues ici, dans la phase de
+      // Prescriptions particulières (ADR-035) : lues ici, dans la phase de
       // calcul, jamais dans la transaction. `dateFin` est arbitrée par
       // `appliquerPrescriptions` pour que la raison d'ignorance soit rendue.
       prescriptionsParticulieres: { where: { actif: true } },
@@ -335,6 +336,10 @@ async function regenererUnePasse(
   // déclenchent. L'identifiant seul rouvrait la ligne archivée d'un appareil dès
   // qu'un AUTRE appareil déclenchait la même obligation.
   const obligationsEncoreApplicables = clesApplicabilite(obligations);
+  // Et le RYTHME de chacune, surcharges de prescription comprises, depuis le
+  // même tableau : une ligne applicable que la génération saute n'a que cette
+  // table pour être réalignée (NB4, 2026-09-15 — voir `periodicitesEffectives`).
+  const periodicites = periodicitesEffectives(obligations);
 
   // Les obligations à porteur salarié n'y sont JAMAIS par la voie ci-dessus :
   // `evaluerObligation` rend `null` pour ce porteur — rien ne dit au moteur qui
@@ -376,12 +381,15 @@ async function regenererUnePasse(
     const o = obligationParId(obligationId);
     if (o !== undefined && estPorteeParSalarie(o)) {
       obligationsEncoreApplicables.add(obligationId);
+      // Aucune surcharge ne vise un titre : le rythme est celui du référentiel.
+      periodicites.set(obligationId, o.periodicite);
     }
   }
 
   const plan = reconcilierCalendrier(existantes, aGenerer, {
     now,
     obligationsEncoreApplicables,
+    periodicitesEffectives: periodicites,
     // `etab.equipements` est déjà filtré sur `actif: true` par la lecture du
     // point 1 : c'est exactement l'ensemble des porteurs encore en service.
     equipementsEnService: new Set(etab.equipements.map((eq) => eq.id)),
@@ -492,6 +500,14 @@ async function regenererUnePasse(
           // et elle afficherait « dépassée » avec un rapport conforme joint.
           datePrevue: lu.datePrevue,
           statut: lu.statut,
+          // Et les deux champs qu'une AUTRE régénération réécrit (2026-09-15) :
+          // un plan calculé avant la réactivation d'une prescription mettait
+          // `prescriptionId` à `null` et rendait à la ligne le rythme du
+          // référentiel, par-dessus la passe qui venait de les rétablir. Une
+          // ligne qui ne leur ressemble plus fait diverger le compte, et la
+          // passe se relance sur une lecture fraîche.
+          periodicite: lu.periodicite,
+          prescriptionId: lu.prescriptionId ?? null,
         },
         data: {
           // Il ne bouge que pour une ligne ADOPTÉE — une obligation qui a

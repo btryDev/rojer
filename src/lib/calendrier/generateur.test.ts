@@ -22,7 +22,9 @@ import {
   type VerificationsPrecedentes,
   cleApplicabilite,
   clesApplicabilite,
+  periodicitesEffectives,
 } from "./generateur";
+import { estVerificationAPlanifier } from "@/lib/dates/retard";
 
 // ============================================================================
 // Fixtures
@@ -1263,6 +1265,213 @@ describe("réconciliation — cycles de vérification", () => {
 
     expect(plan.aDesarchiver).toEqual([]);
     expect(plan.inchangees).toBe(1);
+  });
+
+  describe("NB4 — une ligne applicable que la génération saute se réaligne (2026-09-15)", () => {
+    // Le cas : une prescription donnait un rythme semestriel à une obligation
+    // `autre` sur eq-1, un rapport a fait rouler la ligne, la prescription est
+    // levée. Plus aucune ligne générée ; l'obligation s'applique toujours à
+    // eq-1, sans rythme. Avant la correction, la boucle finale n'écrivait
+    // qu'`archiveLe` : la ligne restait semestrielle, marquée, en retard.
+    const roulee = (over: Partial<OccurrenceExistante> = {}) =>
+      ligneExistante({
+        id: "v-portail",
+        obligationId: "porte-maintien",
+        equipementId: "eq-1",
+        periodicite: "semestrielle",
+        datePrevue: new Date("2026-03-01T00:00:00Z"),
+        derniereRealisation: new Date("2025-09-01T00:00:00Z"),
+        dernierResultat: "conforme",
+        statut: "planifiee",
+        porteUnePreuve: true,
+        prescriptionId: "presc-1",
+        ...over,
+      });
+    const sansRythme = {
+      now: NOW,
+      obligationsEncoreApplicables: new Set([cleApplicabilite("porte-maintien", "eq-1")]),
+      periodicitesEffectives: new Map([
+        [cleApplicabilite("porte-maintien", "eq-1"), "autre" as const],
+      ]),
+      equipementsEnService: new Set(["eq-1"]),
+    };
+
+    it("réécrit le rythme, retire la prescription, lit le statut sur le rapport, garde la date", () => {
+      const plan = reconcilierCalendrier([roulee()], [], sansRythme);
+      expect(plan.aMettreAJour).toEqual([
+        {
+          id: "v-portail",
+          obligationId: "porte-maintien",
+          libelleObligation: "Obligation porte-maintien",
+          periodicite: "autre",
+          realisateurRequis: ["personne_qualifiee"],
+          datePrevue: new Date("2026-03-01T00:00:00Z"),
+          statut: "realisee_conforme",
+          prescriptionId: null,
+        },
+      ]);
+      expect(plan.inchangees).toBe(0);
+      expect(plan.aDesarchiver).toEqual([]);
+      // Et la ligne ainsi écrite n'est plus en retard : un statut réalisé
+      // purge sur une obligation sans rendez-vous suivant.
+      const m = plan.aMettreAJour[0]!;
+      expect(
+        estVerificationEnRetard(
+          { ...m, archiveLe: null },
+          NOW,
+        ),
+      ).toBe(false);
+    });
+
+    it("archivée, elle passe par la mise à jour et non par la simple réouverture", () => {
+      // `aMettreAJour` écrit `archiveLe: null` avec le reste
+      // (`calendrier/actions.ts`) : `aDesarchiver` n'écrirait que l'archivage.
+      const plan = reconcilierCalendrier(
+        [roulee({ archiveLe: new Date("2026-05-01T00:00:00Z") })],
+        [],
+        sansRythme,
+      );
+      expect(plan.aMettreAJour.map((m) => m.id)).toEqual(["v-portail"]);
+      expect(plan.aDesarchiver).toEqual([]);
+    });
+
+    it("une fois réalignée, la passe suivante ne réécrit rien", () => {
+      const plan = reconcilierCalendrier(
+        [
+          roulee({
+            periodicite: "autre",
+            prescriptionId: null,
+            statut: "realisee_conforme",
+          }),
+        ],
+        [],
+        sansRythme,
+      );
+      expect(plan.aMettreAJour).toEqual([]);
+      expect(plan.inchangees).toBe(1);
+    });
+
+    it("action seule, sans rapport réalisé : la ligne passe « à planifier » et sort des retards (limite 1)", () => {
+      // ~~Elle restait « planifiée », donc en retard à sa date.~~ Tranché le
+      // 2026-09-15 : aucun rendez-vous n'est attendu d'une obligation sans
+      // rythme. Ni statut réalisé — ce serait fabriquer une preuve —, ni
+      // archivage — l'obligation s'applique : « à planifier », que
+      // `lignePortantSansRendezVous` tient hors des retards et des « à
+      // planifier ». L'action, elle, garde son propre retard.
+      const plan = reconcilierCalendrier(
+        [roulee({ derniereRealisation: null, dernierResultat: null })],
+        [],
+        sansRythme,
+      );
+      const m = plan.aMettreAJour[0]!;
+      expect(m.periodicite).toBe("autre");
+      expect(m.prescriptionId).toBeNull();
+      expect(m.statut).toBe("a_planifier");
+      expect(m.datePrevue).toEqual(new Date("2026-03-01T00:00:00Z"));
+      const lue = { ...m, archiveLe: null };
+      expect(estVerificationEnRetard(lue, NOW)).toBe(false);
+      expect(estVerificationAPlanifier(lue, NOW)).toBe(false);
+    });
+
+    it("une ligne déjà réalignée « planifiée » est rattrapée sur son seul statut, puis ne bouge plus", () => {
+      // Réalignée avant la limite 1 : `autre`, sans prescription, « planifiée ».
+      // Ni le rythme ni la prescription ne diffèrent ; le statut, si.
+      const dejaAlignee = roulee({
+        periodicite: "autre",
+        prescriptionId: null,
+        derniereRealisation: null,
+        dernierResultat: null,
+      });
+      const premiere = reconcilierCalendrier([dejaAlignee], [], sansRythme);
+      expect(premiere.aMettreAJour.map((m) => m.statut)).toEqual(["a_planifier"]);
+
+      // IDEMPOTENCE : appliquée, la passe suivante n'écrit rien.
+      const seconde = reconcilierCalendrier(
+        [{ ...dejaAlignee, statut: "a_planifier" }],
+        [],
+        sansRythme,
+      );
+      expect(seconde.aMettreAJour).toEqual([]);
+      expect(seconde.inchangees).toBe(1);
+    });
+
+    it("à rythme déjà juste, une prescription restée sur la ligne tombe quand même", () => {
+      // La clause `|| prescriptionId !== null` seule : sans elle, une ligne
+      // déjà `autre` mais encore marquée d'une prescription levée garderait
+      // son marquage — contractuel, le cas échéant (ADR-032).
+      const plan = reconcilierCalendrier(
+        [roulee({ periodicite: "autre", statut: "realisee_conforme" })],
+        [],
+        sansRythme,
+      );
+      expect(plan.aMettreAJour.map((m) => [m.periodicite, m.prescriptionId])).toEqual([
+        ["autre", null],
+      ]);
+    });
+
+    it("sur un rythme, un statut réalisé sans rapport est gardé : c'est la seule trace", () => {
+      // Ligne de titre qui change de rythme sans être générée, dont la seule
+      // trace est son statut réalisé (`porteUneTrace`). `statutCycleOuvert`
+      // la passait « à planifier » : la trace disparaissait, et la passe
+      // suivante supprimait la ligne (relecture du 2026-09-15).
+      const plan = reconcilierCalendrier(
+        [
+          ligneExistante({
+            id: "v-titre",
+            obligationId: "titre-quinquennal",
+            equipementId: null,
+            salarieId: "sal-1",
+            periodicite: "triennale",
+            statut: "realisee_conforme",
+            porteUnePreuve: false,
+          }),
+        ],
+        [],
+        {
+          now: NOW,
+          obligationsEncoreApplicables: new Set(["titre-quinquennal"]),
+          periodicitesEffectives: new Map([["titre-quinquennal", "quinquennale" as const]]),
+        },
+      );
+      expect(plan.aMettreAJour.map((m) => [m.periodicite, m.statut])).toEqual([
+        ["quinquennale", "realisee_conforme"],
+      ]);
+      expect(plan.aSupprimer).toEqual([]);
+    });
+
+    it("une périodicité effective inconnue ne réaligne rien", () => {
+      // Clé indexée sans valeur (fixture qui ne connaît que la clé) : inventer
+      // `autre` ferait purger un statut. Comportement antérieur.
+      const plan = reconcilierCalendrier([roulee()], [], {
+        ...sansRythme,
+        periodicitesEffectives: new Map([
+          [cleApplicabilite("porte-maintien", "eq-1"), undefined],
+        ]),
+      });
+      expect(plan.aMettreAJour).toEqual([]);
+      expect(plan.inchangees).toBe(1);
+    });
+
+    it("la table suit les surcharges par appareil, et la clé de l'ensemble d'applicabilité", () => {
+      const table = periodicitesEffectives([
+        {
+          obligation: { id: "porte-maintien", periodicite: "autre" },
+          porteur: "equipement",
+          equipementsConcernes: [{ id: "eq-1" }, { id: "eq-2" }],
+          surcharges: { "eq-1": { periodicite: "semestrielle" } },
+        },
+        {
+          obligation: { id: "registre", periodicite: "autre" },
+          porteur: "etablissement",
+          equipementsConcernes: [],
+        },
+      ]);
+      expect([...table.entries()].sort()).toEqual([
+        ["porte-maintien::eq-1", "semestrielle"],
+        ["porte-maintien::eq-2", "autre"],
+        ["registre", "autre"],
+      ]);
+    });
   });
 
   it("l'ensemble d'applicabilité se construit par appareil, et par établissement", () => {

@@ -23,7 +23,7 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
  * Aucune des deux ne touche le calendrier :
  *  - `aDemandesAssureur` n'ouvre aucune obligation, il ouvre une porte de
  *    saisie ; ce sont les `PrescriptionParticuliere` créées ensuite qui font
- *    naître des échéances, par le mécanisme inchangé de l'ADR-014.
+ *    naître des échéances, par le mécanisme inchangé de l'ADR-035.
  *  - `epiPresents` est une **consignation**. R. 4323-95 à R. 4323-106 CT et
  *    l'arrêté du 19 mars 1993 n'ont jamais été ouverts dans ce dépôt, et un
  *    guide commercial a déjà fait croire à une périodicité annuelle générale

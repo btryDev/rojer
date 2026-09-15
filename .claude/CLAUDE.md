@@ -510,18 +510,26 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     occurrence » — la pratique dominante des GMAO — est écartée avec ce qui la
     justifierait, et le passage y est mécanique. Le nom du fichier date de la
     proposition
+35. **035** — Prescriptions particulières propres à un établissement : un acte
+    d'autorité (ou une demande d'assureur, ADR-032) renforce une périodicité ou
+    crée une obligation sur mesure (**renumérotée le 2026-09-15, anciennement
+    014**)
 
-**Six ADR ont été déplacées le 2026-09-01**, chacune portant en tête le renvoi
+**Sept ADR ont été déplacées le 2026-09-01** (« six » disait la phrase, qui en
+énumère sept), chacune portant en tête le renvoi
 vers celle qui la remplace ou l'amende : **001** redevient effective (028) ·
-**013** amendée (028) · **014**-prescriptions amendée (032) · **015** remplacée
+**013** amendée (028) · **035** (ex-014-prescriptions) amendée (032) · **015** remplacée
 (030) · **017** amendée (030) · **019** remplacée (029) · **020** amendée (031).
 
 La puce reprend le numéro de l'ADR et non son rang dans la liste, pour que les
 branches puissent atterrir dans n'importe quel ordre sans se contredire.
 
-**Deux fichiers portent le numéro 014** — `014-prescriptions-particulieres.md`
+~~**Deux fichiers portent le numéro 014** — `014-prescriptions-particulieres.md`
 et `014-provenance-navigation.md`. La liste ci-dessus n'en cite qu'un (le
-second) ; les deux sont en vigueur. Collision à trancher, elle ne l'est pas ici.
+second) ; les deux sont en vigueur. Collision à trancher, elle ne l'est pas ici.~~
+**Deux fichiers portaient le numéro 014** jusqu'au 2026-09-15 : la plus récente,
+celle des prescriptions (2026-08-25), est devenue l'**ADR-035** ; la provenance
+(2026-08-20) garde le 014.
 
 Toute nouvelle décision structurante → nouvel ADR avant de coder.
 

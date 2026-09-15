@@ -27,6 +27,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SCEAU_CALENDRIER } from "@/lib/referentiels/conformite";
 import type { EquipementFaux, LigneFausse } from "./faux-prisma";
+import { estVerificationEnRetard } from "@/lib/dates/retard";
 
 // `vi.hoisted` : les fabriques de `vi.mock` sont remontées en tête de module,
 // elles ne peuvent donc pas capturer une variable déclarée plus bas.
@@ -75,6 +76,11 @@ const TITRE_SALARIE = "elec-salarie-attestation-medicale-voisinage";
  */
 const AERATION_FRAGMENT_RETIRE = "aeration-travail-entretien-annuel";
 const AERATION_ABSORBANTE = "aeration-controle-installations-r4222-20";
+/** Portée par un appareil (porte ou portail automatique), `periodicite: "autre"`,
+ *  et ciblable par une prescription qui lui donne un rythme (NB4). */
+const PORTAIL_MAINTIEN = "porte-auto-maintien-en-etat";
+/** Portée par un SALARIÉ, passée de triennale à `autre` (ADR-023 § 6). */
+const HABILITATION_SALARIE = "elec-salarie-habilitation";
 
 // ---------------------------------------------------------------------------
 // Fixtures — elles rendent le monde tel qu'il est, sans pré-filtrer
@@ -143,6 +149,28 @@ function ligne(partiel: Partial<LigneFausse> & { id: string }): LigneFausse {
     nbRapports: 0,
     nbActions: 0,
     ...partiel,
+  };
+}
+
+/** Une prescription qui rend `porte-auto-maintien-en-etat` semestrielle sur
+ *  `eq-portail`, LEVÉE fin 2020. Le magasin n'en type que `{ id, actif }`. */
+function prescriptionPortail() {
+  return {
+    id: "presc-portail",
+    actif: true,
+    source: "arrete_prefectoral",
+    effet: "renforce_periodicite",
+    reference: "Arrêté n° 1",
+    autorite: null,
+    dateDocument: new Date("2019-01-01T00:00:00Z"),
+    dateFin: new Date("2020-12-31T00:00:00Z") as Date | null,
+    obligationId: PORTAIL_MAINTIEN,
+    libelle: null,
+    description: null,
+    periodicite: "semestrielle",
+    realisateurRequis: [],
+    categorieEquipement: null,
+    equipementId: "eq-portail",
   };
 }
 
@@ -393,6 +421,10 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
         obligationId: REGISTRE_SECURITE,
         libelleObligation: "Registre de sécurité",
         periodicite: "autre",
+        // « À planifier » (limite 1, 2026-09-15) : c'est le statut qu'une ligne
+        // sans rendez-vous porte désormais. « Planifiée », elle partait en mise
+        // à jour de statut, et ce test ne mesurait plus la réouverture.
+        statut: "a_planifier",
         archiveLe: new Date("2026-02-01T00:00:00Z"),
         nbRapports: 1,
       }),
@@ -586,6 +618,137 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
     expect(r.updated).toBe(1);
   });
 
+  it("une prescription levée rend son rythme à la ligne qu'elle avait fait rouler (NB4)", async () => {
+    // LE SCÉNARIO DE PRODUCTION, de bout en bout (2026-09-15) : vrai matching,
+    // vraie `appliquerPrescriptions`, vrai générateur, vraie réconciliation.
+    // Un arrêté donne un rythme semestriel à `porte-auto-maintien-en-etat`,
+    // obligation `autre` ; un rapport conforme a fait rouler la ligne ; l'arrêté
+    // est levé. L'obligation n'engendre plus de ligne. Sans la correction, la
+    // ligne restait semestrielle, marquée de l'arrêté, en retard depuis 2021 —
+    // et un nouveau dépôt la faisait rouler au semestre.
+    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+    // Le magasin ne type que `{ id, actif }` ; la lecture rend l'objet entier,
+    // et `appliquerPrescriptions` lit le reste.
+    db.etablissements[0]!.prescriptionsParticulieres = [
+      prescriptionPortail() as unknown as { id: string; actif: boolean },
+    ];
+    db.verifications = [
+      ligne({
+        id: "v-portail",
+        equipementId: "eq-portail",
+        obligationId: PORTAIL_MAINTIEN,
+        libelleObligation: "Maintien en état",
+        periodicite: "semestrielle",
+        datePrevue: new Date("2021-03-01T00:00:00Z"),
+        statut: "planifiee",
+        prescriptionId: "presc-portail",
+        rapports: [{ dateRapport: new Date("2020-09-01T00:00:00Z"), resultat: "conforme" }],
+        nbRapports: 1,
+      }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    const l = db.verifications.find((v) => v.id === "v-portail")!;
+    expect(l.periodicite).toBe("autre");
+    expect(l.prescriptionId).toBeNull();
+    expect(l.statut).toBe("realisee_conforme");
+    expect(l.datePrevue).toEqual(new Date("2021-03-01T00:00:00Z"));
+    expect(l.archiveLe ?? null).toBeNull();
+    expect(
+      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null }, new Date()),
+    ).toBe(false);
+  });
+
+  it("une prescription EN VIGUEUR garde son rythme et son marquage, et la passe suivante n'écrit rien (ADR-032)", async () => {
+    // Le témoin du réalignement : il ne doit toucher que les lignes que la
+    // génération saute. Une prescription active génère sa ligne, qui passe par
+    // la boucle principale et garde `prescriptionId` — c'est lui qui porte le
+    // marquage contractuel d'une demande d'assureur.
+    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+    db.etablissements[0]!.prescriptionsParticulieres = [
+      { ...prescriptionPortail(), dateFin: null } as unknown as {
+        id: string;
+        actif: boolean;
+      },
+    ];
+    db.verifications = [
+      ligne({
+        id: "v-portail",
+        equipementId: "eq-portail",
+        obligationId: PORTAIL_MAINTIEN,
+        libelleObligation: "Maintien en état",
+        periodicite: "semestrielle",
+        datePrevue: new Date("2021-03-01T00:00:00Z"),
+        statut: "planifiee",
+        prescriptionId: "presc-portail",
+        rapports: [{ dateRapport: new Date("2020-09-01T00:00:00Z"), resultat: "conforme" }],
+        nbRapports: 1,
+      }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+    const l = db.verifications.find((v) => v.id === "v-portail")!;
+    expect(l.periodicite).toBe("semestrielle");
+    expect(l.prescriptionId).toBe("presc-portail");
+
+    const seconde = await genererCalendrier(ETAB_ID);
+    expect(seconde.updated).toBe(0);
+    expect(db.verifications.find((v) => v.id === "v-portail")?.prescriptionId).toBe(
+      "presc-portail",
+    );
+  });
+
+  describe("un plan calculé avant une réactivation n'écrase pas la ligne rétablie (2026-09-15)", () => {
+    // La course : le plan lit la prescription LEVÉE et prépare, pour la ligne,
+    // `autre` + `prescriptionId: null`. Entre la lecture et l'écriture, la
+    // prescription est réactivée et une autre passe rétablit la ligne sous
+    // elle. Sans condition sur le rythme et la prescription lus, l'écriture
+    // passait par-dessus : datePrevue et statut n'avaient pas bougé. Avec, la
+    // passe diverge, se relance sur la prescription active et laisse la ligne.
+    const scenario = async (
+      lue: { periodicite: string; prescriptionId: string | null },
+    ) => {
+      poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+      const presc = prescriptionPortail();
+      db.etablissements[0]!.prescriptionsParticulieres = [
+        presc as unknown as { id: string; actif: boolean },
+      ];
+      db.verifications = [
+        ligne({
+          id: "v-portail",
+          equipementId: "eq-portail",
+          obligationId: PORTAIL_MAINTIEN,
+          libelleObligation: "Maintien en état",
+          datePrevue: new Date("2021-03-01T00:00:00Z"),
+          statut: "planifiee",
+          nbActions: 1,
+          ...lue,
+        }),
+      ];
+      db.apresLecture = () => {
+        presc.dateFin = null;
+        const v = db.verifications.find((x) => x.id === "v-portail")!;
+        v.periodicite = "semestrielle";
+        v.prescriptionId = "presc-portail";
+      };
+
+      await genererCalendrier(ETAB_ID);
+
+      const l = db.verifications.find((v) => v.id === "v-portail")!;
+      expect(l.periodicite, "le rythme rétabli a été écrasé").toBe("semestrielle");
+      expect(l.prescriptionId, "la prescription rétablie a été effacée").toBe(
+        "presc-portail",
+      );
+    };
+
+    it("quand seul le rythme a été rétabli", () =>
+      scenario({ periodicite: "autre", prescriptionId: "presc-portail" }));
+
+    it("quand seule la prescription a été rétablie", () =>
+      scenario({ periodicite: "semestrielle", prescriptionId: null }));
+  });
+
   it("l'appareil retiré perd sa ligne alors que l'obligation vit chez son voisin", async () => {
     // LE CAS QUI A FAIT LE LOT 2. Deux appareils électriques, l'un désactivé.
     // L'obligation reste applicable — le second la porte —, donc le garde-fou
@@ -765,6 +928,107 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
     expect(
       db.verifications.find((v) => v.id === "v-titre")?.libelleObligation,
     ).toBe("Attestation médicale");
+  });
+
+  it("la ligne d'un titre non générée prend le rythme du référentiel, et sort des retards sur une action seule (NB4, limite 1)", async () => {
+    // Le cas qui a déjà eu lieu : l'habilitation électrique est passée de
+    // triennale à `autre` (ADR-023 § 6). Un titre sans échéance saisie n'a plus
+    // d'échéance calculable (`echeanceDuTitre`), donc sa ligne n'est plus
+    // générée. Aucune surcharge ne vise un titre : le rythme vient
+    // d'`obligationParId` (2026-09-15).
+    //
+    // LA FIXTURE EST CELLE QUI PEUT EXISTER. Une ligne de salarié ne reçoit
+    // jamais de rapport — `uploadRapport` refuse le dépôt sur un porteur
+    // salarié. Sans preuve, elle est supprimée (test suivant) ; sa seule trace
+    // possible est une action corrective. ~~Le rythme tombait à `autre`, le
+    // statut restait « planifiée » et la ligne RESTAIT EN RETARD pendant que
+    // la page Équipe disait « Sans terme écrit ».~~ Limite 1, tranchée le
+    // 2026-09-15 : la ligne passe « à planifier », hors des retards — le
+    // calendrier dit enfin la même chose qu'Équipe.
+    poserEtablissement([]);
+    poserSalarie("sal-1", true);
+    db.titres = [
+      {
+        obligationId: HABILITATION_SALARIE,
+        salarieId: "sal-1",
+        delivreLe: new Date("2020-03-01T00:00:00Z"),
+        echeanceLe: null,
+      },
+    ];
+    db.verifications = [
+      ligne({
+        id: "v-habilitation",
+        salarieId: "sal-1",
+        obligationId: HABILITATION_SALARIE,
+        libelleObligation: "Habilitation électrique",
+        periodicite: "triennale",
+        datePrevue: new Date("2023-03-01T00:00:00Z"),
+        statut: "planifiee",
+        nbActions: 1,
+      }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    const l = db.verifications.find((v) => v.id === "v-habilitation")!;
+    expect(l.periodicite).toBe("autre");
+    expect(l.statut).toBe("a_planifier");
+    expect(l.datePrevue).toEqual(new Date("2023-03-01T00:00:00Z"));
+    expect(
+      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null }, new Date()),
+    ).toBe(false);
+  });
+
+  it("un titre `autre` dont l'échéance est SAISIE reste « planifiée », donc en retard à sa date", async () => {
+    // Le témoin de la limite 1 : l'échéance vient de la pièce, c'est une vraie
+    // date. La ligne est générée — elle ne passe pas par la boucle finale — et
+    // `lignePortantSansRendezVous` ne la touche pas.
+    poserEtablissement([]);
+    poserSalarie("sal-1", true);
+    db.titres = [
+      {
+        obligationId: HABILITATION_SALARIE,
+        salarieId: "sal-1",
+        delivreLe: new Date("2020-03-01T00:00:00Z"),
+        echeanceLe: new Date("2023-03-01T00:00:00Z"),
+      },
+    ];
+    db.verifications = [];
+
+    await genererCalendrier(ETAB_ID);
+
+    const l = db.verifications.find((v) => v.salarieId === "sal-1")!;
+    expect(l.periodicite).toBe("autre");
+    expect(l.statut).toBe("planifiee");
+    expect(
+      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null }, new Date()),
+    ).toBe(true);
+  });
+
+  it("sans aucune preuve, la même ligne de titre est supprimée", async () => {
+    poserEtablissement([]);
+    poserSalarie("sal-1", true);
+    db.titres = [
+      {
+        obligationId: HABILITATION_SALARIE,
+        salarieId: "sal-1",
+        delivreLe: new Date("2020-03-01T00:00:00Z"),
+        echeanceLe: null,
+      },
+    ];
+    db.verifications = [
+      ligne({
+        id: "v-habilitation",
+        salarieId: "sal-1",
+        obligationId: HABILITATION_SALARIE,
+        periodicite: "triennale",
+        datePrevue: new Date("2023-03-01T00:00:00Z"),
+      }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    expect(db.verifications.find((v) => v.id === "v-habilitation")).toBeUndefined();
   });
 });
 

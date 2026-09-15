@@ -20,7 +20,7 @@ import type {
 } from "./types";
 
 /**
- * Prescriptions particulières propres à un établissement — ADR-014.
+ * Prescriptions particulières propres à un établissement — ADR-035.
  *
  * Le matching du référentiel s'exécute d'abord, inchangé. Cette fonction
  * pure module ensuite son résultat pour UN établissement :
@@ -116,7 +116,9 @@ function suffixeMarquage(p: PrescriptionMatching): string {
  * (recevable mais sans effet ici) sans avoir à reconnaître un message.
  */
 export function prescriptionEnVigueur(
-  p: PrescriptionMatching,
+  // La seule date lue : la suppression d'une prescription pose aussi la
+  // question, sur une lecture réduite.
+  p: Pick<PrescriptionMatching, "dateFin">,
   now: Date,
 ): boolean {
   return p.dateFin === null || p.dateFin.getTime() >= now.getTime();

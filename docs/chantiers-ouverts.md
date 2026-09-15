@@ -1567,8 +1567,70 @@ les corriger.**
 
 Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisser.
 
-- **`Verification.referentielVersion`** (`schema.prisma:602`) : **aucun écrivain**
+- **`Verification.referentielVersion`** (~~`schema.prisma:602`~~ `:603`) : **aucun écrivain**
   dans tout `src/`. La colonne existe pour une resynchronisation jamais écrite.
+  **Remesuré le 2026-09-15 (`lot/reliquats-donnees-docs`)** : ni écrivain ni
+  lecteur explicite dans `src`, `scripts`, les tests et les seeds, et aucun dans
+  l'historique git — elle n'a jamais été écrite. Sa seule lecture est implicite :
+  le client Prisma la sélectionne sur toute requête `Verification` sans `select`.
+  Il n'y a donc aucune écriture à retirer ; le retrait se fait en deux
+  déploiements et attend la décision de la propriétaire.
+  `Etablissement.referentielVersionCalendrier`, le repère réellement lu, n'est
+  pas concerné. ~~Premier déploiement : le champ quitte `schema.prisma` sans
+  migration~~ — **faux, relevé à la relecture** : `.github/workflows/derive-schema.yml`
+  compare les migrations au schéma à chaque push et casserait. Le plan juste,
+  vérifié le 2026-09-15 sur Prisma 6.19.3 installé, sans base :
+  1. **déploiement 1** — `referentielVersion String? @ignore` (`schema.prisma:603`),
+     sans migration. `migrate diff` schéma à schéma rend « empty migration »,
+     donc le workflow reste vert ; le client généré ne porte plus le champ (64
+     occurrences dans `index.d.ts` sans `@ignore`, 0 avec) ;
+  2. **déploiement 2**, poussé seulement quand le 1 est en production — la
+     preview lance `migrate deploy` sur la production dès le push : le champ
+     retiré du schéma et, dans le même commit, la migration
+     `ALTER TABLE "Verification" DROP COLUMN IF EXISTS "referentielVersion";` ;
+  3. **risques résiduels** : une preview d'une branche antérieure au
+     déploiement 1, ou un rollback Vercel en deçà, lit la colonne disparue →
+     P2022. Et les branches ouvertes créées avant le déploiement 1 portent le
+     champ SANS `@ignore` : elles doivent être rebasées avant le déploiement 2,
+     sinon leurs previews tombent en P2022 et leur fusion fait échouer
+     `derive-schema`.
+- **NB4 — une ligne applicable que la génération saute ne se réalignait pas**
+  (ADR-034, N4 point 6). ~~Cas hypothétique~~ : une prescription
+  `renforce_periodicite` sur une obligation `autre`, levée, laissait la ligne à
+  son rythme de prescription, marquée, en retard, et un dépôt la faisait encore
+  rouler. **Corrigé le 2026-09-15 (`lot/reliquats-donnees-docs`)** par la table
+  `periodicitesEffectives` passée au réconciliateur ; détail et limites dans
+  l'ADR-034. **Sans incrément de version**, un dossier existant ne se réaligne
+  qu'à sa prochaine régénération (une mutation, ou un changement de
+  référentiel). ~~**Reste** : une ligne dont la seule trace est une action garde
+  son statut et reste en retard à sa date — voir « une action ouverte compte
+  comme preuve », plus bas. C'est le cas de toute ligne de titre de salarié
+  réalignée, qui ne reçoit jamais de rapport : l'habilitation électrique d'une
+  personne, avec une action seule, reste en retard au calendrier à sa dernière
+  `datePrevue` écrite quand la page Équipe dit « Sans terme écrit » — et de
+  même quand on retire l'échéance saisie d'un titre `autre` dont la ligne porte
+  une action. Non corrigé.~~ **Fermé le 2026-09-15 (limite 1,
+  `lot/reliquats-donnees-docs`)** : une telle ligne passe « à planifier », sort
+  des retards et des comptes (calendrier, brief, score, tableau de bord,
+  widgets, MCP), et se lit « Sans rendez-vous » sur la fiche équipement — avec
+  un lien vers « Ce qui doit être en place » —, au registre et sur sa fiche ; un
+  titre à échéance saisie reste en retard à sa date. Au déploiement, les
+  prédicats agissent tout de suite sur les lignes `autre` + « à planifier »
+  déjà en base ; les autres attendent la régénération de l'incrément de
+  version validé, posé à l'intégration. **Fermé avec**, relecture du même jour : la
+  suppression d'une prescription compte les preuves faites sous l'acte
+  (rapports datés, en jour civil, de l'acte à sa levée, sur les lignes visées),
+  et non plus les lignes qui portent encore son `prescriptionId`, que la
+  régénération retire à la levée (`prescriptions/preuves.ts`). La garde
+  « levée » posée entre-temps est retirée : elle rendait une saisie erronée
+  insupprimable ; l'écran propose désormais la suppression d'une prescription
+  levée selon le même compte, et dit pourquoi quand il la refuse. **Restent,
+  écrits** : ~~une saisie erronée datée AVANT des rapports existants reste
+  insupprimable (aucune action ne corrige la date — décision en attente)~~ —
+  **tranché le 2026-09-15 (option B)** : seuls comptent les rapports déposés
+  après la saisie de la prescription ; un arrêté réel saisi tard devient
+  supprimable, protégé par la seule confirmation ; une succession qui renomme
+  l'obligation ciblée ferait tomber le compte à zéro (théorique à ce jour).
 - **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.
 - **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors

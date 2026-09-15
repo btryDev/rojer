@@ -220,11 +220,14 @@ hors périmètre (déclaration d'AT, registre des accidents bénins) ou déjà
 servies par le module `PlanPrevention`. L'axe est nommé dans l'ADR-022, sans
 mécanisme, et c'est délibéré.
 
-### 5.4 Le doublon d'ADR 014
+### ~~5.4 Le doublon d'ADR 014~~ — FERMÉ LE 2026-09-15
 
-`014-prescriptions-particulieres.md` et `014-provenance-navigation.md` portent
+~~`014-prescriptions-particulieres.md` et `014-provenance-navigation.md` portent
 le même numéro. Les deux sont en vigueur ; `.claude/CLAUDE.md` n'en indexe
-qu'un. **Collision à trancher, elle ne l'est pas.**
+qu'un. **Collision à trancher, elle ne l'est pas.**~~ Tranché dans
+`lot/reliquats-donnees-docs` : la plus récente, celle des prescriptions
+(2026-08-25), est renumérotée **ADR-035** (`035-prescriptions-particulieres.md`)
+et indexée dans `.claude/CLAUDE.md` ; la provenance (2026-08-20) garde le 014.
 
 ---
 

@@ -10,7 +10,7 @@ import type { SectionRegistre } from "./sections";
  *
  * Le registre de sécurité est le document qu'on ouvre devant une commission
  * de sécurité ou un inspecteur : une échéance née d'une demande d'assureur
- * qui s'y lirait comme réglementaire est l'erreur que l'ADR-014 voulait
+ * qui s'y lirait comme réglementaire est l'erreur que l'ADR-035 voulait
  * empêcher, et elle est invisible pour celui qui la subit — le dirigeant, qui
  * croit devoir au droit ce qu'il doit à son contrat.
  */
@@ -107,6 +107,24 @@ describe("registre — une date de génération n'est pas une échéance", () =>
     expect(ligne.meta).not.toContain("prochaine");
     // La pastille, elle, dit le retard : un contrôle dû et jamais fait.
     expect(ligne.statut).toBe("en_retard");
+  });
+});
+
+describe("registre — une ligne sans rendez-vous (limite 1, 2026-09-15)", () => {
+  it("dit « sans rendez-vous », sans pastille « À planifier » ni « En retard »", () => {
+    // Une obligation sans rythme, gardée par une action seule : sa date est la
+    // dernière écrite, et rien n'est attendu. La fiche remise en contrôle ne
+    // doit ni promettre une planification, ni annoncer un retard.
+    const [ligne] = lignesDe([
+      verif({
+        periodicite: "autre",
+        statut: "a_planifier",
+        datePrevue: new Date("2026-03-01T00:00:00Z"),
+      }),
+    ]);
+    expect(ligne.meta).toContain("sans rendez-vous");
+    expect(ligne.meta).not.toContain("sans échéance connue");
+    expect(ligne.statut).toBeUndefined();
   });
 });
 

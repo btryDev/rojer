@@ -23,7 +23,12 @@ import {
 } from "@/lib/salaries/catalogue";
 import { declarerTitre } from "@/lib/salaries/actions";
 import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-evenementielles";
-import { CHAMP_ETAT, ENCRE_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
+import {
+  CHAMP_ETAT,
+  ENCRE_ETAT,
+  LIBELLE_SANS_RENDEZ_VOUS,
+  type RegistreLigne,
+} from "@/lib/calendrier/etats";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { Download } from "lucide-react";
@@ -52,6 +57,9 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   // recommandées (ADR-023 § 6) — décréter une échéance serait inventer une
   // non-conformité.
   aPlanifier: "Sans terme écrit",
+  // Un TITRE n'est jamais classé ainsi (`classerTitre`) : la table est fermée
+  // sur les états d'une ligne, et le mot est le même que celui du calendrier.
+  sansRendezVous: LIBELLE_SANS_RENDEZ_VOUS,
 };
 
 /**

@@ -419,7 +419,7 @@ cohérence du référentiel
   quelque chose à une classe ou à une famille, le critère existe, la colonne
   existe, et il ne resterait qu'à reposer la question.
 
-## Prescriptions particulières (ADR-014)
+## Prescriptions particulières (ADR-035)
 
 Après le matching du référentiel, `appliquerPrescriptions`
 (`src/lib/matching/prescriptions.ts`) module le résultat pour l'établissement :

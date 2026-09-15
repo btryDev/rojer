@@ -364,6 +364,8 @@ export function fauxPrisma(db: Magasin) {
         etablissementId?: string;
         datePrevue?: Date;
         statut?: string;
+        periodicite?: string;
+        prescriptionId?: string | null;
         /** `{ not: null }` = « encore archivée » : la condition de la
          *  réouverture, qui sans elle ne détectait aucune écriture
          *  concurrente (relecture du 2026-09-13). */
@@ -382,6 +384,8 @@ export function fauxPrisma(db: Magasin) {
           etablissementId,
           datePrevue,
           statut,
+          periodicite,
+          prescriptionId,
           archiveLe,
           ...reste
         } = args.where;
@@ -403,6 +407,9 @@ export function fauxPrisma(db: Magasin) {
             (datePrevue === undefined ||
               memeInstant(v.datePrevue, datePrevue)) &&
             (statut === undefined || v.statut === statut) &&
+            (periodicite === undefined || v.periodicite === periodicite) &&
+            (prescriptionId === undefined ||
+              (v.prescriptionId ?? null) === prescriptionId) &&
             archiveLeCorrespond(v),
         );
         for (const v of cibles) Object.assign(v, args.data);

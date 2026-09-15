@@ -173,8 +173,9 @@ Toute entrée écrite avant l'étape 3 serait un contournement de plus.
 2. **ADR** — déclencheur, porteur, nature temporelle, règle du non-renseigné. Prochain numéro
    libre : **022** — *corrigé à la relecture* : le 019 **est livré sur `main`** depuis le
    2026-08-21 (`b0c489e`), le 021 aussi. Aucun `022-*` n'existe sur aucune référence. À signaler
-   au passage : **deux fichiers portent le numéro 014** (`014-prescriptions-particulieres.md` et
-   `014-provenance-navigation.md`), et `CLAUDE.md` n'indexe que le second.
+   au passage : ~~**deux fichiers portent le numéro 014** (`014-prescriptions-particulieres.md` et
+   `014-provenance-navigation.md`), et `CLAUDE.md` n'indexe que le second~~ — tranché le
+   2026-09-15 (`lot/reliquats-donnees-docs`) : les prescriptions sont devenues l'ADR-035.
 3. **Élargir le type `Obligation`** — `categoriesEquipement` optionnel, `declencheur`, `porteur`.
    Ajouter **CSP** (santé publique — DTA, radon, plomb) et **CSS** (sécurité sociale — registre
    des accidents bénins, déclaration d'AT) à `SOURCES_LEGALES`, avec un commentaire justificatif
@@ -278,7 +279,7 @@ vaut donc pour l'ordre des lots autant que pour « une ligne, pas N ». La déci
 reste entière pour le lot suivant : minimal veut dire peu de champs, jamais un compteur par poste.
 
 **Une septième source d'échéances existe et n'est pas dans ce brief** : la prescription
-particulière (ADR-014, modèle `PrescriptionParticuliere`) — arrêté du maire, mise en demeure,
+particulière (ADR-035, modèle `PrescriptionParticuliere`) — arrêté du maire, mise en demeure,
 PV de commission. Elle est traitée à part, et bien. Vérifiez qu'elle ne rentre pas en collision
 avec le nouveau `porteur`.
 

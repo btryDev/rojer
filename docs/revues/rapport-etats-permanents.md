@@ -142,7 +142,7 @@ que la journée du 2026-08-31 a passé à retirer sur deux widgets jumeaux.
 Le critère effectif est donc `nature === "etat_permanent"` **et le générateur
 n'en produit aucune ligne** — soit **29**, et non 30. La seconde moitié se lit
 sur la périodicité **effective**, surcharge de prescription particulière comprise
-(ADR-014) : un arrêté préfectoral qui donne un rythme à une obligation qui n'en
+(ADR-035) : un arrêté préfectoral qui donne un rythme à une obligation qui n'en
 avait pas la fait passer de l'écran au calendrier.
 
 ### b) « Les quatre titres de salarié » en sont un seul

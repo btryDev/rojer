@@ -200,7 +200,7 @@ leur ligne, pas corrigées :
    je n'ai relu aucun texte à la source dans ce lot. À reprendre avec la
    relecture réglementaire — en gardant que le maire ou le préfet peut augmenter
    la fréquence par arrêté, ce qui relève d'une prescription particulière
-   (ADR-014) et non du référentiel.
+   (ADR-035) et non du référentiel.
 2. `porte-auto-portail-piete-coulissant` — état permanent portant
    `mise_en_service_uniquement`. **Non fait** : changer la périodicité déplace
    des lignes chez tous les utilisateurs équipés d'un portail, et cela se décide

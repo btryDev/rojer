@@ -126,7 +126,7 @@ date au lieu de la sauter), et le retenir lui donnerait deux surfaces.
 
 Le critère est donc **`nature === "etat_permanent"` ET le générateur n'en produit
 aucune ligne**, cette seconde moitié étant lue sur la périodicité **effective**,
-surcharge de prescription particulière comprise (ADR-014) : un arrêté préfectoral
+surcharge de prescription particulière comprise (ADR-035) : un arrêté préfectoral
 qui donne un rythme à une obligation qui n'en avait pas la fait passer de l'écran
 au calendrier.
 

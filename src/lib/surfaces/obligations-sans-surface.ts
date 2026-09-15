@@ -93,7 +93,7 @@ export type Surface = (typeof SURFACES)[number];
  * diverge, cette garde certifie une couverture qui n'existe plus.
  *
  * La périodicité prise est celle du référentiel, sans surcharge de prescription
- * particulière (ADR-014). C'est le bon choix ici : une surcharge ne peut
+ * particulière (ADR-035). C'est le bon choix ici : une surcharge ne peut
  * qu'AJOUTER un rendez-vous à un dossier donné, donc qu'ajouter une surface. Ce
  * module mesure le plancher — ce que l'obligation atteint chez tout le monde.
  */

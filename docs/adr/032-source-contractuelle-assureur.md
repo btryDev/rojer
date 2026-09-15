@@ -11,7 +11,7 @@
   après coup, le 2026-09-01 : « le marquage n'est pas optionnel » ne souffre pas
   d'exception, et une requête distincte de celle du calendrier est exactement
   l'endroit où l'exception s'installe sans bruit
-- **Amende** l'ADR-014 (prescriptions particulières) · **Découle de** l'ADR-025
+- **Amende** l'ADR-035 (prescriptions particulières) · **Découle de** l'ADR-025
 
 ## Le problème
 
@@ -28,7 +28,7 @@ guide commercial soumis cette semaine présentait des recyclages CACES
 quinquennaux comme des obligations : c'est faux, et c'est précisément le genre
 d'affirmation que le dépôt refuse de porter.
 
-L'ADR-014 fonde les prescriptions particulières sur des **actes d'autorité
+L'ADR-035 fonde les prescriptions particulières sur des **actes d'autorité
 opposables** : arrêté préfectoral, arrêté municipal, PV de commission de
 sécurité, arrêté ICPE, inspection du travail. Une demande d'assureur n'en est
 pas un. Elle est contractuelle.
@@ -50,12 +50,12 @@ distinguent explicitement la règle APSAD du droit. On étend une pratique
 - **Le marquage n'est pas optionnel.** Partout où la ligne s'affiche —
   calendrier, registre, PDF, ZIP de contrôle — elle porte « engagement
   d'assurance, pas une obligation légale ». Une échéance contractuelle qui se
-  présente comme réglementaire est exactement l'erreur que l'ADR-014 voulait
+  présente comme réglementaire est exactement l'erreur que l'ADR-035 voulait
   empêcher ; c'est le marquage, et lui seul, qui la retient.
 - **Aucune référence légale.** Une prescription d'assureur ne cite pas d'article,
   et le produit ne doit pas lui en chercher un pour faire bonne figure.
 
-**L'amendement à l'ADR-014 tient en une phrase** : les sources d'une prescription
+**L'amendement à l'ADR-035 tient en une phrase** : les sources d'une prescription
 ne sont plus exclusivement des actes d'autorité ; une source contractuelle
 existe, et le produit la sépare visuellement du droit au lieu de la refuser.
 

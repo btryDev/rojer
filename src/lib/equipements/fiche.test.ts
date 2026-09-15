@@ -143,6 +143,28 @@ describe("lignesAFaire", () => {
     );
   });
 
+  it("une ligne sans rendez-vous dit « Sans rendez-vous » et mène à « Ce qui doit être en place » (limite 1)", () => {
+    // « Sans échéance connue — à caler avec votre prestataire » promettait un
+    // rendez-vous que l'obligation n'a pas (2026-09-15).
+    const [ligne] = lignesAFaire(
+      fiche([
+        {
+          id: "v-sans-rythme",
+          datePrevue: "2026-03-01",
+          statut: "a_planifier",
+          periodicite: "autre",
+        },
+      ]),
+      "/etablissements/e1",
+      AUJOURDHUI,
+    );
+    expect(ligne.etat).toBe("sansRendezVous");
+    expect(ligne.date).toBeNull();
+    expect(ligne.detail).toBe("Sans rendez-vous — à tenir en place");
+    expect(ligne.href).toBe("/etablissements/e1/etats-permanents");
+    expect(libelleDelai(ligne, AUJOURDHUI, "ligne")).toBe("sans rendez-vous");
+  });
+
   it("un retard sans date passe EN TÊTE, devant une échéance lointaine", () => {
     // Relecture du lot C : triée sur la seule date, la ligne sans date tombait
     // après la lointaine ; l'en-tête annonçait « attendue dans 182 jours » à

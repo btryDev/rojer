@@ -561,7 +561,96 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      périodicité, sa date et son statut gelés (relecture, NB4) — réaligner
      ces lignes dans le réconciliateur plutôt que filtrer chez les lecteurs,
      ce qui suppose que l'ensemble d'applicabilité porte l'obligation et non
-     sa clé. Cas hypothétique sur ce référentiel, à traiter avec N5. Et la
+     sa clé. ~~Cas hypothétique sur ce référentiel, à traiter avec N5.~~
+     **Mesuré le 2026-09-15 (`lot/reliquats-donnees-docs`) : pas hypothétique,
+     et pas limité à la réouverture.** Une prescription `renforce_periodicite`
+     posée sur une obligation `autre` d'appareil (vingt au référentiel), puis
+     levée, laisse la ligne roulée semestrielle, `prescriptionId` compris, et
+     en retard dès sa date passée — comptée « inchangée » si elle n'est pas
+     archivée, rouverte telle quelle par `aDesarchiver` si elle l'était.
+     ~~**Non corrigé** : réaligner exige la périodicité effective, que la clé ne
+     porte pas, et la déduction « non générée donc `autre` » est fausse pour
+     les lignes de salarié. Le chemin du référentiel (une obligation qui passe
+     à `autre`) est tenu par un fusible,
+     `src/lib/calendrier/reouverture-periodicite.test.ts` ; celui des
+     prescriptions reste ouvert, à trancher.~~ **Corrigé le même jour, après
+     relecture, sans refonte** : `calendrier/actions.ts` construit, depuis le
+     même tableau que l'ensemble d'applicabilité, la table des périodicités
+     EFFECTIVES par clé (`periodicitesEffectives`, surcharges par appareil
+     comprises ; le rythme du référentiel pour un titre de salarié). La boucle
+     finale du réconciliateur pousse dans `aMettreAJour` — donc `archiveLe`
+     remis à `null`, écriture conditionnée sur la date, le statut, le rythme
+     et la prescription lus (les deux derniers ajoutés à la relecture, pour
+     qu'un plan calculé avant une réactivation n'écrase pas la ligne rétablie)
+     — toute
+     ligne applicable, porteuse d'une trace, dont le rythme ou la prescription
+     diffèrent : rythme effectif, `prescriptionId: null`, date inchangée,
+     statut lu sur le dernier rapport réalisé quand il n'y a plus de
+     rendez-vous suivant. Un dépôt ne la fait plus rouler, et ~~elle ne se lit
+     plus en retard~~ elle ne se lit plus en retard **si elle porte un rapport
+     réalisé** — la phrase disait « elle » sans condition, et la relecture l'a
+     démentie sur les deux cas suivants. Le fusible est retiré : il ne
+     couvrait pas les prescriptions et rougissait à chaque obligation `autre`
+     ajoutée. **Trois limites, écrites.** ~~Une ligne dont la seule trace est une
+     action (ou un rapport « non vérifiable ») perd son rythme mais garde son
+     statut : elle reste en retard à sa date — c'est le point mineur « une
+     action ouverte compte comme preuve » de `docs/chantiers-ouverts.md`.
+     **C'est le cas de TOUTE ligne de titre de salarié réalignée** :
+     `uploadRapport` refuse le dépôt sur un porteur salarié, donc une telle
+     ligne n'a jamais de rapport. Sur l'habilitation électrique (triennale
+     devenue `autre`), une ligne sans preuve est supprimée ; avec une action
+     seule, elle passe `autre` + « planifiée » et reste EN RETARD à la
+     dernière `datePrevue` écrite — `delivreLe` + trois ans pour une ligne née
+     de l'ancien rythme, l'échéance saisie pour une autre —, pendant que la
+     page Équipe dit « Sans terme écrit » (`echeanceDuTitre`). **Même effet
+     sans aucun changement de référentiel** : retirer l'échéance saisie d'un
+     titre `autre` dont la ligne porte une action la sort de la génération et
+     la laisse en retard à l'ancienne échéance. Non corrigé : aligner les deux voudrait dire soit
+     retirer au calendrier une ligne qui porte une action, soit dériver du
+     titre l'état de la ligne — ni l'un ni l'autre n'est une garde de trois
+     lignes.~~ **Fermé le 2026-09-15 (limite 1, `lot/reliquats-donnees-docs`),
+     sur décision de la propriétaire.** Une ligne applicable que la génération
+     saute, à rythme SANS RENDEZ-VOUS et sans rapport ni statut réalisé, est
+     écrite « à planifier » par la réconciliation — le statut entre dans la
+     condition, pour rattraper les lignes déjà réalignées « planifiées ».
+     `lignePortantSansRendezVous` (`retard.ts`) la tient hors des retards et
+     des « à planifier », `echeanceAttendue` l'écarte en SQL, et
+     `classerVerification` lui donne un état propre, `sansRendezVous` : pas de
+     pose au calendrier, pas de pastille, le mot « Sans rendez-vous »
+     (`LIBELLE_SANS_RENDEZ_VOUS`) sur la fiche équipement — avec un lien vers
+     « Ce qui doit être en place » —, au registre, sur la fiche de
+     vérification et à l'assistant (`sans_rendez_vous`). Un titre `autre` dont
+     l'échéance est SAISIE reste « planifiée », donc en retard à sa date :
+     c'est une vraie date. L'action garde son propre retard au plan d'actions.
+     **Au déploiement** : les prédicats agissent tout de suite sur les lignes
+     `autre` + « à planifier » déjà en base, qui sortent des retards et des
+     comptes (le score peut monter) ; les lignes `autre` + « planifiée » ne
+     sont réécrites qu'à leur régénération, que l'incrément de version validé
+     déclenchera à l'intégration — aucune version n'est incrémentée sur la
+     branche. Sur un rythme, enfin, un statut réalisé sans rapport est gardé
+     tel quel : c'est la seule trace de la ligne, et la date décide. ~~**La
+     suppression d'une prescription levée est refusée**~~ — cette garde a
+     créé une impasse (une saisie erronée sur une ligne déjà contrôlée ne se
+     supprimait ni active, ni levée) et laissait passer une prescription
+     rattrapée par le référentiel. **Remplacée le même jour** : la suppression
+     compte les preuves faites SOUS l'acte — rapports datés, en jour civil,
+     de `dateDocument` à la levée comprise, sur les lignes qu'il vise
+     (obligation × appareil), que la ligne porte encore `prescriptionId` ou
+     non (`prescriptions/preuves.ts`) — et, **sur décision de la propriétaire
+     (option B)**, enregistrés après la saisie de la prescription : un rapport
+     déposé avant n'a pas roulé à son rythme. Une saisie erronée datée avant des
+     rapports existants redevient supprimable ; le prix accepté est qu'un arrêté
+     réel saisi tard le devient aussi, protégé par la seule confirmation. Un
+     acte ne se date plus dans le futur, et une prescription levée se supprime
+     si rien n'a été fait sous elle. ~~Le compte ne dépend plus de la régénération.~~ Il ne dépend plus
+     de l'effet de la prescription ; **limite, théorique à ce jour** : une
+     succession qui renomme l'obligation ciblée déplace les lignes sous un
+     autre `obligationId`, et le compte tombe à zéro. Et **aucune version
+     n'est incrémentée** : un dossier existant ne se réaligne qu'à sa prochaine
+     régénération, déclenchée par une mutation (dont la levée d'une
+     prescription elle-même) ou par un changement de référentiel ; une levée
+     DATÉE dans le futur n'agit qu'à la régénération qui suit sa date. Faire
+     réaligner tout le parc est une décision de la propriétaire. Et la
      migration de remise au modèle des rangées gelées devient un NETTOYAGE,
      non une condition : c'est la première étape de N5, avec les exclusions
      relevées (lignes `datePrevue ≤ dateRealisee` laissées au réconciliateur,

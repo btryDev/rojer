@@ -7,9 +7,10 @@ import {
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { estPeriodicitePlusStricte } from "@/lib/matching/prescriptions";
 import { SOURCES_PRESCRIPTION } from "./sources";
+import { cleJourCivil } from "@/lib/dates";
 
 /**
- * Validation d'une prescription particulière (ADR-014).
+ * Validation d'une prescription particulière (ADR-035).
  *
  * Deux règles que la base ne peut pas porter seule :
  *  - XOR des effets (la CHECK SQL le garantit aussi, ceinture et bretelles) ;
@@ -55,7 +56,15 @@ const base = z.object({
   source: z.enum(SOURCES_PRESCRIPTION),
   reference: z.string().trim().min(1, "Référence obligatoire").max(200),
   autorite: z.preprocess(vide, z.string().trim().max(200).optional()),
-  dateDocument: dateCivile,
+  // PAS D'ACTE DANS LE FUTUR (2026-09-15). « 2062 » au lieu de « 2026 » : la
+  // prescription s'appliquait quand même — le moteur ne lit que sa fin —, mais
+  // aucun rapport n'était « fait sous l'acte », et la suppression effaçait un
+  // acte qui avait fait rouler des lignes. Borne en jour civil de Paris
+  // (ADR-011), comme la date d'un rapport (`rapports/schema.ts`).
+  dateDocument: dateCivile.refine(
+    (v) => typeof v === "string" && v <= cleJourCivil(new Date()),
+    "Un acte ne peut pas être daté dans le futur : c'est la date portée sur la pièce.",
+  ),
   dateFin: z.preprocess(vide, z.string().regex(DATE_FMT).optional()),
   periodicite: z
     .enum(PERIODICITES)

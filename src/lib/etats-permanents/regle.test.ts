@@ -89,7 +89,7 @@ describe("le critère de l'écran", () => {
   });
 
   it("suit la périodicité EFFECTIVE, pas celle du référentiel", () => {
-    // Une prescription particulière (ADR-014) peut donner un rythme à une
+    // Une prescription particulière (ADR-035) peut donner un rythme à une
     // obligation qui n'en avait pas : ce jour-là elle quitte l'écran pour le
     // calendrier. Prendre `o.periodicite` au lieu de l'effective l'afficherait
     // aux deux endroits.
@@ -404,7 +404,7 @@ describe("le troisième cas — ce qu'un fait rend dû", () => {
     } as Obligation;
     expect(estDeclencheeParUnFait(avecRythme)).toBe(false);
     // Et la périodicité EFFECTIVE l'emporte sur celle du référentiel : c'est
-    // ce qu'une prescription particulière fait (ADR-014).
+    // ce qu'une prescription particulière fait (ADR-035).
     expect(estDeclencheeParUnFait(evenementielle, "annuelle")).toBe(false);
   });
 

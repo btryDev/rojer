@@ -5,15 +5,15 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
-import {
-  portantUnePreuve,
-  toutesLesConditions,
-} from "@/lib/calendrier/portee";
-import { depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 import { validerPrescription } from "./schema";
+import { compterLignesAvecPreuve } from "./preuves";
+import { chargerLignesVisees } from "./lecture-preuves";
+import { raisonDuRefus } from "./refus-suppression";
+import { prescriptionEnVigueur } from "@/lib/matching/prescriptions";
 
 /**
- * Prescriptions particulières (ADR-014) — création, levée, suppression.
+ * Prescriptions particulières (ADR-035) — création, levée, suppression.
  *
  * Toute mutation relance `genererCalendrier` : c'est le générateur qui
  * applique (ou ignore, avec raison) la prescription, jamais cette action.
@@ -104,22 +104,6 @@ export async function creerPrescription(
 }
 
 /**
- * Nombre de lignes de calendrier produites par cette prescription et
- * porteuses d'une preuve — rapport, action corrective, ou simple date de
- * réalisation. Même critère que la réconciliation du calendrier (ADR-012) :
- * ce qui atteste qu'un contrôle a eu lieu ne se détruit pas.
- */
-async function compterLignesAvecPreuve(
-  prescriptionId: string,
-): Promise<number> {
-  // La définition partagée (`portantUnePreuve`) : la recopie d'ici ignorait
-  // le statut réalisé.
-  return prisma.verification.count({
-    where: toutesLesConditions({ prescriptionId }, portantUnePreuve()),
-  });
-}
-
-/**
  * Lève une prescription à une date : elle cesse de produire effet mais reste
  * dans l'historique. C'est la voie normale de sortie — un arrêté rapporté ou
  * une mise en demeure levée ne s'effacent pas, ils cessent.
@@ -200,15 +184,50 @@ export async function supprimerPrescription(
 ): Promise<PrescriptionActionState> {
   await assertEtablissementOwnership(etablissementId);
 
-  const avecPreuve = await compterLignesAvecPreuve(prescriptionId);
+  // (Une garde « prescription levée » a vécu ici quelques heures, le
+  // 2026-09-15 : elle rattrapait un compte fondé sur `prescriptionId`, que la
+  // levée remettait à zéro. Elle créait une impasse — une saisie erronée sur
+  // une ligne déjà contrôlée ne se supprimait ni active, ni levée. Le compte
+  // par cible et par date de l'acte ne dépend plus de l'effet : il suffit.)
+  const existante = await prisma.prescriptionParticuliere.findFirst({
+    where: { id: prescriptionId, etablissementId },
+    select: {
+      id: true,
+      effet: true,
+      obligationId: true,
+      equipementId: true,
+      dateDocument: true,
+      dateFin: true,
+      actif: true,
+      createdAt: true,
+    },
+  });
+  if (!existante) {
+    return { status: "error", message: "Prescription introuvable." };
+  }
+
+  // Les lignes VISÉES et les preuves faites SOUS l'acte (`preuves.ts`), plus
+  // `Verification.prescriptionId`, que la régénération pose et retire au gré
+  // de l'effet (2026-09-15). La lecture est celle de la page.
+  const avecPreuve = compterLignesAvecPreuve(
+    existante,
+    await chargerLignesVisees(etablissementId, existante),
+  );
   if (avecPreuve > 0) {
     return {
       status: "error",
       message:
-        `Suppression refusée : ${avecPreuve} vérification${avecPreuve > 1 ? "s" : ""} ` +
-        `issue${avecPreuve > 1 ? "s" : ""} de cette prescription porte${avecPreuve > 1 ? "nt" : ""} ` +
-        "un rapport ou une action corrective. Levez-la plutôt : son effet " +
-        "s'arrête et l'historique reste.",
+        "Suppression refusée : " +
+        raisonDuRefus(
+          {
+            effet: existante.effet,
+            acte: cleJourCivil(existante.dateDocument),
+            fin: existante.dateFin === null ? null : cleJourCivil(existante.dateFin),
+            levee:
+              !existante.actif || !prescriptionEnVigueur(existante, new Date()),
+          },
+          avecPreuve,
+        ),
     };
   }
 
