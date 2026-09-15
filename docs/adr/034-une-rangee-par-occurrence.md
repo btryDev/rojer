@@ -568,12 +568,33 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      levée, laisse la ligne roulée semestrielle, `prescriptionId` compris, et
      en retard dès sa date passée — comptée « inchangée » si elle n'est pas
      archivée, rouverte telle quelle par `aDesarchiver` si elle l'était.
-     **Non corrigé** : réaligner exige la périodicité effective, que la clé ne
+     ~~**Non corrigé** : réaligner exige la périodicité effective, que la clé ne
      porte pas, et la déduction « non générée donc `autre` » est fausse pour
      les lignes de salarié. Le chemin du référentiel (une obligation qui passe
      à `autre`) est tenu par un fusible,
      `src/lib/calendrier/reouverture-periodicite.test.ts` ; celui des
-     prescriptions reste ouvert, à trancher. Et la
+     prescriptions reste ouvert, à trancher.~~ **Corrigé le même jour, après
+     relecture, sans refonte** : `calendrier/actions.ts` construit, depuis le
+     même tableau que l'ensemble d'applicabilité, la table des périodicités
+     EFFECTIVES par clé (`periodicitesEffectives`, surcharges par appareil
+     comprises ; le rythme du référentiel pour un titre de salarié). La boucle
+     finale du réconciliateur pousse dans `aMettreAJour` — donc `archiveLe`
+     remis à `null`, écriture conditionnée sur la date et le statut lus — toute
+     ligne applicable, porteuse d'une trace, dont le rythme ou la prescription
+     diffèrent : rythme effectif, `prescriptionId: null`, date inchangée,
+     statut lu sur le dernier rapport réalisé quand il n'y a plus de
+     rendez-vous suivant. Un dépôt ne la fait plus rouler, et elle ne se lit
+     plus en retard. Le fusible est retiré : il ne couvrait pas les
+     prescriptions et rougissait à chaque obligation `autre` ajoutée. **Deux
+     limites, écrites.** Une ligne dont la seule trace est une action (ou un
+     rapport « non vérifiable ») perd son rythme mais garde son statut : elle
+     reste en retard à sa date — c'est le point mineur « une action ouverte
+     compte comme preuve » de `docs/chantiers-ouverts.md`. Et **aucune version
+     n'est incrémentée** : un dossier existant ne se réaligne qu'à sa prochaine
+     régénération, déclenchée par une mutation (dont la levée d'une
+     prescription elle-même) ou par un changement de référentiel ; une levée
+     DATÉE dans le futur n'agit qu'à la régénération qui suit sa date. Faire
+     réaligner tout le parc est une décision de la propriétaire. Et la
      migration de remise au modèle des rangées gelées devient un NETTOYAGE,
      non une condition : c'est la première étape de N5, avec les exclusions
      relevées (lignes `datePrevue ≤ dateRealisee` laissées au réconciliateur,

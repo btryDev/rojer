@@ -149,23 +149,60 @@ export function cleApplicabilite(
  * n'y passent pas — le matching ne les rend pas — et l'appelant les ajoute.
  */
 export function clesApplicabilite(
-  obligations: ReadonlyArray<{
-    obligation: { id: string };
-    porteur: string;
-    equipementsConcernes: ReadonlyArray<{ id: string }>;
-  }>,
+  obligations: ReadonlyArray<ApplicableAIndexer>,
 ): Set<string> {
-  const cles = new Set<string>();
+  // Les clés de la table des périodicités, et rien d'autre : une seule
+  // construction, donc aucun désaccord possible entre « s'applique-t-elle ? »
+  // et « à quel rythme ? » (2026-09-15).
+  return new Set(periodicitesEffectives(obligations).keys());
+}
+
+type ApplicableAIndexer = {
+  obligation: { id: string; periodicite?: Periodicite };
+  porteur: string;
+  equipementsConcernes: ReadonlyArray<{ id: string }>;
+  surcharges?: Readonly<Record<string, { periodicite: Periodicite }>>;
+};
+
+/**
+ * La périodicité EFFECTIVE de chaque clé d'applicabilité : celle du
+ * référentiel, sauf surcharge d'une prescription particulière sur l'appareil
+ * (ADR-035) — exactement celle que `genererProchainesVerifications` passe à
+ * `estSansRendezVous`.
+ *
+ * POURQUOI ELLE EXISTE (NB4, ADR-034 N4 point 6 ; 2026-09-15). Une ligne
+ * applicable que la génération saute n'arrive jamais par `aMettreAJour` : la
+ * boucle finale du réconciliateur la comptait « inchangée » ou la rouvrait, en
+ * n'écrivant qu'`archiveLe`. Une prescription qui donnait un rythme semestriel
+ * à une obligation `autre`, une fois levée, laissait donc la ligne semestrielle,
+ * marquée de sa prescription, et en retard dès sa date passée — sur une
+ * obligation qui n'a plus de rythme. La clé seule ne disait pas à quel rythme
+ * réaligner.
+ *
+ * `periodicite` est optionnel dans le type pour les fixtures qui ne testent que
+ * les clés. La clé est alors indexée SANS valeur : elle reste applicable, et le
+ * réconciliateur ne réaligne rien sur une périodicité qu'il ne connaît pas —
+ * inventer `autre` y ferait purger un statut. L'appelant réel passe des
+ * obligations complètes.
+ */
+export function periodicitesEffectives(
+  obligations: ReadonlyArray<ApplicableAIndexer>,
+): Map<string, Periodicite | undefined> {
+  const table = new Map<string, Periodicite | undefined>();
   for (const oa of obligations) {
+    const referentiel = oa.obligation.periodicite;
     if (oa.porteur === "equipement") {
       for (const eq of oa.equipementsConcernes) {
-        cles.add(cleApplicabilite(oa.obligation.id, eq.id));
+        table.set(
+          cleApplicabilite(oa.obligation.id, eq.id),
+          oa.surcharges?.[eq.id]?.periodicite ?? referentiel,
+        );
       }
     } else {
-      cles.add(cleApplicabilite(oa.obligation.id, null));
+      table.set(cleApplicabilite(oa.obligation.id, null), referentiel);
     }
   }
-  return cles;
+  return table;
 }
 
 /** Ce que la génération ÉCRIT. Plus de `depassee` : le retard est une
@@ -256,6 +293,16 @@ export type OptionsGenerateur = {
    * s'appliquait plus qu'à un autre appareil.
    */
   obligationsEncoreApplicables?: Set<string>;
+  /**
+   * La périodicité effective de chaque clé d'applicabilité
+   * (`periodicitesEffectives`, plus les obligations de salarié instanciées,
+   * au rythme du référentiel). Sert à RÉALIGNER une ligne applicable que la
+   * génération saute — elle n'a que ce chemin (NB4, 2026-09-15).
+   *
+   * Absent, ou clé sans valeur = comportement antérieur : la ligne n'est ni
+   * réalignée ni touchée au-delà de son archivage.
+   */
+  periodicitesEffectives?: ReadonlyMap<string, Periodicite | undefined>;
   /**
    * Les équipements encore en service, par identifiant.
    *
@@ -1186,18 +1233,22 @@ export function reconcilierCalendrier(
       !estCyclique(g.periodicite) &&
       (estStatutRealise(ex.statut) || realisation !== null)
     ) {
-      // Obligation sans rendez-vous suivant (`mise_en_service_uniquement`,
-      // `autre`) et réalisée : le one-shot est consommé, plus rien à
-      // replanifier, jamais. La ligne garde le résultat de son unique
-      // contrôle — c'est le seul cas où un statut réalisé reste sur la ligne.
+      // Obligation sans rendez-vous suivant et réalisée : le one-shot est
+      // consommé, plus rien à replanifier, jamais. La ligne garde le résultat
+      // de son unique contrôle — c'est le seul cas où un statut réalisé reste
+      // sur la ligne. EN PRATIQUE `mise_en_service_uniquement` SEULE : une
+      // obligation `autre` n'est jamais générée (`estSansRendezVous`), donc
+      // n'atteint jamais cette boucle. Son pendant vit dans la boucle finale,
+      // sur `periodicitesEffectives` (NB4, 2026-09-15).
       //
       // `|| realisation !== null` COUVRE LE CHANGEMENT DE PAS, et c'est une
       // régression de N2 qu'il ferme : une ligne ROULÉE par un dépôt porte
       // « planifiée », pas un statut réalisé. Le jour où sa périodicité devient
-      // ponctuelle — référentiel corrigé, prescription levée —, elle tombait
-      // en cycle ouvert et gardait une échéance que plus rien n'attend : le
-      // contrôle déjà fait serait annoncé « en retard » au cycle suivant. Son
-      // statut se relit alors sur le résultat de son dernier rapport.
+      // `mise_en_service_uniquement` — référentiel corrigé, ou prescription
+      // levée sur une obligation de mise en service —, elle tombait en cycle
+      // ouvert et gardait une échéance que plus rien n'attend : le contrôle
+      // déjà fait serait annoncé « en retard » au cycle suivant. Son statut se
+      // relit alors sur le résultat de son dernier rapport.
       datePrevue = ex.datePrevue;
       // `ex.statut` en dernier recours, et NON `g.statut` : sur une ligne dont
       // la seule trace est son statut réalisé, prendre le statut fraîchement
@@ -1392,7 +1443,46 @@ export function reconcilierCalendrier(
       encoreApplicables?.has(cleApplicabilite(ex.obligationId, ex.equipementId)) &&
       !porteurDisparu
     ) {
+      const effective = options.periodicitesEffectives?.get(
+        cleApplicabilite(ex.obligationId, ex.equipementId),
+      );
       if (!porteUneTrace) plan.aSupprimer.push(ex.id);
+      // ELLE A CHANGÉ DE RYTHME SANS REPASSER PAR LA GÉNÉRATION (NB4,
+      // 2026-09-15). Le cas vécu : une prescription donne un rythme semestriel
+      // à une obligation `autre` sur un appareil ; un rapport fait rouler la
+      // ligne ; la prescription est levée. L'obligation n'engendre plus de
+      // ligne, et celle-ci restait semestrielle, marquée de sa prescription —
+      // contractuelle le cas échéant (ADR-032) —, en retard à sa date, et un
+      // nouveau dépôt la faisait encore rouler au semestre. Elle passe par
+      // `aMettreAJour`, qui remet aussi `archiveLe` à `null` et reste
+      // conditionnée sur la date et le statut lus.
+      //
+      // Ce qui est réécrit, et rien d'autre : le rythme, la prescription (une
+      // clé non générée n'a plus de surcharge : une surcharge en vigueur
+      // donne un rythme, donc une ligne générée), et le statut — lu sur le
+      // dernier rapport réalisé quand il n'y a plus de rendez-vous suivant,
+      // comme la branche « ponctuelle » plus haut, sinon celui d'un cycle
+      // ouvert. L'échéance ne bouge pas : sans rythme il n'y a rien à
+      // recalculer. Une ligne sans rapport réalisé (une action seule, un
+      // « non vérifiable ») garde son statut, donc sa date décide encore :
+      // voir le test « action seule ».
+      else if (
+        effective !== undefined &&
+        (effective !== ex.periodicite || (ex.prescriptionId ?? null) !== null)
+      ) {
+        plan.aMettreAJour.push({
+          id: ex.id,
+          obligationId: ex.obligationId,
+          libelleObligation: ex.libelleObligation,
+          periodicite: effective,
+          realisateurRequis: ex.realisateurRequis,
+          datePrevue: ex.datePrevue,
+          statut: estCyclique(effective)
+            ? statutCycleOuvert(ex.statut, realisationConnue(ex))
+            : (statutDepuisResultat(ex.dernierResultat) ?? ex.statut),
+          prescriptionId: null,
+        });
+      }
       // ELLE REDEVIENT APPLICABLE, DONC ELLE SE ROUVRE. Le cas : une obligation
       // qui passe à `periodicite: "autre"` — une habilitation qui cesse d'être
       // triennale — n'engendre plus de ligne, donc n'arrive jamais par

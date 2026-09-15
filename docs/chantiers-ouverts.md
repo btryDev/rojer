@@ -1591,6 +1591,17 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   3. **risques résiduels** : une preview d'une branche antérieure au
      déploiement 1, ou un rollback Vercel en deçà, lit la colonne disparue →
      P2022.
+- **NB4 — une ligne applicable que la génération saute ne se réalignait pas**
+  (ADR-034, N4 point 6). ~~Cas hypothétique~~ : une prescription
+  `renforce_periodicite` sur une obligation `autre`, levée, laissait la ligne à
+  son rythme de prescription, marquée, en retard, et un dépôt la faisait encore
+  rouler. **Corrigé le 2026-09-15 (`lot/reliquats-donnees-docs`)** par la table
+  `periodicitesEffectives` passée au réconciliateur ; détail et limites dans
+  l'ADR-034. **Sans incrément de version**, un dossier existant ne se réaligne
+  qu'à sa prochaine régénération (une mutation, ou un changement de
+  référentiel). **Reste** : une ligne dont la seule trace est une action garde
+  son statut et reste en retard à sa date — voir « une action ouverte compte
+  comme preuve », plus bas.
 - **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.
 - **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors
