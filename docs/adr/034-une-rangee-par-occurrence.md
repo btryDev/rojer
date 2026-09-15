@@ -617,9 +617,13 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      compte les preuves faites SOUS l'acte — rapports datés, en jour civil,
      de `dateDocument` à la levée comprise, sur les lignes qu'il vise
      (obligation × appareil), que la ligne porte encore `prescriptionId` ou
-     non (`prescriptions/preuves.ts`) ; un acte ne se date plus dans le
-     futur, et une prescription levée se supprime si rien n'a été fait sous
-     elle. ~~Le compte ne dépend plus de la régénération.~~ Il ne dépend plus
+     non (`prescriptions/preuves.ts`) — et, **sur décision de la propriétaire
+     (option B)**, enregistrés après la saisie de la prescription : un rapport
+     déposé avant n'a pas roulé à son rythme. Une saisie erronée datée avant des
+     rapports existants redevient supprimable ; le prix accepté est qu'un arrêté
+     réel saisi tard le devient aussi, protégé par la seule confirmation. Un
+     acte ne se date plus dans le futur, et une prescription levée se supprime
+     si rien n'a été fait sous elle. ~~Le compte ne dépend plus de la régénération.~~ Il ne dépend plus
      de l'effet de la prescription ; **limite, théorique à ce jour** : une
      succession qui renomme l'obligation ciblée déplace les lignes sous un
      autre `obligationId`, et le compte tombe à zéro. Et **aucune version

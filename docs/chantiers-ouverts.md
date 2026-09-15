@@ -1617,10 +1617,12 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   « levée » posée entre-temps est retirée : elle rendait une saisie erronée
   insupprimable ; l'écran propose désormais la suppression d'une prescription
   levée selon le même compte, et dit pourquoi quand il la refuse. **Restent,
-  écrits** : une saisie erronée datée AVANT des rapports existants reste
-  insupprimable (aucune action ne corrige la date — décision en attente) ; une
-  succession qui renomme l'obligation ciblée ferait tomber le compte à zéro
-  (théorique à ce jour).
+  écrits** : ~~une saisie erronée datée AVANT des rapports existants reste
+  insupprimable (aucune action ne corrige la date — décision en attente)~~ —
+  **tranché le 2026-09-15 (option B)** : seuls comptent les rapports déposés
+  après la saisie de la prescription ; un arrêté réel saisi tard devient
+  supprimable, protégé par la seule confirmation ; une succession qui renomme
+  l'obligation ciblée ferait tomber le compte à zéro (théorique à ce jour).
 - **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.
 - **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors

@@ -18,7 +18,7 @@ const h = vi.hoisted(() => {
     prescription: null as Record<string, unknown> | null,
     lignes: [] as {
       statut: string;
-      rapports: { dateRapport: Date }[];
+      rapports: { dateRapport: Date; createdAt: Date }[];
       _count: { actions: number };
     }[],
   };
@@ -55,11 +55,14 @@ const renforcement = (dateDocument: string): PrescriptionAPreuver => ({
   equipementId: "eq-portail",
   dateDocument: jour(dateDocument),
   dateFin: null,
+  // Saisie ancienne par défaut : les tests de dates d'acte n'en dépendent pas.
+  createdAt: jour("2020-01-01"),
 });
 
 const ligne = (rapports: string[], over: Partial<LigneVisee> = {}): LigneVisee => ({
   statut: "planifiee",
-  rapports: rapports.map((d) => ({ dateRapport: jour(d) })),
+  // Enregistré le jour de sa date, par défaut.
+  rapports: rapports.map((d) => ({ dateRapport: jour(d), createdAt: jour(d) })),
   nbActions: 0,
   ...over,
 });
@@ -156,10 +159,51 @@ describe("bornes de l'acte, en jour civil (2026-09-15)", () => {
     const p = { ...renforcement("2026-01-10"), dateDocument: acte, dateFin: fin };
     const aDixHeures: LigneVisee = {
       statut: "planifiee",
-      rapports: [{ dateRapport: new Date("2026-03-01T09:00:00Z") }],
+      rapports: [
+        {
+          dateRapport: new Date("2026-03-01T09:00:00Z"),
+          createdAt: new Date("2026-03-01T09:00:00Z"),
+        },
+      ],
       nbActions: 0,
     };
     expect(compterLignesAvecPreuve(p, [aDixHeures])).toBe(1);
+  });
+});
+
+describe("option B — seuls comptent les rapports déposés après la saisie (2026-09-15)", () => {
+  // Décision de la propriétaire. Un arrêté posé par erreur, daté de 2024 ;
+  // le portail porte des rapports de 2025 déposés en 2025. La prescription est
+  // saisie le 1er septembre 2026 : elle ne les a pas pilotés.
+  const saisieErronee = {
+    ...renforcement("2024-01-15"),
+    createdAt: new Date("2026-09-01T08:00:00Z"),
+  };
+
+  it("saisie erronée datée avant des rapports existants : supprimable", () => {
+    expect(
+      compterLignesAvecPreuve(saisieErronee, [ligne(["2025-03-10", "2025-09-12"])]),
+    ).toBe(0);
+  });
+
+  it("un rapport déposé APRÈS la saisie compte, même daté d'avant", () => {
+    const deposeApres: LigneVisee = {
+      statut: "planifiee",
+      rapports: [
+        { dateRapport: jour("2025-06-01"), createdAt: new Date("2026-09-10T14:00:00Z") },
+      ],
+      nbActions: 0,
+    };
+    expect(compterLignesAvecPreuve(saisieErronee, [deposeApres])).toBe(1);
+  });
+
+  it("sur mesure, tout compte encore, dépôt antérieur compris", () => {
+    expect(
+      compterLignesAvecPreuve(
+        { ...saisieErronee, effet: "obligation_sur_mesure", obligationId: null },
+        [ligne(["2025-03-10"])],
+      ),
+    ).toBe(1);
   });
 });
 
@@ -214,7 +258,7 @@ describe("supprimerPrescription", () => {
     h.etat.lignes = [
       {
         statut: "planifiee",
-        rapports: rapports.map((d) => ({ dateRapport: jour(d) })),
+        rapports: rapports.map((d) => ({ dateRapport: jour(d), createdAt: jour(d) })),
         _count: { actions: 0 },
       },
     ];
@@ -237,6 +281,32 @@ describe("supprimerPrescription", () => {
     // Le message ne renvoie ni à « annuler la levée » ni à une suppression
     // ultérieure : il dit ce qui reste et comment arrêter l'effet.
     expect(message).not.toMatch(/annul/i);
+  });
+
+  it("accepte la saisie erronée datée AVANT des rapports déposés avant elle (option B)", async () => {
+    poser("2024-01-15", ["2025-03-10"]);
+    h.etat.prescription = {
+      ...h.etat.prescription,
+      createdAt: new Date("2026-09-01T08:00:00Z"),
+    };
+    const res = await supprimerPrescription("etab-1", "presc-1");
+    expect(res.status).toBe("success");
+  });
+
+  it("refuse dès qu'un rapport a été déposé après la saisie, et le dit", async () => {
+    poser("2024-01-15", []);
+    h.etat.prescription = {
+      ...h.etat.prescription,
+      createdAt: new Date("2026-09-01T08:00:00Z"),
+    };
+    h.etat.lignes[0]!.rapports = [
+      { dateRapport: jour("2025-06-01"), createdAt: new Date("2026-09-10T14:00:00Z") },
+    ];
+    const res = await supprimerPrescription("etab-1", "presc-1");
+    expect(res.status).toBe("error");
+    expect(res.status === "error" ? res.message : "").toContain(
+      "déposé depuis la saisie de la prescription",
+    );
   });
 
   it("lit les lignes par cible, jamais par `prescriptionId`", async () => {

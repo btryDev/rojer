@@ -199,6 +199,7 @@ export async function supprimerPrescription(
       dateDocument: true,
       dateFin: true,
       actif: true,
+      createdAt: true,
     },
   });
   if (!existante) {

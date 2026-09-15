@@ -21,19 +21,26 @@ import { cleJourCivil } from "@/lib/dates";
  *    ses lignes — compte à zéro, suppression acceptée, et l'acte qui
  *    justifiait les rapports déposés à son rythme disparaissait.
  *
- * LA RÈGLE : une preuve compte si elle a été faite SOUS l'acte — sur les
- * lignes qu'il vise, par un rapport daté entre le jour de l'acte et celui de sa
- * levée. Rien n'est
+ * LA RÈGLE : une preuve compte si elle a été faite SOUS l'acte ET PILOTÉE PAR
+ * LUI dans Rojer — sur les lignes qu'il vise, par un rapport daté entre le
+ * jour de l'acte et celui de sa levée, et ENREGISTRÉ après la saisie de la
+ * prescription (`rapport.createdAt ≥ prescription.createdAt`). Rien n'est
  * deviné : un rapport antérieur à l'acte n'a pas pu être fait sous lui, et un
- * rapport postérieur l'a été, que le produit ait su ou non l'acte à cette date
- * (un arrêté saisi tard reste l'arrêté qui s'appliquait).
+ * rapport déposé avant la saisie a roulé au rythme du référentiel, puisque la
+ * ligne ne connaissait pas encore la prescription.
+ *
+ * LE SECOND CRITÈRE EST UNE DÉCISION DE LA PROPRIÉTAIRE (2026-09-15, option B).
+ * Sans lui, une saisie erronée DATÉE AVANT des rapports existants les comptait,
+ * et aucune action ne corrigeant la date d'une prescription, elle restait
+ * insupprimable. Le prix, accepté : un arrêté réel saisi tard — acte de 2020,
+ * saisi en 2026, rapports de 2021 à 2025 déposés avant — devient supprimable ;
+ * seule la confirmation « saisie par erreur » le protège. Les rapports, eux, ne
+ * sont jamais supprimés (ADR-012) : ce qui part, c'est l'explication de leur
+ * rythme dans le dossier.
  *
  * `dateDocument` est la seule date d'effet du modèle : `appliquerPrescriptions`
  * n'en connaît pas d'autre que la fin, et une date d'acte est ce que la pièce
- * porte. Limite écrite : une saisie erronée DATÉE AVANT des rapports existants
- * les compte, et aucune action ne permet de corriger la date d'une
- * prescription — la suppression reste alors refusée, du côté de la
- * conservation. Elle se lève. Seconde limite, théorique à ce jour : les lignes
+ * porte. Limite, théorique à ce jour : les lignes
  * visées se trouvent par leur `obligationId`. Une succession qui renomme
  * l'obligation ciblée (`succedeA`, `absorbePar`) déplace les lignes sous un
  * autre identifiant, et le compte tombe à zéro sans que rien n'ait été
@@ -48,12 +55,15 @@ export type PrescriptionAPreuver = {
   dateDocument: Date;
   /** La levée : un rapport daté APRÈS n'a pas été fait sous l'acte. */
   dateFin: Date | null;
+  /** La saisie dans Rojer : un rapport enregistré avant n'a pas roulé à son
+   *  rythme. */
+  createdAt: Date;
 };
 
 /** Ce que la lecture rend d'une ligne visée. */
 export type LigneVisee = {
   statut: string;
-  rapports: ReadonlyArray<{ dateRapport: Date }>;
+  rapports: ReadonlyArray<{ dateRapport: Date; createdAt: Date }>;
   nbActions: number;
 };
 
@@ -84,13 +94,13 @@ export function lignesVisees(
 /** Le `select` qui rend une `LigneVisee`, partagé par les deux lecteurs. */
 export const SELECT_LIGNE_VISEE = {
   statut: true,
-  rapports: { select: { dateRapport: true } },
+  rapports: { select: { dateRapport: true, createdAt: true } },
   _count: { select: { actions: true } },
 } satisfies Prisma.VerificationSelect;
 
 export function versLigneVisee(v: {
   statut: string;
-  rapports: { dateRapport: Date }[];
+  rapports: { dateRapport: Date; createdAt: Date }[];
   _count: { actions: number };
 }): LigneVisee {
   return { statut: v.statut, rapports: v.rapports, nbActions: v._count.actions };
@@ -128,6 +138,13 @@ export function compterLignesAvecPreuve(
     const jour = cleJourCivil(d);
     return jour >= acte && (fin === null || jour <= fin);
   };
-  return lignes.filter((l) => l.rapports.some((r) => sousLActe(r.dateRapport)))
-    .length;
+  // En INSTANTS, et c'est voulu : deux horodatages d'enregistrement, pas des
+  // dates civiles saisies. Un rapport déposé le jour même de la saisie, avant
+  // elle, n'a pas roulé à son rythme.
+  const saisie = p.createdAt.getTime();
+  return lignes.filter((l) =>
+    l.rapports.some(
+      (r) => sousLActe(r.dateRapport) && r.createdAt.getTime() >= saisie,
+    ),
+  ).length;
 }
