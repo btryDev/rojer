@@ -35,7 +35,18 @@ export type LigneMois<V extends VerificationLue> =
       registre: LectureCalendrier["registre"];
       lecture: LectureCalendrier["lecture"];
     }
-  | { genre: "autre"; date: Date; e: EcheanceCalendrier };
+  | {
+      genre: "autre";
+      /** La date EN JEU (`dateEnJeuAutre`) : la fin d'une opération en cours. */
+      date: Date;
+      e: EcheanceCalendrier;
+      /** Calculé une fois ici (`etatAutreEcheance`) : la liste, la règle et la
+       *  vue par famille le relisaient chacune. */
+      etat: EtatEcheance;
+      /** La ligne est posée sur la fin de l'opération, pas sur sa date :
+       *  l'écran le dit (`LIBELLE_FIN_OPERATION`). */
+      fin: boolean;
+    };
 
 /**
  * Les lignes de la liste mensuelle, vérifications et autres échéances mêlées.
@@ -69,11 +80,16 @@ export function lignesDuCalendrier<V extends VerificationLue>(
         lecture: lec.lecture,
       })),
     ),
-    ...autres.map((e) => ({
-      genre: "autre" as const,
-      date: dateEnJeuAutre(e, now),
-      e,
-    })),
+    ...autres.map((e) => {
+      const date = dateEnJeuAutre(e, now);
+      return {
+        genre: "autre" as const,
+        date,
+        e,
+        etat: etatAutreEcheance(e, now),
+        fin: date.getTime() !== e.date.getTime(),
+      };
+    }),
   ];
 }
 
@@ -113,10 +129,8 @@ export function etatDeLaLigne<V extends VerificationLue>(
   l: LigneMois<V>,
   now: Date,
 ): EtatEcheance {
-  if (l.genre !== "verif") {
-    // Le ton, jamais la date seule (`etatAutreEcheance`, où c'est testé).
-    return etatAutreEcheance(l.e, now);
-  }
+  // Le ton, jamais la date seule : calculé au rangement (`etatAutreEcheance`).
+  if (l.genre !== "verif") return l.etat;
   // « À planifier » (donc à date future — le classifieur a déjà rangé les
   // dates passées en retard) est écarté des barres par `estDatable` ; si la
   // ligne arrive quand même ici, sa date de génération se classe comme une

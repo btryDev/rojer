@@ -47,7 +47,6 @@ import {
 } from "@/components/calendrier/AnneeCalendrier";
 import {
   estDatable,
-  etatDeLaLigne,
   lignesDuCalendrier,
   rangerParMois,
   regleDeLAnnee,
@@ -57,8 +56,7 @@ import {
   CHAMP_ETAT,
   ENCRE_ETAT,
   PRIORITE_ETAT,
-  dateEnJeuAutre,
-  etatAutreEcheance,
+  LIBELLE_FIN_OPERATION,
   lecturesCalendrier,
   type EtatEcheance,
   type RegistreLigne,
@@ -620,7 +618,14 @@ export default async function CalendrierPage({
     }
   >();
 
-  for (const e of autresVisibles) {
+  // Les lignes « autre » de la liste mensuelle, et non `autresVisibles` : la
+  // carte d'une famille pose chaque échéance là où la liste la range — une
+  // opération en cours à sa FIN (`lignesDuCalendrier`). Posée à son début, elle
+  // colorait la case de mars quand la liste la montrait en septembre
+  // (relecture, 2026-09-15).
+  for (const l of lignes) {
+    if (l.genre !== "autre") continue;
+    const { e, etat } = l;
     let f = parFamille.get(e.famille);
     if (!f) {
       f = {
@@ -632,14 +637,13 @@ export default async function CalendrierPage({
       };
       parFamille.set(e.famille, f);
     }
-    const etat = etatAutreEcheance(e, aujourdhui);
-    // La date EN JEU pour la « prochaine » de la famille : une opération en
-    // cours annonçait « Dans 60 jours » sur son début passé (relecture,
-    // 2026-09-14). Le placement dans les mois, lui, garde le début.
-    f.dates.push({ date: dateEnJeuAutre(e, aujourdhui), etat });
+    // La date EN JEU, pour la « prochaine » de la famille comme pour la case
+    // du mois : une opération en cours annonçait « Dans 60 jours » sur son
+    // début passé (relecture, 2026-09-14).
+    f.dates.push({ date: l.date, etat });
     f.compte[etat] += 1;
 
-    const c = composantesCiviles(e.date);
+    const c = composantesCiviles(l.date);
     if (c.annee !== anneeCourante) {
       f.horsAnnee += 1;
     } else {
@@ -652,10 +656,10 @@ export default async function CalendrierPage({
         id: e.id,
         href: e.href,
         mois: c.mois,
-        jour: FMT_JOUR.format(e.date),
-        moisCourt: FMT_MOIS_COURT.format(e.date),
+        jour: FMT_JOUR.format(l.date),
+        moisCourt: FMT_MOIS_COURT.format(l.date),
         titre: e.libelle,
-        meta: metaAutre(e),
+        meta: l.fin ? `${LIBELLE_FIN_OPERATION} · ${metaAutre(e)}` : metaAutre(e),
         etat,
       });
     }
@@ -1225,20 +1229,21 @@ export default async function CalendrierPage({
                           <LigneEcheance
                             href={e.href}
                             // La date de RANGEMENT, celle de la section et du
-                            // tri : pour une opération en cours, sa fin. Et la
-                            // méta le dit — une tuile « 25 SEPT. » seule se
-                            // lirait comme le début des travaux (2026-09-15).
+                            // tri : pour une opération en cours, sa fin. La
+                            // méta le dit EN TÊTE — au bout, la troncature
+                            // l'effaçait, et la tuile « 25 SEPT. » se relisait
+                            // comme le début des travaux (2026-09-15).
                             date={ligne.date}
                             type={e.type}
                             titre={e.libelle}
                             meta={
-                              ligne.date !== e.date
-                                ? `${metaAutre(e)} · fin de l'opération`
+                              ligne.fin
+                                ? `${LIBELLE_FIN_OPERATION} · ${metaAutre(e)}`
                                 : metaAutre(e)
                             }
                             // La tuile-date suffit pour le futur : seule
                             // l'alerte mérite une pastille.
-                            registre={etatDeLaLigne(ligne, aujourdhui)}
+                            registre={ligne.etat}
                             pastille={
                               e.tone === "alerte" ? (
                                 <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">

@@ -280,6 +280,14 @@ export function dateEnJeuAutre(
   return e.date;
 }
 
+/**
+ * La mention d'une échéance posée sur la FIN de son opération (`dateEnJeuAutre`)
+ * plutôt que sur sa date. Elle se place EN TÊTE du texte qui accompagne la
+ * date, jamais au bout : ces textes sont tronqués, et une tuile « 25 SEPT. »
+ * sans elle se relit comme le début des travaux (relecture, 2026-09-15).
+ */
+export const LIBELLE_FIN_OPERATION = "Fin";
+
 // `estStatutRealise` — « ce contrôle a eu lieu », le FAIT — vit dans
 // `lib/dates/retard.ts` avec la liste des statuts réalisés : une seule
 // définition, que les clauses SQL lisent aussi. Réexporté ici pour les

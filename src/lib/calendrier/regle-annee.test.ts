@@ -27,13 +27,27 @@ const permis = (
   batiment: null,
 });
 
-type SansVerif = Parameters<typeof lignesDuCalendrier>[0][number];
+const verif = (
+  datePrevue: string,
+  statut: string,
+  derniereRealisation: string | null = null,
+) => ({
+  statut,
+  datePrevue: jour(datePrevue),
+  periodicite: "annuelle",
+  archiveLe: null,
+  libelleObligation: "Vérification périodique des installations électriques",
+  derniereRealisation: derniereRealisation ? jour(derniereRealisation) : null,
+});
 
-const regle = (autres: EcheanceCalendrier[]) => {
-  const parMois = rangerParMois(
-    lignesDuCalendrier<SansVerif>([], autres, AUJOURDHUI),
-  );
-  return { parMois, mois: regleDeLAnnee(parMois, 2026, AUJOURDHUI) };
+const regle = (
+  autres: EcheanceCalendrier[],
+  verifs: ReturnType<typeof verif>[] = [],
+  annee = 2026,
+) => {
+  const lignes = lignesDuCalendrier(verifs, autres, AUJOURDHUI);
+  const parMois = rangerParMois(lignes);
+  return { lignes, parMois, mois: regleDeLAnnee(parMois, annee, AUJOURDHUI) };
 };
 
 describe("règle annuelle — où se range une opération en cours", () => {
@@ -44,7 +58,9 @@ describe("règle annuelle — où se range une opération en cours", () => {
    * se range désormais à sa date en jeu, et la liste mensuelle avec elle.
    */
   it("démarrée sans alerte, elle se range au mois de sa fin, liste comprise", () => {
-    const { parMois, mois } = regle([permis("2026-03-12", "2026-09-25")]);
+    const { lignes, parMois, mois } = regle([permis("2026-03-12", "2026-09-25")]);
+    // La ligne sait qu'elle est posée sur la fin : l'écran le dit en tête.
+    expect(lignes[0]).toMatchObject({ genre: "autre", fin: true, etat: "proche" });
 
     expect(mois[8]).toMatchObject({ cle: "2026-09", proche: 1 });
     expect(mois[2]).toMatchObject({
@@ -60,13 +76,14 @@ describe("règle annuelle — où se range une opération en cours", () => {
   });
 
   it("à venir, ou en alerte sur un début manqué, elle reste au mois de son début", () => {
-    const { mois } = regle([
+    const { lignes, mois } = regle([
       permis("2026-10-05", "2026-12-20"),
       permis("2026-09-01", "2026-11-30", "alerte"),
     ]);
     expect(mois[9]).toMatchObject({ cle: "2026-10", proche: 1 });
     expect(mois[8]).toMatchObject({ cle: "2026-09", enRetard: 1 });
     expect(mois[11]).toMatchObject({ proche: 0, lointain: 0, enRetard: 0 });
+    expect(lignes.map((l) => l.genre === "autre" && l.fin)).toEqual([false, false]);
   });
 
   it("une échéance sans fin se range à sa date", () => {
@@ -78,5 +95,36 @@ describe("règle annuelle — où se range une opération en cours", () => {
     };
     const { mois } = regle([attestation]);
     expect(mois[10]).toMatchObject({ cle: "2026-11", lointain: 1 });
+  });
+});
+
+describe("règle annuelle — les vérifications", () => {
+  it("un retard sans échéance connue n'a pas de barre : il se compte « sans date »", () => {
+    // Sa date est celle de la génération de la ligne (`aUnRendezVous`).
+    const { mois } = regle([], [verif("2026-09-01", "a_planifier")]);
+    expect(mois[8]).toMatchObject({
+      cle: "2026-09",
+      enRetard: 0,
+      proche: 0,
+      lointain: 0,
+      faite: 0,
+      sansDate: 1,
+      retardSansDate: 1,
+    });
+  });
+
+  it("une échéance connue et passée est une barre « dépassée »", () => {
+    const { mois } = regle([], [verif("2026-08-20", "planifiee")]);
+    expect(mois[7]).toMatchObject({ enRetard: 1, sansDate: 0, retardSansDate: 0 });
+  });
+
+  it("un rapport daté pose le fait à son jour, et l'échéance ouverte à la sienne", () => {
+    const lignes = [verif("2027-03-10", "planifiee", "2026-03-10")];
+    expect(regle([], lignes).mois[2]).toMatchObject({ faite: 1, lointain: 0 });
+    expect(regle([], lignes, 2027).mois[2]).toMatchObject({
+      cle: "2027-03",
+      faite: 0,
+      lointain: 1,
+    });
   });
 });
