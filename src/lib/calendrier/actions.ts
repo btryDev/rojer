@@ -13,8 +13,8 @@ import {
   estPorteeParSalarie,
   obligationParId,
   OBLIGATIONS_RETIREES,
-  SCEAU_CALENDRIER,
 } from "@/lib/referentiels/conformite";
+import { SCEAU_CALENDRIER } from "./version-moteur";
 import {
   clesApplicabilite,
   genererProchainesVerifications,

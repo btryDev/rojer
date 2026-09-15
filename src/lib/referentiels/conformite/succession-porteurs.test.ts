@@ -34,45 +34,90 @@ import type { PorteurObligation } from "./types";
  * message qui dit où lire. Voir `docs/chantiers-ouverts.md` § 11, lot 2
  * (« DEUX MÉCANISMES, ET LE PREMIER PREND LE PAS »), et l'ADR-034, N4, point 5
  * (« Laissé ouvert, écrit »).
+ *
+ * CE QU'ILS NE GARDENT PAS, écrit pour ne pas le croire : un porteur mal
+ * déclaré à la main — dans `OBLIGATIONS_RETIREES.porteur` au moment d'un
+ * retrait, ou dans la table ci-dessous pour une obligation neuve — passe. Le
+ * fusible des retraits recoupe le premier avec la table tant que la ligne de
+ * l'obligation retirée y reste ; c'est pourquoi on ne l'en retire pas.
  */
 
 /**
- * Le porteur de chaque obligation qui N'EST PAS portée par un équipement,
- * VIVANTE OU RETIRÉE. Absent = `"equipement"`.
+ * Le porteur de CHAQUE obligation du référentiel, relevé en appelant
+ * `porteurDe` le 2026-09-15 : 154 lignes, 89 équipement, 51 établissement,
+ * 14 salarié. Pas un instantané vitest : une table lue et écrite à la main.
  *
- * POURQUOI UN REGISTRE, ET POURQUOI SEULEMENT CELLES-LÀ. Un identifiant ne dit
- * pas son porteur, et une obligation retirée n'est plus là pour le dire : il
- * faut une mémoire, et rien dans le référentiel n'en tient une. Le 2026-08-31,
- * le lot « faux négatifs d'ancrage » a fait passer des obligations de
- * l'équipement à l'établissement EN GARDANT LEUR IDENTIFIANT — le registre de
- * sécurité (`incendie-registre-securite`, id inchangé depuis avril), la
- * consigne, les exercices — et aucun test n'a rien vu :
- * l'empreinte a bougé, son message dit « ajoutez une ligne à l'historique », et
- * les lignes ancrées sur un appareil seront archivées sans que la nouvelle
- * ligne d'établissement en hérite.
+ * POURQUOI UNE TABLE. Un identifiant ne dit pas son porteur, et rien dans le
+ * référentiel ne se souvient de celui qu'il avait. Le 2026-08-31, le lot
+ * « faux négatifs d'ancrage » a fait passer des obligations de l'équipement à
+ * l'établissement EN GARDANT LEUR IDENTIFIANT — le registre de sécurité
+ * (`incendie-registre-securite`, id inchangé depuis avril), la consigne, les
+ * exercices — et aucun test n'a rien vu : l'empreinte a bougé, son message dit
+ * « ajoutez une ligne à l'historique », et les lignes ancrées sur un appareil
+ * seront archivées sans que la nouvelle ligne d'établissement en hérite.
  *
- * Les obligations d'équipement n'y sont pas, pour ne pas taxer le cas le plus
- * fréquent (une obligation d'appareil ajoutée) : l'absence vaut « équipement »,
- * et c'est ce qui rend détectable le passage d'un appareil à autre chose.
+ * Une ABSENCE veut dire « obligation neuve » ; un ÉCART, « changement de
+ * porteur ». Les deux ont leur message, et ils ne se confondent plus : une
+ * obligation d'équipement passée à l'établissement est présente ici, sous
+ * « equipement ».
  *
- * NE RETIREZ JAMAIS UNE LIGNE, même quand l'obligation quitte le référentiel :
- * c'est ici que son porteur survit, et le fusible des retraits le lit.
- * Construit le 2026-09-15 en appelant `porteurDe` sur le référentiel, jamais au
- * grep : 65 vivantes (51 établissement, 14 salarié) et une retirée.
+ * UNE OBLIGATION RETIRÉE GARDE SA LIGNE : elle recoupe le porteur déclaré dans
+ * `OBLIGATIONS_RETIREES` au moment du retrait.
  */
-const PORTEURS_HORS_EQUIPEMENT: Readonly<
-  Record<string, Exclude<PorteurObligation, "equipement">>
-> = {
+const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "aeration-controle-installations-r4222-20": "etablissement",
+  "aeration-erp-chauffage-ventilation-annuelle": "equipement",
+  "aeration-erp-filtres-visite-periodique": "equipement",
+  "aeration-erp-ps-surveillance-qualite-air-inf-250": "equipement",
+  "aeration-erp-ps-surveillance-qualite-air-sup-250": "equipement",
+  "aeration-habitation-vmc-gaz-annuelle": "equipement",
+  "aeration-habitation-vmc-gaz-quinquennale": "equipement",
+  "aeration-travail-locaux-pollution-specifique": "equipement",
+  "aeration-travail-mise-en-service": "equipement",
+  "aeration-travail-recyclage-semestriel": "equipement",
+  "ascenseur-carnet-entretien": "equipement",
+  "ascenseur-controle-technique-quinquennal": "equipement",
+  "ascenseur-entretien-contrat": "equipement",
+  "ascenseur-examen-annuel-securite": "equipement",
+  "ascenseur-examen-semestriel-secours": "equipement",
+  "ascenseur-rapport-annuel-activite": "equipement",
+  "ascenseur-telealarme-liaison": "equipement",
+  "ascenseur-visite-six-semaines": "equipement",
   "co-activite-etablissement-protocole-securite": "etablissement",
+  "compactage-dechets-vgp-trimestrielle": "equipement",
   "conduite-salarie-attestation-medicale": "salarie",
   "conduite-salarie-autorisation": "salarie",
   "conduite-salarie-formation": "salarie",
+  "cuisson-erp-appareils-annuelle": "equipement",
+  "cuisson-erp-circuits-extraction-nettoyage": "equipement",
+  "cuisson-erp-extinction-automatique-annuelle": "equipement",
+  "cuisson-erp-filtres-hebdomadaire": "equipement",
+  "cuisson-erp-verification-initiale": "equipement",
+  "cuisson-gaz-installations-annuelle": "equipement",
   "eclairage-etablissement-regles-entretien": "etablissement",
+  "elec-erp-cat1-4-annuelle": "equipement",
+  "elec-erp-groupe-electrogene-annuel": "equipement",
+  "elec-erp-groupe-electrogene-quinzaine": "equipement",
+  "elec-erp-mise-en-service": "equipement",
   "elec-erp-presence-personne-qualifiee": "etablissement",
+  "elec-igh-annuelle": "equipement",
   "elec-salarie-attestation-medicale-voisinage": "salarie",
   "elec-salarie-habilitation": "salarie",
+  "elec-travail-carnet-prescriptions": "equipement",
+  "elec-travail-consignation-registre": "equipement",
+  "elec-travail-habilitation-personnel": "equipement",
+  "elec-travail-mise-en-service": "equipement",
+  "elec-travail-periodique-annuelle": "equipement",
+  "elec-travail-rapport-quadriennal": "equipement",
   "epi-etablissement-consigne-utilisation": "etablissement",
+  "epi-verification-generale-periodique": "equipement",
+  "esp-declaration-mise-en-service": "equipement",
+  "esp-dossier-suivi": "equipement",
+  "esp-inspection-periodique": "equipement",
+  "esp-inspection-periodique-generateur-vapeur": "equipement",
+  "esp-intervention-reparation": "equipement",
+  "esp-personnel-formation": "equipement",
+  "esp-requalification-decennale": "equipement",
   "formation-securite-etablissement-information": "etablissement",
   "formation-securite-etablissement-manutention": "etablissement",
   "formation-securite-etablissement-organisation": "etablissement",
@@ -80,6 +125,14 @@ const PORTEURS_HORS_EQUIPEMENT: Readonly<
   "formation-securite-salarie-accueil": "salarie",
   "formation-securite-salarie-cse-sst": "salarie",
   "formation-securite-salarie-designe-competent": "salarie",
+  "froid-controle-etancheite-annuel": "equipement",
+  "froid-controle-etancheite-annuel-50t-detection": "equipement",
+  "froid-controle-etancheite-apres-modification": "equipement",
+  "froid-controle-etancheite-biennal-detection": "equipement",
+  "froid-controle-etancheite-mise-en-service": "equipement",
+  "froid-controle-etancheite-semestriel-500t-detection": "equipement",
+  "froid-controle-etancheite-semestriel-50t": "equipement",
+  "froid-controle-etancheite-trimestriel-500t": "equipement",
   "habitation-consignes-plans-intervention": "etablissement",
   "habitation-registre-securite": "etablissement",
   "habitation-verification-annuelle-installations-securite": "etablissement",
@@ -87,27 +140,55 @@ const PORTEURS_HORS_EQUIPEMENT: Readonly<
   "incendie-erp-5-sommeil-contrat-entretien-sdi": "etablissement",
   "incendie-erp-5-sommeil-plans-affiches": "etablissement",
   "incendie-erp-5-visite-commission": "etablissement",
+  "incendie-erp-alarme-verification-hebdomadaire": "equipement",
+  "incendie-erp-baes-annuelle": "equipement",
+  "incendie-erp-desenfumage-annuelle": "equipement",
+  "incendie-erp-eclairage-securite-autonomie-semestrielle": "equipement",
+  "incendie-erp-eclairage-securite-essai-mensuel": "equipement",
+  "incendie-erp-extincteurs-annuelle": "equipement",
+  "incendie-erp-extincteurs-revision-decennale": "equipement",
   "incendie-erp-pe4-entretien-installations-techniques": "etablissement",
+  "incendie-erp-ria-annuelle": "equipement",
+  "incendie-erp-ssi-annuelle": "equipement",
+  "incendie-erp-ssi-triennale": "equipement",
   "incendie-erp-visite-commission-cat1-2-quinquennale": "etablissement",
   "incendie-erp-visite-commission-cat1-2-triennale": "etablissement",
   "incendie-erp-visite-commission-cat3-quinquennale": "etablissement",
   "incendie-erp-visite-commission-cat3-triennale": "etablissement",
   "incendie-erp-visite-commission-cat4-quinquennale": "etablissement",
-  "incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale":
-    "etablissement",
-  "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale":
-    "etablissement",
+  "incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale": "etablissement",
+  "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale": "etablissement",
   "incendie-erp-visite-commission-cat4-triennale": "etablissement",
+  "incendie-hotel-po-controle-annuel-electricite": "equipement",
   "incendie-igh-charge-calorifique-quinquennale": "etablissement",
+  "incendie-igh-moyens-secours-annuelle": "equipement",
   "incendie-registre-securite": "etablissement",
   "incendie-travail-consigne-affichee": "etablissement",
+  "incendie-travail-eclairage-securite-autonomie-semestrielle": "equipement",
+  "incendie-travail-eclairage-securite-essai-mensuel": "equipement",
   "incendie-travail-exercice-semestriel": "etablissement",
+  "incendie-travail-moyens-lutte": "equipement",
   "information-etablissement-affichages-obligatoires": "etablissement",
   "information-etablissement-avis-acces-duerp": "etablissement",
+  "levage-epreuve-initiale-fonctionnement": "equipement",
+  "levage-examen-adequation-mise-en-service": "equipement",
+  "levage-examen-etat-conservation": "equipement",
+  "levage-registre-securite-consignation": "equipement",
+  "levage-remise-en-service-apres-reparation": "equipement",
+  "levage-vgp-accessoires-annuelle": "equipement",
+  "levage-vgp-annuelle-charges": "equipement",
+  "levage-vgp-semestrielle-chariot-gerbeur": "equipement",
+  "levage-vgp-semestrielle-personnes": "equipement",
+  "levage-vgp-trimestrielle-force-humaine": "equipement",
   "locaux-etablissement-eau-potable": "etablissement",
   "locaux-etablissement-emplacement-restauration": "etablissement",
   "locaux-etablissement-installations-sanitaires": "etablissement",
   "locaux-etablissement-local-restauration": "etablissement",
+  "porte-auto-dossier-maintenance": "equipement",
+  "porte-auto-maintien-en-etat": "equipement",
+  "porte-auto-portail-piete-coulissant": "equipement",
+  "porte-auto-verification-initiale": "equipement",
+  "porte-auto-verification-semestrielle": "equipement",
   "prevention-etablissement-cse": "etablissement",
   "prevention-etablissement-liste-personnes-qualifiees": "etablissement",
   "prevention-etablissement-reglement-interieur": "etablissement",
@@ -129,16 +210,17 @@ const PORTEURS_HORS_EQUIPEMENT: Readonly<
   "signalisation-etablissement-entretien": "etablissement",
   "signalisation-etablissement-obstacles-zones-dangereuses": "etablissement",
   "signalisation-etablissement-risques-residuels": "etablissement",
-  "signalisation-etablissement-signaux-lumineux-acoustiques-semestrielle":
-    "etablissement",
-  // RETIRÉES. Portée par l'établissement dès sa création le 2026-09-01
-  // (`767b862`), retirée le 2026-09-02. Les quatre autres retraits datent
-  // d'avant l'ADR-022, quand tout était porté par un équipement.
-  "incendie-erp-cat1-4-visite-commission": "etablissement",
-};
+  "signalisation-etablissement-signaux-lumineux-acoustiques-semestrielle": "etablissement",
+  "signalisation-incendie-moyens-lutte": "equipement",
+  "signalisation-stockage-substances-dangereuses": "equipement",
+  "stockage-dangereux-declaration-icpe": "equipement",
+  "stockage-dangereux-fiches-donnees": "equipement",
+  "stockage-dangereux-formation-personnel": "equipement",
+  "stockage-dangereux-retention": "equipement",
+  "stockage-dangereux-ventilation-locaux": "equipement",
+  "stockage-dangereux-verification-etancheite": "equipement",
 
-const porteurConnu = (id: string): PorteurObligation =>
-  PORTEURS_HORS_EQUIPEMENT[id] ?? "equipement";
+};
 
 const RENVOI =
   "Voir `docs/chantiers-ouverts.md` § 11, lot 2 (« DEUX MÉCANISMES ») et " +
@@ -150,10 +232,14 @@ const RENVOI =
  * `reconcilierCalendrier`, pas un appel : le jour où le mécanisme s'étend, cette
  * table s'étend avec lui, dans le même commit, et c'est ce qui rend l'extension
  * visible.
+ *
+ * `retrait` : le report d'échéance ne sert que les obligations RETIRÉES
+ * (`absorbePar`) ; une scission (`succedeA`) ne connaît que l'adoption.
  */
 function successionNonServie(
   de: PorteurObligation,
   vers: PorteurObligation,
+  retrait: boolean,
 ): string | null {
   if (de === "salarie" || vers === "salarie") {
     return (
@@ -168,59 +254,72 @@ function successionNonServie(
     );
   }
   if (de === vers) return null; // adoption
-  if (de === "equipement" && vers === "etablissement") return null; // report
+  if (retrait && de === "equipement" && vers === "etablissement") return null; // report
   return (
-    `CHANGEMENT DE PORTEUR ${de} → ${vers} : ni l'adoption (même porteur) ni ` +
-    "le report d'échéance (équipement → établissement) ne le servent. " +
-    "L'ancienne ligne serait archivée et la nouvelle naîtrait « à planifier », " +
-    "sans rien hériter."
+    `CHANGEMENT DE PORTEUR ${de} → ${vers}${retrait ? "" : " par scission"} : ` +
+    "ni l'adoption (même porteur) ni le report d'échéance (équipement → " +
+    "établissement, pour une obligation retirée) ne le servent. L'ancienne " +
+    "ligne serait archivée et la nouvelle naîtrait « à planifier », sans rien " +
+    "hériter."
   );
 }
 
 describe("fusible — une obligation ne change pas de porteur sans le dire", () => {
-  it("chaque obligation vivante a le porteur que le registre lui connaît", () => {
-    const ecarts = obligationsConformite
-      .filter((o) => porteurDe(o) !== porteurConnu(o.id))
-      .map((o) => {
-        const avant = porteurConnu(o.id);
-        const apres = porteurDe(o);
-        return avant === "equipement" && !(o.id in PORTEURS_HORS_EQUIPEMENT)
-          ? `${o.id} — porté par ${apres}, absent du registre. NEUVE : ajoutez ` +
-              `la ligne à \`PORTEURS_HORS_EQUIPEMENT\`. Si elle EXISTAIT déjà ` +
-              `portée par un équipement, c'est un changement de porteur, voir plus bas.`
-          : `${o.id} — ${avant} → ${apres}.`;
-      });
+  it("toute obligation vivante figure dans la table des porteurs", () => {
+    const neuves = obligationsConformite.filter((o) => !(o.id in PORTEURS));
+    expect(
+      neuves.map((o) => `  "${o.id}": "${porteurDe(o)}",`),
+      "Obligation(s) NEUVE(S), absente(s) de `PORTEURS`. Collez les lignes " +
+        "ci-dessus dans la table (ordre alphabétique) — après avoir vérifié " +
+        "qu'aucune n'est une obligation EXISTANTE renommée, auquel cas l'ancien " +
+        "identifiant doit être inscrit à `OBLIGATIONS_RETIREES` avec son porteur.",
+    ).toEqual([]);
+  });
 
+  it("aucune obligation n'a changé de porteur en gardant son identifiant", () => {
+    const ecarts = obligationsConformite
+      .filter((o) => o.id in PORTEURS && PORTEURS[o.id] !== porteurDe(o))
+      .map((o) => `${o.id} — ${PORTEURS[o.id]} → ${porteurDe(o)}`);
     expect(
       ecarts,
-      "Une obligation a changé de porteur en gardant son identifiant (ou une " +
-        "obligation hors équipement est entrée sans être inscrite). Changer de " +
-        "porteur SANS traitement explicite archive les lignes de l'ancien porteur " +
-        "et fait naître la nouvelle « à planifier », sans rien hériter — c'est " +
-        "ce qu'a fait le lot « faux négatifs d'ancrage » le 2026-08-31, en " +
-        "silence. Avant de mettre le registre à jour : soit un NOUVEL " +
-        "identifiant, l'ancien inscrit à `OBLIGATIONS_RETIREES` avec `absorbePar` " +
-        "(servi pour équipement → établissement, voir le test des retraits), soit " +
-        "la décision écrite d'accepter la perte de continuité. " +
+      "CHANGEMENT DE PORTEUR en gardant l'identifiant. Il archive les lignes de " +
+        "l'ancien porteur et fait naître la nouvelle « à planifier », sans rien " +
+        "hériter — ce qu'a fait le lot « faux négatifs d'ancrage » le " +
+        "2026-08-31, en silence. NE CORRIGEZ PAS LA TABLE D'ABORD. Soit un NOUVEL " +
+        "identifiant, l'ancien inscrit à `OBLIGATIONS_RETIREES` avec " +
+        "`absorbePar` et son porteur (servi pour équipement → établissement), " +
+        "soit la décision écrite d'accepter la perte de continuité, et alors " +
+        "seulement la table. " +
         RENVOI,
     ).toEqual([]);
   });
 
-  it("chaque entrée du registre est vivante ou déclarée retirée", () => {
-    // Sans ceci, une ligne effacée du registre au retrait de son obligation
-    // ferait lire « équipement » au fusible des retraits — qui laisserait alors
-    // passer un salarié absorbé par l'établissement.
+  it("une ligne de la table qui n'est plus vivante est un retrait déclaré, au même porteur", () => {
     const vivants = new Set(obligationsConformite.map((o) => o.id));
-    const fantomes = Object.keys(PORTEURS_HORS_EQUIPEMENT).filter(
-      (id) => !vivants.has(id) && !(id in OBLIGATIONS_RETIREES),
-    );
+    const fautes = Object.entries(PORTEURS).flatMap(([id, porteur]) => {
+      if (vivants.has(id)) return [];
+      const retrait = OBLIGATIONS_RETIREES[id];
+      if (retrait === undefined) {
+        return [`${id} — disparu sans être inscrit à \`OBLIGATIONS_RETIREES\``];
+      }
+      return retrait.porteur === porteur
+        ? []
+        : [
+            `${id} — retiré en se déclarant « ${retrait.porteur} », la table le ` +
+              `connaissait « ${porteur} »`,
+          ];
+    });
     expect(
-      fantomes,
-      "Un identifiant du registre n'existe plus et n'est pas inscrit à `OBLIGATIONS_RETIREES`.",
+      fautes,
+      "Une obligation a quitté le référentiel. Gardez sa ligne dans `PORTEURS` : " +
+        "elle recoupe le porteur écrit dans `OBLIGATIONS_RETIREES`.",
     ).toEqual([]);
   });
 
   it("chaque retrait avec absorbant relie deux porteurs que la réconciliation sait continuer", () => {
+    // Lit `OBLIGATIONS_RETIREES.porteur`, écrit au retrait — pas la table :
+    // une ligne effacée de la table ne doit pas pouvoir faire passer un
+    // salarié pour un équipement.
     const nonServis = Object.entries(OBLIGATIONS_RETIREES).flatMap(
       ([id, r]) => {
         if (r.absorbePar === null) return [];
@@ -228,8 +327,9 @@ describe("fusible — une obligation ne change pas de porteur sans le dire", () 
         // Absorbant disparu : `conformite.test.ts` le signale déjà.
         if (absorbant === undefined) return [];
         const raison = successionNonServie(
-          porteurConnu(id),
+          r.porteur,
           porteurDe(absorbant),
+          true,
         );
         return raison === null ? [] : [`${id} → ${r.absorbePar} : ${raison}`];
       },
@@ -243,21 +343,15 @@ describe("fusible — une obligation ne change pas de porteur sans le dire", () 
   });
 
   it("chaque `succedeA` relie deux porteurs que la réconciliation sait continuer", () => {
-    // `adopter` exige le même porteur, et `succedeA` ne passe pas par le report
-    // d'échéance, réservé aux obligations retirées : pour une scission, seule
-    // l'identité de porteur est servie — et jamais pour un salarié.
     const nonServis = obligationsConformite.flatMap((o) =>
       (o.succedeA ?? []).flatMap((pred) => {
         const predecesseur = obligationParId(pred);
         if (predecesseur === undefined) return [];
-        const de = porteurDe(predecesseur);
-        const vers = porteurDe(o);
-        const raison =
-          de === vers && de !== "salarie"
-            ? null
-            : (successionNonServie(de, vers) ??
-              `CHANGEMENT DE PORTEUR ${de} → ${vers} par scission : \`adopter\` ` +
-                "exige le même porteur, et le report d'échéance ne sert que les retraits.");
+        const raison = successionNonServie(
+          porteurDe(predecesseur),
+          porteurDe(o),
+          false,
+        );
         return raison === null ? [] : [`${o.id} succède à ${pred} : ${raison}`];
       }),
     );

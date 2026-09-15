@@ -1,3 +1,8 @@
+import {
+  REFERENTIEL_VERSION,
+  empreinteReferentiel,
+} from "@/lib/referentiels/conformite";
+
 /**
  * La version des RÈGLES de génération du calendrier — le code, pas le contenu
  * du référentiel.
@@ -14,8 +19,9 @@
  * À INCRÉMENTER À LA MAIN quand le code change CE QUE LA RÉGÉNÉRATION ÉCRIT :
  * quelles lignes existent, leurs dates, leur statut, leur archivage. Pas pour
  * un renommage, un commentaire ou un changement d'affichage.
- * `version-moteur.test.ts` le rappelle : il relève le code du moteur,
- * commentaires retirés, et tombe dès qu'il bouge.
+ * `version-moteur.test.ts` le RAPPELLE — il relève le code du moteur et tombe
+ * dès qu'il bouge —, il ne le garantit pas : recopier le relevé sans
+ * incrémenter laisse tout vert.
  *
  * CE QUE COÛTE UN INCRÉMENT, et la décision appartient à la propriétaire :
  * chaque dossier est désynchronisé, donc RÉGÉNÉRÉ à sa prochaine ouverture du
@@ -26,8 +32,47 @@
  * `0` = le moteur d'avant cette constante : le sceau garde alors sa forme
  * antérieure (`sceauCalendrier`), si bien que livrer la constante ne
  * régénère rien. C'est le premier incrément qui le fera.
- *
- * Module sans import, délibérément : le référentiel le lit pour composer le
- * sceau, et il ne doit rien tirer du calendrier en retour.
  */
 export const VERSION_MOTEUR_CALENDRIER = 0;
+
+/**
+ * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la
+ * constante, et le sceau garde la forme que les bases portent déjà — livrer la
+ * constante ne désynchronise aucun dossier. Tout moteur suivant s'y ajoute, et
+ * le premier incrément régénère le parc (2026-09-15).
+ */
+export function sceauCalendrier(
+  version: string,
+  empreinte: string,
+  moteur: number,
+): string {
+  const referentiel = `${version}+${empreinte}`;
+  return moteur === 0 ? referentiel : `${referentiel}+moteur.${moteur}`;
+}
+
+/**
+ * Le repère posé sur un calendrier réconcilié, et comparé à l'ouverture pour
+ * savoir s'il faut le reprendre. Il porte la version, l'empreinte et le moteur.
+ *
+ * La version seule ne suffisait pas, et le 2026-09-10 l'a montré : l'empreinte
+ * a bougé sans elle, et aucun calendrier ne s'est repris. Une table d'historique
+ * dans le test n'y peut rien — réécrire sa dernière ligne au lieu d'en ajouter
+ * une laisse tout vert, et rien de ce qu'un fichier contient ne se souvient de
+ * ce qu'il contenait (relecture du 2026-09-11). Avec l'empreinte dans le repère,
+ * un changement de contenu désynchronise les calendriers par construction,
+ * qu'on ait pensé à la version ou non. La version reste pour ce que l'empreinte
+ * ne voit pas — fondements, descriptions —, et pour les documents qui la citent.
+ *
+ * COMPOSÉ ICI, CÔTÉ CALENDRIER, et non dans le référentiel qui le portait
+ * jusqu'au 2026-09-15 : le moteur est une affaire du calendrier, et le
+ * référentiel n'a rien à importer de lui. Seuls `actions.ts` (qui le pose) et
+ * `queries.ts` (qui le compare) le lisent.
+ *
+ * Calculé une fois, au chargement du module : ni le référentiel ni le moteur ne
+ * changent pendant la vie du processus.
+ */
+export const SCEAU_CALENDRIER = sceauCalendrier(
+  REFERENTIEL_VERSION,
+  empreinteReferentiel(),
+  VERSION_MOTEUR_CALENDRIER,
+);

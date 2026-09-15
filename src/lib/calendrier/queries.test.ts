@@ -40,7 +40,8 @@ vi.mock("@/lib/auth/require-user", () => ({
   getOptionalUser: vi.fn(),
 }));
 
-import { REFERENTIEL_VERSION, SCEAU_CALENDRIER } from "@/lib/referentiels/conformite";
+import { REFERENTIEL_VERSION } from "@/lib/referentiels/conformite";
+import { SCEAU_CALENDRIER } from "./version-moteur";
 import {
   calendrierDesynchronise,
   compterEtatCalendrier,

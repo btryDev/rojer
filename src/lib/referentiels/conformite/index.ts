@@ -14,7 +14,12 @@
  *     frigorifiques (R. 543-79 code de l'environnement, règlement UE 2024/573)
  */
 
-import { porteurDe, type DomaineObligation, type Obligation } from "./types";
+import {
+  porteurDe,
+  type DomaineObligation,
+  type Obligation,
+  type PorteurObligation,
+} from "./types";
 import { obligationsElectricite } from "./electricite";
 import { obligationsIncendie } from "./incendie";
 import { obligationsAeration } from "./aeration";
@@ -36,7 +41,6 @@ import { obligationsCoActivite } from "./co-activite";
 import { obligationsSignalisation } from "./signalisation";
 import { obligationsCompactageDechets } from "./compactage-dechets";
 import { obligationsEclairage } from "./eclairage";
-import { VERSION_MOTEUR_CALENDRIER } from "../../calendrier/version-moteur";
 
 export {
   obligationsElectricite,
@@ -123,7 +127,8 @@ export const obligationsConformite: Obligation[] = [
  *
  * Cette constante est, avec l'empreinte, le repère qui permet de détecter
  * qu'un calendrier a été généré avec un référentiel antérieur, et donc de le
- * réconcilier — les deux sont réunis dans `SCEAU_CALENDRIER`, plus bas.
+ * réconcilier — les deux sont réunis dans `SCEAU_CALENDRIER`
+ * (`calendrier/version-moteur.ts`).
  *
  * **À incrémenter à CHAQUE modification du référentiel.** L'oubli ne fige plus
  * les calendriers — le sceau porte l'empreinte, un contenu changé les
@@ -203,6 +208,17 @@ export const REFERENTIEL_VERSION = "2026-09-11.1";
 export type ObligationRetiree = {
   /** L'obligation qui reprend le contenu, ou `null` si personne ne le reprend. */
   absorbePar: string | null;
+  /**
+   * Le porteur de l'obligation AU MOMENT DE SON RETRAIT — écrit à la main, par
+   * qui retire, parce qu'une obligation retirée n'est plus là pour le dire
+   * (2026-09-15, `lot/fusibles-referentiel`). Requis : un oubli ne compile pas.
+   *
+   * Il décide si la réconciliation sait continuer la ligne vers `absorbePar` —
+   * l'adoption à porteur égal, le report d'échéance de l'équipement vers
+   * l'établissement, et jamais un salarié, dont les titres gardent
+   * l'identifiant retiré. `succession-porteurs.test.ts` le lit.
+   */
+  porteur: PorteurObligation;
   /** Ce qui s'est passé, pour qui trouve l'id en base sans autre contexte. */
   motif: string;
 };
@@ -214,28 +230,33 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
   // empêche le réemploi de l'id. Le registre naissait donc avec un trou connu.
   "aeration-hotte-pro-annuelle": {
     absorbePar: null,
+    porteur: "equipement",
     motif:
       "Retiré avant le 2026-08-27, date inconnue. Doublon du ramonage annuel des circuits d'extraction (GC 20), fusionné avec l'obligation qui le portait déjà. Les `Verification` qui le portaient ont SURVÉCU à son retrait, orphelines — c'est ce cas vécu qui a motivé la colonne `Verification.referentielVersion` (voir `prisma/schema.prisma`). Absorbant non identifié avec certitude à la relecture : laissé à `null` plutôt que deviné.",
   },
   // ADR-022 — fragments absorbés par l'obligation portée par l'établissement.
   "elec-erp-cat5-quinquennale": {
     absorbePar: "incendie-erp-pe4-entretien-installations-techniques",
+    porteur: "equipement",
     motif:
       "Retiré le 2026-08-27. Fragment « installations électriques » de PE 4 § 2, sans fondement propre. L'obligation absorbante porte l'article entier et vit en domaine `incendie` : un utilisateur qui filtre sur « électricité » ne l'y trouvera plus.",
   },
   "cuisson-gaz-installations-triennale": {
     absorbePar: "incendie-erp-pe4-entretien-installations-techniques",
+    porteur: "equipement",
     motif:
       "Retiré le 2026-08-27. Fragment « installations de gaz » de PE 4 § 2, sans fondement propre. À ne pas confondre avec `cuisson-gaz-installations-annuelle`, qui vit toujours et régit les ERP de 1ʳᵉ à 4ᵉ catégorie sur GZ 15.",
   },
   "aeration-travail-entretien-annuel": {
     absorbePar: "aeration-controle-installations-r4222-20",
+    porteur: "equipement",
     motif:
       "Retiré le 2026-08-27. Fragment « VMC/CTA » de R. 4222-20, sans fondement propre. L'absorbante garde le même domaine, le même rythme annuel et la même criticité : pour l'utilisateur, une ligne par appareil devient une ligne pour l'ensemble.",
   },
   // GE 4 § 1 — la ligne unique a éclaté en six quand le tableau a pu être lu.
   "incendie-erp-cat1-4-visite-commission": {
     absorbePar: "incendie-erp-visite-commission-cat1-2-triennale",
+    porteur: "etablissement",
     motif:
       "Retirée le 2026-09-02, créée le 2026-09-01. Elle portait GE 4 § 1 en UNE ligne `triennale` bornée à N1–N4, faute d'avoir pu lire le corps du tableau à la source. Le tableau a depuis été relevé et vérifié case par case sur le fac-similé du Journal officiel : il croise le type et la catégorie, et donne trois OU cinq ans. `periodicite` étant un scalaire, il faut une ligne par bloc — six, qui forment une partition. `absorbePar` désigne celle des six qui hérite du plus grand nombre d'établissements, mais aucune ne la reprend à elle seule : un dossier de 3ᵉ ou 4ᵉ catégorie bascule sur une autre, et un établissement de culte passe de trois à cinq ans. L'id ne doit jamais être réemployé — c'est ce que ce registre garantit.\n\nCE CHAMP EST LU DEPUIS LE 2026-09-10, et cette entrée-ci est la seule des cinq à ne pas se laisser lire entièrement. La réconciliation reporte l'historique d'une ligne retirée vers son absorbant DÉCLARÉ, à la condition que celui-ci s'applique au dossier. Or `absorbePar` est un pointeur unique là où il faudrait une partition : pour un ERP de 3ᵉ ou 4ᵉ catégorie, l'absorbant nommé ici n'est pas applicable — c'est une autre des six qui l'est —, donc AUCUN report n'a lieu et la ligne d'origine est archivée seule. Le dossier perd la continuité de sa visite de commission, précisément pour la population que le motif ci-dessus signale comme mal servie. Le mécanisme couvre donc cette entrée EN PARTIE, et il faut le savoir avant de s'y fier. Ce qui manque n'est pas du code : c'est une déclaration capable de dire « selon la catégorie, l'un OU l'autre ». Les quatre autres entrées ne posent pas ce problème, leur absorbant étant porté par l'établissement, donc applicable à tout dossier.",
   },
@@ -346,47 +367,6 @@ export function empreinteReferentiel(
   }
   const taille = obligations.length;
   return `${taille}-${h1.toString(16)}${h2.toString(16)}`;
-}
-
-/**
- * Le repère posé sur un calendrier réconcilié, et comparé à l'ouverture pour
- * savoir s'il faut le reprendre. Il porte la version ET l'empreinte.
- *
- * La version seule ne suffisait pas, et le 2026-09-10 l'a montré : l'empreinte
- * a bougé sans elle, et aucun calendrier ne s'est repris. Une table d'historique
- * dans le test n'y peut rien — réécrire sa dernière ligne au lieu d'en ajouter
- * une laisse tout vert, et rien de ce qu'un fichier contient ne se souvient de
- * ce qu'il contenait (relecture du 2026-09-11). Avec l'empreinte dans le repère,
- * un changement de contenu désynchronise les calendriers par construction,
- * qu'on ait pensé à la version ou non. La version reste pour ce que l'empreinte
- * ne voit pas — fondements, descriptions —, et pour les documents qui la citent.
- *
- * Calculé une fois, au chargement du module : le référentiel ne change pas
- * pendant la vie du processus.
- *
- * ET LE MOTEUR, depuis le 2026-09-15 : version et empreinte ne voient que le
- * contenu, pas le code qui en tire les lignes. `VERSION_MOTEUR_CALENDRIER`
- * (`calendrier/version-moteur.ts`) s'y ajoute — voir `sceauCalendrier`.
- */
-export const SCEAU_CALENDRIER = sceauCalendrier(
-  REFERENTIEL_VERSION,
-  empreinteReferentiel(),
-  VERSION_MOTEUR_CALENDRIER,
-);
-
-/**
- * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la
- * constante, et le sceau garde la forme que les bases portent déjà — livrer la
- * constante ne désynchronise aucun dossier. Tout moteur suivant s'y ajoute, et
- * le premier incrément régénère le parc (2026-09-15).
- */
-export function sceauCalendrier(
-  version: string,
-  empreinte: string,
-  moteur: number,
-): string {
-  const referentiel = `${version}+${empreinte}`;
-  return moteur === 0 ? referentiel : `${referentiel}+moteur.${moteur}`;
 }
 
 /**

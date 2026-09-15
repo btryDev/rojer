@@ -20,6 +20,11 @@ import { determineObligationsApplicables, matchTypologie } from "@/lib/matching"
 import type { EtablissementMatching } from "@/lib/matching";
 import { CORPUS } from "../corpus";
 import {
+  SCEAU_CALENDRIER,
+  VERSION_MOTEUR_CALENDRIER,
+  sceauCalendrier,
+} from "@/lib/calendrier/version-moteur";
+import {
   PALIER_PAR_OBLIGATION,
   PERIODICITES_ARTICLE_5,
 } from "./froid";
@@ -27,7 +32,6 @@ import {
   DOMAINES_OBLIGATION,
   OBLIGATIONS_RETIREES,
   REFERENTIEL_VERSION,
-  SCEAU_CALENDRIER,
   SOURCES_LEGALES,
   empreinteReferentiel,
   obligationParId,
@@ -1379,14 +1383,15 @@ describe("référentiel conformité — version et empreinte", () => {
     // dont la table ci-dessus a été tenue. Si ce repère redevenait la version
     // seule, une empreinte mise à jour en place — sans version neuve — laisserait
     // de nouveau chaque base réconciliée se croire à jour.
-    // `startsWith` et non `toBe` depuis le 2026-09-15 : la version du moteur
-    // s'y ajoute dès son premier incrément (`sceauCalendrier`), et c'est
-    // `calendrier/version-moteur.test.ts` qui garde cette partie-là.
-    expect(
-      SCEAU_CALENDRIER.startsWith(
-        `${REFERENTIEL_VERSION}+${empreinteReferentiel()}`,
+    // Le moteur s'y ajoute depuis le 2026-09-15 (`calendrier/version-moteur.ts`) ;
+    // la version et l'empreinte restent les deux premiers termes.
+    expect(SCEAU_CALENDRIER).toBe(
+      sceauCalendrier(
+        REFERENTIEL_VERSION,
+        empreinteReferentiel(),
+        VERSION_MOTEUR_CALENDRIER,
       ),
-    ).toBe(true);
+    );
   });
 
   it("la version déclarée est la dernière de l'historique", () => {

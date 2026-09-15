@@ -1,9 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
-import {
-  SCEAU_CALENDRIER,
-  obligationParId,
-} from "@/lib/referentiels/conformite";
+import { obligationParId } from "@/lib/referentiels/conformite";
+import { SCEAU_CALENDRIER } from "./version-moteur";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { cleJourCivil, debutDuJour } from "@/lib/dates";
 import { derniereRealisation } from "@/lib/rapports/derniere-realisation";
