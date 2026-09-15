@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CADRAGE_INITIAL,
   construireFrise,
   ECART_MIN_PX,
   PX_PAR_JOUR,
@@ -264,8 +265,7 @@ describe("construireFrise — proche", () => {
     // Sa carte garde sa vraie date de début.
     expect(f.marqueurs[0].sousTitre).toContain("MARS");
     // Hors du cadrage d'ouverture, elle est nommée pour être cherchée.
-    expect(f.auBordGauche).toEqual([f.marqueurs[0].evenements[0].libelle]);
-    expect(frise([ev("a", 10), { ...ev("op", -20), dateFin: fin(10) }]).auBordGauche).toEqual([]);
+    expect(f.horsCadrage).toEqual([{ libelle: "Événement op", cle: "op", x: 0 }]);
     // En grappe avec un événement du début de fenêtre, la plage porte les
     // deux années : « 11 MARS 2026 → 3 MAI 2026 », jamais une plage courte.
     const g = frise([{ ...ev("op", -150), dateFin: fin(10) }, ev("mai", -97)]);
@@ -273,6 +273,38 @@ describe("construireFrise — proche", () => {
     expect(g.marqueurs[0].sousTitre).toMatch(/MARS 2026 → .* 2026$/);
     // Finie avant la fenêtre, elle n'y entre pas.
     expect(frise([{ ...ev("op", -150), dateFin: fin(-120) }]).marqueurs).toHaveLength(0);
+  });
+
+  it("nomme les opérations non terminées dont la carte est à gauche du cadrage d'ouverture", () => {
+    // Relecture du 2026-09-15 : la note ne retenait que les opérations
+    // commencées avant la fenêtre. En vue « 90 jours », la frise s'ouvre
+    // ~13 jours avant aujourd'hui : une opération commencée il y a 19 jours
+    // et finissant dans 10 était hors de l'écran, comptée « sous 30 j », et
+    // la note ne disait rien.
+    const fin = (n: number) => {
+      const d = new Date(LE_8_AOUT);
+      d.setDate(d.getDate() + n);
+      return d;
+    };
+    const jours = frise([
+      { ...ev("hors", -19), dateFin: fin(10) },
+      { ...ev("visible", -7), dateFin: fin(10) },
+      { ...ev("finie", -40), dateFin: fin(-2) },
+      ev("retard", -30, "alerte"),
+    ]);
+    expect(jours.xCadrage).toBe(jours.xAujourdhui - CADRAGE_INITIAL);
+    expect(jours.horsCadrage.map((h) => h.libelle)).toEqual(["Événement hors"]);
+    expect(jours.horsCadrage[0].x).toBeLessThan(jours.xCadrage);
+
+    // En vue « 12 mois », le même cadrage couvre ~50 jours de passé.
+    const mois = frise(
+      [
+        { ...ev("hors", -60), dateFin: fin(10) },
+        { ...ev("visible", -19), dateFin: fin(10) },
+      ],
+      "mois",
+    );
+    expect(mois.horsCadrage.map((h) => h.libelle)).toEqual(["Événement hors"]);
   });
 
   it("une seule échéance proche suffit à la grappe", () => {

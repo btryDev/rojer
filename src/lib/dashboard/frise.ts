@@ -17,6 +17,7 @@ import { FUSEAU_REFERENCE } from "@/lib/dates";
 import type { TypeEcheance } from "@/lib/calendrier/echeances";
 import { raccourcirLibelle } from "./libelles";
 import { dateEnJeuAutre } from "@/lib/calendrier/etats";
+import { estEnRetard } from "@/lib/dates/retard";
 
 export type EvenementFrise = {
   id: string;
@@ -100,13 +101,17 @@ export type Frise = {
   marqueurs: MarqueurFrise[];
   /** Échéances placées sur l'axe — grappes comprises. */
   nbPlaces: number;
+  /** Abscisse du bord gauche de l'écran à l'ouverture (`CADRAGE_INITIAL`). */
+  xCadrage: number;
   /**
-   * Les libellés des opérations commencées AVANT la fenêtre et posées à son
-   * bord gauche (`place`). La frise s'ouvre cadrée sur aujourd'hui, trois mois
-   * plus loin : leur carte est hors de l'écran, et le tableau de bord les
-   * nomme sous la frise pour qu'on sache qu'il faut défiler (2026-09-15).
+   * Les opérations NON TERMINÉES dont le point tombe à gauche du cadrage
+   * d'ouverture, dans l'ordre de l'axe. Leur carte est hors de l'écran alors
+   * que le « sous 30 j » les compte : le tableau de bord les nomme sous la
+   * frise, et mène à la première (2026-09-15). Une opération commencée avant
+   * la fenêtre, posée au bord gauche, en est un cas ; celle du 20 juin au
+   * 25 septembre, en vue « 90 jours », en est un autre.
    */
-  auBordGauche: string[];
+  horsCadrage: { libelle: string; cle: string; x: number }[];
   mois: GraduationMois[];
 };
 
@@ -136,6 +141,10 @@ export const PX_PAR_JOUR = {
 } as const;
 
 export type EchelleFrise = keyof typeof PX_PAR_JOUR;
+
+/** Marge à gauche d'aujourd'hui au cadrage d'ouverture, en pixels : la frise
+ *  s'ouvre défilée à `xAujourdhui - CADRAGE_INITIAL`. */
+export const CADRAGE_INITIAL = 130;
 
 /** Seuil « proche » : une échéance à moins de 30 jours mérite l'orange.
  *  Même horizon que la promesse produit — « ce qu'il doit faire dans les
@@ -246,7 +255,24 @@ export function construireFrise({
     }
   }
 
+  const xCadrage = Math.max(0, x(aujourdhui) - CADRAGE_INITIAL);
+  const horsCadrage: Frise["horsCadrage"] = [];
+
   const marqueurs: MarqueurFrise[] = groupes.map((groupe, i) => {
+    for (const e of groupe) {
+      // Sa fin, ou sa date faute de fin : une échéance dont la date est
+      // derrière le cadrage et sans fin à venir n'a plus rien à tenir.
+      if (
+        x(place(e)) < xCadrage &&
+        !estEnRetard(e.dateFin ?? e.date, aujourdhui)
+      ) {
+        horsCadrage.push({
+          libelle: raccourcirLibelle(e.libelle),
+          cle: groupe[0].id,
+          x: x(place(e)),
+        });
+      }
+    }
     const evenements: EvenementMarqueur[] = groupe.map((e) => ({
       id: e.id,
       // Les cartes font 172 px : un libellé réglementaire entier s'y fait
@@ -277,7 +303,7 @@ export function construireFrise({
           ? libelleDateLong(premier.date)
           : // Posée au bord, la première peut dater d'une autre année : la
             // plage courte « 3 → 20 JUIN » se lirait alors sur la même.
-            place(premier) !== premier.date
+            place(premier).getTime() !== premier.date.getTime()
             ? `${libelleDateLong(premier.date)} → ${libelleDateLong(dernier.date)}`
             : libellePlage(premier.date, dernier.date),
       // Une alerte au milieu d'un groupe calme reste visible : c'est elle
@@ -316,9 +342,8 @@ export function construireFrise({
     xAujourdhui: x(aujourdhui),
     marqueurs,
     nbPlaces: dansFenetre.length,
-    auBordGauche: dansFenetre
-      .filter((e) => place(e) !== e.date)
-      .map((e) => raccourcirLibelle(e.libelle)),
+    xCadrage,
+    horsCadrage,
     mois: construireMois(debut, fin, aujourdhui, pxParJour),
   };
 }

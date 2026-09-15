@@ -43,7 +43,11 @@ import {
 } from "@/lib/etablissements/illustration";
 import { HeroBatiments } from "./hero-batiments";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
-import { construireFrise, type EchelleFrise } from "@/lib/dashboard/frise";
+import {
+  CADRAGE_INITIAL,
+  construireFrise,
+  type EchelleFrise,
+} from "@/lib/dashboard/frise";
 import { composantesCiviles } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import {
@@ -296,6 +300,12 @@ function Lien({
   );
 }
 
+/** L'allure d'un lien dans une phrase — partagée avec le bouton « Y aller »
+ *  de la frise, qui agit sans naviguer. Le contour de focus est celui du
+ *  board (`--board-blue-strong`). */
+const CLASSES_LIEN_DANS_PHRASE =
+  "font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)]";
+
 /**
  * Un lien DANS une phrase : souligné, à la taille du texte qui le porte.
  * `Lien` est un bouton plein — posé en fin de note, il sautait sur sa propre
@@ -310,10 +320,7 @@ function LienDansPhrase({
   children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
-    >
+    <Link href={href} className={CLASSES_LIEN_DANS_PHRASE}>
       {children}
     </Link>
   );
@@ -791,8 +798,6 @@ const VOIE_BASSE = AXE_Y + 16;
 const PISTE_HAUTEUR = VOIE_BASSE + CARTE_HAUTEUR_MAX + 10;
 /** Demi-largeur d'une carte de marqueur — sert à la borner aux extrémités. */
 const DEMI_CARTE = 86;
-/** Marge à gauche d'aujourd'hui au cadrage initial, en pixels. */
-const CADRAGE_INITIAL = 130;
 
 /** Registre visuel d'un marqueur. La frise ne sert que deux urgences :
  *  le rouge (dépassé ou en alerte), l'orange (dans les 30 jours). Tout
@@ -931,28 +936,40 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
     if (vue !== "frise") return;
     const el = piste.current;
     if (!el) return;
-    el.scrollLeft = Math.max(0, frise.xAujourdhui - CADRAGE_INITIAL);
+    // Le cadrage vient de `construireFrise`, qui s'en sert aussi pour savoir
+    // quelles cartes sont hors de l'écran à l'ouverture (`horsCadrage`).
+    el.scrollLeft = frise.xCadrage;
     majBords();
-  }, [vue, echelle, frise.xAujourdhui, majBords]);
+  }, [vue, echelle, frise.xCadrage, majBords]);
+
+  const comportementDefilement = (): ScrollBehavior =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "auto"
+      : "smooth";
 
   const defiler = (sens: -1 | 1) => {
     const el = piste.current;
     if (!el) return;
-    const anime = !window.matchMedia("(prefers-reduced-motion: reduce)")
-      .matches;
     el.scrollBy({
       left: sens * el.clientWidth * 0.8,
-      behavior: anime ? "smooth" : "auto",
+      behavior: comportementDefilement(),
     });
   };
 
-  // Au bord gauche, où se posent les opérations commencées avant la fenêtre.
-  const allerAuBordGauche = () => {
+  // Jusqu'à la première carte hors du cadrage d'ouverture, posée à la même
+  // marge qu'aujourd'hui à l'ouverture, et le focus sur elle : un lecteur
+  // d'écran ou un clavier arrive sur ce qu'on lui a nommé (2026-09-15).
+  const allerHorsCadrage = () => {
     const el = piste.current;
-    if (!el) return;
-    const anime = !window.matchMedia("(prefers-reduced-motion: reduce)")
-      .matches;
-    el.scrollTo({ left: 0, behavior: anime ? "smooth" : "auto" });
+    const cible = frise.horsCadrage[0];
+    if (!el || !cible) return;
+    el.scrollTo({
+      left: Math.max(0, cible.x - CADRAGE_INITIAL),
+      behavior: comportementDefilement(),
+    });
+    [...el.querySelectorAll<HTMLElement>("[data-marqueur]")]
+      .find((c) => c.dataset.marqueur === cible.cle)
+      ?.focus({ preventScroll: true });
   };
 
   // Le compte « en retard » de l'en-tête ne vient ni de la frise ni des
@@ -1313,6 +1330,7 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
                           extrémités de l'axe : elle y glisse légèrement, le
                           point reste à sa place. */}
                       <LienProvenance
+                        data-marqueur={m.cle}
                         href={
                           grappe
                             ? hrefCalendrier
@@ -1441,19 +1459,20 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
         </p>
       ) : null}
 
-      {vue === "frise" && frise.auBordGauche.length > 0 ? (
-        // Une opération commencée avant la fenêtre est posée au bord gauche,
-        // trois mois avant le cadrage d'ouverture : sa carte est hors de
-        // l'écran, et le « sous 30 j » qui la compte ne disait pas où la
-        // trouver (2026-09-15). La note la nomme, et le bouton y mène.
+      {vue === "frise" && frise.horsCadrage.length > 0 ? (
+        // Une opération non terminée dont le point tombe à gauche du cadrage
+        // d'ouverture — commencée avant la fenêtre, ou simplement il y a plus
+        // de deux semaines : sa carte est hors de l'écran, et le « sous 30 j »
+        // qui la compte ne disait pas où la trouver (2026-09-15). La note la
+        // nomme, et le bouton y mène.
         <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
-          {frise.auBordGauche.length > 1
-            ? `${frise.auBordGauche.length} opérations commencées il y a plus de trois mois sont posées au bord gauche de la frise.`
-            : `Une opération commencée il y a plus de trois mois est posée au bord gauche de la frise : « ${frise.auBordGauche[0]} ».`}{" "}
+          {frise.horsCadrage.length > 1
+            ? `${frise.horsCadrage.length} opérations non terminées sont hors de l'écran, à gauche de la frise.`
+            : `Une opération non terminée est hors de l'écran, à gauche de la frise : « ${frise.horsCadrage[0].libelle} ».`}{" "}
           <button
             type="button"
-            onClick={allerAuBordGauche}
-            className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
+            onClick={allerHorsCadrage}
+            className={CLASSES_LIEN_DANS_PHRASE}
           >
             Y aller
           </button>
