@@ -14,9 +14,11 @@ import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   construireGrilleMois,
+  dateDansLaGrille,
   JOURS_SEMAINE,
   type EvenementGrille,
 } from "@/lib/calendrier/grille";
+import { LIBELLE_FIN_OPERATION } from "@/lib/calendrier/etats";
 import { MarqueurFamille } from "./MarqueurFamille";
 
 /** Nombre de pastilles affichées avant de replier en « +N ». */
@@ -144,23 +146,32 @@ export function VueMois({
               </span>
 
               <ul className="mt-1 flex flex-col gap-1">
-                {visibles.map((e) => (
-                  <li key={e.id}>
-                    <LienProvenance
-                      href={e.href ?? hrefEvenement(e)}
-                      title={`${e.libelle} — ${e.equipement}`}
-                      className={
-                        "flex items-center gap-1 rounded-[7px] px-1.5 py-1 text-[10.5px] font-semibold leading-tight transition-opacity hover:opacity-80 " +
-                        TON_PASTILLE[e.tone]
-                      }
-                    >
-                      {/* L'icône dit la famille ; la pastille garde la
-                          couleur de son urgence. */}
-                      <MarqueurFamille famille={e.famille} className="size-2.5" />
-                      <span className="min-w-0 truncate">{e.libelle}</span>
-                    </LienProvenance>
-                  </li>
-                ))}
+                {visibles.map((e) => {
+                  // Posée sur la fin de son opération, la pastille le dit en
+                  // tête : la case du 25 se lirait comme le début des travaux
+                  // (relecture, 2026-09-15).
+                  const fin =
+                    dateDansLaGrille(e, aujourdhui).getTime() !== e.date.getTime();
+                  return (
+                    <li key={e.id}>
+                      <LienProvenance
+                        href={e.href ?? hrefEvenement(e)}
+                        title={`${e.libelle} — ${e.equipement}`}
+                        className={
+                          "flex items-center gap-1 rounded-[7px] px-1.5 py-1 text-[10.5px] font-semibold leading-tight transition-opacity hover:opacity-80 " +
+                          TON_PASTILLE[e.tone]
+                        }
+                      >
+                        {/* L'icône dit la famille ; la pastille garde la
+                            couleur de son urgence. */}
+                        <MarqueurFamille famille={e.famille} className="size-2.5" />
+                        <span className="min-w-0 truncate">
+                          {fin ? `${LIBELLE_FIN_OPERATION} · ${e.libelle}` : e.libelle}
+                        </span>
+                      </LienProvenance>
+                    </li>
+                  );
+                })}
                 {reste > 0 ? (
                   <li className="px-1.5 text-[10px] font-semibold text-[color:var(--board-slate-soft)]">
                     +{reste}

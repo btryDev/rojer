@@ -210,3 +210,58 @@ describe("construireGrilleAnnee", () => {
     expect(annee(2030).mois.every((m) => m.dansFenetre)).toBe(true);
   });
 });
+
+describe("grilles — une opération en cours se pose sur sa fin", () => {
+  /**
+   * Relecture du 2026-09-15 : la vue calendrier du tableau de bord posait une
+   * opération démarrée en mars à son début, quand la page Calendrier la range
+   * au mois de sa fin — la tuile de mars grisée, septembre vide.
+   */
+  const AUJ = paris(2026, 9, 15, 12);
+  const operation = (tone: EvenementGrille["tone"]): EvenementGrille => ({
+    id: `op-${tone}`,
+    libelle: "Permis de feu n°3 — Cuisine",
+    equipement: "travaux par point chaud",
+    tone,
+    date: jourUtc("2026-03-12"),
+    dateFin: jourUtc("2026-09-25"),
+    famille: "operations",
+  });
+
+  it("vue année : au mois de sa fin, démarrée sans alerte", () => {
+    const g = construireGrilleAnnee({
+      annee: 2026,
+      evenements: [operation("ok")],
+      aujourdhui: AUJ,
+    });
+    expect(g.mois[2].nbTotal).toBe(0);
+    expect(g.mois[8].nbParTon.ok).toBe(1);
+  });
+
+  it("vue mois : sur le jour de sa fin", () => {
+    const septembre = construireGrilleMois({
+      mois: AUJ,
+      evenements: [operation("ok")],
+      aujourdhui: AUJ,
+    });
+    const jour = septembre.semaines.flat().find((j) => j.evenements.length > 0);
+    expect(jour?.cle).toBe("2026-09-25");
+    expect(septembre.nbEvenements).toBe(1);
+  });
+
+  it("en alerte sur un début manqué, elle garde son début", () => {
+    const g = construireGrilleAnnee({
+      annee: 2026,
+      evenements: [
+        {
+          ...operation("alerte"),
+          date: jourUtc("2026-09-01"),
+          dateFin: jourUtc("2026-10-25"),
+        },
+      ],
+      aujourdhui: AUJ,
+    });
+    expect(g.mois[8].nbParTon.alerte).toBe(1);
+    expect(g.mois[9].nbTotal).toBe(0);
+  });
+});

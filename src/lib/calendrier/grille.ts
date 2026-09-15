@@ -24,6 +24,7 @@ import type {
   FamilleEcheance,
   TypeEcheance,
 } from "./echeances";
+import { dateEnJeuAutre } from "./etats";
 
 export type EvenementGrille = {
   id: string;
@@ -43,6 +44,25 @@ export type EvenementGrille = {
    *  non renseigné par l'appelant (compat board). */
   batiment?: BatimentEcheance | null;
 };
+
+/**
+ * La date où la grille pose un événement : sa date EN JEU (`dateEnJeuAutre`).
+ * Une opération démarrée sans alerte se pose sur sa FIN, comme dans la liste
+ * mensuelle du calendrier ; posée à son début, elle grisait la tuile de mars
+ * quand la page Calendrier la rangeait en septembre (relecture, 2026-09-15).
+ * Sans `dateFin` — une vérification, une attestation —, c'est sa date.
+ */
+export function dateDansLaGrille(e: EvenementGrille, aujourdhui: Date): Date {
+  return dateEnJeuAutre(
+    {
+      date: e.date,
+      dateFin: e.dateFin,
+      // `warn` n'existe que sur une vérification, qui n'a pas de fin.
+      tone: e.tone === "alerte" ? "alerte" : "ok",
+    },
+    aujourdhui,
+  );
+}
 
 export type JourGrille = {
   /** Clé stable « 2026-08-24 ». */
@@ -104,13 +124,17 @@ export function construireGrilleMois({
   // ne fait ensuite que des lectures de map.
   const parJour = new Map<string, EvenementGrille[]>();
   for (const e of evenements) {
-    const cle = cleJourCivil(e.date);
+    const cle = cleJourCivil(dateDansLaGrille(e, aujourdhui));
     const liste = parJour.get(cle);
     if (liste) liste.push(e);
     else parJour.set(cle, [e]);
   }
   for (const liste of parJour.values()) {
-    liste.sort((a, b) => a.date.getTime() - b.date.getTime());
+    liste.sort(
+      (a, b) =>
+        dateDansLaGrille(a, aujourdhui).getTime() -
+        dateDansLaGrille(b, aujourdhui).getTime(),
+    );
   }
 
   const decalage = decalageLundi(c.annee, c.mois);
@@ -219,7 +243,7 @@ export function construireGrilleAnnee({
   const pointsParMois: PointAnnee[][] = Array.from({ length: 12 }, () => []);
   let nbEvenements = 0;
   for (const e of evenements) {
-    const c = composantesCiviles(e.date);
+    const c = composantesCiviles(dateDansLaGrille(e, aujourdhui));
     if (c.annee !== annee) continue;
     const index = c.mois - 1;
     parMois[index][e.tone] += 1;
