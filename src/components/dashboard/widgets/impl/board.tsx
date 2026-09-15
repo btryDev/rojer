@@ -479,10 +479,14 @@ function Releve({
   valeur,
   libelle,
   alerte = false,
+  precision = null,
 }: {
   valeur: number;
   libelle: string;
   alerte?: boolean;
+  /** Ce que le nombre contient et que le mot ne dit pas — « dont 5 sans date
+   *  connue » (`Brief.precisionReleveRetard`, 2026-09-15). */
+  precision?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -497,6 +501,11 @@ function Releve({
       <span className="board-eyebrow text-[color:var(--board-slate-mid)]">
         {libelle}
       </span>
+      {precision ? (
+        <span className="text-[11.5px] leading-[1.3] tabular-nums text-[color:var(--board-slate-mid)]">
+          {precision}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -598,6 +607,10 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                   valeur={totalUrgent}
                   libelle={LIBELLE_ETAT_COURT.enRetard}
                   alerte={totalUrgent > 0}
+                  // La part sans date connue que le titre nomme : sans elle,
+                  // « DÉPASSÉES 14 » contredisait « dont cinq sans date
+                  // connue » juste au-dessus (2026-09-15).
+                  precision={brief.precisionReleveRetard}
                 />
               </div>
               <div className="w-px bg-[color:rgba(10,10,10,.12)]" />
@@ -931,6 +944,15 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
       left: sens * el.clientWidth * 0.8,
       behavior: anime ? "smooth" : "auto",
     });
+  };
+
+  // Au bord gauche, où se posent les opérations commencées avant la fenêtre.
+  const allerAuBordGauche = () => {
+    const el = piste.current;
+    if (!el) return;
+    const anime = !window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches;
+    el.scrollTo({ left: 0, behavior: anime ? "smooth" : "auto" });
   };
 
   // Le compte « en retard » de l'en-tête ne vient ni de la frise ni des
@@ -1419,6 +1441,24 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
         </p>
       ) : null}
 
+      {vue === "frise" && frise.auBordGauche.length > 0 ? (
+        // Une opération commencée avant la fenêtre est posée au bord gauche,
+        // trois mois avant le cadrage d'ouverture : sa carte est hors de
+        // l'écran, et le « sous 30 j » qui la compte ne disait pas où la
+        // trouver (2026-09-15). La note la nomme, et le bouton y mène.
+        <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
+          {frise.auBordGauche.length > 1
+            ? `${frise.auBordGauche.length} opérations commencées il y a plus de trois mois sont posées au bord gauche de la frise.`
+            : `Une opération commencée il y a plus de trois mois est posée au bord gauche de la frise : « ${frise.auBordGauche[0]} ».`}{" "}
+          <button
+            type="button"
+            onClick={allerAuBordGauche}
+            className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
+          >
+            Y aller
+          </button>
+        </p>
+      ) : null}
       {vue === "frise" && frise.nbPlaces > frise.marqueurs.length ? (
         // Rien n'est caché : ce qui est trop rapproché pour tenir en
         // cartes distinctes est réuni en grappes. On le dit, sinon le

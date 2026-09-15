@@ -31,11 +31,17 @@ const ligne = (id: string, iso: string, statut = "planifiee") => ({
   prescription: null,
 });
 
-const bundle = (lignes: ReturnType<typeof ligne>[]) =>
+const bundle = (
+  lignes: ReturnType<typeof ligne>[],
+  verifsEnRetardSansEcheance = lignes.filter(
+    (l) => l.statut === "a_planifier" && l.datePrevue < jour("2026-09-14"),
+  ).length,
+) =>
   ({
     etablissementId: "etab-1",
     aujourdhui: AUJOURDHUI,
     prochainesVerifs: lignes,
+    echeances: { verifsEnRetardSansEcheance },
   }) as unknown as DashboardBundle;
 
 const occurrences = (texte: string, motif: string) => texte.split(motif).length - 1;
@@ -71,5 +77,35 @@ describe("widget « Prochaines échéances » — les libellés d'une ligne sans
     expect(texte).toContain("Sans échéance connue");
     expect(texte).toContain("Aucune vérification enregistrée");
     expect(texte).not.toContain("À planifier");
+  });
+});
+
+describe("widget « Prochaines échéances » — les retards sans date hors des cinq", () => {
+  /**
+   * 2026-09-15. Les cinq places vont aux échéances connues d'abord : un dossier
+   * qui en a cinq ne montrait plus ses retards sans date, et rien ne le disait.
+   */
+  const cinqConnues = ["2026-09-20", "2026-10-01", "2026-10-15", "2026-11-01", "2026-12-01"].map(
+    (iso, i) => ligne(`c${i}`, iso),
+  );
+
+  it.each(["liste", "timeline"])(
+    "nomme, en variante %s, les retards sans date que la liste laisse dehors",
+    (variant) => {
+      const { container } = render(
+        <WidgetProchainesEcheances bundle={bundle(cinqConnues, 3)} variant={variant} />,
+      );
+      expect(container.textContent).toContain(
+        "Hors de ces cinq : 3 vérifications en retard, sans échéance connue.",
+      );
+    },
+  );
+
+  it("ne dit rien de ceux que la liste montre déjà", () => {
+    const lignes = [...cinqConnues.slice(0, 4), ligne("s1", "2026-09-01", "a_planifier")];
+    const { container } = render(
+      <WidgetProchainesEcheances bundle={bundle(lignes, 1)} variant="liste" />,
+    );
+    expect(container.textContent).not.toContain("Hors de ces cinq");
   });
 });

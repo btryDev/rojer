@@ -100,6 +100,13 @@ export type Frise = {
   marqueurs: MarqueurFrise[];
   /** Échéances placées sur l'axe — grappes comprises. */
   nbPlaces: number;
+  /**
+   * Les libellés des opérations commencées AVANT la fenêtre et posées à son
+   * bord gauche (`place`). La frise s'ouvre cadrée sur aujourd'hui, trois mois
+   * plus loin : leur carte est hors de l'écran, et le tableau de bord les
+   * nomme sous la frise pour qu'on sache qu'il faut défiler (2026-09-15).
+   */
+  auBordGauche: string[];
   mois: GraduationMois[];
 };
 
@@ -309,6 +316,9 @@ export function construireFrise({
     xAujourdhui: x(aujourdhui),
     marqueurs,
     nbPlaces: dansFenetre.length,
+    auBordGauche: dansFenetre
+      .filter((e) => place(e) !== e.date)
+      .map((e) => raccourcirLibelle(e.libelle)),
     mois: construireMois(debut, fin, aujourdhui, pxParJour),
   };
 }

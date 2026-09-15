@@ -75,6 +75,34 @@ function classifier(
   return { tone: "ok", libelleDate: formaterDateCourteFr(v.datePrevue) };
 }
 
+/**
+ * Les vérifications en retard SANS ÉCHÉANCE CONNUE que la liste ne montre pas.
+ *
+ * Les cinq places vont d'abord aux échéances connues (`cinqProchaines`) : dès
+ * qu'un dossier en a cinq, ses retards sans date sortaient du widget sans que
+ * rien ne le dise (2026-09-15). Le compte vient du même agrégat que le reste
+ * du board, sous le même filtre de zone que la liste (`bundle.echeances`).
+ */
+function retardsSansDateHorsListe(bundle: DashboardBundle): number {
+  const { prochainesVerifs, aujourdhui } = bundle;
+  const listes = prochainesVerifs.filter(
+    (v) => estVerificationEnRetard(v, aujourdhui) && !aUnRendezVous(v, aujourdhui),
+  ).length;
+  return Math.max(0, bundle.echeances.verifsEnRetardSansEcheance - listes);
+}
+
+/** La mention, sous la liste — rien quand tout est listé. */
+function MentionRetardsSansDate({ n }: { n: number }) {
+  if (n === 0) return null;
+  return (
+    <p className="m-0 mt-2 text-[11.5px] leading-[1.5] text-[color:var(--board-slate-soft)]">
+      {n > 1
+        ? `Hors de ces cinq : ${n} vérifications en retard, sans échéance connue.`
+        : "Hors de ces cinq : 1 vérification en retard, sans échéance connue."}
+    </p>
+  );
+}
+
 export function WidgetProchainesEcheances({
   bundle,
   variant,
@@ -83,6 +111,7 @@ export function WidgetProchainesEcheances({
   variant: string;
 }) {
   const { prochainesVerifs, etablissementId, aujourdhui } = bundle;
+  const horsListe = retardsSansDateHorsListe(bundle);
 
   if (prochainesVerifs.length === 0) {
     return (
@@ -108,6 +137,7 @@ export function WidgetProchainesEcheances({
           etablissementId={etablissementId}
           aujourdhui={aujourdhui}
         />
+        <MentionRetardsSansDate n={horsListe} />
       </BentoCell>
     );
   }
@@ -212,6 +242,7 @@ export function WidgetProchainesEcheances({
           );
         })}
       </ul>
+      <MentionRetardsSansDate n={horsListe} />
     </BentoCell>
   );
 }
