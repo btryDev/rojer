@@ -1,12 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { cleJourCivil } from "@/lib/dates";
-import {
-  compterLignesAvecPreuve,
-  lignesVisees,
-  SELECT_LIGNE_VISEE,
-  versLigneVisee,
-} from "./preuves";
+import { compterLignesAvecPreuve } from "./preuves";
+import { chargerLignesVisees } from "./lecture-preuves";
 import {
   appliquerPrescriptions,
   determineObligationsApplicables,
@@ -90,15 +86,13 @@ export async function chargerPagePrescriptions(
   // (2026-09-15).
   const preuves = new Map<string, number>(
     await Promise.all(
-      etab.prescriptionsParticulieres.map(async (p) => {
-        const where = lignesVisees(etab.id, p);
-        if (where === null) return [p.id, 0] as const;
-        const lignes = await prisma.verification.findMany({
-          where,
-          select: SELECT_LIGNE_VISEE,
-        });
-        return [p.id, compterLignesAvecPreuve(p, lignes.map(versLigneVisee))] as const;
-      }),
+      etab.prescriptionsParticulieres.map(
+        async (p) =>
+          [
+            p.id,
+            compterLignesAvecPreuve(p, await chargerLignesVisees(etab.id, p)),
+          ] as const,
+      ),
     ),
   );
 

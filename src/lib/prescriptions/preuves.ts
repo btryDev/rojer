@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
 import { estStatutRealise } from "@/lib/dates/retard";
+import { cleJourCivil } from "@/lib/dates";
 
 /**
  * Ce qu'une prescription a produit de probant — la question que pose sa
@@ -21,7 +22,8 @@ import { estStatutRealise } from "@/lib/dates/retard";
  *    justifiait les rapports déposés à son rythme disparaissait.
  *
  * LA RÈGLE : une preuve compte si elle a été faite SOUS l'acte — sur les
- * lignes qu'il vise, par un rapport daté du jour de l'acte ou après. Rien n'est
+ * lignes qu'il vise, par un rapport daté entre le jour de l'acte et celui de sa
+ * levée. Rien n'est
  * deviné : un rapport antérieur à l'acte n'a pas pu être fait sous lui, et un
  * rapport postérieur l'a été, que le produit ait su ou non l'acte à cette date
  * (un arrêté saisi tard reste l'arrêté qui s'appliquait).
@@ -31,7 +33,11 @@ import { estStatutRealise } from "@/lib/dates/retard";
  * porte. Limite écrite : une saisie erronée DATÉE AVANT des rapports existants
  * les compte, et aucune action ne permet de corriger la date d'une
  * prescription — la suppression reste alors refusée, du côté de la
- * conservation. Elle se lève.
+ * conservation. Elle se lève. Seconde limite, théorique à ce jour : les lignes
+ * visées se trouvent par leur `obligationId`. Une succession qui renomme
+ * l'obligation ciblée (`succedeA`, `absorbePar`) déplace les lignes sous un
+ * autre identifiant, et le compte tombe à zéro sans que rien n'ait été
+ * supprimé — le même lien fragile que `prescriptionId`, en plus rare.
  */
 
 export type PrescriptionAPreuver = {
@@ -40,6 +46,8 @@ export type PrescriptionAPreuver = {
   obligationId: string | null;
   equipementId: string | null;
   dateDocument: Date;
+  /** La levée : un rapport daté APRÈS n'a pas été fait sous l'acte. */
+  dateFin: Date | null;
 };
 
 /** Ce que la lecture rend d'une ligne visée. */
@@ -94,7 +102,11 @@ export function versLigneVisee(v: {
  * Une obligation SUR MESURE n'existe que par la prescription : tout ce que ses
  * lignes portent — rapport, action, statut réalisé — a été fait sous elle.
  * Un RENFORCEMENT porte sur une obligation qui existait avant lui : seuls les
- * rapports datés de l'acte ou après comptent. Les actions n'y comptent pas :
+ * rapports datés entre l'acte et sa levée, bornes comprises, comptent. Les
+ * dates se comparent en JOUR CIVIL de Paris (ADR-011) : un rapport daté du jour
+ * de la levée a été fait sous l'acte, quelle que soit l'heure stockée — la
+ * prescription est encore en vigueur ce jour-là (`prescriptionEnVigueur`).
+ * Les actions n'y comptent pas :
  * elles naissent d'un rapport ou d'un constat, et ne disent rien du rythme
  * que l'acte imposait.
  */
@@ -110,8 +122,12 @@ export function compterLignesAvecPreuve(
         estStatutRealise(l.statut),
     ).length;
   }
-  const acte = p.dateDocument.getTime();
-  return lignes.filter((l) =>
-    l.rapports.some((r) => r.dateRapport.getTime() >= acte),
-  ).length;
+  const acte = cleJourCivil(p.dateDocument);
+  const fin = p.dateFin === null ? null : cleJourCivil(p.dateFin);
+  const sousLActe = (d: Date) => {
+    const jour = cleJourCivil(d);
+    return jour >= acte && (fin === null || jour <= fin);
+  };
+  return lignes.filter((l) => l.rapports.some((r) => sousLActe(r.dateRapport)))
+    .length;
 }

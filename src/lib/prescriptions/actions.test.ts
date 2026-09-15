@@ -5,6 +5,9 @@ import {
   type LigneVisee,
   type PrescriptionAPreuver,
 } from "./preuves";
+import { raisonDuRefus } from "./refus-suppression";
+import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
+import { validerPrescription } from "./schema";
 
 // La suppression d'une prescription : ce que le serveur refuse de détruire.
 // La règle est pure (`preuves.ts`) et se teste sur les trois scénarios de la
@@ -51,6 +54,7 @@ const renforcement = (dateDocument: string): PrescriptionAPreuver => ({
   obligationId: "porte-auto-maintien-en-etat",
   equipementId: "eq-portail",
   dateDocument: jour(dateDocument),
+  dateFin: null,
 });
 
 const ligne = (rapports: string[], over: Partial<LigneVisee> = {}): LigneVisee => ({
@@ -135,9 +139,78 @@ describe("preuves faites sous l'acte (2026-09-15)", () => {
   });
 });
 
+describe("bornes de l'acte, en jour civil (2026-09-15)", () => {
+  it("un rapport daté APRÈS la levée n'a pas été fait sous l'acte", () => {
+    const levee = { ...renforcement("2025-12-01"), dateFin: jour("2026-03-01") };
+    expect(compterLignesAvecPreuve(levee, [ligne(["2026-04-15"])])).toBe(0);
+    // Le jour même de la levée, la prescription est encore en vigueur.
+    expect(compterLignesAvecPreuve(levee, [ligne(["2026-03-01"])])).toBe(1);
+  });
+
+  it("compare des JOURS de Paris, pas des instants", () => {
+    // Acte et levée stockés à minuit Paris ; un rapport dont l'instant tombe à
+    // 10 h, heure de Paris, le jour de la levée, a été fait ce jour-là. En
+    // instants, il passait après minuit et sortait de la période.
+    const acte = depuisCleJourCivil("2026-01-10");
+    const fin = depuisCleJourCivil("2026-03-01");
+    const p = { ...renforcement("2026-01-10"), dateDocument: acte, dateFin: fin };
+    const aDixHeures: LigneVisee = {
+      statut: "planifiee",
+      rapports: [{ dateRapport: new Date("2026-03-01T09:00:00Z") }],
+      nbActions: 0,
+    };
+    expect(compterLignesAvecPreuve(p, [aDixHeures])).toBe(1);
+  });
+});
+
+describe("raisonDuRefus — une phrase, sans renvoi circulaire", () => {
+  it("à une prescription LEVÉE, ne dit pas « levez-la »", () => {
+    const r = raisonDuRefus(
+      { effet: "renforce_periodicite", acte: "2025-12-01", fin: "2026-06-30", levee: true },
+      1,
+    );
+    expect(r).toContain("du 01/12/2025 au 30/06/2026");
+    expect(r).not.toMatch(/levez-la/i);
+  });
+
+  it("accorde la liste d'une obligation sur mesure sans « fait » pendant", () => {
+    const r = raisonDuRefus(
+      { effet: "obligation_sur_mesure", acte: "2025-12-01", fin: null, levee: false },
+      2,
+    );
+    expect(r).toContain(
+      "2 vérifications visées par cette prescription portent un rapport, une action corrective ou un contrôle enregistré.",
+    );
+  });
+});
+
+describe("validerPrescription — un acte ne se date pas dans le futur (2026-09-15)", () => {
+  const saisie = (dateDocument: string) =>
+    validerPrescription({
+      effet: "renforce_periodicite",
+      source: "arrete_prefectoral",
+      reference: "Arrêté n° 1",
+      dateDocument,
+      periodicite: "semestrielle",
+      obligationId: "porte-auto-maintien-en-etat",
+      realisateurRequis: [],
+    });
+
+  it("refuse « 2062 » pour « 2026 »", () => {
+    const r = saisie("2062-01-10");
+    expect(r.success).toBe(false);
+    expect(JSON.stringify(r.error?.flatten().fieldErrors.dateDocument)).toContain("futur");
+  });
+
+  it("accepte aujourd'hui et le passé", () => {
+    expect(saisie("2024-05-02").success).toBe(true);
+    expect(saisie(cleJourCivil(new Date())).success).toBe(true);
+  });
+});
+
 describe("supprimerPrescription", () => {
   const poser = (dateDocument: string, rapports: string[]) => {
-    h.etat.prescription = { ...renforcement(dateDocument) };
+    h.etat.prescription = { ...renforcement(dateDocument), actif: true };
     h.etat.lignes = [
       {
         statut: "planifiee",

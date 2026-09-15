@@ -116,7 +116,9 @@ function suffixeMarquage(p: PrescriptionMatching): string {
  * (recevable mais sans effet ici) sans avoir à reconnaître un message.
  */
 export function prescriptionEnVigueur(
-  p: PrescriptionMatching,
+  // La seule date lue : la suppression d'une prescription pose aussi la
+  // question, sur une lecture réduite.
+  p: Pick<PrescriptionMatching, "dateFin">,
   now: Date,
 ): boolean {
   return p.dateFin === null || p.dateFin.getTime() >= now.getTime();

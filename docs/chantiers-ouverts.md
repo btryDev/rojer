@@ -1611,10 +1611,16 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   même quand on retire l'échéance saisie d'un titre `autre` dont la ligne porte
   une action. Non corrigé. **Fermé avec**, relecture du même jour : la
   suppression d'une prescription compte les preuves faites sous l'acte
-  (rapports datés de l'acte ou après, sur les lignes visées), et non plus les
-  lignes qui portent encore son `prescriptionId`, que la régénération retire
-  à la levée (`prescriptions/preuves.ts`). La garde « levée » posée entre-temps
-  est retirée : elle rendait une saisie erronée insupprimable.
+  (rapports datés, en jour civil, de l'acte à sa levée, sur les lignes visées),
+  et non plus les lignes qui portent encore son `prescriptionId`, que la
+  régénération retire à la levée (`prescriptions/preuves.ts`). La garde
+  « levée » posée entre-temps est retirée : elle rendait une saisie erronée
+  insupprimable ; l'écran propose désormais la suppression d'une prescription
+  levée selon le même compte, et dit pourquoi quand il la refuse. **Restent,
+  écrits** : une saisie erronée datée AVANT des rapports existants reste
+  insupprimable (aucune action ne corrige la date — décision en attente) ; une
+  succession qui renomme l'obligation ciblée ferait tomber le compte à zéro
+  (théorique à ce jour).
 - **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.
 - **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors

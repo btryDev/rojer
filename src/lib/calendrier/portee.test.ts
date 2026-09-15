@@ -376,12 +376,18 @@ describe("portantUnePreuve — ce qu'aucune suppression n'emporte (ADR-012)", ()
     // Elles partagent désormais `prescriptions/preuves.ts` (preuves faites SOUS
     // l'acte, statut réalisé compris pour une obligation sur mesure), et ce
     // test tient qu'elles l'emploient toutes les deux, au lieu de la recopier.
+    // La LECTURE aussi est partagée (`chargerLignesVisees`, relecture du même
+    // jour) : écrite deux fois, la page pouvait revenir à `prescriptionId`
+    // en laissant la suite verte.
     expect(code("prescriptions/actions.ts")).toContain(
-      "return compterPreuves(p, lignes.map(versLigneVisee));",
+      "await chargerLignesVisees(etablissementId, existante),",
     );
     expect(code("prescriptions/queries.ts")).toContain(
-      "compterLignesAvecPreuve(p, lignes.map(versLigneVisee))",
+      "compterLignesAvecPreuve(p, await chargerLignesVisees(etab.id, p)),",
     );
+    for (const f of ["prescriptions/actions.ts", "prescriptions/queries.ts"]) {
+      expect(code(f), f).not.toContain("verification.findMany");
+    }
     // Et plus aucune recopie de l'ancienne liste de témoins.
     for (const f of ["equipements/actions.ts", "prescriptions/actions.ts", "prescriptions/queries.ts"]) {
       expect(code(f), f).not.toContain("dateRealisee: { not: null }");

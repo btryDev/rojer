@@ -614,10 +614,15 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      créé une impasse (une saisie erronée sur une ligne déjà contrôlée ne se
      supprimait ni active, ni levée) et laissait passer une prescription
      rattrapée par le référentiel. **Remplacée le même jour** : la suppression
-     compte les preuves faites SOUS l'acte — rapports datés de `dateDocument`
-     ou après, sur les lignes qu'il vise (obligation × appareil), que la ligne
-     porte encore `prescriptionId` ou non (`prescriptions/preuves.ts`). Le
-     compte ne dépend plus de la régénération. Et **aucune version
+     compte les preuves faites SOUS l'acte — rapports datés, en jour civil,
+     de `dateDocument` à la levée comprise, sur les lignes qu'il vise
+     (obligation × appareil), que la ligne porte encore `prescriptionId` ou
+     non (`prescriptions/preuves.ts`) ; un acte ne se date plus dans le
+     futur, et une prescription levée se supprime si rien n'a été fait sous
+     elle. ~~Le compte ne dépend plus de la régénération.~~ Il ne dépend plus
+     de l'effet de la prescription ; **limite, théorique à ce jour** : une
+     succession qui renomme l'obligation ciblée déplace les lignes sous un
+     autre `obligationId`, et le compte tombe à zéro. Et **aucune version
      n'est incrémentée** : un dossier existant ne se réaligne qu'à sa prochaine
      régénération, déclenchée par une mutation (dont la levée d'une
      prescription elle-même) ou par un changement de référentiel ; une levée

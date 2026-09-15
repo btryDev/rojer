@@ -5,15 +5,12 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
-import { depuisCleJourCivil, formaterDateFr } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 import { validerPrescription } from "./schema";
-import {
-  compterLignesAvecPreuve as compterPreuves,
-  lignesVisees,
-  SELECT_LIGNE_VISEE,
-  versLigneVisee,
-  type PrescriptionAPreuver,
-} from "./preuves";
+import { compterLignesAvecPreuve } from "./preuves";
+import { chargerLignesVisees } from "./lecture-preuves";
+import { raisonDuRefus } from "./refus-suppression";
+import { prescriptionEnVigueur } from "@/lib/matching/prescriptions";
 
 /**
  * Prescriptions particulières (ADR-035) — création, levée, suppression.
@@ -104,25 +101,6 @@ export async function creerPrescription(
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
   revalidatePath(`/etablissements/${etablissementId}`);
   return { status: "success", prescriptionId: p.id };
-}
-
-/**
- * Nombre de lignes VISÉES par cette prescription qui portent une preuve faite
- * SOUS l'acte (`prescriptions/preuves.ts`, où vit la règle et son pourquoi).
- * Plus par `Verification.prescriptionId`, que la régénération pose et retire au
- * gré de l'effet de la prescription, pas de l'histoire (2026-09-15).
- */
-async function compterLignesAvecPreuve(
-  etablissementId: string,
-  p: PrescriptionAPreuver,
-): Promise<number> {
-  const where = lignesVisees(etablissementId, p);
-  if (where === null) return 0;
-  const lignes = await prisma.verification.findMany({
-    where,
-    select: SELECT_LIGNE_VISEE,
-  });
-  return compterPreuves(p, lignes.map(versLigneVisee));
 }
 
 /**
@@ -219,26 +197,36 @@ export async function supprimerPrescription(
       obligationId: true,
       equipementId: true,
       dateDocument: true,
+      dateFin: true,
+      actif: true,
     },
   });
   if (!existante) {
     return { status: "error", message: "Prescription introuvable." };
   }
 
-  const avecPreuve = await compterLignesAvecPreuve(etablissementId, existante);
+  // Les lignes VISÉES et les preuves faites SOUS l'acte (`preuves.ts`), plus
+  // `Verification.prescriptionId`, que la régénération pose et retire au gré
+  // de l'effet (2026-09-15). La lecture est celle de la page.
+  const avecPreuve = compterLignesAvecPreuve(
+    existante,
+    await chargerLignesVisees(etablissementId, existante),
+  );
   if (avecPreuve > 0) {
-    const pluriel = avecPreuve > 1;
-    const preuve =
-      existante.effet === "obligation_sur_mesure"
-        ? "un rapport, une action corrective ou un contrôle enregistré"
-        : `un rapport daté du ${formaterDateFr(existante.dateDocument)} ou après`;
     return {
       status: "error",
       message:
-        `Suppression refusée : ${avecPreuve} vérification${pluriel ? "s" : ""} ` +
-        `visée${pluriel ? "s" : ""} par cette prescription porte${pluriel ? "nt" : ""} ` +
-        `${preuve}, fait sous l'acte. Ces contrôles restent justifiés par lui : ` +
-        "la prescription reste au dossier. Pour arrêter son effet, levez-la.",
+        "Suppression refusée : " +
+        raisonDuRefus(
+          {
+            effet: existante.effet,
+            acte: cleJourCivil(existante.dateDocument),
+            fin: existante.dateFin === null ? null : cleJourCivil(existante.dateFin),
+            levee:
+              !existante.actif || !prescriptionEnVigueur(existante, new Date()),
+          },
+          avecPreuve,
+        ),
     };
   }
 

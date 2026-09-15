@@ -203,6 +203,8 @@ export default async function PrescriptionsPage({
                       estLevee={p.etat.etat === "levee"}
                       lignesAvecPreuve={p.lignesAvecPreuve}
                       dateDocument={cleJourCivil(p.dateDocument)}
+                      dateFin={p.dateFin ? cleJourCivil(p.dateFin) : null}
+                      effet={p.effet}
                     />
                   </div>
                 </li>
