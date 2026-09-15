@@ -1379,9 +1379,14 @@ describe("référentiel conformité — version et empreinte", () => {
     // dont la table ci-dessus a été tenue. Si ce repère redevenait la version
     // seule, une empreinte mise à jour en place — sans version neuve — laisserait
     // de nouveau chaque base réconciliée se croire à jour.
-    expect(SCEAU_CALENDRIER).toBe(
-      `${REFERENTIEL_VERSION}+${empreinteReferentiel()}`,
-    );
+    // `startsWith` et non `toBe` depuis le 2026-09-15 : la version du moteur
+    // s'y ajoute dès son premier incrément (`sceauCalendrier`), et c'est
+    // `calendrier/version-moteur.test.ts` qui garde cette partie-là.
+    expect(
+      SCEAU_CALENDRIER.startsWith(
+        `${REFERENTIEL_VERSION}+${empreinteReferentiel()}`,
+      ),
+    ).toBe(true);
   });
 
   it("la version déclarée est la dernière de l'historique", () => {

@@ -36,6 +36,7 @@ import { obligationsCoActivite } from "./co-activite";
 import { obligationsSignalisation } from "./signalisation";
 import { obligationsCompactageDechets } from "./compactage-dechets";
 import { obligationsEclairage } from "./eclairage";
+import { VERSION_MOTEUR_CALENDRIER } from "../../calendrier/version-moteur";
 
 export {
   obligationsElectricite,
@@ -362,8 +363,31 @@ export function empreinteReferentiel(
  *
  * Calculé une fois, au chargement du module : le référentiel ne change pas
  * pendant la vie du processus.
+ *
+ * ET LE MOTEUR, depuis le 2026-09-15 : version et empreinte ne voient que le
+ * contenu, pas le code qui en tire les lignes. `VERSION_MOTEUR_CALENDRIER`
+ * (`calendrier/version-moteur.ts`) s'y ajoute — voir `sceauCalendrier`.
  */
-export const SCEAU_CALENDRIER = `${REFERENTIEL_VERSION}+${empreinteReferentiel()}`;
+export const SCEAU_CALENDRIER = sceauCalendrier(
+  REFERENTIEL_VERSION,
+  empreinteReferentiel(),
+  VERSION_MOTEUR_CALENDRIER,
+);
+
+/**
+ * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la
+ * constante, et le sceau garde la forme que les bases portent déjà — livrer la
+ * constante ne désynchronise aucun dossier. Tout moteur suivant s'y ajoute, et
+ * le premier incrément régénère le parc (2026-09-15).
+ */
+export function sceauCalendrier(
+  version: string,
+  empreinte: string,
+  moteur: number,
+): string {
+  const referentiel = `${version}+${empreinte}`;
+  return moteur === 0 ? referentiel : `${referentiel}+moteur.${moteur}`;
+}
 
 /**
  * Indexation par id pour lookup O(1) côté moteur de matching et snapshot
