@@ -76,14 +76,21 @@ export function classerTitre(
  * moyen d'éteindre le rouge était de retirer le titre — donc la preuve que
  * `docs/rgpd.md` § 4.3 veut garder (relecture du lot, 2026-09-14). Le titre
  * reste affiché, sans rien réclamer.
+ *
+ * NI POUR UN TITRE DONT L'OBLIGATION A QUITTÉ LE RÉFÉRENTIEL. Le générateur ne
+ * lui produit plus de ligne et la réconciliation archive l'ancienne : le
+ * calendrier, le score et le badge ne le réclament plus. Équipe le peignait
+ * « échéance déclarée dépassée » sur sa date de fin saisie (2026-09-15). La
+ * pièce reste une pièce, affichée ; elle ne réclame plus rien.
  */
 export function etatDuTitre(
   titre: DatesDuTitre,
-  periodicite: Periodicite | undefined,
+  obligation: { periodicite: Periodicite } | undefined,
   salarieActif: boolean,
   now: Date,
 ): EtatTitre {
-  return salarieActif ? classerTitre(titre, periodicite, now) : "archivee";
+  if (!salarieActif || obligation === undefined) return "archivee";
+  return classerTitre(titre, obligation.periodicite, now);
 }
 
 const SELECTION_TITRE = {
@@ -122,7 +129,7 @@ export async function listerEquipe(etablissementId: string, now: Date) {
       return {
         ...t,
         libelle: o?.libelle ?? t.obligationId,
-        etat: etatDuTitre(t, o?.periodicite, s.actif, now),
+        etat: etatDuTitre(t, o, s.actif, now),
       };
     }),
   }));
@@ -173,7 +180,7 @@ export async function getSalarie(
         echeance: echeanceDuTitre(t, o?.periodicite),
         /** Le rythme qui a produit une échéance calculée — la fiche le nomme. */
         periodicite: o?.periodicite ?? null,
-        etat: etatDuTitre(t, o?.periodicite, s.actif, now),
+        etat: etatDuTitre(t, o, s.actif, now),
       };
     }),
   };
@@ -206,7 +213,12 @@ export async function compterTitresEnRetard(
     select: { obligationId: true, delivreLe: true, echeanceLe: true },
   });
   return titres.filter((t) => {
-    const echeance = echeanceDuTitre(t, titreParId(t.obligationId)?.periodicite);
+    // Un titre dont l'obligation a quitté le référentiel ne réclame plus rien,
+    // comme au calendrier et sur Équipe (`etatDuTitre`) : sa date de fin
+    // saisie le comptait encore au badge (2026-09-15).
+    const obligation = titreParId(t.obligationId);
+    if (obligation === undefined) return false;
+    const echeance = echeanceDuTitre(t, obligation.periodicite);
     return echeance !== null && estEnRetard(echeance, now);
   }).length;
 }

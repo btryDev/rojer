@@ -86,15 +86,16 @@ export function prochaineEcheanceConnue<T extends VerificationDatee>(
  * échéance connue pour l'instant » alors que l'échéance existait (relecture de
  * contrôle du lot C, 2026-09-14). La prochaine se choisit AVANT la coupe.
  *
- * Les cinq, elles, ne changent pas : le widget des échéances continue
- * d'afficher les lignes sans échéance, qui sont une information pour lui.
+ * Les cinq gardent les lignes sans échéance, APRÈS les échéances connues
+ * (`cinqProchaines`) : elles restent une information pour le widget, sans plus
+ * cacher les vraies échéances (2026-09-15).
  */
 export function echeancesDuTableauDeBord<T extends VerificationDatee>(
   lignes: T[],
   now: Date,
 ): { prochainesVerifs: T[]; prochaineEcheance: T | null } {
   return {
-    prochainesVerifs: cinqProchaines(lignes),
+    prochainesVerifs: cinqProchaines(lignes, now),
     prochaineEcheance: prochaineEcheanceConnue(lignes, now)?.ligne ?? null,
   };
 }

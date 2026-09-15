@@ -248,6 +248,25 @@ describe("construireFrise — proche", () => {
     expect(frise([{ ...ev("op", -20), dateFin: fin(90) }]).marqueurs[0].proche).toBe(false);
   });
 
+  it("une opération commencée avant la fenêtre, qui finit dedans, y entre au bord gauche", () => {
+    // 2026-09-15 : filtrée sur son début, une opération démarrée il y a plus
+    // de trois mois et finissant dans dix jours n'apparaissait pas, quand le
+    // « sous 30 j » du tableau de bord la comptait.
+    const fin = (n: number) => {
+      const d = new Date(LE_8_AOUT);
+      d.setDate(d.getDate() + n);
+      return d;
+    };
+    const f = frise([{ ...ev("op", -150), dateFin: fin(10) }]);
+    expect(f.marqueurs).toHaveLength(1);
+    expect(f.marqueurs[0].x).toBe(0);
+    expect(f.marqueurs[0].proche).toBe(true);
+    // Sa carte garde sa vraie date de début.
+    expect(f.marqueurs[0].sousTitre).toContain("2026");
+    // Finie avant la fenêtre, elle n'y entre pas.
+    expect(frise([{ ...ev("op", -150), dateFin: fin(-120) }]).marqueurs).toHaveLength(0);
+  });
+
   it("une seule échéance proche suffit à la grappe", () => {
     const f = frise([ev("a", 28), ev("b", 33)]);
     expect(f.marqueurs).toHaveLength(1);

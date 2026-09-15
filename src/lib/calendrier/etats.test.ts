@@ -458,17 +458,39 @@ describe("statutDeLaLecture (ADR-034)", () => {
 });
 
 describe("la date des lectures est l'échéance OUVERTE", () => {
+  const ligneDatee = (iso: string, id: string, statut = "planifiee") => ({
+    id,
+    datePrevue: new Date(iso),
+    statut,
+    periodicite: "annuelle",
+    archiveLe: null,
+    libelleObligation: `Obligation ${id}`,
+  });
+
   it("`cinqProchaines` trie sur la date portée et coupe à cinq", () => {
-    const d = (iso: string, id: string) => ({ id, datePrevue: new Date(iso) });
     const lignes = [
-      d("2027-08-10T00:00:00Z", "gelee-projetee"),
-      d("2026-09-01T00:00:00Z", "a"),
-      d("2026-08-25T00:00:00Z", "b"),
-      d("2026-10-01T00:00:00Z", "c"),
-      d("2026-11-01T00:00:00Z", "d"),
-      d("2026-12-01T00:00:00Z", "e"),
+      ligneDatee("2027-08-10T00:00:00Z", "gelee-projetee"),
+      ligneDatee("2026-09-01T00:00:00Z", "a"),
+      ligneDatee("2026-08-25T00:00:00Z", "b"),
+      ligneDatee("2026-10-01T00:00:00Z", "c"),
+      ligneDatee("2026-11-01T00:00:00Z", "d"),
+      ligneDatee("2026-12-01T00:00:00Z", "e"),
     ];
-    expect(cinqProchaines(lignes).map((l) => l.id)).toEqual(["b", "a", "c", "d", "e"]);
+    expect(cinqProchaines(lignes, NOW).map((l) => l.id)).toEqual(["b", "a", "c", "d", "e"]);
+  });
+
+  it("`cinqProchaines` range les échéances connues avant les lignes sans échéance", () => {
+    // 2026-09-15 : six « à planifier » d'un dossier neuf, datées de leur
+    // génération, cachaient la vraie échéance du 15/10 aux cinq places.
+    const lignes = [
+      ...["p1", "p2", "p3", "p4", "p5", "p6"].map((id) =>
+        ligneDatee("2026-08-01T00:00:00Z", id, "a_planifier"),
+      ),
+      ligneDatee("2026-10-15T00:00:00Z", "vraie"),
+    ];
+    const cinq = cinqProchaines(lignes, NOW).map((l) => l.id);
+    expect(cinq[0]).toBe("vraie");
+    expect(cinq).toHaveLength(5);
   });
 });
 

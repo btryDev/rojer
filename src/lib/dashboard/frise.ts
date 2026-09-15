@@ -212,9 +212,16 @@ export function construireFrise({
   // fonction a longtemps rendu son propre `nbEnRetard`, que plus personne ne
   // lisait — un second compteur en sommeil finit toujours par diverger du
   // premier le jour où quelqu'un le rebranche.
+  // OÙ POSER UNE OPÉRATION COMMENCÉE AVANT LA FENÊTRE. Filtrée sur son début,
+  // une opération démarrée il y a plus de trois mois et finissant dans dix
+  // jours n'apparaissait pas, quand le « sous 30 j » du tableau de bord la
+  // comptait (2026-09-15). Tant que sa fin tombe dans la fenêtre, elle y
+  // entre, posée au bord gauche ; sa carte garde sa vraie date de début.
+  const place = (e: EvenementFrise): Date =>
+    e.date < debut && e.dateFin && e.dateFin >= debut ? debut : e.date;
   const dansFenetre = evenements
-    .filter((e) => e.date >= debut && e.date <= fin)
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+    .filter((e) => place(e) >= debut && place(e) <= fin)
+    .sort((a, b) => place(a).getTime() - place(b).getTime());
 
   // Regroupement : rien n'est écarté. Tout ce qui tomberait à moins de
   // ECART_MIN_PX de la première échéance du groupe rejoint ce groupe, et
@@ -224,7 +231,7 @@ export function construireFrise({
   const groupes: EvenementFrise[][] = [];
   for (const e of dansFenetre) {
     const groupe = groupes[groupes.length - 1];
-    if (groupe && x(e.date) - x(groupe[0].date) < ECART_MIN_PX) {
+    if (groupe && x(place(e)) - x(place(groupe[0])) < ECART_MIN_PX) {
       groupe.push(e);
     } else {
       groupes.push([e]);
@@ -268,8 +275,8 @@ export function construireFrise({
         : groupe.some((e) => e.tone === "warn")
           ? "warn"
           : "ok",
-      x: x(premier.date),
-      xFin: x(dernier.date),
+      x: x(place(premier)),
+      xFin: x(place(dernier)),
       cote: i % 2 === 0 ? "haut" : "bas",
       passe: evenements.every((e) => e.passe),
       proche: groupe.some((e) => {

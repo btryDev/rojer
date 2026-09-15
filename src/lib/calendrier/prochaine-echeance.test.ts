@@ -110,12 +110,13 @@ describe("echeancesDuTableauDeBord — la prochaine se choisit avant la coupe à
     );
   });
 
-  it("et ne change rien aux cinq prochaines, lignes sans échéance comprises", () => {
-    // Le widget « Prochaines échéances » lit la même liste et doit continuer
-    // d'afficher les lignes à planifier.
+  it("les cinq prochaines rangent la vraie échéance en tête, les lignes sans échéance ensuite", () => {
+    // CE TEST A CHANGÉ DE RÉPONSE (2026-09-15). Il attendait p1…p5 : les cinq
+    // « à planifier » cachaient la vraie échéance du 15/10 au widget
+    // « Prochaines échéances ». Elles y restent, derrière elle.
     expect(
       echeancesDuTableauDeBord(lignes, NOW).prochainesVerifs.map((l) => l.id),
-    ).toEqual(["p1", "p2", "p3", "p4", "p5"]);
+    ).toEqual(["vraie", "p1", "p2", "p3", "p4"]);
   });
 
   it("rend `null` quand aucune ligne n'a d'échéance connue", () => {

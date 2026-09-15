@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { echeanceDuTitre } from "./echeance";
-import { classerTitre } from "./queries";
+import { classerTitre, etatDuTitre } from "./queries";
 import { titreParId } from "./catalogue";
 import { genererVerificationsDepuisTitres } from "@/lib/calendrier/generateur";
 import type { Obligation } from "@/lib/referentiels/conformite";
@@ -102,14 +102,17 @@ describe("l'échéance saisie prime sur le calcul", () => {
 
   it("et reste l'échéance quand l'obligation ne résout plus au référentiel", () => {
     // Un titre déclaré sur une obligation retirée : la pièce n'a pas changé
-    // parce que le catalogue a changé.
+    // parce que le catalogue a changé — sa date reste sa date.
     //
-    // DIVERGENCE ASSUMÉE, et c'est le seul cas de ce fichier où le générateur
-    // n'est pas interrogé : il ne produit aucune ligne pour une obligation
-    // qu'il ne connaît plus, quand la page Équipe continue de dire la pièce
-    // échue. Écart antérieur au lot, laissé tel quel : la pièce EST échue, et
-    // l'incertitude ne réduit jamais la couverture (relecture du lot).
+    // L'ÉTAT, LUI, SUIT LE CALENDRIER DEPUIS LE 2026-09-15. Le générateur ne
+    // produit aucune ligne pour une obligation qu'il ne connaît plus ; la page
+    // Équipe disait pourtant la pièce « échéance déclarée dépassée », et le
+    // badge du rail la comptait. Ce n'est pas une incertitude : le retrait
+    // d'une obligation est une décision du référentiel. Le titre se lit
+    // « Ne s'applique plus », comme la ligne archivée du calendrier.
     expect(echeanceDuTitre(titre, undefined)).toEqual(civile("2023-06-01"));
+    expect(etatDuTitre(titre, undefined, true, NOW)).toBe("archivee");
+    expect(etatDuTitre(titre, VIP, true, NOW)).toBe("enRetard");
   });
 });
 

@@ -779,9 +779,11 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        rail ; la fiche d'une personne affiche l'échéance calculée, le dit
        (« Échéance calculée dépassée », « délivrance + quinquennale ») et le
        titre d'une personne SORTIE ne réclame plus rien (« archivée », comme
-       au calendrier et au badge). Aucune migration. Seul écart restant, assumé
+       au calendrier et au badge). Aucune migration. ~~Seul écart restant, assumé
        et testé : un titre dont l'obligation a quitté le référentiel reste échu
-       sur Équipe, sans ligne au calendrier. ~~La
+       sur Équipe, sans ligne au calendrier~~ — fermé le 2026-09-15 : il se lit
+       « Ne s'applique plus » sur Équipe et sort du badge du rail, comme sa ligne
+       du calendrier (`etatDuTitre`). ~~La
        « prochaine échéance » d'un appareil se calcule deux fois (tableau de
        bord sans les retards, vue équipement avec)~~ — fermé le 2026-09-14 :
        une définition,

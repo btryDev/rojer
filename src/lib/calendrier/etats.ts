@@ -375,10 +375,26 @@ function statutDuRegistre(
  * doit dépendre d'aucune lecture que la base ferait autrement que le code (un
  * `take` en base avait chassé une vraie échéance proche, relecture externe du
  * 2026-09-13).
+ *
+ * LES ÉCHÉANCES CONNUES D'ABORD, puis les lignes sans échéance pour compléter.
+ * Triées sur `datePrevue` brute, les « à planifier » d'un dossier neuf, datées
+ * de leur génération, occupaient les cinq places et cachaient les vraies
+ * échéances du widget « Prochaines échéances » (2026-09-15). Leur retard reste
+ * dit ailleurs — bloc « À faire », notes de la frise, compteurs.
  */
-export function cinqProchaines<T extends { datePrevue: Date }>(lignes: T[]): T[] {
+export function cinqProchaines<T extends VerificationDatee>(
+  lignes: T[],
+  now: Date,
+): T[] {
+  const connue = (l: T) => aUnRendezVous(l, now);
   return [...lignes]
-    .sort((a, b) => a.datePrevue.getTime() - b.datePrevue.getTime())
+    .sort((a, b) =>
+      connue(a) !== connue(b)
+        ? connue(a)
+          ? -1
+          : 1
+        : a.datePrevue.getTime() - b.datePrevue.getTime(),
+    )
     .slice(0, 5);
 }
 

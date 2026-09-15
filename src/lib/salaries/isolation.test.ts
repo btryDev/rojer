@@ -247,7 +247,7 @@ beforeEach(() => {
     {
       id: "titre-a",
       salarieId: "sal-a",
-      obligationId: "attestation_medicale_r4544_11_1",
+      obligationId: "elec-salarie-attestation-medicale-voisinage",
       delivreLe: new Date("2021-01-15T00:00:00+01:00"),
       echeanceLe: ECHUE,
       note: null,
@@ -255,7 +255,7 @@ beforeEach(() => {
     {
       id: "titre-b",
       salarieId: "sal-b",
-      obligationId: "attestation_medicale_r4544_11_1",
+      obligationId: "elec-salarie-attestation-medicale-voisinage",
       delivreLe: new Date("2021-01-15T00:00:00+01:00"),
       echeanceLe: ECHUE,
       note: null,
@@ -266,7 +266,7 @@ beforeEach(() => {
     {
       id: "titre-a-partie",
       salarieId: "sal-a-partie",
-      obligationId: "habilitation_electrique_bs_be",
+      obligationId: "elec-salarie-habilitation",
       delivreLe: new Date("2020-06-01T00:00:00+02:00"),
       echeanceLe: ECHUE,
       note: null,
@@ -414,6 +414,23 @@ describe("le propriétaire lit son propre dossier", () => {
     expect(fiche?.titres.find((t) => t.id === "titre-a-vip")?.echeance).toEqual(
       new Date("2025-06-01T12:00:00.000Z"),
     );
+  });
+
+  it("un titre dont l'obligation a quitté le référentiel ne réclame plus rien, au badge comme à l'écran", async () => {
+    // 2026-09-15 : le calendrier ne lui produit plus de ligne, mais sa date de
+    // fin saisie le peignait « échéance déclarée dépassée » sur Équipe et le
+    // comptait au badge du rail.
+    h.db.titres.push({
+      id: "titre-a-retire",
+      salarieId: "sal-a",
+      obligationId: "obligation-retiree-du-referentiel",
+      delivreLe: new Date("2020-06-01T12:00:00.000Z"),
+      echeanceLe: ECHUE,
+      note: null,
+    });
+    expect(await compterTitresEnRetard(ETAB_A, NOW)).toBe(1);
+    const [martin] = await listerEquipe(ETAB_A, NOW);
+    expect(martin.titres.find((t) => t.id === "titre-a-retire")?.etat).toBe("archivee");
   });
 
   it("libellesTitresDeclares décrit AUSSI le titre d'une personne partie", async () => {
