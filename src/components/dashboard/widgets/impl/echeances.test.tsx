@@ -108,4 +108,15 @@ describe("widget « Prochaines échéances » — les retards sans date hors des
     );
     expect(container.textContent).not.toContain("Hors de ces cinq");
   });
+
+  it("ne compte hors de la liste que ceux qu'elle ne montre pas", () => {
+    // Quatre retards sans date au dossier, un seul a trouvé sa place.
+    const lignes = [...cinqConnues.slice(0, 4), ligne("s1", "2026-09-01", "a_planifier")];
+    const { container } = render(
+      <WidgetProchainesEcheances bundle={bundle(lignes, 4)} variant="liste" />,
+    );
+    expect(container.textContent).toContain(
+      "Hors de ces cinq : 3 vérifications en retard, sans échéance connue.",
+    );
+  });
 });
