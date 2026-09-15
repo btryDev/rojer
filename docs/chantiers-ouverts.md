@@ -1624,11 +1624,14 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   liste l'obligation (ni événementielle, ni ponctuelle, ni titre de salarié).
   Sur la fiche équipement, deux défauts antérieurs sont fermés : le chapeau
   disait « Une vérification est due » au-dessus de « 5 vérifications en
-  retard » (`chapeauAFaire`), et la carte « À faire » annonçait 5 lignes pour
-  en montrer 4 sans rien dire du reste (`mentionResteAFaire`). **Fermé avec**, relecture du même jour : la
+  retard » — il dit « 5 vérifications sont dues, et aucune n'est enregistrée »
+  (`chapeauAFaire`) —, et la carte « À faire » annonçait 5 lignes pour en
+  montrer 4 sans rien dire du reste (`mentionResteAFaire`, qui ne renvoie au
+  calendrier que si le reste y figure : des vérifications avec rendez-vous). **Fermé avec**, relecture du même jour : la
   suppression d'une prescription compte les preuves faites sous l'acte
-  (rapports datés, en jour civil, de l'acte à la veille de sa levée, sur les
-  lignes visées ; une levée ne peut plus précéder le dernier d'entre eux),
+  (rapports datés, en jour civil, de l'acte ou après, sans borne de levée, sur
+  les lignes visées ; ~~une levée ne peut plus précéder le dernier d'entre
+  eux~~ — garde retirée : la levée garde la date de la pièce),
   et non plus les lignes qui portent encore son `prescriptionId`, que la
   régénération retire à la levée (`prescriptions/preuves.ts`). La garde
   « levée » posée entre-temps est retirée : elle rendait une saisie erronée

@@ -22,9 +22,17 @@ import { cleJourCivil } from "@/lib/dates";
  *    justifiait les rapports déposés à son rythme disparaissait.
  *
  * LA RÈGLE : une preuve compte si elle a été faite SOUS l'acte ET PILOTÉE PAR
- * LUI dans Rojer — sur les lignes qu'il vise, par un rapport daté entre le
- * jour de l'acte et celui de sa levée, et ENREGISTRÉ après la saisie de la
- * prescription (`rapport.createdAt ≥ prescription.createdAt`). Rien n'est
+ * LUI dans Rojer — sur les lignes qu'il vise, par un rapport daté du jour de
+ * l'acte ou après, et ENREGISTRÉ après la saisie de la prescription
+ * (`rapport.createdAt ≥ prescription.createdAt`).
+ *
+ * SANS BORNE DE LEVÉE (2026-09-15, relecture d'intégration). Bornée à la
+ * levée, une levée antidatée vidait le compte et rendait l'acte supprimable ;
+ * la garde posée alors sur la levée empêchait d'enregistrer sa vraie date — un
+ * rapport et un PV de levée du même jour, un organisme passé après la levée au
+ * titre de son contrat. La levée garde la date de la pièce, et c'est la
+ * suppression qui protège : ce qui a été déposé sous la prescription reste
+ * compté, levée ou non. Rien n'est
  * deviné : un rapport antérieur à l'acte n'a pas pu être fait sous lui, et un
  * rapport déposé avant la saisie a roulé au rythme du référentiel, puisque la
  * ligne ne connaissait pas encore la prescription.
@@ -53,8 +61,6 @@ export type PrescriptionAPreuver = {
   obligationId: string | null;
   equipementId: string | null;
   dateDocument: Date;
-  /** La levée : un rapport daté APRÈS n'a pas été fait sous l'acte. */
-  dateFin: Date | null;
   /** La saisie dans Rojer : un rapport enregistré avant n'a pas roulé à son
    *  rythme. */
   createdAt: Date;
@@ -111,13 +117,10 @@ export function versLigneVisee(v: {
  *
  * Une obligation SUR MESURE n'existe que par la prescription : tout ce que ses
  * lignes portent — rapport, action, statut réalisé — a été fait sous elle.
- * Un RENFORCEMENT porte sur une obligation qui existait avant lui : seuls les
- * rapports datés du jour de l'acte à la VEILLE de sa levée comptent. Les dates
- * se comparent en JOUR CIVIL de Paris (ADR-011), comme la vigueur elle-même
- * (`prescriptionEnVigueur`) : le jour de la levée, l'acte ne produit plus
- * d'effet. ~~Un rapport daté du jour de la levée a été fait sous l'acte~~ — la
- * phrase contredisait le moteur, qui tient la prescription levée ce jour-là
- * (relecture du 2026-09-15).
+ * Un RENFORCEMENT porte sur une obligation qui existait avant lui : seuls
+ * comptent les rapports datés du jour de l'acte ou après — en JOUR CIVIL de
+ * Paris (ADR-011) — et déposés après la saisie. ~~Jusqu'à la veille de sa
+ * levée~~ : la borne est retirée, voir l'en-tête.
  * Les actions n'y comptent pas :
  * elles naissent d'un rapport ou d'un constat, et ne disent rien du rythme
  * que l'acte imposait.
@@ -134,46 +137,14 @@ export function compterLignesAvecPreuve(
         estStatutRealise(l.statut),
     ).length;
   }
-  return lignes.filter((l) => l.rapports.some((r) => faitSousLActe(p, r))).length;
-}
-
-/**
- * Un rapport a-t-il été fait sous l'acte d'un renforcement ? La règle, écrite
- * une fois : le compte des preuves et la garde de la levée la partagent.
- */
-function faitSousLActe(
-  p: PrescriptionAPreuver,
-  r: { dateRapport: Date; createdAt: Date },
-): boolean {
-  const jour = cleJourCivil(r.dateRapport);
-  if (jour < cleJourCivil(p.dateDocument)) return false;
-  if (p.dateFin !== null && jour >= cleJourCivil(p.dateFin)) return false;
-  // En INSTANTS, et c'est voulu : deux horodatages d'enregistrement, pas des
-  // dates civiles saisies. Un rapport déposé le jour même de la saisie, avant
-  // elle, n'a pas roulé à son rythme.
-  return r.createdAt.getTime() >= p.createdAt.getTime();
-}
-
-/**
- * La date du dernier rapport fait sous l'acte, SANS borne de levée — ce qu'une
- * levée ne peut pas précéder (2026-09-15). Levée « au 01/06/2024 » après deux
- * rapports déposés en 2025 au rythme de l'acte, la prescription ne comptait
- * plus aucune preuve et se laissait supprimer : l'antidate effaçait ce que
- * l'acte avait fait faire. `null` : rien n'a été fait sous lui.
- */
-export function dernierRapportSousLActe(
-  p: PrescriptionAPreuver,
-  lignes: ReadonlyArray<LigneVisee>,
-): Date | null {
-  const ouverte = { ...p, dateFin: null };
-  let dernier: Date | null = null;
-  for (const l of lignes) {
-    for (const r of l.rapports) {
-      if (p.effet === "renforce_periodicite" && !faitSousLActe(ouverte, r)) continue;
-      if (dernier === null || r.dateRapport.getTime() > dernier.getTime()) {
-        dernier = r.dateRapport;
-      }
-    }
-  }
-  return dernier;
+  const acte = cleJourCivil(p.dateDocument);
+  // `createdAt` en INSTANTS, et c'est voulu : deux horodatages d'enregistrement,
+  // pas des dates civiles saisies. Un rapport déposé le jour même de la saisie,
+  // avant elle, n'a pas roulé à son rythme.
+  const saisie = p.createdAt.getTime();
+  return lignes.filter((l) =>
+    l.rapports.some(
+      (r) => cleJourCivil(r.dateRapport) >= acte && r.createdAt.getTime() >= saisie,
+    ),
+  ).length;
 }

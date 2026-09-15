@@ -5,9 +5,9 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
-import { cleJourCivil, depuisCleJourCivil, formaterDateFr } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 import { validerPrescription } from "./schema";
-import { compterLignesAvecPreuve, dernierRapportSousLActe } from "./preuves";
+import { compterLignesAvecPreuve } from "./preuves";
 import { chargerLignesVisees } from "./lecture-preuves";
 import { raisonDuRefus } from "./refus-suppression";
 import { estPrescriptionLevee } from "@/lib/matching/prescriptions";
@@ -127,15 +127,7 @@ export async function leverPrescription(
 
   const existante = await prisma.prescriptionParticuliere.findFirst({
     where: { id: prescriptionId, etablissementId },
-    select: {
-      id: true,
-      effet: true,
-      obligationId: true,
-      equipementId: true,
-      dateDocument: true,
-      dateFin: true,
-      createdAt: true,
-    },
+    select: { dateDocument: true },
   });
   if (!existante) {
     return { status: "error", message: "Prescription introuvable." };
@@ -151,24 +143,12 @@ export async function leverPrescription(
     };
   }
 
-  // NI UN CONTRÔLE FAIT SOUS L'ACTE (2026-09-15). Levée « au 01/06/2024 »
-  // après deux rapports déposés en 2025 à son rythme, la prescription ne
-  // comptait plus aucune preuve — la période de l'acte s'arrêtait avant eux —
-  // et se laissait supprimer. Le jour de la levée, l'acte ne produit plus
-  // d'effet : la levée doit tomber APRÈS le dernier rapport fait sous lui. La
-  // règle est celle du compte des preuves (`preuves.ts`), pas une recopie.
-  const dernier = dernierRapportSousLActe(
-    existante,
-    await chargerLignesVisees(etablissementId, existante),
-  );
-  if (dernier !== null && cleJourCivil(date) <= cleJourCivil(dernier)) {
-    return {
-      status: "error",
-      message:
-        `La levée doit être postérieure au ${formaterDateFr(dernier)} : un rapport ` +
-        "de cette date a été fait au rythme de cette prescription.",
-    };
-  }
+  // (Une garde refusait ici une levée antérieure au dernier rapport fait sous
+  // l'acte. Retirée le 2026-09-15 : elle empêchait d'enregistrer la vraie date
+  // de la pièce — un PV de levée du jour d'un rapport, un organisme passé après
+  // la levée au titre de son contrat — et affirmait un « rythme » que rien ne
+  // prouvait. La suppression compte désormais les preuves sans borne de
+  // levée : antidater ne rend plus rien supprimable.)
 
   await prisma.prescriptionParticuliere.update({
     where: { id: prescriptionId, etablissementId },
@@ -249,7 +229,6 @@ export async function supprimerPrescription(
           {
             effet: existante.effet,
             acte: cleJourCivil(existante.dateDocument),
-            fin: existante.dateFin === null ? null : cleJourCivil(existante.dateFin),
             levee: estPrescriptionLevee(existante, new Date()),
           },
           avecPreuve,

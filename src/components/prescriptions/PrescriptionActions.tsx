@@ -42,7 +42,6 @@ export function PrescriptionActions({
   estLevee,
   lignesAvecPreuve,
   dateDocument,
-  dateFin,
   effet,
 }: {
   etablissementId: string;
@@ -51,8 +50,6 @@ export function PrescriptionActions({
   lignesAvecPreuve: number;
   /** Borne basse de la date de levée : une levée ne précède pas son acte. */
   dateDocument: string;
-  /** Jour de la levée (« AAAA-MM-JJ »), ou `null`. */
-  dateFin: string | null;
   effet: "renforce_periodicite" | "obligation_sur_mesure";
 }) {
   const [ouvert, setOuvert] = useState(false);
@@ -112,7 +109,7 @@ export function PrescriptionActions({
         ) : (
           <p className="m-0 max-w-[62ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             {`Suppression indisponible : ${raisonDuRefus(
-              { effet, acte: dateDocument, fin: dateFin, levee: estLevee },
+              { effet, acte: dateDocument, levee: estLevee },
               lignesAvecPreuve,
             )}`}
           </p>

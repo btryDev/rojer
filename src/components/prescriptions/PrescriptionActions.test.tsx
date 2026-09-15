@@ -22,7 +22,6 @@ const rendre = (estLevee: boolean, lignesAvecPreuve: number) =>
       estLevee={estLevee}
       lignesAvecPreuve={lignesAvecPreuve}
       dateDocument="2025-12-01"
-      dateFin={estLevee ? "2026-06-30" : null}
       effet="renforce_periodicite"
     />,
   );
@@ -40,7 +39,7 @@ describe("PrescriptionActions — la suppression suit le compte du serveur", () 
     rendre(true, 2);
     expect(screen.queryByRole("button", { name: "Supprimer" })).toBeNull();
     const raison = screen.getByText(/Suppression indisponible/).textContent ?? "";
-    expect(raison).toContain("du 01/12/2025 à la veille de sa levée du 30/06/2026");
+    expect(raison).toContain("du 01/12/2025 ou après");
     expect(raison).not.toMatch(/levez-la/i);
   });
 

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   compterLignesAvecPreuve,
-  dernierRapportSousLActe,
   lignesVisees,
   type LigneVisee,
   type PrescriptionAPreuver,
@@ -56,7 +55,6 @@ const renforcement = (dateDocument: string): PrescriptionAPreuver => ({
   obligationId: "porte-auto-maintien-en-etat",
   equipementId: "eq-portail",
   dateDocument: jour(dateDocument),
-  dateFin: null,
   // Saisie ancienne par défaut : les tests de dates d'acte n'en dépendent pas.
   createdAt: jour("2020-01-01"),
 });
@@ -144,34 +142,31 @@ describe("preuves faites sous l'acte (2026-09-15)", () => {
   });
 });
 
-describe("bornes de l'acte, en jour civil (2026-09-15)", () => {
-  it("un rapport daté APRÈS la levée n'a pas été fait sous l'acte", () => {
-    const levee = { ...renforcement("2025-12-01"), dateFin: jour("2026-03-01") };
-    expect(compterLignesAvecPreuve(levee, [ligne(["2026-04-15"])])).toBe(0);
-    // ~~Le jour même de la levée, la prescription est encore en vigueur.~~ Faux,
-    // et contraire au moteur : « cesse de produire effet le 01/03 » veut dire
-    // qu'elle n'en produit plus ce jour-là (relecture du 2026-09-15). La veille
-    // compte ; le jour même, non.
-    expect(compterLignesAvecPreuve(levee, [ligne(["2026-02-28"])])).toBe(1);
-    expect(compterLignesAvecPreuve(levee, [ligne(["2026-03-01"])])).toBe(0);
+describe("aucune borne de levée dans le compte (2026-09-15, relecture d'intégration)", () => {
+  it("un rapport déposé sous la prescription compte encore après une levée, même antidatée", () => {
+    // ~~Un rapport daté APRÈS la levée n'a pas été fait sous l'acte.~~ La borne
+    // rendait supprimable un acte levé « au 01/06/2024 » après deux rapports de
+    // 2025. Le compte ne lit plus la levée : `PrescriptionAPreuver` ne la porte
+    // même plus.
+    expect(compterLignesAvecPreuve(renforcement("2024-01-01"), [ligne(["2025-03-10"])])).toBe(1);
   });
 
   it("compare des JOURS de Paris, pas des instants", () => {
-    // Levée stockée à minuit UTC le 1er mars (1 h à Paris) ; un rapport à 0 h 30
-    // à Paris le même 1er mars est un instant ANTÉRIEUR à la levée. En instants,
-    // il comptait ; en jours, il tombe le jour de la levée, et ne compte pas.
-    const p = { ...renforcement("2026-01-10"), dateFin: jour("2026-03-01") };
-    const aMinuitTrente: LigneVisee = {
+    // Acte stocké à minuit UTC le 10 janvier (1 h à Paris) ; un rapport daté du
+    // même jour à minuit Paris est un instant ANTÉRIEUR à l'acte. En instants,
+    // il ne comptait pas ; en jours, il est du jour de l'acte, et compte.
+    const p = renforcement("2026-01-10");
+    const minuitParis: LigneVisee = {
       statut: "planifiee",
       rapports: [
         {
-          dateRapport: new Date("2026-02-28T23:30:00Z"),
-          createdAt: new Date("2026-02-28T23:30:00Z"),
+          dateRapport: new Date("2026-01-09T23:00:00Z"),
+          createdAt: new Date("2026-01-10T10:00:00Z"),
         },
       ],
       nbActions: 0,
     };
-    expect(compterLignesAvecPreuve(p, [aMinuitTrente])).toBe(0);
+    expect(compterLignesAvecPreuve(p, [minuitParis])).toBe(1);
   });
 });
 
@@ -214,16 +209,16 @@ describe("option B — seuls comptent les rapports déposés après la saisie (2
 describe("raisonDuRefus — une phrase, sans renvoi circulaire", () => {
   it("à une prescription LEVÉE, ne dit pas « levez-la »", () => {
     const r = raisonDuRefus(
-      { effet: "renforce_periodicite", acte: "2025-12-01", fin: "2026-06-30", levee: true },
+      { effet: "renforce_periodicite", acte: "2025-12-01", levee: true },
       1,
     );
-    expect(r).toContain("du 01/12/2025 à la veille de sa levée du 30/06/2026");
+    expect(r).toContain("du 01/12/2025 ou après");
     expect(r).not.toMatch(/levez-la/i);
   });
 
   it("accorde la liste d'une obligation sur mesure sans « fait » pendant", () => {
     const r = raisonDuRefus(
-      { effet: "obligation_sur_mesure", acte: "2025-12-01", fin: null, levee: false },
+      { effet: "obligation_sur_mesure", acte: "2025-12-01", levee: false },
       2,
     );
     expect(r).toContain(
@@ -256,14 +251,16 @@ describe("validerPrescription — un acte ne se date pas dans le futur (2026-09-
   });
 });
 
-describe("leverPrescription — une levée ne précède pas un contrôle fait sous l'acte (2026-09-15)", () => {
-  // Le scénario de la relecture : acte du 01/01/2024 saisi le jour même, deux
-  // rapports déposés en 2025 à son rythme, puis levée « au 01/06/2024 ». Le
-  // compte tombait à zéro et la suppression passait.
-  const poser = () => {
+describe("leverPrescription — la levée garde la date de la pièce (2026-09-15)", () => {
+  // La garde qui refusait une levée antérieure au dernier rapport est retirée :
+  // elle empêchait d'enregistrer la vraie date. C'est la suppression qui
+  // protège désormais, en comptant les preuves sans borne de levée.
+  const poser = (effet: "renforce_periodicite" | "obligation_sur_mesure" = "renforce_periodicite") => {
     h.etat.prescription = {
       ...renforcement("2024-01-01"),
+      effet,
       createdAt: new Date("2024-01-01T09:00:00Z"),
+      dateFin: null,
       actif: true,
     };
     h.etat.lignes = [
@@ -283,39 +280,30 @@ describe("leverPrescription — une levée ne précède pas un contrôle fait so
     return leverPrescription("etab-1", "presc-1", { status: "idle" }, fd);
   };
 
-  it("refuse une levée antidatée avant le dernier rapport, et dit la date", async () => {
+  it("accepte une levée le jour même d'un rapport (le PV et le rapport du même jour)", async () => {
     poser();
-    const res = await lever("2024-06-01");
+    expect((await lever("2025-09-12")).status).toBe("success");
+  });
+
+  it("accepte une levée antidatée, et la suppression reste refusée", async () => {
+    poser();
+    expect((await lever("2024-06-01")).status).toBe("success");
+    // Levée désormais « au 01/06/2024 » : les rapports de 2025 comptent encore.
+    h.etat.prescription = { ...h.etat.prescription, dateFin: jour("2024-06-01") };
+    const res = await supprimerPrescription("etab-1", "presc-1");
     expect(res.status).toBe("error");
-    expect(res.status === "error" ? res.message : "").toContain("12/09/2025");
-    expect(h.prisma.prescriptionParticuliere.update).not.toHaveBeenCalled();
+    expect(h.prisma.prescriptionParticuliere.delete).not.toHaveBeenCalled();
   });
 
-  it("refuse aussi une levée le jour même du dernier rapport : l'acte n'y produit plus d'effet", async () => {
-    poser();
-    expect((await lever("2025-09-12")).status).toBe("error");
-  });
-
-  it("accepte une levée postérieure au dernier rapport", async () => {
-    poser();
-    const res = await lever("2025-09-13");
-    expect(res.status).toBe("success");
-    expect(h.prisma.prescriptionParticuliere.update).toHaveBeenCalledTimes(1);
-  });
-
-  it("le dernier rapport sous l'acte ignore la borne de levée, et ce qui précède la saisie", () => {
-    const p = { ...renforcement("2024-01-01"), dateFin: jour("2024-06-01"), createdAt: jour("2024-01-01") };
-    expect(dernierRapportSousLActe(p, [ligne(["2023-05-01", "2025-09-12", "2025-03-10"])]))
-      .toEqual(jour("2025-09-12"));
-    expect(
-      dernierRapportSousLActe({ ...p, createdAt: jour("2026-01-01") }, [ligne(["2025-09-12"])]),
-    ).toBeNull();
+  it("une obligation sur mesure se lève à la date voulue", async () => {
+    poser("obligation_sur_mesure");
+    expect((await lever("2024-06-01")).status).toBe("success");
   });
 });
 
 describe("supprimerPrescription", () => {
   const poser = (dateDocument: string, rapports: string[]) => {
-    h.etat.prescription = { ...renforcement(dateDocument), actif: true };
+    h.etat.prescription = { ...renforcement(dateDocument), dateFin: null, actif: true };
     h.etat.lignes = [
       {
         statut: "planifiee",
