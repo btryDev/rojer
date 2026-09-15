@@ -89,11 +89,11 @@ export type Brief = {
   datePill: string;
   titre: string;
   /**
-   * La légende du relevé « Dépassées » : « dont 5 sans date connue », ou
-   * `null` quand toutes les échéances comptées sont datées. Le titre nomme la
-   * part sans date ; le relevé posé dessous gardait son seul nombre, et
-   * « DÉPASSÉES 14 » contredisait « dont cinq sans date connue » soixante
-   * pixels plus haut (2026-09-15). Le mot de l'état ne change pas
+   * La légende du relevé « Dépassées » : « dont 5 sans date connue », « toutes
+   * sans date connue », ou `null` quand toutes les échéances comptées sont
+   * datées. Le titre nomme la part sans date ; le relevé posé dessous gardait
+   * son seul nombre, et « DÉPASSÉES 14 » contredisait « dont cinq sans date
+   * connue » soixante pixels plus haut (2026-09-15). Le mot de l'état ne change pas
    * (`LIBELLE_ETAT`) : la légende précise ce qu'il compte.
    */
   precisionReleveRetard: string | null;
@@ -186,6 +186,15 @@ const TONS_ALERTE: ReadonlySet<RecoBrief["kind"]> = new Set([
 ]);
 
 /**
+ * Parmi les retards, ceux qui n'ont pas d'échéance connue — la part que le
+ * titre et la légende du relevé nomment. Bornée par le total : les deux
+ * compteurs sortent de lectures distinctes.
+ */
+function retardsSansDate(e: EntreeBrief): number {
+  return Math.min(e.verifsEnRetardSansEcheance, e.retards.total);
+}
+
+/**
  * Le titre du hero — et ce qu'il a le droit de dire.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -234,15 +243,6 @@ const TONS_ALERTE: ReadonlySet<RecoBrief["kind"]> = new Set([
  * compter une occurrence de quatre mois et vérifie qu'elle entre bien dans le
  * titre. Le jour où une fenêtre serait posée, elle tombe.
  */
-/**
- * Parmi les retards, ceux qui n'ont pas d'échéance connue — la part que le
- * titre et la légende du relevé nomment. Bornée par le total : les deux
- * compteurs sortent de lectures distinctes.
- */
-function retardsSansDate(e: EntreeBrief): number {
-  return Math.min(e.verifsEnRetardSansEcheance, e.retards.total);
-}
-
 function construireTitre(e: EntreeBrief): string {
   const urgent = e.retards.total;
   if (urgent > 0) {
@@ -436,8 +436,14 @@ export function construireBrief(e: EntreeBrief): Brief {
   return {
     datePill: formaterDate(e.aujourdhui),
     titre,
+    // « toutes » quand aucune n'est datée : « DÉPASSÉES 5, dont 5 sans date
+    // connue » se lisait comme deux ensembles (relecture, 2026-09-15).
     precisionReleveRetard:
-      sansDate > 0 ? `dont ${sansDate} sans date connue` : null,
+      sansDate === 0
+        ? null
+        : sansDate === e.retards.total
+          ? "toutes sans date connue"
+          : `dont ${sansDate} sans date connue`,
     paragraphe: construireParagraphe(e),
     gestes,
   };

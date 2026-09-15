@@ -102,6 +102,13 @@ describe("construireBrief — titre", () => {
     });
     expect(datees.precisionReleveRetard).toBeNull();
     expect(construireBrief(CALME).precisionReleveRetard).toBeNull();
+
+    const toutes = construireBrief({
+      ...CALME,
+      retards: ventil({ controle: 5 }),
+      verifsEnRetardSansEcheance: 5,
+    });
+    expect(toutes.precisionReleveRetard).toBe("toutes sans date connue");
   });
 
   it("le paragraphe ne compte pas « dépassées » les vérifications sans date connue", () => {
