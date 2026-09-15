@@ -6,7 +6,7 @@ import { chargerLignesVisees } from "./lecture-preuves";
 import {
   appliquerPrescriptions,
   determineObligationsApplicables,
-  prescriptionEnVigueur,
+  estPrescriptionLevee,
   type PrescriptionMatching,
 } from "@/lib/matching";
 import { obligationParId } from "@/lib/referentiels/conformite";
@@ -133,7 +133,7 @@ export async function chargerPagePrescriptions(
     const raison = ignorees.get(p.id);
     if (!p.actif) {
       etat = { etat: "levee", detail: "Désactivée." };
-    } else if (!prescriptionEnVigueur(p, now)) {
+    } else if (estPrescriptionLevee(p, now)) {
       // Fin d'effet datée et atteinte : « levée », pas « ignorée ». Le
       // prédicat est celui du moteur, pas une reconnaissance de message.
       etat = {

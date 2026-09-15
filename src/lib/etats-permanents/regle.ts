@@ -200,6 +200,22 @@ export function modeDeclaration(
 }
 
 /**
+ * L'obligation figure-t-elle sur l'écran « Ce qui doit être en place » ?
+ *
+ * Écrite pour les liens qui y MÈNENT (2026-09-15) : la fiche équipement et la
+ * fiche de vérification renvoyaient à cet écran des obligations qu'il ne liste
+ * pas — une événementielle (« après modification »), une ponctuelle (la
+ * déclaration ICPE), et tous les titres de salarié, que le moteur ne rend pas
+ * à l'écran (ADR-023, `listerEtatsPermanents`). Même règle que l'écran : un
+ * mode de déclaration, et un porteur qui n'est pas un salarié. Sans surcharge :
+ * un lien n'est posé que sur une ligne sans rendez-vous, donc sans surcharge
+ * en vigueur.
+ */
+export function figureSurLEcranEnPlace(o: Obligation): boolean {
+  return o.porteur !== "salarie" && modeDeclaration(o) !== null;
+}
+
+/**
  * Le mode de déclaration d'une obligation **telle qu'elle s'applique à CE
  * dossier** — surcharge de prescription comprise.
  *

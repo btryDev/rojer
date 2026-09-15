@@ -38,6 +38,16 @@ describe("registre de sécurité — vérifications en attente", () => {
     }
   });
 
+  it("écarte une ligne sans rendez-vous, comme l'écran du registre (limite 1)", () => {
+    // `autre` + « à planifier » : aucune échéance attendue. Retenue, elle
+    // s'imprimait « À planifier — sans échéance connue » dans le document remis
+    // en contrôle, quand l'écran dit « sans rendez-vous », sans pastille.
+    expect(estEnAttenteDeRapport(ligne("a_planifier", ACTIVE, "autre"))).toBe(false);
+    // Le témoin : une ligne `autre` « planifiée » — un titre à échéance
+    // saisie — attend bien son rapport.
+    expect(estEnAttenteDeRapport(ligne("planifiee", ACTIVE, "autre"))).toBe(true);
+  });
+
   it("écarte une ligne dont l'obligation ne s'applique plus", () => {
     // Le statut est le MÊME que celui du cas retenu ci-dessus : c'est
     // `archiveLe`, et lui seul, qui doit faire la différence.

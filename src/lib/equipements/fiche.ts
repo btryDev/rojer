@@ -36,7 +36,17 @@ import {
   determineObligationsApplicables,
   projeterEtablissement,
 } from "@/lib/matching";
-import { estDeclencheeParUnFait } from "@/lib/etats-permanents/regle";
+import {
+  estDeclencheeParUnFait,
+  figureSurLEcranEnPlace,
+} from "@/lib/etats-permanents/regle";
+
+/** Le lien « Ce qui doit être en place » ne se pose que si l'écran liste
+ *  l'obligation. Une obligation inconnue du référentiel n'y est pas. */
+function menesALEcranEnPlace(obligationId: string): boolean {
+  const o = obligationParId(obligationId);
+  return o !== undefined && figureSurLEcranEnPlace(o);
+}
 
 /**
  * L'équipement, ses lignes de suivi, leurs rapports et les actions qu'elles
@@ -168,12 +178,13 @@ export function lignesAFaire(
             ? LIBELLE_AUCUNE_VERIFICATION
             : // SANS RENDEZ-VOUS (limite 1, 2026-09-15) : « à caler avec votre
               // prestataire » promettait un rendez-vous que l'obligation n'a
-              // pas. Elle se tient en place, et le lien y mène.
+              // pas. Elle se tient en place, et le lien y mène — SEULEMENT si
+              // l'écran la liste (`figureSurLEcranEnPlace`) ; sinon la fiche.
               etat === "sansRendezVous"
               ? `${LIBELLE_SANS_RENDEZ_VOUS} — à tenir en place`
               : `${LIBELLE_SANS_ECHEANCE} — à caler avec votre prestataire`,
         href:
-          etat === "sansRendezVous"
+          etat === "sansRendezVous" && menesALEcranEnPlace(v.obligationId)
             ? `${base}/etats-permanents`
             : `${base}/verifications/${v.id}`,
       });
@@ -295,6 +306,66 @@ export function phraseSansEcheance(nbVerifications: number, nbCorrections: numbe
   const suite =
     nbVerifications === 0 ? "sans échéance fixée" : "sans échéance connue pour l'instant";
   return `${sujet.charAt(0).toUpperCase()}${sujet.slice(1)} ${verbe} sur cet appareil, ${suite}`;
+}
+
+/**
+ * Le chapeau de « à faire » : ce qui est attendu, sans verdict (sans le point
+ * final, la page y ajoute la trace). Sorti de la page pour être éprouvé.
+ *
+ * LA TÊTE SANS DATE disait « Une vérification est due, et aucune n'est
+ * enregistrée » — au singulier, même au-dessus de la pastille « 5 vérifications
+ * en retard » (contrôle visuel du 2026-09-15, antérieur au lot). Elle prend
+ * désormais `phraseSansEcheance`, sur les lignes SANS DATE, accordée et au bon
+ * genre. Une ligne « sans rendez-vous » n'y entre pas : « sans échéance connue
+ * pour l'instant » promettrait une échéance qu'elle n'aura pas.
+ */
+export function chapeauAFaire(
+  aFaire: ReadonlyArray<Pick<LigneAFaire, "date" | "etat" | "genre">>,
+  tete: Pick<LigneAFaire, "date" | "etat" | "genre"> | null,
+  maintenant: Date,
+): string {
+  if (tete?.date) {
+    return tete.genre === "action"
+      ? `Un écart reste à lever ${libelleDelai(tete, maintenant, "phrase")}`
+      : `Une vérification est attendue ${libelleDelai(tete, maintenant, "phrase")}`;
+  }
+  const sansDate = aFaire.filter(
+    (l) => l.date === null && l.etat !== "sansRendezVous",
+  );
+  if (sansDate.length > 0) {
+    return phraseSansEcheance(
+      sansDate.filter((l) => l.genre === "verification").length,
+      sansDate.filter((l) => l.genre === "action").length,
+    );
+  }
+  const sansRendezVous = aFaire.filter((l) => l.etat === "sansRendezVous").length;
+  if (sansRendezVous > 0) {
+    return sansRendezVous > 1
+      ? "Des obligations sans rendez-vous sont ouvertes sur cet appareil, sans contrôle attendu à une date"
+      : "Une obligation sans rendez-vous est ouverte sur cet appareil, sans contrôle attendu à une date";
+  }
+  return "Aucune échéance n'est ouverte sur cet appareil à ce jour";
+}
+
+/** Combien de lignes la carte « À faire » montre. */
+export const LIGNES_A_FAIRE_VISIBLES = 4;
+
+/**
+ * Ce que la carte « À faire » tait au-delà de ses quatre lignes, dit comme au
+ * tableau de bord (« N autres en retard — voir le calendrier »). Elle annonçait
+ * 5 et en listait 4, sans rien de plus (contrôle visuel du 2026-09-15). `null` :
+ * tout est montré.
+ */
+export function mentionResteAFaire(
+  aFaire: ReadonlyArray<Pick<LigneAFaire, "etat">>,
+): string | null {
+  const caches = aFaire.slice(LIGNES_A_FAIRE_VISIBLES);
+  const n = caches.length;
+  if (n === 0) return null;
+  const enRetard = caches.filter((l) => l.etat === "enRetard").length;
+  return `${n} autre${n > 1 ? "s" : ""} ${
+    enRetard === n ? "en retard" : "à faire"
+  } — voir le calendrier`;
 }
 
 /**

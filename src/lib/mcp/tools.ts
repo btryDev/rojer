@@ -426,7 +426,9 @@ function formaterVerifications(verifs: VerificationLue[]): string {
       // est ici l'échéance ouverte (`mcp/queries.ts`).
       // Et SANS ÉCHÉANCE CONNUE, on le dit au lieu d'imprimer la date de
       // génération comme une échéance (relecture système du 2026-09-14).
-      estVerificationRealisee(v)
+      // Sans rendez-vous : l'état le dit déjà, juste après. « sans échéance
+      // connue » promettait une échéance à venir (limite 1, 2026-09-15).
+      estVerificationRealisee(v) || v.etat === "sans_rendez_vous"
         ? null
         : v.echeanceConnue
           ? `échéance ${formaterDateFr(v.datePrevue)}`

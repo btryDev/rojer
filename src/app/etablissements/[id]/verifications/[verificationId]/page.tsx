@@ -45,6 +45,7 @@ import {
 } from "@/lib/calendrier/labels";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { obligationParId } from "@/lib/referentiels/conformite";
+import { figureSurLEcranEnPlace } from "@/lib/etats-permanents/regle";
 import {
   estPorteeParEquipement,
   estPorteeParSalarie,
@@ -246,7 +247,12 @@ export default async function VerificationDetailPage({
             // n'est dû à une date, l'état se tient en place (ADR-027).
             cle: "Date",
             valeur: LIBELLE_SANS_RENDEZ_VOUS,
-            note: "Cette obligation n'a pas de rythme : elle se tient en place, sur « Ce qui doit être en place ».",
+            // L'écran n'est nommé que s'il liste l'obligation : ni une
+            // événementielle, ni une ponctuelle, ni un titre de salarié.
+            note:
+              obligation !== undefined && figureSurLEcranEnPlace(obligation)
+                ? "Cette obligation n'a pas de rythme : elle se tient en place, sur « Ce qui doit être en place »."
+                : "Cette obligation n'a pas de rythme : aucun contrôle n'est attendu à une date.",
           }
         : sansRendezVous
         ? {
