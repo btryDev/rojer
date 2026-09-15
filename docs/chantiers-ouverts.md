@@ -1574,10 +1574,23 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   l'historique git — elle n'a jamais été écrite. Sa seule lecture est implicite :
   le client Prisma la sélectionne sur toute requête `Verification` sans `select`.
   Il n'y a donc aucune écriture à retirer ; le retrait se fait en deux
-  déploiements — le champ quitte `schema.prisma` sans migration, puis la
-  migration `DROP COLUMN` — et attend la décision de la propriétaire.
+  déploiements et attend la décision de la propriétaire.
   `Etablissement.referentielVersionCalendrier`, le repère réellement lu, n'est
-  pas concerné.
+  pas concerné. ~~Premier déploiement : le champ quitte `schema.prisma` sans
+  migration~~ — **faux, relevé à la relecture** : `.github/workflows/derive-schema.yml`
+  compare les migrations au schéma à chaque push et casserait. Le plan juste,
+  vérifié le 2026-09-15 sur Prisma 6.19.3 installé, sans base :
+  1. **déploiement 1** — `referentielVersion String? @ignore` (`schema.prisma:603`),
+     sans migration. `migrate diff` schéma à schéma rend « empty migration »,
+     donc le workflow reste vert ; le client généré ne porte plus le champ (64
+     occurrences dans `index.d.ts` sans `@ignore`, 0 avec) ;
+  2. **déploiement 2**, poussé seulement quand le 1 est en production — la
+     preview lance `migrate deploy` sur la production dès le push : le champ
+     retiré du schéma et, dans le même commit, la migration
+     `ALTER TABLE "Verification" DROP COLUMN IF EXISTS "referentielVersion";` ;
+  3. **risques résiduels** : une preview d'une branche antérieure au
+     déploiement 1, ou un rollback Vercel en deçà, lit la colonne disparue →
+     P2022.
 - **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.
 - **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors
