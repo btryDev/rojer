@@ -1,0 +1,47 @@
+# Tests unitaires à chaque push (2026-09-15).
+#
+# Motivation — aucun job ne lançait vitest : ni ce dépôt, ni le build Vercel.
+# Les garde-fous écrits en tests (le relevé du moteur du calendrier, la table
+# des porteurs, les accords SQL/TypeScript des prédicats de retard) ne
+# tombaient donc que si quelqu'un pensait à lancer la suite en local avant de
+# fusionner.
+#
+# Aucun secret, aucun accès à une base : les tests passent par le faux Prisma.
+# Les variables ci-dessous ne servent qu'à charger le schéma (`prisma generate`
+# au postinstall) et les modules qui lisent la configuration Supabase.
+
+name: Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  vitest:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgresql://factice:factice@localhost:5432/factice
+      DIRECT_URL: postgresql://factice:factice@localhost:5432/factice
+      NEXT_PUBLIC_SUPABASE_URL: https://factice.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: factice
+      # Même fuseau que les postes de développement : quelques tests de la
+      # frise comparent des libellés de date calculés dans le fuseau local.
+      TZ: Europe/Paris
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Lancer la suite
+        run: pnpm vitest run --maxWorkers=2

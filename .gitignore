@@ -29,6 +29,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+# Sortie de `pnpm dev` redirigée : un journal local, jamais versionné.
+dev.log
 
 # Claude Code runtime
 .claude/scheduled_tasks.lock
