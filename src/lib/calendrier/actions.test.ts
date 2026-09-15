@@ -25,7 +25,7 @@
 //     du produit, pas du test (cf. `docs/chantiers-ouverts.md` § 11, lot 2).
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SCEAU_CALENDRIER } from "@/lib/referentiels/conformite";
+import { SCEAU_CALENDRIER } from "./version-moteur";
 import type { EquipementFaux, LigneFausse } from "./faux-prisma";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 
