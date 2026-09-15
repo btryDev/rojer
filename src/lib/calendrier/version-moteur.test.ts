@@ -26,36 +26,47 @@ import {
  * se poser la question, ce que `REFERENTIEL_VERSION` avait fait le 2026-09-10.
  *
  * CE QUI EST RELEVÉ : la passe de régénération (`calendrier/actions.ts`) et
- * tout ce qu'elle importe à l'exécution dans `src/`, de proche en proche — le
- * réconciliateur, le matching, l'arithmétique des dates, l'échéance d'un
- * titre, et les tables de `referentiels/types-communs.ts`
- * (`PERIODICITE_CALENDAIRE`, `PERIODICITE_EN_JOURS`) et le code de
- * `referentiels/conformite/types.ts` (`porteurDe`…). La liste se calcule : un
- * module que le moteur se met à importer entre dans le relevé sans qu'on y
- * pense. Chaque module est relevé TRANSPILÉ — types et commentaires retirés —,
- * si bien qu'un commentaire daté ou une annotation de type ne font rien tomber.
- * De `referentiels/conformite/index.ts`, les seules DÉCLARATIONS DE FONCTIONS
- * (`obligationParId`, `empreinteReferentiel`, `canonique`…) : ni
- * `REFERENTIEL_VERSION`, qui ferait tomber le test à chaque version, ni les
- * données, ni ses imports. La première rédaction excluait tout le fichier et
- * prétendait son code scellé par construction : faux — `obligationParId` qui
- * normaliserait l'identifiant ne bougeait ni l'empreinte ni le relevé
- * (relecture du 2026-09-15). S'y ajoute une DONNÉE que le moteur lit et que
- * l'empreinte ne hache pas : la table retiré → absorbant de
+ * tout ce qu'elle importe à l'exécution dans `src/`, de proche en proche. La
+ * liste se calcule, et un fichier y entre PAR DÉFAUT : un module que le moteur
+ * se met à importer, ou qu'on extrait d'un module déjà relevé, est relevé sans
+ * qu'on y pense. Chaque module est relevé TRANSPILÉ — types et commentaires
+ * retirés —, si bien qu'un commentaire daté ou une annotation de type ne font
+ * rien tomber.
+ *
+ * Une exception de forme : de `referentiels/conformite/index.ts`, qui mêle
+ * code, données et `REFERENTIEL_VERSION`, on ne relève que les FONCTIONS — une
+ * déclaration `function`, ou une constante qui vaut une fonction fléchée ou une
+ * expression de fonction — que le moteur importe, et celles qu'elles appellent
+ * dans le même fichier. Pas `REFERENTIEL_VERSION`, qui ferait tomber le test à
+ * chaque version ; pas `obligationsParDomaine` ni `empreinteReferentiel`, que
+ * le moteur n'importe pas (une empreinte qui calcule autrement change le sceau
+ * d'elle-même). Ses imports, eux, sont suivis. TROU CONNU : une déclaration
+ * d'`index.ts` qui n'est pas une fonction mais que ces fonctions lisent — le
+ * cache `let _index` d'`obligationParId` — n'est pas relevée. S'y ajoute une DONNÉE que le
+ * moteur lit et que l'empreinte ne hache pas : la table retiré → absorbant de
  * `OBLIGATIONS_RETIREES`, retraits sans absorbant exclus — le moteur les ignore.
  *
  * CE QUI NE L'EST PAS, et pourquoi — vérifié en lisant `empreinteReferentiel` :
- *  · les DONNÉES du référentiel (`referentiels/conformite/`, hors `types.ts`) et
- *    le corpus (`referentiels/corpus/`). L'empreinte hache, par obligation,
- *    l'identifiant, la périodicité, `premierDelai`, le libellé, les
- *    réalisateurs, les typologies, les conditions, les catégories, le porteur,
- *    le contexte d'équipement et `succedeA` : tout ce que la régénération
- *    recopie ou dont elle déduit une ligne. Trou connu : les déclarations de
- *    `index.ts` qui ne sont pas des fonctions (`let _index`, la composition de
- *    `obligationsConformite`) ne sont pas relevées ;
+ *  · les fichiers de DONNÉES du référentiel, nommés un par un dans
+ *    `DONNEES_REFERENTIEL` : les domaines et `veille-textes.ts`. L'empreinte
+ *    hache, par obligation, l'identifiant, la périodicité, `premierDelai`, le
+ *    libellé, les réalisateurs, les typologies, les conditions, les catégories,
+ *    le porteur, le contexte d'équipement et `succedeA` — sur la liste
+ *    `obligationsConformite` telle qu'`index.ts` la compose, si bien que la
+ *    composition elle-même est scellée. `veille-textes.ts` ne produit rien au
+ *    calendrier. Un test fait tomber la liste si l'un de ses fichiers disparaît ;
  *  · `calendrier/version-moteur.ts`, qui porte la constante elle-même ;
  *  · l'accès aux données (`lib/prisma`) et la garde de session (`lib/auth/`),
  *    qui ne décident d'aucune ligne ; les imports de type seul ; les paquets.
+ *
+ * RELEVÉS SANS ÉCRIRE, et laissés : `rapports/schema.ts` et
+ * `prescriptions/sources.ts` sont relevés en entier alors que le moteur n'en
+ * lit qu'une part — `statutDepuisResultat` et `RESULTATS_REALISES`, qui
+ * décident d'un statut écrit ; `estSourceContractuelle`, qui ne marque que des
+ * raisons. Les écarter demanderait de relever par nom dans ces fichiers aussi,
+ * ou une liste d'exclusion qu'un usage futur en écriture rendrait fausse sans
+ * bruit. Le prix : ils peuvent faire tomber le test pour une retouche
+ * d'affichage — réponse NON.
  *
  * Une montée de TypeScript, ou du lockfile qui le fixe, peut changer la sortie
  * du transpileur, donc le relevé, sans qu'aucune règle ait bougé : recopier le
@@ -67,17 +78,41 @@ const RACINE = fileURLToPath(new URL("../../..", import.meta.url));
 const ENTREE = "src/lib/calendrier/actions.ts";
 const INDEX_REFERENTIEL = "src/lib/referentiels/conformite/index.ts";
 
+/**
+ * Les fichiers de données du référentiel, que l'empreinte scelle. Une liste
+ * EXPLICITE, et non « tout le dossier sauf… » : un fichier neuf sous
+ * `conformite/` — du code extrait d'`index.ts`, par exemple — entre dans le
+ * relevé par défaut au lieu d'en sortir en silence.
+ */
+const DONNEES_REFERENTIEL = [
+  "aeration",
+  "ascenseurs",
+  "co-activite",
+  "compactage-dechets",
+  "cuisson-hotte",
+  "eclairage",
+  "electricite",
+  "epi",
+  "equipement-sous-pression",
+  "formation-securite",
+  "froid",
+  "incendie",
+  "information-travailleurs",
+  "levage",
+  "locaux-sociaux",
+  "organisation-prevention",
+  "portes-portails",
+  "sante-travail",
+  "secours",
+  "signalisation",
+  "stockage-dangereux",
+  "veille-textes",
+].map((nom) => `src/lib/referentiels/conformite/${nom}.ts`);
+
 /** Chemins posix relatifs à la racine, séparateurs normalisés. */
 function estHorsReleve(chemin: string): boolean {
   if (chemin === "src/lib/calendrier/version-moteur.ts") return true;
-  if (chemin.startsWith("src/lib/referentiels/corpus/")) return true;
-  if (
-    chemin.startsWith("src/lib/referentiels/conformite/") &&
-    chemin !== "src/lib/referentiels/conformite/types.ts" &&
-    chemin !== INDEX_REFERENTIEL
-  ) {
-    return true;
-  }
+  if (DONNEES_REFERENTIEL.includes(chemin)) return true;
   return chemin === "src/lib/prisma.ts" || chemin.startsWith("src/lib/auth/");
 }
 
@@ -88,7 +123,7 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 0,
-  empreinte: "613e07b1fca257bb",
+  empreinte: "36766d2e7b27f5ea",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
@@ -109,34 +144,76 @@ function resoudre(depuis: string, specifieur: string): string | null {
   return null;
 }
 
+function lire(chemin: string): ts.SourceFile {
+  return ts.createSourceFile(
+    chemin,
+    readFileSync(surDisque(chemin), "utf8"),
+    ts.ScriptTarget.Latest,
+    false,
+    chemin.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+}
+
+/** Les fonctions nommées d'un fichier : `function`, ou constante fonction. */
+function fonctionsDe(source: ts.SourceFile): Map<string, string> {
+  const fonctions = new Map<string, string>();
+  for (const instruction of source.statements) {
+    if (ts.isFunctionDeclaration(instruction) && instruction.name) {
+      fonctions.set(instruction.name.text, instruction.getText(source));
+    } else if (ts.isVariableStatement(instruction)) {
+      for (const d of instruction.declarationList.declarations) {
+        if (
+          ts.isIdentifier(d.name) &&
+          d.initializer !== undefined &&
+          (ts.isArrowFunction(d.initializer) ||
+            ts.isFunctionExpression(d.initializer))
+        ) {
+          fonctions.set(d.name.text, instruction.getText(source));
+        }
+      }
+    }
+  }
+  return fonctions;
+}
+
+/**
+ * Les fonctions d'`index.ts` que le moteur importe, et celles qu'elles
+ * appellent dans le fichier, de proche en proche. `null` = tout (import par
+ * espace de noms).
+ */
+function fonctionsReleveesDeLIndex(
+  source: ts.SourceFile,
+  importees: Set<string> | null,
+): string {
+  const fonctions = fonctionsDe(source);
+  const retenues = new Set<string>();
+  const aVoir = importees === null ? [...fonctions.keys()] : [...importees];
+  while (aVoir.length > 0) {
+    const nom = aVoir.pop()!;
+    const texte = fonctions.get(nom);
+    if (texte === undefined || retenues.has(nom)) continue;
+    retenues.add(nom);
+    for (const mot of texte.match(/[A-Za-z_$][\w$]*/g) ?? []) {
+      if (fonctions.has(mot) && !retenues.has(mot)) aVoir.push(mot);
+    }
+  }
+  return [...retenues]
+    .sort()
+    .map((nom) => fonctions.get(nom)!)
+    .join("\n");
+}
+
 /** Les modules du moteur, de proche en proche depuis la passe de régénération. */
 function modulesDuMoteur(): Map<string, string> {
-  const vus = new Map<string, string>();
+  const sources = new Map<string, ts.SourceFile>();
+  // Ce que les modules relevés importent d'`index.ts`, par nom.
+  let importeesDeLIndex: Set<string> | null = new Set();
   const aVisiter = [ENTREE];
   while (aVisiter.length > 0) {
     const chemin = versPosix(aVisiter.pop()!);
-    if (vus.has(chemin) || estHorsReleve(chemin)) continue;
-    const texte = readFileSync(surDisque(chemin), "utf8");
-    const source = ts.createSourceFile(
-      chemin,
-      texte,
-      ts.ScriptTarget.Latest,
-      false,
-      chemin.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-    );
-    if (chemin === INDEX_REFERENTIEL) {
-      // Ses seules FONCTIONS : pas `REFERENTIEL_VERSION`, pas les données, et
-      // pas ses imports — les fichiers de données, que l'empreinte scelle.
-      vus.set(
-        chemin,
-        source.statements
-          .filter(ts.isFunctionDeclaration)
-          .map((f) => f.getText(source))
-          .join("\n"),
-      );
-      continue;
-    }
-    vus.set(chemin, texte);
+    if (sources.has(chemin) || estHorsReleve(chemin)) continue;
+    const source = lire(chemin);
+    sources.set(chemin, source);
     for (const instruction of source.statements) {
       const estImport =
         ts.isImportDeclaration(instruction) &&
@@ -147,10 +224,37 @@ function modulesDuMoteur(): Map<string, string> {
       const specifieur = instruction.moduleSpecifier;
       if (specifieur === undefined || !ts.isStringLiteral(specifieur)) continue;
       const cible = resoudre(chemin, specifieur.text);
-      if (cible !== null) aVisiter.push(cible);
+      if (cible === null) continue;
+      aVisiter.push(cible);
+      if (cible !== INDEX_REFERENTIEL || chemin === INDEX_REFERENTIEL) continue;
+      const liaisons = ts.isImportDeclaration(instruction)
+        ? instruction.importClause?.namedBindings
+        : instruction.exportClause;
+      if (
+        liaisons === undefined ||
+        ts.isNamespaceImport(liaisons) ||
+        ts.isNamespaceExport(liaisons)
+      ) {
+        importeesDeLIndex = null;
+      } else if (importeesDeLIndex !== null) {
+        for (const e of liaisons.elements) {
+          if (!e.isTypeOnly) {
+            importeesDeLIndex.add((e.propertyName ?? e.name).text);
+          }
+        }
+      }
     }
   }
-  return vus;
+  const textes = new Map<string, string>();
+  for (const [chemin, source] of sources) {
+    textes.set(
+      chemin,
+      chemin === INDEX_REFERENTIEL
+        ? fonctionsReleveesDeLIndex(source, importeesDeLIndex)
+        : source.getFullText(),
+    );
+  }
+  return textes;
 }
 
 function releverLeMoteur(): { empreinte: string; modules: string[] } {
@@ -199,6 +303,9 @@ describe("VERSION_MOTEUR_CALENDRIER — le code du moteur scelle aussi le calend
         "  · NON (renommage, extraction, affichage) : recopiez l'empreinte seule.\n" +
         "  · Une montée de TypeScript ou du lockfile peut aussi le faire tomber sans " +
         "qu'aucune règle ait changé : c'est NON.\n" +
+        "  · Un absorbant modifié AVEC le retrait d'une obligation déplace déjà " +
+        "l'empreinte du référentiel, donc le sceau : l'incrément y est superflu, " +
+        "sans danger.\n" +
         `Modules relevés : ${modules.join(", ")}.`,
     ).toBe(RELEVE.empreinte);
   });
@@ -214,6 +321,44 @@ describe("VERSION_MOTEUR_CALENDRIER — le code du moteur scelle aussi le calend
     expect(modules).toContain("src/lib/calendrier/generateur.ts");
     expect(modules).toContain("src/lib/referentiels/conformite/index.ts");
     expect(modules).not.toContain("src/lib/calendrier/version-moteur.ts");
+  });
+
+  it("de l'index du référentiel, seules les fonctions que le moteur importe sont relevées", () => {
+    const index = modulesDuMoteur().get(INDEX_REFERENTIEL) ?? "";
+    expect(index).toContain("function obligationParId");
+    expect(index).not.toContain("obligationsParDomaine");
+    expect(index).not.toContain("REFERENTIEL_VERSION");
+  });
+
+  it("de l'index, une fonction appelée par une fonction importée est relevée, fléchée comprise", () => {
+    const source = ts.createSourceFile(
+      "index.ts",
+      [
+        "const aide = (id: string) => id.trim();",
+        "const expression = function (x: number) { return x; };",
+        "export function importee(id: string) { return aide(id); }",
+        "export function inutile() { return expression(1); }",
+      ].join("\n"),
+      ts.ScriptTarget.Latest,
+    );
+    const releve = fonctionsReleveesDeLIndex(source, new Set(["importee"]));
+    expect(releve).toContain("function importee");
+    expect(releve).toContain("const aide");
+    expect(releve).not.toContain("inutile");
+    expect(releve).not.toContain("expression");
+    expect(fonctionsReleveesDeLIndex(source, null)).toContain("const expression");
+  });
+
+  it("chaque fichier de données exclu du relevé existe encore", () => {
+    // Sans ceci, la liste pourrit : un fichier renommé y resterait nommé pour
+    // rien, et son successeur — relevé par défaut — ferait tomber le test sans
+    // que personne ne comprenne pourquoi.
+    const disparus = DONNEES_REFERENTIEL.filter((c) => !existsSync(surDisque(c)));
+    expect(
+      disparus,
+      "Un fichier de `DONNEES_REFERENTIEL` n'existe plus : retirez-le de la liste, " +
+        "et ajoutez son successeur s'il ne porte que des données.",
+    ).toEqual([]);
   });
 
   it("la version du moteur est celle du dernier relevé", () => {

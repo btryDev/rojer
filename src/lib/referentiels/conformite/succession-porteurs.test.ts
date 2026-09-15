@@ -4,6 +4,7 @@ import {
   obligationParId,
   obligationsConformite,
   porteurDe,
+  type ObligationRetiree,
 } from "./index";
 import type { PorteurObligation } from "./types";
 
@@ -38,8 +39,9 @@ import type { PorteurObligation } from "./types";
  * CE QU'ILS NE GARDENT PAS, écrit pour ne pas le croire : un porteur mal
  * déclaré à la main — dans `OBLIGATIONS_RETIREES.porteur` au moment d'un
  * retrait, ou dans la table ci-dessous pour une obligation neuve — passe. Le
- * fusible des retraits recoupe le premier avec la table tant que la ligne de
- * l'obligation retirée y reste ; c'est pourquoi on ne l'en retire pas.
+ * fusible des retraits recoupera le premier avec la table au prochain retrait,
+ * la ligne de l'obligation retirée y restant ; les cinq retraits connus
+ * précèdent la table, et pour eux rien ne recoupe le champ.
  */
 
 /**
@@ -61,8 +63,9 @@ import type { PorteurObligation } from "./types";
  * obligation d'équipement passée à l'établissement est présente ici, sous
  * « equipement ».
  *
- * UNE OBLIGATION RETIRÉE GARDE SA LIGNE : elle recoupe le porteur déclaré dans
- * `OBLIGATIONS_RETIREES` au moment du retrait.
+ * UNE OBLIGATION RETIRÉE GARDE SA LIGNE : au prochain retrait, elle recoupera
+ * le porteur déclaré dans `OBLIGATIONS_RETIREES`. Aucune ligne n'est encore
+ * dans ce cas.
  */
 const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "aeration-controle-installations-r4222-20": "etablissement",
@@ -222,6 +225,31 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
 
 };
 
+/**
+ * Les lignes de la table dont l'obligation n'est plus vivante : chacune doit
+ * être un retrait déclaré, au même porteur. Pure, pour être éprouvée sur des
+ * cas fabriqués — sur le référentiel réel, elle ne mord qu'au prochain retrait.
+ */
+function fautesDeRetrait(
+  table: Readonly<Record<string, PorteurObligation>>,
+  vivants: ReadonlySet<string>,
+  retraits: Readonly<Record<string, ObligationRetiree>>,
+): string[] {
+  return Object.entries(table).flatMap(([id, porteur]) => {
+    if (vivants.has(id)) return [];
+    const retrait = retraits[id];
+    if (retrait === undefined) {
+      return [`${id} — disparu sans être inscrit à \`OBLIGATIONS_RETIREES\``];
+    }
+    return retrait.porteur === porteur
+      ? []
+      : [
+          `${id} — retiré en se déclarant « ${retrait.porteur} », la table le ` +
+            `connaissait « ${porteur} »`,
+        ];
+  });
+}
+
 const RENVOI =
   "Voir `docs/chantiers-ouverts.md` § 11, lot 2 (« DEUX MÉCANISMES ») et " +
   "l'ADR-034, N4, point 5 (« Laissé ouvert, écrit »).";
@@ -295,25 +323,38 @@ describe("fusible — une obligation ne change pas de porteur sans le dire", () 
   });
 
   it("une ligne de la table qui n'est plus vivante est un retrait déclaré, au même porteur", () => {
+    // AUJOURD'HUI CE TEST NE MORD SUR RIEN : aucune obligation de la table n'a
+    // encore été retirée — les cinq retraits connus précèdent la table. Il
+    // mordra au prochain retrait, dont la ligne sera restée ici ; la règle
+    // elle-même est éprouvée sur des cas fabriqués, juste dessous.
     const vivants = new Set(obligationsConformite.map((o) => o.id));
-    const fautes = Object.entries(PORTEURS).flatMap(([id, porteur]) => {
-      if (vivants.has(id)) return [];
-      const retrait = OBLIGATIONS_RETIREES[id];
-      if (retrait === undefined) {
-        return [`${id} — disparu sans être inscrit à \`OBLIGATIONS_RETIREES\``];
-      }
-      return retrait.porteur === porteur
-        ? []
-        : [
-            `${id} — retiré en se déclarant « ${retrait.porteur} », la table le ` +
-              `connaissait « ${porteur} »`,
-          ];
-    });
     expect(
-      fautes,
+      fautesDeRetrait(PORTEURS, vivants, OBLIGATIONS_RETIREES),
       "Une obligation a quitté le référentiel. Gardez sa ligne dans `PORTEURS` : " +
         "elle recoupe le porteur écrit dans `OBLIGATIONS_RETIREES`.",
     ).toEqual([]);
+  });
+
+  it("le recoupement des retraits attrape un retrait non inscrit et un porteur mal déclaré", () => {
+    const table: Record<string, PorteurObligation> = {
+      vivante: "equipement",
+      retiree: "salarie",
+      perdue: "etablissement",
+    };
+    const vivants = new Set(["vivante"]);
+    expect(
+      fautesDeRetrait(table, vivants, {
+        retiree: { absorbePar: null, porteur: "salarie", motif: "" },
+      }),
+    ).toEqual(["perdue — disparu sans être inscrit à `OBLIGATIONS_RETIREES`"]);
+    expect(
+      fautesDeRetrait(table, vivants, {
+        retiree: { absorbePar: null, porteur: "equipement", motif: "" },
+        perdue: { absorbePar: null, porteur: "etablissement", motif: "" },
+      }),
+    ).toEqual([
+      "retiree — retiré en se déclarant « equipement », la table le connaissait « salarie »",
+    ]);
   });
 
   it("chaque retrait avec absorbant relie deux porteurs que la réconciliation sait continuer", () => {
