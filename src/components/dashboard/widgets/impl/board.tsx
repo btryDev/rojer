@@ -911,11 +911,6 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
 
   const piste = useRef<HTMLDivElement | null>(null);
   const [bords, setBords] = useState({ gauche: false, droite: false });
-  // L'échelle sur laquelle « Y aller » a déjà mené aux opérations hors de
-  // l'écran : la note qui les dit hors de l'écran s'efface alors, jusqu'au
-  // prochain cadrage d'ouverture (autre échelle, retour à la frise).
-  const [horsCadrageAtteint, setHorsCadrageAtteint] =
-    useState<EchelleFrise | null>(null);
 
   // La fenêtre couvre trois mois de passé et deux ans à venir : c'est le
   // conteneur qui défile, l'échelle ne fait que zoomer.
@@ -978,7 +973,6 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
     [...el.querySelectorAll<HTMLElement>("[data-marqueur]")]
       .find((c) => c.dataset.marqueur === cible.cle)
       ?.focus({ preventScroll: true });
-    setHorsCadrageAtteint(echelle);
   };
 
   // Le compte « en retard » de l'en-tête ne vient ni de la frise ni des
@@ -1088,10 +1082,7 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
             : null}
           <button
             type="button"
-            onClick={() => {
-              setVue(vue === "frise" ? "calendrier" : "frise");
-              setHorsCadrageAtteint(null);
-            }}
+            onClick={() => setVue(vue === "frise" ? "calendrier" : "frise")}
             aria-pressed={vue === "calendrier"}
             aria-label={
               vue === "frise"
@@ -1473,18 +1464,23 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
         </p>
       ) : null}
 
-      {vue === "frise" &&
-      frise.horsCadrage.length > 0 &&
-      horsCadrageAtteint !== echelle ? (
+      {vue === "frise" && frise.horsCadrage.length > 0 ? (
         // Une opération non close dont le point est hors de l'écran à
         // l'ouverture, à gauche : en cours, en retard ou échue, rien ne disait
-        // qu'il fallait défiler pour la trouver (2026-09-15). La note la nomme,
-        // le bouton y mène, et elle s'efface une fois qu'il y a mené — elle ne
-        // dirait plus vrai. La règle est écrite sur `Frise.horsCadrage`.
+        // qu'il fallait défiler pour la trouver (2026-09-15). La note la nomme
+        // et le bouton y mène. La règle est écrite sur `Frise.horsCadrage`.
+        //
+        // UNE PHRASE VRAIE QUEL QUE SOIT LE DÉFILEMENT, ET AUCUN ÉTAT. La note
+        // disait « hors de l'écran » et s'effaçait après « Y aller » ; l'état
+        // qui l'effaçait ne suivait ni les allers-retours d'échelle, qui
+        // recadrent, ni un changement de données sans démontage — la note
+        // restait effacée sur une opération de nouveau hors de l'écran
+        // (relecture, 2026-09-15). « Plus tôt, à gauche du cadrage
+        // d'ouverture » reste vrai avant comme après le défilement.
         <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
           {frise.horsCadrage.length > 1
-            ? `${frise.horsCadrage.length} opérations non closes sont hors de l'écran, à gauche de la frise.`
-            : `Une opération non close est hors de l'écran, à gauche de la frise : « ${frise.horsCadrage[0].libelle} ».`}{" "}
+            ? `${frise.horsCadrage.length} opérations non closes se trouvent plus tôt sur la frise, à gauche du cadrage d'ouverture.`
+            : `Une opération non close se trouve plus tôt sur la frise, à gauche du cadrage d'ouverture : « ${frise.horsCadrage[0].libelle} ».`}{" "}
           <button
             type="button"
             onClick={allerHorsCadrage}
