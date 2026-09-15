@@ -579,7 +579,10 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      EFFECTIVES par clé (`periodicitesEffectives`, surcharges par appareil
      comprises ; le rythme du référentiel pour un titre de salarié). La boucle
      finale du réconciliateur pousse dans `aMettreAJour` — donc `archiveLe`
-     remis à `null`, écriture conditionnée sur la date et le statut lus — toute
+     remis à `null`, écriture conditionnée sur la date, le statut, le rythme
+     et la prescription lus (les deux derniers ajoutés à la relecture, pour
+     qu'un plan calculé avant une réactivation n'écrase pas la ligne rétablie)
+     — toute
      ligne applicable, porteuse d'une trace, dont le rythme ou la prescription
      diffèrent : rythme effectif, `prescriptionId: null`, date inchangée,
      statut lu sur le dernier rapport réalisé quand il n'y a plus de
@@ -596,17 +599,25 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      `uploadRapport` refuse le dépôt sur un porteur salarié, donc une telle
      ligne n'a jamais de rapport. Sur l'habilitation électrique (triennale
      devenue `autre`), une ligne sans preuve est supprimée ; avec une action
-     seule, elle passe `autre` + « planifiée » et reste EN RETARD à
-     `delivreLe` + trois ans, pendant que la page Équipe dit « sans terme »
-     (`echeanceDuTitre`). Non corrigé : aligner les deux voudrait dire soit
+     seule, elle passe `autre` + « planifiée » et reste EN RETARD à la
+     dernière `datePrevue` écrite — `delivreLe` + trois ans pour une ligne née
+     de l'ancien rythme, l'échéance saisie pour une autre —, pendant que la
+     page Équipe dit « Sans terme écrit » (`echeanceDuTitre`). **Même effet
+     sans aucun changement de référentiel** : retirer l'échéance saisie d'un
+     titre `autre` dont la ligne porte une action la sort de la génération et
+     la laisse en retard à l'ancienne échéance. Non corrigé : aligner les deux voudrait dire soit
      retirer au calendrier une ligne qui porte une action, soit dériver du
      titre l'état de la ligne — ni l'un ni l'autre n'est une garde de trois
      lignes. Sur un rythme, enfin, un statut réalisé sans rapport est gardé
-     tel quel : c'est la seule trace de la ligne, et la date décide. **La
-     suppression d'une prescription levée est refusée** (relecture du même
-     jour) : levée, elle ne marque plus aucune ligne, et le compte des lignes
-     porteuses de preuve, tombé à zéro, laissait effacer l'acte qui justifiait
-     les rapports déposés à son rythme. Et **aucune version
+     tel quel : c'est la seule trace de la ligne, et la date décide. ~~**La
+     suppression d'une prescription levée est refusée**~~ — cette garde a
+     créé une impasse (une saisie erronée sur une ligne déjà contrôlée ne se
+     supprimait ni active, ni levée) et laissait passer une prescription
+     rattrapée par le référentiel. **Remplacée le même jour** : la suppression
+     compte les preuves faites SOUS l'acte — rapports datés de `dateDocument`
+     ou après, sur les lignes qu'il vise (obligation × appareil), que la ligne
+     porte encore `prescriptionId` ou non (`prescriptions/preuves.ts`). Le
+     compte ne dépend plus de la régénération. Et **aucune version
      n'est incrémentée** : un dossier existant ne se réaligne qu'à sa prochaine
      régénération, déclenchée par une mutation (dont la levée d'une
      prescription elle-même) ou par un changement de référentiel ; une levée

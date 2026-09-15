@@ -1,7 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { cleJourCivil } from "@/lib/dates";
-import { portantUnePreuve } from "@/lib/calendrier/portee";
+import {
+  compterLignesAvecPreuve,
+  lignesVisees,
+  SELECT_LIGNE_VISEE,
+  versLigneVisee,
+} from "./preuves";
 import {
   appliquerPrescriptions,
   determineObligationsApplicables,
@@ -21,8 +26,8 @@ export type PrescriptionListee = PrescriptionMatching & {
   /** Libellé lisible de l'obligation ciblée (effet renforce_periodicite). */
   libelleObligationCiblee: string | null;
   /**
-   * Nombre de lignes de calendrier que cette prescription a produites et qui
-   * portent une preuve — rapport de vérification ou action corrective.
+   * Nombre de lignes de calendrier visées par cette prescription qui portent
+   * une preuve faite sous l'acte (`prescriptions/preuves.ts`).
    *
    * Au-delà de zéro, la suppression physique est refusée : `ON DELETE SET
    * NULL` laisserait des lignes orphelines dont plus rien ne dirait de quel
@@ -73,19 +78,29 @@ export async function chargerPagePrescriptions(
       equipements: { where: { actif: true } },
       prescriptionsParticulieres: {
         orderBy: { dateDocument: "desc" },
-        include: {
-          _count: {
-            select: {
-              // Le même critère que la suppression (`portantUnePreuve`) : le
-              // compte affiché doit dire ce que la suppression protégera.
-              verifications: { where: portantUnePreuve() },
-            },
-          },
-        },
       },
     },
   });
   if (!etab) return { prescriptions: [], obligations: [], equipements: [] };
+
+  // Le compte affiché dit ce que la suppression protégera : la même règle
+  // (`prescriptions/preuves.ts`), la même lecture. Une requête par
+  // prescription, sur ses seules lignes visées — un dossier en porte peu.
+  // L'ancien `_count` par `prescriptionId` suivait l'effet, pas l'histoire
+  // (2026-09-15).
+  const preuves = new Map<string, number>(
+    await Promise.all(
+      etab.prescriptionsParticulieres.map(async (p) => {
+        const where = lignesVisees(etab.id, p);
+        if (where === null) return [p.id, 0] as const;
+        const lignes = await prisma.verification.findMany({
+          where,
+          select: SELECT_LIGNE_VISEE,
+        });
+        return [p.id, compterLignesAvecPreuve(p, lignes.map(versLigneVisee))] as const;
+      }),
+    ),
+  );
 
   const equipements = etab.equipements.map((eq) => ({
     id: eq.id,
@@ -147,7 +162,7 @@ export async function chargerPagePrescriptions(
     return {
       ...p,
       etat,
-      lignesAvecPreuve: p._count.verifications,
+      lignesAvecPreuve: preuves.get(p.id) ?? 0,
       libelleObligationCiblee: p.obligationId
         ? (obligationParId(p.obligationId)?.libelle ?? p.obligationId)
         : null,

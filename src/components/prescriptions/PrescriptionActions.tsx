@@ -19,8 +19,9 @@ import {
  *    prescription a cessé de produire effet à une date donnée. L'acte reste
  *    au dossier : c'est lui qui explique les vérifications déjà faites.
  *  - **Supprimer** — réservé à la saisie erronée, et refusé par le serveur
- *    dès qu'une ligne de calendrier issue de la prescription porte un rapport
- *    ou une action corrective. Sans ce refus, la preuve survivrait à sa
+ *    dès qu'une ligne visée par la prescription porte une preuve faite sous
+ *    l'acte — un rapport daté de l'acte ou après (`prescriptions/preuves.ts`,
+ *    2026-09-15). Sans ce refus, la preuve survivrait à sa
  *    justification : `Verification.prescriptionId` est en `ON DELETE SET
  *    NULL`, les lignes resteraient sans plus rien dire de quel acte elles
  *    venaient.
@@ -121,9 +122,9 @@ export function PrescriptionActions({
         ) : (
           <p className="m-0 max-w-[62ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             Suppression indisponible : {lignesAvecPreuve} vérification
-            {lignesAvecPreuve > 1 ? "s" : ""} issue
-            {lignesAvecPreuve > 1 ? "s" : ""} de cette prescription porte
-            {lignesAvecPreuve > 1 ? "nt" : ""} un rapport ou une action.
+            {lignesAvecPreuve > 1 ? "s" : ""} visée
+            {lignesAvecPreuve > 1 ? "s" : ""} par cette prescription porte
+            {lignesAvecPreuve > 1 ? "nt" : ""} une preuve faite sous l’acte.
           </p>
         )}
       </div>

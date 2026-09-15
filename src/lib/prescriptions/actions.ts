@@ -5,13 +5,15 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
-import {
-  portantUnePreuve,
-  toutesLesConditions,
-} from "@/lib/calendrier/portee";
-import { depuisCleJourCivil } from "@/lib/dates";
+import { depuisCleJourCivil, formaterDateFr } from "@/lib/dates";
 import { validerPrescription } from "./schema";
-import { prescriptionEnVigueur } from "@/lib/matching/prescriptions";
+import {
+  compterLignesAvecPreuve as compterPreuves,
+  lignesVisees,
+  SELECT_LIGNE_VISEE,
+  versLigneVisee,
+  type PrescriptionAPreuver,
+} from "./preuves";
 
 /**
  * Prescriptions particulières (ADR-035) — création, levée, suppression.
@@ -105,19 +107,22 @@ export async function creerPrescription(
 }
 
 /**
- * Nombre de lignes de calendrier produites par cette prescription et
- * porteuses d'une preuve — rapport, action corrective, ou simple date de
- * réalisation. Même critère que la réconciliation du calendrier (ADR-012) :
- * ce qui atteste qu'un contrôle a eu lieu ne se détruit pas.
+ * Nombre de lignes VISÉES par cette prescription qui portent une preuve faite
+ * SOUS l'acte (`prescriptions/preuves.ts`, où vit la règle et son pourquoi).
+ * Plus par `Verification.prescriptionId`, que la régénération pose et retire au
+ * gré de l'effet de la prescription, pas de l'histoire (2026-09-15).
  */
 async function compterLignesAvecPreuve(
-  prescriptionId: string,
+  etablissementId: string,
+  p: PrescriptionAPreuver,
 ): Promise<number> {
-  // La définition partagée (`portantUnePreuve`) : la recopie d'ici ignorait
-  // le statut réalisé.
-  return prisma.verification.count({
-    where: toutesLesConditions({ prescriptionId }, portantUnePreuve()),
+  const where = lignesVisees(etablissementId, p);
+  if (where === null) return 0;
+  const lignes = await prisma.verification.findMany({
+    where,
+    select: SELECT_LIGNE_VISEE,
   });
+  return compterPreuves(p, lignes.map(versLigneVisee));
 }
 
 /**
@@ -201,44 +206,39 @@ export async function supprimerPrescription(
 ): Promise<PrescriptionActionState> {
   await assertEtablissementOwnership(etablissementId);
 
-  // UNE PRESCRIPTION LEVÉE NE SE SUPPRIME PAS (2026-09-15). Levée, elle cesse
-  // de surcharger : la régénération qui suit rend à ses lignes le rythme du
-  // référentiel et remet leur `prescriptionId` à `null` — pour une obligation
-  // cyclique depuis toujours, pour une obligation `autre` depuis le
-  // réalignement NB4. Le compte ci-dessous tombe alors à zéro alors que des
-  // rapports ont été déposés au rythme qu'elle imposait : la supprimer
-  // effaçait l'acte qui justifie ces rapports (ADR-012), et une demande
-  // d'assureur perdait sa trace contractuelle (ADR-032). Lever, c'est déjà
-  // dire que l'acte a existé ; une saisie erronée se supprime AVANT d'être
-  // levée, ou après « Annuler la levée », qui rend ses lignes à la
-  // prescription et le compte à sa vérité. Le prédicat est celui du moteur et
-  // de l'écran (`estLevee`), qui ne proposait déjà plus la suppression.
+  // (Une garde « prescription levée » a vécu ici quelques heures, le
+  // 2026-09-15 : elle rattrapait un compte fondé sur `prescriptionId`, que la
+  // levée remettait à zéro. Elle créait une impasse — une saisie erronée sur
+  // une ligne déjà contrôlée ne se supprimait ni active, ni levée. Le compte
+  // par cible et par date de l'acte ne dépend plus de l'effet : il suffit.)
   const existante = await prisma.prescriptionParticuliere.findFirst({
     where: { id: prescriptionId, etablissementId },
-    select: { actif: true, dateFin: true },
+    select: {
+      id: true,
+      effet: true,
+      obligationId: true,
+      equipementId: true,
+      dateDocument: true,
+    },
   });
   if (!existante) {
     return { status: "error", message: "Prescription introuvable." };
   }
-  if (!existante.actif || !prescriptionEnVigueur(existante, new Date())) {
-    return {
-      status: "error",
-      message:
-        "Suppression refusée : cette prescription est levée. Ses effets passés " +
-        "restent au dossier ; si elle a été saisie par erreur, annulez d'abord " +
-        "la levée.",
-    };
-  }
 
-  const avecPreuve = await compterLignesAvecPreuve(prescriptionId);
+  const avecPreuve = await compterLignesAvecPreuve(etablissementId, existante);
   if (avecPreuve > 0) {
+    const pluriel = avecPreuve > 1;
+    const preuve =
+      existante.effet === "obligation_sur_mesure"
+        ? "un rapport, une action corrective ou un contrôle enregistré"
+        : `un rapport daté du ${formaterDateFr(existante.dateDocument)} ou après`;
     return {
       status: "error",
       message:
-        `Suppression refusée : ${avecPreuve} vérification${avecPreuve > 1 ? "s" : ""} ` +
-        `issue${avecPreuve > 1 ? "s" : ""} de cette prescription porte${avecPreuve > 1 ? "nt" : ""} ` +
-        "un rapport ou une action corrective. Levez-la plutôt : son effet " +
-        "s'arrête et l'historique reste.",
+        `Suppression refusée : ${avecPreuve} vérification${pluriel ? "s" : ""} ` +
+        `visée${pluriel ? "s" : ""} par cette prescription porte${pluriel ? "nt" : ""} ` +
+        `${preuve}, fait sous l'acte. Ces contrôles restent justifiés par lui : ` +
+        "la prescription reste au dossier. Pour arrêter son effet, levez-la.",
     };
   }
 

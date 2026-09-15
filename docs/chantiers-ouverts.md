@@ -1567,7 +1567,7 @@ les corriger.**
 
 Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisser.
 
-- **`Verification.referentielVersion`** (`schema.prisma:602`) : **aucun écrivain**
+- **`Verification.referentielVersion`** (~~`schema.prisma:602`~~ `:603`) : **aucun écrivain**
   dans tout `src/`. La colonne existe pour une resynchronisation jamais écrite.
   **Remesuré le 2026-09-15 (`lot/reliquats-donnees-docs`)** : ni écrivain ni
   lecteur explicite dans `src`, `scripts`, les tests et les seeds, et aucun dans
@@ -1606,11 +1606,15 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   son statut et reste en retard à sa date — voir « une action ouverte compte
   comme preuve », plus bas. C'est le cas de toute ligne de titre de salarié
   réalignée, qui ne reçoit jamais de rapport : l'habilitation électrique d'une
-  personne, avec une action seule, reste en retard au calendrier à `delivreLe`
-  + trois ans quand la page Équipe dit « sans terme ». Non corrigé. **Fermé
-  avec**, relecture du même jour : la suppression d'une prescription levée est
-  refusée — réalignées, ses lignes ne la portaient plus et le compte des
-  preuves, à zéro, laissait effacer l'acte (`supprimerPrescription`).
+  personne, avec une action seule, reste en retard au calendrier à sa dernière
+  `datePrevue` écrite quand la page Équipe dit « Sans terme écrit » — et de
+  même quand on retire l'échéance saisie d'un titre `autre` dont la ligne porte
+  une action. Non corrigé. **Fermé avec**, relecture du même jour : la
+  suppression d'une prescription compte les preuves faites sous l'acte
+  (rapports datés de l'acte ou après, sur les lignes visées), et non plus les
+  lignes qui portent encore son `prescriptionId`, que la régénération retire
+  à la levée (`prescriptions/preuves.ts`). La garde « levée » posée entre-temps
+  est retirée : elle rendait une saisie erronée insupprimable.
 - **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.
 - **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors

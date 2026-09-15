@@ -695,38 +695,54 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
     );
   });
 
-  it("un plan calculé avant un changement concurrent redit le rythme et la prescription lus", async () => {
-    // La course de la relecture (2026-09-15) : le plan voit la prescription
-    // levée et prépare `autre` + `prescriptionId: null` ; avant l'écriture, une
-    // autre passe a pu rétablir la ligne sous sa prescription réactivée. La
-    // condition d'écriture porte sur le rythme et la prescription lus : la
-    // ligne qui ne leur ressemble plus n'est pas écrasée à cette passe.
-    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
-    db.etablissements[0]!.prescriptionsParticulieres = [
-      prescriptionPortail() as unknown as { id: string; actif: boolean },
-    ];
-    db.verifications = [
-      ligne({
-        id: "v-portail",
-        equipementId: "eq-portail",
-        obligationId: PORTAIL_MAINTIEN,
-        libelleObligation: "Maintien en état",
-        periodicite: "semestrielle",
-        datePrevue: new Date("2021-03-01T00:00:00Z"),
-        statut: "planifiee",
-        prescriptionId: "presc-portail",
-        nbActions: 1,
-      }),
-    ];
+  describe("un plan calculé avant une réactivation n'écrase pas la ligne rétablie (2026-09-15)", () => {
+    // La course : le plan lit la prescription LEVÉE et prépare, pour la ligne,
+    // `autre` + `prescriptionId: null`. Entre la lecture et l'écriture, la
+    // prescription est réactivée et une autre passe rétablit la ligne sous
+    // elle. Sans condition sur le rythme et la prescription lus, l'écriture
+    // passait par-dessus : datePrevue et statut n'avaient pas bougé. Avec, la
+    // passe diverge, se relance sur la prescription active et laisse la ligne.
+    const scenario = async (
+      lue: { periodicite: string; prescriptionId: string | null },
+    ) => {
+      poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+      const presc = prescriptionPortail();
+      db.etablissements[0]!.prescriptionsParticulieres = [
+        presc as unknown as { id: string; actif: boolean },
+      ];
+      db.verifications = [
+        ligne({
+          id: "v-portail",
+          equipementId: "eq-portail",
+          obligationId: PORTAIL_MAINTIEN,
+          libelleObligation: "Maintien en état",
+          datePrevue: new Date("2021-03-01T00:00:00Z"),
+          statut: "planifiee",
+          nbActions: 1,
+          ...lue,
+        }),
+      ];
+      db.apresLecture = () => {
+        presc.dateFin = null;
+        const v = db.verifications.find((x) => x.id === "v-portail")!;
+        v.periodicite = "semestrielle";
+        v.prescriptionId = "presc-portail";
+      };
 
-    await genererCalendrier(ETAB_ID);
+      await genererCalendrier(ETAB_ID);
 
-    const premiere = db.journal.find((j) => j.operation === "verification.updateMany")
-      ?.where as Record<string, unknown> | undefined;
-    expect(
-      premiere,
-      "la condition d'écriture ne redit pas le rythme et la prescription lus",
-    ).toMatchObject({ periodicite: "semestrielle", prescriptionId: "presc-portail" });
+      const l = db.verifications.find((v) => v.id === "v-portail")!;
+      expect(l.periodicite, "le rythme rétabli a été écrasé").toBe("semestrielle");
+      expect(l.prescriptionId, "la prescription rétablie a été effacée").toBe(
+        "presc-portail",
+      );
+    };
+
+    it("quand seul le rythme a été rétabli", () =>
+      scenario({ periodicite: "autre", prescriptionId: "presc-portail" }));
+
+    it("quand seule la prescription a été rétablie", () =>
+      scenario({ periodicite: "semestrielle", prescriptionId: null }));
   });
 
   it("l'appareil retiré perd sa ligne alors que l'obligation vit chez son voisin", async () => {

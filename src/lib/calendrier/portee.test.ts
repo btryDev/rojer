@@ -369,11 +369,18 @@ describe("portantUnePreuve — ce qu'aucune suppression n'emporte (ADR-012)", ()
     expect(code("equipements/actions.ts")).toContain(
       "where: toutesLesConditions({ equipementId: id }, portantUnePreuve()),",
     );
+    // LES DEUX GARDES DE PRESCRIPTION ONT CHANGÉ DE RÈGLE LE 2026-09-15, et
+    // c'est voulu : elles comptaient par `prescriptionId`, que la régénération
+    // pose et retire au gré de l'effet, et une saisie erronée devenait
+    // insupprimable pendant qu'une prescription levée se laissait effacer.
+    // Elles partagent désormais `prescriptions/preuves.ts` (preuves faites SOUS
+    // l'acte, statut réalisé compris pour une obligation sur mesure), et ce
+    // test tient qu'elles l'emploient toutes les deux, au lieu de la recopier.
     expect(code("prescriptions/actions.ts")).toContain(
-      "where: toutesLesConditions({ prescriptionId }, portantUnePreuve()),",
+      "return compterPreuves(p, lignes.map(versLigneVisee));",
     );
     expect(code("prescriptions/queries.ts")).toContain(
-      "verifications: { where: portantUnePreuve() },",
+      "compterLignesAvecPreuve(p, lignes.map(versLigneVisee))",
     );
     // Et plus aucune recopie de l'ancienne liste de témoins.
     for (const f of ["equipements/actions.ts", "prescriptions/actions.ts", "prescriptions/queries.ts"]) {
