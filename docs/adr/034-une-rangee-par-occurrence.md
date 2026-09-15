@@ -556,7 +556,9 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      la prochaine régénération — vrai pour l'appareil, et leurs rapports
      restent visibles, mais la nouvelle ligne d'établissement n'en hérite pas
      faute de succession par changement de porteur. À instruire avec le lot 2
-     du § 11.
+     du § 11. *Le 2026-09-15* (`lot/fusibles-referentiel`) : le cas existant
+     reste ouvert, mais un changement de porteur FUTUR ne passe plus en
+     silence — `succession-porteurs.test.ts` tombe et renvoie ici.
   6. **Reste ouvert, écrit** : une ligne rouverte par `aDesarchiver` garde sa
      périodicité, sa date et son statut gelés (relecture, NB4) — réaligner
      ces lignes dans le réconciliateur plutôt que filtrer chez les lecteurs,
