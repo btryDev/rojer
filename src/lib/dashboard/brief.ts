@@ -88,6 +88,16 @@ export type GesteBrief = {
 export type Brief = {
   datePill: string;
   titre: string;
+  /**
+   * La légende du relevé « Dépassées » : « dont 5 sans date connue », « toutes
+   * sans date connue » (« sans date connue » pour une seule), ou `null` quand
+   * toutes les échéances comptées sont datées. Le titre nomme la part sans
+   * date ; le relevé posé dessous gardait son seul nombre, et « DÉPASSÉES 14 »
+   * contredisait « dont cinq sans date connue » soixante pixels plus haut
+   * (2026-09-15). Le mot de l'état ne change pas (`LIBELLE_ETAT`) : la légende
+   * précise ce qu'il compte.
+   */
+  precisionReleveRetard: string | null;
   paragraphe: string;
   gestes: GesteBrief[];
 };
@@ -177,6 +187,15 @@ const TONS_ALERTE: ReadonlySet<RecoBrief["kind"]> = new Set([
 ]);
 
 /**
+ * Parmi les retards, ceux qui n'ont pas d'échéance connue — la part que le
+ * titre et la légende du relevé nomment. Bornée par le total : les deux
+ * compteurs sortent de lectures distinctes.
+ */
+function retardsSansDate(e: EntreeBrief): number {
+  return Math.min(e.verifsEnRetardSansEcheance, e.retards.total);
+}
+
+/**
  * Le titre du hero — et ce qu'il a le droit de dire.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -212,7 +231,8 @@ const TONS_ALERTE: ReadonlySet<RecoBrief["kind"]> = new Set([
  * date n'est qu'une date de génération, et « ont dépassé leur date » y serait
  * faux. Le titre dit alors « sont dues », qui vaut pour toutes, et nomme la
  * part sans date. Le relevé « DÉPASSÉES » garde son mot et son nombre : c'est
- * l'état du registre d'états, compté sur le ton.
+ * l'état du registre d'états, compté sur le ton — et, depuis le 2026-09-15,
+ * une légende qui nomme la même part (`precisionReleveRetard`).
  *
  * IL PORTE LE VERBE DU RELEVÉ QU'IL COIFFE, et pas son adjectif : « Onze
  * échéances dépassées » aurait recopié mot pour mot, à soixante pixels d'écart,
@@ -233,7 +253,7 @@ function construireTitre(e: EntreeBrief): string {
     // date » en portait cinq qui n'en ont aucune (contrôle visuel en
     // production, 2026-09-14). Le titre dit alors « sont dues », qui vaut
     // pour les deux, et nomme la part sans échéance.
-    const sansEcheance = Math.min(e.verifsEnRetardSansEcheance, urgent);
+    const sansEcheance = retardsSansDate(e);
     if (sansEcheance === 0) {
       // L'accord porte sur deux mots, pas un : « Une échéance a dépassé SA
       // date », « Onze échéances ont dépassé LEUR date ».
@@ -413,9 +433,21 @@ export function construireBrief(e: EntreeBrief): Brief {
     titre = TITRE_AMORCE[premiere.kind] ?? titre;
   }
 
+  const sansDate = retardsSansDate(e);
   return {
     datePill: formaterDate(e.aujourdhui),
     titre,
+    // « toutes » quand aucune n'est datée : « DÉPASSÉES 5, dont 5 sans date
+    // connue » se lisait comme deux ensembles (relecture, 2026-09-15). Et pour
+    // une seule, ni « toutes » ni « dont 1 » : « sans date connue ».
+    precisionReleveRetard:
+      sansDate === 0
+        ? null
+        : sansDate < e.retards.total
+          ? `dont ${sansDate} sans date connue`
+          : sansDate > 1
+            ? "toutes sans date connue"
+            : "sans date connue",
     paragraphe: construireParagraphe(e),
     gestes,
   };

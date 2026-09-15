@@ -24,12 +24,18 @@ import type {
   FamilleEcheance,
   TypeEcheance,
 } from "./echeances";
+// La date où la grille pose un événement : sa date EN JEU. Une opération
+// démarrée sans alerte se pose sur sa FIN, comme dans la liste mensuelle du
+// calendrier ; posée à son début, elle grisait la tuile de mars quand la page
+// Calendrier la rangeait en septembre (relecture, 2026-09-15).
+import { dateEnJeuEvenement } from "./etats";
 
 export type EvenementGrille = {
   id: string;
   libelle: string;
   date: Date;
-  /** La fin d'une opération (`EcheanceCalendrier.dateFin`), pour la frise. */
+  /** La fin d'une opération (`EcheanceCalendrier.dateFin`) : la frise et les
+   *  grilles la lisent (`dateEnJeuEvenement`). */
   dateFin?: Date;
   tone: "alerte" | "warn" | "ok";
   equipement: string;
@@ -104,13 +110,17 @@ export function construireGrilleMois({
   // ne fait ensuite que des lectures de map.
   const parJour = new Map<string, EvenementGrille[]>();
   for (const e of evenements) {
-    const cle = cleJourCivil(e.date);
+    const cle = cleJourCivil(dateEnJeuEvenement(e, aujourdhui));
     const liste = parJour.get(cle);
     if (liste) liste.push(e);
     else parJour.set(cle, [e]);
   }
   for (const liste of parJour.values()) {
-    liste.sort((a, b) => a.date.getTime() - b.date.getTime());
+    liste.sort(
+      (a, b) =>
+        dateEnJeuEvenement(a, aujourdhui).getTime() -
+        dateEnJeuEvenement(b, aujourdhui).getTime(),
+    );
   }
 
   const decalage = decalageLundi(c.annee, c.mois);
@@ -219,7 +229,7 @@ export function construireGrilleAnnee({
   const pointsParMois: PointAnnee[][] = Array.from({ length: 12 }, () => []);
   let nbEvenements = 0;
   for (const e of evenements) {
-    const c = composantesCiviles(e.date);
+    const c = composantesCiviles(dateEnJeuEvenement(e, aujourdhui));
     if (c.annee !== annee) continue;
     const index = c.mois - 1;
     parMois[index][e.tone] += 1;

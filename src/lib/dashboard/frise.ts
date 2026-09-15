@@ -16,7 +16,7 @@
 import { FUSEAU_REFERENCE } from "@/lib/dates";
 import type { TypeEcheance } from "@/lib/calendrier/echeances";
 import { raccourcirLibelle } from "./libelles";
-import { dateEnJeuAutre } from "@/lib/calendrier/etats";
+import { dateEnJeuEvenement } from "@/lib/calendrier/etats";
 
 export type EvenementFrise = {
   id: string;
@@ -100,6 +100,27 @@ export type Frise = {
   marqueurs: MarqueurFrise[];
   /** Échéances placées sur l'axe — grappes comprises. */
   nbPlaces: number;
+  /** Abscisse du bord gauche de l'écran à l'ouverture (`CADRAGE_INITIAL`). */
+  xCadrage: number;
+  /**
+   * Les OPÉRATIONS (une échéance qui porte une `dateFin` : permis de feu, plan
+   * de prévention) dont le point est hors de l'écran à l'ouverture, à gauche du
+   * cadrage, dans l'ordre de l'axe. Le tableau de bord les nomme sous la frise
+   * et mène à la première (2026-09-15).
+   *
+   * LA RÈGLE, ET RIEN D'AUTRE : non close — les closes ne sont pas chargées —,
+   * présente sur la frise, et hors écran à l'ouverture. En cours, en retard sur
+   * son début, échue : toutes comptent, parce qu'aucune n'a de place visible à
+   * l'ouverture alors qu'une opération non close reste à suivre.
+   *
+   * LA BORNE EST CELLE DE LA FENÊTRE (`place`) : l'opération commence dans la
+   * fenêtre, ou avant avec une fin qui tombe dans la fenêtre ou après. Une
+   * opération échue avant le début de la fenêtre n'est ni sur la frise ni ici
+   * — le compte « en retard » la porte. La note ne promet ni « sous 30 jours »
+   * ni une ancienneté, qui dépendrait de l'échelle (deux semaines en vue
+   * « 90 jours », deux mois en vue « 12 mois »).
+   */
+  horsCadrage: { libelle: string; cle: string; x: number }[];
   mois: GraduationMois[];
 };
 
@@ -129,6 +150,16 @@ export const PX_PAR_JOUR = {
 } as const;
 
 export type EchelleFrise = keyof typeof PX_PAR_JOUR;
+
+/** Marge à gauche d'aujourd'hui au cadrage d'ouverture, en pixels : la frise
+ *  s'ouvre défilée à `xAujourdhui - CADRAGE_INITIAL`. */
+export const CADRAGE_INITIAL = 130;
+
+/** Marge intérieure de la piste qui défile, de chaque côté, en pixels : un
+ *  point d'abscisse `x` est à `x + MARGE_PISTE` dans la zone de défilement.
+ *  Le composant la pose, la fonction en tient compte (relecture, 2026-09-15 :
+ *  sans elle, un point visible au bord se disait hors de l'écran). */
+export const MARGE_PISTE = 30;
 
 /** Seuil « proche » : une échéance à moins de 30 jours mérite l'orange.
  *  Même horizon que la promesse produit — « ce qu'il doit faire dans les
@@ -239,7 +270,20 @@ export function construireFrise({
     }
   }
 
+  const xCadrage = Math.max(0, x(aujourdhui) - CADRAGE_INITIAL);
+  const horsCadrage: Frise["horsCadrage"] = [];
+
   const marqueurs: MarqueurFrise[] = groupes.map((groupe, i) => {
+    for (const e of groupe) {
+      // Une opération, hors de l'écran à l'ouverture (`horsCadrage`).
+      if (e.dateFin && x(place(e)) + MARGE_PISTE < xCadrage) {
+        horsCadrage.push({
+          libelle: raccourcirLibelle(e.libelle),
+          cle: groupe[0].id,
+          x: x(place(e)),
+        });
+      }
+    }
     const evenements: EvenementMarqueur[] = groupe.map((e) => ({
       id: e.id,
       // Les cartes font 172 px : un libellé réglementaire entier s'y fait
@@ -270,7 +314,7 @@ export function construireFrise({
           ? libelleDateLong(premier.date)
           : // Posée au bord, la première peut dater d'une autre année : la
             // plage courte « 3 → 20 JUIN » se lirait alors sur la même.
-            place(premier) !== premier.date
+            place(premier).getTime() !== premier.date.getTime()
             ? `${libelleDateLong(premier.date)} → ${libelleDateLong(dernier.date)}`
             : libellePlage(premier.date, dernier.date),
       // Une alerte au milieu d'un groupe calme reste visible : c'est elle
@@ -288,14 +332,7 @@ export function construireFrise({
         // Une opération démarrée sans alerte se lit sur sa fin, comme au
         // « sous 30 j » du tableau de bord (`dateEnJeuAutre`) : posée sur son
         // début passé, elle restait grise à dix jours de son terme.
-        const enJeu = dateEnJeuAutre(
-          {
-            date: e.date,
-            dateFin: e.dateFin,
-            tone: e.tone === "alerte" ? "alerte" : "ok",
-          },
-          aujourdhui,
-        );
+        const enJeu = dateEnJeuEvenement(e, aujourdhui);
         const j = joursEntre(aujourdhui, enJeu);
         return j >= 0 && j <= JOURS_PROCHE;
       }),
@@ -309,6 +346,8 @@ export function construireFrise({
     xAujourdhui: x(aujourdhui),
     marqueurs,
     nbPlaces: dansFenetre.length,
+    xCadrage,
+    horsCadrage,
     mois: construireMois(debut, fin, aujourdhui, pxParJour),
   };
 }

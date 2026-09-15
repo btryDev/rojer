@@ -35,34 +35,11 @@ import {
   type EtatEcheance,
 } from "@/lib/calendrier/etats";
 
-/** Un mois de la règle. Les quatre compteurs sont exclusifs entre eux. */
-export type MoisRegle = {
-  /** Clé `AAAA-MM`, celle des sections de la liste. */
-  cle: string;
-  /** Libellé court affiché sous la graduation (« Jan », « Fév »…). */
-  label: string;
-  /** Libellé long, pour les lecteurs d'écran (« janvier 2026 »). */
-  labelLong: string;
-  enRetard: number;
-  proche: number;
-  lointain: number;
-  /** Occurrences déjà réalisées — le mois n'est pas qu'une dette. */
-  faite: number;
-  /**
-   * Retards SANS ÉCHÉANCE CONNUE rangés dans ce mois (leur date de
-   * génération) : jamais dessinés, mais une dette. Sans ce compte, un retard
-   * sans date d'une année passée n'avait aucune carte atteignable depuis
-   * l'année ouverte — `moisEnRetardAvant` ne lisait que `enRetard`
-   * (relecture, 2026-09-14). Absent = zéro.
-   */
-  retardSansDate?: number;
-  /**
-   * Toutes les lignes SANS ÉCHÉANCE CONNUE rangées dans ce mois, en retard ou
-   * non : jamais dessinées. Leur somme sur l'année est la pastille « sans
-   * date » de CETTE année. Absent = zéro.
-   */
-  sansDate?: number;
-};
+// Le type vit avec le code qui le calcule (`lib/calendrier/regle-annee`) : il
+// était défini ici et importé par `lib`, couche inversée (relecture,
+// 2026-09-15). Réexporté pour les composants qui le lisaient ici.
+import type { MoisRegle } from "@/lib/calendrier/regle-annee";
+export type { MoisRegle };
 
 /** Ce qu'aucune barre de l'année ne place : la pastille « sans date ». */
 export function sansDateDeLAnnee(mois: MoisRegle[]): number {

@@ -45,17 +45,20 @@ import {
   AnneeCalendrier,
   type AnneeRegle,
 } from "@/components/calendrier/AnneeCalendrier";
-import type { MoisRegle } from "@/components/calendrier/RegleAnnuelle";
+import {
+  estDatable,
+  lignesDuCalendrier,
+  rangerParMois,
+  regleDeLAnnee,
+  type LigneMois,
+} from "@/lib/calendrier/regle-annee";
 import {
   CHAMP_ETAT,
   ENCRE_ETAT,
   PRIORITE_ETAT,
-  classerDate,
-  dateEnJeuAutre,
-  etatAutreEcheance,
+  avecMentionFin,
   lecturesCalendrier,
   type EtatEcheance,
-  type LectureCalendrier,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import {
@@ -80,8 +83,6 @@ import {
   LABEL_PERIODICITE,
   LABEL_TOUT_ETABLISSEMENT,
   libellePorteur,
-  MOIS_FR,
-  MOIS_FR_COURT,
   libelleMois,
 } from "@/lib/calendrier/labels";
 import {
@@ -358,133 +359,28 @@ export default async function CalendrierPage({
     return lieu ? `${lieu} · ${e.origine}` : e.origine;
   };
 
-  // La liste mensuelle mêle les deux, triés par date dans chaque mois.
-  //
-  // Une vérification n'est pas posée telle quelle : `lecturesCalendrier`
-  // rend au plus deux lectures — le contrôle fait, lu sur son dernier
-  // rapport et posé au jour du fait, et l'échéance ouverte à sa date,
-  // classée comme n'importe quelle date (ADR-034). Posée d'un bloc à
-  // `datePrevue`, une rangée d'avant s'affichait en vert « faite »… un an
-  // trop tôt.
-  type LigneMois =
-    | {
-        genre: "verif";
-        date: Date;
-        v: (typeof verifsBruts)[number];
-        // Le registre d'une LECTURE, pas d'une ligne : `archivee` en est
-        // exclu par construction (`lecturesCalendrier` n'en produit aucune).
-        registre: LectureCalendrier["registre"];
-        lecture: LectureCalendrier["lecture"];
-      }
-    | { genre: "autre"; date: Date; e: EcheanceCalendrier };
-  const lignes: LigneMois[] = [
-    ...verifsVisibles.flatMap((v) =>
-      lecturesCalendrier(v, aujourdhui).map((lec) => ({
-        genre: "verif" as const,
-        date: lec.date,
-        v,
-        registre: lec.registre,
-        lecture: lec.lecture,
-      })),
-    ),
-    ...autresVisibles.map((e) => ({
-      genre: "autre" as const,
-      date: e.date,
-      e,
-    })),
-  ];
-  const parMois = new Map<string, LigneMois[]>();
-  for (const l of lignes) {
-    // Mois civil lu en heure de Paris : `getMonth()` sur une date stockée
-    // à minuit UTC dépend du fuseau du serveur, et rangeait une échéance
-    // du 1er du mois dans le mois précédent sur un hôte à l'ouest de UTC.
-    const c = composantesCiviles(l.date);
-    const cle = `${c.annee}-${String(c.mois).padStart(2, "0")}`;
-    const bucket = parMois.get(cle) ?? [];
-    bucket.push(l);
-    parMois.set(cle, bucket);
-  }
+  // La liste mensuelle mêle les deux, triés par date dans chaque mois — et
+  // une opération en cours se range à sa date en jeu, pas à son début
+  // (`lignesDuCalendrier`, 2026-09-15). Le rangement vit dans
+  // `lib/calendrier/regle-annee`, où il est testé.
+  const lignes = lignesDuCalendrier(verifsVisibles, autresVisibles, aujourdhui);
+  const parMois = rangerParMois(lignes);
   const moisTries = [...parMois.entries()].sort(([a], [b]) =>
     a.localeCompare(b),
   );
-  for (const [, liste] of moisTries) {
-    liste.sort((a, b) => a.date.getTime() - b.date.getTime());
-  }
 
   // ─────────────────────────────────────────────────────────────────
-  // La règle annuelle : les mêmes lignes, vues de loin.
+  // La règle annuelle : les mêmes lignes, vues de loin. Ses deux règles de
+  // fond — pas de barre pour une ligne sans échéance connue, la couleur dit
+  // l'état et jamais le volume — sont écrites avec elle (`regleDeLAnnee`).
   //
-  // Deux règles de fond, héritées de la grille qu'elle remplace :
-  //
-  //   1. Les occurrences « à planifier » n'entrent PAS dans les barres.
-  //      Leur `datePrevue` est une date de génération, pas un rendez-vous :
-  //      les poser sur un mois donnerait à lire un engagement qui n'existe
-  //      pas. Elles sont annoncées à part, par le compteur « sans date » —
-  //      et la liste, elle, les garde, parce qu'elle affiche leur statut.
-  //   2. La couleur d'un segment dit l'état, jamais le volume (cf.
-  //      `RegleAnnuelle`).
   // Une seule lecture des composantes civiles d'aujourd'hui : l'année de
   // travail et la date affichée en tête sortent du même appel, donc du
   // même fuseau.
   const civilesAujourdhui = composantesCiviles(aujourdhui);
   const anneeCourante = civilesAujourdhui.annee;
-
-  // Le classement vit dans `lib/calendrier/etats` (bâti sur les prédicats
-  // de `lib/dates/retard`) : cette page l'a redérivé à la main une fois,
-  // et ça a produit deux compteurs contradictoires sur le même écran. Le
-  // registre d'une ligne de vérification est figé au dépli
-  // (`lecturesCalendrier`), plus jamais recalculé.
-  const etatDeLaLigne = (l: LigneMois): EtatEcheance => {
-    if (l.genre !== "verif") {
-      // Le ton, jamais la date seule (`etatAutreEcheance`, où c'est testé).
-      return etatAutreEcheance(l.e, aujourdhui);
-    }
-    // « À planifier » (donc à date future — le classifieur a déjà rangé
-    // les dates passées en retard) est écarté des barres par `datable` ;
-    // si la ligne arrive quand même ici, sa date de génération se classe
-    // comme une date ordinaire plutôt que d'inventer un état de barre.
-    return l.registre === "aPlanifier"
-      ? classerDate(l.date, aujourdhui)
-      : l.registre;
-  };
-
-  // « Datable » : mérite une place sur les barres. Une ligne sans échéance
-  // connue n'en a pas, EN RETARD OU NON : sa date est une date de génération
-  // (`aUnRendezVous`). Ce commentaire disait l'inverse pour une « à
-  // planifier » en retard — « le mois où elle est devenue due » —, et la
-  // barre de septembre portait un segment rouge sur la date de création de
-  // la ligne (relecture du lot C, 2026-09-14). Le fait daté d'un rapport,
-  // lui, garde sa place.
-  const datable = (l: LigneMois) =>
-    l.genre !== "verif" ||
-    (l.registre !== "aPlanifier" &&
-      (l.lecture === "realisation" || aUnRendezVous(l.v, aujourdhui)));
-
-  const regleDeLAnnee = (a: number): MoisRegle[] =>
-    Array.from({ length: 12 }, (_, i) => {
-      const cle = `${a}-${String(i + 1).padStart(2, "0")}`;
-      const compte = { enRetard: 0, proche: 0, lointain: 0, faite: 0 };
-      let retardSansDate = 0;
-      let sansDate = 0;
-      for (const l of parMois.get(cle) ?? []) {
-        if (!datable(l)) {
-          // Pas de barre. Compté pour la pastille « sans date » de SON année,
-          // et, s'il est en retard, pour la couture des années passées.
-          sansDate += 1;
-          if (l.genre === "verif" && l.registre === "enRetard") retardSansDate += 1;
-          continue;
-        }
-        compte[etatDeLaLigne(l)] += 1;
-      }
-      return {
-        cle,
-        label: MOIS_FR_COURT[i],
-        labelLong: `${MOIS_FR[i]} ${a}`,
-        ...compte,
-        retardSansDate,
-        sansDate,
-      };
-    });
+  const datable = (l: LigneMois<(typeof verifsVisibles)[number]>) =>
+    estDatable(l, aujourdhui);
 
   // La règle couvre TOUTES les années du dossier, d'un seul tenant : de
   // la plus ancienne dette au contrôle quinquennal le plus lointain, sans
@@ -496,7 +392,7 @@ export default async function CalendrierPage({
   const anneeMax = Math.max(anneeCourante, ...anneesAvecLignes);
   const anneesRegle: AnneeRegle[] = Array.from(
     { length: anneeMax - anneeMin + 1 },
-    (_, i) => ({ annee: anneeMin + i, mois: regleDeLAnnee(anneeMin + i) }),
+    (_, i) => ({ annee: anneeMin + i, mois: regleDeLAnnee(parMois, anneeMin + i, aujourdhui) }),
   );
 
   // ─────────────────────────────────────────────────────────────────
@@ -722,7 +618,14 @@ export default async function CalendrierPage({
     }
   >();
 
-  for (const e of autresVisibles) {
+  // Les lignes « autre » de la liste mensuelle, et non `autresVisibles` : la
+  // carte d'une famille pose chaque échéance là où la liste la range — une
+  // opération en cours à sa FIN (`lignesDuCalendrier`). Posée à son début, elle
+  // colorait la case de mars quand la liste la montrait en septembre
+  // (relecture, 2026-09-15).
+  for (const l of lignes) {
+    if (l.genre !== "autre") continue;
+    const { e, etat } = l;
     let f = parFamille.get(e.famille);
     if (!f) {
       f = {
@@ -734,14 +637,13 @@ export default async function CalendrierPage({
       };
       parFamille.set(e.famille, f);
     }
-    const etat = etatDeLaLigne({ genre: "autre", date: e.date, e });
-    // La date EN JEU pour la « prochaine » de la famille : une opération en
-    // cours annonçait « Dans 60 jours » sur son début passé (relecture,
-    // 2026-09-14). Le placement dans les mois, lui, garde le début.
-    f.dates.push({ date: dateEnJeuAutre(e, aujourdhui), etat });
+    // La date EN JEU, pour la « prochaine » de la famille comme pour la case
+    // du mois : une opération en cours annonçait « Dans 60 jours » sur son
+    // début passé (relecture, 2026-09-14).
+    f.dates.push({ date: l.date, etat });
     f.compte[etat] += 1;
 
-    const c = composantesCiviles(e.date);
+    const c = composantesCiviles(l.date);
     if (c.annee !== anneeCourante) {
       f.horsAnnee += 1;
     } else {
@@ -754,10 +656,10 @@ export default async function CalendrierPage({
         id: e.id,
         href: e.href,
         mois: c.mois,
-        jour: FMT_JOUR.format(e.date),
-        moisCourt: FMT_MOIS_COURT.format(e.date),
+        jour: FMT_JOUR.format(l.date),
+        moisCourt: FMT_MOIS_COURT.format(l.date),
         titre: e.libelle,
-        meta: metaAutre(e),
+        meta: avecMentionFin(metaAutre(e), l.fin),
         etat,
       });
     }
@@ -1326,13 +1228,18 @@ export default async function CalendrierPage({
                         <li key={e.id} className={sep}>
                           <LigneEcheance
                             href={e.href}
-                            date={e.date}
+                            // La date de RANGEMENT, celle de la section et du
+                            // tri : pour une opération en cours, sa fin. La
+                            // méta le dit EN TÊTE — au bout, la troncature
+                            // l'effaçait, et la tuile « 25 SEPT. » se relisait
+                            // comme le début des travaux (2026-09-15).
+                            date={ligne.date}
                             type={e.type}
                             titre={e.libelle}
-                            meta={metaAutre(e)}
+                            meta={avecMentionFin(metaAutre(e), ligne.fin)}
                             // La tuile-date suffit pour le futur : seule
                             // l'alerte mérite une pastille.
-                            registre={etatDeLaLigne(ligne)}
+                            registre={ligne.etat}
                             pastille={
                               e.tone === "alerte" ? (
                                 <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">

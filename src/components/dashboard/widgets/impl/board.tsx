@@ -43,7 +43,12 @@ import {
 } from "@/lib/etablissements/illustration";
 import { HeroBatiments } from "./hero-batiments";
 import type { Recommandation } from "@/lib/dashboard/recommandations";
-import { construireFrise, type EchelleFrise } from "@/lib/dashboard/frise";
+import {
+  CADRAGE_INITIAL,
+  construireFrise,
+  MARGE_PISTE,
+  type EchelleFrise,
+} from "@/lib/dashboard/frise";
 import { composantesCiviles } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import {
@@ -296,6 +301,12 @@ function Lien({
   );
 }
 
+/** L'allure d'un lien dans une phrase — partagée avec le bouton « Y aller »
+ *  de la frise, qui agit sans naviguer. Le contour de focus est celui du
+ *  board (`--board-blue-strong`). */
+const CLASSES_LIEN_DANS_PHRASE =
+  "font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)]";
+
 /**
  * Un lien DANS une phrase : souligné, à la taille du texte qui le porte.
  * `Lien` est un bouton plein — posé en fin de note, il sautait sur sa propre
@@ -310,10 +321,7 @@ function LienDansPhrase({
   children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
-    >
+    <Link href={href} className={CLASSES_LIEN_DANS_PHRASE}>
       {children}
     </Link>
   );
@@ -479,10 +487,14 @@ function Releve({
   valeur,
   libelle,
   alerte = false,
+  precision = null,
 }: {
   valeur: number;
   libelle: string;
   alerte?: boolean;
+  /** Ce que le nombre contient et que le mot ne dit pas — « dont 5 sans date
+   *  connue » (`Brief.precisionReleveRetard`, 2026-09-15). */
+  precision?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -497,6 +509,11 @@ function Releve({
       <span className="board-eyebrow text-[color:var(--board-slate-mid)]">
         {libelle}
       </span>
+      {precision ? (
+        <span className="text-[11.5px] leading-[1.3] tabular-nums text-[color:var(--board-slate-mid)]">
+          {precision}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -598,6 +615,10 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
                   valeur={totalUrgent}
                   libelle={LIBELLE_ETAT_COURT.enRetard}
                   alerte={totalUrgent > 0}
+                  // La part sans date connue que le titre nomme : sans elle,
+                  // « DÉPASSÉES 14 » contredisait « dont cinq sans date
+                  // connue » juste au-dessus (2026-09-15).
+                  precision={brief.precisionReleveRetard}
                 />
               </div>
               <div className="w-px bg-[color:rgba(10,10,10,.12)]" />
@@ -778,8 +799,6 @@ const VOIE_BASSE = AXE_Y + 16;
 const PISTE_HAUTEUR = VOIE_BASSE + CARTE_HAUTEUR_MAX + 10;
 /** Demi-largeur d'une carte de marqueur — sert à la borner aux extrémités. */
 const DEMI_CARTE = 86;
-/** Marge à gauche d'aujourd'hui au cadrage initial, en pixels. */
-const CADRAGE_INITIAL = 130;
 
 /** Registre visuel d'un marqueur. La frise ne sert que deux urgences :
  *  le rouge (dépassé ou en alerte), l'orange (dans les 30 jours). Tout
@@ -918,19 +937,42 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
     if (vue !== "frise") return;
     const el = piste.current;
     if (!el) return;
-    el.scrollLeft = Math.max(0, frise.xAujourdhui - CADRAGE_INITIAL);
+    // Le cadrage vient de `construireFrise`, qui s'en sert aussi pour savoir
+    // quelles cartes sont hors de l'écran à l'ouverture (`horsCadrage`).
+    el.scrollLeft = frise.xCadrage;
     majBords();
-  }, [vue, echelle, frise.xAujourdhui, majBords]);
+  }, [vue, echelle, frise.xCadrage, majBords]);
+
+  // `?.` : un navigateur ou un environnement sans `matchMedia` défile sans
+  // animation plutôt que de lever une erreur.
+  const comportementDefilement = (): ScrollBehavior =>
+    (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? true)
+      ? "auto"
+      : "smooth";
 
   const defiler = (sens: -1 | 1) => {
     const el = piste.current;
     if (!el) return;
-    const anime = !window.matchMedia("(prefers-reduced-motion: reduce)")
-      .matches;
     el.scrollBy({
       left: sens * el.clientWidth * 0.8,
-      behavior: anime ? "smooth" : "auto",
+      behavior: comportementDefilement(),
     });
+  };
+
+  // Jusqu'à la première carte hors du cadrage d'ouverture, posée à la même
+  // marge qu'aujourd'hui à l'ouverture, et le focus sur elle : un lecteur
+  // d'écran ou un clavier arrive sur ce qu'on lui a nommé (2026-09-15).
+  const allerHorsCadrage = () => {
+    const el = piste.current;
+    const cible = frise.horsCadrage[0];
+    if (!el || !cible) return;
+    el.scrollTo({
+      left: Math.max(0, cible.x - CADRAGE_INITIAL),
+      behavior: comportementDefilement(),
+    });
+    [...el.querySelectorAll<HTMLElement>("[data-marqueur]")]
+      .find((c) => c.dataset.marqueur === cible.cle)
+      ?.focus({ preventScroll: true });
   };
 
   // Le compte « en retard » de l'en-tête ne vient ni de la frise ni des
@@ -1210,7 +1252,9 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
             aria-label="Frise des échéances, de 3 mois en arrière à 24 mois en avant"
             className="overflow-x-auto overflow-y-hidden overscroll-x-contain"
           >
-            <div className="w-max px-[30px]">
+            {/* La marge vient de `MARGE_PISTE`, que `construireFrise` lit
+                pour savoir quels points sont hors de l'écran. */}
+            <div className="w-max" style={{ paddingInline: MARGE_PISTE }}>
               <div
                 className="relative"
                 style={{ width: frise.largeur, height: PISTE_HAUTEUR }}
@@ -1291,6 +1335,7 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
                           extrémités de l'axe : elle y glisse légèrement, le
                           point reste à sa place. */}
                       <LienProvenance
+                        data-marqueur={m.cle}
                         href={
                           grappe
                             ? hrefCalendrier
@@ -1419,6 +1464,32 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
         </p>
       ) : null}
 
+      {vue === "frise" && frise.horsCadrage.length > 0 ? (
+        // Une opération non close dont le point est hors de l'écran à
+        // l'ouverture, à gauche : en cours, en retard ou échue, rien ne disait
+        // qu'il fallait défiler pour la trouver (2026-09-15). La note la nomme
+        // et le bouton y mène. La règle est écrite sur `Frise.horsCadrage`.
+        //
+        // UNE PHRASE VRAIE QUEL QUE SOIT LE DÉFILEMENT, ET AUCUN ÉTAT. La note
+        // disait « hors de l'écran » et s'effaçait après « Y aller » ; l'état
+        // qui l'effaçait ne suivait ni les allers-retours d'échelle, qui
+        // recadrent, ni un changement de données sans démontage — la note
+        // restait effacée sur une opération de nouveau hors de l'écran
+        // (relecture, 2026-09-15). « Plus tôt, à gauche du cadrage
+        // d'ouverture » reste vrai avant comme après le défilement.
+        <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
+          {frise.horsCadrage.length > 1
+            ? `${frise.horsCadrage.length} opérations non closes se trouvent plus tôt sur la frise, à gauche du cadrage d'ouverture.`
+            : `Une opération non close se trouve plus tôt sur la frise, à gauche du cadrage d'ouverture : « ${frise.horsCadrage[0].libelle} ».`}{" "}
+          <button
+            type="button"
+            onClick={allerHorsCadrage}
+            className={CLASSES_LIEN_DANS_PHRASE}
+          >
+            Y aller
+          </button>
+        </p>
+      ) : null}
       {vue === "frise" && frise.nbPlaces > frise.marqueurs.length ? (
         // Rien n'est caché : ce qui est trop rapproché pour tenir en
         // cartes distinctes est réuni en grappes. On le dit, sinon le
