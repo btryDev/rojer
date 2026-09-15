@@ -90,11 +90,12 @@ export type Brief = {
   titre: string;
   /**
    * La légende du relevé « Dépassées » : « dont 5 sans date connue », « toutes
-   * sans date connue », ou `null` quand toutes les échéances comptées sont
-   * datées. Le titre nomme la part sans date ; le relevé posé dessous gardait
-   * son seul nombre, et « DÉPASSÉES 14 » contredisait « dont cinq sans date
-   * connue » soixante pixels plus haut (2026-09-15). Le mot de l'état ne change pas
-   * (`LIBELLE_ETAT`) : la légende précise ce qu'il compte.
+   * sans date connue » (« sans date connue » pour une seule), ou `null` quand
+   * toutes les échéances comptées sont datées. Le titre nomme la part sans
+   * date ; le relevé posé dessous gardait son seul nombre, et « DÉPASSÉES 14 »
+   * contredisait « dont cinq sans date connue » soixante pixels plus haut
+   * (2026-09-15). Le mot de l'état ne change pas (`LIBELLE_ETAT`) : la légende
+   * précise ce qu'il compte.
    */
   precisionReleveRetard: string | null;
   paragraphe: string;
@@ -437,13 +438,16 @@ export function construireBrief(e: EntreeBrief): Brief {
     datePill: formaterDate(e.aujourdhui),
     titre,
     // « toutes » quand aucune n'est datée : « DÉPASSÉES 5, dont 5 sans date
-    // connue » se lisait comme deux ensembles (relecture, 2026-09-15).
+    // connue » se lisait comme deux ensembles (relecture, 2026-09-15). Et pour
+    // une seule, ni « toutes » ni « dont 1 » : « sans date connue ».
     precisionReleveRetard:
       sansDate === 0
         ? null
-        : sansDate === e.retards.total
-          ? "toutes sans date connue"
-          : `dont ${sansDate} sans date connue`,
+        : sansDate < e.retards.total
+          ? `dont ${sansDate} sans date connue`
+          : sansDate > 1
+            ? "toutes sans date connue"
+            : "sans date connue",
     paragraphe: construireParagraphe(e),
     gestes,
   };
