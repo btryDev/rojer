@@ -21,9 +21,12 @@ vi.mock("@/components/navigation/LienProvenance", () => ({
 
 import { BlocFrise } from "./board";
 
-/** Le 15 septembre 2026, à midi à Paris. */
-const AUJOURDHUI = new Date("2026-09-15T10:00:00.000Z");
-const jour = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
+// La géométrie de la frise se compte en jours LOCAUX : les dates des tests le
+// sont aussi, à midi, pour tenir sous n'importe quel fuseau du processus
+// (`TZ=America/Los_Angeles` faisait tomber une date UTC la veille).
+const le = (mois: number, jour: number) => new Date(2026, mois - 1, jour, 12);
+/** Le 15 septembre 2026. */
+const AUJOURDHUI = le(9, 15);
 
 const ventilation = {
   parFamille: { controle: 0, travaux: 0, operations: 0, papiers: 0, personnel: 0 },
@@ -46,12 +49,17 @@ const bundle = (evenementsHorizon: unknown[]) =>
     nbVerifs: 0,
   }) as unknown as DashboardBundle;
 
-const operation = (id: string, debut: string, fin: string) => ({
+const operation = (
+  id: string,
+  debut: Date,
+  fin: Date,
+  tone: "ok" | "alerte" = "ok",
+) => ({
   id,
   libelle: `Permis de feu n°${id} — Cuisine`,
-  date: jour(debut),
-  dateFin: jour(fin),
-  tone: "ok",
+  date: debut,
+  dateFin: fin,
+  tone,
   equipement: "",
   type: "permis-feu",
   famille: "operations",
@@ -61,7 +69,7 @@ const operation = (id: string, debut: string, fin: string) => ({
 const enFrise = (evenements: unknown[]) => {
   const rendu = render(<BlocFrise bundle={bundle(evenements)} />);
   fireEvent.click(screen.getByRole("button", { name: "Revenir à la frise" }));
-  return rendu.container.textContent ?? "";
+  return () => rendu.container.textContent ?? "";
 };
 
 const scrollTo = vi.fn();
@@ -76,41 +84,48 @@ afterEach(() => {
   scrollTo.mockReset();
 });
 
-describe("frise du tableau de bord — une opération hors du cadrage d'ouverture", () => {
+describe("frise du tableau de bord — une opération hors de l'écran à l'ouverture", () => {
   /**
    * 2026-09-15. La frise s'ouvre cadrée sur aujourd'hui : une opération non
-   * terminée dont le point tombe plus à gauche — commencée avant la fenêtre,
-   * ou il y a trois semaines — était hors de l'écran sans que rien ne le dise.
+   * close dont le point tombe plus à gauche — commencée avant la fenêtre, il y
+   * a trois semaines, ou échue — était hors de l'écran sans que rien ne le dise.
    */
   it("la nomme sous la frise, avec un moyen d'y aller", () => {
-    const texte = enFrise([operation("3", "2026-04-01", "2026-09-25")]);
-    expect(texte).toContain(
-      "Une opération non terminée est hors de l'écran, à gauche de la frise : « Permis de feu n°3 — Cuisine ».",
+    const texte = enFrise([operation("3", le(4, 1), le(9, 25))]);
+    expect(texte()).toContain(
+      "Une opération non close est hors de l'écran, à gauche de la frise : « Permis de feu n°3 — Cuisine ».",
     );
     expect(screen.getByRole("button", { name: "Y aller" })).toBeTruthy();
   });
 
+  it("nomme aussi une opération échue non close, posée au bord gauche", () => {
+    const texte = enFrise([operation("6", le(4, 1), le(8, 20), "alerte")]);
+    expect(texte()).toContain("Une opération non close est hors de l'écran");
+  });
+
   it("les compte quand elles sont plusieurs", () => {
     const texte = enFrise([
-      operation("3", "2026-04-01", "2026-09-25"),
-      operation("4", "2026-08-25", "2026-10-10"),
+      operation("3", le(4, 1), le(9, 25)),
+      operation("4", le(8, 25), le(10, 10)),
     ]);
-    expect(texte).toContain(
-      "2 opérations non terminées sont hors de l'écran, à gauche de la frise.",
+    expect(texte()).toContain(
+      "2 opérations non closes sont hors de l'écran, à gauche de la frise.",
     );
   });
 
-  it("ne dit rien d'une opération visible à l'ouverture", () => {
-    const texte = enFrise([operation("5", "2026-09-10", "2026-09-25")]);
-    expect(texte).not.toContain("hors de l'écran");
+  it("ne dit rien d'une opération visible à l'ouverture, au bord compris", () => {
+    // Le 1er septembre : point à 920 px, écran ouvert à 930, marge de 30.
+    const texte = enFrise([operation("5", le(9, 1), le(9, 25))]);
+    expect(texte()).not.toContain("hors de l'écran");
   });
 
-  it("« Y aller » défile jusqu'à la première et lui donne le focus", () => {
-    enFrise([operation("4", "2026-08-25", "2026-10-10")]);
+  it("« Y aller » défile jusqu'à la première, lui donne le focus, et la note s'efface", () => {
+    const texte = enFrise([operation("4", le(8, 25), le(10, 10))]);
     fireEvent.click(screen.getByRole("button", { name: "Y aller" }));
     // Fenêtre ouverte au 1er juin ; le 25 août est à 85 jours, 10 px par jour,
     // posé à la marge d'ouverture (130 px). Mouvement réduit : pas d'animation.
     expect(scrollTo).toHaveBeenCalledWith({ left: 720, behavior: "auto" });
     expect(document.activeElement?.getAttribute("data-marqueur")).toBe("4");
+    expect(texte()).not.toContain("hors de l'écran");
   });
 });

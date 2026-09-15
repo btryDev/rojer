@@ -46,6 +46,7 @@ import type { Recommandation } from "@/lib/dashboard/recommandations";
 import {
   CADRAGE_INITIAL,
   construireFrise,
+  MARGE_PISTE,
   type EchelleFrise,
 } from "@/lib/dashboard/frise";
 import { composantesCiviles } from "@/lib/dates";
@@ -910,6 +911,11 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
 
   const piste = useRef<HTMLDivElement | null>(null);
   const [bords, setBords] = useState({ gauche: false, droite: false });
+  // L'échelle sur laquelle « Y aller » a déjà mené aux opérations hors de
+  // l'écran : la note qui les dit hors de l'écran s'efface alors, jusqu'au
+  // prochain cadrage d'ouverture (autre échelle, retour à la frise).
+  const [horsCadrageAtteint, setHorsCadrageAtteint] =
+    useState<EchelleFrise | null>(null);
 
   // La fenêtre couvre trois mois de passé et deux ans à venir : c'est le
   // conteneur qui défile, l'échelle ne fait que zoomer.
@@ -942,8 +948,10 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
     majBords();
   }, [vue, echelle, frise.xCadrage, majBords]);
 
+  // `?.` : un navigateur ou un environnement sans `matchMedia` défile sans
+  // animation plutôt que de lever une erreur.
   const comportementDefilement = (): ScrollBehavior =>
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? true)
       ? "auto"
       : "smooth";
 
@@ -970,6 +978,7 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
     [...el.querySelectorAll<HTMLElement>("[data-marqueur]")]
       .find((c) => c.dataset.marqueur === cible.cle)
       ?.focus({ preventScroll: true });
+    setHorsCadrageAtteint(echelle);
   };
 
   // Le compte « en retard » de l'en-tête ne vient ni de la frise ni des
@@ -1079,7 +1088,10 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
             : null}
           <button
             type="button"
-            onClick={() => setVue(vue === "frise" ? "calendrier" : "frise")}
+            onClick={() => {
+              setVue(vue === "frise" ? "calendrier" : "frise");
+              setHorsCadrageAtteint(null);
+            }}
             aria-pressed={vue === "calendrier"}
             aria-label={
               vue === "frise"
@@ -1249,7 +1261,9 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
             aria-label="Frise des échéances, de 3 mois en arrière à 24 mois en avant"
             className="overflow-x-auto overflow-y-hidden overscroll-x-contain"
           >
-            <div className="w-max px-[30px]">
+            {/* La marge vient de `MARGE_PISTE`, que `construireFrise` lit
+                pour savoir quels points sont hors de l'écran. */}
+            <div className="w-max" style={{ paddingInline: MARGE_PISTE }}>
               <div
                 className="relative"
                 style={{ width: frise.largeur, height: PISTE_HAUTEUR }}
@@ -1459,16 +1473,18 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
         </p>
       ) : null}
 
-      {vue === "frise" && frise.horsCadrage.length > 0 ? (
-        // Une opération non terminée dont le point tombe à gauche du cadrage
-        // d'ouverture — commencée avant la fenêtre, ou simplement il y a plus
-        // de deux semaines : sa carte est hors de l'écran, et le « sous 30 j »
-        // qui la compte ne disait pas où la trouver (2026-09-15). La note la
-        // nomme, et le bouton y mène.
+      {vue === "frise" &&
+      frise.horsCadrage.length > 0 &&
+      horsCadrageAtteint !== echelle ? (
+        // Une opération non close dont le point est hors de l'écran à
+        // l'ouverture, à gauche : en cours, en retard ou échue, rien ne disait
+        // qu'il fallait défiler pour la trouver (2026-09-15). La note la nomme,
+        // le bouton y mène, et elle s'efface une fois qu'il y a mené — elle ne
+        // dirait plus vrai. La règle est écrite sur `Frise.horsCadrage`.
         <p className="mt-2 text-[11.5px] text-[color:var(--board-slate-soft)]">
           {frise.horsCadrage.length > 1
-            ? `${frise.horsCadrage.length} opérations non terminées sont hors de l'écran, à gauche de la frise.`
-            : `Une opération non terminée est hors de l'écran, à gauche de la frise : « ${frise.horsCadrage[0].libelle} ».`}{" "}
+            ? `${frise.horsCadrage.length} opérations non closes sont hors de l'écran, à gauche de la frise.`
+            : `Une opération non close est hors de l'écran, à gauche de la frise : « ${frise.horsCadrage[0].libelle} ».`}{" "}
           <button
             type="button"
             onClick={allerHorsCadrage}

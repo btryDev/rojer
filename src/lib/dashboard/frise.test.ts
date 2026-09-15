@@ -275,31 +275,43 @@ describe("construireFrise — proche", () => {
     expect(frise([{ ...ev("op", -150), dateFin: fin(-120) }]).marqueurs).toHaveLength(0);
   });
 
-  it("nomme les opérations non terminées dont la carte est à gauche du cadrage d'ouverture", () => {
-    // Relecture du 2026-09-15 : la note ne retenait que les opérations
-    // commencées avant la fenêtre. En vue « 90 jours », la frise s'ouvre
-    // ~13 jours avant aujourd'hui : une opération commencée il y a 19 jours
-    // et finissant dans 10 était hors de l'écran, comptée « sous 30 j », et
-    // la note ne disait rien.
+  it("nomme toute opération non close dont le point est hors de l'écran à l'ouverture", () => {
+    // Relecture du 2026-09-15. La règle : une opération (elle porte une fin),
+    // hors de l'écran — en cours, en retard sur son début ou échue, quel que
+    // soit son terme. Une vérification n'en est pas une.
     const fin = (n: number) => {
       const d = new Date(LE_8_AOUT);
       d.setDate(d.getDate() + n);
       return d;
     };
     const jours = frise([
-      { ...ev("hors", -19), dateFin: fin(10) },
+      { ...ev("echue", -150, "alerte"), dateFin: fin(-20) },
+      { ...ev("debut-manque", -30, "alerte"), dateFin: fin(10) },
+      { ...ev("fin-lointaine", -25), dateFin: fin(60) },
+      { ...ev("en-cours", -19), dateFin: fin(10) },
+      { ...ev("au-bord", -17), dateFin: fin(10) },
+      { ...ev("visible-au-bord", -15), dateFin: fin(10) },
       { ...ev("visible", -7), dateFin: fin(10) },
-      { ...ev("finie", -40), dateFin: fin(-2) },
-      ev("retard", -30, "alerte"),
+      ev("verification", -30, "alerte"),
     ]);
     expect(jours.xCadrage).toBe(jours.xAujourdhui - CADRAGE_INITIAL);
-    expect(jours.horsCadrage.map((h) => h.libelle)).toEqual(["Événement hors"]);
-    expect(jours.horsCadrage[0].x).toBeLessThan(jours.xCadrage);
+    expect(jours.horsCadrage.map((h) => h.libelle)).toEqual([
+      "Événement echue",
+      "Événement debut-manque",
+      "Événement fin-lointaine",
+      "Événement en-cours",
+      "Événement au-bord",
+    ]);
+    // La marge de la piste compte : à 15 jours, le point est 10 px à
+    // l'intérieur de l'écran ; à 17 jours, 10 px dehors.
+    expect(
+      frise([{ ...ev("a", -15), dateFin: fin(10) }]).horsCadrage,
+    ).toEqual([]);
 
-    // En vue « 12 mois », le même cadrage couvre ~50 jours de passé.
+    // En vue « 12 mois », le même cadrage couvre ~60 jours de passé.
     const mois = frise(
       [
-        { ...ev("hors", -60), dateFin: fin(10) },
+        { ...ev("hors", -70), dateFin: fin(10) },
         { ...ev("visible", -19), dateFin: fin(10) },
       ],
       "mois",

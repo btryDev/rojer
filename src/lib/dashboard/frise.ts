@@ -17,7 +17,6 @@ import { FUSEAU_REFERENCE } from "@/lib/dates";
 import type { TypeEcheance } from "@/lib/calendrier/echeances";
 import { raccourcirLibelle } from "./libelles";
 import { dateEnJeuEvenement } from "@/lib/calendrier/etats";
-import { estEnRetard } from "@/lib/dates/retard";
 
 export type EvenementFrise = {
   id: string;
@@ -104,12 +103,17 @@ export type Frise = {
   /** Abscisse du bord gauche de l'écran à l'ouverture (`CADRAGE_INITIAL`). */
   xCadrage: number;
   /**
-   * Les opérations NON TERMINÉES dont le point tombe à gauche du cadrage
-   * d'ouverture, dans l'ordre de l'axe. Leur carte est hors de l'écran alors
-   * que le « sous 30 j » les compte : le tableau de bord les nomme sous la
-   * frise, et mène à la première (2026-09-15). Une opération commencée avant
-   * la fenêtre, posée au bord gauche, en est un cas ; celle du 20 juin au
-   * 25 septembre, en vue « 90 jours », en est un autre.
+   * Les OPÉRATIONS (une échéance qui porte une `dateFin` : permis de feu, plan
+   * de prévention) dont le point est hors de l'écran à l'ouverture, à gauche du
+   * cadrage, dans l'ordre de l'axe. Le tableau de bord les nomme sous la frise
+   * et mène à la première (2026-09-15).
+   *
+   * LA RÈGLE, ET RIEN D'AUTRE : non close — les closes ne sont pas chargées —
+   * et hors écran. En cours, en retard sur son début, échue : toutes comptent,
+   * parce qu'aucune n'a de place visible à l'ouverture alors qu'une opération
+   * non close reste à suivre. Aucun horizon : la note ne promet ni « sous
+   * 30 jours » ni une ancienneté, qui dépendrait de l'échelle (deux semaines en
+   * vue « 90 jours », deux mois en vue « 12 mois »).
    */
   horsCadrage: { libelle: string; cle: string; x: number }[];
   mois: GraduationMois[];
@@ -145,6 +149,12 @@ export type EchelleFrise = keyof typeof PX_PAR_JOUR;
 /** Marge à gauche d'aujourd'hui au cadrage d'ouverture, en pixels : la frise
  *  s'ouvre défilée à `xAujourdhui - CADRAGE_INITIAL`. */
 export const CADRAGE_INITIAL = 130;
+
+/** Marge intérieure de la piste qui défile, de chaque côté, en pixels : un
+ *  point d'abscisse `x` est à `x + MARGE_PISTE` dans la zone de défilement.
+ *  Le composant la pose, la fonction en tient compte (relecture, 2026-09-15 :
+ *  sans elle, un point visible au bord se disait hors de l'écran). */
+export const MARGE_PISTE = 30;
 
 /** Seuil « proche » : une échéance à moins de 30 jours mérite l'orange.
  *  Même horizon que la promesse produit — « ce qu'il doit faire dans les
@@ -260,12 +270,8 @@ export function construireFrise({
 
   const marqueurs: MarqueurFrise[] = groupes.map((groupe, i) => {
     for (const e of groupe) {
-      // Sa fin, ou sa date faute de fin : une échéance dont la date est
-      // derrière le cadrage et sans fin à venir n'a plus rien à tenir.
-      if (
-        x(place(e)) < xCadrage &&
-        !estEnRetard(e.dateFin ?? e.date, aujourdhui)
-      ) {
+      // Une opération, hors de l'écran à l'ouverture (`horsCadrage`).
+      if (e.dateFin && x(place(e)) + MARGE_PISTE < xCadrage) {
         horsCadrage.push({
           libelle: raccourcirLibelle(e.libelle),
           cle: groupe[0].id,
