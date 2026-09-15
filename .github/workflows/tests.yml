@@ -17,6 +17,10 @@ on:
     branches: ["**"]
   pull_request:
 
+# Lecture du dépôt, rien d'autre.
+permissions:
+  contents: read
+
 jobs:
   vitest:
     runs-on: ubuntu-latest
@@ -26,9 +30,9 @@ jobs:
       DIRECT_URL: postgresql://factice:factice@localhost:5432/factice
       NEXT_PUBLIC_SUPABASE_URL: https://factice.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: factice
-      # Même fuseau que les postes de développement : quelques tests de la
-      # frise comparent des libellés de date calculés dans le fuseau local.
-      TZ: Europe/Paris
+      # Le fuseau des serveurs Vercel, et non celui des postes à Paris : un test
+      # qui ne passe qu'à Paris cache un défaut que la production verrait.
+      TZ: UTC
 
     steps:
       - uses: actions/checkout@v7

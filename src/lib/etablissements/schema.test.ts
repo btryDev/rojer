@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { cleJourCivil } from "@/lib/dates";
 import {
   etablissementCreationSchema,
   etablissementSchema,
@@ -137,7 +138,13 @@ describe("etablissementSchema — dates civiles (registre, fiche renseignements)
       const d = res.data.dateAutorisationOuverture;
       expect(d).toBeInstanceOf(Date);
       // ADR-011 : le jour civil, pas minuit UTC — qui serait la veille à Paris.
-      expect(d?.getDate()).toBe(26);
+      // Lu dans le fuseau de référence, pas celui de la machine : `getDate()`
+      // passait sur un poste à Paris et tombait sur un runner en UTC
+      // (2026-09-15, premier passage de la suite en CI).
+      expect(d && cleJourCivil(d)).toBe("2026-08-26");
+      // Et l'instant exact : minuit à Paris en été. `cleJourCivil` seul
+      // accepterait aussi minuit UTC, qui tombe à 2 h le même jour à Paris.
+      expect(d?.toISOString()).toBe("2026-08-25T22:00:00.000Z");
     }
   });
 
