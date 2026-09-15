@@ -515,7 +515,8 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     crée une obligation sur mesure (**renumérotée le 2026-09-15, anciennement
     014**)
 
-**Six ADR ont été déplacées le 2026-09-01**, chacune portant en tête le renvoi
+**Sept ADR ont été déplacées le 2026-09-01** (« six » disait la phrase, qui en
+énumère sept), chacune portant en tête le renvoi
 vers celle qui la remplace ou l'amende : **001** redevient effective (028) ·
 **013** amendée (028) · **035** (ex-014-prescriptions) amendée (032) · **015** remplacée
 (030) · **017** amendée (030) · **019** remplacée (029) · **020** amendée (031).
