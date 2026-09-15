@@ -34,8 +34,15 @@ import {
  * module que le moteur se met à importer entre dans le relevé sans qu'on y
  * pense. Chaque module est relevé TRANSPILÉ — types et commentaires retirés —,
  * si bien qu'un commentaire daté ou une annotation de type ne font rien tomber.
- * S'y ajoute une DONNÉE que le moteur lit et que l'empreinte ne hache pas : la
- * table retiré → absorbant de `OBLIGATIONS_RETIREES`.
+ * De `referentiels/conformite/index.ts`, les seules DÉCLARATIONS DE FONCTIONS
+ * (`obligationParId`, `empreinteReferentiel`, `canonique`…) : ni
+ * `REFERENTIEL_VERSION`, qui ferait tomber le test à chaque version, ni les
+ * données, ni ses imports. La première rédaction excluait tout le fichier et
+ * prétendait son code scellé par construction : faux — `obligationParId` qui
+ * normaliserait l'identifiant ne bougeait ni l'empreinte ni le relevé
+ * (relecture du 2026-09-15). S'y ajoute une DONNÉE que le moteur lit et que
+ * l'empreinte ne hache pas : la table retiré → absorbant de
+ * `OBLIGATIONS_RETIREES`, retraits sans absorbant exclus — le moteur les ignore.
  *
  * CE QUI NE L'EST PAS, et pourquoi — vérifié en lisant `empreinteReferentiel` :
  *  · les DONNÉES du référentiel (`referentiels/conformite/`, hors `types.ts`) et
@@ -43,22 +50,22 @@ import {
  *    l'identifiant, la périodicité, `premierDelai`, le libellé, les
  *    réalisateurs, les typologies, les conditions, les catégories, le porteur,
  *    le contexte d'équipement et `succedeA` : tout ce que la régénération
- *    recopie ou dont elle déduit une ligne. `conformite/index.ts` en fait
- *    partie : il porte `REFERENTIEL_VERSION`, qui le ferait tomber à chaque
- *    version ; son code (`empreinteReferentiel`, `obligationParId`) change le
- *    sceau par construction s'il change l'empreinte, et sa seule donnée lue
- *    par le moteur hors empreinte — `absorbePar` — est relevée à part ;
+ *    recopie ou dont elle déduit une ligne. Trou connu : les déclarations de
+ *    `index.ts` qui ne sont pas des fonctions (`let _index`, la composition de
+ *    `obligationsConformite`) ne sont pas relevées ;
  *  · `calendrier/version-moteur.ts`, qui porte la constante elle-même ;
  *  · l'accès aux données (`lib/prisma`) et la garde de session (`lib/auth/`),
  *    qui ne décident d'aucune ligne ; les imports de type seul ; les paquets.
  *
- * Une montée de version de TypeScript peut changer la sortie du transpileur,
- * donc le relevé, sans qu'aucune règle ait bougé : recopier le relevé suffit.
+ * Une montée de TypeScript, ou du lockfile qui le fixe, peut changer la sortie
+ * du transpileur, donc le relevé, sans qu'aucune règle ait bougé : recopier le
+ * relevé suffit.
  */
 
 /** La racine du dépôt, depuis ce fichier — jamais le répertoire courant. */
 const RACINE = fileURLToPath(new URL("../../..", import.meta.url));
 const ENTREE = "src/lib/calendrier/actions.ts";
+const INDEX_REFERENTIEL = "src/lib/referentiels/conformite/index.ts";
 
 /** Chemins posix relatifs à la racine, séparateurs normalisés. */
 function estHorsReleve(chemin: string): boolean {
@@ -66,7 +73,8 @@ function estHorsReleve(chemin: string): boolean {
   if (chemin.startsWith("src/lib/referentiels/corpus/")) return true;
   if (
     chemin.startsWith("src/lib/referentiels/conformite/") &&
-    chemin !== "src/lib/referentiels/conformite/types.ts"
+    chemin !== "src/lib/referentiels/conformite/types.ts" &&
+    chemin !== INDEX_REFERENTIEL
   ) {
     return true;
   }
@@ -80,7 +88,7 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 0,
-  empreinte: "376939893574e58d",
+  empreinte: "613e07b1fca257bb",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
@@ -109,7 +117,6 @@ function modulesDuMoteur(): Map<string, string> {
     const chemin = versPosix(aVisiter.pop()!);
     if (vus.has(chemin) || estHorsReleve(chemin)) continue;
     const texte = readFileSync(surDisque(chemin), "utf8");
-    vus.set(chemin, texte);
     const source = ts.createSourceFile(
       chemin,
       texte,
@@ -117,6 +124,19 @@ function modulesDuMoteur(): Map<string, string> {
       false,
       chemin.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
     );
+    if (chemin === INDEX_REFERENTIEL) {
+      // Ses seules FONCTIONS : pas `REFERENTIEL_VERSION`, pas les données, et
+      // pas ses imports — les fichiers de données, que l'empreinte scelle.
+      vus.set(
+        chemin,
+        source.statements
+          .filter(ts.isFunctionDeclaration)
+          .map((f) => f.getText(source))
+          .join("\n"),
+      );
+      continue;
+    }
+    vus.set(chemin, texte);
     for (const instruction of source.statements) {
       const estImport =
         ts.isImportDeclaration(instruction) &&
@@ -149,8 +169,10 @@ function releverLeMoteur(): { empreinte: string; modules: string[] } {
     hachage.update(`${chemin}\n${outputText}\n`);
   }
   // La donnée que le moteur lit hors empreinte (`SUCCESSIONS_DECLAREES`).
+  // Les retraits SANS absorbant n'y entrent pas : le moteur les ignore.
   const successions = Object.entries(OBLIGATIONS_RETIREES)
-    .map(([id, r]) => `${id}>${r.absorbePar ?? ""}`)
+    .filter(([, r]) => r.absorbePar !== null)
+    .map(([id, r]) => `${id}>${r.absorbePar}`)
     .sort();
   hachage.update(`OBLIGATIONS_RETIREES.absorbePar\n${successions.join("\n")}\n`);
   return {
@@ -175,6 +197,8 @@ describe("VERSION_MOTEUR_CALENDRIER — le code du moteur scelle aussi le calend
         "seront régénérés à leur prochaine ouverture : une écriture en " +
         "production, à signaler à la propriétaire avant de fusionner.\n" +
         "  · NON (renommage, extraction, affichage) : recopiez l'empreinte seule.\n" +
+        "  · Une montée de TypeScript ou du lockfile peut aussi le faire tomber sans " +
+        "qu'aucune règle ait changé : c'est NON.\n" +
         `Modules relevés : ${modules.join(", ")}.`,
     ).toBe(RELEVE.empreinte);
   });
@@ -188,6 +212,7 @@ describe("VERSION_MOTEUR_CALENDRIER — le code du moteur scelle aussi le calend
     expect(modules).toContain("src/lib/referentiels/types-communs.ts");
     expect(modules).toContain("src/lib/referentiels/conformite/types.ts");
     expect(modules).toContain("src/lib/calendrier/generateur.ts");
+    expect(modules).toContain("src/lib/referentiels/conformite/index.ts");
     expect(modules).not.toContain("src/lib/calendrier/version-moteur.ts");
   });
 
