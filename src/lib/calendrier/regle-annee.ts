@@ -7,7 +7,6 @@
 
 import { composantesCiviles } from "@/lib/dates";
 import type { VerificationDatee } from "@/lib/dates/retard";
-import type { MoisRegle } from "@/components/calendrier/RegleAnnuelle";
 // `import type` : `echeances.ts` ouvre la base.
 import type { EcheanceCalendrier } from "./echeances";
 import { MOIS_FR, MOIS_FR_COURT } from "./labels";
@@ -20,6 +19,35 @@ import {
   type EtatEcheance,
   type LectureCalendrier,
 } from "./etats";
+
+/** Un mois de la règle. Les quatre compteurs sont exclusifs entre eux. */
+export type MoisRegle = {
+  /** Clé `AAAA-MM`, celle des sections de la liste. */
+  cle: string;
+  /** Libellé court affiché sous la graduation (« Jan », « Fév »…). */
+  label: string;
+  /** Libellé long, pour les lecteurs d'écran (« janvier 2026 »). */
+  labelLong: string;
+  enRetard: number;
+  proche: number;
+  lointain: number;
+  /** Occurrences déjà réalisées — le mois n'est pas qu'une dette. */
+  faite: number;
+  /**
+   * Retards SANS ÉCHÉANCE CONNUE rangés dans ce mois (leur date de
+   * génération) : jamais dessinés, mais une dette. Sans ce compte, un retard
+   * sans date d'une année passée n'avait aucune carte atteignable depuis
+   * l'année ouverte — `moisEnRetardAvant` ne lisait que `enRetard`
+   * (relecture, 2026-09-14). Absent = zéro.
+   */
+  retardSansDate?: number;
+  /**
+   * Toutes les lignes SANS ÉCHÉANCE CONNUE rangées dans ce mois, en retard ou
+   * non : jamais dessinées. Leur somme sur l'année est la pastille « sans
+   * date » de CETTE année. Absent = zéro.
+   */
+  sansDate?: number;
+};
 
 /** Une vérification telle que la page la lit : sa dernière réalisation jointe. */
 type VerificationLue = VerificationDatee & { derniereRealisation: Date | null };
