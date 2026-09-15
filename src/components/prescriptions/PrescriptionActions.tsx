@@ -11,7 +11,7 @@ import {
 } from "@/lib/prescriptions/actions";
 
 /**
- * Sortie de vie d'une prescription particulière (ADR-014).
+ * Sortie de vie d'une prescription particulière (ADR-035).
  *
  * Deux voies, et une seule est la voie normale :
  *

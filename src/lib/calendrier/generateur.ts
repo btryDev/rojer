@@ -212,7 +212,7 @@ export type VerificationGenere = {
    */
   datePrevueFaisantFoi?: boolean;
   /**
-   * Prescription particulière (ADR-014) à l'origine de la périodicité
+   * Prescription particulière (ADR-035) à l'origine de la périodicité
    * (surcharge) ou de la ligne (sur mesure). `null` = référentiel seul.
    */
   prescriptionId: string | null;
@@ -393,7 +393,7 @@ export function genererProchainesVerifications(
 
     for (const eq of porteurs) {
       // Périodicité effective : celle du référentiel, sauf surcharge d'une
-      // prescription particulière (ADR-014) sur cet équipement.
+      // prescription particulière (ADR-035) sur cet équipement.
       const surcharge = eq.id === null ? undefined : oa.surcharges?.[eq.id];
       const periodicite = surcharge?.periodicite ?? o.periodicite;
       const prescriptionId = surcharge?.prescriptionId ?? null;
@@ -532,7 +532,7 @@ export function genererProchainesVerifications(
 }
 
 /**
- * Criticité portée par les obligations sur mesure (ADR-014). Convention de
+ * Criticité portée par les obligations sur mesure (ADR-035). Convention de
  * tri, pas une cotation : une prescription d'autorité prime sur la plupart
  * des lignes du référentiel dans le calendrier, sans prétendre juger de sa
  * gravité.
@@ -541,7 +541,7 @@ export const CRITICITE_SUR_MESURE = 4 as const;
 
 /**
  * Génère les occurrences des obligations sur mesure issues de prescriptions
- * particulières (ADR-014). `obligationId` est préfixé `prescription:` pour
+ * particulières (ADR-035). `obligationId` est préfixé `prescription:` pour
  * que la clé d'idempotence `(obligationId, equipementId)` et la
  * réconciliation restent inchangées. Comme pour le référentiel, l'historique
  * est ignoré ici : c'est `reconcilierCalendrier` qui le lit.
@@ -776,7 +776,7 @@ export type OccurrenceExistante = {
    *  sans date est ouverte. */
   archiveLe?: Date | null;
   /** Prescription particulière à l'origine de la ligne ou de sa périodicité
-   *  (ADR-014). Optionnel : les fixtures antérieures n'en ont pas. */
+   *  (ADR-035). Optionnel : les fixtures antérieures n'en ont pas. */
   prescriptionId?: string | null;
 };
 

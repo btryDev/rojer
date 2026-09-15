@@ -1,13 +1,23 @@
-# ADR-014 — Prescriptions particulières propres à un établissement
+# ADR-035 — Prescriptions particulières propres à un établissement
 
+> **Renumérotée le 2026-09-15, anciennement 014.** Deux ADR portaient ce
+> numéro : celle-ci, datée du 2026-08-25, et `014-provenance-navigation.md`,
+> datée du 2026-08-20. La plus récente a pris le premier numéro libre ; la
+> décision, sa date et son contenu sont inchangés. Le code, les commentaires et
+> les documents qui la citaient disent désormais « ADR-035 » ; seuls
+> `prisma/schema.prisma` et deux migrations (`20260825140000_prescriptions_particulieres`,
+> `20260901160000_source_prescription_demande_assureur`) écrivent encore
+> « ADR-014 » — une migration jouée ne se réécrit pas, et le schéma est laissé
+> au lot qui le touchera.
+>
 > **Amendée le 2026-09-01 par l'ADR-032.** Les sources d'une prescription ne sont
 > plus exclusivement des actes d'autorité opposables : une source contractuelle
 > — la demande d'assureur — existe, marquée comme telle partout où elle
 > s'affiche. Le mécanisme décrit ici est inchangé.
 >
-> *(Note : deux ADR portent le numéro 014 dans ce dossier — celle-ci et
+> ~~*(Note : deux ADR portent le numéro 014 dans ce dossier — celle-ci et
 > `014-provenance-navigation.md`. Collision antérieure au recadrage, à
-> renuméroter.)*
+> renuméroter.)*~~
 
 - **Date** : 2026-08-25
 - **Statut** : Acceptée

@@ -1,7 +1,7 @@
 /**
  * Les sources d'une prescription particulière, leurs libellés, et la
  * distinction qui compte : acte d'autorité opposable ou engagement
- * contractuel (ADR-014, amendée par l'ADR-032).
+ * contractuel (ADR-035, amendée par l'ADR-032).
  *
  * **Module feuille, et c'est la raison de son existence.** Ces constantes
  * vivaient dans `schema.ts`, qui importe `estPeriodicitePlusStricte` du
@@ -66,7 +66,7 @@ export function estSourceContractuelle(source: string): boolean {
  * une ligne née d'une source contractuelle s'affiche — calendrier, registre,
  * PDF, dossier de contrôle — elle le porte (ADR-032). Une échéance
  * contractuelle qui se présenterait comme réglementaire est exactement
- * l'erreur que l'ADR-014 voulait empêcher, et c'est ce marquage, lui seul,
+ * l'erreur que l'ADR-035 voulait empêcher, et c'est ce marquage, lui seul,
  * qui la retient.
  *
  * La forme est calquée sur ce que le produit dit déjà de la règle APSAD R43

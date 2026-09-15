@@ -9,7 +9,7 @@ import { estPeriodicitePlusStricte } from "@/lib/matching/prescriptions";
 import { SOURCES_PRESCRIPTION } from "./sources";
 
 /**
- * Validation d'une prescription particulière (ADR-014).
+ * Validation d'une prescription particulière (ADR-035).
  *
  * Deux règles que la base ne peut pas porter seule :
  *  - XOR des effets (la CHECK SQL le garantit aussi, ceinture et bretelles) ;

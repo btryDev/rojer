@@ -15,7 +15,7 @@ import { MentionContractuelle } from "@/components/prescriptions/MentionContract
 import { PrescriptionActions } from "@/components/prescriptions/PrescriptionActions";
 
 /**
- * Prescriptions particulières propres à l'établissement (ADR-014) : arrêtés
+ * Prescriptions particulières propres à l'établissement (ADR-035) : arrêtés
  * du maire ou du préfet, arrêtés ICPE, demandes de l'inspection du travail —
  * et, depuis l'ADR-032, demandes de l'assureur, seule source qui ne soit pas
  * un acte d'autorité. Celles-là portent leur marquage contractuel ici comme

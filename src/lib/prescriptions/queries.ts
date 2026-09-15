@@ -28,7 +28,7 @@ export type PrescriptionListee = PrescriptionMatching & {
    * NULL` laisserait des lignes orphelines dont plus rien ne dirait de quel
    * acte elles venaient, alors que la preuve, elle, resterait. C'est la levée
    * qui sert dans ce cas — elle arrête l'effet et garde l'historique
-   * (ADR-012, ADR-014).
+   * (ADR-012, ADR-035).
    */
   lignesAvecPreuve: number;
 };
@@ -48,7 +48,7 @@ export type DonneesPagePrescriptions = {
  *
  * L'état de chaque prescription — active / levée / ignorée (raison) — n'est
  * jamais persisté : il est rejoué à l'affichage par la même fonction pure que
- * le générateur, donc même entrée, même sortie (ADR-014).
+ * le générateur, donc même entrée, même sortie (ADR-035).
  *
  * Les deux moitiés partagent délibérément la même lecture : séparées, elles
  * relisaient l'établissement et ses équipements deux fois et faisaient tourner

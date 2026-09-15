@@ -82,7 +82,7 @@ export type VerificationTenue = {
   equipement: { libelle: string; categorie: string } | null;
   /**
    * L'acte dont la ligne est née, quand elle vient d'une prescription
-   * particulière (ADR-014). `null` = elle vient du référentiel.
+   * particulière (ADR-035). `null` = elle vient du référentiel.
    *
    * La fonction est pure et ne lit pas la base : sans ce champ dans sa forme
    * d'entrée, le registre serait la seule des six surfaces à ne pas pouvoir

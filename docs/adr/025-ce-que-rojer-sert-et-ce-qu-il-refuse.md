@@ -6,7 +6,7 @@
 - **Portée** : le périmètre du produit, donc l'onboarding, le moteur de
   matching, le module de couverture, et le contenu du référentiel.
 - **Remplace ou amende** : ADR-015 (navigation), ADR-019 (bâtiment), ADR-020
-  (nommer plutôt que refuser), ADR-014-prescriptions (sources), ADR-013 (MCP,
+  (nommer plutôt que refuser), ADR-035 (prescriptions, ex-014 ; sources), ADR-013 (MCP,
   un seul établissement) ; **rend de nouveau effective** l'ADR-001 sur le
   multi-établissements. Chacune de ces décisions a son ADR propre, listée au
   § 9 : celle-ci porte le périmètre, les autres portent les mécanismes.
@@ -247,7 +247,7 @@ deux postes, un commerce de trois peut en avoir quatre.
 que le droit n'impose pas — c'est fréquent en restauration et en commerce. Elles
 entrent par le mécanisme des prescriptions particulières, sous une source
 nouvelle, et portent un marquage qui les distingue du droit partout où elles
-s'affichent. Voir l'ADR-032, qui amende l'ADR-014.
+s'affichent. Voir l'ADR-032, qui amende l'ADR-035.
 
 **Les EPI présents.** La question est posée et la réponse consignée. Ce qu'on en
 fait dépend d'une lecture qui n'a jamais été faite : `R. 4323-95` à `-106` et
@@ -286,7 +286,7 @@ d'un test qui échoue si le document et le corpus divergent.
 |---|---|---|
 | 001 — établissement | **Redevient effective** : le multi-site était sa cible, refermée en août | ADR-028 |
 | 013 — MCP OAuth | Amendée : « la requête ne peut pas rendre deux résultats » tombe | ADR-028 |
-| 014 — prescriptions | Amendée : une source contractuelle existe, à côté des actes d'autorité | ADR-032 |
+| 035 (ex-014) — prescriptions | Amendée : une source contractuelle existe, à côté des actes d'autorité | ADR-032 |
 | 015 — rail de navigation | **Remplacée** : cinq entrées deviennent trois axes + deux fonctionnelles | ADR-030 |
 | 017 — opérations ponctuelles | Amendée : son entrée de rail « Opérations » disparaît, le permis de feu et le plan de prévention passent sous santé-sécurité. Sa doctrine — ni corrections ni registres — est intacte | ADR-030 |
 | 019 — bâtiment lieu | **Remplacée** : la zone prend la place du bâtiment, plafonnée à trois | ADR-029 |
@@ -295,9 +295,12 @@ d'un test qui échoue si le document et le corpus divergent.
 Aucune n'est supprimée : leur motif d'origine reste utile, c'est leur statut qui
 change. Chacune porte en tête un renvoi vers celle qui la remplace.
 
-**À trancher par la propriétaire** : deux fichiers portent le numéro ADR-014
+~~**À trancher par la propriétaire** : deux fichiers portent le numéro ADR-014
 (`014-prescriptions-particulieres.md` et `014-provenance-navigation.md`). La
-collision précède ce recadrage ; elle mérite une renumérotation.
+collision précède ce recadrage ; elle mérite une renumérotation.~~ **Tranché le
+2026-09-15** (`lot/reliquats-donnees-docs`) : la plus récente des deux, celle
+des prescriptions (2026-08-25), est renumérotée **ADR-035**
+(`035-prescriptions-particulieres.md`) ; la provenance (2026-08-20) garde le 014.
 
 ---
 

@@ -20,7 +20,7 @@ import type {
 } from "./types";
 
 /**
- * Prescriptions particulières propres à un établissement — ADR-014.
+ * Prescriptions particulières propres à un établissement — ADR-035.
  *
  * Le matching du référentiel s'exécute d'abord, inchangé. Cette fonction
  * pure module ensuite son résultat pour UN établissement :

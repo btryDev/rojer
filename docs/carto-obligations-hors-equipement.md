@@ -263,7 +263,7 @@ DTA se rattache à un bâtiment — c'est l'année de son permis de construire q
 et un établissement peut en occuper plusieurs, d'époques différentes. Porter le DTA sur
 l'établissement serait faux dès le deuxième bâtiment. **Quatre porteurs, donc.**
 
-**Un septième chemin existe déjà, hors référentiel.** La prescription particulière (ADR-014,
+**Un septième chemin existe déjà, hors référentiel.** La prescription particulière (ADR-035,
 modèle `PrescriptionParticuliere`, enum `SourcePrescription`) : arrêté du maire ou du
 préfet, mise en demeure de l'inspection du travail, PV de commission de sécurité. Ce n'est
 pas une lacune — c'est traité à part, et bien. Mais l'ADR doit le nommer, sinon il laissera

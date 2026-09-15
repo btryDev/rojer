@@ -130,14 +130,14 @@ export type ObligationApplicable = {
   raisons: string[];
   /**
    * Surcharges de périodicité imposées par une prescription particulière
-   * (ADR-014), par identifiant d'équipement. Absent = périodicité du
+   * (ADR-035), par identifiant d'équipement. Absent = périodicité du
    * référentiel pour tous les équipements déclencheurs.
    */
   surcharges?: Record<string, SurchargePeriodicite>;
 };
 
 // -----------------------------------------------------------------------------
-// Prescriptions particulières (ADR-014)
+// Prescriptions particulières (ADR-035)
 // -----------------------------------------------------------------------------
 
 export type SurchargePeriodicite = {

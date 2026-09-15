@@ -54,7 +54,7 @@
  * ## La périodicité effective, pas celle du référentiel
  *
  * `generateur.ts` lit la périodicité **après surcharge** d'une prescription
- * particulière (ADR-014) : un arrêté préfectoral peut donner un rythme à une
+ * particulière (ADR-035) : un arrêté préfectoral peut donner un rythme à une
  * obligation qui n'en avait pas. Ce jour-là, l'obligation quitte cet écran pour
  * le calendrier — elle a un rendez-vous. La règle prend donc la périodicité
  * effective en paramètre plutôt que de la lire sur l'obligation.

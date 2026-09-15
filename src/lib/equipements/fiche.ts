@@ -426,7 +426,7 @@ export function obligationsDeLEquipement(eq: FicheEquipement): Obligation[] {
  *
  * ## Ce qui n'est pas lu, et qui devra l'être
  *
- * Les surcharges de prescription particulière (ADR-014). Un arrêté qui donne
+ * Les surcharges de prescription particulière (ADR-035). Un arrêté qui donne
  * un rythme à une obligation `autre` la ferait passer au calendrier, et elle
  * n'aurait plus rien à faire ici. `reperterSansEcheance` a la même lacune, au
  * même endroit et pour la même raison : `determineObligationsApplicables` ne

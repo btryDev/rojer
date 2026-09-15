@@ -7,7 +7,7 @@
   (clé de réconciliation), `prisma/schema.prisma` (`Verification.equipementId`,
   l'unicité), la migration `porteur_etablissement`
 - Dépend de : ADR-003 (référentiel en TypeScript), ADR-010 (registre des sources
-  d'échéances), ADR-012 (conservation et idempotence), ADR-014 (prescriptions
+  d'échéances), ADR-012 (conservation et idempotence), ADR-035 (prescriptions
   particulières), ADR-016 (nature d'échéance), ADR-019 (le bâtiment est un lieu)
 
 ## Contexte
@@ -274,7 +274,7 @@ L'ajout est additif ; aucune obligation de ce lot ne les cite encore.
   prescription dit *d'où vient la règle*, le porteur dit *sur quoi porte l'échéance*
   — et il n'y a pas de collision de mécanisme. Il y a un manque, déjà présent : un
   arrêté municipal prescrivant une visite périodique de l'établissement — le cas
-  nominal de `CCH R. 143-45`, cité en tête de l'ADR-014 — n'est aujourd'hui pas
+  nominal de `CCH R. 143-45`, cité en tête de l'ADR-035 — n'est aujourd'hui pas
   saisissable. Ce lot le débloque en base ; le formulaire suivra.
 
 ## Conséquences

@@ -191,7 +191,7 @@ async function regenererUnePasse(
     where: { id: etablissementId },
     include: {
       equipements: { where: { actif: true } },
-      // Prescriptions particulières (ADR-014) : lues ici, dans la phase de
+      // Prescriptions particulières (ADR-035) : lues ici, dans la phase de
       // calcul, jamais dans la transaction. `dateFin` est arbitrée par
       // `appliquerPrescriptions` pour que la raison d'ignorance soit rendue.
       prescriptionsParticulieres: { where: { actif: true } },

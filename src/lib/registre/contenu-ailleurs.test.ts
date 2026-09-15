@@ -10,7 +10,7 @@ import type { SectionRegistre } from "./sections";
  *
  * Le registre de sécurité est le document qu'on ouvre devant une commission
  * de sécurité ou un inspecteur : une échéance née d'une demande d'assureur
- * qui s'y lirait comme réglementaire est l'erreur que l'ADR-014 voulait
+ * qui s'y lirait comme réglementaire est l'erreur que l'ADR-035 voulait
  * empêcher, et elle est invisible pour celui qui la subit — le dirigeant, qui
  * croit devoir au droit ce qu'il doit à son contrat.
  */

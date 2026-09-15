@@ -390,7 +390,7 @@ n'appartient pas à ce lot.
 - **Le rendu à l'écran** : aucune capture, aucun compte, aucun serveur lancé. Tout ce qui
   précède est mesuré par appel de fonction. Ce qu'une page affiche effectivement des 32
   obligations n'est pas établi ici.
-- **Les prescriptions particulières (ADR-014)** : leur effet de surcharge de périodicité
+- **Les prescriptions particulières (ADR-035)** : leur effet de surcharge de périodicité
   peut faire passer une obligation de l'écran « en place » au calendrier. Le cas n'a pas été
   sondé — les sondes n'ont passé aucune prescription.
 - **Les DUERP et le secteur** : `codeNaf` alimente un référentiel sectoriel de risques que ce

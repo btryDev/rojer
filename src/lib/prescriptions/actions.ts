@@ -13,7 +13,7 @@ import { depuisCleJourCivil } from "@/lib/dates";
 import { validerPrescription } from "./schema";
 
 /**
- * Prescriptions particulières (ADR-014) — création, levée, suppression.
+ * Prescriptions particulières (ADR-035) — création, levée, suppression.
  *
  * Toute mutation relance `genererCalendrier` : c'est le générateur qui
  * applique (ou ignore, avec raison) la prescription, jamais cette action.

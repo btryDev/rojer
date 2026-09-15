@@ -2334,7 +2334,7 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
     // Le § 3 est une FACULTÉ sous plafond, ouverte après deux avis favorables
     // consécutifs et sur PROPOSITION DE LA COMMISSION — un historique et une
     // décision que le produit n'observe pas. Le § 4 est un pouvoir du maire ou
-    // du préfet, donc une prescription particulière (ADR-014).
+    // du préfet, donc une prescription particulière (ADR-035).
     //
     // Ce qui les distingue du tableau, mécaniquement : une quinquennale du
     // § 3 s'appliquerait à TOUT établissement sans hébergement, donc sans
