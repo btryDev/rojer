@@ -583,13 +583,30 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      ligne applicable, porteuse d'une trace, dont le rythme ou la prescription
      diffèrent : rythme effectif, `prescriptionId: null`, date inchangée,
      statut lu sur le dernier rapport réalisé quand il n'y a plus de
-     rendez-vous suivant. Un dépôt ne la fait plus rouler, et elle ne se lit
-     plus en retard. Le fusible est retiré : il ne couvrait pas les
-     prescriptions et rougissait à chaque obligation `autre` ajoutée. **Deux
-     limites, écrites.** Une ligne dont la seule trace est une action (ou un
-     rapport « non vérifiable ») perd son rythme mais garde son statut : elle
-     reste en retard à sa date — c'est le point mineur « une action ouverte
-     compte comme preuve » de `docs/chantiers-ouverts.md`. Et **aucune version
+     rendez-vous suivant. Un dépôt ne la fait plus rouler, et ~~elle ne se lit
+     plus en retard~~ elle ne se lit plus en retard **si elle porte un rapport
+     réalisé** — la phrase disait « elle » sans condition, et la relecture l'a
+     démentie sur les deux cas suivants. Le fusible est retiré : il ne
+     couvrait pas les prescriptions et rougissait à chaque obligation `autre`
+     ajoutée. **Trois limites, écrites.** Une ligne dont la seule trace est une
+     action (ou un rapport « non vérifiable ») perd son rythme mais garde son
+     statut : elle reste en retard à sa date — c'est le point mineur « une
+     action ouverte compte comme preuve » de `docs/chantiers-ouverts.md`.
+     **C'est le cas de TOUTE ligne de titre de salarié réalignée** :
+     `uploadRapport` refuse le dépôt sur un porteur salarié, donc une telle
+     ligne n'a jamais de rapport. Sur l'habilitation électrique (triennale
+     devenue `autre`), une ligne sans preuve est supprimée ; avec une action
+     seule, elle passe `autre` + « planifiée » et reste EN RETARD à
+     `delivreLe` + trois ans, pendant que la page Équipe dit « sans terme »
+     (`echeanceDuTitre`). Non corrigé : aligner les deux voudrait dire soit
+     retirer au calendrier une ligne qui porte une action, soit dériver du
+     titre l'état de la ligne — ni l'un ni l'autre n'est une garde de trois
+     lignes. Sur un rythme, enfin, un statut réalisé sans rapport est gardé
+     tel quel : c'est la seule trace de la ligne, et la date décide. **La
+     suppression d'une prescription levée est refusée** (relecture du même
+     jour) : levée, elle ne marque plus aucune ligne, et le compte des lignes
+     porteuses de preuve, tombé à zéro, laissait effacer l'acte qui justifiait
+     les rapports déposés à son rythme. Et **aucune version
      n'est incrémentée** : un dossier existant ne se réaligne qu'à sa prochaine
      régénération, déclenchée par une mutation (dont la levée d'une
      prescription elle-même) ou par un changement de référentiel ; une levée

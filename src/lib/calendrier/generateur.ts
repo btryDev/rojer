@@ -1477,9 +1477,15 @@ export function reconcilierCalendrier(
           periodicite: effective,
           realisateurRequis: ex.realisateurRequis,
           datePrevue: ex.datePrevue,
-          statut: estCyclique(effective)
-            ? statutCycleOuvert(ex.statut, realisationConnue(ex))
-            : (statutDepuisResultat(ex.dernierResultat) ?? ex.statut),
+          statut: !estCyclique(effective)
+            ? (statutDepuisResultat(ex.dernierResultat) ?? ex.statut)
+            : // Un statut réalisé sans rapport est la SEULE trace de la ligne
+              // (`porteUneTrace`) : le passer « à planifier » l'effaçait, et la
+              // passe suivante supprimait la ligne. Sur un rythme, la date
+              // décide de toute façon (`estVerificationRealisee`).
+              estStatutRealise(ex.statut)
+              ? ex.statut
+              : statutCycleOuvert(ex.statut, realisationConnue(ex)),
           prescriptionId: null,
         });
       }

@@ -500,6 +500,14 @@ async function regenererUnePasse(
           // et elle afficherait « dépassée » avec un rapport conforme joint.
           datePrevue: lu.datePrevue,
           statut: lu.statut,
+          // Et les deux champs qu'une AUTRE régénération réécrit (2026-09-15) :
+          // un plan calculé avant la réactivation d'une prescription mettait
+          // `prescriptionId` à `null` et rendait à la ligne le rythme du
+          // référentiel, par-dessus la passe qui venait de les rétablir. Une
+          // ligne qui ne leur ressemble plus fait diverger le compte, et la
+          // passe se relance sur une lecture fraîche.
+          periodicite: lu.periodicite,
+          prescriptionId: lu.prescriptionId ?? null,
         },
         data: {
           // Il ne bouge que pour une ligne ADOPTÉE — une obligation qui a

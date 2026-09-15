@@ -11,6 +11,7 @@ import {
 } from "@/lib/calendrier/portee";
 import { depuisCleJourCivil } from "@/lib/dates";
 import { validerPrescription } from "./schema";
+import { prescriptionEnVigueur } from "@/lib/matching/prescriptions";
 
 /**
  * Prescriptions particulières (ADR-035) — création, levée, suppression.
@@ -199,6 +200,35 @@ export async function supprimerPrescription(
   prescriptionId: string,
 ): Promise<PrescriptionActionState> {
   await assertEtablissementOwnership(etablissementId);
+
+  // UNE PRESCRIPTION LEVÉE NE SE SUPPRIME PAS (2026-09-15). Levée, elle cesse
+  // de surcharger : la régénération qui suit rend à ses lignes le rythme du
+  // référentiel et remet leur `prescriptionId` à `null` — pour une obligation
+  // cyclique depuis toujours, pour une obligation `autre` depuis le
+  // réalignement NB4. Le compte ci-dessous tombe alors à zéro alors que des
+  // rapports ont été déposés au rythme qu'elle imposait : la supprimer
+  // effaçait l'acte qui justifie ces rapports (ADR-012), et une demande
+  // d'assureur perdait sa trace contractuelle (ADR-032). Lever, c'est déjà
+  // dire que l'acte a existé ; une saisie erronée se supprime AVANT d'être
+  // levée, ou après « Annuler la levée », qui rend ses lignes à la
+  // prescription et le compte à sa vérité. Le prédicat est celui du moteur et
+  // de l'écran (`estLevee`), qui ne proposait déjà plus la suppression.
+  const existante = await prisma.prescriptionParticuliere.findFirst({
+    where: { id: prescriptionId, etablissementId },
+    select: { actif: true, dateFin: true },
+  });
+  if (!existante) {
+    return { status: "error", message: "Prescription introuvable." };
+  }
+  if (!existante.actif || !prescriptionEnVigueur(existante, new Date())) {
+    return {
+      status: "error",
+      message:
+        "Suppression refusée : cette prescription est levée. Ses effets passés " +
+        "restent au dossier ; si elle a été saisie par erreur, annulez d'abord " +
+        "la levée.",
+    };
+  }
 
   const avecPreuve = await compterLignesAvecPreuve(prescriptionId);
   if (avecPreuve > 0) {

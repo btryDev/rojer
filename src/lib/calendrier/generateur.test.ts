@@ -1370,6 +1370,50 @@ describe("réconciliation — cycles de vérification", () => {
       ).toBe(true);
     });
 
+    it("à rythme déjà juste, une prescription restée sur la ligne tombe quand même", () => {
+      // La clause `|| prescriptionId !== null` seule : sans elle, une ligne
+      // déjà `autre` mais encore marquée d'une prescription levée garderait
+      // son marquage — contractuel, le cas échéant (ADR-032).
+      const plan = reconcilierCalendrier(
+        [roulee({ periodicite: "autre", statut: "realisee_conforme" })],
+        [],
+        sansRythme,
+      );
+      expect(plan.aMettreAJour.map((m) => [m.periodicite, m.prescriptionId])).toEqual([
+        ["autre", null],
+      ]);
+    });
+
+    it("sur un rythme, un statut réalisé sans rapport est gardé : c'est la seule trace", () => {
+      // Ligne de titre qui change de rythme sans être générée, dont la seule
+      // trace est son statut réalisé (`porteUneTrace`). `statutCycleOuvert`
+      // la passait « à planifier » : la trace disparaissait, et la passe
+      // suivante supprimait la ligne (relecture du 2026-09-15).
+      const plan = reconcilierCalendrier(
+        [
+          ligneExistante({
+            id: "v-titre",
+            obligationId: "titre-quinquennal",
+            equipementId: null,
+            salarieId: "sal-1",
+            periodicite: "triennale",
+            statut: "realisee_conforme",
+            porteUnePreuve: false,
+          }),
+        ],
+        [],
+        {
+          now: NOW,
+          obligationsEncoreApplicables: new Set(["titre-quinquennal"]),
+          periodicitesEffectives: new Map([["titre-quinquennal", "quinquennale" as const]]),
+        },
+      );
+      expect(plan.aMettreAJour.map((m) => [m.periodicite, m.statut])).toEqual([
+        ["quinquennale", "realisee_conforme"],
+      ]);
+      expect(plan.aSupprimer).toEqual([]);
+    });
+
     it("une périodicité effective inconnue ne réaligne rien", () => {
       // Clé indexée sans valeur (fixture qui ne connaît que la clé) : inventer
       // `autre` ferait purger un statut. Comportement antérieur.

@@ -1590,7 +1590,10 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
      `ALTER TABLE "Verification" DROP COLUMN IF EXISTS "referentielVersion";` ;
   3. **risques résiduels** : une preview d'une branche antérieure au
      déploiement 1, ou un rollback Vercel en deçà, lit la colonne disparue →
-     P2022.
+     P2022. Et les branches ouvertes créées avant le déploiement 1 portent le
+     champ SANS `@ignore` : elles doivent être rebasées avant le déploiement 2,
+     sinon leurs previews tombent en P2022 et leur fusion fait échouer
+     `derive-schema`.
 - **NB4 — une ligne applicable que la génération saute ne se réalignait pas**
   (ADR-034, N4 point 6). ~~Cas hypothétique~~ : une prescription
   `renforce_periodicite` sur une obligation `autre`, levée, laissait la ligne à
@@ -1601,7 +1604,13 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   qu'à sa prochaine régénération (une mutation, ou un changement de
   référentiel). **Reste** : une ligne dont la seule trace est une action garde
   son statut et reste en retard à sa date — voir « une action ouverte compte
-  comme preuve », plus bas.
+  comme preuve », plus bas. C'est le cas de toute ligne de titre de salarié
+  réalignée, qui ne reçoit jamais de rapport : l'habilitation électrique d'une
+  personne, avec une action seule, reste en retard au calendrier à `delivreLe`
+  + trois ans quand la page Équipe dit « sans terme ». Non corrigé. **Fermé
+  avec**, relecture du même jour : la suppression d'une prescription levée est
+  refusée — réalignées, ses lignes ne la portaient plus et le compte des
+  preuves, à zéro, laissait effacer l'acte (`supprimerPrescription`).
 - **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.
 - **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors
