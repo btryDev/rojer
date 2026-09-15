@@ -574,11 +574,20 @@ export default async function EquipementDetailPage({
                     ))}
                   </LignesFiche>
                   <div className="px-7 pt-4 sm:px-8">
+                    {resteAFaire && !resteAFaire.versCalendrier ? (
+                      // Le reste n'est pas au calendrier : on dit combien,
+                      // sans y renvoyer (2026-09-15).
+                      <p className="m-0 pb-2 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                        {resteAFaire.texte}
+                      </p>
+                    ) : null}
                     <Link
                       href={`${base}/calendrier?vue=equipement#eq-${eq.id}`}
                       className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
                     >
-                      {resteAFaire ?? "Voir cet équipement au calendrier"}
+                      {resteAFaire?.versCalendrier
+                        ? resteAFaire.texte
+                        : "Voir cet équipement au calendrier"}
                       <ArrowUpRight className="size-3.5" />
                     </Link>
                   </div>

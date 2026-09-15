@@ -45,7 +45,7 @@ import {
 } from "@/lib/calendrier/labels";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { obligationParId } from "@/lib/referentiels/conformite";
-import { figureSurLEcranEnPlace } from "@/lib/etats-permanents/regle";
+import { modeSurLEcranEnPlace } from "@/lib/etats-permanents/regle";
 import {
   estPorteeParEquipement,
   estPorteeParSalarie,
@@ -249,10 +249,16 @@ export default async function VerificationDetailPage({
             valeur: LIBELLE_SANS_RENDEZ_VOUS,
             // L'écran n'est nommé que s'il liste l'obligation : ni une
             // événementielle, ni une ponctuelle, ni un titre de salarié.
-            note:
-              obligation !== undefined && figureSurLEcranEnPlace(obligation)
-                ? "Cette obligation n'a pas de rythme : elle se tient en place, sur « Ce qui doit être en place »."
-                : "Cette obligation n'a pas de rythme : aucun contrôle n'est attendu à une date.",
+            // Au verbe de l'écran qui la liste (« en place » ou « fait le »),
+            // et sans le nommer s'il ne la liste pas.
+            note: {
+              etat: "Cette obligation n'a pas de rythme : elle se tient en place, sur « Ce qui doit être en place ».",
+              fait: "Cette obligation revient sans rythme écrit : sa dernière réalisation se déclare sur « Ce qui doit être en place ».",
+              aucun: "Cette obligation n'a pas de rythme : aucun contrôle n'est attendu à une date.",
+            }[
+              (obligation === undefined ? null : modeSurLEcranEnPlace(obligation)) ??
+                "aucun"
+            ],
           }
         : sansRendezVous
         ? {

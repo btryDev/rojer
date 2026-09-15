@@ -212,7 +212,27 @@ export function modeDeclaration(
  * en vigueur.
  */
 export function figureSurLEcranEnPlace(o: Obligation): boolean {
-  return o.porteur !== "salarie" && modeDeclaration(o) !== null;
+  return modeSurLEcranEnPlace(o) !== null;
+}
+
+/**
+ * Sous quel verbe l'écran la liste — « en place » ou « fait le » —, ou `null`.
+ * PAR LE CODE DE L'ÉCRAN (`modeDeclarationApplique`), et non par une copie de
+ * sa règle (relecture d'intégration, 2026-09-15). Le salarié est écarté en
+ * amont, comme à l'écran : le moteur ne le rend pas.
+ */
+export function modeSurLEcranEnPlace(
+  o: Obligation,
+): ModeDeclaration["mode"] | null {
+  if (o.porteur === "salarie") return null;
+  return (
+    modeDeclarationApplique({
+      obligation: o,
+      porteur: o.porteur ?? "equipement",
+      equipementsConcernes: [],
+      raisons: [],
+    })?.mode ?? null
+  );
 }
 
 /**

@@ -170,6 +170,23 @@ describe("lignesAFaire", () => {
     expect(libelleDelai(ligne, AUJOURDHUI, "ligne")).toBe("sans rendez-vous");
   });
 
+  it("n'écrit « à tenir en place » que si l'écran la liste en mode « état »", () => {
+    const detail = (obligationId: string) =>
+      lignesAFaire(
+        fiche([
+          { id: "v", obligationId, datePrevue: "2026-03-01", statut: "a_planifier", periodicite: "autre" },
+        ]),
+        "/etablissements/e1",
+        AUJOURDHUI,
+      )[0].detail;
+    // Événementielle : pas sur l'écran, pas de verbe.
+    expect(detail("froid-controle-etancheite-apres-modification")).toBe("Sans rendez-vous");
+    // Échéance récurrente sans rythme écrit : sur l'écran, sous « fait le ».
+    expect(detail("stockage-dangereux-verification-etancheite")).toBe(
+      "Sans rendez-vous — à déclarer faite",
+    );
+  });
+
   it("ne mène à « Ce qui doit être en place » que si l'écran liste l'obligation", () => {
     // Relecture du 2026-09-15 : une obligation ÉVÉNEMENTIELLE n'y figure pas —
     // le lien menait à un écran qui ne la montre pas. La ligne garde sa fiche.
@@ -345,18 +362,23 @@ describe("chapeauAFaire — le nombre et le genre de ce qui est ouvert (2026-09-
     genre: "verification" | "action" = "verification",
   ) => ({ date: date ? jour(date) : null, etat, genre });
 
-  it("cinq retards sans date ne se disent pas « une vérification est due »", () => {
-    // Le contrôle visuel : la tête sans date disait « Une vérification est due,
-    // et aucune n'est enregistrée » au-dessus de « 5 vérifications en retard ».
+  it("cinq retards sans date se disent dus, au pluriel — pas « ouverts pour l'instant »", () => {
+    // Le contrôle visuel : « Une vérification est due » au singulier au-dessus
+    // de « 5 vérifications en retard ». ~~« Des vérifications sont ouvertes…
+    // sans échéance connue pour l'instant »~~ : la première correction
+    // minimisait le retard (relecture d'intégration, 2026-09-15).
     const aFaire = [1, 2, 3, 4, 5].map(() => l(null, "enRetard"));
     expect(chapeauAFaire(aFaire, aFaire[0], AUJOURDHUI)).toBe(
-      "Des vérifications sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+      "5 vérifications sont dues, et aucune n'est enregistrée",
+    );
+    expect(chapeauAFaire([aFaire[0]], aFaire[0], AUJOURDHUI)).toBe(
+      "Une vérification est due, et aucune n'est enregistrée",
     );
   });
 
-  it("ne compte que les lignes sans date, et au bon genre", () => {
-    const aFaire = [l(null, "enRetard"), l(null, "aPlanifier", "action"), l("2026-12-01", "proche")];
-    expect(chapeauAFaire(aFaire, aFaire[0], AUJOURDHUI)).toBe(
+  it("hors retard, ne compte que les lignes sans date, et au bon genre", () => {
+    const aFaire = [l(null, "aPlanifier"), l(null, "aPlanifier", "action")];
+    expect(chapeauAFaire(aFaire, null, AUJOURDHUI)).toBe(
       "Une vérification et une correction sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
     );
   });
@@ -381,16 +403,38 @@ describe("chapeauAFaire — le nombre et le genre de ce qui est ouvert (2026-09-
 });
 
 describe("mentionResteAFaire — ce que la carte tait au-delà de quatre (2026-09-15)", () => {
-  it("rien à dire jusqu'à quatre lignes", () => {
-    expect(mentionResteAFaire([{ etat: "enRetard" }, { etat: "proche" }])).toBeNull();
+  const v = (etat: "enRetard" | "proche", date: string | null = "2026-06-01") => ({
+    etat,
+    date: date ? jour(date) : null,
+    genre: "verification" as const,
   });
 
-  it("annonce le reste, comme le tableau de bord", () => {
-    const retards = Array.from({ length: 5 }, () => ({ etat: "enRetard" as const }));
-    expect(mentionResteAFaire(retards)).toBe("1 autre en retard — voir le calendrier");
+  it("rien à dire jusqu'à quatre lignes", () => {
+    expect(mentionResteAFaire([v("enRetard"), v("proche")])).toBeNull();
+  });
+
+  it("renvoie au calendrier quand il montre le reste : des vérifications datées", () => {
+    const retards = Array.from({ length: 5 }, () => v("enRetard"));
+    expect(mentionResteAFaire(retards)).toEqual({
+      texte: "1 autre en retard — voir le calendrier",
+      versCalendrier: true,
+    });
+    expect(mentionResteAFaire([...retards, v("proche", "2026-12-01")])?.texte).toBe(
+      "2 autres à faire — voir le calendrier",
+    );
+  });
+
+  it("ne promet pas le calendrier pour une correction ou une ligne sans date", () => {
+    // La vue par équipement ne pose que des vérifications avec rendez-vous
+    // (relecture d'intégration, 2026-09-15).
+    const quatre = Array.from({ length: 4 }, () => v("enRetard"));
+    expect(mentionResteAFaire([...quatre, v("enRetard", null)])).toEqual({
+      texte: "1 autre en retard",
+      versCalendrier: false,
+    });
     expect(
-      mentionResteAFaire([...retards, { etat: "proche" }]),
-    ).toBe("2 autres à faire — voir le calendrier");
+      mentionResteAFaire([...quatre, { ...v("enRetard"), genre: "action" as const }]),
+    ).toEqual({ texte: "1 autre en retard", versCalendrier: false });
   });
 });
 

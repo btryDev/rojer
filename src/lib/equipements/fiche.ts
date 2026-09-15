@@ -39,6 +39,7 @@ import {
 import {
   estDeclencheeParUnFait,
   figureSurLEcranEnPlace,
+  modeSurLEcranEnPlace,
 } from "@/lib/etats-permanents/regle";
 
 /** Le lien « Ce qui doit être en place » ne se pose que si l'écran liste
@@ -46,6 +47,16 @@ import {
 function menesALEcranEnPlace(obligationId: string): boolean {
   const o = obligationParId(obligationId);
   return o !== undefined && figureSurLEcranEnPlace(o);
+}
+
+/** Le détail d'une ligne sans rendez-vous, au verbe de l'écran qui la liste —
+ *  et sans verbe s'il ne la liste pas (2026-09-15). */
+function detailSansRendezVous(obligationId: string): string {
+  const o = obligationParId(obligationId);
+  const mode = o === undefined ? null : modeSurLEcranEnPlace(o);
+  if (mode === "etat") return `${LIBELLE_SANS_RENDEZ_VOUS} — à tenir en place`;
+  if (mode === "fait") return `${LIBELLE_SANS_RENDEZ_VOUS} — à déclarer faite`;
+  return LIBELLE_SANS_RENDEZ_VOUS;
 }
 
 /**
@@ -181,7 +192,7 @@ export function lignesAFaire(
               // pas. Elle se tient en place, et le lien y mène — SEULEMENT si
               // l'écran la liste (`figureSurLEcranEnPlace`) ; sinon la fiche.
               etat === "sansRendezVous"
-              ? `${LIBELLE_SANS_RENDEZ_VOUS} — à tenir en place`
+              ? detailSansRendezVous(v.obligationId)
               : `${LIBELLE_SANS_ECHEANCE} — à caler avec votre prestataire`,
         href:
           etat === "sansRendezVous" && menesALEcranEnPlace(v.obligationId)
@@ -312,12 +323,15 @@ export function phraseSansEcheance(nbVerifications: number, nbCorrections: numbe
  * Le chapeau de « à faire » : ce qui est attendu, sans verdict (sans le point
  * final, la page y ajoute la trace). Sorti de la page pour être éprouvé.
  *
- * LA TÊTE SANS DATE disait « Une vérification est due, et aucune n'est
- * enregistrée » — au singulier, même au-dessus de la pastille « 5 vérifications
- * en retard » (contrôle visuel du 2026-09-15, antérieur au lot). Elle prend
- * désormais `phraseSansEcheance`, sur les lignes SANS DATE, accordée et au bon
- * genre. Une ligne « sans rendez-vous » n'y entre pas : « sans échéance connue
- * pour l'instant » promettrait une échéance qu'elle n'aura pas.
+ * LA TÊTE EN RETARD SANS DATE disait « Une vérification est due, et aucune
+ * n'est enregistrée » — au singulier, même au-dessus de la pastille
+ * « 5 vérifications en retard » (contrôle visuel du 2026-09-15, antérieur au
+ * lot). ~~Elle prenait `phraseSansEcheance`~~, qui disait « ouvertes, sans
+ * échéance connue pour l'instant » et minimisait le retard (relecture
+ * d'intégration) : elle garde sa phrase, accordée au nombre de vérifications en
+ * retard sans date. `phraseSansEcheance` reste pour ce qui n'est pas en retard.
+ * Une ligne « sans rendez-vous » n'y entre pas : « sans échéance connue pour
+ * l'instant » promettrait une échéance qu'elle n'aura pas.
  */
 export function chapeauAFaire(
   aFaire: ReadonlyArray<Pick<LigneAFaire, "date" | "etat" | "genre">>,
@@ -328,6 +342,14 @@ export function chapeauAFaire(
     return tete.genre === "action"
       ? `Un écart reste à lever ${libelleDelai(tete, maintenant, "phrase")}`
       : `Une vérification est attendue ${libelleDelai(tete, maintenant, "phrase")}`;
+  }
+  if (tete?.etat === "enRetard") {
+    const dues = aFaire.filter(
+      (l) => l.date === null && l.etat === "enRetard" && l.genre === "verification",
+    ).length;
+    return dues > 1
+      ? `${dues} vérifications sont dues, et aucune n'est enregistrée`
+      : "Une vérification est due, et aucune n'est enregistrée";
   }
   const sansDate = aFaire.filter(
     (l) => l.date === null && l.etat !== "sansRendezVous",
@@ -355,17 +377,29 @@ export const LIGNES_A_FAIRE_VISIBLES = 4;
  * tableau de bord (« N autres en retard — voir le calendrier »). Elle annonçait
  * 5 et en listait 4, sans rien de plus (contrôle visuel du 2026-09-15). `null` :
  * tout est montré.
+ *
+ * LE CALENDRIER N'EST PROMIS QUE S'IL MONTRE LE RESTE (relecture
+ * d'intégration) : sa vue par équipement ne pose que des vérifications avec
+ * rendez-vous. Une correction, une ligne sans date ou sans rendez-vous parmi les
+ * lignes cachées, et la mention dit seulement combien.
  */
 export function mentionResteAFaire(
-  aFaire: ReadonlyArray<Pick<LigneAFaire, "etat">>,
-): string | null {
+  aFaire: ReadonlyArray<Pick<LigneAFaire, "etat" | "date" | "genre">>,
+): { texte: string; versCalendrier: boolean } | null {
   const caches = aFaire.slice(LIGNES_A_FAIRE_VISIBLES);
   const n = caches.length;
   if (n === 0) return null;
   const enRetard = caches.filter((l) => l.etat === "enRetard").length;
-  return `${n} autre${n > 1 ? "s" : ""} ${
+  const versCalendrier = caches.every(
+    (l) => l.genre === "verification" && l.date !== null,
+  );
+  const texte = `${n} autre${n > 1 ? "s" : ""} ${
     enRetard === n ? "en retard" : "à faire"
-  } — voir le calendrier`;
+  }`;
+  return {
+    texte: versCalendrier ? `${texte} — voir le calendrier` : texte,
+    versCalendrier,
+  };
 }
 
 /**

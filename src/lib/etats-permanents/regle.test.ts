@@ -17,8 +17,11 @@ import {
   estEtatADeclarer,
   estFaitADater,
   estSansRendezVous,
+  figureSurLEcranEnPlace,
   modeDeclaration,
+  modeDeclarationApplique,
 } from "./regle";
+import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 
 /**
  * Le point de ce lot n'est pas qu'un test passe : c'est qu'une obligation sans
@@ -41,6 +44,46 @@ const bureau = (effectif: number): EtablissementMatching => ({
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: null,
   comporteLocauxSommeilPublic: null,
+});
+
+describe("figureSurLEcranEnPlace — la même réponse que l'écran (2026-09-15)", () => {
+  it("dit oui exactement aux obligations que l'écran liste, sur un dossier qui les déclenche toutes", () => {
+    // L'écran : le moteur, puis `modeDeclarationApplique`. Un établissement de
+    // travail, ERP, et un appareil de chaque catégorie : le plus large que le
+    // moteur accepte de rendre.
+    const etab = { ...bureau(20), estERP: true, typeErp: "N", categorieErp: "N5" } as EtablissementMatching;
+    const equipements = CATEGORIES_EQUIPEMENT.map((categorie, i) => ({
+      id: `eq-${i}`,
+      libelle: categorie,
+      categorie,
+      caracteristiques: null,
+    }));
+    const applicables = determineObligationsApplicables(
+      projeterEtablissement(etab),
+      equipements,
+    );
+    expect(applicables.length).toBeGreaterThan(40);
+    for (const app of applicables) {
+      expect(figureSurLEcranEnPlace(app.obligation), app.obligation.id).toBe(
+        modeDeclarationApplique(app) !== null,
+      );
+    }
+  });
+
+  it("dit non au salarié, à l'événementielle et à la ponctuelle, sur tout le référentiel", () => {
+    // Le salarié n'est jamais rendu à l'écran par le moteur (ADR-023) : le test
+    // ci-dessus ne peut pas le voir, celui-ci le nomme.
+    for (const o of obligationsConformite) {
+      if (porteurDe(o) === "salarie" || o.nature === "evenementielle" || o.nature === "ponctuelle") {
+        expect(figureSurLEcranEnPlace(o), o.id).toBe(false);
+      }
+    }
+    expect(
+      figureSurLEcranEnPlace(
+        obligationsConformite.find((o) => o.id === "porte-auto-maintien-en-etat")!,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("le critère de l'écran", () => {
