@@ -561,7 +561,19 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      périodicité, sa date et son statut gelés (relecture, NB4) — réaligner
      ces lignes dans le réconciliateur plutôt que filtrer chez les lecteurs,
      ce qui suppose que l'ensemble d'applicabilité porte l'obligation et non
-     sa clé. Cas hypothétique sur ce référentiel, à traiter avec N5. Et la
+     sa clé. ~~Cas hypothétique sur ce référentiel, à traiter avec N5.~~
+     **Mesuré le 2026-09-15 (`lot/reliquats-donnees-docs`) : pas hypothétique,
+     et pas limité à la réouverture.** Une prescription `renforce_periodicite`
+     posée sur une obligation `autre` d'appareil (vingt au référentiel), puis
+     levée, laisse la ligne roulée semestrielle, `prescriptionId` compris, et
+     en retard dès sa date passée — comptée « inchangée » si elle n'est pas
+     archivée, rouverte telle quelle par `aDesarchiver` si elle l'était.
+     **Non corrigé** : réaligner exige la périodicité effective, que la clé ne
+     porte pas, et la déduction « non générée donc `autre` » est fausse pour
+     les lignes de salarié. Le chemin du référentiel (une obligation qui passe
+     à `autre`) est tenu par un fusible,
+     `src/lib/calendrier/reouverture-periodicite.test.ts` ; celui des
+     prescriptions reste ouvert, à trancher. Et la
      migration de remise au modèle des rangées gelées devient un NETTOYAGE,
      non une condition : c'est la première étape de N5, avec les exclusions
      relevées (lignes `datePrevue ≤ dateRealisee` laissées au réconciliateur,
