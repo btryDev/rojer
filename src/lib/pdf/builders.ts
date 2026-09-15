@@ -13,6 +13,7 @@ import { repartirVerifications } from "./etat-verifications";
 import {
   estVerificationArchivee,
   estVerificationRealisee,
+  lignePortantSansRendezVous,
   type VerificationDatee,
 } from "@/lib/dates/retard";
 import {
@@ -40,7 +41,16 @@ export function estEnAttenteDeRapport(v: VerificationDatee): boolean {
   // d'`estVerificationRealisee` : une rangée périodique gelée sur un statut
   // réalisé d'avant l'ADR-034 attend bien le contrôle suivant, et la liste
   // locale de statuts ouverts qui vivait ici la laissait hors du tableau.
-  return !estVerificationArchivee(v) && !estVerificationRealisee(v);
+  //
+  // Ni sans rendez-vous (limite 1, 2026-09-15) : une obligation sans rythme,
+  // gardée par une trace, n'attend aucun contrôle à une date. Retenue, elle
+  // s'imprimait « À planifier » et « sans échéance connue », quand l'écran du
+  // registre (`contenu-ailleurs.ts`) dit « sans rendez-vous », sans pastille.
+  return (
+    !estVerificationArchivee(v) &&
+    !estVerificationRealisee(v) &&
+    !lignePortantSansRendezVous(v)
+  );
 }
 import type { LignePlanActions, PlanActionsData } from "./PlanActionsDocument";
 import type {
@@ -217,8 +227,9 @@ export function ligneVerif(
     equipementLibelle: libelleEquipementSitue(v, multiBatiments),
     datePrevue: v.datePrevue,
     echeanceConnue: aUnRendezVous(v, now),
-    // `undefined` n'arrive pas : les deux tableaux n'admettent aucune ligne
-    // archivée. Le repli garde le type du document.
+    // `undefined` n'arrive pas : les deux tableaux n'admettent ni ligne
+    // archivée, ni ligne sans rendez-vous (`estEnAttenteDeRapport`,
+    // `repartirVerifications`). Le repli garde le type du document.
     statut: statutAffiche(v, now) ?? (v.statut as StatutPeint),
     domaine: obligationParId(v.obligationId)?.domaine ?? null,
     contractuelle: estEcheanceContractuelle(v),

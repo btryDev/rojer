@@ -9,6 +9,8 @@ import {
   appliquerPrescriptions,
   estObligationSurMesure,
   estPeriodicitePlusStricte,
+  estPrescriptionLevee,
+  prescriptionEnVigueur,
   PREFIXE_PRESCRIPTION,
 } from "./prescriptions";
 import type {
@@ -263,6 +265,20 @@ describe("prescriptions — renforce_periodicite", () => {
     );
     expect(res.applicables[0].surcharges).toBeUndefined();
     expect(res.ignorees[0].raison).toContain("levée");
+  });
+
+  it("vigueur et levée se lisent en JOUR CIVIL de Paris (2026-09-15)", () => {
+    // « Cesse de produire effet le 01/06 » : en vigueur la veille, levée le
+    // jour même, quelle que soit l'heure. Une fin stockée à minuit UTC (1 h ou
+    // 2 h à Paris) et une horloge à 0 h 30 à Paris le même jour : en instants,
+    // la prescription était encore en vigueur ; en jours, elle est levée.
+    const fin = { dateFin: new Date("2026-06-01T00:00:00Z") };
+    const aMinuitTrente = new Date("2026-05-31T22:30:00Z");
+    expect(prescriptionEnVigueur(fin, aMinuitTrente)).toBe(false);
+    expect(prescriptionEnVigueur(fin, new Date("2026-05-31T12:00:00Z"))).toBe(true);
+    expect(estPrescriptionLevee({ ...fin, actif: true }, aMinuitTrente)).toBe(true);
+    expect(estPrescriptionLevee({ dateFin: null, actif: false }, aMinuitTrente)).toBe(true);
+    expect(estPrescriptionLevee({ dateFin: null, actif: true }, aMinuitTrente)).toBe(false);
   });
 
   it("ne mute pas le résultat du moteur", () => {

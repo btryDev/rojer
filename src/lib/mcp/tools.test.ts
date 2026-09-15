@@ -385,6 +385,17 @@ describe("équipements et calendrier", () => {
     expect(ligne).not.toContain("01/07/2026");
   });
 
+  it("une ligne sans rendez-vous le dit une fois, sans « sans échéance connue » (limite 1)", async () => {
+    prismaMock.verification.findMany.mockResolvedValue([
+      verif({ statut: "a_planifier", periodicite: "autre" }),
+    ]);
+    const texte = await outil("verifications").executer(ctx, {});
+    const ligne = texte.split("\n").find((l) => l.startsWith("•")) ?? "";
+    expect(ligne).toContain("sans rendez-vous");
+    expect(ligne).not.toContain("sans échéance connue");
+    expect(ligne).not.toContain("en retard");
+  });
+
   it("l'assistant reçoit la dernière réalisation ET l'échéance ouverte", async () => {
     // Relecture externe du 2026-09-13 : l'échéance était écrite en alternative
     // avec la réalisation. L'assistant recevait « réalisée le … » sans pouvoir

@@ -634,7 +634,10 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      supprimait ni active, ni levée) et laissait passer une prescription
      rattrapée par le référentiel. **Remplacée le même jour** : la suppression
      compte les preuves faites SOUS l'acte — rapports datés, en jour civil,
-     de `dateDocument` à la levée comprise, sur les lignes qu'il vise
+     de `dateDocument` ~~à la levée comprise~~ à la veille de la levée — le
+     jour de la levée, la prescription n'est plus en vigueur, et vigueur,
+     écran et suppression lisent désormais le même prédicat en jour civil
+     (`prescriptionEnVigueur`, `estPrescriptionLevee`) —, sur les lignes qu'il vise
      (obligation × appareil), que la ligne porte encore `prescriptionId` ou
      non (`prescriptions/preuves.ts`) — et, **sur décision de la propriétaire
      (option B)**, enregistrés après la saisie de la prescription : un rapport
@@ -642,7 +645,11 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      rapports existants redevient supprimable ; le prix accepté est qu'un arrêté
      réel saisi tard le devient aussi, protégé par la seule confirmation. Un
      acte ne se date plus dans le futur, et une prescription levée se supprime
-     si rien n'a été fait sous elle. ~~Le compte ne dépend plus de la régénération.~~ Il ne dépend plus
+     si rien n'a été fait sous elle. **Une levée ne peut plus précéder le
+     dernier rapport fait sous l'acte** (relecture d'intégration, 2026-09-15) :
+     antidatée « au 01/06/2024 » après deux rapports de 2025, elle vidait le
+     compte et rendait l'acte supprimable (`leverPrescription`,
+     `dernierRapportSousLActe`). ~~Le compte ne dépend plus de la régénération.~~ Il ne dépend plus
      de l'effet de la prescription ; **limite, théorique à ce jour** : une
      succession qui renomme l'obligation ciblée déplace les lignes sous un
      autre `obligationId`, et le compte tombe à zéro. Et **aucune version

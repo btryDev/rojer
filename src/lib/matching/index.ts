@@ -11,6 +11,7 @@ export {
   estObligationSurMesure,
   estPeriodicitePlusStricte,
   prescriptionEnVigueur,
+  estPrescriptionLevee,
   type ResultatPrescriptions,
 } from "./prescriptions";
 export { projeterEtablissement, type SourceEtablissement } from "./projection";

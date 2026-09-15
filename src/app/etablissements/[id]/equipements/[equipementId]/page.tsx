@@ -30,7 +30,9 @@ import {
   obligationsDeclencheesParUnFait,
   libelleDelai,
   obligationsDeLEquipement,
-  phraseSansEcheance,
+  chapeauAFaire,
+  LIGNES_A_FAIRE_VISIBLES,
+  mentionResteAFaire,
 } from "@/lib/equipements/fiche";
 import { caracteristiquesLisibles } from "@/lib/equipements/caracteristiques";
 import {
@@ -206,24 +208,11 @@ export default async function EquipementDetailPage({
     histoire.length > 0
       ? `Dernière trace au dossier : ${formaterDateLongueFr(histoire[0].date)}.`
       : "Aucune preuve n'est encore au dossier pour cet appareil.";
-  const chapeau = tete
-    ? `${
-        tete.genre === "action"
-          ? `Un écart reste à lever ${libelleDelai(tete, maintenant, "phrase")}`
-          : tete.date
-            ? `Une vérification est attendue ${libelleDelai(tete, maintenant, "phrase")}`
-            : "Une vérification est due, et aucune n'est enregistrée"
-      }. ${trace}`
-    : aFaire.length > 0
-      ? // « Aucune date convenue » suggérait un rendez-vous à prendre dans
-        // l'application ; la phrase dit le fait. Et elle nomme ce qui est
-        // ouvert : la seule ligne peut être une CORRECTION non datée, que
-        // « des vérifications » taisait (relecture des libellés, 2026-09-14).
-        `${phraseSansEcheance(
-          aFaire.filter((l) => l.genre === "verification").length,
-          aFaire.filter((l) => l.genre === "action").length,
-        )}. ${trace}`
-      : `Aucune échéance n'est ouverte sur cet appareil à ce jour. ${trace}`;
+  // La composition vit dans `chapeauAFaire` (`lib/equipements/fiche.ts`), où
+  // elle est éprouvée : la tête sans date y était au singulier au-dessus de
+  // « 5 vérifications en retard » (2026-09-15).
+  const chapeau = `${chapeauAFaire(aFaire, tete, maintenant)}. ${trace}`;
+  const resteAFaire = mentionResteAFaire(aFaire);
 
   const realisateurs = realisateursRequis(obligationsCitees);
 
@@ -551,7 +540,7 @@ export default async function EquipementDetailPage({
               ) : (
                 <>
                   <LignesFiche>
-                    {aFaire.slice(0, 4).map((l) => (
+                    {aFaire.slice(0, LIGNES_A_FAIRE_VISIBLES).map((l) => (
                       <LigneFiche
                         key={l.cle}
                         href={avecProvenance(l.href, depuisCetteFiche)}
@@ -589,7 +578,7 @@ export default async function EquipementDetailPage({
                       href={`${base}/calendrier?vue=equipement#eq-${eq.id}`}
                       className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
                     >
-                      Voir cet équipement au calendrier
+                      {resteAFaire ?? "Voir cet équipement au calendrier"}
                       <ArrowUpRight className="size-3.5" />
                     </Link>
                   </div>

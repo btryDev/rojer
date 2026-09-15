@@ -114,6 +114,12 @@ function suffixeMarquage(p: PrescriptionMatching): string {
  * La prescription est-elle encore en vigueur à `now` ? Exporté pour que
  * l'affichage distingue « levée » (fin d'effet datée, atteinte) de « ignorée »
  * (recevable mais sans effet ici) sans avoir à reconnaître un message.
+ *
+ * EN JOUR CIVIL DE PARIS (ADR-011, 2026-09-15). Le formulaire dit « cesse de
+ * produire effet le … » : le jour de la levée, elle n'est plus en vigueur. La
+ * comparaison d'instants rendait la même réponse sur une date stockée à minuit
+ * Paris, mais l'écran, la suppression et les preuves comparaient chacun à leur
+ * façon ; une seule règle, en jours, pour les trois.
  */
 export function prescriptionEnVigueur(
   // La seule date lue : la suppression d'une prescription pose aussi la
@@ -121,7 +127,19 @@ export function prescriptionEnVigueur(
   p: Pick<PrescriptionMatching, "dateFin">,
   now: Date,
 ): boolean {
-  return p.dateFin === null || p.dateFin.getTime() >= now.getTime();
+  return p.dateFin === null || cleJourCivil(now) < cleJourCivil(p.dateFin);
+}
+
+/**
+ * « Levée », au sens que l'écran affiche ET que le serveur applique :
+ * désactivée, ou dont la fin d'effet est atteinte. Écrite une fois — la page
+ * et la suppression la recalculaient chacune (relecture du 2026-09-15).
+ */
+export function estPrescriptionLevee(
+  p: Pick<PrescriptionMatching, "dateFin"> & { actif: boolean },
+  now: Date,
+): boolean {
+  return !p.actif || !prescriptionEnVigueur(p, now);
 }
 
 export function appliquerPrescriptions(

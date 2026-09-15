@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  chapeauAFaire,
   libelleDelai,
   lignesAFaire,
+  mentionResteAFaire,
   lignesHistoire,
   obligationsDeclencheesParUnFait,
   obligationsDeLEquipement,
@@ -52,11 +54,13 @@ function fiche(
     periodicite?: string;
     /** Le jour où l'obligation a cessé de s'appliquer ; absent = ouverte. */
     archiveLe?: string;
+    obligationId?: string;
   }>,
 ): FicheEquipement {
   return {
     verifications: verifs.map((v) => ({
       id: v.id,
+      obligationId: v.obligationId ?? "extincteurs-annuelle",
       libelleObligation: "Vérification annuelle des extincteurs",
       statut: v.statut ?? "planifiee",
       datePrevue: jour(v.datePrevue),
@@ -150,6 +154,7 @@ describe("lignesAFaire", () => {
       fiche([
         {
           id: "v-sans-rythme",
+          obligationId: "porte-auto-maintien-en-etat",
           datePrevue: "2026-03-01",
           statut: "a_planifier",
           periodicite: "autre",
@@ -163,6 +168,26 @@ describe("lignesAFaire", () => {
     expect(ligne.detail).toBe("Sans rendez-vous — à tenir en place");
     expect(ligne.href).toBe("/etablissements/e1/etats-permanents");
     expect(libelleDelai(ligne, AUJOURDHUI, "ligne")).toBe("sans rendez-vous");
+  });
+
+  it("ne mène à « Ce qui doit être en place » que si l'écran liste l'obligation", () => {
+    // Relecture du 2026-09-15 : une obligation ÉVÉNEMENTIELLE n'y figure pas —
+    // le lien menait à un écran qui ne la montre pas. La ligne garde sa fiche.
+    const [ligne] = lignesAFaire(
+      fiche([
+        {
+          id: "v-apres-modification",
+          obligationId: "froid-controle-etancheite-apres-modification",
+          datePrevue: "2026-03-01",
+          statut: "a_planifier",
+          periodicite: "autre",
+        },
+      ]),
+      "/etablissements/e1",
+      AUJOURDHUI,
+    );
+    expect(ligne.etat).toBe("sansRendezVous");
+    expect(ligne.href).toBe("/etablissements/e1/verifications/v-apres-modification");
   });
 
   it("un retard sans date passe EN TÊTE, devant une échéance lointaine", () => {
@@ -312,6 +337,62 @@ function ficheRiche(o: {
     })),
   } as unknown as FicheEquipement;
 }
+
+describe("chapeauAFaire — le nombre et le genre de ce qui est ouvert (2026-09-15)", () => {
+  const l = (
+    date: string | null,
+    etat: "enRetard" | "aPlanifier" | "proche" | "sansRendezVous",
+    genre: "verification" | "action" = "verification",
+  ) => ({ date: date ? jour(date) : null, etat, genre });
+
+  it("cinq retards sans date ne se disent pas « une vérification est due »", () => {
+    // Le contrôle visuel : la tête sans date disait « Une vérification est due,
+    // et aucune n'est enregistrée » au-dessus de « 5 vérifications en retard ».
+    const aFaire = [1, 2, 3, 4, 5].map(() => l(null, "enRetard"));
+    expect(chapeauAFaire(aFaire, aFaire[0], AUJOURDHUI)).toBe(
+      "Des vérifications sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+    );
+  });
+
+  it("ne compte que les lignes sans date, et au bon genre", () => {
+    const aFaire = [l(null, "enRetard"), l(null, "aPlanifier", "action"), l("2026-12-01", "proche")];
+    expect(chapeauAFaire(aFaire, aFaire[0], AUJOURDHUI)).toBe(
+      "Une vérification et une correction sont ouvertes sur cet appareil, sans échéance connue pour l'instant",
+    );
+  });
+
+  it("une ligne sans rendez-vous ne promet pas d'échéance « pour l'instant »", () => {
+    const aFaire = [l(null, "sansRendezVous")];
+    const chapeau = chapeauAFaire(aFaire, null, AUJOURDHUI);
+    expect(chapeau).not.toContain("pour l'instant");
+    expect(chapeau).toBe(
+      "Une obligation sans rendez-vous est ouverte sur cet appareil, sans contrôle attendu à une date",
+    );
+  });
+
+  it("une tête datée garde sa phrase, et rien d'ouvert se dit", () => {
+    expect(chapeauAFaire([l("2026-08-28", "proche")], l("2026-08-28", "proche"), AUJOURDHUI)).toBe(
+      "Une vérification est attendue dans 8 jours",
+    );
+    expect(chapeauAFaire([], null, AUJOURDHUI)).toBe(
+      "Aucune échéance n'est ouverte sur cet appareil à ce jour",
+    );
+  });
+});
+
+describe("mentionResteAFaire — ce que la carte tait au-delà de quatre (2026-09-15)", () => {
+  it("rien à dire jusqu'à quatre lignes", () => {
+    expect(mentionResteAFaire([{ etat: "enRetard" }, { etat: "proche" }])).toBeNull();
+  });
+
+  it("annonce le reste, comme le tableau de bord", () => {
+    const retards = Array.from({ length: 5 }, () => ({ etat: "enRetard" as const }));
+    expect(mentionResteAFaire(retards)).toBe("1 autre en retard — voir le calendrier");
+    expect(
+      mentionResteAFaire([...retards, { etat: "proche" }]),
+    ).toBe("2 autres à faire — voir le calendrier");
+  });
+});
 
 describe("lignesHistoire", () => {
   it("range du plus récent au plus ancien, mise en service comprise", () => {

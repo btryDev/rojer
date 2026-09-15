@@ -1617,9 +1617,18 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   titre à échéance saisie reste en retard à sa date. Au déploiement, les
   prédicats agissent tout de suite sur les lignes `autre` + « à planifier »
   déjà en base ; les autres attendent la régénération de l'incrément de
-  version validé, posé à l'intégration. **Fermé avec**, relecture du même jour : la
+  version validé, posé à l'intégration. **Relecture d'intégration du
+  2026-09-15** : le registre PDF n'imprime plus ces lignes « en attente », et
+  l'assistant ne dit plus « sans échéance connue, sans rendez-vous » ; le lien
+  et la note vers « Ce qui doit être en place » ne sont posés que si l'écran
+  liste l'obligation (ni événementielle, ni ponctuelle, ni titre de salarié).
+  Sur la fiche équipement, deux défauts antérieurs sont fermés : le chapeau
+  disait « Une vérification est due » au-dessus de « 5 vérifications en
+  retard » (`chapeauAFaire`), et la carte « À faire » annonçait 5 lignes pour
+  en montrer 4 sans rien dire du reste (`mentionResteAFaire`). **Fermé avec**, relecture du même jour : la
   suppression d'une prescription compte les preuves faites sous l'acte
-  (rapports datés, en jour civil, de l'acte à sa levée, sur les lignes visées),
+  (rapports datés, en jour civil, de l'acte à la veille de sa levée, sur les
+  lignes visées ; une levée ne peut plus précéder le dernier d'entre eux),
   et non plus les lignes qui portent encore son `prescriptionId`, que la
   régénération retire à la levée (`prescriptions/preuves.ts`). La garde
   « levée » posée entre-temps est retirée : elle rendait une saisie erronée

@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   compterLignesAvecPreuve,
+  dernierRapportSousLActe,
   lignesVisees,
   type LigneVisee,
   type PrescriptionAPreuver,
 } from "./preuves";
 import { raisonDuRefus } from "./refus-suppression";
-import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil } from "@/lib/dates";
 import { validerPrescription } from "./schema";
 
 // La suppression d'une prescription : ce que le serveur refuse de détruire.
@@ -26,6 +27,7 @@ const h = vi.hoisted(() => {
     prescriptionParticuliere: {
       findFirst: vi.fn(async () => etat.prescription),
       delete: vi.fn(async () => ({})),
+      update: vi.fn(async () => ({})),
     },
     verification: {
       findMany: vi.fn(async () => etat.lignes),
@@ -43,7 +45,7 @@ vi.mock("@/lib/calendrier/regeneration-sure", () => ({
   regenererApresMutation: vi.fn(async () => undefined),
 }));
 
-const { supprimerPrescription } = await import("./actions");
+const { leverPrescription, supprimerPrescription } = await import("./actions");
 
 const jour = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
@@ -146,28 +148,30 @@ describe("bornes de l'acte, en jour civil (2026-09-15)", () => {
   it("un rapport daté APRÈS la levée n'a pas été fait sous l'acte", () => {
     const levee = { ...renforcement("2025-12-01"), dateFin: jour("2026-03-01") };
     expect(compterLignesAvecPreuve(levee, [ligne(["2026-04-15"])])).toBe(0);
-    // Le jour même de la levée, la prescription est encore en vigueur.
-    expect(compterLignesAvecPreuve(levee, [ligne(["2026-03-01"])])).toBe(1);
+    // ~~Le jour même de la levée, la prescription est encore en vigueur.~~ Faux,
+    // et contraire au moteur : « cesse de produire effet le 01/03 » veut dire
+    // qu'elle n'en produit plus ce jour-là (relecture du 2026-09-15). La veille
+    // compte ; le jour même, non.
+    expect(compterLignesAvecPreuve(levee, [ligne(["2026-02-28"])])).toBe(1);
+    expect(compterLignesAvecPreuve(levee, [ligne(["2026-03-01"])])).toBe(0);
   });
 
   it("compare des JOURS de Paris, pas des instants", () => {
-    // Acte et levée stockés à minuit Paris ; un rapport dont l'instant tombe à
-    // 10 h, heure de Paris, le jour de la levée, a été fait ce jour-là. En
-    // instants, il passait après minuit et sortait de la période.
-    const acte = depuisCleJourCivil("2026-01-10");
-    const fin = depuisCleJourCivil("2026-03-01");
-    const p = { ...renforcement("2026-01-10"), dateDocument: acte, dateFin: fin };
-    const aDixHeures: LigneVisee = {
+    // Levée stockée à minuit UTC le 1er mars (1 h à Paris) ; un rapport à 0 h 30
+    // à Paris le même 1er mars est un instant ANTÉRIEUR à la levée. En instants,
+    // il comptait ; en jours, il tombe le jour de la levée, et ne compte pas.
+    const p = { ...renforcement("2026-01-10"), dateFin: jour("2026-03-01") };
+    const aMinuitTrente: LigneVisee = {
       statut: "planifiee",
       rapports: [
         {
-          dateRapport: new Date("2026-03-01T09:00:00Z"),
-          createdAt: new Date("2026-03-01T09:00:00Z"),
+          dateRapport: new Date("2026-02-28T23:30:00Z"),
+          createdAt: new Date("2026-02-28T23:30:00Z"),
         },
       ],
       nbActions: 0,
     };
-    expect(compterLignesAvecPreuve(p, [aDixHeures])).toBe(1);
+    expect(compterLignesAvecPreuve(p, [aMinuitTrente])).toBe(0);
   });
 });
 
@@ -213,7 +217,7 @@ describe("raisonDuRefus — une phrase, sans renvoi circulaire", () => {
       { effet: "renforce_periodicite", acte: "2025-12-01", fin: "2026-06-30", levee: true },
       1,
     );
-    expect(r).toContain("du 01/12/2025 au 30/06/2026");
+    expect(r).toContain("du 01/12/2025 à la veille de sa levée du 30/06/2026");
     expect(r).not.toMatch(/levez-la/i);
   });
 
@@ -249,6 +253,63 @@ describe("validerPrescription — un acte ne se date pas dans le futur (2026-09-
   it("accepte aujourd'hui et le passé", () => {
     expect(saisie("2024-05-02").success).toBe(true);
     expect(saisie(cleJourCivil(new Date())).success).toBe(true);
+  });
+});
+
+describe("leverPrescription — une levée ne précède pas un contrôle fait sous l'acte (2026-09-15)", () => {
+  // Le scénario de la relecture : acte du 01/01/2024 saisi le jour même, deux
+  // rapports déposés en 2025 à son rythme, puis levée « au 01/06/2024 ». Le
+  // compte tombait à zéro et la suppression passait.
+  const poser = () => {
+    h.etat.prescription = {
+      ...renforcement("2024-01-01"),
+      createdAt: new Date("2024-01-01T09:00:00Z"),
+      actif: true,
+    };
+    h.etat.lignes = [
+      {
+        statut: "planifiee",
+        rapports: [
+          { dateRapport: jour("2025-03-10"), createdAt: jour("2025-03-10") },
+          { dateRapport: jour("2025-09-12"), createdAt: jour("2025-09-12") },
+        ],
+        _count: { actions: 0 },
+      },
+    ];
+  };
+  const lever = (date: string) => {
+    const fd = new FormData();
+    fd.set("dateFin", date);
+    return leverPrescription("etab-1", "presc-1", { status: "idle" }, fd);
+  };
+
+  it("refuse une levée antidatée avant le dernier rapport, et dit la date", async () => {
+    poser();
+    const res = await lever("2024-06-01");
+    expect(res.status).toBe("error");
+    expect(res.status === "error" ? res.message : "").toContain("12/09/2025");
+    expect(h.prisma.prescriptionParticuliere.update).not.toHaveBeenCalled();
+  });
+
+  it("refuse aussi une levée le jour même du dernier rapport : l'acte n'y produit plus d'effet", async () => {
+    poser();
+    expect((await lever("2025-09-12")).status).toBe("error");
+  });
+
+  it("accepte une levée postérieure au dernier rapport", async () => {
+    poser();
+    const res = await lever("2025-09-13");
+    expect(res.status).toBe("success");
+    expect(h.prisma.prescriptionParticuliere.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("le dernier rapport sous l'acte ignore la borne de levée, et ce qui précède la saisie", () => {
+    const p = { ...renforcement("2024-01-01"), dateFin: jour("2024-06-01"), createdAt: jour("2024-01-01") };
+    expect(dernierRapportSousLActe(p, [ligne(["2023-05-01", "2025-09-12", "2025-03-10"])]))
+      .toEqual(jour("2025-09-12"));
+    expect(
+      dernierRapportSousLActe({ ...p, createdAt: jour("2026-01-01") }, [ligne(["2025-09-12"])]),
+    ).toBeNull();
   });
 });
 

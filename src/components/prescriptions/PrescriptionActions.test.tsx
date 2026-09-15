@@ -40,7 +40,7 @@ describe("PrescriptionActions — la suppression suit le compte du serveur", () 
     rendre(true, 2);
     expect(screen.queryByRole("button", { name: "Supprimer" })).toBeNull();
     const raison = screen.getByText(/Suppression indisponible/).textContent ?? "";
-    expect(raison).toContain("du 01/12/2025 au 30/06/2026");
+    expect(raison).toContain("du 01/12/2025 à la veille de sa levée du 30/06/2026");
     expect(raison).not.toMatch(/levez-la/i);
   });
 

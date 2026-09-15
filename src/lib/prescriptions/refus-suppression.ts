@@ -36,7 +36,7 @@ export function raisonDuRefus(c: ContexteRefus, n: number): string {
         // postérieur à la saisie (option B, 2026-09-15).
         c.fin === null
         ? `un rapport daté du ${enFrancais(c.acte)} ou après et déposé depuis la saisie de la prescription`
-        : `un rapport daté du ${enFrancais(c.acte)} au ${enFrancais(c.fin)} et déposé depuis la saisie de la prescription`;
+        : `un rapport daté du ${enFrancais(c.acte)} à la veille de sa levée du ${enFrancais(c.fin)} et déposé depuis la saisie de la prescription`;
   const suite = c.levee
     ? "Déjà levée, elle reste au dossier : c'est elle qui justifie ces contrôles."
     : "Elle reste au dossier ; pour arrêter son effet, levez-la.";
