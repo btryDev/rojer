@@ -1,6 +1,12 @@
 import type { Prisma } from "@prisma/client";
 import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
 import { PERIODICITES_SANS_SUITE } from "./periodicite";
+import { PERIODICITES } from "@/lib/referentiels/types-communs";
+import { estSansRendezVous } from "@/lib/etats-permanents/regle";
+
+/** Les rythmes sans rendez-vous, dérivés de la règle du générateur — jamais
+ *  recopiés (limite 1, 2026-09-15). */
+const PERIODICITES_SANS_RENDEZ_VOUS = PERIODICITES.filter(estSansRendezVous);
 
 /**
  * Le filtre par bâtiment d'une liste de vérifications (ADR-019, ADR-022).
@@ -130,11 +136,21 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
  * `PERIODICITES_SANS_SUITE` est dérivée de la table du référentiel : la
  * clause et le prédicat s'appuient sur la même définition de « cyclique ».
  * `portee.test.ts` garde l'accord entre les deux sur une table de cas.
+ *
+ * « À PLANIFIER » N'ATTEND RIEN SUR UN RYTHME SANS RENDEZ-VOUS (limite 1,
+ * 2026-09-15) : le pendant de `lignePortantSansRendezVous`. Une telle ligne
+ * ne survit que par une trace, sa date est la dernière écrite, et l'état se
+ * tient sur « Ce qui doit être en place ». « Planifiée », elle, attend
+ * toujours : c'est un titre dont l'échéance est saisie.
  */
 export function echeanceAttendue(): Prisma.VerificationWhereInput {
   return {
     OR: [
-      { statut: { in: ["a_planifier" as const, "planifiee" as const] } },
+      { statut: "planifiee" },
+      {
+        statut: "a_planifier",
+        periodicite: { notIn: [...PERIODICITES_SANS_RENDEZ_VOUS] },
+      },
       {
         statut: { in: [...STATUTS_REALISES_PERSISTES] },
         periodicite: { notIn: [...PERIODICITES_SANS_SUITE] },

@@ -421,6 +421,10 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
         obligationId: REGISTRE_SECURITE,
         libelleObligation: "Registre de sécurité",
         periodicite: "autre",
+        // « À planifier » (limite 1, 2026-09-15) : c'est le statut qu'une ligne
+        // sans rendez-vous porte désormais. « Planifiée », elle partait en mise
+        // à jour de statut, et ce test ne mesurait plus la réouverture.
+        statut: "a_planifier",
         archiveLe: new Date("2026-02-01T00:00:00Z"),
         nbRapports: 1,
       }),
@@ -926,7 +930,7 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
     ).toBe("Attestation médicale");
   });
 
-  it("la ligne d'un titre non générée prend le rythme du référentiel, et reste en retard sur une action seule (NB4)", async () => {
+  it("la ligne d'un titre non générée prend le rythme du référentiel, et sort des retards sur une action seule (NB4, limite 1)", async () => {
     // Le cas qui a déjà eu lieu : l'habilitation électrique est passée de
     // triennale à `autre` (ADR-023 § 6). Un titre sans échéance saisie n'a plus
     // d'échéance calculable (`echeanceDuTitre`), donc sa ligne n'est plus
@@ -936,11 +940,11 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
     // LA FIXTURE EST CELLE QUI PEUT EXISTER. Une ligne de salarié ne reçoit
     // jamais de rapport — `uploadRapport` refuse le dépôt sur un porteur
     // salarié. Sans preuve, elle est supprimée (test suivant) ; sa seule trace
-    // possible est une action corrective. Et voici ce qui se passe vraiment :
-    // le rythme tombe à `autre`, le statut reste « planifiée », la date de
-    // l'ancienne triennale reste, donc la ligne RESTE EN RETARD — pendant que
-    // la page Équipe dit « sans terme ». Limite écrite dans l'ADR-034, pas
-    // corrigée ici.
+    // possible est une action corrective. ~~Le rythme tombait à `autre`, le
+    // statut restait « planifiée » et la ligne RESTAIT EN RETARD pendant que
+    // la page Équipe disait « Sans terme écrit ».~~ Limite 1, tranchée le
+    // 2026-09-15 : la ligne passe « à planifier », hors des retards — le
+    // calendrier dit enfin la même chose qu'Équipe.
     poserEtablissement([]);
     poserSalarie("sal-1", true);
     db.titres = [
@@ -968,8 +972,34 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
 
     const l = db.verifications.find((v) => v.id === "v-habilitation")!;
     expect(l.periodicite).toBe("autre");
-    expect(l.statut).toBe("planifiee");
+    expect(l.statut).toBe("a_planifier");
     expect(l.datePrevue).toEqual(new Date("2023-03-01T00:00:00Z"));
+    expect(
+      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null }, new Date()),
+    ).toBe(false);
+  });
+
+  it("un titre `autre` dont l'échéance est SAISIE reste « planifiée », donc en retard à sa date", async () => {
+    // Le témoin de la limite 1 : l'échéance vient de la pièce, c'est une vraie
+    // date. La ligne est générée — elle ne passe pas par la boucle finale — et
+    // `lignePortantSansRendezVous` ne la touche pas.
+    poserEtablissement([]);
+    poserSalarie("sal-1", true);
+    db.titres = [
+      {
+        obligationId: HABILITATION_SALARIE,
+        salarieId: "sal-1",
+        delivreLe: new Date("2020-03-01T00:00:00Z"),
+        echeanceLe: new Date("2023-03-01T00:00:00Z"),
+      },
+    ];
+    db.verifications = [];
+
+    await genererCalendrier(ETAB_ID);
+
+    const l = db.verifications.find((v) => v.salarieId === "sal-1")!;
+    expect(l.periodicite).toBe("autre");
+    expect(l.statut).toBe("planifiee");
     expect(
       estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null }, new Date()),
     ).toBe(true);

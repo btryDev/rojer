@@ -30,6 +30,7 @@ import {
   classerVerification,
   LIBELLE_AUCUNE_VERIFICATION,
   LIBELLE_SANS_ECHEANCE,
+  LIBELLE_SANS_RENDEZ_VOUS,
   statutAffiche,
 } from "@/lib/calendrier/etats";
 import {
@@ -239,7 +240,15 @@ export default async function VerificationDetailPage({
         // génération sous cette clé, c'est inventer un rendez-vous que
         // personne n'a pris — et c'est précisément ce que le calendrier refuse
         // de faire en la comptant « à planifier » hors de ses barres.
-        sansRendezVous
+        etat === "sansRendezVous"
+        ? {
+            // L'obligation n'a pas de rythme (limite 1, 2026-09-15) : rien
+            // n'est dû à une date, l'état se tient en place (ADR-027).
+            cle: "Date",
+            valeur: LIBELLE_SANS_RENDEZ_VOUS,
+            note: "Cette obligation n'a pas de rythme : elle se tient en place, sur « Ce qui doit être en place ».",
+          }
+        : sansRendezVous
         ? {
             cle: "Date",
             valeur: LIBELLE_SANS_ECHEANCE,

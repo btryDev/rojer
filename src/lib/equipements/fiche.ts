@@ -22,6 +22,7 @@ import {
   estStatutRealise,
   LIBELLE_AUCUNE_VERIFICATION,
   LIBELLE_SANS_ECHEANCE,
+  LIBELLE_SANS_RENDEZ_VOUS,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { joursCivilsEntre } from "@/lib/dates";
@@ -165,8 +166,16 @@ export function lignesAFaire(
           ? "Échéance portée au calendrier"
           : etat === "enRetard"
             ? LIBELLE_AUCUNE_VERIFICATION
-            : `${LIBELLE_SANS_ECHEANCE} — à caler avec votre prestataire`,
-        href: `${base}/verifications/${v.id}`,
+            : // SANS RENDEZ-VOUS (limite 1, 2026-09-15) : « à caler avec votre
+              // prestataire » promettait un rendez-vous que l'obligation n'a
+              // pas. Elle se tient en place, et le lien y mène.
+              etat === "sansRendezVous"
+              ? `${LIBELLE_SANS_RENDEZ_VOUS} — à tenir en place`
+              : `${LIBELLE_SANS_ECHEANCE} — à caler avec votre prestataire`,
+        href:
+          etat === "sansRendezVous"
+            ? `${base}/etats-permanents`
+            : `${base}/verifications/${v.id}`,
       });
     }
 
@@ -247,7 +256,11 @@ export function libelleDelai(
 ): string {
   if (!l.date) {
     return (
-      l.etat === "enRetard" ? LIBELLE_AUCUNE_VERIFICATION : LIBELLE_SANS_ECHEANCE
+      l.etat === "enRetard"
+        ? LIBELLE_AUCUNE_VERIFICATION
+        : l.etat === "sansRendezVous"
+          ? LIBELLE_SANS_RENDEZ_VOUS
+          : LIBELLE_SANS_ECHEANCE
     ).toLowerCase();
   }
   const jours = joursCivilsEntre(maintenant, l.date);

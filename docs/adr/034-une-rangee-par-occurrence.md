@@ -591,7 +591,7 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      réalisé** — la phrase disait « elle » sans condition, et la relecture l'a
      démentie sur les deux cas suivants. Le fusible est retiré : il ne
      couvrait pas les prescriptions et rougissait à chaque obligation `autre`
-     ajoutée. **Trois limites, écrites.** Une ligne dont la seule trace est une
+     ajoutée. **Trois limites, écrites.** ~~Une ligne dont la seule trace est une
      action (ou un rapport « non vérifiable ») perd son rythme mais garde son
      statut : elle reste en retard à sa date — c'est le point mineur « une
      action ouverte compte comme preuve » de `docs/chantiers-ouverts.md`.
@@ -608,7 +608,26 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      la laisse en retard à l'ancienne échéance. Non corrigé : aligner les deux voudrait dire soit
      retirer au calendrier une ligne qui porte une action, soit dériver du
      titre l'état de la ligne — ni l'un ni l'autre n'est une garde de trois
-     lignes. Sur un rythme, enfin, un statut réalisé sans rapport est gardé
+     lignes.~~ **Fermé le 2026-09-15 (limite 1, `lot/reliquats-donnees-docs`),
+     sur décision de la propriétaire.** Une ligne applicable que la génération
+     saute, à rythme SANS RENDEZ-VOUS et sans rapport ni statut réalisé, est
+     écrite « à planifier » par la réconciliation — le statut entre dans la
+     condition, pour rattraper les lignes déjà réalignées « planifiées ».
+     `lignePortantSansRendezVous` (`retard.ts`) la tient hors des retards et
+     des « à planifier », `echeanceAttendue` l'écarte en SQL, et
+     `classerVerification` lui donne un état propre, `sansRendezVous` : pas de
+     pose au calendrier, pas de pastille, le mot « Sans rendez-vous »
+     (`LIBELLE_SANS_RENDEZ_VOUS`) sur la fiche équipement — avec un lien vers
+     « Ce qui doit être en place » —, au registre, sur la fiche de
+     vérification et à l'assistant (`sans_rendez_vous`). Un titre `autre` dont
+     l'échéance est SAISIE reste « planifiée », donc en retard à sa date :
+     c'est une vraie date. L'action garde son propre retard au plan d'actions.
+     **Au déploiement** : les prédicats agissent tout de suite sur les lignes
+     `autre` + « à planifier » déjà en base, qui sortent des retards et des
+     comptes (le score peut monter) ; les lignes `autre` + « planifiée » ne
+     sont réécrites qu'à leur régénération, que l'incrément de version validé
+     déclenchera à l'intégration — aucune version n'est incrémentée sur la
+     branche. Sur un rythme, enfin, un statut réalisé sans rapport est gardé
      tel quel : c'est la seule trace de la ligne, et la date décide. ~~**La
      suppression d'une prescription levée est refusée**~~ — cette garde a
      créé une impasse (une saisie erronée sur une ligne déjà contrôlée ne se

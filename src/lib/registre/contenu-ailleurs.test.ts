@@ -110,6 +110,24 @@ describe("registre — une date de génération n'est pas une échéance", () =>
   });
 });
 
+describe("registre — une ligne sans rendez-vous (limite 1, 2026-09-15)", () => {
+  it("dit « sans rendez-vous », sans pastille « À planifier » ni « En retard »", () => {
+    // Une obligation sans rythme, gardée par une action seule : sa date est la
+    // dernière écrite, et rien n'est attendu. La fiche remise en contrôle ne
+    // doit ni promettre une planification, ni annoncer un retard.
+    const [ligne] = lignesDe([
+      verif({
+        periodicite: "autre",
+        statut: "a_planifier",
+        datePrevue: new Date("2026-03-01T00:00:00Z"),
+      }),
+    ]);
+    expect(ligne.meta).toContain("sans rendez-vous");
+    expect(ligne.meta).not.toContain("sans échéance connue");
+    expect(ligne.statut).toBeUndefined();
+  });
+});
+
 describe("registre — une obligation ponctuelle consommée n'annonce pas de suite", () => {
   it("dit ce qui a été fait, sans promettre une prochaine échéance", () => {
     // Sa `datePrevue` n'est que son échéance d'origine : l'annoncer

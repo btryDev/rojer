@@ -13,6 +13,7 @@ import {
 import {
   estVerificationEnRetard,
   estVerificationRealisee,
+  lignePortantSansRendezVous,
 } from "@/lib/dates/retard";
 
 /**
@@ -293,13 +294,15 @@ describe("echeanceAttendue — le pendant SQL d'`estVerificationRealisee`", () =
   function passe(statut: string, periodicite: string): boolean {
     const clause = echeanceAttendue() as {
       OR: Array<{
-        statut: { in: string[] };
+        statut: string | { in: string[] };
         periodicite?: { notIn: string[] };
       }>;
     };
     return clause.OR.some(
       (b) =>
-        b.statut.in.includes(statut) &&
+        (typeof b.statut === "string"
+          ? b.statut === statut
+          : b.statut.in.includes(statut)) &&
         (b.periodicite === undefined || !b.periodicite.notIn.includes(periodicite)),
     );
   }
@@ -322,11 +325,22 @@ describe("echeanceAttendue — le pendant SQL d'`estVerificationRealisee`", () =
     ];
     for (const statut of statuts) {
       for (const periodicite of rythmes) {
+        // Deux prédicats, depuis la limite 1 (2026-09-15) : une ligne attend si
+        // elle n'est pas soldée ET si elle n'est pas sans rendez-vous.
         expect(passe(statut, periodicite), `${statut} × ${periodicite}`).toBe(
-          !estVerificationRealisee({ statut, periodicite }),
+          !estVerificationRealisee({ statut, periodicite }) &&
+            !lignePortantSansRendezVous({ statut, periodicite }),
         );
       }
     }
+  });
+
+  it("écarte « à planifier » sur un rythme sans rendez-vous, garde « planifiée » (limite 1)", () => {
+    expect(passe("a_planifier", "autre")).toBe(false);
+    // Un titre dont l'échéance est saisie : une vraie date, qui attend.
+    expect(passe("planifiee", "autre")).toBe(true);
+    // Une mise en service, elle, a un rendez-vous.
+    expect(passe("a_planifier", "mise_en_service_uniquement")).toBe(true);
   });
 
   it("retient une rangée périodique gelée sur « réalisée » — le cas qui manquait", () => {

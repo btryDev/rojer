@@ -27,6 +27,7 @@ import { debutDuJour, joursCivilsEntre } from "./index";
 // côté client.
 import { PERIODICITES_SANS_SUITE } from "@/lib/calendrier/periodicite";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
+import { estSansRendezVous } from "@/lib/etats-permanents/regle";
 
 // ---------------------------------------------------------------------
 // Primitives
@@ -233,6 +234,33 @@ export function estVerificationRealisee(
 }
 
 /**
+ * La ligne n'attend-elle AUCUN rendez-vous ? (limite 1, 2026-09-15)
+ *
+ * Son obligation s'applique sans rythme (`estSansRendezVous` — la règle même
+ * qui fait sauter la génération), et son statut dit qu'aucune échéance n'est
+ * connue. La réconciliation l'écrit ainsi quand elle réaligne une ligne que la
+ * génération saute et qu'aucun rapport réalisé ne solde : un titre dont on a
+ * retiré l'échéance saisie, une prescription levée sur une obligation `autre`,
+ * avec une action seule pour trace. Sa date n'est plus que la dernière écrite.
+ *
+ * Elle n'est donc ni en retard, ni « à planifier » — il n'y a rien à caler —,
+ * et `echeanceAttendue` (`calendrier/portee.ts`) l'écarte en SQL. L'état se
+ * tient sur « Ce qui doit être en place » (ADR-027) ; l'action, elle, garde
+ * son propre retard.
+ *
+ * Deux conditions, et la seconde compte : un titre `autre` dont l'échéance est
+ * SAISIE est généré « planifiée » — une vraie date, portée par la pièce —, et
+ * reste en retard quand elle passe.
+ */
+export function lignePortantSansRendezVous(
+  v: Pick<VerificationDatee, "statut" | "periodicite">,
+): boolean {
+  return (
+    v.statut === "a_planifier" && estSansRendezVous(v.periodicite as Periodicite)
+  );
+}
+
+/**
  * Une vérification est **en retard** quand son échéance réglementaire est
  * passée sans qu'elle ait été réalisée : sa `datePrevue` est en retard, que
  * la date ait été arrêtée (`planifiee`) ou non (`a_planifier`). Aucun statut
@@ -266,6 +294,7 @@ export function estVerificationEnRetard(
   // l'échéance, et il n'en reste que sur une obligation sans rendez-vous
   // suivant, consommée.
   if (estVerificationRealisee(v)) return false;
+  if (lignePortantSansRendezVous(v)) return false;
   // LA DATE, ET ELLE SEULE. Un statut stocké « dépassée » suffisait à rendre
   // une ligne en retard, date future comprise : deux sources pour un fait, et
   // la génération devait réécrire la ligne le jour où sa date passait pour que
@@ -301,6 +330,8 @@ export function estVerificationAPlanifier(
 ): boolean {
   if (estVerificationArchivee(v)) return false;
   if (estVerificationRealisee(v)) return false;
+  // Rien à planifier : l'obligation n'a pas de rythme (limite 1).
+  if (lignePortantSansRendezVous(v)) return false;
   if (statutLu(v) !== "a_planifier") return false;
   return !estEnRetard(v.datePrevue, now);
 }

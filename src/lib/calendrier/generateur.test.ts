@@ -24,6 +24,7 @@ import {
   clesApplicabilite,
   periodicitesEffectives,
 } from "./generateur";
+import { estVerificationAPlanifier } from "@/lib/dates/retard";
 
 // ============================================================================
 // Fixtures
@@ -1350,12 +1351,13 @@ describe("réconciliation — cycles de vérification", () => {
       expect(plan.inchangees).toBe(1);
     });
 
-    it("action seule, sans rapport réalisé : le rythme tombe, le statut reste, la date décide encore", () => {
-      // CE QUE LA CORRECTION NE FAIT PAS, et c'est délibéré. Aucun contrôle
-      // prouvé : lui donner un statut réalisé fabriquerait une preuve ;
-      // l'archiver dirait « ne s'applique plus » d'une obligation qui
-      // s'applique. Elle reste donc en retard à sa date — le point mineur
-      // « une action ouverte compte comme preuve » de `chantiers-ouverts.md`.
+    it("action seule, sans rapport réalisé : la ligne passe « à planifier » et sort des retards (limite 1)", () => {
+      // ~~Elle restait « planifiée », donc en retard à sa date.~~ Tranché le
+      // 2026-09-15 : aucun rendez-vous n'est attendu d'une obligation sans
+      // rythme. Ni statut réalisé — ce serait fabriquer une preuve —, ni
+      // archivage — l'obligation s'applique : « à planifier », que
+      // `lignePortantSansRendezVous` tient hors des retards et des « à
+      // planifier ». L'action, elle, garde son propre retard.
       const plan = reconcilierCalendrier(
         [roulee({ derniereRealisation: null, dernierResultat: null })],
         [],
@@ -1364,10 +1366,33 @@ describe("réconciliation — cycles de vérification", () => {
       const m = plan.aMettreAJour[0]!;
       expect(m.periodicite).toBe("autre");
       expect(m.prescriptionId).toBeNull();
-      expect(m.statut).toBe("planifiee");
-      expect(
-        estVerificationEnRetard({ ...m, archiveLe: null }, NOW),
-      ).toBe(true);
+      expect(m.statut).toBe("a_planifier");
+      expect(m.datePrevue).toEqual(new Date("2026-03-01T00:00:00Z"));
+      const lue = { ...m, archiveLe: null };
+      expect(estVerificationEnRetard(lue, NOW)).toBe(false);
+      expect(estVerificationAPlanifier(lue, NOW)).toBe(false);
+    });
+
+    it("une ligne déjà réalignée « planifiée » est rattrapée sur son seul statut, puis ne bouge plus", () => {
+      // Réalignée avant la limite 1 : `autre`, sans prescription, « planifiée ».
+      // Ni le rythme ni la prescription ne diffèrent ; le statut, si.
+      const dejaAlignee = roulee({
+        periodicite: "autre",
+        prescriptionId: null,
+        derniereRealisation: null,
+        dernierResultat: null,
+      });
+      const premiere = reconcilierCalendrier([dejaAlignee], [], sansRythme);
+      expect(premiere.aMettreAJour.map((m) => m.statut)).toEqual(["a_planifier"]);
+
+      // IDEMPOTENCE : appliquée, la passe suivante n'écrit rien.
+      const seconde = reconcilierCalendrier(
+        [{ ...dejaAlignee, statut: "a_planifier" }],
+        [],
+        sansRythme,
+      );
+      expect(seconde.aMettreAJour).toEqual([]);
+      expect(seconde.inchangees).toBe(1);
     });
 
     it("à rythme déjà juste, une prescription restée sur la ligne tombe quand même", () => {

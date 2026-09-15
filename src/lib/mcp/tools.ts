@@ -390,6 +390,8 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   // Dit ce que l'application constate, sans le qualifier en droit : le
   // serveur rend des faits, jamais de conclusion (cf. ses instructions).
   ne_s_applique_plus: "ne s'applique plus",
+  // Le mot du calendrier (`LIBELLE_SANS_RENDEZ_VOUS`), en minuscule.
+  sans_rendez_vous: "sans rendez-vous",
 };
 
 function formaterVerifications(verifs: VerificationLue[]): string {

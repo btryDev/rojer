@@ -125,8 +125,15 @@ export default async function EquipementDetailPage({
     aFaire[0]?.etat === "enRetard"
       ? aFaire[0]
       : (aFaire.find((l) => l.date !== null) ?? null);
+  // Une ligne sans rendez-vous n'est pas « à planifier » : si elle est seule
+  // ouverte, la tuile le dit (limite 1, 2026-09-15).
   const etatTete: RegistreLigne =
-    tete?.etat ?? (aFaire.length > 0 ? "aPlanifier" : "faite");
+    tete?.etat ??
+    (aFaire.some((l) => l.etat !== "sansRendezVous")
+      ? "aPlanifier"
+      : aFaire.length > 0
+        ? "sansRendezVous"
+        : "faite");
   // Les deux pastilles portent sur des ensembles **disjoints**. Elles
   // filtraient la même liste sur deux axes — le genre pour l'une, l'état
   // pour l'autre — si bien qu'un écart en retard s'affichait « 1 échéance en

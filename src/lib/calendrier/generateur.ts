@@ -921,6 +921,39 @@ function statutCycleOuvert(
   return "a_planifier";
 }
 
+/**
+ * Le statut d'une ligne APPLICABLE que la génération saute, à son rythme
+ * effectif — la seule écriture que la boucle finale du réconciliateur fait sur
+ * elle (NB4, puis limite 1, 2026-09-15).
+ *
+ *  · sans rythme suivant : le résultat du dernier rapport réalisé, s'il y en a
+ *    un — la ligne est soldée ; sinon un statut réalisé déjà là, seule trace
+ *    d'une consommation sans rapport ; sinon, sur un rythme SANS RENDEZ-VOUS,
+ *    « à planifier » : aucune échéance n'est attendue, et
+ *    `lignePortantSansRendezVous` la tient hors des retards. Une mise en
+ *    service garde son statut : elle, a un rendez-vous ;
+ *  · sur un rythme : un statut réalisé sans rapport est gardé — c'est la seule
+ *    trace, et le passer « à planifier » faisait supprimer la ligne à la passe
+ *    suivante —, sinon le statut d'un cycle ouvert.
+ *
+ * Idempotente par construction : appliquée à son propre résultat, elle le
+ * rend.
+ */
+function statutDeLigneNonGeneree(
+  ex: OccurrenceExistante,
+  effective: Periodicite,
+): StatutVerificationPersiste {
+  if (!estCyclique(effective)) {
+    const solde = statutDepuisResultat(ex.dernierResultat);
+    if (solde !== null) return solde;
+    if (estStatutRealise(ex.statut)) return ex.statut;
+    return estSansRendezVous(effective) ? "a_planifier" : ex.statut;
+  }
+  return estStatutRealise(ex.statut)
+    ? ex.statut
+    : statutCycleOuvert(ex.statut, realisationConnue(ex));
+}
+
 function memeListe(a: readonly string[], b: readonly string[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
@@ -1446,6 +1479,13 @@ export function reconcilierCalendrier(
       const effective = options.periodicitesEffectives?.get(
         cleApplicabilite(ex.obligationId, ex.equipementId),
       );
+      // Le statut qu'elle doit porter, calculé une fois : il entre dans la
+      // condition, pour que les lignes déjà réalignées avant la limite 1 — `autre`
+      // et « planifiée » — soient rattrapées sans que leur rythme ait bougé.
+      const statutCible =
+        effective === undefined
+          ? ex.statut
+          : statutDeLigneNonGeneree(ex, effective);
       if (!porteUneTrace) plan.aSupprimer.push(ex.id);
       // ELLE A CHANGÉ DE RYTHME SANS REPASSER PAR LA GÉNÉRATION (NB4,
       // 2026-09-15). Le cas vécu : une prescription donne un rythme semestriel
@@ -1463,12 +1503,16 @@ export function reconcilierCalendrier(
       // dernier rapport réalisé quand il n'y a plus de rendez-vous suivant,
       // comme la branche « ponctuelle » plus haut, sinon celui d'un cycle
       // ouvert. L'échéance ne bouge pas : sans rythme il n'y a rien à
-      // recalculer. Une ligne sans rapport réalisé (une action seule, un
-      // « non vérifiable ») garde son statut, donc sa date décide encore :
-      // voir le test « action seule ».
+      // recalculer. ~~Une ligne sans rapport réalisé (une action seule, un
+      // « non vérifiable ») garde son statut, donc sa date décide encore.~~
+      // Depuis la limite 1 (2026-09-15), elle passe « à planifier » quand son
+      // rythme est sans rendez-vous : elle n'est plus en retard, et
+      // `lignePortantSansRendezVous` la sort des comptes.
       else if (
         effective !== undefined &&
-        (effective !== ex.periodicite || (ex.prescriptionId ?? null) !== null)
+        (effective !== ex.periodicite ||
+          (ex.prescriptionId ?? null) !== null ||
+          statutCible !== ex.statut)
       ) {
         plan.aMettreAJour.push({
           id: ex.id,
@@ -1477,15 +1521,7 @@ export function reconcilierCalendrier(
           periodicite: effective,
           realisateurRequis: ex.realisateurRequis,
           datePrevue: ex.datePrevue,
-          statut: !estCyclique(effective)
-            ? (statutDepuisResultat(ex.dernierResultat) ?? ex.statut)
-            : // Un statut réalisé sans rapport est la SEULE trace de la ligne
-              // (`porteUneTrace`) : le passer « à planifier » l'effaçait, et la
-              // passe suivante supprimait la ligne. Sur un rythme, la date
-              // décide de toute façon (`estVerificationRealisee`).
-              estStatutRealise(ex.statut)
-              ? ex.statut
-              : statutCycleOuvert(ex.statut, realisationConnue(ex)),
+          statut: statutCible,
           prescriptionId: null,
         });
       }

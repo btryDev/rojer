@@ -27,10 +27,12 @@ import { formaterDateCourteFr } from "@/lib/dates";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
   estVerificationRealisee,
+  lignePortantSansRendezVous,
 } from "@/lib/dates/retard";
 import {
   aUnRendezVous,
   LIBELLE_SANS_ECHEANCE,
+  LIBELLE_SANS_RENDEZ_VOUS,
   statutAffiche,
   type StatutPeint,
 } from "@/lib/calendrier/etats";
@@ -230,10 +232,14 @@ export function contenuTenuAilleursDepuis(
             // le 01 sept. » sur la date de création de la ligne.
             v.archiveLe || estVerificationRealisee(v)
               ? null
-              : v.datePrevue &&
-                  aUnRendezVous({ ...v, datePrevue: v.datePrevue }, now)
-                ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
-                : LIBELLE_SANS_ECHEANCE.toLowerCase(),
+              : // Sans rendez-vous (limite 1, 2026-09-15) : ni « prochaine le »,
+                // ni « sans échéance connue » — aucune n'est attendue.
+                lignePortantSansRendezVous(v)
+                ? LIBELLE_SANS_RENDEZ_VOUS.toLowerCase()
+                : v.datePrevue &&
+                    aUnRendezVous({ ...v, datePrevue: v.datePrevue }, now)
+                  ? `prochaine le ${formaterDateCourteFr(v.datePrevue)}`
+                  : LIBELLE_SANS_ECHEANCE.toLowerCase(),
           ]
             .filter(Boolean)
             .join(" · "),

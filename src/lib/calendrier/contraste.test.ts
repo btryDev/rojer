@@ -89,6 +89,8 @@ describe("contraste des couples champ/encre", () => {
     aPlanifier: 4.5, // mesuré 6,02
     // Même couple que `aPlanifier` — l'ardoise éteinte —, donc même plancher.
     archivee: 4.5,
+    // Même ardoise encore (limite 1, 2026-09-15).
+    sansRendezVous: 4.5,
   };
 
   it("chaque encre est lisible sur son propre champ", () => {

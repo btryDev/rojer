@@ -29,6 +29,7 @@ import {
   estVerificationArchivee,
   estVerificationAVenir,
   estVerificationEnRetard,
+  lignePortantSansRendezVous,
   type VerificationDatee,
   joursDeRetard,
   STATUTS_ACTION_OUVERTE,
@@ -344,7 +345,13 @@ export type EtatVerification =
    * était restituée « en retard » à un assistant, qui le répétait au
    * dirigeant sur une obligation éteinte.
    */
-  | "ne_s_applique_plus";
+  | "ne_s_applique_plus"
+  /**
+   * L'obligation s'applique sans aucun rythme, et la ligne n'attend aucun
+   * rendez-vous (limite 1, 2026-09-15). Sans cet état, elle tombait dans
+   * « planifiée » — une échéance que personne n'attend.
+   */
+  | "sans_rendez_vous";
 
 function etatDe(v: VerificationDatee, now: Date): EtatVerification {
   // EN PREMIER, avant même le réalisé : une ligne archivée peut porter une
@@ -357,6 +364,7 @@ function etatDe(v: VerificationDatee, now: Date): EtatVerification {
   // « planifiée, 40 jours de retard » à l'assistant, sous un en-tête « aucune
   // en retard ». Relevé en relecture le 2026-09-12.
   if (estVerificationRealisee(v)) return "realisee";
+  if (lignePortantSansRendezVous(v)) return "sans_rendez_vous";
   if (estVerificationEnRetard(v, now)) return "en_retard";
   if (estVerificationAPlanifier(v, now)) return "a_planifier";
   if (estVerificationAVenir(v, now, JOURS_HORIZON_PROCHE)) return "a_venir";
@@ -576,7 +584,10 @@ export async function listerVerifications(
   // Une ligne éteinte n'a pas d'échéance connue non plus (`aUnRendezVous`),
   // mais elle n'est pas « due, jamais faite » : elle garde sa place de date.
   const enTete = (v: VerificationLue) =>
-    !v.echeanceConnue && v.etat !== "ne_s_applique_plus";
+    !v.echeanceConnue &&
+    v.etat !== "ne_s_applique_plus" &&
+    // Pas « due, jamais faite » non plus : rien n'est attendu (limite 1).
+    v.etat !== "sans_rendez_vous";
   lues.sort((a, b) =>
     enTete(a) !== enTete(b)
       ? enTete(a)

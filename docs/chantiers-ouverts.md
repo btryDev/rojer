@@ -1602,14 +1602,22 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   `periodicitesEffectives` passée au réconciliateur ; détail et limites dans
   l'ADR-034. **Sans incrément de version**, un dossier existant ne se réaligne
   qu'à sa prochaine régénération (une mutation, ou un changement de
-  référentiel). **Reste** : une ligne dont la seule trace est une action garde
+  référentiel). ~~**Reste** : une ligne dont la seule trace est une action garde
   son statut et reste en retard à sa date — voir « une action ouverte compte
   comme preuve », plus bas. C'est le cas de toute ligne de titre de salarié
   réalignée, qui ne reçoit jamais de rapport : l'habilitation électrique d'une
   personne, avec une action seule, reste en retard au calendrier à sa dernière
   `datePrevue` écrite quand la page Équipe dit « Sans terme écrit » — et de
   même quand on retire l'échéance saisie d'un titre `autre` dont la ligne porte
-  une action. Non corrigé. **Fermé avec**, relecture du même jour : la
+  une action. Non corrigé.~~ **Fermé le 2026-09-15 (limite 1,
+  `lot/reliquats-donnees-docs`)** : une telle ligne passe « à planifier », sort
+  des retards et des comptes (calendrier, brief, score, tableau de bord,
+  widgets, MCP), et se lit « Sans rendez-vous » sur la fiche équipement — avec
+  un lien vers « Ce qui doit être en place » —, au registre et sur sa fiche ; un
+  titre à échéance saisie reste en retard à sa date. Au déploiement, les
+  prédicats agissent tout de suite sur les lignes `autre` + « à planifier »
+  déjà en base ; les autres attendent la régénération de l'incrément de
+  version validé, posé à l'intégration. **Fermé avec**, relecture du même jour : la
   suppression d'une prescription compte les preuves faites sous l'acte
   (rapports datés, en jour civil, de l'acte à sa levée, sur les lignes visées),
   et non plus les lignes qui portent encore son `prescriptionId`, que la

@@ -22,6 +22,7 @@ import {
   estVerificationEnRetard,
   estVerificationRealisee,
   type VerificationDatee,
+  lignePortantSansRendezVous,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
 import { statutDepuisResultat } from "@/lib/rapports/schema";
@@ -49,7 +50,17 @@ export type EtatEcheance = "enRetard" | "proche" | "lointain" | "faite";
  * (la date qu'il porte est une date de génération, pas un rendez-vous),
  * mais une ligne de liste doit bien l'afficher.
  */
-export type RegistreLigne = EtatEcheance | "aPlanifier" | "archivee";
+export type RegistreLigne =
+  | EtatEcheance
+  | "aPlanifier"
+  | "archivee"
+  // UNE LIGNE QUI N'ATTEND AUCUN RENDEZ-VOUS (limite 1, 2026-09-15) : son
+  // obligation s'applique, sans rythme (`estSansRendezVous`), et la ligne ne
+  // survit que par une trace — une action, un rapport « non vérifiable ». Ni
+  // en retard — il n'y a pas d'échéance à manquer —, ni à planifier — il n'y a
+  // rien à caler —, ni archivée — l'obligation s'applique. Elle se tient en
+  // place, sur l'écran de l'ADR-027 (`lignePortantSansRendezVous`, `retard.ts`).
+  | "sansRendezVous";
 
 /**
  * Urgence relative, pour trancher quand une case ne peut porter qu'un
@@ -74,6 +85,8 @@ export const TON_REGISTRE: Record<RegistreLigne, "alerte" | "warn" | "ok"> = {
   // Archivée : rien à signaler. Ni alerte — l'obligation ne s'applique plus —,
   // ni warn — il n'y a rien à planifier.
   archivee: "ok",
+  // Sans rendez-vous : rien à signaler au calendrier ; l'état se tient ailleurs.
+  sansRendezVous: "ok",
   proche: "ok",
   lointain: "ok",
   faite: "ok",
@@ -90,6 +103,7 @@ export const CHAMP_ETAT: Record<RegistreLigne, string> = {
   // s'attribuer une conformité), ni rose (ce serait annoncer un retard sur
   // ce qui n'est plus dû).
   archivee: "var(--board-slate-pale)",
+  sansRendezVous: "var(--board-slate-pale)",
 };
 
 /** Encre lisible sur le champ correspondant. Jamais de blanc sur le rose. */
@@ -100,6 +114,7 @@ export const ENCRE_ETAT: Record<RegistreLigne, string> = {
   faite: "var(--board-green-ink)",
   aPlanifier: "var(--board-slate-mid)",
   archivee: "var(--board-slate-mid)",
+  sansRendezVous: "var(--board-slate-mid)",
 };
 
 /**
@@ -178,6 +193,7 @@ export const LIBELLE_ETAT: Record<
     un: "ne s'applique plus",
     plusieurs: "ne s'appliquent plus",
   },
+  sansRendezVous: { un: "sans rendez-vous", plusieurs: "sans rendez-vous" },
 };
 
 /**
@@ -194,6 +210,7 @@ export const LIBELLE_ETAT_COURT: Record<RegistreLigne, string> = {
   faite: "faites",
   aPlanifier: "à planif.",
   archivee: "sans objet",
+  sansRendezVous: "sans rendez-vous",
 };
 
 /** « 1 dépassée », « 5 dépassées » — le compte et son mot, accordés. */
@@ -314,6 +331,9 @@ export function classerVerification(
   // MCP, et dans le registre de sécurité remis en contrôle.
   if (estVerificationArchivee(v)) return "archivee";
   if (estVerificationRealisee(v)) return "faite";
+  // Avant le retard : sa date est une ancienne échéance, que `classerDate`
+  // lirait « en retard » (limite 1, 2026-09-15).
+  if (lignePortantSansRendezVous(v)) return "sansRendezVous";
   if (estVerificationEnRetard(v, now)) return "enRetard";
   // Le prédicat, pas le statut brut : une lecture recopiée ici a déjà divergé
   // de lui une fois (retrait de `depassee`, phase A).
@@ -355,6 +375,10 @@ function statutDuRegistre(
 ): StatutPeint | undefined {
   switch (registre) {
     case "archivee":
+      return undefined;
+    // Aucune pastille : « à planifier » promettait un geste qui n'existe pas.
+    // La phrase `LIBELLE_SANS_RENDEZ_VOUS` le dit à la place.
+    case "sansRendezVous":
       return undefined;
     case "enRetard":
       return "en_retard";
@@ -466,6 +490,9 @@ export function statutDeLaLecture(
  *    lieu.
  */
 export const LIBELLE_SANS_ECHEANCE = "Sans échéance connue";
+/** Une ligne dont l'obligation s'applique sans aucun rythme : rien n'est dû à
+ *  une date, l'état se tient en place (ADR-027 ; limite 1, 2026-09-15). */
+export const LIBELLE_SANS_RENDEZ_VOUS = "Sans rendez-vous";
 export const LIBELLE_AUCUNE_VERIFICATION = "Aucune vérification enregistrée";
 
 /**
@@ -518,7 +545,7 @@ export type LectureCalendrier = {
    * vide. Sans cette exclusion, cinq écrans devraient traiter un cas qui ne
    * peut pas leur arriver.
    */
-  registre: Exclude<RegistreLigne, "archivee">;
+  registre: Exclude<RegistreLigne, "archivee" | "sansRendezVous">;
   /**
    * `courante` — l'échéance ouverte de la ligne, la seule qu'elle porte ;
    * `realisation` — le contrôle fait, lu sur son dernier rapport et posé au
@@ -575,7 +602,9 @@ export function lecturesCalendrier(
   // classent une ligne ne le faisaient pas, et le champ dont il dépend était
   // optionnel — donc silencieusement absent chez qui ne le sélectionnait pas.
   const classe = classerVerification(v, now);
-  const archivee = classe === "archivee";
+  // Une ligne sans rendez-vous ne pose rien au calendrier non plus : sa date
+  // n'est plus une échéance. Son fait passé, s'il en a un, reste une preuve.
+  const archivee = classe === "archivee" || classe === "sansRendezVous";
 
   // UNE LIGNE ARCHIVÉE GARDE SON FAIT PASSÉ, et lui seul. Sans réalisation,
   // elle n'a rien à montrer ; avec, ce qu'elle montre est une PREUVE, et une
