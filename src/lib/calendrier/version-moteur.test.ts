@@ -36,13 +36,14 @@ import {
  * Une exception de forme : de `referentiels/conformite/index.ts`, qui mêle
  * code, données et `REFERENTIEL_VERSION`, on ne relève que les FONCTIONS — une
  * déclaration `function`, ou une constante qui vaut une fonction fléchée ou une
- * expression de fonction — que le moteur importe, et celles qu'elles appellent
- * dans le même fichier. Pas `REFERENTIEL_VERSION`, qui ferait tomber le test à
- * chaque version ; pas `obligationsParDomaine` ni `empreinteReferentiel`, que
- * le moteur n'importe pas (une empreinte qui calcule autrement change le sceau
- * d'elle-même). Ses imports, eux, sont suivis. TROU CONNU : une déclaration
- * d'`index.ts` qui n'est pas une fonction mais que ces fonctions lisent — le
- * cache `let _index` d'`obligationParId` — n'est pas relevée. S'y ajoute une DONNÉE que le
+ * expression de fonction — que le moteur importe, et toute déclaration de
+ * premier niveau qu'elles nomment, de proche en proche : aujourd'hui le cache
+ * `let _index` et la liste `obligationsConformite`, que lit `obligationParId`.
+ * Pas `REFERENTIEL_VERSION`, qui ferait tomber le test à chaque version ; pas
+ * `obligationsParDomaine` ni `empreinteReferentiel`, que le moteur n'importe
+ * pas (une empreinte qui calcule autrement change le sceau d'elle-même). Ses
+ * imports, eux, sont suivis. Le repérage des noms est textuel : un nom cité
+ * dans une chaîne est relevé pour rien, sans danger. S'y ajoute une DONNÉE que le
  * moteur lit et que l'empreinte ne hache pas : la table retiré → absorbant de
  * `OBLIGATIONS_RETIREES`, retraits sans absorbant exclus — le moteur les ignore.
  *
@@ -123,7 +124,7 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 0,
-  empreinte: "36766d2e7b27f5ea",
+  empreinte: "aaf9ac0aa65da6c4",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
@@ -154,53 +155,90 @@ function lire(chemin: string): ts.SourceFile {
   );
 }
 
-/** Les fonctions nommées d'un fichier : `function`, ou constante fonction. */
-function fonctionsDe(source: ts.SourceFile): Map<string, string> {
-  const fonctions = new Map<string, string>();
+/**
+ * Les déclarations de premier niveau d'un fichier, par nom, et lesquelles sont
+ * des fonctions : `function`, ou constante qui vaut une fonction fléchée ou une
+ * expression de fonction.
+ */
+function declarationsDe(source: ts.SourceFile): {
+  textes: Map<string, string>;
+  fonctions: Set<string>;
+} {
+  const textes = new Map<string, string>();
+  const fonctions = new Set<string>();
   for (const instruction of source.statements) {
     if (ts.isFunctionDeclaration(instruction) && instruction.name) {
-      fonctions.set(instruction.name.text, instruction.getText(source));
+      textes.set(instruction.name.text, instruction.getText(source));
+      fonctions.add(instruction.name.text);
     } else if (ts.isVariableStatement(instruction)) {
       for (const d of instruction.declarationList.declarations) {
+        if (!ts.isIdentifier(d.name)) continue;
+        textes.set(d.name.text, instruction.getText(source));
         if (
-          ts.isIdentifier(d.name) &&
           d.initializer !== undefined &&
           (ts.isArrowFunction(d.initializer) ||
             ts.isFunctionExpression(d.initializer))
         ) {
-          fonctions.set(d.name.text, instruction.getText(source));
+          fonctions.add(d.name.text);
         }
       }
     }
   }
-  return fonctions;
+  return { textes, fonctions };
 }
 
+/** Les noms qu'un texte cite — identifiants Unicode compris. */
+const NOMS_CITES = /[\p{ID_Start}$_][\p{ID_Continue}$‌‍]*/gu;
+
 /**
- * Les fonctions d'`index.ts` que le moteur importe, et celles qu'elles
- * appellent dans le fichier, de proche en proche. `null` = tout (import par
- * espace de noms).
+ * Les fonctions d'`index.ts` que le moteur importe, et tout ce qu'elles nomment
+ * au premier niveau du fichier — fonctions, cache (`let _index`), liste
+ * (`obligationsConformite`) —, de proche en proche. Seules les FONCTIONS
+ * importées servent de point de départ : une donnée importée par le moteur
+ * (`OBLIGATIONS_RETIREES`) n'entre que si une fonction retenue la nomme.
+ * `null` = toutes les fonctions (import par espace de noms).
  */
 function fonctionsReleveesDeLIndex(
   source: ts.SourceFile,
   importees: Set<string> | null,
 ): string {
-  const fonctions = fonctionsDe(source);
+  const { textes, fonctions } = declarationsDe(source);
   const retenues = new Set<string>();
-  const aVoir = importees === null ? [...fonctions.keys()] : [...importees];
+  const aVoir = [...(importees ?? fonctions)].filter((n) => fonctions.has(n));
   while (aVoir.length > 0) {
     const nom = aVoir.pop()!;
-    const texte = fonctions.get(nom);
+    const texte = textes.get(nom);
     if (texte === undefined || retenues.has(nom)) continue;
     retenues.add(nom);
-    for (const mot of texte.match(/[A-Za-z_$][\w$]*/g) ?? []) {
-      if (fonctions.has(mot) && !retenues.has(mot)) aVoir.push(mot);
+    for (const mot of texte.match(NOMS_CITES) ?? []) {
+      if (textes.has(mot) && !retenues.has(mot)) aVoir.push(mot);
     }
   }
-  return [...retenues]
-    .sort()
-    .map((nom) => fonctions.get(nom)!)
-    .join("\n");
+  const releves = new Set([...retenues].sort().map((nom) => textes.get(nom)!));
+  return [...releves].join("\n");
+}
+
+/**
+ * Les noms qu'un import ou un réexport tire de son module, sous leur nom
+ * D'ORIGINE (`{ a as b }` rend `a`). `null` = tout : `* as`, `export *`, ou
+ * import sans liaison nommée.
+ */
+function nomsLies(
+  instruction: ts.ImportDeclaration | ts.ExportDeclaration,
+): string[] | null {
+  const liaisons = ts.isImportDeclaration(instruction)
+    ? instruction.importClause?.namedBindings
+    : instruction.exportClause;
+  if (
+    liaisons === undefined ||
+    ts.isNamespaceImport(liaisons) ||
+    ts.isNamespaceExport(liaisons)
+  ) {
+    return null;
+  }
+  return liaisons.elements
+    .filter((e) => !e.isTypeOnly)
+    .map((e) => (e.propertyName ?? e.name).text);
 }
 
 /** Les modules du moteur, de proche en proche depuis la passe de régénération. */
@@ -227,21 +265,10 @@ function modulesDuMoteur(): Map<string, string> {
       if (cible === null) continue;
       aVisiter.push(cible);
       if (cible !== INDEX_REFERENTIEL || chemin === INDEX_REFERENTIEL) continue;
-      const liaisons = ts.isImportDeclaration(instruction)
-        ? instruction.importClause?.namedBindings
-        : instruction.exportClause;
-      if (
-        liaisons === undefined ||
-        ts.isNamespaceImport(liaisons) ||
-        ts.isNamespaceExport(liaisons)
-      ) {
-        importeesDeLIndex = null;
-      } else if (importeesDeLIndex !== null) {
-        for (const e of liaisons.elements) {
-          if (!e.isTypeOnly) {
-            importeesDeLIndex.add((e.propertyName ?? e.name).text);
-          }
-        }
+      const noms = nomsLies(instruction);
+      if (noms === null) importeesDeLIndex = null;
+      else if (importeesDeLIndex !== null) {
+        for (const nom of noms) importeesDeLIndex.add(nom);
       }
     }
   }
@@ -301,6 +328,8 @@ describe("VERSION_MOTEUR_CALENDRIER — le code du moteur scelle aussi le calend
         "seront régénérés à leur prochaine ouverture : une écriture en " +
         "production, à signaler à la propriétaire avant de fusionner.\n" +
         "  · NON (renommage, extraction, affichage) : recopiez l'empreinte seule.\n" +
+        "  · Un fichier de DONNÉES neuf du référentiel figure dans les modules " +
+        "relevés : ajoutez-le à `DONNEES_REFERENTIEL`, ne recopiez pas.\n" +
         "  · Une montée de TypeScript ou du lockfile peut aussi le faire tomber sans " +
         "qu'aucune règle ait changé : c'est NON.\n" +
         "  · Un absorbant modifié AVEC le retrait d'une obligation déplace déjà " +
@@ -326,7 +355,11 @@ describe("VERSION_MOTEUR_CALENDRIER — le code du moteur scelle aussi le calend
   it("de l'index du référentiel, seules les fonctions que le moteur importe sont relevées", () => {
     const index = modulesDuMoteur().get(INDEX_REFERENTIEL) ?? "";
     expect(index).toContain("function obligationParId");
+    // Ce que `obligationParId` lit au premier niveau.
+    expect(index).toContain("let _index");
+    expect(index).toContain("const obligationsConformite");
     expect(index).not.toContain("obligationsParDomaine");
+    expect(index).not.toContain("function empreinteReferentiel");
     expect(index).not.toContain("REFERENTIEL_VERSION");
   });
 
@@ -338,6 +371,8 @@ describe("VERSION_MOTEUR_CALENDRIER — le code du moteur scelle aussi le calend
         "const expression = function (x: number) { return x; };",
         "export function importee(id: string) { return aide(id); }",
         "export function inutile() { return expression(1); }",
+        "let mémoire: Map<string, string> | null = null;",
+        "export function lireMémoire() { return mémoire; }",
       ].join("\n"),
       ts.ScriptTarget.Latest,
     );
@@ -346,7 +381,75 @@ describe("VERSION_MOTEUR_CALENDRIER — le code du moteur scelle aussi le calend
     expect(releve).toContain("const aide");
     expect(releve).not.toContain("inutile");
     expect(releve).not.toContain("expression");
+    expect(releve).not.toContain("let mémoire");
+    // Une déclaration non fonction, nommée par une fonction retenue — et un
+    // identifiant accentué, que le repérage ASCII coupait en deux.
+    expect(
+      fonctionsReleveesDeLIndex(source, new Set(["lireMémoire"])),
+    ).toContain("let mémoire");
     expect(fonctionsReleveesDeLIndex(source, null)).toContain("const expression");
+  });
+
+  it("les noms liés suivent le nom d'origine, et `* as` comme `export *` valent tout", () => {
+    const source = ts.createSourceFile(
+      "m.ts",
+      [
+        'import { obligationParId as parId, type Obligation } from "x";',
+        'export { obligationsConformite as liste } from "x";',
+        'import * as ref from "x";',
+        'export * from "x";',
+      ].join("\n"),
+      ts.ScriptTarget.Latest,
+    );
+    const [renomme, reexport, espace, tout] = source.statements as unknown as [
+      ts.ImportDeclaration,
+      ts.ExportDeclaration,
+      ts.ImportDeclaration,
+      ts.ExportDeclaration,
+    ];
+    expect(nomsLies(renomme)).toEqual(["obligationParId"]);
+    expect(nomsLies(reexport)).toEqual(["obligationsConformite"]);
+    expect(nomsLies(espace)).toBeNull();
+    expect(nomsLies(tout)).toBeNull();
+  });
+
+  it("aucun fichier de données exclu ne porte de fonction ni d'import de valeur", () => {
+    // La liste d'exclusion ne vaut que si ses fichiers ne sont QUE des données :
+    // du code qui s'y glisserait sortirait du relevé en silence.
+    const fautes = DONNEES_REFERENTIEL.filter((c) =>
+      existsSync(surDisque(c)),
+    ).flatMap((chemin) => {
+      const trouve = new Set<string>();
+      const visiter = (n: ts.Node) => {
+        if (
+          ts.isFunctionDeclaration(n) ||
+          ts.isFunctionExpression(n) ||
+          ts.isArrowFunction(n) ||
+          ts.isMethodDeclaration(n)
+        ) {
+          trouve.add(`${chemin} : fonction`);
+        }
+        const importDeValeur =
+          ts.isImportDeclaration(n) &&
+          !n.importClause?.isTypeOnly &&
+          (nomsLies(n)?.length ?? 1) > 0;
+        const reexportDeValeur =
+          ts.isExportDeclaration(n) &&
+          n.moduleSpecifier !== undefined &&
+          !n.isTypeOnly;
+        if (importDeValeur || reexportDeValeur) {
+          trouve.add(`${chemin} : import de valeur`);
+        }
+        ts.forEachChild(n, visiter);
+      };
+      visiter(lire(chemin));
+      return [...trouve];
+    });
+    expect(
+      fautes,
+      "Un fichier de `DONNEES_REFERENTIEL` porte du code : retirez-le de la " +
+        "liste (il sera relevé), ou sortez le code dans un module relevé.",
+    ).toEqual([]);
   });
 
   it("chaque fichier de données exclu du relevé existe encore", () => {
