@@ -376,6 +376,11 @@ describe("chapeauAFaire — le nombre et le genre de ce qui est ouvert (2026-09-
     );
   });
 
+  it("une correction en retard en tête ne se dit pas « vérification due »", () => {
+    const aFaire = [l(null, "enRetard", "action")];
+    expect(chapeauAFaire(aFaire, aFaire[0], AUJOURDHUI)).not.toMatch(/vérification/);
+  });
+
   it("hors retard, ne compte que les lignes sans date, et au bon genre", () => {
     const aFaire = [l(null, "aPlanifier"), l(null, "aPlanifier", "action")];
     expect(chapeauAFaire(aFaire, null, AUJOURDHUI)).toBe(

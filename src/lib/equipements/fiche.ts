@@ -343,7 +343,9 @@ export function chapeauAFaire(
       ? `Un écart reste à lever ${libelleDelai(tete, maintenant, "phrase")}`
       : `Une vérification est attendue ${libelleDelai(tete, maintenant, "phrase")}`;
   }
-  if (tete?.etat === "enRetard") {
+  // Une CORRECTION en retard en tête n'est pas « une vérification due » : elle
+  // retombe sur `phraseSansEcheance`, qui nomme les deux genres (2026-09-15).
+  if (tete?.etat === "enRetard" && tete.genre === "verification") {
     const dues = aFaire.filter(
       (l) => l.date === null && l.etat === "enRetard" && l.genre === "verification",
     ).length;
