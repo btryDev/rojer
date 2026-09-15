@@ -215,8 +215,9 @@ export function construireFrise({
   // OÙ POSER UNE OPÉRATION COMMENCÉE AVANT LA FENÊTRE. Filtrée sur son début,
   // une opération démarrée il y a plus de trois mois et finissant dans dix
   // jours n'apparaissait pas, quand le « sous 30 j » du tableau de bord la
-  // comptait (2026-09-15). Tant que sa fin tombe dans la fenêtre, elle y
-  // entre, posée au bord gauche ; sa carte garde sa vraie date de début.
+  // comptait (2026-09-15). Tant que sa fin n'est pas antérieure à la fenêtre
+  // — en cours, ou échue pendant elle —, elle y entre, posée au bord gauche ;
+  // sa carte garde sa vraie date de début, année comprise.
   const place = (e: EvenementFrise): Date =>
     e.date < debut && e.dateFin && e.dateFin >= debut ? debut : e.date;
   const dansFenetre = evenements
@@ -267,7 +268,11 @@ export function construireFrise({
       sousTitre:
         groupe.length === 1
           ? libelleDateLong(premier.date)
-          : libellePlage(premier.date, dernier.date),
+          : // Posée au bord, la première peut dater d'une autre année : la
+            // plage courte « 3 → 20 JUIN » se lirait alors sur la même.
+            place(premier) !== premier.date
+            ? `${libelleDateLong(premier.date)} → ${libelleDate(dernier.date)}`
+            : libellePlage(premier.date, dernier.date),
       // Une alerte au milieu d'un groupe calme reste visible : c'est elle
       // qui décide de la couleur de la carte.
       tone: groupe.some((e) => e.tone === "alerte")

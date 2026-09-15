@@ -1262,7 +1262,9 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
                         />
                       ) : null}
                       {/* Le point est à la date exacte — c'est lui qui dit
-                          vrai. En grappe, il porte le nombre. */}
+                          vrai —, sauf pour une opération commencée avant la
+                          fenêtre, posée au bord gauche : sa carte dit alors
+                          sa vraie date. En grappe, il porte le nombre. */}
                       {grappe ? (
                         <span
                           className="absolute z-10 flex h-5 min-w-5 -translate-x-1/2 items-center justify-center rounded-full px-1.5 text-[10.5px] font-semibold shadow-[0_0_0_4px_var(--board-card)]"

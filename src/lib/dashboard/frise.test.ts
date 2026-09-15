@@ -262,7 +262,7 @@ describe("construireFrise — proche", () => {
     expect(f.marqueurs[0].x).toBe(0);
     expect(f.marqueurs[0].proche).toBe(true);
     // Sa carte garde sa vraie date de début.
-    expect(f.marqueurs[0].sousTitre).toContain("2026");
+    expect(f.marqueurs[0].sousTitre).toContain("MARS");
     // Finie avant la fenêtre, elle n'y entre pas.
     expect(frise([{ ...ev("op", -150), dateFin: fin(-120) }]).marqueurs).toHaveLength(0);
   });

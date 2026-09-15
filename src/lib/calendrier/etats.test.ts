@@ -492,6 +492,14 @@ describe("la date des lectures est l'échéance OUVERTE", () => {
     expect(cinq[0]).toBe("vraie");
     expect(cinq).toHaveLength(5);
   });
+
+  it("`cinqProchaines` place un retard DATÉ avant une ligne sans échéance plus ancienne", () => {
+    const lignes = [
+      ligneDatee("2026-06-01T00:00:00Z", "sans-date", "a_planifier"),
+      ligneDatee("2026-08-01T00:00:00Z", "retard-date"),
+    ];
+    expect(cinqProchaines(lignes, NOW).map((l) => l.id)).toEqual(["retard-date", "sans-date"]);
+  });
 });
 
 describe("statutAffiche — le statut à peindre est celui de l'état du jour", () => {
