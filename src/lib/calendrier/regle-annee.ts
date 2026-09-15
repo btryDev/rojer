@@ -72,7 +72,7 @@ export type LigneMois<V extends VerificationLue> =
        *  vue par famille le relisaient chacune. */
       etat: EtatEcheance;
       /** La ligne est posée sur la fin de l'opération, pas sur sa date :
-       *  l'écran le dit (`LIBELLE_FIN_OPERATION`). */
+       *  l'écran le dit (`avecMentionFin`). */
       fin: boolean;
     };
 

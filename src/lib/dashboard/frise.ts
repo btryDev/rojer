@@ -16,7 +16,7 @@
 import { FUSEAU_REFERENCE } from "@/lib/dates";
 import type { TypeEcheance } from "@/lib/calendrier/echeances";
 import { raccourcirLibelle } from "./libelles";
-import { dateEnJeuAutre } from "@/lib/calendrier/etats";
+import { dateEnJeuEvenement } from "@/lib/calendrier/etats";
 import { estEnRetard } from "@/lib/dates/retard";
 
 export type EvenementFrise = {
@@ -321,14 +321,7 @@ export function construireFrise({
         // Une opération démarrée sans alerte se lit sur sa fin, comme au
         // « sous 30 j » du tableau de bord (`dateEnJeuAutre`) : posée sur son
         // début passé, elle restait grise à dix jours de son terme.
-        const enJeu = dateEnJeuAutre(
-          {
-            date: e.date,
-            dateFin: e.dateFin,
-            tone: e.tone === "alerte" ? "alerte" : "ok",
-          },
-          aujourdhui,
-        );
+        const enJeu = dateEnJeuEvenement(e, aujourdhui);
         const j = joursEntre(aujourdhui, enJeu);
         return j >= 0 && j <= JOURS_PROCHE;
       }),

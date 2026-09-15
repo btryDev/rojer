@@ -14,11 +14,10 @@ import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   construireGrilleMois,
-  dateDansLaGrille,
   JOURS_SEMAINE,
   type EvenementGrille,
 } from "@/lib/calendrier/grille";
-import { LIBELLE_FIN_OPERATION } from "@/lib/calendrier/etats";
+import { avecMentionFin, dateEnJeuEvenement } from "@/lib/calendrier/etats";
 import { MarqueurFamille } from "./MarqueurFamille";
 
 /** Nombre de pastilles affichées avant de replier en « +N ». */
@@ -151,7 +150,7 @@ export function VueMois({
                   // tête : la case du 25 se lirait comme le début des travaux
                   // (relecture, 2026-09-15).
                   const fin =
-                    dateDansLaGrille(e, aujourdhui).getTime() !== e.date.getTime();
+                    dateEnJeuEvenement(e, aujourdhui).getTime() !== e.date.getTime();
                   return (
                     <li key={e.id}>
                       <LienProvenance
@@ -166,7 +165,7 @@ export function VueMois({
                             couleur de son urgence. */}
                         <MarqueurFamille famille={e.famille} className="size-2.5" />
                         <span className="min-w-0 truncate">
-                          {fin ? `${LIBELLE_FIN_OPERATION} · ${e.libelle}` : e.libelle}
+                          {avecMentionFin(e.libelle, fin)}
                         </span>
                       </LienProvenance>
                     </li>

@@ -56,7 +56,7 @@ import {
   CHAMP_ETAT,
   ENCRE_ETAT,
   PRIORITE_ETAT,
-  LIBELLE_FIN_OPERATION,
+  avecMentionFin,
   lecturesCalendrier,
   type EtatEcheance,
   type RegistreLigne,
@@ -659,7 +659,7 @@ export default async function CalendrierPage({
         jour: FMT_JOUR.format(l.date),
         moisCourt: FMT_MOIS_COURT.format(l.date),
         titre: e.libelle,
-        meta: l.fin ? `${LIBELLE_FIN_OPERATION} · ${metaAutre(e)}` : metaAutre(e),
+        meta: avecMentionFin(metaAutre(e), l.fin),
         etat,
       });
     }
@@ -1236,11 +1236,7 @@ export default async function CalendrierPage({
                             date={ligne.date}
                             type={e.type}
                             titre={e.libelle}
-                            meta={
-                              ligne.fin
-                                ? `${LIBELLE_FIN_OPERATION} · ${metaAutre(e)}`
-                                : metaAutre(e)
-                            }
+                            meta={avecMentionFin(metaAutre(e), ligne.fin)}
                             // La tuile-date suffit pour le futur : seule
                             // l'alerte mérite une pastille.
                             registre={ligne.etat}

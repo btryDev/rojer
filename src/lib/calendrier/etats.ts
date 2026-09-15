@@ -281,12 +281,34 @@ export function dateEnJeuAutre(
 }
 
 /**
- * La mention d'une échéance posée sur la FIN de son opération (`dateEnJeuAutre`)
- * plutôt que sur sa date. Elle se place EN TÊTE du texte qui accompagne la
- * date, jamais au bout : ces textes sont tronqués, et une tuile « 25 SEPT. »
- * sans elle se relit comme le début des travaux (relecture, 2026-09-15).
+ * `dateEnJeuAutre` pour un événement de grille ou de frise, dont le ton compte
+ * aussi `warn` — celui d'une vérification, qui n'a pas de fin. Un adaptateur,
+ * écrit une fois : la grille et la frise le recopiaient (relecture, 2026-09-15).
  */
-export const LIBELLE_FIN_OPERATION = "Fin";
+export function dateEnJeuEvenement(
+  e: { date: Date; dateFin?: Date; tone: "alerte" | "warn" | "ok" },
+  now: Date,
+): Date {
+  return dateEnJeuAutre(
+    {
+      date: e.date,
+      dateFin: e.dateFin,
+      tone: e.tone === "alerte" ? "alerte" : "ok",
+    },
+    now,
+  );
+}
+
+/**
+ * La mention d'une échéance posée sur la FIN de son opération plutôt que sur
+ * sa date : « Fin · … ». Elle se place EN TÊTE du texte qui accompagne la date,
+ * jamais au bout : ces textes sont tronqués, et une tuile « 25 SEPT. » sans
+ * elle se relit comme le début des travaux (relecture, 2026-09-15). Une
+ * fonction et non un gabarit recopié : il l'était trois fois.
+ */
+export function avecMentionFin(texte: string, fin: boolean): string {
+  return fin ? `Fin · ${texte}` : texte;
+}
 
 // `estStatutRealise` — « ce contrôle a eu lieu », le FAIT — vit dans
 // `lib/dates/retard.ts` avec la liste des statuts réalisés : une seule
