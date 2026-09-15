@@ -263,6 +263,11 @@ describe("construireFrise — proche", () => {
     expect(f.marqueurs[0].proche).toBe(true);
     // Sa carte garde sa vraie date de début.
     expect(f.marqueurs[0].sousTitre).toContain("MARS");
+    // En grappe avec un événement du début de fenêtre, la plage porte les
+    // deux années : « 11 MARS 2026 → 3 MAI 2026 », jamais une plage courte.
+    const g = frise([{ ...ev("op", -150), dateFin: fin(10) }, ev("mai", -97)]);
+    expect(g.marqueurs).toHaveLength(1);
+    expect(g.marqueurs[0].sousTitre).toMatch(/MARS 2026 → .* 2026$/);
     // Finie avant la fenêtre, elle n'y entre pas.
     expect(frise([{ ...ev("op", -150), dateFin: fin(-120) }]).marqueurs).toHaveLength(0);
   });

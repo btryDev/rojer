@@ -271,7 +271,7 @@ export function construireFrise({
           : // Posée au bord, la première peut dater d'une autre année : la
             // plage courte « 3 → 20 JUIN » se lirait alors sur la même.
             place(premier) !== premier.date
-            ? `${libelleDateLong(premier.date)} → ${libelleDate(dernier.date)}`
+            ? `${libelleDateLong(premier.date)} → ${libelleDateLong(dernier.date)}`
             : libellePlage(premier.date, dernier.date),
       // Une alerte au milieu d'un groupe calme reste visible : c'est elle
       // qui décide de la couleur de la carte.
