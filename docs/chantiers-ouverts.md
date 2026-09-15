@@ -1569,6 +1569,15 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
 
 - **`Verification.referentielVersion`** (`schema.prisma:602`) : **aucun écrivain**
   dans tout `src/`. La colonne existe pour une resynchronisation jamais écrite.
+  **Remesuré le 2026-09-15 (`lot/reliquats-donnees-docs`)** : ni écrivain ni
+  lecteur explicite dans `src`, `scripts`, les tests et les seeds, et aucun dans
+  l'historique git — elle n'a jamais été écrite. Sa seule lecture est implicite :
+  le client Prisma la sélectionne sur toute requête `Verification` sans `select`.
+  Il n'y a donc aucune écriture à retirer ; le retrait se fait en deux
+  déploiements — le champ quitte `schema.prisma` sans migration, puis la
+  migration `DROP COLUMN` — et attend la décision de la propriétaire.
+  `Etablissement.referentielVersionCalendrier`, le repère réellement lu, n'est
+  pas concerné.
 - **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
   service de la tête du calendrier change un champ que personne ne lit.
 - **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors
