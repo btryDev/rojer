@@ -627,9 +627,9 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
      **Au déploiement** : les prédicats agissent tout de suite sur les lignes
      `autre` + « à planifier » déjà en base, qui sortent des retards et des
      comptes (le score peut monter) ; les lignes `autre` + « planifiée » ne
-     sont réécrites qu'à leur régénération, que l'incrément de version validé
-     déclenchera à l'intégration — aucune version n'est incrémentée sur la
-     branche. Sur un rythme, enfin, un statut réalisé sans rapport est gardé
+     sont réécrites qu'à leur régénération, que déclenche l'incrément
+     `VERSION_MOTEUR_CALENDRIER = 1` fait à l'intégration
+     (`lot/integration-restes`, 2026-09-15). Sur un rythme, enfin, un statut réalisé sans rapport est gardé
      tel quel : c'est la seule trace de la ligne, et la date décide. ~~**La
      suppression d'une prescription levée est refusée**~~ — cette garde a
      créé une impasse (une saisie erronée sur une ligne déjà contrôlée ne se

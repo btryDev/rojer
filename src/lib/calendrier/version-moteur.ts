@@ -32,8 +32,14 @@ import {
  * `0` = le moteur d'avant cette constante : le sceau garde alors sa forme
  * antérieure (`sceauCalendrier`), si bien que livrer la constante ne
  * régénère rien. C'est le premier incrément qui le fera.
+ *
+ * `1` (2026-09-15, décidé par la propriétaire) : le réconciliateur réaligne une
+ * ligne restée au rythme d'une prescription levée (ADR-034, N4) et écrit
+ * « à planifier » une ligne sans rendez-vous qui ne porte ni rapport ni statut
+ * réalisé. Sans l'incrément, ces lignes n'étaient reprises qu'au hasard d'une
+ * mutation sur leur dossier.
  */
-export const VERSION_MOTEUR_CALENDRIER = 0;
+export const VERSION_MOTEUR_CALENDRIER = 1;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la
