@@ -1677,3 +1677,97 @@ Idempotence à partir du 3ᵉ passage ; deux régénérations simultanées sur b
 exactement ; les contraintes SQL (`NULLS NOT DISTINCT`, `porteur_xor`) posées et
 gardées ; `empreinteReferentiel` couvre `premierDelai` ; le cloisonnement de la
 régénération dans le code ; le salarié inactif traité conformément à `docs/rgpd.md`.
+
+## 12. Les alertes par e-mail — une règle à tenir avant la première ligne
+
+Posé le 2026-09-16, sur décision de la propriétaire, avant que le chantier des
+relances ne s'ouvre (elles sont encore hors périmètre dans `.claude/CLAUDE.md`).
+
+### La règle
+
+**Aucun e-mail ne part d'un calendrier qui n'a pas été recalculé.** La tâche
+d'envoi répare d'abord les dossiers périmés, puis lit, puis envoie.
+
+### Pourquoi
+
+Une échéance est écrite en base et ne change que sur un événement : un geste de
+l'utilisateur (le dossier est recalculé aussitôt), ou un changement du
+référentiel ou du code du calcul (rien ne se passe au déploiement). Ce second
+cas n'est rattrapé qu'à l'ouverture du tableau de bord ou du calendrier
+(`assurerCalendrierAJour`), qui compare `Etablissement.referentielVersionCalendrier`
+au sceau courant (`SCEAU_CALENDRIER` : version et empreinte du référentiel,
+version du moteur).
+
+Un dossier que personne n'ouvre garde donc ses anciennes lignes. Tant que seul
+l'utilisateur le lit, c'est sans effet : il est réparé sous ses yeux. Une
+alerte, elle, lit sans ouvrir. Exemple : un déploiement fait sortir une
+habilitation des retards (`lignePortantSansRendezVous`) ; le client ne s'est pas
+connecté depuis ; une alerte lue en base lui écrit « habilitation en retard »
+quand son tableau de bord dira l'inverse.
+
+Le passage du temps, lui, ne demande rien : « en retard » se lit sur la date à la
+lecture (ADR-034). La réparation ne sert qu'aux changements de référentiel ou de
+code.
+
+### La forme retenue
+
+La réparation à l'ouverture **reste** : c'est le filet de l'utilisateur. On y
+ajoute **une tâche quotidienne**, qui fait deux choses dans l'ordre :
+
+1. **Réparer** les seuls établissements dont le repère diffère du sceau courant —
+   une requête sur ce champ ; la plupart des jours, il n'y en a aucun.
+2. **Envoyer** les alertes, **une fois par échéance** : un marqueur d'envoi posé
+   sur la ligne, remis à zéro quand la ligne roule (le principe `alertSentAt` de
+   GestBAT, relu en lecture seule le 2026-09-15).
+
+Ce que la tâche exige, et qui n'existe pas encore :
+
+- **une variante interne de la régénération, sans session.** `regenererSansInvalider`
+  passe par `assertEtablissementOwnership`, et `calendrierDesynchronise` par
+  `requireUser` : une tâche planifiée n'a pas d'utilisateur. La variante ne doit
+  jamais être exportée d'un fichier `"use server"` — elle deviendrait appelable
+  depuis le navigateur sur n'importe quel identifiant (même raison que
+  `reconciliation.ts`) ;
+- **une route protégée par un secret**, comparé à temps constant (GestBAT :
+  `src/lib/cron-auth.ts`) ;
+- **la production seule** : jamais sur une preview, comme `assurerCalendrierAJour`
+  (`VERCEL_ENV`) ;
+- **par paquets, avec une borne de temps** : une tâche Vercel est une fonction
+  ordinaire, sa durée maximale s'applique. Un établissement qui échoue est
+  journalisé, reste marqué périmé (`marquerCalendrierPerime`) et ne bloque pas
+  les autres ;
+- **une exécution à la fois** : deux envois simultanés doubleraient les
+  e-mails. Le marqueur par échéance est la seconde protection.
+
+Vercel inclut les tâches planifiées sur toutes les offres ; en Hobby, une par
+jour au plus, déclenchée dans l'heure prévue — suffisant pour ce besoin
+(documentation Vercel « Cron Jobs — Usage & Pricing », lue le 2026-09-16).
+
+### Ce qui est écarté
+
+- **Stocker « en retard »** et le rafraîchir par la tâche : c'est l'option 1 que
+  l'ADR-034 écarte (dérive d'une valeur calculée stockée). La tâche ne répare
+  que ce que le repère désigne ; l'état reste lu sur la date.
+- **Recalculer tous les dossiers chaque jour** : inutile, le repère dit déjà
+  lesquels reprendre.
+- **Recalculer au déploiement** : Vercel construit aussi les previews, qui
+  écriraient en production avec du code non fusionné.
+- **Un bouton « Recalculer »** : ce serait demander à l'utilisateur de réparer
+  nos pannes.
+
+### À faire sans attendre les alertes
+
+Trois lecteurs contournent la réparation et servent en silence un dossier
+périmé : le **serveur MCP**, le **registre PDF**, et une page ouverte par lien
+direct avant le tableau de bord ou le calendrier. Le moins coûteux : qu'ils
+**signalent** un calendrier non recalculé (une lecture du repère, aucune
+écriture) plutôt que de le servir comme juste. La tâche quotidienne, une fois
+en place, rend ce cas rare sans le rendre impossible — un déploiement peut
+tomber entre deux passages.
+
+### Limite qui reste
+
+La version du moteur (`VERSION_MOTEUR_CALENDRIER`) se monte à la main :
+`version-moteur.test.ts` le rappelle, il ne le garantit pas. La tâche
+quotidienne ne change rien à ce point — elle répare ce que le repère désigne,
+et un repère qu'on a oublié de monter ne désigne rien.
