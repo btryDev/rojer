@@ -1257,11 +1257,12 @@ deux rapports.
 > sa ligne archivée si elle porte une preuve, supprimée sinon. Retirer le
 > correctif fait rougir le test qui le nomme.
 >
-> **Le piège annoncé plus bas s'est révélé plus fin que « par porteur ».** Seul le
-> porteur ÉQUIPEMENT se teste. Le porteur établissement ne disparaît jamais, et le
-> porteur salarié disparaît sans que sa ligne soit barrée — ~~l'ADR-023 l'a tranché,
+> **Le piège annoncé plus bas s'est révélé plus fin que « par porteur ».** ~~Seul le
+> porteur ÉQUIPEMENT se teste.~~ Le porteur établissement ne disparaît jamais, ~~et le
+> porteur salarié disparaît sans que sa ligne soit barrée — l'ADR-023 l'a tranché,
 > un test existant le tient~~ (l'ADR-023 ne le dit nulle part ; seul un commentaire
-> et un test le tenaient), et le constat qui rangeait « salarié désactivé » parmi
+> et un test le tenaient ; depuis le 2026-09-17 le porteur salarié se teste aussi),
+> et le constat qui rangeait « salarié désactivé » parmi
 > les lignes gelées à tort visait autre chose : non pas l'archivage, mais le fait
 > qu'elle reste comptée en retard. ~~**Ce point-là n'est PAS corrigé** ; il relève du
 > statut, donc du lot 3.~~ **Fermé le 2026-09-17 (`lot/salarie-inactif-et-menage`,
@@ -1347,7 +1348,9 @@ une ligne d'établissement, **laquelle garde l'état ?** L'ADR-022 dit lui-même
 ce n'est pas tranché. Sans réponse, ce lot ne démarre pas.
 
 **Piège** : raisonner « par porteur » au lieu de « par clé » casserait la garantie
-de l'ADR-023 — un test existant le montre.
+de l'ADR-023 — ~~un test existant le montre~~ (ce test tenait une règle que
+l'ADR-023 n'écrit pas ; il est inversé le 2026-09-17, et le porteur salarié se
+teste par couple obligation × personne, pas par porteur).
 
 #### ~~Lot 3 — Un seul classifieur.~~ **SOLDÉ** : moitié faite le 2026-09-10, l'autre moitié sortie du lot le même jour (« Lot 3 bis ») puis dissoute par l'ADR-034 (constat du 2026-09-17).
 
@@ -1711,8 +1714,10 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION
-  LAISSE PASSER »). Le même chemin vaut désormais pour une ligne de salarié sans
-  trace. Écrit dans le code, non corrigé : le fermer voudrait archiver une ligne
+  LAISSE PASSER »). **Le salarié n'est pas concerné** : sa ligne sans trace,
+  supprimée au départ, est recréée à la réactivation avec la date du titre, donc
+  en retard si le titre est échu — aucun retard n'est effacé (rejoué à la
+  relecture du 2026-09-17, test dans `calendrier/actions.test.ts`). Écrit dans le code, non corrigé : le fermer voudrait archiver une ligne
   qui n'atteste de rien.
 
 ### Les écarts ADR

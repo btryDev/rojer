@@ -479,11 +479,17 @@ export function fauxPrisma(db: Magasin) {
      * du filtre. (La seconde lecture, sans `actif` et avec `distinct`, est
      * partie le même jour ; son support ici avec elle.)
      */
-    findMany: async ({
-      where,
-    }: {
+    findMany: async (args: {
       where: { salarie: { etablissementId: string; actif?: boolean } };
+      select?: unknown;
     }) => {
+      // `select` est la projection, rendue ci-dessous ; toute autre clé — un
+      // `distinct`, un `orderBy` — serait ignorée en silence, donc refusée.
+      const { where } = args;
+      const autres = Object.keys(args).filter(
+        (k) => k !== "where" && k !== "select",
+      );
+      if (autres.length > 0) inconnu("titreSalarie.findMany", autres);
       db.journal.push({ operation: "titreSalarie.findMany", where });
       const { etablissementId, actif, ...reste } = where.salarie;
       if (Object.keys(reste).length > 0) {

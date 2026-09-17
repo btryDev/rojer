@@ -999,6 +999,31 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
       expect(estVerificationEnRetard(lue("v-titre"), new Date())).toBe(true);
     });
 
+    it("une personne réactivée dont la ligne sans trace a été supprimée la retrouve en retard, à la date du titre", async () => {
+      // Le pendant salarié du blanchiment par désactivation d'un appareil —
+      // qui, ici, n'a pas lieu : la ligne recréée tient sa date de la pièce,
+      // pas de la génération (relecture du 2026-09-17).
+      poserEtablissement([]);
+      poserSalarie("sal-1", false);
+      db.titres = [titre("sal-1")];
+      db.verifications = [ligneTitre("v-titre", "sal-1", 0)];
+      await genererCalendrier(ETAB_ID);
+      expect(lignesDe(TITRE_SALARIE)).toHaveLength(0);
+
+      db.salaries[0].actif = true;
+      await genererCalendrier(ETAB_ID);
+
+      const recreees = lignesDe(TITRE_SALARIE);
+      expect(recreees).toHaveLength(1);
+      expect(recreees[0].datePrevue).toEqual(new Date("2020-03-01T00:00:00Z"));
+      expect(
+        estVerificationEnRetard(
+          { ...recreees[0], archiveLe: recreees[0].archiveLe ?? null },
+          new Date(),
+        ),
+      ).toBe(true);
+    });
+
     it("la passe suivante n'écrit plus rien (idempotence)", async () => {
       poserEtablissement([]);
       poserSalarie("sal-parti", false);
