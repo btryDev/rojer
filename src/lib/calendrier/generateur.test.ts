@@ -12,7 +12,6 @@ import {
 import type { EquipementMatching } from "@/lib/matching/types";
 import {
   cleDeLigne,
-  comparerParUrgence,
   genererProchainesVerifications,
   genererVerificationsDepuisTitres,
   reconcilierCalendrier,
@@ -127,7 +126,7 @@ function applique(o: Obligation, eqs: EquipementMatching[]): ObligationApplicabl
 // ============================================================================
 
 describe("générateur calendrier — aucune vérif précédente", () => {
-  it("crée une occurrence 'a_planifier' urgente pour chaque couple", () => {
+  it("crée une occurrence « à planifier », datée du jour, pour chaque couple", () => {
     const o = fakeObligation({ id: "o-annuelle", periodicite: "annuelle" });
     const eq = fakeEquipement();
     const now = new Date("2026-01-15T00:00:00Z");
@@ -138,7 +137,6 @@ describe("générateur calendrier — aucune vérif précédente", () => {
 
     expect(res).toHaveLength(1);
     expect(res[0].statut).toBe("a_planifier");
-    expect(res[0].estUrgent).toBe(true);
     expect(res[0].datePrevue).toEqual(now);
     expect(res[0].cleUnique).toBe("o-annuelle::eq-1");
   });
@@ -168,7 +166,7 @@ describe("générateur calendrier — mise en service comme point de départ", (
   const o = () => fakeObligation({ id: "o-annuelle", periodicite: "annuelle" });
   const NOW = new Date("2026-01-15T00:00:00Z");
 
-  it("date le premier cycle d'un équipement neuf, sans le dire urgent", () => {
+  it("date le premier cycle d'un équipement neuf, planifié", () => {
     // Un extincteur posé le 1er décembre se vérifie le 1er décembre suivant :
     // l'outil sait le déduire, il n'a pas à réclamer la date.
     const res = genererProchainesVerifications(
@@ -181,7 +179,6 @@ describe("générateur calendrier — mise en service comme point de départ", (
     );
 
     expect(res[0].statut).toBe("planifiee");
-    expect(res[0].estUrgent).toBe(false);
     expect(res[0].datePrevue).toEqual(new Date("2026-12-01T00:00:00Z"));
   });
 
@@ -199,7 +196,6 @@ describe("générateur calendrier — mise en service comme point de départ", (
     );
 
     expect(res[0].statut).toBe("a_planifier");
-    expect(res[0].estUrgent).toBe(true);
     expect(res[0].datePrevue).toEqual(NOW);
   });
 
@@ -248,10 +244,9 @@ describe("générateur calendrier — dernière vérif connue", () => {
     attendu.setDate(attendu.getDate() + 365);
     expect(dp.getTime()).toBe(attendu.getTime());
     expect(res[0].statut).toBe("planifiee");
-    expect(res[0].estUrgent).toBe(false);
   });
 
-  it("dernière vérif ancienne → date arrêtée, passée, et urgent=true", () => {
+  it("dernière vérif ancienne → date arrêtée, passée, donc en retard", () => {
     const o = fakeObligation({ id: "annuelle", periodicite: "annuelle" });
     const eq = fakeEquipement();
     const now = new Date("2026-03-01T00:00:00Z");
@@ -267,7 +262,6 @@ describe("générateur calendrier — dernière vérif connue", () => {
     // contrôle réel est arrêtée, et c'est elle qui dit le retard.
     expect(res[0].statut).toBe("planifiee");
     expect(estVerificationEnRetard({ ...res[0], archiveLe: null }, now)).toBe(true);
-    expect(res[0].estUrgent).toBe(true);
   });
 
   it("périodicité quinquennale → prochaine date le même jour, cinq ans plus tard", () => {
@@ -289,7 +283,7 @@ describe("générateur calendrier — dernière vérif connue", () => {
 });
 
 describe("générateur calendrier — mise en service uniquement", () => {
-  it("aucune vérif ni mise en service connue → à planifier, jamais urgente", () => {
+  it("aucune vérif ni mise en service connue → à planifier", () => {
     const o = fakeObligation({
       id: "mes",
       periodicite: "mise_en_service_uniquement",
@@ -301,7 +295,6 @@ describe("générateur calendrier — mise en service uniquement", () => {
     expect(res[0].statut).toBe("a_planifier");
     // Il n'y a pas d'échéance à dépasser : l'événement a eu lieu ou non. Ce
     // qui manque est une pièce au dossier, pas un rendez-vous.
-    expect(res[0].estUrgent).toBe(false);
   });
 
   it("mise en service passée → l'occurrence est datée de l'événement, pas d'aujourd'hui", () => {
@@ -321,7 +314,6 @@ describe("générateur calendrier — mise en service uniquement", () => {
     expect(res).toHaveLength(1);
     expect(res[0].datePrevue.getTime()).toBe(miseEnService.getTime());
     expect(res[0].statut).toBe("a_planifier");
-    expect(res[0].estUrgent).toBe(false);
   });
 
   it("mise en service à venir → planifiée à cette date", () => {
@@ -337,7 +329,6 @@ describe("générateur calendrier — mise en service uniquement", () => {
     );
     expect(res[0].statut).toBe("planifiee");
     expect(res[0].datePrevue.getTime()).toBe(miseEnService.getTime());
-    expect(res[0].estUrgent).toBe(false);
   });
 
   it("vérif précédente connue → plus d'occurrence (one-shot consommé)", () => {
@@ -353,71 +344,6 @@ describe("générateur calendrier — mise en service uniquement", () => {
       prec,
     );
     expect(res).toHaveLength(0);
-  });
-});
-
-describe("générateur calendrier — tri par urgence", () => {
-  it("urgents d'abord, puis date croissante, puis criticité décroissante", () => {
-    const o1 = fakeObligation({ id: "o1", periodicite: "annuelle", criticite: 5 });
-    const o2 = fakeObligation({ id: "o2", periodicite: "annuelle", criticite: 3 });
-    const e1 = fakeEquipement("e1");
-    const e2 = fakeEquipement("e2");
-
-    const now = new Date("2026-03-01T00:00:00Z");
-    const prec: VerificationsPrecedentes = new Map([
-      // o1/e1 : dépassée
-      ["o1::e1", new Date("2024-01-01T00:00:00Z")],
-      // o2/e2 : planifiée dans 6 mois
-      ["o2::e2", new Date("2025-09-01T00:00:00Z")],
-    ]);
-
-    const res = genererProchainesVerifications(
-      [applique(o1, [e1]), applique(o2, [e2])],
-      prec,
-      { now },
-    );
-    res.sort(comparerParUrgence);
-    expect(res[0].cleUnique).toBe("o1::e1"); // dépassée en premier
-    expect(res[1].cleUnique).toBe("o2::e2");
-  });
-
-  it("entre deux dépassées, date plus ancienne d'abord", () => {
-    const o1 = fakeObligation({ id: "o1", periodicite: "annuelle" });
-    const o2 = fakeObligation({ id: "o2", periodicite: "annuelle" });
-    const e = fakeEquipement();
-    const now = new Date("2026-03-01T00:00:00Z");
-    const prec: VerificationsPrecedentes = new Map([
-      ["o1::eq-1", new Date("2023-01-01T00:00:00Z")],
-      ["o2::eq-1", new Date("2024-01-01T00:00:00Z")],
-    ]);
-    // Note : les deux obligations partagent le même équipement "eq-1" ;
-    // les clés distinctes viennent de l'obligationId.
-    const res = genererProchainesVerifications(
-      [applique(o1, [e]), applique(o2, [e])],
-      prec,
-      { now },
-    );
-    res.sort(comparerParUrgence);
-    expect(res[0].cleUnique).toBe("o1::eq-1"); // plus anciennement dépassée
-  });
-
-  it("à date égale, criticité 5 passe avant criticité 3", () => {
-    const o1 = fakeObligation({ id: "o1", periodicite: "annuelle", criticite: 3 });
-    const o2 = fakeObligation({ id: "o2", periodicite: "annuelle", criticite: 5 });
-    const e = fakeEquipement();
-    const now = new Date("2026-03-01T00:00:00Z");
-    const derniere = new Date("2025-03-01T00:00:00Z");
-    const prec: VerificationsPrecedentes = new Map([
-      ["o1::eq-1", derniere],
-      ["o2::eq-1", derniere],
-    ]);
-    const res = genererProchainesVerifications(
-      [applique(o1, [e]), applique(o2, [e])],
-      prec,
-      { now },
-    );
-    res.sort(comparerParUrgence);
-    expect(res[0].cleUnique).toBe("o2::eq-1"); // criticité 5 en tête
   });
 });
 
@@ -653,7 +579,6 @@ describe("porteur salarié — du titre déclaré à la ligne (ADR-023)", () => 
         },
       ]),
       CATALOGUE,
-      { now: NOW },
     );
 
     expect(res).toHaveLength(1);
@@ -683,7 +608,6 @@ describe("porteur salarié — du titre déclaré à la ligne (ADR-023)", () => 
         },
       ]),
       CATALOGUE,
-      { now: NOW },
     );
 
     expect(res).toHaveLength(2);
@@ -707,7 +631,6 @@ describe("porteur salarié — du titre déclaré à la ligne (ADR-023)", () => 
         },
       ]),
       CATALOGUE,
-      { now: NOW },
     );
 
     expect(res[0].datePrevue).toEqual(new Date("2030-10-01T00:00:00Z"));
@@ -737,7 +660,6 @@ describe("porteur salarié — du titre déclaré à la ligne (ADR-023)", () => 
         ],
       ]),
       (id) => (id === "obl-equipement" ? (equipementale as Obligation) : undefined),
-      { now: NOW },
     );
 
     expect(res).toEqual([]);
@@ -754,7 +676,6 @@ describe("porteur salarié — du titre déclaré à la ligne (ADR-023)", () => 
         },
       ]),
       () => undefined,
-      { now: NOW },
     );
 
     expect(res).toEqual([]);
@@ -1015,7 +936,6 @@ describe("réconciliation — un placeholder cède devant une vraie date", () =>
     realisateurRequis: ["personne_qualifiee"],
     datePrevue: new Date("2026-12-01T00:00:00Z"),
     statut: "a_planifier",
-    estUrgent: true,
     criticiteObligation: 3,
     raisons: ["test"],
     prescriptionId: null,
@@ -1843,7 +1763,6 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
     realisateurRequis: ["personne_qualifiee"],
     datePrevue: new Date(echeance),
     statut: "planifiee",
-    estUrgent: false,
     criticiteObligation: 4,
     raisons: ["titre détenu par Jean Dupont"],
     prescriptionId: null,

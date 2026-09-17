@@ -1619,9 +1619,7 @@ async function main(): Promise<void> {
       now: MAINTENANT,
       misesEnService,
     }),
-    ...genererVerificationsDepuisTitres(titresSalaries, obligationParId, {
-      now: MAINTENANT,
-    }),
+    ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
     ...genererVerificationsSurMesure(surMesure, { now: MAINTENANT }),
   ];
 

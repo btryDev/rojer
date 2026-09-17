@@ -3,6 +3,7 @@ import { echeanceDuTitre } from "./echeance";
 import { classerTitre, etatDuTitre } from "./queries";
 import { titreParId } from "./catalogue";
 import { genererVerificationsDepuisTitres } from "@/lib/calendrier/generateur";
+import { estVerificationEnRetard } from "@/lib/dates/retard";
 import type { Obligation } from "@/lib/referentiels/conformite";
 
 /**
@@ -30,14 +31,12 @@ const civile = (jour: string) => new Date(`${jour}T12:00:00.000Z`);
 function ligneDuCalendrier(
   obligationId: string,
   titre: { delivreLe: Date; echeanceLe: Date | null },
-  now: Date,
 ) {
   return genererVerificationsDepuisTitres(
     new Map([
       [obligationId, [{ salarieId: "sal-1", libelle: "Claire Martin", ...titre }]],
     ]),
     (id) => titreParId(id) as Obligation | undefined,
-    { now },
   );
 }
 
@@ -66,10 +65,10 @@ describe("le scénario de la relecture : une VIP délivrée le 1er juin 2020, sa
     // fiche peignait « Sans terme écrit » une visite échue depuis quinze mois.
     expect(classerTitre(titre, VIP?.periodicite, NOW)).toBe("enRetard");
 
-    const lignes = ligneDuCalendrier("sante-travail-salarie-vip", titre, NOW);
+    const lignes = ligneDuCalendrier("sante-travail-salarie-vip", titre);
     expect(lignes).toHaveLength(1);
     expect(lignes[0].datePrevue).toEqual(echeanceDuTitre(titre, VIP?.periodicite));
-    expect(lignes[0].estUrgent).toBe(true);
+    expect(estVerificationEnRetard({ ...lignes[0], archiveLe: null }, NOW)).toBe(true);
   });
 
   it("le jour de l'échéance, ni l'un ni l'autre ne la dit en retard (ADR-011)", () => {
@@ -79,9 +78,8 @@ describe("le scénario de la relecture : une VIP délivrée le 1er juin 2020, sa
     // (relecture du lot, 2026-09-14). Le soir, seul le jour civil la sauve.
     const leJourMeme = new Date("2025-06-01T22:00:00+02:00");
     expect(classerTitre(titre, VIP?.periodicite, leJourMeme)).toBe("proche");
-    expect(
-      ligneDuCalendrier("sante-travail-salarie-vip", titre, leJourMeme)[0].estUrgent,
-    ).toBe(false);
+    const [ligne] = ligneDuCalendrier("sante-travail-salarie-vip", titre);
+    expect(estVerificationEnRetard({ ...ligne, archiveLe: null }, leJourMeme)).toBe(false);
   });
 });
 
@@ -96,7 +94,7 @@ describe("l'échéance saisie prime sur le calcul", () => {
     expect(echeanceDuTitre(titre, VIP?.periodicite)).toEqual(civile("2023-06-01"));
     expect(classerTitre(titre, VIP?.periodicite, NOW)).toBe("enRetard");
     expect(
-      ligneDuCalendrier("sante-travail-salarie-vip", titre, NOW)[0].datePrevue,
+      ligneDuCalendrier("sante-travail-salarie-vip", titre)[0].datePrevue,
     ).toEqual(civile("2023-06-01"));
   });
 
@@ -125,7 +123,7 @@ describe("pas de périodicité, pas d'échéance", () => {
     // non-conformité inventée (ADR-023 § 6).
     expect(echeanceDuTitre(titre, HABILITATION?.periodicite)).toBeNull();
     expect(classerTitre(titre, HABILITATION?.periodicite, NOW)).toBe("aPlanifier");
-    expect(ligneDuCalendrier("elec-salarie-habilitation", titre, NOW)).toEqual([]);
+    expect(ligneDuCalendrier("elec-salarie-habilitation", titre)).toEqual([]);
   });
 
   it("une mise en service seule n'en produit pas davantage", () => {

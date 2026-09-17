@@ -266,9 +266,7 @@ async function regenererUnePasse(
       now,
       misesEnService,
     }),
-    ...genererVerificationsDepuisTitres(titresSalaries, obligationParId, {
-      now,
-    }),
+    ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
     ...genererVerificationsSurMesure(surMesure, { now }),
   ];
 

@@ -36,11 +36,9 @@
  * date posée est une date de génération (`aUnRendezVous`). Le retard se lit
  * à l'affichage, sur la date (`estVerificationEnRetard`).
  *
- * `estUrgent` et `comparerParUrgence` sont une urgence FIGÉE à la génération.
- * Aucun écran ne les lit plus (relecture système du 2026-09-14) : ils ne
- * servent qu'aux tests, qui s'en servent comme observable du générateur. Ne
- * pas les brancher sur une surface — l'urgence d'aujourd'hui n'est pas celle
- * du jour de la génération.
+ * (`estUrgent` et `comparerParUrgence`, une urgence FIGÉE à la génération que
+ * seuls les tests lisaient, sont retirés le 2026-09-17 : les tests lisent le
+ * statut et la date.)
  */
 
 import {
@@ -226,11 +224,6 @@ export type VerificationGenere = {
   realisateurRequis: Realisateur[];
   datePrevue: Date;
   statut: StatutVerificationGen;
-  /**
-   * true si aucune vérification passée n'est connue — déclenche un signal
-   * UI "à planifier d'urgence" sans créer d'enum supplémentaire en base.
-   */
-  estUrgent: boolean;
   /** Criticité issue de l'obligation (1-5). Sert au tri par priorité. */
   criticiteObligation: 1 | 2 | 3 | 4 | 5;
   /** Raisons textuelles du matching — copiées du résultat du moteur. */
@@ -499,13 +492,8 @@ export function genererProchainesVerifications(
       // resterait à perpétuité — la date suivait l'horloge au lieu de suivre
       // l'événement.
       //
-      // Et elle n'est jamais urgente. L'urgence, dans ce module, se déduit
-      // d'une date dépassée (`estDepassee`) ; ici il n'y a pas d'échéance à
-      // dépasser — l'événement qui la déclenche a eu lieu, ou n'a pas eu
-      // lieu. Ce qui manque au dossier est une pièce, pas un rendez-vous, et
-      // c'est ce que dit « à planifier ». La marquer urgente faisait remonter
-      // en tête du calendrier, sur un parc repris, autant de lignes que
-      // d'appareils anciens — sans qu'aucune ne soit due à cette date.
+      // Ce qui manque au dossier est une pièce, pas un rendez-vous : c'est ce
+      // que dit « à planifier ».
       if (periodicite === "mise_en_service_uniquement") {
         if (derniere) continue; // déjà réalisé, pas de nouvelle occurrence
         // Une ligne d'établissement n'a pas de mise en service : il n'y a pas
@@ -527,7 +515,6 @@ export function genererProchainesVerifications(
           realisateurRequis: o.realisateurs,
           datePrevue: miseEnService ?? now,
           statut: aVenir ? "planifiee" : "a_planifier",
-          estUrgent: false,
           criticiteObligation: o.criticite,
           succedeA: o.succedeA,
           raisons,
@@ -539,7 +526,6 @@ export function genererProchainesVerifications(
       if (derniere) {
         const prochaine = prochaineEcheance(derniere, periodicite);
         if (!prochaine) continue;
-        const estDepassee = estEnRetard(prochaine, now);
         out.push({
           cleUnique,
           obligationId: o.id,
@@ -552,7 +538,6 @@ export function genererProchainesVerifications(
           // Une date calculée depuis un contrôle réel est une date arrêtée ;
           // qu'elle soit passée se lit sur elle, pas sur le statut.
           statut: "planifiee",
-          estUrgent: estDepassee,
           criticiteObligation: o.criticite,
           succedeA: o.succedeA,
           raisons,
@@ -586,7 +571,6 @@ export function genererProchainesVerifications(
           realisateurRequis: o.realisateurs,
           datePrevue: premiereEncoreAVenir ? premiere : now,
           statut: premiereEncoreAVenir ? "planifiee" : "a_planifier",
-          estUrgent: !premiereEncoreAVenir,
           criticiteObligation: o.criticite,
           succedeA: o.succedeA,
           raisons,
@@ -630,9 +614,9 @@ export const CRITICITE_SUR_MESURE = 4 as const;
 export function genererVerificationsDepuisTitres(
   titres: Map<string, TitreDeclare[]>,
   obligationParId: (id: string) => Obligation | undefined,
-  options: OptionsGenerateur = {},
+  // (Plus d'options depuis le 2026-09-17 : l'horloge ne servait qu'à
+  // `estUrgent`. Une date de titre vient de la pièce, jamais de `now`.)
 ): VerificationGenere[] {
-  const now = options.now ?? new Date();
   const out: VerificationGenere[] = [];
 
   for (const [obligationId, liste] of titres) {
@@ -663,12 +647,8 @@ export function genererVerificationsDepuisTitres(
       // inscrire — inventer une date serait pire que n'en afficher aucune.
       if (echeance === null) continue;
 
-      // La MÊME règle que pour un équipement (ADR-011) : une attestation qui
-      // expire aujourd'hui n'est pas en retard ce matin. Le titre comparait des
-      // instants et la ligne d'un salarié rougissait un jour avant celle d'un
-      // appareil — deux règles de retard selon le porteur, constat n°4 de
-      // l'audit du 2026-09-09.
-      const depassee = estEnRetard(echeance, now);
+      // Le retard ne se calcule pas ici : il se lit sur la date, avec la même
+      // règle que pour un équipement (ADR-011, `estVerificationEnRetard`).
       out.push({
         cleUnique: cleDeLigne(obligationId, {
           equipementId: null,
@@ -683,7 +663,6 @@ export function genererVerificationsDepuisTitres(
         datePrevue: echeance,
         // La date vient de la pièce : arrêtée, passée ou non.
         statut: "planifiee",
-        estUrgent: depassee,
         criticiteObligation: o.criticite,
         succedeA: o.succedeA,
         raisons: [`titre détenu par ${t.libelle}`],
@@ -722,7 +701,6 @@ export function genererVerificationsSurMesure(
         realisateurRequis: p.realisateurRequis,
         datePrevue: now,
         statut: "a_planifier",
-        estUrgent: true,
         criticiteObligation: CRITICITE_SUR_MESURE,
         raisons: sm.raisons,
         prescriptionId: p.id,
@@ -730,25 +708,6 @@ export function genererVerificationsSurMesure(
     }
   }
   return out;
-}
-
-/**
- * Comparateur pour le tri du calendrier : les vérifications urgentes
- * (dépassées ou à planifier) d'abord, puis par date prévue croissante,
- * puis par criticité décroissante en cas d'égalité.
- */
-export function comparerParUrgence(
-  a: VerificationGenere,
-  b: VerificationGenere,
-): number {
-  // 1. Urgence (urgent avant non-urgent)
-  if (a.estUrgent !== b.estUrgent) return a.estUrgent ? -1 : 1;
-  // 2. Date prévue croissante
-  const da = a.datePrevue.getTime();
-  const db = b.datePrevue.getTime();
-  if (da !== db) return da - db;
-  // 3. Criticité décroissante
-  return b.criticiteObligation - a.criticiteObligation;
 }
 
 // ===========================================================================
@@ -1249,7 +1208,6 @@ export function reconcilierCalendrier(
               ...g,
               datePrevue: prochaine,
               statut: "planifiee",
-              estUrgent: estEnRetard(prochaine, now),
             },
       );
       continue;
