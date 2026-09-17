@@ -1259,11 +1259,20 @@ deux rapports.
 >
 > **Le piège annoncé plus bas s'est révélé plus fin que « par porteur ».** Seul le
 > porteur ÉQUIPEMENT se teste. Le porteur établissement ne disparaît jamais, et le
-> porteur salarié disparaît sans que sa ligne soit barrée — l'ADR-023 l'a tranché,
-> un test existant le tient, et le constat qui rangeait « salarié désactivé » parmi
+> porteur salarié disparaît sans que sa ligne soit barrée — ~~l'ADR-023 l'a tranché,
+> un test existant le tient~~ (l'ADR-023 ne le dit nulle part ; seul un commentaire
+> et un test le tenaient), et le constat qui rangeait « salarié désactivé » parmi
 > les lignes gelées à tort visait autre chose : non pas l'archivage, mais le fait
-> qu'elle reste comptée en retard. **Ce point-là n'est PAS corrigé** ; il relève du
-> statut, donc du lot 3.
+> qu'elle reste comptée en retard. ~~**Ce point-là n'est PAS corrigé** ; il relève du
+> statut, donc du lot 3.~~ **Fermé le 2026-09-17 (`lot/salarie-inactif-et-menage`,
+> décision de la propriétaire)** — le renvoi au lot 3 ne menait nulle part, ce lot
+> ayant été dissous. Le réconciliateur reçoit les couples (obligation, salarié) des
+> titres de personnes PRÉSENTES (`titresActifs`) : une ligne de salarié hors de cet
+> ensemble — personne sortie, ou titre retiré alors qu'un collègue détient le même —
+> est archivée si elle porte une trace, supprimée sinon, comme celle d'un appareil
+> retiré. Elle se lit « ne s'applique plus » au calendrier comme sur Équipe, et
+> sort de tous les comptes, TypeScript et SQL (`archiveLe`). Une réactivation la
+> rouvre. Le titre reste en base (`docs/rgpd.md` § 4.3). Moteur `2`.
 >
 > **Le second symptôme — la continuité d'identifiant — est corrigé aussi.**
 > `OBLIGATIONS_RETIREES.absorbePar` portait la donnée depuis le 2026-08-27 et
@@ -1304,9 +1313,10 @@ deux rapports.
 > « tous les éléments » — donc le plus ancien commande. La règle vit dans une
 > fonction nommée (`reprendreLaRealisation`) : la trancher autrement est une
 > ligne à changer. La propriétaire n'a pas dit le contraire ; elle n'a pas dit
-> oui non plus.
+> oui non plus. **Toujours en attente de sa décision le 2026-09-17** ; la
+> recommandation de ce jour est de garder la règle en l'état.
 >
-> **CE QUI RESTE, ET CE N'EST PAS DANS CE DÉPÔT-CI.** Le mécanisme sert deux cas ;
+> ~~**CE QUI RESTE, ET CE N'EST PAS DANS CE DÉPÔT-CI.** Le mécanisme sert deux cas ;
 > un seul a sa déclaration. La FUSION est câblée, parce qu'`absorbePar` existe.
 > La SCISSION — `worktree-ge4-r-hebergement` — n'a **aucune déclaration nulle
 > part** : elle ne retire rien, elle ajoute deux identifiants et en rétrécit un
@@ -1315,7 +1325,11 @@ deux rapports.
 > déclaration appartient à cette branche-là, avec le lot qui crée la scission —
 > l'ajouter ici serait poser un champ sans utilisateur et faire bouger
 > l'empreinte du référentiel pour personne, c'est-à-dire refaire l'habitude que
-> le § 11 désigne comme le vrai défaut : écrire la garantie avant de la tenir.
+> le § 11 désigne comme le vrai défaut : écrire la garantie avant de la tenir.~~
+> **Périmé, relevé le 2026-09-17** : la scission est déclarée dans main —
+> `Obligation.succedeA`, porté par les deux obligations neuves
+> (`referentiels/conformite/incendie.ts:1170` et `:1195`), lu par
+> `reconcilierCalendrier`.
 >
 > Ce qui suit décrit l'état d'avant.
 
@@ -1335,7 +1349,7 @@ ce n'est pas tranché. Sans réponse, ce lot ne démarre pas.
 **Piège** : raisonner « par porteur » au lieu de « par clé » casserait la garantie
 de l'ADR-023 — un test existant le montre.
 
-#### Lot 3 — Un seul classifieur. **MOITIÉ FAITE LE 2026-09-10 ; l'autre moitié est SORTIE du lot le même jour — voir « Lot 3 bis ».**
+#### ~~Lot 3 — Un seul classifieur.~~ **SOLDÉ** : moitié faite le 2026-09-10, l'autre moitié sortie du lot le même jour (« Lot 3 bis ») puis dissoute par l'ADR-034 (constat du 2026-09-17).
 
 > **CE QUI EST FAIT : le marqueur d'archivage se lit à la racine, et ne se
 > contourne plus.** `VerificationDatee.libelleObligation` est **requis** —
@@ -1350,8 +1364,10 @@ de l'ADR-023 — un test existant le montre.
 > ancienne, arrivait EN TÊTE du tri croissant : le widget de compte à rebours
 > annonçait « Prochaine échéance — Ne s'applique plus — … » et elle consommait
 > une des cinq places. Le premier lot avait dé-rougi ces widgets sans les
-> empêcher d'afficher la ligne. Filtrée en SQL sur le préfixe du libellé —
-> laid et temporaire, l'ADR-034 le remplace par un champ.
+> empêcher d'afficher la ligne. ~~Filtrée en SQL sur le préfixe du libellé —
+> laid et temporaire, l'ADR-034 le remplace par un champ.~~ Périmé (relevé le
+> 2026-09-17) : la page lit `archiveLe`, par `echeancesAnnoncables`
+> (`calendrier/portee.ts`).
 >
 > **SEPT SURFACES CONTOURNAIENT LES CLASSIFIEURS, pas deux.** Le brief en citait
 > deux ; une contre-expertise en a trouvé cinq, une contre-contre-expertise a
@@ -1550,7 +1566,7 @@ s'en sert pas et recalcule avec ses propres fonctions locales, en violation de l
 règle 1 de l'ADR-011. **Le lot consiste à supprimer les fonctions locales, pas à
 les corriger.**
 
-#### Lot 5 — Ce qui n'est jamais relancé. Dépend des lots 3 et 4.
+#### ~~Lot 5 — Ce qui n'est jamais relancé. Dépend des lots 3 et 4.~~ **SOLDÉ** : ses deux points sont tombés (constat du 2026-09-17).
 
 - ~~**régime établi**~~ — **dissous par le N2 de l'ADR-034 le 2026-09-11** :
   la ligne ne porte plus « conforme », elle porte une échéance ouverte, et « en
@@ -1574,7 +1590,9 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   l'historique git — elle n'a jamais été écrite. Sa seule lecture est implicite :
   le client Prisma la sélectionne sur toute requête `Verification` sans `select`.
   Il n'y a donc aucune écriture à retirer ; le retrait se fait en deux
-  déploiements et attend la décision de la propriétaire.
+  déploiements et attend la décision de la propriétaire. **Toujours en attente
+  le 2026-09-17** ; la recommandation de ce jour est de garder la colonne en
+  l'état.
   `Etablissement.referentielVersionCalendrier`, le repère réellement lu, n'est
   pas concerné. ~~Premier déploiement : le champ quitte `schema.prisma` sans
   migration~~ — **faux, relevé à la relecture** : `.github/workflows/derive-schema.yml`
@@ -1646,29 +1664,80 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   après la saisie de la prescription ; un arrêté réel saisi tard devient
   supprimable, protégé par la seule confirmation ; une succession qui renomme
   l'obligation ciblée ferait tomber le compte à zéro (théorique à ce jour).
-- **`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
-  service de la tête du calendrier change un champ que personne ne lit.
-- **`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors
-  tests.
-- La branche `datePrevueFaisantFoi` à statut réalisé (`generateur.ts:791`) :
-  aucun chemin de production ne l'atteint.
-- L'écriture `a_planifier` d'`uploadRapport:151-156`, réécrite `planifiee` par la
-  régénération qui suit.
+- ~~**`estUrgent`** n'est pas persisté : le correctif qui devait sortir les mises en
+  service de la tête du calendrier change un champ que personne ne lit.~~
+  **Retiré le 2026-09-17** (`lot/salarie-inactif-et-menage`), avec
+  `comparerParUrgence` : les tests lisent le statut ou la date.
+- ~~**`OBLIGATIONS_RETIREES.absorbePar`** : donnée déclarée, aucun lecteur hors
+  tests.~~ Périmé (relevé le 2026-09-17) : `SUCCESSIONS_DECLAREES`
+  (`calendrier/actions.ts`) le lit depuis le lot 2.
+- La branche `datePrevueFaisantFoi` ~~à statut réalisé (`generateur.ts:791`) :
+  aucun chemin de production ne l'atteint~~ — **précisé le 2026-09-17** : la
+  branche est vivante, c'est elle qui fait primer la date d'un titre. Seule sa
+  sous-branche « statut réalisé » (`estStatutRealise(ex.statut) ? ex.statut`)
+  est morte en production — une ligne de salarié ne reçoit pas de rapport. À
+  retirer après un comptage en base des lignes de salarié à statut réalisé, **non
+  fait**.
+- ~~L'écriture `a_planifier` d'`uploadRapport:151-156`, réécrite `planifiee` par la
+  régénération qui suit.~~ N'existe plus : un dépôt « non vérifiable » ne touche
+  plus le statut depuis la phase A (`fb94333`).
+- ~~`RetardsParFamille.verifications`~~ (`retards.ts`) : sous-compte sans lecteur
+  depuis l'ADR-015. **Retiré le 2026-09-17.**
 
 ### Deux points mineurs, à prendre au fil
 
-- une **action ouverte compte comme preuve** (`actions.ts:228`) alors qu'elle
-  n'atteste d'aucun contrôle : ligne gelée « dépassée », comptée en retard ;
-- « régime établi = zéro écriture » (ADR-012) est faux : le repère de version est
+- ~~une **action ouverte compte comme preuve** (`actions.ts:228`) alors qu'elle
+  n'atteste d'aucun contrôle : ligne gelée « dépassée », comptée en retard ;~~
+  périmé (relevé le 2026-09-17) : la ligne et la « ligne gelée dépassée » ne
+  sont plus celles-là — le statut `depassee` n'existe plus, et une ligne
+  applicable sans rendez-vous qui ne porte qu'une action sort des retards
+  (limite 1). Ce qui restait — la ligne d'une personne partie, avec une action,
+  comptée en retard — est **fermé par `lot/salarie-inactif-et-menage`** ;
+- ~~« régime établi = zéro écriture » (ADR-012) est faux : le repère de version est
   toujours poussé, `Etablissement.updatedAt` bouge à chaque régénération et cesse
-  de vouloir dire « modifié par l'utilisateur ».
+  de vouloir dire « modifié par l'utilisateur ».~~ **Fermé le 2026-09-17** : le
+  repère n'est écrit que s'il change. `updatedAt` était imprimé par le registre
+  PDF comme « Date ou mise à jour » des fiches « Renseignements généraux » et
+  « ERP », que tout dépôt de rapport redatait.
+
+### Ouvert, relevé le 2026-09-17
+
+- **Constat B — décision attendue.** Une ligne « planifiée » SANS rapport dont le
+  rythme change (annuel → semestriel) garde sa date : la branche de ré-ancrage
+  exige une réalisation (`generateur.ts`, « LA PÉRIODICITÉ A CHANGÉ »). Il faut
+  trancher d'où elle repart — sa date actuelle, sa date moins l'ancien rythme
+  plus le nouveau, la mise en service —, `datePrevue` étant stockée sans son
+  origine.
+- **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
+  preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
+  mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION
+  LAISSE PASSER »). Le même chemin vaut désormais pour une ligne de salarié sans
+  trace. Écrit dans le code, non corrigé : le fermer voudrait archiver une ligne
+  qui n'atteste de rien.
 
 ### Les écarts ADR
 
-Au moins six promesses plus larges que le code. **À reprendre dans le lot qui
-corrige chacune, jamais dans une passe de ménage séparée** — sinon on réécrit une
-promesse sans savoir si elle est tenue, ce qui est exactement le geste qui a créé
-l'écart.
+~~Au moins six promesses plus larges que le code.~~ La liste réelle, relevée le
+2026-09-17 :
+
+- **tenues** : ADR-011, périodicités sans dérive (lot 4) ; ADR-011 règle 1, un
+  seul module de dates ; ADR-012 l.221, aucune action ni aucun rapport ne
+  disparaît par effet de bord (lot 1) ;
+- **en grande partie tenue** : ADR-011 l.201, « toutes les surfaces affichent le
+  même compte » — tenue par `lot/salarie-inactif-et-menage` pour les lignes de
+  personnes parties, sauf les pastilles de la barre latérale, périmées jusqu'au
+  rechargement, ce qui est assumé ;
+- **en partie tenue** : ADR-012 l.129-142, « cycle ouvert : `datePrevue` ne
+  bouge pas » — vrai, mais un changement de rythme ne ré-ancre qu'une ligne
+  réalisée (constat B, ci-dessus) ;
+- **non tenue avant le 2026-09-17** : ADR-012 l.223-224 et l.303, « régime établi
+  = zéro écriture » — fermée par `lot/salarie-inactif-et-menage` ;
+- **dépassée par le code** : ADR-022 l.304-318, « `absorbePar` n'est lu par aucun
+  code » — une note d'amendement le dit.
+
+~~**À reprendre dans le lot qui corrige chacune, jamais dans une passe de ménage
+séparée**~~ — la règle a tenu : chaque promesse ci-dessus a été requalifiée par le
+lot qui la tient, ou constatée périmée par le code.
 
 ### Ce qui est sain, nommément
 
@@ -1676,7 +1745,9 @@ Idempotence à partir du 3ᵉ passage ; deux régénérations simultanées sur b
 (0 doublon) ; `cleDeLigne` unique des deux côtés ; `porteeBatiment` à quatre sites
 exactement ; les contraintes SQL (`NULLS NOT DISTINCT`, `porteur_xor`) posées et
 gardées ; `empreinteReferentiel` couvre `premierDelai` ; le cloisonnement de la
-régénération dans le code ; le salarié inactif traité conformément à `docs/rgpd.md`.
+régénération dans le code ; le salarié inactif traité conformément à `docs/rgpd.md`
+— ~~affirmé à tort : ses lignes restaient comptées en retard~~, vrai depuis
+`lot/salarie-inactif-et-menage` (2026-09-17).
 
 ## 12. Les alertes par e-mail — une règle à tenir avant la première ligne
 

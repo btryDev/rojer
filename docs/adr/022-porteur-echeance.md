@@ -315,6 +315,14 @@ qu'une régénération qui échoue devrait dégrader, pas blanchir un écran.
   absorption, et ce n'est pas une décision : c'est un manque. Le report suppose
   de trancher ce qu'on fait de N historiques d'équipement fusionnés en une
   ligne d'établissement, ce que ce lot ne tranche pas.
+
+  *Amendement du 2026-09-17 (`lot/salarie-inactif-et-menage`) : ce paragraphe
+  est dépassé par le code. `absorbePar` est lu depuis le lot 2 du § 11 de
+  `docs/chantiers-ouverts.md` (`SUCCESSIONS_DECLAREES`, `calendrier/actions.ts`) :
+  l'absorbante naît datée de la plus ancienne réalisation des lignes absorbées,
+  et une scission se déclare par `Obligation.succedeA`. La règle de fusion
+  (« la plus ancienne l'emporte ») attend toujours la décision de la
+  propriétaire ; la recommandation du 2026-09-17 est de la garder.*
 - **Le référentiel change de forme, donc tout le parc se réconcilie.**
   `empreinteReferentiel()` couvre les champs de déclenchement ;
   `REFERENTIEL_VERSION` est incrémentée, et chaque établissement régénère son
