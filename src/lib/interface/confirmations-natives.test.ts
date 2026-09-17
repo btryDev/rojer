@@ -107,7 +107,11 @@ describe("la règle, sur le dépôt", () => {
     expect(
       releves.map((a) => `${a.fichier}:${a.ligne} — ${a.extrait}`),
     ).toEqual([]);
-  });
+    // Délai explicite (2026-09-17) : ce test lit et nettoie chacun des
+    // quelque 800 fichiers de `src/`, et il a dépassé une fois les 5 s par
+    // défaut pendant la suite complète, sur une machine très chargée. Le
+    // dépassement ne disait rien de la règle, seulement de la charge.
+  }, 30_000);
 
   it("le balayage descend vraiment dans src/, sans excepter personne", () => {
     // La borne basse du balayage lui-même : un relevé vide ne prouve rien si

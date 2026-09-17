@@ -1347,10 +1347,11 @@ une ligne existe par obligation **et porteur**. Deux symptômes, un défaut :
 une ligne d'établissement, **laquelle garde l'état ?** L'ADR-022 dit lui-même que
 ce n'est pas tranché. Sans réponse, ce lot ne démarre pas.
 
-**Piège** : raisonner « par porteur » au lieu de « par clé » casserait la garantie
-de l'ADR-023 — ~~un test existant le montre~~ (ce test tenait une règle que
-l'ADR-023 n'écrit pas ; il est inversé le 2026-09-17, et le porteur salarié se
-teste par couple obligation × personne, pas par porteur).
+**Piège** : raisonner « par porteur » au lieu de « par clé » casserait la clé par
+couple obligation × personne de l'ADR-023 (`cleDeLigne`) — ~~un test existant le
+montre~~ (ce test tenait une règle que l'ADR-023 n'écrit pas ; il est inversé le
+2026-09-17, et le porteur salarié se teste par couple obligation × personne, pas
+par porteur).
 
 #### ~~Lot 3 — Un seul classifieur.~~ **SOLDÉ** : moitié faite le 2026-09-10, l'autre moitié sortie du lot le même jour (« Lot 3 bis ») puis dissoute par l'ADR-034 (constat du 2026-09-17).
 
@@ -1714,11 +1715,12 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION
-  LAISSE PASSER »). **Le salarié n'est pas concerné** : sa ligne sans trace,
-  supprimée au départ, est recréée à la réactivation avec la date du titre, donc
-  en retard si le titre est échu — aucun retard n'est effacé (rejoué à la
-  relecture du 2026-09-17, test dans `calendrier/actions.test.ts`). Écrit dans le code, non corrigé : le fermer voudrait archiver une ligne
-  qui n'atteste de rien.
+  LAISSE PASSER »). Écrit dans le code, non corrigé : le fermer voudrait
+  archiver une ligne qui n'atteste de rien. **Le salarié n'est pas concerné** :
+  sa ligne sans trace, supprimée au départ, est recréée à la réactivation avec
+  la date du titre, donc en retard si le titre est échu — aucun retard n'est
+  effacé (rejoué à la relecture du 2026-09-17, test dans
+  `calendrier/actions.test.ts`).
 
 ### Les écarts ADR
 
