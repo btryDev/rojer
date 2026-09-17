@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleJourCivil, depuisCleJourCivil, instantCivil } from "@/lib/dates";
 import { joursDeRetard } from "@/lib/dates/retard";
+import type { ResultatRealise } from "@/lib/rapports/schema";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { echeanceDuTitre } from "@/lib/salaries/echeance";
 import {
@@ -64,10 +65,21 @@ type Declaration = {
 function ligne(d: Declaration): FaitsDeLigne {
   return {
     periodicite: d.rythme,
-    premierPas: premierPas(d.premierDelai, d.referentiel ?? d.rythme, d.rythme),
+    // Sous prescription, le rythme effectif EST la surcharge ; sinon `null`.
+    premierPas: premierPas(
+      d.premierDelai,
+      d.referentiel ?? d.rythme,
+      d.referentiel === undefined ? null : d.rythme,
+    ),
     dateDuTitre: d.titre ?? null,
     realisation: d.rapport
-      ? { date: date(d.rapport.le), resultat: d.rapport.resultat ?? "conforme" }
+      ? {
+          date: date(d.rapport.le),
+          // Le `as` est celui de l'appelant réel, qui lit une chaîne en base :
+          // c'est par lui qu'un « non vérifiable » peut arriver malgré le type,
+          // et deux rangées le font exprès.
+          resultat: (d.rapport.resultat ?? "conforme") as ResultatRealise,
+        }
       : null,
     realisationHeritee: d.heritee === undefined ? null : date(d.heritee),
     miseEnService: d.miseEnService === undefined ? null : date(d.miseEnService),
@@ -333,6 +345,41 @@ const TABLE: Rangee[] = [
     }),
     attendu: { jour: "2026-01-10", statut: "a_planifier", source: "ponctuel_ouvert" },
   },
+  {
+    cas: "ponctuel — la suppression du rapport qui le soldait le rouvre",
+    recit:
+      "Le pendant, pour le contrôle unique, de la suppression du dernier rapport : plus aucune réalisation, donc plus de statut réalisé — la ligne redevient un ponctuel ouvert, datée de sa mise en service. `supprimerRapport` y arrivait par une branche « one-shot » à part ; ici ce sont les mêmes faits que ceux d'un ponctuel jamais contrôlé, donc la même réponse.",
+    faits: ligne({
+      rythme: "mise_en_service_uniquement",
+      origine: "2026-01-15",
+      miseEnService: "2026-01-10",
+    }),
+    attendu: { jour: "2026-01-10", statut: "a_planifier", source: "ponctuel_ouvert" },
+  },
+  {
+    cas: "cyclique — un « non vérifiable » passé par erreur ne fait PAS rouler la ligne",
+    recit:
+      "Le symétrique de la rangée du ponctuel, relevé par la relecture du 2026-09-17 : `resultat` était typé `string`, le ponctuel s'en défendait et le cyclique non — la règle 3 rendait « planifiée » au 01/06/2027, une période entière gagnée sur un contrôle qui n'a pas eu lieu. C'est le mensonge que `STATUT_DEPUIS_RESULTAT` raconte avoir retiré du dépôt. La ligne reste sur ses autres faits : la mise en service.",
+    faits: ligne({
+      rythme: "annuelle",
+      origine: "2026-01-10",
+      miseEnService: "2026-01-10",
+      rapport: { le: "2026-06-01", resultat: "non_verifiable" },
+    }),
+    attendu: { jour: "2027-01-10", statut: "planifiee", source: "mise_en_service" },
+  },
+  {
+    cas: "cyclique — un « non vérifiable » passé par erreur ne masque pas l'héritage",
+    recit:
+      "Et il ne vaut pas non plus « réalisation propre » : la réalisation héritée reste la seule connue, et la source le dit.",
+    faits: ligne({
+      rythme: "annuelle",
+      origine: "2026-01-10",
+      heritee: "2025-06-01",
+      rapport: { le: "2026-06-01", resultat: "non_verifiable" },
+    }),
+    attendu: { jour: "2026-06-01", statut: "planifiee", source: "heritage" },
+  },
 
   // --------------------------------------------------------------------------
   // « Non vérifiable », antidaté, suppression — ce que l'appelant ne passe pas
@@ -588,6 +635,19 @@ const TABLE: Rangee[] = [
     },
   },
   {
+    cas: "LIMITE ÉCRITE — une réalisation antérieure à la mise en service commande quand même",
+    recit:
+      "Contrôle du 01/05/2024, mise en service corrigée ensuite au 01/08/2026 : l'échéance reste le 01/05/2025, en retard. La fonction ne juge pas de la cohérence entre deux faits déclarés — un rapport daté d'avant l'appareil est peut-être celui de l'appareil remplacé, peut-être une coquille, et elle ne sait pas lequel. Identique à aujourd'hui ; le sens d'erreur est « à refaire », jamais « rien à faire » (ADR-036 § 8).",
+    faits: ligne({
+      rythme: "annuelle",
+      origine: "2024-01-01",
+      miseEnService: "2026-08-01",
+      rapport: { le: "2024-05-01" },
+    }),
+    attendu: { jour: "2025-05-01", statut: "planifiee", source: "rapport" },
+    retard: { au: "2026-09-17", jours: 504 },
+  },
+  {
     cas: "l'héritage prime sur la mise en service",
     recit:
       "Un contrôle réel, même hérité, vaut mieux qu'un point de départ par défaut : la règle 3 passe avant la règle 4, pour l'héritée comme pour la propre.",
@@ -822,6 +882,19 @@ const TABLE: Rangee[] = [
     attendu: { jour: "2026-12-01", statut: "planifiee", source: "mise_en_service" },
   },
   {
+    cas: "D1 — une prescription MOINS stricte que le premier délai ne le desserre pas",
+    recit:
+      "Rythme quinquennal ramené à quatre ans par une prescription, premier délai de trois ans : la ligne est quadriennale, mais sa première échéance reste à trois ans. La prescription resserre le rythme, elle ne repousse pas un plafond que le texte pose plus bas qu'elle.",
+    faits: ligne({
+      rythme: "quadriennale",
+      referentiel: "quinquennale",
+      premierDelai: "triennale",
+      origine: "2025-12-01",
+      miseEnService: "2025-12-01",
+    }),
+    attendu: { jour: "2028-12-01", statut: "planifiee", source: "mise_en_service" },
+  },
+  {
     cas: "D1 — un premier délai PLUS LONG que le rythme, sans prescription",
     recit:
       "« Première vérification à deux ans, puis annuelle » : le premier délai n'est jamais comparé au rythme du référentiel — le même texte a voulu les deux. La formule du plan, écrite nue, rendait 2026 ; le générateur d'aujourd'hui rend 2027, et c'est lui qui a raison.",
@@ -1020,6 +1093,27 @@ describe("echeanceDeLigne — la précondition", () => {
     ).toThrow(/précondition/);
   });
 
+  it("le refuse AUSSI quand la ligne porte une réalisation : c'est à l'appelant de la solder", () => {
+    // LE CAS EXISTE (relecture du 2026-09-17). Une prescription donne un rythme
+    // à une obligation `autre` sur un appareil, un rapport y est déposé, la
+    // prescription est levée : la ligne reste en base — elle porte une trace —
+    // sous un rythme `autre`, et on peut encore y déposer un rapport. `rouler`
+    // le sert aujourd'hui : date gardée, statut du résultat. `recalculerLigne`
+    // (lot 4) fera de même HORS de cette fonction, comme la boucle NB4 du
+    // réconciliateur — ce test tient la frontière : une réalisation ne fait
+    // pas entrer un rythme sans rendez-vous dans le calcul des dates.
+    expect(() =>
+      echeanceDeLigne(
+        ligne({
+          rythme: "autre",
+          origine: "2026-01-10",
+          miseEnService: "2026-01-10",
+          rapport: { le: "2026-06-01", resultat: "conforme" },
+        }),
+      ),
+    ).toThrow(/précondition/);
+  });
+
   it("et ne le refuse que lui : un ponctuel sans date de titre est servi", () => {
     expect(() =>
       echeanceDeLigne(ligne({ rythme: "mise_en_service_uniquement", origine: "2024-05-02" })),
@@ -1033,7 +1127,7 @@ describe("premierPas — D1 de l'ADR-036", () => {
     recit: string;
     premierDelai: Periodicite | undefined;
     referentiel: Periodicite;
-    effective: Periodicite;
+    surcharge: Periodicite | null;
     attendu: Periodicite;
   };
   const CAS: Cas[] = [
@@ -1042,7 +1136,7 @@ describe("premierPas — D1 de l'ADR-036", () => {
       recit: "Le rythme s'applique dès le premier cycle — le comportement d'avant.",
       premierDelai: undefined,
       referentiel: "annuelle",
-      effective: "annuelle",
+      surcharge: null,
       attendu: "annuelle",
     },
     {
@@ -1050,24 +1144,33 @@ describe("premierPas — D1 de l'ADR-036", () => {
       recit: "Trois ans, puis quatre : le seul `premierDelai` du référentiel livré.",
       premierDelai: "triennale",
       referentiel: "quadriennale",
-      effective: "quadriennale",
+      surcharge: null,
       attendu: "triennale",
     },
     {
       cas: "premier délai plus LONG que le rythme, sans prescription",
       recit:
-        "« Première à deux ans, puis annuelle » : jamais comparé au rythme du référentiel. La formule nue du plan rendait `annuelle` ici — c'est la garde « pas de surcharge » qui tient cette rangée.",
+        "« Première à deux ans, puis annuelle » : jamais comparé au rythme du référentiel. La formule nue du plan, qui prenait le rythme EFFECTIF en troisième argument, rendait `annuelle` ici — `null` dit « pas de prescription », et la base est rendue telle quelle.",
       premierDelai: "biennale",
       referentiel: "annuelle",
-      effective: "annuelle",
+      surcharge: null,
       attendu: "biennale",
+    },
+    {
+      cas: "LA PERMUTATION — référentiel et surcharge échangés",
+      recit:
+        "Relecture du 2026-09-17 : trois `Periodicite` voisins se permutent sans que le compilateur dise rien. `premierPas(triennale, quadriennale, annuelle)` rend `annuelle` (rangée suivante) ; permuté, il rend `triennale` — une surcharge moins stricte que la base ne desserre rien. Le résultat diffère, donc la table voit une permutation chez l'appelant ; et le sens d'erreur est le plafond du texte, jamais plus lâche que lui.",
+      premierDelai: "triennale",
+      referentiel: "annuelle",
+      surcharge: "quadriennale",
+      attendu: "triennale",
     },
     {
       cas: "prescription plus stricte que le premier délai",
       recit: "Deux plafonds sur le même cycle : le plus bas lie.",
       premierDelai: "triennale",
       referentiel: "quadriennale",
-      effective: "annuelle",
+      surcharge: "annuelle",
       attendu: "annuelle",
     },
     {
@@ -1076,7 +1179,7 @@ describe("premierPas — D1 de l'ADR-036", () => {
         "Une prescription quadriennale sur un rythme quinquennal ne desserre pas un premier délai de trois ans : le texte reste le plafond le plus bas.",
       premierDelai: "triennale",
       referentiel: "quinquennale",
-      effective: "quadriennale",
+      surcharge: "quadriennale",
       attendu: "triennale",
     },
     {
@@ -1084,7 +1187,7 @@ describe("premierPas — D1 de l'ADR-036", () => {
       recit: "« Strictement plus stricte » : à égalité la base reste — c'est la même valeur.",
       premierDelai: "triennale",
       referentiel: "quadriennale",
-      effective: "triennale",
+      surcharge: "triennale",
       attendu: "triennale",
     },
     {
@@ -1092,7 +1195,7 @@ describe("premierPas — D1 de l'ADR-036", () => {
       recit: "La base est le rythme du référentiel, et la prescription le resserre.",
       premierDelai: undefined,
       referentiel: "annuelle",
-      effective: "semestrielle",
+      surcharge: "semestrielle",
       attendu: "semestrielle",
     },
     {
@@ -1100,7 +1203,7 @@ describe("premierPas — D1 de l'ADR-036", () => {
       recit: "La prescription resserre le rythme, donc a fortiori le premier délai.",
       premierDelai: "biennale",
       referentiel: "annuelle",
-      effective: "semestrielle",
+      surcharge: "semestrielle",
       attendu: "semestrielle",
     },
     {
@@ -1109,13 +1212,13 @@ describe("premierPas — D1 de l'ADR-036", () => {
         "Une périodicité sans échéance est « infiniment longue » (`estPeriodicitePlusStricte`) : tout rythme daté la renforce, et devient le premier pas.",
       premierDelai: undefined,
       referentiel: "autre",
-      effective: "semestrielle",
+      surcharge: "semestrielle",
       attendu: "semestrielle",
     },
   ];
 
-  it.each(CAS)("$cas", ({ recit, premierDelai, referentiel, effective, attendu }) => {
-    expect(premierPas(premierDelai, referentiel, effective), recit).toBe(attendu);
+  it.each(CAS)("$cas", ({ recit, premierDelai, referentiel, surcharge, attendu }) => {
+    expect(premierPas(premierDelai, referentiel, surcharge), recit).toBe(attendu);
   });
 });
 
@@ -1216,14 +1319,30 @@ const RACINE_SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CE_MODULE = "lib/calendrier/echeance-de-ligne.ts";
 const CE_TEST = "lib/calendrier/echeance-de-ligne.test.ts";
 
-/** Neutralise les commentaires : ce dépôt commente densément le motif fautif
- *  lui-même, et ce module plus que les autres. */
+/**
+ * Neutralise les commentaires : ce dépôt commente densément le motif fautif
+ * lui-même, et ce module plus que les autres.
+ *
+ * EN UNE PASSE, CHAÎNES PRÉSERVÉES (relecture du 2026-09-17). La première
+ * rédaction — celle de `garde-fuseau.test.ts` — coupait chaque ligne au premier
+ * `//`, y compris dans une chaîne : `import("https://…")`, ou un chemin
+ * d'import écrit après un `//` de chaîne sur la même ligne, disparaissaient
+ * avec le « commentaire ». Pour une garde qui CHERCHE des chaînes, c'est un
+ * faux négatif. Ici une chaîne rencontrée avant un commentaire est rendue telle
+ * quelle, et ce qu'elle contient n'ouvre aucun commentaire.
+ *
+ * Ce que ça ne sait toujours pas lire : une apostrophe de texte JSX ouvre une
+ * fausse chaîne jusqu'à la prochaine apostrophe de la MÊME ligne, et un gabarit
+ * imbriqué dans un `${…}` referme le sien trop tôt. Les deux avalent au pire un
+ * bout de ligne ; le spécificateur d'un import, lui, est une chaîne entière et
+ * reste lisible.
+ */
 function sansCommentaires(code: string): string {
-  return code
-    .replace(/\/\*[\s\S]*?\*\//g, (bloc) => bloc.replace(/[^\n]/g, " "))
-    .split("\n")
-    .map((l) => l.replace(/\/\/.*$/, ""))
-    .join("\n");
+  return code.replace(
+    /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
+    (tout: string, chaine: string | undefined) =>
+      chaine ?? tout.replace(/[^\n]/g, " "),
+  );
 }
 
 /** Tous les .ts/.tsx de src/, TESTS COMPRIS : un test qui importerait le module
@@ -1277,6 +1396,39 @@ describe("ADR-036 — le module n'est PAS branché avant la bascule", () => {
   // date en production, c'est l'état que l'ADR-036 existe pour quitter — et
   // `version-moteur.test.ts` ne le verrait que si l'import passait par
   // `calendrier/actions.ts`.
+  //
+  // `scripts/` N'EST VOLONTAIREMENT PAS PARCOURU : le passage à blanc du lot 2c
+  // y vit, et c'est justement l'endroit d'où le module doit pouvoir être appelé
+  // avant la bascule — un script lancé à la main, en lecture seule, n'est pas
+  // un chemin de production (ADR-036 § 9).
+  const MOTIF_IMPORT = /echeance-de-ligne(\.[cm]?[jt]sx?)?["'`]/;
+
+  it("le motif reconnaît les formes d'import, et le filtre ne lui cache rien", () => {
+    // Le test de la garde elle-même : sans lui, un motif trop étroit passe à
+    // vide et la garde est percée en silence.
+    const branche = [
+      'import { echeanceDeLigne } from "./echeance-de-ligne";',
+      "import { premierPas } from '@/lib/calendrier/echeance-de-ligne.js';",
+      'const m = await import("../calendrier/echeance-de-ligne.ts");',
+      "const m = await import(`./echeance-de-ligne`);",
+      'const vrai = await vi.importActual("./echeance-de-ligne");',
+      'vi.mock("@/lib/calendrier/echeance-de-ligne", () => ({}));',
+      'const url = "https://exemple.test//x"; import x from "./echeance-de-ligne";',
+    ];
+    for (const ligneDeCode of branche) {
+      expect(MOTIF_IMPORT.test(sansCommentaires(ligneDeCode)), ligneDeCode).toBe(true);
+    }
+    const innocent = [
+      '// import { echeanceDeLigne } from "./echeance-de-ligne";',
+      '/* voir "./echeance-de-ligne" */ const x = 1;',
+      "// `echeance-de-ligne.ts` n'est pas encore branché",
+      'import { x } from "./echeance-de-ligne-autre";',
+    ];
+    for (const ligneDeCode of innocent) {
+      expect(MOTIF_IMPORT.test(sansCommentaires(ligneDeCode)), ligneDeCode).toBe(false);
+    }
+  });
+
   it("aucun fichier de src/ ne l'importe, hors son propre test", () => {
     const sources = listerSources();
     // Un chemin faux ferait passer l'assertion à vide.
@@ -1285,11 +1437,14 @@ describe("ADR-036 — le module n'est PAS branché avant la bascule", () => {
 
     const importateurs = sources
       .filter((s) => s.chemin !== CE_MODULE && s.chemin !== CE_TEST)
-      .filter((s) =>
-        /(from\s+|import\s*\(\s*|require\s*\(\s*)["'][^"']*echeance-de-ligne["']/.test(
-          sansCommentaires(s.code),
-        ),
-      )
+      // TOUTE CHAÎNE qui se termine par le nom du module, extension comprise,
+      // quel que soit ce qui la précède : `from`, `import(`, `require(`,
+      // `vi.mock(`, `vi.importActual(`, entre guillemets, apostrophes ou
+      // backticks. La première rédaction énumérait les préfixes et ratait
+      // « ./echeance-de-ligne.js », les gabarits et `importActual` (relecture
+      // du 2026-09-17) ; chercher la chaîne plutôt que l'instruction n'a pas de
+      // liste à tenir.
+      .filter((s) => MOTIF_IMPORT.test(sansCommentaires(s.code)))
       .map((s) => s.chemin);
 
     expect(

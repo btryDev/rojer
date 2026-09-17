@@ -41,7 +41,10 @@ import { debutDuJour } from "@/lib/dates";
 import { estEnRetard } from "@/lib/dates/retard";
 import { estSansRendezVous } from "@/lib/etats-permanents/regle";
 import { estPeriodicitePlusStricte } from "@/lib/matching/prescriptions";
-import { statutDepuisResultat } from "@/lib/rapports/schema";
+import {
+  statutDepuisResultat,
+  type ResultatRealise,
+} from "@/lib/rapports/schema";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { estCyclique, prochaineEcheance } from "./periodicite";
 
@@ -70,7 +73,9 @@ export type FaitsDeLigne = {
   /** Le rythme EFFECTIF : celui du référentiel, sauf surcharge d'une
    *  prescription particulière (ADR-035). */
   periodicite: Periodicite;
-  /** Le pas du PREMIER cycle, résolu par `premierPas`. Lu par la règle 4
+  /** Le pas du PREMIER cycle, résolu par `premierPas(premierDelai, rythme du
+   *  référentiel, surcharge)` — l'appelant tient les trois là où il calcule le
+   *  rythme effectif (`generateur.ts`, `const surcharge`). Lu par la règle 4
    *  seule : un contrôle réalisé fait repartir le rythme, jamais le premier
    *  délai. */
   premierPas: Periodicite;
@@ -84,8 +89,16 @@ export type FaitsDeLigne = {
    * `indexerDernieresRealisations`) : un rapport « non vérifiable » n'est pas
    * une réalisation — le contrôle n'a pas eu lieu — et un rapport antidaté
    * n'est pas le dernier. Dans les deux cas ce champ ne les voit pas.
+   *
+   * LE TYPE LE DIT, ET LA FONCTION NE S'Y FIE PAS (relecture du 2026-09-17).
+   * `resultat` était typé `string` : le ponctuel s'en défendait, le cyclique
+   * non, et un « non vérifiable » passé par erreur faisait rouler la ligne
+   * d'une période entière — le mensonge même que `STATUT_DEPUIS_RESULTAT`
+   * raconte avoir retiré. Le type ferme l'erreur à la compilation ; mais le
+   * résultat arrive de la base en chaîne, par un `as`, donc les règles 2 et 3
+   * ne tiennent pour réalisé que ce que `statutDepuisResultat` reconnaît.
    */
-  realisation: { date: Date; resultat: string } | null;
+  realisation: { date: Date; resultat: ResultatRealise } | null;
   /** La réalisation léguée par les lignes qu'une succession fait absorber — la
    *  PLUS ANCIENNE (`reprendreLaRealisation`). Une réalisation propre prime
    *  toujours sur elle. */
@@ -136,29 +149,36 @@ export type EcheanceDeLigne = {
  * rythme du référentiel, et une ligne étiquetée « semestrielle » naissait avec
  * une première échéance à un an).
  *
- * LA GARDE, ET POURQUOI ELLE N'EST PAS DANS LA FORMULE DU PLAN. Le minimum se
- * prend entre le premier délai et LA SURCHARGE, jamais entre le premier délai
- * et le rythme du référentiel : les deux viennent du même texte, qui a voulu
- * les deux. Un texte « première vérification à deux ans, puis annuelle » serait
- * faussé d'un an. Or sans prescription l'effectif EST le rythme du référentiel,
- * et la comparaison nue le ferait primer sur un premier délai plus long. Aucune
- * obligation livrée n'est dans ce cas aujourd'hui ; la première l'aurait été en
- * silence. Une surcharge est toujours strictement plus stricte que le
- * référentiel (`appliquerPrescriptions` écarte les autres) : « effectif égal au
- * référentiel » veut donc dire « pas de surcharge », exactement.
+ * LA SURCHARGE EST UN PARAMÈTRE, PAS UNE DÉDUCTION. Le minimum se prend entre
+ * le premier délai et LA SURCHARGE, jamais entre le premier délai et le rythme
+ * du référentiel : les deux viennent du même texte, qui a voulu les deux. Un
+ * texte « première vérification à deux ans, puis annuelle » serait faussé d'un
+ * an. La formule du plan prenait le rythme EFFECTIF en troisième argument ; or
+ * sans prescription l'effectif EST le rythme du référentiel, et la comparaison
+ * nue le faisait primer sur un premier délai plus long. Aucune obligation
+ * livrée n'est dans ce cas aujourd'hui ; la première l'aurait été en silence.
+ *
+ * La première rédaction fermait le cas par une garde d'ÉGALITÉ — « effectif
+ * égal au référentiel, donc pas de surcharge ». Elle déduisait ce fait d'une
+ * règle d'un AUTRE module (`appliquerPrescriptions` écarte une surcharge qui
+ * n'est pas strictement plus stricte), qu'aucun test ne gardait ici, alors que
+ * l'appelant le SAIT : il tient la surcharge, ou son absence, à l'endroit même
+ * où il calcule le rythme effectif. Et trois `Periodicite` voisins se
+ * permutaient sans bruit. `null` dit « pas de prescription », et rien d'autre
+ * ne le dit (relecture du 2026-09-17).
  */
 export function premierPas(
   premierDelai: Periodicite | undefined,
   periodiciteReferentiel: Periodicite,
-  periodiciteEffective: Periodicite,
+  surcharge: Periodicite | null,
 ): Periodicite {
   const base = premierDelai ?? periodiciteReferentiel;
-  if (periodiciteEffective === periodiciteReferentiel) return base;
-  // `candidate` d'abord, `reference` ensuite : « l'effectif est-il strictement
-  // plus strict que la base ? ». À égalité la base reste — même valeur.
-  return estPeriodicitePlusStricte(periodiciteEffective, base)
-    ? periodiciteEffective
-    : base;
+  if (surcharge === null) return base;
+  // `candidate` d'abord, `reference` ensuite : « la surcharge est-elle
+  // strictement plus stricte que la base ? ». À égalité la base reste — même
+  // valeur. Une surcharge ne DESSERRE jamais : moins stricte que la base, elle
+  // est sans effet sur le premier cycle.
+  return estPeriodicitePlusStricte(surcharge, base) ? surcharge : base;
 }
 
 /**
@@ -171,6 +191,14 @@ export function premierPas(
  * de dater une obligation qui n'a pas de date ; les lignes `autre` que la
  * génération saute restent l'affaire de la boucle NB4 du réconciliateur, qui ne
  * touche pas aux dates.
+ *
+ * LE CAS EXISTE, ET L'APPELANT LE TRAITE AVANT D'APPELER. Une ligne d'équipement
+ * `autre` reste en base quand la prescription qui lui donnait un rythme est
+ * levée et qu'elle porte une trace ; on peut encore y déposer un rapport, et
+ * `rouler` le sert aujourd'hui — date gardée, statut du résultat.
+ * `recalculerLigne` (lot 4) fera de même HORS de cette fonction, comme la boucle
+ * NB4 : solde par `statutDepuisResultat`, date inchangée (ADR-036 § 4). Une
+ * réalisation ne lève donc pas la précondition.
  *
  * L'ORDRE DES RÈGLES est la décision ; le changer change le produit.
  */
@@ -192,6 +220,14 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
     );
   }
 
+  // CE QUI VAUT RÉALISATION, dit une fois pour les règles 2 et 3, par la seule
+  // table qui le sache. Un résultat qu'elle ne reconnaît pas — « non
+  // vérifiable », ou une valeur d'enum ajoutée sans elle — laisse la ligne
+  // ouverte sur ses autres faits : l'incertitude ne réduit jamais la couverture.
+  const solde = statutDepuisResultat(f.realisation?.resultat);
+  const realisee =
+    f.realisation !== null && solde !== null ? f.realisation.date : null;
+
   // 2. LE PONCTUEL — un contrôle unique, sans rendez-vous suivant. Daté de
   //    l'ÉVÉNEMENT quand on le connaît : datée de « maintenant », une chambre
   //    froide de 2015 était réputée due aujourd'hui, et le restait à perpétuité.
@@ -199,7 +235,6 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
     const datePrevue = f.miseEnService ?? debutDuJour(f.origine);
     // Soldé : le seul cas où un statut réalisé reste sur la ligne. SA
     // réalisation, pas l'héritée — un legs ne solde pas un ponctuel.
-    const solde = statutDepuisResultat(f.realisation?.resultat);
     if (solde !== null) {
       return { datePrevue, statut: solde, source: "ponctuel_solde" };
     }
@@ -223,7 +258,7 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
   //    2024-01-10 ») étaient l'artefact d'un calcul à état. Le RYTHME, jamais le
   //    premier délai : sans quoi le premier cycle se rejouerait à chaque dépôt.
   //    « Planifiée », passée ou non : le retard se lit sur la date.
-  const dernier = f.realisation?.date ?? f.realisationHeritee;
+  const dernier = realisee ?? f.realisationHeritee;
   if (dernier !== null) {
     const prochaine = prochaineEcheance(dernier, f.periodicite);
     // `null` est inatteignable ici — le rythme est cyclique —, et retomber sur
@@ -232,7 +267,7 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
       return {
         datePrevue: prochaine,
         statut: "planifiee",
-        source: f.realisation !== null ? "rapport" : "heritage",
+        source: realisee !== null ? "rapport" : "heritage",
       };
     }
   }

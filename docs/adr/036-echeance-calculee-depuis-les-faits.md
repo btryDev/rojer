@@ -116,7 +116,7 @@ type FaitsDeLigne = {
   periodicite: Periodicite;        // rythme EFFECTIF, prescription comprise
   premierPas: Periodicite;         // premier délai résolu par premierPas()
   dateDuTitre: Date | null;        // salarié — echeanceDuTitre()
-  realisation: { date: Date; resultat: string } | null; // dernier rapport RÉALISÉ propre
+  realisation: { date: Date; resultat: ResultatRealise } | null; // dernier rapport RÉALISÉ propre
   realisationHeritee: Date | null; // succession, la plus ancienne
   miseEnService: Date | null;
   origine: Date;                   // depuis quand Rojer suit la ligne
@@ -148,9 +148,18 @@ rythme `autre` n'a pas de rendez-vous ; la ligne n'existe que si une date de
 titre est saisie, et elle passe alors par la règle 1. La fonction refuse le cas
 contraire par une erreur, plutôt que de dater une obligation qui n'a pas de date.
 
-**`premierPas(premierDelai, periodiciteReferentiel, periodiciteEffective)`** —
-voir D1. Sans prescription, c'est `premierDelai ?? periodiciteReferentiel`, le
-comportement d'aujourd'hui. Sous prescription, le plus court des deux plafonds.
+**Ce qui vaut réalisation** est dit une fois, pour les règles 2 et 3, par
+`statutDepuisResultat`. Le type de `resultat` ferme l'erreur à la compilation,
+mais le résultat arrive de la base en chaîne : un « non vérifiable » passé par
+erreur ne solde pas un ponctuel **et ne fait pas rouler un cyclique** — la ligne
+reste sur ses autres faits. (La première rédaction ne défendait que le ponctuel ;
+relecture du 2026-09-17.)
+
+**`premierPas(premierDelai, periodiciteReferentiel, surcharge | null)`** — voir
+D1. Sans prescription (`null`), c'est `premierDelai ?? periodiciteReferentiel`,
+le comportement d'aujourd'hui. Sous prescription, le plus court des deux
+plafonds. La surcharge est un **paramètre**, pas une déduction : l'appelant la
+tient à l'endroit même où il calcule le rythme effectif.
 
 Tout se compose de fonctions existantes — `prochaineEcheance`, `estCyclique`,
 `estEnRetard`, `debutDuJour`, `statutDepuisResultat`,
@@ -179,6 +188,15 @@ historique, un ponctuel réalisé sort de `aGenerer` et se fait archiver à tort
   `recalculerLigne(tx, verificationId)`. `rouler` et la chaîne de transmission
   d'`echeanceHonoree` disparaissent ; l'écriture d'`echeanceHonoree` au dépôt
   reste, l'ADR-034 § 5 en a besoin pour reconstruire les occurrences.
+- **Un rythme `autre` sans titre se traite HORS de la fonction, et le cas
+  existe.** Une prescription donne un rythme à une obligation `autre` sur un
+  appareil, un rapport y est déposé, la prescription est levée : la ligne reste
+  en base — elle porte une trace — sous un rythme `autre`, et on peut encore y
+  déposer un rapport. `rouler` le sert aujourd'hui : date gardée, statut du
+  résultat. La précondition de `echeanceDeLigne` le refuse, réalisation ou non ;
+  `recalculerLigne` le traitera donc **avant d'appeler**, comme la boucle NB4 :
+  solde par `statutDepuisResultat`, **date inchangée**. Un test de la
+  précondition tient cette frontière.
 
 ## 5. La table des cas
 
@@ -191,7 +209,7 @@ historique, un ponctuel réalisé sort de `aGenerer` et se fait archiver à tort
 | S5 | « planifiée » au 01/09/2027, quel que soit l'ordre des saisies |
 | S7 | mise en service + 6 mois, par `premierPas` |
 | Rythme allongé (1 → 2 ans), sans rapport | mise en service + 2 ans : le retard inventé tombe |
-| Rapport « non vérifiable » seul | ce n'est pas une réalisation : l'appelant passe `realisation: null` → règles 4 ou 5. `porteUnePreuve` empêche toujours la suppression |
+| Rapport « non vérifiable » seul | ce n'est pas une réalisation : l'appelant passe `realisation: null` → règles 4 ou 5 ; passé par erreur, il n'est pas lu non plus, ponctuel comme cyclique. `porteUnePreuve` empêche toujours la suppression |
 | Rapport antidaté | seul le plus récent compte (`indexerDernieresRealisations`) : aucun effet |
 | Suppression du dernier rapport | s'il en reste un réalisé : règle 3 sur lui. Sinon règles 4 ou 5 — une date de génération revient à l'origine, même date et même statut qu'aujourd'hui ; **une vraie échéance revient « planifiée »**, donc visible, et non plus masquée en « à planifier » |
 | Ligne adoptée | même rangée : ses rapports et son origine la suivent |
@@ -233,8 +251,24 @@ aucun fait encodait le défaut ; il est inversé, et nommé ici.**
   (`statutLu`).
 - **« une périodicité devenue PONCTUELLE solde une ligne roulée »** garde son
   statut, pas sa date : le ponctuel soldé est daté de sa mise en service (ou de
-  l'origine), plus de l'échéance roulée qu'il portait. Aucun lecteur ne lit la
-  date d'un ponctuel soldé.
+  l'origine), plus de l'échéance roulée qu'il portait. **Cette date est LUE** —
+  une première rédaction de cet ADR disait le contraire, à tort : la fiche de
+  vérification l'affiche sous « Prochaine échéance » et la passe à la tuile de
+  `HeroFiche` (`verifications/[verificationId]/page.tsx`), `aUnRendezVous` étant
+  vrai pour une ligne réalisée. Pour un ponctuel soldé ORDINAIRE rien ne bouge :
+  sa date est la mise en service, avant comme après. Elle ne change que pour ce
+  cas-ci, un cyclique devenu ponctuel — et là, l'ancien affichage (« Prochaine
+  échéance 01/03/2027 ») comme le nouveau (la mise en service) sont absurdes sur
+  un contrôle unique déjà fait. Le défaut est celui de la fiche, pas du calcul ;
+  il est noté au § 8 comme un reste.
+
+**Un changement de comportement à nommer, hors tests** : un titre de salarié au
+rythme `autre`, hérité de données anciennes avec un **statut réalisé**, est
+aujourd'hui éteint à vie — `estVerificationRealisee` purge son échéance. La
+règle 1 le rend « planifiée » à la date du titre : il **redeviendra « en
+retard » quand cette date passera**. C'est le bon sens d'erreur — une pièce dont
+l'échéance est saisie et passée doit se voir —, et le passage à blanc le
+rangera sous `statut_seul`.
 
 ## 6. Les quatre décisions à confirmer
 
@@ -261,11 +295,15 @@ viennent du même texte, qui a voulu les deux.
 littéralement — `base = premierDelai ?? référentiel`, puis « l'effectif s'il est
 plus strict que la base » —, elle tombe dans (c) quand il n'y a **pas** de
 prescription : l'effectif est alors le rythme du référentiel, et il est comparé
-au premier délai. Le code porte donc une garde : sans prescription (effectif =
-référentiel), la base est rendue telle quelle. Aucune obligation livrée n'est
-touchée aujourd'hui — le seul `premierDelai` du référentiel, 3 ans puis 4 ans,
-est plus court que son rythme — mais la première qui l'aurait été se serait
-trompée en silence. Une mutation qui retire la garde fait rougir la table.
+au premier délai. La fonction reçoit donc **la surcharge elle-même, ou `null`**,
+et non le rythme effectif : sans prescription, la base est rendue telle quelle.
+(Une première rédaction déduisait « pas de prescription » de l'égalité
+effectif = référentiel — une règle d'`appliquerPrescriptions`, qu'aucun test ne
+gardait ici, alors que l'appelant a l'information sous la main ; relecture du
+2026-09-17.) Aucune obligation livrée n'est touchée aujourd'hui — le seul
+`premierDelai` du référentiel, 3 ans puis 4 ans, est plus court que son rythme —
+mais la première qui l'aurait été se serait trompée en silence. Une mutation qui
+rétablit la comparaison fait rougir la table.
 
 ### D2 — Une colonne explicite `suiviDepuis`
 
@@ -274,17 +312,39 @@ trompée en silence. Une mutation qui retire la garde fait rougir la table.
 
 | Option | Ce qui s'affiche |
 |---|---|
-| **(a) colonne `suiviDepuis`, écrite une fois à la création, jamais modifiée** — *recommandée* | 15/06, 94 jours — et pareil après une restauration ou un import |
-| (b) lire `createdAt`, qui existe déjà et que personne ne lit | 15/06, 94 jours **aujourd'hui**. Après une restauration de base le 01/10/2026, `createdAt` repart au 01/10 : **0 jour de retard, 108 jours blanchis, sans un mot**. C'est le défaut que ce chantier ferme — une date stockée sans son origine — qui reviendrait par une autre porte |
+| **(a) colonne `suiviDepuis`, écrite une fois à la création, jamais modifiée** — *recommandée* | 15/06, 94 jours |
+| (b) lire `createdAt`, qui existe déjà et que personne ne lit | 15/06, 94 jours — **la même chose**, dans le cas courant |
 
-Deux raisons de plus pour (a) : les seeds doivent pouvoir écrire « suivi depuis
-huit mois, jamais contrôlé », ce que `createdAt` interdit ; et `createdAt` est
-posé par PostgreSQL quelques millisecondes après l'horloge qui a servi au calcul
-— une ligne créée à 23:59:59,998 le 15/06 pourrait porter le 16/06.
+**Les deux options affichent la même chose aujourd'hui, et il faut le dire** :
+la décision ne se joue pas sur un écran. Une première rédaction de cet ADR
+plaidait (a) avec deux arguments inexacts, retirés à la relecture du
+2026-09-17 : une **restauration de base conserve `createdAt`** — seul un
+ré-import applicatif qui l'omettrait le remettrait à zéro, et ce même ré-import
+remettrait aussi `suiviDepuis` à zéro, puisqu'elle porte un défaut elle aussi ;
+et **Prisma laisse écrire `createdAt`**, donc un seed peut déjà poser un suivi
+passé.
 
-**Le coût** : une migration, additive et sans effet sur le code en ligne (Vercel
-la joue dès la preview) — `ADD COLUMN … NOT NULL DEFAULT CURRENT_TIMESTAMP`, puis
-`UPDATE … SET "suiviDepuis" = "createdAt"`.
+Ce qui tient pour (a) :
+
+- **c'est un fait métier, nommé et immuable**, distinct d'une métadonnée
+  technique que tout outil — import, duplication, script de reprise — peut
+  toucher sans penser qu'il déplace un retard. Le défaut que ce chantier ferme
+  est une date qui servait à deux choses sans le dire ; lire `createdAt` comme
+  origine de suivi en fabrique une seconde ;
+- **le décalage autour de minuit** : `createdAt` est posé par l'horloge de
+  PostgreSQL, quelques millisecondes après le `now` qui a servi au calcul. Une
+  ligne calculée à 23:59:59,998 le 15/06 peut porter le 16/06, et sa règle 4 bis
+  se juger sur un autre jour que celui de sa création. (a) écrit le `now` du
+  calcul lui-même ;
+- **la lisibilité** : le code lit « suivi depuis », pas « créé le ».
+
+**Ce que (a) coûte** : une migration — additive et sans effet sur le code en
+ligne (Vercel la joue dès la preview) : `ADD COLUMN … NOT NULL DEFAULT
+CURRENT_TIMESTAMP`, puis `UPDATE … SET "suiviDepuis" = "createdAt"` —, un champ
+de plus dans `faux-prisma.ts` et dans les fixtures, et une colonne que (b)
+n'aurait pas demandée. (b) coûte zéro migration. La recommandation reste (a),
+pour la première raison ; elle n'est pas écrasante, et c'est à la propriétaire
+de dire si un nom vaut une colonne.
 
 ### D3 — Un changement de rythme peut faire passer une ligne « à planifier », en retard
 
@@ -348,6 +408,18 @@ d'un aller-retour ; dans le doute, l'incertitude ne réduit jamais la couverture
   date d'installation dans les lieux (`GH 61 § 5`), une modification notable d'un
   équipement sous pression, la date d'une prescription : autant de faits que la
   fonction saurait lire et que le modèle ne porte pas. Hors périmètre.
+- **Une réalisation antérieure à la mise en service commande quand même.**
+  Contrôle du 01/05/2024, mise en service corrigée ensuite au 01/08/2026 :
+  l'échéance reste le 01/05/2025, en retard. La fonction ne juge pas de la
+  cohérence entre deux faits déclarés — le rapport est peut-être celui de
+  l'appareil remplacé, peut-être une coquille. Identique à aujourd'hui ; le sens
+  d'erreur est « à refaire », jamais « rien à faire ». Une rangée de la table le
+  tient.
+- **La fiche de vérification affiche « Prochaine échéance » sur un ponctuel
+  soldé** — la date de sa mise en service, sous un intitulé qui n'a pas de sens
+  pour un contrôle unique déjà fait. Le défaut existe aujourd'hui, ce chantier ne
+  le crée ni ne le ferme : les lecteurs et les libellés sont hors périmètre. À
+  reprendre côté fiche.
 - **Le renforcement de périodicité ne vise toujours que le porteur équipement.**
 - **La règle de fusion « la plus ancienne l'emporte »** est inchangée, et reste la
   déduction que `reprendreLaRealisation` dit qu'elle est.
@@ -360,7 +432,7 @@ Chaque lot se fusionne seul, après relecture neutre, suite complète en UTC, `t
 | Lot | Contenu | Preuve |
 |---|---|---|
 | **0** | cet ADR, les quatre décisions | — |
-| **1** | la fonction pure et sa table de vérité, **sans branchement** | une mutation par règle, chacune rouge ; `version-moteur.test.ts` vert sans retouche ; une garde interdit tout import du module |
+| **1** | la fonction pure et sa table de vérité, **sans branchement** | une mutation par règle, chacune rouge ; `version-moteur.test.ts` vert sans retouche ; une garde interdit tout import du module depuis `src/`, tests compris — **`scripts/` n'est volontairement pas parcouru**, le passage à blanc du lot 2c y vit |
 | **2a** | la colonne `suiviDepuis` (si D2), écrite au `createMany` ; `faux-prisma.ts` durci (`select` honoré) | relevé du moteur recopié sans incrément |
 | **2b** | la couture : les branches de date déplacées **mot pour mot** dans une stratégie `deciderParConservation` | les tests existants verts sans être touchés |
 | **2c** | **le passage à blanc** : la stratégie candidate `deciderParFaits`, et un script en transaction `READ ONLY` — une lecture, deux plans, leur différence, par établissement et par catégorie (`identique`, `meme_jour_civil`, `statut_seul`, `rythme`, `mise_en_service`, `retard_invente`, `date_arbitraire`, `legs_statut_realise`, `inexplique`), sans aucun nom de personne ; le plan candidat rejoué à J+400 doit être vide | **zéro `inexplique`**, en local puis en production (lancé par la propriétaire) ; compte rendu dans `docs/revues/` |
