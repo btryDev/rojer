@@ -576,13 +576,23 @@ async function regenererUnePasse(
   // Écrit **dans** la transaction, et en dernier : si le plan échoue,
   // l'établissement reste marqué comme désynchronisé et sera repris au prochain
   // affichage, plutôt que d'être considéré à tort comme à jour.
-  operations.push(
-    prisma.etablissement.update({
-      where: { id: etablissementId },
-      data: { referentielVersionCalendrier: SCEAU_CALENDRIER },
-    }),
-  );
-  attendus.push(null);
+  //
+  // SEULEMENT S'IL DIFFÈRE de ce que la lecture du point 1 a vu (2026-09-17).
+  // Réécrit à chaque passe, il faisait bouger `Etablissement.updatedAt`, que le
+  // registre PDF imprime comme « Date ou mise à jour » des fiches
+  // « Renseignements généraux » et « ERP » (`registre/queries.ts`) : tout dépôt
+  // de rapport redatait ces fiches. Et l'ADR-012 promet qu'un régime établi
+  // n'écrit rien. Une lecture périmée — un marquage « périmé » concurrent entre
+  // la lecture et ici — ne coûte qu'une régénération de plus à l'ouverture.
+  if (etab.referentielVersionCalendrier !== SCEAU_CALENDRIER) {
+    operations.push(
+      prisma.etablissement.update({
+        where: { id: etablissementId },
+        data: { referentielVersionCalendrier: SCEAU_CALENDRIER },
+      }),
+    );
+    attendus.push(null);
+  }
 
   // Les opérations s'exécutent dans l'ordre du tableau, en une transaction.
   const resultats = await prisma.$transaction(operations);

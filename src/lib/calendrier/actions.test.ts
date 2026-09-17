@@ -1232,6 +1232,21 @@ describe("genererCalendrier — estampille de version du référentiel", () => {
       SCEAU_CALENDRIER,
     );
   });
+
+  it("une passe sans changement n'écrit pas l'établissement (2026-09-17)", async () => {
+    // Le repère réécrit à l'identique faisait bouger `updatedAt`, que le
+    // registre PDF imprime comme date de mise à jour des fiches générales :
+    // tout dépôt de rapport les redatait.
+    poserEtablissement([{ id: "eq-elec" }]);
+    await genererCalendrier(ETAB_ID);
+    db.journal = [];
+
+    await genererCalendrier(ETAB_ID);
+
+    expect(
+      db.journal.filter((j) => j.operation === "etablissement.update"),
+    ).toEqual([]);
+  });
 });
 
 // ---------------------------------------------------------------------------
