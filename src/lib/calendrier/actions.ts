@@ -16,6 +16,7 @@ import {
 } from "@/lib/referentiels/conformite";
 import { SCEAU_CALENDRIER } from "./version-moteur";
 import {
+  cleDeLigne,
   clesApplicabilite,
   periodicitesEffectives,
   genererProchainesVerifications,
@@ -235,8 +236,9 @@ async function regenererUnePasse(
   // exister les lignes à porteur salarié : le moteur ne peut pas les dériver,
   // rien ne disant qu'une personne exerce l'activité qui déclenche le titre.
   // Les salariés inactifs sont exclus — une personne partie ne doit plus
-  // apparaître au calendrier, alors que ses lignes déjà réalisées, elles,
-  // subsistent comme preuve (docs/rgpd.md § 4.3).
+  // apparaître au calendrier. Ses titres subsistent comme preuve
+  // (docs/rgpd.md § 4.3), et ses lignes qui portent une trace sont archivées,
+  // pas supprimées (2026-09-17, voir `titresActifs` plus bas).
   const titresBruts = await prisma.titreSalarie.findMany({
     where: { salarie: { etablissementId, actif: true } },
     select: {
@@ -353,36 +355,35 @@ async function regenererUnePasse(
   // l'habilitation électrique passée de `triennale` à `autre` (ADR-023 § 6)
   // cesse de produire une échéance, sans cesser un instant de s'appliquer.
   //
-  // La requête porte sur TOUS les titres déclarés, y compris ceux de salariés
-  // sortis de l'effectif — contrairement à `titresBruts`, qui filtre sur
-  // `actif` parce qu'une personne partie ne doit plus produire de NOUVELLE
-  // ligne. Les deux périmètres sont différents et c'est voulu :
+  // ~~La requête portait sur TOUS les titres déclarés, y compris ceux de
+  // salariés sortis de l'effectif~~ : « ne pas barrer toute obligation qu'un
+  // titre a un jour instanciée » laissait OUVERTE la ligne d'une personne
+  // partie, et comptée en retard si elle portait une action, pendant qu'Équipe
+  // disait « Ne s'applique plus » (2026-09-17, `lot/salarie-inactif-et-menage`).
+  // Les titres des personnes PRÉSENTES suffisent aux deux questions :
   //
-  //   · générer : les personnes présentes ;
-  //   · ne pas barrer : toute obligation qu'un titre a un jour instanciée.
-  //
-  // Sans cette distinction, le départ du seul détenteur faisait sortir
-  // l'obligation du garde-fou : sa ligne était barrée « Ne s'applique plus »
-  // alors que l'obligation s'applique parfaitement — c'est la personne qui est
-  // partie. Et le résultat dépendait d'un fait sans rapport, qu'un collègue
-  // détienne ou non le même titre.
+  //   · l'obligation s'applique-t-elle encore ? — un titre en vigueur la porte ;
+  //   · le porteur de CETTE ligne existe-t-il encore ? — `titresActifs`, par
+  //     couple obligation × personne, comme `equipementsEnService` pour un
+  //     appareil. Le départ du seul détenteur ne barre donc pas l'obligation au
+  //     hasard d'un collègue : c'est la ligne de la personne partie, et elle
+  //     seule, qui sort des comptes.
   //
   // Le filtre `estPorteeParSalarie` n'est pas décoratif : `TitreSalarie.
   // obligationId` n'a pas de clé étrangère (le référentiel vit en TypeScript),
   // donc un titre déclaré par erreur sur une obligation d'ÉQUIPEMENT ferait
   // sinon entrer celle-ci dans le garde-fou, et empêcherait l'archivage
   // légitime de ses lignes le jour où elle est retirée.
-  const obligationsInstanciees = await prisma.titreSalarie.findMany({
-    where: { salarie: { etablissementId } },
-    select: { obligationId: true },
-    distinct: ["obligationId"],
-  });
-  for (const { obligationId } of obligationsInstanciees) {
-    const o = obligationParId(obligationId);
+  const titresActifs = new Set<string>();
+  for (const t of titresBruts) {
+    titresActifs.add(
+      cleDeLigne(t.obligationId, { equipementId: null, salarieId: t.salarieId }),
+    );
+    const o = obligationParId(t.obligationId);
     if (o !== undefined && estPorteeParSalarie(o)) {
-      obligationsEncoreApplicables.add(obligationId);
+      obligationsEncoreApplicables.add(t.obligationId);
       // Aucune surcharge ne vise un titre : le rythme est celui du référentiel.
-      periodicites.set(obligationId, o.periodicite);
+      periodicites.set(t.obligationId, o.periodicite);
     }
   }
 
@@ -393,6 +394,7 @@ async function regenererUnePasse(
     // `etab.equipements` est déjà filtré sur `actif: true` par la lecture du
     // point 1 : c'est exactement l'ensemble des porteurs encore en service.
     equipementsEnService: new Set(etab.equipements.map((eq) => eq.id)),
+    titresActifs,
     successions: SUCCESSIONS_DECLAREES,
   });
 

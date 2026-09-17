@@ -123,9 +123,11 @@ export function cleDeLigne(
  * Une ligne d'ÉQUIPEMENT se teste donc par le couple obligation × appareil,
  * que le matching sait produire (`equipementsConcernes`). Une ligne
  * d'établissement ou de salarié garde l'identifiant nu : le porteur
- * établissement ne disparaît pas, et pour le salarié la règle est délibérément
- * plus large — toute obligation qu'un titre a un jour instanciée reste
- * applicable, que la personne soit partie ou non (voir `calendrier/actions.ts`).
+ * établissement ne disparaît pas, et le porteur salarié se teste à part, par
+ * le couple obligation × personne des titres détenus par une personne présente
+ * (`OptionsGenerateur.titresActifs`, 2026-09-17). ~~Pour le salarié la règle
+ * était délibérément plus large — toute obligation qu'un titre a un jour
+ * instanciée restait applicable, que la personne soit partie ou non.~~
  * Les deux formes cohabitent dans le même ensemble sans se confondre : un
  * identifiant d'obligation ne contient jamais `::`.
  */
@@ -317,16 +319,35 @@ export type OptionsGenerateur = {
    * n'existe plus. Le bouton de suppression promet pourtant « ne génère plus
    * d'échéance ».
    *
-   * **Seul le porteur ÉQUIPEMENT est concerné**, et c'est délibéré. Un porteur
-   * établissement ne disparaît jamais. Un porteur salarié disparaît, mais
-   * l'ADR-023 a tranché que sa ligne n'est PAS barrée pour autant : c'est la
-   * personne qui est partie, pas l'obligation qui cesse — et la ligne atteste
-   * qu'elle détenait son titre au moment où elle opérait.
+   * Un porteur établissement ne disparaît jamais. Le porteur salarié a sa
+   * propre question, `titresActifs`, ci-dessous.
    *
    * Absent = comportement antérieur : un porteur disparu ne se distingue pas
    * d'un porteur vivant.
    */
   equipementsEnService?: Set<string>;
+  /**
+   * Les titres détenus par une personne PRÉSENTE dans l'effectif, par clé de
+   * ligne (`cleDeLigne(obligationId, { equipementId: null, salarieId })`).
+   *
+   * Le pendant d'`equipementsEnService` pour le porteur salarié (2026-09-17,
+   * `lot/salarie-inactif-et-menage`). Une ligne de salarié hors de cet
+   * ensemble — la personne est sortie de l'effectif, ou son titre a été
+   * retiré — est traitée comme la ligne d'un appareil retiré : archivée si
+   * elle porte une trace, supprimée sinon.
+   *
+   * ~~L'ADR-023 a tranché que sa ligne n'est PAS barrée~~ — ce commentaire le
+   * disait, et l'ADR ne le dit nulle part. La ligne restait donc ouverte, et
+   * une ligne ouverte qui porte une action était comptée en retard par le
+   * calendrier, le score et la barre latérale, pendant qu'Équipe disait « Ne
+   * s'applique plus » du même titre. La preuve que la personne était habilitée
+   * quand elle opérait est le TITRE (`TitreSalarie`, conservé, `docs/rgpd.md`
+   * § 4.3), et la ligne archivée garde ses actions : rien ne se perd.
+   *
+   * Absent = comportement antérieur : une ligne de salarié n'est jamais
+   * réputée orpheline de son porteur.
+   */
+  titresActifs?: ReadonlySet<string>;
   /**
    * Qui reprend le contenu de qui, quand une obligation est retirée du
    * référentiel : identifiant retiré → identifiant absorbant.
@@ -1458,12 +1479,22 @@ export function reconcilierCalendrier(
     // appareil que celui-ci. Deux extincteurs, l'un retiré : l'obligation
     // s'applique toujours, mais pas à l'appareil retiré.
     //
-    // Seul l'équipement se teste. Le porteur établissement ne disparaît pas ;
-    // le porteur salarié disparaît sans que sa ligne soit barrée (ADR-023).
+    // Le porteur établissement ne disparaît pas. ~~Le porteur salarié disparaît
+    // sans que sa ligne soit barrée (ADR-023).~~ Depuis le 2026-09-17, il se
+    // teste comme l'appareil : une personne sortie de l'effectif, ou un titre
+    // retiré, fait sortir la ligne des comptes — archivée avec sa trace. Une
+    // réactivation la rouvre par le chemin ordinaire (`aMettreAJour` si elle
+    // est générée, `aDesarchiver` sinon).
+    const salarieId = ex.salarieId ?? null;
     const porteurDisparu =
-      ex.equipementId !== null &&
-      options.equipementsEnService !== undefined &&
-      !options.equipementsEnService.has(ex.equipementId);
+      (ex.equipementId !== null &&
+        options.equipementsEnService !== undefined &&
+        !options.equipementsEnService.has(ex.equipementId)) ||
+      (salarieId !== null &&
+        options.titresActifs !== undefined &&
+        !options.titresActifs.has(
+          cleDeLigne(ex.obligationId, { equipementId: null, salarieId }),
+        ));
 
     // L'obligation vit encore ET son porteur aussi : la ligne n'a simplement
     // plus de rendez-vous.

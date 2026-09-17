@@ -471,26 +471,25 @@ export function fauxPrisma(db: Magasin) {
 
   const titreSalarie = {
     /**
-     * `where: { salarie: { etablissementId, actif? } }`, `distinct`.
+     * `where: { salarie: { etablissementId, actif? } }`.
      *
-     * Les deux périmètres de `actions.ts` passent par ici, et ils DIFFÈRENT
-     * volontairement : générer ne regarde que les personnes présentes, le
-     * garde-fou d'applicabilité regarde tous les titres jamais déclarés. Un
-     * faux client qui ignore `actif` efface cette distinction.
+     * `actif` est HONORÉ : c'est lui qui fait sortir une personne partie de la
+     * génération ET des titres en vigueur que le réconciliateur consulte
+     * (2026-09-17). Un faux client qui l'ignorerait laisserait vert le retrait
+     * du filtre. (La seconde lecture, sans `actif` et avec `distinct`, est
+     * partie le même jour ; son support ici avec elle.)
      */
     findMany: async ({
       where,
-      distinct,
     }: {
       where: { salarie: { etablissementId: string; actif?: boolean } };
-      distinct?: string[];
     }) => {
       db.journal.push({ operation: "titreSalarie.findMany", where });
       const { etablissementId, actif, ...reste } = where.salarie;
       if (Object.keys(reste).length > 0) {
         inconnu("titreSalarie.findMany", Object.keys(reste));
       }
-      const lignes = db.titres
+      return db.titres
         .map((t) => ({
           titre: t,
           salarie: db.salaries.find((s) => s.id === t.salarieId),
@@ -508,17 +507,6 @@ export function fauxPrisma(db: Magasin) {
           echeanceLe: titre.echeanceLe,
           salarie: { nom: salarie!.nom, prenom: salarie!.prenom },
         }));
-
-      if (!distinct) return lignes;
-      const vus = new Set<string>();
-      return lignes.filter((l) => {
-        const k = distinct
-          .map((c) => String((l as Record<string, unknown>)[c]))
-          .join("|");
-        if (vus.has(k)) return false;
-        vus.add(k);
-        return true;
-      });
     },
   };
 

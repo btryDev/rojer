@@ -1267,6 +1267,45 @@ describe("réconciliation — cycles de vérification", () => {
     expect(plan.inchangees).toBe(1);
   });
 
+  it("une ligne de salarié hors des titres actifs sort comme celle d'un appareil retiré (2026-09-17)", () => {
+    // L'obligation vit encore — B détient le titre —, mais A est parti : sa
+    // ligne, avec une action, est archivée ; celle de C, sans trace, supprimée.
+    // Sans `titresActifs`, les deux restaient ouvertes, en retard à leur date.
+    const titre = (id: string, salarieId: string, porteUnePreuve: boolean) =>
+      ligneExistante({
+        id,
+        obligationId: "vip",
+        equipementId: null,
+        salarieId,
+        periodicite: "autre",
+        statut: "planifiee",
+        porteUnePreuve,
+      });
+    const options = {
+      now: NOW,
+      obligationsEncoreApplicables: new Set(["vip"]),
+      titresActifs: new Set([
+        cleDeLigne("vip", { equipementId: null, salarieId: "sal-B" }),
+      ]),
+    };
+    const lignes = [
+      titre("v-A", "sal-A", true),
+      titre("v-C", "sal-C", false),
+    ];
+
+    const plan = reconcilierCalendrier(lignes, [], options);
+    expect(plan.aArchiver).toEqual([{ id: "v-A" }]);
+    expect(plan.aSupprimer).toEqual(["v-C"]);
+
+    // Absent = comportement antérieur : aucune ligne de salarié n'est réputée
+    // orpheline de son porteur.
+    const avant = reconcilierCalendrier(lignes, [], {
+      ...options,
+      titresActifs: undefined,
+    });
+    expect(avant.aArchiver).toEqual([]);
+  });
+
   describe("NB4 — une ligne applicable que la génération saute se réaligne (2026-09-15)", () => {
     // Le cas : une prescription donnait un rythme semestriel à une obligation
     // `autre` sur eq-1, un rapport a fait rouler la ligne, la prescription est

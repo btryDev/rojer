@@ -28,6 +28,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SCEAU_CALENDRIER } from "./version-moteur";
 import type { EquipementFaux, LigneFausse } from "./faux-prisma";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
+import { classerVerification } from "./etats";
 
 // `vi.hoisted` : les fabriques de `vi.mock` sont remontées en tête de module,
 // elles ne peuvent donc pas capturer une variable déclarée plus bas.
@@ -897,37 +898,120 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
     expect(lignesDe(TITRE_SALARIE)).toHaveLength(0);
   });
 
-  it("ne barre pas la ligne d'un titre dont le seul détenteur est parti", async () => {
-    // Le second périmètre de `titreSalarie.findMany`, celui SANS `actif` :
-    // toute obligation qu'un titre a un jour instanciée reste « encore
-    // applicable ». Sinon le départ du seul détenteur ferait barrer une
-    // obligation qui s'applique — c'est la personne qui est partie.
-    poserEtablissement([]);
-    poserSalarie("sal-parti", false);
-    db.titres = [
-      {
-        obligationId: TITRE_SALARIE,
-        salarieId: "sal-parti",
-        delivreLe: new Date("2024-03-01T00:00:00Z"),
-        echeanceLe: new Date("2029-03-01T00:00:00Z"),
-      },
-    ];
-    db.verifications = [
+  // ~~« ne barre pas la ligne d'un titre dont le seul détenteur est parti »~~ :
+  // ce test tenait la règle inverse, qu'aucune décision n'avait posée. La ligne
+  // restait ouverte, donc comptée en retard si elle portait une action, pendant
+  // qu'Équipe disait « Ne s'applique plus » du même titre. Depuis le 2026-09-17
+  // (`lot/salarie-inactif-et-menage`, décision de la propriétaire), une ligne de
+  // salarié sort comme celle d'un appareil retiré. Le TITRE reste en base : c'est
+  // lui la preuve que `docs/rgpd.md` § 4.3 veut garder.
+  describe("une personne sortie de l'effectif sort des comptes (2026-09-17)", () => {
+    /** La ligne de l'attestation médicale de `salarieId`, échue en 2020 — donc
+     *  en retard si elle restait ouverte. */
+    const ligneTitre = (id: string, salarieId: string, nbActions: number) =>
       ligne({
-        id: "v-titre",
-        salarieId: "sal-parti",
+        id,
+        salarieId,
         obligationId: TITRE_SALARIE,
         libelleObligation: "Attestation médicale",
-        nbRapports: 1,
-      }),
-    ];
+        periodicite: "quinquennale",
+        datePrevue: new Date("2020-03-01T00:00:00Z"),
+        statut: "planifiee",
+        nbActions,
+      });
+    const titre = (salarieId: string) => ({
+      obligationId: TITRE_SALARIE,
+      salarieId,
+      delivreLe: new Date("2015-03-01T00:00:00Z"),
+      echeanceLe: new Date("2020-03-01T00:00:00Z"),
+    });
+    const lue = (id: string) => {
+      const l = db.verifications.find((v) => v.id === id)!;
+      return { ...l, archiveLe: l.archiveLe ?? null };
+    };
 
-    const res = await genererCalendrier(ETAB_ID);
+    it("sa ligne qui porte une action est archivée, et n'est plus en retard nulle part", async () => {
+      poserEtablissement([]);
+      poserSalarie("sal-parti", false);
+      db.titres = [titre("sal-parti")];
+      db.verifications = [ligneTitre("v-titre", "sal-parti", 1)];
 
-    expect(res.archived).toBe(0);
-    expect(
-      db.verifications.find((v) => v.id === "v-titre")?.libelleObligation,
-    ).toBe("Attestation médicale");
+      const res = await genererCalendrier(ETAB_ID);
+
+      expect(res.archived).toBe(1);
+      expect(res.deleted).toBe(0);
+      expect(lue("v-titre").archiveLe).toBeInstanceOf(Date);
+      // Le prédicat que lisent le calendrier, le score et la barre latérale,
+      // et l'état que le calendrier peint — « ne s'applique plus », comme Équipe.
+      expect(estVerificationEnRetard(lue("v-titre"), new Date())).toBe(false);
+      expect(classerVerification(lue("v-titre"), new Date())).toBe("archivee");
+      // L'action reste attachée, et le titre reste en base.
+      expect(lue("v-titre").nbActions).toBe(1);
+      expect(db.titres).toHaveLength(1);
+    });
+
+    it("sa ligne sans trace est supprimée", async () => {
+      poserEtablissement([]);
+      poserSalarie("sal-parti", false);
+      db.titres = [titre("sal-parti")];
+      db.verifications = [ligneTitre("v-titre", "sal-parti", 0)];
+
+      const res = await genererCalendrier(ETAB_ID);
+
+      expect(res.deleted).toBe(1);
+      expect(db.verifications.find((v) => v.id === "v-titre")).toBeUndefined();
+      expect(db.titres).toHaveLength(1);
+    });
+
+    it("le titre retiré à A sort la ligne de A, même quand B détient le même titre", async () => {
+      // La variante : l'obligation vit encore, chez B. Tester l'obligation seule
+      // laissait la ligne de A ouverte, en retard, avec son action.
+      poserEtablissement([]);
+      poserSalarie("sal-A", true);
+      poserSalarie("sal-B", true);
+      db.titres = [titre("sal-B")];
+      db.verifications = [
+        ligneTitre("v-A", "sal-A", 1),
+        ligneTitre("v-B", "sal-B", 1),
+      ];
+
+      await genererCalendrier(ETAB_ID);
+
+      expect(lue("v-A").archiveLe).toBeInstanceOf(Date);
+      expect(estVerificationEnRetard(lue("v-A"), new Date())).toBe(false);
+      // Le témoin : la ligne de B reste ouverte, et en retard à sa date.
+      expect(lue("v-B").archiveLe).toBeNull();
+      expect(estVerificationEnRetard(lue("v-B"), new Date())).toBe(true);
+    });
+
+    it("une personne réactivée retrouve sa ligne, désarchivée", async () => {
+      poserEtablissement([]);
+      poserSalarie("sal-1", false);
+      db.titres = [titre("sal-1")];
+      db.verifications = [ligneTitre("v-titre", "sal-1", 1)];
+      await genererCalendrier(ETAB_ID);
+      expect(lue("v-titre").archiveLe).toBeInstanceOf(Date);
+
+      db.salaries[0].actif = true;
+      await genererCalendrier(ETAB_ID);
+
+      expect(lue("v-titre").archiveLe).toBeNull();
+      expect(estVerificationEnRetard(lue("v-titre"), new Date())).toBe(true);
+    });
+
+    it("la passe suivante n'écrit plus rien (idempotence)", async () => {
+      poserEtablissement([]);
+      poserSalarie("sal-parti", false);
+      db.titres = [titre("sal-parti")];
+      db.verifications = [ligneTitre("v-titre", "sal-parti", 1)];
+      await genererCalendrier(ETAB_ID);
+      const archiveLe = lue("v-titre").archiveLe;
+
+      const res = await genererCalendrier(ETAB_ID);
+
+      expect(res.created + res.updated + res.deleted + res.archived).toBe(0);
+      expect(lue("v-titre").archiveLe).toBe(archiveLe);
+    });
   });
 
   it("la ligne d'un titre non générée prend le rythme du référentiel, et sort des retards sur une action seule (NB4, limite 1)", async () => {

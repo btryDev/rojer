@@ -123,8 +123,8 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 1,
-  empreinte: "dc30558aaa682355",
+  version: 2,
+  empreinte: "c758a0b300b63201",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

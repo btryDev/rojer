@@ -38,8 +38,15 @@ import {
  * « à planifier » une ligne sans rendez-vous qui ne porte ni rapport ni statut
  * réalisé. Sans l'incrément, ces lignes n'étaient reprises qu'au hasard d'une
  * mutation sur leur dossier.
+ *
+ * `2` (2026-09-17, décidé par la propriétaire, `lot/salarie-inactif-et-menage`) :
+ * le réconciliateur tient pour disparu le porteur d'une ligne de salarié dont le
+ * titre n'est plus détenu par une personne présente — sortie de l'effectif ou
+ * titre retiré. La ligne est archivée si elle porte une trace, supprimée sinon,
+ * et sort des retards. Sans l'incrément, une ligne de personne partie portant
+ * une action restait comptée en retard jusqu'à la prochaine mutation.
  */
-export const VERSION_MOTEUR_CALENDRIER = 1;
+export const VERSION_MOTEUR_CALENDRIER = 2;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la
