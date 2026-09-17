@@ -1712,6 +1712,11 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   trancher d'où elle repart — sa date actuelle, sa date moins l'ancien rythme
   plus le nouveau, la mise en service —, `datePrevue` étant stockée sans son
   origine.
+  **Renvoi du 2026-09-17** : le constat est plus large que ce paragraphe — une
+  mise en service ajoutée ou corrigée est ignorée de la même façon — et il ne se
+  ferme pas par une branche de plus. Instruit dans l'**ADR-036** (proposée,
+  quatre décisions à confirmer), branche `lot/adr036-fonction-echeance` : la
+  fonction pure et sa table de vérité y sont, rien n'est branché.
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION
