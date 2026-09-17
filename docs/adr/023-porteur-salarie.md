@@ -315,7 +315,8 @@ parce qu'**il n'existe plus**. L'ADR-015 l'a retiré du rail, qui ne porte
 qu'`enRetardTotal` ; la chaîne ne figure plus dans aucun texte rendu, seulement
 dans des commentaires et des noms de tests. Et `RetardsParFamille.verifications`,
 le champ qu'il lisait, **n'a plus aucun lecteur** hors tests : sa correction est
-juste et sans effet visible.
+juste et sans effet visible. *(Le champ est retiré le 2026-09-17,
+`lot/salarie-inactif-et-menage`.)*
 
 La leçon vaut d'être gardée : le commentaire de `retards.ts` décrivait ce badge
 au présent bien avant ce lot. Un commentaire périmé qui dort est une dette ; le

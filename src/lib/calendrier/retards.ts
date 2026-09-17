@@ -42,27 +42,12 @@ export type VentilationEcheances = {
   total: number;
 };
 
-export type RetardsParFamille = VentilationEcheances & {
-  /**
-   * Vérifications périodiques dépassées seules — sous-ensemble de
-   * `parFamille.controle`, qui porte en plus les analyses légionelles
-   * (rangées dans la famille `controle` par le registre).
-   *
-   * **Ce champ n'a aujourd'hui aucun lecteur**, et cette phrase disait le
-   * contraire : « c'est ce nombre que porte le badge "Contrôles matériel" ».
-   * Ce badge a été retiré du rail par l'ADR-015 — la sidebar n'annonce plus
-   * qu'`enRetardTotal`, toutes familles confondues — et la chaîne ne figure
-   * dans aucun texte rendu. Constaté le 2026-08-28, par grep sur `src/app` et
-   * `src/components`.
-   *
-   * Il reste néanmoins **juste** : les lignes à porteur salarié en sortent
-   * depuis qu'elles ont leur famille (ADR-023 § 7), une attestation médicale
-   * n'ayant pas de calendrier réglementaire d'équipement. Un champ mort qui
-   * ment est pire qu'un champ mort ; le retirer est un geste distinct, qui
-   * n'appartient pas au lot de la famille `personnel`.
-   */
-  verifications: number;
-};
+/**
+ * (Le sous-compte `verifications`, qui suivait, est retiré le 2026-09-17 : il
+ * n'avait plus de lecteur depuis que l'ADR-015 a ôté du rail le badge
+ * « Contrôles matériel », constaté le 2026-08-28 et remesuré ce jour-là.)
+ */
+export type RetardsParFamille = VentilationEcheances;
 
 /**
  * Ce que le flux des vérifications apporte, ventilé par nature.
@@ -150,10 +135,7 @@ export function repartirRetards(
     if (e.tone === "alerte") parFamille[e.famille] += 1;
   }
 
-  return {
-    ...totaliser(parFamille),
-    verifications: verifsEnRetard.verification,
-  };
+  return totaliser(parFamille);
 }
 
 /**

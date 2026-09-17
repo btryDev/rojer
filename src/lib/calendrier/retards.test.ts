@@ -78,13 +78,11 @@ describe("repartirRetards", () => {
     expect(r.total).toBe(6);
   });
 
-  it("distingue les vérifications du reste de la famille « controle »", () => {
+  it("additionne les vérifications et le reste de la famille « controle »", () => {
     // Une analyse légionelle est rangée en famille `controle` par le
-    // registre : elle pèse dans `parFamille.controle`, jamais dans le
-    // sous-compte `verifications`.
+    // registre : elle pèse dans `parFamille.controle` avec les vérifications.
     const r = repartirRetards([echeance("controle", "alerte")], verifs(3));
 
-    expect(r.verifications).toBe(3);
     expect(r.parFamille.controle).toBe(4);
   });
 
@@ -127,20 +125,6 @@ describe("repartirRetards", () => {
     expect(apres.total).toBe(avant.total);
     expect(apres.parFamille.controle).toBe(3);
     expect(apres.parFamille.personnel).toBe(2);
-  });
-
-  it("laisse les titres de salariés hors du sous-compte `verifications`", () => {
-    // `verifications` nomme « ce qui a un calendrier réglementaire
-    // d'équipement » : une attestation médicale n'en est pas un.
-    //
-    // Le champ **n'a aucun lecteur aujourd'hui** — le badge « Contrôles
-    // matériel » qu'il servait a été retiré du rail par l'ADR-015. Ce test
-    // ne garde donc rien à l'écran, et son nom ne doit pas le laisser croire ;
-    // il garde la justesse du champ pour le jour où quelqu'un le relira.
-    const r = repartirRetards([], verifs(3, 4));
-
-    expect(r.verifications).toBe(3);
-    expect(r.total).toBe(7);
   });
 });
 
