@@ -169,6 +169,12 @@ que personne n'ouvre est un allègement qui n'existe pas.
 plupart demandent un attribut de modèle, et dans le cadre arrêté le 2026-09-02
 elles se **déclarent**, elles ne s'encodent pas.
 
+**Un assureur doit-il pouvoir employer `renforce_periodicite`, ou seulement
+ajouter une échéance (`obligation_sur_mesure`) ?** Relevé par la propriétaire le
+2026-09-17 en tranchant D1 de l'ADR-036 : un assureur ajoute en général une
+échéance complémentaire, et D1 ne règle que le resserrement d'un rythme du
+référentiel. Décision produit distincte, non tranchée ; ADR-032 et ADR-035.
+
 ---
 
 ## 5. Ce qu'aucun test ne comblera
@@ -1714,9 +1720,10 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   origine.
   **Renvoi du 2026-09-17** : le constat est plus large que ce paragraphe — une
   mise en service ajoutée ou corrigée est ignorée de la même façon — et il ne se
-  ferme pas par une branche de plus. Instruit dans l'**ADR-036** (proposée,
-  quatre décisions à confirmer), branche `lot/adr036-fonction-echeance` : la
-  fonction pure et sa table de vérité y sont, rien n'est branché.
+  ferme pas par une branche de plus. Instruit dans l'**ADR-036** (acceptée le
+  2026-09-17, quatre décisions tranchées), branche
+  `lot/adr036-fonction-echeance` : la fonction pure et sa table de vérité y
+  sont, rien n'est branché — la bascule est le lot 4 de son § 9.
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION

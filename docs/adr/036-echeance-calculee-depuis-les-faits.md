@@ -1,15 +1,16 @@
 # ADR-036 — L'échéance d'une ligne se calcule depuis des faits stockés, par une seule fonction
 
-- **Statut** : **proposée — quatre décisions à confirmer par la propriétaire**
-  (D1 à D4, § 6). Rien n'est branché : la fonction du § 3 existe et est testée
+- **Statut** : **acceptée le 2026-09-17**, par la propriétaire, avec ses quatre
+  décisions tranchées telles que recommandées (D1 à D4, § 6). Proposée le même
+  jour. Rien n'est encore branché : la fonction du § 3 existe et est testée
   (`lot/adr036-fonction-echeance`), aucun fichier du moteur ne l'importe, et un
-  test le garde jusqu'à la bascule.
+  test le garde jusqu'à la bascule (lots 2 à 5, § 9).
 - **Portée, à la bascule** : `src/lib/calendrier/echeance-de-ligne.ts` (neuf),
   `src/lib/calendrier/recalcul-ligne.ts` (neuf), `src/lib/calendrier/generateur.ts`
   (le générateur perd son horloge, le réconciliateur perd ses branches de date),
   `src/lib/calendrier/actions.ts`, `src/lib/rapports/actions.ts` (`rouler` et la
   transmission d'`echeanceHonoree` disparaissent), `prisma/schema.prisma`
-  (`Verification.suiviDepuis`, si D2 est confirmée), les trois scripts de seed
+  (`Verification.suiviDepuis`, D2), les trois scripts de seed
 - **Amendera, au lot 4 et pas avant** : l'ADR-012 § A (« cycle ouvert :
   `datePrevue` ne bouge pas »), l'ADR-034 (le constat B de son § 3, le lot N2,
   la « limite écrite » de la phase A) et l'en-tête de doctrine de
@@ -270,9 +271,17 @@ retard » quand cette date passera**. C'est le bon sens d'erreur — une pièce 
 l'échéance est saisie et passée doit se voir —, et le passage à blanc le
 rangera sous `statut_seul`.
 
-## 6. Les quatre décisions à confirmer
+## 6. Les quatre décisions, tranchées le 2026-09-17
 
-### D1 — Premier délai contre prescription plus stricte
+Chacune est écrite avec son exemple en dates, les options écartées et leur
+raison, pour qu'on sache plus tard ce qui a été pesé — pas seulement ce qui a
+été retenu.
+
+### D1 — Premier délai contre prescription plus stricte : le plus court des deux plafonds
+
+**Tranchée : (a).** Sous une prescription qui renforce le rythme, le premier
+cycle prend le plus court entre le premier délai du référentiel et le rythme de
+la prescription ; sans prescription, le premier délai du référentiel seul.
 
 **L'exemple.** Un récipient sous pression mis en service le **01/12/2025**. Le
 texte dit : première inspection dans les **3 ans**, puis tous les **4 ans**. Sans
@@ -281,9 +290,9 @@ d'aujourd'hui, inchangé. L'assureur impose maintenant un contrôle **annuel**.
 
 | Option | Première échéance affichée |
 |---|---|
-| **(a) le plus court entre « premier délai du référentiel » et « rythme de la prescription »** — *recommandée* | **01/12/2026** |
-| (b) le premier délai du référentiel seul — le code actuel, c'est S7 | 01/12/2028, sur une ligne étiquetée « annuelle » : premier contrôle dans trois ans, puis tous les ans |
-| (c) le plus court entre le premier délai et **tous** les rythmes, référentiel compris | 01/12/2026 ici — mais fausse un autre texte, voir ci-dessous |
+| **(a) le plus court entre « premier délai du référentiel » et « rythme de la prescription »** — *retenue* | **01/12/2026** |
+| (b) le premier délai du référentiel seul — le code actuel, c'est S7 — *écartée* | 01/12/2028, sur une ligne étiquetée « annuelle » : premier contrôle dans trois ans, puis tous les ans |
+| (c) le plus court entre le premier délai et **tous** les rythmes, référentiel compris — *écartée* | 01/12/2026 ici — mais fausse un autre texte, voir ci-dessous |
 
 **Pourquoi pas (c).** Un texte « première vérification à **2 ans**, puis
 **annuelle** » — sans aucune prescription —, appareil du 01/12/2025 : (c) rend le
@@ -291,7 +300,17 @@ d'aujourd'hui, inchangé. L'assureur impose maintenant un contrôle **annuel**.
 compare donc **jamais** le premier délai au rythme du référentiel : les deux
 viennent du même texte, qui a voulu les deux.
 
-**Écart relevé avec la formule du plan, à connaître avant de confirmer.** Écrite
+**Ce que D1 couvre, et ce qu'elle ne couvre pas — relevé par la propriétaire en
+tranchant.** Un assureur, en général, **ajoute** une échéance complémentaire :
+c'est l'effet `obligation_sur_mesure` de l'ADR-035, une ligne à part, avec son
+propre rythme, qui n'a pas de premier délai à arbitrer. D1 ne concerne donc que
+l'effet `renforce_periodicite` — une prescription qui resserre le rythme d'une
+obligation du référentiel sur un appareil. La question « un assureur doit-il
+pouvoir employer `renforce_periodicite`, ou seulement ajouter une échéance ? »
+est une **décision produit distincte**, qui n'est pas tranchée ici : elle est
+inscrite aux décisions en attente de `docs/chantiers-ouverts.md` § 4.
+
+**Écart relevé avec la formule du plan.** Écrite
 littéralement — `base = premierDelai ?? référentiel`, puis « l'effectif s'il est
 plus strict que la base » —, elle tombe dans (c) quand il n'y a **pas** de
 prescription : l'effectif est alors le rythme du référentiel, et il est comparé
@@ -305,15 +324,19 @@ gardait ici, alors que l'appelant a l'information sous la main ; relecture du
 mais la première qui l'aurait été se serait trompée en silence. Une mutation qui
 rétablit la comparaison fait rougir la table.
 
-### D2 — Une colonne explicite `suiviDepuis`
+### D2 — L'origine du suivi est une colonne explicite, `suiviDepuis`
+
+**Tranchée : (a).** `Verification.suiviDepuis`, écrite une fois à la création
+avec le `now` du calcul, jamais modifiée ; migration additive, remplie depuis
+`createdAt` pour les lignes existantes.
 
 **L'exemple.** S1 : une obligation d'établissement suivie depuis le
 **15/06/2026**, jamais contrôlée. Au 17/09 : 94 jours de retard.
 
 | Option | Ce qui s'affiche |
 |---|---|
-| **(a) colonne `suiviDepuis`, écrite une fois à la création, jamais modifiée** — *recommandée* | 15/06, 94 jours |
-| (b) lire `createdAt`, qui existe déjà et que personne ne lit | 15/06, 94 jours — **la même chose**, dans le cas courant |
+| **(a) colonne `suiviDepuis`, écrite une fois à la création, jamais modifiée** — *retenue* | 15/06, 94 jours |
+| (b) lire `createdAt`, qui existe déjà et que personne ne lit — *écartée* | 15/06, 94 jours — **la même chose**, dans le cas courant |
 
 **Les deux options affichent la même chose aujourd'hui, et il faut le dire** :
 la décision ne se joue pas sur un écran. Une première rédaction de cet ADR
@@ -342,11 +365,15 @@ Ce qui tient pour (a) :
 ligne (Vercel la joue dès la preview) : `ADD COLUMN … NOT NULL DEFAULT
 CURRENT_TIMESTAMP`, puis `UPDATE … SET "suiviDepuis" = "createdAt"` —, un champ
 de plus dans `faux-prisma.ts` et dans les fixtures, et une colonne que (b)
-n'aurait pas demandée. (b) coûte zéro migration. La recommandation reste (a),
-pour la première raison ; elle n'est pas écrasante, et c'est à la propriétaire
-de dire si un nom vaut une colonne.
+n'aurait pas demandée. (b) coûte zéro migration. (a) a été retenue pour la
+première raison : un nom vaut une colonne quand il empêche une date de servir à
+deux choses sans le dire.
 
-### D3 — Un changement de rythme peut faire passer une ligne « à planifier », en retard
+### D3 — Un changement de rythme peut faire passer une ligne « à planifier », en retard : accepté
+
+**Tranchée : (a).** La règle 4 s'évalue au jour de l'origine, sans exception
+pour le rythme qui change ; une première échéance passée avant l'origine rend
+« à planifier », daté de l'origine, en retard dès le lendemain.
 
 **L'exemple.** Mise en service le **01/01/2026**. La ligne est créée le
 **01/09/2026** (l'appareil est déclaré ce jour-là). Rythme annuel : première
@@ -357,15 +384,18 @@ Une prescription **semestrielle** arrive. La première échéance devient le
 
 | Option | Ce qui s'affiche |
 |---|---|
-| **(a) accepter la conséquence** — *recommandée* | « à planifier » au **01/09/2026**, donc **en retard dès le 02/09** (16 jours au 17/09). C'est exactement ce que la ligne aurait affiché si la prescription avait existé le jour de la création. Le dirigeant fait faire le contrôle, dépose le rapport, et la ligne repart à rapport + 6 mois |
-| (b) garder la première échéance, même antérieure à l'origine | « planifiée » au 01/07/2026 : **78 jours de retard** au 17/09, comptés sur deux mois où Rojer ne suivait pas l'appareil et où la prescription n'existait pas. C'est abandonner la règle 4 bis : un appareil de 2018 afficherait sept ans de retard |
-| (c) repartir de la date de la prescription | demande un fait que la fonction ne reçoit pas (`dateDocument`). Hors périmètre, nommé au § 8 |
+| **(a) accepter la conséquence** — *retenue* | « à planifier » au **01/09/2026**, donc **en retard dès le 02/09** (16 jours au 17/09). C'est exactement ce que la ligne aurait affiché si la prescription avait existé le jour de la création. Le dirigeant fait faire le contrôle, dépose le rapport, et la ligne repart à rapport + 6 mois |
+| (b) garder la première échéance, même antérieure à l'origine — *écartée* | « planifiée » au 01/07/2026 : **78 jours de retard** au 17/09, comptés sur deux mois où Rojer ne suivait pas l'appareil et où la prescription n'existait pas. C'est abandonner la règle 4 bis : un appareil de 2018 afficherait sept ans de retard |
+| (c) repartir de la date de la prescription — *écartée* | demande un fait que la fonction ne reçoit pas (`dateDocument`). Hors périmètre, nommé au § 8 |
 
-**Ce que (a) coûte, dit honnêtement** : une ligne qui était tranquille jusqu'au
-01/01/2027 devient rouge le lendemain de la saisie de la prescription. C'est le
-prix de l'indépendance à l'ordre des saisies — le même que S1.
+**Ce que (a) coûte, accepté en le sachant** : une ligne qui était tranquille
+jusqu'au 01/01/2027 devient rouge le lendemain de la saisie de la prescription.
+C'est le prix de l'indépendance à l'ordre des saisies — le même que S1.
 
 ### D4 — L'origine n'est pas remise à zéro quand une ligne archivée est rouverte
+
+**Tranchée : (a).** `suiviDepuis` est immuable ; le désarchivage n'y touche
+pas, pas plus que l'adoption.
 
 **L'exemple.** Un extincteur sans date de mise en service. Ligne créée le
 **01/03/2026**. Le 10/03, un rapport « non vérifiable » est déposé — la ligne
@@ -374,8 +404,8 @@ pas supprimée), puis réactivé le **01/09/2026**.
 
 | Option | Ce qui s'affiche au 17/09 |
 |---|---|
-| **(a) l'origine reste le 01/03** — *recommandée* | « à planifier » au 01/03, **200 jours de retard**. Identique à aujourd'hui pour une ligne qui porte une trace |
-| (b) l'origine repart à la réouverture | « à planifier » au 01/09, 16 jours. Désactiver puis réactiver un appareil deviendrait le moyen d'effacer un retard — sur une ligne qui a justement une pièce au dossier |
+| **(a) l'origine reste le 01/03** — *retenue* | « à planifier » au 01/03, **200 jours de retard**. Identique à aujourd'hui pour une ligne qui porte une trace |
+| (b) l'origine repart à la réouverture — *écartée* | « à planifier » au 01/09, 16 jours. Désactiver puis réactiver un appareil deviendrait le moyen d'effacer un retard — sur une ligne qui a justement une pièce au dossier |
 
 **Ce que (a) coûte** : un appareil réellement hors service cinq mois affiche un
 retard qui compte ces cinq mois. Le produit ne sait pas distinguer un arrêt réel
