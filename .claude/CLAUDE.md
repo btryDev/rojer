@@ -514,6 +514,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     d'autorité (ou une demande d'assureur, ADR-032) renforce une périodicité ou
     crée une obligation sur mesure (**renumérotée le 2026-09-15, anciennement
     014**)
+36. **036** — L'échéance d'une ligne se calcule depuis des faits stockés, par
+    une seule fonction (**acceptée le 2026-09-17**, amendera l'ADR-012 § A et
+    l'ADR-034 à la bascule). Titre, dernier rapport réalisé, mise en service +
+    premier pas, sinon « à planifier » à l'origine du suivi (`suiviDepuis`) ;
+    la fonction ne lit aucune horloge, et le réconciliateur ne garde que ses
+    protections. Livrée sans branchement au lot 1 ; bascule au lot 4, moteur 3
 
 **Sept ADR ont été déplacées le 2026-09-01** (« six » disait la phrase, qui en
 énumère sept), chacune portant en tête le renvoi
