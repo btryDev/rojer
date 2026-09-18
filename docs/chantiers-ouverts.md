@@ -1724,6 +1724,13 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   2026-09-17, quatre décisions tranchées), branche
   `lot/adr036-fonction-echeance` : la fonction pure et sa table de vérité y
   sont, rien n'est branché — la bascule est le lot 4 de son § 9.
+  **Lot 3, 2026-09-18** (`lot/adr036-demos-en-faits`) : plus aucun script ne pose
+  une date qu'aucun fait n'explique. `etaler-echeances-demo.ts` et
+  `seed --planifier` sont retirés ; `seed-dossier-complet.ts` écrit
+  `suiviDepuis` (J−240, la date de l'avenant pour l'assureur) et prend date et
+  statut d'`echeanceDeLigne`. Garde : `calendrier/seeds-en-faits.test.ts`. Les
+  vingt et une dates déjà posées en production restent : la bascule les
+  renverra à « à planifier ».
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION

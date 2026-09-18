@@ -127,6 +127,8 @@ import {
   genererVerificationsSurMesure,
   type TitreDeclare,
 } from "@/lib/calendrier/generateur";
+import { echeanceDeLigne } from "@/lib/calendrier/echeance-de-ligne";
+import { faitsDeLigne } from "@/lib/calendrier/decision-par-faits";
 import { obligationParId } from "@/lib/referentiels/conformite";
 
 const prisma = new PrismaClient();
@@ -153,22 +155,23 @@ function jour(iso: string): Date {
 }
 
 // ---------------------------------------------------------------------------
-// La bande de calendrier RÉSERVÉE à l'échéance d'assureur.
+// Depuis quand Rojer « suit » ce dossier : huit mois (ADR-036).
 //
-// Le widget d'échéances en variante frise regroupe les échéances trop proches
-// pour être distinguées à l'œil : à l'échelle « 12 mois », le seuil de
-// `ECART_MIN_PX` (92 px) vaut ~35 jours (cf. `lib/dashboard/frise.ts`). Une
-// ligne marquée « engagement d'assurance » noyée dans une grappe n'a plus de
-// carte à elle, et la pastille ambre de l'ADR-032 devient invisible — c'est ce
-// qui a empêché de la juger au contrôle du 2026-09-02.
+// C'est le SEUL fait que ce script invente pour le calendrier, et c'est un
+// fait que le modèle stocke (`Verification.suiviDepuis`). Toutes les dates de
+// ligne en découlent par `echeanceDeLigne`, avec les mises en service déclarées
+// plus haut et les titres des salariés — aucune n'est plus posée à la main.
 //
-// On lui réserve donc une bande vide de part et d'autre : aucune autre échéance
-// n'est posée entre J+112 et J+208, et elle tombe au milieu, à J+160. La marge
-// de 48 jours tient largement au-dessus des ~35 jours de regroupement.
+// JUSQU'AU 2026-09-18 LE SCRIPT ÉTALAIT LES DATES LUI-MÊME (`repartir`, une
+// bande réservée à l'échéance d'assureur à J+160). Le passage à blanc de
+// l'ADR-036 les a classées `date_arbitraire` : aucun fait ne les expliquait,
+// et le moteur qui recalcule depuis les faits (lot 4) les aurait toutes
+// renvoyées à « à planifier ». Le calendrier démontré est désormais celui que
+// le produit calcule : ce qui n'a ni mise en service exploitable ni rapport
+// reste « à planifier » depuis l'origine du suivi, donc en retard — c'est la
+// réponse juste pour un dossier dont aucun contrôle n'a été déposé.
 // ---------------------------------------------------------------------------
-const ASSUREUR_JOUR = 160;
-const BANDE_RESERVEE_DEBUT = 112;
-const BANDE_RESERVEE_FIN = 208;
+const SUIVI_DEPUIS = jours(-240);
 
 // ===========================================================================
 // 1. L'établissement — un restaurant, secteur cible du produit.
@@ -1623,89 +1626,53 @@ async function main(): Promise<void> {
     ...genererVerificationsSurMesure(surMesure, { now: MAINTENANT }),
   ];
 
-  // Les lignes issues d'un titre portent une date qui vient de la pièce
-  // détenue par le salarié : elle fait foi et n'est jamais réétalée.
-  const surTitre = aGenerer.filter((v) => v.salarieId !== null);
-  const aEtaler = aGenerer.filter(
-    (v) => v.salarieId === null && v.prescriptionId === null,
-  );
-  const surPrescription = aGenerer.filter((v) => v.prescriptionId !== null);
-
-  // Étalement. Sans lui, tout ce qui n'a pas de mise en service exploitable
-  // atterrit à « à planifier » aujourd'hui : le calendrier montre une colonne
-  // et rien d'autre, et un contrôle visuel n'y lit rien. On simule donc la
-  // programmation qu'un dirigeant aurait faite — quelques retards échelonnés,
-  // une poignée dans les trente jours, le reste sur la fenêtre consultable —
-  // EN SAUTANT la bande réservée à l'échéance d'assureur.
-  const lignes = repartir(aEtaler.length);
-
+  // CHAQUE DATE SORT DES FAITS, PAR LA FONCTION DU PRODUIT (ADR-036). Le
+  // générateur apporte ses `sources` — premier pas, mise en service, date du
+  // titre —, l'origine du suivi est `SUIVI_DEPUIS`, et `echeanceDeLigne` rend
+  // la date et le statut. La `datePrevue` que le générateur calcule lui-même,
+  // relative à l'horloge, n'est pas écrite : la ligne en base est donc déjà
+  // celle que le moteur recalculera après la bascule (lot 4), et l'ancien
+  // moteur, qui garde la date d'un cycle ouvert, la laisse en l'état.
+  //
+  // L'échéance d'assureur ne peut pas être suivie avant que l'avenant existe :
+  // son origine est la date du document, pas `SUIVI_DEPUIS`.
   const operations: Prisma.PrismaPromise<unknown>[] = [];
-  for (const [i, v] of aEtaler.entries()) {
-    const decalage = lignes[i];
+  const compte = { titre: 0, assureur: 0, autres: 0 };
+  for (const v of aGenerer) {
+    const origine = v.prescriptionId !== null ? prescription.dateDocument : SUIVI_DEPUIS;
+    if (v.sources === undefined) {
+      // Le repli silencieux de `faitsDeLigne` ferait perdre la mise en service :
+      // un seed ne l'accepte pas.
+      throw new Error(`Ligne générée sans sources : ${v.cleUnique}`);
+    }
+    const echeance = echeanceDeLigne(faitsDeLigne(v, null, null, origine));
     operations.push(
       prisma.verification.create({
         data: {
           etablissementId: etablissement.id,
           equipementId: v.equipementId,
-          salarieId: null,
-          obligationId: v.obligationId,
-          libelleObligation: v.libelleObligation,
-          periodicite: v.periodicite as Periodicite,
-          realisateurRequis: v.realisateurRequis as Realisateur[],
-          datePrevue: jours(decalage),
-          // Une date arrêtée, passée ou non : le retard se lit sur elle.
-          statut: "planifiee" as StatutVerification,
-          prescriptionId: null,
-        },
-      }),
-    );
-  }
-  for (const v of surTitre) {
-    operations.push(
-      prisma.verification.create({
-        data: {
-          etablissementId: etablissement.id,
-          equipementId: null,
           salarieId: v.salarieId,
           obligationId: v.obligationId,
           libelleObligation: v.libelleObligation,
           periodicite: v.periodicite as Periodicite,
           realisateurRequis: v.realisateurRequis as Realisateur[],
-          datePrevue: v.datePrevue,
-          statut: v.statut as StatutVerification,
-          prescriptionId: null,
+          datePrevue: echeance.datePrevue,
+          statut: echeance.statut as StatutVerification,
+          suiviDepuis: origine,
+          prescriptionId: v.prescriptionId,
         },
       }),
     );
-  }
-  // L'échéance d'assureur, SEULE dans sa bande. Le générateur la pose à
-  // « aujourd'hui, à planifier » (cf. `genererVerificationsSurMesure`) : elle
-  // se retrouverait alors dans la grappe du jour, et sa pastille contractuelle
-  // n'aurait plus de carte à elle dans la frise. On lui donne donc un rendez-vous
-  // arrêté, à J+160, à 48 jours de toute autre ligne.
-  for (const v of surPrescription) {
-    operations.push(
-      prisma.verification.create({
-        data: {
-          etablissementId: etablissement.id,
-          equipementId: v.equipementId,
-          salarieId: null,
-          obligationId: v.obligationId,
-          libelleObligation: v.libelleObligation,
-          periodicite: v.periodicite as Periodicite,
-          realisateurRequis: v.realisateurRequis as Realisateur[],
-          datePrevue: jours(ASSUREUR_JOUR),
-          statut: "planifiee",
-          prescriptionId: prescription.id,
-        },
-      }),
-    );
+    if (v.salarieId !== null) compte.titre += 1;
+    else if (v.prescriptionId !== null) compte.assureur += 1;
+    else compte.autres += 1;
   }
 
   await prisma.$transaction(operations);
   console.log(
-    `  calendrier : ${aEtaler.length} échéances d'équipement et d'établissement, ` +
-      `${surTitre.length} de titre, ${surPrescription.length} d'assureur`,
+    `  calendrier : ${compte.autres} échéances d'équipement et d'établissement, ` +
+      `${compte.titre} de titre, ${compte.assureur} d'assureur — suivies depuis ` +
+      `le ${SUIVI_DEPUIS.toISOString().slice(0, 10)}`,
   );
 
   // -------------------------------------------------------------------------
@@ -1770,45 +1737,6 @@ async function main(): Promise<void> {
   console.log(`  ouvrez        : /etablissements/${etablissement.id}`);
 
   console.log(`  compte        : ${userId} — connectez-vous avec lui, c'est tout.`);
-}
-
-/**
- * Répartit `n` échéances sur la fenêtre consultable en SAUTANT la bande
- * réservée à l'échéance d'assureur.
- *
- * Trois familles, parce qu'un calendrier d'une seule couleur ne montre rien :
- * quelques retards échelonnés (la frise défile aussi vers le passé), une
- * poignée dans les trente jours (le seuil « proche » du produit), le reste
- * étalé jusqu'à l'horizon de deux ans.
- */
-function repartir(n: number): number[] {
-  const RETARDS = [-96, -68, -41, -19, -5];
-  const PROCHES = [3, 11, 19, 26];
-  const out: number[] = [];
-
-  for (let i = 0; i < n; i += 1) {
-    if (i < RETARDS.length) {
-      out.push(RETARDS[i]);
-      continue;
-    }
-    if (i < RETARDS.length + PROCHES.length) {
-      out.push(PROCHES[i - RETARDS.length]);
-      continue;
-    }
-    const rang = i - RETARDS.length - PROCHES.length;
-    const restants = Math.max(1, n - RETARDS.length - PROCHES.length);
-    // Fenêtre lointaine amputée de la bande réservée : 34 → 112, puis 208 → 700.
-    const AVANT = BANDE_RESERVEE_DEBUT - 34; // 78 jours utiles
-    const APRES = 700 - BANDE_RESERVEE_FIN; // 492 jours utiles
-    const t = rang / restants; // ∈ [0, 1)
-    const position = t * (AVANT + APRES);
-    out.push(
-      position < AVANT
-        ? Math.round(34 + position)
-        : Math.round(BANDE_RESERVEE_FIN + (position - AVANT)),
-    );
-  }
-  return out;
 }
 
 main()
