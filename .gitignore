@@ -77,6 +77,8 @@ docker-compose.override.yml
 Rojer-*.pdf
 
 # Journal de l'étalement des dossiers de démo : l'état d'une base, pas du code.
+# Le script qui l'écrivait est retiré (2026-09-18, ADR-036 lot 3) ; l'entrée
+# reste tant qu'un journal ancien peut traîner sur une machine.
 /scripts/.etalement/
 
 # Export du passage à blanc (ADR-036, lot 2c) : l'état des calendriers d'une
