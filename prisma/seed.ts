@@ -9,13 +9,14 @@
  *
  *   pnpm db:seed                       → premier établissement trouvé
  *   pnpm db:seed <etablissementId>
- *   pnpm db:seed --planifier           → pose aussi des dates sur les
- *                                        vérifications encore à planifier
  *
- * `--planifier` est explicite parce qu'il ÉCRIT sur des lignes métier
- * existantes (datePrevue et statut de `Verification`), contrairement au reste
- * du seed qui ne fait qu'ajouter ses propres actions. À réserver à une base de
- * développement.
+ * L'option `--planifier`, qui posait des dates de J−80 à J+730 sur les
+ * vérifications encore « à planifier », a été retirée le 2026-09-18 (ADR-036,
+ * lot 3). Ces dates ne s'expliquaient par aucun fait — ni mise en service, ni
+ * rapport, ni origine du suivi — et le moteur qui recalcule depuis les faits
+ * les aurait renvoyées à « à planifier » : c'était simuler une programmation
+ * que le produit ne stocke pas. Une frise remplie se juge sur un dossier dont
+ * les FAITS sont déclarés (`pnpm seed:complet`).
  *
  * L'option `--serie`, qui semait les occurrences suivantes de chaque
  * vérification sur 24 mois, a été retirée : la table `Verification` porte
@@ -43,9 +44,6 @@ const prisma = new PrismaClient();
 
 const MARQUEUR = "[seed]";
 const JOUR = 86400000;
-
-/** Fenêtre consultable de la frise, en jours — cf. `lib/dashboard/frise`. */
-const HORIZON = 730;
 
 /** Date décalée de `jours` par rapport à maintenant (négatif = passé). */
 function dans(jours: number): Date {
@@ -165,62 +163,8 @@ const PRESTATAIRES: {
   },
 ];
 
-/**
- * Étale les vérifications encore `a_planifier` sur les deux ans à venir.
- *
- * Sans ça, un établissement dont le calendrier a été généré mais jamais
- * planifié n'a aucune échéance datée : la frise est vide, et c'est exact.
- * Cette étape simule le travail de programmation qu'un dirigeant ferait
- * dans l'app, pour pouvoir juger le rendu d'une frise remplie.
- *
- * Répartition : une poignée reste dépassée, étalée sur les trois mois
- * écoulés (la frise défile aussi vers le passé, il faut donc y trouver
- * quelque chose), le reste s'échelonne sur la fenêtre consultable.
- */
-async function planifierVerifications(etablissementId: string) {
-  const aPlanifier = await prisma.verification.findMany({
-    where: { etablissementId, statut: "a_planifier" },
-    select: { id: true },
-    orderBy: { datePrevue: "asc" },
-  });
-
-  if (aPlanifier.length === 0) {
-    console.log("  aucune vérification à planifier");
-    return;
-  }
-
-  // ~15 % restent en retard, le reste part dans le futur.
-  const nbEnRetard = Math.max(1, Math.round(aPlanifier.length * 0.15));
-  const nbFutures = aPlanifier.length - nbEnRetard;
-
-  let n = 0;
-  for (const [i, v] of aPlanifier.entries()) {
-    const jours =
-      i < nbEnRetard
-        ? // Retards répartis entre −80 et −3 jours : la voie du passé
-          // n'est ni vide ni tassée sur la veille.
-          -(3 + Math.round((i / Math.max(1, nbEnRetard - 1)) * 77))
-        : Math.round(((i - nbEnRetard) / Math.max(1, nbFutures - 1)) * HORIZON) + 4;
-
-    await prisma.verification.update({
-      where: { id: v.id },
-      data: {
-        datePrevue: dans(jours),
-        // Une date arrêtée, passée ou non : le retard se lit sur elle.
-        statut: "planifiee",
-      },
-    });
-    n += 1;
-  }
-
-  console.log(
-    `  ${n} vérification(s) programmée(s) — dont ${nbEnRetard} laissée(s) en retard`,
-  );
-}
-
 async function main() {
   const args = process.argv.slice(2);
-  const planifier = args.includes("--planifier");
   const cible = args.find((a) => !a.startsWith("--"));
 
   const etab = cible
@@ -404,14 +348,6 @@ async function main() {
   // Pas de version DUERP semée : une version est un document à valeur
   // légale (figé, conservé 40 ans) — validez-en une dans l'app pour voir
   // apparaître l'échéance « mise à jour annuelle » dans Documents.
-
-  if (planifier) {
-    await planifierVerifications(etab.id);
-  } else {
-    console.log(
-      "  (vérifications inchangées — relancez avec --planifier pour leur poser des dates)",
-    );
-  }
 
   console.log("Terminé.");
 }

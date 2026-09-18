@@ -192,16 +192,23 @@ se faire ailleurs.
 
 Le dossier semé porte 3 zones, 10 équipements sur 8 domaines, 5 salariés et
 7 titres, un DUERP validé, 3 prestataires aux attestations échelonnées, permis de
-feu, plan de prévention, carnet sanitaire, accessibilité publiée, 36 échéances
-dont 6 en retard, et 28 actions. La prescription d'assureur y tombe **seule à
+feu, plan de prévention, carnet sanitaire, accessibilité publiée, ~~36 échéances
+dont 6 en retard~~, et 28 actions. ~~La prescription d'assureur y tombe **seule à
 J+160** — sa voisine à 48 jours, au-dessus du seuil de regroupement de la frise —
 pour que la pastille de l'ADR-032 soit jugeable, ce qu'elle n'était pas le
-2026-09-02.
+2026-09-02.~~
 
-**Le calendrier semé est un point fixe de sa propre régénération**, vérifié à
+~~**Le calendrier semé est un point fixe de sa propre régénération**, vérifié à
 blanc : `0 à créer · 0 à modifier · 0 à supprimer · 36 inchangées`. Ouvrir
 `/calendrier` ne le déplace donc pas — ce qui est ce qu'il faut, l'ouverture de
-cet écran écrivant (§ 7).
+cet écran écrivant (§ 7).~~
+
+**Périmé le 2026-09-18.** Ces chiffres, l'assureur seul à J+160 et le point fixe
+venaient de la répartition à la main (`repartir`) et de la bande réservée,
+retirées au lot 3 de l'ADR-036 : les dates sortent désormais des faits, et le
+calendrier semé est presque entièrement « à planifier » en retard, l'assureur
+compris (J−52). Voir l'entrée « Lot 3, 2026-09-18 » au § 11. Non remesuré : rien
+n'a été exécuté.
 
 ~~**Ce qui reste** : la passe elle-même, sur les sept écrans que personne n'a
 jamais pu regarder avec des données — `/equipe`, `/duerp`, `/permis-feu`,
@@ -1724,6 +1731,13 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   2026-09-17, quatre décisions tranchées), branche
   `lot/adr036-fonction-echeance` : la fonction pure et sa table de vérité y
   sont, rien n'est branché — la bascule est le lot 4 de son § 9.
+  **Lot 3, 2026-09-18** (`lot/adr036-demos-en-faits`) : plus aucun script ne pose
+  une date qu'aucun fait n'explique. `etaler-echeances-demo.ts` et
+  `seed --planifier` sont retirés ; `seed-dossier-complet.ts` écrit
+  `suiviDepuis` (J−240, la date de l'avenant pour l'assureur) et prend date et
+  statut d'`echeanceDeLigne`. Garde : `calendrier/seeds-en-faits.test.ts`. Les
+  vingt et une dates déjà posées en production restent : la bascule les
+  renverra à « à planifier ».
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION

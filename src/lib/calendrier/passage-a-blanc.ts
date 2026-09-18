@@ -41,7 +41,9 @@
 //   date_arbitraire      la date en base n'est expliquée par AUCUN fait — ni
 //                        l'origine, ni la mise en service, ni une ancre plus un
 //                        rythme, ni la pièce. Les seeds de démonstration en
-//                        posent (`etaler-echeances-demo.ts`) ;
+//                        ont posé (`etaler-echeances-demo.ts`, retiré au lot 3
+//                        avec `seed --planifier`) : les dossiers existants les
+//                        portent encore ;
 //   inexplique           la date en base est expliquée par un fait, et pourtant
 //                        aucun motif ci-dessus ne nomme l'écart. C'est le
 //                        critère de sortie : ZÉRO `inexplique`.
