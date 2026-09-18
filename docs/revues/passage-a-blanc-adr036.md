@@ -21,9 +21,12 @@ aucune méthode d'écriture Prisma (un test relit son texte pour le garantir :
 
 - La migration `20260918090000_verification_suivi_depuis` doit être **appliquée
   sur la base lue** : le script lit la colonne `Verification.suiviDepuis`. Elle
-  est appliquée par le premier build Vercel qui suit la fusion de la branche
-  (`prisma migrate deploy`), previews comprises. Avant cela, le script échoue en
-  `P2022` (colonne inconnue) — c'est la réponse juste, pas un défaut.
+  est appliquée par le premier build Vercel qui suit la fusion dans `main`
+  (`prisma migrate deploy`). ~~previews comprises~~ — les previews sont
+  abandonnées depuis le 2026-09-18 (`docs/chantiers-ouverts.md` § 13), donc la
+  migration n'est jouée qu'une fois, au build de production. Avant cela, le
+  script échoue en `P2022` (colonne inconnue) — c'est la réponse juste, pas un
+  défaut.
 - `.env` pointe la base de **production**. Le script l'affiche en tête, mot de
   passe masqué : vérifier cette ligne avant de lire la suite.
 - Aucun nom de personne ni d'établissement n'est imprimé — des identifiants

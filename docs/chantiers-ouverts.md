@@ -1861,3 +1861,66 @@ La version du moteur (`VERSION_MOTEUR_CALENDRIER`) se monte à la main :
 `version-moteur.test.ts` le rappelle, il ne le garantit pas. La tâche
 quotidienne ne change rien à ce point — elle répare ce que le repère désigne,
 et un repère qu'on a oublié de monter ne désigne rien.
+
+## 13. Les previews Vercel sont abandonnées — 2026-09-18
+
+### Le fait, enfin vérifié
+
+Les previews partagent la base de PRODUCTION. La question était ouverte depuis
+le 2026-09-14, écrite au § 11 (« Non vérifié ici : que les previews partagent la
+base de production »), et la réponse est venue de l'écran des variables du
+projet Vercel : `DATABASE_URL` y porte la portée **Production, Preview, and
+Development**, une seule valeur pour les trois. Une preview lit donc les vrais
+dossiers, et tout ce qu'elle écrit est écrit pour de bon.
+
+### La décision
+
+**On n'utilise plus les previews.** On éprouve en local — suite complète,
+`tsc`, `eslint`, `next build` —, puis on fusionne dans `main` et on regarde la
+production. C'est la propriétaire qui l'a tranché le 2026-09-18, après la panne
+Vercel du même jour (« Elevated Errors Triggering Deployments », 20 h 32 UTC),
+qui a laissé le commit `a1e4f22` sans aucun déploiement.
+
+Ce que la décision change dans notre façon de travailler :
+
+- **plus de contrôle visuel avant fusion** : il se fait sur la production, après,
+  et en lecture seule — ouvrir un tableau de bord ou un calendrier ÉCRIT
+  (`assurerCalendrierAJour`), une fiche ou un registre non ;
+- **la preuve avant fusion est locale** : tests, types, lint, compilation, plus
+  une relecture neutre. Un changement d'écran qu'aucun test ne tient se regarde
+  donc après coup, et c'est le prix assumé ;
+- **les migrations ne sont plus jouées qu'une fois**, au build de production qui
+  suit la fusion. Le risque « une preview d'une branche ancienne tombe en P2022 »
+  disparaît de lui-même, ainsi que celui d'une migration appliquée avant que son
+  code ne soit en ligne.
+
+### Ce qui reste en place, et pourquoi
+
+- **La garde `VERCEL_ENV === "preview"`** d'`assurerCalendrierAJour`
+  (`src/lib/calendrier/regeneration-sure.ts:73`) : elle ne sert plus à rien tant
+  qu'aucune preview ne tourne, et elle coûte une ligne. Elle reste comme
+  assurance — le jour où une preview repart, par réglage ou par accident, elle
+  empêche de recalculer les dossiers réels avec le référentiel d'une branche.
+  À retirer seulement le jour où les previews auront leur propre base.
+- **Les mentions de preview dans les ADR et les revues** décrivent ce qui était
+  vrai quand elles ont été écrites : elles ne sont pas réécrites, elles sont
+  amendées là où elles donnent une consigne (ADR-036 § 9, revue du passage à
+  blanc).
+
+### À faire dans Vercel, par la propriétaire
+
+1. **Couper les déploiements de preview** : Settings → Git, désactiver les
+   déploiements des branches autres que `main` (« Ignored Build Step », ou la
+   liste des branches déployées).
+2. **`DATABASE_URL` marquée « Needs Attention »** : vérifier le motif exact
+   au survol. Si c'est la recommandation de marquer la variable « Sensitive »,
+   la suivre — la valeur cesse d'être lisible dans l'interface et les journaux,
+   sans rien changer au fonctionnement.
+
+### Ce que ça n'a pas réglé, et qui reste ouvert
+
+Une base propre pour les tests : ni preview, ni local peuplé. `docs/rgpd.md` et
+le § 5 disent déjà qu'aucun seed n'amorce une base vide, si bien qu'un contrôle
+visuel sur données réalistes n'existe nulle part ailleurs qu'en production.
+C'est le vrai manque ; les previews n'étaient qu'une façon coûteuse de le
+contourner.

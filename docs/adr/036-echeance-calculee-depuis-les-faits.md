@@ -457,7 +457,11 @@ d'un aller-retour ; dans le doute, l'incertitude ne réduit jamais la couverture
 ## 9. Le plan de bascule
 
 Chaque lot se fusionne seul, après relecture neutre, suite complète en UTC, `tsc`,
-`eslint`, `next build`, preview et point avec la propriétaire — qui pousse `main`.
+`eslint`, `next build`, ~~preview~~ et point avec la propriétaire — qui pousse
+`main`. **Plus de preview depuis le 2026-09-18** : elles partageaient la base de
+production, et la propriétaire les a abandonnées — la preuve est locale, le
+contrôle visuel se fait sur la production après la fusion
+(`docs/chantiers-ouverts.md` § 13).
 
 | Lot | Contenu | Preuve |
 |---|---|---|
