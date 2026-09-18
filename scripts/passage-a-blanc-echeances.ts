@@ -39,6 +39,8 @@ import {
   CATEGORIES,
   comparerStrategies,
   planVide,
+  projeterLigne,
+  projeterPlan,
   rejouerPlusTard,
   type Categorie,
   type Comparaison,
@@ -56,9 +58,25 @@ function hoteMasque(url: string | undefined): string {
   }
 }
 
+/**
+ * La valeur d'une option, refusée si elle manque ou si c'en est une autre.
+ *
+ * `--json --etablissement x` écrivait un fichier nommé `--etablissement` et
+ * perdait l'identifiant en silence (relecture neutre du 2026-09-18). Une option
+ * sans valeur est une faute de frappe, pas une intention : on s'arrête.
+ */
 function argument(nom: string): string | undefined {
   const i = process.argv.indexOf(nom);
-  return i === -1 ? undefined : process.argv[i + 1];
+  if (i === -1) return undefined;
+  const valeur = process.argv[i + 1];
+  if (valeur === undefined || valeur.startsWith("--")) {
+    console.error(
+      `${nom} attend une valeur` +
+        (valeur === undefined ? " et n'en a pas reçu." : `, et a reçu l'option « ${valeur} ».`),
+    );
+    process.exit(2);
+  }
+  return valeur;
 }
 
 const jour = (d: Date) => cleJourCivil(d);
@@ -181,14 +199,17 @@ async function main() {
           base: hoteMasque(process.env.DATABASE_URL),
           horloge: now.toISOString(),
           rejeu: plusTard.toISOString(),
+          // PROJETÉS, jamais sérialisés en entier : un plan porte des noms de
+          // personnes (`raisons: ["titre détenu par …"]`) et des libellés de
+          // prescription, qui nomment l'assureur. Voir `projeterPlan`.
           etablissements: resultats.map((r) => ({
             etablissementId: r.etablissementId,
-            avant: r.avant,
-            planConservation: r.comparaison.planConservation,
-            planFaits: r.comparaison.planFaits,
+            avant: r.avant.map(projeterLigne),
+            planConservation: projeterPlan(r.comparaison.planConservation),
+            planFaits: projeterPlan(r.comparaison.planFaits),
             ecarts: r.comparaison.ecarts,
             comptes: r.comparaison.comptes,
-            planJ400: r.planJ400,
+            planJ400: projeterPlan(r.planJ400),
           })),
         },
         null,

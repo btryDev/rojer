@@ -78,3 +78,9 @@ Rojer-*.pdf
 
 # Journal de l'étalement des dossiers de démo : l'état d'une base, pas du code.
 /scripts/.etalement/
+
+# Export du passage à blanc (ADR-036, lot 2c) : l'état des calendriers d'une
+# base à un instant, dates et identifiants — jamais du code, et la commande
+# documentée l'écrit à la racine. Le script le projette pour qu'aucun nom n'y
+# figure ; il n'a pas sa place dans le dépôt pour autant.
+/passage-a-blanc-*.json

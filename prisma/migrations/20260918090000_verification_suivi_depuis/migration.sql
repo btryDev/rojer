@@ -25,9 +25,11 @@
 -- lignes d'aujourd'hui, le passage à blanc du lot 2c le rangera sous
 -- `meme_jour_civil` s'il se voit.
 --
--- FORME : la même que `createdAt` dans la migration d'origine
--- (`20260420083612_init`) — `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`
--- est ce que Prisma attend pour `DateTime @default(now())`. Le garde-fou
+-- FORME : la même que le `createdAt` de CETTE table, posé avec elle par
+-- `20260421140000_v2_etablissement_et_conformite` (la table `Verification` naît
+-- là, pas dans `20260420083612_init`) —
+-- `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP` est ce que Prisma attend
+-- pour `DateTime @default(now())`. Le garde-fou
 -- `derive-schema.yml` rejoue les migrations et les compare au schéma : toute
 -- autre forme y ferait apparaître une dérive.
 --

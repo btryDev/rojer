@@ -60,7 +60,16 @@ function realisationPropre(
  *  · le premier pas, la mise en service et la date du titre viennent de
  *    `g.sources`. Une ligne générée sans `sources` — une fixture d'avant la
  *    couture — retombe sur le rythme, aucune mise en service, et la date de
- *    titre que `datePrevueFaisantFoi` désignait ;
+ *    titre que `datePrevueFaisantFoi` désignait.
+ *
+ *    ⚠ CE REPLI EST TEMPORAIRE, ET IL EST SILENCIEUX (relecture neutre du
+ *    2026-09-18). Les trois générateurs renseignent `sources` depuis le lot 2b ;
+ *    seules des fixtures de test construisent encore une ligne sans lui, d'où le
+ *    champ optionnel. Une ligne de production qui arriverait ici sans `sources`
+ *    perdrait sa mise en service et son premier délai SANS RIEN DIRE — donc
+ *    changerait de date en silence. **Au lot 4, `sources` devient requis et ce
+ *    repli devient une erreur** : à la bascule, une ligne générée sans ses
+ *    sources est un défaut de câblage, pas un cas à servir ;
  *  · l'origine est `suiviDepuis` de la ligne en base, ou l'horloge de la passe
  *    pour une ligne à naître — celle que `actions.ts` persistera.
  */

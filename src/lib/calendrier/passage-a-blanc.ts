@@ -27,10 +27,14 @@
 //                        visible ;
 //   rythme               la date en base est « l'ancre + un AUTRE rythme » :
 //                        le rythme a changé et la date ne l'avait pas suivi
-//                        (S3, D3, le rythme allongé) ;
+//                        (S3, D3, le rythme allongé) — y compris un rythme
+//                        devenu PONCTUEL, qui laisse la ligne sans rendez-vous
+//                        suivant et la ramène à son événement ou à son origine ;
 //   mise_en_service      la date nouvelle sort de la mise en service, que la
 //                        date en base ne connaissait pas ou connaissait
-//                        autrement (S4, S5, un ponctuel daté de `now`) ;
+//                        autrement (S4, S5, un ponctuel ouvert daté de `now`,
+//                        un ponctuel SOLDÉ dont la mise en service est saisie
+//                        après coup) ;
 //   retard_invente       la ligne passe « à planifier » à son origine alors que
 //                        la date en base était ANTÉRIEURE au suivi : un retard
 //                        compté sur des jours où Rojer ne suivait rien ;
@@ -166,6 +170,26 @@ export function classerEcart(e: EntreeClassement): Categorie {
         return "rythme";
       }
       break;
+    // UN PONCTUEL, OUVERT OU SOLDÉ, dont la date en base vaut « une ancre + un
+    // rythme » : c'est que la ligne était CYCLIQUE et que son rythme est devenu
+    // ponctuel. La date roulée qu'elle portait n'attend plus rien — l'ADR-036
+    // § 5 le nomme, « une périodicité devenue PONCTUELLE solde une ligne
+    // roulée » —, et c'est bien un changement de rythme qui la déplace.
+    //
+    // Les trois ancres sont essayées, parce qu'on ne sait pas laquelle datait
+    // la ligne du temps où elle était cyclique. `saufRythme` vaut `null` : le
+    // rythme effectif est ici sans pas (`mise_en_service_uniquement`), donc il
+    // n'y a aucun rythme à exclure de la recherche.
+    case "ponctuel_solde":
+    case "ponctuel_ouvert":
+      if (
+        rythmeQuiExplique(avant.datePrevue, faits.realisation?.date ?? null, null) !== null ||
+        rythmeQuiExplique(avant.datePrevue, faits.realisationHeritee, null) !== null ||
+        rythmeQuiExplique(avant.datePrevue, faits.miseEnService, null) !== null
+      ) {
+        return "rythme";
+      }
+      break;
     default:
       break;
   }
@@ -173,8 +197,20 @@ export function classerEcart(e: EntreeClassement): Categorie {
   // La date nouvelle sort de la mise en service, et la date en base ne
   // s'expliquait pas par elle : mise en service ajoutée ou corrigée après
   // coup (S4, S5), ponctuel daté de `now` au lieu de l'événement.
+  //
+  // `ponctuel_solde` EN FAIT PARTIE, et l'oublier était un trou (relecture
+  // neutre du 2026-09-18) : un contrôle unique déjà fait dont la mise en
+  // service est saisie APRÈS coup voit sa date passer de son origine à
+  // l'événement — statut inchangé, date déplacée. La règle 2 le veut ainsi
+  // (« le ponctuel soldé est daté de sa mise en service, à défaut de
+  // l'origine ») ; sans ce motif l'écart tombait en `inexplique` et faisait
+  // sortir le script en 1 sur un comportement que l'ADR a décidé. Quatorze
+  // obligations `mise_en_service_uniquement` sont livrées : le cas est
+  // atteignable sur un dossier réel.
   if (
-    (apres.source === "mise_en_service" || apres.source === "ponctuel_ouvert") &&
+    (apres.source === "mise_en_service" ||
+      apres.source === "ponctuel_ouvert" ||
+      apres.source === "ponctuel_solde") &&
     faits.miseEnService !== null
   ) {
     return "mise_en_service";
@@ -356,6 +392,117 @@ export function comparerStrategies(lecture: LecturePasse, now: Date): Comparaiso
   }
 
   return { planConservation, planFaits, ecarts, comptes };
+}
+
+// ---------------------------------------------------------------------------
+// L'export : des identifiants, jamais un libellé
+// ---------------------------------------------------------------------------
+//
+// POURQUOI UNE PROJECTION, ET PAS `JSON.stringify(plan)` (relecture neutre du
+// 2026-09-18). Sérialisés en entier, les plans portent des NOMS DE PERSONNES :
+// une ligne de titre naît avec `raisons: ["titre détenu par Prénom Nom"]`
+// (`generateur.ts`), et `libelleObligation` vaut, pour une ligne sur mesure, le
+// libellé de la prescription — qui nomme couramment l'assureur ou l'autorité.
+// La sortie console n'imprimait que des identifiants ; le fichier `--json`, lui,
+// emportait tout, et le mode d'emploi affirmait le contraire.
+//
+// La règle est donc celle de la sortie console, appliquée au fichier : des
+// identifiants, des dates, des statuts, des rythmes. Rien qui vienne d'une
+// saisie d'utilisateur. La liste est EXPLICITE et non « tout sauf » : un champ
+// ajouté à `VerificationGenere` ou à `OccurrenceExistante` reste dehors par
+// défaut, au lieu d'entrer dans l'export sans que personne ne le décide.
+
+/** Une ligne en base, réduite à ce qui s'exporte. */
+export type LigneExportee = {
+  id: string;
+  obligationId: string;
+  equipementId: string | null;
+  salarieId: string | null;
+  periodicite: Periodicite;
+  datePrevue: Date;
+  statut: string;
+  archiveLe: Date | null;
+  prescriptionId: string | null;
+  suiviDepuis: Date | null;
+  porteUnePreuve: boolean;
+  derniereRealisation: Date | null;
+  dernierResultat: string | null;
+};
+
+/** Un plan, réduit à ce qui s'exporte. */
+export type PlanExporte = {
+  aCreer: {
+    cleUnique: string;
+    obligationId: string;
+    equipementId: string | null;
+    salarieId: string | null;
+    periodicite: Periodicite;
+    datePrevue: Date;
+    statut: string;
+    prescriptionId: string | null;
+    /** Les sources de calcul : des dates et un rythme, aucun libellé. */
+    sources: VerificationGenere["sources"];
+  }[];
+  aMettreAJour: {
+    id: string;
+    obligationId: string;
+    periodicite: Periodicite;
+    datePrevue: Date;
+    statut: string;
+    prescriptionId: string | null;
+    source: string | null;
+  }[];
+  aArchiver: string[];
+  aDesarchiver: string[];
+  aSupprimer: string[];
+  inchangees: number;
+};
+
+export function projeterLigne(ex: OccurrenceExistante): LigneExportee {
+  return {
+    id: ex.id,
+    obligationId: ex.obligationId,
+    equipementId: ex.equipementId,
+    salarieId: ex.salarieId ?? null,
+    periodicite: ex.periodicite,
+    statut: ex.statut,
+    datePrevue: ex.datePrevue,
+    archiveLe: ex.archiveLe ?? null,
+    prescriptionId: ex.prescriptionId ?? null,
+    suiviDepuis: ex.suiviDepuis ?? null,
+    porteUnePreuve: ex.porteUnePreuve,
+    derniereRealisation: ex.derniereRealisation ?? null,
+    dernierResultat: ex.dernierResultat ?? null,
+  };
+}
+
+export function projeterPlan(plan: PlanReconciliation): PlanExporte {
+  return {
+    aCreer: plan.aCreer.map((v) => ({
+      cleUnique: v.cleUnique,
+      obligationId: v.obligationId,
+      equipementId: v.equipementId,
+      salarieId: v.salarieId,
+      periodicite: v.periodicite,
+      datePrevue: v.datePrevue,
+      statut: v.statut,
+      prescriptionId: v.prescriptionId,
+      sources: v.sources,
+    })),
+    aMettreAJour: plan.aMettreAJour.map((m) => ({
+      id: m.id,
+      obligationId: m.obligationId,
+      periodicite: m.periodicite,
+      datePrevue: m.datePrevue,
+      statut: m.statut,
+      prescriptionId: m.prescriptionId,
+      source: m.source ?? null,
+    })),
+    aArchiver: plan.aArchiver.map((a) => a.id),
+    aDesarchiver: plan.aDesarchiver.map((d) => d.id),
+    aSupprimer: [...plan.aSupprimer],
+    inchangees: plan.inchangees,
+  };
 }
 
 // ---------------------------------------------------------------------------

@@ -27,8 +27,14 @@ aucune méthode d'écriture Prisma (un test relit son texte pour le garantir :
 - `.env` pointe la base de **production**. Le script l'affiche en tête, mot de
   passe masqué : vérifier cette ligne avant de lire la suite.
 - Aucun nom de personne ni d'établissement n'est imprimé — des identifiants
-  seulement. Le fichier `--json` non plus : il exporte les lignes de calendrier
-  (identifiants, dates, statuts), pas les fiches.
+  seulement. **Le fichier `--json` non plus, mais il a fallu le rendre vrai** :
+  la première rédaction sérialisait les plans en entier, et une ligne de titre
+  naît avec `raisons: ["titre détenu par Prénom Nom"]`, quand
+  `libelleObligation` d'une ligne sur mesure porte le libellé de la
+  prescription — qui nomme couramment l'assureur (relecture neutre du
+  2026-09-18). L'export passe désormais par une projection explicite
+  (`projeterPlan`, `projeterLigne`) : identifiants, dates, statuts, rythmes, et
+  rien qui vienne d'une saisie. Un test le vérifie sur la sortie réelle.
 
 ## 2. La commande
 
