@@ -1919,15 +1919,15 @@ relit et se révoque comme du code :
 } }
 ```
 
-**Une liste de préfixes, et surtout pas de joker.** La première version disait
-`{ "main": true, "*": false }`, en s'appuyant sur la documentation : « si une
-branche correspond à plusieurs règles et qu'au moins une vaut `true`, un
-déploiement a lieu ». Le comportement réel dit l'inverse : le commit `850bce6`,
-poussé sur `main` avec cette règle, **n'a jamais été construit** — ni « Ready »,
-ni « Error », ni « Skipped », ni dans les déploiements supprimés. Il a fallu une
-demi-heure pour distinguer ce silence de la panne Vercel du même jour. Une règle
-qui ne peut pas attraper `main` par accident vaut mieux qu'une règle générale
-qu'on croit corrigée par une exception.
+**Une liste de préfixes plutôt qu'un joker.** La première version disait
+`{ "main": true, "*": false }` ; la documentation Vercel dit que `main`, qui
+correspond aux deux règles, l'emporte. Le commit `850bce6` qui la portait est
+resté trois quarts d'heure sans déploiement, et on a d'abord cru — à tort — que
+le joker l'avait attrapé : il était en fait en « Initializing », dans la file
+d'attente laissée par la panne Vercel du même soir, et la liste des déploiements
+l'a montré ensuite. Le joker n'était donc pas en cause. On garde tout de même la
+liste de préfixes : une règle qui ne peut pas attraper `main` n'a pas besoin
+qu'on se souvienne de la subtilité qui la rend sûre.
 
 Le fichier est lu **sur la branche poussée** : la règle ne vaut que pour les
 branches créées après la fusion de ce commit — une branche plus ancienne, poussée

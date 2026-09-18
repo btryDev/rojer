@@ -120,13 +120,52 @@ mérite une lecture ligne par ligne avant le lot 4.
 
 ## 6. Résultats
 
-_Section laissée vide le 2026-09-18 : le script n'a pas été exécuté — aucune base
-n'était disponible depuis le poste qui l'a écrit, et la migration n'est appliquée
-nulle part tant que la branche n'est pas fusionnée. À remplir par la propriétaire
-après le premier lancement sur la production, avec la date, l'hôte affiché en tête
-(masqué), la table des totaux et les écarts `date_arbitraire` sur les dossiers
-réels s'il y en a._
+### Premier passage — 2026-09-18, 23 h 46 (heure de Paris)
+
+Lancé depuis le poste de développement sur la base de **production**
+(`aws-0-eu-west-1.pooler.supabase.com`, mot de passe masqué), après le
+déploiement de `a1e4f22` qui a appliqué la migration `suiviDepuis`.
+Transaction en lecture seule ; export JSON gardé hors dépôt.
 
 | Date | Base | Établissements | identique | meme_jour_civil | statut_seul | rythme | mise_en_service | retard_invente | date_arbitraire | legs | inexplique | J+400 vide |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | — | — | — | — | — | — |
+| 2026-09-18 | production | 4 | 4 | 62 | 0 | 0 | 8 | 3 | 22 | 0 | **0** | 4 / 4 |
+
+**Critère tenu : zéro `inexplique`, et le rejeu à J+400 est vide partout.**
+
+Ce que les écarts disent, établissement par établissement (identifiants
+seulement) :
+
+- **`cmtj4wq7y0002cigd4zauyfmw`** (28 lignes) — 27 `meme_jour_civil`, sans
+  changement visible, et **un seul écart réel** : la vérification annuelle du
+  SSI (`cmtj4xoz7000lcigdbv8xbsz3`), due au 30/08/2026 en base, passerait au
+  **01/09/2026** — le rapport réalisé du 1er mars plus les six mois de la
+  prescription d'assureur en vigueur. La date en base ne s'explique par aucun
+  fait ; la nouvelle, si.
+- **`cmtmnz5gu0001pqe4ajmwdbiz`** (36 lignes) — le dossier de démonstration, et
+  le seul vraiment touché :
+  - **21 `date_arbitraire`** : dates posées par les scripts de démonstration
+    (`etaler-echeances-demo`, `seed --planifier`). Elles deviendraient
+    « à planifier » à l'origine du suivi (04/09/2026). C'est le lot 3 de
+    l'ADR-036 : les démos réécrites en faits ;
+  - **8 `mise_en_service`** : les lignes se calent sur la mise en service
+    réelle — révisions décennales d'extincteurs à mise en service + 10 ans
+    (2031, 2033), vérifications initiales datées de leur mise en service
+    (2015 à 2022), donc « à planifier » en retard depuis. C'est déjà la règle
+    du générateur pour une ligne neuve ;
+  - **3 `retard_invente`** : des « à planifier » datés AVANT l'entrée de la
+    ligne dans Rojer ; ils repartiraient de l'origine ;
+  - 4 `identique`.
+- **`cmtmorr4r0002jy04mx2ifa15`** (29 lignes) — 31 `meme_jour_civil`, dont les
+  lignes que la génération créerait.
+- **`cmtmpbw410002k004d7gg6e98`** (0 ligne) — dossier de test jamais calculé ;
+  ses 4 lignes seraient créées, en `meme_jour_civil`.
+
+**Lecture pour la bascule (lot 4).** Sur les dossiers réels, le nouveau calcul
+ne fait que corriger — l'écart le plus visible est le SSI qui passe du 30/08 au
+01/09. Le dossier de démonstration change beaucoup, parce que ses dates avaient
+été fabriquées ; il ne sert pas encore à des présentations (propriétaire,
+2026-09-18), et le lot 3 retire les scripts qui fabriquaient ces dates.
+
+À refaire juste avant la fusion du lot 4, et à ajouter ici sous une nouvelle
+date.
