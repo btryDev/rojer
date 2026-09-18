@@ -1907,12 +1907,24 @@ Ce que la décision change dans notre façon de travailler :
   amendées là où elles donnent une consigne (ADR-036 § 9, revue du passage à
   blanc).
 
+### Comment les previews sont coupées
+
+Dans `vercel.json`, et non dans l'interface — le réglage suit ainsi le dépôt, se
+relit et se révoque comme du code :
+
+```json
+"git": { "deploymentEnabled": { "main": true, "*": false } }
+```
+
+`main` correspond aux deux règles ; Vercel déploie dès qu'une règle vaut `true`,
+donc la production continue. Toute autre branche ne correspond qu'à `*` et n'est
+plus déployée. Le fichier est lu **sur la branche poussée** : la règle ne vaut
+que pour les branches créées après la fusion de ce commit — une branche plus
+ancienne, poussée telle quelle, déclencherait encore une preview.
+
 ### À faire dans Vercel, par la propriétaire
 
-1. **Couper les déploiements de preview** : Settings → Git, désactiver les
-   déploiements des branches autres que `main` (« Ignored Build Step », ou la
-   liste des branches déployées).
-2. **`DATABASE_URL` marquée « Needs Attention »** : vérifier le motif exact
+1. **`DATABASE_URL` marquée « Needs Attention »** : vérifier le motif exact
    au survol. Si c'est la recommandation de marquer la variable « Sensitive »,
    la suivre — la valeur cesse d'être lisible dans l'interface et les journaux,
    sans rien changer au fonctionnement.
