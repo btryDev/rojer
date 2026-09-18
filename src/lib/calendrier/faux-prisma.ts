@@ -82,6 +82,9 @@ export type LigneFausse = {
   statut: string;
   prescriptionId?: string | null;
   archiveLe?: Date | null;
+  /** Depuis quand Rojer suit la ligne (ADR-036, D2). `NOT NULL` en base, donc
+   *  requis ici : une ligne sans origine n'existe pas. */
+  suiviDepuis: Date;
   /** Les rapports attachés à la ligne, avec leur résultat — ce que la
    *  réconciliation lit pour connaître la dernière réalisation (ADR-034).
    *  Indépendant de `nbRapports`, qui est le compte brut. */
@@ -89,6 +92,28 @@ export type LigneFausse = {
   nbRapports: number;
   nbActions: number;
 };
+
+/**
+ * Les COLONNES de `Verification` que le magasin sait servir à un `select`. Les
+ * autres champs de `LigneFausse` — `rapports`, `nbRapports`, `nbActions` — sont
+ * l'outillage du test, pas des colonnes : un `select` qui les nommerait décrit
+ * une colonne qui n'existe pas en base.
+ */
+const COLONNES_LIGNE: ReadonlySet<string> = new Set([
+  "id",
+  "etablissementId",
+  "equipementId",
+  "salarieId",
+  "obligationId",
+  "libelleObligation",
+  "periodicite",
+  "realisateurRequis",
+  "datePrevue",
+  "statut",
+  "prescriptionId",
+  "archiveLe",
+  "suiviDepuis",
+]);
 
 export type Magasin = {
   etablissements: EtablissementFaux[];
@@ -271,8 +296,56 @@ export function fauxPrisma(db: Magasin) {
       }),
   };
 
+  /**
+   * La projection `select` d'une ligne, HONORÉE (2026-09-18, ADR-036 lot 2a).
+   *
+   * Jusque-là `findMany` rendait la ligne entière quel que soit le `select`, et
+   * c'était un filtre fantôme de la même espèce que les `where` ignorés : une
+   * colonne retirée du `select` de production — `suiviDepuis`, `archiveLe` —
+   * ne faisait rougir aucun test, puisque le faux client la fournissait quand
+   * même. Ici seules les clés demandées sortent ; une clé que le magasin ne
+   * connaît pas est refusée — elle décrirait une colonne qui n'existe pas, et
+   * Prisma la refuserait aussi.
+   *
+   * `_count` est la seule clé composée : `{ select: { rapports, actions } }`,
+   * servie depuis les compteurs bruts de la ligne.
+   */
+  const projeter = (
+    v: LigneFausse,
+    select: Record<string, unknown>,
+  ): Record<string, unknown> => {
+    const sortie: Record<string, unknown> = {};
+    for (const [cle, demande] of Object.entries(select)) {
+      if (demande === false || demande === undefined) continue;
+      if (cle === "_count") {
+        const sous = (demande as { select?: Record<string, boolean> }).select ?? {};
+        const compte: Record<string, number> = {};
+        for (const [relation, voulu] of Object.entries(sous)) {
+          if (!voulu) continue;
+          if (relation === "rapports") compte.rapports = v.nbRapports;
+          else if (relation === "actions") compte.actions = v.nbActions;
+          else inconnu("verification.findMany", [`_count.${relation}`]);
+        }
+        sortie._count = compte;
+        continue;
+      }
+      if (!COLONNES_LIGNE.has(cle)) {
+        inconnu("verification.findMany", [`select.${cle}`]);
+      }
+      // Une colonne nullable absente de la fixture sort `null`, comme en base.
+      sortie[cle] = (v as unknown as Record<string, unknown>)[cle] ?? null;
+    }
+    return sortie;
+  };
+
   const verification = {
-    findMany: async ({ where }: { where: { etablissementId: string } }) => {
+    findMany: async ({
+      where,
+      select,
+    }: {
+      where: { etablissementId: string };
+      select?: Record<string, unknown>;
+    }) => {
       const { etablissementId, ...reste } = where;
       if (Object.keys(reste).length > 0) {
         inconnu("verification.findMany", Object.keys(reste));
@@ -280,10 +353,11 @@ export function fauxPrisma(db: Magasin) {
       db.journal.push({ operation: "verification.findMany", where });
       const lues = db.verifications
         .filter((v) => v.etablissementId === etablissementId)
-        .map((v) => ({
-          ...v,
-          _count: { rapports: v.nbRapports, actions: v.nbActions },
-        }));
+        .map((v) =>
+          select === undefined
+            ? { ...v, _count: { rapports: v.nbRapports, actions: v.nbActions } }
+            : projeter(v, select),
+        );
       // La fenêtre : le plan va être calculé sur `lues`, et quelqu'un écrit
       // avant qu'il ne s'applique. Le crochet ne sert qu'une fois.
       const crochet = db.apresLecture;
@@ -425,6 +499,15 @@ export function fauxPrisma(db: Magasin) {
         let poses = 0;
         for (const d of args.data) {
           const candidat = d as unknown as LigneFausse;
+          // `suiviDepuis` est `NOT NULL DEFAULT CURRENT_TIMESTAMP` en base :
+          // une insertion qui l'omet PASSERAIT, avec l'horloge de PostgreSQL à
+          // la place de celle de la passe — le décalage de minuit que la
+          // colonne existe pour fermer (ADR-036, D2). Le faux client refuse
+          // donc l'omission, pour que son retrait du `createMany` de
+          // production fasse rougir un test au lieu de prendre le défaut.
+          if (!(candidat.suiviDepuis instanceof Date)) {
+            inconnu("verification.createMany", ["suiviDepuis absent"]);
+          }
           const doublon = db.verifications.some(
             (v) => cle(v) === cle(candidat),
           );

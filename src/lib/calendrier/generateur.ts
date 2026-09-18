@@ -805,6 +805,14 @@ export type OccurrenceExistante = {
   /** Prescription particulière à l'origine de la ligne ou de sa périodicité
    *  (ADR-035). Optionnel : les fixtures antérieures n'en ont pas. */
   prescriptionId?: string | null;
+  /**
+   * Depuis quand Rojer suit la ligne — `Verification.suiviDepuis` (ADR-036,
+   * D2). Portée jusqu'ici pour la stratégie de décision qui la lira ; la
+   * stratégie par défaut (`deciderParConservation`) ne la lit PAS. Optionnel :
+   * les fixtures antérieures n'en ont pas, et une stratégie qui en a besoin
+   * retombe sur l'horloge de la passe.
+   */
+  suiviDepuis?: Date;
 };
 
 /** Ce qu'il faut écrire sur une ligne existante. `id` n'y figure jamais en

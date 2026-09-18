@@ -624,6 +624,30 @@ model Verification {
   // a retiré le préfixe.
   archiveLe DateTime?
 
+  // Depuis quand Rojer suit cette ligne (ADR-036, décision D2 — 2026-09-18).
+  //
+  // Un FAIT MÉTIER, écrit une fois par la régénération qui crée la ligne
+  // (`calendrier/actions.ts`, avec l'horloge de la passe) et jamais modifié
+  // ensuite. C'est la seule information que le gel de `datePrevue` protégeait :
+  // le jour à partir duquel l'ADR-011 § 5 compte le retard d'un « à
+  // planifier », et la borne en dessous de laquelle une première échéance
+  // calculée depuis la mise en service serait un retard inventé (règle 4 bis).
+  //
+  // Pas `createdAt`, qui existe et dit presque la même chose : `createdAt` est
+  // une métadonnée technique que tout outil — import, duplication, script de
+  // reprise — peut toucher sans penser qu'il déplace un retard, et PostgreSQL
+  // la pose quelques millisecondes après le `now` du calcul, donc parfois le
+  // lendemain civil. Le défaut que l'ADR-036 ferme est une date qui servait à
+  // deux choses sans le dire ; lire `createdAt` comme origine de suivi en
+  // fabriquerait une seconde.
+  //
+  // Le défaut `now()` n'est là que pour la migration et pour les insertions
+  // qui ne la connaîtraient pas encore : le code en ligne l'écrit lui-même.
+  // Rétro-remplie depuis `createdAt` par la migration
+  // `20260918090000_verification_suivi_depuis`. RIEN NE LA LIT au lot 2 : la
+  // stratégie qui s'en sert (`deciderParFaits`) n'est branchée qu'au lot 4.
+  suiviDepuis DateTime @default(now())
+
   rapports RapportVerification[]
   actions  Action[]
 

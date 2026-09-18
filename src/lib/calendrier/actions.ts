@@ -288,6 +288,10 @@ async function regenererUnePasse(
       archiveLe: true,
       statut: true,
       prescriptionId: true,
+      // Depuis quand Rojer suit la ligne (ADR-036, D2). Lue pour être portée
+      // jusqu'au réconciliateur ; la stratégie par défaut ne s'en sert pas
+      // encore, seule la stratégie candidate du passage à blanc la lit.
+      suiviDepuis: true,
       _count: { select: { rapports: true, actions: true } },
     },
   });
@@ -324,6 +328,7 @@ async function regenererUnePasse(
     statut: v.statut as StatutVerificationPersiste,
     porteUnePreuve: v._count.rapports > 0 || v._count.actions > 0,
     prescriptionId: v.prescriptionId,
+    suiviDepuis: v.suiviDepuis,
   }));
 
   // Les obligations encore applicables, y compris celles qui n'engendrent
@@ -463,6 +468,11 @@ async function regenererUnePasse(
           datePrevue: v.datePrevue,
           statut: v.statut,
           prescriptionId: v.prescriptionId,
+          // L'origine du suivi (ADR-036, D2) : l'horloge de LA PASSE, la même
+          // qui a servi au calcul — pas le défaut de la colonne, que PostgreSQL
+          // poserait quelques millisecondes plus tard, parfois le lendemain
+          // civil. Écrite ici une fois pour toutes ; aucun `update` n'y touche.
+          suiviDepuis: now,
         })),
         skipDuplicates: true,
       }),

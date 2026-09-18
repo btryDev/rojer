@@ -147,6 +147,9 @@ function ligne(partiel: Partial<LigneFausse> & { id: string }): LigneFausse {
     realisateurRequis: ["personne_qualifiee"],
     datePrevue: new Date("2020-01-01T00:00:00Z"),
     statut: "planifiee",
+    // L'origine du suivi (ADR-036, D2) : requise par le magasin comme la
+    // colonne l'est en base. La stratégie par défaut ne la lit pas.
+    suiviDepuis: new Date("2020-01-01T00:00:00Z"),
     nbRapports: 0,
     nbActions: 0,
     ...partiel,

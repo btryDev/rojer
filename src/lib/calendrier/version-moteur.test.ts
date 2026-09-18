@@ -124,7 +124,11 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 2,
-  empreinte: "d4d26d767251f9b7",
+  // Recopiée SANS incrément le 2026-09-18 (ADR-036, lot 2a) : le moteur écrit
+  // `suiviDepuis` sur les lignes qu'il CRÉE et lit la colonne sur celles qui
+  // existent, mais aucune ligne existante n'est réécrite différemment — la
+  // stratégie de date est la même, et rien ne lit encore la colonne.
+  empreinte: "3d57b99359ec4695",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

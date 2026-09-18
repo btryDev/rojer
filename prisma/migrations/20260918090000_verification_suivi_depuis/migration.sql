@@ -1,0 +1,41 @@
+-- ============================================================================
+-- Depuis quand Rojer suit une ligne — ADR-036, décision D2 — 2026-09-18
+--
+-- UNE COLONNE, AUCUNE TABLE, AUCUNE LIGNE DÉTRUITE. `Verification.suiviDepuis`
+-- est le fait que le gel de `datePrevue` protégeait sans le nommer : le jour à
+-- partir duquel l'ADR-011 § 5 compte le retard d'un « à planifier », et la
+-- borne en dessous de laquelle une première échéance calculée depuis la mise
+-- en service serait un retard inventé. Il vivait dans `datePrevue`, puis
+-- migrait dans `echeanceHonoree` quand la ligne roulait ; pour le garder, on
+-- gelait toute la date. Il a désormais sa colonne, écrite une fois à la
+-- création de la ligne et jamais modifiée.
+--
+-- ADDITIVE, ET INERTE POUR LE CODE EN LIGNE. Vercel joue `prisma migrate
+-- deploy` à chaque build, previews comprises : cette migration s'applique donc
+-- à la production AVANT que le code qui lit la colonne n'y soit. C'est voulu et
+-- c'est sans effet : le code déployé ignore la colonne, et ses insertions
+-- profitent du défaut `CURRENT_TIMESTAMP`. Aucun lecteur, aucun écrivain
+-- actuel ne voit la différence.
+--
+-- RÉTRO-REMPLISSAGE depuis `createdAt` : c'est la meilleure date disponible
+-- pour les lignes existantes, et la seule — l'origine de suivi n'a été gardée
+-- nulle part ailleurs. Elle diffère du `now` de la passe qui les a créées de
+-- quelques millisecondes, donc parfois d'un jour civil autour de minuit ; c'est
+-- précisément l'écart que la colonne ferme pour les lignes À VENIR. Pour les
+-- lignes d'aujourd'hui, le passage à blanc du lot 2c le rangera sous
+-- `meme_jour_civil` s'il se voit.
+--
+-- FORME : la même que `createdAt` dans la migration d'origine
+-- (`20260420083612_init`) — `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`
+-- est ce que Prisma attend pour `DateTime @default(now())`. Le garde-fou
+-- `derive-schema.yml` rejoue les migrations et les compare au schéma : toute
+-- autre forme y ferait apparaître une dérive.
+--
+-- Rejouable : la clause `ADD COLUMN` sans `IF NOT EXISTS` échoue si la colonne
+-- existe, ce qui est la réponse juste pour une migration Prisma, jouée une fois
+-- et journalisée dans `_prisma_migrations`.
+-- ============================================================================
+
+ALTER TABLE "Verification" ADD COLUMN "suiviDepuis" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+UPDATE "Verification" SET "suiviDepuis" = "createdAt";
