@@ -44,10 +44,12 @@ import {
   genererVerificationsSurMesure,
   reconcilierCalendrier,
   type OccurrenceExistante,
+  type OptionsGenerateur,
   type PlanReconciliation,
   type StatutVerificationPersiste,
   type StrategieDecision,
   type TitreDeclare,
+  type VerificationGenere,
 } from "./generateur";
 import {
   indexerDernieresRealisations,
@@ -183,6 +185,15 @@ export async function lireEntrees(client: ClientLecture, etablissementId: string
 
 export type LecturePasse = Awaited<ReturnType<typeof lireEntrees>>;
 
+/** Ce que le réconciliateur reçoit : les lignes en base, les lignes générées,
+ *  et ses options. Exposé pour le passage à blanc, qui a besoin des lignes
+ *  générées — leurs `sources` — pour rassembler les faits de chaque écart. */
+export type EntreesReconciliation = {
+  existantes: OccurrenceExistante[];
+  aGenerer: VerificationGenere[];
+  options: OptionsGenerateur;
+};
+
 /**
  * Le plan d'une passe, depuis une lecture et une horloge — matching,
  * génération, réconciliation. Fonction PURE : elle ne lit ni la base ni
@@ -197,6 +208,16 @@ export function planifier(
   now: Date,
   decision?: StrategieDecision,
 ): PlanReconciliation {
+  const { existantes, aGenerer, options } = preparer(lecture, now);
+  return reconcilierCalendrier(existantes, aGenerer, options, decision);
+}
+
+/**
+ * Les deux premiers temps de la planification — matching et génération —, et
+ * les options du réconciliateur. Séparés de `planifier` pour le passage à
+ * blanc ; `planifier` n'est que `preparer` puis `reconcilierCalendrier`.
+ */
+export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliation {
   const { etab, titresBruts, existantes } = lecture;
 
   const equipementsMatching = etab.equipements.map((eq) => ({
@@ -310,10 +331,10 @@ export function planifier(
     }
   }
 
-  return reconcilierCalendrier(
+  return {
     existantes,
     aGenerer,
-    {
+    options: {
       now,
       obligationsEncoreApplicables,
       periodicitesEffectives: periodicites,
@@ -323,6 +344,5 @@ export function planifier(
       titresActifs,
       successions: SUCCESSIONS_DECLAREES,
     },
-    decision,
-  );
+  };
 }

@@ -1118,7 +1118,7 @@ function plusAncienne(
  * d'utilisateur — elle existe pour que le premier absorbant porté par un
  * équipement ne se serve pas en silence de la mauvaise table.
  */
-function heritageDesRetirees(
+export function heritageDesRetirees(
   existantes: OccurrenceExistante[],
   successions: ReadonlyMap<string, string> | undefined,
 ): { parCle: Map<string, Date>; parObligation: Map<string, Date> } {

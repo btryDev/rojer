@@ -1,0 +1,214 @@
+#!/usr/bin/env tsx
+//
+// Le passage à blanc de l'ADR-036 : ce que la stratégie CANDIDATE (l'échéance
+// calculée depuis les faits, `deciderParFaits`) écrirait, comparé à ce que la
+// stratégie EN LIGNE (`deciderParConservation`) écrit — établissement par
+// établissement, ligne par ligne, catégorie par catégorie. Sans rien écrire.
+//
+// LECTURE SEULE STRICTE. Toute la lecture se fait dans UNE transaction
+// interactive dont la première instruction est `SET TRANSACTION READ ONLY` :
+// PostgreSQL refuserait alors toute écriture, même par erreur. Le script ne
+// contient de toute façon aucune écriture Prisma — `passage-a-blanc.test.ts`
+// relit ce fichier et le vérifie — et n'offre AUCUNE option `--appliquer` : ce
+// n'est pas un script de reprise, c'est un instrument de mesure. La bascule
+// est le lot 4, par le code, pas par un script.
+//
+// La base lue est celle de `DATABASE_URL`. Sur la machine de la propriétaire,
+// `.env` pointe la PRODUCTION : le script l'affiche en tête, mot de passe
+// masqué, pour qu'on sache toujours où l'on lit. Aucun nom de personne ni
+// d'établissement n'est imprimé — des identifiants seulement.
+//
+//   pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts
+//   pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts --etablissement <id>
+//   pnpm tsx --env-file=.env scripts/passage-a-blanc-echeances.ts --json passage.json
+//
+// SORTIE. Par établissement : la table catégorie → nombre, puis une ligne par
+// écart hors `identique` et `meme_jour_civil` (identifiant de ligne,
+// obligation, ancienne → nouvelle date, ancien → nouveau statut, source).
+// Ensuite l'IDEMPOTENCE TEMPORELLE : le plan candidat est appliqué en mémoire
+// et replanifié à J+400 — le second plan doit être vide. Code de sortie 1 s'il
+// reste un `inexplique` quelque part ; c'est le critère de l'ADR-036 § 9.
+//
+// Le mode d'emploi complet : docs/revues/passage-a-blanc-adr036.md.
+
+import { writeFileSync } from "node:fs";
+import { PrismaClient } from "@prisma/client";
+import { ajouterJours, cleJourCivil, formaterDateHeureFr } from "@/lib/dates";
+import { lireEntrees, type LecturePasse } from "@/lib/calendrier/passe";
+import {
+  CATEGORIES,
+  comparerStrategies,
+  planVide,
+  rejouerPlusTard,
+  type Categorie,
+  type Comparaison,
+} from "@/lib/calendrier/passage-a-blanc";
+
+/** L'hôte lu, sans son mot de passe. */
+function hoteMasque(url: string | undefined): string {
+  if (!url) return "(DATABASE_URL absente)";
+  try {
+    const u = new URL(url);
+    const utilisateur = u.username ? `${u.username}@` : "";
+    return `${u.protocol}//${utilisateur}${u.host}${u.pathname}`;
+  } catch {
+    return "(DATABASE_URL illisible)";
+  }
+}
+
+function argument(nom: string): string | undefined {
+  const i = process.argv.indexOf(nom);
+  return i === -1 ? undefined : process.argv[i + 1];
+}
+
+const jour = (d: Date) => cleJourCivil(d);
+
+type ResultatEtablissement = {
+  etablissementId: string;
+  lignes: number;
+  comparaison: Comparaison;
+  planJ400: ReturnType<typeof rejouerPlusTard>;
+  avant: LecturePasse["existantes"];
+};
+
+function imprimerEtablissement(r: ResultatEtablissement): void {
+  const { comparaison, planJ400 } = r;
+  console.log(`\n== Établissement ${r.etablissementId} — ${r.lignes} ligne(s) en base ==`);
+  for (const c of CATEGORIES) {
+    const n = comparaison.comptes[c];
+    if (n > 0) console.log(`  ${c.padEnd(20)} ${String(n).padStart(4)}`);
+  }
+  const aDetailler = comparaison.ecarts.filter(
+    (e) => e.categorie !== "identique" && e.categorie !== "meme_jour_civil",
+  );
+  if (aDetailler.length > 0) {
+    console.log("  --");
+    for (const e of aDetailler) {
+      console.log(
+        `  [${e.categorie}] ${e.ligne} ${e.obligationId}` +
+          (e.equipementId ? ` eq=${e.equipementId}` : "") +
+          (e.salarieId ? ` sal=${e.salarieId}` : "") +
+          ` : ${jour(e.avant.datePrevue)} → ${jour(e.apres.datePrevue)}` +
+          ` ; ${e.avant.statut} → ${e.apres.statut}` +
+          ` ; source=${e.apres.source ?? "—"}`,
+      );
+    }
+  }
+  if (planVide(planJ400)) {
+    console.log("  idempotence à J+400 : plan vide ✓");
+  } else {
+    console.log("  idempotence à J+400 : LE PLAN N'EST PAS VIDE");
+    for (const m of planJ400.aMettreAJour) {
+      console.log(
+        `    à mettre à jour ${m.id} ${m.obligationId} → ${jour(m.datePrevue)} ${m.statut}` +
+          ` ; source=${m.source ?? "—"}`,
+      );
+    }
+    for (const c of planJ400.aCreer) console.log(`    à créer ${c.cleUnique}`);
+    for (const id of planJ400.aSupprimer) console.log(`    à supprimer ${id}`);
+    for (const a of planJ400.aArchiver) console.log(`    à archiver ${a.id}`);
+    for (const d of planJ400.aDesarchiver) console.log(`    à désarchiver ${d.id}`);
+    console.log(
+      "    (une prescription dont `dateFin` tombe dans les 400 jours change" +
+        " légitimement ses lignes ; tout le reste est un défaut d'idempotence)",
+    );
+  }
+}
+
+async function main() {
+  const etablissementDemande = argument("--etablissement");
+  const fichierJson = argument("--json");
+  const now = new Date();
+  const plusTard = ajouterJours(now, 400);
+
+  console.log(`Passage à blanc ADR-036 — lecture seule`);
+  console.log(`Base : ${hoteMasque(process.env.DATABASE_URL)}`);
+  console.log(`Horloge : ${formaterDateHeureFr(now)} ; rejeu à J+400 : ${jour(plusTard)}`);
+
+  const prisma = new PrismaClient();
+  const resultats: ResultatEtablissement[] = [];
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        // PREMIÈRE INSTRUCTION de la transaction : à partir d'ici, PostgreSQL
+        // refuse toute écriture jusqu'au COMMIT.
+        await tx.$executeRaw`SET TRANSACTION READ ONLY`;
+
+        const etablissements = etablissementDemande
+          ? [{ id: etablissementDemande }]
+          : await tx.etablissement.findMany({ select: { id: true }, orderBy: { id: "asc" } });
+
+        for (const { id } of etablissements) {
+          const lecture = await lireEntrees(tx, id);
+          const comparaison = comparerStrategies(lecture, now);
+          const planJ400 = rejouerPlusTard(lecture, comparaison.planFaits, now, plusTard);
+          resultats.push({
+            etablissementId: id,
+            lignes: lecture.existantes.length,
+            comparaison,
+            planJ400,
+            avant: lecture.existantes,
+          });
+        }
+      },
+      // Quatre établissements en production ; la marge est large.
+      { timeout: 120_000, maxWait: 10_000 },
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+
+  const total = Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Categorie, number>;
+  for (const r of resultats) {
+    imprimerEtablissement(r);
+    for (const c of CATEGORIES) total[c] += r.comparaison.comptes[c];
+  }
+
+  console.log(`\n== Total — ${resultats.length} établissement(s) ==`);
+  for (const c of CATEGORIES) {
+    console.log(`  ${c.padEnd(20)} ${String(total[c]).padStart(4)}`);
+  }
+  const nonIdempotents = resultats.filter((r) => !planVide(r.planJ400)).length;
+  console.log(`  rejeu à J+400 non vide : ${nonIdempotents} établissement(s)`);
+
+  if (fichierJson) {
+    // L'état d'AVANT et les deux plans, pour garder une trace de ce que la
+    // bascule réécrira — l'ADR-036 § 10 s'y réfère pour le retour arrière.
+    writeFileSync(
+      fichierJson,
+      JSON.stringify(
+        {
+          base: hoteMasque(process.env.DATABASE_URL),
+          horloge: now.toISOString(),
+          rejeu: plusTard.toISOString(),
+          etablissements: resultats.map((r) => ({
+            etablissementId: r.etablissementId,
+            avant: r.avant,
+            planConservation: r.comparaison.planConservation,
+            planFaits: r.comparaison.planFaits,
+            ecarts: r.comparaison.ecarts,
+            comptes: r.comparaison.comptes,
+            planJ400: r.planJ400,
+          })),
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    console.log(`\nExport : ${fichierJson}`);
+  }
+
+  if (total.inexplique > 0) {
+    console.error(
+      `\n${total.inexplique} écart(s) « inexplique » : le classement ne sait pas les nommer.` +
+        " Critère de sortie non atteint (ADR-036 § 9).",
+    );
+    process.exitCode = 1;
+  }
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

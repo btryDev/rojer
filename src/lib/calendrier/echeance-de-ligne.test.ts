@@ -1386,10 +1386,9 @@ describe("echeance-de-ligne.ts — module pur", () => {
 });
 
 describe("ADR-036 — le module n'est PAS branché avant la bascule", () => {
-  // ⚠ CE TEST EST À RETIRER À LA BASCULE (lot 4 de l'ADR-036), et dès le lot 2c
-  // il faudra y inscrire la stratégie candidate `deciderParFaits` et le script
-  // du passage à blanc. Il n'a pas vocation à durer : il tient le lot 1 à ce
-  // qu'il annonce — une fonction posée À CÔTÉ du moteur, que rien n'appelle.
+  // ⚠ CE TEST EST À RETIRER À LA BASCULE (lot 4 de l'ADR-036). Il n'a pas
+  // vocation à durer : il tient les lots 1 à 3 à ce qu'ils annoncent — une
+  // fonction posée À CÔTÉ du moteur, que rien en production n'appelle.
   //
   // Ce qu'il empêche : qu'un lot intermédiaire branche `echeanceDeLigne` sur un
   // seul des trois chemins (régénération, dépôt, suppression). Deux calculs de
@@ -1397,11 +1396,28 @@ describe("ADR-036 — le module n'est PAS branché avant la bascule", () => {
   // `version-moteur.test.ts` ne le verrait que si l'import passait par
   // `calendrier/actions.ts`.
   //
+  // DEPUIS LE LOT 2c (2026-09-18), TROIS MODULES SONT AUTORISÉS NOMMÉMENT, avec
+  // leurs tests : la stratégie candidate `decision-par-faits.ts`, l'outil de
+  // comparaison `passage-a-blanc.ts`, et rien d'autre. Ils ne sont importés que
+  // par le script du passage à blanc et par leurs tests ; un second test, plus
+  // bas, le vérifie pour qu'une autorisation ne devienne pas une porte.
+  // `actions.ts`, `generateur.ts`, `passe.ts` et `rapports/` restent interdits
+  // par défaut, comme tout le reste de `src/`.
+  //
   // `scripts/` N'EST VOLONTAIREMENT PAS PARCOURU : le passage à blanc du lot 2c
   // y vit, et c'est justement l'endroit d'où le module doit pouvoir être appelé
   // avant la bascule — un script lancé à la main, en lecture seule, n'est pas
   // un chemin de production (ADR-036 § 9).
   const MOTIF_IMPORT = /echeance-de-ligne(\.[cm]?[jt]sx?)?["'`]/;
+  const AUTORISES = [
+    "lib/calendrier/decision-par-faits.ts",
+    "lib/calendrier/decision-par-faits.test.ts",
+    "lib/calendrier/passage-a-blanc.ts",
+    "lib/calendrier/passage-a-blanc.test.ts",
+  ];
+  /** Les modules autorisés, eux, ne doivent être importés que par le script et
+   *  par leurs tests — jamais par un module de production. */
+  const MOTIF_IMPORT_AUTORISES = /(decision-par-faits|passage-a-blanc)(\.[cm]?[jt]sx?)?["'`]/;
 
   it("le motif reconnaît les formes d'import, et le filtre ne lui cache rien", () => {
     // Le test de la garde elle-même : sans lui, un motif trop étroit passe à
@@ -1429,14 +1445,30 @@ describe("ADR-036 — le module n'est PAS branché avant la bascule", () => {
     }
   });
 
-  it("aucun fichier de src/ ne l'importe, hors son propre test", () => {
+  it("aucun fichier de src/ ne l'importe, hors son propre test et les modules du passage à blanc", () => {
     const sources = listerSources();
     // Un chemin faux ferait passer l'assertion à vide.
     expect(sources.length).toBeGreaterThan(100);
     expect(sources.some((s) => s.chemin === CE_MODULE)).toBe(true);
+    // Les autorisés existent, et le sont pour quelque chose : chacun importe
+    // bien le module. Une entrée morte dans la liste serait une porte ouverte
+    // pour un fichier futur du même nom.
+    for (const a of AUTORISES) {
+      const source = sources.find((s) => s.chemin === a);
+      expect(source, `${a} est autorisé mais n'existe pas`).toBeDefined();
+    }
+    expect(
+      AUTORISES.filter((a) => {
+        const source = sources.find((s) => s.chemin === a)!;
+        return MOTIF_IMPORT.test(sansCommentaires(source.code));
+      }).length,
+      "les deux modules du passage à blanc importent la fonction d'échéance",
+    ).toBeGreaterThanOrEqual(2);
 
     const importateurs = sources
-      .filter((s) => s.chemin !== CE_MODULE && s.chemin !== CE_TEST)
+      .filter(
+        (s) => s.chemin !== CE_MODULE && s.chemin !== CE_TEST && !AUTORISES.includes(s.chemin),
+      )
       // TOUTE CHAÎNE qui se termine par le nom du module, extension comprise,
       // quel que soit ce qui la précède : `from`, `import(`, `require(`,
       // `vi.mock(`, `vi.importActual(`, entre guillemets, apostrophes ou
@@ -1455,6 +1487,25 @@ describe("ADR-036 — le module n'est PAS branché avant la bascule", () => {
         "ensemble, `VERSION_MOTEUR_CALENDRIER` = 3). Voir " +
         "docs/adr/036-echeance-calculee-depuis-les-faits.md § 9 — et retirer " +
         "ce test dans le lot qui branche.",
+    ).toEqual([]);
+  });
+
+  it("les modules du passage à blanc ne sont importés par aucun module de production", () => {
+    // L'autorisation ci-dessus ne vaut que si elle ne se propage pas : un
+    // `actions.ts` qui importerait `decision-par-faits.ts` brancherait la
+    // fonction d'échéance par transitivité, et le motif principal ne le
+    // verrait pas. Seuls leurs tests peuvent les importer dans `src/` ; le
+    // script les importe depuis `scripts/`, hors du parcours.
+    const sources = listerSources();
+    const importateurs = sources
+      // Ce test nomme les autorisés entre guillemets : il n'importe rien.
+      .filter((s) => !AUTORISES.includes(s.chemin) && s.chemin !== CE_TEST)
+      .filter((s) => MOTIF_IMPORT_AUTORISES.test(sansCommentaires(s.code)))
+      .map((s) => s.chemin);
+    expect(
+      importateurs,
+      "`decision-par-faits.ts` et `passage-a-blanc.ts` ne se branchent pas en " +
+        "production avant le lot 4 de l'ADR-036.",
     ).toEqual([]);
   });
 });

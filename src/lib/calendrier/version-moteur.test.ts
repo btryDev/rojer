@@ -133,7 +133,11 @@ const RELEVE = {
   // branches de date déplacées mot pour mot dans `deciderParConservation`,
   // `sources` ajouté aux lignes générées sans qu'aucune écriture ne le lise,
   // `premierPas` déplacée dans `periodicite.ts`. Une extraction : NON.
-  empreinte: "f0e8ed648606a71a",
+  // Et une troisième (lot 2c, le passage à blanc) : `heritageDesRetirees`
+  // exportée, `planifier` coupée en `preparer` puis réconciliation, pour que
+  // l'outil de comparaison lise les mêmes entrées que le moteur. Rien en
+  // production n'importe la stratégie candidate : NON.
+  empreinte: "f866bfc2837aae27",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
