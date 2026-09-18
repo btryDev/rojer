@@ -68,8 +68,14 @@ function sansCommentaires(code: string): string {
 }
 
 const MOTIF_PROPRIETE = /\bdatePrevue\s*:\s*([^,}\n]*)/g;
-/** Une lecture : tri, sélection ou filtre. */
-const CLAUSE_DE_REQUETE = /^(["'`](asc|desc)["'`]|true|false|\{)/;
+/**
+ * Une lecture : tri, sélection ou filtre. Le scalaire doit être SEUL — sinon
+ * `true ? dans(3) : null` passait —, et un objet n'est admis que s'il ouvre
+ * sur un opérateur de filtre — sinon `{ set: dans(3) }`, une écriture Prisma,
+ * passait (relecture du lot 3).
+ */
+const CLAUSE_DE_REQUETE =
+  /^((["'`](asc|desc)["'`]|true|false)\s*$|\{\s*(lt|lte|gt|gte|equals|not|in|notIn)\s*:)/;
 
 /** Les emplacements fautifs d'un fichier, « chemin:ligne → valeur ». */
 function datesInventees(chemin: string, code: string): string[] {
@@ -122,12 +128,16 @@ describe("ADR-036 lot 3 — les scripts écrivent des faits, pas des dates", () 
       "g({ data: { datePrevue: dans(jours), statut: 'planifiee' } });",
       "h({ datePrevue: autre.datePrevue });",
       "i({ datePrevue: v.datePrevue });",
+      "j({ data: { datePrevue: { set: dans(3) } } });",
+      "k({ datePrevue: true ? dans(3) : null });",
     ].join("\n");
     expect(datesInventees("x.ts", fichier)).toEqual([
       "x.ts:7 → jours(160)",
       "x.ts:8 → dans(jours)",
       "x.ts:9 → autre.datePrevue",
       "x.ts:10 → v.datePrevue",
+      "x.ts:11 → { set: dans(3)",
+      "x.ts:12 → true ? dans(3) : null",
     ]);
   });
 

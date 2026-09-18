@@ -192,16 +192,23 @@ se faire ailleurs.
 
 Le dossier semé porte 3 zones, 10 équipements sur 8 domaines, 5 salariés et
 7 titres, un DUERP validé, 3 prestataires aux attestations échelonnées, permis de
-feu, plan de prévention, carnet sanitaire, accessibilité publiée, 36 échéances
-dont 6 en retard, et 28 actions. La prescription d'assureur y tombe **seule à
+feu, plan de prévention, carnet sanitaire, accessibilité publiée, ~~36 échéances
+dont 6 en retard~~, et 28 actions. ~~La prescription d'assureur y tombe **seule à
 J+160** — sa voisine à 48 jours, au-dessus du seuil de regroupement de la frise —
 pour que la pastille de l'ADR-032 soit jugeable, ce qu'elle n'était pas le
-2026-09-02.
+2026-09-02.~~
 
-**Le calendrier semé est un point fixe de sa propre régénération**, vérifié à
+~~**Le calendrier semé est un point fixe de sa propre régénération**, vérifié à
 blanc : `0 à créer · 0 à modifier · 0 à supprimer · 36 inchangées`. Ouvrir
 `/calendrier` ne le déplace donc pas — ce qui est ce qu'il faut, l'ouverture de
-cet écran écrivant (§ 7).
+cet écran écrivant (§ 7).~~
+
+**Périmé le 2026-09-18.** Ces chiffres, l'assureur seul à J+160 et le point fixe
+venaient de la répartition à la main (`repartir`) et de la bande réservée,
+retirées au lot 3 de l'ADR-036 : les dates sortent désormais des faits, et le
+calendrier semé est presque entièrement « à planifier » en retard, l'assureur
+compris (J−52). Voir l'entrée « Lot 3, 2026-09-18 » au § 11. Non remesuré : rien
+n'a été exécuté.
 
 ~~**Ce qui reste** : la passe elle-même, sur les sept écrans que personne n'a
 jamais pu regarder avec des données — `/equipe`, `/duerp`, `/permis-feu`,

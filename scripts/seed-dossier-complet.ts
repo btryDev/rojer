@@ -208,11 +208,14 @@ type NomZone = (typeof ZONES)[number]["nom"];
 // ===========================================================================
 // 2. Les équipements.
 //
-// Huit domaines, et des mises en service ÉCHELONNÉES : c'est d'elles que le
-// générateur tire la première échéance de chaque ligne (cf.
-// `genererProchainesVerifications`). Un parc entièrement daté du même jour
-// produirait un calendrier d'une seule couleur, sur lequel un contrôle visuel
-// ne montre rien.
+// Huit domaines, et des mises en service ÉCHELONNÉES : ce sont des faits, et
+// `echeanceDeLigne` en tire la première échéance d'une ligne — mais seulement
+// si elle tombe après l'origine du suivi (`SUIVI_DEPUIS`, J−240). Pour ce
+// parc de 2015 à 2023 c'est rarement le cas : le calendrier semé est donc
+// presque entièrement « à planifier », en retard depuis l'origine. C'est un
+// reste assumé (ADR-036, lot 3), pas un défaut : des `RapportVerification`
+// réalisés, semés plus tard, donneraient des échéances variées sans inventer
+// de date.
 //
 // Les caractéristiques passent par `equipementSchema` avant d'être sérialisées :
 // la cohérence catégorie ↔ propriété (une question de VMC sur un extincteur,
@@ -1676,29 +1679,35 @@ async function main(): Promise<void> {
   );
 
   // -------------------------------------------------------------------------
-  // 11. Deux actions issues d'un écart de vérification (ADR-002, branche
+  // 11. Deux actions rattachées à une vérification en retard (ADR-002, branche
   //     `verificationId` du XOR — l'autre branche est déjà servie par le DUERP).
+  //
+  //     Les lignes ne portent AUCUN rapport : les libellés ne parlent donc
+  //     d'aucune observation relevée, seulement du contrôle à faire réaliser.
   // -------------------------------------------------------------------------
   const enRetard = await prisma.verification.findMany({
     // En retard = date passée, pas un statut (retrait de `depassee`).
     where: { etablissementId: etablissement.id, datePrevue: { lt: jours(0) } },
-    orderBy: { datePrevue: "asc" },
+    // Tri secondaire : la plupart des lignes partagent la date de l'origine du
+    // suivi, et `take` choisirait sinon au gré de la base.
+    orderBy: [{ datePrevue: "asc" }, { obligationId: "asc" }],
     select: { id: true, libelleObligation: true },
     take: 2,
   });
   const ECARTS = [
     {
-      libelle: "Lever les observations du dernier rapport de vérification",
+      libelle: "Commander le contrôle en retard auprès d'un organisme",
       description:
-        "Deux observations mineures relevées au précédent contrôle, à solder avant la prochaine visite.",
+        "Aucun rapport n'est déposé pour cette vérification : demander un devis et fixer une date d'intervention.",
       type: "organisationnelle" as TypeAction,
       echeanceJours: -4,
       criticite: 3,
     },
     {
-      libelle: "Reprendre les liaisons équipotentielles signalées en écart",
-      description: "Écart relevé sur le tableau divisionnaire de la cuisine.",
-      type: "protection_collective" as TypeAction,
+      libelle: "Faire réaliser le contrôle et déposer son rapport",
+      description:
+        "Vérification jamais réalisée depuis le début du suivi : la faire faire, puis déposer le rapport dans le registre.",
+      type: "organisationnelle" as TypeAction,
       echeanceJours: 27,
       criticite: 4,
     },
