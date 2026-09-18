@@ -1913,14 +1913,27 @@ Dans `vercel.json`, et non dans l'interface — le réglage suit ainsi le dépô
 relit et se révoque comme du code :
 
 ```json
-"git": { "deploymentEnabled": { "main": true, "*": false } }
+"git": { "deploymentEnabled": {
+  "lot/*": false, "doc/*": false, "fix/*": false,
+  "feat/*": false, "spike/*": false, "perf/*": false, "worktree-*": false
+} }
 ```
 
-`main` correspond aux deux règles ; Vercel déploie dès qu'une règle vaut `true`,
-donc la production continue. Toute autre branche ne correspond qu'à `*` et n'est
-plus déployée. Le fichier est lu **sur la branche poussée** : la règle ne vaut
-que pour les branches créées après la fusion de ce commit — une branche plus
-ancienne, poussée telle quelle, déclencherait encore une preview.
+**Une liste de préfixes, et surtout pas de joker.** La première version disait
+`{ "main": true, "*": false }`, en s'appuyant sur la documentation : « si une
+branche correspond à plusieurs règles et qu'au moins une vaut `true`, un
+déploiement a lieu ». Le comportement réel dit l'inverse : le commit `850bce6`,
+poussé sur `main` avec cette règle, **n'a jamais été construit** — ni « Ready »,
+ni « Error », ni « Skipped », ni dans les déploiements supprimés. Il a fallu une
+demi-heure pour distinguer ce silence de la panne Vercel du même jour. Une règle
+qui ne peut pas attraper `main` par accident vaut mieux qu'une règle générale
+qu'on croit corrigée par une exception.
+
+Le fichier est lu **sur la branche poussée** : la règle ne vaut que pour les
+branches créées après la fusion de ce commit — une branche plus ancienne, poussée
+telle quelle, déclencherait encore une preview. Et une branche dont le nom ne
+commence par aucun de ces préfixes en déclenchera une aussi : c'est le prix de
+l'absence de joker.
 
 ### À faire dans Vercel, par la propriétaire
 

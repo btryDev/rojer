@@ -3,8 +3,13 @@
   "regions": ["dub1"],
   "git": {
     "deploymentEnabled": {
-      "main": true,
-      "*": false
+      "lot/*": false,
+      "doc/*": false,
+      "fix/*": false,
+      "feat/*": false,
+      "spike/*": false,
+      "perf/*": false,
+      "worktree-*": false
     }
   }
 }
