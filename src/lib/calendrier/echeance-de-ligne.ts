@@ -32,15 +32,15 @@
 // AUCUNE RÈGLE N'EST RECOPIÉE. Tout se compose de fonctions que le dépôt porte
 // déjà en un seul exemplaire : `prochaineEcheance` et `estCyclique`
 // (`periodicite.ts`), `estEnRetard` et `debutDuJour` (`lib/dates`),
-// `statutDepuisResultat` (`rapports/schema.ts`), `estPeriodicitePlusStricte`
-// (`matching/prescriptions.ts`), `estSansRendezVous` (`etats-permanents`).
+// `statutDepuisResultat` (`rapports/schema.ts`), `estSansRendezVous`
+// (`etats-permanents`) ; `premierPas` vit dans `periodicite.ts` depuis le lot
+// 2b et est réexporté d'ici.
 // `echeanceDuTitre` (`salaries/echeance.ts`) reste chez l'appelant, qui lui
 // doit `dateDuTitre`.
 
 import { debutDuJour } from "@/lib/dates";
 import { estEnRetard } from "@/lib/dates/retard";
 import { estSansRendezVous } from "@/lib/etats-permanents/regle";
-import { estPeriodicitePlusStricte } from "@/lib/matching/prescriptions";
 import {
   statutDepuisResultat,
   type ResultatRealise,
@@ -138,48 +138,14 @@ export type EcheanceDeLigne = {
 /**
  * Le pas du PREMIER cycle d'une ligne jamais contrôlée (ADR-036, D1).
  *
- * Sans prescription, c'est le comportement d'avant : `premierDelai` quand le
- * texte fixe un plafond de premier cycle distinct du rythme (`esp-inspection-
- * periodique` : trois ans, puis quatre), le rythme sinon.
- *
- * Sous prescription, DEUX PLAFONDS pèsent sur le même premier cycle — celui du
- * texte et celui de la prescription — et c'est le plus bas qui lie. « Première
- * inspection à trois ans, puis chaque année » serait absurde ; c'est pourtant
- * ce que le générateur rendait (S7 de l'audit du 2026-09-17 : il lisait le
- * rythme du référentiel, et une ligne étiquetée « semestrielle » naissait avec
- * une première échéance à un an).
- *
- * LA SURCHARGE EST UN PARAMÈTRE, PAS UNE DÉDUCTION. Le minimum se prend entre
- * le premier délai et LA SURCHARGE, jamais entre le premier délai et le rythme
- * du référentiel : les deux viennent du même texte, qui a voulu les deux. Un
- * texte « première vérification à deux ans, puis annuelle » serait faussé d'un
- * an. La formule du plan prenait le rythme EFFECTIF en troisième argument ; or
- * sans prescription l'effectif EST le rythme du référentiel, et la comparaison
- * nue le faisait primer sur un premier délai plus long. Aucune obligation
- * livrée n'est dans ce cas aujourd'hui ; la première l'aurait été en silence.
- *
- * La première rédaction fermait le cas par une garde d'ÉGALITÉ — « effectif
- * égal au référentiel, donc pas de surcharge ». Elle déduisait ce fait d'une
- * règle d'un AUTRE module (`appliquerPrescriptions` écarte une surcharge qui
- * n'est pas strictement plus stricte), qu'aucun test ne gardait ici, alors que
- * l'appelant le SAIT : il tient la surcharge, ou son absence, à l'endroit même
- * où il calcule le rythme effectif. Et trois `Periodicite` voisins se
- * permutaient sans bruit. `null` dit « pas de prescription », et rien d'autre
- * ne le dit (relecture du 2026-09-17).
+ * DÉFINIE DANS `periodicite.ts` DEPUIS LE LOT 2b (2026-09-18), réexportée ici
+ * pour que la table de vérité et l'API du lot 1 ne bougent pas. Le générateur
+ * doit la renseigner dans `VerificationGenere.sources` avant la bascule, et la
+ * garde de ce module lui interdit de l'importer d'ici — d'où le déplacement
+ * vers le module qui compose déjà la table calendaire. La règle, son récit et
+ * ses mutations sont là-bas.
  */
-export function premierPas(
-  premierDelai: Periodicite | undefined,
-  periodiciteReferentiel: Periodicite,
-  surcharge: Periodicite | null,
-): Periodicite {
-  const base = premierDelai ?? periodiciteReferentiel;
-  if (surcharge === null) return base;
-  // `candidate` d'abord, `reference` ensuite : « la surcharge est-elle
-  // strictement plus stricte que la base ? ». À égalité la base reste — même
-  // valeur. Une surcharge ne DESSERRE jamais : moins stricte que la base, elle
-  // est sans effet sur le premier cycle.
-  return estPeriodicitePlusStricte(surcharge, base) ? surcharge : base;
-}
+export { premierPas } from "./periodicite";
 
 /**
  * L'échéance ouverte et le statut d'une ligne, depuis ses faits.

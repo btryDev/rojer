@@ -4,35 +4,10 @@ import { revalidatePath } from "next/cache";
 import { Prisma, type Realisateur } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import {
-  appliquerPrescriptions,
-  determineObligationsApplicables,
-  projeterEtablissement,
-} from "@/lib/matching";
-import {
-  estPorteeParSalarie,
-  obligationParId,
-  OBLIGATIONS_RETIREES,
-} from "@/lib/referentiels/conformite";
 import { SCEAU_CALENDRIER } from "./version-moteur";
-import {
-  cleDeLigne,
-  clesApplicabilite,
-  periodicitesEffectives,
-  genererProchainesVerifications,
-  genererVerificationsDepuisTitres,
-  genererVerificationsSurMesure,
-  reconcilierCalendrier,
-  type OccurrenceExistante,
-  type StatutVerificationPersiste,
-  type TitreDeclare,
-} from "./generateur";
+import { lireEntrees, planifier } from "./passe";
 import { marquerCalendrierPerime } from "./reconciliation";
 import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
-import {
-  indexerDernieresRealisations,
-  WHERE_RAPPORT_REALISE,
-} from "@/lib/rapports/derniere-realisation";
 
 export type GenerationResult = {
   /** Lignes de suivi nouvellement ouvertes (nouvel équipement, nouvelle
@@ -144,23 +119,6 @@ export async function regenererSansInvalider(
  *  dépôt de rapport pendant une déclaration d'équipement. */
 const TENTATIVES_MAX = 3;
 
-/**
- * `OBLIGATIONS_RETIREES` réduit à ce dont la réconciliation a besoin : les
- * retraits QUI ONT UN ABSORBANT, sous forme de table.
- *
- * `absorbePar` portait cette donnée depuis le 2026-08-27 et **aucun code ne la
- * lisait** — l'ADR-022 le disait de lui-même, « un manque, pas une décision ».
- * C'est cette ligne qui la branche.
- *
- * Calculée une fois : le référentiel est du TypeScript figé à la compilation
- * (ADR-003), il ne change pas d'un appel à l'autre.
- */
-const SUCCESSIONS_DECLAREES: ReadonlyMap<string, string> = new Map(
-  Object.entries(OBLIGATIONS_RETIREES).flatMap(([retire, r]) =>
-    r.absorbePar === null ? [] : [[retire, r.absorbePar] as [string, string]],
-  ),
-);
-
 type PasseRegeneration = {
   resultat: GenerationResult;
   /** `false` dès qu'une écriture a touché MOINS de lignes que le plan n'en
@@ -188,218 +146,14 @@ async function regenererUnePasse(
 ): Promise<PasseRegeneration> {
   const now = new Date();
 
-  // 1. Lecture établissement + équipements encore en service.
-  const etab = await prisma.etablissement.findUnique({
-    where: { id: etablissementId },
-    include: {
-      equipements: { where: { actif: true } },
-      // Prescriptions particulières (ADR-035) : lues ici, dans la phase de
-      // calcul, jamais dans la transaction. `dateFin` est arbitrée par
-      // `appliquerPrescriptions` pour que la raison d'ignorance soit rendue.
-      prescriptionsParticulieres: { where: { actif: true } },
-    },
-  });
-  if (!etab) throw new Error("Établissement introuvable");
-
-  const equipementsMatching = etab.equipements.map((eq) => ({
-    id: eq.id,
-    libelle: eq.libelle,
-    categorie: eq.categorie,
-    caracteristiques: (eq.caracteristiques ?? null) as Record<
-      string,
-      unknown
-    > | null,
-  }));
-
-  // 2. Matching du référentiel, puis modulation par les prescriptions
-  //    particulières propres à l'établissement.
-  const obligationsReferentiel = determineObligationsApplicables(
-    projeterEtablissement(etab),
-    equipementsMatching,
-  );
-  const { applicables: obligations, surMesure } = appliquerPrescriptions(
-    obligationsReferentiel,
-    etab.prescriptionsParticulieres,
-    equipementsMatching,
-    now,
-  );
-
-  // 3. Ensemble des couples applicables. Historique volontairement vide :
-  //    cf. la doc de `reconcilierCalendrier`. Les mises en service, elles,
-  //    donnent au générateur de quoi dater le premier cycle d'un équipement
-  //    neuf plutôt que de le poser « à planifier » faute de mieux.
-  const misesEnService = new Map<string, Date>();
-  for (const eq of etab.equipements) {
-    if (eq.dateMiseEnService) misesEnService.set(eq.id, eq.dateMiseEnService);
-  }
-  // Les titres déclarés par l'employeur (ADR-023). Ce sont eux qui font
-  // exister les lignes à porteur salarié : le moteur ne peut pas les dériver,
-  // rien ne disant qu'une personne exerce l'activité qui déclenche le titre.
-  // Les salariés inactifs sont exclus — une personne partie ne doit plus
-  // apparaître au calendrier. Ses titres subsistent comme preuve
-  // (docs/rgpd.md § 4.3), et ses lignes qui portent une trace sont archivées,
-  // pas supprimées (2026-09-17, voir `titresActifs` plus bas).
-  const titresBruts = await prisma.titreSalarie.findMany({
-    where: { salarie: { etablissementId, actif: true } },
-    select: {
-      obligationId: true,
-      salarieId: true,
-      delivreLe: true,
-      echeanceLe: true,
-      salarie: { select: { nom: true, prenom: true } },
-    },
-  });
-  const titresSalaries = new Map<string, TitreDeclare[]>();
-  for (const t of titresBruts) {
-    const liste = titresSalaries.get(t.obligationId) ?? [];
-    liste.push({
-      salarieId: t.salarieId,
-      libelle: `${t.salarie.prenom} ${t.salarie.nom}`.trim(),
-      delivreLe: t.delivreLe,
-      echeanceLe: t.echeanceLe,
-    });
-    titresSalaries.set(t.obligationId, liste);
-  }
-
-  const aGenerer = [
-    ...genererProchainesVerifications(obligations, new Map(), {
-      now,
-      misesEnService,
-    }),
-    ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
-    ...genererVerificationsSurMesure(surMesure, { now }),
-  ];
-
-  // 4. État en base. `_count` sert au seul arbitrage qui autorise une
-  //    suppression : une ligne sans rapport ni action ne porte aucune preuve.
-  const existantesBrutes = await prisma.verification.findMany({
-    where: { etablissementId },
-    select: {
-      id: true,
-      obligationId: true,
-      equipementId: true,
-      salarieId: true,
-      libelleObligation: true,
-      periodicite: true,
-      realisateurRequis: true,
-      datePrevue: true,
-      // L'archivage (ADR-034, N3) : sans lui, la réconciliation ne sait plus
-      // qu'une ligne est barrée et la ré-archiverait à chaque passe.
-      archiveLe: true,
-      statut: true,
-      prescriptionId: true,
-      // Depuis quand Rojer suit la ligne (ADR-036, D2). Lue pour être portée
-      // jusqu'au réconciliateur ; la stratégie par défaut ne s'en sert pas
-      // encore, seule la stratégie candidate du passage à blanc la lit.
-      suiviDepuis: true,
-      _count: { select: { rapports: true, actions: true } },
-    },
-  });
-
-  // La réalisation de chaque ligne se lit sur ses rapports (ADR-034) : une
-  // requête pour tout l'établissement, jamais une par ligne.
-  const dernieresRealisations = indexerDernieresRealisations(
-    await prisma.rapportVerification.findMany({
-      where: { etablissementId, ...WHERE_RAPPORT_REALISE },
-      // Le résultat voyage avec la date : il donne son statut à une ligne sans
-      // rendez-vous suivant, seule à en garder un (ADR-034). `createdAt`
-      // départage deux rapports du même jour.
-      select: {
-        verificationId: true,
-        dateRapport: true,
-        createdAt: true,
-        resultat: true,
-      },
-    }),
-  );
-
-  const existantes: OccurrenceExistante[] = existantesBrutes.map((v) => ({
-    id: v.id,
-    obligationId: v.obligationId,
-    equipementId: v.equipementId,
-    salarieId: v.salarieId,
-    libelleObligation: v.libelleObligation,
-    periodicite: v.periodicite,
-    realisateurRequis: v.realisateurRequis,
-    datePrevue: v.datePrevue,
-    archiveLe: v.archiveLe,
-    derniereRealisation: dernieresRealisations.get(v.id)?.dateRapport ?? null,
-    dernierResultat: dernieresRealisations.get(v.id)?.resultat ?? null,
-    statut: v.statut as StatutVerificationPersiste,
-    porteUnePreuve: v._count.rapports > 0 || v._count.actions > 0,
-    prescriptionId: v.prescriptionId,
-    suiviDepuis: v.suiviDepuis,
-  }));
-
-  // Les obligations encore applicables, y compris celles qui n'engendrent
-  // aucune ligne parce qu'elles sont permanentes (`periodicite: "autre"`).
-  // Sans cette liste, la réconciliation prendrait leur absence d'`aGenerer`
-  // pour un retrait et barrerait des lignes qui prouvent un contrôle réel.
-  //
-  // PAR CLÉ D'APPLICABILITÉ, pas par identifiant nu (`cleApplicabilite`) : une
-  // obligation d'équipement n'est « encore applicable » qu'aux appareils qui la
-  // déclenchent. L'identifiant seul rouvrait la ligne archivée d'un appareil dès
-  // qu'un AUTRE appareil déclenchait la même obligation.
-  const obligationsEncoreApplicables = clesApplicabilite(obligations);
-  // Et le RYTHME de chacune, surcharges de prescription comprises, depuis le
-  // même tableau : une ligne applicable que la génération saute n'a que cette
-  // table pour être réalignée (NB4, 2026-09-15 — voir `periodicitesEffectives`).
-  const periodicites = periodicitesEffectives(obligations);
-
-  // Les obligations à porteur salarié n'y sont JAMAIS par la voie ci-dessus :
-  // `evaluerObligation` rend `null` pour ce porteur — rien ne dit au moteur qui
-  // opère sur quoi, le cinquième déclencheur n'étant pas implémenté (ADR-023).
-  // Elles arrivent donc par la déclaration de l'employeur, et il faut les
-  // ajouter ici sans quoi le garde-fou ci-dessus ne couvre que deux porteurs
-  // sur trois : une ligne de titre qui cesse d'être générée serait classée
-  // « obligation retirée du référentiel » et supprimée.
-  //
-  // Le cas n'est pas théorique, et c'est celui-là même que le garde-fou cite :
-  // l'habilitation électrique passée de `triennale` à `autre` (ADR-023 § 6)
-  // cesse de produire une échéance, sans cesser un instant de s'appliquer.
-  //
-  // ~~La requête portait sur TOUS les titres déclarés, y compris ceux de
-  // salariés sortis de l'effectif~~ : « ne pas barrer toute obligation qu'un
-  // titre a un jour instanciée » laissait OUVERTE la ligne d'une personne
-  // partie, et comptée en retard si elle portait une action, pendant qu'Équipe
-  // disait « Ne s'applique plus » (2026-09-17, `lot/salarie-inactif-et-menage`).
-  // Les titres des personnes PRÉSENTES suffisent aux deux questions :
-  //
-  //   · l'obligation s'applique-t-elle encore ? — un titre en vigueur la porte ;
-  //   · le porteur de CETTE ligne existe-t-il encore ? — `titresActifs`, par
-  //     couple obligation × personne, comme `equipementsEnService` pour un
-  //     appareil. Le départ du seul détenteur ne barre donc pas l'obligation au
-  //     hasard d'un collègue : c'est la ligne de la personne partie, et elle
-  //     seule, qui sort des comptes.
-  //
-  // Le filtre `estPorteeParSalarie` n'est pas décoratif : `TitreSalarie.
-  // obligationId` n'a pas de clé étrangère (le référentiel vit en TypeScript),
-  // donc un titre déclaré par erreur sur une obligation d'ÉQUIPEMENT ferait
-  // sinon entrer celle-ci dans le garde-fou, et empêcherait l'archivage
-  // légitime de ses lignes le jour où elle est retirée.
-  const titresActifs = new Set<string>();
-  for (const t of titresBruts) {
-    titresActifs.add(
-      cleDeLigne(t.obligationId, { equipementId: null, salarieId: t.salarieId }),
-    );
-    const o = obligationParId(t.obligationId);
-    if (o !== undefined && estPorteeParSalarie(o)) {
-      obligationsEncoreApplicables.add(t.obligationId);
-      // Aucune surcharge ne vise un titre : le rythme est celui du référentiel.
-      periodicites.set(t.obligationId, o.periodicite);
-    }
-  }
-
-  const plan = reconcilierCalendrier(existantes, aGenerer, {
-    now,
-    obligationsEncoreApplicables,
-    periodicitesEffectives: periodicites,
-    // `etab.equipements` est déjà filtré sur `actif: true` par la lecture du
-    // point 1 : c'est exactement l'ensemble des porteurs encore en service.
-    equipementsEnService: new Set(etab.equipements.map((eq) => eq.id)),
-    titresActifs,
-    successions: SUCCESSIONS_DECLAREES,
-  });
+  // 1 à 4. Lecture, matching, génération, réconciliation — dans `passe.ts`
+  //    depuis le lot 2b de l'ADR-036 (2026-09-18), pour que le passage à blanc
+  //    puisse calculer un plan sans écrire. La lecture ne prend pas l'horloge ;
+  //    la planification la reçoit, et c'est la même `now` qui date ci-dessous
+  //    les lignes créées (`suiviDepuis`).
+  const lecture = await lireEntrees(prisma, etablissementId);
+  const plan = planifier(lecture, now);
+  const { etab, existantes } = lecture;
 
   // 5. Application du plan — tout ou rien. Un calendrier à moitié régénéré
   //    (créations passées, mises à jour perdues) afficherait des échéances

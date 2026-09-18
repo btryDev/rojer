@@ -128,7 +128,12 @@ const RELEVE = {
   // `suiviDepuis` sur les lignes qu'il CRÉE et lit la colonne sur celles qui
   // existent, mais aucune ligne existante n'est réécrite différemment — la
   // stratégie de date est la même, et rien ne lit encore la colonne.
-  empreinte: "3d57b99359ec4695",
+  // Recopiée SANS incrément une seconde fois le même jour (lot 2b, la
+  // couture) : `lireEntrees` et `planifier` extraites dans `passe.ts`, les
+  // branches de date déplacées mot pour mot dans `deciderParConservation`,
+  // `sources` ajouté aux lignes générées sans qu'aucune écriture ne le lise,
+  // `premierPas` déplacée dans `periodicite.ts`. Une extraction : NON.
+  empreinte: "f0e8ed648606a71a",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
