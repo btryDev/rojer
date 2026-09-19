@@ -58,7 +58,7 @@ import {
 } from "@/lib/referentiels/conformite/types";
 // La décision de date — la seule (ADR-036). `decision-par-faits.ts` n'importe de
 // ce module que des TYPES (`import type`) : aucun cycle à l'exécution.
-import { STRATEGIE_FAITS } from "./decision-par-faits";
+import { creerParFaits, deciderParFaits } from "./decision-par-faits";
 
 /**
  * Sentinelle du porteur « établissement » dans la clé de ligne.
@@ -1069,8 +1069,6 @@ export type ContexteExistante = {
   ex: OccurrenceExistante;
   /** La ligne générée qui la continue — attributs de référentiel et `sources`. */
   g: VerificationGenere;
-  /** Le dernier rapport réalisé de la ligne, ou `null` (`realisationConnue`). */
-  realisation: Date | null;
   /** La réalisation léguée par les lignes absorbées, ou `null`. */
   heritee: Date | null;
   /** L'horloge de la passe — repli de l'origine d'une ligne sans `suiviDepuis`. */
@@ -1093,30 +1091,17 @@ export type DecisionDeLigne = {
   source?: string;
 };
 
-/**
- * La décision de date du réconciliateur — la COUTURE posée au lot 2b de
- * l'ADR-036 (2026-09-18) pour faire tourner deux stratégies côte à côte.
- *
- * DEPUIS LA BASCULE (2026-09-19) IL N'Y EN A PLUS QU'UNE, `STRATEGIE_FAITS`
- * (`decision-par-faits.ts`) : la date et le statut sortent de `echeanceDeLigne`,
- * pour une ligne existante comme pour une ligne à créer. ~~La stratégie par
- * défaut, `deciderParConservation`, portait les huit branches de date du
- * réconciliateur, dont le « cycle ouvert » où la date en base ne bougeait
- * jamais — le constat B.~~ Retirée avec `statutCycleOuvert`. Le paramètre
- * reste le temps d'un lot, pour les tests qui injectent une décision ; le lot 5
- * retire la couture.
- */
-export type StrategieDecision = {
-  existante: (ctx: ContexteExistante) => DecisionDeLigne;
-  creation: (ctx: ContexteCreation) => DecisionDeLigne;
-};
+// ~~`StrategieDecision`~~ — la COUTURE posée au lot 2b de l'ADR-036
+// (2026-09-18) pour faire tourner deux stratégies côte à côte, retirée au lot 5
+// (2026-09-19) : depuis la bascule il n'y en avait plus qu'une. Le
+// réconciliateur appelle directement `deciderParFaits` et `creerParFaits`
+// (`decision-par-faits.ts`) — la date et le statut sortent de
+// `echeanceDeLigne`, pour une ligne existante comme pour une ligne à créer.
 
 export function reconcilierCalendrier(
   existantes: OccurrenceExistante[],
   aGenerer: VerificationGenere[],
   options: OptionsGenerateur = {},
-  // La décision de date — une seule depuis la bascule (ADR-036, lot 4).
-  decision: StrategieDecision = STRATEGIE_FAITS,
 ): PlanReconciliation {
   const now = options.now ?? new Date();
 
@@ -1245,7 +1230,7 @@ export function reconcilierCalendrier(
       // existante — origine = l'horloge de la passe, que `actions.ts` écrit
       // dans `suiviDepuis`. Une absorbante neuve naît donc datée de l'héritage
       // (règle 3), et non « à planifier », urgente, pour un acte accompli.
-      const d = decision.creation({ g, heritee, now });
+      const d = creerParFaits({ g, heritee, now });
       if (estStatutRealise(d.statut)) {
         // Inatteignable : une ligne qui n'existe pas encore ne porte aucun
         // rapport, donc aucune réalisation à solder. Le refus est explicite
@@ -1271,9 +1256,8 @@ export function reconcilierCalendrier(
     // `lib/referentiels/conformite/` se propage sans détruire la ligne.
     // Une obligation qui redevient applicable redevient normale : l'écriture
     // de la mise à jour remet `archiveLe` à `null` (`calendrier/actions.ts`).
-    // La réalisation que la ligne prouve : son dernier rapport réalisé. Lue sur
-    // les rapports (ADR-034), jamais recalculée ni recopiée sur la ligne.
-    const realisation = realisationConnue(ex);
+    // La réalisation que la ligne prouve — son dernier rapport réalisé, lu sur
+    // les rapports (ADR-034) — est rassemblée par `faitsDeLigne`.
 
     // LA DATE ET LE STATUT sortent de `echeanceDeLigne`, sur les faits de la
     // ligne (`deciderParFaits`). Le réconciliateur ne décide d'aucune date ; il
@@ -1283,13 +1267,7 @@ export function reconcilierCalendrier(
     // désarchivage, porteur disparu, boucle NB4 — plus bas —, et, dans
     // `actions.ts`, les écritures conditionnées et le sceau.
 
-    const decidee = decision.existante({
-      ex,
-      g,
-      realisation,
-      heritee,
-      now,
-    });
+    const decidee = deciderParFaits({ ex, g, heritee, now });
 
     const cible: MiseAJourOccurrence = {
       id: ex.id,

@@ -11,7 +11,6 @@ import {
 } from "@/lib/referentiels/conformite/types";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import {
-  STRATEGIE_FAITS,
   faitsDeLigne,
 } from "./decision-par-faits";
 import {
@@ -453,21 +452,9 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
 });
 
 describe("la décision par défaut — l'idempotence temporelle sur un dossier mêlé", () => {
-  it("c'est bien `STRATEGIE_FAITS` que le réconciliateur prend sans qu'on la lui passe", () => {
-    const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
-    const aGenerer = genererProchainesVerifications([applicable(o, [EQ])], new Map(), {
-      misesEnService: new Map([[EQ.id, d("2026-06-01")]]),
-    });
-    const ex = existante(aGenerer[0], {
-      statut: "a_planifier",
-      datePrevue: d("2026-09-16"),
-      suiviDepuis: d("2026-09-16"),
-    });
-    const opts = { now: NOW };
-    expect(reconcilierCalendrier([ex], aGenerer, opts)).toEqual(
-      reconcilierCalendrier([ex], aGenerer, opts, STRATEGIE_FAITS),
-    );
-  });
+  // ~~« c'est bien `STRATEGIE_FAITS` que le réconciliateur prend sans qu'on la
+  // lui passe »~~ — la couture est partie au lot 5 (2026-09-19) : il n'y a
+  // plus de décision à passer.
 
   it("appliquer le plan puis replanifier à J+400 ne réécrit rien", () => {
     const annuelle = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });

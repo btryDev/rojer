@@ -47,7 +47,6 @@ import {
   type OptionsGenerateur,
   type PlanReconciliation,
   type StatutVerificationPersiste,
-  type StrategieDecision,
   type TitreDeclare,
   type VerificationGenere,
 } from "./generateur";
@@ -199,17 +198,10 @@ export type EntreesReconciliation = {
  * génération, réconciliation. Fonction PURE : elle ne lit ni la base ni
  * l'horloge du processus, si bien que la même lecture replanifiée à une autre
  * date dit ce que la régénération écrirait ce jour-là.
- *
- * `decision` est la décision de date du réconciliateur ; absente, c'est la
- * seule du produit depuis la bascule (`STRATEGIE_FAITS`, ADR-036).
  */
-export function planifier(
-  lecture: LecturePasse,
-  now: Date,
-  decision?: StrategieDecision,
-): PlanReconciliation {
+export function planifier(lecture: LecturePasse, now: Date): PlanReconciliation {
   const { existantes, aGenerer, options } = preparer(lecture, now);
-  return reconcilierCalendrier(existantes, aGenerer, options, decision);
+  return reconcilierCalendrier(existantes, aGenerer, options);
 }
 
 /**

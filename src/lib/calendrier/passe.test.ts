@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { debutDuJour } from "@/lib/dates";
-import { STRATEGIE_FAITS, creerParFaits } from "./decision-par-faits";
 import type { EtablissementFaux, LigneFausse } from "./faux-prisma";
 import { lireEntrees, planifier, type ClientLecture } from "./passe";
 
@@ -124,14 +123,14 @@ describe("planifier — un plan depuis une lecture et une horloge", () => {
     expect(JSON.stringify(lecture.existantes)).toBe(avant);
   });
 
-  it("emploie la décision par les faits quand aucune n'est passée (ADR-036, bascule)", async () => {
+  it("date par la décision par les faits (ADR-036, bascule)", async () => {
     poserEtablissement();
     db.verifications = [ligne({ id: "v-1" })];
     const lecture = await lireEntrees(client, ETAB_ID);
     const now = new Date("2026-09-18T10:00:00Z");
+    // ~~`planifier(lecture, now)` égal à `planifier(lecture, now,
+    // STRATEGIE_FAITS)`~~ — la couture est partie au lot 5 (2026-09-19).
     const implicite = planifier(lecture, now);
-    const explicite = planifier(lecture, now, STRATEGIE_FAITS);
-    expect(implicite).toEqual(explicite);
     // Et elle RECALCULE depuis les faits : la ligne « à planifier » n'a ni
     // rapport ni mise en service, donc elle est datée du début du jour de son
     // ORIGINE (`suiviDepuis`, 1er mars à 9 h 30), plus du 1er mars à minuit UTC
@@ -143,23 +142,9 @@ describe("planifier — un plan depuis une lecture et une horloge", () => {
     expect(implicite.aMettreAJour[0].statut).toBe("a_planifier");
     expect(implicite.aMettreAJour[0].source).toBe("origine");
   });
-
-  it("remonte la `source` d'une décision qui en donne une, sans la comparer", async () => {
-    poserEtablissement();
-    db.verifications = [ligne({ id: "v-1" })];
-    const lecture = await lireEntrees(client, ETAB_ID);
-    const now = new Date("2026-09-18T10:00:00Z");
-    const plan = planifier(lecture, now, {
-      existante: () => ({
-        datePrevue: new Date("2026-12-01T00:00:00Z"),
-        statut: "planifiee",
-        source: "test",
-      }),
-      creation: creerParFaits,
-    });
-    expect(plan.aMettreAJour).toHaveLength(1);
-    expect(plan.aMettreAJour[0].source).toBe("test");
-  });
+  // ~~« remonte la `source` d'une décision qui en donne une »~~ — il injectait
+  // une décision par la couture, retirée au lot 5 (2026-09-19). La `source`
+  // de la décision réelle est lue par le test précédent.
 });
 
 describe("regenererUnePasse — la jointure lire → planifier → écrire", () => {

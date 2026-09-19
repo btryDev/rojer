@@ -143,7 +143,10 @@ const RELEVE = {
   // réalisé, le retrait le rouvre (comme avant la bascule), un rapport ne se
   // dépose pas sur une ligne de salarié, les seeds n'écrivent aucun statut
   // réalisé et le générateur ne crée jamais de ligne `autre`.
-  empreinte: "e9e0cd2dd4168dec",
+  // Recopiée SANS incrément le même jour (lot 5, suite) : la couture part —
+  // le réconciliateur appelle directement la seule décision qu'il prenait
+  // déjà par défaut. NON : même décision, mêmes écritures.
+  empreinte: "73c20af1f9685a3b",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

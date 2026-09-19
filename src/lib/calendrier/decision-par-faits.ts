@@ -2,8 +2,9 @@
 // sortent de `echeanceDeLigne`, calculés depuis des faits — ADR-036.
 //
 // ~~Stratégie CANDIDATE, que rien en production n'importe (lot 2c).~~ DEPUIS LA
-// BASCULE (lot 4, 2026-09-19), C'EST LA SEULE. `reconcilierCalendrier` la prend
-// par défaut, et c'est par lui qu'elle sert les trois chemins qui écrivent une
+// BASCULE (lot 4, 2026-09-19), C'EST LA SEULE. `reconcilierCalendrier` l'appelle
+// directement (~~par défaut, au lot 4~~ — la couture est partie au lot 5), et
+// c'est par lui qu'elle sert les trois chemins qui écrivent une
 // date : la régénération, le dépôt et la suppression d'un rapport
 // (`recalcul-ligne.ts`, qui rejoue le plan de la passe pour UNE ligne).
 //
@@ -27,14 +28,13 @@ import {
 } from "@/lib/rapports/schema";
 import { echeanceDeLigne, type FaitsDeLigne } from "./echeance-de-ligne";
 // DES TYPES SEULEMENT, et en `import type` : `generateur.ts` importe ce module
-// pour sa décision par défaut, et un import de valeur dans l'autre sens ferait
+// pour sa décision, et un import de valeur dans l'autre sens ferait
 // un cycle à l'exécution.
 import type {
   ContexteCreation,
   ContexteExistante,
   DecisionDeLigne,
   OccurrenceExistante,
-  StrategieDecision,
   VerificationGenere,
 } from "./generateur";
 import { estCyclique } from "./periodicite";
@@ -134,10 +134,4 @@ export function creerParFaits(ctx: ContexteCreation): DecisionDeLigne {
   const r = echeanceDeLigne(faitsDeLigne(ctx.g, null, ctx.heritee, ctx.now));
   return { datePrevue: r.datePrevue, statut: r.statut, source: r.source };
 }
-
-/** La décision complète — celle que `reconcilierCalendrier` prend par défaut. */
-export const STRATEGIE_FAITS: StrategieDecision = {
-  existante: deciderParFaits,
-  creation: creerParFaits,
-};
 
