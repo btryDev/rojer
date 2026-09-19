@@ -24,6 +24,25 @@ export const WHERE_RAPPORT_REALISE = {
   resultat: { in: [...RESULTATS_REALISES] },
 } satisfies Prisma.RapportVerificationWhereInput;
 
+/**
+ * L'ordre « du plus récent au plus ancien » des rapports d'une ligne, en
+ * `orderBy` Prisma : la date du rapport, puis l'instant de dépôt pour
+ * départager deux rapports du même jour (`dateRapport` est un jour civil).
+ *
+ * C'EST L'ORDRE DU MOTEUR, écrit pour les lecteurs. Le moteur départage en
+ * mémoire, par `indexerDernieresRealisations` ; les écrans, le registre, le
+ * serveur MCP et le dépôt d'un rapport lisent le premier d'une liste triée en
+ * base. L'ordre était recopié en littéral à huit endroits (audit du
+ * 2026-09-19) : une copie qui perdrait son second terme ferait afficher, pour
+ * deux rapports du même jour, un autre « dernier rapport » que celui dont le
+ * moteur a tiré le statut. `derniere-realisation.test.ts` tient l'équivalence
+ * entre cette constante et le départage du moteur.
+ */
+export const ORDRE_RAPPORT_PLUS_RECENT = [
+  { dateRapport: "desc" },
+  { createdAt: "desc" },
+] satisfies Prisma.RapportVerificationOrderByWithRelationInput[];
+
 /** La date du rapport réalisé le plus récent, ou `null` si aucun. Accepte la
  *  liste complète des rapports comme une liste déjà réduite au plus récent.
  *  Deux rapports du même jour portent la même date : le départage n'importe

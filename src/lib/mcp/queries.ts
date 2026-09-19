@@ -45,6 +45,7 @@ import { aUnRendezVous } from "@/lib/calendrier/etats";
 import { estVerificationRealisee } from "@/lib/dates/retard";
 import {
   derniereRealisation,
+  ORDRE_RAPPORT_PLUS_RECENT,
   WHERE_RAPPORT_REALISE,
 } from "@/lib/rapports/derniere-realisation";
 
@@ -533,12 +534,14 @@ export async function listerVerifications(
       // assistant hors du produit (cf. `libellePorteurSansNom`).
       salarieId: true,
       // La date du dernier rapport réalisé, et rien d'autre du rapport
-      // (ADR-034) : ni organisme, ni commentaire, ni fichier. Écrit en clair
-      // et non par une constante partagée : la garde RGPD de ce serveur relit
-      // le source, et une constante lui cacherait ce qui sort.
+      // (ADR-034) : ni organisme, ni commentaire, ni fichier. Le `select` est
+      // écrit en clair et non par une constante partagée : la garde RGPD de ce
+      // serveur relit le source, et une constante lui cacherait ce qui sort.
+      // L'ORDRE, lui, vient de la constante du moteur : il ne décide pas de ce
+      // qui sort, seulement de quel rapport sort.
       rapports: {
         where: WHERE_RAPPORT_REALISE,
-        orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+        orderBy: ORDRE_RAPPORT_PLUS_RECENT,
         take: 1,
         select: { dateRapport: true },
       },

@@ -165,7 +165,10 @@ const RELEVE = {
   // Recopiée SANS incrément le même jour (point 4) : `deciderParFaits` et
   // `creerParFaits`, deux relais d'une ligne, sont inlinés ; la branche
   // `source === undefined`, morte, part. NON : mêmes appels, mêmes écritures.
-  empreinte: "0de7502f2d5ca005",
+  // Recopiée SANS incrément le même jour (point 5) : `derniere-realisation.ts`
+  // gagne `ORDRE_RAPPORT_PLUS_RECENT`, que le moteur n'importe pas — il
+  // départage toujours par `indexerDernieresRealisations`. NON.
+  empreinte: "c40d958332ef09f4",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

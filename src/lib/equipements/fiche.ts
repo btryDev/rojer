@@ -14,6 +14,7 @@
 
 import type { ResultatVerification } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
 import { requireUser } from "@/lib/auth/require-user";
 import {
   aUnRendezVous,
@@ -101,7 +102,7 @@ export async function getFicheEquipement(id: string) {
       verifications: {
         orderBy: { datePrevue: "asc" },
         include: {
-          rapports: { orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }] },
+          rapports: { orderBy: ORDRE_RAPPORT_PLUS_RECENT },
           actions: true,
         },
       },

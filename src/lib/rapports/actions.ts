@@ -11,7 +11,10 @@ import {
   LigneModifieeEntreTemps,
   recalculerLigne,
 } from "@/lib/calendrier/recalcul-ligne";
-import { WHERE_RAPPORT_REALISE } from "./derniere-realisation";
+import {
+  ORDRE_RAPPORT_PLUS_RECENT,
+  WHERE_RAPPORT_REALISE,
+} from "./derniere-realisation";
 import { estResultatRealise, rapportMetadataSchema } from "./schema";
 import { validerFichier } from "./validator";
 
@@ -196,9 +199,9 @@ export async function uploadRapport(
       if (estResultatRealise(resultat)) {
         const dernierRealise = await tx.rapportVerification.findFirst({
           where: { verificationId: verif.id, ...WHERE_RAPPORT_REALISE },
-          // `createdAt` en second : deux rapports du même jour, sinon, ne se
+          // Le départage du moteur : deux rapports du même jour, sinon, ne se
           // départagent pas.
-          orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+          orderBy: ORDRE_RAPPORT_PLUS_RECENT,
           select: { dateRapport: true },
         });
         if (
