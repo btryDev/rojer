@@ -34,6 +34,11 @@ function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
   if (!ligne) return false;
   return Object.entries(where).every(([clef, attendu]) => {
     if (attendu && typeof attendu === "object" && !(attendu instanceof Date)) {
+      // `{ gte: Date }` — la fenêtre de la limite de fréquence.
+      if ("gte" in (attendu as Ligne)) {
+        const v = ligne[clef];
+        return v instanceof Date && v >= ((attendu as Ligne).gte as Date);
+      }
       return correspond(ligne[clef] as Ligne, attendu as Ligne);
     }
     return ligne[clef] === attendu;
@@ -51,6 +56,9 @@ function table(lignes: Ligne[]) {
     findUnique: vi.fn(chercher),
     findFirst: vi.fn(chercher),
     findMany: vi.fn(async () => lignes),
+    count: vi.fn(async ({ where }: { where: Ligne }) =>
+      lignes.filter((l) => correspond(l, where)).length,
+    ),
     create: vi.fn(async ({ data }: { data: Ligne }) => data),
     update: vi.fn(),
     delete: vi.fn(),
@@ -105,7 +113,7 @@ vi.mock("@/lib/email", () => ({
   publicAppUrl: () => "http://localhost:3000",
 }));
 
-import { emettreAccessToken } from "@/lib/access-tokens/actions";
+import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { demanderSignature } from "./actions";
 import { objetAppartientAEtablissement } from "./appartenance";
 
@@ -182,7 +190,7 @@ describe("émission d'un accès — objet d'un autre client", () => {
       objetId: RAPPORT_A_MOI.id,
     });
 
-    expect(r.accessTokenId).toMatch(/^atk_/);
+    expect(r.ok && r.accessTokenId).toMatch(/^atk_/);
     expect(prismaMock.accessToken.create).toHaveBeenCalledTimes(1);
     expect(mailsEnvoyes).toHaveLength(1);
   });
@@ -210,7 +218,6 @@ describe("demande de signature — les facteurs ne remontent pas au demandeur", 
       objetId: RAPPORT_A_MOI.id,
       signataireEmail: "signataire@exemple-externe.fr",
       signataireNom: "Jean Dupond",
-      libelleDocument: "Rapport de vérification",
     });
 
     // Contrôle positif d'abord : sans lui, les assertions suivantes
@@ -231,5 +238,164 @@ describe("demande de signature — les facteurs ne remontent pas au demandeur", 
     expect(rendu).not.toContain(code!);
     expect(rendu).not.toContain(lien!);
     expect(retour).toEqual({ ok: true });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// Garantie 5 — la demande de signature n'est plus un relais de courriels
+// piégés sous l'identité Rojer.
+// ─────────────────────────────────────────────────────────────────────────
+
+const DEMANDE = {
+  etablissementId: "etab-a-moi",
+  objetType: "rapport_verification" as const,
+  objetId: RAPPORT_A_MOI.id,
+  signataireEmail: "signataire@exemple-externe.fr",
+  signataireNom: "Jean Dupond",
+};
+
+function jetonsEmis(
+  n: number,
+  champs: { etablissementId: string; createdByUserId?: string; createdAt?: Date },
+): Record<string, unknown>[] {
+  return Array.from({ length: n }, (_, i) => ({
+    id: `atk_ancien_${i}_${champs.etablissementId}`,
+    createdByUserId: "user-1",
+    createdAt: new Date(),
+    ...champs,
+  }));
+}
+
+describe("garantie 5a — les entrées de demanderSignature sont validées", () => {
+  it("refuse un saut de ligne dans le nom du signataire, sans rien écrire ni envoyer", async () => {
+    const r = await demanderSignature({
+      ...DEMANDE,
+      signataireNom: "Jean\r\nBcc: victime@exemple-externe.fr",
+    });
+
+    expect(r.ok).toBe(false);
+    aucuneEcriture();
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("refuse une adresse invalide", async () => {
+    const r = await demanderSignature({ ...DEMANDE, signataireEmail: "pas-une-adresse" });
+
+    expect(r.ok).toBe(false);
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("refuse un nom démesuré", async () => {
+    const r = await demanderSignature({ ...DEMANDE, signataireNom: "A".repeat(5000) });
+
+    expect(r.ok).toBe(false);
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("refuse un type d'objet hors de l'énumération", async () => {
+    const r = await demanderSignature({
+      ...DEMANDE,
+      objetType: "facture" as never,
+    });
+
+    expect(r.ok).toBe(false);
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+});
+
+describe("garantie 5b — le texte du courriel ne vient plus du client", () => {
+  it("ignore un libellé fourni par l'appelant et dérive le sien de l'objet", async () => {
+    const PIEGE = "Facture impayée, cliquez ici";
+    const r = await demanderSignature({
+      ...DEMANDE,
+      // L'ancien paramètre, envoyé quand même par un appelant hostile.
+      libelleDocument: PIEGE,
+      sujetMail: PIEGE,
+      messageMail: PIEGE,
+    } as never);
+
+    expect(r).toEqual({ ok: true });
+    expect(mailsEnvoyes).toHaveLength(1);
+    const [mail] = mailsEnvoyes;
+    expect(mail.subject).not.toContain(PIEGE);
+    expect(mail.text).not.toContain(PIEGE);
+    // Contrôle positif : le libellé vient bien de l'objet.
+    expect(mail.subject).toBe("Signature à apporter : Ma vérification — rapport du 03/03/2026");
+  });
+
+  it("traversée : l'objet d'un autre client ne fournit pas de libellé, et rien ne part", async () => {
+    await expect(
+      demanderSignature({ ...DEMANDE, objetId: RAPPORT_DU_VOISIN.id }),
+    ).rejects.toSatisfy(estNotFound);
+
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("emettreAccessToken n'est plus exportée d'un module \"use server\"", async () => {
+    const actions = await import("@/lib/access-tokens/actions");
+    expect(Object.keys(actions)).not.toContain("emettreAccessToken");
+  });
+
+  it("le courriel refuse de partir avec un sujet sur plusieurs lignes", async () => {
+    const { envoyerMailAcces } = await import("@/lib/access-tokens/mail");
+    await expect(
+      envoyerMailAcces({
+        to: "signataire@exemple-externe.fr",
+        sujet: "Signature\r\nBcc: victime@exemple-externe.fr",
+        message: "x",
+        urlAcces: "http://localhost:3000/acces/x",
+        otp: null,
+        expireLe: new Date(),
+      }),
+    ).rejects.toThrow();
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+});
+
+describe("garantie 5c — limite de fréquence comptée en base", () => {
+  it("refuse le onzième lien de l'heure pour un établissement, sans rien écrire ni envoyer", async () => {
+    prismaMock.accessToken = table(jetonsEmis(10, { etablissementId: "etab-a-moi" }));
+
+    const r = await demanderSignature(DEMANDE);
+
+    expect(r.ok).toBe(false);
+    expect(prismaMock.accessToken.create).not.toHaveBeenCalled();
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("des liens émis il y a plus d'une heure ne comptent pas", async () => {
+    prismaMock.accessToken = table(
+      jetonsEmis(10, {
+        etablissementId: "etab-a-moi",
+        createdAt: new Date(Date.now() - 61 * 60_000),
+      }),
+    );
+
+    expect(await demanderSignature(DEMANDE)).toEqual({ ok: true });
+    expect(mailsEnvoyes).toHaveLength(1);
+  });
+
+  it("traversée : les envois d'un autre client ne consomment pas mon quota", async () => {
+    prismaMock.accessToken = table(
+      jetonsEmis(50, { etablissementId: "etab-voisin", createdByUserId: "user-voisin" }),
+    );
+
+    expect(await demanderSignature(DEMANDE)).toEqual({ ok: true });
+    expect(mailsEnvoyes).toHaveLength(1);
+  });
+
+  it("ouvrir d'autres établissements ne contourne pas la limite : plafond par utilisateur", async () => {
+    // Vingt liens émis par le même compte depuis deux autres établissements :
+    // aucun n'est au plafond de 10, le compte, lui, l'est à 20.
+    prismaMock.accessToken = table([
+      ...jetonsEmis(9, { etablissementId: "etab-bis" }),
+      ...jetonsEmis(9, { etablissementId: "etab-ter" }),
+      ...jetonsEmis(2, { etablissementId: "etab-quater" }),
+    ]);
+
+    const r = await demanderSignature(DEMANDE);
+
+    expect(r.ok).toBe(false);
+    expect(mailsEnvoyes).toHaveLength(0);
   });
 });

@@ -415,7 +415,6 @@ export default async function PlanPreventionDetailPage({
                   etablissementId={id}
                   objetType="plan_prevention"
                   objetId={plan.id}
-                  libelleDocument={`Plan de prévention ${numero(plan.numero)} — ${plan.entrepriseExterieureRaison}`}
                   nomDefaut={plan.euChefNom}
                 />
               ) : (
@@ -451,7 +450,6 @@ export default async function PlanPreventionDetailPage({
                   etablissementId={id}
                   objetType="plan_prevention"
                   objetId={plan.id}
-                  libelleDocument={`Plan de prévention ${numero(plan.numero)} — ${plan.entrepriseExterieureRaison}`}
                   emailDefaut={plan.efChefEmail}
                   nomDefaut={plan.efChefNom}
                 />

@@ -22,7 +22,22 @@ export type MailAccesArgs = {
   expireLe: Date;
 };
 
+/**
+ * Le dernier rempart contre l'injection d'en-tête : un sujet ou un nom qui
+ * porte un saut de ligne ne part pas. Les appelants valident déjà leurs
+ * entrées (`emissionSchema`) — ceci n'est pas une normalisation qui
+ * rattraperait une entrée fautive en silence, c'est un refus : une valeur
+ * multiligne arrivée jusqu'ici est un défaut à voir, pas à lisser.
+ */
+function exigerUneLigne(champ: string, valeur: string): void {
+  if (/[\r\n]/.test(valeur)) {
+    throw new Error(`Courriel d'accès refusé : ${champ} sur plusieurs lignes.`);
+  }
+}
+
 export async function envoyerMailAcces(args: MailAccesArgs): Promise<void> {
+  exigerUneLigne("sujet", args.sujet);
+  if (args.nom) exigerUneLigne("nom du destinataire", args.nom);
   const bonjour = args.nom ? `Bonjour ${args.nom},` : "Bonjour,";
   const expiration = formaterDateHeureFr(args.expireLe);
 

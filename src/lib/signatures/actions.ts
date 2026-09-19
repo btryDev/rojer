@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { formaterDateFr } from "@/lib/dates";
-import { emettreAccessToken } from "@/lib/access-tokens/actions";
+import { z } from "zod";
+import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
 import {
   decrementOtpEssais,
@@ -24,7 +25,10 @@ import {
 } from "./otp";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
 import { objetEstSignable } from "./etat-signable";
-import type { MethodeSignature, ObjetSignable } from "@prisma/client";
+import { ObjetSignable } from "@prisma/client";
+import type { MethodeSignature } from "@prisma/client";
+import { libelleDocumentSignable } from "./libelle-document";
+import { notFound } from "next/navigation";
 
 /**
  * Server actions de signature électronique simple (ADR-006 / ADR-008).
@@ -42,38 +46,82 @@ const MESSAGE_NON_SIGNABLE =
   "Ce document n'est plus à signer : il a été clos ou annulé.";
 
 /**
+ * Les entrées de `demanderSignature`, validées. C'est une server action,
+ * donc un point d'entrée réseau : ces valeurs sont celles que l'appelant a
+ * choisies, pas celles qu'un formulaire a envoyées. Le nom part dans le
+ * corps du courriel (« Bonjour … ») : aucun caractère de contrôle, pour
+ * qu'il ne puisse ni fabriquer des lignes, ni rien injecter.
+ *
+ * Il n'y a plus de `libelleDocument` : le nom du document se dérive de
+ * l'objet, côté serveur (`./libelle-document.ts`). Une clé inconnue envoyée
+ * quand même est ignorée — `z.object` ne la laisse pas passer. Plus de
+ * `prestataireId` non plus : aucun appelant ne le passait, et rien ne
+ * vérifiait qu'il appartenait à l'établissement.
+ */
+const demandeSignatureSchema = z.object({
+  etablissementId: z.string().min(1).max(100),
+  objetType: z.enum(ObjetSignable),
+  objetId: z.string().min(1).max(100),
+  signataireEmail: z
+    .string({ error: "Adresse électronique requise." })
+    .trim()
+    .toLowerCase()
+    .email({ error: "Adresse électronique invalide." })
+    .max(254, { error: "Adresse électronique trop longue." }),
+  signataireNom: z
+    .string({ error: "Nom du signataire requis." })
+    .trim()
+    .min(1, { error: "Nom du signataire requis." })
+    .max(120, { error: "Nom du signataire trop long (120 caractères au plus)." })
+    .regex(/^[^\p{Cc}]*$/u, {
+      error: "Le nom du signataire ne doit pas contenir de saut de ligne.",
+    }),
+  signataireRole: z
+    .string()
+    .trim()
+    .max(120)
+    .regex(/^[^\p{Cc}]*$/u)
+    .optional(),
+});
+
+export type DemandeSignature = z.input<typeof demandeSignatureSchema>;
+
+/**
  * Émet une demande de signature : crée un AccessToken scope "signature",
  * envoie le lien par email. Le destinataire viendra signer via OTP sur
  * `/acces/[token]`.
  *
- * L'autorisation est portée par `emettreAccessToken`, qui exige un user
- * connecté propriétaire de `etablissementId` **et** que `objetId` s'y
- * trouve — les deux paramètres arrivent du même appel, et l'un ne dit rien
- * de l'autre.
+ * Dans l'ordre : validation des entrées, propriété de l'établissement, état
+ * signable de l'objet, dérivation du libellé (qui établit aussi que l'objet
+ * est dans l'établissement), puis `emettreAccessToken` — qui revérifie
+ * l'appartenance et applique la limite de fréquence.
+ *
+ * **Le texte du courriel ne vient plus du client.** Sujet et corps sont
+ * écrits ici, autour d'un libellé lu sur l'objet : un compte ne choisit plus
+ * le texte d'un message envoyé sous l'identité Rojer.
  *
  * **Rien de ce qui permet de signer ne revient ici** — ni le lien, ni le
- * code. Le retour est un accusé de réception, et c'est le point : le
+ * code. Le retour est un accusé de réception, ou un refus lisible : le
  * demandeur ne doit pas tenir ce qui n'est adressé qu'au signataire, sans
- * quoi il signe à sa place. Le raisonnement complet, ce que ce retrait
- * emporte, et le chemin qui sert le besoin d'essai en local, sont dans
- * `@/lib/access-tokens/actions`.
+ * quoi il signe à sa place. Le raisonnement complet est dans
+ * `@/lib/access-tokens/emission`.
  */
-export async function demanderSignature(params: {
-  etablissementId: string;
-  objetType: ObjetSignable;
-  objetId: string;
-  signataireEmail: string;
-  signataireNom: string;
-  signataireRole?: string;
-  prestataireId?: string;
-  libelleDocument: string;
-}): Promise<{ ok: true } | { ok: false; message: string }> {
+export async function demanderSignature(
+  entree: DemandeSignature,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const parsed = demandeSignatureSchema.safeParse(entree);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Demande invalide.",
+    };
+  }
+  const params = parsed.data;
+
+  await assertEtablissementOwnership(params.etablissementId);
   // Aucun lien ne part pour un objet clos ou annulé : il serait refusé au
   // moment de signer (`poserSignatureAvecToken`), autant ne pas envoyer au
-  // tiers un courriel qui ne mène à rien. L'appartenance de l'objet est
-  // vérifiée plus bas par `emettreAccessToken` ; ici, un objet étranger
-  // répond « non signable » sans rien dire de plus.
-  await assertEtablissementOwnership(params.etablissementId);
+  // tiers un courriel qui ne mène à rien.
   if (
     !(await objetEstSignable(
       params.objetType,
@@ -83,21 +131,29 @@ export async function demanderSignature(params: {
   ) {
     return { ok: false, message: MESSAGE_NON_SIGNABLE };
   }
-  await emettreAccessToken({
+
+  const libelle = await libelleDocumentSignable(
+    params.objetType,
+    params.objetId,
+    params.etablissementId,
+  );
+  if (!libelle) notFound();
+
+  const r = await emettreAccessToken({
     etablissementId: params.etablissementId,
     scope: "signature",
     objetType: params.objetType,
     objetId: params.objetId,
-    prestataireId: params.prestataireId,
     emailDestinataire: params.signataireEmail,
     nomDestinataire: params.signataireNom,
-    sujetMail: `Signature à apporter : ${params.libelleDocument}`,
+    sujetMail: `Signature à apporter : ${libelle}`,
     messageMail:
       `Vous êtes invité(e) à signer électroniquement le document suivant : ` +
-      `« ${params.libelleDocument} ». ` +
+      `« ${libelle} ». ` +
       `Cette signature a la même valeur probatoire qu'une signature manuscrite ` +
       `(art. 1366-1367 du Code civil, règlement eIDAS niveau simple).`,
   });
+  if (!r.ok) return { ok: false, message: r.message };
   // Un accusé de réception, rien d'autre. Aucun appelant n'a besoin de
   // l'identifiant du jeton, et ce qui n'est pas rendu ne peut pas fuir.
   return { ok: true };

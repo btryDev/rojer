@@ -600,7 +600,6 @@ export default async function VerificationDetailPage({
                           etablissementId={id}
                           objetType="rapport_verification"
                           objetId={r.id}
-                          libelleDocument={`${v.libelleObligation} — rapport du ${formatDate(r.dateRapport)}`}
                         />
                       </div>
                       <SupprimerRapportButton id={r.id} />

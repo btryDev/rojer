@@ -339,7 +339,6 @@ export default async function PermisFeuDetailPage({
                     etablissementId={id}
                     objetType="permis_feu"
                     objetId={permis.id}
-                    libelleDocument={`Permis de feu ${numero(permis.numero)} — ${permis.prestataireRaison}`}
                     emailDefaut={undefined}
                     nomDefaut={permis.donneurOrdreNom}
                   />
@@ -385,7 +384,6 @@ export default async function PermisFeuDetailPage({
                     etablissementId={id}
                     objetType="permis_feu"
                     objetId={permis.id}
-                    libelleDocument={`Permis de feu ${numero(permis.numero)} — ${permis.prestataireRaison}`}
                     emailDefaut={permis.prestataireEmail}
                     nomDefaut={permis.prestataireContact}
                   />

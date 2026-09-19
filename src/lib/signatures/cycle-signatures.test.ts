@@ -430,7 +430,6 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
       objetId: "pp-1",
       signataireEmail: "signataire@exemple-externe.fr",
       signataireNom: "Jean Dupond",
-      libelleDocument: "Plan",
     });
 
     expect(r.ok).toBe(false);
