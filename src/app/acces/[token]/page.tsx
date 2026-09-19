@@ -5,6 +5,20 @@ import { WhyCard, LegalBadge } from "@/components/ui-kit";
 import { SignatureExterneForm } from "@/components/signatures/SignatureExterneForm";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
+import { objetEstSignable } from "@/lib/signatures/etat-signable";
+import {
+  contenuASigner,
+  type ContenuASigner,
+  type ContenuPermisASigner,
+  type ContenuPlanASigner,
+} from "@/lib/signatures/contenu-a-signer";
+import {
+  CHAPEAU_R4512_8,
+  RUBRIQUES_R4512_8,
+  texteRubrique,
+} from "@/lib/plan-prevention/contenu-r4512-8";
+import { LABEL_NATURE } from "@/lib/permis-feu/schema";
+import { mesureParId } from "@/lib/permis-feu/referentiel";
 
 /**
  * Page publique non authentifiée : un prestataire arrive ici via un lien
@@ -60,11 +74,37 @@ export default async function AccesParTokenPage({
   });
   if (!etablissement) notFound();
 
-  const libelleObjet = await libelleObjetSignable(
+  // Lecture bornée à l'établissement DU JETON : c'est par une lecture non
+  // bornée que cette page a déjà laissé fuir le rapport d'un autre client.
+  const contenu = await contenuASigner(
     t.objetType,
     t.objetId,
     t.etablissementId,
   );
+  const libelleObjet = libelleDe(contenu);
+
+  // Un objet clos ou annulé ne se signe plus : on le dit ici plutôt que de
+  // présenter un formulaire que la pose de signature refusera. Bornée à
+  // l'établissement du jeton, comme toute lecture de cette page.
+  if (
+    t.scope === "signature" &&
+    !(await objetEstSignable(t.objetType, t.objetId, t.etablissementId))
+  ) {
+    return (
+      <main className="mx-auto max-w-xl px-6 py-16 sm:px-10">
+        <div className="rounded-2xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-8">
+          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Signature</p>
+          <h1 className="mt-2 text-[1.5rem] font-semibold tracking-[-0.02em]">
+            Ce document n&apos;est plus à signer
+          </h1>
+          <p className="mt-4 text-[0.9rem] leading-relaxed text-[color:var(--muted-foreground)]">
+            Il a été clos ou annulé par la personne qui vous a envoyé ce lien.
+            Rapprochez-vous d&apos;elle si une signature reste attendue.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   if (t.scope === "signature") {
     return (
@@ -97,6 +137,10 @@ export default async function AccesParTokenPage({
             </LegalBadge>
           </WhyCard>
         </div>
+
+        {contenu?.type === "plan_prevention" &&
+          detailPlan(contenu, etablissement.entreprise.raisonSociale)}
+        {contenu?.type === "permis_feu" && detailPermis(contenu)}
 
         <div className="mt-10">
           <SignatureExterneForm
@@ -137,41 +181,200 @@ export default async function AccesParTokenPage({
 /**
  * Libellé de l'objet visé, pour dire au porteur du lien ce qu'il signe.
  *
- * **`etablissementId` est un paramètre obligatoire**, et il vient du jeton,
- * jamais de l'URL. Cette fonction lisait le rapport sur son seul identifiant :
- * elle rendait alors le nom du fichier, la date et l'obligation d'un rapport
- * appartenant à n'importe quel établissement. L'émission d'un jeton borne
- * désormais `objetId` à l'établissement (`lib/signatures/appartenance.ts`),
- * mais un jeton émis avant ce garde reste en base jusqu'à son expiration —
- * et c'est ici que se joue ce qu'il donne à lire.
- *
- * Un objet hors du périmètre du jeton est traité comme inexistant : on
- * retombe sur le libellé générique, exactement comme pour un type d'objet
- * qu'on ne sait pas encore nommer.
+ * Le contenu arrive déjà borné à l'établissement du jeton
+ * (`contenuASigner`). Un objet hors de ce périmètre vaut `null` : on retombe
+ * sur le libellé générique, exactement comme pour un type d'objet qu'on ne
+ * sait pas encore montrer — et l'identifiant interne n'est plus affiché, il
+ * n'apprenait rien au signataire.
  */
-async function libelleObjetSignable(
-  objetType: string,
-  objetId: string,
-  etablissementId: string,
-) {
-  if (objetType === "rapport_verification") {
-    const r = await prisma.rapportVerification.findFirst({
-      where: { id: objetId, etablissementId },
-      select: {
-        fichierNomOriginal: true,
-        dateRapport: true,
-        verification: { select: { libelleObligation: true } },
-      },
-    });
-    if (r) {
-      return {
-        titre: r.verification.libelleObligation,
-        description: `Rapport du ${formaterDateFr(r.dateRapport)} — fichier « ${r.fichierNomOriginal} ».`,
-      };
-    }
+function libelleDe(contenu: ContenuASigner | null): {
+  titre: string;
+  description: string;
+} {
+  if (!contenu) {
+    return {
+      titre: "Document à signer",
+      description:
+        "Le détail de ce document n'est pas disponible sur cette page. Rapprochez-vous de la personne qui vous a envoyé ce lien avant de signer.",
+    };
   }
-  return {
-    titre: "Document à signer",
-    description: "Référence interne : " + objetId,
-  };
+  switch (contenu.type) {
+    case "rapport_verification":
+      return { titre: contenu.titre, description: contenu.description };
+    case "plan_prevention":
+      return {
+        titre: `Plan de prévention PP-${String(contenu.numero).padStart(3, "0")}`,
+        description:
+          "Le plan arrêté en commun avant les travaux (art. R. 4512-6 CT). Votre signature porte sur l'ensemble du contenu ci-dessous : relisez-le avant de signer.",
+      };
+    case "permis_feu":
+      return {
+        titre: `Permis de feu PF-${String(contenu.numero).padStart(3, "0")}`,
+        description:
+          "L'autorisation de travaux par point chaud et ses mesures de prévention. Votre signature porte sur l'ensemble du contenu ci-dessous : relisez-le avant de signer.",
+      };
+  }
+}
+
+const CLASSE_SECTION =
+  "mt-6 rounded-2xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-6";
+const CLASSE_SURTITRE =
+  "board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]";
+const CLASSE_TEXTE = "m-0 mt-2 whitespace-pre-wrap text-[0.9rem] leading-relaxed";
+const CLASSE_VIDE =
+  "m-0 mt-2 text-[0.85rem] leading-relaxed text-[color:var(--muted-foreground)]";
+
+function periode(debut: Date, fin: Date): string {
+  return `Du ${formaterDateFr(debut)} au ${formaterDateFr(fin)}`;
+}
+
+/**
+ * Le plan tel que le signataire l'engage. Des fonctions qui rendent du JSX,
+ * pas des composants : la page reste un seul arbre, qu'un test lit en entier.
+ */
+function detailPlan(c: ContenuPlanASigner, raisonSocialeEU: string) {
+  return (
+    <div className="mt-8">
+      <section className={CLASSE_SECTION}>
+        <p className={CLASSE_SURTITRE}>Les parties</p>
+        <dl className="mt-3 grid grid-cols-1 gap-y-2 text-[0.9rem] sm:grid-cols-[200px_1fr]">
+          <dt className="text-[color:var(--muted-foreground)]">Entreprise utilisatrice</dt>
+          <dd className="m-0">
+            {raisonSocialeEU} — {c.euChefNom}
+            {c.euChefFonction ? `, ${c.euChefFonction}` : ""}
+          </dd>
+          <dt className="text-[color:var(--muted-foreground)]">Entreprise extérieure</dt>
+          <dd className="m-0">
+            {c.entrepriseExterieureRaison}
+            {c.entrepriseExterieureSiret ? ` (SIRET ${c.entrepriseExterieureSiret})` : ""}{" "}
+            — {c.efChefNom} · {c.efEffectifIntervenant} intervenant
+            {c.efEffectifIntervenant > 1 ? "s" : ""}
+          </dd>
+        </dl>
+      </section>
+
+      <section className={CLASSE_SECTION}>
+        <p className={CLASSE_SURTITRE}>Les travaux</p>
+        <dl className="mt-3 grid grid-cols-1 gap-y-2 text-[0.9rem] sm:grid-cols-[200px_1fr]">
+          <dt className="text-[color:var(--muted-foreground)]">Période</dt>
+          <dd className="m-0">
+            {periode(c.dateDebut, c.dateFin)}
+            {c.dureeHeuresEstimee != null ? ` · ${c.dureeHeuresEstimee} h estimées` : ""}
+          </dd>
+          <dt className="text-[color:var(--muted-foreground)]">Lieux</dt>
+          <dd className="m-0 whitespace-pre-wrap">{c.lieux}</dd>
+          <dt className="text-[color:var(--muted-foreground)]">Nature des travaux</dt>
+          <dd className="m-0 whitespace-pre-wrap">
+            {c.naturesTravaux}
+            {c.travauxDangereux
+              ? " — travaux figurant sur la liste dangereuse (arrêté du 19 mars 1993)"
+              : ""}
+          </dd>
+          <dt className="text-[color:var(--muted-foreground)]">Inspection commune</dt>
+          <dd className="m-0 whitespace-pre-wrap">
+            {c.inspectionDate
+              ? `Le ${formaterDateFr(c.inspectionDate)}${
+                  c.inspectionParticipants ? ` — ${c.inspectionParticipants}` : ""
+                }`
+              : "Non renseignée"}
+          </dd>
+        </dl>
+      </section>
+
+      <section className={CLASSE_SECTION}>
+        <p className={CLASSE_SURTITRE}>Risques d&apos;interférence et mesures de chaque partie</p>
+        {c.lignes.length === 0 ? (
+          <p className={CLASSE_VIDE}>Aucun risque d&apos;interférence n&apos;est inscrit au plan.</p>
+        ) : (
+          <ol className="m-0 mt-3 flex list-decimal flex-col gap-3 pl-5 text-[0.9rem]">
+            {c.lignes.map((l) => (
+              <li key={l.ordre}>
+                <p className="m-0 font-semibold whitespace-pre-wrap">{l.risque}</p>
+                <p className="m-0 mt-1 whitespace-pre-wrap">
+                  Entreprise utilisatrice : {l.mesureEntrepriseUtilisatrice || "—"}
+                </p>
+                <p className="m-0 whitespace-pre-wrap">
+                  Entreprise extérieure : {l.mesureEntrepriseExterieure || "—"}
+                </p>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <section className={CLASSE_SECTION}>
+        <p className={CLASSE_SURTITRE}>Contenu minimal · art. R. 4512-8 CT</p>
+        <p className={CLASSE_VIDE}>{CHAPEAU_R4512_8}</p>
+        {RUBRIQUES_R4512_8.map((r) => (
+          <div key={r.numero} className="mt-4">
+            <p className="m-0 text-[0.9rem] font-semibold">
+              {r.numero}° {r.titre}
+            </p>
+            {!r.renseignee(c) ? (
+              <p className={CLASSE_VIDE}>Non renseigné.</p>
+            ) : r.numero === 1 ? (
+              <ul className="m-0 mt-2 flex list-disc flex-col gap-2 pl-5 text-[0.9rem]">
+                {c.phasesDangereuses.map((f) => (
+                  <li key={f.ordre} className="whitespace-pre-wrap">
+                    {f.phase || "—"} → {f.moyensPrevention || "moyens de prévention non renseignés"}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={CLASSE_TEXTE}>{texteRubrique(c, r.numero)}</p>
+            )}
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function detailPermis(c: ContenuPermisASigner) {
+  return (
+    <div className="mt-8">
+      <section className={CLASSE_SECTION}>
+        <p className={CLASSE_SURTITRE}>Les parties et les travaux</p>
+        <dl className="mt-3 grid grid-cols-1 gap-y-2 text-[0.9rem] sm:grid-cols-[200px_1fr]">
+          <dt className="text-[color:var(--muted-foreground)]">Intervenant</dt>
+          <dd className="m-0">
+            {c.prestataireRaison} — {c.prestataireContact}
+          </dd>
+          <dt className="text-[color:var(--muted-foreground)]">Donneur d&apos;ordre</dt>
+          <dd className="m-0">
+            {c.donneurOrdreNom}
+            {c.donneurOrdreFonction ? `, ${c.donneurOrdreFonction}` : ""}
+          </dd>
+          <dt className="text-[color:var(--muted-foreground)]">Période</dt>
+          <dd className="m-0">{periode(c.dateDebut, c.dateFin)}</dd>
+          <dt className="text-[color:var(--muted-foreground)]">Lieu</dt>
+          <dd className="m-0 whitespace-pre-wrap">{c.lieu}</dd>
+          <dt className="text-[color:var(--muted-foreground)]">Nature</dt>
+          <dd className="m-0">
+            {c.naturesTravaux
+              .map((n) => LABEL_NATURE[n as keyof typeof LABEL_NATURE] ?? n)
+              .join(", ") || "—"}
+          </dd>
+          <dt className="text-[color:var(--muted-foreground)]">Description</dt>
+          <dd className="m-0 whitespace-pre-wrap">{c.descriptionTravaux}</dd>
+          <dt className="text-[color:var(--muted-foreground)]">Surveillance après travaux</dt>
+          <dd className="m-0">{c.dureeSurveillanceMinutes} minutes</dd>
+        </dl>
+      </section>
+
+      <section className={CLASSE_SECTION}>
+        <p className={CLASSE_SURTITRE}>Mesures de prévention retenues</p>
+        {c.mesuresValidees.length === 0 ? (
+          <p className={CLASSE_VIDE}>Aucune mesure n&apos;est cochée sur ce permis.</p>
+        ) : (
+          <ul className="m-0 mt-3 flex list-disc flex-col gap-1.5 pl-5 text-[0.9rem]">
+            {c.mesuresValidees.map((id) => (
+              <li key={id}>{mesureParId(id)?.libelle ?? id}</li>
+            ))}
+          </ul>
+        )}
+        {c.mesuresNotes ? <p className={CLASSE_TEXTE}>{c.mesuresNotes}</p> : null}
+      </section>
+    </div>
+  );
 }

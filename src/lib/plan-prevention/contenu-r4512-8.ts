@@ -150,7 +150,7 @@ export function rubriquesManquantes(
 }
 
 /** Ce que la rubrique 2° à 5° contient sur ce plan, ou `null`. */
-function texteRubrique(plan: ContenuPlan, numero: number): string | null {
+export function texteRubrique(plan: ContenuPlan, numero: number): string | null {
   switch (numero) {
     case 2:
       return plan.adaptationMateriels;

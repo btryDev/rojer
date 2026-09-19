@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { formaterDateFr } from "@/lib/dates";
-import { emettreAccessToken } from "@/lib/access-tokens/actions";
+import { z } from "zod";
+import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
 import {
   decrementOtpEssais,
@@ -23,7 +24,11 @@ import {
   verifyOtp,
 } from "./otp";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
-import type { MethodeSignature, ObjetSignable } from "@prisma/client";
+import { objetEstSignable } from "./etat-signable";
+import { ObjetSignable } from "@prisma/client";
+import type { MethodeSignature } from "@prisma/client";
+import { libelleDocumentSignable } from "./libelle-document";
+import { notFound } from "next/navigation";
 
 /**
  * Server actions de signature électronique simple (ADR-006 / ADR-008).
@@ -37,48 +42,118 @@ import type { MethodeSignature, ObjetSignable } from "@prisma/client";
  * et le nom des documents de n'importe quel établissement.
  */
 
+const MESSAGE_NON_SIGNABLE =
+  "Ce document n'est plus à signer : il a été clos ou annulé.";
+
+/**
+ * Les entrées de `demanderSignature`, validées. C'est une server action,
+ * donc un point d'entrée réseau : ces valeurs sont celles que l'appelant a
+ * choisies, pas celles qu'un formulaire a envoyées. Le nom part dans le
+ * corps du courriel (« Bonjour … ») : aucun caractère de contrôle, pour
+ * qu'il ne puisse ni fabriquer des lignes, ni rien injecter.
+ *
+ * Il n'y a plus de `libelleDocument` : le nom du document se dérive de
+ * l'objet, côté serveur (`./libelle-document.ts`). Une clé inconnue envoyée
+ * quand même est ignorée — `z.object` ne la laisse pas passer. Plus de
+ * `prestataireId` non plus : aucun appelant ne le passait, et rien ne
+ * vérifiait qu'il appartenait à l'établissement.
+ */
+const demandeSignatureSchema = z.object({
+  etablissementId: z.string().min(1).max(100),
+  objetType: z.enum(ObjetSignable),
+  objetId: z.string().min(1).max(100),
+  signataireEmail: z
+    .string({ error: "Adresse électronique requise." })
+    .trim()
+    .toLowerCase()
+    .email({ error: "Adresse électronique invalide." })
+    .max(254, { error: "Adresse électronique trop longue." }),
+  signataireNom: z
+    .string({ error: "Nom du signataire requis." })
+    .trim()
+    .min(1, { error: "Nom du signataire requis." })
+    .max(120, { error: "Nom du signataire trop long (120 caractères au plus)." })
+    .regex(/^[^\p{Cc}]*$/u, {
+      error: "Le nom du signataire ne doit pas contenir de saut de ligne.",
+    }),
+  signataireRole: z
+    .string()
+    .trim()
+    .max(120)
+    .regex(/^[^\p{Cc}]*$/u)
+    .optional(),
+});
+
+export type DemandeSignature = z.input<typeof demandeSignatureSchema>;
+
 /**
  * Émet une demande de signature : crée un AccessToken scope "signature",
  * envoie le lien par email. Le destinataire viendra signer via OTP sur
  * `/acces/[token]`.
  *
- * L'autorisation est portée par `emettreAccessToken`, qui exige un user
- * connecté propriétaire de `etablissementId` **et** que `objetId` s'y
- * trouve — les deux paramètres arrivent du même appel, et l'un ne dit rien
- * de l'autre.
+ * Dans l'ordre : validation des entrées, propriété de l'établissement, état
+ * signable de l'objet, dérivation du libellé (qui établit aussi que l'objet
+ * est dans l'établissement), puis `emettreAccessToken` — qui revérifie
+ * l'appartenance et applique la limite de fréquence.
+ *
+ * **Le texte du courriel ne vient plus du client.** Sujet et corps sont
+ * écrits ici, autour d'un libellé lu sur l'objet : un compte ne choisit plus
+ * le texte d'un message envoyé sous l'identité Rojer.
  *
  * **Rien de ce qui permet de signer ne revient ici** — ni le lien, ni le
- * code. Le retour est un accusé de réception, et c'est le point : le
+ * code. Le retour est un accusé de réception, ou un refus lisible : le
  * demandeur ne doit pas tenir ce qui n'est adressé qu'au signataire, sans
- * quoi il signe à sa place. Le raisonnement complet, ce que ce retrait
- * emporte, et le chemin qui sert le besoin d'essai en local, sont dans
- * `@/lib/access-tokens/actions`.
+ * quoi il signe à sa place. Le raisonnement complet est dans
+ * `@/lib/access-tokens/emission`.
  */
-export async function demanderSignature(params: {
-  etablissementId: string;
-  objetType: ObjetSignable;
-  objetId: string;
-  signataireEmail: string;
-  signataireNom: string;
-  signataireRole?: string;
-  prestataireId?: string;
-  libelleDocument: string;
-}): Promise<{ ok: true }> {
-  await emettreAccessToken({
+export async function demanderSignature(
+  entree: DemandeSignature,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const parsed = demandeSignatureSchema.safeParse(entree);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Demande invalide.",
+    };
+  }
+  const params = parsed.data;
+
+  await assertEtablissementOwnership(params.etablissementId);
+  // Aucun lien ne part pour un objet clos ou annulé : il serait refusé au
+  // moment de signer (`poserSignatureAvecToken`), autant ne pas envoyer au
+  // tiers un courriel qui ne mène à rien.
+  if (
+    !(await objetEstSignable(
+      params.objetType,
+      params.objetId,
+      params.etablissementId,
+    ))
+  ) {
+    return { ok: false, message: MESSAGE_NON_SIGNABLE };
+  }
+
+  const libelle = await libelleDocumentSignable(
+    params.objetType,
+    params.objetId,
+    params.etablissementId,
+  );
+  if (!libelle) notFound();
+
+  const r = await emettreAccessToken({
     etablissementId: params.etablissementId,
     scope: "signature",
     objetType: params.objetType,
     objetId: params.objetId,
-    prestataireId: params.prestataireId,
     emailDestinataire: params.signataireEmail,
     nomDestinataire: params.signataireNom,
-    sujetMail: `Signature à apporter : ${params.libelleDocument}`,
+    sujetMail: `Signature à apporter : ${libelle}`,
     messageMail:
       `Vous êtes invité(e) à signer électroniquement le document suivant : ` +
-      `« ${params.libelleDocument} ». ` +
+      `« ${libelle} ». ` +
       `Cette signature a la même valeur probatoire qu'une signature manuscrite ` +
       `(art. 1366-1367 du Code civil, règlement eIDAS niveau simple).`,
   });
+  if (!r.ok) return { ok: false, message: r.message };
   // Un accusé de réception, rien d'autre. Aucun appelant n'a besoin de
   // l'identifiant du jeton, et ce qui n'est pas rendu ne peut pas fuir.
   return { ok: true };
@@ -129,6 +204,21 @@ export async function poserSignatureAvecToken(
   }
   if (!token.otpHash) {
     return { status: "error", message: "Configuration OTP manquante." };
+  }
+
+  // LA GARDE DE FOND. La clôture et l'annulation révoquent les liens en vol
+  // (`revoquerLiensEnVol`), mais un jeton émis par un autre chemin, ou
+  // pendant la clôture, y échapperait : c'est ici, au moment de signer, que
+  // l'état de l'objet décide. Placée avant le code, elle ne consomme pas
+  // d'essai. Bornée à l'établissement du jeton.
+  if (
+    !(await objetEstSignable(
+      token.objetType,
+      token.objetId,
+      token.etablissementId,
+    ))
+  ) {
+    return { status: "error", message: MESSAGE_NON_SIGNABLE };
   }
 
   // Expiration du **code**, distincte de celle du lien. Elle se vérifie
@@ -302,10 +392,29 @@ export async function signerEnCompteConnecte(params: {
   role?: string;
 }): Promise<
   | { ok: true; signatureId: string }
-  | { ok: false; raison: "objet_introuvable" | "fichier_introuvable" | "non_implemente" }
+  | {
+      ok: false;
+      raison:
+        | "objet_introuvable"
+        | "fichier_introuvable"
+        | "non_implemente"
+        | "non_signable";
+    }
 > {
   const user = await requireUser();
   await assertEtablissementOwnership(params.etablissementId);
+
+  // Même garde que pour le signataire externe : un objet clos ou annulé ne
+  // se signe plus, par personne.
+  if (
+    !(await objetEstSignable(
+      params.objetType,
+      params.objetId,
+      params.etablissementId,
+    ))
+  ) {
+    return { ok: false, raison: "non_signable" };
+  }
 
   // L'objet est cherché dans ce seul établissement : un objetId d'un autre
   // périmètre ressort « introuvable ».
