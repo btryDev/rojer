@@ -2019,3 +2019,40 @@ pré-production le ferait plus vite, sans toucher à la production — c'est une
 décision de la propriétaire, pas faite ici. Au même relevé, la mémoire
 provisionnée des fonctions est à 250 Go-h sur 360 : à surveiller, pas encore
 un dépassement.
+
+---
+
+## 14. L'audit du 2026-09-19 est fusionné — ce qu'il laisse ouvert
+
+Les trois audits (qualité de code, bonnes pratiques, sécurité) de la plage
+`bd8084e..f90f77c` — les 177 commits venus de l'autre poste — sont rendus dans
+`docs/revues/audit-2026-09-19.md`. **Tout ce qu'ils ont trouvé est corrigé et
+fusionné dans `main` le 2026-09-20** (`d3372c3`, 36 commits, 69 fichiers, aucune
+migration), déployé et vérifié en production. Ne pas rouvrir ces constats sans
+relire ce document : S1 à S7, M3, M4, Q2 à Q4 sont clos.
+
+**Ce qui reste, et pourquoi.**
+
+**M2 — une lecture en production.** Compter les lignes touchées par le
+déploiement du 11 au 14 septembre. Lecture seule, aucune écriture. Elle attend
+l'autorisation de la propriétaire pour qui a accès à la base.
+
+**M1 — invérifiable.** La cause des builds rouges du 11 au 14 septembre est
+donnée pour plausible par la session qui était aux commandes, et ne se tranche
+plus : les heures réelles des déploiements ne sont plus consultables. Ne pas
+rejouer l'enquête ; elle a déjà coûté deux passes.
+
+**Q1 — de l'historique.** Le commit rouge `617844b` reste rouge dans l'arbre.
+On ne réécrit pas l'historique pour ça.
+
+**Les cinq décisions de produit.** Elles sont énumérées à la fin de l'audit,
+avec ce qui les fonde. La relecture neutre les juge toutes justes ; la
+cinquième — la règle du statut réalisé non appliquée aux lignes archivées — est
+la moins solide, et c'est pour cela qu'elle est écrite dans
+`reouvrirSansRapportRealise` plutôt que tue. Elles n'attendent pas un
+développement, elles attendent un mot.
+
+**Les branches `garde-fous-tests` et `garde-fous-tests-2`** sont des souches
+d'avant les 177 commits ; leur contenu utile est entré dans `main` par d'autres
+routes, sauf la règle de conduite n° 11, reprise ici. Elles ne portent plus
+rien : à supprimer, pas à fusionner.
