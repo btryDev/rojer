@@ -47,24 +47,12 @@ function entree(
   avant: { datePrevue: Date; statut: string },
   apres: { datePrevue: Date; statut: string; source: string | null },
   f: FaitsDeLigne,
-  legs = false,
 ): EntreeClassement {
-  return { avant, apres, faits: f, legs };
+  return { avant, apres, faits: f };
 }
 
 describe("classerEcart — un cas par catégorie, dans l'ordre des motifs", () => {
   const CAS: { categorie: Categorie; recit: string; e: EntreeClassement }[] = [
-    {
-      categorie: "legs_statut_realise",
-      recit:
-        "Un ponctuel réalisé sans rapport : la garde de `deciderParFaits` le conserve, et il est compté à part QUEL QUE SOIT l'écart — ici aucun.",
-      e: entree(
-        { datePrevue: d("2025-04-20"), statut: "realisee_conforme" },
-        { datePrevue: d("2025-04-20"), statut: "realisee_conforme", source: "legs_statut_realise" },
-        faits({ periodicite: "mise_en_service_uniquement", premierPas: "mise_en_service_uniquement", miseEnService: d("2025-04-20"), origine: d("2025-04-25") }),
-        true,
-      ),
-    },
     {
       categorie: "identique",
       recit: "S2 et S6 : même instant, même statut.",

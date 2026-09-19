@@ -14,15 +14,13 @@
 // de l'ADR-036 : une seule fonction décide, et ce module ne fait que lui
 // apporter ses faits.
 //
-// UNE SEULE GARDE, HORS DE LA FONCTION, ET ELLE EST ÉTROITE : le LEGS d'un
-// ponctuel au statut réalisé SANS AUCUN RAPPORT RÉALISÉ (seed uniquement — le
-// produit rouvre la ligne quand son dernier rapport part). La fonction ne voit
-// que des faits et effacerait cette trace : la garde conserve statut ET date.
-// Le passage à blanc du 2026-09-18 en a compté ZÉRO en production ; elle reste
-// le temps de le vérifier une seconde fois juste avant la fusion, et le lot 5
-// la retire (ADR-036 § 5 et § 9).
+// ~~UNE SEULE GARDE, HORS DE LA FONCTION : le LEGS d'un ponctuel au statut
+// réalisé sans aucun rapport réalisé, dont statut et date étaient conservés.~~
+// RETIRÉE AU LOT 5 (2026-09-19) : le contrôle de santé du même jour n'en a
+// compté AUCUN en production, et aucun chemin du produit n'en fabrique — le
+// dépôt n'écrit un statut réalisé que depuis un rapport réalisé, le retrait le
+// rouvre. Ce module ne décide plus rien hors de la fonction.
 
-import { estStatutRealise } from "@/lib/dates/retard";
 import {
   statutDepuisResultat,
   type ResultatRealise,
@@ -60,9 +58,9 @@ import { estCyclique } from "./periodicite";
  *    `continuite-identite.test.ts` — un rapport de 2025 en quinquennal donne
  *    2030 — en dépend, et doit rester vert sans retouche (plan de l'ADR-036) ;
  *  · PONCTUEL : le résultat EST le statut de la ligne soldée (règle 2), et on
- *    ne l'invente pas : pas de réalisation, et la garde du legs conserve le
- *    statut réalisé que la ligne porte — ce que `deciderParConservation`
- *    faisait (`statutDepuisResultat(…) ?? ex.statut`).
+ *    ne l'invente pas : pas de réalisation, la ligne se décide sur ses autres
+ *    faits. ~~La garde du legs conservait alors le statut réalisé que la ligne
+ *    portait~~ — retirée au lot 5 (2026-09-19).
  */
 function realisationPropre(
   ex: OccurrenceExistante,
@@ -118,54 +116,14 @@ export function faitsDeLigne(
   };
 }
 
-/**
- * Le legs à protéger hors de la fonction (ADR-036 § 5) : un ponctuel au statut
- * réalisé sans aucun rapport réalisé. Sa seule trace est son statut ; la
- * fonction, qui ne voit que des faits, le rouvrirait.
+/** La date et le statut d'une ligne EXISTANTE, depuis ses faits. C'est la
+ *  décision de la régénération, du dépôt et du retrait d'un rapport.
  *
- * ÉTROITE PAR CONSTRUCTION, et chaque condition compte : un CYCLIQUE au statut
- * réalisé n'est pas un legs (la fonction le remet « planifiée » sur ses faits,
- * ADR-036 § 5) ; un ponctuel qui porte un rapport réalisé se solde par la
- * fonction elle-même (règle 2). Retirée au lot 5 si la production n'en compte
- * aucun au passage à blanc refait avant la fusion.
- */
-export function estLegsStatutRealise(
-  ex: OccurrenceExistante,
-  periodiciteEffective: FaitsDeLigne["periodicite"],
-): boolean {
-  return (
-    !estCyclique(periodiciteEffective) &&
-    estStatutRealise(ex.statut) &&
-    realisationPropre(ex, periodiciteEffective) === null
-  );
-}
-
-/** Nom de source rendu pour le legs, à côté des sources de la fonction. */
-export const SOURCE_LEGS = "legs_statut_realise";
-
-/** La date et le statut d'une ligne EXISTANTE, depuis ses faits — la garde du
- *  legs comprise. C'est la décision de la régénération. */
+ *  ~~La garde du legs, et sa variante sans garde pour le retrait d'un rapport
+ *  réalisé (`deciderSurLesFaitsSeuls`, `garderLegs: false`)~~ — retirées au
+ *  lot 5 (2026-09-19). Sans garde, les deux décisions n'en font qu'une : un
+ *  statut réalisé ne survit pas sans rapport réalisé. */
 export function deciderParFaits(ctx: ContexteExistante): DecisionDeLigne {
-  const { ex, g } = ctx;
-  if (estLegsStatutRealise(ex, g.periodicite)) {
-    return { datePrevue: ex.datePrevue, statut: ex.statut, source: SOURCE_LEGS };
-  }
-  return deciderSurLesFaitsSeuls(ctx);
-}
-
-/**
- * La même décision SANS la garde du legs — pour la suppression d'un rapport
- * RÉALISÉ (`recalculerLigne`, option `garderLegs: false`).
- *
- * POURQUOI. Un ponctuel soldé dont on retire le seul rapport réalisé porte
- * encore, au moment du recalcul, le statut réalisé que ce rapport lui avait
- * donné : vu de la ligne, c'est exactement un legs — statut réalisé, aucun
- * rapport. La garde le conserverait, et le contrôle unique resterait « fait »
- * sans aucune pièce au dossier. Or ici on SAIT d'où venait le statut : du
- * rapport qu'on retire. La ligne rouvre sur ses faits (règle 2), comme
- * `supprimerRapport` le faisait avant la bascule.
- */
-export function deciderSurLesFaitsSeuls(ctx: ContexteExistante): DecisionDeLigne {
   const { ex, g, heritee, now } = ctx;
   const r = echeanceDeLigne(faitsDeLigne(g, ex, heritee, now));
   return { datePrevue: r.datePrevue, statut: r.statut, source: r.source };
@@ -183,9 +141,3 @@ export const STRATEGIE_FAITS: StrategieDecision = {
   creation: creerParFaits,
 };
 
-/** La décision sans garde du legs — voir `deciderSurLesFaitsSeuls`. */
-export const STRATEGIE_FAITS_SANS_LEGS: StrategieDecision = {
-  existante: deciderSurLesFaitsSeuls,
-  creation: creerParFaits,
-  garderLegs: false,
-};

@@ -46,7 +46,6 @@
 
 import type { Prisma } from "@prisma/client";
 import { estStatutRealise } from "@/lib/dates/retard";
-import { STRATEGIE_FAITS, STRATEGIE_FAITS_SANS_LEGS } from "./decision-par-faits";
 import { lireEntrees, planifier } from "./passe";
 
 /**
@@ -74,16 +73,8 @@ export type OptionsRecalcul = {
   /** L'horloge de la passe : prescriptions en vigueur, origine d'une ligne à
    *  naître. Défaut = `new Date()`. */
   now?: Date;
-  /**
-   * La garde du legs s'applique-t-elle ? (`decision-par-faits.ts`.)
-   *
-   * OUI par défaut — c'est la décision de la régénération, et le dépôt s'y
-   * tient. NON quand l'appelant retire un rapport RÉALISÉ : le statut réalisé
-   * que porte alors un ponctuel vient de ce rapport-là, et le conserver
-   * laisserait un contrôle unique « fait » sans aucune pièce
-   * (`deciderSurLesFaitsSeuls`).
-   */
-  garderLegs?: boolean;
+  // ~~`garderLegs`~~ — retirée au lot 5 de l'ADR-036 (2026-09-19) avec la
+  // garde du legs : le dépôt et le retrait décident comme la régénération.
 };
 
 export type ResultatRecalcul =
@@ -124,24 +115,24 @@ export async function recalculerLigne(
   // identifiant. Rien à recalculer si elle n'est plus là.
   if (lue === undefined) return { ecrit: false };
 
-  const plan = planifier(
-    lecture,
-    now,
-    options.garderLegs === false ? STRATEGIE_FAITS_SANS_LEGS : STRATEGIE_FAITS,
-  );
+  const plan = planifier(lecture, now);
   const trouvee = plan.aMettreAJour.find((m) => m.id === verificationId);
   // UNE LIGNE QUE LE PLAN NE MET PAS À JOUR — archivée, porteur disparu,
-  // obligation retirée — et dont on retire le seul rapport RÉALISÉ : son
-  // statut réalisé venait de ce rapport, et `porteUneTrace` le compterait
-  // ensuite comme une trace que plus rien ne rouvre. Elle repasse « à
-  // planifier », DATE INCHANGÉE — ce que l'ancien `supprimerRapport` faisait
-  // (relecture du lot 4, 2026-09-19). Son sort — archivée, supprimée — reste
-  // l'affaire de la régénération.
+  // obligation retirée — et qui porte un statut réalisé SANS rapport réalisé :
+  // le cas d'un retrait du seul rapport réalisé, d'où venait ce statut.
+  // `porteUneTrace` le compterait ensuite comme une trace que plus rien ne
+  // rouvre. Elle repasse « à planifier », DATE INCHANGÉE — ce que l'ancien
+  // `supprimerRapport` faisait (relecture du lot 4, 2026-09-19). Son sort —
+  // archivée, supprimée — reste l'affaire de la régénération.
+  //
+  // ~~Seulement au retrait d'un rapport réalisé (`garderLegs: false`).~~ Sans
+  // condition depuis le lot 5 (2026-09-19) : un statut réalisé ne survit pas
+  // sans rapport réalisé, c'est la règle de la régénération aussi
+  // (`statutDeLigneNonGeneree`). Au dépôt, la ligne n'est jamais dans ce cas :
+  // un dépôt réalisé lui donne son rapport réalisé.
   const cible =
     trouvee ??
-    (options.garderLegs === false &&
-    estStatutRealise(lue.statut) &&
-    (lue.derniereRealisation ?? null) === null
+    (estStatutRealise(lue.statut) && (lue.derniereRealisation ?? null) === null
       ? { datePrevue: lue.datePrevue, statut: "a_planifier" as const }
       : undefined);
   if (cible === undefined) return { ecrit: false };

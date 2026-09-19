@@ -886,15 +886,25 @@ export type PlanReconciliation = {
  * effectif — la seule écriture que la boucle finale du réconciliateur fait sur
  * elle (NB4, puis limite 1, 2026-09-15).
  *
+ * UNE RÈGLE, depuis le lot 5 de l'ADR-036 (2026-09-19) : UN STATUT RÉALISÉ NE
+ * SURVIT PAS SANS RAPPORT RÉALISÉ.
+ *
  *  · sans rythme suivant : le résultat du dernier rapport réalisé, s'il y en a
- *    un — la ligne est soldée ; sinon un statut réalisé déjà là, seule trace
- *    d'une consommation sans rapport ; sinon, sur un rythme SANS RENDEZ-VOUS,
- *    « à planifier » : aucune échéance n'est attendue, et
- *    `lignePortantSansRendezVous` la tient hors des retards. Une mise en
- *    service garde son statut : elle, a un rendez-vous ;
- *  · sur un rythme : un statut réalisé sans rapport est gardé — c'est la seule
- *    trace, et le passer « à planifier » faisait supprimer la ligne à la passe
- *    suivante —, sinon le statut d'un cycle ouvert.
+ *    un — la ligne est soldée ; sinon « à planifier » si la ligne porte un
+ *    statut réalisé ou si son rythme est SANS RENDEZ-VOUS — aucune échéance
+ *    n'est attendue, et `lignePortantSansRendezVous` la tient hors des
+ *    retards. Une mise en service garde son statut : elle, a un rendez-vous ;
+ *  · sur un rythme : « planifiée » si la ligne l'était déjà ou si un contrôle
+ *    réel est derrière elle, « à planifier » autrement. Un statut réalisé n'y
+ *    survit jamais, rapport ou non : un contrôle suivi d'un rendez-vous est
+ *    « planifié » (ADR-034).
+ *
+ * ~~Un statut réalisé sans rapport était gardé — la « seule trace » d'un legs
+ * (`garderLegs`), sauf au retrait d'un rapport réalisé.~~ Retiré au lot 5 :
+ * le contrôle de santé du 2026-09-19 n'a compté aucun legs en production, et
+ * aucun chemin du produit n'en écrit. Sur un rythme, la branche est de plus
+ * inatteignable aujourd'hui — une ligne cyclique applicable est toujours
+ * générée, un titre cyclique ayant toujours une échéance (`echeanceDuTitre`).
  *
  * Idempotente par construction : appliquée à son propre résultat, elle le
  * rend.
@@ -902,26 +912,18 @@ export type PlanReconciliation = {
 function statutDeLigneNonGeneree(
   ex: OccurrenceExistante,
   effective: Periodicite,
-  // `false` au retrait d'un rapport RÉALISÉ (`StrategieDecision.garderLegs`) :
-  // un statut réalisé sans rapport vient alors du rapport qu'on retire, ce
-  // n'est pas une trace à garder (relecture du lot 4, 2026-09-19).
-  garderLegs: boolean,
 ): StatutVerificationPersiste {
   if (!estCyclique(effective)) {
     const solde = statutDepuisResultat(ex.dernierResultat);
     if (solde !== null) return solde;
-    if (estStatutRealise(ex.statut)) return garderLegs ? ex.statut : "a_planifier";
-    return estSansRendezVous(effective) ? "a_planifier" : ex.statut;
+    if (estStatutRealise(ex.statut) || estSansRendezVous(effective)) {
+      return "a_planifier";
+    }
+    return ex.statut;
   }
-  // SUR UN RYTHME, sans passer par la génération : une ligne de titre dont la
-  // pièce ne porte pas d'échéance (`echeanceDuTitre` rend `null`), que la
-  // boucle finale réaligne sur le rythme du référentiel. Un statut réalisé
-  // sans rapport est gardé — c'est la seule trace, et le passer « à
-  // planifier » faisait supprimer la ligne à la passe suivante. Sinon
-  // « planifiée » si la ligne l'était déjà ou si un contrôle réel est derrière
-  // elle, « à planifier » autrement. (C'était `statutCycleOuvert`, recopiée
-  // ici pour ce seul usage, qui ne touche pas à la date.)
-  if (garderLegs && estStatutRealise(ex.statut)) return ex.statut;
+  // SUR UN RYTHME, sans passer par la génération. (C'était
+  // `statutCycleOuvert`, recopiée ici pour ce seul usage, qui ne touche pas à
+  // la date.)
   if (ex.statut === "planifiee" || realisationConnue(ex) !== null) {
     return "planifiee";
   }
@@ -1107,18 +1109,6 @@ export type DecisionDeLigne = {
 export type StrategieDecision = {
   existante: (ctx: ContexteExistante) => DecisionDeLigne;
   creation: (ctx: ContexteCreation) => DecisionDeLigne;
-  /**
-   * Un statut réalisé SANS rapport réalisé se garde-t-il ? Oui par défaut —
-   * c'est la seule trace d'un legs. Non au retrait d'un rapport réalisé
-   * (`STRATEGIE_FAITS_SANS_LEGS`) : le statut vient de ce rapport. Lu par la
-   * décision d'une ligne générée ET par la boucle NB4, sans quoi une ligne
-   * `autre` restait « réalisée » sans pièce (relecture du lot 4).
-   *
-   * Sur un rythme CYCLIQUE, `false` abandonne le statut réalisé MÊME quand un
-   * rapport réalisé reste : la ligne devient « planifiée », comme l'ADR-034 le
-   * veut — seul un contrôle sans rendez-vous suivant garde un statut réalisé.
-   */
-  garderLegs?: boolean;
 };
 
 export function reconcilierCalendrier(
@@ -1412,7 +1402,7 @@ export function reconcilierCalendrier(
       const statutCible =
         effective === undefined
           ? ex.statut
-          : statutDeLigneNonGeneree(ex, effective, decision.garderLegs ?? true);
+          : statutDeLigneNonGeneree(ex, effective);
       if (!porteUneTrace) plan.aSupprimer.push(ex.id);
       // ELLE A CHANGÉ DE RYTHME SANS REPASSER PAR LA GÉNÉRATION (NB4,
       // 2026-09-15). Le cas vécu : une prescription donne un rythme semestriel

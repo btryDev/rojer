@@ -132,7 +132,18 @@ const RELEVE = {
   // Recopiée SANS incrément le même jour (relecture du lot 4) : `garderLegs`
   // porté jusqu'à la boucle NB4. La bascule n'a jamais été livrée : on reste
   // en version 3.
-  empreinte: "2ca2bc215eafd23f",
+  // Recopiée SANS incrément le 2026-09-19 (ADR-036, lot 5 — le ménage) : la
+  // garde du legs est retirée. NON, la régénération n'écrit pas autrement sur
+  // les dossiers réels : la garde ne changeait que le sort d'une ligne au
+  // statut réalisé SANS rapport réalisé (ponctuel générée, ou `autre` en
+  // boucle NB4), et d'une ligne cyclique non générée au statut réalisé — que
+  // rien n'atteint, un titre cyclique ayant toujours une échéance. Le contrôle
+  // de santé du 2026-09-19 compte zéro legs sur les lignes générées ; et aucun
+  // chemin n'en fabrique : un statut réalisé n'est écrit que depuis un rapport
+  // réalisé, le retrait le rouvre (comme avant la bascule), un rapport ne se
+  // dépose pas sur une ligne de salarié, les seeds n'écrivent aucun statut
+  // réalisé et le générateur ne crée jamais de ligne `autre`.
+  empreinte: "e9e0cd2dd4168dec",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

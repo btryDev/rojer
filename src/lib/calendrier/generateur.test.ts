@@ -23,7 +23,6 @@ import {
   periodicitesEffectives,
 } from "./generateur";
 import { estVerificationAPlanifier } from "@/lib/dates/retard";
-import { STRATEGIE_FAITS_SANS_LEGS } from "./decision-par-faits";
 
 // ============================================================================
 // Fixtures
@@ -1419,33 +1418,35 @@ describe("réconciliation — cycles de vérification", () => {
       ]);
     });
 
-    it("au retrait d'un rapport réalisé (`garderLegs: false`), un statut réalisé sans rapport ne se garde plus", () => {
+    it("au retrait d'un rapport réalisé, un statut réalisé sans rapport ne se garde plus", () => {
       // Relecture du lot 4 (2026-09-19). La ligne `autre`, soldée par le
       // rapport qu'on retire, porte encore une prescription levée : NB4 la met
       // à jour pour cela, et gardait au passage son statut réalisé — sans
-      // aucune pièce. Sous la décision du retrait, elle repasse « à
-      // planifier », date inchangée ; sous la décision ordinaire, la trace
-      // reste (c'est un legs).
+      // aucune pièce. Elle repasse « à planifier », date inchangée.
+      // ~~Sous la décision ordinaire, la trace restait (c'était un legs).~~
+      // Depuis le lot 5 (2026-09-19), il n'y a plus qu'une décision : un
+      // statut réalisé ne survit pas sans rapport réalisé.
       const soldeeSansPiece = roulee({
         periodicite: "autre",
         statut: "realisee_conforme",
         derniereRealisation: null,
         dernierResultat: null,
       });
-      const retrait = reconcilierCalendrier([soldeeSansPiece], [], sansRythme, STRATEGIE_FAITS_SANS_LEGS);
+      const retrait = reconcilierCalendrier([soldeeSansPiece], [], sansRythme);
       expect(retrait.aMettreAJour.map((m) => [m.statut, m.prescriptionId])).toEqual([
         ["a_planifier", null],
       ]);
       expect(retrait.aMettreAJour[0].datePrevue).toEqual(new Date("2026-03-01T00:00:00Z"));
-      const ordinaire = reconcilierCalendrier([soldeeSansPiece], [], sansRythme);
-      expect(ordinaire.aMettreAJour.map((m) => m.statut)).toEqual(["realisee_conforme"]);
     });
 
-    it("sur un rythme, un statut réalisé sans rapport est gardé : c'est la seule trace", () => {
-      // Ligne de titre qui change de rythme sans être générée, dont la seule
-      // trace est son statut réalisé (`porteUneTrace`). `statutCycleOuvert`
-      // la passait « à planifier » : la trace disparaissait, et la passe
-      // suivante supprimait la ligne (relecture du 2026-09-15).
+    // ~~« sur un rythme, un statut réalisé sans rapport est gardé : c'est la
+    // seule trace »~~ — retiré au lot 5 (2026-09-19) avec la garde du legs.
+    // Le test suivant tient désormais la règle, sans décision particulière.
+
+    it("sur un rythme, le statut réalisé sans rapport ne se garde plus", () => {
+      // Une ligne de titre, non générée, au statut réalisé sans rapport : le
+      // statut ne vient d'aucune pièce, ce n'est pas une trace. Sans rapport
+      // réalisé ni statut « planifiée », elle repasse « à planifier ».
       const plan = reconcilierCalendrier(
         [
           ligneExistante({
@@ -1464,36 +1465,6 @@ describe("réconciliation — cycles de vérification", () => {
           obligationsEncoreApplicables: new Set(["titre-quinquennal"]),
           periodicitesEffectives: new Map([["titre-quinquennal", "quinquennale" as const]]),
         },
-      );
-      expect(plan.aMettreAJour.map((m) => [m.periodicite, m.statut])).toEqual([
-        ["quinquennale", "realisee_conforme"],
-      ]);
-      expect(plan.aSupprimer).toEqual([]);
-    });
-
-    it("sur un rythme, sous `garderLegs: false`, le statut réalisé sans rapport ne se garde plus", () => {
-      // La même ligne de titre, décidée comme au RETRAIT d'un rapport réalisé :
-      // le statut réalisé venait de ce rapport, ce n'est plus une trace. Sans
-      // rapport réalisé ni statut « planifiée », elle repasse « à planifier ».
-      const plan = reconcilierCalendrier(
-        [
-          ligneExistante({
-            id: "v-titre",
-            obligationId: "titre-quinquennal",
-            equipementId: null,
-            salarieId: "sal-1",
-            periodicite: "triennale",
-            statut: "realisee_conforme",
-            porteUnePreuve: false,
-          }),
-        ],
-        [],
-        {
-          now: NOW,
-          obligationsEncoreApplicables: new Set(["titre-quinquennal"]),
-          periodicitesEffectives: new Map([["titre-quinquennal", "quinquennale" as const]]),
-        },
-        STRATEGIE_FAITS_SANS_LEGS,
       );
       expect(plan.aMettreAJour.map((m) => [m.periodicite, m.statut])).toEqual([
         ["quinquennale", "a_planifier"],
@@ -1678,7 +1649,9 @@ describe("réconciliation — cycles de vérification", () => {
       new Map(),
       { now: NOW },
     );
-    const datePrevue = new Date("2025-05-01T00:00:00Z");
+    // Une date que les faits expliquent : sans mise en service, un ponctuel
+    // soldé porte l'origine de son suivi (règle 2).
+    const datePrevue = depuisCleJourCivil("2025-05-01");
 
     const plan = reconcilierCalendrier(
       [
@@ -1689,7 +1662,12 @@ describe("réconciliation — cycles de vérification", () => {
           libelleObligation: "Obligation mes",
           periodicite: "mise_en_service_uniquement",
           datePrevue,
+          suiviDepuis: datePrevue,
           derniereRealisation: new Date("2025-05-01T00:00:00Z"),
+          // Le résultat du rapport, que la lecture de production porte toujours.
+          // ~~Absent, la garde du legs conservait le statut~~ — retirée au lot 5
+          // (2026-09-19) : un ponctuel se solde sur son rapport réalisé.
+          dernierResultat: "conforme",
           statut: "realisee_conforme",
           porteUnePreuve: true,
         }),

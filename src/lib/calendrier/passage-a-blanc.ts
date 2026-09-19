@@ -23,11 +23,10 @@
 // LES CATÉGORIES, dans l'ordre où elles sont essayées — le premier motif qui
 // tient l'emporte :
 //
-//   legs_statut_realise  un ponctuel au statut réalisé sans rapport : la garde
-//                        de `deciderParFaits` le conserve ; compté à part pour
-//                        savoir combien la production en porte (lot 5 : retirer
-//                        la garde s'il n'y en a aucun). Compté qu'il y ait écart
-//                        ou non : c'est un inventaire ;
+//   ~~legs_statut_realise~~  retirée au lot 5 (2026-09-19) avec la garde
+//                        qu'elle inventoriait : le contrôle de santé du même
+//                        jour n'en comptait aucun en production. Une telle
+//                        ligne se classe désormais par les motifs ordinaires ;
 //   identique            même instant, même statut ;
 //   meme_jour_civil      même statut, même jour civil de Paris, instant
 //                        différent — la règle 5 réécrit chaque « à planifier »
@@ -61,7 +60,7 @@
 
 import { cleJourCivil, debutDuJour } from "@/lib/dates";
 import { PERIODICITE_CALENDAIRE, type Periodicite } from "@/lib/referentiels/types-communs";
-import { estLegsStatutRealise, faitsDeLigne } from "./decision-par-faits";
+import { faitsDeLigne } from "./decision-par-faits";
 import type { FaitsDeLigne } from "./echeance-de-ligne";
 import {
   cleDeLigne,
@@ -75,7 +74,6 @@ import { type LecturePasse, planifier, preparer } from "./passe";
 import { estCyclique, prochaineEcheance } from "./periodicite";
 
 export const CATEGORIES = [
-  "legs_statut_realise",
   "identique",
   "meme_jour_civil",
   "statut_seul",
@@ -98,8 +96,6 @@ export type EntreeClassement = {
   apres: EtatLigne & { source: string | null };
   /** Les faits que le moteur a lus. */
   faits: FaitsDeLigne;
-  /** La ligne est-elle le legs protégé (`estLegsStatutRealise`) ? */
-  legs: boolean;
 };
 
 const memeInstant = (a: Date, b: Date) => a.getTime() === b.getTime();
@@ -147,8 +143,6 @@ export function dateExpliqueeParUnFait(date: Date, f: FaitsDeLigne): boolean {
  */
 export function classerEcart(e: EntreeClassement): Categorie {
   const { avant, apres, faits } = e;
-  if (e.legs) return "legs_statut_realise";
-
   const memeStatut = avant.statut === apres.statut;
   const memeJour = cleJourCivil(avant.datePrevue) === cleJourCivil(apres.datePrevue);
   if (memeStatut && memeInstant(avant.datePrevue, apres.datePrevue)) return "identique";
@@ -323,8 +317,7 @@ export function comparerAuMoteur(lecture: LecturePasse, now: Date): Comparaison 
             origine: ex.suiviDepuis ?? now,
           }
         : faitsDeLigne(g, ex, herediteDe(g), now);
-    const legs = g !== undefined && estLegsStatutRealise(ex, g.periodicite);
-    const categorie = classerEcart({ avant, apres, faits, legs });
+    const categorie = classerEcart({ avant, apres, faits });
     comptes[categorie] += 1;
     ecarts.push({
       ligne: ex.id,

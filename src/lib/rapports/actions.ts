@@ -310,15 +310,16 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
     // Relu sous le verrou : une suppression concurrente a pu l'emporter déjà.
     const retire = await tx.rapportVerification.findUnique({
       where: { id: rapportId },
-      select: { resultat: true },
+      select: { id: true },
     });
     if (retire === null) return;
 
     await tx.rapportVerification.delete({ where: { id: rapportId } });
 
-    // La ligne se recalcule sur ce qui reste. `garderLegs: false` quand le
-    // retiré était RÉALISÉ : le statut réalisé qu'un ponctuel porte encore
-    // vient de lui, et la garde du legs le conserverait sans aucune pièce.
+    // La ligne se recalcule sur ce qui reste, par la décision même de la
+    // régénération : un statut réalisé ne survit pas sans rapport réalisé.
+    // (~~`garderLegs: false` quand le retiré était réalisé~~ — la garde du
+    // legs est partie au lot 5 de l'ADR-036, 2026-09-19.)
     //
     // Si l'écriture conditionnée ne prend pas — aucun chemin connu sous le
     // verrou —, `LigneModifieeEntreTemps` annule TOUT : le rapport reste,
@@ -326,9 +327,7 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
     // aucune pièce ne justifie. Le bouton de suppression ne capture pas
     // l'erreur : l'utilisateur verrait la page d'erreur générique. C'est
     // accepté pour un cas sans chemin ; une garde qui échoue fait du bruit.
-    await recalculerLigne(tx, rap.verificationId, {
-      garderLegs: !estResultatRealise(retire.resultat),
-    });
+    await recalculerLigne(tx, rap.verificationId);
   });
 
   // La base a tranché : on peut libérer le fichier.

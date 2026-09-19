@@ -12,9 +12,6 @@ import {
 import type { Periodicite } from "@/lib/referentiels/types-communs";
 import {
   STRATEGIE_FAITS,
-  SOURCE_LEGS,
-  deciderParFaits,
-  estLegsStatutRealise,
   faitsDeLigne,
 } from "./decision-par-faits";
 import {
@@ -336,13 +333,18 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
   });
 });
 
-describe("deciderParFaits — la garde du legs, et rien d'autre hors de la fonction", () => {
+describe("deciderParFaits — rien hors de la fonction (la garde du legs est partie au lot 5)", () => {
   const ponctuel = obligationEquipement({
     id: "elec-mise-en-service",
     periodicite: "mise_en_service_uniquement",
   });
 
-  it("un ponctuel au statut réalisé SANS rapport garde sa date et son statut", () => {
+  it("un ponctuel au statut réalisé SANS rapport rouvre sur ses faits", () => {
+    // INVERSÉ AU LOT 5 (2026-09-19). ~~La garde du legs lui gardait date et
+    // statut, et la décision nommait la source `legs_statut_realise`.~~ Le
+    // contrôle de santé du 2026-09-19 n'en comptait aucun en production, et
+    // aucun chemin du produit n'en fabrique : un statut réalisé ne survit pas
+    // sans rapport réalisé. La ligne se date de sa mise en service (règle 2).
     const s = scenario(
       [applicable(ponctuel, [EQ])],
       (g) =>
@@ -353,24 +355,13 @@ describe("deciderParFaits — la garde du legs, et rien d'autre hors de la fonct
         }),
       { misesEnService: new Map([[EQ.id, d("2025-04-20")]]) },
     );
-    expect(estLegsStatutRealise(s.existantes[0], "mise_en_service_uniquement")).toBe(true);
     const apres = etat(s.faits, s.existantes[0]);
-    expect(apres.statut).toBe("realisee_conforme");
+    expect(apres.statut).toBe("a_planifier");
     expect(apres.datePrevue).toEqual(d("2025-04-20"));
-    // La décision nomme le legs, pour que le contrôle de santé le compte à part.
-    expect(
-      deciderParFaits({
-        ex: s.existantes[0],
-        g: s.g,
-        realisation: null,
-        heritee: null,
-        now: NOW,
-      }).source,
-    ).toBe(SOURCE_LEGS);
     expect(planVide(s.rejouer(s.faits, J_400))).toBe(true);
   });
 
-  it("le même ponctuel AVEC son rapport n'est pas un legs : le statut sort du résultat", () => {
+  it("le même ponctuel AVEC son rapport se solde : le statut sort du résultat", () => {
     const s = scenario(
       [applicable(ponctuel, [EQ])],
       (g) =>
@@ -384,13 +375,12 @@ describe("deciderParFaits — la garde du legs, et rien d'autre hors de la fonct
         }),
       { misesEnService: new Map([[EQ.id, d("2025-04-20")]]) },
     );
-    expect(estLegsStatutRealise(s.existantes[0], "mise_en_service_uniquement")).toBe(false);
     const apres = etat(s.faits, s.existantes[0]);
     expect(apres.statut).toBe("realisee_observations");
     expect(apres.source).toBe("ponctuel_solde");
   });
 
-  it("un cyclique au statut réalisé sans rapport n'est PAS un legs : la fonction décide", () => {
+  it("un cyclique au statut réalisé sans rapport : la fonction décide", () => {
     const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
     const s = scenario(
       [applicable(o, [EQ])],
@@ -402,7 +392,6 @@ describe("deciderParFaits — la garde du legs, et rien d'autre hors de la fonct
         }),
       { misesEnService: new Map([[EQ.id, d("2026-01-10")]]) },
     );
-    expect(estLegsStatutRealise(s.existantes[0], "annuelle")).toBe(false);
     expect(etat(s.faits, s.existantes[0]).statut).toBe("planifiee");
   });
 });

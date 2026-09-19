@@ -572,11 +572,11 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     expect(ligne().statut).toBe("planifiee");
   });
 
-  it("le retrait du seul contrôle d'un ponctuel le ROUVRE — la garde du legs ne le retient pas", async () => {
+  it("le retrait du seul contrôle d'un ponctuel le ROUVRE", async () => {
     // Vu de la ligne, un ponctuel soldé dont on retire le seul rapport réalisé
-    // est exactement un legs : statut réalisé, aucun rapport. La garde le
-    // conserverait, et le contrôle unique resterait « fait » sans pièce.
-    // `garderLegs: false` : on sait d'où venait le statut.
+    // porte un statut réalisé sans aucun rapport. ~~La garde du legs le
+    // conservait, sauf sous `garderLegs: false`.~~ Depuis le lot 5
+    // (2026-09-19), un statut réalisé ne survit pas sans rapport réalisé.
     poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2026-01-05") }]);
     poserLigne({
       obligationId: ELEC_MISE_EN_SERVICE,
@@ -671,9 +671,13 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     expect(ligne().datePrevue).toEqual(d("2026-01-05"));
   });
 
-  it("un « non vérifiable » retiré d'un ponctuel au statut hérité (legs) ne le rouvre pas", async () => {
-    // Le pendant : le rapport retiré n'a rien soldé, le statut réalisé ne
-    // vient pas de lui. La garde du legs s'applique.
+  it("un ponctuel au statut réalisé SANS rapport réalisé rouvre, quel que soit le rapport retiré", async () => {
+    // INVERSÉ AU LOT 5 (2026-09-19). ~~« un non vérifiable retiré d'un
+    // ponctuel au statut hérité (legs) ne le rouvre pas » : le statut ne
+    // venait pas du rapport retiré, et la garde du legs le conservait.~~ La
+    // garde est partie — aucun legs en production, aucun chemin qui en
+    // fabrique. Un statut réalisé ne survit pas sans rapport réalisé : le
+    // retrait recalcule la ligne sur ses faits, comme la régénération.
     poserLigne({
       obligationId: ELEC_MISE_EN_SERVICE,
       datePrevue: d("2025-04-20"),
@@ -683,8 +687,10 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
 
     await retirer("rap-nv");
 
-    expect(ligne().statut).toBe("realisee_conforme");
-    expect(ligne().datePrevue).toEqual(d("2025-04-20"));
+    expect(ligne().statut).toBe("a_planifier");
+    // Sans mise en service connue, un ponctuel ouvert porte l'origine de son
+    // suivi.
+    expect(ligne().datePrevue).toEqual(ORIGINE);
   });
 
   it("l'origine est un FAIT : tous les ordres de retrait finissent au même état, antidaté compris", async () => {
