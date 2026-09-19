@@ -8,7 +8,7 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { construireEcrituresImport } from "./ecritures";
 import { verifierPlafondImport } from "../plafond-unites";
 import { parserFichierDuerp, planifierImport } from "./parser";
-import { validerFichier } from "@/lib/rapports/validator";
+import { validerFichierImport } from "./format";
 
 /**
  * Import d'un DUERP Excel ou CSV.
@@ -23,14 +23,6 @@ import { validerFichier } from "@/lib/rapports/validator";
  * étape de preview (sans écriture) précède l'import pour que l'utilisateur
  * corrige le mapping de colonnes si la détection automatique a raté.
  */
-
-const MIME_IMPORT_AUTORISES = [
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // xlsx
-  "application/vnd.ms-excel", // xls
-  "text/csv",
-  "text/plain", // certains navigateurs envoient CSV en text/plain
-] as const;
 
 export type PreviewImportState =
   | { status: "idle" }
@@ -64,22 +56,7 @@ export async function previewImport(
   if (!(fichier instanceof File) || fichier.size === 0) {
     return { status: "error", message: "Aucun fichier fourni." };
   }
-  // Validation MIME spécifique à l'import (PDF exclu).
-  if (!(MIME_IMPORT_AUTORISES as readonly string[]).includes(fichier.type)) {
-    // Fallback : accepter un fichier CSV même si le navigateur envoie
-    // un type générique sous réserve de l'extension.
-    const extCsv = fichier.name.toLowerCase().endsWith(".csv");
-    const extXlsx =
-      fichier.name.toLowerCase().endsWith(".xlsx") ||
-      fichier.name.toLowerCase().endsWith(".xls");
-    if (!extCsv && !extXlsx) {
-      return {
-        status: "error",
-        message: `Format non accepté (${fichier.type || "inconnu"}). Fournissez un fichier Excel (.xlsx / .xls) ou CSV.`,
-      };
-    }
-  }
-  const check = validerFichier(fichier);
+  const check = validerFichierImport(fichier);
   if (!check.ok) return { status: "error", message: check.erreur };
 
   const buffer = Buffer.from(await fichier.arrayBuffer());
@@ -126,7 +103,7 @@ export async function commitImport(
   if (!(fichier instanceof File) || fichier.size === 0) {
     return { status: "error", message: "Fichier manquant." };
   }
-  const check = validerFichier(fichier);
+  const check = validerFichierImport(fichier);
   if (!check.ok) return { status: "error", message: check.erreur };
 
   const buffer = Buffer.from(await fichier.arrayBuffer());
