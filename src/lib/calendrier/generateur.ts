@@ -906,6 +906,10 @@ function statutDeLigneNonGeneree(
   if (!estCyclique(effective)) {
     const solde = statutDepuisResultat(ex.dernierResultat);
     if (solde !== null) return solde;
+    // `estStatutRealise` ne décide seul que sur un ponctuel AVEC rendez-vous
+    // (`mise_en_service_uniquement`) — inatteignable aujourd'hui (2026-09-19) :
+    // une telle ligne applicable est toujours générée. Tenu par un test du
+    // réconciliateur (`generateur.test.ts`).
     if (estStatutRealise(ex.statut) || estSansRendezVous(effective)) {
       return "a_planifier";
     }

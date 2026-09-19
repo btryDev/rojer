@@ -1423,6 +1423,46 @@ describe("réconciliation — cycles de vérification", () => {
     // seule trace »~~ — retiré au lot 5 (2026-09-19) avec la garde du legs.
     // Le test suivant tient désormais la règle, sans décision particulière.
 
+    it("un ponctuel AVEC rendez-vous, non généré, réalisé sans rapport : « à planifier », date inchangée", () => {
+      // La clause `estStatutRealise(ex.statut)` de `statutDeLigneNonGeneree`,
+      // seule : sur `mise_en_service_uniquement`, `estSansRendezVous` est faux,
+      // et sans elle le statut réalisé survivrait sans pièce.
+      //
+      // INATTEIGNABLE AUJOURD'HUI (relecture du lot 5, 2026-09-19) : une ligne
+      // `mise_en_service_uniquement` applicable a un rendez-vous, donc elle est
+      // toujours générée et ne passe jamais par la boucle NB4. Le test tient la
+      // règle au niveau du réconciliateur, pour le jour où un chemin l'y
+      // mènerait.
+      const datePrevue = new Date("2025-04-20T00:00:00Z");
+      const plan = reconcilierCalendrier(
+        [
+          ligneExistante({
+            id: "v-mes",
+            obligationId: "mes",
+            equipementId: "eq-1",
+            periodicite: "mise_en_service_uniquement",
+            datePrevue,
+            statut: "realisee_conforme",
+            derniereRealisation: null,
+            dernierResultat: null,
+            porteUnePreuve: true,
+          }),
+        ],
+        [],
+        {
+          now: NOW,
+          obligationsEncoreApplicables: new Set([cleApplicabilite("mes", "eq-1")]),
+          periodicitesEffectives: new Map([
+            [cleApplicabilite("mes", "eq-1"), "mise_en_service_uniquement" as const],
+          ]),
+          equipementsEnService: new Set(["eq-1"]),
+        },
+      );
+      expect(plan.aMettreAJour.map((m) => [m.id, m.statut, m.datePrevue])).toEqual([
+        ["v-mes", "a_planifier", datePrevue],
+      ]);
+    });
+
     it("sur un rythme, le statut réalisé sans rapport ne se garde plus", () => {
       // Une ligne de titre, non générée, au statut réalisé sans rapport : le
       // statut ne vient d'aucune pièce, ce n'est pas une trace. Sans rapport
