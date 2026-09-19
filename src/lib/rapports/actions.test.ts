@@ -559,6 +559,49 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     await attendreConfluence();
   });
 
+  it("une ligne `autre` soldée par un dépôt rouvre au retrait de ce rapport, date inchangée (NB4)", async () => {
+    // Relecture du lot 4 : la boucle NB4 gardait le statut réalisé que le
+    // rapport retiré avait donné — « réalisée » sans pièce, et `porteUneTrace`
+    // la comptait ensuite comme une trace que plus rien ne rouvrait.
+    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+    poserLigne({
+      id: "v-portail",
+      obligationId: PORTAIL_MAINTIEN,
+      equipementId: "eq-portail",
+      datePrevue: d("2021-03-01"),
+      statut: "a_planifier",
+      nbActions: 1,
+    });
+    await deposer("conforme", "2026-06-01", "v-portail");
+    expect(ligne("v-portail").statut).toBe("realisee_conforme");
+
+    await retirer(rapports("v-portail")[0].id!);
+
+    expect(ligne("v-portail").statut).toBe("a_planifier");
+    expect(ligne("v-portail").datePrevue).toEqual(d("2021-03-01"));
+    await attendreConfluence("v-portail");
+  });
+
+  it("une ligne ARCHIVÉE dont on retire le seul rapport réalisé perd son statut réalisé, date inchangée", async () => {
+    // Le cas voisin : l'appareil est retiré, la ligne archivée avec sa preuve.
+    // Le plan ne la met pas à jour ; sans la règle de `recalculerLigne`, elle
+    // restait « réalisée » sans aucune pièce.
+    poserEtablissement([{ id: "eq-1", actif: false, dateMiseEnService: d("2026-01-05") }]);
+    poserLigne({
+      obligationId: ELEC_MISE_EN_SERVICE,
+      datePrevue: d("2026-01-05"),
+      statut: "realisee_conforme",
+      archiveLe: d("2026-07-01"),
+      rapports: [rapport({ id: "rap-mes", dateRapport: d("2026-02-01") })],
+    });
+
+    await retirer("rap-mes");
+
+    expect(ligne().statut).toBe("a_planifier");
+    expect(ligne().datePrevue).toEqual(d("2026-01-05"));
+    expect(ligne().archiveLe).toEqual(d("2026-07-01"));
+  });
+
   it("un « non vérifiable » retiré d'un ponctuel au statut hérité (legs) ne le rouvre pas", async () => {
     // Le pendant : le rapport retiré n'a rien soldé, le statut réalisé ne
     // vient pas de lui. La garde du legs s'applique.

@@ -187,4 +187,5 @@ export const STRATEGIE_FAITS: StrategieDecision = {
 export const STRATEGIE_FAITS_SANS_LEGS: StrategieDecision = {
   existante: deciderSurLesFaitsSeuls,
   creation: creerParFaits,
+  garderLegs: false,
 };

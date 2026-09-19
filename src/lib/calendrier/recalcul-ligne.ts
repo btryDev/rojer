@@ -45,6 +45,7 @@
 // fait confiance à l'appelant, qui a vérifié la propriété de l'établissement.
 
 import type { Prisma } from "@prisma/client";
+import { estStatutRealise } from "@/lib/dates/retard";
 import { STRATEGIE_FAITS, STRATEGIE_FAITS_SANS_LEGS } from "./decision-par-faits";
 import { lireEntrees, planifier } from "./passe";
 
@@ -128,7 +129,21 @@ export async function recalculerLigne(
     now,
     options.garderLegs === false ? STRATEGIE_FAITS_SANS_LEGS : STRATEGIE_FAITS,
   );
-  const cible = plan.aMettreAJour.find((m) => m.id === verificationId);
+  const trouvee = plan.aMettreAJour.find((m) => m.id === verificationId);
+  // UNE LIGNE QUE LE PLAN NE MET PAS À JOUR — archivée, porteur disparu,
+  // obligation retirée — et dont on retire le seul rapport RÉALISÉ : son
+  // statut réalisé venait de ce rapport, et `porteUneTrace` le compterait
+  // ensuite comme une trace que plus rien ne rouvre. Elle repasse « à
+  // planifier », DATE INCHANGÉE — ce que l'ancien `supprimerRapport` faisait
+  // (relecture du lot 4, 2026-09-19). Son sort — archivée, supprimée — reste
+  // l'affaire de la régénération.
+  const cible =
+    trouvee ??
+    (options.garderLegs === false &&
+    estStatutRealise(lue.statut) &&
+    (lue.derniereRealisation ?? null) === null
+      ? { datePrevue: lue.datePrevue, statut: "a_planifier" as const }
+      : undefined);
   if (cible === undefined) return { ecrit: false };
   if (
     cible.datePrevue.getTime() === lue.datePrevue.getTime() &&
@@ -136,7 +151,6 @@ export async function recalculerLigne(
   ) {
     return { ecrit: false };
   }
-
   const { count } = await tx.verification.updateMany({
     where: {
       id: verificationId,

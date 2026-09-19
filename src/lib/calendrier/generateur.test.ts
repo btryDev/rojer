@@ -23,6 +23,7 @@ import {
   periodicitesEffectives,
 } from "./generateur";
 import { estVerificationAPlanifier } from "@/lib/dates/retard";
+import { STRATEGIE_FAITS_SANS_LEGS } from "./decision-par-faits";
 
 // ============================================================================
 // Fixtures
@@ -1416,6 +1417,28 @@ describe("réconciliation — cycles de vérification", () => {
       expect(plan.aMettreAJour.map((m) => [m.periodicite, m.prescriptionId])).toEqual([
         ["autre", null],
       ]);
+    });
+
+    it("au retrait d'un rapport réalisé (`garderLegs: false`), un statut réalisé sans rapport ne se garde plus", () => {
+      // Relecture du lot 4 (2026-09-19). La ligne `autre`, soldée par le
+      // rapport qu'on retire, porte encore une prescription levée : NB4 la met
+      // à jour pour cela, et gardait au passage son statut réalisé — sans
+      // aucune pièce. Sous la décision du retrait, elle repasse « à
+      // planifier », date inchangée ; sous la décision ordinaire, la trace
+      // reste (c'est un legs).
+      const soldeeSansPiece = roulee({
+        periodicite: "autre",
+        statut: "realisee_conforme",
+        derniereRealisation: null,
+        dernierResultat: null,
+      });
+      const retrait = reconcilierCalendrier([soldeeSansPiece], [], sansRythme, STRATEGIE_FAITS_SANS_LEGS);
+      expect(retrait.aMettreAJour.map((m) => [m.statut, m.prescriptionId])).toEqual([
+        ["a_planifier", null],
+      ]);
+      expect(retrait.aMettreAJour[0].datePrevue).toEqual(new Date("2026-03-01T00:00:00Z"));
+      const ordinaire = reconcilierCalendrier([soldeeSansPiece], [], sansRythme);
+      expect(ordinaire.aMettreAJour.map((m) => m.statut)).toEqual(["realisee_conforme"]);
     });
 
     it("sur un rythme, un statut réalisé sans rapport est gardé : c'est la seule trace", () => {

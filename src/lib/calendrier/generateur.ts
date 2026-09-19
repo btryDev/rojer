@@ -900,11 +900,15 @@ export type PlanReconciliation = {
 function statutDeLigneNonGeneree(
   ex: OccurrenceExistante,
   effective: Periodicite,
+  // `false` au retrait d'un rapport RÉALISÉ (`StrategieDecision.garderLegs`) :
+  // un statut réalisé sans rapport vient alors du rapport qu'on retire, ce
+  // n'est pas une trace à garder (relecture du lot 4, 2026-09-19).
+  garderLegs: boolean,
 ): StatutVerificationPersiste {
   if (!estCyclique(effective)) {
     const solde = statutDepuisResultat(ex.dernierResultat);
     if (solde !== null) return solde;
-    if (estStatutRealise(ex.statut)) return ex.statut;
+    if (estStatutRealise(ex.statut)) return garderLegs ? ex.statut : "a_planifier";
     return estSansRendezVous(effective) ? "a_planifier" : ex.statut;
   }
   // SUR UN RYTHME, sans passer par la génération : une ligne de titre dont la
@@ -915,7 +919,7 @@ function statutDeLigneNonGeneree(
   // « planifiée » si la ligne l'était déjà ou si un contrôle réel est derrière
   // elle, « à planifier » autrement. (C'était `statutCycleOuvert`, recopiée
   // ici pour ce seul usage, qui ne touche pas à la date.)
-  if (estStatutRealise(ex.statut)) return ex.statut;
+  if (garderLegs && estStatutRealise(ex.statut)) return ex.statut;
   if (ex.statut === "planifiee" || realisationConnue(ex) !== null) {
     return "planifiee";
   }
@@ -1101,6 +1105,14 @@ export type DecisionDeLigne = {
 export type StrategieDecision = {
   existante: (ctx: ContexteExistante) => DecisionDeLigne;
   creation: (ctx: ContexteCreation) => DecisionDeLigne;
+  /**
+   * Un statut réalisé SANS rapport réalisé se garde-t-il ? Oui par défaut —
+   * c'est la seule trace d'un legs. Non au retrait d'un rapport réalisé
+   * (`STRATEGIE_FAITS_SANS_LEGS`) : le statut vient de ce rapport. Lu par la
+   * décision d'une ligne générée ET par la boucle NB4, sans quoi une ligne
+   * `autre` restait « réalisée » sans pièce (relecture du lot 4).
+   */
+  garderLegs?: boolean;
 };
 
 export function reconcilierCalendrier(
@@ -1394,7 +1406,7 @@ export function reconcilierCalendrier(
       const statutCible =
         effective === undefined
           ? ex.statut
-          : statutDeLigneNonGeneree(ex, effective);
+          : statutDeLigneNonGeneree(ex, effective, decision.garderLegs ?? true);
       if (!porteUneTrace) plan.aSupprimer.push(ex.id);
       // ELLE A CHANGÉ DE RYTHME SANS REPASSER PAR LA GÉNÉRATION (NB4,
       // 2026-09-15). Le cas vécu : une prescription donne un rythme semestriel
