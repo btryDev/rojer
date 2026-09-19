@@ -152,7 +152,23 @@ const RELEVE = {
   // déjà par défaut. NON : même décision, mêmes écritures.
   // Puis le deuxième argument mort du générateur (l'historique, refusé s'il
   // n'était pas vide) : NON, aucun appelant ne le remplissait.
-  empreinte: "77d8530abadcb4da",
+  // Recopiée SANS incrément le 2026-09-19 (`lot/qualite-calendrier`, point 2) :
+  // `dernierResultat` et `suiviDepuis` deviennent requis, leur absence lève au
+  // lieu de retomber sur « conforme » et sur l'horloge. NON : `lireEntrees`
+  // porte les deux sur chaque ligne (la colonne `suiviDepuis` est NOT NULL, le
+  // résultat voyage avec la date du même rapport), donc aucun repli n'était
+  // atteint en production ; seules des fixtures l'atteignaient.
+  // Recopiée SANS incrément le même jour (point 3) : « un statut réalisé ne
+  // survit pas sans rapport réalisé » sort de `statutDeLigneNonGeneree` dans
+  // `reouvrirSansRapportRealise`, que `recalcul-ligne.ts` appelle aussi. NON :
+  // la boucle NB4 rend le même statut dans chaque cas, branche pour branche.
+  // Recopiée SANS incrément le même jour (point 4) : `deciderParFaits` et
+  // `creerParFaits`, deux relais d'une ligne, sont inlinés ; la branche
+  // `source === undefined`, morte, part. NON : mêmes appels, mêmes écritures.
+  // Recopiée SANS incrément le même jour (point 5) : `derniere-realisation.ts`
+  // gagne `ORDRE_RAPPORT_PLUS_RECENT`, que le moteur n'importe pas — il
+  // départage toujours par `indexerDernieresRealisations`. NON.
+  empreinte: "c40d958332ef09f4",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

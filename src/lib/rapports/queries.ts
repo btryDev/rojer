@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ORDRE_RAPPORT_PLUS_RECENT } from "./derniere-realisation";
 import { requireUser } from "@/lib/auth/require-user";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
@@ -29,7 +30,7 @@ export async function listerRapportsDeLEtablissement(
         },
       },
     },
-    orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+    orderBy: ORDRE_RAPPORT_PLUS_RECENT,
   });
 
   let out = rapports;
@@ -93,6 +94,6 @@ export async function listerRapportsDUneVerification(verificationId: string) {
       verificationId,
       etablissement: { entreprise: { userId: user.id } },
     },
-    orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+    orderBy: ORDRE_RAPPORT_PLUS_RECENT,
   });
 }
