@@ -1922,6 +1922,15 @@ Ce que la décision change dans notre façon de travailler :
   suit la fusion. Le risque « une preview d'une branche ancienne tombe en P2022 »
   disparaît de lui-même, ainsi que celui d'une migration appliquée avant que son
   code ne soit en ligne.
+- **l'ordre du build (2026-09-19)** : `prisma generate && next build && prisma
+  migrate deploy` — `next build` n'ouvre aucune connexion à la base (78 routes
+  `ƒ`, zéro connexion relevée par une sonde TCP mise à la place de
+  `DATABASE_URL`/`DIRECT_URL`, à revérifier si une page devient statique), donc
+  une compilation rouge ne migre plus ; mais un build qui échoue *après*
+  `migrate deploy` (code 1, non promu) laisse le schéma en avance sur le code en
+  ligne, et même un build vert migre avant la promotion : une migration qui
+  retire quelque chose se fait toujours en deux déploiements (§ 11, retrait de
+  `Verification.referentielVersion`).
 
 ### Ce qui reste en place, et pourquoi
 
