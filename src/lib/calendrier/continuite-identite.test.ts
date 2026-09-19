@@ -84,7 +84,15 @@ function ligneDeja(
     // La visite de 2025 : sa date vit sur le rapport (ADR-034), la colonne de
     // la ligne n'est plus tenue.
     derniereRealisation: new Date("2025-06-01T00:00:00Z"),
+    // Son résultat, lu sur le même rapport. Absent, la réconciliation le
+    // fabriquait (« conforme ») pour que ce fichier reste vert sans retouche ;
+    // elle le refuse depuis le 2026-09-19, et la fixture le porte.
+    dernierResultat: "conforme",
     statut: "planifiee",
+    // Suivie depuis l'ouverture du dossier, avant la visite de 2025. Aucune
+    // assertion n'en dépend — la date se lit sur le rapport (règle 3) —, mais
+    // la ligne ne retombe plus sur l'horloge de la passe.
+    suiviDepuis: new Date("2025-01-15T00:00:00Z"),
     porteUnePreuve: true,
     prescriptionId: null,
     ...over,

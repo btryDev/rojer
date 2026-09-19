@@ -4,7 +4,10 @@ import { obligationParId } from "@/lib/referentiels/conformite";
 import { SCEAU_CALENDRIER } from "./version-moteur";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 import { cleJourCivil, debutDuJour } from "@/lib/dates";
-import { derniereRealisation } from "@/lib/rapports/derniere-realisation";
+import {
+  derniereRealisation,
+  ORDRE_RAPPORT_PLUS_RECENT,
+} from "@/lib/rapports/derniere-realisation";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 // Module **pur** : c'est lui qui détient la partition en quatre ensembles
 // disjoints (retard / à planifier / à venir / réalisées 12 mois), déjà
@@ -124,7 +127,7 @@ export async function getVerification(id: string) {
         },
       },
       rapports: {
-        orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+        orderBy: ORDRE_RAPPORT_PLUS_RECENT,
       },
       // Même raison que dans `listerVerifications` : la fiche d'une échéance
       // est l'écran où l'on vient chercher ce qu'elle engage (ADR-032).

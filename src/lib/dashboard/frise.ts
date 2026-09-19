@@ -13,7 +13,7 @@
 // échéances distantes de dix jours sont toujours à la même distance
 // visuelle, quel que soit l'horizon affiché.
 
-import { FUSEAU_REFERENCE } from "@/lib/dates";
+import { composantesCiviles, FUSEAU_REFERENCE } from "@/lib/dates";
 import type { TypeEcheance } from "@/lib/calendrier/echeances";
 import { raccourcirLibelle } from "./libelles";
 import { dateEnJeuEvenement } from "@/lib/calendrier/etats";
@@ -352,13 +352,21 @@ export function construireFrise({
   };
 }
 
-/** « 24 SEPT. », « 6 → 24 JUIL. », « 28 JUIL. → 3 SEPT. ». */
+/** « 24 SEPT. », « 6 → 24 JUIL. », « 28 JUIL. → 3 SEPT. ».
+ *
+ *  Jour et mois lus au fuseau de référence (`composantesCiviles`, ADR-011
+ *  règle 1), comme `libelleDate` qui écrit l'autre bout. Ils se lisaient par
+ *  `getDate()`/`getMonth()`, dans le fuseau du PROCESSUS : sur un serveur en
+ *  UTC, une plage qui commence à minuit de Paris affichait la veille
+ *  (« 8 → 14 AOÛT » pour le 9), corrigé le 2026-09-19. */
 function libellePlage(debut: Date, fin: Date): string {
-  if (debut.getMonth() === fin.getMonth() && debut.getDate() === fin.getDate()) {
+  const a = composantesCiviles(debut);
+  const b = composantesCiviles(fin);
+  if (a.mois === b.mois && a.jour === b.jour) {
     return libelleDate(debut);
   }
-  if (debut.getMonth() === fin.getMonth()) {
-    return `${debut.getDate()} → ${libelleDate(fin)}`;
+  if (a.mois === b.mois) {
+    return `${a.jour} → ${libelleDate(fin)}`;
   }
   return `${libelleDate(debut)} → ${libelleDate(fin)}`;
 }

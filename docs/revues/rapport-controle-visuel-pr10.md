@@ -10,7 +10,7 @@ Captures dans `captures-pr10/`.
 **Compte utilisé** — à supprimer à la fin du contrôle, il existe sur le projet
 Supabase qui sert le produit en ligne : le compte créé par la propriétaire depuis
 le dashboard Supabase le 31 août 2026 (« Auto Confirm User »), UUID
-`5f6fe9e5-a0f4-4ae5-8e98-ab1c676f1aad`. **Aucun compte n'a été créé pendant la
+(uuid gardé hors du dépôt public). **Aucun compte n'a été créé pendant la
 fenêtre où « Confirm email » était désactivé** : le point 3 de
 `reglage-temporaire-confirm-email.md` est sans objet. Si un compte apparaît sur
 ce créneau, il n'est pas celui du contrôle.

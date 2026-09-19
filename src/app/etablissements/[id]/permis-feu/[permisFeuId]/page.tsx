@@ -16,6 +16,7 @@ import {
   type FaitFiche,
 } from "@/components/ui-kit";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
+import { statutPermisSignable } from "@/lib/signatures/etat-signable";
 import {
   BoutonDemarrer,
   BoutonSupprimer,
@@ -92,6 +93,9 @@ export default async function PermisFeuDetailPage({
   const groupes = mesuresParGroupe();
 
   // Signatures : on attend 2 signatures (donneur + prestataire).
+  // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
+  // serveur la refuserait de toute façon (`etat-signable.ts`).
+  const permisSignable = statutPermisSignable(permis.statut);
   const signatureDonneur = permis.signatures.find(
     (s) => s.signataireEmail !== permis.prestataireEmail,
   );
@@ -330,14 +334,19 @@ export default async function PermisFeuDetailPage({
                 En attente de votre signature côté site.
               </p>
               <div className="mt-3">
-                <DemanderSignatureForm
-                  etablissementId={id}
-                  objetType="permis_feu"
-                  objetId={permis.id}
-                  libelleDocument={`Permis de feu ${numero(permis.numero)} — ${permis.prestataireRaison}`}
-                  emailDefaut={undefined}
-                  nomDefaut={permis.donneurOrdreNom}
-                />
+                {permisSignable ? (
+                  <DemanderSignatureForm
+                    etablissementId={id}
+                    objetType="permis_feu"
+                    objetId={permis.id}
+                    emailDefaut={undefined}
+                    nomDefaut={permis.donneurOrdreNom}
+                  />
+                ) : (
+                  <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
+                    Plus de signature à recueillir : le document est clos ou annulé.
+                  </p>
+                )}
               </div>
             </BlocCreux>
           )}
@@ -370,14 +379,19 @@ export default async function PermisFeuDetailPage({
                 .
               </p>
               <div className="mt-3">
-                <DemanderSignatureForm
-                  etablissementId={id}
-                  objetType="permis_feu"
-                  objetId={permis.id}
-                  libelleDocument={`Permis de feu ${numero(permis.numero)} — ${permis.prestataireRaison}`}
-                  emailDefaut={permis.prestataireEmail}
-                  nomDefaut={permis.prestataireContact}
-                />
+                {permisSignable ? (
+                  <DemanderSignatureForm
+                    etablissementId={id}
+                    objetType="permis_feu"
+                    objetId={permis.id}
+                    emailDefaut={permis.prestataireEmail}
+                    nomDefaut={permis.prestataireContact}
+                  />
+                ) : (
+                  <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
+                    Plus de signature à recueillir : le document est clos ou annulé.
+                  </p>
+                )}
               </div>
             </BlocCreux>
           )}

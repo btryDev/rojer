@@ -33,6 +33,7 @@ import { compterEtatEcheances } from "@/lib/calendrier/retards";
 import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
 import { statsActionsEnRetard } from "@/lib/actions/queries";
 import { prisma } from "@/lib/prisma";
+import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
 import { enumererFamilles, libellePorteur } from "@/lib/calendrier/labels";
 import { libelleEtatCourtCapitale } from "@/lib/calendrier/etats";
@@ -142,7 +143,7 @@ export default async function EtablissementPage({
     prisma.rapportVerification.findMany({
       where: { etablissementId: id },
       include: { verification: true },
-      orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+      orderBy: ORDRE_RAPPORT_PLUS_RECENT,
       take: 4,
     }),
   ]);

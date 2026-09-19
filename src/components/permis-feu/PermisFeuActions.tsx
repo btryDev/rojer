@@ -49,7 +49,8 @@ export function BoutonTerminer({ permisFeuId }: { permisFeuId: string }) {
             detail:
               "Vous attestez qu'aucun point chaud et aucune fumée ne " +
               "subsistent sur la zone. Le permis passe en « terminé » et la " +
-              "surveillance cesse d'être demandée.",
+              "surveillance cesse d'être demandée. Les liens de signature " +
+              "encore ouverts sont désactivés.",
             agir: "Marquer terminé",
             alors: () =>
               startTransition(async () => {
@@ -85,10 +86,12 @@ export function BoutonSupprimer({ permisFeuId }: { permisFeuId: string }) {
           demander({
             titre: "Supprimer ce permis de feu ?",
             detail:
-              "Un permis encore en brouillon ou en attente de signatures est " +
-              "effacé, avec les mesures de prévention qui y ont été saisies. " +
-              "Un permis déjà signé passe en « annulé » et reste au dossier : " +
-              "la piste d'audit des travaux par point chaud se conserve.",
+              "Un permis qui n'a reçu aucune signature et pour lequel aucun " +
+              "lien de signature n'a été envoyé est effacé, avec les mesures " +
+              "de prévention qui y ont été saisies. Sinon, il passe en " +
+              "« annulé » et reste au dossier : la piste d'audit des travaux " +
+              "par point chaud se conserve. Les liens de signature encore " +
+              "ouverts sont désactivés.",
             agir: "Supprimer le permis",
             alors: () =>
               startTransition(async () => {

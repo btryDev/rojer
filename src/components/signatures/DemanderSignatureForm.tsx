@@ -16,9 +16,13 @@ import type { ObjetSignable } from "@prisma/client";
  * remontait auparavant jusqu'ici, et un modal permettait de signer sur-le-
  * champ à la place du destinataire — le demandeur tenait les deux facteurs,
  * et la signature obtenue ne valait pas mieux qu'une case qu'il aurait cochée
- * lui-même. Le raisonnement est dans `@/lib/access-tokens/actions`, y compris
+ * lui-même. Le raisonnement est dans `@/lib/access-tokens/emission`, y compris
  * ce que ce retrait emporte (la copie manuelle du lien) et par quel chemin
  * cela doit revenir si le besoin est confirmé.
+ *
+ * Le nom du document n'est plus passé d'ici : il partait tel quel dans le
+ * sujet du courriel, et c'était le client qui l'écrivait. Le serveur le
+ * dérive de l'objet (`@/lib/signatures/libelle-document`).
  *
  * Pour essayer le flux en local, le message est à lire dans
  * `/dev/boite-mail`, là où le destinataire le lirait — une page qui n'est
@@ -35,14 +39,12 @@ export function DemanderSignatureForm({
   etablissementId,
   objetType,
   objetId,
-  libelleDocument,
   emailDefaut,
   nomDefaut,
 }: {
   etablissementId: string;
   objetType: ObjetSignable;
   objetId: string;
-  libelleDocument: string;
   emailDefaut?: string;
   nomDefaut?: string;
 }) {
@@ -62,16 +64,19 @@ export function DemanderSignatureForm({
     }
     startTransition(async () => {
       try {
-        await demanderSignature({
+        // Un refus attendu (objet clos, saisie invalide, trop d'envois) revient
+        // comme une valeur, pas comme une exception : en production, Next
+        // remplace le message d'une exception de server action par un texte
+        // générique, et l'utilisateur ne saurait pas pourquoi.
+        const r = await demanderSignature({
           etablissementId,
           objetType,
           objetId,
           signataireEmail: email,
           signataireNom: nom,
           signataireRole: role || undefined,
-          libelleDocument,
         });
-        setResult({ ok: true });
+        setResult(r.ok ? { ok: true } : { ok: false, message: r.message });
       } catch (e) {
         setResult({
           ok: false,
@@ -154,7 +159,7 @@ export function DemanderSignatureForm({
             name="signataireNom"
             defaultValue={nomDefaut}
             required
-            maxLength={200}
+            maxLength={120}
             placeholder="Jean Dupond"
           />
         </div>

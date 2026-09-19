@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { getSignature } from "@/lib/signatures/queries";
 import { SignatureBlock, LegalBadge } from "@/components/ui-kit";
 
 /**
@@ -11,6 +11,20 @@ import { SignatureBlock, LegalBadge } from "@/components/ui-kit";
  * Contrairement à /verifier/[id] qui recalcule le hash et peut dire
  * « document modifié », cette page se contente de présenter proprement
  * la signature qui vient d'être posée — c'est un accusé de réception.
+ *
+ * ── Même projection que `/verifier`, et pas une de plus ─────────────────
+ *
+ * Les deux pages sont publiques et prennent le MÊME identifiant : quiconque
+ * tient un `/verifier/sig_…` — l'inspecteur, l'assureur, l'acquéreur à qui on
+ * l'a transmis — n'a qu'à remplacer `verifier` par `signe`. Cette page lisait
+ * la signature avec l'établissement et l'entreprise, et affichait la raison
+ * sociale et le nom du site que `/verifier` retient à dessein. Elle lit
+ * désormais par `getSignature`, dont la projection (`SELECT_PREUVE`) est la
+ * seule décision de ce qu'un tiers sans compte peut voir d'une signature.
+ *
+ * La ligne « Demandé par » disparaît donc. Le signataire n'y perd rien : il
+ * vient de voir, sur la page du lien, qui lui demandait de signer, et le
+ * courriel qu'il a reçu le dit aussi.
  */
 export default async function ConfirmationSignaturePage({
   params,
@@ -18,17 +32,7 @@ export default async function ConfirmationSignaturePage({
   params: Promise<{ signatureId: string }>;
 }) {
   const { signatureId } = await params;
-  const signature = await prisma.signature.findUnique({
-    where: { id: signatureId },
-    include: {
-      etablissement: {
-        select: {
-          raisonDisplay: true,
-          entreprise: { select: { raisonSociale: true } },
-        },
-      },
-    },
-  });
+  const signature = await getSignature(signatureId);
   if (!signature) notFound();
 
   return (
@@ -75,13 +79,6 @@ export default async function ConfirmationSignaturePage({
       {/* Contexte */}
       <section className="mt-8 rounded-xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-5 text-[0.85rem]">
         <dl className="grid grid-cols-1 gap-y-2 sm:grid-cols-[160px_1fr]">
-          <dt className="text-[color:var(--muted-foreground)]">Demandé par :</dt>
-          <dd className="font-medium text-[color:var(--board-ink)]">
-            {signature.etablissement.entreprise.raisonSociale}
-            <span className="ml-1 text-[color:var(--muted-foreground)]">
-              · {signature.etablissement.raisonDisplay}
-            </span>
-          </dd>
           <dt className="text-[color:var(--muted-foreground)]">Document :</dt>
           <dd className="text-[color:var(--board-ink)]">
             {signature.nomDocument ?? "Document à signer"}

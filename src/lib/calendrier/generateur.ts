@@ -56,9 +56,11 @@ import {
   estPorteeParSalarie,
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
-// La décision de date — la seule (ADR-036). `decision-par-faits.ts` n'importe de
-// ce module que des TYPES (`import type`) : aucun cycle à l'exécution.
-import { creerParFaits, deciderParFaits } from "./decision-par-faits";
+// La décision de date — la seule (ADR-036) : `echeanceDeLigne`, sur les faits
+// que `faitsDeLigne` rassemble. `decision-par-faits.ts` n'importe de ce module
+// que des TYPES (`import type`) : aucun cycle à l'exécution.
+import { faitsDeLigne } from "./decision-par-faits";
+import { echeanceDeLigne, type SourceEcheance } from "./echeance-de-ligne";
 
 /**
  * Sentinelle du porteur « établissement » dans la clé de ligne.
@@ -269,9 +271,9 @@ export type SourcesDeCalcul = {
 };
 
 /**
- * Une ligne À CRÉER : la ligne générée, datée par la stratégie de décision du
- * réconciliateur (`creerParFaits`). C'est la seule forme sous laquelle une date
- * accompagne une ligne générée — elle naît dans le temps 2, jamais dans le 1.
+ * Une ligne À CRÉER : la ligne générée, datée par le réconciliateur —
+ * `echeanceDeLigne` sur ses faits, origine = l'horloge de la passe. C'est la
+ * seule forme sous laquelle une date accompagne une ligne générée — elle naît dans le temps 2, jamais dans le 1.
  */
 export type LigneACreer = VerificationGenere & {
   datePrevue: Date;
@@ -282,8 +284,7 @@ export type OptionsGenerateur = {
   /**
    * L'horloge de la passe, pour la RÉCONCILIATION seulement : c'est l'origine
    * du suivi d'une ligne à naître (`suiviDepuis`, que `actions.ts` écrit avec
-   * cette même valeur), et le repli d'une ligne existante qui n'en porterait
-   * pas — une fixture ; la lecture de production la fournit toujours. Défaut =
+   * cette même valeur). Une ligne existante porte la sienne, requise. Défaut =
    * `new Date()`. Le GÉNÉRATEUR ne la lit plus depuis la bascule (ADR-036).
    */
   now?: Date;
@@ -770,9 +771,17 @@ export type OccurrenceExistante = {
    * `calendrier/actions.ts` (ADR-034). La ligne n'en porte plus depuis le N5.
    */
   derniereRealisation?: Date | null;
-  /** Le résultat de ce rapport (`conforme`…). Il donne son statut à une ligne
-   *  sans rendez-vous suivant, seule à en garder un. */
-  dernierResultat?: string | null;
+  /** Le résultat de ce rapport (`conforme`…), `null` s'il n'y en a pas. Il
+   *  donne son statut à une ligne sans rendez-vous suivant, seule à en garder
+   *  un, et atteste qu'une date de rapport vaut réalisation (ADR-036 § 3).
+   *
+   *  REQUIS depuis le 2026-09-19. Optionnel, il laissait `realisationPropre`
+   *  prendre une date sans résultat pour une réalisation « conforme », en
+   *  silence, afin que des fixtures d'avant ce champ restent vertes. La
+   *  lecture de production le porte toujours (`lireEntrees`) ; une ligne qui
+   *  arriverait sans lui est refusée par `faitsDeLigne`, comme une ligne
+   *  générée sans `sources`. */
+  dernierResultat: string | null;
   statut: StatutVerificationPersiste;
   /** La ligne porte-t-elle au moins un rapport de vérification ou une action
    *  corrective ? C'est le seul critère qui autorise — ou interdit — la
@@ -789,13 +798,15 @@ export type OccurrenceExistante = {
   /**
    * Depuis quand Rojer suit la ligne — `Verification.suiviDepuis` (ADR-036,
    * D2) : l'ORIGINE que `echeanceDeLigne` lit (règles 2, 4 et 5). La lecture
-   * de production la porte toujours — la colonne est `NOT NULL`. Optionnelle
-   * dans le type pour les fixtures pures qui ne testent que l'identité ou
-   * l'archivage (`continuite-identite.test.ts` doit rester vert sans retouche) :
-   * absente, l'origine retombe sur l'horloge de la passe, comme pour une ligne
-   * à naître.
+   * de production la porte toujours — la colonne est `NOT NULL`.
+   *
+   * REQUISE depuis le 2026-09-19. ~~Optionnelle pour les fixtures pures :
+   * absente, l'origine retombait sur l'horloge de la passe.~~ Ce repli
+   * rendait un retard dépendant du jour du calcul — exactement ce que la D2
+   * existe pour empêcher — et il était silencieux. `faitsDeLigne` refuse
+   * désormais une ligne existante qui arrive sans elle.
    */
-  suiviDepuis?: Date;
+  suiviDepuis: Date;
 };
 
 /** Ce qu'il faut écrire sur une ligne existante. `id` n'y figure jamais en
@@ -819,10 +830,10 @@ export type MiseAJourOccurrence = {
   datePrevue: Date;
   statut: StatutVerificationPersiste;
   prescriptionId: string | null;
-  /** D'où la décision a tiré la date (`DecisionDeLigne.source`) — pour le
-   *  contrôle de santé et les tests, jamais écrite. Absente sur une ligne que
-   *  la boucle finale réaligne (NB4) : elle ne décide d'aucune date. */
-  source?: string;
+  /** D'où `echeanceDeLigne` a tiré la date — pour le contrôle de santé et les
+   *  tests, jamais écrite. Absente sur une ligne que la boucle finale réaligne
+   *  (NB4) : elle ne décide d'aucune date. */
+  source?: SourceEcheance;
 };
 
 /**
@@ -837,7 +848,7 @@ function realisationConnue(ex: OccurrenceExistante): Date | null {
 
 export type PlanReconciliation = {
   /** Couples (obligation, porteur) sans ligne de suivi : à insérer, datés par
-   *  la décision de création (`creerParFaits`). */
+   *  `echeanceDeLigne`, origine = l'horloge de la passe. */
   aCreer: LigneACreer[];
   /** Lignes existantes dont au moins un champ change. */
   aMettreAJour: MiseAJourOccurrence[];
@@ -872,6 +883,41 @@ export type PlanReconciliation = {
 // dans `statutDeLigneNonGeneree`, ci-dessous, qui ne décide d'aucune date.
 
 /**
+ * UN STATUT RÉALISÉ NE SURVIT PAS SANS RAPPORT RÉALISÉ (ADR-036, § 11 — le
+ * ménage) : rend « à planifier » à la place d'un statut réalisé que plus aucun
+ * rapport réalisé ne porte, et le statut tel quel dans tous les autres cas. La
+ * date n'y est pas : la règle ne touche qu'au statut.
+ *
+ * ÉCRITE UNE FOIS, APPELÉE DEUX FOIS (2026-09-19). Elle vivait en deux
+ * exemplaires : dans `statutDeLigneNonGeneree` ci-dessous (la boucle NB4 de la
+ * régénération) et dans `recalcul-ligne.ts` (le dépôt et le retrait d'un
+ * rapport), avec deux formulations — « le dernier résultat n'est pas réalisé »
+ * ici, « aucune date de dernière réalisation » là. Elles coïncident sur toute
+ * ligne que `lireEntrees` produit : la date et le résultat y viennent du même
+ * rapport, filtré par `WHERE_RAPPORT_REALISE`. C'est la première, celle de la
+ * régénération, qui est gardée.
+ *
+ * SA PORTÉE N'EST PAS LA MÊME SUR LES DEUX CHEMINS, et c'est écrit plutôt que
+ * corrigé : le recalcul l'applique à toute ligne que le plan ne met pas à jour
+ * — archivée, porteur disparu, obligation retirée —, la régénération seulement
+ * aux lignes applicables qu'elle saute (NB4). Une ligne à archiver ou déjà
+ * archivée garde son statut à la régénération. L'étendre demanderait une
+ * écriture de statut qui ne désarchive pas (`aMettreAJour` remet `archiveLe` à
+ * `null`), et ferait perdre à une telle ligne la trace que `porteUneTrace` lit
+ * sur son statut — donc la ferait supprimer à la passe suivante si rien d'autre
+ * ne la retient. Aucun chemin du produit ne fabrique une telle ligne (ADR-036
+ * § 11, contrôle de santé du 2026-09-19 : zéro).
+ */
+export function reouvrirSansRapportRealise(
+  ex: Pick<OccurrenceExistante, "statut" | "dernierResultat">,
+): StatutVerificationPersiste {
+  return estStatutRealise(ex.statut) &&
+    statutDepuisResultat(ex.dernierResultat) === null
+    ? "a_planifier"
+    : ex.statut;
+}
+
+/**
  * Le statut d'une ligne APPLICABLE que la génération saute, à son rythme
  * effectif — la seule écriture que la boucle finale du réconciliateur fait sur
  * elle (NB4, puis limite 1, 2026-09-15).
@@ -880,10 +926,11 @@ export type PlanReconciliation = {
  * SURVIT PAS SANS RAPPORT RÉALISÉ.
  *
  *  · sans rythme suivant : le résultat du dernier rapport réalisé, s'il y en a
- *    un — la ligne est soldée ; sinon « à planifier » si la ligne porte un
- *    statut réalisé ou si son rythme est SANS RENDEZ-VOUS — aucune échéance
- *    n'est attendue, et `lignePortantSansRendezVous` la tient hors des
- *    retards. Une mise en service garde son statut : elle, a un rendez-vous ;
+ *    un — la ligne est soldée ; sinon « à planifier » si son rythme est SANS
+ *    RENDEZ-VOUS — aucune échéance n'est attendue, et
+ *    `lignePortantSansRendezVous` la tient hors des retards — ou si elle porte
+ *    un statut réalisé (`reouvrirSansRapportRealise`). Une mise en service
+ *    garde son statut : elle, a un rendez-vous ;
  *  · sur un rythme : « planifiée » si la ligne l'était déjà ou si un contrôle
  *    réel est derrière elle, « à planifier » autrement. Un statut réalisé n'y
  *    survit jamais, rapport ou non : un contrôle suivi d'un rendez-vous est
@@ -906,14 +953,12 @@ function statutDeLigneNonGeneree(
   if (!estCyclique(effective)) {
     const solde = statutDepuisResultat(ex.dernierResultat);
     if (solde !== null) return solde;
-    // `estStatutRealise` ne décide seul que sur un ponctuel AVEC rendez-vous
+    if (estSansRendezVous(effective)) return "a_planifier";
+    // La règle ne décide seule que sur un ponctuel AVEC rendez-vous
     // (`mise_en_service_uniquement`) — inatteignable aujourd'hui (2026-09-19) :
     // une telle ligne applicable est toujours générée. Tenu par un test du
     // réconciliateur (`generateur.test.ts`).
-    if (estStatutRealise(ex.statut) || estSansRendezVous(effective)) {
-      return "a_planifier";
-    }
-    return ex.statut;
+    return reouvrirSansRapportRealise(ex);
   }
   // SUR UN RYTHME, sans passer par la génération. (C'était
   // `statutCycleOuvert`, recopiée ici pour ce seul usage, qui ne touche pas à
@@ -1053,44 +1098,17 @@ export function heritageDesRetirees(
   return { parCle, parObligation };
 }
 
-/**
- * Ce que le réconciliateur sait d'une ligne existante au moment de décider sa
- * date et son statut — et rien de plus : la décision ne voit ni le plan ni
- * les autres lignes.
- */
-export type ContexteExistante = {
-  /** La ligne en base, telle que la lecture l'a vue. */
-  ex: OccurrenceExistante;
-  /** La ligne générée qui la continue — attributs de référentiel et `sources`. */
-  g: VerificationGenere;
-  /** La réalisation léguée par les lignes absorbées, ou `null`. */
-  heritee: Date | null;
-  /** L'horloge de la passe — repli de l'origine d'une ligne sans `suiviDepuis`. */
-  now: Date;
-};
-
-/** Ce que le réconciliateur sait d'une ligne À CRÉER. */
-export type ContexteCreation = {
-  g: VerificationGenere;
-  heritee: Date | null;
-  /** L'horloge de la passe : l'origine du suivi de la ligne à naître. */
-  now: Date;
-};
-
-/** Ce qu'une décision rend. `source` dit d'où sort la date — pour le contrôle
- *  de santé et les tests, jamais persistée. */
-export type DecisionDeLigne = {
-  datePrevue: Date;
-  statut: StatutVerificationPersiste;
-  source?: string;
-};
+// ~~`ContexteExistante`, `ContexteCreation`, `DecisionDeLigne`~~ — retirés le
+// 2026-09-19 avec `deciderParFaits` et `creerParFaits`, deux relais d'une
+// ligne à un seul appelant. Le réconciliateur appelle `echeanceDeLigne`
+// (`faitsDeLigne(…)`) directement, et reçoit son type de retour.
 
 // ~~`StrategieDecision`~~ — la COUTURE posée au lot 2b de l'ADR-036
 // (2026-09-18) pour faire tourner deux stratégies côte à côte, retirée au lot 5
 // (2026-09-19) : depuis la bascule il n'y en avait plus qu'une. Le
-// réconciliateur appelle directement `deciderParFaits` et `creerParFaits`
-// (`decision-par-faits.ts`) — la date et le statut sortent de
-// `echeanceDeLigne`, pour une ligne existante comme pour une ligne à créer.
+// réconciliateur appelle directement `echeanceDeLigne` sur les faits que
+// `faitsDeLigne` rassemble — pour une ligne existante comme pour une ligne à
+// créer.
 
 export function reconcilierCalendrier(
   existantes: OccurrenceExistante[],
@@ -1224,7 +1242,7 @@ export function reconcilierCalendrier(
       // existante — origine = l'horloge de la passe, que `actions.ts` écrit
       // dans `suiviDepuis`. Une absorbante neuve naît donc datée de l'héritage
       // (règle 3), et non « à planifier », urgente, pour un acte accompli.
-      const d = creerParFaits({ g, heritee, now });
+      const d = echeanceDeLigne(faitsDeLigne(g, null, heritee, now));
       if (estStatutRealise(d.statut)) {
         // Inatteignable : une ligne qui n'existe pas encore ne porte aucun
         // rapport, donc aucune réalisation à solder. Le refus est explicite
@@ -1254,14 +1272,14 @@ export function reconcilierCalendrier(
     // les rapports (ADR-034) — est rassemblée par `faitsDeLigne`.
 
     // LA DATE ET LE STATUT sortent de `echeanceDeLigne`, sur les faits de la
-    // ligne (`deciderParFaits`). Le réconciliateur ne décide d'aucune date ; il
+    // ligne (`faitsDeLigne`). Le réconciliateur ne décide d'aucune date ; il
     // rassemble ce que la décision doit savoir et écrit ce qu'elle rend
     // (ADR-036). Ce qu'il garde en propre, ce sont ses PROTECTIONS : adoption,
     // non-suppression d'une ligne qui porte une trace, archivage et
     // désarchivage, porteur disparu, boucle NB4 — plus bas —, et, dans
     // `actions.ts`, les écritures conditionnées et le sceau.
 
-    const decidee = deciderParFaits({ ex, g, heritee, now });
+    const decidee = echeanceDeLigne(faitsDeLigne(g, ex, heritee, now));
 
     const cible: MiseAJourOccurrence = {
       id: ex.id,
@@ -1274,7 +1292,7 @@ export function reconcilierCalendrier(
       prescriptionId: g.prescriptionId,
       // Portée pour le contrôle de santé et les tests ; `actions.ts` ne la lit
       // pas et `identique` ne la compare pas.
-      ...(decidee.source === undefined ? {} : { source: decidee.source }),
+      source: decidee.source,
     };
 
     const identique =

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
 import { requireUser } from "@/lib/auth/require-user";
 import type { StatutAction } from "@prisma/client";
 import { JOURS_HORIZON_PROCHE, ajouterJours, debutDuJour } from "@/lib/dates";
@@ -89,7 +90,7 @@ export async function getAction(id: string) {
           equipement: true,
           salarie: true,
           rapports: {
-            orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+            orderBy: ORDRE_RAPPORT_PLUS_RECENT,
           },
         },
       },

@@ -180,7 +180,7 @@ function etat(plan: PlanReconciliation, ex: OccurrenceExistante) {
 
 const J_400 = ajouterJours(NOW, 400);
 
-describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", () => {
+describe("la décision par les faits — les sept scénarios de l'audit, de bout en bout", () => {
   it("S1 — sans source, suivie depuis le 15/06 : la date ne glisse plus, 94 jours de retard gardés", () => {
     const o = obligationEtablissement({ id: "etab-annuelle", periodicite: "annuelle" });
     const origine = instantCivil(2026, 6, 15, 10, 12);
@@ -332,7 +332,7 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
   });
 });
 
-describe("deciderParFaits — rien hors de la fonction (la garde du legs est partie au lot 5)", () => {
+describe("la décision par les faits — rien hors de la fonction (la garde du legs est partie au lot 5)", () => {
   const ponctuel = obligationEquipement({
     id: "elec-mise-en-service",
     periodicite: "mise_en_service_uniquement",
@@ -447,6 +447,44 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
     const [g] = genererProchainesVerifications([applicable(o, [EQ])], { now: NOW });
     const sansSources = { ...g, sources: undefined } as unknown as VerificationGenere;
     expect(() => faitsDeLigne(sansSources, null, null, NOW)).toThrow(/sources/);
+  });
+
+  it("une ligne existante sans `suiviDepuis` ni `dernierResultat` est REFUSÉE, comme sans `sources`", () => {
+    // Les deux replis silencieux sont partis le 2026-09-19 : sans origine, la
+    // ligne prenait l'horloge de la passe — un retard dépendant du jour du
+    // calcul ; sans résultat, une date de rapport valait réalisation
+    // « conforme » sur un rythme. Le type les rend requis ; ce test tient le
+    // refus pour ce qui passerait par un `as`.
+    const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
+    const [g] = genererProchainesVerifications([applicable(o, [EQ])], { now: NOW });
+    const complete = existante(g, {
+      datePrevue: d("2026-12-01"),
+      suiviDepuis: d("2025-12-01"),
+      derniereRealisation: d("2025-12-01"),
+      dernierResultat: "conforme",
+    });
+    // Borne basse : la ligne complète passe, avec sa réalisation.
+    expect(faitsDeLigne(g, complete, null, NOW).realisation).toEqual({
+      date: d("2025-12-01"),
+      resultat: "conforme",
+    });
+
+    const sansOrigine = { ...complete, suiviDepuis: undefined } as unknown as OccurrenceExistante;
+    expect(() => faitsDeLigne(g, sansOrigine, null, NOW)).toThrow(/suiviDepuis/);
+
+    const sansResultat = { ...complete, dernierResultat: undefined } as unknown as OccurrenceExistante;
+    expect(() => faitsDeLigne(g, sansResultat, null, NOW)).toThrow(/dernierResultat/);
+
+    // Une date de rapport SANS son résultat : les deux se lisent sur le même
+    // rapport, l'un sans l'autre est un défaut de lecture — refusé, ni
+    // « conforme » ni « rien ».
+    const dateSeule = existante(g, {
+      datePrevue: d("2026-12-01"),
+      suiviDepuis: d("2025-12-01"),
+      derniereRealisation: d("2025-12-01"),
+      dernierResultat: null,
+    });
+    expect(() => faitsDeLigne(g, dateSeule, null, NOW)).toThrow(/sans son résultat/);
   });
 });
 

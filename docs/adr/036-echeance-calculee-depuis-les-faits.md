@@ -553,12 +553,18 @@ Branche `lot/adr036-bascule`. Ce qui s'écarte du plan ou le précise :
   rapport lui avait donné — vu de la ligne, c'est un legs, et la garde l'aurait
   laissé « fait » sans pièce. Au dépôt et à la régénération, la garde
   s'applique.
-- **Un `dernierResultat` absent** (fixture pure d'avant ce champ ; la lecture
+- ~~**Un `dernierResultat` absent** (fixture pure d'avant ce champ ; la lecture
   de production le porte toujours) : sur un rythme cyclique la date du dernier
   rapport vaut réalisation — son résultat n'y est lu que pour attester qu'il
   s'agit d'une réalisation, ce que le contrat de `derniereRealisation` dit
   déjà ; sur un ponctuel on n'invente pas le statut. C'est ce qui garde
-  `continuite-identite.test.ts` vert **sans retouche**.
+  `continuite-identite.test.ts` vert **sans retouche**.~~ *Retiré le
+  2026-09-19 (`lot/qualite-calendrier`)* : un repli de production qui ne
+  servait qu'aux fixtures. `dernierResultat` et `suiviDepuis` sont requis sur
+  `OccurrenceExistante` ; `faitsDeLigne` lève quand l'un manque, ou quand une
+  date de rapport arrive sans son résultat, comme il lève sans `sources`. Les
+  fixtures portent la donnée (`continuite-identite.test.ts`,
+  `generateur.test.ts`).
 - ~~**Le générateur garde un deuxième argument mort**~~ (*retiré au lot 5*) — l'ancien historique —,
   pour la même raison : `continuite-identite.test.ts` l'appelle ainsi. Non vide,
   il est refusé. Le lot 5 le retire avec la couture (le paramètre `decision` du
@@ -568,7 +574,9 @@ Branche `lot/adr036-bascule`. Ce qui s'écarte du plan ou le précise :
   cherche si une date en base s'explique par « une ancre + un rythme » pour
   classer un écart — il ne date ni n'écrit rien, et aucun module de production
   ne l'importe (même garde). Les écritures de `datePrevue` sont limitées à
-  `calendrier/actions.ts` et `calendrier/recalcul-ligne.ts` dans `src/` ;
+  `calendrier/actions.ts` et `calendrier/recalcul-ligne.ts` dans `src/` —
+  **et celles du `statut` d'une `Verification` depuis le 2026-09-19** : la
+  garde ne tenait que la date, alors que le § 2 dit les deux dérivés ;
   `scripts/` et `prisma/seed.ts` restent sous `seeds-en-faits.test.ts`.
 - **Le passage à blanc devient un contrôle de santé** : il n'y a plus deux
   stratégies à comparer. `comparerAuMoteur` compare l'état EN BASE au plan du

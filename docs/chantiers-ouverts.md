@@ -269,15 +269,14 @@ l'ADR-027 disant qu'une déclaration se coche et ne se sème pas.
   Depuis le 2026-09-02, l'aide de saisie le dit au dirigeant ; le module ne le
   fait toujours pas.
 - **Comptes de test en production — à la main de la propriétaire, pas à
-  supprimer d'office.** `contact+controle-pr10@btry.fr` et « Bistrot de la
-  Verification SARL » (`cmtj4wq7y0002cigd4zauyfmw`) sont **gardés
+  supprimer d'office.** Un compte de contrôle visuel (`contact+…@`, adresse gardée hors du dépôt public) et « Bistrot de la
+  Verification SARL » (identifiant gardé hors du dépôt public) sont **gardés
   volontairement** ; ils ont servi au contrôle visuel du 2026-09-02 et le
   dossier a reçu une régénération de calendrier depuis. Une première version de
   cette liste les rangeait « à supprimer » : c'était une décision prise à la
   place de la propriétaire.
 
-  S'y ajoute `controle-visuel-seed@btry.fr` (uuid
-  `e2d350b2-534b-4500-8cc0-550d8e579047`), **créé par erreur** le 2026-09-03 par
+  S'y ajoute un compte de seed (adresse et uuid gardés hors du dépôt public), **créé par erreur** le 2026-09-03 par
   le lot du seed, sur le projet Supabase de production. Non confirmé, jamais
   utilisé. La cause est un défaut de brief : la session distante avait
   l'interdiction écrite de toucher la prod, ce lot-là ne l'avait pas — on lui
@@ -523,7 +522,7 @@ tout s'ouvre. C'est la voie employée depuis le 2026-09-04.
 
 **C'est exactement là que le lot du 2026-09-03 a dérapé** : il a cherché à
 *fabriquer* une session au lieu de *demander* qu'on lui en ouvre une, et il a
-créé `controle-visuel-seed@btry.fr` sur le Supabase de production (§ 6). La
+créé un compte de seed sur le Supabase de production (§ 6). La
 règle qui en sort : **si un lot n'a pas la propriétaire sous la main, la réponse
 n'est ni « projet Supabase local » ni « contournement de session en dev » —
 c'est que ce lot ne fait pas de contrôle visuel.** Les deux contournements ont
@@ -1922,6 +1921,15 @@ Ce que la décision change dans notre façon de travailler :
   suit la fusion. Le risque « une preview d'une branche ancienne tombe en P2022 »
   disparaît de lui-même, ainsi que celui d'une migration appliquée avant que son
   code ne soit en ligne.
+- **l'ordre du build (2026-09-19)** : `prisma generate && next build && prisma
+  migrate deploy` — `next build` n'ouvre aucune connexion à la base (78 routes
+  `ƒ`, zéro connexion relevée par une sonde TCP mise à la place de
+  `DATABASE_URL`/`DIRECT_URL`, à revérifier si une page devient statique), donc
+  une compilation rouge ne migre plus ; mais un build qui échoue *après*
+  `migrate deploy` (code 1, non promu) laisse le schéma en avance sur le code en
+  ligne, et même un build vert migre avant la promotion : une migration qui
+  retire quelque chose se fait toujours en deux déploiements (§ 11, retrait de
+  `Verification.referentielVersion`).
 
 ### Ce qui reste en place, et pourquoi
 

@@ -402,6 +402,14 @@ function ligneExistante(
     datePrevue: new Date("2026-12-01T00:00:00Z"),
     statut: "a_planifier",
     porteUnePreuve: false,
+    // Aucun rapport réalisé. Un test qui en pose un (`derniereRealisation`)
+    // pose aussi son résultat : la réconciliation refuse une date de rapport
+    // sans résultat, au lieu de la tenir pour « conforme » (2026-09-19).
+    dernierResultat: null,
+    // Suivie depuis l'instant de la passe. C'est la valeur que le code
+    // fabriquait quand le champ manquait ; la fixture la porte désormais, et
+    // un test dont le retard dépend de l'origine la nomme.
+    suiviDepuis: NOW,
     ...over,
   };
 }
@@ -798,6 +806,7 @@ describe("réconciliation — survie des actions correctives", () => {
         datePrevue,
         statut,
         derniereRealisation: new Date("2025-02-01T00:00:00Z"),
+        dernierResultat: "conforme",
         porteUnePreuve: true,
       });
 
@@ -884,6 +893,7 @@ describe("réconciliation — idempotence et stabilité des identifiants", () =>
       datePrevue: v.datePrevue,
       statut: v.statut,
       porteUnePreuve: false,
+      dernierResultat: null,
       // Ce que `actions.ts` écrit à la création : l'horloge de la passe.
       suiviDepuis: NOW,
     }));
@@ -1051,6 +1061,7 @@ describe("réconciliation — cycles de vérification", () => {
           equipementId: "eq-1",
           periodicite: "annuelle",
           derniereRealisation: new Date("2026-03-01T00:00:00Z"),
+          dernierResultat: "conforme",
           datePrevue: new Date("2027-03-01T00:00:00Z"),
           statut: "planifiee",
           porteUnePreuve: true,
@@ -1096,6 +1107,7 @@ describe("réconciliation — cycles de vérification", () => {
           equipementId: "eq-1",
           datePrevue: new Date("2027-08-01T00:00:00Z"),
           derniereRealisation: new Date("2026-08-01T00:00:00Z"),
+          dernierResultat: "conforme",
           statut: "a_planifier",
           porteUnePreuve: true,
         }),
@@ -1641,6 +1653,7 @@ describe("réconciliation — cycles de vérification", () => {
           periodicite: "annuelle",
           realisateurRequis: o.realisateurs,
           derniereRealisation: new Date("2026-03-01T00:00:00Z"),
+          dernierResultat: "conforme",
           datePrevue: new Date("2027-03-01T00:00:00Z"),
           statut: "planifiee",
           porteUnePreuve: true,
@@ -2057,6 +2070,7 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
       obligationId,
       equipementId: `eq-${id}`,
       derniereRealisation: new Date(quand),
+      dernierResultat: "conforme",
       statut: "realisee_conforme",
       porteUnePreuve: true,
     });
@@ -2139,6 +2153,7 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           // Ligne ROULÉE par son dépôt (ADR-034) : le fait sur le rapport,
           // l'échéance suivante sur la ligne.
           derniereRealisation: new Date("2026-07-01T00:00:00Z"),
+          dernierResultat: "conforme",
           datePrevue: new Date("2027-07-01T00:00:00Z"),
           statut: "planifiee",
           porteUnePreuve: true,
@@ -2230,6 +2245,7 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           obligationId: "frag-vmc",
           equipementId: "eq-1",
           derniereRealisation: new Date("2026-06-01T00:00:00Z"),
+          dernierResultat: "conforme",
           datePrevue: new Date("2027-06-01T00:00:00Z"),
           statut: "planifiee",
           porteUnePreuve: true,

@@ -9,6 +9,8 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { NatureTravauxPointChaud } from "@prisma/client";
 import { NATURES_TRAVAUX, permisFeuSchema } from "./schema";
 import { nextNumeroPermisFeu } from "./queries";
+import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
+import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 
 export type PermisFeuActionState =
   | { status: "idle" }
@@ -132,6 +134,14 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
     where: { id: permisFeuId },
     data: { statut: "termine" },
   });
+  // Un permis terminé ne se signe plus (`etat-signable.ts`) : ses liens
+  // encore ouverts tombent avec lui.
+  await revoquerLiensEnVol({
+    etablissementId: permis.etablissementId,
+    objetType: "permis_feu",
+    objetId: permisFeuId,
+    motif: "Permis de feu terminé",
+  });
   revalidatePath(`/etablissements/${permis.etablissementId}/permis-feu/${permisFeuId}`);
 }
 
@@ -143,9 +153,16 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
   if (!permis) return;
   await assertEtablissementOwnership(permis.etablissementId);
   // On ne supprime pas un permis déjà signé : on l'annule à la place pour
-  // conserver la piste d'audit.
+  // conserver la piste d'audit. LE STATUT NE LE DISAIT PAS : un permis est
+  // créé en `attente_signatures` et y reste une fois signé, rien n'écrivant
+  // `valide`. Le critère est donc le fait en base — une signature posée ou un
+  // lien émis (`porteUneTraceDeSignature`) —, et seul un permis vierge
+  // s'efface.
   const etabId = permis.etablissementId;
-  if (permis.statut === "attente_signatures" || permis.statut === "brouillon") {
+  const effacable =
+    (permis.statut === "attente_signatures" || permis.statut === "brouillon") &&
+    !(await porteUneTraceDeSignature("permis_feu", permisFeuId, etabId));
+  if (effacable) {
     await prisma.permisFeu.delete({ where: { id: permisFeuId } });
   } else {
     await prisma.permisFeu.update({
@@ -153,6 +170,12 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
       data: { statut: "annule" },
     });
   }
+  await revoquerLiensEnVol({
+    etablissementId: etabId,
+    objetType: "permis_feu",
+    objetId: permisFeuId,
+    motif: effacable ? "Permis de feu supprimé" : "Permis de feu annulé",
+  });
   revalidatePath(`/etablissements/${etabId}/permis-feu`);
   redirect(`/etablissements/${etabId}/permis-feu`);
 }

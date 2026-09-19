@@ -14,6 +14,7 @@ import {
   type FaitFiche,
 } from "@/components/ui-kit";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
+import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import {
   BoutonCloturer,
   BoutonSupprimerPlan,
@@ -80,6 +81,9 @@ export default async function PlanPreventionDetailPage({
     5: plan.participationCroisee,
   };
 
+  // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
+  // serveur la refuserait de toute façon (`etat-signable.ts`).
+  const planSignable = statutPlanSignable(plan.statut);
   const signatureEU = plan.signatures.find(
     (s) => s.signataireEmail !== plan.efChefEmail,
   );
@@ -406,13 +410,18 @@ export default async function PlanPreventionDetailPage({
             />
           ) : (
             <BlocCreux>
-              <DemanderSignatureForm
-                etablissementId={id}
-                objetType="plan_prevention"
-                objetId={plan.id}
-                libelleDocument={`Plan de prévention ${numero(plan.numero)} — ${plan.entrepriseExterieureRaison}`}
-                nomDefaut={plan.euChefNom}
-              />
+              {planSignable ? (
+                <DemanderSignatureForm
+                  etablissementId={id}
+                  objetType="plan_prevention"
+                  objetId={plan.id}
+                  nomDefaut={plan.euChefNom}
+                />
+              ) : (
+                <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
+                  Plus de signature à recueillir : le document est clos ou annulé.
+                </p>
+              )}
             </BlocCreux>
           )}
         </div>
@@ -436,14 +445,19 @@ export default async function PlanPreventionDetailPage({
             />
           ) : (
             <BlocCreux>
-              <DemanderSignatureForm
-                etablissementId={id}
-                objetType="plan_prevention"
-                objetId={plan.id}
-                libelleDocument={`Plan de prévention ${numero(plan.numero)} — ${plan.entrepriseExterieureRaison}`}
-                emailDefaut={plan.efChefEmail}
-                nomDefaut={plan.efChefNom}
-              />
+              {planSignable ? (
+                <DemanderSignatureForm
+                  etablissementId={id}
+                  objetType="plan_prevention"
+                  objetId={plan.id}
+                  emailDefaut={plan.efChefEmail}
+                  nomDefaut={plan.efChefNom}
+                />
+              ) : (
+                <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
+                  Plus de signature à recueillir : le document est clos ou annulé.
+                </p>
+              )}
             </BlocCreux>
           )}
         </div>

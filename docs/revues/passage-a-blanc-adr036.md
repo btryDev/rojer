@@ -142,7 +142,7 @@ mérite une lecture ligne par ligne avant le lot 4.
 ### Premier passage — 2026-09-18, 23 h 46 (heure de Paris)
 
 Lancé depuis le poste de développement sur la base de **production**
-(`aws-0-eu-west-1.pooler.supabase.com`, mot de passe masqué), après le
+(pooler Supabase de production, hôte et mot de passe gardés hors du dépôt public), après le
 déploiement de `a1e4f22` qui a appliqué la migration `suiviDepuis`.
 Transaction en lecture seule ; export JSON gardé hors dépôt.
 
@@ -155,13 +155,13 @@ Transaction en lecture seule ; export JSON gardé hors dépôt.
 Ce que les écarts disent, établissement par établissement (identifiants
 seulement) :
 
-- **`cmtj4wq7y0002cigd4zauyfmw`** (28 lignes) — 27 `meme_jour_civil`, sans
+- **établissement A** (28 lignes) — 27 `meme_jour_civil`, sans
   changement visible, et **un seul écart réel** : la vérification annuelle du
-  SSI (`cmtj4xoz7000lcigdbv8xbsz3`), due au 30/08/2026 en base, passerait au
+  SSI (identifiant gardé hors du dépôt public), due au 30/08/2026 en base, passerait au
   **01/09/2026** — le rapport réalisé du 1er mars plus les six mois de la
   prescription d'assureur en vigueur. La date en base ne s'explique par aucun
   fait ; la nouvelle, si.
-- **`cmtmnz5gu0001pqe4ajmwdbiz`** (36 lignes) — le dossier de démonstration, et
+- **établissement B** (36 lignes) — le dossier de démonstration, et
   le seul vraiment touché :
   - **21 `date_arbitraire`** : dates posées par les scripts de démonstration
     (`etaler-echeances-demo`, `seed --planifier`). Elles deviendraient
@@ -175,9 +175,9 @@ seulement) :
   - **3 `retard_invente`** : des « à planifier » datés AVANT l'entrée de la
     ligne dans Rojer ; ils repartiraient de l'origine ;
   - 4 `identique`.
-- **`cmtmorr4r0002jy04mx2ifa15`** (29 lignes) — 31 `meme_jour_civil`, dont les
+- **établissement C** (29 lignes) — 31 `meme_jour_civil`, dont les
   lignes que la génération créerait.
-- **`cmtmpbw410002k004d7gg6e98`** (0 ligne) — dossier de test jamais calculé ;
+- **établissement D** (0 ligne) — dossier de test jamais calculé ;
   ses 4 lignes seraient créées, en `meme_jour_civil`.
 
 **Lecture pour la bascule (lot 4).** Sur les dossiers réels, le nouveau calcul
