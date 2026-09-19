@@ -113,16 +113,6 @@ const EXEMPTIONS = new Map<string, Exemption>([
     },
   ],
   [
-    "lib/signatures/actions.ts:demanderSignature",
-    {
-      garde: "emettreAccessToken",
-      raison:
-        "L'écriture est entièrement déléguée à `emettreAccessToken`, qui " +
-        "exige le propriétaire de l'établissement ET que l'objet s'y trouve. " +
-        "Le garde vit dans un autre module : la sonde ne le propage pas.",
-    },
-  ],
-  [
     "lib/versions/actions.ts:creerVersion",
     {
       garde: "construireSnapshot",
@@ -138,6 +128,11 @@ const EXEMPTIONS = new Map<string, Exemption>([
  * Le compte relevé le 2026-09-19, après correction de la sonde : 84 écritures
  * exposées (73 avant, parce que transactions et délégations lui échappaient).
  *
+ * DESCENDU À 83 LE MÊME JOUR, délibérément : le lot `signatures-acces-externe`
+ * a sorti `emettreAccessToken` de la surface exposée — elle vit désormais dans
+ * `access-tokens/emission.ts`, qui n'est pas un module `"use server"`. Une
+ * action exposée de moins, parce qu'elle n'est plus un point d'entrée réseau.
+ *
  * BORNE BASSE, ET NON ÉGALITÉ : une action de plus ne doit pas faire rougir un
  * lot qui n'a touché à rien ici, et une égalité se « répare » en recopiant le
  * nouveau nombre — donc cesse de vérifier. Une action de MOINS, en revanche,
@@ -146,7 +141,7 @@ const EXEMPTIONS = new Map<string, Exemption>([
  * courant des gardes qui lisent du source, et celui contre lequel `> 50` ne
  * protégeait plus de rien avec 73 relevées.
  */
-const PLANCHER = 84;
+const PLANCHER = 83;
 
 describe("les écritures des server actions", () => {
   it("établissent toutes l'appartenance, ou sont exemptées nommément", () => {
