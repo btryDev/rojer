@@ -1723,8 +1723,8 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   l'ADR-036** (lot 4, branche `lot/adr036-bascule`) : la date et le statut de
   chaque ligne sortent de `echeanceDeLigne`, sur ses faits, par les trois
   chemins qui l'écrivent — régénération, dépôt, retrait d'un rapport
-  (`recalcul-ligne.ts`). `VERSION_MOTEUR_CALENDRIER` = 3. Restent au lot 5 le
-  retrait de la couture et de la garde du legs, et la puce 036 du `CLAUDE.md`.
+  (`recalcul-ligne.ts`). `VERSION_MOTEUR_CALENDRIER` = 3. ~~Restent au lot 5 le
+  retrait de la couture et de la garde du legs, et la puce 036 du `CLAUDE.md`.~~
   *Historique du constat :* une ligne « planifiée » SANS rapport dont le
   rythme change (annuel → semestriel) garde sa date : la branche de ré-ancrage
   exige une réalisation (`generateur.ts`, « LA PÉRIODICITÉ A CHANGÉ »). Il faut
@@ -1746,6 +1746,10 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   renverra à « à planifier ».
   **Lot 4, 2026-09-19** (`lot/adr036-bascule`) : la bascule — voir l'en-tête de
   ce point.
+  **CHANTIER ADR-036 CLOS le 2026-09-19** par le lot 5 (`lot/adr036-menage`) :
+  la couture, l'argument mort du générateur et la garde du legs sont retirés
+  (zéro legs en production), sans effet sur ce que la régénération écrit ;
+  l'ADR est « terminée », la puce 036 du `CLAUDE.md` dit la bascule au présent.
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION

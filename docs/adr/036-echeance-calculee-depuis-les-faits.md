@@ -5,8 +5,9 @@
   jour. ~~Rien n'est encore branché~~ — **BASCULÉE le 2026-09-19**
   (`lot/adr036-bascule`, lot 4 du § 9) : `echeanceDeLigne` est la seule
   décision de date du réconciliateur, le dépôt et le retrait d'un rapport
-  passent par `recalculerLigne`, `VERSION_MOTEUR_CALENDRIER` = 3. Reste le
-  lot 5 (ménage). Ce qui s'écarte du plan est écrit au § 11.
+  passent par `recalculerLigne`, `VERSION_MOTEUR_CALENDRIER` = 3. ~~Reste le
+  lot 5 (ménage).~~ **TERMINÉE le 2026-09-19** : les lots 0 à 5 sont faits, le
+  ménage sur `lot/adr036-menage`. Ce qui s'écarte du plan est écrit au § 11.
 - **Portée, à la bascule** : `src/lib/calendrier/echeance-de-ligne.ts` (neuf),
   `src/lib/calendrier/recalcul-ligne.ts` (neuf), `src/lib/calendrier/generateur.ts`
   (le générateur perd son horloge, le réconciliateur perd ses branches de date),
@@ -515,7 +516,7 @@ contrôle visuel se fait sur la production après la fusion
 | **2c** | **le passage à blanc** : la stratégie candidate `deciderParFaits`, et un script en transaction `READ ONLY` — une lecture, deux plans, leur différence, par établissement et par catégorie (`identique`, `meme_jour_civil`, `statut_seul`, `rythme`, `mise_en_service`, `retard_invente`, `date_arbitraire`, `legs_statut_realise`, `inexplique`), sans aucun nom de personne ; le plan candidat rejoué à J+400 doit être vide | **zéro `inexplique`**, en local puis en production (lancé par la propriétaire) ; compte rendu dans `docs/revues/` |
 | **3** | les seeds et les démos écrivent des faits ; leur `datePrevue` sort de `echeanceDeLigne` | seed complet + passage à blanc = zéro écart |
 | **4** — *fait le 2026-09-19* | **la bascule** : `deciderParFaits` par défaut, le générateur perd `now`, dépôt et suppression passent par `recalculerLigne`, `VERSION_MOTEUR_CALENDRIER` = 3, amendements barrés (ADR-012, ADR-034, en-tête de `generateur.ts`), la garde du lot 1 est retirée | passage à blanc refait sur la production juste avant ; confluence (après un dépôt, la réconciliation rend « inchangé ») ; plan vide à J+400 |
-| **5** | le ménage : couture, types morts, garde du legs si la production n'en compte aucun, `chantiers-ouverts.md`, puce 036 du `CLAUDE.md` | — |
+| **5** — *fait le 2026-09-19* | le ménage : couture, types morts, garde du legs si la production n'en compte aucun, `chantiers-ouverts.md`, puce 036 du `CLAUDE.md` | relevé du moteur recopié sans incrément (§ 11) ; gardes vertes |
 
 C'est la méthode « Scientist » : le nouveau calcul tourne à côté de l'ancien, les
 écarts sont journalisés sans rien écrire, puis on bascule.
@@ -546,7 +547,7 @@ Branche `lot/adr036-bascule`. Ce qui s'écarte du plan ou le précise :
   hors de `echeanceDeLigne`, date inchangée, comme le § 4 le demande.
 - **Le dépôt verrouille aussi la ligne** (il ne le faisait pas) : l'échéance
   honorée et le « dernier rapport réalisé » y sont relus sous le verrou.
-- **La garde du legs a une exception** : au retrait d'un rapport RÉALISÉ,
+- ~~**La garde du legs a une exception**~~ (*partie avec la garde au lot 5*) : au retrait d'un rapport RÉALISÉ,
   `recalculerLigne` décide sans elle (`garderLegs: false`). Un ponctuel soldé
   dont on retire le seul rapport porte encore le statut réalisé que ce
   rapport lui avait donné — vu de la ligne, c'est un legs, et la garde l'aurait
@@ -558,7 +559,7 @@ Branche `lot/adr036-bascule`. Ce qui s'écarte du plan ou le précise :
   s'agit d'une réalisation, ce que le contrat de `derniereRealisation` dit
   déjà ; sur un ponctuel on n'invente pas le statut. C'est ce qui garde
   `continuite-identite.test.ts` vert **sans retouche**.
-- **Le générateur garde un deuxième argument mort** — l'ancien historique —,
+- ~~**Le générateur garde un deuxième argument mort**~~ (*retiré au lot 5*) — l'ancien historique —,
   pour la même raison : `continuite-identite.test.ts` l'appelle ainsi. Non vide,
   il est refusé. Le lot 5 le retire avec la couture (le paramètre `decision` du
   réconciliateur, qui n'a plus qu'une valeur, `STRATEGIE_FAITS`).
@@ -620,3 +621,51 @@ brut, lui échappent.
 sur la production **avec le script de la branche `main`** (celui de cette
 branche compare la base au moteur 3, ce qui est la même mesure). Compter
 `legs_statut_realise` : à zéro, le lot 5 retire la garde.
+
+### Le ménage, tel qu'il a été fait (lot 5, 2026-09-19)
+
+Branche `lot/adr036-menage`, sans effet pour l'utilisateur. Le contrôle de santé
+du même jour, en production et en lecture seule : `legs_statut_realise` = 0 sur
+les quatre établissements, le dossier recalculé 100 % `identique`, J+400 vide
+partout.
+
+**Ce qui est retiré :**
+
+- **la couture** : le paramètre `decision` de `reconcilierCalendrier` et de
+  `planifier`, le type `StrategieDecision`, la constante `STRATEGIE_FAITS` et le
+  champ `realisation` du contexte, que seule l'ancienne stratégie lisait. Le
+  réconciliateur appelle directement `deciderParFaits` et `creerParFaits` ;
+- **le deuxième argument du générateur** (l'ancien historique, refusé s'il
+  n'était pas vide). `continuite-identite.test.ts` perd la ligne `new Map()` de
+  son appel, et rien d'autre : ses assertions — le ré-ancrage 2028 → 2030 —
+  sont intactes. `VerificationsPrecedentes` avait déjà disparu ;
+- **la garde du legs** : `garderLegs`, `STRATEGIE_FAITS_SANS_LEGS`,
+  `deciderSurLesFaitsSeuls`, `estLegsStatutRealise`, `SOURCE_LEGS`, l'option de
+  `recalculerLigne` et la catégorie `legs_statut_realise` du contrôle de santé.
+
+**La règle qui reste, et elle est une seule : un statut réalisé ne survit pas
+sans rapport réalisé.** L'exception « au retrait d'un rapport réalisé » du § 11
+n'en est plus une : c'est la règle de la régénération aussi. Au retrait, une
+ligne `autre` (boucle NB4) ou archivée dont on retire le seul rapport réalisé
+repasse « à planifier », date inchangée — les tests qui le protègent
+(`rapports/actions.test.ts`, `generateur.test.ts`) gardent leurs assertions, et
+une mutation sur chacun des deux chemins les fait tomber. Sur un rythme, un
+statut réalisé ne survit jamais, rapport ou non (ADR-034). Les trois tests qui
+tenaient la garde elle-même sont inversés et le disent.
+
+**Relevé du moteur : recopié SANS incrément**, trois fois (un par commit). La
+garde ne changeait le sort que de deux sortes de lignes : au statut réalisé
+SANS rapport réalisé — zéro sur les lignes générées en production, et aucun
+chemin n'en fabrique (un statut réalisé n'est écrit que depuis un rapport
+réalisé, le retrait le rouvre, aucun rapport ne se dépose sur une ligne de
+salarié, les seeds n'écrivent aucun statut réalisé, le générateur ne crée
+jamais de ligne `autre`) ; et cycliques non générées au statut réalisé — que
+rien n'atteint, un titre cyclique ayant toujours une échéance
+(`echeanceDuTitre`). **Limite de la mesure** : le contrôle de santé ne comptait
+le legs que sur les lignes générées ; le zéro de la boucle NB4 est un
+raisonnement sur le code, pas une mesure.
+
+**Ce qui reste** : `scripts/passage-a-blanc-echeances.ts`, comme contrôle de
+santé (`docs/revues/passage-a-blanc-adr036.md`). La branche `estStatutRealise`
+de `porteUneTrace` est gardée : sans legs elle n'ajoute rien à « un rapport
+réalisé », et la retirer ne changerait rien d'observable.

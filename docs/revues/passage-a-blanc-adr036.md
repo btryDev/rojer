@@ -7,6 +7,12 @@
 > d'un dossier, tout doit y être `identique`. Le mode d'emploi ci-dessous
 > décrit la version du lot 2c.
 >
+> **Depuis le lot 5 (2026-09-19)** il n'y a plus de garde du legs, donc plus de
+> catégorie `legs_statut_realise` : le contrôle de santé du même jour n'en
+> comptait aucun en production. Le script RESTE, comme contrôle de santé — à
+> relancer quand un écart est soupçonné : après la régénération d'un dossier,
+> tout doit y être `identique`, et le rejeu à J+400 vide.
+>
 > **Effet visible de la fusion, hors du calendrier** : le moteur 3 réécrit le
 > sceau de chaque dossier, donc `Etablissement.updatedAt`. Les fiches
 > « Renseignements généraux » et « ERP » du registre PDF impriment cette date
@@ -88,7 +94,7 @@ tient l'emporte) :
 
 | Catégorie | Ce qu'elle veut dire | Ce qu'on en attend |
 |---|---|---|
-| `legs_statut_realise` | un ponctuel au statut réalisé **sans rapport** (seed uniquement) : la garde de `deciderParFaits` le conserve tel quel | compté à part ; si la production n'en a **aucun**, la garde part au lot 5 |
+| ~~`legs_statut_realise`~~ | ~~un ponctuel au statut réalisé **sans rapport** (seed uniquement) : la garde de `deciderParFaits` le conserve tel quel~~ | **retirée au lot 5 (2026-09-19)** avec la garde : zéro en production |
 | `identique` | même instant, même statut | la majorité |
 | `meme_jour_civil` | même statut, même jour civil de Paris, instant différent | **toutes les lignes « à planifier »** : la règle 5 les réécrit une fois vers minuit de Paris (ADR-036 § 5, conséquence écrite). Normal |
 | `statut_seul` | même jour, statut différent | rare : un titre `autre` au statut réalisé redevenant « planifiée », une échéance rendue par la suppression d'un rapport redevenant visible |
