@@ -282,8 +282,7 @@ export type OptionsGenerateur = {
   /**
    * L'horloge de la passe, pour la RÉCONCILIATION seulement : c'est l'origine
    * du suivi d'une ligne à naître (`suiviDepuis`, que `actions.ts` écrit avec
-   * cette même valeur), et le repli d'une ligne existante qui n'en porterait
-   * pas — une fixture ; la lecture de production la fournit toujours. Défaut =
+   * cette même valeur). Une ligne existante porte la sienne, requise. Défaut =
    * `new Date()`. Le GÉNÉRATEUR ne la lit plus depuis la bascule (ADR-036).
    */
   now?: Date;
@@ -770,9 +769,17 @@ export type OccurrenceExistante = {
    * `calendrier/actions.ts` (ADR-034). La ligne n'en porte plus depuis le N5.
    */
   derniereRealisation?: Date | null;
-  /** Le résultat de ce rapport (`conforme`…). Il donne son statut à une ligne
-   *  sans rendez-vous suivant, seule à en garder un. */
-  dernierResultat?: string | null;
+  /** Le résultat de ce rapport (`conforme`…), `null` s'il n'y en a pas. Il
+   *  donne son statut à une ligne sans rendez-vous suivant, seule à en garder
+   *  un, et atteste qu'une date de rapport vaut réalisation (ADR-036 § 3).
+   *
+   *  REQUIS depuis le 2026-09-19. Optionnel, il laissait `realisationPropre`
+   *  prendre une date sans résultat pour une réalisation « conforme », en
+   *  silence, afin que des fixtures d'avant ce champ restent vertes. La
+   *  lecture de production le porte toujours (`lireEntrees`) ; une ligne qui
+   *  arriverait sans lui est refusée par `faitsDeLigne`, comme une ligne
+   *  générée sans `sources`. */
+  dernierResultat: string | null;
   statut: StatutVerificationPersiste;
   /** La ligne porte-t-elle au moins un rapport de vérification ou une action
    *  corrective ? C'est le seul critère qui autorise — ou interdit — la
@@ -789,13 +796,15 @@ export type OccurrenceExistante = {
   /**
    * Depuis quand Rojer suit la ligne — `Verification.suiviDepuis` (ADR-036,
    * D2) : l'ORIGINE que `echeanceDeLigne` lit (règles 2, 4 et 5). La lecture
-   * de production la porte toujours — la colonne est `NOT NULL`. Optionnelle
-   * dans le type pour les fixtures pures qui ne testent que l'identité ou
-   * l'archivage (`continuite-identite.test.ts` doit rester vert sans retouche) :
-   * absente, l'origine retombe sur l'horloge de la passe, comme pour une ligne
-   * à naître.
+   * de production la porte toujours — la colonne est `NOT NULL`.
+   *
+   * REQUISE depuis le 2026-09-19. ~~Optionnelle pour les fixtures pures :
+   * absente, l'origine retombait sur l'horloge de la passe.~~ Ce repli
+   * rendait un retard dépendant du jour du calcul — exactement ce que la D2
+   * existe pour empêcher — et il était silencieux. `faitsDeLigne` refuse
+   * désormais une ligne existante qui arrive sans elle.
    */
-  suiviDepuis?: Date;
+  suiviDepuis: Date;
 };
 
 /** Ce qu'il faut écrire sur une ligne existante. `id` n'y figure jamais en
@@ -1065,7 +1074,8 @@ export type ContexteExistante = {
   g: VerificationGenere;
   /** La réalisation léguée par les lignes absorbées, ou `null`. */
   heritee: Date | null;
-  /** L'horloge de la passe — repli de l'origine d'une ligne sans `suiviDepuis`. */
+  /** L'horloge de la passe — `faitsDeLigne` ne la lit que pour une ligne à
+   *  naître ; une ligne existante porte son `suiviDepuis`. */
   now: Date;
 };
 

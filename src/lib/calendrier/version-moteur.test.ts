@@ -152,7 +152,13 @@ const RELEVE = {
   // déjà par défaut. NON : même décision, mêmes écritures.
   // Puis le deuxième argument mort du générateur (l'historique, refusé s'il
   // n'était pas vide) : NON, aucun appelant ne le remplissait.
-  empreinte: "77d8530abadcb4da",
+  // Recopiée SANS incrément le 2026-09-19 (`lot/qualite-calendrier`, point 2) :
+  // `dernierResultat` et `suiviDepuis` deviennent requis, leur absence lève au
+  // lieu de retomber sur « conforme » et sur l'horloge. NON : `lireEntrees`
+  // porte les deux sur chaque ligne (la colonne `suiviDepuis` est NOT NULL, le
+  // résultat voyage avec la date du même rapport), donc aucun repli n'était
+  // atteint en production ; seules des fixtures l'atteignaient.
+  empreinte: "bb82515649457b6d",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

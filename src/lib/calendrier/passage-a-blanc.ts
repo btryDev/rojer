@@ -314,7 +314,7 @@ export function comparerAuMoteur(lecture: LecturePasse, now: Date): Comparaison 
             realisation: null,
             realisationHeritee: null,
             miseEnService: null,
-            origine: ex.suiviDepuis ?? now,
+            origine: ex.suiviDepuis,
           }
         : faitsDeLigne(g, ex, herediteDe(g), now);
     const categorie = classerEcart({ avant, apres, faits });
@@ -409,10 +409,10 @@ export function projeterLigne(ex: OccurrenceExistante): LigneExportee {
     datePrevue: ex.datePrevue,
     archiveLe: ex.archiveLe ?? null,
     prescriptionId: ex.prescriptionId ?? null,
-    suiviDepuis: ex.suiviDepuis ?? null,
+    suiviDepuis: ex.suiviDepuis,
     porteUnePreuve: ex.porteUnePreuve,
     derniereRealisation: ex.derniereRealisation ?? null,
-    dernierResultat: ex.dernierResultat ?? null,
+    dernierResultat: ex.dernierResultat,
   };
 }
 

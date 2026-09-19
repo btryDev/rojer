@@ -448,6 +448,44 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
     const sansSources = { ...g, sources: undefined } as unknown as VerificationGenere;
     expect(() => faitsDeLigne(sansSources, null, null, NOW)).toThrow(/sources/);
   });
+
+  it("une ligne existante sans `suiviDepuis` ni `dernierResultat` est REFUSÉE, comme sans `sources`", () => {
+    // Les deux replis silencieux sont partis le 2026-09-19 : sans origine, la
+    // ligne prenait l'horloge de la passe — un retard dépendant du jour du
+    // calcul ; sans résultat, une date de rapport valait réalisation
+    // « conforme » sur un rythme. Le type les rend requis ; ce test tient le
+    // refus pour ce qui passerait par un `as`.
+    const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
+    const [g] = genererProchainesVerifications([applicable(o, [EQ])], { now: NOW });
+    const complete = existante(g, {
+      datePrevue: d("2026-12-01"),
+      suiviDepuis: d("2025-12-01"),
+      derniereRealisation: d("2025-12-01"),
+      dernierResultat: "conforme",
+    });
+    // Borne basse : la ligne complète passe, avec sa réalisation.
+    expect(faitsDeLigne(g, complete, null, NOW).realisation).toEqual({
+      date: d("2025-12-01"),
+      resultat: "conforme",
+    });
+
+    const sansOrigine = { ...complete, suiviDepuis: undefined } as unknown as OccurrenceExistante;
+    expect(() => faitsDeLigne(g, sansOrigine, null, NOW)).toThrow(/suiviDepuis/);
+
+    const sansResultat = { ...complete, dernierResultat: undefined } as unknown as OccurrenceExistante;
+    expect(() => faitsDeLigne(g, sansResultat, null, NOW)).toThrow(/dernierResultat/);
+
+    // Une date de rapport SANS son résultat : les deux se lisent sur le même
+    // rapport, l'un sans l'autre est un défaut de lecture — refusé, ni
+    // « conforme » ni « rien ».
+    const dateSeule = existante(g, {
+      datePrevue: d("2026-12-01"),
+      suiviDepuis: d("2025-12-01"),
+      derniereRealisation: d("2025-12-01"),
+      dernierResultat: null,
+    });
+    expect(() => faitsDeLigne(g, dateSeule, null, NOW)).toThrow(/sans son résultat/);
+  });
 });
 
 describe("la décision par défaut — l'idempotence temporelle sur un dossier mêlé", () => {

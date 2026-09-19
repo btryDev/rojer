@@ -37,7 +37,6 @@ import type {
   OccurrenceExistante,
   VerificationGenere,
 } from "./generateur";
-import { estCyclique } from "./periodicite";
 
 /**
  * Le dernier rapport RÉALISÉ d'une ligne, ou `null`.
@@ -45,34 +44,50 @@ import { estCyclique } from "./periodicite";
  * `derniereRealisation` est RÉALISÉE PAR CONTRAT : la lecture de production ne
  * la tire que de rapports filtrés par `WHERE_RAPPORT_REALISE`
  * (`passe.ts`), et `OccurrenceExistante` la définit ainsi. Le résultat qui
- * l'accompagne est vérifié quand il est LÀ — un « non vérifiable » passé par
- * erreur n'entre jamais comme réalisation (ADR-036 § 3).
+ * l'accompagne est vérifié — un « non vérifiable » passé par erreur n'entre
+ * jamais comme réalisation (ADR-036 § 3).
  *
- * QUAND IL MANQUE (`dernierResultat` absent — une fixture pure d'avant ce
- * champ ; la lecture de production le porte toujours), la date reste une
- * réalisation, et ce qui en dépend se décide selon le rythme :
- *  · CYCLIQUE : la règle 3 ne lit du résultat que « est-ce une réalisation ? »,
- *    ce que le contrat garantit déjà ; la date de la ligne n'en dépend pas, et
- *    son statut est « planifiée » quel que soit le résultat. On transmet donc
- *    la date avec le résultat neutre `conforme`, JAMAIS LU pour autre chose.
- *    `continuite-identite.test.ts` — un rapport de 2025 en quinquennal donne
- *    2030 — en dépend, et doit rester vert sans retouche (plan de l'ADR-036) ;
- *  · PONCTUEL : le résultat EST le statut de la ligne soldée (règle 2), et on
- *    ne l'invente pas : pas de réalisation, la ligne se décide sur ses autres
- *    faits. ~~La garde du legs conservait alors le statut réalisé que la ligne
- *    portait~~ — retirée au lot 5 (2026-09-19).
+ * ~~QUAND IL MANQUAIT (`dernierResultat` absent), la date restait une
+ * réalisation sur un rythme cyclique, avec le résultat neutre `conforme`, pour
+ * que `continuite-identite.test.ts` reste vert sans retouche.~~ Retiré le
+ * 2026-09-19 : un repli de production qui ne servait qu'aux fixtures, et qui
+ * fabriquait un résultat en silence. Le champ est requis ; une date de rapport
+ * SANS résultat est une incohérence de lecture — la production lit les deux
+ * sur le même rapport (`indexerDernieresRealisations`) — et elle est refusée,
+ * en nommant la ligne, au lieu d'être tenue pour une réalisation ou pour rien.
  */
-function realisationPropre(
-  ex: OccurrenceExistante,
-  periodicite: FaitsDeLigne["periodicite"],
-): FaitsDeLigne["realisation"] {
+function realisationPropre(ex: OccurrenceExistante): FaitsDeLigne["realisation"] {
   const date = ex.derniereRealisation ?? null;
   if (date === null) return null;
-  if (ex.dernierResultat == null) {
-    return estCyclique(periodicite) ? { date, resultat: "conforme" } : null;
+  if (ex.dernierResultat === null) {
+    throw new Error(
+      `faitsDeLigne : la ligne « ${ex.id} » porte une dernière réalisation sans ` +
+        "son résultat. Les deux se lisent sur le même rapport ; l'un sans l'autre " +
+        "est un défaut de lecture, pas un cas à servir (ADR-036 § 3).",
+    );
   }
   if (statutDepuisResultat(ex.dernierResultat) === null) return null;
   return { date, resultat: ex.dernierResultat as ResultatRealise };
+}
+
+/** Refuse une ligne existante à laquelle manque un fait que le type rend
+ *  requis — une fixture ou une donnée passée par un `as`. Même règle que pour
+ *  les `sources` d'une ligne générée : on nomme la ligne, on ne retombe pas. */
+function exigerFaitsDeLaLigne(ex: OccurrenceExistante): void {
+  const manquants = [
+    (ex.suiviDepuis as Date | undefined) === undefined ? "suiviDepuis" : null,
+    (ex.dernierResultat as string | null | undefined) === undefined
+      ? "dernierResultat"
+      : null,
+  ].filter((m): m is string => m !== null);
+  if (manquants.length > 0) {
+    throw new Error(
+      `faitsDeLigne : la ligne « ${ex.id} » arrive sans ${manquants.join(" ni ")}. ` +
+        "La lecture de production les porte toujours ; sans eux, l'origine du " +
+        "suivi retomberait sur l'horloge et une date de rapport sur un résultat " +
+        "inventé, en silence (ADR-036).",
+    );
+  }
 }
 
 /**
@@ -87,8 +102,8 @@ function realisationPropre(
  *    délai sans rien dire. Depuis la bascule (2026-09-19), c'est une ERREUR,
  *    comme le lot 2c l'annonçait : une ligne générée sans ses sources est un
  *    défaut de câblage, pas un cas à servir ;
- *  · l'origine est `suiviDepuis` de la ligne en base, ou l'horloge de la passe
- *    pour une ligne à naître — celle que `actions.ts` persistera.
+ *  · l'origine est `suiviDepuis` de la ligne en base, REQUISE, ou l'horloge de
+ *    la passe pour une ligne à naître — celle que `actions.ts` persistera.
  */
 export function faitsDeLigne(
   g: VerificationGenere,
@@ -105,14 +120,15 @@ export function faitsDeLigne(
         "en service et le premier délai seraient perdus en silence (ADR-036).",
     );
   }
+  if (ex !== null) exigerFaitsDeLaLigne(ex);
   return {
     periodicite: g.periodicite,
     premierPas: g.sources.premierPas,
     dateDuTitre: g.sources.dateDuTitre,
-    realisation: ex === null ? null : realisationPropre(ex, g.periodicite),
+    realisation: ex === null ? null : realisationPropre(ex),
     realisationHeritee: heritee,
     miseEnService: g.sources.miseEnService,
-    origine: ex?.suiviDepuis ?? now,
+    origine: ex === null ? now : ex.suiviDepuis,
   };
 }
 

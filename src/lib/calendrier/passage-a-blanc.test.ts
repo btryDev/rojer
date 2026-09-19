@@ -652,6 +652,7 @@ describe("appliquerPlanEnMemoire — ce que la base porterait après le plan", (
       datePrevue: d("2026-01-01"),
       statut: "planifiee" as const,
       porteUnePreuve: false,
+      dernierResultat: null,
       suiviDepuis: d("2025-01-01"),
     };
     const existantes = [
