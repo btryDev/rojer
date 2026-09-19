@@ -582,6 +582,37 @@ Branche `lot/adr036-bascule`. Ce qui s'écarte du plan ou le précise :
   retrait dans `rapports/actions.test.ts`, qui passe désormais par le faux
   client du calendrier et le vrai référentiel.
 
+**Relecture neutre du lot 4 (2026-09-19) — corrigé** : au retrait d'un
+rapport réalisé, une ligne `autre` (boucle NB4) ou une ligne archivée gardait
+le statut réalisé que ce rapport lui avait donné, sans aucune pièce.
+`garderLegs` voyage jusqu'à `statutDeLigneNonGeneree`, et `recalculerLigne`
+repasse « à planifier », date inchangée, une ligne hors du plan dont on retire
+le seul rapport réalisé.
+
+**Couplages acceptés, écrits :**
+
+- une exception levée par `planifier` sur N'IMPORTE QUELLE ligne de
+  l'établissement fait échouer le dépôt ou le retrait de tout rapport — c'est
+  l'inverse de `regeneration-sure.ts`, qui ne laisse jamais une régénération
+  faire échouer l'action qui la suit. Aucune de ces exceptions n'est
+  atteignable aujourd'hui (précondition de `echeanceDeLigne`, statut réalisé
+  à la création, sources absentes : trois défauts de câblage) ;
+- au dépôt, la date est calculée au rythme EFFECTIF, mais `periodicite` et
+  `prescriptionId` de la ligne ne sont réécrits que par la régénération qui
+  suit. Si elle échoue, la ligne porte une date au nouveau rythme sous
+  l'ancien — écart transitoire, repris à la prochaine ouverture (calendrier
+  marqué périmé).
+
+**Effet visible de la fusion** : le passage au moteur 3 réécrit le sceau de
+chaque dossier, donc `Etablissement.updatedAt`. Les fiches « Renseignements
+généraux » et « ERP » du registre PDF, qui impriment cette date
+(`registre/queries.ts`, `misAJourLe[sectionId] = etab.updatedAt`), prendront
+la date de la première ouverture du dossier après la fusion.
+
+**Limites de la garde statique** (`garde-convergence.test.ts`) : elle lit les
+littéraux — un `data: patch` passé par une variable, ou un `INSERT` en SQL
+brut, lui échappent.
+
 **À faire avant la fusion, par la propriétaire** : refaire le passage à blanc
 sur la production **avec le script de la branche `main`** (celui de cette
 branche compare la base au moteur 3, ce qui est la même mesure). Compter

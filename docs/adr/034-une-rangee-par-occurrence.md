@@ -121,8 +121,13 @@ l'échéance ouverte.** Au dépôt d'un rapport, dans la même transaction :
    2026-09-19 par l'ADR-036, lot 4 : la ligne ne « roule » plus par un calcul
    propre au dépôt. Elle se RECALCULE depuis ses faits — le rapport qu'on vient
    de créer compris — par `recalculerLigne`, qui rejoue la décision de la
-   régénération (`echeanceDeLigne`). Pour un rapport réalisé le plus récent, le
-   résultat est le même : date du rapport + rythme effectif, « planifiée ».)*
+   régénération (`echeanceDeLigne`). Pour un rapport réalisé le plus récent sur
+   une obligation CYCLIQUE dont la ligne porte déjà le bon rythme, le résultat
+   est le même : date du rapport + rythme, « planifiée ». Il diffère dans deux
+   cas : un contrôle PONCTUEL se solde — statut du résultat, date de la mise en
+   service ou de l'origine, pas de « roulement » ; et une ligne restée à un
+   rythme PÉRIMÉ (prescription posée ou levée, référentiel corrigé) est datée
+   au rythme effectif, pas à celui qu'elle affiche.)*
 
 Le résultat « non vérifiable » ne fait rien rouler : un rapport est déposé, la
 ligne reste ouverte sur la même échéance — c'est déjà la règle

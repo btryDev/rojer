@@ -31,9 +31,11 @@
  * (`recalcul-ligne.ts`). L'origine du suivi, seul fait que le gel protégeait,
  * est une colonne : `Verification.suiviDepuis`.
  *
- * Le statut `a_planifier` veut dire une chose : AUCUNE ÉCHÉANCE CONNUE — la
- * date posée est l'origine du suivi (`aUnRendezVous`). Le retard se lit à
- * l'affichage, sur la date (`estVerificationEnRetard`).
+ * Le statut `a_planifier` veut dire une chose : AUCUNE ÉCHÉANCE CONNUE
+ * (`aUnRendezVous`). La date posée est l'origine du suivi (règle 5) — ou, pour
+ * un contrôle PONCTUEL, sa mise en service quand elle est connue et déjà
+ * passée à l'origine (règle 2). Le retard se lit à l'affichage, sur la date
+ * (`estVerificationEnRetard`).
  */
 
 import {

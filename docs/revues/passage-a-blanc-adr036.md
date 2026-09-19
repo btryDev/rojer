@@ -6,6 +6,12 @@
 > et le même rejeu à J+400. C'est un contrôle de santé : après la régénération
 > d'un dossier, tout doit y être `identique`. Le mode d'emploi ci-dessous
 > décrit la version du lot 2c.
+>
+> **Effet visible de la fusion, hors du calendrier** : le moteur 3 réécrit le
+> sceau de chaque dossier, donc `Etablissement.updatedAt`. Les fiches
+> « Renseignements généraux » et « ERP » du registre PDF impriment cette date
+> (`registre/queries.ts`) : elles prendront la date de la première ouverture du
+> dossier après la fusion. Ce n'est pas un écart du passage à blanc.
 
 Mode d'emploi du script `scripts/passage-a-blanc-echeances.ts`, écrit le
 **2026-09-18** sur la branche `lot/adr036-passage-a-blanc`. Il compare, sans rien

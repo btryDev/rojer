@@ -146,8 +146,11 @@ durable d'une obligation sur un équipement. Sa sémantique est fixée ainsi :
     accumulé n'est plus protégé en gelant la date : il l'est par l'origine,
     qui est un fait. Geler la date empêchait aussi d'appliquer un rythme, une
     mise en service ou un premier délai corrigés — le constat B.)*
-  - cycle soldé et période non écoulée : `datePrevue` = `dateRealisee +
-    périodicité`, le résultat du contrôle (`realisee_*`) est conservé ;
+  - ~~cycle soldé et période non écoulée : `datePrevue` = `dateRealisee +
+    périodicité`, le résultat du contrôle (`realisee_*`) est conservé ;~~
+    *(faux depuis le 2026-09-19, ADR-036 lot 4 : sur un rythme cyclique, la
+    ligne est « planifiée » à dernier rapport réalisé + rythme effectif ; seul
+    un contrôle PONCTUEL garde le statut du résultat de son rapport)*
   - cycle soldé et période écoulée : nouveau cycle — `dateRealisee` repasse à
     `null`, statut `depassee` *(règle remplacée : depuis l'ADR-034 la ligne
     roule au dépôt d'un rapport, la colonne `dateRealisee` et le statut
@@ -167,10 +170,14 @@ par `createMany({ skipDuplicates: true })` : deux régénérations concurrentes
 peuvent calculer la même insertion, la contrainte d'unicité tranche sans faire
 échouer la transaction.
 
-Le générateur reçoit un historique **vide** : il ne sert plus qu'à énumérer les
+~~Le générateur reçoit un historique **vide** : il ne sert plus qu'à énumérer les
 couples applicables et leurs attributs. Lui passer l'historique ferait
 disparaître de sa sortie les obligations « mise en service » déjà réalisées,
-qui seraient alors prises pour des obligations retirées — et archivées à tort.
+qui seraient alors prises pour des obligations retirées — et archivées à tort.~~
+*(Remplacé le 2026-09-19, ADR-036 lot 4 : le générateur ne reçoit plus
+d'historique du tout — un historique non vide est refusé — et ne date plus
+rien. Il décrit les couples applicables, leurs attributs et leurs SOURCES ; la
+date sort de `echeanceDeLigne` dans le réconciliateur.)*
 
 Le résultat « non vérifiable » ne vaut plus réalisation :
 `STATUT_DEPUIS_RESULTAT` ne couvre plus que les trois résultats qui attestent
