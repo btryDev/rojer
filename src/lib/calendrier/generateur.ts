@@ -1113,6 +1113,10 @@ export type StrategieDecision = {
    * (`STRATEGIE_FAITS_SANS_LEGS`) : le statut vient de ce rapport. Lu par la
    * décision d'une ligne générée ET par la boucle NB4, sans quoi une ligne
    * `autre` restait « réalisée » sans pièce (relecture du lot 4).
+   *
+   * Sur un rythme CYCLIQUE, `false` abandonne le statut réalisé MÊME quand un
+   * rapport réalisé reste : la ligne devient « planifiée », comme l'ADR-034 le
+   * veut — seul un contrôle sans rendez-vous suivant garde un statut réalisé.
    */
   garderLegs?: boolean;
 };

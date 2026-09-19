@@ -587,7 +587,10 @@ rapport réalisé, une ligne `autre` (boucle NB4) ou une ligne archivée gardait
 le statut réalisé que ce rapport lui avait donné, sans aucune pièce.
 `garderLegs` voyage jusqu'à `statutDeLigneNonGeneree`, et `recalculerLigne`
 repasse « à planifier », date inchangée, une ligne hors du plan dont on retire
-le seul rapport réalisé.
+le seul rapport réalisé. Sur un rythme CYCLIQUE, `garderLegs: false` abandonne
+le statut réalisé même quand un rapport réalisé reste : la ligne devient
+« planifiée », conformément à l'ADR-034 — seul un contrôle sans rendez-vous
+suivant garde un statut réalisé.
 
 **Couplages acceptés, écrits :**
 
