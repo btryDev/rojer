@@ -1,5 +1,5 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join, relative, sep } from "node:path";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleJourCivil, depuisCleJourCivil, instantCivil } from "@/lib/dates";
@@ -1317,7 +1317,6 @@ describe("echeanceDeLigne — propriétés", () => {
 
 const RACINE_SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CE_MODULE = "lib/calendrier/echeance-de-ligne.ts";
-const CE_TEST = "lib/calendrier/echeance-de-ligne.test.ts";
 
 /**
  * Neutralise les commentaires : ce dépôt commente densément le motif fautif
@@ -1345,26 +1344,6 @@ function sansCommentaires(code: string): string {
   );
 }
 
-/** Tous les .ts/.tsx de src/, TESTS COMPRIS : un test qui importerait le module
- *  avant la bascule le brancherait tout autant dans la tête du lecteur. */
-function listerSources(): { chemin: string; code: string }[] {
-  const out: { chemin: string; code: string }[] = [];
-  const parcourir = (dossier: string): void => {
-    for (const e of readdirSync(dossier, { withFileTypes: true })) {
-      const complet = join(dossier, e.name);
-      if (e.isDirectory()) parcourir(complet);
-      else if (/\.tsx?$/.test(e.name)) {
-        out.push({
-          chemin: relative(RACINE_SRC, complet).split(sep).join("/"),
-          code: readFileSync(complet, "utf8"),
-        });
-      }
-    }
-  };
-  parcourir(RACINE_SRC);
-  return out;
-}
-
 describe("echeance-de-ligne.ts — module pur", () => {
   const code = sansCommentaires(readFileSync(join(RACINE_SRC, CE_MODULE), "utf8"));
 
@@ -1385,127 +1364,13 @@ describe("echeance-de-ligne.ts — module pur", () => {
   });
 });
 
-describe("ADR-036 — le module n'est PAS branché avant la bascule", () => {
-  // ⚠ CE TEST EST À RETIRER À LA BASCULE (lot 4 de l'ADR-036). Il n'a pas
-  // vocation à durer : il tient les lots 1 à 3 à ce qu'ils annoncent — une
-  // fonction posée À CÔTÉ du moteur, que rien en production n'appelle.
-  //
-  // Ce qu'il empêche : qu'un lot intermédiaire branche `echeanceDeLigne` sur un
-  // seul des trois chemins (régénération, dépôt, suppression). Deux calculs de
-  // date en production, c'est l'état que l'ADR-036 existe pour quitter — et
-  // `version-moteur.test.ts` ne le verrait que si l'import passait par
-  // `calendrier/actions.ts`.
-  //
-  // DEPUIS LE LOT 2c (2026-09-18), TROIS MODULES SONT AUTORISÉS NOMMÉMENT, avec
-  // leurs tests : la stratégie candidate `decision-par-faits.ts`, l'outil de
-  // comparaison `passage-a-blanc.ts`, et rien d'autre. Ils ne sont importés que
-  // par le script du passage à blanc et par leurs tests ; un second test, plus
-  // bas, le vérifie pour qu'une autorisation ne devienne pas une porte.
-  // `actions.ts`, `generateur.ts`, `passe.ts` et `rapports/` restent interdits
-  // par défaut, comme tout le reste de `src/`.
-  //
-  // `scripts/` N'EST VOLONTAIREMENT PAS PARCOURU : le passage à blanc du lot 2c
-  // y vit, et c'est justement l'endroit d'où le module doit pouvoir être appelé
-  // avant la bascule — un script lancé à la main, en lecture seule, n'est pas
-  // un chemin de production (ADR-036 § 9).
-  const MOTIF_IMPORT = /echeance-de-ligne(\.[cm]?[jt]sx?)?["'`]/;
-  const AUTORISES = [
-    "lib/calendrier/decision-par-faits.ts",
-    "lib/calendrier/decision-par-faits.test.ts",
-    "lib/calendrier/passage-a-blanc.ts",
-    "lib/calendrier/passage-a-blanc.test.ts",
-  ];
-  /** Les modules autorisés, eux, ne doivent être importés que par le script et
-   *  par leurs tests — jamais par un module de production. */
-  const MOTIF_IMPORT_AUTORISES = /(decision-par-faits|passage-a-blanc)(\.[cm]?[jt]sx?)?["'`]/;
-
-  it("le motif reconnaît les formes d'import, et le filtre ne lui cache rien", () => {
-    // Le test de la garde elle-même : sans lui, un motif trop étroit passe à
-    // vide et la garde est percée en silence.
-    const branche = [
-      'import { echeanceDeLigne } from "./echeance-de-ligne";',
-      "import { premierPas } from '@/lib/calendrier/echeance-de-ligne.js';",
-      'const m = await import("../calendrier/echeance-de-ligne.ts");',
-      "const m = await import(`./echeance-de-ligne`);",
-      'const vrai = await vi.importActual("./echeance-de-ligne");',
-      'vi.mock("@/lib/calendrier/echeance-de-ligne", () => ({}));',
-      'const url = "https://exemple.test//x"; import x from "./echeance-de-ligne";',
-    ];
-    for (const ligneDeCode of branche) {
-      expect(MOTIF_IMPORT.test(sansCommentaires(ligneDeCode)), ligneDeCode).toBe(true);
-    }
-    const innocent = [
-      '// import { echeanceDeLigne } from "./echeance-de-ligne";',
-      '/* voir "./echeance-de-ligne" */ const x = 1;',
-      "// `echeance-de-ligne.ts` n'est pas encore branché",
-      'import { x } from "./echeance-de-ligne-autre";',
-    ];
-    for (const ligneDeCode of innocent) {
-      expect(MOTIF_IMPORT.test(sansCommentaires(ligneDeCode)), ligneDeCode).toBe(false);
-    }
-  });
-
-  it("aucun fichier de src/ ne l'importe, hors son propre test et les modules du passage à blanc", () => {
-    const sources = listerSources();
-    // Un chemin faux ferait passer l'assertion à vide.
-    expect(sources.length).toBeGreaterThan(100);
-    expect(sources.some((s) => s.chemin === CE_MODULE)).toBe(true);
-    // Les autorisés existent, et le sont pour quelque chose : chacun importe
-    // bien le module. Une entrée morte dans la liste serait une porte ouverte
-    // pour un fichier futur du même nom.
-    for (const a of AUTORISES) {
-      const source = sources.find((s) => s.chemin === a);
-      expect(source, `${a} est autorisé mais n'existe pas`).toBeDefined();
-    }
-    expect(
-      AUTORISES.filter((a) => {
-        const source = sources.find((s) => s.chemin === a)!;
-        return MOTIF_IMPORT.test(sansCommentaires(source.code));
-      }).length,
-      "les deux modules du passage à blanc importent la fonction d'échéance",
-    ).toBeGreaterThanOrEqual(2);
-
-    const importateurs = sources
-      .filter(
-        (s) => s.chemin !== CE_MODULE && s.chemin !== CE_TEST && !AUTORISES.includes(s.chemin),
-      )
-      // TOUTE CHAÎNE qui se termine par le nom du module, extension comprise,
-      // quel que soit ce qui la précède : `from`, `import(`, `require(`,
-      // `vi.mock(`, `vi.importActual(`, entre guillemets, apostrophes ou
-      // backticks. La première rédaction énumérait les préfixes et ratait
-      // « ./echeance-de-ligne.js », les gabarits et `importActual` (relecture
-      // du 2026-09-17) ; chercher la chaîne plutôt que l'instruction n'a pas de
-      // liste à tenir.
-      .filter((s) => MOTIF_IMPORT.test(sansCommentaires(s.code)))
-      .map((s) => s.chemin);
-
-    expect(
-      importateurs,
-      "`echeance-de-ligne.ts` ne se branche pas avant la bascule : le passage à " +
-        "blanc est le lot 2c de l'ADR-036 (stratégie candidate, que rien en " +
-        "production n'importe), la bascule est le lot 4 (les trois chemins " +
-        "ensemble, `VERSION_MOTEUR_CALENDRIER` = 3). Voir " +
-        "docs/adr/036-echeance-calculee-depuis-les-faits.md § 9 — et retirer " +
-        "ce test dans le lot qui branche.",
-    ).toEqual([]);
-  });
-
-  it("les modules du passage à blanc ne sont importés par aucun module de production", () => {
-    // L'autorisation ci-dessus ne vaut que si elle ne se propage pas : un
-    // `actions.ts` qui importerait `decision-par-faits.ts` brancherait la
-    // fonction d'échéance par transitivité, et le motif principal ne le
-    // verrait pas. Seuls leurs tests peuvent les importer dans `src/` ; le
-    // script les importe depuis `scripts/`, hors du parcours.
-    const sources = listerSources();
-    const importateurs = sources
-      // Ce test nomme les autorisés entre guillemets : il n'importe rien.
-      .filter((s) => !AUTORISES.includes(s.chemin) && s.chemin !== CE_TEST)
-      .filter((s) => MOTIF_IMPORT_AUTORISES.test(sansCommentaires(s.code)))
-      .map((s) => s.chemin);
-    expect(
-      importateurs,
-      "`decision-par-faits.ts` et `passage-a-blanc.ts` ne se branchent pas en " +
-        "production avant le lot 4 de l'ADR-036.",
-    ).toEqual([]);
-  });
-});
+// ~~« ADR-036 — le module n'est PAS branché avant la bascule »~~ — garde du
+// lot 1, élargie au lot 2c aux modules du passage à blanc, RETIRÉE à la bascule
+// (lot 4, 2026-09-19) comme son commentaire le demandait : la fonction est
+// désormais branchée sur les trois chemins, par `decision-par-faits.ts` que
+// `generateur.ts` importe. Ce qu'elle protégeait — deux calculs de date en
+// production — est tenu par sa suite, `garde-convergence.test.ts` : seule la
+// fonction appelle `prochaineEcheance`, seuls la régénération et le recalcul
+// d'une ligne écrivent `datePrevue`, et l'outil de contrôle n'est importé par
+// aucun module de production (l'ancienne garde du lot 2c, adaptée : la
+// stratégie par les faits n'est plus « candidate », elle EST la production).

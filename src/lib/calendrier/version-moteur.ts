@@ -45,8 +45,20 @@ import {
  * titre retiré. La ligne est archivée si elle porte une trace, supprimée sinon,
  * et sort des retards. Sans l'incrément, une ligne de personne partie portant
  * une action restait comptée en retard jusqu'à la prochaine mutation.
+ *
+ * `3` (2026-09-19, décidé par la propriétaire — plan approuvé de l'ADR-036,
+ * `lot/adr036-bascule`) : LA BASCULE. La date et le statut de chaque ligne
+ * sortent de `echeanceDeLigne`, sur ses faits — origine du suivi, mise en
+ * service, dernier rapport réalisé, héritage, rythme effectif, premier pas —,
+ * au lieu d'être conservés tels que la base les portait. Une ligne dont le
+ * rythme, la mise en service ou le premier délai a changé sans rapport se
+ * recale (constat B) ; chaque « à planifier » est réécrit une fois vers minuit
+ * de Paris de son jour d'origine. Le passage à blanc du 2026-09-18 a
+ * catégorisé ces écarts sur la production (zéro `inexplique`). Sans
+ * l'incrément, ils ne s'appliqueraient qu'au hasard d'une mutation. Retour
+ * arrière : annuler le lot et passer à 4, pas à 2 (ADR-036 § 10).
  */
-export const VERSION_MOTEUR_CALENDRIER = 2;
+export const VERSION_MOTEUR_CALENDRIER = 3;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la

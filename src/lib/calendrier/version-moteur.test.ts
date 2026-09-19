@@ -123,21 +123,13 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 2,
-  // Recopiée SANS incrément le 2026-09-18 (ADR-036, lot 2a) : le moteur écrit
-  // `suiviDepuis` sur les lignes qu'il CRÉE et lit la colonne sur celles qui
-  // existent, mais aucune ligne existante n'est réécrite différemment — la
-  // stratégie de date est la même, et rien ne lit encore la colonne.
-  // Recopiée SANS incrément une seconde fois le même jour (lot 2b, la
-  // couture) : `lireEntrees` et `planifier` extraites dans `passe.ts`, les
-  // branches de date déplacées mot pour mot dans `deciderParConservation`,
-  // `sources` ajouté aux lignes générées sans qu'aucune écriture ne le lise,
-  // `premierPas` déplacée dans `periodicite.ts`. Une extraction : NON.
-  // Et une troisième (lot 2c, le passage à blanc) : `heritageDesRetirees`
-  // exportée, `planifier` coupée en `preparer` puis réconciliation, pour que
-  // l'outil de comparaison lise les mêmes entrées que le moteur. Rien en
-  // production n'importe la stratégie candidate : NON.
-  empreinte: "f866bfc2837aae27",
+  version: 3,
+  // INCRÉMENTÉ le 2026-09-19 (ADR-036, lot 4 — la bascule) : la réconciliation
+  // date chaque ligne par `echeanceDeLigne` au lieu de conserver la date en
+  // base ; `decision-par-faits.ts` et `echeance-de-ligne.ts` entrent dans le
+  // relevé par l'import de `generateur.ts`. OUI, la régénération écrit
+  // autrement : voir le commentaire de `VERSION_MOTEUR_CALENDRIER`.
+  empreinte: "f5e24f9d7dbe9ce9",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
