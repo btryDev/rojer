@@ -568,7 +568,9 @@ Branche `lot/adr036-bascule`. Ce qui s'écarte du plan ou le précise :
   cherche si une date en base s'explique par « une ancre + un rythme » pour
   classer un écart — il ne date ni n'écrit rien, et aucun module de production
   ne l'importe (même garde). Les écritures de `datePrevue` sont limitées à
-  `calendrier/actions.ts` et `calendrier/recalcul-ligne.ts` dans `src/` ;
+  `calendrier/actions.ts` et `calendrier/recalcul-ligne.ts` dans `src/` —
+  **et celles du `statut` d'une `Verification` depuis le 2026-09-19** : la
+  garde ne tenait que la date, alors que le § 2 dit les deux dérivés ;
   `scripts/` et `prisma/seed.ts` restent sous `seeds-en-faits.test.ts`.
 - **Le passage à blanc devient un contrôle de santé** : il n'y a plus deux
   stratégies à comparer. `comparerAuMoteur` compare l'état EN BASE au plan du
