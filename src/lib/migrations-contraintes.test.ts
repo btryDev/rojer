@@ -693,3 +693,90 @@ describe("la ligne ne porte que l'échéance ouverte (ADR-034, N1)", () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Les quatre migrations de la plage 2026-09-13 → 2026-09-18 qui n'avaient pas
+// de garde. Relevé par l'audit du 2026-09-19 (`docs/revues/audit-2026-09-19.md`,
+// M4) : elles sont en production, leur état réel est bon, mais rien ne
+// signalait qu'une édition ultérieure — ou un `db push` — les défasse.
+//
+// Chaque test tient une PROPRIÉTÉ de la migration, pas son texte : l'ordre des
+// opérations quand il protège une donnée, le périmètre quand une ligne ne doit
+// pas être touchée, et l'accord avec `schema.prisma`.
+// ---------------------------------------------------------------------------
+describe("les migrations des lots N5, retrait de `depassee` et ADR-036", () => {
+  const schema = readFileSync(join(RACINE, "prisma", "schema.prisma"), "utf8");
+  const migrations = lireMigrations();
+  const trouver = (suffixe: string) => {
+    const m = migrations.find((x) => x.nom.endsWith(suffixe));
+    expect(m, `La migration \`${suffixe}\` a disparu.`).toBeDefined();
+    return { ...m!, sql: normaliser(m!.sql) };
+  };
+  const modele = (nom: string) => {
+    const m = schema.match(new RegExp(`\\bmodel\\s+${nom}\\s*\\{([\\s\\S]*?)\\n\\}`));
+    expect(m, `model ${nom} introuvable`).not.toBeNull();
+    return m![1];
+  };
+
+  it("N5 requalifie les statuts réalisés AVANT de retirer `dateRealisee`", () => {
+    const n5 = trouver("_ligne_ouverte_retrait_date_realisee");
+    const requalifie = n5.sql.indexOf("UPDATE \"Verification\"");
+    const retire = n5.sql.indexOf('DROP COLUMN IF EXISTS "dateRealisee"');
+    expect(retire, "N5 ne retire plus la colonne.").toBeGreaterThan(-1);
+    // Dans l'ordre inverse, la requalification lirait une table dont la date de
+    // réalisation a déjà disparu : plus rien ne distinguerait ce qui a été fait.
+    expect(requalifie).toBeGreaterThan(-1);
+    expect(requalifie).toBeLessThan(retire);
+    // Une obligation sans rendez-vous suivant garde son statut réalisé : c'est
+    // la seule preuve qu'elle a été faite.
+    expect(n5.sql).toContain("NOT IN ('mise_en_service_uniquement', 'autre')");
+    // Le champ, pas le mot : un commentaire du modèle raconte son retrait.
+    expect(modele("Verification")).not.toMatch(/\n\s+dateRealisee\s+DateTime/);
+  });
+
+  it("le retrait de `depassee` reclasse les lignes AVANT de recréer le type", () => {
+    const m = trouver("_retrait_statut_depassee");
+    const reclasse = m.sql.indexOf("WHERE v.\"statut\" = 'depassee'");
+    const recree = m.sql.indexOf('CREATE TYPE "StatutVerification"');
+    // Recréer le type d'abord ferait échouer la conversion sur toute ligne
+    // encore `depassee` — ou, pire, la perdrait si le cast était permissif.
+    expect(reclasse).toBeGreaterThan(-1);
+    expect(recree).toBeGreaterThan(reclasse);
+    // Rejouable : sans cette garde, un second passage échouerait sur le type
+    // déjà recréé.
+    expect(m.sql).toContain("e.enumlabel = 'depassee'");
+    // Le défaut est reposé : `DROP DEFAULT` sans `SET DEFAULT` laisserait toute
+    // création de ligne sans statut.
+    expect(m.sql).toContain("SET DEFAULT 'a_planifier'");
+    const e = schema.match(/enum\s+StatutVerification\s*\{([\s\S]*?)\n\}/);
+    expect(e, "enum StatutVerification introuvable").not.toBeNull();
+    expect(e![1]).not.toMatch(/\bdepassee\b/);
+  });
+
+  it("« à planifier avec contrôle » ne touche ni l'archivé, ni le salarié, ni le ponctuel", () => {
+    const m = trouver("_a_planifier_avec_controle");
+    expect(m.sql).toContain('"archiveLe" IS NULL');
+    expect(m.sql).toContain('"salarieId" IS NULL');
+    expect(m.sql).toContain("NOT IN ('mise_en_service_uniquement', 'autre')");
+    // Seul un contrôle réellement fait vaut : un rapport « non vérifiable »
+    // n'atteste de rien et ne doit pas faire passer la ligne à « planifiée ».
+    expect(m.sql).not.toContain("non_verifiable");
+  });
+
+  it("`suiviDepuis` naît rétro-rempli, requis, et aucune migration ne le réécrit ensuite", () => {
+    const m = trouver("_verification_suivi_depuis");
+    expect(m.sql).toContain('ADD COLUMN "suiviDepuis" TIMESTAMP(3) NOT NULL');
+    // Sans le rétro-remplissage, toutes les lignes existantes prendraient la
+    // date de la migration pour origine — le défaut S1 de l'ADR-036 lui-même.
+    expect(m.sql).toContain('SET "suiviDepuis" = "createdAt"');
+    expect(modele("Verification")).toMatch(/\n\s+suiviDepuis\s+DateTime\s+@default\(now\(\)\)/);
+    // L'origine du suivi est immuable (ADR-036, D2). Une migration postérieure
+    // qui la réécrirait déplacerait toutes les échéances calculées depuis elle.
+    const apres = migrations.filter((x) => x.nom > m.nom);
+    for (const x of apres) {
+      expect(normaliser(x.sql), `${x.nom} réécrit \`suiviDepuis\``).not.toContain(
+        'SET "suiviDepuis"',
+      );
+    }
+  });
+});
