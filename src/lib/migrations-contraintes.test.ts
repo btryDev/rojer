@@ -772,6 +772,12 @@ describe("les migrations des lots N5, retrait de `depassee` et ADR-036", () => {
     expect(modele("Verification")).toMatch(/\n\s+suiviDepuis\s+DateTime\s+@default\(now\(\)\)/);
     // L'origine du suivi est immuable (ADR-036, D2). Une migration postérieure
     // qui la réécrirait déplacerait toutes les échéances calculées depuis elle.
+    //
+    // CETTE BOUCLE NE PARCOURT RIEN AUJOURD'HUI, et c'est voulu :
+    // `_verification_suivi_depuis` est la dernière migration de l'arbre. Elle
+    // ne garde donc que l'avenir — relevé par la relecture du 2026-09-19, qui
+    // a eu raison de le dire : un lecteur pressé croirait la propriété
+    // vérifiée. Les trois assertions ci-dessus, elles, mordent dès maintenant.
     const apres = migrations.filter((x) => x.nom > m.nom);
     for (const x of apres) {
       expect(normaliser(x.sql), `${x.nom} réécrit \`suiviDepuis\``).not.toContain(

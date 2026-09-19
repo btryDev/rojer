@@ -157,7 +157,7 @@ seulement) :
 
 - **établissement A** (28 lignes) — 27 `meme_jour_civil`, sans
   changement visible, et **un seul écart réel** : la vérification annuelle du
-  SSI (`cmtj4xoz7000lcigdbv8xbsz3`), due au 30/08/2026 en base, passerait au
+  SSI (identifiant gardé hors du dépôt public), due au 30/08/2026 en base, passerait au
   **01/09/2026** — le rapport réalisé du 1er mars plus les six mois de la
   prescription d'assureur en vigueur. La date en base ne s'explique par aucun
   fait ; la nouvelle, si.
