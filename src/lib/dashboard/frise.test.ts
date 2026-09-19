@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { instantCivil } from "@/lib/dates";
 import {
   CADRAGE_INITIAL,
   construireFrise,
@@ -166,6 +167,27 @@ describe("construireFrise — regroupement", () => {
     expect(f.marqueurs[0].titre).toBe("2 échéances");
     // 9 → 14 août : même mois, le mois n'est écrit qu'une fois.
     expect(f.marqueurs[0].sousTitre).toBe("9 → 14 AOÛT");
+  });
+
+  it("date la plage au jour civil de Paris, quel que soit le fuseau du serveur", () => {
+    // Une échéance est stockée à minuit de PARIS (`debutDuJour`, ADR-011) :
+    // sur un serveur en UTC — Vercel —, cet instant tombe la veille à 22 h.
+    // Le libellé lisait le jour par `getDate()`, dans le fuseau du processus,
+    // et affichait « 8 → 14 AOÛT » pour une grappe qui commence le 9.
+    // Rejoué sous `TZ=UTC` (la suite l'est) ; sous Paris, il passait déjà.
+    const aParis = (jour: number): EvenementFrise => ({
+      id: `p${jour}`,
+      libelle: `Événement ${jour}`,
+      equipement: "Équipement",
+      tone: "ok",
+      date: instantCivil(2026, 8, jour),
+    });
+    const f = frise([aParis(9), aParis(14)]);
+    expect(f.marqueurs).toHaveLength(1);
+    expect(f.marqueurs[0].sousTitre).toBe("9 → 14 AOÛT");
+    // Et une grappe d'un seul jour civil garde sa forme courte.
+    const g = frise([aParis(9), { ...aParis(9), id: "p9bis" }]);
+    expect(g.marqueurs[0].sousTitre).toBe("9 AOÛT");
   });
 
   it("écrit les deux mois quand la grappe est à cheval", () => {
