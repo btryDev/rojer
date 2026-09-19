@@ -1,18 +1,21 @@
 // L'échéance ouverte d'une ligne de suivi, calculée depuis des FAITS — ADR-036.
 //
-// ⚠ RIEN N'IMPORTE ENCORE CE MODULE, ET C'EST VOULU (lot 1, 2026-09-17). Il est
-// posé à côté du moteur avec sa table de vérité ; le brancher est l'affaire des
-// lots 2c (passage à blanc) et 4 (bascule) de l'ADR-036. Un test de
-// `echeance-de-ligne.test.ts` échoue si un fichier de `src/` l'importe avant.
+// ~~⚠ RIEN N'IMPORTE ENCORE CE MODULE, ET C'EST VOULU (lot 1, 2026-09-17).~~
+// BRANCHÉ À LA BASCULE (lot 4, 2026-09-19) : c'est la seule fonction qui date
+// une ligne, sur les trois chemins qui l'écrivent — la régénération
+// (`reconcilierCalendrier`, par `decision-par-faits.ts`), le dépôt et la
+// suppression d'un rapport (`recalcul-ligne.ts`, qui rejoue la même passe).
+// `garde-convergence.test.ts` tient qu'aucun autre module ne calcule une
+// échéance ni n'écrit `datePrevue`.
 //
-// CE QU'IL REMPLACERA. La date d'une ligne s'écrit aujourd'hui à quatre
-// endroits — le `createMany` et l'`update` de la régénération, `rouler` au dépôt
-// d'un rapport, le recul à sa suppression — et `reconcilierCalendrier` la
-// redécide dans huit branches, dont chacune raconte la régression de la
-// précédente. La branche générale, « cycle ouvert », impose que la date en base
-// ne bouge JAMAIS : c'est le constat B. Tant qu'un appareil n'a pas été
-// contrôlé, un rythme qui change, une mise en service ajoutée ou corrigée, un
-// premier délai revu restent sans effet, et le calendrier dépend de l'ordre des
+// CE QU'IL A REMPLACÉ. La date d'une ligne s'écrivait à quatre endroits — le
+// `createMany` et l'`update` de la régénération, `rouler` au dépôt d'un
+// rapport, le recul à sa suppression — et `reconcilierCalendrier` la redécidait
+// dans huit branches, dont chacune racontait la régression de la précédente.
+// La branche générale, « cycle ouvert », imposait que la date en base ne bouge
+// JAMAIS : c'était le constat B. Tant qu'un appareil n'avait pas été contrôlé,
+// un rythme qui change, une mise en service ajoutée ou corrigée, un premier
+// délai revu restaient sans effet, et le calendrier dépendait de l'ordre des
 // saisies au lieu des faits déclarés.
 //
 // POURQUOI ON NE POUVAIT PAS « SIMPLEMENT ÉCRASER ». Le générateur répond
@@ -160,11 +163,11 @@ export { premierPas } from "./periodicite";
  *
  * LE CAS EXISTE, ET L'APPELANT LE TRAITE AVANT D'APPELER. Une ligne d'équipement
  * `autre` reste en base quand la prescription qui lui donnait un rythme est
- * levée et qu'elle porte une trace ; on peut encore y déposer un rapport, et
- * `rouler` le sert aujourd'hui — date gardée, statut du résultat.
- * `recalculerLigne` (lot 4) fera de même HORS de cette fonction, comme la boucle
- * NB4 : solde par `statutDepuisResultat`, date inchangée (ADR-036 § 4). Une
- * réalisation ne lève donc pas la précondition.
+ * levée et qu'elle porte une trace ; on peut encore y déposer un rapport.
+ * `recalculerLigne` la sert HORS de cette fonction, par la boucle NB4 du
+ * réconciliateur dont il reprend la décision : solde par
+ * `statutDepuisResultat`, date inchangée (ADR-036 § 4). Une réalisation ne lève
+ * donc pas la précondition.
  *
  * L'ORDRE DES RÈGLES est la décision ; le changer change le produit.
  */

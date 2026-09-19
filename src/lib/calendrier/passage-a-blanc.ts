@@ -1,14 +1,24 @@
-// Le passage à blanc de l'ADR-036 (lot 2c, 2026-09-18) : deux plans sur une
-// même lecture, leur différence ligne à ligne, et le classement de chaque écart.
+// Le passage à blanc de l'ADR-036 : l'état EN BASE comparé au plan du moteur
+// courant, ligne à ligne, et le classement de chaque écart. Sans rien écrire.
 //
-// C'est la méthode « Scientist » : le nouveau calcul tourne À CÔTÉ de l'ancien,
-// on journalise les écarts SANS RIEN ÉCRIRE, puis on bascule. Ce module est la
-// partie pure de l'outil ; `scripts/passage-a-blanc-echeances.ts` lui apporte
-// la lecture, en transaction `READ ONLY`, et imprime.
+// CE QU'IL ÉTAIT (lot 2c, 2026-09-18) : deux plans sur une même lecture — la
+// stratégie en ligne, `deciderParConservation`, et la candidate,
+// `deciderParFaits` —, leur différence, et le classement de chaque écart.
+// C'était la méthode « Scientist » : le nouveau calcul tournait À CÔTÉ de
+// l'ancien, on journalisait les écarts sans rien écrire, puis on basculait.
 //
-// ⚠ RIEN EN PRODUCTION N'IMPORTE CE MODULE. Il importe `echeance-de-ligne.ts`
-// (ses types) et `decision-par-faits.ts` ; la garde de
-// `echeance-de-ligne.test.ts` l'autorise nommément.
+// CE QU'IL EST DEPUIS LA BASCULE (lot 4, 2026-09-19) : il n'y a plus qu'une
+// stratégie. L'outil compare donc ce que la base PORTE à ce que le moteur
+// ÉCRIRAIT à la prochaine régénération. C'est un CONTRÔLE DE SANTÉ :
+//  · juste après la fusion, avant que chaque dossier ait été régénéré sous le
+//    moteur 3, il montre ce que la première régénération réécrira — les mêmes
+//    catégories que le passage à blanc du 2026-09-18, lues cette fois sur
+//    l'état en base au lieu du plan de l'ancien moteur ;
+//  · une fois un dossier régénéré, tout doit y être `identique` : un écart
+//    dit qu'un chemin a écrit une date que le moteur ne reconnaît pas — le
+//    défaut même que l'ADR-036 ferme.
+// Ce module est la partie pure de l'outil ; `scripts/passage-a-blanc-echeances.ts`
+// lui apporte la lecture, en transaction `READ ONLY`, et imprime.
 //
 // LES CATÉGORIES, dans l'ordre où elles sont essayées — le premier motif qui
 // tient l'emporte :
@@ -16,7 +26,8 @@
 //   legs_statut_realise  un ponctuel au statut réalisé sans rapport : la garde
 //                        de `deciderParFaits` le conserve ; compté à part pour
 //                        savoir combien la production en porte (lot 5 : retirer
-//                        la garde s'il n'y en a aucun) ;
+//                        la garde s'il n'y en a aucun). Compté qu'il y ait écart
+//                        ou non : c'est un inventaire ;
 //   identique            même instant, même statut ;
 //   meme_jour_civil      même statut, même jour civil de Paris, instant
 //                        différent — la règle 5 réécrit chaque « à planifier »
@@ -50,12 +61,7 @@
 
 import { cleJourCivil, debutDuJour } from "@/lib/dates";
 import { PERIODICITE_CALENDAIRE, type Periodicite } from "@/lib/referentiels/types-communs";
-import {
-  STRATEGIE_FAITS,
-  creerParFaits,
-  estLegsStatutRealise,
-  faitsDeLigne,
-} from "./decision-par-faits";
+import { estLegsStatutRealise, faitsDeLigne } from "./decision-par-faits";
 import type { FaitsDeLigne } from "./echeance-de-ligne";
 import {
   cleDeLigne,
@@ -86,11 +92,11 @@ export type Categorie = (typeof CATEGORIES)[number];
 export type EtatLigne = { datePrevue: Date; statut: string };
 
 export type EntreeClassement = {
-  /** Ce que la stratégie en ligne écrirait (ou laisserait). */
+  /** Ce que la ligne porte en base. */
   avant: EtatLigne;
-  /** Ce que la stratégie candidate écrirait, et d'où sort sa date. */
+  /** Ce que le moteur écrirait, et d'où sort sa date. */
   apres: EtatLigne & { source: string | null };
-  /** Les faits que la candidate a lus. */
+  /** Les faits que le moteur a lus. */
   faits: FaitsDeLigne;
   /** La ligne est-elle le legs protégé (`estLegsStatutRealise`) ? */
   legs: boolean;
@@ -232,11 +238,11 @@ export function classerEcart(e: EntreeClassement): Categorie {
 }
 
 // ---------------------------------------------------------------------------
-// Les deux plans, et leur différence
+// L'état en base, le plan du moteur, et leur différence
 // ---------------------------------------------------------------------------
 
 export type Ecart = {
-  /** L'identifiant de la ligne en base, ou `à créer` pour une ligne neuve. */
+  /** L'identifiant de la ligne en base. */
   ligne: string;
   cleUnique: string;
   obligationId: string;
@@ -248,70 +254,37 @@ export type Ecart = {
 };
 
 export type Comparaison = {
-  planConservation: PlanReconciliation;
-  planFaits: PlanReconciliation;
+  /** Le plan que la prochaine régénération appliquerait. */
+  plan: PlanReconciliation;
   ecarts: Ecart[];
   comptes: Record<Categorie, number>;
+  /** Les lignes que la régénération CRÉERAIT : sans état en base, elles n'ont
+   *  rien à comparer — comptées, pas classées. */
+  aCreer: number;
 };
 
 function comptesVides(): Record<Categorie, number> {
   return Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Categorie, number>;
 }
 
-/** Ce que chaque ligne existante porte sous un plan : la mise à jour si le plan
- *  en a une, sinon la ligne telle qu'elle est. Les lignes supprimées ou
- *  archivées par le plan n'y figurent pas — ces décisions ne dépendent pas de
- *  la stratégie, les deux plans les partagent. */
-function etatsSousLePlan(
-  existantes: OccurrenceExistante[],
-  plan: PlanReconciliation,
-): Map<string, EtatLigne & { source: string | null }> {
-  const hors = new Set([...plan.aSupprimer, ...plan.aArchiver.map((a) => a.id)]);
-  const etats = new Map<string, EtatLigne & { source: string | null }>();
-  for (const ex of existantes) {
-    if (hors.has(ex.id)) continue;
-    etats.set(ex.id, { datePrevue: ex.datePrevue, statut: ex.statut, source: null });
-  }
-  for (const m of plan.aMettreAJour) {
-    if (hors.has(m.id)) continue;
-    etats.set(m.id, { datePrevue: m.datePrevue, statut: m.statut, source: m.source ?? null });
-  }
-  return etats;
-}
-
 /**
- * La ligne générée qui rencontre une ligne existante — par sa clé, ou par
- * adoption (clé d'un prédécesseur). Sert à retrouver les `sources` d'une ligne
- * mise à jour, pour rassembler ses faits.
+ * Compare l'état EN BASE au plan du moteur courant, sur une même lecture.
+ *
+ * Seules les lignes que le plan garde ouvertes sont classées : celles qu'il
+ * supprime ou archive sortent du calendrier, et leur date n'est plus lue. Pour
+ * rassembler les faits d'une ligne, la ligne générée qui la rencontre est
+ * retrouvée par sa clé — et, pour une ligne adoptée, par l'`obligationId` que
+ * le plan lui écrit. Une ligne que la génération saute (rythme `autre`, boucle
+ * NB4) n'a pas de faits de date : le réconciliateur ne touche pas sa date.
  */
-function indexerGenerees(aGenerer: VerificationGenere[]): Map<string, VerificationGenere> {
-  const index = new Map<string, VerificationGenere>();
-  for (const g of aGenerer) index.set(g.cleUnique, g);
-  return index;
-}
-
-/**
- * Compare les deux stratégies sur une même lecture. Les lignes générées sont
- * refaites ici par `planifier` ; pour rassembler les faits d'une ligne mise à
- * jour, la ligne générée qui la rencontre est retrouvée par sa clé — et, pour
- * une ligne adoptée, par l'`obligationId` que le plan lui écrit.
- */
-export function comparerStrategies(lecture: LecturePasse, now: Date): Comparaison {
-  const entrees = preparer(lecture, now);
-  const { existantes, aGenerer, options } = entrees;
-  const planConservation = reconcilierCalendrier(existantes, aGenerer, options);
-  const planFaits = reconcilierCalendrier(existantes, aGenerer, options, STRATEGIE_FAITS);
-  const generees = indexerGenerees(aGenerer);
+export function comparerAuMoteur(lecture: LecturePasse, now: Date): Comparaison {
+  const { existantes, aGenerer, options } = preparer(lecture, now);
+  const plan = reconcilierCalendrier(existantes, aGenerer, options);
+  const generees = new Map(aGenerer.map((g) => [g.cleUnique, g]));
   // Ce que les obligations retirées lèguent — la même table que le
   // réconciliateur consulte, pour que les faits rassemblés ici soient ceux
-  // que la stratégie candidate a lus.
+  // qu'il a lus.
   const heritage = heritageDesRetirees(existantes, options.successions);
-
-  const avantParId = etatsSousLePlan(existantes, planConservation);
-  const apresParId = etatsSousLePlan(existantes, planFaits);
-  const comptes = comptesVides();
-  const ecarts: Ecart[] = [];
-
   const herediteDe = (g: VerificationGenere): Date | null =>
     heritage.parCle.get(g.cleUnique) ??
     (g.equipementId === null && g.salarieId === null
@@ -319,22 +292,25 @@ export function comparerStrategies(lecture: LecturePasse, now: Date): Comparaiso
       : undefined) ??
     null;
 
-  for (const ex of existantes) {
-    const avant = avantParId.get(ex.id);
-    const apres = apresParId.get(ex.id);
-    if (avant === undefined || apres === undefined) continue;
+  const hors = new Set([...plan.aSupprimer, ...plan.aArchiver.map((a) => a.id)]);
+  const misesAJour = new Map(plan.aMettreAJour.map((m) => [m.id, m]));
+  const comptes = comptesVides();
+  const ecarts: Ecart[] = [];
 
-    // La ligne générée : par la clé de la ligne, ou — ligne adoptée — par
-    // l'identifiant d'obligation que le plan candidat lui écrit.
-    const adoptee = planFaits.aMettreAJour.find((m) => m.id === ex.id);
-    const cle = cleDeLigne(adoptee?.obligationId ?? ex.obligationId, {
+  for (const ex of existantes) {
+    if (hors.has(ex.id)) continue;
+    const m = misesAJour.get(ex.id);
+    const avant: EtatLigne = { datePrevue: ex.datePrevue, statut: ex.statut };
+    const apres = {
+      datePrevue: m?.datePrevue ?? ex.datePrevue,
+      statut: m?.statut ?? ex.statut,
+      source: m?.source ?? null,
+    };
+    const cle = cleDeLigne(m?.obligationId ?? ex.obligationId, {
       equipementId: ex.equipementId,
       salarieId: ex.salarieId ?? null,
     });
     const g = generees.get(cle);
-    // Une ligne que la génération saute (rythme `autre`, boucle NB4) n'a pas de
-    // faits à rassembler : les deux stratégies la laissent au réconciliateur,
-    // qui ne touche pas sa date. Elle est identique par construction.
     const faits: FaitsDeLigne =
       g === undefined
         ? {
@@ -353,47 +329,16 @@ export function comparerStrategies(lecture: LecturePasse, now: Date): Comparaiso
     ecarts.push({
       ligne: ex.id,
       cleUnique: cle,
-      obligationId: adoptee?.obligationId ?? ex.obligationId,
+      obligationId: m?.obligationId ?? ex.obligationId,
       equipementId: ex.equipementId,
       salarieId: ex.salarieId ?? null,
-      avant: { datePrevue: avant.datePrevue, statut: avant.statut },
+      avant,
       apres,
       categorie,
     });
   }
 
-  // Les lignes À CRÉER : les deux plans en créent les mêmes, par clé.
-  const creeesFaits = new Map(planFaits.aCreer.map((v) => [v.cleUnique, v]));
-  for (const c of planConservation.aCreer) {
-    const f = creeesFaits.get(c.cleUnique);
-    if (f === undefined) continue;
-    const g = generees.get(c.cleUnique) ?? c;
-    const heritee = herediteDe(g);
-    const faits = faitsDeLigne(g, null, heritee, now);
-    // `aCreer` ne porte pas la source ; la décision est déterministe, on la
-    // redemande à la stratégie pour la nommer dans l'écart.
-    const source = creerParFaits({ g, heritee, now }).source ?? null;
-    const apres = { datePrevue: f.datePrevue, statut: f.statut, source };
-    const categorie = classerEcart({
-      avant: { datePrevue: c.datePrevue, statut: c.statut },
-      apres,
-      faits,
-      legs: false,
-    });
-    comptes[categorie] += 1;
-    ecarts.push({
-      ligne: "à créer",
-      cleUnique: c.cleUnique,
-      obligationId: c.obligationId,
-      equipementId: c.equipementId,
-      salarieId: c.salarieId,
-      avant: { datePrevue: c.datePrevue, statut: c.statut },
-      apres,
-      categorie,
-    });
-  }
-
-  return { planConservation, planFaits, ecarts, comptes };
+  return { plan, ecarts, comptes, aCreer: plan.aCreer.length };
 }
 
 // ---------------------------------------------------------------------------
@@ -513,7 +458,8 @@ export function projeterPlan(plan: PlanReconciliation): PlanExporte {
 
 /**
  * L'état des lignes APRÈS application d'un plan, en mémoire — ce que la base
- * porterait si `actions.ts` l'avait écrit. Les lignes créées naissent sans
+ * porterait si `actions.ts` l'avait écrit — y compris `suiviDepuis = now` sur
+ * les lignes créées, comme `actions.ts` l'écrit. Les lignes créées naissent sans
  * preuve, sans réalisation, suivies depuis `now`.
  */
 export function appliquerPlanEnMemoire(
@@ -588,10 +534,10 @@ export function planVide(plan: PlanReconciliation): boolean {
 }
 
 /**
- * Rejoue le plan candidat : appliqué en mémoire, puis replanifié à `plusTard`
- * avec la même stratégie. Rend le second plan — qui doit être VIDE : une
- * fonction sans horloge rend la même date quel que soit le jour, donc rien à
- * réécrire. Un second plan non vide nomme les lignes fautives.
+ * Rejoue le plan : appliqué en mémoire, puis replanifié à `plusTard`. Rend le
+ * second plan — qui doit être VIDE : une fonction sans horloge rend la même
+ * date quel que soit le jour, donc rien à réécrire. Un second plan non vide
+ * nomme les lignes fautives.
  *
  * Réserve, écrite : `appliquerPrescriptions` lit `plusTard` pour la `dateFin`
  * des prescriptions. Une prescription qui expire entre `now` et `plusTard`
@@ -600,10 +546,10 @@ export function planVide(plan: PlanReconciliation): boolean {
  */
 export function rejouerPlusTard(
   lecture: LecturePasse,
-  planFaits: PlanReconciliation,
+  plan: PlanReconciliation,
   now: Date,
   plusTard: Date,
 ): PlanReconciliation {
-  const existantes = appliquerPlanEnMemoire(lecture.existantes, planFaits, now);
-  return planifier({ ...lecture, existantes }, plusTard, STRATEGIE_FAITS);
+  const existantes = appliquerPlanEnMemoire(lecture.existantes, plan, now);
+  return planifier({ ...lecture, existantes }, plusTard);
 }

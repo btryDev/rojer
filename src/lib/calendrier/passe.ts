@@ -137,9 +137,9 @@ export async function lireEntrees(client: ClientLecture, etablissementId: string
       archiveLe: true,
       statut: true,
       prescriptionId: true,
-      // Depuis quand Rojer suit la ligne (ADR-036, D2). Lue pour être portée
-      // jusqu'au réconciliateur ; la stratégie par défaut ne s'en sert pas
-      // encore, seule la stratégie candidate du passage à blanc la lit.
+      // Depuis quand Rojer suit la ligne (ADR-036, D2) : l'origine que
+      // `echeanceDeLigne` lit pour dater un « à planifier » et borner la
+      // première échéance d'une mise en service.
       suiviDepuis: true,
       _count: { select: { rapports: true, actions: true } },
     },
@@ -200,8 +200,8 @@ export type EntreesReconciliation = {
  * l'horloge du processus, si bien que la même lecture replanifiée à une autre
  * date dit ce que la régénération écrirait ce jour-là.
  *
- * `decision` est la stratégie de date du réconciliateur ; absente, c'est celle
- * du produit en ligne (`deciderParConservation`).
+ * `decision` est la décision de date du réconciliateur ; absente, c'est la
+ * seule du produit depuis la bascule (`STRATEGIE_FAITS`, ADR-036).
  */
 export function planifier(
   lecture: LecturePasse,
@@ -243,10 +243,9 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
     now,
   );
 
-  // 3. Ensemble des couples applicables. Historique volontairement vide :
-  //    cf. la doc de `reconcilierCalendrier`. Les mises en service, elles,
-  //    donnent au générateur de quoi dater le premier cycle d'un équipement
-  //    neuf plutôt que de le poser « à planifier » faute de mieux.
+  // 3. Ensemble des couples applicables, sans historique : cf. la doc de
+  //    `reconcilierCalendrier`. Les mises en service sont portées dans les
+  //    `sources` de chaque ligne ; `echeanceDeLigne` en tire le premier cycle.
   const misesEnService = new Map<string, Date>();
   for (const eq of etab.equipements) {
     if (eq.dateMiseEnService) misesEnService.set(eq.id, eq.dateMiseEnService);
@@ -263,13 +262,14 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
     titresSalaries.set(t.obligationId, liste);
   }
 
+  // Le générateur DÉCRIT, il ne date plus (ADR-036) : ni horloge, ni
+  // historique — le second argument est l'emplacement mort qu'il garde
+  // jusqu'au lot 5. `now` n'entre qu'au réconciliateur, comme origine d'une
+  // ligne à naître.
   const aGenerer = [
-    ...genererProchainesVerifications(obligations, new Map(), {
-      now,
-      misesEnService,
-    }),
+    ...genererProchainesVerifications(obligations, undefined, { misesEnService }),
     ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
-    ...genererVerificationsSurMesure(surMesure, { now }),
+    ...genererVerificationsSurMesure(surMesure),
   ];
 
   // Les obligations encore applicables, y compris celles qui n'engendrent

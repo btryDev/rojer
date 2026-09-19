@@ -1566,7 +1566,8 @@ async function main(): Promise<void> {
   //
   // La régénération au chargement de `/calendrier` (ADR-012) reprendra ces
   // lignes par leur clé `(obligationId, equipementId, salarieId)` et les
-  // laissera en l'état — un cycle ouvert conserve sa `datePrevue`.
+  // laissera en l'état : leur date sort déjà de `echeanceDeLigne`, sur les
+  // faits que ce seed écrit (ADR-036).
   // -------------------------------------------------------------------------
   const pourMatching = await prisma.etablissement.findUniqueOrThrow({
     where: { id: etablissement.id },
@@ -1621,21 +1622,17 @@ async function main(): Promise<void> {
   }
 
   const aGenerer = [
-    ...genererProchainesVerifications(obligations, new Map(), {
-      now: MAINTENANT,
-      misesEnService,
-    }),
+    ...genererProchainesVerifications(obligations, undefined, { misesEnService }),
     ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
-    ...genererVerificationsSurMesure(surMesure, { now: MAINTENANT }),
+    ...genererVerificationsSurMesure(surMesure),
   ];
 
   // CHAQUE DATE SORT DES FAITS, PAR LA FONCTION DU PRODUIT (ADR-036). Le
   // générateur apporte ses `sources` — premier pas, mise en service, date du
   // titre —, l'origine du suivi est `SUIVI_DEPUIS`, et `echeanceDeLigne` rend
-  // la date et le statut. La `datePrevue` que le générateur calcule lui-même,
-  // relative à l'horloge, n'est pas écrite : la ligne en base est donc déjà
-  // celle que le moteur recalculera après la bascule (lot 4), et l'ancien
-  // moteur, qui garde la date d'un cycle ouvert, la laisse en l'état.
+  // la date et le statut — la ligne en base est donc celle que le moteur
+  // recalcule à chaque régénération (ADR-036). (Le générateur ne date plus rien
+  // depuis la bascule ; faitsDeLigne refuse une ligne sans sources.)
   //
   // L'échéance d'assureur ne peut pas être suivie avant que l'avenant existe :
   // son origine est la date du document, pas `SUIVI_DEPUIS`.
@@ -1643,11 +1640,6 @@ async function main(): Promise<void> {
   const compte = { titre: 0, assureur: 0, autres: 0 };
   for (const v of aGenerer) {
     const origine = v.prescriptionId !== null ? prescription.dateDocument : SUIVI_DEPUIS;
-    if (v.sources === undefined) {
-      // Le repli silencieux de `faitsDeLigne` ferait perdre la mise en service :
-      // un seed ne l'accepte pas.
-      throw new Error(`Ligne générée sans sources : ${v.cleUnique}`);
-    }
     const echeance = echeanceDeLigne(faitsDeLigne(v, null, null, origine));
     operations.push(
       prisma.verification.create({

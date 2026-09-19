@@ -3,20 +3,16 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { StatutVerification } from "@prisma/client";
-import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { cleRapport, getStorage } from "@/lib/storage";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
-import { estCyclique, prochaineEcheance } from "@/lib/calendrier/periodicite";
-import { WHERE_RAPPORT_REALISE } from "./derniere-realisation";
 import {
-  estResultatRealise,
-  rapportMetadataSchema,
-  STATUT_DEPUIS_RESULTAT,
-  type ResultatRealise,
-} from "./schema";
+  LigneModifieeEntreTemps,
+  recalculerLigne,
+} from "@/lib/calendrier/recalcul-ligne";
+import { WHERE_RAPPORT_REALISE } from "./derniere-realisation";
+import { estResultatRealise, rapportMetadataSchema } from "./schema";
 import { validerFichier } from "./validator";
 
 export type UploadRapportState =
@@ -28,25 +24,9 @@ export type UploadRapportState =
     }
   | { status: "success"; rapportId: string };
 
-/**
- * Levée quand la ligne de suivi a changé entre la lecture et l'écriture — un
- * dépôt ou une suppression concurrents l'ont fait rouler. La transaction est
- * annulée ; rien n'est écrit, l'utilisateur recommence sur l'état à jour.
- *
- * NON EXPORTÉE, et c'est une contrainte de Next, pas un choix : un module
- * `"use server"` n'exporte que des fonctions async. L'`export class` posé au
- * N2 faisait rejeter tout le module par `next build` — « The module has no
- * exports at all » —, et chaque déploiement échouait depuis le 2026-09-11,
- * sans que `tsc` ni la suite de tests ne le voient.
- */
-class LigneModifieeEntreTemps extends Error {
-  constructor() {
-    super(
-      "Cette échéance a été modifiée pendant l'enregistrement. Rechargez la page et recommencez.",
-    );
-    this.name = "LigneModifieeEntreTemps";
-  }
-}
+// `LigneModifieeEntreTemps` vit dans `calendrier/recalcul-ligne.ts` depuis la
+// bascule de l'ADR-036 : un module `"use server"` n'exporte que des fonctions
+// async, et c'est le recalcul qui la lève désormais.
 
 /**
  * Server action d'upload d'un rapport sur une vérification.
@@ -54,25 +34,26 @@ class LigneModifieeEntreTemps extends Error {
  * Flux :
  *  1. Valide métadonnées (Zod) et fichier (MIME/taille).
  *  2. Écrit le fichier via l'abstraction `FileStorage`.
- *  3. Crée la ligne `RapportVerification` et FAIT ROULER la `Verification`
- *     parente dans une **transaction** (ADR-034) ; si la base refuse, le
- *     fichier tout juste écrit est nettoyé (best-effort).
- *  4. Régénère le calendrier — il ne roule plus rien, il réaligne le reste.
+ *  3. Dans une **transaction** : verrouille la ligne, crée le
+ *     `RapportVerification`, puis RECALCULE la ligne depuis ses faits
+ *     (`recalculerLigne`, ADR-036) ; si la base refuse, le fichier tout juste
+ *     écrit est nettoyé (best-effort).
+ *  4. Régénère le calendrier — il réaligne le reste.
  *
- * CE QUE « ROULER » VEUT DIRE. La ligne ne porte que l'échéance ouverte. Le
- * rapport reçoit l'échéance qu'il honorait (`echeanceHonoree` = la
- * `datePrevue` lue), et la ligne passe à l'échéance suivante : date du rapport
- * + périodicité, statut « planifiée ». Le résultat du contrôle vit sur le
- * rapport, pas sur la ligne.
+ * ~~CE QUE « ROULER » VEUT DIRE : la ligne passe à l'échéance suivante, date du
+ * rapport + périodicité, statut « planifiée » ; trois cas ne font pas rouler —
+ * « non vérifiable », un rapport antidaté, une obligation sans rendez-vous
+ * suivant.~~ Barré le 2026-09-19 (ADR-036, lot 4) : `rouler` était un
+ * deuxième calculateur de date, à côté de celui de la régénération. La date
+ * sort désormais de `echeanceDeLigne`, par le même chemin que la
+ * régénération, et les trois cas s'y retrouvent d'eux-mêmes : un « non
+ * vérifiable » n'est pas une réalisation, un antidaté n'est pas le dernier
+ * rapport réalisé, un ponctuel se solde sur le résultat (règles 2 et 3).
  *
- * Trois cas ne font pas rouler :
- *  - « non vérifiable » — le contrôle n'a pas eu lieu, l'échéance qui courait
- *    court toujours (cf. `STATUT_DEPUIS_RESULTAT`) ;
- *  - un rapport ANTIDATÉ — plus ancien qu'un rapport réalisé déjà déposé : il
- *    est conservé et daté, mais la ligne ne recule pas vers un passé qu'un
- *    rapport plus récent a déjà dépassé (ADR-034 § 3) ;
- *  - une obligation sans rendez-vous suivant (`mise_en_service_uniquement`,
- *    `autre`) : le one-shot est consommé, la ligne garde le statut réalisé.
+ * CE QUI RESTE ICI : l'ÉCHÉANCE HONORÉE écrite sur le rapport — la `datePrevue`
+ * ouverte au moment du dépôt, pour un rapport réalisé qui n'est pas antidaté.
+ * L'ADR-034 § 5 en a besoin pour reconstruire les occurrences ; aucune date de
+ * ligne ne se calcule plus depuis elle.
  *
  * La dernière réalisation se lit sur les rapports (`derniere-realisation.ts`) ;
  * la ligne ne porte plus de date de réalisation depuis le N5.
@@ -115,17 +96,13 @@ export async function uploadRapport(
     };
   }
 
-  // 3. Contexte vérification. `datePrevue` et `statut` sont ce que le
-  //    roulement lit ET ce sur quoi l'écriture est conditionnée (lot 1) ;
-  //    `periodicite` donne le pas.
+  // 3. Contexte vérification : de quoi refuser AVANT tout stockage. La date et
+  //    le statut sont relus sous le verrou, dans la transaction.
   const verif = await prisma.verification.findUnique({
     where: { id: verificationId },
     select: {
       id: true,
       etablissementId: true,
-      datePrevue: true,
-      statut: true,
-      periodicite: true,
       salarieId: true,
       archiveLe: true,
     },
@@ -178,21 +155,7 @@ export async function uploadRapport(
     };
   }
 
-  // 4. Le rapport réalisé le plus récent déjà déposé : c'est lui qui dit si
-  //    celui-ci est antidaté. Lu avant la transaction ; l'écriture
-  //    conditionnée sur la ligne rattrape un dépôt concurrent.
-  const dernierRealise = await prisma.rapportVerification.findFirst({
-    where: {
-      verificationId: verif.id,
-      ...WHERE_RAPPORT_REALISE,
-    },
-    // `createdAt` en second : deux rapports du même jour, sinon, ne se
-    // départagent pas.
-    orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
-    select: { dateRapport: true },
-  });
-
-  // 5. Lire le fichier en buffer + stocker
+  // 4. Lire le fichier en buffer + stocker
   const buffer = Buffer.from(await fichier.arrayBuffer());
   const rapportId = `rap_${randomUUID()}`;
   const cle = cleRapport(verif.etablissementId, rapportId, fichier.name);
@@ -200,55 +163,52 @@ export async function uploadRapport(
   const storage = getStorage();
   await storage.put(cle, buffer, val.mime);
 
-  // 6. Effet du résultat sur la ligne de suivi.
   const resultat = parsed.data.resultat;
   const dateRapport = parsed.data.dateRapport;
-  let echeanceHonoree: Date | null = null;
-  let majVerification: {
-    datePrevue?: Date;
-    statut: StatutVerification;
-  };
-  if (!estResultatRealise(resultat)) {
-    // Non vérifiable : le contrôle reste dû. Rien n'a été vérifié, et
-    // `datePrevue` n'est pas repoussée : l'échéance réglementaire qui courait
-    // court toujours, et son statut NE BOUGE PAS : il dit si la date est une
-    // vraie échéance, et un déplacement sans contrôle n'y change rien.
-    // Passée, elle se lit en retard sur sa date.
-    //
-    // Il la requalifiait « à replanifier ». Tant que la génération tamponnait
-    // `depassee` le lendemain, l'effet s'effaçait ; depuis le retrait du
-    // tampon (phase A), il laissait une échéance réelle se lire comme une
-    // date de génération — carte « aucune vérification enregistrée », date
-    // masquée au calendrier (relecture de la phase A, 2026-09-14). Une ligne
-    // DÉJÀ soldée — le one-shot réalisé — n'est pas déclassée non plus.
-    majVerification = { statut: verif.statut };
-  } else if (
-    dernierRealise !== null &&
-    dateRapport.getTime() <= dernierRealise.dateRapport.getTime()
-  ) {
-    // Antidaté (ou doublon du même jour) : la pièce entre au registre, la
-    // ligne ne bouge pas. Elle n'honorait aucune échéance connue.
-    majVerification = { statut: verif.statut };
-  } else {
-    // L'échéance que ce rapport honore est l'échéance OUVERTE de la ligne, et
-    // c'est elle que la suppression du rapport rendra à la ligne : la lire
-    // ailleurs faisait reculer la ligne d'un an au retrait (relecture externe
-    // du 2026-09-13). L'écriture conditionnée compare à cette même valeur.
-    echeanceHonoree = verif.datePrevue;
-    majVerification = rouler(
-      verif.datePrevue,
-      verif.periodicite as Periodicite,
-      dateRapport,
-      resultat,
-    );
-  }
 
-  // 7. Persistance DB (rapport + roulement de la ligne) dans une transaction.
-  //    L'écriture sur la ligne est CONDITIONNÉE sur ce qu'on a lu : si un
-  //    autre dépôt l'a fait rouler entre-temps, `echeanceHonoree` et la date
-  //    calculée sont fausses, et on n'écrit rien.
+  // 5. Persistance DB dans une transaction : le rapport, puis la ligne
+  //    recalculée depuis ses faits. Tout ou rien.
   try {
     await prisma.$transaction(async (tx) => {
+      // LA LIGNE EST VERROUILLÉE AVANT TOUTE LECTURE, comme à la suppression
+      // (revue du 2026-09-14) : deux dépôts concurrents sur la même ligne
+      // s'enchaînent, et chacun lit ce que le précédent a laissé — l'échéance
+      // honorée comme le dernier rapport réalisé.
+      await tx.$queryRaw`SELECT 1 FROM "Verification" WHERE "id" = ${verif.id} FOR UPDATE`;
+      const ligne = await tx.verification.findUnique({
+        where: { id: verif.id },
+        select: { datePrevue: true, archiveLe: true },
+      });
+      // Archivée ENTRE la lecture et ici : le refus plus haut ne lisait
+      // `archiveLe` qu'avant l'envoi du fichier, et l'archivage n'écrit que ce
+      // champ (relecture externe du 2026-09-13). On annule.
+      if (ligne === null || ligne.archiveLe !== null) {
+        throw new LigneModifieeEntreTemps();
+      }
+
+      // L'ÉCHÉANCE QUE CE RAPPORT HONORE : l'échéance OUVERTE de la ligne —
+      // pour un rapport réalisé qui est le plus récent. Un « non vérifiable »
+      // n'honore rien (le contrôle n'a pas eu lieu), un antidaté non plus (un
+      // rapport plus récent a déjà dépassé cette échéance). Elle ne sert plus
+      // à dater la ligne ; elle sert à reconstruire les occurrences (ADR-034
+      // § 5).
+      let echeanceHonoree: Date | null = null;
+      if (estResultatRealise(resultat)) {
+        const dernierRealise = await tx.rapportVerification.findFirst({
+          where: { verificationId: verif.id, ...WHERE_RAPPORT_REALISE },
+          // `createdAt` en second : deux rapports du même jour, sinon, ne se
+          // départagent pas.
+          orderBy: [{ dateRapport: "desc" }, { createdAt: "desc" }],
+          select: { dateRapport: true },
+        });
+        if (
+          dernierRealise === null ||
+          dateRapport.getTime() > dernierRealise.dateRapport.getTime()
+        ) {
+          echeanceHonoree = ligne.datePrevue;
+        }
+      }
+
       await tx.rapportVerification.create({
         data: {
           id: rapportId,
@@ -265,20 +225,10 @@ export async function uploadRapport(
           fichierTaille: val.taille,
         },
       });
-      const { count } = await tx.verification.updateMany({
-        where: {
-          id: verif.id,
-          datePrevue: verif.datePrevue,
-          statut: verif.statut,
-          // Encore ouverte AU MOMENT D'ÉCRIRE : le refus plus haut ne lit
-          // `archiveLe` qu'à la lecture, et l'archivage n'écrit que ce champ.
-          // Une régénération qui archive la ligne pendant l'envoi du fichier
-          // laissait passer le roulement (relecture externe du 2026-09-13).
-          archiveLe: null,
-        },
-        data: majVerification,
-      });
-      if (count !== 1) throw new LigneModifieeEntreTemps();
+
+      // LA LIGNE SE RECALCULE DEPUIS SES FAITS — le rapport qu'on vient de
+      // créer compris —, par la même décision que la régénération (ADR-036).
+      await recalculerLigne(tx, verif.id);
     });
   } catch (err) {
     // Nettoyage best-effort du fichier si la DB a échoué.
@@ -289,8 +239,9 @@ export async function uploadRapport(
     throw err;
   }
 
-  // 8. Régénération du calendrier. Elle est idempotente (ADR-012) et ne roule
-  // rien (ADR-034) : elle réaligne le reste sans toucher au dépôt.
+  // 6. Régénération du calendrier. Elle est idempotente (ADR-012), et elle ne
+  // déplace pas la ligne qu'on vient de recalculer : c'est la même décision,
+  // sur les mêmes faits (ADR-036). Elle réaligne le reste.
   //
   // ET ELLE NE PEUT PLUS FAIRE ÉCHOUER LE DÉPÔT. Le rapport est commité et le
   // fichier est écrit : un recalage qui échoue rendait pourtant une erreur à
@@ -307,27 +258,8 @@ export async function uploadRapport(
   return { status: "success", rapportId };
 }
 
-/**
- * Ce que devient la ligne quand un rapport réalisé, le plus récent, est
- * déposé : l'échéance suivante s'ouvre. Pour une obligation sans rendez-vous
- * suivant, la ligne garde son échéance et prend le statut du résultat — c'est
- * le seul cas où un statut réalisé reste sur la ligne.
- */
-function rouler(
-  datePrevue: Date,
-  periodicite: Periodicite,
-  dateRapport: Date,
-  resultat: ResultatRealise,
-): { datePrevue: Date; statut: StatutVerification } {
-  const prochaine = prochaineEcheance(dateRapport, periodicite);
-  if (prochaine === null) {
-    return {
-      datePrevue,
-      statut: STATUT_DEPUIS_RESULTAT[resultat],
-    };
-  }
-  return { datePrevue: prochaine, statut: "planifiee" };
-}
+// ~~`rouler`~~ — retirée le 2026-09-19 (ADR-036, lot 4) : la date d'une ligne
+// sort de `echeanceDeLigne`, par `recalculerLigne`.
 
 /**
  * Retire un rapport du registre.
@@ -342,16 +274,18 @@ function rouler(
  * seulement le fichier. Un fichier orphelin se rattrape ; une ligne de
  * registre sans pièce, non.
  *
- * LA LIGNE RECULE D'UN CYCLE (ADR-034) si le rapport retiré est celui qui
- * l'avait fait rouler — le rapport réalisé le plus récent. Si un rapport
- * réalisé reste : une obligation périodique revient à l'échéance qu'il
- * engendre (« planifiée ») ; un contrôle unique reprend le statut réalisé de
- * ce rapport et garde sa date. Si aucun ne reste : la ligne revient à
- * l'échéance que le retiré honorait (`echeanceHonoree`), à défaut — rapport
- * d'avant N2 — elle garde sa date ; dans les deux cas « à planifier », parce
- * qu'on ne sait pas si cette date était une vraie échéance, et elle ne
- * s'affiche donc plus (`aUnRendezVous`). Un rapport non vérifiable ou
- * antidaté n'avait rien fait rouler : la ligne ne lui doit rien.
+ * ~~LA LIGNE RECULE D'UN CYCLE (ADR-034) : sur le dernier rapport réalisé qui
+ * reste, sinon sur l'échéance que le retiré honorait (`echeanceHonoree`,
+ * transmise de rapport en rapport jusqu'à la tête de chaîne), « à planifier »
+ * faute de savoir si elle était réelle.~~ Barré le 2026-09-19 (ADR-036,
+ * lot 4). LA LIGNE SE RECALCULE DEPUIS SES FAITS (`recalculerLigne`) : s'il
+ * reste un rapport réalisé, sur lui (règle 3) ; sinon sur la mise en service
+ * et le premier pas (règle 4), à défaut sur l'origine du suivi (règle 5). La
+ * chaîne de transmission d'`echeanceHonoree` a disparu avec : l'échéance
+ * d'origine qu'elle protégeait est un FAIT stocké, `suiviDepuis`, et une vraie
+ * échéance revient « planifiée », donc visible, au lieu d'être masquée en « à
+ * planifier ». Un rapport non vérifiable ou antidaté ne change aucun fait de
+ * date : la ligne ne bouge pas.
  */
 export async function supprimerRapport(rapportId: string): Promise<void> {
   const rap = await prisma.rapportVerification.findUnique({
@@ -368,139 +302,33 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
 
   await prisma.$transaction(async (tx) => {
     // LA LIGNE EST VERROUILLÉE AVANT TOUTE LECTURE, et c'est ce qui rend le
-    // recul juste sous concurrence (revue du 2026-09-14). Deux suppressions
+    // recalcul juste sous concurrence (revue du 2026-09-14). Deux suppressions
     // sur la même ligne — deux onglets, un double clic — lisaient chacune
-    // l'état d'avant l'autre : la seconde voyait son écriture conditionnée
-    // échouer, abandonnait le recul, et la ligne gardait l'échéance future
-    // d'un rapport qui n'existait plus. Le commentaire promettait que la
-    // régénération recalerait la ligne ; elle ne recalcule rien hors
-    // changement de rythme. Verrouillées, les suppressions s'enchaînent, et
-    // chacune relit ce que la précédente a laissé.
+    // l'état d'avant l'autre. Verrouillées, elles s'enchaînent, et chacune
+    // relit ce que la précédente a laissé.
     await tx.$queryRaw`SELECT 1 FROM "Verification" WHERE "id" = ${rap.verificationId} FOR UPDATE`;
-    const ligne = await tx.verification.findUnique({
-      where: { id: rap.verificationId },
-      select: { datePrevue: true, statut: true, periodicite: true },
-    });
-    // Relu sous le verrou, lui aussi : une suppression concurrente a pu
-    // l'emporter déjà, ou transmettre son échéance d'origine à ce rapport.
+    // Relu sous le verrou : une suppression concurrente a pu l'emporter déjà.
     const retire = await tx.rapportVerification.findUnique({
       where: { id: rapportId },
-      select: { dateRapport: true, resultat: true, echeanceHonoree: true },
+      select: { resultat: true },
     });
-    if (ligne === null || retire === null) return;
+    if (retire === null) return;
 
     await tx.rapportVerification.delete({ where: { id: rapportId } });
 
-    if (!estResultatRealise(retire.resultat)) return;
-
-    // Les rapports réalisés qui restent, du plus ANCIEN au plus récent.
-    // `createdAt` départage deux rapports du même jour : sans lui, ni « le
-    // premier » ni « le dernier » ne sont déterministes, et la ligne en dépend.
-    const restants = await tx.rapportVerification.findMany({
-      where: {
-        verificationId: rap.verificationId,
-        ...WHERE_RAPPORT_REALISE,
-      },
-      orderBy: [{ dateRapport: "asc" }, { createdAt: "asc" }],
-      select: { id: true, dateRapport: true, resultat: true, echeanceHonoree: true },
-    });
-
-    // L'ÉCHÉANCE D'ORIGINE NE SE PERD JAMAIS, et c'est tout l'enjeu : elle vit
-    // sur le PLUS ANCIEN rapport réalisé, qui est le seul à pouvoir la porter
-    // quand tous les autres sont partis. Le retiré emportait la sienne ; si
-    // elle est plus ancienne que celle de la tête de chaîne, elle lui est
-    // transmise — quel que soit l'ordre des suppressions.
+    // La ligne se recalcule sur ce qui reste. `garderLegs: false` quand le
+    // retiré était RÉALISÉ : le statut réalisé qu'un ponctuel porte encore
+    // vient de lui, et la garde du legs le conserverait sans aucune pièce.
     //
-    // La première rédaction ne transmettait qu'au SUCCESSEUR, et gardait « la
-    // plus tardive » des deux dates au moment de rouvrir. Les deux perdaient
-    // l'échéance d'origine dès qu'un rapport ANTIDATÉ traînait dans la chaîne :
-    // en supprimant les trois dans le bon ordre, la ligne finissait sur une
-    // échéance future, sans aucune pièce — le retard blanchi, exactement ce que
-    // la correction précédente prétendait fermer (relecture de contrôle,
-    // 2026-09-12).
-    // La tête plutôt que le successeur : les deux tiennent l'invariant — c'est
-    // « la plus ancienne l'emporte » qui le tient, et l'échéance d'origine
-    // redescend la chaîne à chaque suppression, quel que soit le rapport visé.
-    // Vérifié par mutation : viser le dernier ne fait rougir aucun test, et
-    // c'est honnête de le dire. On écrit sur la tête parce que c'est le
-    // rapport qui restera le plus longtemps, donc le moins d'écritures.
-    const tete = restants[0] ?? null;
-    if (
-      retire.echeanceHonoree !== null &&
-      tete !== null &&
-      (tete.echeanceHonoree === null ||
-        tete.echeanceHonoree.getTime() > retire.echeanceHonoree.getTime())
-    ) {
-      await tx.rapportVerification.update({
-        where: { id: tete.id },
-        data: { echeanceHonoree: retire.echeanceHonoree },
-      });
-    }
-
-    const dernier = restants.length > 0 ? restants[restants.length - 1] : null;
-    // Un rapport réalisé plus récent (ou du même jour) subsiste : le retiré
-    // n'avait pas fait rouler la ligne, elle ne lui doit rien de plus.
-    if (dernier !== null && dernier.dateRapport.getTime() >= retire.dateRapport.getTime()) {
-      return;
-    }
-
-    const periodicite = ligne.periodicite as Periodicite;
-    const cyclique = estCyclique(periodicite);
-    // L'échéance qui rouvre : celle qu'engendre le dernier contrôle ENCORE
-    // PROUVÉ ; s'il n'en reste aucun, celle que le retiré honorait — c'est-à-dire
-    // l'échéance d'origine, que la transmission ci-dessus a gardée en tête de
-    // chaîne. À défaut des deux, la ligne garde sa date.
-    let datePrevue = ligne.datePrevue;
-    if (dernier !== null) {
-      if (cyclique) {
-        datePrevue = prochaineEcheance(dernier.dateRapport, periodicite) ?? datePrevue;
-      }
-    } else if (retire.echeanceHonoree !== null) {
-      datePrevue = retire.echeanceHonoree;
-    }
-
-    // Le retard éventuel se lit sur la date rendue à la ligne, pas sur son
-    // statut : ce dernier ne dit que « la date est-elle une vraie échéance ? »
-    // (retrait de `depassee`, phase A). Elle l'est quand un contrôle reste —
-    // l'échéance suivante est calculée depuis lui.
-    //
-    // QUAND PLUS AUCUN RAPPORT NE RESTE, ON NE SAIT PAS, et on l'écrit. La
-    // ligne revient à l'échéance que le rapport retiré honorait, mais rien ne
-    // dit si c'était une échéance réelle ou la date de génération d'un « à
-    // planifier » qu'on avait roulé : `echeanceHonoree` ne garde que la date.
-    // L'écrire « planifiée » faisait annoncer « échéance dépassée » sur l'âge
-    // du dossier, et une mise en service « urgente » qu'aucun texte ne date
-    // (relecture de contrôle de la phase A, 2026-09-14). « À planifier » est
-    // la lecture qui n'invente rien — et la ligne reste EN RETARD par sa
-    // date : compteurs, score et filtres la comptent ; seul l'affichage de la
-    // date s'efface. La garde « placeholder » du réconciliateur l'empêche
-    // ensuite de recevoir une date plus tardive.
-    let statut: StatutVerification;
-    if (!cyclique && dernier !== null) {
-      // One-shot : le rapport précédent l'avait déjà consommé.
-      statut = STATUT_DEPUIS_RESULTAT[dernier.resultat as ResultatRealise];
-    } else {
-      statut = dernier !== null ? "planifiee" : "a_planifier";
-    }
-
-    const { count } = await tx.verification.updateMany({
-      where: {
-        id: rap.verificationId,
-        datePrevue: ligne.datePrevue,
-        statut: ligne.statut,
-      },
-      // Rien d'autre à éteindre : la réalisation ne vit que sur les rapports
-      // (ADR-034, N5), retirer le plus récent suffit à la faire reculer.
-      data: { datePrevue, statut },
-    });
-    // Sous le verrou, la ligne ne peut pas avoir bougé depuis sa relecture :
-    // cette levée n'a aucun chemin connu. Si elle en trouvait un, on ANNULE
-    // TOUT — le rapport reste — plutôt que d'abandonner le recul en silence :
-    // un retrait sans recul laisse une échéance future sans pièce, et rien ne
-    // la recalerait ensuite. Le bouton de suppression ne capture pas l'erreur :
-    // l'utilisateur verrait la page d'erreur générique, pas ce message. C'est
+    // Si l'écriture conditionnée ne prend pas — aucun chemin connu sous le
+    // verrou —, `LigneModifieeEntreTemps` annule TOUT : le rapport reste,
+    // plutôt qu'un retrait sans recalcul qui laisserait une échéance que plus
+    // aucune pièce ne justifie. Le bouton de suppression ne capture pas
+    // l'erreur : l'utilisateur verrait la page d'erreur générique. C'est
     // accepté pour un cas sans chemin ; une garde qui échoue fait du bruit.
-    if (count !== 1) throw new LigneModifieeEntreTemps();
+    await recalculerLigne(tx, rap.verificationId, {
+      garderLegs: !estResultatRealise(retire.resultat),
+    });
   });
 
   // La base a tranché : on peut libérer le fichier.
