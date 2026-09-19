@@ -1,5 +1,12 @@
 # Passage à blanc — l'échéance calculée depuis les faits (ADR-036, lot 2c)
 
+> **Depuis la bascule (lot 4, 2026-09-19)** le script de la branche
+> `lot/adr036-bascule` n'a plus deux stratégies à comparer : il compare l'état
+> EN BASE au plan du moteur 3 (`comparerAuMoteur`), avec les mêmes catégories
+> et le même rejeu à J+400. C'est un contrôle de santé : après la régénération
+> d'un dossier, tout doit y être `identique`. Le mode d'emploi ci-dessous
+> décrit la version du lot 2c.
+
 Mode d'emploi du script `scripts/passage-a-blanc-echeances.ts`, écrit le
 **2026-09-18** sur la branche `lot/adr036-passage-a-blanc`. Il compare, sans rien
 écrire, ce que la stratégie de date **en ligne** (`deciderParConservation`) écrit à

@@ -136,8 +136,16 @@ durable d'une obligation sur un équipement. Sa sémantique est fixée ainsi :
   rapports liés survivent. Les attributs de référentiel (libellé, périodicité,
   réalisateurs) sont réalignés à chaque passage ; les dates, elles, suivent
   trois règles :
-  - cycle ouvert (`dateRealisee === null`) : `datePrevue` **ne bouge pas**.
-    Une régénération n'a aucune raison d'effacer un retard accumulé ;
+  - ~~cycle ouvert (`dateRealisee === null`) : `datePrevue` **ne bouge pas**.
+    Une régénération n'a aucune raison d'effacer un retard accumulé ;~~
+    *(règle remplacée le 2026-09-19 par l'ADR-036, lot 4 : `datePrevue` et
+    `statut` sont une fonction de faits stockés — origine du suivi
+    `suiviDepuis`, mise en service, dernier rapport réalisé, héritage, rythme
+    effectif, premier pas —, recalculée à chaque passe par `echeanceDeLigne`,
+    et par la même fonction au dépôt et au retrait d'un rapport. Le retard
+    accumulé n'est plus protégé en gelant la date : il l'est par l'origine,
+    qui est un fait. Geler la date empêchait aussi d'appliquer un rythme, une
+    mise en service ou un premier délai corrigés — le constat B.)*
   - cycle soldé et période non écoulée : `datePrevue` = `dateRealisee +
     périodicité`, le résultat du contrôle (`realisee_*`) est conservé ;
   - cycle soldé et période écoulée : nouveau cycle — `dateRealisee` repasse à

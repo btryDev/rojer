@@ -115,9 +115,14 @@ l'échéance ouverte.** Au dépôt d'un rapport, dans la même transaction :
    c'est lui que `D. 4711-3` fait conserver ;
 2. il reçoit **l'échéance qu'il honorait**, `echeanceHonoree` = la `datePrevue`
    de la ligne au moment du dépôt — une colonne, aucune table ;
-3. la ligne **roule** : `datePrevue` = date du rapport + périodicité calendaire
+3. ~~la ligne **roule** : `datePrevue` = date du rapport + périodicité calendaire
    (`prochaineEcheance`), `statut` = `planifiee` ou `a_planifier` selon qu'une
-   date a été arrêtée, `dateRealisee` n'est plus écrite.
+   date a été arrêtée~~, `dateRealisee` n'est plus écrite. *(Amendé le
+   2026-09-19 par l'ADR-036, lot 4 : la ligne ne « roule » plus par un calcul
+   propre au dépôt. Elle se RECALCULE depuis ses faits — le rapport qu'on vient
+   de créer compris — par `recalculerLigne`, qui rejoue la décision de la
+   régénération (`echeanceDeLigne`). Pour un rapport réalisé le plus récent, le
+   résultat est le même : date du rapport + rythme effectif, « planifiée ».)*
 
 Le résultat « non vérifiable » ne fait rien rouler : un rapport est déposé, la
 ligne reste ouverte sur la même échéance — c'est déjà la règle
@@ -204,9 +209,14 @@ Il est retiré de la balance.
   reculer la ligne. GestBAT le règle en marquant le document inactif sans toucher
   l'échéance ; Rojer fera pareil : le rapport est conservé et daté, la ligne ne
   bouge que si le rapport est le plus récent.
-- **Le ré-ancrage d'une périodicité qui change** sur un cycle ouvert reste le
+- ~~**Le ré-ancrage d'une périodicité qui change** sur un cycle ouvert reste le
   constat B de l'audit (`datePrevue` stockée sans son origine) ; il n'est ni
-  aggravé ni réglé ici, et `echeanceHonoree` en fournira la trace.
+  aggravé ni réglé ici, et `echeanceHonoree` en fournira la trace.~~ *(Fermé
+  le 2026-09-19 par l'ADR-036, lot 4 : l'origine est stockée —
+  `Verification.suiviDepuis` —, et la date d'une ligne est recalculée à chaque
+  passe depuis ses faits. Un rythme, une mise en service ou un premier délai
+  qui change s'applique, rapport ou non. `echeanceHonoree` n'a pas servi à le
+  fermer ; elle reste la trace du § 5.)*
 
 ## 4. Ce que deviennent les lots du § 11
 
@@ -291,11 +301,17 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
   conditionnée sur `datePrevue` et `statut` lus (lot 1) ; un dépôt concurrent
   fait annuler la transaction et rend une erreur à recommencer. Le rapport
   antidaté — plus ancien **ou du même jour** qu'un rapport réalisé déjà déposé —
-  entre au registre sans `echeanceHonoree` et ne roule pas. La suppression du
+  entre au registre sans `echeanceHonoree` et ne roule pas. ~~La suppression du
   rapport réalisé le plus récent recule la ligne à son `echeanceHonoree` ; à
   défaut (rapport d'avant N2) à l'échéance qu'engendre le rapport réalisé
-  précédent ; à défaut elle garde sa date et rouvre son cycle. Retirer un
-  rapport antidaté ou non vérifiable ne touche pas la ligne. Le réconciliateur
+  précédent ; à défaut elle garde sa date et rouvre son cycle.~~ Retirer un
+  rapport antidaté ou non vérifiable ne touche pas la ligne. *(Amendé le
+  2026-09-19 par l'ADR-036, lot 4 : `rouler` et la chaîne de transmission
+  d'`echeanceHonoree` à la suppression ont disparu. Dépôt et retrait passent
+  par `recalculerLigne` — la même décision que la régénération. Au retrait du
+  dernier rapport réalisé, la ligne revient sur ses autres faits : mise en
+  service + premier pas, sinon l'origine du suivi ; une vraie échéance revient
+  « planifiée ». L'écriture d'`echeanceHonoree` AU DÉPÔT reste, pour le § 5.)* Le réconciliateur
   a perdu sa branche « cycle soldé » ; sept mutations jouées, chacune rouge.
   **Trois écarts au plan, écrits :**
   1. ~~`dateRealisee` reste écrite jusqu'à N4~~ — **retiré le même jour, sur
@@ -713,11 +729,14 @@ Chacun rayé et daté au commit qui le ferme, dans le § 11.
        planifier »**, en retard par sa date : compteurs, score et filtres la
        comptent, seul l'affichage de la date s'efface ; la garde placeholder
        l'empêche ensuite de recevoir une date plus tardive. Cinq mutations
-       rouges sur le lot. 2634 tests. **Limite écrite** : un « à planifier »
+       rouges sur le lot. 2634 tests. ~~**Limite écrite** : un « à planifier »
        dont la date de génération est passée ne reçoit plus la première
        échéance calculée d'une mise en service déclarée après coup — la garde
        ne distingue pas une date de génération d'un rendez-vous manqué, et
-       préfère ne jamais effacer un retard ;
+       préfère ne jamais effacer un retard~~ *(levée le 2026-09-19 par
+       l'ADR-036, lot 4 — c'est S5 : l'origine du suivi est un fait stocké, et
+       la mise en service déclarée après coup s'applique ; le test qui tenait
+       la garde est inversé et nommé dans l'ADR-036 § 5)* ;
      - ~~**phase B**~~ (`lot/retrait-depassee-b`, A déployée en production le
        2026-09-14, `a7c80fd`) : migration
        `20260914120000_retrait_statut_depassee` — `depassee → planifiee` si

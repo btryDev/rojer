@@ -2,20 +2,21 @@
 
 - **Statut** : **acceptée le 2026-09-17**, par la propriétaire, avec ses quatre
   décisions tranchées telles que recommandées (D1 à D4, § 6). Proposée le même
-  jour. Rien n'est encore branché : la fonction du § 3 existe et est testée
-  (`lot/adr036-fonction-echeance`), aucun fichier du moteur ne l'importe, et un
-  test le garde jusqu'à la bascule (lots 2 à 5, § 9).
+  jour. ~~Rien n'est encore branché~~ — **BASCULÉE le 2026-09-19**
+  (`lot/adr036-bascule`, lot 4 du § 9) : `echeanceDeLigne` est la seule
+  décision de date du réconciliateur, le dépôt et le retrait d'un rapport
+  passent par `recalculerLigne`, `VERSION_MOTEUR_CALENDRIER` = 3. Reste le
+  lot 5 (ménage). Ce qui s'écarte du plan est écrit au § 11.
 - **Portée, à la bascule** : `src/lib/calendrier/echeance-de-ligne.ts` (neuf),
   `src/lib/calendrier/recalcul-ligne.ts` (neuf), `src/lib/calendrier/generateur.ts`
   (le générateur perd son horloge, le réconciliateur perd ses branches de date),
   `src/lib/calendrier/actions.ts`, `src/lib/rapports/actions.ts` (`rouler` et la
   transmission d'`echeanceHonoree` disparaissent), `prisma/schema.prisma`
   (`Verification.suiviDepuis`, D2), les trois scripts de seed
-- **Amendera, au lot 4 et pas avant** : l'ADR-012 § A (« cycle ouvert :
+- **Amende, depuis le lot 4 (barrés en place, datés du 2026-09-19)** : l'ADR-012 § A (« cycle ouvert :
   `datePrevue` ne bouge pas »), l'ADR-034 (le constat B de son § 3, le lot N2,
   la « limite écrite » de la phase A) et l'en-tête de doctrine de
-  `generateur.ts`. **Jusqu'à la bascule ces trois textes décrivent le vrai**, et
-  les barrer aujourd'hui ferait mentir la documentation sur le code en ligne
+  `generateur.ts`
 - **Dépend de** l'ADR-011 (jour civil de Paris, retard dès le lendemain),
   l'ADR-022 et l'ADR-023 (porteurs), l'ADR-034 (la ligne ne porte que l'échéance
   ouverte, la réalisation se lit sur les rapports), l'ADR-035 (rythme effectif)
@@ -263,6 +264,48 @@ aucun fait encodait le défaut ; il est inversé, et nommé ici.**
   un contrôle unique déjà fait. Le défaut est celui de la fiche, pas du calcul ;
   il est noté au § 8 comme un reste.
 
+**La liste réelle, relevée à la bascule (2026-09-19).** Les quatre tests
+ci-dessus ont été traités comme annoncé ; en voici la liste exacte, avec ceux
+que la rédaction n'avait pas prévus.
+
+*Inversés* (l'assertion dit désormais le contraire) :
+
+1. `generateur.test.ts` — « n'efface pas un retard déjà constaté », devenu
+   « INVERSÉ (ADR-036 § 5) — une mise en service déclarée après coup remplace
+   une date de génération passée » ; son scénario d'origine est réécrit à côté
+   avec des faits (« … et un VRAI retard, exprimé par un fait, n'est jamais
+   effacé »).
+2. `generateur.test.ts` — « une périodicité devenue PONCTUELLE solde une
+   ligne roulée » : statut gardé, **date inversée** (origine du suivi, faute
+   de mise en service).
+3. `generateur.test.ts` — « adopte l'échéance même quand la ligne porte une
+   réalisation » : date gardée, **statut inversé** (`planifiee`).
+4. `decision-par-faits.test.ts` — « une ligne générée sans `sources` retombe
+   sur le rythme… » : le repli est devenu une **erreur**, comme le lot 2c
+   l'annonçait.
+5. `rapports/actions.test.ts` — « l'échéance d'origine se transmet à la TÊTE
+   de chaîne » : la chaîne de transmission est retirée, le retrait n'écrit
+   plus `echeanceHonoree`.
+6. `generateur.test.ts` — « vérif précédente connue → plus d'occurrence
+   (one-shot consommé) » : le générateur **refuse** désormais un historique ;
+   le one-shot consommé est tenu par le réconciliateur.
+
+*Gardés, retard exprimé par un fait* (origine, mise en service ou rapport) :
+« ne bouge pas l'échéance calculée d'un équipement » (c'est S1),
+« ne supprime pas une vérification dépassée porteuse d'une action »,
+« ne repousse jamais l'échéance d'un cycle encore ouvert », « se réconcilie
+sans rien créer ni supprimer quand la ligne existe déjà », « ne rejoue JAMAIS
+l'héritage sur une ligne qui porte déjà sa preuve » (l'absorbante porte son
+propre rapport ; c'est l'ordre des règles qui la tient, plus
+`!porteUnePreuve`). Au retrait d'un rapport, la ligne revient à l'origine
+(`suiviDepuis`) au lieu de l'échéance honorée — même date dans les
+fixtures, puisque l'origine y est l'échéance d'origine.
+
+*Règles de date du générateur devenues tests de câblage* : mise en service,
+dernier rapport, ponctuel, `premierDelai`, titre — et un test par source de
+la fonction (`câblage — chaque source de echeanceDeLigne traverse le
+réconciliateur`).
+
 **Un changement de comportement à nommer, hors tests** : un titre de salarié au
 rythme `autre`, hérité de données anciennes avec un **statut réalisé**, est
 aujourd'hui éteint à vie — `estVerificationRealisee` purge son échéance. La
@@ -471,7 +514,7 @@ contrôle visuel se fait sur la production après la fusion
 | **2b** | la couture : les branches de date déplacées **mot pour mot** dans une stratégie `deciderParConservation` | les tests existants verts sans être touchés |
 | **2c** | **le passage à blanc** : la stratégie candidate `deciderParFaits`, et un script en transaction `READ ONLY` — une lecture, deux plans, leur différence, par établissement et par catégorie (`identique`, `meme_jour_civil`, `statut_seul`, `rythme`, `mise_en_service`, `retard_invente`, `date_arbitraire`, `legs_statut_realise`, `inexplique`), sans aucun nom de personne ; le plan candidat rejoué à J+400 doit être vide | **zéro `inexplique`**, en local puis en production (lancé par la propriétaire) ; compte rendu dans `docs/revues/` |
 | **3** | les seeds et les démos écrivent des faits ; leur `datePrevue` sort de `echeanceDeLigne` | seed complet + passage à blanc = zéro écart |
-| **4** | **la bascule** : `deciderParFaits` par défaut, le générateur perd `now`, dépôt et suppression passent par `recalculerLigne`, `VERSION_MOTEUR_CALENDRIER` = 3, amendements barrés (ADR-012, ADR-034, en-tête de `generateur.ts`), la garde du lot 1 est retirée | passage à blanc refait sur la production juste avant ; confluence (après un dépôt, la réconciliation rend « inchangé ») ; plan vide à J+400 |
+| **4** — *fait le 2026-09-19* | **la bascule** : `deciderParFaits` par défaut, le générateur perd `now`, dépôt et suppression passent par `recalculerLigne`, `VERSION_MOTEUR_CALENDRIER` = 3, amendements barrés (ADR-012, ADR-034, en-tête de `generateur.ts`), la garde du lot 1 est retirée | passage à blanc refait sur la production juste avant ; confluence (après un dépôt, la réconciliation rend « inchangé ») ; plan vide à J+400 |
 | **5** | le ménage : couture, types morts, garde du legs si la production n'en compte aucun, `chantiers-ouverts.md`, puce 036 du `CLAUDE.md` | — |
 
 C'est la méthode « Scientist » : le nouveau calcul tourne à côté de l'ancien, les
@@ -485,3 +528,61 @@ L'ancien moteur conserve les dates en place, qui sont justes. La colonne
 `suiviDepuis` reste, sans effet. **Aucun fait n'est détruit par la bascule** — une
 date est une donnée dérivée, et l'export JSON du passage à blanc garde l'état
 d'avant.
+
+## 11. La bascule, telle qu'elle a été faite (2026-09-19)
+
+Branche `lot/adr036-bascule`. Ce qui s'écarte du plan ou le précise :
+
+- **`recalculerLigne` rejoue la passe ENTIÈRE et n'en garde que la ligne.** Le
+  rythme effectif et le premier pas dépendent des prescriptions résolues sur
+  le matching de tout l'établissement ; l'héritage se lit sur les autres
+  lignes ; l'identité peut être une adoption. Écrire ces trois lectures pour
+  une ligne aurait fait un second calculateur. La fonction appelle donc
+  `lireEntrees` et `planifier` — les fonctions mêmes de la régénération — dans
+  la transaction du dépôt ou du retrait, sous le verrou `FOR UPDATE`, et
+  n'écrit que `datePrevue` et `statut`, sous condition des valeurs lues. Coût :
+  une lecture d'établissement de plus par dépôt, que la régénération qui suit
+  payait déjà. Le rythme `autre` sans titre y est servi par la boucle NB4 —
+  hors de `echeanceDeLigne`, date inchangée, comme le § 4 le demande.
+- **Le dépôt verrouille aussi la ligne** (il ne le faisait pas) : l'échéance
+  honorée et le « dernier rapport réalisé » y sont relus sous le verrou.
+- **La garde du legs a une exception** : au retrait d'un rapport RÉALISÉ,
+  `recalculerLigne` décide sans elle (`garderLegs: false`). Un ponctuel soldé
+  dont on retire le seul rapport porte encore le statut réalisé que ce
+  rapport lui avait donné — vu de la ligne, c'est un legs, et la garde l'aurait
+  laissé « fait » sans pièce. Au dépôt et à la régénération, la garde
+  s'applique.
+- **Un `dernierResultat` absent** (fixture pure d'avant ce champ ; la lecture
+  de production le porte toujours) : sur un rythme cyclique la date du dernier
+  rapport vaut réalisation — son résultat n'y est lu que pour attester qu'il
+  s'agit d'une réalisation, ce que le contrat de `derniereRealisation` dit
+  déjà ; sur un ponctuel on n'invente pas le statut. C'est ce qui garde
+  `continuite-identite.test.ts` vert **sans retouche**.
+- **Le générateur garde un deuxième argument mort** — l'ancien historique —,
+  pour la même raison : `continuite-identite.test.ts` l'appelle ainsi. Non vide,
+  il est refusé. Le lot 5 le retire avec la couture (le paramètre `decision` du
+  réconciliateur, qui n'a plus qu'une valeur, `STRATEGIE_FAITS`).
+- **La garde statique** (`calendrier/garde-convergence.test.ts`) autorise un
+  quatrième appelant de `prochaineEcheance` : `passage-a-blanc.ts`, qui
+  cherche si une date en base s'explique par « une ancre + un rythme » pour
+  classer un écart — il ne date ni n'écrit rien, et aucun module de production
+  ne l'importe (même garde). Les écritures de `datePrevue` sont limitées à
+  `calendrier/actions.ts` et `calendrier/recalcul-ligne.ts` dans `src/` ;
+  `scripts/` et `prisma/seed.ts` restent sous `seeds-en-faits.test.ts`.
+- **Le passage à blanc devient un contrôle de santé** : il n'y a plus deux
+  stratégies à comparer. `comparerAuMoteur` compare l'état EN BASE au plan du
+  moteur courant, avec les mêmes catégories et le même rejeu à J+400. Juste
+  après la fusion il montre ce que la première régénération réécrira ; ensuite,
+  tout doit y être `identique`. Le script garde sa lecture seule.
+- **Les gardes des lots 1 et 2c** (« le module n'est pas branché ») sont
+  retirées ; ce qu'elles protégeaient est tenu par `garde-convergence.test.ts`.
+- **Les S1 à S7 sont rejoués de bout en bout** trois fois : au réconciliateur
+  (`decision-par-faits.test.ts`), par la régénération sur le faux client avec
+  rejeu à J+400 (`calendrier/actions.test.ts`), et la confluence du dépôt et du
+  retrait dans `rapports/actions.test.ts`, qui passe désormais par le faux
+  client du calendrier et le vrai référentiel.
+
+**À faire avant la fusion, par la propriétaire** : refaire le passage à blanc
+sur la production **avec le script de la branche `main`** (celui de cette
+branche compare la base au moteur 3, ce qui est la même mesure). Compter
+`legs_statut_realise` : à zéro, le lot 5 retire la garde.

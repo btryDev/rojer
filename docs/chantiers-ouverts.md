@@ -1719,7 +1719,13 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
 
 ### Ouvert, relevé le 2026-09-17
 
-- **Constat B — décision attendue.** Une ligne « planifiée » SANS rapport dont le
+- ~~**Constat B — décision attendue.**~~ **FERMÉ le 2026-09-19 par la bascule de
+  l'ADR-036** (lot 4, branche `lot/adr036-bascule`) : la date et le statut de
+  chaque ligne sortent de `echeanceDeLigne`, sur ses faits, par les trois
+  chemins qui l'écrivent — régénération, dépôt, retrait d'un rapport
+  (`recalcul-ligne.ts`). `VERSION_MOTEUR_CALENDRIER` = 3. Restent au lot 5 le
+  retrait de la couture et de la garde du legs, et la puce 036 du `CLAUDE.md`.
+  *Historique du constat :* une ligne « planifiée » SANS rapport dont le
   rythme change (annuel → semestriel) garde sa date : la branche de ré-ancrage
   exige une réalisation (`generateur.ts`, « LA PÉRIODICITÉ A CHANGÉ »). Il faut
   trancher d'où elle repart — sa date actuelle, sa date moins l'ancien rythme
@@ -1738,6 +1744,8 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   statut d'`echeanceDeLigne`. Garde : `calendrier/seeds-en-faits.test.ts`. Les
   vingt et une dates déjà posées en production restent : la bascule les
   renverra à « à planifier ».
+  **Lot 4, 2026-09-19** (`lot/adr036-bascule`) : la bascule — voir l'en-tête de
+  ce point.
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION
@@ -1760,9 +1768,11 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   même compte » — tenue par `lot/salarie-inactif-et-menage` pour les lignes de
   personnes parties, sauf les pastilles de la barre latérale, périmées jusqu'au
   rechargement, ce qui est assumé ;
-- **en partie tenue** : ADR-012 l.129-142, « cycle ouvert : `datePrevue` ne
+- ~~**en partie tenue** : ADR-012 l.129-142, « cycle ouvert : `datePrevue` ne
   bouge pas » — vrai, mais un changement de rythme ne ré-ancre qu'une ligne
-  réalisée (constat B, ci-dessus) ;
+  réalisée (constat B, ci-dessus)~~ — **remplacée** le 2026-09-19 : la règle
+  est barrée dans l'ADR-012 et la date se recalcule depuis les faits (ADR-036,
+  lot 4) ;
 - **non tenue avant le 2026-09-17** : ADR-012 l.223-224 et l.303, « régime établi
   = zéro écriture » — fermée par `lot/salarie-inactif-et-menage` ;
 - **dépassée par le code** : ADR-022 l.304-318, « `absorbePar` n'est lu par aucun
