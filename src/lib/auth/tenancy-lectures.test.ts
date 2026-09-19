@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { marqueursDePortee, sansCommentairesNiChaines } from "./tenancy-sonde";
 
 /**
  * Toute lecture d'une ligne rattachée à un établissement établit sa portée.
@@ -59,66 +60,7 @@ const EXEMPTIONS = new Map<string, string>([
   ],
 ]);
 
-/**
- * Retire commentaires et chaînes avant de chercher les marqueurs.
- *
- * ⚠ SANS ÇA, LA GARDE EST DÉCORATIVE, et je l'ai vérifié en la cassant : la
- * première rédaction cherchait les marqueurs dans le source brut. En retirant
- * le prédicat d'appartenance de `listerEtatsPermanents` pour éprouver le test,
- * il est resté VERT — parce que le commentaire qui explique le prédicat
- * contient le mot « requireEtablissement ». Le code était nu, la prose le
- * couvrait.
- *
- * C'est le mode d'échec propre aux gardes qui lisent du source, et il est
- * d'autant plus vicieux ici que ce sont les modules les mieux commentés — donc
- * ceux qui expliquent leur portée — qui se seraient exemptés tout seuls.
- */
-function sansCommentairesNiChaines(src: string): string {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/\/\/[^\n]*/g, " ")
-    .replace(/`(?:[^`\\]|\\.)*`/g, " ")
-    .replace(/"(?:[^"\\]|\\.)*"/g, " ")
-    .replace(/'(?:[^'\\]|\\.)*'/g, " ");
-}
-
-/**
- * Ce qui, dans le corps d'une fonction, établit la portée au user.
- *
- * LES ASSERTIONS D'APPARTENANCE SE DÉRIVENT, ELLES NE SE RECOPIENT PAS.
- * `assertEtablissementOwnership` figurait ici à la main, et sa jumelle
- * `assertEntrepriseOwnership` — même corps, `requireUser()` puis un `where`
- * sur `userId`, puis `notFound()` — n'y figurait pas. Une lecture
- * parfaitement scopée a donc été dénoncée le 2026-09-04, et le remède
- * évident aurait été d'ajouter le second nom : c'est-à-dire de réparer la
- * liste en recopiant, ce que ce dépôt s'interdit — une liste qu'on répare
- * ainsi cesse de vérifier.
- *
- * Elles se relèvent donc dans `scope.ts`, qui est l'endroit où elles vivent.
- * La troisième s'ajoutera d'elle-même.
- */
-function assertionsDAppartenance(): string[] {
-  const source = readFileSync(join(process.cwd(), "src/lib/auth/scope.ts"), "utf8");
-  const noms = [
-    ...source.matchAll(/export async function (assert\w+Ownership)\b/g),
-  ].map((m) => m[1]);
-  if (noms.length === 0) {
-    throw new Error(
-      "Aucune assertion d'appartenance relevée dans auth/scope.ts. Soit elles " +
-        "ont été renommées, soit ce relevé est cassé — dans les deux cas la " +
-        "garde ne garde plus, et il faut regarder plutôt que la contourner.",
-    );
-  }
-  return noms;
-}
-
-const MARQUEURS_DE_PORTEE = [
-  "requireUser",
-  "requireEtablissement",
-  ...assertionsDAppartenance(),
-  "portee(",
-  "userId",
-];
+const MARQUEURS_DE_PORTEE = marqueursDePortee();
 
 const RACINE = join(process.cwd(), "src/lib");
 
