@@ -158,7 +158,11 @@ const RELEVE = {
   // porte les deux sur chaque ligne (la colonne `suiviDepuis` est NOT NULL, le
   // résultat voyage avec la date du même rapport), donc aucun repli n'était
   // atteint en production ; seules des fixtures l'atteignaient.
-  empreinte: "bb82515649457b6d",
+  // Recopiée SANS incrément le même jour (point 3) : « un statut réalisé ne
+  // survit pas sans rapport réalisé » sort de `statutDeLigneNonGeneree` dans
+  // `reouvrirSansRapportRealise`, que `recalcul-ligne.ts` appelle aussi. NON :
+  // la boucle NB4 rend le même statut dans chaque cas, branche pour branche.
+  empreinte: "31473f7282b46e96",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

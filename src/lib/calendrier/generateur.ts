@@ -881,6 +881,41 @@ export type PlanReconciliation = {
 // dans `statutDeLigneNonGeneree`, ci-dessous, qui ne décide d'aucune date.
 
 /**
+ * UN STATUT RÉALISÉ NE SURVIT PAS SANS RAPPORT RÉALISÉ (ADR-036, § 11 — le
+ * ménage) : rend « à planifier » à la place d'un statut réalisé que plus aucun
+ * rapport réalisé ne porte, et le statut tel quel dans tous les autres cas. La
+ * date n'y est pas : la règle ne touche qu'au statut.
+ *
+ * ÉCRITE UNE FOIS, APPELÉE DEUX FOIS (2026-09-19). Elle vivait en deux
+ * exemplaires : dans `statutDeLigneNonGeneree` ci-dessous (la boucle NB4 de la
+ * régénération) et dans `recalcul-ligne.ts` (le dépôt et le retrait d'un
+ * rapport), avec deux formulations — « le dernier résultat n'est pas réalisé »
+ * ici, « aucune date de dernière réalisation » là. Elles coïncident sur toute
+ * ligne que `lireEntrees` produit : la date et le résultat y viennent du même
+ * rapport, filtré par `WHERE_RAPPORT_REALISE`. C'est la première, celle de la
+ * régénération, qui est gardée.
+ *
+ * SA PORTÉE N'EST PAS LA MÊME SUR LES DEUX CHEMINS, et c'est écrit plutôt que
+ * corrigé : le recalcul l'applique à toute ligne que le plan ne met pas à jour
+ * — archivée, porteur disparu, obligation retirée —, la régénération seulement
+ * aux lignes applicables qu'elle saute (NB4). Une ligne à archiver ou déjà
+ * archivée garde son statut à la régénération. L'étendre demanderait une
+ * écriture de statut qui ne désarchive pas (`aMettreAJour` remet `archiveLe` à
+ * `null`), et ferait perdre à une telle ligne la trace que `porteUneTrace` lit
+ * sur son statut — donc la ferait supprimer à la passe suivante si rien d'autre
+ * ne la retient. Aucun chemin du produit ne fabrique une telle ligne (ADR-036
+ * § 11, contrôle de santé du 2026-09-19 : zéro).
+ */
+export function reouvrirSansRapportRealise(
+  ex: Pick<OccurrenceExistante, "statut" | "dernierResultat">,
+): StatutVerificationPersiste {
+  return estStatutRealise(ex.statut) &&
+    statutDepuisResultat(ex.dernierResultat) === null
+    ? "a_planifier"
+    : ex.statut;
+}
+
+/**
  * Le statut d'une ligne APPLICABLE que la génération saute, à son rythme
  * effectif — la seule écriture que la boucle finale du réconciliateur fait sur
  * elle (NB4, puis limite 1, 2026-09-15).
@@ -889,10 +924,11 @@ export type PlanReconciliation = {
  * SURVIT PAS SANS RAPPORT RÉALISÉ.
  *
  *  · sans rythme suivant : le résultat du dernier rapport réalisé, s'il y en a
- *    un — la ligne est soldée ; sinon « à planifier » si la ligne porte un
- *    statut réalisé ou si son rythme est SANS RENDEZ-VOUS — aucune échéance
- *    n'est attendue, et `lignePortantSansRendezVous` la tient hors des
- *    retards. Une mise en service garde son statut : elle, a un rendez-vous ;
+ *    un — la ligne est soldée ; sinon « à planifier » si son rythme est SANS
+ *    RENDEZ-VOUS — aucune échéance n'est attendue, et
+ *    `lignePortantSansRendezVous` la tient hors des retards — ou si elle porte
+ *    un statut réalisé (`reouvrirSansRapportRealise`). Une mise en service
+ *    garde son statut : elle, a un rendez-vous ;
  *  · sur un rythme : « planifiée » si la ligne l'était déjà ou si un contrôle
  *    réel est derrière elle, « à planifier » autrement. Un statut réalisé n'y
  *    survit jamais, rapport ou non : un contrôle suivi d'un rendez-vous est
@@ -915,14 +951,12 @@ function statutDeLigneNonGeneree(
   if (!estCyclique(effective)) {
     const solde = statutDepuisResultat(ex.dernierResultat);
     if (solde !== null) return solde;
-    // `estStatutRealise` ne décide seul que sur un ponctuel AVEC rendez-vous
+    if (estSansRendezVous(effective)) return "a_planifier";
+    // La règle ne décide seule que sur un ponctuel AVEC rendez-vous
     // (`mise_en_service_uniquement`) — inatteignable aujourd'hui (2026-09-19) :
     // une telle ligne applicable est toujours générée. Tenu par un test du
     // réconciliateur (`generateur.test.ts`).
-    if (estStatutRealise(ex.statut) || estSansRendezVous(effective)) {
-      return "a_planifier";
-    }
-    return ex.statut;
+    return reouvrirSansRapportRealise(ex);
   }
   // SUR UN RYTHME, sans passer par la génération. (C'était
   // `statutCycleOuvert`, recopiée ici pour ce seul usage, qui ne touche pas à

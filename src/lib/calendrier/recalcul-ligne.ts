@@ -45,7 +45,7 @@
 // fait confiance à l'appelant, qui a vérifié la propriété de l'établissement.
 
 import type { Prisma } from "@prisma/client";
-import { estStatutRealise } from "@/lib/dates/retard";
+import { reouvrirSansRapportRealise } from "./generateur";
 import { lireEntrees, planifier } from "./passe";
 
 /**
@@ -127,13 +127,16 @@ export async function recalculerLigne(
   //
   // ~~Seulement au retrait d'un rapport réalisé (`garderLegs: false`).~~ Sans
   // condition depuis le lot 5 (2026-09-19) : un statut réalisé ne survit pas
-  // sans rapport réalisé, c'est la règle de la régénération aussi
-  // (`statutDeLigneNonGeneree`). Au dépôt, la ligne n'est jamais dans ce cas :
-  // un dépôt réalisé lui donne son rapport réalisé.
+  // sans rapport réalisé. La règle est écrite une fois,
+  // `reouvrirSansRapportRealise`, que la régénération appelle aussi (boucle
+  // NB4) — avec une portée plus étroite, dite dans sa documentation. Au dépôt,
+  // la ligne n'est jamais dans ce cas : un dépôt réalisé lui donne son rapport
+  // réalisé.
+  const reouvert = reouvrirSansRapportRealise(lue);
   const cible =
     trouvee ??
-    (estStatutRealise(lue.statut) && (lue.derniereRealisation ?? null) === null
-      ? { datePrevue: lue.datePrevue, statut: "a_planifier" as const }
+    (reouvert !== lue.statut
+      ? { datePrevue: lue.datePrevue, statut: reouvert }
       : undefined);
   if (cible === undefined) return { ecrit: false };
   if (
