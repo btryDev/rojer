@@ -596,11 +596,18 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     // Relecture du lot 4 : la boucle NB4 gardait le statut réalisé que le
     // rapport retiré avait donné — « réalisée » sans pièce, et `porteUneTrace`
     // la comptait ensuite comme une trace que plus rien ne rouvrait.
+    //
+    // La ligne porte encore le rythme et la marque d'une prescription LEVÉE :
+    // NB4 la met donc à jour pour une autre raison que le statut, et c'est
+    // SA décision qui doit rouvrir la ligne — pas le repli de
+    // `recalculerLigne` pour une ligne hors du plan, qui masquerait NB4.
     poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
     poserLigne({
       id: "v-portail",
       obligationId: PORTAIL_MAINTIEN,
       equipementId: "eq-portail",
+      periodicite: "semestrielle",
+      prescriptionId: "presc-levee",
       datePrevue: d("2021-03-01"),
       statut: "a_planifier",
       nbActions: 1,
@@ -612,7 +619,13 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
 
     expect(ligne("v-portail").statut).toBe("a_planifier");
     expect(ligne("v-portail").datePrevue).toEqual(d("2021-03-01"));
-    await attendreConfluence("v-portail");
+    // La régénération réalignera le rythme et retirera la marque — pas le
+    // statut ni la date, que le retrait a déjà écrits comme elle.
+    const suite = await decisionDeLaRegeneration("v-portail");
+    expect(suite?.periodicite).toBe("autre");
+    expect(suite?.prescriptionId).toBeNull();
+    expect(suite?.statut).toBe("a_planifier");
+    expect(suite?.datePrevue).toEqual(d("2021-03-01"));
   });
 
   it("une ligne ARCHIVÉE dont on retire le seul rapport réalisé perd son statut réalisé, date inchangée", async () => {
