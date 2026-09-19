@@ -648,6 +648,29 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     expect(ligne().archiveLe).toEqual(d("2026-07-01"));
   });
 
+  it("une ligne ARCHIVÉE qui garde un autre rapport réalisé reste réalisée quand on retire le plus récent", async () => {
+    // La borne de la règle précédente : elle ne rouvre une ligne hors du plan
+    // que s'il NE RESTE AUCUN rapport réalisé. Ici un contrôle reste : le
+    // statut réalisé a encore sa pièce.
+    poserEtablissement([{ id: "eq-1", actif: false, dateMiseEnService: d("2026-01-05") }]);
+    poserLigne({
+      obligationId: ELEC_MISE_EN_SERVICE,
+      datePrevue: d("2026-01-05"),
+      statut: "realisee_conforme",
+      archiveLe: d("2026-07-01"),
+      rapports: [
+        rapport({ id: "rap-ancien", dateRapport: d("2026-02-01") }),
+        rapport({ id: "rap-recent", dateRapport: d("2026-03-01") }),
+      ],
+    });
+
+    await retirer("rap-recent");
+
+    expect(rapports().map((r) => r.id)).toEqual(["rap-ancien"]);
+    expect(ligne().statut).toBe("realisee_conforme");
+    expect(ligne().datePrevue).toEqual(d("2026-01-05"));
+  });
+
   it("un « non vérifiable » retiré d'un ponctuel au statut hérité (legs) ne le rouvre pas", async () => {
     // Le pendant : le rapport retiré n'a rien soldé, le statut réalisé ne
     // vient pas de lui. La garde du legs s'applique.
