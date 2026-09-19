@@ -327,7 +327,23 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
     },
     {
       ref: "R. 4624-28-3",
-      statut: "non_depouille",
+      intitule:
+        "État des lieux des expositions et surveillance post-exposition — établi par le médecin du travail",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043927915",
+      versionEnVigueur: "2022-03-31",
+      // `url` omise : l'URL du décret lui-même n'a pas été relevée, seule la
+      // page de l'article l'a été. Mieux vaut le champ nu qu'un lien deviné.
+      modifiePar: { texte: "Décret n° 2022-372 du 16 mars 2022, art. 3" },
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Charge LE MÉDECIN DU TRAVAIL d'établir un état des lieux des expositions du travailleur aux facteurs de risques professionnels de L. 4161-1, sur la base du dossier médical en santé au travail, des déclarations du travailleur et de celles de ses employeurs successifs. À l'issue de la visite, il remet le document au travailleur et le verse au dossier médical ; lorsque le document fait état d'une exposition, il met en place la surveillance post-exposition ou post-professionnelle, transmet le document au médecin traitant si nécessaire et avec l'accord du travailleur, et informe le travailleur des démarches lorsqu'il remplit les conditions du dispositif.",
+      citationCle:
+        "Le médecin du travail établit un état des lieux des expositions du travailleur aux facteurs de risques professionnels mentionnés à l'article L. 4161-1. […] À l'issue de la visite, le médecin du travail remet au travailleur le document […] et le verse au dossier médical en santé au travail.",
+      statut: "hors_perimetre",
+      exclusion: "sans_destinataire_exploitant",
+      motif:
+        "TOUTES LES OBLIGATIONS DE CET ARTICLE PÈSENT SUR LE MÉDECIN DU TRAVAIL : établir, remettre, verser au dossier, mettre en place la surveillance, transmettre, informer. L'employeur n'y apparaît qu'au pluriel et comme SOURCE — « les déclarations du travailleur et de ses employeurs successifs » —, jamais comme destinataire d'une prescription. Il n'y a rien à inscrire au dossier d'un établissement.\n\nÀ NE PAS CONFONDRE AVEC SON VOISIN, et c'est la raison d'être de cette entrée. `R. 4624-28-2`, l'entrée juste au-dessus, fait peser sur L'EMPLOYEUR l'information du service de prévention et de santé au travail à la cessation d'exposition, au départ ou à la mise à la retraite — celui-là est `obligation_manquante`, bloqué par l'absence de déclencheur événementiel. Les deux articles traitent du même moment de la vie d'un salarié et se lisent l'un après l'autre ; leurs destinataires sont opposés. Sans cette entrée, le prochain lecteur rouvre les deux.\n\nPOURQUOI CE MOTIF D'EXCLUSION PLUTÔT QU'UN AUTRE. `sans_destinataire_exploitant` porte le libellé « ne s'adresse pas à l'exploitant », qui est exactement le cas. Son motif n'énumère que l'administration, la commission de sécurité, le maire et le préfet ; le médecin du travail n'y figure pas, et l'énumération gagnerait à être élargie — la liste `EXCLUSIONS` étant fermée à dessein, c'est une discussion à avoir là-bas, pas un écart à prendre ici.\n\nPOURQUOI IL ÉTAIT `non_depouille`. Son entrée ne portait qu'une référence — ni intitulé, ni URL, ni date : il avait été relevé depuis le sommaire de la sous-section sans jamais être ouvert. C'était le seul trou de dépouillement situé dans un domaine que le produit sert, le suivi individuel renforcé, et c'est ce qui l'a fait rouvrir le 2026-09-20.",
     },
     {
       ref: "R. 4624-28",

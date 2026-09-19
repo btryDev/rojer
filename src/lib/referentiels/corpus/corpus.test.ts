@@ -991,7 +991,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // différence des trois suivantes. Bloquée par l'absence de catégorie
       // d'équipement.
       "R. 1321-60",
-      // Les trois entrées de l'arrêté du 10 septembre 2021, pris pour
+      // Les QUATRE entrées de l'arrêté du 10 septembre 2021, pris pour
       // l'application de R. 1321-61. Elles partagent DEUX blocages, et le
       // second est le plus inhabituel du référentiel : l'article 2 de l'arrêté
       // réserve tout le texte aux réseaux « mis en place ou rénovés totalement
@@ -1001,6 +1001,15 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // responsable d'établissement ou si la responsabilité lui a été
       // contractuellement déléguée.
       //
+      // Art. 4 : entré le 2026-09-20, en l'ouvrant. Il était `non_depouille`
+      // depuis le 2026-09-02 sur la foi de son intitulé — « Les trois niveaux
+      // de protection » —, et une passe s'apprêtait à le ranger hors périmètre
+      // comme règle de construction. Son III met à la charge du propriétaire
+      // des réseaux la VÉRIFICATION INITIALE du bon fonctionnement, son IV
+      // l'adaptation en cas de modification des réseaux, et son V les preuves
+      // d'efficacité tenues à la disposition de l'autorité sanitaire. Trois
+      // obligations d'exploitation, pas une règle de chantier.
+      "Arrêté 10-09-2021 art. 4",
       // Art. 9 : vérification, « a minima à fréquence annuelle ».
       "Arrêté 10-09-2021 art. 9",
       // Art. 10 : entretien, « a minima à une fréquence annuelle », et le seul
