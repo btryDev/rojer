@@ -255,11 +255,10 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
   }
 
   // Le générateur DÉCRIT, il ne date plus (ADR-036) : ni horloge, ni
-  // historique — le second argument est l'emplacement mort qu'il garde
-  // jusqu'au lot 5. `now` n'entre qu'au réconciliateur, comme origine d'une
-  // ligne à naître.
+  // historique. `now` n'entre qu'au réconciliateur, comme origine d'une ligne
+  // à naître.
   const aGenerer = [
-    ...genererProchainesVerifications(obligations, undefined, { misesEnService }),
+    ...genererProchainesVerifications(obligations, { misesEnService }),
     ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
     ...genererVerificationsSurMesure(surMesure),
   ];

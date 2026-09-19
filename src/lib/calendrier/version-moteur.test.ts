@@ -146,7 +146,9 @@ const RELEVE = {
   // Recopiée SANS incrément le même jour (lot 5, suite) : la couture part —
   // le réconciliateur appelle directement la seule décision qu'il prenait
   // déjà par défaut. NON : même décision, mêmes écritures.
-  empreinte: "73c20af1f9685a3b",
+  // Puis le deuxième argument mort du générateur (l'historique, refusé s'il
+  // n'était pas vide) : NON, aucun appelant ne le remplissait.
+  empreinte: "77d8530abadcb4da",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

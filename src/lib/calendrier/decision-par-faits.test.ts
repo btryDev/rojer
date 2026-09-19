@@ -138,7 +138,7 @@ function scenario(
   options: { now?: Date; misesEnService?: Map<string, Date> } = {},
 ) {
   const now = options.now ?? NOW;
-  const aGenerer = genererProchainesVerifications(obligations, new Map(), {
+  const aGenerer = genererProchainesVerifications(obligations, {
     now,
     misesEnService: options.misesEnService,
   });
@@ -161,7 +161,7 @@ function scenario(
     rejouer: (plan: PlanReconciliation, plusTard: Date) =>
       reconcilierCalendrier(
         appliquerPlanEnMemoire(existantes, plan, now),
-        genererProchainesVerifications(obligations, new Map(), {
+        genererProchainesVerifications(obligations, {
           now: plusTard,
           misesEnService: options.misesEnService,
         }),
@@ -404,7 +404,6 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
     });
     const [g] = genererProchainesVerifications(
       [applicable(o, [EQ], { periodicite: "annuelle" })],
-      new Map(),
       { now: NOW, misesEnService: new Map([[EQ.id, d("2025-12-01")]]) },
     );
     const ex = existante(g, {
@@ -427,7 +426,7 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
 
   it("un « non vérifiable » n'entre jamais comme réalisation, et une ligne à naître a `now` pour origine", () => {
     const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
-    const [g] = genererProchainesVerifications([applicable(o, [EQ])], new Map(), { now: NOW });
+    const [g] = genererProchainesVerifications([applicable(o, [EQ])], { now: NOW });
     const ex = existante(g, {
       datePrevue: NOW,
       suiviDepuis: d("2026-01-01"),
@@ -445,7 +444,7 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
     // service et le premier délai d'une ligne mal câblée — donc changeait sa
     // date sans rien dire. Le lot 2c l'annonçait : à la bascule, une erreur.
     const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
-    const [g] = genererProchainesVerifications([applicable(o, [EQ])], new Map(), { now: NOW });
+    const [g] = genererProchainesVerifications([applicable(o, [EQ])], { now: NOW });
     const sansSources = { ...g, sources: undefined } as unknown as VerificationGenere;
     expect(() => faitsDeLigne(sansSources, null, null, NOW)).toThrow(/sources/);
   });
@@ -469,7 +468,7 @@ describe("la décision par défaut — l'idempotence temporelle sur un dossier m
       applicable(etab, []),
     ];
     const misesEnService = new Map([[EQ.id, d("2026-06-01")]]);
-    const aGenerer = genererProchainesVerifications(obligations, new Map(), { now: NOW, misesEnService });
+    const aGenerer = genererProchainesVerifications(obligations, { now: NOW, misesEnService });
     const parCle = new Map(aGenerer.map((g) => [g.cleUnique, g]));
     const gAnnuelle = parCle.get(cleDeLigne("elec-annuelle", { equipementId: EQ.id, salarieId: null }))!;
     const gEtab = parCle.get(cleDeLigne("etab-annuelle", { equipementId: null, salarieId: null }))!;
@@ -503,7 +502,7 @@ describe("la décision par défaut — l'idempotence temporelle sur un dossier m
     const apres = appliquerPlanEnMemoire(existantes, plan, NOW);
     const replan = reconcilierCalendrier(
       apres,
-      genererProchainesVerifications(obligations, new Map(), { now: J_400, misesEnService }),
+      genererProchainesVerifications(obligations, { now: J_400, misesEnService }),
       { ...opts, now: J_400 },
     );
     expect(planVide(replan), JSON.stringify(replan, null, 2)).toBe(true);

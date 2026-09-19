@@ -193,29 +193,18 @@ describe("générateur calendrier — il décrit, il ne date plus (ADR-036)", ()
     expect(res).toHaveLength(0);
   });
 
-  it("refuse un historique : le générateur n'en est pas nourri (ADR-036 § 4)", () => {
-    // ~~« vérif précédente connue → plus d'occurrence (one-shot consommé) »~~ :
-    // nourri d'un historique, le générateur faisait disparaître un ponctuel
-    // réalisé de `aGenerer`, et la réconciliation l'aurait pris pour une
-    // obligation retirée. Le one-shot consommé est tenu par le réconciliateur
-    // (« une obligation one-shot déjà réalisée n'est ni archivée ni
-    // replanifiée », plus bas). L'emplacement du deuxième argument reste
-    // jusqu'au lot 5 ; il doit être vide.
-    const o = fakeObligation({ id: "mes", periodicite: "mise_en_service_uniquement" });
-    expect(() =>
-      genererProchainesVerifications(
-        [applique(o, [fakeEquipement()])],
-        new Map([["mes::eq-1", new Date("2025-05-01T00:00:00Z")]]),
-      ),
-    ).toThrow(/historique/);
-  });
+  // ~~« refuse un historique : le générateur n'en est pas nourri »~~ — le
+  // deuxième argument mort est retiré au lot 5 (2026-09-19) : c'est le type
+  // qui le refuse désormais. Le one-shot consommé est tenu par le
+  // réconciliateur (« une obligation one-shot déjà réalisée n'est ni archivée
+  // ni replanifiée », plus bas).
 });
 
 describe("câblage — la mise en service traverse le générateur jusqu'à la fonction", () => {
   const o = () => fakeObligation({ id: "o-annuelle", periodicite: "annuelle" });
   const NOW = new Date("2026-01-15T00:00:00Z");
   const avecMiseEnService = (miseEnService: Date) =>
-    genererProchainesVerifications([applique(o(), [fakeEquipement()])], undefined, {
+    genererProchainesVerifications([applique(o(), [fakeEquipement()])], {
       misesEnService: new Map([["eq-1", miseEnService]]),
     });
 
@@ -263,7 +252,7 @@ describe("câblage — la mise en service traverse le générateur jusqu'à la f
 
   it("retombe sur « à planifier » sans mise en service connue", () => {
     const [ligne] = creees(
-      genererProchainesVerifications([applique(o(), [fakeEquipement()])], undefined, {
+      genererProchainesVerifications([applique(o(), [fakeEquipement()])], {
         misesEnService: new Map(),
       }),
       NOW,
@@ -337,7 +326,7 @@ describe("câblage — mise en service uniquement (règle 2)", () => {
     // chambre froide de 2015 était réputée due aujourd'hui, dix ans plus tard.
     const miseEnService = new Date("2015-03-01T00:00:00Z");
     const [ligne] = creees(
-      genererProchainesVerifications([applique(o(), [fakeEquipement()])], undefined, {
+      genererProchainesVerifications([applique(o(), [fakeEquipement()])], {
         misesEnService: new Map([["eq-1", miseEnService]]),
       }),
       NOW_MES,
@@ -349,7 +338,7 @@ describe("câblage — mise en service uniquement (règle 2)", () => {
   it("mise en service à venir → planifiée à cette date", () => {
     const miseEnService = new Date(NOW_MES.getTime() + 30 * 86_400_000);
     const [ligne] = creees(
-      genererProchainesVerifications([applique(o(), [fakeEquipement()])], undefined, {
+      genererProchainesVerifications([applique(o(), [fakeEquipement()])], {
         misesEnService: new Map([["eq-1", miseEnService]]),
       }),
       NOW_MES,
@@ -381,10 +370,10 @@ describe("générateur calendrier — déterminisme", () => {
     // même description.
     const o = fakeObligation({ id: "o", periodicite: "annuelle" });
     const eq = fakeEquipement();
-    const a = genererProchainesVerifications([applique(o, [eq])], undefined, {
+    const a = genererProchainesVerifications([applique(o, [eq])], {
       now: new Date("2026-01-01T00:00:00Z"),
     });
-    const b = genererProchainesVerifications([applique(o, [eq])], undefined, {
+    const b = genererProchainesVerifications([applique(o, [eq])], {
       now: new Date("2031-07-14T00:00:00Z"),
     });
     expect(a).toEqual(b);
@@ -437,7 +426,6 @@ describe("générateur calendrier — porteur établissement (ADR-022)", () => {
 
     const res = genererProchainesVerifications(
       [applicableEtablissement(o)],
-      new Map(),
       { now: NOW },
     );
 
@@ -457,7 +445,6 @@ describe("générateur calendrier — porteur établissement (ADR-022)", () => {
 
     const res = genererProchainesVerifications(
       [applicableEtablissement(o)],
-      new Map(),
       { now: NOW },
     );
 
@@ -486,7 +473,6 @@ describe("générateur calendrier — porteur établissement (ADR-022)", () => {
     });
     const aGenerer = genererProchainesVerifications(
       [applicableEtablissement(o)],
-      new Map(),
       { now: NOW },
     );
 
@@ -524,10 +510,10 @@ describe("générateur calendrier — porteur établissement (ADR-022)", () => {
     const eq = fakeEquipement("eq-1");
 
     const aGenerer = [
-      ...genererProchainesVerifications([applicableEtablissement(oEtab)], new Map(), {
+      ...genererProchainesVerifications([applicableEtablissement(oEtab)], {
         now: NOW,
       }),
-      ...genererProchainesVerifications([applique(oEquip, [eq])], new Map(), {
+      ...genererProchainesVerifications([applique(oEquip, [eq])], {
         now: NOW,
       }),
     ];
@@ -765,7 +751,6 @@ describe("réconciliation — survie des actions correctives", () => {
     const eq = fakeEquipement("eq-elec");
     const aGenerer = genererProchainesVerifications(
       [applique(o, [eq])],
-      new Map(),
       { now: NOW },
     );
 
@@ -801,7 +786,7 @@ describe("réconciliation — survie des actions correctives", () => {
     // connue. La date ne bouge pas ; la passe suivante n'écrit plus rien.
     const o = fakeObligation({ id: "elec", periodicite: "annuelle" });
     const eq = fakeEquipement("eq-elec");
-    const aGenerer = genererProchainesVerifications([applique(o, [eq])], new Map(), {
+    const aGenerer = genererProchainesVerifications([applique(o, [eq])], {
       now: NOW,
     });
     const datePrevue = new Date("2026-02-01T00:00:00Z");
@@ -830,7 +815,6 @@ describe("réconciliation — survie des actions correctives", () => {
     const eq = fakeEquipement("eq-elec");
     const aGenerer = genererProchainesVerifications(
       [applique(o, [eq])],
-      new Map(),
       { now: NOW },
     );
     // Le retard, exprimé par un FAIT : l'origine du suivi, le 1er février.
@@ -880,7 +864,6 @@ describe("réconciliation — idempotence et stabilité des identifiants", () =>
     const eq = fakeEquipement("eq-1");
     const aGenerer = genererProchainesVerifications(
       [applique(o1, [eq]), applique(o2, [eq])],
-      new Map(),
       { now: NOW },
     );
 
@@ -927,7 +910,6 @@ describe("réconciliation — idempotence et stabilité des identifiants", () =>
     const eq = fakeEquipement("eq-1");
     const aGenerer = genererProchainesVerifications(
       [applique(o, [eq])],
-      new Map(),
       { now: NOW },
     );
 
@@ -1058,7 +1040,6 @@ describe("réconciliation — cycles de vérification", () => {
     const eq = fakeEquipement("eq-1");
     const aGenerer = genererProchainesVerifications(
       [applique(o, [eq])],
-      new Map(),
       { now: NOW },
     );
 
@@ -1102,7 +1083,7 @@ describe("réconciliation — cycles de vérification", () => {
     // — le placeholder ne se déclencherait jamais, et ce test ne garderait
     // rien. Il l'a fait pendant une heure, jusqu'à ce que la mutation reste
     // verte et le dise.
-    const aGenerer = genererProchainesVerifications([applique(o, [eq])], new Map(), {
+    const aGenerer = genererProchainesVerifications([applique(o, [eq])], {
       now: NOW,
       misesEnService: new Map([["eq-1", new Date("2026-06-12T00:00:00Z")]]),
     });
@@ -1141,7 +1122,6 @@ describe("réconciliation — cycles de vérification", () => {
     });
     const aGenerer = genererProchainesVerifications(
       [applique(o, [fakeEquipement("eq-1")])],
-      new Map(),
       { now: NOW },
     );
 
@@ -1608,7 +1588,6 @@ describe("réconciliation — cycles de vérification", () => {
     const eq = fakeEquipement("eq-1");
     const aGenerer = genererProchainesVerifications(
       [applique(o, [eq])],
-      new Map(),
       { now: NOW },
     );
 
@@ -1646,7 +1625,6 @@ describe("réconciliation — cycles de vérification", () => {
     // obligation retirée du référentiel.
     const aGenerer = genererProchainesVerifications(
       [applique(o, [eq])],
-      new Map(),
       { now: NOW },
     );
     // Une date que les faits expliquent : sans mise en service, un ponctuel
@@ -1781,7 +1759,6 @@ describe("réconciliation — obligations devenues non applicables", () => {
     const eq = fakeEquipement("eq-1");
     const aGenerer = genererProchainesVerifications(
       [applique(o, [eq])],
-      new Map(),
       { now: NOW },
     );
 
@@ -1955,7 +1932,6 @@ describe("générateur — le plafond du premier cycle (`premierDelai`)", () => 
   it("sans historique, la première échéance suit `premierDelai`, pas le rythme", () => {
     const res = genererProchainesVerifications(
       [applique(avecDelai(), [fakeEquipement()])],
-      undefined,
       { misesEnService: new Map([["eq-1", new Date("2025-12-01T00:00:00Z")]]) },
     );
     expect(res[0].sources.premierPas).toBe("triennale");
@@ -1995,7 +1971,6 @@ describe("générateur — le plafond du premier cycle (`premierDelai`)", () => 
           [fakeEquipement()],
         ),
       ],
-      undefined,
       { misesEnService: new Map([["eq-1", new Date("2025-12-01T00:00:00Z")]]) },
     );
     expect(creees(res, NOW_PD)[0].datePrevue.getUTCFullYear()).toBe(2029);
@@ -2031,7 +2006,6 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
           raisons: ["test"],
         },
       ],
-      new Map(),
       { now: NOW },
     );
   }
@@ -2159,7 +2133,6 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     });
     const aGenerer = genererProchainesVerifications(
       [applique(absorbant, [fakeEquipement("eq-1"), fakeEquipement("eq-2")])],
-      new Map(),
       { now: NOW },
     );
 
@@ -2203,7 +2176,6 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     });
     const aGenerer = genererProchainesVerifications(
       [applique(absorbant, [fakeEquipement("eq-1"), fakeEquipement("eq-2")])],
-      new Map(),
       { now: NOW },
     );
 
@@ -2421,7 +2393,7 @@ describe("câblage — chaque source de `echeanceDeLigne` traverse le réconcili
   ) =>
     reconcilierCalendrier(
       [ex],
-      genererProchainesVerifications([applique(o, [eq])], undefined, {
+      genererProchainesVerifications([applique(o, [eq])], {
         misesEnService: miseEnService === null ? new Map() : new Map([["eq-1", miseEnService]]),
       }),
       { now: NOW },

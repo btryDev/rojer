@@ -111,7 +111,6 @@ const LIGNES_DE_VISITE = [
 function aGenerer(etab: EtablissementMatching) {
   return genererProchainesVerifications(
     determineObligationsApplicables(etab, []),
-    new Map(),
     { now: NOW },
   ).filter((g) => LIGNES_DE_VISITE.includes(g.obligationId));
 }

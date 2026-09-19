@@ -416,26 +416,16 @@ type PorteurDeLigne = {
  * rendez-vous, la ligne de suivi attendue et ses SOURCES de calcul. Aucune
  * date, aucun statut : c'est le temps 2 qui les calcule (ADR-036).
  *
- * LE DEUXIÈME ARGUMENT EST UN EMPLACEMENT MORT, conservé pour les appelants
- * d'avant la bascule — `continuite-identite.test.ts` doit rester vert sans
- * retouche (ADR-036, plan). Il recevait l'historique des vérifications ; le
- * générateur n'est pas nourri de l'historique (§ 4 : l'identité se résout au
- * temps 2, et un ponctuel réalisé disparaissait de `aGenerer`). Il doit être
- * VIDE, et un historique non vide est refusé plutôt qu'ignoré. Retiré au lot 5
- * avec la couture.
+ * ~~LE DEUXIÈME ARGUMENT, l'historique des vérifications — emplacement mort
+ * depuis la bascule, refusé s'il n'était pas vide~~ — retiré au lot 5 de
+ * l'ADR-036 (2026-09-19). Le générateur n'est pas nourri de l'historique
+ * (§ 4) : la réalisation d'une ligne se lit sur ses rapports, dans le
+ * réconciliateur, et un ponctuel réalisé ne disparaît plus de `aGenerer`.
  */
 export function genererProchainesVerifications(
   obligations: ObligationApplicable[],
-  historique: ReadonlyMap<string, unknown> = new Map(),
   options: OptionsGenerateur = {},
 ): VerificationGenere[] {
-  if (historique.size > 0) {
-    throw new Error(
-      "genererProchainesVerifications : le générateur n'est pas nourri de " +
-        "l'historique (ADR-036 § 4). La réalisation d'une ligne se lit sur ses " +
-        "rapports, dans le réconciliateur.",
-    );
-  }
   const out: VerificationGenere[] = [];
 
   for (const oa of obligations) {

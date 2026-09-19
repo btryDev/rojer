@@ -1622,7 +1622,7 @@ async function main(): Promise<void> {
   }
 
   const aGenerer = [
-    ...genererProchainesVerifications(obligations, undefined, { misesEnService }),
+    ...genererProchainesVerifications(obligations, { misesEnService }),
     ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
     ...genererVerificationsSurMesure(surMesure),
   ];
