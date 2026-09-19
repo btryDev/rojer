@@ -1471,6 +1471,35 @@ describe("réconciliation — cycles de vérification", () => {
       expect(plan.aSupprimer).toEqual([]);
     });
 
+    it("sur un rythme, sous `garderLegs: false`, le statut réalisé sans rapport ne se garde plus", () => {
+      // La même ligne de titre, décidée comme au RETRAIT d'un rapport réalisé :
+      // le statut réalisé venait de ce rapport, ce n'est plus une trace. Sans
+      // rapport réalisé ni statut « planifiée », elle repasse « à planifier ».
+      const plan = reconcilierCalendrier(
+        [
+          ligneExistante({
+            id: "v-titre",
+            obligationId: "titre-quinquennal",
+            equipementId: null,
+            salarieId: "sal-1",
+            periodicite: "triennale",
+            statut: "realisee_conforme",
+            porteUnePreuve: false,
+          }),
+        ],
+        [],
+        {
+          now: NOW,
+          obligationsEncoreApplicables: new Set(["titre-quinquennal"]),
+          periodicitesEffectives: new Map([["titre-quinquennal", "quinquennale" as const]]),
+        },
+        STRATEGIE_FAITS_SANS_LEGS,
+      );
+      expect(plan.aMettreAJour.map((m) => [m.periodicite, m.statut])).toEqual([
+        ["quinquennale", "a_planifier"],
+      ]);
+    });
+
     it("une périodicité effective inconnue ne réaligne rien", () => {
       // Clé indexée sans valeur (fixture qui ne connaît que la clé) : inventer
       // `autre` ferait purger un statut. Comportement antérieur.
