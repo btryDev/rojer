@@ -23,6 +23,7 @@ import {
   verifyOtp,
 } from "./otp";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
+import { objetEstSignable } from "./etat-signable";
 import type { MethodeSignature, ObjetSignable } from "@prisma/client";
 
 /**
@@ -36,6 +37,9 @@ import type { MethodeSignature, ObjetSignable } from "@prisma/client";
  * déplacée dans `./hash-objet` : exportée d'ici, elle exposait l'empreinte
  * et le nom des documents de n'importe quel établissement.
  */
+
+const MESSAGE_NON_SIGNABLE =
+  "Ce document n'est plus à signer : il a été clos ou annulé.";
 
 /**
  * Émet une demande de signature : crée un AccessToken scope "signature",
@@ -63,7 +67,22 @@ export async function demanderSignature(params: {
   signataireRole?: string;
   prestataireId?: string;
   libelleDocument: string;
-}): Promise<{ ok: true }> {
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  // Aucun lien ne part pour un objet clos ou annulé : il serait refusé au
+  // moment de signer (`poserSignatureAvecToken`), autant ne pas envoyer au
+  // tiers un courriel qui ne mène à rien. L'appartenance de l'objet est
+  // vérifiée plus bas par `emettreAccessToken` ; ici, un objet étranger
+  // répond « non signable » sans rien dire de plus.
+  await assertEtablissementOwnership(params.etablissementId);
+  if (
+    !(await objetEstSignable(
+      params.objetType,
+      params.objetId,
+      params.etablissementId,
+    ))
+  ) {
+    return { ok: false, message: MESSAGE_NON_SIGNABLE };
+  }
   await emettreAccessToken({
     etablissementId: params.etablissementId,
     scope: "signature",
@@ -129,6 +148,21 @@ export async function poserSignatureAvecToken(
   }
   if (!token.otpHash) {
     return { status: "error", message: "Configuration OTP manquante." };
+  }
+
+  // LA GARDE DE FOND. La clôture et l'annulation révoquent les liens en vol
+  // (`revoquerLiensEnVol`), mais un jeton émis par un autre chemin, ou
+  // pendant la clôture, y échapperait : c'est ici, au moment de signer, que
+  // l'état de l'objet décide. Placée avant le code, elle ne consomme pas
+  // d'essai. Bornée à l'établissement du jeton.
+  if (
+    !(await objetEstSignable(
+      token.objetType,
+      token.objetId,
+      token.etablissementId,
+    ))
+  ) {
+    return { status: "error", message: MESSAGE_NON_SIGNABLE };
   }
 
   // Expiration du **code**, distincte de celle du lien. Elle se vérifie
@@ -302,10 +336,29 @@ export async function signerEnCompteConnecte(params: {
   role?: string;
 }): Promise<
   | { ok: true; signatureId: string }
-  | { ok: false; raison: "objet_introuvable" | "fichier_introuvable" | "non_implemente" }
+  | {
+      ok: false;
+      raison:
+        | "objet_introuvable"
+        | "fichier_introuvable"
+        | "non_implemente"
+        | "non_signable";
+    }
 > {
   const user = await requireUser();
   await assertEtablissementOwnership(params.etablissementId);
+
+  // Même garde que pour le signataire externe : un objet clos ou annulé ne
+  // se signe plus, par personne.
+  if (
+    !(await objetEstSignable(
+      params.objetType,
+      params.objetId,
+      params.etablissementId,
+    ))
+  ) {
+    return { ok: false, raison: "non_signable" };
+  }
 
   // L'objet est cherché dans ce seul établissement : un objetId d'un autre
   // périmètre ressort « introuvable ».

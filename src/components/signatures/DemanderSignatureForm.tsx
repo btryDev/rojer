@@ -62,7 +62,11 @@ export function DemanderSignatureForm({
     }
     startTransition(async () => {
       try {
-        await demanderSignature({
+        // Un refus attendu (objet clos, saisie invalide, trop d'envois) revient
+        // comme une valeur, pas comme une exception : en production, Next
+        // remplace le message d'une exception de server action par un texte
+        // générique, et l'utilisateur ne saurait pas pourquoi.
+        const r = await demanderSignature({
           etablissementId,
           objetType,
           objetId,
@@ -71,7 +75,7 @@ export function DemanderSignatureForm({
           signataireRole: role || undefined,
           libelleDocument,
         });
-        setResult({ ok: true });
+        setResult(r.ok ? { ok: true } : { ok: false, message: r.message });
       } catch (e) {
         setResult({
           ok: false,

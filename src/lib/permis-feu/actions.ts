@@ -10,6 +10,7 @@ import { NatureTravauxPointChaud } from "@prisma/client";
 import { NATURES_TRAVAUX, permisFeuSchema } from "./schema";
 import { nextNumeroPermisFeu } from "./queries";
 import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
+import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 
 export type PermisFeuActionState =
   | { status: "idle" }
@@ -133,6 +134,14 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
     where: { id: permisFeuId },
     data: { statut: "termine" },
   });
+  // Un permis terminé ne se signe plus (`etat-signable.ts`) : ses liens
+  // encore ouverts tombent avec lui.
+  await revoquerLiensEnVol({
+    etablissementId: permis.etablissementId,
+    objetType: "permis_feu",
+    objetId: permisFeuId,
+    motif: "Permis de feu terminé",
+  });
   revalidatePath(`/etablissements/${permis.etablissementId}/permis-feu/${permisFeuId}`);
 }
 
@@ -161,6 +170,12 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
       data: { statut: "annule" },
     });
   }
+  await revoquerLiensEnVol({
+    etablissementId: etabId,
+    objetType: "permis_feu",
+    objetId: permisFeuId,
+    motif: effacable ? "Permis de feu supprimé" : "Permis de feu annulé",
+  });
   revalidatePath(`/etablissements/${etabId}/permis-feu`);
   redirect(`/etablissements/${etabId}/permis-feu`);
 }

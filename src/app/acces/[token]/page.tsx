@@ -5,6 +5,7 @@ import { WhyCard, LegalBadge } from "@/components/ui-kit";
 import { SignatureExterneForm } from "@/components/signatures/SignatureExterneForm";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
+import { objetEstSignable } from "@/lib/signatures/etat-signable";
 
 /**
  * Page publique non authentifiée : un prestataire arrive ici via un lien
@@ -65,6 +66,29 @@ export default async function AccesParTokenPage({
     t.objetId,
     t.etablissementId,
   );
+
+  // Un objet clos ou annulé ne se signe plus : on le dit ici plutôt que de
+  // présenter un formulaire que la pose de signature refusera. Bornée à
+  // l'établissement du jeton, comme toute lecture de cette page.
+  if (
+    t.scope === "signature" &&
+    !(await objetEstSignable(t.objetType, t.objetId, t.etablissementId))
+  ) {
+    return (
+      <main className="mx-auto max-w-xl px-6 py-16 sm:px-10">
+        <div className="rounded-2xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-8">
+          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Signature</p>
+          <h1 className="mt-2 text-[1.5rem] font-semibold tracking-[-0.02em]">
+            Ce document n&apos;est plus à signer
+          </h1>
+          <p className="mt-4 text-[0.9rem] leading-relaxed text-[color:var(--muted-foreground)]">
+            Il a été clos ou annulé par la personne qui vous a envoyé ce lien.
+            Rapprochez-vous d&apos;elle si une signature reste attendue.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   if (t.scope === "signature") {
     return (
