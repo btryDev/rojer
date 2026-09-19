@@ -129,7 +129,10 @@ const RELEVE = {
   // base ; `decision-par-faits.ts` et `echeance-de-ligne.ts` entrent dans le
   // relevé par l'import de `generateur.ts`. OUI, la régénération écrit
   // autrement : voir le commentaire de `VERSION_MOTEUR_CALENDRIER`.
-  empreinte: "f5e24f9d7dbe9ce9",
+  // Recopiée SANS incrément le même jour (relecture du lot 4) : `garderLegs`
+  // porté jusqu'à la boucle NB4. La bascule n'a jamais été livrée : on reste
+  // en version 3.
+  empreinte: "2ca2bc215eafd23f",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
