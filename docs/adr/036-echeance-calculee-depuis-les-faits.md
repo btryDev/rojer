@@ -650,8 +650,16 @@ ligne `autre` (boucle NB4) ou archivée dont on retire le seul rapport réalisé
 repasse « à planifier », date inchangée — les tests qui le protègent
 (`rapports/actions.test.ts`, `generateur.test.ts`) gardent leurs assertions, et
 une mutation sur chacun des deux chemins les fait tomber. Sur un rythme, un
-statut réalisé ne survit jamais, rapport ou non (ADR-034). Les trois tests qui
-tenaient la garde elle-même sont inversés et le disent.
+statut réalisé ne survit jamais, rapport ou non (ADR-034). Les tests qui
+tenaient la garde ou la couture : trois inversés (le ponctuel au statut
+réalisé sans rapport de `decision-par-faits.test.ts`, le « non vérifiable »
+retiré de `rapports/actions.test.ts`, le titre cyclique de
+`generateur.test.ts`) ; cinq retirés (le titre cyclique « gardé » et le refus
+d'un historique non vide dans `generateur.test.ts`, la décision par défaut dans
+`decision-par-faits.test.ts`, la décision injectée dans `passe.test.ts`, le cas
+`legs_statut_realise` de `passage-a-blanc.test.ts`) ; une fixture réécrite (le
+one-shot réalisé de `generateur.test.ts`, qui porte désormais son résultat et
+une date expliquée par les faits). Chacun le dit en place.
 
 **Relevé du moteur : recopié SANS incrément**, trois fois (un par commit). La
 garde ne changeait le sort que de deux sortes de lignes : au statut réalisé
@@ -661,9 +669,15 @@ réalisé, le retrait le rouvre, aucun rapport ne se dépose sur une ligne de
 salarié, les seeds n'écrivent aucun statut réalisé, le générateur ne crée
 jamais de ligne `autre`) ; et cycliques non générées au statut réalisé — que
 rien n'atteint, un titre cyclique ayant toujours une échéance
-(`echeanceDuTitre`). **Limite de la mesure** : le contrôle de santé ne comptait
-le legs que sur les lignes générées ; le zéro de la boucle NB4 est un
-raisonnement sur le code, pas une mesure.
+(`echeanceDuTitre`). **Mesuré, pas seulement raisonné** : le 2026-09-19, le
+contrôle de santé de `lot/adr036-menage` — dont `comparerAuMoteur` couvre aussi
+les lignes non générées — a été lancé en lecture seule sur la production. Sur
+les 4 établissements : `identique` 32, `meme_jour_civil` 29, `statut_seul` **0**,
+`rythme` 0, `mise_en_service` 8, `retard_invente` 3, `date_arbitraire` 21,
+`inexplique` **0**, rejeu à J+400 vide partout, et le dossier recalculé au
+moteur 3 identique ligne pour ligne. Une ligne `autre` héritée, au statut
+réalisé sans rapport réalisé, serait sortie en `statut_seul` : il n'y en a
+aucune.
 
 **Ce qui reste** : `scripts/passage-a-blanc-echeances.ts`, comme contrôle de
 santé (`docs/revues/passage-a-blanc-adr036.md`). La branche `estStatutRealise`

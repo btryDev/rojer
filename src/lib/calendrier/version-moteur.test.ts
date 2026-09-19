@@ -137,8 +137,12 @@ const RELEVE = {
   // les dossiers réels : la garde ne changeait que le sort d'une ligne au
   // statut réalisé SANS rapport réalisé (ponctuel générée, ou `autre` en
   // boucle NB4), et d'une ligne cyclique non générée au statut réalisé — que
-  // rien n'atteint, un titre cyclique ayant toujours une échéance. Le contrôle
-  // de santé du 2026-09-19 compte zéro legs sur les lignes générées ; et aucun
+  // rien n'atteint, un titre cyclique ayant toujours une échéance. MESURÉ le
+  // 2026-09-19 en production, en lecture seule, par le contrôle de santé de
+  // CETTE branche (`comparerAuMoteur`, qui couvre aussi les lignes non
+  // générées) sur les 4 établissements : `statut_seul` 0 — une ligne au statut
+  // réalisé sans rapport réalisé y serait sortie —, `inexplique` 0, J+400 vide,
+  // le dossier recalculé au moteur 3 identique ligne pour ligne. Et aucun
   // chemin n'en fabrique : un statut réalisé n'est écrit que depuis un rapport
   // réalisé, le retrait le rouvre (comme avant la bascule), un rapport ne se
   // dépose pas sur une ligne de salarié, les seeds n'écrivent aucun statut
