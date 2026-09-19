@@ -12,11 +12,14 @@
 //
 // POURQUOI LA COUPE (ADR-036, lot 2b — 2026-09-18). `regenererUnePasse`
 // enchaînait lecture, matching, génération, réconciliation et écriture dans
-// une seule fonction de quatre cents lignes. Le passage à blanc du lot 2c a
-// besoin des trois premiers temps SANS le quatrième : une lecture, deux plans
-// — la stratégie en ligne et la candidate —, leur différence, et aucune
-// écriture. La coupe rend ces temps appelables séparément ; elle ne déplace
-// aucune règle. `regenererUnePasse` appelle `lireEntrees` puis `planifier`, et
+// une seule fonction de quatre cents lignes. Le passage à blanc du lot 2c
+// avait besoin des trois premiers temps SANS le quatrième : ~~une lecture, deux
+// plans — la stratégie en ligne et la candidate —, leur différence~~ ; depuis
+// la bascule (lot 4, 2026-09-19), il n'y a qu'un plan, et le contrôle de santé
+// le compare à l'état EN BASE (`comparerAuMoteur`), sans aucune écriture. Le
+// dépôt et le retrait d'un rapport rejouent la même lecture et le même plan
+// pour une ligne (`recalcul-ligne.ts`). La coupe rend ces temps appelables
+// séparément ; elle ne déplace aucune règle. `regenererUnePasse` appelle `lireEntrees` puis `planifier`, et
 // garde la transaction et ses écritures conditionnées telles quelles.
 //
 // LA LECTURE NE PREND PAS D'HORLOGE. `now` n'entre qu'au moment de planifier :

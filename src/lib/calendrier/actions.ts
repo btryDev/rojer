@@ -191,12 +191,16 @@ async function regenererUnePasse(
           etablissementId,
           rapports: { none: {} },
           actions: { none: {} },
-          // ET le statut : une obligation sans rendez-vous suivant, consommée
-          // sans rapport (seed uniquement — le produit rouvre la ligne quand
-          // son dernier rapport part), n'a plus que son statut réalisé pour
-          // témoigner qu'elle a été faite, et `porteUneTrace` le compte comme
-          // tel. La clause SQL doit dire la même chose, sinon un appareil
-          // désactivé emporte la preuve.
+          // ET le statut : une ligne au statut réalisé n'a peut-être plus que
+          // lui pour témoigner qu'elle a été faite, et `porteUneTrace` le
+          // compte comme tel. La clause SQL doit dire la même chose, sinon un
+          // appareil désactivé emporterait la preuve. ~~(seed uniquement)~~ :
+          // depuis l'ADR-036 § 11 (2026-09-19), aucun chemin n'en fabrique —
+          // les seeds n'écrivent plus de statut réalisé, un statut réalisé
+          // n'est écrit que depuis un rapport réalisé, et le retrait du
+          // dernier rouvre la ligne. Le contrôle de santé en a compté zéro en
+          // production. La clause reste alignée sur `porteUneTrace`, dont la
+          // branche `estStatutRealise` est gardée pour la même raison.
           statut: { notIn: [...STATUTS_REALISES_PERSISTES] },
         },
       }),

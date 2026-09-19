@@ -271,9 +271,9 @@ export type SourcesDeCalcul = {
 };
 
 /**
- * Une ligne À CRÉER : la ligne générée, datée par la stratégie de décision du
- * réconciliateur (`creerParFaits`). C'est la seule forme sous laquelle une date
- * accompagne une ligne générée — elle naît dans le temps 2, jamais dans le 1.
+ * Une ligne À CRÉER : la ligne générée, datée par le réconciliateur —
+ * `echeanceDeLigne` sur ses faits, origine = l'horloge de la passe. C'est la
+ * seule forme sous laquelle une date accompagne une ligne générée — elle naît dans le temps 2, jamais dans le 1.
  */
 export type LigneACreer = VerificationGenere & {
   datePrevue: Date;
