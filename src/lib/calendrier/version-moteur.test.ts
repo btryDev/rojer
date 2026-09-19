@@ -162,7 +162,10 @@ const RELEVE = {
   // survit pas sans rapport réalisé » sort de `statutDeLigneNonGeneree` dans
   // `reouvrirSansRapportRealise`, que `recalcul-ligne.ts` appelle aussi. NON :
   // la boucle NB4 rend le même statut dans chaque cas, branche pour branche.
-  empreinte: "31473f7282b46e96",
+  // Recopiée SANS incrément le même jour (point 4) : `deciderParFaits` et
+  // `creerParFaits`, deux relais d'une ligne, sont inlinés ; la branche
+  // `source === undefined`, morte, part. NON : mêmes appels, mêmes écritures.
+  empreinte: "0de7502f2d5ca005",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

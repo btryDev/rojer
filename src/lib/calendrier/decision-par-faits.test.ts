@@ -180,7 +180,7 @@ function etat(plan: PlanReconciliation, ex: OccurrenceExistante) {
 
 const J_400 = ajouterJours(NOW, 400);
 
-describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", () => {
+describe("la décision par les faits — les sept scénarios de l'audit, de bout en bout", () => {
   it("S1 — sans source, suivie depuis le 15/06 : la date ne glisse plus, 94 jours de retard gardés", () => {
     const o = obligationEtablissement({ id: "etab-annuelle", periodicite: "annuelle" });
     const origine = instantCivil(2026, 6, 15, 10, 12);
@@ -332,7 +332,7 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
   });
 });
 
-describe("deciderParFaits — rien hors de la fonction (la garde du legs est partie au lot 5)", () => {
+describe("la décision par les faits — rien hors de la fonction (la garde du legs est partie au lot 5)", () => {
   const ponctuel = obligationEquipement({
     id: "elec-mise-en-service",
     periodicite: "mise_en_service_uniquement",

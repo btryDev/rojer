@@ -69,13 +69,9 @@ export class LigneModifieeEntreTemps extends Error {
 /** Le client de transaction interactive que les deux actions de rapport tiennent. */
 export type ClientTransaction = Prisma.TransactionClient;
 
-export type OptionsRecalcul = {
-  /** L'horloge de la passe : prescriptions en vigueur, origine d'une ligne à
-   *  naître. Défaut = `new Date()`. */
-  now?: Date;
-  // ~~`garderLegs`~~ — retirée au lot 5 de l'ADR-036 (2026-09-19) avec la
-  // garde du legs : le dépôt et le retrait décident comme la régénération.
-};
+// ~~`OptionsRecalcul`~~ — retirée le 2026-09-19. Son dernier champ, `now`,
+// n'était passé par aucun appelant ; ~~`garderLegs`~~ était parti au lot 5 de
+// l'ADR-036 avec la garde du legs. L'horloge est celle de l'appel.
 
 export type ResultatRecalcul =
   | { ecrit: false }
@@ -98,9 +94,10 @@ export type ResultatRecalcul =
 export async function recalculerLigne(
   tx: ClientTransaction,
   verificationId: string,
-  options: OptionsRecalcul = {},
 ): Promise<ResultatRecalcul> {
-  const now = options.now ?? new Date();
+  // L'horloge de la passe : prescriptions en vigueur, origine d'une ligne à
+  // naître — jamais celle d'une ligne existante, qui porte `suiviDepuis`.
+  const now = new Date();
   await tx.$queryRaw`SELECT 1 FROM "Verification" WHERE "id" = ${verificationId} FOR UPDATE`;
 
   const ligne = await tx.verification.findUnique({

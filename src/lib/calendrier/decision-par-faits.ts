@@ -26,17 +26,11 @@ import {
   statutDepuisResultat,
   type ResultatRealise,
 } from "@/lib/rapports/schema";
-import { echeanceDeLigne, type FaitsDeLigne } from "./echeance-de-ligne";
+import type { FaitsDeLigne } from "./echeance-de-ligne";
 // DES TYPES SEULEMENT, et en `import type` : `generateur.ts` importe ce module
 // pour sa décision, et un import de valeur dans l'autre sens ferait
 // un cycle à l'exécution.
-import type {
-  ContexteCreation,
-  ContexteExistante,
-  DecisionDeLigne,
-  OccurrenceExistante,
-  VerificationGenere,
-} from "./generateur";
+import type { OccurrenceExistante, VerificationGenere } from "./generateur";
 
 /**
  * Le dernier rapport RÉALISÉ d'une ligne, ou `null`.
@@ -132,22 +126,6 @@ export function faitsDeLigne(
   };
 }
 
-/** La date et le statut d'une ligne EXISTANTE, depuis ses faits. C'est la
- *  décision de la régénération, du dépôt et du retrait d'un rapport.
- *
- *  ~~La garde du legs, et sa variante sans garde pour le retrait d'un rapport
- *  réalisé (`deciderSurLesFaitsSeuls`, `garderLegs: false`)~~ — retirées au
- *  lot 5 (2026-09-19). Sans garde, les deux décisions n'en font qu'une : un
- *  statut réalisé ne survit pas sans rapport réalisé. */
-export function deciderParFaits(ctx: ContexteExistante): DecisionDeLigne {
-  const { ex, g, heritee, now } = ctx;
-  const r = echeanceDeLigne(faitsDeLigne(g, ex, heritee, now));
-  return { datePrevue: r.datePrevue, statut: r.statut, source: r.source };
-}
-
-/** La date et le statut d'une ligne À CRÉER : mêmes faits, origine = `now`. */
-export function creerParFaits(ctx: ContexteCreation): DecisionDeLigne {
-  const r = echeanceDeLigne(faitsDeLigne(ctx.g, null, ctx.heritee, ctx.now));
-  return { datePrevue: r.datePrevue, statut: r.statut, source: r.source };
-}
-
+// ~~`deciderParFaits`, `creerParFaits`~~ — retirées le 2026-09-19 : deux
+// relais d'une ligne, un seul appelant chacun. `reconcilierCalendrier` appelle
+// `echeanceDeLigne(faitsDeLigne(…))` lui-même.
