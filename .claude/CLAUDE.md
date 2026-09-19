@@ -515,8 +515,8 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     crée une obligation sur mesure (**renumérotée le 2026-09-15, anciennement
     014**)
 36. **036** — L'échéance d'une ligne se calcule depuis des faits stockés, par
-    une seule fonction (**acceptée le 2026-09-17**, amendera l'ADR-012 § A et
-    l'ADR-034 à la bascule). Titre, dernier rapport réalisé, mise en service +
+    une seule fonction (**acceptée le 2026-09-17, terminée le 2026-09-19** ;
+    elle amende l'ADR-012 § A et l'ADR-034). Titre, dernier rapport réalisé, mise en service +
     premier pas, sinon « à planifier » à l'origine du suivi (`suiviDepuis`) ;
     la fonction ne lit aucune horloge, et le réconciliateur ne garde que ses
     protections. La bascule est en production depuis le 2026-09-19 (moteur 3)

@@ -1748,7 +1748,8 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   ce point.
   **CHANTIER ADR-036 CLOS le 2026-09-19** par le lot 5 (`lot/adr036-menage`) :
   la couture, l'argument mort du générateur et la garde du legs sont retirés
-  (zéro legs en production), sans effet sur ce que la régénération écrit ;
+  (zéro legs en production, mesuré le 2026-09-19 par le contrôle de santé sur
+  toutes les lignes, générées ou non), sans effet sur ce que la régénération écrit ;
   l'ADR est « terminée », la puce 036 du `CLAUDE.md` dit la bascule au présent.
 - **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
