@@ -370,6 +370,39 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     expect(ligne().datePrevue).toEqual(ORIGINE);
   });
 
+  it("n'écrit QUE la ligne visée, même quand le plan en déplacerait une autre", async () => {
+    // `recalculerLigne` rejoue la passe entière : le plan peut vouloir
+    // déplacer une ligne voisine désalignée. Ce n'est pas l'affaire du dépôt —
+    // c'est celle de la régénération, avec son sceau et ses trois passes.
+    poserEtablissement([{ id: "eq-1" }, { id: "eq-2" }]);
+    poserLigne({ id: "v-2", equipementId: "eq-2", datePrevue: d("2030-01-01"), statut: "planifiee" });
+    poserLigne({ datePrevue: d("2031-01-01"), statut: "planifiee" });
+    db.journal = [];
+
+    await deposer("conforme", "2026-06-01");
+
+    expect(ligne().datePrevue).toEqual(d("2027-06-01"));
+    expect(ligne("v-2").datePrevue).toEqual(d("2030-01-01"));
+    expect(ligne("v-2").statut).toBe("planifiee");
+    expect(db.journal.filter((j) => j.operation === "verification.updateMany")).toHaveLength(1);
+  });
+
+  it("l'écriture reste conditionnée à la date et au statut LUS : une ligne modifiée entre-temps annule tout", async () => {
+    // Sans bouchon : la ligne change DANS le magasin juste après la lecture
+    // de `recalculerLigne` (`apresLecture`), et c'est la condition de
+    // l'`updateMany` qui doit la voir.
+    db.apresLecture = () => {
+      ligne().datePrevue = d("2029-01-01");
+    };
+
+    const res = await deposer("conforme", "2026-06-01");
+
+    expect(res.status).toBe("error");
+    expect(res.status === "error" && res.message).toMatch(/modifiée/);
+    expect(rapports()).toEqual([]);
+    expect(stockage.fichiers.size).toBe(0);
+  });
+
   it("nettoie le fichier si la base refuse l'écriture", async () => {
     db.faireEchouer = (op) => op === "rapportVerification.create";
 
