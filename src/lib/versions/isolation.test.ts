@@ -8,8 +8,17 @@
 //
 // Rien ne le gardait. `snapshot-builder.test.ts` simule `findFirst` par une
 // fonction qui rend la fixture quel que soit le `where` : retirer le prédicat
-// laissait les 2442 tests verts. Et le module ne s'appelle pas `queries.ts`,
-// donc le balayage de `auth/tenancy.test.ts` ne le lit pas.
+// laissait toute la suite verte — 2442 tests à l'époque. Et le module ne
+// s'appelle pas `queries.ts`, donc le balayage des lectures
+// (`auth/tenancy-lectures.test.ts`, renommé depuis `auth/tenancy.test.ts`) ne
+// le lit pas.
+//
+// Ré-éprouvé le 2026-09-19 en le cassant, prédicat retiré, suite entière :
+// « Tests 1 failed | 3001 passed (3002) », et l'unique rouge est le premier
+// cas ci-dessous. C'est ce fichier, et lui seul, qui tient le cloisonnement.
+// Le balayage des ÉCRITURES ne le remplace pas : `creerVersion` y est exemptée
+// NOMMÉMENT parce que `construireSnapshot` la borne, et l'exemption vérifie
+// que l'appel est toujours là — pas que le prédicat y est encore.
 //
 // Même montage que `salaries/isolation.test.ts` : le faux Prisma **évalue**
 // le `where` contre deux dossiers en mémoire, chaîne de relations comprise,
