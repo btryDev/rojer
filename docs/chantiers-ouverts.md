@@ -1964,12 +1964,34 @@ telle quelle, déclencherait encore une preview. Et une branche dont le nom ne
 commence par aucun de ces préfixes en déclenchera une aussi : c'est le prix de
 l'absence de joker.
 
-### À faire dans Vercel, par la propriétaire
+### ~~À faire dans Vercel, par la propriétaire~~ — FAIT le 2026-09-19
 
-1. **`DATABASE_URL` marquée « Needs Attention »** : vérifier le motif exact
+1. ~~**`DATABASE_URL` marquée « Needs Attention »** : vérifier le motif exact
    au survol. Si c'est la recommandation de marquer la variable « Sensitive »,
    la suivre — la valeur cesse d'être lisible dans l'interface et les journaux,
-   sans rien changer au fonctionnement.
+   sans rien changer au fonctionnement.~~
+
+**Fait le 2026-09-19.** `DATABASE_URL` et `DIRECT_URL` sont désormais de type
+**Secret** et portées par l'environnement **Production seul** — plus de copie
+Preview ni Development. Le mot de passe de la base, lisible en clair dans le
+formulaire d'édition avant le passage en Secret, a été **changé** dans Supabase
+puis reporté dans les deux variables et dans `.env.supabase.bak`, qui est hors
+dépôt. Aucun `.env` n'a jamais été commité, vérifié dans tout l'historique.
+Les copies Preview de `MCP_CLE` et `MCP_ETABLISSEMENT_ID` ont été supprimées,
+les previews étant coupées.
+
+**Ce que la rotation a appris.** Chaque déploiement porte les variables de son
+build : changer le mot de passe coupe la production tant qu'un nouveau
+déploiement n'a pas repris la valeur, soit environ cinq minutes ce jour-là.
+L'ordre qui limite la coupure : écrire le nouveau mot de passe dans
+`.env.supabase.bak`, le tester depuis le poste, puis le reporter dans Vercel
+et redéployer aussitôt. Le build rejoue `prisma migrate deploy` sur
+`DIRECT_URL`, et c'est lui qui a signalé une première valeur fausse.
+
+**Relevé en passant, non traité.** `MCP_ETABLISSEMENT_ID`, en production,
+désigne un établissement qui n'existe plus : l'outil `fiche_etablissement`
+répond « Établissement introuvable ». Le serveur MCP n'est donc relié à aucun
+dossier tant que la variable n'est pas mise à jour.
 
 ### Ce que ça n'a pas réglé, et qui reste ouvert
 
@@ -1978,3 +2000,14 @@ le § 5 disent déjà qu'aucun seed n'amorce une base vide, si bien qu'un contr�
 visuel sur données réalistes n'existe nulle part ailleurs qu'en production.
 C'est le vrai manque ; les previews n'étaient qu'une façon coûteuse de le
 contourner.
+
+**Stockage des fonctions Vercel au-dessus du quota** (relevé le 2026-09-19) :
+24,7 Go pour 10 Go inclus sur trente jours, en offre Hobby. La rétention des
+déploiements est à trente jours pour les quatre catégories. Ce stockage se
+compte par déploiement conservé, et les previews des branches d'agents en ont
+produit beaucoup : leur arrêt le fera redescendre à mesure que les anciens
+expirent. Raccourcir la rétention des déploiements annulés, en erreur et de
+pré-production le ferait plus vite, sans toucher à la production — c'est une
+décision de la propriétaire, pas faite ici. Au même relevé, la mémoire
+provisionnée des fonctions est à 250 Go-h sur 360 : à surveiller, pas encore
+un dépassement.
