@@ -12,6 +12,7 @@ import {
   type LigneInput,
 } from "./schema";
 import { nextNumeroPlan } from "./queries";
+import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
 
 export type PlanActionState =
   | { status: "idle" }
@@ -224,7 +225,16 @@ export async function supprimerPlan(planId: string): Promise<void> {
   if (!plan) return;
   await assertEtablissementOwnership(plan.etablissementId);
   const etabId = plan.etablissementId;
-  if (plan.statut === "brouillon" || plan.statut === "attente_signatures") {
+  // LE STATUT NE DIT PAS SI LE PLAN A ÉTÉ SIGNÉ. `attente_signatures` est
+  // l'état de création ET celui où les signatures se recueillent, et rien
+  // n'écrit jamais `valide` : s'y fier effaçait des plans signés, laissant
+  // leurs signatures orphelines. Un plan ne s'efface que VIERGE — ni
+  // signature, ni lien émis (`porteUneTraceDeSignature`) ; sinon il passe
+  // « annulé » et rien n'est détruit.
+  const effacable =
+    (plan.statut === "brouillon" || plan.statut === "attente_signatures") &&
+    !(await porteUneTraceDeSignature("plan_prevention", planId, etabId));
+  if (effacable) {
     await prisma.planPrevention.delete({ where: { id: planId } });
   } else {
     await prisma.planPrevention.update({
