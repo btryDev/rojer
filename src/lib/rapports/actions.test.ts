@@ -1,216 +1,46 @@
-// Dépôt et retrait d'un rapport de vérification — server actions, base et
-// stockage simulés.
+// Dépôt et retrait d'un rapport de vérification — server actions, sur le faux
+// client Prisma du calendrier (`calendrier/faux-prisma.ts`) et le VRAI
+// référentiel.
 //
-// Depuis l'ADR-034 (lot N2, 2026-09-11), c'est ICI que la ligne roule : le
-// dépôt d'un rapport réalisé écrit sur le rapport l'échéance qu'il honorait et
-// ouvre l'échéance suivante sur la ligne, dans la même transaction. La
-// régénération ne roule plus rien. Les cas qui NE roulent pas sont testés un
-// par un — non vérifiable, antidaté, one-shot —, parce que chacun a une raison
-// différente de ne pas bouger.
+// DEPUIS LA BASCULE DE L'ADR-036 (lot 4, 2026-09-19), le dépôt et le retrait
+// ne calculent plus de date eux-mêmes. ~~Le dépôt faisait « rouler » la ligne
+// (`rouler`) et le retrait la faisait « reculer » en transmettant l'échéance
+// honorée de rapport en rapport.~~ Les deux appellent `recalculerLigne`, qui
+// rejoue la passe de régénération pour cette ligne : la date sort de
+// `echeanceDeLigne`, sur les faits — le rapport qu'on vient d'écrire ou de
+// retirer compris. Ce fichier tient trois choses :
+//  · LES MÊMES RÈGLES qu'avant, là où elles tenaient : « non vérifiable » et
+//    antidaté ne bougent rien, un rapport réalisé fait courir le rythme, un
+//    ponctuel se solde ;
+//  · LA CONFLUENCE : après un dépôt, puis après un retrait, l'état écrit,
+//    repassé dans la réconciliation, rend la ligne « inchangée » — la
+//    régénération qui suit ne peut pas la déplacer ;
+//  · les PROTECTIONS de la transaction : verrou, écriture conditionnée,
+//    annulation totale, frontière médicale, obligation éteinte.
 //
-// Le cas historique reste : le résultat « non vérifiable ». L'ancienne
-// implémentation écrivait `dateRealisee` avec un statut `a_planifier`, ce qui
-// faisait passer le contrôle pour réalisé, repoussait l'échéance d'une période
-// entière, et faisait détruire le rapport par la régénération qui suivait.
+// La régénération qui suit chaque action (`regenererApresMutation`) est
+// bouchonnée : on éprouve ce que la TRANSACTION a écrit, pas ce qu'une passe
+// ultérieure aurait réparé. C'est ce qui rend la confluence observable.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
+import { obligationParId } from "@/lib/referentiels/conformite";
+import type { EquipementFaux, LigneFausse, RapportFaux } from "@/lib/calendrier/faux-prisma";
+import { lireEntrees, planifier, type ClientLecture } from "@/lib/calendrier/passe";
 
-type LigneVerif = {
-  id: string;
-  etablissementId: string;
-  datePrevue: Date;
-  statut: string;
-  periodicite: string;
-  /** Porteur de la ligne. Non nul = échéance d'une personne, sur laquelle
-   *  aucun document ne se dépose (ADR-023 § 2). */
-  salarieId: string | null;
-  /** `null` = ligne ouverte ; une date = l'obligation ne s'applique plus. */
-  archiveLe?: Date | null;
-};
-
-type RapportFaux = {
-  id: string;
-  etablissementId: string;
-  verificationId: string;
-  dateRapport: Date;
-  resultat: string;
-  echeanceHonoree: Date | null;
-  fichierCle: string;
-  /** Départage deux rapports du même jour, comme en base. */
-  createdAt: Date;
-};
-
-const h = vi.hoisted(() => {
-  const db = {
-    verification: null as LigneVerif | null,
-    rapports: [] as RapportFaux[],
-  };
-  const stockage = { fichiers: new Set<string>() };
-
-  const memeInstant = (a: Date | null | undefined, b: Date | null | undefined) =>
-    (a ?? null) === null || (b ?? null) === null
-      ? (a ?? null) === (b ?? null)
-      : a!.getTime() === b!.getTime();
-
-  /**
-   * Le `where` et le `orderBy` sont HONORÉS, et c'est ce qui rend les tests
-   * capables de rougir : la suppression cherche tantôt le dernier réalisé
-   * (ordre décroissant), tantôt le successeur d'un rapport retiré (ordre
-   * croissant, borné par `dateRapport >= …`). Un faux client qui rendrait
-   * toujours le même rapport laisserait passer les deux.
-   */
-  const rapportsRealises = (
-    where: {
-      verificationId: string;
-      resultat?: { in: string[] };
-      dateRapport?: { gte?: Date };
-    },
-    orderBy: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[] = [
-      { dateRapport: "desc" },
-    ],
-  ) => {
-    const sens = orderBy[0]?.dateRapport === "asc" ? 1 : -1;
-    return db.rapports
-      .filter(
-        (r) =>
-          r.verificationId === where.verificationId &&
-          (where.resultat === undefined || where.resultat.in.includes(r.resultat)) &&
-          (where.dateRapport?.gte === undefined ||
-            r.dateRapport.getTime() >= where.dateRapport.gte.getTime()),
-      )
-      .sort((a, b) => {
-        const parDate = sens * (a.dateRapport.getTime() - b.dateRapport.getTime());
-        if (parDate !== 0) return parDate;
-        // Le départage n'est appliqué QUE si la production le demande : sinon
-        // le faux client tranchait à sa place, et retirer `createdAt` du code
-        // ne faisait rougir aucun test (relecture de contrôle, 2026-09-12).
-        const second = orderBy[1]?.createdAt;
-        if (second === undefined) return 0;
-        return (second === "asc" ? 1 : -1) * (a.createdAt.getTime() - b.createdAt.getTime());
-      });
-  };
-
-  const prisma: Record<string, unknown> = {
-    verification: {
-      findUnique: async () => db.verification,
-      /** Écriture CONDITIONNÉE, comme en production : rend un compte. */
-      updateMany: async ({
-        where,
-        data,
-      }: {
-        where: { id: string; datePrevue?: Date; statut?: string; archiveLe?: Date | null };
-        data: Record<string, unknown>;
-      }) => {
-        const v = db.verification;
-        if (
-          v === null ||
-          v.id !== where.id ||
-          (where.datePrevue !== undefined && !memeInstant(v.datePrevue, where.datePrevue)) ||
-          (where.statut !== undefined && v.statut !== where.statut) ||
-          (where.archiveLe !== undefined && !memeInstant(v.archiveLe ?? null, where.archiveLe))
-        ) {
-          return { count: 0 };
-        }
-        Object.assign(v, data);
-        return { count: 1 };
-      },
-    },
-    rapportVerification: {
-      create: async ({ data }: { data: RapportFaux }) => {
-        db.rapports.push(data);
-        return data;
-      },
-      findUnique: async ({ where }: { where: { id: string } }) => {
-        const r = db.rapports.find((x) => x.id === where.id);
-        if (!r) return null;
-        const v = db.verification!;
-        return {
-          ...r,
-          verification: {
-            datePrevue: v.datePrevue,
-            statut: v.statut,
-            periodicite: v.periodicite,
-          },
-        };
-      },
-      findFirst: async ({
-        where,
-        orderBy,
-      }: {
-        where: {
-          verificationId: string;
-          resultat?: { in: string[] };
-          dateRapport?: { gte?: Date };
-        };
-        orderBy?: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[];
-      }) => rapportsRealises(where, orderBy)[0] ?? null,
-      findMany: async ({
-        where,
-        orderBy,
-      }: {
-        where: {
-          verificationId: string;
-          resultat?: { in: string[] };
-          dateRapport?: { gte?: Date };
-        };
-        orderBy?: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[];
-      }) => rapportsRealises(where, orderBy),
-      update: async ({
-        where,
-        data,
-      }: {
-        where: { id: string };
-        data: Record<string, unknown>;
-      }) => {
-        const r = db.rapports.find((x) => x.id === where.id);
-        if (r) Object.assign(r, data);
-        return r ?? null;
-      },
-      delete: async ({ where }: { where: { id: string } }) => {
-        const i = db.rapports.findIndex((x) => x.id === where.id);
-        return i === -1 ? null : db.rapports.splice(i, 1)[0];
-      },
-      count: async () => db.rapports.length,
-    },
-  };
-  // La transaction ANNULE, comme en base : sans restauration, un test ne peut
-  // pas affirmer qu'un dépôt refusé ne laisse pas un rapport orphelin — il
-  // décrirait le faux client, pas la garantie.
-  /** Le verrou de ligne de `supprimerRapport` : sans concurrence dans un faux
-   *  client, il n'a rien à attendre. Les appels sont comptés, pour qu'un test
-   *  puisse affirmer que la ligne est verrouillée AVANT d'être relue. */
-  const verrous: string[] = [];
-  prisma.$queryRaw = async (morceaux: TemplateStringsArray) => {
-    verrous.push(morceaux.join("?"));
-    return [];
-  };
-  prisma.$transaction = async (arg: unknown) => {
-    if (typeof arg !== "function") return Promise.all(arg as Promise<unknown>[]);
-    const avant = {
-      verification: db.verification ? { ...db.verification } : null,
-      rapports: db.rapports.map((r) => ({ ...r })),
-    };
-    try {
-      return await (arg as (tx: unknown) => Promise<unknown>)(prisma);
-    } catch (e) {
-      db.verification = avant.verification;
-      db.rapports = avant.rapports;
-      throw e;
-    }
-  };
-
+const h = vi.hoisted(async () => {
+  const { fauxPrisma, magasinVide } = await import("@/lib/calendrier/faux-prisma");
+  const db = magasinVide();
   return {
     db,
-    prisma,
-    stockage,
-    verrous,
-    genererCalendrier: vi.fn(async () => ({})),
+    prisma: fauxPrisma(db),
+    stockage: { fichiers: new Set<string>() },
+    regenerer: vi.fn(async () => true),
   };
 });
 
-vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
+vi.mock("@/lib/prisma", async () => ({ prisma: (await h).prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(() => {
@@ -220,553 +50,536 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
 }));
-vi.mock("@/lib/calendrier/actions", () => ({
-  genererCalendrier: h.genererCalendrier,
+vi.mock("@/lib/calendrier/regeneration-sure", async () => ({
+  regenererApresMutation: (await h).regenerer,
 }));
-vi.mock("@/lib/storage", () => ({
-  getStorage: () => ({
-    put: async (cle: string) => {
-      h.stockage.fichiers.add(cle);
-    },
-    delete: async (cle: string) => {
-      h.stockage.fichiers.delete(cle);
-    },
-  }),
-  cleRapport: (etab: string, id: string, nom: string) =>
-    `rapports/${etab}/${id}-${nom}`,
-}));
+vi.mock("@/lib/storage", async () => {
+  const { stockage } = await h;
+  return {
+    getStorage: () => ({
+      put: async (cle: string) => {
+        stockage.fichiers.add(cle);
+      },
+      delete: async (cle: string) => {
+        stockage.fichiers.delete(cle);
+      },
+    }),
+    cleRapport: (etab: string, id: string, nom: string) => `rapports/${etab}/${id}-${nom}`,
+  };
+});
 
+const { db, prisma, stockage, regenerer } = await h;
+const client = prisma as unknown as ClientLecture;
 const { supprimerRapport, uploadRapport } = await import("./actions");
+
+const ETAB = "etab-1";
+const d = (cle: string) => depuisCleJourCivil(cle);
+
+/** Obligations RÉELLES du référentiel. */
+const ELEC_ANNUELLE = "elec-travail-periodique-annuelle";
+const ELEC_MISE_EN_SERVICE = "elec-travail-mise-en-service";
+const PORTAIL_MAINTIEN = "porte-auto-maintien-en-etat";
+
+/** L'origine du suivi des lignes de ces tests : le 15 janvier 2026. Sans autre
+ *  fait, une ligne est « à planifier » à cette date — en retard depuis. */
+const ORIGINE = d("2026-01-15");
+
+function poserEtablissement(equipements: Partial<EquipementFaux>[] = [{ id: "eq-1" }]) {
+  db.etablissements = [
+    {
+      id: ETAB,
+      userId: "user-1",
+      effectifSurSite: 5,
+      estEtablissementTravail: true,
+      estERP: false,
+      estIGH: false,
+      estHabitation: false,
+      typeErp: null,
+      categorieErp: null,
+      classeIgh: null,
+      familleHabitation: null,
+      personnesPresentesHabituellement: null,
+      manipuleMatieresR422722: null,
+      comporteLocauxSommeilPublic: null,
+      referentielVersionCalendrier: null,
+      prescriptionsParticulieres: [],
+      equipements: equipements.map((e) => ({
+        libelle: `Équipement ${e.id}`,
+        categorie: "INSTALLATION_ELECTRIQUE",
+        caracteristiques: null,
+        actif: true,
+        dateMiseEnService: null,
+        ...e,
+      })) as EquipementFaux[],
+    },
+  ];
+}
+
+/** Une ligne alignée sur le référentiel — libellé, rythme, réalisateurs —,
+ *  pour que la confluence ne parle que de la date et du statut. */
+function poserLigne(partiel: Partial<LigneFausse> = {}): LigneFausse {
+  const obligationId = partiel.obligationId ?? ELEC_ANNUELLE;
+  const o = obligationParId(obligationId)!;
+  const ligne: LigneFausse = {
+    id: "v-1",
+    etablissementId: ETAB,
+    equipementId: "eq-1",
+    salarieId: null,
+    obligationId,
+    libelleObligation: o.libelle,
+    periodicite: o.periodicite,
+    realisateurRequis: [...o.realisateurs],
+    datePrevue: ORIGINE,
+    statut: "a_planifier",
+    prescriptionId: null,
+    archiveLe: null,
+    suiviDepuis: ORIGINE,
+    rapports: [],
+    nbRapports: 0,
+    nbActions: 0,
+    ...partiel,
+  };
+  ligne.nbRapports = partiel.nbRapports ?? ligne.rapports?.length ?? 0;
+  db.verifications = [...db.verifications.filter((v) => v.id !== ligne.id), ligne];
+  return ligne;
+}
+
+let horloge = 0;
+function rapport(partiel: Partial<RapportFaux> & { id: string; dateRapport: Date }): RapportFaux {
+  return {
+    resultat: "conforme",
+    echeanceHonoree: null,
+    fichierCle: `rapports/${ETAB}/${partiel.id}-x.pdf`,
+    // Croissant dans l'ordre de pose : deux rapports du même jour se
+    // départagent comme en base.
+    createdAt: new Date(2020, 0, 1, 0, 0, (horloge += 1)),
+    ...partiel,
+  };
+}
 
 function formulaire(resultat: string, dateRapport: string): FormData {
   const fd = new FormData();
   fd.set("dateRapport", dateRapport);
   fd.set("resultat", resultat);
-  // Le formulaire poste toujours ces champs, vides le cas échéant.
   fd.set("organismeVerif", "");
   fd.set("commentaires", "");
-  fd.set(
-    "fichier",
-    new File([new Uint8Array([1, 2, 3])], "rapport.pdf", {
-      type: "application/pdf",
-    }),
-  );
+  fd.set("fichier", new File([new Uint8Array([1, 2, 3])], "rapport.pdf", { type: "application/pdf" }));
   return fd;
 }
 
-let horlogeCreation = 0;
-function rapport(partiel: Partial<RapportFaux> & { id: string; dateRapport: Date }): RapportFaux {
-  return {
-    etablissementId: "etab-1",
-    verificationId: "v-1",
-    resultat: "conforme",
-    echeanceHonoree: null,
-    fichierCle: `rapports/etab-1/${partiel.id}-x.pdf`,
-    // Croissant dans l'ordre de pose : deux rapports du même jour se
-    // départagent comme en base.
-    createdAt: new Date(2020, 0, 1, 0, 0, (horlogeCreation += 1)),
-    ...partiel,
-  };
+/** La ligne telle que la base la porte MAINTENANT (la transaction peut avoir
+ *  remplacé l'objet). */
+const ligne = (id = "v-1") => db.verifications.find((v) => v.id === id)!;
+const rapports = (id = "v-1") => ligne(id).rapports ?? [];
+const deposer = (resultat: string, date: string, id = "v-1") =>
+  uploadRapport(id, { status: "idle" }, formulaire(resultat, date));
+const retirer = (rapportId: string) =>
+  expect(supprimerRapport(rapportId)).rejects.toThrow("NEXT_REDIRECT");
+
+function enRetard(id = "v-1"): boolean {
+  const v = ligne(id);
+  return estVerificationEnRetard({ ...v, archiveLe: v.archiveLe ?? null }, new Date());
 }
 
-/** L'échéance de départ de la ligne, déjà passée au moment des tests. */
-const ECHEANCE = new Date("2026-01-15T00:00:00Z");
-
 /**
- * La ligne est-elle EN RETARD, lue par le prédicat du produit ?
- *
- * Ces tests affirmaient `statut === "depassee"`. Depuis le retrait de ce
- * statut (phase A), le retard est une fonction de la date : l'affirmer sur le
- * statut ne tiendrait plus aucune garantie. On pose donc la question que
- * l'écran pose — et le statut écrit, lui, ne dit plus que « date arrêtée ou
- * non ».
+ * LA CONFLUENCE : ce que la régénération suivante déciderait pour la ligne.
+ * Elle doit rendre la ligne « inchangée » sur sa date et son statut — sinon
+ * deux chemins écrivent deux dates, l'état que l'ADR-036 existe pour quitter.
  */
-function ligneEnRetard(): boolean {
-  const v = h.db.verification!;
-  return estVerificationEnRetard(
-    { ...v, archiveLe: v.archiveLe ?? null, libelleObligation: "Vérification" },
-    new Date(),
-  );
+async function decisionDeLaRegeneration(id = "v-1") {
+  const plan = planifier(await lireEntrees(client, ETAB), new Date());
+  return plan.aMettreAJour.find((m) => m.id === id);
+}
+async function attendreConfluence(id = "v-1") {
+  expect(
+    await decisionDeLaRegeneration(id),
+    "la régénération déplacerait la ligne que le dépôt ou le retrait vient d'écrire",
+  ).toBeUndefined();
 }
 
 beforeEach(() => {
-  h.db.rapports = [];
-  h.stockage.fichiers.clear();
-  h.genererCalendrier.mockClear();
-  h.db.verification = {
-    salarieId: null,
-    id: "v-1",
-    etablissementId: "etab-1",
-    datePrevue: ECHEANCE,
-    statut: "a_planifier",
-    periodicite: "annuelle",
-    archiveLe: null,
-  };
+  db.etablissements = [];
+  db.salaries = [];
+  db.titres = [];
+  db.verifications = [];
+  db.faireEchouer = null;
+  db.apresLecture = null;
+  db.journal = [];
+  db.verrous = [];
+  stockage.fichiers.clear();
+  regenerer.mockClear();
+  poserEtablissement();
+  poserLigne();
 });
+
+// ---------------------------------------------------------------------------
+// Le dépôt
+// ---------------------------------------------------------------------------
 
 describe("uploadRapport — résultat « non vérifiable »", () => {
-  it("n'écrit pas de date de réalisation", async () => {
-    const res = await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
+  it("ne change aucun fait de date : la ligne reste où elle est, en retard", async () => {
+    const res = await deposer("non_verifiable", "2026-06-01");
 
     expect(res.status).toBe("success");
+    expect(ligne().datePrevue).toEqual(ORIGINE);
+    expect(ligne().statut).toBe("a_planifier");
+    expect(enRetard()).toBe(true);
+    await attendreConfluence();
   });
 
-  it("ne repousse pas l'échéance, qui reste en retard, et ne touche pas son statut", async () => {
-    // Une échéance RÉELLE, « planifiée » : un déplacement sans contrôle ne la
-    // change pas en date de génération. La requalifier « à planifier » faisait
-    // dire « aucune vérification enregistrée » à la carte d'un appareil suivi,
-    // et masquait sa date au calendrier (relecture de la phase A).
-    h.db.verification = { ...h.db.verification!, statut: "planifiee" };
-    await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
+  it("une vraie échéance « planifiée » le reste, et reste en retard", async () => {
+    // Mise en service le 2025-06-01, suivie depuis le 2025-06-10 : la première
+    // échéance, née pendant le suivi, est le 2026-06-01. Un déplacement sans
+    // contrôle ne la transforme pas en date de génération.
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2025-06-01") }]);
+    poserLigne({ datePrevue: d("2026-06-01"), statut: "planifiee", suiviDepuis: d("2025-06-10") });
 
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(ligneEnRetard()).toBe(true);
-    expect(h.db.verification?.statut).toBe("planifiee");
+    await deposer("non_verifiable", "2026-08-01");
+
+    expect(ligne().datePrevue).toEqual(d("2026-06-01"));
+    expect(ligne().statut).toBe("planifiee");
+    expect(enRetard()).toBe(true);
   });
-
 
   it("conserve le rapport et son fichier, sans échéance honorée", async () => {
-    await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-06-01"));
+    await deposer("non_verifiable", "2026-06-01");
 
-    expect(h.db.rapports).toHaveLength(1);
-    expect(h.db.rapports[0].resultat).toBe("non_verifiable");
+    expect(rapports()).toHaveLength(1);
+    expect(rapports()[0].resultat).toBe("non_verifiable");
     // Rien n'a été vérifié : ce rapport n'honore aucune échéance.
-    expect(h.db.rapports[0].echeanceHonoree).toBeNull();
-    expect(h.stockage.fichiers.size).toBe(1);
+    expect(rapports()[0].echeanceHonoree).toBeNull();
+    expect(stockage.fichiers.size).toBe(1);
   });
 });
 
-describe("uploadRapport — un rapport réalisé fait ROULER la ligne (ADR-034)", () => {
-  it("le rapport garde l'échéance qu'il honorait", async () => {
-    await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
-
-    // C'est la seule trace qui survive au roulement : la ligne, elle, ne porte
-    // plus que l'échéance suivante.
-    expect(h.db.rapports[0].echeanceHonoree).toEqual(ECHEANCE);
+describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui (ADR-036)", () => {
+  it("le rapport garde l'échéance qu'il honorait (ADR-034 § 5)", async () => {
+    await deposer("conforme", "2026-06-01");
+    expect(rapports()[0].echeanceHonoree).toEqual(ORIGINE);
   });
 
-  it("la ligne passe à l'échéance suivante, planifiée", async () => {
-    await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
+  it("la ligne passe à l'échéance suivante, planifiée — et la régénération ne la déplace pas", async () => {
+    await deposer("conforme", "2026-06-01");
 
     // Date du rapport + un an, et non l'ancienne échéance + un an : c'est
     // l'intervalle que le texte impose, il court depuis le contrôle.
-    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
-    expect(h.db.verification?.statut).toBe("planifiee");
-    expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
+    expect(ligne().datePrevue).toEqual(d("2027-06-01"));
+    expect(ligne().statut).toBe("planifiee");
+    expect(regenerer).toHaveBeenCalledWith(ETAB, "rapports/upload");
+    await attendreConfluence();
   });
 
   it("la réalisation vit sur le rapport, en date civile — la ligne n'en porte plus", async () => {
-    await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
-
-    // La date saisie est une date **civile** : elle est ancrée à minuit heure
-    // de Paris, pas à minuit UTC (ADR-011). `new Date("2026-06-01")` aurait
-    // désigné 02:00 du matin heure française — l'écart qui faisait basculer
-    // une échéance du jour en « en retard » dès 2 h.
-    expect(h.db.rapports[0].dateRapport).toEqual(depuisCleJourCivil("2026-06-01"));
+    await deposer("conforme", "2026-06-01");
+    // Minuit de Paris, pas minuit UTC (ADR-011).
+    expect(rapports()[0].dateRapport).toEqual(d("2026-06-01"));
   });
 
-  it("un résultat avec écart roule pareil : le résultat vit sur le rapport", async () => {
-    await uploadRapport("v-1", { status: "idle" }, formulaire("ecart_majeur", "2026-06-01"));
+  it("un résultat avec écart fait courir le rythme pareil : le résultat vit sur le rapport", async () => {
+    await deposer("ecart_majeur", "2026-06-01");
 
-    expect(h.db.rapports[0].resultat).toBe("ecart_majeur");
-    expect(h.db.verification?.statut).toBe("planifiee");
-    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
+    expect(rapports()[0].resultat).toBe("ecart_majeur");
+    expect(ligne().statut).toBe("planifiee");
+    expect(ligne().datePrevue).toEqual(d("2027-06-01"));
   });
 
   it("un rapport ANTIDATÉ entre au registre sans faire reculer la ligne", async () => {
-    // Un contrôle de 2026 est déjà déposé et la ligne a roulé à 2027. On
-    // retrouve le rapport de 2025 : il se conserve, mais la ligne ne repart
-    // pas vers 2026 — un rapport plus récent a déjà dépassé cette échéance.
-    h.db.rapports = [
-      rapport({ id: "rap-2026", dateRapport: depuisCleJourCivil("2026-06-01"), echeanceHonoree: ECHEANCE }),
-    ];
-    h.db.verification!.datePrevue = depuisCleJourCivil("2027-06-01");
-    h.db.verification!.statut = "planifiee";
+    poserLigne({
+      datePrevue: d("2027-06-01"),
+      statut: "planifiee",
+      rapports: [rapport({ id: "rap-2026", dateRapport: d("2026-06-01"), echeanceHonoree: ORIGINE })],
+    });
 
-    const res = await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2025-05-01"));
+    const res = await deposer("conforme", "2025-05-01");
 
     expect(res.status).toBe("success");
-    expect(h.db.rapports).toHaveLength(2);
-    const antidate = h.db.rapports.find((r) => r.id !== "rap-2026")!;
+    expect(rapports()).toHaveLength(2);
+    const antidate = rapports().find((r) => r.id !== "rap-2026")!;
     expect(antidate.echeanceHonoree).toBeNull();
-    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
-    expect(h.db.verification?.statut).toBe("planifiee");
+    expect(ligne().datePrevue).toEqual(d("2027-06-01"));
+    expect(ligne().statut).toBe("planifiee");
+    await attendreConfluence();
   });
 
-  it("une obligation sans rendez-vous suivant garde son échéance et prend le statut du résultat", async () => {
-    h.db.verification!.periodicite = "mise_en_service_uniquement";
+  it("un contrôle unique se SOLDE : statut du résultat, date de l'événement", async () => {
+    // Mise en service le 2026-01-05, suivie depuis le 15 : le ponctuel est
+    // daté de l'événement, « à planifier » (déjà passé à l'origine).
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2026-01-05") }]);
+    poserLigne({ obligationId: ELEC_MISE_EN_SERVICE, datePrevue: d("2026-01-05") });
 
-    await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
+    await deposer("conforme", "2026-06-01");
 
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(h.db.verification?.statut).toBe("realisee_conforme");
-    expect(h.db.rapports[0].echeanceHonoree).toEqual(ECHEANCE);
+    expect(ligne().datePrevue).toEqual(d("2026-01-05"));
+    expect(ligne().statut).toBe("realisee_conforme");
+    expect(rapports()[0].echeanceHonoree).toEqual(d("2026-01-05"));
+    await attendreConfluence();
   });
 
-  it("n'écrit rien si la ligne a roulé entre la lecture et l'écriture", async () => {
-    // Deux dépôts concurrents sur la même ligne. Le second lit l'échéance
-    // d'avant, calcule dessus, et trouve la ligne changée : il ne doit ni
-    // écrire une échéance honorée fausse, ni laisser un rapport orphelin de la
-    // transaction annulée, ni un fichier.
-    const original = (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany;
-    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany = async () => ({ count: 0 });
+  it("un rythme `autre` sans titre se solde HORS de la fonction : statut du résultat, date inchangée (ADR-036 § 4)", async () => {
+    // Le cas qui existe : une prescription donnait un rythme à une obligation
+    // `autre` sur un portail, puis a été levée. La ligne reste — elle porte une
+    // action —, sous un rythme sans rendez-vous, et on peut encore y déposer.
+    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+    poserLigne({
+      id: "v-portail",
+      obligationId: PORTAIL_MAINTIEN,
+      equipementId: "eq-portail",
+      datePrevue: d("2021-03-01"),
+      statut: "a_planifier",
+      nbActions: 1,
+    });
 
-    const res = await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
+    const res = await deposer("conforme", "2026-06-01", "v-portail");
 
-    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany = original;
+    expect(res.status).toBe("success");
+    expect(ligne("v-portail").statut).toBe("realisee_conforme");
+    expect(ligne("v-portail").datePrevue).toEqual(d("2021-03-01"));
+    await attendreConfluence("v-portail");
+  });
+
+  it("verrouille la ligne AVANT de la relire", async () => {
+    await deposer("conforme", "2026-06-01");
+    expect(db.verrous.length).toBeGreaterThanOrEqual(1);
+    expect(db.verrous[0]).toContain('FROM "Verification"');
+    expect(db.verrous[0]).toContain("FOR UPDATE");
+    // Le verrou précède la relecture de la ligne DANS la transaction — la
+    // seconde `verification.findUnique`, la première étant le refus préalable.
+    const ops = db.journal.map((j) => j.operation);
+    const iVerrou = ops.indexOf("$queryRaw");
+    const relectures = ops.flatMap((o, i) => (o === "verification.findUnique" ? [i] : []));
+    expect(relectures.length).toBeGreaterThanOrEqual(2);
+    expect(iVerrou).toBeGreaterThan(relectures[0]);
+    expect(iVerrou).toBeLessThan(relectures[1]);
+  });
+
+  it("n'écrit rien si la ligne ne ressemble plus à ce que la lecture a vu : ni rapport, ni fichier", async () => {
+    // L'écriture conditionnée de `recalculerLigne` ne prend pas : tout est
+    // annulé — la transaction restaure le rapport déjà créé.
+    db.faireEchouer = null;
+    const verification = (prisma as { verification: { updateMany: unknown } }).verification;
+    const original = verification.updateMany;
+    verification.updateMany = () => Promise.resolve({ count: 0 });
+
+    const res = await deposer("conforme", "2026-06-01");
+
+    verification.updateMany = original;
     expect(res.status).toBe("error");
     expect(res.status === "error" && res.message).toMatch(/modifiée/);
-    expect(h.stockage.fichiers.size).toBe(0);
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+    expect(rapports()).toEqual([]);
+    expect(stockage.fichiers.size).toBe(0);
+    expect(ligne().datePrevue).toEqual(ORIGINE);
   });
 
   it("nettoie le fichier si la base refuse l'écriture", async () => {
-    const create = (h.prisma as { rapportVerification: { create: unknown } })
-      .rapportVerification.create;
-    (h.prisma as { rapportVerification: { create: unknown } }).rapportVerification.create =
-      async () => {
-        throw new Error("contrainte violée");
-      };
+    db.faireEchouer = (op) => op === "rapportVerification.create";
 
-    await expect(
-      uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01")),
-    ).rejects.toThrow("contrainte violée");
-    expect(h.stockage.fichiers.size).toBe(0);
-
-    (h.prisma as { rapportVerification: { create: unknown } }).rapportVerification.create =
-      create;
-  });
-});
-
-describe("supprimerRapport — la ligne recule d'un cycle (ADR-034)", () => {
-  /** Une ligne roulée par un rapport de juin 2026. */
-  function ligneRoulee() {
-    h.db.verification = {
-      salarieId: null,
-      id: "v-1",
-      etablissementId: "etab-1",
-      datePrevue: depuisCleJourCivil("2027-06-01"),
-      statut: "planifiee",
-      periodicite: "annuelle",
-    };
-  }
-
-  it("revient à l'échéance que le rapport honorait, en retard", async () => {
-    ligneRoulee();
-    h.db.rapports = [
-      rapport({ id: "rap-1", dateRapport: depuisCleJourCivil("2026-06-01"), echeanceHonoree: ECHEANCE }),
-    ];
-    h.stockage.fichiers.add("rapports/etab-1/rap-1-x.pdf");
-
-    // `redirect` lève, comme en production : on l'absorbe.
-    await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
-
-    // Plus de preuve → l'échéance du 15 janvier 2026 rouvre, en retard. Avant
-    // l'ADR-034 la ligne restait à 2027 : le retard était blanchi par la
-    // suppression de la pièce qui le justifiait.
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(ligneEnRetard()).toBe(true);
-    // Plus aucun rapport : rien ne dit si l'échéance rendue était réelle ou
-    // une date de génération roulée — « à planifier », et EN RETARD par sa
-    // date (relecture de contrôle de la phase A).
-    expect(h.db.verification?.statut).toBe("a_planifier");
-    // Le fichier n'est libéré qu'après le commit.
-    expect(h.stockage.fichiers.size).toBe(0);
-  });
-
-  it("se rabat sur le rapport réalisé précédent quand celui-ci reste", async () => {
-    ligneRoulee();
-    h.db.rapports = [
-      rapport({ id: "rap-2025", dateRapport: depuisCleJourCivil("2025-05-01"), echeanceHonoree: null }),
-      rapport({ id: "rap-2026", dateRapport: depuisCleJourCivil("2026-06-01"), echeanceHonoree: null }),
-    ];
-
-    await expect(supprimerRapport("rap-2026")).rejects.toThrow("NEXT_REDIRECT");
-
-    // Rapport d'avant N2, sans échéance honorée : la ligne se recalcule depuis
-    // le rapport qui reste — mai 2025 + un an, donc dépassée.
-    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2026-05-01"));
-    expect(ligneEnRetard()).toBe(true);
-    // Un contrôle reste : son échéance suivante est une date arrêtée.
-    expect(h.db.verification?.statut).toBe("planifiee");
-  });
-
-  it("retirer un rapport ANTIDATÉ ne touche pas la ligne", async () => {
-    ligneRoulee();
-    h.db.rapports = [
-      rapport({ id: "rap-2025", dateRapport: depuisCleJourCivil("2025-05-01") }),
-      rapport({ id: "rap-2026", dateRapport: depuisCleJourCivil("2026-06-01"), echeanceHonoree: ECHEANCE }),
-    ];
-
-    await expect(supprimerRapport("rap-2025")).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.rapports.map((r) => r.id)).toEqual(["rap-2026"]);
-    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
-    expect(h.db.verification?.statut).toBe("planifiee");
-  });
-
-  it("retirer un rapport non vérifiable ne touche pas la ligne", async () => {
-    ligneRoulee();
-    h.db.rapports = [
-      rapport({ id: "rap-nv", dateRapport: depuisCleJourCivil("2026-08-01"), resultat: "non_verifiable" }),
-    ];
-
-    await expect(supprimerRapport("rap-nv")).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
-    expect(h.db.verification?.statut).toBe("planifiee");
-  });
-
-  it("sans échéance honorée ni autre rapport, la ligne garde sa date et rouvre son cycle", async () => {
-    // Le cas d'avant N2 : on ne sait pas d'où la ligne venait, on n'invente
-    // rien. Elle cesse seulement d'afficher une réalisation qu'aucune pièce ne
-    // prouve.
-    ligneRoulee();
-    h.db.rapports = [
-      rapport({ id: "rap-1", dateRapport: depuisCleJourCivil("2026-06-01"), echeanceHonoree: null }),
-    ];
-
-    await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-06-01"));
-    expect(h.db.verification?.statut).toBe("a_planifier");
+    await expect(deposer("conforme", "2026-06-01")).rejects.toThrow(/panne injectée/);
+    expect(stockage.fichiers.size).toBe(0);
+    expect(rapports()).toEqual([]);
   });
 });
 
 describe("uploadRapport — une obligation éteinte ne reçoit pas de rapport", () => {
-  // Le dépôt ferait rouler une ligne archivée en lui laissant `archiveLe` : une
-  // obligation éteinte portant un rendez-vous. La fiche ne propose plus le
-  // formulaire, mais l'action est exposée en RPC (relecture du 2026-09-13).
   beforeEach(() => {
-    h.db.verification = {
-      salarieId: null,
-      id: "v-eteinte",
-      etablissementId: "etab-1",
-      datePrevue: ECHEANCE,
-      statut: "planifiee",
-      periodicite: "annuelle",
-      archiveLe: new Date("2026-02-01T00:00:00Z"),
-    };
+    poserLigne({ archiveLe: d("2026-02-01"), statut: "planifiee" });
   });
 
   it("refuse, avant tout stockage et toute écriture", async () => {
-    const res = await uploadRapport(
-      "v-eteinte",
-      { status: "idle" },
-      formulaire("conforme", "2026-06-01"),
-    );
+    const res = await deposer("conforme", "2026-06-01");
     expect(res.status === "error" && res.message).toMatch(/ne s'applique plus/i);
-    expect(h.stockage.fichiers.size).toBe(0);
-    expect(h.db.rapports).toEqual([]);
-    // Et la ligne n'a pas roulé.
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+    expect(stockage.fichiers.size).toBe(0);
+    expect(rapports()).toEqual([]);
+    expect(ligne().datePrevue).toEqual(ORIGINE);
   });
 
   it("refuse aussi si la ligne est archivée ENTRE la lecture et l'écriture", async () => {
-    // L'archivage n'écrit que `archiveLe`. Sans la condition au `where`, une
-    // régénération qui archivait la ligne pendant l'envoi du fichier laissait
-    // passer le roulement (relecture externe du 2026-09-13). On simule
-    // l'archivage juste avant l'écriture conditionnée : la lecture a vu une
-    // ligne ouverte.
-    h.db.verification = { ...h.db.verification!, archiveLe: null };
-    type AvecCreate = { rapportVerification: { create: (a: unknown) => Promise<unknown> } };
-    const create = (h.prisma as AvecCreate).rapportVerification.create;
-    (h.prisma as AvecCreate).rapportVerification.create = async (a) => {
-      h.db.verification = {
-        ...h.db.verification!,
-        archiveLe: new Date("2026-08-19T00:00:00Z"),
-      };
-      return create(a);
+    // L'archivage n'écrit que `archiveLe`. Il survient pendant l'envoi du
+    // fichier : la lecture a vu une ligne ouverte, la relecture sous verrou
+    // la voit archivée (relecture externe du 2026-09-13).
+    poserLigne({ archiveLe: null });
+    const verrou = (prisma as { $queryRaw: unknown }).$queryRaw;
+    (prisma as { $queryRaw: unknown }).$queryRaw = async () => {
+      ligne().archiveLe = d("2026-08-19");
+      return [];
     };
 
-    const res = await uploadRapport(
-      "v-eteinte",
-      { status: "idle" },
-      formulaire("conforme", "2026-06-01"),
-    );
+    const res = await deposer("conforme", "2026-06-01");
 
-    (h.prisma as AvecCreate).rapportVerification.create = create;
+    (prisma as { $queryRaw: unknown }).$queryRaw = verrou;
     expect(res.status).toBe("error");
-    // La ligne archivée n'a pas roulé.
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(h.stockage.fichiers.size).toBe(0);
+    expect(rapports()).toEqual([]);
+    expect(ligne().datePrevue).toEqual(ORIGINE);
+    expect(stockage.fichiers.size).toBe(0);
   });
 });
 
 describe("uploadRapport — la frontière médicale, tenue côté serveur", () => {
-  /**
-   * D'un titre de salarié, l'outil ne garde que l'existence, la date et
-   * l'échéance — jamais le document (ADR-023 § 2, `docs/rgpd.md` § 2.3).
-   *
-   * Trois documents l'affirmaient, et rien ne l'empêchait : la garde vivait
-   * dans un ternaire JSX de la fiche de vérification. Cette action serveur est
-   * exposée en RPC ; un appel direct, ou une refonte de cet écran, déposait le
-   * fichier sans un mot — l'attestation médicale d'une personne dans le
-   * système de fichiers.
-   */
+  // D'un titre de salarié, l'outil ne garde que l'existence, la date et
+  // l'échéance — jamais le document (ADR-023 § 2, `docs/rgpd.md` § 2.3).
   beforeEach(() => {
-    h.db.verification = {
-      salarieId: "sal-1",
+    poserLigne({
       id: "v-titre",
-      etablissementId: "etab-1",
-      datePrevue: ECHEANCE,
-      statut: "a_planifier",
-      periodicite: "quinquennale",
-    };
+      obligationId: "elec-salarie-attestation-medicale-voisinage",
+      equipementId: null,
+      salarieId: "sal-1",
+    });
   });
 
-  it("refuse un dépôt sur l'échéance d'une personne", async () => {
-    const res = await uploadRapport(
-      "v-titre",
-      { status: "idle" },
-      formulaire("conforme", "2026-06-01"),
-    );
+  it("refuse un dépôt sur l'échéance d'une personne, sans rien stocker", async () => {
+    const res = await deposer("conforme", "2026-06-01", "v-titre");
     expect(res.status).toBe("error");
-  });
-
-  it("ne stocke aucun fichier et ne crée aucun rapport", async () => {
-    // Le point qui compte : le refus doit intervenir AVANT l'écriture. Un
-    // message d'erreur rendu après avoir posé le buffer dans le stockage ne
-    // vaudrait rien.
-    await uploadRapport(
-      "v-titre",
-      { status: "idle" },
-      formulaire("conforme", "2026-06-01"),
-    );
-    expect(h.stockage.fichiers.size).toBe(0);
-    expect(h.db.rapports).toEqual([]);
-  });
-
-  it("le refus porte sur le PORTEUR, pas sur le caractère médical", async () => {
-    // Dix-neuf titres salarié restent à encoder, dont la plupart ne sont pas
-    // médicaux — SST, CACES, autorisation de conduite. Aucun n'a de document à
-    // déposer ici non plus : indexer la garde sur `pieceMedicale` la lèverait
-    // au premier d'entre eux.
-    const res = await uploadRapport(
-      "v-titre",
-      { status: "idle" },
-      formulaire("conforme", "2026-06-01"),
-    );
+    // Le refus porte sur le PORTEUR, pas sur le caractère médical.
     expect(res.status === "error" && res.message).toMatch(/personne/i);
+    expect(stockage.fichiers.size).toBe(0);
+    expect(rapports("v-titre")).toEqual([]);
   });
 });
 
-describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
-  it("supprimer les rapports du PLUS ANCIEN au plus récent ne blanchit pas le retard", () => {
-    // LE DÉFAUT BLOQUANT. Deux dépôts sur la même ligne : juin, puis
-    // septembre. On supprime juin, puis septembre. À la fin il ne reste aucune
-    // pièce, et la ligne doit être revenue à l'échéance d'origine, dépassée.
-    // Elle restait à 2027, « à planifier » : le retard disparaissait avec les
-    // pièces qui le prouvaient.
-    return (async () => {
-      h.db.verification = {
-        salarieId: null,
-        id: "v-1",
-        etablissementId: "etab-1",
-        datePrevue: depuisCleJourCivil("2027-09-01"),
-        statut: "planifiee",
-        periodicite: "annuelle",
-      };
-      h.db.rapports = [
-        rapport({
-          id: "rap-juin",
-          dateRapport: depuisCleJourCivil("2026-06-01"),
-          echeanceHonoree: ECHEANCE,
-        }),
-        rapport({
-          id: "rap-sept",
-          dateRapport: depuisCleJourCivil("2026-09-01"),
-          echeanceHonoree: depuisCleJourCivil("2027-06-01"),
-        }),
-      ];
-
-      await expect(supprimerRapport("rap-juin")).rejects.toThrow("NEXT_REDIRECT");
-      // L'échéance que juin honorait est reportée sur septembre, qui l'honore
-      // désormais : c'est elle qui rouvrira quand septembre partira.
-      expect(h.db.rapports[0].echeanceHonoree).toEqual(ECHEANCE);
-
-      await expect(supprimerRapport("rap-sept")).rejects.toThrow("NEXT_REDIRECT");
-      expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-      expect(ligneEnRetard()).toBe(true);
-      expect(h.db.verification?.statut).toBe("a_planifier");
-      expect(h.db.rapports).toEqual([]);
-    })();
-  });
-
-  it("deux rapports du MÊME JOUR : le second n'est pas perdu au retrait du premier", async () => {
-    // Un rapport et sa contre-visite, déposés le même jour. Le premier fait
-    // rouler, le second est traité comme antidaté. Retirer le premier ne doit
-    // pas laisser la ligne sans échéance à rouvrir.
-    h.db.verification = {
-      salarieId: null,
-      id: "v-1",
-      etablissementId: "etab-1",
-      datePrevue: depuisCleJourCivil("2027-06-01"),
-      statut: "planifiee",
-      periodicite: "annuelle",
-    };
-    h.db.rapports = [
-      rapport({
-        id: "rap-a",
-        dateRapport: depuisCleJourCivil("2026-06-01"),
-        echeanceHonoree: ECHEANCE,
-      }),
-      rapport({ id: "rap-b", dateRapport: depuisCleJourCivil("2026-06-01") }),
-    ];
-
-    await expect(supprimerRapport("rap-a")).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.db.rapports[0].echeanceHonoree).toEqual(ECHEANCE);
-    await expect(supprimerRapport("rap-b")).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(ligneEnRetard()).toBe(true);
-    expect(h.db.verification?.statut).toBe("a_planifier");
-  });
-
-  it("une date de GÉNÉRATION roulée puis rendue ne devient pas une échéance", async () => {
-    // S1 de la relecture de contrôle. Un « à planifier » daté de sa génération
-    // reçoit un rapport : l'échéance honorée enregistrée est cette date de
-    // génération. Retirer le rapport la rend à la ligne ; l'écrire « planifiée »
-    // annonçait « échéance dépassée » sur l'âge du dossier.
-    h.db.verification = { ...h.db.verification!, statut: "a_planifier" };
-    await uploadRapport("v-1", { status: "idle" }, formulaire("conforme", "2026-06-01"));
-    expect(h.db.verification?.statut).toBe("planifiee");
-    const [depose] = h.db.rapports;
-
-    await expect(supprimerRapport(depose.id)).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-    expect(h.db.verification?.statut).toBe("a_planifier");
-    // En retard quand même : on ne sait pas si la date était réelle, et
-    // l'incertitude ne réduit jamais la couverture.
-    expect(ligneEnRetard()).toBe(true);
-  });
-
-
+describe("uploadRapport — la date du rapport", () => {
   it("un contrôle daté d'AUJOURD'HUI est accepté", async () => {
-    // Le pendant du refus ci-dessous, et il garde la borne : reculée d'un
-    // jour, elle refuserait le dépôt le plus banal — le rapport remis sur
-    // place, le jour du contrôle. Aucun test ne le voyait.
-    const aujourdhui = cleJourCivil(new Date());
-
-    const res = await uploadRapport(
-      "v-1",
-      { status: "idle" },
-      formulaire("conforme", aujourdhui),
-    );
-
+    const res = await deposer("conforme", cleJourCivil(new Date()));
     expect(res.status).toBe("success");
-    expect(h.db.rapports).toHaveLength(1);
+    expect(rapports()).toHaveLength(1);
   });
 
-  it("l'échéance d'origine survit à TOUS les ordres de suppression, antidaté compris", async () => {
-    // LE DÉFAUT QUE LA RELECTURE DE CONTRÔLE A TROUVÉ. Trois rapports, dont un
-    // antidaté au milieu de la chaîne : selon l'ordre des suppressions, la
-    // ligne finissait sur une échéance de 2027 « à planifier », sans aucune
-    // pièce au registre — le retard blanchi par l'ordre des clics.
-    //
-    // L'invariant, éprouvé sur les six ordres : quand plus aucun rapport
-    // réalisé ne reste, la ligne est revenue à son échéance d'origine, et elle
-    // est dépassée.
+  it("un rapport daté dans le futur est refusé", async () => {
+    const res = await deposer("conforme", "2062-06-01");
+    expect(res.status).toBe("error");
+    expect(rapports()).toEqual([]);
+    expect(stockage.fichiers.size).toBe(0);
+    expect(ligne().datePrevue).toEqual(ORIGINE);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Le retrait
+// ---------------------------------------------------------------------------
+
+describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)", () => {
+  /** Une ligne dont le contrôle de juin 2026 a fait courir l'échéance. */
+  function ligneAvec(liste: RapportFaux[], datePrevue = d("2027-06-01")) {
+    poserLigne({ datePrevue, statut: "planifiee", rapports: liste });
+  }
+
+  it("sans autre rapport ni mise en service : retour à l'origine, « à planifier », en retard", async () => {
+    ligneAvec([rapport({ id: "rap-1", dateRapport: d("2026-06-01"), echeanceHonoree: ORIGINE })]);
+    stockage.fichiers.add(`rapports/${ETAB}/rap-1-x.pdf`);
+
+    await retirer("rap-1");
+
+    // Plus de preuve → le retard court de nouveau depuis l'origine du suivi.
+    // Avant l'ADR-034 la ligne restait à 2027 : le retard était blanchi par la
+    // suppression de la pièce qui le justifiait.
+    expect(ligne().datePrevue).toEqual(ORIGINE);
+    expect(ligne().statut).toBe("a_planifier");
+    expect(enRetard()).toBe(true);
+    // Le fichier n'est libéré qu'après le commit.
+    expect(stockage.fichiers.size).toBe(0);
+    expect(regenerer).toHaveBeenCalledWith(ETAB, "rapports/suppression");
+    await attendreConfluence();
+  });
+
+  it("une VRAIE échéance revient « planifiée », donc visible — plus masquée en « à planifier »", async () => {
+    // ADR-036 § 5, « Suppression du dernier rapport ». Mise en service le
+    // 2025-06-01, suivie depuis le 2025-06-10 : l'échéance du 2026-06-01 est
+    // née pendant le suivi. ~~Le retrait la rendait « à planifier », faute de
+    // savoir si elle était réelle~~ ; les faits le savent.
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2025-06-01") }]);
+    poserLigne({
+      datePrevue: d("2027-06-01"),
+      statut: "planifiee",
+      suiviDepuis: d("2025-06-10"),
+      rapports: [rapport({ id: "rap-1", dateRapport: d("2026-06-01"), echeanceHonoree: d("2026-06-01") })],
+    });
+
+    await retirer("rap-1");
+
+    expect(ligne().datePrevue).toEqual(d("2026-06-01"));
+    expect(ligne().statut).toBe("planifiee");
+    expect(enRetard()).toBe(true);
+    await attendreConfluence();
+  });
+
+  it("se rabat sur le rapport réalisé précédent quand celui-ci reste", async () => {
+    ligneAvec([
+      rapport({ id: "rap-2025", dateRapport: d("2025-05-01") }),
+      rapport({ id: "rap-2026", dateRapport: d("2026-06-01") }),
+    ]);
+
+    await retirer("rap-2026");
+
+    expect(ligne().datePrevue).toEqual(d("2026-05-01"));
+    expect(ligne().statut).toBe("planifiee");
+    expect(enRetard()).toBe(true);
+    await attendreConfluence();
+  });
+
+  it("retirer un rapport ANTIDATÉ ne touche pas la ligne", async () => {
+    ligneAvec([
+      rapport({ id: "rap-2025", dateRapport: d("2025-05-01") }),
+      rapport({ id: "rap-2026", dateRapport: d("2026-06-01"), echeanceHonoree: ORIGINE }),
+    ]);
+
+    await retirer("rap-2025");
+
+    expect(rapports().map((r) => r.id)).toEqual(["rap-2026"]);
+    expect(ligne().datePrevue).toEqual(d("2027-06-01"));
+    expect(ligne().statut).toBe("planifiee");
+  });
+
+  it("retirer un rapport non vérifiable ne touche pas la ligne", async () => {
+    ligneAvec([
+      rapport({ id: "rap-1", dateRapport: d("2026-06-01") }),
+      rapport({ id: "rap-nv", dateRapport: d("2026-08-01"), resultat: "non_verifiable" }),
+    ]);
+
+    await retirer("rap-nv");
+
+    expect(ligne().datePrevue).toEqual(d("2027-06-01"));
+    expect(ligne().statut).toBe("planifiee");
+  });
+
+  it("le retrait du seul contrôle d'un ponctuel le ROUVRE — la garde du legs ne le retient pas", async () => {
+    // Vu de la ligne, un ponctuel soldé dont on retire le seul rapport réalisé
+    // est exactement un legs : statut réalisé, aucun rapport. La garde le
+    // conserverait, et le contrôle unique resterait « fait » sans pièce.
+    // `garderLegs: false` : on sait d'où venait le statut.
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2026-01-05") }]);
+    poserLigne({
+      obligationId: ELEC_MISE_EN_SERVICE,
+      datePrevue: d("2026-01-05"),
+      statut: "realisee_conforme",
+      rapports: [rapport({ id: "rap-mes", dateRapport: d("2026-02-01") })],
+    });
+
+    await retirer("rap-mes");
+
+    expect(ligne().statut).toBe("a_planifier");
+    expect(ligne().datePrevue).toEqual(d("2026-01-05"));
+    await attendreConfluence();
+  });
+
+  it("un « non vérifiable » retiré d'un ponctuel au statut hérité (legs) ne le rouvre pas", async () => {
+    // Le pendant : le rapport retiré n'a rien soldé, le statut réalisé ne
+    // vient pas de lui. La garde du legs s'applique.
+    poserLigne({
+      obligationId: ELEC_MISE_EN_SERVICE,
+      datePrevue: d("2025-04-20"),
+      statut: "realisee_conforme",
+      rapports: [rapport({ id: "rap-nv", dateRapport: d("2026-02-01"), resultat: "non_verifiable" })],
+    });
+
+    await retirer("rap-nv");
+
+    expect(ligne().statut).toBe("realisee_conforme");
+    expect(ligne().datePrevue).toEqual(d("2025-04-20"));
+  });
+
+  it("l'origine est un FAIT : tous les ordres de retrait finissent au même état, antidaté compris", async () => {
+    // ~~L'échéance d'origine se transmettait de rapport en rapport jusqu'à la
+    // tête de chaîne, et deux rédactions successives l'avaient perdue selon
+    // l'ordre des clics.~~ Elle est `suiviDepuis` : aucun ordre ne peut la
+    // perdre. L'invariant, éprouvé sur les six ordres.
     const ordres = [
       ["a", "b", "c"],
       ["a", "c", "b"],
@@ -775,229 +588,112 @@ describe("les cas limites que la relecture du 2026-09-12 a trouvés", () => {
       ["c", "a", "b"],
       ["c", "b", "a"],
     ];
-
     for (const ordre of ordres) {
-      h.db.verification = {
-        salarieId: null,
-        id: "v-1",
-        etablissementId: "etab-1",
-        datePrevue: depuisCleJourCivil("2027-06-01"),
-        statut: "planifiee",
-        periodicite: "annuelle",
-      };
-      h.db.rapports = [
-        // a : le premier contrôle, il honore l'échéance d'origine.
-        rapport({
-          id: "a",
-          dateRapport: depuisCleJourCivil("2026-04-01"),
-          echeanceHonoree: ECHEANCE,
-        }),
-        // b : antidaté, déposé après coup — il n'a rien fait rouler.
-        rapport({ id: "b", dateRapport: depuisCleJourCivil("2026-02-01") }),
-        // c : le contrôle suivant, il honore l'échéance qu'« a » avait ouverte.
-        rapport({
-          id: "c",
-          dateRapport: depuisCleJourCivil("2026-06-01"),
-          echeanceHonoree: depuisCleJourCivil("2027-04-01"),
-        }),
-      ];
+      ligneAvec([
+        rapport({ id: "a", dateRapport: d("2026-04-01"), echeanceHonoree: ORIGINE }),
+        rapport({ id: "b", dateRapport: d("2026-02-01") }),
+        rapport({ id: "c", dateRapport: d("2026-06-01"), echeanceHonoree: d("2027-04-01") }),
+      ]);
+      for (const id of ordre) await retirer(id);
 
-      for (const id of ordre) {
-        await expect(supprimerRapport(id)).rejects.toThrow("NEXT_REDIRECT");
-      }
-
-      expect(h.db.rapports, `ordre ${ordre.join(" → ")}`).toEqual([]);
-      expect(h.db.verification?.datePrevue, `ordre ${ordre.join(" → ")}`).toEqual(
-        ECHEANCE,
-      );
-      expect(ligneEnRetard(), `ordre ${ordre.join(" → ")}`).toBe(true);
-      expect(h.db.verification?.statut, `ordre ${ordre.join(" → ")}`).toBe("a_planifier");
+      const quand = `ordre ${ordre.join(" → ")}`;
+      expect(rapports(), quand).toEqual([]);
+      expect(ligne().datePrevue, quand).toEqual(ORIGINE);
+      expect(ligne().statut, quand).toBe("a_planifier");
+      expect(enRetard(), quand).toBe(true);
     }
   });
 
-  it("l'échéance d'origine se transmet à la TÊTE de chaîne, pas au successeur immédiat", async () => {
-    // Ce que l'invariant ci-dessus exige, vu de près : le rapport retiré donne
-    // son échéance au PLUS ANCIEN des rapports restants — c'est le seul qui
-    // sera encore là quand tous les autres seront partis.
-    h.db.verification = {
-      salarieId: null,
-      id: "v-1",
-      etablissementId: "etab-1",
-      datePrevue: depuisCleJourCivil("2027-06-01"),
-      statut: "planifiee",
-      periodicite: "annuelle",
-    };
-    h.db.rapports = [
-      rapport({ id: "ancien", dateRapport: depuisCleJourCivil("2026-02-01") }),
-      rapport({
-        id: "recent",
-        dateRapport: depuisCleJourCivil("2026-06-01"),
-        echeanceHonoree: ECHEANCE,
-      }),
-    ];
+  it("deux rapports du MÊME JOUR : retirer l'un laisse l'autre commander", async () => {
+    ligneAvec([
+      rapport({ id: "rap-a", dateRapport: d("2026-06-01"), echeanceHonoree: ORIGINE }),
+      rapport({ id: "rap-b", dateRapport: d("2026-06-01") }),
+    ]);
 
-    await expect(supprimerRapport("recent")).rejects.toThrow("NEXT_REDIRECT");
-
-    const reste = h.db.rapports.find((r) => r.id === "ancien")!;
-    expect(reste.echeanceHonoree).toEqual(ECHEANCE);
+    await retirer("rap-a");
+    expect(ligne().datePrevue).toEqual(d("2027-06-01"));
+    await retirer("rap-b");
+    expect(ligne().datePrevue).toEqual(ORIGINE);
+    expect(ligne().statut).toBe("a_planifier");
   });
 
-  it("un rapport daté dans le futur est refusé", async () => {
-    // Depuis que la ligne roule sur la date du rapport, une coquille — 2062 au
-    // lieu de 2026 — rendrait tout dépôt suivant antidaté, donc sans effet :
-    // la ligne resterait figée jusqu'à ce qu'on pense à supprimer la pièce.
-    const res = await uploadRapport(
-      "v-1",
-      { status: "idle" },
-      formulaire("conforme", "2062-06-01"),
-    );
+  it("n'écrit plus d'échéance honorée sur les rapports qui restent (chaîne de transmission retirée)", async () => {
+    // INVERSÉ (ADR-036, lot 4). ~~« l'échéance d'origine se transmet à la TÊTE
+    // de chaîne, pas au successeur immédiat »~~ : le retrait réécrivait
+    // `echeanceHonoree` sur le plus ancien rapport restant pour qu'elle
+    // survive. L'échéance honorée n'est plus qu'une trace posée AU DÉPÔT ; le
+    // retrait n'y touche pas.
+    ligneAvec([
+      rapport({ id: "ancien", dateRapport: d("2026-02-01") }),
+      rapport({ id: "recent", dateRapport: d("2026-06-01"), echeanceHonoree: ORIGINE }),
+    ]);
 
-    expect(res.status).toBe("error");
-    expect(h.db.rapports).toEqual([]);
-    expect(h.stockage.fichiers.size).toBe(0);
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
+    await retirer("recent");
+
+    expect(rapports().find((r) => r.id === "ancien")!.echeanceHonoree).toBeNull();
   });
 
-  it("le retrait d'un rapport ne recule pas la ligne AVANT ce qu'un rapport restant prouve", async () => {
-    // Échéance de 2026. Un contrôle d'août 2026 fait rouler la ligne à 2027,
-    // puis un antidaté de mai 2026 entre au registre. En retirant celui d'août,
-    // la ligne ne doit pas revenir à janvier 2026 : le rapport de mai, toujours
-    // là, porte l'échéance à mai 2027.
-    h.db.verification = {
-      salarieId: null,
-      id: "v-1",
-      etablissementId: "etab-1",
-      datePrevue: depuisCleJourCivil("2027-08-01"),
-      statut: "planifiee",
-      periodicite: "annuelle",
-    };
-    h.db.rapports = [
-      rapport({ id: "rap-mai", dateRapport: depuisCleJourCivil("2026-05-01") }),
-      rapport({
-        id: "rap-aout",
-        dateRapport: depuisCleJourCivil("2026-08-01"),
-        echeanceHonoree: ECHEANCE,
-      }),
-    ];
-
-    await expect(supprimerRapport("rap-aout")).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.db.verification?.datePrevue).toEqual(depuisCleJourCivil("2027-05-01"));
-    expect(h.db.verification?.statut).toBe("planifiee");
-  });
-
-  it("un « non vérifiable » ne déclasse pas une obligation ponctuelle déjà faite", async () => {
-    // Une vérification à la mise en service, faite. Le prestataire repasse et
-    // ne peut rien contrôler : sa pièce entre au registre, mais la ligne ne
-    // redevient pas « à planifier » — il n'y a plus rien à planifier.
-    h.db.verification = {
-      salarieId: null,
-      id: "v-1",
-      etablissementId: "etab-1",
-      datePrevue: ECHEANCE,
-      statut: "realisee_conforme",
-      periodicite: "mise_en_service_uniquement",
-    };
-
-    await uploadRapport("v-1", { status: "idle" }, formulaire("non_verifiable", "2026-08-01"));
-
-    expect(h.db.verification?.statut).toBe("realisee_conforme");
-    expect(h.db.verification?.datePrevue).toEqual(ECHEANCE);
-  });
-
-  it("un dépôt refusé pour conflit ne laisse aucun rapport orphelin", async () => {
-    // La transaction annule : sans cela, le registre garderait une pièce que
-    // la ligne ne connaît pas.
-    const original = (h.prisma as { verification: { updateMany: unknown } }).verification
-      .updateMany;
-    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
-      async () => ({ count: 0 });
-
-    const res = await uploadRapport(
-      "v-1",
-      { status: "idle" },
-      formulaire("conforme", "2026-06-01"),
-    );
-
-    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
-      original;
-    expect(res.status).toBe("error");
-    expect(h.db.rapports).toEqual([]);
-  });
-
-  it("la suppression verrouille la ligne avant de la relire", async () => {
-    // Revue du 2026-09-14. Deux suppressions concurrentes sur la même ligne
-    // lisaient chacune l'état d'avant l'autre ; la seconde abandonnait son
-    // recul, et la ligne gardait l'échéance future d'un rapport disparu. Le
-    // verrou `FOR UPDATE` les enchaîne. Un faux client n'a pas de concurrence :
-    // ce test tient la présence du verrou, sur la bonne table.
-    h.verrous.length = 0;
-    h.db.rapports = [
-      rapport({
-        id: "rap-1",
-        dateRapport: depuisCleJourCivil("2026-06-01"),
-        echeanceHonoree: ECHEANCE,
-      }),
-    ];
-
-    await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
-
-    expect(h.verrous).toHaveLength(1);
-    expect(h.verrous[0]).toContain('FROM "Verification"');
-    expect(h.verrous[0]).toContain("FOR UPDATE");
+  it("verrouille la ligne avant de la relire", async () => {
+    ligneAvec([rapport({ id: "rap-1", dateRapport: d("2026-06-01") })]);
+    await retirer("rap-1");
+    expect(db.verrous[0]).toContain('FROM "Verification"');
+    expect(db.verrous[0]).toContain("FOR UPDATE");
   });
 
   it("si la ligne a bougé malgré le verrou, rien n'est retiré : le rapport reste", async () => {
-    // Le recul abandonné en silence laissait une échéance future sans pièce,
-    // et aucune régénération ne la recalait. Mieux vaut refuser le retrait —
-    // l'utilisateur recommence sur l'état à jour — que perdre un retard.
-    h.db.rapports = [
-      rapport({
-        id: "rap-1",
-        dateRapport: depuisCleJourCivil("2026-06-01"),
-        echeanceHonoree: ECHEANCE,
-      }),
-    ];
-    const original = (h.prisma as { verification: { updateMany: unknown } }).verification
-      .updateMany;
-    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
-      async () => ({ count: 0 });
+    ligneAvec([rapport({ id: "rap-1", dateRapport: d("2026-06-01"), echeanceHonoree: ORIGINE })]);
+    const verification = (prisma as { verification: { updateMany: unknown } }).verification;
+    const original = verification.updateMany;
+    verification.updateMany = () => Promise.resolve({ count: 0 });
 
-    await expect(supprimerRapport("rap-1")).rejects.toThrow(
-      "Cette échéance a été modifiée",
-    );
+    await expect(supprimerRapport("rap-1")).rejects.toThrow("Cette échéance a été modifiée");
 
-    (h.prisma as { verification: { updateMany: unknown } }).verification.updateMany =
-      original;
-    expect(h.db.rapports.map((r) => r.id)).toEqual(["rap-1"]);
+    verification.updateMany = original;
+    expect(rapports().map((r) => r.id)).toEqual(["rap-1"]);
+    expect(ligne().datePrevue).toEqual(d("2027-06-01"));
   });
 
   it("un rapport déjà retiré par une suppression concurrente ne fait rien", async () => {
-    // Relu sous le verrou : la suppression arrivée en second trouve le
-    // rapport parti, et ne rejoue ni la suppression ni le recul.
-    h.db.rapports = [
-      rapport({
-        id: "rap-1",
-        dateRapport: depuisCleJourCivil("2026-06-01"),
-        echeanceHonoree: ECHEANCE,
-      }),
-    ];
-    const lecture = (h.prisma as { rapportVerification: { findUnique: unknown } })
-      .rapportVerification.findUnique as (a: unknown) => Promise<unknown>;
+    ligneAvec([rapport({ id: "rap-1", dateRapport: d("2026-06-01") })]);
+    const rv = (prisma as { rapportVerification: { findUnique: (a: unknown) => Promise<unknown> } })
+      .rapportVerification;
+    const lecture = rv.findUnique;
     let appels = 0;
-    (h.prisma as { rapportVerification: { findUnique: unknown } }).rapportVerification.findUnique =
-      async (a: unknown) => {
-        appels += 1;
-        // Première lecture (hors transaction) : le rapport existe. Relecture
-        // sous le verrou : une autre suppression l'a emporté.
-        return appels === 1 ? lecture(a) : null;
-      };
-    const avant = { ...h.db.verification! };
+    rv.findUnique = async (a: unknown) => {
+      appels += 1;
+      // Première lecture (hors transaction) : le rapport existe. Relecture
+      // sous le verrou : une autre suppression l'a emporté.
+      return appels === 1 ? lecture(a) : null;
+    };
+    const avant = { ...ligne(), rapports: [...rapports()] };
 
-    await expect(supprimerRapport("rap-1")).rejects.toThrow("NEXT_REDIRECT");
+    await retirer("rap-1");
 
-    (h.prisma as { rapportVerification: { findUnique: unknown } }).rapportVerification.findUnique =
-      lecture;
-    expect(h.db.rapports.map((r) => r.id)).toEqual(["rap-1"]);
-    expect(h.db.verification).toEqual(avant);
+    rv.findUnique = lecture;
+    expect(ligne()).toEqual(avant);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// La confluence, sur un aller-retour complet
+// ---------------------------------------------------------------------------
+
+describe("confluence — dépôt puis retrait, la régénération n'a jamais rien à redire", () => {
+  it("après chaque étape, la ligne est « inchangée » pour la réconciliation", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2025-06-01") }]);
+    poserLigne({ datePrevue: d("2026-06-01"), statut: "planifiee", suiviDepuis: d("2025-06-10") });
+    await attendreConfluence();
+
+    await deposer("conforme", "2026-07-01");
+    expect(ligne().datePrevue).toEqual(d("2027-07-01"));
+    await attendreConfluence();
+
+    await deposer("non_verifiable", "2026-08-01");
+    await attendreConfluence();
+
+    const conforme = rapports().find((r) => r.resultat === "conforme")!;
+    await retirer(conforme.id!);
+    expect(ligne().datePrevue).toEqual(d("2026-06-01"));
+    await attendreConfluence();
   });
 });

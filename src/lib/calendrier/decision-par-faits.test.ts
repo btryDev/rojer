@@ -28,9 +28,13 @@ import {
 import { appliquerPlanEnMemoire, planVide } from "./passage-a-blanc";
 
 // ============================================================================
-// La stratégie candidate, DE BOUT EN BOUT : les sept scénarios de l'audit du
-// 2026-09-17 (ADR-036 § 1) traversent le générateur — qui renseigne `sources` —
-// puis `reconcilierCalendrier` avec `STRATEGIE_FAITS`. La table de vérité de
+// La décision par les faits, DE BOUT EN BOUT dans le réconciliateur : les sept
+// scénarios de l'audit du 2026-09-17 (ADR-036 § 1) traversent le générateur —
+// qui renseigne `sources` — puis `reconcilierCalendrier`, dont c'est la
+// décision PAR DÉFAUT depuis la bascule (lot 4). Chaque scénario dit, en
+// commentaire, ce que l'ancien moteur (`deciderParConservation`, retiré)
+// affichait. Les mêmes scénarios, par le dépôt et la suppression d'un rapport,
+// sont rejoués dans `rapports/actions.test.ts`. La table de vérité de
 // `echeance-de-ligne.test.ts` prouve la fonction ; ce fichier prouve que le
 // réconciliateur lui apporte les bons faits, et qu'appliquer le plan puis
 // replanifier quatre cents jours plus tard ne réécrit rien.
@@ -131,7 +135,7 @@ function existante(
   };
 }
 
-/** Génère, puis réconcilie avec les deux stratégies. */
+/** Génère, puis réconcilie avec la décision par défaut. */
 function scenario(
   obligations: ObligationApplicable[],
   faireExistante: ((g: VerificationGenere) => OccurrenceExistante) | null,
@@ -156,8 +160,8 @@ function scenario(
     g,
     existantes,
     now,
-    conservation: reconcilierCalendrier(existantes, aGenerer, opts),
-    faits: reconcilierCalendrier(existantes, aGenerer, opts, STRATEGIE_FAITS),
+    // SANS stratégie passée : c'est la décision par défaut qui est éprouvée.
+    faits: reconcilierCalendrier(existantes, aGenerer, opts),
     rejouer: (plan: PlanReconciliation, plusTard: Date) =>
       reconcilierCalendrier(
         appliquerPlanEnMemoire(existantes, plan, now),
@@ -166,7 +170,6 @@ function scenario(
           misesEnService: options.misesEnService,
         }),
         { ...opts, now: plusTard },
-        STRATEGIE_FAITS,
       ),
   };
 }
@@ -193,9 +196,8 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
     expect(apres.statut).toBe("a_planifier");
     expect(apres.source).toBe("origine");
     expect(joursDeRetard(apres.datePrevue, NOW)).toBe(94);
-    // La conservation la laissait telle quelle — même jour : c'est la
-    // réécriture vers minuit de Paris que l'ADR-036 § 5 annonce.
-    expect(cleJourCivil(etat(s.conservation, s.existantes[0]).datePrevue)).toBe("2026-06-15");
+    // L'ancien moteur la laissait telle quelle, au même jour : la réécriture
+    // vers minuit de Paris est celle que l'ADR-036 § 5 annonce.
     expect(planVide(s.rejouer(s.faits, J_400))).toBe(true);
   });
 
@@ -210,9 +212,9 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
     expect(apres.datePrevue).toEqual(d("2026-06-01"));
     expect(apres.statut).toBe("planifiee");
     expect(joursDeRetard(apres.datePrevue, NOW)).toBe(108);
-    // Identique à la conservation : « écraser » avec le générateur d'aujourd'hui
-    // aurait rendu « à planifier » au 17/09 — le plan candidat, lui, ne
-    // touche pas la ligne.
+    // Identique à l'ancien moteur : « écraser » avec le générateur d'avant la
+    // bascule aurait rendu « à planifier » au 17/09 — la décision par les
+    // faits, elle, ne touche pas la ligne.
     expect(s.faits.aMettreAJour).toEqual([]);
     expect(s.faits.inchangees).toBe(1);
     expect(planVide(s.rejouer(s.faits, J_400))).toBe(true);
@@ -234,8 +236,8 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
       { misesEnService: new Map([[EQ.id, d("2026-06-01")]]) },
     );
     expect(s.g.periodicite).toBe("semestrielle");
-    expect(s.g.sources?.premierPas).toBe("semestrielle");
-    expect(etat(s.conservation, s.existantes[0]).datePrevue).toEqual(d("2027-06-01"));
+    expect(s.g.sources.premierPas).toBe("semestrielle");
+    // L'ancien moteur gardait le 01/06/2027 sur une ligne « semestrielle ».
     const apres = etat(s.faits, s.existantes[0]);
     expect(apres.datePrevue).toEqual(d("2026-12-01"));
     expect(apres.statut).toBe("planifiee");
@@ -270,8 +272,7 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
       (g) => existante(g, { datePrevue: d("2027-03-15"), suiviDepuis: d("2026-03-15") }),
       { misesEnService: new Map([[EQ.id, d("2025-11-15")]]) },
     );
-    // La conservation comptait la ligne « inchangée » — correction ignorée.
-    expect(s.conservation.inchangees).toBe(1);
+    // L'ancien moteur comptait la ligne « inchangée » — correction ignorée.
     const apres = etat(s.faits, s.existantes[0]);
     expect(apres.datePrevue).toEqual(d("2026-11-15"));
     expect(apres.statut).toBe("planifiee");
@@ -290,9 +291,8 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
         }),
       { misesEnService: new Map([[EQ.id, d("2026-09-01")]]) },
     );
-    // La conservation refusait la date calculée : « à planifier » au 16/09,
+    // L'ancien moteur refusait la date calculée : « à planifier » au 16/09,
     // en retard dès le 17 — pour toujours.
-    expect(etat(s.conservation, s.existantes[0]).datePrevue).toEqual(d("2026-09-16"));
     const apres = etat(s.faits, s.existantes[0]);
     expect(apres.datePrevue).toEqual(d("2027-09-01"));
     expect(apres.statut).toBe("planifiee");
@@ -324,13 +324,12 @@ describe("deciderParFaits — les sept scénarios de l'audit, de bout en bout", 
     const s = scenario([applicable(o, [EQ], { periodicite: "semestrielle" })], null, {
       misesEnService: new Map([[EQ.id, d("2026-09-01")]]),
     });
-    // Le générateur d'aujourd'hui lit le rythme du RÉFÉRENTIEL pour le premier
-    // cycle : la conservation crée la ligne au 01/09/2027, étiquetée
-    // « semestrielle ».
-    expect(s.conservation.aCreer[0].periodicite).toBe("semestrielle");
-    expect(s.conservation.aCreer[0].datePrevue).toEqual(d("2027-09-01"));
-    // La candidate date la création par la fonction, origine = `now`.
+    // Le générateur d'avant la bascule lisait le rythme du RÉFÉRENTIEL pour le
+    // premier cycle : la ligne naissait au 01/09/2027, étiquetée
+    // « semestrielle ». La création est désormais datée par la fonction,
+    // origine = `now`.
     expect(s.faits.aCreer).toHaveLength(1);
+    expect(s.faits.aCreer[0].periodicite).toBe("semestrielle");
     expect(s.faits.aCreer[0].datePrevue).toEqual(d("2027-03-01"));
     expect(s.faits.aCreer[0].statut).toBe("planifiee");
     expect(planVide(s.rejouer(s.faits, J_400))).toBe(true);
@@ -358,7 +357,7 @@ describe("deciderParFaits — la garde du legs, et rien d'autre hors de la fonct
     const apres = etat(s.faits, s.existantes[0]);
     expect(apres.statut).toBe("realisee_conforme");
     expect(apres.datePrevue).toEqual(d("2025-04-20"));
-    // La stratégie nomme le legs, pour que le passage à blanc le compte à part.
+    // La décision nomme le legs, pour que le contrôle de santé le compte à part.
     expect(
       deciderParFaits({
         ex: s.existantes[0],
@@ -451,24 +450,37 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
     expect(faitsDeLigne(g, null, null, NOW).origine).toBe(NOW);
   });
 
-  it("une ligne générée sans `sources` retombe sur le rythme et sur la date que `datePrevueFaisantFoi` désigne", () => {
+  it("une ligne générée sans `sources` est REFUSÉE — le repli silencieux est parti à la bascule", () => {
+    // INVERSÉ LE 2026-09-19 (ADR-036, lot 4). Ce test tenait le repli : sans
+    // `sources`, le rythme pour premier pas, aucune mise en service, et la date
+    // que `datePrevueFaisantFoi` désignait. Il perdait en silence la mise en
+    // service et le premier délai d'une ligne mal câblée — donc changeait sa
+    // date sans rien dire. Le lot 2c l'annonçait : à la bascule, une erreur.
     const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
     const [g] = genererProchainesVerifications([applicable(o, [EQ])], new Map(), { now: NOW });
-    const sansSources: VerificationGenere = {
-      ...g,
-      sources: undefined,
-      datePrevueFaisantFoi: true,
-      datePrevue: d("2031-01-10"),
-    };
-    const f = faitsDeLigne(sansSources, null, null, NOW);
-    expect(f.premierPas).toBe("annuelle");
-    expect(f.miseEnService).toBeNull();
-    expect(f.dateDuTitre).toEqual(d("2031-01-10"));
+    const sansSources = { ...g, sources: undefined } as unknown as VerificationGenere;
+    expect(() => faitsDeLigne(sansSources, null, null, NOW)).toThrow(/sources/);
   });
 });
 
-describe("STRATEGIE_FAITS — l'idempotence temporelle sur un dossier mêlé", () => {
-  it("appliquer le plan candidat puis replanifier à J+400 ne réécrit rien", () => {
+describe("la décision par défaut — l'idempotence temporelle sur un dossier mêlé", () => {
+  it("c'est bien `STRATEGIE_FAITS` que le réconciliateur prend sans qu'on la lui passe", () => {
+    const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
+    const aGenerer = genererProchainesVerifications([applicable(o, [EQ])], new Map(), {
+      misesEnService: new Map([[EQ.id, d("2026-06-01")]]),
+    });
+    const ex = existante(aGenerer[0], {
+      statut: "a_planifier",
+      datePrevue: d("2026-09-16"),
+      suiviDepuis: d("2026-09-16"),
+    });
+    const opts = { now: NOW };
+    expect(reconcilierCalendrier([ex], aGenerer, opts)).toEqual(
+      reconcilierCalendrier([ex], aGenerer, opts, STRATEGIE_FAITS),
+    );
+  });
+
+  it("appliquer le plan puis replanifier à J+400 ne réécrit rien", () => {
     const annuelle = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
     const ponctuel = obligationEquipement({
       id: "elec-mise-en-service",
@@ -508,7 +520,7 @@ describe("STRATEGIE_FAITS — l'idempotence temporelle sur un dossier mêlé", (
       ]),
       equipementsEnService: new Set([EQ.id]),
     };
-    const plan = reconcilierCalendrier(existantes, aGenerer, opts, STRATEGIE_FAITS);
+    const plan = reconcilierCalendrier(existantes, aGenerer, opts);
     expect(plan.aMettreAJour).toHaveLength(2);
     expect(plan.aCreer).toHaveLength(1);
 
@@ -517,7 +529,6 @@ describe("STRATEGIE_FAITS — l'idempotence temporelle sur un dossier mêlé", (
       apres,
       genererProchainesVerifications(obligations, new Map(), { now: J_400, misesEnService }),
       { ...opts, now: J_400 },
-      STRATEGIE_FAITS,
     );
     expect(planVide(replan), JSON.stringify(replan, null, 2)).toBe(true);
     expect(replan.inchangees).toBe(3);

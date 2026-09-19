@@ -29,6 +29,10 @@ import { SCEAU_CALENDRIER } from "./version-moteur";
 import type { EquipementFaux, LigneFausse } from "./faux-prisma";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import { classerVerification } from "./etats";
+import { ajouterJours, cleJourCivil, depuisCleJourCivil, instantCivil } from "@/lib/dates";
+import { prochaineEcheance } from "./periodicite";
+import { lireEntrees, planifier, type ClientLecture } from "./passe";
+import { planVide } from "./passage-a-blanc";
 
 // `vi.hoisted` : les fabriques de `vi.mock` sont remontées en tête de module,
 // elles ne peuvent donc pas capturer une variable déclarée plus bas.
@@ -1325,5 +1329,152 @@ describe("genererCalendrier — établissement d'un autre client", () => {
       estNotFound,
     );
     expect(db.verifications.map((v) => v.id)).toEqual(["v-autre"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ADR-036 — les sept scénarios de l'audit, DE BOUT EN BOUT par la régénération
+// ---------------------------------------------------------------------------
+// Vrai matching, vraies prescriptions, vrai générateur, vraie réconciliation,
+// écritures conditionnées du faux client. Chaque scénario pose les FAITS du
+// § 1 de l'ADR-036 et la date que l'ancien moteur avait laissée en base, puis
+// régénère. Puis le dossier entier est REPLANIFIÉ à J+400 sur ce qui a été
+// écrit : le plan doit être vide — l'idempotence temporelle, sur la base.
+// (Les mêmes scénarios, au niveau du réconciliateur seul :
+// `decision-par-faits.test.ts` ; par le dépôt et le retrait :
+// `rapports/actions.test.ts`.)
+
+describe("ADR-036 — S1 à S7, de la base à la base", () => {
+  const d = (cle: string) => depuisCleJourCivil(cle);
+  const AERATION_ETAB = "aeration-controle-installations-r4222-20";
+  const assureurSemestriel = () => ({
+    id: "presc-assureur",
+    actif: true,
+    source: "demande_assureur",
+    effet: "renforce_periodicite",
+    reference: "Avenant n° 3",
+    autorite: null,
+    dateDocument: d("2026-01-10"),
+    dateFin: null,
+    obligationId: ELEC_ANNUELLE,
+    libelle: null,
+    description: null,
+    periodicite: "semestrielle",
+    realisateurRequis: [],
+    categorieEquipement: null,
+    equipementId: "eq-1",
+  });
+  const ligneDe = (id: string) => db.verifications.find((v) => v.id === id)!;
+
+  async function regenererPuisRejouer() {
+    await genererCalendrier(ETAB_ID);
+    const client = (await h).prisma as unknown as ClientLecture;
+    const lecture = await lireEntrees(client, ETAB_ID);
+    const plusTard = planifier(lecture, ajouterJours(new Date(), 400));
+    expect(planVide(plusTard), JSON.stringify(plusTard.aMettreAJour, null, 2)).toBe(true);
+    // Et une seconde régénération, aujourd'hui, n'écrit rien non plus.
+    const seconde = await genererCalendrier(ETAB_ID);
+    expect(seconde.created + seconde.updated + seconde.deleted + seconde.archived).toBe(0);
+  }
+
+  it("S1 — une obligation d'établissement sans source garde son retard, daté de son origine", async () => {
+    poserEtablissement([]);
+    const origine = instantCivil(2026, 6, 15, 10, 12);
+    db.verifications = [
+      ligne({
+        id: "s1",
+        obligationId: AERATION_ETAB,
+        equipementId: null,
+        statut: "a_planifier",
+        datePrevue: origine,
+        suiviDepuis: origine,
+      }),
+    ];
+    await regenererPuisRejouer();
+    expect(ligneDe("s1").datePrevue).toEqual(d("2026-06-15"));
+    expect(ligneDe("s1").statut).toBe("a_planifier");
+  });
+
+  it("S2 — l'échéance manquée du 01/06/2026, née pendant le suivi, est gardée", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2025-06-01") }]);
+    db.verifications = [
+      ligne({ id: "s2", equipementId: "eq-1", datePrevue: d("2026-06-01"), suiviDepuis: d("2025-09-10") }),
+    ];
+    await regenererPuisRejouer();
+    expect(ligneDe("s2").datePrevue).toEqual(d("2026-06-01"));
+    expect(ligneDe("s2").statut).toBe("planifiee");
+  });
+
+  it("S3 — annuel → semestriel par une prescription, sans rapport : 01/12/2026", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2026-06-01") }]);
+    db.etablissements[0]!.prescriptionsParticulieres = [
+      assureurSemestriel() as unknown as { id: string; actif: boolean },
+    ];
+    db.verifications = [
+      ligne({ id: "s3", equipementId: "eq-1", datePrevue: d("2027-06-01"), suiviDepuis: d("2026-06-01") }),
+    ];
+    await regenererPuisRejouer();
+    expect(ligneDe("s3").periodicite).toBe("semestrielle");
+    expect(ligneDe("s3").prescriptionId).toBe("presc-assureur");
+    expect(ligneDe("s3").datePrevue).toEqual(d("2026-12-01"));
+  });
+
+  it("S4 — la mise en service corrigée s'applique : 15/11/2026", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2025-11-15") }]);
+    db.verifications = [
+      ligne({ id: "s4", equipementId: "eq-1", datePrevue: d("2027-03-15"), suiviDepuis: d("2026-03-15") }),
+    ];
+    await regenererPuisRejouer();
+    expect(ligneDe("s4").datePrevue).toEqual(d("2026-11-15"));
+  });
+
+  it("S5 — la mise en service saisie le lendemain donne ce que la même saisie le jour même aurait donné", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2026-09-01") }]);
+    db.verifications = [
+      ligne({
+        id: "s5",
+        equipementId: "eq-1",
+        statut: "a_planifier",
+        datePrevue: d("2026-09-16"),
+        suiviDepuis: d("2026-09-16"),
+      }),
+    ];
+    await regenererPuisRejouer();
+    expect(ligneDe("s5").datePrevue).toEqual(d("2027-09-01"));
+    expect(ligneDe("s5").statut).toBe("planifiee");
+  });
+
+  it("S6 — une ligne qui porte un rapport : rapport + rythme, rien ne bouge", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2024-01-10") }]);
+    db.verifications = [
+      ligne({
+        id: "s6",
+        equipementId: "eq-1",
+        datePrevue: d("2027-03-01"),
+        suiviDepuis: d("2024-02-01"),
+        rapports: [{ dateRapport: d("2026-03-01"), resultat: "conforme" }],
+        nbRapports: 1,
+      }),
+    ];
+    await regenererPuisRejouer();
+    expect(ligneDe("s6").datePrevue).toEqual(d("2027-03-01"));
+  });
+
+  it("S7 — un appareil neuf sous prescription semestrielle naît à six mois", async () => {
+    // Mis en service AUJOURD'HUI : la ligne naît aujourd'hui, et sa première
+    // échéance ne dépend pas du jour où le test tourne.
+    const miseEnService = d(cleJourCivil(new Date()));
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: miseEnService }]);
+    db.etablissements[0]!.prescriptionsParticulieres = [
+      assureurSemestriel() as unknown as { id: string; actif: boolean },
+    ];
+    await regenererPuisRejouer();
+    const s7 = db.verifications.find(
+      (v) => v.obligationId === ELEC_ANNUELLE && v.equipementId === "eq-1",
+    )!;
+    expect(s7.periodicite).toBe("semestrielle");
+    // Six mois, pas un an : `premierPas` sous prescription (D1).
+    expect(s7.datePrevue).toEqual(prochaineEcheance(miseEnService, "semestrielle"));
+    expect(s7.statut).toBe("planifiee");
   });
 });

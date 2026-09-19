@@ -10,7 +10,7 @@ import {
   CATEGORIES,
   appliquerPlanEnMemoire,
   classerEcart,
-  comparerStrategies,
+  comparerAuMoteur,
   dateExpliqueeParUnFait,
   planVide,
   projeterLigne,
@@ -365,7 +365,11 @@ beforeEach(() => {
   db.journal = [];
 });
 
-describe("comparerStrategies — une lecture, deux plans, leur différence", () => {
+describe("comparerAuMoteur — l'état en base, le plan du moteur, leur différence", () => {
+  // DEPUIS LA BASCULE (ADR-036, lot 4) il n'y a plus qu'une stratégie : l'outil
+  // compare ce que la base PORTE à ce que la prochaine régénération ÉCRIRAIT.
+  // Les dossiers de ces tests portent des dates d'avant la bascule ; les
+  // catégories sont les mêmes qu'au passage à blanc du 2026-09-18.
   it("classe S1 en meme_jour_civil et S5 en mise_en_service, et le rejeu à J+400 est vide", async () => {
     poserEtablissement([
       {
@@ -396,7 +400,7 @@ describe("comparerStrategies — une lecture, deux plans, leur différence", () 
       }),
     ];
     const lecture = await lireEntrees(client, ETAB_ID);
-    const c = comparerStrategies(lecture, NOW);
+    const c = comparerAuMoteur(lecture, NOW);
 
     const s1 = c.ecarts.find((e) => e.ligne === "s1")!;
     expect(s1.categorie).toBe("meme_jour_civil");
@@ -407,11 +411,11 @@ describe("comparerStrategies — une lecture, deux plans, leur différence", () 
     expect(s5.apres.datePrevue).toEqual(d("2027-09-01"));
     expect(s5.apres.statut).toBe("planifiee");
     // Le reste du dossier — les obligations d'établissement et d'équipement à
-    // créer — est daté de `now` par la conservation et de minuit de Paris ou de
-    // la mise en service par la candidate : rien d'inexpliqué.
+    // créer — n'a pas d'état en base : compté, pas classé.
     expect(c.comptes.inexplique).toBe(0);
     expect(c.comptes.date_arbitraire).toBe(0);
-    expect(c.ecarts.filter((e) => e.ligne === "à créer").length).toBeGreaterThan(0);
+    expect(c.aCreer).toBeGreaterThan(0);
+    expect(c.ecarts.map((e) => e.ligne).sort()).toEqual(["s1", "s5"]);
     // Aucun nom : les écarts ne portent que des identifiants.
     for (const e of c.ecarts) {
       expect(Object.keys(e).sort()).toEqual(
@@ -419,7 +423,7 @@ describe("comparerStrategies — une lecture, deux plans, leur différence", () 
       );
     }
 
-    const j400 = rejouerPlusTard(lecture, c.planFaits, NOW, ajouterJours(NOW, 400));
+    const j400 = rejouerPlusTard(lecture, c.plan, NOW, ajouterJours(NOW, 400));
     expect(planVide(j400), JSON.stringify(j400.aMettreAJour, null, 2)).toBe(true);
   });
 
@@ -427,7 +431,7 @@ describe("comparerStrategies — une lecture, deux plans, leur différence", () 
     // Le scénario de la relecture neutre (2026-09-18), avec ses dates. La ligne
     // du contrôle unique naît le 10/03 sans mise en service, donc datée de son
     // origine ; un rapport conforme est déposé le 02/04 ; la mise en service est
-    // saisie ENSUITE au 05/01. La candidate date le ponctuel de son événement.
+    // saisie ENSUITE au 05/01. Le moteur date le ponctuel de son événement.
     poserEtablissement([
       {
         id: "eq-1",
@@ -452,7 +456,7 @@ describe("comparerStrategies — une lecture, deux plans, leur différence", () 
       }),
     ];
     const lecture = await lireEntrees(client, ETAB_ID);
-    const c = comparerStrategies(lecture, NOW);
+    const c = comparerAuMoteur(lecture, NOW);
     const e = c.ecarts.find((x) => x.ligne === "ponctuel")!;
     expect(e.avant.datePrevue).toEqual(d("2026-03-10"));
     expect(e.apres.datePrevue).toEqual(d("2026-01-05"));
@@ -474,7 +478,7 @@ describe("comparerStrategies — une lecture, deux plans, leur différence", () 
       }),
     ];
     const lecture = await lireEntrees(client, ETAB_ID);
-    const c = comparerStrategies(lecture, NOW);
+    const c = comparerAuMoteur(lecture, NOW);
     expect(c.ecarts.find((e) => e.ligne === "demo")?.categorie).toBe("date_arbitraire");
   });
 });
@@ -502,17 +506,16 @@ describe("l'export JSON — des identifiants, jamais un nom", () => {
       },
     ];
     const lecture = await lireEntrees(client, ETAB_ID);
-    const c = comparerStrategies(lecture, NOW);
+    const c = comparerAuMoteur(lecture, NOW);
 
-    const brut = JSON.stringify(c.planFaits);
+    const brut = JSON.stringify(c.plan);
     expect(brut, "le plan brut porte bien le nom : la projection a quelque chose à retirer").toContain(
       "Jeanne Dupont",
     );
 
     const projete = JSON.stringify({
       avant: lecture.existantes.map(projeterLigne),
-      planConservation: projeterPlan(c.planConservation),
-      planFaits: projeterPlan(c.planFaits),
+      plan: projeterPlan(c.plan),
       ecarts: c.ecarts,
       comptes: c.comptes,
     });
@@ -641,12 +644,11 @@ describe("l'export JSON — des identifiants, jamais un nom", () => {
     // rester exportée et inutilisée.
     const script = readFileSync(join(RACINE, SCRIPT), "utf8");
     expect(script).toMatch(/avant: r\.avant\.map\(projeterLigne\)/);
-    expect(script).toMatch(/planConservation: projeterPlan\(/);
-    expect(script).toMatch(/planFaits: projeterPlan\(/);
+    expect(script).toMatch(/plan: projeterPlan\(/);
     expect(script).toMatch(/planJ400: projeterPlan\(/);
     // Aucun plan ni aucune lecture bruts dans l'objet sérialisé.
     expect(script).not.toMatch(/avant: r\.avant,/);
-    expect(script).not.toMatch(/planFaits: r\.comparaison\.planFaits,/);
+    expect(script).not.toMatch(/plan: r\.comparaison\.plan,/);
   });
 });
 
@@ -701,6 +703,7 @@ describe("appliquerPlanEnMemoire — ce que la base porterait après le plan", (
           criticiteObligation: 3,
           raisons: [],
           prescriptionId: null,
+          sources: { premierPas: "annuelle", miseEnService: null, dateDuTitre: null },
         },
       ],
       inchangees: 1,

@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import { echeanceDuTitre } from "./echeance";
 import { classerTitre, etatDuTitre } from "./queries";
 import { titreParId } from "./catalogue";
-import { genererVerificationsDepuisTitres } from "@/lib/calendrier/generateur";
+import {
+  genererVerificationsDepuisTitres,
+  reconcilierCalendrier,
+} from "@/lib/calendrier/generateur";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import type { Obligation } from "@/lib/referentiels/conformite";
 
@@ -27,17 +30,24 @@ const HABILITATION = titreParId("elec-salarie-habilitation");
 /** Dates civiles à midi UTC, comme `titreSchema` les écrit. */
 const civile = (jour: string) => new Date(`${jour}T12:00:00.000Z`);
 
-/** Le générateur, sur un titre unique, avec le référentiel réel. */
+/**
+ * La ligne que le calendrier CRÉE pour un titre unique, avec le référentiel
+ * réel : le générateur la décrit, le réconciliateur la date par
+ * `echeanceDeLigne` (ADR-036 — le générateur ne date plus rien).
+ */
 function ligneDuCalendrier(
   obligationId: string,
   titre: { delivreLe: Date; echeanceLe: Date | null },
 ) {
-  return genererVerificationsDepuisTitres(
+  const decrites = genererVerificationsDepuisTitres(
     new Map([
       [obligationId, [{ salarieId: "sal-1", libelle: "Claire Martin", ...titre }]],
     ]),
     (id) => titreParId(id) as Obligation | undefined,
   );
+  return reconcilierCalendrier([], decrites, {
+    now: new Date("2026-09-14T10:00:00+02:00"),
+  }).aCreer;
 }
 
 describe("garde : le référentiel porte encore les deux cas", () => {

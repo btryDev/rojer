@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deciderParConservation } from "./generateur";
+import { debutDuJour } from "@/lib/dates";
+import { STRATEGIE_FAITS, creerParFaits } from "./decision-par-faits";
 import type { EtablissementFaux, LigneFausse } from "./faux-prisma";
 import { lireEntrees, planifier, type ClientLecture } from "./passe";
 
@@ -23,8 +24,8 @@ vi.mock("@/lib/auth/require-user", () => ({
 
 const USER_ID = "user-1";
 const ETAB_ID = "etab-1";
-/** Portée par l'ÉTABLISSEMENT, annuelle, sans aucune source de date : le
- *  générateur la date de `now`, « à planifier ». */
+/** Portée par l'ÉTABLISSEMENT, annuelle, sans aucune source de date : elle
+ *  naît « à planifier », datée du début du jour de son origine (règle 5). */
 const AERATION_R4222_20 = "aeration-controle-installations-r4222-20";
 
 const { db, prisma } = await h;
@@ -114,34 +115,36 @@ describe("planifier — un plan depuis une lecture et une horloge", () => {
 
     const l1 = plan1.aCreer.find((v) => v.obligationId === AERATION_R4222_20);
     const l2 = plan2.aCreer.find((v) => v.obligationId === AERATION_R4222_20);
-    // Sans source, le générateur d'aujourd'hui date la ligne de `now` : c'est
-    // le défaut que l'ADR-036 nomme, et c'est ce qui prouve ici que l'horloge
-    // est bien celle du paramètre, pas celle du processus.
-    expect(l1?.datePrevue).toEqual(j1);
-    expect(l2?.datePrevue).toEqual(j2);
+    // Sans source, une ligne À NAÎTRE est datée du début du jour de son
+    // origine — l'horloge de la passe, que `actions.ts` écrit dans
+    // `suiviDepuis`. C'est ce qui prouve ici que l'horloge est bien celle du
+    // paramètre, pas celle du processus.
+    expect(l1?.datePrevue).toEqual(debutDuJour(j1));
+    expect(l2?.datePrevue).toEqual(debutDuJour(j2));
     expect(JSON.stringify(lecture.existantes)).toBe(avant);
   });
 
-  it("emploie la stratégie par défaut quand aucune n'est passée", async () => {
+  it("emploie la décision par les faits quand aucune n'est passée (ADR-036, bascule)", async () => {
     poserEtablissement();
     db.verifications = [ligne({ id: "v-1" })];
     const lecture = await lireEntrees(client, ETAB_ID);
     const now = new Date("2026-09-18T10:00:00Z");
     const implicite = planifier(lecture, now);
-    const explicite = planifier(lecture, now, { existante: deciderParConservation });
+    const explicite = planifier(lecture, now, STRATEGIE_FAITS);
     expect(implicite).toEqual(explicite);
-    // Et la stratégie par défaut CONSERVE : la ligne « à planifier » datée du
-    // 1er mars garde sa date et son statut — seuls le libellé et les
-    // réalisateurs, que la fixture n'a pas pris au référentiel, sont réalignés.
+    // Et elle RECALCULE depuis les faits : la ligne « à planifier » n'a ni
+    // rapport ni mise en service, donc elle est datée du début du jour de son
+    // ORIGINE (`suiviDepuis`, 1er mars à 9 h 30), plus du 1er mars à minuit UTC
+    // que la base portait — même jour civil, réécrit une fois (ADR-036 § 5).
     expect(implicite.aMettreAJour).toHaveLength(1);
     expect(implicite.aMettreAJour[0].datePrevue).toEqual(
-      new Date("2026-03-01T00:00:00Z"),
+      debutDuJour(new Date("2026-03-01T09:30:00Z")),
     );
     expect(implicite.aMettreAJour[0].statut).toBe("a_planifier");
-    expect(implicite.aMettreAJour[0].source).toBeUndefined();
+    expect(implicite.aMettreAJour[0].source).toBe("origine");
   });
 
-  it("remonte la `source` d'une stratégie qui en donne une, sans la comparer", async () => {
+  it("remonte la `source` d'une décision qui en donne une, sans la comparer", async () => {
     poserEtablissement();
     db.verifications = [ligne({ id: "v-1" })];
     const lecture = await lireEntrees(client, ETAB_ID);
@@ -152,6 +155,7 @@ describe("planifier — un plan depuis une lecture et une horloge", () => {
         statut: "planifiee",
         source: "test",
       }),
+      creation: creerParFaits,
     });
     expect(plan.aMettreAJour).toHaveLength(1);
     expect(plan.aMettreAJour[0].source).toBe("test");
@@ -164,11 +168,11 @@ describe("regenererUnePasse — la jointure lire → planifier → écrire", () 
     await genererCalendrier(ETAB_ID);
     const creee = db.verifications.find((v) => v.obligationId === AERATION_R4222_20);
     expect(creee).toBeDefined();
-    // Sans source, le générateur date la ligne de `now`. Si `suiviDepuis` ne
-    // portait pas le MÊME instant, l'origine du suivi et la date de génération
-    // diraient deux jours différents autour de minuit — le décalage que la
-    // colonne existe pour fermer (ADR-036, D2).
-    expect(creee!.suiviDepuis.getTime()).toBe(creee!.datePrevue.getTime());
+    // Sans source, la ligne est datée du début du jour de son origine. Si
+    // `suiviDepuis` ne portait pas le MÊME instant que l'horloge qui a daté le
+    // plan, l'origine du suivi et la date diraient deux jours différents autour
+    // de minuit — le décalage que la colonne existe pour fermer (ADR-036, D2).
+    expect(creee!.datePrevue).toEqual(debutDuJour(creee!.suiviDepuis));
     expect(creee!.statut).toBe("a_planifier");
   });
 });

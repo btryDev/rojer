@@ -69,6 +69,24 @@ export type TitreFaux = {
   echeanceLe: Date | null;
 };
 
+/**
+ * Un rapport posé sur une ligne. `dateRapport` et `resultat` suffisent à la
+ * réconciliation ; les autres champs servent au DÉPÔT et au RETRAIT d'un
+ * rapport (`rapports/actions.ts`), qui passent depuis la bascule de l'ADR-036
+ * par le même recalcul que la régénération (`recalcul-ligne.ts`) — donc par ce
+ * même magasin.
+ */
+export type RapportFaux = {
+  dateRapport: Date;
+  resultat: string;
+  id?: string;
+  /** Départage deux rapports du même jour, comme en base. Absent = ordre de
+   *  pose (le magasin le complète). */
+  createdAt?: Date;
+  echeanceHonoree?: Date | null;
+  fichierCle?: string;
+};
+
 export type LigneFausse = {
   id: string;
   etablissementId: string;
@@ -88,7 +106,7 @@ export type LigneFausse = {
   /** Les rapports attachés à la ligne, avec leur résultat — ce que la
    *  réconciliation lit pour connaître la dernière réalisation (ADR-034).
    *  Indépendant de `nbRapports`, qui est le compte brut. */
-  rapports?: { dateRapport: Date; resultat: string }[];
+  rapports?: RapportFaux[];
   nbRapports: number;
   nbActions: number;
 };
@@ -141,6 +159,10 @@ export type Magasin = {
   apresLecture: (() => void) | null;
   /** Journal des clauses reçues, pour les assertions de portée. */
   journal: { operation: string; where: unknown }[];
+  /** Les requêtes brutes reçues (`$queryRaw`) — les verrous `FOR UPDATE`, dans
+   *  l'ordre. Un faux client n'a pas de concurrence : on tient la présence du
+   *  verrou et son rang, pas son effet. */
+  verrous: string[];
 };
 
 export function magasinVide(): Magasin {
@@ -152,6 +174,7 @@ export function magasinVide(): Magasin {
     faireEchouer: null,
     apresLecture: null,
     journal: [],
+    verrous: [],
   };
 }
 
@@ -339,6 +362,24 @@ export function fauxPrisma(db: Magasin) {
   };
 
   const verification = {
+    /** `where: { id }` + `select` honoré — la lecture du dépôt et du recalcul. */
+    findUnique: async ({
+      where,
+      select,
+    }: {
+      where: { id: string };
+      select?: Record<string, unknown>;
+    }) => {
+      const { id, ...reste } = where;
+      if (Object.keys(reste).length > 0) {
+        inconnu("verification.findUnique", Object.keys(reste));
+      }
+      db.journal.push({ operation: "verification.findUnique", where });
+      const v = db.verifications.find((x) => x.id === id);
+      if (!v) return null;
+      return select === undefined ? { ...v } : projeter(v, select);
+    },
+
     findMany: async ({
       where,
       select,
@@ -599,41 +640,151 @@ export function fauxPrisma(db: Magasin) {
     },
   };
 
+  /** Les rapports de toutes les lignes, avec la ligne qui les porte. */
+  const tousLesRapports = () =>
+    db.verifications.flatMap((v) =>
+      (v.rapports ?? []).map((r, i) => ({ v, r, rang: i })),
+    );
+  /** `createdAt`, ou l'ordre de pose à défaut — comme la base départage. */
+  const cree = (r: RapportFaux, rang: number) => r.createdAt ?? new Date(rang);
+
   const rapportVerification = {
     /**
-     * `where: { etablissementId, resultat: { in: [...] } }` — la lecture des
-     * réalisations par la réconciliation (ADR-034). Le faux client ne stocke
-     * que les rapports posés sur la ligne (`rapports` : date et résultat) :
-     * c'est tout ce que la réconciliation en lit.
+     * Deux formes, et seulement celles-là :
+     *  · `where: { etablissementId, resultat: { in } }` — la lecture des
+     *    réalisations par la réconciliation (ADR-034) ;
+     *  · `where: { verificationId, resultat?: { in } }`.
+     * Le filtre sur `resultat` est HONORÉ : un « non vérifiable » ne doit pas
+     * ressortir comme une réalisation. Sans cela, retirer le filtre du code de
+     * production ne faisait rougir aucun test.
      */
     findMany: async ({
       where,
     }: {
-      where: { etablissementId: string; resultat?: { in: readonly string[] } };
+      where: {
+        etablissementId?: string;
+        verificationId?: string;
+        resultat?: { in: readonly string[] };
+      };
+      select?: unknown;
     }) => {
       db.journal.push({ operation: "rapportVerification.findMany", where });
-      const { etablissementId, resultat, ...reste } = where;
+      const { etablissementId, verificationId, resultat, ...reste } = where;
       if (Object.keys(reste).length > 0) {
         inconnu("rapportVerification.findMany", Object.keys(reste));
       }
-      if (resultat === undefined) {
+      if (etablissementId === undefined && verificationId === undefined) {
+        inconnu("rapportVerification.findMany", ["ni établissement ni ligne"]);
+      }
+      if (etablissementId !== undefined && resultat === undefined) {
         inconnu("rapportVerification.findMany", ["resultat absent"]);
       }
-      // Le filtre sur `resultat` est HONORÉ, pas seulement exigé : les
-      // rapports posés sur une ligne portent le leur, et un « non vérifiable »
-      // ne doit pas ressortir comme une réalisation. Sans cela, retirer le
-      // filtre du code de production ne faisait rougir aucun test.
-      return db.verifications
-        .filter((v) => v.etablissementId === etablissementId)
-        .flatMap((v) =>
-          (v.rapports ?? []).map((r) => ({
-            verificationId: v.id,
-            dateRapport: r.dateRapport,
-            resultat: r.resultat,
-          })),
+      return tousLesRapports()
+        .filter(
+          ({ v }) =>
+            (etablissementId === undefined || v.etablissementId === etablissementId) &&
+            (verificationId === undefined || v.id === verificationId),
         )
-        .filter((r) => resultat.in.includes(r.resultat));
+        .filter(({ r }) => resultat === undefined || resultat.in.includes(r.resultat))
+        .map(({ v, r, rang }) => ({
+          id: r.id,
+          verificationId: v.id,
+          dateRapport: r.dateRapport,
+          createdAt: cree(r, rang),
+          resultat: r.resultat,
+          echeanceHonoree: r.echeanceHonoree ?? null,
+        }));
     },
+
+    /** `where: { verificationId, resultat: { in } }`, `orderBy` sur
+     *  `dateRapport` puis `createdAt`, HONORÉ — c'est lui qui dit si un dépôt
+     *  est antidaté. */
+    findFirst: async ({
+      where,
+      orderBy,
+    }: {
+      where: { verificationId: string; resultat?: { in: readonly string[] } };
+      orderBy?: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[];
+      select?: unknown;
+    }) => {
+      const { verificationId, resultat, ...reste } = where;
+      if (Object.keys(reste).length > 0) {
+        inconnu("rapportVerification.findFirst", Object.keys(reste));
+      }
+      const liste = tousLesRapports().filter(
+        ({ v, r }) =>
+          v.id === verificationId &&
+          (resultat === undefined || resultat.in.includes(r.resultat)),
+      );
+      const sens = orderBy?.[0]?.dateRapport === "asc" ? 1 : -1;
+      const second = orderBy?.[1]?.createdAt;
+      liste.sort((a, b) => {
+        const parDate = sens * (a.r.dateRapport.getTime() - b.r.dateRapport.getTime());
+        if (parDate !== 0 || second === undefined) return parDate;
+        return (
+          (second === "asc" ? 1 : -1) *
+          (cree(a.r, a.rang).getTime() - cree(b.r, b.rang).getTime())
+        );
+      });
+      const premier = liste[0];
+      return premier === undefined
+        ? null
+        : { dateRapport: premier.r.dateRapport, resultat: premier.r.resultat };
+    },
+
+    findUnique: async ({ where }: { where: { id: string }; select?: unknown }) => {
+      const trouve = tousLesRapports().find(({ r }) => r.id === where.id);
+      if (!trouve) return null;
+      return {
+        id: trouve.r.id,
+        etablissementId: trouve.v.etablissementId,
+        verificationId: trouve.v.id,
+        dateRapport: trouve.r.dateRapport,
+        resultat: trouve.r.resultat,
+        echeanceHonoree: trouve.r.echeanceHonoree ?? null,
+        fichierCle: trouve.r.fichierCle ?? `rapports/${trouve.v.etablissementId}/${where.id}`,
+      };
+    },
+
+    /** Pose le rapport sur sa ligne, et compte une preuve de plus. */
+    create: ({
+      data,
+    }: {
+      data: {
+        id: string;
+        verificationId: string;
+        dateRapport: Date;
+        resultat: string;
+        echeanceHonoree: Date | null;
+        fichierCle: string;
+      };
+    }) =>
+      ecriture("rapportVerification.create", () => {
+        echouerSiDemande("rapportVerification.create");
+        const v = db.verifications.find((x) => x.id === data.verificationId);
+        if (!v) throw new Error(`Ligne ${data.verificationId} introuvable`);
+        const rapport: RapportFaux = {
+          id: data.id,
+          dateRapport: data.dateRapport,
+          resultat: data.resultat,
+          echeanceHonoree: data.echeanceHonoree,
+          fichierCle: data.fichierCle,
+          createdAt: new Date(Date.now() + ++seq),
+        };
+        v.rapports = [...(v.rapports ?? []), rapport];
+        v.nbRapports += 1;
+        return rapport;
+      }),
+
+    delete: ({ where }: { where: { id: string } }) =>
+      ecriture("rapportVerification.delete", () => {
+        echouerSiDemande("rapportVerification.delete");
+        const trouve = tousLesRapports().find(({ r }) => r.id === where.id);
+        if (!trouve) throw new Error(`Rapport ${where.id} introuvable`);
+        trouve.v.rapports = (trouve.v.rapports ?? []).filter((r) => r.id !== where.id);
+        trouve.v.nbRapports -= 1;
+        return trouve.r;
+      }),
   };
 
   const prisma: Record<string, unknown> = {
@@ -643,6 +794,24 @@ export function fauxPrisma(db: Magasin) {
     rapportVerification,
   };
 
+  /** Le verrou de ligne (`SELECT … FOR UPDATE`) : journalisé, sans effet. */
+  prisma.$queryRaw = async (morceaux: TemplateStringsArray) => {
+    db.verrous.push(morceaux.join("?"));
+    // Au journal aussi, pour qu'un test puisse dire que le verrou PRÉCÈDE la
+    // relecture de la ligne.
+    db.journal.push({ operation: "$queryRaw", where: morceaux.join("?") });
+    return [];
+  };
+
+  /** Une copie profonde de ce qu'une transaction peut écrire. */
+  const instantane = () => ({
+    verifications: db.verifications.map((v) => ({
+      ...v,
+      rapports: v.rapports?.map((r) => ({ ...r })),
+    })),
+    etablissements: db.etablissements.map((e) => ({ ...e })),
+  });
+
   /**
    * Séquentielle et ATOMIQUE. Le `Promise.all` d'avant appliquait le lot dans
    * un ordre indéterminé et ne restaurait rien : remplacer `$transaction` par
@@ -650,13 +819,20 @@ export function fauxPrisma(db: Magasin) {
    */
   prisma.$transaction = async (arg: unknown) => {
     if (typeof arg === "function") {
-      return (arg as (tx: unknown) => Promise<unknown>)(prisma);
+      // La forme INTERACTIVE, atomique elle aussi (2026-09-19) : le dépôt et le
+      // retrait d'un rapport y écrivent le rapport PUIS la ligne recalculée ;
+      // une levée entre les deux doit tout annuler, rapport compris.
+      const avant = instantane();
+      try {
+        return await (arg as (tx: unknown) => Promise<unknown>)(prisma);
+      } catch (e) {
+        db.verifications = avant.verifications;
+        db.etablissements = avant.etablissements;
+        throw e;
+      }
     }
     const operations = arg as Ecriture<unknown>[];
-    const avant = {
-      verifications: db.verifications.map((v) => ({ ...v })),
-      etablissements: db.etablissements.map((e) => ({ ...e })),
-    };
+    const avant = instantane();
     const sorties: unknown[] = [];
     try {
       for (const op of operations) sorties.push(op.executer());
