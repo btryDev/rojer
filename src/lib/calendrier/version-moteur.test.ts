@@ -129,6 +129,9 @@ const RELEVE = {
   // OUI, la régénération écrit autrement : les ERP de 5ᵉ catégorie hors de ces
   // types, muets, perdent leurs quatre lignes « sommeil ». Voir le commentaire
   // de `VERSION_MOTEUR_CALENDRIER`.
+  // Recopiée SANS incrément le même jour (revue du lot) : la règle devient
+  // uniforme — hors liste, même un « oui » en base ne s'applique pas. La
+  // version 4 n'avait pas été livrée : on y reste.
   // INCRÉMENTÉ le 2026-09-19 (ADR-036, lot 4 — la bascule) : la réconciliation
   // date chaque ligne par `echeanceDeLigne` au lieu de conserver la date en
   // base ; `decision-par-faits.ts` et `echeance-de-ligne.ts` entrent dans le
@@ -173,7 +176,7 @@ const RELEVE = {
   // Recopiée SANS incrément le même jour (point 5) : `derniere-realisation.ts`
   // gagne `ORDRE_RAPPORT_PLUS_RECENT`, que le moteur n'importe pas — il
   // départage toujours par `indexerDernieresRealisations`. NON.
-  empreinte: "91818c02ec7ea78b",
+  empreinte: "83de8f616ce17231",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

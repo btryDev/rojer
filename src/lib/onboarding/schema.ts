@@ -82,7 +82,7 @@ export const onboardingSchema = z
     ),
     // ─── Locaux à sommeil pour le public (2026-09-09) ───────
     //
-    // Posée au parcours depuis ce jour, et seulement aux quatre types de
+    // Posée au parcours depuis ce jour, et seulement aux types où le sommeil est plausible de
     // `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`. DEUX réponses, « oui » ou « non »,
     // et la réponse est OBLIGATOIRE là où la question est posée (arbitrage de
     // la propriétaire, 2026-09-21 : « je ne sais pas encore » est retiré — un
@@ -163,7 +163,7 @@ export const onboardingSchema = z
       }
     }
 
-    // La réponse aux locaux à sommeil n'est acceptée QUE des quatre types à qui
+    // La réponse aux locaux à sommeil n'est acceptée QUE des types où le sommeil est plausible à qui
     // le parcours pose la question. Même forme que les deux gardes ci-dessus,
     // et même raison : un champ qui n'est pas à l'écran ne doit pas pouvoir
     // être posté depuis un client trafiqué. Ce qui serait écrit ici est un fait

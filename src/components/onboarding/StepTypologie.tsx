@@ -51,7 +51,7 @@ export function StepTypologie({
     errors?.[champ];
 
   /**
-   * La question des locaux à sommeil n'est posée qu'à quatre types (décision
+   * La question des locaux à sommeil n'est posée qu'à types où le sommeil est plausible (décision
    * du 2026-09-09, cf. `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`). Elle apparaît donc
    * SOUS le type, dans la même étape, et pas ailleurs : elle a besoin de la
    * réponse au type pour savoir si elle doit exister.
@@ -214,11 +214,13 @@ export function StepTypologie({
                 </div>
 
                 {/* Locaux à sommeil — posée au parcours depuis le 2026-09-09,
-                    et seulement aux types J, O, U et R. Elle est ici, sous le
+                    et seulement aux types de `TYPES_ERP_A_SOMMEIL_PLAUSIBLE`. Elle est ici, sous le
                     type, parce qu'elle a besoin de sa réponse pour savoir si
                     elle doit exister : c'est la seule question du parcours dont
                     la PRÉSENCE dépend d'une autre.
 
+                    [2026-09-21 : ELLE BLOQUE désormais — la réponse est due, par
+                    arbitrage ; le paragraphe qui suit décrit l'état d'avant.]
                     Elle ne bloque pas : « Je ne sais pas encore » est la valeur
                     par défaut et laisse la colonne à `null`. Le recadrage du
                     2026-09-01 a sorti deux questions de technicien de ce

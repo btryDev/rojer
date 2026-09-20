@@ -117,6 +117,9 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     ...(raw.dateCertificatConformite === undefined
       ? {}
       : { dateCertificatConformite: raw.dateCertificatConformite }),
+    // [2026-09-21 : vrai pour les types à qui la question est posée. Hors
+    // liste, `reponseSommeilSuivantLeType` remet la colonne à `null` à
+    // l'écriture — la réponse suit le type.]
     // Même protection, et elle compte davantage ici : cette colonne DÉCIDE de
     // quatre obligations (PE 4 § 1, PE 33, PE 35, PE 37). Un « non » effacé en
     // décochant l'ERP les ferait toutes réapparaître « à confirmer » sans que

@@ -245,7 +245,7 @@ describe("visite de commission — le faux négatif est corrigé (2026-09-01)", 
   it("un hôtel de 5ᵉ catégorie sans aucun équipement déclaré reçoit la visite", () => {
     expect(
       idsSansAucunEquipement(
-        restoErpCat5SansRien({ comporteLocauxSommeilPublic: true }),
+        restoErpCat5SansRien({ typeErp: "O", comporteLocauxSommeilPublic: true }),
       ),
     ).toContain(VISITE);
   });

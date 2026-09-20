@@ -180,10 +180,19 @@ scindant la ligne triennale : `R` avec locaux à sommeil déclarés ⇒ trois an
 ligne — `J`, `O`, `U` — doivent alors sortir sur une ligne sans critère de
 sommeil, sans quoi il les contraindrait aussi.
 
-**À vérifier avant d'encoder** : l'attribut n'apparaît qu'au formulaire de
+~~**À vérifier avant d'encoder** : l'attribut n'apparaît qu'au formulaire de
 modification. Rien n'établit que le parcours d'accueil pose la question, donc
 qu'un `R` puisse y répondre. Un allègement qui ne se déclenche que sur un écran
-que personne n'ouvre est un allègement qui n'existe pas.
+que personne n'ouvre est un allègement qui n'existe pas.~~
+
+> **CLOS LE 2026-09-21** (`lot/sommeil-parcours`). La question est posée au
+> parcours d'accueil ET sur la fiche, aux seuls types où le sommeil est
+> plausible (J, O, U, R, REF, OA), réponse due « oui » ou « non ». Hors de ces
+> types elle ne s'affiche nulle part et le moteur ne retient rien — mesuré
+> avant correction : restaurant, magasin, bureau et musée de 5ᵉ catégorie
+> portaient chacun quatre lignes « sommeil » qu'ils ne devaient pas. Moteur en
+> version 4. Coût assumé : l'auberge typée N n'est couverte qu'en se déclarant
+> O.
 
 **Les `obligation_manquante` du corpus ne sont pas une liste de tâches.** La
 plupart demandent un attribut de modèle, et dans le cadre arrêté le 2026-09-02

@@ -314,13 +314,18 @@ export type TypeErp = (typeof TYPES_ERP)[number];
  *    prudence, « à confirmer » ; hors de ces types, il ne retient pas — le
  *    type déclaré a déjà répondu, il n'y a pas d'incertitude à couvrir.
  *
- * UNE RÉPONSE EXPLICITE L'EMPORTE TOUJOURS, DANS LES DEUX SENS ET POUR TOUT
- * TYPE. L'auberge typée N — le produit ne stocke qu'un type par établissement
- * — déclare ses chambres sur sa fiche, et ses quatre lignes s'appliquent.
- * C'est ce qui sépare cette liste de la borne `typesExclus` essayée le
- * 2026-09-09 sur les obligations elles-mêmes : celle-là rendait muette la
- * réponse d'un type hors liste, et demandait au référentiel de trancher sans
- * source quels types hébergent.
+ * HORS DE CETTE LISTE, RIEN NE S'APPLIQUE, quelle que soit la valeur en base
+ * (arbitrage du 2026-09-21 : « sur un type hors liste la question ne s'affiche
+ * pas, donc pas de oui »). ~~Une première rédaction laissait un « oui »
+ * explicite l'emporter pour tout type, pour rattraper l'auberge typée N.~~
+ * Retiré le jour même, sur revue : aucun écran ne permettait plus d'écrire ce
+ * « oui », et la fiche l'effaçait au premier enregistrement — le dossier aurait
+ * perdu ses quatre lignes à une date de hasard. La règle est donc uniforme, et
+ * son coût est nommé : l'auberge ou la chambre d'hôtes typée N n'est couverte
+ * qu'en se déclarant O, le modèle ne stockant qu'un type par établissement.
+ *
+ * DANS la liste, la réponse tranche dans les deux sens, et le silence d'un
+ * dossier d'avant la question retient par prudence, « à confirmer ».
  *
  * D'OÙ ELLE VIENT. J, O, U, R : l'arbitrage du 2026-09-09, et ce sont aussi,
  * au tableau de GE 4 § 1, les quatre cases triennales de 4ᵉ catégorie — R n'y

@@ -1785,7 +1785,7 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
     // Le faux négatif que l'ancrage sur l'alarme produisait : PE 37 vise
     // l'établissement, pas son SSI.
     const res = determineObligationsApplicables(
-      etabRestoErpCat5({ comporteLocauxSommeilPublic: true }),
+      etabRestoErpCat5({ typeErp: "O", comporteLocauxSommeilPublic: true }),
       [],
     );
     expect(idsObligations(res)).toContain(VISITE);
@@ -1828,17 +1828,36 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
     }
   });
 
-  it("UN « OUI » EXPLICITE L'EMPORTE POUR TOUT TYPE — l'auberge typée N", () => {
-    // Le modèle ne stocke qu'un type par établissement : l'auberge, la chambre
-    // d'hôtes au-dessus du restaurant se déclarent N. Leur réponse sur la
-    // fiche doit compter — c'est ce que la borne `typesExclus` essayée le
-    // 2026-09-09 rendait impossible (« enregistrée et sans effet »).
+  it("HORS LISTE, MÊME UN « OUI » EN BASE NE S'APPLIQUE PAS — la règle est uniforme", () => {
+    // Arbitrage du 2026-09-21 : « sur un type hors liste la question ne
+    // s'affiche pas, donc pas de oui ». Une valeur héritée — d'avant la règle,
+    // ou d'un ancien type — ne compte pas : sinon le dossier garderait ses
+    // quatre lignes jusqu'au jour où la fiche, qui n'affiche plus la question,
+    // efface la réponse au détour d'un changement d'adresse. La bascule se fait
+    // une fois, à la régénération. Coût nommé dans `engine.ts` : l'auberge
+    // typée N n'est plus couverte.
     for (const typeErp of ["N", "M", "W", "Y"] as const) {
       const res = determineObligationsApplicables(
         etabRestoErpCat5({ typeErp, comporteLocauxSommeilPublic: true }),
         [],
       );
-      expect(idsObligations(res), typeErp).toContain(VISITE);
+      expect(idsObligations(res), typeErp).not.toContain(VISITE);
+    }
+  });
+
+  it("DANS LA LISTE, la réponse tranche dans les deux sens", () => {
+    // Le pendant : sans lui, écarter tout le monde passerait au vert.
+    for (const typeErp of ["O", "R", "U", "J", "REF", "OA"] as const) {
+      const oui = determineObligationsApplicables(
+        etabRestoErpCat5({ typeErp, comporteLocauxSommeilPublic: true }),
+        [],
+      );
+      const non = determineObligationsApplicables(
+        etabRestoErpCat5({ typeErp, comporteLocauxSommeilPublic: false }),
+        [],
+      );
+      expect(idsObligations(oui), typeErp).toContain(VISITE);
+      expect(idsObligations(non), typeErp).not.toContain(VISITE);
     }
   });
 
@@ -1847,6 +1866,10 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
     // que PE 1 § 1 écarte. La restriction de catégorie reste en ET.
     const res = determineObligationsApplicables(
       etabRestoErpCat5({
+        // Un HÔTEL de 2ᵉ catégorie : avec le type N de la fixture, la ligne
+        // serait écartée par le type et ce test passerait sans plus rien dire
+        // de la restriction de catégorie, qui est son objet.
+        typeErp: "O",
         categorieErp: "N2",
         comporteLocauxSommeilPublic: true,
       }),
@@ -1871,7 +1894,7 @@ describe("moteur matching — les trois autres lignes du chapitre III (locaux à
   it("sont servies à l'hôtel qui a répondu « oui », sans aucun équipement déclaré", () => {
     const ids = idsObligations(
       determineObligationsApplicables(
-        etabRestoErpCat5({ comporteLocauxSommeilPublic: true }),
+        etabRestoErpCat5({ typeErp: "O", comporteLocauxSommeilPublic: true }),
         [],
       ),
     );
@@ -1907,7 +1930,7 @@ describe("moteur matching — les trois autres lignes du chapitre III (locaux à
     // Porteur établissement (ADR-022) : une alarme de plus ne dédouble pas
     // le contrat d'entretien.
     const res = determineObligationsApplicables(
-      etabRestoErpCat5({ comporteLocauxSommeilPublic: true }),
+      etabRestoErpCat5({ typeErp: "O", comporteLocauxSommeilPublic: true }),
       [alarme(), { ...alarme(), id: "eq-alarme-2" }],
     );
     for (const id of LIGNES) {
@@ -2341,7 +2364,7 @@ describe("moteur matching — visite de commission : GE 4 en 1ʳᵉ–4ᵉ, PE 3
           // public, des locaux à sommeil ». Le cas dangereux de ce test est
           // celui-là : on le déclare, pour que la ligne PE 37 soit bien là et
           // que GE 4 n'ait aucune chance de s'y ajouter sans être vue.
-          { ...erp(cat), comporteLocauxSommeilPublic: true },
+          { ...erp(cat), typeErp: "O", comporteLocauxSommeilPublic: true },
           [
             { id: "eq-a", libelle: "Alarme", categorie: "ALARME_INCENDIE" as const, caracteristiques: null },
           ],

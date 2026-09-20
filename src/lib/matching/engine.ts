@@ -230,6 +230,11 @@ function evaluerHabitation(
  * Locaux à sommeil pour le public — arrêté du 25 juin 1980, Livre III
  * (PE 4 § 1, PE 33, PE 35, PE 37).
  *
+ * [2026-09-21 : le silence ne retient plus que pour les types où le sommeil
+ * est plausible et pour un type non renseigné — voir le corps de la fonction.
+ * Le paragraphe ci-dessous décrit la règle d'origine, qui vaut toujours DANS
+ * ces types.]
+ *
  * Le patron est celui d'`evaluerHabitation` : **l'attribut non renseigné ne
  * retire rien**, il retient l'obligation en le disant. La règle du
  * non-renseigné (`.claude/CLAUDE.md`) veut ici la même prudence, et pour la
@@ -255,23 +260,31 @@ function evaluerLocauxSommeil(
   const declare = etab.comporteLocauxSommeilPublic;
 
   if (critere === true) {
-    // Une réponse explicite l'emporte toujours, dans les deux sens et pour
-    // tout type : « non » écarte, « oui » applique — y compris à l'auberge
-    // typée N, que le type unique du modèle ne sait pas dire autrement.
+    // HORS DES TYPES OÙ LE SOMMEIL EST PLAUSIBLE, RIEN NE S'APPLIQUE — quelle
+    // que soit la valeur en base (arbitrage de la propriétaire, 2026-09-21 :
+    // « sur un type hors liste la question ne s'affiche pas, donc pas de
+    // oui »). Un type déclaré a répondu ; une valeur héritée d'avant la règle,
+    // ou d'un ancien type, ne compte pas. La règle est UNIFORME exprès : une
+    // première rédaction laissait un « oui » explicite l'emporter pour tout
+    // type, alors qu'aucun écran ne permettait plus de l'écrire et que la
+    // fiche l'effaçait au premier enregistrement — un dossier aurait perdu ses
+    // quatre lignes à une date de hasard, en modifiant son adresse. Ici la
+    // bascule se fait une fois, à la régénération, pour tout le monde.
+    //
+    // CE QUE ÇA COÛTE, NOMMÉ : l'auberge ou la chambre d'hôtes typée N n'est
+    // plus couverte — le modèle ne stocke qu'un type, et c'est en se déclarant
+    // O qu'elle retrouve la question. Coût accepté avec l'arbitrage.
+    //
+    // Sans type déclaré, rien n'a répondu : la prudence joue comme avant
+    // (ADR-022 § 7), et la réponse en base est lue.
+    if (!sommeilPlausiblePourLeType(etab.typeErp)) return { ok: false };
+
+    // Dans ces types, la réponse tranche ; le silence — dossier d'avant la
+    // question, la colonne datant du 2026-09-01 — retient par prudence.
     if (declare === false) return { ok: false };
     if (declare === true) {
       return { ok: true, raison: "locaux à sommeil pour le public déclarés" };
     }
-    // LE SILENCE, ET CE QU'IL VAUT SELON LE TYPE (2026-09-21). Jusqu'ici il
-    // retenait partout : mesuré en production, un musée, un magasin, un bureau
-    // et un restaurant de 5ᵉ catégorie portaient chacun les quatre lignes —
-    // contrat d'entretien de la détection, consigne dans les chambres —, et
-    // les auraient portées pour toujours, la question ne leur étant posée que
-    // sur un écran que personne n'ouvre. La prudence couvre une INCERTITUDE ;
-    // or un type déclaré hors de `TYPES_ERP_A_SOMMEIL_PLAUSIBLE` n'en laisse
-    // pas : le type a déjà répondu. Sans type déclaré, en revanche, rien n'a
-    // répondu, et le silence retient comme avant (ADR-022 § 7).
-    if (!sommeilPlausiblePourLeType(etab.typeErp)) return { ok: false };
     return {
       ok: true,
       raison:

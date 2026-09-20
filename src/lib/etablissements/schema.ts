@@ -30,44 +30,22 @@ export const TYPE_ERP = [
 export const CATEGORIES_ERP = ["N1", "N2", "N3", "N4", "N5"] as const;
 
 /**
- * LES QUATRE TYPES AUXQUELS LA QUESTION DES LOCAUX À SOMMEIL EST POSÉE.
+ * À QUI LA QUESTION DU SOMMEIL EST POSÉE — alias de la liste du référentiel.
  *
- * DÉCISION DE PRODUIT DU 2026-09-09, ET ELLE N'EST PAS UNE LECTURE DU TEXTE.
- * Aucun article ne rattache un type d'exploitation à la présence de locaux à
- * sommeil, et ce n'est pas faute d'avoir cherché : `GN 1 § 1` est la
- * nomenclature des vingt-deux types et ne dit rien de l'hébergement ; son § 4
- * en donne la définition — « les seuls locaux destinés au sommeil du public la
- * nuit » — et rien de plus. La liste vient d'un spécialiste consulté par la
- * propriétaire, arbitrée le 2026-09-09 en connaissance de cette absence de
- * fondement textuel. Elle est une BORNE DE PÉRIMÈTRE, pas une déduction : le
- * produit ne suppose pas qu'une boulangerie ne fait pas dormir, il décide que
- * les obligations de locaux à sommeil ne visent que ces quatre types.
+ * ~~Une première version (2026-09-09, jamais fusionnée) en faisait QUATRE types
+ * et une BORNE DE PÉRIMÈTRE sur les obligations elles-mêmes (`typesExclus`), en
+ * sacrifiant nommément le refuge et l'hôtel-restaurant d'altitude.~~ Ce n'est
+ * plus ça : la liste en compte SIX, elle ne borne aucune obligation, et REF et
+ * OA y figurent. Elle dit à qui la question est posée — parcours d'accueil et
+ * fiche —, et le moteur s'en sert pour le silence. L'argument complet est sur
+ * `TYPES_ERP_A_SOMMEIL_PLAUSIBLE` (`referentiels/types-communs.ts`).
  *
- * CE QUE CETTE BORNE RENVERSE, ET IL FAUT LE LIRE AVANT DE LA TOUCHER. Le
- * dépôt avait tranché deux fois dans l'AUTRE sens :
- *   — `docs/carto-obligations-hors-equipement.md` § « Décisions tranchées »
- *     point 3 : « attribut DÉCLARÉ, pas dérivé », au motif que « la dérivation
- *     depuis `typeErp` est incomplète des deux côtés — un type N peut comporter
- *     des chambres à l'étage, un type R sans internat n'en comporte pas » ;
- *   — la note de `incendie-erp-visite-commission-cat5-quinquennale` : « encoder
- *     une liste de types équivaudrait à trancher, sans source article par
- *     article, quels types d'exploitation comportent des locaux à sommeil — ce
- *     que la règle n°6 interdit ».
- * Les deux ont été relues et remontées avant l'arbitrage. Elles restent vraies
- * comme lecture du texte ; elles sont écartées comme règle de produit. Ce qui
- * les écarte est une décision, pas une réfutation — d'où cette note plutôt
- * qu'une suppression.
- *
- * CE QU'ELLE COÛTE, NOMMÉ PLUTÔT QUE TU. Trois cas perdent les quatre lignes :
- * le refuge de montagne (REF) et l'hôtel-restaurant d'altitude (OA), dont les
- * libellés de GN 1 nomment pourtant l'hébergement ; et le type N ou M qui
- * comporte des chambres à l'étage — l'auberge, la chambre d'hôtes au-dessus du
- * restaurant —, que `typeErp` ne sait pas distinguer parce qu'il ne stocke
- * qu'un type par établissement et que `GN 2` et `GN 3`, qui règlent le
- * classement des exploitations à types multiples, ne sont pas dépouillés au
- * corpus. Ces trois cas ont été soumis à l'arbitrage et écartés avec lui.
- *
- * L'ORDRE EST CELUI DE `TYPE_ERP`, lui-même celui de `GN 1 § 1`.
+ * Deux lectures du texte avaient été écartées par l'arbitrage de 2026-09-09 et
+ * le restent : « un type N peut comporter des chambres à l'étage », et
+ * « encoder une liste de types trancherait sans source quels types
+ * hébergent ». Elles sont vraies comme lecture du règlement ; ce qui les écarte
+ * est une décision de produit, prise deux fois, en connaissance du coût —
+ * l'auberge typée N n'est pas couverte tant qu'elle ne se déclare pas O.
  */
 // ~~Liste propre à ce module : O, R, U, J, bornant aussi les obligations par
 // `typesExclus`.~~ Remplacée le 2026-09-21 : la liste vit côté référentiel
@@ -262,6 +240,11 @@ export const etablissementSchema = z
     // `manipuleMatieresR422722`, et la même règle : vide = « pas encore
     // répondu », jamais « non ».
     //
+    // [2026-09-21 : « je ne sais pas » n'est plus proposé, et la réponse est
+    // due pour les types de la liste (`superRefine` ci-dessous). La protection
+    // décrite ici ne vaut plus que pour eux : hors liste, la colonne est
+    // remise à `null` par `reponseSommeilSuivantLeType`.]
+    //
     // `undefined` traverse au lieu d'être coercé en `null` — c'est ce qui
     // distingue « le champ n'a pas été posté » (bloc ERP replié) de
     // « l'utilisateur a remis « je ne sais pas ». Sans lui, décocher l'ERP
@@ -311,6 +294,31 @@ export const etablissementSchema = z
     dateCertificatConformite: dateCivileOptionnelle,
   })
   .superRefine((val, ctx) => {
+    // LA RÉPONSE SUR LE SOMMEIL EST DUE À LA PORTE, PAS SEULEMENT À L'ÉCRAN
+    // (2026-09-21, relevé par la revue du lot). Le `required` du formulaire ne
+    // tenait que dans le navigateur : ce schéma — qui sert la modification ET,
+    // par `etablissementCreationSchema`, la création d'un second établissement
+    // — laissait passer un hôtel muet. `actions.ts` l'écrit : « c'est la
+    // porte, pas le parcours, qui doit porter la règle ». Même contrôle que
+    // celui d'`onboarding/schema.ts`. Hors de la liste, rien n'est refusé : la
+    // valeur est remise à `null` par `reponseSommeilSuivantLeType`.
+    if (
+      val.estERP &&
+      val.typeErp != null &&
+      (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
+        val.typeErp,
+      ) &&
+      (val.comporteLocauxSommeilPublic === undefined ||
+        val.comporteLocauxSommeilPublic === null)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["comporteLocauxSommeilPublic"],
+        message:
+          "Indiquez si votre établissement héberge du public pour la nuit.",
+      });
+    }
+
     // Règle ADR-004 : les précisions sont alignées sur les flags.
     if (val.estERP) {
       if (!val.typeErp) {

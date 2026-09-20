@@ -29,7 +29,7 @@ export type OnboardingState = {
   categorieErp: string;
 
   // Locaux à sommeil pour le public — posée depuis le 2026-09-09, et seulement
-  // aux quatre types de `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`. Trois valeurs :
+  // aux types où le sommeil est plausible de `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`. Trois valeurs :
   // "" (« je ne sais pas encore »), "oui", "non". La chaîne vide n'est pas un
   // trou de saisie, c'est une réponse : elle laisse la colonne à `null`.
   comporteLocauxSommeilPublic: string;
