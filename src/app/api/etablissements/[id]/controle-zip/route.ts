@@ -521,12 +521,26 @@ function genererReadme(args: {
     "",
     " DUERP :                    art. R. 4121-1 à R. 4121-4 Code du travail",
     " Vérifications :            art. R. 4226-16 et s. Code du travail",
-    " Registre de sécurité :     art. L. 4711-5 Code du travail",
+    " Registre de sécurité :     art. R. 4323-25 et R. 4323-26 Code du travail",
+    "                            (conservation : art. D. 4711-3, cinq ans)",
     " Accessibilité ERP :        art. R. 164-6 CCH · arrêté 19-04-2017",
     " Vigilance donneur d'ordre : art. L. 8222-1 Code du travail",
-    " Permis de feu :            art. R. 4224-17 Code du travail",
+    // ~~« Permis de feu : art. R. 4224-17 Code du travail »~~ — retiré le
+    // 2026-09-20. R. 4224-17 impose l'entretien et la vérification des
+    // INSTALLATIONS ET DISPOSITIFS techniques et de sécurité des lieux de
+    // travail (verbatim au corpus `code-travail-portes`) ; il ne dit rien d'un
+    // permis de travail par point chaud. Et ce même README écrit dix lignes
+    // plus bas que l'INRS ED 6030 et la règle APSAD R43 sont « sans valeur
+    // réglementaire propre » : lui donner un article de code au-dessus le
+    // contredisait dans le même document, celui qu'on remet à un inspecteur.
+    " Permis de feu :            voir « référentiels non opposables » ci-dessous",
     " Plan de prévention :       art. R. 4512-6 à R. 4512-12 CT",
-    " Carnet sanitaire eau :     arrêté 01-02-2010 · art. R. 1321-23 CSP",
+    // ~~« · art. R. 1321-23 CSP »~~ — retiré le 2026-09-20. Le corpus a
+    // établi le 2026-09-02 que son destinataire est « la personne responsable
+    // de la production ou de la distribution d'eau », c'est-à-dire
+    // l'exploitant du réseau PUBLIC, et non l'établissement raccordé. Le
+    // badge a été retiré de l'écran ce jour-là ; il était resté dans le ZIP.
+    " Carnet sanitaire eau :     arrêté du 1er février 2010",
     " Maintien en conformité :   art. R. 4224-17 Code du travail",
     "",
     // APSAD R43 et l'INRS ED 6030 figuraient dans la liste ci-dessus, entre

@@ -140,12 +140,15 @@ export default async function PermisFeuListePage({
                 R. 4224-17 mais R. 4434-9 (bruit). Relu à la source le
                 2026-08-28 ; l'identifiant juste est celui que citent déjà les
                 autres écrans. */}
-            <LegalBadge
-              charte="board"
-              reference="Art. R. 4224-17 CT"
-              href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197"
-              extrait="Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. Toute défectuosité susceptible d'affecter la santé et la sécurité des travailleurs est éliminée le plus rapidement possible."
-            />
+            {/* ~~Badge « Art. R. 4224-17 CT »~~ — retiré le 2026-09-20. Son URL
+                avait déjà été corrigée le 2026-08-28 ; l'article lui-même n'a
+                pas sa place ici. Il impose l'entretien et la vérification des
+                INSTALLATIONS ET DISPOSITIFS techniques et de sécurité des lieux
+                de travail — c'est ce qu'il fonde ailleurs dans le produit, sur
+                les portes et portails —, et rien sur un permis de travail par
+                point chaud. Le cadre réel de cette page est nommé juste
+                au-dessus, et il est non opposable : c'est la vérité de ce
+                module, écrite au README du ZIP et désormais ici aussi. */}
             {/* Ici se tenait « MS 52 ERP · APSAD R43 », sans lien. Les deux
                 références étaient fausses, chacune à sa manière, et le
                 2026-08-28 les a relues à la source :

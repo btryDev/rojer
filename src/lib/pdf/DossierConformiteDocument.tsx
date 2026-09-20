@@ -608,12 +608,17 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             Hiérarchie des mesures opposable.
           </Text>
           <Text style={{ marginTop: 3 }}>
-            — Vérifications périodiques : articles R. 4226-14 et s. CT
+            {/* ~~« R. 4226-14 et s. »~~ — corrigé le 2026-09-20. Au corpus,
+                R. 4226-14 est la vérification INITIALE et R. 4226-16 la
+                PÉRIODIQUE : sous le mot « périodiques », c'était le mauvais
+                article. Le README du ZIP écrivait déjà R. 4226-16 — deux
+                documents du même dossier se contredisaient. */}
+            — Vérifications périodiques : articles R. 4226-16 et s. CT
             (électricité), R. 4222-20 CT (aération), R. 4227-28 et s. CT
             (incendie), arrêté du 25 juin 1980 (règlement ERP).
           </Text>
           <Text style={{ marginTop: 3 }}>
-            — Registre de sécurité : L. 4711-5 CT, R. 143-44 CCH (ERP),
+            — Registre de sécurité : R. 4323-25 et R. 4323-26 CT, R. 143-44 CCH (ERP),
             R. 146-35 CCH (IGH).
           </Text>
           <Text style={{ marginTop: 6 }}>

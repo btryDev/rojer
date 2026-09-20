@@ -225,9 +225,18 @@ export function PrescriptionForm({
           />
         </div>
         <p className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          {/* ~~« CCH, art. R. 143-45 »~~ — corrigé le 2026-09-20, les deux
+              articles relus à la source. R. 143-45 existe, mais c'est celui de
+              la FERMETURE d'un établissement exploité en infraction ; il ne
+              décrit pas la suite ordinaire d'une visite. Aucune occurrence de
+              « 143-45 » ailleurs dans le dépôt : la référence était citée au
+              dirigeant et adossée à rien. R. 143-42 est le bon — « A l'issue
+              de chaque visite, il est dressé un procès-verbal. Le maire notifie
+              le résultat de ces visites ET SA DÉCISION aux exploitants » —,
+              c'est-à-dire exactement le partage que cette phrase explique. */}
           Un procès-verbal de commission est un avis ; l&apos;acte qui prescrit
-          est l&apos;arrêté du maire ou du préfet qui le suit (CCH, art. R.
-          143-45). Rojer n&apos;enregistre qu&apos;une prescription qui
+          est la décision que le maire ou le préfet notifie ensuite (CCH, art. R.
+          143-42). Rojer n&apos;enregistre qu&apos;une prescription qui
           <strong> renforce</strong>{" "}
           vos obligations : un allègement se conserve
           dans vos pièces, il n&apos;est pas pris en compte dans le calendrier.

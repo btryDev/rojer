@@ -233,7 +233,7 @@ export type SuppressionEquipementResult =
  * `Verification.equipementId` est en `onDelete: Cascade`, et
  * `RapportVerification.verificationId` et `Action.verificationId` le sont
  * aussi : supprimer une hotte emportait ses vérifications *y compris
- * réalisées*, donc les rapports du registre de sécurité (art. L. 4711-5 CT)
+ * réalisées*, donc les rapports du registre de sécurité (art. D. 4711-3 CT)
  * et les actions correctives ouvertes. Les PDF, eux, restaient sur le disque,
  * orphelins.
  *
@@ -274,7 +274,11 @@ export async function supprimerEquipement(
       message:
         "Équipement retiré du parc. Ses rapports de vérification et ses " +
         "actions correctives sont conservés : la loi impose de pouvoir les " +
-        "présenter en cas de contrôle (art. L. 4711-5 du Code du travail). " +
+        // ~~L. 4711-5~~ : cette phrase dit « la loi impose de POUVOIR LES
+        // PRÉSENTER », c'est-à-dire une conservation — et la conservation est
+        // à D. 4711-3 (cinq ans, ou les deux derniers contrôles). L. 4711-5
+        // n'impose rien : il autorise à réunir plusieurs registres en un seul.
+        "présenter en cas de contrôle (art. D. 4711-3 du Code du travail). " +
         "Il n'apparaît plus dans vos listes et ne génère plus d'échéance.",
     };
   }

@@ -90,7 +90,13 @@ const QUESTIONS_TRI_ETAT: Record<
 > = {
   estVmcGaz: {
     question: "Cette VMC est-elle raccordée à des appareils à gaz ?",
-    aide: "On parle de « VMC-Gaz » : la ventilation évacue aussi les produits de combustion de chaudières ou de chauffe-eau au gaz. Si oui, entretien et vérification annuels par un professionnel sous contrat écrit (arrêté du 25 avril 1985).",
+    aide: "On parle de « VMC-Gaz » : la ventilation évacue aussi les produits de combustion de chaudières ou de chauffe-eau au gaz. Si oui, entretien et vérification annuels par un professionnel sous contrat écrit (arrêté du 23 février 2018, art. 26)."
+    // ~~« arrêté du 25 avril 1985 »~~ — corrigé le 2026-09-20. Ce texte est
+    // ABROGÉ depuis le 5 mars 2018, et le dépôt l'écrit lui-même en tête de
+    // `conformite/aeration.ts` : c'est l'arrêté du 23 février 2018 qui l'a
+    // abrogé, et ce sont ses articles qui portent les deux obligations
+    // VMC-Gaz encodées. Le rythme annoncé au dirigeant était juste ; le texte
+    // cité ne l'était plus depuis huit ans.,
   },
   aExtinctionAutomatique: {
     question:
