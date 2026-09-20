@@ -6,6 +6,11 @@ import { getDashboardData } from "@/lib/dashboard/queries";
 import { countAlertesVigilance } from "@/lib/prestataires/queries";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
+import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import {
+  etatSelonCalendrier,
+  type EtatPiece,
+} from "@/lib/calendrier/etat-affiche";
 
 export const metadata = {
   title: "Préparer un contrôle — Dossier 1 clic",
@@ -46,6 +51,7 @@ export default async function ControlePage({
     duerpVersion,
     nbRapports,
     registreAccessibilite,
+    fraicheur,
   ] = await Promise.all([
     getDashboardData(id),
     countAlertesVigilance(id),
@@ -60,14 +66,33 @@ export default async function ControlePage({
       where: { etablissementId: id },
       select: { publie: true },
     }),
+    // CE QU'ON SAIT AVANT DE COMPTER. C'est l'écran qu'on ouvre devant un
+    // contrôleur : il ne peut affirmer « à jour » que s'il sait sur quoi.
+    fraicheurCalendrier(id),
   ]);
+
+  // LE PATRON `etat-charge.ts`, APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
+  // se tranche AVANT tout comptage. Un calendrier jamais calculé rend zéro
+  // retard, et zéro retard se lit comme une bonne nouvelle — c'est exactement
+  // le défaut que ce fichier portait. Tant qu'on ne sait pas, aucune ligne
+  // adossée au calendrier ne dit « à jour » ; elle dit « à planifier », ce qui
+  // est vrai dans les deux cas.
+  const avertissement = phraseFraicheur(fraicheur);
+  const selonCalendrier = (etat: EtatPiece): EtatPiece =>
+    etatSelonCalendrier(fraicheur, etat);
 
   const elements: ElementDossier[] = [
     {
       titre: "Dossier de conformité consolidé",
       description: "Synthèse globale de votre posture santé-sécurité.",
       present: true,
-      etat: "a_jour",
+      // PAS D'ÉTAT, et c'est une correction : cette ligne portait
+      // `etat: "a_jour"` ÉCRIT EN DUR, sans lire la moindre donnée. Un dossier
+      // vide sortait donc avec une pastille verte sur la première ligne de
+      // l'écran ouvert devant un contrôleur. La pièce est bien produite — d'où
+      // `present: true`, qui dit ce qu'il part dans le ZIP — mais sa seule
+      // existence n'est l'état de conformité de rien, et `etat` est optionnel
+      // précisément pour ce cas.
     },
     {
       titre: "DUERP versionné",
@@ -82,8 +107,16 @@ export default async function ControlePage({
       titre: "Registre de sécurité",
       description: `${nbRapports} rapport${nbRapports > 1 ? "s" : ""} de vérification archivé${nbRapports > 1 ? "s" : ""}.`,
       present: true,
+      // Zéro rapport archivé n'est pas « à jour » : c'est un registre qui
+      // n'atteste encore de rien. Le compteur de retard ne le disait pas —
+      // il ne compte que des lignes dépassées, et un dossier sans ligne n'en
+      // a aucune.
       etat:
-        dashboard.compteurs.verifsEnRetard > 0 ? "en_retard" : "a_jour",
+        dashboard.compteurs.verifsEnRetard > 0
+          ? "en_retard"
+          : nbRapports === 0
+            ? "a_planifier"
+            : selonCalendrier("a_jour"),
       // R. 4323-25 fonde la consignation des vérifications, R. 4323-26
       // l'annexion des rapports d'un tiers — c'est ce que cette carte compte.
       // Ce n'est PAS L. 4711-5, qui autorise seulement à réunir plusieurs
@@ -99,7 +132,9 @@ export default async function ControlePage({
           ? `${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours} action${dashboard.compteurs.actionsOuvertes + dashboard.compteurs.actionsEnCours > 1 ? "s" : ""} en cours.`
           : "Aucune action en cours.",
       present: true,
-      etat: dashboard.compteurs.actionsEnRetard > 0 ? "en_retard" : "a_jour",
+      etat: selonCalendrier(
+        dashboard.compteurs.actionsEnRetard > 0 ? "en_retard" : "a_jour",
+      ),
       reference: "Art. L. 4121-2 CT",
     },
     {
@@ -135,11 +170,18 @@ export default async function ControlePage({
     },
   ];
 
-  const nbReady = elements.filter(
-    (e) => e.etat === "a_jour" || e.etat === "non_applicable",
-  ).length;
-  const nbTotal = elements.length;
-  const pourcentPret = Math.round((nbReady / nbTotal) * 100);
+  // ~~`pourcentPret` : part des pièces « à jour » sur leur nombre, rendue en
+  // anneau coloré, et titre « Vous êtes prêt à passer un contrôle. » dès 90 %.~~
+  // RETIRÉ LE 2026-09-20. C'était un SECOND SCORE, et le produit s'interdit le
+  // premier : « Aucun total, aucun score, aucun pourcentage. Quatre manques sur
+  // quatre axes ne font pas "4" […] un chiffre laisserait croire à une mesure
+  // de complétude que rien ne fonde » (`app/etablissements/[id]/perimetre/page.tsx`).
+  // Celui-ci était pire que fondé sur rien : il divisait par le nombre de
+  // LIGNES DE L'ÉCRAN, si bien qu'un dossier sans aucune vérification faite
+  // sortait à 100 % dès qu'il avait une version de DUERP et un registre publié.
+  // Le score du tableau de bord, lui, reste — il a sa garde (`score.ts` rabat
+  // sur « indéterminé » dès qu'un état permanent n'est pas déclaré) et son
+  // titre honnête, « indicateur interne ».
 
   return (
     <>
@@ -160,12 +202,7 @@ export default async function ControlePage({
             <div className="border-b border-[color:var(--board-slate-line)] px-8 py-8 md:border-b-0 md:border-r md:px-10 md:py-10">
               <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Dossier 1 clic</p>
               <h1 className="mt-3 text-[clamp(22px,2.2vw,27px)] font-semibold leading-tight tracking-[-0.025em]">
-                Vous êtes prêt à
-                <br />
-                <span>
-                  passer un contrôle
-                </span>
-                {pourcentPret >= 90 ? "." : " ?"}
+                Préparer votre dossier
               </h1>
               <p className="mt-4 max-w-prose text-[0.95rem] leading-relaxed text-[color:var(--board-ink)]/80">
                 Cette page rassemble, en un seul dossier ZIP, tout ce qu&apos;un
@@ -173,54 +210,21 @@ export default async function ControlePage({
                 ou un bailleur peut demander. Vérifiez l&apos;état de chaque pièce,
                 puis téléchargez le dossier.
               </p>
-              {pourcentPret < 90 && (
-                <p className="mt-4 text-[0.85rem] text-[color:var(--board-signal-ink)]">
-                  Certaines pièces sont incomplètes. Le dossier reste
-                  téléchargeable, mais corrigez-les avant une présentation
-                  formelle.
+              {/* ~~« Vous êtes prêt à passer un contrôle. » dès 90 %~~ — retiré
+                  le 2026-09-20 avec l&apos;anneau qui le calculait. Ce n&apos;est pas
+                  au produit de dire qu&apos;un dossier est prêt : il rassemble des
+                  pièces et dit l&apos;état de chacune, ce que la liste ci-dessous
+                  fait ligne par ligne. Le titre annonce donc le geste, pas un
+                  verdict. */}
+              {avertissement && (
+                <p className="mt-4 max-w-prose rounded-md border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-4 py-3 text-[0.85rem] leading-relaxed text-[color:var(--board-ink)]/85">
+                  {avertissement}
                 </p>
               )}
             </div>
 
-            {/* Droite : score + CTA */}
+            {/* Droite : le dossier */}
             <div className="flex flex-col items-center justify-center gap-4 bg-[color:var(--board-slate-pale)] px-8 py-10 md:px-10">
-              <div className="relative h-28 w-28">
-                <svg viewBox="0 0 36 36" className="h-28 w-28 -rotate-90">
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="16"
-                    fill="none"
-                    stroke="var(--board-slate)"
-                    strokeWidth="2"
-                  />
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="16"
-                    fill="none"
-                    stroke={
-                      pourcentPret >= 90
-                        ? "var(--board-green-ink)"
-                        : pourcentPret >= 60
-                          ? "var(--board-amber)"
-                          : "var(--board-signal-ink)"
-                    }
-                    strokeWidth="2"
-                    strokeDasharray={`${pourcentPret} 100`}
-                    pathLength={100}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="font-mono text-[1.75rem] font-semibold tabular-nums">
-                    {pourcentPret}
-                  </span>
-                  <span className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-[color:var(--board-slate-mid)]">
-                    % prêt
-                  </span>
-                </span>
-              </div>
               <a
                 href={`/api/etablissements/${id}/controle-zip`}
                 className="inline-flex items-center gap-2 rounded-md bg-[color:var(--board-ink)] px-5 py-3 text-[0.92rem] font-medium text-[color:var(--board-card)] shadow-sm transition-colors hover:opacity-90"
