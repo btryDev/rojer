@@ -524,8 +524,11 @@ export type ConditionApplication =
  * **La nature est une propriété du TEXTE, jamais de ce que le produit sait en
  * faire.** Une échéance récurrente dont l'article n'écrit pas le rythme reste
  * récurrente — elle porte alors `periodicite: "autre"`, et ce couple se lit
- * « elle revient, on ne sait pas à quel rythme ». C'est un état légitime, et le
- * plus fréquent des quarante-trois.
+ * « elle revient, on ne sait pas à quel rythme ». C'est un état légitime —
+ * ~~et le plus fréquent des quarante-trois~~ : mesuré en appelant le
+ * 2026-09-20, `autre` compte soixante-deux lignes, dont TROIS seulement sont
+ * des échéances récurrentes ; cinquante et une sont des états permanents. La
+ * phrase était fausse sur le nombre et sur le rang.
  */
 export const NATURES_OBLIGATION = [
   /**
@@ -839,8 +842,8 @@ type ObligationCommune = {
    * coche, sans pièce. C'est juste pour une affiche au mur ou de l'eau
    * potable ; c'en est une pour un registre de sécurité, où une case cochée
    * sans rien derrière serait exactement la déclaration-qui-ressemble-à-une-
-   * preuve que le même brief interdit. Le champ nomme les seize lignes où la
-   * case seule ne suffit pas.
+   * preuve que le même brief interdit. Le champ nomme les ~~seize~~ vingt-six
+   * lignes (mesuré en appelant le 2026-09-20) où la case seule ne suffit pas.
    *
    * Requis pour la même raison que `nature` : `null` est une réponse, un champ
    * absent n'en est pas une.

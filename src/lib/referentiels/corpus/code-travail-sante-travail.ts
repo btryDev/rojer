@@ -325,6 +325,8 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       citationCle:
         "Pour l'organisation de la visite prévue à l'article L. 4624-2-1, l'employeur informe son service de prévention et de santé au travail, dès qu'il en a connaissance, de la cessation de l'exposition d'un des travailleurs de l'entreprise à des risques particuliers pour sa santé ou sa sécurité justifiant un suivi individuel renforcé, de son départ ou de sa mise à la retraite. Il avise sans délai le travailleur concerné de la transmission de cette information.",
       statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: true,
       motif:
         "Obligation d'employeur pleine et entière, et le référentiel ne la porte pas : informer le service de santé au travail à la cessation d'exposition, au départ ou à la mise à la retraite d'un salarié en suivi individuel renforcé, puis en aviser sans délai l'intéressé. Elle prolonge exactement les obligations que ce lot encode — elle vise les mêmes salariés, ceux du SIR — et elle intervient au moment où l'outil cesse de les suivre.",
       bloquePar:
@@ -379,6 +381,8 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       citationCle:
         "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, il saisit le service de prévention et de santé au travail qui organise l'examen de reprise le jour de la reprise effective du travail par le travailleur, et au plus tard dans un délai de huit jours qui suivent cette reprise.",
       statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: true,
       motif:
         "OBLIGATION D'EMPLOYEUR PLEINE ET ENTIÈRE, DANS UN DOMAINE QUE LE PRODUIT SERT, et le référentiel ne la porte pas. Saisir le service de santé au travail dès la connaissance de la date de fin d'arrêt, pour un examen à tenir le jour de la reprise et au plus tard huit jours après : un acte, un destinataire, un délai chiffré.\n\nCE QU'ELLE APPREND SUR LA FRAÎCHEUR DU CORPUS. Sa version en vigueur date du 15 juin 2026 et vient du décret n° 2026-503 du 12 juin 2026 — un texte de trois mois que le dépôt n'avait jamais croisé, trouvé uniquement parce qu'on a ouvert le texte modificateur d'un article voisin. Le corpus est déclaré `articles_cites` et son en-tête dit ne pas lire le reste de la section, donc ce n'était pas un trou caché ; c'était un trou non cherché.",
       bloquePar:

@@ -32,7 +32,7 @@ export const ICPE_STOCKAGE: Corpus = {
         "Sont soumises à autorisation les installations qui présentent de graves dangers ou inconvénients pour les intérêts mentionnés à l'article L. 511-1. L'autorisation, dénommée autorisation environnementale, est délivrée dans les conditions prévues au chapitre unique du titre VIII du livre Ier.",
       statut: "retenu",
       obligations: ["stockage-dangereux-declaration-icpe"],
-      reserve:
+      historique:
         "RÉSERVE LEVÉE LE 2026-09-01 (lot C). Elle disait : « UN SEUL DES TROIS RÉGIMES […] les deux articles réellement utiles à un commerce ou un restaurant, L. 512-7 et L. 512-8, ne sont ni cités ni au corpus. » Ils le sont désormais, chacun avec son entrée et son verbatim, et `stockage-dangereux-declaration-icpe` les cite avec leur clé d'article. Ce qui subsiste ici est le CHEMIN, qui explique pourquoi cet article-ci ne pouvait pas porter les trois : Livre V, Titre Ier, Chapitre II, SECTION 1 « Installations soumises à autorisation ». L'enregistrement est à la section 2, la déclaration à la section 3.\n\nÀ ne pas confondre avec la nomenclature : ce n'est pas cet article qui classe, c'est le décret de nomenclature pris pour L. 511-2. L'article ne dit pas quelles quantités déclenchent quoi.",
     },
     {

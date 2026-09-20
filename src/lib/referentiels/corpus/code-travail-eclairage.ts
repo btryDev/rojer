@@ -134,6 +134,8 @@ export const CODE_TRAVAIL_ECLAIRAGE: Corpus = {
       citationCle:
         "Pendant la présence des travailleurs dans les lieux mentionnés à l'article R. 4223-1, les niveaux d'éclairement mesurés au plan de travail ou, à défaut, au sol, sont au moins égaux aux valeurs indiquées dans le tableau suivant : [voies de circulation intérieures 40 lux ; escaliers et entrepôts 60 lux ; locaux de travail, vestiaires, sanitaires 120 lux ; locaux aveugles affectés à un travail permanent 200 lux ; zones et voies de circulation extérieures 10 lux ; espaces extérieurs où sont accomplis des travaux permanents 40 lux].",
       statut: "obligation_manquante",
+      cause: "a_trancher",
+      toucheLaCible: true,
       motif:
         "L'ARTICLE EST CITÉ AU DIRIGEANT ET N'EST PORTÉ PAR RIEN. Il s'affiche sur l'écran de cotation du DUERP et il est IMPRIMÉ DANS LE PDF remis à des tiers, comme « texte de référence pour les mesures physiques » ; aucune obligation du référentiel ne s'y adosse. La citation est exacte — c'est bien lui qui porte les seuils d'éclairement — mais elle est présentée comme une aide à la cotation là où l'article impose une obligation de résultat à tout employeur, sans seuil d'effectif.\n\nCE QUI LE BLOQUE : il n'a ni périodicité, ni pièce, ni acte. Aucun texte n'impose de mesurer l'éclairement à intervalle, à la différence du bruit, où R. 4433-2 chiffre cinq ans. Le porter en état permanent auto-déclaré donnerait une case à cocher à vie sur une valeur que le dirigeant ne mesure pas et ne peut pas produire ; ce serait répondre en apparence. La voie qui l'ouvrirait n'est pas le calendrier de conformité mais le DUERP lui-même — le champ « dernières mesures physiques » existe déjà et n'est rattaché à aucune exigence.",
     },

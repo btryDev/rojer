@@ -20,6 +20,9 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
     "Prévention du risque chimique (R. 4412-11 et s.), information et formation (R. 4412-38, R. 4412-87), aération (R. 4222-20). DEUX RÉGIMES Y COHABITENT DEPUIS LE 2026-09-02, et il faut le dire plutôt que de le laisser deviner : la SECTION 1 du chapitre II, commune à tous les agents chimiques dangereux (R. 4412-11, R. 4412-17, R. 4412-38), et la SECTION 2, propre aux agents CMR — R. 4412-87 y était seul, R. 4412-59 l'y rejoint en tant qu'article de champ. Ce corpus ne prétend couvrir ni l'une ni l'autre : il ne porte que les articles que le référentiel ou les écrans citent. La formation à l'utilisation des équipements de travail n'est plus ici : `R. 4323-1` relève du livre III (équipements de travail), pas du risque chimique, et a rejoint `code-travail-equipements-information` le 2026-09-01.",
   articles: [
     {
+      // ~~obligation_manquante~~ → retenu le 2026-09-20 : la consigne est encodée
+      // (`aeration-etablissement-consigne-utilisation`). C'était la seule manquante que rien ne
+      // bloquait. Le motif d'origine (lot A, 2026-09-01) est dans l'historique git.
       ref: "R. 4222-21",
       intitule: "Consigne d'utilisation des installations de ventilation",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000036483604",
@@ -30,9 +33,8 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
         "Impose un ÉCRIT permanent — une consigne d'utilisation disant les dispositions prises pour la ventilation et les mesures à prendre en cas de panne —, soumise à l'avis du médecin du travail et du CSE. Aucun contrôle, aucune mesure, aucune date.",
       citationCle:
         "L'employeur indique dans une consigne d'utilisation les dispositions prises pour la ventilation et fixe les mesures à prendre en cas de panne des installations. Cette consigne est établie en tenant compte, s'il y a lieu, des indications de la notice d'instructions fournie par le maître d'ouvrage conformément à l'article R. 4212-7. Elle est soumise à l'avis du médecin du travail, du comité social et économique.",
-      statut: "obligation_manquante",
-      motif:
-        "LA CONSIGNE D'UTILISATION N'EST PORTÉE PAR AUCUNE OBLIGATION. C'est un état permanent, avec une pièce écrite — la consigne disant les dispositions prises pour la ventilation et les mesures à prendre en cas de panne —, un avis de deux instances (médecin du travail, CSE), et aucun porteur au référentiel. L'article 2 b) de l'arrêté du 8 octobre 1987 la vise du même mouvement, sous son ancienne numérotation R. 232-5-9, et R. 4224-17 l'agrège nommément au dossier de maintenance des lieux de travail : trois textes la nomment, le produit ne la demande à personne.\n\nCLASSÉ ICI LE 2026-09-01 (lot A), après retrait de la seule obligation qui s'y adossait. `aeration-travail-mise-en-service` le citait pour fonder un contrôle à la mise en service : l'article n'en impose aucun — ni « vérification », ni « contrôle », ni « mise en service » n'y figurent, le seul acte prescrit est la rédaction d'une consigne. Le délai d'un mois qu'elle décrit vient de l'article 2 a) de l'arrêté du 8 octobre 1987, qui la porte désormais. Le lot A ne crée pas d'obligation : le manque est nommé, pas comblé.",
+      statut: "retenu",
+      obligations: ["aeration-etablissement-consigne-utilisation"],
     },
     {
       ref: "R. 4412-11",

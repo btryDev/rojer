@@ -35,10 +35,10 @@
  *
  * ## Mais la nature seule ne suffit pas non plus
  *
- * `nature === "etat_permanent"` compte **cinquante** obligations au 2026-09-20
+ * `nature === "etat_permanent"` compte **cinquante et une** obligations au 2026-09-20
  * (~~quarante-huit au 2026-09-13, sur 154~~ : le lot chaleur intense en ajoute
- * deux) — remesuré en appelant `obligationsConformite`, jamais au grep, sur un
- * total de 156 qui concorde avec le préfixe de l'empreinte ; le « quarante-cinq » du
+ * deux, le registre de dette une) — remesuré en appelant `obligationsConformite`, jamais au grep, sur un
+ * total de 157 qui concorde avec le préfixe de l'empreinte ; le « quarante-cinq » du
  * 2026-09-04 avait été dépassé par trois lots sans que la phrase bouge —, et l'une d'elles
  * produit bel et bien une ligne de calendrier : `porte-auto-portail-piete-coulissant`
  * est un état permanent porté par un équipement, avec

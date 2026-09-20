@@ -180,7 +180,7 @@ export const obligationsConformite: Obligation[] = [
 // internat restait sous l'ancien identifiant. Trouvé en relecture post-fusion.
 // La règle que le test énonce est la bonne, et elle a été lue à moitié : quand
 // l'empreinte change, la version change dans le MÊME commit.
-export const REFERENTIEL_VERSION = "2026-09-20.1";
+export const REFERENTIEL_VERSION = "2026-09-20.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

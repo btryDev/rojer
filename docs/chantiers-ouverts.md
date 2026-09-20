@@ -102,6 +102,51 @@ permanent de fournitures de rechange de l'alarme** (`MS 69`).
 
 ---
 
+## 3 bis. Le registre de dette, compté — 2026-09-20
+
+**« Rattraper » une obligation manquante ne veut pas dire l'encoder.** Le mot
+est dans `corpus/types.ts` (« le compte de ces articles est ce que le
+référentiel doit rattraper ») ; il se lit : la PORTER, l'ANNONCER au dirigeant
+concerné, ou l'ÉCARTER avec son motif. Un quatrième état existait — « su en
+interne, dit à personne » — et c'est lui qu'on vide.
+
+**Mesuré en appelant le corpus, et tenu à l'unité par
+`corpus/registre-dette.test.ts`.** Soixante-six obligations manquantes au matin ;
+soixante-cinq au soir, `R. 4222-21` — la seule que rien ne bloquait — étant
+encodée. Chacune porte désormais deux champs fermés et obligatoires, `cause`
+et `toucheLaCible` ; la prose de `bloquePar` reste, elle porte le raisonnement.
+
+| Cause | Touche la cible | Hors cible | Ce qui la lèverait |
+|---|---|---|---|
+| `evenement` | 11 | 1 | Une surface qui DISE l'événementiel sans le dater — lot 6a |
+| `a_trancher` | 11 | 1 | Une décision de la propriétaire — lot 6b |
+| `destinataire` | 5 | 0 | Savoir qui tient le réseau d'eau intérieur |
+| `module` | 5 | 0 | Un champ au plan de prévention (4) ou au DUERP (1) |
+| `activite_exercee` | 3 | 3 | Le cinquième déclencheur de l'ADR-022 |
+| `relation_tiers` | 3 | 0 | La décision sur le module de vigilance (§ 4) |
+| `texte_a_lire` | 2 | 1 | Ouvrir R. 4431-2, R. 4214-11, R. 4224-3 |
+| `attribut_etablissement` | 2 | 3 | Un attribut que personne ne demande |
+| `categorie_equipement` | 0 | 11 | Une catégorie (échafaudage, gaz, tribune…) |
+| `perimetre` | 0 | 3 | Rien de technique : hôtels, hors cible |
+| **Total** | **42** | **23** | |
+
+**Deux lectures, et elles cadrent le lot 6.** Vingt-deux des quarante-deux
+obligations qui touchent la cible n'attendent que DEUX choses — une surface
+pour l'événementiel, une séance de décisions. Et AUCUNE des onze qui butent
+sur une catégorie d'équipement ne touche la cible : créer des catégories
+« échafaudage » ou « tribune » ne servirait pas un restaurant.
+
+**Les réserves : 98 → 91.** Dix-neuf se disaient « corrigées » ou « levées » ;
+relues une à une, sept le sont entièrement et passent dans `historique`, un champ
+qui ne se compte pas. Douze gardent un point ouvert et restent des réserves, en
+entier. Le plan du matin en annonçait vingt-huit closes : il avait compté des
+mots, pas des dettes.
+
+**Deux « libres » du plan ne l'étaient pas.** Le livret de `CH 39` attend qu'on
+tranche s'il fait un écrit à part ou rejoint ceux de `GC 18` et de `R. 4224-17` ;
+le stock de rechange de `MS 69` « se décide pour lui-même ». Et les deux visent
+les ERP des quatre premières catégories.
+
 ## 4. Ce qui attend une décision, pas un développement
 
 **La vigilance prestataires est dans le périmètre servi et hors du périmètre

@@ -781,6 +781,18 @@ l'avait juste. Une lecture plus récente n'est pas une lecture meilleure.
 **Non lu :** l'arrêté qui définit l'épisode de chaleur intense (`R. 4463-1`).
 Aucun seuil de température n'est écrit nulle part dans le produit.
 
+### C17 · 2026-09-20 — Le registre de dette, et la seule obligation qui n'avait pas d'excuse
+
+**Relu :** les soixante-six motifs d'`obligation_manquante` et dix-neuf réserves
+qui se disaient closes — du corpus, pas de Légifrance. **Lu à la source :**
+`R. 4222-21` sur sa page propre (version au 2018-01-01, décret n° 2017-1819,
+section 5 « Contrôle et maintenance des installations »), avant de l'encoder.
+**Appliqué :** `cause` et `toucheLaCible` sur chaque manquante ;
+`aeration-etablissement-consigne-utilisation` (référentiel 2026-09-20.2, 157
+obligations) ; sept réserves passées en `historique` ; trois `bloquePar` levés
+depuis l'ADR-022 et jamais raturés. Le compte est dans
+`docs/chantiers-ouverts.md` § 3 bis, et `registre-dette.test.ts` le tient.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

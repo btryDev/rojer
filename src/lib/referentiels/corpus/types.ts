@@ -57,6 +57,49 @@ import type { MotifExclusion } from "./perimetre";
  * d'annoncer une couverture complète. Sans elle, un article oublié serait
  * simplement absent — indistinguable d'un article qui n'existe pas.
  */
+/**
+ * POURQUOI UNE OBLIGATION LUE N'EST PAS ENCODÉE — vocabulaire fermé, posé le
+ * 2026-09-20.
+ *
+ * `bloquePar` existait, en prose libre : soixante-six obligations manquantes,
+ * dix-neuf sans blocage écrit, et plus de quarante formulations distinctes pour
+ * les autres. Un registre de dette qu'on ne peut pas COMPTER par cause ne dit
+ * pas quoi construire : il a fallu relire les soixante-six motifs pour
+ * apprendre que onze d'entre elles attendent la même chose. La prose reste —
+ * elle porte le raisonnement — et ce champ la rend interrogeable.
+ *
+ * Une valeur nouvelle se justifie ici, pas dans l'entrée qui l'emploie.
+ */
+export const CAUSES_BLOCAGE = [
+  /** Rien ne bloque : à encoder. Une dette qui n'a pas d'excuse. */
+  "libre",
+  /**
+   * Déclenchée par un événement que le produit n'observe pas (un accident, une
+   * reprise, un épisode de chaleur, un signalement). Il ne peut pas la DATER ;
+   * il pourrait la DIRE. Attend une surface pour l'événementiel.
+   */
+  "evenement",
+  /** Aucune catégorie d'équipement ne désigne l'objet visé. */
+  "categorie_equipement",
+  /** Le fait qui la déclenche est un attribut d'établissement absent du modèle. */
+  "attribut_etablissement",
+  /** Le texte vise quelqu'un (propriétaire du réseau…) que le produit ne sait pas identifier. */
+  "destinataire",
+  /** Cinquième déclencheur de l'ADR-022 : une activité réellement exercée, que rien ne déclare. */
+  "activite_exercee",
+  /** Elle pèse sur une relation contractuelle, qui n'est aucun des trois porteurs. */
+  "relation_tiers",
+  /** Un module existant (plan de prévention, DUERP) n'a pas le champ qu'elle demande. */
+  "module",
+  /** Son champ dépend d'un article qui n'est pas dépouillé, ou d'un point de lecture non résolu. */
+  "texte_a_lire",
+  /** Rien de technique : une décision de conception ou de périmètre, qui appartient à la propriétaire. */
+  "a_trancher",
+  /** Encodable, mais hors de la cible : ni priorité ni blocage. */
+  "perimetre",
+] as const;
+export type CauseBlocage = (typeof CAUSES_BLOCAGE)[number];
+
 export type StatutArticle =
   /** Retenu : l'article fonde une ou plusieurs obligations du référentiel. */
   | {
@@ -119,7 +162,25 @@ export type StatutArticle =
    * Une obligation manquante n'est pas un défaut du dépouillement : c'est son
    * produit. Le compte de ces articles est ce que le référentiel doit rattraper.
    */
-  | { statut: "obligation_manquante"; motif: string; bloquePar?: string }
+  | {
+      statut: "obligation_manquante";
+      motif: string;
+      /** Le blocage, en prose — tel que la personne qui a lu l'a écrit. */
+      bloquePar?: string;
+      /** Pourquoi elle n'est pas encodée, dans un vocabulaire FERMÉ. */
+      cause: CauseBlocage;
+      /**
+       * Touche-t-elle la cible du produit — restaurant, commerce de détail,
+       * bureau, 5ᵉ catégorie d'ERP, cinquante salariés au plus ?
+       *
+       * `false` ne dit pas « sans importance » : il dit qu'un hôtel, un
+       * immeuble d'habitation, un ERP des quatre premières catégories ou un
+       * chantier d'échafaudage y sont soumis, et que le produit les SERT sans
+       * les viser (ADR-031). Dans le doute, `true` : entre sur- et sous-compter
+       * une dette, on sur-compte.
+       */
+      toucheLaCible: boolean;
+    }
   /**
    * L'article impose quelque chose à un exploitant, mais le produit ne le
    * couvre pas — et le dit.
@@ -215,6 +276,21 @@ export type ArticleDepouille = {
   modifiePar?: { texte: string; url?: string } | null;
   /** Terme ou version future programmée, s'il y en a une. */
   versionFuture?: string;
+  /**
+   * Ce qui FUT une réserve, et ne l'est plus : un défaut corrigé, un relevé
+   * infirmé, un détour à ne pas refaire. **Ne se compte pas.**
+   *
+   * Le champ existe depuis le 2026-09-20 parce que `reserve` est une DETTE —
+   * « ce que l'article impose encore et que le référentiel ne porte pas » — et
+   * que sept réserves commençaient par « CORRIGÉ LE… » ou « RÉSERVE LEVÉE » sans
+   * rien laisser d'ouvert. Elles gonflaient le compte d'une dette soldée. Les
+   * supprimer aurait effacé ce qui empêche de rouvrir la question : la règle 11
+   * de `CLAUDE.md` dit de rayer, pas de retirer. Déplacer le texte ici EST la
+   * rature — il reste lisible, et il cesse d'être compté.
+   *
+   * Une réserve qui garde UN point ouvert reste une `reserve`, en entier.
+   */
+  historique?: string;
   /** Ce que l'article impose, et à qui. Une phrase. */
   prescrit?: string;
   /** Le verbatim de la phrase décisive, quand elle en porte une. */

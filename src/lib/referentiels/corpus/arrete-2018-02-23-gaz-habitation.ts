@@ -45,6 +45,8 @@ export const ARRETE_2018_02_23_GAZ_HABITATION: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "« Dans les bâtiments collectifs, les installations situées entre l'organe de coupure générale visé à l'article 9.1 et les compteurs individuels ou, à défaut de compteurs, les organes de coupure individuels (OCI) visés à l'article 9.2 inclus font l'objet d'actions d'entretien dont la périodicité n'excède pas 10 ans. » Le référentiel ne porte AUCUNE obligation sur ces installations collectives de gaz : il ne connaît que la VMC-gaz du § 5°. Le même paragraphe impose en outre un contrat d'entretien écrit passé avec le distributeur ou une entreprise compétente lorsque les installations ne sont pas sous la garde du distributeur — c'est ce contrat qui avait été porté à tort sur la VMC-gaz. Créer l'obligation suppose une catégorie d'équipement « installation collective de gaz » qui n'existe pas dans l'enum.",
     },

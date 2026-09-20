@@ -317,6 +317,8 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
+      cause: "a_trancher",
+      toucheLaCible: true,
       motif:
         "Impose au § 5 que « le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours », sans périodicité écrite, pour tous les ERP de 5e catégorie. Le référentiel ne porte aucune ligne de formation du personnel côté ERP. Le § 4 c précise que l'information « peut être complétée par des exercices périodiques d'évacuation » — facultatif, à ne pas confondre avec R. 4227-39. N'ouvre le Livre II que sur MS 70. Réécrit par l'arrêté du 4 février 2026.",
       bloquePar:
@@ -466,9 +468,12 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "obligation_manquante",
+      cause: "perimetre",
+      toucheLaCible: false,
       motif:
         "« L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans. » Le référentiel ne sait pas porter « l'ensemble » : une obligation s'accroche à des catégories d'équipement énumérées, et énumérer reviendrait à décider à la place du texte ce qu'est une installation technique d'hôtel. Deux catégories plausibles — VMC et installation frigorifique — portent déjà une obligation BIENNALE valant pour tous les ERP : une ligne supplémentaire y ferait doublon. Cinquième occurrence du motif PE 4 § 2. Les ascenseurs sont explicitement exclus par le renvoi à AS 9.",
-      bloquePar: "porteur-d-echeance-hors-equipement",
+      bloquePar:
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
     },
     {
       ref: "PO 7",
@@ -477,9 +482,12 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "obligation_manquante",
+      cause: "perimetre",
+      toucheLaCible: false,
       motif:
         "« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. » Périodicité chiffrée, donc encodable — mais l'obligation ne porte sur AUCUN équipement, et toute obligation du référentiel s'accroche aujourd'hui à une catégorie d'équipement. C'est le même blocage que PE 27 § 5 et R. 4544-11-1. Verbatim relevé en première main le 2026-08-26.",
-      bloquePar: "porteur-d-echeance-hors-equipement",
+      bloquePar:
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
     },
     {
       ref: "PO 2",
@@ -597,9 +605,12 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "obligation_manquante",
+      cause: "perimetre",
+      toucheLaCible: false,
       motif:
         "« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. » Symétrique de PO 8 § 1 pour la formation : PO 7 — deux séances d'instruction et d'entraînement du personnel par an — est réimporté nommément dans le régime des établissements EXISTANTS. La périodicité vaut donc pour tous les hôtels, pas seulement les neufs. Même blocage que PO 7 lui-même : l'obligation ne porte sur aucun équipement.",
-      bloquePar: "porteur-d-echeance-hors-equipement",
+      bloquePar:
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
     },
     {
       ref: "PO 13",

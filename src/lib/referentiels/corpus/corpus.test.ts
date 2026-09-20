@@ -723,7 +723,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // obligation. Elle est nommée par trois textes (celui-ci, l'article 2 b)
       // de l'arrêté du 8 octobre 1987, R. 4224-17) et demandée par aucun. Le
       // lot A ne crée pas d'obligation : le manque est nommé, pas comblé.
-      "R. 4222-21",
+      // ~~"R. 4222-21"~~ — encodée le 2026-09-20 (`aeration-etablissement-consigne-utilisation`).
       "Arrêté 23-02-2018 art. 26 § 3",
       // Les trois suivantes entrent avec le lot 7, et la liste s'allonge pour
       // la raison qu'elle s'allonge toujours ici : on a lu quatre textes de

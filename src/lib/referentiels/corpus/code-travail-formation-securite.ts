@@ -125,6 +125,8 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       citationCle:
         "Il est créé un passeport de prévention afin de faciliter le respect par les employeurs de leur obligation de formation prévue à l'article L. 4141-2. Il comporte les attestations, certificats, certifications professionnelles et diplômes obtenus dans le cadre des formations relatives à la santé et à la sécurité au travail mentionnées au même article L. 4141-2.",
       statut: "obligation_manquante",
+      cause: "a_trancher",
+      toucheLaCible: true,
       motif:
         "L'article met à la charge de l'employeur le renseignement du passeport de prévention (III, 1°) pour les formations qu'il dispense. C'est une obligation d'exploitant, non couverte par le référentiel. Il est aussi le seul endroit du chapitre où le droit affirme que la formation à la sécurité PRODUIT une pièce nominative — attestation, certificat, diplôme — ce qui est l'argument le plus fort en faveur du porteur salarié retenu pour `formation-securite-salarie-accueil`.",
       bloquePar:
@@ -260,6 +262,8 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       citationCle:
         "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave, l'employeur procède, après avoir pris toute mesure pour satisfaire aux dispositions de l'article L. 4221-1, à l'analyse des conditions de circulation ou de travail. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, les formations à la sécurité prévues par le présent chapitre.",
       statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: true,
       motif:
         "Obligation réelle et datable, mais déclenchée par un événement — un accident grave, ou la répétition d'accidents sur un même poste. Le référentiel ne la porte pas.",
       bloquePar:
@@ -325,6 +329,8 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       citationCle:
         "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion, l'employeur procède, après avoir pris toutes mesures pour satisfaire aux dispositions de l'article L. 4221-1 relatives à l'utilisation des lieux de travail, à l'analyse des nouvelles conditions de circulation et d'exploitation.",
       statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: true,
       motif:
         "Obligation réelle, déclenchée par une modification des conditions de circulation ou d'exploitation. Le référentiel ne la porte pas.",
       bloquePar:

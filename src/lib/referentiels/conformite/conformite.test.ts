@@ -1360,6 +1360,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // ligne existante » protège une version qui A SERVI ; celle-ci n'avait
     // scellé aucun calendrier — `origin/main` était encore à 2026-09-11.1.)
     { version: "2026-09-20.1", empreinte: "156-1d15d5c17cdffe43" },
+    // Registre de dette : la seule obligation manquante que rien ne bloquait,
+    // `R. 4222-21` (consigne d'utilisation de la ventilation), état permanent
+    // d'établissement. Aucune ligne de calendrier n'en naît.
+    { version: "2026-09-20.2", empreinte: "157-ee9b1ce134166553" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1516,7 +1520,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(156);
+    ).toBe(157);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

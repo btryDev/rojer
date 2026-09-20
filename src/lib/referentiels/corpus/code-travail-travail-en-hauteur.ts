@@ -175,6 +175,8 @@ export const CODE_TRAVAIL_TRAVAIL_EN_HAUTEUR: Corpus = {
       citationCle:
         "L'employeur précise dans une notice les points d'ancrage, les dispositifs d'amarrage et les modalités d'utilisation de l'équipement de protection individuelle.",
       statut: "obligation_manquante",
+      cause: "activite_exercee",
+      toucheLaCible: false,
       motif:
         "Le troisième alinéa met à la charge de l'employeur un DOCUMENT qu'il rédige et détient : la notice des points d'ancrage. C'est le seul élément de la sous-section 1 qui ne soit ni une dimension ni une règle de geste, et c'est à ce titre qu'il se distingue de `R. 4323-59` et `-60`, classés sans objet — un document se constitue, se date, se montre à un contrôle, et se voit manquer.\n\nPORTEUR : établissement. La notice décrit les ancrages d'un lieu, pas la formation d'une personne ni la révision d'une machine.\nNATURE : état permanent (ADR-026) — à constituer une fois, puis à maintenir à jour quand les ancrages changent.\nPÉRIODICITÉ : `autre`. Le texte ne chiffre rien, et il n'y a rien à chiffrer : une notice ne se renouvelle pas à échéance, elle suit l'installation.\n\nCE QUE CE N'EST PAS : une obligation relative aux EPI, qui sont hors périmètre par leur REGISTRE. L'obligation porte sur la notice de l'employeur, pas sur la vérification périodique du harnais. La confusion des deux est précisément ce qui avait fait ranger tout le domaine hors périmètre.",
       bloquePar:
@@ -308,6 +310,8 @@ export const CODE_TRAVAIL_TRAVAIL_EN_HAUTEUR: Corpus = {
       citationCle:
         "Les échafaudages ne peuvent être montés, démontés ou sensiblement modifiés que sous la direction d'une personne compétente et par des travailleurs qui ont reçu une formation adéquate et spécifique aux opérations envisagées.",
       statut: "obligation_manquante",
+      cause: "activite_exercee",
+      toucheLaCible: false,
       motif:
         "Une formation NOMINATIVE que le référentiel ne porte pas, alors qu'il en porte déjà cinq autres du même genre depuis le lot 7. L'article ne se contente pas d'exiger une formation : il en fixe le contenu en six points (compréhension du plan de montage ; sécurité pendant l'opération ; prévention des chutes de personnes et d'objets ; conduite en cas de changement météorologique ; efforts de structure admissibles ; tout autre risque), et renvoie pour le reste à `R. 4141-13` et `R. 4141-17`, tous deux déjà dépouillés par `code-travail-formation-securite`.\n\nPORTEUR : salarié (ADR-023). L'obligation se rattache à une personne désignée, pas à un poste : elle a la même forme que l'habilitation électrique de `R. 4544-10`, que le référentiel porte déjà. Un compteur par poste produirait un chiffre, pas une preuve.\nNATURE : état permanent — une compétence à acquérir puis à maintenir, non un rendez-vous.\nPÉRIODICITÉ : `autre`, et c'est une conclusion, pas un défaut de lecture. `R. 4323-3`, ouvert pour cette question le 2026-09-01, dit « renouvelée et complétée AUSSI SOUVENT QUE NÉCESSAIRE pour prendre en compte les évolutions de ces équipements ». Aucun chiffre. Les « cinq ans » que l'on rencontre partout viennent de la recommandation R 408 de la CNAM, qui n'est pas une source opposable et ne fonde rien ici.\n\nÀ NE PAS CONFONDRE avec la deuxième exigence du même alinéa : la DIRECTION par une « personne compétente » n'est pas une formation, c'est une condition d'organisation de l'opération, et elle ne se traduit par aucun titre délivré.",
       bloquePar:
@@ -326,6 +330,8 @@ export const CODE_TRAVAIL_TRAVAIL_EN_HAUTEUR: Corpus = {
       citationCle:
         "Ces documents sont conservés sur le lieu de travail.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "Le dernier alinéa crée une obligation DOCUMENTAIRE opposable, et c'est ce qui distingue cet article des huit autres du paragraphe échafaudages : « ces documents sont conservés sur le lieu de travail ». Un contrôleur les demande, l'employeur les produit ou ne les produit pas. C'est exactement la forme d'obligation que le référentiel sait porter ailleurs — registre de sécurité, notice d'instructions, rapport de vérification.\n\nPORTEUR : équipement — l'échafaudage. Les documents suivent le matériel et sa configuration, pas l'établissement : le même employeur qui monte deux échafaudages différents en doit deux jeux.\nNATURE : état permanent, à constituer avant le montage et à maintenir sur place pendant toute la durée d'installation.\nPÉRIODICITÉ : `autre`. Aucun renouvellement dans le texte ; l'obligation s'éteint au démontage.\n\nLE CAS À TROIS BRANCHES, qu'un résumé aurait rabattu sur une : montage conforme à la notice → on suit la note de calcul qu'elle vise ; note de calcul indisponible OU configuration structurelle non prévue par elle → calcul de résistance et de stabilité par une personne compétente ; configuration ne correspondant pas à un montage prévu par la notice → plan de montage, d'utilisation et de démontage par une personne compétente. Les trois branches ne s'excluent pas et la troisième se cumule couramment avec la deuxième.",
       bloquePar:
@@ -360,6 +366,8 @@ export const CODE_TRAVAIL_TRAVAIL_EN_HAUTEUR: Corpus = {
       citationCle:
         "Ces éléments font l'objet d'une vérification de leur bon état de conservation avant toute opération de montage d'un échafaudage.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "Le troisième alinéa impose une VÉRIFICATION, et c'est la seule de la section 8 — toutes les autres vérifications du domaine viennent de l'arrêté du 21 décembre 2004. Elle est distincte de celles de l'arrêté : celles-ci portent sur l'échafaudage monté, celle-ci sur les ÉLÉMENTS avant qu'il n'existe, et elle est due même si le montage n'aboutit pas.\n\nPORTEUR : équipement.\nNATURE : événementielle (ADR-026) — le fait générateur est l'opération de montage, qui peut survenir une fois par décennie ou trois fois par mois. Ce n'est pas une échéance récurrente déguisée : « avant toute opération de montage » ne dit rien d'un intervalle.\nPÉRIODICITÉ : `autre`. Le texte ne chiffre rien et n'a rien à chiffrer.\n\nLes deux premiers alinéas, eux, sont des spécifications de matériau et d'assemblage sans échéance ; s'ils étaient seuls, l'article serait classé sans objet comme ses voisins.",
       bloquePar:
@@ -623,6 +631,8 @@ export const CODE_TRAVAIL_TRAVAIL_EN_HAUTEUR: Corpus = {
       citationCle:
         "6° Les travailleurs reçoivent une formation adéquate et spécifique aux opérations envisagées et aux procédures de sauvetage. Le contenu de cette formation est précisé aux articles R. 4141-13 et R. 4141-17. Elle est renouvelée dans les conditions prévues à l'article R. 4323-3.",
       statut: "obligation_manquante",
+      cause: "activite_exercee",
+      toucheLaCible: false,
       motif:
         "Deux obligations distinctes que le référentiel ne porte pas, dans un même article.\n\n1. LA FORMATION DU 6°, nominative, porteur SALARIÉ (ADR-023), nature état permanent, périodicité `autre` — `R. 4323-3` dit « aussi souvent que nécessaire », sans chiffre. Elle a une particularité que n'a pas celle de `R. 4323-69` : elle porte aussi sur les PROCÉDURES DE SAUVETAGE, ce qui la rattache à l'organisation des secours et non seulement au maniement du matériel.\n\n2. LA NOTE DE CALCUL DES ANCRAGES DU 1°, document établi par l'employeur ou une personne compétente, porteur établissement ou équipement selon que les ancrages sont ceux du bâtiment ou d'une installation mobile, nature état permanent, périodicité `autre`. Elle est le pendant de la notice de `R. 4323-61` pour les cordes.\n\nLES SIX CONDITIONS SONT CUMULATIVES : le texte écrit « est conditionnée au respect des conditions suivantes », et manquer une seule rend l'usage des cordes irrégulier. Le 5° — « le travail est programmé et supervisé de telle sorte qu'un secours puisse être immédiatement porté » — n'est pas une formalité de rédaction : c'est l'obligation d'organisation qui interdit le travail sur cordes en solitaire.",
       bloquePar:
@@ -748,6 +758,8 @@ export const ARRETE_2004_12_21_ECHAFAUDAGES: Corpus = {
       prescrit:
         "Une vérification comprenant un examen d'adéquation, un examen de montage et d'installation et un examen de l'état de conservation s'impose dans cinq circonstances : première utilisation ; changement de site d'utilisation et tout démontage suivi d'un remontage ; changement de configuration, remplacement ou transformation importante des constituants essentiels, notamment après un accident, un incident ou un choc ; modification des conditions d'utilisation, atmosphériques ou d'environnement affectant la sécurité ; interruption d'utilisation d'au moins un mois.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "PORTEUR : équipement — l'échafaudage.\nNATURE : événementielle (ADR-026), et c'est le champ qui la qualifie, pas une déduction. Cinq faits générateurs, dont aucun n'est une date.\nPÉRIODICITÉ : `autre`. Le texte ne chiffre RIEN ici, et le « d'au moins un mois » du cinquième cas est une durée d'INTERRUPTION qui déclenche, non un intervalle qui revient. Le lire comme « vérification mensuelle » serait précisément l'erreur de plafond-pris-pour-rythme que cette revue a relevée à répétition.\n\nMêmes cinq circonstances, à un mot près, que celles de l'article 20-I de l'arrêté du 1er mars 2004 déjà porté par `levage-remise-en-service-apres-reparation` — même famille d'obligation, même impasse de génération : le produit n'observe aucun de ces faits.\n\nLe VERBATIM des cinq alinéas a) à e) n'est pas reproduit en `citationCle` : la restitution obtenue portait deux coquilles manifestes de transcription (« montagne » pour montage, « à la uiste » pour à la suite), et un verbatim douteux ne se colle pas. Le contenu des cinq cas, lui, est concordant et repris ci-dessus en `prescrit`.",
       bloquePar:
@@ -765,6 +777,8 @@ export const ARRETE_2004_12_21_ECHAFAUDAGES: Corpus = {
       citationCle:
         "Le chef d'établissement doit, quotidiennement, réaliser ou faire réaliser un examen de l'état de conservation en vue de s'assurer que l'échafaudage n'a pas subi de dégradation perceptible pouvant créer des dangers.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "PORTEUR : équipement.\nNATURE : échéance récurrente.\nPÉRIODICITÉ : aucune valeur ne convient. `PERIODICITES` va de `hebdomadaire` à `decennale` et n'a pas de valeur journalière — la plus courte, `hebdomadaire`, diviserait la charge réelle par sept et ferait mentir le référentiel dans le sens permissif. Le seul encodage honnête aujourd'hui serait `autre`, qui tairait le rythme alors que le texte en donne un, clair et quotidien.\n\nC'EST LE SEUL CAS DU RÉFÉRENTIEL OÙ LE TEXTE CHIFFRE UN RYTHME QUE LE MODÈLE NE PEUT PAS ÉCRIRE. Le dépôt a déjà ajouté `bimensuelle` pour EL 18 § 4 et `six_semaines` pour la visite de base des ascenseurs, chaque fois parce que rabattre sur une valeur voisine faisait mentir le texte ; `journaliere` serait le même geste. Il n'est pas fait ici : une valeur d'énumération ajoutée sans obligation qui la porte est du sur-engineering, et l'obligation ne peut pas exister sans catégorie d'équipement.\n\nLA CONSIGNATION AU REGISTRE `L. 620-6` est une seconde obligation dans le même article. `L. 620-6` est le registre unique de sécurité, dont le référentiel porte déjà la tenue côté ERP et côté levage — voir `levage-registre-securite-consignation`. Ce qui manque n'est donc pas le registre, c'est la ligne d'échafaudage qui devrait s'y consigner.",
       bloquePar:
@@ -783,6 +797,8 @@ export const ARRETE_2004_12_21_ECHAFAUDAGES: Corpus = {
       citationCle:
         "Aucun échafaudage ne peut demeurer en service s'il n'a pas fait l'objet depuis moins de trois mois d'un examen approfondi de son état de conservation. Cet examen implique des vérifications techniques concernant notamment les éléments énumérés à l'article 3-III du présent arrêté.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "LA SEULE PÉRIODICITÉ CHIFFRÉE ET ENCODABLE DE TOUT LE DOMAINE DU TRAVAIL EN HAUTEUR. Les 33 articles de la section 8 n'en portent aucune ; celle-ci en porte une, et elle est nette.\n\nPORTEUR : équipement — l'échafaudage.\nNATURE : échéance récurrente.\nPÉRIODICITÉ : `trimestrielle`. Le texte écrit « depuis moins de trois mois », donc un plafond ; mais à la différence des cinq ans de `R. 4624-16`, où le médecin du travail fixe un délai réel plus court, aucun tiers n'intervient ici et l'examen conditionne le MAINTIEN EN SERVICE de l'échafaudage. Le plafond est donc aussi le rythme : au quatre-vingt-douzième jour, l'échafaudage doit sortir du service ou avoir été réexaminé. `trimestrielle` (91 jours dans `PERIODICITE_EN_JOURS`) est juste, et légèrement conservateur, ce qui est le bon sens de l'erreur.\n\nCE QUI FONDE N'EST PAS LA R 408. La « vérification trimestrielle des échafaudages » est presque toujours attribuée à la recommandation R 408 de la CNAM, qui n'est pas une source opposable. Elle est ici, dans un arrêté, depuis le 1er janvier 2005.\n\nL'ARTICLE 2 EN DISPENSE le chef d'entreprise dont l'échafaudage est déjà vérifié par une autre entreprise sur le même site et dans la même configuration — exclusion à porter avec l'obligation, jamais après.",
       bloquePar:
