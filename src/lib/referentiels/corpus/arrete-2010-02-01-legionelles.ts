@@ -35,7 +35,8 @@
 // vérifications (§ 2.D, pièges 4 à 8). La page consolidée avait rendu l'article
 // 2 tronqué. Les articles 5, 6, 8 et l'annexe 1 ne sont lus QUE sur la page
 // consolidée : aucun ne fonde quoi que ce soit à l'écran. Le texte modificateur du 30 décembre 2022 a été OUVERT, pas
-// seulement nommé (règle de `types.ts`) : ses six points sont reportés dans les
+// seulement nommé (règle de `types.ts`) : il compte SEPT points (le 7° touche
+// l'annexe 1), et ceux qui changent le sens sont reportés dans les
 // motifs des articles qu'ils touchent.
 
 import type { Corpus } from "./types";
@@ -62,7 +63,7 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
       citationCle:
         "Sans préjudice des dispositions de l'arrêté du 23 juin 1978 susvisé, le présent arrêté fixe les prescriptions techniques applicables aux installations collectives de production, de stockage et de distribution d'eau chaude sanitaire qui alimentent des points d'usage à risque définis à l'article 2 dans les établissements de santé, les établissements sociaux et médico-sociaux, les établissements pénitentiaires, les hôtels et résidences de tourisme, les campings et les autres établissements recevant du public.",
       statut: "sans_objet",
-      motif: "Article de champ, qui ne prescrit rien — mais c'est LUI qui décide si le carnet sanitaire de Rojer a quoi que ce soit d'obligatoire à dire. Trois conditions cumulées : être un ERP (ou l'un des établissements nommés), avoir une installation COLLECTIVE d'eau chaude, et que celle-ci alimente au moins un point d'usage à risque. La rédaction « des points d'usage à risque définis à l'article 2 dans » a été INSÉRÉE par l'arrêté du 30 décembre 2022 (art. 1er, 1°), ouvert le 2026-09-20 : avant le 1er janvier 2023 le champ se lisait plus large. L'écran du module affirmait « obligatoire pour tout établissement avec ECS » : c'est faux trois fois — un établissement de travail seul n'est pas visé, un ERP sans installation collective non plus, ni un ERP dont l'eau chaude n'alimente aucun point d'usage à risque. Ce qu'EST un tel point (un lavabo en est-il un ?) n'est pas tranché par le texte au-delà des deux conditions de l'article 2 : l'écran les cite et ne qualifie pas.",
+      motif: "Article de champ, qui ne prescrit rien — mais c'est LUI qui décide si le carnet sanitaire de Rojer a quoi que ce soit d'obligatoire à dire. Trois conditions cumulées : être un ERP (ou l'un des établissements nommés), avoir une installation COLLECTIVE d'eau chaude, et que celle-ci alimente au moins un point d'usage à risque. La rédaction « des points d'usage à risque définis à l'article 2 dans » a été DÉPLACÉE, pas créée, par l'arrêté du 30 décembre 2022, ouvert le 2026-09-20 : son 1° a) l'insère après « qui alimentent », et son 1° b) supprime, après « du public », les mots « qui possèdent des points d'usage à risque tels que définis à l'article 2 du présent arrêté ». La condition existait donc dès 2010 pour les « autres établissements recevant du public » — la catégorie de la cible. ~~« avant le 1er janvier 2023 le champ se lisait plus large »~~ : rien ne le soutient pour un restaurant ou un commerce (contre-lecture du même jour) ; la version de 2010 de l'article n'a pas été ouverte. L'écran du module affirmait « obligatoire pour tout établissement avec ECS » : c'est faux trois fois — un établissement de travail seul n'est pas visé, un ERP sans installation collective non plus, ni un ERP dont l'eau chaude n'alimente aucun point d'usage à risque. Ce qu'EST un tel point (un lavabo en est-il un ?) n'est pas tranché par le texte au-delà des deux conditions de l'article 2 : l'écran les cite et ne qualifie pas.",
     },
     {
       ref: "Arrêté 01-02-2010 art. 2",
@@ -92,8 +93,8 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
       citationCle:
         "Le responsable des installations assure la traçabilité de cette surveillance. Il consigne les modalités et les résultats de cette surveillance avec les éléments descriptifs des réseaux d'eau chaude sanitaire et ceux relatifs à leur maintenance dans un fichier sanitaire des installations, qui est tenu à disposition du directeur général de l'agence régionale de santé.",
       statut: "non_couvert",
-      motif: "Une obligation d'exploitation réelle, avec deux rythmes (annexe 2 : température mensuelle, légionelles annuelles) — que le RÉFÉRENTIEL ne porte pas, par décision du 2026-09-20. Son champ (art. 1 et 2) laisse dehors la cible du produit : restaurant, commerce de détail, bureau. Elle vise des hôtels, campings, salles de sport, établissements de santé, que Rojer accepte sans les viser. Le module « Carnet sanitaire » l'OUTILLE pour qui est concerné — c'est le « fichier sanitaire » de cet article — sans qu'aucune ligne de calendrier n'en dérive, et sans que le produit sache dire QUI est concerné : il ne connaît ni le caractère collectif de l'installation ni la présence d'un point d'usage à risque. Les encoder demanderait deux attributs d'établissement que personne dans la cible n'aurait à renseigner. « trois semaines » a remplacé « deux » le 1er janvier 2023 (arrêté du 30 décembre 2022, art. 1er, 3°).",
-      declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le chapeau de la page dit le champ de l'arrêté (art. 1 et 2) et que Rojer n'en dérive aucune échéance",
+      motif: "Une obligation d'exploitation réelle, avec deux rythmes (annexe 2 : température mensuelle, légionelles annuelles) — que le RÉFÉRENTIEL ne porte pas, par décision du 2026-09-20. Son champ (art. 1 et 2) laisse dehors la cible du produit : restaurant, commerce de détail, bureau. Elle vise des hôtels, campings, salles de sport, établissements de santé, que Rojer accepte sans les viser. Le module « Carnet sanitaire » l'OUTILLE pour qui est concerné — c'est le « fichier sanitaire » de cet article. ~~« sans qu'aucune ligne de calendrier n'en dérive »~~ : FAUX, relevé par la contre-lecture du 2026-09-20. `calendrier/echeances.ts` (`echeanceLegionelles`, source `sourceLegionelles`) inscrit l'analyse suivante à un an de la dernière saisie, et le tableau de bord porte deux cellules — mais seulement pour qui a OUVERT un carnet : c'est une échéance du module, déclenchée par le dirigeant, pas une obligation que le moteur applique. Le RÉFÉRENTIEL, lui, n'en dérive rien, et le produit ne sait pas dire QUI est concerné : il ne connaît ni le caractère collectif de l'installation ni la présence d'un point d'usage à risque. Les encoder demanderait deux attributs d'établissement que personne dans la cible n'aurait à renseigner. « trois semaines » a remplacé « deux » le 1er janvier 2023 (arrêté du 30 décembre 2022, art. 1er, 3°).",
+      declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le paragraphe « Êtes-vous concerné ? » cite le champ de l'arrêté (art. 1er et 2) et dit ce que Rojer fait : rien tant qu'aucun carnet n'est ouvert, puis un rappel de l'analyse suivante à un an",
     },
     {
       ref: "Arrêté 01-02-2010 art. 4",
@@ -109,7 +110,7 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
         "Les dénombrements en Legionella pneumophila doivent être inférieurs à la limite de qualité fixée à 1 000 unités formant colonie par litre au niveau de tous les points d'usage à risque.",
       statut: "non_couvert",
       motif: "Même décision et même champ que l'article 3, dont il est le critère. C'est l'article que le module cite pour son seuil de 1 000 UFC/L — le code l'attribuait à « l'annexe II », qui ne porte que des fréquences, et le nommait « seuil d'action légal » quand le texte dit « limite de qualité » depuis le 1er janvier 2023 (« Objectifs cibles » devient « Seuils », « au seuil » devient « à la limite » : arrêté du 30 décembre 2022, art. 1er, 4°). L'article vise Legionella PNEUMOPHILA ; le module enregistre un dénombrement sans distinguer l'espèce, ce qui est sans conséquence tant que l'utilisateur saisit le résultat que son laboratoire rend pour pneumophila.",
-      declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le chapeau de la page dit le champ de l'arrêté (art. 1 et 2) et que Rojer n'en dérive aucune échéance",
+      declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le paragraphe « Êtes-vous concerné ? » cite le champ de l'arrêté (art. 1er et 2) et dit ce que Rojer fait : rien tant qu'aucun carnet n'est ouvert, puis un rappel de l'analyse suivante à un an",
     },
     {
       ref: "Arrêté 01-02-2010 art. 5",
@@ -138,9 +139,8 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
         "Fixe la norme d'analyse (NF T90-431), la forme des résultats (UFC/L) et le contenu du rapport d'essai ; met les frais à la charge du responsable des installations ; conservation des souches trois mois quand l'ARS a demandé l'analyse et que les seuils sont dépassés.",
       citationCle:
         "Les frais relatifs aux prélèvements et analyses réalisés en application de l'article 3 sont à la charge du responsable des installations.",
-      statut: "hors_perimetre",
-      exclusion: "sans_destinataire_exploitant",
-      motif: "S'adresse au laboratoire pour l'essentiel. Deux phrases visent le responsable des installations — demander la conservation des souches, supporter les frais — et ni l'une ni l'autre ne produit d'échéance ni de pièce à tenir.",
+      statut: "sans_objet",
+      motif: "~~hors_perimetre / sans_destinataire_exploitant~~ : le statut niait ce que ce motif dit lui-même. S'adresse au laboratoire pour l'essentiel. Deux phrases visent le responsable des installations — demander la conservation des souches, supporter les frais — et ni l'une ni l'autre ne produit d'échéance ni de pièce à tenir.",
     },
     {
       ref: "Arrêté 01-02-2010 art. 7",
@@ -186,7 +186,7 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
         "Température de l'eau : 1 fois par jour (ou en continu).",
       statut: "non_couvert",
       motif: "Régime des seuls établissements de santé, hors de la cible et que le produit ne vise pas. C'est pourtant de LUI que vient, vraisemblablement, le rythme hebdomadaire du module (« 1 fois par semaine » aux points d'usage) — que `dashboard/obligations.ts` présente, à raison, comme un seuil retenu par le produit et non comme l'exigence de l'annexe 2.",
-      declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le chapeau de la page dit le champ de l'arrêté (art. 1 et 2) et que Rojer n'en dérive aucune échéance",
+      declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le paragraphe « Êtes-vous concerné ? » cite le champ de l'arrêté (art. 1er et 2) et dit ce que Rojer fait : rien tant qu'aucun carnet n'est ouvert, puis un rappel de l'analyse suivante à un an",
     },
     {
       ref: "Arrêté 01-02-2010 annexe 2",
@@ -202,7 +202,7 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
         "Point(s) d'usage à risque le(s) plus représentatif(s) du réseau ou à défaut le(s) point(s) d'usage le(s) plus éloigné(s) de la production d'eau chaude sanitaire. Analyses de légionelles : 1 fois par an. Température de l'eau : 1 fois par mois.",
       statut: "non_couvert",
       motif: "Les deux seuls rythmes de l'arrêté pour un ERP ordinaire : un mois pour la température, un an pour les légionelles. Le module retient 365 jours pour l'analyse — conforme — et 7 jours pour le relevé, plus serré que le texte et présenté comme tel. Non encodés au référentiel pour la raison dite à l'article 3.",
-      declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le chapeau de la page dit le champ de l'arrêté (art. 1 et 2) et que Rojer n'en dérive aucune échéance",
+      declareA: "src/app/etablissements/[id]/carnet-sanitaire/page.tsx — le paragraphe « Êtes-vous concerné ? » cite le champ de l'arrêté (art. 1er et 2) et dit ce que Rojer fait : rien tant qu'aucun carnet n'est ouvert, puis un rappel de l'analyse suivante à un an",
     },
     {
       ref: "Arrêté du 23 juin 1978 art. 36",
@@ -216,9 +216,11 @@ export const ARRETE_2010_02_01_LEGIONELLES: Corpus = {
         "§ 1, contre la brûlure : 50 °C AU PLUS aux points de puisage des pièces destinées à la toilette, 60 °C au plus ailleurs (90 °C en certains points signalés des cuisines et buanderies d'ERP). § 2, contre les légionelles, sur les réseaux susceptibles d'alimenter des points de puisage à risque (« notamment des douches ») : 50 °C AU MOINS en tout point du système de distribution quand le volume entre mise en distribution et point le plus éloigné dépasse 3 litres, tubes finaux exceptés ; et, quand le stockage atteint 400 litres, 55 °C AU MOINS en permanence à la SORTIE des équipements de stockage — ou une élévation quotidienne suffisante (annexe 1).",
       citationCle:
         "lorsque le volume entre le point de mise en distribution et le point de puisage le plus éloigné est supérieur à 3 litres, la température de l'eau doit être supérieure ou égale à 50 °C en tout point du système de distribution, à l'exception des tubes finaux d'alimentation des points de puisage.",
-      statut: "sans_objet",
+      statut: "non_couvert",
+      declareA:
+        "src/components/carnet-sanitaire/AjoutPointReleveForm.tsx — l'aide du seuil cite l'article, ses conditions et son alternative, et présente les valeurs proposées comme des repères",
       motif:
-        "C'est LA SOURCE des 50 °C et des 55 °C du module, que son code attribuait à l'arrêté du 1er février 2010 — lequel ne porte aucune température. Deux écarts relevés le 2026-09-20. (1) Le module posait « 50 °C au puisage » comme un MINIMUM : au puisage des pièces de toilette, 50 °C est un MAXIMUM (§ 1) ; le minimum de 50 °C vaut « en tout point du système de distribution », tubes finaux EXCEPTÉS — donc précisément pas au robinet. (2) Il posait 55 °C « au retour de boucle » : le texte le place « à la sortie des équipements » de stockage de 400 litres et plus ; le retour de boucle relève des 50 °C de tout point du réseau. Aucune périodicité ici : c'est une règle de conception et d'exploitation d'installation, d'où le statut. NON TRANCHÉ : le champ dans le temps. L'article 2 de l'arrêté du 30 novembre 2005, ouvert le même jour, fixe la prise d'effet un an après parution (15 décembre 2006) sans distinguer installations neuves et existantes ; l'article 1er de l'arrêté de 1978, qui borne l'ensemble du texte, n'a PAS été ouvert. L'écran présente donc ces deux valeurs comme des repères tirés de cet article, pas comme une obligation du dirigeant. L'annexe 1 (durées d'élévation quotidienne) n'est pas reproduite sur Légifrance : non lue.",
+        "~~sans_objet~~ : l'article IMPOSE (« les exigences suivantes doivent être respectées pendant l'utilisation […] et dans les 24 heures précédant »), à qui tient un réseau susceptible d'alimenter des points de puisage à risque. Le référentiel ne le porte pas : exigence permanente sans échéance, sur un fait — la présence de douches — que le produit ne détient pas. C'est LA SOURCE des 50 °C et des 55 °C du module, que son code attribuait à l'arrêté du 1er février 2010 — lequel ne porte aucune température. Deux écarts relevés le 2026-09-20. (1) Le module posait « 50 °C au puisage » comme un MINIMUM : au puisage des pièces de toilette, 50 °C est un MAXIMUM (§ 1) ; le minimum de 50 °C vaut « en tout point du système de distribution », tubes finaux EXCEPTÉS — donc précisément pas au robinet. (2) Il posait 55 °C « au retour de boucle » : le texte le place « à la sortie des équipements » de stockage de 400 litres et plus ; le retour de boucle relève des 50 °C de tout point du réseau. Aucune périodicité ici : c'est une règle de conception et d'exploitation d'installation, d'où le statut. NON TRANCHÉ : le champ dans le temps. L'article 2 de l'arrêté du 30 novembre 2005, ouvert le même jour, fixe la prise d'effet un an après parution (15 décembre 2006) sans distinguer installations neuves et existantes ; l'article 1er de l'arrêté de 1978, qui borne l'ensemble du texte, n'a PAS été ouvert. L'écran présente donc ces deux valeurs comme des repères tirés de cet article, avec ses conditions (réseau pouvant alimenter un point de puisage à risque, plus de 3 litres) et son alternative (élévation quotidienne), pas comme une obligation du dirigeant. L'annexe 1 (durées d'élévation quotidienne) n'est pas reproduite sur Légifrance : non lue.",
     },
   ],
 };

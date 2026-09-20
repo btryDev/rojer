@@ -2181,7 +2181,16 @@ lot 6.
 > (champ, installations neuves ou existantes) n'est pas ouvert. (3) Le relevé
 > hebdomadaire du tableau de bord reste un seuil du produit, plus serré que le
 > mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts`. (4) La
-> phrase « entre 25 et 45 °C » de la page ne cite aucune source.
+> ~~phrase « entre 25 et 45 °C » de la page ne cite aucune source~~ — retirée
+> le même jour. (5) Le jeu de données `scripts/seed-dossier-complet.ts` pose
+> 55 °C en sortie d'un ballon de 300 L et 50 °C minimum à un mitigeur : deux
+> valeurs que la lecture dément ; données de démonstration, non corrigées.
+> (6) `arretesDuCorpus()` tient un arrêté pour « ouvert » dès qu'UN de ses
+> articles est au corpus : l'arrêté du 23 juin 1978 l'est sur la foi du seul
+> article 36. (7) Le balayage des ARTICLES (`citationsSansCorpus`) garde le
+> défaut que celui des arrêtés vient de perdre : une citation coupée en fin de
+> ligne lui est invisible. (8) Les textes d'écran rangés dans `src/lib/` ne
+> sont pas balayés.
 
 
 Relevé le 2026-09-20 par la sonde de dépouillement, puis **rendu visible par un

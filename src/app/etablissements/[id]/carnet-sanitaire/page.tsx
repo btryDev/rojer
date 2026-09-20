@@ -49,7 +49,7 @@ export default async function CarnetSanitairePage({
     <>
       <AppTopbar
         title="Carnet sanitaire eau"
-        subtitle="Surveillance des légionelles — due là où une eau chaude collective alimente des points d'usage à risque accessibles au public."
+        subtitle="Surveillance des légionelles — due aux établissements recevant du public dont l'eau chaude collective alimente des points d'usage à risque."
         crumbs={[
           { href: `/etablissements/${id}`, label: etablissement.raisonDisplay },
           { label: "Carnet sanitaire" },
@@ -64,7 +64,7 @@ export default async function CarnetSanitairePage({
           charte="board"
           kicker="Pourquoi ce carnet"
           titre="Légionellose — risque mortel, risque contrôlable."
-          enjeu="Les légionelles se développent dans les réseaux d'eau chaude sanitaire entre 25 et 45°C. Tenir le réseau à 50 °C au moins, tubes finaux exceptés, est ce que demande l'article 36 de l'arrêté du 23 juin 1978. Ce carnet garde la trace de vos relevés et de vos analyses."
+          enjeu="Les légionelles se développent dans les réseaux d'eau chaude sanitaire mal tenus en température. Ce carnet garde la trace de vos relevés et de vos analyses : c'est le « fichier sanitaire des installations » que l'arrêté fait tenir à la disposition de l'agence régionale de santé."
           tonalite="info"
         >
           {/* « Obligatoire pour tout établissement avec ECS » A VÉCU ICI JUSQU'AU
@@ -75,8 +75,9 @@ export default async function CarnetSanitairePage({
               Le produit ne détient aucun des deux faits qui décident — le
               caractère collectif de l'installation, la présence d'un point
               d'usage à risque — : il DIT le champ, il ne tranche pas pour le
-              dirigeant, et il n'inscrit rien à son calendrier tant qu'il n'a
-              pas ouvert de carnet. */}
+              dirigeant. Et il dit ce qu'il FAIT, en clair et non en
+              commentaire : c'est l'adresse (`declareA`) des entrées
+              `non_couvert` du corpus. */}
           <p className="m-0 mt-3 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             <strong>Êtes-vous concerné ?</strong>{" "}
             L&apos;arrêté du 1er février
@@ -88,10 +89,14 @@ export default async function CarnetSanitairePage({
             pouvant produire des aérosols d&apos;eau chaude sanitaire
             susceptible d&apos;être contaminée par les légionelles ; il
             s&apos;agit notamment des douches, des douchettes, des bains à
-            remous ou à jets » (art. 2). Rojer ne sait pas si c&apos;est votre cas, et ne le
-            décide pas à votre place. Pour les établissements autres que de santé, son
-            annexe 2 fixe au minimum un relevé de température par mois et une
-            analyse de légionelles par an.
+            remous ou à jets » (art. 2). Pour les établissements autres que de
+            santé, son annexe 2 fixe au minimum un relevé de température par
+            mois et une analyse de légionelles par an, à chaque point de
+            surveillance. Rojer ne sait pas si c&apos;est votre cas, et ne le
+            décide pas à votre place : il n&apos;inscrit rien à votre
+            calendrier tant que vous n&apos;avez pas ouvert de carnet, puis
+            vous rappelle l&apos;analyse suivante un an après la dernière
+            saisie.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {/* L'extrait affiché ici était FABRIQUÉ : ni « bonne
@@ -307,8 +312,8 @@ export default async function CarnetSanitairePage({
                 Prélèvements et résultats laboratoire
               </h2>
               <p className="m-0 mt-1.5 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Fréquence recommandée : annuelle minimum, semestrielle pour les
-                ERP sensibles (EHPAD, hôpitaux).
+                L&apos;arrêté du 1er février 2010 fixe au minimum une analyse par
+                an et par point de surveillance (annexes 1 et 2).
               </p>
             </div>
             <AjoutAnalyseForm etablissementId={id} />

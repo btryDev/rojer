@@ -254,7 +254,26 @@ export function arretesSansCorpus(racine: string): CitationOrpheline[] {
         )
           return;
 
-        for (const m of sansVerbatim(ligne).matchAll(MOTIF_ARRETE)) {
+        // UNE CITATION COUPÉE EN FIN DE LIGNE ÉTAIT INVISIBLE (contre-lecture du
+        // 2026-09-20) : « arrêté du 1er février » / « 2010 vise… », la forme
+        // que prend toute phrase de JSX un peu longue. On lit donc aussi la
+        // ligne AVEC la suivante, et on ne retient de cette fenêtre que les
+        // dates qu'aucune des deux lignes ne porte seule — sans quoi chaque
+        // citation d'une ligne serait comptée deux fois.
+        const seule = [...sansVerbatim(ligne).matchAll(MOTIF_ARRETE)];
+        const suivante = lignes[index + 1] ?? "";
+        const datesIsolees = new Set(
+          [...seule, ...sansVerbatim(suivante).matchAll(MOTIF_ARRETE)].map(
+            (m) => dateArrete(m),
+          ),
+        );
+        const aCheval = [
+          ...sansVerbatim(`${ligne.trimEnd()} ${suivante.trim()}`).matchAll(
+            MOTIF_ARRETE,
+          ),
+        ].filter((m) => !datesIsolees.has(dateArrete(m)));
+
+        for (const m of [...seule, ...aCheval]) {
           const date = dateArrete(m);
           if (!date || connus.has(date)) continue;
           const ou = `${fichier.slice(racine.length + 1)}:${index + 1}`;

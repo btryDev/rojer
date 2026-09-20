@@ -407,7 +407,7 @@ export async function GET(
         `  10 derniers relevés :`,
         ...pt.releves.map(
           (r) =>
-            `    ${formaterDateFr(r.dateReleve)} · ${r.temperatureCelsius.toFixed(1)}°C · ${r.conforme ? "CONFORME" : "NON CONFORME"}`,
+            `    ${formaterDateFr(r.dateReleve)} · ${r.temperatureCelsius.toFixed(1)}°C · ${r.conforme ? "au seuil du point" : "HORS du seuil du point"}`,
         ),
         "",
       ]),
@@ -415,7 +415,7 @@ export async function GET(
       `Analyses légionelles récentes (${carnetSan.analyses.length}) :`,
       "────────────────────────────────────────────────────────────",
       ...carnetSan.analyses.flatMap((a) => [
-        `  ${formaterDateFr(a.dateAnalyse)} · ${a.valeurUfcParL ?? "—"} UFC/L · ${a.conforme ? "CONFORME (<1000 UFC/L)" : "ACTION REQUISE"}${a.laboratoire ? ` · ${a.laboratoire}` : ""}`,
+        `  ${formaterDateFr(a.dateAnalyse)} · ${a.valeurUfcParL ?? "—"} UFC/L · ${a.conforme ? "sous la limite de qualité (< 1 000 UFC/L)" : "LIMITE DE QUALITÉ ATTEINTE (≥ 1 000 UFC/L)"}${a.laboratoire ? ` · ${a.laboratoire}` : ""}`,
         a.commentaire ? `    ${a.commentaire}` : "",
       ]),
       "",
@@ -575,7 +575,7 @@ function genererReadme(args: {
     " [ ] Formation sécurité du personnel à jour",
     " [ ] Permis de feu signés avant tout travail par point chaud",
     " [ ] Plans de prévention signés avant toute intervention EE ≥ 400 h",
-    " [ ] Carnet sanitaire renseigné (si ECS) — relevés hebdo",
+    " [ ] Carnet sanitaire renseigné, si votre eau chaude collective alimente des points d'usage à risque accessibles au public — température mensuelle, légionelles annuelles au minimum",
     "",
     "────────────────────────────────────────────────────────────",
     " CADRE LÉGAL DES OBLIGATIONS",
@@ -602,7 +602,7 @@ function genererReadme(args: {
     // de la production ou de la distribution d'eau », c'est-à-dire
     // l'exploitant du réseau PUBLIC, et non l'établissement raccordé. Le
     // badge a été retiré de l'écran ce jour-là ; il était resté dans le ZIP.
-    " Carnet sanitaire eau :     arrêté du 1er février 2010",
+    " Carnet sanitaire eau :     arrêté du 1er février 2010 (ERP, eau chaude collective, points d'usage à risque)",
     " Maintien en conformité :   art. R. 4224-17 Code du travail",
     "",
     // APSAD R43 et l'INRS ED 6030 figuraient dans la liste ci-dessus, entre

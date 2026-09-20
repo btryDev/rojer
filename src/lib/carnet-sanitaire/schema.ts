@@ -40,9 +40,6 @@ export const SEUIL_DEFAUT: Record<TypeReseauEau, number> = {
   ECS_BOUCLAGE: 50,
 };
 
-/** Dit à l'écran d'où viennent ces valeurs — et ce qui n'a pas de texte. */
-export const AIDE_SEUIL_TEMPERATURE =
-  "Repères tirés de l'arrêté du 23 juin 1978 (art. 36) : 50 °C au moins en tout point du réseau d'eau chaude, tubes finaux exceptés, et 55 °C au moins en sortie d'un stockage de 400 litres et plus. Aux robinets des pièces de toilette, le même article fixe au contraire 50 °C au plus. Les 20 °C proposés pour l'eau froide sont un repère de Rojer : aucun de ces textes ne les fixe.";
 
 export const pointReleveSchema = z.object({
   nom: z.string().trim().min(1, "Nom requis").max(200),

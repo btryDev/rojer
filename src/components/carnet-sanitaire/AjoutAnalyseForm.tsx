@@ -90,7 +90,9 @@ export function AjoutAnalyseForm({
               size="sm"
               status={sousLeSeuil ? "a_jour" : "non_conforme"}
               label={
-                sousLeSeuil ? "Sous le seuil d'action" : "Action obligatoire"
+                sousLeSeuil
+                  ? "Sous la limite de qualité"
+                  : "Limite de qualité atteinte"
               }
               className="shrink-0"
             />
@@ -102,7 +104,8 @@ export function AjoutAnalyseForm({
         >
           Limite de qualité en <em>Legionella pneumophila</em> :{" "}
           {SEUIL_LEGIONELLE_UFC_PAR_L}{" "}UFC/L aux points d&apos;usage à risque
-          (arrêté du 1er février 2010, art. 4). Au-delà, le même article
+          (arrêté du 1er février 2010, art. 4). À partir de cette valeur, le
+          même article
           demande des mesures correctives sans délai, puis des analyses pour
           en vérifier l&apos;efficacité.
         </p>

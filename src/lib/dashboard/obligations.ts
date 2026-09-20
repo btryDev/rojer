@@ -116,10 +116,11 @@ export const SEUIL_RELEVE_CARNET_JOURS = 7;
 /**
  * Analyse légionelles : seuil d'affichage annuel. L'arrêté du 1er février
  * 2010 organise la surveillance des légionelles dans les installations
- * collectives d'eau chaude sanitaire ; la fréquence exacte dépend du type
- * d'établissement et du point de prélèvement. 365 jours est le seuil que le
- * produit retient pour dire « une analyse a été faite dans l'année », pas
- * une périodicité recopiée.
+ * collectives d'eau chaude sanitaire ; ~~la fréquence exacte dépend du type
+ * d'établissement et du point de prélèvement~~ — lu le 2026-09-20 : ses deux
+ * annexes disent « Analyses de légionelles : 1 fois par an », PAR POINT de
+ * surveillance. 365 jours colle donc au texte pour UNE analyse ; ce que le
+ * produit ne vérifie pas, c'est que chaque point a eu la sienne.
  */
 export const SEUIL_ANALYSE_LEGIONELLE_JOURS = 365;
 

@@ -148,8 +148,9 @@ contrôles mis à la charge de l'employeur « au titre de la santé et de la
 sécurité **au travail** ». Il ne couvre donc ni `Action.responsable` — la
 personne à qui l'employeur confie une action corrective n'est pas un
 vérificateur — ni `ReleveTemperature.operateur` : un relevé d'eau chaude
-sanitaire relève du carnet sanitaire (arrêté du 1er février 2010,
-`R. 1321-23` CSP), dont l'article 3 demande de consigner « les modalités et
+sanitaire relève du carnet sanitaire (arrêté du 1er février 2010 ;
+~~`R. 1321-23` CSP~~, retiré le 2026-09-02 : son destinataire est l'exploitant
+du réseau public), dont l'article 3 demande de consigner « les modalités et
 les résultats » de la surveillance, et non l'identité de qui relève.
 
 Le maintien de `responsable` dans les documents remis est donc un fondement
