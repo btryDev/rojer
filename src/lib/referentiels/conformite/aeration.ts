@@ -4,8 +4,9 @@
  * Sources primaires :
  *   - Code du travail, articles R. 4222-1 à R. 4222-26 (aération des lieux de
  *     travail), notamment R. 4222-20 — maintien en bon état et contrôle
- *     régulier. R. 4222-21 n'y figure plus : il n'impose qu'une consigne
- *     d'utilisation écrite, aucun contrôle (relevé du 2026-09-01).
+ *     régulier. ~~R. 4222-21 n'y figure plus~~ : il n'impose qu'une consigne
+ *     d'utilisation écrite, aucun contrôle (relevé du 2026-09-01) — et c'est
+ *     cette consigne, et rien d'autre, qu'il fonde ici depuis le 2026-09-20.
  *   - Arrêté du 8 octobre 1987 relatif au contrôle périodique des installations
  *     d'aération et d'assainissement des locaux de travail.
  *   - Arrêté du 25 juin 1980 modifié (règlement ERP) — article CH 58

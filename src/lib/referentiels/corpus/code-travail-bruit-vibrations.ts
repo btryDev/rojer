@@ -127,7 +127,7 @@ export const CODE_TRAVAIL_BRUIT_VIBRATIONS: Corpus = {
       citationCle:
         "L'employeur vérifie l'efficacité des mesures prises en application du présent chapitre.",
       statut: "obligation_manquante",
-      cause: "a_trancher",
+      cause: "texte_a_lire",
       toucheLaCible: true,
       motif:
         "UN ACTE DE VÉRIFICATION QUE PERSONNE NE RÉCLAME, et c'est bien une obligation d'employeur — pas une définition, pas un renvoi. Elle ferme le chapitre IV comme une boucle : après avoir pris des mesures, en vérifier l'effet.\n\nPOURQUOI `obligation_manquante` PLUTÔT QUE `non_couvert`, puisque le domaine du bruit n'est effectivement pas servi. `non_couvert` dit « on a choisi de ne pas le porter, et on le dit à l'utilisateur ». Ni l'une ni l'autre moitié n'est vraie ici : aucune décision n'a jamais été prise sur ce domaine — l'inventaire de la partie IV le range comme « jamais ouvert » —, et aucune surface ne l'annonce à qui que ce soit. Surtout, les manques `non_couvert` du référentiel visent des établissements que le produit NE SERT PAS ; celui-ci vise un restaurant avec musique et lave-vaisselle, c'est-à-dire la cible même. Le classer là-bas ferait passer une dette pour une non-question, ce que `perimetre.ts` interdit en toutes lettres.\n\nCE QUI LE BLOQUE : aucun rythme dans le texte, et surtout aucun objet à vérifier tant que le produit ne sait pas quelles mesures ont été prises. Son déclenchement suppose un dépassement des valeurs de R. 4431-2, donc un mesurage — la même condition d'entrée que R. 4433-2, et le même trou.",

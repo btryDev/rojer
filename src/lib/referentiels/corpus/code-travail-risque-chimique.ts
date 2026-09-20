@@ -21,8 +21,8 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
   articles: [
     {
       // ~~obligation_manquante~~ → retenu le 2026-09-20 : la consigne est encodée
-      // (`aeration-etablissement-consigne-utilisation`). C'était la seule manquante que rien ne
-      // bloquait. Le motif d'origine (lot A, 2026-09-01) est dans l'historique git.
+      // (`aeration-etablissement-consigne-utilisation`). Le motif d'origine est
+      // gardé dans `historique` ; ce qui reste dehors est dans `reserve`.
       ref: "R. 4222-21",
       intitule: "Consigne d'utilisation des installations de ventilation",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000036483604",
@@ -35,6 +35,10 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
         "L'employeur indique dans une consigne d'utilisation les dispositions prises pour la ventilation et fixe les mesures à prendre en cas de panne des installations. Cette consigne est établie en tenant compte, s'il y a lieu, des indications de la notice d'instructions fournie par le maître d'ouvrage conformément à l'article R. 4212-7. Elle est soumise à l'avis du médecin du travail, du comité social et économique.",
       statut: "retenu",
       obligations: ["aeration-etablissement-consigne-utilisation"],
+      reserve:
+        "DEUX CHOSES RESTENT DEHORS (2026-09-20). (1) L'AVIS : la consigne « est soumise à l'avis du médecin du travail, du comité social et économique ». Aucun champ ne le trace ; le dirigeant qui déclare sa consigne en place n'a rien dit de cet avis. Le CSE n'existe qu'à partir de onze salariés : en dessous, seul l'avis du médecin du travail est recueillable, ce que le texte ne dit pas et que le produit ne tranche pas. (2) UNE SUR-APPLICATION CONNUE : l'article parle de « panne des installations », donc d'une ventilation qui peut tomber en panne. Un local aéré par ses seules fenêtres n'en a pas. L'obligation est posée sur tout établissement de travail, comme sa voisine `aeration-controle-installations-r4222-20`, parce que le produit ne sait pas si une installation existe ; l'écran des états permanents n'offre pas de « sans objet », et ce bureau-là garde donc la ligne non déclarée. De la même espèce que la sur-application écrite à `R. 4323-24`.",
+      historique:
+        "Le motif de l'entrée quand elle était `obligation_manquante` (lot A, 2026-09-01), conservé : LA CONSIGNE D'UTILISATION N'EST PORTÉE PAR AUCUNE OBLIGATION. C'est un état permanent, avec une pièce écrite — la consigne disant les dispositions prises pour la ventilation et les mesures à prendre en cas de panne —, un avis de deux instances (médecin du travail, CSE), et aucun porteur au référentiel. L'article 2 b) de l'arrêté du 8 octobre 1987 la vise du même mouvement, sous son ancienne numérotation R. 232-5-9, et R. 4224-17 l'agrège nommément au dossier de maintenance des lieux de travail : trois textes la nomment, le produit ne la demande à personne.\n\nCLASSÉ ICI LE 2026-09-01 (lot A), après retrait de la seule obligation qui s'y adossait. `aeration-travail-mise-en-service` le citait pour fonder un contrôle à la mise en service : l'article n'en impose aucun — ni « vérification », ni « contrôle », ni « mise en service » n'y figurent, le seul acte prescrit est la rédaction d'une consigne. Le délai d'un mois qu'elle décrit vient de l'article 2 a) de l'arrêté du 8 octobre 1987, qui la porte désormais. Le lot A ne crée pas d'obligation : le manque est nommé, pas comblé.",
     },
     {
       ref: "R. 4412-11",

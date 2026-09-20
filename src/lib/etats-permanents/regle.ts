@@ -282,9 +282,10 @@ export function modeDeclarationApplique(
  * juste pour une affiche au mur ou de l'eau potable. Mais cocher « en place »
  * sur un registre de sécurité est une déclaration qui ressemble à une preuve.
  * `pieceAttendue` nomme l'écrit ; l'écran l'affiche pour que le dirigeant sache
- * ce qu'il affirme détenir. **Dix-huit** des quarante-sept lignes de cet écran en
- * portent un au 2026-09-04, remesuré en appelant `modeDeclaration` sur le
- * référentiel entier. La dix-huitième est `stockage-dangereux-fiches-donnees`,
+ * ce qu'il affirme détenir. **Vingt et une** des cinquante-trois lignes de cet
+ * écran en portent un au 2026-09-20 (~~dix-huit des quarante-sept au
+ * 2026-09-04~~), remesuré en appelant `modeDeclaration` sur le référentiel
+ * entier. La dix-huitième est `stockage-dangereux-fiches-donnees`,
  * entrée ce jour-là avec la correction de sa nature.
  */
 export function pieceAttendue(o: Obligation): string | null {

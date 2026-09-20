@@ -296,7 +296,7 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       citationCle:
         "Lorsque l'établissement d'un plan de prévention par écrit est obligatoire, en application de l'article R. 4512-7 : 1° Ce plan est tenu, pendant toute la durée des travaux, à la disposition de l'inspection du travail, des agents de prévention des organismes de sécurité sociale et, le cas échéant, de l'Organisme professionnel de prévention du bâtiment et des travaux publics ; 2° Le chef de l'entreprise utilisatrice informe par écrit l'inspection du travail de l'ouverture des travaux.",
       statut: "obligation_manquante",
-      cause: "evenement",
+      cause: "module",
       toucheLaCible: true,
       motif:
         "LE 2° EST UNE DÉMARCHE À FAIRE, PAS UN DOCUMENT À RANGER, et c'est le seul acte du chapitre qui sorte de l'entreprise : informer par écrit l'inspection du travail de l'ouverture des travaux, à la charge du chef de l'entreprise utilisatrice, dès que l'écrit est obligatoire. Rien dans le produit ne le nomme — ni le formulaire, ni la fiche de plan, ni le ZIP de contrôle —, alors que DEUX surfaces affichent la pastille « Art. R. 4512-6 à R. 4512-12 CT » et que la prose de la pastille parle de l'établissement conjoint du plan sans dire un mot de cette démarche. Un dirigeant qui lit l'écran conclut qu'il a fini quand il a signé. Le 1° est mieux servi — le plan est stocké et exportable — mais « pendant toute la durée des travaux » suppose de savoir que les travaux ont commencé, ce que `dateDebut` donne, sans qu'aucune surface le rapproche de l'exigence. Le blocage du 2° est celui des obligations événementielles : le déclencheur est l'ouverture des travaux, et le référentiel n'a pas d'axe pour ça.",

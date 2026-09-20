@@ -118,7 +118,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         "cuisson-erp-appareils-annuelle",
         "cuisson-erp-verification-initiale",
       ],
-      reserve:
+      historique:
         "DEUX CHOSES RELEVÉES LE 2026-09-01, ARTICLE LU EN ENTIER.\n\n(1) L'EXTINCTION AUTOMATIQUE N'EST PAS DANS GC 22 — CORRIGÉ LE 2026-09-01 (lot A). L'objet de la vérification annuelle y est énuméré en quatre points, et aucun ne vise un système d'extinction automatique : entretien et maintenance, ventilation et évacuation des buées et graisses, signalisation des dispositifs de sécurité, manœuvre des arrêts d'urgence. `cuisson-erp-extinction-automatique-annuelle` citait l'article pour une chose qu'il ne dit pas ; la référence est retirée, et le fondement est MS 73 § 2 — déjà cité par elle, comme GC 8 (existence du dispositif). Aucun texte ajouté : deux références de contexte déjà là, dont l'une remonte en fondement.\n\n(2) LE RAMONAGE ANNUEL ET LE NETTOYAGE HEBDOMADAIRE DES FILTRES SONT À GC 21, NON ICI, et GC 21 § 3 impose en outre un livret d'entretien annexé au registre de sécurité. GC 21 est au corpus avec son verbatim ; le rappeler ici évite de croire que GC 22 porte tout le chapitre.",
     },
     {

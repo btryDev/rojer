@@ -85,7 +85,7 @@ export const CODE_TRAVAIL_MATIERES_INFLAMMABLES: Corpus = {
       citationCle:
         "Outre l'interdiction de fumer dans les lieux collectifs, prévue à l'article L. 3511-7 du code de la santé publique, il est interdit de fumer dans les emplacements situés à l'air libre mentionnés à l'article R. 4227-22. Cette interdiction fait l'objet d'une signalisation conforme à la réglementation en vigueur.",
       statut: "obligation_manquante",
-      cause: "a_trancher",
+      cause: "attribut_etablissement",
       toucheLaCible: true,
       motif:
         "UNE SIGNALISATION OBLIGATOIRE QUE LE DOMAINE `signalisation`, ENCODÉ LE 2026-09-02 MÊME, NE PORTE PAS : il vient de l'arrêté du 4 novembre 1993, dont le champ est la signalisation de santé et de sécurité au travail, et aucune de ses obligations ne vise l'interdiction de fumer. Le panneau de R. 4227-23 est donc dû, opposable, et réclamé par personne.\n\nCE QUI LE BLOQUE est un attribut, et un seul : l'article ne vise que les emplacements situés À L'AIR LIBRE — la partie du champ de R. 4227-22 que l'interdiction générale des lieux collectifs ne couvre pas. `manipuleMatieresR422722` dit qu'un établissement manipule ces matières, jamais qu'il le fait dehors. Déclencher sur l'attribut seul afficherait le panneau à un laboratoire de pâtisserie entièrement clos, qui n'en doit aucun.\n\nRENVOI MORT, CONSTATÉ ET NON CORRIGÉ : « L. 3511-7 du code de la santé publique » est abrogé depuis le 19 mai 2016 (ordonnance n° 2016-623), recodifié à L. 3512-8 au contenu inchangé. Le code du travail n'a jamais été mis à jour. L. 3512-8 n'a pas été ouvert par ce lot.",
@@ -142,7 +142,7 @@ export const CODE_TRAVAIL_MATIERES_INFLAMMABLES: Corpus = {
       citationCle:
         "Les chiffons, cotons et papiers imprégnés de liquides inflammables ou de matières grasses sont, après usage, enfermés dans des récipients métalliques clos et étanches.",
       statut: "obligation_manquante",
-      cause: "a_trancher",
+      cause: "activite_exercee",
       toucheLaCible: true,
       motif:
         "L'ARTICLE DE LA SECTION QUI TOUCHE LE PLUS DIRECTEMENT LA CIBLE, et il n'a aucun rapport avec les matières explosives. « Ou de matières grasses » : un torchon de cuisine imbibé d'huile relève de cet article, dans toute cuisine de restaurant, sans condition d'effectif et sans qu'aucune matière classée dangereuse soit présente. Le risque est réel et documenté — l'auto-échauffement des textiles gras est une cause d'incendie connue.\n\nCE QUI LE BLOQUE N'EST PAS LE MODÈLE mais le déclencheur. L'article ne vit pas sous la condition de R. 4227-22 : sa phrase est autonome et vise tout lieu de travail où l'on utilise de tels chiffons. Le déclencher supposerait de savoir qu'un établissement en produit — c'est le cinquième déclencheur de l'ADR-022, « activité réellement exercée », non implémenté. L'accrocher au secteur restauration serait une inférence de code NAF, que ce dépôt n'autorise pas ; l'accrocher à `manipuleMatieresR422722` sous-appliquerait à contresens du texte, l'article n'en dépendant pas.",

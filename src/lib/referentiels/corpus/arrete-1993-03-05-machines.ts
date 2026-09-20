@@ -104,7 +104,7 @@ export const ARRETE_1993_03_05_MACHINES: Corpus = {
         "Les équipements de travail suivants doivent avoir fait l'objet, depuis moins de douze mois au moment de leur utilisation, de la vérification générale périodique prévue à l'article R. 233-11 du code du travail : Centrifugeuses ; Machines mobiles d'extraction, de terrassement, d'excavation ou de forage du sol à conducteur porté et machines à battre les palplanches.",
       statut: "obligation_manquante",
       cause: "texte_a_lire",
-      toucheLaCible: false,
+      toucheLaCible: true,
       motif:
         "Une vérification générale périodique annuelle que le référentiel ne porte pour aucun équipement hors levage. Les deux entrées ne se ressemblent pas et ne se tranchent pas de la même façon. Les « machines mobiles d'extraction, de terrassement, d'excavation ou de forage du sol à conducteur porté et machines à battre les palplanches » sont des engins de travaux publics : un restaurant, un commerce de détail ou un bureau n'en détient pas, et cette moitié de l'article est sans portée pour la cible. LES « CENTRIFUGEUSES » NE SE TRANCHENT PAS À LA SOURCE, ET C'EST ÉCRIT ICI PLUTÔT QUE COMBLÉ : l'arrêté n'en donne aucune définition, ne renvoie à aucune norme et ne restreint le terme à aucune branche — à la différence des « machines à cylindres », qu'il borne expressément à l'industrie du caoutchouc. Rien dans le texte ne permet donc d'affirmer qu'une essoreuse de blanchisserie, une essoreuse à salade professionnelle ou une centrifugeuse de laboratoire en relève, ni qu'elle n'en relève pas. La question reste ouverte au lieu d'être fermée dans un sens ou dans l'autre.",
       bloquePar:

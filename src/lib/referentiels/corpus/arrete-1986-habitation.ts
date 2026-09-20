@@ -297,7 +297,7 @@ export const ARRETE_1986_HABITATION: Corpus = {
       luLe: "2026-09-03",
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
-      cause: "attribut_etablissement",
+      cause: "destinataire",
       toucheLaCible: false,
       citationCle:
         "2° Le parc de stationnement relève d'un propriétaire unique. Le propriétaire unique ou la personne qu'il désigne expressément pour assurer la gestion du parc est dénommée, pour l'application du présent article, le gestionnaire.\n" +

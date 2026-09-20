@@ -96,7 +96,8 @@ heure de travail.** Les deux motifs le disaient depuis deux jours, mot pour mot.
 **Ce qui reste, et qui est de la même espèce.** Trois écrits que le modèle sait
 porter et que personne ne réclame, chacun en réserve au corpus sous son
 article : la **consigne d'utilisation de la ventilation** (`R. 4222-21`, jumelle
-de celle de l'éclairage, toujours `obligation_manquante`), le **livret
+de celle de l'éclairage, ~~toujours `obligation_manquante`~~ — **encodée le
+2026-09-20**, voir § 3 bis), le **livret
 d'entretien de l'installation de filtration** (`CH 39 § 1`), et le **stock
 permanent de fournitures de rechange de l'alarme** (`MS 69`).
 
@@ -110,37 +111,67 @@ référentiel doit rattraper ») ; il se lit : la PORTER, l'ANNONCER au dirigean
 concerné, ou l'ÉCARTER avec son motif. Un quatrième état existait — « su en
 interne, dit à personne » — et c'est lui qu'on vide.
 
-**Mesuré en appelant le corpus, et tenu à l'unité par
-`corpus/registre-dette.test.ts`.** Soixante-six obligations manquantes au matin ;
-soixante-cinq au soir, `R. 4222-21` — la seule que rien ne bloquait — étant
-encodée. Chacune porte désormais deux champs fermés et obligatoires, `cause`
-et `toucheLaCible` ; la prose de `bloquePar` reste, elle porte le raisonnement.
+**Mesuré en appelant le corpus, et tenu par `corpus/registre-dette.test.ts`.**
+Soixante-six obligations manquantes au matin ; soixante-cinq au soir,
+`R. 4222-21` étant encodée. Chacune porte désormais deux champs fermés et
+obligatoires, `cause` et `toucheLaCible` ; la prose de `bloquePar` reste, elle
+porte le raisonnement.
 
 | Cause | Touche la cible | Hors cible | Ce qui la lèverait |
 |---|---|---|---|
-| `evenement` | 11 | 1 | Une surface qui DISE l'événementiel sans le dater — lot 6a |
-| `a_trancher` | 11 | 1 | Une décision de la propriétaire — lot 6b |
-| `destinataire` | 5 | 0 | Savoir qui tient le réseau d'eau intérieur |
-| `module` | 5 | 0 | Un champ au plan de prévention (4) ou au DUERP (1) |
-| `activite_exercee` | 3 | 3 | Le cinquième déclencheur de l'ADR-022 |
+| `evenement` | 9 | 1 | Une surface qui DISE l'événementiel sans le dater — ADR-037, lot 6a |
+| `module` | 7 | 0 | Un champ au plan de prévention (5) ou au DUERP (2) |
+| `a_trancher` | 7 | 1 | Une décision de la propriétaire — lot 6b |
+| `activite_exercee` | 6 | 1 | Le cinquième déclencheur de l'ADR-022 |
+| `categorie_equipement` | 5 | 6 | Une catégorie — « échafaudage » pour les cinq de la cible |
+| `destinataire` | 5 | 1 | Savoir qui tient le réseau d'eau intérieur |
+| `texte_a_lire` | 4 | 0 | Ouvrir `R. 4431-2`, `R. 4214-11`, `R. 4224-3` ; trancher ce qu'est une « centrifugeuse » |
+| `attribut_etablissement` | 3 | 2 | Un attribut que personne ne demande |
 | `relation_tiers` | 3 | 0 | La décision sur le module de vigilance (§ 4) |
-| `texte_a_lire` | 2 | 1 | Ouvrir R. 4431-2, R. 4214-11, R. 4224-3 |
-| `attribut_etablissement` | 2 | 3 | Un attribut que personne ne demande |
-| `categorie_equipement` | 0 | 11 | Une catégorie (échafaudage, gaz, tribune…) |
-| `perimetre` | 0 | 3 | Rien de technique : hôtels, hors cible |
-| **Total** | **42** | **23** | |
+| `libre` | 1 | 0 | **Rien : `PE 27 § 5`, à encoder au prochain lot de lecture** |
+| `perimetre` | 0 | 3 | Rien de technique : hôtels (`PO 1 § 3`, `PO 7`, `PO 12`) |
+| **Total** | **50** | **15** | |
 
-**Deux lectures, et elles cadrent le lot 6.** Vingt-deux des quarante-deux
-obligations qui touchent la cible n'attendent que DEUX choses — une surface
-pour l'événementiel, une séance de décisions. Et AUCUNE des onze qui butent
-sur une catégorie d'équipement ne touche la cible : créer des catégories
-« échafaudage » ou « tribune » ne servirait pas un restaurant.
+**Ce tableau est sa seconde version, et la première était trop propre.** Elle
+annonçait 42 / 23, « vingt-deux n'attendent que deux choses » et « aucune
+catégorie d'équipement ne touche la cible ». La contre-lecture a confronté
+chaque `cause` au motif de l'entrée et chaque `toucheLaCible` à la règle du
+doute (« dans le doute, `true` ») :
 
-**Les réserves : 98 → 91.** Dix-neuf se disaient « corrigées » ou « levées » ;
-relues une à une, sept le sont entièrement et passent dans `historique`, un champ
-qui ne se compte pas. Douze gardent un point ouvert et restent des réserves, en
-entier. Le plan du matin en annonçait vingt-huit closes : il avait compté des
-mots, pas des dettes.
+- six causes contredisaient leur propre motif — `R. 4227-23` écrit « ce qui le
+  bloque est un attribut », `R. 4227-26` « le cinquième déclencheur »,
+  `L. 4121-3-1` VI se date sur un acte de l'outil lui-même (c'est un manque du
+  module DUERP, pas un événement inobservable) ;
+- huit « hors cible » ne tenaient pas : le corpus écrit lui-même que
+  l'échafaudage roulant est « le seul que ces secteurs possèdent parfois en
+  propre », et que la notice des points d'ancrage concerne « une minorité »
+  des établissements de la cible — une minorité de la cible est dans la cible ;
+- `PE 27 § 5` était rangée `a_trancher` alors que son blocage est levé.
+
+**Ce que le compte dit, à sa juste mesure.** Aucune cause ne domine : la dette
+de la cible est étalée sur dix causes, et la plus lourde — l'événementiel —
+n'en porte que neuf sur cinquante. L'ADR-037 reste le meilleur levier unitaire ;
+il n'est pas « la moitié du problème ».
+
+**Une tension que ce registre ne tranche pas : qu'est-ce que « la cible » ?**
+`toucheLaCible` suit `CATEGORIES_COUVERTES = ["N5"]` : le gaz d'un restaurant de
+4ᵉ catégorie (`GZ 13`, `GZ 14`) est compté HORS cible. L'ADR-031 écrit pourtant
+qu'un restaurant de huit salariés en 3ᵉ catégorie « reste dans la cible ». Les
+deux définitions cohabitent dans le dépôt ; la réponse appartient à la
+propriétaire (lot 6b), et elle déplacerait quatre lignes de colonne.
+
+**Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
+dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le
+modèle sait le porter. Ne pas l'encoder est un choix de priorité, pas une
+impossibilité — à confirmer, le produit SERVANT les hôtels (ADR-031).
+
+**Les réserves : 98 → 89.** Dix-neuf se disaient « corrigées » ou « levées ».
+Relues une à une : sept entièrement closes d'après le lot, trois de plus
+d'après sa contre-lecture (`R. 4223-11`, `PE 33`, `GC 22`), passent dans
+`historique`, un champ qui ne se compte pas. Les autres gardent un point ouvert
+et restent des réserves, en entier. Une réserve est NÉE : celle de `R. 4222-21`,
+dont l'avis du médecin du travail et du CSE reste hors du produit. Le plan du
+matin annonçait vingt-huit réserves closes : il avait compté des mots.
 
 **Deux « libres » du plan ne l'étaient pas.** Le livret de `CH 39` attend qu'on
 tranche s'il fait un écrit à part ou rejoint ceux de `GC 18` et de `R. 4224-17` ;

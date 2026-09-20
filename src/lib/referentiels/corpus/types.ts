@@ -289,6 +289,10 @@ export type ArticleDepouille = {
    * rature — il reste lisible, et il cesse d'être compté.
    *
    * Une réserve qui garde UN point ouvert reste une `reserve`, en entier.
+   *
+   * Second usage : le MOTIF d'une `obligation_manquante` devenue `retenu`.
+   * Dans ce cas seulement il cohabite avec une `reserve` — l'un dit pourquoi
+   * l'article attendait, l'autre ce qu'il laisse encore dehors (`R. 4222-21`).
    */
   historique?: string;
   /** Ce que l'article impose, et à qui. Une phrase. */

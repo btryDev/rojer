@@ -317,7 +317,7 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
-      cause: "a_trancher",
+      cause: "libre",
       toucheLaCible: true,
       motif:
         "Impose au § 5 que « le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours », sans périodicité écrite, pour tous les ERP de 5e catégorie. Le référentiel ne porte aucune ligne de formation du personnel côté ERP. Le § 4 c précise que l'information « peut être complétée par des exercices périodiques d'évacuation » — facultatif, à ne pas confondre avec R. 4227-39. N'ouvre le Livre II que sur MS 70. Réécrit par l'arrêté du 4 février 2026.",
@@ -390,7 +390,7 @@ export const CORPUS_PE: Corpus = {
         "Une consigne d'incendie doit être affichée dans chaque chambre ; elle est rédigée en français et complétée par une bande dessinée illustrant les consignes.",
       statut: "retenu",
       obligations: ["incendie-erp-5-sommeil-consigne-chambres"],
-      reserve:
+      historique:
         "Le § 2 est encodé depuis le 2026-09-01 (lot A11). Le § 1 — « L'exploitant doit tenir à jour un registre de sécurité. Ce document doit pouvoir être présenté à chaque visite de la commission de sécurité. » — n'a PAS d'obligation propre, et c'est délibéré : `incendie-registre-securite` le porte déjà, fondée sur R. 143-44 CCH, dont le champ est « les établissements soumis aux prescriptions du présent chapitre », 5ᵉ catégorie comprise. En créer une seconde pour les seuls établissements à locaux à sommeil ferait croire à deux registres là où le texte n'en impose qu'un. Cette entrée ne cite pas cette obligation-là parce qu'elle ne cite pas PE 33 en fondement : la citer ici ferait dire au corpus qu'un article fonde une ligne qui ne le connaît pas.",
     },
     {

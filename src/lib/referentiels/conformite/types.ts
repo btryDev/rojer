@@ -527,8 +527,11 @@ export type ConditionApplication =
  * « elle revient, on ne sait pas à quel rythme ». C'est un état légitime —
  * ~~et le plus fréquent des quarante-trois~~ : mesuré en appelant le
  * 2026-09-20, `autre` compte soixante-deux lignes, dont TROIS seulement sont
- * des échéances récurrentes ; cinquante et une sont des états permanents. La
- * phrase était fausse sur le nombre et sur le rang.
+ * des échéances récurrentes ; CINQUANTE sont des états permanents (le
+ * cinquante et unième état permanent du référentiel a un rythme :
+ * `porte-auto-portail-piete-coulissant`), six des événementielles, trois des
+ * ponctuelles. La phrase était fausse sur le nombre et sur le rang — et ma
+ * première correction l'était d'une unité, relevée par la contre-lecture.
  */
 export const NATURES_OBLIGATION = [
   /**
