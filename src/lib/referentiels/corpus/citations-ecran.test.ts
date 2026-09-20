@@ -209,7 +209,9 @@ describe("les arrêtés cités par leur date, que le motif d'article ne voyait p
    * Ce plafond est un CLIQUET : il ne remonte pas. Le jour où l'arrêté entre
    * au corpus, il descend à zéro et n'en bouge plus.
    */
-  const PLAFOND_ARRETES = 1;
+  // ~~1~~ → 0 le 2026-09-20 : l'arrêté du 1er février 2010 est entré au corpus
+  // (`arrete-2010-02-01-legionelles.ts`). Il n'en bouge plus.
+  const PLAFOND_ARRETES = 0;
 
   it("ne dépasse pas le plafond, et le plafond ne remonte pas", () => {
     const orphelins = arretesSansCorpus(RACINE);
@@ -235,8 +237,7 @@ describe("les arrêtés cités par leur date, que le motif d'article ne voyait p
   it("l'orphelin restant est bien celui qu'on croit", () => {
     // Nommé, pour qu'un AUTRE trou ne se glisse pas à sa place sous le même
     // plafond. C'est la faute classique d'un cliquet numérique.
-    expect(arretesSansCorpus(RACINE).map((o) => o.ref)).toEqual([
-      "2010-02-01",
-    ]);
+    // ~~["2010-02-01"]~~ — dépouillé le 2026-09-20. Il n'en reste aucun.
+    expect(arretesSansCorpus(RACINE).map((o) => o.ref)).toEqual([]);
   });
 });

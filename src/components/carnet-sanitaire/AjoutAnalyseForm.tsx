@@ -100,9 +100,11 @@ export function AjoutAnalyseForm({
           id="valeurUfcParL-aide"
           className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
         >
-          Seuil d&apos;action légal : {SEUIL_LEGIONELLE_UFC_PAR_L} UFC/L
-          (arrêté 01-02-2010 annexe II). Au-delà, mesures correctives
-          immédiates obligatoires.
+          Limite de qualité en <em>Legionella pneumophila</em> :{" "}
+          {SEUIL_LEGIONELLE_UFC_PAR_L}{" "}UFC/L aux points d&apos;usage à risque
+          (arrêté du 1er février 2010, art. 4). Au-delà, le même article
+          demande des mesures correctives sans délai, puis des analyses pour
+          en vérifier l&apos;efficacité.
         </p>
       </div>
 

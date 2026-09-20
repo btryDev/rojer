@@ -7,8 +7,10 @@ import { formaterJourMoisFr } from "@/lib/dates";
  * d'interaction complexe — juste une visualisation lisible.
  *
  * Passage à la charte board (`docs/charte-board.md`). Le graphe porte un
- * **seuil réglementaire** — l'arrêté du 1er février 2010 pour l'eau chaude
- * sanitaire —, et c'est la seule chose que le remappage des couleurs ne
+ * **seuil** — ~~« réglementaire, l'arrêté du 1er février 2010 »~~ : ce texte
+ * ne porte aucune température ; le seuil est celui que le dirigeant a fixé au
+ * point, proposé d'après l'article 36 de l'arrêté du 23 juin 1978 —, et c'est
+ * la seule chose que le remappage des couleurs ne
  * pouvait pas se permettre de déplacer. Trois choix en découlent :
  *
  * - **Le seuil garde le registre rouge.** `--minium` devient

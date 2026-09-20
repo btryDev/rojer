@@ -2159,7 +2159,30 @@ lot 6.
 
 ---
 
-## 16. L'arrêté du 1er février 2010 — un module livré sur un texte jamais ouvert
+## ~~16. L'arrêté du 1er février 2010 — un module livré sur un texte jamais ouvert~~ — FAIT le 2026-09-20
+
+> **Clos par `lot/legionelles-arrete-2010`.** L'arrêté (huit articles, deux
+> annexes) et son modificatif du 30 décembre 2022 sont au corpus
+> (`corpus/arrete-2010-02-01-legionelles.ts`), `PLAFOND_ARRETES` est à zéro.
+> Ce que la lecture a changé : le champ (« obligatoire pour tout établissement
+> avec ECS » était faux — il faut un ERP, une installation collective et un
+> point d'usage à risque accessible au public ; la page cite désormais les
+> articles 1er et 2) ; la source des températures (l'arrêté n'en porte aucune :
+> 50 °C et 55 °C viennent de l'article 36 de l'arrêté du 23 juin 1978, et le
+> module plaçait les 55 °C au retour de boucle au lieu de la sortie de stockage —
+> le défaut proposé pour le bouclage passe à 50) ; 1 000 UFC/L est à l'article 4,
+> « limite de qualité », pas à « l'annexe II ». **Aucune obligation encodée**,
+> par décision de la propriétaire : la cible n'est pas dans le champ.
+>
+> **Reste ouvert, et petit.** (1) Le module propose UN seuil minimal par point
+> d'eau chaude, quand l'article 36 en pose trois selon l'endroit (≥ 50 réseau,
+> ≥ 55 sortie de stockage ≥ 400 L, ≤ 50 aux robinets de toilette) : le type
+> « ECS » ne dit pas où est le point. (2) L'article 1er de l'arrêté de 1978
+> (champ, installations neuves ou existantes) n'est pas ouvert. (3) Le relevé
+> hebdomadaire du tableau de bord reste un seuil du produit, plus serré que le
+> mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts`. (4) La
+> phrase « entre 25 et 45 °C » de la page ne cite aucune source.
+
 
 Relevé le 2026-09-20 par la sonde de dépouillement, puis **rendu visible par un
 cliquet** le même jour : le balayage des citations d'écran ne reconnaissait que

@@ -10,6 +10,7 @@ import {
 } from "@/lib/carnet-sanitaire/actions";
 import {
   LABEL_RESEAU,
+  AIDE_SEUIL_TEMPERATURE,
   SEUIL_DEFAUT,
   TYPES_RESEAU,
 } from "@/lib/carnet-sanitaire/schema";
@@ -103,6 +104,7 @@ export function AjoutPointReleveForm({
           step="0.5"
           defaultValue={SEUIL_DEFAUT[type]}
           key={`seuil-${type}`}
+          aide={AIDE_SEUIL_TEMPERATURE}
         />
       </div>
 
