@@ -57,8 +57,24 @@ import {
  * catégorisé ces écarts sur la production (zéro `inexplique`). Sans
  * l'incrément, ils ne s'appliqueraient qu'au hasard d'une mutation. Retour
  * arrière : annuler le lot et passer à 4, pas à 2 (ADR-036 § 10).
+ *
+ * `4` (2026-09-21, décidé par la propriétaire — « on enlève sommeil à tout,
+ * sauf si l'utilisateur répond oui ») : LE SILENCE SUR LES LOCAUX À SOMMEIL NE
+ * RETIENT PLUS QUE LÀ OÙ LE SOMMEIL EST PLAUSIBLE. Mesuré la veille sur le
+ * moteur de production : un restaurant, un magasin, un bureau et un musée de
+ * 5ᵉ catégorie qui n'avaient jamais répondu portaient chacun quatre lignes —
+ * visite de commission, contrat d'entretien de la détection, consigne dans les
+ * chambres, plans affichés —, la question ne leur étant posée que sur un écran
+ * que personne n'ouvre. `evaluerLocauxSommeil` (`matching/engine.ts`) ne
+ * retient désormais sur le silence que pour `TYPES_ERP_A_SOMMEIL_PLAUSIBLE` et
+ * pour un type non renseigné. Sans l'incrément, seuls les dossiers NEUFS
+ * seraient justes ; les anciens garderaient leurs quatre lignes jusqu'à une
+ * mutation de hasard. Une ligne qui porte une trace est archivée, jamais
+ * supprimée. Le numéro 4 avait été réservé au retour arrière de l'ADR-036 : ce
+ * retour, s'il devait se faire, prendrait le numéro suivant — les versions ne
+ * sont qu'une suite croissante.
  */
-export const VERSION_MOTEUR_CALENDRIER = 3;
+export const VERSION_MOTEUR_CALENDRIER = 4;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la

@@ -322,7 +322,12 @@ describe("moteur matching — typologie ERP", () => {
   });
 
   it("ERP cat 5 → visite commission PE locaux à sommeil (typologie cat N5)", () => {
-    const res = determineObligationsApplicables(etabRestoErpCat5(), [alarme()]);
+    // Un HÔTEL, et non plus le restaurant de la fixture : depuis le
+    // 2026-09-21 le silence ne retient que là où le sommeil est plausible.
+    const res = determineObligationsApplicables(
+      etabRestoErpCat5({ typeErp: "O" }),
+      [alarme()],
+    );
     expect(idsObligations(res)).toContain("incendie-erp-5-visite-commission");
   });
 
@@ -1794,11 +1799,47 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
     expect(idsObligations(res)).not.toContain(VISITE);
   });
 
-  it("reste affichée tant que personne n'a répondu (opt-out)", () => {
-    // Criticité 4 sur une obligation déjà publiée : aucun établissement
-    // existant ne doit perdre la ligne en silence à la régénération.
-    const res = determineObligationsApplicables(etabRestoErpCat5(), []);
-    expect(idsObligations(res)).toContain(VISITE);
+  it("reste affichée tant que personne n'a répondu — LÀ OÙ LE SOMMEIL EST PLAUSIBLE", () => {
+    // Criticité 4 : aucun hôtel, aucun refuge, aucun dossier SANS TYPE ne doit
+    // perdre la ligne en silence. Les deux bornes sont ici ensemble, parce
+    // qu'aucune ne vaut seule : la première passerait avec une prudence
+    // généralisée, la seconde avec une prudence supprimée.
+    for (const typeErp of ["O", "R", "U", "J", "REF", "OA", null] as const) {
+      const res = determineObligationsApplicables(
+        etabRestoErpCat5({ typeErp }),
+        [],
+      );
+      expect(idsObligations(res), String(typeErp)).toContain(VISITE);
+    }
+  });
+
+  it("NE S'AFFICHE PLUS chez un type qui a déjà répondu par son type (2026-09-21)", () => {
+    // Mesuré en production la veille : restaurant, magasin, bureau et musée
+    // de 5ᵉ catégorie portaient chacun les quatre lignes « sommeil », et les
+    // auraient portées pour toujours — la question ne leur était posée que sur
+    // un écran que personne n'ouvre. Pour eux le silence n'est pas une
+    // incertitude : le type déclaré a répondu.
+    for (const typeErp of ["N", "M", "W", "Y"] as const) {
+      const res = determineObligationsApplicables(
+        etabRestoErpCat5({ typeErp }),
+        [],
+      );
+      expect(idsObligations(res), typeErp).not.toContain(VISITE);
+    }
+  });
+
+  it("UN « OUI » EXPLICITE L'EMPORTE POUR TOUT TYPE — l'auberge typée N", () => {
+    // Le modèle ne stocke qu'un type par établissement : l'auberge, la chambre
+    // d'hôtes au-dessus du restaurant se déclarent N. Leur réponse sur la
+    // fiche doit compter — c'est ce que la borne `typesExclus` essayée le
+    // 2026-09-09 rendait impossible (« enregistrée et sans effet »).
+    for (const typeErp of ["N", "M", "W", "Y"] as const) {
+      const res = determineObligationsApplicables(
+        etabRestoErpCat5({ typeErp, comporteLocauxSommeilPublic: true }),
+        [],
+      );
+      expect(idsObligations(res), typeErp).toContain(VISITE);
+    }
   });
 
   it("ne s'applique pas à un ERP de 2ᵉ catégorie, même avec des locaux à sommeil", () => {
@@ -1848,7 +1889,11 @@ describe("moteur matching — les trois autres lignes du chapitre III (locaux à
   });
 
   it("sont servies « à confirmer » tant que personne n'a répondu", () => {
-    const res = determineObligationsApplicables(etabRestoErpCat5(), []);
+    // Un hôtel muet : le type rend le sommeil plausible, la prudence joue.
+    const res = determineObligationsApplicables(
+      etabRestoErpCat5({ typeErp: "O" }),
+      [],
+    );
     for (const id of LIGNES) {
       const ligne = res.find((o) => o.obligation.id === id);
       expect(ligne, id).toBeDefined();
@@ -2290,13 +2335,31 @@ describe("moteur matching — visite de commission : GE 4 en 1ʳᵉ–4ᵉ, PE 3
     // établissement pour la même visite.
     for (const cat of ["N1", "N2", "N3", "N4", "N5"] as const) {
       const ids = idsObligations(
-        determineObligationsApplicables(erp(cat), [
-          { id: "eq-a", libelle: "Alarme", categorie: "ALARME_INCENDIE" as const, caracteristiques: null },
-        ]),
+        determineObligationsApplicables(
+          // En 5ᵉ catégorie la visite de PE 37 n'existe que pour qui héberge —
+          // le texte la réserve aux établissements « comportant, pour le
+          // public, des locaux à sommeil ». Le cas dangereux de ce test est
+          // celui-là : on le déclare, pour que la ligne PE 37 soit bien là et
+          // que GE 4 n'ait aucune chance de s'y ajouter sans être vue.
+          { ...erp(cat), comporteLocauxSommeilPublic: true },
+          [
+            { id: "eq-a", libelle: "Alarme", categorie: "ALARME_INCENDIE" as const, caracteristiques: null },
+          ],
+        ),
       );
       const visites = [...CAT14, CAT5].filter((id) => ids.includes(id));
       expect(visites, cat).toHaveLength(1);
     }
+  });
+
+  it("un ERP de 5ᵉ qui n'héberge pas n'a AUCUNE visite périodique, et c'est le texte", () => {
+    // PE 37 : « Ces établissements [comportant, pour le public, des locaux à
+    // sommeil] doivent être visités tous les cinq ans ». GE 4 ne couvre pas la
+    // 5ᵉ catégorie. Un magasin de 5ᵉ muet n'a donc aucune ligne de visite — ce
+    // que la branche du 2026-09-09 relevait comme un effet de bord, et qui est
+    // simplement le droit.
+    const ids = idsObligations(determineObligationsApplicables(erp("N5"), []));
+    expect([...CAT14, CAT5].filter((id) => ids.includes(id))).toHaveLength(0);
   });
 
   it("un ERP dont le type n'est pas renseigné garde sa visite, et une seule", () => {

@@ -53,6 +53,7 @@ import type {
   FamilleHabitation,
   TypologieApplication,
 } from "@/lib/referentiels/types-communs";
+import { sommeilPlausiblePourLeType } from "@/lib/referentiels/types-communs";
 import type {
   EquipementMatching,
   EtablissementMatching,
@@ -254,18 +255,28 @@ function evaluerLocauxSommeil(
   const declare = etab.comporteLocauxSommeilPublic;
 
   if (critere === true) {
-    // Seule une réponse « non » explicite écarte l'obligation.
+    // Une réponse explicite l'emporte toujours, dans les deux sens et pour
+    // tout type : « non » écarte, « oui » applique — y compris à l'auberge
+    // typée N, que le type unique du modèle ne sait pas dire autrement.
     if (declare === false) return { ok: false };
-    return declare === true
-      ? {
-          ok: true,
-          raison: "locaux à sommeil pour le public déclarés",
-        }
-      : {
-          ok: true,
-          raison:
-            "présence de locaux à sommeil pour le public non renseignée — obligation retenue par prudence, à confirmer",
-        };
+    if (declare === true) {
+      return { ok: true, raison: "locaux à sommeil pour le public déclarés" };
+    }
+    // LE SILENCE, ET CE QU'IL VAUT SELON LE TYPE (2026-09-21). Jusqu'ici il
+    // retenait partout : mesuré en production, un musée, un magasin, un bureau
+    // et un restaurant de 5ᵉ catégorie portaient chacun les quatre lignes —
+    // contrat d'entretien de la détection, consigne dans les chambres —, et
+    // les auraient portées pour toujours, la question ne leur étant posée que
+    // sur un écran que personne n'ouvre. La prudence couvre une INCERTITUDE ;
+    // or un type déclaré hors de `TYPES_ERP_A_SOMMEIL_PLAUSIBLE` n'en laisse
+    // pas : le type a déjà répondu. Sans type déclaré, en revanche, rien n'a
+    // répondu, et le silence retient comme avant (ADR-022 § 7).
+    if (!sommeilPlausiblePourLeType(etab.typeErp)) return { ok: false };
+    return {
+      ok: true,
+      raison:
+        "présence de locaux à sommeil pour le public non renseignée — obligation retenue par prudence, à confirmer",
+    };
   }
 
   // `false` : l'obligation ne vise que les établissements SANS locaux à

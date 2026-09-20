@@ -123,7 +123,12 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 3,
+  version: 4,
+  // INCRÉMENTÉ le 2026-09-21 (décision de la propriétaire) : le silence sur
+  // les locaux à sommeil ne retient plus que là où le sommeil est plausible.
+  // OUI, la régénération écrit autrement : les ERP de 5ᵉ catégorie hors de ces
+  // types, muets, perdent leurs quatre lignes « sommeil ». Voir le commentaire
+  // de `VERSION_MOTEUR_CALENDRIER`.
   // INCRÉMENTÉ le 2026-09-19 (ADR-036, lot 4 — la bascule) : la réconciliation
   // date chaque ligne par `echeanceDeLigne` au lieu de conserver la date en
   // base ; `decision-par-faits.ts` et `echeance-de-ligne.ts` entrent dans le
@@ -168,7 +173,7 @@ const RELEVE = {
   // Recopiée SANS incrément le même jour (point 5) : `derniere-realisation.ts`
   // gagne `ORDRE_RAPPORT_PLUS_RECENT`, que le moteur n'importe pas — il
   // départage toujours par `indexerDernieresRealisations`. NON.
-  empreinte: "c40d958332ef09f4",
+  empreinte: "91818c02ec7ea78b",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

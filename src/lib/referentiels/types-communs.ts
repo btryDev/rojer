@@ -298,6 +298,60 @@ export const TYPES_ERP = [
 export type TypeErp = (typeof TYPES_ERP)[number];
 
 /**
+ * Les types d'ERP où le sommeil du public est PLAUSIBLE.
+ *
+ * CE QUE CETTE LISTE EST, ET CE QU'ELLE N'EST PAS. Elle ne borne AUCUNE
+ * obligation : les quatre lignes « locaux à sommeil » du Livre III restent
+ * attachées au seul critère que le texte connaît — « les seuls locaux destinés
+ * au sommeil du public la nuit » (GN 1 § 4), porté par
+ * `Etablissement.comporteLocauxSommeilPublic`. La liste ne sert qu'à deux
+ * choses, toutes deux du côté du SILENCE :
+ *
+ *  · à qui la question est POSÉE dès le parcours d'accueil — un musée à qui
+ *    l'on demande s'il héberge pour la nuit lit une question à côté de la
+ *    plaque (arbitrage de la propriétaire, 2026-09-09 puis 2026-09-21) ;
+ *  · ce que vaut l'ABSENCE de réponse : dans ces types, le moteur retient par
+ *    prudence, « à confirmer » ; hors de ces types, il ne retient pas — le
+ *    type déclaré a déjà répondu, il n'y a pas d'incertitude à couvrir.
+ *
+ * UNE RÉPONSE EXPLICITE L'EMPORTE TOUJOURS, DANS LES DEUX SENS ET POUR TOUT
+ * TYPE. L'auberge typée N — le produit ne stocke qu'un type par établissement
+ * — déclare ses chambres sur sa fiche, et ses quatre lignes s'appliquent.
+ * C'est ce qui sépare cette liste de la borne `typesExclus` essayée le
+ * 2026-09-09 sur les obligations elles-mêmes : celle-là rendait muette la
+ * réponse d'un type hors liste, et demandait au référentiel de trancher sans
+ * source quels types hébergent.
+ *
+ * D'OÙ ELLE VIENT. J, O, U, R : l'arbitrage du 2026-09-09, et ce sont aussi,
+ * au tableau de GE 4 § 1, les quatre cases triennales de 4ᵉ catégorie — R n'y
+ * figurant que pour sa colonne « avec hébergement ». REF et OA : les libellés
+ * mêmes de GN 1 nomment l'hébergement (refuge de montagne, hôtel-restaurant
+ * d'altitude) ; l'arbitrage de 2026-09-09 les avait écartés comme le coût
+ * d'une règle plus simple, et la règle du silence les reprend sans rien coûter.
+ *
+ * UN ERP DONT LE TYPE N'EST PAS RENSEIGNÉ RESTE DANS LA PRUDENCE : sans type,
+ * rien n'a répondu, et l'incertitude ne réduit jamais la couverture (ADR-022
+ * § 7).
+ */
+export const TYPES_ERP_A_SOMMEIL_PLAUSIBLE = [
+  "O",
+  "R",
+  "U",
+  "J",
+  "REF",
+  "OA",
+] as const satisfies readonly TypeErp[];
+
+/** Le type déclaré rend-il plausible le sommeil du public ? `null`/absent =
+ *  on ne sait pas, donc oui : le silence sur le type ne retire rien. */
+export function sommeilPlausiblePourLeType(
+  typeErp: string | null | undefined,
+): boolean {
+  if (typeErp == null || typeErp === "") return true;
+  return (TYPES_ERP_A_SOMMEIL_PLAUSIBLE as readonly string[]).includes(typeErp);
+}
+
+/**
  * Catégories d'ERP — CCH, art. R. 143-19, dans l'ordre du texte.
  *
  * PAS `GN 2` de l'arrêté du 25 juin 1980, qu'on lui attribuait : cet article

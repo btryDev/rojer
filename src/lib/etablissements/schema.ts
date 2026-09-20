@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { depuisCleJourCivil } from "@/lib/dates";
+import { TYPES_ERP_A_SOMMEIL_PLAUSIBLE } from "@/lib/referentiels/types-communs";
 
 // Enums reflétant le schéma Prisma. Si on ajoute une valeur côté Prisma,
 // pensez à la refléter ici — pas d'import direct de @prisma/client pour
@@ -27,6 +28,92 @@ export const TYPE_ERP = [
 
 /** Catégories d'ERP — CCH, art. R. 143-19. Cinq, dans l'ordre du texte. */
 export const CATEGORIES_ERP = ["N1", "N2", "N3", "N4", "N5"] as const;
+
+/**
+ * LES QUATRE TYPES AUXQUELS LA QUESTION DES LOCAUX À SOMMEIL EST POSÉE.
+ *
+ * DÉCISION DE PRODUIT DU 2026-09-09, ET ELLE N'EST PAS UNE LECTURE DU TEXTE.
+ * Aucun article ne rattache un type d'exploitation à la présence de locaux à
+ * sommeil, et ce n'est pas faute d'avoir cherché : `GN 1 § 1` est la
+ * nomenclature des vingt-deux types et ne dit rien de l'hébergement ; son § 4
+ * en donne la définition — « les seuls locaux destinés au sommeil du public la
+ * nuit » — et rien de plus. La liste vient d'un spécialiste consulté par la
+ * propriétaire, arbitrée le 2026-09-09 en connaissance de cette absence de
+ * fondement textuel. Elle est une BORNE DE PÉRIMÈTRE, pas une déduction : le
+ * produit ne suppose pas qu'une boulangerie ne fait pas dormir, il décide que
+ * les obligations de locaux à sommeil ne visent que ces quatre types.
+ *
+ * CE QUE CETTE BORNE RENVERSE, ET IL FAUT LE LIRE AVANT DE LA TOUCHER. Le
+ * dépôt avait tranché deux fois dans l'AUTRE sens :
+ *   — `docs/carto-obligations-hors-equipement.md` § « Décisions tranchées »
+ *     point 3 : « attribut DÉCLARÉ, pas dérivé », au motif que « la dérivation
+ *     depuis `typeErp` est incomplète des deux côtés — un type N peut comporter
+ *     des chambres à l'étage, un type R sans internat n'en comporte pas » ;
+ *   — la note de `incendie-erp-visite-commission-cat5-quinquennale` : « encoder
+ *     une liste de types équivaudrait à trancher, sans source article par
+ *     article, quels types d'exploitation comportent des locaux à sommeil — ce
+ *     que la règle n°6 interdit ».
+ * Les deux ont été relues et remontées avant l'arbitrage. Elles restent vraies
+ * comme lecture du texte ; elles sont écartées comme règle de produit. Ce qui
+ * les écarte est une décision, pas une réfutation — d'où cette note plutôt
+ * qu'une suppression.
+ *
+ * CE QU'ELLE COÛTE, NOMMÉ PLUTÔT QUE TU. Trois cas perdent les quatre lignes :
+ * le refuge de montagne (REF) et l'hôtel-restaurant d'altitude (OA), dont les
+ * libellés de GN 1 nomment pourtant l'hébergement ; et le type N ou M qui
+ * comporte des chambres à l'étage — l'auberge, la chambre d'hôtes au-dessus du
+ * restaurant —, que `typeErp` ne sait pas distinguer parce qu'il ne stocke
+ * qu'un type par établissement et que `GN 2` et `GN 3`, qui règlent le
+ * classement des exploitations à types multiples, ne sont pas dépouillés au
+ * corpus. Ces trois cas ont été soumis à l'arbitrage et écartés avec lui.
+ *
+ * L'ORDRE EST CELUI DE `TYPE_ERP`, lui-même celui de `GN 1 § 1`.
+ */
+// ~~Liste propre à ce module : O, R, U, J, bornant aussi les obligations par
+// `typesExclus`.~~ Remplacée le 2026-09-21 : la liste vit côté référentiel
+// (`TYPES_ERP_A_SOMMEIL_PLAUSIBLE`), où le moteur la lit, et elle ne borne plus
+// aucune obligation — elle dit à qui la question est posée dès le parcours, et
+// ce que vaut le silence. Voir sa note pour l'argument complet. L'alias garde
+// le nom que les écrans du parcours importent déjà.
+export const TYPES_ERP_QUESTION_LOCAUX_SOMMEIL = TYPES_ERP_A_SOMMEIL_PLAUSIBLE;
+
+/**
+ * LA RÉPONSE SUIT LE TYPE (2026-09-21).
+ *
+ * La question du sommeil n'est posée qu'aux types de la liste. Quand
+ * l'établissement enregistré n'en est pas — ERP décoché, ou type hors liste —,
+ * la question n'existe plus pour lui et SA RÉPONSE PART AVEC ELLE : la colonne
+ * est remise à `null`.
+ *
+ * Sans cela, un hôtel devenu restaurant garderait son « oui » en base, donc
+ * ses quatre lignes (dans le moteur, une réponse explicite l'emporte), et plus
+ * aucun écran ne lui montrerait la question pour le corriger : le champ masqué
+ * n'est pas posté, et un champ non posté n'écrit rien.
+ *
+ * Le risque que l'ancienne protection couvrait — un « non » effacé qui fait
+ * réapparaître quatre lignes « à confirmer » — n'existe plus pour ces types :
+ * le moteur ne retient rien sur leur silence.
+ */
+export function reponseSommeilSuivantLeType<
+  T extends {
+    estERP?: boolean | null;
+    typeErp?: string | null;
+    comporteLocauxSommeilPublic?: boolean | null;
+  },
+>(donnees: T): T {
+  const questionPosee =
+    donnees.estERP === true &&
+    donnees.typeErp != null &&
+    (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
+      donnees.typeErp,
+    );
+  return questionPosee
+    ? donnees
+    : { ...donnees, comporteLocauxSommeilPublic: null };
+}
+
+export type TypeErpQuestionLocauxSommeil =
+  (typeof TYPES_ERP_QUESTION_LOCAUX_SOMMEIL)[number];
 
 /**
  * LA CLASSE D'IGH ET LA FAMILLE D'HABITATION NE SE DÉCLARENT PLUS (2026-09-03).

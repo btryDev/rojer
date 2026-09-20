@@ -516,6 +516,18 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
       />
       <input type="hidden" name="typeErp" value={state.typeErp} />
       <input type="hidden" name="categorieErp" value={state.categorieErp} />
+      {/* Locaux à sommeil. Le champ n'est POSTÉ QUE S'IL A UNE RÉPONSE : « je
+          ne sais pas encore » ne s'envoie pas, et le schéma le lirait de toute
+          façon `undefined`. Le rendre conditionnel plutôt que vide dit la même
+          chose deux fois, et c'est voulu — c'est la seule pièce du formulaire
+          dont la valeur vide ne doit jamais devenir un `false` en base. */}
+      {state.comporteLocauxSommeilPublic ? (
+        <input
+          type="hidden"
+          name="comporteLocauxSommeilPublic"
+          value={state.comporteLocauxSommeilPublic}
+        />
+      ) : null}
     </>
   );
 }
