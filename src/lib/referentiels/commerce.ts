@@ -285,6 +285,57 @@ export const commerce: Referentiel = {
         },
       ],
     },
+    {
+      // Entré le 2026-09-20 avec l'encodage de R. 4463-2. Le bureau le nommait
+      // déjà (`bur-thermique`), la restauration par sa cuisine
+      // (`resto-ambiance-thermique`) ; le commerce n'en disait rien, alors que
+      // l'article vise l'exposition « en intérieur ou en extérieur » de tout
+      // employeur. Les mesures sont tirées de R. 4463-3, R. 4463-4 et
+      // R. 4463-6, sans ajout ; la cotation par défaut est celle du bureau.
+      id: "com-chaleur-intense",
+      libelle: "Ambiances thermiques — épisodes de chaleur intense",
+      description:
+        "Code du travail, art. R. 4463-2 et R. 4463-3 ; ED 840 fiche 12.",
+      unitesAssociees: [
+        "com-reception-stockage",
+        "com-vente-caisse",
+        "com-locaux",
+      ],
+      graviteParDefaut: 2,
+      probabiliteParDefaut: 3,
+      mesuresRecommandees: [
+        {
+          id: "com-chaleur-moyens-techniques",
+          libelle:
+            "Moyens techniques pour réduire le rayonnement solaire sur les surfaces exposées et prévenir l'accumulation de chaleur dans les locaux",
+          type: "protection_collective",
+        },
+        {
+          id: "com-chaleur-organisation",
+          libelle:
+            "Adaptation de l'organisation et des horaires de travail pour limiter la durée et l'intensité de l'exposition, avec des périodes de repos",
+          type: "organisationnelle",
+        },
+        {
+          id: "com-chaleur-eau",
+          libelle:
+            "Eau potable fraîche en quantité suffisante, maintenue au frais à proximité des postes de travail",
+          type: "organisationnelle",
+        },
+        {
+          id: "com-chaleur-signalement",
+          libelle:
+            "Modalités de signalement d'un malaise et de secours, portées à la connaissance des salariés",
+          type: "organisationnelle",
+        },
+        {
+          id: "com-chaleur-formation",
+          libelle:
+            "Information et formation des salariés sur la conduite à tenir en cas de forte chaleur",
+          type: "formation",
+        },
+      ],
+    },
   ],
   questionsDetection: [],
   /*

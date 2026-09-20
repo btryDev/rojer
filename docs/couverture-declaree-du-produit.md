@@ -53,6 +53,22 @@ ce que le dépôt s'interdit.
 | `effectif` | L'effectif dépasse la borne au-delà de laquelle la création d'un dossier est refusée (ADR-031 § 1 bis) | Que le dossier soit fermé : la borne ne vaut qu'à la création, un client qui embauche reste servi | `EFFECTIF_MAX` (`etablissements/schema.ts`), passé en fait par `faits.ts` |
 | ~~`famille_obligation`~~ **(retiré, § 3 bis)** | Des articles lus imposent quelque chose que le produit ne porte pas | **Qu'ils visent cet établissement-là.** Voir § 2 | statut `non_couvert` du corpus |
 
+**Une unité du manque de l'axe `categorie_erp`, écrite le 2026-09-20 : le
+défibrillateur automatisé externe.** L'axe établit « qu'il existe » un manque,
+« pas de combien » ; en voici une conséquence nommable. `R. 157-1` CCH (lu le
+2026-09-01, version en vigueur depuis le 7 décembre 2025 — détail et verbatim
+dans `docs/revues/lot-d3-recoupement-droit.md` § 3) soumet à la détention d'un
+DAE les ERP de catégories 1 à 4, et, en 5ᵉ catégorie, huit familles seulement
+(accueil de personnes âgées ou handicapées, santé, sport clos et couvert, danse
+et jeux, gares, aéroports, hôtels-restaurants d'altitude, refuges), sous deux
+conditions fixées par arrêté. **Aucun des trois secteurs cibles n'y figure en
+5ᵉ catégorie** : le référentiel n'encode donc rien, et ce n'est pas un trou. Le
+jour où les catégories 1 à 4 seraient COUVERTES, le DAE deviendrait dû sans
+condition et redeviendrait une obligation d'établissement à encoder — avec une
+réserve : `R. 157-4` fait peser la maintenance sur le PROPRIÉTAIRE du
+défibrillateur, pas sur l'exploitant. La déclaration à la base nationale relève
+de textes non lus : ne rien en affirmer.
+
 Deux garanties de construction méritent d'être connues avant de toucher au
 module :
 

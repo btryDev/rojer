@@ -94,11 +94,13 @@ On refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement.
 3. **Bureau / services tertiaires**
 
 ### Référentiel de conformité (vérifications)
-Livré : **154 obligations sur 21 domaines** — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
+Livré : **156 obligations sur 21 domaines** — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
 
-**89 d'entre elles sont déclenchées par un équipement déclaré, cinquante et une
+**89 d'entre elles sont déclenchées par un équipement déclaré, cinquante-trois
 sont portées par l'établissement, quatorze par un salarié** — remesuré en
-appelant `obligationsConformite` et `porteurDe` le 2026-09-11, jamais au grep.
+appelant `obligationsConformite` et `porteurDe` le 2026-09-20 (lot chaleur
+intense : deux états permanents d'établissement, `R. 4463-2` et `R. 4463-6`),
+jamais au grep.
 Cette phrase disait « 88 / quarante-huit », la répartition plus bas « 88 / 50 »,
 et les deux étaient fausses : 88 + 50 + 14 font 152, pas les 154 annoncés. Une
 première correction, le même jour, avait aligné celle-ci sur celle d'en bas —
@@ -154,8 +156,10 @@ place dans cette liste, et `eclairage` la rejoint par l'autre extrémité de
 l'énumération. La liste ci-dessus est le produit d'un filtre sur `porteurDe`, exécuté
 le 2026-09-04 ; c'est la seule forme sous laquelle elle ne se périmera pas en silence.
 Un bureau de six personnes sans le moindre appareil déclaré doit
-désormais **vingt-sept obligations**. À douze salariés il en doit **vingt-huit** (le CSE
-s'ajoute), à cinquante-cinq **trente et une** : le règlement intérieur s'ajoute, le local de
+désormais **trente obligations**. À douze salariés il en doit **trente et une** (le CSE
+s'ajoute), à cinquante-cinq **trente-quatre** (remesuré en appelant le moteur le
+2026-09-20 ; les ~~vingt-sept, vingt-huit, trente et une~~ écrits ici étaient
+déjà périmés d'une unité avant que le lot chaleur intense n'en ajoute deux) : le règlement intérieur s'ajoute, le local de
 restauration remplace l'emplacement, et le franchissement de cinquante et une personnes
 présentes fait entrer la consigne de sécurité incendie et l'exercice semestriel.
 
@@ -227,8 +231,8 @@ l'ADR-022, sans mécanisme.
 
 Répartition remesurée le 2026-09-11 (inchangée depuis la scission de la
 colonne R de `GE 4 § 1`, le 2026-09-08) :
-**89 équipement, 51 établissement, 14 salarié**
-(total 154) — en appelant `obligationsConformite` et
+**89 équipement, 53 établissement, 14 salarié**
+(total 156, remesuré le 2026-09-20 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
 `porteurDe`, pas au grep. Les quatre entrées du lot sont, dans l'ordre où elles
 apparaissent au référentiel : `aeration-erp-filtres-visite-periodique`
 (`CH 39 § 3`, visite TRIMESTRIELLE des filtres de ventilation par l'utilisateur,
@@ -426,6 +430,8 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
 - Analyses comparatives / benchmarks sectoriels
 - Signalements de terrain / ticketing : le module Interventions a été retiré (ADR-018) ; rien ne relie plus un constat à une action datée
 - Registres non couverts : accidents du travail / AT bénins, dangers graves et imminents, EPI
+- **Défibrillateur automatisé externe** (`R. 157-1` et s. CCH) : dû aux ERP de catégories 1 à 4 et, en 5ᵉ, à huit familles dont aucun des trois secteurs cibles — rien à encoder tant que `CATEGORIES_COUVERTES = ["N5"]` ; instruit le 2026-09-01 (`docs/revues/lot-d3-recoupement-droit.md` § 3), exclusion écrite le 2026-09-20 dans `docs/couverture-declaree-du-produit.md`
+- **Entretien annuel des chaudières de 4 à 400 kW** : écarté par décision de la propriétaire le 2026-09-20 (« hors cadre »). Le texte n'a PAS été dépouillé ; aucune référence n'en est citée ici, faute de l'avoir ouvert. À ne pas redécouvrir comme un manque
 
 ## Stack technique
 

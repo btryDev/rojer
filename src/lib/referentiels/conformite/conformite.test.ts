@@ -1352,6 +1352,10 @@ describe("référentiel conformité — version et empreinte", () => {
   }> = [
     { version: "2026-09-08.1", empreinte: "154-5af740612719ff11" },
     { version: "2026-09-11.1", empreinte: "154-f79cfff96b4eff09" },
+    // Lot chaleur intense : deux états permanents d'établissement, R. 4463-2
+    // et R. 4463-6. Aucune ligne de calendrier n'en naît (ni rythme ni date) ;
+    // le sceau change quand même, donc chaque dossier se régénère à l'ouverture.
+    { version: "2026-09-20.1", empreinte: "156-67ebbe60824e20e4" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1508,7 +1512,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(154);
+    ).toBe(156);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
