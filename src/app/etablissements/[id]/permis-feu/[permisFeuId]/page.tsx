@@ -404,10 +404,20 @@ export default async function PermisFeuDetailPage({
             profession de l'assurance : le dépôt ne cite en pastille que des
             sources primaires ou institutionnelles (`conformite/types.ts`,
             ADR-003). Elle est donc nommée dans le complément, qualifiée. */}
+        {/* ~~« Art. R. 4224-17 CT · INRS ED 6030 »~~ — l'article retiré le
+            2026-09-20, et le lien avec lui : il menait à R. 4224-17 sur
+            Légifrance sous un libellé qui ne le nommait plus. R. 4224-17 impose
+            l'entretien et la vérification des INSTALLATIONS ET DISPOSITIFS
+            techniques et de sécurité des lieux de travail — c'est ce qu'il
+            fonde ailleurs dans le produit, sur les portes et portails —, et
+            rien sur un permis de travail par point chaud. Le README du ZIP
+            écrit lui-même que cette pratique repose sur des référentiels sans
+            valeur réglementaire propre ; lui adosser un article de code le
+            contredisait. */}
         <LegalBadge
           charte="board"
-          reference="Art. R. 4224-17 CT · INRS ED 6030"
-          href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197"
+          reference="INRS ED 6030"
+          href="https://www.inrs.fr/media.html?refINRS=ED%206030"
           defaultOpen
         >
           Le permis de feu engage conjointement l&apos;entreprise utilisatrice

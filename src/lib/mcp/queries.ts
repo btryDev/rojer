@@ -48,6 +48,10 @@ import {
   ORDRE_RAPPORT_PLUS_RECENT,
   WHERE_RAPPORT_REALISE,
 } from "@/lib/rapports/derniere-realisation";
+import {
+  fraicheurDepuisRepere,
+  type FraicheurCalendrier,
+} from "@/lib/calendrier/fraicheur";
 
 // ---------------------------------------------------------------------
 // Fiche établissement
@@ -62,6 +66,29 @@ export type FicheEtablissement = NonNullable<
  * situent le dossier. `null` si l'identifiant ne correspond à rien — le
  * serveur refuse alors de démarrer plutôt que de servir un dossier vide.
  */
+/**
+ * L'âge du calendrier, à portée explicite.
+ *
+ * Même règle que côté application (`fraicheurDepuisRepere`), lue autrement :
+ * ici la portée est l'`etablissementId` que le serveur a reçu, et non une
+ * session. Les quatre outils qui rendent des échéances ou des compteurs de
+ * retard servaient jusqu'ici une liste sans jamais dire d'où venait son
+ * silence — un calendrier jamais calculé rend une liste vide, qu'un modèle
+ * lit comme « rien à signaler ».
+ */
+export async function getFraicheurCalendrier(
+  etablissementId: string,
+): Promise<FraicheurCalendrier> {
+  const etab = await prismaMcp.etablissement.findUnique({
+    where: { id: etablissementId },
+    select: { referentielVersionCalendrier: true },
+  });
+  if (!etab) return { etat: "jamais_genere" };
+  return fraicheurDepuisRepere(etab.referentielVersionCalendrier, () =>
+    prismaMcp.verification.count({ where: { etablissementId } }),
+  );
+}
+
 export async function getFicheEtablissement(etablissementId: string) {
   return prismaMcp.etablissement.findUnique({
     where: { id: etablissementId },

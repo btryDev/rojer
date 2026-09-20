@@ -68,6 +68,7 @@ function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
     regimesTexte: "Établissement de travail, ERP type N cat. 5",
     genereLe: new Date("2026-09-01T10:00:00Z"),
     couverture: null,
+    avertissementCalendrier: null,
     score: {
       valeur: 100,
       niveau: "indetermine",
@@ -98,6 +99,47 @@ async function pages(data: DossierData): Promise<number> {
   const buf = await renderToBuffer(DossierConformiteDocument({ data }));
   return nombreDePages(Buffer.from(buf));
 }
+
+/** La taille du rendu. Le fichier compare déjà des NOMBRES DE PAGES pour
+ *  prouver qu'un tableau est rendu et pas seulement annoncé ; un encadré de
+ *  page de garde n'ajoute pas de page, mais il ajoute du contenu. C'est le
+ *  même raisonnement, à l'échelle en dessous — et il se casse pour la bonne
+ *  raison : retirez le JSX, les deux tailles s'égalisent.
+ *
+ *  Pourquoi pas une recherche de la phrase : `@react-pdf` écrit le texte en
+ *  flux compressés, avec des polices sous-ensemblées. Un extracteur maison
+ *  rendait une chaîne vide, donc le test « reste muet » passait sans rien
+ *  vérifier — un faux vert vaut moins que pas de test. */
+async function taille(data: DossierData): Promise<number> {
+  const buf = await renderToBuffer(DossierConformiteDocument({ data }));
+  return Buffer.from(buf).length;
+}
+
+const AVERTISSEMENT =
+  "Le calendrier des vérifications n'a pas encore été calculé pour ce " +
+  "dossier : ce qui suit ne recense aucune échéance, ce qui ne veut pas dire " +
+  "qu'il n'y en a pas. Ouvrez le tableau de bord ou le calendrier.";
+
+describe("le dossier dit quand son calendrier n'est pas à jour", () => {
+  it("imprime quelque chose de plus quand il y a un avertissement", async () => {
+    // LE DÉFAUT D'ORIGINE : ce document a imprimé « 0 vérification en retard »
+    // pour des dossiers dont le calendrier n'avait jamais été calculé. Zéro s'y
+    // lit comme une bonne nouvelle, et ce PDF part chez un tiers.
+    const d = dossier(bloc(4));
+    const sans = await taille(d);
+    const avec = await taille({ ...d, avertissementCalendrier: AVERTISSEMENT });
+    expect(avec).toBeGreaterThan(sans);
+  });
+
+  it("reste identique quand le calendrier est à jour", async () => {
+    // Un bandeau permanent cesserait d'être lu : c'est le sort de tout
+    // avertissement qui s'affiche toujours. `null` ne doit donc RIEN ajouter.
+    const d = dossier(bloc(4));
+    expect(await taille({ ...d, avertissementCalendrier: null })).toBe(
+      await taille(d),
+    );
+  });
+});
 
 describe("le dossier de conformité imprime les états permanents", () => {
   it("rend les lignes, et pas seulement le chapeau qui les annonce", async () => {

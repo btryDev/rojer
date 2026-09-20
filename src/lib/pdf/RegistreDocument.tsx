@@ -693,20 +693,41 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
 
         <View style={s.mentionsLegalesBloc}>
           {/* Trois références, et pas une de plus. R. 143-44 CCH fonde le
-              registre en ERP, L. 4711-1 et L. 4711-5 CT le fondent côté
+              registre en ERP ; R. 4323-25 et R. 4323-26 CT le fondent côté
               employeur — ce sont les deux régimes que ce générateur sert.
 
-              R. 146-35 CCH, qui figurait ici, n'y est plus : c'est l'article
-              du registre **IGH**, et l'IGH est hors périmètre du produit
-              (`src/lib/perimetre/couverture.ts` l'écarte avant même de
-              regarder la catégorie ERP). Ce document n'est donc jamais
-              présenté par un IGH, et la citation ne rencontrait personne.
+              ~~« L. 4711-1 et L. 4711-5 CT le fondent côté employeur »~~ —
+              corrigé le 2026-09-20, les deux relus à la source. L. 4711-5
+              « autorise à réunir » : une faculté, ce que le dépôt avait déjà
+              tranché trois fois. L. 4711-1 ne fonde rien non plus : il dit que
+              les documents « COMPORTENT des mentions obligatoires déterminées
+              par voie réglementaire » — le verbe porte sur leur CONTENU, pas
+              sur l'obligation d'en tenir un. Ce qui impose la consignation est
+              R. 4323-25, ce qui impose d'annexer les rapports d'un tiers est
+              R. 4323-26, et ce qui impose de les conserver est D. 4711-3. La
+              fausse paire a tenu parce que R. 4323-25 renvoie lui-même à
+              L. 4711-5 pour NOMMER le registre : le renvoi se lisait comme un
+              fondement.
+
+              R. 146-35 CCH, qui figurait ici, n'y est plus. ~~Motif d'alors :
+              « c'est l'article du registre IGH, et l'IGH est hors périmètre du
+              produit ».~~ CE MOTIF EST FAUX, relevé le 2026-09-20 : l'ADR-031
+              ne refuse à l'entrée qu'un ERP SITUÉ EN IGH — « l'IGH seul n'est
+              pas refusé » —, et `perimetre/couverture.ts` lui POUSSE un manque
+              sur l'axe `igh` au lieu d'écarter son dossier. Un IGH peut donc
+              présenter ce document. Le retrait tient toujours pour une autre
+              raison, plus étroite : le produit ne porte du régime IGH que deux
+              obligations, et ce registre-ci ne rend pas celles-là. Reste que
+              le PDF de dossier de conformité, lui, imprime encore
+              « R. 146-35 CCH (IGH) » — deux documents du même ZIP qui ne
+              disent pas la même chose. À trancher par la propriétaire, dans un
+              sens ou dans l'autre ; ce lot corrige le motif, pas le choix.
               C'est le même défaut que celui corrigé sur L. 4711-5 en août
               2026 — une référence qui ne vise pas son lecteur. Si l'IGH
               entre un jour au périmètre, elle reviendra avec lui, et ce sera
               un ajout conscient plutôt qu'un héritage. */}
           <Text style={{ fontFamily: "Helvetica-Bold", marginBottom: 4 }}>
-            Tenue du registre (R. 143-44 CCH · L. 4711-1 et L. 4711-5 CT)
+            Tenue du registre (R. 143-44 CCH · R. 4323-25 et R. 4323-26 CT)
           </Text>
           <Text>
             Ce registre réunit les fiches dues à cet établissement, leur contenu

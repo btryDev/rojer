@@ -108,7 +108,9 @@ describe("supprimerEquipement", () => {
     expect(res.statut).toBe("desactive");
     if (res.statut !== "desactive") return;
     expect(res.message).toContain("conservés");
-    expect(res.message).toContain("L. 4711-5");
+    // La phrase dit « pouvoir les présenter » : c'est une conservation, donc
+    // D. 4711-3. L. 4711-5 n'impose rien (relu à la source le 2026-09-20).
+    expect(res.message).toContain("D. 4711-3");
   });
 
   it("régénère le calendrier dans les deux cas", async () => {

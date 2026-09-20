@@ -4,8 +4,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  arretesDuCorpus,
+  arretesSansCorpus,
   articlesDuCorpus,
   citationsSansCorpus,
+  dateArrete,
   SURFACES_AFFICHEES,
 } from "./citations-ecran";
 
@@ -146,5 +149,94 @@ describe("ce que les écrans citent sans que personne l'ait ouvert", () => {
     } finally {
       rmSync(bac, { recursive: true, force: true });
     }
+  });
+});
+
+
+describe("les arrêtés cités par leur date, que le motif d'article ne voyait pas", () => {
+  /**
+   * POURQUOI CE BALAYAGE EXISTE. `MOTIF_ARTICLE` exige `L.`/`R.`/`D.` ; un
+   * arrêté cité par sa date n'en a pas. Le compteur d'orphelines affichait
+   * donc zéro EN REGARDANT AILLEURS — et c'est par cet angle mort qu'est passé
+   * le seul module du produit bâti sur un texte qu'aucun corpus n'a ouvert :
+   * le carnet sanitaire affiche l'arrêté du 1er février 2010 en badge,
+   * l'imprime dans le ZIP remis au contrôleur, et en dérive une échéance
+   * annuelle.
+   */
+  it("ramène les deux vocabulaires à une même date civile", () => {
+    // Le corpus écrit `Arrêté 2017-04-19` ici et `Arrêté 23-02-2018` là ;
+    // l'écran écrit « arrêté du 1er février 2010 » ou « arrêté 01-02-2010 ».
+    // Sans normalisation, aucun de ces quatre ne rencontrerait son jumeau.
+    const dateDe = (t: string) => {
+      const m = /arrêtés?\s+(?:du\s+)?(?:(\d{1,2})(?:er)?\s+([a-zéèûô]+)\s+(\d{4})|(\d{2,4})-(\d{2})-(\d{2,4}))/i.exec(t);
+      return m ? dateArrete(m) : null;
+    };
+    expect(dateDe("Arrêté du 1er février 2010, art. 3")).toBe("2010-02-01");
+    expect(dateDe("arrêté 01-02-2010")).toBe("2010-02-01");
+    expect(dateDe("Arrêté 2017-04-19 art. 1er")).toBe("2017-04-19");
+    expect(dateDe("Arrêté 19-04-2017")).toBe("2017-04-19");
+    expect(dateDe("arrêté du 23 février 2018, art. 26")).toBe("2018-02-23");
+  });
+
+  it("ne rend jamais une date inventée sur une forme qu'il ne sait pas lire", () => {
+    // Un mois mal orthographié doit rendre `null`, pas une date fausse : une
+    // date inventée se rapprocherait d'un corpus au hasard et ferait passer
+    // un orphelin pour un texte dépouillé.
+    const m = /arrêtés?\s+(?:du\s+)?(?:(\d{1,2})(?:er)?\s+([a-zéèûô]+)\s+(\d{4})|(\d{2,4})-(\d{2})-(\d{2,4}))/i.exec(
+      "arrêté du 1er févier 2010",
+    );
+    expect(m && dateArrete(m)).toBeNull();
+  });
+
+  it("voit les arrêtés que le corpus a ouverts — sinon il ne prouve rien", () => {
+    // Borne basse : un balayage qui ne reconnaît rien dénoncerait tout, et un
+    // qui reconnaît tout ne dénoncerait rien. Les deux pannes sont muettes.
+    const connus = arretesDuCorpus();
+    expect(connus.size).toBeGreaterThanOrEqual(15);
+    expect(connus.has("1980-06-25")).toBe(true); // règlement de sécurité ERP
+    expect(connus.has("2018-02-23")).toBe(true); // gaz des bâtiments d'habitation
+  });
+
+  /**
+   * UN SEUL ARRÊTÉ ORPHELIN, ET IL EST CONNU — celui du 1er février 2010.
+   *
+   * Le plafond n'est pas à zéro parce que combler ce trou est un
+   * dépouillement, pas une correction de citation : il faut ouvrir l'arrêté,
+   * ses annexes 1 et 2, et confronter au texte les trois valeurs que le module
+   * affirme (50 °C, 1 000 UFC/L, le rythme annuel). C'est un lot à part, écrit
+   * au § 14 de `docs/chantiers-ouverts.md`.
+   *
+   * Ce plafond est un CLIQUET : il ne remonte pas. Le jour où l'arrêté entre
+   * au corpus, il descend à zéro et n'en bouge plus.
+   */
+  const PLAFOND_ARRETES = 1;
+
+  it("ne dépasse pas le plafond, et le plafond ne remonte pas", () => {
+    const orphelins = arretesSansCorpus(RACINE);
+    expect(
+      orphelins.length,
+      `${orphelins.length} arrêté(s) cité(s) sans corpus (plafond ` +
+        `${PLAFOND_ARRETES}) :\n` +
+        orphelins
+          .map((o) => `  ${o.ref} — ${o.emplacements.join(", ")}`)
+          .join("\n") +
+        `\nUn arrêté affiché au dirigeant ou imprimé dans le dossier remis à ` +
+        `un tiers doit avoir été ouvert à la source. Si ce nombre a BAISSÉ, ` +
+        `abaisser PLAFOND_ARRETES d'autant.`,
+    ).toBeLessThanOrEqual(PLAFOND_ARRETES);
+  });
+
+  it("le plafond n'est pas trop haut : il colle à ce qui reste", () => {
+    // Un plafond qui dépasse la réalité laisserait entrer un orphelin de plus
+    // sans rien dire — c'est ce qui rend un cliquet inoffensif.
+    expect(arretesSansCorpus(RACINE).length).toBe(PLAFOND_ARRETES);
+  });
+
+  it("l'orphelin restant est bien celui qu'on croit", () => {
+    // Nommé, pour qu'un AUTRE trou ne se glisse pas à sa place sous le même
+    // plafond. C'est la faute classique d'un cliquet numérique.
+    expect(arretesSansCorpus(RACINE).map((o) => o.ref)).toEqual([
+      "2010-02-01",
+    ]);
   });
 });

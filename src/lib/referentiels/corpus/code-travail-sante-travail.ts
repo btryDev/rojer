@@ -1,10 +1,15 @@
 // Corpus : code du travail — suivi individuel de l'état de santé du travailleur.
 //
 // Étendue « articles_cites » : la section 2 du chapitre IV court de R. 4624-10
-// à R. 4624-45-9 — une quarantaine d'articles, dont les examens de reprise, le
-// suivi post-exposition, la fiche d'entreprise, les contestations d'avis. Neuf
-// seulement sont lus ici, ceux sur lesquels s'appuient les six obligations
-// encodées. Le reste n'est pas dépouillé et ne se déclare pas lu.
+// à R. 4624-45-9 — une quarantaine d'articles, dont le suivi post-exposition,
+// la fiche d'entreprise et les contestations d'avis. ~~Neuf seulement sont lus
+// ici, ceux sur lesquels s'appuient les six obligations encodées.~~ SEIZE au
+// 2026-09-20 : le compte de neuf était périmé depuis plusieurs lots, et il a
+// encore vieilli de deux ce jour-là. Le reste n'est pas dépouillé et ne se
+// déclare pas lu. ⚠ LES EXAMENS DE REPRISE NE SONT PLUS « le reste » : le
+// paragraphe 2 de la sous-section 3 est entré le 2026-09-20 par R. 4624-31,
+// trouvé en ouvrant le texte modificateur de R. 4624-28-3. R. 4624-29,
+// R. 4624-30, R. 4624-32 et R. 4624-33 restent dehors.
 //
 // CE QUE CE CORPUS A DE PARTICULIER, ET QUI DOIT SE LIRE AVANT DE L'ÉTENDRE.
 // C'est le seul corpus du référentiel dont toutes les obligations salarié
@@ -327,7 +332,57 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
     },
     {
       ref: "R. 4624-28-3",
-      statut: "non_depouille",
+      intitule:
+        "État des lieux des expositions et surveillance post-exposition — établi par le médecin du travail",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043927915",
+      versionEnVigueur: "2022-03-31",
+      modifiePar: {
+        texte: "Décret n° 2022-372 du 16 mars 2022, art. 3",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000045365883",
+      },
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Charge LE MÉDECIN DU TRAVAIL d'établir un état des lieux des expositions du travailleur aux facteurs de risques professionnels de L. 4161-1, sur la base du dossier médical en santé au travail, des déclarations du travailleur et de celles de ses employeurs successifs. À l'issue de la visite, il remet le document au travailleur et le verse au dossier médical ; lorsque le document fait état d'une exposition, il met en place la surveillance post-exposition ou post-professionnelle, transmet le document au médecin traitant si nécessaire et avec l'accord du travailleur, et informe le travailleur des démarches lorsqu'il remplit les conditions du dispositif.",
+      citationCle:
+        "Le médecin du travail établit un état des lieux des expositions du travailleur aux facteurs de risques professionnels mentionnés à l'article L. 4161-1. […] À l'issue de la visite, le médecin du travail remet au travailleur le document […] et le verse au dossier médical en santé au travail.",
+      statut: "hors_perimetre",
+      exclusion: "sans_destinataire_exploitant",
+      motif:
+        "TOUTES LES OBLIGATIONS DE CET ARTICLE PÈSENT SUR LE MÉDECIN DU TRAVAIL : établir, remettre, verser au dossier, mettre en place la surveillance, transmettre, informer. L'employeur n'y apparaît qu'au pluriel et comme SOURCE — « des déclarations du travailleur et de celles de ses employeurs successifs » —, jamais comme destinataire d'une prescription. Il n'y a rien à inscrire au dossier d'un établissement.\n\nÀ NE PAS CONFONDRE AVEC SON VOISIN, et c'est la raison d'être de cette entrée. `R. 4624-28-2`, l'entrée juste au-dessus, fait peser sur L'EMPLOYEUR l'information du service de prévention et de santé au travail à la cessation d'exposition, au départ ou à la mise à la retraite — celui-là est `obligation_manquante`, bloqué par l'absence de déclencheur événementiel. Les deux articles traitent du même moment de la vie d'un salarié et se lisent l'un après l'autre ; leurs destinataires sont opposés. Sans cette entrée, le prochain lecteur rouvre les deux.\n\nPOURQUOI `hors_perimetre` ICI ET `sans_objet` DEUX ENTRÉES PLUS HAUT, alors que les deux motifs disent « aucun acte à la charge de l'employeur ». La contre-lecture du lot a relevé la divergence et proposé de basculer `R. 4624-28-1` ; elle n'a pas lieu d'être, et la raison mérite d'être écrite une fois pour que la question ne se rouvre pas. `R. 4624-28-1` énumère les catégories de travailleurs concernées par la visite de fin de carrière : c'est LA DÉFINITION DU CHAMP de l'obligation que `R. 4624-28-2` met, elle, à la charge de l'employeur. Une définition qui sert une obligation portée par le corpus est exactement ce que `types.ts` range en `sans_objet` — « définition, renvoi ». Le présent article ne définit rien : il PRESCRIT six actes, tous au médecin du travail. Aucune obligation d'exploitant n'en découle, ce qui est la lettre de `hors_perimetre`. Les deux statuts sont justes, pour deux raisons différentes ; c'est le motif commun — « pas d'acte pour l'employeur » — qui trompe, parce qu'il est vrai des deux sans être discriminant.\n\nPOURQUOI CE MOTIF D'EXCLUSION PLUTÔT QU'UN AUTRE. `sans_destinataire_exploitant` porte le libellé « ne s'adresse pas à l'exploitant », qui est exactement le cas. Son motif n'énumère que l'administration, la commission de sécurité, le maire et le préfet ; le médecin du travail n'y figure pas, et l'énumération gagnerait à être élargie — la liste `EXCLUSIONS` étant fermée à dessein, c'est une discussion à avoir là-bas, pas un écart à prendre ici.\n\nPOURQUOI IL ÉTAIT `non_depouille`. Son entrée ne portait qu'une référence — ni intitulé, ni URL, ni date : il avait été relevé depuis le sommaire de la sous-section sans jamais être ouvert. C'était le seul trou de dépouillement situé dans un domaine que le produit sert, le suivi individuel renforcé, et c'est ce qui l'a fait rouvrir le 2026-09-20.",
+    },
+    {
+      // ENTRÉE OUVERTE LE 2026-09-20 PAR LE TEXTE MODIFICATEUR DU VOISIN, et
+      // c'est la règle de `types.ts` qui la fait exister : « quand un article
+      // que vous ouvrez porte un texte modificateur récent, ouvrez ce texte EN
+      // ENTIER et listez ce qu'il touche d'autre ». `R. 4624-28-3` est modifié
+      // par le décret n° 2022-372 du 16 mars 2022 ; ce décret s'intitule
+      // « relatif à la surveillance post-exposition, AUX VISITES DE PRÉREPRISE
+      // ET DE REPRISE des travailleurs […] » et touche aussi R. 4624-29 et
+      // R. 4624-31, qu'aucun corpus ne portait. La première rédaction du lot
+      // avait rempli `modifiePar` sans ouvrir le décret — exactement la faute
+      // que le champ existe pour empêcher, et que `types.ts` raconte à propos
+      // du décret n° 2025-482. Relevée par la contre-lecture, réparée ici.
+      ref: "R. 4624-31",
+      intitule:
+        "Visite de reprise — l'employeur saisit le service dès qu'il connaît la date de fin de l'arrêt",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045676892",
+      versionEnVigueur: "2026-06-15",
+      modifiePar: {
+        texte: "Décret n° 2026-503 du 12 juin 2026, art. 2",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000054248175",
+      },
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Ouvre droit à un examen de reprise par le médecin du travail après un congé de maternité, une absence pour maladie professionnelle, une absence d'au moins trente jours pour accident du travail, ou d'au moins soixante jours pour maladie ou accident non professionnel. MET UN ACTE À LA CHARGE DE L'EMPLOYEUR : dès qu'il connaît la date de fin de l'arrêt, il saisit le service de prévention et de santé au travail, qui organise l'examen le jour de la reprise effective et au plus tard dans les huit jours qui suivent. Par exception, et sauf demande du médecin, de l'employeur ou du travailleur, la visite n'est pas requise si une visite de préreprise a eu lieu dans les trente jours précédant la reprise et que le médecin y a conclu qu'aucune mesure d'aménagement n'était nécessaire.",
+      citationCle:
+        "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, il saisit le service de prévention et de santé au travail qui organise l'examen de reprise le jour de la reprise effective du travail par le travailleur, et au plus tard dans un délai de huit jours qui suivent cette reprise.",
+      statut: "obligation_manquante",
+      motif:
+        "OBLIGATION D'EMPLOYEUR PLEINE ET ENTIÈRE, DANS UN DOMAINE QUE LE PRODUIT SERT, et le référentiel ne la porte pas. Saisir le service de santé au travail dès la connaissance de la date de fin d'arrêt, pour un examen à tenir le jour de la reprise et au plus tard huit jours après : un acte, un destinataire, un délai chiffré.\n\nCE QU'ELLE APPREND SUR LA FRAÎCHEUR DU CORPUS. Sa version en vigueur date du 15 juin 2026 et vient du décret n° 2026-503 du 12 juin 2026 — un texte de trois mois que le dépôt n'avait jamais croisé, trouvé uniquement parce qu'on a ouvert le texte modificateur d'un article voisin. Le corpus est déclaré `articles_cites` et son en-tête dit ne pas lire le reste de la section, donc ce n'était pas un trou caché ; c'était un trou non cherché.",
+      bloquePar:
+        "Le déclencheur événementiel, absent du modèle — même blocage que `R. 4624-28-2` deux entrées plus haut, et que `R. 4141-8`, `R. 4141-12` et `L. 8222-5` ailleurs. Le fait générateur est la fin d'un arrêt de travail, que le produit n'a aucun moyen de connaître : il ne détient ni arrêt, ni absence, ni date de reprise, et `docs/rgpd.md` § 2.3 explique pourquoi il ne détiendra pas la pièce médicale. L'ADR-022 nomme l'axe « événement » et s'arrête là.\n\nÀ NE PAS RÉSOUDRE PAR UNE ÉCHÉANCE PÉRIODIQUE : il n'y a pas de rythme ici, et en poser un réclamerait un examen de reprise à des salariés qui ne se sont jamais arrêtés.",
     },
     {
       ref: "R. 4624-28",

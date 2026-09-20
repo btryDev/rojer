@@ -104,7 +104,17 @@ export default async function PrestataireDetailPage({
                           : "1 pièce à demander"}
                       </PastilleFiche>
                     ) : (
-                      <PastilleFiche ton="fait">Pièces à jour</PastilleFiche>
+                      /* ~~« Pièces à jour »~~ — corrigé le 2026-09-20. Le
+                         calcul de vigilance ne porte QUE sur l'attestation
+                         URSSAF et la RC Pro : « Kbis exclu », écrit au type
+                         (`prestataires/vigilance.ts`). La pastille coiffait
+                         donc, quatre-vingts lignes plus bas, une ligne
+                         « Extrait Kbis — Non fourni ». Elle nomme désormais ce
+                         qu'elle a vérifié, ce qui est à la fois plus modeste
+                         et plus utile : le lecteur sait quoi regarder ensuite. */
+                      <PastilleFiche ton="fait">
+                        Vigilance à jour
+                      </PastilleFiche>
                     )}
                     {p.domaines.map((d) => (
                       <PastilleFiche key={d} ton="neutre">

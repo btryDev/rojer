@@ -27,6 +27,10 @@ import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
+import {
+  fraicheurCalendrier,
+  phraseFraicheur,
+} from "@/lib/calendrier/fraicheur";
 
 /**
  * Assemble en un ZIP **tous** les documents qu'un inspecteur, un assureur,
@@ -49,6 +53,15 @@ export async function GET(
   const { id } = await context.params;
   const { etablissement } = await requireEtablissement(id);
 
+  // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
+  // Ce dossier part chez un tiers qui n'a aucun moyen de recouper ce
+  // qu'il lit : s'il est bâti sur un calendrier jamais calculé, ses
+  // sections d'échéances seront vides, et un vide se lit comme « rien à
+  // signaler ». On le dit, en tête du README. Lecture seule : une route
+  // d'export n'écrit pas, et `regeneration-sure.ts` réserve la
+  // réparation aux deux pages d'entrée.
+  const fraicheur = await fraicheurCalendrier(id);
+
   const zip = new JSZip();
   // Horloge lue une seule fois : toutes les fenêtres et toutes les dates
   // imprimées dans le dossier décrivent le même instant.
@@ -66,6 +79,14 @@ export async function GET(
   // donc pas annoncées — c'est cohérent, pas un oubli.
   const echeancesContractuelles = new Set<string>();
 
+  // L'âge de la dernière version de DUERP et le nombre de vérifications en
+  // retard, pour la checklist. Les retards sont pris À LA MÊME SOURCE que le
+  // dossier de conformité : les deux pièces du ZIP ne doivent pas se
+  // contredire. Douze mois est le seuil que le README annonce, et il vient de
+  // R. 4121-2, déjà porté par le produit.
+  let duerpAJour = false;
+  let nbVerifsEnRetard = 0;
+
   // ── 01 Dossier de conformité ────────────────────────────────────────
   try {
     const data = await construireDossierConformiteData(id);
@@ -73,6 +94,7 @@ export async function GET(
       for (const v of data.verifsEnRetard) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
       }
+      nbVerifsEnRetard = data.verifsEnRetard.length;
       const buf = await renderToBuffer(DossierConformiteDocument({ data }));
       zip.file("01_Dossier_conformite.pdf", new Uint8Array(buf));
     }
@@ -122,6 +144,9 @@ export async function GET(
       );
       zip.file(`02_DUERP_v${versionCourante.numero}.pdf`, new Uint8Array(buf));
       duerpNumeroVersion = versionCourante.numero;
+      duerpAJour =
+        maintenant.getTime() - versionCourante.createdAt.getTime() <
+        365 * 24 * 60 * 60 * 1000;
     }
   } catch {
     // On continue même si une brique échoue : le README dira que le DUERP
@@ -385,6 +410,9 @@ export async function GET(
       carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0),
     ),
     nbEcheancesContractuelles: echeancesContractuelles.size,
+    duerpAJour,
+    nbVerifsEnRetard,
+    avertissementCalendrier: phraseFraicheur(fraicheur),
   });
   zip.file("00_README.txt", readme);
 
@@ -399,6 +427,27 @@ export async function GET(
       "Cache-Control": "no-store",
     },
   });
+}
+
+/**
+ * Coupe un paragraphe en lignes d'au plus `largeur` caractères, sans couper un
+ * mot. Le README est un `.txt` lu dans un bloc-notes, sans retour à la ligne
+ * automatique garanti : une phrase de trois cents caractères y devient une
+ * ligne que le lecteur ne voit pas en entier.
+ */
+function decouper(texte: string, largeur: number): string[] {
+  const lignes: string[] = [];
+  let courante = "";
+  for (const mot of texte.split(" ")) {
+    if (courante === "") courante = mot;
+    else if (courante.length + 1 + mot.length <= largeur) courante += ` ${mot}`;
+    else {
+      lignes.push(courante);
+      courante = mot;
+    }
+  }
+  if (courante !== "") lignes.push(courante);
+  return lignes;
 }
 
 function genererReadme(args: {
@@ -416,6 +465,18 @@ function genererReadme(args: {
   /** Échéances nées d'une demande d'assureur et imprimées dans ce dossier
    *  (ADR-032). Zéro = rien à annoncer, et rien n'est écrit. */
   nbEcheancesContractuelles: number;
+  /** Âge de la dernière version de DUERP : `true` si elle a moins de douze
+   *  mois. `null` au champ voisin veut dire qu'aucune version n'est figée. */
+  duerpAJour: boolean;
+  /** Vérifications dépassées à la date d'édition, telles que le dossier de
+   *  conformité les compte — même source, pour que les deux pièces du ZIP ne
+   *  divergent pas. */
+  nbVerifsEnRetard: number;
+  /** Ce qu'il faut savoir de l'âge du calendrier, ou `null` s'il est à jour.
+   *  En tête du README plutôt qu'en pied : un lecteur qui s'arrête à la
+   *  première page doit l'avoir vu, et c'est lui qui décide ensuite comment
+   *  lire les sections d'échéances. */
+  avertissementCalendrier: string | null;
 }): string {
   const lignes: string[] = [];
   lignes.push(
@@ -424,6 +485,16 @@ function genererReadme(args: {
     `Adresse : ${args.adresse}`,
     `Généré le : ${args.dateNow}`,
     "",
+    ...(args.avertissementCalendrier
+      ? [
+          "────────────────────────────────────────────────────────────",
+          " À LIRE AVANT LE RESTE",
+          "────────────────────────────────────────────────────────────",
+          "",
+          ...decouper(args.avertissementCalendrier, 60).map((l) => ` ${l}`),
+          "",
+        ]
+      : []),
     "────────────────────────────────────────────────────────────",
     " CONTENU DU DOSSIER",
     "────────────────────────────────────────────────────────────",
@@ -454,9 +525,22 @@ function genererReadme(args: {
     " CHECKLIST AVANT LE CONTRÔLE",
     "────────────────────────────────────────────────────────────",
     "",
+    // DEUX CASES QUE LE PRODUIT SAIT REMPLIR, ET QUI RESTAIENT VIDES. Le
+    // dossier connaît l'âge de la dernière version de DUERP et le nombre de
+    // vérifications en retard : les laisser à cocher à la main faisait relire
+    // au dirigeant ce que le ZIP venait de calculer, et lui faisait cocher de
+    // confiance. Les autres cases restent vides — elles portent sur des faits
+    // que le produit n'observe pas (une lecture, un affichage en entrée, une
+    // signature avant travaux).
     " [ ] Dossier de conformité lu en entier (10 min)",
-    " [ ] DUERP à jour depuis moins de 12 mois",
-    " [ ] Tous les rapports de vérification 12 derniers mois présents",
+    args.duerpNumeroVersion === null
+      ? " [!] DUERP : aucune version figée — à créer avant le contrôle"
+      : args.duerpAJour
+        ? " [x] DUERP à jour depuis moins de 12 mois"
+        : " [!] DUERP : dernière version de plus de 12 mois",
+    args.nbVerifsEnRetard === 0
+      ? " [x] Aucune vérification en retard à ce jour"
+      : ` [!] ${args.nbVerifsEnRetard} vérification(s) en retard — voir 01_Dossier_conformite.pdf`,
     " [ ] Plan d'actions : tous écarts majeurs ont une date d'échéance",
     " [ ] Attestations URSSAF prestataires < 6 mois",
     " [ ] Registre d'accessibilité affiché (ERP) — QR code en entrée",
@@ -471,12 +555,26 @@ function genererReadme(args: {
     "",
     " DUERP :                    art. R. 4121-1 à R. 4121-4 Code du travail",
     " Vérifications :            art. R. 4226-16 et s. Code du travail",
-    " Registre de sécurité :     art. L. 4711-5 Code du travail",
+    " Registre de sécurité :     art. R. 4323-25 et R. 4323-26 Code du travail",
+    "                            (conservation : art. D. 4711-3, cinq ans)",
     " Accessibilité ERP :        art. R. 164-6 CCH · arrêté 19-04-2017",
     " Vigilance donneur d'ordre : art. L. 8222-1 Code du travail",
-    " Permis de feu :            art. R. 4224-17 Code du travail",
+    // ~~« Permis de feu : art. R. 4224-17 Code du travail »~~ — retiré le
+    // 2026-09-20. R. 4224-17 impose l'entretien et la vérification des
+    // INSTALLATIONS ET DISPOSITIFS techniques et de sécurité des lieux de
+    // travail (verbatim au corpus `code-travail-portes`) ; il ne dit rien d'un
+    // permis de travail par point chaud. Et ce même README écrit dix lignes
+    // plus bas que l'INRS ED 6030 et la règle APSAD R43 sont « sans valeur
+    // réglementaire propre » : lui donner un article de code au-dessus le
+    // contredisait dans le même document, celui qu'on remet à un inspecteur.
+    " Permis de feu :            voir « référentiels non opposables » ci-dessous",
     " Plan de prévention :       art. R. 4512-6 à R. 4512-12 CT",
-    " Carnet sanitaire eau :     arrêté 01-02-2010 · art. R. 1321-23 CSP",
+    // ~~« · art. R. 1321-23 CSP »~~ — retiré le 2026-09-20. Le corpus a
+    // établi le 2026-09-02 que son destinataire est « la personne responsable
+    // de la production ou de la distribution d'eau », c'est-à-dire
+    // l'exploitant du réseau PUBLIC, et non l'établissement raccordé. Le
+    // badge a été retiré de l'écran ce jour-là ; il était resté dans le ZIP.
+    " Carnet sanitaire eau :     arrêté du 1er février 2010",
     " Maintien en conformité :   art. R. 4224-17 Code du travail",
     "",
     // APSAD R43 et l'INRS ED 6030 figuraient dans la liste ci-dessus, entre

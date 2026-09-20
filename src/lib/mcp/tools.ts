@@ -31,6 +31,7 @@ import {
   getEtatDuerp,
   getNomEtablissement,
   getFicheEtablissement,
+  getFraicheurCalendrier,
   listerActions,
   listerEquipements,
   listerVerifications,
@@ -40,6 +41,7 @@ import {
   type FicheEtablissement,
   type VerificationLue,
 } from "./queries";
+import { phraseFraicheur } from "@/lib/calendrier/fraicheur";
 
 /**
  * Consigne transmise au client à l'ouverture de session, et relayée par lui
@@ -298,7 +300,11 @@ const outilActions: OutilMcp<typeof schemaActions> = {
   schema: schemaActions,
   executer: async (ctx, args) => {
     const actions = await listerActions(ctx.scope.etablissementId, args, ctx.now);
-    return formaterActions(actions);
+    // Les échéances rendues ici sont de TRAITEMENT et non réglementaires (cf.
+    // la description), mais les actions naissent en partie d'écarts relevés au
+    // calendrier : un calendrier jamais calculé rend une liste courte pour une
+    // raison que le lecteur doit connaître.
+    return avecFraicheur(ctx.scope.etablissementId, formaterActions(actions));
   },
 };
 
@@ -486,6 +492,28 @@ const schemaVerifications = z.object({
     ),
 });
 
+/**
+ * Préfixe la réponse d'un outil par l'état du calendrier, quand il n'est pas à
+ * jour.
+ *
+ * POURQUOI ICI, ET PAS UNE GARDE. Le serveur MCP est en lecture seule —
+ * « l'ajout d'une écriture ici ne serait pas un détail d'implémentation mais un
+ * changement de nature du serveur » —, donc il ne peut pas régénérer, et il ne
+ * doit pas. Ce qu'il peut faire, c'est ne pas laisser un modèle conclure d'une
+ * liste vide qu'il n'y a rien à faire. C'était le cas : sur les quatre outils
+ * qui rendent des échéances ou des compteurs de retard, aucun ne disait d'où
+ * venait son silence.
+ *
+ * La phrase passe AVANT le contenu : un modèle qui tronque lit le début.
+ */
+async function avecFraicheur(
+  etablissementId: string,
+  rendu: string,
+): Promise<string> {
+  const phrase = phraseFraicheur(await getFraicheurCalendrier(etablissementId));
+  return phrase === null ? rendu : `${phrase}\n\n${rendu}`;
+}
+
 const outilVerifications: OutilMcp<typeof schemaVerifications> = {
   nom: "verifications",
   titre: "Calendrier des vérifications",
@@ -499,7 +527,10 @@ const outilVerifications: OutilMcp<typeof schemaVerifications> = {
       args,
       ctx.now,
     );
-    return formaterVerifications(verifs);
+    return avecFraicheur(
+      ctx.scope.etablissementId,
+      formaterVerifications(verifs),
+    );
   },
 };
 

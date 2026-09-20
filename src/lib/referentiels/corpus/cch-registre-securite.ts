@@ -82,6 +82,32 @@ export const CCH_REGISTRE_SECURITE: Corpus = {
       obligations: ["incendie-registre-securite"],
     },
     {
+      // ENTRÉE DU 2026-09-20, ET C'EST UN CLIQUET QUI L'A EXIGÉE. L'écran des
+      // prescriptions citait au dirigeant « CCH, art. R. 143-45 » pour l'acte
+      // qui prescrit après une visite de commission ; R. 143-45 est l'article
+      // de la FERMETURE d'un établissement exploité en infraction. La
+      // correction a désigné R. 143-42, que le dépôt ne portait nulle part —
+      // et `citations-ecran` l'a aussitôt dénoncé comme orphelin, ce qu'il
+      // était. La référence était de surcroît coupée entre deux lignes du JSX,
+      // donc invisible du balayage : la remettre d'un tenant a fait apparaître
+      // la dette en même temps qu'elle la créait.
+      ref: "CCH R. 143-42",
+      intitule:
+        "Présence de l'exploitant à la visite, procès-verbal, et notification par le maire",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819033",
+      versionEnVigueur: "2021-07-01",
+      modifiePar: null,
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Impose à l'exploitant d'ASSISTER à la visite de son établissement ou de s'y faire représenter par une personne qualifiée. Prévoit qu'un procès-verbal est dressé à l'issue de chaque visite, et que LE MAIRE — lui seul dans cet article — notifie aux exploitants le résultat de ces visites ET SA DÉCISION, par la voie administrative ou par lettre recommandée avec accusé de réception.",
+      citationCle:
+        "Les exploitants sont tenus d'assister à la visite de leur établissement ou de s'y faire représenter par une personne qualifiée. A l'issue de chaque visite, il est dressé un procès-verbal. Le maire notifie le résultat de ces visites et sa décision aux exploitants soit par la voie administrative, soit par lettre recommandée avec accusé de réception.",
+      statut: "sans_objet",
+      motif:
+        "LU, DANS LE PÉRIMÈTRE, ET RIEN À INSCRIRE AU CALENDRIER. L'article décrit une PROCÉDURE que l'exploitant subit — une visite dont il ne fixe ni la date ni le rythme — et la notification qui la suit. Le seul acte qui lui incombe, assister ou se faire représenter, n'a ni périodicité propre ni fait générateur que le produit observe : il se déclenche quand la commission vient, ce que Rojer n'a aucun moyen de savoir. La périodicité des visites, elle, est portée par R. 143-41 et par la table GE 4, déjà encodées.\n\nPOURQUOI L'ENTRÉE EXISTE QUAND MÊME, et c'est l'usage le moins évident de ce statut : l'écran des prescriptions s'appuie sur cet article pour expliquer au dirigeant le partage entre l'AVIS de la commission et l'ACTE qui prescrit. Ce partage est le fondement de tout le module — Rojer n'enregistre qu'une prescription qui renforce. Sans cette entrée, la référence affichée reposerait sur une lecture que personne n'aurait tracée.\n\nNE PAS LE CONFONDRE AVEC R. 143-45, qui vit dans la section « Sanctions administratives » et permet au maire OU au représentant de l'État d'ordonner la fermeture d'un établissement exploité en infraction. C'est lui qui était cité à tort ; c'est aussi de lui que venait le « ou le préfet » de l'écran, R. 143-42 ne nommant que le maire.",
+    },
+    {
       ref: "CCH R. 143-41",
       intitule: "Visites périodiques de contrôle par la commission de sécurité",
       versionEnVigueur: "2021-07-01",

@@ -28,13 +28,14 @@ const { prismaMock } = vi.hoisted(() => ({
     duerp: { findFirst: vi.fn() },
     action: { findMany: vi.fn() },
     equipement: { findMany: vi.fn() },
-    verification: { findMany: vi.fn() },
+    verification: { findMany: vi.fn(), count: vi.fn() },
   },
 }));
 
 vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
 
 import { OUTILS_MCP, type ContexteMcp } from "./tools";
+import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
 import { getEtatDuerp, listerActions } from "./queries";
 
 /** 10 août 2026, 9 h à Paris. */
@@ -62,6 +63,70 @@ beforeEach(() => {
   prismaMock.action.findMany.mockReset().mockResolvedValue([]);
   prismaMock.equipement.findMany.mockReset().mockResolvedValue([]);
   prismaMock.verification.findMany.mockReset().mockResolvedValue([]);
+  // Par défaut, un dossier dont le calendrier est à jour : les tests qui
+  // portent sur autre chose n'ont pas à porter l'avertissement de fraîcheur.
+  prismaMock.verification.count.mockReset().mockResolvedValue(0);
+});
+
+describe("le serveur dit quand le calendrier n'est pas à jour", () => {
+  /** Un établissement lisible, dont le repère de calendrier est paramétrable. */
+  function dossier(repere: string | null) {
+    return {
+      raisonDisplay: "Café du Port",
+      adresse: "1 quai Neuf",
+      ville: "Sète",
+      referentielVersionCalendrier: repere,
+      codeNaf: "56.10A",
+      effectifSurSite: 8,
+      estEtablissementTravail: true,
+      estERP: true,
+      estIGH: false,
+      estHabitation: false,
+      typeErp: "N",
+      categorieErp: "cinq",
+      entreprise: {
+        raisonSociale: "Port SARL",
+        siret: "12345678900011",
+        codeNaf: "56.10A",
+        effectif: 8,
+      },
+      _count: { equipements: 0, verifications: 0, actions: 0 },
+    };
+  }
+
+  it("préfixe les vérifications quand le calendrier n'a jamais été calculé", async () => {
+    // LE DÉFAUT : `listerVerifications` rend une liste vide, et un modèle en
+    // conclut « rien à signaler ». Le serveur est en lecture seule, il ne peut
+    // pas régénérer — mais il peut dire d'où vient son silence.
+    prismaMock.etablissement.findUnique.mockResolvedValue(dossier(null));
+    prismaMock.verification.count.mockResolvedValue(0);
+
+    const texte = await outil("verifications").executer(ctx, {});
+
+    expect(texte).toContain("n'a pas encore été calculé");
+    expect(texte).toContain("ne veut pas dire qu'il n'y en a pas");
+  });
+
+  it("ne dit rien quand le calendrier est à jour", async () => {
+    // Un avertissement permanent cesse d'être lu.
+    prismaMock.etablissement.findUnique.mockResolvedValue(
+      dossier(SCEAU_CALENDRIER),
+    );
+
+    const texte = await outil("verifications").executer(ctx, {});
+
+    expect(texte).not.toContain("n'a pas encore été calculé");
+    expect(texte).not.toMatch(/calendrier des vérifications n'a pas/i);
+  });
+
+  it("préfixe aussi le plan d'actions, qui naît en partie du calendrier", async () => {
+    prismaMock.etablissement.findUnique.mockResolvedValue(dossier(null));
+    prismaMock.verification.count.mockResolvedValue(0);
+
+    const texte = await outil("plan_actions").executer(ctx, {});
+
+    expect(texte).toContain("n'a pas encore été calculé");
+  });
 });
 
 describe("portée des lectures", () => {

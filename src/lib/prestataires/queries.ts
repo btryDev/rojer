@@ -26,12 +26,27 @@ export async function getPrestataire(
   return { ...prestataire, vigilance: computeVigilance(prestataire) };
 }
 
+/**
+ * Les prestataires dont une pièce appelle une action, comptés SUR LA GRAVITÉ.
+ *
+ * ~~Comptait `alertesOuvertes > 0`.~~ Corrigé le 2026-09-20. Le module qu'il
+ * appelle écrit, au champ voisin : « **les écrans lisent celui-ci**, jamais
+ * `alertesOuvertes` — qui compte un volume et ne dit rien de la gravité ». Or
+ * `alertesOuvertes` inclut les pièces JAMAIS FOURNIES : un prestataire créé le
+ * matin même sortait donc « en retard » sur l'écran « Préparer un contrôle »,
+ * sous le libellé « attestation(s) expirée(s) ou expirant », alors que sa
+ * propre fiche le montrait en ardoise. Rien n'avait expiré ; rien n'avait
+ * seulement été demandé.
+ *
+ * `etatLePlusGrave` vaut `null` quand tout est à jour, et porte sinon l'état
+ * réellement présent — c'est ce que l'écran doit peindre.
+ */
 export async function countAlertesVigilance(
   etablissementId: string,
 ): Promise<number> {
   const prestataires = await listPrestataires(etablissementId);
   return prestataires.reduce(
-    (acc, p) => acc + (p.vigilance.alertesOuvertes > 0 ? 1 : 0),
+    (acc, p) => acc + (p.vigilance.etatLePlusGrave !== null ? 1 : 0),
     0,
   );
 }

@@ -304,7 +304,7 @@ export const ARRETE_2021_09_10_RETOURS_EAU: Corpus = {
   url: URL_ARRETE,
   etendue: "integral",
   portee:
-    "Les quatorze articles de l'arrêté sont énumérés, CINQ ne sont pas dépouillés et se comptent comme tels : les articles 4 à 8, qui disent OÙ placer les dispositifs de protection et comment repérer les canalisations. Ils ont été parcourus, leur verbatim n'a pas été relevé, et deux au moins portent des obligations permanentes réelles — l'article 5 (protection au point de livraison de tout réseau intérieur raccordé) et l'article 8 (repérage des canalisations et signalisation « eau non potable » des points de puisage). Les neuf autres sont lus à la source. C'est le texte pris pour l'application de R. 1321-61 du code de la santé publique, et le seul de tout le dossier à écrire une périodicité : « a minima à fréquence annuelle », pour la vérification (art. 9) comme pour l'entretien (art. 10), l'article 10 nommant expressément les disconnecteurs. Son article 2 en borne la portée aux bâtiments dont les réseaux d'eau sont mis en place ou rénovés totalement à compter du 1er janvier 2023, et ses articles 9 V, 10 V et 12 II en écartent les parties privatives d'habitation. Aucun arrêté antérieur n'avait été pris sur le fondement de R. 1321-61 ; il n'y a donc rien à abroger et rien de transitoire, ce que confirment ses articles 13 et 14.",
+    "Les QUATORZE articles de l'arrêté sont lus à la source, aucun ne reste à dépouiller. ~~CINQ ne sont pas dépouillés et se comptent comme tels : les articles 4 à 8 […] Ils ont été parcourus, leur verbatim n'a pas été relevé […] Les neuf autres sont lus à la source.~~ RAYÉ LE 2026-09-20, jour où les articles 4 à 8 ont été ouverts. Ce champ avait raison de se méfier : l'article 8 porte bien une obligation d'exploitation, et il est entré en `obligation_manquante`. Trois affirmations de la rédaction précédente étaient devenues fausses le même jour — le compte, le verbatim, et « les neuf autres » — et RIEN NE LES VOYAIT : aucun test ne rapproche la `portee` d'un corpus de l'état réel de ses articles, si bien que `couverture()` rendait `complet: true` pendant que ce texte disait le contraire, à deux champs d'écart. Relevé par la contre-lecture du lot, pas par une garde. C'est le texte pris pour l'application de R. 1321-61 du code de la santé publique, et le seul de tout le dossier à écrire une périodicité : « a minima à fréquence annuelle », pour la vérification (art. 9) comme pour l'entretien (art. 10), l'article 10 nommant expressément les disconnecteurs. Son article 2 en borne la portée aux bâtiments dont les réseaux d'eau sont mis en place ou rénovés totalement à compter du 1er janvier 2023, et ses articles 9 V, 10 V et 12 II en écartent les parties privatives d'habitation. Aucun arrêté antérieur n'avait été pris sur le fondement de R. 1321-61 ; il n'y a donc rien à abroger et rien de transitoire, ce que confirment ses articles 13 et 14.",
   articles: [
     {
       ref: "Arrêté 10-09-2021 art. 1",
@@ -355,32 +355,81 @@ export const ARRETE_2021_09_10_RETOURS_EAU: Corpus = {
       ref: "Arrêté 10-09-2021 art. 4",
       intitule: "Les trois niveaux de protection",
       url: URL_ARRETE,
-      statut: "non_depouille",
+      versionEnVigueur: "2023-01-01",
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Pose les trois niveaux de protection — point de livraison (art. 5), piquages (art. 6), équipements (art. 7) — et met leur mise en œuvre à la charge du PROPRIÉTAIRE DES RÉSEAUX INTÉRIEURS, mise en œuvre qui comprend expressément le choix, l'installation ET LA VÉRIFICATION INITIALE du bon fonctionnement dans les conditions de l'article 9 (III). Lui impose en outre d'ADAPTER la protection en cas de modification des réseaux susceptible de générer des risques supplémentaires de retour d'eau (IV), et de TENIR À LA DISPOSITION DE L'AUTORITÉ SANITAIRE les preuves d'efficacité des dispositifs — marquage NF ou certificat de conformité à une norme publiée au Journal officiel (V).",
+      citationCle:
+        "En application de l'article R.1321-57 du code de la santé publique, les dispositifs de protection mentionnés aux articles 5, 6 et 7 sont mis en œuvre par le propriétaire des réseaux intérieurs de distribution des bâtiments. Cette mise en œuvre comprend notamment le choix et l'installation du dispositif de protection ainsi que la vérification initiale de son bon fonctionnement dans les conditions prévues à l'article 9. […] En cas de modification des réseaux intérieurs de distribution susceptible de générer des risques supplémentaires de retour d'eau (création de nouveaux piquages notamment), le propriétaire des réseaux intérieurs adapte la protection […] Ces preuves sont tenues à la disposition de l'autorité sanitaire par le propriétaire des réseaux intérieurs de distribution.",
+      statut: "obligation_manquante",
+      motif:
+        "DEUX OBLIGATIONS D'EXPLOITATION QUE RIEN D'AUTRE NE PORTE, et elles sont au IV et au V.\n\nLE IV est événementiel : « en cas de modification des réseaux intérieurs susceptible de générer des risques supplémentaires de retour d'eau (création de nouveaux piquages notamment), le propriétaire ADAPTE la protection ». Un fait générateur, pas un rythme.\n\nLE V est une pièce : les preuves d'efficacité des dispositifs — marquage NF ou certificat de conformité à une norme publiée au Journal officiel — « sont tenues à la disposition de l'autorité sanitaire ». Même famille que les rapports que le registre porte déjà.\n\nLE III NE COMPTE PAS, et une première rédaction le mettait en tête. Il énonce que la mise en œuvre « comprend notamment le choix et l'installation du dispositif ainsi que la vérification initiale de son bon fonctionnement DANS LES CONDITIONS PRÉVUES À L'ARTICLE 9 » : c'est un renvoi, et l'article 9 III porte déjà cette vérification initiale — « les opérations de vérification sont réalisées lors de la mise en place initiale des dispositifs de protection, puis de façon périodique ». La dette est donc déjà comptée sur l'article 9, et la doubler ici compterait deux fois la même obligation — ce que le motif de `R. 1321-57` refuse expressément dans ce même fichier. Corrigé par la contre-lecture du lot le 2026-09-20.\n\nCE QUI A ÉTÉ CORRIGÉ EN L'OUVRANT. Cet article était `non_depouille` depuis le 2026-09-02 sur la foi de son intitulé, « Les trois niveaux de protection », qui sonne comme une règle de chantier. Un intitulé de tableau ne dit pas à qui un article s'adresse.",
+      bloquePar:
+        "LE MÊME BLOCAGE QUE LES ARTICLES 9 ET 10, ET IL EST DOUBLE. D'abord l'article 2, qui s'ouvre par « SAUF DISPOSITION CONTRAIRE » — aucun des quatorze articles n'en porte de contraire quant à la date, donc la borne vaut bien pour tous : l'arrêté ne s'applique qu'aux bâtiments « dont les réseaux de distribution d'eau sont mis en place ou rénovés totalement à compter du 1er janvier 2023 », et le produit ne détient aucun attribut disant l'âge de la plomberie ni si elle a été intégralement refaite. Ensuite le destinataire : l'article 1er III définit le propriétaire des réseaux intérieurs comme « le responsable juridique du fonctionnement des réseaux intérieurs », qui pour un bâtiment existant « peut s'agir du propriétaire du bâtiment, du responsable d'établissement ou de l'exploitant SI CETTE RESPONSABILITÉ LUI A ÉTÉ CONTRACTUELLEMENT DÉLÉGUÉE » — aucun attribut de bail ne permet de trancher. Porter l'obligation sans ces deux réponses la réclamerait à des exploitants qu'elle ne vise pas.",
     },
     {
       ref: "Arrêté 10-09-2021 art. 5",
       intitule: "Protection au point de livraison",
       url: URL_ARRETE,
-      statut: "non_depouille",
+      versionEnVigueur: "2023-01-01",
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Dit QUELS réseaux sont équipés d'une protection au point de livraison — tout réseau intérieur raccordé à un réseau public, et tout réseau intérieur raccordé à un réseau privé d'adduction au sens du 2° de R. 1321-43 — et à quel NIVEAU : le dispositif doit être au moins équivalent au niveau correspondant au fluide le plus dangereux circulant en aval, un avis du ministre chargé de la santé publique publié au Journal officiel listant les dispositifs réputés satisfaire l'exigence.",
+      citationCle:
+        "En présence de plusieurs fluides de catégories différentes dans le bâtiment, le dispositif de protection équipant le point de livraison est de niveau au moins équivalent au niveau de protection correspondant au fluide le plus dangereux circulant en son aval.",
+      statut: "sans_objet",
+      motif:
+        "Article d'ÉQUIPEMENT et de niveau, sans rendez-vous ni rythme : il dit ce qui doit être en place, jamais quand le refaire. Le seul rendez-vous que le dispositif engendre est aux articles 9 et 10 — vérification et entretien a minima annuels —, tous deux déjà au corpus et tous deux `obligation_manquante`. Même traitement que l'article 3, état permanent de l'installation.",
     },
     {
       ref: "Arrêté 10-09-2021 art. 6",
       intitule: "Protection aux piquages",
       url: URL_ARRETE,
-      statut: "non_depouille",
+      versionEnVigueur: "2023-01-01",
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Impose un dispositif de protection à chaque piquage d'un réseau à usage autre qu'alimentaire ou sanitaire (RT1e, RT2 à RT5) sur un réseau alimentaire ou sanitaire (RT1a à RT1d), et à chaque piquage des parties privatives sur les parties collectives. Le dispositif est installé au plus près du piquage, à moins de trois mètres. Le IV écarte les parties privatives des bâtiments d'habitation collective et les maisons individuelles.",
+      citationCle:
+        "Le dispositif de protection est installé au plus près du piquage et dans tous les cas à une distance inférieure à 3 mètres.",
+      statut: "sans_objet",
+      motif:
+        "Règle de POSE — où, et à quelle distance —, sans récurrence. Comme l'article 5, le seul rendez-vous qu'elle engendre est aux articles 9 et 10. À noter pour la suite : le vocabulaire RT1a à RT5 que cet article manipule n'existe nulle part dans le modèle, et l'encodage des articles 9 et 10 aura à décider s'il a besoin de le porter.",
     },
     {
       ref: "Arrêté 10-09-2021 art. 7",
       intitule: "Protection des équipements",
       url: URL_ARRETE,
-      statut: "non_depouille",
+      versionEnVigueur: "2023-01-01",
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Étend la protection aux équipements susceptibles d'être à l'origine d'une pollution par retour d'eau — production d'eau chaude sanitaire, traitement complémentaire de l'eau au sens de R. 1321-53 —, le dispositif étant intégré à l'équipement ou posé à son point d'alimentation. Le V impose au PROPRIÉTAIRE DES RÉSEAUX INTÉRIEURS de n'employer, dans les équipements de traitement thermique de l'eau destinée à la consommation humaine, que des eaux issues d'un réseau d'eau potable ou des produits satisfaisant l'arrêté du 14 janvier 2019, et exige une séparation permanente entre ces fluides et l'eau potable. Le VI écarte les parties privatives d'habitation collective et les maisons individuelles.",
+      citationCle:
+        "Le propriétaire des réseaux intérieurs de distribution emploie dans les équipements utilisés pour le traitement thermique de l'eau destinée à la consommation humaine, les fluides correspondant, soit aux eaux directement issues d'un réseau d'adduction ou de distribution d'eau destinée à la consommation humaine, soit aux produits satisfaisant aux exigences définies par l'arrêté du 14 janvier 2019 susvisé.",
+      statut: "sans_objet",
+      motif:
+        "Le V est bien une obligation d'exploitation — quels fluides employer —, mais c'est un ÉTAT PERMANENT : « permettent, dans des conditions normales d'utilisation, de séparer en permanence ». Ni rendez-vous, ni rythme, ni pièce à produire ; son constat se fait, le cas échéant, aux opérations des articles 9 et 10. Même raisonnement que l'article 3, dont le motif a servi de patron. La condition d'application est de surcroît un équipement de traitement thermique de l'eau, que le produit ne sait pas déclarer.",
     },
     {
       ref: "Arrêté 10-09-2021 art. 8",
       intitule:
         "Repérage des canalisations et signalisation des points d'eau non potable",
       url: "https://www.legifrance.gouv.fr/jorf/article_jo/JORFARTI000044060788",
-      statut: "non_depouille",
+      versionEnVigueur: "2023-01-01",
+      luLe: "2026-09-20",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Impose de repérer les canalisations d'eaux non potables et des réseaux RT1e, RT2 à RT5 de façon explicite et DISTINCTE DES CANALISATIONS DU RÉSEAU D'EAU DESTINÉE À LA CONSOMMATION HUMAINE, notamment à l'entrée et à la sortie des vannes, des appareils et aux passages de cloisons et de murs. Impose en outre que les points de soutirage correspondants ne soient pas à proximité d'un robinet d'eau potable, portent à proximité immédiate une plaque « eau non potable » avec un pictogramme compréhensible par les personnes malvoyantes ou ne maîtrisant pas le français, et soient SOIT placés dans un local fermé non accessible au public, SOIT équipés d'un robinet verrouillable par un outil spécifique non lié au robinet. Le III écarte les parties privatives des bâtiments d'habitation collective et les maisons individuelles.",
+      citationCle:
+        "Les points de soutirage d'eaux non potables et les points de soutirage des réseaux de type RT1e, RT2 à RT5 […] sont associés à leur proximité immédiate, à une plaque signalétique comportant la mention « eau non potable » accompagnée d'un pictogramme explicite, compréhensible par les personnes malvoyantes ou ne maîtrisant pas l'usage du français. Ils respectent a minima l'une des conditions suivantes : - ils sont placés dans un local fermé non accessible au public ; - ils sont équipés d'un robinet verrouillable dont l'ouverture est faite à l'aide d'un outil spécifique qui ne lui est pas lié.",
+      statut: "obligation_manquante",
+      motif:
+        "UNE OBLIGATION D'EXPLOITATION CRÉÉE PAR LE TEXTE, ET QUE LE RÉFÉRENTIEL NE PORTE PAS. Une plaque « eau non potable » avec pictogramme accessible, un repérage de canalisations aux passages de cloisons, un robinet verrouillable ou un local fermé : ce sont des choses à mettre en place et à maintenir, à la charge de celui qui exploite les lieux.\n\nC'EST UN ÉTAT PERMANENT AU SENS DE L'ADR-026, pas une absence d'obligation. Le référentiel sait porter cette nature — le domaine `signalisation` en compte sept, livrés, aucun ne portant de rythme — et l'article 12 du même arrêté, deux entrées plus bas, est rangé exactement ainsi : « registre à constituer puis à maintenir […] c'est un état permanent au sens de l'ADR-026 », `obligation_manquante`.\n\n~~UNE PREMIÈRE RÉDACTION L'AVAIT CLASSÉ `sans_objet`, LE 2026-09-20, au motif qu'« il n'y a rien à inscrire au calendrier ».~~ Corrigé le jour même par la contre-lecture du lot, et l'erreur vaut d'être gardée parce qu'elle est la plus coûteuse de ce dépôt. `sans_objet` est réservé par `types.ts` à une « définition, un renvoi, une règle ponctuelle sans récurrence » ; cet article n'est aucun des trois. Le classer là faisait SORTIR UN MANQUE RÉEL DU DÉCOMPTE — précisément ce que `perimetre.ts` interdit : « ranger un manque parmi les exclusions le fait disparaître du décompte ; il cesse d'être une dette pour devenir une non-question ». Le motif fautif s'ouvrait d'ailleurs par « C'EST BIEN DE L'EXPLOITATION » et se fermait sur « si cet article devait être porté un jour, ce serait comme état permanent » : il contenait sa propre réfutation, et aucun test ne l'a vu.\n\nSENS DE L'ERREUR, ET C'EST CE QUI LA RENDAIT GRAVE : sous-application silencieuse. Un restaurant avec une cuve de récupération d'eau de pluie n'aurait jamais vu la plaque « eau non potable », et personne ne l'aurait compté comme manquant.",
+      bloquePar:
+        "Un attribut que le produit ne détient pas : distribuer des eaux non potables, ou tenir un réseau de type RT1e, RT2 à RT5. Rien ne le demande au dirigeant, et cela ne se devine ni du code NAF ni du parc d'équipements. C'est le même blocage qui écarte l'article 3, à ceci près que l'article 3 est une interdiction permanente sans acte — « la séparation doit être totale en permanence » — quand celui-ci demande de poser et de maintenir des objets nommés.\n\nS'Y AJOUTE LA CLAUSE DE DATE DE L'ARTICLE 2, commune à tout l'arrêté sauf disposition contraire, et le destinataire de l'article 1er III — le propriétaire des réseaux intérieurs, que le produit ne sait pas identifier. Le III du présent article écarte en outre les parties privatives d'habitation collective et les maisons individuelles.",
     },
     {
       ref: "Arrêté 10-09-2021 art. 9",

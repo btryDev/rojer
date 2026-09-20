@@ -135,7 +135,27 @@ valeurs » et jamais reconfrontée à la nomenclature.
 > qu'on ne raye pas fait refaire le travail ; ici elle a fait *rapporter* un
 > défaut qui n'existait plus.
 
-**`R` RESTE NON SUBDIVISÉ, ET LA LETTRE LE VEUT.** `GN 1 § 1` n'écrit qu'un seul
+> **ENCODÉ LE 2026-09-08, RAYÉ LE 2026-09-20.** La partition que les trois
+> paragraphes suivants décrivent comme « à trancher » est en place, et
+> exactement dans la forme qu'ils proposaient — scinder la ligne triennale
+> plutôt qu'ajouter une lettre :
+> `incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale`
+> (`src/lib/referentiels/conformite/incendie.ts:1169`) et
+> `...-r-sans-hebergement-quinquennale` (`:1194`), tous deux portant un
+> `succedeA` vers la ligne qu'ils remplacent. Les colonnes `J`, `O`, `U` sont
+> bien sorties sur une ligne sans critère de sommeil. La sur-application « du
+> côté court » n'existe plus.
+>
+> Le § 11 de ce même document le relevait déjà — « Périmé, relevé le
+> 2026-09-17 » — **sans que ce § 4 soit touché** : deux sections du même
+> fichier se sont contredites pendant trois jours. Rayer là où on corrige,
+> pas ailleurs.
+>
+> Reste la réserve du dernier paragraphe, qui n'a pas été vérifiée : rien
+> n'établit que le parcours d'accueil pose la question du sommeil. C'est
+> l'objet de la branche `worktree-sommeil-parcours`, en attente d'une décision.
+
+~~**`R` RESTE NON SUBDIVISÉ, ET LA LETTRE LE VEUT.**~~ `GN 1 § 1` n'écrit qu'un seul
 `R` ; les deux colonnes de `GE 4` sont deux régimes d'une même ligne, séparés par
 l'hébergement (`GN 1 § 4`). L'encodage actuel met tout `R` de 4ᵉ catégorie à
 trois ans (`incendie.ts`, `incendie-erp-visite-commission-cat4-triennale`), là où
@@ -548,7 +568,34 @@ Relevées le 2026-09-07, chacune parce qu'elle a manqué :
 
 ---
 
-## 7 bis. Les équipements de protection — ce qu'on ne sait pas déclarer
+## ~~7 bis. Les équipements de protection — ce qu'on ne sait pas déclarer~~ — CLOS LE 2026-09-04, RAYÉ LE 2026-09-20
+
+> **TOUT CE QUI SUIT EST FAIT, LE JOUR MÊME OÙ CE § A ÉTÉ ÉCRIT**, sauf la
+> dernière ligne. Commits `b20090c`, `abae49a`, `5e3d6fd` du 2026-09-04.
+> Vérifié en rouvrant le code le 2026-09-20 :
+>
+> · le référentiel porte un domaine EPI — `src/lib/referentiels/conformite/epi.ts`,
+>   deux obligations : `epi-etablissement-consigne-utilisation` (`:40`, porteur
+>   établissement, `R. 4323-105`) et `epi-verification-generale-periodique`
+>   (`:78`, porteur équipement, annuelle, personne qualifiée) ;
+> · l'arrêté habilité par `R. 4323-99` est dépouillé — corpus
+>   `arrete-1993-03-19-epi`. **Et la mise en garde du point 1 ci-dessous était
+>   elle-même fausse** : il y a bien DEUX arrêtés du 19 mars 1993, celui des
+>   travaux dangereux et celui des EPI. C'est le second, et le dépôt le connaît ;
+> · les catégories existent : `EPI`, `EPI_ANTICHUTE`, `EPI_RESPIRATOIRE`,
+>   `EPI_GILET_SAUVETAGE` (`prisma/schema.prisma:533-541`, migration
+>   `20260904120000_categorie_epi`), plus `Equipement.datePeremption` ;
+> · le porteur est tranché, et dans le sens que le point 3 appelait :
+>   établissement pour la consigne, équipement pour la vérification.
+>
+> **Ce qui reste vraiment, et c'est bien plus petit** : la protection
+> COLLECTIVE n'existe toujours pas comme famille d'objet (avant-dernier
+> paragraphe). Le reste est de l'histoire, gardé pour ce qu'il apprend.
+>
+> Ce § est resté écrit au présent seize jours après sa clôture. C'est
+> exactement le coût que la règle de conduite n° 11 du `.claude/CLAUDE.md`
+> chiffre — et il a failli faire rapporter à la propriétaire, le 2026-09-20, une
+> journée de travail comme s'il restait à faire.
 
 **Relevé le 2026-09-04, à la demande de la propriétaire.** Un dirigeant ne peut
 déclarer ni un casque, ni un harnais, ni des chaussures de sécurité : les
@@ -1691,9 +1738,13 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   aucun chemin de production ne l'atteint~~ — **précisé le 2026-09-17** : la
   branche est vivante, c'est elle qui fait primer la date d'un titre. Seule sa
   sous-branche « statut réalisé » (`estStatutRealise(ex.statut) ? ex.statut`)
-  est morte en production — une ligne de salarié ne reçoit pas de rapport. À
+  est morte en production — une ligne de salarié ne reçoit pas de rapport. ~~À
   retirer après un comptage en base des lignes de salarié à statut réalisé, **non
-  fait**.
+  fait**.~~ **SANS OBJET DEPUIS LE 2026-09-19** (rayé le 2026-09-20) : le champ
+  n'existe plus du tout. `datePrevueFaisantFoi` est parti avec `datePrevue` et
+  `statut` du plan du générateur (`calendrier/generateur.ts:229-232`), et il ne
+  reste dans `src/` que des commentaires qui racontent son retrait. Le comptage
+  qu'on attendait n'a plus rien à compter.
 - ~~L'écriture `a_planifier` d'`uploadRapport:151-156`, réécrite `planifiee` par la
   régénération qui suit.~~ N'existe plus : un dépôt « non vérifiable » ne touche
   plus le statut depuis la phase A (`fb94333`).
@@ -2019,3 +2070,80 @@ pré-production le ferait plus vite, sans toucher à la production — c'est une
 décision de la propriétaire, pas faite ici. Au même relevé, la mémoire
 provisionnée des fonctions est à 250 Go-h sur 360 : à surveiller, pas encore
 un dépassement.
+
+---
+
+## 14. L'audit du 2026-09-19 est fusionné — ce qu'il laisse ouvert
+
+Les trois audits (qualité de code, bonnes pratiques, sécurité) de la plage
+`bd8084e..f90f77c` — les 177 commits venus de l'autre poste — sont rendus dans
+`docs/revues/audit-2026-09-19.md`. **Tout ce qu'ils ont trouvé est corrigé et
+fusionné dans `main` le 2026-09-20** (`d3372c3`, 36 commits, 69 fichiers, aucune
+migration), déployé et vérifié en production. Ne pas rouvrir ces constats sans
+relire ce document : S1 à S7, M3, M4, Q2 à Q4 sont clos.
+
+**Ce qui reste, et pourquoi.**
+
+**M2 — une lecture en production.** Compter les lignes touchées par le
+déploiement du 11 au 14 septembre. Lecture seule, aucune écriture. Elle attend
+l'autorisation de la propriétaire pour qui a accès à la base.
+
+**M1 — invérifiable.** La cause des builds rouges du 11 au 14 septembre est
+donnée pour plausible par la session qui était aux commandes, et ne se tranche
+plus : les heures réelles des déploiements ne sont plus consultables. Ne pas
+rejouer l'enquête ; elle a déjà coûté deux passes.
+
+**Q1 — de l'historique.** Le commit rouge `617844b` reste rouge dans l'arbre.
+On ne réécrit pas l'historique pour ça.
+
+**Les cinq décisions de produit.** Elles sont énumérées à la fin de l'audit,
+avec ce qui les fonde. La relecture neutre les juge toutes justes ; la
+cinquième — la règle du statut réalisé non appliquée aux lignes archivées — est
+la moins solide, et c'est pour cela qu'elle est écrite dans
+`reouvrirSansRapportRealise` plutôt que tue. Elles n'attendent pas un
+développement, elles attendent un mot.
+
+**Ce document lui-même surestimait ce qui reste** (passe de vérification du
+2026-09-20, chaque entrée rouverte dans le code). Trois entrées présentées au
+présent étaient closes et sont rayées dans ce commit : le § 7 bis en entier —
+une journée de travail du 2026-09-04 —, la subdivision du type `R` — encodée le
+2026-09-08, et déjà relevée périmée par le § 11 sans que le § 4 soit touché —, et
+la sous-branche `datePrevueFaisantFoi`, dont le champ n'existe plus depuis le
+2026-09-19. Les listes fermées du § 9 l'étaient déjà par sa parenthèse finale.
+
+**Les branches `garde-fous-tests` et `garde-fous-tests-2`** sont des souches
+d'avant les 177 commits ; leur contenu utile est entré dans `main` par d'autres
+routes, sauf la règle de conduite n° 11, reprise ici. Elles ne portent plus
+rien : à supprimer, pas à fusionner.
+
+---
+
+## 15. Un dossier qui n'a rien déclaré rend des listes vides, et ne le dit pas
+
+Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».
+
+Ce lot a fermé un faux vert : les sorties qui rendent un état de conformité —
+le ZIP remis au contrôleur, les PDF, l'écran « Préparer un contrôle », les
+outils MCP — disent désormais quand le calendrier n'a pas été calculé, l'a été
+sans aboutir, ou l'a été avant une évolution du référentiel.
+
+**Il en reste un, de nature différente.** Un calendrier À JOUR qui rend zéro
+ligne ne dit rien, et c'est voulu : zéro ligne est la vérité quand
+l'établissement a tout déclaré et n'a rien de périodique à suivre — un bureau
+sans aucun appareil est dans ce cas. Mais c'est aussi ce que voit un dossier
+qui vient d'être créé et **n'a encore rien déclaré**. Les deux sortent
+identiques : une liste vide, aucune phrase.
+
+**Pourquoi ça n'a pas été corrigé avec le reste.** Les deux états se
+ressemblent à l'écran et n'ont ni la même cause ni le même geste de
+réparation : l'un se répare en ouvrant le tableau de bord, l'autre en
+déclarant ses équipements. Les fondre dans l'union de `calendrier/fraicheur.ts`
+aurait rendu la phrase fausse une fois sur deux — la faute même que cette
+union corrige. Le manque est nommé en tête de ce module.
+
+**Où ça se raccrocherait.** `src/lib/perimetre/couverture.ts` porte déjà l'axe
+`domaine_equipement`, mais il ne couvre que « des équipements déclarés ne
+déclenchent aucune obligation », pas « rien n'est déclaré ». Le seuil qui
+distingue « rien à suivre » de « rien de déclaré » est une décision de
+produit : elle appartient à la propriétaire, et elle rejoint la séance du
+lot 6.

@@ -52,7 +52,13 @@ const DETAILS: OutilDetail[] = [
   {
     n: "03",
     titre: "Registre de sécurité",
-    source: "Art. L. 4711-5 · Code du travail",
+    // ~~« Art. L. 4711-5 »~~ — corrigé le 2026-09-20. Cet article « autorise
+    // à réunir » des informations dans un registre unique : une faculté, qui
+    // n'institue rien. Le fondement de la consignation est R. 4323-25, qui
+    // renvoie à L. 4711-5 pour NOMMER le registre — et c'est ce renvoi qui a
+    // fait prendre la faculté pour le fondement, quatre fois en onze jours
+    // d'après le corpus.
+    source: "Art. R. 4323-25 · Code du travail",
     couleur: "ink",
     loi: [
       "Centralisation de tous les rapports, avis, observations.",
