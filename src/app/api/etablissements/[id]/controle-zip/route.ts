@@ -27,6 +27,10 @@ import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
+import {
+  fraicheurCalendrier,
+  phraseFraicheur,
+} from "@/lib/calendrier/fraicheur";
 
 /**
  * Assemble en un ZIP **tous** les documents qu'un inspecteur, un assureur,
@@ -48,6 +52,15 @@ export async function GET(
 ) {
   const { id } = await context.params;
   const { etablissement } = await requireEtablissement(id);
+
+  // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
+  // Ce dossier part chez un tiers qui n'a aucun moyen de recouper ce
+  // qu'il lit : s'il est bâti sur un calendrier jamais calculé, ses
+  // sections d'échéances seront vides, et un vide se lit comme « rien à
+  // signaler ». On le dit, en tête du README. Lecture seule : une route
+  // d'export n'écrit pas, et `regeneration-sure.ts` réserve la
+  // réparation aux deux pages d'entrée.
+  const fraicheur = await fraicheurCalendrier(id);
 
   const zip = new JSZip();
   // Horloge lue une seule fois : toutes les fenêtres et toutes les dates
@@ -385,6 +398,7 @@ export async function GET(
       carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0),
     ),
     nbEcheancesContractuelles: echeancesContractuelles.size,
+    avertissementCalendrier: phraseFraicheur(fraicheur),
   });
   zip.file("00_README.txt", readme);
 
@@ -399,6 +413,27 @@ export async function GET(
       "Cache-Control": "no-store",
     },
   });
+}
+
+/**
+ * Coupe un paragraphe en lignes d'au plus `largeur` caractères, sans couper un
+ * mot. Le README est un `.txt` lu dans un bloc-notes, sans retour à la ligne
+ * automatique garanti : une phrase de trois cents caractères y devient une
+ * ligne que le lecteur ne voit pas en entier.
+ */
+function decouper(texte: string, largeur: number): string[] {
+  const lignes: string[] = [];
+  let courante = "";
+  for (const mot of texte.split(" ")) {
+    if (courante === "") courante = mot;
+    else if (courante.length + 1 + mot.length <= largeur) courante += ` ${mot}`;
+    else {
+      lignes.push(courante);
+      courante = mot;
+    }
+  }
+  if (courante !== "") lignes.push(courante);
+  return lignes;
 }
 
 function genererReadme(args: {
@@ -416,6 +451,11 @@ function genererReadme(args: {
   /** Échéances nées d'une demande d'assureur et imprimées dans ce dossier
    *  (ADR-032). Zéro = rien à annoncer, et rien n'est écrit. */
   nbEcheancesContractuelles: number;
+  /** Ce qu'il faut savoir de l'âge du calendrier, ou `null` s'il est à jour.
+   *  En tête du README plutôt qu'en pied : un lecteur qui s'arrête à la
+   *  première page doit l'avoir vu, et c'est lui qui décide ensuite comment
+   *  lire les sections d'échéances. */
+  avertissementCalendrier: string | null;
 }): string {
   const lignes: string[] = [];
   lignes.push(
@@ -424,6 +464,16 @@ function genererReadme(args: {
     `Adresse : ${args.adresse}`,
     `Généré le : ${args.dateNow}`,
     "",
+    ...(args.avertissementCalendrier
+      ? [
+          "────────────────────────────────────────────────────────────",
+          " À LIRE AVANT LE RESTE",
+          "────────────────────────────────────────────────────────────",
+          "",
+          ...decouper(args.avertissementCalendrier, 60).map((l) => ` ${l}`),
+          "",
+        ]
+      : []),
     "────────────────────────────────────────────────────────────",
     " CONTENU DU DOSSIER",
     "────────────────────────────────────────────────────────────",

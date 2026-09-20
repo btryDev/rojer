@@ -36,6 +36,16 @@ export type DossierData = {
    * le document reste muet plutôt que de rassurer.
    */
   couverture: CouvertureEtablissement | null;
+  /**
+   * Ce qu'il faut savoir de l'âge du calendrier, ou `null` s'il est à jour.
+   *
+   * REQUIS, comme `etatsPermanents` et pour la même raison : optionnel, il
+   * serait resté vide. Ce document a imprimé des compteurs d'échéances pendant
+   * tout le temps où personne n'avait à se demander d'où elles venaient — et
+   * un dossier dont le calendrier n'a jamais été calculé y sortait « 0 en
+   * retard », ce qui se lit comme une bonne nouvelle.
+   */
+  avertissementCalendrier: string | null;
 
   score: Score;
   /**
@@ -202,6 +212,36 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             Document édité le {formatDateLongue(data.genereLe)}
           </Text>
         </View>
+
+        {/* AVANT LE SCORE, et c'est l'ordre qui compte : le score se calcule
+            sur ce que la base porte, donc sur un calendrier dont on ne sait
+            rien tant que cette phrase n'est pas lue. L'imprimer après
+            laisserait un lecteur conclure sur un chiffre qu'il n'aurait pas
+            encore de raison de relativiser. */}
+        {data.avertissementCalendrier && (
+          <View
+            style={{
+              marginTop: 40,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: BOARD.ardoiseMoyenne,
+              maxWidth: 420,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 9,
+                fontFamily: "Helvetica-Bold",
+                marginBottom: 4,
+              }}
+            >
+              À lire avant ce qui suit
+            </Text>
+            <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>
+              {data.avertissementCalendrier}
+            </Text>
+          </View>
+        )}
 
         <View style={{ marginTop: 60 }}>
           <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold" }}>

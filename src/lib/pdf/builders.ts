@@ -76,6 +76,10 @@ import { afficherValeur } from "@/lib/registre/valeur";
 import type { DossierData } from "./DossierConformiteDocument";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { blocEtatsPermanents } from "./mentions-etats-permanents";
+import {
+  fraicheurCalendrier,
+  phraseFraicheur,
+} from "@/lib/calendrier/fraicheur";
 
 /**
  * Builders qui lisent la DB et construisent les données sérialisables
@@ -462,8 +466,19 @@ export async function construireDossierConformiteData(
   // décrire le même ensemble. Avant, le compteur venait d'un agrégat SQL et
   // la liste d'un filtre TypeScript portant sur d'autres statuts — le PDF
   // annonçait « 5 vérifications en retard » puis en détaillait 3.
-  const [compteursActions, plan, rapports, verifs, couverture, etatsPermanents] =
-    await Promise.all([
+  const [
+    compteursActions,
+    plan,
+    rapports,
+    verifs,
+    couverture,
+    etatsPermanents,
+    // Lecture seule, en parallèle du reste : ce builder sert la route PDF ET
+    // la copie que le ZIP embarque, donc le poser ici couvre les deux d'un
+    // coup. Il ne régénère rien — `regeneration-sure.ts` réserve la
+    // réparation aux deux pages d'entrée.
+    fraicheur,
+  ] = await Promise.all([
       compterActions(etablissementId),
       construirePlanActionsData(etablissementId),
       listerRapportsDeLEtablissement(etablissementId),
@@ -485,6 +500,7 @@ export async function construireDossierConformiteData(
       // mot pour mot le défaut raconté six lignes plus haut, celui des « 5
       // vérifications en retard » suivies de 3 lignes.
       etatsPermanentsDuDossier(etablissementId, user.id),
+      fraicheurCalendrier(etablissementId),
     ]);
 
   const now = new Date();
@@ -560,6 +576,7 @@ export async function construireDossierConformiteData(
     regimesTexte: regimesTexte(etab),
     genereLe: now,
     couverture,
+    avertissementCalendrier: phraseFraicheur(fraicheur),
     score,
     // Les trente obligations sans échéance ne vivaient que sur un écran : un
     // dirigeant qui avait passé ses états en revue ne pouvait le montrer à
