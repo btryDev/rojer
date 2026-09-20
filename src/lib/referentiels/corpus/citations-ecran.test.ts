@@ -34,6 +34,39 @@ describe("ce que les écrans citent sans que personne l'ait ouvert", () => {
   // sans que le dirigeant y perde quoi que ce soit.
   const PLAFOND = 0;
 
+  it("voit un arrêté dont la citation est coupée en fin de ligne, et ne le compte qu'une fois", () => {
+    // Contre-lecture du 2026-09-20 : « arrêté du 1er février » / « 2011 vise… »
+    // passait. C'est la forme de toute phrase de JSX un peu longue, et c'était
+    // celle de la citation principale du carnet sanitaire.
+    const bac = mkdtempSync(join(tmpdir(), "citations-"));
+    try {
+      for (const surface of SURFACES_AFFICHEES) {
+        mkdirSync(join(bac, surface), { recursive: true });
+      }
+      writeFileSync(
+        join(bac, "src/app", "faux-ecran.tsx"),
+        [
+          "export const E = () => (",
+          "  <p>",
+          "    L&apos;arrêté du 3 mars",
+          "    1911 vise les fabriques, et l&apos;arrêté du 4 avril 1912 aussi.",
+          "  </p>",
+          ");",
+          "",
+        ].join("\n"),
+      );
+      const vues = arretesSansCorpus(bac);
+      expect(vues.map((v) => v.ref)).toEqual(["1911-03-03", "1912-04-04"]);
+      // À cheval : attribué à la ligne où la citation COMMENCE, une seule fois.
+      expect(vues[0]?.emplacements).toEqual(["src/app/faux-ecran.tsx:3"]);
+      // Tenu sur une ligne : compté une fois, pas deux (la fenêtre de la ligne
+      // précédente le contient aussi).
+      expect(vues[1]?.emplacements).toEqual(["src/app/faux-ecran.tsx:4"]);
+    } finally {
+      rmSync(bac, { recursive: true, force: true });
+    }
+  });
+
   it("ne dépasse pas le plafond, et le plafond ne remonte pas", () => {
     const orphelines = citationsSansCorpus(RACINE);
     expect(
@@ -209,7 +242,9 @@ describe("les arrêtés cités par leur date, que le motif d'article ne voyait p
    * Ce plafond est un CLIQUET : il ne remonte pas. Le jour où l'arrêté entre
    * au corpus, il descend à zéro et n'en bouge plus.
    */
-  const PLAFOND_ARRETES = 1;
+  // ~~1~~ → 0 le 2026-09-20 : l'arrêté du 1er février 2010 est entré au corpus
+  // (`arrete-2010-02-01-legionelles.ts`). Il n'en bouge plus.
+  const PLAFOND_ARRETES = 0;
 
   it("ne dépasse pas le plafond, et le plafond ne remonte pas", () => {
     const orphelins = arretesSansCorpus(RACINE);
@@ -235,8 +270,7 @@ describe("les arrêtés cités par leur date, que le motif d'article ne voyait p
   it("l'orphelin restant est bien celui qu'on croit", () => {
     // Nommé, pour qu'un AUTRE trou ne se glisse pas à sa place sous le même
     // plafond. C'est la faute classique d'un cliquet numérique.
-    expect(arretesSansCorpus(RACINE).map((o) => o.ref)).toEqual([
-      "2010-02-01",
-    ]);
+    // ~~["2010-02-01"]~~ — dépouillé le 2026-09-20. Il n'en reste aucun.
+    expect(arretesSansCorpus(RACINE).map((o) => o.ref)).toEqual([]);
   });
 });

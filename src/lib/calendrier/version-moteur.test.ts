@@ -124,7 +124,7 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 4,
-  // INCRÉMENTÉ le 2026-09-21 (décision de la propriétaire) : le silence sur
+  // INCRÉMENTÉ le 2026-09-20 (décision de la propriétaire) : le silence sur
   // les locaux à sommeil ne retient plus que là où le sommeil est plausible.
   // OUI, la régénération écrit autrement : les ERP de 5ᵉ catégorie hors de ces
   // types, muets, perdent leurs quatre lignes « sommeil ». Voir le commentaire
@@ -176,7 +176,15 @@ const RELEVE = {
   // Recopiée SANS incrément le même jour (point 5) : `derniere-realisation.ts`
   // gagne `ORDRE_RAPPORT_PLUS_RECENT`, que le moteur n'importe pas — il
   // départage toujours par `indexerDernieresRealisations`. NON.
-  empreinte: "83de8f616ce17231",
+  // Recopiée SANS incrément le 2026-09-20 (`lot/accueil-personnes-presentes`) :
+  // `evaluerPersonnesPresentes` et ses deux tables sortent d'`engine.ts` vers
+  // `matching/personnes-presentes.ts`, pour être chargeables par un écran. NON :
+  // corps et gabarits de raison identiques au caractère près (contre-lecture,
+  // diff ligne à ligne), et les raisons ne sont de toute façon pas persistées.
+  // Le module entre au relevé avec `nombreDePersonnesADemander` et les mots de
+  // la question : une retouche de ces textes déplacera l'empreinte sans toucher
+  // un calendrier — recopier, ne pas incrémenter.
+  empreinte: "aa9563477bf1ea07",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

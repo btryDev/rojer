@@ -733,6 +733,54 @@ lectures se seraient contredites en silence.
 
 ---
 
+### C15 · 2026-09-20 — L'arrêté « légionelles », et le piège n° 8 repris sur le fait
+
+**Lu :** arrêté du 1er février 2010 (art. 1 à 8, annexes 1 et 2, version au
+2023-01-01), son modificatif du 30 décembre 2022 (JORFTEXT000046849698, ouvert),
+l'article 36 de l'arrêté du 23 juin 1978 (version au 2006-12-15) et l'arrêté du
+30 novembre 2005 qui l'a réécrit (art. 2 et 3). **Comment :** `WebFetch`, en deux
+passes — page consolidée, puis page propre de chaque article pour les articles
+1er, 2, 3, 4, 7, l'annexe 2 et l'article 36. **Consigné :**
+`corpus/arrete-2010-02-01-legionelles.ts`, lecture `agent_verbatim`.
+
+**Ce qui en est sorti :** le champ du carnet sanitaire était faux à l'écran, deux
+températures étaient attribuées au mauvais texte et l'une au mauvais endroit du
+réseau, le seuil de 1 000 UFC/L au mauvais article. Aucune obligation encodée
+(décision de la propriétaire : la cible n'est pas dans le champ).
+
+**Le piège n° 8, une fois de plus.** La page consolidée a rendu l'article 2
+TRONQUÉ — sans « il s'agit notamment des douches, des douchettes, des bains à
+remous ou à jets », sans la phrase qui nomme les trois titulaires possibles de
+la responsabilité — et le corpus a d'abord écrit « l'article ne donne aucune
+liste d'exemples ». La page propre de l'article l'a démenti une heure plus tard.
+La parade du § 2.D tient ; elle n'avait simplement pas été appliquée d'emblée.
+
+**Non lu :** l'article 1er de l'arrêté de 1978 (son champ), et l'annexe 1 de
+l'arrêté de 2005 (durées d'élévation), que Légifrance ne reproduit pas.
+### C16 · 2026-09-20 — Le chapitre « chaleur intense », encodé trois semaines après son instruction
+
+**Lu :** `R. 4463-1` à `R. 4463-8` du code du travail (créés par le décret
+n° 2025-482 du 27 mai 2025, art. 3, en vigueur depuis le 2025-06-02), chacun sur
+sa page propre. **Consigné :** `corpus/code-travail-chaleur-intense.ts`,
+`agent_verbatim`. **Appliqué :** deux états permanents d'établissement —
+`R. 4463-2` (évaluer, définir les mesures) et `R. 4463-6` (modalités de
+signalement et de secours) — ; quatre `obligation_manquante` (deux déclenchées
+par un épisode que le produit n'observe pas, une par une information reçue sur
+une personne, une qui vise le plan de prévention) ; un risque « chaleur
+intense » aux référentiels DUERP du commerce et de la restauration. Référentiel 2026-09-20.1, 156 obligations.
+
+**Ce que la relecture a corrigé de l'instruction du 2026-09-01**
+(`docs/revues/lot-d3-recoupement-droit.md` § 1), qui avait lu la page de
+SECTION pour les articles 4 à 8 : `R. 4463-4` et `R. 4463-6` ont un second
+alinéa qu'elle tronquait ; `R. 4463-8` n'est pas servi par le module
+`PlanPrevention`. **Et ce que la contre-lecture a corrigé de la relecture** :
+la citation de `R. 4463-7` portait « survenance », mot que l'outil de lecture
+avait normalisé — le texte dit « survenue », et l'instruction du 2026-09-01
+l'avait juste. Une lecture plus récente n'est pas une lecture meilleure.
+
+**Non lu :** l'arrêté qui définit l'épisode de chaleur intense (`R. 4463-1`).
+Aucun seuil de température n'est écrit nulle part dans le produit.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

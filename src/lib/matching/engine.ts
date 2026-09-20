@@ -49,11 +49,11 @@ import {
 } from "@/lib/referentiels/conformite/types";
 import type {
   CategorieEquipement,
-  CategorieErp,
   FamilleHabitation,
   TypologieApplication,
 } from "@/lib/referentiels/types-communs";
 import { sommeilPlausiblePourLeType } from "@/lib/referentiels/types-communs";
+import { evaluerPersonnesPresentes } from "./personnes-presentes";
 import type {
   EquipementMatching,
   EtablissementMatching,
@@ -230,7 +230,7 @@ function evaluerHabitation(
  * Locaux à sommeil pour le public — arrêté du 25 juin 1980, Livre III
  * (PE 4 § 1, PE 33, PE 35, PE 37).
  *
- * [2026-09-21 : le silence ne retient plus que pour les types où le sommeil
+ * [2026-09-20 : le silence ne retient plus que pour les types où le sommeil
  * est plausible et pour un type non renseigné — voir le corps de la fonction.
  * Le paragraphe ci-dessous décrit la règle d'origine, qui vaut toujours DANS
  * ces types.]
@@ -261,7 +261,7 @@ function evaluerLocauxSommeil(
 
   if (critere === true) {
     // HORS DES TYPES OÙ LE SOMMEIL EST PLAUSIBLE, RIEN NE S'APPLIQUE — quelle
-    // que soit la valeur en base (arbitrage de la propriétaire, 2026-09-21 :
+    // que soit la valeur en base (arbitrage de la propriétaire, 2026-09-20 :
     // « sur un type hors liste la question ne s'affiche pas, donc pas de
     // oui »). Un type déclaré a répondu ; une valeur héritée d'avant la règle,
     // ou d'un ancien type, ne compte pas. La règle est UNIFORME exprès : une
@@ -299,110 +299,6 @@ function evaluerLocauxSommeil(
     ok: true,
     raison: "absence de locaux à sommeil pour le public déclarée",
   };
-}
-
-/**
- * Personnes habituellement présentes — R. 4227-34 CT, « occupées ou réunies ».
- *
- * LE NOMBRE COMPTE LES SALARIÉS **ET** LE PUBLIC, et c'est tout le sujet. Le
- * produit ne le demande plus depuis le 2026-09-01 ; il en déduit donc ce qu'il
- * peut, et ce qu'il peut n'est jamais qu'une **borne basse** du total.
- *
- * UNE BORNE BASSE NE CONCLUT QUE DANS UN SENS. Elle établit « au-dessus du
- * seuil » et n'établit jamais « en dessous ». C'est le précédent de forme
- * d'`opposabiliteUrssaf` (`prestataires/vigilance.ts`), dont le commentaire dit
- * la même chose de `updatedAt` : la déduction ne vaut que dans ce sens, et
- * c'est le seul qu'on utilise.
- *
- * TROIS ÉTATS, PAS DEUX. `atteint` (le seuil est franchi, on sait pourquoi),
- * `non_atteint` (le total est connu et il est inférieur), `indetermine` (on ne
- * sait pas, et l'obligation est retenue « à confirmer » — le mécanisme
- * d'`evaluerHabitation` et d'`evaluerLocauxSommeil`, pas un second).
- *
- * CE QUI SÉPARE `non_atteint` D'`indetermine` EST LE RÉGIME. Un établissement
- * de travail seul ne reçoit pas de public : son effectif salarié EST le total,
- * la comparaison est exacte, et l'obligation tombe pour de bon. Un ERP en
- * reçoit par définition : rien n'autorise à traiter ses huit salariés comme le
- * nombre de personnes réunies chez lui, et le silence ne peut pas y valoir
- * « non ».
- */
-type EvalPersonnesPresentes =
-  | { etat: "atteint"; raison: string }
-  | { etat: "indetermine"; raison: string }
-  | { etat: "non_atteint" };
-
-/**
- * Le public que la catégorie d'ERP garantit **au moins** (ADR-004, seuils du
- * règlement de sécurité). Seules les trois premières catégories bornent par le
- * bas : la 4ᵉ va du seuil du type jusqu'à 300 et la 5ᵉ est sous le seuil du
- * type — ni l'une ni l'autre ne garantit quoi que ce soit, et les omettre est
- * la façon d'écrire qu'elles ne déduisent rien.
- *
- * Le nombre est le premier de la fourchette, pas sa borne haute : la 3ᵉ
- * catégorie commence à 301, pas à 700.
- */
-const PLANCHER_PUBLIC_PAR_CATEGORIE: Partial<Record<CategorieErp, number>> = {
-  N1: 1501,
-  N2: 701,
-  N3: 301,
-};
-
-const LIBELLE_CATEGORIE_ERP: Record<CategorieErp, string> = {
-  N1: "1ʳᵉ catégorie",
-  N2: "2ᵉ catégorie",
-  N3: "3ᵉ catégorie",
-  N4: "4ᵉ catégorie",
-  N5: "5ᵉ catégorie",
-};
-
-function evaluerPersonnesPresentes(
-  seuil: number,
-  etab: EtablissementMatching,
-): EvalPersonnesPresentes {
-  // Le chiffre déclaré tranche seul, dans les deux sens : il n'y a plus de
-  // borne, il y a le total.
-  const declare = etab.personnesPresentesHabituellement;
-  if (declare !== null && declare !== undefined) {
-    return declare >= seuil
-      ? {
-          etat: "atteint",
-          raison: `${declare} personnes habituellement présentes (seuil ${seuil})`,
-        }
-      : { etat: "non_atteint" };
-  }
-
-  // Première borne : la catégorie d'ERP. Le public seul suffit à franchir le
-  // seuil dès la 3ᵉ, et le dirigeant l'a déclarée — rien à demander de plus.
-  const categorie = etab.estERP ? etab.categorieErp : null;
-  if (categorie) {
-    const plancherPublic = PLANCHER_PUBLIC_PAR_CATEGORIE[categorie];
-    if (plancherPublic !== undefined && plancherPublic >= seuil) {
-      return {
-        etat: "atteint",
-        raison: `ERP de ${LIBELLE_CATEGORIE_ERP[categorie]} : le public admis y atteint au moins ${plancherPublic} personnes, seuil de ${seuil} franchi par le public seul`,
-      };
-    }
-  }
-
-  // Seconde borne : l'effectif salarié, compté par le texte au même titre.
-  if (etab.effectifSurSite >= seuil) {
-    return {
-      etat: "atteint",
-      raison: `${etab.effectifSurSite} salariés sur site, seuil de ${seuil} personnes présentes franchi par l'effectif seul`,
-    };
-  }
-
-  // Sous les deux bornes. Pour un ERP, cela ne dit rien du total : il reçoit du
-  // public, et le nombre n'est pas déclaré.
-  if (etab.estERP) {
-    return {
-      etat: "indetermine",
-      raison: `nombre de personnes habituellement présentes non renseigné, et l'établissement reçoit du public — obligation retenue par prudence, à confirmer (seuil ${seuil})`,
-    };
-  }
-
-  // Établissement de travail seul : pas de public, l'effectif est le total.
-  return { etat: "non_atteint" };
 }
 
 /**
@@ -569,9 +465,10 @@ export function matchTypologie(
   //
   // Le seuil compte « les personnes occupées ou réunies » : salariés ET
   // public. Le produit n'a pas toujours ce nombre — la question a été retirée
-  // du parcours de création le 2026-09-01, c'était une question de technicien
-  // posée à qui n'avait encore rien vu du produit — et ce qu'il fait alors est
-  // ce que ce bloc décide.
+  // du parcours de création le 2026-09-01, et n'y est revenue le 2026-09-20
+  // que pour les dossiers que la règle laisse indéterminés ; les dossiers nés
+  // entre-temps sont muets — et ce qu'il fait alors est ce que ce bloc décide
+  // (la règle elle-même vit dans `personnes-presentes.ts`).
   //
   // CE QU'IL FAISAIT JUSQU'AU 2026-09-02, ET POURQUOI C'ÉTAIT LE MAUVAIS SENS.
   // Le silence retombait sur `effectifSurSite` et le nombre obtenu était traité

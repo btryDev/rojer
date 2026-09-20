@@ -1038,6 +1038,13 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // légionelles ; celui-ci est un plan des réseaux et un journal
       // d'interventions sur les dispositifs anti-retour.
       "Arrêté 10-09-2021 art. 12",
+      // ── Lot chaleur intense, 2026-09-20. Trois obligations déclenchées par
+      // un ÉPISODE, que le produit n'observe pas (eau fraîche, travailleur
+      // vulnérable, mise en œuvre), et la prise en compte au plan de prévention.
+      "R. 4463-4",
+      "R. 4463-5",
+      "R. 4463-7",
+      "R. 4463-8",
       // ── Lot « socle DUERP », 2026-09-02 : le texte fondateur du produit.
       // Bloc contigu en fin de liste, pour la raison écrite par le lot D1 — le
       // lot B supprime cette énumération, un bloc d'un seul tenant se retire

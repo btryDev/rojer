@@ -185,7 +185,7 @@ modification. Rien n'établit que le parcours d'accueil pose la question, donc
 qu'un `R` puisse y répondre. Un allègement qui ne se déclenche que sur un écran
 que personne n'ouvre est un allègement qui n'existe pas.~~
 
-> **CLOS LE 2026-09-21** (`lot/sommeil-parcours`). La question est posée au
+> **CLOS LE 2026-09-20** (`lot/sommeil-parcours`). La question est posée au
 > parcours d'accueil ET sur la fiche, aux seuls types où le sommeil est
 > plausible (J, O, U, R, REF, OA), réponse due « oui » ou « non ». Hors de ces
 > types elle ne s'affiche nulle part et le moteur ne retient rien — mesuré
@@ -669,6 +669,19 @@ laisser croire que le motif « registre EPI non couvert » recouvre la question.
 présentes » a montré qu'une question posée au dirigeant était **déjà répondue**
 par une autre : dès la 3ᵉ catégorie d'ERP, le public dépasse 301, donc les 51 de
 `R. 4227-34`. La question a pu partir.
+
+> **2026-09-20 — elle est revenue, pour ceux que la déduction ne tranche pas.**
+> « Partir » valait pour la 3ᵉ catégorie et au-dessus. En dessous, le moteur
+> retenait « par prudence » — et comme la question n'était plus posée qu'à la
+> fiche, le silence était la règle : un restaurant de six salariés et trente
+> couverts portait une consigne incendie et un exercice semestriel que rien
+> n'établit qu'il doive. Le parcours d'accueil la pose désormais aux SEULS dossiers que
+> `nombreDePersonnesADemander` désigne (ERP que ni la catégorie ni l'effectif ne
+> portent à 51), réponse due, exigée aussi par le schéma de la fiche. Le moteur
+> n'a pas changé (version 4, empreinte re-relevée pour une extraction). Reste
+> ouvert : les dossiers anciens restés muets gardent leur « à confirmer »
+> jusqu'à ce qu'ils rouvrent leur fiche — rien ne les y amène ; et
+> `manipuleMatieresR422722` (§ 1) n'est toujours posée qu'à la fiche.
 
 Il y a probablement **d'autres cas du même genre**, et il se peut aussi que le
 produit les traite déjà très bien — c'est à mesurer, pas à supposer.
@@ -2159,7 +2172,39 @@ lot 6.
 
 ---
 
-## 16. L'arrêté du 1er février 2010 — un module livré sur un texte jamais ouvert
+## ~~16. L'arrêté du 1er février 2010 — un module livré sur un texte jamais ouvert~~ — FAIT le 2026-09-20
+
+> **Clos par `lot/legionelles-arrete-2010`.** L'arrêté (huit articles, deux
+> annexes) et son modificatif du 30 décembre 2022 sont au corpus
+> (`corpus/arrete-2010-02-01-legionelles.ts`), `PLAFOND_ARRETES` est à zéro.
+> Ce que la lecture a changé : le champ (« obligatoire pour tout établissement
+> avec ECS » était faux — il faut un ERP, une installation collective et un
+> point d'usage à risque accessible au public ; la page cite désormais les
+> articles 1er et 2) ; la source des températures (l'arrêté n'en porte aucune :
+> 50 °C et 55 °C viennent de l'article 36 de l'arrêté du 23 juin 1978, et le
+> module plaçait les 55 °C au retour de boucle au lieu de la sortie de stockage —
+> le défaut proposé pour le bouclage passe à 50) ; 1 000 UFC/L est à l'article 4,
+> « limite de qualité », pas à « l'annexe II ». **Aucune obligation encodée**,
+> par décision de la propriétaire : la cible n'est pas dans le champ.
+>
+> **Reste ouvert, et petit.** (1) Le module propose UN seuil minimal par point
+> d'eau chaude, quand l'article 36 en pose trois selon l'endroit (≥ 50 réseau,
+> ≥ 55 sortie de stockage ≥ 400 L, ≤ 50 aux robinets de toilette) : le type
+> « ECS » ne dit pas où est le point. (2) L'article 1er de l'arrêté de 1978
+> (champ, installations neuves ou existantes) n'est pas ouvert. (3) Le relevé
+> hebdomadaire du tableau de bord reste un seuil du produit, plus serré que le
+> mensuel de l'annexe 2 — déjà dit dans `dashboard/obligations.ts`. (4) La
+> ~~phrase « entre 25 et 45 °C » de la page ne cite aucune source~~ — retirée
+> le même jour. (5) Le jeu de données `scripts/seed-dossier-complet.ts` pose
+> 55 °C en sortie d'un ballon de 300 L et 50 °C minimum à un mitigeur : deux
+> valeurs que la lecture dément ; données de démonstration, non corrigées.
+> (6) `arretesDuCorpus()` tient un arrêté pour « ouvert » dès qu'UN de ses
+> articles est au corpus : l'arrêté du 23 juin 1978 l'est sur la foi du seul
+> article 36. (7) Le balayage des ARTICLES (`citationsSansCorpus`) garde le
+> défaut que celui des arrêtés vient de perdre : une citation coupée en fin de
+> ligne lui est invisible. (8) Les textes d'écran rangés dans `src/lib/` ne
+> sont pas balayés.
+
 
 Relevé le 2026-09-20 par la sonde de dépouillement, puis **rendu visible par un
 cliquet** le même jour : le balayage des citations d'écran ne reconnaissait que

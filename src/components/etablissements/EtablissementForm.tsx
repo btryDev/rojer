@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  AIDE_NOMBRE_DE_PERSONNES,
+  LIBELLE_NOMBRE_DE_PERSONNES,
+} from "@/lib/matching/personnes-presentes";
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -76,7 +80,7 @@ export function EtablissementForm({
   const [estERP, setEstERP] = useState<boolean>(
     valeursInitiales?.estERP ?? false,
   );
-  // Le type est suivi en état depuis le 2026-09-21 : la question du sommeil
+  // Le type est suivi en état depuis le 2026-09-20 : la question du sommeil
   // n'existe que pour certains types, et doit apparaître ou disparaître au
   // moment où le dirigeant en change, pas au rechargement.
   const [typeErp, setTypeErp] = useState<string>(
@@ -170,24 +174,26 @@ export function EtablissementForm({
           </div>
 
           {/* Champ de R. 4227-34 CT : alarme sonore → consigne → exercices
-              semestriels. Question distincte de l'effectif salarié, et qui
-              n'est PAS reposée au parcours de création (décision du
+              semestriels. Question distincte de l'effectif salarié.
+              ~~Elle n'est PAS reposée au parcours de création (décision du
               2026-09-01, confirmée le 2026-09-02) : c'est une question de
-              technicien, et le moteur s'en passe désormais. Elle reste ici,
-              sur la fiche, parce qu'y répondre reste ce qui tranche — au-dessus
-              comme en dessous du seuil, ce que la déduction ne fait que dans
-              un sens. */}
+              technicien, et le moteur s'en passe désormais.~~ [2026-09-20 :
+              elle y est reposée, aux seuls dossiers que
+              `nombreDePersonnesADemander` désigne, et le schéma l'exige d'eux
+              ici aussi.] Elle reste sur la fiche pour tous, parce qu'y répondre
+              reste ce qui tranche — au-dessus comme en dessous du seuil, ce que
+              la déduction ne fait que dans un sens. */}
           <ChampBoard
             className="sm:col-span-2"
             id="personnesPresentesHabituellement"
             name="personnesPresentesHabituellement"
-            label="Personnes habituellement présentes (salariés + public)"
+            label={LIBELLE_NOMBRE_DE_PERSONNES}
             type="text"
             inputMode="numeric"
             defaultValue={
               valeursInitiales?.personnesPresentesHabituellement ?? ""
             }
-            aide="Salariés, clients, élèves, patients, visiteurs réguliers — tous ceux qui se trouvent habituellement dans vos locaux en même temps. Au-delà de 50, le Code du travail impose une alarme sonore, une consigne incendie affichée et des exercices tous les six mois (art. R. 4227-34, R. 4227-37, R. 4227-39). Laissez vide si vous ne savez pas : rien ne vous est retiré pour autant. Si vous recevez du public, ces obligations vous sont présentées à confirmer ; sinon, votre effectif salarié est le compte exact."
+            aide={`${AIDE_NOMBRE_DE_PERSONNES} Ce nombre vous est demandé si vous recevez du public et que ni votre catégorie d'ERP ni votre effectif n'établissent le seuil ; sinon vous pouvez le laisser vide.`}
             erreur={err("personnesPresentesHabituellement")}
           />
 
@@ -430,7 +436,7 @@ export function EtablissementForm({
                       (`TYPES_ERP_A_SOMMEIL_PLAUSIBLE`), ici comme au parcours
                       d'accueil, et la réponse est due : « oui » ou « non »
                       (arbitrages de la propriétaire, 2026-09-09 puis
-                      2026-09-21). Hors de ces types elle ne s'affiche pas :
+                      2026-09-20). Hors de ces types elle ne s'affiche pas :
                       le type déclaré a déjà répondu, et le moteur ne retient
                       rien sur leur silence.
 
@@ -573,6 +579,19 @@ export function EtablissementForm({
       {state.status === "error" && !state.fieldErrors && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
           {state.message}
+        </p>
+      )}
+      {/* Un refus qui vise un champ est rendu SOUS ce champ — six cents lignes
+          plus haut que le bouton pour les premiers d'entre eux. Sans cette
+          ligne, « Enregistrer » ne changeait rien à portée de regard. */}
+      {state.status === "error" && state.fieldErrors && (
+        <p
+          role="alert"
+          className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]"
+        >
+          Non enregistré —{" "}
+          {Object.values(state.fieldErrors).flat().filter(Boolean)[0] ??
+            "un champ est à corriger plus haut."}
         </p>
       )}
       {state.status === "success" && (

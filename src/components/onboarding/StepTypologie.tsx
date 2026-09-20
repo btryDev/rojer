@@ -9,7 +9,13 @@ import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
 } from "@/lib/etablissements/labels";
+import {
+  AIDE_NOMBRE_DE_PERSONNES,
+  LIBELLE_NOMBRE_DE_PERSONNES,
+  QUESTION_NOMBRE_DE_PERSONNES,
+} from "@/lib/matching/personnes-presentes";
 import type { StepProps } from "./types";
+import { nombreDePersonnesDemande } from "./validation";
 
 /**
  * Étape 2 sur 3 — la typologie de l'établissement (ERP / IGH / habitation).
@@ -59,6 +65,14 @@ export function StepTypologie({
   const poseLocauxSommeil = (
     TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]
   ).includes(state.typeErp);
+
+  /**
+   * Le nombre de personnes n'est demandé qu'à ceux dont la réponse change
+   * quelque chose (2026-09-20) : un ERP que ni sa catégorie ni son effectif ne
+   * portent au-dessus du seuil de R. 4227-34. La question apparaît donc SOUS la
+   * catégorie, pour la même raison que le sommeil apparaît sous le type.
+   */
+  const poseNombre = nombreDePersonnesDemande(state);
 
   return (
     <div className="flex flex-col gap-[22px]">
@@ -216,10 +230,11 @@ export function StepTypologie({
                 {/* Locaux à sommeil — posée au parcours depuis le 2026-09-09,
                     et seulement aux types de `TYPES_ERP_A_SOMMEIL_PLAUSIBLE`. Elle est ici, sous le
                     type, parce qu'elle a besoin de sa réponse pour savoir si
-                    elle doit exister : c'est la seule question du parcours dont
-                    la PRÉSENCE dépend d'une autre.
+                    elle doit exister : ~~c'est la seule question du parcours
+                    dont la PRÉSENCE dépend d'une autre~~ [2026-09-20 : elles
+                    sont deux, avec le nombre de personnes plus bas].
 
-                    [2026-09-21 : ELLE BLOQUE désormais — la réponse est due, par
+                    [2026-09-20 : ELLE BLOQUE désormais — la réponse est due, par
                     arbitrage ; le paragraphe qui suit décrit l'état d'avant.]
                     Elle ne bloque pas : « Je ne sais pas encore » est la valeur
                     par défaut et laisse la colonne à `null`. Le recadrage du
@@ -251,7 +266,7 @@ export function StepTypologie({
                         messagePour("comporteLocauxSommeilPublic"),
                       )}
                     >
-                      {/* ~~« Je ne sais pas encore »~~ — retiré le 2026-09-21
+                      {/* ~~« Je ne sais pas encore »~~ — retiré le 2026-09-20
                           par arbitrage : la réponse est due. L'option vide
                           n'est plus qu'une invite, non sélectionnable. */}
                       <option value="" disabled>
@@ -263,6 +278,44 @@ export function StepTypologie({
                     {messagePour("comporteLocauxSommeilPublic") && (
                       <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
                         {messagePour("comporteLocauxSommeilPublic")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Le nombre de personnes — revenu au parcours le 2026-09-20, et
+                    posé aux seuls dossiers où le moteur, sans lui, retiendrait
+                    la consigne incendie et l'exercice semestriel « par
+                    prudence ». Question, aide et message vivent dans
+                    `matching/personnes-presentes.ts`, avec la raison de
+                    chaque mot : l'aide CITE R. 4227-34 au lieu de le
+                    reformuler. */}
+                {poseNombre && (
+                  <div className="flex flex-col gap-3">
+                    <SousQuestion
+                      question={QUESTION_NOMBRE_DE_PERSONNES}
+                      aide={AIDE_NOMBRE_DE_PERSONNES}
+                    />
+                    <input
+                      id="personnesPresentesHabituellement"
+                      aria-label={LIBELLE_NOMBRE_DE_PERSONNES}
+                      type="text"
+                      inputMode="numeric"
+                      value={state.personnesPresentesHabituellement}
+                      onChange={(e) =>
+                        update({
+                          personnesPresentesHabituellement:
+                            e.currentTarget.value,
+                        })
+                      }
+                      className="champ-board max-w-[12rem]"
+                      aria-invalid={Boolean(
+                        messagePour("personnesPresentesHabituellement"),
+                      )}
+                    />
+                    {messagePour("personnesPresentesHabituellement") && (
+                      <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                        {messagePour("personnesPresentesHabituellement")}
                       </p>
                     )}
                   </div>

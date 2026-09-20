@@ -309,13 +309,13 @@ export type TypeErp = (typeof TYPES_ERP)[number];
  *
  *  · à qui la question est POSÉE dès le parcours d'accueil — un musée à qui
  *    l'on demande s'il héberge pour la nuit lit une question à côté de la
- *    plaque (arbitrage de la propriétaire, 2026-09-09 puis 2026-09-21) ;
+ *    plaque (arbitrage de la propriétaire, 2026-09-09 puis 2026-09-20) ;
  *  · ce que vaut l'ABSENCE de réponse : dans ces types, le moteur retient par
  *    prudence, « à confirmer » ; hors de ces types, il ne retient pas — le
  *    type déclaré a déjà répondu, il n'y a pas d'incertitude à couvrir.
  *
  * HORS DE CETTE LISTE, RIEN NE S'APPLIQUE, quelle que soit la valeur en base
- * (arbitrage du 2026-09-21 : « sur un type hors liste la question ne s'affiche
+ * (arbitrage du 2026-09-20 : « sur un type hors liste la question ne s'affiche
  * pas, donc pas de oui »). ~~Une première rédaction laissait un « oui »
  * explicite l'emporter pour tout type, pour rattraper l'auberge typée N.~~
  * Retiré le jour même, sur revue : aucun écran ne permettait plus d'écrire ce

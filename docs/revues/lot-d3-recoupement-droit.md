@@ -582,9 +582,9 @@ couverture sont l'endroit où le manque se voit déjà aujourd'hui.
 
 | Famille | Verdict | Suite |
 |---|---|---|
-| Chapitre chaleur `R. 4463-1` à `-8` | **Fondée, dans le périmètre** | 2 obligations d'établissement à encoder |
+| Chapitre chaleur `R. 4463-1` à `-8` | **Fondée, dans le périmètre** | ~~2 obligations d'établissement à encoder~~ — **ENCODÉES le 2026-09-20** (`lot/chaleur-intense`), corpus `code-travail-chaleur-intense`. Deux écarts avec ce document : `R. 4463-6` a un second alinéa que la page de section tronquait, et `R. 4463-8` n'est PAS « déjà servi » par `PlanPrevention` (aucune ligne n'y nomme la chaleur) |
 | Pénibilité / C2P | **Fondée, hors périmètre outillé** | Corpus `non_couvert` + déclaration, **pas** d'obligation |
-| Défibrillateur | **Fondée, hors périmètre couvert** | Rien à encoder ; exclusion à écrire |
+| Défibrillateur | **Fondée, hors périmètre couvert** | Rien à encoder ; ~~exclusion à écrire~~ — **écrite le 2026-09-20** (`.claude/CLAUDE.md`, `docs/couverture-declaree-du-produit.md`, axe `categorie_erp`) |
 | Seconde branche de `R. 4323-23` | **Fondée, dans le périmètre** | 1 obligation d'équipement, trimestrielle, après création du type |
 
 **Quatre sur quatre existent en droit. Deux sur quatre donnent des obligations à

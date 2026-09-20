@@ -9,6 +9,11 @@ import {
 // Réexportée : la validation client du wizard la lit ici, au plus près du
 // parcours qu'elle borne.
 export { EFFECTIF_MAX };
+import {
+  MESSAGE_NOMBRE_DE_PERSONNES,
+  SEUIL_PERSONNES_R422734,
+  nombreDePersonnesADemander,
+} from "@/lib/matching/personnes-presentes";
 import { evaluerScopeSecteur } from "./scope";
 
 /**
@@ -85,7 +90,7 @@ export const onboardingSchema = z
     // Posée au parcours depuis ce jour, et seulement aux types où le sommeil est plausible de
     // `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`. DEUX réponses, « oui » ou « non »,
     // et la réponse est OBLIGATOIRE là où la question est posée (arbitrage de
-    // la propriétaire, 2026-09-21 : « je ne sais pas encore » est retiré — un
+    // la propriétaire, 2026-09-20 : « je ne sais pas encore » est retiré — un
     // exploitant sait s'il héberge du public la nuit, et la question n'est
     // posée qu'aux types où elle a un sens). Le paragraphe ci-dessous décrit
     // l'état d'avant, gardé pour ce qu'il explique du `undefined` : il reste la
@@ -107,6 +112,31 @@ export const onboardingSchema = z
               ? v
               : undefined,
       z.boolean().optional(),
+    ),
+    // ─── Personnes pouvant se trouver réunies (2026-09-20) ──
+    //
+    // LA QUESTION REVIENT AU PARCOURS, ET PAS SOUS SA FORME DU 2026-09-01. Elle
+    // en était sortie ce jour-là parce qu'elle était posée À TOUS, dès la
+    // première minute : « deux questions de technicien ». Le moteur s'en est
+    // passé depuis en retenant « par prudence » — et la mesure du 2026-09-20
+    // montre ce que cela coûte : un restaurant de six salariés et trente
+    // couverts porte une consigne incendie et un exercice semestriel que rien
+    // n'établit qu'il doive, sans qu'aucun écran du parcours ne l'ait invité à répondre.
+    //
+    // Elle n'est donc posée QU'À CEUX DONT LA RÉPONSE CHANGE QUELQUE CHOSE —
+    // `nombreDePersonnesADemander` : un ERP que ni sa catégorie ni son effectif
+    // ne portent au-dessus du seuil de R. 4227-34. Pour eux elle est
+    // obligatoire ; pour tous les autres elle n'est pas à l'écran et n'est pas
+    // acceptée. `manipuleMatieresR422722` ne revient PAS : sa décision de champ
+    // est en attente, et le silence n'y retire rien à personne.
+    personnesPresentesHabituellement: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.coerce
+        .number({ message: MESSAGE_NOMBRE_DE_PERSONNES })
+        .int(MESSAGE_NOMBRE_DE_PERSONNES)
+        .min(1, MESSAGE_NOMBRE_DE_PERSONNES)
+        .max(99999, MESSAGE_NOMBRE_DE_PERSONNES)
+        .optional(),
     ),
     // `classeIgh` et `familleHabitation` ont quitté ce schéma le 2026-09-03
     // avec les deux questions du parcours qui les posaient. Voir le bloc en
@@ -170,7 +200,7 @@ export const onboardingSchema = z
     // que personne n'a été invité à déclarer.
     //
     // Hors de ces types la question n'est posée NULLE PART, fiche comprise
-    // (arbitrage du 2026-09-21) : le type déclaré a déjà répondu, et le moteur
+    // (arbitrage du 2026-09-20) : le type déclaré a déjà répondu, et le moteur
     // ne retient rien sur leur silence (`matching/engine.ts`).
     if (
       val.comporteLocauxSommeilPublic !== undefined &&
@@ -190,7 +220,7 @@ export const onboardingSchema = z
       });
     }
 
-    // LA RÉPONSE EST DUE LÀ OÙ LA QUESTION EST POSÉE (2026-09-21). Sans ce
+    // LA RÉPONSE EST DUE LÀ OÙ LA QUESTION EST POSÉE (2026-09-20). Sans ce
     // contrôle, un client qui ne poste pas le champ créerait un hôtel muet —
     // que le moteur couvrirait par prudence, mais que plus aucun écran
     // n'inviterait à répondre dès la création.
@@ -210,6 +240,29 @@ export const onboardingSchema = z
       });
     }
 
+    // LE NOMBRE DE PERSONNES : dû là où il est demandé, refusé ailleurs. Même
+    // forme que les locaux à sommeil ci-dessus, et même raison dans les deux
+    // sens — un `required` de navigateur ne tient rien, et un champ absent de
+    // l'écran ne doit pas pouvoir être posté.
+    const nombreDemande = nombreDePersonnesADemander({
+      estERP: val.estERP,
+      categorieErp: val.categorieErp,
+      effectifSurSite: val.effectifSurSite,
+    });
+    if (nombreDemande && val.personnesPresentesHabituellement === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["personnesPresentesHabituellement"],
+        message: MESSAGE_NOMBRE_DE_PERSONNES,
+      });
+    }
+    if (!nombreDemande && val.personnesPresentesHabituellement !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["personnesPresentesHabituellement"],
+        message: `Ce nombre n'est demandé qu'aux établissements recevant du public dont ni la catégorie ni l'effectif n'établissent le seuil de ${SEUIL_PERSONNES_R422734} personnes.`,
+      });
+    }
     // Le seul cumul refusé (ADR-025 § 1) : un ERP en IGH relève du règlement
     // de sécurité des IGH, jamais dépouillé. L'IGH seul reste servi — un
     // employeur locataire d'une tour de bureaux relève du Code du travail, que
@@ -264,4 +317,5 @@ export const onboardingValeursInitiales = {
   typeErp: "" as string | undefined,
   categorieErp: "" as string | undefined,
   comporteLocauxSommeilPublic: "" as string,
+  personnesPresentesHabituellement: "" as string,
 };

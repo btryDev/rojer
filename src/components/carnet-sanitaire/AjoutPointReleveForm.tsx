@@ -15,6 +15,22 @@ import {
 } from "@/lib/carnet-sanitaire/schema";
 import type { TypeReseauEau } from "@prisma/client";
 
+/**
+ * D'où viennent les valeurs proposées — et ce qui n'a pas de texte.
+ *
+ * La constante vit ICI et non dans `lib/carnet-sanitaire` : c'est un texte
+ * d'écran qui cite un arrêté, et `citations-ecran` ne balaie que les surfaces
+ * affichées. Dans `lib/`, une date d'arrêté fausse y restait verte
+ * (contre-lecture du 2026-09-20).
+ *
+ * Les CONDITIONS et l'ALTERNATIVE de l'article sont dites : sans « plus de
+ * 3 litres » ni « points de puisage à risque », la phrase étendait l'exigence
+ * à tout réseau ; sans « ou une élévation quotidienne », elle donnait 55 °C
+ * pour la seule voie.
+ */
+const AIDE_SEUIL_TEMPERATURE =
+  "Valeurs proposées, à ajuster. Repères tirés de l'article 36 de l'arrêté du 23 juin 1978, pour les réseaux susceptibles d'alimenter des points de puisage à risque (notamment des douches) : 50 °C au moins en tout point du réseau d'eau chaude, tubes finaux exceptés, quand plus de 3 litres séparent la mise en distribution du point le plus éloigné ; et, pour un stockage de 400 litres et plus, 55 °C au moins en permanence à sa sortie, ou une élévation quotidienne de température. Aux robinets des pièces de toilette, le même article fixe au contraire 50 °C au plus. Les 20 °C proposés pour l'eau froide sont un repère de Rojer : aucun de ces deux textes ne les fixe.";
+
 export function AjoutPointReleveForm({
   etablissementId,
   batiments = [],
@@ -103,6 +119,7 @@ export function AjoutPointReleveForm({
           step="0.5"
           defaultValue={SEUIL_DEFAUT[type]}
           key={`seuil-${type}`}
+          aide={AIDE_SEUIL_TEMPERATURE}
         />
       </div>
 
