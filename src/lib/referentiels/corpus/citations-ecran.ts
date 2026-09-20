@@ -73,6 +73,73 @@ const MOTIF_ARTICLE = /\b[LRD]\.\s?\d{3,4}-\d+(?:-\d+)*\b/g;
 
 const normaliser = (ref: string) => ref.replace(/\s+/g, " ").trim();
 
+// ── LES ARRÊTÉS, QUE LE MOTIF D'ARTICLE NE VOIT PAS ─────────────────────────
+//
+// `MOTIF_ARTICLE` exige un préfixe `L.`/`R.`/`D.` : « arrêté du 1er février
+// 2010 » n'en a pas, donc il n'a jamais été mesuré. Ce n'est pas une lacune de
+// détail — c'est par là qu'est passé le seul module du produit bâti sur un
+// texte qu'aucun corpus n'a ouvert : le carnet sanitaire affiche l'arrêté du
+// 1er février 2010 en badge, l'imprime dans le ZIP remis au contrôleur et en
+// dérive une échéance annuelle. Le compteur affichait zéro parce qu'il
+// regardait ailleurs.
+//
+// DEUX VOCABULAIRES, ENCORE, ET PIRE QUE POUR LES ARTICLES. Un écran écrit
+// « arrêté du 1er février 2010 » ou « arrêté 01-02-2010 » ; le corpus écrit
+// `Arrêté 2017-04-19 art. 1er` — et parfois `Arrêté 23-02-2018`, c'est-à-dire
+// JOUR-MOIS-ANNÉE là où son voisin écrit ANNÉE-MOIS-JOUR. Comparer les chaînes
+// ne rapprocherait rien. On ramène donc les deux côtés à UNE DATE CIVILE, qui
+// est la seule chose qu'un arrêté porte de façon stable : le texte du
+// 23 février 2018 est le même quel que soit le nom qu'on lui donne.
+//
+// L'ambiguïté `10-09-2021` se tranche sans convention : le membre à quatre
+// chiffres est l'année, et rien d'autre ne peut l'être.
+
+const MOIS_FR: Record<string, string> = {
+  janvier: "01", février: "02", fevrier: "02", mars: "03", avril: "04",
+  mai: "05", juin: "06", juillet: "07", août: "08", aout: "08",
+  septembre: "09", octobre: "10", novembre: "11", décembre: "12",
+  decembre: "12",
+};
+
+/** « arrêté du 1er février 2010 », « Arrêté 10-09-2021 », « arrêté 2017-04-19 ». */
+const MOTIF_ARRETE =
+  /arrêtés?\s+(?:du\s+)?(?:(\d{1,2})(?:er)?\s+([a-zéèûô]+)\s+(\d{4})|(\d{2,4})-(\d{2})-(\d{2,4}))/gi;
+
+/**
+ * La date civile d'un arrêté, en clé `AAAA-MM-JJ`, ou `null` si la forme
+ * rencontrée n'en est pas une (un mois inconnu, par exemple : mieux vaut ne
+ * rien rendre que rendre une date inventée).
+ */
+export function dateArrete(m: RegExpMatchArray): string | null {
+  const [, jour, mois, annee, a, b2, c] = m;
+  if (jour && mois && annee) {
+    const mm = MOIS_FR[mois.toLowerCase()];
+    return mm ? `${annee}-${mm}-${jour.padStart(2, "0")}` : null;
+  }
+  if (!a || !b2 || !c) return null;
+  // Le membre à quatre chiffres est l'année : `2017-04-19` et `19-04-2017`
+  // désignent le même texte, et aucune convention n'a à être supposée.
+  return a.length === 4
+    ? `${a}-${b2}-${c.padStart(2, "0")}`
+    : `${c}-${b2}-${a.padStart(2, "0")}`;
+}
+
+/** Les dates d'arrêté que le corpus déclare avoir ouvertes. */
+export function arretesDuCorpus(): Set<string> {
+  const dates = new Set<string>();
+  const ajouter = (texte: string) => {
+    for (const m of texte.matchAll(MOTIF_ARRETE)) {
+      const d = dateArrete(m);
+      if (d) dates.add(d);
+    }
+  };
+  for (const corpus of CORPUS) {
+    ajouter(corpus.intitule);
+    for (const article of corpus.articles) ajouter(article.ref);
+  }
+  return dates;
+}
+
 /**
  * Toutes les clés d'article que le corpus déclare avoir dépouillées.
  *
@@ -155,6 +222,54 @@ export type CitationOrpheline = {
   /** Où elle apparaît, en `chemin:ligne`, relatif à la racine du dépôt. */
   emplacements: string[];
 };
+
+/**
+ * Les ARRÊTÉS cités sur une surface qui s'affiche, et qu'aucun corpus ne
+ * déclare avoir ouverts.
+ *
+ * Même balayage que pour les articles, même exclusion des commentaires et des
+ * verbatims : ce qui n'est pas le produit qui parle ne se compte pas.
+ */
+export function arretesSansCorpus(racine: string): CitationOrpheline[] {
+  const connus = arretesDuCorpus();
+  const orphelins = new Map<string, string[]>();
+
+  for (const dossier of SURFACES_AFFICHEES) {
+    for (const fichier of fichiersSources(racine, dossier)) {
+      const lignes = readFileSync(fichier, "utf8").split("\n");
+      let dansBloc = false;
+      lignes.forEach((ligne, index) => {
+        const nue = ligne.trim();
+        const ouvre = ligne.lastIndexOf("/*");
+        const ferme = ligne.lastIndexOf("*/");
+        const etaitDansBloc = dansBloc;
+        if (ouvre !== -1 && ouvre > ferme) dansBloc = true;
+        else if (ferme !== -1 && ferme > ouvre) dansBloc = false;
+        if (
+          etaitDansBloc ||
+          dansBloc ||
+          nue.startsWith("//") ||
+          nue.startsWith("*") ||
+          nue.startsWith("/*")
+        )
+          return;
+
+        for (const m of sansVerbatim(ligne).matchAll(MOTIF_ARRETE)) {
+          const date = dateArrete(m);
+          if (!date || connus.has(date)) continue;
+          const ou = `${fichier.slice(racine.length + 1)}:${index + 1}`;
+          const deja = orphelins.get(date);
+          if (deja) deja.push(ou);
+          else orphelins.set(date, [ou]);
+        }
+      });
+    }
+  }
+
+  return [...orphelins]
+    .map(([ref, emplacements]) => ({ ref, emplacements }))
+    .sort((a, b) => a.ref.localeCompare(b.ref));
+}
 
 /**
  * Les articles cités sur une surface qui s'affiche, et qu'aucun corpus ne
