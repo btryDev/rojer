@@ -778,6 +778,13 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // cité n'est pas un intervalle lu — c'est le même défaut que la phrase
       // sur l'amiante et le plomb, corrigée le même jour.
       "R. 4624-28-2",
+      // Entré le 2026-09-20, et par un chemin qui vaut d'être dit : en ouvrant
+      // le texte modificateur de R. 4624-28-3, comme `types.ts` l'exige. Le
+      // décret n° 2022-372 touche aussi les visites de reprise. « Dès que
+      // l'employeur a connaissance de la date de la fin de l'arrêt de travail,
+      // il saisit le service de prévention et de santé au travail. » Même
+      // blocage que son voisin : le déclencheur événementiel n'existe pas.
+      "R. 4624-31",
       // R. 4225-3 entre avec le lot 8, et pour la même raison que les
       // précédentes : un texte lu de plus, pas un défaut d'encodage. La
       // boisson non alcoolisée gratuite est due « lorsque des conditions
@@ -991,7 +998,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // différence des trois suivantes. Bloquée par l'absence de catégorie
       // d'équipement.
       "R. 1321-60",
-      // Les trois entrées de l'arrêté du 10 septembre 2021, pris pour
+      // Les CINQ entrées de l'arrêté du 10 septembre 2021, pris pour
       // l'application de R. 1321-61. Elles partagent DEUX blocages, et le
       // second est le plus inhabituel du référentiel : l'article 2 de l'arrêté
       // réserve tout le texte aux réseaux « mis en place ou rénovés totalement
@@ -1001,7 +1008,22 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // responsable d'établissement ou si la responsabilité lui a été
       // contractuellement déléguée.
       //
+      // Art. 4 : entré le 2026-09-20, en l'ouvrant. Il était `non_depouille`
+      // depuis le 2026-09-02 sur la foi de son intitulé — « Les trois niveaux
+      // de protection » —, et une passe s'apprêtait à le ranger hors périmètre
+      // comme règle de construction. Son III met à la charge du propriétaire
+      // des réseaux la VÉRIFICATION INITIALE du bon fonctionnement, son IV
+      // l'adaptation en cas de modification des réseaux, et son V les preuves
+      // d'efficacité tenues à la disposition de l'autorité sanitaire. Trois
+      // obligations d'exploitation, pas une règle de chantier.
+      "Arrêté 10-09-2021 art. 4",
       // Art. 9 : vérification, « a minima à fréquence annuelle ».
+      // Art. 8 : entré le 2026-09-20 en `sans_objet`, corrigé le jour même en
+      // `obligation_manquante` par la contre-lecture du lot. Plaque « eau non
+      // potable », robinet verrouillable, repérage des canalisations : un état
+      // permanent au sens de l'ADR-026, comme l'art. 12 plus bas. Le classer
+      // `sans_objet` faisait sortir un manque réel du décompte.
+      "Arrêté 10-09-2021 art. 8",
       "Arrêté 10-09-2021 art. 9",
       // Art. 10 : entretien, « a minima à une fréquence annuelle », et le seul
       // texte du dossier qui écrive le mot « disconnecteur ». Deux articles et
