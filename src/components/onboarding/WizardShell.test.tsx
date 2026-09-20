@@ -357,3 +357,69 @@ describe("la question des locaux à sommeil au parcours (2026-09-09)", () => {
     expect(select.value).toBe("");
   });
 });
+
+describe("la question du nombre de personnes au parcours (2026-09-20)", () => {
+  const LIBELLE = /Personnes pouvant se trouver habituellement/;
+  const champPoste = () =>
+    document.querySelector<HTMLInputElement>(
+      'input[type="hidden"][name="personnesPresentesHabituellement"]',
+    );
+
+  /** Étape 2, ERP coché, restaurant, sur la catégorie demandée (effectif 8). */
+  async function allerEtape2EnCategorie(categorie: string) {
+    render(<WizardShell />);
+    remplirEtape1();
+    await souffler();
+    screen.getByRole("button", { name: /Suivant/ }).click();
+    await souffler();
+    screen.getAllByRole("button", { name: /^Oui$/ })[0].click();
+    await souffler();
+    choisir(/Type d'ERP/, "N");
+    choisir(/Catégorie d'ERP/, categorie);
+    await souffler();
+  }
+
+  it("est posée au restaurant de 5ᵉ catégorie, et pas à celui de 3ᵉ", async () => {
+    await allerEtape2EnCategorie("N5");
+    expect(screen.getByLabelText(LIBELLE)).toBeTruthy();
+    choisir(/Catégorie d'ERP/, "N3");
+    await souffler();
+    expect(screen.queryByLabelText(LIBELLE)).toBeNull();
+  });
+
+  it("« Suivant » retient sans le nombre, et le refus est rendu AU champ", async () => {
+    await allerEtape2EnCategorie("N5");
+    screen.getByRole("button", { name: /Suivant/ }).click();
+    await souffler();
+    expect(screen.getByLabelText(LIBELLE).getAttribute("aria-invalid")).toBe(
+      "true",
+    );
+    expect(screen.getByText(/Indiquez combien de personnes/)).toBeTruthy();
+  });
+
+  it("le nombre n'est POSTÉ que tant que la question est à l'écran", async () => {
+    // Un nombre saisi puis rendu sans objet reste dans l'état ; s'il partait,
+    // le serveur le refuserait — à raison — sur un champ que plus rien ne
+    // montre. C'est la garde de `ChampsCaches`.
+    await allerEtape2EnCategorie("N5");
+    saisir(LIBELLE, "40");
+    await souffler();
+    expect(champPoste()?.value).toBe("40");
+    choisir(/Catégorie d'ERP/, "N3");
+    await souffler();
+    expect(champPoste()).toBeNull();
+  });
+
+  it("depuis l'étape 1, le rail mène à l'étape qui refuse au lieu de ne rien montrer", async () => {
+    await allerEtape2EnCategorie("N5");
+    screen.getByRole("button", { name: /Précédent|Retour/ }).click();
+    await souffler();
+    expect(screen.queryByLabelText(LIBELLE)).toBeNull();
+    // Le rail, vers l'étape 3 : l'étape 2 refuse (nombre absent).
+    screen.getByRole("button", { name: /Résumé/ }).click();
+    await souffler();
+    expect(screen.getByLabelText(LIBELLE).getAttribute("aria-invalid")).toBe(
+      "true",
+    );
+  });
+});

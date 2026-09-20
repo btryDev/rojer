@@ -77,6 +77,7 @@ describe("onboardingSchema", () => {
       estERP: true,
       typeErp: "N",
       categorieErp: "N5",
+      personnesPresentesHabituellement: "40",
     });
     expect(res.success).toBe(true);
   });
@@ -213,6 +214,7 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
     estERP: true,
     typeErp: "O",
     categorieErp: "N5",
+    personnesPresentesHabituellement: "30",
   };
 
   it("accepte « oui » d'un type de la question", () => {
@@ -237,7 +239,7 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
     // `false` et l'absence de réponse sont deux choses différentes : l'un
     // retire quatre obligations. Un `z.coerce.boolean()` posé ici par
     // inadvertance rendrait `false` sur la chaîne vide et répondrait « non » à
-    // la place du dirigeant. Depuis le 2026-09-21 la réponse est DUE pour un
+    // la place du dirigeant. Depuis le 2026-09-20 la réponse est DUE pour un
     // hôtel : le vide y est donc refusé — et le refus est la preuve qu'il n'a
     // pas été coercé en « non », qui serait passé.
     for (const vide of ["", undefined, null]) {
@@ -260,7 +262,7 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
     }
   });
 
-  it("LA RÉPONSE EST DUE là où la question est posée (2026-09-21)", () => {
+  it("LA RÉPONSE EST DUE là où la question est posée (2026-09-20)", () => {
     // « Je ne sais pas encore » est retiré par arbitrage : un exploitant sait
     // s'il héberge du public la nuit. Sans ce contrôle, un client qui ne poste
     // pas le champ créerait un hôtel muet.
@@ -313,5 +315,73 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
     });
     expect(res.success).toBe(true);
     if (res.success) expect(res.data.comporteLocauxSommeilPublic).toBeUndefined();
+  });
+});
+
+describe("nombre de personnes au parcours (2026-09-20)", () => {
+  const restaurant = {
+    ...base,
+    estERP: true,
+    typeErp: "N",
+    categorieErp: "N5",
+  };
+  const erreurs = (saisie: Record<string, unknown>) => {
+    const res = onboardingSchema.safeParse(saisie);
+    // `undefined` et non `null` quand la saisie passe : `toBeDefined()` accepte
+    // `null`, et le refus ci-dessous restait vert une fois sa règle retirée.
+    return res.success
+      ? undefined
+      : res.error.flatten().fieldErrors.personnesPresentesHabituellement;
+  };
+
+  it("EXIGE le nombre d'un ERP que ni sa catégorie ni son effectif ne portent au seuil", () => {
+    for (const vide of ["", null, undefined]) {
+      expect(
+        erreurs({ ...restaurant, personnesPresentesHabituellement: vide }),
+        String(vide),
+      ).toBeDefined();
+    }
+    expect(erreurs({ ...restaurant, categorieErp: "N4" })).toBeDefined();
+  });
+
+  it("le lit comme un nombre, dans les deux sens du seuil", () => {
+    for (const n of ["40", "60"]) {
+      const res = onboardingSchema.safeParse({
+        ...restaurant,
+        personnesPresentesHabituellement: n,
+      });
+      expect(res.success, n).toBe(true);
+      if (res.success)
+        expect(res.data.personnesPresentesHabituellement).toBe(Number(n));
+    }
+  });
+
+  it("refuse zéro, un décimal et un texte", () => {
+    for (const n of ["0", "12.5", "une trentaine"]) {
+      expect(
+        erreurs({ ...restaurant, personnesPresentesHabituellement: n }),
+        n,
+      ).toBeDefined();
+    }
+  });
+
+  it("ne demande RIEN à ceux pour qui le moteur conclut seul", () => {
+    expect(onboardingSchema.safeParse(base).success).toBe(true);
+    expect(
+      onboardingSchema.safeParse({ ...restaurant, categorieErp: "N3" }).success,
+    ).toBe(true);
+  });
+
+  it("et refuse d'eux un nombre que l'écran ne leur a pas demandé", () => {
+    expect(
+      erreurs({ ...base, personnesPresentesHabituellement: "40" }),
+    ).toBeDefined();
+    expect(
+      erreurs({
+        ...restaurant,
+        categorieErp: "N3",
+        personnesPresentesHabituellement: "40",
+      }),
+    ).toBeDefined();
   });
 });

@@ -5,7 +5,7 @@ import {
 } from "./schema";
 
 /**
- * La réponse à la question du sommeil SUIT LE TYPE (arbitrage du 2026-09-21).
+ * La réponse à la question du sommeil SUIT LE TYPE (arbitrage du 2026-09-20).
  *
  * Le piège que ce fichier tient : la question n'est affichée qu'à certains
  * types ; un champ masqué n'est pas posté, et un champ non posté n'écrit rien.

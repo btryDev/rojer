@@ -131,6 +131,10 @@ export function refusAlEntree(): RefusAlEntree[] {
       estERP: true,
       typeErp: "N",
       categorieErp: "N5",
+      // Dû à un ERP de 5ᵉ catégorie depuis le 2026-09-20. Sans lui la sonde
+      // échouerait pour DEUX raisons, et « chaque sonde n'en change qu'une
+      // chose » cesserait d'être vrai.
+      personnesPresentesHabituellement: 30,
       estIGH: true,
       classeIgh: "GHA",
     },

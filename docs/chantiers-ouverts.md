@@ -185,7 +185,7 @@ modification. Rien n'établit que le parcours d'accueil pose la question, donc
 qu'un `R` puisse y répondre. Un allègement qui ne se déclenche que sur un écran
 que personne n'ouvre est un allègement qui n'existe pas.~~
 
-> **CLOS LE 2026-09-21** (`lot/sommeil-parcours`). La question est posée au
+> **CLOS LE 2026-09-20** (`lot/sommeil-parcours`). La question est posée au
 > parcours d'accueil ET sur la fiche, aux seuls types où le sommeil est
 > plausible (J, O, U, R, REF, OA), réponse due « oui » ou « non ». Hors de ces
 > types elle ne s'affiche nulle part et le moteur ne retient rien — mesuré
@@ -669,6 +669,19 @@ laisser croire que le motif « registre EPI non couvert » recouvre la question.
 présentes » a montré qu'une question posée au dirigeant était **déjà répondue**
 par une autre : dès la 3ᵉ catégorie d'ERP, le public dépasse 301, donc les 51 de
 `R. 4227-34`. La question a pu partir.
+
+> **2026-09-20 — elle est revenue, pour ceux que la déduction ne tranche pas.**
+> « Partir » valait pour la 3ᵉ catégorie et au-dessus. En dessous, le moteur
+> retenait « par prudence » — et comme la question n'était plus posée qu'à la
+> fiche, le silence était la règle : un restaurant de six salariés et trente
+> couverts portait une consigne incendie et un exercice semestriel que rien
+> n'établit qu'il doive. Le parcours d'accueil la pose désormais aux SEULS dossiers que
+> `nombreDePersonnesADemander` désigne (ERP que ni la catégorie ni l'effectif ne
+> portent à 51), réponse due, exigée aussi par le schéma de la fiche. Le moteur
+> n'a pas changé (version 4, empreinte re-relevée pour une extraction). Reste
+> ouvert : les dossiers anciens restés muets gardent leur « à confirmer »
+> jusqu'à ce qu'ils rouvrent leur fiche — rien ne les y amène ; et
+> `manipuleMatieresR422722` (§ 1) n'est toujours posée qu'à la fiche.
 
 Il y a probablement **d'autres cas du même genre**, et il se peut aussi que le
 produit les traite déjà très bien — c'est à mesurer, pas à supposer.

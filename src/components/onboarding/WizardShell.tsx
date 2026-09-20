@@ -15,6 +15,7 @@ import {
   type OnboardingActionState,
 } from "@/lib/onboarding/actions";
 import {
+  nombreDePersonnesDemande,
   validerIdentite,
   validerResume,
   validerTypologie,
@@ -127,6 +128,8 @@ export function WizardShell({ email }: { email?: string | null }) {
         )
       : undefined;
 
+  const premierRefusServeur = Object.values(serverErrors ?? {}).find(Boolean);
+
   const update = (patch: Partial<OnboardingState>) => {
     setState((s) => ({ ...s, ...patch }));
     setBlocage(null);
@@ -183,6 +186,12 @@ export function WizardShell({ email }: { email?: string | null }) {
     for (let i = etapeIdx; i < idx; i++) {
       const err = ETAPES[i].valide(state);
       if (err) {
+        // ON VA À L'ÉTAPE QUI REFUSE. Un refus qui vise un champ n'est rendu
+        // que par l'étape qui porte ce champ : rester où l'on est le rendait
+        // invisible dès que l'étape fautive n'était pas la courante — ce qui
+        // arrive depuis le 2026-09-20, l'effectif de l'étape 1 pouvant rouvrir
+        // à l'étape 2 une question restée sans réponse.
+        setEtapeIdx(i);
         setBlocage(err);
         return;
       }
@@ -409,6 +418,16 @@ export function WizardShell({ email }: { email?: string | null }) {
             <BandeauBlocage>{serverState.message}</BandeauBlocage>
           ) : null}
 
+          {/* Un refus du serveur qui vise un champ est rendu par l'étape de ce
+              champ — et le résumé n'en porte aucun : sans cette ligne, « Créer »
+              ne produisait RIEN de visible. Le texte est celui du serveur. */}
+          {etape.id === "resume" && premierRefusServeur ? (
+            <BandeauBlocage>
+              {premierRefusServeur} — revenez à l&apos;étape
+              concernée pour le corriger.
+            </BandeauBlocage>
+          ) : null}
+
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--board-slate-line)] pt-8">
             {etapeIdx > 0 ? (
               <Button
@@ -526,6 +545,18 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
           type="hidden"
           name="comporteLocauxSommeilPublic"
           value={state.comporteLocauxSommeilPublic}
+        />
+      ) : null}
+      {/* Le nombre de personnes n'est posté que si la question est À L'ÉCRAN
+          pour l'état final : un nombre saisi puis rendu sans objet (effectif
+          ou catégorie corrigés en revenant en arrière) reste dans l'état et
+          ne part pas — le schéma le refuserait, à raison. */}
+      {nombreDePersonnesDemande(state) &&
+      state.personnesPresentesHabituellement ? (
+        <input
+          type="hidden"
+          name="personnesPresentesHabituellement"
+          value={state.personnesPresentesHabituellement}
         />
       ) : null}
     </>
