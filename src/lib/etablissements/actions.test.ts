@@ -110,6 +110,9 @@ function formulaire(over: Record<string, string> = {}): FormData {
   fd.set("codeNaf", "56.10A");
   fd.set("effectifSurSite", "5");
   fd.set("estEtablissementTravail", "on");
+  // Dû depuis le 2026-09-21 à un ERP que ni sa catégorie ni son effectif ne
+  // portent au seuil de R. 4227-34 — le cas de presque tous les tests d'ici.
+  fd.set("personnesPresentesHabituellement", "30");
   for (const [k, v] of Object.entries(over)) fd.set(k, v);
   return fd;
 }

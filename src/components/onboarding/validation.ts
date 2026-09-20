@@ -14,7 +14,10 @@
 // Module **pur** : ni Prisma, ni React.
 
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
+import { TYPES_ERP_QUESTION_LOCAUX_SOMMEIL } from "@/lib/etablissements/schema";
+import { nombreDePersonnesADemander } from "@/lib/matching/personnes-presentes";
 import { EFFECTIF_MAX } from "@/lib/onboarding/schema";
+import type { CategorieErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
 
 /**
@@ -115,6 +118,20 @@ export function validerIdentite(s: OnboardingState): Blocage | null {
 }
 
 /** Étape 2 — les régimes (ADR-004). */
+/**
+ * La question du nombre de personnes est-elle à l'écran pour cet état ?
+ * Une seule lecture pour l'étape, son refus et le champ posté : les trois
+ * doivent dire la même chose, sinon on poste ce qu'on ne montre pas.
+ */
+export function nombreDePersonnesDemande(s: OnboardingState): boolean {
+  const effectif = s.effectifSurSite.trim();
+  return nombreDePersonnesADemander({
+    estERP: s.estERP,
+    categorieErp: (s.categorieErp || null) as CategorieErp | null,
+    effectifSurSite: /^[0-9]+$/.test(effectif) ? Number(effectif) : null,
+  });
+}
+
 export function validerTypologie(s: OnboardingState): Blocage | null {
   if (!s.estEtablissementTravail && !s.estERP && !s.estIGH && !s.estHabitation)
     return {
@@ -146,6 +163,32 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
       champ: "categorieErp",
       message: "Précisez la catégorie de votre ERP.",
     };
+  // LES DEUX QUESTIONS DONT LA PRÉSENCE DÉPEND D'UNE AUTRE, et dont la réponse
+  // est due. Sans ces deux refus, le passage d'étape laissait filer et c'est la
+  // server action qui refusait — à l'étape 3, sur un champ de l'étape 2 que
+  // l'écran ne montrait plus : « Formulaire invalide », sans rien à corriger
+  // sous les yeux. Les conditions sont celles du schéma, par les mêmes
+  // fonctions, pas une copie.
+  if (
+    s.estERP &&
+    (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
+      s.typeErp,
+    ) &&
+    !s.comporteLocauxSommeilPublic
+  )
+    return {
+      champ: "comporteLocauxSommeilPublic",
+      message: "Indiquez si votre établissement héberge du public pour la nuit.",
+    };
+  if (nombreDePersonnesDemande(s)) {
+    const n = s.personnesPresentesHabituellement.trim();
+    if (!/^[0-9]+$/.test(n) || Number(n) < 1)
+      return {
+        champ: "personnesPresentesHabituellement",
+        message:
+          "Indiquez combien de personnes peuvent se trouver en même temps dans vos locaux, salariés et public compris.",
+      };
+  }
   // DEUX REFUS ONT VÉCU ICI, ET SONT TOMBÉS LE 2026-09-03 : « Précisez la
   // classe IGH » et « Précisez la famille de l'immeuble d'habitation ».
   //

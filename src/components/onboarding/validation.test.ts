@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { VALEURS_INITIALES, type OnboardingState } from "./types";
 import {
+  nombreDePersonnesDemande,
   refusEffectif,
   validerIdentite,
   validerTypologie,
@@ -101,6 +102,10 @@ describe("étape 2 — les régimes (ADR-004)", () => {
     estERP: true,
     typeErp: "O",
     categorieErp: "N5",
+    // Les deux questions dont la présence dépend d'une autre, dues depuis le
+    // 2026-09-21 : un hôtel de 5ᵉ catégorie les reçoit toutes les deux.
+    comporteLocauxSommeilPublic: "oui",
+    personnesPresentesHabituellement: "30",
   };
 
   it("accepte un ERP complètement renseigné", () => {
@@ -236,6 +241,10 @@ describe("le refus dit où regarder, et de quelle nature il est", () => {
     estERP: true,
     typeErp: "O",
     categorieErp: "N5",
+    // Les deux questions dont la présence dépend d'une autre, dues depuis le
+    // 2026-09-21 : un hôtel de 5ᵉ catégorie les reçoit toutes les deux.
+    comporteLocauxSommeilPublic: "oui",
+    personnesPresentesHabituellement: "30",
   };
 
   it.each([
@@ -314,5 +323,46 @@ describe("la borne d'effectif n'est écrite qu'une fois", () => {
     // structure trop grande là où il n'y a qu'une virgule.
     expect(refusEffectif("50.5")).toBeNull();
     expect(refusEffectif("")).toBeNull();
+  });
+});
+
+describe("étape 2 — les deux questions dont la présence dépend d'une autre (2026-09-21)", () => {
+  const restaurant: OnboardingState = {
+    ...complet,
+    estERP: true,
+    typeErp: "N",
+    categorieErp: "N5",
+    personnesPresentesHabituellement: "",
+  };
+
+  it("retient un restaurant de 5ᵉ catégorie qui n'a pas donné le nombre, sur SON champ", () => {
+    expect(validerTypologie(restaurant)?.champ).toBe(
+      "personnesPresentesHabituellement",
+    );
+    for (const n of ["0", "abc", "12.5"])
+      expect(
+        validerTypologie({ ...restaurant, personnesPresentesHabituellement: n })
+          ?.champ,
+        n,
+      ).toBe("personnesPresentesHabituellement");
+    expect(
+      validerTypologie({ ...restaurant, personnesPresentesHabituellement: "40" }),
+    ).toBeNull();
+  });
+
+  it("ne demande rien à une 3ᵉ catégorie ni à un établissement sans public", () => {
+    expect(validerTypologie({ ...restaurant, categorieErp: "N3" })).toBeNull();
+    expect(nombreDePersonnesDemande({ ...restaurant, estERP: false })).toBe(false);
+  });
+
+  it("retient un hôtel qui n'a pas répondu sur le sommeil, sur SON champ", () => {
+    expect(
+      validerTypologie({
+        ...restaurant,
+        typeErp: "O",
+        personnesPresentesHabituellement: "30",
+        comporteLocauxSommeilPublic: "",
+      })?.champ,
+    ).toBe("comporteLocauxSommeilPublic");
   });
 });

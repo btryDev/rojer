@@ -33,6 +33,11 @@ export type OnboardingState = {
   // "" (« je ne sais pas encore »), "oui", "non". La chaîne vide n'est pas un
   // trou de saisie, c'est une réponse : elle laisse la colonne à `null`.
   comporteLocauxSommeilPublic: string;
+
+  // Personnes pouvant se trouver réunies dans les locaux (R. 4227-34 CT) —
+  // posée depuis le 2026-09-21 aux seuls dossiers que
+  // `nombreDePersonnesADemander` désigne. Saisie texte, comme l'effectif.
+  personnesPresentesHabituellement: string;
   // `classeIgh` et `familleHabitation` ont quitté l'état du wizard le
   // 2026-09-03 : les deux sous-questions qui les remplissaient ont été
   // retirées, aucune obligation du référentiel ne dépendant de l'une ni de
@@ -54,6 +59,7 @@ export const VALEURS_INITIALES: OnboardingState = {
   typeErp: "",
   categorieErp: "",
   comporteLocauxSommeilPublic: "",
+  personnesPresentesHabituellement: "",
 };
 
 export type StepProps = {

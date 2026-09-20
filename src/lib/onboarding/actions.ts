@@ -67,6 +67,7 @@ export async function finaliserOnboarding(
     // Vide = « je ne sais pas encore », et le vide ne se coerce pas en `false` :
     // le schéma le rend `undefined`, et l'écriture ci-dessous est alors omise.
     comporteLocauxSommeilPublic: raw.comporteLocauxSommeilPublic,
+    personnesPresentesHabituellement: raw.personnesPresentesHabituellement,
   };
 
   const parsed = onboardingSchema.safeParse(input);
@@ -103,15 +104,22 @@ export async function finaliserOnboarding(
         adresse: d.adresse,
         codeNaf: d.codeNaf,
         effectifSurSite: d.effectifSurSite,
-        // `personnesPresentesHabituellement` et `manipuleMatieresR422722` ne
-        // sont plus demandés à l'onboarding (2026-09-01) : deux questions de
-        // technicien au tout début d'un parcours, à qui n'a encore rien vu du
-        // produit. Les colonnes restent et la fiche établissement les porte.
-        // Ne pas les écrire ici les laisse à `null`, ce qui est leur valeur
-        // juste : on ne sait pas encore. Depuis le 2026-09-03, le moteur en
-        // tire ce qu'il peut sans rien demander — la catégorie d'ERP franchit
-        // le seuil de R. 4227-34 dès la 3ᵉ — et retient « à confirmer » ce
-        // qu'il ne peut pas trancher, au lieu de l'écarter.
+        // ~~`personnesPresentesHabituellement` et~~ `manipuleMatieresR422722`
+        // n'est plus demandé à l'onboarding (2026-09-01) : question de
+        // technicien au tout début d'un parcours. La colonne reste à `null` —
+        // on ne sait pas encore — et la fiche établissement la porte.
+        //
+        // LE NOMBRE DE PERSONNES EST REVENU LE 2026-09-21, borné : le schéma ne
+        // l'accepte que des dossiers que `nombreDePersonnesADemander` désigne,
+        // et l'exige d'eux. Pour tous les autres il reste `undefined` ici, donc
+        // `null` en base, et le moteur conclut sans lui (catégorie d'ERP dès la
+        // 3ᵉ, effectif, ou établissement de travail seul).
+        ...(d.personnesPresentesHabituellement === undefined
+          ? {}
+          : {
+              personnesPresentesHabituellement:
+                d.personnesPresentesHabituellement,
+            }),
         estEtablissementTravail: d.estEtablissementTravail,
         estERP: d.estERP,
         estIGH: d.estIGH,

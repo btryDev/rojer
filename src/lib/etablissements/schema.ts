@@ -1,3 +1,4 @@
+import { nombreDePersonnesADemander } from "@/lib/matching/personnes-presentes";
 import { z } from "zod";
 import { depuisCleJourCivil } from "@/lib/dates";
 import { TYPES_ERP_A_SOMMEIL_PLAUSIBLE } from "@/lib/referentiels/types-communs";
@@ -316,6 +317,33 @@ export const etablissementSchema = z
         path: ["comporteLocauxSommeilPublic"],
         message:
           "Indiquez si votre établissement héberge du public pour la nuit.",
+      });
+    }
+
+    // LE NOMBRE DE PERSONNES EST DÛ LÀ OÙ LE MOTEUR NE SAIT PAS CONCLURE SANS LUI
+    // (2026-09-21). Même règle qu'au parcours de création, par la même
+    // fonction : `/etablissements/nouveau` passe par ce schéma-ci, et une
+    // règle posée sur un seul parcours se contourne en changeant de porte.
+    // Ici le champ reste ACCEPTÉ de tous — la fiche le montre à tous, et un
+    // nombre déclaré tranche dans les deux sens.
+    //
+    // Conséquence voulue pour un dossier ancien resté muet : sa fiche ne
+    // s'enregistre plus sans le nombre. C'est le seul endroit où il peut
+    // lever le « à confirmer » de sa consigne incendie et de son exercice
+    // semestriel.
+    if (
+      val.personnesPresentesHabituellement == null &&
+      nombreDePersonnesADemander({
+        estERP: val.estERP,
+        categorieErp: val.categorieErp ?? null,
+        effectifSurSite: val.effectifSurSite,
+      })
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["personnesPresentesHabituellement"],
+        message:
+          "Indiquez combien de personnes peuvent se trouver en même temps dans vos locaux, salariés et public compris.",
       });
     }
 

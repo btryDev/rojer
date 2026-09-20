@@ -170,24 +170,26 @@ export function EtablissementForm({
           </div>
 
           {/* Champ de R. 4227-34 CT : alarme sonore → consigne → exercices
-              semestriels. Question distincte de l'effectif salarié, et qui
-              n'est PAS reposée au parcours de création (décision du
+              semestriels. Question distincte de l'effectif salarié.
+              ~~Elle n'est PAS reposée au parcours de création (décision du
               2026-09-01, confirmée le 2026-09-02) : c'est une question de
-              technicien, et le moteur s'en passe désormais. Elle reste ici,
-              sur la fiche, parce qu'y répondre reste ce qui tranche — au-dessus
-              comme en dessous du seuil, ce que la déduction ne fait que dans
-              un sens. */}
+              technicien, et le moteur s'en passe désormais.~~ [2026-09-21 :
+              elle y est reposée, aux seuls dossiers que
+              `nombreDePersonnesADemander` désigne, et le schéma l'exige d'eux
+              ici aussi.] Elle reste sur la fiche pour tous, parce qu'y répondre
+              reste ce qui tranche — au-dessus comme en dessous du seuil, ce que
+              la déduction ne fait que dans un sens. */}
           <ChampBoard
             className="sm:col-span-2"
             id="personnesPresentesHabituellement"
             name="personnesPresentesHabituellement"
-            label="Personnes habituellement présentes (salariés + public)"
+            label="Personnes pouvant se trouver en même temps dans vos locaux (salariés + public)"
             type="text"
             inputMode="numeric"
             defaultValue={
               valeursInitiales?.personnesPresentesHabituellement ?? ""
             }
-            aide="Salariés, clients, élèves, patients, visiteurs réguliers — tous ceux qui se trouvent habituellement dans vos locaux en même temps. Au-delà de 50, le Code du travail impose une alarme sonore, une consigne incendie affichée et des exercices tous les six mois (art. R. 4227-34, R. 4227-37, R. 4227-39). Laissez vide si vous ne savez pas : rien ne vous est retiré pour autant. Si vous recevez du public, ces obligations vous sont présentées à confirmer ; sinon, votre effectif salarié est le compte exact."
+            aide="Salariés, clients, élèves, patients, visiteurs réguliers — tous ceux qui se trouvent habituellement dans vos locaux en même temps. Au-delà de 50, le Code du travail impose une alarme sonore, une consigne incendie affichée et des exercices tous les six mois (art. R. 4227-34, R. 4227-37, R. 4227-39). Ce nombre vous est demandé si vous recevez du public et que ni votre catégorie d'ERP ni votre effectif ne suffisent à établir le seuil ; sinon vous pouvez le laisser vide."
             erreur={err("personnesPresentesHabituellement")}
           />
 

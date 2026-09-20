@@ -10,6 +10,7 @@ import {
   LABEL_TYPE_ERP,
 } from "@/lib/etablissements/labels";
 import type { StepProps } from "./types";
+import { nombreDePersonnesDemande } from "./validation";
 
 /**
  * Étape 2 sur 3 — la typologie de l'établissement (ERP / IGH / habitation).
@@ -59,6 +60,14 @@ export function StepTypologie({
   const poseLocauxSommeil = (
     TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]
   ).includes(state.typeErp);
+
+  /**
+   * Le nombre de personnes n'est demandé qu'à ceux dont la réponse change
+   * quelque chose (2026-09-21) : un ERP que ni sa catégorie ni son effectif ne
+   * portent au-dessus du seuil de R. 4227-34. La question apparaît donc SOUS la
+   * catégorie, pour la même raison que le sommeil apparaît sous le type.
+   */
+  const poseNombre = nombreDePersonnesDemande(state);
 
   return (
     <div className="flex flex-col gap-[22px]">
@@ -263,6 +272,45 @@ export function StepTypologie({
                     {messagePour("comporteLocauxSommeilPublic") && (
                       <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
                         {messagePour("comporteLocauxSommeilPublic")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Le nombre de personnes — revenu au parcours le 2026-09-21, et
+                    posé aux seuls dossiers où le moteur, sans lui, retiendrait
+                    la consigne incendie et l'exercice semestriel « par
+                    prudence ». Les mots sont ceux de R. 4227-34 — « peuvent se
+                    trouver occupées ou réunies habituellement » — : ce n'est
+                    ni une moyenne ni un record, et l'aide ne tranche pas à la
+                    place du dirigeant ce que « habituellement » veut dire
+                    chez lui. */}
+                {poseNombre && (
+                  <div className="flex flex-col gap-3">
+                    <SousQuestion
+                      question="Combien de personnes peuvent se trouver en même temps dans vos locaux ?"
+                      aide="Vos salariés et le public que vous recevez habituellement, comptés ensemble — clients, élèves, patients, visiteurs. Au-delà de cinquante, le Code du travail impose une alarme sonore, une consigne de sécurité incendie affichée et des exercices tous les six mois (art. R. 4227-34, R. 4227-37 et R. 4227-39)."
+                    />
+                    <input
+                      id="personnesPresentesHabituellement"
+                      aria-label="Nombre de personnes pouvant se trouver en même temps dans les locaux"
+                      type="text"
+                      inputMode="numeric"
+                      value={state.personnesPresentesHabituellement}
+                      onChange={(e) =>
+                        update({
+                          personnesPresentesHabituellement:
+                            e.currentTarget.value,
+                        })
+                      }
+                      className="champ-board max-w-[12rem]"
+                      aria-invalid={Boolean(
+                        messagePour("personnesPresentesHabituellement"),
+                      )}
+                    />
+                    {messagePour("personnesPresentesHabituellement") && (
+                      <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                        {messagePour("personnesPresentesHabituellement")}
                       </p>
                     )}
                   </div>

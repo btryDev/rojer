@@ -15,6 +15,7 @@ import {
   type OnboardingActionState,
 } from "@/lib/onboarding/actions";
 import {
+  nombreDePersonnesDemande,
   validerIdentite,
   validerResume,
   validerTypologie,
@@ -526,6 +527,18 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
           type="hidden"
           name="comporteLocauxSommeilPublic"
           value={state.comporteLocauxSommeilPublic}
+        />
+      ) : null}
+      {/* Le nombre de personnes n'est posté que si la question est À L'ÉCRAN
+          pour l'état final : un nombre saisi puis rendu sans objet (effectif
+          ou catégorie corrigés en revenant en arrière) reste dans l'état et
+          ne part pas — le schéma le refuserait, à raison. */}
+      {nombreDePersonnesDemande(state) &&
+      state.personnesPresentesHabituellement ? (
+        <input
+          type="hidden"
+          name="personnesPresentesHabituellement"
+          value={state.personnesPresentesHabituellement}
         />
       ) : null}
     </>

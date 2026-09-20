@@ -40,6 +40,7 @@ describe("etablissementSchema — typologie (ADR-004)", () => {
       estERP: true,
       typeErp: "N",
       categorieErp: "N4",
+      personnesPresentesHabituellement: 120,
     });
     expect(res.success).toBe(true);
   });
@@ -246,6 +247,35 @@ describe("refus de périmètre — création seulement", () => {
       etablissementCreationSchema.safeParse({
         ...base,
         estIGH: true,
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe("etablissementSchema — nombre de personnes (2026-09-21)", () => {
+  const restaurant = { ...base, estERP: true, typeErp: "N", categorieErp: "N5" };
+
+  it("l'exige d'un ERP sous les deux bornes — la seconde porte de création passe par ici", () => {
+    const res = etablissementSchema.safeParse(restaurant);
+    expect(res.success).toBe(false);
+    if (!res.success)
+      expect(
+        res.error.flatten().fieldErrors.personnesPresentesHabituellement,
+      ).toBeDefined();
+  });
+
+  it("ne l'exige ni d'un établissement de travail seul, ni d'une 3ᵉ catégorie", () => {
+    expect(etablissementSchema.safeParse(base).success).toBe(true);
+    expect(
+      etablissementSchema.safeParse({ ...restaurant, categorieErp: "N3" }).success,
+    ).toBe(true);
+  });
+
+  it("l'accepte de tous : sur la fiche, un nombre déclaré tranche dans les deux sens", () => {
+    expect(
+      etablissementSchema.safeParse({
+        ...base,
+        personnesPresentesHabituellement: 12,
       }).success,
     ).toBe(true);
   });

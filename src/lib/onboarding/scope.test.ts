@@ -114,6 +114,9 @@ describe("la porte d'onboarding ne se ferme plus sur le secteur", () => {
     // 2026-09-21.
     comporteLocauxSommeilPublic: "oui",
     categorieErp: "N5",
+    // Un ERP de 5ᵉ catégorie de quatre salariés : le nombre de personnes lui
+    // est dû depuis le 2026-09-21.
+    personnesPresentesHabituellement: "30",
   };
 
   it.each([
