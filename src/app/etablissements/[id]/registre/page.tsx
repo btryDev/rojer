@@ -338,20 +338,24 @@ export default async function RegistrePage({
             ))}
           </div>
 
-          // ~~« L'article L. 4711-1 impose de le tenir à
-          // disposition d'un contrôleur »~~ — corrigé le 2026-09-20.
-          // L. 4711-1 dit que ces documents « COMPORTENT des mentions
-          // obligatoires déterminées par voie réglementaire » : le
-          // verbe porte sur leur contenu, il n'impose ni tenue ni
-          // mise à disposition. La conservation est à D. 4711-3.
-          // Cette page AFFICHE le verbatim de L. 4711-1 deux cents
-          // lignes plus haut : la phrase se démentait elle-même.
-          //
-          // C'est mot pour mot la correction faite le même jour sur
-          // `equipements/actions.ts`, et cet écran avait été examiné
-          // dans la foulée puis déclaré propre — sur son badge
-          // `L. 4711-5`, qui l'est. Relevé par la contre-lecture :
-          // vérifier une surface, ce n'est pas vérifier une ligne.
+          {/* ~~« L'article L. 4711-1 impose de le tenir à disposition d'un
+              contrôleur »~~ — corrigé le 2026-09-20. L. 4711-1 dit que ces
+              documents « COMPORTENT des mentions obligatoires déterminées par
+              voie réglementaire » : le verbe porte sur leur contenu, il
+              n'impose ni tenue ni mise à disposition. La conservation est à
+              D. 4711-3. Cette page AFFICHE le verbatim de L. 4711-1 deux cents
+              lignes plus haut : la phrase se démentait elle-même.
+
+              C'est mot pour mot la correction faite le même jour sur
+              `equipements/actions.ts`, et cet écran avait été examiné dans la
+              foulée puis déclaré propre — sur son badge `L. 4711-5`, qui
+              l'est. Relevé par la contre-lecture : vérifier une surface, ce
+              n'est pas vérifier une ligne.
+
+              ET CE COMMENTAIRE-CI A FAILLI S'AFFICHER. Écrit d'abord en `//`
+              dans les enfants JSX, il était rendu comme du TEXTE, sur la page
+              qu'il prétendait corriger. `tsc` ne l'a pas vu ; eslint si
+              (`react/jsx-no-comment-textnodes`). */}
           <div className="mt-5">
             {rapports.length === 0 ? (
               q || filtreDomaine ? (

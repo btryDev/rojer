@@ -79,6 +79,14 @@ export async function GET(
   // donc pas annoncées — c'est cohérent, pas un oubli.
   const echeancesContractuelles = new Set<string>();
 
+  // L'âge de la dernière version de DUERP et le nombre de vérifications en
+  // retard, pour la checklist. Les retards sont pris À LA MÊME SOURCE que le
+  // dossier de conformité : les deux pièces du ZIP ne doivent pas se
+  // contredire. Douze mois est le seuil que le README annonce, et il vient de
+  // R. 4121-2, déjà porté par le produit.
+  let duerpAJour = false;
+  let nbVerifsEnRetard = 0;
+
   // ── 01 Dossier de conformité ────────────────────────────────────────
   try {
     const data = await construireDossierConformiteData(id);
@@ -86,6 +94,7 @@ export async function GET(
       for (const v of data.verifsEnRetard) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
       }
+      nbVerifsEnRetard = data.verifsEnRetard.length;
       const buf = await renderToBuffer(DossierConformiteDocument({ data }));
       zip.file("01_Dossier_conformite.pdf", new Uint8Array(buf));
     }
@@ -135,6 +144,9 @@ export async function GET(
       );
       zip.file(`02_DUERP_v${versionCourante.numero}.pdf`, new Uint8Array(buf));
       duerpNumeroVersion = versionCourante.numero;
+      duerpAJour =
+        maintenant.getTime() - versionCourante.createdAt.getTime() <
+        365 * 24 * 60 * 60 * 1000;
     }
   } catch {
     // On continue même si une brique échoue : le README dira que le DUERP
@@ -398,6 +410,8 @@ export async function GET(
       carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0),
     ),
     nbEcheancesContractuelles: echeancesContractuelles.size,
+    duerpAJour,
+    nbVerifsEnRetard,
     avertissementCalendrier: phraseFraicheur(fraicheur),
   });
   zip.file("00_README.txt", readme);
@@ -451,6 +465,13 @@ function genererReadme(args: {
   /** Échéances nées d'une demande d'assureur et imprimées dans ce dossier
    *  (ADR-032). Zéro = rien à annoncer, et rien n'est écrit. */
   nbEcheancesContractuelles: number;
+  /** Âge de la dernière version de DUERP : `true` si elle a moins de douze
+   *  mois. `null` au champ voisin veut dire qu'aucune version n'est figée. */
+  duerpAJour: boolean;
+  /** Vérifications dépassées à la date d'édition, telles que le dossier de
+   *  conformité les compte — même source, pour que les deux pièces du ZIP ne
+   *  divergent pas. */
+  nbVerifsEnRetard: number;
   /** Ce qu'il faut savoir de l'âge du calendrier, ou `null` s'il est à jour.
    *  En tête du README plutôt qu'en pied : un lecteur qui s'arrête à la
    *  première page doit l'avoir vu, et c'est lui qui décide ensuite comment
@@ -504,9 +525,22 @@ function genererReadme(args: {
     " CHECKLIST AVANT LE CONTRÔLE",
     "────────────────────────────────────────────────────────────",
     "",
+    // DEUX CASES QUE LE PRODUIT SAIT REMPLIR, ET QUI RESTAIENT VIDES. Le
+    // dossier connaît l'âge de la dernière version de DUERP et le nombre de
+    // vérifications en retard : les laisser à cocher à la main faisait relire
+    // au dirigeant ce que le ZIP venait de calculer, et lui faisait cocher de
+    // confiance. Les autres cases restent vides — elles portent sur des faits
+    // que le produit n'observe pas (une lecture, un affichage en entrée, une
+    // signature avant travaux).
     " [ ] Dossier de conformité lu en entier (10 min)",
-    " [ ] DUERP à jour depuis moins de 12 mois",
-    " [ ] Tous les rapports de vérification 12 derniers mois présents",
+    args.duerpNumeroVersion === null
+      ? " [!] DUERP : aucune version figée — à créer avant le contrôle"
+      : args.duerpAJour
+        ? " [x] DUERP à jour depuis moins de 12 mois"
+        : " [!] DUERP : dernière version de plus de 12 mois",
+    args.nbVerifsEnRetard === 0
+      ? " [x] Aucune vérification en retard à ce jour"
+      : ` [!] ${args.nbVerifsEnRetard} vérification(s) en retard — voir 01_Dossier_conformite.pdf`,
     " [ ] Plan d'actions : tous écarts majeurs ont une date d'échéance",
     " [ ] Attestations URSSAF prestataires < 6 mois",
     " [ ] Registre d'accessibilité affiché (ERP) — QR code en entrée",

@@ -96,8 +96,14 @@ export default async function RegistrePublicPage({
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
               Accessibilité
             </p>
+            {/* ~~« Cet établissement EST adapté à »~~ — corrigé le 2026-09-20.
+                Le produit ne constate rien : il affiche des cases que
+                l'exploitant a cochées. Le lecteur de cette page est, par
+                construction, la personne concernée — celle pour qui l'écart
+                entre « est adapté » et « se déclare adapté » décide d'un
+                déplacement. */}
             <h2 className="board-titre m-0 mt-2 text-[22px]">
-              Cet établissement est adapté à
+              L&apos;exploitant déclare cet établissement adapté à
             </h2>
             <ul className="m-0 mt-4 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2">
               {r.handicapsAccueillis.map((h) => (
@@ -193,6 +199,13 @@ export default async function RegistrePublicPage({
               <p className="m-0 text-[14px] font-semibold leading-[1.45] text-[color:var(--board-ink)]">
                 {LABEL_REGIME[r.conformiteRegime]}
               </p>
+              {/* Le régime est DÉCLARÉ, comme le reste de cette page. Sans
+                  cette ligne, « Conforme dès la construction » se lit comme un
+                  constat que Rojer aurait fait — il n'en fait aucun, et ne
+                  saurait pas le faire. */}
+              <p className="m-0 mt-1 text-[11.5px] text-[color:var(--board-slate-soft)]">
+                Régime déclaré par l&apos;exploitant.
+              </p>
               {r.dateConformite && (
                 <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-slate-mid)]">
                   Effective depuis le {formatDate(r.dateConformite)}
@@ -240,8 +253,23 @@ export default async function RegistrePublicPage({
         {/* Footer */}
         <footer className="mt-6 border-t border-[color:var(--board-slate-line)] pt-6 text-center">
           <p className="m-0 font-mono text-[10.5px] uppercase tracking-[0.16em] text-[color:var(--board-slate-mid)]">
-            Registre tenu conformément à l&apos;arrêté du 19 avril 2017
+            Registre établi par l&apos;exploitant — arrêté du 19 avril 2017
           </p>
+          {/* ~~« Registre tenu CONFORMÉMENT À l'arrêté du 19 avril 2017 »~~ —
+              corrigé le 2026-09-20. La publication n'exige que DEUX champs
+              (`accessibilite/actions.ts` : prestations, régime de conformité),
+              quand l'arrêté « énumère neuf pièces à son article 1er » — phrase
+              écrite quinze lignes plus bas, dans ce même fichier, depuis le
+              2026-09-04. Toutes les autres sections de cette page sont en
+              rendu conditionnel : un registre à deux champs s'affichait donc
+              comme un registre complet, et se concluait par une attestation de
+              conformité.
+
+              Le pied nomme désormais le texte SANS affirmer qu'il est
+              satisfait, et dit qui a établi le registre. C'est ce que le
+              produit sait ; le reste appartient à l'exploitant et au lecteur.
+              La page est lue par la personne concernée, qui n'a aucun moyen de
+              recouper ce qu'elle y lit. */}
           <p className="m-0 mt-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]">
             Mis à jour le {formatDate(r.updatedAt)}
           </p>
