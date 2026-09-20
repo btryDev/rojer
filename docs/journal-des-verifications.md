@@ -733,6 +733,31 @@ lectures se seraient contredites en silence.
 
 ---
 
+### C15 · 2026-09-20 — L'arrêté « légionelles », et le piège n° 8 repris sur le fait
+
+**Lu :** arrêté du 1er février 2010 (art. 1 à 8, annexes 1 et 2, version au
+2023-01-01), son modificatif du 30 décembre 2022 (JORFTEXT000046849698, ouvert),
+l'article 36 de l'arrêté du 23 juin 1978 (version au 2006-12-15) et l'arrêté du
+30 novembre 2005 qui l'a réécrit (art. 2 et 3). **Comment :** `WebFetch`, en deux
+passes — page consolidée, puis page propre de chaque article pour les articles
+1er, 2, 3, 4, 7, l'annexe 2 et l'article 36. **Consigné :**
+`corpus/arrete-2010-02-01-legionelles.ts`, lecture `agent_verbatim`.
+
+**Ce qui en est sorti :** le champ du carnet sanitaire était faux à l'écran, deux
+températures étaient attribuées au mauvais texte et l'une au mauvais endroit du
+réseau, le seuil de 1 000 UFC/L au mauvais article. Aucune obligation encodée
+(décision de la propriétaire : la cible n'est pas dans le champ).
+
+**Le piège n° 8, une fois de plus.** La page consolidée a rendu l'article 2
+TRONQUÉ — sans « il s'agit notamment des douches, des douchettes, des bains à
+remous ou à jets », sans la phrase qui nomme les trois titulaires possibles de
+la responsabilité — et le corpus a d'abord écrit « l'article ne donne aucune
+liste d'exemples ». La page propre de l'article l'a démenti une heure plus tard.
+La parade du § 2.D tient ; elle n'avait simplement pas été appliquée d'emblée.
+
+**Non lu :** l'article 1er de l'arrêté de 1978 (son champ), et l'annexe 1 de
+l'arrêté de 2005 (durées d'élévation), que Légifrance ne reproduit pas.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

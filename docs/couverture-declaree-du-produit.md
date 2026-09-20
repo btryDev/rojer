@@ -135,13 +135,14 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-Les 20 articles ci-dessous sont ceux que le dépouillement a lus, qui imposent
+Les 25 articles ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise.** Un bureau tertiaire les
 voyait tous, y compris les onze articles propres aux hôtels.
 
-**Le chiffre a bougé deux fois : 28 → 19 le 2026-09-01, puis 19 → 20 le
-2026-09-03.** Neuf articles du chapitre III
+**Le chiffre a bougé trois fois : 28 → 19 le 2026-09-01, 19 → 20 le
+2026-09-03, puis 20 → 25 le 2026-09-20** (arrêté du 1er février 2010,
+légionelles, et l'article 36 de l'arrêté du 23 juin 1978 : cinq entrées, avec une adresse visible — voir sa famille au § 3). Neuf articles du chapitre III
 du Livre III (locaux à sommeil) sont sortis de cette liste, et le § 3 dit
 comment. Les « 27 » et « 28 » qui subsistent plus bas dans ce document
 racontent une histoire datée — ils ne décrivent pas l'état d'aujourd'hui.
@@ -184,7 +185,7 @@ couverture.
 
 ---
 
-## 3. Les 20 articles lus et non portés
+## 3. Les 25 articles lus et non portés
 
 Cinq familles, une sixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -320,6 +321,27 @@ répondre, et a trouvé cela en chemin. Il a **une adresse visible**, contrairem
 à `R. 4323-63` : la page « Ce que Rojer ne couvre pas » nomme déjà « le service
 de sécurité permanent » et « les dispositions propres à la classe de l'immeuble »
 parmi ce que l'outil ne porte pas. Le cliquet `MUETS` ne bouge donc pas.
+
+### Légionelles, eau chaude sanitaire collective des ERP — 5 entrées (2026-09-20)
+
+`Arrêté 01-02-2010 art. 3` · `Arrêté 01-02-2010 art. 4` ·
+`Arrêté 01-02-2010 annexe 1` · `Arrêté 01-02-2010 annexe 2` ·
+`Arrêté du 23 juin 1978 art. 36`
+
+> Une obligation d'exploitation réelle, avec deux rythmes (annexe 2 : température
+> mensuelle, légionelles annuelles) — que le RÉFÉRENTIEL ne porte pas, par
+> décision du 2026-09-20. Son champ (art. 1 et 2) laisse dehors la cible du
+> produit : restaurant, commerce de détail, bureau.
+
+**Ces cinq-là ont une adresse visible** : la page du module « Carnet
+sanitaire », qui outille le « fichier sanitaire » de l'article 3, cite le champ
+des articles 1er et 2 au lieu d'affirmer « obligatoire pour tout établissement
+avec ECS », et DIT ce que Rojer fait — rien tant qu'aucun carnet n'est ouvert,
+puis un rappel annuel de l'analyse. Pour l'article 36 de 1978 (températures du
+réseau), l'adresse est l'aide du seuil au formulaire de point de relevé. Le cliquet `MUETS` ne bouge
+pas. Ce que le produit ne sait pas dire est QUI est concerné : il ne détient ni
+le caractère collectif de l'installation, ni la présence d'un point d'usage à
+risque.
 
 ### Travail en hauteur, tous secteurs confondus — 1 article
 
@@ -490,7 +512,7 @@ La carte du tableau de bord est retirée. Ce qui reste :
   interroge le schéma au lieu de le décrire), et les articles `hors_perimetre`
   du corpus, groupés par motif d'exclusion.
 
-  **Elle ne donne PAS d'adresse aux 20 articles `non_couvert`**, et un test le
+  **Elle ne donne PAS d'adresse aux 25 articles `non_couvert`**, et un test le
   verrouille. La tentation était forte — la page ressemble à l'endroit où les
   mettre — mais ce serait exactement la confusion que `corpus/perimetre.ts`
   interdit en tête de fichier : ranger un manque parmi les exclusions le fait

@@ -21,6 +21,7 @@ import {
   ARRETE_2021_09_10_RETOURS_EAU,
   CSP_EAU_POTABLE,
 } from "./csp-eau-potable";
+import { ARRETE_2010_02_01_LEGIONELLES } from "./arrete-2010-02-01-legionelles";
 import { ARRETE_2018_02_23_GAZ_HABITATION } from "./arrete-2018-02-23-gaz-habitation";
 import { ARRETES_ASCENSEURS } from "./arretes-ascenseurs";
 import { ARRETES_MODIFICATIFS_ERP } from "./arretes-modificatifs-erp";
@@ -177,6 +178,9 @@ export const CORPUS: readonly Corpus[] = [
   // le produit ne sait pas identifier.
   CSP_EAU_POTABLE,
   ARRETE_2021_09_10_RETOURS_EAU,
+  // Lot légionelles, 2026-09-20 — le dernier arrêté cité à l'écran sans avoir
+  // été ouvert. Aucune obligation encodée : le champ laisse la cible dehors.
+  ARRETE_2010_02_01_LEGIONELLES,
   // Lot « socle DUERP », 2026-09-02 — le texte fondateur du produit, dont le
   // corpus ne portait qu'un article (`R. 4121-4`, entré par la porte de
   // l'affichage obligatoire) alors que dix-neuf surfaces le citent au
