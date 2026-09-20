@@ -15,8 +15,9 @@
 
 Le registre de dette du 2026-09-20 (`docs/chantiers-ouverts.md` § 3 bis,
 `corpus/registre-dette.test.ts`) classe les soixante-cinq obligations lues et
-non portées. **Onze de celles qui touchent la cible ont la même cause**,
+non portées. **Neuf des cinquante qui touchent la cible ont la même cause**,
 `evenement` : le texte les déclenche sur un fait que le produit n'observe pas.
+C'est la cause la plus lourde du registre, sans en être la moitié.
 
 | Article | Le fait | Ce qui est dû |
 |---|---|---|
@@ -25,12 +26,18 @@ non portées. **Onze de celles qui touchent la cible ont la même cause**,
 | `R. 4141-8` | accident grave, ou accidents répétés à un poste | refaire la formation à la sécurité |
 | `R. 4141-12` | modification des conditions de circulation | former de nouveau |
 | `R. 4121-2` | décision d'aménagement important, information nouvelle | mettre à jour le document unique |
-| `L. 4121-3-1` VI | chaque mise à jour du document unique | le transmettre au service de santé au travail |
-| `R. 4512-12` | ouverture de travaux sous plan de prévention écrit | en informer l'inspection du travail |
 | `L. 8222-5` | signalement écrit d'une irrégularité d'un sous-traitant | l'enjoindre aussitôt de la faire cesser |
 | `R. 4463-4` | épisode de chaleur intense | eau fraîche en quantité suffisante, tenue au frais |
 | `R. 4463-5` | un travailleur signalé vulnérable à la chaleur | adapter les mesures, avec le service de santé |
 | `R. 4463-7` | épisode de chaleur intense | mettre en œuvre les mesures définies |
+
+**Deux lignes ont quitté ce tableau à la contre-lecture du registre**, et la
+raison vaut d'être gardée : la transmission du document unique à chaque mise à
+jour (`L. 4121-3-1` VI) et l'information de l'inspection à l'ouverture de
+travaux (`R. 4512-12`) se déclenchent sur un fait que l'OUTIL CONNAÎT — la
+validation d'une version, la date de début d'un plan. Ce ne sont pas des
+événements inobservables mais des manques de module : cette page ne les sert
+pas, et les y ranger aurait caché un travail à faire ailleurs.
 
 Et le référentiel porte DÉJÀ des obligations de cette nature que personne ne
 voit : `SANS_SURFACE` en inscrit neuf, avec ce motif répété — « aucune surface
@@ -100,24 +107,24 @@ obligations événementielles n'ont nulle part où se montrer.
 
 ## 5. Ce que cela débloque
 
-- Les **onze manquantes** du § 1 deviennent encodables, en `evenementielle` /
+- Les **neuf manquantes** du § 1 deviennent encodables, en `evenementielle` /
   `autre`, porteur établissement — chacune après relecture de son article sur
   sa page propre. `R. 4624-31` et `R. 4624-28-2` visent un fait qui concerne UNE
   personne ; elles se portent pourtant sur l'établissement, parce que la règle
   est la même pour tous et que la fiche d'un salarié ne doit rien laisser
   deviner d'un arrêt (même raisonnement que `R. 4463-5` au corpus).
-- `cause: "evenement"` tombe de onze à zéro pour la cible, et le registre le
+- `cause: "evenement"` tombe de neuf à zéro pour la cible, et le registre le
   montrera sans qu'on y touche.
 
 ## 6. Coût et risque
 
 Aucune migration, aucune donnée nouvelle en base, aucune écriture : la page est
 une lecture du référentiel filtrée par le moteur. Le risque est éditorial —
-onze phrases « quand… » à écrire dans les mots des textes, sans ajouter ni
+neuf phrases « quand… » à écrire dans les mots des textes, sans ajouter ni
 qualifier. C'est le même risque que partout ailleurs dans le référentiel, et les
 mêmes gardes le tiennent (`citations-ecran`, contre-lecture par lot).
 
-Le champ `faitGenerateur` n'entre pas dans l'empreinte ; **l'encodage des onze
+Le champ `faitGenerateur` n'entre pas dans l'empreinte ; **l'encodage des neuf
 obligations, lui, change le référentiel**, donc le sceau : une régénération des
 calendriers à l'ouverture, sans qu'aucune échéance ne bouge.
 
@@ -128,4 +135,4 @@ calendriers à l'ouverture, sans qu'aucune échéance ne bouge.
 | **Q1** | Où vit la page ? | Sous **« À faire »**, quatrième entrée du panneau, après « Ce qui doit être en place ». Elle répond à « qu'est-ce que je dois faire » — à une condition près. Pas sous « Comprendre » : ce n'est pas de la lecture générale, la liste dépend du dossier. |
 | **Q2** | Les obligations **ponctuelles** (dues une fois : la qualification ICPE avant exploitation) y vont-elles ? | **Non, pas dans ce lot.** Une ponctuelle se SOLDE : elle appelle un « fait le », donc une déclaration au sens de l'ADR-027 — un autre mécanisme. Trois inscriptions restent à `SANS_SURFACE`, nommées. |
 | **Q3** | Le dirigeant peut-il noter qu'un fait est survenu ? | **Non.** Voir § 4. Si le besoin se confirme, il se discutera contre l'ADR-018, pas en passant. |
-| **Q4** | Encoder les onze dans le même lot que la page, ou après ? | **Après, en un lot à part.** La page se livre sur les trois obligations déjà au référentiel : elle se juge à l'écran avant qu'on y verse onze lignes. |
+| **Q4** | Encoder les neuf dans le même lot que la page, ou après ? | **Après, en un lot à part.** La page se livre sur les trois obligations déjà au référentiel : elle se juge à l'écran avant qu'on y verse neuf lignes. |
