@@ -4,7 +4,7 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-09-19
+**Généré le** : 2026-09-20
 **Référentiel** : `2026-09-11.1`
 **Régénérer** : `pnpm verification --ecrire`
 
@@ -191,7 +191,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**277 articles dépouillés ne sont cités par aucune obligation**, répartis sur 38 corpus.
+**278 articles dépouillés ne sont cités par aucune obligation**, répartis sur 38 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -214,11 +214,11 @@ une relecture déjà faite.
 | `code-travail-matieres-inflammables` | 6 | 6 | 2026-09-02 |
 | `code-travail-bruit-vibrations` | 5 | 5 | 2026-09-02 |
 | `arrete-2011-12-30-igh` | 4 | 6 | 2026-09-03 → 2026-09-04 |
+| `code-travail-sante-travail` | 4 | 16 | 2026-08-31 → 2026-09-20 |
 | `code-travail-duerp` | 4 | 5 | 2026-09-02 |
 | `code-travail-travail-dissimule` | 4 | 4 | 2026-09-02 |
 | `arrete-2017-04-19-registre-accessibilite` | 4 | 4 | 2026-09-03 |
 | `arrete-2018-02-23-gaz-habitation` | 3 | 4 | 2026-08-26 |
-| `code-travail-sante-travail` | 3 | 15 | 2026-08-31 → 2026-09-20 |
 | `arrete-1993-03-05-machines` | 3 | 5 | 2026-09-02 |
 | `cch-classement-erp-igh` | 3 | 3 | 2026-09-03 |
 | `code-travail-electricite` | 2 | 8 | 2026-08-31 |
