@@ -1355,7 +1355,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // Lot chaleur intense : deux états permanents d'établissement, R. 4463-2
     // et R. 4463-6. Aucune ligne de calendrier n'en naît (ni rythme ni date) ;
     // le sceau change quand même, donc chaque dossier se régénère à l'ouverture.
-    { version: "2026-09-20.1", empreinte: "156-67ebbe60824e20e4" },
+    // (Empreinte réécrite EN PLACE une fois, le jour même : la contre-lecture a
+    // fait corriger un libellé avant toute fusion. La règle « n'éditez pas la
+    // ligne existante » protège une version qui A SERVI ; celle-ci n'avait
+    // scellé aucun calendrier — `origin/main` était encore à 2026-09-11.1.)
+    { version: "2026-09-20.1", empreinte: "156-1d15d5c17cdffe43" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

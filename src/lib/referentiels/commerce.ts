@@ -286,16 +286,21 @@ export const commerce: Referentiel = {
       ],
     },
     {
-      // Entré le 2026-09-20 avec l'encodage de R. 4463-2. Le bureau le nommait
-      // déjà (`bur-thermique`), la restauration par sa cuisine
-      // (`resto-ambiance-thermique`) ; le commerce n'en disait rien, alors que
-      // l'article vise l'exposition « en intérieur ou en extérieur » de tout
-      // employeur. Les mesures sont tirées de R. 4463-3, R. 4463-4 et
-      // R. 4463-6, sans ajout ; la cotation par défaut est celle du bureau.
+      // Entré le 2026-09-20 avec l'encodage de R. 4463-2, qui vise l'exposition
+      // « en intérieur ou en extérieur » de tout employeur. Le bureau nommait
+      // déjà les « vagues de chaleur » (`bur-thermique`) ; le commerce n'en
+      // disait rien, la restauration non plus (`resto-ambiance-thermique` ne
+      // traite que le contraste cuisine / chambre froide — elle reçoit le même
+      // risque dans ce lot). Cinq mesures CHOISIES parmi celles de R. 4463-3,
+      // R. 4463-4 et R. 4463-6, dans leurs mots ; les 1°, 2°, 6° et 7° de
+      // R. 4463-3 ne sont pas repris. Cotation par défaut : celle du bureau.
+      // ~~« ED 840 fiche 12 »~~ retiré de la description : recopié de
+      // `bur-thermique` sans que rien dans le dépôt établisse ce que porte
+      // cette fiche. Le Code du travail suffit à sourcer.
       id: "com-chaleur-intense",
       libelle: "Ambiances thermiques — épisodes de chaleur intense",
       description:
-        "Code du travail, art. R. 4463-2 et R. 4463-3 ; ED 840 fiche 12.",
+        "Code du travail, art. R. 4463-2, R. 4463-3, R. 4463-4 et R. 4463-6.",
       unitesAssociees: [
         "com-reception-stockage",
         "com-vente-caisse",
@@ -307,7 +312,7 @@ export const commerce: Referentiel = {
         {
           id: "com-chaleur-moyens-techniques",
           libelle:
-            "Moyens techniques pour réduire le rayonnement solaire sur les surfaces exposées et prévenir l'accumulation de chaleur dans les locaux",
+            "Moyens techniques pour réduire le rayonnement solaire sur les surfaces exposées et prévenir l'accumulation de chaleur dans les locaux ou au poste de travail",
           type: "protection_collective",
         },
         {
@@ -319,19 +324,19 @@ export const commerce: Referentiel = {
         {
           id: "com-chaleur-eau",
           libelle:
-            "Eau potable fraîche en quantité suffisante, maintenue au frais à proximité des postes de travail",
+            "En cas d'épisode de chaleur intense, eau potable fraîche en quantité suffisante, maintenue au frais à proximité des postes de travail",
           type: "organisationnelle",
         },
         {
           id: "com-chaleur-signalement",
           libelle:
-            "Modalités de signalement d'un malaise et de secours, portées à la connaissance des salariés",
+            "Modalités de signalement d'un indice physiologique préoccupant, d'un malaise ou d'une détresse, et de secours, portées à la connaissance des travailleurs",
           type: "organisationnelle",
         },
         {
           id: "com-chaleur-formation",
           libelle:
-            "Information et formation des salariés sur la conduite à tenir en cas de forte chaleur",
+            "Information et formation des travailleurs sur la conduite à tenir en cas de forte chaleur",
           type: "formation",
         },
       ],

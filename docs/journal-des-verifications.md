@@ -740,15 +740,19 @@ n° 2025-482 du 27 mai 2025, art. 3, en vigueur depuis le 2025-06-02), chacun su
 sa page propre. **Consigné :** `corpus/code-travail-chaleur-intense.ts`,
 `agent_verbatim`. **Appliqué :** deux états permanents d'établissement —
 `R. 4463-2` (évaluer, définir les mesures) et `R. 4463-6` (modalités de
-signalement et de secours) — ; quatre `obligation_manquante` déclenchées par un
-épisode que le produit n'observe pas ; un risque « chaleur intense » au
-référentiel DUERP du commerce. Référentiel 2026-09-20.1, 156 obligations.
+signalement et de secours) — ; quatre `obligation_manquante` (deux déclenchées
+par un épisode que le produit n'observe pas, une par une information reçue sur
+une personne, une qui vise le plan de prévention) ; un risque « chaleur
+intense » aux référentiels DUERP du commerce et de la restauration. Référentiel 2026-09-20.1, 156 obligations.
 
 **Ce que la relecture a corrigé de l'instruction du 2026-09-01**
 (`docs/revues/lot-d3-recoupement-droit.md` § 1), qui avait lu la page de
 SECTION pour les articles 4 à 8 : `R. 4463-4` et `R. 4463-6` ont un second
 alinéa qu'elle tronquait ; `R. 4463-8` n'est pas servi par le module
-`PlanPrevention`.
+`PlanPrevention`. **Et ce que la contre-lecture a corrigé de la relecture** :
+la citation de `R. 4463-7` portait « survenance », mot que l'outil de lecture
+avait normalisé — le texte dit « survenue », et l'instruction du 2026-09-01
+l'avait juste. Une lecture plus récente n'est pas une lecture meilleure.
 
 **Non lu :** l'arrêté qui définit l'épisode de chaleur intense (`R. 4463-1`).
 Aucun seuil de température n'est écrit nulle part dans le produit.

@@ -229,8 +229,8 @@ réellement événementielles recensées sont hors périmètre (déclaration d'A
 accidents bénins) ou déjà servies par le module `PlanPrevention`. L'axe est nommé dans
 l'ADR-022, sans mécanisme.
 
-Répartition remesurée le 2026-09-11 (inchangée depuis la scission de la
-colonne R de `GE 4 § 1`, le 2026-09-08) :
+Répartition remesurée le 2026-09-20 (~~le 2026-09-11, inchangée depuis la
+scission de la colonne R de `GE 4 § 1`, le 2026-09-08~~) :
 **89 équipement, 53 établissement, 14 salarié**
 (total 156, remesuré le 2026-09-20 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
 `porteurDe`, pas au grep. Les quatre entrées du lot sont, dans l'ordre où elles

@@ -359,6 +359,52 @@ export const restauration: Referentiel = {
       ],
     },
     {
+      // Entré le 2026-09-20. `resto-ambiance-thermique`, juste au-dessus, traite
+      // le CONTRASTE cuisine chaude / chambre froide et n'a ni eau, ni horaires,
+      // ni signalement : l'épisode de chaleur intense de R. 4463-2 n'y était pas,
+      // alors que la cuisine de restaurant en est le cas d'école. Mêmes mesures
+      // et même cotation que `com-chaleur-intense`, pour la même raison.
+      id: "resto-chaleur-intense",
+      libelle: "Ambiances thermiques — épisodes de chaleur intense",
+      description:
+        "Code du travail, art. R. 4463-2, R. 4463-3, R. 4463-4 et R. 4463-6.",
+      unitesAssociees: ["production", "plonge", "service-salle"],
+      graviteParDefaut: 2,
+      probabiliteParDefaut: 3,
+      mesuresRecommandees: [
+        {
+          id: "resto-chaleur-moyens-techniques",
+          libelle:
+            "Moyens techniques pour réduire le rayonnement solaire sur les surfaces exposées et prévenir l'accumulation de chaleur dans les locaux ou au poste de travail",
+          type: "protection_collective",
+        },
+        {
+          id: "resto-chaleur-organisation",
+          libelle:
+            "Adaptation de l'organisation et des horaires de travail pour limiter la durée et l'intensité de l'exposition, avec des périodes de repos",
+          type: "organisationnelle",
+        },
+        {
+          id: "resto-chaleur-eau",
+          libelle:
+            "En cas d'épisode de chaleur intense, eau potable fraîche en quantité suffisante, maintenue au frais à proximité des postes de travail",
+          type: "organisationnelle",
+        },
+        {
+          id: "resto-chaleur-signalement",
+          libelle:
+            "Modalités de signalement d'un indice physiologique préoccupant, d'un malaise ou d'une détresse, et de secours, portées à la connaissance des travailleurs",
+          type: "organisationnelle",
+        },
+        {
+          id: "resto-chaleur-formation",
+          libelle:
+            "Information et formation des travailleurs sur la conduite à tenir en cas de forte chaleur",
+          type: "formation",
+        },
+      ],
+    },
+    {
       id: "resto-rps-coup-feu",
       libelle: "Risques psychosociaux : stress, coup de feu, amplitude horaire",
       description:

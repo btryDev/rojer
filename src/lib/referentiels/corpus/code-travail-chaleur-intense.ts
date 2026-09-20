@@ -17,6 +17,15 @@
 // et `-7` y sont paraphrasés. C'est le piège n° 8 du journal des vérifications.
 // `agent_verbatim` : lu à travers l'outil de récupération, non recoupé à l'œil.
 //
+// `R. 4463-3` EST RETENU COMME CONTENU de l'obligation de `R. 4463-2`, pas
+// comme ligne propre : il dit sur quoi « se fonde, notamment » la réduction du
+// risque. Son 5° (« l'augmentation, autant qu'il est nécessaire, de l'eau
+// potable fraîche ») n'est PAS `R. 4225-2`, que le référentiel porte déjà : l'un
+// est la mise à disposition permanente, l'autre son augmentation en épisode.
+// Ce n'est pas une `reserve` — le champ compte ce qu'un article impose ENCORE
+// et que rien ne porte, et il n'y a rien de tel ici (contre-lecture du
+// 2026-09-20).
+//
 // CE QUI N'EST PAS LU : l'arrêté d'application qui définit l'épisode
 // (`R. 4463-1`). Aucun seuil de température n'est donc écrit nulle part.
 
@@ -32,7 +41,7 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
   url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051676074",
   etendue: "integral",
   portee:
-    "Les huit articles du chapitre, tous créés par l'article 3 du décret n° 2025-482 du 27 mai 2025 et en vigueur depuis le 2 juin 2025. Deux fondent une obligation d'établissement (R. 4463-2 et R. 4463-6), un troisième en donne le contenu (R. 4463-3). Quatre imposent quelque chose que le référentiel ne porte pas, parce qu'un épisode de chaleur est un événement que le produit n'observe pas. L'arrêté qui définit l'épisode n'est pas dépouillé.",
+    "Les huit articles du chapitre, tous créés par l'article 3 du décret n° 2025-482 du 27 mai 2025 et en vigueur depuis le 2 juin 2025. L'article 8 du même décret (ouvert le 2026-09-20) donne aux employeurs un mois pour s'y conformer, délai qui, pour ce chapitre, « court à compter de la publication de l'arrêté prévu à l'article R. 4463-1 » — arrêté non lu ici ; le délai est échu de longue date. Deux fondent une obligation d'établissement (R. 4463-2 et R. 4463-6), un troisième en donne le contenu (R. 4463-3). Quatre imposent quelque chose que le référentiel ne porte pas : deux se déclenchent sur un épisode que le produit n'observe pas (R. 4463-4, R. 4463-7), un sur une information reçue au sujet d'une personne (R. 4463-5), un vise le plan de prévention (R. 4463-8). L'arrêté qui définit l'épisode n'est pas dépouillé.",
   articles: [
     {
       ref: "R. 4463-1",
@@ -78,7 +87,6 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
         "La réduction des risques liés à l'exposition aux épisodes de chaleur intense prévue au second alinéa de l'article R. 4463-2 se fonde, notamment, sur :",
       statut: "retenu",
       obligations: ["prevention-etablissement-evaluation-chaleur-intense"],
-      reserve: "Retenu comme CONTENU de l'obligation de R. 4463-2, pas comme ligne propre : il dit sur quoi se fondent les mesures que l'autre article fait définir. Le 5° (« l'augmentation, autant qu'il est nécessaire, de l'eau potable fraîche ») n'est PAS `R. 4225-2`, que le référentiel porte déjà : l'un est la mise à disposition permanente, l'autre son augmentation en épisode. Les mesures du risque `com-chaleur-intense` du référentiel DUERP du commerce sont tirées de cette liste, sans ajout.",
     },
     {
       ref: "R. 4463-4",
@@ -129,7 +137,7 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
     },
     {
       ref: "R. 4463-7",
-      intitule: "Mise en œuvre lors de la survenance d'un épisode",
+      intitule: "Mise en œuvre lors de la survenue d'un épisode",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676939",
       versionEnVigueur: "2025-06-02",
       modifiePar: { texte: "Décret n° 2025-482 du 27 mai 2025 - art. 3 (création)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051676074" },
@@ -138,9 +146,9 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       prescrit:
         "Quand l'épisode survient, l'employeur met en œuvre les mesures définies en application de R. 4463-3, et les adapte si la chaleur s'intensifie.",
       citationCle:
-        "Lors de la survenance des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur.",
+        "Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur.",
       statut: "obligation_manquante",
-      motif: "Le pendant événementiel de R. 4463-2 : définir est un état permanent, mettre en œuvre se déclenche sur l'épisode. Même blocage que R. 4463-4.",
+      motif: "Le pendant événementiel de R. 4463-2 : définir est un état permanent, mettre en œuvre se déclenche sur l'épisode. Même blocage que R. 4463-4. ~~« survenance »~~ : la première écriture de cette citation portait ce mot, que le texte n'a pas — il dit « survenue », confirmé le 2026-09-20 sur la page de l'article ET dans l'article 3 du décret. L'outil de lecture avait normalisé le mot ; l'instruction du 2026-09-01, elle, l'avait juste.",
       bloquePar: "surface-evenementielle-absente",
     },
     {
@@ -156,7 +164,7 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       citationCle:
         "Le plan de prévention prévu à l'article R. 4512-6, le plan général de coordination prévu à l'article L. 4532-8, et le plan particulier de sécurité et de protection de la santé prévu à l'article L. 4532-9 tiennent compte, le cas échéant, des risques liés à l'exposition aux épisodes de chaleur intense.",
       statut: "obligation_manquante",
-      motif: "Le module `PlanPrevention` porte le plan de R. 4512-6 et ses lignes de risques d'interférence, mais RIEN n'y nomme la chaleur — vérifié le 2026-09-20 : aucune occurrence de « chaleur » dans `src/lib/plan-prevention`. L'instruction du 2026-09-01 le croyait « déjà servi ». « Le cas échéant » laisse l'appréciation à l'employeur : ce qui manque est une ligne proposée dans le référentiel des risques d'interférence, pas une échéance. PGC et PPSPS sont des pièces de chantier du BTP, hors cible.",
+      motif: "Le module `PlanPrevention` porte le plan de R. 4512-6 et ses lignes de risques d'interférence, mais RIEN n'y nomme la chaleur — vérifié le 2026-09-20 : aucune occurrence de « chaleur » dans `src/lib/plan-prevention`. L'instruction du 2026-09-01 le croyait « déjà servi ». « Le cas échéant » laisse l'appréciation à l'employeur : ce qui manque est une invite à y penser, pas une échéance — le formulaire du plan est un répéteur libre, sans liste de risques proposée, donc il n'y a aujourd'hui nulle part où la loger. PGC et PPSPS sont des pièces de chantier du BTP, hors cible.",
     },
   ],
 };

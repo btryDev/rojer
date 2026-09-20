@@ -61,7 +61,8 @@ dans `docs/revues/lot-d3-recoupement-droit.md` § 3) soumet à la détention d'u
 DAE les ERP de catégories 1 à 4, et, en 5ᵉ catégorie, huit familles seulement
 (accueil de personnes âgées ou handicapées, santé, sport clos et couvert, danse
 et jeux, gares, aéroports, hôtels-restaurants d'altitude, refuges), sous deux
-conditions fixées par arrêté. **Aucun des trois secteurs cibles n'y figure en
+conditions : une implantation de plus de trois mois, écrite dans l'article, et
+un nombre minimal de personnes accueillies, renvoyé à un arrêté. **Aucun des trois secteurs cibles n'y figure en
 5ᵉ catégorie** : le référentiel n'encode donc rien, et ce n'est pas un trou. Le
 jour où les catégories 1 à 4 seraient COUVERTES, le DAE deviendrait dû sans
 condition et redeviendrait une obligation d'établissement à encoder — avec une
