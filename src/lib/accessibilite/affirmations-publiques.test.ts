@@ -59,8 +59,8 @@ const VERBES_DE_CONFORMITE = [
  */
 const ATTRIBUE = /déclar|par\s+l['’]exploitant|selon\s+l['’]exploitant/i;
 
-function fichiersSources(dossier: string): string[] {
-  const chemin = join(RACINE, dossier);
+function fichiersSources(dossier: string, racine: string = RACINE): string[] {
+  const chemin = join(racine, dossier);
   const trouves: string[] = [];
   const descendre = (d: string) => {
     for (const entree of readdirSync(d)) {
@@ -92,15 +92,69 @@ function lignesRendues(source: string): { texte: string; n: number }[] {
   return rendues;
 }
 
-function affirmationsNues(): string[] {
+/**
+ * Les répertoires balayés.
+ *
+ * `SURFACES_PUBLIQUES_ACCESSIBILITE` ne couvre que ce qui RÉPOND ; il y manque
+ * ce qui FOURNIT LES PHRASES. Éprouvé : en mettant « Cet établissement est
+ * conforme aux règles d'accessibilité » dans `LABEL_REGIME`
+ * (`lib/accessibilite/schema.ts`), la page l'affichait tel quel et la garde
+ * restait verte. Un libellé défini ailleurs est affiché ici : il se balaie ici.
+ */
+const SOURCES_DES_PHRASES = [
+  ...SURFACES_PUBLIQUES_ACCESSIBILITE,
+  "src/lib/accessibilite",
+] as const;
+
+/**
+ * Cherche sur le TEXTE ENTIER, pas ligne à ligne.
+ *
+ * Éprouvé : « Cet établissement est / adapté à » coupé sur deux lignes — la
+ * coupure que prettier fait de lui-même dans ce fichier — passait au vert,
+ * alors que JSX écrase le retour et rend la phrase d'un seul tenant. Un
+ * balayage ligne à ligne mesure la mise en forme, pas ce qui s'affiche.
+ *
+ * Les espaces sont donc aplatis, et la position rendue en numéro de ligne par
+ * comptage des sauts avant la correspondance.
+ */
+function affirmationsNues(
+  racine: string = RACINE,
+  dossiers: readonly string[] = SOURCES_DES_PHRASES,
+): string[] {
   const fautives: string[] = [];
-  for (const dossier of SURFACES_PUBLIQUES_ACCESSIBILITE) {
-    for (const fichier of fichiersSources(dossier)) {
+  for (const dossier of dossiers) {
+    for (const fichier of fichiersSources(dossier, racine)) {
       const source = readFileSync(fichier, "utf8");
-      for (const { texte, n } of lignesRendues(source)) {
-        if (!VERBES_DE_CONFORMITE.some((v) => v.test(texte))) continue;
-        if (ATTRIBUE.test(texte)) continue;
-        fautives.push(`${fichier.slice(RACINE.length + 1)}:${n} — ${texte.trim()}`);
+      const rendu = lignesRendues(source)
+        .map(({ texte, n }) => ({ texte, n }))
+        .reduce<{ plat: string; index: { fin: number; n: number }[] }>(
+          (acc, { texte, n }) => {
+            const morceau = `${texte.replace(/\s+/g, " ").trim()} `;
+            acc.plat += morceau;
+            acc.index.push({ fin: acc.plat.length, n });
+            return acc;
+          },
+          { plat: "", index: [] },
+        );
+
+      for (const verbe of VERBES_DE_CONFORMITE) {
+        const motif = new RegExp(verbe.source, "gi");
+        for (const m of rendu.plat.matchAll(motif)) {
+          const debut = m.index ?? 0;
+          // La phrase entière autour de la correspondance, pour juger de
+          // l'attribution : « déclare » peut précéder le verbe de plusieurs
+          // mots, et se trouvait souvent sur la ligne d'avant.
+          const contexte = rendu.plat.slice(
+            Math.max(0, debut - 160),
+            debut + m[0].length + 80,
+          );
+          if (ATTRIBUE.test(contexte)) continue;
+          const n =
+            rendu.index.find((i) => i.fin > debut)?.n ?? 0;
+          fautives.push(
+            `${fichier.slice(racine.length + 1)}:${n} — ${m[0]}`,
+          );
+        }
       }
     }
   }

@@ -204,7 +204,7 @@ describe("les arrêtés cités par leur date, que le motif d'article ne voyait p
    * dépouillement, pas une correction de citation : il faut ouvrir l'arrêté,
    * ses annexes 1 et 2, et confronter au texte les trois valeurs que le module
    * affirme (50 °C, 1 000 UFC/L, le rythme annuel). C'est un lot à part, écrit
-   * au § 14 de `docs/chantiers-ouverts.md`.
+   * au § 16 de `docs/chantiers-ouverts.md`.
    *
    * Ce plafond est un CLIQUET : il ne remonte pas. Le jour où l'arrêté entre
    * au corpus, il descend à zéro et n'en bouge plus.

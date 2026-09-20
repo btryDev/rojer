@@ -2147,3 +2147,38 @@ déclenchent aucune obligation », pas « rien n'est déclaré ». Le seuil qui
 distingue « rien à suivre » de « rien de déclaré » est une décision de
 produit : elle appartient à la propriétaire, et elle rejoint la séance du
 lot 6.
+
+---
+
+## 16. L'arrêté du 1er février 2010 — un module livré sur un texte jamais ouvert
+
+Relevé le 2026-09-20 par la sonde de dépouillement, puis **rendu visible par un
+cliquet** le même jour : le balayage des citations d'écran ne reconnaissait que
+les numérotations `L.`/`R.`/`D.`, donc un arrêté cité par sa date lui était
+invisible. Il les voit désormais, et n'en trouve qu'un seul orphelin —
+celui-ci. `PLAFOND_ARRETES` vaut 1 en attendant ce lot, et descendra à zéro le
+jour où il sera fait.
+
+**Ce que le produit affirme sur ce texte.** Le module carnet sanitaire affiche
+l'article 3 en badge avec son verbatim (`carnet-sanitaire/page.tsx`), l'imprime
+dans le ZIP remis à un contrôleur, et en dérive une échéance annuelle
+(`calendrier/echeances.ts`). Aucun corpus ne porte ce texte : ni verbatim, ni
+date de version, ni date de lecture.
+
+**Pourquoi le trou a existé.** Le module est né le 2026-04-24, la discipline du
+corpus le 2026-08-26 — quatre mois plus tard, et bâtie **en remontant des
+obligations du référentiel vers leurs articles**. Le carnet sanitaire n'est pas
+une obligation du référentiel : c'est un module à part, avec sa citation écrite
+en dur. Les cliquets obligation ↔ corpus ne pouvaient pas le voir.
+
+**Ce qu'il faut faire.** Dépouiller l'arrêté et ses annexes 1 et 2 dans un
+corpus neuf, puis confronter au texte les valeurs que le module affirme :
+50 °C au puisage, 1 000 UFC/L (annexe II), le rythme annuel des analyses. Deux
+de ses seuils ne citent aucun texte (20 °C pour l'eau froide, 55 °C au retour
+de boucle) : les sourcer ou les retirer. Vérifier surtout **le champ** — l'écran
+annonce « obligatoire pour tout établissement avec ECS » sans qu'aucun attribut
+ne le vérifie, quand l'arrêté vise les points d'usage à risque de certains
+établissements.
+
+**À ne pas confondre** avec `csp-eau-potable`, qui est dépouillé et porte la
+protection contre les retours d'eau : un autre texte, un autre objet.

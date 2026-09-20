@@ -229,13 +229,26 @@ export default async function RegistrePublicPage({
               Formation du personnel d&apos;accueil
             </p>
             <div className="mt-3 rounded-[18px] bg-[color:var(--board-slate-pale)] px-4 py-3.5 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+              {/* ~~« Formation en cours de mise en place. »~~ — corrigé le
+                  2026-09-20 par la contre-lecture. AUCUN CHAMP NE PORTE CELA :
+                  la case `personnelForme` était simplement décochée, et le
+                  produit en tirait une promesse favorable, à son compte, sur
+                  la page lue par la personne concernée. Une case non cochée
+                  dit qu'on ne sait pas, pas que quelque chose est en cours.
+
+                  Même famille que « Cet établissement est adapté », mais la
+                  garde ne la voyait pas : ce n'est pas un verbe de conformité,
+                  c'est une prévision. */}
               {r.personnelForme ? (
                 <p className="m-0">
-                  Notre personnel d&apos;accueil a été formé à l&apos;accueil des
-                  personnes en situation de handicap.
+                  L&apos;exploitant déclare son personnel d&apos;accueil formé à
+                  l&apos;accueil des personnes en situation de handicap.
                 </p>
               ) : (
-                <p className="m-0">Formation en cours de mise en place.</p>
+                <p className="m-0">
+                  L&apos;exploitant n&apos;a pas déclaré de formation du
+                  personnel d&apos;accueil.
+                </p>
               )}
               {r.dateDerniereFormation && (
                 <p className="m-0 mt-2 text-[12.5px] text-[color:var(--board-slate-mid)]">
