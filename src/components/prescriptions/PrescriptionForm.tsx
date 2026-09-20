@@ -234,9 +234,22 @@ export function PrescriptionForm({
               de chaque visite, il est dressé un procès-verbal. Le maire notifie
               le résultat de ces visites ET SA DÉCISION aux exploitants » —,
               c'est-à-dire exactement le partage que cette phrase explique. */}
+          {/* ~~« le maire OU LE PRÉFET »~~ — corrigé le 2026-09-20 par la
+              contre-lecture. R. 143-42 ne nomme que le maire : « LE MAIRE
+              notifie le résultat de ces visites et sa décision aux
+              exploitants ». Le préfet figure à R. 143-45 — « par le maire, ou
+              par le représentant de l'État dans le département » —, c'est-à-dire
+              l'article que ce même lot venait d'écarter. Corriger une référence
+              en gardant la phrase qui allait avec l'ancienne, c'est remplacer
+              une erreur par une autre.
+
+              La référence est aussi remise D'UN SEUL TENANT : coupée entre deux
+              lignes (« art. R. » / « 143-42) »), elle échappait à
+              `citations-ecran.ts`, qui lit ligne par ligne. Le cliquet affichait
+              zéro orpheline sur une citation que le corpus ne porte pas. */}
           Un procès-verbal de commission est un avis ; l&apos;acte qui prescrit
-          est la décision que le maire ou le préfet notifie ensuite (CCH, art. R.
-          143-42). Rojer n&apos;enregistre qu&apos;une prescription qui
+          est la décision que le maire notifie ensuite (CCH, art. R. 143-42).
+          Rojer n&apos;enregistre qu&apos;une prescription qui
           <strong> renforce</strong>{" "}
           vos obligations : un allègement se conserve
           dans vos pièces, il n&apos;est pas pris en compte dans le calendrier.

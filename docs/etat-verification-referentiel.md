@@ -191,7 +191,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**278 articles dépouillés ne sont cités par aucune obligation**, répartis sur 38 corpus.
+**279 articles dépouillés ne sont cités par aucune obligation**, répartis sur 39 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -227,6 +227,7 @@ une relecture déjà faite.
 | `code-travail-epi-amont` | 2 | 2 | 2026-09-04 |
 | `arrete-1993-03-19-epi` | 2 | 4 | 2026-09-04 |
 | `arrete-1980-livre-1` | 1 | 1 | 2026-09-03 |
+| `cch-registre-securite` | 1 | 6 | 2026-09-20 |
 | `inrs-documentaire` | 1 | 2 | 2026-09-03 |
 | `code-travail-locaux-sociaux` | 1 | 5 | 2026-08-31 |
 | `code-travail-service-prevention-sante` | 1 | 4 | 2026-08-31 |

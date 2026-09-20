@@ -34,6 +34,29 @@
 // « le calcul a échoué ». Le comptage des lignes tranche, et il ne coûte qu'un
 // `count` : aucune ligne et aucun repère, c'est un dossier neuf.
 
+// CE QUE CE MODULE NE COUVRE PAS, ET QU'IL NE FAUT PAS LUI FAIRE DIRE.
+//
+// Un calendrier À JOUR qui rend zéro ligne ne dit rien, par construction : ce
+// module se tait sur `a_jour`. La contre-lecture du 2026-09-20 y a vu la
+// prémisse du lot restée intacte — « une liste vide se lit comme rien à
+// signaler » — pour le cas le plus fréquent en début de dossier.
+//
+// L'OBJECTION EST JUSTE SUR LE FAIT, ET LA CORRECTION N'EST PAS ICI. Zéro
+// ligne sur un calendrier à jour est VRAI quand l'établissement a tout déclaré
+// et n'a rien de périodique à suivre — un bureau sans aucun appareil est dans
+// ce cas, et lui annoncer un doute serait un faux rouge. Ce qui manque est un
+// AUTRE fait : « vous n'avez encore rien déclaré », qui ne se lit pas sur le
+// sceau du calendrier mais sur l'inventaire. Les deux se ressemblent à
+// l'écran et n'ont ni la même cause, ni le même geste de réparation : l'un se
+// répare en ouvrant le tableau de bord, l'autre en déclarant ses équipements.
+//
+// Les fondre dans cette union rendrait la phrase fausse une fois sur deux, et
+// c'est exactement la faute que l'union à quatre états corrige. Le manque est
+// donc NOMMÉ ici et inscrit à `docs/chantiers-ouverts.md`, pas comblé de
+// travers. `perimetre/couverture.ts` porte déjà l'axe qui l'accueillerait —
+// il ne couvre aujourd'hui que « des équipements déclarés ne déclenchent
+// rien », pas « rien n'est déclaré ».
+
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { SCEAU_CALENDRIER } from "./version-moteur";

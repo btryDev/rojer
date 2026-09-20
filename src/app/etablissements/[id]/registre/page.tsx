@@ -338,6 +338,20 @@ export default async function RegistrePage({
             ))}
           </div>
 
+          // ~~« L'article L. 4711-1 impose de le tenir à
+          // disposition d'un contrôleur »~~ — corrigé le 2026-09-20.
+          // L. 4711-1 dit que ces documents « COMPORTENT des mentions
+          // obligatoires déterminées par voie réglementaire » : le
+          // verbe porte sur leur contenu, il n'impose ni tenue ni
+          // mise à disposition. La conservation est à D. 4711-3.
+          // Cette page AFFICHE le verbatim de L. 4711-1 deux cents
+          // lignes plus haut : la phrase se démentait elle-même.
+          //
+          // C'est mot pour mot la correction faite le même jour sur
+          // `equipements/actions.ts`, et cet écran avait été examiné
+          // dans la foulée puis déclaré propre — sur son badge
+          // `L. 4711-5`, qui l'est. Relevé par la contre-lecture :
+          // vérifier une surface, ce n'est pas vérifier une ligne.
           <div className="mt-5">
             {rapports.length === 0 ? (
               q || filtreDomaine ? (
@@ -348,7 +362,7 @@ export default async function RegistrePage({
               ) : (
                 <EmptyState
                   titre="Vos rapports de vérification se rangent ici"
-                  pourquoi="Chaque fois qu'un organisme agréé ou une personne qualifiée vérifie une installation — électricité, extincteurs, hotte —, il vous remet un rapport. L'article L. 4711-1 impose de le tenir à disposition d'un contrôleur. Le registre numérique vous évite la boîte d'archive."
+                  pourquoi="Chaque fois qu'un organisme agréé ou une personne qualifiée vérifie une installation — électricité, extincteurs, hotte —, il vous remet un rapport. L'article D. 4711-3 impose de le conserver cinq ans pour pouvoir le présenter en cas de contrôle. Le registre numérique vous évite la boîte d'archive."
                   quoiFaire="ouvrez une vérification dans votre calendrier, déposez le fichier (PDF, photo, DOCX) et indiquez le résultat. L'outil met automatiquement à jour la prochaine échéance."
                   cta="Ouvrir le calendrier"
                   ctaHref={`${base}/calendrier`}

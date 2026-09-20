@@ -2115,3 +2115,35 @@ la sous-branche `datePrevueFaisantFoi`, dont le champ n'existe plus depuis le
 d'avant les 177 commits ; leur contenu utile est entré dans `main` par d'autres
 routes, sauf la règle de conduite n° 11, reprise ici. Elles ne portent plus
 rien : à supprimer, pas à fusionner.
+
+---
+
+## 15. Un dossier qui n'a rien déclaré rend des listes vides, et ne le dit pas
+
+Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».
+
+Ce lot a fermé un faux vert : les sorties qui rendent un état de conformité —
+le ZIP remis au contrôleur, les PDF, l'écran « Préparer un contrôle », les
+outils MCP — disent désormais quand le calendrier n'a pas été calculé, l'a été
+sans aboutir, ou l'a été avant une évolution du référentiel.
+
+**Il en reste un, de nature différente.** Un calendrier À JOUR qui rend zéro
+ligne ne dit rien, et c'est voulu : zéro ligne est la vérité quand
+l'établissement a tout déclaré et n'a rien de périodique à suivre — un bureau
+sans aucun appareil est dans ce cas. Mais c'est aussi ce que voit un dossier
+qui vient d'être créé et **n'a encore rien déclaré**. Les deux sortent
+identiques : une liste vide, aucune phrase.
+
+**Pourquoi ça n'a pas été corrigé avec le reste.** Les deux états se
+ressemblent à l'écran et n'ont ni la même cause ni le même geste de
+réparation : l'un se répare en ouvrant le tableau de bord, l'autre en
+déclarant ses équipements. Les fondre dans l'union de `calendrier/fraicheur.ts`
+aurait rendu la phrase fausse une fois sur deux — la faute même que cette
+union corrige. Le manque est nommé en tête de ce module.
+
+**Où ça se raccrocherait.** `src/lib/perimetre/couverture.ts` porte déjà l'axe
+`domaine_equipement`, mais il ne couvre que « des équipements déclarés ne
+déclenchent aucune obligation », pas « rien n'est déclaré ». Le seuil qui
+distingue « rien à suivre » de « rien de déclaré » est une décision de
+produit : elle appartient à la propriétaire, et elle rejoint la séance du
+lot 6.

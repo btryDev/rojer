@@ -90,13 +90,26 @@ const QUESTIONS_TRI_ETAT: Record<
 > = {
   estVmcGaz: {
     question: "Cette VMC est-elle raccordée à des appareils à gaz ?",
-    aide: "On parle de « VMC-Gaz » : la ventilation évacue aussi les produits de combustion de chaudières ou de chauffe-eau au gaz. Si oui, entretien et vérification annuels par un professionnel sous contrat écrit (arrêté du 23 février 2018, art. 26)."
-    // ~~« arrêté du 25 avril 1985 »~~ — corrigé le 2026-09-20. Ce texte est
-    // ABROGÉ depuis le 5 mars 2018, et le dépôt l'écrit lui-même en tête de
-    // `conformite/aeration.ts` : c'est l'arrêté du 23 février 2018 qui l'a
-    // abrogé, et ce sont ses articles qui portent les deux obligations
-    // VMC-Gaz encodées. Le rythme annoncé au dirigeant était juste ; le texte
-    // cité ne l'était plus depuis huit ans.,
+    aide: "On parle de « VMC-Gaz » : la ventilation évacue aussi les produits de combustion de chaudières ou de chauffe-eau au gaz. Si oui, entretien et vérification annuels donnant lieu à un certificat remis au propriétaire ou au syndic (arrêté du 23 février 2018, art. 26 § 5°)."
+    // DEUX CORRECTIONS, LE 2026-09-20, ET LA SECONDE EST LA PLUS INSTRUCTIVE.
+    //
+    // (1) ~~« arrêté du 25 avril 1985 »~~ : abrogé le 5 mars 2018 par celui du
+    // 23 février 2018, ce que `conformite/aeration.ts` écrit en tête de fichier.
+    //
+    // (2) ~~« sous contrat écrit »~~ : ces mots ne sont PAS dans le § 5°, qui
+    // impose « des opérations périodiques d'entretien et de vérification […]
+    // donnant lieu à l'établissement d'un CERTIFICAT remis au propriétaire ou
+    // au syndic » (relu à la source le 2026-09-20). Le contrat d'entretien
+    // écrit existe bien dans cet arrêté — au § 3°, et il porte sur les
+    // installations de GAZ situées entre l'organe de coupure générale et les
+    // compteurs, pas sur la VMC-gaz.
+    //
+    // CE QUE ÇA APPREND : `conformite/aeration.ts` le disait DÉJÀ, en toutes
+    // lettres, depuis le 2026-08-26. La première passe de ce lot a lu le haut
+    // du fichier pour l'abrogation et n'est pas descendue jusqu'au commentaire
+    // qui la contredisait — si bien que corriger la date ANCRAIT la fausse
+    // exigence sur un article précis, là où elle était vague. Relevé par la
+    // contre-lecture du lot. Une correction partielle peut aggraver.
   },
   aExtinctionAutomatique: {
     question:
