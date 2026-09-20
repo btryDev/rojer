@@ -17,8 +17,10 @@ d'agent et une conversation — trois endroits qu'on ne rouvre pas. Voir aussi
 
 ## 1. Ce qui reste du champ de R. 4227-34 — `manipuleMatieresR422722`
 
-**Le gros de l'entrée est fait, le 2026-09-03.** La question « personnes
-habituellement présentes » n'est pas revenue au parcours, le repli a changé de
+**Le gros de l'entrée est fait, le 2026-09-03.** ~~La question « personnes
+habituellement présentes » n'est pas revenue au parcours~~ [2026-09-20 : elle y
+est revenue, bornée aux dossiers que le moteur laisse indéterminés — voir § 8],
+le repli a changé de
 sens et le bandeau a quitté le calendrier. Ce que le moteur fait désormais est
 écrit dans `evaluerPersonnesPresentes` (`src/lib/matching/engine.ts`) et dans
 l'ADR-022 § 7 : borne basse par la catégorie d'ERP puis par l'effectif salarié,
