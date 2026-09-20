@@ -80,6 +80,17 @@ function remplirEtape1() {
   saisir(/Effectif travailleur/, "8");
 }
 
+/** Choisit dans un `<select>` contrôlé par React, comme le ferait un clic. */
+function choisir(label: RegExp | string, valeur: string) {
+  const el = screen.getByLabelText(label) as HTMLSelectElement;
+  const setter = Object.getOwnPropertyDescriptor(
+    window.HTMLSelectElement.prototype,
+    "value",
+  )!.set!;
+  setter.call(el, valeur);
+  el.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
 const souffler = () => new Promise((r) => setTimeout(r, 30));
 
 describe("le formulaire ne se soumet qu'à la dernière étape", () => {
@@ -284,5 +295,65 @@ describe("on peut sortir de la mise en place", () => {
     await souffler();
 
     expect(appels).toEqual(["deconnexion"]);
+  });
+});
+
+describe("la question des locaux à sommeil au parcours (2026-09-09)", () => {
+  /** Amène le wizard à l'étape 2, ERP coché, sur le type demandé. */
+  async function allerEtape2AvecType(type: string) {
+    render(<WizardShell />);
+    remplirEtape1();
+    await souffler();
+    screen.getByRole("button", { name: /Suivant/ }).click();
+    await souffler();
+    // Trois cartes portent un « Oui » à cette étape — ERP, IGH, habitation.
+    // La première est celle de l'ERP, et c'est la seule qui nous intéresse.
+    screen.getAllByRole("button", { name: /^Oui$/ })[0].click();
+    await souffler();
+    choisir(/Type d'ERP/, type);
+    await souffler();
+  }
+
+  it("n'est pas posée avant qu'un type soit choisi", () => {
+    // Elle a besoin de la réponse au type pour savoir si elle doit exister :
+    // c'est la seule question du parcours dont la PRÉSENCE dépend d'une autre.
+    render(<WizardShell />);
+    expect(
+      screen.queryByLabelText(/Hébergement du public pour la nuit/),
+    ).toBeNull();
+  });
+
+  it("est posée à l'hôtel", async () => {
+    await allerEtape2AvecType("O");
+    expect(
+      screen.getByLabelText(/Hébergement du public pour la nuit/),
+    ).toBeTruthy();
+  });
+
+  it("n'est pas posée au restaurant", async () => {
+    // La borne du 2026-09-09 : quatre types, et le type N n'en est pas.
+    await allerEtape2AvecType("N");
+    expect(
+      screen.queryByLabelText(/Hébergement du public pour la nuit/),
+    ).toBeNull();
+  });
+
+  it("la réponse part avec la question quand le type change", async () => {
+    // SANS CE NETTOYAGE, un « oui » donné en type O survivrait au passage en
+    // type N : le champ disparaît de l'écran, la valeur reste dans l'état, et
+    // le formulaire posterait une déclaration que plus personne ne voit — que
+    // le schéma refuserait, en bloquant la création sur un champ invisible.
+    await allerEtape2AvecType("O");
+    choisir(/Hébergement du public pour la nuit/, "oui");
+    await souffler();
+    choisir(/Type d'ERP/, "N");
+    await souffler();
+    choisir(/Type d'ERP/, "O");
+    await souffler();
+
+    const select = screen.getByLabelText(
+      /Hébergement du public pour la nuit/,
+    ) as HTMLSelectElement;
+    expect(select.value).toBe("");
   });
 });

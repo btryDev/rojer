@@ -4,7 +4,11 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard, SectionChamps } from "@/components/ui-kit";
-import { CATEGORIES_ERP, TYPE_ERP } from "@/lib/etablissements/schema";
+import {
+  CATEGORIES_ERP,
+  TYPE_ERP,
+  TYPES_ERP_QUESTION_LOCAUX_SOMMEIL,
+} from "@/lib/etablissements/schema";
 import {
   LABEL_CATEGORIE_ERP,
   LABEL_TYPE_ERP,
@@ -72,6 +76,15 @@ export function EtablissementForm({
   const [estERP, setEstERP] = useState<boolean>(
     valeursInitiales?.estERP ?? false,
   );
+  // Le type est suivi en état depuis le 2026-09-21 : la question du sommeil
+  // n'existe que pour certains types, et doit apparaître ou disparaître au
+  // moment où le dirigeant en change, pas au rechargement.
+  const [typeErp, setTypeErp] = useState<string>(
+    valeursInitiales?.typeErp ?? "",
+  );
+  const poseLocauxSommeil =
+    estERP &&
+    (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(typeErp);
   const [estHabitation, setEstHabitation] = useState<boolean>(
     valeursInitiales?.estHabitation ?? false,
   );
@@ -326,7 +339,8 @@ export function EtablissementForm({
                     <select
                       id="typeErp"
                       name="typeErp"
-                      defaultValue={valeursInitiales?.typeErp ?? ""}
+                      value={typeErp}
+                      onChange={(e) => setTypeErp(e.currentTarget.value)}
                       required={estERP}
                       className="champ-board"
                       aria-invalid={Boolean(err("typeErp"))}
@@ -412,15 +426,20 @@ export function EtablissementForm({
                     erreur={err("dateCertificatConformite")}
                   />
 
-                  {/* Locaux à sommeil — arrêté du 25 juin 1980, Livre III.
-                      La question est ici et NON au wizard d'onboarding : le
-                      recadrage vient d'en retirer deux questions de
-                      technicien, et celle-ci n'a pas à barrer la route d'une
-                      création de dossier. Elle est en revanche posée à
-                      l'endroit où le dirigeant vient déclarer ce que son
-                      établissement est, et elle est visible en permanence —
-                      tant qu'il n'y a pas répondu, quatre lignes lui sont
-                      servies « à confirmer ». */}
+                  {/* LA QUESTION DU SOMMEIL — posée aux seuls types où il est plausible
+                      (`TYPES_ERP_A_SOMMEIL_PLAUSIBLE`), ici comme au parcours
+                      d'accueil, et la réponse est due : « oui » ou « non »
+                      (arbitrages de la propriétaire, 2026-09-09 puis
+                      2026-09-21). Hors de ces types elle ne s'affiche pas :
+                      le type déclaré a déjà répondu, et le moteur ne retient
+                      rien sur leur silence.
+
+                      Un dossier ANCIEN de ces types peut encore porter `null`
+                      — la colonne date du 2026-09-01. Le moteur le couvre par
+                      prudence, « à confirmer », et c'est ici qu'il répond : à
+                      son prochain enregistrement la réponse lui est
+                      demandée. */}
+                  {poseLocauxSommeil && (
                   <div className="sm:col-span-2">
                     <label
                       className="label-board"
@@ -432,6 +451,7 @@ export function EtablissementForm({
                       id="comporteLocauxSommeilPublic"
                       name="comporteLocauxSommeilPublic"
                       className="champ-board"
+                      required
                       aria-describedby="comporteLocauxSommeilPublic-aide"
                       defaultValue={
                         valeursInitiales?.comporteLocauxSommeilPublic === true
@@ -442,7 +462,9 @@ export function EtablissementForm({
                             : ""
                       }
                     >
-                      <option value="">Je ne sais pas encore</option>
+                      <option value="" disabled>
+                        Choisir…
+                      </option>
                       <option value="oui">Oui</option>
                       <option value="non">Non</option>
                     </select>
@@ -451,9 +473,7 @@ export function EtablissementForm({
                       className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
                       Chambres d&apos;hôtel, chambres d&apos;hôtes, gîte,
-                      hébergement — des locaux où le public dort. Un restaurant,
-                      un commerce ou un bureau sans hébergement : répondez
-                      «&nbsp;non&nbsp;». Un logement de fonction occupé par
+                      hébergement — des locaux où le public dort. Un logement de fonction occupé par
                       vous ou par un salarié ne compte pas : le texte vise le
                       sommeil du public. Si oui, s&apos;ajoutent un contrat
                       annuel d&apos;entretien de la détection incendie, des
@@ -462,6 +482,7 @@ export function EtablissementForm({
                       25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37).
                     </p>
                   </div>
+                  )}
                 </div>
               )}
             </div>

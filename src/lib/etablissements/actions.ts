@@ -14,6 +14,7 @@ import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
   etablissementCreationSchema,
   etablissementSchema,
+  reponseSommeilSuivantLeType,
 } from "./schema";
 
 export type EtablissementActionState =
@@ -116,6 +117,9 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     ...(raw.dateCertificatConformite === undefined
       ? {}
       : { dateCertificatConformite: raw.dateCertificatConformite }),
+    // [2026-09-21 : vrai pour les types à qui la question est posée. Hors
+    // liste, `reponseSommeilSuivantLeType` remet la colonne à `null` à
+    // l'écriture — la réponse suit le type.]
     // Même protection, et elle compte davantage ici : cette colonne DÉCIDE de
     // quatre obligations (PE 4 § 1, PE 33, PE 35, PE 37). Un « non » effacé en
     // décochant l'ERP les ferait toutes réapparaître « à confirmer » sans que
@@ -159,7 +163,7 @@ export async function creerEtablissement(
   const etab = await prisma.etablissement.create({
     data: {
       entrepriseId,
-      ...parsed.data,
+      ...reponseSommeilSuivantLeType(parsed.data),
       // ADR-019 : tout établissement naît avec son bâtiment principal.
       batiments: { create: { nom: NOM_BATIMENT_PRINCIPAL, ordre: 0 } },
     },
@@ -259,13 +263,13 @@ export async function modifierEtablissement(
 
   const etab = await prisma.etablissement.update({
     where: { id },
-    data: parsed.data,
+    data: reponseSommeilSuivantLeType(parsed.data),
   });
 
   revalidatePath(`/entreprises/${etab.entrepriseId}`);
   revalidatePath(`/etablissements/${id}`);
 
-  if (typologieAChange(avant, parsed.data)) {
+  if (typologieAChange(avant, reponseSommeilSuivantLeType(parsed.data))) {
     // Le garde est celui de `calendrier/regeneration-sure`, comme partout
     // ailleurs. Il était ici recopié à la main — c'est en migrant les six
     // appels qui n'en avaient AUCUN qu'on a vu que deux autres en avaient un,

@@ -206,3 +206,112 @@ describe("onboardingSchema", () => {
     expect(res.success).toBe(true);
   });
 });
+
+describe("locaux à sommeil au parcours (2026-09-09)", () => {
+  const hotel = {
+    ...base,
+    estERP: true,
+    typeErp: "O",
+    categorieErp: "N5",
+  };
+
+  it("accepte « oui » d'un type de la question", () => {
+    const res = onboardingSchema.safeParse({
+      ...hotel,
+      comporteLocauxSommeilPublic: "oui",
+    });
+    expect(res.success).toBe(true);
+    if (res.success) expect(res.data.comporteLocauxSommeilPublic).toBe(true);
+  });
+
+  it("accepte « non » d'un type de la question", () => {
+    const res = onboardingSchema.safeParse({
+      ...hotel,
+      comporteLocauxSommeilPublic: "non",
+    });
+    expect(res.success).toBe(true);
+    if (res.success) expect(res.data.comporteLocauxSommeilPublic).toBe(false);
+  });
+
+  it("une réponse vide n'est JAMAIS lue « non »", () => {
+    // `false` et l'absence de réponse sont deux choses différentes : l'un
+    // retire quatre obligations. Un `z.coerce.boolean()` posé ici par
+    // inadvertance rendrait `false` sur la chaîne vide et répondrait « non » à
+    // la place du dirigeant. Depuis le 2026-09-21 la réponse est DUE pour un
+    // hôtel : le vide y est donc refusé — et le refus est la preuve qu'il n'a
+    // pas été coercé en « non », qui serait passé.
+    for (const vide of ["", undefined, null]) {
+      const res = onboardingSchema.safeParse({
+        ...hotel,
+        comporteLocauxSommeilPublic: vide,
+      });
+      expect(res.success, String(vide)).toBe(false);
+    }
+    // Chez un type à qui rien n'est demandé, le vide traverse en `undefined`.
+    for (const vide of ["", undefined, null]) {
+      const res = onboardingSchema.safeParse({
+        ...hotel,
+        typeErp: "N",
+        comporteLocauxSommeilPublic: vide,
+      });
+      expect(res.success, String(vide)).toBe(true);
+      if (res.success)
+        expect(res.data.comporteLocauxSommeilPublic, String(vide)).toBeUndefined();
+    }
+  });
+
+  it("LA RÉPONSE EST DUE là où la question est posée (2026-09-21)", () => {
+    // « Je ne sais pas encore » est retiré par arbitrage : un exploitant sait
+    // s'il héberge du public la nuit. Sans ce contrôle, un client qui ne poste
+    // pas le champ créerait un hôtel muet.
+    const muet = onboardingSchema.safeParse({ ...hotel, typeErp: "O" , comporteLocauxSommeilPublic: "" });
+    expect(muet.success).toBe(false);
+    // Le pendant : un restaurant, à qui rien n'est demandé, passe sans répondre.
+    const resto = onboardingSchema.safeParse({ ...hotel, typeErp: "N", comporteLocauxSommeilPublic: "" });
+    expect(resto.success).toBe(true);
+  });
+
+  it("accepte les types où le sommeil est plausible, et eux seuls", () => {
+    // Les deux moitiés sont écrites ensemble parce qu'aucune ne vaut sans
+    // l'autre : la première seule passerait avec un contrôle absent, la
+    // seconde seule passerait avec un contrôle qui refuse tout.
+    for (const t of ["J", "O", "U", "R", "REF", "OA"]) {
+      const res = onboardingSchema.safeParse({
+        ...hotel,
+        typeErp: t,
+        comporteLocauxSommeilPublic: "oui",
+      });
+      expect(res.success, t).toBe(true);
+    }
+    for (const t of ["N", "M", "W", "Y", "EF"]) {
+      const res = onboardingSchema.safeParse({
+        ...hotel,
+        typeErp: t,
+        comporteLocauxSommeilPublic: "oui",
+      });
+      expect(res.success, t).toBe(false);
+    }
+  });
+
+  it("refuse la réponse d'un établissement qui n'est pas ERP", () => {
+    // Le champ n'est à l'écran que dans le bloc ERP : le poster hors de lui
+    // ne peut venir que d'un client trafiqué.
+    const res = onboardingSchema.safeParse({
+      ...base,
+      comporteLocauxSommeilPublic: "oui",
+    });
+    expect(res.success).toBe(false);
+  });
+
+  it("laisse passer un type hors question tant qu'il ne répond pas", () => {
+    // La borne ne barre pas la création d'un restaurant : elle borne la
+    // RÉPONSE, pas le dossier.
+    const res = onboardingSchema.safeParse({
+      ...hotel,
+      typeErp: "N",
+      comporteLocauxSommeilPublic: "",
+    });
+    expect(res.success).toBe(true);
+    if (res.success) expect(res.data.comporteLocauxSommeilPublic).toBeUndefined();
+  });
+});

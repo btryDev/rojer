@@ -110,6 +110,9 @@ describe("la porte d'onboarding ne se ferme plus sur le secteur", () => {
     estIGH: false,
     estHabitation: false,
     typeErp: "O",
+    // Un hôtel répond à la question du sommeil : elle lui est due depuis le
+    // 2026-09-21.
+    comporteLocauxSommeilPublic: "oui",
     categorieErp: "N5",
   };
 

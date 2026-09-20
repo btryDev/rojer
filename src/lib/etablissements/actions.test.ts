@@ -29,6 +29,7 @@ const h = vi.hoisted(() => {
       effectifPublicAdmis: null as number | null,
       dateAutorisationOuverture: null as Date | null,
       dateCertificatConformite: null as Date | null,
+      comporteLocauxSommeilPublic: null as boolean | null,
     },
     nbVersionsDuerp: 0,
     supprimes: [] as string[],
@@ -342,5 +343,57 @@ describe("modifierEtablissement — les champs ERP ne s'effacent pas tout seuls"
     );
 
     expect(h.db.etablissement.effectifPublicAdmis).toBe(80);
+  });
+});
+
+describe("modifierEtablissement — la réponse sur le sommeil suit le type (2026-09-21)", () => {
+  // LE BRANCHEMENT, pas la fonction. `reponse-sommeil.test.ts` tient
+  // `reponseSommeilSuivantLeType` comme fonction pure ; la revue du lot a
+  // retiré ses trois appels d'`actions.ts` et 3131 tests sont restés verts.
+  // Une règle juste que personne n'appelle ne protège rien : c'est ici qu'on
+  // vérifie qu'elle est sur le chemin d'écriture.
+  it("un hôtel devenu restaurant perd sa réponse en base", async () => {
+    h.db.etablissement.estERP = true;
+    h.db.etablissement.typeErp = "O";
+    h.db.etablissement.categorieErp = "N5";
+    h.db.etablissement.comporteLocauxSommeilPublic = true;
+
+    // Le formulaire d'un type N n'affiche plus la question : le champ n'est
+    // pas posté. Sans le branchement, rien n'écrirait la colonne et le « oui »
+    // de l'ancien hôtel survivrait.
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ estERP: "on", typeErp: "N", categorieErp: "N5" }),
+    );
+
+    expect(h.db.etablissement.comporteLocauxSommeilPublic).toBeNull();
+  });
+
+  it("un hôtel qui répond voit sa réponse écrite", async () => {
+    h.db.etablissement.comporteLocauxSommeilPublic = null;
+    await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({
+        estERP: "on",
+        typeErp: "O",
+        categorieErp: "N5",
+        comporteLocauxSommeilPublic: "non",
+      }),
+    );
+    expect(h.db.etablissement.comporteLocauxSommeilPublic).toBe(false);
+  });
+
+  it("LA PORTE refuse un hôtel muet — la réponse est due côté serveur", async () => {
+    // Le `required` du formulaire ne tient que dans le navigateur.
+    h.db.etablissement.comporteLocauxSommeilPublic = null;
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ estERP: "on", typeErp: "O", categorieErp: "N5" }),
+    );
+    expect(res.status).toBe("error");
+    expect(h.db.etablissement.comporteLocauxSommeilPublic).toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import {
   CATEGORIES_ERP,
   EFFECTIF_MAX,
   TYPE_ERP,
+  TYPES_ERP_QUESTION_LOCAUX_SOMMEIL,
 } from "@/lib/etablissements/schema";
 
 // Réexportée : la validation client du wizard la lit ici, au plus près du
@@ -79,6 +80,34 @@ export const onboardingSchema = z
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(CATEGORIES_ERP).optional(),
     ),
+    // ─── Locaux à sommeil pour le public (2026-09-09) ───────
+    //
+    // Posée au parcours depuis ce jour, et seulement aux types où le sommeil est plausible de
+    // `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`. DEUX réponses, « oui » ou « non »,
+    // et la réponse est OBLIGATOIRE là où la question est posée (arbitrage de
+    // la propriétaire, 2026-09-21 : « je ne sais pas encore » est retiré — un
+    // exploitant sait s'il héberge du public la nuit, et la question n'est
+    // posée qu'aux types où elle a un sens). Le paragraphe ci-dessous décrit
+    // l'état d'avant, gardé pour ce qu'il explique du `undefined` : il reste la
+    // valeur des types à qui rien n'est demandé.
+    //
+    // `undefined` EST UNE RÉPONSE VALIDE ET C'EST LE CŒUR DU CHAMP. Il traverse
+    // jusqu'à la server action, qui n'écrit alors rien : la colonne reste
+    // `null`, c'est-à-dire « pas encore répondu ». La question ne bloque donc
+    // aucune création — c'est ce que le recadrage du 2026-09-01 exigeait en
+    // sortant deux questions de technicien du parcours — et rien n'est inscrit
+    // au dossier que personne n'a déclaré.
+    comporteLocauxSommeilPublic: z.preprocess(
+      (v) =>
+        v === "oui"
+          ? true
+          : v === "non"
+            ? false
+            : v === true || v === false
+              ? v
+              : undefined,
+      z.boolean().optional(),
+    ),
     // `classeIgh` et `familleHabitation` ont quitté ce schéma le 2026-09-03
     // avec les deux questions du parcours qui les posaient. Voir le bloc en
     // tête de `@/lib/etablissements/schema`.
@@ -134,6 +163,53 @@ export const onboardingSchema = z
       }
     }
 
+    // La réponse aux locaux à sommeil n'est acceptée QUE des types où le sommeil est plausible à qui
+    // le parcours pose la question. Même forme que les deux gardes ci-dessus,
+    // et même raison : un champ qui n'est pas à l'écran ne doit pas pouvoir
+    // être posté depuis un client trafiqué. Ce qui serait écrit ici est un fait
+    // que personne n'a été invité à déclarer.
+    //
+    // Hors de ces types la question n'est posée NULLE PART, fiche comprise
+    // (arbitrage du 2026-09-21) : le type déclaré a déjà répondu, et le moteur
+    // ne retient rien sur leur silence (`matching/engine.ts`).
+    if (
+      val.comporteLocauxSommeilPublic !== undefined &&
+      !(
+        val.estERP &&
+        val.typeErp !== undefined &&
+        (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
+          val.typeErp,
+        )
+      )
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["comporteLocauxSommeilPublic"],
+        message:
+          "La question des locaux à sommeil n'est pas posée à ce type d'établissement.",
+      });
+    }
+
+    // LA RÉPONSE EST DUE LÀ OÙ LA QUESTION EST POSÉE (2026-09-21). Sans ce
+    // contrôle, un client qui ne poste pas le champ créerait un hôtel muet —
+    // que le moteur couvrirait par prudence, mais que plus aucun écran
+    // n'inviterait à répondre dès la création.
+    if (
+      val.comporteLocauxSommeilPublic === undefined &&
+      val.estERP &&
+      val.typeErp !== undefined &&
+      (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(
+        val.typeErp,
+      )
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["comporteLocauxSommeilPublic"],
+        message:
+          "Indiquez si votre établissement héberge du public pour la nuit.",
+      });
+    }
+
     // Le seul cumul refusé (ADR-025 § 1) : un ERP en IGH relève du règlement
     // de sécurité des IGH, jamais dépouillé. L'IGH seul reste servi — un
     // employeur locataire d'une tour de bureaux relève du Code du travail, que
@@ -187,4 +263,5 @@ export const onboardingValeursInitiales = {
   estHabitation: false,
   typeErp: "" as string | undefined,
   categorieErp: "" as string | undefined,
+  comporteLocauxSommeilPublic: "" as string,
 };

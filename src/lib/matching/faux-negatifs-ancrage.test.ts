@@ -245,7 +245,7 @@ describe("visite de commission — le faux négatif est corrigé (2026-09-01)", 
   it("un hôtel de 5ᵉ catégorie sans aucun équipement déclaré reçoit la visite", () => {
     expect(
       idsSansAucunEquipement(
-        restoErpCat5SansRien({ comporteLocauxSommeilPublic: true }),
+        restoErpCat5SansRien({ typeErp: "O", comporteLocauxSommeilPublic: true }),
       ),
     ).toContain(VISITE);
   });
@@ -263,7 +263,18 @@ describe("visite de commission — le faux négatif est corrigé (2026-09-01)", 
     // qu'avant : la ligne tombe désormais chez tout ERP de 5ᵉ catégorie muet,
     // alarme déclarée ou non. Elle est visible au calendrier et se retire
     // d'une réponse ; l'oubli d'un hôtel, lui, ne se voyait de nulle part.
-    expect(idsSansAucunEquipement(restoErpCat5SansRien())).toContain(VISITE);
+    // Précisé le 2026-09-21 : la prudence joue là où le sommeil est PLAUSIBLE.
+    // Un hôtel muet la reçoit ; un restaurant muet ne la reçoit plus — son type
+    // a déjà répondu, et la lui servir lui faisait porter un contrat d'entretien
+    // de détection qu'il ne doit pas. Les deux sens sont tenus ensemble.
+    expect(
+      idsSansAucunEquipement(restoErpCat5SansRien({ typeErp: "O" })),
+    ).toContain(VISITE);
+    expect(idsSansAucunEquipement(restoErpCat5SansRien())).not.toContain(VISITE);
+    // Et l'oubli d'un dossier SANS TYPE reste couvert : rien n'y a répondu.
+    expect(
+      idsSansAucunEquipement(restoErpCat5SansRien({ typeErp: null })),
+    ).toContain(VISITE);
   });
 
   it("un employeur non-ERP ne la reçoit pas, même en déclarant des locaux à sommeil", () => {
