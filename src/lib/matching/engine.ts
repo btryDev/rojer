@@ -230,7 +230,7 @@ function evaluerHabitation(
  * Locaux à sommeil pour le public — arrêté du 25 juin 1980, Livre III
  * (PE 4 § 1, PE 33, PE 35, PE 37).
  *
- * [2026-09-21 : le silence ne retient plus que pour les types où le sommeil
+ * [2026-09-20 : le silence ne retient plus que pour les types où le sommeil
  * est plausible et pour un type non renseigné — voir le corps de la fonction.
  * Le paragraphe ci-dessous décrit la règle d'origine, qui vaut toujours DANS
  * ces types.]
@@ -261,7 +261,7 @@ function evaluerLocauxSommeil(
 
   if (critere === true) {
     // HORS DES TYPES OÙ LE SOMMEIL EST PLAUSIBLE, RIEN NE S'APPLIQUE — quelle
-    // que soit la valeur en base (arbitrage de la propriétaire, 2026-09-21 :
+    // que soit la valeur en base (arbitrage de la propriétaire, 2026-09-20 :
     // « sur un type hors liste la question ne s'affiche pas, donc pas de
     // oui »). Un type déclaré a répondu ; une valeur héritée d'avant la règle,
     // ou d'un ancien type, ne compte pas. La règle est UNIFORME exprès : une
@@ -465,7 +465,7 @@ export function matchTypologie(
   //
   // Le seuil compte « les personnes occupées ou réunies » : salariés ET
   // public. Le produit n'a pas toujours ce nombre — la question a été retirée
-  // du parcours de création le 2026-09-01, et n'y est revenue le 2026-09-21
+  // du parcours de création le 2026-09-01, et n'y est revenue le 2026-09-20
   // que pour les dossiers que la règle laisse indéterminés ; les dossiers nés
   // entre-temps sont muets — et ce qu'il fait alors est ce que ce bloc décide
   // (la règle elle-même vit dans `personnes-presentes.ts`).

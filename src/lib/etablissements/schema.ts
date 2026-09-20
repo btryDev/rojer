@@ -1,4 +1,7 @@
-import { nombreDePersonnesADemander } from "@/lib/matching/personnes-presentes";
+import {
+  MESSAGE_NOMBRE_DE_PERSONNES,
+  nombreDePersonnesADemander,
+} from "@/lib/matching/personnes-presentes";
 import { z } from "zod";
 import { depuisCleJourCivil } from "@/lib/dates";
 import { TYPES_ERP_A_SOMMEIL_PLAUSIBLE } from "@/lib/referentiels/types-communs";
@@ -49,7 +52,7 @@ export const CATEGORIES_ERP = ["N1", "N2", "N3", "N4", "N5"] as const;
  * l'auberge typée N n'est pas couverte tant qu'elle ne se déclare pas O.
  */
 // ~~Liste propre à ce module : O, R, U, J, bornant aussi les obligations par
-// `typesExclus`.~~ Remplacée le 2026-09-21 : la liste vit côté référentiel
+// `typesExclus`.~~ Remplacée le 2026-09-20 : la liste vit côté référentiel
 // (`TYPES_ERP_A_SOMMEIL_PLAUSIBLE`), où le moteur la lit, et elle ne borne plus
 // aucune obligation — elle dit à qui la question est posée dès le parcours, et
 // ce que vaut le silence. Voir sa note pour l'argument complet. L'alias garde
@@ -57,7 +60,7 @@ export const CATEGORIES_ERP = ["N1", "N2", "N3", "N4", "N5"] as const;
 export const TYPES_ERP_QUESTION_LOCAUX_SOMMEIL = TYPES_ERP_A_SOMMEIL_PLAUSIBLE;
 
 /**
- * LA RÉPONSE SUIT LE TYPE (2026-09-21).
+ * LA RÉPONSE SUIT LE TYPE (2026-09-20).
  *
  * La question du sommeil n'est posée qu'aux types de la liste. Quand
  * l'établissement enregistré n'en est pas — ERP décoché, ou type hors liste —,
@@ -241,7 +244,7 @@ export const etablissementSchema = z
     // `manipuleMatieresR422722`, et la même règle : vide = « pas encore
     // répondu », jamais « non ».
     //
-    // [2026-09-21 : « je ne sais pas » n'est plus proposé, et la réponse est
+    // [2026-09-20 : « je ne sais pas » n'est plus proposé, et la réponse est
     // due pour les types de la liste (`superRefine` ci-dessous). La protection
     // décrite ici ne vaut plus que pour eux : hors liste, la colonne est
     // remise à `null` par `reponseSommeilSuivantLeType`.]
@@ -296,7 +299,7 @@ export const etablissementSchema = z
   })
   .superRefine((val, ctx) => {
     // LA RÉPONSE SUR LE SOMMEIL EST DUE À LA PORTE, PAS SEULEMENT À L'ÉCRAN
-    // (2026-09-21, relevé par la revue du lot). Le `required` du formulaire ne
+    // (2026-09-20, relevé par la revue du lot). Le `required` du formulaire ne
     // tenait que dans le navigateur : ce schéma — qui sert la modification ET,
     // par `etablissementCreationSchema`, la création d'un second établissement
     // — laissait passer un hôtel muet. `actions.ts` l'écrit : « c'est la
@@ -321,7 +324,7 @@ export const etablissementSchema = z
     }
 
     // LE NOMBRE DE PERSONNES EST DÛ LÀ OÙ LE MOTEUR NE SAIT PAS CONCLURE SANS LUI
-    // (2026-09-21). Même règle qu'au parcours de création, par la même
+    // (2026-09-20). Même règle qu'au parcours de création, par la même
     // fonction : `/etablissements/nouveau` passe par ce schéma-ci, et une
     // règle posée sur un seul parcours se contourne en changeant de porte.
     // Ici le champ reste ACCEPTÉ de tous — la fiche le montre à tous, et un
@@ -337,13 +340,13 @@ export const etablissementSchema = z
         estERP: val.estERP,
         categorieErp: val.categorieErp ?? null,
         effectifSurSite: val.effectifSurSite,
+        manipuleMatieresR422722: val.manipuleMatieresR422722,
       })
     ) {
       ctx.addIssue({
         code: "custom",
         path: ["personnesPresentesHabituellement"],
-        message:
-          "Indiquez combien de personnes peuvent se trouver en même temps dans vos locaux, salariés et public compris.",
+        message: MESSAGE_NOMBRE_DE_PERSONNES,
       });
     }
 

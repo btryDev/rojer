@@ -1,5 +1,5 @@
 /**
- * LE SEUIL DE PERSONNES DE R. 4227-34 CT, HORS DU MOTEUR (2026-09-21).
+ * LE SEUIL DE PERSONNES DE R. 4227-34 CT, HORS DU MOTEUR (2026-09-20).
  *
  * Ce bloc vivait dans `engine.ts`. Il en sort, inchangé, pour une seule
  * raison : `engine.ts` importe le référentiel entier et ne peut pas être
@@ -30,11 +30,34 @@ export type EtablissementPourLeSeuil = {
 export const SEUIL_PERSONNES_R422734 = 51;
 
 /**
+ * LES MOTS DE LA QUESTION, UNE SEULE FOIS — pour le parcours, la fiche et les
+ * deux schémas. La première écriture disait « peuvent se trouver EN MÊME TEMPS »
+ * et avait perdu « habituellement » : deux écarts au texte relevés par la
+ * contre-lecture du 2026-09-20. « En même temps » n'est pas dans R. 4227-34, et
+ * sans « habituellement » la question se lit comme une capacité maximale. Le
+ * texte dit « peuvent se trouver occupées ou réunies habituellement » ; on le
+ * CITE dans l'aide et on n'en tranche pas le sens à la place du dirigeant.
+ *
+ * L'aide dit aussi la seconde branche du même article (matières de
+ * R. 4227-22, « quelle que soit leur importance ») : sans elle, répondre 30
+ * se lirait « ces obligations ne me concernent pas », ce que le produit ne
+ * sait pas tant que la question des matières — posée à la fiche — est muette.
+ */
+export const QUESTION_NOMBRE_DE_PERSONNES =
+  "Combien de personnes peuvent se trouver habituellement dans vos locaux, salariés et public compris ?";
+export const LIBELLE_NOMBRE_DE_PERSONNES =
+  "Personnes pouvant se trouver habituellement dans vos locaux (salariés + public)";
+export const MESSAGE_NOMBRE_DE_PERSONNES =
+  "Indiquez combien de personnes peuvent se trouver habituellement dans vos locaux, salariés et public compris (nombre entier, de 1 à 99 999).";
+export const AIDE_NOMBRE_DE_PERSONNES =
+  "Le Code du travail vise les établissements « dans lesquels peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes » (art. R. 4227-34). Il leur impose un système d'alarme sonore, une consigne de sécurité incendie affichée (art. R. 4227-37), et des essais et exercices au moins tous les six mois (art. R. 4227-39). Comptez ensemble vos salariés et le public — clients, élèves, patients, visiteurs. Les mêmes obligations valent, quel que soit ce nombre, là où sont manipulées des matières inflammables : cette question-là figure sur la fiche de l'établissement.";
+
+/**
  * Personnes habituellement présentes — R. 4227-34 CT, « occupées ou réunies ».
  *
  * LE NOMBRE COMPTE LES SALARIÉS **ET** LE PUBLIC, et c'est tout le sujet. Le
  * produit ne l'a plus demandé à la création entre le 2026-09-01 et le
- * 2026-09-21, et ne le demande depuis qu'à ceux que cette règle laisse
+ * 2026-09-20, et ne le demande depuis qu'à ceux que cette règle laisse
  * indéterminés ; pour les autres — et pour les dossiers anciens restés muets —
  * il en déduit ce qu'il peut, et ce qu'il peut n'est jamais qu'une **borne
  * basse** du total.
@@ -146,12 +169,21 @@ export function evaluerPersonnesPresentes(
  *
  * Un effectif illisible (champ encore vide à l'écran) ne pose pas la question :
  * on ne demande rien sur la foi d'une valeur qu'on n'a pas.
+ *
+ * LA SECONDE BRANCHE DE R. 4227-34 REND LE NOMBRE SANS OBJET. Là où les matières
+ * de R. 4227-22 sont DÉCLARÉES manipulées, le champ est ouvert « quelle que soit
+ * leur importance » : le moteur retient les deux lignes sans « à confirmer »,
+ * que le nombre soit 30, 60 ou absent. L'exiger alors bloquerait une fiche pour
+ * une réponse qui ne change rien (contre-lecture du 2026-09-20). Le parcours de
+ * création ne pose pas la question des matières : il n'y passe jamais `true`.
  */
 export function nombreDePersonnesADemander(etab: {
   estERP: boolean;
   categorieErp: CategorieErp | null | undefined;
   effectifSurSite: number | null | undefined;
+  manipuleMatieresR422722?: boolean | null;
 }): boolean {
+  if (etab.manipuleMatieresR422722 === true) return false;
   if (!etab.estERP || !etab.categorieErp) return false;
   if (etab.effectifSurSite == null || !Number.isFinite(etab.effectifSurSite)) {
     return false;

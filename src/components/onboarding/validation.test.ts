@@ -103,7 +103,7 @@ describe("étape 2 — les régimes (ADR-004)", () => {
     typeErp: "O",
     categorieErp: "N5",
     // Les deux questions dont la présence dépend d'une autre, dues depuis le
-    // 2026-09-21 : un hôtel de 5ᵉ catégorie les reçoit toutes les deux.
+    // 2026-09-20 : un hôtel de 5ᵉ catégorie les reçoit toutes les deux.
     comporteLocauxSommeilPublic: "oui",
     personnesPresentesHabituellement: "30",
   };
@@ -242,7 +242,7 @@ describe("le refus dit où regarder, et de quelle nature il est", () => {
     typeErp: "O",
     categorieErp: "N5",
     // Les deux questions dont la présence dépend d'une autre, dues depuis le
-    // 2026-09-21 : un hôtel de 5ᵉ catégorie les reçoit toutes les deux.
+    // 2026-09-20 : un hôtel de 5ᵉ catégorie les reçoit toutes les deux.
     comporteLocauxSommeilPublic: "oui",
     personnesPresentesHabituellement: "30",
   };
@@ -326,7 +326,7 @@ describe("la borne d'effectif n'est écrite qu'une fois", () => {
   });
 });
 
-describe("étape 2 — les deux questions dont la présence dépend d'une autre (2026-09-21)", () => {
+describe("étape 2 — les deux questions dont la présence dépend d'une autre (2026-09-20)", () => {
   const restaurant: OnboardingState = {
     ...complet,
     estERP: true,
@@ -348,6 +348,30 @@ describe("étape 2 — les deux questions dont la présence dépend d'une autre 
     expect(
       validerTypologie({ ...restaurant, personnesPresentesHabituellement: "40" }),
     ).toBeNull();
+  });
+
+  it("lit l'effectif comme le serveur le lira — « 12.0 » ouvre la question", () => {
+    // La regex d'origine lisait « 12.0 » illisible : l'étape 1 passait, la
+    // question ne s'ouvrait pas, et le serveur refusait à l'étape 3.
+    for (const effectif of ["12.0", " 12 ", "012", "1e1"])
+      expect(
+        nombreDePersonnesDemande({ ...restaurant, effectifSurSite: effectif }),
+        effectif,
+      ).toBe(true);
+    for (const effectif of ["", "abc", "12.5"])
+      expect(
+        nombreDePersonnesDemande({ ...restaurant, effectifSurSite: effectif }),
+        effectif,
+      ).toBe(false);
+  });
+
+  it("retient un nombre que le serveur refuserait (hors de 1 à 99 999)", () => {
+    expect(
+      validerTypologie({
+        ...restaurant,
+        personnesPresentesHabituellement: "100000",
+      })?.champ,
+    ).toBe("personnesPresentesHabituellement");
   });
 
   it("ne demande rien à une 3ᵉ catégorie ni à un établissement sans public", () => {

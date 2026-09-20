@@ -128,6 +128,8 @@ export function WizardShell({ email }: { email?: string | null }) {
         )
       : undefined;
 
+  const premierRefusServeur = Object.values(serverErrors ?? {}).find(Boolean);
+
   const update = (patch: Partial<OnboardingState>) => {
     setState((s) => ({ ...s, ...patch }));
     setBlocage(null);
@@ -184,6 +186,12 @@ export function WizardShell({ email }: { email?: string | null }) {
     for (let i = etapeIdx; i < idx; i++) {
       const err = ETAPES[i].valide(state);
       if (err) {
+        // ON VA À L'ÉTAPE QUI REFUSE. Un refus qui vise un champ n'est rendu
+        // que par l'étape qui porte ce champ : rester où l'on est le rendait
+        // invisible dès que l'étape fautive n'était pas la courante — ce qui
+        // arrive depuis le 2026-09-20, l'effectif de l'étape 1 pouvant rouvrir
+        // à l'étape 2 une question restée sans réponse.
+        setEtapeIdx(i);
         setBlocage(err);
         return;
       }
@@ -408,6 +416,16 @@ export function WizardShell({ email }: { email?: string | null }) {
 
           {serverState.status === "error" && !serverState.fieldErrors ? (
             <BandeauBlocage>{serverState.message}</BandeauBlocage>
+          ) : null}
+
+          {/* Un refus du serveur qui vise un champ est rendu par l'étape de ce
+              champ — et le résumé n'en porte aucun : sans cette ligne, « Créer »
+              ne produisait RIEN de visible. Le texte est celui du serveur. */}
+          {etape.id === "resume" && premierRefusServeur ? (
+            <BandeauBlocage>
+              {premierRefusServeur} — revenez à l&apos;étape
+              concernée pour le corriger.
+            </BandeauBlocage>
           ) : null}
 
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--board-slate-line)] pt-8">

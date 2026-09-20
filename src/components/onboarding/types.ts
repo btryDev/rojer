@@ -35,7 +35,7 @@ export type OnboardingState = {
   comporteLocauxSommeilPublic: string;
 
   // Personnes pouvant se trouver réunies dans les locaux (R. 4227-34 CT) —
-  // posée depuis le 2026-09-21 aux seuls dossiers que
+  // posée depuis le 2026-09-20 aux seuls dossiers que
   // `nombreDePersonnesADemander` désigne. Saisie texte, comme l'effectif.
   personnesPresentesHabituellement: string;
   // `classeIgh` et `familleHabitation` ont quitté l'état du wizard le

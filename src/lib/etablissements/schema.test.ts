@@ -252,7 +252,7 @@ describe("refus de périmètre — création seulement", () => {
   });
 });
 
-describe("etablissementSchema — nombre de personnes (2026-09-21)", () => {
+describe("etablissementSchema — nombre de personnes (2026-09-20)", () => {
   const restaurant = { ...base, estERP: true, typeErp: "N", categorieErp: "N5" };
 
   it("l'exige d'un ERP sous les deux bornes — la seconde porte de création passe par ici", () => {
@@ -268,6 +268,15 @@ describe("etablissementSchema — nombre de personnes (2026-09-21)", () => {
     expect(etablissementSchema.safeParse(base).success).toBe(true);
     expect(
       etablissementSchema.safeParse({ ...restaurant, categorieErp: "N3" }).success,
+    ).toBe(true);
+  });
+
+  it("ne l'exige pas quand les matières de R. 4227-22 sont déclarées", () => {
+    expect(
+      etablissementSchema.safeParse({
+        ...restaurant,
+        manipuleMatieresR422722: "oui",
+      }).success,
     ).toBe(true);
   });
 

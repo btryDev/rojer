@@ -110,7 +110,7 @@ function formulaire(over: Record<string, string> = {}): FormData {
   fd.set("codeNaf", "56.10A");
   fd.set("effectifSurSite", "5");
   fd.set("estEtablissementTravail", "on");
-  // Dû depuis le 2026-09-21 à un ERP que ni sa catégorie ni son effectif ne
+  // Dû depuis le 2026-09-20 à un ERP que ni sa catégorie ni son effectif ne
   // portent au seuil de R. 4227-34 — le cas de presque tous les tests d'ici.
   fd.set("personnesPresentesHabituellement", "30");
   for (const [k, v] of Object.entries(over)) fd.set(k, v);
@@ -349,7 +349,7 @@ describe("modifierEtablissement — les champs ERP ne s'effacent pas tout seuls"
   });
 });
 
-describe("modifierEtablissement — la réponse sur le sommeil suit le type (2026-09-21)", () => {
+describe("modifierEtablissement — la réponse sur le sommeil suit le type (2026-09-20)", () => {
   // LE BRANCHEMENT, pas la fonction. `reponse-sommeil.test.ts` tient
   // `reponseSommeilSuivantLeType` comme fonction pure ; la revue du lot a
   // retiré ses trois appels d'`actions.ts` et 3131 tests sont restés verts.

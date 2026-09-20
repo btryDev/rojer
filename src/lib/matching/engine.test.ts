@@ -323,7 +323,7 @@ describe("moteur matching — typologie ERP", () => {
 
   it("ERP cat 5 → visite commission PE locaux à sommeil (typologie cat N5)", () => {
     // Un HÔTEL, et non plus le restaurant de la fixture : depuis le
-    // 2026-09-21 le silence ne retient que là où le sommeil est plausible.
+    // 2026-09-20 le silence ne retient que là où le sommeil est plausible.
     const res = determineObligationsApplicables(
       etabRestoErpCat5({ typeErp: "O" }),
       [alarme()],
@@ -1813,7 +1813,7 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
     }
   });
 
-  it("NE S'AFFICHE PLUS chez un type qui a déjà répondu par son type (2026-09-21)", () => {
+  it("NE S'AFFICHE PLUS chez un type qui a déjà répondu par son type (2026-09-20)", () => {
     // Mesuré en production la veille : restaurant, magasin, bureau et musée
     // de 5ᵉ catégorie portaient chacun les quatre lignes « sommeil », et les
     // auraient portées pour toujours — la question ne leur était posée que sur
@@ -1829,7 +1829,7 @@ describe("moteur matching — visite de commission ERP 5ᵉ bornée aux locaux �
   });
 
   it("HORS LISTE, MÊME UN « OUI » EN BASE NE S'APPLIQUE PAS — la règle est uniforme", () => {
-    // Arbitrage du 2026-09-21 : « sur un type hors liste la question ne
+    // Arbitrage du 2026-09-20 : « sur un type hors liste la question ne
     // s'affiche pas, donc pas de oui ». Une valeur héritée — d'avant la règle,
     // ou d'un ancien type — ne compte pas : sinon le dossier garderait ses
     // quatre lignes jusqu'au jour où la fiche, qui n'affiche plus la question,

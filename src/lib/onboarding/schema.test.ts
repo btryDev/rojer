@@ -239,7 +239,7 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
     // `false` et l'absence de réponse sont deux choses différentes : l'un
     // retire quatre obligations. Un `z.coerce.boolean()` posé ici par
     // inadvertance rendrait `false` sur la chaîne vide et répondrait « non » à
-    // la place du dirigeant. Depuis le 2026-09-21 la réponse est DUE pour un
+    // la place du dirigeant. Depuis le 2026-09-20 la réponse est DUE pour un
     // hôtel : le vide y est donc refusé — et le refus est la preuve qu'il n'a
     // pas été coercé en « non », qui serait passé.
     for (const vide of ["", undefined, null]) {
@@ -262,7 +262,7 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
     }
   });
 
-  it("LA RÉPONSE EST DUE là où la question est posée (2026-09-21)", () => {
+  it("LA RÉPONSE EST DUE là où la question est posée (2026-09-20)", () => {
     // « Je ne sais pas encore » est retiré par arbitrage : un exploitant sait
     // s'il héberge du public la nuit. Sans ce contrôle, un client qui ne poste
     // pas le champ créerait un hôtel muet.
@@ -318,7 +318,7 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
   });
 });
 
-describe("nombre de personnes au parcours (2026-09-21)", () => {
+describe("nombre de personnes au parcours (2026-09-20)", () => {
   const restaurant = {
     ...base,
     estERP: true,

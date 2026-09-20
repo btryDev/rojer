@@ -58,7 +58,7 @@ import {
  * l'incrément, ils ne s'appliqueraient qu'au hasard d'une mutation. Retour
  * arrière : annuler le lot et passer à 4, pas à 2 (ADR-036 § 10).
  *
- * `4` (2026-09-21, décidé par la propriétaire — « on enlève sommeil à tout,
+ * `4` (2026-09-20, décidé par la propriétaire — « on enlève sommeil à tout,
  * sauf si l'utilisateur répond oui ») : LE SILENCE SUR LES LOCAUX À SOMMEIL NE
  * RETIENT PLUS QUE LÀ OÙ LE SOMMEIL EST PLAUSIBLE. Mesuré la veille sur le
  * moteur de production : un restaurant, un magasin, un bureau et un musée de

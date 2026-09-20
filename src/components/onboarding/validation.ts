@@ -15,7 +15,10 @@
 
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
 import { TYPES_ERP_QUESTION_LOCAUX_SOMMEIL } from "@/lib/etablissements/schema";
-import { nombreDePersonnesADemander } from "@/lib/matching/personnes-presentes";
+import {
+  MESSAGE_NOMBRE_DE_PERSONNES,
+  nombreDePersonnesADemander,
+} from "@/lib/matching/personnes-presentes";
 import { EFFECTIF_MAX } from "@/lib/onboarding/schema";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
@@ -117,21 +120,26 @@ export function validerIdentite(s: OnboardingState): Blocage | null {
   return refusEffectif(s.effectifSurSite);
 }
 
-/** Étape 2 — les régimes (ADR-004). */
 /**
  * La question du nombre de personnes est-elle à l'écran pour cet état ?
  * Une seule lecture pour l'étape, son refus et le champ posté : les trois
  * doivent dire la même chose, sinon on poste ce qu'on ne montre pas.
  */
 export function nombreDePersonnesDemande(s: OnboardingState): boolean {
-  const effectif = s.effectifSurSite.trim();
+  // L'effectif se lit ICI comme le serveur le lira — `Number()`, ce que fait
+  // `z.coerce.number()` — et non par une regex : « 12.0 » passait l'étape 1
+  // (qui lit `Number`), n'ouvrait pas la question (qui lisait `^[0-9]+$`), puis
+  // était refusé par le serveur à l'étape 3, sur un champ jamais montré.
+  const saisi = s.effectifSurSite.trim();
+  const effectif = saisi === "" ? NaN : Number(saisi);
   return nombreDePersonnesADemander({
     estERP: s.estERP,
     categorieErp: (s.categorieErp || null) as CategorieErp | null,
-    effectifSurSite: /^[0-9]+$/.test(effectif) ? Number(effectif) : null,
+    effectifSurSite: Number.isInteger(effectif) ? effectif : null,
   });
 }
 
+/** Étape 2 — les régimes (ADR-004), et les deux questions qui en dépendent. */
 export function validerTypologie(s: OnboardingState): Blocage | null {
   if (!s.estEtablissementTravail && !s.estERP && !s.estIGH && !s.estHabitation)
     return {
@@ -181,12 +189,14 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
       message: "Indiquez si votre établissement héberge du public pour la nuit.",
     };
   if (nombreDePersonnesDemande(s)) {
-    const n = s.personnesPresentesHabituellement.trim();
-    if (!/^[0-9]+$/.test(n) || Number(n) < 1)
+    const saisie = s.personnesPresentesHabituellement.trim();
+    const n = saisie === "" ? NaN : Number(saisie);
+    // Mêmes bornes que le schéma serveur (1 à 99 999, entier) : ce qui passe
+    // ici doit passer là-bas, sinon le refus tombe à l'étape 3, hors de vue.
+    if (!Number.isInteger(n) || n < 1 || n > 99999)
       return {
         champ: "personnesPresentesHabituellement",
-        message:
-          "Indiquez combien de personnes peuvent se trouver en même temps dans vos locaux, salariés et public compris.",
+        message: MESSAGE_NOMBRE_DE_PERSONNES,
       };
   }
   // DEUX REFUS ONT VÉCU ICI, ET SONT TOMBÉS LE 2026-09-03 : « Précisez la

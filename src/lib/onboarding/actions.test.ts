@@ -110,12 +110,12 @@ describe("finaliserOnboarding — le calendrier naît avec l'établissement", ()
   });
 });
 
-// Le nombre de personnes (R. 4227-34) revient au parcours le 2026-09-21. Le
+// Le nombre de personnes (R. 4227-34) revient au parcours le 2026-09-20. Le
 // schéma a ses tests ; ceux-ci tiennent le BRANCHEMENT — que le champ posté
 // atteigne la base, et que rien n'y soit écrit quand personne n'a répondu.
 // Retirer la ligne `personnesPresentesHabituellement` de l'objet `input`, ou
 // le spread de l'écriture, laisse le schéma vert et crée un restaurant muet.
-describe("finaliserOnboarding — le nombre de personnes atteint la base (2026-09-21)", () => {
+describe("finaliserOnboarding — le nombre de personnes atteint la base (2026-09-20)", () => {
   const restaurant = {
     codeNaf: "56.10A",
     estERP: "true",

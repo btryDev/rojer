@@ -109,7 +109,7 @@ export async function finaliserOnboarding(
         // technicien au tout début d'un parcours. La colonne reste à `null` —
         // on ne sait pas encore — et la fiche établissement la porte.
         //
-        // LE NOMBRE DE PERSONNES EST REVENU LE 2026-09-21, borné : le schéma ne
+        // LE NOMBRE DE PERSONNES EST REVENU LE 2026-09-20, borné : le schéma ne
         // l'accepte que des dossiers que `nombreDePersonnesADemander` désigne,
         // et l'exige d'eux. Pour tous les autres il reste `undefined` ici, donc
         // `null` en base, et le moteur conclut sans lui (catégorie d'ERP dès la

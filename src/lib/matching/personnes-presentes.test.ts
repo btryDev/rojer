@@ -81,6 +81,29 @@ describe("nombreDePersonnesADemander — à qui la question est posée", () => {
     ).toBe(false);
   });
 
+  it("ne la pose pas quand les matières de R. 4227-22 sont déclarées : le nombre ne changerait rien", () => {
+    const n5 = { estERP: true, categorieErp: "N5" as const, effectifSurSite: 6 };
+    expect(
+      nombreDePersonnesADemander({ ...n5, manipuleMatieresR422722: true }),
+    ).toBe(false);
+    // Le moteur le confirme : matières déclarées, les deux lignes sont dues
+    // sans « à confirmer », nombre absent ou non.
+    const raisons = determineObligationsApplicables(
+      etab({ manipuleMatieresR422722: true }),
+      [],
+    )
+      .filter((o) => IDS.includes(o.obligation.id))
+      .flatMap((o) => o.raisons)
+      .join(" ");
+    expect(retenues(etab({ manipuleMatieresR422722: true }))).toEqual(IDS);
+    expect(raisons).not.toContain("à confirmer");
+    // « non » et le silence, eux, laissent la question due.
+    for (const m of [false, null])
+      expect(
+        nombreDePersonnesADemander({ ...n5, manipuleMatieresR422722: m }),
+      ).toBe(true);
+  });
+
   it("ne demande rien sur la foi d'un effectif ou d'une catégorie absents", () => {
     expect(
       nombreDePersonnesADemander({ estERP: true, categorieErp: "N5", effectifSurSite: null }),

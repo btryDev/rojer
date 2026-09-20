@@ -10,6 +10,7 @@ import {
 // parcours qu'elle borne.
 export { EFFECTIF_MAX };
 import {
+  MESSAGE_NOMBRE_DE_PERSONNES,
   SEUIL_PERSONNES_R422734,
   nombreDePersonnesADemander,
 } from "@/lib/matching/personnes-presentes";
@@ -89,7 +90,7 @@ export const onboardingSchema = z
     // Posée au parcours depuis ce jour, et seulement aux types où le sommeil est plausible de
     // `TYPES_ERP_QUESTION_LOCAUX_SOMMEIL`. DEUX réponses, « oui » ou « non »,
     // et la réponse est OBLIGATOIRE là où la question est posée (arbitrage de
-    // la propriétaire, 2026-09-21 : « je ne sais pas encore » est retiré — un
+    // la propriétaire, 2026-09-20 : « je ne sais pas encore » est retiré — un
     // exploitant sait s'il héberge du public la nuit, et la question n'est
     // posée qu'aux types où elle a un sens). Le paragraphe ci-dessous décrit
     // l'état d'avant, gardé pour ce qu'il explique du `undefined` : il reste la
@@ -112,15 +113,15 @@ export const onboardingSchema = z
               : undefined,
       z.boolean().optional(),
     ),
-    // ─── Personnes pouvant se trouver réunies (2026-09-21) ──
+    // ─── Personnes pouvant se trouver réunies (2026-09-20) ──
     //
     // LA QUESTION REVIENT AU PARCOURS, ET PAS SOUS SA FORME DU 2026-09-01. Elle
     // en était sortie ce jour-là parce qu'elle était posée À TOUS, dès la
     // première minute : « deux questions de technicien ». Le moteur s'en est
-    // passé depuis en retenant « par prudence » — et la mesure du 2026-09-21
+    // passé depuis en retenant « par prudence » — et la mesure du 2026-09-20
     // montre ce que cela coûte : un restaurant de six salariés et trente
-    // couverts porte une consigne incendie et un exercice semestriel qu'il ne
-    // doit pas, sans qu'aucun écran du parcours ne l'ait invité à répondre.
+    // couverts porte une consigne incendie et un exercice semestriel que rien
+    // n'établit qu'il doive, sans qu'aucun écran du parcours ne l'ait invité à répondre.
     //
     // Elle n'est donc posée QU'À CEUX DONT LA RÉPONSE CHANGE QUELQUE CHOSE —
     // `nombreDePersonnesADemander` : un ERP que ni sa catégorie ni son effectif
@@ -131,10 +132,10 @@ export const onboardingSchema = z
     personnesPresentesHabituellement: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
       z.coerce
-        .number({ message: "Indiquez un nombre entier." })
-        .int("Indiquez un nombre entier.")
-        .min(1, "Au moins une personne.")
-        .max(99999)
+        .number({ message: MESSAGE_NOMBRE_DE_PERSONNES })
+        .int(MESSAGE_NOMBRE_DE_PERSONNES)
+        .min(1, MESSAGE_NOMBRE_DE_PERSONNES)
+        .max(99999, MESSAGE_NOMBRE_DE_PERSONNES)
         .optional(),
     ),
     // `classeIgh` et `familleHabitation` ont quitté ce schéma le 2026-09-03
@@ -199,7 +200,7 @@ export const onboardingSchema = z
     // que personne n'a été invité à déclarer.
     //
     // Hors de ces types la question n'est posée NULLE PART, fiche comprise
-    // (arbitrage du 2026-09-21) : le type déclaré a déjà répondu, et le moteur
+    // (arbitrage du 2026-09-20) : le type déclaré a déjà répondu, et le moteur
     // ne retient rien sur leur silence (`matching/engine.ts`).
     if (
       val.comporteLocauxSommeilPublic !== undefined &&
@@ -219,7 +220,7 @@ export const onboardingSchema = z
       });
     }
 
-    // LA RÉPONSE EST DUE LÀ OÙ LA QUESTION EST POSÉE (2026-09-21). Sans ce
+    // LA RÉPONSE EST DUE LÀ OÙ LA QUESTION EST POSÉE (2026-09-20). Sans ce
     // contrôle, un client qui ne poste pas le champ créerait un hôtel muet —
     // que le moteur couvrirait par prudence, mais que plus aucun écran
     // n'inviterait à répondre dès la création.
@@ -252,8 +253,7 @@ export const onboardingSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["personnesPresentesHabituellement"],
-        message:
-          "Indiquez combien de personnes peuvent se trouver en même temps dans vos locaux, salariés et public compris.",
+        message: MESSAGE_NOMBRE_DE_PERSONNES,
       });
     }
     if (!nombreDemande && val.personnesPresentesHabituellement !== undefined) {

@@ -117,7 +117,7 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     ...(raw.dateCertificatConformite === undefined
       ? {}
       : { dateCertificatConformite: raw.dateCertificatConformite }),
-    // [2026-09-21 : vrai pour les types à qui la question est posée. Hors
+    // [2026-09-20 : vrai pour les types à qui la question est posée. Hors
     // liste, `reponseSommeilSuivantLeType` remet la colonne à `null` à
     // l'écriture — la réponse suit le type.]
     // Même protection, et elle compte davantage ici : cette colonne DÉCIDE de
