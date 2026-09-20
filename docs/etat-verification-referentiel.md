@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-09-20
-**Référentiel** : `2026-09-11.1`
+**Référentiel** : `2026-09-20.1`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,18 +83,18 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**154 obligations**, **299 références** — 90 obligations en citent plus d'une.
+**156 obligations**, **302 références** — 91 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
 | 5 · lu à la source, verbatim relevé | 59 | 38 % | 67 | 148 | 49 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 84 | 55 % | 81 | 139 | 46 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 86 | 55 % | 83 | 142 | 47 % |
 | 3 · lu et daté, aucun verbatim | 11 | 7 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**143 obligations sur 154 (93 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**145 obligations sur 156 (93 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **11 obligations (7 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 279 | 93 % |
+| ancrée | 282 | 93 % |
 | divergente | 0 | 0 % |
 | jamais constatée | 20 | 7 % |
 
-**11 obligations sur 154 (7 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**11 obligations sur 156 (7 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **Aucune divergence** entre la version qu'une obligation déclare avoir constatée et celle que le corpus déclare avoir lue. Les deux moitiés du dépôt disent la même chose partout où elles parlent toutes les deux.
 
@@ -137,16 +137,16 @@ repose sur un texte que personne n'a ouvert.
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 |
 | `levage` | 10 | 27 | 9 | 1 | · | · | · | · | 10 / 10 — 100 % | 0 / 27 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 |
-| `organisation_prevention` | 4 | 7 | 1 | 3 | · | · | · | · | 4 / 4 — 100 % | 0 / 7 | 2026-08-31 → 2026-09-02 |
+| `organisation_prevention` | 5 | 9 | 1 | 4 | · | · | · | · | 5 / 5 — 100 % | 0 / 9 | 2026-08-31 → 2026-09-20 |
 | `porte_portail` | 5 | 8 | · | 5 | · | · | · | · | 5 / 5 — 100 % | 0 / 8 | 2026-09-01 |
 | `sante_travail` | 9 | 17 | · | 8 | 1 | · | · | · | 8 / 9 — 89 % | 0 / 17 | 2026-08-31 |
-| `secours` | 3 | 3 | · | 3 | · | · | · | · | 3 / 3 — 100 % | 0 / 3 | 2026-08-31 |
+| `secours` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-20 |
 | `signalisation` | 9 | 10 | · | 9 | · | · | · | · | 9 / 9 — 100 % | 0 / 10 | 2026-09-02 |
 | `stockage_dangereux` | 6 | 13 | · | 6 | · | · | · | · | 6 / 6 — 100 % | 0 / 13 | 2026-08-27 → 2026-09-01 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
-**17 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (10), `ascenseur` (8), `co_activite` (1), `compactage_dechets` (1), `eclairage` (1), `epi` (2), `equipement_sous_pression` (7), `formation_securite` (9), `froid` (8), `information_travailleurs` (2), `levage` (10), `locaux_sociaux` (4), `organisation_prevention` (4), `porte_portail` (5), `secours` (3), `signalisation` (9), `stockage_dangereux` (6).
+**17 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (10), `ascenseur` (8), `co_activite` (1), `compactage_dechets` (1), `eclairage` (1), `epi` (2), `equipement_sous_pression` (7), `formation_securite` (9), `froid` (8), `information_travailleurs` (2), `levage` (10), `locaux_sociaux` (4), `organisation_prevention` (5), `porte_portail` (5), `secours` (4), `signalisation` (9), `stockage_dangereux` (6).
 
 Aucun domaine n'est entièrement dépourvu de verbatim.
 
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-04 |
-| `etablissement` | 51 | 102 | 15 | 33 | 3 | · | · | · | 48 / 51 — 94 % | 0 / 102 | 2026-08-26 → 2026-09-04 |
+| `etablissement` | 53 | 105 | 15 | 35 | 3 | · | · | · | 50 / 53 — 94 % | 0 / 105 | 2026-08-26 → 2026-09-20 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-01 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -174,8 +174,9 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-09-01 | 141 | 47 % | 88 |
 | 2026-09-02 | 16 | 5 % | 13 |
 | 2026-09-04 | 14 | 5 % | 8 |
+| 2026-09-20 | 3 | 1 % | 2 |
 
-299 des 299 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-04.
+302 des 302 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-20.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -191,7 +192,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**290 articles dépouillés ne sont cités par aucune obligation**, répartis sur 40 corpus.
+**295 articles dépouillés ne sont cités par aucune obligation**, répartis sur 41 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -213,6 +214,7 @@ une relecture déjà faite.
 | `arrete-1980-livre-2` | 6 | 25 | 2026-09-01 → 2026-09-04 |
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 |
 | `code-travail-matieres-inflammables` | 6 | 6 | 2026-09-02 |
+| `code-travail-chaleur-intense` | 5 | 8 | 2026-09-20 |
 | `code-travail-bruit-vibrations` | 5 | 5 | 2026-09-02 |
 | `arrete-2011-12-30-igh` | 4 | 6 | 2026-09-03 → 2026-09-04 |
 | `code-travail-sante-travail` | 4 | 16 | 2026-08-31 → 2026-09-20 |
@@ -242,7 +244,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 154 obligations
+## 8. Les 156 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -308,6 +310,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `locaux-etablissement-installations-sanitaires` | locaux_sociaux | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `locaux-etablissement-local-restauration` | locaux_sociaux | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `prevention-etablissement-cse` | organisation_prevention | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
+| `prevention-etablissement-evaluation-chaleur-intense` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-20 |
 | `prevention-etablissement-reglement-interieur` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 |
 | `prevention-etablissement-salarie-designe` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 |
 | `porte-auto-dossier-maintenance` | porte_portail | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
@@ -325,6 +328,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `sante-travail-salarie-vip-adaptee` | sante_travail | salarie | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 |
 | `secours-etablissement-materiel` | secours | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `secours-etablissement-mesures` | secours | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
+| `secours-etablissement-signalement-chaleur-intense` | secours | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-20 |
 | `secours-salarie-secouriste` | secours | salarie | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `signalisation-etablissement-alimentation-secours-presence` | signalisation | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
 | `signalisation-etablissement-alimentations-secours-annuelle` | signalisation | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-02 |
@@ -406,7 +410,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 299 références, une par une
+## 9. Les 302 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -673,6 +677,7 @@ refaire pour la contredire.
 | `secours-etablissement-materiel` | fondement | R. 4224-14 (matériel de premiers secours adapté à la nature des risques et facilement accessible) | R. 4224-14 | code-travail-secours | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `secours-salarie-secouriste` | fondement | R. 4224-15 (membre du personnel formé au secourisme dans chaque atelier où sont accomplis des travaux dangereux) | R. 4224-15 | code-travail-secours | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `secours-etablissement-mesures` | fondement | R. 4224-16 (mesures prises après avis du médecin du travail, consignées dans un document tenu à disposition de l'inspection du travail) | R. 4224-16 | code-travail-secours | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2021-02-13 | 2021-02-13 | 4 · agent + verbatim | ancrée |
+| `secours-etablissement-signalement-chaleur-intense` | fondement | R. 4463-6 (modalités de signalement et de secours, portées à la connaissance des travailleurs et communiquées au service de prévention et de santé au travail) | R. 4463-6 | code-travail-chaleur-intense | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-salarie-designe` | fondement | L. 4644-1 I (l'employeur désigne un ou plusieurs salariés compétents pour s'occuper des activités de protection et de prévention) | L. 4644-1 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2022-03-31 | 2022-03-31 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-salarie-designe` | contexte 1 | R. 4644-1 (les personnes désignées le sont après avis du comité social et économique s'il existe, et disposent du temps nécessaire et des moyens requis) | R. 4644-1 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-cse` | fondement | L. 2311-2 (CSE dans les entreprises d'au moins onze salariés, si l'effectif est atteint pendant douze mois consécutifs) | L. 2311-2 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
@@ -680,6 +685,8 @@ refaire pour la contredire.
 | `prevention-etablissement-reglement-interieur` | contexte 1 | L. 1311-2 (obligation d'établir un règlement intérieur à partir de cinquante salariés, au terme d'un délai de douze mois) | L. 1311-2 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2020-01-01 | 2020-01-01 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-liste-personnes-qualifiees` | fondement | R. 4323-24 première phrase (liste des personnes qualifiées tenue à la disposition de l'inspection du travail) | R. 4323-24 | code-travail-levage | retenu | 2026-09-02 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `prevention-etablissement-liste-personnes-qualifiees` | contexte 1 | R. 4323-23 (article qui institue la vérification générale périodique et en renvoie la périodicité à des arrêtés) | R. 4323-23 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
+| `prevention-etablissement-evaluation-chaleur-intense` | fondement | R. 4463-2 (évaluation du risque lié aux épisodes de chaleur intense, et définition des mesures du III de L. 4121-3-1) | R. 4463-2 | code-travail-chaleur-intense | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
+| `prevention-etablissement-evaluation-chaleur-intense` | contexte 1 | R. 4463-3 (les huit fondements de la réduction du risque) | R. 4463-3 | code-travail-chaleur-intense | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
 | `information-etablissement-affichages-obligatoires` | fondement | D. 4711-1 (affichage de l'adresse et du numéro d'appel du service de santé au travail, des secours d'urgence et de l'inspection du travail) | D. 4711-1 | code-travail-information-travailleurs | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `information-etablissement-avis-acces-duerp` | fondement | R. 4121-4 dernier alinéa (avis affiché indiquant les modalités d'accès des travailleurs au document unique) | R. 4121-4 | code-travail-information-travailleurs | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2022-03-31 | 2022-03-31 | 4 · agent + verbatim | ancrée |
 | `epi-etablissement-consigne-utilisation` | fondement | R. 4323-105 (consigne d'utilisation des équipements de protection individuelle) | R. 4323-105 | code-travail-epi | retenu | 2026-09-04 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |

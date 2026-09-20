@@ -26,6 +26,7 @@ import { ARRETE_2018_02_23_GAZ_HABITATION } from "./arrete-2018-02-23-gaz-habita
 import { ARRETES_ASCENSEURS } from "./arretes-ascenseurs";
 import { ARRETES_MODIFICATIFS_ERP } from "./arretes-modificatifs-erp";
 import { CCH_ASCENSEURS } from "./cch-ascenseurs";
+import { CODE_TRAVAIL_CHALEUR_INTENSE } from "./code-travail-chaleur-intense";
 import { CODE_TRAVAIL_PORTES } from "./code-travail-portes";
 import { CODE_TRAVAIL_ELECTRICITE } from "./code-travail-electricite";
 import { CODE_TRAVAIL_RISQUE_CHIMIQUE } from "./code-travail-risque-chimique";
@@ -181,6 +182,9 @@ export const CORPUS: readonly Corpus[] = [
   // Lot légionelles, 2026-09-20 — le dernier arrêté cité à l'écran sans avoir
   // été ouvert. Aucune obligation encodée : le champ laisse la cible dehors.
   ARRETE_2010_02_01_LEGIONELLES,
+  // Lot chaleur intense, 2026-09-20 — le chapitre que le décret n° 2025-482
+  // créait, et que le dépôt n'avait lu que par son article voisin.
+  CODE_TRAVAIL_CHALEUR_INTENSE,
   // Lot « socle DUERP », 2026-09-02 — le texte fondateur du produit, dont le
   // corpus ne portait qu'un article (`R. 4121-4`, entré par la porte de
   // l'affichage obligatoire) alors que dix-neuf surfaces le citent au

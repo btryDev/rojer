@@ -120,4 +120,34 @@ export const obligationsSecours: Obligation[] = [
     notesInternes:
       "LA PLUPART DES TPE SONT CONCERNÉES SANS LE SAVOIR : la condition de l'article est l'ABSENCE d'infirmiers, ce qui est le cas ordinaire d'une entreprise de moins de cinquante personnes. Ce n'est donc pas une obligation d'exception, c'est la règle générale pour la cible du produit.\n\nCE QUE L'OUTIL NE SAIT PAS SOLDER. L'article exige un DOCUMENT « tenu à la disposition de l'agent de contrôle de l'inspection du travail ». Le produit n'offre ici qu'un dépôt de fichier là où le texte attend un écrit structuré — même configuration que R. 4227-39 pour le registre des exercices d'évacuation. Aucune transmission `modele_absent` n'est déclarée : `docs/registre-securite-ecart.md` recense les modèles manquants sous des noms précis, et en inventer un ici sans avoir vérifié sa nomenclature créerait une référence fantôme. C'est signalé au rapport du lot 7 comme un point à instruire, pas comme une décision prise.\n\n« APRÈS AVIS DU MÉDECIN DU TRAVAIL » : condition de bonne exécution que l'outil ne trace pas, comme l'association du médecin à la formation (R. 4141-6). Aucun champ ne la porte.\n\nVERSION À SURVEILLER : l'article a été modifié par le décret n° 2021-143 du 10 février 2021, en vigueur au 13 février 2021 — c'est le seul des trois articles de la section qui ait bougé depuis 2008.\n\nCriticité 3 : le manquement porte sur une organisation et sa formalisation, pas directement sur l'absence de moyens de secours (R. 4224-14) ou de personne formée (R. 4224-15).\n\nLE MODÈLE MANQUANT EST DÉSORMAIS NOMMÉ AUTREMENT (ADR-026). Le paragraphe ci-dessus refuse de déclarer une transmission `modele_absent` faute de nomenclature, et il a raison : `docs/registre-securite-ecart.md` est un écart du REGISTRE DE SÉCURITÉ INCENDIE, sa table des modèles manquants ne porte rien qui couvre le document de R. 4224-16, et y inventer une entrée serait la référence fantôme qu'il redoute. Vérifié le 2026-08-31, les huit modèles de son § 6 lus un à un. Le manque est maintenant porté par `pieceAttendue`, qui nomme l'écrit que le TEXTE exige sans rien préjuger du modèle Prisma qui le porterait : la donnée est lisible par une machine, et aucune référence n'est inventée.",
   },
+
+  {
+    id: "secours-etablissement-signalement-chaleur-intense",
+    domaine: "secours",
+    libelle:
+      "Chaleur intense : modalités de signalement (indice physiologique préoccupant, malaise, détresse) et de secours, portées à la connaissance des travailleurs et communiquées au service de prévention et de santé au travail",
+    description:
+      "L'employeur définit les modalités de signalement de toute apparition d'indice physiologique préoccupant, de situation de malaise ou de détresse, ainsi que celles destinées à porter secours, dans les meilleurs délais, à tout travailleur et, plus particulièrement, aux travailleurs isolés ou éloignés. Elles sont portées à la connaissance des travailleurs et communiquées au service de prévention et de santé au travail.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4463-6 (modalités de signalement et de secours, portées à la connaissance des travailleurs et communiquées au service de prévention et de santé au travail)",
+        article: "R. 4463-6",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676937",
+        note: "« L'employeur définit les modalités de signalement de toute apparition d'indice physiologique préoccupant, de situation de malaise ou de détresse, ainsi que celles destinées à porter secours, dans les meilleurs délais, à tout travailleur et, plus particulièrement, aux travailleurs isolés ou éloignés. Elles sont portées à la connaissance des travailleurs et communiquées au service de prévention et de santé au travail. » Créé par le décret n° 2025-482 du 27 mai 2025, art. 3. Relu sur la page de l'article le 2026-09-20.",
+        versionConstatee: "2025-06-02",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "LE SECOND ALINÉA AVAIT ÉCHAPPÉ À LA PREMIÈRE LECTURE. L'instruction du 2026-09-01 résumait l'article à « définit les modalités de signalement » ; la page de SECTION du code le rend d'ailleurs tronqué à cette seule proposition. La page propre de l'article, ouverte le 2026-09-20, porte deux choses de plus : les modalités « destinées à porter secours », et un second alinéa — « portées à la connaissance des travailleurs et communiquées au service de prévention et de santé au travail ». Le libellé les dit — les TROIS signaux, les secours, et les deux destinataires du second alinéa ; sa première écriture réduisait le tout à « un malaise » et oubliait le service de santé au travail (contre-lecture du 2026-09-20).\n\n`pieceAttendue: null`. Le texte fait DÉFINIR, FAIRE CONNAÎTRE et COMMUNIQUER ; il ne nomme ni registre, ni consigne, ni document tenu à disposition — à la différence de `R. 4224-16`, son voisin de domaine, qui exige « un document ». Nommer une pièce ici ferait passer une bonne pratique pour du droit.\n\nPLACÉE SOUS LE CHAPITRE « CHALEUR INTENSE », ET BORNÉE PAR LUI. L'article ne répète pas la condition, mais il vit dans la section « Mesures de prévention » du chapitre III du titre VI : c'est une mesure de prévention du risque chaleur, pas une obligation générale de signalement des malaises. Le libellé garde donc « en cas de chaleur intense ».\n\nAUCUNE PÉRIODICITÉ, d'où `autre` et `etat_permanent`. Criticité 3, celle de `secours-etablissement-mesures`.",
+  },
 ];
