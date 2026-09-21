@@ -46,9 +46,10 @@ import type { PorteurObligation } from "./types";
 
 /**
  * Le porteur de CHAQUE obligation du référentiel, relevé en appelant
- * `porteurDe` le 2026-09-21 : 159 lignes, 89 équipement, 56 établissement,
+ * `porteurDe` le 2026-09-21 : 162 lignes, 89 équipement, 59 établissement,
  * 14 salarié (~~154 / 51 au 2026-09-15~~ ; +2 au lot chaleur intense, +1 au
- * registre de dette, +2 avec `PE 27`). Pas un instantané vitest : une table lue et écrite à la main.
+ * registre de dette, +2 avec `PE 27`, +3 avec les
+ * événementielles de la chaleur intense). Pas un instantané vitest : une table lue et écrite à la main.
  *
  * POURQUOI UNE TABLE. Un identifiant ne dit pas son porteur, et rien dans le
  * référentiel ne se souvient de celui qu'il avait. Le 2026-08-31, le lot
@@ -196,6 +197,9 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "porte-auto-portail-piete-coulissant": "equipement",
   "porte-auto-verification-initiale": "equipement",
   "porte-auto-verification-semestrielle": "equipement",
+  "prevention-etablissement-chaleur-eau-fraiche": "etablissement",
+  "prevention-etablissement-chaleur-mise-en-oeuvre": "etablissement",
+  "prevention-etablissement-chaleur-travailleur-vulnerable": "etablissement",
   "prevention-etablissement-cse": "etablissement",
   "prevention-etablissement-evaluation-chaleur-intense": "etablissement",
   "prevention-etablissement-liste-personnes-qualifiees": "etablissement",

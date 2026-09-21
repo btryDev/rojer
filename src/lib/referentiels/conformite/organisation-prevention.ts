@@ -245,4 +245,97 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     notesInternes:
       "INSTRUIT LE 2026-09-01 (`docs/revues/lot-d3-recoupement-droit.md` § 1), ENCODÉ LE 2026-09-20. C'est l'incident fondateur raconté en tête de `corpus/types.ts` : le décret n° 2025-482 était entré dans le dépôt par `R. 4225-2` (« eau potable et fraîche ») sans que personne remonte à son objet principal — un chapitre entier, `R. 4463-1` à `-8`, qui vise TOUT employeur et nomme l'exposition « en intérieur ». Une cuisine de restaurant en est le cas d'école.\n\nAUCUNE PÉRIODICITÉ, AUCUN SEUIL. Ni cet article ni aucun autre du chapitre n'écrit un rythme ; l'évaluation suit celle du document unique. Aucune température ne figure au code : l'épisode de chaleur intense est défini par arrêté, par référence au dispositif de vigilance de Météo-France (`R. 4463-1` ; l'arrêté du 27 mai 2025 n'a PAS été ouvert ici). Écrire « 33 °C » ou tout autre chiffre serait inventer. D'où `periodicite: \"autre\"` et `nature: \"etat_permanent\"`.\n\n`pieceAttendue: null`, ET C'EST DÉLIBÉRÉ. L'écrit existe — le III de `L. 4121-3-1` (au corpus `code-travail-duerp`, lu le 2026-09-02, version au 2022-03-31) fait consigner la liste des actions dans le document unique EN DESSOUS de cinquante salariés (2°), et les range dans le programme annuel de prévention À PARTIR de cinquante (1°) ; la description dit les deux, sa première écriture écrasait le second cas — mais cet écrit EST le DUERP, que le produit porte comme module et dont l'obligation est ailleurs. Nommer ici une seconde pièce ferait croire à un document distinct que le texte ne demande pas. L'obligation est un ACTE : évaluer, puis définir.\n\nCE QUE LE PRODUIT NE RELIE PAS. Les référentiels DUERP nomment l'épisode de chaleur (`bur-thermique` : « vagues de chaleur » ; `com-chaleur-intense` et `resto-chaleur-intense` depuis ce lot — `resto-ambiance-thermique` ne traitait que le contraste cuisine / chambre froide), mais rien ne rapproche cette ligne d'un risque effectivement coté dans le document unique du dossier : l'état se DÉCLARE (ADR-027), il ne se déduit pas.\n\nLES MODALITÉS NE SONT PAS DES LIGNES. `R. 4463-4` (eau fraîche en épisode, et un moyen de la maintenir au frais), `-5` (travailleur vulnérable), `-7` (mise en œuvre lors de la survenance) se déclenchent sur un ÉPISODE, que le produit n'observe pas : au corpus en `obligation_manquante`, bloqués par l'absence de surface pour l'événementiel (lot 6a du plan). `R. 4463-6` a sa propre ligne, secours-etablissement-signalement-chaleur-intense.\n\nCriticité 3 : obligation d'évaluation et d'organisation, comme `secours-etablissement-mesures`.",
   },
+
+  {
+    id: "prevention-etablissement-chaleur-eau-fraiche",
+    domaine: "organisation_prevention",
+    libelle:
+      "Eau potable fraîche en quantité suffisante, et un moyen de la maintenir au frais près des postes",
+    description:
+      "En cas d'épisode de chaleur intense, une quantité d'eau potable fraîche suffisante est fournie par l'employeur. Il prévoit un moyen pour maintenir au frais, tout au long de la journée de travail, l'eau destinée à la boisson, à proximité des postes de travail, notamment pour les postes de travail extérieurs.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4463-4 (eau potable fraîche en cas d'épisode de chaleur intense)",
+        article: "R. 4463-4",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676933",
+        note: "« En cas d'épisode de chaleur intense, une quantité d'eau potable fraîche suffisante est fournie par l'employeur. L'employeur prévoit un moyen pour maintenir au frais, tout au long de la journée de travail, l'eau destinée à la boisson, à proximité des postes de travail, notamment pour les postes de travail extérieurs. » Créé par le décret n° 2025-482 du 27 mai 2025, art. 3.",
+        versionConstatee: "2025-06-02",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "En cas d'épisode de chaleur intense",
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-21, avec la page « Quand ça arrive » (ADR-037). Elle était au corpus en `obligation_manquante`, cause `evenement` : le produit n'observe pas la vigilance météorologique, donc il ne peut pas la DATER. Il peut la DIRE, et c'est tout ce que cette ligne fait — ni date, ni état, ni case. Verbatim relevé sur la page propre de l'article le 2026-09-20, recoupé par une contre-lecture le même jour. AUCUN SEUIL DE TEMPÉRATURE : l'épisode de chaleur intense est défini par arrêté, par référence au dispositif de Météo-France (`R. 4463-1`) ; cet arrêté n'est pas ouvert, et aucun chiffre n'est écrit nulle part.\n\nÀ NE PAS CONFONDRE avec `R. 4225-2` (eau potable et fraîche à disposition, en permanence), que le référentiel porte comme état permanent : celle-ci est son RENFORCEMENT en épisode — quantité « suffisante », et un moyen de la tenir au frais. Criticité 4 : le coup de chaleur tue.",
+  },
+
+  {
+    id: "prevention-etablissement-chaleur-travailleur-vulnerable",
+    domaine: "organisation_prevention",
+    libelle:
+      "Mesures de prévention adaptées pour un travailleur particulièrement vulnérable à la chaleur, en liaison avec le service de santé au travail",
+    description:
+      "Lorsqu'il est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense, l'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention en vue d'assurer la protection de sa santé.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4463-5 (adaptation des mesures au travailleur particulièrement vulnérable)",
+        article: "R. 4463-5",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676935",
+        note: "« Lorsqu'il est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense, l'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention prévues au présent chapitre en vue d'assurer la protection de sa santé. » Créé par le décret n° 2025-482 du 27 mai 2025, art. 3.",
+        versionConstatee: "2025-06-02",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "Lorsque l'employeur est informé qu'un travailleur est, notamment en raison de son âge ou de son état de santé, particulièrement vulnérable à la chaleur intense",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-21, avec la page « Quand ça arrive » (ADR-037). Elle était au corpus en `obligation_manquante`, cause `evenement` : le produit n'observe pas la vigilance météorologique, donc il ne peut pas la DATER. Il peut la DIRE, et c'est tout ce que cette ligne fait — ni date, ni état, ni case. Verbatim relevé sur la page propre de l'article le 2026-09-20, recoupé par une contre-lecture le même jour. AUCUN SEUIL DE TEMPÉRATURE : l'épisode de chaleur intense est défini par arrêté, par référence au dispositif de Météo-France (`R. 4463-1`) ; cet arrêté n'est pas ouvert, et aucun chiffre n'est écrit nulle part.\n\nPORTÉE PAR L'ÉTABLISSEMENT, ET PAS PAR LE SALARIÉ — délibérément. Le fait concerne UNE personne, mais la règle est la même pour tous, et la fiche d'un salarié ne doit rien laisser deviner de son âge ni de son état de santé : `docs/rgpd.md` § 2.3 interdit au produit de détenir quoi que ce soit de tel. Le produit DIT la règle, il ne recueille ni qui est vulnérable, ni pourquoi.",
+  },
+
+  {
+    id: "prevention-etablissement-chaleur-mise-en-oeuvre",
+    domaine: "organisation_prevention",
+    libelle:
+      "Mise en œuvre des mesures de prévention définies, adaptées si la chaleur s'intensifie",
+    description:
+      "Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention qu'il a définies, en les adaptant en cas d'intensification de la chaleur.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4463-7 (mise en œuvre des mesures lors de la survenue d'un épisode)",
+        article: "R. 4463-7",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676939",
+        note: "« Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur. » Créé par le décret n° 2025-482 du 27 mai 2025, art. 3. Le mot est « survenue » : une première lecture avait rendu « survenance », corrigée le 2026-09-20.",
+        versionConstatee: "2025-06-02",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "Lors de la survenue d'un épisode de chaleur intense",
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-21, avec la page « Quand ça arrive » (ADR-037). Elle était au corpus en `obligation_manquante`, cause `evenement` : le produit n'observe pas la vigilance météorologique, donc il ne peut pas la DATER. Il peut la DIRE, et c'est tout ce que cette ligne fait — ni date, ni état, ni case. Verbatim relevé sur la page propre de l'article le 2026-09-20, recoupé par une contre-lecture le même jour. AUCUN SEUIL DE TEMPÉRATURE : l'épisode de chaleur intense est défini par arrêté, par référence au dispositif de Météo-France (`R. 4463-1`) ; cet arrêté n'est pas ouvert, et aucun chiffre n'est écrit nulle part.\n\nLE PENDANT ÉVÉNEMENTIEL de `prevention-etablissement-evaluation-chaleur-intense` (`R. 4463-2`) : définir les mesures est un état permanent, les mettre en œuvre se déclenche sur l'épisode. Deux lignes, deux natures, deux écrans — c'est l'ADR-026.",
+  },
 ];

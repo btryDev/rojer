@@ -33,6 +33,9 @@ describe("« Quand ça arrive » — ce que la page présente", () => {
     const ids = lignes(etab()).map((l) => l.obligation.id);
     expect(ids).toContain("formation-securite-etablissement-information");
     expect(ids).toContain("formation-securite-etablissement-travail-sur-ecran");
+    // Depuis le 2026-09-21, tout employeur y lit aussi ce qu'un épisode de
+    // chaleur intense rend dû (R. 4463-4, -5, -7).
+    expect(ids).toContain("prevention-etablissement-chaleur-eau-fraiche");
     for (const l of lignes(etab())) {
       expect(l.obligation.nature, l.obligation.id).toBe("evenementielle");
       expect(porteurDe(l.obligation), l.obligation.id).toBe("etablissement");

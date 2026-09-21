@@ -38,7 +38,7 @@
  * `nature === "etat_permanent"` compte **cinquante-trois** obligations au 2026-09-21
  * (~~quarante-huit au 2026-09-13, sur 154~~ : le lot chaleur intense en ajoute
  * deux, le registre de dette une, `PE 27` deux) — remesuré en appelant `obligationsConformite`, jamais au grep, sur un
- * total de 159 qui concorde avec le préfixe de l'empreinte ; le « quarante-cinq » du
+ * total de 162 qui concorde avec le préfixe de l'empreinte ; le « quarante-cinq » du
  * 2026-09-04 avait été dépassé par trois lots sans que la phrase bouge —, et l'une d'elles
  * produit bel et bien une ligne de calendrier : `porte-auto-portail-piete-coulissant`
  * est un état permanent porté par un équipement, avec

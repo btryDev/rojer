@@ -1041,9 +1041,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // ── Lot chaleur intense, 2026-09-20. Trois obligations déclenchées par
       // un ÉPISODE, que le produit n'observe pas (eau fraîche, travailleur
       // vulnérable, mise en œuvre), et la prise en compte au plan de prévention.
-      "R. 4463-4",
-      "R. 4463-5",
-      "R. 4463-7",
+      // ~~"R. 4463-4", "R. 4463-5", "R. 4463-7"~~ — encodées le 2026-09-21.
       "R. 4463-8",
       // ── Lot « lectures en attente », 2026-09-21 : trouvé en ouvrant les deux
       // articles auxquels l'article 13 de l'arrêté de signalisation renvoie.

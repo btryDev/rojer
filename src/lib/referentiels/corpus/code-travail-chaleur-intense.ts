@@ -41,7 +41,7 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
   url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051676074",
   etendue: "integral",
   portee:
-    "Les huit articles du chapitre, tous créés par l'article 3 du décret n° 2025-482 du 27 mai 2025 et en vigueur depuis le 2 juin 2025. L'article 8 du même décret (ouvert le 2026-09-20) donne aux employeurs un mois pour s'y conformer, délai qui, pour ce chapitre, « court à compter de la publication de l'arrêté prévu à l'article R. 4463-1 » — arrêté non lu ici ; le délai est échu de longue date. Deux fondent une obligation d'établissement (R. 4463-2 et R. 4463-6), un troisième en donne le contenu (R. 4463-3). Quatre imposent quelque chose que le référentiel ne porte pas : deux se déclenchent sur un épisode que le produit n'observe pas (R. 4463-4, R. 4463-7), un sur une information reçue au sujet d'une personne (R. 4463-5), un vise le plan de prévention (R. 4463-8). L'arrêté qui définit l'épisode n'est pas dépouillé.",
+    "Les huit articles du chapitre, tous créés par l'article 3 du décret n° 2025-482 du 27 mai 2025 et en vigueur depuis le 2 juin 2025. L'article 8 du même décret (ouvert le 2026-09-20) donne aux employeurs un mois pour s'y conformer, délai qui, pour ce chapitre, « court à compter de la publication de l'arrêté prévu à l'article R. 4463-1 » — arrêté non lu ici ; le délai est échu de longue date. Deux fondent une obligation d'établissement (R. 4463-2 et R. 4463-6), un troisième en donne le contenu (R. 4463-3). ~~Quatre imposent quelque chose que le référentiel ne porte pas~~ [2026-09-21 : R. 4463-4, R. 4463-5 et R. 4463-7 sont encodés, en obligations événementielles que la page « Quand ça arrive » présente]. Reste R. 4463-8, qui vise le plan de prévention. L'arrêté qui définit l'épisode n'est pas dépouillé.",
   articles: [
     {
       ref: "R. 4463-1",
@@ -100,11 +100,10 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
         "En cas d'épisode de chaleur intense, l'employeur fournit une quantité suffisante d'eau potable fraîche et prévoit un moyen de la maintenir au frais toute la journée, à proximité des postes de travail, notamment extérieurs.",
       citationCle:
         "En cas d'épisode de chaleur intense, une quantité d'eau potable fraîche suffisante est fournie par l'employeur. L'employeur prévoit un moyen pour maintenir au frais, tout au long de la journée de travail, l'eau destinée à la boisson, à proximité des postes de travail, notamment pour les postes de travail extérieurs.",
-      statut: "obligation_manquante",
-      cause: "evenement",
-      toucheLaCible: true,
-      motif: "Obligation réelle, qui touche la cible, et DÉCLENCHÉE PAR UN ÉPISODE : le produit n'observe pas la vigilance météorologique et ne peut donc pas la dater. Il pourrait la DIRE — « quand un épisode survient, fournissez… » — le jour où une surface sert l'événementiel d'établissement (lot 6a du plan du 2026-09-20). Le second alinéa, tronqué par la page de section, n'est apparu que sur la page propre de l'article.",
-      bloquePar: "surface-evenementielle-absente",
+      statut: "retenu",
+      obligations: ["prevention-etablissement-chaleur-eau-fraiche"],
+      historique:
+        "Obligation manquante du 2026-09-20 au 2026-09-21 (cause `evenement`), encodée avec la page « Quand ça arrive ». Son motif d'alors : Obligation réelle, qui touche la cible, et DÉCLENCHÉE PAR UN ÉPISODE : le produit n'observe pas la vigilance météorologique et ne peut donc pas la dater. Il pourrait la DIRE — « quand un épisode survient, fournissez… » — le jour où une surface sert l'événementiel d'établissement (lot 6a du plan du 2026-09-20). Le second alinéa, tronqué par la page de section, n'est apparu que sur la page propre de l'article.",
     },
     {
       ref: "R. 4463-5",
@@ -118,11 +117,10 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
         "Informé qu'un travailleur est particulièrement vulnérable à la chaleur intense — âge, état de santé notamment —, l'employeur adapte les mesures de prévention en liaison avec le service de prévention et de santé au travail.",
       citationCle:
         "Lorsqu'il est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense, l'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention prévues au présent chapitre en vue d'assurer la protection de sa santé.",
-      statut: "obligation_manquante",
-      cause: "evenement",
-      toucheLaCible: true,
-      motif: "Déclenchée par une INFORMATION reçue sur une personne, et qui touche à son état de santé : le produit ne la stockera pas (frontière médicale, `docs/rgpd.md`) — il peut au plus rappeler la règle. Même blocage que R. 4463-4 : aucune surface ne sert l'événementiel d'établissement.",
-      bloquePar: "surface-evenementielle-absente",
+      statut: "retenu",
+      obligations: ["prevention-etablissement-chaleur-travailleur-vulnerable"],
+      historique:
+        "Obligation manquante du 2026-09-20 au 2026-09-21 (cause `evenement`), encodée avec la page « Quand ça arrive ». Son motif d'alors : Déclenchée par une INFORMATION reçue sur une personne, et qui touche à son état de santé : le produit ne la stockera pas (frontière médicale, `docs/rgpd.md`) — il peut au plus rappeler la règle. Même blocage que R. 4463-4 : aucune surface ne sert l'événementiel d'établissement.",
     },
     {
       ref: "R. 4463-6",
@@ -151,11 +149,10 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
         "Quand l'épisode survient, l'employeur met en œuvre les mesures définies en application de R. 4463-3, et les adapte si la chaleur s'intensifie.",
       citationCle:
         "Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur.",
-      statut: "obligation_manquante",
-      cause: "evenement",
-      toucheLaCible: true,
-      motif: "Le pendant événementiel de R. 4463-2 : définir est un état permanent, mettre en œuvre se déclenche sur l'épisode. Même blocage que R. 4463-4. ~~« survenance »~~ : la première écriture de cette citation portait ce mot, que le texte n'a pas — il dit « survenue », confirmé le 2026-09-20 sur la page de l'article ET dans l'article 3 du décret. L'outil de lecture avait normalisé le mot ; l'instruction du 2026-09-01, elle, l'avait juste.",
-      bloquePar: "surface-evenementielle-absente",
+      statut: "retenu",
+      obligations: ["prevention-etablissement-chaleur-mise-en-oeuvre"],
+      historique:
+        "Obligation manquante du 2026-09-20 au 2026-09-21 (cause `evenement`), encodée avec la page « Quand ça arrive ». Son motif d'alors : Le pendant événementiel de R. 4463-2 : définir est un état permanent, mettre en œuvre se déclenche sur l'épisode. Même blocage que R. 4463-4. ~~« survenance »~~ : la première écriture de cette citation portait ce mot, que le texte n'a pas — il dit « survenue », confirmé le 2026-09-20 sur la page de l'article ET dans l'article 3 du décret. L'outil de lecture avait normalisé le mot ; l'instruction du 2026-09-01, elle, l'avait juste.",
     },
     {
       ref: "R. 4463-8",

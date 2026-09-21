@@ -144,6 +144,11 @@ s'ajoute en `a_trancher`. Total : **65, dont 50 dans la cible**. Les lignes du
 tableau ci-dessus datent du 20 ; `registre-dette.test.ts` porte les chiffres
 courants.
 
+**Mise à jour du 2026-09-21, suite (`lot/evenementielles-cible`).** Les trois
+événementielles de la chaleur intense sont encodées : 65 − `R. 4463-4`
+− `R. 4463-5` − `R. 4463-7` = **62 manquantes, dont 47 dans la cible** ;
+`evenement` y passe de 9 à 6.
+
 **Ce tableau est sa seconde version, et la première était trop propre.** Elle
 annonçait 42 / 23, « vingt-deux n'attendent que deux choses » et « aucune
 catégorie d'équipement ne touche la cible ». La contre-lecture a confronté

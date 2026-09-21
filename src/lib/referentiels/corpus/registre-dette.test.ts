@@ -65,7 +65,9 @@ describe("registre de dette — les obligations manquantes", () => {
     expect(matrice).toEqual({
       //                        [cible, hors cible]
       libre: [0, 0],
-      evenement: [9, 1],
+      // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
+      // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
+      evenement: [6, 1],
       categorie_equipement: [5, 6],
       attribut_etablissement: [4, 2],
       destinataire: [5, 1],
@@ -81,8 +83,8 @@ describe("registre de dette — les obligations manquantes", () => {
       a_trancher: [8, 1],
       perimetre: [0, 3],
     });
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(50);
-    expect(manquantes.length).toBe(65);
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(47);
+    expect(manquantes.length).toBe(62);
   });
 });
 

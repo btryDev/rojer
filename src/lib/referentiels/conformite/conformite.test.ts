@@ -1375,6 +1375,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // `PE 27` § 4 et § 5 : consignes affichées et personnel instruit, deux états
     // permanents de tout ERP de 5ᵉ catégorie. Aucune ligne de calendrier.
     { version: "2026-09-21.1", empreinte: "159-c8f511323424c950" },
+    // Les trois obligations ÉVÉNEMENTIELLES de la chaleur intense (R. 4463-4,
+    // -5, -7), que la page « Quand ça arrive » présente. Ni date ni ligne de
+    // calendrier : 159 + 3 = 162.
+    { version: "2026-09-21.2", empreinte: "162-c5341dcba730e779" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1531,7 +1535,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(159);
+    ).toBe(162);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
