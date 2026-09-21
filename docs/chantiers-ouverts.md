@@ -161,8 +161,9 @@ doute (« dans le doute, `true` ») :
 - `PE 27 § 5` était rangée `a_trancher` alors que son blocage est levé.
 
 **Ce que le compte dit, à sa juste mesure.** Aucune cause ne domine : la dette
-de la cible est étalée sur dix causes, et la plus lourde — l'événementiel —
-n'en porte que neuf sur cinquante. L'ADR-037 reste le meilleur levier unitaire ;
+de la cible est étalée sur ~~dix~~ NEUF causes (au 2026-09-21 : plus aucune
+« libre »), et les deux plus lourdes — l'événementiel et les manques de module —
+en portent neuf chacune sur cinquante. L'ADR-037 reste le meilleur levier unitaire ;
 il n'est pas « la moitié du problème ».
 
 **Une tension que ce registre ne tranche pas : qu'est-ce que « la cible » ?**

@@ -3,7 +3,8 @@ import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
 import { estDeclencheeParUnFait, modeDeclaration, estSansRendezVous } from "@/lib/etats-permanents/regle";
 import type { EtablissementMatching } from "@/lib/matching";
-import { listerQuandCaArrive, releveDeLaPage } from "./lignes";
+import type { ObligationApplicable } from "@/lib/matching";
+import { lignesDepuis, listerQuandCaArrive, releveDeLaPage } from "./lignes";
 
 function etab(p: Partial<EtablissementMatching> = {}): EtablissementMatching {
   return {
@@ -38,11 +39,14 @@ describe("« Quand ça arrive » — ce que la page présente", () => {
     }
   });
 
-  it("chaque ligne dit son fait, et il vient du référentiel", () => {
-    for (const l of lignes(etab())) {
-      expect(l.fait.length, l.obligation.id).toBeGreaterThan(20);
-      expect(l.fait).toBe(l.obligation.faitGenerateur);
-    }
+  it("cite l'article qui DIT le fait, pas seulement le fondateur", () => {
+    // « lors de l'embauche et chaque fois que nécessaire » est de R. 4141-2,
+    // troisième référence d'une obligation fondée sur L. 4141-1.
+    const info = lignes(etab()).find(
+      (l) => l.obligation.id === "formation-securite-etablissement-information",
+    );
+    expect(info?.articles).toContain("R. 4141-2");
+    expect(info?.articles[0]).toBe("L. 4141-1");
   });
 
   it("passe par le moteur : un immeuble d'habitation seul, sans employeur, n'y voit rien", () => {
@@ -59,6 +63,48 @@ describe("« Quand ça arrive » — ce que la page présente", () => {
       expect(estSansRendezVous(l.obligation.periodicite), l.obligation.id).toBe(true);
       expect(modeDeclaration(l.obligation), l.obligation.id).toBeNull();
     }
+  });
+});
+
+describe("« Quand ça arrive » — le filtre, éprouvé sur ce que le référentiel ne contient pas encore", () => {
+  // `faitGenerateur` est LICITE sur une obligation de salarié ou d'appareil
+  // (les fiches pourront s'en servir). Le jour où l'une en porte un, seul le
+  // filtre de porteur garde la page propre — et aucune obligation réelle ne
+  // permet de l'éprouver aujourd'hui. On lui en fabrique donc une.
+  const base = obligationsConformite.find(
+    (o) => o.id === "froid-controle-etancheite-apres-modification",
+  )!;
+  const dAppareilAvecUnFait = {
+    obligation: { ...base, faitGenerateur: "Après toute modification du circuit frigorifique" },
+    raisons: [],
+    equipementsConcernes: [],
+  } as unknown as ObligationApplicable;
+
+  it("le prédicat de nature la reconnaît — c'est bien le porteur qui l'écarte", () => {
+    expect(estDeclencheeParUnFait(dAppareilAvecUnFait.obligation)).toBe(true);
+    expect(porteurDe(dAppareilAvecUnFait.obligation)).toBe("equipement");
+  });
+
+  it("une obligation d'APPAREIL portant un fait n'entre pas sur la page", () => {
+    expect(lignesDepuis([dAppareilAvecUnFait])).toEqual([]);
+  });
+
+  it("une obligation d'établissement SANS son fait n'y entre pas non plus, plutôt qu'à moitié", () => {
+    const info = obligationsConformite.find(
+      (o) => o.id === "formation-securite-etablissement-information",
+    )!;
+    const sansFait = {
+      obligation: { ...info, faitGenerateur: undefined },
+      raisons: [],
+      equipementsConcernes: [],
+    } as unknown as ObligationApplicable;
+    expect(lignesDepuis([sansFait])).toEqual([]);
+    // La borne haute : la même, avec son fait, y entre.
+    expect(
+      lignesDepuis([{ ...sansFait, obligation: info } as ObligationApplicable]).map(
+        (l) => l.obligation.id,
+      ),
+    ).toEqual(["formation-securite-etablissement-information"]);
   });
 });
 

@@ -97,7 +97,8 @@ describe("registre de dette — les réserves de lecture", () => {
       (a) => a.statut === "retenu" && a.reserve,
     ).length;
     // 89 → 90 le 2026-09-21 : `PE 27`, encodé pour ses § 4 et § 5, garde
-    // dehors ses § 1, § 2 et § 3.
+    // dehors ses § 1, § 2, § 3 — et son § 6, que la première écriture de cette
+    // réserve avait oublié (l'article a SIX paragraphes, pas cinq).
     expect(n).toBe(90);
     expect(reservesDeLecture().length).toBe(n);
   });

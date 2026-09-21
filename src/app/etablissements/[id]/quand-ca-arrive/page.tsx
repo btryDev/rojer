@@ -57,10 +57,13 @@ export default async function QuandCaArrivePage({
           </h1>
           <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             Des obligations qui n&apos;ont pas de date : elles deviennent dues
-            quand un fait survient chez vous — une embauche, un changement de
-            poste, une livraison. Rojer ne sait pas quand ce fait arrive ; il ne
-            peut donc ni vous le rappeler, ni vous dire que vous êtes à jour. Il
-            vous dit la règle, pour que vous la connaissiez le jour venu.
+            quand un fait survient dans votre établissement — une embauche, une
+            première affectation à un poste sur écran, une livraison. Rojer ne
+            sait pas quand ce fait arrive ; il ne peut donc ni vous le rappeler,
+            ni vous dire où vous en êtes. Il vous dit la règle, pour que vous la
+            connaissiez le jour venu. Ce qu&apos;un fait rend dû à une personne
+            ou à un appareil se lit sur sa fiche, dans Équipe et dans
+            Équipements.
           </p>
         </div>
       </header>
@@ -73,10 +76,11 @@ export default async function QuandCaArrivePage({
                 Rien de cette nature pour ce dossier
               </h2>
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Aucune des obligations que votre dossier déclenche ne dépend
-                d&apos;un fait à venir parmi celles que Rojer porte. Cela ne
-                veut pas dire qu&apos;aucun texte n&apos;en prévoit : voyez « Ce
-                que Rojer ne couvre pas ».
+                Parmi les obligations que Rojer porte pour votre établissement,
+                aucune ne dépend d&apos;un fait à venir. Celles qui tiennent à
+                une personne ou à un appareil se lisent sur leur fiche, dans
+                Équipe et dans Équipements. Rojer ne porte pas toutes les
+                obligations de cette nature que les textes prévoient.
               </p>
             </div>
           </section>
@@ -115,7 +119,7 @@ export default async function QuandCaArrivePage({
                       </p>
                     )}
                     <p className="m-0 mt-2 text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
-                      {l.article}
+                      {l.articles.join(" · ")}
                     </p>
                   </li>
                 ))}

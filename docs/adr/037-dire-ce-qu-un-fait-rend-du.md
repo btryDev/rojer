@@ -153,10 +153,26 @@ calendriers à l'ouverture, sans qu'aucune échéance ne bouge.
   répétitives, état permanent) n'était encodé nulle part. L'obligation ayant
   désormais une surface, l'inscription tombe — mais pas le manque : il est
   devenu une `reserve` du corpus, donc toujours compté.
-- **Une contre-épreuve ne rougit pas, et c'est un mutant équivalent.** Retirer
-  le filtre `releveDeLaPage` de la boucle laisse la suite verte : la ligne
-  suivante écarte toute obligation sans `faitGenerateur`, et seules les
-  obligations de la page en portent un. Les deux gardes se recouvrent
-  aujourd'hui ; elles cesseraient le jour où une événementielle de salarié
-  recevrait un fait générateur — ce que le test « la page ne prend que le
-  porteur établissement » tient alors, et il rougit bien (épreuve F3).
+- ~~**Une contre-épreuve ne rougit pas, et c'est un mutant équivalent.**~~
+  **C'ÉTAIT UN TROU DE TEST, et cette puce affirmait le contraire.** Retirer le
+  filtre `releveDeLaPage` de la boucle laissait la suite verte, et j'avais écrit
+  que le test de porteur « tient alors, et il rougit bien ». La contre-lecture a
+  fait l'épreuve : filtre retiré, `faitGenerateur` posé en mémoire sur
+  `froid-controle-etancheite-apres-modification`, neuf tests verts et une ligne
+  d'APPAREIL sur la page. Le test n'éprouvait que la fonction, jamais que la
+  boucle l'appelle ; et tous les tests de liste passaient `[]` comme parc. La
+  boucle est sortie dans `lignesDepuis`, à qui le test passe une obligation
+  d'appareil fabriquée, portant un fait : elle rougit.
+- **Le délai n'a pas de champ.** Le § 3 (point 2) promet « le délai quand le
+  texte en écrit un ». `LigneQuandCaArrive` n'en porte pas : aucune des trois
+  obligations actuelles n'en a. Il faudra l'ajouter avec `R. 4624-31` (« au
+  plus tard huit jours »), pas avant — un champ vide ne se vérifie pas.
+- **Les chiffres du § 1 sont ceux du 2026-09-20.** Au 2026-09-21 le registre
+  compte 65 manquantes dont 50 dans la cible (− `R. 4222-21`, − `PE 27`,
+  + `R. 4224-3`) ; `evenement` y pèse toujours neuf.
+- **La page dit où vivent les AUTRES événementielles.** Celles d'une personne et
+  d'un appareil se lisent sur leur fiche ; le chapeau et l'état vide le disent,
+  faute de quoi un dossier sans employeur mais avec une chambre froide lisait
+  « rien de cette nature » alors que sa fiche d'appareil en porte une. Le renvoi
+  vers « Ce que Rojer ne couvre pas » est retiré : cette page-là ne dit rien des
+  obligations événementielles non portées.

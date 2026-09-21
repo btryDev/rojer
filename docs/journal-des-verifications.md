@@ -804,7 +804,14 @@ phrase du § 1 lettre à lettre, les § 2 et § 3 en paraphrase seulement.
 5ᵉ catégorie ; référentiel 2026-09-21.1, 159 obligations. **Trouvaille :** le
 § 4 n'était relevé nulle part — le corpus n'en nommait que l'alinéa facultatif
 sur les exercices. **En réserve :** § 1 (présence permanente, et ses
-dérogations), § 2 (alarme maintenue en bon état), § 3 (alerte, MS 70).
+dérogations), § 2 (alarme : personnel informé du signal, système maintenu en
+bon état), § 3 (alerte, MS 70), **et le § 6 — un plan d'intervention apposé à
+l'entrée — que cette entrée avait d'abord OUBLIÉ.** J'avais demandé à l'outil de
+lecture les « § 1 à § 5 » : il a répondu dans le cadre que je lui donnais.
+L'article en compte six ; la contre-lecture l'a relevé, et je l'ai vérifié en
+demandant « combien de paragraphes, et lequel est le dernier ». Le § 6 n'est pas
+encodé tant que l'arrêté du 4 février 2026, qui a réécrit l'article, n'est pas
+ouvert : rien n'établit qu'il vaille pour les établissements existants.
 
 ### C19 · 2026-09-21 — Trois « textes à lire » lus, et ce qu'ils bloquaient vraiment
 

@@ -63,8 +63,9 @@
 // autre garde est le geste qui vide les deux. Il vit donc ici, sous le nom de ce
 // qu'il mesure : quelle surface une obligation atteint.
 //
-// SA SECONDE LIMITE EST LE DÉNOMINATEUR DES SURFACES. Il en connaît deux, parce
-// que ce sont les deux qui décident du sort d'une obligation à partir du
+// SA SECONDE LIMITE EST LE DÉNOMINATEUR DES SURFACES. Il en connaît ~~deux~~
+// TROIS depuis le 2026-09-21 (`faits`, ADR-037), parce
+// que ce sont celles qui décident du sort d'une obligation à partir du
 // référentiel seul. Le PDF du DUERP, le registre de sécurité et l'écran de
 // périmètre en citent d'autres, mais ils affichent ce que ces deux-là ont
 // produit, ou de la prose que `non-couverture.ts` couvre déjà. Une troisième
@@ -82,7 +83,6 @@ import {
   modeDeclaration,
 } from "@/lib/etats-permanents/regle";
 
-/** Les surfaces qui trient les obligations à partir du référentiel seul. */
 /**
  * `faits` est entrée le 2026-09-21 (ADR-037), et elle RATTRAPE un angle mort de
  * ce module autant qu'elle ajoute une surface. Une obligation déclenchée par
@@ -171,8 +171,12 @@ export const PLAFOND_SANS_SURFACE = 3;
  * échouer aussi. Le registre ne peut donc ni oublier une ligne, ni en garder
  * une de trop.
  *
- * Les huit qui restent après le 2026-09-04 partagent une cause et une seule :
- * les natures `evenementielle` et `ponctuelle` n'ont AUCUNE surface. L'ADR-022
+ * ~~Les huit qui restent après le 2026-09-04 partagent une cause et une seule :
+ * les natures `evenementielle` et `ponctuelle` n'ont AUCUNE surface.~~
+ * [2026-09-21 : l'événementielle en a une — la fiche de son sujet, et la page
+ * « Quand ça arrive » pour l'établissement (ADR-037). Restent TROIS
+ * inscriptions, toutes `ponctuelle` ; la suite de ce paragraphe vaut pour
+ * elles seules.] L'ADR-022
  * nomme l'axe « événement » sans mécanisme, et l'écran « Ce qui doit être en
  * place » ne sert que `etat_permanent` et `echeance_recurrente` (ADR-026,
  * `etats-permanents/regle.ts`). Leur donner une surface est une décision de
