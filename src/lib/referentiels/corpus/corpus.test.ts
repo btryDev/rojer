@@ -1045,6 +1045,9 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       "R. 4463-5",
       "R. 4463-7",
       "R. 4463-8",
+      // ── Lot « lectures en attente », 2026-09-21 : trouvé en ouvrant les deux
+      // articles auxquels l'article 13 de l'arrêté de signalisation renvoie.
+      "R. 4224-3",
       // ── Lot « socle DUERP », 2026-09-02 : le texte fondateur du produit.
       // Bloc contigu en fin de liste, pour la raison écrite par le lot D1 — le
       // lot B supprime cette énumération, un bloc d'un seul tenant se retire

@@ -134,6 +134,16 @@ porte le raisonnement.
 | `perimetre` | 0 | 3 | Rien de technique : hôtels (`PO 1 § 3`, `PO 7`, `PO 12`) |
 | **Total** | **49** | **15** | (64 : `PE 27` encodé le 2026-09-21) |
 
+**Mise à jour du 2026-09-21 (`lot/lectures-en-attente`) — trois lectures faites,
+et le tableau bouge.** `R. 4431-2` (seuils du bruit), `R. 4214-11` et `R. 4224-3`
+(circulation) sont ouverts. `texte_a_lire` tombe de 4 à 1 : les deux manques du
+bruit deviennent `module` (le DUERP ne recueille aucun niveau sonore), le
+marquage des voies devient `attribut_etablissement` (rien ne dit que des
+véhicules circulent dans les locaux). Et `R. 4224-3`, ouvert pour un autre,
+s'ajoute en `a_trancher`. Total : **65, dont 50 dans la cible**. Les lignes du
+tableau ci-dessus datent du 20 ; `registre-dette.test.ts` porte les chiffres
+courants.
+
 **Ce tableau est sa seconde version, et la première était trop propre.** Elle
 annonçait 42 / 23, « vingt-deux n'attendent que deux choses » et « aucune
 catégorie d'équipement ne touche la cible ». La contre-lecture a confronté

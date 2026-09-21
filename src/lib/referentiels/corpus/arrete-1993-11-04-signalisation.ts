@@ -391,12 +391,12 @@ export const ARRETE_1993_11_04_SIGNALISATION: Corpus = {
       citationCle:
         "Lorsqu'en application des articles R. 4214-11 ou R. 4224-3 du code du travail les voies de circulation doivent être clairement identifiées, ces voies doivent être bordées par des bandes continues d'une couleur bien visible, de préférence blanche ou jaune, compte tenu de la couleur du sol. L'emplacement des bandes doit tenir compte des distances de sécurité nécessaires entre les véhicules qui peuvent y circuler et tout objet pouvant se trouver à proximité et entre les piétons et les véhicules. Les voies permanentes situées à l'extérieur dans les zones bâties doivent également être marquées, à moins qu'elles ne soient pourvues de barrières ou d'un dallage appropriés.",
       statut: "obligation_manquante",
-      cause: "texte_a_lire",
+      cause: "attribut_etablissement",
       toucheLaCible: true,
       motif:
-        "État permanent non porté. Le renvoi de tête est ici À JOUR — l'arrêté du 2 août 2013 a remplacé l'ancienne numérotation par R. 4214-11 et R. 4224-3, ce qui contraste avec l'article 4, resté sur le CHSCT. Mais il est CONDITIONNEL : l'obligation de marquage ne naît que si l'un de ces deux articles impose d'identifier les voies, et aucun des deux n'est dans un corpus de ce dépôt. Encoder ce marquage suppose donc de dépouiller d'abord R. 4224-3, faute de quoi la condition serait devinée.",
+        "[2026-09-21 — LES DEUX ARTICLES SONT OUVERTS (`corpus/code-travail-circulation-lieux.ts`), et la cause change : ~~texte à lire~~ → `attribut_etablissement`. `R. 4214-11` s'adresse au maître d'ouvrage ; `R. 4224-3` pose à l'employeur un résultat — la circulation sûre — sans parler de marquage. Ce qui déclenche la bande continue est donc le critère de `R. 4214-11`, « l'importance de la circulation des véhicules ou le danger lié à l'utilisation […] des locaux » : un fait de l'établissement, que rien ne demande au dirigeant. Une réserve de restaurant où l'on pousse un transpalette, oui peut-être ; un bureau, non.] État permanent non porté. Le renvoi de tête est ici À JOUR — l'arrêté du 2 août 2013 a remplacé l'ancienne numérotation par R. 4214-11 et R. 4224-3, ce qui contraste avec l'article 4, resté sur le CHSCT. Mais il est CONDITIONNEL : l'obligation de marquage ne naît que si l'un de ces deux articles impose d'identifier les voies, et aucun des deux n'est dans un corpus de ce dépôt. Encoder ce marquage suppose donc de dépouiller d'abord R. 4224-3, faute de quoi la condition serait devinée.",
       bloquePar:
-        "La condition de déclenchement vit dans R. 4214-11 et R. 4224-3, articles non dépouillés ; l'obligation ne s'écrit pas avant eux.",
+        "~~La condition de déclenchement vit dans R. 4214-11 et R. 4224-3, articles non dépouillés~~ — dépouillés le 2026-09-21. Reste : aucun attribut ne dit que des véhicules circulent dans les locaux.",
     },
     {
       ref: "Arrêté 1993-11-04 art. 14",

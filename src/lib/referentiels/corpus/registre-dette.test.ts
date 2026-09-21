@@ -67,17 +67,22 @@ describe("registre de dette — les obligations manquantes", () => {
       libre: [0, 0],
       evenement: [9, 1],
       categorie_equipement: [5, 6],
-      attribut_etablissement: [3, 2],
+      attribut_etablissement: [4, 2],
       destinataire: [5, 1],
       activite_exercee: [6, 1],
       relation_tiers: [3, 0],
-      module: [7, 0],
-      texte_a_lire: [4, 0],
-      a_trancher: [7, 1],
+      // 7 → 9 le 2026-09-21 : `R. 4431-2` ouvert, les deux manques du bruit ne
+      // sont plus un texte à lire mais une donnée que le DUERP ne recueille pas.
+      module: [9, 0],
+      // 4 → 1 le même jour : trois lectures faites. Reste la « centrifugeuse »
+      // de l'arrêté du 5 mars 1993, qui ne se tranche pas en ouvrant un article.
+      texte_a_lire: [1, 0],
+      // 7 → 8 : `R. 4224-3`, trouvé en l'ouvrant pour un autre.
+      a_trancher: [8, 1],
       perimetre: [0, 3],
     });
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(49);
-    expect(manquantes.length).toBe(64);
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(50);
+    expect(manquantes.length).toBe(65);
   });
 });
 

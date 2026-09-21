@@ -806,6 +806,21 @@ phrase du § 1 lettre à lettre, les § 2 et § 3 en paraphrase seulement.
 sur les exercices. **En réserve :** § 1 (présence permanente, et ses
 dérogations), § 2 (alarme maintenue en bon état), § 3 (alerte, MS 70).
 
+### C19 · 2026-09-21 — Trois « textes à lire » lus, et ce qu'ils bloquaient vraiment
+
+**Lu, chacun sur sa page propre :** `R. 4431-2` (trois paliers de bruit,
+80 / 85 / 87 dB(A)), `R. 4433-1`, `R. 4433-2`, `R. 4214-11`, `R. 4224-3` — tous en
+version du 2008-05-01. **Consigné :** `code-travail-bruit-vibrations.ts` (une
+entrée neuve) et `code-travail-circulation-lieux.ts` (corpus neuf).
+
+**Ce que la lecture a changé.** Aucune des trois manquantes classées « texte à
+lire » n'était bloquée par un texte. Les deux du bruit attendent une donnée que
+le DUERP ne recueille pas (un niveau mesuré, et laquelle des grandeurs
+physiques l'a été). Le marquage des voies attend un attribut : `R. 4214-11`
+s'adresse au maître d'ouvrage, `R. 4224-3` ne parle pas de marquage, et ce qui
+décide est « l'importance de la circulation des véhicules ». Une manquante de
+plus, `R. 4224-3` — le produit normal d'une lecture.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
