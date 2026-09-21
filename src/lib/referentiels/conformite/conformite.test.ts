@@ -539,6 +539,14 @@ describe("référentiel conformité — anti-doublon", () => {
       raison:
         "Instruit le 2026-08-27, ce n'est PAS un doublon. `R. 4412-38` fonde d'un côté « l'accès des travailleurs aux fiches de données de sécurité » — une pièce à tenir disponible — et de l'autre leur formation. Un document et un enseignement ne sont pas le même acte, même sous le même article.",
     },
+    {
+      paire: [
+        "incendie-erp-5-consignes-affichees",
+        "incendie-erp-5-instruction-personnel",
+      ],
+      raison:
+        "Instruit le 2026-09-21, ce n'est PAS un doublon. `PE 27` fonde d'un côté, par son § 4, un ÉCRIT affiché — trois mentions, une pièce que l'on voit au mur — et de l'autre, par son § 5, un ACTE envers des personnes : instruire le personnel et l'entraîner à la manœuvre des moyens de secours. Deux paragraphes, deux objets, deux façons de le constater ; les fondre donnerait une case unique pour une affiche et pour une formation. La clé d'article reste « PE 27 » pour les deux parce que le corpus ne descend pas au paragraphe — leur `reference` le désigne.",
+    },
     // ── Résolus le 2026-08-27 ──────────────────────────────────────────
     // Trois paires figuraient ici : les fragments de PE 4 § 2 (électricité,
     // gaz) et de R. 4222-20 (VMC/CTA) face aux obligations qui portent ces
@@ -1364,6 +1372,9 @@ describe("référentiel conformité — version et empreinte", () => {
     // `R. 4222-21` (consigne d'utilisation de la ventilation), état permanent
     // d'établissement. Aucune ligne de calendrier n'en naît.
     { version: "2026-09-20.2", empreinte: "157-ee9b1ce134166553" },
+    // `PE 27` § 4 et § 5 : consignes affichées et personnel instruit, deux états
+    // permanents de tout ERP de 5ᵉ catégorie. Aucune ligne de calendrier.
+    { version: "2026-09-21.1", empreinte: "159-c8f511323424c950" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1520,7 +1531,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(157);
+    ).toBe(159);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

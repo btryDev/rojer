@@ -130,9 +130,9 @@ porte le raisonnement.
 | `texte_a_lire` | 4 | 0 | Ouvrir `R. 4431-2`, `R. 4214-11`, `R. 4224-3` ; trancher ce qu'est une « centrifugeuse » |
 | `attribut_etablissement` | 3 | 2 | Un attribut que personne ne demande |
 | `relation_tiers` | 3 | 0 | La décision sur le module de vigilance (§ 4) |
-| `libre` | 1 | 0 | **Rien : `PE 27 § 5`, à encoder au prochain lot de lecture** |
+| ~~`libre`~~ | ~~1~~ 0 | 0 | ~~`PE 27 § 5`~~ — **encodée le 2026-09-21**, avec le § 4 trouvé en ouvrant l'article |
 | `perimetre` | 0 | 3 | Rien de technique : hôtels (`PO 1 § 3`, `PO 7`, `PO 12`) |
-| **Total** | **50** | **15** | |
+| **Total** | **49** | **15** | (64 : `PE 27` encodé le 2026-09-21) |
 
 **Ce tableau est sa seconde version, et la première était trop propre.** Elle
 annonçait 42 / 23, « vingt-deux n'attendent que deux choses » et « aucune

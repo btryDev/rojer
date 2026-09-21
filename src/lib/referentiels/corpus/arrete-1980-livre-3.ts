@@ -313,16 +313,21 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 27",
       intitule: "Alarme, alerte, consignes",
+      url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000024766984/",
       versionEnVigueur: "2026-05-01",
-      luLe: "2026-08-26",
+      modifiePar: { texte: "Arrêté du 4 février 2026 - art. 1" },
+      luLe: "2026-09-21",
       lecture: "agent_verbatim",
-      statut: "obligation_manquante",
-      cause: "libre",
-      toucheLaCible: true,
-      motif:
-        "Impose au § 5 que « le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours », sans périodicité écrite, pour tous les ERP de 5e catégorie. Le référentiel ne porte aucune ligne de formation du personnel côté ERP. Le § 4 c précise que l'information « peut être complétée par des exercices périodiques d'évacuation » — facultatif, à ne pas confondre avec R. 4227-39. N'ouvre le Livre II que sur MS 70. Réécrit par l'arrêté du 4 février 2026.",
-      bloquePar:
-        "Porteur d'échéance : l'obligation naît de l'établissement, pas d'un équipement. Corrigé le 2026-08-27 (ADR-022) : ce n'est plus le modèle qui bloque — `categoriesEquipement` n'est plus requis et `Verification.equipementId` est nullable. PE 27 § 5 est une obligation d'établissement, et le porteur existe. Ce qui bloque encore est ce que dit le motif : l'article n'écrit aucune périodicité, et en inventer une serait décider à la place du texte.",
+      prescrit:
+        "Alarme, alerte et consignes des ERP de 5ᵉ catégorie. § 1 : présence permanente d'un membre du personnel ou d'un responsable quand l'établissement est ouvert au public, avec des dérogations. § 2 : un équipement d'alarme, maintenu en bon état. § 3 : la liaison avec les sapeurs-pompiers. § 4 : des consignes affichées, trois mentions. § 5 : le personnel instruit et entraîné.",
+      citationCle:
+        "Le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours.",
+      statut: "retenu",
+      obligations: ["incendie-erp-5-instruction-personnel", "incendie-erp-5-consignes-affichees"],
+      reserve:
+        "TROIS PARAGRAPHES RESTENT DEHORS, ET DEUX N'ONT ÉTÉ LUS QU'EN PARAPHRASE (2026-09-21). La page propre de l'article ne rend qu'une table des matières (piège n° 2 du journal) ; la page de SECTION a rendu les § 4 et § 5 lettre à lettre, et la première phrase du § 1 — « Un membre du personnel ou un responsable au moins doit être présent en permanence lorsque l'établissement est ouvert au public. » —, mais les § 2 et § 3 seulement résumés. (1) LE § 1, présence permanente : obligation réelle, avec des dérogations (moins de vingt personnes sans locaux à sommeil, convention de surveillance par les utilisateurs) qu'il faut lire en entier avant d'écrire une ligne. (2) LE § 2, l'alarme « maintenue en bon état de fonctionnement » : à rapprocher des obligations d'alarme que le référentiel porte déjà pour la 5ᵉ catégorie avant d'en créer une. (3) LE § 3, l'alerte, renvoie à MS 70.",
+      historique:
+        "L'entrée quand elle était `obligation_manquante` (2026-08-26 → 2026-09-21). Son motif : Impose au § 5 que « le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours », sans périodicité écrite, pour tous les ERP de 5e catégorie. Le référentiel ne porte aucune ligne de formation du personnel côté ERP. Le § 4 c précise que l'information « peut être complétée par des exercices périodiques d'évacuation » — facultatif, à ne pas confondre avec R. 4227-39. N'ouvre le Livre II que sur MS 70. Réécrit par l'arrêté du 4 février 2026. — Son blocage : Porteur d'échéance : l'obligation naît de l'établissement, pas d'un équipement. Corrigé le 2026-08-27 (ADR-022) : ce n'est plus le modèle qui bloque — `categoriesEquipement` n'est plus requis et `Verification.equipementId` est nullable. PE 27 § 5 est une obligation d'établissement, et le porteur existe. Ce qui bloque encore est ce que dit le motif : l'article n'écrit aucune périodicité, et en inventer une serait décider à la place du texte."
     },
     {
       ref: "PE 28",

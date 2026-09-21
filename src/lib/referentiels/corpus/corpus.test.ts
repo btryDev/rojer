@@ -576,7 +576,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
     // sait pas porter. La liste s'allonge parce qu'on voit mieux.
     // L'ordre suit la déclaration des corpus, pas l'alphabet.
     expect(refs).toEqual([
-      "PE 27",
+      // ~~"PE 27"~~ — encodée le 2026-09-21 (§ 4 et § 5).
       // PE 37 a quitté cette liste le 2026-08-31 au soir : sa quinquennale est
       // désormais portée par `incendie-erp-5-visite-commission`, et l'article
       // passe à `retenu` avec une `reserve`. Cette réserve disait alors deux

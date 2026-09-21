@@ -31,7 +31,9 @@ describe("registre de dette — les obligations manquantes", () => {
     // et s'allonger coûte un geste visible.
     //
     // `R. 4222-21`, libre au matin du 2026-09-20, est encodée le soir même.
-    expect(parCause("libre").map((a) => a.ref)).toEqual(["PE 27"]);
+    // `PE 27`, nommée ici au soir du 2026-09-20, est encodée le lendemain
+    // (§ 4 et § 5). La liste est vide ; elle doit le rester ou se justifier.
+    expect(parCause("libre").map((a) => a.ref)).toEqual([]);
   });
 
   it("« hors de la cible, rien ne bloque » ne peut pas toucher la cible", () => {
@@ -62,7 +64,7 @@ describe("registre de dette — les obligations manquantes", () => {
     );
     expect(matrice).toEqual({
       //                        [cible, hors cible]
-      libre: [1, 0],
+      libre: [0, 0],
       evenement: [9, 1],
       categorie_equipement: [5, 6],
       attribut_etablissement: [3, 2],
@@ -74,8 +76,8 @@ describe("registre de dette — les obligations manquantes", () => {
       a_trancher: [7, 1],
       perimetre: [0, 3],
     });
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(50);
-    expect(manquantes.length).toBe(65);
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(49);
+    expect(manquantes.length).toBe(64);
   });
 });
 
@@ -89,7 +91,9 @@ describe("registre de dette — les réserves de lecture", () => {
     const n = CORPUS.flatMap((c) => c.articles).filter(
       (a) => a.statut === "retenu" && a.reserve,
     ).length;
-    expect(n).toBe(89);
+    // 89 → 90 le 2026-09-21 : `PE 27`, encodé pour ses § 4 et § 5, garde
+    // dehors ses § 1, § 2 et § 3.
+    expect(n).toBe(90);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

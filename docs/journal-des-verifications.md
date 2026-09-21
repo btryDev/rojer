@@ -793,6 +793,19 @@ obligations) ; sept réserves passées en `historique` ; trois `bloquePar` levé
 depuis l'ADR-022 et jamais raturés. Le compte est dans
 `docs/chantiers-ouverts.md` § 3 bis, et `registre-dette.test.ts` le tient.
 
+### C18 · 2026-09-21 — `PE 27`, ouvert pour un paragraphe, encodé pour deux
+
+**Lu :** `PE 27` du règlement de sécurité (version au 2026-05-01, arrêté du
+4 février 2026, art. 1). La page propre de l'article n'a rendu qu'une table des
+matières (piège n° 2) ; la page de section a rendu les § 4 et § 5 et la première
+phrase du § 1 lettre à lettre, les § 2 et § 3 en paraphrase seulement.
+**Appliqué :** `incendie-erp-5-instruction-personnel` (§ 5) et
+`incendie-erp-5-consignes-affichees` (§ 4), états permanents de tout ERP de
+5ᵉ catégorie ; référentiel 2026-09-21.1, 159 obligations. **Trouvaille :** le
+§ 4 n'était relevé nulle part — le corpus n'en nommait que l'alinéa facultatif
+sur les exercices. **En réserve :** § 1 (présence permanente, et ses
+dérogations), § 2 (alarme maintenue en bon état), § 3 (alerte, MS 70).
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

@@ -526,9 +526,9 @@ export type ConditionApplication =
  * récurrente — elle porte alors `periodicite: "autre"`, et ce couple se lit
  * « elle revient, on ne sait pas à quel rythme ». C'est un état légitime —
  * ~~et le plus fréquent des quarante-trois~~ : mesuré en appelant le
- * 2026-09-20, `autre` compte soixante-deux lignes, dont TROIS seulement sont
- * des échéances récurrentes ; CINQUANTE sont des états permanents (le
- * cinquante et unième état permanent du référentiel a un rythme :
+ * 2026-09-21, `autre` compte soixante-quatre lignes, dont TROIS seulement sont
+ * des échéances récurrentes ; CINQUANTE-DEUX sont des états permanents (le
+ * cinquante-troisième état permanent du référentiel a un rythme :
  * `porte-auto-portail-piete-coulissant`), six des événementielles, trois des
  * ponctuelles. La phrase était fausse sur le nombre et sur le rang — et ma
  * première correction l'était d'une unité, relevée par la contre-lecture.
@@ -845,8 +845,8 @@ type ObligationCommune = {
    * coche, sans pièce. C'est juste pour une affiche au mur ou de l'eau
    * potable ; c'en est une pour un registre de sécurité, où une case cochée
    * sans rien derrière serait exactement la déclaration-qui-ressemble-à-une-
-   * preuve que le même brief interdit. Le champ nomme les ~~seize~~ vingt-six
-   * lignes (mesuré en appelant le 2026-09-20) où la case seule ne suffit pas.
+   * preuve que le même brief interdit. Le champ nomme les ~~seize~~ vingt-sept
+   * lignes (mesuré en appelant le 2026-09-21) où la case seule ne suffit pas.
    *
    * Requis pour la même raison que `nature` : `null` est une réponse, un champ
    * absent n'en est pas une.
