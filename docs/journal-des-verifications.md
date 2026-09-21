@@ -874,6 +874,33 @@ mais seul le texte recopié fait foi, et il se recoupe par une requête ciblée.
 **Appliqué :** cinq obligations événementielles (référentiel 2026-09-21.3, 167).
 `L. 8222-5` n'est pas encodée : décision B1 du dossier.
 
+### C22 · 2026-09-21 — Les dates derrière `GN 10`, et un paragraphe qui a neuf mois
+
+**Lu, par un agent, sur les pages de SECTION datées de Légifrance** (la seule
+forme qui rende « Version en vigueur du … au … » pour ces articles) : six
+versions de `PE 27`, deux de `PE 33`, une de `PE 35`, deux de `EL 18`, et les
+arrêtés du 22 juin 1990, du 2 février 1993, du 11 décembre 2009, du
+11 septembre 2023, du 1er décembre 2025, du 24 juillet 2006, du 26 octobre 2011
+et du 19 novembre 2001 pour leurs clauses d'application.
+
+**Ce qui en sort.** `PE 27` § 4 et § 5, `PE 33` § 2 et `PE 35` sont au règlement
+depuis le 27 août 1990 : « établissement existant » veut dire, pour eux, ouvert
+avant cette date. Le § 6 de `PE 27` ne visait que les établissements « en étage
+ou en sous-sol » jusqu'au 31 décembre 2025 ; « chaque établissement » date de
+l'arrêté du 1er décembre 2025, sans clause pour les existants. Aucun des
+arrêtés lus n'étend ces dispositions aux établissements existants, sauf le
+chapitre des hôtels (`PO 8`, `PO 11`, `PO 12`).
+
+**Trois choses à ne pas lisser.** (1) Légifrance date la rédaction 2006 de
+`PE 33` du 04/11/2011 quand l'arrêté dit « trois mois après publication », soit
+2006 : non tranché. (2) L'historique d'`EL 18` avant 2002 est écrasé — la date
+« 15/08/1980 » affichée est celle du règlement, pas celle de la phrase. (3) Le
+brief de l'agent affirmait que l'arrêté du 26 octobre 2011 avait remanié
+`PE 27` : il ne le touche pas. L'agent l'a vérifié au lieu de le croire.
+
+**Et `PE 4` est à jour** : sa rédaction applicable au 1er juillet 2026 est celle
+que le corpus porte depuis le 2026-08-27 ; il ne manquait que le nom du texte.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
