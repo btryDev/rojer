@@ -828,6 +828,28 @@ s'adresse au maître d'ouvrage, `R. 4224-3` ne parle pas de marquage, et ce qui
 décide est « l'importance de la circulation des véhicules ». Une manquante de
 plus, `R. 4224-3` — le produit normal d'une lecture.
 
+### C20 · 2026-09-21 — `GN 10`, l'article de champ que personne n'avait ouvert
+
+**Lu :** l'arrêté du 4 février 2026 (JORFTEXT000053886207, trois articles — il ne
+modifie que le § 1 de `PE 27`), puis `GN 10` du règlement de sécurité (version
+au 2010-01-23, arrêté du 24 septembre 2009), en demandant d'abord « combien de
+paragraphes ». **Consigné :** `corpus/arrete-1980-livre-1.ts`, entrée GN 10.
+
+**Ce qui en sort.** « A l'exception des dispositions à caractère administratif,
+de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à
+l'entretien, le présent règlement ne s'applique pas aux établissements
+existants. » Zéro occurrence de « GN 10 » dans le dépôt avant ce jour. Cinq
+états permanents du référentiel ne sont ni contrôle, ni vérification, ni
+entretien, et sur-appliquent donc aux établissements anciens ; deux sont en
+production (`PE 33`, `PE 35`). Les deux de `PE 27`, encodés le matin même, le
+disent désormais dans leur description. Le § 6 de `PE 27` reste en réserve.
+Décision au dossier (A6).
+
+**Une justification que j'avais écrite le matin était fausse** : « les § 4 et
+§ 5 sont des actes d'exploitation, encodés sans distinction de date comme
+`PE 4 § 2` ». `PE 4 § 2` est un ENTRETIEN — précisément ce que GN 10 excepte.
+L'analogie ne valait pas ; elle est raturée dans la réserve de `PE 27`.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
