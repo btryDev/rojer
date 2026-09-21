@@ -855,6 +855,29 @@ type ObligationCommune = {
    * de lignes ni leurs dates.
    */
   pieceAttendue: string | null;
+  /**
+   * **Le fait qui rend l'obligation due**, dans les mots du texte — la phrase
+   * « quand… » d'une obligation `evenementielle` (ADR-037).
+   *
+   * Une obligation événementielle n'a ni date ni état : elle redevient due au
+   * fait suivant. Ce que le produit peut en dire est donc « quand ceci arrive,
+   * cela est dû », et ce « quand » n'existait que noyé dans `description`.
+   *
+   * REQUIS pour toute obligation événementielle portée par l'ÉTABLISSEMENT et
+   * sans rendez-vous : ce sont elles que la page « Quand ça arrive » présente,
+   * et une ligne sans son fait n'aurait rien à dire (`quand-ca-arrive.test.ts`
+   * le tient). Facultatif ailleurs — les fiches d'un salarié et d'un appareil
+   * présentent les leurs sans lui. INTERDIT hors de la nature
+   * `evenementielle` : un état permanent n'attend aucun fait.
+   *
+   * L'ADR proposait une union discriminée sur la nature ; `Obligation` en est
+   * déjà une sur `porteur`, et les croiser doublait chaque branche. La règle
+   * est tenue par un test plutôt que par le type — écart assumé, écrit ici.
+   *
+   * **N'entre pas dans `empreinteReferentiel()`** : il ne change ni le nombre
+   * de lignes ni leurs dates.
+   */
+  faitGenerateur?: string;
   /** Réalisateurs acceptés. Au moins un. En général 1, parfois 2 (ex. "personne qualifiée OU organisme agréé"). */
   realisateurs: [Realisateur, ...Realisateur[]];
   /** 1 = informatif, 5 = vital (mise en danger directe si manquement). */

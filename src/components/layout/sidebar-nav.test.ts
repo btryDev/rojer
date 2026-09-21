@@ -138,6 +138,10 @@ describe("construireSections — structure", () => {
       "calendrier",
       "actions",
       "etats-permanents",
+      // ADR-037 : la troisième nature. Une activité à une condition près — ce
+      // qu'il faudra faire le jour où le fait survient —, pas un filtre : ces
+      // lignes ne peuvent exister ni au calendrier ni à l'écran précédent.
+      "quand-ca-arrive",
     ]);
     // Aucune destination du panneau ne porte de query : un filtre est un
     // réglage d'écran, pas une place dans l'arborescence (ADR-015 révisé).

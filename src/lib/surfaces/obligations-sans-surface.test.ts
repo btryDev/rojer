@@ -1,3 +1,4 @@
+import { CORPUS } from "@/lib/referentiels/corpus";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -35,7 +36,10 @@ const ORPHELINE_FABRIQUEE = {
     "Obligation fabriquée par le test pour éprouver la garde. Elle n'entre jamais dans le référentiel.",
   referencesLegales: [],
   periodicite: "autre",
-  nature: "evenementielle",
+  // `ponctuelle` et non plus `evenementielle` : depuis l'ADR-037 (2026-09-21)
+  // une événementielle sans rendez-vous A une surface. La ponctuelle est la
+  // nature qui n'en a toujours aucune.
+  nature: "ponctuelle",
   pieceAttendue: null,
   realisateurs: ["exploitant"],
   criticite: 1,
@@ -177,18 +181,22 @@ describe("les deux obligations tranchées le 2026-09-04", () => {
     expect("stockage-dangereux-fiches-donnees" in SANS_SURFACE).toBe(false);
   });
 
-  it("le protocole de sécurité reste sans surface, et le registre dit pourquoi", () => {
+  it("le protocole de sécurité A une surface depuis l'ADR-037, et le corpus garde ce qui manque", () => {
+    // ~~« reste sans surface, et le registre dit pourquoi »~~ — 2026-09-21.
     // R. 4515-8 fait établir un protocole par opération non répétitive : la
-    // nature `evenementielle` est juste. Ce que le registre porte est l'autre
-    // moitié — le protocole unique de R. 4515-9, état permanent, qui n'est
-    // encodé nulle part.
+    // nature `evenementielle` est juste, et la page « Quand ça arrive » la
+    // montre. Ce que le registre portait en plus — le protocole UNIQUE de
+    // R. 4515-9, état permanent, encodé nulle part — n'a pas disparu avec
+    // l'inscription : c'est une `reserve` du corpus, donc une dette comptée.
     const o = obligationsConformite.find(
       (x) => x.id === "co-activite-etablissement-protocole-securite",
     );
     expect(o?.nature).toBe("evenementielle");
-    expect(surfacesDe(o!)).toEqual([]);
-    expect(SANS_SURFACE["co-activite-etablissement-protocole-securite"]?.motif).toContain(
-      "R. 4515-9",
+    expect(surfacesDe(o!)).toEqual(["faits"]);
+    expect(SANS_SURFACE["co-activite-etablissement-protocole-securite"]).toBeUndefined();
+    const r45159 = CORPUS.flatMap((c) => c.articles).find((a) => a.ref === "R. 4515-9");
+    expect(r45159?.statut === "retenu" ? r45159.reserve : undefined).toContain(
+      "SECOND régime",
     );
   });
 });

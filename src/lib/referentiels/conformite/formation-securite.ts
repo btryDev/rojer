@@ -257,6 +257,8 @@ export const obligationsFormationSecurite: Obligation[] = [
     periodicite: "autre",
     nature: "evenementielle",
     pieceAttendue: null,
+    faitGenerateur:
+      "À l'embauche d'un salarié, et chaque fois que nécessaire",
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },
@@ -409,6 +411,8 @@ export const obligationsFormationSecurite: Obligation[] = [
     periodicite: "autre",
     nature: "evenementielle",
     pieceAttendue: null,
+    faitGenerateur:
+      "Avant la première affectation d'un salarié à un travail sur écran, et chaque fois que l'organisation du poste de travail est modifiée de manière substantielle",
     realisateurs: ["exploitant"],
     criticite: 2,
     typologies: { travail: true },

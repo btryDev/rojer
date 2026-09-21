@@ -76,10 +76,24 @@ import {
   obligationsConformite,
   type Obligation,
 } from "@/lib/referentiels/conformite";
-import { estSansRendezVous, modeDeclaration } from "@/lib/etats-permanents/regle";
+import {
+  estDeclencheeParUnFait,
+  estSansRendezVous,
+  modeDeclaration,
+} from "@/lib/etats-permanents/regle";
 
 /** Les surfaces qui trient les obligations à partir du référentiel seul. */
-export const SURFACES = ["calendrier", "etats_permanents"] as const;
+/**
+ * `faits` est entrée le 2026-09-21 (ADR-037), et elle RATTRAPE un angle mort de
+ * ce module autant qu'elle ajoute une surface. Une obligation déclenchée par
+ * un fait se montre sur la fiche de son sujet : celle du salarié
+ * (`salaries/obligations-evenementielles.ts`) et celle de l'appareil
+ * (`equipements/fiche.ts`) le faisaient déjà, et ce module ne savait pas les
+ * compter — trois inscriptions de `SANS_SURFACE` disaient « aucune surface »
+ * d'obligations qui en avaient une. Le troisième porteur n'avait pas de fiche ;
+ * la page « Quand ça arrive » (`quand-ca-arrive/lignes.ts`) est la sienne.
+ */
+export const SURFACES = ["calendrier", "etats_permanents", "faits"] as const;
 
 export type Surface = (typeof SURFACES)[number];
 
@@ -101,6 +115,8 @@ export function surfacesDe(o: Obligation): Surface[] {
   const atteintes: Surface[] = [];
   if (!estSansRendezVous(o.periodicite)) atteintes.push("calendrier");
   if (modeDeclaration(o) !== null) atteintes.push("etats_permanents");
+  // Le MÊME prédicat que les trois fiches appellent — jamais sa paraphrase.
+  if (estDeclencheeParUnFait(o)) atteintes.push("faits");
   return atteintes;
 }
 
@@ -141,7 +157,10 @@ export type InscriptionSansSurface = {
  * impossible : la limite ne corrige rien, elle nomme un état, et cet état est
  * censé se vider.
  */
-export const PLAFOND_SANS_SURFACE = 9;
+// ~~9~~ → 3 le 2026-09-21 : les six obligations ÉVÉNEMENTIELLES ont une
+// surface (ADR-037). Restent les trois PONCTUELLES, qui se SOLDENT et
+// appellent un autre mécanisme — question Q2 de l'ADR, non tranchée.
+export const PLAFOND_SANS_SURFACE = 3;
 
 /**
  * Les obligations dont l'absence de surface est constatée, datée et assumée.
@@ -166,31 +185,6 @@ export const SANS_SURFACE: Readonly<Record<string, InscriptionSansSurface>> = {
     motif:
       "Nature `ponctuelle` : la qualification ICPE est faite une fois, avant exploitation, et ne se refait qu'au changement des quantités stockées — fait que le produit n'observe pas. Aucune surface ne sert les obligations ponctuelles : l'écran des états permanents les écarte parce qu'une case cochée à vie y serait juste mais sans rappel de la pièce, et le calendrier n'a pas de rendez-vous à leur donner. Décision de conception, non tranchée.",
   },
-  "froid-controle-etancheite-apres-modification": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `evenementielle` : le contrôle est dû après chaque modification du circuit frigorifique, fait que le produit n'observe pas. Deuxième des trois cas d'école de l'audit du 2026-08-31. Aucune surface ne sert les obligations événementielles ; l'ADR-022 nomme l'axe « événement » sans mécanisme.",
-  },
-  "formation-securite-salarie-accueil": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `evenementielle` : `L. 4141-2` vise l'embauche mais aussi le changement de poste ou de technique, et `R. 4141-15` l'affectation à l'une des tâches qu'il énumère. Un titre déclaré une fois ne vaut pas pour la carrière. Aucune surface ne sert cette nature — et ici le fait déclencheur est en partie observable (`Salarie`), ce qui en fait la candidate la plus proche d'un mécanisme.",
-  },
-  "formation-securite-etablissement-information": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `evenementielle` : `R. 4141-2` dispense l'information « lors de l'embauche et chaque fois que nécessaire ». Ni rythme ni état — un fait. Aucune surface ne sert cette nature. À ne pas confondre avec `formation-securite-etablissement-organisation`, récurrente, qui atteint l'écran sous le verbe « fait le ».",
-  },
-  "conduite-salarie-formation": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `evenementielle` : `R. 4323-55` fait « compléter et réactualiser chaque fois que nécessaire » — un nouvel équipement, un changement de conditions d'utilisation. Aucune surface ne sert cette nature. L'autorisation de conduite de `R. 4323-56`, elle, est un état permanent et atteint l'écran.",
-  },
-  "formation-securite-etablissement-travail-sur-ecran": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `evenementielle` : `R. 4542-16` porte deux titres, et la règle de résolution de l'ADR-026 § 3 retient le second — « chaque fois que l'organisation du poste de travail est modifiée de manière substantielle ». Aucune surface ne sert cette nature.",
-  },
   "formation-securite-salarie-designe-competent": {
     inscriteLe: "2026-09-04",
     motif:
@@ -200,11 +194,6 @@ export const SANS_SURFACE: Readonly<Record<string, InscriptionSansSurface>> = {
     inscriteLe: "2026-09-04",
     motif:
       "Nature `ponctuelle` : le Code ne donne aucune durée de validité à la formation, le titre est acquis une fois. Aucune surface ne sert cette nature. Réserve portée par la ligne elle-même et non comblée : le départ du salarié formé rend l'obligation à nouveau due, et ce fait EST observable (`Salarie.actif`) sans que rien ne s'en serve — ce n'est pas un défaut de nature, c'est un rapprochement qui n'est pas fait.",
-  },
-  "co-activite-etablissement-protocole-securite": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `evenementielle`, CONFIRMÉE le 2026-09-04 après relecture de `R. 4515-3`, `R. 4515-8` et `R. 4515-9` : `R. 4515-8` fait établir un protocole par opération non répétitive, avant elle, et le produit n'observe pas ce fait. Mais `R. 4515-9` porte un SECOND régime, disjoint — un protocole unique pour les opérations répétitives au sens de `R. 4515-3`, établi avant la première et applicable jusqu'à modification significative —, qui est un état permanent et qui n'est encodé nulle part. Tant qu'une seule ligne couvre les deux, la règle de résolution de l'ADR-026 § 3 place `evenementielle` devant et la moitié qui aurait un écran disparaît avec l'autre. Ce n'est donc pas une nature à corriger mais une obligation qui manque : l'ajouter déplace `EMPREINTE_ATTENDUE`, et la décision revient à la propriétaire. Le dépouillement est fait — le chapitre V est `integral` au corpus depuis le 2026-09-02 — et la proposition est écrite dans les `notesInternes` de cette obligation.",
   },
 };
 

@@ -181,7 +181,7 @@ export const CODE_TRAVAIL_CO_ACTIVITE: Corpus = {
       statut: "retenu",
       obligations: ["co-activite-etablissement-protocole-securite"],
       reserve:
-        "C'EST L'ARTICLE QUI AURAIT PU FAIRE INVENTER UNE PÉRIODICITÉ, et il n'en écrit aucune. « Aussi longtemps que les employeurs intéressés considèrent que les conditions n'ont subi aucune modification significative » est une condition appréciée par les parties, pas une durée de validité. Encoder une revue annuelle ici aurait fabriqué une échéance à partir d'une prudence, pas d'un texte.",
+        "C'EST L'ARTICLE QUI AURAIT PU FAIRE INVENTER UNE PÉRIODICITÉ, et il n'en écrit aucune. « Aussi longtemps que les employeurs intéressés considèrent que les conditions n'ont subi aucune modification significative » est une condition appréciée par les parties, pas une durée de validité. Encoder une revue annuelle ici aurait fabriqué une échéance à partir d'une prudence, pas d'un texte.\n\nCE QUI RESTE DEHORS, et qui vivait jusqu'au 2026-09-21 dans le registre `SANS_SURFACE` : cet article porte un SECOND régime, disjoint de celui de `R. 4515-8` — un protocole UNIQUE pour les opérations répétitives au sens de `R. 4515-3`, établi avant la première et applicable jusqu'à modification significative. C'est un état permanent, et il n'est encodé nulle part : `co-activite-etablissement-protocole-securite` couvre les deux d'une seule ligne événementielle. Depuis l'ADR-037 cette ligne A une surface (« Quand ça arrive »), et son fait générateur dit le cas répétitif en incise ; l'obligation distincte manque toujours. L'ajouter déplace l'empreinte, et la décision revient à la propriétaire ; la proposition est dans les `notesInternes` de l'obligation.",
     },
     {
       ref: "R. 4515-10",

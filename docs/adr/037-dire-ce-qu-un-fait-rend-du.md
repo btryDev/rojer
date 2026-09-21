@@ -1,6 +1,9 @@
 # ADR-037 — Dire ce qu'un fait rend dû, sans jamais le dater
 
-- **Statut** : **PROPOSÉE le 2026-09-20.** Rien n'est codé. Quatre questions
+- **Statut** : **PROPOSÉE le 2026-09-20, CODÉE SUR SA BRANCHE le 2026-09-21**
+  (`lot/surface-evenementiel`) pour être jugée sur pièce — non fusionnée, et les
+  quatre questions du § 7 restent à la propriétaire. ~~Rien n'est codé.~~
+  Deux écarts à ce texte, écrits au § 8. Quatre questions
   attendent la propriétaire (§ 7) ; les recommandations y sont écrites, et
   l'ADR se lit « acceptée telle que recommandée » si elle les retient toutes.
 - **Amende** : l'ADR-022 (qui nomme l'axe « événement » sans mécanisme) et
@@ -136,3 +139,24 @@ calendriers à l'ouverture, sans qu'aucune échéance ne bouge.
 | **Q2** | Les obligations **ponctuelles** (dues une fois : la qualification ICPE avant exploitation) y vont-elles ? | **Non, pas dans ce lot.** Une ponctuelle se SOLDE : elle appelle un « fait le », donc une déclaration au sens de l'ADR-027 — un autre mécanisme. Trois inscriptions restent à `SANS_SURFACE`, nommées. |
 | **Q3** | Le dirigeant peut-il noter qu'un fait est survenu ? | **Non.** Voir § 4. Si le besoin se confirme, il se discutera contre l'ADR-018, pas en passant. |
 | **Q4** | Encoder les neuf dans le même lot que la page, ou après ? | **Après, en un lot à part.** La page se livre sur les trois obligations déjà au référentiel : elle se juge à l'écran avant qu'on y verse neuf lignes. |
+
+## 8. Ce que le code a fait autrement, et pourquoi (2026-09-21)
+
+- **`faitGenerateur` n'est pas une union discriminée sur la nature** (§ 3, point
+  4). `Obligation` en est déjà une sur `porteur` ; les croiser doublait chaque
+  branche du type. Le champ est facultatif au type, et
+  `quand-ca-arrive/lignes.test.ts` tient la règle dans ses deux sens : toute
+  obligation que la page peut présenter porte son fait ; aucun fait n'est posé
+  hors de la nature `evenementielle`.
+- **Une dette a failli partir avec une inscription.** `SANS_SURFACE` disait du
+  protocole de sécurité qu'un SECOND régime (`R. 4515-9`, opérations
+  répétitives, état permanent) n'était encodé nulle part. L'obligation ayant
+  désormais une surface, l'inscription tombe — mais pas le manque : il est
+  devenu une `reserve` du corpus, donc toujours compté.
+- **Une contre-épreuve ne rougit pas, et c'est un mutant équivalent.** Retirer
+  le filtre `releveDeLaPage` de la boucle laisse la suite verte : la ligne
+  suivante écarte toute obligation sans `faitGenerateur`, et seules les
+  obligations de la page en portent un. Les deux gardes se recouvrent
+  aujourd'hui ; elles cesseraient le jour où une événementielle de salarié
+  recevrait un fait générateur — ce que le test « la page ne prend que le
+  porteur établissement » tient alors, et il rougit bien (épreuve F3).

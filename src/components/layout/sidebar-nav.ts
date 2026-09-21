@@ -48,31 +48,32 @@
 // que de laisser croire à un dossier vide.
 
 import {
-  LayoutDashboard,
-  Wrench,
-  Calendar,
-  FileText,
-  NotebookText,
-  ListChecks,
-  ListTodo,
-  FileCheck2,
-  Settings,
-  Users,
-  IdCard,
   Accessibility,
-  Flame,
-  HandshakeIcon,
-  Droplets,
-  ShieldCheck,
-  Building2,
-  Warehouse,
-  HardHat,
   Archive,
-  CircleCheck,
   BookMarked,
-  Plug,
+  Building2,
+  Calendar,
+  CircleCheck,
   CircleSlash,
   Compass,
+  CornerDownRight,
+  Droplets,
+  FileCheck2,
+  FileText,
+  Flame,
+  HandshakeIcon,
+  HardHat,
+  IdCard,
+  LayoutDashboard,
+  ListChecks,
+  ListTodo,
+  NotebookText,
+  Plug,
+  Settings,
+  ShieldCheck,
+  Users,
+  Warehouse,
+  Wrench,
 } from "lucide-react";
 
 /** Ids historiques — conservés tels quels pour la prop `active`. */
@@ -89,6 +90,7 @@ export type SidebarActive =
   | "carnet-sanitaire"
   | "controle"
   | "etats-permanents"
+  | "quand-ca-arrive"
   | "duerp"
   | "guide"
   | "connecter";
@@ -121,6 +123,9 @@ export const LABEL_ITEM: Record<SidebarItemId, string> = {
   // route gardent le terme technique — c'est le rôle de cette table que de les
   // découpler.
   "etats-permanents": "Ce qui doit être en place",
+  // Le pendant du précédent pour la troisième nature (ADR-037) : ce qu'un
+  // fait rend dû. Les mots du dirigeant, pas « obligations événementielles ».
+  "quand-ca-arrive": "Quand ça arrive",
   guide: "Comprendre",
   perimetre: "Ce que Rojer ne couvre pas",
   documents: "Documents obligatoires",
@@ -248,6 +253,7 @@ export function deduireActif(
   if (pathname.startsWith(`${base}/plan-prevention`)) return "plan-prevention";
   if (pathname.startsWith(`${base}/carnet-sanitaire`)) return "carnet-sanitaire";
   if (pathname.startsWith(`${base}/etats-permanents`)) return "etats-permanents";
+  if (pathname.startsWith(`${base}/quand-ca-arrive`)) return "quand-ca-arrive";
   if (pathname.startsWith(`${base}/controle`)) return "controle";
   if (pathname.startsWith(`${base}/duerp`)) return "duerp";
   if (pathname.startsWith(`${base}/guide`)) return "guide";
@@ -305,6 +311,18 @@ export function construireSections({
       label: LABEL_ITEM["etats-permanents"],
       href: href("/etats-permanents"),
       Icon: CircleCheck,
+    },
+    // ADR-037, question Q1 — À VALIDER PAR LA PROPRIÉTAIRE. « À faire » ne
+    // porte que des activités ; celle-ci en est une À UNE CONDITION PRÈS : ce
+    // qu'il faudra faire le jour où le fait survient. Ce n'est pas une lecture
+    // générale (la liste dépend du dossier), et ce n'est pas un filtre du
+    // calendrier (ces lignes ne peuvent pas y exister). Pas de `count` : rien
+    // n'y est jamais en retard.
+    {
+      id: "quand-ca-arrive",
+      label: LABEL_ITEM["quand-ca-arrive"],
+      href: href("/quand-ca-arrive"),
+      Icon: CornerDownRight,
     },
   ];
 
