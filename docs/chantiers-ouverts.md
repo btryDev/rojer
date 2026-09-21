@@ -149,6 +149,12 @@ courants.
 − `R. 4463-5` − `R. 4463-7` = **62 manquantes, dont 47 dans la cible** ;
 `evenement` y passe de 9 à 6.
 
+Puis cinq autres, relues à la source le même jour : 62 − `R. 4624-31`
+− `R. 4624-28-2` − `R. 4141-8` − `R. 4141-12` − `R. 4121-2` = **57 manquantes,
+dont 42 dans la cible**. `evenement` tombe à 0 dans la cible : la sixième,
+`L. 8222-5`, n'attend plus une surface mais la décision sur le module de
+vigilance, et passe en `a_trancher` (8 → 9).
+
 **Ce tableau est sa seconde version, et la première était trop propre.** Elle
 annonçait 42 / 23, « vingt-deux n'attendent que deux choses » et « aucune
 catégorie d'équipement ne touche la cible ». La contre-lecture a confronté

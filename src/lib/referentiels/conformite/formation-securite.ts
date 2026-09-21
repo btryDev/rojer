@@ -524,4 +524,66 @@ export const obligationsFormationSecurite: Obligation[] = [
     notesInternes:
       "DEUX ACTES SOUS UN MÊME RÉGIME, ET NON UN SEUL. C'est la question que ce lot a rouverte après coup, et la réponse vient de la lecture des trois articles du renvoi — dont deux n'avaient pas été ouverts la première fois. Quatre indices, dans l'ordre de leur force :\\n\\n1. LE VOCABULAIRE DU RENVOI. L. 4644-1 écrit « bénéficient d'une formation en matière de santé au travail DANS LES CONDITIONS PRÉVUES aux articles L. 2315-16 à L. 2315-18 ». « Dans les conditions prévues » renvoie à des MODALITÉS. Si le législateur avait voulu la même formation, il aurait écrit « bénéficient de la formation prévue à l'article L. 2315-18 » — la tournure existe et il ne l'a pas employée.\\n\\n2. L'OBJET DIFFÈRE. L. 2315-18 vise « la formation nécessaire à l'exercice de LEURS MISSIONS en matière de santé, de sécurité et de conditions de travail PRÉVUES AU CHAPITRE II DU PRÉSENT TITRE » — c'est-à-dire les attributions du CSE. Un salarié désigné n'a aucune de ces attributions : il s'occupe « des activités de protection et de prévention des risques professionnels de l'entreprise » (L. 4644-1). L'objet de la formation est défini par référence à des missions qu'il n'exerce pas.\\n\\n3. L'INDICE DÉCISIF EST DANS L. 2315-17. Son renouvellement est écrit ainsi : « Ces formations sont renouvelées lorsque LES REPRÉSENTANTS ont exercé LEUR MANDAT pendant quatre ans, consécutifs ou non. » Un salarié désigné n'est pas un représentant et ne détient aucun mandat : R. 4644-1 le fait DÉSIGNER par l'employeur après avis du CSE, il n'est pas élu. Si le renvoi valait identité d'acte, cette condition de renouvellement serait inapplicable à la moitié de ses destinataires — ce qui n'a pas de sens. Elle est cohérente seulement si le renvoi porte sur des conditions dont chacune s'applique là où elle peut.\\n\\n4. LA CONSÉQUENCE PRATIQUE CONFIRME. Le seuil de onze salariés de la ligne CSE vient de L. 2311-2, qui ne s'applique qu'au CSE. Le salarié désigné est dû DÈS LE PREMIER SALARIÉ. Une ligne unique aurait obligé à choisir entre proposer un titre CSE à une entreprise de trois personnes, ou priver un employeur de six personnes de la formation de son désigné. Les deux étaient faux.\\n\\nPÉRIODICITÉ `autre`, ET C'EST LE POINT LE PLUS FIN DE CE LOT. La ligne CSE porte `quadriennale` parce que L. 2315-17 chiffre son renouvellement. Celle-ci porte `autre` parce que le même article chiffre ce renouvellement EN ANNÉES DE MANDAT EXERCÉ, et qu'un salarié désigné n'exerce aucun mandat. Le même renvoi produit donc deux périodicités différentes, et ce n'est pas une incohérence : c'est le texte lu de près. Encoder `quadriennale` ici aurait fabriqué une échéance en appliquant à quelqu'un une condition écrite pour un autre.\\n\\nCE QUE JE NE PEUX PAS AFFIRMER, ET QUI SE DIT. Aucun texte lu ne donne de durée de validité à la formation du salarié désigné. Cela ne veut pas dire qu'elle est acquise à vie : cela veut dire que le Code ne le dit pas. `TitreSalarie.echeanceLe` reste nullable — l'employeur qui connaît l'échéance de son attestation la saisit, l'outil ne l'invente pas. Même régime que l'habilitation électrique et que la formation à la sécurité de R. 4141-20.\\n\\nPORTEUR SALARIÉ. Le titre est nominatif : R. 4644-1 fait désigner UNE OU PLUSIEURS PERSONNES, après avis du CSE, et l'employeur sait qui il a désigné. C'est le critère qui manquait à la manutention et à l'écran — le produit sait ici à qui attribuer le titre. `prevention-etablissement-salarie-designe` porte l'acte de désigner, celle-ci porte la formation de la personne désignée.\\n\\nMÊME ARTICLE FONDATEUR QUE `prevention-etablissement-salarie-designe`, ET C'EST DÉCLARÉ. Les deux se fondent sur L. 4644-1 : le I alinéa 1 pour la désignation, le I alinéa 2 pour la formation. Le test anti-doublon ne compare que l'article et ne sait pas distinguer deux alinéas ; la paire est donc inscrite dans `PAIRES_DECLAREES` avec sa raison, comme la paire R. 4222-20 avant elle.\\n\\n`pieceMedicale: false` — une attestation de formation en santé au travail atteste d'une compétence, pas d'un état de santé.\\n\\nCriticité 3, la même que la désignation qu'elle prolonge : le manquement est réel et sanctionnable, sans exposition corporelle directe.\n\nNATURE : PONCTUELLE (ADR-026). Le renouvellement de L. 2315-17 court sur quatre ans de MANDAT exercé, et un salarié désigné n'en détient aucun — c'est le point que ce fichier établit plus haut. Aucun autre texte ne date le renouvellement de cette formation : elle est due une fois, à la désignation. Le contraste avec `formation-securite-salarie-cse-sst`, quadriennale, tient tout entier là.",
   },
+
+  {
+    id: "formation-securite-etablissement-apres-accident-grave",
+    domaine: "formation_securite",
+    libelle:
+      "Après un accident du travail grave, ou des accidents répétés à un même poste : analyser les conditions de travail, et reformer s'il y a lieu",
+    description:
+      "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave, l'employeur procède, après avoir pris toute mesure pour satisfaire aux dispositions de l'article L. 4221-1, à l'analyse des conditions de circulation ou de travail. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, les formations à la sécurité. Il en est de même en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété, soit à un même poste de travail ou à des postes de travail similaires, soit dans une même fonction ou des fonctions similaires.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4141-8 (analyse après accident grave ou accidents répétés, et formation s'il y a lieu)",
+        article: "R. 4141-8",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532868",
+        note: "« En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave, l'employeur procède, après avoir pris toute mesure pour satisfaire aux dispositions de l'article L. 4221-1, à l'analyse des conditions de circulation ou de travail. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, les formations à la sécurité prévues par le présent chapitre. Il en est de même en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété : 1° Soit à un même poste de travail ou à des postes de travail similaires ; 2° Soit dans une même fonction ou des fonctions similaires. » Version en vigueur depuis le 1er mai 2008.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "En cas d'accident du travail grave, ou de maladie professionnelle ou à caractère professionnel grave — et en cas d'accidents ou de maladies présentant un caractère répété à un même poste, à des postes similaires, dans une même fonction ou des fonctions similaires",
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-21 sur la page « Quand ça arrive » (ADR-037) : elle était au corpus en `obligation_manquante`, cause `evenement`. Le produit n'observe pas le fait ; il DIT la règle, sans date, sans état, sans case. Article relu le jour même sur sa page propre, en demandant d'abord le nombre d'alinéas, avec un contrôle ciblé sur chaque passage décisif ; la `citationCle` du corpus a été confirmée mot pour mot. La relecture a aussi montré que cette `citationCle` s'ARRÊTAIT avant le troisième alinéa — le second déclencheur, les accidents RÉPÉTÉS, pour lequel la gravité n'est pas exigée — ; elle est complétée.\n\nL'ANALYSE EST DUE, LA FORMATION NE L'EST QUE « S'IL Y A LIEU ». Le libellé garde la nuance. Aucun délai n'est écrit, et « grave » n'est défini ni ici ni ailleurs dans ce que le dépôt a lu : le produit ne qualifie pas un accident à la place du dirigeant.\n\nÀ NE PAS CONFONDRE avec la déclaration d'accident du travail ni avec le registre des accidents bénins, hors périmètre (`CLAUDE.md`).",
+  },
+
+  {
+    id: "formation-securite-etablissement-modification-circulation-exploitation",
+    domaine: "formation_securite",
+    libelle:
+      "Après une modification des conditions de circulation ou d'exploitation : analyser les nouvelles conditions, et former s'il y a lieu",
+    description:
+      "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion, l'employeur procède, après avoir pris toutes mesures pour satisfaire aux dispositions de l'article L. 4221-1 relatives à l'utilisation des lieux de travail, à l'analyse des nouvelles conditions de circulation et d'exploitation. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, une formation à la sécurité.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4141-12 (analyse des nouvelles conditions, et formation s'il y a lieu)",
+        article: "R. 4141-12",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532858",
+        note: "« En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion, l'employeur procède, après avoir pris toutes mesures pour satisfaire aux dispositions de l'article L. 4221-1 relatives à l'utilisation des lieux de travail, à l'analyse des nouvelles conditions de circulation et d'exploitation. L'employeur organise, s'il y a lieu, au bénéfice des travailleurs intéressés, une formation à la sécurité répondant aux dispositions de l'article R. 4141-11. » Version en vigueur depuis le 1er mai 2008.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement, ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-21 sur la page « Quand ça arrive » (ADR-037) : elle était au corpus en `obligation_manquante`, cause `evenement`. Le produit n'observe pas le fait ; il DIT la règle, sans date, sans état, sans case. Article relu le jour même sur sa page propre, en demandant d'abord le nombre d'alinéas, avec un contrôle ciblé sur chaque passage décisif ; la `citationCle` du corpus a été confirmée mot pour mot. La relecture a montré que la citation omettait le SECOND alinéa, celui qui porte la formation ; elle est complétée.\n\nUNE AMBIGUÏTÉ DU TEXTE, GARDÉE TELLE QUELLE. « présentant notamment des risques d'intoxication, d'incendie ou d'explosion » suit immédiatement « conditions d'exploitation » : rien ne permet d'affirmer qu'il qualifie aussi la modification des conditions de CIRCULATION. Le `prescrit` du corpus le rattachait aux deux, et fermait la liste en omettant « notamment » — une interprétation, pas une lecture. Le fait générateur reprend la phrase dans son ordre, sans trancher.\n\nL'analyse est due ; la formation « s'il y a lieu ». Aucun délai écrit.",
+  },
 ];

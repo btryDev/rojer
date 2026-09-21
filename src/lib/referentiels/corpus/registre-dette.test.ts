@@ -67,7 +67,10 @@ describe("registre de dette — les obligations manquantes", () => {
       libre: [0, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
-      evenement: [6, 1],
+      // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
+      // `L. 8222-5`, passe en `a_trancher` — ce qui la retient est la décision
+      // sur le module de vigilance, plus l'absence de surface.
+      evenement: [0, 1],
       categorie_equipement: [5, 6],
       attribut_etablissement: [4, 2],
       destinataire: [5, 1],
@@ -80,11 +83,11 @@ describe("registre de dette — les obligations manquantes", () => {
       // de l'arrêté du 5 mars 1993, qui ne se tranche pas en ouvrant un article.
       texte_a_lire: [1, 0],
       // 7 → 8 : `R. 4224-3`, trouvé en l'ouvrant pour un autre.
-      a_trancher: [8, 1],
+      a_trancher: [9, 1],
       perimetre: [0, 3],
     });
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(47);
-    expect(manquantes.length).toBe(62);
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(42);
+    expect(manquantes.length).toBe(57);
   });
 });
 

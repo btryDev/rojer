@@ -850,6 +850,30 @@ Décision au dossier (A6).
 `PE 4 § 2` ». `PE 4 § 2` est un ENTRETIEN — précisément ce que GN 10 excepte.
 L'analogie ne valait pas ; elle est raturée dans la réserve de `PE 27`.
 
+### C21 · 2026-09-21 — Six articles événementiels relus avant d'être encodés
+
+**Lu, par un agent, chacun sur sa page propre** (trois à quatre requêtes par
+article : nombre d'alinéas, texte intégral, contrôle ciblé des mots décisifs) :
+`R. 4624-31`, `R. 4624-28-2`, `R. 4141-8`, `R. 4141-12`, `R. 4121-2`, `L. 8222-5`,
+et le décret n° 2026-503 du 12 juin 2026 (art. 2 et 5).
+
+**Les six `citationCle` du corpus étaient exactes mot pour mot.** Ce qui manquait
+était AUTOUR : la citation de `R. 4141-8` s'arrêtait avant son troisième alinéa
+(les accidents répétés, sans condition de gravité) ; celle de `R. 4141-12`
+omettait son second alinéa (la formation) ; le troisième alinéa de `L. 8222-5`
+n'était mentionné nulle part ; deux textes modificateurs n'étaient pas relevés
+(décret n° 2022-679, loi n° 2014-790 — ni l'un ni l'autre ouvert) ; la note
+d'application dans le temps de `R. 4624-31` manquait.
+
+**Un enseignement sur l'outil de lecture : il ne sait pas compter.** Sa réponse à
+« combien d'alinéas, lequel est le dernier » était fausse ou incohérente sur
+quatre articles sur six — pour `R. 4141-8` il donnait le 1° comme dernier, et le
+2° aurait été oublié. La question reste utile (elle force à regarder la fin),
+mais seul le texte recopié fait foi, et il se recoupe par une requête ciblée.
+
+**Appliqué :** cinq obligations événementielles (référentiel 2026-09-21.3, 167).
+`L. 8222-5` n'est pas encodée : décision B1 du dossier.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

@@ -338,4 +338,35 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     notesInternes:
       "ENCODÉE LE 2026-09-21, avec la page « Quand ça arrive » (ADR-037). Elle était au corpus en `obligation_manquante`, cause `evenement` : le produit n'observe pas la vigilance météorologique, donc il ne peut pas la DATER. Il peut la DIRE, et c'est tout ce que cette ligne fait — ni date, ni état, ni case. Verbatim relevé sur la page propre de l'article le 2026-09-20, recoupé par une contre-lecture le même jour. AUCUN SEUIL DE TEMPÉRATURE : l'épisode de chaleur intense est défini par arrêté, par référence au dispositif de Météo-France (`R. 4463-1`) ; cet arrêté n'est pas ouvert, et aucun chiffre n'est écrit nulle part.\n\nLE PENDANT ÉVÉNEMENTIEL de `prevention-etablissement-evaluation-chaleur-intense` (`R. 4463-2`) : définir les mesures est un état permanent, les mettre en œuvre se déclenche sur l'épisode. Deux lignes, deux natures, deux écrans — c'est l'ADR-026.",
   },
+
+  {
+    id: "prevention-etablissement-mise-a-jour-duerp-sur-fait",
+    domaine: "organisation_prevention",
+    libelle:
+      "Document unique mis à jour lors d'une décision d'aménagement important, et lorsqu'une information nouvelle intéresse l'évaluation d'un risque",
+    description:
+      "La mise à jour du document unique d'évaluation des risques professionnels est réalisée lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur. À chaque mise à jour du document unique, le programme annuel de prévention ou la liste des actions de prévention et de protection est mis à jour, si nécessaire. La mise à jour au moins annuelle, due par les entreprises d'au moins onze salariés, est suivie par le module du document unique.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4121-2, 2° et 3° (mise à jour du document unique sur décision d'aménagement important ou information nouvelle)",
+        article: "R. 4121-2",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045386446",
+        note: "« La mise à jour du document unique d'évaluation des risques professionnels est réalisée : 1° Au moins chaque année dans les entreprises d'au moins onze salariés ; 2° Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail ; 3° Lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur. La mise à jour du programme annuel de prévention des risques professionnels et d'amélioration des conditions de travail ou de la liste des actions de prévention et de protection mentionnés au III de l'article L. 4121-3-1 est effectuée à chaque mise à jour du document unique d'évaluation des risques professionnels, si nécessaire. » Version en vigueur depuis le 31 mars 2022 (décret n° 2022-395 du 18 mars 2022, art. 1).",
+        versionConstatee: "2022-03-31",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur",
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-21 sur la page « Quand ça arrive » (ADR-037) : elle était au corpus en `obligation_manquante`, cause `evenement`. Le produit n'observe pas le fait ; il DIT la règle, sans date, sans état, sans case. Article relu le jour même sur sa page propre, en demandant d'abord le nombre d'alinéas, avec un contrôle ciblé sur chaque passage décisif ; la `citationCle` du corpus a été confirmée mot pour mot.\n\nLES CAS DE MISE À JOUR SONT TROIS, ET SEUL LE 1° DÉPEND DE L'EFFECTIF. Le 1° — annuel, entreprises d'au moins onze salariés — a une date, et il vit dans `evaluerEtatDuerp`, SEUL endroit du produit où cette règle s'écrit. Cette ligne ne porte QUE les 2° et 3°, qui valent pour tout employeur et n'ont pas de date : le fait est la DÉCISION d'aménagement (pas sa réalisation), ou l'information reçue. UNE SEULE LIGNE pour les deux faits : l'acte dû est le même, mettre à jour le document.\n\nCE QUE LE PRODUIT POURRAIT FAIRE ET NE FAIT PAS : il connaît la date de la dernière version validée du document unique. Il ne peut pas en déduire qu'une décision d'aménagement a été prise depuis. D'où une ligne qui dit la règle, et aucun état.\n\nL'ALINÉA FINAL (programme annuel ou liste des actions, « si nécessaire ») est repris dans la description ; le produit ne le trace pas.",
+  },
 ];

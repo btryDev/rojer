@@ -1379,6 +1379,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // -5, -7), que la page « Quand ça arrive » présente. Ni date ni ligne de
     // calendrier : 159 + 3 = 162.
     { version: "2026-09-21.2", empreinte: "162-c5341dcba730e779" },
+    // Cinq obligations événementielles de plus, relues à la source le jour
+    // même : examen de reprise (R. 4624-31), fin d'exposition (R. 4624-28-2),
+    // accident grave (R. 4141-8), modification des conditions (R. 4141-12), mise
+    // à jour du document unique sur un fait (R. 4121-2, 2° et 3°). 162 + 5 = 167.
+    { version: "2026-09-21.3", empreinte: "167-979e88706daaf366" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1535,7 +1540,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(162);
+    ).toBe(167);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

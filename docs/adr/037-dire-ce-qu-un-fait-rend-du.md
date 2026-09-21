@@ -163,10 +163,19 @@ calendriers à l'ouverture, sans qu'aucune échéance ne bouge.
   boucle l'appelle ; et tous les tests de liste passaient `[]` comme parc. La
   boucle est sortie dans `lignesDepuis`, à qui le test passe une obligation
   d'appareil fabriquée, portant un fait : elle rougit.
-- **Le délai n'a pas de champ.** Le § 3 (point 2) promet « le délai quand le
-  texte en écrit un ». `LigneQuandCaArrive` n'en porte pas : aucune des trois
-  obligations actuelles n'en a. Il faudra l'ajouter avec `R. 4624-31` (« au
-  plus tard huit jours »), pas avant — un champ vide ne se vérifie pas.
+- **Le délai n'a pas de champ, et il n'en aura pas.** Le § 3 (point 2) promettait
+  « le délai quand le texte en écrit un », en pensant aux « huit jours » de
+  `R. 4624-31`. Relu à la source le 2026-09-21 : ces huit jours s'attachent à
+  l'ORGANISATION de l'examen par le service de santé au travail ; le seul terme
+  de la saisine, qui est l'acte de l'employeur, est « dès que ». Un champ
+  « sous 8 jours » aurait dit au dirigeant ce que le texte ne dit pas. La
+  description porte la phrase entière ; c'est elle qui fait foi.
+- **Huit obligations de plus sur la page le 2026-09-21** : les trois de la
+  chaleur intense, puis cinq relues à la source (`R. 4624-31`, `R. 4624-28-2`,
+  `R. 4141-8`, `R. 4141-12`, `R. 4121-2` 2° et 3°). `L. 8222-5` n'y est PAS :
+  elle attend la décision sur le module de vigilance. La question Q4 (« la page
+  d'abord, les obligations ensuite ») est donc dépassée par les faits — la page
+  n'est pas déployée, et la propriétaire la jugera avec ses onze lignes.
 - **Les chiffres du § 1 sont ceux du 2026-09-20.** Au 2026-09-21 le registre
   compte 65 manquantes dont 50 dans la cible (− `R. 4222-21`, − `PE 27`,
   + `R. 4224-3`) ; `evenement` y pèse toujours neuf.

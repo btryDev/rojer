@@ -456,4 +456,66 @@ export const obligationsSanteTravail: Obligation[] = [
     notesInternes:
       "LA SEULE OBLIGATION DE CE LOT QUE L'EMPLOYEUR NE RÉALISE PAS, et c'est ce qui a décidé de son réalisateur. `R. 4624-46` confie la fiche « au médecin du travail ou, dans les services de prévention et de santé au travail interentreprises, à l'équipe pluridisciplinaire » — verbatim relevé le 2026-08-31, version en vigueur depuis le 2022-04-28. L'employeur ne l'écrit pas : il la reçoit. `realisateurs: [\"medecin_travail\", \"equipe_pluridisciplinaire\"]`, dans l'ordre où le texte les cite.\n\nLA SECONDE VALEUR N'EXISTAIT PAS QUAND CETTE LIGNE A ÉTÉ ÉCRITE, et le repli d'alors était faux pour la cible du produit. `professionnel_sante_travail` désigne « l'un des professionnels de santé mentionnés au premier alinéa de L. 4624-1 » ; l'équipe pluridisciplinaire de `L. 4622-8` est plus large — elle comprend les intervenants en prévention des risques professionnels, qui ne sont pas des soignants. Or c'est elle, et non le médecin seul, qui établit la fiche d'une TPE adhérant à un service interentreprises : le cas ORDINAIRE. `equipe_pluridisciplinaire` a été ajoutée à l'enum par le lot 7 et la ligne est corrigée.\n\nPOURQUOI L'ENCODER MALGRÉ TOUT COMME UNE OBLIGATION DE L'ÉTABLISSEMENT. Parce que c'est ainsi qu'elle se présente en contrôle : l'inspection demande la fiche d'entreprise, et l'employeur qui n'en a pas est en défaut, même si l'acte incombe au service. C'est exactement le régime des vérifications périodiques réalisées par un organisme agréé — l'obligation est celle de l'exploitant, la réalisation celle d'un tiers.\n\nAUCUNE PÉRIODICITÉ, ET C'ÉTAIT LE PIÈGE. `R. 4624-46` écrit « établit ET MET À JOUR », sans dire à quel rythme. On lit couramment que la fiche se met à jour tous les quatre ans, ou à chaque changement notable ; aucune de ces durées n'est dans l'article. `periodicite: \"autre\"`. Ce dépôt a déjà retiré un « triennal » qui venait d'une norme NF ; un « quadriennal » venant d'un usage professionnel serait la même faute.\n\nL'ANNÉE DE `R. 4624-47` EST UN DÉLAI, PAS UNE PÉRIODICITÉ. « La fiche d'entreprise est établie dans l'année qui suit l'adhésion » : c'est un point de départ unique, pas un rythme. Le produit ne porte pas la date d'adhésion au service, donc ce délai n'engendre aucune ligne de calendrier ; il est rappelé en description. L'exposer supposerait un attribut d'établissement qui n'existe pas — et je n'en déclare pas de `Transmission` `attribut_absent`, parce que cet attribut ne conditionne pas l'APPLICABILITÉ de l'obligation, seulement la date à laquelle elle devient exigible. Nommer un attribut absent pour une échéance qu'on ne calcule de toute façon pas aurait été du bruit.\n\nCriticité 2 : le manquement est réel en contrôle, mais il ne pèse pas d'abord sur l'employeur — c'est au service qu'il incombe d'établir la fiche.\n\nNATURE : ÉTAT PERMANENT, `pieceAttendue: \"fiche d'entreprise\"` (ADR-026). R. 4624-46 fait « établir ET METTRE À JOUR » la fiche sans écrire de rythme, et l'obligation vue du côté de l'employeur est d'en détenir une à jour. La mise à jour incombe au service de santé au travail, seul réalisateur — c'est ce qui interdit de la ranger en échéance récurrente à la charge de l'employeur.",
   },
+
+  {
+    id: "sante-travail-etablissement-examen-de-reprise",
+    domaine: "sante_travail",
+    libelle:
+      "Saisir le service de santé au travail dès que la date de fin d'un arrêt de travail est connue, pour l'examen de reprise",
+    description:
+      "Le travailleur bénéficie d'un examen de reprise du travail par le médecin du travail après un congé de maternité, après une absence pour cause de maladie professionnelle, après une absence d'au moins trente jours pour cause d'accident du travail, et après une absence d'au moins soixante jours pour cause de maladie ou d'accident non professionnel. Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, il saisit le service de prévention et de santé au travail, qui organise l'examen le jour de la reprise effective du travail, et au plus tard dans un délai de huit jours qui suivent cette reprise. La visite de reprise n'est pas requise, sauf demande du médecin du travail, de l'employeur ou du travailleur, si le travailleur a bénéficié d'une visite de préreprise dans les trente jours précédant sa reprise et que le médecin du travail y a conclu qu'aucune mesure d'aménagement n'était nécessaire.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4624-31 (examen de reprise : cas, saisine du service, délai de huit jours, dérogation)",
+        article: "R. 4624-31",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045676892",
+        note: "« Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, il saisit le service de prévention et de santé au travail qui organise l'examen de reprise le jour de la reprise effective du travail par le travailleur, et au plus tard dans un délai de huit jours qui suivent cette reprise. » Version en vigueur depuis le 15 juin 2026 (décret n° 2026-503 du 12 juin 2026, art. 2, qui ajoute la dérogation) ; son article 5 l'applique aux arrêts de travail délivrés à compter du lendemain de sa publication.",
+        versionConstatee: "2026-06-15",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail d'un travailleur — après un congé de maternité, une absence pour maladie professionnelle, une absence d'au moins trente jours pour accident du travail, ou d'au moins soixante jours pour maladie ou accident non professionnel",
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-21 sur la page « Quand ça arrive » (ADR-037) : elle était au corpus en `obligation_manquante`, cause `evenement`. Le produit n'observe pas le fait ; il DIT la règle, sans date, sans état, sans case. Article relu le jour même sur sa page propre, en demandant d'abord le nombre d'alinéas, avec un contrôle ciblé sur chaque passage décisif ; la `citationCle` du corpus a été confirmée mot pour mot.\n\nLE DÉLAI DE HUIT JOURS N'EST PAS CELUI DE L'EMPLOYEUR, et c'est la raison pour laquelle la page n'a pas de champ « délai ». Grammaticalement il s'attache à l'ORGANISATION de l'examen par le service ; le seul terme de la saisine, qui est l'acte de l'employeur, est « dès que ». Un champ « sous 8 jours » à côté de cette ligne aurait dit au dirigeant qu'il a huit jours pour saisir — ce que le texte ne dit pas. La description garde la phrase entière.\n\nPORTÉE PAR L'ÉTABLISSEMENT, PAS PAR LE SALARIÉ : le fait concerne une personne, mais la fiche d'un salarié ne doit rien laisser deviner d'un arrêt ni de sa cause (`docs/rgpd.md` § 2.3). Le produit ne recueille ni l'arrêt, ni sa durée, ni sa nature.\n\nLA DÉROGATION EST CUMULATIVE (« si l'ensemble des conditions suivantes sont réunies ») et date du décret n° 2026-503, ouvert : six articles, dont seuls l'article 2 (la dérogation) et l'article 5 (application dans le temps) ont été lus mot pour mot. Le même décret touche `R. 4624-30`, la visite de préreprise, que le référentiel ne porte pas.",
+  },
+
+  {
+    id: "sante-travail-etablissement-fin-exposition-suivi-renforce",
+    domaine: "sante_travail",
+    libelle:
+      "Informer le service de santé au travail de la fin d'exposition, du départ ou de la retraite d'un travailleur en suivi individuel renforcé, et en aviser l'intéressé",
+    description:
+      "Pour l'organisation de la visite de fin de carrière ou de fin d'exposition, l'employeur informe son service de prévention et de santé au travail, dès qu'il en a connaissance, de la cessation de l'exposition d'un des travailleurs de l'entreprise à des risques particuliers pour sa santé ou sa sécurité justifiant un suivi individuel renforcé, de son départ ou de sa mise à la retraite. Il avise sans délai le travailleur concerné de la transmission de cette information.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4624-28-2 (information du service de santé au travail, puis du travailleur)",
+        article: "R. 4624-28-2",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043927913",
+        note: "« Pour l'organisation de la visite prévue à l'article L. 4624-2-1, l'employeur informe son service de prévention et de santé au travail, dès qu'il en a connaissance, de la cessation de l'exposition d'un des travailleurs de l'entreprise à des risques particuliers pour sa santé ou sa sécurité justifiant un suivi individuel renforcé, de son départ ou de sa mise à la retraite. Il avise sans délai le travailleur concerné de la transmission de cette information. » Version en vigueur depuis le 28 avril 2022 (décret n° 2022-679 du 26 avril 2022, art. 2 — non ouvert).",
+        versionConstatee: "2022-04-28",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "Dès que l'employeur a connaissance de la cessation de l'exposition d'un travailleur à des risques justifiant un suivi individuel renforcé, de son départ ou de sa mise à la retraite",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-21 sur la page « Quand ça arrive » (ADR-037) : elle était au corpus en `obligation_manquante`, cause `evenement`. Le produit n'observe pas le fait ; il DIT la règle, sans date, sans état, sans case. Article relu le jour même sur sa page propre, en demandant d'abord le nombre d'alinéas, avec un contrôle ciblé sur chaque passage décisif ; la `citationCle` du corpus a été confirmée mot pour mot.\n\nDEUX ACTES, DEUX TERMES : informer le service « dès qu'il en a connaissance », aviser le travailleur « sans délai ». Les alinéas 2 et 3 de l'article ne pèsent pas sur l'employeur — le travailleur peut demander la visite lui-même, du mois précédant la fin d'exposition ou son départ jusqu'à six mois après ; le service vérifie les conditions de `R. 4624-28-1` et organise.\n\nSERVIE À TOUT EMPLOYEUR, et c'est exact : le fait générateur porte lui-même la condition (« justifiant un suivi individuel renforcé »). Qui n'a aucun salarié en suivi renforcé ne rencontrera pas ce fait. Le produit connaît pourtant les titres de suivi renforcé déclarés (`sante-travail-salarie-sir`) ; il ne s'en sert pas ici, faute de savoir quand une exposition CESSE.\n\nLE TEXTE MODIFICATEUR N'EST PAS OUVERT (décret n° 2022-679, art. 2) : la règle de `corpus/types.ts` demanderait de le faire.",
+  },
 ];

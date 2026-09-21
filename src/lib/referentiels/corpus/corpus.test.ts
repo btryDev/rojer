@@ -746,8 +746,8 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // S'y ajoute, pour R. 4141-8, que le registre des accidents du travail
       // et la déclaration d'AT sont déclarés hors périmètre produit : l'outil
       // ne connaîtrait pas l'accident qui déclenche l'obligation.
-      "R. 4141-8",
-      "R. 4141-12",
+      // ~~"R. 4141-8"~~ — encodée le 2026-09-21 (page « Quand ça arrive »).
+      // ~~"R. 4141-12"~~ — encodée le 2026-09-21 (page « Quand ça arrive »).
       // L. 4622-1 a quitté cette liste le 2026-09-01, et CE TEST EST LA RAISON
       // POUR LAQUELLE IL Y ÉTAIT RESTÉ. L'article était encodé depuis le
       // 2026-08-31 — `sante-travail-etablissement-adhesion-spst` — sans que
@@ -777,14 +777,14 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // alors que la sous-section court jusqu'à R. 4624-28-3. Un intervalle
       // cité n'est pas un intervalle lu — c'est le même défaut que la phrase
       // sur l'amiante et le plomb, corrigée le même jour.
-      "R. 4624-28-2",
+      // ~~"R. 4624-28-2"~~ — encodée le 2026-09-21 (page « Quand ça arrive »).
       // Entré le 2026-09-20, et par un chemin qui vaut d'être dit : en ouvrant
       // le texte modificateur de R. 4624-28-3, comme `types.ts` l'exige. Le
       // décret n° 2022-372 touche aussi les visites de reprise. « Dès que
       // l'employeur a connaissance de la date de la fin de l'arrêt de travail,
       // il saisit le service de prévention et de santé au travail. » Même
       // blocage que son voisin : le déclencheur événementiel n'existe pas.
-      "R. 4624-31",
+      // ~~"R. 4624-31"~~ — encodée le 2026-09-21 (page « Quand ça arrive »).
       // R. 4225-3 entre avec le lot 8, et pour la même raison que les
       // précédentes : un texte lu de plus, pas un défaut d'encodage. La
       // boisson non alcoolisée gratuite est due « lorsque des conditions
@@ -1097,7 +1097,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // SANS condition d'effectif, et sont donc les seules règles de mise à
       // jour pour la part de la cible en dessous de onze salariés, à qui le
       // dossier ne dit rien. Événementiels tous les deux.
-      "R. 4121-2",
+      // ~~"R. 4121-2"~~ — encodée le 2026-09-21 (page « Quand ça arrive »).
       // ── Lot « plan de prévention », 2026-09-02 : le chapitre II du titre Ier
       // du livre V, seize articles sur seize. Bloc contigu en fin de liste,
       // pour la raison écrite par le lot D1 — il se retirera d'un coup le jour

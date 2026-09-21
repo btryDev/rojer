@@ -46,10 +46,10 @@ import type { PorteurObligation } from "./types";
 
 /**
  * Le porteur de CHAQUE obligation du référentiel, relevé en appelant
- * `porteurDe` le 2026-09-21 : 162 lignes, 89 équipement, 59 établissement,
+ * `porteurDe` le 2026-09-21 : 167 lignes, 89 équipement, 64 établissement,
  * 14 salarié (~~154 / 51 au 2026-09-15~~ ; +2 au lot chaleur intense, +1 au
  * registre de dette, +2 avec `PE 27`, +3 avec les
- * événementielles de la chaleur intense). Pas un instantané vitest : une table lue et écrite à la main.
+ * événementielles de la chaleur intense, +5 avec celles du Code du travail). Pas un instantané vitest : une table lue et écrite à la main.
  *
  * POURQUOI UNE TABLE. Un identifiant ne dit pas son porteur, et rien dans le
  * référentiel ne se souvient de celui qu'il avait. Le 2026-08-31, le lot
@@ -124,8 +124,10 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "esp-intervention-reparation": "equipement",
   "esp-personnel-formation": "equipement",
   "esp-requalification-decennale": "equipement",
+  "formation-securite-etablissement-apres-accident-grave": "etablissement",
   "formation-securite-etablissement-information": "etablissement",
   "formation-securite-etablissement-manutention": "etablissement",
+  "formation-securite-etablissement-modification-circulation-exploitation": "etablissement",
   "formation-securite-etablissement-organisation": "etablissement",
   "formation-securite-etablissement-travail-sur-ecran": "etablissement",
   "formation-securite-salarie-accueil": "salarie",
@@ -203,10 +205,13 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "prevention-etablissement-cse": "etablissement",
   "prevention-etablissement-evaluation-chaleur-intense": "etablissement",
   "prevention-etablissement-liste-personnes-qualifiees": "etablissement",
+  "prevention-etablissement-mise-a-jour-duerp-sur-fait": "etablissement",
   "prevention-etablissement-reglement-interieur": "etablissement",
   "prevention-etablissement-salarie-designe": "etablissement",
   "sante-travail-etablissement-adhesion-spst": "etablissement",
+  "sante-travail-etablissement-examen-de-reprise": "etablissement",
   "sante-travail-etablissement-fiche-entreprise": "etablissement",
+  "sante-travail-etablissement-fin-exposition-suivi-renforce": "etablissement",
   "sante-travail-etablissement-liste-postes-risques": "etablissement",
   "sante-travail-salarie-sir": "salarie",
   "sante-travail-salarie-sir-categorie-a": "salarie",
