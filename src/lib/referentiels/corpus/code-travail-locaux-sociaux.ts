@@ -94,6 +94,8 @@ export const CODE_TRAVAIL_LOCAUX_SOCIAUX: Corpus = {
       prescrit:
         "Lorsque des conditions particulières de travail conduisent les travailleurs à se désaltérer fréquemment, l'employeur met gratuitement à leur disposition au moins une boisson non alcoolisée ; la liste des postes concernés est établie après avis du médecin du travail et du CSE.",
       statut: "obligation_manquante",
+      cause: "activite_exercee",
+      toucheLaCible: true,
       motif:
         "L'article impose une mise à disposition gratuite de boisson, et une liste de postes tenue par l'employeur — deux actes réels, qu'aucune obligation du référentiel ne porte. Il n'est pas encodé parce que son champ dépend de « conditions particulières de travail » que le produit ne sait pas qualifier : ni le parc d'équipements ni le code NAF ne les donnent. Le déduire serait le cinquième déclencheur, l'activité réellement exercée, non implémenté. Encodé sans condition, l'article se serait affiché à tout dossier, y compris un bureau où il ne s'applique pas ; encodé sur une condition inventée, il n'aurait plus rien signifié. Il est décrit dans la description de `locaux-etablissement-eau-potable`, où il informe sans produire de ligne.",
       bloquePar:

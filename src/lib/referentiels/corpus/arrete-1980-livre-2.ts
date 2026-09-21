@@ -118,7 +118,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         "cuisson-erp-appareils-annuelle",
         "cuisson-erp-verification-initiale",
       ],
-      reserve:
+      historique:
         "DEUX CHOSES RELEVÉES LE 2026-09-01, ARTICLE LU EN ENTIER.\n\n(1) L'EXTINCTION AUTOMATIQUE N'EST PAS DANS GC 22 — CORRIGÉ LE 2026-09-01 (lot A). L'objet de la vérification annuelle y est énuméré en quatre points, et aucun ne vise un système d'extinction automatique : entretien et maintenance, ventilation et évacuation des buées et graisses, signalisation des dispositifs de sécurité, manœuvre des arrêts d'urgence. `cuisson-erp-extinction-automatique-annuelle` citait l'article pour une chose qu'il ne dit pas ; la référence est retirée, et le fondement est MS 73 § 2 — déjà cité par elle, comme GC 8 (existence du dispositif). Aucun texte ajouté : deux références de contexte déjà là, dont l'une remonte en fondement.\n\n(2) LE RAMONAGE ANNUEL ET LE NETTOYAGE HEBDOMADAIRE DES FILTRES SONT À GC 21, NON ICI, et GC 21 § 3 impose en outre un livret d'entretien annexé au registre de sécurité. GC 21 est au corpus avec son verbatim ; le rappeler ici évite de croire que GC 22 porte tout le chapitre.",
     },
     {
@@ -134,6 +134,8 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle:
         "§ 4. L'utilisation du gaz ne peut intervenir qu'après vérification de l'installation, par une personne ou un organisme agréé. Cette vérification doit faire l'objet d'un rapport de vérification technique conforme aux dispositions de l'article GE 9. Un visa apposé par cette personne ou cet organisme sur l'exemplaire du certificat de conformité joint au registre de sécurité atteste que l'installation satisfait aux exigences règlementaires.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "Le § 4 impose à l'exploitant une vérification de l'installation de gaz par une personne ou un organisme agréé AVANT toute utilisation du gaz, avec une pièce à joindre au registre de sécurité — rapport de vérification technique conforme à GE 9, et visa sur le certificat de conformité. Le référentiel ne porte rien de tel : `cuisson-gaz-installations-annuelle` porte la seule périodique de GZ 15, et `cuisson-erp-verification-initiale` porte la mise en service des appareils de cuisson, pas celle de l'installation de gaz. Signalé sans être encodé : l'ajout d'obligation ne relève pas du lot de traçabilité du 2026-09-01.",
       bloquePar:
@@ -152,6 +154,8 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle:
         "§ 1. Le maintien en l'état et l'entretien des installations de gaz, des appareils à gaz et de leurs systèmes d'évacuation des produits de combustion incombent à l'exploitant. Le distributeur assure l'entretien de l'organe de coupure de branchement.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "Deux obligations d'exploitant, aucune portée. (1) L'entretien et le maintien en l'état des installations de gaz, des appareils et de leurs systèmes d'évacuation — un état permanent, du même genre que le « maintenus en bon état de fonctionnement » de R. 4227-29, que le référentiel porte pour les extincteurs et pas ici. La vérification annuelle de GZ 15 CONSTATE cet entretien, elle ne le remplace pas : `cuisson-gaz-installations-annuelle` est la seule ligne du domaine et elle porte la vérification, pas l'entretien. (2) Le maintien en l'état de la signalisation de l'organe de coupure de branchement, et de son accès lorsqu'il est sur le domaine privé. Signalé sans être encodé, comme GZ 13.",
       bloquePar:
@@ -404,6 +408,8 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle:
         "La tribune télescopique (escamotable, déploiement à tiroirs et autres dispositifs) dont le dernier plancher déployé est à plus d'un mètre du sol est soumise au contrôle de la conception et à la vérification du montage prévus respectivement aux articles 37 § 2 et 38 § 4 de l'arrêté du 25 juillet 2022 fixant les règles de sécurité et les dispositions techniques applicables aux structures provisoires et démontables. Une inspection périodique portant sur l'état de conservation de la tribune télescopique est réalisée tous les cinq ans par un organisme accrédité pour l'inspection en exploitation des structures provisoires et démontables. Cette inspection fait l'objet d'un rapport dont le contenu figure à l'annexe VI de l'arrêté précité. La motorisation servant au déploiement n'est pas concernée par ces contrôles et ces vérifications.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "UNE QUINQUENNALE ÉCRITE, ET AUCUN OBJET POUR LA PORTER. Le § 6 impose à l'exploitant une inspection périodique tous les cinq ans par un organisme accrédité — un rythme chiffré, un réalisateur nommé, un rapport dont le contenu est fixé. Le référentiel ne sait pas la faire naître : aucune catégorie d'équipement ne dit « tribune », et le mot n'apparaît nulle part dans `src/`.\n\nCE QUI SERAIT FAUX ET QU'ON NE FAIT PAS. L'accrocher à `AUTRE` ferait naître une quinquennale d'organisme accrédité chez tout dirigeant ayant déclaré un équipement inclassable — un faux positif de masse sur une ligne coûteuse. La faire porter par l'établissement la donnerait à tous les ERP du 1er groupe, alors que le § 6 ne vise QUE la tribune télescopique de plus d'un mètre : ni une salle de restaurant, ni un magasin, ni un bureau n'en détiennent.\n\nCE QUE LE MANQUE COÛTE, ET IL EST BORNÉ. Une tribune télescopique se rencontre en type X (établissements sportifs), en type L (salles de spectacle) et dans les salles polyvalentes — aucun des trois secteurs cibles. Le relevé du 2026-09-03 le classait « sans objet dans les trois secteurs cibles » ; il n'est pas classé `sans_objet` ici, parce que ce statut dit « aucune échéance n'en sort » et que c'est faux : une échéance en sort, pour un exploitant que le produit ne sert pas encore.",
       bloquePar:
@@ -463,6 +469,8 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle:
         "En outre, l'exploitant est tenu de faire procéder : a) Annuellement, par une personne ou un organisme agréé : – à un examen du maintien de la conformité acquise lors de la mise en service ou après une transformation importante ; – à un examen de l'état de conservation des éléments de l'installation ; – à la vérification du fonctionnement des dispositifs de sécurité. b) Au milieu de la période annuelle ci-dessus, à un examen supplémentaire des chaînes et crémaillères, par le service ou l'entreprise chargé de l'entretien.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "DEUX RYTHMES ÉCRITS, ET AUCUN OBJET POUR LES PORTER. L'annuelle du a) et l'examen à mi-période du b) sont l'un et l'autre chiffrés, avec chacun son réalisateur — organisme ou personne agréé pour le premier, service ou entreprise d'entretien pour le second. Ce serait deux obligations, sur le patron de `incendie-erp-extincteurs-annuelle` et de sa révision décennale : deux actes, deux dates, deux preuves.\n\nCE QUI MANQUE EST UNE CATÉGORIE D'ÉQUIPEMENT, et le constat du 2026-09-03 se confirme en cherchant à nouveau : ni « escalier mécanique » ni « trottoir roulant » n'apparaissent dans `src/`. Le chapitre IX en réunit trois — ascenseurs, escaliers mécaniques, trottoirs roulants — et le référentiel n'en connaît qu'un.\n\nCE QU'IL NE FAUT SURTOUT PAS FAIRE, et c'est pour cela que ce motif est écrit plutôt qu'une ligne encodée : accrocher AS 10 à `ASCENSEUR`. Le chapitre traite les deux familles séparément — AS 9 pour les ascenseurs, AS 10 pour les escaliers mécaniques et trottoirs roulants — et leurs régimes ne coïncident sur rien : cinq ans contre un an, organisme agréé seul contre deux réalisateurs, aucun examen intermédiaire contre un examen à six mois. Un propriétaire d'ascenseur recevrait trois rendez-vous qu'il ne doit pas, et un exploitant d'escalier mécanique n'en recevrait toujours aucun.\n\nCE QUE LE MANQUE COÛTE. Un escalier mécanique se rencontre en centre commercial et en grand magasin — le type M, l'un des trois secteurs cibles. C'est celui des quatre manques de ce lot qui touche le plus près de la cible.",
       bloquePar:
@@ -484,6 +492,8 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle:
         "h) L'entretien doit être réalisé conformément aux dispositions de l'article GC 21. Le livret d'entretien doit être tenu à la disposition de la commission de sécurité. Le conduit d'extraction des buées et graisses doit être nettoyé avant chaque mise en place et au moins tous les six mois.",
       statut: "obligation_manquante",
+      cause: "categorie_equipement",
+      toucheLaCible: false,
       motif:
         "UN SEMESTRIEL ÉCRIT, SUR UN OBJET QUE LE PARC NE CONNAÎT PAS. Le dernier alinéa du h) impose un nettoyage du conduit d'extraction au moins tous les six mois, et un nettoyage supplémentaire avant chaque mise en place. Le premier est un rythme, le second un événement.\n\nCE QU'IL NE FAUT PAS FAIRE, ET C'EST LE POINT. L'accrocher à `HOTTE_PRO` donnerait un semestriel à toutes les cuisines professionnelles, alors que GC 21 ne leur impose qu'un ramonage ANNUEL des conduits — le référentiel le porte sous `cuisson-erp-circuits-extraction-nettoyage`. Ce serait doubler la fréquence pour l'immense majorité des exploitants sur la foi d'un article qui ne les vise pas : GC 18 ne parle que du module ou conteneur SPÉCIALISÉ, installé TEMPORAIREMENT. `GC 1` distingue déjà le module du reste du chapitre ; le référentiel, lui, n'a qu'une catégorie de hotte.\n\nCE QUE LE MANQUE COÛTE. Le module ou conteneur de cuisson est la cuisine mobile — camion-restaurant, cuisine relais de chantier ou d'événement, conteneur de remise en température. Il touche la restauration, secteur cible, mais par un mode d'exploitation que le produit ne sait pas décrire : rien, dans le modèle, ne dit qu'une cuisine est temporaire.",
       bloquePar:
@@ -523,6 +533,8 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle:
         "§ 3. La vérification de la continuité des moyens de communications radioélectriques est réalisée par un organisme agréé par le ministère chargé de la sécurité civile : - une fois avant l'ouverture au public de l'établissement concerné ; puis - une fois tous les trois ans et lors de la visite de réception consécutive à des travaux relatifs à l'installation précitée.",
       statut: "obligation_manquante",
+      cause: "attribut_etablissement",
+      toucheLaCible: false,
       motif:
         "UNE TRIENNALE ÉCRITE, UN CHAMP QUE LE PRODUIT NE SAIT PAS INTERROGER. Le § 3 est aussi net que possible : organisme agréé, une fois avant ouverture, puis tous les trois ans. Ce qui manque n'est pas la lecture, c'est la question qui dit à qui elle s'adresse.\n\nDEUX CONDITIONS CUMULATIVES, AUCUNE RENSEIGNABLE. Le § 1 exige (a) plus d'un niveau de sous-sol et (b) une surface totale des niveaux en sous-sol d'au moins 100 m². `Etablissement` ne porte ni l'un ni l'autre, et aucun attribut voisin ne s'en approche.\n\nCE QU'UNE SUR-APPLICATION COÛTERAIT, ET POURQUOI ELLE EST REFUSÉE ICI. La règle du dépôt veut qu'entre sur- et sous-appliquer, on choisisse l'erreur que subit quelqu'un qui peut s'en apercevoir. Elle ne tranche pas en faveur de la sur-application quand le rendez-vous appelle un ORGANISME AGRÉÉ par le ministère de l'intérieur, tous les trois ans, pour une installation que l'immense majorité des ERP du 1er groupe n'a pas : le restaurant de plain-pied, le magasin de rue et le bureau sans sous-sol n'y sont pas, et la ligne leur coûterait une recherche de prestataire et un devis avant qu'ils comprennent qu'elle ne les vise pas. Le § 1 exclut ici plus qu'il n'inclut, ce qui n'est le cas d'aucune des sur-applications déjà assumées par le référentiel.\n\nCE QUE LE MANQUE COÛTE. Il est réel pour un commerce à réserve enterrée sur deux niveaux ou un restaurant à cave et sous-sol technique — mais il suppose PLUS D'UN niveau de sous-sol, ce qui reste rare dans les trois secteurs cibles.",
       bloquePar:

@@ -781,6 +781,46 @@ l'avait juste. Une lecture plus récente n'est pas une lecture meilleure.
 **Non lu :** l'arrêté qui définit l'épisode de chaleur intense (`R. 4463-1`).
 Aucun seuil de température n'est écrit nulle part dans le produit.
 
+### C17 · 2026-09-20 — Le registre de dette, et la seule obligation qui n'avait pas d'excuse
+
+**Relu :** les soixante-six motifs d'`obligation_manquante` et dix-neuf réserves
+qui se disaient closes — du corpus, pas de Légifrance. **Lu à la source :**
+`R. 4222-21` sur sa page propre (version au 2018-01-01, décret n° 2017-1819,
+section 5 « Contrôle et maintenance des installations »), avant de l'encoder.
+**Appliqué :** `cause` et `toucheLaCible` sur chaque manquante ;
+`aeration-etablissement-consigne-utilisation` (référentiel 2026-09-20.2, 157
+obligations) ; sept réserves passées en `historique` ; trois `bloquePar` levés
+depuis l'ADR-022 et jamais raturés. Le compte est dans
+`docs/chantiers-ouverts.md` § 3 bis, et `registre-dette.test.ts` le tient.
+
+### C18 · 2026-09-21 — `PE 27`, ouvert pour un paragraphe, encodé pour deux
+
+**Lu :** `PE 27` du règlement de sécurité (version au 2026-05-01, arrêté du
+4 février 2026, art. 1). La page propre de l'article n'a rendu qu'une table des
+matières (piège n° 2) ; la page de section a rendu les § 4 et § 5 et la première
+phrase du § 1 lettre à lettre, les § 2 et § 3 en paraphrase seulement.
+**Appliqué :** `incendie-erp-5-instruction-personnel` (§ 5) et
+`incendie-erp-5-consignes-affichees` (§ 4), états permanents de tout ERP de
+5ᵉ catégorie ; référentiel 2026-09-21.1, 159 obligations. **Trouvaille :** le
+§ 4 n'était relevé nulle part — le corpus n'en nommait que l'alinéa facultatif
+sur les exercices. **En réserve :** § 1 (présence permanente, et ses
+dérogations), § 2 (alarme maintenue en bon état), § 3 (alerte, MS 70).
+
+### C19 · 2026-09-21 — Trois « textes à lire » lus, et ce qu'ils bloquaient vraiment
+
+**Lu, chacun sur sa page propre :** `R. 4431-2` (trois paliers de bruit,
+80 / 85 / 87 dB(A)), `R. 4433-1`, `R. 4433-2`, `R. 4214-11`, `R. 4224-3` — tous en
+version du 2008-05-01. **Consigné :** `code-travail-bruit-vibrations.ts` (une
+entrée neuve) et `code-travail-circulation-lieux.ts` (corpus neuf).
+
+**Ce que la lecture a changé.** Aucune des trois manquantes classées « texte à
+lire » n'était bloquée par un texte. Les deux du bruit attendent une donnée que
+le DUERP ne recueille pas (un niveau mesuré, et laquelle des grandeurs
+physiques l'a été). Le marquage des voies attend un attribut : `R. 4214-11`
+s'adresse au maître d'ouvrage, `R. 4224-3` ne parle pas de marquage, et ce qui
+décide est « l'importance de la circulation des véhicules ». Une manquante de
+plus, `R. 4224-3` — le produit normal d'une lecture.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

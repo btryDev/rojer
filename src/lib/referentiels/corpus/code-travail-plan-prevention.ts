@@ -117,6 +117,8 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       citationCle:
         "Lorsque, après le début de l'intervention, une entreprise extérieure recourt à de nouveaux sous-traitants, les procédures prévues par le présent chapitre sont à nouveau applicables à ces derniers.",
       statut: "obligation_manquante",
+      cause: "module",
+      toucheLaCible: true,
       motif:
         "L'article rend caduque, pour un nouvel arrivant, la procédure déjà accomplie : un plan signé le lundi ne couvre pas le sous-traitant arrivé le jeudi, et il faut refaire l'inspection commune avec lui. Le modèle `PlanPrevention` ne connaît qu'UNE entreprise extérieure par plan — `entrepriseExterieureRaison`, un seul `efChefNom`, un seul `efEffectifIntervenant` — et aucun champ ni aucun écran ne mentionne la sous-traitance en cascade. Un plan validé reste donc affiché « signé » quand le texte le tient pour inapplicable à la moitié des gens présents sur le site. Le blocage est double : événementiel, comme R. 4141-8 et R. 4141-12 — il n'y a pas de déclencheur « événement » au modèle —, et structurel, puisque le rattachement d'un plan à plusieurs entreprises n'existe pas. C'est le manque le plus silencieux du chapitre : rien, à l'écran, ne laisse deviner qu'une question se pose.",
     },
@@ -241,6 +243,8 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       citationCle:
         "Chaque entreprise concernée fournit la liste des postes occupés par les travailleurs susceptibles de relever du suivi individuel renforcé prévu par les articles R. 4624-22 à R. 4624-28 ou, s'il s'agit d'un salarié agricole, par l'article R. 717-16 du code rural et de la pêche maritime, en raison des risques liés aux travaux réalisés dans l'entreprise utilisatrice. Cette liste figure dans le plan de prévention.",
       statut: "obligation_manquante",
+      cause: "module",
+      toucheLaCible: true,
       motif:
         "Une pièce nommée, exigée dans le plan, et qui n'existe nulle part dans le produit : « Cette liste figure dans le plan de prévention » est une phrase impérative, pas une recommandation, et « chaque entreprise concernée » inclut l'entreprise utilisatrice pour ses propres travailleurs exposés. Aucun champ du modèle `PlanPrevention`, aucune section du formulaire, aucune ligne du PDF. Le blocage n'est pas seulement un champ manquant : le produit ne rattache aucun poste ni aucun salarié à un suivi individuel renforcé — le corpus `code-travail-sante-travail` a déjà buté sur la même absence à propos de R. 4624-28-2. Encoder la liste sans savoir qui la peuple produirait un champ vide qu'on cocherait.",
     },
@@ -275,6 +279,8 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       citationCle:
         "Les dossiers techniques regroupant les informations relatives à la recherche et à l'identification des matériaux contenant de l'amiante prévus aux articles R. 1334-29-4 à R. 1334-29-6 du code de la santé publique et à l'article R. 126-10 du code de la construction et de l'habitation ou, le cas échéant, le rapport de repérage de l'amiante prévu à l'article R. 4412-97-5 du présent code sont joints au plan de prévention.",
       statut: "obligation_manquante",
+      cause: "module",
+      toucheLaCible: true,
       motif:
         "Une pièce que l'entreprise utilisatrice DÉTIENT — le dossier technique amiante est celui du propriétaire ou de l'exploitant de l'immeuble — et que le texte lui fait joindre au plan. Le produit ne connaît le DTA sous aucune forme : ni type de document, ni champ, ni pièce attendue du plan de prévention, balayage de `src/` le 2026-09-02. Le manque touche la cible de plein fouet : un local commercial ou un restaurant construit avant le 1er juillet 1997 a un DTA, et l'intervention d'un plombier ou d'un électricien dans ses faux plafonds est exactement le cas que l'article vise. La version lue est celle du décret n° 2021-872, qui a substitué le renvoi à R. 126-10 du CCH à l'ancien R. 111-45 recodifié — un renvoi de plus qui aurait été mort si l'article n'avait pas été rouvert. Ce qui empêche l'encodage n'est pas le modèle mais l'absence de toute notion d'amiante dans le produit, qui déborde ce lot.",
     },
@@ -290,6 +296,8 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       citationCle:
         "Lorsque l'établissement d'un plan de prévention par écrit est obligatoire, en application de l'article R. 4512-7 : 1° Ce plan est tenu, pendant toute la durée des travaux, à la disposition de l'inspection du travail, des agents de prévention des organismes de sécurité sociale et, le cas échéant, de l'Organisme professionnel de prévention du bâtiment et des travaux publics ; 2° Le chef de l'entreprise utilisatrice informe par écrit l'inspection du travail de l'ouverture des travaux.",
       statut: "obligation_manquante",
+      cause: "module",
+      toucheLaCible: true,
       motif:
         "LE 2° EST UNE DÉMARCHE À FAIRE, PAS UN DOCUMENT À RANGER, et c'est le seul acte du chapitre qui sorte de l'entreprise : informer par écrit l'inspection du travail de l'ouverture des travaux, à la charge du chef de l'entreprise utilisatrice, dès que l'écrit est obligatoire. Rien dans le produit ne le nomme — ni le formulaire, ni la fiche de plan, ni le ZIP de contrôle —, alors que DEUX surfaces affichent la pastille « Art. R. 4512-6 à R. 4512-12 CT » et que la prose de la pastille parle de l'établissement conjoint du plan sans dire un mot de cette démarche. Un dirigeant qui lit l'écran conclut qu'il a fini quand il a signé. Le 1° est mieux servi — le plan est stocké et exportable — mais « pendant toute la durée des travaux » suppose de savoir que les travaux ont commencé, ce que `dateDebut` donne, sans qu'aucune surface le rapproche de l'exigence. Le blocage du 2° est celui des obligations événementielles : le déclencheur est l'ouverture des travaux, et le référentiel n'a pas d'axe pour ça.",
     },

@@ -524,8 +524,14 @@ export type ConditionApplication =
  * **La nature est une propriété du TEXTE, jamais de ce que le produit sait en
  * faire.** Une échéance récurrente dont l'article n'écrit pas le rythme reste
  * récurrente — elle porte alors `periodicite: "autre"`, et ce couple se lit
- * « elle revient, on ne sait pas à quel rythme ». C'est un état légitime, et le
- * plus fréquent des quarante-trois.
+ * « elle revient, on ne sait pas à quel rythme ». C'est un état légitime —
+ * ~~et le plus fréquent des quarante-trois~~ : mesuré en appelant le
+ * 2026-09-21, `autre` compte soixante-quatre lignes, dont TROIS seulement sont
+ * des échéances récurrentes ; CINQUANTE-DEUX sont des états permanents (le
+ * cinquante-troisième état permanent du référentiel a un rythme :
+ * `porte-auto-portail-piete-coulissant`), six des événementielles, trois des
+ * ponctuelles. La phrase était fausse sur le nombre et sur le rang — et ma
+ * première correction l'était d'une unité, relevée par la contre-lecture.
  */
 export const NATURES_OBLIGATION = [
   /**
@@ -839,8 +845,8 @@ type ObligationCommune = {
    * coche, sans pièce. C'est juste pour une affiche au mur ou de l'eau
    * potable ; c'en est une pour un registre de sécurité, où une case cochée
    * sans rien derrière serait exactement la déclaration-qui-ressemble-à-une-
-   * preuve que le même brief interdit. Le champ nomme les seize lignes où la
-   * case seule ne suffit pas.
+   * preuve que le même brief interdit. Le champ nomme les ~~seize~~ vingt-sept
+   * lignes (mesuré en appelant le 2026-09-21) où la case seule ne suffit pas.
    *
    * Requis pour la même raison que `nature` : `null` est une réponse, un champ
    * absent n'en est pas une.
@@ -849,6 +855,29 @@ type ObligationCommune = {
    * de lignes ni leurs dates.
    */
   pieceAttendue: string | null;
+  /**
+   * **Le fait qui rend l'obligation due**, dans les mots du texte — la phrase
+   * « quand… » d'une obligation `evenementielle` (ADR-037).
+   *
+   * Une obligation événementielle n'a ni date ni état : elle redevient due au
+   * fait suivant. Ce que le produit peut en dire est donc « quand ceci arrive,
+   * cela est dû », et ce « quand » n'existait que noyé dans `description`.
+   *
+   * REQUIS pour toute obligation événementielle portée par l'ÉTABLISSEMENT et
+   * sans rendez-vous : ce sont elles que la page « Quand ça arrive » présente,
+   * et une ligne sans son fait n'aurait rien à dire (`quand-ca-arrive.test.ts`
+   * le tient). Facultatif ailleurs — les fiches d'un salarié et d'un appareil
+   * présentent les leurs sans lui. INTERDIT hors de la nature
+   * `evenementielle` : un état permanent n'attend aucun fait.
+   *
+   * L'ADR proposait une union discriminée sur la nature ; `Obligation` en est
+   * déjà une sur `porteur`, et les croiser doublait chaque branche. La règle
+   * est tenue par un test plutôt que par le type — écart assumé, écrit ici.
+   *
+   * **N'entre pas dans `empreinteReferentiel()`** : il ne change ni le nombre
+   * de lignes ni leurs dates.
+   */
+  faitGenerateur?: string;
   /** Réalisateurs acceptés. Au moins un. En général 1, parfois 2 (ex. "personne qualifiée OU organisme agréé"). */
   realisateurs: [Realisateur, ...Realisateur[]];
   /** 1 = informatif, 5 = vital (mise en danger directe si manquement). */

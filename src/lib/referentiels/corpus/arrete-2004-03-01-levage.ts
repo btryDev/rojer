@@ -142,7 +142,7 @@ export const ARRETE_2004_03_01_LEVAGE: Corpus = {
       statut: "retenu",
       obligations: ["levage-examen-adequation-mise-en-service"],      prescrit:
         "Article de DÉFINITION, non de prescription. Il dit ce qu'est un « examen d'adéquation » (I) et un « examen de montage et d'installation » (II) ; il n'impose ni l'un ni l'autre à personne et ne porte aucune échéance. Ce sont les articles 14 (mise en service), 19 (remise en service) et 22-23 (VGP) qui les EXIGENT en renvoyant à lui.",
-      reserve:
+      historique:
         "CORRIGÉ LE 2026-09-01 (lot A). L'article était le FONDEMENT de `levage-examen-adequation-mise-en-service` — même défaut « définir n'est pas prescrire » que celui relevé le 2026-08-26 sur `levage-epreuve-initiale-fonctionnement`, où les articles 6, 10 et 11 avaient été mis pour l'article 14. Le fondement est désormais l'article 14-I a). L'article reste cité par cette obligation, mais en contexte : c'est lui qui dit ce que l'examen contient.",
       citationCle:
         "I. - On entend par « examen d'adéquation d'un appareil de levage » l'examen qui consiste à vérifier qu'il est approprié aux travaux que l'utilisateur prévoit d'effectuer ainsi qu'aux risques auxquels les travailleurs sont exposés et que les opérations prévues sont compatibles avec les conditions d'utilisation de l'appareil définies par le fabricant. II. - On entend par « examen de montage et d'installation d'un appareil de levage » l'examen qui consiste à s'assurer qu'il est monté et installé de façon sûre, conformément à la notice d'instructions du fabricant.",
@@ -157,7 +157,7 @@ export const ARRETE_2004_03_01_LEVAGE: Corpus = {
       lecture: "premiere_main",
       statut: "retenu",
       obligations: ["levage-examen-etat-conservation"],
-      reserve:
+      historique:
         "CORRIGÉ LE 2026-09-01 (lot A). L'article était le FONDEMENT de `levage-examen-etat-conservation`, alors qu'il définit sans exiger ni cadencer. Le fondement est désormais l'article 22-II (qui l'exige) complété de l'article 23 (qui le cadence à douze mois) ; l'article 9 reste cité, en contexte, pour le contenu de l'examen.",
       prescrit:
         "Article de DÉFINITION : dit en quoi consiste l'« examen de l'état de conservation » et énumère les huit familles d'éléments essentiels à contrôler (calage et freinage, freins, contrôle de descente, poulies, limiteurs de charge et de moment, limiteurs de mouvement, crochets et préhension, câbles et chaînes), puis précise la méthode — examen visuel détaillé complété au besoin d'essais de fonctionnement. Il n'impose pas l'examen et ne porte aucune périodicité : c'est l'article 22 qui soumet les appareils à la VGP et l'article 23 qui en fixe le rythme.",

@@ -1040,6 +1040,64 @@ export const obligationsIncendie: Obligation[] = [
   },
 
   {
+    id: "incendie-erp-5-instruction-personnel",
+    domaine: "incendie",
+    libelle:
+      "Personnel instruit des conduites à tenir en cas d'incendie et entraîné à la manœuvre des moyens de secours (ERP de 5ᵉ catégorie)",
+    description:
+      "Dans un établissement recevant du public de 5ᵉ catégorie, le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference: "Arrêté du 25 juin 1980, art. PE 27 § 5 (instruction et entraînement du personnel)",
+        article: "PE 27",
+        url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000024766984/",
+        note: "« Le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours. » Version en vigueur depuis le 1er mai 2026, modifiée par l'arrêté du 4 février 2026, art. 1. Paragraphe relevé lettre à lettre le 2026-09-21.",
+        versionConstatee: "2026-05-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [],
+    typologies: { erp: { categories: ["N5"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "LA SEULE OBLIGATION MANQUANTE QUE RIEN NE BLOQUAIT (registre de dette, `cause: \"libre\"`). Le corpus la portait depuis le 2026-08-26 avec ce blocage : « l'article n'écrit aucune périodicité, et en inventer une serait décider à la place du texte ». L'argument était juste et il est devenu sans objet : depuis l'ADR-026 le référentiel porte cinquante états permanents sans rythme. Une obligation sans périodicité n'est pas une obligation qu'on ne sait pas écrire.\n\nAUCUN RYTHME, ET IL NE FAUT PAS LUI EN PRÊTER. Le § 2 du même article dit que l'information du personnel sur le signal d'alarme « peut être complétée par des exercices périodiques d'évacuation » — FACULTATIF, et à ne pas confondre avec l'exercice semestriel de `R. 4227-39`, que le Code du travail n'impose qu'au-delà de cinquante personnes. Un restaurant de six salariés doit CETTE ligne et pas l'autre.\n\n`pieceAttendue: null` : le texte fait instruire et entraîner, il ne demande ni registre ni attestation.\n\nUNE SUR-APPLICATION CONNUE : un ERP de 5ᵉ catégorie peut n'avoir aucun personnel (une salle mise à disposition, que le § 1 du même article organise). La ligne lui est présentée quand même ; la typologie ne sait pas conjuguer « ERP de 5ᵉ catégorie ET employeur » (les régimes positifs forment une disjonction), et l'écran des états permanents n'a pas de « sans objet ».\n\nCriticité 4, celle de `incendie-travail-exercice-semestriel` : c'est ce qui décide, le jour d'un feu, de ce que fait la personne qui est là.",
+  },
+
+  {
+    id: "incendie-erp-5-consignes-affichees",
+    domaine: "incendie",
+    libelle:
+      "Consignes incendie affichées bien en vue : numéro des sapeurs-pompiers, adresse du centre de secours, dispositions immédiates (ERP de 5ᵉ catégorie)",
+    description:
+      "Dans un établissement recevant du public de 5ᵉ catégorie, des consignes précises, affichées bien en vue, doivent indiquer le numéro d'appel des sapeurs-pompiers, l'adresse du centre de secours le plus proche et les dispositions immédiates à prendre en cas de sinistre.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference: "Arrêté du 25 juin 1980, art. PE 27 § 4 (consignes affichées)",
+        article: "PE 27",
+        url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000024766984/",
+        note: "« Des consignes précises, affichées bien en vue, doivent indiquer : le numéro d'appel des sapeurs-pompiers ; l'adresse du centre de secours le plus proche ; les dispositions immédiates à prendre en cas de sinistre. » Version en vigueur depuis le 1er mai 2026, modifiée par l'arrêté du 4 février 2026, art. 1. Paragraphe relevé lettre à lettre le 2026-09-21.",
+        versionConstatee: "2026-05-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "consignes incendie affichées",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: ["N5"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "TROUVÉE EN OUVRANT L'ARTICLE POUR SON § 5, le 2026-09-21. Le corpus ne nommait du § 4 que son alinéa facultatif sur les exercices ; la consigne affichée elle-même n'était relevée nulle part. C'est pourtant une obligation entière, sans seuil, de tout ERP de 5ᵉ catégorie.\n\nÀ NE PAS CONFONDRE avec `incendie-travail-consigne-affichee` (`R. 4227-37`) : celle-là est une consigne du Code du travail, due au-delà de cinquante personnes, avec huit rubriques (`R. 4227-38`). Celle-ci est du règlement de sécurité, due dès la 5ᵉ catégorie, avec trois mentions. Un restaurant de six salariés et trente couverts doit celle-ci et pas l'autre ; au-delà de cinquante personnes il doit les deux, et un même affichage peut porter les deux contenus — ce que le produit ne dit pas, n'ayant pas à le dire.\n\n`pieceAttendue` NOMMÉE : l'obligation EST un écrit affiché.\n\nCriticité 3, celle de `incendie-travail-consigne-affichee`.",
+  },
+
+  {
     id: "incendie-erp-visite-commission-cat1-2-triennale",
     domaine: "incendie",
     libelle: "Visite périodique de la commission de sécurité (ERP 1ʳᵉ à 4ᵉ catégorie)",

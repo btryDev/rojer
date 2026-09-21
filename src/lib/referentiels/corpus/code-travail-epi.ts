@@ -421,6 +421,8 @@ export const CODE_TRAVAIL_EPI: Corpus = {
       citationCle:
         "L'employeur fait bénéficier les travailleurs devant utiliser un équipement de protection individuelle d'une formation adéquate comportant, en tant que de besoin, un entraînement au port de cet équipement. Cette formation est renouvelée aussi souvent que nécessaire pour que l'équipement soit utilisé conformément à la consigne d'utilisation.",
       statut: "obligation_manquante",
+      cause: "a_trancher",
+      toucheLaCible: true,
       motif:
         "Une formation que le référentiel ne porte pas : aucune obligation du domaine `formation_securite` ne cite cet article, et aucune ne vise le port d'un équipement de protection individuelle. ⚠ ET LE TEXTE NE POSE AUCUNE PÉRIODICITÉ — c'est le point à ne pas franchir. « Aussi souvent que nécessaire » n'est pas un rythme : le renouvellement est indexé sur un RÉSULTAT (que l'équipement soit utilisé conformément à la consigne), pas sur une durée. Lui donner trois ans par analogie avec une formation voisine, ou un an par analogie avec la vérification de l'arrêté, fabriquerait une échéance que personne ne peut opposer. Ce que le texte permet d'affirmer sans le forcer : la formation est due, elle vise des personnes nommées, et son renouvellement n'a pas de terme légal.",
       bloquePar:

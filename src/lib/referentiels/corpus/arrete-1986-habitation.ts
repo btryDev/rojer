@@ -274,6 +274,8 @@ export const ARRETE_1986_HABITATION: Corpus = {
       luLe: "2026-09-04",
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
+      cause: "attribut_etablissement",
+      toucheLaCible: false,
       citationCle:
         "Si l'une des conditions suivantes est respectée, le système de ventilation est soumis aux seules prescriptions de l'article 59 relatives aux conduits.\n" +
         "1. Le fonctionnement du ventilateur est réputé assuré en permanence. Cette condition est réalisée quand : L'alimentation électrique du ventilateur est protégée de façon à ne pas être affectée par un incident survenant sur les autres circuits et ne traverse pas de locaux présentant des risques particuliers d'incendie, ou assurée par un groupe électrogène de secours dont la mise en marche est asservie à la coupure de l'alimentation électrique normale. Le fonctionnement du groupe électrogène et du dispositif de mise en marche automatique doit être vérifié au moins une fois par mois.",
@@ -295,6 +297,8 @@ export const ARRETE_1986_HABITATION: Corpus = {
       luLe: "2026-09-03",
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
+      cause: "destinataire",
+      toucheLaCible: false,
       citationCle:
         "2° Le parc de stationnement relève d'un propriétaire unique. Le propriétaire unique ou la personne qu'il désigne expressément pour assurer la gestion du parc est dénommée, pour l'application du présent article, le gestionnaire.\n" +
         "7° Le gestionnaire assure le suivi et le contrôle des boxes affectés au stockage. Il procède à un contrôle visuel de chaque box affecté au stockage au moins une fois par an et à chaque changement d'utilisateur. Ce contrôle a pour but de s'assurer du respect des dispositions prévues au 4° et de la déclaration mentionnée au 6°. Les résultats du contrôle sont consignés dans le registre mentionné à l'article 101 et tenus à la disposition de l'autorité compétente. Les boxes affectés au stockage sont identifiés dans un document tenu à jour par le gestionnaire et annexé au registre mentionné à l'article 101.",
@@ -392,6 +396,8 @@ export const ARRETE_1986_HABITATION: Corpus = {
       luLe: "2026-09-01",
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: false,
       citationCle:
         "Le propriétaire doit s'assurer que les transformations apportées aux immeubles en ce qui concerne l'affectation des locaux, les matériaux constitutifs des revêtements des couvertures ou des façades, les revêtements de sols et des parois des circulations communes, des celliers ainsi que des parcs, la constitution de ces parois ne soient pas de nature à diminuer les caractéristiques de réaction et de résistance au feu exigées pour ces divers éléments par le présent arrêté. Le propriétaire est tenu de s'assurer du respect des dispositions de l'article 1er, en identifiant les places de stationnement utilisées effectivement par des personnes non résidentes du bâtiment d'habitation pour une durée inférieure à 30 jours consécutifs.",
       motif:

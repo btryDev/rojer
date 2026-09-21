@@ -313,14 +313,21 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 27",
       intitule: "Alarme, alerte, consignes",
+      url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000024766984/",
       versionEnVigueur: "2026-05-01",
-      luLe: "2026-08-26",
+      modifiePar: { texte: "Arrêté du 4 février 2026 - art. 1" },
+      luLe: "2026-09-21",
       lecture: "agent_verbatim",
-      statut: "obligation_manquante",
-      motif:
-        "Impose au § 5 que « le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours », sans périodicité écrite, pour tous les ERP de 5e catégorie. Le référentiel ne porte aucune ligne de formation du personnel côté ERP. Le § 4 c précise que l'information « peut être complétée par des exercices périodiques d'évacuation » — facultatif, à ne pas confondre avec R. 4227-39. N'ouvre le Livre II que sur MS 70. Réécrit par l'arrêté du 4 février 2026.",
-      bloquePar:
-        "Porteur d'échéance : l'obligation naît de l'établissement, pas d'un équipement. Corrigé le 2026-08-27 (ADR-022) : ce n'est plus le modèle qui bloque — `categoriesEquipement` n'est plus requis et `Verification.equipementId` est nullable. PE 27 § 5 est une obligation d'établissement, et le porteur existe. Ce qui bloque encore est ce que dit le motif : l'article n'écrit aucune périodicité, et en inventer une serait décider à la place du texte.",
+      prescrit:
+        "Alarme, alerte et consignes des ERP de 5ᵉ catégorie. § 1 : présence permanente d'un membre du personnel ou d'un responsable quand l'établissement est ouvert au public, avec des dérogations. § 2 : un équipement d'alarme, maintenu en bon état. § 3 : la liaison avec les sapeurs-pompiers. § 4 : des consignes affichées, trois mentions. § 5 : le personnel instruit et entraîné.",
+      citationCle:
+        "Le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours.",
+      statut: "retenu",
+      obligations: ["incendie-erp-5-instruction-personnel", "incendie-erp-5-consignes-affichees"],
+      reserve:
+        "TROIS PARAGRAPHES RESTENT DEHORS, ET DEUX N'ONT ÉTÉ LUS QU'EN PARAPHRASE (2026-09-21). La page propre de l'article ne rend qu'une table des matières (piège n° 2 du journal) ; la page de SECTION a rendu les § 4 et § 5 lettre à lettre, et la première phrase du § 1 — « Un membre du personnel ou un responsable au moins doit être présent en permanence lorsque l'établissement est ouvert au public. » —, mais les § 2 et § 3 seulement résumés. (1) LE § 1, présence permanente : obligation réelle, avec des dérogations (moins de vingt personnes sans locaux à sommeil, convention de surveillance par les utilisateurs) qu'il faut lire en entier avant d'écrire une ligne. (2) LE § 2, l'alarme « maintenue en bon état de fonctionnement » : à rapprocher des obligations d'alarme que le référentiel porte déjà pour la 5ᵉ catégorie avant d'en créer une. (3) LE § 3, l'alerte, renvoie à MS 70.",
+      historique:
+        "L'entrée quand elle était `obligation_manquante` (2026-08-26 → 2026-09-21). Son motif : Impose au § 5 que « le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours », sans périodicité écrite, pour tous les ERP de 5e catégorie. Le référentiel ne porte aucune ligne de formation du personnel côté ERP. Le § 4 c précise que l'information « peut être complétée par des exercices périodiques d'évacuation » — facultatif, à ne pas confondre avec R. 4227-39. N'ouvre le Livre II que sur MS 70. Réécrit par l'arrêté du 4 février 2026. — Son blocage : Porteur d'échéance : l'obligation naît de l'établissement, pas d'un équipement. Corrigé le 2026-08-27 (ADR-022) : ce n'est plus le modèle qui bloque — `categoriesEquipement` n'est plus requis et `Verification.equipementId` est nullable. PE 27 § 5 est une obligation d'établissement, et le porteur existe. Ce qui bloque encore est ce que dit le motif : l'article n'écrit aucune périodicité, et en inventer une serait décider à la place du texte."
     },
     {
       ref: "PE 28",
@@ -388,7 +395,7 @@ export const CORPUS_PE: Corpus = {
         "Une consigne d'incendie doit être affichée dans chaque chambre ; elle est rédigée en français et complétée par une bande dessinée illustrant les consignes.",
       statut: "retenu",
       obligations: ["incendie-erp-5-sommeil-consigne-chambres"],
-      reserve:
+      historique:
         "Le § 2 est encodé depuis le 2026-09-01 (lot A11). Le § 1 — « L'exploitant doit tenir à jour un registre de sécurité. Ce document doit pouvoir être présenté à chaque visite de la commission de sécurité. » — n'a PAS d'obligation propre, et c'est délibéré : `incendie-registre-securite` le porte déjà, fondée sur R. 143-44 CCH, dont le champ est « les établissements soumis aux prescriptions du présent chapitre », 5ᵉ catégorie comprise. En créer une seconde pour les seuls établissements à locaux à sommeil ferait croire à deux registres là où le texte n'en impose qu'un. Cette entrée ne cite pas cette obligation-là parce qu'elle ne cite pas PE 33 en fondement : la citer ici ferait dire au corpus qu'un article fonde une ligne qui ne le connaît pas.",
     },
     {
@@ -466,9 +473,12 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "obligation_manquante",
+      cause: "perimetre",
+      toucheLaCible: false,
       motif:
         "« L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans. » Le référentiel ne sait pas porter « l'ensemble » : une obligation s'accroche à des catégories d'équipement énumérées, et énumérer reviendrait à décider à la place du texte ce qu'est une installation technique d'hôtel. Deux catégories plausibles — VMC et installation frigorifique — portent déjà une obligation BIENNALE valant pour tous les ERP : une ligne supplémentaire y ferait doublon. Cinquième occurrence du motif PE 4 § 2. Les ascenseurs sont explicitement exclus par le renvoi à AS 9.",
-      bloquePar: "porteur-d-echeance-hors-equipement",
+      bloquePar:
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
     },
     {
       ref: "PO 7",
@@ -477,9 +487,12 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "obligation_manquante",
+      cause: "perimetre",
+      toucheLaCible: false,
       motif:
         "« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. » Périodicité chiffrée, donc encodable — mais l'obligation ne porte sur AUCUN équipement, et toute obligation du référentiel s'accroche aujourd'hui à une catégorie d'équipement. C'est le même blocage que PE 27 § 5 et R. 4544-11-1. Verbatim relevé en première main le 2026-08-26.",
-      bloquePar: "porteur-d-echeance-hors-equipement",
+      bloquePar:
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
     },
     {
       ref: "PO 2",
@@ -597,9 +610,12 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "obligation_manquante",
+      cause: "perimetre",
+      toucheLaCible: false,
       motif:
         "« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. » Symétrique de PO 8 § 1 pour la formation : PO 7 — deux séances d'instruction et d'entraînement du personnel par an — est réimporté nommément dans le régime des établissements EXISTANTS. La périodicité vaut donc pour tous les hôtels, pas seulement les neufs. Même blocage que PO 7 lui-même : l'obligation ne porte sur aucun équipement.",
-      bloquePar: "porteur-d-echeance-hors-equipement",
+      bloquePar:
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
     },
     {
       ref: "PO 13",
