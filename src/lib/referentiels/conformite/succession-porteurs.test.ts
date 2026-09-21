@@ -46,8 +46,9 @@ import type { PorteurObligation } from "./types";
 
 /**
  * Le porteur de CHAQUE obligation du référentiel, relevé en appelant
- * `porteurDe` le 2026-09-20 : 156 lignes, 89 équipement, 53 établissement,
- * 14 salarié (~~154 / 51 au 2026-09-15~~, avant le lot chaleur intense). Pas un instantané vitest : une table lue et écrite à la main.
+ * `porteurDe` le 2026-09-21 : 159 lignes, 89 équipement, 56 établissement,
+ * 14 salarié (~~154 / 51 au 2026-09-15~~ ; +2 au lot chaleur intense, +1 au
+ * registre de dette, +2 avec `PE 27`). Pas un instantané vitest : une table lue et écrite à la main.
  *
  * POURQUOI UNE TABLE. Un identifiant ne dit pas son porteur, et rien dans le
  * référentiel ne se souvient de celui qu'il avait. Le 2026-08-31, le lot
@@ -69,6 +70,7 @@ import type { PorteurObligation } from "./types";
  */
 const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "aeration-controle-installations-r4222-20": "etablissement",
+  "aeration-etablissement-consigne-utilisation": "etablissement",
   "aeration-erp-chauffage-ventilation-annuelle": "equipement",
   "aeration-erp-filtres-visite-periodique": "equipement",
   "aeration-erp-ps-surveillance-qualite-air-inf-250": "equipement",
@@ -139,6 +141,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "habitation-consignes-plans-intervention": "etablissement",
   "habitation-registre-securite": "etablissement",
   "habitation-verification-annuelle-installations-securite": "etablissement",
+  "incendie-erp-5-consignes-affichees": "etablissement",
+  "incendie-erp-5-instruction-personnel": "etablissement",
   "incendie-erp-5-sommeil-consigne-chambres": "etablissement",
   "incendie-erp-5-sommeil-contrat-entretien-sdi": "etablissement",
   "incendie-erp-5-sommeil-plans-affiches": "etablissement",

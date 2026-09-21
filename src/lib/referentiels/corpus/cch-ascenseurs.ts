@@ -23,7 +23,7 @@ export const CCH_ASCENSEURS: Corpus = {
       lecture: "premiere_main",
       statut: "retenu",
       obligations: ["ascenseur-telealarme-liaison"],
-      reserve:
+      historique:
         "CORRIGÉ LE 2026-09-01 (lot A). L'article était le FONDEMENT de `ascenseur-telealarme-liaison` alors qu'il ne dit rien des moyens d'alerte. Le fondement est désormais R. 134-2, 6°, entré au corpus le même jour. L'article reste cité, en contexte, pour ce qu'il fait seul : borner le champ de la section, exclusion des 0,15 m/s comprise.",
       prescrit:
         "Article de CHAMP, pas de prescription : il définit ce qu'est un ascenseur au sens de la section — appareil desservant de manière permanente les niveaux d'un bâtiment par une cabine se déplaçant le long de guides rigides inclinés de plus de 15 degrés, pour le transport de personnes, de personnes et d'objets, ou d'objets seuls dès lors que la cabine est accessible sans difficulté et équipée de commandes à portée. Y sont assimilés les appareils à course fixée dans l'espace même sans guides rigides (ascenseurs à ciseaux). EXCLUSION : les appareils dont la vitesse n'excède pas 0,15 m/s — la même borne que celle par laquelle l'annexe de l'arrêté du 1er mars 2004 les écarte du levage ; les deux corpus se recoupent exactement sur ce point. L'article ne dit RIEN des moyens d'alerte ni de la liaison avec un service d'intervention : cet objectif de sécurité est à R. 134-2, et son entretien à R. 134-6. Le référentiel rattache pourtant `ascenseur-telealarme-liaison` à la clé « CCH R. 134-1 » ; non corrigé ici, hors mandat de relevé.",

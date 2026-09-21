@@ -227,6 +227,8 @@ export const ARRETE_1993_11_04_SIGNALISATION: Corpus = {
       citationCle:
         "Le chef d'établissement détermine, après consultation du comité d'hygiène, de sécurité et des conditions de travail ou, à défaut, des délégués du personnel, la signalisation relative à la sécurité ou la santé qui doit être installée ou utilisée en fonction des risques.",
       statut: "obligation_manquante",
+      cause: "a_trancher",
+      toucheLaCible: true,
       motif:
         "Obligation procédurale pleine et entière — une consultation, préalable à la détermination de la signalisation — que le référentiel ne porte pas. À LIRE AVEC UNE RÉSERVE DE RENVOI : l'article n'a jamais été modifié depuis 1993 et vise encore le « comité d'hygiène, de sécurité et des conditions de travail » et, à défaut, les « délégués du personnel ». Ces deux instances ont disparu, fondues dans le CSE par l'ordonnance n° 2017-1386 du 22 septembre 2017 au plus tard le 1er janvier 2020. Le renvoi est donc mort au sens de la skill de veille, et le destinataire réel de la consultation est aujourd'hui le CSE ; l'encoder suppose de l'écrire, pas de recopier le texte tel quel.",
       bloquePar:
@@ -299,6 +301,8 @@ export const ARRETE_1993_11_04_SIGNALISATION: Corpus = {
       citationCle:
         "Au cas où des travailleurs concernés ont des capacités ou facultés auditives ou visuelles limitées, y compris par le port d'équipements de protection individuelle, des mesures adéquates supplémentaires ou de remplacement doivent être prises.",
       statut: "obligation_manquante",
+      cause: "activite_exercee",
+      toucheLaCible: true,
       motif:
         "Obligation d'employeur réelle et non portée. Elle est remarquable par sa deuxième branche : la limitation peut venir du PORT D'ÉQUIPEMENTS DE PROTECTION INDIVIDUELLE, donc d'un fait d'organisation du travail et non d'un état de santé — un cuisinier en casque antibruit entre dans le champ sans qu'aucune donnée de santé n'entre en jeu. La première branche, en revanche, suppose de connaître une limitation auditive ou visuelle d'un salarié nommé, ce que `docs/rgpd.md` interdit de stocker et que la frontière sur la santé du CLAUDE.md exclut.",
       bloquePar:
@@ -387,6 +391,8 @@ export const ARRETE_1993_11_04_SIGNALISATION: Corpus = {
       citationCle:
         "Lorsqu'en application des articles R. 4214-11 ou R. 4224-3 du code du travail les voies de circulation doivent être clairement identifiées, ces voies doivent être bordées par des bandes continues d'une couleur bien visible, de préférence blanche ou jaune, compte tenu de la couleur du sol. L'emplacement des bandes doit tenir compte des distances de sécurité nécessaires entre les véhicules qui peuvent y circuler et tout objet pouvant se trouver à proximité et entre les piétons et les véhicules. Les voies permanentes situées à l'extérieur dans les zones bâties doivent également être marquées, à moins qu'elles ne soient pourvues de barrières ou d'un dallage appropriés.",
       statut: "obligation_manquante",
+      cause: "texte_a_lire",
+      toucheLaCible: true,
       motif:
         "État permanent non porté. Le renvoi de tête est ici À JOUR — l'arrêté du 2 août 2013 a remplacé l'ancienne numérotation par R. 4214-11 et R. 4224-3, ce qui contraste avec l'article 4, resté sur le CHSCT. Mais il est CONDITIONNEL : l'obligation de marquage ne naît que si l'un de ces deux articles impose d'identifier les voies, et aucun des deux n'est dans un corpus de ce dépôt. Encoder ce marquage suppose donc de dépouiller d'abord R. 4224-3, faute de quoi la condition serait devinée.",
       bloquePar:
@@ -575,6 +581,8 @@ export const ARRETE_1993_11_04_SIGNALISATION: Corpus = {
       citationCle:
         "Un dispositif pour émettre un signal lumineux utilisable en cas de danger grave doit être spécialement surveillé ou être muni d'une ampoule auxiliaire.",
       statut: "obligation_manquante",
+      cause: "activite_exercee",
+      toucheLaCible: true,
       motif:
         "SEULE ANNEXE À IMPOSER AUTRE CHOSE QU'UNE CARACTÉRISTIQUE, et il a fallu lire les deux rubriques en entier pour la trouver : la phrase est la dernière du point 2, sous un intitulé — « Règles d'utilisation des signaux lumineux » — qui ne laisse pas deviner qu'une obligation de surveillance s'y cache. Elle offre une alternative à l'exploitant : surveiller spécialement le dispositif, ou le doter d'une ampoule auxiliaire. La première branche est une organisation, la seconde un équipement, et le référentiel ne porte ni l'une ni l'autre. À ne pas confondre avec l'alimentation de secours de l'article 7, qui répond à une rupture d'énergie ; ici il s'agit de la défaillance de la lampe elle-même.",
       bloquePar:

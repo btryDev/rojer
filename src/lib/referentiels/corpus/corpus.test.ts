@@ -576,7 +576,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
     // sait pas porter. La liste s'allonge parce qu'on voit mieux.
     // L'ordre suit la déclaration des corpus, pas l'alphabet.
     expect(refs).toEqual([
-      "PE 27",
+      // ~~"PE 27"~~ — encodée le 2026-09-21 (§ 4 et § 5).
       // PE 37 a quitté cette liste le 2026-08-31 au soir : sa quinquennale est
       // désormais portée par `incendie-erp-5-visite-commission`, et l'article
       // passe à `retenu` avec une `reserve`. Cette réserve disait alors deux
@@ -723,7 +723,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // obligation. Elle est nommée par trois textes (celui-ci, l'article 2 b)
       // de l'arrêté du 8 octobre 1987, R. 4224-17) et demandée par aucun. Le
       // lot A ne crée pas d'obligation : le manque est nommé, pas comblé.
-      "R. 4222-21",
+      // ~~"R. 4222-21"~~ — encodée le 2026-09-20 (`aeration-etablissement-consigne-utilisation`).
       "Arrêté 23-02-2018 art. 26 § 3",
       // Les trois suivantes entrent avec le lot 7, et la liste s'allonge pour
       // la raison qu'elle s'allonge toujours ici : on a lu quatre textes de
@@ -1224,7 +1224,9 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // sens littéral : l'article fait deux phrases, seule la seconde suppose
       // l'instance, et aucun `effectifMin` n'est posé.
       //
-      // Son jumeau `R. 4222-21` reste, lui, plus bas dans cette liste : des deux
+      // [2026-09-20 : le jumeau est encodé et a QUITTÉ cette liste ; la phrase
+      // qui suit décrit l'état d'avant.]
+      // ~~Son jumeau `R. 4222-21` reste, lui, plus bas dans cette liste~~ : des deux
       // documents que R. 4224-17 agrège nommément, le référentiel en porte
       // désormais un. La réserve de R. 4224-17 est corrigée du même mouvement —
       // elle recopiait le renvoi entier et n'en tirait qu'un seul document.

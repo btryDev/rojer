@@ -101,6 +101,8 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       citationCle:
         "En cas d'épisode de chaleur intense, une quantité d'eau potable fraîche suffisante est fournie par l'employeur. L'employeur prévoit un moyen pour maintenir au frais, tout au long de la journée de travail, l'eau destinée à la boisson, à proximité des postes de travail, notamment pour les postes de travail extérieurs.",
       statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: true,
       motif: "Obligation réelle, qui touche la cible, et DÉCLENCHÉE PAR UN ÉPISODE : le produit n'observe pas la vigilance météorologique et ne peut donc pas la dater. Il pourrait la DIRE — « quand un épisode survient, fournissez… » — le jour où une surface sert l'événementiel d'établissement (lot 6a du plan du 2026-09-20). Le second alinéa, tronqué par la page de section, n'est apparu que sur la page propre de l'article.",
       bloquePar: "surface-evenementielle-absente",
     },
@@ -117,6 +119,8 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       citationCle:
         "Lorsqu'il est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense, l'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention prévues au présent chapitre en vue d'assurer la protection de sa santé.",
       statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: true,
       motif: "Déclenchée par une INFORMATION reçue sur une personne, et qui touche à son état de santé : le produit ne la stockera pas (frontière médicale, `docs/rgpd.md`) — il peut au plus rappeler la règle. Même blocage que R. 4463-4 : aucune surface ne sert l'événementiel d'établissement.",
       bloquePar: "surface-evenementielle-absente",
     },
@@ -148,6 +152,8 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       citationCle:
         "Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur.",
       statut: "obligation_manquante",
+      cause: "evenement",
+      toucheLaCible: true,
       motif: "Le pendant événementiel de R. 4463-2 : définir est un état permanent, mettre en œuvre se déclenche sur l'épisode. Même blocage que R. 4463-4. ~~« survenance »~~ : la première écriture de cette citation portait ce mot, que le texte n'a pas — il dit « survenue », confirmé le 2026-09-20 sur la page de l'article ET dans l'article 3 du décret. L'outil de lecture avait normalisé le mot ; l'instruction du 2026-09-01, elle, l'avait juste.",
       bloquePar: "surface-evenementielle-absente",
     },
@@ -164,6 +170,8 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       citationCle:
         "Le plan de prévention prévu à l'article R. 4512-6, le plan général de coordination prévu à l'article L. 4532-8, et le plan particulier de sécurité et de protection de la santé prévu à l'article L. 4532-9 tiennent compte, le cas échéant, des risques liés à l'exposition aux épisodes de chaleur intense.",
       statut: "obligation_manquante",
+      cause: "module",
+      toucheLaCible: true,
       motif: "Le module `PlanPrevention` porte le plan de R. 4512-6 et ses lignes de risques d'interférence, mais RIEN n'y nomme la chaleur — vérifié le 2026-09-20 : aucune occurrence de « chaleur » dans `src/lib/plan-prevention`. L'instruction du 2026-09-01 le croyait « déjà servi ». « Le cas échéant » laisse l'appréciation à l'employeur : ce qui manque est une invite à y penser, pas une échéance — le formulaire du plan est un répéteur libre, sans liste de risques proposée, donc il n'y a aujourd'hui nulle part où la loger. PGC et PPSPS sont des pièces de chantier du BTP, hors cible.",
     },
   ],
