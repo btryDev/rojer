@@ -73,7 +73,7 @@ export const obligationsCoActivite: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: "protocole de sécurité",
     faitGenerateur:
-      "Avant une opération de chargement ou de déchargement réalisée par une entreprise extérieure de transport — une seule fois quand les mêmes entreprises reviennent, tant que les conditions n'ont pas changé de manière significative",
+      "Avant une opération de chargement ou de déchargement réalisée par une entreprise extérieure transportant des marchandises — ou, pour des opérations à caractère répétitif, avant la première, le protocole restant applicable aussi longtemps que les employeurs intéressés considèrent que les conditions n'ont subi aucune modification significative",
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },

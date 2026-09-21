@@ -865,7 +865,7 @@ type ObligationCommune = {
    *
    * REQUIS pour toute obligation événementielle portée par l'ÉTABLISSEMENT et
    * sans rendez-vous : ce sont elles que la page « Quand ça arrive » présente,
-   * et une ligne sans son fait n'aurait rien à dire (`quand-ca-arrive.test.ts`
+   * et une ligne sans son fait n'aurait rien à dire (`quand-ca-arrive/lignes.test.ts`
    * le tient). Facultatif ailleurs — les fiches d'un salarié et d'un appareil
    * présentent les leurs sans lui. INTERDIT hors de la nature
    * `evenementielle` : un état permanent n'attend aucun fait.

@@ -26,6 +26,7 @@ import {
   projeterEtablissement,
   type EquipementMatching,
   type EtablissementMatching,
+  type ObligationApplicable,
 } from "@/lib/matching";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { estDeclencheeParUnFait } from "@/lib/etats-permanents/regle";
@@ -41,10 +42,14 @@ export type LigneQuandCaArrive = {
   fait: string;
   /** L'écrit que le texte nomme, s'il en nomme un. */
   pieceAttendue: string | null;
-  /** L'article fondateur, tel qu'il se cite. */
-  article: string;
-  /** Pourquoi le moteur la retient pour CE dossier. */
-  raisons: string[];
+  /**
+   * TOUS les articles que l'obligation cite, fondateur en tête. Le fait montré
+   * peut venir d'un autre que le premier : « lors de l'embauche et chaque fois
+   * que nécessaire » est de `R. 4141-2`, troisième référence d'une obligation
+   * fondée sur `L. 4141-1`. N'afficher que le fondateur citait à l'écran un
+   * article qui ne dit pas la phrase affichée (contre-lecture du 2026-09-21).
+   */
+  articles: string[];
 };
 
 export type GroupeQuandCaArrive = {
@@ -76,31 +81,52 @@ export function releveDeLaPage(
   );
 }
 
+/**
+ * Les lignes de la page, depuis ce que le moteur a retenu.
+ *
+ * SÉPARÉE de `listerQuandCaArrive` pour être ÉPROUVABLE : la première écriture
+ * filtrait dans la boucle, et aucun test ne pouvait lui présenter une
+ * obligation d'ÉQUIPEMENT portant un `faitGenerateur` — le champ est licite
+ * hors du porteur établissement. La contre-lecture a retiré le filtre, posé un
+ * fait sur `froid-controle-etancheite-apres-modification`, et la suite est
+ * restée verte avec une ligne d'appareil sur la page. Le test lui passe
+ * désormais une applicable fabriquée.
+ */
+export function lignesDepuis(
+  applicables: readonly ObligationApplicable[],
+): LigneQuandCaArrive[] {
+  const lignes: LigneQuandCaArrive[] = [];
+  for (const app of applicables) {
+    const o = app.obligation;
+    if (!releveDeLaPage(o)) continue;
+    // Une ligne sans son fait n'aurait rien à dire. Le test du référentiel
+    // interdit le cas ; on ne l'affiche pas à moitié s'il survenait.
+    if (!o.faitGenerateur) continue;
+    lignes.push({
+      obligation: o,
+      fait: o.faitGenerateur,
+      pieceAttendue: o.pieceAttendue,
+      articles: o.referencesLegales.map((r) => r.article ?? r.reference),
+    });
+  }
+  return lignes;
+}
+
 /** Les lignes de la page pour ce dossier, groupées par domaine. */
 export function listerQuandCaArrive(
   etablissement: EtablissementMatching,
   equipements: EquipementMatching[],
 ): GroupeQuandCaArrive[] {
   const parDomaine = new Map<DomaineObligation, LigneQuandCaArrive[]>();
-
-  for (const app of determineObligationsApplicables(
-    projeterEtablissement(etablissement),
-    equipements,
+  for (const ligne of lignesDepuis(
+    determineObligationsApplicables(
+      projeterEtablissement(etablissement),
+      equipements,
+    ),
   )) {
-    const o = app.obligation;
-    if (!releveDeLaPage(o)) continue;
-    // Une ligne sans son fait n'aurait rien à dire. Le test du référentiel
-    // interdit le cas ; on ne l'affiche pas à moitié s'il survenait.
-    if (!o.faitGenerateur) continue;
-    const lignes = parDomaine.get(o.domaine) ?? [];
-    lignes.push({
-      obligation: o,
-      fait: o.faitGenerateur,
-      pieceAttendue: o.pieceAttendue,
-      article: o.referencesLegales[0].reference,
-      raisons: app.raisons,
-    });
-    parDomaine.set(o.domaine, lignes);
+    const lignes = parDomaine.get(ligne.obligation.domaine) ?? [];
+    lignes.push(ligne);
+    parDomaine.set(ligne.obligation.domaine, lignes);
   }
 
   return [...parDomaine.entries()]
