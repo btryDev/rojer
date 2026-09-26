@@ -1210,7 +1210,9 @@ pas.**
   travaux par points chauds » : la phrase est citée et attribuée à l'INRS, et
   l'écran rappelle que ce n'est ni un article de code, ni un arrêté.
 - L'INRS ne classe AUCUNE mesure en « obligatoire » ou « conseillée » : son
-  formulaire demande « À FAIRE ? OUI / NON ». Ce classement est celui de
+  formulaire demande ~~« À FAIRE ? OUI / NON »~~ « À FAIRE ? O/N » et « FAIT ?
+  O/N, LE : » (pages 10-11 de la brochure ; le formulaire servi à part,
+  `TI-ED-6030.pdf`, écrit « OUI NON » et « OUI/NON, LE : »). Ce classement est celui de
   Rojer. Le mot « obligatoire » quitte donc les libellés (formulaire, fiche,
   pastille « N non cochée(s) ») pour « prioritaire », et le chapeau dit que
   c'est Rojer qui les signale. L'identifiant interne `obligatoire` ne change
@@ -1228,13 +1230,33 @@ pas.**
   « en&nbsp;règle », « en{" "} » suivi de « règle », et les familles « vous
   couvre / vous protège », « responsabilité engagée », « valeur légale »,
   « premier document demandé ». Les admissions valent pour un texte exact,
-  plus pour un fichier. Éprouvée sur la sonde de la contre-lecture (neuf
+  plus pour un fichier ~~(au mesuré : la comparaison portait sur le MOT, pas
+  sur la phrase — une sonde « Ce registre est opposable à l'inspection. »
+  ajoutée dans `mcp/tools.ts` passait)~~ [corrigé le même jour : l'admission
+  porte sur la LIGNE exacte ; la sonde, ajoutée dans la consigne réelle de
+  `tools.ts`, est refusée à la ligne 75]. Éprouvée sur la sonde de la contre-lecture (neuf
   formes, toutes refusées) et sur les fichiers réels de `2fbd230`, remis puis
   restaurés : cinq refus à la ligne. **Ce qu'elle ne voit toujours pas** :
   une qualification hors de ces familles. « Un permis de feu = votre assurance
   et votre preuve » et « Obligatoire avant tout travail » ne relèvent d'aucune
   et ne sont pas refusés sur le fichier restauré. Ils ont été trouvés à la
   lecture.
+
+**Troisième passe, le même jour (vérification de la coordination).**
+- Le filigrane de l'aperçu disait « aucune version n'est encore validée dans
+  Rojer », ce qui est faux dès la v1 : l'aperçu est toujours proposé, se
+  numérote `versions[0].numero + 1` et imprime l'historique. Il dit
+  maintenant « Aperçu de la version N, non validée ».
+- Le motif de l'aperçu, « APERÇU — brouillon non validé, ne fait pas foi »,
+  perd « ne fait pas foi ». La garde voit désormais « fait pas foi » (motif
+  de l'aperçu remis dans la route réelle : refusé à la ligne 32).
+- La fiche d'un permis de feu dit, sous « Mesures tirées de l'INRS ED 6030 »,
+  que « prioritaire » est un classement de Rojer.
+- La phrase « Il matérialise un faisceau d'obligations » se lisait comme
+  portant sur l'arrêté ; elle devient un renvoi à `GN 13`, par son intitulé
+  « Travaux dangereux », cité juste en dessous. L'« entretien des
+  installations de sécurité » qu'elle affirmait n'est plus nommé : son
+  article (`R. 4224-17`) avait été retiré de cette page le 2026-09-20.
 
 **Sceau inchangé**, mesuré avant et après :
 `2026-09-26.5+167-66f005e23f039ca+moteur.4`.

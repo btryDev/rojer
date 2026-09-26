@@ -129,11 +129,9 @@ export default async function PermisFeuListePage({
             travaux dangereux pour lesquels un plan de prévention est établi
             par écrit,
             mentionne les «&nbsp;Travaux de soudage oxyacétylénique exigeant
-            le recours à un permis de feu&nbsp;». Il
-            matérialise un <strong>faisceau d&apos;obligations</strong>{" "}
-            :
-            l&apos;entretien des installations de sécurité, et, en ERP,
-            l&apos;interdiction de travaux dangereux en présence du public.
+            le recours à un permis de feu&nbsp;». En ERP, l&apos;article
+            GN&nbsp;13 du règlement de sécurité, intitulé «&nbsp;Travaux
+            dangereux&nbsp;», est cité ci-dessous.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <LegalBadge

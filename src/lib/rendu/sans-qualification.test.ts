@@ -47,7 +47,9 @@ const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
   // Les formes françaises, accent compris — pas `opposab\p{L}*`, qui avalait
   // les identifiants `opposabiliteUrssaf`, `opposabilite` de la vigilance.
   { nom: "opposable", motif: mot(String.raw`(?:non[\s-]+|in)?opposab(?:les?|ilités?)`) },
-  { nom: "fait foi", motif: mot(String.raw`(?:fait|font|faire|faisant|fera|feront|ferait)\s+foi`) },
+  // « ne fait pas foi » aussi : la négation d'une valeur probante en affirme
+  // l'existence ailleurs (motif de l'aperçu du DUERP, contre-lecture du 2026-09-26).
+  { nom: "fait foi", motif: mot(String.raw`(?:fait|font|faire|faisant|fera|feront|ferait)\s+(?:pas\s+|plus\s+|point\s+)?foi`) },
   {
     nom: "exigé par l'assureur",
     motif: mot(
@@ -72,17 +74,16 @@ const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
  * du même mot dans le même fichier. Une entrée qui ne correspond plus à rien
  * fait échouer le test : un aveu mort se retire.
  */
-const ADMISES: { fichier: string; texte: string; motif: string }[] = [
+const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
   {
     fichier: "src/lib/mcp/tools.ts",
-    texte: "opposable",
+    // La LIGNE exacte, espaces de tête retirés : une admission par mot
+    // laissait passer toute autre phrase du même fichier qui l'emploie
+    // (contre-lecture du 2026-09-26). Une seule entrée pour les deux mots
+    // qu'elle porte (« en infraction », « opposable »).
+    ligne: "- Ne qualifie jamais juridiquement un état : ni « conforme », ni « en infraction », ni « opposable ». Les outils rendent des faits (dates, statuts, cotations) et les articles qui fondent une obligation ; ils ne rendent jamais de conclusion de droit, et il n'y en a pas à en tirer.",
     motif:
-      "La consigne donnée au modèle qui lit le serveur MCP : elle NOMME le mot pour l'interdire (« ni « conforme », ni « en infraction », ni « opposable » »).",
-  },
-  {
-    fichier: "src/lib/mcp/tools.ts",
-    texte: "en infraction",
-    motif: "Même consigne, même motif.",
+      "La consigne donnée au modèle qui lit le serveur MCP : elle NOMME les mots pour les interdire.",
   },
 ];
 
@@ -138,7 +139,7 @@ function sansCommentaires(source: string): string {
     .replace(/(^|[^:\\])\/\/[^\n]*/g, (c, avant: string) => avant + " ".repeat(c.length - avant.length));
 }
 
-type Trouvee = { ou: string; nom: string; texte: string };
+type Trouvee = { ou: string; nom: string; texte: string; ligne: string };
 
 function qualificationsAffichees(racine: string): Trouvee[] {
   const out: Trouvee[] = [];
@@ -148,7 +149,12 @@ function qualificationsAffichees(racine: string): Trouvee[] {
     for (const q of QUALIFICATIONS) {
       for (const m of code.matchAll(q.motif)) {
         const ligne = code.slice(0, m.index).split("\n").length;
-        out.push({ ou: `${rel}:${ligne}`, nom: q.nom, texte: m[0].replace(/\s+/g, " ") });
+        out.push({
+          ou: `${rel}:${ligne}`,
+          nom: q.nom,
+          texte: m[0].replace(/\s+/g, " "),
+          ligne: code.split("\n")[ligne - 1].trim(),
+        });
       }
     }
   }
@@ -165,7 +171,7 @@ function qualificationsAffichees(racine: string): Trouvee[] {
 }
 
 const admise = (t: Trouvee) =>
-  ADMISES.some((a) => t.ou.startsWith(`${a.fichier}:`) && a.texte === t.texte.toLowerCase());
+  ADMISES.some((a) => t.ou.startsWith(`${a.fichier}:`) && a.ligne === t.ligne);
 
 describe("aucune sortie ne qualifie juridiquement", () => {
   const trouvees = qualificationsAffichees(RACINE);
@@ -186,8 +192,8 @@ describe("aucune sortie ne qualifie juridiquement", () => {
   it("chaque occurrence admise existe encore — un aveu mort se retire", () => {
     for (const a of ADMISES)
       expect(
-        trouvees.some((t) => t.ou.startsWith(`${a.fichier}:`) && t.texte.toLowerCase() === a.texte),
-        `${a.fichier} / ${a.texte}`,
+        trouvees.some((t) => t.ou.startsWith(`${a.fichier}:`) && t.ligne === a.ligne),
+        `${a.fichier} / ${a.ligne.slice(0, 60)}`,
       ).toBe(true);
   });
 });
@@ -295,15 +301,37 @@ describe("la garde éprouvée en la cassant", () => {
     }
   });
 
-  it("une admission vaut pour son texte exact, pas pour le fichier", () => {
+  it("une admission vaut pour sa LIGNE exacte, pas pour le mot ni le fichier", () => {
+    // La sonde de la contre-lecture du 2026-09-26 : une phrase qualifiante
+    // ajoutée dans le fichier admis, qui passait tant que l'admission portait
+    // sur le mot.
     const r = bac({
-      "src/lib/mcp/tools.ts":
-        "const C = `ni « conforme », ni « en infraction », ni « opposable »`;\nconst D = `ce rapport fait foi`;\n",
+      "src/lib/mcp/tools.ts": [
+        `const C = \`${ADMISES[0].ligne}\`;`,
+        "const D = `Ce registre est opposable à l'inspection.`;",
+        "",
+      ].join("\n"),
     });
     try {
       const vues = qualificationsAffichees(r);
-      expect(vues.filter((t) => !admise(t)).map((t) => `${t.ou} ${t.nom}`)).toEqual([
-        "src/lib/mcp/tools.ts:2 fait foi",
+      // La ligne admise est retrouvée telle quelle, préfixe de code compris :
+      // on compare donc la ligne affichée, et la vraie ligne de `tools.ts` est
+      // un texte de gabarit, sans préfixe.
+      expect(vues.filter((t) => !admise(t)).map((t) => `${t.ou} ${t.nom}`)).toContain(
+        "src/lib/mcp/tools.ts:2 opposable",
+      );
+    } finally {
+      rmSync(r, { recursive: true, force: true });
+    }
+  });
+
+  it("voit « ne fait pas foi », tel que le motif de l'aperçu du DUERP l'écrivait", () => {
+    const r = bac({
+      "src/app/duerp/preview/route.ts": '    motif: "APERÇU — brouillon non validé, ne fait pas foi",\n',
+    });
+    try {
+      expect(qualificationsAffichees(r).map((t) => `${t.ou} ${t.texte}`)).toEqual([
+        "src/app/duerp/preview/route.ts:1 fait pas foi",
       ]);
     } finally {
       rmSync(r, { recursive: true, force: true });

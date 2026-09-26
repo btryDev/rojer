@@ -173,7 +173,7 @@ export default async function PermisFeuDetailPage({
             </CarteFiche>
 
             <TitreSection
-              surtitre="Check-list INRS ED 6030"
+              surtitre="Mesures tirées de l'INRS ED 6030"
               titre="Mesures de prévention"
               droite={
                 <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
@@ -182,6 +182,11 @@ export default async function PermisFeuDetailPage({
                 </span>
               }
             />
+
+            <p className="m-0 -mt-2 max-w-[68ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              «&nbsp;Prioritaire&nbsp;» est un classement de Rojer&nbsp;:
+              l&apos;INRS ne classe pas ces mesures.
+            </p>
 
             {(["avant", "pendant", "apres"] as const).map((g) => {
               // Le manque se compte en tête de groupe, il ne se répète pas
