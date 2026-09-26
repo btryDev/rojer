@@ -82,6 +82,8 @@ export function genererReadme(args: {
   echecs: ReadonlyMap<string, string>;
   /** Pièces de prestataires déclarées que le stockage n'a pas rendues. */
   piecesPrestatairesManquantes: number;
+  /** Pièces de prestataires RÉELLEMENT mises au ZIP, par type. */
+  piecesPrestataires: { attestation: number; rcPro: number; kbis: number };
   /** Le régime, pour les références qui n'en valent qu'un (`mentions-registre.ts`). */
   regime: RegimeDuRegistre;
   /** `false` quand la lecture des versions du DUERP a échoué : « aucune
@@ -134,7 +136,7 @@ export function genererReadme(args: {
           ? ` 02_DUERP.pdf                  ${absent("02_DUERP", "Non inclus — lecture des versions en échec")}`
           : " 02_DUERP.pdf                  Non inclus (aucune version validée)",
     ligne("03_Registre_securite.pdf", "Rapports de vérifications périodiques", "Non inclus"),
-    ligne("04_Plan_actions.pdf", "Actions en cours, par échéance puis criticité", "Non inclus"),
+    ligne("04_Plan_actions.pdf", "Actions ouvertes puis en cours, chacune par échéance puis criticité", "Non inclus"),
     // Tous sur `zip.files` (contre-lecture du 2026-09-26 : 05 à 08 et
     // Prestataires/ restaient calculés sur des compteurs).
     ligne("05_Accessibilite_URL.txt", "URL publique du registre d'accessibilité", "Non inclus (registre non publié)"),
@@ -142,15 +144,25 @@ export function genererReadme(args: {
     ligne("07_Plans_de_prevention.txt", `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
     ligne("08_Carnet_sanitaire.txt", "Relevés ECS + analyses légionelles (arrêté 01-02-2010)", "Non configuré"),
     (() => {
-      const pieces = [...args.presents].filter((n) => n.startsWith("Prestataires/") && !n.endsWith("/")).length;
+      if (args.echecs.has("Prestataires/"))
+        return ` Prestataires/                 ${absent("Prestataires/", "Non inclus")}`;
       if (args.nbPrestataires === 0) return " Prestataires/                 Aucun prestataire déclaré";
+      const pp = args.piecesPrestataires;
+      // Les types RÉELLEMENT présents, et eux seuls (contre-lecture du
+      // 2026-09-26 : un Kbis seul s'annonçait « attestations de vigilance,
+      // RC Pro, Kbis »).
+      const types = [
+        pp.attestation > 0 ? `${pp.attestation} attestation(s) de vigilance` : null,
+        pp.rcPro > 0 ? `${pp.rcPro} attestation(s) RC Pro` : null,
+        pp.kbis > 0 ? `${pp.kbis} Kbis` : null,
+      ].filter(Boolean);
       const manquantes =
         args.piecesPrestatairesManquantes > 0
           ? ` ; ${args.piecesPrestatairesManquantes} pièce(s) déclarée(s) non récupérée(s)`
           : "";
-      return pieces === 0
+      return types.length === 0
         ? ` Prestataires/                 Aucune pièce (${args.nbPrestataires} prestataire(s) déclaré(s))${manquantes}`
-        : ` Prestataires/                 ${pieces} pièce(s) — attestations de vigilance, RC Pro, Kbis — pour ${args.nbPrestataires} prestataire(s)${manquantes}`;
+        : ` Prestataires/                 ${types.join(", ")} — ${args.nbPrestataires} prestataire(s)${manquantes}`;
     })(),
     "",
     "────────────────────────────────────────────────────────────",
@@ -183,9 +195,18 @@ export function genererReadme(args: {
     " [ ] Registre public d'accessibilité (ERP) « consultable par le public sur",
     "     place au principal point d'accueil accessible de l'établissement », ou",
     "     mis en ligne (arrêté du 19 avril 2017, art. 3)",
-    " [ ] Permis de feu établi avant tout travail par points chauds — INRS ED 6030 :",
-    "     « La rédaction du permis de feu est obligatoire pour tous travaux par",
-    "     points chauds » (ni article de code, ni arrêté)",
+    // ~~« INRS ED 6030 : « La rédaction du permis de feu est obligatoire… » »~~
+    // — même attribué, « obligatoire » dans une case remise à un contrôleur
+    // se lit comme une obligation (seconde contre-lecture du 2026-09-26). Le
+    // seul texte qui nomme le permis de feu est l'arrêté du 19 mars 1993,
+    // art. 1er, point 21 (Légifrance numérote « 21. »), relu deux fois le même
+    // jour ; le reste de la ligne reprend R. 4512-7 par ses constantes.
+    " [ ] Permis de feu avant travaux par points chauds (conseil de Rojer, d'après",
+    "     INRS ED 6030). Aucun texte ne l'impose sous ce nom ; l'arrêté du 19 mars",
+    "     1993 (art. 1er, point 21) range les « Travaux de soudage oxyacétylénique",
+    "     exigeant le recours à un permis de feu » parmi les travaux dangereux",
+    `     pour lesquels le plan de prévention est « ${R4512_7_ECRIT} »`,
+    "     (art. R. 4512-7)",
     // Les DEUX cas de R. 4512-7 : « EE ≥ 400 h » taisait le 2°, les travaux
     // dangereux, « quelle que soit la durée prévisible de l'opération »
     // (contre-lecture du 2026-09-26). « Signés » n'était pas dans le texte :
@@ -203,8 +224,10 @@ export function genererReadme(args: {
     // 01_Dossier_conformite.pdf »~~ : faux, le tableau des retards n'en porte
     // aucun (contre-lecture du 2026-09-26). La liste par domaine est celle du
     // dossier, écrite une fois (`mentions-registre.ts`).
-    ...decouper(`Vérifications périodiques : ${referencesVerificationsPeriodiques(args.regime)}`, 60).map(
-      (l, i) => (i === 0 ? ` ${l}` : `                            ${l}`),
+    // ~~Une ligne de 88 colonnes au libellé mal aligné~~ (F4) : le libellé
+    // tient dans la colonne, et la liste se coupe à droite de la colonne.
+    ...decouper(`notamment ${referencesVerificationsPeriodiques(args.regime)}`, 50).map(
+      (l, i) => `${i === 0 ? " Vérifications :            " : "                            "}${l}`,
     ),
     " Registre de sécurité :     art. R. 4323-25 et R. 4323-26 Code du travail",
     // ~~« (conservation : art. D. 4711-3, cinq ans) »~~ : l'article commence
@@ -222,8 +245,8 @@ export function genererReadme(args: {
     // INSTALLATIONS ET DISPOSITIFS techniques et de sécurité des lieux de
     // travail (verbatim au corpus `code-travail-portes`) ; il ne dit rien d'un
     // permis de travail par point chaud. Et ce même README écrit dix lignes
-    // plus bas que l'INRS ED 6030 et la règle APSAD R43 ne sont « ni article
-    // de code, ni arrêté » : lui donner un article de code au-dessus le
+    // plus bas que l'INRS ED 6030 ~~et la règle APSAD R43~~ (retirée le
+    // 2026-09-26) n'est « ni article de code, ni arrêté » : lui donner un article de code au-dessus le
     // contredisait dans le même document, celui qu'on remet à un inspecteur.
     " Permis de feu :            voir « ni code, ni arrêté » ci-dessous",
     " Plan de prévention :       art. R. 4512-6 à R. 4512-12 CT",
@@ -232,7 +255,8 @@ export function genererReadme(args: {
     // de la production ou de la distribution d'eau », c'est-à-dire
     // l'exploitant du réseau PUBLIC, et non l'établissement raccordé. Le
     // badge a été retiré de l'écran ce jour-là ; il était resté dans le ZIP.
-    " Carnet sanitaire eau :     arrêté du 1er février 2010 (ERP, eau chaude collective, points d'usage à risque)",
+    " Carnet sanitaire eau :     arrêté du 1er février 2010 (ERP, eau chaude",
+    "                            collective, points d'usage à risque)",
     // ~~« Maintien en conformité »~~ : l'article dit « entretenus et
     // vérifiés suivant une périodicité appropriée ».
     " Installations et dispositifs techniques et de sécurité : art. R. 4224-17",
@@ -247,12 +271,16 @@ export function genererReadme(args: {
     // référentiels restent nommés — ils fondent réellement la pratique — mais
     // sous leur propre titre, et en disant ce qu'ils opposent.
     "────────────────────────────────────────────────────────────",
-    " RÉFÉRENTIELS CITÉS DANS CE DOSSIER — NI CODE, NI ARRÊTÉ",
+    // ~~« RÉFÉRENTIELS CITÉS DANS CE DOSSIER »~~ promettait une liste
+    // complète ; 02_DUERP en cite d'autres (INRS, Assurance Maladie) et les
+    // nomme lui-même (seconde contre-lecture du 2026-09-26).
+    " RÉFÉRENTIELS — NI CODE, NI ARRÊTÉ",
     "────────────────────────────────────────────────────────────",
     "",
-    " INRS ED 6030 :             recommandation de l'Institut national de",
-    "                            recherche et de sécurité. Ni article de",
-    "                            code, ni arrêté.",
+    " INRS ED 6030 :             brochure de l'Institut national de",
+    "                            recherche et de sécurité (permis de feu).",
+    " 02_DUERP :                 nomme lui-même les brochures INRS et les",
+    "                            documents de l'Assurance Maladie qu'il cite.",
     // ~~« Règle APSAD R43 : référentiel de la profession de l'assurance … »~~
     // — retiré le 2026-09-26 : plus aucune pièce du dossier ne la cite
     // (`permis-feu/referentiel.ts` ne tient rien d'une règle jamais lue).

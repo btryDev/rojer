@@ -23,6 +23,7 @@ const base: Parameters<typeof genererReadme>[0] = {
   duerpLu: true,
   echecs: new Map(),
   piecesPrestatairesManquantes: 0,
+  piecesPrestataires: { attestation: 0, rcPro: 0, kbis: 0 },
 };
 
 const INVENTAIRE = {
@@ -146,19 +147,30 @@ describe("contre-lecture du 2026-09-26 : ce que le README affirmait sans l'avoir
   });
 
   it("2. une lecture des versions en échec ne dit pas « aucune version »", () => {
-    const t = plat({ ...base, duerpLu: false, echecs: new Map([["02_DUERP", "la génération a échoué"]]) });
+    // ~~La raison injectée était « la génération a échoué »~~ : le test
+    // figeait l'erreur que la route commettait (seconde contre-lecture). La
+    // route note désormais « lecture des versions en échec » quand la
+    // lecture a échoué, et le contenu dit la même chose que la checklist.
+    const t = plat({ ...base, duerpLu: false, echecs: new Map([["02_DUERP", "lecture des versions en échec"]]) });
     expect(t).not.toContain("aucune version validée");
     expect(t).not.toContain("aucune version figée");
     expect(t).toContain("non déterminé (lecture des versions en échec)");
-    expect(t).toMatch(/02_DUERP\.pdf Non inclus — la génération a échoué/);
+    expect(t).toMatch(/02_DUERP\.pdf Non inclus — lecture des versions en échec/);
+    expect(t).not.toContain("génération a échoué");
   });
 
   it("3. un prestataire sans pièce n'est pas annoncé avec ses attestations", () => {
     const t = plat({ ...base, nbPrestataires: 1 });
     expect(t).toContain("Aucune pièce (1 prestataire(s) déclaré(s))");
     expect(t).not.toContain("RC Pro, Kbis (1)");
-    const avec = plat({ ...base, nbPrestataires: 1, presents: new Set([...base.presents, "Prestataires/Acme/", "Prestataires/Acme/Kbis.pdf"]) });
-    expect(avec).toContain("1 pièce(s)");
+    // F1 : un Kbis seul ne s'annonce plus « attestations de vigilance, RC Pro, Kbis ».
+    const kbisSeul = plat({ ...base, nbPrestataires: 1, piecesPrestataires: { attestation: 0, rcPro: 0, kbis: 1 } });
+    const lignePrestataires = genererReadme({ ...base, nbPrestataires: 1, piecesPrestataires: { attestation: 0, rcPro: 0, kbis: 1 } })
+      .split("\n")
+      .find((l) => l.startsWith(" Prestataires/"))!;
+    expect(kbisSeul).toContain("1 Kbis — 1 prestataire(s)");
+    expect(lignePrestataires).not.toContain("vigilance");
+    expect(lignePrestataires).not.toContain("RC Pro");
   });
 
   it("3. 05 à 08 suivent aussi ce que le ZIP contient", () => {
@@ -182,8 +194,35 @@ describe("contre-lecture du 2026-09-26 : ce que le README affirmait sans l'avoir
     expect(t).toContain("lu en entier (conseil de Rojer)");
     expect(t).not.toContain("(10 min)");
     expect(t).not.toContain("priorisés");
-    expect(t).toContain("par échéance puis criticité");
-    expect(t).toContain("« La rédaction du permis de feu est obligatoire pour tous travaux par points chauds »");
+    expect(t).toContain("Actions ouvertes puis en cours, chacune par échéance puis criticité");
     expect(t).toContain("Installations et dispositifs techniques et de sécurité");
+  });
+
+  it("M3. le permis de feu n'est pas dit « obligatoire » ; l'arrêté de 1993 est cité, point 21", () => {
+    const t = plat(base);
+    expect(t).not.toContain("est obligatoire pour tous travaux");
+    expect(t).toContain("conseil de Rojer, d'après INRS ED 6030");
+    expect(t).toContain("Aucun texte ne l'impose sous ce nom");
+    expect(t).toContain("(art. 1er, point 21)");
+    expect(t).toContain("« Travaux de soudage oxyacétylénique exigeant le recours à un permis de feu »");
+  });
+
+  it("M4, M6. les listes ne se donnent plus pour complètes", () => {
+    const t = plat(base);
+    expect(t).toContain("Vérifications : notamment R. 4323-23 et s. CT");
+    expect(t).not.toContain("RÉFÉRENTIELS CITÉS DANS CE DOSSIER");
+    expect(t).toContain("nomme lui-même les brochures INRS");
+  });
+
+  it("F4. aucune ligne du cadre légal ne dépasse 80 colonnes", () => {
+    const lignes = genererReadme(base).split("\n");
+    const i = lignes.findIndex((l) => l.includes("CADRE LÉGAL"));
+    const cadre = lignes.slice(i, lignes.findIndex((l, k) => k > i + 2 && l.startsWith("───")));
+    expect(cadre.filter((l) => l.length > 80)).toEqual([]);
+  });
+
+  it("F5. une brique 05-08 dont la lecture échoue est dite « Non incluse », pas un 500", () => {
+    const t = plat({ ...base, echecs: new Map([["06_Permis_de_feu.txt", "la lecture a échoué"]]) });
+    expect(t).toMatch(/06_Permis_de_feu\.txt Non inclus — la lecture a échoué/);
   });
 });

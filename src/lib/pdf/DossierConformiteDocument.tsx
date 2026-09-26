@@ -669,7 +669,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                 PÉRIODIQUE : sous le mot « périodiques », c'était le mauvais
                 article. Le README du ZIP écrivait déjà R. 4226-16 — deux
                 documents du même dossier se contredisaient. */}
-            — Vérifications périodiques : articles{" "}
+            — Vérifications périodiques : notamment les articles{" "}
             {referencesVerificationsPeriodiques(data.regime)}.
           </Text>
           <Text style={{ marginTop: 3 }}>

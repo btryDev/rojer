@@ -10,7 +10,7 @@ import { mesuresUniquementBasNiveau, trierParHierarchie } from "@/lib/prevention
 import { tousRisquesConnus } from "@/lib/referentiels";
 import { getRisque } from "@/lib/risques/queries";
 import type { TypeMesure } from "@/lib/referentiels/types";
-import { L4121_2_8, ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
+import { L4121_2_3, L4121_2_8, ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
 
 export default async function MesuresPage({
   params,
@@ -41,6 +41,10 @@ export default async function MesuresPage({
 
   const typesRetenus = risque.mesures.map((m) => m.type as TypeMesure);
   const alerteBasNiveau = mesuresUniquementBasNiveau(typesRetenus);
+  // Le 8° de L. 4121-2 ne vise que la protection INDIVIDUELLE : sans EPI
+  // retenu (formation ou organisation seules), c'est le 3° qu'on cite, pas le
+  // 8° (seconde contre-lecture du 2026-09-26).
+  const avecEpi = typesRetenus.includes("protection_individuelle");
 
   const mesuresAffichees = trierParHierarchie(
     risque.mesures.map((m) => ({ ...m, type: m.type as TypeMesure })),
@@ -160,7 +164,8 @@ export default async function MesuresPage({
               </span>
               <span className="mt-2 block text-[11px] opacity-75">
                 EPI et formation viennent en dernier, jamais en substitut des
-                trois premiers niveaux.
+                trois premiers niveaux — classement de Rojer, que l&apos;article
+                n&apos;écrit pas.
               </span>
             </InfoTooltip>
           </span>
@@ -190,13 +195,19 @@ export default async function MesuresPage({
           // rose (charte, interdit 3).
           <div className="rounded-[22px] bg-[color:var(--board-signal-wash)] px-6 py-5">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-signal-ink)]">
-              Protection collective · art. L. 4121-2, 8°
+              {avecEpi
+                ? "Protection collective · art. L. 4121-2, 8°"
+                : "Réduction à la source · art. L. 4121-2, 3°"}
             </p>
             <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
               Les mesures retenues ne comportent que des EPI, de la formation
               ou de l&apos;organisation. Avez-vous étudié une solution
-              collective ou une réduction à la source&nbsp;? Art. L. 4121-2,
-              8°&nbsp;: «&nbsp;{L4121_2_8}&nbsp;».
+              collective ou une réduction à la source&nbsp;? Art. L. 4121-2,{" "}
+              {avecEpi ? (
+                <>8°&nbsp;: «&nbsp;{L4121_2_8}&nbsp;».</>
+              ) : (
+                <>3°&nbsp;: «&nbsp;{L4121_2_3}&nbsp;».</>
+              )}
             </p>
           </div>
         )}

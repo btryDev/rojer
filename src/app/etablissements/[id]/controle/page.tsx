@@ -343,7 +343,7 @@ export default async function ControlePage({
           <WhyCard charte="board"
             kicker="D'où viennent les pièces"
             titre="Ce que vous avez saisi, et les textes qu'elles citent."
-            enjeu="Chaque document de ce dossier est généré à partir de ce que vous avez saisi dans Rojer. Les articles cités sont lus sur Légifrance ; la brochure INRS est nommée pour ce qu'elle est, ni article de code, ni arrêté."
+            enjeu="Chaque document de ce dossier est généré à partir de ce que vous avez saisi et de ce que Rojer en calcule (obligations, échéances, retards). Les articles cités sont lus sur Légifrance ; les brochures INRS sont nommées pour ce qu'elles sont, ni article de code, ni arrêté."
             tonalite="info"
           >
             <p>

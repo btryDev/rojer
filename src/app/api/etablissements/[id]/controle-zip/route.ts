@@ -110,11 +110,25 @@ export async function GET(
   // noté ici, par le nom du fichier qu'il prive, et le README ne décrit que ce
   // que le ZIP contient vraiment (`zip.files`).
   const echecs = new Map<string, string>();
-  const noterEchec = (fichier: string, e: unknown) => {
-    echecs.set(fichier, "la génération a échoué");
+  const noterEchec = (fichier: string, e: unknown, raison = "la génération a échoué") => {
+    echecs.set(fichier, raison);
     console.error(`controle-zip : ${fichier} non inclus`, e);
   };
   let piecesPrestatairesManquantes = 0;
+  // Les pièces de prestataires réellement mises au ZIP, par type : le README
+  // ne nomme que les types présents (contre-lecture du 2026-09-26).
+  const piecesPrestataires = { attestation: 0, rcPro: 0, kbis: 0 };
+  // Une LECTURE en panne pour 05 à 08 et les prestataires donnait une
+  // réponse 500 : tout le dossier tombait pour une brique. Elle se note
+  // comme les autres échecs, et la brique est dite « Non incluse ».
+  const lire = async <T,>(fichier: string, repli: T, f: () => Promise<T>): Promise<T> => {
+    try {
+      return await f();
+    } catch (e) {
+      noterEchec(fichier, e, "la lecture a échoué");
+      return repli;
+    }
+  };
 
   // ── 01 Dossier de conformité ────────────────────────────────────────
   try {
@@ -204,7 +218,10 @@ export async function GET(
   } catch (e) {
     // On continue même si une brique échoue : le README dira que le DUERP
     // n'est pas inclus, et pourquoi, plutôt que de faire échouer le dossier.
-    noterEchec("02_DUERP", e);
+    // ~~Toujours « la génération a échoué »~~ : une panne de LECTURE n'est pas
+    // une panne de rendu, et la checklist disait déjà « lecture » (contre-
+    // lecture du 2026-09-26).
+    noterEchec("02_DUERP", e, duerpLu ? "la génération a échoué" : "lecture des versions en échec");
   }
 
   // ── 03 Registre de sécurité ─────────────────────────────────────────
@@ -233,10 +250,11 @@ export async function GET(
   }
 
   // ── 05 Accessibilité (URL publique + QR si publié) ──────────────────
-  const registreAccess = await prisma.registreAccessibilite.findUnique({
+  const registreAccess = await lire("05_Accessibilite_URL.txt", null, () =>
+    prisma.registreAccessibilite.findUnique({
     where: { etablissementId: id },
     select: { slugPublic: true, publie: true },
-  });
+  }));
   if (registreAccess?.publie) {
     const url = `${publicAppUrl()}/accessibilite/${registreAccess.slugPublic}`;
     zip.file(
@@ -249,10 +267,11 @@ export async function GET(
   }
 
   // ── Prestataires : attestations URSSAF, RC Pro, Kbis ────────────────
-  const prestataires = await prisma.prestataire.findMany({
+  const prestataires = await lire("Prestataires/", [], () =>
+    prisma.prestataire.findMany({
     where: { etablissementId: id },
     orderBy: { raisonSociale: "asc" },
-  });
+  }));
   if (prestataires.length > 0) {
     const dossierPrestataires = zip.folder("Prestataires") ?? zip;
     const storage = getStorage();
@@ -263,15 +282,16 @@ export async function GET(
       // conservé en base pour l'affichage, il ne devient un nom d'entrée
       // d'archive qu'assaini. L'export est fait pour être décompressé chez
       // un tiers.
-      for (const [cle, nom] of [
-        [p.attestationUrssafCle, nomEntreeArchive(p.attestationUrssafNom, "URSSAF.pdf")],
-        [p.assuranceRcProCle, nomEntreeArchive(p.assuranceRcProNom, "RC_Pro.pdf")],
-        [p.kbisCle, nomEntreeArchive(p.kbisNom, "Kbis.pdf")],
+      for (const [cle, nom, type] of [
+        [p.attestationUrssafCle, nomEntreeArchive(p.attestationUrssafNom, "URSSAF.pdf"), "attestation"],
+        [p.assuranceRcProCle, nomEntreeArchive(p.assuranceRcProNom, "RC_Pro.pdf"), "rcPro"],
+        [p.kbisCle, nomEntreeArchive(p.kbisNom, "Kbis.pdf"), "kbis"],
       ] as const) {
         if (!cle) continue;
         try {
           const buf = await storage.get(cle);
           sousDossier.file(nom, new Uint8Array(buf));
+          piecesPrestataires[type]++;
         } catch (e) {
           // Une pièce déclarée que le stockage ne rend pas : comptée, et
           // annoncée par le README au lieu d'être ignorée.
@@ -292,19 +312,23 @@ export async function GET(
   // l'heure courante ferait disparaître du dossier, l'après-midi, une pièce
   // encore présente le matin.
   const ilYaUnAn = debutDuJour(ajouterMois(maintenant, -MOIS_FENETRE_HISTORIQUE));
-  const permisFeuList = await prisma.permisFeu.findMany({
+  const permisFeuList = await lire("06_Permis_de_feu.txt", [], () =>
+    prisma.permisFeu.findMany({
     where: {
       etablissementId: id,
       dateDebut: { gte: ilYaUnAn },
       statut: { notIn: ["brouillon", "annule"] },
     },
     orderBy: { numero: "desc" },
-  });
+  }));
   if (permisFeuList.length > 0) {
     const txt = [
       `PERMIS DE FEU — 12 derniers mois (${permisFeuList.length})`,
       // ~~« règle APSAD R43 »~~ — rayé le 2026-09-26 : `permis-feu/referentiel.ts`
-      // ne tient plus rien d'APSAD, qui n'a jamais été lue.
+      // ne tient plus rien d'APSAD, qui n'a jamais été lue. ⚠ Vrai une fois
+      // `lot/permis-feu-ed6030` (dc29a20 et suivants) fusionné — l'intégration
+      // le fusionne avant ou avec ce lot ; seul, ce lot porte encore l'ancien
+      // référentiel.
       `Mesures tirées de la brochure INRS ED 6030 (2e édition, août 2019) — ni article de code, ni arrêté.`,
       "",
       "────────────────────────────────────────────────────────────",
@@ -324,7 +348,8 @@ export async function GET(
   }
 
   // ── 07 Plans de prévention (actifs 12 derniers mois) ────────────────
-  const plansList = await prisma.planPrevention.findMany({
+  const plansList = await lire("07_Plans_de_prevention.txt", [], () =>
+    prisma.planPrevention.findMany({
     where: {
       etablissementId: id,
       dateDebut: { gte: ilYaUnAn },
@@ -335,7 +360,7 @@ export async function GET(
       phasesDangereuses: { orderBy: { ordre: "asc" } },
     },
     orderBy: { numero: "desc" },
-  });
+  }));
   if (plansList.length > 0) {
     const txt = [
       `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
@@ -385,7 +410,8 @@ export async function GET(
   }
 
   // ── 08 Carnet sanitaire (résumé) ─────────────────────────────────────
-  const carnetSan = await prisma.carnetSanitaire.findUnique({
+  const carnetSan = await lire("08_Carnet_sanitaire.txt", null, () =>
+    prisma.carnetSanitaire.findUnique({
     where: { etablissementId: id },
     include: {
       pointsReleve: {
@@ -429,7 +455,7 @@ export async function GET(
       },
       analyses: { orderBy: { dateAnalyse: "desc" }, take: 5 },
     },
-  });
+  }));
   if (carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0)) {
     const txt = [
       `CARNET SANITAIRE EAU`,
@@ -482,6 +508,7 @@ export async function GET(
     duerpLu,
     echecs,
     piecesPrestatairesManquantes,
+    piecesPrestataires,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
     nbPermisFeu: permisFeuList.length,

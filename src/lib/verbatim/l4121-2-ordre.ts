@@ -8,6 +8,9 @@
 // collectivement, EPI, formation, organisation — comme « imposé » par
 // l'article ; c'est un classement de Rojer (journal C34).
 
+/** Le 3° de l'article, mot pour mot : ce qu'on cite quand aucune protection individuelle n'est en jeu. */
+export const L4121_2_3 = "Combattre les risques à la source";
+
 /** Le 8° de l'article, mot pour mot. */
 export const L4121_2_8 =
   "Prendre des mesures de protection collective en leur donnant la priorité sur les mesures de protection individuelle";

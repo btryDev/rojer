@@ -1714,6 +1714,36 @@ d'autres numéros de ligne. Le point 1 était déjà à moitié traité : le cas
   à l'identique celle de `lot/permis-feu-ed6030` (`dc29a20`), pour que les
   deux lots se fusionnent sans conflit sur elle.
 
+**Seconde contre-lecture, le même jour.** Sa sonde appelle la vraie route.
+- Une panne de LECTURE des versions du DUERP s'écrivait « la génération a
+  échoué », et le test figeait l'erreur en l'injectant lui-même. La route
+  note désormais « lecture des versions en échec », et le test l'attend.
+- Le tri du plan d'actions est dit exactement : ouvertes puis en cours,
+  chacune par échéance puis criticité.
+- Le permis de feu n'est plus dit « obligatoire », même attribué à l'INRS. La
+  case dit « conseil de Rojer, d'après INRS ED 6030 », qu'« aucun texte ne
+  l'impose sous ce nom », et cite l'arrêté du 19 mars 1993, art. 1er,
+  **point 21** (Légifrance numérote « 21. » ; relu deux fois le même jour),
+  avec `R. 4512-7` par ses constantes.
+- Les listes ne se donnent plus pour complètes : « notamment » devant les
+  articles des vérifications (où `R. 4323-23`, le plus cité du référentiel,
+  est ajouté), et « RÉFÉRENTIELS — NI CODE, NI ARRÊTÉ », où `02_DUERP`
+  « nomme lui-même » ses brochures.
+- La mesure d'un risque ne donne plus « jamais en substitut » pour du texte :
+  c'est un classement de Rojer. Sans EPI retenu, l'alerte cite le 3°
+  (« Combattre les risques à la source »), et non le 8°.
+- L'écran de contrôle dit aussi « ce que Rojer en calcule », et parle des
+  brochures INRS au pluriel.
+- `Prestataires/` ne nomme que les types de pièces réellement mis au ZIP.
+- Les lectures de 05 à 08 et des prestataires sont sous `lire()` : une panne
+  donne « Non inclus — la lecture a échoué », et non plus une réponse 500.
+- Aucune ligne du cadre légal ne dépasse 80 colonnes.
+- ⚠ Le 06 (« Mesures tirées de la brochure INRS ED 6030 ») n'est vrai qu'une
+  fois `lot/permis-feu-ed6030` fusionné. L'intégration le fusionne avant ou
+  avec ce lot ; le commentaire de la route le dit.
+**Non éprouvé** : `noterEchec(…, "lecture des versions en échec")` et
+`lire()`, dans la route, qu'aucun test n'importe.
+
 **Épreuves.** Chaque règle nouvelle est neutralisée dans le vrai fichier, et
 son test retombe : « jamais calculé » ignoré, « sans valeur » rendu « sous la
 limite », commission rendue à tous ; puis, après contre-lecture, `duerpLu`

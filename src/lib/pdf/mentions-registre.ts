@@ -109,8 +109,12 @@ export function destinatairesRegistre(r: RegimeDuRegistre): string {
  * citent désormais la même liste, domaine par domaine.
  */
 export function referencesVerificationsPeriodiques(r: RegimeDuRegistre): string {
+  // « notamment » est porté par les appelants : la liste n'est pas celle de
+  // toutes les obligations du dossier (seconde contre-lecture du 2026-09-26 —
+  // `R. 4323-23`, le plus cité du référentiel, n'y figurait pas).
   return (
-    "R. 4226-16 et s. CT (électricité), R. 4222-20 CT (aération), " +
+    "R. 4323-23 et s. CT (équipements de travail), R. 4226-16 et s. CT " +
+    "(électricité), R. 4222-20 CT (aération), " +
     `R. 4227-28 et s. CT (incendie)${mentionReglementErp(r)}`
   );
 }
