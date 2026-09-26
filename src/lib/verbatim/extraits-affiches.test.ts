@@ -29,9 +29,10 @@
 // - qu'une virgule n'a pas été ajoutée ou retirée, ni la casse changée ;
 // - qu'un extrait est tiré du bon ALINÉA quand la `citationCle` en porte
 //   plusieurs ;
-// - qu'un verbatim déclaré dans HORS_CORPUS a été relu : la garde exige qu'il
-//   soit écrit, avec son adresse et sa date, pas qu'il soit juste. Il se
-//   relit comme une `citationCle`, et sa date dit quand.
+// - qu'un verbatim déclaré dans HORS_CORPUS a été relu : la garde exige
+//   qu'il soit écrit, avec son adresse et sa date NON VIDES (le type seul
+//   laissait passer une chaîne vide), pas qu'il soit juste. Il se relit comme
+//   une `citationCle`, et sa date dit quand.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -216,13 +217,19 @@ function codeDeLArticle(corpusId: string, ref: string): string | null {
  * corpus retenu.
  */
 const qualifiantsDArrete = (reference: string) =>
-  normaliser(
-    reference
-      .replace(MOTIF_ARRETE, " ")
-      .replace(/\bart\.\s*\d+(?:er)?/gi, " "),
-  )
+  reference
+    .replace(MOTIF_ARRETE, " ")
+    .replace(/\bart\.\s*\d+(?:er)?/gi, " ")
     .split(/[^\p{L}]+/u)
-    .filter((m) => m.length >= 4);
+    // Les mots de quatre lettres et plus, ET les sigles en capitales :
+    // « EPI » était ignoré (contre-lecture du 2026-09-26), et « Arrêté du
+    // 19 mars 1993 · EPI » se résolvait vers les deux arrêtés du jour.
+    .filter((m) => m.length >= 4 || /^\p{Lu}{2,}$/u.test(m))
+    .map(normaliser);
+
+/** Les mots d'un corpus et d'un article, où un qualifiant doit se trouver — le sigle « (EPI) » est dans la `ref`. */
+const motsDe = (...textes: string[]) =>
+  new Set(textes.flatMap((t) => normaliser(t).split(/[^\p{L}]+/u)).filter(Boolean));
 
 /** Les articles du corpus que la `reference` nomme. */
 function articlesNommes(reference: string): ArticleDepouille[] {
@@ -235,7 +242,6 @@ function articlesNommes(reference: string): ArticleDepouille[] {
 
   const trouves: ArticleDepouille[] = [];
   for (const c of CORPUS) {
-    const intitule = normaliser(c.intitule);
     for (const a of c.articles) {
       const ref = espaces(a.ref);
       const sesCles = new Set([ref, ...[...ref.matchAll(MOTIF_ARTICLE)].map((m) => espaces(m[0]))]);
@@ -253,7 +259,7 @@ function articlesNommes(reference: string): ArticleDepouille[] {
         saDate !== undefined &&
         arretes.includes(saDate) &&
         (numero === undefined || numeroArticle(ref) === numero) &&
-        qualifiants.every((q) => intitule.includes(q));
+        qualifiants.every((q) => motsDe(c.intitule, a.ref).has(q));
       if (parArticle || parReglement || parArrete) trouves.push(a);
     }
   }
@@ -296,6 +302,16 @@ describe("les extraits affichés entre guillemets sont le texte de l'article", (
       expect(ecartsDeCitation(p.extrait, textes)).toEqual([]);
     },
   );
+
+  it("chaque texte déclaré hors corpus porte un verbatim, une adresse et des dates non vides", () => {
+    for (const [ref, h] of Object.entries(HORS_CORPUS)) {
+      expect(h.verbatim.trim(), ref).not.toBe("");
+      expect(h.url, ref).toMatch(/^https:\/\/www\.legifrance\.gouv\.fr\//);
+      expect(h.luLe, ref).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(h.versionEnVigueur, ref).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(h.motif.trim(), ref).not.toBe("");
+    }
+  });
 
   it("chaque texte déclaré hors corpus est encore cité — sinon l'aveu est mort", () => {
     const citees = new Set(TOUTES.map((p) => p.reference));
@@ -370,6 +386,28 @@ describe("la garde éprouvée en la cassant", () => {
         verbatimDe("Art. L. 4121-3-1 CT"),
       ).length,
     ).toBeGreaterThan(0);
+  });
+
+  it("une citation qui GARDE la numérotation de Légifrance passe ; la lettre seule, non (2026-09-26)", () => {
+    const l4121_3_1 = verbatimDe("Art. L. 4121-3-1 CT");
+    // Passaient à 752933f, refusées à 8e40d19 sur leur seul numéro.
+    for (const c of [
+      "V.-A.-Le document unique d'évaluation des risques professionnels, dans ses versions successives, est conservé par l'employeur […]",
+      "III.-Les résultats de cette évaluation débouchent : […]",
+      "VI.-Le document unique d'évaluation des risques professionnels est transmis par l'employeur à chaque mise à jour au service de prévention et de santé au travail auquel il adhère.",
+    ])
+      expect(ecartsDeCitation(c, l4121_3_1), c).toEqual([]);
+    // Et le refus que la règle existe pour tenir.
+    expect(
+      ecartsDeCitation("a le document unique d'évaluation des risques professionnels […]", l4121_3_1).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("un sigle qualifie l'arrêté : « EPI » ne se résout plus vers les deux arrêtés du jour", () => {
+    const refs = (r: string) => articlesNommes(r).map((a) => a.ref);
+    expect(refs("Arrêté du 19 mars 1993 · EPI").every((r) => r.includes("(EPI)"))).toBe(true);
+    expect(refs("Arrêté du 19 mars 1993 · EPI").length).toBeGreaterThan(0);
+    expect(refs("Arrêté du 19 mars 1993 · Travaux dangereux")).toEqual(["Arrêté 1993-03-19 art. 1er"]);
   });
 
   it("la même coupe, MARQUÉE d'une élision, est admise — c'est ce que le lecteur voit", () => {

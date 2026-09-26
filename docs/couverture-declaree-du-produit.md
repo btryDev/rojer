@@ -152,13 +152,13 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-Les 25 articles ci-dessous sont ceux que le dépouillement a lus, qui imposent
+Les 26 articles ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise.** Un bureau tertiaire les
 voyait tous, y compris les onze articles propres aux hôtels.
 
-**Le chiffre a bougé trois fois : 28 → 19 le 2026-09-01, 19 → 20 le
-2026-09-03, puis 20 → 25 le 2026-09-20** (arrêté du 1er février 2010,
+**Le chiffre a bougé quatre fois : 28 → 19 le 2026-09-01, 19 → 20 le
+2026-09-03, 20 → 25 le 2026-09-20, puis 25 → 26 le 2026-09-26 (`GN 13`, voir sa famille au § 3)** (arrêté du 1er février 2010,
 légionelles, et l'article 36 de l'arrêté du 23 juin 1978 : cinq entrées, avec une adresse visible — voir sa famille au § 3). Neuf articles du chapitre III
 du Livre III (locaux à sommeil) sont sortis de cette liste, et le § 3 dit
 comment. Les « 27 » et « 28 » qui subsistent plus bas dans ce document
@@ -202,7 +202,7 @@ couverture.
 
 ---
 
-## 3. Les 25 articles lus et non portés
+## 3. Les 26 articles lus et non portés
 
 Cinq familles, une sixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -389,6 +389,19 @@ entré au corpus le 2026-09-01, plus de trois jours après le retrait de la cart
 et il n'a donc jamais été annoncé à personne. Les « 27 » du § 3 bis restent 27 :
 ils comptent une histoire, pas un état.
 
+### Travaux en présence du public, tous ERP — 1 article (2026-09-26)
+
+`GN 13`
+
+> Consigné le 2026-09-26 parce que l'écran du permis de feu en affiche le texte entre guillemets, et qu'aucun corpus ne le portait : l'extrait n'était confronté à rien (`verbatim/extraits-affiches.test.ts`). Un seul alinéa, section 4 « Travaux » du Livre Ier. C'est une INTERDICTION qui vise tout exploitant d'ERP, donc la cible du produit — restaurant, commerce, bureau recevant du public —, et que le référentiel ne porte pas : ni pièce ni rythme, rien ne s'en inscrit au calendrier. Il ne prescrit pas de permis de feu — l'écran le dit déjà.
+
+**Celui-ci a une adresse visible** : l'écran du permis de feu, où la pastille
+« Art. GN 13 · Règlement ERP » affiche le texte mot pour mot. Le cliquet
+`MUETS` ne bouge pas. Il était entré au corpus le matin même comme
+`sans_objet`, et il a été reclassé sur le précédent de `R. 4323-63` : une
+obligation qui vise la cible et que le référentiel ne porte pas se déclare,
+elle ne se nie pas.
+
 ---
 
 ## 3 bis. Ces 27 articles ont eu une adresse visible. Elle a été retirée.
@@ -529,7 +542,7 @@ La carte du tableau de bord est retirée. Ce qui reste :
   interroge le schéma au lieu de le décrire), et les articles `hors_perimetre`
   du corpus, groupés par motif d'exclusion.
 
-  **Elle ne donne PAS d'adresse aux 25 articles `non_couvert`**, et un test le
+  **Elle ne donne PAS d'adresse aux 26 articles `non_couvert`**, et un test le
   verrouille. La tentation était forte — la page ressemble à l'endroit où les
   mettre — mais ce serait exactement la confusion que `corpus/perimetre.ts`
   interdit en tête de fichier : ranger un manque parmi les exclusions le fait

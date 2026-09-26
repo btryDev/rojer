@@ -387,12 +387,14 @@ soit déclarées hors corpus avec leur motif.~~
 sur la règle partagée avec `fait-dans-le-texte.test.ts` (`extrait-continu.ts`).
 Remesuré par elle : 24 extraits, **3 échecs à la première mesure, pas 5** —
 deux extraits qui s'écartaient du texte, et un article sans verbatim au corpus
-(`GN 13`, dont l'extrait était exact). ~~3 écarts~~ [corrigé le 2026-09-26,
-contre-lecture : le diff corrige DEUX extraits ; le troisième écart historique
-de `R. 4121-2` l'avait été plus tôt, par `48cc576`]. Les « huit sans verbatim »
+(`GN 13`, dont l'extrait était exact). [Précisé le 2026-09-26 après
+contre-lecture : le troisième échec mesuré est `GN 13`. Les deux citations
+fausses de `R. 4121-2` avaient été corrigées plus tôt, par `48cc576`, et
+n'entrent pas dans ces trois.] Les « huit sans verbatim »
 étaient pour cinq d'entre eux un défaut de clé de la sonde (`CCH R. 164-6`,
 `CCH R. 143-44`, les arrêtés de 2010 et 1993 sont au corpus sous une autre
-graphie) ; restaient `GN 13`, consigné au corpus, et le Code civil, déclaré
+graphie) ; restaient `GN 13`, consigné au corpus (`non_couvert`, avec
+l'écran du permis de feu pour adresse), et le Code civil, déclaré
 hors corpus AVEC son verbatim relu. `R. 4323-23` passe (élision marquée).
 Corrigés : `L. 4121-3-1` (segments intervertis, durée reformulée),
 `L. 4121-2` (graphie de Légifrance). Ce que la garde ne prouve pas est écrit

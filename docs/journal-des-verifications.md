@@ -1109,8 +1109,9 @@ s'écartaient du texte (`L. 4121-3-1`, `L. 4121-2`), corrigés dans l'extrait ;
 un article sans verbatim au corpus (`GN 13`), consigné, son extrait inchangé
 parce qu'exact. *[Précisé le 2026-09-26 après contre-lecture : le titre, le
 commit `752933f` et le § 5 bis disaient « 3 écarts » ; le diff n'en corrige
-que deux. Les deux citations fausses de `R. 4121-2` l'avaient été plus tôt
-par `48cc576`.]* La sonde du matin en
+que deux, et le troisième échec est `GN 13`. Les deux citations fausses de
+`R. 4121-2` avaient été corrigées plus tôt, par `48cc576`, et n'entrent pas
+dans ces trois.]* La sonde du matin en
 comptait 5 écarts et 8 « sans verbatim » : cinq de ces huit étaient au corpus
 sous une autre graphie de clé (`CCH R. 164-6`, `CCH R. 143-44`,
 `Arrêté 01-02-2010 art. 3`, `Arrêté 1993-03-19 art. 1er`). `R. 4323-23`
@@ -1139,7 +1140,9 @@ formulation décisive confirmée par une seconde lecture distincte :**
   seuls le chapeau et les 1° à 3° ont été relus.
 - `GN 13` (LEGIARTI000020303866) : un alinéa, section 4 « Travaux » ; l'extrait
   concorde mot pour mot, deux lectures. **Consigné au corpus**
-  (`arrete-1980-livre-1`, `sans_objet` : une interdiction, sans pièce ni rythme).
+  (`arrete-1980-livre-1`) ~~, `sans_objet` : une interdiction, sans pièce ni
+  rythme~~ — reclassé `non_couvert` le même jour, `declareA` sur l'écran du
+  permis de feu : voir plus bas.
   La page affiche « Version en vigueur depuis le 15/08/1980 » et « Modifié par
   Arrêté du 7 juillet 1983, v. init. » : relevé tel quel, la contradiction
   apparente des deux dates n'est pas tranchée.
@@ -1156,15 +1159,38 @@ pouvait être cité. Un trait d'union seul ne compte toujours pas (testé).
 acceptait tout article d'un arrêté dès que la date concordait : l'arrêté EPI
 du 19 mars 1993 répondait à la pastille « Travaux dangereux » du même jour.
 Chaque mot qui qualifie l'arrêté dans la `reference` doit désormais figurer
-dans l'intitulé du corpus. (2) Le code nommé n'était pas lu :
+dans l'intitulé du corpus. *[Au mesuré : la première version ne retenait que
+les mots de quatre lettres et plus. « Arrêté du 19 mars 1993 · EPI » se
+résolvait donc encore vers les deux arrêtés. Les sigles en capitales comptent
+depuis la passe suivante, cherchés dans l'intitulé et dans la `ref` de
+l'article, qui porte « (EPI) ».]* (2) Le code nommé n'était pas lu :
 `articlesNommes("Art. R. 164-6 CT")` rendait `CCH R. 164-6`. Le code de la
 pastille doit désormais être celui de l'article (préfixe, sinon identifiant du
 corpus), et une pastille d'article de code qui n'en nomme aucun ne se
 rapproche de rien. (3) « .- » ouvrait aussi la LETTRE de numérotation : « a le
 document unique… » passait sur `L. 4121-3-1`, grâce au « A » de « V.-A.- ».
-Un mot suivi de « .- » n'ouvre plus de proposition. Chaque cas est gardé en
+Un mot suivi de « .- » n'ouvre plus de proposition. *[Au mesuré : cette règle
+refusait du même coup une citation qui GARDE la numérotation — « V.-A.-Le
+document unique… », « III.-Les résultats… », « VI.-Le document unique… »
+rendaient ["V"], ["III"], ["VI"]. Depuis la passe suivante, le numéro est
+retiré du texte contrôlé (jamais du verbatim), et ce qui le suit doit
+toujours ouvrir une proposition.]* Chaque cas est gardé en
 épreuve, et chaque correctif, neutralisé un à un, fait retomber la sienne.
 Les faits générateurs (`fait-dans-le-texte.test.ts`) restent verts.
+
+**Dernière passe, le même jour.** Les deux reprises ci-dessus (sigles,
+numérotation), chacune éprouvée : les trois citations numérotées passent, « a
+le document unique… » reste refusé ; « · EPI » ne rend plus que les articles
+de l'arrêté EPI. Chaque correctif neutralisé fait retomber son épreuve. Une
+entrée HORS_CORPUS doit porter verbatim, adresse Légifrance, `luLe` et
+version non vides — le type seul laissait passer une chaîne vide. **`GN 13`
+passe en `non_couvert`** avec `declareA` sur l'écran du permis de feu, sur le
+précédent de `R. 4323-63`. Aucune garde ne vérifie qu'un `declareA` désigne
+une surface réelle : `corpus.test.ts` compte seulement les manques « muets »
+(absents, « Non déclaré », `docs/`). Mouvement, mesuré en appelant le corpus :
+`non_couvert` 25 + 1 = 26, `sans_objet` 181 − 1 = 180, muets 19 → 19.
+`docs/couverture-declaree-du-produit.md` suit (26, et une famille
+« Travaux en présence du public »).
 
 **Éprouvée en la cassant** avec le défaut réel de `R. 4121-2`, remis dans
 `duerp/page.tsx` tel que `git show 48cc576^` le donne : refusé, un seul

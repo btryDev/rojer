@@ -82,10 +82,25 @@ export function estExtraitComplet(segment: string[], texte: Jeton[]): boolean {
 
 const PONCTUATION_DE_COUPE = /[,;:.—]/;
 
+/**
+ * La numérotation de Légifrance — « V.-A.- », « III.- » — retirée du texte
+ * CONTRÔLÉ, jamais du verbatim.
+ *
+ * POURQUOI (contre-lecture du 2026-09-26). La lettre de numérotation a cessé
+ * d'ouvrir une proposition, pour que « a le document unique… » ne passe plus
+ * grâce au « A » de « V.-A.- ». Du même coup, une citation qui GARDE la
+ * numérotation — « V.-A.-Le document unique… », « III.-Les résultats… » —
+ * était refusée sur son numéro seul (« V », « III »). Le numéro est un repère,
+ * pas un mot du texte : il s'efface de la citation, et ce qui le suit doit
+ * toujours ouvrir une proposition du verbatim.
+ */
+const NUMEROTATION = /(?<![\p{L}\p{N}])(?:[IVXLCDM]+|[A-Z])\.-\s*/gu;
+export const sansNumerotation = (t: string) => t.replace(NUMEROTATION, "");
+
 /** Les segments du fait qui ne sont pas un extrait complet d'un des textes. */
 export function segmentsHorsTexte(fait: string, textes: string[]): string[] {
   const sequences = textes.map(jetonsDuTexte);
-  return fait
+  return sansNumerotation(fait)
     .split(PONCTUATION_DE_COUPE)
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
@@ -133,7 +148,7 @@ export function ecartsDeCitation(citation: string, textes: string[]): string[] {
   const sequences = textes.map(jetonsDuTexte).filter((t) => t.length > 0);
   if (sequences.length === 0) return [citation];
 
-  let corps = citation.trim();
+  let corps = sansNumerotation(citation).trim();
   const suspendue = /…$/.test(corps) && !/\]\s*$/.test(corps);
   if (suspendue) corps = corps.replace(/…$/, "");
 

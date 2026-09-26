@@ -34,7 +34,7 @@ export const ARRETE_1980_LIVRE_1: Corpus = {
   url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020303816/",
   etendue: "articles_cites",
   portee:
-    "Dispositions générales (GN 1 à GN 15) applicables à tous les ERP, des deux groupes. Ni PE 1 § 1 — qui écarte le Livre II en 5ᵉ catégorie — ni aucune autre exclusion ne les restreint. Ce corpus porte à ce jour trois articles : GN 1, pour ce qu'il définit — la nomenclature des types, dont l'énumération `TypeErp` du modèle est censée être le reflet —, GN 10, l'article de champ, et GN 13, que l'écran du permis de feu cite. Les douze autres articles du Livre Ier ne sont pas dépouillés et ne figurent pas ici — l'étendue `articles_cites` le dit.",
+    "Dispositions générales (GN 1 à GN 15) applicables à tous les ERP, des deux groupes. Ni PE 1 § 1 — qui écarte le Livre II en 5ᵉ catégorie — ni aucune autre exclusion ne les restreint. Ce corpus porte à ce jour trois articles : GN 1, pour ce qu'il définit — la nomenclature des types, dont l'énumération `TypeErp` du modèle est censée être le reflet —, GN 10, l'article de champ, et GN 13, que l'écran du permis de feu cite et que le référentiel ne porte pas (`non_couvert`). Les douze autres articles du Livre Ier ne sont pas dépouillés et ne figurent pas ici — l'étendue `articles_cites` le dit.",
   articles: [
     {
       ref: "GN 1",
@@ -128,9 +128,13 @@ export const ARRETE_1980_LIVRE_1: Corpus = {
         "Interdit à l'exploitant d'effectuer ou de faire effectuer, en présence du public, des travaux qui mettraient le public en danger ou gêneraient son évacuation.",
       citationCle:
         "L'exploitant ne peut effectuer ou faire effectuer, en présence du public, des travaux qui feraient courir un danger quelconque à ce dernier ou qui apporteraient une gêne pour son évacuation.",
-      statut: "sans_objet",
+      statut: "non_couvert",
       motif:
-        "Consigné le 2026-09-26 parce que l'écran du permis de feu en affiche le texte entre guillemets, et qu'aucun corpus ne le portait : l'extrait n'était confronté à rien (`verbatim/extraits-affiches.test.ts`). Un seul alinéa, section 4 « Travaux » du Livre Ier. C'est une INTERDICTION, sans pièce ni rythme : rien ne s'en inscrit au calendrier. Il ne prescrit pas de permis de feu — l'écran le dit déjà.\n\nPOURQUOI `sans_objet` ET NON `non_couvert`, alors qu'un précédent existe. `R. 4323-63` (`code-travail-travail-en-hauteur`), interdiction elle aussi, et qui vise elle aussi les établissements servis, est classé `non_couvert` : son motif est que « le produit n'en dit rien ». C'est ce motif, et non la nature d'interdiction, qui fait le classement. Il ne vaut pas ici : l'écran du permis de feu, là où des travaux se préparent, affiche le texte de `GN 13` mot pour mot. Si cet affichage était retiré, le précédent s'appliquerait, et l'entrée passerait en `non_couvert`.",
+        "Consigné le 2026-09-26 parce que l'écran du permis de feu en affiche le texte entre guillemets, et qu'aucun corpus ne le portait : l'extrait n'était confronté à rien (`verbatim/extraits-affiches.test.ts`). Un seul alinéa, section 4 « Travaux » du Livre Ier. C'est une INTERDICTION qui vise tout exploitant d'ERP, donc la cible du produit — restaurant, commerce, bureau recevant du public —, et que le référentiel ne porte pas : ni pièce ni rythme, rien ne s'en inscrit au calendrier. Il ne prescrit pas de permis de feu — l'écran le dit déjà.",
+      declareA:
+        "src/app/etablissements/[id]/permis-feu/page.tsx — la pastille « Art. GN 13 · Règlement ERP » de la carte « Pourquoi cette page », qui en affiche le texte mot pour mot, avec son lien Légifrance.",
+      historique:
+        "Classé `sans_objet` le 2026-09-26 (752933f, motif argumenté en 8e40d19), reclassé `non_couvert` le même jour après contre-lecture. Le précédent du dépôt tranche : `R. 4323-63`, interdiction qui vise elle aussi la cible et que le référentiel ne porte pas, est `non_couvert`, et `corpus.test.ts` dit que le reclasser en `sans_objet` serait « une rustine », « en niant une obligation qui existe ». Le motif de 8e40d19 — `sans_objet` parce que l'écran affiche le texte — confondait une ADRESSE (ce que `declareA` porte) avec l'absence d'obligation.",
     },
   ],
 };
