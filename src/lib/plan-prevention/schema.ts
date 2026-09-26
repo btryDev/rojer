@@ -3,6 +3,9 @@ import { depuisCleJourCivil, depuisSaisieDateHeure } from "@/lib/dates";
 import {
   EXTRAIT_R4512_12,
   FAIT_DUREE_NON_RENSEIGNEE,
+  PHRASE_R4512_2,
+  PHRASE_R4512_6,
+  PHRASE_R4512_7,
   type EtatEcrit,
 } from "./annonces-plan";
 
@@ -235,10 +238,11 @@ export function diagnostiquerPlan(params: {
   // est obligatoire ET quand Rojer ne peut pas dire qu'il ne l'est pas. Aucun
   // délai ajouté — l'article n'en fixe pas.
   const r4512_12 = `Art. R. 4512-12 : « ${EXTRAIT_R4512_12} »`;
-  const PLAN_DU =
-    "Le plan reste dû : il naît de l'analyse conjointe dès qu'un risque d'interférence existe, quelle que soit la durée (art. R. 4512-6).";
-  const RESTE_A_FAIRE =
-    "L'inspection commune préalable et l'accord sur les mesures, eux, restent à faire avant le début des travaux.";
+  // Chaque article avec ses mots et son moment : l'inspection « préalablement
+  // à l'exécution de l'opération » (R. 4512-2), l'accord « avant le début des
+  // travaux » (R. 4512-6), l'écrit dans ses DEUX cas (R. 4512-7). Aucun
+  // « restent à faire » : le diagnostic ne sait pas si l'inspection a eu lieu.
+  const TEXTES = `${PHRASE_R4512_7} ${PHRASE_R4512_2} ${PHRASE_R4512_6}`;
   return {
     ecrit,
     ecritObligatoire,
@@ -246,9 +250,9 @@ export function diagnostiquerPlan(params: {
     raisons,
     recommandation:
       ecrit === "obligatoire"
-        ? `Un plan de prévention ÉCRIT est obligatoire avant démarrage des travaux. ${r4512_12}`
+        ? `${TEXTES} ${r4512_12}`
         : ecrit === "indetermine"
-          ? `${PLAN_DU} ${FAIT_DUREE_NON_RENSEIGNEE} ${RESTE_A_FAIRE} ${r4512_12}`
-          : `${PLAN_DU} Ce sont les 400 heures qui commandent l'écrit, et elles ne sont pas atteintes ici. ${RESTE_A_FAIRE}`,
+          ? `${FAIT_DUREE_NON_RENSEIGNEE} ${TEXTES} ${r4512_12}`
+          : `Durée saisie : ${params.dureeHeuresEstimee} heures ; travaux non déclarés dangereux. ${TEXTES}`,
   };
 }

@@ -1142,6 +1142,28 @@ sur les trois surfaces. `ecritObligatoire` garde son sens (obligatoire
 seulement) pour la pastille et la carte « Pourquoi l'écrit est obligatoire »
 de la fiche.
 
+**Le diagnostic, remis sur ses textes** (seconde reprise). `R. 4512-2`,
+`R. 4512-6` et `R. 4512-7` relus sur leur page propre le 2026-09-26, la
+formulation décisive confirmée deux fois ; verbatims du corpus exacts ; `luLe` passé au 2026-09-26, `lecture` laissée `agent_verbatim` (mention de version non relevée ce jour). Trois
+défauts du diagnostic, antérieurs au lot : (1) « quelle que soit la durée
+(art. R. 4512-6) » — `R. 4512-6` ne contient pas le mot « durée » ; ces mots
+ouvrent le 2° de `R. 4512-7` (« Quelle que soit la durée prévisible de
+l'opération »). (2) « L'inspection commune préalable et l'accord sur les
+mesures, eux, restent à faire avant le début des travaux » — l'inspection
+a lieu « préalablement à l'exécution de l'opération réalisée par une
+entreprise extérieure » (`R. 4512-2`, qui ne contient pas « travaux ») ;
+seul l'accord est « avant le début des travaux » (`R. 4512-6`) ; et « restent
+à faire » s'affichait même quand une inspection est datée. (3) « Ce sont les
+400 heures qui commandent l'écrit » taisait le 2° de `R. 4512-7`, comme
+« EE ≥ 400 h » dans `00_README.txt`. Désormais chaque article a sa phrase,
+ses mots entre guillemets et son moment (`PHRASE_R4512_2`, `_6`, `_7` dans
+`annonces-plan.ts`, fragments confrontés au verbatim de LEUR article) ; aucun
+« reste à faire » ; les deux cas de l'écrit partout, README compris ; sous le
+seuil, le fait « Durée saisie : N heures ; travaux non déclarés dangereux. »
+remplace la conclusion. `seuil.test.ts` tenait l'ancienne phrase ; ses deux
+tests sont réécrits sur les nouvelles, et deux s'ajoutent (« durée » jamais
+attribuée à `R. 4512-6`, les deux cas de l'écrit).
+
 **La garde, et ce qu'elle mesure.** Deux fichiers.
 `annonces-plan.test.ts` : chaque texte égal au `citationCle` du corpus et
 chaque URL à la sienne ; le chapeau et les deux items de `R. 4512-12`
@@ -1152,26 +1174,48 @@ diagnostic et les lignes du ZIP citent `R. 4512-12` entier ou pas du tout ;
 la route du ZIP appelle `lignesR4512_12Zip(p)` une fois, avec le plan de la
 boucle, et n'a aucune autre voie vers ces lignes (contrôle du SOURCE : la
 route n'est pas rendue en test) ; aucune seconde copie des textes dans
-`src/` hors corpus. `annonces-surfaces.test.tsx` REND la fiche (page réelle,
-requêtes et composants de signature doublés) dans les trois états et le
-formulaire au premier affichage (état indéterminé), et y cherche chaque texte
-ENTIER, chaque pastille avec son lien, l'ordre pastille → citation, et
-l'absence de « pendant les travaux ». **Ce qu'elle ne prouve pas** : qu'une
-surface n'ajoute pas une phrase de son cru à côté des textes ; les états
-« obligatoire » et « non imposé » du formulaire (qui ne se rendent qu'après
-saisie) ne sont tenus que par le diagnostic ; la route, par son source.
+`src/` hors corpus. `annonces-surfaces.test.tsx` REND la page réelle de la fiche dans les trois
+états et le formulaire au premier affichage (état indéterminé), et y cherche
+chaque texte ENTIER, chaque pastille avec son lien, l'ordre pastille →
+citation, l'absence de « pendant les travaux », et le contenu de la carte
+« Ce que d'autres articles demandent au plan » lu dans son HTML, du titre à
+la fin de sa liste. **Doublures, toutes** : `LegalBadge` (la vraie ne rend
+son lien qu'une fois dépliée ; la doublure rend référence et lien — **le lien
+n'est donc vérifié que sur la doublure**, pas sur la pastille réelle) ;
+`next/navigation` (`useRouter`, `usePathname`, `notFound`) ; les actions
+serveur de `plan-prevention/actions` ; `getPlanPrevention` de
+`plan-prevention/queries` (un plan construit par le test, sans base) ;
+`DemanderSignatureForm` ; `BoutonCloturer` et `BoutonSupprimerPlan`.
+**Ce qu'elle ne prouve pas** : qu'une surface n'ajoute pas une phrase de son
+cru à côté des textes ; les états « obligatoire » et « non imposé » du
+formulaire (qui ne se rendent qu'après saisie) ne sont tenus que par le
+diagnostic ; la route, par son source ; le lien de la pastille réelle.
 
-**Éprouvée** : vingt et une injections, toutes rouges, fichiers restaurés
-après chacune. Les cinq défauts que la première garde laissait passer
+**Éprouvée.** ~~Vingt et une injections, toutes rouges~~ [2026-09-26 : faux
+— la vérification ciblée de `562f848` a rangé `R. 4512-1` dans la carte
+« demandent au plan » et la suite est restée verte ; le test qui devait
+l'interdire s'arrêtait sur la pastille « Art. R. 4512-1 CT », qui porte le
+même libellé que le titre qu'il cherchait]. Après correction : **vingt-huit
+injections, les vingt-huit rouges**, fichiers restaurés après chacune. Quatre
+exécutions ont figé vitest (constat « À faire », copie dans la fiche,
+« quelle que soit la durée (art. R. 4512-6) », 2° de R. 4512-7 retiré) : elles
+ont été arrêtées — seuls les processus de ce worktree, identifiés par leur
+répertoire —, puis rejouées une à une, rouges toutes les quatre. La liste : Les cinq défauts que la première garde laissait passer
 (condition de la carte forcée à vrai ; chapeau `R. 4512-12` supprimé de la
 fiche ; état écrit en dur dans la route, équivalent du `|| true`, et plan
 retouché ; `{CHAPITRE_R4512}` retiré du formulaire ; `R4512_9` tronqué en
 place, sur la fiche et sur le formulaire) ; les trois mots que le filtre
 ratait (« délais », « N’oubliez », « À faire ») ; la durée manquante rabattue
 sur « non imposé » ; le titre « pendant les travaux » rétabli ; la pastille
-remise après la citation ; un lien retiré du formulaire ; et les sept de la
+remise après la citation ; un lien retiré du formulaire ; les sept de la
 première passe (paraphrases du corpus et du brief, constat qui avise, copie
-recopiée, constante contournée, recommandation amputée).
+recopiée, constante contournée, recommandation amputée) ; et sept de la
+seconde reprise : `R. 4512-1` rangé dans la carte « demandent au plan »
+(l'injection exacte de la vérification ciblée), « Le plan reste dû […]
+quelle que soit la durée (art. R. 4512-6) » rétabli, « restent à faire »
+rétabli, l'inspection rattachée au moment de l'accord, le 2° de R. 4512-7
+retiré, « EE ≥ 400 h » rétabli dans le README, le seuil de R. 4512-7
+paraphrasé.
 
 **Rayé au corpus**, daté : les deux « pas de déclencheur / d'axe événement »
 (`R. 4512-1`, `R. 4512-12` — la page « Quand ça arrive » existe, ADR-037, sans

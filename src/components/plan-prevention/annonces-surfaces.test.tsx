@@ -184,12 +184,22 @@ describe("fiche du plan : ce qui s'y lit, dans les trois états de l'écrit", ()
   });
 
   it("R. 4512-1 n'est pas rangé parmi ce que d'autres articles « demandent au plan »", async () => {
-    const { lu } = await rendreFiche({ dureeHeuresEstimee: 30, travauxDangereux: false });
-    const debut = lu.indexOf("Ce que d'autres articles demandent au plan");
-    const suivant = lu.indexOf("Art. R. 4512-1 ", debut); // le titre de la carte suivante
+    // Borné par ce que la carte contient, pas par un libellé qui se répète :
+    // la première version s'arrêtait sur « Art. R. 4512-1 » — que porte aussi
+    // la pastille de R. 4512-1 elle-même — et restait verte quand on
+    // rangeait l'article dans la carte (contre-lecture du 2026-09-26). On lit
+    // donc le HTML de la carte, du titre jusqu'à la fin de sa liste.
+    const { html } = await rendreFiche({ dureeHeuresEstimee: 30, travauxDangereux: false });
+    const debut = html.indexOf("Ce que d&#x27;autres articles demandent au plan");
     expect(debut).toBeGreaterThanOrEqual(0);
-    const carte = lu.slice(debut, suivant > debut ? suivant : undefined);
+    const fin = html.indexOf("</ul>", debut);
+    expect(fin).toBeGreaterThan(debut);
+    const carte = texte(html.slice(debut, fin));
+    for (const t of [R4512_9, R4512_11, R4463_8]) expect(contient(carte, t)).toBe(true);
+    expect(carte).not.toContain("[Art. R. 4512-1 CT]");
     expect(carte).not.toContain(R4512_1.slice(0, 50));
+    // Et il reste dit ailleurs sur la fiche.
+    expect(contient(texte(html), R4512_1)).toBe(true);
   });
 });
 

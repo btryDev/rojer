@@ -10,6 +10,12 @@
 // Module **pur** : la route lui passe ce qu'elle a lu.
 
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
+import {
+  R4512_7_1_SEUIL,
+  R4512_7_2_DUREE,
+  R4512_7_2_LISTE,
+  R4512_7_ECRIT,
+} from "@/lib/plan-prevention/annonces-plan";
 import type { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
 import { ligneDuerp, ligneVerifsEnRetard } from "./checklist-controle";
@@ -143,7 +149,11 @@ export function genererReadme(args: {
     " [ ] Registre d'accessibilité affiché (ERP) — QR code en entrée",
     " [ ] Formation sécurité du personnel à jour",
     " [ ] Permis de feu signés avant tout travail par point chaud",
-    " [ ] Plans de prévention signés avant toute intervention EE ≥ 400 h",
+    // Les DEUX cas de R. 4512-7 : « EE ≥ 400 h » taisait le 2°, les travaux
+    // dangereux, « quelle que soit la durée prévisible de l'opération »
+    // (contre-lecture du 2026-09-26). « Signés » n'était pas dans le texte :
+    // l'article dit « établi par écrit et arrêté ».
+    ` [ ] Plans de prévention « ${R4512_7_ECRIT} » (art. R. 4512-7) : 1° opération « ${R4512_7_1_SEUIL} » ; 2° « ${R4512_7_2_LISTE} » par arrêté, « ${R4512_7_2_DUREE.charAt(0).toLowerCase()}${R4512_7_2_DUREE.slice(1)} »`,
     " [ ] Carnet sanitaire renseigné, si votre eau chaude collective alimente des points d'usage à risque accessibles au public — température mensuelle, légionelles annuelles au minimum",
     "",
     "────────────────────────────────────────────────────────────",

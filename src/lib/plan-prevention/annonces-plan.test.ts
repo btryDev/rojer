@@ -20,7 +20,16 @@ import {
   CONSTAT_R4512_12,
   EXTRAIT_R4512_12,
   FAIT_DUREE_NON_RENSEIGNEE,
+  PHRASE_R4512_2,
+  PHRASE_R4512_6,
+  PHRASE_R4512_7,
   R4463_8,
+  R4512_2_MOMENT,
+  R4512_6_MOMENT,
+  R4512_7_1_SEUIL,
+  R4512_7_2_DUREE,
+  R4512_7_2_LISTE,
+  R4512_7_ECRIT,
   R4512_1,
   R4512_9,
   R4512_11,
@@ -65,6 +74,39 @@ describe("cinq articles écrits une fois, et dans leurs mots", () => {
     expect(refs[0]).toBe("R. 4512-1");
     expect(refs.at(-1)).toBe("R. 4512-16");
     expect(CHAPITRE_R4512).toContain("articles R. 4512-1 à R. 4512-16");
+  });
+});
+
+describe("le diagnostic : R. 4512-2, -6 et -7 dans leurs mots", () => {
+  it.each([
+    ["R. 4512-2", R4512_2_MOMENT],
+    ["R. 4512-6", R4512_6_MOMENT],
+    ["R. 4512-7", R4512_7_ECRIT],
+    ["R. 4512-7", R4512_7_1_SEUIL],
+    ["R. 4512-7", R4512_7_2_LISTE],
+    ["R. 4512-7", R4512_7_2_DUREE],
+  ])("%s : « %s » est dans le verbatim de CET article", (ref, fragment) => {
+    expect(verbatim(ref)).toContain(fragment);
+  });
+
+  it("chaque moment est rattaché au sien, et à aucun autre", () => {
+    // Le défaut corrigé : « avant le début des travaux » valait pour
+    // l'inspection, et « quelle que soit la durée » pour R. 4512-6.
+    expect(verbatim("R. 4512-2")).not.toContain(R4512_6_MOMENT);
+    expect(verbatim("R. 4512-6")).not.toMatch(/durée/);
+    expect(PHRASE_R4512_2).toContain(R4512_2_MOMENT);
+    expect(PHRASE_R4512_6).toContain(R4512_6_MOMENT);
+  });
+
+  it.each([
+    [400, false],
+    [null, true],
+    [null, false],
+    [12, false],
+  ] as const)("durée %s, dangereux %s : les trois articles, les deux cas de l'écrit", (duree, dangereux) => {
+    const r = diagnostiquerPlan({ dureeHeuresEstimee: duree, travauxDangereux: dangereux }).recommandation;
+    for (const p of [PHRASE_R4512_7, PHRASE_R4512_2, PHRASE_R4512_6]) expect(r).toContain(p);
+    expect(r).not.toMatch(/restent? à faire|quelle que soit la durée \(art\. R\. 4512-6\)|400 heures qui commandent/);
   });
 });
 

@@ -71,19 +71,37 @@ describe("sous le seuil, ce qui reste dû", () => {
     expect(sousLeSeuil.ecritObligatoire).toBe(false);
   });
 
-  it("il dit que le plan lui-même reste dû", () => {
+  // Réécrits le 2026-09-26 (contre-lecture de C30) : la phrase qu'ils
+  // tenaient, « le plan reste dû […] quelle que soit la durée (art.
+  // R. 4512-6) », attribuait à R. 4512-6 des mots qui ouvrent le 2° de
+  // R. 4512-7, et rangeait l'inspection sous le moment de l'accord. Ce qui
+  // est tenu désormais : chaque acte, avec son article et SON moment.
+  it("il dit que le plan lui-même est arrêté, par R. 4512-6, avant le début des travaux", () => {
     expect(
       sousLeSeuil.recommandation,
       "Le message sous le seuil ne dit pas que le plan est dû : le dirigeant " +
         "lit qu'il n'a rien à faire tant qu'il n'atteint pas 400 heures.",
-    ).toMatch(/plan reste dû/i);
+    ).toContain(
+      "Art. R. 4512-6 : lorsque des risques d'interférence existent, les employeurs arrêtent d'un commun accord le plan de prévention « avant le début des travaux ».",
+    );
   });
 
-  it("il nomme les deux actes qui ne dépendent d'aucun seuil", () => {
-    // Coordonner et inspecter — c'est la phrase de R. 4512-6 et celle de
-    // R. 4512-2, les deux que la durée ne conditionne pas.
-    expect(sousLeSeuil.recommandation).toMatch(/inspection commune/i);
-    expect(sousLeSeuil.recommandation).toMatch(/accord sur les mesures/i);
+  it("il nomme l'inspection commune avec le moment de R. 4512-2, pas celui de l'accord", () => {
+    expect(sousLeSeuil.recommandation).toContain(
+      "Art. R. 4512-2 : l'inspection commune a lieu « préalablement à l'exécution de l'opération réalisée par une entreprise extérieure ».",
+    );
+    expect(sousLeSeuil.recommandation).not.toMatch(/restent? à faire/i);
+  });
+
+  it("« quelle que soit la durée » n'est jamais attribué à R. 4512-6", () => {
+    for (const d of [sousLeSeuil, diagnostiquerPlan({ dureeHeuresEstimee: null, travauxDangereux: false })]) {
+      expect(d.recommandation).not.toMatch(/quelle que soit la durée[^.]*R\. 4512-6/i);
+    }
+  });
+
+  it("il dit les deux cas de l'écrit, pas seulement les 400 heures", () => {
+    expect(sousLeSeuil.recommandation).toMatch(/1° [^;]*400 heures/);
+    expect(sousLeSeuil.recommandation).toMatch(/2° [^.]*travaux dangereux[^.]*quelle que soit la durée prévisible/);
   });
 
   it("il ne présente plus l'écrit comme une précaution contre le litige", () => {

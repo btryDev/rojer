@@ -135,7 +135,10 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       intitule: "Inspection commune préalable",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529795",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
+      // Verbatim relu sur sa page propre le 2026-09-26 (C30, diagnostic) :
+      // identique. `lecture` inchangée — la mention de version de la page
+      // n'a pas été relevée ce jour, et `premiere_main` la demande.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Une inspection commune des lieux de travail, des installations et des matériels mis à disposition est faite préalablement à l'exécution de toute opération réalisée par une entreprise extérieure, sans condition de durée ni de nature des travaux.",
@@ -195,7 +198,10 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       intitule: "Analyse conjointe des risques et plan de prévention",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529785",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
+      // Verbatim relu sur sa page propre le 2026-09-26 (C30, diagnostic) :
+      // identique. `lecture` inchangée — la mention de version de la page
+      // n'a pas été relevée ce jour, et `premiere_main` la demande.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Les chefs des entreprises utilisatrice et extérieures analysent en commun les risques d'interférence au vu de l'inspection commune ; lorsque ces risques existent, ils arrêtent d'un commun accord, avant le début des travaux, un plan de prévention définissant les mesures de chacun.",
@@ -210,7 +216,10 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       intitule: "Cas où le plan de prévention est établi par écrit",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529783",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
+      // Verbatim relu sur sa page propre le 2026-09-26 (C30, diagnostic) :
+      // identique. `lecture` inchangée — la mention de version de la page
+      // n'a pas été relevée ce jour, et `premiere_main` la demande.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Le plan est établi par écrit et arrêté avant le commencement des travaux dans deux cas : au moins 400 heures de travail prévisibles sur une période inférieure ou égale à douze mois, ou travaux figurant sur la liste de travaux dangereux fixée par arrêté, quelle que soit la durée.",

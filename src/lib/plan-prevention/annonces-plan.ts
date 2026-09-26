@@ -49,6 +49,42 @@ export const EXTRAIT_R4512_12 =
 export const URL_R4512_12 =
   "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529773";
 
+// ── R. 4512-2, R. 4512-6, R. 4512-7 — le diagnostic, dans leurs mots ──────
+/**
+ * POURQUOI ICI. Le diagnostic écrivait « quelle que soit la durée
+ * (art. R. 4512-6) » — ces mots ouvrent le 2° de R. 4512-7, R. 4512-6 ne les
+ * porte pas —, rangeait l'inspection commune et l'accord sous un même « avant
+ * le début des travaux » qui n'est que celui de R. 4512-6, disait « restent à
+ * faire » même quand une inspection est datée, et « ce sont les 400 heures qui
+ * commandent l'écrit » en taisant le 2° de R. 4512-7 (contre-lecture du
+ * 2026-09-26). Chaque article garde ici ses mots, entre guillemets, relus sur
+ * sa page propre le 2026-09-26 et confrontés au corpus par le test.
+ */
+export const R4512_2_MOMENT =
+  "préalablement à l'exécution de l'opération réalisée par une entreprise extérieure";
+export const R4512_6_MOMENT = "avant le début des travaux";
+export const R4512_7_ECRIT = "établi par écrit et arrêté avant le commencement des travaux";
+export const R4512_7_1_SEUIL =
+  "égal au moins à 400 heures sur une période inférieure ou égale à douze mois";
+export const R4512_7_2_LISTE = "travaux dangereux figurant sur une liste fixée";
+export const R4512_7_2_DUREE = "Quelle que soit la durée prévisible de l'opération";
+
+const minuscule = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
+
+/** Les deux cas de l'écrit, 1° ET 2° — jamais l'un sans l'autre. */
+export const PHRASE_R4512_7 =
+  `Art. R. 4512-7 : le plan de prévention est « ${R4512_7_ECRIT} » dans deux cas — ` +
+  `1° un nombre total d'heures de travail prévisible « ${R4512_7_1_SEUIL} » ; ` +
+  `2° des « ${R4512_7_2_LISTE} » par arrêté, « ${minuscule(R4512_7_2_DUREE)} ».`;
+
+/** Le moment de l'inspection — le sien, pas celui de l'accord. Aucun « reste à faire ». */
+export const PHRASE_R4512_2 =
+  `Art. R. 4512-2 : l'inspection commune a lieu « ${R4512_2_MOMENT} ».`;
+
+/** Le moment de l'accord. « Ces risques » du texte : ceux d'interférence de sa première phrase. */
+export const PHRASE_R4512_6 =
+  `Art. R. 4512-6 : lorsque des risques d'interférence existent, les employeurs arrêtent d'un commun accord le plan de prévention « ${R4512_6_MOMENT} ».`;
+
 /**
  * TROIS ÉTATS, ET NON DEUX. `R. 4512-7` rend l'écrit obligatoire à 400 heures
  * ou sur travaux dangereux. La durée est facultative à la saisie : quand elle
