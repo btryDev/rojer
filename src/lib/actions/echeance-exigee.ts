@@ -22,6 +22,7 @@
 // constante nommée, la règle est pure et testée.
 
 import {
+  mentionAConfirmer,
   seuilEntrepriseAtteint,
   type EffectifsDeclares,
 } from "@/lib/matching/effectif-entreprise";
@@ -56,7 +57,7 @@ export function exigenceEcheanceActions(
     return {
       exigee: true,
       mention: seuil.aConfirmer
-        ? "à dater, à confirmer — l'entreprise est déclarée sous cinquante salariés, ce site en compte cinquante ou plus"
+        ? `à dater, ${mentionAConfirmer(SEUIL_CALENDRIER_ACTIONS)}`
         : "à dater — votre programme annuel doit porter un calendrier",
       reference: seuil.aConfirmer
         ? "Art. L. 4121-3-1 CT · à confirmer"

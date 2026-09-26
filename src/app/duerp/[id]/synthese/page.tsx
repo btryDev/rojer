@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { CarteMiseAJour } from "@/components/duerps/CarteMiseAJour";
+import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import { CreerVersionForm } from "@/components/duerps/CreerVersionForm";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import {
@@ -20,7 +21,7 @@ import {
   formaterDateLongueFr,
   joursCivilsEntre,
 } from "@/lib/dates";
-import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
+import { EFFECTIF_MAJ_ANNUELLE, evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { listerVersions } from "@/lib/versions/queries";
 import type { TypeMesure } from "@/lib/referentiels/types";
 import { L4121_2_3, L4121_2_8 } from "@/lib/verbatim/l4121-2-ordre";
@@ -113,13 +114,16 @@ export default async function SynthesePage({
     },
     aujourdhui,
   );
-  const { majEchue, jamaisValide } = etatDuerp;
+  const { majEchue, jamaisValide, majAnnuelleAConfirmer } = etatDuerp;
   // Deux situations, deux états — et pas le même. L'échéance annuelle
   // dépassée est un retard : le champ rose le dit. Un dossier dont aucune
   // version n'a jamais été figée n'a, lui, aucune échéance dépassée : c'est
   // l'absence de rendez-vous, donc l'ardoise (charte, interdits 3 et 4).
   // La table d'états est celle du calendrier, jamais une locale.
-  const etatMaj = majEchue ? "enRetard" : "aPlanifier";
+  // Une échéance retenue par la seule prudence (C37 : entreprise déclarée
+  // sous onze, site à onze ou plus) ne se peint pas en retard : on ne sait
+  // pas qu'elle est due.
+  const etatMaj = majEchue && !majAnnuelleAConfirmer ? "enRetard" : "aPlanifier";
 
   return (
     <div className="flex flex-col gap-[22px]">
@@ -138,7 +142,9 @@ export default async function SynthesePage({
             >
               {jamaisValide
                 ? "Aucune version validée · art. R. 4121-1"
-                : "Mise à jour requise · art. R. 4121-2"}
+                : majAnnuelleAConfirmer
+                  ? "Mise à jour à confirmer · art. R. 4121-2"
+                  : "Mise à jour requise · art. R. 4121-2"}
             </p>
             {/* L'effectif ne se montre que là où il décide de quelque
                 chose — c'est-à-dire sur l'échéance annuelle du 1°. Sur un
@@ -176,6 +182,12 @@ export default async function SynthesePage({
                 . L&apos;art. R. 4121-2, 1°, prévoit une mise à jour « au moins
                 chaque année dans les entreprises d&apos;au moins onze salariés ». Créez une
                 nouvelle version pour figer l&apos;état à jour.
+                {majAnnuelleAConfirmer ? (
+                  <>
+                    {" "}
+                    Échéance {mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}.
+                  </>
+                ) : null}
               </>
             )}
           </p>

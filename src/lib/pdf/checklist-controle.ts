@@ -20,6 +20,8 @@
 // `route.test.ts` sous `controle-zip/`. Ces deux règles vivent donc ici, où
 // elles peuvent être éprouvées.
 
+import { EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
+import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import type { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { faitRetards, type LectureRetards } from "./fait-retards";
 
@@ -54,6 +56,14 @@ export function ligneDuerp(etat: EtatDuerpLu | null, lu = true): string {
       ? " [x] DUERP : version de moins de 12 mois"
       : " [ ] DUERP : version de plus de 12 mois — la mise à jour annuelle" +
           " ne vous est pas exigée (moins de 11 salariés)";
+  }
+  if (etat.majAnnuelleAConfirmer) {
+    // Soumis par la seule prudence commune aux seuils d'entreprise (C37) :
+    // la pièce remise au contrôleur n'affirme pas une échéance échue — ni
+    // « [!] » ni « [x] » sur un seuil qu'on ne sait pas atteint.
+    return etat.estAJour
+      ? " [x] DUERP à jour depuis moins de 12 mois"
+      : ` [ ] DUERP : version de plus de 12 mois — mise à jour annuelle (art. R. 4121-2) ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}`;
   }
   return etat.estAJour
     ? " [x] DUERP à jour depuis moins de 12 mois"

@@ -82,3 +82,14 @@ export function phraseEffectifAConfirmer(
     "l'entreprise."
   );
 }
+
+/**
+ * La mention COURTE, la même sur chaque surface qui annonce un seuil
+ * d'entreprise atteint par prudence seulement — checklist du contrôle, outil
+ * MCP, recommandations, synthèse du document unique, écran des actions
+ * (contre-lecture C37). La phrase longue (`phraseEffectifAConfirmer`) vit là où
+ * il y a la place de dire de quoi conclure.
+ */
+export function mentionAConfirmer(seuil: number): string {
+  return `à confirmer : l'entreprise est déclarée sous ${seuil} salariés, ce site en compte ${seuil} ou plus`;
+}

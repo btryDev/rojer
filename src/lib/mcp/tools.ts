@@ -26,7 +26,8 @@ import type { StatutAction } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
 import { estVerificationRealisee } from "@/lib/dates/retard";
 import { LIBELLE_SANS_ECHEANCE } from "@/lib/calendrier/etats";
-import { ageEnMois } from "@/lib/dashboard/duerp";
+import { ageEnMois, EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
+import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import {
   getEtatDuerp,
   getNomEtablissement,
@@ -141,7 +142,9 @@ function formaterFiche(f: FicheEtablissement): string {
  * constate qu'une échéance de mise à jour est ou non dépassée, il ne dit
  * jamais que le dossier est « conforme ».
  */
-function formaterEtatDuerp(d: EtatDuerpLu): string {
+// Exportée pour `maj-a-confirmer.test.ts` : chaque sortie qui lit
+// `soumisMajAnnuelle` y est confrontée au cas « à confirmer ».
+export function formaterEtatDuerp(d: EtatDuerpLu): string {
   if (!d.existe || !d.etat) {
     return "Aucun DUERP n'a encore été ouvert pour cet établissement.";
   }
@@ -164,16 +167,23 @@ function formaterEtatDuerp(d: EtatDuerpLu): string {
     lignes.push(
       `Effectif de ${d.effectifEntreprise} salariés : le 1° de l'art. R. 4121-2 (« ${enMinuscule(MAJ_DUERP_ANNUELLE)} ») ne s'applique pas. Ses 2° et 3° valent quel que soit l'effectif : la mise à jour est réalisée « ${enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)} » et « ${enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} ».`,
     );
-  } else if (e.majEchue) {
-    lignes.push(
-      e.dateLimiteMaj
-        ? `Mise à jour annuelle échue depuis le ${formaterDateFr(e.dateLimiteMaj)}.`
-        : "Mise à jour annuelle échue.",
-    );
-  } else if (e.rappelMajProche && e.dateLimiteMaj) {
-    lignes.push(`Mise à jour annuelle à prévoir avant le ${formaterDateFr(e.dateLimiteMaj)}.`);
-  } else if (e.dateLimiteMaj) {
-    lignes.push(`Prochaine mise à jour annuelle attendue le ${formaterDateFr(e.dateLimiteMaj)}.`);
+  } else {
+    // Soumis par la seule prudence (C37) : la ligne le dit, dans les mots des
+    // autres surfaces.
+    const doute = e.majAnnuelleAConfirmer
+      ? ` (${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)})`
+      : "";
+    if (e.majEchue) {
+      lignes.push(
+        e.dateLimiteMaj
+          ? `Mise à jour annuelle échue depuis le ${formaterDateFr(e.dateLimiteMaj)}${doute}.`
+          : `Mise à jour annuelle échue${doute}.`,
+      );
+    } else if (e.rappelMajProche && e.dateLimiteMaj) {
+      lignes.push(`Mise à jour annuelle à prévoir avant le ${formaterDateFr(e.dateLimiteMaj)}${doute}.`);
+    } else if (e.dateLimiteMaj) {
+      lignes.push(`Prochaine mise à jour annuelle attendue le ${formaterDateFr(e.dateLimiteMaj)}${doute}.`);
+    }
   }
 
   const nbRisques = d.unites.reduce((s, u) => s + u.risques.length, 0);
