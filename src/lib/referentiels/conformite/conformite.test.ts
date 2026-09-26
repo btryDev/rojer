@@ -706,8 +706,20 @@ describe("référentiel conformité — seuils d'effectif", () => {
     // au titre du texte. Le livre II, titre Ier, se reconnaît à ses préfixes
     // de chapitre (GE, CO, AM, DF, CH, GZ, EL, EC, AS, GC, MS).
     const LIVRE_2 = /^(GE|CO|AM|DF|CH|GZ|EL|EC|AS|GC|MS) \d/;
+    // `livre II(?!I)` : « livre III » n'est pas le livre II, et l'accepter
+    // laissait passer une référence qui dirait le contraire (contre-lecture
+    // de 546a54c).
     const DIT_SON_CHAMP =
-      /livre II|quatre premières catégories|4 premières catégories|PAS applicable en 5ᵉ/;
+      /livre II(?!I)|quatre premières catégories|4 premières catégories|PAS applicable en 5ᵉ/;
+    // La description dit la sur-application quand l'article FONDATEUR
+    // (`referencesLegales[0]`) est du livre II : sans elle, l'exploitant lit
+    // une référence réservée aux quatre premières catégories ET une échéance
+    // à son calendrier, sans savoir pourquoi les deux coexistent. Une ligne
+    // qui ne cite le livre II qu'en contexte n'est pas une sur-application et
+    // ne doit pas se dire telle : la visite de commission de 5ᵉ cite GE 4
+    // pour dire qu'il ne s'y applique PAS, le contrôle quinquennal des
+    // ascenseurs est fondé ailleurs et cite AS 9 pour les catégories 1 à 4.
+    const DIT_LA_SUR_APPLICATION = /sur-application assumée/;
     const servieAuxN5 = (erp: unknown): boolean => {
       if (erp === true) return true;
       if (!erp || typeof erp !== "object") return false;
@@ -715,6 +727,7 @@ describe("référentiel conformité — seuils d'effectif", () => {
       return !categories || categories.includes("N5");
     };
     const muettes: string[] = [];
+    const descriptionsMuettes: string[] = [];
     for (const o of obligationsConformite) {
       if (!servieAuxN5(o.typologies.erp)) continue;
       for (const r of o.referencesLegales) {
@@ -723,8 +736,13 @@ describe("référentiel conformité — seuils d'effectif", () => {
           muettes.push(`${o.id} — ${r.reference}`);
         }
       }
+      const fondeSurLeLivre2 = LIVRE_2.test(o.referencesLegales[0].article ?? "");
+      if (fondeSurLeLivre2 && !DIT_LA_SUR_APPLICATION.test(o.description ?? "")) {
+        descriptionsMuettes.push(o.id);
+      }
     }
     expect(muettes).toEqual([]);
+    expect(descriptionsMuettes).toEqual([]);
   });
 
   it("`champR422734` n'est jamais posé sans `personnesPresentesMin`", () => {
