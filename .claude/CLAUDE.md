@@ -598,7 +598,7 @@ la tuile s'allume dessus.
 Le tableau de bord est un **board personnalisable de widgets** (`src/components/dashboard/widgets/`) : un registre central de widgets avec variants de visualisation, un layout par défaut éditorial, un tiroir « Ajouter un widget », drag-and-drop, persistance versionnée en localStorage (`useLayoutPerso`). Le widget Équipements est épinglé (obligatoire). Un bandeau « brief » en tête liste les éléments à traiter.
 
 ### Onboarding
-Compte → entreprise → **premier** établissement → déclaration guidée des équipements → génération automatique des obligations applicables et du calendrier.
+Compte → entreprise → **premier** établissement, en trois étapes (identité et lieu, typologie, résumé — aucune ne déclare d'équipement) → arrivée sur la page Équipements (`/etablissements/[id]/equipements?bienvenue=1`), où les équipements se déclarent → génération automatique des obligations applicables et du calendrier. *(Corrigé le 2026-09-26 : la phrase annonçait une « déclaration guidée des équipements » dans le parcours, qui n'existe plus.)*
 
 Le parcours **ne déduit plus rien** depuis le 2026-09-01 : le type et la
 catégorie d'ERP sont **déclarés** par le dirigeant — son classement figure sur
