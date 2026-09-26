@@ -142,3 +142,18 @@ describe("« Quand ça arrive » — ce que le référentiel lui doit", () => {
     }
   });
 });
+
+describe("« Quand ça arrive » — l'ordre des lignes", () => {
+  it("suit le Code : les trois lignes de la chaleur intense se suivent, dans l'ordre des articles", () => {
+    const groupe = listerQuandCaArrive(etab(), []).find((g) =>
+      g.lignes.some((l) => l.obligation.id === "prevention-etablissement-chaleur-eau-fraiche"),
+    )!;
+    const ids = groupe.lignes.map((l) => l.obligation.id);
+    const i = ids.indexOf("prevention-etablissement-chaleur-eau-fraiche");
+    expect(ids.slice(i, i + 3)).toEqual([
+      "prevention-etablissement-chaleur-eau-fraiche", // R. 4463-4
+      "prevention-etablissement-chaleur-travailleur-vulnerable", // R. 4463-5
+      "prevention-etablissement-chaleur-mise-en-oeuvre", // R. 4463-7
+    ]);
+  });
+});

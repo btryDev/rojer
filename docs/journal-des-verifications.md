@@ -885,7 +885,7 @@ et du 19 novembre 2001 pour leurs clauses d'application.
 
 **Ce qui en sort.** `PE 27` § 4 et § 5, `PE 33` § 2 et `PE 35` sont au règlement
 depuis le 27 août 1990 : « établissement existant » veut dire, pour eux, ouvert
-avant cette date. Le § 6 de `PE 27` ne visait que les établissements « en étage
+avant cette date. *[2026-09-26 : cette dernière phrase est une LECTURE, pas le texte — `GN 10` ne date pas l'« existant ». Voir C23.]* Le § 6 de `PE 27` ne visait que les établissements « en étage
 ou en sous-sol » jusqu'au 31 décembre 2025 ; « chaque établissement » date de
 l'arrêté du 1er décembre 2025, sans clause pour les existants. Aucun des
 arrêtés lus n'étend ces dispositions aux établissements existants, sauf le
@@ -900,6 +900,62 @@ brief de l'agent affirmait que l'arrêté du 26 octobre 2011 avait remanié
 
 **Et `PE 4` est à jour** : sa rédaction applicable au 1er juillet 2026 est celle
 que le corpus porte depuis le 2026-08-27 ; il ne manquait que le nom du texte.
+
+### C23 · 2026-09-26 — La contre-lecture des huit événementielles, et une garde pour qu'elle ne soit plus nécessaire
+
+**Le constat.** Une contre-lecture neutre de la branche `lot/evenementielles-cible`
+a confirmé tous les comptes (167, 57 manquantes dont 42 dans la cible, 90
+réserves, aucun doublon d'identifiant) et trouvé ce que les comptes ne voient
+pas : des libellés et des faits générateurs qui paraphrasaient leur article.
+« Vulnérable à la chaleur intense » pour « vulnérable aux risques liés à
+l'exposition aux épisodes de chaleur intense » ; « d'accidents ou de maladies »
+pour « d'accident du travail ou de maladie professionnelle ou à caractère
+professionnel » ; « un arrêt de travail » tout court, qui étendait l'examen de
+reprise à tout arrêt ; « service de santé au travail », nom abandonné en 2022.
+Et `R. 4624-31` n'avait AUCUN verbatim consigné pour ses quatre cas ni sa
+dérogation, alors que la description les affirmait.
+
+**Relu à la source, le 2026-09-26.** `R. 4624-31` en entier, de première main
+(le nombre d'alinéas demandé en aveugle, puis deux formulations confirmées par
+une requête ciblée) ; `R. 4141-8`, `R. 4141-12`, `R. 4624-28-2`, `R. 4463-4`,
+`-5`, `-7` par un agent, au même protocole ; `R. 4515-8` et `R. 4515-9` de
+première main ; `GN 10` et `PE 27` intégraux, versions datées, par un agent.
+
+**Ce que la relecture a trouvé de plus que la contre-lecture.** (1) La
+dérogation de `R. 4624-31` distingue DEUX catégories de mesures — « aucune
+mesure individuelle d'aménagement, d'adaptation ou de transformation du poste
+NI aucune mesure d'aménagement du temps de travail » ; la description les
+rabattait sur une, ce qui ÉLARGISSAIT la dérogation. (2) La carte des trois cas
+de mise à jour du document unique écrivait « À toute décision » là où
+`R. 4121-2` écrit « Lors de toute décision ». (3) `GN 10` ne date pas
+l'« établissement existant » ; le 22 juin 1990 est l'arrêté qui approuve le
+type PE, et la dernière rédaction de `GN 10` date de l'arrêté du 24 septembre
+2009 (en vigueur le 23 janvier 2010). La phrase « la disposition date du
+27 août 1990, et cette ligne vise de plein droit… » était à la fois une
+qualification juridique et un rattachement faux ; elle est remplacée par la
+citation de `GN 10` et la date du type PE, sans conclusion. (4) Le décret
+n° 2022-679, ouvert : son article 2, II, ne fait que renommer le service dans
+tout le titre II du livre VI ; il ne cite pas `R. 4624-28-2`.
+
+**La garde.** `src/lib/quand-ca-arrive/fait-dans-le-texte.test.ts` découpe
+chaque fait générateur à la ponctuation et exige que chaque segment soit un
+extrait CONTINU du verbatim consigné. Une première version, mot à mot, laissait
+passer toutes les paraphrases trouvées : elles n'emploient que des mots de
+l'article, rangés autrement. La version par segments les refuse — éprouvée sur
+les quatre paraphrases historiques, pas sur des erreurs fabriquées. Elle a
+trouvé trois écarts que la contre-lecture n'avait pas vus : « salarié » pour
+« travailleur » (`R. 4542-16`), le protocole de sécurité qui employait les mots
+de `R. 4515-8` sans le citer (article désormais `retenu`), et la fin
+d'exposition.
+
+**Un effet de bord, bienvenu.** Rétablir mot pour mot l'alinéa final de
+`R. 4121-2` dans la description a fait rougir `non-couverture.test.ts` : la page
+Périmètre annonce que Rojer ne porte pas « le programme annuel de prévention
+des risques ». La paraphrase précédente y échappait par accident. L'alinéa
+quitte la description et reste dans la `note`.
+
+**Appliqué :** référentiel `2026-09-26.1`, 167 obligations, aucune entrée ni
+sortie. Comptes remesurés en appelant le code : inchangés.
 
 ### Ce que la chronologie donne à voir
 

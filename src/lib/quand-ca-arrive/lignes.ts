@@ -112,6 +112,8 @@ export function lignesDepuis(
   return lignes;
 }
 
+const articleDe = (l: LigneQuandCaArrive) => l.articles[0] ?? "";
+
 /** Les lignes de la page pour ce dossier, groupées par domaine. */
 export function listerQuandCaArrive(
   etablissement: EtablissementMatching,
@@ -133,8 +135,11 @@ export function listerQuandCaArrive(
     .map(([domaine, lignes]) => ({
       domaine,
       libelle: LABEL_DOMAINE[domaine],
+      // Dans l'ordre du Code, pas de l'alphabet : trié par libellé, le
+      // document unique s'intercalait entre les trois lignes de la chaleur
+      // intense (`R. 4463-4`, `-5`, `-7`), qui se lisent ensemble.
       lignes: lignes.sort((a, b) =>
-        a.obligation.libelle.localeCompare(b.obligation.libelle, "fr"),
+        articleDe(a).localeCompare(articleDe(b), "fr", { numeric: true }),
       ),
     }))
     .sort((a, b) => a.libelle.localeCompare(b.libelle, "fr"));

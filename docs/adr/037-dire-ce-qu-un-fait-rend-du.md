@@ -176,9 +176,22 @@ calendriers à l'ouverture, sans qu'aucune échéance ne bouge.
   elle attend la décision sur le module de vigilance. La question Q4 (« la page
   d'abord, les obligations ensuite ») est donc dépassée par les faits — la page
   n'est pas déployée, et la propriétaire la jugera avec ses onze lignes.
-- **Les chiffres du § 1 sont ceux du 2026-09-20.** Au 2026-09-21 le registre
+- **Les chiffres du § 1 sont ceux du 2026-09-20.** ~~Au 2026-09-21 le registre
   compte 65 manquantes dont 50 dans la cible (− `R. 4222-21`, − `PE 27`,
-  + `R. 4224-3`) ; `evenement` y pèse toujours neuf.
+  + `R. 4224-3`) ; `evenement` y pèse toujours neuf.~~ Ce chiffre était celui
+  de `main` AVANT les huit obligations de cette branche, et la phrase l'a
+  laissé tel quel après les avoir encodées. Mesuré sur la branche le
+  2026-09-26, en appelant le corpus : 65 − 3 (chaleur : `R. 4463-4`, `-5`,
+  `-7`) − 5 (`R. 4624-31`, `R. 4624-28-2`, `R. 4141-8`, `R. 4141-12`,
+  `R. 4121-2`) = **57 manquantes, dont 42 dans la cible** ; `evenement` en
+  compte **une**, hors cible, et `L. 8222-5` est passée à `a_trancher`.
+- **Les faits générateurs sont contrôlés contre le texte** depuis le
+  2026-09-26 (`src/lib/quand-ca-arrive/fait-dans-le-texte.test.ts`) : chaque
+  segment entre deux signes de ponctuation doit être un extrait continu du
+  verbatim consigné. La contre-lecture en avait trouvé cinq qui paraphrasaient ;
+  le contrôle en a trouvé trois de plus (écran, protocole de sécurité, fin
+  d'exposition), et il refuse les quatre paraphrases historiques qu'on lui
+  soumet.
 - **La page dit où vivent les AUTRES événementielles.** Celles d'une personne et
   d'un appareil se lisent sur leur fiche ; le chapeau et l'état vide le disent,
   faute de quoi un dossier sans employeur mais avec une chambre froide lisait
