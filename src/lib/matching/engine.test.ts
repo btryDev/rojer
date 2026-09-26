@@ -521,7 +521,7 @@ describe("moteur matching — typologie habitation", () => {
 // ============================================================================
 
 describe("moteur matching — conditions booléennes (groupe électrogène)", () => {
-  it("ERP avec groupe électrogène déclaré → EL 20 applicable", () => {
+  it("ERP avec groupe électrogène déclaré → EL 18 § 4 mensuel applicable", () => {
     const res = determineObligationsApplicables(etabErpCat3(), [
       elec({
         caracteristiques: { aGroupeElectrogene: true },
@@ -530,7 +530,7 @@ describe("moteur matching — conditions booléennes (groupe électrogène)", ()
     expect(idsObligations(res)).toContain("elec-erp-groupe-electrogene-annuel");
   });
 
-  it("ERP SANS groupe électrogène → EL 20 NON applicable", () => {
+  it("ERP SANS groupe électrogène → EL 18 § 4 mensuel NON applicable", () => {
     const res = determineObligationsApplicables(etabErpCat3(), [
       elec({ caracteristiques: { aGroupeElectrogene: false } }),
     ]);
@@ -539,7 +539,7 @@ describe("moteur matching — conditions booléennes (groupe électrogène)", ()
     );
   });
 
-  it("ERP avec caracs absentes → EL 20 NON applicable (condition par défaut = non remplie)", () => {
+  it("ERP avec caracs absentes → EL 18 § 4 mensuel NON applicable (condition par défaut = non remplie)", () => {
     const res = determineObligationsApplicables(etabErpCat3(), [elec()]);
     expect(idsObligations(res)).not.toContain(
       "elec-erp-groupe-electrogene-annuel",
