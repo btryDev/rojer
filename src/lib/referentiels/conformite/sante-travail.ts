@@ -492,7 +492,7 @@ export const obligationsSanteTravail: Obligation[] = [
     id: "sante-travail-etablissement-fin-exposition-suivi-renforce",
     domaine: "sante_travail",
     libelle:
-      "L'employeur informe son service de prévention et de santé au travail ; il avise sans délai le travailleur concerné",
+      "L'employeur informe son service de prévention et de santé au travail ; il avise sans délai le travailleur concerné de la transmission",
     description:
       "Pour l'organisation de la visite prévue à l'article L. 4624-2-1, l'employeur informe son service de prévention et de santé au travail, dès qu'il en a connaissance, de la cessation de l'exposition d'un des travailleurs de l'entreprise à des risques particuliers pour sa santé ou sa sécurité justifiant un suivi individuel renforcé, de son départ ou de sa mise à la retraite. Il avise sans délai le travailleur concerné de la transmission de cette information.",
     referencesLegales: [

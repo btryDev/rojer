@@ -13,7 +13,7 @@
 // de bonne foi ne se voit pas à la relecture : elle se lit bien.
 //
 // LA RÈGLE DU FAIT GÉNÉRATEUR. Il se découpe à la ponctuation. Chaque
-// segment, privé d'une conjonction de tête (« et », « ou »), est un EXTRAIT
+// segment — conjonction de tête comprise, si le fait en met une — est un EXTRAIT
 // CONTINU du verbatim consigné pour l'obligation, qui COMMENCE ET SE TERMINE
 // LÀ OÙ UNE PROPOSITION DU TEXTE COMMENCE ET SE TERMINE (ponctuation, numéro
 // d'item « 1° », début ou fin du texte). Le verbatim, c'est la
@@ -21,7 +21,10 @@
 // GUILLEMETS de la `note` de chaque référence — jamais le commentaire qui
 // l'entoure. Deux souplesses, écrites ici plutôt que laissées à
 // l'appréciation : la casse et la ponctuation ne comptent pas, et le
-// singulier vaut le pluriel.
+// singulier vaut le pluriel. ~~Une conjonction de tête (« et », « ou ») était
+// effacée avant le contrôle~~ (retiré le 2026-09-26) : elle laissait joindre
+// par un « et » cumulatif deux cas que le texte sépare — le 2° et le 3° de
+// `R. 4121-2`. Un fait qui a besoin d'une conjonction la prend dans le texte.
 //
 // Ce que la fin de proposition attrape : une troncature qui fait tomber un
 // qualificatif — « en cas d'accident du travail ou de maladie
@@ -88,7 +91,6 @@ function estExtraitComplet(segment: string[], texte: Jeton[]): boolean {
   return false;
 }
 
-const CONJONCTION_DE_TETE = new Set(["et", "ou"]);
 
 /** Les segments du fait qui ne sont pas un extrait complet d'un des textes. */
 function segmentsHorsTexte(fait: string, textes: string[]): string[] {
@@ -99,8 +101,7 @@ function segmentsHorsTexte(fait: string, textes: string[]): string[] {
     .filter((s) => s.length > 0)
     .filter((s) => {
       const j = mots(s);
-      const segment = j[0] !== undefined && CONJONCTION_DE_TETE.has(j[0]) ? j.slice(1) : j;
-      return !sequences.some((t) => estExtraitComplet(segment, t));
+      return !sequences.some((t) => estExtraitComplet(j, t));
     });
 }
 
@@ -180,6 +181,9 @@ describe("le fait générateur et le libellé sont écrits dans les mots du text
     ["sante-travail-etablissement-examen-de-reprise", "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail — après un congé de maternité, une absence pour cause de maladie professionnelle, pour cause d'accident du travail, pour cause de maladie ou d'accident non professionnel"],
     ["co-activite-etablissement-protocole-securite", "Préalablement à la réalisation de l'opération : le caractère répétitif défini à l'article R. 4515-3 donne lieu à un protocole de sécurité spécifique"],
     ["prevention-etablissement-chaleur-travailleur-vulnerable", "Un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense"],
+    // Proposé par la vérification du 2026-09-26 : le « et » cumulatif que la
+    // correction de C26 venait de retirer, et que la garde laissait revenir.
+    ["prevention-etablissement-mise-a-jour-duerp-sur-fait", "Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur"],
   ])("le défaut relevé sur %s est refusé", (id, fautif) => {
     expect(segmentsHorsTexte(fautif, verbatimDe(parId(id))).length).toBeGreaterThan(0);
   });
@@ -192,10 +196,11 @@ describe("le fait générateur et le libellé sont écrits dans les mots du text
     expect(motsHorsTexte(fautif, verbatimDe(parId(id))).length).toBeGreaterThan(0);
   });
 
-  it("le pluriel vaut le singulier, la conjonction de tête est admise, début et fin de proposition sont exigés", () => {
+  it("le pluriel vaut le singulier ; début et fin de proposition sont exigés ; aucune conjonction n'est offerte", () => {
     const texte = ["Épisodes de chaleur intense, l'employeur"];
-    expect(segmentsHorsTexte("ou épisode de chaleur intense", texte)).toEqual([]);
-    expect(segmentsHorsTexte("ou épisode de chaleur", texte)).toEqual(["ou épisode de chaleur"]);
+    expect(segmentsHorsTexte("épisode de chaleur intense", texte)).toEqual([]);
+    expect(segmentsHorsTexte("épisode de chaleur", texte)).toEqual(["épisode de chaleur"]);
+    expect(segmentsHorsTexte("et épisode de chaleur intense", texte)).toEqual(["et épisode de chaleur intense"]);
     expect(segmentsHorsTexte("chaleur intense", texte)).toEqual(["chaleur intense"]);
   });
 

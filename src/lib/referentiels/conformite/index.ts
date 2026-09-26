@@ -190,7 +190,8 @@ export const obligationsConformite: Obligation[] = [
 // `.4` le 2026-09-26 (`.3` annulée, jamais publiée) : aucune entrée ni
 // sortie ; libellés des lignes « Quand ça arrive » repris après une troisième
 // contre-lecture.
-export const REFERENTIEL_VERSION = "2026-09-26.4";
+// `.5` le 2026-09-26 : deux libellés retouchés après vérification ciblée.
+export const REFERENTIEL_VERSION = "2026-09-26.5";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

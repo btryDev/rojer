@@ -90,10 +90,10 @@ export const CORPUS_PE: Corpus = {
         texte: "Arrêté du 1er décembre 2025 (NOR INTE2529354A) - art. 13 pour la date d'application",
         url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000053020948",
       },
-      luLe: "2026-08-27",
+      luLe: "2026-09-26",
       lecture: "premiere_main",
       citationCle:
-        "Tous les trois ans au plus, l'exploitant doit procéder, ou faire procéder, par des techniciens compétents, aux opérations d'entretien et de vérification des installations techniques.",
+        "§ 2. Tous les trois ans au plus, l'exploitant doit procéder, ou faire procéder, par des techniciens compétents, aux opérations d'entretien et de vérification des installations et des équipements techniques de son établissement (chauffage, éclairage, installations électriques, installations de gaz, appareils de cuisson, circuits d'extraction de l'air vicié, des buées et des graisses des grandes cuisines, des offices de remise en température et des îlots, ascenseurs, moyens de secours, etc.).",
       statut: "retenu",
       obligations: [
         // L'obligation portée par l'établissement (ADR-022), qui prend le § 2

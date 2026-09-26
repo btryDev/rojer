@@ -67,6 +67,8 @@ describe("construireChezVous — DUERP", () => {
     const r = construireChezVous(etabBureau({ effectifSurSite: 8 }), [], 15);
     expect(r.duerp.misAJourAnnuel).toBe(true);
     expect(r.duerp.effectif).toBe(15);
+    // L'en-tête, lui, dit le site.
+    expect(r.duerp.effectifSurSite).toBe(8);
   });
 
   it("effectif < 11 → pas d'annualité imposée", () => {

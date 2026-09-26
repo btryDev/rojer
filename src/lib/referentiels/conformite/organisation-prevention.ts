@@ -313,7 +313,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-chaleur-mise-en-oeuvre",
     domaine: "organisation_prevention",
     libelle:
-      "L'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur",
+      "L'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3",
     description:
       "Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur.",
     referencesLegales: [

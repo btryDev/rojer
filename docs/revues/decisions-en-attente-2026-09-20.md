@@ -75,7 +75,7 @@ texte, le quatrième sur la charte. Ce qui reste, et qui le porte :]
   (interdit 15) : dire « aucun équipement déclaré » comme un fait, jusque dans
   le ZIP et les PDF.
 - **À reverser au corpus** : ~~le verbatim de `PE 20` § 2~~ (consigné le
-  2026-09-26), la liste complète de `PE 4` § 2 (reste à relever).
+  2026-09-26), ~~la liste complète de `PE 4` § 2~~ (relevée et consignée le 2026-09-26).
 
 Je ne formule pas de recommandation sur ces quatre-là sans avoir rouvert le code
 et les textes : ce serait deviner.

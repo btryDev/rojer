@@ -55,6 +55,8 @@ export type ChezVous = {
      * l'outil MCP lisaient déjà l'entreprise.
      */
     effectif: number;
+    /** L'effectif du SITE, pour l'en-tête de la section — pas pour le seuil. */
+    effectifSurSite: number;
     /** true ⇔ effectif de l'entreprise ≥ 11. */
     misAJourAnnuel: boolean;
   };
@@ -159,6 +161,7 @@ export function construireChezVous(
   return {
     duerp: {
       effectif: effectifEntreprise,
+      effectifSurSite: etab.effectifSurSite,
       misAJourAnnuel: effectifEntreprise >= SEUIL_MAJ_ANNUELLE_DUERP,
     },
     domaines,

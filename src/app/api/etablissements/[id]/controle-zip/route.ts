@@ -139,7 +139,8 @@ export async function GET(
     const versionCourante = versions[0] ?? null;
     if (versionCourante) {
       // L'historique imprimé en fin de document liste toutes les versions
-      // du DUERP — la traçabilité exigée par l'art. R. 4121-2.
+      // du DUERP. (~~« la traçabilité exigée par l'art. R. 4121-2 »~~ :
+      // l'article n'exige aucune traçabilité — rayé le 2026-09-26.)
       const historique = versions.map((v) => ({
         numero: v.numero,
         genereLe: v.createdAt.toISOString(),

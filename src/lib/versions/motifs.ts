@@ -13,10 +13,11 @@ export type VersionActionState =
  * l'employeur (3°).
  *
  * « Accident du travail ou maladie professionnelle » n'est donc pas un
- * quatrième cas légal : c'est une espèce du 3°, et le libellé le dit
- * désormais. Le proposer séparément reste utile — c'est ainsi qu'un dirigeant
- * nomme l'événement — mais le présenter comme un cas propre revenait à
- * inventer une catégorie que le texte n'a pas.
+ * quatrième cas légal. Le proposer reste utile — c'est ainsi qu'un dirigeant
+ * nomme l'événement —, mais son libellé ne le rattache à aucun cas de
+ * l'article : ~~« c'est une espèce du 3°, et le libellé le dit »~~ (rayé le
+ * 2026-09-26) — dire qu'un accident « intéresse l'évaluation d'un risque »
+ * au sens du 3° est une qualification que le produit ne fait pas.
  */
 export const MOTIFS_VERSION = {
   annuelle:

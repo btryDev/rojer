@@ -1401,6 +1401,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // (acte sans condition, sans renvoi orphelin), fait générateur de
     // R. 4624-31 rattaché à l'examen, R. 4121-2 en deux cas séparés.
     { version: "2026-09-26.4", empreinte: "167-a7565d6c2ecd2c0c" },
+    // Toujours 167. Vérification ciblée de la troisième passe : deux libellés
+    // retouchés (adaptation retirée du libellé de R. 4463-7, objet de l'avis
+    // rendu à R. 4624-28-2).
+    { version: "2026-09-26.5", empreinte: "167-66f005e23f039ca" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
