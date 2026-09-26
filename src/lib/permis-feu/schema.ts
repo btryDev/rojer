@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DUREES_SURVEILLANCE_MINUTES, IDS_MESURES_COURANTES } from "./referentiel";
 import { depuisSaisieDateHeure } from "@/lib/dates";
 import { NatureTravauxPointChaud } from "@prisma/client";
 
@@ -96,13 +97,29 @@ export const permisFeuSchema = z
       .max(4000),
 
     // Mesures
+    // Une création n'accepte que la liste courante : un identifiant retiré ou
+    // inconnu serait affiché comme une mesure qu'aucune liste ne propose plus
+    // (contre-lecture du 2026-09-26).
     mesuresValidees: z
-      .array(z.string())
+      .array(
+        z.string().refine((id) => IDS_MESURES_COURANTES.has(id), {
+          message:
+            "Une mesure cochée n'est plus dans la liste : rechargez la page et cochez à nouveau les mesures en place.",
+        }),
+      )
       .default([])
       .transform((a) => Array.from(new Set(a))),
     mesuresNotes: optionalTrimmed(2000),
 
-    dureeSurveillanceMinutes: z.coerce.number().int().min(30).max(720).default(120),
+    // ~~`.min(30).max(720)`~~ : trente minutes passaient avec « 2 h au moins »
+    // cochée (contre-lecture du 2026-09-26). Les choix sont ceux de l'écran.
+    dureeSurveillanceMinutes: z.coerce
+      .number()
+      .int()
+      .refine((v) => (DUREES_SURVEILLANCE_MINUTES as readonly number[]).includes(v), {
+        message: "Choisissez 2 h, 4 h ou 6 h.",
+      })
+      .default(120),
   })
   .refine((val) => val.dateFin > val.dateDebut, {
     message: "La date de fin doit être après la date de début.",

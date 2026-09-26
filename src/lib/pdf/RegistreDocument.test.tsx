@@ -17,6 +17,7 @@ const data: RegistreData = {
   etablissement: "Le Comptoir",
   adresse: "1 rue des Lilas",
   genereLe: new Date("2026-08-26T10:00:00Z"),
+  calendrier: { etat: "a_jour" },
   regime: { estERP: true, estIGH: false },
   inventaire: null,
   bilan: { dues: 4, outillees: 3, faites: 1, aRemplir: 1, tenuesAilleurs: 1, nonOutillees: 1 },
@@ -57,6 +58,7 @@ function registreJournal(n: number): RegistreData {
     etablissement: "E",
     adresse: "A",
     genereLe: new Date("2026-01-01T00:00:00Z"),
+    calendrier: { etat: "a_jour" },
     regime: { estERP: false, estIGH: false },
     inventaire: null,
     bilan: {

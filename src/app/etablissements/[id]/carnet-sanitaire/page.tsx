@@ -15,6 +15,7 @@ import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import {
   LABEL_RESEAU,
   SEUIL_LEGIONELLE_UFC_PAR_L,
+  resultatAnalyse,
 } from "@/lib/carnet-sanitaire/schema";
 import { formaterDateCourteFr } from "@/lib/dates";
 
@@ -179,7 +180,13 @@ export default async function CarnetSanitairePage({
               }
               mono
               mention={
-                derniereAnalyse?.conforme === false ? "Écart relevé" : undefined
+                !derniereAnalyse
+                  ? undefined
+                  : resultatAnalyse(derniereAnalyse.valeurUfcParL) === "limite_atteinte"
+                    ? "Écart relevé"
+                    : resultatAnalyse(derniereAnalyse.valeurUfcParL) === "sans_valeur"
+                      ? "Valeur non saisie"
+                      : undefined
               }
             />
           </div>
@@ -352,9 +359,10 @@ export default async function CarnetSanitairePage({
                         <p
                           className="m-0 font-mono text-[22px] font-semibold tabular-nums"
                           style={{
-                            color: a.conforme
-                              ? "var(--board-ink)"
-                              : "var(--board-signal-ink)",
+                            color:
+                              resultatAnalyse(a.valeurUfcParL) === "limite_atteinte"
+                                ? "var(--board-signal-ink)"
+                                : "var(--board-ink)",
                           }}
                         >
                           {/* nombre, pas une date : séparateurs de milliers */}
@@ -367,11 +375,19 @@ export default async function CarnetSanitairePage({
                       <StatusPill
                         charte="board"
                         size="sm"
-                        status={a.conforme ? "a_jour" : "non_conforme"}
+                        status={
+                          {
+                            sous_limite: "a_jour",
+                            limite_atteinte: "non_conforme",
+                            sans_valeur: "non_applicable",
+                          }[resultatAnalyse(a.valeurUfcParL)] as "a_jour" | "non_conforme" | "non_applicable"
+                        }
                         label={
-                          a.conforme
-                            ? `< ${SEUIL_LEGIONELLE_UFC_PAR_L} UFC/L`
-                            : `≥ ${SEUIL_LEGIONELLE_UFC_PAR_L} UFC/L — action`
+                          {
+                            sous_limite: `< ${SEUIL_LEGIONELLE_UFC_PAR_L} UFC/L`,
+                            limite_atteinte: `≥ ${SEUIL_LEGIONELLE_UFC_PAR_L} UFC/L — action`,
+                            sans_valeur: "Valeur non saisie",
+                          }[resultatAnalyse(a.valeurUfcParL)]
                         }
                       />
                     </div>

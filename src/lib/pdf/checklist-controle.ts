@@ -21,6 +21,7 @@
 // elles peuvent être éprouvées.
 
 import type { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
+import { faitRetards, type LectureRetards } from "./fait-retards";
 
 export type EtatDuerpLu = ReturnType<typeof evaluerEtatDuerp>;
 
@@ -41,7 +42,10 @@ export type EtatDuerpLu = ReturnType<typeof evaluerEtatDuerp>;
  * (`lib/pdf/builders.ts` : « vit dans `evaluerEtatDuerp` et NULLE PART
  * AILLEURS »).
  */
-export function ligneDuerp(etat: EtatDuerpLu | null): string {
+export function ligneDuerp(etat: EtatDuerpLu | null, lu = true): string {
+  // Une lecture en échec n'est pas « aucune version » (contre-lecture du
+  // 2026-09-26) : la case reste vide, et dit pourquoi.
+  if (!lu) return " [ ] DUERP : non déterminé (lecture des versions en échec)";
   if (etat === null || !etat.aVersionValidee) {
     return " [ ] DUERP : aucune version figée — à créer avant le contrôle";
   }
@@ -64,11 +68,17 @@ export function ligneDuerp(etat: EtatDuerpLu | null): string {
  * cocher cette case sur un dossier dont le calendrier n'avait jamais été
  * calculé.
  */
-export function ligneVerifsEnRetard(nb: number | null): string {
-  if (nb === null) {
-    return " [ ] Vérifications en retard : non déterminé (voir l'avertissement)";
-  }
-  return nb === 0
-    ? " [x] Aucune vérification en retard à ce jour"
-    : ` [!] ${nb} vérification(s) en retard — voir 01_Dossier_conformite.pdf`;
+//
+// ~~Zéro se cochait toujours~~ (relecture du 2026-09-26) : zéro sur un
+// calendrier jamais calculé, ou sur un inventaire vide, n'est pas un fait
+// favorable. La règle vit dans `fait-retards.ts`, que le dossier de
+// conformité et le registre lisent aussi.
+//
+// Le renvoi à 01 ne se fait que si 01 est dans le ZIP : le compte est lu
+// avant le rendu, qui peut échouer (contre-lecture du 2026-09-26).
+export function ligneVerifsEnRetard(l: LectureRetards, dossierInclus = true): string {
+  const f = faitRetards(l);
+  return f.coche === "!"
+    ? ` [!] ${f.texte}${dossierInclus ? " — voir 01_Dossier_conformite.pdf" : ""}`
+    : ` [${f.coche}] ${f.texte}`;
 }

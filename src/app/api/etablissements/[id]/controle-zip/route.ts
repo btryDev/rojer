@@ -1,4 +1,6 @@
 import { renderToBuffer } from "@react-pdf/renderer";
+import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
+import { dureeHhMm } from "@/lib/permis-feu/duree";
 import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
@@ -38,6 +40,7 @@ import {
   type ManqueCouverture,
 } from "@/lib/perimetre/couverture";
 import { genererReadme } from "@/lib/pdf/readme-controle";
+import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
 
 /**
  * Assemble en un ZIP **tous** les documents qu'un inspecteur, un assureur,
@@ -103,6 +106,32 @@ export async function GET(
   // README se tait alors : il n'affirme pas un inventaire qu'il n'a pas lu.
   let inventaire: ManqueCouverture | null = null;
 
+  // CE QUI ÉCHOUE SE DIT (relecture du 2026-09-26). Les `catch {}` sautaient
+  // une brique en silence, et le README annonçait ses fichiers sans condition
+  // — `02_DUERP_vN.pdf` même quand son rendu avait échoué. Chaque échec est
+  // noté ici, par le nom du fichier qu'il prive, et le README ne décrit que ce
+  // que le ZIP contient vraiment (`zip.files`).
+  const echecs = new Map<string, string>();
+  const noterEchec = (fichier: string, e: unknown, raison = "la génération a échoué") => {
+    echecs.set(fichier, raison);
+    console.error(`controle-zip : ${fichier} non inclus`, e);
+  };
+  let piecesPrestatairesManquantes = 0;
+  // Les pièces de prestataires réellement mises au ZIP, par type : le README
+  // ne nomme que les types présents (contre-lecture du 2026-09-26).
+  const piecesPrestataires = { attestation: 0, rcPro: 0, kbis: 0 };
+  // Une LECTURE en panne pour 05 à 08 et les prestataires donnait une
+  // réponse 500 : tout le dossier tombait pour une brique. Elle se note
+  // comme les autres échecs, et la brique est dite « Non incluse ».
+  const lire = async <T,>(fichier: string, repli: T, f: () => Promise<T>): Promise<T> => {
+    try {
+      return await f();
+    } catch (e) {
+      noterEchec(fichier, e, "la lecture a échoué");
+      return repli;
+    }
+  };
+
   // ── 01 Dossier de conformité ────────────────────────────────────────
   try {
     const data = await construireDossierConformiteData(id);
@@ -115,8 +144,9 @@ export async function GET(
       const buf = await renderToBuffer(DossierConformiteDocument({ data }));
       zip.file("01_Dossier_conformite.pdf", new Uint8Array(buf));
     }
-  } catch {
-    // On continue même si une brique échoue.
+  } catch (e) {
+    // On continue même si une brique échoue — et on le dit.
+    noterEchec("01_Dossier_conformite.pdf", e);
   }
 
   // ── 02 DUERP (dernière version figée) ───────────────────────────────
@@ -138,12 +168,16 @@ export async function GET(
   // L'ownership a déjà été vérifié par requireEtablissement en haut ; la
   // requête reste néanmoins bornée par `duerp.etablissementId`.
   let duerpNumeroVersion: number | null = null;
+  // `false` tant que la lecture des versions n'a pas abouti : une lecture en
+  // échec n'est pas « aucune version validée ».
+  let duerpLu = false;
   try {
     const versions = await prisma.duerpVersion.findMany({
       where: { duerp: { etablissementId: id } },
       orderBy: { numero: "desc" },
       select: { numero: true, snapshot: true, motif: true, createdAt: true },
     });
+    duerpLu = true;
     const versionCourante = versions[0] ?? null;
     if (versionCourante) {
       // L'historique imprimé en fin de document liste toutes les versions
@@ -183,9 +217,13 @@ export async function GET(
       );
       zip.file(`02_DUERP_v${versionCourante.numero}.pdf`, new Uint8Array(buf));
     }
-  } catch {
+  } catch (e) {
     // On continue même si une brique échoue : le README dira que le DUERP
-    // n'est pas inclus plutôt que de faire échouer tout le dossier.
+    // n'est pas inclus, et pourquoi, plutôt que de faire échouer le dossier.
+    // ~~Toujours « la génération a échoué »~~ : une panne de LECTURE n'est pas
+    // une panne de rendu, et la checklist disait déjà « lecture » (contre-
+    // lecture du 2026-09-26).
+    noterEchec("02_DUERP", e, duerpLu ? "la génération a échoué" : "lecture des versions en échec");
   }
 
   // ── 03 Registre de sécurité ─────────────────────────────────────────
@@ -198,8 +236,8 @@ export async function GET(
       const buf = await renderToBuffer(RegistreDocument({ data }));
       zip.file("03_Registre_securite.pdf", new Uint8Array(buf));
     }
-  } catch {
-    /* noop */
+  } catch (e) {
+    noterEchec("03_Registre_securite.pdf", e);
   }
 
   // ── 04 Plan d'actions ───────────────────────────────────────────────
@@ -209,15 +247,16 @@ export async function GET(
       const buf = await renderToBuffer(PlanActionsDocument({ data }));
       zip.file("04_Plan_actions.pdf", new Uint8Array(buf));
     }
-  } catch {
-    /* noop */
+  } catch (e) {
+    noterEchec("04_Plan_actions.pdf", e);
   }
 
   // ── 05 Accessibilité (URL publique + QR si publié) ──────────────────
-  const registreAccess = await prisma.registreAccessibilite.findUnique({
+  const registreAccess = await lire("05_Accessibilite_URL.txt", null, () =>
+    prisma.registreAccessibilite.findUnique({
     where: { etablissementId: id },
     select: { slugPublic: true, publie: true },
-  });
+  }));
   if (registreAccess?.publie) {
     const url = `${publicAppUrl()}/accessibilite/${registreAccess.slugPublic}`;
     zip.file(
@@ -230,10 +269,11 @@ export async function GET(
   }
 
   // ── Prestataires : attestations URSSAF, RC Pro, Kbis ────────────────
-  const prestataires = await prisma.prestataire.findMany({
+  const prestataires = await lire("Prestataires/", [], () =>
+    prisma.prestataire.findMany({
     where: { etablissementId: id },
     orderBy: { raisonSociale: "asc" },
-  });
+  }));
   if (prestataires.length > 0) {
     const dossierPrestataires = zip.folder("Prestataires") ?? zip;
     const storage = getStorage();
@@ -244,17 +284,21 @@ export async function GET(
       // conservé en base pour l'affichage, il ne devient un nom d'entrée
       // d'archive qu'assaini. L'export est fait pour être décompressé chez
       // un tiers.
-      for (const [cle, nom] of [
-        [p.attestationUrssafCle, nomEntreeArchive(p.attestationUrssafNom, "URSSAF.pdf")],
-        [p.assuranceRcProCle, nomEntreeArchive(p.assuranceRcProNom, "RC_Pro.pdf")],
-        [p.kbisCle, nomEntreeArchive(p.kbisNom, "Kbis.pdf")],
+      for (const [cle, nom, type] of [
+        [p.attestationUrssafCle, nomEntreeArchive(p.attestationUrssafNom, "URSSAF.pdf"), "attestation"],
+        [p.assuranceRcProCle, nomEntreeArchive(p.assuranceRcProNom, "RC_Pro.pdf"), "rcPro"],
+        [p.kbisCle, nomEntreeArchive(p.kbisNom, "Kbis.pdf"), "kbis"],
       ] as const) {
         if (!cle) continue;
         try {
           const buf = await storage.get(cle);
           sousDossier.file(nom, new Uint8Array(buf));
-        } catch {
-          /* fichier manquant, on ignore */
+          piecesPrestataires[type]++;
+        } catch (e) {
+          // Une pièce déclarée que le stockage ne rend pas : comptée, et
+          // annoncée par le README au lieu d'être ignorée.
+          piecesPrestatairesManquantes++;
+          console.error(`controle-zip : pièce prestataire non récupérée (${nom})`, e);
         }
       }
     }
@@ -270,19 +314,25 @@ export async function GET(
   // l'heure courante ferait disparaître du dossier, l'après-midi, une pièce
   // encore présente le matin.
   const ilYaUnAn = debutDuJour(ajouterMois(maintenant, -MOIS_FENETRE_HISTORIQUE));
-  const permisFeuList = await prisma.permisFeu.findMany({
+  const permisFeuList = await lire("06_Permis_de_feu.txt", [], () =>
+    prisma.permisFeu.findMany({
     where: {
       etablissementId: id,
       dateDebut: { gte: ilYaUnAn },
       statut: { notIn: ["brouillon", "annule"] },
     },
     orderBy: { numero: "desc" },
-  });
+  }));
   if (permisFeuList.length > 0) {
     const txt = [
       `PERMIS DE FEU — 12 derniers mois (${permisFeuList.length})`,
-      `Recommandation INRS ED 6030 ; règle APSAD R43, référentiel de la profession de l'assurance.`,
-      `Ni l'une ni l'autre n'est un texte réglementaire — cf. le dossier de contrôle.`,
+      // ~~« règle APSAD R43 »~~ — rayé le 2026-09-26 : `permis-feu/referentiel.ts`
+      // ne tient plus rien d'APSAD, qui n'a jamais été lue.
+      `Mesures tirées de la brochure INRS ED 6030 (2e édition, août 2019) — ni article de code, ni arrêté.`,
+      // Pas pour un permis établi sur une liste antérieure, dont les
+      // mesures ne viennent pas toutes de la brochure (contre-lecture du
+      // 2026-09-26) : la ligne de chaque permis le dit.
+      `Un permis établi sur une liste antérieure porte les libellés de celle-ci, qui ne viennent pas tous de la brochure.`,
       "",
       "────────────────────────────────────────────────────────────",
       ...permisFeuList.flatMap((p) => [
@@ -290,10 +340,17 @@ export async function GET(
         `  Prestataire : ${p.prestataireRaison} (${p.prestataireContact})`,
         `  Lieu : ${p.lieu}`,
         `  Période : ${formaterDateHeureFr(p.dateDebut)} → ${formaterDateHeureFr(p.dateFin)}`,
-        `  Surveillance : ${Math.round(p.dureeSurveillanceMinutes / 60)}h`,
+        `  Surveillance : ${dureeHhMm(p.dureeSurveillanceMinutes)}`,
         `  Travaux : ${p.naturesTravaux.join(", ")}`,
         `  Description : ${p.descriptionTravaux}`,
-        `  Mesures validées : ${p.mesuresValidees.length}`,
+        // ~~« Mesures validées : N »~~ : le compte mêlait mesures courantes et
+        // retirées, sans libellé. Chaque mesure est nommée, telle que le permis
+        // la porte.
+        `  Mesures cochées (${p.mesuresValidees.length}) :`,
+        ...p.mesuresValidees.map((m) => `    - ${mesureParId(m)?.libelle ?? m}`),
+        ...(surListeAnterieure(p.mesuresValidees, p.createdAt)
+          ? ["    (établi sur une liste antérieure de mesures)"]
+          : []),
         "",
       ]),
     ].join("\n");
@@ -301,7 +358,8 @@ export async function GET(
   }
 
   // ── 07 Plans de prévention (actifs 12 derniers mois) ────────────────
-  const plansList = await prisma.planPrevention.findMany({
+  const plansList = await lire("07_Plans_de_prevention.txt", [], () =>
+    prisma.planPrevention.findMany({
     where: {
       etablissementId: id,
       dateDebut: { gte: ilYaUnAn },
@@ -312,7 +370,7 @@ export async function GET(
       phasesDangereuses: { orderBy: { ordre: "asc" } },
     },
     orderBy: { numero: "desc" },
-  });
+  }));
   if (plansList.length > 0) {
     const txt = [
       `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
@@ -362,7 +420,8 @@ export async function GET(
   }
 
   // ── 08 Carnet sanitaire (résumé) ─────────────────────────────────────
-  const carnetSan = await prisma.carnetSanitaire.findUnique({
+  const carnetSan = await lire("08_Carnet_sanitaire.txt", null, () =>
+    prisma.carnetSanitaire.findUnique({
     where: { etablissementId: id },
     include: {
       pointsReleve: {
@@ -406,7 +465,7 @@ export async function GET(
       },
       analyses: { orderBy: { dateAnalyse: "desc" }, take: 5 },
     },
-  });
+  }));
   if (carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0)) {
     const txt = [
       `CARNET SANITAIRE EAU`,
@@ -433,7 +492,7 @@ export async function GET(
       `Analyses légionelles récentes (${carnetSan.analyses.length}) :`,
       "────────────────────────────────────────────────────────────",
       ...carnetSan.analyses.flatMap((a) => [
-        `  ${formaterDateFr(a.dateAnalyse)} · ${a.valeurUfcParL ?? "—"} UFC/L · ${a.conforme ? "sous la limite de qualité (< 1 000 UFC/L)" : "LIMITE DE QUALITÉ ATTEINTE (≥ 1 000 UFC/L)"}${a.laboratoire ? ` · ${a.laboratoire}` : ""}`,
+        `  ${formaterDateFr(a.dateAnalyse)} · ${a.valeurUfcParL ?? "—"} UFC/L · ${{ sous_limite: "sous la limite de qualité (< 1 000 UFC/L)", limite_atteinte: "LIMITE DE QUALITÉ ATTEINTE (≥ 1 000 UFC/L)", sans_valeur: "valeur non saisie" }[resultatAnalyse(a.valeurUfcParL)]}${a.laboratoire ? ` · ${a.laboratoire}` : ""}`,
         a.commentaire ? `    ${a.commentaire}` : "",
       ]),
       "",
@@ -450,7 +509,16 @@ export async function GET(
     adresse: etablissement.adresse,
     dateNow,
     duerpNumeroVersion,
-    aDuerpPdf: duerpNumeroVersion !== null,
+    // ~~`duerpNumeroVersion !== null`~~ : une version existante dont le rendu
+    // a échoué était annoncée présente.
+    aDuerpPdf:
+      duerpNumeroVersion !== null && `02_DUERP_v${duerpNumeroVersion}.pdf` in zip.files,
+    presents: new Set(Object.keys(zip.files)),
+    regime: { estERP: etablissement.estERP, estIGH: etablissement.estIGH },
+    duerpLu,
+    echecs,
+    piecesPrestatairesManquantes,
+    piecesPrestataires,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
     nbPermisFeu: permisFeuList.length,
@@ -460,7 +528,11 @@ export async function GET(
     ),
     nbEcheancesContractuelles: echeancesContractuelles.size,
     etatDuerp,
-    nbVerifsEnRetard,
+    retards: {
+      nbEnRetard: nbVerifsEnRetard,
+      calendrier: fraicheur,
+      inventaire,
+    },
     avertissementCalendrier: phraseFraicheur(fraicheur),
     inventaire,
   });
