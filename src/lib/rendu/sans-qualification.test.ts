@@ -153,20 +153,21 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
     ligne: "? \"L'avis d'aptitude vous est transmis et vous le conservez de votre côté (art. R. 4624-55) : Rojer n'en garde pas copie.\"",
     motif: "Transmis par le médecin du travail (R. 4624-55), pas par Rojer.",
   },
-  // EN ATTENTE DE DÉCISION (C38) : le flux de signature externe. Aucun
-  // driver d'envoi réel (`lib/email/index.ts`) — ces deux phrases sont
-  // fausses aujourd'hui, et leur sort (masquer le bouton ou brancher un
-  // driver) est posé à la propriétaire. Admises nommément pour que la
-  // décision se prenne là, et que toute AUTRE promesse tombe.
+  // Le flux de signature externe. ~~En attente de décision~~ — tranché le
+  // 2026-09-26 par la propriétaire : le bouton reste, et la demande est
+  // refusée AVANT le jeton tant que l'envoi n'est pas en service
+  // (`envoiEnService`). Ces deux phrases ne s'affichent donc qu'après un
+  // envoi réellement parti : la première sur `ok: true`, la seconde sur la
+  // page qu'ouvre le lien reçu.
   {
     fichier: "src/components/signatures/DemanderSignatureForm.tsx",
     ligne: "Le destinataire va recevoir un email avec le lien et son code de",
-    motif: "En attente de décision (C38) : faux tant qu'aucun driver n'est branché.",
+    motif: "Affichée sur `ok: true` seulement, c'est-à-dire après un envoi parti (`emettreAccessToken`).",
   },
   {
     fichier: "src/components/signatures/SignatureExterneForm.tsx",
     ligne: '<Label htmlFor="otp">Code reçu par email *</Label>',
-    motif: "En attente de décision (C38) : faux tant qu'aucun driver n'est branché.",
+    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
   },
 ];
 

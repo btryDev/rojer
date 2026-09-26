@@ -53,8 +53,13 @@ class ConsoleEmailDriver implements EmailDriver {
 
 let _driver: EmailDriver | null = null;
 
-export function getEmailDriver(): EmailDriver {
-  if (_driver) return _driver;
+/**
+ * Pourquoi aucun message ne partirait, ou `null` si l'envoi est en service.
+ * UNE seule règle, lue par `getEmailDriver` (qui lève) et par `envoiEnService`
+ * (qui répond avant qu'on écrive quoi que ce soit) : les deux ne peuvent pas
+ * se contredire.
+ */
+function refusDuDriver(): string | null {
   const driver = process.env.EMAIL_DRIVER ?? "console";
   if (driver === "console") {
     // Le driver `console` n'envoie rien : il imprime. En production, il ne
@@ -63,19 +68,34 @@ export function getEmailDriver(): EmailDriver {
     // attendent. Un déploiement sans `EMAIL_DRIVER` avalait jusqu'ici chaque
     // message sans qu'aucune trace ne le dise. Il lève désormais au premier
     // envoi — c'est-à-dire au moment exact où le défaut a une conséquence.
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "EMAIL_DRIVER vaut « console » en production : aucun mail ne partirait, " +
+    return process.env.NODE_ENV === "production"
+      ? "EMAIL_DRIVER vaut « console » en production : aucun mail ne partirait, " +
           "et le lien de signature n'atteindrait jamais son destinataire. " +
-          "Brancher un driver d'envoi réel avant de servir ce chemin.",
-      );
-    }
-    _driver = new ConsoleEmailDriver();
-    return _driver;
+          "Brancher un driver d'envoi réel avant de servir ce chemin."
+      : null;
   }
-  throw new Error(
-    `Driver email non supporté : ${driver}. Utiliser "console" ou brancher une implémentation.`,
-  );
+  return `Driver email non supporté : ${driver}. Utiliser "console" ou brancher une implémentation.`;
+}
+
+/**
+ * L'envoi d'un e-mail peut-il partir ? En production, aujourd'hui : non —
+ * aucun driver réel n'est implémenté (relevé du 2026-09-26, C38). En
+ * développement : oui, vers la console et `/dev/boite-mail`.
+ *
+ * À appeler AVANT toute écriture qui n'a de sens que si le message part : un
+ * jeton d'accès créé puis jamais envoyé restait en base, et un code renouvelé
+ * puis jamais envoyé rendait le précédent inutilisable.
+ */
+export function envoiEnService(): boolean {
+  return refusDuDriver() === null;
+}
+
+export function getEmailDriver(): EmailDriver {
+  if (_driver) return _driver;
+  const refus = refusDuDriver();
+  if (refus) throw new Error(refus);
+  _driver = new ConsoleEmailDriver();
+  return _driver;
 }
 
 export async function sendMail(payload: EmailPayload): Promise<void> {

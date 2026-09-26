@@ -9,6 +9,7 @@ import { formaterDateFr } from "@/lib/dates";
 import { z } from "zod";
 import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
+import { envoiEnService } from "@/lib/email";
 import {
   decrementOtpEssais,
   marquerUtilise,
@@ -44,6 +45,10 @@ import { notFound } from "next/navigation";
 
 const MESSAGE_NON_SIGNABLE =
   "Ce document n'est plus à signer : il a été clos ou annulé.";
+
+/** Vrai à la lettre : le refus arrive avant le renouvellement du code. */
+const MESSAGE_RENVOI_HORS_SERVICE =
+  "Aucun nouveau code n'a été envoyé : l'envoi d'e-mails n'est pas encore en service dans Rojer. Le code précédent n'a pas été modifié.";
 
 /**
  * Les entrées de `demanderSignature`, validées. C'est une server action,
@@ -355,6 +360,12 @@ export async function renvoyerCodeOtp(
       status: "error",
       message: `Un code vient d'être envoyé. Patientez ${renvoi.attendreSecondes} seconde${renvoi.attendreSecondes > 1 ? "s" : ""} avant d'en demander un autre.`,
     };
+  }
+
+  // Avant le renouvellement : un code renouvelé puis jamais envoyé rendait le
+  // précédent inutilisable (C38, 2026-09-26).
+  if (!envoiEnService()) {
+    return { status: "error", message: MESSAGE_RENVOI_HORS_SERVICE };
   }
 
   const otp = generateOtp();

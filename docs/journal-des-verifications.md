@@ -2345,8 +2345,7 @@ l'avait trouvée, hors de la relecture.
   jeton reste en base sans message. La phrase ne s'affiche qu'en
   développement, où le message part à la console et à `/dev/boite-mail`,
   pas au destinataire.
-  La phrase est laissée : la corriger, c'est décider de ce que devient la
-  demande de signature, et c'est une décision de produit.
+  ~~La phrase est laissée~~ : tranché le même jour, voir plus bas.
 
 **Contre-lecture du 2026-09-26, sur `64ac8b0`.**
 
@@ -2425,6 +2424,28 @@ passe. Elle est dite dans la sonde.
 **Hors lot, noté** : `incendie-registre-securite` (R. 4227-39) ne porte pas
 `champR422734`, contrairement à ses sœurs. Le référentiel est scellé ; la
 politique sœur est à chercher avant d'y toucher.
+
+**Décision de la propriétaire, 2026-09-26 : la signature externe.** Le
+bouton reste, et le message dit vrai « le temps qu'on s'occupe de l'envoi
+des mails ». Mise en œuvre :
+- `lib/email` exporte `envoiEnService()`. Il lit la même règle que
+  `getEmailDriver` (`refusDuDriver`) : en production aujourd'hui, non ; en
+  développement, oui (console et `/dev/boite-mail`, inchangés).
+- `emettreAccessToken` refuse AVANT toute écriture et rend
+  `envoi_hors_service`. La demande lit « La demande n'a pas été envoyée :
+  l'envoi d'e-mails n'est pas encore en service dans Rojer. Aucun lien n'a
+  été créé. » Le jeton orphelin et l'erreur générique de Next disparaissent.
+- `renvoyerCodeOtp` refuse avant de renouveler : un code renouvelé puis
+  jamais envoyé rendait le précédent inutilisable. Aucun écran ne l'appelle
+  aujourd'hui ; c'est une server action, donc joignable par le réseau.
+- « Le destinataire va recevoir un email » et « Code reçu par email » ne
+  s'affichent plus qu'après un envoi parti. Leur admission dans la garde est
+  requalifiée.
+
+**Éprouvé en cassant**, trois cassures indépendantes, 5 tests tombés :
+- le refus retiré d'`emettreAccessToken` ;
+- le refus de `renvoyerCodeOtp` déplacé après le renouvellement ;
+- `envoiEnService` forcé à `true`.
 
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
 inchangée depuis `d34bb24`, et le lot ne touche pas `src/lib/referentiels`.

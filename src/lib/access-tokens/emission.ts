@@ -13,6 +13,7 @@ import {
   ttlHoursFor,
 } from "./token";
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
+import { envoiEnService } from "@/lib/email";
 import { generateOtp, hashOtp, otpExpirationDate } from "@/lib/signatures/otp";
 
 /**
@@ -146,7 +147,14 @@ export type EmissionTokenParams = {
 
 export type EmissionResultat =
   | { ok: true; accessTokenId: string; expireLe: Date }
-  | { ok: false; raison: "frequence"; message: string };
+  | { ok: false; raison: "frequence" | "envoi_hors_service"; message: string };
+
+/**
+ * Ce que le demandeur lit quand l'envoi n'est pas en service. Vrai à la
+ * lettre : le refus arrive avant la création du jeton.
+ */
+export const MESSAGE_ENVOI_HORS_SERVICE =
+  "La demande n'a pas été envoyée : l'envoi d'e-mails n'est pas encore en service dans Rojer. Aucun lien n'a été créé.";
 
 export async function emettreAccessToken(
   entree: EmissionTokenParams,
@@ -174,6 +182,14 @@ export async function emettreAccessToken(
     ))
   ) {
     notFound();
+  }
+
+  // ~~Le jeton créé, puis l'envoi qui lève~~ (C38, 2026-09-26) : en
+  // production, sans driver réel, chaque demande laissait un jeton orphelin et
+  // rendait l'erreur générique de Next. L'envoi se sait hors service AVANT
+  // toute écriture.
+  if (!envoiEnService()) {
+    return { ok: false, raison: "envoi_hors_service", message: MESSAGE_ENVOI_HORS_SERVICE };
   }
 
   // Limite de fréquence, avant toute écriture et tout envoi.

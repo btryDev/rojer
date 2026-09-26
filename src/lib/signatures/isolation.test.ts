@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * Isolation entre clients sur l'émission d'un accès de signature, et
@@ -105,10 +105,12 @@ vi.mock("next/navigation", () => ({
     throw e;
   },
 }));
+const { envoi } = vi.hoisted(() => ({ envoi: { enService: true } }));
 vi.mock("@/lib/email", () => ({
   sendMail: vi.fn(async (p: { to: string; subject: string; text: string }) => {
     mailsEnvoyes.push(p);
   }),
+  envoiEnService: () => envoi.enService,
   mailFrom: () => "no-reply@test.local",
   publicAppUrl: () => "http://localhost:3000",
 }));
@@ -349,6 +351,33 @@ describe("garantie 5b — le texte du courriel ne vient plus du client", () => {
       }),
     ).rejects.toThrow();
     expect(mailsEnvoyes).toHaveLength(0);
+  });
+});
+
+describe("envoi hors service (C38, 2026-09-26) — la demande est refusée AVANT le jeton", () => {
+  afterEach(() => {
+    envoi.enService = true;
+  });
+
+  it("rend le message exact, sans créer de jeton ni envoyer", async () => {
+    envoi.enService = false;
+
+    const r = await demanderSignature(DEMANDE);
+
+    expect(r).toEqual({
+      ok: false,
+      message:
+        "La demande n'a pas été envoyée : l'envoi d'e-mails n'est pas encore en service dans Rojer. Aucun lien n'a été créé.",
+    });
+    expect(prismaMock.accessToken.create).not.toHaveBeenCalled();
+    expect(prismaMock.accessToken.lignes).toHaveLength(0);
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("l'envoi en service, rien ne change : un jeton, un message", async () => {
+    expect(await demanderSignature(DEMANDE)).toEqual({ ok: true });
+    expect(prismaMock.accessToken.create).toHaveBeenCalledTimes(1);
+    expect(mailsEnvoyes).toHaveLength(1);
   });
 });
 
