@@ -230,6 +230,10 @@ export function diagnostiquerPlan(params: {
   // pris aux constantes d'`annonces-plan.ts` que `annonces-plan.test.ts`
   // confronte au corpus. Relu sur Légifrance le 2026-09-26, en vigueur
   // depuis le 2008-05-01 : identique.
+  // Le 2° renvoie à DEUX listes — « respectivement, par arrêté du ministre
+  // chargé du travail et par arrêté du ministre chargé de l'agriculture ».
+  // La seconde n'est pas lue au dépôt : elle est nommée, pas citée
+  // (contre-lecture de C40, 2026-09-27).
   if (seuil400) {
     raisons.push(
       `Durée estimée : ${params.dureeHeuresEstimee} h. Art. R. 4512-7, 1° : ` +
@@ -242,7 +246,8 @@ export function diagnostiquerPlan(params: {
       "Travaux déclarés dangereux. Art. R. 4512-7, 2° : " +
         `« ${R4512_7_2_DUREE.charAt(0).toLowerCase()}${R4512_7_2_DUREE.slice(1)} », ` +
         `le plan est « ${R4512_7_ECRIT} » lorsque les travaux sont au nombre ` +
-        `des « ${R4512_7_2_LISTE} » par arrêté (arrêté du 19 mars 1993).`,
+        `des « ${R4512_7_2_LISTE} » par arrêté (arrêté du 19 mars 1993 et, ` +
+        "pour les travaux agricoles, arrêté du ministre chargé de l'agriculture).",
     );
   }
   const ecritObligatoire = seuil400 || params.travauxDangereux;

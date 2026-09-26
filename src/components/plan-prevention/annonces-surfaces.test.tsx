@@ -247,7 +247,7 @@ describe("formulaire : ce qui s'y lit au premier affichage", async () => {
   it("la case des travaux dangereux : l'arrêté daté en toutes lettres, exemples tirés de sa liste", () => {
     // C40, suite. Chaque exemple entre guillemets de la case est un point de
     // l'article 1er de l'arrêté du 19 mars 1993, tel que le corpus le porte.
-    expect(contient(lu, "liste des travaux dangereux de l'arrêté du 19 mars 1993 (art. R. 4512-7, 2°)")).toBe(true);
+    expect(contient(lu, "liste des travaux dangereux de l'arrêté du 19 mars 1993 ou, pour les travaux agricoles, de l'arrêté du ministre chargé de l'agriculture (art. R. 4512-7, 2°)")).toBe(true);
     expect(lu).not.toContain("19-03-1993");
     const liste = (
       indexArticlesParRef().get("Arrêté 1993-03-19 art. 1er")?.article.citationCle ?? ""

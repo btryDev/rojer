@@ -2872,6 +2872,58 @@ ancienne phrase de la fiche remise, exemple paraphrasé (« Travaux de
 démolition lourde »), date en chiffres remise — trois rouges, fichiers
 restaurés.
 
+**Contre-lecture de `11e76b3` (2026-09-27), et ses corrections.** Rendue sans
+point grave par la session de coordination, qui a rendu elle-même le PDF du
+document unique (pdftotext : « à confirmer » à 49/50, rien sur une version
+figée ancienne) et vérifié les six surfaces du lien. Cinq reprises :
+
+- **M1** — E2 rayé « Tranché et fait (C37, ADR-031 § 1 ter) » : § 1 ter ne
+  porte que la borne. La source est la réponse de la propriétaire du
+  2026-09-26, « ok super penses a rectifier les deux points », au relevé qui
+  posait les deux questions d'E2 — relayée par la coordination, non
+  consignée ailleurs au dépôt. Exécutée par C36 (programme annuel annoncé dès
+  cinquante) et C37 (deux nombres, règle de prudence). L'attribution fausse
+  est rayée et datée au fichier des décisions.
+- **F1** — le guide nommait « comité social et économique, règlement
+  intérieur » même à un dossier que ni l'un ni l'autre ne vise (9/9). Il dit
+  la règle : « Les obligations de l'écran « Ce qui doit être en place » ne
+  citent pas encore leur texte à l'écran. »
+- **F2** — `droits.ts` : l'ouverture « pour certains travaux ou certains
+  postes » oubliait la visite d'information et de prévention, due à « Tout
+  travailleur » (`R. 4624-10`, relu le 2026-09-27, en vigueur depuis le
+  01/01/2017) ; elle dit désormais les deux. Coupure « ne peuvent être /
+  confiés » refaite. E8, au fichier des décisions : ce que `1a8dd58` a changé,
+  et ce qui reste affirmé pour tous les titres (6.1.c, 17.3.b, art. 21).
+- **F3** — le 2° de `R. 4512-7` renvoie à deux listes, « respectivement, par
+  arrêté du ministre chargé du travail et par arrêté du ministre chargé de
+  l'agriculture ». La raison du diagnostic et la case du formulaire ne
+  nommaient que la première. Elles nomment la seconde, **sans la citer** :
+  l'arrêté agricole n'est pas lu au dépôt.
+- **F4** — référentiel, **descriptions seules** : `L. 4644-1` relu le
+  2026-09-27 (en vigueur depuis le 31/03/2022) — son I ne pose ni condition
+  d'effectif ni de secteur. « Cette désignation s'impose dès le premier
+  salarié, sans condition d'effectif ni de secteur » → « L'article ne pose ni
+  condition d'effectif ni condition de secteur. » ; et, trouvée par la garde
+  étendue, la description de la formation du salarié désigné : « Elle est due
+  dès le premier salarié désigné » → le deuxième alinéa cité. **Ni
+  `REFERENTIEL_VERSION` ni `HISTORIQUE_EMPREINTES` touchés** (un lot
+  parallèle passe la version à `.11` ; la numérotation se fera à
+  l'intégration) ; `conformite.test.ts` vert — l'empreinte ne lit pas les
+  descriptions. La garde `r4121-1-sans-seuil` balaie désormais
+  `lib/referentiels/conformite`, commentaires dépliés, avec cinq phrases
+  admises À LA LETTRE (commentaires et `notesInternes`, non affichés) et un
+  test qui exige que chacune existe encore.
+
+**Éprouvées** : description de `L. 4644-1` remise ; phrase admise réécrite
+(« dès le tout premier salarié ») ; liste agricole retirée de la raison, puis
+de la case ; ouverture de `droits.ts` rendue à « certains travaux ou certains
+postes ». Relevé : `r4121-1-sans-seuil` 1 failed | 2 passed (description) et
+1 failed | 2 passed (phrase admise) ; `seuil.test` 1 failed | 16 passed ;
+`annonces-surfaces` 1 failed | 20 passed ; `salaries.test` 1 failed | 21
+passed — fichiers restaurés après chacune. Vitest a figé deux fois sur
+l'injection de la description ; seuls les processus de ce worktree ont été
+arrêtés, l'injection rejouée seule.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

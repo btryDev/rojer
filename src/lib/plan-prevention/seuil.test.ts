@@ -68,6 +68,14 @@ describe("seuil des 400 h — art. R. 4512-7", () => {
     }
   });
 
+  it("le 2° nomme ses deux listes, travail et agriculture", () => {
+    // « respectivement, par arrêté du ministre chargé du travail et par
+    // arrêté du ministre chargé de l'agriculture » (R. 4512-7, 2°).
+    const r = diag(null, true).raisons[0];
+    expect(r).toContain("arrêté du 19 mars 1993");
+    expect(r).toContain("arrêté du ministre chargé de l'agriculture");
+  });
+
   it("chaque raison nomme le fait saisi qui la déclenche", () => {
     expect(diag(420).raisons[0]).toMatch(/^Durée estimée : 420 h\./);
     expect(diag(null, true).raisons[0]).toMatch(/^Travaux déclarés dangereux\./);

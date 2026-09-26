@@ -477,7 +477,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     libelle:
       "Formation en santé au travail du salarié désigné compétent",
     description:
-      "Le ou les salariés désignés par l'employeur pour s'occuper des activités de protection et de prévention des risques professionnels bénéficient d'une formation en matière de santé au travail, dans les conditions prévues pour la formation des membres du comité social et économique : temps pris sur le temps de travail et rémunéré, organisme enregistré auprès de l'autorité administrative, durée minimale de cinq jours, financement à la charge de l'employeur. Elle est due dès le premier salarié désigné, sans condition d'effectif. Le Code ne lui fixe aucune durée de validité.",
+      "Le ou les salariés désignés par l'employeur pour s'occuper des activités de protection et de prévention des risques professionnels bénéficient d'une formation en matière de santé au travail, dans les conditions prévues pour la formation des membres du comité social et économique : temps pris sur le temps de travail et rémunéré, organisme enregistré auprès de l'autorité administrative, durée minimale de cinq jours, financement à la charge de l'employeur. Le texte la donne à chaque salarié désigné (« Le ou les salariés ainsi désignés par l'employeur bénéficient d'une formation »), sans condition d'effectif. Le Code ne lui fixe aucune durée de validité.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",

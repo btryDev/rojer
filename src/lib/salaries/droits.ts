@@ -112,7 +112,10 @@ export async function exporterDonneesSalarie(
  * dangereux » et certains chantiers ; L. 2315-18 dit que les membres de la
  * délégation du personnel du CSE et le référent « bénéficient » de leur
  * formation (tous deux relus sur Légifrance le 2026-09-26). Le texte dit
- * désormais « prévus ». Il n'arbitre pas E8 : la base 6.1.c, et les refus
+ * désormais « prévus », et que certains le sont pour tout travailleur : la
+ * visite d'information et de prévention (R. 4624-10, « Tout travailleur
+ * bénéficie… », relu le 2026-09-27) — la première écriture de cette
+ * correction, « pour certains travaux ou certains postes », l'oubliait. Il n'arbitre pas E8 : la base 6.1.c, et les refus
  * d'effacement (17.3.b) et d'opposition (21) qui s'en déduisent, restent
  * tels quels jusqu'à la décision.
  */
@@ -130,9 +133,10 @@ export function texteInformation({
 
   return `Information sur le suivi de vos titres et habilitations
 
-${raisonSociale} utilise un outil, Rojer, pour suivre les échéances des titres
-que vous détenez et que le Code du travail prévoit pour certains travaux ou
-certains postes.
+${raisonSociale} utilise un outil, Rojer, pour suivre les échéances des titres,
+formations et visites que le Code du travail prévoit : certains pour tout
+travailleur, comme la visite d'information et de prévention (art. R. 4624-10),
+d'autres pour certains travaux ou certains postes.
 
 CE QUI EST ENREGISTRÉ
 
@@ -159,9 +163,8 @@ R. 4624-55 du Code du travail).
 POURQUOI
 
 Parce que le Code du travail prévoit ces titres, formations et visites.
-Certains travaux ne peuvent être
-confiés qu'à une personne titulaire d'un titre en cours de validité, et
-l'employeur doit pouvoir en justifier. La base légale de ce traitement est
+Certains travaux ne peuvent être confiés qu'à une personne titulaire d'un
+titre en cours de validité, et l'employeur doit pouvoir en justifier. La base légale de ce traitement est
 l'article 6.1.c du RGPD — une obligation légale.
 
 Ce n'est donc pas un traitement fondé sur votre consentement, et il ne peut pas

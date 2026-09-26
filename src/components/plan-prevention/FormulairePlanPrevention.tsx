@@ -440,7 +440,9 @@ export function FormulairePlanPrevention({
           <span className="min-w-0 flex-1">
             <span className="block text-[13.5px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
               Les travaux figurent sur la liste des travaux dangereux de
-              l&apos;arrêté du 19 mars 1993 (art. R. 4512-7, 2°)
+              l&apos;arrêté du 19 mars 1993 ou, pour les travaux agricoles,
+              de l&apos;arrêté du ministre chargé de l&apos;agriculture
+              (art. R. 4512-7, 2°)
             </span>
             {/* Les exemples sont des points de la liste, entre guillemets
                 (C40, suite). Ils étaient paraphrasés, et plusieurs en

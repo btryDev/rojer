@@ -67,10 +67,9 @@ export function ChezVous({
           règle du DUERP cite sa source ci-dessous. Une vérification datée
           cite la sienne sur sa fiche de vérification, une obligation qui
           vise une personne sur sa fiche dans l&apos;équipe, une obligation
-          qui naît d&apos;un événement sur la page « Quand ça arrive ». Ce
-          qui doit être en place — comité social et économique, règlement
-          intérieur — ne cite pas encore le sien sur l&apos;écran « Ce qui
-          doit être en place ». Modifiez vos déclarations et cette section
+          qui naît d&apos;un événement sur la page « Quand ça arrive ». Les
+          obligations de l&apos;écran « Ce qui doit être en place » ne
+          citent pas encore leur texte à l&apos;écran. Modifiez vos déclarations et cette section
           se recalcule.
         </p>
       </header>

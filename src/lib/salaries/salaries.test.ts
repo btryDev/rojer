@@ -163,6 +163,9 @@ describe("texteInformation — art. 13", () => {
     // reste ouverte : le texte dit « prévus », il ne dit plus « impose ».
     expect(texte).not.toMatch(/la loi l'impose|lui impose de connaître|exigés par le Code/);
     expect(texte).toContain("prévoit");
+    // La VIP est due à « Tout travailleur » (R. 4624-10) : l'ouverture ne
+    // peut pas réduire le suivi à « certains travaux ou certains postes ».
+    expect(texte).toMatch(/certains pour tout\s+travailleur, comme la visite d'information et de prévention/);
   });
 
   it("le dit franchement quand rien n'est encore suivi", () => {
