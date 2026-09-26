@@ -195,14 +195,14 @@ export const IDS_MESURES_COURANTES: ReadonlySet<string> = new Set(MESURES_PERMIS
 /**
  * La date à partir de laquelle la liste courante est en service.
  *
- * ⚠ BORNE PROVISOIRE, À FIXER À L'INTÉGRATION par la date du déploiement de
- * cette liste. La valeur ci-dessous est le lendemain du lot : aucun permis
- * créé avant elle n'a pu cocher la liste courante, puisqu'elle n'était
- * déployée nulle part. Entre elle et le déploiement, un permis antérieur SANS
- * aucune mesure cochée se lirait encore comme courant : c'est le seul cas que
- * les identifiants ne tranchent pas (contre-lecture du 2026-09-26).
+ * Fixée à l'intégration au jour du déploiement de cette liste, le
+ * 2026-09-26 (minuit, heure de Paris). Un permis créé ce jour-là avant le
+ * déploiement, sur l'ancienne liste et SANS aucune mesure cochée, se lirait
+ * comme courant : c'est le seul cas que les identifiants ne tranchent pas
+ * (contre-lecture du 2026-09-26). La propriétaire a indiqué que les données
+ * de production étaient alors fictives : le cas n'a pas de victime.
  */
-export const BASCULE_LISTE_ED6030 = depuisCleJourCivil("2026-09-27");
+export const BASCULE_LISTE_ED6030 = depuisCleJourCivil("2026-09-26");
 
 /**
  * Un permis a-t-il été établi sur une liste antérieure ? Par ses identifiants

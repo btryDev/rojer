@@ -2004,10 +2004,11 @@ passaient en vert.]*
   quoi faire.
 - Un permis antérieur sans aucune mesure cochée s'affichait « 0 sur 13 »,
   avec neuf prioritaires « manquantes ». Il se reconnaît désormais aussi par
-  sa date de création (`BASCULE_LISTE_ED6030`). ⚠ La valeur est une BORNE
+  sa date de création (`BASCULE_LISTE_ED6030`). ~~⚠ La valeur est une BORNE
   PROVISOIRE, le lendemain du lot, à fixer à l'intégration par la date du
-  déploiement. Entre les deux, seul un permis sans mesure cochée resterait
-  mal lu.
+  déploiement.~~ *[Fixée le 2026-09-26 à l'intégration
+  (`integration/2026-09-26-c`) au jour du déploiement, 2026-09-26 ; données
+  de production alors fictives, selon la propriétaire.]*
 - La garde ne liait pas un commentaire à son action : échanger ceux de deux
   mesures de la même page passait. `LIGNES_ED6030` porte l'empreinte de
   chaque paire, lue dans l'ordre des lignes du tableau. Dans « Étape d'après
