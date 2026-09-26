@@ -1120,7 +1120,7 @@ du bruit. Elle est donc aussi dans l'aide du champ « Dernières mesures
 physiques », que tout document affiche. Le PDF décrivait DÉJÀ l'annexe, juste
 en dessous, sous condition (« Annexes éventuellement obligatoires … lorsque
 l'activité le justifie », « seuils réglementaires ») : ce paragraphe, que le
-texte ne soutient pas, est retiré — l'annexe n'est plus décrite qu'une fois.
+texte ne soutient pas, est retiré. ~~L'annexe n'est plus décrite qu'une fois.~~ [Faux, relevé par vérification le jour même : quand un risque porte une saisie d'exposition, la page « Expositions relevées » garde son propre chapeau (« Ce n'est pas l'annexe prévue par l'article R. 4121-1-1… »), qui dit pourquoi CE tableau n'est pas l'annexe ; la mention générale dit que l'annexe n'est pas produite. Deux phrases, deux objets.]
 La mention de transmission continue désormais la liste du PDF (« il est :
 … transmis par l'employeur … ») ; le chapeau des informations complémentaires
 du formulaire de cotation ne promet plus « certaines annexes obligatoires ».

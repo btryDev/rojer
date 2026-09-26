@@ -3,8 +3,8 @@
  * PORTE pas, mais qu'il DIT — une seule écriture chacune, lue par toutes les
  * surfaces, et confrontée au verbatim du corpus par `textes-duerp.test.ts`.
  *
- * POURQUOI ICI. Ces deux obligations sont au corpus en `obligation_manquante`,
- * `cause: "module"` (`L. 4121-3-1`, `R. 4121-1-1`) : le produit n'a ni la
+ * POURQUOI ICI. Ces trois obligations sont au corpus en `obligation_manquante`,
+ * `cause: "module"` (`L. 4121-3-1`, `R. 4121-1-1`, `R. 4433-2`) : le produit n'a ni la
  * trace d'une transmission, ni l'annexe d'exposition. Le 2026-09-26, une
  * instruction a constaté que rien ne les disait à qui tient son document
  * unique : la transmission n'apparaissait nulle part, et la phrase « ce n'est
