@@ -134,7 +134,7 @@ repose sur un texte que personne n'a ouvert.
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-26 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 |
 | `incendie` | 36 | 73 | 20 | 9 | 7 | · | · | · | 29 / 36 — 81 % | 0 / 73 | 2026-08-26 → 2026-09-26 |
-| `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 |
+| `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 10 | 27 | 9 | 1 | · | · | · | · | 10 / 10 — 100 % | 0 / 27 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 |
 | `organisation_prevention` | 9 | 13 | 1 | 8 | · | · | · | · | 9 / 9 — 100 % | 0 / 13 | 2026-08-31 → 2026-09-26 |
@@ -170,12 +170,12 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | --- | --- | --- | --- |
 | 2026-08-26 | 46 | 15 % | 37 |
 | 2026-08-27 | 10 | 3 % | 7 |
-| 2026-08-31 | 68 | 22 % | 32 |
+| 2026-08-31 | 67 | 21 % | 31 |
 | 2026-09-01 | 141 | 45 % | 89 |
 | 2026-09-02 | 17 | 5 % | 14 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
-| 2026-09-26 | 17 | 5 % | 14 |
+| 2026-09-26 | 18 | 6 % | 15 |
 
 316 des 316 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-26.
 
@@ -309,7 +309,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-alarme-verification-hebdomadaire` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-04 |
 | `incendie-registre-securite` | incendie | etablissement | 10 | 5 · première main | 4 · agent + verbatim | 0 / 10 | 2026-08-31 → 2026-09-26 |
 | `information-etablissement-affichages-obligatoires` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
-| `information-etablissement-avis-acces-duerp` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
+| `information-etablissement-avis-acces-duerp` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-26 |
 | `levage-examen-etat-conservation` | levage | equipement | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-09-01 |
 | `locaux-etablissement-eau-potable` | locaux_sociaux | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `locaux-etablissement-emplacement-restauration` | locaux_sociaux | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
@@ -712,7 +712,7 @@ refaire pour la contredire.
 | `prevention-etablissement-chaleur-mise-en-oeuvre` | fondement | R. 4463-7 (mise en œuvre des mesures lors de la survenue d'un épisode) | R. 4463-7 | code-travail-chaleur-intense | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-mise-a-jour-duerp-sur-fait` | fondement | R. 4121-2, 2° et 3° (mise à jour du document unique sur décision d'aménagement important ou information nouvelle) | R. 4121-2 | code-travail-duerp | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 2022-03-31 | 2022-03-31 | 4 · agent + verbatim | ancrée |
 | `information-etablissement-affichages-obligatoires` | fondement | D. 4711-1 (affichage de l'adresse et du numéro d'appel du service de santé au travail, des secours d'urgence et de l'inspection du travail) | D. 4711-1 | code-travail-information-travailleurs | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
-| `information-etablissement-avis-acces-duerp` | fondement | R. 4121-4 dernier alinéa (avis affiché indiquant les modalités d'accès des travailleurs au document unique) | R. 4121-4 | code-travail-information-travailleurs | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2022-03-31 | 2022-03-31 | 4 · agent + verbatim | ancrée |
+| `information-etablissement-avis-acces-duerp` | fondement | R. 4121-4 dernier alinéa (avis affiché indiquant les modalités d'accès des travailleurs au document unique) | R. 4121-4 | code-travail-information-travailleurs | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2022-03-31 | 2022-03-31 | 4 · agent + verbatim | ancrée |
 | `epi-etablissement-consigne-utilisation` | fondement | R. 4323-105 (consigne d'utilisation des équipements de protection individuelle) | R. 4323-105 | code-travail-epi | retenu | 2026-09-04 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
 | `epi-etablissement-consigne-utilisation` | contexte 1 | R. 4323-104 (contenu de l'information dont la consigne est la reprise écrite) | R. 4323-104 | code-travail-epi | sans_objet | 2026-09-04 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `epi-verification-generale-periodique` | fondement | Arrêté du 19 mars 1993, art. 1er (liste des EPI soumis à vérification et périodicité de douze mois) | Arrêté 1993-03-19 (EPI) art. 1er | arrete-1993-03-19-epi | retenu | 2026-09-04 | premiere_main | ✓ | ✓ | 1993-12-01 | 1993-12-01 | 5 · première main | ancrée |

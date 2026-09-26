@@ -10,6 +10,7 @@ import { formaterDateCourteFr, formaterDateLongueFr } from "@/lib/dates";
 import { LABEL_STATUT, LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
 import { estHorsReferentiel } from "@/lib/risques/helpers";
 import { phrasesMethodologie, quandSansReponse } from "./mentions-couverture";
+import { TEXTE_R4121_4 } from "./mentions-r4121-4";
 import {
   CHAPEAU_ANNEXE_EXPOSITION,
   TITRE_ANNEXE_EXPOSITION,
@@ -260,8 +261,7 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
               aussi réalisée {enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}, et{" "}
               {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} (2° et 3°).
               Conservation 40 ans à compter de son
-              élaboration, ainsi que ses versions antérieures (loi du 2 août
-              2021).
+              élaboration, ainsi que ses versions antérieures (art. R. 4121-4).
             </Text>
           </View>
         </View>
@@ -850,13 +850,11 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
             • mis à jour {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} ;
           </Text>
           <Text>
-            • conservé pendant 40 ans à compter de son élaboration, ainsi que
-            ses versions antérieures (loi du 2 août 2021) ;
+            • tenu à disposition, conservé et signalé par un avis dans les
+            termes de l&apos;article R. 4121-4 du Code du travail :
           </Text>
-          <Text>
-            • tenu à disposition des travailleurs, du CSE le cas échéant, du
-            médecin du travail, des agents de l&apos;inspection du travail et
-            des agents des services de prévention de la Carsat.
+          <Text style={{ marginLeft: 10, marginTop: 3 }}>
+            «&nbsp;{TEXTE_R4121_4}&nbsp;»
           </Text>
         </View>
 

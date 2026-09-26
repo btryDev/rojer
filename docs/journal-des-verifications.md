@@ -1089,6 +1089,95 @@ rend **onze** qui admettent l'IGH : trois propres (`elec-igh-annuelle`,
 `incendie-igh-moyens-secours-annuelle`,
 `incendie-igh-charge-calorifique-quinquennale`) et huit d'ascenseur, ouvertes à
 tous les régimes.
+
+### C32 · 2026-09-26 — Aucune sortie ne qualifie : « opposable », « fait foi », « exigée par les assureurs » remplacés par des faits
+
+**Constat.** Rojer calcule, il n'avise pas (charte, interdits 16 et 17) ; les
+tests anti-verdict gardaient chacun leur sortie, rien ne gardait le reste. Une
+recherche sur `src/` et le serveur MCP (hors commentaires) a relevé, sur des
+surfaces affichées ou imprimées : « opposable par votre contrat — pas par le
+droit » (écran et fiche du permis de feu, README du dossier de contrôle, et le
+marquage long de l'ADR-032, laissé — voir plus bas), « RÉFÉRENTIELS NON OPPOSABLES », « Hiérarchie des
+mesures opposable » et « éléments opposables » (dossier de conformité), « les
+rendant opposables » (guide des documents obligatoires), « pas une règle
+opposable » (description d'un risque), « fait foi » et « engage
+conjointement » (fiche du permis de feu), « engage le prestataire et vous
+protège » (écran du permis de feu), « exigée par les assureurs » (ZIP de
+contrôle), « ce qui est en règle » (page d'accueil — trouvé par la garde, la
+phrase était coupée en fin de ligne), « conforme et vérifiée » (exemple d'un
+champ du plan de prévention). Chacun est remplacé par ce que le texte dit, ou
+ce que Rojer fait.
+
+**L'ADR-032 emploie lui-même le mot** (« sources opposables », « actes
+d'autorité opposables ») pour décider ; il n'est pas réécrit. Il impose un
+marquage, « engagement d'assurance, pas une obligation légale », qui reste
+tel quel. La phrase qui le prolonge dans `MARQUAGE_CONTRACTUEL_LONG`
+(« opposable par votre contrat d'assurance, pas par le droit ») n'est pas dans
+l'ADR, **mais elle n'est PAS corrigée** : `prescriptions/sources.ts` est un
+module du moteur de calendrier, et la modifier déplace l'empreinte que
+`calendrier/version-moteur.test.ts` scelle. Essayé, constaté
+(`91badd776f7acbba` au lieu de `aa9563477bf1ea07`), retiré. Le texte n'est
+écrit en base par aucune régénération (il est seulement réexporté pour
+l'affichage), ce qui en ferait un « NON » au sens du test — recopier
+l'empreinte seule —, mais recopier une empreinte n'est pas une décision de ce
+lot. Déclarée dans la garde comme dette nommée, remplacement proposé : « cette
+échéance naît d'une demande de votre assureur, et aucune référence légale ne
+lui est attachée ».
+
+**Lu, pages propres, structure demandée d'abord, formulation décisive deux
+fois :**
+
+- `R. 4121-4` (LEGIARTI000045386451, en vigueur depuis le 2022-03-31, modifié
+  par le décret n° 2022-395, art. 1) : un chapeau, sept destinataires 1° à 7°,
+  deux alinéas. « […] sont tenus, pendant une durée de 40 ans à compter de
+  leur élaboration, à la disposition : ». **L'article entier est consigné au
+  corpus** (`code-travail-information-travailleurs`, `luLe` 2026-09-26,
+  `modifiePar` ajouté) ; le PDF du document unique le lit de là
+  (`pdf/mentions-r4121-4.ts`) au lieu d'une paraphrase qui retenait quatre
+  destinataires (« médecin du travail », « Carsat »), sans les anciens
+  travailleurs ni les 6° et 7°. Les quarante ans y étaient attribués à la loi
+  du 2 août 2021, qui ne fixe qu'un plancher : ils citent désormais
+  `R. 4121-4`, dans ce PDF et dans le dossier de conformité.
+- Arrêté du 19 mars 1993, art. 1er (LEGIARTI000029720328, en vigueur depuis le
+  2008-05-01, modifié par le décret n° 2008-244) : un chapeau, vingt et un
+  points numérotés « 1. » à « 21. ». « 21. Travaux de soudage oxyacétylénique
+  exigeant le recours à un permis de feu. » — seule occurrence de « permis de
+  feu » dans l'article. Cité sur l'écran du permis de feu, à côté de « Aucun
+  texte n'impose le permis de feu sous ce nom », sans trancher entre les deux.
+  `luLe` du corpus inchangé : seuls le chapeau et le point 21 ont été relus.
+
+**La garde** : `src/lib/rendu/sans-qualification.test.ts`, qui balaie
+`src/app`, `src/components`, `src/lib` et `scripts/mcp-server.ts`,
+commentaires blanchis, et cherche les mots par-dessus les coupures de ligne.
+Trois occurrences admises nommément : la consigne du serveur MCP, qui NOMME
+les mots pour les interdire (deux), et le marquage long, en dette. **Éprouvée** : la phrase historique de l'écran du
+permis de feu, remise telle que `abd0108` la donne, est refusée à sa ligne
+(`permis-feu/page.tsx:178 — « opposable »`) ; les défauts de ce jour sont
+gardés en épreuve dans un bac, coupures de ligne comprises.
+
+**Ce que la garde ne regarde pas, et qui reste à décider :**
+
+- `src/lib/referentiels/conformite/` est scellé : `stockage-dangereux.ts`
+  porte en `reference` « valeurs de rétention, opposables uniquement sous ce
+  régime ICPE », et d'autres notes emploient le mot. Les corriger demande une
+  montée de version.
+- « Conforme » comme libellé du résultat d'un rapport (formulaire, calendrier,
+  registre, tableau de bord) : c'est ce que le vérificateur écrit, affiché
+  seul. Le reformuler est une décision de vocabulaire, pas une correction.
+- Le choix « Conforme dès la construction » / « Mis en conformité après
+  travaux » (régime d'accessibilité déclaré) et « Escabeau … conforme aux
+  normes (NF) » (une mesure du DUERP) : le mot y qualifie un bâtiment ou un
+  équipement déclaré, pas l'état du dossier.
+- Les phrases qui NIENT un verdict (« Cela ne veut pas dire qu'il est
+  conforme », « ne rend aucun dossier conforme », « Ce dossier ne vaut pas
+  certification de conformité ») sont laissées : elles disent ce que Rojer ne
+  fait pas.
+
+**Sceau inchangé**, mesuré avant et après :
+`2026-09-26.5+167-66f005e23f039ca+moteur.4`.
+`docs/etat-verification-referentiel.md` régénéré : lus au 2026-08-31,
+68 − 1 = 67 ; lus au 2026-09-26, 17 + 1 = 18 (`R. 4121-4`).
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

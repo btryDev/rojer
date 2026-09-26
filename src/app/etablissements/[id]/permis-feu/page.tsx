@@ -117,11 +117,15 @@ export default async function PermisFeuListePage({
           charte="board"
           kicker="Pourquoi cette page"
           titre="Un permis de feu = votre assurance et votre preuve."
-          enjeu="80 % des incendies de travaux se déclarent après le chantier, pendant la surveillance. Un permis signé engage le prestataire et vous protège."
+          enjeu="80 % des incendies de travaux se déclarent après le chantier, pendant la surveillance. Le permis nomme qui intervient, où, et les mesures prises avant, pendant et après les travaux."
           tonalite="info"
         >
           <p className="m-0">
-            Aucun texte n&apos;impose le permis de feu sous ce nom. Il
+            Aucun texte n&apos;impose le permis de feu sous ce nom.
+            L&apos;arrêté du 19 mars 1993 (art. 1er, point 21), qui liste les
+            travaux pour lesquels un plan de prévention est établi par écrit,
+            mentionne les «&nbsp;Travaux de soudage oxyacétylénique exigeant
+            le recours à un permis de feu&nbsp;». Il
             matérialise un <strong>faisceau d&apos;obligations</strong>{" "}
             :
             l&apos;entretien des installations de sécurité, et, en ERP,
@@ -173,9 +177,10 @@ export default async function PermisFeuListePage({
             />
           </div>
           <p className="m-0 mt-3 text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Votre assureur l&apos;exigera probablement au titre de la règle
-            APSAD R43. C&apos;est un référentiel de la profession de
-            l&apos;assurance, opposable par votre contrat — pas par le droit.
+            La règle APSAD R43 (travaux par points chauds) est un référentiel
+            publié par la profession de l&apos;assurance : ni un article de
+            code, ni un arrêté. Un contrat d&apos;assurance peut y renvoyer ;
+            Rojer ne lit pas le vôtre.
           </p>
         </WhyCard>
       </div>

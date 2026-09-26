@@ -161,10 +161,10 @@ export function genererReadme(args: {
     // INSTALLATIONS ET DISPOSITIFS techniques et de sécurité des lieux de
     // travail (verbatim au corpus `code-travail-portes`) ; il ne dit rien d'un
     // permis de travail par point chaud. Et ce même README écrit dix lignes
-    // plus bas que l'INRS ED 6030 et la règle APSAD R43 sont « sans valeur
-    // réglementaire propre » : lui donner un article de code au-dessus le
+    // plus bas que l'INRS ED 6030 et la règle APSAD R43 ne sont « ni article
+    // de code, ni arrêté » : lui donner un article de code au-dessus le
     // contredisait dans le même document, celui qu'on remet à un inspecteur.
-    " Permis de feu :            voir « référentiels non opposables » ci-dessous",
+    " Permis de feu :            voir « ni code, ni arrêté » ci-dessous",
     " Plan de prévention :       art. R. 4512-6 à R. 4512-12 CT",
     // ~~« · art. R. 1321-23 CSP »~~ — retiré le 2026-09-20. Le corpus a
     // établi le 2026-09-02 que son destinataire est « la personne responsable
@@ -182,15 +182,16 @@ export function genererReadme(args: {
     // référentiels restent nommés — ils fondent réellement la pratique — mais
     // sous leur propre titre, et en disant ce qu'ils opposent.
     "────────────────────────────────────────────────────────────",
-    " RÉFÉRENTIELS NON OPPOSABLES CITÉS DANS CE DOSSIER",
+    " RÉFÉRENTIELS CITÉS DANS CE DOSSIER — NI CODE, NI ARRÊTÉ",
     "────────────────────────────────────────────────────────────",
     "",
     " INRS ED 6030 :             recommandation de l'Institut national de",
-    "                            recherche et de sécurité. Bonne pratique",
-    "                            reconnue, sans valeur réglementaire propre.",
+    "                            recherche et de sécurité. Ni article de",
+    "                            code, ni arrêté.",
     " Règle APSAD R43 :          référentiel de la profession de l'assurance",
-    "                            (travaux par points chauds). Opposable par",
-    "                            votre contrat d'assurance, pas par le droit.",
+    "                            (travaux par points chauds). Ni article de",
+    "                            code, ni arrêté ; un contrat d'assurance",
+    "                            peut y renvoyer.",
     "",
   );
   // Le même titre que ci-dessus vaudrait pour ces lignes, mais elles ne sont
@@ -212,9 +213,8 @@ export function genererReadme(args: {
       ` ${n} échéance${n > 1 ? "s" : ""} de ce dossier ${n > 1 ? "naissent" : "naît"} d'une demande de`,
       " votre assureur, et non d'un texte. Chacune porte la mention",
       ` « ${MARQUAGE_CONTRACTUEL} »`,
-      " là où elle apparaît. Elles sont opposables par votre contrat",
-      " d'assurance, pas par le droit, et aucune référence légale ne leur",
-      " est attachée.",
+      " là où elle apparaît. Aucune référence légale ne leur est",
+      " attachée.",
       "",
     );
   }

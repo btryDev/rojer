@@ -640,11 +640,11 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             — Évaluation des risques professionnels : articles R. 4121-1 à
             R. 4121-4 du Code du travail. Mise à jour annuelle minimum
             (entreprises ≥ 11 salariés), conservation 40 ans des versions
-            (loi du 2 août 2021).
+            à compter de leur élaboration (art. R. 4121-4).
           </Text>
           <Text style={{ marginTop: 3 }}>
-            — Principes généraux de prévention : article L. 4121-2 CT.
-            Hiérarchie des mesures opposable.
+            — Principes généraux de prévention : article L. 4121-2 CT, qui
+            en énumère neuf.
           </Text>
           <Text style={{ marginTop: 3 }}>
             {/* ~~« R. 4226-14 et s. »~~ — corrigé le 2026-09-20. Au corpus,
@@ -665,8 +665,8 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
           </Text>
           <Text style={{ marginTop: 6 }}>
             Ce dossier ne vaut pas certification de conformité. Il
-            centralise les éléments opposables à disposition de
-            l&apos;employeur pour faciliter le dialogue avec
+            rassemble les pièces et les échéances enregistrées dans Rojer, à
+            disposition de l&apos;employeur, pour faciliter le dialogue avec
             l&apos;inspection, la commission de sécurité, l&apos;assureur
             ou le bailleur.
           </Text>

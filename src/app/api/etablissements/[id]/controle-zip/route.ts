@@ -279,7 +279,7 @@ export async function GET(
   if (permisFeuList.length > 0) {
     const txt = [
       `PERMIS DE FEU — 12 derniers mois (${permisFeuList.length})`,
-      `Recommandation INRS ED 6030 ; règle APSAD R43 exigée par les assureurs.`,
+      `Recommandation INRS ED 6030 ; règle APSAD R43, référentiel de la profession de l'assurance.`,
       `Ni l'une ni l'autre n'est un texte réglementaire — cf. le dossier de contrôle.`,
       "",
       "────────────────────────────────────────────────────────────",

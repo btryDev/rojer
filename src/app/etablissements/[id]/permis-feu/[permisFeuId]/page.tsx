@@ -420,12 +420,12 @@ export default async function PermisFeuDetailPage({
           href="https://www.inrs.fr/media.html?refINRS=ED%206030"
           defaultOpen
         >
-          Le permis de feu engage conjointement l&apos;entreprise utilisatrice
-          et l&apos;entreprise extérieure. Il fait foi de l&apos;analyse de
-          risque menée avant travaux et des mesures prises. En cas de sinistre,
-          ce document est le premier demandé par l&apos;assureur, au titre de
-          la règle APSAD R43 — un référentiel de la profession de
-          l&apos;assurance, opposable par le contrat et non par le droit.
+          Le permis de feu enregistré ici nomme le donneur d&apos;ordre et
+          l&apos;entreprise qui intervient, les travaux, les mesures
+          préventives cochées (INRS ED 6030) et la durée de surveillance après
+          travaux. La règle APSAD R43 (travaux par points chauds) est un
+          référentiel de la profession de l&apos;assurance : ni un article de
+          code, ni un arrêté. Un contrat d&apos;assurance peut y renvoyer.
         </LegalBadge>
       </div>
     </EcranFiche>
