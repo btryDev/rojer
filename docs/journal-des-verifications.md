@@ -1187,6 +1187,55 @@ l'entreprise. » Il remplace l'autre, attribué. La brochure servie en PDF
 n'est que le formulaire ; son texte courant n'a pas été lu. La règle APSAD
 R43, payante, ne l'a pas été non plus.
 
+**Contre-lecture du même jour, et ce qu'elle a trouvé que la garde ne voyait
+pas.**
+
+- Le « 80 % » vivait encore dans les mesures du permis de feu
+  (`permis-feu/referentiel.ts`, sous-titre de l'étape « après »), avec
+  « C'est la principale cause d'incendie post-travaux » et « Porter à 4h
+  minimum » sur la mesure de surveillance.
+- La brochure INRS ED 6030 (2e édition, août 2019) est lue en entier : ~~la
+  brochure servie en PDF n'est que le formulaire~~ [le texte courant est
+  `TI-ED-6030-2.pdf`], extrait deux fois par deux outils distincts. Elle ne
+  dit ni 80 %, ni « principale cause », ni 4 h. Elle dit « Surveillance à
+  réaliser pendant 2 h au moins après l'arrêt des travaux. Arrêter les travaux
+  2 h au moins avant la fermeture de l'entreprise si le maintien de la
+  surveillance n'est pas possible. » C'est ce qui s'affiche désormais, cité.
+  Le sous-titre de l'étape nomme ses trois actions (inspection, surveillance,
+  remise en service), celles du tableau « Étape d'après travaux » de la
+  brochure.
+- « Obligatoire avant tout travail par point chaud » contredisait, sur le même
+  écran, « Aucun texte n'impose le permis de feu sous ce nom ». La brochure
+  écrit elle-même « La rédaction du permis de feu est obligatoire pour tous
+  travaux par points chauds » : la phrase est citée et attribuée à l'INRS, et
+  l'écran rappelle que ce n'est ni un article de code, ni un arrêté.
+- L'INRS ne classe AUCUNE mesure en « obligatoire » ou « conseillée » : son
+  formulaire demande « À FAIRE ? OUI / NON ». Ce classement est celui de
+  Rojer. Le mot « obligatoire » quitte donc les libellés (formulaire, fiche,
+  pastille « N non cochée(s) ») pour « prioritaire », et le chapeau dit que
+  c'est Rojer qui les signale. L'identifiant interne `obligatoire` ne change
+  pas. « Checklist officielle » devient ce qu'est l'ED 6030 : une brochure.
+- Six phrases de même nature, hors des mots gardés, sont remplacées par un
+  fait : « Aucune valeur légale avant validation » (filigrane du PDF),
+  « votre responsabilité est engagée » (plan de prévention, où `R. 4512-6`
+  est maintenant cité depuis le corpus), « votre assurance et votre preuve »,
+  « c'est cette preuve qui vous couvre », « qui protège aussi bien
+  l'entreprise que vous-même », « le premier document demandé ».
+- La garde est élargie : frontières Unicode (`\b` est ASCII en JavaScript),
+  entités de JSX et apostrophe typographique ramenées à ce qu'elles rendent,
+  formes « inopposable », « opposabilité », « fera foi », « exigée par
+  l'assureur / par votre assurance », « l'exigera probablement »,
+  « en&nbsp;règle », « en{" "} » suivi de « règle », et les familles « vous
+  couvre / vous protège », « responsabilité engagée », « valeur légale »,
+  « premier document demandé ». Les admissions valent pour un texte exact,
+  plus pour un fichier. Éprouvée sur la sonde de la contre-lecture (neuf
+  formes, toutes refusées) et sur les fichiers réels de `2fbd230`, remis puis
+  restaurés : cinq refus à la ligne. **Ce qu'elle ne voit toujours pas** :
+  une qualification hors de ces familles. « Un permis de feu = votre assurance
+  et votre preuve » et « Obligatoire avant tout travail » ne relèvent d'aucune
+  et ne sont pas refusés sur le fichier restauré. Ils ont été trouvés à la
+  lecture.
+
 **Sceau inchangé**, mesuré avant et après :
 `2026-09-26.5+167-66f005e23f039ca+moteur.4`.
 `docs/etat-verification-referentiel.md` régénéré : lus au 2026-08-31,

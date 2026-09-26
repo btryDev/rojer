@@ -47,7 +47,7 @@ export const MESURES_PERMIS_FEU: readonly MesurePermisFeu[] = [
     id: "isoler-detection",
     libelle: "Isoler ou neutraliser les détecteurs automatiques d'incendie",
     explication:
-      "Uniquement temporairement et selon une procédure écrite. Remise en service obligatoire en fin de travaux.",
+      "Uniquement temporairement et selon une procédure écrite. Remise en service en fin de travaux.",
     groupe: "avant",
     priorite: "conseillee",
   },
@@ -99,7 +99,7 @@ export const MESURES_PERMIS_FEU: readonly MesurePermisFeu[] = [
     id: "surveillance-2h-min",
     libelle: "Surveillance de la zone pendant au moins 2 heures après arrêt",
     explication:
-      "Porter à 4h minimum en présence de matériaux combustibles profonds (isolants, bois). C'est la principale cause d'incendie post-travaux.",
+      "INRS, ED 6030 : « Surveillance à réaliser pendant 2 h au moins après l'arrêt des travaux. Arrêter les travaux 2 h au moins avant la fermeture de l'entreprise si le maintien de la surveillance n'est pas possible. »",
     groupe: "apres",
     priorite: "obligatoire",
   },
@@ -137,7 +137,7 @@ export const GROUPES_LABEL: Record<
   },
   apres: {
     label: "Après les travaux",
-    sous: "Attention — c'est là que 80% des incendies se déclarent",
+    sous: "Inspection, surveillance, remise en service",
   },
 };
 

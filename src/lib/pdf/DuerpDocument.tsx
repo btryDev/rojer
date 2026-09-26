@@ -217,7 +217,7 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
           DOCUMENT NON VALIDÉ — APERÇU
         </Text>
         <Text style={s.watermarkHint}>
-          Aucune valeur légale avant validation d&apos;une version
+          Aperçu : aucune version n&apos;est encore validée dans Rojer
         </Text>
       </View>
   ) : null;

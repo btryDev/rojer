@@ -35,35 +35,68 @@ import { describe, expect, it } from "vitest";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
+// Frontières UNICODE : `\b` est ASCII en JavaScript, même avec le drapeau `u`
+// — il voyait une frontière au milieu de « opposabilité » (contre-lecture du
+// 2026-09-26). Un mot commence et finit là où ni lettre, ni chiffre, ni `_`.
+const D = String.raw`(?<![\p{L}\p{N}_])`;
+const F = String.raw`(?![\p{L}\p{N}_])`;
+const mot = (corps: string) => new RegExp(`${D}(?:${corps})${F}`, "giu");
+
 /** Les qualifications, en mots séparés par n'importe quel blanc — une phrase de JSX se coupe en fin de ligne. */
 const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
-  { nom: "opposable", motif: /\b(?:non[\s-]+)?opposab(?:les?|ilités?)\b/giu },
-  { nom: "fait foi", motif: /\b(?:fait|font|faire|faisant)\s+foi\b/giu },
+  // Les formes françaises, accent compris — pas `opposab\p{L}*`, qui avalait
+  // les identifiants `opposabiliteUrssaf`, `opposabilite` de la vigilance.
+  { nom: "opposable", motif: mot(String.raw`(?:non[\s-]+|in)?opposab(?:les?|ilités?)`) },
+  { nom: "fait foi", motif: mot(String.raw`(?:fait|font|faire|faisant|fera|feront|ferait)\s+foi`) },
   {
-    nom: "exigé par les assureurs",
-    motif: /\bexig(?:é|ée|és|ées)\s+par\s+(?:les|vos|votre|l')\s*assureurs?\b/giu,
+    nom: "exigé par l'assureur",
+    motif: mot(
+      String.raw`exig\p{L}*\s+par\s+(?:les?|la|vos|votre|l')\s*(?:assureurs?|assurances?)` +
+        String.raw`|(?:assureurs?|assurances?)\s+(?:l'|les\s+|la\s+)?exig\p{L}*` +
+        String.raw`|l'exig\p{L}*\s+probablement`,
+    ),
   },
-  { nom: "en règle", motif: /\ben\s+règle\b/giu },
-  { nom: "en infraction", motif: /\ben\s+infraction\b/giu },
+  { nom: "en règle", motif: mot(String.raw`en\s+règle`) },
+  { nom: "en infraction", motif: mot(String.raw`en\s+infraction`) },
+  // Les familles que la contre-lecture a trouvées hors de la garde : ce que
+  // le produit promettrait qu'un document fait POUR le dirigeant.
+  { nom: "vous couvre / vous protège", motif: mot(String.raw`vous\s+(?:couvre|couvrent|protège|protègent)|qui\s+protège|vous\s+protéger`) },
+  { nom: "responsabilité engagée", motif: mot(String.raw`responsabilité\s+(?:est\s+|serait\s+|sera\s+)?engagée`) },
+  { nom: "valeur légale", motif: mot(String.raw`valeur\s+(?:légale|juridique|probante)`) },
+  { nom: "premier document demandé", motif: mot(String.raw`premier\s+document\s+demandé`) },
 ];
 
 /**
- * Les occurrences admises, NOMMÉMENT, avec leur motif. Une entrée qui ne
- * correspond plus à rien fait échouer le test : un aveu mort se retire.
+ * Les occurrences admises, NOMMÉMENT — fichier et texte exact, pas le mot
+ * seul : une admission par fichier laissait passer toute nouvelle occurrence
+ * du même mot dans le même fichier. Une entrée qui ne correspond plus à rien
+ * fait échouer le test : un aveu mort se retire.
  */
-const ADMISES: { fichier: string; nom: string; motif: string }[] = [
+const ADMISES: { fichier: string; texte: string; motif: string }[] = [
   {
     fichier: "src/lib/mcp/tools.ts",
-    nom: "opposable",
+    texte: "opposable",
     motif:
       "La consigne donnée au modèle qui lit le serveur MCP : elle NOMME le mot pour l'interdire (« ni « conforme », ni « en infraction », ni « opposable » »).",
   },
   {
     fichier: "src/lib/mcp/tools.ts",
-    nom: "en infraction",
+    texte: "en infraction",
     motif: "Même consigne, même motif.",
   },
 ];
+
+/**
+ * Le source tel qu'il s'affiche, à la ligne près : les entités de JSX et les
+ * espaces explicites ramenées à ce qu'elles rendent, l'apostrophe typographique
+ * à la droite. « l&apos;exigera », « en&nbsp;règle », « en{" "} » suivi de
+ * « règle » à la ligne : tous passaient.
+ */
+const commeAffiche = (code: string) =>
+  code
+    .replace(/&apos;|&#39;|[’‘]/g, "'")
+    .replace(/&nbsp;|&#160;| | /g, " ")
+    .replace(/\{\s*["'`] ["'`]\s*\}/g, " ");
 
 const DOSSIERS = ["src/app", "src/components", "src/lib"];
 const EXCLUS = ["src/lib/referentiels/conformite", "src/lib/referentiels/corpus"];
@@ -110,7 +143,7 @@ type Trouvee = { ou: string; nom: string; texte: string };
 function qualificationsAffichees(racine: string): Trouvee[] {
   const out: Trouvee[] = [];
   for (const f of fichiers(racine)) {
-    const code = sansCommentaires(readFileSync(f, "utf8"));
+    const code = commeAffiche(sansCommentaires(readFileSync(f, "utf8")));
     const rel = relative(racine, f);
     for (const q of QUALIFICATIONS) {
       for (const m of code.matchAll(q.motif)) {
@@ -119,11 +152,20 @@ function qualificationsAffichees(racine: string): Trouvee[] {
       }
     }
   }
-  return out;
+  // Rangées par fichier puis par ligne : l'ordre des motifs n'est pas celui du texte.
+  const cle = (t: Trouvee) => {
+    const i = t.ou.lastIndexOf(":");
+    return [t.ou.slice(0, i), Number(t.ou.slice(i + 1))] as const;
+  };
+  return out.sort((a, b) => {
+    const [fa, la] = cle(a);
+    const [fb, lb] = cle(b);
+    return fa === fb ? la - lb : fa.localeCompare(fb);
+  });
 }
 
 const admise = (t: Trouvee) =>
-  ADMISES.some((a) => t.ou.startsWith(`${a.fichier}:`) && a.nom === t.nom);
+  ADMISES.some((a) => t.ou.startsWith(`${a.fichier}:`) && a.texte === t.texte.toLowerCase());
 
 describe("aucune sortie ne qualifie juridiquement", () => {
   const trouvees = qualificationsAffichees(RACINE);
@@ -144,8 +186,8 @@ describe("aucune sortie ne qualifie juridiquement", () => {
   it("chaque occurrence admise existe encore — un aveu mort se retire", () => {
     for (const a of ADMISES)
       expect(
-        trouvees.some((t) => t.ou.startsWith(`${a.fichier}:`) && t.nom === a.nom),
-        `${a.fichier} / ${a.nom}`,
+        trouvees.some((t) => t.ou.startsWith(`${a.fichier}:`) && t.texte.toLowerCase() === a.texte),
+        `${a.fichier} / ${a.texte}`,
       ).toBe(true);
   });
 });
@@ -186,10 +228,82 @@ describe("la garde éprouvée en la cassant", () => {
     });
     try {
       expect(qualificationsAffichees(r).map((t) => `${t.ou} ${t.nom}`)).toEqual([
+        "src/app/permis-feu/page.tsx:3 exigé par l'assureur",
         "src/app/permis-feu/page.tsx:5 opposable",
         "src/app/permis-feu/page.tsx:6 fait foi",
         "src/lib/pdf/readme.ts:2 opposable",
-        "src/lib/pdf/readme.ts:3 exigé par les assureurs",
+        "src/lib/pdf/readme.ts:3 exigé par l'assureur",
+      ]);
+    } finally {
+      rmSync(r, { recursive: true, force: true });
+    }
+  });
+
+  it("voit ce que la sonde de la contre-lecture faisait passer", () => {
+    // Chaque forme, une par ligne, telle qu'un écran l'écrirait.
+    const formes = [
+      "C&apos;est inopposable.",
+      "Son opposabilité tient au contrat.",
+      "Ce document fera foi.",
+      "Une règle exigée par l&apos;assureur.",
+      "Une règle exigée par l’assureur.",
+      "Une mesure exigée par votre assurance.",
+      "Votre assureur l&apos;exigera probablement.",
+      "Tout est en&nbsp;règle.",
+      "Tout est en{\" \"}",
+      "règle.",
+    ];
+    const r = bac({ "src/app/sonde.tsx": `export const S = () => (\n<p>\n${formes.join("\n")}\n</p>\n);\n` });
+    try {
+      expect(qualificationsAffichees(r).map((t) => t.ou)).toEqual(
+        [3, 4, 5, 6, 7, 8, 9, 10, 11].map((l) => `src/app/sonde.tsx:${l}`),
+      );
+    } finally {
+      rmSync(r, { recursive: true, force: true });
+    }
+  });
+
+  it("voit les six phrases que la contre-lecture a trouvées hors de la garde, telles qu'elles étaient écrites", () => {
+    // Recopiées de `2fbd230`, où la garde précédente les laissait passer.
+    const r = bac({
+      "src/lib/pdf/DuerpDocument.tsx": "          Aucune valeur légale avant validation d&apos;une version\n",
+      "src/app/plan-prevention/page.tsx":
+        'enjeu="Une entreprise qui intervient chez vous fait intervenir son personnel dans votre environnement : si un accident survient faute d\'analyse conjointe, votre responsabilité est engagée."\n',
+      "src/app/equipe/page.tsx": [
+        "                  habilitée au moment où elle a travaillé — c&apos;est cette",
+        "                  preuve qui vous couvre sur la période passée.",
+        "",
+      ].join("\n"),
+      "src/lib/salaries/droits.ts": [
+        "période où vous avez travaillé. C'est cette preuve qui protège aussi bien",
+        "l'entreprise que vous-même.",
+        "",
+      ].join("\n"),
+      "src/app/duerp/page.tsx":
+        'enjeu="Obligatoire dès le premier salarié. En cas de contrôle ou d\'accident, c\'est le premier document demandé."\n',
+    });
+    try {
+      expect(qualificationsAffichees(r).map((t) => `${t.ou} ${t.nom}`)).toEqual([
+        "src/app/duerp/page.tsx:1 premier document demandé",
+        "src/app/equipe/page.tsx:2 vous couvre / vous protège",
+        "src/app/plan-prevention/page.tsx:1 responsabilité engagée",
+        "src/lib/pdf/DuerpDocument.tsx:1 valeur légale",
+        "src/lib/salaries/droits.ts:1 vous couvre / vous protège",
+      ]);
+    } finally {
+      rmSync(r, { recursive: true, force: true });
+    }
+  });
+
+  it("une admission vaut pour son texte exact, pas pour le fichier", () => {
+    const r = bac({
+      "src/lib/mcp/tools.ts":
+        "const C = `ni « conforme », ni « en infraction », ni « opposable »`;\nconst D = `ce rapport fait foi`;\n",
+    });
+    try {
+      const vues = qualificationsAffichees(r);
+      expect(vues.filter((t) => !admise(t)).map((t) => `${t.ou} ${t.nom}`)).toEqual([
+        "src/lib/mcp/tools.ts:2 fait foi",
       ]);
     } finally {
       rmSync(r, { recursive: true, force: true });

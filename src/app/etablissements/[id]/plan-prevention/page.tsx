@@ -168,7 +168,7 @@ export default async function PlanPreventionListePage({
           charte="board"
           kicker="Pourquoi cette page"
           titre="Protéger les deux parties contre les risques d'interférence."
-          enjeu="Une entreprise qui intervient chez vous fait intervenir son personnel dans votre environnement : si un accident survient faute d'analyse conjointe, votre responsabilité est engagée."
+          enjeu="Une entreprise qui intervient chez vous fait intervenir son personnel dans votre environnement. Art. R. 4512-6 : « les chefs des entreprises utilisatrice et extérieures procèdent en commun à une analyse des risques pouvant résulter de l'interférence entre les activités, installations et matériels »."
           tonalite="info"
         >
           {/* CE QUE LES 400 HEURES CONDITIONNENT, ET CE QU'ELLES NE

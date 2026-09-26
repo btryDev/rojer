@@ -197,7 +197,7 @@ export default async function PermisFeuDetailPage({
                   droite={
                     manquantesObligatoires > 0 ? (
                       <PastilleFiche ton="retard">
-                        {manquantesObligatoires} obligatoire
+                        {manquantesObligatoires} prioritaire
                         {manquantesObligatoires > 1 ? "s" : ""} non cochée
                         {manquantesObligatoires > 1 ? "s" : ""}
                       </PastilleFiche>
@@ -247,7 +247,7 @@ export default async function PermisFeuDetailPage({
                           </span>
                           {manque && (
                             <span className="ml-auto flex-none text-[11.5px] font-semibold text-[color:var(--board-signal-ink)]">
-                              obligatoire
+                              prioritaire
                             </span>
                           )}
                         </li>
