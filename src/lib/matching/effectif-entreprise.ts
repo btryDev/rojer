@@ -65,8 +65,15 @@ export function seuilEntrepriseAtteint(
 /**
  * Ce que le dirigeant lit quand un seuil n'est atteint que par prudence — la
  * même phrase partout, et de quoi conclure (contre-lecture M3). Au plus près
- * de L. 1111-3, qui écarte du calcul « 1° Les apprentis » et, au 6°, les
- * titulaires d'un contrat de professionnalisation.
+ * des textes, relus de première main : L. 1111-3 écarte du calcul, entre
+ * autres, « 1° Les apprentis » et, au 6°, « Les titulaires d'un contrat de
+ * professionnalisation jusqu'au terme prévu par le contrat lorsque celui-ci
+ * est à durée déterminée ou jusqu'à la fin de l'action de professionnalisation
+ * lorsque le contrat est à durée indéterminée » ; L. 1111-2 compte les temps
+ * partiels et les contrats à durée déterminée au prorata. L'écart entre les
+ * deux nombres peut venir de l'une de ces règles, pas seulement des deux
+ * premières : la phrase dit « notamment » et nomme la règle de calcul plutôt
+ * que de présenter l'alternative comme binaire.
  */
 export function phraseEffectifAConfirmer(
   e: EffectifsDeclares,
@@ -75,8 +82,11 @@ export function phraseEffectifAConfirmer(
   return (
     `L'entreprise est déclarée à ${e.entreprise} salarié${e.entreprise > 1 ? "s" : ""}, ` +
     `ce site à ${e.site} travailleur${e.site > 1 ? "s" : ""}. ` +
-    "Si l'écart vient de vos apprentis ou de titulaires d'un contrat de " +
-    `professionnalisation, que l'art. L. 1111-3 ne compte pas, ${consequence}. ` +
+    "Si l'écart vient des règles de décompte des effectifs — notamment vos " +
+    "apprentis, ou des titulaires d'un contrat de professionnalisation " +
+    "jusqu'au terme de ce contrat ou de l'action de professionnalisation, " +
+    "que l'art. L. 1111-3 ne compte pas, ou des temps partiels et contrats à " +
+    `durée déterminée que l'art. L. 1111-2 compte au prorata —, ${consequence}. ` +
     "S'il vient d'un effectif " +
     "d'entreprise qui n'est plus à jour, mettez-le à jour sur la fiche de " +
     "l'entreprise."

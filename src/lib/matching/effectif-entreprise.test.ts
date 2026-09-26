@@ -170,6 +170,13 @@ describe("la phrase « à confirmer » donne de quoi conclure (M3)", () => {
     expect(p).toContain("apprentis");
     expect(p).toContain("contrat de professionnalisation");
     expect(p).toContain("L. 1111-3");
+    // Le 6° ne vaut que jusqu'à un terme, et le texte le dit.
+    expect(p).toContain("jusqu'au terme");
+  });
+
+  it("ne présente pas l'écart comme binaire", () => {
+    expect(p).toContain("notamment");
+    expect(p).toContain("L. 1111-2");
   });
 
   it("dit la sortie par la mise à jour", () => {
