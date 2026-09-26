@@ -107,7 +107,25 @@ export type Entree = {
   categorie: CategorieEquipement;
   libelle: string;
   raison: string;
+  /**
+   * Ce que la référence citée ne dit pas seule (C39, 2026-09-27). Une
+   * citation « — livre II, établissements des quatre premières catégories »
+   * lue à côté d'une suggestion faite à un ERP de 5ᵉ se contredit en
+   * apparence : l'article n'y vaut pas au titre du texte, et le calendrier
+   * pose pourtant l'échéance. La mention le dit, au même endroit. Un champ à
+   * part et non une phrase de plus dans `raison`, dont la forme
+   * `motif (références).` est tenue par un test.
+   */
+  mention?: string;
 };
+
+/**
+ * Posée dès qu'une référence citée est du livre II. Écrite pour tous les ERP
+ * — la suggestion ne connaît pas la catégorie —, elle ne dit donc que le cas
+ * de la 5ᵉ, sans rien affirmer des quatre premières.
+ */
+export const MENTION_SUR_APPLICATION_5E =
+  "En 5ᵉ catégorie, l'échéance est maintenue par sur-application assumée : le détail est sur la fiche de l'obligation.";
 
 /**
  * Ce qu'une règle de suggestion déclare : le motif en langage courant, et les
@@ -122,10 +140,14 @@ type Suggestion = {
 };
 
 function entree(s: Suggestion): Entree {
+  const citations = citer(s.fondements);
   return {
     categorie: s.categorie,
     libelle: s.libelle,
-    raison: `${s.motif} (${citer(s.fondements)}).`,
+    raison: `${s.motif} (${citations}).`,
+    ...(/livre II(?!I)/.test(citations)
+      ? { mention: MENTION_SUR_APPLICATION_5E }
+      : {}),
   };
 }
 
