@@ -2969,6 +2969,66 @@ dans le moteur. Les deux consignes (« fais pareil » et « null garde la
 ligne ») ne tiennent pas ensemble : rien n'est changé, la version reste
 `.10`.
 
+**M2 posé puis ANNULÉ le 2026-09-27.** Une condition `non_infirmee` a été
+posée sur la quinzaine (`797634a`, référentiel `.11`), puis annulée par la
+coordination le même jour (`b131c6f`, revert). Rien n'a quitté la branche.
+
+LA RAISON DE L'ANNULATION : « faux » n'est pas une réponse. La case
+« Groupe électrogène de sécurité présent » du formulaire d'équipement
+(`EquipementForm.tsx`) est une case à cocher binaire, décochée par défaut
+(`defaultChecked={… ?? false}`), et le formulaire écrit toujours un
+booléen. Toute installation électrique enregistrée par le formulaire sans
+cocher la case porte donc `aGroupeElectrogene: false`, que la personne ait
+pensé ou non à la question. `non_infirmee` y éteignait la quinzaine : le
+faux négatif muet qu'on voulait éviter, déplacé du silence vers la case
+décochée.
+
+La grille de `797634a` ne le voyait pas. Elle traitait « faux » comme une
+réponse, et ses 24 pertes « groupe = faux » étaient exactement ce faux
+négatif.
+
+LA VRAIE CORRECTION est un choix à trois états — Oui / Non / Je ne sais
+pas —, par défaut « Je ne sais pas » (propriété absente). Le formulaire
+connaît déjà ce patron (`CHAMPS_TRI_ETAT`, `normaliserTriEtat`). Elle est à
+décider par la propriétaire, avec la question de
+`elec-erp-groupe-electrogene-annuel` :
+- ses `notesInternes` ne disent rien du non-renseigné ;
+- le « absent → non applicable » n'est écrit que dans
+  `CONDITIONS_STRICTES_JUSTIFIEES` (motif de non-régression : « l'obligation
+  n'a JAMAIS été appliquée sans réponse ») et constaté par
+  `engine.test.ts` ;
+- une installation créée par le pré-remplissage, sans `caracteristiques`,
+  ne la reçoit pas.
+
+**Version.** `.10` reste la version courante. `.11` est abandonnée et son
+numéro n'est pas réemployé, comme `.3` ; la prochaine sera `.12`. Le
+commentaire de `HISTORIQUE_EMPREINTES` le dit.
+
+**Grille de contrôle** (`032c5df` contre `d4681ef`, moteur et référentiel
+de production). Les 128 cas de la grille du groupe électrogène, au niveau
+(obligation, équipement), sont IDENTIQUES au caractère près. La quinzaine
+est servie dans les 72 cas ERP avec installation électrique, dont les 24
+« groupe = faux », comme en production.
+
+**Texte de la case, corrigé.** Il disait « Déclenche la vérification
+annuelle prévue par l'art. EL 20 du règlement ERP ». EL 20 traite des
+installations temporaires : il était cité à tort, et le référentiel l'avait
+corrigé dès l'audit 2026-08. La ligne gouvernée est mensuelle. Le nouveau
+texte est la constante `AIDE_GROUPE_ELECTROGENE` (`equipements/labels.ts`) :
+« Cochée, déclenche chaque mois l'entretien et l'essai du groupe
+électrogène de sécurité (art. EL 18 § 4 du règlement de sécurité — livre
+II, établissements des quatre premières catégories ; en 5ᵉ catégorie,
+échéance maintenue par sur-application assumée). »
+
+Il est lu contre le référentiel par `labels.test.ts` : seule ligne
+conditionnée sur la propriété, `mensuelle`, fondée sur EL 18 § 4 avec la
+réserve livre II, et jamais « EL 20 ». **Éprouvé** : EL 20 réinjecté à la
+place d'EL 18 § 4 donne `× ne cite pas EL 20` et `× parle de la seule
+ligne…`. Restauré, il passe.
+
+Le commentaire de `equipements/schema.ts:16` et les trois titres de tests
+du moteur qui disaient « EL 20 » sont corrigés.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
