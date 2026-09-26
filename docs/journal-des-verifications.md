@@ -2204,6 +2204,141 @@ absente, DUERP annoncé malgré l'échec du rendu, bureau lisant la commission).
 test n'importe. Le README est éprouvé sur ses entrées, pas sur ce que la
 route lui passe.
 
+### C38 · 2026-09-26 — La page d'accueil, le guide et le connecteur ne promettent plus que ce que Rojer fait
+
+**Constats** : une relecture en 35 points de la page d'accueil, du guide
+« Comprendre » et du connecteur MCP. Chacun a été revérifié sur `d34bb24`
+avant correction. Les points 18 (CSSCT « 11 salariés et + ») et 19
+(« contrôles obligatoires » des vérificateurs) étaient déjà corrigés par
+`deb2c01` (C36) : la relecture avait lu un état antérieur. Les chiffres ont
+été comptés en appelant `obligationsConformite`, pas au grep :
+- 169 obligations sur 21 domaines ;
+- porteurs : 89 équipement, 66 établissement, 14 salarié ;
+- natures : 86 échéances récurrentes, 53 états permanents,
+  21 événementielles, 9 ponctuelles ; 74 en périodicité `autre` ;
+- sources : Code du travail 150, arrêtés 124, CCH 24, Code de
+  l'environnement 12, règlement (UE) 8 (EUR-Lex), INRS 1.
+
+1. **Les promesses que Rojer ne tient pas** sont retirées :
+   - « Un e-mail vous prévient avant la date » (`Etapes.tsx`, étape 3). La
+     page dit désormais « Rojer n'envoie pas de rappel par e-mail ». La
+     promesse est rayée au backlog. Le seul envoi du dépôt est le lien
+     d'accès des signatures (`access-tokens/mail.ts`).
+   - « Alertes J-30 / J-7 / jour J, escalade », « rappels », « vous
+     rappelle » (`OutilDetails`, `OutilsConformite`, carnet sanitaire).
+   - « Action créée automatiquement depuis un écart » et « Chaque écart
+     ouvre une action » : l'action s'ouvre à la main
+     (`creerActionDepuisVerification`).
+   - « Rojer en déduit les contrôles obligatoires », « les dates se posent
+     seules », « le calendrier se remplit seul » : une date ne se pose que
+     quand le texte fixe un rythme, et 74 obligations n'en ont pas.
+   - « Le jour d'un contrôle, vous n'avez rien à préparer » et « Quatre
+     documents. Tout ce qu'on vous demandera » : la page « Documents
+     obligatoires » en nomme d'autres.
+2. **La maquette du tableau de bord** montrait trois obligations absentes du
+   référentiel ou impossibles, décrites en regard :
+   - la « Vérification électrique périodique (ERP 5ᵉ catégorie) », qui
+     n'existe plus depuis le 2026-08-27 ;
+   - des « moyens de lutte contre l'incendie » en retard de trois jours,
+     alors que c'est un état permanent ;
+   - un « dégraissage des conduits de hotte » qui n'existe sous aucun nom.
+   Elles sont remplacées par des libellés exacts du référentiel, à rythme
+   daté. Le widget « Score de conformité 78/100 » contredisait la FAQ de la
+   même page (« Rojer atteste-t-il de ma conformité ? Non ») : il devient
+   « Indice d'avancement — Formule interne de Rojer, pas une attestation ».
+3. **Les sources** : « Légifrance et l'INRS » devient « Légifrance et
+   EUR-Lex » sur la page d'accueil (8 références au règlement (UE) 2024/573
+   contre 1 à l'INRS) et « Légifrance, EUR-Lex et INRS » dans le guide. Dans
+   le bloc des sources :
+   - « articles L. 4121 à L. 4641 » devient « Quatrième partie : santé et
+     sécurité au travail ». Le lien, relu, ouvre L. 4111-1 à L. 4831-1.
+   - Le CCH, l'arrêté du 25 juin 1980 et le règlement (UE) 2024/573
+     (EUR-Lex, ELI) sont ajoutés.
+   - Le pied du guide perd « Mis à jour 04/2026 » et porte
+     `REFERENTIEL_VERSION`.
+4. **Le périmètre, dit** dans la FAQ : la 5ᵉ catégorie
+   (`CATEGORIES_COUVERTES`), les ERP de 1ʳᵉ à 4ᵉ catégorie sans leurs
+   règles propres, le refus au-delà de 50 travailleurs (`EFFECTIF_MAX`) et
+   le refus d'un ERP situé en IGH. Sur la conservation, « quarante ans… une
+   obligation légale, pas un choix de notre part » est retiré : l'obligation
+   pèse sur l'employeur. La FAQ cite désormais R. 4121-4, « pendant une
+   durée de 40 ans à compter de leur élaboration ».
+5. **Par métier** (`lib/guide/metiers.ts`) :
+   - L'« exercice d'évacuation » du bureau et la « consigne incendie » du
+     commerce portent la condition de **R. 4227-34**, relu deux fois sur
+     Légifrance (« plus de cinquante personnes », « matières inflammables
+     mentionnées à l'article R. 4227-22 »). La condition est lue sur
+     `typologies.champR422734`, pas recopiée. La consigne du commerce
+     renvoie aussi à la consigne ERP.
+   - L'« installation électrique » de la restauration et du commerce
+     renvoyait au seul PE 4, « tous les 3 ans ». Elle distingue maintenant
+     le PE 4 (ERP) et `elec-travail-periodique-annuelle`.
+   - Le DUERP porte « chaque année dès 11 salariés », tiré des constantes
+     de `texte-r4121-2`.
+   - Le lien `#metiers` du pied de page pointait vers une section absente :
+     il est retiré.
+6. **Le guide** :
+   - « Chaque règle cite sa source » devient « la règle du DUERP cite sa
+     source ; chaque obligation cite la sienne sur sa fiche ».
+   - « obligatoire dès le premier salarié » devient « R. 4121-1 fait
+     transcrire l'évaluation… sans seuil d'effectif ».
+   - « 4 outils » devient « 5 outils ».
+   - Le carnet sanitaire est dit hors référentiel.
+   - La colonne « Ce que dit la loi » d'`OutilDetails` ne contient plus que
+     des citations, et la référence du calendrier est corrigée :
+     - DUERP : R. 4121-1 ; R. 4121-2 par ses constantes ; R. 4121-4.
+     - Calendrier : **R. 4323-23**, relu deux fois (LEGIARTI000018531479).
+       R. 4323-22, cité avant, est la vérification initiale.
+     - Registre : R. 4323-25.
+     - Plan d'actions : L. 4121-2 1° et 8°.
+     La ligne sur l'accès au registre est retirée : L. 4711-3 et L. 4711-4
+     ne sont pas relus dans ce lot.
+7. **Le permis de feu**, aligné sur la case du README (C33) :
+   - « INRS… obligatoire » devient « Rojer propose un permis de feu,
+     d'après la brochure INRS ED 6030 ; aucun texte ne l'impose sous ce
+     nom ».
+   - Le paragraphe de l'arrêté du 19 mars 1993 porte R. 4512-7.
+   - L'APSAD R43 est dit « que Rojer n'a pas lu », sur la liste et sur la
+     fiche.
+8. **La signature** : « Signature authentique » devient « Signature
+   enregistrée ». « Votre signature électronique est couverte par l'article
+   1367 » devient une phrase sans qualification, qui cite l'al. 2 (« dans
+   des conditions fixées par décret en Conseil d'Etat »).
+9. **Le connecteur MCP** :
+   - Sur un établissement inconnu, quatre outils sur cinq décrivaient un
+     dossier vide (« aucun équipement déclaré »). L'outil n'est plus
+     exécuté : la réponse dit « Établissement introuvable… rien n'est à
+     conclure de son contenu ».
+   - Une liste vide sans filtre ne dit plus « ne correspond à ces
+     critères ».
+   - `périodicité autre` devient « sans rythme écrit (le texte n'en fixe
+     pas) ».
+   - Les descriptions perdent « vérifications périodiques obligatoires »
+     et « échéances réglementaires ».
+   - La consigne ne dit plus que les outils rendent « les articles qui
+     fondent une obligation » : seul l'état du DUERP en cite.
+   - « (art. R. 4121-1) » n'est plus attaché à un état de l'application.
+
+**La garde** : `sans-qualification.test.ts` gagne quatre familles, « rappel
+promis », « automatisme promis », « prêt pour contrôle » et « rien à
+préparer ». Une sonde de huit lignes reprend sept phrases réelles de
+`d34bb24`, toutes vues (la deuxième deux fois : « Alertes » et
+« escalade »). La huitième est la phrase qui remplace l'étape 3 (« n'envoie
+pas de rappel par e-mail »), et elle passe. **Éprouvée en la cassant** : la phrase
+d'origine du carnet sanitaire, remise dans le fichier, fait échouer la garde
+(« carnet-sanitaire/page.tsx:98 — « vous rappelle » »). C'est cette garde qui
+l'avait trouvée, hors de la relecture.
+
+**Laissé, et signalé** (décisions de produit) :
+- Dans l'application, le widget s'appelle encore « Score de conformité »
+  (`registry.ts`, `score.tsx`, dossier PDF « (indicateur interne) »).
+- « dès le premier salarié » reste sur trois écrans de l'application : c'est
+  une lecture de R. 4121-1.
+- « Le destinataire va recevoir un email » reste : c'est vrai.
+
+**Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
+inchangée depuis `d34bb24`, et le lot ne touche pas `src/lib/referentiels`.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
