@@ -44,8 +44,11 @@ const DETAILS: OutilDetail[] = [
     ],
     app: [
       "Calendrier généré à partir de vos équipements déclarés.",
-      "Alertes J-30 / J-7 / jour J, escalade si retard.",
-      "Lien direct vers un prestataire agréé (optionnel).",
+      // ~~« Alertes J-30 / J-7 / jour J, escalade si retard. »~~ : aucun
+      // rappel n'est envoyé (relecture du 2026-09-26). ~~« prestataire
+      // agréé »~~ : Rojer ne vérifie aucun agrément.
+      "Retards et échéances proches au tableau de bord — aucun rappel par e-mail.",
+      "Lien direct vers votre prestataire (optionnel).",
     ],
     cta: { libelle: "Voir mon calendrier", href: "calendrier" },
   },
@@ -61,14 +64,17 @@ const DETAILS: OutilDetail[] = [
     source: "Art. R. 4323-25 · Code du travail",
     couleur: "ink",
     loi: [
-      "Centralisation de tous les rapports, avis, observations.",
-      "Tenue continue, horodatée.",
-      "Consultable par agents de contrôle et salariés.",
+      // ~~« Centralisation de tous les rapports… », « Tenue continue,
+      // horodatée », « Consultable par agents de contrôle et salariés »~~ —
+      // retirés le 2026-09-26 : R. 4323-25 ne vise que les vérifications
+      // générales périodiques, aucun texte cité n'écrit « horodatée », et
+      // l'accès au registre (L. 4711-3, L. 4711-4) n'est pas relu dans ce lot.
+      "Le résultat des vérifications générales périodiques y est consigné (R. 4323-25).",
     ],
     app: [
       "Dépôt en 1 clic, liaison automatique à la vérification.",
       "Recalcul automatique de la prochaine échéance.",
-      "Export ZIP + index PDF en 30 secondes.",
+      "Export ZIP + index PDF.",
     ],
     cta: { libelle: "Ouvrir le registre", href: "registre" },
   },
@@ -78,14 +84,19 @@ const DETAILS: OutilDetail[] = [
     source: "Art. L. 4121-2 · Code du travail",
     couleur: "minium",
     loi: [
-      "Principes généraux de prévention : supprimer avant de protéger.",
-      "Toute action tracée de l'ouverture à la levée.",
-      "Justificatif requis à la clôture.",
+      // ~~« supprimer avant de protéger », « Toute action tracée de
+      // l'ouverture à la levée », « Justificatif requis à la clôture »~~ :
+      // L. 4121-2 n'écrit rien de tel (relecture du 2026-09-26).
+      "Principes généraux de prévention, dont le 1° : « Eviter les risques ».",
+      "Le 8° : la protection collective a « la priorité sur les mesures de protection individuelle ».",
     ],
     app: [
-      "Action créée automatiquement depuis un écart de rapport.",
-      "Assignation, échéance, rappels.",
-      "Levée documentée, historique auditable.",
+      // ~~« créée automatiquement », « rappels », « historique auditable »~~ :
+      // l'action se crée à la main depuis l'écart, aucun rappel ne part, et
+      // aucun journal d'audit n'existe (relecture du 2026-09-26).
+      "Action ouverte depuis un écart de rapport, en un geste.",
+      "Responsable et échéance.",
+      "Levée datée ; le justificatif est facultatif.",
     ],
     cta: { libelle: "Ouvrir le plan", href: "actions" },
   },

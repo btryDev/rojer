@@ -34,7 +34,7 @@ const OUTILS: Outil[] = [
     n: "02",
     titre: "Vérifications",
     sousTitre: "Périodiques",
-    description: "Calendrier des contrôles obligatoires, rapports classés.",
+    description: "Calendrier des vérifications, rapports classés.",
     couleur: "warm",
     statut: "actif",
     icon: CalendarClock,
@@ -61,10 +61,13 @@ const OUTILS: Outil[] = [
   {
     n: "05",
     titre: "Carnet sanitaire",
-    sousTitre: "Eau · air",
-    description: "Relevés sanitaires des installations d'eau et d'aération.",
+    // ~~« Eau · air », « d'aération », `statut: "bientot"`~~ — relecture du
+    // 2026-09-26 : le module existe (`/carnet-sanitaire`) et ne suit que
+    // l'eau chaude sanitaire (arrêté du 1er février 2010).
+    sousTitre: "Eau chaude",
+    description: "Relevés de température et analyses de légionelles de l'eau chaude sanitaire.",
     couleur: "muted",
-    statut: "bientot",
+    statut: "actif",
     icon: Wind,
   },
   // La carte « 06 · Autres outils — À venir » a été retirée le 2026-09-01, et
@@ -82,20 +85,20 @@ export function OutilsConformite() {
   return (
     <section>
       <header className="mb-10">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">§ Les outils de conformité</p>
+        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">§ Les outils de suivi</p>
         <h2 className="board-titre text-[clamp(22px,2.2vw,27px)] mt-3 max-w-[18ch]">
           Une vue d&apos;ensemble
           <br />
-          <span className="text-[color:var(--board-blue-ink)]">sur votre conformité.</span>
+          <span className="text-[color:var(--board-blue-ink)]">sur vos obligations.</span>
         </h2>
         <p className="text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)] mt-5">
           Vous déclarez vos équipements et votre matériel ; la plateforme{" "}
           <strong>génère les documents attendus</strong>{" "}
           (DUERP, registre,
           plan d&apos;actions…), les met à jour au fil de vos
-          vérifications et <strong>vous rappelle les échéances</strong>{" "}
-          avant qu&apos;elles ne passent. Chaque outil ci-dessous
-          correspond à une obligation précise. Les documents que vous devez
+          vérifications et <strong>vous montre les échéances</strong>{" "}
+          qui approchent — sans rappel par e-mail. Chaque outil ci-dessous
+          répond à un texte. Les documents que vous devez
           tenir <strong>et que la plateforme ne produit pas</strong>{" "}
           sont
           nommés sur la page « Documents obligatoires », avec le texte qui les fonde et l&apos;endroit où

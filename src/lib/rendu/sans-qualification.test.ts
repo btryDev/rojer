@@ -81,7 +81,10 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
     // laissait passer toute autre phrase du même fichier qui l'emploie
     // (contre-lecture du 2026-09-26). Une seule entrée pour les deux mots
     // qu'elle porte (« en infraction », « opposable »).
-    ligne: "- Ne qualifie jamais juridiquement un état : ni « conforme », ni « en infraction », ni « opposable ». Les outils rendent des faits (dates, statuts, cotations) et les articles qui fondent une obligation ; ils ne rendent jamais de conclusion de droit, et il n'y en a pas à en tirer.",
+    // Ligne coupée le 2026-09-26 (C38) : la phrase qui promettait « les
+    // articles qui fondent une obligation » était fausse, et elle est passée à
+    // la ligne suivante, corrigée. L'admission ne porte plus que l'interdit.
+    ligne: "- Ne qualifie jamais juridiquement un état : ni « conforme », ni « en infraction », ni « opposable ».",
     motif:
       "La consigne donnée au modèle qui lit le serveur MCP : elle NOMME les mots pour les interdire.",
   },

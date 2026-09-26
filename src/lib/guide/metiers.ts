@@ -16,6 +16,12 @@
 
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
+import {
+  MAJ_DUERP_AMENAGEMENT_IMPORTANT,
+  MAJ_DUERP_ANNUELLE,
+  MAJ_DUERP_INFORMATION_NOUVELLE,
+  enMinuscule,
+} from "@/lib/referentiels/conformite/texte-r4121-2";
 
 export type LigneMetier = {
   /** Nom court, celui qu'emploie le dirigeant. */
@@ -26,7 +32,21 @@ export type LigneMetier = {
   reference: string;
   /** Périodicité indicative, telle que portée par le référentiel. */
   rythme: string;
+  /**
+   * La condition du texte, quand l'obligation ne vaut pas pour tous — lue
+   * dans le référentiel, jamais écrite ici à la main (relecture du
+   * 2026-09-26 : l'exercice d'évacuation était montré à un bureau de cinq
+   * salariés, que le moteur, lui, n'en charge pas).
+   */
+  condition?: string;
 };
+
+/**
+ * Le champ de R. 4227-34, relu sur Légifrance le 2026-09-26 (deux lectures).
+ * Porté par toute obligation qui déclare `typologies.champR422734`.
+ */
+const CONDITION_R4227_34 =
+  "Seulement dans les établissements « dans lesquels peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes », ou où sont manipulées des « matières inflammables mentionnées à l'article R. 4227-22 » (art. R. 4227-34).";
 
 export type Metier = {
   id: string;
@@ -43,7 +63,11 @@ const DUERP: LigneMetier = {
   nom: "DUERP",
   libelle: "Évaluation des risques professionnels, transcrite et mise à jour",
   reference: "C. trav. R. 4121-1 et R. 4121-2",
-  rythme: "annuelle",
+  // ~~« annuelle »~~ tout court : R. 4121-2, 1° ne rend l'annuel qu'aux
+  // entreprises d'au moins onze salariés (relecture du 2026-09-26). Les deux
+  // autres cas de l'article valent pour tous, et n'ont pas de date.
+  rythme: "chaque année dès 11 salariés",
+  condition: `${MAJ_DUERP_ANNUELLE} (art. R. 4121-2, 1°) ; ${enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}, et ${enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}, quel que soit l'effectif (2° et 3°).`,
 };
 
 function ligne(nom: string, id: string): LigneMetier | null {
@@ -56,6 +80,7 @@ function ligne(nom: string, id: string): LigneMetier | null {
     libelle: o.libelle,
     reference: o.referencesLegales[0]?.reference ?? "",
     rythme: LABEL_PERIODICITE[o.periodicite],
+    ...(o.typologies?.champR422734 ? { condition: CONDITION_R4227_34 } : {}),
   };
 }
 
@@ -87,7 +112,11 @@ export const METIERS: Metier[] = [
       ["Éclairage de sécurité (BAES)", "incendie-erp-baes-annuelle"],
       // PE 4 § 2 est désormais encodé entier et porté par l'établissement
       // (ADR-022) : le fragment « installations électriques » a été absorbé.
-      ["Installation électrique", "incendie-erp-pe4-entretien-installations-techniques"],
+      // ~~« Installation électrique »~~ pour le seul PE 4, triennal : un
+      // restaurant employeur reçoit aussi R. 4226-16, annuelle (relecture du
+      // 2026-09-26). Les deux lignes sont nommées pour ce qu'elles sont.
+      ["Installations techniques (ERP)", "incendie-erp-pe4-entretien-installations-techniques"],
+      ["Installation électrique (travail)", "elec-travail-periodique-annuelle"],
       // R. 4222-20 encodé entier, porté par l'établissement (ADR-022) : le
       // fragment « VMC/CTA » a été absorbé.
       ["Ventilation", "aeration-controle-installations-r4222-20"],
@@ -103,15 +132,19 @@ export const METIERS: Metier[] = [
       ["Porte automatique", "porte-auto-verification-semestrielle"],
       // PE 4 § 2 est désormais encodé entier et porté par l'établissement
       // (ADR-022) : le fragment « installations électriques » a été absorbé.
-      ["Installation électrique", "incendie-erp-pe4-entretien-installations-techniques"],
-      ["Consigne incendie", "incendie-travail-consigne-affichee"],
+      ["Installations techniques (ERP)", "incendie-erp-pe4-entretien-installations-techniques"],
+      ["Installation électrique (travail)", "elec-travail-periodique-annuelle"],
+      // ~~`incendie-travail-consigne-affichee`~~ (R. 4227-37, plus de
+      // cinquante personnes) : pour un commerce de 5ᵉ catégorie, c'est PE 27
+      // qui s'applique (relecture du 2026-09-26).
+      ["Consignes incendie (ERP)", "incendie-erp-5-consignes-affichees"],
       ["Registre de sécurité", "incendie-registre-securite"],
     ],
   ),
   metier(
     "bureaux",
     "Bureau et services",
-    "Peu d'équipements, mais les mêmes obligations de fond — et un exercice d'évacuation qu'on oublie souvent.",
+    "Peu d'équipements, mais les mêmes obligations de fond. L'exercice d'évacuation ne vaut que dans les établissements de l'art. R. 4227-34 : sa ligne dit lesquels.",
     [
       ["Installation électrique", "elec-travail-periodique-annuelle"],
       ["Moyens de lutte contre l'incendie", "incendie-travail-moyens-lutte"],

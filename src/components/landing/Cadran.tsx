@@ -35,11 +35,14 @@ const DOCUMENTS: Document[] = [
     numero: "01",
     famille: "Échéances",
     titre: "Le calendrier des vérifications",
-    corps: "Vous déclarez vos équipements une fois. Rojer en déduit les contrôles obligatoires, pose les dates et les repousse à mesure que les rapports arrivent.",
+    corps: "Vous déclarez vos équipements une fois. Rojer en déduit les vérifications qui les concernent ; quand le texte fixe un rythme, il pose les dates et les repousse à mesure que les rapports arrivent.",
     // Compté sur `obligationsConformite` (src/lib/referentiels/conformite).
     // À recompter quand le référentiel s'étend — un chiffre faux sur une
     // page publique se paie plus cher que pas de chiffre du tout.
-    reperes: ["169 obligations · 21 domaines", "Sources Légifrance et INRS"],
+    // ~~« Sources Légifrance et INRS »~~ : huit références citent le
+    // règlement (UE) 2024/573 (EUR-Lex), une seule l'INRS (compté le
+    // 2026-09-26 en appelant `obligationsConformite`).
+    reperes: ["169 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
   },
   {
     numero: "02",
@@ -59,7 +62,9 @@ const DOCUMENTS: Document[] = [
     numero: "04",
     famille: "Suivi",
     titre: "Le plan d'actions",
-    corps: "Un rond vide n'est pas une faute : c'est ce qu'il reste à faire. Chaque écart ouvre une action, avec un responsable et une date.",
+    // ~~« Chaque écart ouvre une action »~~ : l'action se crée à la main depuis
+    // l'écart (`creerActionDepuisVerification`), rien ne s'ouvre seul.
+    corps: "Un rond vide n'est pas une faute : c'est ce qu'il reste à faire. Depuis un écart, vous ouvrez une action, avec un responsable et une date.",
     reperes: ["Hiérarchie des mesures", "Revu au fil de l'eau"],
   },
   {

@@ -60,7 +60,11 @@ export default async function VerifierSignaturePage({
             Vérification publique d&apos;intégrité
           </p>
           <h1 className="text-[1.5rem] font-semibold tracking-[-0.02em]">
-            Signature authentique — comparaison automatique impossible
+            {/* ~~« Signature authentique »~~ : l'authenticité, au sens de
+                l'art. 1367 C. civ., est conférée par un officier public
+                (relecture du 2026-09-26). Ce que la page constate, c'est un
+                enregistrement. */}
+            Signature enregistrée — comparaison automatique impossible
           </h1>
           <div className="space-y-2 text-[0.9rem] text-[color:var(--muted-foreground)]">
             <p>

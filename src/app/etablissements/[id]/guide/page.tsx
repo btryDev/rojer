@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { REFERENTIEL_VERSION } from "@/lib/referentiels/conformite";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { AppTopbar } from "@/components/layout/AppTopbar";
@@ -153,8 +154,12 @@ export default async function GuidePage({
         </GReveal>
 
         <footer className="border-t border-dashed border-[color:var(--board-slate-line)] pt-6 text-center font-mono text-[0.62rem] uppercase tracking-[0.22em] text-[color:var(--board-slate-mid)]">
-          § Guide rédigé à partir des sources primaires Légifrance + INRS ·
-          Mis à jour 04/2026
+          {/* ~~« Légifrance + INRS · Mis à jour 04/2026 »~~ : EUR-Lex aussi, et
+              le contenu a changé jusqu'au 2026-09-26. La version du
+              référentiel est un fait que le code connaît ; une date écrite à
+              la main ne l'était pas. */}
+          § Sources primaires Légifrance, EUR-Lex et INRS · référentiel{" "}
+          {REFERENTIEL_VERSION}
         </footer>
       </div>
     </>

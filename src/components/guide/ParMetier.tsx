@@ -114,6 +114,11 @@ export function ParMetier({
                 <p className="mt-1 text-[0.85rem] leading-[1.5] text-[color:var(--board-slate-mid)]">
                   {l.libelle}
                 </p>
+                {l.condition ? (
+                  <p className="mt-1 text-[0.8rem] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                    {l.condition}
+                  </p>
+                ) : null}
                 {l.reference ? (
                   // Casse d'origine : une référence légale se cite telle
                   // qu'elle s'écrit — « art. MS 38 § 2 », pas en capitales.

@@ -21,6 +21,8 @@
 // L'horloge est injectée (ADR-011) : `now` vient du contexte, jamais d'un
 // `new Date()` planté au milieu d'un formatage.
 
+import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
+import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { z } from "zod";
 import type { StatutAction } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
@@ -71,7 +73,8 @@ export const CONSIGNE_SERVEUR = `Ce serveur donne accès en lecture au dossier d
 
 Restitue ce que les outils rendent, sans le compléter.
 
-- Ne qualifie jamais juridiquement un état : ni « conforme », ni « en infraction », ni « opposable ». Les outils rendent des faits (dates, statuts, cotations) et les articles qui fondent une obligation ; ils ne rendent jamais de conclusion de droit, et il n'y en a pas à en tirer.
+- Ne qualifie jamais juridiquement un état : ni « conforme », ni « en infraction », ni « opposable ».
+- Les outils rendent des faits (dates, statuts, cotations). Seul l'état du DUERP cite des articles ; les autres outils n'en rendent aucun. Aucun outil ne rend de conclusion de droit, et il n'y en a pas à en tirer.
 - Ne cite aucune référence réglementaire qui ne figure pas dans une réponse d'outil.
 - « Version validée » est un état de l'application, pas une catégorie juridique : n'en déduis aucune conséquence de droit.
 - Si tu ajoutes une analyse, une priorisation ou une recommandation, dis explicitement qu'elle vient de toi et non de Rojer.
@@ -151,7 +154,9 @@ function formaterEtatDuerp(d: EtatDuerpLu): string {
 
   if (e.jamaisValide) {
     lignes.push(
-      "Le DUERP est ouvert mais aucune version n'a encore été validée (art. R. 4121-1).",
+      // ~~« (art. R. 4121-1) »~~ : un article attaché à un état de
+      // l'application, ce que la consigne interdit (relecture du 2026-09-26).
+      "Le DUERP est ouvert mais aucune version n'a encore été validée dans Rojer.",
     );
   } else if (d.derniereVersionAu) {
     const age = e.ageJours !== null ? ` (il y a ${ageEnMois(e.ageJours)} mois)` : "";
@@ -207,9 +212,17 @@ const LIBELLE_ORIGINE: Record<ActionLue["origine"], string> = {
   libre: "libre",
 };
 
-function formaterActions(actions: ActionLue[]): string {
+/** Un filtre a-t-il été passé ? Sans filtre, une liste vide dit autre chose. */
+const avecFiltre = (args: object) =>
+  Object.values(args).some((v) => v !== undefined && v !== null && v !== false);
+
+function formaterActions(actions: ActionLue[], filtre = true): string {
   if (actions.length === 0) {
-    return "Aucune action ne correspond à ces critères.";
+    // ~~Toujours « ne correspond à ces critères »~~ : la même phrase sans
+    // filtre et sur un plan vide (relecture du 2026-09-26).
+    return filtre
+      ? "Aucune action ne correspond à ces critères."
+      : "Le plan d'actions ne contient aucune action.";
   }
 
   const enRetard = actions.filter((a) => a.enRetard).length;
@@ -302,7 +315,7 @@ const outilActions: OutilMcp<typeof schemaActions> = {
     // promettre un. Le champ n'est plus lu (cf. `listerActions`), la promesse
     // part avec lui.
     "Actions correctives de l'établissement, qu'elles viennent du DUERP, d'un rapport de vérification ou d'une saisie libre : libellé, statut, criticité, échéance et retard éventuel. Filtrable par statut, criticité, actions en cours ou en retard. " +
-    "Attention : les échéances rendues ici sont des échéances de **traitement**, que l'établissement se fixe. Elles sont distinctes des échéances réglementaires des vérifications périodiques, rendues par l'outil `verifications`. Avant de conclure qu'une date n'existe pas dans le dossier, interroger les deux.",
+    "Attention : les échéances rendues ici sont des échéances de **traitement**, que l'établissement se fixe. Elles sont distinctes des échéances des obligations suivies, rendues par l'outil `verifications`. Avant de conclure qu'une date n'existe pas dans le dossier, interroger les deux.",
   schema: schemaActions,
   executer: async (ctx, args) => {
     const actions = await listerActions(ctx.scope.etablissementId, args, ctx.now);
@@ -310,7 +323,7 @@ const outilActions: OutilMcp<typeof schemaActions> = {
     // la description), mais les actions naissent en partie d'écarts relevés au
     // calendrier : un calendrier jamais calculé rend une liste courte pour une
     // raison que le lecteur doit connaître.
-    return avecFraicheur(ctx.scope.etablissementId, formaterActions(actions));
+    return avecFraicheur(ctx.scope.etablissementId, formaterActions(actions, avecFiltre(args)));
   },
 };
 
@@ -406,9 +419,11 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   sans_rendez_vous: "sans rendez-vous",
 };
 
-function formaterVerifications(verifs: VerificationLue[]): string {
+function formaterVerifications(verifs: VerificationLue[], filtre = true): string {
   if (verifs.length === 0) {
-    return "Aucune vérification ne correspond à ces critères.";
+    return filtre
+      ? "Aucune vérification ne correspond à ces critères."
+      : "Le calendrier ne contient aucune vérification.";
   }
 
   const enRetard = verifs.filter((v) => v.etat === "en_retard").length;
@@ -424,7 +439,12 @@ function formaterVerifications(verifs: VerificationLue[]): string {
       v.categorie
         ? `${categorieLisible(v.categorie)} « ${v.equipement} »`
         : v.equipement,
-      `périodicité ${v.periodicite}`,
+      // ~~La valeur brute de l'énumération (`autre`, `six_semaines`)~~ :
+      // `autre` veut dire « le texte n'écrit pas de rythme », et l'assistant
+      // ne pouvait pas le savoir (relecture du 2026-09-26).
+      v.periodicite === "autre"
+        ? "sans rythme écrit (le texte n'en fixe pas)"
+        : `périodicité ${LABEL_PERIODICITE[v.periodicite as Periodicite] ?? v.periodicite}`,
       // Depuis l'ADR-034 la ligne dit les deux : ce qui a été fait — lu sur le
       // dernier rapport — ET l'échéance ouverte.
       v.derniereRealisation
@@ -468,7 +488,7 @@ const outilEquipements: OutilMcp<z.ZodObject<Record<string, never>>> = {
   nom: "equipements",
   titre: "Équipements déclarés",
   description:
-    "Équipements déclarés de l'établissement (extincteurs, installation électrique, blocs de secours, ventilation, ascenseur…) avec leur catégorie, leur localisation, leur date de mise en service, et le nombre de vérifications réglementaires en retard ou à planifier pour chacun. À appeler pour savoir de quel matériel dispose l'établissement.",
+    "Équipements déclarés de l'établissement (extincteurs, installation électrique, blocs de secours, ventilation, ascenseur…) avec leur catégorie, leur localisation, leur date de mise en service, et le nombre de vérifications en retard ou à planifier pour chacun. À appeler pour savoir de quel matériel dispose l'établissement.",
   schema: z.object({}),
   executer: async (ctx) => {
     const equipements = await listerEquipements(ctx.scope.etablissementId, ctx.now);
@@ -524,8 +544,13 @@ const outilVerifications: OutilMcp<typeof schemaVerifications> = {
   nom: "verifications",
   titre: "Calendrier des vérifications",
   description:
-    "Calendrier réglementaire de l'établissement : vérifications périodiques obligatoires par équipement, avec périodicité, échéance, état (en retard, à planifier, à venir, réalisée) et ancienneté du retard. C'est l'outil à appeler pour toute question sur les contrôles obligatoires — « mes extincteurs sont-ils à jour ? », « qu'est-ce qui est en retard ? », « qu'est-ce qui arrive le mois prochain ? ». " +
-    "Attention : Rojer distingue deux échéances qui ne se recouvrent pas. Celles rendues ici sont les échéances **réglementaires** des contrôles à faire réaliser. Les échéances de traitement des actions correctives sont d'autres dates, rendues par l'outil `plan_actions`. Avant de conclure qu'une date n'existe pas dans le dossier, interroger les deux.",
+    // ~~« vérifications périodiques obligatoires par équipement », « échéances
+    // **réglementaires** »~~ : l'outil rend aussi des lignes portées par
+    // l'établissement, des états permanents, et des engagements d'assurance
+    // qu'il marque lui-même comme tels (relecture du 2026-09-26). Une
+    // description est lue par le modèle avant tout appel.
+    "Calendrier de l'établissement : les échéances que Rojer suit — vérifications d'équipements, obligations portées par l'établissement, et engagements d'assurance, marqués comme tels —, avec rythme, échéance, état (en retard, à planifier, à venir, réalisée) et ancienneté du retard. C'est l'outil à appeler pour toute question sur les vérifications — « mes extincteurs sont-ils à jour ? », « qu'est-ce qui est en retard ? », « qu'est-ce qui arrive le mois prochain ? ». " +
+    "Attention : Rojer distingue deux échéances qui ne se recouvrent pas. Celles rendues ici sont les échéances des obligations suivies. Les échéances de traitement des actions correctives sont d'autres dates, rendues par l'outil `plan_actions`. Avant de conclure qu'une date n'existe pas dans le dossier, interroger les deux.",
   schema: schemaVerifications,
   executer: async (ctx, args) => {
     const verifs = await listerVerifications(
@@ -535,7 +560,7 @@ const outilVerifications: OutilMcp<typeof schemaVerifications> = {
     );
     return avecFraicheur(
       ctx.scope.etablissementId,
-      formaterVerifications(verifs),
+      formaterVerifications(verifs, avecFiltre(args)),
     );
   },
 };
@@ -574,11 +599,17 @@ function avecEtablissement<S extends z.ZodTypeAny>(
   return {
     ...outil,
     executer: async (ctx, args) => {
-      const [nom, texte] = await Promise.all([
-        getNomEtablissement(ctx.scope.etablissementId),
-        outil.executer(ctx, args),
-      ]);
-      return nom ? `Établissement : ${nom}\n\n${texte}` : texte;
+      // ~~En parallèle, et le texte rendu même sans établissement~~ : sur un
+      // établissement inconnu, quatre outils sur cinq décrivaient un dossier
+      // vide — « aucun équipement déclaré », « aucun DUERP ouvert » —, un fait
+      // faux dit comme un fait (relecture du 2026-09-26). L'outil n'est plus
+      // exécuté.
+      const nom = await getNomEtablissement(ctx.scope.etablissementId);
+      if (!nom) {
+        return "Établissement introuvable pour ce connecteur : son dossier ne peut pas être lu, et rien n'est à conclure de son contenu.";
+      }
+      const texte = await outil.executer(ctx, args);
+      return `Établissement : ${nom}\n\n${texte}`;
     },
   };
 }

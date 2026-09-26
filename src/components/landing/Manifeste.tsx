@@ -7,7 +7,8 @@
 //   · le cadran → ce que ça produit (les six documents)
 //   · « Trois étapes » → ce que ça coûte à prendre en main (≈ 30 min, puis
 //                 ce qui arrive à échéance)
-//   · « Par métier » → la preuve sur pièces, tirée du référentiel
+//   · ~~« Par métier »~~ — n'est plus une section de cette page (elle vit
+//     dans le guide, derrière la connexion) ; le lien du pied est retiré.
 //
 // Cette bande a absorbé l'ancienne « Sur le terrain », qui racontait la
 // même mécanique une troisième fois. Chaque charge est nommée par ce
@@ -23,7 +24,7 @@ const CHARGES = [
     numero: "01",
     titre: "Vos échéances, posées et recalculées",
     corps:
-      "Vos équipements portent leur périodicité. Les dates se posent seules et se reportent à chaque pièce déposée.",
+      "Quand un texte fixe le rythme d'une vérification, sa date se pose, et se reporte à chaque rapport déposé. Le reste se lit sans date : un état à tenir, un événement qui déclenche.",
   },
   {
     // Pas seulement des rapports : le stockage reçoit aussi les
@@ -175,7 +176,7 @@ export function Manifeste() {
               <span className="text-[color:var(--board-sky)]">
                 Le jour d&apos;un contrôle,
               </span>{" "}
-              vous n&apos;avez rien à préparer.
+              ce que Rojer tient part en un seul export.
             </p>
 
             <a

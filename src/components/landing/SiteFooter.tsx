@@ -27,9 +27,6 @@ export function SiteFooter() {
             <a href="#documents" className="text-white/70 transition-colors hover:text-white">
               Les documents
             </a>
-            <a href="#metiers" className="text-white/70 transition-colors hover:text-white">
-              Par métier
-            </a>
             <a href="#questions" className="text-white/70 transition-colors hover:text-white">
               Questions
             </a>
@@ -43,7 +40,7 @@ export function SiteFooter() {
           <span>Hébergement UE · vos données restent en Europe</span>
           <span>
             Rojer assiste, il ne certifie pas · référentiel construit depuis
-            Légifrance et l&apos;INRS
+            Légifrance et EUR-Lex
           </span>
         </div>
       </div>

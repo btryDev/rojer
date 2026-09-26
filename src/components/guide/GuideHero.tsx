@@ -23,8 +23,11 @@ export function GuideHero() {
 
         <ul className="mt-8 flex flex-wrap gap-2.5">
           <MetaPastille titre="~ 7 min" sous="de lecture" />
-          <MetaPastille titre="4 outils" sous="suivis ici" />
-          <MetaPastille titre="Sources" sous="Légifrance · INRS" highlight />
+          {/* ~~« 4 outils »~~ : cinq cartes actives depuis que le carnet
+              sanitaire l'est ; ~~« Légifrance · INRS »~~ : EUR-Lex aussi
+              (relecture du 2026-09-26). */}
+          <MetaPastille titre="5 outils" sous="suivis ici" />
+          <MetaPastille titre="Sources" sous="Légifrance · EUR-Lex · INRS" highlight />
         </ul>
       </div>
 

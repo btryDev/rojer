@@ -49,7 +49,9 @@ const QUESTIONS = [
   },
   {
     q: "Mon activité est-elle couverte ?",
-    r: "L'évaluation des risques couvre aujourd'hui la restauration, le commerce de détail et les activités de bureau. Le suivi des vérifications et des registres, lui, ne dépend pas du secteur : il découle de vos équipements et de votre type d'établissement.",
+    // Le périmètre, dit (relecture du 2026-09-26) : `CATEGORIES_COUVERTES`
+    // (5ᵉ catégorie), `EFFECTIF_MAX` et les refus de `perimetre/exclusions.ts`.
+    r: "L'évaluation des risques couvre aujourd'hui la restauration, le commerce de détail et les activités de bureau. Le suivi des vérifications découle de vos équipements et de votre établissement. Pour un établissement recevant du public, le règlement de sécurité est suivi en 5ᵉ catégorie ; un établissement des quatre premières catégories est servi sans les règles propres à sa catégorie. Rojer n'ouvre pas de dossier au-delà de 50 travailleurs, ni pour un établissement recevant du public situé dans un immeuble de grande hauteur.",
   },
   {
     q: "Comment présenter mon dossier lors d'un contrôle ?",
@@ -57,7 +59,10 @@ const QUESTIONS = [
   },
   {
     q: "Où sont hébergées mes données ?",
-    r: "Dans l'Union européenne. Vous exportez ou supprimez votre dossier à tout moment. Les versions de DUERP font exception : leur conservation pendant quarante ans est une obligation légale, pas un choix de notre part.",
+    // ~~« une obligation légale, pas un choix de notre part »~~ : l'obligation
+    // pèse sur l'employeur ; garder les versions après une suppression est le
+    // choix de Rojer, fait pour la servir (relecture du 2026-09-26).
+    r: "Dans l'Union européenne. Vous exportez ou supprimez votre dossier à tout moment. Les versions validées de DUERP font exception : Rojer les garde, parce que le Code du travail fait tenir le document unique et ses versions antérieures « pendant une durée de 40 ans à compter de leur élaboration » (art. R. 4121-4).",
   },
 ];
 

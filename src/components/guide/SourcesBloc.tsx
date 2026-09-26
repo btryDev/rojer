@@ -10,9 +10,31 @@ type Source = {
 const SOURCES: Source[] = [
   {
     titre: "Légifrance · Code du travail",
-    sousTitre: "Partie santé-sécurité, articles L. 4121 à L. 4641",
+    // ~~« articles L. 4121 à L. 4641 »~~ : le lien ouvre la quatrième partie
+    // entière, articles L. 4111-1 à L. 4831-1 (relu le 2026-09-26).
+    sousTitre: "Quatrième partie : santé et sécurité au travail",
     url: "https://www.legifrance.gouv.fr/codes/id/LEGISCTA000006132338",
     hote: "legifrance.gouv.fr",
+  },
+  // Les trois sources que le référentiel cite et que ce bloc omettait
+  // (relecture du 2026-09-26) ; adresses prises au corpus, ouvertes le même jour.
+  {
+    titre: "Légifrance · Code de la construction et de l'habitation",
+    sousTitre: "Établissements recevant du public, ascenseurs, accessibilité",
+    url: "https://www.legifrance.gouv.fr/codes/texte_lc/LEGITEXT000006074096",
+    hote: "legifrance.gouv.fr",
+  },
+  {
+    titre: "Légifrance · Arrêté du 25 juin 1980",
+    sousTitre: "Règlement de sécurité contre l'incendie et la panique dans les ERP",
+    url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020303816/",
+    hote: "legifrance.gouv.fr",
+  },
+  {
+    titre: "EUR-Lex · Règlement (UE) 2024/573",
+    sousTitre: "Gaz à effet de serre fluorés : contrôles d'étanchéité",
+    url: "https://eur-lex.europa.eu/eli/reg/2024/573/oj/fra",
+    hote: "eur-lex.europa.eu",
   },
   {
     titre: "INRS · Publications ED",
@@ -91,7 +113,7 @@ export function SourcesBloc() {
 
           <aside className="mt-8 rounded-lg border-l-4 border-[color:var(--board-green-ink)] bg-[color:color-mix(in_oklch,var(--board-card)_8%,transparent)] px-5 py-4">
             <p className="text-[0.88rem] leading-[1.55] text-[color:color-mix(in_oklch,var(--board-card)_90%,transparent)]">
-              La plateforme vous aide à structurer et rappelle les
+              La plateforme vous aide à structurer et montre les
               échéances. Elle ne remplace pas l&apos;avis d&apos;un
               professionnel de la prévention lorsque votre activité
               présente des risques particuliers.
