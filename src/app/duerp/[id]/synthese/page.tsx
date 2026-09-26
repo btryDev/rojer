@@ -23,7 +23,7 @@ import {
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { listerVersions } from "@/lib/versions/queries";
 import type { TypeMesure } from "@/lib/referentiels/types";
-import { L4121_2_8 } from "@/lib/verbatim/l4121-2-ordre";
+import { L4121_2_3, L4121_2_8 } from "@/lib/verbatim/l4121-2-ordre";
 
 function formatDate(d: Date | null) {
   if (!d) return "—";
@@ -238,7 +238,10 @@ export default async function SynthesePage({
                 intitule={`${synthese.nbAlertesHierarchie} risque${
                   synthese.nbAlertesHierarchie > 1 ? "s" : ""
                 } traité${synthese.nbAlertesHierarchie > 1 ? "s" : ""} uniquement par EPI / formation`}
-                detail={`Art. L. 4121-2, 8° : « ${L4121_2_8} ».`}
+                // Le compte agrège des risques traités par EPI et d'autres par la seule
+                // formation : la page de chaque risque cite le 8° dans le premier cas,
+                // le 3° dans le second. L'agrégat cite donc les deux, chacun avec son cas.
+                detail={`Art. L. 4121-2, 3° : « ${L4121_2_3} » ; 8°, quand des EPI sont retenus : « ${L4121_2_8} ».`}
                 ton="alerte"
               />
             )}
