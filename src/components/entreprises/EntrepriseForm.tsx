@@ -104,6 +104,11 @@ export function EntrepriseForm({
           Enregistré.
         </p>
       )}
+      {state.status === "success_avec_avertissement" && (
+        <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+          {state.message}
+        </p>
+      )}
 
       <div className="flex gap-3">
         <Button type="submit" variant="board" size="board" disabled={pending}>

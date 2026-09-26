@@ -8,13 +8,18 @@ import {
   assertEntrepriseOwnership,
   getOptionalUserEtablissement,
 } from "@/lib/auth/scope";
-import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
+import {
+  MESSAGE_REGEN_ECHEC,
+  regenererApresMutation,
+} from "@/lib/calendrier/regeneration-sure";
 import { entrepriseSchema } from "./schema";
 
 export type ActionState =
   | { status: "idle" }
   | { status: "error"; message: string; fieldErrors?: Record<string, string[]> }
-  | { status: "success" };
+  | { status: "success" }
+  /** Enregistré, mais un calendrier n'a pas pu être régénéré à l'instant. */
+  | { status: "success_avec_avertissement"; message: string };
 
 export async function creerEntreprise(
   _prev: ActionState,
@@ -78,18 +83,26 @@ export async function modifierEntreprise(
   // établissement est régénéré comme après toute mutation qu'il lit — le
   // patron du dépôt — pour qu'une obligation datée à seuil d'entreprise, le
   // jour où il y en aura une, ne dépende pas d'une mutation de hasard.
+  //
+  // L'issue est testée, comme dans `etablissements/actions.ts` : un échec ne
+  // se tait pas derrière un « Enregistré ». `genererCalendrier` revalide
+  // lui-même les pages de l'établissement (`calendrier/actions.ts`).
   const etablissements = await prisma.etablissement.findMany({
     where: { entrepriseId: id },
     select: { id: true },
   });
+  let toutesRegenerees = true;
   for (const e of etablissements) {
-    await regenererApresMutation(e.id, "entreprises/modification");
-    revalidatePath(`/etablissements/${e.id}`, "layout");
+    if (!(await regenererApresMutation(e.id, "entreprises/modification"))) {
+      toutesRegenerees = false;
+    }
   }
 
   revalidatePath("/entreprises");
   revalidatePath(`/entreprises/${id}`);
-  return { status: "success" };
+  return toutesRegenerees
+    ? { status: "success" }
+    : { status: "success_avec_avertissement", message: MESSAGE_REGEN_ECHEC };
 }
 
 /**
