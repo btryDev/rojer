@@ -105,6 +105,7 @@ describe("la porte d'onboarding ne se ferme plus sur le secteur", () => {
     siret: "",
     adresse: "12 rue du Port, 29200 Brest",
     effectifSurSite: "4",
+    effectifEntreprise: "4",
     estEtablissementTravail: true,
     estERP: true,
     estIGH: false,

@@ -16,6 +16,10 @@ import {
 } from "@/lib/matching/personnes-presentes";
 import { evaluerScopeSecteur } from "./scope";
 
+/** Le refus d'un effectif d'entreprise absent ou illisible, client et serveur. */
+export const MESSAGE_EFFECTIF_ENTREPRISE =
+  "Indiquez l'effectif de l'entreprise, apprentis non compris (0 ou plus).";
+
 /**
  * Schéma fusionné du parcours d'onboarding — couvre Entreprise + premier
  * Etablissement en une seule validation.
@@ -71,6 +75,17 @@ export const onboardingSchema = z
         EFFECTIF_MAX,
         `Rojer prend en charge les structures jusqu'à ${EFFECTIF_MAX} salariés.`,
       ),
+    // L'effectif de l'ENTREPRISE, apprentis non compris (C37). Zéro est une
+    // réponse — une entreprise dont le seul travailleur est un apprenti —,
+    // le vide n'en est pas une : `z.coerce` ferait de « » un zéro, et un
+    // effectif non renseigné se lirait « aucun salarié ».
+    effectifEntreprise: z.preprocess(
+      (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.coerce
+        .number({ message: MESSAGE_EFFECTIF_ENTREPRISE })
+        .int("Effectif entier")
+        .min(0, MESSAGE_EFFECTIF_ENTREPRISE),
+    ),
 
     // ─── Étape 3 — Typologie (ADR-004, flags cumulables) ────
     estEtablissementTravail: z.coerce.boolean().default(true),
@@ -310,6 +325,7 @@ export const onboardingValeursInitiales = {
   adresse: "",
   codeNaf: "",
   effectifSurSite: "" as string | number,
+  effectifEntreprise: "" as string | number,
   estEtablissementTravail: true,
   estERP: false,
   estIGH: false,

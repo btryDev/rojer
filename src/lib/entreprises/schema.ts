@@ -20,10 +20,16 @@ export const entrepriseSchema = z.object({
     .trim()
     .toUpperCase()
     .regex(nafRegex, "Code NAF invalide (ex. 56.10A)"),
-  effectif: z.coerce
-    .number()
-    .int("Effectif entier")
-    .min(1, "Au moins 1 salarié"),
+  // Zéro est une réponse : l'effectif compte les salariés de l'entreprise
+  // apprentis non compris (L. 1111-3), et une entreprise peut n'employer qu'un
+  // apprenti (C37). Le vide n'en est pas une — `z.coerce` en ferait un zéro.
+  effectif: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.coerce
+      .number({ message: "Indiquez l'effectif de l'entreprise" })
+      .int("Effectif entier")
+      .min(0, "L'effectif ne peut pas être négatif"),
+  ),
   adresse: z.string().trim().min(1, "L'adresse est obligatoire"),
 });
 

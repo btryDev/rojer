@@ -244,8 +244,8 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
         <View style={{ marginTop: 60 }}>
           <Text style={s.metaLigne}>Adresse : {data.adresse}</Text>
           <Text style={s.metaLigne}>
-            Effectif sur site : {data.effectifSurSite} salarié
-            {data.effectifSurSite > 1 ? "s" : ""}
+            Travailleurs sur site : {data.effectifSurSite}, apprentis
+            compris
           </Text>
           {data.codeNaf && (
             <Text style={s.metaLigne}>Code NAF : {data.codeNaf}</Text>

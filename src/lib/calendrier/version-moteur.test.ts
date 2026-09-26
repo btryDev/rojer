@@ -197,7 +197,7 @@ const RELEVE = {
   // vérification et le formulaire des prescriptions, réexporté par
   // `prescriptions/schema.ts`, absent de `calendrier/` et de
   // `prescriptions/actions.ts` (décision de la session de coordination).
-  empreinte: "03b932a11526f7b4",
+  empreinte: "2a6cff9893c2c913",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

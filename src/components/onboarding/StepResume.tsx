@@ -74,10 +74,18 @@ export function StepResume({ state }: StepProps) {
           <SumLigne label="Adresse" valeur={adresseComplete || "—"} />
           <SumLigne label="Code NAF" valeur={state.codeNaf || "—"} />
           <SumLigne
-            label="Effectif"
+            label="Travailleurs sur ce site"
             valeur={
               state.effectifSurSite
-                ? `${state.effectifSurSite} salarié${Number(state.effectifSurSite) > 1 ? "s" : ""}`
+                ? `${state.effectifSurSite}, apprentis compris`
+                : "—"
+            }
+          />
+          <SumLigne
+            label="Salariés de l'entreprise"
+            valeur={
+              state.effectifEntreprise.trim()
+                ? `${state.effectifEntreprise}, apprentis non compris`
                 : "—"
             }
           />

@@ -262,6 +262,12 @@ export type FaitEquipements = {
 export type FaitEffectif = {
   /** L'effectif salarié déclaré sur le site. */
   surSite: number;
+  /**
+   * L'effectif déclaré de l'ENTREPRISE, apprentis non compris
+   * (`Entreprise.effectif`). C'est lui que compte L. 4121-3-1 III (« les
+   * entreprises dont l'effectif… »), et non le site (C37).
+   */
+  entreprise: number;
   /** Au-delà duquel la création d'un dossier est refusée (ADR-031). */
   seuilServi: number;
 };
@@ -686,10 +692,22 @@ function axeEffectif(
 ): void {
   if (fait === null) return;
   if (fait.surSite <= fait.seuilServi) {
-    if (fait.surSite < SEUIL_PROGRAMME_ANNUEL) return;
+    // Le texte compte l'ENTREPRISE (C37). Le site au seuil parle aussi : il
+    // ne peut pas compter plus que l'entreprise, sauf apprentis ou effectif
+    // d'entreprise resté à une ancienne valeur — et annoncer un programme qui
+    // n'est pas dû se voit, taire un programme dû ne se voit pas.
+    if (
+      fait.entreprise < SEUIL_PROGRAMME_ANNUEL &&
+      fait.surSite < SEUIL_PROGRAMME_ANNUEL
+    )
+      return;
+    const constat =
+      fait.entreprise >= SEUIL_PROGRAMME_ANNUEL
+        ? `Votre entreprise déclare ${fait.entreprise} salariés.`
+        : `Cet établissement déclare ${fait.surSite} travailleurs, et l'entreprise ${fait.entreprise} salariés.`;
     manques.push({
       axe: "effectif",
-      motif: `Cet établissement déclare ${fait.surSite} salariés. À partir de cinquante salariés dans l'entreprise, les résultats de l'évaluation des risques débouchent sur un programme annuel de prévention (art. L. 4121-3-1, III, 1°).`,
+      motif: `${constat} À partir de cinquante salariés dans l'entreprise, les résultats de l'évaluation des risques débouchent sur un programme annuel de prévention (art. L. 4121-3-1, III, 1°).`,
       consequence: `Rojer ne produit pas ${nonPorte("le programme annuel de prévention des risques")}.`,
     });
     return;

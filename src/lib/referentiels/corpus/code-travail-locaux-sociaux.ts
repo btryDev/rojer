@@ -106,8 +106,9 @@ export const CODE_TRAVAIL_LOCAUX_SOCIAUX: Corpus = {
       intitule: "Local de restauration — cinquante salariés et plus",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000041455665",
       versionEnVigueur: "2020-01-02",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      modifiePar: { texte: "Décret n° 2019-1586 du 31 décembre 2019 - art. 2" },
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "Dans les établissements d'au moins cinquante salariés, l'employeur met à disposition un local de restauration pourvu de sièges et de tables, d'un robinet d'eau potable fraîche et chaude pour dix usagers, d'un moyen de conservation ou de réfrigération et d'une installation pour réchauffer les plats.",
       citationCle:
@@ -115,15 +116,16 @@ export const CODE_TRAVAIL_LOCAUX_SOCIAUX: Corpus = {
       statut: "retenu",
       obligations: ["locaux-etablissement-local-restauration"],
       reserve:
-        "L'effectif se décompte selon L. 130-1 du code de la sécurité sociale — moyenne sur l'année civile précédente — là où le moteur évalue `effectifSurSite`, un effectif courant déclaré. Autour du seuil, les deux peuvent diverger : l'une ou l'autre des deux lignes de restauration s'affichera, jamais aucune.",
+        "L'effectif se décompte selon L. 130-1 du code de la sécurité sociale — moyenne sur l'année civile précédente — là où le moteur évalue `effectifSurSite`, un effectif courant déclaré. Autour du seuil, les deux peuvent diverger : l'une ou l'autre des deux lignes de restauration s'affichera, jamais aucune. [2026-09-26, C37 — relu de première main ; deuxième alinéa confirmé mot pour mot : « L'effectif salarié et le franchissement du seuil de cinquante salariés sont déterminés selon les modalités prévues à l'article L. 130-1 du code de la sécurité sociale. Lorsque l'entreprise comporte plusieurs établissements, les effectifs sont décomptés par établissement. » La maille est l'établissement (`effectifMaille: \"etablissement\"`, `effectifSurSite`). Les apprentis n'y sont pas comptés : R. 130-1 III du code de la sécurité sociale, lu le même jour (version du 2020-01-02, décret n° 2019-1586), écrit « Les personnes mentionnées aux 1°, 2°, 4° et 6° de l'article L. 1111-3 du code du travail ne sont pas prises en compte pour la détermination de l'effectif mentionné au I », et le 1° de L. 1111-3 est « Les apprentis ». `effectifSurSite` les compte : un établissement que ses apprentis portent à cinquante lit le local au lieu de l'emplacement. Déclaré, non comblé.]",
     },
     {
       ref: "R. 4228-23",
       intitule: "Emplacement de restauration — moins de cinquante salariés",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000041455662",
       versionEnVigueur: "2020-01-02",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      modifiePar: { texte: "Décret n° 2019-1586 du 31 décembre 2019 - art. 2" },
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "Dans les établissements de moins de cinquante salariés, l'employeur met à disposition un emplacement permettant de se restaurer dans de bonnes conditions de santé et de sécurité ; par dérogation et après déclaration, cet emplacement peut être aménagé dans les locaux de travail si l'activité n'y comporte ni emploi ni stockage de substances dangereuses.",
       citationCle:
@@ -131,7 +133,7 @@ export const CODE_TRAVAIL_LOCAUX_SOCIAUX: Corpus = {
       statut: "retenu",
       obligations: ["locaux-etablissement-emplacement-restauration"],
       reserve:
-        "C'est l'article qui concerne la quasi-totalité de la cible du produit. La dérogation du troisième alinéa — aménagement dans les locaux de travail, après déclaration à l'inspection et au médecin du travail — n'est pas modélisée : le produit ne sait pas si le dirigeant en use, et le critère « substances ou mélanges dangereux » ne conditionne pas cette obligation. L'arrêté qui doit définir le contenu de la déclaration n'a pas été recherché.",
+        "C'est l'article qui concerne la quasi-totalité de la cible du produit. La dérogation du troisième alinéa — aménagement dans les locaux de travail, après déclaration à l'inspection et au médecin du travail — n'est pas modélisée : le produit ne sait pas si le dirigeant en use, et le critère « substances ou mélanges dangereux » ne conditionne pas cette obligation. L'arrêté qui doit définir le contenu de la déclaration n'a pas été recherché. [2026-09-26, C37 — relu de première main ; deuxième alinéa confirmé mot pour mot : « L'effectif salarié et le franchissement du seuil de cinquante salariés sont déterminés selon les modalités prévues à l'article L. 130-1 du code de la sécurité sociale. Lorsque l'entreprise comporte plusieurs établissements, les effectifs sont décomptés par établissement. » La maille est l'établissement (`effectifMaille: \"etablissement\"`, `effectifSurSite`). Les apprentis n'y sont pas comptés : R. 130-1 III du code de la sécurité sociale, lu le même jour (version du 2020-01-02, décret n° 2019-1586), écrit « Les personnes mentionnées aux 1°, 2°, 4° et 6° de l'article L. 1111-3 du code du travail ne sont pas prises en compte pour la détermination de l'effectif mentionné au I », et le 1° de L. 1111-3 est « Les apprentis ». `effectifSurSite` les compte : un établissement que ses apprentis portent à cinquante lit le local au lieu de l'emplacement. Déclaré, non comblé.]",
     },
   ],
 };

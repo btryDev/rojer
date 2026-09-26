@@ -65,7 +65,7 @@ describe("maille entreprise — CSE (L. 2311-2)", () => {
     const r = matchTypologie(typo, etab(6, 15));
     expect(r.ok).toBe(true);
     expect(r.ok && r.raisons.join(" ")).toContain(
-      "effectif de l'entreprise 15, apprentis non compris",
+      "effectif déclaré de l'entreprise 15",
     );
   });
 
@@ -108,7 +108,7 @@ describe("le référentiel, pas un mécanisme de test", () => {
     expect(vus.has("prevention-etablissement-cse")).toBe(true);
     expect(vus.has("prevention-etablissement-reglement-interieur")).toBe(true);
     expect(raisons(etab(8, 50), "prevention-etablissement-cse")).toContain(
-      "effectif de l'entreprise 50",
+      "effectif déclaré de l'entreprise 50",
     );
   });
 

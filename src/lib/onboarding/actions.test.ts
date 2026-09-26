@@ -12,7 +12,8 @@ const h = vi.hoisted(() => {
   const ordre: string[] = [];
   const tx = {
     entreprise: {
-      create: vi.fn(async () => {
+      create: vi.fn(async (args: { data: Record<string, unknown> }) => {
+        void args;
         ordre.push("entreprise");
         return { id: "ent-1" };
       }),
@@ -72,6 +73,7 @@ function formulaire(over: Record<string, string> = {}): FormData {
   fd.set("adresse", "12 rue des halles, 44000 Nantes");
   fd.set("codeNaf", "69.10Z");
   fd.set("effectifSurSite", "6");
+  fd.set("effectifEntreprise", "6");
   fd.set("estEtablissementTravail", "true");
   for (const [k, v] of Object.entries(over)) fd.set(k, v);
   return fd;
@@ -153,5 +155,34 @@ describe("finaliserOnboarding — le nombre de personnes atteint la base (2026-0
       finaliserOnboarding({ status: "idle" }, formulaire()),
     ).rejects.toThrow("NEXT_REDIRECT");
     expect(ecrit()).not.toHaveProperty("personnesPresentesHabituellement");
+  });
+});
+
+describe("les deux effectifs (C37)", () => {
+  // L'effectif de l'entreprise était recopié de celui du site, apprentis
+  // compris. Il est demandé pour lui-même : c'est sur lui que se comptent le
+  // CSE et le règlement intérieur (L. 2311-2 → L. 1111-2, L. 1111-3).
+  it("écrit l'effectif de l'entreprise déclaré, pas celui du site", async () => {
+    await expect(
+      finaliserOnboarding(
+        { status: "idle" },
+        formulaire({ effectifSurSite: "12", effectifEntreprise: "10" }),
+      ),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    const entreprise = h.tx.entreprise.create.mock.calls.at(-1)?.[0].data;
+    const etablissement = h.tx.etablissement.create.mock.calls.at(-1)?.[0].data;
+    expect(entreprise?.effectif).toBe(10);
+    expect(etablissement?.effectifSurSite).toBe(12);
+  });
+
+  it("refuse un effectif d'entreprise vide plutôt que d'y lire zéro", async () => {
+    const res = await finaliserOnboarding(
+      { status: "idle" },
+      formulaire({ effectifEntreprise: "" }),
+    );
+    expect(res.status).toBe("error");
+    expect(
+      res.status === "error" && res.fieldErrors?.effectifEntreprise?.[0],
+    ).toBeTruthy();
   });
 });

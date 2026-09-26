@@ -38,6 +38,12 @@ export type EtablissementFaux = {
   /** Le propriétaire, pour le prédicat `entreprise: { userId }` (ADR-005). */
   userId: string;
   effectifSurSite: number;
+  /**
+   * `Entreprise.effectif`, rendu par `include: { entreprise }` (C37). Absent,
+   * il vaut l'effectif du site : ce que la création écrivait avant C37, et ce
+   * qui laisse les dossiers de test lire le moteur comme avant.
+   */
+  effectifEntreprise?: number;
   estEtablissementTravail: boolean;
   estERP: boolean;
   estIGH: boolean;
@@ -263,6 +269,12 @@ export function fauxPrisma(db: Magasin) {
 
       const sortie: Record<string, unknown> = { ...etab };
       for (const [relation, options] of Object.entries(include ?? {})) {
+        if (relation === "entreprise") {
+          sortie.entreprise = {
+            effectif: etab.effectifEntreprise ?? etab.effectifSurSite,
+          };
+          continue;
+        }
         const liste = (etab as unknown as Record<string, unknown[]>)[relation];
         if (liste === undefined) {
           throw new Error(

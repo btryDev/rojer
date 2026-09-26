@@ -291,6 +291,7 @@ describe("familles d'habitation — la liste du modèle est celle de l'article 3
     // au verbatim de l'article 3.
     const regime = {
       effectifSurSite: 4,
+      effectifEntreprise: 4,
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,

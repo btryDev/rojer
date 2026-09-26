@@ -19,7 +19,10 @@ import {
   MESSAGE_NOMBRE_DE_PERSONNES,
   nombreDePersonnesADemander,
 } from "@/lib/matching/personnes-presentes";
-import { EFFECTIF_MAX } from "@/lib/onboarding/schema";
+import {
+  EFFECTIF_MAX,
+  MESSAGE_EFFECTIF_ENTREPRISE,
+} from "@/lib/onboarding/schema";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
 
@@ -117,7 +120,13 @@ export function validerIdentite(s: OnboardingState): Blocage | null {
       champ: "effectifSurSite",
       message: "Indiquez un effectif (au moins 1).",
     };
-  return refusEffectif(s.effectifSurSite);
+  const refus = refusEffectif(s.effectifSurSite);
+  if (refus) return refus;
+  // Lu comme le serveur le lira, mais le vide n'est pas un zéro.
+  const e = s.effectifEntreprise.trim();
+  if (e === "" || !Number.isInteger(Number(e)) || Number(e) < 0)
+    return { champ: "effectifEntreprise", message: MESSAGE_EFFECTIF_ENTREPRISE };
+  return null;
 }
 
 /**

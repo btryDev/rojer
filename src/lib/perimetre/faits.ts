@@ -159,6 +159,7 @@ export async function faitsDeCouverture(
     // module de projection n'ayant aucune arête sortante au runtime.
     effectif: {
       surSite: etab.effectifSurSite,
+      entreprise: etab.entreprise.effectif,
       seuilServi: EFFECTIF_MAX,
     },
   };

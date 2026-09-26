@@ -53,7 +53,7 @@ export function ChezVous({
         </h2>
         <p className="text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)] mt-5">
           Ce que vous lisez ici est calculé depuis votre dossier —{" "}
-          <strong>{raisonDisplay}</strong>, {data.duerp.effectifSurSite} salarié
+          <strong>{raisonDisplay}</strong>, {data.duerp.effectifSurSite} travailleur
           {data.duerp.effectifSurSite > 1 ? "s" : ""} sur site
           {regimes.length > 0 ? <> · {regimes.join(" · ")}</> : null}. Chaque
           règle cite sa source ; modifiez vos déclarations et cette section

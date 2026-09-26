@@ -362,12 +362,14 @@ function evaluerEffectif(
       if (etab.effectifSurSite < t.effectifMin) return { ok: false };
       return {
         ok: true,
-        raison: `effectif de l'entreprise déclaré à ${n} salarié${n > 1 ? "s" : ""}, apprentis non compris, mais ${etab.effectifSurSite} travailleurs sur ce site — obligation applicable ${seuil} dans l'entreprise, retenue par prudence, à confirmer : si l'écart ne tient pas aux apprentis, mettez à jour l'effectif de l'entreprise`,
+        raison: `effectif déclaré de l'entreprise ${n}, mais ${etab.effectifSurSite} travailleurs sur ce site — obligation applicable ${seuil} dans l'entreprise, retenue par prudence, à confirmer : si l'écart ne tient pas aux apprentis, mettez à jour l'effectif de l'entreprise`,
       };
     }
     return {
       ok: true,
-      raison: `effectif de l'entreprise ${n}, apprentis non compris — obligation applicable ${seuil}`,
+      // « Déclaré », sans « apprentis non compris » : les dossiers nés avant
+      // C37 portent l'effectif du site recopié, apprentis compris.
+      raison: `effectif déclaré de l'entreprise ${n} — obligation applicable ${seuil}`,
     };
   }
 
