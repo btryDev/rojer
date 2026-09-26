@@ -1109,8 +1109,11 @@ possibilité pour celui-ci de solliciter l'organisation de l'examen de
 préreprise », pour une absence « d'une durée supérieure à une durée fixée par
 décret » — plus de trente jours selon `R. 4624-29`. Relu de première main
 (structure demandée en aveugle, recopie, requête ciblée) ; encodé en
-événementielle d'établissement ; `R. 4624-29`, qui n'en donne que la durée,
-reste `sans_objet` (précédent `R. 4624-28-1`). 168 + 1 = 169 (89 / 66 / 14). La même contre-lecture a fait retirer
+événementielle d'établissement ; ~~`R. 4624-29` passe `retenu`~~ [rayé le
+2026-09-26 : `retenu` à `04738ba`, rendu à `sans_objet` à `5d9b6a6` après
+vérification — il n'en donne que la durée ; précédent de statut
+`R. 4624-28-1`, qui n'est pas cité par une obligation, et onze articles
+`sans_objet` qui le sont]. 168 + 1 = 169 (89 / 66 / 14). La même contre-lecture a fait retirer
 la redite de la page (une description identique au fait n'est plus affichée
 deux fois), rétabli l'ordre de la phrase d'onboarding de `.claude/CLAUDE.md`
 (le calendrier d'établissement naît AVANT la page Équipements) et remplacé des
