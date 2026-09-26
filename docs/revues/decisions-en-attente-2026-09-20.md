@@ -38,11 +38,34 @@ Répondre « ok comme recommandé » à une ligne suffit.
 
 ## D. Non relu ce soir — à instruire avant de te le soumettre
 
-- **La scission `CH 57` / `CH 58`**, notée « appartient à la propriétaire ».
-- **La divergence sur `R. 146-35` CCH** entre les deux PDF.
-- **La règle de fusion « la plus ancienne »** de deux lignes de calendrier.
-- **§ 15** — un dossier qui n'a rien déclaré rend des listes vides sans le dire :
-  le seuil à partir duquel on le dit est une décision de produit.
+**[2026-09-26 — instruits tous les quatre** par une autre session
+(`revue/sujets-d`, `6ce3a0a`, rapport `docs/revues/instruction-sujets-D-2026-09-26.md`).
+**Aucun n'est une décision de la propriétaire** : trois se tranchent sur le
+texte, le quatrième sur la charte. Ce qui reste, et qui le porte :]
+
+- **La scission `CH 57` / `CH 58`** — EN COURS, cette session
+  (`lot/evenementielles-cible`). La première question est la portée : en
+  5ᵉ catégorie, `PE 1` § 1 écarte le Livre II « sauf celles relevant d'articles
+  expressément mentionnés » (relu de première main le 2026-09-26), et `PE 20`
+  § 2 ne renvoie au chapitre V que pour la « mise en œuvre ». Reste à vérifier
+  qu'aucun autre article du Livre III ne mentionne `CH 57` ou `CH 58` avant de
+  retirer l'annuelle aux N5.
+- **La divergence sur `R. 146-35` CCH** entre les deux PDF — CONFIÉE le
+  2026-09-26 à la session `rojer-outils-62` (le texte vise le propriétaire
+  d'un IGH : retirer du PDF de dossier, conditionner au régime).
+- ~~**La règle de fusion « la plus ancienne »** de deux lignes de
+  calendrier.~~ — CLOS le 2026-09-26 : conforme à `R. 4222-20` (« l'ensemble »)
+  et à `PE 4` § 2 (« tous les trois ans au plus »), l'erreur va vers « à
+  refaire ». Gardée telle quelle.
+- **§ 15** — un dossier qui n'a rien déclaré rend des listes vides sans le dire —
+  CONFIÉ le 2026-09-26 à la session `rojer-outils-62`. La prémisse était
+  fausse (un dossier vierge rend 4 à 6 lignes) ; la charte tranche
+  (interdit 15) : dire « aucun équipement déclaré » comme un fait, jusque dans
+  le ZIP et les PDF.
+- **À reverser au corpus par cette session** (après la fusion de sa branche) :
+  le verbatim de `PE 20` § 2 (relu le 2026-09-26), la liste complète de
+  `PE 4` § 2, et le motif faux de `PE 31` (le référentiel ne porte pas le
+  ramonage).
 
 Je ne formule pas de recommandation sur ces quatre-là sans avoir rouvert le code
 et les textes : ce serait deviner.
