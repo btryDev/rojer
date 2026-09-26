@@ -1,4 +1,10 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import type { ManqueCouverture } from "@/lib/perimetre/couverture";
+import {
+  phraseRegistreIgh,
+  referencesRegistreTenue,
+  type RegimeDuRegistre,
+} from "./mentions-registre";
 import { LABEL_RESULTAT } from "@/lib/rapports/schema";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
@@ -99,6 +105,19 @@ export type RegistreData = {
   etablissement: string;
   adresse: string;
   genereLe: Date;
+  /** Décide des articles cités sous « Tenue du registre »
+   *  (`mentions-registre.ts`). */
+  regime: RegimeDuRegistre;
+  /**
+   * « Aucun équipement en service n'est déclaré », quand c'est le cas
+   * (`perimetre/couverture.ts`, axe `inventaire`). `null` sinon — ou quand la
+   * couverture n'a pas pu être lue : le document se tait plutôt que
+   * d'affirmer un inventaire qu'il n'a pas lu.
+   *
+   * Requis, pour que l'oubli ne compile pas : optionnel, il serait resté vide,
+   * et c'est précisément le silence que ce champ existe pour rompre.
+   */
+  inventaire: ManqueCouverture | null;
   /** Les fiches dues, dans l'ordre du document. */
   parties: PartiePdf[];
   bilan: BilanPdf;
@@ -554,6 +573,19 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             renseignée peut l&apos;être avec une réponse fausse, et une fiche
             que l&apos;outil ne recueille pas reste due.
           </Text>
+          {/* Sous le décompte, qui dit « compte tenu […] des équipements
+              déclarés » : c'est là qu'un inventaire vide change ce qu'on lit.
+              Un fait, pas un verdict (`docs/chantiers-ouverts.md` § 15). */}
+          {data.inventaire && (
+            <View style={{ marginTop: 6 }}>
+              <Text style={{ fontFamily: "Helvetica-Bold" }}>
+                {data.inventaire.motif}
+              </Text>
+              <Text style={{ marginTop: 2 }}>
+                {data.inventaire.consequence}
+              </Text>
+            </View>
+          )}
         </View>
 
         <PiedDePage etablissement={data.etablissement} />
@@ -715,19 +747,25 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
               ne refuse à l'entrée qu'un ERP SITUÉ EN IGH — « l'IGH seul n'est
               pas refusé » —, et `perimetre/couverture.ts` lui POUSSE un manque
               sur l'axe `igh` au lieu d'écarter son dossier. Un IGH peut donc
-              présenter ce document. Le retrait tient toujours pour une autre
-              raison, plus étroite : le produit ne porte du régime IGH que deux
-              obligations, et ce registre-ci ne rend pas celles-là. Reste que
-              le PDF de dossier de conformité, lui, imprime encore
-              « R. 146-35 CCH (IGH) » — deux documents du même ZIP qui ne
-              disent pas la même chose. À trancher par la propriétaire, dans un
-              sens ou dans l'autre ; ce lot corrige le motif, pas le choix.
-              C'est le même défaut que celui corrigé sur L. 4711-5 en août
-              2026 — une référence qui ne vise pas son lecteur. Si l'IGH
-              entre un jour au périmètre, elle reviendra avec lui, et ce sera
-              un ajout conscient plutôt qu'un héritage. */}
+              présenter ce document.
+
+              ~~« le produit ne porte du régime IGH que deux obligations »~~ —
+              faux aussi, mesuré le 2026-09-26 en appelant le référentiel : ONZE
+              obligations admettent l'IGH, trois qui lui sont propres
+              (`elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
+              `incendie-igh-charge-calorifique-quinquennale`) et huit
+              d'ascenseur, ouvertes à tous les régimes.
+
+              TRANCHÉ LE 2026-09-26, par le texte. R. 146-35, relu sur sa page
+              Légifrance : « Il doit être tenu, par le propriétaire, un registre
+              de sécurité […] ». Il n'entre donc pas dans le titre — ce document
+              n'est pas ce registre-là, qui est celui de l'immeuble et de son
+              propriétaire — mais il est nommé pour un IGH, en une phrase qui
+              dit de qui il relève (`phraseRegistreIgh`). R. 143-44, lui, n'est
+              plus cité qu'à un ERP : il s'imprimait en titre chez tous. Le
+              dossier de conformité suit la même règle, par le même module. */}
           <Text style={{ fontFamily: "Helvetica-Bold", marginBottom: 4 }}>
-            Tenue du registre (R. 143-44 CCH · R. 4323-25 et R. 4323-26 CT)
+            Tenue du registre ({referencesRegistreTenue(data.regime)})
           </Text>
           <Text>
             Ce registre réunit les fiches dues à cet établissement, leur contenu
@@ -736,6 +774,9 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             fichiers originaux des rapports sont conservés et téléchargeables
             depuis l&apos;application.
           </Text>
+          {phraseRegistreIgh(data.regime) && (
+            <Text style={{ marginTop: 4 }}>{phraseRegistreIgh(data.regime)}</Text>
+          )}
         </View>
 
         <PiedDePage etablissement={data.etablissement} />

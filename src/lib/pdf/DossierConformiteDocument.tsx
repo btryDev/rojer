@@ -13,8 +13,15 @@ import {
   stylesCommuns as s,
 } from "./styles";
 import type { Score } from "@/lib/dashboard/score";
-import type { CouvertureEtablissement } from "@/lib/perimetre/couverture";
+import {
+  faitInventaire,
+  type CouvertureEtablissement,
+} from "@/lib/perimetre/couverture";
 import { blocsPerimetre, chapeauPerimetre } from "./mentions-perimetre";
+import {
+  referencesRegistreDossier,
+  type RegimeDuRegistre,
+} from "./mentions-registre";
 import {
   phraseIndetermines,
   type BlocEtatsPermanents,
@@ -29,9 +36,14 @@ export type DossierData = {
   effectifSurSite: number;
   codeNaf: string | null;
   regimesTexte: string; // ex: "Établissement de travail, ERP type N cat. 5"
+  /** Les deux régimes qui décident des articles du registre cités en
+   *  mentions légales (`mentions-registre.ts`). Requis : `regimesTexte` est
+   *  une phrase, et une référence conditionnée à une phrase se casserait au
+   *  premier changement de libellé. */
+  regime: RegimeDuRegistre;
   genereLe: Date;
   /**
-   * Ce que le référentiel ne traite pas pour cet établissement, sur ses cinq
+   * Ce que le référentiel ne traite pas pour cet établissement, sur ses six
    * axes. `null` seulement si la couverture n'a pas pu être lue — auquel cas
    * le document reste muet plutôt que de rassurer.
    */
@@ -163,11 +175,42 @@ function TableauEtats({ lignes }: { lignes: LigneEtatPermanentPdf[] }) {
   );
 }
 
+/** L'encadré de la page de garde, lu avant le score. */
+function EncadreALire({
+  titre,
+  texte,
+  marge = 40,
+}: {
+  titre: string;
+  texte: string;
+  /** L'écart au bloc précédent : 40 sous l'identité, moins entre deux
+   *  encadrés, qui se lisent d'un même mouvement. */
+  marge?: number;
+}) {
+  return (
+    <View
+      style={{
+        marginTop: marge,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: BOARD.ardoiseMoyenne,
+        maxWidth: 420,
+      }}
+    >
+      <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold", marginBottom: 4 }}>
+        {titre}
+      </Text>
+      <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>{texte}</Text>
+    </View>
+  );
+}
+
 export function DossierConformiteDocument({ data }: { data: DossierData }) {
   // Muet si la couverture n'a pas pu être lue : un document qui ne sait pas
   // ce qu'il ignore ne doit pas écrire qu'il n'ignore rien.
   const chapeau = data.couverture ? chapeauPerimetre(data.couverture) : null;
   const blocs = data.couverture ? blocsPerimetre(data.couverture) : [];
+  const inventaire = data.couverture ? faitInventaire(data.couverture) : null;
 
   return (
     <Document>
@@ -219,28 +262,24 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             laisserait un lecteur conclure sur un chiffre qu'il n'aurait pas
             encore de raison de relativiser. */}
         {data.avertissementCalendrier && (
-          <View
-            style={{
-              marginTop: 40,
-              padding: 12,
-              borderWidth: 1,
-              borderColor: BOARD.ardoiseMoyenne,
-              maxWidth: 420,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 9,
-                fontFamily: "Helvetica-Bold",
-                marginBottom: 4,
-              }}
-            >
-              À lire avant ce qui suit
-            </Text>
-            <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>
-              {data.avertissementCalendrier}
-            </Text>
-          </View>
+          <EncadreALire
+            titre="À lire avant ce qui suit"
+            texte={data.avertissementCalendrier}
+          />
+        )}
+
+        {/* LE MÊME ENDROIT, POUR LE MÊME MOTIF (`docs/chantiers-ouverts.md`
+            § 15). Un dossier sans équipement déclaré sort des listes
+            d'échéances vides et un score — un vide qui se lit comme une
+            réponse. Le fait vient avant, énoncé comme un fait : ni score, ni
+            verdict. Il figure aussi, avec les autres, sous « Ce que ce dossier
+            ne couvre pas » ; ici, il est lu avant le chiffre. */}
+        {inventaire && (
+          <EncadreALire
+            titre={inventaire.motif}
+            texte={inventaire.consequence}
+            marge={data.avertissementCalendrier ? 10 : 40}
+          />
         )}
 
         <View style={{ marginTop: 60 }}>
@@ -618,8 +657,11 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             (incendie), arrêté du 25 juin 1980 (règlement ERP).
           </Text>
           <Text style={{ marginTop: 3 }}>
-            — Registre de sécurité : R. 4323-25 et R. 4323-26 CT, R. 143-44 CCH (ERP),
-            R. 146-35 CCH (IGH).
+            {/* ~~« R. 143-44 CCH (ERP), R. 146-35 CCH (IGH) » à tous~~ —
+                conditionné au régime le 2026-09-26 : un bureau ni ERP ni IGH
+                lisait deux articles qui ne le visent pas. Les textes et leur
+                verbatim sont dans `mentions-registre.ts`. */}
+            — Registre de sécurité : {referencesRegistreDossier(data.regime)}.
           </Text>
           <Text style={{ marginTop: 6 }}>
             Ce dossier ne vaut pas certification de conformité. Il

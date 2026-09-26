@@ -75,6 +75,7 @@ import {
 import { afficherValeur } from "@/lib/registre/valeur";
 import type { DossierData } from "./DossierConformiteDocument";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
+import { faitInventaire } from "@/lib/perimetre/couverture";
 import { blocEtatsPermanents } from "./mentions-etats-permanents";
 import {
   fraicheurCalendrier,
@@ -292,9 +293,14 @@ export async function construireRegistreData(
   // quarante-neuf fiches et la date de génération se lisent au même instant.
   const now = new Date();
 
-  const [rapports, verifs] = await Promise.all([
+  const [rapports, verifs, couverture] = await Promise.all([
     listerRapportsDeLEtablissement(etablissementId),
     listerVerifications(etablissementId),
+    // Par la même entrée que le dossier de conformité, pour que les deux PDF
+    // du ZIP disent le même fait de l'inventaire (§ 15). Seul l'axe
+    // `inventaire` s'imprime ici : le registre n'a jamais porté le reste du
+    // périmètre, et ce lot ne l'y ajoute pas.
+    couvertureDuDossier(etablissementId),
   ]);
 
   const lignesRapports: LigneRapport[] = rapports.map((r) => ({
@@ -379,6 +385,10 @@ export async function construireRegistreData(
     etablissement: etab.raisonDisplay,
     adresse: etab.adresse,
     genereLe: now,
+    regime: { estERP: etab.estERP, estIGH: etab.estIGH },
+    // `null` si la couverture n'a pas pu être lue OU si l'inventaire n'est pas
+    // vide : dans les deux cas le document n'affirme rien de l'inventaire.
+    inventaire: couverture ? faitInventaire(couverture) : null,
     parties,
     bilan: bilanDuRegistre(completudes),
     rapports: lignesRapports,
@@ -574,6 +584,7 @@ export async function construireDossierConformiteData(
     effectifSurSite: etab.effectifSurSite,
     codeNaf: etab.codeNaf ?? etab.entreprise.codeNaf,
     regimesTexte: regimesTexte(etab),
+    regime: { estERP: etab.estERP, estIGH: etab.estIGH },
     genereLe: now,
     couverture,
     avertissementCalendrier: phraseFraicheur(fraicheur),

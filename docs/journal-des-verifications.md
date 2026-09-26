@@ -1057,6 +1057,38 @@ réemployée), 167 obligations. La mention d'application du décret
 n° 2026-503 (article 5) est ajoutée, mot pour mot, à la description de
 l'examen de reprise.
 
+### C27 · 2026-09-26 — `R. 146-35` CCH, relu pour trancher deux PDF qui se contredisaient
+
+**Lu, sur sa page propre** (LEGIARTI000043819153, version en vigueur depuis le
+2026-07-01) : structure demandée d'abord sans rien suggérer — un alinéa, une
+phrase d'annonce, six items 1° à 6°, rangé au chapitre VI « Immeubles de grande
+hauteur », section 5 « Mesures de contrôle ». Formulation décisive confirmée par
+deux lectures distinctes : « Il doit être tenu, par le propriétaire, un registre
+de sécurité sur lequel sont portés les renseignements indispensables au contrôle
+de la sécurité. » Puis : « Ce registre comprend, outre les pièces attendues aux
+articles R. 141-10 et R. 141-11 : […] ». **Le corpus le portait déjà** :
+`corpus/cch-registre-securite.ts`, lu le 2026-09-01, même verbatim, et la même
+remarque en majuscules — « le PROPRIÉTAIRE — et non l'exploitant ». La relecture
+n'a rien trouvé de neuf dans le texte ; ce qui manquait était dans les PDF, qui
+ne lisaient pas le corpus. **Consigné :** au corpus (`luLe` passé au 2026-09-26,
+`lecture` inchangée, sceau du calendrier mesuré identique avant et après :
+`2026-09-21.1+159-c8f511323424c950+moteur.4`), et dans le code qui imprime,
+`src/lib/pdf/mentions-registre.ts`.
+
+**Ce que la lecture a changé.** Le dossier de conformité imprimait
+« R. 143-44 CCH (ERP), R. 146-35 CCH (IGH) » à tout établissement, et le registre
+« R. 143-44 CCH » en titre à tout établissement. Les deux sont désormais
+conditionnés au régime ; `R. 146-35` n'est cité qu'à un IGH, et **avec son
+débiteur** — le propriétaire —, parce que le dirigeant qui lit le registre de
+Rojer n'est pas nécessairement celui qui tient le registre de l'immeuble. Il
+n'entre pas dans le titre du registre : ce document n'est pas celui-là.
+
+**Une mesure refaite en appelant le code.** Le commentaire du registre disait
+« le produit ne porte du régime IGH que deux obligations ». Le référentiel en
+rend **onze** qui admettent l'IGH : trois propres (`elec-igh-annuelle`,
+`incendie-igh-moyens-secours-annuelle`,
+`incendie-igh-charge-calorifique-quinquennale`) et huit d'ascenseur, ouvertes à
+tous les régimes.
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

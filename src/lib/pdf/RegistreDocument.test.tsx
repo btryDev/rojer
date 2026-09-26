@@ -8,6 +8,7 @@
 // est le seul garde-fou qui le verrait.
 
 import { describe, expect, it } from "vitest";
+import { elementsDansLOrdre, texteDirect } from "./arbre-rendu.test-utils";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { RegistreDocument, type RegistreData } from "./RegistreDocument";
 
@@ -16,6 +17,8 @@ const data: RegistreData = {
   etablissement: "Le Comptoir",
   adresse: "1 rue des Lilas",
   genereLe: new Date("2026-08-26T10:00:00Z"),
+  regime: { estERP: true, estIGH: false },
+  inventaire: null,
   bilan: { dues: 4, outillees: 3, faites: 1, aRemplir: 1, tenuesAilleurs: 1, nonOutillees: 1 },
   parties: [
     {
@@ -54,6 +57,8 @@ function registreJournal(n: number): RegistreData {
     etablissement: "E",
     adresse: "A",
     genereLe: new Date("2026-01-01T00:00:00Z"),
+    regime: { estERP: false, estIGH: false },
+    inventaire: null,
     bilan: {
       dues: 1,
       outillees: 1,
@@ -112,4 +117,43 @@ describe("RegistreDocument", () => {
     expect(court).toBeGreaterThan(5);
     expect(long).toBeGreaterThan(court * 1.5);
   }, 60000);
+
+  // La taille du rendu, comme dans `DossierConformiteDocument.test.tsx` : le
+  // texte d'un PDF react-pdf n'est pas lisible dans le fichier produit.
+  const taille = async (d: RegistreData) =>
+    (await renderToBuffer(<RegistreDocument data={d} />)).length;
+
+  it("dit « aucun équipement déclaré » quand c'est le cas (§ 15)", async () => {
+    const sans = await taille(data);
+    const avec = await taille({
+      ...data,
+      inventaire: {
+        axe: "inventaire",
+        motif: "Aucun équipement en service n'est déclaré pour cet établissement.",
+        consequence: "Aucune vérification attachée à un équipement ne peut donc figurer au registre.",
+      },
+    });
+    expect(avec).toBeGreaterThan(sans);
+  }, 30000);
+
+  it("cite R. 143-44 à l'ERP seul, et R. 146-35 à l'IGH seul", async () => {
+    const aucun = await taille({ ...data, regime: { estERP: false, estIGH: false } });
+    const erp = await taille({ ...data, regime: { estERP: true, estIGH: false } });
+    const igh = await taille({ ...data, regime: { estERP: false, estIGH: true } });
+    expect(erp).toBeGreaterThan(aucun);
+    expect(igh).toBeGreaterThan(aucun);
+  }, 30000);
+
+  it("ne met pas R. 146-35 dans le titre du registre, et le nomme à part en IGH", () => {
+    // Ce document n'est pas le registre de l'immeuble (R. 146-35 : « tenu,
+    // par le propriétaire ») : le titre ne cite que ce qu'il met en œuvre.
+    const noeuds = elementsDansLOrdre(
+      RegistreDocument({ data: { ...data, regime: { estERP: true, estIGH: true } } }),
+    );
+    const titre = noeuds.map(texteDirect).find((t) => t.startsWith("Tenue du registre ("));
+    expect(titre).toBeDefined();
+    expect(titre).toContain("R. 143-44 CCH");
+    expect(titre).not.toContain("146-35");
+    expect(noeuds.map(texteDirect).some((t) => /R\. 146-35 CCH.*propriétaire/.test(t))).toBe(true);
+  });
 });

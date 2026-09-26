@@ -15,10 +15,11 @@
 // paraissent complets alors qu'ils ignorent la moitié du règlement sont pires
 // qu'un refus : le dirigeant s'y fierait devant une commission.
 //
-// ## Cinq axes, une seule adresse
+// ## Six axes, une seule adresse
 //
 // (Le titre disait « Six » : `famille_habitation` est parti le 2026-09-03, et
-// l'union `AxeCouverture` porte cinq membres — relevé le 2026-09-13.)
+// l'union `AxeCouverture` porte cinq membres — relevé le 2026-09-13. Il le
+// redit depuis le 2026-09-26 : `inventaire` est entré, voir `axeInventaire`.)
 //
 // Le régime ERP n'est pas le seul bord du produit, et il n'a jamais été le
 // seul. Trois autres mécanismes disaient déjà, chacun dans son coin, une
@@ -115,6 +116,9 @@ export type AxeCouverture =
   /** Des appareils du parc ne portent aucune échéance — rappel de
    *  `equipements/hors-referentiel.ts`. */
   | "domaine_equipement"
+  /** Aucun équipement en service n'est déclaré — le fait, sans verdict.
+   *  Entré le 2026-09-26 (`docs/chantiers-ouverts.md` § 15). */
+  | "inventaire"
   /* L'axe `famille_habitation` a existé du 2026-09-01 au 2026-09-03. Il
      disait : « l'immeuble d'habitation n'a pas de famille, les obligations de
      l'arrêté du 31 janvier 1986 lui sont servies sans distinction ». Cette
@@ -234,6 +238,14 @@ export type FaitEquipements = {
   nbSansObligation: number;
   /** Taille du parc en service, pour situer le nombre sans en faire un taux. */
   nbEquipements: number;
+  /**
+   * Équipements retirés du parc (`actif: false`). Un équipement ne se retire
+   * au lieu de se supprimer que s'il porte une preuve (`supprimerEquipement`) :
+   * ses vérifications et rapports restent, et le registre les imprime. Sans ce
+   * nombre, un parc entièrement retiré lisait « aucune vérification […] ne
+   * peut figurer au registre » au-dessus d'un registre qui en listait.
+   */
+  nbRetires: number;
 };
 
 /**
@@ -285,7 +297,13 @@ function axeRegime(
   if (regime.estIGH) {
     manques.push({
       axe: "igh",
-      motif: "Cet établissement est déclaré immeuble de grande hauteur (IGH).",
+      // ~~« Cet établissement est déclaré immeuble de grande hauteur (IGH). »~~
+      // — corrigé le 2026-09-26, comme `pdf/mentions-registre.ts` : la case
+      // recueillie porte sur le BÂTIMENT (« Immeuble de Grande Hauteur »,
+      // hauteur > 28 m ou > 50 m). L'établissement y est situé ; il n'est pas
+      // l'immeuble.
+      motif:
+        "Cet établissement est situé dans un immeuble déclaré de grande hauteur (IGH).",
       // « des vérifications que cet outil ne connaît pas », disait cette
       // phrase jusqu'au 2026-09-03. Deux obligations IGH sont pourtant au
       // référentiel, adossées à l'article GH 5 du même arrêté : le dirigeant
@@ -549,6 +567,79 @@ function axeEquipements(
 }
 
 /**
+ * Aucun équipement en service n'est déclaré (`docs/chantiers-ouverts.md` § 15).
+ *
+ * Un calendrier à jour qui rend zéro ligne ne disait rien, et c'est ce que
+ * voyaient à l'identique deux dossiers que rien ne rapproche : celui qui a
+ * tout déclaré et n'a rien de périodique à suivre, et celui qui n'a encore
+ * rien déclaré. Le silence ressemblait à une réponse — l'interdit 15 de la
+ * charte.
+ *
+ * La phrase énonce le FAIT, et seulement lui. Elle ne tranche pas entre les
+ * deux dossiers — un bureau sans appareil soumis et un dossier abandonné à
+ * l'onboarding sortent la même phrase, et elle est vraie des deux. Ni score,
+ * ni « complet », ni « à compléter » : ce qui se lit comme un verdict sur
+ * l'établissement est exactement ce que ce module s'interdit (`ManqueCouverture`).
+ *
+ * Un axe à part de `domaine_equipement`, et non une variante : l'un dit que des
+ * appareils déclarés ne déclenchent rien, l'autre qu'il n'y a pas d'appareil.
+ * Les sorties qui n'impriment pas tout le périmètre — le registre, le ZIP,
+ * « Préparer un contrôle » — lisent celui-ci seul (`faitInventaire`), et ne
+ * pourraient pas le distinguer par sa phrase sans la recopier.
+ *
+ * Le seuil est zéro, et c'est le seul qui soit un fait. Un seuil plus haut
+ * (« moins de trois équipements ») serait une appréciation de ce qu'un
+ * établissement devrait détenir.
+ */
+function axeInventaire(
+  eq: FaitEquipements,
+  manques: ManqueCouverture[],
+): void {
+  if (eq.nbEquipements > 0) return;
+
+  // ~~« L'inventaire se complète depuis la page Équipements. »~~ — retiré le
+  // 2026-09-26 par la contre-lecture. La phrase présumait un inventaire
+  // incomplet, ce que ce docblock s'interdit, et elle renvoyait à un écran le
+  // contrôleur qui lit le PDF. Le lien, à l'écran, reste au bandeau.
+  const listeVide =
+    "Une liste d'échéances vide de ce côté ne dit pas que rien n'est dû : elle reflète l'inventaire tel qu'il est déclaré.";
+
+  if (eq.nbRetires > 0) {
+    // Parc entièrement retiré : les preuves de ces équipements restent, et le
+    // registre les imprime. Dire « rien ne peut figurer au registre » serait
+    // faux sous les yeux du lecteur.
+    const n = eq.nbRetires;
+    const pl = n > 1;
+    manques.push({
+      axe: "inventaire",
+      motif: "Aucun équipement en service n'est déclaré pour cet établissement.",
+      consequence: `Les vérifications et rapports déjà consignés pour ${n} équipement${pl ? "s" : ""} retiré${pl ? "s" : ""} du parc sont conservés. Aucune nouvelle échéance attachée à un équipement n'est calculée. ${listeVide}`,
+    });
+    return;
+  }
+
+  manques.push({
+    axe: "inventaire",
+    motif: "Aucun équipement n'est déclaré pour cet établissement.",
+    consequence: `Aucune vérification attachée à un équipement ne figure donc au calendrier ni au registre. ${listeVide}`,
+  });
+}
+
+/**
+ * Le fait « aucun équipement déclaré », seul, pour les sorties qui
+ * n'impriment pas tout le périmètre. `null` quand l'inventaire n'est pas vide.
+ *
+ * Lu dans la couverture déjà calculée, et non recalculé : une seconde règle
+ * « zéro équipement » dans une route finirait par dire autre chose que le
+ * dossier de conformité imprimé dans le même ZIP.
+ */
+export function faitInventaire(
+  c: CouvertureEtablissement,
+): ManqueCouverture | null {
+  return c.manques.find((m) => m.axe === "inventaire") ?? null;
+}
+
+/**
  * L'effectif dépasse ce que la porte de création accepte (ADR-031 § 1 bis).
  *
  * Un **manque**, jamais un refus : la borne d'effectif ne vaut qu'à la
@@ -615,6 +706,7 @@ export function couvertureDeLEtablissement(
   axeDuerp(faits.duerp, manques, indeterminations);
   axeSecteurParDefaut(faits.duerp, manques);
   axeEquipements(faits.equipements, manques);
+  axeInventaire(faits.equipements, manques);
 
   return { manques, indeterminations };
 }
@@ -630,10 +722,12 @@ export function couvertureDeLEtablissement(
 export function couvertureDuRegime(
   regime: RegimeEtablissement,
 ): CouvertureEtablissement {
-  return couvertureDeLEtablissement({
-    regime,
-    duerp: null,
-    equipements: { nbSansObligation: 0, nbEquipements: 0 },
-    effectif: null,
-  });
+  // L'axe du régime, APPELÉ SEUL — et non plus `couvertureDeLEtablissement`
+  // nourri d'un parc fictif à zéro. Ce zéro était inoffensif tant qu'aucun axe
+  // ne lisait la taille du parc ; depuis `axeInventaire`, il faisait affirmer
+  // « aucun équipement déclaré » par un écran qui n'a pas regardé le parc.
+  const manques: ManqueCouverture[] = [];
+  const indeterminations: IndeterminationCouverture[] = [];
+  axeRegime(regime, manques, indeterminations);
+  return { manques, indeterminations };
 }

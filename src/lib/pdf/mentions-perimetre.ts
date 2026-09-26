@@ -37,9 +37,15 @@ export function chapeauPerimetre(
   const n = couverture.manques.length + couverture.indeterminations.length;
   if (n === 0) return null;
   return (
+    // « ou ne peut pas traiter faute de déclaration » : ajouté le 2026-09-26
+    // avec l'axe `inventaire`. « Aucun équipement déclaré » n'est pas une
+    // chose que le référentiel ignore — il la traiterait si on la lui
+    // déclarait —, et la phrase d'avant la rangeait sous un titre qui disait
+    // le contraire.
     "Ce dossier est produit à partir du référentiel de Rojer, qui a un " +
     "périmètre. Les points ci-dessous nomment ce que ce référentiel ne " +
-    "traite pas pour cet établissement, à la date d'édition. Ils ne " +
+    "traite pas pour cet établissement, ou ne peut pas traiter faute de " +
+    "déclaration, à la date d'édition. Ils ne " +
     "qualifient pas la situation de l'établissement au regard du droit : " +
     "une obligation non traitée ici reste due si un texte l'impose."
   );

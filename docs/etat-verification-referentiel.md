@@ -171,11 +171,11 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 46 | 15 % | 37 |
 | 2026-08-27 | 10 | 3 % | 7 |
 | 2026-08-31 | 68 | 22 % | 32 |
-| 2026-09-01 | 142 | 45 % | 89 |
+| 2026-09-01 | 141 | 45 % | 89 |
 | 2026-09-02 | 17 | 5 % | 14 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
-| 2026-09-26 | 16 | 5 % | 13 |
+| 2026-09-26 | 17 | 5 % | 14 |
 
 316 des 316 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-26.
 
@@ -307,7 +307,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-5-sommeil-consigne-chambres` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-erp-5-sommeil-plans-affiches` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-erp-alarme-verification-hebdomadaire` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-04 |
-| `incendie-registre-securite` | incendie | etablissement | 10 | 5 · première main | 4 · agent + verbatim | 0 / 10 | 2026-08-31 → 2026-09-01 |
+| `incendie-registre-securite` | incendie | etablissement | 10 | 5 · première main | 4 · agent + verbatim | 0 / 10 | 2026-08-31 → 2026-09-26 |
 | `information-etablissement-affichages-obligatoires` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `information-etablissement-avis-acces-duerp` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `levage-examen-etat-conservation` | levage | equipement | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-09-01 |
@@ -474,7 +474,7 @@ refaire pour la contredire.
 | `incendie-registre-securite` | contexte 6 | CCH, art. R. 143-44 (ex R. 123-51) — ERP | CCH R. 143-44 | cch-registre-securite | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-registre-securite` | contexte 7 | CCH, art. R. 141-10 — contenu du registre | CCH R. 141-10 | cch-registre-securite | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-registre-securite` | contexte 8 | CCH, art. R. 141-11 — solutions d'effet équivalent | CCH R. 141-11 | cch-registre-securite | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
-| `incendie-registre-securite` | contexte 9 | CCH, art. R. 146-35 (ex R. 122-29) — IGH | CCH R. 146-35 | cch-registre-securite | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
+| `incendie-registre-securite` | contexte 9 | CCH, art. R. 146-35 (ex R. 122-29) — IGH | CCH R. 146-35 | cch-registre-securite | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-travail-eclairage-securite-essai-mensuel` | fondement | Arrêté du 14 décembre 2011, art. 11 | Arrêté 2011-12-14 art. 11 | arrete-2011-12-14-eclairage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-12-31 | 2011-12-31 | 5 · première main | ancrée |
 | `incendie-travail-eclairage-securite-essai-mensuel` | contexte 1 | R. 4227-14 | R. 4227-14 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-07-01 | 2011-07-01 | 5 · première main | ancrée |
 | `incendie-travail-eclairage-securite-essai-mensuel` | contexte 2 | R. 4226-19 | R. 4226-19 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-07-01 | 2011-07-01 | 5 · première main | ancrée |

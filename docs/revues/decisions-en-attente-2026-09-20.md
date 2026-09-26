@@ -54,8 +54,9 @@ texte, le quatrième sur la charte. Ce qui reste, et qui le porte :]
 - ~~Motif faux de `PE 31` au corpus~~ — rayé le 2026-09-26.
 - ~~**La divergence sur `R. 146-35` CCH** entre les deux PDF~~ — FAIT le
   2026-09-26 par la session `rojer-outils-62`, branche
-  `lot/sorties-sans-equipement-et-igh` (`572675c`), NON FUSIONNÉE, contre-lecture
-  en cours : `R. 143-44` cité aux seuls ERP, `R. 146-35` aux seuls IGH avec son
+  `lot/sorties-sans-equipement-et-igh` (`572675c`, corrigé jusqu'à `1966554`),
+  contre-lue puis vérifiée point par point le 2026-09-26, réunie dans
+  `integration/2026-09-26` (journal C27), NON POUSSÉE sur `main` : `R. 143-44` cité aux seuls ERP, `R. 146-35` aux seuls IGH avec son
   débiteur (le propriétaire).
 - ~~**La règle de fusion « la plus ancienne »** de deux lignes de
   calendrier.~~ — CLOS le 2026-09-26 : conforme à `R. 4222-20` (« l'ensemble »)
