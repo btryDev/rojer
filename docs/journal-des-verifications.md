@@ -2321,6 +2321,35 @@ seule → 1 rouge ; `evaluerEtatDuerp` idem → 1 rouge ; projection lisant le
 site (`: etab.effectifSurSite`) → 2 rouges, dont un de comportement par
 `lireEntrees` ; mention retirée des états permanents → 1 rouge ; phrase privée
 des contrats de professionnalisation → 1 rouge. Restauré, vert.
+
+**Seconde vérification (sur `c5972c7`), corrigée le même jour** :
+- **La mise à jour annuelle retenue par prudence affirmait une échéance
+  échue.** `majAnnuelleAConfirmer` n'avait aucun lecteur : entreprise 10,
+  site 11, version de 2025, la checklist du ZIP de contrôle imprimait « [!]
+  DUERP : mise à jour annuelle échue (art. R. 4121-2) » — sur `main`, le même
+  dossier était « non soumis ». La checklist (case vide, plus de « [!] »),
+  l'outil MCP, les recommandations, le brief et la synthèse du document unique
+  lisent désormais le doute et le disent avec la même mention courte
+  (`mentionAConfirmer`), reprise par l'écran des actions. Garde
+  (`dashboard/maj-a-confirmer.test.ts`) : chaque sortie sur le dossier témoin,
+  et aucun fichier ne lit l'échéance sans lire `majAnnuelleAConfirmer`.
+  Épreuves : checklist rendue sourde → 2 rouges ; outil MCP → 2 ; recommandations
+  → 1 ; brief → 1 ; synthèse privée du drapeau → 1.
+- **La phrase citait le 6° de L. 1111-3 sans l'avoir relu.** Relu ce jour mot
+  pour mot (lecture ciblée) : « Les titulaires d'un contrat de
+  professionnalisation jusqu'au terme prévu par le contrat lorsque celui-ci est
+  à durée déterminée ou jusqu'à la fin de l'action de professionnalisation
+  lorsque le contrat est à durée indéterminée. » Ajouté à la citation du
+  corpus, motif mis à jour. La phrase dit le terme, dit « notamment » et nomme
+  le prorata de L. 1111-2 (temps partiels, contrats à durée déterminée) : elle
+  ne présente plus l'écart comme binaire. Épreuve : « notamment » et le terme
+  retirés → 2 rouges.
+- **Modifier l'entreprise taisait un échec de régénération.** L'issue est
+  testée, un échec rend `MESSAGE_REGEN_ECHEC` ; le `revalidatePath` redondant
+  est retiré. Épreuve : issue ignorée → 1 rouge.
+- **Non porté** : le score, le tableau des obligations et la carte du tableau
+  de bord lisent `estAJour` sans le doute ; ils disent « pas à jour » d'une
+  version de plus de douze mois, ce qui reste un fait.
 - **Borne du produit** : `EFFECTIF_MAX` (50, ADR-031) reste lue sur le site ;
   l'effectif de l'entreprise n'est pas borné. Décision de produit non prise
   ici.
