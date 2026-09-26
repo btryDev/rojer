@@ -77,6 +77,7 @@ describe("sourçage des risques", () => {
 
   /**
    * Cinq risques de restauration sont entrés au référentiel sans description,
+   * ~~cinq~~ quatre depuis le 2026-09-26 (`resto-incendie` sourcé, C35),
    * donc sans source. Ils ne sont pas corrigés ici : leur rédaction demande
    * d'ouvrir les fiches INRS correspondantes, pas de deviner un numéro.
    * La liste est figée pour que la dette reste comptée et ne grossisse pas —
@@ -85,7 +86,6 @@ describe("sourçage des risques", () => {
   const SANS_SOURCE_TOLERES = [
     "resto-brulure",
     "resto-chute-hauteur",
-    "resto-incendie",
     "resto-chimique",
     "resto-ambiance-thermique",
   ];
