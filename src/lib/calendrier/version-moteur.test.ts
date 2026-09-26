@@ -131,6 +131,10 @@ const RELEVE = {
   // formation des élus naît des titres (contre-lecture : 256 couples, zéro
   // calendrier différent). Un incrément à 5, posé d'abord, a été retiré avant
   // livraison. Voir le commentaire de `VERSION_MOTEUR_CALENDRIER`.
+  // Recopiée SANS incrément le même jour (seconde vérification C37) :
+  // `matching/effectif-entreprise.ts` ne change que des PHRASES (le 6° de
+  // L. 1111-3 borné à son terme, « notamment », la mention courte commune).
+  // NON, la régénération n'écrit rien d'autre.
   // INCRÉMENTÉ le 2026-09-20 (décision de la propriétaire) : le silence sur
   // les locaux à sommeil ne retient plus que là où le sommeil est plausible.
   // OUI, la régénération écrit autrement : les ERP de 5ᵉ catégorie hors de ces
@@ -198,7 +202,7 @@ const RELEVE = {
   // vérification et le formulaire des prescriptions, réexporté par
   // `prescriptions/schema.ts`, absent de `calendrier/` et de
   // `prescriptions/actions.ts` (décision de la session de coordination).
-  empreinte: "3501f1d31416ed4c",
+  empreinte: "d6ce6130dcdbeea4",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
