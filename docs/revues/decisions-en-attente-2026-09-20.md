@@ -69,9 +69,9 @@ texte, le quatrième sur la charte. Ce qui reste, et qui le porte :]
 - **Ce que ce lot a vu et laissé, à reprendre** : un dossier vide sort encore
   « 100/100 » ; le PDF du dossier cite l'arrêté du 25 juin 1980 à un non-ERP ;
   le registre PDF parle de « la commission de sécurité » à un non-ERP et garde
-  l'injonction « Déclarez vos équipements… » ; la phrase de `.claude/CLAUDE.md`
+  l'injonction « Déclarez vos équipements… » ; ~~la phrase de `.claude/CLAUDE.md`
   sur l'onboarding (l. 597) est périmée — trois étapes, aucune ne déclare
-  d'équipement. La prémisse était
+  d'équipement~~ (corrigée le 2026-09-26, `894d5e4`). La prémisse était
   fausse (un dossier vierge rend 4 à 6 lignes) ; la charte tranche
   (interdit 15) : dire « aucun équipement déclaré » comme un fait, jusque dans
   le ZIP et les PDF.
@@ -80,3 +80,19 @@ texte, le quatrième sur la charte. Ce qui reste, et qui le porte :]
 
 Je ne formule pas de recommandation sur ces quatre-là sans avoir rouvert le code
 et les textes : ce serait deviner.
+
+## E. Ce que l'instruction des neuf manques « module » a sorti (2026-09-26)
+
+Instruction en lecture seule, verbatims relus (`agent_verbatim`) : les neuf
+`citationCle` concordent. Les ANNONCES sans migration ni décision sont en
+cours (plan de prévention : `lot/annonces-plan-prevention` ; DUERP et bruit :
+à suivre). Restent à toi :
+
+| | Question | Pourquoi c'est à toi |
+|---|---|---|
+| **E1** | **Un manque ANNONCÉ quitte-t-il `obligation_manquante` ?** Le seul statut « annoncé » du corpus est `non_couvert` + `declareA`, qui veut dire « on a choisi de ne pas la porter ». | Basculer les neuf est un choix de périmètre, pas un constat. Sans décision, ils restent comptés manquants même une fois dits. |
+| **E2** | **Programme annuel de prévention (`L. 4121-3-1` III 1°) : à 50 salariés pile, il est dû et rien ne le dit** (l'axe de couverture ne l'annonce qu'au-delà de 50). Et le texte compte l'effectif de l'ENTREPRISE, l'axe celui du SITE. | Faire afficher un manque à un dossier que Rojer sert ; et trancher entreprise / site pour tous les seuils. |
+| **E3** | **Transmission du DUERP au service de santé au travail à chaque mise à jour (`L. 4121-3-1` VI)** : l'annoncer au geste de validation est sans décision ; la PORTER contredit l'ADR-037 § 1 (qui exclut ce cas de « Quand ça arrive ») ou demande un champ de version. | Choix de surface et de modèle. |
+| **E4** | **Liste des postes en suivi renforcé dans le plan (`R. 4512-9`)** : la porter demande un champ à TROIS états (non renseigné / aucun poste / une liste) — un simple vide afficherait « non renseigné » là où « aucun » est la bonne réponse. | Forme du champ. |
+| **E5** | **Mesurage du bruit (`R. 4433-2`, renouvelé au moins tous les cinq ans « en cas de mesurage »)** : le corpus a refusé d'ancrer l'échéance sur une date saisie (« inverserait la charge ») ; l'instruction observe que le texte ne fait naître le renouvellement qu'en cas de mesurage, donc qu'un ancrage déclaré ne retirerait de couverture à personne. | Réexaminer un refus écrit ; migration (quelle grandeur a été mesurée). |
+| **E6** | **Amiante (`R. 4512-11`), annexe d'exposition (`R. 4121-1-1`), programme annuel porté** : pièces jointes au plan, rattachement des risques aux facteurs de `L. 4161-1`, coût/indicateurs sur les actions. | Gros morceaux, décisions de périmètre. |
