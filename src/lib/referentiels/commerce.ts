@@ -272,7 +272,7 @@ export const commerce: Referentiel = {
     {
       id: "com-bruit",
       libelle: "Ambiance sonore (musique, ventilation, affluence)",
-      description: "ED 840 fiche 11. À évaluer notamment dans les commerces avec musique de fond.",
+      description: "ED 840 fiche 11. À évaluer notamment dans les commerces avec musique de fond. « En cas de mesurage, celui-ci est renouvelé au moins tous les cinq ans. » (art. R. 4433-2)",
       unitesAssociees: ["com-vente-caisse", "com-locaux"],
       graviteParDefaut: 1,
       probabiliteParDefaut: 3,

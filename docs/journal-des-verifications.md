@@ -1138,6 +1138,41 @@ modificateurs de `R. 4624-29` (décret n° 2022-372, art. 5) et de `R. 4624-30`
 (décret n° 2026-503, art. 1) sont nommés tels que Légifrance les affiche ; leurs
 articles n'ont pas été lus mot pour mot.
 
+### C31 · 2026-09-26 — Trois manques du document unique, dits à qui le tient
+
+**Le constat** (instruction des neuf manques « module », lecture seule) : le
+produit a le module du document unique, mais ne disait pas à qui le tient
+trois choses que le Code met à sa charge — la transmission au service de
+prévention et de santé au travail à chaque mise à jour (`L. 4121-3-1` VI),
+l'annexe d'exposition (`R. 4121-1-1`, dont l'absence n'était imprimée que si
+un risque portait une saisie), le renouvellement quinquennal d'un mesurage du
+bruit (`R. 4433-2`). Et l'aide du champ « Dernières mesures physiques »
+affirmait qu'une mesure se fait « par un organisme habilité » : pour le bruit,
+le texte dit « personnes compétentes ».
+
+**Relu.** `L. 4121-3-1` VI de première main, concordant avec l'instruction.
+`R. 4121-1-1` et `R. 4433-2` : verbatim du corpus, confirmé par l'instruction.
+
+**Appliqué.** `src/lib/referentiels/conformite/textes-duerp.ts`, une écriture
+par texte, confrontée au corpus par un test éprouvé sur l'ancien nom du
+service (« service de santé au travail ») ; message de validation d'une
+version ; mentions du PDF (transmission, annexe non produite — toujours) ;
+trois risques bruit ; aide du champ corrigée. Aucune obligation n'entre, le
+statut des trois reste `obligation_manquante` : les faire sortir est la
+décision E1. `R. 4434-9` n'est PAS annoncé : ses articles de renvoi ne sont
+pas lus.
+
+**Contre-lu le jour même, corrigé.** La description d'un risque est COPIÉE en
+base quand on le coche : un document unique existant ne voyait pas la phrase
+du bruit. Elle est donc aussi dans l'aide du champ « Dernières mesures
+physiques », que tout document affiche. Le PDF décrivait DÉJÀ l'annexe, juste
+en dessous, sous condition (« Annexes éventuellement obligatoires … lorsque
+l'activité le justifie », « seuils réglementaires ») : ce paragraphe, que le
+texte ne soutient pas, est retiré. ~~L'annexe n'est plus décrite qu'une fois.~~ [Faux, relevé par vérification le jour même : quand un risque porte une saisie d'exposition, la page « Expositions relevées » garde son propre chapeau (« Ce n'est pas l'annexe prévue par l'article R. 4121-1-1… »), qui dit pourquoi CE tableau n'est pas l'annexe ; la mention générale dit que l'annexe n'est pas produite. Deux phrases, deux objets.]
+La mention de transmission continue désormais la liste du PDF (« il est :
+… transmis par l'employeur … ») ; le chapeau des informations complémentaires
+du formulaire de cotation ne promet plus « certaines annexes obligatoires ».
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

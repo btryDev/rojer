@@ -451,7 +451,7 @@ export const restauration: Referentiel = {
       id: "resto-bruit",
       libelle: "Ambiance sonore (cuisine, plonge, salle)",
       description:
-        "ED 840 fiche 11. Hotte, lave-vaisselle, mixeurs et batteurs en cuisine ; musique et affluence en salle. L'employeur évalue et, si nécessaire, mesure les niveaux de bruit (art. R. 4433-1).",
+        "ED 840 fiche 11. Hotte, lave-vaisselle, mixeurs et batteurs en cuisine ; musique et affluence en salle. L'employeur évalue et, si nécessaire, mesure les niveaux de bruit (art. R. 4433-1). « En cas de mesurage, celui-ci est renouvelé au moins tous les cinq ans. » (art. R. 4433-2)",
       unitesAssociees: ["production", "plonge", "service-salle"],
       graviteParDefaut: 1,
       probabiliteParDefaut: 3,
