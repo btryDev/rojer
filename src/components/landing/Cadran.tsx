@@ -40,8 +40,8 @@ const DOCUMENTS: Document[] = [
     // À recompter quand le référentiel s'étend — un chiffre faux sur une
     // page publique se paie plus cher que pas de chiffre du tout.
     // ~~« Sources Légifrance et INRS »~~ : huit références citent le
-    // règlement (UE) 2024/573 (EUR-Lex), une seule l'INRS (compté le
-    // 2026-09-26 en appelant `obligationsConformite`).
+    // règlement (UE) 2024/573 (EUR-Lex), une seule l'INRS (compté en
+    // appelant le référentiel, relecture du 2026-09-26).
     reperes: ["169 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
   },
   {
