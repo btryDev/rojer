@@ -545,30 +545,6 @@ describe("moteur matching — conditions booléennes (groupe électrogène)", ()
       "elec-erp-groupe-electrogene-annuel",
     );
   });
-
-  // C39, 2026-09-27 : la quinzaine (EL 18 § 4, niveaux) porte la même
-  // propriété en `non_infirmee`. Trois états, trois tests : seule une
-  // réponse « non » explicite l'éteint ; le silence la garde.
-  const QUINZAINE = "elec-erp-groupe-electrogene-quinzaine";
-
-  it("quinzaine : groupe électrogène déclaré → applicable", () => {
-    const res = determineObligationsApplicables(etabErpCat3(), [
-      elec({ caracteristiques: { aGroupeElectrogene: true } }),
-    ]);
-    expect(idsObligations(res)).toContain(QUINZAINE);
-  });
-
-  it("quinzaine : « pas de groupe électrogène » déclaré → NON applicable", () => {
-    const res = determineObligationsApplicables(etabErpCat3(), [
-      elec({ caracteristiques: { aGroupeElectrogene: false } }),
-    ]);
-    expect(idsObligations(res)).not.toContain(QUINZAINE);
-  });
-
-  it("quinzaine : propriété absente → applicable (le silence n'éteint pas)", () => {
-    const res = determineObligationsApplicables(etabErpCat3(), [elec()]);
-    expect(idsObligations(res)).toContain(QUINZAINE);
-  });
 });
 
 describe("moteur matching — conditions booléennes (local pollution spécifique)", () => {

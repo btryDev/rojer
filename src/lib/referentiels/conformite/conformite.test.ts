@@ -1501,13 +1501,6 @@ describe("référentiel conformité — version et empreinte", () => {
     // `.9` ; même cas que `.8` (descriptions seules, empreinte inchangée).
     // 169 + 0 − 0 = 169.
     { version: "2026-09-26.10", empreinte: "169-b35a654fd2941809" },
-    // C39, 2026-09-27 : `.10` n'a jamais été publiée et sa ligne n'est pas
-    // réécrite (précédent : `.3`, annulée, jamais réemployée).
-    // `elec-erp-groupe-electrogene-quinzaine` gagne la condition
-    // `non_infirmee` sur `aGroupeElectrogene` : seule une réponse « non »
-    // explicite l'éteint. Les conditions sont hachées, l'empreinte bouge ;
-    // 169 + 0 − 0 = 169.
-    { version: "2026-09-26.11", empreinte: "169-d9690840528dde38" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

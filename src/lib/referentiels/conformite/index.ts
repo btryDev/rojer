@@ -216,11 +216,7 @@ export const obligationsConformite: Obligation[] = [
 // catégories », et dans leur description ce que le livre III porte en 5ᵉ et
 // la sur-application assumée. Aucune typologie, aucun libellé : empreinte
 // inchangée, 169.
-// `.11` le 2026-09-27 (C39) : `elec-erp-groupe-electrogene-quinzaine` gagne
-// une condition `non_infirmee` sur `aGroupeElectrogene`. Un ERP qui déclare
-// n'avoir pas de groupe électrogène ne reçoit plus la vérification des niveaux
-// tous les quinze jours ; propriété absente ou « oui » : inchangé. 169.
-export const REFERENTIEL_VERSION = "2026-09-26.11";
+export const REFERENTIEL_VERSION = "2026-09-26.10";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
