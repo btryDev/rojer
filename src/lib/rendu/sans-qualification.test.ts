@@ -83,6 +83,9 @@ const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
   // (contre-lecture du 2026-09-26).
   { nom: "valeur légale", motif: mot(String.raw`valeur\s+(?:légale|juridique|probante|probatoire)`) },
   { nom: "premier document demandé", motif: mot(String.raw`premier\s+document\s+demandé`) },
+  // L'indice se dit « d'avancement » (décision de la propriétaire,
+  // 2026-09-26) : « conformité » y qualifiait un calcul interne.
+  { nom: "score de conformité", motif: mot(String.raw`scores?\s+de\s+conformité`) },
   // PROMESSES QUE LE PRODUIT NE TIENT PAS (C38, 2026-09-26). Aucun rappel
   // n'est envoyé — le dépôt n'a aucun driver d'envoi réel —, aucune action
   // ne naît seule d'un écart, aucun dossier n'est « prêt » par construction.

@@ -31,14 +31,14 @@ const LIBELLE_NIVEAU = {
 function ScoreInfoTooltip({ align = "right" }: { align?: "left" | "right" | "center" }) {
   return (
     <InfoTooltip align={align}>
-      Repère interne, pas une certification. Le score agrège trois
+      Formule interne de Rojer, pas une attestation. L&apos;indice agrège trois
       engagements datés : les vérifications périodiques dépassées (chacune
       citée avec son texte au calendrier), les actions correctives en retard et la mise
       à jour du DUERP depuis moins de 12 mois, dans les entreprises d&apos;au
       moins onze salariés (art. R. 4121-2, 1° CT). Plus un
       engagement est urgent, plus son retard pénalise. Les états permanents
       n&apos;ont pas de date : ils ne pénalisent rien, mais tant qu&apos;ils
-      restent sans réponse le score ne conclut pas.
+      restent sans réponse l&apos;indice ne conclut pas.
     </InfoTooltip>
   );
 }
@@ -141,7 +141,7 @@ export function WidgetScore({
       <BentoCell
         kicker={
           <>
-            Score de conformité
+            Indice d&apos;avancement
             <ScoreInfoTooltip align="left" />
           </>
         }
@@ -168,14 +168,14 @@ export function WidgetScore({
       <BentoCell
         kicker={
           <>
-            Score de conformité
+            Indice d&apos;avancement
             <ScoreInfoTooltip align="left" />
           </>
         }
       >
         <div className="flex flex-col gap-1">
           <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--board-slate-mid)]">
-            Score actuel
+            Indice actuel
           </span>
           <div className="flex items-baseline gap-3">
             <span className="text-[5.5rem] font-semibold leading-none tracking-[-0.055em] tabular-nums">
@@ -202,11 +202,11 @@ export function WidgetScore({
       <header className="flex items-start justify-between gap-3">
         <div>
           <h3 className="v2-title inline-flex items-center">
-            Score de conformité
+            Indice d&apos;avancement
             <ScoreInfoTooltip align="left" />
           </h3>
           <p className="v2-subtitle">
-            Indicateur interne — pas une certification officielle
+            Formule interne de Rojer — pas une attestation
           </p>
         </div>
       </header>
@@ -303,7 +303,7 @@ function ScoreRingV2({
       height={size}
       viewBox={`0 0 ${size} ${size}`}
       role="img"
-      aria-label={`Score de conformité ${pct} sur 100`}
+      aria-label={`Indice d'avancement ${pct} sur 100`}
     >
       <circle
         cx={size / 2}
@@ -492,7 +492,7 @@ function GaugeScore({ valeur }: { valeur: number }) {
       className="shrink-0"
       style={{ width: taille, height: taille * 0.75 }}
       role="img"
-      aria-label={`Score de conformité ${valeur}%`}
+      aria-label={`Indice d'avancement ${valeur}%`}
     >
       <svg viewBox={`0 0 ${taille} ${taille * 0.75}`} className="h-full w-full">
         <path

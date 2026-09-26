@@ -2330,8 +2330,9 @@ d'origine du carnet sanitaire, remise dans le fichier, fait échouer la garde
 l'avait trouvée, hors de la relecture.
 
 **Laissé, et signalé** (décisions de produit) :
-- Dans l'application, le widget s'appelle encore « Score de conformité »
-  (`registry.ts`, `score.tsx`, dossier PDF « (indicateur interne) »).
+- ~~Dans l'application, le widget s'appelle encore « Score de conformité »
+  (`registry.ts`, `score.tsx`, dossier PDF « (indicateur interne) »).~~
+  Tranché le même jour : voir plus bas.
 - « dès le premier salarié » reste sur trois écrans de l'application : c'est
   une lecture de R. 4121-1.
 - ~~« Le destinataire va recevoir un email » reste : c'est vrai.~~ C'est
@@ -2446,6 +2447,24 @@ des mails ». Mise en œuvre :
 - le refus retiré d'`emettreAccessToken` ;
 - le refus de `renvoyerCodeOtp` déplacé après le renouvellement ;
 - `envoiEnService` forcé à `true`.
+
+**Décision de la propriétaire, 2026-09-26 : « Indice d'avancement » dans
+l'application.** Le texte visible change sur :
+- le titre du widget (`registry.ts`) ;
+- les trois en-têtes et l'« Indice actuel » de `score.tsx` ;
+- ses deux `aria-label` et son info-bulle (« Formule interne de Rojer, pas
+  une attestation. L'indice agrège… ») ;
+- son sous-titre (« Formule interne de Rojer — pas une attestation ») ;
+- la page de garde du dossier de conformité (« Indice d'avancement (formule
+  interne de Rojer, pas une attestation) ») ;
+- la page établissement (« l'indice d'avancement »).
+
+Les identifiants ne bougent pas : l'`id` `score` du widget est porté par les
+préférences stockées. `scripts/mesure-score-adr034.ts` est un outil de
+mesure, non affiché ; il est laissé.
+
+La garde `sans-qualification` gagne « score de conformité ». Éprouvée : le
+titre d'origine, remis dans `registry.ts`, tombe.
 
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
 inchangée depuis `d34bb24`, et le lot ne touche pas `src/lib/referentiels`.

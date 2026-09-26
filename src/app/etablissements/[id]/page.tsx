@@ -426,7 +426,7 @@ export default async function EtablissementPage({
             // légende posée sous eux.
             legende={
               batimentFiltre
-                ? `Les échéances, équipements et opérations affichés sont ceux de cette zone, plus ce qui concerne tout l'établissement. Les relevés « ${libelleEtatCourtCapitale("enRetard")} » et « ${libelleEtatCourtCapitale("proche")} », le score et l'état des documents portent toujours sur l'établissement entier.`
+                ? `Les échéances, équipements et opérations affichés sont ceux de cette zone, plus ce qui concerne tout l'établissement. Les relevés « ${libelleEtatCourtCapitale("enRetard")} » et « ${libelleEtatCourtCapitale("proche")} », l'indice d'avancement et l'état des documents portent toujours sur l'établissement entier.`
                 : undefined
             }
           />
