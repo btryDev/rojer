@@ -338,8 +338,8 @@ export const obligationsIncendie: Obligation[] = [
         reference: "L. 4711-1 — mentions obligatoires des pièces de vérification",
         article: "L. 4711-1",
         url:
-          "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000006178110/",
-        note: "« Les attestations, consignes, résultats et rapports relatifs aux vérifications et contrôles mis à la charge de l'employeur au titre de la santé et de la sécurité au travail comportent des mentions obligatoires déterminées par voie réglementaire. » Verbatim relevé le 2026-08-31. Aucune condition d'effectif, d'équipement ni de classement ERP : c'est l'un des deux articles qui fondent réellement la branche `travail: true`.",
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006903383",
+        note: "« Les attestations, consignes, résultats et rapports relatifs aux vérifications et contrôles mis à la charge de l'employeur au titre de la santé et de la sécurité au travail comportent des mentions obligatoires déterminées par voie réglementaire. » Verbatim relevé le 2026-08-31 par un agent, relu en première main le 2026-09-26 sur la page de l'article (version en vigueur depuis le 01/05/2008). Aucune condition d'effectif, d'équipement ni de classement ERP : c'est l'un des deux articles qui fondent réellement la branche `travail: true`.",
         versionConstatee: "2008-05-01",
       },
       {
