@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { EtablissementForm } from "@/components/etablissements/EtablissementForm";
+import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import { creerEtablissement } from "@/lib/etablissements/actions";
 import { getEntrepriseDuUser } from "@/lib/entreprises/queries";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
@@ -63,12 +64,26 @@ export default async function EtablissementNouveauPage() {
           l&apos;effectif déclarés ici déterminent les obligations qui
           s&apos;y appliquent.
         </p>
+        {/* Ajouter un site, c'est le moment où l'effectif de l'entreprise
+            cesse le plus souvent d'être juste : il est rappelé ici, avec le
+            chemin pour le corriger (C37). Les seuils du comité social et
+            économique et du règlement intérieur se comptent sur lui. */}
+        <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          Les seuils de onze et de cinquante salariés se comptent sur
+          l&apos;effectif de l&apos;entreprise, tous établissements confondus :
+          s&apos;il change avec ce site, mettez-le à jour.
+        </p>
+        <LienEffectifEntreprise
+          entrepriseId={entreprise.id}
+          effectif={entreprise.effectif}
+        />
       </header>
 
       <div className="px-[var(--board-gutter)] pt-6">
         <div className="carte-board max-w-[880px] px-7 py-7 sm:px-8">
           <EtablissementForm
             action={action}
+            entreprise={{ id: entreprise.id, effectif: entreprise.effectif }}
             libelleSubmit="Créer l'établissement"
             labelAnnuler={{ libelle: "Annuler", href: retourHref }}
           />

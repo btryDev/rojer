@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Pencil, Phone } from "lucide-react";
 import type { DashboardBundle } from "../types";
+import { hrefEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 
 function regimes(etab: DashboardBundle["etablissement"]): string[] {
   const out: string[] = [];
@@ -82,6 +83,26 @@ export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
                   {chiffreEffectif}
                 </span>{" "}
                 sur site
+              </span>
+            }
+          />
+          {/* L'effectif de l'ENTREPRISE, sur lequel se comptent les seuils du
+              CSE et du règlement intérieur (C37), et le seul chemin de
+              l'interface vers sa fiche de modification. */}
+          <Ligne
+            label="Entreprise"
+            value={
+              <span>
+                <span className="font-mono text-[0.82rem] tabular-nums text-[color:var(--board-ink)]">
+                  {etab.entreprise.effectif}
+                </span>{" "}
+                salarié{etab.entreprise.effectif > 1 ? "s" : ""} ·{" "}
+                <Link
+                  href={hrefEffectifEntreprise(etab.entrepriseId)}
+                  className="text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
+                >
+                  modifier
+                </Link>
               </span>
             }
           />

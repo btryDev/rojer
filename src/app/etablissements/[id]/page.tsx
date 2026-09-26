@@ -319,6 +319,7 @@ export default async function EtablissementPage({
         raisonSociale: etab.entreprise.raisonSociale,
         siret: etab.entreprise.siret,
         codeNaf: etab.entreprise.codeNaf,
+        effectif: etab.entreprise.effectif,
       },
     },
     dashboard,

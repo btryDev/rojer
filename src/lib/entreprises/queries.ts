@@ -33,7 +33,7 @@ export async function getEntrepriseDuUser() {
   const user = await requireUser();
   return prisma.entreprise.findFirst({
     where: { userId: user.id },
-    select: { id: true, raisonSociale: true },
+    select: { id: true, raisonSociale: true, effectif: true },
   });
 }
 
