@@ -52,8 +52,11 @@ export default async function PermisFeuListePage({
               Permis de feu
             </h1>
             <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Obligatoire avant tout travail par point chaud (soudage, découpe,
-              meulage…).
+              Travaux par points chauds (soudage, découpe, meulage…).
+              L&apos;INRS (ED 6030) écrit&nbsp;: «&nbsp;La rédaction du permis
+              de feu est obligatoire pour tous travaux par points
+              chauds&nbsp;». Ni article de code, ni arrêté&nbsp;: voir
+              ci-dessous.
             </p>
           </div>
 
@@ -116,16 +119,19 @@ export default async function PermisFeuListePage({
         <WhyCard
           charte="board"
           kicker="Pourquoi cette page"
-          titre="Un permis de feu = votre assurance et votre preuve."
-          enjeu="80 % des incendies de travaux se déclarent après le chantier, pendant la surveillance. Un permis signé engage le prestataire et vous protège."
+          titre="Ce que le permis de feu enregistre."
+          enjeu="« Les travaux par points chauds représentent 30 % des origines d'un incendie dans l'entreprise » (INRS, ED 6030, août 2019). Le permis nomme qui intervient, où, et les mesures cochées avant les travaux."
           tonalite="info"
         >
           <p className="m-0">
-            Aucun texte n&apos;impose le permis de feu sous ce nom. Il
-            matérialise un <strong>faisceau d&apos;obligations</strong>{" "}
-            :
-            l&apos;entretien des installations de sécurité, et, en ERP,
-            l&apos;interdiction de travaux dangereux en présence du public.
+            Aucun texte n&apos;impose le permis de feu sous ce nom.
+            L&apos;arrêté du 19 mars 1993 (art. 1er, point 21), qui liste les
+            travaux dangereux pour lesquels un plan de prévention est établi
+            par écrit,
+            mentionne les «&nbsp;Travaux de soudage oxyacétylénique exigeant
+            le recours à un permis de feu&nbsp;». En ERP, l&apos;article
+            GN&nbsp;13 du règlement de sécurité, intitulé «&nbsp;Travaux
+            dangereux&nbsp;», est cité ci-dessous.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <LegalBadge
@@ -133,8 +139,9 @@ export default async function PermisFeuListePage({
               reference="INRS ED 6030"
               href="https://www.inrs.fr/media.html?refINRS=ED%206030"
             >
-              Recommandation de référence — checklist officielle des mesures
-              préventives avant, pendant, après.
+              Brochure de l&apos;INRS (2e édition, août 2019)&nbsp;: la
+              démarche avant, pendant et après les travaux, et un exemple de
+              permis de feu. Ni article de code, ni arrêté.
             </LegalBadge>
             {/* L'URL pointait sur LEGIARTI000018530333, qui n'est pas
                 R. 4224-17 mais R. 4434-9 (bruit). Relu à la source le

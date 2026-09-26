@@ -277,7 +277,7 @@ export function FormulairePermisFeu({
 
       <SectionChamps
         titre="Check-list à valider avant, pendant, après"
-        chapeau={`Référentiel INRS ED 6030. ${nbObligatoires} mesures obligatoires. Cochez au fur et à mesure qu'elles sont en place.`}
+        chapeau={`Mesures tirées de la démarche INRS ED 6030. Rojer en signale ${nbObligatoires} comme prioritaires ; l'INRS ne les classe pas. Cochez celles qui sont en place.`}
       >
         {/* Les trois groupes sont séparés par le blanc, pas par un filet
             pointillé : le board sépare par filet plein ou pas du tout, et
@@ -312,7 +312,7 @@ export function FormulairePermisFeu({
                         </span>
                         {m.priorite === "obligatoire" && (
                           <span className="text-[11.5px] font-semibold text-[color:var(--board-signal-ink)]">
-                            obligatoire
+                            prioritaire
                           </span>
                         )}
                       </span>
@@ -353,8 +353,8 @@ export function FormulairePermisFeu({
             ))}
           </div>
           <p className="m-0 mt-2 max-w-[62ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-            2h minimum INRS. Passez à 4h si matières combustibles profondes
-            (bois, isolants), 6h si risque incendie élevé.
+            L&apos;INRS (ED 6030)&nbsp;: «&nbsp;Surveillance à réaliser
+            pendant 2 h au moins après l&apos;arrêt des travaux.&nbsp;»
           </p>
         </fieldset>
 

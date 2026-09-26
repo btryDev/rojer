@@ -29,7 +29,7 @@ export async function GET(
 
   const snapshot = await construireSnapshot(id, {
     numero: numeroProvisoire,
-    motif: "APERÇU — brouillon non validé, ne fait pas foi",
+    motif: "APERÇU — brouillon non validé",
   });
   if (!snapshot) {
     return new Response("DUERP introuvable", { status: 404 });

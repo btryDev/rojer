@@ -61,7 +61,7 @@ export default async function EtablissementDuerpPage({
           charte="board"
           kicker="Pourquoi ce document"
           titre="Le DUERP : votre évaluation des risques, posée par écrit"
-          enjeu="Obligatoire dès le premier salarié. En cas de contrôle ou d'accident, c'est le premier document demandé."
+          enjeu="Obligatoire dès le premier salarié."
           tonalite="info"
         >
           <p className="m-0">

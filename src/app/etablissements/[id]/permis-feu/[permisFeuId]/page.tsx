@@ -173,7 +173,7 @@ export default async function PermisFeuDetailPage({
             </CarteFiche>
 
             <TitreSection
-              surtitre="Check-list INRS ED 6030"
+              surtitre="Mesures tirées de l'INRS ED 6030"
               titre="Mesures de prévention"
               droite={
                 <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
@@ -182,6 +182,11 @@ export default async function PermisFeuDetailPage({
                 </span>
               }
             />
+
+            <p className="m-0 -mt-2 max-w-[68ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              «&nbsp;Prioritaire&nbsp;» est un classement de Rojer&nbsp;:
+              l&apos;INRS ne classe pas ces mesures.
+            </p>
 
             {(["avant", "pendant", "apres"] as const).map((g) => {
               // Le manque se compte en tête de groupe, il ne se répète pas
@@ -197,7 +202,7 @@ export default async function PermisFeuDetailPage({
                   droite={
                     manquantesObligatoires > 0 ? (
                       <PastilleFiche ton="retard">
-                        {manquantesObligatoires} obligatoire
+                        {manquantesObligatoires} prioritaire
                         {manquantesObligatoires > 1 ? "s" : ""} non cochée
                         {manquantesObligatoires > 1 ? "s" : ""}
                       </PastilleFiche>
@@ -247,7 +252,7 @@ export default async function PermisFeuDetailPage({
                           </span>
                           {manque && (
                             <span className="ml-auto flex-none text-[11.5px] font-semibold text-[color:var(--board-signal-ink)]">
-                              obligatoire
+                              prioritaire
                             </span>
                           )}
                         </li>
@@ -420,12 +425,12 @@ export default async function PermisFeuDetailPage({
           href="https://www.inrs.fr/media.html?refINRS=ED%206030"
           defaultOpen
         >
-          Le permis de feu engage conjointement l&apos;entreprise utilisatrice
-          et l&apos;entreprise extérieure. Il fait foi de l&apos;analyse de
-          risque menée avant travaux et des mesures prises. La règle APSAD
-          R43 (travaux par points chauds) est un référentiel de la profession
-          de l&apos;assurance : ni un article de code, ni un arrêté. Un
-          contrat d&apos;assurance peut y renvoyer.
+          Le permis de feu enregistré ici nomme le donneur d&apos;ordre et
+          l&apos;entreprise qui intervient, les travaux, les mesures
+          préventives cochées (INRS ED 6030) et la durée de surveillance après
+          travaux. La règle APSAD R43 (travaux par points chauds) est un
+          référentiel de la profession de l&apos;assurance : ni un article de
+          code, ni un arrêté. Un contrat d&apos;assurance peut y renvoyer.
         </LegalBadge>
       </div>
     </EcranFiche>

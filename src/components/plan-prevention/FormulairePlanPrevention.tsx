@@ -63,7 +63,7 @@ const nouvelleCle = () => `rang-${(compteurRang += 1)}`;
 const RUBRIQUES_TEXTE = [
   { numero: 2, name: "adaptationMateriels", rows: 3,
     placeholder:
-      "Ex : nacelle élévatrice conforme et vérifiée du 12-03-2026, contrôle quotidien avant usage ; groupe électrogène EE raccordé sur le tableau de chantier, entretien à la charge de l'EE." },
+      "Ex : nacelle élévatrice vérifiée le 12-03-2026, contrôle quotidien avant usage ; groupe électrogène EE raccordé sur le tableau de chantier, entretien à la charge de l'EE." },
   { numero: 3, name: "instructionsTravailleurs", rows: 3,
     placeholder:
       "Ex : accueil sécurité à l'arrivée, port du harnais obligatoire en toiture, interdiction de fumer, consignes d'évacuation remises au chef d'équipe." },

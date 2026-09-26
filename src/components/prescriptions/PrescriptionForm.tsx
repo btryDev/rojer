@@ -185,8 +185,7 @@ export function PrescriptionForm({
               <p className="m-0 mt-2 max-w-[52ch] rounded-2xl bg-[color:var(--board-amber)] px-3.5 py-2.5 text-[12.5px] leading-[1.55] text-[color:var(--board-amber-ink)]">
                 {MARQUAGE_CONTRACTUEL_LONG} Les échéances qui en naîtront
                 porteront cette mention dans le calendrier, le registre et le
-                dossier de contrôle, et aucune référence légale ne leur sera
-                attachée.
+                dossier de contrôle.
               </p>
             )}
           </div>

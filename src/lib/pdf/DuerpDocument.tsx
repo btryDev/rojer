@@ -10,6 +10,7 @@ import { formaterDateCourteFr, formaterDateLongueFr } from "@/lib/dates";
 import { LABEL_STATUT, LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
 import { estHorsReferentiel } from "@/lib/risques/helpers";
 import { phrasesMethodologie, quandSansReponse } from "./mentions-couverture";
+import { TEXTE_R4121_4 } from "./mentions-r4121-4";
 import {
   CHAPEAU_ANNEXE_EXPOSITION,
   TITRE_ANNEXE_EXPOSITION,
@@ -220,7 +221,7 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
           DOCUMENT NON VALIDÉ — APERÇU
         </Text>
         <Text style={s.watermarkHint}>
-          Aucune valeur légale avant validation d&apos;une version
+          Aperçu de la version {version}, non validée
         </Text>
       </View>
   ) : null;
@@ -853,16 +854,14 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
             • mis à jour {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} ;
           </Text>
           <Text>
-            • conservé pendant 40 ans à compter de son élaboration, ainsi que
-            ses versions antérieures (art. R. 4121-4) ;
-          </Text>
-          <Text>
             {`• ${TRANSMISSION_DUERP_SUITE} (art. L. 4121-3-1, VI) ;`}
           </Text>
           <Text>
-            • tenu à disposition des travailleurs, du CSE le cas échéant, du
-            médecin du travail, des agents de l&apos;inspection du travail et
-            des agents des services de prévention de la Carsat.
+            • tenu à disposition, conservé et signalé par un avis dans les
+            termes de l&apos;article R. 4121-4 du Code du travail :
+          </Text>
+          <Text style={{ marginLeft: 10, marginTop: 3 }}>
+            «&nbsp;{TEXTE_R4121_4}&nbsp;»
           </Text>
         </View>
         <Text style={{ marginTop: 8 }}>{ANNEXE_EXPOSITION_NON_PRODUITE}</Text>

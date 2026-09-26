@@ -1285,6 +1285,179 @@ est réalisée ». Les deux écarts de ce jour sont gardés en épreuve.
 régénéré : articles dépouillés cités par aucune obligation 286 − 0 + 1
 (`GN 13`) = 287.
 
+### C32 · 2026-09-26 — Aucune sortie ne qualifie : « opposable », « fait foi », « exigée par les assureurs » remplacés par des faits
+
+**Constat.** Rojer calcule, il n'avise pas (charte, interdits 16 et 17) ; les
+tests anti-verdict gardaient chacun leur sortie, rien ne gardait le reste. Une
+recherche sur `src/` et le serveur MCP (hors commentaires) a relevé, sur des
+surfaces affichées ou imprimées : « opposable par votre contrat — pas par le
+droit » (écran et fiche du permis de feu, README du dossier de contrôle, et le
+marquage long de l'ADR-032 — voir plus bas), « RÉFÉRENTIELS NON OPPOSABLES », « Hiérarchie des
+mesures opposable » et « éléments opposables » (dossier de conformité), « les
+rendant opposables » (guide des documents obligatoires), « pas une règle
+opposable » (description d'un risque), « fait foi » et « engage
+conjointement » (fiche du permis de feu), « engage le prestataire et vous
+protège » (écran du permis de feu), « exigée par les assureurs » (ZIP de
+contrôle), « ce qui est en règle » (page d'accueil — trouvé par la garde, la
+phrase était coupée en fin de ligne), « conforme et vérifiée » (exemple d'un
+champ du plan de prévention). Chacun est remplacé par ce que le texte dit, ou
+ce que Rojer fait.
+
+**L'ADR-032 emploie lui-même le mot** (« sources opposables », « actes
+d'autorité opposables ») pour décider ; il n'est pas réécrit. Il impose un
+marquage, « engagement d'assurance, pas une obligation légale », qui reste
+tel quel. ~~La phrase qui le prolonge dans `MARQUAGE_CONTRACTUEL_LONG`
+(« opposable par votre contrat d'assurance, pas par le droit ») n'est pas dans
+l'ADR, **mais elle n'est PAS corrigée** : `prescriptions/sources.ts` est un
+module du moteur de calendrier, et la modifier déplace l'empreinte que
+`calendrier/version-moteur.test.ts` scelle. Essayé, constaté
+(`91badd776f7acbba` au lieu de `aa9563477bf1ea07`), retiré. Le texte n'est
+écrit en base par aucune régénération (il est seulement réexporté pour
+l'affichage), ce qui en ferait un « NON » au sens du test — recopier
+l'empreinte seule —, mais recopier une empreinte n'est pas une décision de ce
+lot. Déclarée dans la garde comme dette nommée.~~ [2026-09-26 : repris, voir
+plus bas.]
+
+**Lu, pages propres, structure demandée d'abord, formulation décisive deux
+fois :**
+
+- `R. 4121-4` (LEGIARTI000045386451, en vigueur depuis le 2022-03-31, modifié
+  par le décret n° 2022-395, art. 1) : un chapeau, sept destinataires 1° à 7°,
+  deux alinéas. « […] sont tenus, pendant une durée de 40 ans à compter de
+  leur élaboration, à la disposition : ». **L'article entier est consigné au
+  corpus** (`code-travail-information-travailleurs`, `luLe` 2026-09-26,
+  `modifiePar` ajouté) ; le PDF du document unique le lit de là
+  (`pdf/mentions-r4121-4.ts`) au lieu d'une paraphrase qui retenait quatre
+  destinataires (« médecin du travail », « Carsat »), sans les anciens
+  travailleurs ni les 6° et 7°. Les quarante ans y étaient attribués à la loi
+  du 2 août 2021, qui ne fixe qu'un plancher : ils citent désormais
+  `R. 4121-4`, dans ce PDF et dans le dossier de conformité.
+- Arrêté du 19 mars 1993, art. 1er (LEGIARTI000029720328, en vigueur depuis le
+  2008-05-01, modifié par le décret n° 2008-244) : un chapeau, vingt et un
+  points numérotés « 1. » à « 21. ». « 21. Travaux de soudage oxyacétylénique
+  exigeant le recours à un permis de feu. » — seule occurrence de « permis de
+  feu » dans l'article. Cité sur l'écran du permis de feu, à côté de « Aucun
+  texte n'impose le permis de feu sous ce nom », sans trancher entre les deux.
+  `luLe` du corpus inchangé : seuls le chapeau et le point 21 ont été relus.
+
+**La garde** : `src/lib/rendu/sans-qualification.test.ts`, qui balaie
+`src/app`, `src/components`, `src/lib` et `scripts/mcp-server.ts`,
+commentaires blanchis, et cherche les mots par-dessus les coupures de ligne.
+Deux occurrences admises nommément : la consigne du serveur MCP, qui NOMME
+les mots pour les interdire. ~~Et le marquage long, en dette.~~ [Retiré le même jour.] **Éprouvée** : la phrase historique de l'écran du
+permis de feu, remise telle que `abd0108` la donne, est refusée à sa ligne
+(`permis-feu/page.tsx:178 — « opposable »`) ; les défauts de ce jour sont
+gardés en épreuve dans un bac, coupures de ligne comprises.
+
+**Ce que la garde ne regarde pas, et qui reste à décider :**
+
+- `src/lib/referentiels/conformite/` est scellé : `stockage-dangereux.ts`
+  porte en `reference` « valeurs de rétention, opposables uniquement sous ce
+  régime ICPE », et d'autres notes emploient le mot. Les corriger demande une
+  montée de version.
+- « Conforme » comme libellé du résultat d'un rapport (formulaire, calendrier,
+  registre, tableau de bord) : c'est ce que le vérificateur écrit, affiché
+  seul. Le reformuler est une décision de vocabulaire, pas une correction.
+- Le choix « Conforme dès la construction » / « Mis en conformité après
+  travaux » (régime d'accessibilité déclaré) et « Escabeau … conforme aux
+  normes (NF) » (une mesure du DUERP) : le mot y qualifie un bâtiment ou un
+  équipement déclaré, pas l'état du dossier.
+- Les phrases qui NIENT un verdict (« Cela ne veut pas dire qu'il est
+  conforme », « ne rend aucun dossier conforme », « Ce dossier ne vaut pas
+  certification de conformité ») sont laissées : elles disent ce que Rojer ne
+  fait pas.
+
+**Repris le même jour, sur décision de la session de coordination.** Le
+marquage long est corrigé : « cette échéance naît d'une demande de votre
+assureur, et aucune référence légale ne lui est attachée ». L'empreinte du
+moteur est recopiée SANS incrément (`91badd776f7acbba`, « NON : affichage
+seul »), et la dette est retirée de la garde. Dans le formulaire des
+prescriptions, la phrase qui suivait répétait « aucune référence légale » :
+ce doublon est retiré. Le « 80 % des incendies de travaux se déclarent
+après le chantier » de l'écran du permis de feu n'avait pas de source. La
+page de l'INRS (brochure ED 6030, « Le permis de feu — Démarche et document
+support », août 2019), lue deux fois, n'en donne qu'un : « Les travaux par
+points chauds représentent 30 % des origines d'un incendie dans
+l'entreprise. » Il remplace l'autre, attribué. La brochure servie en PDF
+n'est que le formulaire ; son texte courant n'a pas été lu. La règle APSAD
+R43, payante, ne l'a pas été non plus.
+
+**Contre-lecture du même jour, et ce qu'elle a trouvé que la garde ne voyait
+pas.**
+
+- Le « 80 % » vivait encore dans les mesures du permis de feu
+  (`permis-feu/referentiel.ts`, sous-titre de l'étape « après »), avec
+  « C'est la principale cause d'incendie post-travaux » et « Porter à 4h
+  minimum » sur la mesure de surveillance.
+- La brochure INRS ED 6030 (2e édition, août 2019) est lue en entier : ~~la
+  brochure servie en PDF n'est que le formulaire~~ [le texte courant est
+  `TI-ED-6030-2.pdf`], extrait deux fois par deux outils distincts. Elle ne
+  dit ni 80 %, ni « principale cause », ni 4 h. Elle dit « Surveillance à
+  réaliser pendant 2 h au moins après l'arrêt des travaux. Arrêter les travaux
+  2 h au moins avant la fermeture de l'entreprise si le maintien de la
+  surveillance n'est pas possible. » C'est ce qui s'affiche désormais, cité.
+  Le sous-titre de l'étape nomme ses trois actions (inspection, surveillance,
+  remise en service), celles du tableau « Étape d'après travaux » de la
+  brochure.
+- « Obligatoire avant tout travail par point chaud » contredisait, sur le même
+  écran, « Aucun texte n'impose le permis de feu sous ce nom ». La brochure
+  écrit elle-même « La rédaction du permis de feu est obligatoire pour tous
+  travaux par points chauds » : la phrase est citée et attribuée à l'INRS, et
+  l'écran rappelle que ce n'est ni un article de code, ni un arrêté.
+- L'INRS ne classe AUCUNE mesure en « obligatoire » ou « conseillée » : son
+  formulaire demande ~~« À FAIRE ? OUI / NON »~~ « À FAIRE ? O/N » et « FAIT ?
+  O/N, LE : » (pages 10-11 de la brochure ; le formulaire servi à part,
+  `TI-ED-6030.pdf`, écrit « OUI NON » et « OUI/NON, LE : »). Ce classement est celui de
+  Rojer. Le mot « obligatoire » quitte donc les libellés (formulaire, fiche,
+  pastille « N non cochée(s) ») pour « prioritaire », et le chapeau dit que
+  c'est Rojer qui les signale. L'identifiant interne `obligatoire` ne change
+  pas. « Checklist officielle » devient ce qu'est l'ED 6030 : une brochure.
+- Six phrases de même nature, hors des mots gardés, sont remplacées par un
+  fait : « Aucune valeur légale avant validation » (filigrane du PDF),
+  « votre responsabilité est engagée » (plan de prévention, où `R. 4512-6`
+  est maintenant cité depuis le corpus), « votre assurance et votre preuve »,
+  « c'est cette preuve qui vous couvre », « qui protège aussi bien
+  l'entreprise que vous-même », « le premier document demandé ».
+- La garde est élargie : frontières Unicode (`\b` est ASCII en JavaScript),
+  entités de JSX et apostrophe typographique ramenées à ce qu'elles rendent,
+  formes « inopposable », « opposabilité », « fera foi », « exigée par
+  l'assureur / par votre assurance », « l'exigera probablement »,
+  « en&nbsp;règle », « en{" "} » suivi de « règle », et les familles « vous
+  couvre / vous protège », « responsabilité engagée », « valeur légale »,
+  « premier document demandé ». Les admissions valent pour un texte exact,
+  plus pour un fichier ~~(au mesuré : la comparaison portait sur le MOT, pas
+  sur la phrase — une sonde « Ce registre est opposable à l'inspection. »
+  ajoutée dans `mcp/tools.ts` passait)~~ [corrigé le même jour : l'admission
+  porte sur la LIGNE exacte ; la sonde, ajoutée dans la consigne réelle de
+  `tools.ts`, est refusée à la ligne 75]. Éprouvée sur la sonde de la contre-lecture (neuf
+  formes, toutes refusées) et sur les fichiers réels de `2fbd230`, remis puis
+  restaurés : cinq refus à la ligne. **Ce qu'elle ne voit toujours pas** :
+  une qualification hors de ces familles. « Un permis de feu = votre assurance
+  et votre preuve » et « Obligatoire avant tout travail » ne relèvent d'aucune
+  et ne sont pas refusés sur le fichier restauré. Ils ont été trouvés à la
+  lecture.
+
+**Troisième passe, le même jour (vérification de la coordination).**
+- Le filigrane de l'aperçu disait « aucune version n'est encore validée dans
+  Rojer », ce qui est faux dès la v1 : l'aperçu est toujours proposé, se
+  numérote `versions[0].numero + 1` et imprime l'historique. Il dit
+  maintenant « Aperçu de la version N, non validée ».
+- Le motif de l'aperçu, « APERÇU — brouillon non validé, ne fait pas foi »,
+  perd « ne fait pas foi ». La garde voit désormais « fait pas foi » (motif
+  de l'aperçu remis dans la route réelle : refusé à la ligne 32).
+- La fiche d'un permis de feu dit, sous « Mesures tirées de l'INRS ED 6030 »,
+  que « prioritaire » est un classement de Rojer.
+- La phrase « Il matérialise un faisceau d'obligations » se lisait comme
+  portant sur l'arrêté ; elle devient un renvoi à `GN 13`, par son intitulé
+  « Travaux dangereux », cité juste en dessous. L'« entretien des
+  installations de sécurité » qu'elle affirmait n'est plus nommé : son
+  article (`R. 4224-17`) avait été retiré de cette page le 2026-09-20.
+
+**Sceau inchangé**, mesuré avant et après :
+`2026-09-26.5+167-66f005e23f039ca+moteur.4`.
+`docs/etat-verification-referentiel.md` régénéré : lus au 2026-08-31,
+68 − 1 = 67 ; lus au 2026-09-26, 17 + 1 = 18 (`R. 4121-4`).
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

@@ -283,8 +283,8 @@ export function TableauDeBord() {
             Un tableau de bord qui se lit d&apos;un coup d&apos;œil.
           </h2>
           <p className="lp-lede mx-auto mt-6 max-w-[54ch]">
-            Ce qui a dépassé sa date, ce qui tombe ce mois-ci, ce qui est en
-            règle. Vous ouvrez, vous savez.
+            Ce qui a dépassé sa date, ce qui tombe ce mois-ci, ce qui est
+            fait. Vous ouvrez, vous savez.
           </p>
         </Reveal>
 

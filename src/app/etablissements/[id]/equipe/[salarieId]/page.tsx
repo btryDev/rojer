@@ -183,9 +183,8 @@ export default async function SalarieDetailPage({
               {!s.actif && (
                 <p className="m-0 mt-4 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   Cette personne ne fait plus partie de l&apos;effectif. Sa fiche
-                  est conservée parce que ses titres prouvent qu&apos;elle était
-                  habilitée au moment où elle a travaillé — c&apos;est cette
-                  preuve qui vous couvre sur la période passée.
+                  est conservée parce que ses titres montrent qu&apos;elle était
+                  habilitée au moment où elle a travaillé.
                 </p>
               )}
             </section>

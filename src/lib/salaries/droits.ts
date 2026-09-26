@@ -155,8 +155,7 @@ COMBIEN DE TEMPS
 
 Vos titres sont conservés cinq ans au titre de l'article D. 4711-3 du Code du
 travail, et au-delà tant qu'ils prouvent que vous étiez habilité pendant une
-période où vous avez travaillé. C'est cette preuve qui protège aussi bien
-l'entreprise que vous-même.
+période où vous avez travaillé.
 
 Votre départ de l'entreprise n'efface donc pas ces données. Votre fiche est
 marquée comme sortie de l'effectif, et les titres restent.

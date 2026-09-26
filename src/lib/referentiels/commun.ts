@@ -148,7 +148,7 @@ export const risquesTransverses: RisqueReferentiel[] = [
     libelle:
       "Charge physique : port de charges, manutention manuelle (TMS, lombalgies)",
     description:
-      "INRS ED 840 fiche 5 « Risques liés à la charge physique de travail ». Le Code du travail impose d'éviter le recours à la manutention manuelle (R. 4541-2) ; il ne fixe pas de seuil général, seulement des limites hautes avec avis médical (R. 4541-9 : 55 kg, 105 kg au maximum). Le repère de 10 kg est une valeur de bonne pratique, pas une règle opposable.",
+      "INRS ED 840 fiche 5 « Risques liés à la charge physique de travail ». Le Code du travail impose d'éviter le recours à la manutention manuelle (R. 4541-2) ; il ne fixe pas de seuil général, seulement des limites hautes avec avis médical (R. 4541-9 : 55 kg, 105 kg au maximum). Le repère de 10 kg est une valeur de bonne pratique.",
     unitesAssociees: [],
     graviteParDefaut: 3,
     probabiliteParDefaut: 3,
