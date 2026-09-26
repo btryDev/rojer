@@ -54,8 +54,6 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       lecture: "agent_verbatim",
       citationCle:
         "§ 2. Les vérifications périodiques doivent avoir lieu tous les ans et concernent : - les installations de production de chaleur ou de froid visées aux sections II, V et VI du présent chapitre ; - le stockage des combustibles visé à la section III ; - les installations de traitement d'air et de ventilation visées à la section VII ; - les appareils de production-émission de chaleur à combustion et les systèmes thermodynamiques visés à la section VIII. […] Les systèmes thermodynamiques visés à l'article CH 35 font l'objet d'un contrôle d'étanchéité qui fait mention des résultats des détections de fuites directes ou indirectes. De plus, les dispositifs de sécurité et les asservissements liés, visés à l'article CH 35 §3, doivent être vérifiés dans leur totalité tous les 3 ans.",
-      historique:
-        "Le 2026-09-26, l'obligation qu'il fonde est bornée aux catégories 1 à 4 : en 5ᵉ catégorie, `PE 1` § 1 écarte le livre II sauf « articles expressément mentionnés », et aucun article PE ne mentionne `CH 58` (balayage consigné dans les `notesInternes` de `aeration-erp-chauffage-ventilation-annuelle`).",
       statut: "retenu",
       obligations: ["aeration-erp-chauffage-ventilation-annuelle"],
       prescrit:

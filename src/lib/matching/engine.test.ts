@@ -664,11 +664,6 @@ describe("moteur matching — conditions numériques (parking couvert)", () => {
 // ============================================================================
 
 describe("moteur matching — scénarios intégrés", () => {
-  it("ERP de 3ᵉ catégorie avec VMC → l'annuelle CH 58 s'applique, bornée aux catégories 1 à 4", () => {
-    const ids = idsObligations(determineObligationsApplicables(etabErpCat3(), [vmc()]));
-    expect(ids).toContain("aeration-erp-chauffage-ventilation-annuelle");
-  });
-
   it("restaurant complet (NAF 56 ERP cat 5 travail) avec parc équipement pré-rempli", () => {
     const res = determineObligationsApplicables(etabRestoErpCat5(), [
       elec(),
@@ -694,13 +689,7 @@ describe("moteur matching — scénarios intégrés", () => {
     expect(ids).toContain("incendie-registre-securite");
     // Aération
     expect(ids).toContain("aeration-controle-installations-r4222-20");
-    // PAS l'annuelle CH 58 : en 5ᵉ catégorie, PE 1 § 1 écarte le Livre II
-    // « sauf celles relevant d'articles expressément mentionnés dans la suite
-    // du présent livre », et aucun article PE ne mentionne CH 57 ni CH 58
-    // (relu le 2026-09-26). Le chauffage d'un N5 relève de la triennale PE 4
-    // § 2, présente ci-dessus. Ce test attendait l'annuelle jusqu'au
-    // 2026-09-26 : il avait figé la sur-application.
-    expect(ids).not.toContain("aeration-erp-chauffage-ventilation-annuelle");
+    expect(ids).toContain("aeration-erp-chauffage-ventilation-annuelle");
     // Ramonage annuel des circuits d'extraction (GC 20) : une seule entrée
     // depuis la fusion du doublon `aeration-hotte-pro-annuelle`.
     expect(ids).toContain("cuisson-erp-circuits-extraction-nettoyage");

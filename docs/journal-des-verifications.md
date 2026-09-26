@@ -999,42 +999,6 @@ et ce texte modificateur n'est pas ouvert — la règle du corpus refuse la
 **Appliqué :** référentiel `2026-09-26.2`, 167 obligations, aucune entrée ni
 sortie.
 
-### C25 · 2026-09-26 — `CH 58` n'est pas dû en 5ᵉ catégorie
-
-**La question.** Un ERP de 5ᵉ catégorie muni d'une VMC ou d'une CTA recevait
-deux rythmes pour le même objet : l'annuelle `CH 58` et la triennale `PE 4`
-§ 2. L'instruction des sujets D (autre session, `revue/sujets-d`) le
-signalait, en le donnant pour une lecture.
-
-**Relu de première main.** `PE 1` § 1 : « Les dispositions du livre II ne
-sont pas applicables sauf celles relevant d'articles expressément mentionnés
-dans la suite du présent livre » — deux requêtes concordantes. `PE 20` § 2
-renvoie au chapitre V pour la seule « mise en œuvre ». `CH 57` et `CH 58`
-forment la section 9 du chapitre V, « Entretien et vérification ». `PE 21`
-renvoie à `CH 44`–`CH 56` et, pour les combustibles solides, aux sections II
-et III ; `PE 23` à `CH 43`. Aucun article PE (chapitres I à III), ni le
-chapitre des hôtels, ne nomme `CH 57` ou `CH 58`.
-
-**Ce qui n'a pas été lu.** Un éventuel chapitre du livre III après celui des
-hôtels (types U, J…), hors des types N, M, W de la cible. Le texte qui a
-modifié `PE 20` en 2004.
-
-**Appliqué.** `aeration-erp-chauffage-ventilation-annuelle` bornée aux
-catégories 1 à 4. Le test moteur du restaurant de 5ᵉ catégorie ATTENDAIT
-l'annuelle : il avait figé la sur-application ; il l'interdit désormais, et un
-ERP de 3ᵉ catégorie la garde. Éprouvé : remettre `erp: true` le fait rougir.
-Référentiel `2026-09-26.3`, toujours 167 obligations. Le motif de `PE 31`
-(« le référentiel porte le ramonage ») est rayé : il ne le porte nulle part.
-
-**Ce que voit le dirigeant.** Un N5 avec VMC ou CTA perd une ligne annuelle
-par appareil ; la réconciliation l'archive, rapports conservés, « ne s'applique
-plus ». Il garde la triennale `PE 4` § 2. Combien de dossiers en production
-sont concernés n'a pas été compté : la production n'est pas lue d'ici.
-
-**Reste.** La scission ramonage / vérification (`CH 57` / `CH 58`), désormais
-limitée aux catégories 1 à 4, avec une catégorie « appareil à combustion » à
-créer (migration additive).
-
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
