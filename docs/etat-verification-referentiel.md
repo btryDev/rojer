@@ -193,16 +193,16 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**309 articles dépouillés ne sont cités par aucune obligation**, répartis sur 45 corpus.
+**311 articles dépouillés ne sont cités par aucune obligation**, répartis sur 45 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
 | `arrete-1980-livre-3` | 51 | 59 | 2026-08-26 → 2026-09-26 |
 | `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 |
 | `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-26 |
+| `inrs-documentaire` | 14 | 15 | 2026-09-03 → 2026-09-26 |
 | `arrete-1993-11-04-signalisation` | 14 | 21 | 2026-09-02 |
 | `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-20 |
-| `inrs-documentaire` | 12 | 13 | 2026-09-03 → 2026-09-26 |
 | `csp-eau-potable` | 11 | 11 | 2026-09-02 |
 | `arrete-2010-02-01-legionelles` | 11 | 11 | 2026-09-20 |
 | `code-travail-eclairage` | 11 | 12 | 2026-09-02 |

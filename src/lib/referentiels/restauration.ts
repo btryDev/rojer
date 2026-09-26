@@ -245,6 +245,14 @@ export const restauration: Referentiel = {
     {
       id: "resto-incendie",
       libelle: "Incendie (friteuse, hotte, flamme nue)",
+      // Sourcée le 2026-09-26 (sortie de `SANS_SOURCE_TOLERES`), en corrigeant
+      // la mesure `resto-extincteurs`, qui écrivait « vérifiés annuellement »
+      // sans texte. Chaque périodicité est citée avec ce qui la porte : rien
+      // dans R. 4227-29, une recommandation de l'INRS, MS 38 pour le livre II
+      // du règlement de sécurité — que PE 1 écarte en 5e catégorie, et que
+      // PE 26 ne rouvre pas.
+      description:
+        "INRS ED 840, fiche 13 « Risques d'incendie et d'explosion ». « Le premier secours contre l'incendie est assuré par des extincteurs en nombre suffisant et maintenus en bon état de fonctionnement. » (art. R. 4227-29) Cet article ne fixe pas de périodicité de vérification. « Faire vérifier les extincteurs annuellement par une personne qualifiée. » (INRS ED 880, fiche 3) Dans un établissement recevant du public relevant du livre II du règlement de sécurité : « Un extincteur doit faire l'objet d'une vérification annuelle et d'une révision tous les dix ans par une personne ou un organisme compétent. » (arrêté du 25 juin 1980, art. MS 38) En 5e catégorie : « Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre. » (arrêté du 25 juin 1980, art. PE 1) L'article PE 26, qui y traite des extincteurs, renvoie à MS 39, pas à MS 38.",
       unitesAssociees: ["production"],
       graviteParDefaut: 4,
       probabiliteParDefaut: 2,
@@ -264,7 +272,7 @@ export const restauration: Referentiel = {
         {
           id: "resto-extincteurs",
           libelle:
-            "Extincteurs adaptés (classe F pour huiles), accessibles, signalés, vérifiés annuellement",
+            "Extincteurs en nombre suffisant, adaptés aux risques, accessibles, signalés et maintenus en bon état de fonctionnement (art. R. 4227-29) ; vérification annuelle par une personne qualifiée (recommandation INRS ED 880, fiche 3)",
           type: "protection_collective",
         },
         {

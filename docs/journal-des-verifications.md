@@ -1697,12 +1697,12 @@ au bon article admise ; `R. 4421-1` sans sa seconde condition, refusé.
 l'autoroute », la paraphrase de `R. 4421-1`), un chiffre nu, un numéro de
 fiche faux sans citation.
 
-**Relevé, non corrigé** (hors de la liste, décision de sens) : la mesure
+~~**Relevé, non corrigé** (hors de la liste, décision de sens) : la mesure
 `trv-nuit-rotation` (« sens horaire ») n'est pas dans ED 6305 révisé, qui
 recommande une rotation rapide ; la description de `trv-rps-isolement`
 attribue à la fiche 17 une définition du travail isolé qu'elle ne porte pas ;
 « extincteurs … vérifiés annuellement » (`resto-extincteurs`) n'a pas été
-confronté.
+confronté.~~ [Traité le même jour, seconde passe : voir plus bas.]
 
 **Sceau inchangé**, mesuré avant et après :
 `2026-09-26.7+169-85f0fac08bca3950+moteur.4`.
@@ -1712,6 +1712,64 @@ par aucune obligation 289 + 5 (`code-travail-manutention-ecran`) + 2
 11 (`inrs-documentaire`) = 309, sur 42 + 3 = 45 corpus ; lus au 2026-09-26,
 21 + 1 = 22 références (l'art. 3 de l'arrêté, lu au 2026-09-01 : 141 − 1 =
 140).
+
+**Seconde passe, le même jour (demande de la coordination : les trois
+relevés suivent la même règle que le reste du lot).**
+
+- `trv-nuit-rotation` → **`trv-nuit-rotation-rapide`**. ED 6305 révisé
+  (p. 4, « Agir sur l'organisation du travail ») : « En cas de travail posté,
+  adopter une vitesse de rotation rapide (tous les 2-3 jours) associée à une
+  micro-sieste nocturne ou proposer un 2 x 8 associé à une équipe de nuit
+  permanente. » Ni « sens horaire » ni « consécutives » dans le dépliant. Le
+  sens change : identifiant neuf, même rendu que `trv-routier` pour un DUERP
+  existant.
+- `trv-rps-isolement` : l'attribution à ED 840 fiche 17 est retirée (la
+  fiche ne contient pas « isolé »). Définition citée depuis le dossier web
+  INRS « Travail isolé » (« Travailler de façon isolée, c'est réaliser seul
+  une tâche dans un environnement de travail où l'on ne peut être vu ou
+  entendu directement par d'autres personnes, et où la probabilité de visite
+  est faible. »), consigné au corpus. Identifiant gardé : seule la
+  description change.
+- `resto-extincteurs` « vérifiés annuellement » : confronté au droit, lu sur
+  Légifrance. `R. 4227-29` (LEGIARTI000018532079) : « en nombre suffisant et
+  maintenus en bon état de fonctionnement », aucune périodicité. `R. 4227-39`
+  (relu, deux lectures) : ni « extincteur » ni « annuel » ; ses essais du
+  matériel sont semestriels, dans le seul champ de `R. 4227-34`. `MS 38`
+  (LEGIARTI000020382888, deux lectures) : « Un extincteur doit faire l'objet
+  d'une vérification annuelle et d'une révision tous les dix ans par une
+  personne ou un organisme compétent. » — livre II. `PE 1` (relu) écarte le
+  livre II en 5ᵉ catégorie sauf renvoi exprès ; `PE 26` (LEGIARTI000024766855,
+  deux lectures, reconsigné en première main) renvoie à `MS 39`, pas à
+  `MS 38`. L'annuelle de la brochure INRS ED 880 (fiche 3, rubrique
+  « Incendie » : « Faire vérifier les extincteurs annuellement par une
+  personne qualifiée. ») est une recommandation. **Libellé** : « Extincteurs
+  en nombre suffisant, adaptés aux risques, accessibles, signalés et
+  maintenus en bon état de fonctionnement (art. R. 4227-29) ; vérification
+  annuelle par une personne qualifiée (recommandation INRS ED 880, fiche 3) ».
+  La « classe F pour huiles » n'a de source ni dans ED 880 ni dans ED 840
+  fiche 13 : retirée. Identifiant gardé : la mesure reste « des extincteurs
+  adaptés, entretenus et vérifiés ». `resto-incendie` reçoit une description
+  qui porte les quatre textes, et sort de `SANS_SOURCE_TOLERES` (5 − 1 = 4).
+  **Écart avec le module de conformité, non traité ici** :
+  `incendie-erp-extincteurs-annuelle` applique `MS 38` à tout ERP, 5ᵉ
+  catégorie comprise ; la réserve de `MS 38` au corpus le nomme déjà
+  « sur-application ». La description de `resto-incendie` dit ce que
+  `PE 1` et `PE 26` disent, sans conclure.
+- **Troisième règle de la garde** : une périodicité hors guillemets
+  (« annuel », « annuellement », « tous les ans », « semestriel »,
+  « mensuel », « tous les N ans / mois », « triennal »…) doit être suivie,
+  dans la même proposition, d'une source du corpus dont le verbatim porte ce
+  rythme. **Éprouvée** : `commun.ts` et `restauration.ts` de `957b2b6` remis
+  en place → un refus,
+  `restauration/resto-incendie/resto-extincteurs — « annuellement »` ;
+  restaurés. En épreuve permanente : le libellé de `eb75c0b`, « annuellement
+  (art. R. 4227-29) » et « (art. R. 4227-39) » refusés, « (…, art. MS 38) »
+  admis, l'électrique « (annuel) » de `eb75c0b` refusé. **Ne voit pas** une
+  paraphrase de rythme sans mot de périodicité (« le sens horaire » n'aurait
+  pas été vu).
+- Sceau remesuré : `2026-09-26.7+169-85f0fac08bca3950+moteur.4`, inchangé.
+  `docs/etat-verification-referentiel.md` régénéré : 309 + 2
+  (`INRS ED 840 fiche 13`, dossier « Travail isolé ») = 311.
 
 ### Ce que la chronologie donne à voir
 

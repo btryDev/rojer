@@ -131,8 +131,12 @@ export const risquesTransverses: RisqueReferentiel[] = [
     // historique de maintenance.
     id: "trv-rps-isolement",
     libelle: "Risques psychosociaux — travail isolé",
+    // La description attribuait à « ED 840 fiche 17 » une définition du
+    // travail isolé que la fiche ne porte pas (relue le 2026-09-26 : elle ne
+    // contient pas « isolé »). La définition vient du dossier web INRS
+    // « Travail isolé », cité mot pour mot.
     description:
-      "ED 840 fiche 17. Concerne le travail effectué hors de portée de vue ou de voix d'un tiers, y compris ponctuellement — ouverture, fermeture, livraison, intervention seul.",
+      "INRS, dossier web « Travail isolé » : « Travailler de façon isolée, c'est réaliser seul une tâche dans un environnement de travail où l'on ne peut être vu ou entendu directement par d'autres personnes, et où la probabilité de visite est faible. » Situations possibles : ouverture, fermeture, livraison, intervention seul.",
     unitesAssociees: [],
     graviteParDefaut: 3,
     probabiliteParDefaut: 2,
@@ -270,9 +274,16 @@ export const risquesTransverses: RisqueReferentiel[] = [
         type: "suppression",
       },
       {
-        id: "trv-nuit-rotation",
+        // Remplace `trv-nuit-rotation` (2026-09-26), qui écrivait « Organiser
+        // les rotations dans le sens horaire (matin, après-midi, nuit) et
+        // limiter les nuits consécutives » : ni le sens horaire ni les nuits
+        // consécutives ne sont dans ED 6305 révisé en mars 2026, qui
+        // recommande une rotation RAPIDE (p. 4). Le sens change, donc
+        // l'identifiant : un DUERP qui a retenu l'ancienne garde son libellé
+        // copié (E10) et se voit proposer celle-ci à côté.
+        id: "trv-nuit-rotation-rapide",
         libelle:
-          "Organiser les rotations dans le sens horaire (matin, après-midi, nuit) et limiter les nuits consécutives",
+          "« En cas de travail posté, adopter une vitesse de rotation rapide (tous les 2-3 jours) associée à une micro-sieste nocturne ou proposer un 2 x 8 associé à une équipe de nuit permanente. » (INRS ED 6305)",
         type: "organisationnelle",
       },
       {

@@ -154,10 +154,10 @@ export const INRS_DOCUMENTAIRE: Corpus = {
       luLe: "2026-09-26",
       lecture: "premiere_main",
       citationCle:
-        "[Sommaire :] 3. Production froide et chaude [Fiche 3, p. 11, rubrique « Électrisation », pistes d'amélioration :] Entretenez et faites effectuer les contrôles périodiques réglementaires de vos installations électriques annuellement ou tous les deux ans dans certaines conditions.",
+        "[Sommaire :] 3. Production froide et chaude [Fiche 3, p. 11, rubrique « Électrisation », pistes d'amélioration :] Entretenez et faites effectuer les contrôles périodiques réglementaires de vos installations électriques annuellement ou tous les deux ans dans certaines conditions. [Même page, rubrique « Incendie », pistes d'amélioration :] Faire vérifier les extincteurs annuellement par une personne qualifiée.",
       statut: "sans_objet",
       motif:
-        "Fiche 3 de la brochure ED 880 (voir l'entrée « INRS ED 880 p. 4 » pour l'édition). N'institue rien. Citée par `resto-electrisation` et `resto-rps-coup-feu`. Elle-même écrit « annuellement ou tous les deux ans dans certaines conditions » : le « annuels obligatoires » de la description n'y était pas non plus.",
+        "Fiche 3 de la brochure ED 880 (voir l'entrée « INRS ED 880 p. 4 » pour l'édition). N'institue rien. Citée par `resto-electrisation` et `resto-rps-coup-feu`. Elle-même écrit « annuellement ou tous les deux ans dans certaines conditions » : le « annuels obligatoires » de la description n'y était pas non plus. Rubrique « Incendie » ajoutée le même jour (seconde passe, pdftotext) : elle porte la recommandation annuelle que la mesure `resto-extincteurs` écrivait sans source ; c'est une recommandation de l'INRS, pas un texte. La « classe F pour huiles » de la même mesure n'est ni dans ED 880 ni dans ED 840 fiche 13 : retirée.",
     },
     {
       ref: "INRS ED 6305",
@@ -168,10 +168,10 @@ export const INRS_DOCUMENTAIRE: Corpus = {
       luLe: "2026-09-26",
       lecture: "premiere_main",
       citationCle:
-        "[Titre :] Le travail de nuit et le travail posté [Sous-titre :] Quels effets ? Quelle prévention ? [Rubrique « Quels effets sur la santé ? » :] Le travail de nuit peut altérer, de manière plus ou moins grave, la santé du salarié, allant de troubles du sommeil au risque de cancer ou de maladie cardiovasculaire. [Ligne d'édition :] 2e édition • (2022) révisée en mars 2026",
+        "[Titre :] Le travail de nuit et le travail posté [Sous-titre :] Quels effets ? Quelle prévention ? [Rubrique « Quels effets sur la santé ? » :] Le travail de nuit peut altérer, de manière plus ou moins grave, la santé du salarié, allant de troubles du sommeil au risque de cancer ou de maladie cardiovasculaire. [Ligne d'édition :] 2e édition • (2022) révisée en mars 2026 [p. 4, rubrique « Agir sur l'organisation du travail » :] En cas de travail posté, adopter une vitesse de rotation rapide (tous les 2-3 jours) associée à une micro-sieste nocturne ou proposer un 2 x 8 associé à une équipe de nuit permanente.",
       statut: "sans_objet",
       motif:
-        "Dépliant de six volets, date de publication 03/2026 au catalogue INRS. `commun.ts` le datait « (2022) » : c'est la 2e édition de 2022 révisée en mars 2026, et le texte lu est celui de mars 2026. N'institue rien. Citée par `trv-travail-nuit`, dont la description énumérait des effets « digestifs » que le dépliant révisé ne nomme pas ; elle cite désormais sa phrase de synthèse. La mesure `trv-nuit-rotation` (« dans le sens horaire ») n'y trouve pas d'appui non plus — le dépliant recommande une « vitesse de rotation rapide (tous les 2-3 jours) » — : relevé, non corrigé (le sens de la mesure changerait, décision à prendre).",
+        "Dépliant de six volets, date de publication 03/2026 au catalogue INRS. `commun.ts` le datait « (2022) » : c'est la 2e édition de 2022 révisée en mars 2026, et le texte lu est celui de mars 2026. N'institue rien. Citée par `trv-travail-nuit`, dont la description énumérait des effets « digestifs » que le dépliant révisé ne nomme pas ; elle cite désormais sa phrase de synthèse. La mesure `trv-nuit-rotation` (« dans le sens horaire », « limiter les nuits consécutives ») n'y trouve pas d'appui — le dépliant ne contient ni « sens horaire » ni « consécutives » : remplacée le 2026-09-26 par `trv-nuit-rotation-rapide`, qui cite la phrase de la p. 4.",
     },
     {
       ref: "INRS page « Travail de bureau. Les risques du métier »",
@@ -197,6 +197,33 @@ export const INRS_DOCUMENTAIRE: Corpus = {
       statut: "sans_objet",
       motif:
         "Dossier web de l'INRS, cité par `trv-tms-ecran`. N'institue rien. Ni cette page, ni « Risques pour la santé », ni « Prévention des risques » ne portent de seuil de « 4 heures par jour » ni de « règle 20-20-20 » (recherche dans le HTML téléchargé le 2026-09-26). La page « Prévention des risques » porte la distance œil-écran « généralement de 50 cm à 70 cm » que reprend la mesure `trv-ecran-poste`.",
+    },
+    {
+      ref: "INRS ED 840 fiche 13",
+      intitule: "Risques d'incendie et d'explosion",
+      url: "https://www.inrs.fr/dam/inrs/CataloguePapier/ED/TI-ED-840.pdf",
+      versionEnVigueur: "2025-05-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      citationCle:
+        "[Titre :] Risques d'incendie et d'explosion [p. 20 :] – installez des moyens d'extinction adaptés : extincteurs, robinets d'incendie armés (RIA), systèmes automatiques (sprinklers, gaz…), – assurez une maintenance régulière des appareils et des installations,",
+      statut: "sans_objet",
+      motif:
+        "Fiche de la brochure ED 840 (voir la fiche 4 pour l'édition). N'institue rien. Citée par `resto-incendie` depuis le 2026-09-26. Elle ne fixe aucune périodicité de vérification des extincteurs et ne parle pas de « classe F ».",
+    },
+    {
+      ref: "INRS dossier web « Travail isolé »",
+      intitule: "Travail isolé. Ce qu'il faut retenir",
+      url: "https://www.inrs.fr/risques/travail-isole/ce-qu-il-faut-retenir.html",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      citationCle:
+        "[Titre de la page :] Travail isolé. Ce qu'il faut retenir [Texte :] Travailler de façon isolée, c'est réaliser seul une tâche dans un environnement de travail où l'on ne peut être vu ou entendu directement par d'autres personnes, et où la probabilité de visite est faible.",
+      statut: "sans_objet",
+      motif:
+        "Dossier web de l'INRS, HTML téléchargé le 2026-09-26. N'institue rien. La description de `trv-rps-isolement` attribuait à « ED 840 fiche 17 » une définition du travail isolé (« hors de portée de vue ou de voix d'un tiers ») : la fiche 17 ne contient pas le mot « isolé », et cette formule n'est dans aucune source du dépôt. La définition citée est celle-ci.",
     },
   ],
 };

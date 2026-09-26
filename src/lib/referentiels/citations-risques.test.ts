@@ -132,7 +132,9 @@ const FORMES: [RegExp, (m: RegExpExecArray) => string | null][] = [
   [/\bED\s?(\d{3,4}),?\s+p\.\s*(\d+)/g, (m) => `INRS ED ${m[1]} p. ${m[2]}`],
   [/\bED\s?6305\b/g, () => "INRS ED 6305"],
   [/page « Travail de bureau\. Les risques du métier »/g, (m) => `INRS ${m[0]}`],
-  [/dossier web « Travail sur écran »/g, (m) => `INRS ${m[0]}`],
+  [/dossier web « [^»]+ »/g, (m) => `INRS ${m[0]}`],
+  // Les articles du règlement de sécurité ERP : « art. MS 38 », « art. PE 1 ».
+  [/\bart\.\s*([A-Z]{1,3}\s\d+)\b/g, (m) => m[1]],
 ];
 
 function mentions(texte: string): Mention[] {
@@ -152,6 +154,10 @@ function articleDuCorpus(ref: string): ArticleDepouille | undefined {
   for (const c of CORPUS) {
     const estCode = /^[LRD]\. /.test(ref);
     if (estCode && !c.id.startsWith("code-travail")) continue;
+    // `MS 38`, `PE 1` : le seul règlement numéroté ainsi au corpus est celui
+    // du 25 juin 1980.
+    const estReglement = /^[A-Z]{1,3} \d+$/.test(ref);
+    if (estReglement && !c.id.startsWith("arrete-1980")) continue;
     const a = c.articles.find((x) => x.ref === ref);
     if (a) return a;
   }
@@ -273,6 +279,68 @@ function qualifiantsDuChamp(champ: Champ): string[] {
   );
 }
 
+// ── Les périodicités ────────────────────────────────────────────────────────
+//
+// TROISIÈME RÈGLE (2026-09-26, seconde passe). Une périodicité écrite hors
+// guillemets — « vérifiés annuellement », « tous les deux ans » — doit être
+// suivie, dans la même proposition (jusqu'au « ; » ou à la phrase suivante),
+// d'une source du corpus dont le verbatim porte CETTE périodicité. Nommer une
+// source ne suffit pas : « annuellement (art. R. 4227-29) » est refusé parce
+// que R. 4227-29 ne fixe aucun rythme, et « (art. R. 4227-39) » parce qu'il
+// dit six mois. C'est la faute exacte de `resto-extincteurs`, qui écrivait
+// « vérifiés annuellement » sans rien derrière.
+
+const NOMBRES = "deux|trois|quatre|cinq|six|dix";
+const PERIODICITES: { hors: RegExp; porte: (m: RegExpExecArray) => RegExp }[] = [
+  {
+    hors: /(?<![\p{L}])(?:annuel(?:le)?s?|annuellement|tous les ans|chaque année)(?![\p{L}])/giu,
+    porte: () => /annuel|\bun an\b|chaque année/i,
+  },
+  {
+    hors: /(?<![\p{L}])(?:semestriel(?:le)?s?|semestriellement)(?![\p{L}])/giu,
+    porte: () => /semestr|six mois/i,
+  },
+  {
+    hors: /(?<![\p{L}])(?:mensuel(?:le)?s?|mensuellement|tous les mois|chaque mois)(?![\p{L}])/giu,
+    porte: () => /mensuel|par mois|chaque mois/i,
+  },
+  {
+    hors: /(?<![\p{L}])(?:trimestriel(?:le)?s?|triennal(?:e|es|aux)?|quinquennal(?:e|es|aux)?|décennal(?:e|es|aux)?)(?![\p{L}])/giu,
+    porte: (m) =>
+      /^trim/i.test(m[0]) ? /trimestr|trois mois/i
+      : /^trien/i.test(m[0]) ? /triennal|trois ans/i
+      : /^quinq/i.test(m[0]) ? /quinquennal|cinq ans/i
+      : /décennal|dix ans/i,
+  },
+  {
+    hors: new RegExp(`(?<![\\p{L}])tous les (${NOMBRES}) (ans|mois)(?![\\p{L}])`, "giu"),
+    porte: (m) => new RegExp(`${m[1]} ${m[2]}`, "i"),
+  },
+];
+
+/** Jusqu'où une périodicité cherche sa source : le « ; » ou la phrase suivante. */
+// « art. MS 38 » n'est pas une fin de phrase.
+const FIN_DE_PROPOSITION_ = /;|(?<!\bart)\.\s+(?=[A-ZÀ-ÖØ-Ý«])/;
+
+function periodicitesSansTexte(champ: Champ): string[] {
+  const t = champ.texte.replace(/«[^»]*»/g, (q) => "«" + " ".repeat(q.length - 2) + "»");
+  const out: string[] = [];
+  for (const { hors, porte } of PERIODICITES) {
+    hors.lastIndex = 0;
+    for (let m = hors.exec(t); m; m = hors.exec(t)) {
+      const suite = t.slice(m.index);
+      const fin = FIN_DE_PROPOSITION_.exec(suite);
+      const segment = fin ? suite.slice(0, fin.index) : suite;
+      const verbatims = mentions(segment)
+        .map((x) => articleDuCorpus(x.ref)?.citationCle)
+        .filter((v): v is string => Boolean(v));
+      if (!verbatims.some((v) => porte(m!).test(v)))
+        out.push(`${champ.ou} — « ${m[0]} » : aucune source qui porte ce rythme`);
+    }
+  }
+  return out;
+}
+
 // ── La garde ────────────────────────────────────────────────────────────────
 
 const CHAMPS = champsAffiches();
@@ -296,6 +364,16 @@ describe("référentiels de risques du DUERP — ce qui s'affiche dit ce que la 
 
   it("aucun mot qui qualifie hors d'une citation", () => {
     expect(CHAMPS.flatMap(qualifiantsDuChamp)).toEqual([]);
+  });
+
+  it("aucune périodicité hors d'une citation sans la source qui la porte", () => {
+    expect(CHAMPS.flatMap(periodicitesSansTexte)).toEqual([]);
+    // Borne basse : la règle traverse au moins les deux mesures électriques
+    // et la mesure des extincteurs, sinon elle ne voit rien.
+    const vues = CHAMPS.filter((c) =>
+      PERIODICITES.some(({ hors }) => { hors.lastIndex = 0; return hors.test(c.texte.replace(/«[^»]*»/g, "")); }),
+    );
+    expect(vues.length).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -347,6 +425,29 @@ describe("la garde éprouvée sur les défauts réels du 2026-09-26", () => {
       champ("commun.ts:253", "Le recours au travail de nuit est exceptionnel et doit être justifié (art. L. 3122-1)"),
     ];
     expect(avant.map((c) => qualifiantsDuChamp(c).length)).toEqual([1, 1, 1, 1, 1, 2, 1, 1, 1]);
+  });
+
+  it("refuse « vérifiés annuellement » sans texte, et une source qui ne porte pas ce rythme", () => {
+    // restauration.ts:267 à eb75c0b, tel quel.
+    const avant = champ(
+      "restauration.ts:267",
+      "Extincteurs adaptés (classe F pour huiles), accessibles, signalés, vérifiés annuellement",
+    );
+    expect(periodicitesSansTexte(avant)).toEqual([
+      "restauration.ts:267 — « annuellement » : aucune source qui porte ce rythme",
+    ]);
+    // Une source nommée ne suffit pas : R. 4227-29 ne fixe aucun rythme,
+    // R. 4227-39 dit six mois.
+    for (const art of ["R. 4227-29", "R. 4227-39"])
+      expect(periodicitesSansTexte(champ("sonde", `Extincteurs vérifiés annuellement (art. ${art})`))).toHaveLength(1);
+    // MS 38 porte la vérification annuelle : admis.
+    expect(
+      periodicitesSansTexte(champ("sonde", "Extincteurs vérifiés annuellement (arrêté du 25 juin 1980, art. MS 38)")),
+    ).toEqual([]);
+    // Et la mesure électrique de eb75c0b : « (annuel) » sans source.
+    expect(
+      periodicitesSansTexte(champ("restauration.ts:285", "Contrôles périodiques réglementaires des installations électriques (annuel)")),
+    ).toHaveLength(1);
   });
 
   it("une admission vaut pour sa phrase exacte, pas pour le mot", () => {

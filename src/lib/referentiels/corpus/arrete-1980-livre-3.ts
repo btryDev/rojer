@@ -316,9 +316,16 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 26",
       intitule: "Moyens de secours",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766855",
       versionEnVigueur: "2008-10-08",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      modifiePar: { texte: "Arrêté du 26 juin 2008, v. init." },
+      // Relu le 2026-09-26 sur sa page propre, deux lectures (C35) : le § 1
+      // renvoie à MS 39 et ne mentionne ni MS 38, ni « vérification », ni
+      // « annuel ». Cité par la description de `resto-incendie`.
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      citationCle:
+        "§ 1. Les établissements doivent être dotés d'au moins un extincteur portatif installé dans les conditions définies par l'article MS 39 et en atténuation de cet article avec un minimum d'un appareil pour 300 mètres carrés et un appareil par niveau.",
       statut: "sans_objet",
       motif:
         "Impose au moins un extincteur portatif installé selon MS 39, un appareil pour 300 m² et un par niveau. C'est une règle de dotation et de dimensionnement, sans récurrence. Point décisif du dépouillement : PE 26 n'ouvre le Livre II que sur MS 39, qui n'est pas un article de vérification.",
