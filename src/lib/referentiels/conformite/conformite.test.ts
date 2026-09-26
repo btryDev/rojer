@@ -696,6 +696,37 @@ describe("référentiel conformité — seuils d'effectif", () => {
     }
   });
 
+  it("toute référence au livre II servie à un ERP de 5ᵉ dit son champ (C39)", () => {
+    // PE 1 § 1 : « Les dispositions du livre II ne sont pas applicables sauf
+    // celles relevant d'articles expressément mentionnés dans la suite du
+    // présent livre ». Les lignes fondées sur le livre II et servies aux N5
+    // sont une sur-application ASSUMÉE — maintenue, pas retirée. Ce qui est
+    // exigé ici n'est donc pas de les borner, mais que la référence AFFICHÉE
+    // (fiche, guide, pré-remplissage) ne présente pas l'article comme dû en 5ᵉ
+    // au titre du texte. Le livre II, titre Ier, se reconnaît à ses préfixes
+    // de chapitre (GE, CO, AM, DF, CH, GZ, EL, EC, AS, GC, MS).
+    const LIVRE_2 = /^(GE|CO|AM|DF|CH|GZ|EL|EC|AS|GC|MS) \d/;
+    const DIT_SON_CHAMP =
+      /livre II|quatre premières catégories|4 premières catégories|PAS applicable en 5ᵉ/;
+    const servieAuxN5 = (erp: unknown): boolean => {
+      if (erp === true) return true;
+      if (!erp || typeof erp !== "object") return false;
+      const categories = (erp as { categories?: string[] }).categories;
+      return !categories || categories.includes("N5");
+    };
+    const muettes: string[] = [];
+    for (const o of obligationsConformite) {
+      if (!servieAuxN5(o.typologies.erp)) continue;
+      for (const r of o.referencesLegales) {
+        if (!LIVRE_2.test(r.article ?? "")) continue;
+        if (!DIT_SON_CHAMP.test(r.reference)) {
+          muettes.push(`${o.id} — ${r.reference}`);
+        }
+      }
+    }
+    expect(muettes).toEqual([]);
+  });
+
   it("`champR422734` n'est jamais posé sans `personnesPresentesMin`", () => {
     for (const o of obligationsConformite) {
       if (o.typologies.champR422734) {
