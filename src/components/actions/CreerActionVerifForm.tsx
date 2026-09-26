@@ -7,6 +7,7 @@ import { ChampBoard } from "@/components/ui-kit";
 import { TYPES_ACTION } from "@/lib/actions/schema";
 import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import type { ActionPlanState } from "@/lib/actions/plan";
+import { ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
 
 type Props = {
   action: (
@@ -74,8 +75,9 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
             id="type-aide"
             className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
           >
-            Hiérarchie L. 4121-2 : préférer la suppression à la source quand
-            c&apos;est possible, avant les EPI et la formation.
+            {ORDRE_SELON_L4121_2}{" "}
+            L&apos;ordre des types proposés est un
+            classement de Rojer.
           </p>
         </div>
 

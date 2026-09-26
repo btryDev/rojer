@@ -23,6 +23,7 @@ import {
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { listerVersions } from "@/lib/versions/queries";
 import type { TypeMesure } from "@/lib/referentiels/types";
+import { L4121_2_8 } from "@/lib/verbatim/l4121-2-ordre";
 
 function formatDate(d: Date | null) {
   if (!d) return "—";
@@ -237,7 +238,7 @@ export default async function SynthesePage({
                 intitule={`${synthese.nbAlertesHierarchie} risque${
                   synthese.nbAlertesHierarchie > 1 ? "s" : ""
                 } traité${synthese.nbAlertesHierarchie > 1 ? "s" : ""} uniquement par EPI / formation`}
-                detail="L'art. L. 4121-2 impose de prioriser les mesures collectives et de réduction à la source."
+                detail={`Art. L. 4121-2, 8° : « ${L4121_2_8} ».`}
                 ton="alerte"
               />
             )}
