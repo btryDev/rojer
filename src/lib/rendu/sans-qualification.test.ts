@@ -42,18 +42,22 @@ const D = String.raw`(?<![\p{L}\p{N}_])`;
 const F = String.raw`(?![\p{L}\p{N}_])`;
 const mot = (corps: string) => new RegExp(`${D}(?:${corps})${F}`, "giu");
 
-const RACINE_ENVOI = String.raw`(?:envo[iy]\p{L}*|enverr\p{L}*|notifi\p{L}*|rappel\p{L}*|alert\p{L}*|prévien\p{L}*|préviendr\p{L}*|(?:recev|recevr|reç)\p{L}*(?!\s+(?:du|le|au)\s+public))`;
-const SUJET = String.raw`(?:vous|nous|il|elle|ils|elles|on|rojer|la\s+plateforme|l'application|le\s+destinataire|le\s+signataire|le\s+prestataire)`;
+// `averti`, `relanc`, « tenir informé » : la vérification du 2026-09-26 en a
+// fait passer quatre variantes (« Vous serez averti par courriel »…).
+const RACINE_ENVOI = String.raw`(?:envo[iy]\p{L}*|enverr\p{L}*|notifi\p{L}*|rappel\p{L}*|alert\p{L}*|averti\p{L}*|relanc\p{L}*|prévien\p{L}*|préviendr\p{L}*|(?:tien\p{L}*|tiendr\p{L}*|ten\p{L}*)\s+informée?s?|(?:recev|recevr|reç)\p{L}*(?!\s+(?:du|le|au)\s+public))`;
+const SUJET = String.raw`(?:vous|nous|il|elle|ils|elles|on|rojer|la\s+plateforme|l'application|le\s+destinataire|le\s+signataire|(?:le|votre)\s+prestataire)`;
 const PRONOM = String.raw`(?:vous|lui|leur|les|en)\s+`;
 const ENVOI_PROMIS = mot(
   [
     String.raw`(?<!(?:^|[^\p{L}])ne\s+)${SUJET}\s+(?:${PRONOM})?(?:va|vont|allons|allez|pourr\p{L}*|ser\p{L}*)?\s*(?:${PRONOM})?${RACINE_ENVOI}`,
-    String.raw`(?:un|une|des|le|la|les|chaque)\s+(?:e-?mails?|courriels?|notifications?|rappels?|alertes?|sms|messages?)\s+(?:vous|lui|leur|part|partent|partira|est\s+envoy|sera|seront)`,
+    String.raw`(?:un|une|des|le|la|les|chaque)\s+(?:e-?mails?|courriels?|notifications?|rappels?|relances?|alertes?|sms|messages?)\s+(?:vous|lui|leur|part|partent|partira|est\s+envoy|sera|seront)`,
+    // « vient d'être envoyé », « Lien envoyé », « liens envoyés ».
+    String.raw`vien\p{L}*\s+d'être\s+(?:envoy|adress|transmi)\p{L}*|(?:liens?|codes?|e-?mails?|courriels?|messages?)\s+envoyée?s?`,
     // Le PASSIF seul, et pas sa négation : « la personne qui vous a envoyé ce
     // lien » décrit ce qu'une personne a fait, « n'a été envoyé » le nie.
     String.raw`(?<!(?:^|[^\p{L}])n')(?:(?:a|ont)\s+été|est|sont|sera|seront|serait)\s+(?:envoy|adress|transmi)\p{L}*`,
     String.raw`(?:e-?mails?|courriels?|messages?|liens?)(?:\s+\p{L}+){0,3}\s+(?:vient\s+de\s+partir|va\s+partir|partira|part)`,
-    String.raw`(?:reçue?s?|envoyée?s?|transmise?s?|adressée?s?)\s+par\s+(?:e-?mail|courriel|sms|notification)`,
+    String.raw`(?:reçue?s?|envoyée?s?|transmise?s?|adressée?s?)\s+(?:par|dans)\s+(?:l'|le\s+|un\s+|votre\s+)?(?:e-?mail|courriel|sms|notification)`,
   ].join("|"),
 );
 
@@ -86,6 +90,9 @@ const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
   // L'indice se dit « d'avancement » (décision de la propriétaire,
   // 2026-09-26) : « conformité » y qualifiait un calcul interne.
   { nom: "score de conformité", motif: mot(String.raw`scores?\s+de\s+conformité`) },
+  // La signature classée par Rojer (vérification du 2026-09-26) : « au sens
+  // de l'article 1367 », « eIDAS simple », « niveau simple ».
+  { nom: "signature qualifiée", motif: mot(String.raw`au\s+sens\s+de\s+l'article\s+136[67]|(?:eIDAS|niveau)\s+simple`) },
   // PROMESSES QUE LE PRODUIT NE TIENT PAS (C38, 2026-09-26). Aucun rappel
   // n'est envoyé — le dépôt n'a aucun driver d'envoi réel —, aucune action
   // ne naît seule d'un écart, aucun dossier n'est « prêt » par construction.
@@ -162,6 +169,33 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
   // (`envoiEnService`). Ces deux phrases ne s'affichent donc qu'après un
   // envoi réellement parti : la première sur `ok: true`, la seconde sur la
   // page qu'ouvre le lien reçu.
+  // Les phrases du flux qui ne s'affichent qu'après un envoi réel (vérifié
+  // chacune le 2026-09-26 contre `envoiEnService`).
+  {
+    fichier: "src/components/signatures/DemanderSignatureForm.tsx",
+    ligne: "Lien envoyé",
+    motif: "Titre du bloc affiché sur `ok: true` seulement, après un envoi parti.",
+  },
+  {
+    fichier: "src/components/signatures/SignatureExterneForm.tsx",
+    ligne: "Code à 6 chiffres reçu dans l'email. Valable 10 minutes, 3 essais",
+    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
+  },
+  {
+    fichier: "src/lib/access-tokens/emission.ts",
+    ligne: "\"Trop de liens envoyés dans l'heure. Réessayez un peu plus tard.\",",
+    motif: "Limite de fréquence, comptée APRÈS le refus d'envoi hors service : ne s'affiche que l'envoi en service.",
+  },
+  {
+    fichier: "src/lib/signatures/actions.ts",
+    ligne: "message: `Un code vient d'être envoyé. Patientez ${renvoi.attendreSecondes} seconde${renvoi.attendreSecondes > 1 ? \"s\" : \"\"} avant d'en demander un autre.`,",
+    motif: "Délai de renvoi, contrôlé APRÈS le refus d'envoi hors service (test « refuse avant le délai de renvoi »).",
+  },
+  {
+    fichier: "src/lib/signatures/actions.ts",
+    ligne: "message: `Un nouveau code vient d'être envoyé à ${token.emailDestinataire}.`,",
+    motif: "Rendu après `envoyerMailAcces`, qui a réussi.",
+  },
   {
     fichier: "src/components/signatures/DemanderSignatureForm.tsx",
     ligne: "Le destinataire va recevoir un email avec le lien et son code de",
@@ -340,6 +374,31 @@ describe("l'envoi promis, par racines (contre-lecture du 2026-09-26)", () => {
         "Un e-mail part au prestataire dès l'échéance.",
       ]),
     ).toEqual([1, 3, 4, 5, 6, 7, 8]);
+  });
+
+  it("voit les quatre variantes de la vérification du 2026-09-26, et les phrases réelles du flux", () => {
+    expect(
+      vuesDans([
+        "Vous serez averti par courriel.",
+        "Nous vous tiendrons informé par e-mail.",
+        "Une relance part la veille de l'échéance.",
+        "Votre prestataire sera averti automatiquement.",
+        "Un code vient d'être envoyé. Patientez 30 secondes.",
+        "Code à 6 chiffres reçu dans l'email.",
+        "Lien envoyé",
+      ]),
+    ).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("voit la signature qualifiée, telle qu'elle était écrite", () => {
+    expect(
+      vuesDans([
+        "vous apposez une signature au sens de l'article 1367 du Code civil.",
+        'reference="Art. 1366 · 1367 Code civil · eIDAS simple"',
+        "910/2014 · niveau simple.",
+        "Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014.",
+      ]),
+    ).toEqual([1, 2, 3]);
   });
 
   it("laisse passer la négation, l'adresse enregistrée et le public reçu", () => {

@@ -77,12 +77,15 @@ const HORS_CORPUS: Record<
   string,
   { motif: string; url: string; luLe: string; versionEnVigueur: string; verbatim: string }
 > = {
-  "Art. 1366 · 1367 Code civil · eIDAS simple": {
+  // ~~« Art. 1366 · 1367 Code civil · eIDAS simple »~~ (vérification du
+  // 2026-09-26) : « simple » classait la signature ; la pastille nomme les
+  // textes, comme le pied de `/verifier`.
+  "Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014": {
     motif:
       "Code civil, la preuve par écrit électronique — citée sur les écrans de " +
       "signature et d'accès par lien. Hors du droit que le corpus dépouille. " +
-      "L'extrait est l'article 1366 seul ; 1367 et eIDAS sont nommés dans la " +
-      "pastille, pas cités.",
+      "L'extrait est l'article 1366 seul ; 1367 et le règlement (UE) n° 910/2014 " +
+      "sont nommés dans la pastille, pas cités.",
     url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032042461",
     luLe: "2026-09-26",
     versionEnVigueur: "2016-10-01",

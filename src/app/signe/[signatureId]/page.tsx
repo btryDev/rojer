@@ -93,7 +93,7 @@ export default async function ConfirmationSignaturePage({
       {/* Valeur probante */}
       <section className="mt-8">
         <LegalBadge charte="board"
-          reference="Art. 1366 · 1367 Code civil · eIDAS simple"
+          reference="Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014"
           extrait="L'écrit électronique a la même force probante que l'écrit sur support papier, sous réserve que puisse être dûment identifiée la personne dont il émane et qu'il soit établi et conservé dans des conditions de nature à en garantir l'intégrité."
           defaultOpen
         >

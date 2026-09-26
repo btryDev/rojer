@@ -144,8 +144,11 @@ export function OutilDetails({ etablissementId }: { etablissementId: string }) {
           Pour chaque outil, <span className="text-[color:var(--board-blue-ink)]">deux colonnes</span>.
         </h2>
         <p className="mt-3 text-[0.92rem] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          À gauche, l&apos;obligation légale. À droite, ce que la
-          plateforme génère, suit ou rappelle pour vous la tenir.
+          {/* ~~« génère, suit ou rappelle pour vous la tenir »~~ — « rappelle »
+              se lisait comme un envoi (vérification du 2026-09-26) ; la colonne
+              de gauche ne contient plus que le texte, cité. */}
+          À gauche, ce que dit le texte, cité. À droite, ce que la
+          plateforme génère et suit pour vous aider à la tenir.
         </p>
       </header>
 

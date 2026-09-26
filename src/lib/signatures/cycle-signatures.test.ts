@@ -464,6 +464,19 @@ describe("renvoi du code, envoi hors service (C38, 2026-09-26)", () => {
     expect(mailsEnvoyes).toHaveLength(0);
   });
 
+  it("refuse avant le délai de renvoi : pas de « Un code vient d'être envoyé » quand rien ne peut partir", async () => {
+    envoi.enService = false;
+    const lien = lienValide("plan_prevention", "pp-1");
+    // Un code tout juste émis : le délai de renvoi n'est pas écoulé.
+    lien.otpExpireLe = new Date(Date.now() + 10 * 60_000);
+    prismaMock.accessToken.lignes.push(lien);
+
+    const r = await renvoyerCodeOtp(JETON_CLAIR);
+
+    expect(r.status).toBe("error");
+    expect((r as { message: string }).message).toMatch(/^Aucun nouveau code n'a été envoyé/);
+  });
+
   it("l'envoi en service, le code se renouvelle et part", async () => {
     // Un code émis il y a plus longtemps que le délai minimal de renvoi.
     const lien = lienValide("plan_prevention", "pp-1");

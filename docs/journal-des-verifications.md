@@ -2466,6 +2466,60 @@ mesure, non affiché ; il est laissé.
 La garde `sans-qualification` gagne « score de conformité ». Éprouvée : le
 titre d'origine, remis dans `registry.ts`, tombe.
 
+**Vérification du 2026-09-26, sur `383e7d5` : dernière passe.**
+
+M1. **La garde « envoi promis » laissait passer des variantes** : 5 vues sur
+12 phrases injectées. Elle gagne :
+- les racines `averti`, `relanc` et « tenir informé » ;
+- « vient d'être envoyé » ;
+- « Lien/code envoyé » ;
+- « reçu dans l'e-mail » ;
+- « votre prestataire » comme sujet.
+
+Sont désormais vues : « Vous serez averti par courriel », « Nous vous
+tiendrons informé par e-mail », « Une relance part la veille », « Votre
+prestataire sera averti automatiquement », et trois phrases réelles.
+
+Les phrases réelles du flux de signature sont admises à la ligne exacte,
+chacune vérifiée contre `envoiEnService` :
+- « Lien envoyé » : affichée sur `ok: true` ;
+- « reçu dans l'email » : sur la page que seul le lien reçu ouvre ;
+- « Trop de liens envoyés » : limite comptée après le refus ;
+- les deux « vient d'être envoyé » : délai de renvoi et succès.
+
+Correction d'ordre : le refus de `renvoyerCodeOtp` passait APRÈS le délai de
+renvoi. « Un code vient d'être envoyé. Patientez… » pouvait donc s'afficher
+envoi hors service. Il passe avant. Éprouvé : remis après, le test « refuse
+avant le délai de renvoi » tombe.
+
+`acces/[token]` (« la personne qui vous a envoyé ce lien ») n'est pas vue :
+l'actif passé d'une personne est exclu de la garde. Ces phrases décrivent
+ce qu'a fait la personne qui a envoyé le lien.
+
+`OutilDetails` : « ce que la plateforme génère, suit ou rappelle pour
+vous » devient « génère et suit pour vous aider à la tenir ». La garde ne la
+voyait pas, parce que des verbes s'intercalent entre le sujet et
+« rappelle ».
+
+M3. **La signature, encore classée** :
+- « vous apposez une signature au sens de l'article 1367 » est retiré ;
+- les badges « Art. 1366 · 1367 Code civil · eIDAS simple » de `/signe` et
+  `/acces` deviennent « Textes : art. 1366 et 1367 du Code civil ·
+  règlement (UE) n° 910/2014 », comme le pied de `/verifier` ;
+- la clé `HORS_CORPUS` d'`extraits-affiches` suit. L'extrait de l'art. 1366
+  reste confronté.
+
+Nouvelle famille « signature qualifiée » (`au sens de l'article 136[67]`,
+`eIDAS/niveau simple`). Éprouvée : les deux fichiers remis à `4d28064`
+tombent, ici et dans `extraits-affiches`.
+
+F1. Le sous-titre de SourcesBloc (« Règlement de sécurité… dans les ERP »)
+vise le règlement entier : le lien du texte est gardé. Celui du Livre III
+(LEGISCTA000020342841) servirait un sous-titre « 5ᵉ catégorie ».
+
+F2. `controle-zip/route.ts` : « synthèse globale signée » devient
+« synthèse globale ».
+
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
 inchangée depuis `d34bb24`, et le lot ne touche pas `src/lib/referentiels`.
 

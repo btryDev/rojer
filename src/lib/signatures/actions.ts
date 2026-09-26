@@ -353,6 +353,13 @@ export async function renvoyerCodeOtp(
     };
   }
 
+  // Avant le renouvellement : un code renouvelé puis jamais envoyé rendait le
+  // précédent inutilisable (C38, 2026-09-26). Et avant le délai de renvoi :
+  // « Un code vient d'être envoyé » ne se dit pas quand rien ne peut partir.
+  if (!envoiEnService()) {
+    return { status: "error", message: MESSAGE_RENVOI_HORS_SERVICE };
+  }
+
   const maintenant = new Date();
   const renvoi = renvoiOtpAutorise(token.otpExpireLe, maintenant);
   if (!renvoi.autorise) {
@@ -360,12 +367,6 @@ export async function renvoyerCodeOtp(
       status: "error",
       message: `Un code vient d'être envoyé. Patientez ${renvoi.attendreSecondes} seconde${renvoi.attendreSecondes > 1 ? "s" : ""} avant d'en demander un autre.`,
     };
-  }
-
-  // Avant le renouvellement : un code renouvelé puis jamais envoyé rendait le
-  // précédent inutilisable (C38, 2026-09-26).
-  if (!envoiEnService()) {
-    return { status: "error", message: MESSAGE_RENVOI_HORS_SERVICE };
   }
 
   const otp = generateOtp();

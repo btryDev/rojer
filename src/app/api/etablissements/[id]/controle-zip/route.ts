@@ -49,7 +49,7 @@ import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
  *
  * Contenu :
  *   00_README.txt                — sommaire, checklist pré-contrôle, astuces
- *   01_Dossier_conformite.pdf    — synthèse globale signée (existant)
+ *   01_Dossier_conformite.pdf    — synthèse globale (existant)
  *   02_DUERP.pdf                 — dernière version figée si présente
  *   03_Registre_securite.pdf     — rapports de vérif + signatures (existant)
  *   04_Plan_actions.pdf          — écarts ouverts priorisés (existant)
