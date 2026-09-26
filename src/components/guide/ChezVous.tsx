@@ -67,26 +67,28 @@ export function ChezVous({
           DUERP — rythme de mise à jour
         </p>
         <p className="mt-2 max-w-3xl text-[0.95rem] leading-relaxed">
-          Le document unique est obligatoire dès le premier salarié. Avec{" "}
+          Le document unique est obligatoire dès le premier salarié. Votre
+          entreprise déclare{" "}
           <strong>
             {data.duerp.effectif} salarié{data.duerp.effectif > 1 ? "s" : ""}
           </strong>{" "}
-          sur site,{" "}
+          :{" "}
           {data.duerp.misAJourAnnuel ? (
             <>
-              vous êtes au-dessus du seuil de {SEUIL_MAJ_ANNUELLE_DUERP} :
-              la mise à jour est réalisée <strong>au moins chaque année</strong>,
-              et aussi {enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}, et{" "}
+              le 1° de l&apos;art. R. 4121-2, qui vise les entreprises
+              d&apos;au moins {SEUIL_MAJ_ANNUELLE_DUERP} salariés,
+              s&apos;applique — la mise à jour est réalisée{" "}
+              <strong>au moins chaque année</strong>. Elle l&apos;est aussi{" "}
+              {enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)} ; et{" "}
               {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}.
             </>
           ) : (
             <>
-              vous êtes sous le seuil de {SEUIL_MAJ_ANNUELLE_DUERP}{" "}
-              :
-              le 1° de l&apos;article ne s&apos;applique pas, mais la mise à
-              jour est réalisée{" "}
-              <strong>{enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}</strong>,
-              et {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}.
+              le 1° de l&apos;art. R. 4121-2, qui vise les entreprises
+              d&apos;au moins {SEUIL_MAJ_ANNUELLE_DUERP} salariés, ne
+              s&apos;applique pas. La mise à jour est réalisée{" "}
+              <strong>{enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}</strong>{" "}
+              ; et {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}.
             </>
           )}
         </p>

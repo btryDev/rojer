@@ -37,7 +37,7 @@ describe("R. 4121-2 écrit une fois, et dans ses mots", () => {
   it("l'obligation « Quand ça arrive » écrit exactement les constantes", () => {
     const o = obligationParId("prevention-etablissement-mise-a-jour-duerp-sur-fait")!;
     expect(o.faitGenerateur).toBe(
-      `${MAJ_DUERP_AMENAGEMENT_IMPORTANT}, et ${enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}`,
+      `${MAJ_DUERP_AMENAGEMENT_IMPORTANT} ; ${enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}`,
     );
     expect((o.description ?? "").startsWith(
       `${MAJ_DUERP_CHAPEAU} : ${enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)} ; ${enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}.`,

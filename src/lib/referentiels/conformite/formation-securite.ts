@@ -230,7 +230,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     libelle:
       "L'employeur informe les travailleurs sur les risques pour leur santé et leur sécurité, et sur les modalités d'accès au document unique d'évaluation des risques",
     description:
-      "L'employeur informe les travailleurs, d'une manière compréhensible pour chacun, sur les risques pour leur santé et leur sécurité. Cette information porte notamment sur les modalités d'accès au document unique d'évaluation des risques, sur les mesures de prévention qu'il retient, sur le rôle du service de santé au travail, sur le règlement intérieur le cas échéant, et sur les consignes de sécurité incendie ainsi que l'identité des personnes chargées de l'évacuation. Obligation permanente : elle est due à l'embauche et chaque fois que nécessaire.",
+      "« L'employeur informe les travailleurs sur les risques pour leur santé et leur sécurité d'une manière compréhensible pour chacun. Cette information ainsi que la formation à la sécurité sont dispensées lors de l'embauche et chaque fois que nécessaire. » (R. 4141-2) « L'employeur informe les travailleurs sur les risques pour leur santé et leur sécurité. Cette information porte sur : 1° Les modalités d'accès au document unique d'évaluation des risques, prévu à l'article R. 4121-1 ; 2° Les mesures de prévention des risques identifiés dans le document unique d'évaluation des risques ; 3° Le rôle du service de santé au travail et, le cas échéant, des représentants du personnel en matière de prévention des risques professionnels ; 4° Le cas échéant, les dispositions contenues dans le règlement intérieur, prévues aux alinéas 1° et 2° de l'article L. 1321-1 ; 5° Les consignes de sécurité incendie et instructions mentionnées à l'article R. 4227-37 ainsi que l'identité des personnes chargées de la mise en œuvre des mesures prévues à l'article R. 4227-38. » (R. 4141-3-1)",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -259,7 +259,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "Lors de l'embauche et chaque fois que nécessaire",
+      "Cette information ainsi que la formation à la sécurité sont dispensées lors de l'embauche et chaque fois que nécessaire",
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },
@@ -396,7 +396,7 @@ export const obligationsFormationSecurite: Obligation[] = [
   {
     id: "formation-securite-etablissement-travail-sur-ecran",
     domaine: "formation_securite",
-    libelle: "Information et formation au travail sur écran de visualisation",
+    libelle: "L'employeur assure l'information et la formation des travailleurs sur les modalités d'utilisation de l'écran et de l'équipement de travail dans lequel cet écran est intégré",
     description:
       "L'employeur assure l'information et la formation des travailleurs sur les modalités d'utilisation de l'écran et de l'équipement de travail dans lequel cet écran est intégré. Chaque travailleur en bénéficie avant sa première affectation à un travail sur écran de visualisation et chaque fois que l'organisation du poste de travail est modifiée de manière substantielle.",
     referencesLegales: [
@@ -531,7 +531,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     id: "formation-securite-etablissement-apres-accident-grave",
     domaine: "formation_securite",
     libelle:
-      "Analyse des conditions de circulation ou de travail, et formations à la sécurité prévues par le présent chapitre, s'il y a lieu",
+      "Analyse des conditions de circulation ou de travail ; formations à la sécurité, s'il y a lieu",
     description:
       "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave, l'employeur procède, après avoir pris toute mesure pour satisfaire aux dispositions de l'article L. 4221-1, à l'analyse des conditions de circulation ou de travail. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, les formations à la sécurité prévues par le présent chapitre. Il en est de même en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété : 1° Soit à un même poste de travail ou à des postes de travail similaires ; 2° Soit dans une même fonction ou des fonctions similaires.",
     referencesLegales: [
@@ -548,7 +548,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave — ou en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété, soit à un même poste de travail ou à des postes de travail similaires, soit dans une même fonction ou des fonctions similaires",
+      "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave ; il en est de même en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété : soit à un même poste de travail ou à des postes de travail similaires ; soit dans une même fonction ou des fonctions similaires",
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },
@@ -562,7 +562,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     id: "formation-securite-etablissement-modification-circulation-exploitation",
     domaine: "formation_securite",
     libelle:
-      "Analyse des nouvelles conditions de circulation et d'exploitation, et formation à la sécurité s'il y a lieu",
+      "Analyse des nouvelles conditions de circulation et d'exploitation ; formation à la sécurité, s'il y a lieu",
     description:
       "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion, l'employeur procède, après avoir pris toutes mesures pour satisfaire aux dispositions de l'article L. 4221-1 relatives à l'utilisation des lieux de travail, à l'analyse des nouvelles conditions de circulation et d'exploitation. L'employeur organise, s'il y a lieu, au bénéfice des travailleurs intéressés, une formation à la sécurité répondant aux dispositions de l'article R. 4141-11.",
     referencesLegales: [

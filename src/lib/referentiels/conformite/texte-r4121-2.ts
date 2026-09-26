@@ -18,8 +18,10 @@
  * Toutes ces surfaces lisent désormais ce module. Module sans dépendance : il
  * peut être importé par un composant client sans y tirer le référentiel.
  *
- * Verbatim relevé à la source (corpus `code-travail-duerp`, `R. 4121-2`,
- * version en vigueur depuis le 31 mars 2022), relu le 2026-09-26.
+ * Verbatim : celui du corpus (`code-travail-duerp`, `R. 4121-2`, version en
+ * vigueur depuis le 31 mars 2022, lu par un agent le 2026-09-02), confronté à
+ * Légifrance par la contre-lecture du 2026-09-26 — pas relu ce jour de
+ * première main.
  */
 
 /** La phrase d'introduction de l'article, jusqu'aux deux-points. */

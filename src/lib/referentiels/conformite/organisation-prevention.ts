@@ -251,7 +251,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-chaleur-eau-fraiche",
     domaine: "organisation_prevention",
     libelle:
-      "Une quantité d'eau potable fraîche suffisante, et un moyen pour maintenir au frais l'eau destinée à la boisson, à proximité des postes de travail",
+      "Une quantité d'eau potable fraîche suffisante est fournie par l'employeur ; l'employeur prévoit un moyen pour maintenir au frais, tout au long de la journée de travail, l'eau destinée à la boisson, à proximité des postes de travail",
     description:
       "En cas d'épisode de chaleur intense, une quantité d'eau potable fraîche suffisante est fournie par l'employeur. Il prévoit un moyen pour maintenir au frais, tout au long de la journée de travail, l'eau destinée à la boisson, à proximité des postes de travail, notamment pour les postes de travail extérieurs.",
     referencesLegales: [
@@ -282,7 +282,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-chaleur-travailleur-vulnerable",
     domaine: "organisation_prevention",
     libelle:
-      "L'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention prévues au présent chapitre",
+      "L'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention",
     description:
       "Lorsqu'il est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense, l'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention prévues au présent chapitre en vue d'assurer la protection de sa santé.",
     referencesLegales: [
@@ -361,7 +361,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur",
+      "Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail ; lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur",
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },

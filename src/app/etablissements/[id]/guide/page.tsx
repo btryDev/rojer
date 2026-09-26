@@ -57,6 +57,7 @@ export default async function GuidePage({
         unknown
       > | null,
     })),
+    etab.entreprise.effectif,
   );
 
   const regimes: string[] = [];

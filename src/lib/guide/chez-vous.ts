@@ -47,8 +47,15 @@ export type ChezVousDomaine = {
 
 export type ChezVous = {
   duerp: {
+    /**
+     * L'effectif de l'ENTREPRISE — le 1° de `R. 4121-2` vise « les entreprises
+     * d'au moins onze salariés ». Jusqu'au 2026-09-26 on lisait l'effectif du
+     * site : une entreprise de quinze salariés sur deux sites s'entendait dire
+     * que le 1° ne s'appliquait pas. La carte des écrans du document unique et
+     * l'outil MCP lisaient déjà l'entreprise.
+     */
     effectif: number;
-    /** true ⇔ effectif ≥ 11 : mise à jour au moins annuelle imposée. */
+    /** true ⇔ effectif de l'entreprise ≥ 11. */
     misAJourAnnuel: boolean;
   };
   domaines: ChezVousDomaine[];
@@ -83,6 +90,7 @@ const RANG_PERIODICITE: Record<Periodicite, number> = {
 export function construireChezVous(
   etab: EtablissementMatching,
   equipements: EquipementMatching[],
+  effectifEntreprise: number,
 ): ChezVous {
   const applicables = determineObligationsApplicables(etab, equipements);
 
@@ -150,8 +158,8 @@ export function construireChezVous(
 
   return {
     duerp: {
-      effectif: etab.effectifSurSite,
-      misAJourAnnuel: etab.effectifSurSite >= SEUIL_MAJ_ANNUELLE_DUERP,
+      effectif: effectifEntreprise,
+      misAJourAnnuel: effectifEntreprise >= SEUIL_MAJ_ANNUELLE_DUERP,
     },
     domaines,
     categoriesSansObligation,

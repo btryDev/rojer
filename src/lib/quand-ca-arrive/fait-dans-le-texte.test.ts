@@ -14,8 +14,9 @@
 //
 // LA RÈGLE DU FAIT GÉNÉRATEUR. Il se découpe à la ponctuation. Chaque
 // segment, privé d'une conjonction de tête (« et », « ou »), est un EXTRAIT
-// CONTINU du verbatim consigné pour l'obligation, qui SE TERMINE LÀ OÙ UNE
-// PROPOSITION DU TEXTE SE TERMINE (ponctuation ou fin). Le verbatim, c'est la
+// CONTINU du verbatim consigné pour l'obligation, qui COMMENCE ET SE TERMINE
+// LÀ OÙ UNE PROPOSITION DU TEXTE COMMENCE ET SE TERMINE (ponctuation, numéro
+// d'item « 1° », début ou fin du texte). Le verbatim, c'est la
 // `citationCle` du corpus pour les articles cités, et le passage ENTRE
 // GUILLEMETS de la `note` de chaque référence — jamais le commentaire qui
 // l'entoure. Deux souplesses, écrites ici plutôt que laissées à
@@ -26,11 +27,17 @@
 // qualificatif — « en cas d'accident du travail ou de maladie
 // professionnelle », privé de « grave » —, ou qui détache un complément de sa
 // phrase — « dans un délai de huit jours », privé de « qui suivent cette
-// reprise », qui attribuait le délai à l'employeur.
+// reprise », qui attribuait le délai à l'employeur. Ce qu'attrape le début de
+// proposition (ajouté le 2026-09-26, après qu'une contre-lecture a fait
+// passer trois coupes en tête) : « le caractère répétitif … donne lieu à un
+// protocole spécifique », privé de « ne revêtant pas », qui inversait le
+// sens ; « un travailleur est … vulnérable », privé de « lorsqu'il est
+// informé de ce qu' ».
 //
 // LA RÈGLE DU LIBELLÉ. Il dit l'ACTE, sans condition : la condition est dans
-// le fait générateur. Tout mot de quatre lettres ou plus du libellé figure
-// dans le verbatim. C'est plus faible que la règle du fait, et c'est voulu :
+// le fait générateur. Tout mot du libellé, court compris, figure dans le
+// verbatim — un « ne … pas » ajouté se voit donc, sauf si l'article emploie
+// lui-même ces mots. C'est plus faible que la règle du fait, et c'est voulu :
 // un libellé est court, il ne peut pas être un extrait ; il ne doit pas non
 // plus apporter de vocabulaire que le texte n'emploie pas (« dû »,
 // « reformer », « salarié » pour « travailleur »).
@@ -51,12 +58,15 @@ const normaliser = (t: string) => t.replace(/[’‘]/g, "'").toLowerCase();
 const MOT = /[\p{L}\p{N}]+/gu;
 const FIN_DE_PROPOSITION = /^\s*(?:$|[,;:.—–…»«()[\]°!?])/;
 
-type Jeton = { mot: string; finDeProposition: boolean };
+const DEBUT_DE_PROPOSITION = /(?:^|[,;:.—–…»«()[\]°!?])\s*$/;
+
+type Jeton = { mot: string; debutDeProposition: boolean; finDeProposition: boolean };
 
 function jetonsDuTexte(texte: string): Jeton[] {
   const t = normaliser(texte);
   return [...t.matchAll(MOT)].map((m) => ({
     mot: m[0],
+    debutDeProposition: DEBUT_DE_PROPOSITION.test(t.slice(0, m.index!)),
     finDeProposition: FIN_DE_PROPOSITION.test(t.slice(m.index! + m[0].length)),
   }));
 }
@@ -70,6 +80,7 @@ function estExtraitComplet(segment: string[], texte: Jeton[]): boolean {
   for (let i = 0; i + segment.length <= texte.length; i++) {
     if (
       segment.every((m, k) => memeMot(m, texte[i + k].mot)) &&
+      texte[i].debutDeProposition &&
       texte[i + segment.length - 1].finDeProposition
     )
       return true;
@@ -93,10 +104,10 @@ function segmentsHorsTexte(fait: string, textes: string[]): string[] {
     });
 }
 
-/** Les mots du libellé (quatre lettres ou plus) que le texte n'emploie pas. */
+/** Les mots du libellé que le texte n'emploie pas. */
 function motsHorsTexte(libelle: string, textes: string[]): string[] {
   const vocabulaire = new Set(textes.flatMap(mots).map(singulier));
-  return mots(libelle).filter((m) => m.length >= 4 && !vocabulaire.has(singulier(m)));
+  return mots(libelle).filter((m) => !vocabulaire.has(singulier(m)));
 }
 
 /** Le passage entre guillemets d'une note : du premier « au dernier ». */
@@ -164,6 +175,11 @@ describe("le fait générateur et le libellé sont écrits dans les mots du text
     ["formation-securite-etablissement-apres-accident-grave", "En cas d'accident du travail ou de maladie professionnelle"],
     ["sante-travail-etablissement-examen-de-reprise", "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, il saisit le service"],
     ["sante-travail-etablissement-examen-de-reprise", "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, dans un délai de huit jours"],
+    // Proposés par la contre-lecture suivante comme passant la garde à fin de
+    // proposition seule : trois coupes en tête.
+    ["sante-travail-etablissement-examen-de-reprise", "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail — après un congé de maternité, une absence pour cause de maladie professionnelle, pour cause d'accident du travail, pour cause de maladie ou d'accident non professionnel"],
+    ["co-activite-etablissement-protocole-securite", "Préalablement à la réalisation de l'opération : le caractère répétitif défini à l'article R. 4515-3 donne lieu à un protocole de sécurité spécifique"],
+    ["prevention-etablissement-chaleur-travailleur-vulnerable", "Un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense"],
   ])("le défaut relevé sur %s est refusé", (id, fautif) => {
     expect(segmentsHorsTexte(fautif, verbatimDe(parId(id))).length).toBeGreaterThan(0);
   });
@@ -171,14 +187,16 @@ describe("le fait générateur et le libellé sont écrits dans les mots du text
   it.each([
     ["sante-travail-etablissement-examen-de-reprise", "Saisir le service de santé au travail pour l'examen de reprise dû"],
     ["formation-securite-etablissement-apres-accident-grave", "Après un accident grave : analyser les conditions de travail, et reformer s'il y a lieu"],
+    ["prevention-etablissement-chaleur-mise-en-oeuvre", "L'employeur ne met pas en œuvre les mesures"],
   ])("le libellé fautif relevé sur %s est refusé", (id, fautif) => {
     expect(motsHorsTexte(fautif, verbatimDe(parId(id))).length).toBeGreaterThan(0);
   });
 
-  it("le pluriel vaut le singulier, la conjonction de tête est admise, la fin de proposition est exigée", () => {
-    const texte = ["des épisodes de chaleur intense, l'employeur"];
+  it("le pluriel vaut le singulier, la conjonction de tête est admise, début et fin de proposition sont exigés", () => {
+    const texte = ["Épisodes de chaleur intense, l'employeur"];
     expect(segmentsHorsTexte("ou épisode de chaleur intense", texte)).toEqual([]);
     expect(segmentsHorsTexte("ou épisode de chaleur", texte)).toEqual(["ou épisode de chaleur"]);
+    expect(segmentsHorsTexte("chaleur intense", texte)).toEqual(["chaleur intense"]);
   });
 
   it("le commentaire d'une note n'est pas du texte", () => {

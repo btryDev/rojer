@@ -34,7 +34,8 @@ function ScoreInfoTooltip({ align = "right" }: { align?: "left" | "right" | "cen
       Repère interne, pas une certification. Le score agrège trois
       engagements datés : les vérifications périodiques dépassées (art. R. 4226-16
       CT), les actions correctives en retard (art. L. 4121-2 CT) et la mise
-      à jour du DUERP depuis moins de 12 mois (art. R. 4121-2 CT). Plus un
+      à jour du DUERP depuis moins de 12 mois, dans les entreprises d&apos;au
+      moins onze salariés (art. R. 4121-2, 1° CT). Plus un
       engagement est urgent, plus son retard pénalise. Les états permanents
       n&apos;ont pas de date : ils ne pénalisent rien, mais tant qu&apos;ils
       restent sans réponse le score ne conclut pas.

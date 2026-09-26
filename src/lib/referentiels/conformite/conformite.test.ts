@@ -1395,6 +1395,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // le fait, extrait du texte. Le protocole de sécurité cite `R. 4515-5` et
     // `R. 4515-6`, dont sa description reprenait le contenu sans les nommer.
     { version: "2026-09-26.2", empreinte: "167-b9d48ac97814cdc1" },
+    // Pas de `.3` : la version ainsi numérotée (bornage de `CH 58`) a été
+    // annulée le jour même, sans avoir quitté sa branche ; son numéro n'est
+    // pas réemployé. Toujours 167 : troisième contre-lecture des libellés
+    // (acte sans condition, sans renvoi orphelin), fait générateur de
+    // R. 4624-31 rattaché à l'examen, R. 4121-2 en deux cas séparés.
+    { version: "2026-09-26.4", empreinte: "167-a7565d6c2ecd2c0c" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

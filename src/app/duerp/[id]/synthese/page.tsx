@@ -169,8 +169,8 @@ export default async function SynthesePage({
                 <span className="font-semibold tabular-nums">
                   {joursDepuisDerniereVersion} jours
                 </span>
-                . La mise à jour annuelle est obligatoire pour les entreprises
-                d&apos;au moins 11 salariés (art. R. 4121-2, 1°). Créez une
+                . L&apos;art. R. 4121-2, 1°, prévoit une mise à jour « au moins
+                chaque année dans les entreprises d&apos;au moins onze salariés ». Créez une
                 nouvelle version pour figer l&apos;état à jour.
               </>
             )}

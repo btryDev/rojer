@@ -34,7 +34,7 @@ export async function creerVersion(
     return {
       status: "error",
       message:
-        "Sélectionnez un motif de mise à jour — c'est une exigence de l'art. R. 4121-2.",
+        "Sélectionnez un motif de mise à jour.",
     };
   }
   const precisionParsed = precisionSchema.safeParse(

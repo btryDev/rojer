@@ -1031,6 +1031,32 @@ les conditions du chapitre V / X) : une seule question, qui décide de
 `CH 58` et des `GC` en 5ᵉ catégorie. Le motif de `PE 31` au corpus est rayé :
 il affirmait que le référentiel porte le ramonage des conduits de fumée.
 
+### C26 · 2026-09-26 — Troisième contre-lecture : ce qu'un extrait exact peut encore trahir
+
+**Constat.** Les verbatims et les comptes étaient justes. Restaient des
+extraits exacts mal assemblés : les quatre cas de l'examen de reprise
+rattachés à « la fin de l'arrêt de travail » au lieu de l'examen lui-même ;
+les 2° et 3° de `R. 4121-2` joints par un « et » qui les faisait lire comme
+cumulés ; « s'il y a lieu » placé en fin de libellé, donc lu sur l'analyse
+autant que sur la formation ; des renvois sans antécédent (« le présent
+chapitre », « cette information »). Et, ailleurs dans l'application :
+« l'art. R. 4121-2 impose d'indiquer le motif » (l'article ne parle d'aucun
+motif), le seuil de onze salariés lu sur l'effectif du SITE dans le guide
+(le 1° vise l'entreprise), un motif de version qui rangeait l'accident du
+travail « au sens du 3° », la description de l'information à l'embauche
+qui ajoutait « notamment » et réécrivait trois items.
+
+**La garde.** Un segment doit désormais COMMENCER aussi là où une
+proposition du texte commence : trois coupes en tête passaient, dont une
+qui inversait le sens (« ne revêtant pas » retiré). Le libellé est contrôlé
+mot à mot, mots courts compris. Éprouvée sur les défauts proposés par la
+contre-lecture.
+
+**Appliqué.** Référentiel `2026-09-26.4` (la `.3`, annulée, n'est pas
+réemployée), 167 obligations. La mention d'application du décret
+n° 2026-503 (article 5) est ajoutée, mot pour mot, à la description de
+l'examen de reprise.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

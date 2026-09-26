@@ -36,7 +36,7 @@ describe("le guide ne contredit pas le produit", () => {
   it("un établissement sans équipement a bien des domaines à montrer", () => {
     // La moitié factuelle du défaut. Tant qu'elle était fausse, la phrase du
     // guide était vraie — c'est le produit qui a changé sous elle.
-    const r = construireChezVous(bureauSansRien(), []);
+    const r = construireChezVous(bureauSansRien(), [], 12);
     expect(r.aucunEquipement).toBe(true);
     expect(
       r.domaines.length,

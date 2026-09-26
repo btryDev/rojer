@@ -187,7 +187,10 @@ export const obligationsConformite: Obligation[] = [
 // `.2` le 2026-09-26 : aucune entrée ni sortie. Les libellés des onze lignes
 // « Quand ça arrive » disent l'acte dans les mots du texte, sans condition ;
 // le protocole de sécurité cite `R. 4515-5` et `R. 4515-6`.
-export const REFERENTIEL_VERSION = "2026-09-26.2";
+// `.4` le 2026-09-26 (`.3` annulée, jamais publiée) : aucune entrée ni
+// sortie ; libellés des lignes « Quand ça arrive » repris après une troisième
+// contre-lecture.
+export const REFERENTIEL_VERSION = "2026-09-26.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

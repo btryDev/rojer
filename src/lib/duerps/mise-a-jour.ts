@@ -64,7 +64,7 @@ const salaries = (n: number) => `${n} salarié${n > 1 ? "s" : ""}`;
 export const CHAPEAU_MISE_A_JOUR =
   "L'art. R. 4121-2 fixe trois cas de mise à jour du document unique. Un seul " +
   "dépend de votre effectif. Les deux autres s'appliquent quel que soit le " +
-  "nombre de salariés, et ne se planifient pas : ils surviennent.";
+  "nombre de salariés, et aucune date ne les annonce.";
 
 /**
  * La phrase de pied. Elle dit pourquoi deux des trois cas n'apparaissent

@@ -57,13 +57,20 @@ function autre(): EquipementMatching {
 
 describe("construireChezVous — DUERP", () => {
   it("effectif ≥ 11 → mise à jour au moins annuelle", () => {
-    const r = construireChezVous(etabBureau({ effectifSurSite: 11 }), []);
+    const r = construireChezVous(etabBureau({ effectifSurSite: 11 }), [], 11);
     expect(r.duerp.misAJourAnnuel).toBe(true);
     expect(r.duerp.effectif).toBe(11);
   });
 
+  it("le seuil lit l'effectif de l'ENTREPRISE, pas celui du site", () => {
+    // Quinze salariés sur deux sites, huit sur celui-ci : le 1° s'applique.
+    const r = construireChezVous(etabBureau({ effectifSurSite: 8 }), [], 15);
+    expect(r.duerp.misAJourAnnuel).toBe(true);
+    expect(r.duerp.effectif).toBe(15);
+  });
+
   it("effectif < 11 → pas d'annualité imposée", () => {
-    const r = construireChezVous(etabBureau({ effectifSurSite: 8 }), []);
+    const r = construireChezVous(etabBureau({ effectifSurSite: 8 }), [], 8);
     expect(r.duerp.misAJourAnnuel).toBe(false);
   });
 
@@ -74,7 +81,7 @@ describe("construireChezVous — DUERP", () => {
 
 describe("construireChezVous — domaines", () => {
   it("bureau avec élec + extincteurs → domaines électricité et incendie, dans l'ordre du référentiel", () => {
-    const r = construireChezVous(etabBureau(), [elec(), extincteur()]);
+    const r = construireChezVous(etabBureau(), [elec(), extincteur()], 12);
     const ids = r.domaines.map((d) => d.domaine);
     expect(ids).toContain("electricite");
     expect(ids).toContain("incendie");
@@ -86,7 +93,7 @@ describe("construireChezVous — domaines", () => {
   });
 
   it("les périodicités sont triées de la plus fréquente à la plus espacée, sans doublon", () => {
-    const r = construireChezVous(etabBureau(), [elec()]);
+    const r = construireChezVous(etabBureau(), [elec()], 12);
     const elecDom = r.domaines.find((d) => d.domaine === "electricite")!;
     expect(new Set(elecDom.periodicites).size).toBe(
       elecDom.periodicites.length,
@@ -100,7 +107,7 @@ describe("construireChezVous — domaines", () => {
   });
 
   it("les raisons sont dédupliquées entre obligations d'un même domaine", () => {
-    const r = construireChezVous(etabBureau(), [elec()]);
+    const r = construireChezVous(etabBureau(), [elec()], 12);
     const elecDom = r.domaines.find((d) => d.domaine === "electricite")!;
     expect(new Set(elecDom.raisons).size).toBe(elecDom.raisons.length);
   });
@@ -119,14 +126,14 @@ describe("construireChezVous — domaines", () => {
         categorie: "ASCENSEUR",
         caracteristiques: null,
       },
-    ]);
+    ], 12);
     expect(r.domaines.map((d) => d.domaine)).toContain("ascenseur");
   });
 });
 
 describe("construireChezVous — trous honnêtes", () => {
   it("catégorie AUTRE déclarée → signalée comme sans obligation générée", () => {
-    const r = construireChezVous(etabBureau(), [elec(), autre()]);
+    const r = construireChezVous(etabBureau(), [elec(), autre()], 12);
     expect(r.categoriesSansObligation).toContain("AUTRE");
     expect(r.categoriesSansObligation).not.toContain(
       "INSTALLATION_ELECTRIQUE",
@@ -139,7 +146,7 @@ describe("construireChezVous — trous honnêtes", () => {
     // guide qui s'intitule « chez vous », qu'il ne lui incombait rien. Or
     // R. 4222-20 lui impose d'entretenir et de contrôler l'ensemble de ses
     // installations d'aération, déclarées ou non (ADR-022).
-    const r = construireChezVous(etabBureau(), []);
+    const r = construireChezVous(etabBureau(), [], 12);
     expect(r.aucunEquipement).toBe(true);
     expect(r.categoriesSansObligation).toEqual([]);
 
@@ -224,7 +231,7 @@ describe("construireChezVous — trous honnêtes", () => {
           ),
         ),
       ].sort();
-      const duGuide = construireChezVous(etab, [])
+      const duGuide = construireChezVous(etab, [], 12)
         .domaines.map((d) => d.domaine)
         .sort();
       expect(duGuide).toEqual(duMoteur);

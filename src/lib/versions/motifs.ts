@@ -19,12 +19,12 @@ export type VersionActionState =
  * inventer une catégorie que le texte n'a pas.
  */
 export const MOTIFS_VERSION = {
-  annuelle: "Mise à jour annuelle (art. R. 4121-2, 1°)",
+  annuelle:
+    "Au moins chaque année dans les entreprises d'au moins onze salariés (art. R. 4121-2, 1°)",
   amenagement: "Décision d'aménagement important (art. R. 4121-2, 2°)",
-  accident:
-    "Accident du travail ou maladie professionnelle — information nouvelle au sens de l'art. R. 4121-2, 3°",
+  accident: "Accident du travail ou maladie professionnelle",
   nouvelle_info:
-    "Autre information nouvelle portée à la connaissance de l'employeur (art. R. 4121-2, 3°)",
+    "Information supplémentaire intéressant l'évaluation d'un risque portée à la connaissance de l'employeur (art. R. 4121-2, 3°)",
   autre: "Autre",
 } as const;
 
