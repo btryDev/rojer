@@ -11,6 +11,7 @@ import {
   enregistrerCotation,
   type CotationActionState,
 } from "@/lib/risques/actions";
+import { RENOUVELLEMENT_MESURAGE_BRUIT } from "@/lib/referentiels/conformite/textes-duerp";
 
 type Props = {
   risqueId: string;
@@ -228,8 +229,7 @@ export function CotationForm({
           Informations complémentaires · facultatives
         </legend>
         <p className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Utiles pour la traçabilité et certaines annexes obligatoires
-          (pénibilité, CMR, mesures physiques réglementées).
+          Utiles à la traçabilité de l&apos;évaluation.
         </p>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -257,7 +257,7 @@ export function CotationForm({
             label="Dernières mesures physiques"
             type="date"
             defaultValue={initial.dateMesuresPhysiques ?? ""}
-            aide="Date des dernières mesures physiques de ce risque, si des mesures ont été réalisées (bruit, éclairement, ambiances thermiques, vibrations)."
+            aide={`Date des dernières mesures physiques de ce risque, si des mesures ont été réalisées (bruit, éclairement, ambiances thermiques, vibrations). Pour le bruit : «\u00a0${RENOUVELLEMENT_MESURAGE_BRUIT}\u00a0» (art. R. 4433-2).`}
           />
         </div>
 

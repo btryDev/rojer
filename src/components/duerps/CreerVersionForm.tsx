@@ -112,7 +112,7 @@ export function CreerVersionForm({
       )}
       {state.status === "success" && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
-          {`« ${TRANSMISSION_DUERP_SPST} » (art. L. 4121-3-1, VI, du Code du travail). Rojer ne transmet pas le document et n'en garde pas trace.`}
+          {`«\u00a0${TRANSMISSION_DUERP_SPST}\u00a0» (art. L. 4121-3-1, VI, du Code du travail). Rojer ne transmet pas le document et n'en garde pas trace.`}
         </p>
       )}
 

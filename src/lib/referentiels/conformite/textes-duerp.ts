@@ -1,5 +1,5 @@
 /**
- * Deux phrases du Code du travail sur le document unique que le produit ne
+ * Trois phrases du Code du travail sur le document unique que le produit ne
  * PORTE pas, mais qu'il DIT — une seule écriture chacune, lue par toutes les
  * surfaces, et confrontée au verbatim du corpus par `textes-duerp.test.ts`.
  *
@@ -14,9 +14,15 @@
  * Module sans dépendance : importable par un composant client.
  */
 
-/** `L. 4121-3-1`, VI — version en vigueur depuis le 31 mars 2022, relue le 2026-09-26. */
+/**
+ * `L. 4121-3-1`, VI — version en vigueur depuis le 31 mars 2022, relue le
+ * 2026-09-26. Sans son point final : la phrase se cite entre guillemets suivis
+ * de la référence, et continue une liste dans le PDF (« il est : … »).
+ */
+export const TRANSMISSION_DUERP_SUITE =
+  "transmis par l'employeur à chaque mise à jour au service de prévention et de santé au travail auquel il adhère";
 export const TRANSMISSION_DUERP_SPST =
-  "Le document unique d'évaluation des risques professionnels est transmis par l'employeur à chaque mise à jour au service de prévention et de santé au travail auquel il adhère.";
+  `Le document unique d'évaluation des risques professionnels est ${TRANSMISSION_DUERP_SUITE}`;
 
 /** `R. 4121-1-1`, 1° : ce que l'annexe consigne d'abord (extrait). */
 export const ANNEXE_EXPOSITION_DONNEES =
@@ -28,10 +34,10 @@ export const ANNEXE_EXPOSITION_DONNEES =
  * produite. Un fait, sans qualification.
  */
 export const ANNEXE_EXPOSITION_NON_PRODUITE =
-  "Ce document ne comprend pas l'annexe prévue par l'article R. 4121-1-1 du Code du travail, où l'employeur consigne « " +
+  "Ce document ne comprend pas l'annexe prévue par l'article R. 4121-1-1 du Code du travail, où l'employeur consigne «\u00a0" +
   ANNEXE_EXPOSITION_DONNEES.charAt(0).toLowerCase() +
   ANNEXE_EXPOSITION_DONNEES.slice(1) +
-  " » et la proportion de salariés exposés à ces facteurs au-delà des seuils : Rojer ne la produit pas.";
+  "\u00a0» et la proportion de salariés exposés à ces facteurs au-delà des seuils : Rojer ne la produit pas.";
 
 /** `R. 4433-2`, dernier alinéa — version en vigueur depuis le 1er mai 2008. */
 export const RENOUVELLEMENT_MESURAGE_BRUIT =

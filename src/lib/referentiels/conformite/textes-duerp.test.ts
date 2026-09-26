@@ -33,4 +33,16 @@ describe("textes du document unique, dans leurs mots", () => {
     expect(risques).toHaveLength(3);
     for (const r of risques) expect(r.description).toContain(`« ${RENOUVELLEMENT_MESURAGE_BRUIT} »`);
   });
+
+  // Le PDF l'imprime dans ses mentions, HORS de la page d'annexe
+  // conditionnelle : un document sans saisie d'exposition la porte aussi.
+  // Contrôle de source, faute de rendu PDF dans la suite : l'appel doit se
+  // trouver dans le bloc « Mentions légales et rappels ».
+  it("le PDF imprime « annexe non produite » dans ses mentions, sans condition", async () => {
+    const { readFileSync } = await import("node:fs");
+    const src = readFileSync("src/lib/pdf/DuerpDocument.tsx", "utf8");
+    const bloc = src.slice(src.indexOf("Mentions légales et rappels"));
+    expect(bloc).toContain("{ANNEXE_EXPOSITION_NON_PRODUITE}");
+    expect(bloc).not.toContain("Annexes éventuellement obligatoires");
+  });
 });

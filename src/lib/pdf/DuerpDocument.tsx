@@ -28,7 +28,7 @@ import {
 } from "@/lib/referentiels/conformite/texte-r4121-2";
 import {
   ANNEXE_EXPOSITION_NON_PRODUITE,
-  TRANSMISSION_DUERP_SPST,
+  TRANSMISSION_DUERP_SUITE,
 } from "@/lib/referentiels/conformite/textes-duerp";
 
 const s = StyleSheet.create({
@@ -858,7 +858,7 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
             ses versions antérieures (loi du 2 août 2021) ;
           </Text>
           <Text>
-            {`• « ${TRANSMISSION_DUERP_SPST} » (art. L. 4121-3-1, VI) ;`}
+            {`• ${TRANSMISSION_DUERP_SUITE} (art. L. 4121-3-1, VI) ;`}
           </Text>
           <Text>
             • tenu à disposition des travailleurs, du CSE le cas échéant, du
@@ -884,16 +884,6 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
           </>
         )}
 
-        <Text style={[s.small, { marginTop: 10 }]}>
-          <Text style={{ fontFamily: "Helvetica-Bold" }}>
-            Annexes éventuellement obligatoires :
-          </Text>{" "}
-          données collectives utiles à l&apos;évaluation des expositions aux
-          facteurs de risques professionnels (pénibilité / compte professionnel
-          de prévention) ; proportion de salariés exposés au-delà des seuils
-          réglementaires. Ces annexes sont à joindre séparément lorsque
-          l&apos;activité le justifie.
-        </Text>
 
         <Text style={[s.small, { marginTop: 16 }]}>
           Ce document a été rédigé avec l&apos;aide d&apos;un outil de

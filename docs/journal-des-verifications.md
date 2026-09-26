@@ -1089,6 +1089,7 @@ rend **onze** qui admettent l'IGH : trois propres (`elec-igh-annuelle`,
 `incendie-igh-moyens-secours-annuelle`,
 `incendie-igh-charge-calorifique-quinquennale`) et huit d'ascenseur, ouvertes à
 tous les régimes.
+
 ### C31 · 2026-09-26 — Trois manques du document unique, dits à qui le tient
 
 **Le constat** (instruction des neuf manques « module », lecture seule) : le
@@ -1112,6 +1113,17 @@ trois risques bruit ; aide du champ corrigée. Aucune obligation n'entre, le
 statut des trois reste `obligation_manquante` : les faire sortir est la
 décision E1. `R. 4434-9` n'est PAS annoncé : ses articles de renvoi ne sont
 pas lus.
+
+**Contre-lu le jour même, corrigé.** La description d'un risque est COPIÉE en
+base quand on le coche : un document unique existant ne voyait pas la phrase
+du bruit. Elle est donc aussi dans l'aide du champ « Dernières mesures
+physiques », que tout document affiche. Le PDF décrivait DÉJÀ l'annexe, juste
+en dessous, sous condition (« Annexes éventuellement obligatoires … lorsque
+l'activité le justifie », « seuils réglementaires ») : ce paragraphe, que le
+texte ne soutient pas, est retiré — l'annexe n'est plus décrite qu'une fois.
+La mention de transmission continue désormais la liste du PDF (« il est :
+… transmis par l'employeur … ») ; le chapeau des informations complémentaires
+du formulaire de cotation ne promet plus « certaines annexes obligatoires ».
 
 ### Ce que la chronologie donne à voir
 
