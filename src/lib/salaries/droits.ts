@@ -81,7 +81,7 @@ export async function exporterDonneesSalarie(
     })),
     conservation: {
       regle:
-        "Les titres sont conservés au titre de l'obligation de tenue des documents de vérification (D. 4711-3, cinq ans), et au-delà tant qu'ils servent de preuve d'habilitation sur une période travaillée.",
+        "Les titres sont conservés cinq ans — la durée que l'article D. 4711-3 fixe pour les documents des vérifications et contrôles, reprise par analogie : l'article ne vise pas les titres eux-mêmes —, et au-delà tant qu'ils servent de preuve d'habilitation sur une période travaillée.",
       effacement:
         "Le droit à l'effacement est limité sur ces données : l'article 17.3.b du RGPD excepte ce qui est conservé au titre d'une obligation légale. Une sortie de l'effectif ne les efface donc pas.",
       opposition:
@@ -153,9 +153,11 @@ l'être : un consentement donné à son employeur n'est pas considéré comme li
 
 COMBIEN DE TEMPS
 
-Vos titres sont conservés cinq ans au titre de l'article D. 4711-3 du Code du
-travail, et au-delà tant qu'ils prouvent que vous étiez habilité pendant une
-période où vous avez travaillé.
+Vos titres sont conservés cinq ans, et au-delà tant qu'ils prouvent que vous
+étiez habilité pendant une période où vous avez travaillé. Cinq ans, c'est la
+durée que l'article D. 4711-3 du Code du travail fixe pour les documents des
+vérifications et contrôles ; elle est reprise ici par analogie, cet article ne
+visant pas les titres eux-mêmes.
 
 Votre départ de l'entreprise n'efface donc pas ces données. Votre fiche est
 marquée comme sortie de l'effectif, et les titres restent.
