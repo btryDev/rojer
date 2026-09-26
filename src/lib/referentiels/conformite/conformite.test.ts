@@ -1496,7 +1496,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // C39 : même empreinte, version neuve — descriptions et `reference`
     // seules (registre de sécurité : L. 4711-1 en tête, R. 4227-39 dit dans
     // le champ de R. 4227-34 ; extincteurs d'ERP : MS 38 dit au livre II,
-    // PE 4 § 2 nommé pour la 5ᵉ). Précédent `.8`. 169 + 0 − 0 = 169.
+    // PE 4 § 2 nommé pour la 5ᵉ) ; puis, sur la même version non publiée,
+    // les dix-sept lignes du livre II servies aux N5. Version précédente
+    // `.9` ; même cas que `.8` (descriptions seules, empreinte inchangée).
+    // 169 + 0 − 0 = 169.
     { version: "2026-09-26.10", empreinte: "169-b35a654fd2941809" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
