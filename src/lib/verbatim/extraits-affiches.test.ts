@@ -28,7 +28,10 @@
 //   une négation) : elle est marquée, le lecteur la voit, la garde non ;
 // - qu'une virgule n'a pas été ajoutée ou retirée, ni la casse changée ;
 // - qu'un extrait est tiré du bon ALINÉA quand la `citationCle` en porte
-//   plusieurs.
+//   plusieurs ;
+// - qu'un verbatim déclaré dans HORS_CORPUS a été relu : la garde exige qu'il
+//   soit écrit, avec son adresse et sa date, pas qu'il soit juste. Il se
+//   relit comme une `citationCle`, et sa date dit quand.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -38,7 +41,7 @@ import { CORPUS } from "@/lib/referentiels/corpus";
 import { SURFACES_AFFICHEES, dateArrete } from "@/lib/referentiels/corpus/citations-ecran";
 import type { ArticleDepouille } from "@/lib/referentiels/corpus/types";
 import { EXTRAIT_R4121_2 } from "@/lib/referentiels/conformite/texte-r4121-2";
-import { ecartsDeCitation } from "./extrait-continu";
+import { ecartsDeCitation, normaliser } from "./extrait-continu";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
@@ -172,28 +175,86 @@ const MOTIF_ARRETE =
 const espaces = (t: string) => t.replace(/\s+/g, " ").trim();
 const numeroArticle = (t: string) => /\bart\.\s*(\d+)(?:er)?\b/i.exec(t)?.[1];
 
+/**
+ * Le code que la `reference` nomme — ou `null`.
+ *
+ * LU DEPUIS LE 2026-09-26 (contre-lecture) : la clé seule faisait rendre
+ * `CCH R. 164-6` à une pastille « Art. R. 164-6 CT ». Aucune ne se trompait de
+ * code ce jour-là ; la garde n'en aurait rien dit.
+ */
+const CODES: [string, RegExp][] = [
+  ["CT", /\bCT\b|code du travail/i],
+  ["CCH", /\bCCH\b|code de la construction/i],
+  ["CSP", /\bCSP\b|code de la santé publique/i],
+  ["C. env.", /C\.\s?env\.|code de l'environnement/i],
+];
+const codeNomme = (reference: string) => CODES.find(([, m]) => m.test(reference))?.[0] ?? null;
+
+/**
+ * Le code d'un article du corpus : son préfixe (`CCH R. 164-6`,
+ * `C. env. R. 557-14-1`), sinon celui que l'identifiant du corpus déclare
+ * (`code-travail-…`, `cch-…`, `csp-…`). `null` quand ni l'un ni l'autre ne le
+ * dit : l'article ne se rapproche alors d'aucune pastille qui nomme un code.
+ */
+function codeDeLArticle(corpusId: string, ref: string): string | null {
+  const prefixe = /^(.*?)\s*[LRD]\.\s?\d/.exec(ref)?.[1]?.trim();
+  if (prefixe) return codeNomme(prefixe);
+  if (corpusId.startsWith("code-travail")) return "CT";
+  if (corpusId.startsWith("cch")) return "CCH";
+  if (corpusId.startsWith("csp")) return "CSP";
+  return null;
+}
+
+/**
+ * Les mots qui qualifient un arrêté dans la `reference` — « Travaux
+ * dangereux » —, une fois la date et l'article retirés.
+ *
+ * DEUX ARRÊTÉS DU MÊME JOUR (contre-lecture du 2026-09-26) : le 19 mars 1993
+ * en a deux au corpus, les travaux dangereux et les EPI. La date seule les
+ * confondait, et une phrase de l'arrêté EPI passait sous la pastille
+ * « Travaux dangereux ». Chaque mot qualifiant doit figurer dans l'intitulé du
+ * corpus retenu.
+ */
+const qualifiantsDArrete = (reference: string) =>
+  normaliser(
+    reference
+      .replace(MOTIF_ARRETE, " ")
+      .replace(/\bart\.\s*\d+(?:er)?/gi, " "),
+  )
+    .split(/[^\p{L}]+/u)
+    .filter((m) => m.length >= 4);
+
 /** Les articles du corpus que la `reference` nomme. */
 function articlesNommes(reference: string): ArticleDepouille[] {
-  const cles = new Set(
-    [...reference.matchAll(MOTIF_ARTICLE), ...reference.matchAll(MOTIF_REGLEMENT)].map((m) =>
-      espaces(m[0]),
-    ),
-  );
+  const articles = new Set([...reference.matchAll(MOTIF_ARTICLE)].map((m) => espaces(m[0])));
+  const reglement = new Set([...reference.matchAll(MOTIF_REGLEMENT)].map((m) => espaces(m[0])));
+  const code = codeNomme(reference);
   const arretes = [...reference.matchAll(MOTIF_ARRETE)].map(dateArrete).filter(Boolean);
   const numero = numeroArticle(reference);
+  const qualifiants = qualifiantsDArrete(reference);
 
   const trouves: ArticleDepouille[] = [];
   for (const c of CORPUS) {
+    const intitule = normaliser(c.intitule);
     for (const a of c.articles) {
       const ref = espaces(a.ref);
       const sesCles = new Set([ref, ...[...ref.matchAll(MOTIF_ARTICLE)].map((m) => espaces(m[0]))]);
-      const parArticle = [...cles].some((k) => sesCles.has(k));
+      // Un article de code : la clé ET le code. Une pastille qui ne nomme pas
+      // de code ne se rapproche d'aucun.
+      const parArticle =
+        code !== null &&
+        [...articles].some((k) => sesCles.has(k)) &&
+        codeDeLArticle(c.id, ref) === code;
+      // Un article de règlement de sécurité (`GN 13`) : le seul règlement
+      // numéroté ainsi au corpus est celui du 25 juin 1980.
+      const parReglement = c.id.startsWith("arrete-1980") && reglement.has(ref);
       const saDate = [...ref.matchAll(MOTIF_ARRETE)].map(dateArrete)[0];
       const parArrete =
         saDate !== undefined &&
         arretes.includes(saDate) &&
-        (numero === undefined || numeroArticle(ref) === numero);
-      if (parArticle || parArrete) trouves.push(a);
+        (numero === undefined || numeroArticle(ref) === numero) &&
+        qualifiants.every((q) => intitule.includes(q));
+      if (parArticle || parReglement || parArrete) trouves.push(a);
     }
   }
   return trouves;
@@ -287,6 +348,30 @@ describe("la garde éprouvée en la cassant", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("refuse les trois cas que la contre-lecture a fait passer, le 2026-09-26", () => {
+    // 1. Deux arrêtés du même jour : une phrase de l'arrêté EPI du 19 mars
+    // 1993, verbatim de son article 1er au corpus, sous la pastille de
+    // l'arrêté « Travaux dangereux » du même jour.
+    const epi = CORPUS.find((c) => c.id === "arrete-1993-03-19-epi")!.articles[0].citationCle!;
+    const phraseEpi = epi.split(" : ")[0];
+    const travauxDangereux = verbatimDe("Arrêté du 19 mars 1993 · Travaux dangereux");
+    expect(travauxDangereux).not.toContain(epi);
+    expect(ecartsDeCitation(phraseEpi, travauxDangereux).length).toBeGreaterThan(0);
+    // Et la pastille des travaux dangereux trouve toujours son texte.
+    expect(travauxDangereux.length).toBe(1);
+    // 2. Le code nommé : « R. 164-6 CT » n'est pas « CCH R. 164-6 ».
+    expect(articlesNommes("Art. R. 164-6 CT")).toEqual([]);
+    expect(articlesNommes("Art. R. 164-6 CCH · Accessibilité").map((a) => a.ref)).toEqual(["CCH R. 164-6"]);
+    // 3. La lettre de numérotation : « a le document unique… », le « A » de
+    // « V.-A.- » lu comme le verbe avoir.
+    expect(
+      ecartsDeCitation(
+        "a le document unique d'évaluation des risques professionnels, dans ses versions successives, est conservé par l'employeur […]",
+        verbatimDe("Art. L. 4121-3-1 CT"),
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+
   it("la même coupe, MARQUÉE d'une élision, est admise — c'est ce que le lecteur voit", () => {
     expect(
       ecartsDeCitation(
@@ -296,8 +381,11 @@ describe("la garde éprouvée en la cassant", () => {
     ).toEqual([]);
   });
 
-  it("« V.-A.- » ouvre une proposition ; un trait d'union seul, non", () => {
+  it("« V.-A.- » ouvre une proposition ; un trait d'union seul, non ; la lettre de numérotation, non plus", () => {
     expect(ecartsDeCitation("Le document est conservé.", ["V.-A.-Le document est conservé."])).toEqual([]);
+    expect(ecartsDeCitation("A le document est conservé.", ["V.-A.-Le document est conservé."])).toEqual([
+      "A le document est conservé",
+    ]);
     expect(ecartsDeCitation("document est conservé.", ["Le porte-document est conservé."])).toEqual([
       "document est conservé",
     ]);

@@ -1090,7 +1090,7 @@ rend **onze** qui admettent l'IGH : trois propres (`elec-igh-annuelle`,
 `incendie-igh-charge-calorifique-quinquennale`) et huit d'ascenseur, ouvertes à
 tous les régimes.
 
-### C28 · 2026-09-26 — La garde des extraits affichés : 24 mesurés, 3 écarts, tous corrigés dans l'extrait
+### C28 · 2026-09-26 — La garde des extraits affichés : 24 mesurés, ~~3 écarts, tous corrigés dans l'extrait~~ 3 échecs — 2 extraits corrigés, 1 verbatim consigné
 
 **Constat.** Un `LegalBadge` montre un `extrait` entre guillemets comme le
 texte de l'article ; rien ne le confrontait au corpus (chantiers-ouverts
@@ -1104,7 +1104,13 @@ segments se suivent dans l'ordre d'un même texte. Le verbatim est la
 `extrait={…}` inconnue fait échouer le test ; un texte hors corpus s'y déclare
 avec son motif ET son verbatim, et reste confronté.
 
-**Mesuré : 24 extraits, 21 concordent, 3 écarts.** La sonde du matin en
+**Mesuré : 24 extraits, 21 concordent, 3 échecs** — deux extraits qui
+s'écartaient du texte (`L. 4121-3-1`, `L. 4121-2`), corrigés dans l'extrait ;
+un article sans verbatim au corpus (`GN 13`), consigné, son extrait inchangé
+parce qu'exact. *[Précisé le 2026-09-26 après contre-lecture : le titre, le
+commit `752933f` et le § 5 bis disaient « 3 écarts » ; le diff n'en corrige
+que deux. Les deux citations fausses de `R. 4121-2` l'avaient été plus tôt
+par `48cc576`.]* La sonde du matin en
 comptait 5 écarts et 8 « sans verbatim » : cinq de ces huit étaient au corpus
 sous une autre graphie de clé (`CCH R. 164-6`, `CCH R. 143-44`,
 `Arrêté 01-02-2010 art. 3`, `Arrêté 1993-03-19 art. 1er`). `R. 4323-23`
@@ -1145,6 +1151,20 @@ formulation décisive confirmée par une seconde lecture distincte :**
 séparateur de numérotation de Légifrance ne comptait pas comme début de
 proposition, alors que « 1° » oui ; rien de ce qui suit un « V.-A.- » ne
 pouvait être cité. Un trait d'union seul ne compte toujours pas (testé).
+
+**Contre-lecture du même jour : trois trous, fermés.** (1) Le résolveur
+acceptait tout article d'un arrêté dès que la date concordait : l'arrêté EPI
+du 19 mars 1993 répondait à la pastille « Travaux dangereux » du même jour.
+Chaque mot qui qualifie l'arrêté dans la `reference` doit désormais figurer
+dans l'intitulé du corpus. (2) Le code nommé n'était pas lu :
+`articlesNommes("Art. R. 164-6 CT")` rendait `CCH R. 164-6`. Le code de la
+pastille doit désormais être celui de l'article (préfixe, sinon identifiant du
+corpus), et une pastille d'article de code qui n'en nomme aucun ne se
+rapproche de rien. (3) « .- » ouvrait aussi la LETTRE de numérotation : « a le
+document unique… » passait sur `L. 4121-3-1`, grâce au « A » de « V.-A.- ».
+Un mot suivi de « .- » n'ouvre plus de proposition. Chaque cas est gardé en
+épreuve, et chaque correctif, neutralisé un à un, fait retomber la sienne.
+Les faits générateurs (`fait-dans-le-texte.test.ts`) restent verts.
 
 **Éprouvée en la cassant** avec le défaut réel de `R. 4121-2`, remis dans
 `duerp/page.tsx` tel que `git show 48cc576^` le donne : refusé, un seul

@@ -28,6 +28,11 @@ const FIN_DE_PROPOSITION = /^\s*(?:$|[,;:.—–…»«()[\]°!?])/;
 // (« I.- », « A.- ») ouvre une proposition, comme « 1° ». Ajouté le 2026-09-26 :
 // sans lui, rien de ce qui suit un « V.-A.- » ne pouvait être cité.
 const DEBUT_DE_PROPOSITION = /(?:^|[,;:.—–…»«()[\]°!?]|\.-)\s*$/;
+// Mais la LETTRE de numérotation n'est pas une proposition : « A » dans
+// « V.-A.-Le », suivie de son « .- ». Sans cette exclusion (contre-lecture du
+// 2026-09-26), « a le document unique… » passait sur `L. 4121-3-1` — le « A »
+// de la numérotation lu comme le verbe avoir.
+const SUIVI_DU_SEPARATEUR = /^\.-/;
 
 export type Jeton = { mot: string; debutDeProposition: boolean; finDeProposition: boolean };
 
@@ -35,7 +40,9 @@ export function jetonsDuTexte(texte: string): Jeton[] {
   const t = normaliser(texte);
   return [...t.matchAll(MOT)].map((m) => ({
     mot: m[0],
-    debutDeProposition: DEBUT_DE_PROPOSITION.test(t.slice(0, m.index!)),
+    debutDeProposition:
+      DEBUT_DE_PROPOSITION.test(t.slice(0, m.index!)) &&
+      !SUIVI_DU_SEPARATEUR.test(t.slice(m.index! + m[0].length)),
     finDeProposition: FIN_DE_PROPOSITION.test(t.slice(m.index! + m[0].length)),
   }));
 }

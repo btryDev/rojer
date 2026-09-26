@@ -130,7 +130,7 @@ export const ARRETE_1980_LIVRE_1: Corpus = {
         "L'exploitant ne peut effectuer ou faire effectuer, en présence du public, des travaux qui feraient courir un danger quelconque à ce dernier ou qui apporteraient une gêne pour son évacuation.",
       statut: "sans_objet",
       motif:
-        "Consigné le 2026-09-26 parce que l'écran du permis de feu en affiche le texte entre guillemets, et qu'aucun corpus ne le portait : l'extrait n'était confronté à rien (`verbatim/extraits-affiches.test.ts`). Un seul alinéa, section 4 « Travaux » du Livre Ier. C'est une INTERDICTION, sans pièce ni rythme : rien ne s'en inscrit au calendrier. Il ne prescrit pas de permis de feu — l'écran le dit déjà.",
+        "Consigné le 2026-09-26 parce que l'écran du permis de feu en affiche le texte entre guillemets, et qu'aucun corpus ne le portait : l'extrait n'était confronté à rien (`verbatim/extraits-affiches.test.ts`). Un seul alinéa, section 4 « Travaux » du Livre Ier. C'est une INTERDICTION, sans pièce ni rythme : rien ne s'en inscrit au calendrier. Il ne prescrit pas de permis de feu — l'écran le dit déjà.\n\nPOURQUOI `sans_objet` ET NON `non_couvert`, alors qu'un précédent existe. `R. 4323-63` (`code-travail-travail-en-hauteur`), interdiction elle aussi, et qui vise elle aussi les établissements servis, est classé `non_couvert` : son motif est que « le produit n'en dit rien ». C'est ce motif, et non la nature d'interdiction, qui fait le classement. Il ne vaut pas ici : l'écran du permis de feu, là où des travaux se préparent, affiche le texte de `GN 13` mot pour mot. Si cet affichage était retiré, le précédent s'appliquerait, et l'entrée passerait en `non_couvert`.",
     },
   ],
 };

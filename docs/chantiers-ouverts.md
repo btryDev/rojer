@@ -385,7 +385,11 @@ soit déclarées hors corpus avec leur motif.~~
 
 **Fait le 2026-09-26 (C28).** La garde est `src/lib/verbatim/extraits-affiches.test.ts`,
 sur la règle partagée avec `fait-dans-le-texte.test.ts` (`extrait-continu.ts`).
-Remesuré par elle : 24 extraits, **3 écarts, pas 5**. Les « huit sans verbatim »
+Remesuré par elle : 24 extraits, **3 échecs à la première mesure, pas 5** —
+deux extraits qui s'écartaient du texte, et un article sans verbatim au corpus
+(`GN 13`, dont l'extrait était exact). ~~3 écarts~~ [corrigé le 2026-09-26,
+contre-lecture : le diff corrige DEUX extraits ; le troisième écart historique
+de `R. 4121-2` l'avait été plus tôt, par `48cc576`]. Les « huit sans verbatim »
 étaient pour cinq d'entre eux un défaut de clé de la sonde (`CCH R. 164-6`,
 `CCH R. 143-44`, les arrêtés de 2010 et 1993 sont au corpus sous une autre
 graphie) ; restaient `GN 13`, consigné au corpus, et le Code civil, déclaré
