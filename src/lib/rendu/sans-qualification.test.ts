@@ -67,7 +67,7 @@ const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
   { nom: "valeur légale", motif: mot(String.raw`valeur\s+(?:légale|juridique|probante)`) },
   { nom: "premier document demandé", motif: mot(String.raw`premier\s+document\s+demandé`) },
   // PROMESSES QUE LE PRODUIT NE TIENT PAS (C38, 2026-09-26). Aucun rappel
-  // n'est envoyé — le seul envoi du dépôt est le lien d'accès —, aucune action
+  // n'est envoyé — le dépôt n'a aucun driver d'envoi réel —, aucune action
   // ne naît seule d'un écart, aucun dossier n'est « prêt » par construction.
   // Les négations écrites pour le dire (« aucun rappel par e-mail ») ne
   // tombent pas sous ces formes.

@@ -64,8 +64,8 @@ const ETAPES = [
   {
     titre: "Vous traitez ce qui arrive à échéance",
     // ~~« Un e-mail vous prévient avant la date »~~ — retiré le 2026-09-26 :
-    // aucun rappel n'est envoyé (le seul envoi du dépôt est le lien d'accès,
-    // `access-tokens/mail.ts`), et l'envoi n'est pas une priorité de produit.
+    // aucun rappel n'est envoyé, et l'envoi n'est pas une priorité de produit.
+    // Le dépôt n'a d'ailleurs aucun driver d'envoi réel (`lib/email`).
     corps: "Le tableau de bord montre ce qui arrive à échéance ; le reste attend son tour. Rojer n'envoie pas de rappel par e-mail : c'est en l'ouvrant que vous le voyez.",
     duree: "Chaque semaine",
   },

@@ -2222,8 +2222,8 @@ avant correction. Les points 18 (CSSCT « 11 salariés et + ») et 19
 1. **Les promesses que Rojer ne tient pas** sont retirées :
    - « Un e-mail vous prévient avant la date » (`Etapes.tsx`, étape 3). La
      page dit désormais « Rojer n'envoie pas de rappel par e-mail ». La
-     promesse est rayée au backlog. Le seul envoi du dépôt est le lien
-     d'accès des signatures (`access-tokens/mail.ts`).
+     promesse est rayée au backlog. ~~Le seul envoi du dépôt est le lien
+     d'accès des signatures~~ : ce n'est pas le cas, voir plus bas.
    - « Alertes J-30 / J-7 / jour J, escalade », « rappels », « vous
      rappelle » (`OutilDetails`, `OutilsConformite`, carnet sanitaire).
    - « Action créée automatiquement depuis un écart » et « Chaque écart
@@ -2334,7 +2334,19 @@ l'avait trouvée, hors de la relecture.
   (`registry.ts`, `score.tsx`, dossier PDF « (indicateur interne) »).
 - « dès le premier salarié » reste sur trois écrans de l'application : c'est
   une lecture de R. 4121-1.
-- « Le destinataire va recevoir un email » reste : c'est vrai.
+- ~~« Le destinataire va recevoir un email » reste : c'est vrai.~~ C'est
+  faux, et la coordination l'a relevé le même jour. `getEmailDriver` ne
+  connaît que le driver `console`, qui lève en production. Toute autre
+  valeur de `EMAIL_DRIVER` lève aussi. Relevé sur Vercel, projet
+  `test-duerp`, noms seuls, valeurs non lues : ni `EMAIL_DRIVER`, ni
+  `SIGNATURE_MAIL_FROM`, ni `PUBLIC_APP_URL`.
+  En production, `demanderSignature` crée donc l'`AccessToken`, puis
+  `envoyerMailAcces` lève. Le demandeur reçoit une erreur générique, et le
+  jeton reste en base sans message. La phrase ne s'affiche qu'en
+  développement, où le message part à la console et à `/dev/boite-mail`,
+  pas au destinataire.
+  La phrase est laissée : la corriger, c'est décider de ce que devient la
+  demande de signature, et c'est une décision de produit.
 
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
 inchangée depuis `d34bb24`, et le lot ne touche pas `src/lib/referentiels`.
