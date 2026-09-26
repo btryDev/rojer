@@ -51,7 +51,7 @@ const QUESTIONS = [
     q: "Mon activité est-elle couverte ?",
     // Le périmètre, dit (relecture du 2026-09-26) : `CATEGORIES_COUVERTES`
     // (5ᵉ catégorie), `EFFECTIF_MAX` et les refus de `perimetre/exclusions.ts`.
-    r: "L'évaluation des risques couvre aujourd'hui la restauration, le commerce de détail et les activités de bureau. Le suivi des vérifications découle de vos équipements et de votre établissement. Pour un établissement recevant du public, le règlement de sécurité est suivi en 5ᵉ catégorie ; un établissement des quatre premières catégories est servi sans les règles propres à sa catégorie. Rojer n'ouvre pas de dossier au-delà de 50 travailleurs sur un site, ni pour un établissement recevant du public situé dans un immeuble de grande hauteur.",
+    r: "L'évaluation des risques couvre aujourd'hui la restauration, le commerce de détail et les activités de bureau. Le suivi des vérifications découle de vos équipements et de votre établissement. Pour un établissement recevant du public, le règlement de sécurité est suivi en 5ᵉ catégorie ; un établissement des quatre premières catégories est servi sans les règles propres à sa catégorie. Rojer n'ouvre pas de dossier au-delà de 50 travailleurs sur un site ou de 50 salariés dans l'entreprise, ni pour un établissement recevant du public situé dans un immeuble de grande hauteur.",
   },
   {
     q: "Comment présenter mon dossier lors d'un contrôle ?",
