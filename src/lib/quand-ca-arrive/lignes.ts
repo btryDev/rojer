@@ -112,7 +112,14 @@ export function lignesDepuis(
   return lignes;
 }
 
-const articleDe = (l: LigneQuandCaArrive) => l.articles[0] ?? "";
+// L'ordre du Code : le numéro d'abord, puis L. avant R. avant D. — pas
+// l'alphabet, qui rangerait tous les « D. » avant les « L. ».
+const RANG_PARTIE: Record<string, number> = { L: 0, R: 1, D: 2 };
+const cleDuCode = (l: LigneQuandCaArrive) => {
+  const a = l.articles[0] ?? "";
+  const m = /^([LRD])\.\s*(.*)$/.exec(a);
+  return m ? `${m[2]} ${RANG_PARTIE[m[1]]}` : a;
+};
 
 /** Les lignes de la page pour ce dossier, groupées par domaine. */
 export function listerQuandCaArrive(
@@ -139,7 +146,7 @@ export function listerQuandCaArrive(
       // document unique s'intercalait entre les trois lignes de la chaleur
       // intense (`R. 4463-4`, `-5`, `-7`), qui se lisent ensemble.
       lignes: lignes.sort((a, b) =>
-        articleDe(a).localeCompare(articleDe(b), "fr", { numeric: true }),
+        cleDuCode(a).localeCompare(cleDuCode(b), "fr", { numeric: true }),
       ),
     }))
     .sort((a, b) => a.libelle.localeCompare(b.libelle, "fr"));

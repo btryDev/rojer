@@ -362,6 +362,27 @@ fichier réellement stocké, et en fabriquer produirait des entrées de registre
 pointant vers un fichier absent ; et les déclarations d'états permanents non plus,
 l'ADR-027 disant qu'une déclaration se coche et ne se sème pas.
 
+## 5 bis. Les citations affichées entre guillemets — aucune garde ne les confronte au texte (2026-09-26)
+
+Un `LegalBadge` porte un `extrait` : le texte de l'article, présenté comme
+une citation. `citations-ecran.ts` vérifie que l'ARTICLE cité est dépouillé ;
+rien ne vérifie que l'EXTRAIT est bien son texte. Les deux citations de
+`R. 4121-2` écrivaient « d'évaluation des risques est réalisée », sans
+« professionnels » — corrigé le 2026-09-26, elles lisent `EXTRAIT_R4121_2`.
+
+**Mesuré le 2026-09-26** par une sonde qui confronte chaque `extrait=` au
+verbatim du corpus (segments continus) : 24 extraits. 11 concordent. 5
+s'écartent ou semblent s'écarter — `R. 4121-2` ×2 (corrigés), `R. 4323-23`,
+`L. 4121-2`, `L. 4121-3-1` : les trois derniers portent des élisions « […] »
+ou des renvois « L. 4121-1 » que la sonde découpait mal, à vérifier un par
+un avant de conclure. 8 citent un article absent du corpus sous cette clé
+(`R. 164-6` et `R. 143-44` CCH, `GN 13`, arrêtés de 2010 et 1993, Code civil)
+et ne sont donc confrontés à rien.
+
+**À faire :** une garde permanente sur ce modèle, qui traite « […] » comme une
+élision admise ; les huit citations sans verbatim au corpus soit dépouillées,
+soit déclarées hors corpus avec leur motif.
+
 ## 6. Plus petit, mais mesuré
 
 - **30 URL de section** au lieu d'URL d'article au corpus, sous cliquet

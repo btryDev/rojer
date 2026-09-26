@@ -66,12 +66,13 @@ export const CODE_TRAVAIL_MANUTENTION_ECRAN: Corpus = {
         "Information et formation des travailleurs sur écran de visualisation",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018528838",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "L'employeur assure l'information et la formation des travailleurs sur les modalités d'utilisation de l'écran et de l'équipement dans lequel il est intégré, avant la première affectation et à chaque modification substantielle du poste.",
       citationCle:
-        "Chaque travailleur en bénéficie avant sa première affectation à un travail sur écran de visualisation et chaque fois que l'organisation du poste de travail est modifiée de manière substantielle.",
+        "L'employeur assure l'information et la formation des travailleurs sur les modalités d'utilisation de l'écran et de l'équipement de travail dans lequel cet écran est intégré. Chaque travailleur en bénéficie avant sa première affectation à un travail sur écran de visualisation et chaque fois que l'organisation du poste de travail est modifiée de manière substantielle.",
       statut: "retenu",
       obligations: ["formation-securite-etablissement-travail-sur-ecran"],
       reserve:

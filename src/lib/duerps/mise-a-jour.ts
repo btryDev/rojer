@@ -32,8 +32,9 @@
 import { EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
 import {
   MAJ_DUERP_AMENAGEMENT_IMPORTANT,
+  MAJ_DUERP_ANNUELLE,
   MAJ_DUERP_INFORMATION_NOUVELLE,
-} from "@/lib/referentiels/conformite/organisation-prevention";
+} from "@/lib/referentiels/conformite/texte-r4121-2";
 
 export type DeclencheurMaj = {
   /** Le rang dans l'article, tel qu'il s'y lit. */
@@ -86,7 +87,7 @@ export function declencheursMiseAJour(effectif: number): DeclencheurMaj[] {
   return [
     {
       rang: "1°",
-      quand: "Au moins une fois par an",
+      quand: MAJ_DUERP_ANNUELLE,
       portee: soumisAnnuel
         ? `Vous déclarez ${salaries(effectif)} : ce cas s'applique. ` +
           "L'échéance court à partir de la date de votre dernière version " +
@@ -102,9 +103,8 @@ export function declencheursMiseAJour(effectif: number): DeclencheurMaj[] {
       rang: "2°",
       quand: MAJ_DUERP_AMENAGEMENT_IMPORTANT,
       portee:
-        "Quel que soit l'effectif. Un nouveau poste, un nouvel équipement, " +
-        "un changement de locaux ou d'organisation du travail. Rien dans ce " +
-        "dossier ne peut le voir venir.",
+        "Quel que soit l'effectif. Rien dans ce dossier ne peut le voir " +
+        "venir.",
       datable: false,
       applicable: true,
     },
@@ -112,9 +112,7 @@ export function declencheursMiseAJour(effectif: number): DeclencheurMaj[] {
       rang: "3°",
       quand: MAJ_DUERP_INFORMATION_NOUVELLE,
       portee:
-        "Quel que soit l'effectif. Un accident du travail, une maladie " +
-        "professionnelle, un signalement de salarié, un résultat de mesure. " +
-        "Rien dans ce dossier ne peut le savoir.",
+        "Quel que soit l'effectif. Rien dans ce dossier ne peut le savoir.",
       datable: false,
       applicable: true,
     },

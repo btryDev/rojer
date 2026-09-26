@@ -6,6 +6,7 @@ import { WhyCard } from "@/components/ui-kit/WhyCard";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { creerDuerp } from "@/lib/duerps/actions";
+import { EXTRAIT_R4121_2 } from "@/lib/referentiels/conformite/texte-r4121-2";
 
 // Porte d'entrée DUERP depuis la sidebar (la nav ne connaît que
 // l'etablissementId).
@@ -81,12 +82,11 @@ export default async function EtablissementDuerpPage({
               charte="board"
               reference="Art. R. 4121-2 CT"
               href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045386446"
-              extrait="La mise à jour du document unique d'évaluation des risques est réalisée : au moins chaque année dans les entreprises d'au moins onze salariés ; lors de toute décision d'aménagement important…"
+              extrait={EXTRAIT_R4121_2}
             >
               <p>
-                Mise à jour au moins annuelle à partir de onze salariés — et
-                dans tous les cas après un aménagement important ou une
-                information nouvelle sur un risque.
+                Trois cas de mise à jour. Seul le premier dépend de
+                l&apos;effectif ; les deux autres valent pour tout employeur.
               </p>
             </LegalBadge>
             <LegalBadge

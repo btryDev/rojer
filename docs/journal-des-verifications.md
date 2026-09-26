@@ -957,6 +957,48 @@ quitte la description et reste dans la `note`.
 **Appliqué :** référentiel `2026-09-26.1`, 167 obligations, aucune entrée ni
 sortie. Comptes remesurés en appelant le code : inchangés.
 
+### C24 · 2026-09-26 — La contre-lecture des corrections, et la règle du libellé
+
+**Le constat.** Une seconde contre-lecture, sur les corrections de C23, a
+confirmé les verbatims et les comptes, et trouvé que les LIBELLÉS
+continuaient de déformer : pour tenir en une ligne, ils résumaient la
+condition — « un accident du travail de trente jours » pour « une absence
+d'au moins trente jours pour cause d'accident du travail », « présentant un
+caractère répété » sans la borne poste/fonction, « grave » écrit une fois
+au lieu de deux. Et que la garde du fait générateur laissait passer une
+troncature (« en cas d'accident du travail ou de maladie professionnelle »,
+sans « grave ») et un complément détaché (« dans un délai de huit jours »).
+
+**La règle du libellé.** Un libellé dit l'ACTE, dans les mots du texte, SANS
+condition : la condition est dans le fait générateur, extrait mot pour mot.
+Un libellé qui ne porte pas de portée ne peut ni l'élargir ni la rétrécir.
+Appliquée aux onze lignes de la page. La garde vérifie que le libellé
+n'emploie aucun mot que le texte n'emploie pas ; elle ne peut pas vérifier
+qu'il ne porte pas de condition — c'est écrit dans son en-tête.
+
+**La garde, resserrée.** Chaque segment du fait doit se terminer là où une
+proposition du texte se termine ; seul le passage entre guillemets d'une
+`note` compte comme texte, jamais le commentaire qui l'entoure. Éprouvée sur
+les trois défauts que la contre-lecture proposait comme passant la version
+précédente : les trois sont refusés.
+
+**R. 4121-2, écrit une fois.** L'article était récrit sur huit surfaces, dont
+deux citations entre guillemets fausses et un PDF qui imprimait « mis à jour
+après tout accident du travail » comme un cas propre. Toutes lisent
+`src/lib/referentiels/conformite/texte-r4121-2.ts`, confronté au corpus par
+un test éprouvé sur le défaut historique.
+
+**Relu à la source, le 2026-09-26.** `PE 1`, `PE 20` (pour la portée de
+`CH 58` en 5ᵉ catégorie), `R. 4515-5`, `R. 4515-6`, `R. 4542-16`. Les dates
+de lecture du corpus sont remises au jour des relectures — la contre-lecture
+avait relevé qu'elles ne l'étaient pas. `PE 20` et `R. 4515-6` restent notés
+`agent_verbatim` : ils ont été modifiés (en 2004 ; par le décret n° 2009-289)
+et ce texte modificateur n'est pas ouvert — la règle du corpus refuse la
+« première main » sans lui, et elle a eu raison de rougir.
+
+**Appliqué :** référentiel `2026-09-26.2`, 167 obligations, aucune entrée ni
+sortie.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

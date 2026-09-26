@@ -255,7 +255,7 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       intitule: "Formation après accident grave ou maladie professionnelle",
       url: URL("LEGIARTI000018532868"),
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-08-31",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Après un accident du travail ou une maladie professionnelle ou à caractère professionnel grave, ou présentant un caractère répété à un même poste de travail ou à des postes similaires, ou dans une même fonction ou des fonctions similaires, l'employeur analyse les conditions de circulation ou de travail et organise s'il y a lieu les formations à la sécurité prévues par le chapitre. [2026-09-26 : la première rédaction de ce résumé perdait « à caractère professionnel » et les postes et fonctions « similaires ».]",
@@ -319,7 +319,7 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
         "Formation après modification des conditions de circulation ou d'exploitation",
       url: URL("LEGIARTI000018532858"),
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-08-31",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "En cas de modification des conditions HABITUELLES de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant NOTAMMENT des risques d'intoxication, d'incendie ou d'explosion, l'employeur analyse les nouvelles conditions de circulation et d'exploitation et organise s'il y a lieu la formation de R. 4141-11. [2026-09-26 : la première rédaction de ce résumé perdait « habituelles » et « notamment », et rattachait les risques aux deux modifications. Le texte, sans virgule, laisse ouverte la question de savoir si l'incise qualifie aussi la modification de circulation ; le résumé ne la tranche pas.]",

@@ -321,7 +321,7 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       // Relevé sur la page de l'article le 2026-09-21. LE DÉCRET N'EST PAS OUVERT :
       // la règle de `types.ts` demanderait de le faire.
       modifiePar: { texte: "Décret n° 2022-679 du 26 avril 2022 - art. 2" },
-      luLe: "2026-08-31",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "L'employeur informe son service de prévention et de santé au travail, dès qu'il en a connaissance, de la cessation d'exposition d'un travailleur à des risques particuliers, de son départ ou de sa mise à la retraite ; il en avise le travailleur sans délai. [Relu le 2026-09-21 : la condition de champ est écrite dans l'article — des risques « justifiant un suivi individuel renforcé ». Trois alinéas : le premier seul pèse sur l'employeur ; le deuxième ouvre au travailleur une demande directe, du mois précédant la cessation de l'exposition ou son départ jusqu'à six mois après ; le troisième charge le service de vérifier les conditions et d'organiser la visite.]",
@@ -374,8 +374,8 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
         texte: "Décret n° 2026-503 du 12 juin 2026, art. 2",
         url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000054248175",
       },
-      luLe: "2026-09-20",
-      lecture: "agent_verbatim",
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "Ouvre droit à un examen de reprise par le médecin du travail après un congé de maternité, une absence pour maladie professionnelle, une absence d'au moins trente jours pour accident du travail, ou d'au moins soixante jours pour maladie ou accident non professionnel. MET UN ACTE À LA CHARGE DE L'EMPLOYEUR : dès qu'il connaît la date de fin de l'arrêt, il saisit le service de prévention et de santé au travail, qui organise l'examen le jour de la reprise effective et au plus tard dans les huit jours qui suivent. Par dérogation, et sauf demande du médecin du travail, de l'employeur ou du travailleur, la visite n'est pas requise si le travailleur a bénéficié d'une visite de préreprise prévue à l'article L. 4624-2-4 dans les trente jours précédant sa reprise effective, ET que le médecin y a conclu qu'aucune mesure individuelle d'aménagement, d'adaptation ou de transformation du poste NI aucune mesure d'aménagement du temps de travail n'était nécessaire. [2026-09-26 : la première rédaction de ce résumé rabattait les deux catégories de mesures sur une seule, ce qui élargissait la dérogation.] [Relu le 2026-09-21 : la dérogation exige « l'ensemble des conditions », cumulatives ; et l'article 5 du décret n° 2026-503 applique la rédaction nouvelle aux arrêts de travail délivrés à compter du lendemain de sa publication (JORF du 14 juin 2026). Le délai de huit jours s'attache à l'organisation de l'examen par le SERVICE ; le seul terme de la saisine par l'employeur est « dès que ».]",
       citationCle:

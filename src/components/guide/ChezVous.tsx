@@ -10,6 +10,12 @@ import {
   SEUIL_MAJ_ANNUELLE_DUERP,
   type ChezVous as ChezVousData,
 } from "@/lib/guide/chez-vous";
+import {
+  EXTRAIT_R4121_2,
+  MAJ_DUERP_AMENAGEMENT_IMPORTANT,
+  MAJ_DUERP_INFORMATION_NOUVELLE,
+  enMinuscule,
+} from "@/lib/referentiels/conformite/texte-r4121-2";
 
 /**
  * « Chez vous, concrètement » — la seule section personnalisée de la page
@@ -69,17 +75,18 @@ export function ChezVous({
           {data.duerp.misAJourAnnuel ? (
             <>
               vous êtes au-dessus du seuil de {SEUIL_MAJ_ANNUELLE_DUERP} :
-              la mise à jour est <strong>au moins annuelle</strong>, en plus
-              de toute mise à jour lors d&apos;un aménagement important ou
-              d&apos;une information nouvelle sur un risque.
+              la mise à jour est réalisée <strong>au moins chaque année</strong>,
+              et aussi {enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}, et{" "}
+              {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}.
             </>
           ) : (
             <>
               vous êtes sous le seuil de {SEUIL_MAJ_ANNUELLE_DUERP}{" "}
               :
-              l&apos;annualité n&apos;est pas imposée, mais la mise à jour
-              reste due <strong>lors de tout aménagement important</strong>{" "}
-              ou quand une information nouvelle sur un risque vous parvient.
+              le 1° de l&apos;article ne s&apos;applique pas, mais la mise à
+              jour est réalisée{" "}
+              <strong>{enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}</strong>,
+              et {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}.
             </>
           )}
         </p>
@@ -87,7 +94,7 @@ export function ChezVous({
           <LegalBadge charte="board"
             reference="Art. R. 4121-2 CT"
             href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045386446"
-            extrait="La mise à jour du document unique d'évaluation des risques est réalisée : au moins chaque année dans les entreprises d'au moins onze salariés ; lors de toute décision d'aménagement important…"
+            extrait={EXTRAIT_R4121_2}
           />
         </div>
       </div>

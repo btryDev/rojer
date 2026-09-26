@@ -184,7 +184,10 @@ export const obligationsConformite: Obligation[] = [
 // sept obligations événementielles reprennent les mots de leur article, et le
 // protocole de sécurité cite `R. 4515-8`. Aucune échéance ne bouge — ces
 // lignes n'ont pas de date —, mais l'empreinte couvre le libellé.
-export const REFERENTIEL_VERSION = "2026-09-26.1";
+// `.2` le 2026-09-26 : aucune entrée ni sortie. Les libellés des onze lignes
+// « Quand ça arrive » disent l'acte dans les mots du texte, sans condition ;
+// le protocole de sécurité cite `R. 4515-5` et `R. 4515-6`.
+export const REFERENTIEL_VERSION = "2026-09-26.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

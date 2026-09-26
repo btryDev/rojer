@@ -32,9 +32,9 @@ export const obligationsCoActivite: Obligation[] = [
     id: "co-activite-etablissement-protocole-securite",
     domaine: "co_activite",
     libelle:
-      "Protocole de sécurité pour les opérations de chargement et de déchargement",
+      "Protocole de sécurité : les opérations de chargement ou de déchargement font l'objet d'un document écrit",
     description:
-      "Les opérations de chargement ou de déchargement réalisées par une entreprise extérieure de transport font l'objet d'un document écrit, dit « protocole de sécurité », qui remplace le plan de prévention. Il comprend les informations utiles à l'évaluation des risques générés par l'opération et les mesures de prévention à observer à chacune de ses phases : consignes de sécurité, lieu de livraison, modalités d'accès et de stationnement avec plan et consignes de circulation, matériels utilisés, moyens de secours, et identité du responsable désigné par l'entreprise d'accueil. Lorsque les opérations impliquant les mêmes entreprises sont répétitives, un seul protocole est établi avant la première opération et reste applicable tant que les conditions de déroulement n'ont pas subi de modification significative. Un exemplaire daté et signé est tenu à la disposition du comité social et économique et de l'inspection du travail.",
+      "« Les opérations de chargement ou de déchargement, font l'objet d'un document écrit, dit « protocole de sécurité », remplaçant le plan de prévention. » (R. 4515-4) « Les dispositions du présent chapitre s'appliquent aux opérations de chargement ou de déchargement réalisées par des entreprises extérieures transportant des marchandises, en provenance ou à destination d'un lieu extérieur à l'enceinte de l'entreprise utilisatrice, dite « entreprise d'accueil ». » (R. 4515-1) « Le protocole de sécurité comprend les informations utiles à l'évaluation des risques de toute nature générés par l'opération ainsi que les mesures de prévention et de sécurité à observer à chacune des phases de sa réalisation. » (R. 4515-5) « Pour l'entreprise d'accueil, le protocole de sécurité comprend, notamment, les informations suivantes : 1° Les consignes de sécurité, particulièrement celles qui concernent l'opération de chargement ou de déchargement ; 2° Le lieu de livraison ou de prise en charge, les modalités d'accès et de stationnement aux postes de chargement ou de déchargement accompagnées d'un plan et des consignes de circulation ; 3° Les matériels et engins spécifiques utilisés pour le chargement ou le déchargement ; 4° Les moyens de secours en cas d'accident ou d'incident ; 5° L'identité du responsable désigné par l'entreprise d'accueil, auquel l'employeur délègue, le cas échéant, ses attributions. » (R. 4515-6) « Le protocole de sécurité est établi dans le cadre d'un échange entre les employeurs intéressés, préalablement à la réalisation de l'opération. Chacune des opérations ne revêtant pas le caractère répétitif défini à l'article R. 4515-3 donne lieu à un protocole de sécurité spécifique. » (R. 4515-8) « Les opérations de chargement ou de déchargement impliquant les mêmes entreprises et revêtant un caractère répétitif font l'objet d'un seul protocole de sécurité établi préalablement à la première opération. Ce protocole de sécurité reste applicable aussi longtemps que les employeurs intéressés considèrent que les conditions de déroulement des opérations n'ont subi aucune modification significative, dans l'un quelconque de leurs éléments constitutifs. » (R. 4515-9) « Les chefs d'établissement des entreprises d'accueil et de transport tiennent un exemplaire de chaque protocole de sécurité, daté et signé, à la disposition : 1° Des comités sociaux et économiques des entreprises intéressées ; 2° De l'inspection du travail. » (R. 4515-11)",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -63,6 +63,22 @@ export const obligationsCoActivite: Obligation[] = [
       },
       {
         source: "CODE_TRAVAIL",
+        reference: "R. 4515-5 (ce que le protocole de sécurité comprend)",
+        article: "R. 4515-5",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529682",
+        note: "« Le protocole de sécurité comprend les informations utiles à l'évaluation des risques de toute nature générés par l'opération ainsi que les mesures de prévention et de sécurité à observer à chacune des phases de sa réalisation. » Relu le 2026-09-26 sur sa page propre, un alinéa.",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4515-6 (les informations que le protocole comprend pour l'entreprise d'accueil)",
+        article: "R. 4515-6",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020398165",
+        note: "« Pour l'entreprise d'accueil, le protocole de sécurité comprend, notamment, les informations suivantes : 1° Les consignes de sécurité, particulièrement celles qui concernent l'opération de chargement ou de déchargement ; 2° Le lieu de livraison ou de prise en charge, les modalités d'accès et de stationnement aux postes de chargement ou de déchargement accompagnées d'un plan et des consignes de circulation ; 3° Les matériels et engins spécifiques utilisés pour le chargement ou le déchargement ; 4° Les moyens de secours en cas d'accident ou d'incident ; 5° L'identité du responsable désigné par l'entreprise d'accueil, auquel l'employeur délègue, le cas échéant, ses attributions. » Relu le 2026-09-26 sur sa page propre, cinq items ; « comprend, notamment, » et le 2° confirmés par une requête ciblée.",
+        versionConstatee: "2009-03-16",
+      },
+      {
+        source: "CODE_TRAVAIL",
         reference:
           "R. 4515-8 (le protocole est établi préalablement à la réalisation de l'opération ; un protocole spécifique par opération non répétitive)",
         article: "R. 4515-8",
@@ -83,7 +99,7 @@ export const obligationsCoActivite: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: "protocole de sécurité",
     faitGenerateur:
-      "Opérations de chargement ou de déchargement réalisées par des entreprises extérieures transportant des marchandises : préalablement à la réalisation de l'opération. Les opérations de chargement ou de déchargement impliquant les mêmes entreprises et revêtant un caractère répétitif font l'objet d'un seul protocole de sécurité établi préalablement à la première opération. Ce protocole de sécurité reste applicable aussi longtemps que les employeurs intéressés considèrent que les conditions de déroulement des opérations n'ont subi aucune modification significative",
+      "Opérations de chargement ou de déchargement réalisées par des entreprises extérieures transportant des marchandises, en provenance ou à destination d'un lieu extérieur à l'enceinte de l'entreprise utilisatrice : préalablement à la réalisation de l'opération. Chacune des opérations ne revêtant pas le caractère répétitif défini à l'article R. 4515-3 donne lieu à un protocole de sécurité spécifique. Les opérations de chargement ou de déchargement impliquant les mêmes entreprises et revêtant un caractère répétitif font l'objet d'un seul protocole de sécurité établi préalablement à la première opération. Ce protocole de sécurité reste applicable aussi longtemps que les employeurs intéressés considèrent que les conditions de déroulement des opérations n'ont subi aucune modification significative, dans l'un quelconque de leurs éléments constitutifs",
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },

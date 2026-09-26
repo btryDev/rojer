@@ -20,6 +20,12 @@ import {
 } from "@/lib/activites/snapshot";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 import type { TypeMesure } from "@/lib/referentiels/types";
+import {
+  MAJ_DUERP_AMENAGEMENT_IMPORTANT,
+  MAJ_DUERP_ANNUELLE,
+  MAJ_DUERP_INFORMATION_NOUVELLE,
+  enMinuscule,
+} from "@/lib/referentiels/conformite/texte-r4121-2";
 
 const s = StyleSheet.create({
   page: {
@@ -249,13 +255,11 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
           <View style={{ marginTop: 80 }}>
             <Text style={s.small}>
               Ce document est établi en application des articles R. 4121-1 à
-              R. 4121-4 du Code du travail. La mise à jour annuelle est
-              obligatoire dans les entreprises d&apos;au moins 11 salariés
-              (art. R. 4121-2). Toute entreprise doit en outre le mettre à
-              jour à chaque décision d&apos;aménagement important, après un
-              accident, ou lorsqu&apos;une information supplémentaire sur
-              l&apos;évaluation d&apos;un risque est portée à la connaissance
-              de l&apos;employeur. Conservation 40 ans à compter de son
+              R. 4121-4 du Code du travail. La mise à jour est réalisée{" "}
+              {enMinuscule(MAJ_DUERP_ANNUELLE)} (art. R. 4121-2, 1°). Quel que soit l&apos;effectif, elle est
+              aussi réalisée {enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}, et{" "}
+              {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} (2° et 3°).
+              Conservation 40 ans à compter de son
               élaboration, ainsi que ses versions antérieures (loi du 2 août
               2021).
             </Text>
@@ -834,21 +838,17 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
         <Text style={s.h2}>Mentions légales et rappels</Text>
         <Text>
           Ce document unique est établi en application des articles R. 4121-1
-          à R. 4121-4 du Code du travail. L&apos;obligation de mise à jour
-          annuelle s&apos;applique aux entreprises d&apos;au moins 11 salariés
-          (art. R. 4121-2). En tout état de cause, il doit être :
+          à R. 4121-4 du Code du travail. Sa mise à jour est réalisée{" "}
+          {enMinuscule(MAJ_DUERP_ANNUELLE)} (art. R. 4121-2, 1°). Quel que
+          soit l&apos;effectif, il est :
         </Text>
         <View style={{ marginLeft: 10, marginTop: 6 }}>
           <Text>
-            • mis à jour à chaque décision d&apos;aménagement important
-            (nouveau poste, nouvel équipement, changement de locaux) ;
+            • mis à jour {enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)} ;
           </Text>
           <Text>
-            • mis à jour lorsqu&apos;une information supplémentaire sur
-            l&apos;évaluation d&apos;un risque est portée à la connaissance de
-            l&apos;employeur ;
+            • mis à jour {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} ;
           </Text>
-          <Text>• mis à jour après tout accident du travail ;</Text>
           <Text>
             • conservé pendant 40 ans à compter de son élaboration, ainsi que
             ses versions antérieures (loi du 2 août 2021) ;

@@ -188,10 +188,13 @@ calendriers à l'ouverture, sans qu'aucune échéance ne bouge.
 - **Les faits générateurs sont contrôlés contre le texte** depuis le
   2026-09-26 (`src/lib/quand-ca-arrive/fait-dans-le-texte.test.ts`) : chaque
   segment entre deux signes de ponctuation doit être un extrait continu du
-  verbatim consigné. La contre-lecture en avait trouvé cinq qui paraphrasaient ;
-  le contrôle en a trouvé trois de plus (écran, protocole de sécurité, fin
-  d'exposition), et il refuse les quatre paraphrases historiques qu'on lui
-  soumet.
+  verbatim consigné, qui s'arrête là où une proposition du texte s'arrête ; le
+  libellé, lui, dit l'acte sans condition, et n'emploie aucun mot que le texte
+  n'emploie pas. Le contrôle est éprouvé sur les défauts réellement trouvés —
+  trois par la contre-lecture du 21, un par le contrôle lui-même, trois
+  proposés par la contre-lecture du 26 comme passant sa première version —,
+  pas sur des erreurs fabriquées. Son en-tête dit ce qu'il ne prouve pas :
+  l'omission d'un segment entier, l'ordre, la virgule.
 - **La page dit où vivent les AUTRES événementielles.** Celles d'une personne et
   d'un appareil se lisent sur leur fiche ; le chapeau et l'état vide le disent,
   faute de quoi un dossier sans employeur mais avec une chambre froide lisait

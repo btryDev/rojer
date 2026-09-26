@@ -94,7 +94,7 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676933",
       versionEnVigueur: "2025-06-02",
       modifiePar: { texte: "Décret n° 2025-482 du 27 mai 2025 - art. 3 (création)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051676074" },
-      luLe: "2026-09-20",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "En cas d'épisode de chaleur intense, l'employeur fournit une quantité suffisante d'eau potable fraîche et prévoit un moyen de la maintenir au frais toute la journée, à proximité des postes de travail, notamment extérieurs.",
@@ -111,7 +111,7 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676935",
       versionEnVigueur: "2025-06-02",
       modifiePar: { texte: "Décret n° 2025-482 du 27 mai 2025 - art. 3 (création)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051676074" },
-      luLe: "2026-09-20",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Informé qu'un travailleur est particulièrement vulnérable à la chaleur intense — âge, état de santé notamment —, l'employeur adapte les mesures de prévention en liaison avec le service de prévention et de santé au travail.",
@@ -143,7 +143,7 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676939",
       versionEnVigueur: "2025-06-02",
       modifiePar: { texte: "Décret n° 2025-482 du 27 mai 2025 - art. 3 (création)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051676074" },
-      luLe: "2026-09-20",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Quand l'épisode survient, l'employeur met en œuvre les mesures définies en application de R. 4463-3, et les adapte si la chaleur s'intensifie.",

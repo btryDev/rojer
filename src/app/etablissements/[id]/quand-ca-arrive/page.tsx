@@ -59,7 +59,7 @@ export default async function QuandCaArrivePage({
             Des obligations qui n&apos;ont pas de date : elles deviennent dues
             quand un fait survient — une embauche, une première affectation à
             un poste sur écran, une livraison par un transporteur, la fin
-            d&apos;un arrêt de travail, un accident du travail grave, un
+            de certains arrêts de travail, un accident du travail grave, un
             épisode de chaleur intense. Rojer ne
             sait pas quand ce fait arrive ; il ne peut donc ni vous le rappeler,
             ni vous dire où vous en êtes. Il vous dit la règle, pour que vous la

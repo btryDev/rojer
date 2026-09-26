@@ -1,4 +1,10 @@
 import { Reveal } from "./Reveal";
+import {
+  MAJ_DUERP_AMENAGEMENT_IMPORTANT,
+  MAJ_DUERP_ANNUELLE,
+  MAJ_DUERP_INFORMATION_NOUVELLE,
+  enMinuscule,
+} from "@/lib/referentiels/conformite/texte-r4121-2";
 
 // Les questions posées avant de créer un compte. Registre sobre, réponses
 // courtes, sans promesse : ce que l'outil fait, et surtout ce qu'il ne
@@ -27,7 +33,7 @@ const QUESTIONS = [
   },
   {
     q: "Mon DUERP doit-il être mis à jour chaque année ?",
-    r: "À partir de onze salariés, oui : au moins une fois par an (art. R. 4121-2 du Code du travail). En dessous de ce seuil, la mise à jour annuelle n'est pas exigée, mais elle reste obligatoire à chaque aménagement important et à chaque information nouvelle sur un risque. Rojer applique la règle qui correspond à votre effectif.",
+    r: `À partir de onze salariés, oui : l'art. R. 4121-2 du Code du travail la prévoit « ${enMinuscule(MAJ_DUERP_ANNUELLE)} ». Quel que soit l'effectif, elle est aussi réalisée « ${enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)} » et « ${enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} ». Rojer applique la règle qui correspond à votre effectif.`,
   },
   {
     q: "Rojer remplace-t-il mon organisme de vérification ?",

@@ -20,8 +20,7 @@ export type VersionActionState =
  */
 export const MOTIFS_VERSION = {
   annuelle: "Mise à jour annuelle (art. R. 4121-2, 1°)",
-  amenagement:
-    "Aménagement important — nouveau poste, nouvel équipement, nouveaux locaux (art. R. 4121-2, 2°)",
+  amenagement: "Décision d'aménagement important (art. R. 4121-2, 2°)",
   accident:
     "Accident du travail ou maladie professionnelle — information nouvelle au sens de l'art. R. 4121-2, 3°",
   nouvelle_info:

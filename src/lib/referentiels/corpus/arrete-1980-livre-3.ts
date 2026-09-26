@@ -43,8 +43,11 @@ export const CORPUS_PE: Corpus = {
       ref: "PE 1",
       intitule: "Objet. - Textes applicables",
       versionEnVigueur: "1990-08-27",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      citationCle:
+        "Le présent livre complète les dispositions du livre Ier du règlement de sécurité. Il fixe les prescriptions applicables aux établissements classés dans le deuxième groupe, visé à l'article GN 1 (§ 2 a). Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre.",
       statut: "sans_objet",
       motif:
         "Article de champ d'application : il énonce que le Livre III complète le Livre Ier, vise le deuxième groupe (GN 1 § 2 a) et écarte le Livre II sauf renvoi exprès. Il n'impose rien à l'exploitant, mais c'est lui qui commande le classement de tout le reste du corpus.",
@@ -256,8 +259,10 @@ export const CORPUS_PE: Corpus = {
       ref: "PE 20",
       intitule: "Généralités (chauffage, ventilation)",
       versionEnVigueur: "2004-05-22",
-      luLe: "2026-08-26",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
+      citationCle:
+        "§ 1. Les installations visées à la présente section doivent être réalisées dans les conditions définies dans la suite du présent règlement. § 2. Toutefois, les installations autorisées dans les établissements de 4e catégorie sont également autorisées dans les établissements de 5e catégorie du même type. Dans ce cas, leur mise en œuvre devra être réalisée dans les conditions définies au livre II, titre Ier, chapitre V.",
       statut: "sans_objet",
       motif:
         "Article d'articulation renvoyant au Livre II pour les installations admises en 4e catégorie. Ne prescrit rien en propre.",
@@ -321,15 +326,15 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 27",
       intitule: "Alarme, alerte, consignes",
-      url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000024766984/",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766984",
       versionEnVigueur: "2026-05-01",
       modifiePar: { texte: "Arrêté du 4 février 2026 - art. 1" },
-      luLe: "2026-09-21",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Alarme, alerte et consignes des ERP de 5ᵉ catégorie, en SIX paragraphes. § 1 : présence permanente d'un membre du personnel ou d'un responsable quand l'établissement est ouvert au public, avec deux dérogations et une convention possible. § 2 : un système d'alarme — dont c) le personnel informé du signal sonore, e) le système maintenu en bon état. § 3 : la liaison avec les sapeurs-pompiers (MS 70). § 4 : des consignes affichées, trois mentions. § 5 : le personnel instruit et entraîné. § 6 : un plan d'intervention apposé à l'entrée.",
       citationCle:
-        "Le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours.",
+        "§ 4. Des consignes précises, affichées bien en vue, doivent indiquer : - le numéro d'appel des sapeurs-pompiers ; - l'adresse du centre de secours le plus proche ; - les dispositions immédiates à prendre en cas de sinistre. § 5. Le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours.",
       statut: "retenu",
       obligations: ["incendie-erp-5-instruction-personnel", "incendie-erp-5-consignes-affichees"],
       reserve:

@@ -42,6 +42,12 @@ import {
   type VerificationLue,
 } from "./queries";
 import { phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import {
+  MAJ_DUERP_AMENAGEMENT_IMPORTANT,
+  MAJ_DUERP_ANNUELLE,
+  MAJ_DUERP_INFORMATION_NOUVELLE,
+  enMinuscule,
+} from "@/lib/referentiels/conformite/texte-r4121-2";
 
 /**
  * Consigne transmise au client à l'ouverture de session, et relayée par lui
@@ -156,7 +162,7 @@ function formaterEtatDuerp(d: EtatDuerpLu): string {
 
   if (!e.soumisMajAnnuelle) {
     lignes.push(
-      `Effectif de ${d.effectifEntreprise} salariés : la mise à jour annuelle de l'art. R. 4121-2 ne s'applique pas (seuil de 11 salariés). La mise à jour reste exigée lors de tout aménagement important ou information nouvelle.`,
+      `Effectif de ${d.effectifEntreprise} salariés : le 1° de l'art. R. 4121-2 (« ${enMinuscule(MAJ_DUERP_ANNUELLE)} ») ne s'applique pas. Ses 2° et 3° valent quel que soit l'effectif : la mise à jour est réalisée « ${enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)} » et « ${enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} ».`,
     );
   } else if (e.majEchue) {
     lignes.push(

@@ -1390,6 +1390,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // `R. 4515-8` cité par le protocole de sécurité, dont le fait générateur
     // employait les mots sans nommer l'article.
     { version: "2026-09-26.1", empreinte: "167-cfbe5dd387e13f05" },
+    // Toujours 167. Seconde contre-lecture : les libellés des onze lignes à
+    // fait générateur disent l'ACTE, sans condition — la condition est dans
+    // le fait, extrait du texte. Le protocole de sécurité cite `R. 4515-5` et
+    // `R. 4515-6`, dont sa description reprenait le contenu sans les nommer.
+    { version: "2026-09-26.2", empreinte: "167-b9d48ac97814cdc1" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

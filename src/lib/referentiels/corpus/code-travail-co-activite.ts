@@ -116,28 +116,35 @@ export const CODE_TRAVAIL_CO_ACTIVITE: Corpus = {
     {
       ref: "R. 4515-5",
       intitule: "Objet du protocole de sécurité",
-      url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000018491668/",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529682",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "Le protocole comprend les informations utiles à l'évaluation des risques générés par l'opération et les mesures de prévention à observer à chacune de ses phases.",
-      statut: "sans_objet",
-      motif:
-        "Article de contenu : il dit ce que le protocole doit comporter, pas un acte distinct à porter au calendrier. Son contenu est repris dans la description de l'obligation fondée sur R. 4515-4 ; en faire une obligation à part aurait dédoublé la même ligne.",
+      citationCle:
+        "Le protocole de sécurité comprend les informations utiles à l'évaluation des risques de toute nature générés par l'opération ainsi que les mesures de prévention et de sécurité à observer à chacune des phases de sa réalisation.",
+      statut: "retenu",
+      obligations: ["co-activite-etablissement-protocole-securite"],
+      historique:
+        "Consigné `sans_objet` du 2026-08-31 au 2026-09-26 ; retenu ce jour, parce que la description du protocole de sécurité reprend son contenu et le cite désormais mot pour mot. Relu le 2026-09-26 sur sa page propre. Le motif d'alors : " + "Article de contenu : il dit ce que le protocole doit comporter, pas un acte distinct à porter au calendrier. Son contenu est repris dans la description de l'obligation fondée sur R. 4515-4 ; en faire une obligation à part aurait dédoublé la même ligne.",
     },
     {
       ref: "R. 4515-6",
       intitule: "Contenu du protocole pour l'entreprise d'accueil",
-      url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000018491668/",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020398165",
       versionEnVigueur: "2009-03-16",
-      luLe: "2026-08-31",
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Pour l'entreprise d'accueil, le protocole comprend notamment les consignes de sécurité, le lieu de livraison, les modalités d'accès et de stationnement avec plan et consignes de circulation, les matériels et engins utilisés, les moyens de secours, et l'identité du responsable désigné.",
-      statut: "sans_objet",
-      motif:
-        "Article de contenu, comme R. 4515-5 : il énumère les cinq rubriques que le protocole doit porter côté entreprise d'accueil. Aucun acte distinct, aucune échéance. Ses rubriques sont reprises dans la description de l'obligation, où elles disent au dirigeant ce qu'il doit y écrire.",
+      citationCle:
+        "Pour l'entreprise d'accueil, le protocole de sécurité comprend, notamment, les informations suivantes : 1° Les consignes de sécurité, particulièrement celles qui concernent l'opération de chargement ou de déchargement ; 2° Le lieu de livraison ou de prise en charge, les modalités d'accès et de stationnement aux postes de chargement ou de déchargement accompagnées d'un plan et des consignes de circulation ; 3° Les matériels et engins spécifiques utilisés pour le chargement ou le déchargement ; 4° Les moyens de secours en cas d'accident ou d'incident ; 5° L'identité du responsable désigné par l'entreprise d'accueil, auquel l'employeur délègue, le cas échéant, ses attributions.",
+      statut: "retenu",
+      obligations: ["co-activite-etablissement-protocole-securite"],
+      historique:
+        "Consigné `sans_objet` du 2026-08-31 au 2026-09-26 ; retenu ce jour, parce que la description du protocole de sécurité reprend son contenu et le cite désormais mot pour mot. Relu le 2026-09-26 sur sa page propre. Le motif d'alors : " + "Article de contenu, comme R. 4515-5 : il énumère les cinq rubriques que le protocole doit porter côté entreprise d'accueil. Aucun acte distinct, aucune échéance. Ses rubriques sont reprises dans la description de l'obligation, où elles disent au dirigeant ce qu'il doit y écrire.",
     },
     {
       ref: "R. 4515-7",
@@ -157,8 +164,9 @@ export const CODE_TRAVAIL_CO_ACTIVITE: Corpus = {
       intitule: "Échange préalable et protocole spécifique par opération",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529676",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
-      lecture: "agent_verbatim",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "Le protocole est établi dans le cadre d'un échange entre les employeurs, préalablement à la réalisation de l'opération ; chaque opération non répétitive donne lieu à un protocole spécifique.",
       citationCle:
@@ -173,8 +181,9 @@ export const CODE_TRAVAIL_CO_ACTIVITE: Corpus = {
       intitule: "Protocole unique pour les opérations répétitives",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529674",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "Les opérations répétitives impliquant les mêmes entreprises font l'objet d'un seul protocole établi avant la première opération, applicable tant que les conditions de déroulement n'ont subi aucune modification significative.",
       citationCle:

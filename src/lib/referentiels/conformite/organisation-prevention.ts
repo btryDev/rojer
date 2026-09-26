@@ -48,25 +48,6 @@
 
 import type { Obligation } from "./types";
 
-/**
- * Les deux cas de mise à jour du document unique que `R. 4121-2` écrit sans
- * condition d'effectif — ses 2° et 3°, dans ses mots, majuscule initiale
- * comprise.
- *
- * UNE SEULE ÉCRITURE POUR DEUX SURFACES. La ligne « Quand ça arrive »
- * (`prevention-etablissement-mise-a-jour-duerp-sur-fait`, ci-dessous) et la
- * carte des trois cas des écrans du document unique
- * (`src/lib/duerps/mise-a-jour.ts`) disent la même règle à deux lecteurs qui
- * n'arrivent pas par le même chemin. Écrites deux fois sans lien, en
- * septembre 2026, elles avaient déjà divergé : la carte écrivait « À toute
- * décision » là où l'article écrit « Lors de toute décision ». Les deux
- * lisent désormais ces constantes, et le test du fait générateur les
- * confronte au verbatim consigné.
- */
-export const MAJ_DUERP_AMENAGEMENT_IMPORTANT =
-  "Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail";
-export const MAJ_DUERP_INFORMATION_NOUVELLE =
-  "Lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur";
 
 export const obligationsOrganisationPrevention: Obligation[] = [
   {
@@ -270,7 +251,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-chaleur-eau-fraiche",
     domaine: "organisation_prevention",
     libelle:
-      "Eau potable fraîche en quantité suffisante, et un moyen de la maintenir au frais près des postes",
+      "Une quantité d'eau potable fraîche suffisante, et un moyen pour maintenir au frais l'eau destinée à la boisson, à proximité des postes de travail",
     description:
       "En cas d'épisode de chaleur intense, une quantité d'eau potable fraîche suffisante est fournie par l'employeur. Il prévoit un moyen pour maintenir au frais, tout au long de la journée de travail, l'eau destinée à la boisson, à proximité des postes de travail, notamment pour les postes de travail extérieurs.",
     referencesLegales: [
@@ -301,7 +282,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-chaleur-travailleur-vulnerable",
     domaine: "organisation_prevention",
     libelle:
-      "Adapter, en liaison avec le service de prévention et de santé au travail, les mesures de prévention pour un travailleur particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense",
+      "L'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention prévues au présent chapitre",
     description:
       "Lorsqu'il est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense, l'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention prévues au présent chapitre en vue d'assurer la protection de sa santé.",
     referencesLegales: [
@@ -332,7 +313,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-chaleur-mise-en-oeuvre",
     domaine: "organisation_prevention",
     libelle:
-      "Mettre en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur",
+      "L'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur",
     description:
       "Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur.",
     referencesLegales: [
@@ -363,9 +344,9 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-mise-a-jour-duerp-sur-fait",
     domaine: "organisation_prevention",
     libelle:
-      "Document unique mis à jour lors de toute décision d'aménagement important, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur",
+      "Mise à jour du document unique d'évaluation des risques professionnels",
     description:
-      "La mise à jour du document unique d'évaluation des risques professionnels est réalisée lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur. La mise à jour au moins annuelle, due par les entreprises d'au moins onze salariés, est suivie par le module du document unique.",
+      "La mise à jour du document unique d'évaluation des risques professionnels est réalisée : lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail ; lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur. Le 1° de l'article — « au moins chaque année dans les entreprises d'au moins onze salariés » — est suivi par le module du document unique.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -379,7 +360,8 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     periodicite: "autre",
     nature: "evenementielle",
     pieceAttendue: null,
-    faitGenerateur: `${MAJ_DUERP_AMENAGEMENT_IMPORTANT}, et l${MAJ_DUERP_INFORMATION_NOUVELLE.slice(1)}`,
+    faitGenerateur:
+      "Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur",
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },

@@ -1,77 +1,121 @@
-// Le fait générateur d'une ligne « Quand ça arrive » est ce que le dirigeant
-// lit pour savoir si l'obligation le concerne. `lignes.ts` promet qu'il est
-// écrit « dans les mots du texte ». Ce fichier rend la promesse vérifiable.
+// Le fait générateur et le libellé d'une ligne « Quand ça arrive » sont ce
+// que le dirigeant lit pour savoir ce qui lui est dû, et quand. `lignes.ts`
+// promet qu'ils sont écrits « dans les mots du texte ». Ce fichier rend la
+// promesse vérifiable — dans la mesure exacte que son en-tête décrit.
 //
-// POURQUOI CE TEST EXISTE. La contre-lecture du 2026-09-21 a trouvé, sur onze
-// faits générateurs, des écarts au texte que rien n'avait signalés :
-// « particulièrement vulnérable à la chaleur intense » là où l'article écrit
-// « particulièrement vulnérable aux risques liés à l'exposition aux épisodes
-// de chaleur intense », « d'accidents ou de maladies » pour « d'accident du
-// travail ou de maladie professionnelle ou à caractère professionnel »…
-// Une paraphrase de bonne foi ne se voit pas à la relecture : elle se lit bien.
+// POURQUOI CE TEST EXISTE. Deux contre-lectures, les 2026-09-21 et 26, ont
+// trouvé des paraphrases que rien n'avait signalées : « vulnérable à la
+// chaleur intense » pour « vulnérable aux risques liés à l'exposition aux
+// épisodes de chaleur intense », « d'accidents ou de maladies » pour
+// « d'accident du travail ou de maladie professionnelle ou à caractère
+// professionnel », « un arrêt de travail » tout court, des libellés qui
+// perdaient « au moins », « grave », la borne poste/fonction. Une paraphrase
+// de bonne foi ne se voit pas à la relecture : elle se lit bien.
 //
-// POURQUOI PAS UN CONTRÔLE MOT À MOT. La première version de ce test cherchait
-// chaque mot du fait dans le texte. Elle passait sur toutes ces paraphrases :
-// elles n'emploient que des mots de l'article, rangés autrement. Ce qui les
-// trahit est l'ORDRE.
+// LA RÈGLE DU FAIT GÉNÉRATEUR. Il se découpe à la ponctuation. Chaque
+// segment, privé d'une conjonction de tête (« et », « ou »), est un EXTRAIT
+// CONTINU du verbatim consigné pour l'obligation, qui SE TERMINE LÀ OÙ UNE
+// PROPOSITION DU TEXTE SE TERMINE (ponctuation ou fin). Le verbatim, c'est la
+// `citationCle` du corpus pour les articles cités, et le passage ENTRE
+// GUILLEMETS de la `note` de chaque référence — jamais le commentaire qui
+// l'entoure. Deux souplesses, écrites ici plutôt que laissées à
+// l'appréciation : la casse et la ponctuation ne comptent pas, et le
+// singulier vaut le pluriel.
 //
-// LA RÈGLE. Le fait se découpe à la ponctuation (virgule, point-virgule,
-// deux-points, point, tiret). Chaque segment, privé d'une conjonction de tête
-// (« et », « ou »), est un EXTRAIT CONTINU du verbatim consigné pour
-// l'obligation — la `note` de ses références légales, ou la `citationCle` du
-// corpus pour ces mêmes articles. Deux souplesses, écrites ici plutôt que
-// laissées à l'appréciation : la casse et la ponctuation sont ignorées, et le
-// singulier vaut le pluriel (« épisode » / « épisodes »).
+// Ce que la fin de proposition attrape : une troncature qui fait tomber un
+// qualificatif — « en cas d'accident du travail ou de maladie
+// professionnelle », privé de « grave » —, ou qui détache un complément de sa
+// phrase — « dans un délai de huit jours », privé de « qui suivent cette
+// reprise », qui attribuait le délai à l'employeur.
 //
-// CE QU'ELLE NE PROUVE PAS : que les segments sont dans l'ordre du texte, ni
-// qu'une virgule n'a pas été ajoutée ou retirée — celle qui, dans `R. 4141-12`,
-// faisait pencher le rattachement d'une incise.
+// LA RÈGLE DU LIBELLÉ. Il dit l'ACTE, sans condition : la condition est dans
+// le fait générateur. Tout mot de quatre lettres ou plus du libellé figure
+// dans le verbatim. C'est plus faible que la règle du fait, et c'est voulu :
+// un libellé est court, il ne peut pas être un extrait ; il ne doit pas non
+// plus apporter de vocabulaire que le texte n'emploie pas (« dû »,
+// « reformer », « salarié » pour « travailleur »).
+//
+// CE QU'AUCUNE DES DEUX NE PROUVE, et qui reste à la relecture humaine :
+// - qu'un SEGMENT ENTIER n'a pas été omis — « préalablement à la première
+//   opération », extrait complet, appliqué à toutes les opérations au lieu des
+//   seules répétitives, passerait ;
+// - que les segments sont dans l'ordre du texte, ou tirés du bon article ;
+// - qu'une virgule n'a pas été ajoutée ou retirée ;
+// - qu'un libellé ne porte pas une condition faite de mots du texte.
 
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 
-function jetons(texte: string): string[] {
-  return texte.replace(/[’‘]/g, "'").toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+const normaliser = (t: string) => t.replace(/[’‘]/g, "'").toLowerCase();
+const MOT = /[\p{L}\p{N}]+/gu;
+const FIN_DE_PROPOSITION = /^\s*(?:$|[,;:.—–…»«()[\]°!?])/;
+
+type Jeton = { mot: string; finDeProposition: boolean };
+
+function jetonsDuTexte(texte: string): Jeton[] {
+  const t = normaliser(texte);
+  return [...t.matchAll(MOT)].map((m) => ({
+    mot: m[0],
+    finDeProposition: FIN_DE_PROPOSITION.test(t.slice(m.index! + m[0].length)),
+  }));
 }
+const mots = (t: string) => normaliser(t).match(MOT) ?? [];
 
 const singulier = (m: string) => (/[sx]$/.test(m) && m.length > 3 ? m.slice(0, -1) : m);
 const memeMot = (a: string, b: string) => a === b || singulier(a) === singulier(b);
 
-function estExtrait(segment: string[], texte: string[]): boolean {
+function estExtraitComplet(segment: string[], texte: Jeton[]): boolean {
   if (segment.length === 0) return true;
   for (let i = 0; i + segment.length <= texte.length; i++) {
-    if (segment.every((m, k) => memeMot(m, texte[i + k]))) return true;
+    if (
+      segment.every((m, k) => memeMot(m, texte[i + k].mot)) &&
+      texte[i + segment.length - 1].finDeProposition
+    )
+      return true;
   }
   return false;
 }
 
 const CONJONCTION_DE_TETE = new Set(["et", "ou"]);
 
-/** Les segments du fait qui ne sont un extrait continu d'aucun des textes. */
+/** Les segments du fait qui ne sont pas un extrait complet d'un des textes. */
 function segmentsHorsTexte(fait: string, textes: string[]): string[] {
-  const sequences = textes.map(jetons);
+  const sequences = textes.map(jetonsDuTexte);
   return fait
     .split(/[,;:.—]/)
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
     .filter((s) => {
-      const j = jetons(s);
-      const segment = CONJONCTION_DE_TETE.has(j[0]) ? j.slice(1) : j;
-      return !sequences.some((t) => estExtrait(segment, t));
+      const j = mots(s);
+      const segment = j[0] !== undefined && CONJONCTION_DE_TETE.has(j[0]) ? j.slice(1) : j;
+      return !sequences.some((t) => estExtraitComplet(segment, t));
     });
 }
 
-/** Le verbatim consigné pour une obligation : ses notes, et la clé de corpus de ses articles. */
+/** Les mots du libellé (quatre lettres ou plus) que le texte n'emploie pas. */
+function motsHorsTexte(libelle: string, textes: string[]): string[] {
+  const vocabulaire = new Set(textes.flatMap(mots).map(singulier));
+  return mots(libelle).filter((m) => m.length >= 4 && !vocabulaire.has(singulier(m)));
+}
+
+/** Le passage entre guillemets d'une note : du premier « au dernier ». */
+const entreGuillemets = (note: string) => {
+  const a = note.indexOf("«");
+  const b = note.lastIndexOf("»");
+  return a >= 0 && b > a ? note.slice(a + 1, b) : "";
+};
+
+/** Le verbatim consigné pour une obligation. */
 function verbatimDe(o: (typeof obligationsConformite)[number]): string[] {
   const index = indexArticlesParRef();
   const textes: string[] = [];
   for (const r of o.referencesLegales) {
-    if (r.note) textes.push(r.note);
+    if (r.note) textes.push(entreGuillemets(r.note));
     const cle = r.article ? index.get(r.article)?.article.citationCle : undefined;
     if (cle) textes.push(cle);
   }
-  return textes;
+  return textes.filter(Boolean);
 }
 
 const avecFait = obligationsConformite.filter((o) => o.faitGenerateur);
@@ -81,22 +125,29 @@ const parId = (id: string) => {
   return o;
 };
 
-describe("le fait générateur est écrit dans les mots du texte", () => {
+describe("le fait générateur et le libellé sont écrits dans les mots du texte", () => {
   it("il y a des faits générateurs à contrôler — sinon ce test ne contrôle rien", () => {
     expect(avecFait.length).toBeGreaterThanOrEqual(11);
   });
 
   it.each(avecFait.map((o) => [o.id, o] as const))(
-    "%s : chaque segment est un extrait du texte",
+    "%s : chaque segment du fait est un extrait complet du texte",
     (_id, o) => {
       expect(segmentsHorsTexte(o.faitGenerateur!, verbatimDe(o))).toEqual([]);
     },
   );
 
-  // LA GARDE ÉPROUVÉE EN LA CASSANT — avec les paraphrases que la
-  // contre-lecture a réellement trouvées, pas avec des erreurs fabriquées
-  // pour l'occasion. Chacune doit être refusée.
+  it.each(avecFait.map((o) => [o.id, o] as const))(
+    "%s : le libellé n'emploie aucun mot que le texte n'emploie pas",
+    (_id, o) => {
+      expect(motsHorsTexte(o.libelle, verbatimDe(o))).toEqual([]);
+    },
+  );
+
+  // LA GARDE ÉPROUVÉE EN LA CASSANT — avec les défauts réellement trouvés,
+  // pas avec des erreurs fabriquées pour l'occasion. Chacun doit être refusé.
   it.each([
+    // Trouvés par la contre-lecture du 2026-09-21.
     [
       "prevention-etablissement-chaleur-travailleur-vulnerable",
       "Lorsque l'employeur est informé qu'un travailleur est, notamment en raison de son âge ou de son état de santé, particulièrement vulnérable à la chaleur intense",
@@ -106,18 +157,31 @@ describe("le fait générateur est écrit dans les mots du texte", () => {
       "En cas d'accident du travail grave, ou de maladie professionnelle ou à caractère professionnel grave — et en cas d'accidents ou de maladies présentant un caractère répété à un même poste, à des postes similaires, dans une même fonction ou des fonctions similaires",
     ],
     ["prevention-etablissement-chaleur-mise-en-oeuvre", "Lors de la survenue d'un épisode de chaleur intense"],
-    [
-      "formation-securite-etablissement-travail-sur-ecran",
-      "Avant la première affectation d'un salarié à un travail sur écran",
-    ],
-  ])("la paraphrase historique de %s est refusée", (id, paraphrase) => {
-    expect(segmentsHorsTexte(paraphrase, verbatimDe(parId(id))).length).toBeGreaterThan(0);
+    // Trouvé par cette garde elle-même, le 2026-09-26.
+    ["formation-securite-etablissement-travail-sur-ecran", "Avant la première affectation d'un salarié à un travail sur écran"],
+    // Proposés par la contre-lecture du 2026-09-26 comme passant la version
+    // précédente de la garde : une troncature, deux compléments détachés.
+    ["formation-securite-etablissement-apres-accident-grave", "En cas d'accident du travail ou de maladie professionnelle"],
+    ["sante-travail-etablissement-examen-de-reprise", "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, il saisit le service"],
+    ["sante-travail-etablissement-examen-de-reprise", "Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, dans un délai de huit jours"],
+  ])("le défaut relevé sur %s est refusé", (id, fautif) => {
+    expect(segmentsHorsTexte(fautif, verbatimDe(parId(id))).length).toBeGreaterThan(0);
   });
 
-  it("le pluriel du texte couvre le singulier du fait, et la conjonction de tête est admise", () => {
-    expect(segmentsHorsTexte("ou épisode de chaleur", ["des épisodes de chaleur intense"])).toEqual([]);
-    expect(segmentsHorsTexte("ou un épisode de chaleur", ["des épisodes de chaleur intense"])).toEqual([
-      "ou un épisode de chaleur",
-    ]);
+  it.each([
+    ["sante-travail-etablissement-examen-de-reprise", "Saisir le service de santé au travail pour l'examen de reprise dû"],
+    ["formation-securite-etablissement-apres-accident-grave", "Après un accident grave : analyser les conditions de travail, et reformer s'il y a lieu"],
+  ])("le libellé fautif relevé sur %s est refusé", (id, fautif) => {
+    expect(motsHorsTexte(fautif, verbatimDe(parId(id))).length).toBeGreaterThan(0);
+  });
+
+  it("le pluriel vaut le singulier, la conjonction de tête est admise, la fin de proposition est exigée", () => {
+    const texte = ["des épisodes de chaleur intense, l'employeur"];
+    expect(segmentsHorsTexte("ou épisode de chaleur intense", texte)).toEqual([]);
+    expect(segmentsHorsTexte("ou épisode de chaleur", texte)).toEqual(["ou épisode de chaleur"]);
+  });
+
+  it("le commentaire d'une note n'est pas du texte", () => {
+    expect(entreGuillemets("« Le texte. » Version en vigueur depuis 2022 — commentaire.")).toBe(" Le texte. ");
   });
 });

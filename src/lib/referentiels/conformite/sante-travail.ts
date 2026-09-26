@@ -461,7 +461,7 @@ export const obligationsSanteTravail: Obligation[] = [
     id: "sante-travail-etablissement-examen-de-reprise",
     domaine: "sante_travail",
     libelle:
-      "Saisir le service de prévention et de santé au travail dès que la date de la fin de l'arrêt est connue, pour l'examen de reprise dû après un congé de maternité, une maladie professionnelle, un accident du travail de trente jours ou une maladie ou un accident non professionnel de soixante jours",
+      "Examen de reprise du travail : l'employeur saisit le service de prévention et de santé au travail",
     description:
       "Le travailleur bénéficie d'un examen de reprise du travail par le médecin du travail : 1° Après un congé de maternité ; 2° Après une absence pour cause de maladie professionnelle ; 3° Après une absence d'au moins trente jours pour cause d'accident du travail ; 4° Après une absence d'au moins soixante jours pour cause de maladie ou d'accident non professionnel. Dès que l'employeur a connaissance de la date de la fin de l'arrêt de travail, il saisit le service de prévention et de santé au travail qui organise l'examen de reprise le jour de la reprise effective du travail par le travailleur, et au plus tard dans un délai de huit jours qui suivent cette reprise. Par dérogation aux dispositions des alinéas précédents, et sauf demande du médecin du travail, de l'employeur ou du travailleur, la visite de reprise n'est pas requise si l'ensemble des conditions suivantes sont réunies : 1° Le travailleur a bénéficié d'une visite de préreprise prévue à l'article L. 4624-2-4 dans les trente jours précédant sa reprise effective du travail ; 2° Lors de cette visite de préreprise, le médecin du travail a conclu qu'aucune mesure individuelle d'aménagement, d'adaptation ou de transformation du poste ni aucune mesure d'aménagement du temps de travail n'était nécessaire en vue de la reprise.",
     referencesLegales: [
@@ -492,7 +492,7 @@ export const obligationsSanteTravail: Obligation[] = [
     id: "sante-travail-etablissement-fin-exposition-suivi-renforce",
     domaine: "sante_travail",
     libelle:
-      "Informer le service de prévention et de santé au travail, dès qu'il en a connaissance, de la cessation d'exposition, du départ ou de la mise à la retraite d'un travailleur en suivi individuel renforcé, et en aviser sans délai l'intéressé",
+      "L'employeur informe son service de prévention et de santé au travail, et avise sans délai le travailleur concerné de la transmission de cette information",
     description:
       "Pour l'organisation de la visite prévue à l'article L. 4624-2-1, l'employeur informe son service de prévention et de santé au travail, dès qu'il en a connaissance, de la cessation de l'exposition d'un des travailleurs de l'entreprise à des risques particuliers pour sa santé ou sa sécurité justifiant un suivi individuel renforcé, de son départ ou de sa mise à la retraite. Il avise sans délai le travailleur concerné de la transmission de cette information.",
     referencesLegales: [
