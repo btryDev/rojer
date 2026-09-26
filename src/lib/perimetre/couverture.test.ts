@@ -77,7 +77,16 @@ describe("axe du régime", () => {
       estHabitation: false,
     });
     expect(axes(c)).toEqual(["igh"]);
-    expect(c.manques[0].motif).toContain("immeuble de grande hauteur");
+    expect(c.manques[0].motif).toContain("de grande hauteur (IGH)");
+  });
+
+  it("dit l'établissement SITUÉ dans l'immeuble, pas l'immeuble lui-même", () => {
+    // La donnée recueillie porte sur le bâtiment (« Immeuble de Grande
+    // Hauteur », > 28 m ou > 50 m) : un établissement n'est pas « déclaré
+    // immeuble ». Même phrase que `pdf/mentions-registre.ts`.
+    const c = couvertureDuRegime({ ...regimeCouvert, estIGH: true });
+    expect(c.manques[0].motif).toMatch(/situé dans un immeuble déclaré de grande hauteur/);
+    expect(c.manques[0].motif).not.toMatch(/est déclaré immeuble/);
   });
 });
 

@@ -297,7 +297,13 @@ function axeRegime(
   if (regime.estIGH) {
     manques.push({
       axe: "igh",
-      motif: "Cet établissement est déclaré immeuble de grande hauteur (IGH).",
+      // ~~« Cet établissement est déclaré immeuble de grande hauteur (IGH). »~~
+      // — corrigé le 2026-09-26, comme `pdf/mentions-registre.ts` : la case
+      // recueillie porte sur le BÂTIMENT (« Immeuble de Grande Hauteur »,
+      // hauteur > 28 m ou > 50 m). L'établissement y est situé ; il n'est pas
+      // l'immeuble.
+      motif:
+        "Cet établissement est situé dans un immeuble déclaré de grande hauteur (IGH).",
       // « des vérifications que cet outil ne connaît pas », disait cette
       // phrase jusqu'au 2026-09-03. Deux obligations IGH sont pourtant au
       // référentiel, adossées à l'article GH 5 du même arrêté : le dirigeant
