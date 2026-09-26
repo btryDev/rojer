@@ -55,6 +55,12 @@ export type DeclencheurMaj = {
   datable: boolean;
   /** Ce déclencheur joue pour cet établissement. */
   applicable: boolean;
+  /**
+   * Vrai quand `portee` porte la phrase « à confirmer » — et donc la consigne
+   * « mettez-le à jour sur la fiche de l'entreprise », que l'écran accompagne
+   * du lien vers l'effectif (`LienEffectifEntreprise`).
+   */
+  aConfirmer: boolean;
 };
 
 const salaries = (n: number) => `${n} salarié${n > 1 ? "s" : ""}`;
@@ -114,6 +120,7 @@ export function declencheursMiseAJour(
           "les deux cas suivants, eux, restent dus.",
       datable: true,
       applicable: soumisAnnuel,
+      aConfirmer: seuil.aConfirmer,
     },
     {
       rang: "2°",
@@ -123,6 +130,7 @@ export function declencheursMiseAJour(
         "venir.",
       datable: false,
       applicable: true,
+      aConfirmer: false,
     },
     {
       rang: "3°",
@@ -131,6 +139,7 @@ export function declencheursMiseAJour(
         "Quel que soit l'effectif. Rien dans ce dossier ne peut le savoir.",
       datable: false,
       applicable: true,
+      aConfirmer: false,
     },
   ];
 }

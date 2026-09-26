@@ -124,6 +124,7 @@ export default async function GuidePage({
           <ChezVous
             data={chezVous}
             etablissementId={id}
+            entrepriseId={etab.entrepriseId}
             raisonDisplay={etab.raisonDisplay}
             regimes={regimes}
           />

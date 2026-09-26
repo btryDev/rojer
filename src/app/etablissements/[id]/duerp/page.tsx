@@ -61,7 +61,7 @@ export default async function EtablissementDuerpPage({
           charte="board"
           kicker="Pourquoi ce document"
           titre="Le DUERP : votre évaluation des risques, posée par écrit"
-          enjeu="Obligatoire dès le premier salarié."
+          enjeu="L'employeur « transcrit et met à jour dans un document unique » les résultats de son évaluation des risques (art. R. 4121-1), sans seuil d'effectif."
           tonalite="info"
         >
           <p className="m-0">

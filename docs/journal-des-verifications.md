@@ -1351,10 +1351,15 @@ gardés en épreuve dans un bac, coupures de ligne comprises.
 
 **Ce que la garde ne regarde pas, et qui reste à décider :**
 
-- `src/lib/referentiels/conformite/` est scellé : `stockage-dangereux.ts`
+- ~~`src/lib/referentiels/conformite/` est scellé : `stockage-dangereux.ts`
   porte en `reference` « valeurs de rétention, opposables uniquement sous ce
   régime ICPE », et d'autres notes emploient le mot. Les corriger demande une
-  montée de version.
+  montée de version.~~ [2026-09-26, C40 — périmé le jour même : `fae2ed6` a
+  remplacé la `reference` par « valeurs de rétention ; texte relatif aux
+  installations classées de ce régime ». Le mot reste ailleurs dans le
+  dossier — 18 lignes portant « opposable » sous `referentiels/conformite/`,
+  comptées ce jour par `grep -rn`, tests exclus —, que la garde ne balaie
+  toujours pas ; lesquelles s'affichent n'a pas été instruit.]
 - « Conforme » comme libellé du résultat d'un rapport (formulaire, calendrier,
   registre, tableau de bord) : c'est ce que le vérificateur écrit, affiché
   seul. Le reformuler est une décision de vocabulaire, pas une correction.
@@ -1525,7 +1530,12 @@ seul l'accord est « avant le début des travaux » (`R. 4512-6`) ; et « resten
 400 heures qui commandent l'écrit » taisait le 2° de `R. 4512-7`, comme
 « EE ≥ 400 h » dans `00_README.txt`. Désormais chaque article a sa phrase,
 ses mots entre guillemets et son moment (`PHRASE_R4512_2`, `_6`, `_7` dans
-`annonces-plan.ts`, fragments confrontés au verbatim de LEUR article) ; aucun
+`annonces-plan.ts`, fragments confrontés au verbatim de LEUR article)
+[2026-09-26, C40 — sauf un endroit : les `raisons` de `diagnostiquerPlan`,
+affichées sur la fiche et le formulaire, disaient encore « Les travaux
+atteignent 400 h sur 12 mois (seuil art. R4512-7) » et « Les travaux figurent
+sur la liste dangereuse (arrêté 19-03-1993) ». Aucune des vingt-huit injections
+ne les visait ; elles citent désormais le texte] ; aucun
 « reste à faire » ; les deux cas de l'écrit partout, README compris ; sous le
 seuil, le fait « Durée saisie : N heures ; travaux non déclarés dangereux. »
 remplace la conclusion. `seuil.test.ts` tenait l'ancienne phrase ; ses deux
@@ -2705,6 +2715,125 @@ F2. `controle-zip/route.ts` : « synthèse globale signée » devient
 
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
 inchangée depuis `d34bb24`, et le lot ne touche dans `src/lib/referentiels` qu'un commentaire (`corpus/citations-ecran.ts`, 383e7d5).
+
+### C40 · 2026-09-26 — Suites de la revue finale de l'intégration d, et petits textes
+
+*Base : production `d4681ef`, branche `lot/suites-et-petits-textes`.
+Ni référentiel ni moteur touchés : aucune obligation, aucune raison du moteur,
+aucune empreinte ne change.*
+
+**Relu sur Légifrance le 2026-09-26**, chacun sur sa page propre, recopie
+intégrale demandée : `R. 4512-7` (en vigueur depuis le 01/05/2008 — identique
+au `citationCle`) ; `R. 4121-1` (depuis le 01/04/2011) et `L. 4121-3` (depuis
+le 31/03/2022) — **aucun des deux n'écrit « dès le premier salarié »** ;
+`R. 4224-15` (depuis le 01/05/2008) et `L. 2315-18` (depuis le 31/03/2022),
+cités dans le commentaire de `salaries/droits.ts`. Corpus inchangé : `R. 4512-7`
+a désormais sa mention de version relevée, mais le passer en `premiere_main`
+touche le corpus, ce que ce lot s'interdit — à faire par qui le tient.
+
+**Constat → avant / après.**
+
+- **1a · La consigne « mettez-le à jour sur la fiche de l'entreprise » sans
+  chemin.** Avant : la phrase de `phraseEffectifAConfirmer` s'affichait sans
+  `LienEffectifEntreprise` dans le guide (bloc du document unique ET raisons
+  des domaines), la carte des trois cas de la synthèse du document unique et
+  le bandeau de couverture. Après : le lien suit la phrase sur les quatre
+  surfaces qui la rendent (la ligne « Ce qui doit être en place » l'avait
+  déjà) ; `ManqueCouverture.effectifAConfirmer`, `DeclencheurMaj.aConfirmer`
+  et `ChezVousDomaine.aConfirmer` portent le fait jusqu'à l'écran. Le PDF des
+  mentions de périmètre reprend le motif sans lien : un papier nomme
+  l'endroit, il ne peut pas y mener.
+- **1a · « Cette obligation » dans un bloc qui en agrège plusieurs.** Avant :
+  entreprise 9 / site 12, le bloc « Organisation de la prévention » (plusieurs
+  obligations) portait la raison du moteur « … à confirmer. L'entreprise est
+  déclarée à 9 salariés… cette obligation ne vous concerne pas ». Après : le
+  guide nomme — « « Mise en place du comité social et économique (11
+  salariés) » : obligation applicable… » — et porte la phrase longue une fois
+  par domaine, avec le lien. La raison du MOTEUR n'est pas réécrite (le
+  calendrier la conserve) ; le guide la transforme à l'affichage.
+- **1b · « Entreprises d'au moins 50 salariés (art. L. 4121-3-1) »** dans le
+  PDF du document unique, même atteint par prudence. Après : « Retenu par
+  prudence, à confirmer : l'entreprise est déclarée sous 50 salariés, ce site
+  en compte 50 ou plus. » sous le paragraphe. Règle extraite dans
+  `versions/seuil-programme-annuel.ts` : une version figée sans
+  `effectifEntreprise` se lit comme avant (les deux nombres égaux, jamais « à
+  confirmer »).
+- **1c · « chaque obligation cite la sienne sur sa fiche de vérification »**
+  (guide). Faux pour les états permanents, et vérifié à l'écran : l'écran
+  « Ce qui doit être en place » ne cite AUCUN texte. Après : vérification
+  datée → sa fiche de vérification ; obligation d'une personne → sa fiche
+  dans l'équipe ; obligation événementielle → « Quand ça arrive » ; ce qui
+  doit être en place — CSE, règlement intérieur — « ne cite pas encore le
+  sien ». Aucune surface nouvelle : poser la pastille sur `LigneEtat` est
+  proposé, pas fait.
+- **2a · Raisons du diagnostic du plan de prévention.** Avant : « Les travaux
+  atteignent 400 h sur 12 mois (seuil art. R4512-7) », « Les travaux figurent
+  sur la liste dangereuse (arrêté 19-03-1993) ». Après : le fait saisi, puis
+  le cas de `R. 4512-7` entre guillemets, pris aux constantes
+  d'`annonces-plan.ts` (« Durée estimée : 420 h. Art. R. 4512-7, 1° : le plan
+  est « établi par écrit et arrêté avant le commencement des travaux » dès
+  lors que l'opération représente un nombre total d'heures de travail
+  prévisible « égal au moins à 400 heures sur une période inférieure ou égale
+  à douze mois ». »). Garde à la façon de `fait-dans-le-texte` : chaque
+  passage entre guillemets des raisons est dans le `citationCle` du corpus.
+- **2b · ZIP, « Inspection commune : NON RÉALISÉE »** quand aucune date
+  n'est saisie. Après : « date non renseignée » (`ligneInspectionZip`,
+  patron de `pdf/fait-retards.ts` : Rojer ne sait pas ≠ pas fait).
+- **2c · E8, `salaries/droits.ts`.** E8 est OUVERTE (aucune décision au
+  fichier). Retiré ce qui était affirmé plus largement que le texte : « la
+  réglementation lui impose de connaître », « Parce que la loi l'impose à
+  votre employeur », « exigés par le Code du travail » — les quatorze titres
+  du catalogue répondent chacun à un article du Code (relevé en appelant
+  `obligationsConformite`), mais tous ne conditionnent pas un travail. Le
+  texte dit « prévus ». **Non arbitré, et signalé** : la base 6.1.c et les
+  refus d'effacement (17.3.b) et d'opposition (21) restent tels quels.
+- **2d · « obligatoire dès le premier salarié (art. R. 4121-1) »** sur la
+  checklist de l'établissement et la carte « Pourquoi ce document » du
+  document unique ; **et une troisième surface, trouvée en cherchant la
+  politique sœur** : `documents-obligatoires.ts` (« Il est dû dès le premier
+  salarié »). Après : l'article cité entre guillemets, « L'article ne fixe
+  pas de seuil d'effectif », sans « obligatoire ».
+- **4 · Ménage** : `decisions-en-attente-2026-09-20.md` — en-tête de la
+  section E (annonces livrées, 9 manques `module` recomptés sur `CORPUS`),
+  E2 rayé (fait par C37), E3 à moitié rayé (l'annonce au geste de validation
+  existe), E9 recompté (13 / 9 / 1 / 3 : les compteurs tenaient) ; journal —
+  C32 (la `reference` « opposables » corrigée par `fae2ed6`), C30 (les
+  raisons du diagnostic restaient paraphrasées). `docs/chantiers-ouverts.md`
+  et `docs/backlog.md` : aucune ligne faite par les lots du jour n'y restait
+  non rayée (recherche par mots de C37, C38 et de ce lot).
+
+**Gardes, et ce qu'elles mesurent.** `entreprises/lien-effectif-partout.test.tsx`
+REND les quatre surfaces sur un dossier « à confirmer » et exige autant de
+liens vers `/entreprises/…/modifier#effectif` que de consignes, et que les
+phrases soient à l'écran ; il recense les appelants de
+`phraseEffectifAConfirmer` (borne haute : un appelant nouveau le fait tomber
+tant que sa surface n'y est pas rendue). `seuil.test.ts` (guillemets ⊂
+verbatim, fait nommé), `annonces-zip.test.ts`,
+`versions/seuil-programme-annuel.test.ts`, `salaries.test.ts`,
+`referentiels/r4121-1-sans-seuil.test.ts`. **Ce qu'elles ne prouvent pas** :
+que le PDF du document unique imprime la mention (contrôle du SOURCE, le PDF
+n'est pas rendu) ; que la route du ZIP écrit la ligne (source aussi).
+
+**Éprouvées** — chaque injection appliquée, la suite ciblée rouge, le fichier
+restauré : lien retiré de la carte des trois cas ; raison du guide non
+nommée ; lien retiré du bandeau ; bloc du domaine retiré (d'abord VERT — le
+compte phrase/lien restait juste ; la garde exige depuis que les phrases
+soient à l'écran, et l'injection est rouge) ; lien seul retiré du bloc du
+domaine ; appelant nouveau de `phraseEffectifAConfirmer` ; paraphrase entre
+guillemets dans la raison des 400 h ; ancienne raison remise ; « NON
+RÉALISÉE » remis dans le module ; la route contournant le module ; mention
+« à confirmer » retirée du PDF ; version figée inventant un doute ; « la loi
+l'impose » remis ; « dès le premier salarié » remis sur la checklist, puis
+dans les documents obligatoires. Vitest a figé deux fois : seul le processus
+de ce worktree a été arrêté (identifié par son répertoire), l'injection
+rejouée seule.
+
+**Laissé, et signalé** : la fiche du plan écrit « Cette inspection est
+obligatoire avant le démarrage des travaux (art. R. 4512-2 CT) », alors que
+`R4512_2_MOMENT` dit « préalablement à l'exécution de l'opération réalisée
+par une entreprise extérieure » ; le formulaire du plan garde la case « Les
+travaux figurent sur la liste dangereuse (arrêté 19-03-1993) » et
+`plan-prevention/page.tsx` « l'arrêté du 19-03-1993 ». Hors du brief.
 
 ### Ce que la chronologie donne à voir
 

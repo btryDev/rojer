@@ -29,6 +29,7 @@ import type {
   IndeterminationCouverture,
 } from "@/lib/perimetre/couverture";
 import { riensASignaler } from "@/lib/perimetre/couverture";
+import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 
 /** Le geste proposé, par axe. Un lien par manque serait du bruit ; un lien
  *  vers la fiche établissement quand c'est le régime qui est en cause, et
@@ -81,7 +82,12 @@ function Bloc({
 }: {
   ton: "signal" | "ambre";
   entrees: (ManqueCouverture | IndeterminationCouverture)[];
-  hrefs: { etablissement: string; duerp?: string; equipements?: string };
+  hrefs: {
+    etablissement: string;
+    duerp?: string;
+    equipements?: string;
+    entrepriseId: string;
+  };
 }) {
   if (entrees.length === 0) return null;
   const signal = ton === "signal";
@@ -144,6 +150,16 @@ function Bloc({
                   {lien.libelle}
                 </Link>
               ) : null}
+              {/* La phrase « à confirmer » dit « mettez-le à jour sur la
+                  fiche de l'entreprise » : le chemin la suit (C37). Le lien
+                  de l'axe, lui, mène au nombre du SITE. */}
+              {"effectifAConfirmer" in e && e.effectifAConfirmer ? (
+                <LienEffectifEntreprise
+                  entrepriseId={hrefs.entrepriseId}
+                  effectif={null}
+                  className="m-0 mt-2 text-[12.5px] leading-[1.5]"
+                />
+              ) : null}
             </div>
           );
         })}
@@ -154,11 +170,14 @@ function Bloc({
 
 export function BandeauCouverture({
   couverture,
+  entrepriseId,
   hrefEtablissement,
   hrefDuerp,
   hrefEquipements,
 }: {
   couverture: CouvertureEtablissement;
+  /** Pour le lien vers l'effectif de l'entreprise (manque « à confirmer »). */
+  entrepriseId: string;
   /** La fiche établissement, où se corrige ou se renseigne le régime. */
   hrefEtablissement: string;
   /** Le document unique, où se répondent les questions d'activité. */
@@ -171,6 +190,7 @@ export function BandeauCouverture({
     etablissement: hrefEtablissement,
     duerp: hrefDuerp,
     equipements: hrefEquipements,
+    entrepriseId,
   };
 
   return (

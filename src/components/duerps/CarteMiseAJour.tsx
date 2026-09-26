@@ -1,4 +1,5 @@
 import type { EffectifsDeclares } from "@/lib/matching/effectif-entreprise";
+import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import {
   CHAPEAU_MISE_A_JOUR,
   declencheursMiseAJour,
@@ -39,8 +40,11 @@ import {
  */
 export function CarteMiseAJour({
   effectifs,
+  entrepriseId,
 }: {
   effectifs: EffectifsDeclares;
+  /** Pour le lien qui suit la phrase « à confirmer » du 1° (C37). */
+  entrepriseId: string;
 }) {
   return (
     <section className="carte-board px-7 py-6 sm:px-8">
@@ -85,6 +89,13 @@ export function CarteMiseAJour({
               <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 {d.portee}
               </p>
+              {d.aConfirmer ? (
+                <LienEffectifEntreprise
+                  entrepriseId={entrepriseId}
+                  effectif={null}
+                  className="m-0 mt-1 text-[12.5px] leading-[1.55]"
+                />
+              ) : null}
             </div>
           </li>
         ))}

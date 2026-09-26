@@ -16,3 +16,24 @@ export function lignesR4512_12Zip(plan: {
 }): string[] {
   return annoncesZip.parPlan(diagnostiquerPlan(plan).ecrit);
 }
+
+/**
+ * La ligne de l'inspection commune préalable (art. R. 4512-2) sous un plan.
+ *
+ * ROJER NE SAIT PAS N'EST PAS « PAS FAIT » (revue finale de l'intégration d,
+ * 2026-09-26). Sans date, la route imprimait « Inspection commune : NON
+ * RÉALISÉE ». Le dossier ne tient qu'une DATE, facultative à la saisie : son
+ * absence dit qu'on ne l'a pas saisie, pas que l'inspection n'a pas eu lieu —
+ * et le destinataire du ZIP est un inspecteur, qui aurait lu un manquement
+ * affirmé. Même partage que `pdf/fait-retards.ts` : on dit le fait qu'on
+ * tient, la date, ou qu'on ne la tient pas. La fiche du plan dit de même :
+ * « Aucune date d'inspection commune enregistrée. »
+ */
+export function ligneInspectionZip(
+  inspectionDate: Date | null,
+  formater: (d: Date) => string,
+): string {
+  return inspectionDate
+    ? `  Inspection commune : ${formater(inspectionDate)}`
+    : "  Inspection commune : date non renseignée";
+}

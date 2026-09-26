@@ -27,7 +27,10 @@ import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { annoncesZip } from "@/lib/plan-prevention/annonces-plan";
-import { lignesR4512_12Zip } from "@/lib/plan-prevention/annonces-zip";
+import {
+  ligneInspectionZip,
+  lignesR4512_12Zip,
+} from "@/lib/plan-prevention/annonces-zip";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 import {
@@ -393,9 +396,9 @@ export async function GET(
         `  Période : ${formaterDateFr(p.dateDebut)} → ${formaterDateFr(p.dateFin)}${p.dureeHeuresEstimee ? ` · ${p.dureeHeuresEstimee} h` : ""}`,
         `  Lieux : ${p.lieux}`,
         `  Travaux dangereux : ${p.travauxDangereux ? "OUI" : "non"}`,
-        p.inspectionDate
-          ? `  Inspection commune : ${formaterDateFr(p.inspectionDate)}`
-          : `  Inspection commune : NON RÉALISÉE`,
+        // « date non renseignée », pas « NON RÉALISÉE » : Rojer ne tient
+        // que la date (`ligneInspectionZip`).
+        ligneInspectionZip(p.inspectionDate, formaterDateFr),
         `  Risques d'interférence identifiés (art. R. 4512-6, ${p.lignes.length}) :`,
         ...p.lignes.map(
           (l, i) =>

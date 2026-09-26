@@ -157,6 +157,14 @@ describe("texteInformation — art. 13", () => {
     expect(texte).toContain("Attestation médicale (habilitation électrique)");
   });
 
+  it("n'affirme pas pour tous les titres une exigence que le Code ne pose pas partout (E8 ouverte)", () => {
+    // Chaque titre répond à un article du Code du travail, mais tous ne
+    // conditionnent pas un travail (R. 4224-15, L. 2315-18). La décision E8
+    // reste ouverte : le texte dit « prévus », il ne dit plus « impose ».
+    expect(texte).not.toMatch(/la loi l'impose|lui impose de connaître|exigés par le Code/);
+    expect(texte).toContain("prévoit");
+  });
+
   it("le dit franchement quand rien n'est encore suivi", () => {
     const vide = texteInformation({ raisonSociale: "X", titresSuivis: [] });
     expect(vide).toMatch(/aucun titre suivi/i);

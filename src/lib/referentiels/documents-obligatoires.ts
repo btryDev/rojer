@@ -99,7 +99,7 @@ export const DOCUMENTS_OBLIGATOIRES: readonly DocumentObligatoire[] = [
     id: "duerp",
     nom: "Document unique d'évaluation des risques professionnels",
     ceQueLeTexteDemande:
-      "Transcrire et tenir à jour, dans un document unique, les résultats de l'évaluation des risques, unité de travail par unité de travail. Il est dû dès le premier salarié.",
+      "Transcrire et tenir à jour, dans un document unique, les résultats de l'évaluation des risques, unité de travail par unité de travail. L'article ne fixe pas de seuil d'effectif.",
     produitParRojer: true,
     ouDansRojer:
       "Le module « Document unique » : unités de travail, risques cotés, et une version figée à chaque validation. Les versions successives sont conservées, l'article R. 4121-4 les faisant tenir à disposition pendant 40 ans à compter de leur élaboration.",

@@ -22,6 +22,7 @@ import { determineObligationsApplicables } from "@/lib/matching";
 import type {
   EquipementMatching,
   EtablissementMatching,
+  ObligationApplicable,
 } from "@/lib/matching";
 import {
   DOMAINES_OBLIGATION,
@@ -47,6 +48,14 @@ export type ChezVousDomaine = {
   raisons: string[];
   /** Libellés distincts des équipements déclencheurs. */
   equipements: string[];
+  /**
+   * Les obligations du domaine retenues par la seule prudence d'un seuil
+   * d'entreprise, NOMMÉES, et la phrase qui dit de quoi conclure ; `null`
+   * quand aucune ne l'est. La phrase vit ici, une fois par domaine, et non
+   * dans chaque raison : c'est là que l'écran pose le lien vers l'effectif de
+   * l'entreprise (`LienEffectifEntreprise`).
+   */
+  aConfirmer: { obligations: string[]; phrase: string } | null;
 };
 
 export type ChezVous = {
@@ -99,6 +108,36 @@ const RANG_PERIODICITE: Record<Periodicite, number> = {
   autre: 13,
 };
 
+/**
+ * Les raisons d'une obligation, telles que le bloc de son domaine les agrège.
+ *
+ * « CETTE OBLIGATION » NE DÉSIGNE RIEN DANS UN BLOC QUI EN COMPTE PLUSIEURS
+ * (revue finale de l'intégration d, 2026-09-26). Le moteur écrit la raison
+ * « à confirmer » d'une ligne pour cette ligne : « … retenue par prudence, à
+ * confirmer. » suivi de `phraseEffectifAConfirmer(…, "cette obligation ne vous
+ * concerne pas")`. Le guide la recopiait dans le bloc du domaine — entreprise
+ * à 9, site à 12 : « Organisation de la prévention · N obligations », et une
+ * raison qui disait « cette obligation » sans dire laquelle.
+ *
+ * La raison du moteur n'est pas réécrite (elle est aussi celle que le
+ * calendrier conserve) ; le guide la NOMME, et en retire la phrase longue, que
+ * le bloc porte une seule fois, avec le lien (`ChezVousDomaine.aConfirmer`).
+ * Si la raison ne se termine pas par la phrase attendue — le moteur l'aurait
+ * reformulée —, elle est gardée entière : on nomme sans rien perdre.
+ */
+function raisonsNommees(a: ObligationApplicable): string[] {
+  if (!a.effectifAConfirmer) return a.raisons;
+  const phrase = phraseEffectifAConfirmer(
+    a.effectifAConfirmer,
+    "cette obligation ne vous concerne pas",
+  );
+  return a.raisons.map((r) => {
+    if (!r.includes(phrase)) return r;
+    const sansPhrase = r.replace(phrase, "").trimEnd().replace(/\.$/, "");
+    return `« ${a.obligation.libelle} » : ${sansPhrase}`;
+  });
+}
+
 export function construireChezVous(
   etab: EtablissementMatching,
   equipements: EquipementMatching[],
@@ -114,6 +153,7 @@ export function construireChezVous(
       realisateurs: Set<Realisateur>;
       raisons: string[];
       equipements: Set<string>;
+      aConfirmer: string[];
     }
   >();
 
@@ -129,15 +169,17 @@ export function construireChezVous(
         realisateurs: new Set(),
         raisons: [],
         equipements: new Set(),
+        aConfirmer: [],
       };
       parDomaine.set(d, agg);
     }
     agg.nb += 1;
     agg.periodicites.add(a.obligation.periodicite);
     for (const r of a.obligation.realisateurs) agg.realisateurs.add(r);
-    for (const raison of a.raisons) {
+    for (const raison of raisonsNommees(a)) {
       if (!agg.raisons.includes(raison)) agg.raisons.push(raison);
     }
+    if (a.effectifAConfirmer) agg.aConfirmer.push(a.obligation.libelle);
     for (const eq of a.equipementsConcernes) {
       agg.equipements.add(eq.libelle);
       categoriesDeclenchantes.add(eq.categorie);
@@ -158,6 +200,21 @@ export function construireChezVous(
       realisateurs: [...agg.realisateurs],
       raisons: agg.raisons,
       equipements: [...agg.equipements],
+      aConfirmer:
+        agg.aConfirmer.length > 0
+          ? {
+              obligations: agg.aConfirmer,
+              phrase: phraseEffectifAConfirmer(
+                {
+                  entreprise: effectifEntreprise,
+                  site: etab.effectifSurSite,
+                },
+                agg.aConfirmer.length > 1
+                  ? "ces obligations ne vous concernent pas"
+                  : "cette obligation ne vous concerne pas",
+              ),
+            }
+          : null,
     };
   });
 
