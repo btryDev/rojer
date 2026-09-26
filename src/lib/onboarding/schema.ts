@@ -15,6 +15,7 @@ import {
   nombreDePersonnesADemander,
 } from "@/lib/matching/personnes-presentes";
 import { evaluerScopeSecteur } from "./scope";
+import { MESSAGE_REFUS_EFFECTIF_ENTREPRISE } from "@/lib/entreprises/schema";
 
 /** Le refus d'un effectif d'entreprise absent ou illisible, client et serveur. */
 export const MESSAGE_EFFECTIF_ENTREPRISE =
@@ -84,7 +85,10 @@ export const onboardingSchema = z
       z.coerce
         .number({ message: MESSAGE_EFFECTIF_ENTREPRISE })
         .int("Effectif entier")
-        .min(0, MESSAGE_EFFECTIF_ENTREPRISE),
+        .min(0, MESSAGE_EFFECTIF_ENTREPRISE)
+        // La borne du produit, comme pour le site (décision du 2026-09-26,
+        // ADR-031) : même constante, jamais le chiffre en dur.
+        .max(EFFECTIF_MAX, MESSAGE_REFUS_EFFECTIF_ENTREPRISE),
     ),
 
     // ─── Étape 3 — Typologie (ADR-004, flags cumulables) ────

@@ -5,7 +5,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import { BlocCreux } from "@/components/ui-kit/fiche";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
-import { refusEffectif } from "./validation";
+import { refusEffectif, refusEffectifEntreprise } from "./validation";
 import type { StepProps } from "./types";
 
 const SUGGESTIONS_NAF = [
@@ -37,7 +37,11 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
   // Le repère des seuils de onze se lit sur l'effectif de l'ENTREPRISE : c'est
   // lui que ces seuils comptent (C37). Il se lisait sur celui du site, en
   // disant sous le nombre saisi que ce n'était pas le bon.
-  const repere = refus ? null : repereEffectif(state.effectifEntreprise);
+  // La même borne sur l'effectif de l'entreprise (décision du 2026-09-26,
+  // ADR-031), lue en direct comme celle du site.
+  const refusEntreprise = refusEffectifEntreprise(state.effectifEntreprise);
+  const repere =
+    refus || refusEntreprise ? null : repereEffectif(state.effectifEntreprise);
   /** L'erreur d'un champ : le refus de passage d'étape, sinon le serveur. */
   const messagePour = (champ: string) =>
     (blocage?.champ === champ ? blocage.message : undefined) ??
@@ -327,7 +331,14 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 onChange={(e) => update({ effectifEntreprise: e.target.value })}
                 placeholder="8"
                 aide="Tous établissements confondus, apprentis non compris (art. L. 1111-3). Les seuils de onze et de cinquante salariés se comptent sur ce nombre. À partir de 50, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
-                erreur={messagePour("effectifEntreprise")}
+                erreur={
+                  refusEntreprise ? undefined : messagePour("effectifEntreprise")
+                }
+                aria-describedby={
+                  refusEntreprise
+                    ? "effectifEntreprise-aide effectifEntreprise-refus"
+                    : undefined
+                }
               />
             </div>
 
@@ -356,6 +367,22 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 />
                 <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
                   {refus.message}
+                </p>
+              </div>
+            ) : null}
+
+            {refusEntreprise ? (
+              <div
+                id="effectifEntreprise-refus"
+                role="status"
+                className="flex items-start gap-2.5 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 shadow-[inset_0_0_0_1px_var(--board-signal-line)]"
+              >
+                <OctagonX
+                  aria-hidden
+                  className="mt-px size-4 flex-none text-[color:var(--board-signal-ink)]"
+                />
+                <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
+                  {refusEntreprise.message}
                 </p>
               </div>
             ) : null}

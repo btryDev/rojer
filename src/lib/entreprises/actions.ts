@@ -12,7 +12,7 @@ import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
 } from "@/lib/calendrier/regeneration-sure";
-import { entrepriseSchema } from "./schema";
+import { entrepriseCreationSchema, entrepriseSchema } from "./schema";
 
 export type ActionState =
   | { status: "idle" }
@@ -33,7 +33,7 @@ export async function creerEntreprise(
   if (existant) redirect(`/etablissements/${existant.id}`);
 
   const raw = Object.fromEntries(formData);
-  const parsed = entrepriseSchema.safeParse(raw);
+  const parsed = entrepriseCreationSchema.safeParse(raw);
 
   if (!parsed.success) {
     return {

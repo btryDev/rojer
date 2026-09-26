@@ -695,7 +695,10 @@ function axeEffectif(
   manques: ManqueCouverture[],
 ): void {
   if (fait === null) return;
-  if (fait.surSite <= fait.seuilServi) {
+  // La borne du produit vaut pour le site ET pour l'entreprise (décision de la
+  // propriétaire du 2026-09-26, ADR-031) : l'un ou l'autre au-delà, et le
+  // dossier — resté ouvert — porte le même manque.
+  if (fait.surSite <= fait.seuilServi && fait.entreprise <= fait.seuilServi) {
     // Le texte compte l'ENTREPRISE (C37), et la règle est celle de tous les
     // lecteurs d'un seuil d'entreprise (`effectifRetenuPourSeuil`) : le site
     // au seuil parle aussi, « à confirmer ».
@@ -715,7 +718,10 @@ function axeEffectif(
 
   manques.push({
     axe: "effectif",
-    motif: `Cet établissement déclare ${fait.surSite} salariés, au-delà des ${fait.seuilServi} pour lesquels Rojer est construit.`,
+    motif:
+      fait.surSite > fait.seuilServi
+        ? `Cet établissement déclare ${fait.surSite} salariés, au-delà des ${fait.seuilServi} pour lesquels Rojer est construit.`
+        : `Votre entreprise déclare ${fait.entreprise} salariés, au-delà des ${fait.seuilServi} pour lesquels Rojer est construit.`,
     consequence: `Au-delà de ce seuil, des obligations que cet outil ne porte pas s'ajoutent — ${nonPorte("le programme annuel de prévention des risques")}, notamment. ${porte("Le règlement intérieur")}, lui, vous est bien présenté : sa ligne est dans vos états permanents depuis le franchissement. Votre dossier reste ouvert et ce qu'il contient reste juste ; il est incomplet sur ce qui vient avec la taille, et le restera.`,
   });
 }

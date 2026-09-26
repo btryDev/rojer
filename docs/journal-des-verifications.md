@@ -2350,9 +2350,29 @@ des contrats de professionnalisation → 1 rouge. Restauré, vert.
 - **Non porté** : le score, le tableau des obligations et la carte du tableau
   de bord lisent `estAJour` sans le doute ; ils disent « pas à jour » d'une
   version de plus de douze mois, ce qui reste un fait.
-- **Borne du produit** : `EFFECTIF_MAX` (50, ADR-031) reste lue sur le site ;
+
+**Borne de l'effectif de l'entreprise (décision de la propriétaire,
+2026-09-26 ; ADR-031 § 1 ter)** : le patron du site, appliqué tel quel.
+- À la création : refus au-delà d'`EFFECTIF_MAX` dans le parcours d'entrée
+  (schéma serveur, et porte fermée avant le clic par `refusEffectifEntreprise`,
+  même ton que `refusEffectif`, la phrase dit « salariés de l'entreprise ») et
+  à la création d'une entreprise hors parcours (`entrepriseCreationSchema`).
+  La page des éléments exclus le projette depuis la porte : les refus à
+  l'entrée passent à trois (`effectif_entreprise`).
+- En édition : jamais refusé, comme le site (§ 1 bis) ; le dossier reste
+  ouvert et la couverture (axe `effectif`) annonce « Votre entreprise déclare
+  N salariés, au-delà des 50 pour lesquels Rojer est construit ».
+- Tests aux bornes (`entreprises/borne-effectif.test.ts`) : 50 accepté, 51
+  refusé, vide refusé, édition à 51 acceptée, couverture. Épreuves : borne
+  retirée du schéma d'entrée → 1 rouge ; retirée du client → 1 ; création
+  d'entreprise bornée à 52 → 2 (dont la page des refus) ; couverture sourde à
+  l'entreprise → 1.
+- **Non touché, signalé** : la FAQ publique (`landing/Questions.tsx`) est
+  dans le lot d'une autre session.
+- ~~**Borne du produit** : `EFFECTIF_MAX` (50, ADR-031) reste lue sur le site ;
   l'effectif de l'entreprise n'est pas borné. Décision de produit non prise
-  ici.
+  ici.~~ *[tranché le 2026-09-26 par la propriétaire : « c'est la limite de
+  Rojer ». Voir ci-dessous.]*
 - Dossiers existants : `Entreprise.effectif` y vaut l'effectif du site à la
   création, apprentis compris — surcompte, dans le sens qui ne retire rien.
 - L. 1251-54 (salariés temporaires) non ouvert.

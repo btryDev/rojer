@@ -74,6 +74,16 @@ parce qu'il a embauché serait absurde. Mais la promesse implicite doit rester
 explicite — au-delà de cinquante, son dossier porte un manque de couverture qui
 le dit. C'est le même traitement d'honnêteté que les ERP de 1re à 4e catégorie.
 
+**1 ter. La borne vaut aussi pour l'effectif de l'entreprise (2026-09-26,
+décision de la propriétaire : « c'est la limite de Rojer »).** Depuis C37, le
+produit tient deux effectifs : les travailleurs du site et les salariés de
+l'entreprise, sur lesquels se comptent les seuils du CSE, du règlement
+intérieur et du programme annuel. La même borne (`EFFECTIF_MAX`) s'applique
+aux deux, par le même mécanisme : refus à la création (parcours d'entrée et
+création d'une entreprise), jamais en édition — une entreprise qui franchit le
+seuil en cours de route garde son dossier, qui porte le manque (axe
+`effectif` de la couverture). Les refus à l'entrée passent ainsi à trois.
+
 **2. Le refus ne borne jamais le déclenchement d'une obligation.** Les seuils du
 référentiel se lisent sur ce qu'ils visent : `personnesPresentesHabituellement`
 n'est pas plafonné par la borne d'effectif, et un établissement de trente
