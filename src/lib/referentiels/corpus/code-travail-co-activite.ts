@@ -163,9 +163,10 @@ export const CODE_TRAVAIL_CO_ACTIVITE: Corpus = {
         "Le protocole est établi dans le cadre d'un échange entre les employeurs, préalablement à la réalisation de l'opération ; chaque opération non répétitive donne lieu à un protocole spécifique.",
       citationCle:
         "Le protocole de sécurité est établi dans le cadre d'un échange entre les employeurs intéressés, préalablement à la réalisation de l'opération. Chacune des opérations ne revêtant pas le caractère répétitif défini à l'article R. 4515-3 donne lieu à un protocole de sécurité spécifique.",
-      statut: "sans_objet",
-      motif:
-        "Ouvert le 2026-09-02, il était le seul article non lu du chapitre. Il ne crée pas d'obligation seconde : il dit COMMENT s'établit celle de R. 4515-4 — par un échange, avant l'opération — et à quelle maille. Sa seconde phrase est celle qui compte pour le produit, et elle est la contrepartie exacte de R. 4515-9 : hors opérations répétitives au sens de R. 4515-3, un protocole par opération. Un exploitant qui reçoit un transporteur occasionnel ne peut pas s'abriter derrière le protocole signé avec son fournisseur habituel. Rien à porter au calendrier pour autant, la nature événementielle de l'obligation le dit déjà.",
+      statut: "retenu",
+      obligations: ["co-activite-etablissement-protocole-securite"],
+      historique:
+        "Consigné `sans_objet` du 2026-09-02 au 2026-09-26. Retenu ce jour : c'est de cet article, et non de R. 4515-4, que la ligne « Quand ça arrive » du protocole tient le moment où il est dû — « préalablement à la réalisation de l'opération ». Le fait générateur l'employait sans le citer ; le garde-fou du fait générateur (`fait-dans-le-texte.test.ts`) l'a trouvé. Article relu le 2026-09-26 sur sa page propre : identique à la `citationCle` ci-dessus. Le motif d'alors : " + "Ouvert le 2026-09-02, il était le seul article non lu du chapitre. Il ne crée pas d'obligation seconde : il dit COMMENT s'établit celle de R. 4515-4 — par un échange, avant l'opération — et à quelle maille. Sa seconde phrase est celle qui compte pour le produit, et elle est la contrepartie exacte de R. 4515-9 : hors opérations répétitives au sens de R. 4515-3, un protocole par opération. Un exploitant qui reçoit un transporteur occasionnel ne peut pas s'abriter derrière le protocole signé avec son fournisseur habituel. Rien à porter au calendrier pour autant, la nature événementielle de l'obligation le dit déjà.",
     },
     {
       ref: "R. 4515-9",
@@ -177,7 +178,7 @@ export const CODE_TRAVAIL_CO_ACTIVITE: Corpus = {
       prescrit:
         "Les opérations répétitives impliquant les mêmes entreprises font l'objet d'un seul protocole établi avant la première opération, applicable tant que les conditions de déroulement n'ont subi aucune modification significative.",
       citationCle:
-        "Ce protocole de sécurité reste applicable aussi longtemps que les employeurs intéressés considèrent que les conditions de déroulement des opérations n'ont subi aucune modification significative, dans l'un quelconque de leurs éléments constitutifs.",
+        "Les opérations de chargement ou de déchargement impliquant les mêmes entreprises et revêtant un caractère répétitif font l'objet d'un seul protocole de sécurité établi préalablement à la première opération. Ce protocole de sécurité reste applicable aussi longtemps que les employeurs intéressés considèrent que les conditions de déroulement des opérations n'ont subi aucune modification significative, dans l'un quelconque de leurs éléments constitutifs.",
       statut: "retenu",
       obligations: ["co-activite-etablissement-protocole-securite"],
       reserve:

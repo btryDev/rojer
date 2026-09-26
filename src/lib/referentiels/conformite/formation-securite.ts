@@ -412,7 +412,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "Avant la première affectation d'un salarié à un travail sur écran, et chaque fois que l'organisation du poste de travail est modifiée de manière substantielle",
+      "Avant sa première affectation à un travail sur écran de visualisation et chaque fois que l'organisation du poste de travail est modifiée de manière substantielle",
     realisateurs: ["exploitant"],
     criticite: 2,
     typologies: { travail: true },

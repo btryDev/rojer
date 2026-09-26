@@ -58,6 +58,16 @@ export const obligationsCoActivite: Obligation[] = [
           "R. 4515-9 (opérations répétitives : un seul protocole, applicable tant que les conditions n'ont pas subi de modification significative)",
         article: "R. 4515-9",
         url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529674",
+        note: "« Les opérations de chargement ou de déchargement impliquant les mêmes entreprises et revêtant un caractère répétitif font l'objet d'un seul protocole de sécurité établi préalablement à la première opération. Ce protocole de sécurité reste applicable aussi longtemps que les employeurs intéressés considèrent que les conditions de déroulement des opérations n'ont subi aucune modification significative, dans l'un quelconque de leurs éléments constitutifs. » Relu le 2026-09-26 sur sa page propre, deux alinéas.",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4515-8 (le protocole est établi préalablement à la réalisation de l'opération ; un protocole spécifique par opération non répétitive)",
+        article: "R. 4515-8",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529676",
+        note: "« Le protocole de sécurité est établi dans le cadre d'un échange entre les employeurs intéressés, préalablement à la réalisation de l'opération. Chacune des opérations ne revêtant pas le caractère répétitif défini à l'article R. 4515-3 donne lieu à un protocole de sécurité spécifique. » Relu le 2026-09-26 sur sa page propre, deux alinéas.",
         versionConstatee: "2008-05-01",
       },
       {
@@ -73,7 +83,7 @@ export const obligationsCoActivite: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: "protocole de sécurité",
     faitGenerateur:
-      "Avant une opération de chargement ou de déchargement réalisée par une entreprise extérieure transportant des marchandises — ou, pour des opérations à caractère répétitif, avant la première, le protocole restant applicable aussi longtemps que les employeurs intéressés considèrent que les conditions n'ont subi aucune modification significative",
+      "Opérations de chargement ou de déchargement réalisées par des entreprises extérieures transportant des marchandises : préalablement à la réalisation de l'opération. Les opérations de chargement ou de déchargement impliquant les mêmes entreprises et revêtant un caractère répétitif font l'objet d'un seul protocole de sécurité établi préalablement à la première opération. Ce protocole de sécurité reste applicable aussi longtemps que les employeurs intéressés considèrent que les conditions de déroulement des opérations n'ont subi aucune modification significative",
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },

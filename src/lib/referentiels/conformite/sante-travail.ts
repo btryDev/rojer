@@ -509,7 +509,7 @@ export const obligationsSanteTravail: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "Dès que l'employeur a connaissance de la cessation de l'exposition d'un travailleur à des risques justifiant un suivi individuel renforcé, de son départ ou de sa mise à la retraite",
+      "Dès qu'il en a connaissance, de la cessation de l'exposition d'un des travailleurs de l'entreprise à des risques particuliers pour sa santé ou sa sécurité justifiant un suivi individuel renforcé, de son départ ou de sa mise à la retraite",
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },
