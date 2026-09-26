@@ -2255,9 +2255,14 @@ les seuils d'entreprise.
 - `perimetre/couverture.ts` annonce le programme annuel sur l'effectif de
   l'entreprise (ou du site au seuil, par prudence) ;
 - `REFERENTIEL_VERSION` 2026-09-26.9 (169 obligations, empreinte
-  `169-b35a654fd2941809`), `VERSION_MOTEUR_CALENDRIER` 5 — **écriture sur tout
-  le parc à la prochaine ouverture, à signaler à la propriétaire avant de
-  fusionner** ;
+  `169-b35a654fd2941809`), ~~`VERSION_MOTEUR_CALENDRIER` 5 — **écriture sur
+  tout le parc à la prochaine ouverture, à signaler à la propriétaire avant de
+  fusionner**~~ *[retiré le 2026-09-26 après contre-lecture : la réponse à la
+  question du moteur est NON — les obligations d'établissement à seuil sont
+  des états permanents que le générateur saute, la formation des élus naît
+  des titres ; 256 couples, zéro calendrier différent (mesure de la
+  contre-lecture). `VERSION_MOTEUR_CALENDRIER` reste à 4, le relevé est
+  recopié ; le passage du référentiel à .9 resynchronise le parc]* ;
 - corpus : L. 1111-2 entre (`sans_objet`) ; L. 2311-2, L. 1311-2, R. 4228-22,
   R. 4228-23 passent en `premiere_main`.
 
@@ -2277,14 +2282,45 @@ vide accepté (`validation.test.ts`) → 1 rouge. Restauré, vert.
 - **Effectif d'entreprise périmé** : une entreprise multi-sites dont
   l'effectif déclaré est périmé ET dont aucun site n'atteint onze ne voit pas
   le CSE — la même ligne que le moteur d'avant ne montrait pas. Déclaré au
-  corpus (L. 2311-2) et aux notes du CSE. L'écran d'établissement renvoie à la
-  fiche de l'entreprise pour le tenir à jour.
-- **Lecteurs hors moteur d'`Entreprise.effectif`** (mise à jour annuelle du
+  corpus (L. 2311-2) et aux notes du CSE. ~~L'écran d'établissement renvoie à
+  la fiche de l'entreprise pour le tenir à jour.~~ *[faux au moment où c'était
+  écrit — la contre-lecture l'a relevé : aucun lien de l'interface ne menait à
+  `/entreprises/[id]/modifier`. Corrigé le 2026-09-26 : `LienEffectifEntreprise`
+  rappelle l'effectif de l'entreprise et mène à son champ sous celui du site
+  dans le formulaire de l'établissement (création et modification), en tête de
+  la page d'ajout d'un site, dans la carte d'identité de la fiche de
+  l'établissement, et sous chaque ligne « à confirmer » de « Ce qui doit être
+  en place ». La modification de l'entreprise régénère le calendrier de chacun
+  de ses établissements.]*
+- ~~**Lecteurs hors moteur d'`Entreprise.effectif`** (mise à jour annuelle du
   document unique `dashboard/duerp.ts`, échéances des actions
   `actions/echeance-exigee.ts`, mention du PDF à cinquante) : maille juste
   (l'entreprise) depuis toujours, mais sans la garde « site au seuil » ; un
   effectif d'entreprise sous-déclaré ou périmé les fait taire. Inchangé par
-  ce lot.
+  ce lot.~~ *[corrigé le 2026-09-26, contre-lecture M2 : une seule règle,
+  `effectifRetenuPourSeuil` (`matching/effectif-entreprise.ts`), lue par le
+  moteur, la couverture, `evaluerEtatDuerp`, la carte de mise à jour du
+  document unique, le guide « Chez vous », l'écran des actions et le PDF du
+  document unique (qui fige désormais aussi l'effectif de l'entreprise ; une
+  version antérieure se lit comme avant). Le dossier « site 50, entreprise
+  49 » lit partout « atteint, à confirmer ».]*
+
+**Contre-lecture du lot, corrigée le même jour** :
+- « à confirmer » est porté sur « Ce qui doit être en place », là où vivent
+  le CSE et le règlement intérieur (M1) ;
+- la phrase dit de quoi conclure : « Si l'écart vient de vos apprentis ou de
+  titulaires d'un contrat de professionnalisation, que l'art. L. 1111-3 ne
+  compte pas, […] ne vous concerne pas. S'il vient d'un effectif d'entreprise
+  qui n'est plus à jour, mettez-le à jour sur la fiche de l'entreprise » —
+  la sur-application reste, elle est visible par qui la subit (M3) ;
+- le faux prisma n'égalise plus les deux nombres : `effectifEntreprise` y est
+  requis, sans repli, et ne sort que par `include: { entreprise }` (M4).
+
+**Épreuves de la contre-lecture** : écran des actions rendu à l'entreprise
+seule → 1 rouge ; `evaluerEtatDuerp` idem → 1 rouge ; projection lisant le
+site (`: etab.effectifSurSite`) → 2 rouges, dont un de comportement par
+`lireEntrees` ; mention retirée des états permanents → 1 rouge ; phrase privée
+des contrats de professionnalisation → 1 rouge. Restauré, vert.
 - **Borne du produit** : `EFFECTIF_MAX` (50, ADR-031) reste lue sur le site ;
   l'effectif de l'entreprise n'est pas borné. Décision de produit non prise
   ici.
