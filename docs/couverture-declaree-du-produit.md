@@ -158,13 +158,17 @@ restreint aux établissements que leur chapitre vise.** Un bureau tertiaire les
 voyait tous, y compris les onze articles propres aux hôtels.
 
 **Le chiffre a bougé cinq fois : 28 → 19 le 2026-09-01, 19 → 20 le
-2026-09-03, 20 → 25 le 2026-09-20, 25 → 26 le 2026-09-26 (`GN 13`, voir sa famille au § 3), puis 26 → 27 le même jour (`R. 4624-55`)** (arrêté du 1er février 2010,
-légionelles, et l'article 36 de l'arrêté du 23 juin 1978 : cinq entrées, avec une adresse visible — voir sa famille au § 3). Neuf articles du chapitre III
-du Livre III (locaux à sommeil) sont sortis de cette liste, et le § 3 dit
-comment. Les « 27 » et « 28 » qui subsistent plus bas dans ce document
-racontent une histoire datée — ils ne décrivent pas l'état d'aujourd'hui.
+2026-09-03, 20 → 25 le 2026-09-20 (arrêté du 1er février 2010, légionelles, et
+l'article 36 de l'arrêté du 23 juin 1978 : cinq entrées, avec une adresse
+visible — voir leur famille au § 3), 25 → 26 le 2026-09-26 (`GN 13`, voir sa
+famille au § 3), puis 26 → 27 le même jour (`R. 4624-55`).** Neuf articles du
+chapitre III du Livre III (locaux à sommeil) sont sortis de cette liste, et le
+§ 3 dit comment. Le « 28 » et les « 27 » qui subsistent plus bas, au § 3 bis et
+dans ce qui en découle, comptent les articles du 2026-08-28 : ils racontent une
+histoire datée. Qu'ils soient 27 aujourd'hui aussi est une coïncidence — ce ne
+sont pas les mêmes articles (`R. 4624-55`, entré le 2026-09-26, a une adresse).
 
-**Le dernier entré, `R. 4323-63`, n'est pas de la même espèce que les autres,
+**`R. 4323-63`, entré le 2026-09-01, n'est pas de la même espèce que les autres,
 et c'est ce qui le rend gênant.** Les autres visent des établissements que le
 produit ne sert pas — hôtels, établissements de soins, équipements sportifs :
 le manque de rattachement les affiche trop largement, mais aucun ne concerne
@@ -414,7 +418,7 @@ garde pas copie.
 
 ---
 
-## 3 bis. Ces 27 articles ont eu une adresse visible. Elle a été retirée.
+## 3 bis. Les 27 articles du 2026-08-28 ont eu une adresse visible. Elle a été retirée.
 
 À lire avant de conclure quoi que ce soit du § 3, parce que l'histoire compte
 autant que la liste.

@@ -34,7 +34,7 @@ const ROLES: Role[] = [
     glyph: "+",
   },
   {
-    titre: "Organismes agréés",
+    titre: "Vérificateurs",
     sousTitre: "Vérifications",
     description:
       "Organisme agréé, personne qualifiée ou exploitant, selon la vérification.",

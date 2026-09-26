@@ -1628,7 +1628,9 @@ conserve), `D. 8222-5` (le Kbis, sans ancienneté fixée).
 - « En cas de doute, commencez par la 5ᵉ » (qui poussait vers le régime le moins
   exigeant) ;
 - la catégorie « figure sur votre arrêté d'ouverture ou le PV » dit à tous :
-  une 5ᵉ sans hébergement peut n'avoir ni l'un ni l'autre ;
+  ~~une 5ᵉ sans hébergement peut n'avoir ni l'un ni l'autre~~ *[rayé le
+  2026-09-26, voir « Contre-lecture » ci-dessous : la dispense ne vaut qu'au
+  titre de l'incendie]* ;
 - les rythmes PE du sommeil dits à toutes les catégories ;
 - « extincteurs tous les ans » / « Vérification annuelle obligatoire » : le
   Code du travail ne fixe pas d'annuelle ;
@@ -1648,6 +1650,54 @@ conserve), `D. 8222-5` (le Kbis, sans ancienneté fixée).
 `CCH R. 143-38` en `sans_objet` (règle d'ouverture, sans récurrence),
 `R. 4624-55` en `non_couvert` avec son `declareA` (Rojer ne conserve pas
 l'avis, par choix — `docs/rgpd.md` § 2.3). Non couverts : 26 + 1 = 27.
+
+**Contre-lecture (même jour), onze remarques, dix corrigées.**
+
+- **Autorisation d'ouverture.** « Un établissement de 5ᵉ catégorie sans
+  hébergement du public n'a pas d'autorisation d'ouverture à demander (art.
+  R. 143-38) » disait plus que le droit. L. 122-5 CCH (version du 28 mai 2026,
+  lu) subordonne l'ouverture de tout ERP à une autorisation, après contrôle de
+  l'accessibilité (L. 161-1) ; R. 122-5 II (version du 21 novembre 2025, décret
+  2025-1100, lu, phrase confirmée mot pour mot en deux lectures ciblées) ne
+  dispense la 5ᵉ sans hébergement que de la demande « au titre de
+  l'incendie ». Les quatre surfaces disent désormais cela, en citant
+  R. 122-5 ; « il peut n'avoir ni l'un ni l'autre » est retiré. `CCH R. 122-5`
+  entre au corpus (`sans_objet`), le motif de `R. 143-38` est corrigé.
+- **Avis d'aptitude.** L'encadré le promettait sur sept titres ; une VIP donne
+  une attestation de suivi (R. 4624-14), la visite intermédiaire est faite par
+  un professionnel de santé (R. 4624-28). La phrase citant R. 4624-55 est
+  bornée aux deux titres dont la visite produit un avis (R. 4624-25 : examen du
+  suivi renforcé et son renouvellement annuel en catégorie A) ; les autres
+  lisent « Vous conservez le document de votre côté : Rojer n'en garde pas
+  copie. » `declareA` de R. 4624-55 mis à jour.
+- **« Cinq outils » au-dessus de trois lignes.** La liste de la page Connecter
+  se lit désormais dans `OUTILS_MCP`, et son nombre aussi ; un test exige une
+  description produit par outil servi et aucune de trop.
+- **Seuil de 50.** Le programme annuel de prévention est dû « dès 50 »
+  (L. 4121-3-1 III 1°), pas « au-delà », et Rojer accepte 50 : l'aide le dit.
+  Un dossier de 50 salariés est servi et le programme n'est pas porté : il
+  lui est désormais annoncé, sur son dossier (`perimetre/couverture.ts`, axe
+  `effectif`, seuil du texte `SEUIL_PROGRAMME_ANNUEL` distinct du seuil servi).
+  Test éprouvé : le seuil passé à 51, « se tait sous le seuil du programme
+  annuel, parle à partir de lui » rougit (1 failed | 52 passed), restauré.
+- **Version du référentiel.** Une description changée sans version neuve :
+  `2026-09-26.8`, même empreinte.
+- **Chapeau Typologie**, `QUESTION_CATEGORIE` : « s'il y en a un ».
+- **Comptage de l'effectif.** Le repère dit que les seuils de onze se comptent
+  sur l'entreprise, apprentis non compris (L. 1111-3, lu, entré au corpus en
+  `sans_objet`) ; L. 2311-2 renvoie bien à L. 1111-2 (lu). *Non corrigé : le
+  champ reste un effectif de site « salariés + apprentis » ; le repère le dit,
+  il ne le recompte pas.*
+- **R. 143-19** : la majoration du public par le personnel porte sa condition
+  (« n'occupant pas des locaux indépendants » dotés de leurs dégagements).
+- **Petits** : ADR-025 rendu grammatical ; alarme « Obligatoire selon
+  effectif et typologie » retiré ; « Organismes agréés » → « Vérificateurs » ;
+  le message D. 4711-3 dit « au titre de la santé et de la sécurité au
+  travail, et sauf dispositions particulières » ; compteurs de
+  `couverture-declaree-du-produit.md` désambiguïsés.
+- **Non traités dans ce lot** : « obligatoire dès le premier salarié (art.
+  R. 4121-1) » (`etablissements/[id]/page.tsx:210`, non instruit) ;
+  `personnes-presentes.ts:136` (« franchi par le public seul », hors lot).
 
 ### Ce que la chronologie donne à voir
 

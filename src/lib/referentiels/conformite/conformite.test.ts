@@ -1413,6 +1413,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // de solliciter l'examen de préreprise, trouvée par la contre-lecture du
     // lot précédent. 168 + 1 = 169.
     { version: "2026-09-26.7", empreinte: "169-85f0fac08bca3950" },
+    // Même empreinte, version neuve : seule une `description` a changé
+    // (« la vérification annuelle des extincteurs est la règle de fait »
+    // retirée de `incendie-travail-moyens-lutte`). L'empreinte ne lit pas les
+    // descriptions ; la version, elle, date ce que les documents citent.
+    { version: "2026-09-26.8", empreinte: "169-85f0fac08bca3950" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

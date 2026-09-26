@@ -290,7 +290,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 value={state.effectifSurSite}
                 onChange={(e) => update({ effectifSurSite: e.target.value })}
                 placeholder="8"
-                aide="Salariés + apprentis présents régulièrement. Rojer s'arrête à 50 : au-delà, d'autres obligations s'ajoutent (programme annuel de prévention, art. L. 4121-3-1) que l'outil ne porte pas."
+                aide="Salariés + apprentis présents régulièrement. Rojer s'arrête à 50. À partir de 50 salariés, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
                 // Le refus de périmètre n'est pas rendu ici mais dans le bloc
                 // ci-dessous : il tient trois lignes et il porte une icône.
                 erreur={refus ? undefined : messagePour("effectifSurSite")}
@@ -379,7 +379,7 @@ function repereEffectif(
     return {
       titre: `${n} salarié${n > 1 ? "s" : ""}`,
       corps:
-        "Sous onze salariés : pas de comité social et économique (art. L. 2311-2), et la mise à jour annuelle du document unique ne s'applique pas (art. R. 4121-2, 1°).",
+        "Sous onze salariés : pas de comité social et économique (art. L. 2311-2), et la mise à jour annuelle du document unique ne s'applique pas (art. R. 4121-2, 1°). Ces seuils se comptent sur l'entreprise, apprentis non compris (art. L. 1111-3).",
     };
   }
   // Au-delà d'EFFECTIF_MAX, l'appelant n'arrive jamais ici : `refusEffectif`
@@ -387,6 +387,6 @@ function repereEffectif(
   return {
     titre: `${n} salariés`,
     corps:
-      "À partir de onze salariés : un comité social et économique est mis en place si cet effectif est atteint pendant douze mois consécutifs (art. L. 2311-2), et le document unique est mis à jour au moins chaque année (art. R. 4121-2, 1°).",
+      "À partir de onze salariés : un comité social et économique est mis en place si cet effectif est atteint pendant douze mois consécutifs (art. L. 2311-2), et le document unique est mis à jour au moins chaque année (art. R. 4121-2, 1°). Ces seuils se comptent sur l'entreprise, apprentis non compris (art. L. 1111-3).",
   };
 }

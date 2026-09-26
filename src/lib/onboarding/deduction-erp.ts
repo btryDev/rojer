@@ -165,7 +165,7 @@ export function deduireCategorieErp(effectif: number): DeductionCategorieErp {
     categoriesPossibles: ["N4", "N5"],
     motif: `${SEUIL_3E_CATEGORIE} personnes ou moins : l'établissement relève de la 4ᵉ ou de la 5ᵉ catégorie. La limite entre les deux dépend d'un seuil propre à votre type d'activité, fixé par le règlement de sécurité — l'effectif seul ne permet pas de trancher.`,
     question:
-      "Votre arrêté d'ouverture ou le PV de la commission de sécurité, s'il y en a un, indique-t-il « 4ᵉ catégorie » ou « 5ᵉ catégorie » ? Un établissement de 5ᵉ catégorie sans hébergement du public n'a pas d'autorisation d'ouverture à demander (art. R. 143-38 CCH) : il peut n'avoir ni l'un ni l'autre.",
+      "Votre arrêté d'ouverture ou le PV de la commission de sécurité, s'il y en a un, indique-t-il « 4ᵉ catégorie » ou « 5ᵉ catégorie » ? En 5ᵉ catégorie sans hébergement du public, l'autorisation d'ouverture n'est pas demandée au titre de l'incendie (art. R. 122-5 CCH).",
   };
 }
 
@@ -444,7 +444,7 @@ export type EffectifPublicParNiveau = {
 };
 
 const QUESTION_CATEGORIE =
-  "Votre arrêté d'ouverture ou le PV de la commission de sécurité indique-t-il « 4ᵉ catégorie » ou « 5ᵉ catégorie » ?";
+  "Votre arrêté d'ouverture ou le PV de la commission de sécurité, s'il y en a un, indique-t-il « 4ᵉ catégorie » ou « 5ᵉ catégorie » ?";
 
 function aConfirmer(motif: string): DeductionCategorieErp {
   return {

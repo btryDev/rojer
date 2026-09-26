@@ -273,7 +273,9 @@ export async function supprimerEquipement(
       statut: "desactive",
       message:
         "Équipement retiré du parc. Ses rapports de vérification et ses " +
-        "actions correctives sont conservés. L'article D. 4711-3 du Code du " +
+        "actions correctives sont conservés. Pour les vérifications dues au " +
+        "titre de la santé et de la sécurité au travail, et sauf dispositions " +
+        "particulières, l'article D. 4711-3 du Code du " +
         // ~~L. 4711-5~~ : cette phrase dit « la loi impose de POUVOIR LES
         // PRÉSENTER », c'est-à-dire une conservation — et la conservation est
         // à D. 4711-3 (cinq ans, ou les deux derniers contrôles). L. 4711-5

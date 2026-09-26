@@ -409,7 +409,7 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       motif:
         "L'employeur CONSERVE l'avis : c'est une obligation, et Rojer ne la porte pas, par choix — le produit n'enregistre des visites que leur existence, leur date et leur échéance, jamais l'avis (`docs/rgpd.md` § 2.3). Consigné le 2026-09-26, quand l'écran de saisie d'un titre a cessé de dire que l'avis « ne vous est pas destiné » (faux : il est transmis à l'employeur). Relu de première main, un alinéa ; « Création Décret n° 2016-1908 du 27 décembre 2016 - art. 1 », en vigueur le 1er janvier 2017 : `modifiePar: null`.",
       declareA:
-        "src/components/salaries/FormulaireTitre.tsx — l'encadré « Ne déposez pas le document » de la saisie d'un titre, qui dit que l'avis est transmis à l'employeur, que celui-ci le conserve (art. R. 4624-55) et que Rojer n'en garde pas copie.",
+        "src/components/salaries/FormulaireTitre.tsx — l'encadré « Ne déposez pas le document » de la saisie d'un titre, qui dit, sur les seuls titres dont la visite produit un avis d'aptitude (examen du suivi individuel renforcé, R. 4624-25, et son renouvellement annuel en catégorie A), que l'avis est transmis à l'employeur, que celui-ci le conserve (art. R. 4624-55) et que Rojer n'en garde pas copie. Borné le 2026-09-26 : la phrase s'affichait aussi sur la VIP, qui donne une attestation de suivi (R. 4624-14).",
     },
     {
       ref: "L. 4624-2-4",

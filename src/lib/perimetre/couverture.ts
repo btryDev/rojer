@@ -335,7 +335,7 @@ function axeRegime(
       motif:
         "La catégorie de votre établissement recevant du public n'est pas renseignée.",
       quoiFaire:
-        "Elle figure sur votre arrêté d'ouverture ou sur le procès-verbal de la commission de sécurité, quand il y en a un : un établissement de 5ᵉ catégorie sans hébergement du public n'a pas d'autorisation d'ouverture à demander (art. R. 143-38 CCH). C'est elle qui décide de ce que la réglementation vous impose — sans elle, votre calendrier et votre registre sont incomplets sans qu'on puisse vous dire de combien.",
+        "Elle figure sur votre arrêté d'ouverture ou sur le procès-verbal de la commission de sécurité, quand il y en a un : en 5ᵉ catégorie sans hébergement du public, l'autorisation d'ouverture n'est pas demandée au titre de l'incendie (art. R. 122-5 CCH). C'est elle qui décide de ce que la réglementation vous impose — sans elle, votre calendrier et votre registre sont incomplets sans qu'on puisse vous dire de combien.",
     });
     return;
   }
@@ -668,11 +668,32 @@ export function faitInventaire(
  * ce que ce module affirme de la couverture passe désormais par `nonPorte()` ou
  * `porte()`, et se confronte au référentiel.
  */
+/**
+ * Le seuil à partir duquel l'évaluation des risques débouche sur un programme
+ * annuel de prévention : « supérieur ou égal à cinquante salariés »
+ * (L. 4121-3-1, III, 1°). C'est un seuil du TEXTE, pas de l'outil — il ne dit
+ * pas ce que Rojer sert, et ne se confond donc pas avec `seuilServi`.
+ *
+ * Né le 2026-09-26 : l'axe ne parlait qu'au-dessus de `seuilServi` (50), et
+ * un dossier de cinquante salariés — servi — ne lisait nulle part que le
+ * programme lui était dû et que Rojer ne le produit pas.
+ */
+const SEUIL_PROGRAMME_ANNUEL = 50;
+
 function axeEffectif(
   fait: FaitEffectif | null,
   manques: ManqueCouverture[],
 ): void {
-  if (fait === null || fait.surSite <= fait.seuilServi) return;
+  if (fait === null) return;
+  if (fait.surSite <= fait.seuilServi) {
+    if (fait.surSite < SEUIL_PROGRAMME_ANNUEL) return;
+    manques.push({
+      axe: "effectif",
+      motif: `Cet établissement déclare ${fait.surSite} salariés. À partir de cinquante salariés dans l'entreprise, les résultats de l'évaluation des risques débouchent sur un programme annuel de prévention (art. L. 4121-3-1, III, 1°).`,
+      consequence: `Rojer ne produit pas ${nonPorte("le programme annuel de prévention des risques")}.`,
+    });
+    return;
+  }
 
   manques.push({
     axe: "effectif",

@@ -387,14 +387,15 @@ export function EtablissementForm({
                       id="categorieErp-aide"
                       className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
-                      La catégorie dépend du nombre total de personnes (public +
-                      personnel) que peut accueillir l&apos;établissement (art.
+                      La catégorie dépend du nombre total de personnes (public, et
+                      personnel qui n&apos;occupe pas des locaux indépendants
+                      dotés de leurs propres dégagements) que peut accueillir l&apos;établissement (art.
                       R. 143-19 CCH). Elle figure sur l&apos;arrêté
                       d&apos;ouverture ou le procès-verbal de la commission de
-                      sécurité quand il y en a un ; un établissement de 5ᵉ
-                      catégorie sans hébergement du public n&apos;a pas
-                      d&apos;autorisation d&apos;ouverture à demander (art.
-                      R. 143-38 CCH).
+                      sécurité quand il y en a un ; en 5ᵉ catégorie sans
+                      hébergement du public, l&apos;autorisation
+                      d&apos;ouverture n&apos;est pas demandée au titre de
+                      l&apos;incendie (art. R. 122-5 CCH).
                     </p>
                     <Erreur message={err("categorieErp")} />
                   </div>

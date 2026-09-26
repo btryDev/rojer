@@ -51,7 +51,7 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   BAES:
     "Blocs autonomes d'éclairage de sécurité qui s'allument en cas de coupure.",
   ALARME_INCENDIE:
-    "Détection, alarme, centrale SSI. Obligatoire selon effectif et typologie.",
+    "Détection, alarme, centrale SSI.",
   DESENFUMAGE:
     "Dispositifs d'évacuation naturelle ou mécanique des fumées (DENFC, volets).",
   VMC:

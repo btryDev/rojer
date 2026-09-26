@@ -540,19 +540,33 @@ describe("axe effectif", () => {
     expect(riensASignaler(couvertureDeLEtablissement(faits()))).toBe(true);
   });
 
-  it("se tait au seuil, et parle juste au-dessus", () => {
-    // Deux assertions et non une : une borne se prouve des deux côtés. Un
-    // `>=` mis à la place du `>` refuserait l'établissement de cinquante
-    // salariés, qui est exactement la cible haute du produit.
+  it("se tait sous le seuil du programme annuel, parle à partir de lui", () => {
+    // L. 4121-3-1, III, 1° : « supérieur ou égal à cinquante salariés ». Une
+    // borne se prouve des deux côtés : 49 se tait, 50 parle — du programme,
+    // pas du dépassement, puisque 50 est servi.
+    const sous = couvertureDeLEtablissement(
+      faits({ effectif: { surSite: 49, seuilServi: 50 } }),
+    );
+    expect(axes(sous)).not.toContain("effectif");
+
     const au = couvertureDeLEtablissement(
       faits({ effectif: { surSite: 50, seuilServi: 50 } }),
     );
-    expect(axes(au)).not.toContain("effectif");
+    const m = au.manques.filter((x) => x.axe === "effectif");
+    expect(m).toHaveLength(1);
+    expect(m[0].motif).toContain("L. 4121-3-1");
+    expect(m[0].motif).not.toContain("au-delà");
+  });
 
+  it("au-dessus du seuil servi, dit le dépassement, une seule fois", () => {
+    // Un `>=` mis à la place du `>` refuserait l'établissement de cinquante
+    // salariés, qui est exactement la cible haute du produit.
     const audela = couvertureDeLEtablissement(
       faits({ effectif: { surSite: 51, seuilServi: 50 } }),
     );
-    expect(axes(audela)).toContain("effectif");
+    const m = audela.manques.filter((x) => x.axe === "effectif");
+    expect(m).toHaveLength(1);
+    expect(m[0].motif).toContain("au-delà");
   });
 
   it("est un MANQUE, jamais une indétermination", () => {
