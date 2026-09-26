@@ -42,12 +42,17 @@ export const ARRETE_2011_12_26_ELECTRICITE: Corpus = {
       // elle était déjà relevée en prose dans `prescrit`, tronquée de « de
       // nature à répondre aux observations contenues dans le rapport de
       // vérification ». L'URL de l'article remplace celle du texte entier.
+      // [Contre-lecture du même jour : la citation s'arrêtait avant les deux
+      // phrases suivantes du même alinéa — la lettre recommandée à
+      // l'inspecteur du travail et l'avis du CHSCT ou des délégués —, soit la
+      // condition procédurale du passage à deux ans. Relues sur la page de
+      // l'article et sur celle du texte (deux lectures ciblées), ajoutées.]
       luLe: "2026-09-26",
       lecture: "premiere_main",
       statut: "retenu",
       obligations: ["elec-travail-periodique-annuelle"],
       citationCle:
-        "La périodicité des vérifications est fixée à un an, le point de départ de cette périodicité étant la date de la vérification initiale. Toutefois, le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité de nature à répondre aux observations contenues dans le rapport de vérification.",
+        "La périodicité des vérifications est fixée à un an, le point de départ de cette périodicité étant la date de la vérification initiale. Toutefois, le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité de nature à répondre aux observations contenues dans le rapport de vérification. Le chef d'établissement informe l'inspecteur du travail par lettre recommandée avec accusé de réception, accompagnée des éléments prouvant qu'il n'y a pas de non-conformité ou que les non-conformités ont été levées. Cet envoi doit comprendre, le cas échéant, l'avis des membres du CHSCT ou des délégués du personnel.",
       prescrit:
         "L'AN EST ICI, ET NULLE PART AILLEURS — R. 4226-16 ne chiffre rien. Le point de départ est la date de la vérification initiale, non la date de mise en service ni un millésime. Verbatim relevé le 2026-09-01.\n\nSECOND RÉGIME NON PORTÉ, relevé le 2026-08-27. « Le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité. » Ce n'est ni automatique ni de droit acquis : il faut informer l'inspecteur du travail par lettre recommandée avec accusé de réception, pièces à l'appui. Sans doute à NE PAS encoder comme une périodicité — afficher deux ans sans trace de l'envoi afficherait une échéance qui n'existe pas.",
     },

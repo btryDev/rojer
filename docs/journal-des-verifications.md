@@ -1771,6 +1771,51 @@ relevés suivent la même règle que le reste du lot).**
   `docs/etat-verification-referentiel.md` régénéré : 309 + 2
   (`INRS ED 840 fiche 13`, dossier « Travail isolé ») = 311.
 
+**Troisième passe, le même jour (contre-lecture neutre de `aaa4787`).**
+
+- Arrêté du 26 décembre 2011, art. 3 : la citation s'arrêtait avant les deux
+  dernières phrases du même alinéa — « Le chef d'établissement informe
+  l'inspecteur du travail par lettre recommandée avec accusé de réception,
+  accompagnée des éléments prouvant qu'il n'y a pas de non-conformité ou que
+  les non-conformités ont été levées. Cet envoi doit comprendre, le cas
+  échéant, l'avis des membres du CHSCT ou des délégués du personnel. » —,
+  c'est-à-dire la condition procédurale du passage à deux ans : le défaut
+  même corrigé sur `R. 4421-1`. Relues par deux lectures ciblées (page de
+  l'article LEGIARTI000025049531, page du texte). Ajoutées aux deux
+  descriptions électriques et à la `citationCle` ; les deux mesures disent
+  « dont l'information de l'inspecteur du travail ».
+- `resto-incendie` : la chaîne MS 38 → PE 1 → PE 26 est retirée de la
+  description. Elle laissait lire qu'en 5ᵉ catégorie aucun texte ne rythme
+  la vérification, alors que `PE 4` § 2 vise les « moyens de secours » tous
+  les trois ans au plus, et que le calendrier applique `MS 38` à tout ERP
+  par choix documenté. Restent `R. 4227-29`, ED 840 fiche 13 et la
+  recommandation ED 880. Le DUERP ne tranche pas la périodicité en ERP.
+- `resto-extincteurs` : « accessibles et signalés » rattachés à ED 880
+  fiche 3 (sa question « Les extincteurs sont-ils accessibles, signalés et
+  contrôlés ? », consignée), hors de la parenthèse de `R. 4227-29`.
+- `com-rps-public` : « Situations possibles », sans attribution.
+  `com-charge-physique` : « OiRA commerce identifie les manutentions comme un
+  risque central… » retiré, faute de source lisible. `trv-addictions` : cite
+  ED 840 fiche 20 (« Elles peuvent être à l'origine d'accidents du travail et
+  d'accidents routiers. », « conduite de véhicules ou de machines
+  dangereuses ») au lieu de « Concerne tous les secteurs ; risque accru… ».
+  `trv-charges` : « au 2° de l'article R. 4541-5 », comme le texte.
+- `bur-escabeau-norme` et `com-marchepied-norme` NE SONT PAS renommés
+  (stockés en base, non affichés) ; une ligne de commentaire le dit.
+- Garde : « il faut », « obligation », « légal », « interdit » refusés hors
+  citation (angle mort « g ») ; pour une mesure ou une question, la source
+  d'un rythme doit être aussi celle du risque (angle mort « f » : « Extincteurs
+  vérifiés tous les deux ans (arrêté du 26 décembre 2011, art. 3) » est
+  refusé sous le risque incendie, admis sous le risque électrique). Chaque
+  ajout neutralisé fait tomber son épreuve, et une seule. L'en-tête écrit ce
+  que la garde ne voit toujours pas : une citation arrêtée avant une
+  condition finale (le cas de l'art. 3 ci-dessus), une `citationCle`
+  recopiée depuis la paraphrase, un rythme dans une description sans risque
+  au-dessus.
+- Sceau remesuré, inchangé : `2026-09-26.7+169-85f0fac08bca3950+moteur.4`.
+  `docs/etat-verification-referentiel.md` régénéré : 311 + 1
+  (`INRS ED 840 fiche 20`) = 312.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

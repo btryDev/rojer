@@ -160,7 +160,7 @@ export const risquesTransverses: RisqueReferentiel[] = [
     libelle:
       "Charge physique : port de charges, manutention manuelle (TMS, lombalgies)",
     description:
-      "INRS ED 840, fiche 5 « Risques liés à la charge physique de travail ». « L'employeur prend les mesures d'organisation appropriées ou utilise les moyens appropriés, et notamment les équipements mécaniques, afin d'éviter le recours à la manutention manuelle de charges par les travailleurs. » (art. R. 4541-3) Lorsque le recours à la manutention manuelle est inévitable et que les aides mécaniques prévues à l'article R. 4541-5 ne peuvent pas être mises en œuvre, « un travailleur ne peut être admis à porter d'une façon habituelle des charges supérieures à 55 kilogrammes qu'à condition d'y avoir été reconnu apte par le médecin du travail, sans que ces charges puissent être supérieures à 105 kilogrammes. » « Toutefois, les femmes ne sont pas autorisées à porter des charges supérieures à 25 kilogrammes ou à transporter des charges à l'aide d'une brouette supérieures à 40 kilogrammes, brouette comprise. » (art. R. 4541-9) Parmi les situations dangereuses, l'INRS cite une « masse unitaire supérieure à 15 kg » (ED 840, fiche 5).",
+      "INRS ED 840, fiche 5 « Risques liés à la charge physique de travail ». « L'employeur prend les mesures d'organisation appropriées ou utilise les moyens appropriés, et notamment les équipements mécaniques, afin d'éviter le recours à la manutention manuelle de charges par les travailleurs. » (art. R. 4541-3) Lorsque le recours à la manutention manuelle est inévitable et que les aides mécaniques prévues au 2° de l'article R. 4541-5 ne peuvent pas être mises en œuvre, « un travailleur ne peut être admis à porter d'une façon habituelle des charges supérieures à 55 kilogrammes qu'à condition d'y avoir été reconnu apte par le médecin du travail, sans que ces charges puissent être supérieures à 105 kilogrammes. » « Toutefois, les femmes ne sont pas autorisées à porter des charges supérieures à 25 kilogrammes ou à transporter des charges à l'aide d'une brouette supérieures à 40 kilogrammes, brouette comprise. » (art. R. 4541-9) Parmi les situations dangereuses, l'INRS cite une « masse unitaire supérieure à 15 kg » (ED 840, fiche 5).",
     unitesAssociees: [],
     graviteParDefaut: 3,
     probabiliteParDefaut: 3,
@@ -219,7 +219,7 @@ export const risquesTransverses: RisqueReferentiel[] = [
     libelle:
       "Pratiques addictives en milieu professionnel (alcool, médicaments, substances psychoactives)",
     description:
-      "INRS ED 840 fiche 20. Concerne tous les secteurs ; risque accru en cas d'usage de machines ou de conduite.",
+      "INRS ED 840, fiche 20 « Risques liés aux pratiques addictives » : « Elles peuvent être à l'origine d'accidents du travail et d'accidents routiers. » Parmi les situations que la fiche dit dangereuses lorsqu'elles se croisent avec des pratiques addictives : « conduite de véhicules ou de machines dangereuses ».",
     unitesAssociees: [],
     graviteParDefaut: 3,
     probabiliteParDefaut: 1,

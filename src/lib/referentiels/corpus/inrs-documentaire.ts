@@ -154,7 +154,7 @@ export const INRS_DOCUMENTAIRE: Corpus = {
       luLe: "2026-09-26",
       lecture: "premiere_main",
       citationCle:
-        "[Sommaire :] 3. Production froide et chaude [Fiche 3, p. 11, rubrique « Électrisation », pistes d'amélioration :] Entretenez et faites effectuer les contrôles périodiques réglementaires de vos installations électriques annuellement ou tous les deux ans dans certaines conditions. [Même page, rubrique « Incendie », pistes d'amélioration :] Faire vérifier les extincteurs annuellement par une personne qualifiée.",
+        "[Sommaire :] 3. Production froide et chaude [Fiche 3, p. 11, rubrique « Électrisation », pistes d'amélioration :] Entretenez et faites effectuer les contrôles périodiques réglementaires de vos installations électriques annuellement ou tous les deux ans dans certaines conditions. [Même page, rubrique « Incendie », question :] Les extincteurs sont-ils accessibles, signalés et contrôlés ? [Pistes d'amélioration :] Faire vérifier les extincteurs annuellement par une personne qualifiée.",
       statut: "sans_objet",
       motif:
         "Fiche 3 de la brochure ED 880 (voir l'entrée « INRS ED 880 p. 4 » pour l'édition). N'institue rien. Citée par `resto-electrisation` et `resto-rps-coup-feu`. Elle-même écrit « annuellement ou tous les deux ans dans certaines conditions » : le « annuels obligatoires » de la description n'y était pas non plus. Rubrique « Incendie » ajoutée le même jour (seconde passe, pdftotext) : elle porte la recommandation annuelle que la mesure `resto-extincteurs` écrivait sans source ; c'est une recommandation de l'INRS, pas un texte. La « classe F pour huiles » de la même mesure n'est ni dans ED 880 ni dans ED 840 fiche 13 : retirée.",
@@ -224,6 +224,20 @@ export const INRS_DOCUMENTAIRE: Corpus = {
       statut: "sans_objet",
       motif:
         "Dossier web de l'INRS, HTML téléchargé le 2026-09-26. N'institue rien. La description de `trv-rps-isolement` attribuait à « ED 840 fiche 17 » une définition du travail isolé (« hors de portée de vue ou de voix d'un tiers ») : la fiche 17 ne contient pas le mot « isolé », et cette formule n'est dans aucune source du dépôt. La définition citée est celle-ci.",
+    },
+    {
+      ref: "INRS ED 840 fiche 20",
+      intitule: "Risques liés aux pratiques addictives",
+      url: "https://www.inrs.fr/dam/inrs/CataloguePapier/ED/TI-ED-840.pdf",
+      versionEnVigueur: "2025-05-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      citationCle:
+        "[Titre :] Risques liés aux pratiques addictives [p. 28 :] Les pratiques addictives peuvent entraîner des dépressions, des troubles de la vigilance, des problèmes cardiovasculaires, des cancers ou une dépendance à un produit. Elles peuvent être à l'origine d'accidents du travail et d'accidents routiers. […] – existence d'activités dangereuses : conduite de véhicules ou de machines dangereuses, travail en hauteur, manipulation de substances chimiques, port d'arme…,",
+      statut: "sans_objet",
+      motif:
+        "Fiche de la brochure ED 840 (voir la fiche 4 pour l'édition). N'institue rien. Citée par `trv-addictions`, dont la description écrivait « Concerne tous les secteurs ; risque accru en cas d'usage de machines ou de conduite » : ni l'une ni l'autre formule n'est dans la fiche (contre-lecture du 2026-09-26). Elle cite désormais ces deux passages.",
     },
   ],
 };

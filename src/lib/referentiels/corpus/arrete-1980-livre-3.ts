@@ -321,7 +321,9 @@ export const CORPUS_PE: Corpus = {
       modifiePar: { texte: "Arrêté du 26 juin 2008, v. init." },
       // Relu le 2026-09-26 sur sa page propre, deux lectures (C35) : le § 1
       // renvoie à MS 39 et ne mentionne ni MS 38, ni « vérification », ni
-      // « annuel ». Cité par la description de `resto-incendie`.
+      // « annuel ». ~~Cité par la description de `resto-incendie`.~~ [Retiré
+      // de cette description le même jour, sur contre-lecture : la périodicité
+      // en ERP relève du module de conformité. Le relevé reste.]
       luLe: "2026-09-26",
       lecture: "premiere_main",
       citationCle:

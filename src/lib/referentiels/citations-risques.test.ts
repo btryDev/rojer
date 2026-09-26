@@ -48,8 +48,22 @@
 //   n'aurait pas été vu) ;
 // - que le numéro de fiche nommé sans citation soit le bon (« ED 840 fiche
 //   19 » pour une coupure n'aurait pas été vu) ;
-// - que la `citationCle` soit juste — elle se relit à la source ;
-// - qu'une élision « […] » ne retire pas une condition.
+// - que la `citationCle` soit juste — elle se relit à la source. ET SI ELLE
+//   A ÉTÉ RECOPIÉE DEPUIS LA PARAPHRASE qu'elle devait contrôler, la règle se
+//   tait : la garde compare deux copies du même texte. Seule la relecture à
+//   la source, datée dans `luLe`, protège de ce cas ;
+// - qu'une élision « […] » ne retire pas une condition ;
+// - qu'une citation ne s'arrête pas AVANT une condition qui tombe en fin de
+//   phrase ou dans la phrase suivante : une citation qui s'arrête sur une fin
+//   de proposition est un extrait exact, même amputée de ce qui la
+//   conditionne. Le cas réel : l'art. 3 de l'arrêté du 26 décembre 2011 cité
+//   jusqu'à « deux ans… rapport de vérification. », sans la lettre
+//   recommandée à l'inspecteur du travail (contre-lecture du 2026-09-26) ;
+// - pour une périodicité écrite dans une DESCRIPTION, que la source citée
+//   porte ce rythme POUR CET OBJET : la règle 3 exige la source dans le
+//   champ, et, pour une mesure ou une question, que cette source soit aussi
+//   celle du risque (même domaine) — une description n'a pas de risque
+//   au-dessus d'elle.
 
 import { describe, expect, it } from "vitest";
 import { CORPUS } from "./corpus";
@@ -252,6 +266,12 @@ const QUALIFIANTS = new RegExp(
       "normée?s?",
       "aux normes",
       "conformes?",
+      // Ajoutés sur contre-lecture du 2026-09-26 (angle mort « g »).
+      "il faut",
+      "obligations?",
+      "légale?s?",
+      "légaux",
+      "interdite?s?",
     ].join("|") +
     ")(?![\\p{L}\\p{N}])",
   "giu",
@@ -331,7 +351,13 @@ function periodicitesSansTexte(champ: Champ): string[] {
       const suite = t.slice(m.index);
       const fin = FIN_DE_PROPOSITION_.exec(suite);
       const segment = fin ? suite.slice(0, fin.index) : suite;
+      // Pour une mesure ou une question, la source du rythme doit AUSSI être
+      // une source du risque qu'elle sert : le rythme vrai d'un autre objet
+      // (« extincteurs vérifiés tous les deux ans (arrêté du 26 décembre 2011,
+      // art. 3) ») ne passe plus — angle mort « f » de la contre-lecture.
+      const duRisque = champ.repli ? new Set(mentions(champ.repli).map((x) => x.ref)) : null;
       const verbatims = mentions(segment)
+        .filter((x) => duRisque === null || duRisque.has(x.ref))
         .map((x) => articleDuCorpus(x.ref)?.citationCle)
         .filter((v): v is string => Boolean(v));
       if (!verbatims.some((v) => porte(m!).test(v)))
@@ -448,6 +474,39 @@ describe("la garde éprouvée sur les défauts réels du 2026-09-26", () => {
     expect(
       periodicitesSansTexte(champ("restauration.ts:285", "Contrôles périodiques réglementaires des installations électriques (annuel)")),
     ).toHaveLength(1);
+  });
+
+  it("refuse le rythme vrai d'un autre objet, pour une mesure (angle mort « f »)", () => {
+    const incendie = "« Faire vérifier les extincteurs annuellement par une personne qualifiée. » (INRS ED 880, fiche 3)";
+    // La phrase de la contre-lecture, rattachée au risque incendie : l'arrêté
+    // de 2011 porte bien « deux ans », mais pour les installations électriques.
+    expect(
+      periodicitesSansTexte(
+        champ("sonde", "Extincteurs vérifiés tous les deux ans (arrêté du 26 décembre 2011, art. 3)", incendie),
+      ),
+    ).toHaveLength(1);
+    // La même source, sous le risque électrique qui la cite : admise.
+    expect(
+      periodicitesSansTexte(
+        champ(
+          "sonde",
+          "Installations vérifiées tous les deux ans (arrêté du 26 décembre 2011, art. 3)",
+          "« La périodicité des vérifications est fixée à un an […] » (arrêté du 26 décembre 2011, art. 3)",
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("refuse « il faut », « obligation », « légal », « interdit » hors citation (angle mort « g »)", () => {
+    for (const [phrase, mot] of [
+      ["Il faut vérifier les extincteurs.", "Il faut"],
+      ["Une obligation de l'employeur.", "obligation"],
+      ["Contrôle légal des installations.", "légal"],
+      ["Stockage interdit dans les passages.", "interdit"],
+    ])
+      expect(qualifiantsDuChamp(champ("sonde", phrase))).toEqual([`sonde — « ${mot} »`]);
+    // Entre guillemets, attribués, ils restent admis par cette règle.
+    expect(qualifiantsDuChamp(champ("sonde", "« Il faut » (art. X)"))).toEqual([]);
   });
 
   it("une admission vaut pour sa phrase exacte, pas pour le mot", () => {

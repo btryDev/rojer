@@ -70,7 +70,7 @@ export const commerce: Referentiel = {
       id: "com-charge-physique",
       libelle: "Charge physique : manutentions et postures (mise en rayon, port de charges)",
       description:
-        "ED 840, fiche 5 « Risques liés à la charge physique de travail ». OiRA commerce identifie les manutentions comme un risque central de l'activité de mise en rayon et de réserve.",
+        "ED 840, fiche 5 « Risques liés à la charge physique de travail ».",
       unitesAssociees: ["com-reception-stockage", "com-mise-rayon"],
       graviteParDefaut: 3,
       probabiliteParDefaut: 3,
@@ -142,6 +142,9 @@ export const commerce: Referentiel = {
       probabiliteParDefaut: 2,
       mesuresRecommandees: [
         {
+          // Identifiant gardé malgré « norme » (retiré du libellé le 2026-09-26) :
+          // il est stocké en base et n'est pas affiché ; le renommer casserait
+          // la continuité des mesures déjà retenues.
           id: "com-marchepied-norme",
           libelle:
             "Escabeau ou marchepied stable ; proscrire les escaliers improvisés",
@@ -160,7 +163,7 @@ export const commerce: Referentiel = {
       libelle:
         "Risques psychosociaux : agression, incivilités, braquage",
       description:
-        "ED 840, fiche 17 « Risques psychosociaux ». Situations visées : la caisse, l'ouverture et la fermeture du magasin.",
+        "ED 840, fiche 17 « Risques psychosociaux ». Situations possibles : la caisse, l'ouverture et la fermeture du magasin.",
       unitesAssociees: ["com-vente-caisse", "com-locaux"],
       graviteParDefaut: 4,
       probabiliteParDefaut: 2,

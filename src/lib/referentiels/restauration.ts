@@ -247,12 +247,14 @@ export const restauration: Referentiel = {
       libelle: "Incendie (friteuse, hotte, flamme nue)",
       // Sourcée le 2026-09-26 (sortie de `SANS_SOURCE_TOLERES`), en corrigeant
       // la mesure `resto-extincteurs`, qui écrivait « vérifiés annuellement »
-      // sans texte. Chaque périodicité est citée avec ce qui la porte : rien
-      // dans R. 4227-29, une recommandation de l'INRS, MS 38 pour le livre II
-      // du règlement de sécurité — que PE 1 écarte en 5e catégorie, et que
-      // PE 26 ne rouvre pas.
+      // sans texte. ~~La description citait aussi MS 38, PE 1 et PE 26.~~
+      // [Retiré le même jour sur contre-lecture : l'enchaînement laissait lire
+      // qu'en 5e catégorie aucun texte ne rythme la vérification, alors que
+      // PE 4 § 2 vise les « moyens de secours » tous les trois ans au plus, et
+      // le calendrier applique MS 38 à tout ERP par choix documenté. La
+      // périodicité en ERP se tranche dans le module de conformité, pas ici.]
       description:
-        "INRS ED 840, fiche 13 « Risques d'incendie et d'explosion ». « Le premier secours contre l'incendie est assuré par des extincteurs en nombre suffisant et maintenus en bon état de fonctionnement. » (art. R. 4227-29) Cet article ne fixe pas de périodicité de vérification. « Faire vérifier les extincteurs annuellement par une personne qualifiée. » (INRS ED 880, fiche 3) Dans un établissement recevant du public relevant du livre II du règlement de sécurité : « Un extincteur doit faire l'objet d'une vérification annuelle et d'une révision tous les dix ans par une personne ou un organisme compétent. » (arrêté du 25 juin 1980, art. MS 38) En 5e catégorie : « Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre. » (arrêté du 25 juin 1980, art. PE 1) L'article PE 26, qui y traite des extincteurs, renvoie à MS 39, pas à MS 38.",
+        "INRS ED 840, fiche 13 « Risques d'incendie et d'explosion ». « Le premier secours contre l'incendie est assuré par des extincteurs en nombre suffisant et maintenus en bon état de fonctionnement. » (art. R. 4227-29) « Faire vérifier les extincteurs annuellement par une personne qualifiée. » (INRS ED 880, fiche 3)",
       unitesAssociees: ["production"],
       graviteParDefaut: 4,
       probabiliteParDefaut: 2,
@@ -272,7 +274,7 @@ export const restauration: Referentiel = {
         {
           id: "resto-extincteurs",
           libelle:
-            "Extincteurs en nombre suffisant, adaptés aux risques, accessibles, signalés et maintenus en bon état de fonctionnement (art. R. 4227-29) ; vérification annuelle par une personne qualifiée (recommandation INRS ED 880, fiche 3)",
+            "Extincteurs en nombre suffisant, adaptés aux risques et maintenus en bon état de fonctionnement (art. R. 4227-29), accessibles et signalés (INRS ED 880, fiche 3) ; vérification annuelle par une personne qualifiée (recommandation INRS ED 880, fiche 3)",
           type: "protection_collective",
         },
         {
@@ -287,7 +289,7 @@ export const restauration: Referentiel = {
       id: "resto-electrisation",
       libelle: "Risque électrique (installations cuisine, lavage)",
       description:
-        "INRS ED 880, fiche 3 « Production froide et chaude » ; ED 840, fiche 14 « Risques liés à l'électricité ». « La périodicité des vérifications est fixée à un an, le point de départ de cette périodicité étant la date de la vérification initiale. Toutefois, le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité de nature à répondre aux observations contenues dans le rapport de vérification. » (arrêté du 26 décembre 2011, art. 3)",
+        "INRS ED 880, fiche 3 « Production froide et chaude » ; ED 840, fiche 14 « Risques liés à l'électricité ». « La périodicité des vérifications est fixée à un an, le point de départ de cette périodicité étant la date de la vérification initiale. Toutefois, le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité de nature à répondre aux observations contenues dans le rapport de vérification. Le chef d'établissement informe l'inspecteur du travail par lettre recommandée avec accusé de réception, accompagnée des éléments prouvant qu'il n'y a pas de non-conformité ou que les non-conformités ont été levées. Cet envoi doit comprendre, le cas échéant, l'avis des membres du CHSCT ou des délégués du personnel. » (arrêté du 26 décembre 2011, art. 3)",
       unitesAssociees: ["production", "plonge", "stockage"],
       graviteParDefaut: 4,
       probabiliteParDefaut: 1,
@@ -295,7 +297,7 @@ export const restauration: Referentiel = {
         {
           id: "resto-controle-elec",
           libelle:
-            "Vérification périodique des installations électriques : tous les ans, ou tous les deux ans aux conditions de l'arrêté du 26 décembre 2011, art. 3",
+            "Vérification périodique des installations électriques : tous les ans, ou tous les deux ans aux conditions de l'arrêté du 26 décembre 2011, art. 3, dont l'information de l'inspecteur du travail",
           type: "organisationnelle",
         },
         {

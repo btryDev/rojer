@@ -260,7 +260,7 @@ export const bureau: Referentiel = {
     {
       id: "bur-electrique",
       libelle: "Risque électrique (multiprises, câbles, équipements)",
-      description: "ED 840, fiche 14 « Risques liés à l'électricité ». « La périodicité des vérifications est fixée à un an, le point de départ de cette périodicité étant la date de la vérification initiale. Toutefois, le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité de nature à répondre aux observations contenues dans le rapport de vérification. » (arrêté du 26 décembre 2011, art. 3)",
+      description: "ED 840, fiche 14 « Risques liés à l'électricité ». « La périodicité des vérifications est fixée à un an, le point de départ de cette périodicité étant la date de la vérification initiale. Toutefois, le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité de nature à répondre aux observations contenues dans le rapport de vérification. Le chef d'établissement informe l'inspecteur du travail par lettre recommandée avec accusé de réception, accompagnée des éléments prouvant qu'il n'y a pas de non-conformité ou que les non-conformités ont été levées. Cet envoi doit comprendre, le cas échéant, l'avis des membres du CHSCT ou des délégués du personnel. » (arrêté du 26 décembre 2011, art. 3)",
       unitesAssociees: ["bur-poste-ecran", "bur-archives"],
       graviteParDefaut: 4,
       probabiliteParDefaut: 1,
@@ -268,7 +268,7 @@ export const bureau: Referentiel = {
         {
           id: "bur-controle-elec-bur",
           libelle:
-            "Vérification périodique des installations électriques : tous les ans, ou tous les deux ans aux conditions de l'arrêté du 26 décembre 2011, art. 3",
+            "Vérification périodique des installations électriques : tous les ans, ou tous les deux ans aux conditions de l'arrêté du 26 décembre 2011, art. 3, dont l'information de l'inspecteur du travail",
           type: "organisationnelle",
         },
         {
@@ -332,6 +332,9 @@ export const bureau: Referentiel = {
       probabiliteParDefaut: 1,
       mesuresRecommandees: [
         {
+          // Identifiant gardé malgré « norme » (retiré du libellé le 2026-09-26) :
+          // il est stocké en base et n'est pas affiché ; le renommer casserait
+          // la continuité des mesures déjà retenues.
           id: "bur-escabeau-norme",
           libelle:
             "Escabeau stable disponible ; interdiction de monter sur les chaises ou meubles",
