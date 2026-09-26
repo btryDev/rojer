@@ -316,7 +316,7 @@ function messageConservationDuerp(nbVersions: number): string {
     `de votre document unique d'évaluation des risques ${nbVersions > 1 ? "sont" : "est"} ` +
     "archivée" +
     (nbVersions > 1 ? "s" : "") +
-    " ici. La loi impose de les conserver 40 ans " +
+    " ici. Le Code du travail les fait conserver 40 ans " +
     "(art. R. 4121-4 du Code du travail) : elles servent à prouver, des " +
     "décennies plus tard, à quels risques un salarié a été exposé. Ce refus " +
     "s'applique même à une demande d'effacement (art. 17.3 du RGPD, obligation " +

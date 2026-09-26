@@ -84,7 +84,7 @@ export const LABEL_TYPE_ERP: Record<(typeof TYPE_ERP)[number], string> = {
 /**
  * Les seuils entre parenthèses comptent le **public admis**, jamais les
  * salariés. C'est ce qui a tranché le périmètre du produit le 2026-09-01 :
- * un restaurant de huit salariés qui sert trois cents couverts relève de la
+ * un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois relève de la
  * 3ᵉ catégorie et reste dans la cible, alors que la borne de l'outil est de
  * cinquante travailleurs. Les deux chiffres ne parlent pas de la même chose.
  */

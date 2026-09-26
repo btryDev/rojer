@@ -267,7 +267,7 @@ export function EtablissementForm({
       <div className="border-t border-[color:var(--board-slate-line)] pt-7">
         <SectionChamps
           titre="Régimes réglementaires applicables"
-          chapeau="Cochez tous les régimes applicables — ils se cumulent. Par défaut, tout établissement ayant des salariés relève du Code du travail (art. R. 4121-1)."
+          chapeau="Cochez tous les régimes applicables — ils se cumulent. Par défaut, tout établissement ayant des salariés relève du Code du travail."
         >
           <div className="flex flex-col gap-5">
             {/* Travail */}
@@ -388,9 +388,13 @@ export function EtablissementForm({
                       className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
                     >
                       La catégorie dépend du nombre total de personnes (public +
-                      personnel) que peut accueillir l&apos;établissement. En
-                      cas de doute, commencez par la 5ᵉ — vous ajusterez après
-                      vérification.
+                      personnel) que peut accueillir l&apos;établissement (art.
+                      R. 143-19 CCH). Elle figure sur l&apos;arrêté
+                      d&apos;ouverture ou le procès-verbal de la commission de
+                      sécurité quand il y en a un ; un établissement de 5ᵉ
+                      catégorie sans hébergement du public n&apos;a pas
+                      d&apos;autorisation d&apos;ouverture à demander (art.
+                      R. 143-38 CCH).
                     </p>
                     <Erreur message={err("categorieErp")} />
                   </div>
@@ -481,7 +485,8 @@ export function EtablissementForm({
                       Chambres d&apos;hôtel, chambres d&apos;hôtes, gîte,
                       hébergement — des locaux où le public dort. Un logement de fonction occupé par
                       vous ou par un salarié ne compte pas : le texte vise le
-                      sommeil du public. Si oui, s&apos;ajoutent un contrat
+                      sommeil du public. Si oui, et en 5ᵉ catégorie,
+                      s&apos;ajoutent un contrat
                       annuel d&apos;entretien de la détection incendie, des
                       consignes et des plans affichés, et une visite de la
                       commission de sécurité tous les cinq ans (arrêté du

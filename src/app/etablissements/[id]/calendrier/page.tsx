@@ -1043,9 +1043,8 @@ export default async function CalendrierPage({
                     Votre calendrier se remplit tout seul
                   </h2>
                   <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                    Le Code du travail et le règlement ERP imposent de vérifier
-                    certains équipements à fréquence fixe — extincteurs tous les
-                    ans, installation électrique tous les ans, etc. L&apos;outil
+                    Certains textes fixent une fréquence de vérification ;
+                    chaque échéance du calendrier cite le sien. L&apos;outil
                     calcule ces échéances à partir de la fiche de
                     l&apos;établissement, de ses équipements et de ses
                     salariés.{" "}

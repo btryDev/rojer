@@ -152,13 +152,13 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-Les 26 articles ci-dessous sont ceux que le dépouillement a lus, qui imposent
+Les 27 articles ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise.** Un bureau tertiaire les
 voyait tous, y compris les onze articles propres aux hôtels.
 
-**Le chiffre a bougé quatre fois : 28 → 19 le 2026-09-01, 19 → 20 le
-2026-09-03, 20 → 25 le 2026-09-20, puis 25 → 26 le 2026-09-26 (`GN 13`, voir sa famille au § 3)** (arrêté du 1er février 2010,
+**Le chiffre a bougé cinq fois : 28 → 19 le 2026-09-01, 19 → 20 le
+2026-09-03, 20 → 25 le 2026-09-20, 25 → 26 le 2026-09-26 (`GN 13`, voir sa famille au § 3), puis 26 → 27 le même jour (`R. 4624-55`)** (arrêté du 1er février 2010,
 légionelles, et l'article 36 de l'arrêté du 23 juin 1978 : cinq entrées, avec une adresse visible — voir sa famille au § 3). Neuf articles du chapitre III
 du Livre III (locaux à sommeil) sont sortis de cette liste, et le § 3 dit
 comment. Les « 27 » et « 28 » qui subsistent plus bas dans ce document
@@ -202,9 +202,9 @@ couverture.
 
 ---
 
-## 3. Les 26 articles lus et non portés
+## 3. Les 27 articles lus et non portés
 
-Cinq familles, une sixième étant sortie de la liste le 2026-09-01 (voir
+~~Cinq familles~~ Neuf familles (compte refait le 2026-09-26), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
 été rédigés par la personne qui a lu l'article, et une reformulation ici
 vieillirait à part de la source.
@@ -402,6 +402,16 @@ ils comptent une histoire, pas un état.
 obligation qui vise la cible et que le référentiel ne porte pas se déclare,
 elle ne se nie pas.
 
+### Avis d'aptitude conservé par l'employeur, tous secteurs — 1 article (2026-09-26)
+
+`R. 4624-55`
+
+> L'employeur conserve l'avis d'aptitude ou d'inaptitude « pour être en mesure de le présenter à tout moment, sur leur demande, à l'inspecteur du travail et au médecin inspecteur du travail ». Rojer ne le porte pas, par choix : il n'enregistre d'une visite que son existence, sa date et son échéance, jamais l'avis (`docs/rgpd.md` § 2.3). Consigné le 2026-09-26, quand l'écran de saisie d'un titre a cessé de dire que l'avis « ne vous est pas destiné ».
+
+**Celui-ci a une adresse visible** : l'encadré « Ne déposez pas le document » de
+la saisie d'un titre, qui dit que l'employeur conserve l'avis et que Rojer n'en
+garde pas copie.
+
 ---
 
 ## 3 bis. Ces 27 articles ont eu une adresse visible. Elle a été retirée.
@@ -542,7 +552,7 @@ La carte du tableau de bord est retirée. Ce qui reste :
   interroge le schéma au lieu de le décrire), et les articles `hors_perimetre`
   du corpus, groupés par motif d'exclusion.
 
-  **Elle ne donne PAS d'adresse aux 26 articles `non_couvert`**, et un test le
+  **Elle ne donne PAS d'adresse aux 27 articles `non_couvert`**, et un test le
   verrouille. La tentation était forte — la page ressemble à l'endroit où les
   mettre — mais ce serait exactement la confusion que `corpus/perimetre.ts`
   interdit en tête de fichier : ranger un manque parmi les exclusions le fait

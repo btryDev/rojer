@@ -138,7 +138,7 @@ export type TypeErpQuestionLocauxSommeil =
 /**
  * La borne du produit (ADR-025 § 1). Elle porte sur les **travailleurs**, et
  * sur eux seuls : le public reçu ne la déclenche jamais. Un restaurant de huit
- * salariés qui sert trois cents couverts relève de la 3ᵉ catégorie d'ERP et
+ * salariés qui peut accueillir quatre cents personnes à la fois relève de la 3ᵉ catégorie d'ERP et
  * reste dans la cible — la catégorie mesure le public, pas l'effectif.
  *
  * Elle vit ici, au plus bas, parce que trois écrits la posent : le schéma
@@ -443,7 +443,7 @@ export const etablissementCreationSchema = etablissementSchema.superRefine(
     }
 
     // La borne compte les TRAVAILLEURS. Le public reçu ne la déclenche jamais :
-    // un restaurant de huit salariés qui sert trois cents couverts est classé
+    // un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois est classé
     // en 3ᵉ catégorie d'ERP et reste dans la cible.
     if (val.estERP && val.estIGH) {
       ctx.addIssue({

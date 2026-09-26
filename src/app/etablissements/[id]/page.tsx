@@ -227,7 +227,7 @@ export default async function EtablissementPage({
       id: "assureur",
       titre: "Dire si votre assureur impose des vérifications",
       pourquoi:
-        "Beaucoup de contrats d'assurance imposent des contrôles que le droit n'impose pas — extincteurs plus fréquents, thermographie, hotte. Les oublier fait perdre la garantie. Déclarées ici, elles entrent au calendrier en portant la mention qui les distingue du droit.",
+        "Un contrat d'assurance peut imposer des contrôles que le droit n'impose pas — extincteurs plus fréquents, thermographie, hotte. Déclarées ici, elles entrent au calendrier en portant la mention qui les distingue du droit.",
       faite: questionRepondue(etab.aDemandesAssureur),
       question: (
         <QuestionParametrage

@@ -121,7 +121,7 @@ export function refusAlEntree(): RefusAlEntree[] {
       cle: "effectif",
       regime: `Une structure de plus de ${EFFECTIF_MAX} travailleurs`,
       message: effectif,
-      indication: `La borne compte les travailleurs, jamais le public reçu : un restaurant de huit salariés qui sert trois cents couverts reste dans la cible. Au-delà, des obligations que cet outil ne porte pas s'ajoutent — ${nonPorte("le programme annuel de prévention des risques")}, notamment — et votre service de prévention et de santé au travail est le premier interlocuteur pour les cadrer. Un dossier déjà ouvert n'est jamais fermé s'il franchit le seuil en cours de route : il porte alors ce manque, écrit, dans la partie ci-dessous.`,
+      indication: `La borne compte les travailleurs, jamais le public reçu : un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois reste dans la cible. Au-delà, des obligations que cet outil ne porte pas s'ajoutent — ${nonPorte("le programme annuel de prévention des risques")}, notamment — et votre service de prévention et de santé au travail est le premier interlocuteur pour les cadrer. Un dossier déjà ouvert n'est jamais fermé s'il franchit le seuil en cours de route : il porte alors ce manque, écrit, dans la partie ci-dessous.`,
     });
   }
 

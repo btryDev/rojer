@@ -185,10 +185,9 @@ export function FormulaireTitre({
             <strong>Ne déposez pas le document.</strong>{" "}
             Rojer enregistre
             qu&apos;une attestation ou une visite a eu lieu, sa date et son
-            échéance — rien d&apos;autre. Le motif médical, l&apos;avis
-            d&apos;aptitude et la pièce elle-même ne vous sont pas destinés et
-            n&apos;ont pas à transiter ici. Vous conservez l&apos;original de
-            votre côté, comme aujourd&apos;hui.
+            échéance — rien d&apos;autre. L&apos;avis d&apos;aptitude vous est
+            transmis et vous le conservez de votre côté (art. R. 4624-55) :
+            Rojer n&apos;en garde pas copie.
           </p>
         </div>
       )}

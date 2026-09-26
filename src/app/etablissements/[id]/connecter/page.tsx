@@ -156,7 +156,7 @@ export default async function ConnecterPage({
               Ce que l&apos;assistant peut lire
             </h2>
             <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              Trois outils, tous en lecture seule, tous limités à{" "}
+              Cinq outils, tous en lecture seule, tous limités à{" "}
               <strong>{etablissement.raisonDisplay}</strong>. L&apos;assistant
               ne peut ni modifier une donnée, ni consulter un autre
               établissement — l&apos;identifiant est fixé au lancement, il

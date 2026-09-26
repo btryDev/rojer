@@ -64,8 +64,7 @@ export function SupprimerEquipementButton({
             detail:
               "Il sortira du calendrier et ne générera plus d'échéance. Ses " +
               "rapports de vérification et ses actions correctives restent au " +
-              "dossier : la loi impose de pouvoir les présenter en cas de " +
-              "contrôle.",
+              "dossier.",
             agir: "Retirer l'équipement",
             alors: retirer,
           })

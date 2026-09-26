@@ -73,14 +73,14 @@ function clauseConservation(versionsDuerp: number): string {
     return (
       "Aucune version du DUERP n'est archivée ici : rien ne s'oppose à la " +
       "suppression. Dès qu'une version le sera, elle deviendra impossible — " +
-      "la loi impose de les conserver 40 ans."
+      "le Code du travail les fait conserver (art. L. 4121-3-1 fixe un plancher de quarante ans, et R. 4121-4 une durée de 40 ans à compter de leur élaboration)."
     );
   }
   const pluriel = versionsDuerp > 1;
   return (
     `La suppression sera refusée : ${versionsDuerp} version` +
     `${pluriel ? "s" : ""} du DUERP ${pluriel ? "sont archivées" : "est archivée"} ` +
-    "ici, et la loi impose de les conserver 40 ans (art. R. 4121-4 du Code du " +
+    "ici, et le Code du travail les fait conserver 40 ans (art. R. 4121-4 du Code du " +
     "travail)."
   );
 }

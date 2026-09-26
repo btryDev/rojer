@@ -112,6 +112,22 @@ export const CCH_CLASSEMENT_ERP_IGH: Corpus = {
         "Aucune échéance n'en découle : l'article classe, il ne prescrit aucune vérification périodique. C'est le cas type du statut — « définition, renvoi, règle ponctuelle sans récurrence ».\n\nCE QU'IL SERT EST AILLEURS QUE DANS LE RÉFÉRENTIEL : il est la source de l'énumération `CategorieErp` du modèle, et `categories-erp.test.ts` en dérive la liste attendue ainsi que les seuils affichés au dirigeant. CONFRONTATION FAITE LE 2026-09-03, ET LA LISTE EST JUSTE : cinq catégories au texte, cinq au modèle, aucune en trop, aucune manquante — c'est la seule des trois listes ouvertes ce jour-là dont la source présumée était fausse SANS que le modèle le soit. Les seuils des libellés (1 500 / 701 / 301 / 700 / 300) collent au texte, chiffre pour chiffre.\n\nRÉSERVE, écrite pour ne pas la redécouvrir : l'article se lit avec `GN 2` de l'arrêté du 25 juin 1980, qui règle le classement d'un GROUPEMENT d'exploitations — plusieurs activités dans un même bâtiment non isolées entre elles forment un seul ERP, dont la catégorie s'obtient en additionnant les effectifs. Le modèle ne porte qu'une catégorie par établissement et ne sait pas représenter un groupement ; ce n'est pas un défaut de la liste, c'est une question de modélisation qui n'a pas été instruite.",
     },
     {
+      ref: "CCH R. 143-38",
+      intitule: "Visite de réception et autorisation d'ouverture",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819025",
+      versionEnVigueur: "2021-07-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "Avant l'ouverture au public (ou la réouverture après plus de dix mois de fermeture), la commission procède à une visite de réception ; l'exploitant demande au maire l'autorisation d'ouverture, sauf pour les établissements de 5ᵉ catégorie sans locaux d'hébergement pour le public.",
+      citationCle:
+        "L'exploitant demande au maire l'autorisation d'ouverture, sauf dans le cas des établissements visés au premier alinéa de l'article R. 143-14 qui ne comportent pas de locaux d'hébergement pour le public.",
+      statut: "sans_objet",
+      motif:
+        "Règle ponctuelle d'ouverture, sans récurrence : rien à inscrire au calendrier d'un établissement ouvert. Consignée le 2026-09-26 parce que les écrans la citent : la catégorie d'un ERP « figure sur l'arrêté d'ouverture ou le procès-verbal de la commission de sécurité » était dit à tous, alors qu'un établissement de 5ᵉ catégorie sans hébergement n'a pas d'autorisation d'ouverture à demander, donc peut n'avoir ni l'un ni l'autre. Relu de première main : trois alinéas ; seule la phrase citée l'a été mot pour mot (l'outil de lecture a refusé la recopie intégrale), le reste en résumé. « Création Décret n° 2021-872 du 30 juin 2021 », en vigueur le 1er juillet 2021 : aucune modification, `modifiePar: null`.",
+    },
+    {
       ref: "CCH R. 146-3",
       intitule: "Définition de l'immeuble de grande hauteur",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819081",

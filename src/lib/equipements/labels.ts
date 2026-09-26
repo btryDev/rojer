@@ -45,7 +45,7 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   INSTALLATION_ELECTRIQUE:
     "Tableau général, circuits terminaux, éventuel groupe électrogène de sécurité.",
   EXTINCTEUR:
-    "Extincteurs portatifs (eau, CO₂, poudre) et mobiles. Vérification annuelle obligatoire.",
+    "Extincteurs portatifs (eau, CO₂, poudre) et mobiles.",
   RIA:
     "Robinets d'incendie armés : tuyau sur dévidoir, raccordé en permanence à l'eau, en coffret mural. Installation fixe (arrêté du 25 juin 1980, art. MS 14 à MS 17), vérifiée au moins une fois par an en ERP (MS 73 § 2).",
   BAES:

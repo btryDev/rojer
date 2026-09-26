@@ -124,7 +124,7 @@ export function avertissementProximiteSeuil(
     SEUIL_1RE_CATEGORIE,
   ]) {
     if (Math.abs(effectif - borne) <= borne * MARGE_PROXIMITE_SEUIL) {
-      return `Effectif proche de la limite des ${borne} personnes : au-dessus, la catégorie change et les vérifications avec elle. Vérifiez la catégorie indiquée sur votre arrêté d'ouverture ou sur le PV de la commission de sécurité.`;
+      return `Effectif proche de la limite des ${borne} personnes : au-dessus, la catégorie change et les vérifications avec elle. Vérifiez la catégorie indiquée sur votre arrêté d'ouverture ou sur le PV de la commission de sécurité, s'il y en a un.`;
     }
   }
   return undefined;
@@ -165,7 +165,7 @@ export function deduireCategorieErp(effectif: number): DeductionCategorieErp {
     categoriesPossibles: ["N4", "N5"],
     motif: `${SEUIL_3E_CATEGORIE} personnes ou moins : l'établissement relève de la 4ᵉ ou de la 5ᵉ catégorie. La limite entre les deux dépend d'un seuil propre à votre type d'activité, fixé par le règlement de sécurité — l'effectif seul ne permet pas de trancher.`,
     question:
-      "Votre arrêté d'ouverture ou le PV de la commission de sécurité indique-t-il « 4ᵉ catégorie » ou « 5ᵉ catégorie » ?",
+      "Votre arrêté d'ouverture ou le PV de la commission de sécurité, s'il y en a un, indique-t-il « 4ᵉ catégorie » ou « 5ᵉ catégorie » ? Un établissement de 5ᵉ catégorie sans hébergement du public n'a pas d'autorisation d'ouverture à demander (art. R. 143-38 CCH) : il peut n'avoir ni l'un ni l'autre.",
   };
 }
 

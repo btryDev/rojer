@@ -198,7 +198,7 @@ export function StepTypologie({
                 <div className="flex flex-col gap-3">
                   <SousQuestion
                     question="Quelle est votre catégorie ?"
-                    aide="Elle compte le public admis, pas vos salariés — un petit restaurant qui sert trois cents couverts est en 3ᵉ catégorie."
+                    aide="Elle se compte sur l'effectif du public, majoré de celui du personnel (art. R. 143-19 CCH) — pas sur vos seuls salariés : un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois est en 3ᵉ catégorie (de 301 à 700 personnes)."
                   />
                   <select
                     id="categorieErp"
@@ -250,7 +250,7 @@ export function StepTypologie({
                   <div className="flex flex-col gap-3">
                     <SousQuestion
                       question="Votre établissement héberge-t-il du public pour la nuit ?"
-                      aide="Chambres d'hôtel, chambres d'hôtes, gîte, hébergement — des locaux où le public dort. Un logement de fonction occupé par vous ou par un salarié ne compte pas : le texte vise le sommeil du public. Si oui, s'ajoutent un contrat annuel d'entretien de la détection incendie, des consignes et des plans affichés, et une visite de la commission de sécurité tous les cinq ans (arrêté du 25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37)."
+                      aide="Chambres d'hôtel, chambres d'hôtes, gîte, hébergement — des locaux où le public dort. Un logement de fonction occupé par vous ou par un salarié ne compte pas : le texte vise le sommeil du public. Si oui, et en 5ᵉ catégorie, s'ajoutent un contrat annuel d'entretien de la détection incendie, des consignes et des plans affichés, et une visite de la commission de sécurité tous les cinq ans (arrêté du 25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37)."
                     />
                     <select
                       id="comporteLocauxSommeilPublic"

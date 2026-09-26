@@ -335,7 +335,7 @@ function axeRegime(
       motif:
         "La catégorie de votre établissement recevant du public n'est pas renseignée.",
       quoiFaire:
-        "Elle figure sur votre arrêté d'ouverture ou sur le procès-verbal de la commission de sécurité. C'est elle qui décide de ce que la réglementation vous impose — sans elle, votre calendrier et votre registre sont incomplets sans qu'on puisse vous dire de combien.",
+        "Elle figure sur votre arrêté d'ouverture ou sur le procès-verbal de la commission de sécurité, quand il y en a un : un établissement de 5ᵉ catégorie sans hébergement du public n'a pas d'autorisation d'ouverture à demander (art. R. 143-38 CCH). C'est elle qui décide de ce que la réglementation vous impose — sans elle, votre calendrier et votre registre sont incomplets sans qu'on puisse vous dire de combien.",
     });
     return;
   }

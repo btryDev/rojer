@@ -203,7 +203,7 @@ export const obligationsIncendie: Obligation[] = [
     domaine: "incendie",
     libelle: "Présence et maintien en état des moyens de lutte contre l'incendie (travail)",
     description:
-      "Les établissements doivent être dotés de moyens de lutte contre l'incendie adaptés (extincteurs appropriés, RIA le cas échéant), maintenus en bon état et accessibles. La vérification annuelle des extincteurs est la règle de fait.",
+      "Les établissements doivent être dotés de moyens de lutte contre l'incendie adaptés (extincteurs appropriés, RIA le cas échéant), maintenus en bon état et accessibles.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",

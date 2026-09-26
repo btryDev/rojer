@@ -1607,6 +1607,48 @@ peuplement possible tant que rien ne rattache un poste au suivi individuel
 renforcé ; le DTA n'existe pas au modèle ; un plan ne connaît qu'une
 entreprise extérieure ; le seuil n'est pas recalculé en cours d'exécution.
 
+### C36 · 2026-09-26 — Ce que les écrans disaient du droit, et qui était faux
+
+**Relu de première main** (page propre, formulation décisive confirmée) :
+`L. 2315-36` (la CSSCT, « au moins trois cent salariés »), `L. 2311-2` (le CSE,
+« atteint pendant douze mois consécutifs »), `CCH R. 143-19` (catégories :
+« d'après l'effectif du public et du personnel », public « majoré » du
+personnel, « 300 personnes et au-dessous » en 4ᵉ), `CCH R. 143-38`
+(autorisation d'ouverture, sauf 5ᵉ catégorie sans hébergement), `R. 4624-55`
+(l'avis d'aptitude est transmis au salarié et à l'employeur, qui le
+conserve), `D. 8222-5` (le Kbis, sans ancienneté fixée).
+
+**Corrigé à l'écran** :
+- « Seuil CSSCT (11+) » et « CSSCT dédiée » au-delà de 50 : la CSSCT est à 300 ;
+- « élection d'un CSE sous 12 mois » : les douze mois sont une durée
+  d'effectif ;
+- « un petit restaurant qui sert trois cents couverts est en 3ᵉ catégorie » :
+  faux deux fois (le personnel s'ajoute ; 300 et au-dessous, c'est la 4ᵉ) ;
+  l'exemple venait de l'ADR-025, corrigé là aussi ;
+- « En cas de doute, commencez par la 5ᵉ » (qui poussait vers le régime le moins
+  exigeant) ;
+- la catégorie « figure sur votre arrêté d'ouverture ou le PV » dit à tous :
+  une 5ᵉ sans hébergement peut n'avoir ni l'un ni l'autre ;
+- les rythmes PE du sommeil dits à toutes les catégories ;
+- « extincteurs tous les ans » / « Vérification annuelle obligatoire » : le
+  Code du travail ne fixe pas d'annuelle ;
+- la phrase écrite pour PE 4 § 2 (« etc. », « échéance due sans appareil »)
+  affichée pour toute obligation d'établissement ;
+- « la loi impose » (D. 4711-3, un décret, qui ne vise pas les actions
+  correctives ; R. 4121-4, un décret) ;
+- « l'avis d'aptitude ne vous est pas destiné » (il l'est, R. 4624-55) ;
+- Kbis « de moins de 3 mois à l'embauche » ;
+- R. 4121-1 donné pour champ du Code du travail ; R. 4226-16 et L. 4121-2
+  donnés pour fondement du score ;
+- « Trois outils » MCP (cinq) ; « jamais partagées » ; « fait perdre la
+  garantie » ; « ce qui vous distingue ».
+
+**La garde des citations a mordu** : deux articles nouvellement cités
+(`R. 143-38`, `R. 4624-55`) n'avaient pas d'entrée de corpus. Consignés :
+`CCH R. 143-38` en `sans_objet` (règle d'ouverture, sans récurrence),
+`R. 4624-55` en `non_couvert` avec son `declareA` (Rojer ne conserve pas
+l'avis, par choix — `docs/rgpd.md` § 2.3). Non couverts : 26 + 1 = 27.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
