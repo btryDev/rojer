@@ -18,7 +18,7 @@ import {
   texteRubrique,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { LABEL_NATURE } from "@/lib/permis-feu/schema";
-import { mesureParId } from "@/lib/permis-feu/referentiel";
+import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 
 /**
  * Page publique non authentifiée : un prestataire arrive ici via un lien
@@ -373,6 +373,12 @@ function detailPermis(c: ContenuPermisASigner) {
             ))}
           </ul>
         )}
+        {surListeAnterieure(c.mesuresValidees) ? (
+          <p className={CLASSE_TEXTE}>
+            Ce permis a été établi sur une liste antérieure de mesures&nbsp;:
+            les libellés ci-dessus sont ceux qu&apos;il portait.
+          </p>
+        ) : null}
         {c.mesuresNotes ? <p className={CLASSE_TEXTE}>{c.mesuresNotes}</p> : null}
       </section>
     </div>

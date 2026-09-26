@@ -1283,17 +1283,17 @@ lue : la mention est rayée.
 | Ancien identifiant | Sort | Ce que dit la brochure |
 |---|---|---|
 | `zone-degagee-5m` | retiré → `eloignement-combustibles-10m` + `protection-combustibles` | « au moins 10 m » ; bâches ignifugées ou plaques jointives (p. 8) |
-| `balisage-zone` | gardé, libellé et commentaire de la brochure | « Balisage de la zone » (p. 8) |
+| `balisage-zone` | ~~gardé~~ retiré → `balisage-zone-ed6030` | « Balisage de la zone » (p. 8) |
 | `couper-ventilation` | retiré → `ventilation-si-necessaire` | « Ventilation des zones de travail et/ou des locaux attenants si nécessaire » (p. 8) |
-| `isoler-detection` | gardé, libellé du formulaire, commentaire de la p. 7 | « Isolation de la boucle de détection » ; « des mesures de sécurité au moins équivalentes … en accord avec l'assureur » |
+| `isoler-detection` | ~~gardé~~ retiré → `isolation-boucle-detection` ; source composite : action du formulaire (p. 10), commentaire d'un paragraphe de la p. 7, qui vise « détection ou d'extinction automatique » | « Isolation de la boucle de détection » ; « des mesures de sécurité au moins équivalentes … en accord avec l'assureur » |
 | `extincteurs-proximite` | retiré → `moyens-extinction-alarme` | « au minimum 1 extincteur 9 litres à eau et 1 extincteur adapté aux risques du local » ; pas de « ≤ 3 m » (p. 8) |
-| `verif-etat-materiel` | gardé | « Vérification de l'état de l'outillage utilisé » (p. 8) |
+| `verif-etat-materiel` | ~~gardé~~ retiré → `verification-outillage` | « Vérification de l'état de l'outillage utilisé » (p. 8) |
 | `information-occupants` | retiré → `visite-commune` | « Visite commune … » ; « Informer les opérateurs situés à proximité » (p. 8) |
 | `surveillant-dedie` | retiré → `surveillance-premiere-intervention` | « une personne formée à la première intervention » ; ni « dédié », ni « en continu » (p. 9) |
 | `epi-operateur` | retiré, sans remplaçant | aucune mesure ; les EPI ne sont nommés qu'à propos du champ de vision (p. 9) |
 | `evacuation-dechets` | retiré, sans remplaçant | aucune mesure |
-| `surveillance-2h-min` | gardé | « Surveillance des lieux de travail et des abords » ; « 2 h au moins » (p. 9) |
-| `controle-zone` | gardé | « Inspection du lieu d'intervention et des abords juste après l'arrêt des travaux … » (p. 9) |
+| `surveillance-2h-min` | ~~gardé~~ retiré → `surveillance-lieux-abords` | « Surveillance des lieux de travail et des abords » ; « 2 h au moins » (p. 9) |
+| `controle-zone` | ~~gardé~~ retiré → `inspection-apres-arret` | « Inspection du lieu d'intervention et des abords juste après l'arrêt des travaux … » (p. 9) |
 | `reactivation-detection` | retiré → `deconsignation-remise-disposition` | « Déconsignation et remise à disposition de l'installation » (p. 9) |
 | `nettoyage-zone` (après) | retiré → `nettoyage-zone-preparation` (avant) | la brochure le place en préparation (p. 8) |
 
@@ -1316,9 +1316,42 @@ de démonstration prend les identifiants courants.
 
 **La garde** : `permis-feu/referentiel.test.ts`. Libellé = action, explication
 = commentaire, page dans les tableaux, aucun identifiant retiré réemployé, et
-chaque retiré lisible. Éprouvée avec les trois mesures contredites telles que
+chaque retiré lisible. ~~Éprouvée avec les trois mesures contredites telles que
 `4096d0f` les écrivait, puis dans le vrai fichier (« rayon de 5 m » remis sur
-`eloignement-combustibles-10m` : refusé, restauré).
+`eloignement-combustibles-10m` : refusé, restauré).~~ *[Au mesuré, après
+contre-lecture : l'épreuve cassait le LIBELLÉ, pas la SOURCE. Or `inrs()`
+fabrique le libellé depuis la source : une paraphrase écrite dans la source
+passait, et la garde était vraie par construction. Trois sondes (« rayon de
+5 m », « 6 litres … ou 1 CO2 de 5 kg », « Coupure de la ventilation ») la
+passaient en vert.]*
+
+**Contre-lecture du même jour, corrigée.**
+- **Cinq identifiants gardés avaient changé de contenu** (`balisage-zone`,
+  `isoler-detection`, `verif-etat-materiel`, `controle-zone`,
+  `surveillance-2h-min`). La page de signature par lien affichait donc à un
+  signataire un autre texte que celui qu'il avait coché, sous la même
+  empreinte. Ma propre règle (contenu changé → nouvel identifiant) est
+  appliquée : les cinq passent dans `MESURES_RETIREES` avec leur libellé
+  d'origine (relu à `4096d0f`), et la liste courante n'en garde AUCUN. Les
+  quatorze identifiants antérieurs sont tous retirés. Un permis qui en porte
+  un est donc reconnu sans ambiguïté, sauf s'il ne porte aucune mesure.
+- **Un permis antérieur ne lit plus la liste courante comme un manque.** Sur
+  la fiche, ni compteur « N sur 13 », ni pastilles « prioritaire non
+  cochée » ; à la place, « Liste antérieure ». La page de signature dit
+  qu'il a été établi sur une liste antérieure. Le ZIP nomme chaque mesure
+  cochée au lieu de les compter. La date « 26 septembre 2026 », qui était
+  celle du lot et non du déploiement, est retirée.
+- **La création refuse un identifiant retiré ou inconnu**
+  (`permis-feu/schema.ts`).
+- **Un témoin indépendant** : `permis-feu/releve-ed6030.ts` porte le
+  SHA-256 de chaque action et de chaque commentaire, pris dans le PDF (forme
+  de comparaison : blancs réduits, apostrophe droite, puces retirées), sans
+  les identifiants, avec le SHA-256 du fichier de la brochure. La source de
+  chaque mesure doit y être, à sa page. Épreuve : les trois sondes sont
+  refusées, et « Coupure de la ventilation » écrit dans la source du vrai
+  fichier l'est aussi (restauré ensuite).
+- Le ZIP ne cite plus APSAD R43. Le formulaire dit que « standard /
+  renforcé / intensif » sont des libellés de Rojer.
 
 **Ce qui n'est pas porté** : les autres lignes de la brochure — dégazage,
 contrôle d'atmosphère, bouteilles de gaz, supports incombustibles, issues,

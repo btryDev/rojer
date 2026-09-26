@@ -97,6 +97,11 @@ export default async function PermisFeuDetailPage({
   // d'origine, et la liste courante ne se lit pas comme un manque.
   const retireesCochees = MESURES_RETIREES.filter((m) => mesuresCochees.has(m.id));
   const courantesCochees = MESURES_PERMIS_FEU.filter((m) => mesuresCochees.has(m.id)).length;
+  // Un permis établi sur une liste antérieure n'a pas pu cocher la liste
+  // courante : elle ne s'y compte pas comme un manque (contre-lecture du
+  // 2026-09-26). Un permis antérieur SANS aucune mesure cochée ne se
+  // distingue pas d'un permis courant : il s'affiche comme tel.
+  const anterieur = retireesCochees.length > 0;
 
   // Signatures : on attend 2 signatures (donneur + prestataire).
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
@@ -183,7 +188,9 @@ export default async function PermisFeuDetailPage({
               titre="Mesures de prévention"
               droite={
                 <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
-                  {courantesCochees} sur {MESURES_PERMIS_FEU.length}
+                  {anterieur
+                    ? "Liste antérieure"
+                    : `${courantesCochees} sur ${MESURES_PERMIS_FEU.length}`}
                 </span>
               }
             />
@@ -194,10 +201,9 @@ export default async function PermisFeuDetailPage({
               {retireesCochees.length > 0 ? (
                 <>
                   {" "}
-                  Ce permis a été établi sur la liste antérieure au
-                  26&nbsp;septembre&nbsp;2026&nbsp;: les mesures ci-dessous
-                  n&apos;y figuraient pas toutes, et celles qu&apos;il porte
-                  sont reprises plus bas.
+                  Ce permis a été établi sur une liste antérieure&nbsp;: les
+                  mesures ci-dessous n&apos;y figuraient pas, et celles
+                  qu&apos;il porte sont reprises plus bas.
                 </>
               ) : null}
             </p>
@@ -206,15 +212,17 @@ export default async function PermisFeuDetailPage({
               // Le manque se compte en tête de groupe, il ne se répète pas
               // à chaque ligne : onze pastilles roses empilées ne
               // signalaient plus rien, elles remplissaient la carte.
-              const manquantesObligatoires = groupes[g].filter(
-                (m) => m.priorite === "obligatoire" && !mesuresCochees.has(m.id),
-              ).length;
+              const manquantesObligatoires = anterieur
+                ? 0
+                : groupes[g].filter(
+                    (m) => m.priorite === "obligatoire" && !mesuresCochees.has(m.id),
+                  ).length;
               return (
                 <CarteFiche
                   key={g}
                   titre={GROUPES_LABEL[g].label}
                   droite={
-                    manquantesObligatoires > 0 ? (
+                    anterieur ? null : manquantesObligatoires > 0 ? (
                       <PastilleFiche ton="retard">
                         {manquantesObligatoires} prioritaire
                         {manquantesObligatoires > 1 ? "s" : ""} non cochée
@@ -231,7 +239,7 @@ export default async function PermisFeuDetailPage({
                   <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                     {groupes[g].map((m) => {
                       const ok = mesuresCochees.has(m.id);
-                      const manque = m.priorite === "obligatoire" && !ok;
+                      const manque = !anterieur && m.priorite === "obligatoire" && !ok;
                       return (
                         <li
                           key={m.id}
@@ -280,9 +288,9 @@ export default async function PermisFeuDetailPage({
             {retireesCochees.length > 0 && (
               <CarteFiche titre="Cochées sur la liste antérieure">
                 <p className="m-0 -mt-2 mb-4 text-[12.5px] text-[color:var(--board-slate-mid)]">
-                  Mesures retirées de la liste le 26&nbsp;septembre&nbsp;2026,
-                  après confrontation à la brochure INRS ED 6030. Elles
-                  s&apos;affichent telles que ce permis les a portées.
+                  Mesures retirées de la liste après confrontation à la
+                  brochure INRS ED 6030. Elles s&apos;affichent telles que ce
+                  permis les a portées.
                 </p>
                 <ul className="m-0 flex list-none flex-col gap-3 p-0">
                   {retireesCochees.map((m) => (

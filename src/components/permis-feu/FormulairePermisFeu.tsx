@@ -355,6 +355,8 @@ export function FormulairePermisFeu({
           <p className="m-0 mt-2 max-w-[62ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             L&apos;INRS (ED 6030)&nbsp;: «&nbsp;Surveillance à réaliser
             pendant 2 h au moins après l&apos;arrêt des travaux.&nbsp;»
+            «&nbsp;Standard&nbsp;», «&nbsp;renforcé&nbsp;» et
+            «&nbsp;intensif&nbsp;» sont des libellés de Rojer.
           </p>
         </fieldset>
 

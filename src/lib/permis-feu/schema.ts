@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IDS_MESURES_COURANTES } from "./referentiel";
 import { depuisSaisieDateHeure } from "@/lib/dates";
 import { NatureTravauxPointChaud } from "@prisma/client";
 
@@ -96,8 +97,15 @@ export const permisFeuSchema = z
       .max(4000),
 
     // Mesures
+    // Une création n'accepte que la liste courante : un identifiant retiré ou
+    // inconnu serait affiché comme une mesure qu'aucune liste ne propose plus
+    // (contre-lecture du 2026-09-26).
     mesuresValidees: z
-      .array(z.string())
+      .array(
+        z.string().refine((id) => IDS_MESURES_COURANTES.has(id), {
+          message: "Mesure inconnue ou retirée de la liste",
+        }),
+      )
       .default([])
       .transform((a) => Array.from(new Set(a))),
     mesuresNotes: optionalTrimmed(2000),

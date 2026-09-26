@@ -1,4 +1,5 @@
 import { renderToBuffer } from "@react-pdf/renderer";
+import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
@@ -279,8 +280,9 @@ export async function GET(
   if (permisFeuList.length > 0) {
     const txt = [
       `PERMIS DE FEU — 12 derniers mois (${permisFeuList.length})`,
-      `Recommandation INRS ED 6030 ; règle APSAD R43, référentiel de la profession de l'assurance.`,
-      `Ni l'une ni l'autre n'est un texte réglementaire — cf. le dossier de contrôle.`,
+      // ~~« règle APSAD R43 »~~ — rayé le 2026-09-26 : `permis-feu/referentiel.ts`
+      // ne tient plus rien d'APSAD, qui n'a jamais été lue.
+      `Mesures tirées de la brochure INRS ED 6030 (2e édition, août 2019) — ni article de code, ni arrêté.`,
       "",
       "────────────────────────────────────────────────────────────",
       ...permisFeuList.flatMap((p) => [
@@ -291,7 +293,14 @@ export async function GET(
         `  Surveillance : ${Math.round(p.dureeSurveillanceMinutes / 60)}h`,
         `  Travaux : ${p.naturesTravaux.join(", ")}`,
         `  Description : ${p.descriptionTravaux}`,
-        `  Mesures validées : ${p.mesuresValidees.length}`,
+        // ~~« Mesures validées : N »~~ : le compte mêlait mesures courantes et
+        // retirées, sans libellé. Chaque mesure est nommée, telle que le permis
+        // la porte.
+        `  Mesures cochées (${p.mesuresValidees.length}) :`,
+        ...p.mesuresValidees.map((m) => `    - ${mesureParId(m)?.libelle ?? m}`),
+        ...(surListeAnterieure(p.mesuresValidees)
+          ? ["    (établi sur une liste antérieure de mesures)"]
+          : []),
         "",
       ]),
     ].join("\n");
