@@ -21,6 +21,9 @@
 // comme une liste se recopie. Il se refait depuis le PDF, et seulement depuis
 // lui, quand l'INRS révise la brochure (journal C33).
 
+// ⚠ Lu par AUCUN test : la brochure n'est pas au dépôt. Il dit quel fichier a
+// servi au relevé ; le recoupement se fait en recalculant le SHA-256 du PDF
+// téléchargé chez l'INRS (contre-lecture du 2026-09-26).
 export const BROCHURE_ED6030_SHA256 =
   "fbcb6d2619b7eddc9655aab42f6523e718f9751d7d178e948c49aa8d992301ec";
 
@@ -52,4 +55,29 @@ export const RELEVES_ED6030: readonly ReleveExtrait[] = [
   { page: 9, champ: "action", sha256: "235b5f98af411e05071419683961552074b9c87a5c235dc01c34292901874ead" },
   { page: 9, champ: "commentaire", sha256: "bf2de794228f24dfb0102f12be778f2a2fedebd890418d998457ddddd15a0a9e" },
   { page: 9, champ: "action", sha256: "5ca940d4109d1c861ec895bc6ed1cde07886083df74707f2c093bd56c9c280a0" },
+];
+
+/**
+ * Les PAIRES action ↔ commentaire, telles qu'une ligne de tableau les réunit
+ * (SHA-256 de « action \n commentaire », sous-chaînes lues dans le PDF). Sans
+ * elles, deux commentaires de la même page s'échangeaient sans que rien ne
+ * bouge (contre-lecture du 2026-09-26). Appariées dans l'ordre des lignes du
+ * tableau ; dans « Étape d'après travaux », l'extraction rend les trois
+ * actions avant les commentaires, et l'appariement suit l'ordre relu.
+ * `composite` : la seule paire que la brochure ne réunit pas (action du
+ * formulaire p. 10, commentaire du paragraphe p. 7) — un choix de Rojer, dit.
+ */
+export const LIGNES_ED6030: readonly { page: number; sha256: string; composite: boolean }[] = [
+  { page: 8, sha256: "bcf4baf6e1b3ebac4177a89d1ee48bb75f7d057392440b06e2b518323c591703", composite: false },
+  { page: 8, sha256: "7f7bfa1de8330f879a4374a843dbd56b3ec0cdc3af3e749f6e5816768ca13122", composite: false },
+  { page: 8, sha256: "8a634ad7547c2d46cb0676d61ec506e930eaee9c48ad63d71f69b855bcc92735", composite: false },
+  { page: 8, sha256: "b25639b0bead8f055e9dd3a20585c42a8e5059608d5c8b83490b93b870f61379", composite: false },
+  { page: 10, sha256: "d91108bfbb878e57f965f3b65acfa3a0ec6f47b513d570eb30b1f48394d8e913", composite: true },
+  { page: 8, sha256: "1724150383de6a78474bc3aed7678f46b0ca15f1391966ca31e1c22c7968b63e", composite: false },
+  { page: 8, sha256: "4bb00a8c47e5f6d235d03d6c8fd5e7f37038765654f39c4c14da76159e67d2ec", composite: false },
+  { page: 8, sha256: "5908234efe0d3aee2fe709039ec87bef4e0ec72c81cbe1343b3f6d592643f100", composite: false },
+  { page: 8, sha256: "1136f52a1d057b2a3d39f8f4a433c8519e5ebfc2c5920284f71d78a20baccbbf", composite: false },
+  { page: 9, sha256: "197427dfc0a8ddb4629012dd78696da6d9672d4732e5f69db52db20edd098f8f", composite: false },
+  { page: 9, sha256: "1a006762252f3b601535226b649cf512b70396b3c72ad7ea391f73e2f1136002", composite: false },
+  { page: 9, sha256: "af204c675952704ba4e1662ffc5e41694df29d3ea8200cd14f8ec6d95cbebea6", composite: false },
 ];

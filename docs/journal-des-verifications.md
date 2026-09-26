@@ -1353,6 +1353,41 @@ passaient en vert.]*
 - Le ZIP ne cite plus APSAD R43. Le formulaire dit que « standard /
   renforcé / intensif » sont des libellés de Rojer.
 
+**Seconde contre-lecture, le même jour (0 grave, 2 moyens, 5 faibles).**
+- Le refus d'une mesure retirée remontait en erreur de champ, et le
+  formulaire ne l'affichait pas : un formulaire ouvert avant le changement
+  de liste échouait en silence. L'erreur s'affiche sous les mesures et dit
+  quoi faire.
+- Un permis antérieur sans aucune mesure cochée s'affichait « 0 sur 13 »,
+  avec neuf prioritaires « manquantes ». Il se reconnaît désormais aussi par
+  sa date de création (`BASCULE_LISTE_ED6030`). ⚠ La valeur est une BORNE
+  PROVISOIRE, le lendemain du lot, à fixer à l'intégration par la date du
+  déploiement. Entre les deux, seul un permis sans mesure cochée resterait
+  mal lu.
+- La garde ne liait pas un commentaire à son action : échanger ceux de deux
+  mesures de la même page passait. `LIGNES_ED6030` porte l'empreinte de
+  chaque paire, lue dans l'ordre des lignes du tableau. Dans « Étape d'après
+  travaux », l'extraction rend les actions avant les commentaires, et
+  l'appariement suit l'ordre relu. La paire composite
+  (`isolation-boucle-detection`) est marquée comme telle.
+- La pastille de la fiche et l'en-tête du ZIP attribuaient à l'INRS les
+  mesures d'un permis antérieur. Ce n'est plus le cas.
+- La SÉLECTION est dite : 13 mesures reprises de la brochure, qui en décrit
+  davantage (24 actions dans ses trois tableaux, selon la contre-lecture).
+  Parmi les écartées : colmatage « dans un rayon de 10 m au moins »,
+  contrôle d'atmosphère, extinction des étincelles, refroidissement,
+  bouteilles de gaz, supports incombustibles, issues. **Aucun motif d'écart
+  n'est écrit** : la sélection précède ce lot, et personne ne l'a
+  argumentée.
+- Le schéma acceptait 30 minutes de surveillance avec « 2 h au moins »
+  cochée ; il n'accepte plus que les choix de l'écran (2, 4 ou 6 h,
+  `DUREES_SURVEILLANCE_MINUTES`).
+- `BROCHURE_ED6030_SHA256` n'est lu par aucun test, et le fichier le dit :
+  la brochure n'est pas au dépôt.
+- Épreuves dans les vrais fichiers, restaurés ensuite : commentaires
+  échangés (3 rouges), date de création ignorée (1), refus d'un identifiant
+  retiré supprimé (1).
+
 **Ce qui n'est pas porté** : les autres lignes de la brochure — dégazage,
 contrôle d'atmosphère, bouteilles de gaz, supports incombustibles, issues,
 extinction des étincelles, refroidissement, colmatage. Elles n'ont jamais été

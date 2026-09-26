@@ -29,6 +29,7 @@ import {
   MESURES_PERMIS_FEU,
   MESURES_RETIREES,
   mesuresParGroupe,
+  surListeAnterieure,
 } from "@/lib/permis-feu/referentiel";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import { etatPermisFeu } from "@/lib/calendrier/echeances";
@@ -99,9 +100,9 @@ export default async function PermisFeuDetailPage({
   const courantesCochees = MESURES_PERMIS_FEU.filter((m) => mesuresCochees.has(m.id)).length;
   // Un permis établi sur une liste antérieure n'a pas pu cocher la liste
   // courante : elle ne s'y compte pas comme un manque (contre-lecture du
-  // 2026-09-26). Un permis antérieur SANS aucune mesure cochée ne se
-  // distingue pas d'un permis courant : il s'affiche comme tel.
-  const anterieur = retireesCochees.length > 0;
+  // 2026-09-26). Sa date de création tranche le cas qu'aucun identifiant ne
+  // dit : un permis antérieur sans aucune mesure cochée.
+  const anterieur = surListeAnterieure(permis.mesuresValidees, permis.createdAt);
 
   // Signatures : on attend 2 signatures (donneur + prestataire).
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
@@ -184,7 +185,7 @@ export default async function PermisFeuDetailPage({
             </CarteFiche>
 
             <TitreSection
-              surtitre="Mesures tirées de l'INRS ED 6030"
+              surtitre="Une sélection de mesures de l'INRS ED 6030"
               titre="Mesures de prévention"
               droite={
                 <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
@@ -198,12 +199,14 @@ export default async function PermisFeuDetailPage({
             <p className="m-0 -mt-2 max-w-[68ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               «&nbsp;Prioritaire&nbsp;» est un classement de Rojer&nbsp;:
               l&apos;INRS ne classe pas ces mesures.
-              {retireesCochees.length > 0 ? (
+              {anterieur ? (
                 <>
                   {" "}
                   Ce permis a été établi sur une liste antérieure&nbsp;: les
-                  mesures ci-dessous n&apos;y figuraient pas, et celles
-                  qu&apos;il porte sont reprises plus bas.
+                  mesures ci-dessous n&apos;y figuraient pas
+                  {retireesCochees.length > 0
+                    ? ", et celles qu'il porte sont reprises plus bas."
+                    : "."}
                 </>
               ) : null}
             </p>
@@ -469,7 +472,7 @@ export default async function PermisFeuDetailPage({
         >
           Le permis de feu enregistré ici nomme le donneur d&apos;ordre et
           l&apos;entreprise qui intervient, les travaux, les mesures
-          préventives cochées (INRS ED 6030) et la durée de surveillance après
+          préventives cochées et la durée de surveillance après
           travaux. La règle APSAD R43 (travaux par points chauds) est un
           référentiel de la profession de l&apos;assurance : ni un article de
           code, ni un arrêté. Un contrat d&apos;assurance peut y renvoyer.

@@ -13,6 +13,8 @@ import {
 import { NATURES_TRAVAUX, LABEL_NATURE } from "@/lib/permis-feu/schema";
 import {
   GROUPES_LABEL,
+  DUREES_SURVEILLANCE_MINUTES,
+  MESURES_PERMIS_FEU,
   mesuresParGroupe,
   type MesurePermisFeu,
 } from "@/lib/permis-feu/referentiel";
@@ -277,7 +279,7 @@ export function FormulairePermisFeu({
 
       <SectionChamps
         titre="Check-list à valider avant, pendant, après"
-        chapeau={`Mesures tirées de la démarche INRS ED 6030. Rojer en signale ${nbObligatoires} comme prioritaires ; l'INRS ne les classe pas. Cochez celles qui sont en place.`}
+        chapeau={`Une sélection de Rojer : ${MESURES_PERMIS_FEU.length} mesures reprises mot pour mot de la brochure INRS ED 6030, qui en décrit davantage. Rojer en signale ${nbObligatoires} comme prioritaires ; l'INRS ne les classe pas. Cochez celles qui sont en place.`}
       >
         {/* Les trois groupes sont séparés par le blanc, pas par un filet
             pointillé : le board sépare par filet plein ou pas du tout, et
@@ -328,13 +330,21 @@ export function FormulairePermisFeu({
             </ul>
           </div>
         ))}
+        {/* Le refus d'une mesure retirée revient en `fieldErrors` : sans
+            cette ligne, un formulaire ouvert avant le changement de liste
+            échouait en silence (contre-lecture du 2026-09-26). */}
+        {err("mesuresValidees") && (
+          <p role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+            {err("mesuresValidees")}
+          </p>
+        )}
 
         <fieldset className="m-0 border-0 p-0">
           <legend className="label-board">
             Durée de surveillance post-travaux *
           </legend>
           <div className="mt-2 flex flex-wrap gap-2">
-            {[120, 240, 360].map((mn) => (
+            {DUREES_SURVEILLANCE_MINUTES.map((mn) => (
               <label key={mn} className={PILULE_COCHABLE}>
                 <input
                   type="radio"

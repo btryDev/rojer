@@ -1,3 +1,5 @@
+import { depuisCleJourCivil } from "@/lib/dates";
+
 /**
  * Les mesures préventives d'un permis de feu, telles que la brochure INRS
  * ED 6030 les écrit.
@@ -180,12 +182,37 @@ export const MESURES_RETIREES: readonly {
   { id: "controle-zone", libelle: "Contrôle visuel de la zone : aucun point chaud, aucune fumée", groupe: "apres", motif: "Remplacé par l'inspection « du lieu d'intervention et des abords juste après l'arrêt des travaux » (p. 9)." },
 ];
 
+/**
+ * Les durées de surveillance que l'écran propose. La brochure dit « 2 h au
+ * moins » ; 4 h et 6 h, et leurs libellés « renforcé » et « intensif », sont
+ * des choix de Rojer.
+ */
+export const DUREES_SURVEILLANCE_MINUTES = [120, 240, 360] as const;
+
 /** Les identifiants qu'une création accepte : ceux de la liste courante, et eux seuls. */
 export const IDS_MESURES_COURANTES: ReadonlySet<string> = new Set(MESURES_PERMIS_FEU.map((m) => m.id));
 
-/** Un permis porte-t-il des mesures d'une liste antérieure ? */
-export const surListeAnterieure = (ids: readonly string[]) =>
-  ids.some((id) => MESURES_RETIREES.some((m) => m.id === id));
+/**
+ * La date à partir de laquelle la liste courante est en service.
+ *
+ * ⚠ BORNE PROVISOIRE, À FIXER À L'INTÉGRATION par la date du déploiement de
+ * cette liste. La valeur ci-dessous est le lendemain du lot : aucun permis
+ * créé avant elle n'a pu cocher la liste courante, puisqu'elle n'était
+ * déployée nulle part. Entre elle et le déploiement, un permis antérieur SANS
+ * aucune mesure cochée se lirait encore comme courant : c'est le seul cas que
+ * les identifiants ne tranchent pas (contre-lecture du 2026-09-26).
+ */
+export const BASCULE_LISTE_ED6030 = depuisCleJourCivil("2026-09-27");
+
+/**
+ * Un permis a-t-il été établi sur une liste antérieure ? Par ses identifiants
+ * (les quatorze anciens sont tous retirés), ou par sa date de création quand
+ * elle est connue — un permis sans aucune mesure cochée n'a pas
+ * d'identifiant qui le dise.
+ */
+export const surListeAnterieure = (ids: readonly string[], creeLe?: Date) =>
+  ids.some((id) => MESURES_RETIREES.some((m) => m.id === id)) ||
+  (creeLe !== undefined && creeLe < BASCULE_LISTE_ED6030);
 
 export const GROUPES_LABEL: Record<
   MesurePermisFeu["groupe"],

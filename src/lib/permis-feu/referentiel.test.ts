@@ -21,8 +21,10 @@
 
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { RELEVES_ED6030 } from "./releve-ed6030";
+import { LIGNES_ED6030, RELEVES_ED6030 } from "./releve-ed6030";
 import {
+  BASCULE_LISTE_ED6030,
+  surListeAnterieure,
   MESURES_PERMIS_FEU,
   MESURES_RETIREES,
   mesureParId,
@@ -75,6 +77,17 @@ const formeDeComparaison = (t: string) =>
   t.replace(/\u00ad/g, "").replace(/[’]/g, "'").replace(/•/g, " ").replace(/\s+/g, " ").trim();
 const empreinte = (t: string) => createHash("sha256").update(formeDeComparaison(t)).digest("hex");
 
+/** L'action et le commentaire de la source forment-ils une ligne du relevé ? */
+const lignePresente = (m: MesurePermisFeu) =>
+  LIGNES_ED6030.some(
+    (l) =>
+      l.page === m.source.page &&
+      l.sha256 ===
+        createHash("sha256")
+          .update(`${formeDeComparaison(m.source.action)}\n${formeDeComparaison(m.source.commentaire ?? "")}`)
+          .digest("hex"),
+  );
+
 /** Les extraits de la source qu'aucun relevé du PDF ne connaît, à leur page. */
 function horsReleve(m: MesurePermisFeu): string[] {
   const connu = (champ: "action" | "commentaire", page: number, t: string) =>
@@ -92,6 +105,13 @@ describe("la SOURCE de chaque mesure est dans le relevé du PDF — un témoin q
   it.each(MESURES_PERMIS_FEU.map((m) => [m.id, m] as const))("%s", (_id, m) => {
     expect(horsReleve(m)).toEqual([]);
   });
+
+  it.each(MESURES_PERMIS_FEU.filter((m) => m.source.commentaire).map((m) => [m.id, m] as const))(
+    "%s : l'action et le commentaire sont la même ligne de la brochure",
+    (_id, m) => {
+      expect(lignePresente(m)).toBe(true);
+    },
+  );
 
   it("le relevé n'a pas d'extrait orphelin — sinon il ne garde plus rien", () => {
     const utilises = new Set(
@@ -115,6 +135,16 @@ describe("la garde éprouvée en la cassant", () => {
       { ...par("ventilation-si-necessaire"), source: { ...par("ventilation-si-necessaire").source, action: "Coupure de la ventilation des zones de travail et/ou des locaux attenants" } },
     ];
     for (const s of sondes) expect(horsReleve(s).length, s.id).toBeGreaterThan(0);
+  });
+
+  it("refuse deux commentaires échangés entre mesures de la même page — la sonde de la contre-lecture", () => {
+    const par = (id: string) => MESURES_PERMIS_FEU.find((m) => m.id === id)!;
+    const a = par("balisage-zone-ed6030");
+    const b = par("nettoyage-zone-preparation");
+    // Chaque extrait reste dans le relevé : seul le lien est faux.
+    const echange = { ...a, source: { ...a.source, commentaire: b.source.commentaire } };
+    expect(horsReleve(echange)).toEqual([]);
+    expect(lignePresente(echange)).toBe(false);
   });
 
   it("refuse les mesures qui contredisaient la brochure, telles qu'elles étaient écrites", () => {
@@ -141,5 +171,16 @@ describe("la garde éprouvée en la cassant", () => {
       },
     ])
       expect(ecartsALaSource(fautive).length, fautive.libelle).toBeGreaterThan(0);
+  });
+});
+
+describe("un permis antérieur se reconnaît même sans mesure cochée (contre-lecture du 2026-09-26)", () => {
+  it("par sa date de création, quand aucun identifiant ne le dit", () => {
+    // La sonde : un permis ancien sans mesure cochée s'affichait « 0 sur 13 »
+    // avec neuf prioritaires « manquantes ».
+    const avant = new Date(BASCULE_LISTE_ED6030.getTime() - 1);
+    expect(surListeAnterieure([], avant)).toBe(true);
+    expect(surListeAnterieure([], BASCULE_LISTE_ED6030)).toBe(false);
+    expect(surListeAnterieure(["zone-degagee-5m"], BASCULE_LISTE_ED6030)).toBe(true);
   });
 });

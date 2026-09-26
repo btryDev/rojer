@@ -283,6 +283,10 @@ export async function GET(
       // ~~« règle APSAD R43 »~~ — rayé le 2026-09-26 : `permis-feu/referentiel.ts`
       // ne tient plus rien d'APSAD, qui n'a jamais été lue.
       `Mesures tirées de la brochure INRS ED 6030 (2e édition, août 2019) — ni article de code, ni arrêté.`,
+      // Pas pour un permis établi sur une liste antérieure, dont les
+      // mesures ne viennent pas toutes de la brochure (contre-lecture du
+      // 2026-09-26) : la ligne de chaque permis le dit.
+      `Un permis établi sur une liste antérieure porte les libellés de celle-ci, qui ne viennent pas tous de la brochure.`,
       "",
       "────────────────────────────────────────────────────────────",
       ...permisFeuList.flatMap((p) => [
@@ -298,7 +302,7 @@ export async function GET(
         // la porte.
         `  Mesures cochées (${p.mesuresValidees.length}) :`,
         ...p.mesuresValidees.map((m) => `    - ${mesureParId(m)?.libelle ?? m}`),
-        ...(surListeAnterieure(p.mesuresValidees)
+        ...(surListeAnterieure(p.mesuresValidees, p.createdAt)
           ? ["    (établi sur une liste antérieure de mesures)"]
           : []),
         "",
