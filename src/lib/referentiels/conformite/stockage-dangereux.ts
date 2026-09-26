@@ -82,7 +82,7 @@ export const obligationsStockageDangereux: Obligation[] = [
     domaine: "stockage_dangereux",
     libelle: "Capacité de rétention (stockage liquides dangereux)",
     description:
-      "Tout stockage de liquides dangereux (inflammables, toxiques, corrosifs) est organisé de façon à prévenir les épandages : récipients placés sur une capacité de rétention étanche. La règle chiffrée des arrêtés ICPE — capacité de rétention au moins égale à la PLUS GRANDE des deux valeurs : 100 % de la capacité du plus grand réservoir, ou 50 % de la capacité totale des réservoirs associés — n'est opposable qu'aux établissements classés ; hors ICPE, elle sert de référence de bonne pratique.",
+      "Tout stockage de liquides dangereux (inflammables, toxiques, corrosifs) est organisé de façon à prévenir les épandages : récipients placés sur une capacité de rétention étanche. La règle chiffrée des arrêtés ICPE — capacité de rétention au moins égale à la PLUS GRANDE des deux valeurs : 100 % de la capacité du plus grand réservoir, ou 50 % de la capacité totale des réservoirs associés — figure dans l'arrêté du 1er juin 2015 relatif aux installations classées soumises à enregistrement (rubriques 4331 et 4734) ; hors de ce régime, aucun texte lu ici ne la fixe, et Rojer la cite comme repère.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -94,7 +94,7 @@ export const obligationsStockageDangereux: Obligation[] = [
       },
       {
         source: "ARRETE",
-        reference: "Arrêté du 1er juin 2015 (rubriques 4331/4734, enregistrement), art. 22 — valeurs de rétention, opposables uniquement sous ce régime ICPE",
+        reference: "Arrêté du 1er juin 2015 (rubriques 4331/4734, enregistrement), art. 22 — valeurs de rétention ; texte relatif aux installations classées de ce régime",
         article: "Arrêté 2015-06-01 art. 22",
         url:
           "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000044166790",

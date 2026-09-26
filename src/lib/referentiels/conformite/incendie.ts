@@ -1473,7 +1473,7 @@ export const obligationsIncendie: Obligation[] = [
         article: "Arrêté 1986-01-31 art. 104",
         url:
           "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006828542",
-        note: "« Le propriétaire est tenu de présenter toutes les justifications utiles concernant l'entretien et la vérification des installations sur demande des agents assermentés et commissionnés à cet effet. » Relevé le 2026-09-01. C'est ce qui rend le registre opposable.",
+        note: "« Le propriétaire est tenu de présenter toutes les justifications utiles concernant l'entretien et la vérification des installations sur demande des agents assermentés et commissionnés à cet effet. » Relevé le 2026-09-01.",
         versionConstatee: "1986-03-05",
       },
     ],
