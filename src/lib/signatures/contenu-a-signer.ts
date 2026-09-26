@@ -92,6 +92,12 @@ export type ContenuPermisASigner = {
   mesuresValidees: string[];
   mesuresNotes: string | null;
   dureeSurveillanceMinutes: number;
+  /**
+   * AFFICHAGE SEUL, hors de l'empreinte (`hash-objet.ts` a son propre
+   * `select`, sans lui) : sert à dire qu'un permis ancien sans mesure cochée
+   * a été établi sur une liste antérieure (vérification du 2026-09-26).
+   */
+  createdAt: Date;
 };
 
 export type ContenuRapportASigner = {
@@ -188,6 +194,7 @@ export async function contenuASigner(
         mesuresValidees: true,
         mesuresNotes: true,
         dureeSurveillanceMinutes: true,
+        createdAt: true,
       },
     });
     if (!p) return null;

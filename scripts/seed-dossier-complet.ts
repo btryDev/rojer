@@ -1256,13 +1256,12 @@ async function main(): Promise<void> {
       descriptionTravaux:
         "Brasage des liaisons frigorifiques et reprise du support du groupe. Meulage ponctuel sur platine acier.",
       mesuresValidees: [
-        "zone-degagee-5m",
-        "balisage-zone",
-        "extincteurs-proximite",
-        "verif-etat-materiel",
-        "surveillant-dedie",
-        "epi-operateur",
-        "surveillance-2h-min",
+        "eloignement-combustibles-10m",
+        "balisage-zone-ed6030",
+        "moyens-extinction-alarme",
+        "verification-outillage",
+        "surveillance-premiere-intervention",
+        "surveillance-lieux-abords",
       ],
       mesuresNotes:
         "Détection incendie du local isolée pendant l'intervention, réactivée à la fin par le gérant.",

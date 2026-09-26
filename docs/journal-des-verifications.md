@@ -1908,6 +1908,155 @@ relevés suivent la même règle que le reste du lot).**
   `docs/etat-verification-referentiel.md` régénéré : 311 + 1
   (`INRS ED 840 fiche 20`) = 312.
 
+### C33 · 2026-09-26 — Les mesures du permis de feu, appariées ligne à ligne à la brochure INRS ED 6030
+
+**Constat.** `permis-feu/referentiel.ts` présentait ses mesures comme
+« tirées de la démarche INRS ED 6030 », et plusieurs la contredisaient. La
+vérification de la coordination en nommait quatre ; l'appariement en trouve
+davantage. La liste comptait **14 mesures**, pas 22.
+
+**Lu** : la brochure entière (`TI-ED-6030-2.pdf`, 2e édition révisée en août
+2019), extraite deux fois, par pdftotext et par pypdf. Les tableaux « Étape de
+préparation » (p. 8), « Étape de réalisation » et « Étape d'après travaux »
+(p. 9), le paragraphe « Préparation » (p. 7) et le formulaire (p. 10). La
+règle APSAD R43, que l'en-tête du module citait comme source, n'a jamais été
+lue : la mention est rayée.
+
+**Appariement, mesure par mesure (avant → après) :**
+
+| Ancien identifiant | Sort | Ce que dit la brochure |
+|---|---|---|
+| `zone-degagee-5m` | retiré → `eloignement-combustibles-10m` + `protection-combustibles` | « au moins 10 m » ; bâches ignifugées ou plaques jointives (p. 8) |
+| `balisage-zone` | ~~gardé~~ retiré → `balisage-zone-ed6030` | « Balisage de la zone » (p. 8) |
+| `couper-ventilation` | retiré → `ventilation-si-necessaire` | « Ventilation des zones de travail et/ou des locaux attenants si nécessaire » (p. 8) |
+| `isoler-detection` | ~~gardé~~ retiré → `isolation-boucle-detection` ; source composite : action du formulaire (p. 10), commentaire d'un paragraphe de la p. 7, qui vise « détection ou d'extinction automatique » | « Isolation de la boucle de détection » ; « des mesures de sécurité au moins équivalentes … en accord avec l'assureur » |
+| `extincteurs-proximite` | retiré → `moyens-extinction-alarme` | « au minimum 1 extincteur 9 litres à eau et 1 extincteur adapté aux risques du local » ; pas de « ≤ 3 m » (p. 8) |
+| `verif-etat-materiel` | ~~gardé~~ retiré → `verification-outillage` | « Vérification de l'état de l'outillage utilisé » (p. 8) |
+| `information-occupants` | retiré → `visite-commune` | « Visite commune … » ; « Informer les opérateurs situés à proximité » (p. 8) |
+| `surveillant-dedie` | retiré → `surveillance-premiere-intervention` | « une personne formée à la première intervention » ; ni « dédié », ni « en continu » (p. 9) |
+| `epi-operateur` | retiré, sans remplaçant | aucune mesure ; les EPI ne sont nommés qu'à propos du champ de vision (p. 9) |
+| `evacuation-dechets` | retiré, sans remplaçant | aucune mesure |
+| `surveillance-2h-min` | ~~gardé~~ retiré → `surveillance-lieux-abords` | « Surveillance des lieux de travail et des abords » ; « 2 h au moins » (p. 9) |
+| `controle-zone` | ~~gardé~~ retiré → `inspection-apres-arret` | « Inspection du lieu d'intervention et des abords juste après l'arrêt des travaux … » (p. 9) |
+| `reactivation-detection` | retiré → `deconsignation-remise-disposition` | « Déconsignation et remise à disposition de l'installation » (p. 9) |
+| `nettoyage-zone` (après) | retiré → `nettoyage-zone-preparation` (avant) | la brochure le place en préparation (p. 8) |
+
+Au total, 13 mesures courantes, toutes tirées de la brochure : leur libellé
+EST l'« Action », leur explication EST le « Commentaire ». Aucune n'est un
+ajout de Rojer. Les 25 extraits sont retrouvés dans les deux extractions, une
+coupure de mot près (« interro- ger », pypdf). Le classement « prioritaire »
+reste celui de Rojer ; la ventilation, « si nécessaire », n'est pas classée
+prioritaire.
+
+**Les identifiants en base ne changent pas de sens.** Une mesure dont le
+contenu change prend un nouvel identifiant. Les neuf retirées passent dans
+`MESURES_RETIREES` avec leur libellé d'origine et le motif du retrait, et
+`mesureParId` les lit encore : la page de signature par lien et la fiche
+affichent un permis existant tel qu'il a été établi. La fiche les montre à
+part (« Cochées sur la liste antérieure ») et dit que la liste courante
+n'existait pas toute à cette date. L'empreinte d'une signature porte sur les
+identifiants, pas sur les libellés : aucun permis signé n'est touché. Le seed
+de démonstration prend les identifiants courants.
+
+**La garde** : `permis-feu/referentiel.test.ts`. Libellé = action, explication
+= commentaire, page dans les tableaux, aucun identifiant retiré réemployé, et
+chaque retiré lisible. ~~Éprouvée avec les trois mesures contredites telles que
+`4096d0f` les écrivait, puis dans le vrai fichier (« rayon de 5 m » remis sur
+`eloignement-combustibles-10m` : refusé, restauré).~~ *[Au mesuré, après
+contre-lecture : l'épreuve cassait le LIBELLÉ, pas la SOURCE. Or `inrs()`
+fabrique le libellé depuis la source : une paraphrase écrite dans la source
+passait, et la garde était vraie par construction. Trois sondes (« rayon de
+5 m », « 6 litres … ou 1 CO2 de 5 kg », « Coupure de la ventilation ») la
+passaient en vert.]*
+
+**Contre-lecture du même jour, corrigée.**
+- **Cinq identifiants gardés avaient changé de contenu** (`balisage-zone`,
+  `isoler-detection`, `verif-etat-materiel`, `controle-zone`,
+  `surveillance-2h-min`). La page de signature par lien affichait donc à un
+  signataire un autre texte que celui qu'il avait coché, sous la même
+  empreinte. Ma propre règle (contenu changé → nouvel identifiant) est
+  appliquée : les cinq passent dans `MESURES_RETIREES` avec leur libellé
+  d'origine (relu à `4096d0f`), et la liste courante n'en garde AUCUN. Les
+  quatorze identifiants antérieurs sont tous retirés. Un permis qui en porte
+  un est donc reconnu sans ambiguïté, sauf s'il ne porte aucune mesure.
+- **Un permis antérieur ne lit plus la liste courante comme un manque.** Sur
+  la fiche, ni compteur « N sur 13 », ni pastilles « prioritaire non
+  cochée » ; à la place, « Liste antérieure ». La page de signature dit
+  qu'il a été établi sur une liste antérieure. Le ZIP nomme chaque mesure
+  cochée au lieu de les compter. La date « 26 septembre 2026 », qui était
+  celle du lot et non du déploiement, est retirée.
+- **La création refuse un identifiant retiré ou inconnu**
+  (`permis-feu/schema.ts`).
+- **Un témoin indépendant** : `permis-feu/releve-ed6030.ts` porte le
+  SHA-256 de chaque action et de chaque commentaire, pris dans le PDF (forme
+  de comparaison : blancs réduits, apostrophe droite, puces retirées), sans
+  les identifiants, avec le SHA-256 du fichier de la brochure. La source de
+  chaque mesure doit y être, à sa page. Épreuve : les trois sondes sont
+  refusées, et « Coupure de la ventilation » écrit dans la source du vrai
+  fichier l'est aussi (restauré ensuite).
+- Le ZIP ne cite plus APSAD R43. Le formulaire dit que « standard /
+  renforcé / intensif » sont des libellés de Rojer.
+
+**Seconde contre-lecture, le même jour (0 grave, 2 moyens, 5 faibles).**
+- Le refus d'une mesure retirée remontait en erreur de champ, et le
+  formulaire ne l'affichait pas : un formulaire ouvert avant le changement
+  de liste échouait en silence. L'erreur s'affiche sous les mesures et dit
+  quoi faire.
+- Un permis antérieur sans aucune mesure cochée s'affichait « 0 sur 13 »,
+  avec neuf prioritaires « manquantes ». Il se reconnaît désormais aussi par
+  sa date de création (`BASCULE_LISTE_ED6030`). ⚠ La valeur est une BORNE
+  PROVISOIRE, le lendemain du lot, à fixer à l'intégration par la date du
+  déploiement. Entre les deux, seul un permis sans mesure cochée resterait
+  mal lu.
+- La garde ne liait pas un commentaire à son action : échanger ceux de deux
+  mesures de la même page passait. `LIGNES_ED6030` porte l'empreinte de
+  chaque paire, lue dans l'ordre des lignes du tableau. Dans « Étape d'après
+  travaux », l'extraction rend les actions avant les commentaires, et
+  l'appariement suit l'ordre relu. La paire composite
+  (`isolation-boucle-detection`) est marquée comme telle.
+- La pastille de la fiche et l'en-tête du ZIP attribuaient à l'INRS les
+  mesures d'un permis antérieur. Ce n'est plus le cas.
+- La SÉLECTION est dite : 13 mesures reprises de la brochure, qui en décrit
+  davantage (24 actions dans ses trois tableaux, selon la contre-lecture).
+  Parmi les écartées : colmatage « dans un rayon de 10 m au moins »,
+  contrôle d'atmosphère, extinction des étincelles, refroidissement,
+  bouteilles de gaz, supports incombustibles, issues. **Aucun motif d'écart
+  n'est écrit** : la sélection précède ce lot, et personne ne l'a
+  argumentée.
+- Le schéma acceptait 30 minutes de surveillance avec « 2 h au moins »
+  cochée ; il n'accepte plus que les choix de l'écran (2, 4 ou 6 h,
+  `DUREES_SURVEILLANCE_MINUTES`).
+- `BROCHURE_ED6030_SHA256` n'est lu par aucun test, et le fichier le dit :
+  la brochure n'est pas au dépôt.
+- Épreuves dans les vrais fichiers, restaurés ensuite : commentaires
+  échangés (3 rouges), date de création ignorée (1), refus d'un identifiant
+  retiré supprimé (1).
+
+**Vérification ciblée, le même jour : trois suites et un reste.**
+- Un refus serveur sur un champ qui n'affiche pas son erreur (durée,
+  fonction du donneur d'ordre, notes) restait muet. Le message général ne se
+  masque plus dès qu'il y a des erreurs de champ : toute erreur qu'aucun
+  champ n'affiche est listée en bas du formulaire. Un test confronte la liste
+  des champs rendus aux `err("…")` du source (épreuve : `lieu` retiré de la
+  liste → refusé).
+- La page de signature reçoit `createdAt`, pour AFFICHAGE seul :
+  `hash-objet.ts` a son propre `select`, sans lui, et l'empreinte d'un permis
+  signé ne bouge pas. Un permis ancien sans mesure y porte donc aussi la
+  mention « liste antérieure ».
+- Le ZIP arrondissait la surveillance à l'heure (90 min → « 2h ») ; il écrit
+  désormais comme la fiche (« 1h30 »), par une seule fonction
+  (`permis-feu/duree.ts`).
+- L'état vide de la liste des permis disait « doit faire l'objet d'un permis
+  signé conjointement », ce qui contredisait « Aucun texte n'impose le permis
+  de feu sous ce nom » sur la même page. Il dit désormais ce que Rojer
+  propose, et renvoie à ce paragraphe.
+
+**Ce qui n'est pas porté** : les autres lignes de la brochure — dégazage,
+contrôle d'atmosphère, bouteilles de gaz, supports incombustibles, issues,
+extinction des étincelles, refroidissement, colmatage. Elles n'ont jamais été
+dans la liste, et les y ajouter est une décision de contenu, pas une
+correction.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

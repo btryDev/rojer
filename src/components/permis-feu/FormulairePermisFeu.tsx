@@ -13,6 +13,8 @@ import {
 import { NATURES_TRAVAUX, LABEL_NATURE } from "@/lib/permis-feu/schema";
 import {
   GROUPES_LABEL,
+  DUREES_SURVEILLANCE_MINUTES,
+  MESURES_PERMIS_FEU,
   mesuresParGroupe,
   type MesurePermisFeu,
 } from "@/lib/permis-feu/referentiel";
@@ -44,6 +46,12 @@ const PILULE_RETENUE =
  * une tabulation traverserait la liste sans que rien ne bouge à l'écran.
  */
 const PILULE_COCHABLE = `${PILULE} ${PILULE_REPOS} has-[:checked]:bg-[color:var(--board-blue-pale)] has-[:checked]:text-[color:var(--board-blue-ink)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[color:var(--board-blue-strong)]`;
+
+/** Les champs dont l'erreur s'affiche à côté d'eux ; les autres, en bas du formulaire. */
+const CHAMPS_AVEC_ERREUR_RENDUE = new Set([
+  "batimentId", "dateDebut", "dateFin", "descriptionTravaux", "donneurOrdreNom", "lieu",
+  "mesuresValidees", "naturesTravaux", "prestataireContact", "prestataireEmail", "prestataireRaison",
+]);
 
 export function FormulairePermisFeu({
   etablissementId,
@@ -277,7 +285,7 @@ export function FormulairePermisFeu({
 
       <SectionChamps
         titre="Check-list à valider avant, pendant, après"
-        chapeau={`Mesures tirées de la démarche INRS ED 6030. Rojer en signale ${nbObligatoires} comme prioritaires ; l'INRS ne les classe pas. Cochez celles qui sont en place.`}
+        chapeau={`Une sélection de Rojer : ${MESURES_PERMIS_FEU.length} mesures reprises mot pour mot de la brochure INRS ED 6030, qui en décrit davantage. Rojer en signale ${nbObligatoires} comme prioritaires ; l'INRS ne les classe pas. Cochez celles qui sont en place.`}
       >
         {/* Les trois groupes sont séparés par le blanc, pas par un filet
             pointillé : le board sépare par filet plein ou pas du tout, et
@@ -328,13 +336,21 @@ export function FormulairePermisFeu({
             </ul>
           </div>
         ))}
+        {/* Le refus d'une mesure retirée revient en `fieldErrors` : sans
+            cette ligne, un formulaire ouvert avant le changement de liste
+            échouait en silence (contre-lecture du 2026-09-26). */}
+        {err("mesuresValidees") && (
+          <p role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+            {err("mesuresValidees")}
+          </p>
+        )}
 
         <fieldset className="m-0 border-0 p-0">
           <legend className="label-board">
             Durée de surveillance post-travaux *
           </legend>
           <div className="mt-2 flex flex-wrap gap-2">
-            {[120, 240, 360].map((mn) => (
+            {DUREES_SURVEILLANCE_MINUTES.map((mn) => (
               <label key={mn} className={PILULE_COCHABLE}>
                 <input
                   type="radio"
@@ -355,6 +371,8 @@ export function FormulairePermisFeu({
           <p className="m-0 mt-2 max-w-[62ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             L&apos;INRS (ED 6030)&nbsp;: «&nbsp;Surveillance à réaliser
             pendant 2 h au moins après l&apos;arrêt des travaux.&nbsp;»
+            «&nbsp;Standard&nbsp;», «&nbsp;renforcé&nbsp;» et
+            «&nbsp;intensif&nbsp;» sont des libellés de Rojer.
           </p>
         </fieldset>
 
@@ -373,11 +391,26 @@ export function FormulairePermisFeu({
         </div>
       </SectionChamps>
 
-      {state.status === "error" && !state.fieldErrors && (
-        <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-          {state.message}
-        </p>
-      )}
+      {/* Le message général ne se masque plus dès qu'il y a des erreurs de
+          champ : un champ sans `err()` rendu (durée, fonction, notes…)
+          restait muet (vérification du 2026-09-26). Toute erreur qu'aucun
+          champ n'affiche est listée ici, sans câblage champ par champ. */}
+      {state.status === "error" &&
+        (!state.fieldErrors ||
+          Object.keys(state.fieldErrors).some((k) => !CHAMPS_AVEC_ERREUR_RENDUE.has(k))) && (
+          <div role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+            <p className="m-0">{state.message}</p>
+            {state.fieldErrors ? (
+              <ul className="m-0 mt-1 pl-4">
+                {Object.entries(state.fieldErrors)
+                  .filter(([k]) => !CHAMPS_AVEC_ERREUR_RENDUE.has(k))
+                  .map(([k, msgs]) => (
+                    <li key={k}>{msgs?.[0]}</li>
+                  ))}
+              </ul>
+            ) : null}
+          </div>
+        )}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="board" size="board" type="submit" disabled={pending}>
