@@ -27,6 +27,7 @@ import { LABEL_NATURE } from "@/lib/permis-feu/schema";
 import {
   GROUPES_LABEL,
   MESURES_PERMIS_FEU,
+  MESURES_RETIREES,
   mesuresParGroupe,
 } from "@/lib/permis-feu/referentiel";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
@@ -91,6 +92,11 @@ export default async function PermisFeuDetailPage({
 
   const mesuresCochees = new Set(permis.mesuresValidees);
   const groupes = mesuresParGroupe();
+  // Un permis établi avant le 2026-09-26 porte des identifiants que la liste
+  // n'a plus (`MESURES_RETIREES`) : ils s'affichent à part, avec leur libellé
+  // d'origine, et la liste courante ne se lit pas comme un manque.
+  const retireesCochees = MESURES_RETIREES.filter((m) => mesuresCochees.has(m.id));
+  const courantesCochees = MESURES_PERMIS_FEU.filter((m) => mesuresCochees.has(m.id)).length;
 
   // Signatures : on attend 2 signatures (donneur + prestataire).
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
@@ -177,8 +183,7 @@ export default async function PermisFeuDetailPage({
               titre="Mesures de prévention"
               droite={
                 <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
-                  {permis.mesuresValidees.length} sur{" "}
-                  {MESURES_PERMIS_FEU.length}
+                  {courantesCochees} sur {MESURES_PERMIS_FEU.length}
                 </span>
               }
             />
@@ -186,6 +191,15 @@ export default async function PermisFeuDetailPage({
             <p className="m-0 -mt-2 max-w-[68ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               «&nbsp;Prioritaire&nbsp;» est un classement de Rojer&nbsp;:
               l&apos;INRS ne classe pas ces mesures.
+              {retireesCochees.length > 0 ? (
+                <>
+                  {" "}
+                  Ce permis a été établi sur la liste antérieure au
+                  26&nbsp;septembre&nbsp;2026&nbsp;: les mesures ci-dessous
+                  n&apos;y figuraient pas toutes, et celles qu&apos;il porte
+                  sont reprises plus bas.
+                </>
+              ) : null}
             </p>
 
             {(["avant", "pendant", "apres"] as const).map((g) => {
@@ -262,6 +276,26 @@ export default async function PermisFeuDetailPage({
                 </CarteFiche>
               );
             })}
+
+            {retireesCochees.length > 0 && (
+              <CarteFiche titre="Cochées sur la liste antérieure">
+                <p className="m-0 -mt-2 mb-4 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                  Mesures retirées de la liste le 26&nbsp;septembre&nbsp;2026,
+                  après confrontation à la brochure INRS ED 6030. Elles
+                  s&apos;affichent telles que ce permis les a portées.
+                </p>
+                <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                  {retireesCochees.map((m) => (
+                    <li key={m.id} className="text-[13.5px] leading-[1.5]">
+                      <span className="text-[color:var(--board-ink)]">{m.libelle}</span>
+                      <span className="mt-0.5 block text-[12px] text-[color:var(--board-slate-mid)]">
+                        {m.motif}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </CarteFiche>
+            )}
 
             {permis.mesuresNotes && (
               <BlocCreux>

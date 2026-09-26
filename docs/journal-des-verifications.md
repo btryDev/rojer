@@ -1263,6 +1263,69 @@ pas.**
 `docs/etat-verification-referentiel.md` régénéré : lus au 2026-08-31,
 68 − 1 = 67 ; lus au 2026-09-26, 17 + 1 = 18 (`R. 4121-4`).
 
+
+### C33 · 2026-09-26 — Les mesures du permis de feu, appariées ligne à ligne à la brochure INRS ED 6030
+
+**Constat.** `permis-feu/referentiel.ts` présentait ses mesures comme
+« tirées de la démarche INRS ED 6030 », et plusieurs la contredisaient. La
+vérification de la coordination en nommait quatre ; l'appariement en trouve
+davantage. La liste comptait **14 mesures**, pas 22.
+
+**Lu** : la brochure entière (`TI-ED-6030-2.pdf`, 2e édition révisée en août
+2019), extraite deux fois, par pdftotext et par pypdf. Les tableaux « Étape de
+préparation » (p. 8), « Étape de réalisation » et « Étape d'après travaux »
+(p. 9), le paragraphe « Préparation » (p. 7) et le formulaire (p. 10). La
+règle APSAD R43, que l'en-tête du module citait comme source, n'a jamais été
+lue : la mention est rayée.
+
+**Appariement, mesure par mesure (avant → après) :**
+
+| Ancien identifiant | Sort | Ce que dit la brochure |
+|---|---|---|
+| `zone-degagee-5m` | retiré → `eloignement-combustibles-10m` + `protection-combustibles` | « au moins 10 m » ; bâches ignifugées ou plaques jointives (p. 8) |
+| `balisage-zone` | gardé, libellé et commentaire de la brochure | « Balisage de la zone » (p. 8) |
+| `couper-ventilation` | retiré → `ventilation-si-necessaire` | « Ventilation des zones de travail et/ou des locaux attenants si nécessaire » (p. 8) |
+| `isoler-detection` | gardé, libellé du formulaire, commentaire de la p. 7 | « Isolation de la boucle de détection » ; « des mesures de sécurité au moins équivalentes … en accord avec l'assureur » |
+| `extincteurs-proximite` | retiré → `moyens-extinction-alarme` | « au minimum 1 extincteur 9 litres à eau et 1 extincteur adapté aux risques du local » ; pas de « ≤ 3 m » (p. 8) |
+| `verif-etat-materiel` | gardé | « Vérification de l'état de l'outillage utilisé » (p. 8) |
+| `information-occupants` | retiré → `visite-commune` | « Visite commune … » ; « Informer les opérateurs situés à proximité » (p. 8) |
+| `surveillant-dedie` | retiré → `surveillance-premiere-intervention` | « une personne formée à la première intervention » ; ni « dédié », ni « en continu » (p. 9) |
+| `epi-operateur` | retiré, sans remplaçant | aucune mesure ; les EPI ne sont nommés qu'à propos du champ de vision (p. 9) |
+| `evacuation-dechets` | retiré, sans remplaçant | aucune mesure |
+| `surveillance-2h-min` | gardé | « Surveillance des lieux de travail et des abords » ; « 2 h au moins » (p. 9) |
+| `controle-zone` | gardé | « Inspection du lieu d'intervention et des abords juste après l'arrêt des travaux … » (p. 9) |
+| `reactivation-detection` | retiré → `deconsignation-remise-disposition` | « Déconsignation et remise à disposition de l'installation » (p. 9) |
+| `nettoyage-zone` (après) | retiré → `nettoyage-zone-preparation` (avant) | la brochure le place en préparation (p. 8) |
+
+Au total, 13 mesures courantes, toutes tirées de la brochure : leur libellé
+EST l'« Action », leur explication EST le « Commentaire ». Aucune n'est un
+ajout de Rojer. Les 25 extraits sont retrouvés dans les deux extractions, une
+coupure de mot près (« interro- ger », pypdf). Le classement « prioritaire »
+reste celui de Rojer ; la ventilation, « si nécessaire », n'est pas classée
+prioritaire.
+
+**Les identifiants en base ne changent pas de sens.** Une mesure dont le
+contenu change prend un nouvel identifiant. Les neuf retirées passent dans
+`MESURES_RETIREES` avec leur libellé d'origine et le motif du retrait, et
+`mesureParId` les lit encore : la page de signature par lien et la fiche
+affichent un permis existant tel qu'il a été établi. La fiche les montre à
+part (« Cochées sur la liste antérieure ») et dit que la liste courante
+n'existait pas toute à cette date. L'empreinte d'une signature porte sur les
+identifiants, pas sur les libellés : aucun permis signé n'est touché. Le seed
+de démonstration prend les identifiants courants.
+
+**La garde** : `permis-feu/referentiel.test.ts`. Libellé = action, explication
+= commentaire, page dans les tableaux, aucun identifiant retiré réemployé, et
+chaque retiré lisible. Éprouvée avec les trois mesures contredites telles que
+`4096d0f` les écrivait, puis dans le vrai fichier (« rayon de 5 m » remis sur
+`eloignement-combustibles-10m` : refusé, restauré).
+
+**Ce qui n'est pas porté** : les autres lignes de la brochure — dégazage,
+contrôle d'atmosphère, bouteilles de gaz, supports incombustibles, issues,
+extinction des étincelles, refroidissement, colmatage. Elles n'ont jamais été
+dans la liste, et les y ajouter est une décision de contenu, pas une
+correction.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
