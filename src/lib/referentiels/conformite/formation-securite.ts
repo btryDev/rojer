@@ -529,9 +529,9 @@ export const obligationsFormationSecurite: Obligation[] = [
     id: "formation-securite-etablissement-apres-accident-grave",
     domaine: "formation_securite",
     libelle:
-      "Après un accident du travail grave, ou des accidents répétés à un même poste : analyser les conditions de travail, et reformer s'il y a lieu",
+      "Après un accident du travail ou une maladie professionnelle ou à caractère professionnel grave, ou présentant un caractère répété : analyser les conditions de circulation ou de travail, et organiser s'il y a lieu les formations à la sécurité",
     description:
-      "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave, l'employeur procède, après avoir pris toute mesure pour satisfaire aux dispositions de l'article L. 4221-1, à l'analyse des conditions de circulation ou de travail. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, les formations à la sécurité. Il en est de même en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété, soit à un même poste de travail ou à des postes de travail similaires, soit dans une même fonction ou des fonctions similaires.",
+      "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave, l'employeur procède, après avoir pris toute mesure pour satisfaire aux dispositions de l'article L. 4221-1, à l'analyse des conditions de circulation ou de travail. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, les formations à la sécurité prévues par le présent chapitre. Il en est de même en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété : 1° Soit à un même poste de travail ou à des postes de travail similaires ; 2° Soit dans une même fonction ou des fonctions similaires.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -546,7 +546,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "En cas d'accident du travail grave, ou de maladie professionnelle ou à caractère professionnel grave — et en cas d'accidents ou de maladies présentant un caractère répété à un même poste, à des postes similaires, dans une même fonction ou des fonctions similaires",
+      "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave — ou en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété, soit à un même poste de travail ou à des postes de travail similaires, soit dans une même fonction ou des fonctions similaires",
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },
@@ -560,9 +560,9 @@ export const obligationsFormationSecurite: Obligation[] = [
     id: "formation-securite-etablissement-modification-circulation-exploitation",
     domaine: "formation_securite",
     libelle:
-      "Après une modification des conditions de circulation ou d'exploitation : analyser les nouvelles conditions, et former s'il y a lieu",
+      "Après une modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion : analyser les nouvelles conditions de circulation et d'exploitation, et organiser s'il y a lieu une formation à la sécurité",
     description:
-      "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion, l'employeur procède, après avoir pris toutes mesures pour satisfaire aux dispositions de l'article L. 4221-1 relatives à l'utilisation des lieux de travail, à l'analyse des nouvelles conditions de circulation et d'exploitation. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, une formation à la sécurité.",
+      "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion, l'employeur procède, après avoir pris toutes mesures pour satisfaire aux dispositions de l'article L. 4221-1 relatives à l'utilisation des lieux de travail, à l'analyse des nouvelles conditions de circulation et d'exploitation. L'employeur organise, s'il y a lieu, au bénéfice des travailleurs intéressés, une formation à la sécurité répondant aux dispositions de l'article R. 4141-11.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -577,7 +577,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement, ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion",
+      "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion",
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },

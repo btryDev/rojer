@@ -48,6 +48,26 @@
 
 import type { Obligation } from "./types";
 
+/**
+ * Les deux cas de mise à jour du document unique que `R. 4121-2` écrit sans
+ * condition d'effectif — ses 2° et 3°, dans ses mots, majuscule initiale
+ * comprise.
+ *
+ * UNE SEULE ÉCRITURE POUR DEUX SURFACES. La ligne « Quand ça arrive »
+ * (`prevention-etablissement-mise-a-jour-duerp-sur-fait`, ci-dessous) et la
+ * carte des trois cas des écrans du document unique
+ * (`src/lib/duerps/mise-a-jour.ts`) disent la même règle à deux lecteurs qui
+ * n'arrivent pas par le même chemin. Écrites deux fois sans lien, en
+ * septembre 2026, elles avaient déjà divergé : la carte écrivait « À toute
+ * décision » là où l'article écrit « Lors de toute décision ». Les deux
+ * lisent désormais ces constantes, et le test du fait générateur les
+ * confronte au verbatim consigné.
+ */
+export const MAJ_DUERP_AMENAGEMENT_IMPORTANT =
+  "Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail";
+export const MAJ_DUERP_INFORMATION_NOUVELLE =
+  "Lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur";
+
 export const obligationsOrganisationPrevention: Obligation[] = [
   {
     id: "prevention-etablissement-salarie-designe",
@@ -281,9 +301,9 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-chaleur-travailleur-vulnerable",
     domaine: "organisation_prevention",
     libelle:
-      "Mesures de prévention adaptées pour un travailleur particulièrement vulnérable à la chaleur, en liaison avec le service de santé au travail",
+      "Adapter, en liaison avec le service de prévention et de santé au travail, les mesures de prévention pour un travailleur particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense",
     description:
-      "Lorsqu'il est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense, l'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention en vue d'assurer la protection de sa santé.",
+      "Lorsqu'il est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense, l'employeur adapte, en liaison avec le service de prévention et de santé au travail, les mesures de prévention prévues au présent chapitre en vue d'assurer la protection de sa santé.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -298,7 +318,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "Lorsque l'employeur est informé qu'un travailleur est, notamment en raison de son âge ou de son état de santé, particulièrement vulnérable à la chaleur intense",
+      "Lorsque l'employeur est informé de ce qu'un travailleur est, pour des raisons tenant notamment à son âge ou à son état de santé, particulièrement vulnérable aux risques liés à l'exposition aux épisodes de chaleur intense",
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },
@@ -312,9 +332,9 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-chaleur-mise-en-oeuvre",
     domaine: "organisation_prevention",
     libelle:
-      "Mise en œuvre des mesures de prévention définies, adaptées si la chaleur s'intensifie",
+      "Mettre en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur",
     description:
-      "Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention qu'il a définies, en les adaptant en cas d'intensification de la chaleur.",
+      "Lors de la survenue des épisodes de chaleur intense, l'employeur met en œuvre les mesures ou les actions de prévention définies en application de l'article R. 4463-3, en les adaptant en cas d'intensification de la chaleur.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -329,7 +349,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     nature: "evenementielle",
     pieceAttendue: null,
     faitGenerateur:
-      "Lors de la survenue d'un épisode de chaleur intense",
+      "Lors de la survenue des épisodes de chaleur intense",
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },
@@ -343,9 +363,9 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     id: "prevention-etablissement-mise-a-jour-duerp-sur-fait",
     domaine: "organisation_prevention",
     libelle:
-      "Document unique mis à jour lors d'une décision d'aménagement important, et lorsqu'une information nouvelle intéresse l'évaluation d'un risque",
+      "Document unique mis à jour lors de toute décision d'aménagement important, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur",
     description:
-      "La mise à jour du document unique d'évaluation des risques professionnels est réalisée lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur. À chaque mise à jour du document unique, le programme annuel de prévention ou la liste des actions de prévention et de protection est mis à jour, si nécessaire. La mise à jour au moins annuelle, due par les entreprises d'au moins onze salariés, est suivie par le module du document unique.",
+      "La mise à jour du document unique d'évaluation des risques professionnels est réalisée lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur. La mise à jour du programme annuel de prévention des risques professionnels et d'amélioration des conditions de travail ou de la liste des actions de prévention et de protection mentionnés au III de l'article L. 4121-3-1 est effectuée à chaque mise à jour du document unique d'évaluation des risques professionnels, si nécessaire. La mise à jour au moins annuelle, due par les entreprises d'au moins onze salariés, est suivie par le module du document unique.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -359,14 +379,13 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     periodicite: "autre",
     nature: "evenementielle",
     pieceAttendue: null,
-    faitGenerateur:
-      "Lors de toute décision d'aménagement important modifiant les conditions de santé et de sécurité ou les conditions de travail, et lorsqu'une information supplémentaire intéressant l'évaluation d'un risque est portée à la connaissance de l'employeur",
+    faitGenerateur: `${MAJ_DUERP_AMENAGEMENT_IMPORTANT}, et l${MAJ_DUERP_INFORMATION_NOUVELLE.slice(1)}`,
     realisateurs: ["exploitant"],
     criticite: 4,
     typologies: { travail: true },
     porteur: "etablissement",
     transmet: [],
     notesInternes:
-      "ENCODÉE LE 2026-09-21 sur la page « Quand ça arrive » (ADR-037) : elle était au corpus en `obligation_manquante`, cause `evenement`. Le produit n'observe pas le fait ; il DIT la règle, sans date, sans état, sans case. Article relu le jour même sur sa page propre, en demandant d'abord le nombre d'alinéas, avec un contrôle ciblé sur chaque passage décisif ; la `citationCle` du corpus a été confirmée mot pour mot.\n\nLES CAS DE MISE À JOUR SONT TROIS, ET SEUL LE 1° DÉPEND DE L'EFFECTIF. Le 1° — annuel, entreprises d'au moins onze salariés — a une date, et il vit dans `evaluerEtatDuerp`, SEUL endroit du produit où cette règle s'écrit. Cette ligne ne porte QUE les 2° et 3°, qui valent pour tout employeur et n'ont pas de date : le fait est la DÉCISION d'aménagement (pas sa réalisation), ou l'information reçue. UNE SEULE LIGNE pour les deux faits : l'acte dû est le même, mettre à jour le document.\n\nCE QUE LE PRODUIT POURRAIT FAIRE ET NE FAIT PAS : il connaît la date de la dernière version validée du document unique. Il ne peut pas en déduire qu'une décision d'aménagement a été prise depuis. D'où une ligne qui dit la règle, et aucun état.\n\nL'ALINÉA FINAL (programme annuel ou liste des actions, « si nécessaire ») est repris dans la description ; le produit ne le trace pas.",
+      "ENCODÉE LE 2026-09-21 sur la page « Quand ça arrive » (ADR-037) : elle était au corpus en `obligation_manquante`, cause `evenement`. Le produit n'observe pas le fait ; il DIT la règle, sans date, sans état, sans case. Article relu le jour même sur sa page propre, en demandant d'abord le nombre d'alinéas, avec un contrôle ciblé sur chaque passage décisif ; la `citationCle` du corpus a été confirmée mot pour mot.\n\nLES CAS DE MISE À JOUR SONT TROIS, ET SEUL LE 1° DÉPEND DE L'EFFECTIF. Le 1° — annuel, entreprises d'au moins onze salariés — a une date, et il vit dans `evaluerEtatDuerp`. [2026-09-26 : « SEUL endroit du produit où cette règle s'écrit » était faux et est rayé — le seuil de onze se redéclare dans `src/lib/guide/chez-vous.ts`, et la carte `src/lib/duerps/mise-a-jour.ts` énonce les trois cas sur les écrans du document unique.] Cette ligne ne porte QUE les 2° et 3°, qui valent pour tout employeur et n'ont pas de date : le fait est la DÉCISION d'aménagement (pas sa réalisation), ou l'information reçue. UNE SEULE LIGNE pour les deux faits : l'acte dû est le même, mettre à jour le document.\n\nCE QUE LE PRODUIT POURRAIT FAIRE ET NE FAIT PAS : il connaît la date de la dernière version validée du document unique. Il ne peut pas en déduire qu'une décision d'aménagement a été prise depuis. D'où une ligne qui dit la règle, et aucun état.\n\nL'ALINÉA FINAL (programme annuel ou liste des actions, « si nécessaire ») est repris dans la description ; le produit ne le trace pas.",
   },
 ];

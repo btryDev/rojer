@@ -258,7 +258,7 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       luLe: "2026-08-31",
       lecture: "agent_verbatim",
       prescrit:
-        "Après un accident du travail grave, une maladie professionnelle grave, ou des accidents ou maladies à caractère répété sur un même poste ou une même fonction, l'employeur analyse les conditions de circulation ou de travail et organise s'il y a lieu les formations à la sécurité.",
+        "Après un accident du travail ou une maladie professionnelle ou à caractère professionnel grave, ou présentant un caractère répété à un même poste de travail ou à des postes similaires, ou dans une même fonction ou des fonctions similaires, l'employeur analyse les conditions de circulation ou de travail et organise s'il y a lieu les formations à la sécurité prévues par le chapitre. [2026-09-26 : la première rédaction de ce résumé perdait « à caractère professionnel » et les postes et fonctions « similaires ».]",
       citationCle:
         "En cas d'accident du travail grave ou de maladie professionnelle ou à caractère professionnel grave, l'employeur procède, après avoir pris toute mesure pour satisfaire aux dispositions de l'article L. 4221-1, à l'analyse des conditions de circulation ou de travail. Il organise, s'il y a lieu, au bénéfice des travailleurs intéressés, les formations à la sécurité prévues par le présent chapitre. Il en est de même en cas d'accident du travail ou de maladie professionnelle ou à caractère professionnel présentant un caractère répété : 1° Soit à un même poste de travail ou à des postes de travail similaires ; 2° Soit dans une même fonction ou des fonctions similaires.",
       statut: "retenu",
@@ -322,7 +322,7 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       luLe: "2026-08-31",
       lecture: "agent_verbatim",
       prescrit:
-        "En cas de modification des conditions de circulation ou d'exploitation présentant des risques d'intoxication, d'incendie ou d'explosion, l'employeur analyse les nouvelles conditions et organise s'il y a lieu la formation de R. 4141-11.",
+        "En cas de modification des conditions HABITUELLES de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant NOTAMMENT des risques d'intoxication, d'incendie ou d'explosion, l'employeur analyse les nouvelles conditions de circulation et d'exploitation et organise s'il y a lieu la formation de R. 4141-11. [2026-09-26 : la première rédaction de ce résumé perdait « habituelles » et « notamment », et rattachait les risques aux deux modifications. Le texte, sans virgule, laisse ouverte la question de savoir si l'incise qualifie aussi la modification de circulation ; le résumé ne la tranche pas.]",
       citationCle:
         "En cas de modification des conditions habituelles de circulation sur les lieux de travail ou dans l'établissement ou de modification des conditions d'exploitation présentant notamment des risques d'intoxication, d'incendie ou d'explosion, l'employeur procède, après avoir pris toutes mesures pour satisfaire aux dispositions de l'article L. 4221-1 relatives à l'utilisation des lieux de travail, à l'analyse des nouvelles conditions de circulation et d'exploitation. L'employeur organise, s'il y a lieu, au bénéfice des travailleurs intéressés, une formation à la sécurité répondant aux dispositions de l'article R. 4141-11.",
       statut: "retenu",

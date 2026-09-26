@@ -1045,7 +1045,7 @@ export const obligationsIncendie: Obligation[] = [
     libelle:
       "Personnel instruit des conduites à tenir en cas d'incendie et entraîné à la manœuvre des moyens de secours (ERP de 5ᵉ catégorie)",
     description:
-      "Dans un établissement recevant du public de 5ᵉ catégorie, le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours. Le règlement de sécurité ne s'applique aux établissements existants que pour ses dispositions administratives, de contrôle, de vérification et d'entretien (art. GN 10) : la disposition date du 27 août 1990, et cette ligne vise de plein droit les établissements qui n'existaient pas encore à cette date, ainsi que les parties modifiées depuis.",
+      "Dans un établissement recevant du public de 5ᵉ catégorie, le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours. L'article GN 10 du règlement de sécurité écrit : « A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. » Ce paragraphe figure dans les dispositions applicables aux établissements de 5ᵉ catégorie approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990.",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -1074,7 +1074,7 @@ export const obligationsIncendie: Obligation[] = [
     libelle:
       "Consignes incendie affichées bien en vue : numéro des sapeurs-pompiers, adresse du centre de secours, dispositions immédiates (ERP de 5ᵉ catégorie)",
     description:
-      "Dans un établissement recevant du public de 5ᵉ catégorie, des consignes précises, affichées bien en vue, doivent indiquer le numéro d'appel des sapeurs-pompiers, l'adresse du centre de secours le plus proche et les dispositions immédiates à prendre en cas de sinistre. Le règlement de sécurité ne s'applique aux établissements existants que pour ses dispositions administratives, de contrôle, de vérification et d'entretien (art. GN 10) : la disposition date du 27 août 1990, et cette ligne vise de plein droit les établissements qui n'existaient pas encore à cette date, ainsi que les parties modifiées depuis.",
+      "Dans un établissement recevant du public de 5ᵉ catégorie, des consignes précises, affichées bien en vue, doivent indiquer le numéro d'appel des sapeurs-pompiers, l'adresse du centre de secours le plus proche et les dispositions immédiates à prendre en cas de sinistre. L'article GN 10 du règlement de sécurité écrit : « A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. » Ce paragraphe figure dans les dispositions applicables aux établissements de 5ᵉ catégorie approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990.",
     referencesLegales: [
       {
         source: "ARRETE",

@@ -30,6 +30,10 @@
 // Module **pur** : l'écran n'a plus qu'à le rendre dans l'ordre.
 
 import { EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
+import {
+  MAJ_DUERP_AMENAGEMENT_IMPORTANT,
+  MAJ_DUERP_INFORMATION_NOUVELLE,
+} from "@/lib/referentiels/conformite/organisation-prevention";
 
 export type DeclencheurMaj = {
   /** Le rang dans l'article, tel qu'il s'y lit. */
@@ -96,9 +100,7 @@ export function declencheursMiseAJour(effectif: number): DeclencheurMaj[] {
     },
     {
       rang: "2°",
-      quand:
-        "À toute décision d'aménagement important modifiant les conditions " +
-        "de santé et de sécurité ou les conditions de travail",
+      quand: MAJ_DUERP_AMENAGEMENT_IMPORTANT,
       portee:
         "Quel que soit l'effectif. Un nouveau poste, un nouvel équipement, " +
         "un changement de locaux ou d'organisation du travail. Rien dans ce " +
@@ -108,9 +110,7 @@ export function declencheursMiseAJour(effectif: number): DeclencheurMaj[] {
     },
     {
       rang: "3°",
-      quand:
-        "Lorsqu'une information supplémentaire intéressant l'évaluation " +
-        "d'un risque est portée à la connaissance de l'employeur",
+      quand: MAJ_DUERP_INFORMATION_NOUVELLE,
       portee:
         "Quel que soit l'effectif. Un accident du travail, une maladie " +
         "professionnelle, un signalement de salarié, un résultat de mesure. " +
