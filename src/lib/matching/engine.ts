@@ -578,9 +578,10 @@ export function matchTypologie(
   // seuil », jamais « en dessous ». Deux bornes, et la meilleure des deux :
   //
   //   - la catégorie d'ERP, déclarée par le dirigeant depuis le 2026-09-01 —
-  //     dès la 3ᵉ catégorie le public seul dépasse trois cents personnes, donc
-  //     largement les cinquante et une du seuil, sans qu'on ait rien à
-  //     demander (`PLANCHER_PUBLIC_PAR_CATEGORIE`) ;
+  //     dès la 3ᵉ catégorie l'effectif de classement — public et personnel,
+  //     R. 143-19 CCH (C39) — dépasse trois cents personnes, donc largement
+  //     les cinquante et une du seuil, sans qu'on ait rien à demander
+  //     (`PLANCHER_EFFECTIF_PAR_CATEGORIE`) ;
   //   - l'effectif salarié, qui est compté par le texte lui aussi.
   //
   // Au-dessus de la borne : l'obligation s'applique, et la raison dit d'où le

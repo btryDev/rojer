@@ -2039,17 +2039,19 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
   const CONSIGNE = "incendie-travail-consigne-affichee";
   const LES_DEUX = [CONSIGNE, EXERCICE];
 
-  it("ERP de 3ᵉ catégorie sans le chiffre : le public seul franchit le seuil, rien à demander", () => {
-    // ADR-004 : la 3ᵉ catégorie commence à 301 personnes de public. Le seuil
-    // de R. 4227-34 est à 51 — il est franchi par le public seul, et
-    // l'établissement ne déclare que 45 salariés.
+  it("ERP de 3ᵉ catégorie sans le chiffre : l'effectif de classement franchit le seuil, rien à demander", () => {
+    // ADR-004 : la 3ᵉ catégorie commence à 301 personnes — public ET personnel
+    // (R. 143-19 CCH, C39). Le seuil de R. 4227-34 est à 51 : le classement
+    // seul le franchit, et l'établissement ne déclare que 45 salariés.
     const res = determineObligationsApplicables(etabErpCat3(), []);
     for (const id of LES_DEUX) expect(idsObligations(res), id).toContain(id);
     const raison = res
       .find((r) => r.obligation.id === EXERCICE)!
       .raisons.join(" ");
     expect(raison).toContain("3ᵉ catégorie");
-    expect(raison).toContain("le public admis");
+    expect(raison).toContain("public et personnel comptés ensemble");
+    // C39 : la phrase ne prétend plus que le public SEUL atteint le plancher.
+    expect(raison).not.toContain("public seul");
     // Une certitude, pas une prudence : la déduction tient, il n'y a rien à
     // confirmer.
     expect(raison).not.toContain("à confirmer");
@@ -2138,7 +2140,7 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
       const raison = res
         .find((r) => r.obligation.id === EXERCICE)!
         .raisons.join(" ");
-      expect(raison, cat).toContain("le public admis");
+      expect(raison, cat).toContain("public et personnel comptés ensemble");
     }
     const cinq = determineObligationsApplicables(
       etabRestoErpCat5({ categorieErp: "N5", effectifSurSite: 8 }),

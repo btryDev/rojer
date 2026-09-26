@@ -86,16 +86,26 @@ export type EvalPersonnesPresentes =
   | { etat: "non_atteint" };
 
 /**
- * Le public que la catégorie d'ERP garantit **au moins** (ADR-004, seuils du
- * règlement de sécurité). Seules les trois premières catégories bornent par le
- * bas : la 4ᵉ va du seuil du type jusqu'à 300 et la 5ᵉ est sous le seuil du
- * type — ni l'une ni l'autre ne garantit quoi que ce soit, et les omettre est
- * la façon d'écrire qu'elles ne déduisent rien.
+ * L'effectif que la catégorie d'ERP garantit **au moins** (ADR-004, art.
+ * R. 143-19 CCH). Seules les trois premières catégories bornent par le bas :
+ * la 4ᵉ va du seuil du type jusqu'à 300 et la 5ᵉ est sous le seuil du type —
+ * ni l'une ni l'autre ne garantit quoi que ce soit, et les omettre est la façon
+ * d'écrire qu'elles ne déduisent rien.
  *
  * Le nombre est le premier de la fourchette, pas sa borne haute : la 3ᵉ
  * catégorie commence à 301, pas à 700.
+ *
+ * CE N'EST PAS UN PUBLIC SEUL (C39, 2026-09-26). R. 143-19, relu sur Légifrance
+ * (version en vigueur depuis le 01/07/2021), classe « d'après l'effectif du
+ * public et du personnel », et précise « il y a lieu de majorer l'effectif du
+ * public de celui du personnel n'occupant pas des locaux indépendants ». Une
+ * 3ᵉ catégorie peut donc réunir 290 clients et 11 salariés. La raison affichée
+ * disait « le public admis y atteint au moins 301 personnes, seuil franchi par
+ * le public seul » : faux dans ce cas. La CONCLUSION tient — R. 4227-34 compte
+ * aussi les personnes « occupées », salariés compris, et 301 > 51 —, seule la
+ * phrase change.
  */
-const PLANCHER_PUBLIC_PAR_CATEGORIE: Partial<Record<CategorieErp, number>> = {
+const PLANCHER_EFFECTIF_PAR_CATEGORIE: Partial<Record<CategorieErp, number>> = {
   N1: 1501,
   N2: 701,
   N3: 301,
@@ -125,15 +135,16 @@ export function evaluerPersonnesPresentes(
       : { etat: "non_atteint" };
   }
 
-  // Première borne : la catégorie d'ERP. Le public seul suffit à franchir le
-  // seuil dès la 3ᵉ, et le dirigeant l'a déclarée — rien à demander de plus.
+  // Première borne : la catégorie d'ERP. Son effectif de classement suffit à
+  // franchir le seuil dès la 3ᵉ, et le dirigeant l'a déclarée — rien à
+  // demander de plus.
   const categorie = etab.estERP ? etab.categorieErp : null;
   if (categorie) {
-    const plancherPublic = PLANCHER_PUBLIC_PAR_CATEGORIE[categorie];
-    if (plancherPublic !== undefined && plancherPublic >= seuil) {
+    const plancherEffectif = PLANCHER_EFFECTIF_PAR_CATEGORIE[categorie];
+    if (plancherEffectif !== undefined && plancherEffectif >= seuil) {
       return {
         etat: "atteint",
-        raison: `ERP de ${LIBELLE_CATEGORIE_ERP[categorie]} : le public admis y atteint au moins ${plancherPublic} personnes, seuil de ${seuil} franchi par le public seul`,
+        raison: `ERP de ${LIBELLE_CATEGORIE_ERP[categorie]} : au moins ${plancherEffectif} personnes par son classement, public et personnel comptés ensemble, seuil de ${seuil} franchi`,
       };
     }
   }

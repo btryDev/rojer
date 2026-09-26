@@ -677,6 +677,25 @@ describe("référentiel conformité — seuils d'effectif", () => {
     }
   });
 
+  it("une obligation FONDÉE sur un article du champ de R. 4227-34 porte ce champ (C39)", () => {
+    // R. 4227-34 pose le champ, R. 4227-37 (consigne) et R. 4227-38 (son
+    // contenu) y renvoient, R. 4227-39 (essais, exercices, leur registre)
+    // s'ouvre sur « La consigne de sécurité incendie prévoit ». Un article de
+    // ce groupe en `referencesLegales[0]` — « l'article qui fonde », convention
+    // du type — sur une ligne servie hors du champ serait une sur-application
+    // que la référence affichée présente comme le texte. Le cas inverse est
+    // permis, et c'est celui du registre de sécurité : il CITE R. 4227-39 en
+    // contexte, et il est fondé ailleurs (L. 4711-1 chez tout employeur, CCH
+    // R. 143-44 dans tout ERP).
+    const DU_CHAMP = /^R\. 4227-3[4-9]$/;
+    for (const o of obligationsConformite) {
+      const fondateur = o.referencesLegales[0];
+      if (DU_CHAMP.test(fondateur.article ?? fondateur.reference)) {
+        expect(o.typologies.champR422734, o.id).toBe(true);
+      }
+    }
+  });
+
   it("`champR422734` n'est jamais posé sans `personnesPresentesMin`", () => {
     for (const o of obligationsConformite) {
       if (o.typologies.champR422734) {
@@ -1425,6 +1444,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // établissement : les deux lignes de restauration). Les typologies sont
     // hachées, l'empreinte bouge ; 169 + 0 − 0 = 169.
     { version: "2026-09-26.9", empreinte: "169-b35a654fd2941809" },
+    // C39 : même empreinte, version neuve — descriptions et `reference`
+    // seules (registre de sécurité : L. 4711-1 en tête, R. 4227-39 dit dans
+    // le champ de R. 4227-34 ; extincteurs d'ERP : MS 38 dit au livre II,
+    // PE 4 § 2 nommé pour la 5ᵉ). Précédent `.8`. 169 + 0 − 0 = 169.
+    { version: "2026-09-26.10", empreinte: "169-b35a654fd2941809" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

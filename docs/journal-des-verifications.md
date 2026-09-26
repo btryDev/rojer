@@ -2706,6 +2706,126 @@ F2. `controle-zip/route.ts` : « synthèse globale signée » devient
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
 inchangée depuis `d34bb24`, et le lot ne touche dans `src/lib/referentiels` qu'un commentaire (`corpus/citations-ecran.ts`, 383e7d5).
 
+### C39 · 2026-09-26 — Les sœurs incendie : ce que la référence affichée dit du champ
+
+Trois questions, instruites avant toute retouche. Pour chacune, les
+`notesInternes` des sœurs ont été cherchées par article et par argument
+avant de décider.
+
+**A. `incendie-registre-securite` ne porte pas `champR422734`.** Textes relus
+sur Légifrance le 2026-09-26 :
+- `R. 4227-39` (LEGIARTI000024769386, en vigueur depuis le 10/11/2011)
+  s'ouvre sur « La consigne de sécurité incendie prévoit des essais et
+  visites périodiques du matériel et des exercices ». Il finit par « Leur
+  date et les observations […] sont consignées sur un registre tenu à la
+  disposition de l'inspection du travail ».
+- `R. 4227-37` (en vigueur du 10/11/2011 au 01/01/2027) : « Dans les
+  établissements mentionnés à l'article R. 4227-34, une consigne de sécurité
+  incendie est établie ».
+- `R. 4227-34` (LEGIARTI000018532067, en vigueur depuis le 01/05/2008) :
+  « plus de cinquante personnes, ainsi que ceux, quelle que soit leur
+  importance, où sont manipulées et mises en œuvre des matières
+  inflammables ».
+
+Le registre DE `R. 4227-39` est donc dans ce champ. Le rattachement passe
+par « la consigne » : c'est une lecture, la même que celle des deux sœurs
+(`incendie.ts:277` pour la consigne, `incendie.ts:327` pour l'exercice).
+Mais la ligne n'est pas ce registre-là. Son amendement (B) du 2026-08-31
+(`incendie.ts:436`) la fonde sur deux bases, sans seuil :
+- chez tout employeur : `L. 4711-1`, `L. 4711-2`, `D. 4711-2` et
+  `D. 4711-3` ;
+- dans tout ERP, 5ᵉ comprise : CCH `R. 143-44`.
+
+Le registre des essais et exercices est déjà porté, dans le champ, par
+`incendie-travail-exercice-semestriel`. **Pas d'alignement** : aligner
+priverait de la ligne tout employeur et tout ERP de 5ᵉ sous le seuil. Ce
+serait un faux négatif muet, et des lignes supprimées par la réconciliation.
+
+Ce qui se voyait pourtant, et qui est corrigé :
+- `R. 4227-39` était en `referencesLegales[0]`, « l'article qui fonde ».
+  Le guide « Par métier » l'affichait comme référence du registre du profil
+  « Bureau ». `L. 4711-1` prend la tête, et `R. 4227-39` passe en contexte
+  avec une note qui dit son champ.
+- La description disait l'obligation de `R. 4227-39` sans condition. Elle
+  dit maintenant ce que doit tout employeur, puis ce que doivent en plus les
+  établissements de `R. 4227-34`.
+
+Garde neuve dans `conformite.test.ts` : une obligation fondée sur
+`R. 4227-34` à `-39` porte `champR422734`. **Éprouvée** en remettant
+l'`incendie.ts` de `d4681ef` : `incendie-registre-securite: expected
+undefined to be true`. Restaurée, elle passe.
+
+Mouvement de l'état de vérification : le fondement du registre passe de
+« 5 · première main » (`R. 4227-39`) à « 4 · agent + verbatim »
+(`L. 4711-1`, relevé par agent le 2026-08-31). Sur le tableau des
+fondements, 74 − 1 = 73 au niveau 5 et 89 + 1 = 90 au niveau 4. Les
+obligations « mieux vérifiées sur leur fondement » passent de 11 − 1 = 10.
+
+**B. `incendie-erp-extincteurs-annuelle` (MS 38) en 5ᵉ catégorie.** Textes
+relus le 2026-09-26 :
+- le chemin de MS 38 : « Livre II : Dispositions applicables aux
+  établissements des quatre premières catégories » ;
+- le § 4, verbatim identique au corpus ;
+- `PE 1` (LEGIARTI000020374786, en vigueur depuis le 27/08/1990) : « Les
+  dispositions du livre II ne sont pas applicables sauf celles relevant
+  d'articles expressément mentionnés dans la suite du présent livre ».
+
+`PE 26` § 1 ne renvoie qu'à MS 39 (corpus `arrete-1980-livre-3.ts:317`).
+La politique sœur est la sur-application assumée, déjà écrite dans les
+notes de la ligne (`incendie.ts:676`), de sa jumelle décennale
+(`incendie.ts:732`), du désenfumage (`incendie.ts:854`), du groupe
+électrogène (`electricite.ts:555`) et de CH 58 (`aeration.ts:332`, bornage
+annulé). **Comportement inchangé.**
+
+Mais aucun écran ne le disait. La fiche (« Ce qui fonde cette
+obligation »), le guide « Par métier » (commerce, restauration) et la raison
+du pré-remplissage citaient « MS 38 § 4 » à un ERP de 5ᵉ sans réserve.
+C'est corrigé sur les deux lignes MS 38 :
+- la `reference` porte « — livre II, établissements des quatre premières
+  catégories » ;
+- la description nomme `PE 4` § 2 (« tous les trois ans au plus ») et dit
+  que le calendrier maintient l'échéance en 5ᵉ.
+
+**C. La raison de `personnes-presentes.ts`** pour une 1ʳᵉ à 3ᵉ catégorie
+disait « le public admis y atteint au moins 301 personnes, seuil franchi
+par le public seul ». CCH `R. 143-19` (LEGIARTI000043818977, en vigueur
+depuis le 01/07/2021) classe « d'après l'effectif du public et du
+personnel ». Il ajoute : « il y a lieu de majorer l'effectif du public de
+celui du personnel n'occupant pas des locaux indépendants ». La phrase est
+donc fausse pour une 3ᵉ catégorie à 290 clients et 11 salariés. Elle
+devient « au moins 301 personnes par son classement, public et personnel
+comptés ensemble, seuil de 51 franchi ».
+
+La conclusion tient : `R. 4227-34` compte aussi les personnes « occupées »,
+et le plancher (301) reste supérieur au seuil (51). La formule
+`plancher >= seuil` garde la phrase vraie pour tout seuil. L'assertion
+`not.toContain("public seul")` a été **éprouvée** en réinjectant les mots
+(`expected '…' not to contain 'public seul'`), puis restaurée.
+
+`version-moteur.test.ts` : NON. Les `raisons` ne sont ni écrites par
+`calendrier/actions.ts` ni lues par `reconciliation.ts`. Le relevé est
+recopié (`d6ce6130dcdbeea4` → `acc5dd2269f36cce`), sans incrément.
+
+**Applicabilité inchangée, prouvée par une grille** : 144 cas, soit
+{N5, M3, ERP sans catégorie, travail seul} × effectif {2, 30, 60} ×
+personnes présentes {non renseigné, 20, 80} × matières {non renseigné,
+oui} × équipements {aucun, tous}. `determineObligationsApplicables` a été
+lancé sur `d4681ef` puis après : les sorties sont identiques au caractère
+près. Le registre est rendu dans les 144 cas, l'annuelle des extincteurs
+dans les 54 cas ERP avec équipements.
+
+**Sceau** : `2026-09-26.10+169-b35a654fd2941809+moteur.4`. La version est
+neuve, l'empreinte inchangée (précédent `.8`) ; 169 + 0 − 0 = 169.
+
+**Reste ouvert** :
+- `labels.ts` affiche toujours que les seuils de catégorie « comptent le
+  public admis, jamais les salariés ». L'écart avec `R. 143-19` est relevé
+  au corpus, non tranché.
+- Les autres sœurs du livre II citent leur article sans réserve de
+  catégorie (BAES, SSI, désenfumage, RIA, groupe électrogène, CH 58). MS 73
+  § 2 est cité en contexte des extincteurs.
+- `L. 4711-1`, devenu fondement, n'est relu que par agent.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
