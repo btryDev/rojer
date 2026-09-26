@@ -76,7 +76,11 @@ export const CCH_REGISTRE_SECURITE: Corpus = {
         "Il doit être tenu, par le propriétaire, un registre de sécurité sur lequel sont portés les renseignements indispensables au contrôle de la sécurité. Ce registre comprend, outre les pièces attendues aux articles R. 141-10 et R. 141-11 : 1° Les dates des travaux d'aménagement et de transformation, leur nature, les noms du ou des entrepreneurs, et, s'il y a lieu, de l'architecte ou du technicien chargé de surveiller les travaux ; 2° L'état nominatif et hiérarchique des personnes appartenant au service de sécurité ; 3° Les diverses consignes, générales et particulières, établies en cas d'incendie, y compris les consignes d'évacuation prenant en compte les différents types de handicap ; 4° Les dates des divers contrôles et vérifications ainsi que les observations ou rapports auxquels ceux-ci ont donné lieu ; 5° Les dates des exercices de sécurité incendie ; 6° L'état et les plans de situation des moyens de secours mis à disposition du service de sécurité.",
       versionEnVigueur: "2026-07-01",
       modifiePar: { texte: "Décret n° 2025-1100 du 19 novembre 2025 - art. 1" },
-      luLe: "2026-09-01",
+      // Relu le 2026-09-26 sur sa page propre, pour trancher les références
+      // « registre » des deux PDF : structure demandée sans rien suggérer (un
+      // alinéa, une phrase d'annonce, six items), formulation décisive
+      // confirmée par deux lectures. Verbatim identique à celui du 2026-09-01.
+      luLe: "2026-09-26",
       lecture: "premiere_main",
       statut: "retenu",
       obligations: ["incendie-registre-securite"],

@@ -238,6 +238,14 @@ export type FaitEquipements = {
   nbSansObligation: number;
   /** Taille du parc en service, pour situer le nombre sans en faire un taux. */
   nbEquipements: number;
+  /**
+   * Équipements retirés du parc (`actif: false`). Un équipement ne se retire
+   * au lieu de se supprimer que s'il porte une preuve (`supprimerEquipement`) :
+   * ses vérifications et rapports restent, et le registre les imprime. Sans ce
+   * nombre, un parc entièrement retiré lisait « aucune vérification […] ne
+   * peut figurer au registre » au-dessus d'un registre qui en listait.
+   */
+  nbRetires: number;
 };
 
 /**
@@ -583,11 +591,31 @@ function axeInventaire(
 ): void {
   if (eq.nbEquipements > 0) return;
 
+  // ~~« L'inventaire se complète depuis la page Équipements. »~~ — retiré le
+  // 2026-09-26 par la contre-lecture. La phrase présumait un inventaire
+  // incomplet, ce que ce docblock s'interdit, et elle renvoyait à un écran le
+  // contrôleur qui lit le PDF. Le lien, à l'écran, reste au bandeau.
+  const listeVide =
+    "Une liste d'échéances vide de ce côté ne dit pas que rien n'est dû : elle reflète l'inventaire tel qu'il est déclaré.";
+
+  if (eq.nbRetires > 0) {
+    // Parc entièrement retiré : les preuves de ces équipements restent, et le
+    // registre les imprime. Dire « rien ne peut figurer au registre » serait
+    // faux sous les yeux du lecteur.
+    const n = eq.nbRetires;
+    const pl = n > 1;
+    manques.push({
+      axe: "inventaire",
+      motif: "Aucun équipement en service n'est déclaré pour cet établissement.",
+      consequence: `Les vérifications et rapports déjà consignés pour ${n} équipement${pl ? "s" : ""} retiré${pl ? "s" : ""} du parc sont conservés. Aucune nouvelle échéance attachée à un équipement n'est calculée. ${listeVide}`,
+    });
+    return;
+  }
+
   manques.push({
     axe: "inventaire",
-    motif: "Aucun équipement en service n'est déclaré pour cet établissement.",
-    consequence:
-      "Aucune vérification attachée à un équipement ne peut donc figurer au calendrier ni au registre. Une liste vide de ce côté ne dit pas que rien n'est dû : elle reflète l'inventaire tel qu'il est déclaré. L'inventaire se complète depuis la page Équipements.",
+    motif: "Aucun équipement n'est déclaré pour cet établissement.",
+    consequence: `Aucune vérification attachée à un équipement ne figure donc au calendrier ni au registre. ${listeVide}`,
   });
 }
 

@@ -55,8 +55,12 @@ export function referencesRegistreTenue(r: RegimeDuRegistre): string {
  */
 export function phraseRegistreIgh(r: RegimeDuRegistre): string | null {
   if (!r.estIGH) return null;
+  // ~~« Cet établissement est déclaré immeuble de grande hauteur »~~ —
+  // corrigé le 2026-09-26 par la contre-lecture. La case recueillie porte sur
+  // le BÂTIMENT (« Immeuble de Grande Hauteur », hauteur > 28 m ou > 50 m) :
+  // l'établissement y est situé, il n'est pas l'immeuble.
   return (
-    "Cet établissement est déclaré immeuble de grande hauteur. L'article " +
+    "Cet établissement est situé dans un immeuble déclaré de grande hauteur (IGH). L'article " +
     "R. 146-35 CCH y prévoit un registre de sécurité tenu par le " +
     "propriétaire de l'immeuble ; le présent document n'en tient pas lieu."
   );

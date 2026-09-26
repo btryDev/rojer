@@ -4,7 +4,7 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-09-21
+**Généré le** : 2026-09-26
 **Référentiel** : `2026-09-21.1`
 **Régénérer** : `pnpm verification --ecrire`
 
@@ -133,7 +133,7 @@ repose sur un texte que personne n'a ouvert.
 | `equipement_sous_pression` | 7 | 8 | 7 | · | · | · | · | · | 7 / 7 — 100 % | 1 / 8 | 2026-09-01 |
 | `formation_securite` | 9 | 30 | · | 9 | · | · | · | · | 9 / 9 — 100 % | 0 / 30 | 2026-08-31 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 |
-| `incendie` | 36 | 73 | 20 | 9 | 7 | · | · | · | 29 / 36 — 81 % | 0 / 73 | 2026-08-26 → 2026-09-21 |
+| `incendie` | 36 | 73 | 20 | 9 | 7 | · | · | · | 29 / 36 — 81 % | 0 / 73 | 2026-08-26 → 2026-09-26 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 |
 | `levage` | 10 | 27 | 9 | 1 | · | · | · | · | 10 / 10 — 100 % | 0 / 27 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-04 |
-| `etablissement` | 56 | 108 | 15 | 38 | 3 | · | · | · | 53 / 56 — 95 % | 0 / 108 | 2026-08-26 → 2026-09-21 |
+| `etablissement` | 56 | 108 | 15 | 38 | 3 | · | · | · | 53 / 56 — 95 % | 0 / 108 | 2026-08-26 → 2026-09-26 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-01 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -171,13 +171,14 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 46 | 15 % | 37 |
 | 2026-08-27 | 12 | 4 % | 9 |
 | 2026-08-31 | 70 | 23 % | 33 |
-| 2026-09-01 | 142 | 47 % | 89 |
+| 2026-09-01 | 141 | 46 % | 89 |
 | 2026-09-02 | 16 | 5 % | 13 |
 | 2026-09-04 | 14 | 5 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-21 | 2 | 1 % | 2 |
+| 2026-09-26 | 1 | 0 % | 1 |
 
-305 des 305 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-21.
+305 des 305 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-26.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -306,7 +307,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-5-sommeil-consigne-chambres` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-erp-5-sommeil-plans-affiches` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-erp-alarme-verification-hebdomadaire` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-04 |
-| `incendie-registre-securite` | incendie | etablissement | 10 | 5 · première main | 4 · agent + verbatim | 0 / 10 | 2026-08-31 → 2026-09-01 |
+| `incendie-registre-securite` | incendie | etablissement | 10 | 5 · première main | 4 · agent + verbatim | 0 / 10 | 2026-08-31 → 2026-09-26 |
 | `information-etablissement-affichages-obligatoires` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `information-etablissement-avis-acces-duerp` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `levage-examen-etat-conservation` | levage | equipement | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-09-01 |
@@ -466,7 +467,7 @@ refaire pour la contredire.
 | `incendie-registre-securite` | contexte 6 | CCH, art. R. 143-44 (ex R. 123-51) — ERP | CCH R. 143-44 | cch-registre-securite | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-registre-securite` | contexte 7 | CCH, art. R. 141-10 — contenu du registre | CCH R. 141-10 | cch-registre-securite | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-registre-securite` | contexte 8 | CCH, art. R. 141-11 — solutions d'effet équivalent | CCH R. 141-11 | cch-registre-securite | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
-| `incendie-registre-securite` | contexte 9 | CCH, art. R. 146-35 (ex R. 122-29) — IGH | CCH R. 146-35 | cch-registre-securite | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
+| `incendie-registre-securite` | contexte 9 | CCH, art. R. 146-35 (ex R. 122-29) — IGH | CCH R. 146-35 | cch-registre-securite | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-travail-eclairage-securite-essai-mensuel` | fondement | Arrêté du 14 décembre 2011, art. 11 | Arrêté 2011-12-14 art. 11 | arrete-2011-12-14-eclairage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-12-31 | 2011-12-31 | 5 · première main | ancrée |
 | `incendie-travail-eclairage-securite-essai-mensuel` | contexte 1 | R. 4227-14 | R. 4227-14 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-07-01 | 2011-07-01 | 5 · première main | ancrée |
 | `incendie-travail-eclairage-securite-essai-mensuel` | contexte 2 | R. 4226-19 | R. 4226-19 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-07-01 | 2011-07-01 | 5 · première main | ancrée |

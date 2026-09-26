@@ -51,11 +51,16 @@
 // répare en ouvrant le tableau de bord, l'autre en déclarant ses équipements.
 //
 // Les fondre dans cette union rendrait la phrase fausse une fois sur deux, et
-// c'est exactement la faute que l'union à quatre états corrige. Le manque est
-// donc NOMMÉ ici et inscrit à `docs/chantiers-ouverts.md`, pas comblé de
-// travers. `perimetre/couverture.ts` porte déjà l'axe qui l'accueillerait —
-// il ne couvre aujourd'hui que « des équipements déclarés ne déclenchent
-// rien », pas « rien n'est déclaré ».
+// c'est exactement la faute que l'union à quatre états corrige.
+// ~~Le manque est donc NOMMÉ ici et inscrit à `docs/chantiers-ouverts.md`, pas
+// comblé de travers. `perimetre/couverture.ts` porte déjà l'axe qui
+// l'accueillerait — il ne couvre aujourd'hui que « des équipements déclarés ne
+// déclenchent rien », pas « rien n'est déclaré ».~~ — COMBLÉ LE 2026-09-26,
+// et ailleurs qu'ici, comme ce paragraphe le demandait : l'axe `inventaire` de
+// `perimetre/couverture.ts` dit « aucun équipement déclaré » comme un fait, et
+// les sorties remises à un tiers le lisent par `faitInventaire`
+// (`docs/chantiers-ouverts.md` § 15, rayé). Ce module, lui, se tait toujours
+// sur `a_jour`, et c'est toujours juste.
 
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";

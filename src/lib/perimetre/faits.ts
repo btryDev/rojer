@@ -57,6 +57,9 @@ export async function faitsDeCouverture(
       entreprise: { select: { codeNaf: true } },
       // Le parc **en service** : un équipement désactivé ne génère plus rien.
       equipements: { where: { actif: true } },
+      // Les retirés, comptés à part : ils portent des preuves que le registre
+      // imprime (axe `inventaire`, `couverture.ts`).
+      _count: { select: { equipements: { where: { actif: false } } } },
       // « 1 établissement = 1 DUERP » est un invariant de base
       // (`Duerp.etablissementId @unique`) : le premier est le seul.
       duerps: { include: { unites: true } },
@@ -145,6 +148,7 @@ export async function faitsDeCouverture(
     equipements: {
       nbSansObligation: compterSansObligation(sansEcheance),
       nbEquipements: etab.equipements.length,
+      nbRetires: etab._count.equipements,
     },
     // La borne d'effectif de l'ADR-031, lue là où elle est FAITE RESPECTER —
     // `etablissements/schema.ts`, la porte de création. La recopier dans

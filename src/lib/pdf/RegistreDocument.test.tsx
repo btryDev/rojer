@@ -8,6 +8,7 @@
 // est le seul garde-fou qui le verrait.
 
 import { describe, expect, it } from "vitest";
+import { elementsDansLOrdre, texteDirect } from "./arbre-rendu.test-utils";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { RegistreDocument, type RegistreData } from "./RegistreDocument";
 
@@ -142,4 +143,17 @@ describe("RegistreDocument", () => {
     expect(erp).toBeGreaterThan(aucun);
     expect(igh).toBeGreaterThan(aucun);
   }, 30000);
+
+  it("ne met pas R. 146-35 dans le titre du registre, et le nomme à part en IGH", () => {
+    // Ce document n'est pas le registre de l'immeuble (R. 146-35 : « tenu,
+    // par le propriétaire ») : le titre ne cite que ce qu'il met en œuvre.
+    const noeuds = elementsDansLOrdre(
+      RegistreDocument({ data: { ...data, regime: { estERP: true, estIGH: true } } }),
+    );
+    const titre = noeuds.map(texteDirect).find((t) => t.startsWith("Tenue du registre ("));
+    expect(titre).toBeDefined();
+    expect(titre).toContain("R. 143-44 CCH");
+    expect(titre).not.toContain("146-35");
+    expect(noeuds.map(texteDirect).some((t) => /R\. 146-35 CCH.*propriétaire/.test(t))).toBe(true);
+  });
 });

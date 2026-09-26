@@ -2240,7 +2240,15 @@ rien : à supprimer, pas à fusionner.
 > registre de sécurité (sous « Composition de ce registre »), le README du ZIP
 > (« À lire avant le reste ») et l'écran « Préparer un contrôle ».
 > `couvertureDuRegime` n'y passe plus un parc fictif à zéro, qui lui aurait fait
-> affirmer le fait sans avoir lu le parc.
+> affirmer le fait sans avoir lu le parc. Deux phrases, et non une : un parc
+> entièrement RETIRÉ (équipements désactivés parce qu'ils portent une preuve)
+> ne lit pas « rien au registre », puisque le registre imprime leurs rapports.
+>
+> **Le serveur MCP n'est pas couvert.** L'entrée d'origine le citait parmi les
+> sorties ; `mcp/tools.ts` rend toujours « Aucune vérification ne correspond à
+> ces critères. » sur une liste vide, sans le fait. Il passe par ses propres
+> requêtes (`ctx.scope`, sans `requireUser`), et ce lot s'est borné aux pièces
+> remises à un tiers — ZIP, deux PDF, « Préparer un contrôle ». Reste ouvert.
 
 ~~Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».~~
 

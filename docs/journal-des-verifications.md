@@ -859,8 +859,14 @@ hauteur », section 5 « Mesures de contrôle ». Formulation décisive confirm�
 deux lectures distinctes : « Il doit être tenu, par le propriétaire, un registre
 de sécurité sur lequel sont portés les renseignements indispensables au contrôle
 de la sécurité. » Puis : « Ce registre comprend, outre les pièces attendues aux
-articles R. 141-10 et R. 141-11 : […] ». **Consigné :** `src/lib/pdf/mentions-registre.ts`
-(le code), pas le corpus, que ce lot ne touchait pas.
+articles R. 141-10 et R. 141-11 : […] ». **Le corpus le portait déjà** :
+`corpus/cch-registre-securite.ts`, lu le 2026-09-01, même verbatim, et la même
+remarque en majuscules — « le PROPRIÉTAIRE — et non l'exploitant ». La relecture
+n'a rien trouvé de neuf dans le texte ; ce qui manquait était dans les PDF, qui
+ne lisaient pas le corpus. **Consigné :** au corpus (`luLe` passé au 2026-09-26,
+`lecture` inchangée, sceau du calendrier mesuré identique avant et après :
+`2026-09-21.1+159-c8f511323424c950+moteur.4`), et dans le code qui imprime,
+`src/lib/pdf/mentions-registre.ts`.
 
 **Ce que la lecture a changé.** Le dossier de conformité imprimait
 « R. 143-44 CCH (ERP), R. 146-35 CCH (IGH) » à tout établissement, et le registre

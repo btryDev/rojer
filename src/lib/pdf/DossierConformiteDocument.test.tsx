@@ -21,6 +21,7 @@
 // défaut qu'on veut voir tomber.
 
 import { describe, expect, it } from "vitest";
+import { elementsDansLOrdre } from "./arbre-rendu.test-utils";
 import { renderToBuffer } from "@react-pdf/renderer";
 import {
   DossierConformiteDocument,
@@ -228,6 +229,27 @@ describe("le dossier dit « aucun équipement déclaré » avant le score (§ 15
       },
     });
     expect(inventaire).toBeGreaterThan(autreAxe);
+  });
+});
+
+describe("le fait de l'inventaire se lit avant le score", () => {
+  it("l'encadré précède la ligne de score dans l'ordre du document", () => {
+    const motif = "Aucun équipement n'est déclaré pour cet établissement.";
+    const d: DossierData = {
+      ...dossier(bloc(2)),
+      couverture: {
+        manques: [{ axe: "inventaire", motif, consequence: "Conséquence." }],
+        indeterminations: [],
+      },
+    };
+    const noeuds = elementsDansLOrdre(DossierConformiteDocument({ data: d }));
+    const encadre = noeuds.findIndex(
+      (n) => n.type === "EncadreALire" && n.props.titre === motif,
+    );
+    const score = noeuds.findIndex((n) => n.type === "ScoreLigne");
+    expect(encadre).toBeGreaterThan(-1);
+    expect(score).toBeGreaterThan(-1);
+    expect(encadre).toBeLessThan(score);
   });
 });
 

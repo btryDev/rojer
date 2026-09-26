@@ -23,7 +23,7 @@ function faits(partiel: Partial<FaitsCouverture> = {}): FaitsCouverture {
   return {
     regime: regimeCouvert,
     duerp: null,
-    equipements: { nbSansObligation: 0, nbEquipements: 12 },
+    equipements: { nbSansObligation: 0, nbEquipements: 12, nbRetires: 0 },
     effectif: null,
     ...partiel,
   };
@@ -397,14 +397,14 @@ describe("axe secteur_duerp — `secteur_inconnu` couvre trois situations", () =
 describe("axe domaine_equipement", () => {
   it("se tait quand tous les appareils déclenchent quelque chose", () => {
     const c = couvertureDeLEtablissement(
-      faits({ equipements: { nbSansObligation: 0, nbEquipements: 12 } }),
+      faits({ equipements: { nbSansObligation: 0, nbEquipements: 12, nbRetires: 0 } }),
     );
     expect(riensASignaler(c)).toBe(true);
   });
 
   it("dit le nombre, le situe, et renvoie au détail plutôt que de le refaire", () => {
     const c = couvertureDeLEtablissement(
-      faits({ equipements: { nbSansObligation: 3, nbEquipements: 12 } }),
+      faits({ equipements: { nbSansObligation: 3, nbEquipements: 12, nbRetires: 0 } }),
     );
     expect(axes(c)).toEqual(["domaine_equipement"]);
     expect(c.manques[0].motif).toContain("3 équipements");
@@ -422,7 +422,7 @@ describe("axe domaine_equipement", () => {
     // le démenti était toujours là, l'affirmation aussi. Un test de présence
     // ne peut pas garantir une absence.
     const c = couvertureDeLEtablissement(
-      faits({ equipements: { nbSansObligation: 1, nbEquipements: 1 } }),
+      faits({ equipements: { nbSansObligation: 1, nbEquipements: 1, nbRetires: 0 } }),
     );
     const phrase = c.manques[0].consequence;
     expect(phrase).toContain(
@@ -458,7 +458,7 @@ describe("les axes ne s'additionnent ni ne se recouvrent", () => {
       nbActivitesDeclarees: 0,
       correspondance: { statut: "sans_naf" as const },
     },
-    equipements: { nbSansObligation: 4, nbEquipements: 9 },
+    equipements: { nbSansObligation: 4, nbEquipements: 9, nbRetires: 0 },
     effectif: null,
   });
 
@@ -499,7 +499,7 @@ describe("les axes ne s'additionnent ni ne se recouvrent", () => {
           categorieErp: null,
           estHabitation: false,
         },
-        equipements: { nbSansObligation: 2, nbEquipements: 5 },
+        equipements: { nbSansObligation: 2, nbEquipements: 5, nbRetires: 0 },
       }),
     );
     expect(axes(c)).toEqual(["domaine_equipement"]);
@@ -604,7 +604,7 @@ describe("axe de l'inventaire : aucun équipement déclaré", () => {
   // Le cas réel : un dossier qui sort de l'onboarding. Trois étapes, aucune
   // ne déclare d'équipement — le parc en service est vide.
   const dossierNeuf = faits({
-    equipements: { nbSansObligation: 0, nbEquipements: 0 },
+    equipements: { nbSansObligation: 0, nbEquipements: 0, nbRetires: 0 },
   });
 
   it("le dit, et comme un fait", () => {
@@ -615,7 +615,7 @@ describe("axe de l'inventaire : aucun équipement déclaré", () => {
 
   it("se tait dès qu'un seul équipement est en service", () => {
     const c = couvertureDeLEtablissement(
-      faits({ equipements: { nbSansObligation: 0, nbEquipements: 1 } }),
+      faits({ equipements: { nbSansObligation: 0, nbEquipements: 1, nbRetires: 0 } }),
     );
     expect(faitInventaire(c)).toBeNull();
     expect(axes(c)).not.toContain("inventaire");
@@ -631,15 +631,33 @@ describe("axe de l'inventaire : aucun équipement déclaré", () => {
     }
   });
 
-  it("ne qualifie rien : ni verdict, ni score", () => {
-    const m = faitInventaire(couvertureDeLEtablissement(dossierNeuf));
-    const texte = `${m?.motif} ${m?.consequence}`.toLowerCase();
-    // Borne basse : les mots du verdict que la charte interdit (interdit 15,
-    // et la règle « Rojer calcule, il n'avise pas »).
-    for (const mot of ["conforme", "en règle", "complet", "à jour", "score"]) {
-      expect(texte).not.toContain(mot);
+  // Un parc entièrement retiré : l'équipement portait une preuve, il a été
+  // désactivé plutôt que supprimé (`supprimerEquipement`), et le registre
+  // imprime encore son rapport.
+  const parcRetire = faits({
+    equipements: { nbSansObligation: 0, nbEquipements: 0, nbRetires: 1 },
+  });
+
+  it("ne dit pas « rien au registre » quand un équipement retiré y porte ses preuves", () => {
+    const m = faitInventaire(couvertureDeLEtablissement(parcRetire));
+    expect(m?.axe).toBe("inventaire");
+    expect(m?.consequence).not.toMatch(/registre/i);
+    expect(m?.consequence).toMatch(/1 équipement retiré du parc sont conservés/);
+  });
+
+  it("ne qualifie rien, et ne renvoie pas le lecteur à un écran", () => {
+    // Borne basse : les formes du verdict que la charte interdit (interdit 15,
+    // « Rojer calcule, il n'avise pas »), par RADICAL — la première version
+    // cherchait « complet » et laissait passer « se complète ». Et le renvoi à
+    // un écran : ces phrases s'impriment dans des pièces lues par un tiers.
+    for (const f of [dossierNeuf, parcRetire]) {
+      const m = faitInventaire(couvertureDeLEtablissement(f));
+      const texte = `${m?.motif} ${m?.consequence}`.toLowerCase();
+      for (const radical of [/conform/, /en règle/, /compl[eè]t/, /à jour/, /score/, /page équipements/]) {
+        expect(texte).not.toMatch(radical);
+      }
+      expect(texte).not.toMatch(/\d+\s*(%|\/\s*100)/);
     }
-    expect(texte).not.toMatch(/\d+\s*(%|\/\s*100)/);
   });
 
   it("ne se confond pas avec l'axe des équipements sans obligation", () => {
