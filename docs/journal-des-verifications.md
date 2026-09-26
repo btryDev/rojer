@@ -1097,7 +1097,7 @@ tests anti-verdict gardaient chacun leur sortie, rien ne gardait le reste. Une
 recherche sur `src/` et le serveur MCP (hors commentaires) a relevé, sur des
 surfaces affichées ou imprimées : « opposable par votre contrat — pas par le
 droit » (écran et fiche du permis de feu, README du dossier de contrôle, et le
-marquage long de l'ADR-032, laissé — voir plus bas), « RÉFÉRENTIELS NON OPPOSABLES », « Hiérarchie des
+marquage long de l'ADR-032 — voir plus bas), « RÉFÉRENTIELS NON OPPOSABLES », « Hiérarchie des
 mesures opposable » et « éléments opposables » (dossier de conformité), « les
 rendant opposables » (guide des documents obligatoires), « pas une règle
 opposable » (description d'un risque), « fait foi » et « engage
@@ -1111,7 +1111,7 @@ ce que Rojer fait.
 **L'ADR-032 emploie lui-même le mot** (« sources opposables », « actes
 d'autorité opposables ») pour décider ; il n'est pas réécrit. Il impose un
 marquage, « engagement d'assurance, pas une obligation légale », qui reste
-tel quel. La phrase qui le prolonge dans `MARQUAGE_CONTRACTUEL_LONG`
+tel quel. ~~La phrase qui le prolonge dans `MARQUAGE_CONTRACTUEL_LONG`
 (« opposable par votre contrat d'assurance, pas par le droit ») n'est pas dans
 l'ADR, **mais elle n'est PAS corrigée** : `prescriptions/sources.ts` est un
 module du moteur de calendrier, et la modifier déplace l'empreinte que
@@ -1120,9 +1120,8 @@ module du moteur de calendrier, et la modifier déplace l'empreinte que
 écrit en base par aucune régénération (il est seulement réexporté pour
 l'affichage), ce qui en ferait un « NON » au sens du test — recopier
 l'empreinte seule —, mais recopier une empreinte n'est pas une décision de ce
-lot. Déclarée dans la garde comme dette nommée, remplacement proposé : « cette
-échéance naît d'une demande de votre assureur, et aucune référence légale ne
-lui est attachée ».
+lot. Déclarée dans la garde comme dette nommée.~~ [2026-09-26 : repris, voir
+plus bas.]
 
 **Lu, pages propres, structure demandée d'abord, formulation décisive deux
 fois :**
@@ -1149,8 +1148,8 @@ fois :**
 **La garde** : `src/lib/rendu/sans-qualification.test.ts`, qui balaie
 `src/app`, `src/components`, `src/lib` et `scripts/mcp-server.ts`,
 commentaires blanchis, et cherche les mots par-dessus les coupures de ligne.
-Trois occurrences admises nommément : la consigne du serveur MCP, qui NOMME
-les mots pour les interdire (deux), et le marquage long, en dette. **Éprouvée** : la phrase historique de l'écran du
+Deux occurrences admises nommément : la consigne du serveur MCP, qui NOMME
+les mots pour les interdire. ~~Et le marquage long, en dette.~~ [Retiré le même jour.] **Éprouvée** : la phrase historique de l'écran du
 permis de feu, remise telle que `abd0108` la donne, est refusée à sa ligne
 (`permis-feu/page.tsx:178 — « opposable »`) ; les défauts de ce jour sont
 gardés en épreuve dans un bac, coupures de ligne comprises.
@@ -1172,6 +1171,21 @@ gardés en épreuve dans un bac, coupures de ligne comprises.
   conforme », « ne rend aucun dossier conforme », « Ce dossier ne vaut pas
   certification de conformité ») sont laissées : elles disent ce que Rojer ne
   fait pas.
+
+**Repris le même jour, sur décision de la session de coordination.** Le
+marquage long est corrigé : « cette échéance naît d'une demande de votre
+assureur, et aucune référence légale ne lui est attachée ». L'empreinte du
+moteur est recopiée SANS incrément (`91badd776f7acbba`, « NON : affichage
+seul »), et la dette est retirée de la garde. Dans le formulaire des
+prescriptions, la phrase qui suivait répétait « aucune référence légale » :
+ce doublon est retiré. Le « 80 % des incendies de travaux se déclarent
+après le chantier » de l'écran du permis de feu n'avait pas de source. La
+page de l'INRS (brochure ED 6030, « Le permis de feu — Démarche et document
+support », août 2019), lue deux fois, n'en donne qu'un : « Les travaux par
+points chauds représentent 30 % des origines d'un incendie dans
+l'entreprise. » Il remplace l'autre, attribué. La brochure servie en PDF
+n'est que le formulaire ; son texte courant n'a pas été lu. La règle APSAD
+R43, payante, ne l'a pas été non plus.
 
 **Sceau inchangé**, mesuré avant et après :
 `2026-09-26.5+167-66f005e23f039ca+moteur.4`.

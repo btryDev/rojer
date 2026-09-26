@@ -117,7 +117,7 @@ export default async function PermisFeuListePage({
           charte="board"
           kicker="Pourquoi cette page"
           titre="Un permis de feu = votre assurance et votre preuve."
-          enjeu="80 % des incendies de travaux se déclarent après le chantier, pendant la surveillance. Le permis nomme qui intervient, où, et les mesures prises avant, pendant et après les travaux."
+          enjeu="« Les travaux par points chauds représentent 30 % des origines d'un incendie dans l'entreprise » (INRS, ED 6030, août 2019). Le permis nomme qui intervient, où, et les mesures prises avant, pendant et après les travaux."
           tonalite="info"
         >
           <p className="m-0">

@@ -184,7 +184,14 @@ const RELEVE = {
   // Le module entre au relevé avec `nombreDePersonnesADemander` et les mots de
   // la question : une retouche de ces textes déplacera l'empreinte sans toucher
   // un calendrier — recopier, ne pas incrémenter.
-  empreinte: "aa9563477bf1ea07",
+  // Recopiée SANS incrément le 2026-09-26 (`lot/sans-qualification`, C32) :
+  // `MARQUAGE_CONTRACTUEL_LONG` (`prescriptions/sources.ts`) ne dit plus
+  // « opposable par votre contrat d'assurance, pas par le droit ». NON :
+  // affichage seul, jamais écrit par la régénération — lu par la fiche de
+  // vérification et le formulaire des prescriptions, réexporté par
+  // `prescriptions/schema.ts`, absent de `calendrier/` et de
+  // `prescriptions/actions.ts` (décision de la session de coordination).
+  empreinte: "91badd776f7acbba",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

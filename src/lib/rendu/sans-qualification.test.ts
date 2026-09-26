@@ -63,19 +63,6 @@ const ADMISES: { fichier: string; nom: string; motif: string }[] = [
     nom: "en infraction",
     motif: "Même consigne, même motif.",
   },
-  {
-    // UNE DETTE, PAS UNE EXCEPTION DE FOND. `MARQUAGE_CONTRACTUEL_LONG` dit
-    // encore « opposable par votre contrat d'assurance, pas par le droit ». Le
-    // fichier est un module du moteur de calendrier : le modifier déplace
-    // l'empreinte que `calendrier/version-moteur.test.ts` scelle, et recopier
-    // une empreinte n'est pas une décision de ce lot (journal C32). Remplacement
-    // proposé : « cette échéance naît d'une demande de votre assureur, et
-    // aucune référence légale ne lui est attachée ». Retirer cette entrée le
-    // jour où la phrase change.
-    fichier: "src/lib/prescriptions/sources.ts",
-    nom: "opposable",
-    motif: "Module scellé par l'empreinte du moteur : attend la décision de recopier l'empreinte.",
-  },
 ];
 
 const DOSSIERS = ["src/app", "src/components", "src/lib"];

@@ -79,8 +79,8 @@ export const MARQUAGE_CONTRACTUEL =
 
 /** Même chose, pour les surfaces qui ont la place d'une phrase entière. */
 export const MARQUAGE_CONTRACTUEL_LONG =
-  "Engagement d'assurance, pas une obligation légale : cette échéance est " +
-  "opposable par votre contrat d'assurance, pas par le droit.";
+  "Engagement d'assurance, pas une obligation légale : cette échéance naît " +
+  "d'une demande de votre assureur, et aucune référence légale ne lui est attachée.";
 
 /** Libellé court des pastilles et des colonnes étroites. */
 export const PASTILLE_CONTRACTUELLE = "Engagement d'assurance";
