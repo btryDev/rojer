@@ -5,7 +5,8 @@ import type { Referentiel } from "./types";
  *
  * Sources :
  *  - INRS ED 880 « La restauration traditionnelle — Prévention des risques
- *    professionnels » (novembre 2012) — fiches « Réception », « Stockage »,
+ *    professionnels » (3e édition 2012, réimpression juillet 2018 — ligne
+ *    d'édition de la brochure, relue le 2026-09-26) — fiches « Réception », « Stockage »,
  *    « Production froide et chaude », « Service en salle », « Plonge ».
  *  - OiRA Restauration (outil INRS / EU-OSHA, AC 64).
  *  - INRS ED 840 « Évaluation des risques professionnels — Aide au repérage
@@ -14,9 +15,13 @@ import type { Referentiel } from "./types";
  *
  * Les libellés des risques et les mesures recommandées sont alignés sur le
  * vocabulaire INRS. Les valeurs de cotation par défaut reflètent les risques
- * mis en avant comme prédominants par l'ED 880 (« les chutes et glissades
- * de plain-pied représentent 1/3 des accidents à elles seules ; les accidents
- * aux mains représentent plus d'1/3 des accidents »).
+ * mis en avant comme prédominants par l'ED 880, p. 4 : « Trois types
+ * d'accidents représentent à eux seuls plus des deux tiers des accidents en
+ * restauration collective : les chutes et glissades de plain-pied (1/3 à eux
+ * seuls) […] » et « Les accidents aux mains représentent plus d'1/3 des
+ * accidents. » Le chiffre des chutes est donné pour la restauration
+ * COLLECTIVE, dans une brochure consacrée à la restauration traditionnelle :
+ * la description du risque le dit (relecture du 2026-09-26).
  */
 export const restauration: Referentiel = {
   id: "restauration",
@@ -59,7 +64,7 @@ export const restauration: Referentiel = {
       id: "resto-chute-plain-pied",
       libelle: "Chute de plain-pied (sols glissants, encombrés)",
       description:
-        "INRS ED 880 : les chutes et glissades de plain-pied représentent à elles seules environ 1/3 des accidents en restauration.",
+        "INRS ED 880, p. 4 : « Trois types d'accidents représentent à eux seuls plus des deux tiers des accidents en restauration collective : […] les chutes et glissades de plain-pied (1/3 à eux seuls) ; […] »",
       unitesAssociees: ["reception", "stockage", "production", "service-salle", "plonge"],
       graviteParDefaut: 2,
       probabiliteParDefaut: 4,
@@ -100,7 +105,7 @@ export const restauration: Referentiel = {
       id: "resto-coupure",
       libelle: "Coupure aux mains (couteaux, trancheuse, mandoline)",
       description:
-        "INRS ED 880 : les accidents aux mains représentent plus d'1/3 des accidents en restauration.",
+        "INRS ED 880, p. 4 : « Les accidents aux mains représentent plus d'1/3 des accidents. »",
       unitesAssociees: ["production", "plonge"],
       graviteParDefaut: 2,
       probabiliteParDefaut: 3,
@@ -173,7 +178,7 @@ export const restauration: Referentiel = {
       id: "resto-charge-physique",
       libelle: "Charge physique : manutentions et postures (cuisine, service, plonge)",
       description:
-        "ED 840 fiche 5 « charge physique de travail » : déplacements de charges, postures debout statiques, gestes répétitifs.",
+        "ED 840, fiche 5 « Risques liés à la charge physique de travail » : déplacements de charges, postures debout statiques, gestes répétitifs.",
       unitesAssociees: ["reception", "stockage", "production", "service-salle", "plonge"],
       graviteParDefaut: 2,
       probabiliteParDefaut: 4,
@@ -274,7 +279,7 @@ export const restauration: Referentiel = {
       id: "resto-electrisation",
       libelle: "Risque électrique (installations cuisine, lavage)",
       description:
-        "ED 880 fiche 3 + ED 840 fiche 14. Contrôles périodiques annuels obligatoires.",
+        "INRS ED 880, fiche 3 « Production froide et chaude » ; ED 840, fiche 14 « Risques liés à l'électricité ». « La périodicité des vérifications est fixée à un an, le point de départ de cette périodicité étant la date de la vérification initiale. Toutefois, le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité de nature à répondre aux observations contenues dans le rapport de vérification. » (arrêté du 26 décembre 2011, art. 3)",
       unitesAssociees: ["production", "plonge", "stockage"],
       graviteParDefaut: 4,
       probabiliteParDefaut: 1,
@@ -282,7 +287,7 @@ export const restauration: Referentiel = {
         {
           id: "resto-controle-elec",
           libelle:
-            "Contrôles périodiques réglementaires des installations électriques (annuel)",
+            "Vérification périodique des installations électriques : tous les ans, ou tous les deux ans aux conditions de l'arrêté du 26 décembre 2011, art. 3",
           type: "organisationnelle",
         },
         {
@@ -408,7 +413,7 @@ export const restauration: Referentiel = {
       id: "resto-rps-coup-feu",
       libelle: "Risques psychosociaux : stress, coup de feu, amplitude horaire",
       description:
-        "ED 840 fiche 17 « risques psychosociaux ». ED 880 fiche 3 (stress, fatigue physique).",
+        "ED 840, fiche 17 « Risques psychosociaux ». ED 880, fiche 3 (stress, fatigue physique).",
       unitesAssociees: ["production", "service-salle"],
       graviteParDefaut: 3,
       probabiliteParDefaut: 3,
@@ -501,7 +506,9 @@ export const restauration: Referentiel = {
    *    routier, déjà porté par le référentiel transverse (`trv-routier`, dont
    *    la question détecteur vise explicitement les deux-roues).
    *  - Service en terrasse : aucune source INRS ne lui attribue de risque
-   *    propre, et l'ambiance thermique est déjà cotée (`resto-thermique`).
+   *    propre, et l'ambiance thermique est déjà cotée
+   *    (`resto-ambiance-thermique` ; le renvoi écrivait `resto-thermique`,
+   *    identifiant qui n'existe pas — corrigé le 2026-09-26).
    *  - Travail de nuit : non nommé par les sources sectorielles INRS de la
    *    restauration, donc pas de ligne sectorielle. Porté depuis le
    *    2026-08-25 par le transverse `trv-travail-nuit`, adossé à ED 6305 —

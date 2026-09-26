@@ -2,7 +2,8 @@ import type { RisqueReferentiel, QuestionDetection } from "./types";
 
 /**
  * Risques transverses présents quel que soit le secteur. Référencés sur les
- * 20 fiches de risques de l'INRS ED 840, 8e édition (2023), révisée en mai 2025. Les numéros
+ * 20 fiches de risques de l'INRS ED 840, 8e édition (2023), révisée en mai 2025 (ligne
+ * d'édition de la brochure, p. 36, relue le 2026-09-26). Les numéros
  * de fiche cités dans ce fichier ont été recoupés un à un sur le sommaire de
  * cette édition à l'audit du 2026-08-25.
  *
@@ -19,15 +20,22 @@ export const risquesTransverses: RisqueReferentiel[] = [
     id: "trv-routier",
     libelle: "Risque routier en mission",
     description:
-      "INRS ED 840 fiche 4. Concerne tout déplacement professionnel (voiture, deux-roues, utilitaire) — y compris occasionnel. Risque majeur en termes de gravité.",
+      "INRS ED 840, fiche 4 « Risques routiers en mission » : « Les salariés sont exposés à un risque important d'accident sur la route. » Concerne tout déplacement professionnel (voiture, deux-roues, utilitaire), y compris occasionnel.",
     unitesAssociees: [],
     graviteParDefaut: 4,
     probabiliteParDefaut: 2,
     mesuresRecommandees: [
       {
-        id: "trv-routier-alternatif",
+        // Remplace `trv-routier-alternatif` (2026-09-26), qui écrivait
+        // « privilégier le train sur l'autoroute » : ED 840 fiche 4 recommande
+        // le train ET les autoroutes (« privilégiez des moyens de déplacements
+        // plus sûrs (train) et empruntez des itinéraires plus sûrs
+        // (autoroutes) »). Le sens de la mesure change, donc l'identifiant :
+        // un DUERP qui a retenu l'ancienne garde son libellé copié (décision
+        // E10) et se voit proposer celle-ci à côté.
+        id: "trv-routier-moyens-surs",
         libelle:
-          "Limiter les déplacements (visioconférence, audioconférence) ; privilégier le train sur l'autoroute",
+          "Éviter ou limiter les déplacements (visioconférences, audioconférences) ; privilégier des moyens de déplacement plus sûrs (train) et des itinéraires plus sûrs (autoroutes)",
         type: "reduction_source",
       },
       {
@@ -60,7 +68,7 @@ export const risquesTransverses: RisqueReferentiel[] = [
     id: "trv-tms-ecran",
     libelle: "Travail sur écran (TMS, fatigue visuelle)",
     description:
-      "INRS dossier « Travail sur écran ». Concerne tout poste exposé plus de 4 heures par jour à un écran.",
+      "INRS, dossier web « Travail sur écran ». « Les dispositions du présent chapitre s'appliquent aux travailleurs qui utilisent de façon habituelle et pendant une partie non négligeable du temps de travail des équipements de travail comportant des écrans de visualisation. » (art. R. 4542-1)",
     unitesAssociees: [],
     graviteParDefaut: 2,
     probabiliteParDefaut: 3,
@@ -74,7 +82,7 @@ export const risquesTransverses: RisqueReferentiel[] = [
       {
         id: "trv-ecran-pauses",
         libelle:
-          "Pauses régulières (règle 20-20-20 : toutes les 20 min, regarder à 20 pieds pendant 20 s)",
+          "Temps quotidien de travail sur écran périodiquement interrompu par des pauses ou par des changements d'activité (art. R. 4542-4)",
         type: "organisationnelle",
       },
       {
@@ -148,7 +156,7 @@ export const risquesTransverses: RisqueReferentiel[] = [
     libelle:
       "Charge physique : port de charges, manutention manuelle (TMS, lombalgies)",
     description:
-      "INRS ED 840 fiche 5 « Risques liés à la charge physique de travail ». Le Code du travail impose d'éviter le recours à la manutention manuelle (R. 4541-2) ; il ne fixe pas de seuil général, seulement des limites hautes avec avis médical (R. 4541-9 : 55 kg, 105 kg au maximum). Le repère de 10 kg est une valeur de bonne pratique.",
+      "INRS ED 840, fiche 5 « Risques liés à la charge physique de travail ». « L'employeur prend les mesures d'organisation appropriées ou utilise les moyens appropriés, et notamment les équipements mécaniques, afin d'éviter le recours à la manutention manuelle de charges par les travailleurs. » (art. R. 4541-3) Lorsque le recours à la manutention manuelle est inévitable et que les aides mécaniques prévues à l'article R. 4541-5 ne peuvent pas être mises en œuvre, « un travailleur ne peut être admis à porter d'une façon habituelle des charges supérieures à 55 kilogrammes qu'à condition d'y avoir été reconnu apte par le médecin du travail, sans que ces charges puissent être supérieures à 105 kilogrammes. » « Toutefois, les femmes ne sont pas autorisées à porter des charges supérieures à 25 kilogrammes ou à transporter des charges à l'aide d'une brouette supérieures à 40 kilogrammes, brouette comprise. » (art. R. 4541-9) Parmi les situations dangereuses, l'INRS cite une « masse unitaire supérieure à 15 kg » (ED 840, fiche 5).",
     unitesAssociees: [],
     graviteParDefaut: 3,
     probabiliteParDefaut: 3,
@@ -250,7 +258,7 @@ export const risquesTransverses: RisqueReferentiel[] = [
     id: "trv-travail-nuit",
     libelle: "Travail de nuit et travail posté",
     description:
-      "INRS ED 6305 « Le travail de nuit et le travail posté. Quels effets ? Quelle prévention ? » (2022). Troubles du sommeil et de la vigilance, accidents, effets cardiovasculaires, digestifs et métaboliques, risque cancérogène. Le recours au travail de nuit est exceptionnel et doit être justifié (art. L. 3122-1) ; est considéré comme travail de nuit tout travail effectué sur une période d'au moins neuf heures consécutives comprenant l'intervalle entre minuit et 5 heures (art. L. 3122-2).",
+      "« Le travail de nuit peut altérer, de manière plus ou moins grave, la santé du salarié, allant de troubles du sommeil au risque de cancer ou de maladie cardiovasculaire. » (INRS ED 6305, dépliant « Le travail de nuit et le travail posté », 2e édition révisée en mars 2026) « Le recours au travail de nuit est exceptionnel. Il prend en compte les impératifs de protection de la santé et de la sécurité des travailleurs et est justifié par la nécessité d'assurer la continuité de l'activité économique ou des services d'utilité sociale. » (art. L. 3122-1) « Tout travail effectué au cours d'une période d'au moins neuf heures consécutives comprenant l'intervalle entre minuit et 5 heures est considéré comme du travail de nuit. » (art. L. 3122-2)",
     unitesAssociees: [],
     graviteParDefaut: 3,
     probabiliteParDefaut: 2,
@@ -291,16 +299,19 @@ export const risquesTransverses: RisqueReferentiel[] = [
     // Ajouté 2026-08-25. Aucun des trois secteurs couverts n'avait de ligne
     // biologique, alors que tous trois ont une ligne chimique.
     //
-    // Sur le périmètre : l'article R. 4421-1 écarte expressément le
-    // confinement, les mesures techniques de laboratoire et les déclarations
-    // « lorsque l'activité, bien qu'elle puisse conduire à exposer des
-    // travailleurs, n'implique pas normalement l'utilisation délibérée d'un
-    // agent biologique ». La restauration et le commerce alimentaire relèvent
-    // de ce second étage : l'évaluation s'applique, le régime laboratoire non.
+    // Sur le périmètre : l'article R. 4421-1, alinéa 2, écarte une liste
+    // d'articles (R. 4424-2, R. 4424-3, R. 4424-7 à R. 4424-10, R. 4425-6 et
+    // R. 4425-7) à DEUX conditions cumulatives : l'activité « n'implique pas
+    // normalement l'utilisation délibérée d'un agent biologique » ET
+    // « l'évaluation des risques prévue au chapitre III ne met pas en évidence
+    // de risque spécifique ». La première version de cette note et de la
+    // description ne citait que la première (relecture du 2026-09-26). Ce que
+    // les articles écartés imposent n'a pas été lu : la description cite
+    // l'alinéa entier plutôt que de les résumer.
     id: "trv-biologique",
     libelle: "Agents biologiques (denrées, déchets, linge, sanitaires)",
     description:
-      "INRS ED 840 fiche 8 « risques liés aux agents biologiques ». Contact avec des produits agroalimentaires, des déchets ou des surfaces contaminées. L'employeur détermine la nature, la durée et les conditions de l'exposition (art. R. 4423-1). Les mesures de confinement et les déclarations ne s'appliquent pas lorsque l'activité n'implique pas l'utilisation délibérée d'un agent biologique (art. R. 4421-1).",
+      "INRS ED 840, fiche 8 « Risques liés aux agents biologiques ». Contact avec des produits agroalimentaires, des déchets ou des surfaces contaminées. « Pour toute activité susceptible de présenter un risque d'exposition à des agents biologiques, l'employeur détermine la nature, la durée et les conditions de l'exposition des travailleurs. » (art. R. 4423-1) « Toutefois, les dispositions des articles R. 4424-2, R. 4424-3, R. 4424-7 à R. 4424-10, R. 4425-6 et R. 4425-7 ne sont pas applicables lorsque l'activité, bien qu'elle puisse conduire à exposer des travailleurs, n'implique pas normalement l'utilisation délibérée d'un agent biologique et que l'évaluation des risques prévue au chapitre III ne met pas en évidence de risque spécifique. » (art. R. 4421-1)",
     unitesAssociees: [],
     graviteParDefaut: 2,
     probabiliteParDefaut: 3,
@@ -367,7 +378,7 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
   {
     id: "q-ecran",
     intitule:
-      "Des salariés travaillent-ils plus de 4 heures par jour sur un écran ?",
+      "Des salariés utilisent-ils un écran de façon habituelle et pendant une partie non négligeable de leur temps de travail ?",
     risqueIdAssocie: "trv-tms-ecran",
   },
   {
@@ -385,7 +396,7 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
   {
     id: "q-charges",
     intitule:
-      "Des salariés portent-ils régulièrement des charges supérieures à 10 kg, ou effectuent-ils des manutentions manuelles fréquentes ?",
+      "Des salariés portent-ils, poussent-ils ou tirent-ils des charges à la main, même occasionnellement ?",
     risqueIdAssocie: "trv-charges",
   },
   {

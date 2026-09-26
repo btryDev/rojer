@@ -70,7 +70,7 @@ export const commerce: Referentiel = {
       id: "com-charge-physique",
       libelle: "Charge physique : manutentions et postures (mise en rayon, port de charges)",
       description:
-        "ED 840 fiche 5 « charge physique de travail ». OiRA commerce identifie les manutentions comme un risque central de l'activité de mise en rayon et de réserve.",
+        "ED 840, fiche 5 « Risques liés à la charge physique de travail ». OiRA commerce identifie les manutentions comme un risque central de l'activité de mise en rayon et de réserve.",
       unitesAssociees: ["com-reception-stockage", "com-mise-rayon"],
       graviteParDefaut: 3,
       probabiliteParDefaut: 3,
@@ -144,7 +144,7 @@ export const commerce: Referentiel = {
         {
           id: "com-marchepied-norme",
           libelle:
-            "Escabeau ou marchepied stable conforme aux normes (NF), proscrire les escaliers improvisés",
+            "Escabeau ou marchepied stable ; proscrire les escaliers improvisés",
           type: "protection_collective",
         },
         {
@@ -160,7 +160,7 @@ export const commerce: Referentiel = {
       libelle:
         "Risques psychosociaux : agression, incivilités, braquage",
       description:
-        "ED 840 fiche 17 « risques psychosociaux ». Risque majeur en commerce de détail (caisse, ouverture/fermeture).",
+        "ED 840, fiche 17 « Risques psychosociaux ». Situations visées : la caisse, l'ouverture et la fermeture du magasin.",
       unitesAssociees: ["com-vente-caisse", "com-locaux"],
       graviteParDefaut: 4,
       probabiliteParDefaut: 2,
@@ -195,7 +195,7 @@ export const commerce: Referentiel = {
       id: "com-postural-caisse",
       libelle:
         "Charge physique en caisse : posture statique et gestes répétitifs",
-      description: "ED 840 fiche 5. Risque majeur des hôtes/hôtesses de caisse.",
+      description: "ED 840, fiche 5 « Risques liés à la charge physique de travail ».",
       unitesAssociees: ["com-vente-caisse"],
       graviteParDefaut: 2,
       probabiliteParDefaut: 4,
@@ -223,7 +223,7 @@ export const commerce: Referentiel = {
     {
       id: "com-coupure-cutter",
       libelle: "Coupure (cutter, ouverture de cartons, étiquetage)",
-      description: "ED 840 fiches 9 (équipements) et 19 (heurt/cognement).",
+      description: "ED 840, fiche 9 « Risques liés aux équipements de travail », qui cite parmi les situations dangereuses l'« utilisation d'outils tranchants : couteaux, hachoirs, cutters, scies… ».",
       unitesAssociees: ["com-reception-stockage", "com-mise-rayon"],
       graviteParDefaut: 2,
       probabiliteParDefaut: 3,
@@ -296,7 +296,10 @@ export const commerce: Referentiel = {
       // R. 4463-3 ne sont pas repris. Cotation par défaut : celle du bureau.
       // ~~« ED 840 fiche 12 »~~ retiré de la description : recopié de
       // `bur-thermique` sans que rien dans le dépôt établisse ce que porte
-      // cette fiche. Le Code du travail suffit à sourcer.
+      // cette fiche. Le Code du travail suffit à sourcer. [Relu le 2026-09-26
+      // sur le sommaire de la brochure (8e édition révisée en mai 2025) : la
+      // fiche 12 est bien « Risques liés aux ambiances thermiques ». Le motif
+      // du retrait était faux ; la référence n'est pas remise, le Code suffit.]
       id: "com-chaleur-intense",
       libelle: "Ambiances thermiques — épisodes de chaleur intense",
       description:
@@ -402,9 +405,12 @@ export const commerce: Referentiel = {
       // que les chutes. Page métier INRS « Poissonnerie. Les risques du
       // métier » : coupures par les arêtes dorsales et lors de la manipulation
       // des déchets, infections cutanées consécutives aux coupures, risque
-      // électrique dû à des installations inadaptées au milieu humide. L'INRS
-      // y relève la durée d'arrêt moyenne par maladie professionnelle la plus
-      // élevée des commerces de bouche.
+      // électrique dû à des installations inadaptées au milieu humide.
+      // ~~L'INRS y relève la durée d'arrêt moyenne par maladie professionnelle
+      // la plus élevée des commerces de bouche.~~ [Retiré le 2026-09-26 : la
+      // page métier, relue ce jour, ne porte cette comparaison dans aucun
+      // texte lisible — son encadré « Quelques chiffres » est une image sans
+      // texte alternatif. Non vérifiable, donc plus affiché.]
       id: "com-rayon-maree",
       libelle: "Préparation du poisson et des coquillages",
       question: "Préparez-vous du poisson ou des coquillages sur place ?",
@@ -413,7 +419,7 @@ export const commerce: Referentiel = {
       cequiManque:
         "L'évaluation ne décrit pas le banc de marée : manutention répétée de la glace, du chargement du banc à l'évacuation de l'eau de fonte ; coupures par les arêtes et par les couteaux, et infections cutanées qui s'ensuivent ; installations électriques exposées à l'humidité permanente du poste ; travail debout dans le froid et sur sol mouillé.",
       pourquoi:
-        "Les unités types de ce référentiel décrivent la vente, pas la préparation des produits. L'INRS consacre à ce métier un outil d'évaluation distinct (OiRA « Poissonnerie », dépliant ED 6380) et relève dans les commerces de bouche la durée d'arrêt moyenne par maladie professionnelle la plus élevée pour la poissonnerie.",
+        "Les unités types de ce référentiel décrivent la vente, pas la préparation des produits. L'INRS consacre à ce métier un outil d'évaluation distinct (OiRA « Poissonnerie », dépliant ED 6380).",
     },
     {
       // Sources : INRS, outil OiRA « Boulangerie - Pâtisserie - Chocolaterie -

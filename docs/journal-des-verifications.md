@@ -1607,6 +1607,112 @@ peuplement possible tant que rien ne rattache un poste au suivi individuel
 renforcé ; le DTA n'existe pas au modèle ; un plan ne connaît qu'une
 entreprise extérieure ; le seuil n'est pas recalculé en cours d'exécution.
 
+### C35 · 2026-09-26 — Les référentiels de risques du document unique, confrontés à leurs sources
+
+*C33 et C34 sont pris par des lots parallèles, sur d'autres branches.*
+
+**Le constat** (relecture du jour sur `abd0108`, revérifiée sur `eb75c0b`) :
+dans `commun.ts`, `restauration.ts`, `commerce.ts` et `bureau.ts`, des phrases
+affichées au dirigeant — et **copiées en base** quand il retient un risque ou
+une mesure (E10) — disaient autre chose que leurs sources.
+
+**Lu, pages propres de Légifrance, structure demandée d'abord, formulation
+décisive confirmée par une seconde lecture ciblée ; consigné au corpus :**
+
+- `R. 4541-2` (LEGIARTI000018528909) : une définition ; ni « éviter » ni
+  « employeur ». L'obligation d'éviter la manutention manuelle est à
+  `R. 4541-3` (LEGIARTI000018528905), cité désormais mot pour mot.
+- `R. 4541-9` (LEGIARTI000018528889), deux alinéas : 55 kg avec aptitude
+  reconnue par le médecin du travail, 105 kg au plus ; « Toutefois, les femmes
+  ne sont pas autorisées à porter des charges supérieures à 25 kilogrammes ou
+  à transporter des charges à l'aide d'une brouette supérieures à 40
+  kilogrammes, brouette comprise. » — sans avis médical. La condition d'entrée
+  (« mises en œuvre ») n'est pas citée entre guillemets : la graphie de la
+  ligature n'est pas sûre.
+- `R. 4542-1` et `R. 4542-4` : aucune durée chiffrée. Le « plus de 4 heures
+  par jour » et la « règle 20-20-20 » sont retirés ; la question `q-ecran` et
+  les deux mesures de pauses reprennent les mots des articles.
+- `R. 4421-1` (LEGIARTI000018530512), alinéa 2 : la seconde condition
+  cumulative (« et que l'évaluation des risques prévue au chapitre III ne met
+  pas en évidence de risque spécifique ») est citée ; `R. 4423-1` aussi. Les
+  articles que `R. 4421-1` écarte ne sont PAS lus.
+- `L. 3122-1` et `L. 3122-2` (loi n° 2016-1088, art. 8) : « doit être
+  justifié » n'y est pas ; l'article est cité en entier. `L. 3122-11` ouvert,
+  non consigné (texte modificateur non relevé).
+- Arrêté du 26 décembre 2011, art. 3 (LEGIARTI000025049531) : la phrase
+  « Toutefois, le délai entre deux vérifications peut être porté à deux ans…
+  de nature à répondre aux observations contenues dans le rapport de
+  vérification. » entre dans la `citationCle` (deux lectures concordantes ;
+  `prescrit` la donnait tronquée). « Contrôles annuels obligatoires » est
+  remplacé par l'article cité.
+- `R. 4227-5` lu une fois : il vise les dégagements, pas les allées. « Largeur
+  réglementaire » est retiré ; l'article n'est pas consigné.
+
+**Lu à l'INRS, PDF téléchargés et extraits par pdftotext, page citée ;
+consigné dans `corpus/inrs-documentaire.ts` :** ED 840 (8e éd. 2023 révisée
+en mai 2025) fiches 4, 5, 8, 9, 14, 17 — la fiche 4 recommande le train ET
+les autoroutes, la fiche 5 écrit 15 kg (pas 10), la fiche 9 nomme le cutter
+(la fiche 19 est « heurt, cognement »), la fiche 12 est bien « ambiances
+thermiques » (le commentaire de `commerce.ts` qui l'avait retirée faute de
+preuve est rayé, la référence n'est pas remise) ; ED 880 (3e éd. 2012,
+réimpression juillet 2018, pas « novembre 2012 ») p. 4 — le tiers des
+accidents dus aux chutes est donné pour la restauration COLLECTIVE — et
+fiche 3 ; ED 6305 (2e éd. 2022 révisée en mars 2026) ; la page « Travail de
+bureau. Les risques du métier » (l'ancienne adresse répond 404), dont les
+citations de `bureau.ts` étaient des
+reformulations ; le dossier
+« Travail sur écran » (ni 4 heures, ni 20-20-20). ED 950 : 5e édition, juin
+2025. Page « Poissonnerie » : la comparaison des durées d'arrêt est dans une
+image sans texte — retirée, non vérifiable.
+
+**Retiré faute de source :** « risque majeur » (`trv-routier`,
+`com-rps-public`, `com-postural-caisse`), « Ameli.fr : risque sectoriel
+reconnu », « normé » / « conforme aux normes (NF) » (aucune norme nommée),
+le repère de 10 kg, le seuil de 4 heures, la règle 20-20-20, les effets
+« digestifs » du travail de nuit, la comparaison attribuée à l'INRS pour la
+poissonnerie.
+
+**Un identifiant change :** `trv-routier-alternatif` → `trv-routier-moyens-surs`
+(le sens de la mesure s'inverse sur l'autoroute). Un DUERP qui a retenu
+l'ancienne garde son libellé copié dans « Mesures retenues » (le rendu lit
+`Action.libelle`, jamais le référentiel) et se voit proposer la nouvelle parmi
+les recommandées. Tous les autres identifiants sont gardés : leur sens ne
+change pas. **Aucune migration de données** (E10).
+
+**La garde** : `src/lib/referentiels/citations-risques.test.ts`. Chaque
+« … » d'un champ affiché est rattaché à sa source (parenthèse qui suit,
+sinon dernière source nommée avant, sinon la description du risque pour une
+mesure) et confronté à la `citationCle` du corpus par `ecartsDeCitation` ;
+un intitulé annoncé (outil OiRA, dossier, dépliant…) est admis. Hors
+citations, « obligatoire », « réglementaire », « impose », « exige »,
+« doit », « majeur », « reconnu », « normé », « aux normes », « conforme »
+sont refusés — deux emplois descriptifs d'« imposer » admis à la phrase
+exacte. **Éprouvée** sur les quatre fichiers de `eb75c0b` remis en place :
+21 refus, dont `trv-charges — « impose »` (la phrase de `R. 4541-2`), les
+deux « obligatoires » électriques, les cinq citations reformulées
+de `bureau.ts` et les deux « charge physique de travail » partiels ; puis
+restaurés. La citation de `R. 4541-3` attribuée à `R. 4541-2` est refusée,
+au bon article admise ; `R. 4421-1` sans sa seconde condition, refusé.
+**Ce qu'elle ne voit pas :** une paraphrase sans guillemets (« train sur
+l'autoroute », la paraphrase de `R. 4421-1`), un chiffre nu, un numéro de
+fiche faux sans citation.
+
+**Relevé, non corrigé** (hors de la liste, décision de sens) : la mesure
+`trv-nuit-rotation` (« sens horaire ») n'est pas dans ED 6305 révisé, qui
+recommande une rotation rapide ; la description de `trv-rps-isolement`
+attribue à la fiche 17 une définition du travail isolé qu'elle ne porte pas ;
+« extincteurs … vérifiés annuellement » (`resto-extincteurs`) n'a pas été
+confronté.
+
+**Sceau inchangé**, mesuré avant et après :
+`2026-09-26.7+169-85f0fac08bca3950+moteur.4`.
+`docs/etat-verification-referentiel.md` régénéré : articles dépouillés cités
+par aucune obligation 289 + 5 (`code-travail-manutention-ecran`) + 2
+(`code-travail-agents-biologiques`) + 2 (`code-travail-travail-de-nuit`) +
+11 (`inrs-documentaire`) = 309, sur 42 + 3 = 45 corpus ; lus au 2026-09-26,
+21 + 1 = 22 références (l'art. 3 de l'arrêté, lu au 2026-09-01 : 141 − 1 =
+140).
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

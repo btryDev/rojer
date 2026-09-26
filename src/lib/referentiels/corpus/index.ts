@@ -48,6 +48,8 @@ import { CODE_TRAVAIL_CO_ACTIVITE } from "./code-travail-co-activite";
 import { CODE_TRAVAIL_PLAN_PREVENTION } from "./code-travail-plan-prevention";
 import { CODE_TRAVAIL_SERVICE_PREVENTION_SANTE } from "./code-travail-service-prevention-sante";
 import { CODE_TRAVAIL_MANUTENTION_ECRAN } from "./code-travail-manutention-ecran";
+import { CODE_TRAVAIL_AGENTS_BIOLOGIQUES } from "./code-travail-agents-biologiques";
+import { CODE_TRAVAIL_TRAVAIL_DE_NUIT } from "./code-travail-travail-de-nuit";
 import {
   CODE_TRAVAIL_DUERP,
   CODE_TRAVAIL_DUERP_PRINCIPES,
@@ -136,6 +138,8 @@ export const CORPUS: readonly Corpus[] = [
   CODE_TRAVAIL_CO_ACTIVITE,
   CODE_TRAVAIL_SERVICE_PREVENTION_SANTE,
   CODE_TRAVAIL_MANUTENTION_ECRAN,
+  CODE_TRAVAIL_AGENTS_BIOLOGIQUES,
+  CODE_TRAVAIL_TRAVAIL_DE_NUIT,
   // Lot D1 — le travail en hauteur, qui n'avait aucune entrée de corpus ni
   // aucune citation au référentiel avant le 2026-09-01. Le premier corpus est
   // le seul du dépôt à couvrir une SECTION entière de code : ses 33 articles

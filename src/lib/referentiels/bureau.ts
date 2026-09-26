@@ -4,14 +4,15 @@ import type { Referentiel } from "./types";
  * Référentiel activités de bureau / tertiaire.
  *
  * Sources :
- *  - INRS — dossier « Travail de bureau » (inrs.fr/risques/travail-bureau).
- *    « Les chutes et les manutentions manuelles sont les principales causes
- *    d'accident. Les TMS et lombalgies constituent l'essentiel des maladies
- *    professionnelles. La sédentarité associée à la posture assise prolongée
- *    favorise pathologies cardiovasculaires et diabète. Les salariés sont
- *    également exposés aux risques psychosociaux. »
+ *  - INRS — page « Travail de bureau. Les risques du métier »
+ *    (https://www.inrs.fr/metiers/commerce-service/travail-bureau/travail-bureau-risques.html,
+ *    relue le 2026-09-26 ; l'adresse inrs.fr/risques/travail-bureau citée
+ *    jusque-là répond 404). Les phrases que les descriptions citent y sont
+ *    relevées mot pour mot au corpus (`inrs-documentaire`) ; la citation
+ *    qui figurait ici les reformulait entre guillemets.
  *  - INRS ED 950 « Conception des lieux et des situations de travail »
- *    (août 2025).
+ *    (5e édition, juin 2025 — ligne d'édition de la brochure ; le catalogue
+ *    INRS la date d'août 2025).
  *  - INRS ED 6497 « Améliorer la qualité de l'air dans les locaux de travail
  *    du tertiaire » (octobre 2022).
  *  - INRS ED 840 « Évaluation des risques professionnels — Aide au repérage
@@ -41,7 +42,7 @@ export const bureau: Referentiel = {
       id: "bur-poste-ecran",
       nom: "Postes de travail sur écran (open-space, bureaux)",
       description:
-        "Postes individuels ou partagés, travail prolongé sur écran (source : INRS Travail de bureau).",
+        "Postes individuels ou partagés, travail prolongé sur écran (source : INRS, page « Travail de bureau. Les risques du métier »).",
     },
     {
       id: "bur-accueil",
@@ -74,7 +75,7 @@ export const bureau: Referentiel = {
       libelle:
         "Charge physique : travail prolongé sur écran (TMS, posture assise, sédentarité)",
       description:
-        "INRS : « les TMS et lombalgies constituent l'essentiel des maladies professionnelles » du tertiaire ; « la sédentarité associée à la posture assise prolongée favorise pathologies cardiovasculaires et diabète ». ED 840 fiche 5.",
+        "INRS, page « Travail de bureau. Les risques du métier » : « Les troubles musculosquelettiques (ou TMS) et les lombalgies représentent quant à eux la très grande majorité des maladies professionnelles recensées. » « Ce comportement sédentaire, lorsqu'il se prolonge, peut être à l'origine de troubles musculosquelettiques, mais aussi d'atteinte à la santé mentale, de diabète de type 2, d'obésité, de pathologies cardiovasculaires… » ED 840, fiche 5.",
       unitesAssociees: ["bur-poste-ecran", "bur-accueil"],
       graviteParDefaut: 2,
       probabiliteParDefaut: 4,
@@ -82,7 +83,7 @@ export const bureau: Referentiel = {
         {
           id: "bur-poste-ergo",
           libelle:
-            "Aménagement ergonomique : siège réglable normé, écran à hauteur des yeux, clavier et souris adaptés",
+            "Aménagement ergonomique : siège réglable, écran à hauteur des yeux, clavier et souris adaptés",
           type: "protection_collective",
         },
         {
@@ -94,7 +95,7 @@ export const bureau: Referentiel = {
         {
           id: "bur-pauses-ecran",
           libelle:
-            "Pauses régulières (règle 20-20-20) ; alternance assis / debout si possible",
+            "Temps quotidien de travail sur écran périodiquement interrompu par des pauses ou par des changements d'activité (art. R. 4542-4) ; alternance assis / debout si possible",
           type: "organisationnelle",
         },
         {
@@ -109,7 +110,7 @@ export const bureau: Referentiel = {
       id: "bur-chute-plain-pied",
       libelle: "Chute de plain-pied (câbles, mobilier, sols)",
       description:
-        "ED 840 fiche 1. INRS : « les chutes constituent une des principales causes d'accident dans le tertiaire ».",
+        "ED 840, fiche 1. INRS, page « Travail de bureau. Les risques du métier » : « Les chutes et les manutentions manuelles (port de charges, efforts physiques…) constituent les principales causes d'accidents. »",
       unitesAssociees: [
         "bur-poste-ecran",
         "bur-accueil",
@@ -129,7 +130,7 @@ export const bureau: Referentiel = {
         {
           id: "bur-circulation-bur",
           libelle:
-            "Allées dégagées (largeur réglementaire), pas de stockage temporaire dans les passages",
+            "Allées dégagées, pas de stockage temporaire dans les passages",
           type: "organisationnelle",
         },
         {
@@ -145,7 +146,7 @@ export const bureau: Referentiel = {
       libelle:
         "Risques psychosociaux : charge mentale, stress, surcharge de travail",
       description:
-        "INRS : « les salariés sont exposés aux risques psychosociaux (stress, harcèlement…) ». ED 840 fiche 17.",
+        "INRS, page « Travail de bureau. Les risques du métier » : « L'activité elle-même ou l'organisation du travail, mais également les situations de harcèlement ou de violences peuvent exposer les salariés à des risques psychosociaux (stress, burnout…). » ED 840, fiche 17.",
       unitesAssociees: ["bur-poste-ecran", "bur-accueil"],
       graviteParDefaut: 3,
       probabiliteParDefaut: 3,
@@ -181,7 +182,7 @@ export const bureau: Referentiel = {
       libelle:
         "Risques psychosociaux : tensions avec le public, incivilités, harcèlement",
       description:
-        "ED 840 fiche 17. Ameli.fr : risque sectoriel reconnu en tertiaire d'accueil.",
+        "ED 840, fiche 17 « Risques psychosociaux ».",
       unitesAssociees: ["bur-accueil"],
       graviteParDefaut: 2,
       probabiliteParDefaut: 3,
@@ -237,7 +238,7 @@ export const bureau: Referentiel = {
     {
       id: "bur-bruit-openspace",
       libelle: "Bruit en bureaux ouverts",
-      description: "INRS Travail de bureau : « bruit en bureaux ouverts ». ED 840 fiche 11. « En cas de mesurage, celui-ci est renouvelé au moins tous les cinq ans. » (art. R. 4433-2)",
+      description: "INRS, page « Travail de bureau. Les risques du métier », parmi les origines du stress : « Bruit ambiant excessif (voix, conversations voisines, climatisation, imprimantes…) ». ED 840 fiche 11. « En cas de mesurage, celui-ci est renouvelé au moins tous les cinq ans. » (art. R. 4433-2)",
       unitesAssociees: ["bur-poste-ecran"],
       graviteParDefaut: 1,
       probabiliteParDefaut: 3,
@@ -259,7 +260,7 @@ export const bureau: Referentiel = {
     {
       id: "bur-electrique",
       libelle: "Risque électrique (multiprises, câbles, équipements)",
-      description: "ED 840 fiche 14. Contrôles annuels obligatoires.",
+      description: "ED 840, fiche 14 « Risques liés à l'électricité ». « La périodicité des vérifications est fixée à un an, le point de départ de cette périodicité étant la date de la vérification initiale. Toutefois, le délai entre deux vérifications peut être porté à deux ans par le chef d'établissement si le rapport précédent ne présente aucune observation ou si, avant l'échéance, le chef d'établissement a fait réaliser les travaux de mise en conformité de nature à répondre aux observations contenues dans le rapport de vérification. » (arrêté du 26 décembre 2011, art. 3)",
       unitesAssociees: ["bur-poste-ecran", "bur-archives"],
       graviteParDefaut: 4,
       probabiliteParDefaut: 1,
@@ -267,7 +268,7 @@ export const bureau: Referentiel = {
         {
           id: "bur-controle-elec-bur",
           libelle:
-            "Contrôles périodiques des installations électriques (annuel)",
+            "Vérification périodique des installations électriques : tous les ans, ou tous les deux ans aux conditions de l'arrêté du 26 décembre 2011, art. 3",
           type: "organisationnelle",
         },
         {
@@ -333,7 +334,7 @@ export const bureau: Referentiel = {
         {
           id: "bur-escabeau-norme",
           libelle:
-            "Escabeau stable normé disponible ; interdiction de monter sur les chaises ou meubles",
+            "Escabeau stable disponible ; interdiction de monter sur les chaises ou meubles",
           type: "protection_collective",
         },
       ],

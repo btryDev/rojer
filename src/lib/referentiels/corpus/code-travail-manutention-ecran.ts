@@ -31,6 +31,19 @@
 // ni le code NAF ne donnent. Un titre que personne ne sait attribuer ne produit
 // aucune ligne (ADR-023). Les deux obligations sont donc portées par
 // l'établissement.
+//
+// CINQ ARTICLES DE PLUS LE 2026-09-26, lus pour les référentiels de risques du
+// DUERP (`commun.ts`, `bureau.ts`) et non pour une obligation : `R. 4541-2`,
+// `R. 4541-3`, `R. 4541-9`, `R. 4542-1` et `R. 4542-4`. Le risque `trv-charges`
+// attribuait à `R. 4541-2` l'obligation d'éviter la manutention manuelle, qui
+// est à `R. 4541-3` — `R. 4541-2` n'est qu'une définition — et résumait
+// `R. 4541-9` en « limites hautes avec avis médical », là où son second alinéa
+// fixe 25 et 40 kilogrammes pour les femmes, sans avis médical. Le travail sur
+// écran se disait « plus de 4 heures par jour » : `R. 4542-1` ne chiffre rien.
+// Chacun est lu sur sa page propre, structure demandée d'abord, formulation
+// décisive confirmée par une seconde lecture ciblée. Tous `sans_objet` : aucun
+// ne produit d'échéance ; les descriptions des risques les citent mot pour
+// mot, et `referentiels/citations-risques.test.ts` les confronte à ce relevé.
 
 import type { Corpus } from "./types";
 
@@ -77,6 +90,85 @@ export const CODE_TRAVAIL_MANUTENTION_ECRAN: Corpus = {
       obligations: ["formation-securite-etablissement-travail-sur-ecran"],
       reserve:
         "Le second déclenchement — « chaque fois que l'organisation du poste de travail est modifiée de manière substantielle » — est un événement non daté et non détectable par le produit. Il est porté par la description de l'obligation, jamais par une échéance : c'est la position de `.claude/CLAUDE.md` sur l'absence de sixième déclencheur. Le reste du chapitre II, dont l'analyse des postes (R. 4542-3) et l'examen ophtalmologique approprié (R. 4542-17), n'est pas dépouillé.",
+    },
+    {
+      ref: "R. 4541-2",
+      intitule: "Définition de la manutention manuelle",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018528909",
+      versionEnVigueur: "2008-05-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit: "Rien : l'article définit la manutention manuelle.",
+      citationCle:
+        "On entend par manutention manuelle, toute opération de transport ou de soutien d'une charge, dont le levage, la pose, la poussée, la traction, le port ou le déplacement, qui exige l'effort physique d'un ou de plusieurs travailleurs.",
+      statut: "sans_objet",
+      motif:
+        "UNE DÉFINITION, ET C'EST POUR LE DIRE QU'ELLE EST ICI. La description du risque transverse `trv-charges` lui attribuait « l'obligation d'éviter le recours à la manutention manuelle » jusqu'au 2026-09-26 ; l'article n'emploie ni « éviter » ni « employeur » (seconde lecture ciblée). L'obligation est à R. 4541-3. Aucune échéance.",
+    },
+    {
+      ref: "R. 4541-3",
+      intitule: "Éviter le recours à la manutention manuelle",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018528905",
+      versionEnVigueur: "2008-05-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "L'employeur prend les mesures d'organisation ou utilise les moyens appropriés, notamment mécaniques, pour éviter le recours à la manutention manuelle de charges.",
+      citationCle:
+        "L'employeur prend les mesures d'organisation appropriées ou utilise les moyens appropriés, et notamment les équipements mécaniques, afin d'éviter le recours à la manutention manuelle de charges par les travailleurs.",
+      statut: "sans_objet",
+      motif:
+        "Principe de prévention appliqué à la manutention, sans acte daté ni pièce : il se traite dans l'évaluation des risques que le DUERP porte. Cité mot pour mot dans la description du risque transverse `trv-charges`.",
+    },
+    {
+      ref: "R. 4541-9",
+      intitule: "Charges maximales portées de façon habituelle",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018528889",
+      versionEnVigueur: "2008-05-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "Quand la manutention manuelle est inévitable et que les aides mécaniques de R. 4541-5 ne peuvent être mises en œuvre : au-delà de 55 kg portés habituellement, aptitude reconnue par le médecin du travail, 105 kg au plus. Pour les femmes, 25 kg portés, 40 kg à la brouette, brouette comprise — sans avis médical.",
+      citationCle:
+        "un travailleur ne peut être admis à porter d'une façon habituelle des charges supérieures à 55 kilogrammes qu'à condition d'y avoir été reconnu apte par le médecin du travail, sans que ces charges puissent être supérieures à 105 kilogrammes. Toutefois, les femmes ne sont pas autorisées à porter des charges supérieures à 25 kilogrammes ou à transporter des charges à l'aide d'une brouette supérieures à 40 kilogrammes, brouette comprise.",
+      statut: "sans_objet",
+      motif:
+        "Des plafonds de poids, sans échéance. La `citationCle` commence après la condition d'entrée du premier alinéa (« Lorsque le recours à la manutention manuelle est inévitable et que les aides mécaniques prévues au 2° de l'article R. 4541-5 ne peuvent pas être mises en œuvre, ») : deux lectures ont rendu « œuvre » avec la ligature, et la graphie de Légifrance a déjà trompé ce dépôt (`L. 4121-2`, C28) — la condition est donc citée en prose, jamais entre guillemets. Le second alinéa, lu deux fois, ne mentionne ni médecin ni aptitude : la description de `trv-charges` qui parlait de « limites hautes avec avis médical » taisait les 25 et 40 kilogrammes.",
+    },
+    {
+      ref: "R. 4542-1",
+      intitule: "Champ du chapitre écrans de visualisation",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018528877",
+      versionEnVigueur: "2008-05-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "Le chapitre s'applique aux travailleurs qui utilisent un écran de façon habituelle et pendant une partie non négligeable du temps de travail, sauf cinq catégories d'équipements.",
+      citationCle:
+        "Les dispositions du présent chapitre s'appliquent aux travailleurs qui utilisent de façon habituelle et pendant une partie non négligeable du temps de travail des équipements de travail comportant des écrans de visualisation.",
+      statut: "sans_objet",
+      motif:
+        "Article de champ. Il ne chiffre AUCUNE durée (seconde lecture ciblée) : le seuil de « plus de 4 heures par jour » que portaient la description de `trv-tms-ecran` et la question `q-ecran` n'avait pas de source et a été retiré le 2026-09-26. Les cinq exclusions (1° à 5°, dont les caisses enregistreuses) ne sont pas recopiées ici.",
+    },
+    {
+      ref: "R. 4542-4",
+      intitule: "Interruption du travail quotidien sur écran",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018528867",
+      versionEnVigueur: "2008-05-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "L'employeur organise l'activité pour que le temps quotidien de travail sur écran soit périodiquement interrompu par des pauses ou des changements d'activité.",
+      citationCle:
+        "L'employeur organise l'activité du travailleur de telle sorte que son temps quotidien de travail sur écran soit périodiquement interrompu par des pauses ou par des changements d'activité réduisant la charge de travail sur écran.",
+      statut: "sans_objet",
+      motif:
+        "Obligation d'organisation sans rythme chiffré — ni durée, ni « 20 », ni distance (seconde lecture ciblée). Elle remplace dans les mesures `trv-ecran-pauses` et `bur-pauses-ecran` la « règle 20-20-20 », qu'aucune source du dépôt ne porte.",
     },
   ],
 };
