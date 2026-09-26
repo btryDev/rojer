@@ -36,7 +36,10 @@ const DETAILS: OutilDetail[] = [
     app: [
       "Trame pré-remplie adaptée à votre secteur NAF.",
       "Cotation guidée par unité de travail.",
-      "Versionnage automatique, export PDF signé daté.",
+      // ~~« Versionnage automatique, export PDF signé daté »~~ (contre-lecture
+      // du 2026-09-26) : le PDF n'est pas signé, et une version naît d'une
+      // validation, avec son motif (`versions/actions.ts`).
+      "Chaque validation fige une version numérotée, avec son motif ; export PDF daté.",
     ],
     cta: { libelle: "Ouvrir mon DUERP", href: "duerp" },
   },
@@ -85,9 +88,13 @@ const DETAILS: OutilDetail[] = [
       "R. 4323-25 : « Le résultat des vérifications générales périodiques est consigné sur le ou les registres de sécurité mentionnés à l'article L. 4711-5. »",
     ],
     app: [
-      "Dépôt en 1 clic, liaison automatique à la vérification.",
-      "Recalcul automatique de la prochaine échéance.",
-      "Export ZIP + index PDF.",
+      // ~~« Dépôt en 1 clic, liaison automatique », « index PDF »~~
+      // (contre-lecture du 2026-09-26) : le rapport se saisit sur sa
+      // vérification (fichier, date, organisme, résultat), et le ZIP porte un
+      // sommaire texte, `00_README.txt`.
+      "Le rapport se dépose sur la vérification qu'il concerne : fichier, date, organisme, résultat.",
+      "Quand le texte fixe un rythme, la prochaine échéance se recalcule depuis le rapport.",
+      "Export ZIP, avec son sommaire.",
     ],
     cta: { libelle: "Ouvrir le registre", href: "registre" },
   },

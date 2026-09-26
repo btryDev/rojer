@@ -238,10 +238,11 @@ function ModuleVolumes() {
 }
 
 /** File — le même widget « À faire » que dans la fenêtre, en réduction. */
-const URGENCES = [
-  { titre: "Vérification électrique", jour: "J−1" },
-  { titre: "Moyens de lutte incendie", jour: "J−3" },
-];
+// ~~Une liste à part (« Moyens de lutte incendie », J−3)~~ : elle gardait
+// l'état permanent retiré d'`A_FAIRE` (contre-lecture du 2026-09-26). Les
+// lignes en retard d'`A_FAIRE`, lues telles quelles : les deux ne peuvent
+// plus se contredire.
+const URGENCES = A_FAIRE.filter((l) => l.detail.endsWith("en retard")).slice(0, 2);
 function ModuleAFaire() {
   return (
     <ul className="m-0 flex list-none flex-col p-0">

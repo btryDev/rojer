@@ -71,7 +71,10 @@ const DOCUMENTS: Document[] = [
     numero: "05",
     famille: "Public",
     titre: "Le registre d'accessibilité",
-    corps: "La page publique de votre établissement, l'attestation, l'affiche à QR code à coller à l'entrée. Prête à imprimer, jamais périmée.",
+    // ~~« l'attestation… jamais périmée »~~ (contre-lecture du 2026-09-26) :
+    // Rojer n'établit aucune attestation (il en garde le numéro), et la page
+    // dit ce que vous y tenez, datée de sa dernière mise à jour.
+    corps: "La page publique de votre établissement et l'affiche à QR code à coller à l'entrée, prête à imprimer. La page montre ce que vous y tenez, datée de sa dernière mise à jour.",
     reperes: ["Page publique", "Affiche QR"],
   },
   {

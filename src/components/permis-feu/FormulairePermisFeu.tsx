@@ -167,7 +167,7 @@ export function FormulairePermisFeu({
           defaultValue={prestataireChoisi?.contactEmail ?? ""}
           key={`email-${prestataireChoisi?.id ?? "libre"}`}
           erreur={err("prestataireEmail")}
-          aide="Utilisé pour envoyer le lien de signature au technicien."
+          aide="Enregistrée sur le permis, avec le nom du technicien."
         />
       </SectionChamps>
 

@@ -148,10 +148,15 @@ export async function demanderSignature(
     nomDestinataire: params.signataireNom,
     sujetMail: `Signature à apporter : ${libelle}`,
     messageMail:
+      // ~~« la même valeur probatoire qu'une signature manuscrite (art.
+      // 1366-1367 du Code civil, règlement eIDAS niveau simple) »~~ — une
+      // qualification (contre-lecture du 2026-09-26) : l'al. 2 de l'art. 1367
+      // ne présume la fiabilité que « dans des conditions fixées par décret en
+      // Conseil d'Etat ». Même texte que la page `/signe`.
       `Vous êtes invité(e) à signer électroniquement le document suivant : ` +
       `« ${libelle} ». ` +
-      `Cette signature a la même valeur probatoire qu'une signature manuscrite ` +
-      `(art. 1366-1367 du Code civil, règlement eIDAS niveau simple).`,
+      `Rojer enregistrera votre signature avec son horodatage et l'empreinte ` +
+      `du document tel qu'il se présentait.`,
   });
   if (!r.ok) return { ok: false, message: r.message };
   // Un accusé de réception, rien d'autre. Aucun appelant n'a besoin de

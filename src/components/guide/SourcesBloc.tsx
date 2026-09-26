@@ -27,7 +27,11 @@ const SOURCES: Source[] = [
   {
     titre: "Légifrance · Arrêté du 25 juin 1980",
     sousTitre: "Règlement de sécurité contre l'incendie et la panique dans les ERP",
-    url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020303816/",
+    // ~~La section LEGISCTA000020303816~~ : elle n'ouvre que le Livre Ier
+    // (GN 1 à GN 15), pas le règlement que le sous-titre nomme (contre-lecture
+    // du 2026-09-26). Le lien du texte, celui du corpus
+    // (`arrete-1980-livre-2.ts`), relu le même jour.
+    url: "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000020303557/",
     hote: "legifrance.gouv.fr",
   },
   {

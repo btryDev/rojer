@@ -101,8 +101,9 @@ export default async function VerifierSignaturePage({
         </div>
 
         <footer className="mt-8 font-mono text-[0.72rem] uppercase tracking-[0.1em] text-[color:var(--board-slate-soft)]">
-          Fondement légal : art. 1366-1367 Code civil, règlement eIDAS (UE)
-          910/2014 · niveau simple.
+          Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014
+          (eIDAS). La fiabilité n&apos;est présumée que dans des conditions
+          fixées par décret en Conseil d&apos;Etat (art. 1367, al. 2).
         </footer>
       </main>
     );
@@ -183,8 +184,11 @@ export default async function VerifierSignaturePage({
       </div>
 
       <footer className="mt-8 font-mono text-[0.72rem] uppercase tracking-[0.1em] text-[color:var(--board-slate-soft)]">
-        Fondement légal : art. 1366-1367 Code civil, règlement eIDAS (UE)
-        910/2014 · niveau simple.
+        {/* ~~« Fondement légal : … · niveau simple »~~ (contre-lecture du
+            2026-09-26) : aligné sur `/signe`, sans qualification. */}
+        Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014
+        (eIDAS). La fiabilité n&apos;est présumée que dans des conditions
+        fixées par décret en Conseil d&apos;Etat (art. 1367, al. 2).
       </footer>
     </main>
   );

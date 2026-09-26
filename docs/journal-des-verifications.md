@@ -2348,6 +2348,84 @@ l'avait trouvée, hors de la relecture.
   La phrase est laissée : la corriger, c'est décider de ce que devient la
   demande de signature, et c'est une décision de produit.
 
+**Contre-lecture du 2026-09-26, sur `64ac8b0`.**
+
+G1. **Promesses d'envoi qui restaient.** Aucun appelant n'émet de jeton
+`depot_rapport`, et aucun driver n'envoie. Corrigé :
+- permis de feu : « Utilisé pour envoyer le lien de signature » devient
+  « Enregistrée sur le permis » ;
+- fiche prestataire : « Servira aussi à envoyer les liens… » devient
+  « Son adresse est enregistrée sur la fiche » ;
+- fiche prestataire : « la plateforme vous enverra une alerte 30 jours avant
+  expiration » devient la pastille « Expire bientôt », affichée à 30 jours
+  (`JOURS_ALERTE_EXPIRATION`), sans rappel par e-mail ;
+- annuaire vide : « vous pourrez leur envoyer un lien de dépôt » est retiré.
+
+Le flux de signature externe n'est pas touché, en attente de la décision
+de la propriétaire.
+
+M1. **La maquette.** `URGENCES` gardait « Moyens de lutte incendie J−3 ».
+Elle se lit désormais dans les lignes en retard d'`A_FAIRE`, et les deux ne
+peuvent plus se contredire.
+
+M2. **La signature, qualifiée ailleurs que sur `/signe`.** Deux endroits
+sont alignés sur `/signe` (art. 1367 al. 2, « dans des conditions fixées
+par décret en Conseil d'Etat ») :
+- le corps du mail (« la même valeur probatoire qu'une signature
+  manuscrite ») ;
+- les deux pieds de `/verifier` (« Fondement légal : … niveau simple »).
+
+« valeur probatoire » est ajouté à la garde. `citations-ecran` ne voit pas
+le Code civil : un numéro nu se confond avec les identifiants Légifrance, et
+le corpus n'a pas d'entrée pour ce code. Cette limite est écrite en tête du
+module.
+
+M3. **La garde des promesses, par racines.** Les racines seules touchent
+288 lignes, identifiants compris : ce serait une liste recopiée. La famille
+« envoi promis » les prend donc dans leurs formes de promesse :
+- sujet + verbe d'envoi, à tout temps ;
+- envoi vers quelqu'un ;
+- passif ;
+- départ ;
+- « reçu par ».
+
+Négations et « recevoir du public » exclues.
+
+Admises à la ligne exacte :
+- les deux e-mails de Supabase Auth, qui partent vraiment ;
+- l'avertissement MCP (« sont envoyées à l'assistant ») ;
+- l'avis d'aptitude « transmis » par le médecin (R. 4624-55) ;
+- les deux phrases du flux de signature, en attente.
+
+**Éprouvée** :
+- la variante de la contre-lecture (« Nous vous enverrons un courriel… »)
+  est vue ;
+- les phrases de `ccd5cb8` remises dans `FormulairePrestataire.tsx` et
+  `signatures/actions.ts` tombent (« la plateforme vous enverra »,
+  « valeur probatoire »).
+
+**Limite** : « Servira aussi à envoyer… », sans sujet ni destinataire,
+passe. Elle est dite dans la sonde.
+
+**Faibles** :
+- FAQ : « au-delà de 50 travailleurs sur un site » (la porte lit
+  `effectifSurSite`).
+- SourcesBloc : le lien du règlement de 1980 ouvrait la section du Livre Ier
+  seul. Il ouvre maintenant le texte (LEGITEXT000020303557, celui du corpus,
+  titre relu sur Légifrance).
+- OutilDetails :
+  - « export PDF signé » : le PDF n'est pas signé ;
+  - « dépôt en 1 clic » : un formulaire ;
+  - « index PDF » : le ZIP porte un `00_README.txt`.
+  Les trois sont réécrits.
+- Cadran : « l'attestation… jamais périmée » est retiré. Rojer n'établit
+  aucune attestation, et la page publique est datée de sa dernière mise à
+  jour.
+
+**Hors lot, noté** : `incendie-registre-securite` (R. 4227-39) ne porte pas
+`champR422734`, contrairement à ses sœurs. Le référentiel est scellé ; la
+politique sœur est à chercher avant d'y toucher.
+
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
 inchangée depuis `d34bb24`, et le lot ne touche pas `src/lib/referentiels`.
 

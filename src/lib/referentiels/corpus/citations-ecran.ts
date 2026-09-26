@@ -25,6 +25,18 @@
 // pas de verbatim, pas de date de lecture. C'est la différence entre une
 // affirmation et un fondement, et c'est la seule chose que le corpus mesure.
 //
+// CE QU'IL NE VOIT PAS : le Code civil, ni aucun texte dont les articles
+// n'ont pas de lettre (`MOTIF_ARTICLE` exige `L.`, `R.` ou `D.`). « art. 1366 »
+// et « art. 1367 », cités par `/signe` et `/verifier`, passent donc. L'étendre
+// n'est pas simple, pour deux raisons :
+// - un numéro nu se confond avec les identifiants Légifrance
+//   (`LEGIARTI000018531367`) et avec les montants ;
+// - le corpus ne porte aucune entrée du Code civil à laquelle rapprocher la
+//   citation.
+// L'extrait de l'art. 1366 est tenu, à part, par `verbatim/extraits-affiches`.
+// L'al. 2 de l'art. 1367 a été relu sur Légifrance le 2026-09-26 (C38), sans
+// entrée de corpus. Noté à la contre-lecture du même jour.
+//
 // LE PÉRIMÈTRE DU BALAYAGE est celui des surfaces qui s'affichent : les écrans,
 // les composants, les documents générés. Pas `referentiels/` lui-même, dont les
 // citations passent déjà par `ReferenceLegale` et sont rapprochées du corpus
