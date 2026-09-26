@@ -439,12 +439,21 @@ export function FormulairePlanPrevention({
           />
           <span className="min-w-0 flex-1">
             <span className="block text-[13.5px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
-              Les travaux figurent sur la liste dangereuse (arrêté 19-03-1993)
+              Les travaux figurent sur la liste des travaux dangereux de
+              l&apos;arrêté du 19 mars 1993 (art. R. 4512-7, 2°)
             </span>
+            {/* Les exemples sont des points de la liste, entre guillemets
+                (C40, suite). Ils étaient paraphrasés, et plusieurs en
+                faisaient plus que l'arrêté : « travaux sur toiture »,
+                « soudage en hauteur », « travaux à chaud », « levage lourd »
+                n'y figurent pas sous ces mots. */}
             <span className="mt-1 block text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Ex : travaux sur toiture, espaces confinés, amiante,
-              radioprotection, soudage en hauteur, travaux à chaud, tension
-              &gt; 50V, levage lourd…
+              Parmi les vingt et un points de la liste : « Travaux de
+              démolition », « Travaux exposant au contact avec des pièces
+              nues sous tension supérieure à la T. B. T. », « Travaux dans ou
+              sur des cuves et accumulateurs de matière ou en atmosphère
+              confinée », « Travaux de soudage oxyacétylénique exigeant le
+              recours à un permis de feu »…
             </span>
           </span>
         </label>

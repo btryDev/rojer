@@ -39,7 +39,7 @@ import {
  * ce plan passe à l'ÉCRIT.
  *
  *   - Durée totale ≥ 400 h sur 12 mois : écrit obligatoire
- *   - Travaux sur liste dangereuse (arrêté 19-03-1993) : écrit obligatoire
+ *   - Travaux sur la liste de l'arrêté du 19 mars 1993 : écrit obligatoire
  *     indépendamment de la durée
  *
  * Le diagnostic ne répond donc qu'à la seconde question. Sous le seuil,

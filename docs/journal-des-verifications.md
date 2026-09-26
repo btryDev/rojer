@@ -2828,12 +2828,49 @@ dans les documents obligatoires. Vitest a figé deux fois : seul le processus
 de ce worktree a été arrêté (identifié par son répertoire), l'injection
 rejouée seule.
 
-**Laissé, et signalé** : la fiche du plan écrit « Cette inspection est
+~~**Laissé, et signalé** : la fiche du plan écrit « Cette inspection est
 obligatoire avant le démarrage des travaux (art. R. 4512-2 CT) », alors que
 `R4512_2_MOMENT` dit « préalablement à l'exécution de l'opération réalisée
 par une entreprise extérieure » ; le formulaire du plan garde la case « Les
 travaux figurent sur la liste dangereuse (arrêté 19-03-1993) » et
-`plan-prevention/page.tsx` « l'arrêté du 19-03-1993 ». Hors du brief.
+`plan-prevention/page.tsx` « l'arrêté du 19-03-1993 ». Hors du brief.~~
+[2026-09-26, même lot, second commit, à la demande de la coordination :
+fait.]
+
+**Suite (second commit).** Relu sur Légifrance le 2026-09-26 : l'arrêté du
+19 mars 1993 — intitulé « fixant, en application de l'article R. 4512-7 du
+code du travail, la liste des travaux dangereux pour lesquels il est établi
+par écrit un plan de prévention », chapeau de l'article 1er identique au
+`citationCle` ; la page de `R. 4512-7` pour ses mentions : « Création Décret
+n°2008-244 du 7 mars 2008 - art. (V) », aucune modification.
+
+- **Fiche du plan, sans date d'inspection.** Avant : « Cette inspection est
+  obligatoire avant le démarrage des travaux (art. R. 4512-2 CT). » Après :
+  « Aucune date d'inspection commune enregistrée. » suivi de
+  `PHRASE_R4512_2` (« Art. R. 4512-2 : l'inspection commune a lieu
+  « préalablement à l'exécution de l'opération réalisée par une entreprise
+  extérieure ». »).
+- **Case « travaux dangereux » du formulaire.** Avant : « Les travaux
+  figurent sur la liste dangereuse (arrêté 19-03-1993) », et en aide « Ex :
+  travaux sur toiture, espaces confinés, amiante, radioprotection, soudage en
+  hauteur, travaux à chaud, tension > 50V, levage lourd… » — quatre de ces
+  mots ne sont pas dans la liste. Après : « Les travaux figurent sur la liste
+  des travaux dangereux de l'arrêté du 19 mars 1993 (art. R. 4512-7, 2°) »,
+  et quatre points de l'article 1er entre guillemets (démolition, pièces nues
+  sous tension supérieure à la T. B. T., cuves ou atmosphère confinée,
+  soudage oxyacétylénique exigeant un permis de feu). `plan-prevention/page.tsx` :
+  « l'arrêté du 19 mars 1993 ». Commentaire de `schema.ts` aligné.
+- **Corpus, `R. 4512-7`** : `lecture: "premiere_main"`, `modifiePar: null`.
+  `conformite.test.ts` vert sans toucher à l'empreinte : le corpus n'y entre
+  pas.
+
+**Garde** : `annonces-surfaces.test.tsx` rend la fiche sans date (le texte de
+`PHRASE_R4512_2`, pas « obligatoire avant le démarrage ») et le formulaire
+(la date en toutes lettres, jamais « 19-03-1993 », chaque exemple entre
+guillemets contenu dans le `citationCle` de l'article 1er). **Éprouvée** :
+ancienne phrase de la fiche remise, exemple paraphrasé (« Travaux de
+démolition lourde »), date en chiffres remise — trois rouges, fichiers
+restaurés.
 
 ### Ce que la chronologie donne à voir
 
