@@ -293,7 +293,7 @@ export async function construireRegistreData(
   // quarante-neuf fiches et la date de génération se lisent au même instant.
   const now = new Date();
 
-  const [rapports, verifs, couverture] = await Promise.all([
+  const [rapports, verifs, couverture, fraicheur] = await Promise.all([
     listerRapportsDeLEtablissement(etablissementId),
     listerVerifications(etablissementId),
     // Par la même entrée que le dossier de conformité, pour que les deux PDF
@@ -301,6 +301,7 @@ export async function construireRegistreData(
     // `inventaire` s'imprime ici : le registre n'a jamais porté le reste du
     // périmètre, et ce lot ne l'y ajoute pas.
     couvertureDuDossier(etablissementId),
+    fraicheurCalendrier(etablissementId),
   ]);
 
   const lignesRapports: LigneRapport[] = rapports.map((r) => ({
@@ -389,6 +390,7 @@ export async function construireRegistreData(
     // `null` si la couverture n'a pas pu être lue OU si l'inventaire n'est pas
     // vide : dans les deux cas le document n'affirme rien de l'inventaire.
     inventaire: couverture ? faitInventaire(couverture) : null,
+    calendrier: fraicheur,
     parties,
     bilan: bilanDuRegistre(completudes),
     rapports: lignesRapports,
@@ -588,6 +590,7 @@ export async function construireDossierConformiteData(
     genereLe: now,
     couverture,
     avertissementCalendrier: phraseFraicheur(fraicheur),
+    calendrier: fraicheur,
     score,
     // Les trente obligations sans échéance ne vivaient que sur un écran : un
     // dirigeant qui avait passé ses états en revue ne pouvait le montrer à

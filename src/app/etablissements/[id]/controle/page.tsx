@@ -271,8 +271,9 @@ export default async function ControlePage({
               Pièces incluses
             </h2>
             <p className="mt-1 text-[0.85rem] text-[color:var(--board-slate-mid)]">
-              Chaque pièce est vérifiée avant d&apos;être mise au ZIP. Statut des
-              données à l&apos;instant de la génération.
+              Le ZIP contient ce qui a pu être généré&nbsp;; ce qui a échoué
+              est dit dans son fichier 00_README.txt. Statut des données à
+              l&apos;instant de la génération.
             </p>
             {/* Les deux signaux d'une ligne ne disent pas la même chose, et
                 rien ne l'annonçait : la pastille dit l'état de vos données,
@@ -340,14 +341,14 @@ export default async function ControlePage({
         {/* Pourquoi ça nous rassure */}
         <section className="mt-10">
           <WhyCard charte="board"
-            kicker="Notre engagement"
-            titre="Traçabilité totale — zéro IA, zéro reformulation."
-            enjeu="Chaque document de ce dossier a été généré à partir de vos saisies brutes, sans retraitement. Les références réglementaires sont sourcées Légifrance et INRS."
+            kicker="D'où viennent les pièces"
+            titre="Ce que vous avez saisi, et les textes qu'elles citent."
+            enjeu="Chaque document de ce dossier est généré à partir de ce que vous avez saisi et de ce que Rojer en calcule (obligations, échéances, retards). Les articles cités sont lus sur Légifrance ; les brochures INRS sont nommées pour ce qu'elles sont, ni article de code, ni arrêté."
             tonalite="info"
           >
             <p>
-              Si un inspecteur conteste une pièce, vous pouvez la retrouver en
-              base, voir qui l&apos;a modifiée et quand. Aucune opération cachée.
+              Si un inspecteur conteste une pièce, vous pouvez la retrouver
+              dans l&apos;application, à l&apos;écran d&apos;où elle vient.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <LegalBadge

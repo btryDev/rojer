@@ -11,6 +11,7 @@ import { LABEL_STATUT, LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
 import { estHorsReferentiel } from "@/lib/risques/helpers";
 import { phrasesMethodologie, quandSansReponse } from "./mentions-couverture";
 import { TEXTE_R4121_4 } from "./mentions-r4121-4";
+import { ORDRE_SELON_L4121_2, TEXTE_L4121_2 } from "./mentions-l4121-2";
 import {
   CHAPEAU_ANNEXE_EXPOSITION,
   TITRE_ANNEXE_EXPOSITION,
@@ -280,9 +281,12 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
         <Text style={s.h2}>Méthodologie d&apos;évaluation</Text>
         <Text style={s.h3}>Modalités et découpage</Text>
         <Text>
-          L&apos;évaluation est conduite par unité de travail, chaque unité
-          regroupant les salariés exposés aux mêmes situations de risque (cf.
-          art. R. 4121-1 et INRS ED 840).
+          L&apos;évaluation est conduite par unité de travail. L&apos;article
+          R. 4121-1 demande «&nbsp;un inventaire des risques identifiés dans
+          chaque unité de travail de l&apos;entreprise ou de
+          l&apos;établissement&nbsp;», sans définir l&apos;unité&nbsp;; dans
+          ce document, une unité regroupe les salariés exposés aux mêmes
+          situations de risque, un découpage retenu par Rojer.
           {"\n"}L&apos;inventaire des risques s&apos;appuie sur les référentiels
           sectoriels et transverses INRS pré-chargés (voir ci-dessous), que
           l&apos;employeur complète et ajuste à sa réalité.
@@ -307,18 +311,11 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
           situations complexes.
         </Text>
 
-        <Text style={s.h3}>Hiérarchie des mesures</Text>
+        <Text style={s.h3}>Principes généraux de prévention</Text>
         <Text>
-          La priorisation des mesures suit l&apos;ordre imposé par
-          l&apos;article L. 4121-2 du Code du travail :
-          {"\n"}1. éviter les risques ; 2. évaluer les risques qui ne peuvent
-          être évités ; 3. combattre les risques à la source ; 4. adapter le
-          travail à l&apos;homme ; 5. tenir compte de l&apos;évolution de la
-          technique ; 6. remplacer ce qui est dangereux par ce qui l&apos;est
-          moins ; 7. planifier la prévention ; 8. prendre des mesures de
-          protection collective en leur donnant la priorité sur les mesures
-          individuelles ; 9. donner les instructions appropriées aux
-          travailleurs.
+          Article L. 4121-2 du Code du travail&nbsp;: «&nbsp;{TEXTE_L4121_2}&nbsp;»
+          {"\n"}
+          {ORDRE_SELON_L4121_2}
         </Text>
 
         <Text style={s.h2}>Sources et référentiels</Text>

@@ -87,8 +87,8 @@ repose sur un texte que personne n'a ouvert.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 63 | 37 % | 71 | 156 | 49 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 95 | 56 % | 92 | 151 | 47 % |
+| 5 · lu à la source, verbatim relevé | 63 | 37 % | 71 | 157 | 49 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 95 | 56 % | 92 | 150 | 47 % |
 | 3 · lu et daté, aucun verbatim | 11 | 7 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
@@ -128,7 +128,7 @@ repose sur un texte que personne n'a ouvert.
 | `compactage_dechets` | 1 | 5 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson_hotte` | 6 | 9 | 2 | 3 | 1 | · | · | · | 5 / 6 — 83 % | 1 / 9 | 2026-08-26 → 2026-09-01 |
 | `eclairage` | 1 | 2 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 2 | 2026-09-01 → 2026-09-02 |
-| `electricite` | 15 | 24 | 2 | 11 | 2 | · | · | · | 13 / 15 — 87 % | 2 / 24 | 2026-08-26 → 2026-09-04 |
+| `electricite` | 15 | 24 | 2 | 11 | 2 | · | · | · | 13 / 15 — 87 % | 2 / 24 | 2026-08-26 → 2026-09-26 |
 | `epi` | 2 | 7 | 2 | · | · | · | · | · | 2 / 2 — 100 % | 0 / 7 | 2026-09-04 |
 | `equipement_sous_pression` | 7 | 8 | 7 | · | · | · | · | · | 7 / 7 — 100 % | 1 / 8 | 2026-09-01 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-26 |
@@ -156,7 +156,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-04 |
+| `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-26 |
 | `etablissement` | 66 | 122 | 19 | 44 | 3 | · | · | · | 63 / 66 — 95 % | 0 / 122 | 2026-08-26 → 2026-09-26 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-01 |
 
@@ -171,11 +171,11 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 46 | 14 % | 37 |
 | 2026-08-27 | 10 | 3 % | 7 |
 | 2026-08-31 | 67 | 21 % | 31 |
-| 2026-09-01 | 141 | 44 % | 89 |
+| 2026-09-01 | 140 | 44 % | 89 |
 | 2026-09-02 | 17 | 5 % | 14 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
-| 2026-09-26 | 21 | 7 % | 17 |
+| 2026-09-26 | 22 | 7 % | 18 |
 
 319 des 319 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-26.
 
@@ -193,13 +193,14 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**293 articles dépouillés ne sont cités par aucune obligation**, répartis sur 43 corpus.
+**316 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
 | `arrete-1980-livre-3` | 51 | 59 | 2026-08-26 → 2026-09-26 |
 | `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 |
 | `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-26 |
+| `inrs-documentaire` | 15 | 16 | 2026-09-03 → 2026-09-26 |
 | `arrete-1993-11-04-signalisation` | 14 | 21 | 2026-09-02 |
 | `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-20 |
 | `csp-eau-potable` | 11 | 11 | 2026-09-02 |
@@ -216,6 +217,7 @@ une relecture déjà faite.
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-21 |
 | `code-travail-matieres-inflammables` | 6 | 6 | 2026-09-02 |
 | `code-travail-sante-travail` | 5 | 22 | 2026-08-31 → 2026-09-26 |
+| `code-travail-manutention-ecran` | 5 | 7 | 2026-09-26 |
 | `cch-classement-erp-igh` | 5 | 5 | 2026-09-03 → 2026-09-26 |
 | `arrete-2011-12-30-igh` | 4 | 6 | 2026-09-03 → 2026-09-04 |
 | `code-travail-co-activite` | 4 | 11 | 2026-08-31 → 2026-09-02 |
@@ -227,13 +229,14 @@ une relecture déjà faite.
 | `code-travail-duerp` | 3 | 5 | 2026-09-02 |
 | `code-travail-electricite` | 2 | 8 | 2026-08-31 |
 | `arrete-2011-12-26-electricite` | 2 | 5 | 2026-08-26 |
+| `code-travail-agents-biologiques` | 2 | 2 | 2026-09-26 |
+| `code-travail-travail-de-nuit` | 2 | 2 | 2026-09-26 |
 | `code-travail-chaleur-intense` | 2 | 8 | 2026-09-20 → 2026-09-26 |
 | `code-travail-circulation-lieux` | 2 | 2 | 2026-09-21 |
 | `code-travail-epi-amont` | 2 | 2 | 2026-09-04 |
 | `arrete-1993-03-19-epi` | 2 | 4 | 2026-09-04 |
 | `cch-registre-securite` | 1 | 6 | 2026-09-20 |
 | `code-travail-risque-chimique` | 1 | 8 | 2026-09-02 |
-| `inrs-documentaire` | 1 | 2 | 2026-09-03 |
 | `code-travail-organisation-prevention` | 1 | 9 | 2026-09-26 |
 | `code-travail-locaux-sociaux` | 1 | 5 | 2026-08-31 |
 | `code-travail-service-prevention-sante` | 1 | 4 | 2026-08-31 |
@@ -241,7 +244,7 @@ une relecture déjà faite.
 | `casf-definition-handicap` | 1 | 1 | 2026-09-03 |
 | `cch-registre-accessibilite` | 1 | 1 | 2026-09-04 |
 
-**20 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-26), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-20), `csp-eau-potable` (11 articles, lus 2026-09-02), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-26), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-21), `code-travail-matieres-inflammables` (6 articles, lus 2026-09-02), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-26), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
+**22 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-26), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-20), `csp-eau-potable` (11 articles, lus 2026-09-02), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-26), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-21), `code-travail-matieres-inflammables` (6 articles, lus 2026-09-02), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-26), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
 
 Le total du corpus, les articles jamais lus et ceux qui imposent une obligation que le référentiel ne porte pas sont tenus par `pnpm relecture`, qui les compte à la maille du corpus.
 
@@ -288,7 +291,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `elec-travail-carnet-prescriptions` | electricite | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-travail-consignation-registre` | electricite | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-31 → 2026-09-01 |
 | `elec-travail-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
-| `elec-travail-periodique-annuelle` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
+| `elec-travail-periodique-annuelle` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-26 |
 | `elec-travail-rapport-quadriennal` | electricite | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-26 → 2026-09-01 |
 | `conduite-salarie-autorisation` | formation_securite | salarie | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 |
 | `conduite-salarie-formation` | formation_securite | salarie | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
@@ -438,7 +441,7 @@ refaire pour la contredire.
 | `elec-travail-mise-en-service` | fondement | R. 4226-14 | R. 4226-14 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2011-07-01 | 2011-07-01 | 4 · agent + verbatim | ancrée |
 | `elec-travail-mise-en-service` | contexte 1 | Arrêté du 26 décembre 2011 (vérifications des installations électriques), art. 2 et 6 | Arrêté 2011-12-26 art. 2 | arrete-2011-12-26-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2011-12-30 | 2011-12-30 | 4 · agent + verbatim | ancrée |
 | `elec-travail-periodique-annuelle` | fondement | R. 4226-16 | R. 4226-16 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2011-07-01 | 2011-07-01 | 4 · agent + verbatim | ancrée |
-| `elec-travail-periodique-annuelle` | contexte 1 | Arrêté du 26 décembre 2011 (vérifications des installations électriques), art. 3 | Arrêté 2011-12-26 art. 3 | arrete-2011-12-26-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2011-12-30 | 2011-12-30 | 4 · agent + verbatim | ancrée |
+| `elec-travail-periodique-annuelle` | contexte 1 | Arrêté du 26 décembre 2011 (vérifications des installations électriques), art. 3 | Arrêté 2011-12-26 art. 3 | arrete-2011-12-26-electricite | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2011-12-30 | 2011-12-30 | 5 · première main | ancrée |
 | `elec-travail-consignation-registre` | fondement | R. 4226-19 | R. 4226-19 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-07-01 | 2011-07-01 | 5 · première main | ancrée |
 | `elec-travail-consignation-registre` | contexte 1 | L. 4711-5 | L. 4711-5 | code-travail-incendie | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `elec-travail-habilitation-personnel` | fondement | R. 4544-9 à R. 4544-11 | R. 4544-10 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2025-10-01 | 2025-10-01 | 4 · agent + verbatim | ancrée |

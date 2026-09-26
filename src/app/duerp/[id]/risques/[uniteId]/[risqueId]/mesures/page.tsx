@@ -10,6 +10,7 @@ import { mesuresUniquementBasNiveau, trierParHierarchie } from "@/lib/prevention
 import { tousRisquesConnus } from "@/lib/referentiels";
 import { getRisque } from "@/lib/risques/queries";
 import type { TypeMesure } from "@/lib/referentiels/types";
+import { L4121_2_3, L4121_2_8, ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
 
 export default async function MesuresPage({
   params,
@@ -40,6 +41,10 @@ export default async function MesuresPage({
 
   const typesRetenus = risque.mesures.map((m) => m.type as TypeMesure);
   const alerteBasNiveau = mesuresUniquementBasNiveau(typesRetenus);
+  // Le 8° de L. 4121-2 ne vise que la protection INDIVIDUELLE : sans EPI
+  // retenu (formation ou organisation seules), c'est le 3° qu'on cite, pas le
+  // 8° (seconde contre-lecture du 2026-09-26).
+  const avecEpi = typesRetenus.includes("protection_individuelle");
 
   const mesuresAffichees = trierParHierarchie(
     risque.mesures.map((m) => ({ ...m, type: m.type as TypeMesure })),
@@ -121,13 +126,15 @@ export default async function MesuresPage({
             /
           </span>
           <span className="board-eyebrow inline-flex items-center text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            Hiérarchie L. 4121-2 — existantes et prévues
-            <InfoTooltip variant="legal" align="left" label="Hiérarchie de prévention — art. L. 4121-2">
+            Types de mesures — existantes et prévues
+            <InfoTooltip variant="legal" align="left" label="Types de mesures — classement de Rojer">
               <span className="block font-mono text-[9.5px] font-semibold uppercase tracking-[0.2em] opacity-70">
                 Art. L. 4121-2 · Code du travail
               </span>
               <span className="mt-2 block font-medium normal-case tracking-normal">
-                Ordre à respecter lors du choix des mesures :
+                {ORDRE_SELON_L4121_2}{" "}
+                L&apos;ordre des types ci-dessous est un
+                classement de Rojer&nbsp;:
               </span>
               <span className="mt-1.5 block normal-case tracking-normal">
                 <span className="block">
@@ -157,7 +164,8 @@ export default async function MesuresPage({
               </span>
               <span className="mt-2 block text-[11px] opacity-75">
                 EPI et formation viennent en dernier, jamais en substitut des
-                trois premiers niveaux.
+                trois premiers niveaux — classement de Rojer, que l&apos;article
+                n&apos;écrit pas.
               </span>
             </InfoTooltip>
           </span>
@@ -187,13 +195,19 @@ export default async function MesuresPage({
           // rose (charte, interdit 3).
           <div className="rounded-[22px] bg-[color:var(--board-signal-wash)] px-6 py-5">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-signal-ink)]">
-              Hiérarchie de prévention · art. L. 4121-2
+              {avecEpi
+                ? "Protection collective · art. L. 4121-2, 8°"
+                : "Réduction à la source · art. L. 4121-2, 3°"}
             </p>
             <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
               Les mesures retenues ne comportent que des EPI, de la formation
               ou de l&apos;organisation. Avez-vous étudié une solution
-              collective ou une réduction à la source ? Le Code du travail
-              impose de prioriser ces approches avant les EPI.
+              collective ou une réduction à la source&nbsp;? Art. L. 4121-2,{" "}
+              {avecEpi ? (
+                <>8°&nbsp;: «&nbsp;{L4121_2_8}&nbsp;».</>
+              ) : (
+                <>3°&nbsp;: «&nbsp;{L4121_2_3}&nbsp;».</>
+              )}
             </p>
           </div>
         )}

@@ -1,4 +1,6 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
+import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
+import { faitRetards } from "./fait-retards";
 import type { LignePlanActions } from "./PlanActionsDocument";
 import type { LigneRapport, LigneVerif } from "./RegistreDocument";
 import { LABEL_STATUT_ACTION, LABEL_TYPE_ACTION } from "@/lib/actions/labels";
@@ -19,7 +21,9 @@ import {
 } from "@/lib/perimetre/couverture";
 import { blocsPerimetre, chapeauPerimetre } from "./mentions-perimetre";
 import {
+  destinatairesDossier,
   referencesRegistreDossier,
+  referencesVerificationsPeriodiques,
   type RegimeDuRegistre,
 } from "./mentions-registre";
 import {
@@ -58,6 +62,12 @@ export type DossierData = {
    * retard », ce qui se lit comme une bonne nouvelle.
    */
   avertissementCalendrier: string | null;
+  /**
+   * L'état du calendrier, pour que « aucune vérification en retard » ne
+   * s'affirme que là où il est calculé et à jour (`fait-retards.ts`). `null` :
+   * non lu. Requis, pour la même raison que le champ ci-dessus.
+   */
+  calendrier: FraicheurCalendrier | null;
 
   score: Score;
   /**
@@ -473,7 +483,14 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
 
         {data.verifsEnRetard.length === 0 ? (
           <Text style={[s.small, { marginTop: 12 }]}>
-            Aucune vérification en retard.
+            {
+              faitRetards({
+                nbEnRetard: 0,
+                calendrier: data.calendrier,
+                inventaire: data.couverture ? faitInventaire(data.couverture) : null,
+              }).texte
+            }
+            .
           </Text>
         ) : (
           <View>
@@ -652,9 +669,8 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                 PÉRIODIQUE : sous le mot « périodiques », c'était le mauvais
                 article. Le README du ZIP écrivait déjà R. 4226-16 — deux
                 documents du même dossier se contredisaient. */}
-            — Vérifications périodiques : articles R. 4226-16 et s. CT
-            (électricité), R. 4222-20 CT (aération), R. 4227-28 et s. CT
-            (incendie), arrêté du 25 juin 1980 (règlement ERP).
+            — Vérifications périodiques : notamment les articles{" "}
+            {referencesVerificationsPeriodiques(data.regime)}.
           </Text>
           <Text style={{ marginTop: 3 }}>
             {/* ~~« R. 143-44 CCH (ERP), R. 146-35 CCH (IGH) » à tous~~ —
@@ -666,9 +682,8 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
           <Text style={{ marginTop: 6 }}>
             Ce dossier ne vaut pas certification de conformité. Il
             rassemble les pièces et les échéances enregistrées dans Rojer, à
-            disposition de l&apos;employeur, pour faciliter le dialogue avec
-            l&apos;inspection, la commission de sécurité, l&apos;assureur
-            ou le bailleur.
+            disposition de l&apos;employeur, pour faciliter le dialogue avec{" "}
+            {destinatairesDossier(data.regime)}.
           </Text>
         </View>
 

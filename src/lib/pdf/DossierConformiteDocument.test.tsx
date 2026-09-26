@@ -71,6 +71,7 @@ function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
     genereLe: new Date("2026-09-01T10:00:00Z"),
     couverture: null,
     avertissementCalendrier: null,
+    calendrier: { etat: "a_jour" },
     score: {
       valeur: 100,
       niveau: "indetermine",

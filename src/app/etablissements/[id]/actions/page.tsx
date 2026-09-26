@@ -19,6 +19,7 @@ import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
+import { ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
 
 function formatDate(d: Date | null): string {
   if (!d) return "—";
@@ -177,10 +178,10 @@ export default async function PlanActionsPage({
                 extrait="L'employeur met en oeuvre les mesures prévues à l'article L. 4121-1 sur le fondement des principes généraux de prévention suivants : 1° Eviter les risques ; 2° Evaluer les risques qui ne peuvent pas être évités ; 3° Combattre les risques à la source ; […]"
               >
                 <p>
-                  C&apos;est la hiérarchie des mesures de prévention : supprimer
-                  le risque vaut mieux que le réduire, le réduire vaut mieux
-                  qu&apos;un équipement de protection. L&apos;outil applique ce
-                  garde-fou aux mesures issues du DUERP.
+                  {ORDRE_SELON_L4121_2}{" "}
+                  Rojer signale les risques du DUERP
+                  traités uniquement par des EPI, de la formation ou de
+                  l&apos;organisation.
                 </p>
               </LegalBadge>
             </div>

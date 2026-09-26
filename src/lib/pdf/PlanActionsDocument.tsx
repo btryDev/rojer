@@ -1,4 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { ORDRE_SELON_L4121_2, TEXTE_L4121_2 } from "./mentions-l4121-2";
 import { LABEL_STATUT_ACTION, LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import type { OrigineAction } from "@/lib/actions/queries";
 import {
@@ -135,12 +136,13 @@ export function PlanActionsDocument({ data }: { data: PlanActionsData }) {
 
         <View style={s.mentionsLegalesBloc}>
           <Text style={{ fontFamily: "Helvetica-Bold", marginBottom: 4 }}>
-            Hiérarchie des mesures de prévention (art. L. 4121-2 CT)
+            Principes généraux de prévention (art. L. 4121-2 CT)
           </Text>
-          <Text>
-            1. Suppression du risque à la source · 2. Réduction à la source ·
-            3. Protection collective · 4. Protection individuelle (EPI) ·
-            5. Formation / information · 6. Mesures organisationnelles.
+          <Text>«&nbsp;{TEXTE_L4121_2}&nbsp;»</Text>
+          <Text style={{ marginTop: 4 }}>
+            {ORDRE_SELON_L4121_2}{" "}
+            Le type de chaque action ci-dessus est un
+            classement de Rojer.
           </Text>
           <Text style={{ marginTop: 4 }}>
             Ce document ne vaut pas certification de conformité. Il

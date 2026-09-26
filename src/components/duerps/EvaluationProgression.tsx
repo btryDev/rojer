@@ -97,7 +97,7 @@ export function EvaluationProgression({
           <SousPartie
             numero="02"
             titre="Mesures"
-            description="Prévention déjà en place et prévue, triée selon l'article L. 4121-2."
+            description="Prévention déjà en place et prévue, par type de mesure."
             statut={
               etape === "mesures"
                 ? "en-cours"

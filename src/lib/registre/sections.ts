@@ -121,7 +121,7 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     partie: "1",
     titre: "Services, intervenants et adresses utiles",
     attendu:
-      "Mairie, préfecture, médecin, inspection du travail, installateurs et organismes agréés — adresse et téléphone.",
+      "Mairie, préfecture, médecin, inspection du travail, installateurs et organismes chargés des vérifications — adresse et téléphone.",
   },
   // Le service de sécurité incendie au sens des articles MS 45 à MS 52 (poste
   // de sécurité, agents qualifiés SSIAP, chef d'équipe) relève du **Livre II**
@@ -321,6 +321,9 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
   },
 
   // -- Partie 3.1 — Vérifications des moyens d'extinction ------------------
+  // ~~« Vérificateur agréé »~~ sur les dix-huit fiches de vérification — rayé
+  // le 2026-09-26 : ni R. 4226-16 ni R. 4227-39 ne disent « agréé », et le
+  // mot promettait au lecteur un agrément que la fiche ne vérifie pas.
   // Chaque fiche de vérification est le miroir d'une fiche d'inventaire : même
   // déclencheur, même famille. C'est ce qui permet au PDF de classer les
   // rapports archivés par catégorie d'équipement sans donnée nouvelle.
@@ -329,49 +332,49 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     partie: "3.1",
     titre: "Extincteurs automatiques",
     categoriesEquipement: ["EXTINCTION_AUTOMATIQUE"], // à créer
-    attendu: "Vérificateur agréé, date, type d'installation, observations, visa.",
+    attendu: "Vérificateur, date, type d'installation, observations, visa.",
   },
   {
     id: "verif-extincteurs",
     partie: "3.1",
     titre: "Extincteurs mobiles",
     categoriesEquipement: ["EXTINCTEUR"],
-    attendu: "Vérificateur agréé, date, nombre d'appareils vérifiés, observations, visa.",
+    attendu: "Vérificateur, date, nombre d'appareils vérifiés, observations, visa.",
   },
   {
     id: "verif-ria",
     partie: "3.1",
     titre: "Robinets d'incendie armés et prolongateurs",
     categoriesEquipement: ["RIA"],
-    attendu: "Vérificateur agréé, date, nombre de postes vérifiés, observations, visa.",
+    attendu: "Vérificateur, date, nombre de postes vérifiés, observations, visa.",
   },
   {
     id: "verif-ari",
     partie: "3.1",
     titre: "Appareils respiratoires isolants",
     categoriesEquipement: ["ARI"], // à créer
-    attendu: "Vérificateur agréé, désignation, date de vérification, observations, visa.",
+    attendu: "Vérificateur, désignation, date de vérification, observations, visa.",
   },
   {
     id: "verif-ressources-eau",
     partie: "3.1",
     titre: "Ressources en eau utilisables en cas d'incendie",
     categoriesEquipement: ["RESSOURCE_EAU"], // à créer
-    attendu: "Vérificateur agréé, date, numéro d'appareil, observations, visa.",
+    attendu: "Vérificateur, date, numéro d'appareil, observations, visa.",
   },
   {
     id: "verif-colonnes-seches",
     partie: "3.1",
     titre: "Colonnes sèches",
     categoriesEquipement: ["COLONNE_SECHE"], // à créer
-    attendu: "Vérificateur agréé, date d'épreuve, état apparent et des accessoires, visa.",
+    attendu: "Vérificateur, date d'épreuve, état apparent et des accessoires, visa.",
   },
   {
     id: "verif-colonnes-humides",
     partie: "3.1",
     titre: "Colonnes humides",
     categoriesEquipement: ["COLONNE_HUMIDE"], // à créer
-    attendu: "Vérificateur agréé, date d'épreuve, dispositif d'alimentation, état, visa.",
+    attendu: "Vérificateur, date d'épreuve, dispositif d'alimentation, état, visa.",
   },
 
   // -- Partie 3.2 — Vérifications des installations ou dispositifs ---------
@@ -380,70 +383,70 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     partie: "3.2",
     titre: "Détection automatique",
     categoriesEquipement: ["ALARME_INCENDIE"],
-    attendu: "Vérificateur agréé, date, zones et détecteurs, renvoi au rapport, visa.",
+    attendu: "Vérificateur, date, zones et détecteurs, renvoi au rapport, visa.",
   },
   {
     id: "verif-alarme",
     partie: "3.2",
     titre: "Dispositifs d'alarme",
     categoriesEquipement: ["ALARME_INCENDIE"],
-    attendu: "Vérificateur agréé, date, observations, visa.",
+    attendu: "Vérificateur, date, observations, visa.",
   },
   {
     id: "verif-eclairage-securite",
     partie: "3.2",
     titre: "Éclairage de sécurité",
     categoriesEquipement: ["BAES"],
-    attendu: "Vérificateur agréé, type d'installation, date, observations, visa.",
+    attendu: "Vérificateur, type d'installation, date, observations, visa.",
   },
   {
     id: "verif-portes-coupe-feu",
     partie: "3.2",
     titre: "Portes coupe-feu",
     categoriesEquipement: ["PORTE_COUPE_FEU"], // à créer
-    attendu: "Vérificateur agréé, date, nombre de portes vérifiées, renvoi au rapport, visa.",
+    attendu: "Vérificateur, date, nombre de portes vérifiées, renvoi au rapport, visa.",
   },
   {
     id: "verif-volets-clapets",
     partie: "3.2",
     titre: "Volets et clapets coupe-feu",
     categoriesEquipement: ["CLAPET_COUPE_FEU"], // à créer
-    attendu: "Vérificateur agréé, date, désignation, nombre vérifié, renvoi au rapport, visa.",
+    attendu: "Vérificateur, date, désignation, nombre vérifié, renvoi au rapport, visa.",
   },
   {
     id: "verif-exutoires",
     partie: "3.2",
     titre: "Exutoires de fumées",
     categoriesEquipement: ["DESENFUMAGE"],
-    attendu: "Vérificateur agréé, date, nature des vérifications, observations, visa.",
+    attendu: "Vérificateur, date, nature des vérifications, observations, visa.",
   },
   {
     id: "verif-installations-electriques",
     partie: "3.2",
     titre: "Installations électriques",
     categoriesEquipement: ["INSTALLATION_ELECTRIQUE"],
-    attendu: "Vérificateur agréé, date, nature des vérifications, observations, visa.",
+    attendu: "Vérificateur, date, nature des vérifications, observations, visa.",
   },
   {
     id: "verif-ascenseurs",
     partie: "3.2",
     titre: "Ascenseurs, montes-charges et appareils de levage",
     categoriesEquipement: ["ASCENSEUR", "EQUIPEMENT_LEVAGE"],
-    attendu: "Vérificateur agréé, date, type de vérification, type et emplacement, visa.",
+    attendu: "Vérificateur, date, type de vérification, type et emplacement, visa.",
   },
   {
     id: "verif-chauffage-gaz-ventilation",
     partie: "3.2",
     titre: "Chauffage - Gaz - Ventilation - Désenfumage",
     categoriesEquipement: ["VMC", "CTA", "HOTTE_PRO", "APPAREIL_CUISSON_ERP"],
-    attendu: "Vérificateur agréé, date, observations, visa.",
+    attendu: "Vérificateur, date, observations, visa.",
   },
   {
     id: "verif-paratonnerres",
     partie: "3.2",
     titre: "Paratonnerres",
     categoriesEquipement: ["PARATONNERRE"], // à créer
-    attendu: "Vérificateur agréé, date, type et emplacement, observations, visa.",
+    attendu: "Vérificateur, date, type et emplacement, observations, visa.",
   },
 
   // -- Partie 3.3 — Vérifications des constructions ------------------------
@@ -452,7 +455,7 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     partie: "3.3",
     titre: "Dispositions constructives",
     typologies: { erp: true },
-    attendu: "Vérificateur agréé, date, observations, visa.",
+    attendu: "Vérificateur, date, observations, visa.",
   },
   {
     id: "verif-depoussierage",
