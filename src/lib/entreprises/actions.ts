@@ -8,6 +8,7 @@ import {
   assertEntrepriseOwnership,
   getOptionalUserEtablissement,
 } from "@/lib/auth/scope";
+import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { entrepriseSchema } from "./schema";
 
 export type ActionState =
@@ -69,6 +70,22 @@ export async function modifierEntreprise(
     where: { id },
     data: parsed.data,
   });
+
+  // L'effectif de l'entreprise est lu par le moteur (`effectifMaille`, C37) :
+  // le CSE, la formation de ses élus et le règlement intérieur en dépendent.
+  // Aujourd'hui aucune de ces obligations n'écrit de ligne au calendrier
+  // (états permanents, titres de salariés), mais le calendrier de chaque
+  // établissement est régénéré comme après toute mutation qu'il lit — le
+  // patron du dépôt — pour qu'une obligation datée à seuil d'entreprise, le
+  // jour où il y en aura une, ne dépende pas d'une mutation de hasard.
+  const etablissements = await prisma.etablissement.findMany({
+    where: { entrepriseId: id },
+    select: { id: true },
+  });
+  for (const e of etablissements) {
+    await regenererApresMutation(e.id, "entreprises/modification");
+    revalidatePath(`/etablissements/${e.id}`, "layout");
+  }
 
   revalidatePath("/entreprises");
   revalidatePath(`/entreprises/${id}`);
