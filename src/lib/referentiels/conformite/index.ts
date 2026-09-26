@@ -191,7 +191,10 @@ export const obligationsConformite: Obligation[] = [
 // sortie ; libellés des lignes « Quand ça arrive » repris après une troisième
 // contre-lecture.
 // `.5` le 2026-09-26 : deux libellés retouchés après vérification ciblée.
-export const REFERENTIEL_VERSION = "2026-09-26.5";
+// `.6` le 2026-09-26 : une obligation événementielle entre, `R. 4624-33`
+// (arrêt de moins de trente jours pour accident du travail). Aucune échéance :
+// elle vit sur la page « Quand ça arrive ».
+export const REFERENTIEL_VERSION = "2026-09-26.6";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

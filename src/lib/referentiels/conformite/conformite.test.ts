@@ -1405,6 +1405,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // retouchés (adaptation retirée du libellé de R. 4463-7, objet de l'avis
     // rendu à R. 4624-28-2).
     { version: "2026-09-26.5", empreinte: "167-66f005e23f039ca" },
+    // Une obligation événementielle de plus, lue le jour même : l'employeur
+    // informe le médecin du travail de tout arrêt de moins de trente jours
+    // pour accident du travail (R. 4624-33). 167 + 1 = 168.
+    { version: "2026-09-26.6", empreinte: "168-6152eee279ea343c" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1561,7 +1565,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(167);
+    ).toBe(168);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

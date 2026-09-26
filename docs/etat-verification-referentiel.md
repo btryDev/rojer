@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-09-26
-**Référentiel** : `2026-09-26.5`
+**Référentiel** : `2026-09-26.6`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,18 +83,18 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**167 obligations**, **316 références** — 91 obligations en citent plus d'une.
+**168 obligations**, **317 références** — 91 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 61 | 37 % | 69 | 153 | 48 % |
+| 5 · lu à la source, verbatim relevé | 62 | 37 % | 70 | 154 | 49 % |
 | 4 · lu à la source par un agent, verbatim rapporté | 95 | 57 % | 92 | 151 | 48 % |
 | 3 · lu et daté, aucun verbatim | 11 | 7 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**156 obligations sur 167 (93 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**157 obligations sur 168 (93 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **11 obligations (7 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 296 | 94 % |
+| ancrée | 297 | 94 % |
 | divergente | 0 | 0 % |
 | jamais constatée | 20 | 6 % |
 
-**11 obligations sur 167 (7 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**11 obligations sur 168 (7 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **Aucune divergence** entre la version qu'une obligation déclare avoir constatée et celle que le corpus déclare avoir lue. Les deux moitiés du dépôt disent la même chose partout où elles parlent toutes les deux.
 
@@ -139,7 +139,7 @@ repose sur un texte que personne n'a ouvert.
 | `locaux_sociaux` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 |
 | `organisation_prevention` | 9 | 13 | 1 | 8 | · | · | · | · | 9 / 9 — 100 % | 0 / 13 | 2026-08-31 → 2026-09-26 |
 | `porte_portail` | 5 | 8 | · | 5 | · | · | · | · | 5 / 5 — 100 % | 0 / 8 | 2026-09-01 |
-| `sante_travail` | 11 | 19 | 1 | 9 | 1 | · | · | · | 10 / 11 — 91 % | 0 / 19 | 2026-08-31 → 2026-09-26 |
+| `sante_travail` | 12 | 20 | 2 | 9 | 1 | · | · | · | 11 / 12 — 92 % | 0 / 20 | 2026-08-31 → 2026-09-26 |
 | `secours` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-20 |
 | `signalisation` | 9 | 10 | · | 9 | · | · | · | · | 9 / 9 — 100 % | 0 / 10 | 2026-09-02 |
 | `stockage_dangereux` | 6 | 13 | · | 6 | · | · | · | · | 6 / 6 — 100 % | 0 / 13 | 2026-08-27 → 2026-09-01 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-04 |
-| `etablissement` | 64 | 119 | 17 | 44 | 3 | · | · | · | 61 / 64 — 95 % | 0 / 119 | 2026-08-26 → 2026-09-26 |
+| `etablissement` | 65 | 120 | 18 | 44 | 3 | · | · | · | 62 / 65 — 95 % | 0 / 120 | 2026-08-26 → 2026-09-26 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-01 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -170,14 +170,14 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | --- | --- | --- | --- |
 | 2026-08-26 | 46 | 15 % | 37 |
 | 2026-08-27 | 10 | 3 % | 7 |
-| 2026-08-31 | 68 | 22 % | 32 |
-| 2026-09-01 | 141 | 45 % | 89 |
+| 2026-08-31 | 68 | 21 % | 32 |
+| 2026-09-01 | 141 | 44 % | 89 |
 | 2026-09-02 | 17 | 5 % | 14 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
-| 2026-09-26 | 17 | 5 % | 14 |
+| 2026-09-26 | 18 | 6 % | 15 |
 
-316 des 316 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-26.
+317 des 317 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-26.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -193,7 +193,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**286 articles dépouillés ne sont cités par aucune obligation**, répartis sur 42 corpus.
+**289 articles dépouillés ne sont cités par aucune obligation**, répartis sur 42 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -215,6 +215,7 @@ une relecture déjà faite.
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-21 |
 | `code-travail-matieres-inflammables` | 6 | 6 | 2026-09-02 |
+| `code-travail-sante-travail` | 5 | 20 | 2026-08-31 → 2026-09-26 |
 | `arrete-2011-12-30-igh` | 4 | 6 | 2026-09-03 → 2026-09-04 |
 | `code-travail-co-activite` | 4 | 11 | 2026-08-31 → 2026-09-02 |
 | `code-travail-travail-dissimule` | 4 | 4 | 2026-09-02 |
@@ -226,7 +227,6 @@ une relecture déjà faite.
 | `arrete-1980-livre-1` | 2 | 2 | 2026-09-03 → 2026-09-26 |
 | `code-travail-electricite` | 2 | 8 | 2026-08-31 |
 | `arrete-2011-12-26-electricite` | 2 | 5 | 2026-08-26 |
-| `code-travail-sante-travail` | 2 | 16 | 2026-08-31 → 2026-09-20 |
 | `code-travail-chaleur-intense` | 2 | 8 | 2026-09-20 |
 | `code-travail-circulation-lieux` | 2 | 2 | 2026-09-21 |
 | `code-travail-epi-amont` | 2 | 2 | 2026-09-04 |
@@ -246,7 +246,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 167 obligations
+## 8. Les 168 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -417,13 +417,14 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `levage-vgp-trimestrielle-force-humaine` | levage | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `prevention-etablissement-liste-personnes-qualifiees` | organisation_prevention | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-02 |
 | `sante-travail-etablissement-examen-de-reprise` | sante_travail | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
+| `sante-travail-etablissement-information-arret-accident-moins-trente-jours` | sante_travail | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
 
 Trié du plus faible au plus solide : la première ligne est celle qui
 demande le plus de travail.
 
 ---
 
-## 9. Les 316 références, une par une
+## 9. Les 317 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -693,6 +694,7 @@ refaire pour la contredire.
 | `sante-travail-etablissement-fiche-entreprise` | fondement | R. 4624-46 (le médecin du travail ou l'équipe pluridisciplinaire établit et met à jour une fiche d'entreprise) | R. 4624-46 | code-travail-sante-travail | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2022-04-28 | 2022-04-28 | 4 · agent + verbatim | ancrée |
 | `sante-travail-etablissement-fiche-entreprise` | contexte 1 | R. 4624-47 (pour les entreprises adhérentes à un service interentreprises, la fiche est établie dans l'année qui suit l'adhésion) | R. 4624-47 | code-travail-sante-travail | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2022-04-28 | 2022-04-28 | 4 · agent + verbatim | ancrée |
 | `sante-travail-etablissement-examen-de-reprise` | fondement | R. 4624-31 (examen de reprise : cas, saisine du service, délai de huit jours, dérogation) | R. 4624-31 | code-travail-sante-travail | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2026-06-15 | 2026-06-15 | 5 · première main | ancrée |
+| `sante-travail-etablissement-information-arret-accident-moins-trente-jours` | fondement | R. 4624-33 (information du médecin du travail de tout arrêt de moins de trente jours pour accident du travail) | R. 4624-33 | code-travail-sante-travail | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2022-03-18 | 2022-03-18 | 5 · première main | ancrée |
 | `sante-travail-etablissement-fin-exposition-suivi-renforce` | fondement | R. 4624-28-2 (information du service de santé au travail, puis du travailleur) | R. 4624-28-2 | code-travail-sante-travail | retenu | 2026-09-26 | agent_verbatim | ✓ | ✓ | 2022-04-28 | 2022-04-28 | 4 · agent + verbatim | ancrée |
 | `secours-etablissement-materiel` | fondement | R. 4224-14 (matériel de premiers secours adapté à la nature des risques et facilement accessible) | R. 4224-14 | code-travail-secours | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `secours-salarie-secouriste` | fondement | R. 4224-15 (membre du personnel formé au secourisme dans chaque atelier où sont accomplis des travaux dangereux) | R. 4224-15 | code-travail-secours | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |

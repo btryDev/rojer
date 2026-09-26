@@ -210,6 +210,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "prevention-etablissement-salarie-designe": "etablissement",
   "sante-travail-etablissement-adhesion-spst": "etablissement",
   "sante-travail-etablissement-examen-de-reprise": "etablissement",
+  "sante-travail-etablissement-information-arret-accident-moins-trente-jours": "etablissement",
   "sante-travail-etablissement-fiche-entreprise": "etablissement",
   "sante-travail-etablissement-fin-exposition-suivi-renforce": "etablissement",
   "sante-travail-etablissement-liste-postes-risques": "etablissement",

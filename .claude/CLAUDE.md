@@ -94,9 +94,9 @@ On refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement.
 3. **Bureau / services tertiaires**
 
 ### Référentiel de conformité (vérifications)
-Livré : **167 obligations sur 21 domaines** — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
+Livré : **168 obligations sur 21 domaines** — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
 
-**89 d'entre elles sont déclenchées par un équipement déclaré, soixante-quatre
+**89 d'entre elles sont déclenchées par un équipement déclaré, soixante-cinq
 sont portées par l'établissement, quatorze par un salarié** — remesuré en
 appelant `obligationsConformite` et `porteurDe` le 2026-09-21 (lot chaleur
 intense : deux états permanents d'établissement, `R. 4463-2` et `R. 4463-6` ;
@@ -104,7 +104,8 @@ registre de dette : un troisième, `R. 4222-21` ; puis `PE 27` § 4 et § 5,
 consignes affichées et personnel instruit, pour tout ERP de 5ᵉ catégorie ; puis
 les trois obligations événementielles de la chaleur intense, `R. 4463-4`, `-5`
 et `-7` : 159 + 3 = 162 ; puis cinq autres, `R. 4624-31`, `R. 4624-28-2`,
-`R. 4141-8`, `R. 4141-12` et `R. 4121-2` 2° et 3° : 162 + 5 = 167),
+`R. 4141-8`, `R. 4141-12` et `R. 4121-2` 2° et 3° : 162 + 5 = 167 ; puis
+`R. 4624-33`, le 2026-09-26 : 167 + 1 = 168),
 jamais au grep.
 Cette phrase disait « 88 / quarante-huit », la répartition plus bas « 88 / 50 »,
 et les deux étaient fausses : 88 + 50 + 14 font 152, pas les 154 annoncés. Une
@@ -237,8 +238,8 @@ l'ADR-022, sans mécanisme.
 
 Répartition remesurée le 2026-09-20 (~~le 2026-09-11, inchangée depuis la
 scission de la colonne R de `GE 4 § 1`, le 2026-09-08~~) :
-**89 équipement, 64 établissement, 14 salarié**
-(total 167, remesuré le 2026-09-21 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
+**89 équipement, 65 établissement, 14 salarié**
+(total 168, remesuré le 2026-09-26 — `R. 4624-33` ; 167 le 2026-09-21 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
 `porteurDe`, pas au grep. Les quatre entrées du lot sont, dans l'ordre où elles
 apparaissent au référentiel : `aeration-erp-filtres-visite-periodique`
 (`CH 39 § 3`, visite TRIMESTRIELLE des filtres de ventilation par l'utilisateur,

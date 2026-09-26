@@ -8,8 +8,10 @@
 // encore vieilli de deux ce jour-là. Le reste n'est pas dépouillé et ne se
 // déclare pas lu. ⚠ LES EXAMENS DE REPRISE NE SONT PLUS « le reste » : le
 // paragraphe 2 de la sous-section 3 est entré le 2026-09-20 par R. 4624-31,
-// trouvé en ouvrant le texte modificateur de R. 4624-28-3. R. 4624-29,
-// R. 4624-30, R. 4624-32 et R. 4624-33 restent dehors.
+// trouvé en ouvrant le texte modificateur de R. 4624-28-3. ~~R. 4624-29,
+// R. 4624-30, R. 4624-32 et R. 4624-33 restent dehors.~~ Lus le 2026-09-26 :
+// la préreprise (R. 4624-29, -30) et l'objet de l'examen (R. 4624-32) ne
+// mettent aucun acte à la charge de l'employeur ; R. 4624-33 en met un.
 //
 // CE QUE CE CORPUS A DE PARTICULIER, ET QUI DOIT SE LIRE AVANT DE L'ÉTENDRE.
 // C'est le seul corpus du référentiel dont toutes les obligations salarié
@@ -384,6 +386,74 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       obligations: ["sante-travail-etablissement-examen-de-reprise"],
       historique:
         "Obligation manquante jusqu'au 2026-09-21 (cause `evenement`), encodée avec la page « Quand ça arrive ». Son motif d'alors : OBLIGATION D'EMPLOYEUR PLEINE ET ENTIÈRE, DANS UN DOMAINE QUE LE PRODUIT SERT, et le référentiel ne la porte pas. Saisir le service de santé au travail dès la connaissance de la date de fin d'arrêt, pour un examen à tenir le jour de la reprise et au plus tard huit jours après : un acte, un destinataire, un délai chiffré.\n\nCE QU'ELLE APPREND SUR LA FRAÎCHEUR DU CORPUS. Sa version en vigueur date du 15 juin 2026 et vient du décret n° 2026-503 du 12 juin 2026 — un texte de trois mois que le dépôt n'avait jamais croisé, trouvé uniquement parce qu'on a ouvert le texte modificateur d'un article voisin. Le corpus est déclaré `articles_cites` et son en-tête dit ne pas lire le reste de la section, donc ce n'était pas un trou caché ; c'était un trou non cherché. — Son blocage : Le déclencheur événementiel, absent du modèle — même blocage que `R. 4624-28-2` deux entrées plus haut, et que `R. 4141-8`, `R. 4141-12` et `L. 8222-5` ailleurs. Le fait générateur est la fin d'un arrêt de travail, que le produit n'a aucun moyen de connaître : il ne détient ni arrêt, ni absence, ni date de reprise, et `docs/rgpd.md` § 2.3 explique pourquoi il ne détiendra pas la pièce médicale. L'ADR-022 nomme l'axe « événement » et s'arrête là.\n\nÀ NE PAS RÉSOUDRE PAR UNE ÉCHÉANCE PÉRIODIQUE : il n'y a pas de rythme ici, et en poser un réclamerait un examen de reprise à des salariés qui ne se sont jamais arrêtés.",
+    },
+    {
+      ref: "R. 4624-29",
+      intitule: "Visite de préreprise — qui peut en bénéficier",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045371016",
+      versionEnVigueur: "2022-03-31",
+      modifiePar: { texte: "Décret n° 2022-372 du 16 mars 2022, art. 5" },
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "Les travailleurs en arrêt de travail de plus de trente jours peuvent bénéficier d'une visite de préreprise, en vue de favoriser le maintien dans l'emploi.",
+      citationCle:
+        "En vue de favoriser le maintien dans l'emploi, les travailleurs en arrêt de travail d'une durée de plus de trente jours peuvent bénéficier d'une visite de préreprise.",
+      statut: "sans_objet",
+      motif:
+        "Ouvre une POSSIBILITÉ au travailleur (« peuvent bénéficier ») ; aucun acte n'y est mis à la charge de l'employeur. Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Le texte modificateur est nommé tel que Légifrance l'affiche ; seul son article 5 est en cause, et il n'a pas été lu mot pour mot. La page porte aussi : « Conformément à l'article 6 du décret n° 2022-372 du 16 mars 2022, ces dispositions entrent en vigueur le 31 mars 2022 et s'appliquent aux arrêts de travail commençant après cette date. »",
+    },
+    {
+      ref: "R. 4624-30",
+      intitule: "Examen de préreprise — recommandations du médecin du travail",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000054250636",
+      versionEnVigueur: "2026-06-15",
+      modifiePar: {
+        texte: "Décret n° 2026-503 du 12 juin 2026, art. 1",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000054248175",
+      },
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "Le médecin du travail peut recommander des aménagements, des préconisations de reclassement ou des formations ; il informe l'employeur, sauf opposition du travailleur, de l'organisation de l'examen et de ses recommandations.",
+      citationCle:
+        "Au cours de l'examen de préreprise, le médecin du travail peut recommander : 1° Des aménagements et adaptations du poste de travail ; 2° Des préconisations de reclassement ; 3° Des formations professionnelles à organiser en vue de faciliter le reclassement du travailleur ou sa réorientation professionnelle. A cet effet, il s'appuie en tant que de besoin sur le service social du travail du service de prévention et de santé au travail interentreprises ou sur celui de l'entreprise. Il informe, sauf si le travailleur s'y oppose, l'employeur de l'organisation de cet examen et également l'employeur et le médecin conseil de ces recommandations afin que toutes les mesures soient mises en œuvre en vue de favoriser le maintien dans l'emploi du travailleur.",
+      statut: "sans_objet",
+      motif:
+        "Tous les actes de l'article sont ceux du MÉDECIN DU TRAVAIL : recommander, s'appuyer sur le service social, informer. L'employeur est destinataire de l'information ; « afin que toutes les mesures soient mises en œuvre » dit le but de cette information, pas une obligation autonome à dater. Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Le décret n° 2026-503 a été ouvert pour R. 4624-31 (articles 2 et 5 lus mot pour mot) ; son article 1, qui modifie celui-ci, ne l'a pas été. La page porte : « Conformément à l'article 5 du décret n° 2026-503 du 12 juin 2026, ces dispositions, dans leur rédaction résultant du décret précité, s'appliquent aux arrêts de travail délivrés à compter du lendemain de la publication dudit décret. »",
+    },
+    {
+      ref: "R. 4624-32",
+      intitule: "Examen de reprise — son objet",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045371021",
+      versionEnVigueur: "2022-03-18",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "L'examen de reprise vérifie la compatibilité du poste avec l'état de santé, examine les propositions d'aménagement ou de reclassement de l'employeur, préconise, et émet le cas échéant un avis d'inaptitude.",
+      citationCle:
+        "L'examen de reprise a pour objet : 1° De vérifier si le poste de travail que doit reprendre le travailleur ou le poste de reclassement auquel il doit être affecté est compatible avec son état de santé ; 2° D'examiner les propositions d'aménagement ou d'adaptation du poste repris par le travailleur ou de reclassement faites par l'employeur à la suite des préconisations émises le cas échéant par le médecin du travail lors de la visite de préreprise ; 3° De préconiser l'aménagement, l'adaptation du poste ou le reclassement du travailleur ; 4° D'émettre, le cas échéant, un avis d'inaptitude.",
+      statut: "sans_objet",
+      motif:
+        "Article de CONTENU de l'examen que le médecin du travail conduit. L'employeur y apparaît comme auteur de « propositions d'aménagement ou d'adaptation » examinées, pas comme débiteur d'un acte daté. Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. `modifiePar: null` : Légifrance n'affiche, pour la version en vigueur depuis le 18/03/2022, aucune mention « Création » ni « Modifié par » (vérifié aussi sur la page datée du 2022-03-18) ; le texte qui a produit cette version n'est pas établi.",
+    },
+    {
+      ref: "R. 4624-33",
+      intitule: "Arrêt de moins de trente jours pour accident du travail — information du médecin du travail",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045371018",
+      versionEnVigueur: "2022-03-18",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "L'employeur informe le médecin du travail de tout arrêt de travail de moins de trente jours pour cause d'accident du travail.",
+      citationCle:
+        "Le médecin du travail est informé par l'employeur de tout arrêt de travail d'une durée inférieure à trente jours pour cause d'accident du travail afin de pouvoir apprécier, notamment, l'opportunité d'un nouvel examen médical et, avec l'équipe pluridisciplinaire, de préconiser des mesures de prévention des risques professionnels.",
+      statut: "retenu",
+      obligations: ["sante-travail-etablissement-information-arret-accident-moins-trente-jours"],
+      historique:
+        "Jamais lu avant le 2026-09-26 (le corpus le déclarait « dehors »). Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Les deux passages décisifs — « par l'employeur » et « d'une durée inférieure à trente jours pour cause d'accident du travail » — confirmés par une requête ciblée. `modifiePar: null` : Légifrance n'affiche aucune mention « Création » ni « Modifié par » pour la version en vigueur depuis le 18/03/2022 (vérifié aussi sur la page datée) ; le texte qui l'a produite n'est pas établi.",
     },
     {
       ref: "R. 4624-28",

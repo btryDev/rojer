@@ -489,6 +489,36 @@ export const obligationsSanteTravail: Obligation[] = [
   },
 
   {
+    id: "sante-travail-etablissement-information-arret-accident-moins-trente-jours",
+    domaine: "sante_travail",
+    libelle: "Le médecin du travail est informé par l'employeur",
+    description:
+      "Le médecin du travail est informé par l'employeur de tout arrêt de travail d'une durée inférieure à trente jours pour cause d'accident du travail afin de pouvoir apprécier, notamment, l'opportunité d'un nouvel examen médical et, avec l'équipe pluridisciplinaire, de préconiser des mesures de prévention des risques professionnels.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4624-33 (information du médecin du travail de tout arrêt de moins de trente jours pour accident du travail)",
+        article: "R. 4624-33",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045371018",
+        note: "« Le médecin du travail est informé par l'employeur de tout arrêt de travail d'une durée inférieure à trente jours pour cause d'accident du travail afin de pouvoir apprécier, notamment, l'opportunité d'un nouvel examen médical et, avec l'équipe pluridisciplinaire, de préconiser des mesures de prévention des risques professionnels. » Relu le 2026-09-26 sur sa page propre, un alinéa ; « par l'employeur » et « d'une durée inférieure à trente jours pour cause d'accident du travail » confirmés par une requête ciblée. Version en vigueur depuis le 18 mars 2022 ; aucun texte modificateur affiché.",
+        versionConstatee: "2022-03-18",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "Le médecin du travail est informé par l'employeur de tout arrêt de travail d'une durée inférieure à trente jours pour cause d'accident du travail afin de pouvoir apprécier, notamment, l'opportunité d'un nouvel examen médical et, avec l'équipe pluridisciplinaire, de préconiser des mesures de prévention des risques professionnels",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-26 sur la page « Quand ça arrive » (ADR-037), le jour où l'article a été lu pour la première fois. Le produit n'observe pas le fait ; il dit la règle, sans date, sans état, sans case.\\n\\nLA SŒUR DE L'EXAMEN DE REPRISE, ET SON COMPLÉMENT EXACT. `R. 4624-31` couvre l'absence d'au moins trente jours pour accident du travail — l'employeur saisit le service, qui organise l'examen. Celle-ci couvre l'arrêt de MOINS de trente jours pour la même cause — l'employeur informe le médecin du travail, qui apprécie l'opportunité d'un nouvel examen. Les deux ne se recouvrent pas.\\n\\nLE FAIT EST LA PHRASE ENTIÈRE, parce que le texte n'a aucune ponctuation autour de « de tout arrêt de travail d'une durée inférieure à trente jours pour cause d'accident du travail » : un extrait plus court commencerait ou finirait au milieu d'une proposition, ce que la garde `fait-dans-le-texte.test.ts` refuse, à raison.\\n\\nAUCUN DÉLAI dans le texte : la page n'en affiche pas, et aucun champ « sous N jours » n'est ajouté.\\n\\nPORTÉE PAR L'ÉTABLISSEMENT, PAS PAR LE SALARIÉ, pour la même raison que `sante-travail-etablissement-examen-de-reprise` : la fiche d'un salarié ne doit rien laisser deviner d'un arrêt ni de sa cause (`docs/rgpd.md` § 2.3).",
+  },
+
+  {
     id: "sante-travail-etablissement-fin-exposition-suivi-renforce",
     domaine: "sante_travail",
     libelle:

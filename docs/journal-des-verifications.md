@@ -1089,6 +1089,38 @@ rend **onze** qui admettent l'IGH : trois propres (`elec-igh-annuelle`,
 `incendie-igh-moyens-secours-annuelle`,
 `incendie-igh-charge-calorifique-quinquennale`) et huit d'ascenseur, ouvertes à
 tous les régimes.
+### C29 · 2026-09-26 — Les quatre articles de la visite de reprise qui restaient dehors
+
+**Lus de première main**, sur leurs pages propres (structure demandée en
+aveugle, recopie intégrale, passage décisif confirmé) : `R. 4624-29`,
+`R. 4624-30`, `R. 4624-32`, `R. 4624-33`. Le corpus les déclarait « dehors »
+depuis le 2026-09-20.
+
+**Trois n'imposent rien à l'employeur.** `R. 4624-29` ouvre une possibilité au
+travailleur (« peuvent bénéficier d'une visite de préreprise ») ; `R. 4624-30`
+ne décrit que des actes du médecin du travail, l'employeur étant destinataire
+de ses recommandations ; `R. 4624-32` dit l'objet de l'examen de reprise.
+`sans_objet`, motif écrit.
+
+**Un impose.** `R. 4624-33` : « Le médecin du travail est informé par
+l'employeur de tout arrêt de travail d'une durée inférieure à trente jours pour
+cause d'accident du travail […] ». C'est le complément exact de
+`R. 4624-31` (absence d'au moins trente jours pour accident du travail). Encodé
+en événementielle d'établissement, sur la page « Quand ça arrive » : 167 + 1 =
+168 obligations (89 / 65 / 14), la page d'un bureau passe de 11 à 12 lignes.
+Aucune obligation n'existait déjà sur cet article (recherché avant d'encoder).
+Le fait générateur est la phrase entière : le texte n'a aucune ponctuation
+autour du fait, et la garde refuse un extrait qui commence ou finit au milieu
+d'une proposition.
+
+**Ce qui n'est pas établi.** Pour `R. 4624-32` et `R. 4624-33`, Légifrance
+n'affiche aucune mention « Création » ni « Modifié par » (version en vigueur
+depuis le 18 mars 2022, vérifié aussi sur la page datée) : `modifiePar: null`,
+et le texte qui a produit cette version n'est pas nommé. Les textes
+modificateurs de `R. 4624-29` (décret n° 2022-372, art. 5) et de `R. 4624-30`
+(décret n° 2026-503, art. 1) sont nommés tels que Légifrance les affiche ; leurs
+articles n'ont pas été lus mot pour mot.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
