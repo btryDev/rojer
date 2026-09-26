@@ -2902,6 +2902,73 @@ identique au caractère près à celle de `d4681ef`. Sceau inchangé :
 œuvre », vérification comprise ou non — que les notes de CH 58 demandent
 de trancher ensemble. La description le dit sans le trancher.
 
+**Troisième passe, le 2026-09-27, après contre-lecture de `546a54c`.** La
+contre-lecture n'a relevé aucun point grave. Sa grille de 1008 cas ne
+montre aucune différence d'applicabilité ni de génération, et les
+citations sont exactes. Les corrections :
+
+- **M1.** La phrase « par sur-application assumée » n'était gardée par
+  rien : retirée des huit descriptions d'`incendie.ts`, la suite restait
+  verte. La garde du livre II l'exige désormais des obligations dont
+  l'article FONDATEUR est du livre II et qui sont servies en 5ᵉ. Ce n'est
+  pas « une référence quelconque » : la visite de commission de 5ᵉ cite
+  `GE 4` pour dire qu'il ne s'y applique pas, et le contrôle quinquennal des
+  ascenseurs cite `AS 9` en contexte. Exiger d'elles la phrase la rendrait
+  fausse (première rédaction : rouge sur ces deux-là, restreinte).
+  **Éprouvée** : les huit phrases retirées d'`incendie.ts` donnent
+  `expected [ …(8) ] to deeply equal []`, avec les huit identifiants.
+  Restaurée, elle passe.
+- **F1.** `livre II(?!I)`. **Éprouvée** : la référence de `DF 10` réécrite
+  « — livre III » donne `incendie-erp-desenfumage-annuelle — Arrêté du 25
+  juin 1980, art. DF 10 — livre III`. Restaurée, elle passe.
+- **F2.** Motif de `PE 14` au corpus : « Le désenfumage figure en revanche
+  dans la liste triennale de PE 4 § 2 » est rayé et daté. La liste du § 2
+  ne le nomme pas ; c'est le § 1 qui le nomme, à la construction et avant
+  l'ouverture, avec locaux à sommeil.
+- **F3.** Commentaires. L'historique dit « version précédente `.9` ; même
+  cas que `.8` ». `.8` est bien le précédent d'une version neuve à
+  empreinte inchangée, puisque `.9` a déplacé l'empreinte ; les deux sont
+  donc nommés. `index.ts` décrit le périmètre réel : 18 obligations, soit le
+  registre et les 17 lignes du livre II. Ce compte a été mesuré en
+  comparant descriptions et références de `d4681ef` à celles de la branche.
+- **F4.** La description du registre cite la seconde branche de
+  `R. 4227-34` dans ses mots : « manipulées et mises en œuvre des matières
+  inflammables mentionnées à l'article R. 4227-22 ».
+- **F5.** Le pré-remplissage portait « MS 38 § 4 — livre II… » sans rien
+  sur la sur-application. `Entree.mention` est un champ à part : la forme
+  `motif (références).` de `raison` est tenue par un test. Il est posé dès
+  qu'une citation est du livre II : « En 5ᵉ catégorie, l'échéance est
+  maintenue par sur-application assumée : le détail est sur la fiche de
+  l'obligation. » Il est rendu dans le même paragraphe par
+  `PreRemplissagePanel`. **Éprouvé** : la mention retirée d'`entree()` et du
+  rendu fait tomber trois tests (valeur, équivalence « cite le livre II ⇔
+  mention », rendu jsdom). Restaurée, elle passe.
+
+**M2, NON FAIT, renvoyé à la coordination.**
+`elec-erp-groupe-electrogene-quinzaine` n'a pas la condition
+`aGroupeElectrogene` que porte `-annuel`. Mais `-annuel` NE GARDE PAS la
+ligne sur le non-renseigné :
+- `equipement_propriete_booleenne` rend `false` quand la propriété est
+  absente (`engine.ts:745`) ;
+- `engine.test.ts:542` le tient : « caracs absentes → EL 20 NON
+  applicable ».
+
+Mesuré sur un ERP de type M et une installation électrique :
+
+| catégorie | vrai | faux | absent |
+|---|---|---|---|
+| N5, N3 ou sans catégorie | quinzaine + annuel | quinzaine seule | quinzaine seule |
+
+Or l'absence est le cas courant : `creerEquipementsDepuisPreRemplissage`
+crée les équipements sans `caracteristiques`. Aligner « pareil » que
+`-annuel` éteindrait donc la quinzaine chez tous ces ERP, pas seulement
+chez ceux qui ont répondu `false`. Garder la ligne sur l'absent et
+l'éteindre sur `false` demande une condition qui n'existe pas : le type
+booléen confond absent et faux. Il faudrait écrire une sémantique neuve
+dans le moteur. Les deux consignes (« fais pareil » et « null garde la
+ligne ») ne tiennent pas ensemble : rien n'est changé, la version reste
+`.10`.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
