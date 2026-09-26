@@ -5,7 +5,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import { BlocCreux } from "@/components/ui-kit/fiche";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
-import { refusEffectif } from "./validation";
+import { refusEffectif, refusEffectifEntreprise } from "./validation";
 import type { StepProps } from "./types";
 
 const SUGGESTIONS_NAF = [
@@ -34,7 +34,14 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
   // d'étape — mais ils se rendent au champ qu'ils visent plutôt que d'être
   // rendus en bas de colonne.
   const refus = refusEffectif(state.effectifSurSite);
-  const repere = refus ? null : repereEffectif(state.effectifSurSite);
+  // Le repère des seuils de onze se lit sur l'effectif de l'ENTREPRISE : c'est
+  // lui que ces seuils comptent (C37). Il se lisait sur celui du site, en
+  // disant sous le nombre saisi que ce n'était pas le bon.
+  // La même borne sur l'effectif de l'entreprise (décision du 2026-09-26,
+  // ADR-031), lue en direct comme celle du site.
+  const refusEntreprise = refusEffectifEntreprise(state.effectifEntreprise);
+  const repere =
+    refus || refusEntreprise ? null : repereEffectif(state.effectifEntreprise);
   /** L'erreur d'un champ : le refus de passage d'étape, sinon le serveur. */
   const messagePour = (champ: string) =>
     (blocage?.champ === champ ? blocage.message : undefined) ??
@@ -284,13 +291,13 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
               <ChampBoard
                 id="effectifSurSite"
                 name="effectifSurSite"
-                label="Effectif travailleur"
+                label="Travailleurs sur ce site"
                 requis
                 inputMode="numeric"
                 value={state.effectifSurSite}
                 onChange={(e) => update({ effectifSurSite: e.target.value })}
                 placeholder="8"
-                aide="Salariés + apprentis présents régulièrement. Rojer s'arrête à 50. À partir de 50 salariés, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
+                aide="Salariés et apprentis qui y travaillent régulièrement. Rojer s'arrête à 50."
                 // Le refus de périmètre n'est pas rendu ici mais dans le bloc
                 // ci-dessous : il tient trois lignes et il porte une icône.
                 erreur={refus ? undefined : messagePour("effectifSurSite")}
@@ -303,6 +310,33 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 aria-describedby={
                   refus
                     ? "effectifSurSite-aide effectifSurSite-refus"
+                    : undefined
+                }
+              />
+
+              {/* DEUX NOMBRES, PARCE QUE LES TEXTES EN COMPTENT DEUX (C37).
+                  Le site, apprentis compris, est ce que comptent les
+                  personnes présentes et la restauration (par établissement).
+                  L'entreprise, apprentis non compris, est ce que comptent le
+                  CSE et le règlement intérieur (L. 2311-2 renvoie à L. 1111-2,
+                  dont L. 1111-3 écarte les apprentis). Un seul champ
+                  « salariés + apprentis » servait aux deux. */}
+              <ChampBoard
+                id="effectifEntreprise"
+                name="effectifEntreprise"
+                label="Salariés de l'entreprise"
+                requis
+                inputMode="numeric"
+                value={state.effectifEntreprise}
+                onChange={(e) => update({ effectifEntreprise: e.target.value })}
+                placeholder="8"
+                aide="Tous établissements confondus, apprentis non compris (art. L. 1111-3). Les seuils de onze et de cinquante salariés se comptent sur ce nombre. À partir de 50, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
+                erreur={
+                  refusEntreprise ? undefined : messagePour("effectifEntreprise")
+                }
+                aria-describedby={
+                  refusEntreprise
+                    ? "effectifEntreprise-aide effectifEntreprise-refus"
                     : undefined
                 }
               />
@@ -333,6 +367,22 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 />
                 <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
                   {refus.message}
+                </p>
+              </div>
+            ) : null}
+
+            {refusEntreprise ? (
+              <div
+                id="effectifEntreprise-refus"
+                role="status"
+                className="flex items-start gap-2.5 rounded-[18px] bg-[color:var(--board-signal-wash)] px-4 py-3 shadow-[inset_0_0_0_1px_var(--board-signal-line)]"
+              >
+                <OctagonX
+                  aria-hidden
+                  className="mt-px size-4 flex-none text-[color:var(--board-signal-ink)]"
+                />
+                <p className="m-0 max-w-[62ch] text-[12.5px] leading-[1.55] text-[color:var(--board-signal-ink)]">
+                  {refusEntreprise.message}
                 </p>
               </div>
             ) : null}
@@ -373,8 +423,11 @@ function repereEffectif(
   // Entier seulement : « 50,5 salariés » n'est pas un effectif, et une saisie
   // non entière est de toute façon refusée au passage d'étape. Le repère se
   // tait plutôt que de commenter un nombre qui ne veut rien dire.
+  // Zéro est une réponse (une entreprise dont le seul travailleur est un
+  // apprenti) ; le vide n'en est pas une.
+  if (v.trim() === "") return null;
   const n = Number(v);
-  if (!Number.isInteger(n) || n < 1) return null;
+  if (!Number.isInteger(n) || n < 0) return null;
   if (n < 11) {
     return {
       titre: `${n} salarié${n > 1 ? "s" : ""}`,

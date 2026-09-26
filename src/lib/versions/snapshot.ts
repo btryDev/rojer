@@ -103,7 +103,15 @@ export type EntrepriseSnapshot = {
   raisonSociale: string;
   siret: string | null;
   codeNaf: string;
+  /** Les travailleurs du SITE (`effectifSurSite`), malgré le nom. */
   effectif: number;
+  /**
+   * L'effectif de l'ENTREPRISE (`Entreprise.effectif`), figé depuis le
+   * 2026-09-26 (C37) : le seuil du programme annuel (L. 4121-3-1 III 1°) se
+   * compte sur lui. Absent des versions antérieures — le document retombe
+   * alors sur `effectif`, ce qu'il lisait déjà.
+   */
+  effectifEntreprise?: number;
   adresse: string;
 };
 

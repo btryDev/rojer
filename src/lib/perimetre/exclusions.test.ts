@@ -27,13 +27,16 @@ const dossierAccepte = {
 };
 
 describe("les refus à l'entrée sont projetés, pas recopiés", () => {
-  it("rend les deux refus de l'ADR-031, et eux seuls", () => {
+  it("rend les refus de l'ADR-031, et eux seuls", () => {
     // « Deux cas, et deux seulement » au 2026-09-01. Un troisième refus ajouté
     // au schéma sans décision fera tomber ce test — c'est ce qu'on lui demande :
     // « la liste des régimes refusés est un objet à relire, pas une constante
     // qu'on augmente au fil des cas gênants. »
+    // Le troisième est entré par décision : la propriétaire, le 2026-09-26,
+    // a plafonné l'effectif de l'entreprise comme celui du site (ADR-031).
     expect(refusAlEntree().map((r) => r.cle)).toEqual([
       "effectif",
+      "effectif_entreprise",
       "erp_en_igh",
     ]);
   });

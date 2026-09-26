@@ -184,7 +184,10 @@ export async function getEtatDuerp(
         select: { numero: true, createdAt: true },
       },
       etablissement: {
-        select: { entreprise: { select: { effectif: true } } },
+        select: {
+          effectifSurSite: true,
+          entreprise: { select: { effectif: true } },
+        },
       },
       unites: {
         orderBy: { nom: "asc" },
@@ -226,7 +229,10 @@ export async function getEtatDuerp(
     {
       ouvert: true,
       dateDerniereVersion: derniereVersion?.createdAt ?? null,
-      effectif: effectifEntreprise,
+      effectifs: {
+        entreprise: effectifEntreprise,
+        site: duerp.etablissement.effectifSurSite,
+      },
     },
     now,
   );

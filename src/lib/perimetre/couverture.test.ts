@@ -545,12 +545,12 @@ describe("axe effectif", () => {
     // borne se prouve des deux côtés : 49 se tait, 50 parle — du programme,
     // pas du dépassement, puisque 50 est servi.
     const sous = couvertureDeLEtablissement(
-      faits({ effectif: { surSite: 49, seuilServi: 50 } }),
+      faits({ effectif: { surSite: 49, entreprise: 49, seuilServi: 50 } }),
     );
     expect(axes(sous)).not.toContain("effectif");
 
     const au = couvertureDeLEtablissement(
-      faits({ effectif: { surSite: 50, seuilServi: 50 } }),
+      faits({ effectif: { surSite: 50, entreprise: 50, seuilServi: 50 } }),
     );
     const m = au.manques.filter((x) => x.axe === "effectif");
     expect(m).toHaveLength(1);
@@ -558,11 +558,37 @@ describe("axe effectif", () => {
     expect(m[0].motif).not.toContain("au-delà");
   });
 
+  it("compte l'entreprise pour le programme annuel, pas le site seul (C37)", () => {
+    // L. 4121-3-1 III 1° : « Pour les entreprises dont l'effectif est
+    // supérieur ou égal à cinquante salariés ». Un site de dix dans une
+    // entreprise de cinquante parle ; un site de quarante-neuf dans une
+    // entreprise de quarante-neuf se tait.
+    const multi = couvertureDeLEtablissement(
+      faits({ effectif: { surSite: 10, entreprise: 50, seuilServi: 50 } }),
+    );
+    const m = multi.manques.filter((x) => x.axe === "effectif");
+    expect(m).toHaveLength(1);
+    expect(m[0].motif).toContain("Votre entreprise déclare 50 salariés");
+
+    const sous = couvertureDeLEtablissement(
+      faits({ effectif: { surSite: 49, entreprise: 49, seuilServi: 50 } }),
+    );
+    expect(axes(sous)).not.toContain("effectif");
+
+    // Le site au seuil sous une entreprise déclarée en dessous : l'écart
+    // tient aux apprentis ou à un effectif d'entreprise périmé, on ne sait
+    // pas lequel, et l'annonce reste.
+    const doute = couvertureDeLEtablissement(
+      faits({ effectif: { surSite: 50, entreprise: 46, seuilServi: 50 } }),
+    );
+    expect(axes(doute)).toContain("effectif");
+  });
+
   it("au-dessus du seuil servi, dit le dépassement, une seule fois", () => {
     // Un `>=` mis à la place du `>` refuserait l'établissement de cinquante
     // salariés, qui est exactement la cible haute du produit.
     const audela = couvertureDeLEtablissement(
-      faits({ effectif: { surSite: 51, seuilServi: 50 } }),
+      faits({ effectif: { surSite: 51, entreprise: 51, seuilServi: 50 } }),
     );
     const m = audela.manques.filter((x) => x.axe === "effectif");
     expect(m).toHaveLength(1);
@@ -575,7 +601,7 @@ describe("axe effectif", () => {
     // manque. Le dossier reste ouvert (ADR-031 § 1 bis) : ce module ne ferme
     // rien, il dit.
     const c = couvertureDeLEtablissement(
-      faits({ effectif: { surSite: 62, seuilServi: 50 } }),
+      faits({ effectif: { surSite: 62, entreprise: 62, seuilServi: 50 } }),
     );
     expect(axes(c)).toEqual(["effectif"]);
     expect(c.indeterminations).toEqual([]);
@@ -587,7 +613,7 @@ describe("axe effectif", () => {
     // de cet axe une seconde déclaration de ce que le produit sait servir, et
     // elle divergerait en silence de `EFFECTIF_MAX`.
     const c = couvertureDeLEtablissement(
-      faits({ effectif: { surSite: 77, seuilServi: 60 } }),
+      faits({ effectif: { surSite: 77, entreprise: 77, seuilServi: 60 } }),
     );
     const m = c.manques.find((x) => x.axe === "effectif");
     expect(m?.motif).toContain("77");
@@ -596,7 +622,7 @@ describe("axe effectif", () => {
 
   it("ne qualifie jamais la situation au regard du droit", () => {
     const c = couvertureDeLEtablissement(
-      faits({ effectif: { surSite: 80, seuilServi: 50 } }),
+      faits({ effectif: { surSite: 80, entreprise: 80, seuilServi: 50 } }),
     );
     const dit = c.manques.map((m) => `${m.motif} ${m.consequence}`).join(" ");
     for (const interdit of [
@@ -613,7 +639,7 @@ describe("axe effectif", () => {
     const c = couvertureDeLEtablissement(
       faits({
         regime: { ...regimeCouvert, categorieErp: "N3" },
-        effectif: { surSite: 90, seuilServi: 50 },
+        effectif: { surSite: 90, entreprise: 90, seuilServi: 50 },
       }),
     );
     // L'ordre est celui de l'énumération : le régime, puis la taille.

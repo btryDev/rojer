@@ -200,7 +200,12 @@ export const obligationsConformite: Obligation[] = [
 // ne dit plus que la vérification annuelle des extincteurs est « la règle de
 // fait ». Empreinte inchangée, version neuve : deux documents qui citent la
 // même version doivent avoir lu le même texte.
-export const REFERENTIEL_VERSION = "2026-09-26.8";
+// `.9` le 2026-09-26 (C37) : les cinq typologies à seuil d'effectif disent
+// sur quel nombre il se compte (`effectifMaille`) — l'entreprise pour le CSE,
+// la formation de ses élus et le règlement intérieur (L. 2311-2, L. 1111-2,
+// L. 1111-3), l'établissement pour la restauration (R. 4228-22/-23). 169
+// obligations, aucune n'entre ni ne sort.
+export const REFERENTIEL_VERSION = "2026-09-26.9";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

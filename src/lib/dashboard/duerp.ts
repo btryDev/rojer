@@ -36,6 +36,10 @@
 
 import { ajouterAns, joursCivilsEntre, JOURS_HORIZON_PROCHE } from "@/lib/dates";
 import { estDansLesProchainsJours, estEnRetard } from "@/lib/dates/retard";
+import {
+  seuilEntrepriseAtteint,
+  type EffectifsDeclares,
+} from "@/lib/matching/effectif-entreprise";
 
 /** Effectif à partir duquel la mise à jour annuelle est exigée
  *  (art. R. 4121-2 du Code du travail : « au moins onze salariés »). */
@@ -49,8 +53,12 @@ export type EntreeEtatDuerp = {
   ouvert: boolean;
   /** Date de la dernière version **validée**, `null` si aucune. */
   dateDerniereVersion: Date | null;
-  /** Effectif de l'entreprise — seuil légal de la mise à jour annuelle. */
-  effectif: number;
+  /**
+   * Les deux effectifs déclarés. Le seuil de R. 4121-2 1° se compte sur
+   * l'entreprise ; le site n'intervient que par la prudence commune à tous
+   * les seuils d'entreprise (`effectifRetenuPourSeuil`, C37).
+   */
+  effectifs: EffectifsDeclares;
 };
 
 export type EtatDuerp = {
@@ -64,6 +72,11 @@ export type EtatDuerp = {
   dateLimiteMaj: Date | null;
   /** L'entreprise est soumise à la mise à jour annuelle (effectif ≥ 11). */
   soumisMajAnnuelle: boolean;
+  /**
+   * `soumisMajAnnuelle` ne tient qu'à la prudence : l'entreprise est déclarée
+   * sous onze, le site en compte onze ou plus (C37).
+   */
+  majAnnuelleAConfirmer: boolean;
   /** Une version existe et a moins d'un an — fait d'ancienneté pur, sans
    *  condition d'effectif. C'est ce que le brief peut annoncer comme acquis
    *  (« votre DUERP est à jour ») sans en dire plus qu'il ne sait. */
@@ -87,7 +100,8 @@ export type EtatDuerp = {
 };
 
 export function evaluerEtatDuerp(e: EntreeEtatDuerp, now: Date): EtatDuerp {
-  const soumisMajAnnuelle = e.effectif >= EFFECTIF_MAJ_ANNUELLE;
+  const seuilMaj = seuilEntrepriseAtteint(EFFECTIF_MAJ_ANNUELLE, e.effectifs);
+  const soumisMajAnnuelle = seuilMaj.atteint;
   const aVersionValidee = e.ouvert && e.dateDerniereVersion !== null;
 
   const ageJours = e.dateDerniereVersion
@@ -122,6 +136,7 @@ export function evaluerEtatDuerp(e: EntreeEtatDuerp, now: Date): EtatDuerp {
     ageJours,
     dateLimiteMaj,
     soumisMajAnnuelle,
+    majAnnuelleAConfirmer: seuilMaj.aConfirmer,
     versionRecente,
     jamaisValide,
     majEchue,

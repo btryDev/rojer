@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-09-26
-**Référentiel** : `2026-09-26.8`
+**Référentiel** : `2026-09-26.9`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -87,8 +87,8 @@ repose sur un texte que personne n'a ouvert.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 63 | 37 % | 71 | 157 | 49 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 95 | 56 % | 92 | 150 | 47 % |
+| 5 · lu à la source, verbatim relevé | 66 | 39 % | 74 | 161 | 50 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 92 | 54 % | 89 | 146 | 46 % |
 | 3 · lu et daté, aucun verbatim | 11 | 7 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
@@ -136,8 +136,8 @@ repose sur un texte que personne n'a ouvert.
 | `incendie` | 36 | 73 | 20 | 9 | 7 | · | · | · | 29 / 36 — 81 % | 0 / 73 | 2026-08-26 → 2026-09-26 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 10 | 27 | 9 | 1 | · | · | · | · | 10 / 10 — 100 % | 0 / 27 | 2026-08-26 → 2026-09-02 |
-| `locaux_sociaux` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 |
-| `organisation_prevention` | 9 | 13 | 1 | 8 | · | · | · | · | 9 / 9 — 100 % | 0 / 13 | 2026-08-31 → 2026-09-26 |
+| `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
+| `organisation_prevention` | 9 | 13 | 2 | 7 | · | · | · | · | 9 / 9 — 100 % | 0 / 13 | 2026-08-31 → 2026-09-26 |
 | `porte_portail` | 5 | 8 | · | 5 | · | · | · | · | 5 / 5 — 100 % | 0 / 8 | 2026-09-01 |
 | `sante_travail` | 13 | 22 | 3 | 9 | 1 | · | · | · | 12 / 13 — 92 % | 0 / 22 | 2026-08-31 → 2026-09-26 |
 | `secours` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-20 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-26 |
-| `etablissement` | 66 | 122 | 19 | 44 | 3 | · | · | · | 63 / 66 — 95 % | 0 / 122 | 2026-08-26 → 2026-09-26 |
+| `etablissement` | 66 | 122 | 22 | 41 | 3 | · | · | · | 63 / 66 — 95 % | 0 / 122 | 2026-08-26 → 2026-09-26 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-01 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -170,12 +170,12 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | --- | --- | --- | --- |
 | 2026-08-26 | 46 | 14 % | 37 |
 | 2026-08-27 | 10 | 3 % | 7 |
-| 2026-08-31 | 67 | 21 % | 31 |
+| 2026-08-31 | 63 | 20 % | 28 |
 | 2026-09-01 | 140 | 44 % | 89 |
 | 2026-09-02 | 17 | 5 % | 14 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
-| 2026-09-26 | 22 | 7 % | 18 |
+| 2026-09-26 | 26 | 8 % | 22 |
 
 319 des 319 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-26.
 
@@ -193,7 +193,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**316 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
+**317 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -229,6 +229,7 @@ une relecture déjà faite.
 | `code-travail-duerp` | 3 | 5 | 2026-09-02 |
 | `code-travail-electricite` | 2 | 8 | 2026-08-31 |
 | `arrete-2011-12-26-electricite` | 2 | 5 | 2026-08-26 |
+| `code-travail-organisation-prevention` | 2 | 10 | 2026-09-26 |
 | `code-travail-agents-biologiques` | 2 | 2 | 2026-09-26 |
 | `code-travail-travail-de-nuit` | 2 | 2 | 2026-09-26 |
 | `code-travail-chaleur-intense` | 2 | 8 | 2026-09-20 → 2026-09-26 |
@@ -237,7 +238,6 @@ une relecture déjà faite.
 | `arrete-1993-03-19-epi` | 2 | 4 | 2026-09-04 |
 | `cch-registre-securite` | 1 | 6 | 2026-09-20 |
 | `code-travail-risque-chimique` | 1 | 8 | 2026-09-02 |
-| `code-travail-organisation-prevention` | 1 | 9 | 2026-09-26 |
 | `code-travail-locaux-sociaux` | 1 | 5 | 2026-08-31 |
 | `code-travail-service-prevention-sante` | 1 | 4 | 2026-08-31 |
 | `arrete-1993-03-19-travaux-dangereux` | 1 | 1 | 2026-09-03 |
@@ -316,16 +316,13 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `information-etablissement-avis-acces-duerp` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-26 |
 | `levage-examen-etat-conservation` | levage | equipement | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-09-01 |
 | `locaux-etablissement-eau-potable` | locaux_sociaux | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
-| `locaux-etablissement-emplacement-restauration` | locaux_sociaux | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `locaux-etablissement-installations-sanitaires` | locaux_sociaux | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
-| `locaux-etablissement-local-restauration` | locaux_sociaux | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `prevention-etablissement-chaleur-eau-fraiche` | organisation_prevention | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-26 |
 | `prevention-etablissement-chaleur-mise-en-oeuvre` | organisation_prevention | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-26 |
 | `prevention-etablissement-chaleur-travailleur-vulnerable` | organisation_prevention | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-26 |
-| `prevention-etablissement-cse` | organisation_prevention | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `prevention-etablissement-evaluation-chaleur-intense` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-20 |
 | `prevention-etablissement-mise-a-jour-duerp-sur-fait` | organisation_prevention | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
-| `prevention-etablissement-reglement-interieur` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 |
+| `prevention-etablissement-reglement-interieur` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `prevention-etablissement-salarie-designe` | organisation_prevention | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 |
 | `porte-auto-dossier-maintenance` | porte_portail | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
 | `porte-auto-maintien-en-etat` | porte_portail | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
@@ -419,6 +416,9 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `levage-vgp-semestrielle-chariot-gerbeur` | levage | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
 | `levage-vgp-semestrielle-personnes` | levage | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `levage-vgp-trimestrielle-force-humaine` | levage | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
+| `locaux-etablissement-emplacement-restauration` | locaux_sociaux | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
+| `locaux-etablissement-local-restauration` | locaux_sociaux | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
+| `prevention-etablissement-cse` | organisation_prevention | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
 | `prevention-etablissement-liste-personnes-qualifiees` | organisation_prevention | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-02 |
 | `sante-travail-etablissement-examen-de-reprise` | sante_travail | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
 | `sante-travail-etablissement-information-arret-accident-moins-trente-jours` | sante_travail | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
@@ -709,9 +709,9 @@ refaire pour la contredire.
 | `secours-etablissement-signalement-chaleur-intense` | fondement | R. 4463-6 (modalités de signalement et de secours, portées à la connaissance des travailleurs et communiquées au service de prévention et de santé au travail) | R. 4463-6 | code-travail-chaleur-intense | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-salarie-designe` | fondement | L. 4644-1 I (l'employeur désigne un ou plusieurs salariés compétents pour s'occuper des activités de protection et de prévention) | L. 4644-1 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2022-03-31 | 2022-03-31 | 4 · agent + verbatim | ancrée |
 | `prevention-etablissement-salarie-designe` | contexte 1 | R. 4644-1 (les personnes désignées le sont après avis du comité social et économique s'il existe, et disposent du temps nécessaire et des moyens requis) | R. 4644-1 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
-| `prevention-etablissement-cse` | fondement | L. 2311-2 (CSE dans les entreprises d'au moins onze salariés, si l'effectif est atteint pendant douze mois consécutifs) | L. 2311-2 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
+| `prevention-etablissement-cse` | fondement | L. 2311-2 (CSE dans les entreprises d'au moins onze salariés, si l'effectif est atteint pendant douze mois consécutifs) | L. 2311-2 | code-travail-organisation-prevention | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
 | `prevention-etablissement-reglement-interieur` | fondement | L. 1321-1 1° (le règlement intérieur fixe les mesures d'application de la réglementation en matière de santé et de sécurité) | L. 1321-1 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
-| `prevention-etablissement-reglement-interieur` | contexte 1 | L. 1311-2 (obligation d'établir un règlement intérieur à partir de cinquante salariés, au terme d'un délai de douze mois) | L. 1311-2 | code-travail-organisation-prevention | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2020-01-01 | 2020-01-01 | 4 · agent + verbatim | ancrée |
+| `prevention-etablissement-reglement-interieur` | contexte 1 | L. 1311-2 (obligation d'établir un règlement intérieur à partir de cinquante salariés, au terme d'un délai de douze mois) | L. 1311-2 | code-travail-organisation-prevention | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2020-01-01 | 2020-01-01 | 5 · première main | ancrée |
 | `prevention-etablissement-liste-personnes-qualifiees` | fondement | R. 4323-24 première phrase (liste des personnes qualifiées tenue à la disposition de l'inspection du travail) | R. 4323-24 | code-travail-levage | retenu | 2026-09-02 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `prevention-etablissement-liste-personnes-qualifiees` | contexte 1 | R. 4323-23 (article qui institue la vérification générale périodique et en renvoie la périodicité à des arrêtés) | R. 4323-23 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `prevention-etablissement-evaluation-chaleur-intense` | fondement | R. 4463-2 (évaluation du risque lié aux épisodes de chaleur intense, et définition des mesures du III de L. 4121-3-1) | R. 4463-2 | code-travail-chaleur-intense | retenu | 2026-09-20 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
@@ -731,8 +731,8 @@ refaire pour la contredire.
 | `epi-verification-generale-periodique` | contexte 4 | R. 4323-101 à R. 4323-103 (consignation et conservation) | R. 4323-101 | code-travail-epi | sans_objet | 2026-09-04 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `locaux-etablissement-installations-sanitaires` | fondement | R. 4228-1 (moyens d'assurer la propreté individuelle : vestiaires, lavabos, cabinets d'aisance et, le cas échéant, douches) | R. 4228-1 | code-travail-locaux-sociaux | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `locaux-etablissement-eau-potable` | fondement | R. 4225-2 (mise à disposition d'eau potable et fraîche pour se désaltérer et se rafraîchir) | R. 4225-2 | code-travail-locaux-sociaux | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2025-06-02 | 2025-06-02 | 4 · agent + verbatim | ancrée |
-| `locaux-etablissement-local-restauration` | fondement | R. 4228-22 (local de restauration dans les établissements d'au moins cinquante salariés) | R. 4228-22 | code-travail-locaux-sociaux | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2020-01-02 | 2020-01-02 | 4 · agent + verbatim | ancrée |
-| `locaux-etablissement-emplacement-restauration` | fondement | R. 4228-23 (emplacement permettant de se restaurer dans les établissements de moins de cinquante salariés) | R. 4228-23 | code-travail-locaux-sociaux | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2020-01-02 | 2020-01-02 | 4 · agent + verbatim | ancrée |
+| `locaux-etablissement-local-restauration` | fondement | R. 4228-22 (local de restauration dans les établissements d'au moins cinquante salariés) | R. 4228-22 | code-travail-locaux-sociaux | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2020-01-02 | 2020-01-02 | 5 · première main | ancrée |
+| `locaux-etablissement-emplacement-restauration` | fondement | R. 4228-23 (emplacement permettant de se restaurer dans les établissements de moins de cinquante salariés) | R. 4228-23 | code-travail-locaux-sociaux | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2020-01-02 | 2020-01-02 | 5 · première main | ancrée |
 | `co-activite-etablissement-protocole-securite` | fondement | R. 4515-4 (les opérations de chargement ou de déchargement font l'objet d'un document écrit dit « protocole de sécurité », remplaçant le plan de prévention) | R. 4515-4 | code-travail-co-activite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `co-activite-etablissement-protocole-securite` | contexte 1 | R. 4515-1 (champ d'application : opérations réalisées par des entreprises extérieures transportant des marchandises en provenance ou à destination d'un lieu extérieur à l'enceinte de l'entreprise d'accueil) | R. 4515-1 | code-travail-co-activite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `co-activite-etablissement-protocole-securite` | contexte 2 | R. 4515-9 (opérations répétitives : un seul protocole, applicable tant que les conditions n'ont pas subi de modification significative) | R. 4515-9 | code-travail-co-activite | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |

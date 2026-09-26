@@ -25,7 +25,7 @@ import {
   determineObligationsApplicables,
   projeterEtablissement,
   type EquipementMatching,
-  type EtablissementMatching,
+  type SourceEtablissement,
   type ObligationApplicable,
 } from "@/lib/matching";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
@@ -134,7 +134,7 @@ const cleDuCode = (l: LigneQuandCaArrive) => {
 
 /** Les lignes de la page pour ce dossier, groupées par domaine. */
 export function listerQuandCaArrive(
-  etablissement: EtablissementMatching,
+  etablissement: SourceEtablissement,
   equipements: EquipementMatching[],
 ): GroupeQuandCaArrive[] {
   const parDomaine = new Map<DomaineObligation, LigneQuandCaArrive[]>();

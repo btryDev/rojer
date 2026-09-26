@@ -113,6 +113,7 @@ export async function construireSnapshot(
       siret: ent.siret,
       codeNaf: etab.codeNaf ?? ent.codeNaf,
       effectif: etab.effectifSurSite,
+      effectifEntreprise: ent.effectif,
       adresse: etab.adresse,
     },
     unites: unitesSnap,

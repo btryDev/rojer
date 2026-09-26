@@ -45,6 +45,10 @@ export default async function ModifierEtablissementPage({
         <div className="carte-board max-w-[880px] px-7 py-7 sm:px-8">
           <EtablissementForm
             action={action}
+            entreprise={{
+              id: etab.entreprise.id,
+              effectif: etab.entreprise.effectif,
+            }}
             valeursInitiales={{
               raisonDisplay: etab.raisonDisplay,
               adresse: etab.adresse,

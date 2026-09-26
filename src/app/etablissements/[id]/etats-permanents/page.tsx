@@ -187,6 +187,14 @@ export default async function EtatsPermanentsPage({
                       mode={l.mode}
                       pieceAttendue={l.pieceAttendue}
                       declareLe={l.declareLe ? l.declareLe.toISOString() : null}
+                      aConfirmer={
+                        l.aConfirmer
+                          ? {
+                              phrase: l.aConfirmer,
+                              entrepriseId: etablissement.entrepriseId,
+                            }
+                          : null
+                      }
                     />
                   ))}
                 </ul>
@@ -254,6 +262,14 @@ export default async function EtatsPermanentsPage({
                       mode={l.mode}
                       pieceAttendue={l.pieceAttendue}
                       declareLe={l.declareLe ? l.declareLe.toISOString() : null}
+                      aConfirmer={
+                        l.aConfirmer
+                          ? {
+                              phrase: l.aConfirmer,
+                              entrepriseId: etablissement.entrepriseId,
+                            }
+                          : null
+                      }
                     />
                   ))}
                 </ul>

@@ -71,16 +71,35 @@ export const CODE_TRAVAIL_ORGANISATION_PREVENTION: Corpus = {
       intitule: "Champ d'application du comité social et économique",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000035609353",
       versionEnVigueur: "2018-01-01",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      // Création (ordonnance n° 2017-1386 du 22 septembre 2017, art. 1) :
+      // aucun texte modificateur affiché.
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
-        "Un CSE est mis en place dans les entreprises d'au moins onze salariés, l'obligation ne naissant que si l'effectif est atteint pendant douze mois consécutifs.",
+        "Un CSE est mis en place dans les entreprises d'au moins onze salariés, l'obligation ne naissant que si l'effectif est atteint pendant douze mois consécutifs ; l'effectif se calcule selon L. 1111-2 et L. 1251-54.",
       citationCle:
-        "Un comité social et économique est mis en place dans les entreprises d'au moins onze salariés. Sa mise en place n'est obligatoire que si l'effectif d'au moins onze salariés est atteint pendant douze mois consécutifs.",
+        "Un comité social et économique est mis en place dans les entreprises d'au moins onze salariés. Sa mise en place n'est obligatoire que si l'effectif d'au moins onze salariés est atteint pendant douze mois consécutifs. Les modalités de calcul des effectifs sont celles prévues aux articles L. 1111-2 et L. 1251-54.",
       statut: "retenu",
       obligations: ["prevention-etablissement-cse"],
       reserve:
-        "Les douze mois consécutifs ne sont pas calculés : le modèle ne porte que l'effectif courant, sans historique. La ligne apparaît au franchissement constaté, donc en avance sur l'échéance légale. L'article compte par ENTREPRISE, le moteur évalue par établissement (`effectifSurSite`) : une entreprise multi-sites dont aucun site n'atteint onze ne verra pas la ligne.",
+        "Les douze mois consécutifs ne sont pas calculés : le modèle ne porte que l'effectif courant, sans historique. La ligne apparaît au franchissement constaté, donc en avance sur l'échéance légale. ~~L'article compte par ENTREPRISE, le moteur évalue par établissement (`effectifSurSite`) : une entreprise multi-sites dont aucun site n'atteint onze ne verra pas la ligne.~~ [2026-09-26, C37 — relu de première main, les trois alinéas mot pour mot. Le troisième renvoie le calcul à L. 1111-2, qui compte « les effectifs de l'entreprise », et L. 1111-3 en écarte les apprentis. Le moteur compare désormais le seuil à `Entreprise.effectif`, demandé à la création comme l'effectif de l'entreprise, apprentis non compris (`effectifMaille: \"entreprise\"`). Le faux négatif multi-sites est levé tant que cet effectif est tenu à jour ; quand il est sous onze et que le site atteint onze, la ligne est retenue « à confirmer ». Ce qui reste : une entreprise dont l'effectif déclaré est périmé ET dont aucun site n'atteint onze. L. 1251-54 (salariés temporaires) n'a pas été ouvert : le produit ne demande pas l'intérim, et l'effectif déclaré est celui du dirigeant.]",
+    },
+    {
+      ref: "L. 1111-2",
+      intitule: "Calcul des effectifs de l'entreprise",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000019353569",
+      versionEnVigueur: "2008-08-22",
+      modifiePar: { texte: "LOI n° 2008-789 du 20 août 2008 - art. 3" },
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "Règle de calcul des effectifs de l'entreprise pour l'application du code du travail : CDI à temps plein pris intégralement, CDD, intermittents, mis à disposition et temporaires au prorata de leur présence sur douze mois, temps partiels au prorata de leurs horaires.",
+      citationCle:
+        "Pour la mise en oeuvre des dispositions du présent code, les effectifs de l'entreprise sont calculés conformément aux dispositions suivantes :",
+      statut: "sans_objet",
+      motif:
+        "Règle de calcul, sans échéance — même traitement que L. 1111-3, qui la complète. Consignée le 2026-09-26 (C37) parce que le moteur compte désormais les seuils d'entreprise sur l'effectif de l'entreprise : L. 2311-2 y renvoie expressément, et la phrase d'ouverture — « Pour la mise en oeuvre des dispositions du présent code » — en fait la règle par défaut des seuils du code qui n'en écrivent pas d'autre (R. 4121-2 1°, L. 4121-3-1 III, L. 1311-2). Lue en entier une fois, phrase d'ouverture confirmée mot pour mot par une seconde lecture. Le produit ne recalcule pas l'effectif selon ces règles (prorata des CDD, temps partiels) : il demande au dirigeant son effectif, apprentis non compris.",
     },
     {
       ref: "L. 1111-3",
@@ -95,10 +114,10 @@ export const CODE_TRAVAIL_ORGANISATION_PREVENTION: Corpus = {
       prescrit:
         "Écarte du calcul des effectifs de l'entreprise plusieurs catégories de salariés, en tête desquelles les apprentis.",
       citationCle:
-        "Ne sont pas pris en compte dans le calcul des effectifs de l'entreprise : 1° Les apprentis",
+        "Ne sont pas pris en compte dans le calcul des effectifs de l'entreprise : 1° Les apprentis ; […] 6° Les titulaires d'un contrat de professionnalisation jusqu'au terme prévu par le contrat lorsque celui-ci est à durée déterminée ou jusqu'à la fin de l'action de professionnalisation lorsque le contrat est à durée indéterminée.",
       statut: "sans_objet",
       motif:
-        "Règle de calcul, sans échéance : elle sert les seuils des obligations (L. 2311-2 renvoie à L. 1111-2, que cet article complète), elle n'en crée aucune — même traitement que les définitions qui servent une obligation (précédent R. 4624-28-1). Consignée le 2026-09-26 parce que le repère d'effectif de l'onboarding la cite : le champ « Effectif travailleur » demande « Salariés + apprentis » et le repère comparait ce nombre aux seuils de onze salariés sans dire que ceux-ci se comptent sur l'entreprise et sans les apprentis. Relu de première main : seules la phrase d'ouverture et le 1° ont été lus mot pour mot ; les autres catégories et l'alinéa final ne sont pas recopiés ici. La page lue se dit « version en vigueur depuis le 01/01/2016 ».",
+        "Règle de calcul, sans échéance : elle sert les seuils des obligations (L. 2311-2 renvoie à L. 1111-2, que cet article complète), elle n'en crée aucune — même traitement que les définitions qui servent une obligation (précédent R. 4624-28-1). Consignée le 2026-09-26 parce que le repère d'effectif de l'onboarding la cite : le champ « Effectif travailleur » demande « Salariés + apprentis » et le repère comparait ce nombre aux seuils de onze salariés sans dire que ceux-ci se comptent sur l'entreprise et sans les apprentis. ~~Relu de première main : seules la phrase d'ouverture et le 1° ont été lus mot pour mot ; les autres catégories et l'alinéa final ne sont pas recopiés ici.~~ [2026-09-26, C37 — le 6° relu mot pour mot par une lecture ciblée, parce que la phrase « à confirmer » du produit (`phraseEffectifAConfirmer`) cite les contrats de professionnalisation : il ne les écarte que « jusqu'au terme prévu par le contrat lorsque celui-ci est à durée déterminée ou jusqu'à la fin de l'action de professionnalisation lorsque le contrat est à durée indéterminée », et la phrase le dit. Les 2° et 4° (contrat initiative-emploi, contrat d'accompagnement dans l'emploi, pendant la durée de l'aide) et l'alinéa final (« Toutefois, ces salariés sont pris en compte pour l'application des dispositions légales relatives à la tarification des risques d'accidents du travail et de maladies professionnelles. ») ont été lus sans être recopiés à la citation ; la phrase du produit dit « notamment ».] La page lue se dit « version en vigueur depuis le 01/01/2016 », modifiée par l'ordonnance n° 2015-1578 du 3 décembre 2015, art. 1.",
     },
     {
       ref: "L. 2315-18",
@@ -193,8 +212,9 @@ export const CODE_TRAVAIL_ORGANISATION_PREVENTION: Corpus = {
       intitule: "Établissement obligatoire du règlement intérieur",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000038610176",
       versionEnVigueur: "2020-01-01",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      modifiePar: { texte: "LOI n° 2019-486 du 22 mai 2019 - art. 11 (V)" },
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "L'établissement d'un règlement intérieur est obligatoire à partir de cinquante salariés, au terme d'un délai de douze mois à compter du franchissement du seuil.",
       citationCle:
@@ -202,7 +222,7 @@ export const CODE_TRAVAIL_ORGANISATION_PREVENTION: Corpus = {
       statut: "retenu",
       obligations: ["prevention-etablissement-reglement-interieur"],
       reserve:
-        "Cet article porte le SEUIL, pas le contenu : il ne suffirait pas à fonder une obligation dans un produit qui ne couvre que la santé-sécurité. Il est cité en contexte derrière L. 1321-1. Le délai de douze mois n'est pas calculé, pour la même raison que sur L. 2311-2 : le modèle ne porte pas la date de franchissement.",
+        "Cet article porte le SEUIL, pas le contenu : il ne suffirait pas à fonder une obligation dans un produit qui ne couvre que la santé-sécurité. Il est cité en contexte derrière L. 1321-1. Le délai de douze mois n'est pas calculé, pour la même raison que sur L. 2311-2 : le modèle ne porte pas la date de franchissement. [2026-09-26, C37 — relu de première main, premier alinéa confirmé mot pour mot. « Entreprises ou établissements » : l'entreprise compte au moins autant que chacun de ses établissements, et le seuil se compare donc à l'effectif de l'entreprise (`effectifMaille: \"entreprise\"`) ; aucun renvoi de calcul propre, donc L. 1111-2, sans les apprentis de L. 1111-3.]",
     },
   ],
 };

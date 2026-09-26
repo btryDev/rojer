@@ -7,6 +7,7 @@ const base = {
   adresse: "12 rue des halles, 44000 Nantes",
   codeNaf: "56.10A",
   effectifSurSite: 8,
+  effectifEntreprise: 8,
   estEtablissementTravail: true,
   estERP: false,
   estIGH: false,

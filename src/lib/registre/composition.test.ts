@@ -16,6 +16,7 @@ function etabBureau(
   return {
     id: "etab_bureau",
     effectifSurSite: 8,
+    effectifEntreprise: 8,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: false,
@@ -38,6 +39,7 @@ function etabErp(over: Partial<EtablissementMatching> = {}): EtablissementMatchi
     typeErp: "N",
     categorieErp: "N5",
     effectifSurSite: 12,
+    effectifEntreprise: 12,
     ...over,
   });
 }

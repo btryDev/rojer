@@ -99,6 +99,9 @@ export async function lireEntrees(client: ClientLecture, etablissementId: string
       // calcul, jamais dans la transaction. `dateFin` est arbitrée par
       // `appliquerPrescriptions` pour que la raison d'ignorance soit rendue.
       prescriptionsParticulieres: { where: { actif: true } },
+      // L'effectif de l'entreprise, que lisent les seuils comptés sur elle
+      // (CSE, règlement intérieur — `effectifMaille`, C37).
+      entreprise: { select: { effectif: true } },
     },
   });
   if (!etab) throw new Error("Établissement introuvable");

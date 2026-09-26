@@ -589,6 +589,7 @@ function ficheAuMoteur(opts: {
     etablissement: {
       id: "etab-1",
       effectifSurSite: 6,
+      entreprise: { effectif: 6 },
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,

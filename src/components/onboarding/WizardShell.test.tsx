@@ -77,7 +77,8 @@ function remplirEtape1() {
   saisir(/Code postal/, "75011");
   saisir(/^Ville/, "Paris");
   saisir(/Code NAF/, "56.10A");
-  saisir(/Effectif travailleur/, "8");
+  saisir(/Travailleurs sur ce site/, "8");
+  saisir(/Salariés de l'entreprise/, "8");
 }
 
 /** Choisit dans un `<select>` contrôlé par React, comme le ferait un clic. */
@@ -149,7 +150,7 @@ describe("le refus de périmètre ferme la porte avant le clic", () => {
   it("cinquante et un salariés : « Suivant » est désactivé", async () => {
     render(<WizardShell />);
     remplirEtape1();
-    saisir(/Effectif travailleur/, "51");
+    saisir(/Travailleurs sur ce site/, "51");
     await souffler();
 
     const suivant = screen.getByRole("button", {
@@ -161,7 +162,7 @@ describe("le refus de périmètre ferme la porte avant le clic", () => {
   it("cinquante salariés : elle reste ouverte", async () => {
     render(<WizardShell />);
     remplirEtape1();
-    saisir(/Effectif travailleur/, "50");
+    saisir(/Travailleurs sur ce site/, "50");
     await souffler();
 
     expect(
@@ -217,10 +218,10 @@ describe("le refus de périmètre est aussi lisible sans le voir", () => {
     // une moitié.
     render(<WizardShell />);
     remplirEtape1();
-    saisir(/Effectif travailleur/, "51");
+    saisir(/Travailleurs sur ce site/, "51");
     await souffler();
 
-    const champ = screen.getByLabelText(/Effectif travailleur/);
+    const champ = screen.getByLabelText(/Travailleurs sur ce site/);
     const decrit = champ.getAttribute("aria-describedby") ?? "";
     expect(decrit.split(" ")).toContain("effectifSurSite-aide");
     expect(decrit.split(" ")).toContain("effectifSurSite-refus");

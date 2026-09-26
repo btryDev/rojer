@@ -80,6 +80,10 @@
 // donnés ; leur collecte vit dans `faits.ts`, sur le modèle du couple
 // `reperterSansEcheance` / `equipementsSansEcheance`.
 
+import {
+  phraseEffectifAConfirmer,
+  seuilEntrepriseAtteint,
+} from "@/lib/matching/effectif-entreprise";
 import type { EtatCouverture } from "@/lib/duerps/couverture";
 import { nonPorte, porte } from "./non-couverture";
 import type { CorrespondanceSecteur } from "./secteur";
@@ -262,6 +266,12 @@ export type FaitEquipements = {
 export type FaitEffectif = {
   /** L'effectif salarié déclaré sur le site. */
   surSite: number;
+  /**
+   * L'effectif déclaré de l'ENTREPRISE, apprentis non compris
+   * (`Entreprise.effectif`). C'est lui que compte L. 4121-3-1 III (« les
+   * entreprises dont l'effectif… »), et non le site (C37).
+   */
+  entreprise: number;
   /** Au-delà duquel la création d'un dossier est refusée (ADR-031). */
   seuilServi: number;
 };
@@ -685,11 +695,22 @@ function axeEffectif(
   manques: ManqueCouverture[],
 ): void {
   if (fait === null) return;
-  if (fait.surSite <= fait.seuilServi) {
-    if (fait.surSite < SEUIL_PROGRAMME_ANNUEL) return;
+  // La borne du produit vaut pour le site ET pour l'entreprise (décision de la
+  // propriétaire du 2026-09-26, ADR-031) : l'un ou l'autre au-delà, et le
+  // dossier — resté ouvert — porte le même manque.
+  if (fait.surSite <= fait.seuilServi && fait.entreprise <= fait.seuilServi) {
+    // Le texte compte l'ENTREPRISE (C37), et la règle est celle de tous les
+    // lecteurs d'un seuil d'entreprise (`effectifRetenuPourSeuil`) : le site
+    // au seuil parle aussi, « à confirmer ».
+    const effectifs = { entreprise: fait.entreprise, site: fait.surSite };
+    const seuil = seuilEntrepriseAtteint(SEUIL_PROGRAMME_ANNUEL, effectifs);
+    if (!seuil.atteint) return;
+    const constat = seuil.aConfirmer
+      ? `À confirmer. ${phraseEffectifAConfirmer(effectifs)}`
+      : `Votre entreprise déclare ${fait.entreprise} salariés.`;
     manques.push({
       axe: "effectif",
-      motif: `Cet établissement déclare ${fait.surSite} salariés. À partir de cinquante salariés dans l'entreprise, les résultats de l'évaluation des risques débouchent sur un programme annuel de prévention (art. L. 4121-3-1, III, 1°).`,
+      motif: `${constat} À partir de cinquante salariés dans l'entreprise, les résultats de l'évaluation des risques débouchent sur un programme annuel de prévention (art. L. 4121-3-1, III, 1°).`,
       consequence: `Rojer ne produit pas ${nonPorte("le programme annuel de prévention des risques")}.`,
     });
     return;
@@ -697,7 +718,10 @@ function axeEffectif(
 
   manques.push({
     axe: "effectif",
-    motif: `Cet établissement déclare ${fait.surSite} salariés, au-delà des ${fait.seuilServi} pour lesquels Rojer est construit.`,
+    motif:
+      fait.surSite > fait.seuilServi
+        ? `Cet établissement déclare ${fait.surSite} salariés, au-delà des ${fait.seuilServi} pour lesquels Rojer est construit.`
+        : `Votre entreprise déclare ${fait.entreprise} salariés, au-delà des ${fait.seuilServi} pour lesquels Rojer est construit.`,
     consequence: `Au-delà de ce seuil, des obligations que cet outil ne porte pas s'ajoutent — ${nonPorte("le programme annuel de prévention des risques")}, notamment. ${porte("Le règlement intérieur")}, lui, vous est bien présenté : sa ligne est dans vos états permanents depuis le franchissement. Votre dossier reste ouvert et ce qu'il contient reste juste ; il est incomplet sur ce qui vient avec la taille, et le restera.`,
   });
 }

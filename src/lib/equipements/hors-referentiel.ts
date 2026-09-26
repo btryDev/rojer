@@ -221,7 +221,10 @@ export async function equipementsSansEcheance(
   const user = await requireUser();
   const etab = await prisma.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId: user.id } },
-    include: { equipements: { where: { actif: true } } },
+    include: {
+      equipements: { where: { actif: true } },
+      entreprise: { select: { effectif: true } },
+    },
   });
   if (!etab) return new Map();
 
@@ -229,6 +232,7 @@ export async function equipementsSansEcheance(
     {
       id: etab.id,
       effectifSurSite: etab.effectifSurSite,
+      effectifEntreprise: etab.entreprise.effectif,
       estEtablissementTravail: etab.estEtablissementTravail,
       estERP: etab.estERP,
       estIGH: etab.estIGH,

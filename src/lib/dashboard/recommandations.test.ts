@@ -24,7 +24,7 @@ function duerpDe(ageJours: number | null, effectif = 20) {
     {
       ouvert: true,
       dateDerniereVersion: ageJours === null ? null : dateDecalee(-ageJours),
-      effectif,
+      effectifs: { entreprise: effectif, site: effectif },
     },
     NOW,
   );

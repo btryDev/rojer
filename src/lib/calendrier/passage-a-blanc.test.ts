@@ -310,6 +310,7 @@ function poserEtablissement(equipements: EtablissementFaux["equipements"]) {
       id: ETAB_ID,
       userId: "user-1",
       effectifSurSite: 5,
+      effectifEntreprise: 5,
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,

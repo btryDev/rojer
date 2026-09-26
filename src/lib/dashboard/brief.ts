@@ -15,6 +15,8 @@
 // qui tirerait Prisma) pour rester testable en environnement `node`.
 
 import { FUSEAU_REFERENCE } from "@/lib/dates";
+import { EFFECTIF_MAJ_ANNUELLE } from "./duerp";
+import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import type { FamilleEcheance } from "@/lib/calendrier/echeances";
 import { raccourcirLibelle } from "./libelles";
 import type { EtatDuerp } from "./duerp";
@@ -328,7 +330,8 @@ const ORDRE_FAMILLES: FamilleEcheance[] = [
  * mois » l'est aussi bien pour un DUERP sans version que pour une version
  * périmée.
  */
-function phraseDuerp(duerp: DuerpBrief): string | null {
+// Exportée pour `maj-a-confirmer.test.ts`.
+export function phraseDuerp(duerp: DuerpBrief): string | null {
   if (!duerp.existe) return "Votre DUERP n'est pas encore ouvert.";
   if (duerp.estAJour) return null;
 
@@ -336,6 +339,11 @@ function phraseDuerp(duerp: DuerpBrief): string | null {
   if (!etat) return "Votre DUERP n'a pas de version validée de moins de douze mois.";
   if (etat.jamaisValide) {
     return "Aucune version de votre DUERP n'a encore été validée.";
+  }
+  // Soumis par la seule prudence (C37) : le fait d'ancienneté reste vrai, la
+  // mise à jour annuelle est dite à confirmer.
+  if (etat.majAnnuelleAConfirmer) {
+    return `La dernière version de votre DUERP a plus de douze mois ; mise à jour annuelle ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}.`;
   }
   return "La dernière version de votre DUERP a plus de douze mois.";
 }

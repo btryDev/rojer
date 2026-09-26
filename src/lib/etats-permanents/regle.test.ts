@@ -33,6 +33,7 @@ import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 const bureau = (effectif: number): EtablissementMatching => ({
   id: "etab-test",
   effectifSurSite: effectif,
+  effectifEntreprise: effectif,
   estEtablissementTravail: true,
   estERP: false,
   estIGH: false,

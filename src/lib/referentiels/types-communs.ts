@@ -519,6 +519,30 @@ export type TypologieApplication = {
   effectifMin?: number;
   effectifMax?: number;
   /**
+   * SUR QUEL NOMBRE LE SEUIL SE COMPTE — requis dès qu'`effectifMin` ou
+   * `effectifMax` est écrit (`conformite.test.ts` le tient). Ajouté le
+   * 2026-09-26 (C37) : le moteur comparait tous les seuils à
+   * `effectifSurSite`, « salariés + apprentis » du site, alors que les textes
+   * ne comptent pas tous la même chose.
+   *
+   *   - `"entreprise"` : le texte compte l'ENTREPRISE, au sens de L. 1111-2
+   *     (« Pour la mise en oeuvre des dispositions du présent code, les
+   *     effectifs de l'entreprise sont calculés… »), dont L. 1111-3 exclut
+   *     « 1° Les apprentis ». Évalué sur `effectifEntreprise`
+   *     (`Entreprise.effectif`). Cas de L. 2311-2 (qui y renvoie
+   *     expressément), de L. 2315-18 (qui suit l'existence du CSE) et de
+   *     L. 1311-2 (« entreprises ou établissements » : l'entreprise compte au
+   *     moins autant que chacun de ses établissements).
+   *   - `"etablissement"` : le texte compte l'établissement. Évalué sur
+   *     `effectifSurSite`. Cas de R. 4228-22 et R. 4228-23 (« les effectifs
+   *     sont décomptés par établissement »).
+   *
+   * Le sens du doute est celui de toute la typologie : sur `"entreprise"`, un
+   * effectif d'entreprise sous le seuil alors que le site l'atteint ne rejette
+   * pas — l'obligation est retenue « à confirmer » (cf. `evaluerEffectif`).
+   */
+  effectifMaille?: "entreprise" | "etablissement";
+  /**
    * Seuil sur les personnes habituellement présentes — salariés **et**
    * public — évalué sur `personnesPresentesHabituellement`, à défaut sur
    * `effectifSurSite`. Source : R. 4227-34 CT (« occupées ou réunies

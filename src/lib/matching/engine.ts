@@ -22,8 +22,9 @@
  *   3. Si l'obligation a des `conditions[]`, elles sont regroupées par
  *      catégorie d'équipement ; il doit exister au moins un équipement
  *      E satisfaisant TOUTES les conditions dont `categorie === E.categorie`.
- *   4. Si l'obligation a `effectifMin`/`effectifMax`, l'effectif sur site
- *      doit être dans la plage (bornes incluses).
+ *   4. Si l'obligation a `effectifMin`/`effectifMax`, l'effectif compté à
+ *      la maille que le texte écrit (`effectifMaille` : entreprise ou site)
+ *      doit être dans la plage (bornes incluses) — cf. `evaluerEffectif`.
  *   5. Si l'obligation a `locauxSommeilPublic`, l'établissement doit le
  *      satisfaire — avec la règle du non-renseigné : `true` retient quand la
  *      réponse manque (« à confirmer »), `false` rejette (un allègement ne se
@@ -54,6 +55,11 @@ import type {
 } from "@/lib/referentiels/types-communs";
 import { sommeilPlausiblePourLeType } from "@/lib/referentiels/types-communs";
 import { evaluerPersonnesPresentes } from "./personnes-presentes";
+import {
+  effectifRetenuPourSeuil,
+  phraseEffectifAConfirmer,
+  type EffectifsDeclares,
+} from "./effectif-entreprise";
 import type {
   EquipementMatching,
   EtablissementMatching,
@@ -64,7 +70,18 @@ import type {
 // Étape 1 — Typologie
 // -----------------------------------------------------------------------------
 
-export type ResultatTypologie = { ok: true; raisons: string[] } | { ok: false };
+export type ResultatTypologie =
+  | {
+      ok: true;
+      raisons: string[];
+      /**
+       * Présent quand un seuil compté sur l'entreprise n'est atteint que par
+       * prudence (`effectifRetenuPourSeuil`) : les écrans le portent à côté
+       * de la ligne, pas seulement dans la raison (contre-lecture M1).
+       */
+      effectifAConfirmer?: EffectifsDeclares;
+    }
+  | { ok: false };
 
 /**
  * Évaluation d'un critère de régime : `absent` (non déclaré par
@@ -302,6 +319,102 @@ function evaluerLocauxSommeil(
 }
 
 /**
+ * Le seuil d'effectif d'une typologie, compté sur le nombre que son texte
+ * compte (C37, 2026-09-26). `null` = la typologie n'écrit aucun seuil.
+ *
+ * DEUX NOMBRES, PARCE QUE LES TEXTES EN COMPTENT DEUX. `effectifSurSite` est
+ * celui du site, apprentis compris — la maille que R. 4228-22/-23 décomptent
+ * « par établissement », et le nombre que R. 4227-34 compte parmi les
+ * personnes présentes. `effectifEntreprise` est celui de l'entreprise au sens
+ * de L. 1111-2, sans les apprentis (L. 1111-3 1°) — ce que comptent L. 2311-2
+ * et L. 1311-2.
+ *
+ * CE QUI RESTE ÉCART, ET DANS QUEL SENS. R. 4228-22/-23 décomptent selon
+ * L. 130-1 CSS, dont R. 130-1 III écarte les personnes du 1° de L. 1111-3 : les
+ * apprentis. Le produit ne porte pas « salariés du site, hors apprentis ». Le
+ * site est donc surcompté de ses apprentis, et l'erreur possible est une
+ * seule : un établissement que ses apprentis portent à cinquante lit le local
+ * de restauration (R. 4228-22) au lieu de l'emplacement (R. 4228-23). Les deux
+ * lignes se partagent l'espace ; l'une ou l'autre s'affiche, jamais aucune.
+ *
+ * LE SENS DU DOUTE, SUR LA MAILLE ENTREPRISE. Un effectif d'entreprise sous le
+ * seuil ne rejette que si le site est lui aussi sous le seuil. Si le site
+ * l'atteint, deux explications, que le produit ne sait pas départager : l'écart
+ * tient aux apprentis — et le texte ne les compte pas —, ou l'effectif de
+ * l'entreprise n'a pas été tenu à jour quand le site a grandi ou qu'un site
+ * s'est ajouté. Rejeter ferait disparaître la ligne dans le second cas, sans
+ * que personne puisse s'en apercevoir ; on la retient donc, et la raison le
+ * dit. C'est la dissymétrie d'`evaluerHabitation` : un dirigeant qui lit une
+ * ligne qu'il ne doit pas a une chance de s'en apercevoir, l'inverse n'en a
+ * aucune. Conséquence voulue : par rapport au moteur d'avant, qui comptait le
+ * site partout, la maille entreprise n'ôte aucune ligne, elle en ajoute là où
+ * l'entreprise atteint le seuil sans qu'aucun site ne l'atteigne.
+ *
+ * La borne haute (`effectifMax`) n'est écrite à ce jour que sur la maille
+ * établissement ; sur l'entreprise, elle rejetterait au-dessus, sans doute à
+ * lever — un allègement ne se donne pas sur un nombre qu'on sait dépassé.
+ */
+function evaluerEffectif(
+  t: TypologieApplication,
+  etab: EtablissementMatching,
+):
+  | { ok: true; raison: string; aConfirmer?: EffectifsDeclares }
+  | { ok: false }
+  | null {
+  if (t.effectifMin === undefined && t.effectifMax === undefined) return null;
+
+  // Cette raison est LUE PAR UN DIRIGEANT : le guide « Comprendre » l'affiche
+  // sous « pourquoi chez vous ». Trois formes plutôt qu'une, parce que le
+  // seuil qui compte n'est pas le même selon les bornes déclarées, et qu'une
+  // seule tournure aurait forcé à nommer une borne absente.
+  const seuil =
+    t.effectifMin !== undefined && t.effectifMax !== undefined
+      ? `de ${t.effectifMin} à ${t.effectifMax} salariés`
+      : t.effectifMin !== undefined
+        ? `à partir de ${t.effectifMin} salarié${t.effectifMin > 1 ? "s" : ""}`
+        : `jusqu'à ${t.effectifMax} salariés`;
+
+  if (t.effectifMaille === "entreprise") {
+    const n = etab.effectifEntreprise;
+    if (t.effectifMax !== undefined && n > t.effectifMax) return { ok: false };
+    if (t.effectifMin !== undefined) {
+      // La règle est celle de tous les lecteurs d'un seuil d'entreprise
+      // (`effectif-entreprise.ts`) — une seule, pour que le moteur et les
+      // écrans ne tiennent pas deux doctrines sur le même dossier.
+      const effectifs = {
+        entreprise: n,
+        site: etab.effectifSurSite,
+      };
+      const retenu = effectifRetenuPourSeuil(t.effectifMin, effectifs);
+      if (retenu.valeur < t.effectifMin) return { ok: false };
+      if (retenu.aConfirmer) {
+        return {
+          ok: true,
+          aConfirmer: effectifs,
+          raison: `obligation applicable ${seuil} dans l'entreprise, retenue par prudence, à confirmer. ${phraseEffectifAConfirmer(effectifs, "cette obligation ne vous concerne pas")}`,
+        };
+      }
+    }
+    return {
+      ok: true,
+      // « Déclaré », sans « apprentis non compris » : les dossiers nés avant
+      // C37 portent l'effectif du site recopié, apprentis compris.
+      raison: `effectif déclaré de l'entreprise ${n} — obligation applicable ${seuil}`,
+    };
+  }
+
+  // Maille établissement — et, faute de maille déclarée, le nombre du site,
+  // comme avant C37 (`conformite.test.ts` exige que la maille soit écrite).
+  const n = etab.effectifSurSite;
+  if (t.effectifMin !== undefined && n < t.effectifMin) return { ok: false };
+  if (t.effectifMax !== undefined && n > t.effectifMax) return { ok: false };
+  return {
+    ok: true,
+    raison: `effectif sur site ${n} — obligation applicable ${seuil}`,
+  };
+}
+
+/**
  * Sémantique (amendements 2026-08, cf. `docs/regles-matching.md`) :
  *   - Les critères de régime **positifs** (`travail: true`, `erp: true |
  *     {categories}`, `igh: true | {classes}`, `habitation: true`) forment
@@ -434,32 +547,14 @@ export function matchTypologie(
 
   const raisons = matches.map((r) => (r as { raison: string }).raison);
 
-  // 3. Effectif (ET).
-  if (t.effectifMin !== undefined && etab.effectifSurSite < t.effectifMin) {
-    return { ok: false };
+  // 3. Effectif (ET), compté à la maille que le texte écrit.
+  const effectif = evaluerEffectif(t, etab);
+  if (effectif !== null) {
+    if (!effectif.ok) return { ok: false };
+    raisons.push(effectif.raison);
   }
-  if (t.effectifMax !== undefined && etab.effectifSurSite > t.effectifMax) {
-    return { ok: false };
-  }
-  if (t.effectifMin !== undefined || t.effectifMax !== undefined) {
-    // Cette raison est LUE PAR UN DIRIGEANT : le guide « Comprendre » l'affiche
-    // sous « pourquoi chez vous ». Elle s'écrivait en notation d'intervalle —
-    // « effectif sur site 6 dans la plage [— ; 49] » —, une notation de
-    // développeur, avec un tiret cadratin pour dire « pas de borne ». Personne
-    // hors de ce dépôt ne lit ça.
-    //
-    // Trois formes plutôt qu'une, parce que le seuil qui compte n'est pas le
-    // même selon les bornes déclarées, et qu'une seule tournure aurait forcé à
-    // nommer une borne absente.
-    const n = etab.effectifSurSite;
-    const seuil =
-      t.effectifMin !== undefined && t.effectifMax !== undefined
-        ? `de ${t.effectifMin} à ${t.effectifMax} salariés`
-        : t.effectifMin !== undefined
-          ? `à partir de ${t.effectifMin} salarié${t.effectifMin > 1 ? "s" : ""}`
-          : `jusqu'à ${t.effectifMax} salariés`;
-    raisons.push(`effectif sur site ${n} — obligation applicable ${seuil}`);
-  }
+  const effectifAConfirmer =
+    effectif !== null && effectif.ok ? effectif.aConfirmer : undefined;
 
   // 3 bis. Personnes présentes (salariés + public) et champ R. 4227-34.
   //
@@ -543,7 +638,9 @@ export function matchTypologie(
     return { ok: false };
   }
 
-  return { ok: true, raisons };
+  return effectifAConfirmer
+    ? { ok: true, raisons, effectifAConfirmer }
+    : { ok: true, raisons };
 }
 
 // -----------------------------------------------------------------------------
@@ -791,6 +888,9 @@ export function evaluerObligation(
       equipementsConcernes: [],
       porteur: "etablissement",
       raisons,
+      ...(typo.effectifAConfirmer
+        ? { effectifAConfirmer: typo.effectifAConfirmer }
+        : {}),
     };
   }
 
@@ -811,6 +911,9 @@ export function evaluerObligation(
     equipementsConcernes: eq.declencheurs,
     porteur: "equipement",
     raisons,
+    ...(typo.effectifAConfirmer
+      ? { effectifAConfirmer: typo.effectifAConfirmer }
+      : {}),
   };
 }
 

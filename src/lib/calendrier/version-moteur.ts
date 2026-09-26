@@ -73,6 +73,19 @@ import {
  * supprimée. Le numéro 4 avait été réservé au retour arrière de l'ADR-036 : ce
  * retour, s'il devait se faire, prendrait le numéro suivant — les versions ne
  * sont qu'une suite croissante.
+ *
+ * PAS DE `5` POUR C37 (2026-09-26, `lot/effectif-entreprise`). Les seuils
+ * comptés sur l'entreprise se comparent désormais à `Entreprise.effectif`
+ * (`effectifMaille`, `effectifRetenuPourSeuil`) : des obligations peuvent
+ * entrer dans l'applicabilité. Mais la question de ce fichier est « ce que la
+ * régénération ÉCRIT », et la réponse est NON : les quatre obligations
+ * d'établissement à seuil sont des états permanents (`periodicite: "autre"`),
+ * que le générateur saute, et la formation des élus naît des titres de
+ * salariés. Mesuré par la contre-lecture sur une grille de 256 couples
+ * (site, entreprise) : `genererProchainesVerifications` avant/après, zéro
+ * calendrier différent. Un incrément avait été posé, puis retiré avant toute
+ * livraison — précédent de `MARQUAGE_CONTRACTUEL_LONG`. Le passage du
+ * référentiel à `2026-09-26.9` resynchronise déjà le parc.
  */
 export const VERSION_MOTEUR_CALENDRIER = 4;
 

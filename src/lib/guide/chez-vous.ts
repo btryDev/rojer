@@ -14,6 +14,10 @@
  * node comme le moteur de matching qu'il consomme.
  */
 
+import {
+  phraseEffectifAConfirmer,
+  seuilEntrepriseAtteint,
+} from "@/lib/matching/effectif-entreprise";
 import { determineObligationsApplicables } from "@/lib/matching";
 import type {
   EquipementMatching,
@@ -57,8 +61,14 @@ export type ChezVous = {
     effectif: number;
     /** L'effectif du SITE, pour l'en-tête de la section — pas pour le seuil. */
     effectifSurSite: number;
-    /** true ⇔ effectif de l'entreprise ≥ 11. */
+    /** true ⇔ effectif retenu pour le seuil d'entreprise ≥ 11 (C37). */
     misAJourAnnuel: boolean;
+    /**
+     * La phrase « à confirmer » quand `misAJourAnnuel` ne tient qu'à la
+     * prudence (entreprise déclarée sous onze, site à onze ou plus) ; `null`
+     * sinon.
+     */
+    aConfirmer: string | null;
   };
   domaines: ChezVousDomaine[];
   /**
@@ -162,7 +172,18 @@ export function construireChezVous(
     duerp: {
       effectif: effectifEntreprise,
       effectifSurSite: etab.effectifSurSite,
-      misAJourAnnuel: effectifEntreprise >= SEUIL_MAJ_ANNUELLE_DUERP,
+      ...(() => {
+        // La règle commune aux seuils d'entreprise (C37).
+        const effectifs = {
+          entreprise: effectifEntreprise,
+          site: etab.effectifSurSite,
+        };
+        const s = seuilEntrepriseAtteint(SEUIL_MAJ_ANNUELLE_DUERP, effectifs);
+        return {
+          misAJourAnnuel: s.atteint,
+          aConfirmer: s.aConfirmer ? phraseEffectifAConfirmer(effectifs) : null,
+        };
+      })(),
     },
     domaines,
     categoriesSansObligation,

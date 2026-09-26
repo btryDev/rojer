@@ -28,6 +28,7 @@ function etabErp5(
   return {
     id: "etab-erp5",
     effectifSurSite: 3,
+    effectifEntreprise: 3,
     estEtablissementTravail: true,
     estERP: true,
     estIGH: false,

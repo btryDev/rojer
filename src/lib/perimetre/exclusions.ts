@@ -7,7 +7,9 @@
 // régime refusé lui ferait croire qu'un dossier l'attend.
 //
 //  1. **Refusé à l'entrée** — le produit ne sait pas servir ce cas *du tout*
-//     (ADR-031). Deux cas, et deux seulement. Projeté ci-dessous.
+//     (ADR-031). ~~Deux cas, et deux seulement.~~ Trois depuis le 2026-09-26 :
+//     la propriétaire a plafonné l'effectif de l'entreprise comme celui du
+//     site (« c'est la limite de Rojer »). Projeté ci-dessous.
 //  2. **Servi partiellement et prévenu** — c'est `perimetre/couverture.ts`,
 //     et rien d'autre. Ce module ne le redit pas : la page appelle les deux.
 //  3. **Hors périmètre déclaré** — les articles que le dépouillement a lus et
@@ -37,14 +39,15 @@ import {
   EFFECTIF_MAX,
   etablissementCreationSchema,
 } from "@/lib/etablissements/schema";
+import { entrepriseCreationSchema } from "@/lib/entreprises/schema";
 import { CORPUS, EXCLUSIONS } from "@/lib/referentiels/corpus";
 import type { MotifExclusion } from "@/lib/referentiels/corpus";
 import { nonPorte } from "./non-couverture";
 
 /* ─── 1. Ce qui est refusé à l'entrée ─────────────────────────────────── */
 
-/** Les deux refus, nommés pour être cités — jamais pour être comptés. */
-export type CleRefus = "effectif" | "erp_en_igh";
+/** Les refus, nommés pour être cités — jamais pour être comptés. */
+export type CleRefus = "effectif" | "effectif_entreprise" | "erp_en_igh";
 
 export type RefusAlEntree = {
   cle: CleRefus;
@@ -122,6 +125,29 @@ export function refusAlEntree(): RefusAlEntree[] {
       regime: `Une structure de plus de ${EFFECTIF_MAX} travailleurs`,
       message: effectif,
       indication: `La borne compte les travailleurs, jamais le public reçu : un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois reste dans la cible. Au-delà, des obligations que cet outil ne porte pas s'ajoutent — ${nonPorte("le programme annuel de prévention des risques")}, notamment — et votre service de prévention et de santé au travail est le premier interlocuteur pour les cadrer. Un dossier déjà ouvert n'est jamais fermé s'il franchit le seuil en cours de route : il porte alors ce manque, écrit, dans la partie ci-dessous.`,
+    });
+  }
+
+  // La même borne, sur l'effectif de l'ENTREPRISE (décision de la
+  // propriétaire du 2026-09-26, ADR-031 : « c'est la limite de Rojer »).
+  // Interrogée sur SA porte — la création d'une entreprise —, comme les deux
+  // autres, pour que la page ne l'annonce que tant que la porte la fait.
+  const sondeEntreprise = entrepriseCreationSchema.safeParse({
+    raisonSociale: "Sonde de périmètre",
+    codeNaf: "56.10A",
+    effectif: EFFECTIF_MAX + 1,
+    adresse: "1 rue de la Sonde, 75000 Paris",
+  });
+  const effectifEntreprise = sondeEntreprise.success
+    ? null
+    : (sondeEntreprise.error.issues.find((i) => i.path[0] === "effectif")
+        ?.message ?? null);
+  if (effectifEntreprise !== null) {
+    refus.push({
+      cle: "effectif_entreprise",
+      regime: `Une entreprise de plus de ${EFFECTIF_MAX} salariés, tous établissements confondus`,
+      message: effectifEntreprise,
+      indication: `La borne vaut pour l'entreprise comme pour chacun de ses sites : les seuils qui changent la nature des obligations se comptent sur l'entreprise. Au-delà, des obligations que cet outil ne porte pas s'ajoutent — ${nonPorte("le programme annuel de prévention des risques")}, notamment — et votre service de prévention et de santé au travail est le premier interlocuteur pour les cadrer. Un dossier déjà ouvert n'est jamais fermé si l'entreprise franchit le seuil en cours de route : il porte alors ce manque, écrit, dans la partie ci-dessous.`,
     });
   }
 

@@ -17,6 +17,7 @@ const h = vi.hoisted(() => {
     findUnique: vi.fn(async () => ({
       id: "etab-1",
       effectifSurSite: 6,
+      entreprise: { effectif: 6 },
       estEtablissementTravail: true,
       estERP: false,
       estIGH: false,

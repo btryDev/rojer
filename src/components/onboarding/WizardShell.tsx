@@ -523,6 +523,11 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
       />
       <input
         type="hidden"
+        name="effectifEntreprise"
+        value={state.effectifEntreprise}
+      />
+      <input
+        type="hidden"
         name="estEtablissementTravail"
         value={state.estEtablissementTravail ? "true" : "false"}
       />

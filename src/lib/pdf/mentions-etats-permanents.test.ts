@@ -43,6 +43,7 @@ function ligne(p: Partial<LigneEtatPermanent> & { id?: string }): LigneEtatPerma
     pieceAttendue: null,
     declareLe: null,
     note: null,
+    aConfirmer: null,
     ...p,
   };
 }

@@ -24,7 +24,11 @@ const IL_Y_A_2_MOIS = new Date("2026-07-20T10:00:00Z");
 
 const etat = (effectif: number, version: Date | null): EtatDuerpLu =>
   evaluerEtatDuerp(
-    { ouvert: true, dateDerniereVersion: version, effectif },
+    {
+      ouvert: true,
+      dateDerniereVersion: version,
+      effectifs: { entreprise: effectif, site: effectif },
+    },
     LE_JOUR,
   );
 

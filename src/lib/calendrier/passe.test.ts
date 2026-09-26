@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { debutDuJour } from "@/lib/dates";
 import type { EtablissementFaux, LigneFausse } from "./faux-prisma";
-import { lireEntrees, planifier, type ClientLecture } from "./passe";
+import { lireEntrees, planifier, preparer, type ClientLecture } from "./passe";
 
 // La couture du lot 2b (ADR-036, 2026-09-18) : `regenererUnePasse` = lire,
 // planifier, écrire. Ce fichier tient les deux premiers temps et leur jointure
@@ -36,6 +36,7 @@ function poserEtablissement(): EtablissementFaux {
     id: ETAB_ID,
     userId: USER_ID,
     effectifSurSite: 5,
+    effectifEntreprise: 5,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: false,
@@ -92,6 +93,25 @@ describe("lireEntrees — la lecture, sans horloge", () => {
     expect(lecture.existantes[0].suiviDepuis).toEqual(
       new Date("2026-03-01T09:30:00Z"),
     );
+  });
+
+  it("lit l'effectif de l'ENTREPRISE, pas celui du site, pour un seuil d'entreprise (C37, M4)", async () => {
+    // Les deux nombres DIFFÈRENT : un site de cinq dans une entreprise de
+    // quinze. Le CSE (L. 2311-2) se compte sur l'entreprise ; une projection
+    // qui lirait le site le perdrait. Le magasin n'a plus de repli qui
+    // égaliserait les deux nombres.
+    const etab = poserEtablissement();
+    etab.effectifEntreprise = 15;
+    const maintenant = new Date("2026-09-26T10:00:00Z");
+    const cse = async () =>
+      [
+        ...(preparer(await lireEntrees(client, ETAB_ID), maintenant).options
+          .obligationsEncoreApplicables ?? []),
+      ].some((k) => k.includes("prevention-etablissement-cse"));
+    expect(await cse()).toBe(true);
+
+    etab.effectifEntreprise = 5;
+    expect(await cse()).toBe(false);
   });
 
   it("refuse un établissement inconnu", async () => {

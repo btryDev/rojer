@@ -435,6 +435,7 @@ describe("classes d'IGH — la liste du modèle est celle de l'article R. 146-4"
     // l'objet validé, et n'atteint donc jamais Prisma.
     const regime = {
       effectifSurSite: 12,
+      effectifEntreprise: 12,
       estEtablissementTravail: true,
       estERP: false,
       estIGH: true,

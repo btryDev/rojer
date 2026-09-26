@@ -74,8 +74,9 @@ export function EntrepriseForm({
       <ChampBoard
         id="effectif"
         name="effectif"
-        label="Effectif"
+        label="Salariés de l'entreprise"
         requis
+        aide="Tous établissements confondus, apprentis non compris (art. L. 1111-3). Les seuils de onze et de cinquante salariés — comité social et économique, règlement intérieur, mise à jour annuelle du document unique — se comptent sur ce nombre : tenez-le à jour quand un site s'ajoute ou grandit."
         // La molette d'un champ nombre modifie une valeur déjà saisie sans
         // que rien ne le signale ; la borne reste au serveur.
         type="text"
@@ -101,6 +102,11 @@ export function EntrepriseForm({
       {state.status === "success" && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
           Enregistré.
+        </p>
+      )}
+      {state.status === "success_avec_avertissement" && (
+        <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+          {state.message}
         </p>
       )}
 

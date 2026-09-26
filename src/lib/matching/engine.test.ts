@@ -22,6 +22,7 @@ function etabBureau(over: Partial<EtablissementMatching> = {}): EtablissementMat
   return {
     id: "etab-bureau",
     effectifSurSite: 12,
+    effectifEntreprise: 12,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: false,
@@ -43,6 +44,7 @@ function etabRestoErpCat5(
   return {
     id: "etab-resto",
     effectifSurSite: 8,
+    effectifEntreprise: 8,
     estEtablissementTravail: true,
     estERP: true,
     estIGH: false,
@@ -62,6 +64,7 @@ function etabErpCat3(): EtablissementMatching {
   return {
     id: "etab-centre-comm",
     effectifSurSite: 45,
+    effectifEntreprise: 45,
     estEtablissementTravail: true,
     estERP: true,
     estIGH: false,
@@ -80,6 +83,7 @@ function etabIgh(): EtablissementMatching {
   return {
     id: "etab-igh",
     effectifSurSite: 600,
+    effectifEntreprise: 600,
     estEtablissementTravail: true,
     estERP: true,
     estIGH: true,
@@ -98,6 +102,7 @@ function etabHabitationPure(): EtablissementMatching {
   return {
     id: "etab-hab",
     effectifSurSite: 0,
+    effectifEntreprise: 0,
     estEtablissementTravail: false,
     estERP: false,
     estIGH: false,
@@ -796,6 +801,7 @@ describe("moteur matching — cohérence avec le référentiel", () => {
     const etabComplet: EtablissementMatching = {
       id: "etab-complet",
       effectifSurSite: 800,
+      effectifEntreprise: 800,
       estEtablissementTravail: true,
       estERP: true,
       estIGH: true,
@@ -1204,6 +1210,7 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
   const etabTousRegimes: EtablissementMatching = {
     id: "etab-legacy",
     effectifSurSite: 80,
+    effectifEntreprise: 80,
     estEtablissementTravail: true,
     estERP: true,
     estIGH: true,
@@ -1535,6 +1542,7 @@ describe("moteur matching — contrôle d'étanchéité des installations frigor
     // régime : la typologie déclare travail ET ERP, en disjonction.
     const commerceSansSalarie = etabRestoErpCat5({
       effectifSurSite: 0,
+      effectifEntreprise: 0,
       estEtablissementTravail: false,
     });
     expect(
@@ -2055,6 +2063,7 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
       etabRestoErpCat5({
         categorieErp: "N4",
         effectifSurSite: 8,
+        effectifEntreprise: 8,
         personnesPresentesHabituellement: null,
       }),
       [],
@@ -2072,6 +2081,7 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
       etabRestoErpCat5({
         categorieErp: "N4",
         effectifSurSite: 8,
+        effectifEntreprise: 8,
         personnesPresentesHabituellement: 200,
       }),
       [],
@@ -2093,6 +2103,7 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
       etabRestoErpCat5({
         categorieErp: "N4",
         effectifSurSite: 8,
+        effectifEntreprise: 8,
         personnesPresentesHabituellement: 20,
       }),
       [],
@@ -2107,6 +2118,7 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
     const res = determineObligationsApplicables(
       etabBureau({
         effectifSurSite: 8,
+        effectifEntreprise: 8,
         personnesPresentesHabituellement: null,
       }),
       [alarme(), extincteur()],

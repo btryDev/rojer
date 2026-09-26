@@ -12,6 +12,7 @@ const etablissement = (
 ): EtablissementMatching => ({
   id: "etab",
   effectifSurSite: 10,
+  effectifEntreprise: 10,
   estEtablissementTravail: true,
   estERP: false,
   estIGH: false,

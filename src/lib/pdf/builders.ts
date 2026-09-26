@@ -530,7 +530,10 @@ export async function construireDossierConformiteData(
     {
       ouvert: duerp !== null,
       dateDerniereVersion: derniereVersion?.createdAt ?? null,
-      effectif: etab.entreprise.effectif,
+      effectifs: {
+        entreprise: etab.entreprise.effectif,
+        site: etab.effectifSurSite,
+      },
     },
     now,
   );

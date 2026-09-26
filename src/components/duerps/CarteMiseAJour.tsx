@@ -1,3 +1,4 @@
+import type { EffectifsDeclares } from "@/lib/matching/effectif-entreprise";
 import {
   CHAPEAU_MISE_A_JOUR,
   declencheursMiseAJour,
@@ -36,7 +37,11 @@ import {
  * Toutes les phrases viennent de `lib/duerps/mise-a-jour.ts`, où elles se
  * vérifient. Ce composant les met en page, il ne décide de rien.
  */
-export function CarteMiseAJour({ effectif }: { effectif: number }) {
+export function CarteMiseAJour({
+  effectifs,
+}: {
+  effectifs: EffectifsDeclares;
+}) {
   return (
     <section className="carte-board px-7 py-6 sm:px-8">
       <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
@@ -49,7 +54,7 @@ export function CarteMiseAJour({ effectif }: { effectif: number }) {
         {CHAPEAU_MISE_A_JOUR}
       </p>
       <ul className="m-0 mt-4 list-none p-0">
-        {declencheursMiseAJour(effectif).map((d) => (
+        {declencheursMiseAJour(effectifs).map((d) => (
           <li
             key={d.rang}
             className="flex items-start gap-4 border-t border-[color:var(--board-slate-line)] py-3.5"

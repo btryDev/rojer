@@ -6,6 +6,7 @@ import {
 } from "@/lib/matching/personnes-presentes";
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChampBoard, SectionChamps } from "@/components/ui-kit";
 import {
@@ -62,6 +63,12 @@ type Props = {
   valeursInitiales?: Valeurs;
   libelleSubmit: string;
   labelAnnuler?: { libelle: string; href: string };
+  /**
+   * L'entreprise du site : son effectif déclaré est rappelé sous celui du
+   * site, avec le lien pour le mettre à jour (C37). Requis — l'aide du champ y
+   * renvoie, et une consigne sans chemin ne se suit pas.
+   */
+  entreprise: { id: string; effectif: number };
 };
 
 export function EtablissementForm({
@@ -69,6 +76,7 @@ export function EtablissementForm({
   valeursInitiales,
   libelleSubmit,
   labelAnnuler,
+  entreprise,
 }: Props) {
   const [state, formAction, pending] = useActionState<
     EtablissementActionState,
@@ -133,11 +141,13 @@ export function EtablissementForm({
             erreur={err("codeNaf")}
           />
 
+          <div>
           <ChampBoard
             id="effectifSurSite"
             name="effectifSurSite"
-            label="Effectif sur site"
+            label="Travailleurs sur ce site"
             requis
+            aide="Salariés et apprentis qui y travaillent régulièrement. L'effectif de l'entreprise, sur lequel se comptent les seuils de onze et de cinquante salariés, se modifie sur la fiche de l'entreprise — lien ci-dessous."
             // Un champ `type="number"` change de valeur à la molette, sur une
             // saisie déjà faite et sans que rien ne le signale. Le contrôle de
             // borne reste au serveur, où il est de toute façon rejoué.
@@ -146,6 +156,15 @@ export function EtablissementForm({
             defaultValue={valeursInitiales?.effectifSurSite}
             erreur={err("effectifSurSite")}
           />
+          {/* Un lien et non un champ : l'entreprise a sa propre fiche, et
+              l'effectif qu'elle porte vaut pour tous ses sites. Le rappeler
+              ici, c'est ce qui permet de le corriger quand un site s'ajoute
+              ou grandit. */}
+          <LienEffectifEntreprise
+            entrepriseId={entreprise.id}
+            effectif={entreprise.effectif}
+          />
+          </div>
 
           {/* Fiche « Renseignements généraux » du registre de sécurité
               (CCH R. 143-44). La donnée vit ici, le registre la lit — il ne

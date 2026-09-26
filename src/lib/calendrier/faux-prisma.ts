@@ -38,6 +38,13 @@ export type EtablissementFaux = {
   /** Le propriétaire, pour le prédicat `entreprise: { userId }` (ADR-005). */
   userId: string;
   effectifSurSite: number;
+  /**
+   * `Entreprise.effectif`, rendu par `include: { entreprise }` (C37). REQUIS,
+   * et sans repli sur le site : un repli égalisait les deux nombres dans tout
+   * test qui passe par ce magasin, si bien qu'une projection lisant le site à
+   * la place de l'entreprise restait verte (contre-lecture M4).
+   */
+  effectifEntreprise: number;
   estEtablissementTravail: boolean;
   estERP: boolean;
   estIGH: boolean;
@@ -261,8 +268,18 @@ export function fauxPrisma(db: Magasin) {
       const etab = db.etablissements.find((e) => e.id === id);
       if (!etab) return null;
 
-      const sortie: Record<string, unknown> = { ...etab };
+      // `effectifEntreprise` n'est PAS une colonne de l'établissement : il ne
+      // sort que par `include: { entreprise }`, comme en base. Le laisser
+      // passer dans l'objet rendu faisait lire le nombre par la porte
+      // « déjà projeté » de `projeterEtablissement`, et la lecture de
+      // `entreprise.effectif` n'était plus éprouvée par personne.
+      const { effectifEntreprise, ...colonnes } = etab;
+      const sortie: Record<string, unknown> = { ...colonnes };
       for (const [relation, options] of Object.entries(include ?? {})) {
+        if (relation === "entreprise") {
+          sortie.entreprise = { effectif: effectifEntreprise };
+          continue;
+        }
         const liste = (etab as unknown as Record<string, unknown[]>)[relation];
         if (liste === undefined) {
           throw new Error(

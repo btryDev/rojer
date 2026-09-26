@@ -62,7 +62,8 @@ import {
   aUnRendezVous,
   LIBELLE_AUCUNE_VERIFICATION,
 } from "@/lib/calendrier/etats";
-import { ageEnMois, type EtatDuerp } from "./duerp";
+import { ageEnMois, EFFECTIF_MAJ_ANNUELLE, type EtatDuerp } from "./duerp";
+import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import { TIERS_LUI_MEME_OBLIGATOIRE } from "@/lib/prestataires/domaines";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 
@@ -306,7 +307,9 @@ export function genererRecommandations(
         kind: "duerp_a_jour",
         cle: "duerp:maj-echue",
         titre: "DUERP à mettre à jour",
-        sousTitre: `Dernière version il y a ${ageEnMois(duerp.ageJours ?? 0)} mois`,
+        sousTitre: duerp.majAnnuelleAConfirmer
+          ? `Dernière version il y a ${ageEnMois(duerp.ageJours ?? 0)} mois — ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}`
+          : `Dernière version il y a ${ageEnMois(duerp.ageJours ?? 0)} mois`,
         href,
         priorite: 5,
         date: duerp.dateLimiteMaj ?? undefined,
@@ -316,7 +319,9 @@ export function genererRecommandations(
         kind: "duerp_a_jour",
         cle: "duerp:rappel-maj",
         titre: "DUERP à mettre à jour",
-        sousTitre: "Mise à jour annuelle à prévoir",
+        sousTitre: duerp.majAnnuelleAConfirmer
+          ? `Mise à jour annuelle à prévoir — ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}`
+          : "Mise à jour annuelle à prévoir",
         href,
         priorite: 5,
         date: duerp.dateLimiteMaj ?? undefined,

@@ -19,6 +19,11 @@ export type OnboardingState = {
 
   codeNaf: string;
   effectifSurSite: string; // saisie texte, convertie en number au submit
+  // L'effectif de l'ENTREPRISE, apprentis non compris (L. 1111-2, L. 1111-3) —
+  // le nombre sur lequel se comptent les seuils du CSE et du règlement
+  // intérieur. Demandé depuis le 2026-09-26 (C37) ; il était recopié de
+  // l'effectif du site, apprentis compris.
+  effectifEntreprise: string;
 
   estEtablissementTravail: boolean;
   estERP: boolean;
@@ -52,6 +57,7 @@ export const VALEURS_INITIALES: OnboardingState = {
   adresseVille: "",
   codeNaf: "",
   effectifSurSite: "",
+  effectifEntreprise: "",
   estEtablissementTravail: true,
   estERP: false,
   estIGH: false,

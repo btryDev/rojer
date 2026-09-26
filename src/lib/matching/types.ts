@@ -14,6 +14,7 @@ import type {
 // Type seul : l'import est effacé à la compilation, il ne crée donc pas de
 // cycle avec `prescriptions/schema.ts`, qui importe une valeur d'ici.
 import type { SourcePrescription } from "@/lib/prescriptions/schema";
+import type { EffectifsDeclares } from "./effectif-entreprise";
 
 /**
  * Types utilisés par le moteur de matching (étape 5, ADR-005).
@@ -24,7 +25,23 @@ import type { SourcePrescription } from "@/lib/prescriptions/schema";
 
 export type EtablissementMatching = {
   id: string;
+  /**
+   * Les travailleurs du SITE, salariés et apprentis — la question posée à la
+   * création. C'est le nombre des textes qui comptent l'établissement ou des
+   * personnes présentes (R. 4228-22/-23, R. 4227-34).
+   */
   effectifSurSite: number;
+  /**
+   * L'effectif de l'ENTREPRISE (`Entreprise.effectif`), tous établissements
+   * confondus, apprentis non compris (L. 1111-2, L. 1111-3 1°). C'est le
+   * nombre des seuils que le texte compte sur l'entreprise — CSE, règlement
+   * intérieur (`TypologieApplication.effectifMaille`).
+   *
+   * Requis, pour la raison que portent les champs ci-dessous : une projection
+   * qui l'omettrait compilerait, et le moteur retomberait sur un nombre qui
+   * n'est pas le sien.
+   */
+  effectifEntreprise: number;
   estEtablissementTravail: boolean;
   estERP: boolean;
   estIGH: boolean;
@@ -134,6 +151,12 @@ export type ObligationApplicable = {
    * référentiel pour tous les équipements déclencheurs.
    */
   surcharges?: Record<string, SurchargePeriodicite>;
+  /**
+   * Les deux effectifs déclarés, quand la ligne n'est retenue que par la
+   * prudence d'un seuil compté sur l'entreprise (`effectifRetenuPourSeuil`) —
+   * absent sinon. Les écrans l'affichent « à confirmer » (C37, M1).
+   */
+  effectifAConfirmer?: EffectifsDeclares;
 };
 
 // -----------------------------------------------------------------------------

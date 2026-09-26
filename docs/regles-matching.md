@@ -129,8 +129,8 @@ ou de classe, et l'effectif s'appliquent **en ET** :
 | `igh: true`      | matché si l'établissement est IGH                                                                                                                                    |
 | `igh: { classes: [...] }`    | matché si l'établissement est IGH **et** sa `classeIgh` appartient à la liste — **ou n'est pas renseignée**, auquel cas l'obligation est retenue « à confirmer » (2026-09-03, même dissymétrie que la famille : la question de la classe ayant été retirée du produit, tout dossier neuf porte `null`, et rejeter reviendrait à faire disparaître en silence la première obligation qu'on bornerait ainsi)                                                                            |
 | `habitation: true`| matché si `estHabitation = true`                                                                                                                                    |
-| `effectifMin`    | requis (ET) : `effectifSurSite` ≥ `effectifMin` (bornes incluses)                                                                                                    |
-| `effectifMax`    | requis (ET) : `effectifSurSite` ≤ `effectifMax` (bornes incluses)                                                                                                    |
+| `effectifMin`    | requis (ET) : l'effectif de la maille (`effectifMaille`) ≥ `effectifMin` (bornes incluses). Maille `entreprise` : `Entreprise.effectif` (L. 1111-2, apprentis non compris, L. 1111-3) ; sous le seuil alors que `effectifSurSite` l'atteint → retenu « à confirmer ». Maille `etablissement` : `effectifSurSite` (C37) |
+| `effectifMax`    | requis (ET) : l'effectif de la maille (`effectifMaille`) ≤ `effectifMax` (bornes incluses)                                                                                                    |
 | `personnesPresentesMin` | requis (ET) : le total « personnes occupées ou réunies » (salariés + public) doit l'atteindre. Le chiffre déclaré tranche dans les deux sens ; à défaut le moteur ne connaît que des **bornes basses** — plancher de public de la catégorie d'ERP (1ʳᵉ 1501, 2ᵉ 701, 3ᵉ 301 ; la 4ᵉ et la 5ᵉ n'en donnent pas), puis `effectifSurSite`. Au-dessus d'une borne : applicable. En dessous : « à confirmer » si l'établissement est ERP, rejet s'il est de travail seul (pas de public, l'effectif est le total) |
 
 **Règle importante** : si la typologie d'une obligation est vide (aucun
@@ -322,7 +322,8 @@ Toute obligation qui entre dans `src/lib/referentiels/conformite/` doit :
    pas de double échéance. C'est ce qui permet aux six lignes de `GE 4 § 1` de
    coexister sans six exceptions écrites à la main.
 5. Si sa description énonce un seuil d'effectif, le déclarer en
-   `effectifMin` / `effectifMax` — un seuil écrit en prose et jamais encodé
+   `effectifMin` / `effectifMax`, avec la maille que le texte compte
+   (`effectifMaille` : `entreprise` ou `etablissement` — obligatoire, C37) — un seuil écrit en prose et jamais encodé
    est un seuil qui n'existe pas. Un test le vérifie également.
 
 Les tests du moteur (`src/lib/matching/engine.test.ts`) et les tests de

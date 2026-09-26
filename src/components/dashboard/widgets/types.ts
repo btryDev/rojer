@@ -81,6 +81,8 @@ type EtablissementLite = {
     raisonSociale: string;
     siret: string | null;
     codeNaf: string;
+    /** L'effectif déclaré de l'entreprise (C37), rappelé sous celui du site. */
+    effectif: number;
   };
 };
 

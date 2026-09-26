@@ -756,7 +756,10 @@ export const getDashboardData = cache(async function getDashboardData(
         // L'effectif de l'entreprise conditionne la mise à jour annuelle
         // (art. R. 4121-2) — cf. `./duerp`.
         etablissement: {
-          select: { entreprise: { select: { effectif: true } } },
+          select: {
+            effectifSurSite: true,
+            entreprise: { select: { effectif: true } },
+          },
         },
       },
     }),
@@ -802,7 +805,12 @@ export const getDashboardData = cache(async function getDashboardData(
     {
       ouvert: duerp !== null,
       dateDerniereVersion: derniereVersion?.createdAt ?? null,
-      effectif: duerp?.etablissement.entreprise.effectif ?? 0,
+      // Sans DUERP, rien n'est ouvert et l'effectif ne décide de rien :
+      // `ouvert: false` tranche avant lui.
+      effectifs: {
+        entreprise: duerp?.etablissement.entreprise.effectif ?? 0,
+        site: duerp?.etablissement.effectifSurSite ?? 0,
+      },
     },
     now,
   );

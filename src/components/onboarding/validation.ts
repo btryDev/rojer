@@ -19,7 +19,10 @@ import {
   MESSAGE_NOMBRE_DE_PERSONNES,
   nombreDePersonnesADemander,
 } from "@/lib/matching/personnes-presentes";
-import { EFFECTIF_MAX } from "@/lib/onboarding/schema";
+import {
+  EFFECTIF_MAX,
+  MESSAGE_EFFECTIF_ENTREPRISE,
+} from "@/lib/onboarding/schema";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
 
@@ -63,13 +66,34 @@ export type Blocage = {
  * couverts est dans la cible, et sa catégorie d'ERP ne dit rien de son
  * effectif.
  */
+const AU_DELA_DE_LA_BORNE =
+  "Au-delà, les obligations changent de nature — CSSCT dédiée, programme annuel de prévention présenté au CSE, bilan annuel — et l'outil ne les porte pas.";
+
 export function refusEffectif(effectifSurSite: string): Blocage | null {
   const n = Number(effectifSurSite);
   if (!Number.isInteger(n) || n <= EFFECTIF_MAX) return null;
   return {
     champ: "effectifSurSite",
     perimetre: true,
-    message: `${n} salariés : Rojer prend en charge les structures jusqu'à ${EFFECTIF_MAX} salariés. Au-delà, les obligations changent de nature — CSSCT dédiée, programme annuel de prévention présenté au CSE, bilan annuel — et l'outil ne les porte pas.`,
+    message: `${n} salariés : Rojer prend en charge les structures jusqu'à ${EFFECTIF_MAX} salariés. ${AU_DELA_DE_LA_BORNE}`,
+  };
+}
+
+/**
+ * La même borne, sur l'effectif de l'ENTREPRISE (décision de la propriétaire
+ * du 2026-09-26, ADR-031 : « c'est la limite de Rojer »). Même mécanisme que
+ * `refusEffectif`, même ton ; la phrase dit « salariés de l'entreprise ».
+ */
+export function refusEffectifEntreprise(
+  effectifEntreprise: string,
+): Blocage | null {
+  const saisi = effectifEntreprise.trim();
+  const n = Number(saisi);
+  if (saisi === "" || !Number.isInteger(n) || n <= EFFECTIF_MAX) return null;
+  return {
+    champ: "effectifEntreprise",
+    perimetre: true,
+    message: `${n} salariés de l'entreprise : Rojer prend en charge les structures jusqu'à ${EFFECTIF_MAX} salariés dans l'entreprise, tous établissements confondus. ${AU_DELA_DE_LA_BORNE}`,
   };
 }
 
@@ -117,7 +141,13 @@ export function validerIdentite(s: OnboardingState): Blocage | null {
       champ: "effectifSurSite",
       message: "Indiquez un effectif (au moins 1).",
     };
-  return refusEffectif(s.effectifSurSite);
+  const refus = refusEffectif(s.effectifSurSite);
+  if (refus) return refus;
+  // Lu comme le serveur le lira, mais le vide n'est pas un zéro.
+  const e = s.effectifEntreprise.trim();
+  if (e === "" || !Number.isInteger(Number(e)) || Number(e) < 0)
+    return { champ: "effectifEntreprise", message: MESSAGE_EFFECTIF_ENTREPRISE };
+  return refusEffectifEntreprise(s.effectifEntreprise);
 }
 
 /**

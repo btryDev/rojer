@@ -27,6 +27,7 @@ const complet: OnboardingState = {
   adresseVille: "Brest",
   codeNaf: "56.10A",
   effectifSurSite: "4",
+  effectifEntreprise: "4",
   estEtablissementTravail: true,
 };
 
@@ -388,5 +389,19 @@ describe("étape 2 — les deux questions dont la présence dépend d'une autre 
         comporteLocauxSommeilPublic: "",
       })?.champ,
     ).toBe("comporteLocauxSommeilPublic");
+  });
+});
+
+describe("étape 1 — l'effectif de l'entreprise (C37)", () => {
+  it("est exigé : le vide n'est pas un zéro", () => {
+    expect(validerIdentite({ ...complet, effectifEntreprise: "" })?.champ).toBe(
+      "effectifEntreprise",
+    );
+  });
+
+  it("admet zéro — une entreprise dont le seul travailleur est un apprenti", () => {
+    expect(
+      validerIdentite({ ...complet, effectifSurSite: "1", effectifEntreprise: "0" }),
+    ).toBeNull();
   });
 });

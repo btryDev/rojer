@@ -10,6 +10,7 @@ function etab(p: Partial<EtablissementMatching> = {}): EtablissementMatching {
   return {
     id: "etab-1",
     effectifSurSite: 6,
+    effectifEntreprise: 6,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: false,

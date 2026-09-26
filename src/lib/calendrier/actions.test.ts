@@ -100,6 +100,7 @@ function poserEtablissement(
     id,
     userId: options.userId ?? USER_ID,
     effectifSurSite: 5,
+    effectifEntreprise: 5,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: false,

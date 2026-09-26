@@ -1685,9 +1685,11 @@ l'avis, par choix — `docs/rgpd.md` § 2.3). Non couverts : 26 + 1 = 27.
 - **Chapeau Typologie**, `QUESTION_CATEGORIE` : « s'il y en a un ».
 - **Comptage de l'effectif.** Le repère dit que les seuils de onze se comptent
   sur l'entreprise, apprentis non compris (L. 1111-3, lu, entré au corpus en
-  `sans_objet`) ; L. 2311-2 renvoie bien à L. 1111-2 (lu). *Non corrigé : le
+  `sans_objet`) ; L. 2311-2 renvoie bien à L. 1111-2 (lu). ~~*Non corrigé : le
   champ reste un effectif de site « salariés + apprentis » ; le repère le dit,
-  il ne le recompte pas.*
+  il ne le recompte pas.*~~ *[corrigé le 2026-09-26, C37 : l'effectif de
+  l'entreprise est demandé pour lui-même et le moteur y compare les seuils
+  d'entreprise.]*
 - **R. 143-19** : la majoration du public par le personnel porte sa condition
   (« n'occupant pas des locaux indépendants » dotés de leurs dégagements).
 - **Petits** : ADR-025 rendu grammatical ; alarme « Obligatoire selon
@@ -2203,6 +2205,177 @@ absente, DUERP annoncé malgré l'échec du rendu, bureau lisant la commission).
 **Non éprouvé** : le câblage de la route (`controle-zip/route.ts`), qu'aucun
 test n'importe. Le README est éprouvé sur ses entrées, pas sur ce que la
 route lui passe.
+
+### C37 · 2026-09-26 — Chaque seuil d'effectif compté sur le nombre que son texte compte
+
+**Le constat** (contre-lecture de C36, revérifié) : l'onboarding demandait un
+seul nombre, « Effectif travailleur » (« Salariés + apprentis présents
+régulièrement »), recopié dans `Entreprise.effectif`, et le moteur comparait
+les cinq seuils d'effectif du référentiel à `effectifSurSite`. Les textes ne
+comptent pas tous la même chose.
+
+**Relu de première main** le 2026-09-26 (page de l'article, structure lue à
+l'aveugle, phrase décisive confirmée par une seconde lecture ciblée) :
+
+| Texte | Seuil | Maille | Apprentis | Phrase décisive |
+|---|---|---|---|---|
+| L. 2311-2 (CSE) | ≥ 11 | entreprise | exclus | « Les modalités de calcul des effectifs sont celles prévues aux articles L. 1111-2 et L. 1251-54. » |
+| L. 1111-2 | — | entreprise | (règle) | « Pour la mise en oeuvre des dispositions du présent code, les effectifs de l'entreprise sont calculés conformément aux dispositions suivantes : » |
+| L. 1111-3 | — | entreprise | exclus | « Ne sont pas pris en compte dans le calcul des effectifs de l'entreprise : 1° Les apprentis » |
+| L. 2315-18 (formation des élus) | suit le CSE | entreprise | exclus | pas de seuil propre ; les élus n'existent qu'au seuil de L. 2311-2 |
+| R. 4121-2 1° (mise à jour annuelle) | ≥ 11 | entreprise | exclus (L. 1111-2 par défaut) | « Au moins chaque année dans les entreprises d'au moins onze salariés » — aucune règle de calcul propre |
+| L. 4121-3-1 III 1° (programme annuel) | ≥ 50 | entreprise | exclus (L. 1111-2 par défaut) | « Pour les entreprises dont l'effectif est supérieur ou égal à cinquante salariés » — aucune règle de calcul propre |
+| L. 1311-2 (règlement intérieur) | ≥ 50 | entreprise ou établissement | exclus (L. 1111-2 par défaut) | « L'établissement d'un règlement intérieur est obligatoire dans les entreprises ou établissements employant au moins cinquante salariés. » |
+| R. 4228-22 / R. 4228-23 (restauration) | ≥ 50 / < 50 | établissement | exclus (L. 130-1 CSS → R. 130-1 III) | « L'effectif salarié et le franchissement du seuil de cinquante salariés sont déterminés selon les modalités prévues à l'article L. 130-1 du code de la sécurité sociale. Lorsque l'entreprise comporte plusieurs établissements, les effectifs sont décomptés par établissement. » |
+| R. 130-1 III CSS | — | — | exclus | « Les personnes mentionnées aux 1°, 2°, 4° et 6° de l'article L. 1111-3 du code du travail ne sont pas prises en compte pour la détermination de l'effectif mentionné au I sauf en ce qui concerne l'application des dispositions relatives à la tarification des risques d'accidents du travail et de maladies professionnelles. » |
+| R. 4227-34 (personnes présentes) | > 50 | site | **comptés** | « occupées ou réunies habituellement » — déjà au corpus, non relu ici |
+
+**Deux nombres, parce que les textes en comptent deux.** Un seul ne suffisait
+pas : retirer les apprentis du nombre du site aurait fait tomber des
+personnes présentes (R. 4227-34, où `personnes-presentes.ts` traite l'effectif
+d'un établissement de travail seul comme le total) ; les y laisser surcompte
+les seuils d'entreprise.
+
+**Ce qui a changé** :
+- l'onboarding demande « Travailleurs sur ce site » (salariés et apprentis —
+  `effectifSurSite`) ET « Salariés de l'entreprise » (tous établissements,
+  apprentis non compris, art. L. 1111-3 — `Entreprise.effectif`, qui n'est plus
+  recopié du site). Le repère des seuils de onze se lit sur ce second nombre.
+  L'édition de l'entreprise porte la même définition ; zéro y est admis (une
+  entreprise dont le seul travailleur est un apprenti), le vide ne l'est pas ;
+- `TypologieApplication.effectifMaille` : `"entreprise"` pour le CSE, la
+  formation de ses élus et le règlement intérieur, `"etablissement"` pour les
+  deux lignes de restauration ; `evaluerEffectif` (`matching/engine.ts`) lit le
+  nombre correspondant. Sur la maille entreprise, un effectif d'entreprise sous
+  le seuil ne rejette que si le site est lui aussi sous le seuil ; sinon la
+  ligne est retenue « à confirmer » (apprentis ou effectif d'entreprise
+  périmé : le produit ne sait pas lequel). Conséquence : aucune ligne ne
+  disparaît par rapport au moteur d'avant ; des lignes apparaissent pour une
+  entreprise déclarée au seuil dont aucun site ne l'atteint ;
+- `perimetre/couverture.ts` annonce le programme annuel sur l'effectif de
+  l'entreprise (ou du site au seuil, par prudence) ;
+- `REFERENTIEL_VERSION` 2026-09-26.9 (169 obligations, empreinte
+  `169-b35a654fd2941809`), ~~`VERSION_MOTEUR_CALENDRIER` 5 — **écriture sur
+  tout le parc à la prochaine ouverture, à signaler à la propriétaire avant de
+  fusionner**~~ *[retiré le 2026-09-26 après contre-lecture : la réponse à la
+  question du moteur est NON — les obligations d'établissement à seuil sont
+  des états permanents que le générateur saute, la formation des élus naît
+  des titres ; 256 couples, zéro calendrier différent (mesure de la
+  contre-lecture). `VERSION_MOTEUR_CALENDRIER` reste à 4, le relevé est
+  recopié ; le passage du référentiel à .9 resynchronise le parc]* ;
+- corpus : L. 1111-2 entre (`sans_objet`) ; L. 2311-2, L. 1311-2, R. 4228-22,
+  R. 4228-23 passent en `premiere_main`.
+
+**Épreuves** (`matching/effectif-maille.test.ts`) : garde « à confirmer »
+retirée → 2 rouges (« retient à confirmer », « aucune ligne ne disparaît ») ;
+`effectifMaille` ôté du CSE → 2 rouges ; maille entreprise lue sur le site →
+3 rouges. Garde du programme annuel ramenée au seul site
+(`couverture.test.ts`) → 1 rouge ; `Entreprise.effectif` recopié du site à
+l'onboarding (`onboarding/actions.test.ts`) → 1 rouge ; effectif d'entreprise
+vide accepté (`validation.test.ts`) → 1 rouge. Restauré, vert.
+
+**Ce qui reste déclaré** :
+- **Restauration** : le site est compté apprentis compris alors que R. 130-1 III
+  les écarte ; un établissement que ses apprentis portent à cinquante lit le
+  local au lieu de l'emplacement (l'une des deux lignes s'affiche toujours).
+  Déclaré aux notes des deux obligations et au corpus.
+- **Effectif d'entreprise périmé** : une entreprise multi-sites dont
+  l'effectif déclaré est périmé ET dont aucun site n'atteint onze ne voit pas
+  le CSE — la même ligne que le moteur d'avant ne montrait pas. Déclaré au
+  corpus (L. 2311-2) et aux notes du CSE. ~~L'écran d'établissement renvoie à
+  la fiche de l'entreprise pour le tenir à jour.~~ *[faux au moment où c'était
+  écrit — la contre-lecture l'a relevé : aucun lien de l'interface ne menait à
+  `/entreprises/[id]/modifier`. Corrigé le 2026-09-26 : `LienEffectifEntreprise`
+  rappelle l'effectif de l'entreprise et mène à son champ sous celui du site
+  dans le formulaire de l'établissement (création et modification), en tête de
+  la page d'ajout d'un site, dans la carte d'identité de la fiche de
+  l'établissement, et sous chaque ligne « à confirmer » de « Ce qui doit être
+  en place ». La modification de l'entreprise régénère le calendrier de chacun
+  de ses établissements.]*
+- ~~**Lecteurs hors moteur d'`Entreprise.effectif`** (mise à jour annuelle du
+  document unique `dashboard/duerp.ts`, échéances des actions
+  `actions/echeance-exigee.ts`, mention du PDF à cinquante) : maille juste
+  (l'entreprise) depuis toujours, mais sans la garde « site au seuil » ; un
+  effectif d'entreprise sous-déclaré ou périmé les fait taire. Inchangé par
+  ce lot.~~ *[corrigé le 2026-09-26, contre-lecture M2 : une seule règle,
+  `effectifRetenuPourSeuil` (`matching/effectif-entreprise.ts`), lue par le
+  moteur, la couverture, `evaluerEtatDuerp`, la carte de mise à jour du
+  document unique, le guide « Chez vous », l'écran des actions et le PDF du
+  document unique (qui fige désormais aussi l'effectif de l'entreprise ; une
+  version antérieure se lit comme avant). Le dossier « site 50, entreprise
+  49 » lit partout « atteint, à confirmer ».]*
+
+**Contre-lecture du lot, corrigée le même jour** :
+- « à confirmer » est porté sur « Ce qui doit être en place », là où vivent
+  le CSE et le règlement intérieur (M1) ;
+- la phrase dit de quoi conclure : « Si l'écart vient de vos apprentis ou de
+  titulaires d'un contrat de professionnalisation, que l'art. L. 1111-3 ne
+  compte pas, […] ne vous concerne pas. S'il vient d'un effectif d'entreprise
+  qui n'est plus à jour, mettez-le à jour sur la fiche de l'entreprise » —
+  la sur-application reste, elle est visible par qui la subit (M3) ;
+- le faux prisma n'égalise plus les deux nombres : `effectifEntreprise` y est
+  requis, sans repli, et ne sort que par `include: { entreprise }` (M4).
+
+**Épreuves de la contre-lecture** : écran des actions rendu à l'entreprise
+seule → 1 rouge ; `evaluerEtatDuerp` idem → 1 rouge ; projection lisant le
+site (`: etab.effectifSurSite`) → 2 rouges, dont un de comportement par
+`lireEntrees` ; mention retirée des états permanents → 1 rouge ; phrase privée
+des contrats de professionnalisation → 1 rouge. Restauré, vert.
+
+**Seconde vérification (sur `c5972c7`), corrigée le même jour** :
+- **La mise à jour annuelle retenue par prudence affirmait une échéance
+  échue.** `majAnnuelleAConfirmer` n'avait aucun lecteur : entreprise 10,
+  site 11, version de 2025, la checklist du ZIP de contrôle imprimait « [!]
+  DUERP : mise à jour annuelle échue (art. R. 4121-2) » — sur `main`, le même
+  dossier était « non soumis ». La checklist (case vide, plus de « [!] »),
+  l'outil MCP, les recommandations, le brief et la synthèse du document unique
+  lisent désormais le doute et le disent avec la même mention courte
+  (`mentionAConfirmer`), reprise par l'écran des actions. Garde
+  (`dashboard/maj-a-confirmer.test.ts`) : chaque sortie sur le dossier témoin,
+  et aucun fichier ne lit l'échéance sans lire `majAnnuelleAConfirmer`.
+  Épreuves : checklist rendue sourde → 2 rouges ; outil MCP → 2 ; recommandations
+  → 1 ; brief → 1 ; synthèse privée du drapeau → 1.
+- **La phrase citait le 6° de L. 1111-3 sans l'avoir relu.** Relu ce jour mot
+  pour mot (lecture ciblée) : « Les titulaires d'un contrat de
+  professionnalisation jusqu'au terme prévu par le contrat lorsque celui-ci est
+  à durée déterminée ou jusqu'à la fin de l'action de professionnalisation
+  lorsque le contrat est à durée indéterminée. » Ajouté à la citation du
+  corpus, motif mis à jour. La phrase dit le terme, dit « notamment » et nomme
+  le prorata de L. 1111-2 (temps partiels, contrats à durée déterminée) : elle
+  ne présente plus l'écart comme binaire. Épreuve : « notamment » et le terme
+  retirés → 2 rouges.
+- **Modifier l'entreprise taisait un échec de régénération.** L'issue est
+  testée, un échec rend `MESSAGE_REGEN_ECHEC` ; le `revalidatePath` redondant
+  est retiré. Épreuve : issue ignorée → 1 rouge.
+- **Non porté** : le score, le tableau des obligations et la carte du tableau
+  de bord lisent `estAJour` sans le doute ; ils disent « pas à jour » d'une
+  version de plus de douze mois, ce qui reste un fait.
+
+**Borne de l'effectif de l'entreprise (décision de la propriétaire,
+2026-09-26 ; ADR-031 § 1 ter)** : le patron du site, appliqué tel quel.
+- À la création : refus au-delà d'`EFFECTIF_MAX` dans le parcours d'entrée
+  (schéma serveur, et porte fermée avant le clic par `refusEffectifEntreprise`,
+  même ton que `refusEffectif`, la phrase dit « salariés de l'entreprise ») et
+  à la création d'une entreprise hors parcours (`entrepriseCreationSchema`).
+  La page des éléments exclus le projette depuis la porte : les refus à
+  l'entrée passent à trois (`effectif_entreprise`).
+- En édition : jamais refusé, comme le site (§ 1 bis) ; le dossier reste
+  ouvert et la couverture (axe `effectif`) annonce « Votre entreprise déclare
+  N salariés, au-delà des 50 pour lesquels Rojer est construit ».
+- Tests aux bornes (`entreprises/borne-effectif.test.ts`) : 50 accepté, 51
+  refusé, vide refusé, édition à 51 acceptée, couverture. Épreuves : borne
+  retirée du schéma d'entrée → 1 rouge ; retirée du client → 1 ; création
+  d'entreprise bornée à 52 → 2 (dont la page des refus) ; couverture sourde à
+  l'entreprise → 1.
+- **Non touché, signalé** : la FAQ publique (`landing/Questions.tsx`) est
+  dans le lot d'une autre session.
+- ~~**Borne du produit** : `EFFECTIF_MAX` (50, ADR-031) reste lue sur le site ;
+  l'effectif de l'entreprise n'est pas borné. Décision de produit non prise
+  ici.~~ *[tranché le 2026-09-26 par la propriétaire : « c'est la limite de
+  Rojer ». Voir ci-dessous.]*
+- Dossiers existants : `Entreprise.effectif` y vaut l'effectif du site à la
+  création, apprentis compris — surcompte, dans le sens qui ne retire rien.
+- L. 1251-54 (salariés temporaires) non ouvert.
 
 ### Ce que la chronologie donne à voir
 

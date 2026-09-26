@@ -1573,6 +1573,7 @@ async function main(): Promise<void> {
     include: {
       equipements: { where: { actif: true } },
       prescriptionsParticulieres: { where: { actif: true } },
+      entreprise: { select: { effectif: true } },
     },
   });
 

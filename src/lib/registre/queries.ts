@@ -91,7 +91,9 @@ export const composerRegistreDeLEtablissement = cache(
         effectifPublicAdmis: true,
         dateAutorisationOuverture: true,
         dateCertificatConformite: true,
-        entreprise: { select: { raisonSociale: true, adresse: true } },
+        entreprise: {
+          select: { raisonSociale: true, adresse: true, effectif: true },
+        },
         equipements: {
           where: { actif: true },
           select: { id: true, libelle: true, categorie: true },
@@ -111,6 +113,7 @@ export const composerRegistreDeLEtablissement = cache(
       {
         id: etab.id,
         effectifSurSite: etab.effectifSurSite,
+        effectifEntreprise: etab.entreprise.effectif,
         estEtablissementTravail: etab.estEtablissementTravail,
         estERP: etab.estERP,
         estIGH: etab.estIGH,

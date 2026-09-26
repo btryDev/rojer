@@ -58,6 +58,7 @@ export async function finaliserOnboarding(
     adresse: raw.adresse,
     codeNaf: raw.codeNaf,
     effectifSurSite: raw.effectifSurSite,
+    effectifEntreprise: raw.effectifEntreprise,
     estEtablissementTravail: raw.estEtablissementTravail === "true",
     estERP: raw.estERP === "true",
     estIGH: raw.estIGH === "true",
@@ -88,9 +89,12 @@ export async function finaliserOnboarding(
         raisonSociale: d.raisonSociale,
         siret: d.siret,
         codeNaf: d.codeNaf,
-        // L'effectif entreprise est pris égal à l'effectif sur site au
-        // démarrage (mono-site TPE). Modifiable ensuite si multi-site.
-        effectif: d.effectifSurSite,
+        // L'effectif de l'ENTREPRISE, apprentis non compris, demandé pour
+        // lui-même (C37, 2026-09-26). Il était recopié de l'effectif du site,
+        // « salariés + apprentis » : les seuils du CSE et du règlement
+        // intérieur, qui se comptent sur l'entreprise sans les apprentis
+        // (L. 2311-2 → L. 1111-2, L. 1111-3), lisaient un autre nombre.
+        effectif: d.effectifEntreprise,
         adresse: d.adresse,
       },
     });
