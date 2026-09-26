@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { depuisCleJourCivil, depuisSaisieDateHeure } from "@/lib/dates";
-import { EXTRAIT_R4512_12 } from "./annonces-plan";
+import {
+  EXTRAIT_R4512_12,
+  FAIT_DUREE_NON_RENSEIGNEE,
+  type EtatEcrit,
+} from "./annonces-plan";
 
 /**
  * Plan de prévention — art. R. 4512-6 à R. 4512-12 du code du travail.
@@ -168,6 +172,14 @@ export type PlanPreventionInput = z.infer<typeof planPreventionSchema>;
  * un message humain à afficher dans l'UI.
  */
 export type ResultatDiagnostic = {
+  /**
+   * Les trois réponses possibles à « l'écrit est-il obligatoire ? ».
+   * `indetermine` : durée non renseignée ET travaux non déclarés dangereux.
+   * Tout ce qui décide d'afficher `R. 4512-12` lit ce champ, jamais
+   * `ecritObligatoire` — voir `citeR4512_12`.
+   */
+  ecrit: EtatEcrit;
+  /** `ecrit === "obligatoire"`, et rien d'autre : l'indéterminé n'y entre pas. */
   ecritObligatoire: boolean;
   /**
    * Le seuil de `R. 4512-7` est-il atteint — et lui seul.
@@ -212,16 +224,31 @@ export function diagnostiquerPlan(params: {
     );
   }
   const ecritObligatoire = seuil400 || params.travauxDangereux;
+  const ecrit: EtatEcrit = ecritObligatoire
+    ? "obligatoire"
+    : params.dureeHeuresEstimee === null
+      ? "indetermine"
+      : "non_impose";
+  // `R. 4512-12` s'ouvre sur « Lorsque l'établissement d'un plan de
+  // prévention par écrit est obligatoire, en application de l'article
+  // R. 4512-7 » : il est cité entier, sa condition comprise, quand l'écrit
+  // est obligatoire ET quand Rojer ne peut pas dire qu'il ne l'est pas. Aucun
+  // délai ajouté — l'article n'en fixe pas.
+  const r4512_12 = `Art. R. 4512-12 : « ${EXTRAIT_R4512_12} »`;
+  const PLAN_DU =
+    "Le plan reste dû : il naît de l'analyse conjointe dès qu'un risque d'interférence existe, quelle que soit la durée (art. R. 4512-6).";
+  const RESTE_A_FAIRE =
+    "L'inspection commune préalable et l'accord sur les mesures, eux, restent à faire avant le début des travaux.";
   return {
+    ecrit,
     ecritObligatoire,
     seuil400,
     raisons,
-    recommandation: ecritObligatoire
-      ? // `R. 4512-12` se lit sous la même condition que cette branche : il
-        // s'ouvre sur « Lorsque l'établissement d'un plan de prévention par
-        // écrit est obligatoire, en application de l'article R. 4512-7 ». Il
-        // est cité entier, sans délai ajouté — l'article n'en fixe pas.
-        `Un plan de prévention ÉCRIT est obligatoire avant démarrage des travaux. Art. R. 4512-12 : « ${EXTRAIT_R4512_12} »`
-      : "Le plan reste dû : il naît de l'analyse conjointe dès qu'un risque d'interférence existe, quelle que soit la durée (art. R. 4512-6). Ce sont les 400 heures qui commandent l'écrit, et elles ne sont pas atteintes ici. L'inspection commune préalable et l'accord sur les mesures, eux, restent à faire avant le début des travaux.",
+    recommandation:
+      ecrit === "obligatoire"
+        ? `Un plan de prévention ÉCRIT est obligatoire avant démarrage des travaux. ${r4512_12}`
+        : ecrit === "indetermine"
+          ? `${PLAN_DU} ${FAIT_DUREE_NON_RENSEIGNEE} ${RESTE_A_FAIRE} ${r4512_12}`
+          : `${PLAN_DU} Ce sont les 400 heures qui commandent l'écrit, et elles ne sont pas atteintes ici. ${RESTE_A_FAIRE}`,
   };
 }

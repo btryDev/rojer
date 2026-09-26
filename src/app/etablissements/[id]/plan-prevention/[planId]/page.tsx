@@ -33,6 +33,7 @@ import {
   CONSTAT_R4512_9,
   CONSTAT_R4512_11,
   CONSTAT_R4512_12,
+  FAIT_DUREE_NON_RENSEIGNEE,
   R4463_8,
   R4512_1,
   R4512_9,
@@ -45,6 +46,7 @@ import {
   URL_R4512_9,
   URL_R4512_11,
   URL_R4512_12,
+  citeR4512_12,
 } from "@/lib/plan-prevention/annonces-plan";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import { etatPlanPrevention } from "@/lib/calendrier/echeances";
@@ -186,14 +188,24 @@ export default async function PlanPreventionDetailPage({
                 </ul>
               </CarteFiche>
             )}
-            {/* R. 4512-12, sous la condition qu'il pose lui-même : l'écrit
-                obligatoire. Le 2° est le seul acte du chapitre qui sorte de
-                l'entreprise, et aucune surface ne le nommait — un dirigeant
-                concluait qu'il avait fini quand il avait signé. Texte entier,
-                débiteur écrit, aucun délai : l'article n'en fixe pas. */}
-            {diag.ecritObligatoire && (
-              <CarteFiche titre="Art. R. 4512-12 · pendant les travaux">
-                <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+            {/* R. 4512-12, cité quand l'écrit est obligatoire ET quand la
+                durée manque — Rojer ne peut alors pas dire qu'il ne l'est pas,
+                et l'incertitude ne réduit pas la couverture. Dans ce second
+                cas, le fait qui manque précède l'article, et l'article porte sa
+                propre condition dans son chapeau. Le 2° est le seul acte du
+                chapitre qui sorte de l'entreprise ; aucune surface ne le
+                nommait. Titre neutre — le numéro seul : « pendant les
+                travaux » situait le 2° dans le temps, ce que le texte ne fait
+                pas. Débiteur écrit, aucun délai : l'article n'en fixe pas. */}
+            {citeR4512_12(diag.ecrit) && (
+              <CarteFiche titre="Art. R. 4512-12">
+                <LegalBadge charte="board" reference="Art. R. 4512-12 CT" href={URL_R4512_12} />
+                {diag.ecrit === "indetermine" && (
+                  <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                    {FAIT_DUREE_NON_RENSEIGNEE}
+                  </p>
+                )}
+                <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
                   « {R4512_12_CHAPEAU} :
                 </p>
                 <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-[14px] leading-[1.6]">
@@ -203,9 +215,6 @@ export default async function PlanPreventionDetailPage({
                 <p className="m-0 mt-3 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {CONSTAT_R4512_12}
                 </p>
-                <div className="mt-3">
-                  <LegalBadge charte="board" reference="Art. R. 4512-12 CT" href={URL_R4512_12} />
-                </div>
               </CarteFiche>
             )}
             <CarteFiche titre="Nature des travaux">
@@ -407,12 +416,13 @@ export default async function PlanPreventionDetailPage({
               </LegalBadge>
             </div>
 
-            {/* QUATRE ARTICLES QUE CE PLAN NE PORTE PAS, ET QUE LA FICHE DIT.
-                Au corpus, ils sont `obligation_manquante` : le module existe
-                et n'en disait rien. Ils ne sont pas comptés dans les « cinq
-                rubriques » — R. 4512-8 est le seul article qui les énumère —,
-                et aucune pastille ne leur donne un état : Rojer n'a rien pour
-                savoir s'ils sont satisfaits. Le texte, puis ce que le produit
+            {/* TROIS ARTICLES QUI DISENT CE QUE LE PLAN CONTIENT, ET QUE CE
+                PLAN NE PORTE PAS. Au corpus, ils sont `obligation_manquante` :
+                le module existe et n'en disait rien. Ils ne sont pas comptés
+                dans les « cinq rubriques » — R. 4512-8 est le seul article qui
+                les énumère —, et aucune pastille ne leur donne un état : Rojer
+                n'a rien pour savoir s'ils sont satisfaits. L'article d'abord
+                (la pastille), puis son texte, puis ce que le produit
                 enregistre ou non ; aucune qualification. */}
             <CarteFiche titre="Ce que d'autres articles demandent au plan">
               <ul className="m-0 flex list-none flex-col gap-4 p-0 text-[13.5px] leading-[1.6]">
@@ -420,26 +430,30 @@ export default async function PlanPreventionDetailPage({
                   { ref: "R. 4512-9", href: URL_R4512_9, texte: R4512_9, suite: CONSTAT_R4512_9 },
                   { ref: "R. 4512-11", href: URL_R4512_11, texte: R4512_11, suite: CONSTAT_R4512_11 },
                   { ref: "R. 4463-8", href: URL_R4463_8, texte: R4463_8, suite: null },
-                  {
-                    ref: "R. 4512-1",
-                    href: URL_R4512_1,
-                    texte: R4512_1,
-                    suite: `${CHAPITRE_R4512} ${CONSTAT_R4512_1}`,
-                  },
                 ].map((a) => (
                   <li key={a.ref}>
-                    <p className="m-0">« {a.texte} »</p>
+                    <LegalBadge charte="board" reference={`Art. ${a.ref} CT`} href={a.href} />
+                    <p className="m-0 mt-2">« {a.texte} »</p>
                     {a.suite && (
                       <p className="m-0 mt-1 text-[13px] text-[color:var(--board-slate-mid)]">
                         {a.suite}
                       </p>
                     )}
-                    <div className="mt-2">
-                      <LegalBadge charte="board" reference={`Art. ${a.ref} CT`} href={a.href} />
-                    </div>
                   </li>
                 ))}
               </ul>
+            </CarteFiche>
+
+            {/* R. 4512-1 à part : il ne demande rien AU PLAN, il dit que les
+                procédures du chapitre valent de nouveau pour un nouveau
+                sous-traitant. Le ranger dans la carte précédente lui faisait
+                dire ce qu'il ne dit pas (contre-lecture du 2026-09-26). */}
+            <CarteFiche titre="Art. R. 4512-1">
+              <LegalBadge charte="board" reference="Art. R. 4512-1 CT" href={URL_R4512_1} />
+              <p className="m-0 mt-2 text-[13.5px] leading-[1.6]">« {R4512_1} »</p>
+              <p className="m-0 mt-1 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                {CHAPITRE_R4512} {CONSTAT_R4512_1}
+              </p>
             </CarteFiche>
           </>
         }

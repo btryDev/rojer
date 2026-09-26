@@ -160,10 +160,13 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676941",
       versionEnVigueur: "2025-06-02",
       modifiePar: { texte: "Décret n° 2025-482 du 27 mai 2025 - art. 3 (création)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051676074" },
-      // Relu le 2026-09-26 sur sa page propre ; `lecture` inchangée, comme
-      // les sept autres articles du chapitre.
+      // Relu le 2026-09-26 sur sa page propre (C30). `premiere_main` : la page
+      // ne porte que la création par le décret n° 2025-482, art. 3, décret
+      // déjà ouvert pour ce corpus (voir `portee`) ; même traitement que
+      // `R. 4512-1` et `-12`. Les sept autres articles du chapitre restent
+      // `agent_verbatim` : ils n'ont pas été relus ce jour.
       luLe: "2026-09-26",
-      lecture: "agent_verbatim",
+      lecture: "premiere_main",
       prescrit:
         "Le plan de prévention (R. 4512-6), le plan général de coordination et le plan particulier de sécurité et de protection de la santé tiennent compte, le cas échéant, du risque lié aux épisodes de chaleur intense.",
       citationCle:

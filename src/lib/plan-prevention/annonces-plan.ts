@@ -49,6 +49,29 @@ export const EXTRAIT_R4512_12 =
 export const URL_R4512_12 =
   "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529773";
 
+/**
+ * TROIS ÉTATS, ET NON DEUX. `R. 4512-7` rend l'écrit obligatoire à 400 heures
+ * ou sur travaux dangereux. La durée est facultative à la saisie : quand elle
+ * manque et que les travaux ne sont pas déclarés dangereux, Rojer ne sait
+ * pas. Rabattre ce cas sur « non imposé » faisait lire « elles ne sont pas
+ * atteintes ici » et taisait `R. 4512-12` — l'incertitude réduisait la
+ * couverture, ce que la règle du dépôt interdit (contre-lecture du
+ * 2026-09-26).
+ */
+export type EtatEcrit = "obligatoire" | "non_impose" | "indetermine";
+
+/**
+ * `R. 4512-12` se dit quand l'écrit est obligatoire ET quand Rojer ne peut
+ * pas dire qu'il ne l'est pas. Dans le second cas, il est cité sous sa
+ * condition écrite — son chapeau, « Lorsque l'établissement d'un plan de
+ * prévention par écrit est obligatoire… » —, précédé du fait qui manque.
+ */
+export const citeR4512_12 = (ecrit: EtatEcrit): boolean => ecrit !== "non_impose";
+
+/** Le fait, sans conclusion : ce que Rojer ne sait pas quand la durée manque. */
+export const FAIT_DUREE_NON_RENSEIGNEE =
+  "Durée non renseignée : Rojer ne peut pas dire si le seuil de R. 4512-7 est atteint.";
+
 /** Constat sur le produit : aucun champ du plan ne porte cette démarche. */
 export const CONSTAT_R4512_12 =
   "Rojer n'enregistre pas l'information prévue au 2°.";
@@ -115,8 +138,8 @@ export const URL_R4463_8 =
  * apprendre que ce fichier ne les contient pas plutôt que de conclure à leur
  * absence de l'obligation.
  *
- * `parPlan` : `R. 4512-12`, seulement pour un plan dont l'écrit est
- * obligatoire — c'est la condition que l'article pose lui-même.
+ * Les lignes de `R. 4512-12` par plan vivent dans `annonces-zip.ts` : elles
+ * appellent le diagnostic, que ce module sans dépendance n'importe pas.
  */
 export const annoncesZip = {
   enTete: (): string[] => [
@@ -125,11 +148,12 @@ export const annoncesZip = {
     `Art. R. 4512-11 : « ${R4512_11} »`,
     `  ${CONSTAT_R4512_11} Ce fichier ne les contient pas.`,
   ],
-  parPlan: (ecritObligatoire: boolean): string[] =>
-    ecritObligatoire
-      ? [
+  parPlan: (ecrit: EtatEcrit): string[] =>
+    !citeR4512_12(ecrit)
+      ? []
+      : [
+          ...(ecrit === "indetermine" ? [`  ${FAIT_DUREE_NON_RENSEIGNEE}`] : []),
           `  Art. R. 4512-12 : « ${EXTRAIT_R4512_12} »`,
           `    ${CONSTAT_R4512_12}`,
-        ]
-      : [],
+        ],
 };

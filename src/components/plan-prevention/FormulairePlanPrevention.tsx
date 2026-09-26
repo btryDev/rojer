@@ -25,8 +25,12 @@ import {
   R4512_1,
   R4512_9,
   R4512_11,
+  URL_R4463_8,
+  URL_R4512_1,
   URL_R4512_9,
   URL_R4512_11,
+  URL_R4512_12,
+  citeR4512_12,
 } from "@/lib/plan-prevention/annonces-plan";
 
 type PrestataireLite = {
@@ -204,9 +208,13 @@ export function FormulairePlanPrevention({
             Deux faits plutôt qu'un : le plan est dû (R. 4512-6, quelle que
             soit la durée), l'écrit ne l'est pas ici (R. 4512-7). */}
         <h2 className="board-titre m-0 mt-2 text-[22px]">
-          {diagnostic.ecritObligatoire
+          {/* Trois états : sans durée ni travaux dangereux, Rojer ne sait
+              pas, et le titre le dit au lieu de conclure « non imposé ». */}
+          {diagnostic.ecrit === "obligatoire"
             ? "Plan écrit obligatoire"
-            : "Plan dû, écrit non imposé"}
+            : diagnostic.ecrit === "indetermine"
+              ? "Plan dû, durée non renseignée"
+              : "Plan dû, écrit non imposé"}
         </h2>
         <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
           {diagnostic.recommandation}
@@ -224,6 +232,16 @@ export function FormulairePlanPrevention({
             reference="Art. R. 4512-7 CT"
             href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529783"
           />
+          {/* La recommandation cite R. 4512-12 dans ces deux états : sa
+              source doit s'ouvrir d'ici, comme celle de R. 4512-7. */}
+          {citeR4512_12(diagnostic.ecrit) && (
+            <LegalBadge
+              charte="board"
+              reference="Art. R. 4512-12 CT"
+              href={URL_R4512_12}
+              className="ml-3"
+            />
+          )}
         </div>
       </section>
 
@@ -243,6 +261,7 @@ export function FormulairePlanPrevention({
           </>
         }
       >
+        <LegalBadge charte="board" reference="Art. R. 4512-1 CT" href={URL_R4512_1} />
         {prestataires.length > 0 && (
           <fieldset className="m-0 border-0 p-0">
             <legend className="label-board">
@@ -514,6 +533,7 @@ export function FormulairePlanPrevention({
           </>
         }
       >
+        <LegalBadge charte="board" reference="Art. R. 4463-8 CT" href={URL_R4463_8} />
         {/* Les risques sont séparés par un filet plein : le board sépare
             ainsi, ou pas du tout — il n'a pas de pointillé. */}
         {lignes.map((l, i) => (

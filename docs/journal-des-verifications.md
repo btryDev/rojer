@@ -1092,6 +1092,9 @@ tous les régimes.
 
 ### C30 · 2026-09-26 — Cinq manques du plan de prévention, dits à qui l'utilise
 
+*C28 et C29 sont pris par des lots parallèles, sur d'autres branches ; ils
+n'apparaissent pas dans celle-ci.*
+
 **Le constat.** `R. 4512-1`, `R. 4512-9`, `R. 4512-11`, `R. 4512-12` et
 `R. 4463-8` sont `obligation_manquante`, cause `module`, et touchent la cible :
 le produit a le plan de prévention et n'en disait rien. Le lot les DIT sur
@@ -1099,55 +1102,87 @@ les surfaces existantes ; il ne les encode pas. Pas de migration, pas de
 champ, statuts inchangés — les changer est une décision de produit.
 
 **Relu à la source, le 2026-09-26**, chacun sur sa page propre : structure
-(nombre d'alinéas, d'items, de phrases) demandée sans rien suggérer, recopie
-intégrale, puis questions fermées sur la formulation décisive — « informe
-par écrit », le débiteur « le chef de l'entreprise utilisatrice », l'absence
-de tout délai (`R. 4512-12`) ; « sont à nouveau applicables à ces derniers »
-(`R. 4512-1`) ; « Cette liste figure dans le plan de prévention. »
-(`R. 4512-9`) ; « sont joints au plan de prévention » et le nombre de phrases
-(`R. 4512-11` — la première réponse en annonçait deux pour une seule
-recopiée ; la question fermée en compte une) ; « tiennent compte, le cas
-échéant », et l'absence de « doivent » (`R. 4463-8`). **Les cinq verbatims du
-corpus sont exacts.** `R. 4512-1` et `-12` passent en `premiere_main`
-(`modifiePar: null`, leur page ne portant que la création par le décret
-n° 2008-244, comme `R. 4515-5` en C24) ; `-9`, `-11` et `R. 4463-8` restent
-`agent_verbatim`, leur texte modificateur n'étant pas ouvert en entier.
+demandée sans rien suggérer, recopie intégrale, puis questions fermées sur la
+formulation décisive — « informe par écrit », le débiteur « le chef de
+l'entreprise utilisatrice », l'absence de tout délai (`R. 4512-12`) ; « sont à
+nouveau applicables à ces derniers » (`R. 4512-1`) ; « Cette liste figure dans
+le plan de prévention. » (`R. 4512-9`) ; « sont joints au plan de prévention »
+et le nombre de phrases (`R. 4512-11` — la première réponse en annonçait deux
+pour une seule recopiée ; la question fermée en compte une) ; « tiennent
+compte, le cas échéant », et l'absence de « doivent » (`R. 4463-8`). **Les cinq
+verbatims du corpus sont exacts.** `R. 4512-1`, `-12` et `R. 4463-8` passent en
+`premiere_main` : leur page ne porte que leur création (décret n° 2008-244 pour
+les deux premiers, `modifiePar: null` comme `R. 4515-5` en C24 ; décret
+n° 2025-482, art. 3, déjà ouvert pour le corpus chaleur, pour le troisième).
+`-9` et `-11` restent `agent_verbatim`, leur texte modificateur n'étant pas
+ouvert ; leur `modifiePar.url`, qui pointait l'article lui-même et non le
+décret, est retirée.
 
 **Une seule écriture.** `src/lib/plan-prevention/annonces-plan.ts` porte les
-cinq textes, entiers, et quatre constats sur le produit (« Rojer n'enregistre
-pas l'information prévue au 2°. », « Rojer ne rattache à un plan qu'une seule
-entreprise extérieure. », « Le plan tenu dans Rojer n'a pas de champ pour
-cette liste. », « … ne permet pas d'y joindre ces pièces. »). Surfaces :
-`recommandation` de `diagnostiquerPlan` quand l'écrit est obligatoire (donc la
-carte du formulaire), la fiche du plan (carte `R. 4512-12` sous la même
-condition ; carte « Ce que d'autres articles demandent au plan »), le
-formulaire (chapeaux « Entreprise extérieure » et « Analyse conjointe »,
-section « Contenu minimal »), le fichier 07 du ZIP (en-tête pour `-9`/`-11`,
-par plan pour `-12`). `R. 4463-8` est cité entier, PGC et PPSPS compris :
-couper laissait un sujet singulier devant « tiennent ».
+cinq textes, entiers, et cinq phrases de Rojer — quatre constats sur ce que le
+produit enregistre et le fait « Durée non renseignée : Rojer ne peut pas dire
+si le seuil de R. 4512-7 est atteint. ». Surfaces : la `recommandation` de
+`diagnostiquerPlan` (donc la carte du formulaire, avec la pastille de
+`R. 4512-12`), la fiche du plan (carte « Art. R. 4512-12 » ; carte « Ce que
+d'autres articles demandent au plan » pour `-9`, `-11` et `R. 4463-8`, la
+pastille avant la citation ; carte propre « Art. R. 4512-1 », qui ne demande
+rien au plan), le formulaire (chapeaux « Entreprise extérieure » et « Analyse
+conjointe » avec leurs pastilles, section « Contenu minimal »), le fichier 07
+du ZIP (en-tête pour `-9`/`-11`, `lignesR4512_12Zip(p)` par plan).
+`R. 4463-8` est cité entier, PGC et PPSPS compris : couper laissait un sujet
+singulier devant « tiennent ».
 
-**La garde**, `annonces-plan.test.ts` : égalité de chaque texte au
-`citationCle` du corpus et de chaque URL à la sienne ; les constats sans mot
-de prescription ni délai ; `R. 4512-12` cité si et seulement si l'écrit est
-obligatoire ; aucune seconde copie dans `src/` hors corpus ; chaque surface
-importe et emploie le module. **Éprouvée** sur sept injections, toutes
-rouges : les paraphrases que le dépôt a déjà écrites (le `prescrit` de
-`R. 4463-8`, « du risque lié aux épisodes » ; `R. 4512-12` 2° sans « par
-écrit » ; « s'appliquent de nouveau » pour `R. 4512-1`, la paraphrase du
-brief de ce lot), un constat qui avise (« Pensez à informer l'inspection du
-travail avant le début des travaux. »), une copie recopiée dans la fiche, un
-chapeau de formulaire qui contourne la constante, une `recommandation` qui
-perd l'article. **Ce qu'elle ne prouve pas** : qu'une surface n'ajoute pas,
-à côté de la constante, une phrase de son cru ; la liste des mots de
-prescription est courte et nommée.
+**Trois états de l'écrit, pas deux** (corrigé après contre-lecture). La durée
+est facultative ; sans elle et sans travaux déclarés dangereux,
+`diagnostiquerPlan` rendait « non imposé », écrivait « elles ne sont pas
+atteintes ici » et taisait `R. 4512-12` partout. Il rend désormais `ecrit` :
+`obligatoire`, `non_impose` ou `indetermine`. Dans l'indéterminé, le
+diagnostic dit le fait, et `R. 4512-12` est cité sous sa condition écrite,
+sur les trois surfaces. `ecritObligatoire` garde son sens (obligatoire
+seulement) pour la pastille et la carte « Pourquoi l'écrit est obligatoire »
+de la fiche.
+
+**La garde, et ce qu'elle mesure.** Deux fichiers.
+`annonces-plan.test.ts` : chaque texte égal au `citationCle` du corpus et
+chaque URL à la sienne ; le chapeau et les deux items de `R. 4512-12`
+recomposent l'article ; les phrases de Rojer passent un filtre de mots de
+prescription (liste courte et nommée, frontières Unicode, apostrophe
+typographique) éprouvé sur quatre dérives ; dans les trois états, le
+diagnostic et les lignes du ZIP citent `R. 4512-12` entier ou pas du tout ;
+la route du ZIP appelle `lignesR4512_12Zip(p)` une fois, avec le plan de la
+boucle, et n'a aucune autre voie vers ces lignes (contrôle du SOURCE : la
+route n'est pas rendue en test) ; aucune seconde copie des textes dans
+`src/` hors corpus. `annonces-surfaces.test.tsx` REND la fiche (page réelle,
+requêtes et composants de signature doublés) dans les trois états et le
+formulaire au premier affichage (état indéterminé), et y cherche chaque texte
+ENTIER, chaque pastille avec son lien, l'ordre pastille → citation, et
+l'absence de « pendant les travaux ». **Ce qu'elle ne prouve pas** : qu'une
+surface n'ajoute pas une phrase de son cru à côté des textes ; les états
+« obligatoire » et « non imposé » du formulaire (qui ne se rendent qu'après
+saisie) ne sont tenus que par le diagnostic ; la route, par son source.
+
+**Éprouvée** : vingt et une injections, toutes rouges, fichiers restaurés
+après chacune. Les cinq défauts que la première garde laissait passer
+(condition de la carte forcée à vrai ; chapeau `R. 4512-12` supprimé de la
+fiche ; état écrit en dur dans la route, équivalent du `|| true`, et plan
+retouché ; `{CHAPITRE_R4512}` retiré du formulaire ; `R4512_9` tronqué en
+place, sur la fiche et sur le formulaire) ; les trois mots que le filtre
+ratait (« délais », « N’oubliez », « À faire ») ; la durée manquante rabattue
+sur « non imposé » ; le titre « pendant les travaux » rétabli ; la pastille
+remise après la citation ; un lien retiré du formulaire ; et les sept de la
+première passe (paraphrases du corpus et du brief, constat qui avise, copie
+recopiée, constante contournée, recommandation amputée).
 
 **Rayé au corpus**, daté : les deux « pas de déclencheur / d'axe événement »
-(`R. 4512-1`, `R. 4512-12` — la page « Quand ça arrive » existe, ADR-037,
-sans que ces obligations y soient encodées), et les phrases devenues fausses
-(« aucun écran ne mentionne », « rien, à l'écran », « ni le formulaire, ni la
-fiche, ni le ZIP », « aucune section du formulaire », « RIEN n'y nomme la
-chaleur », « nulle part où la loger »). Aucune ligne de
-`docs/chantiers-ouverts.md` ne portait ces articles.
+(`R. 4512-1`, `R. 4512-12` — la page « Quand ça arrive » existe, ADR-037, sans
+que ces obligations y soient encodées), les phrases devenues fausses (« aucun
+écran ne mentionne », « rien, à l'écran », « ni le formulaire, ni la fiche, ni
+le ZIP », « aucune section du formulaire », « RIEN n'y nomme la chaleur »,
+« nulle part où la loger »), et « Un dirigeant qui lit l'écran conclut qu'il a
+fini quand il a signé », qui **reste vraie dans un cas** : durée saisie sous
+400 h, travaux non déclarés dangereux, et 400 h atteintes en cours
+d'exécution — Rojer ne refait pas le diagnostic après validation. Aucune
+ligne de `docs/chantiers-ouverts.md` ne portait ces articles.
 
 **Appliqué :** référentiel inchangé (`2026-09-26.5`, 167 obligations) ; sceau
 du calendrier mesuré identique avant et après :
@@ -1158,7 +1193,8 @@ bougé.
 `R. 4512-12` n'a ni date ni trace ; la liste de `R. 4512-9` n'a pas de
 peuplement possible tant que rien ne rattache un poste au suivi individuel
 renforcé ; le DTA n'existe pas au modèle ; un plan ne connaît qu'une
-entreprise extérieure.
+entreprise extérieure ; le seuil n'est pas recalculé en cours d'exécution.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
