@@ -3,6 +3,7 @@ import { obligationsConformite } from "@/lib/referentiels/conformite";
 import {
   determineObligationsApplicables,
   matchTypologie,
+  projeterEtablissement,
   type EtablissementMatching,
 } from "./index";
 
@@ -139,5 +140,19 @@ describe("le référentiel, pas un mécanisme de test", () => {
       }
     }
     expect(perdues).toEqual([]);
+  });
+});
+
+describe("la projection prend l'effectif de l'entreprise là où il vit (M4)", () => {
+  it("lit `entreprise.effectif`, pas le site, quand les deux diffèrent", () => {
+    const { effectifEntreprise: _omis, ...sansEntreprise } = etab(6, 0);
+    void _omis;
+    const projete = projeterEtablissement({
+      ...sansEntreprise,
+      entreprise: { effectif: 15 },
+    });
+    expect(projete.effectifEntreprise).toBe(15);
+    expect(projete.effectifSurSite).toBe(6);
+    expect(ids(projete).has("prevention-etablissement-cse")).toBe(true);
   });
 });
