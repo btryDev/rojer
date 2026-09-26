@@ -62,12 +62,15 @@ export type Blocage = {
  * dans deux formulations.
  *
  * Elle porte sur les TRAVAILLEURS et sur eux seuls : le public reçu ne la
- * déclenche jamais — un restaurant de huit salariés qui sert trois cents
- * couverts est dans la cible, et sa catégorie d'ERP ne dit rien de son
+ * déclenche jamais — un restaurant de huit salariés qui peut accueillir
+ * quatre cents personnes est dans la cible, et sa catégorie d'ERP ne dit rien de son
  * effectif.
  */
 const AU_DELA_DE_LA_BORNE =
-  "Au-delà, les obligations changent de nature — CSSCT dédiée, programme annuel de prévention présenté au CSE, bilan annuel — et l'outil ne les porte pas.";
+  // ~~« CSSCT dédiée », « bilan annuel »~~ retirés le 2026-09-26 : la CSSCT
+// n'est imposée qu'à partir de trois cents salariés (L. 2315-36), et le
+// bilan n'était sourcé nulle part. Reste ce que le corpus porte.
+  "À cette taille, d'autres obligations s'ajoutent — dont le programme annuel de prévention, dû dès cinquante salariés (art. L. 4121-3-1) — et l'outil ne les porte pas.";
 
 export function refusEffectif(effectifSurSite: string): Blocage | null {
   const n = Number(effectifSurSite);

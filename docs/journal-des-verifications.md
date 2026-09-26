@@ -2367,8 +2367,18 @@ des contrats de professionnalisation → 1 rouge. Restauré, vert.
   retirée du schéma d'entrée → 1 rouge ; retirée du client → 1 ; création
   d'entreprise bornée à 52 → 2 (dont la page des refus) ; couverture sourde à
   l'entreprise → 1.
-- **Non touché, signalé** : la FAQ publique (`landing/Questions.tsx`) est
-  dans le lot d'une autre session.
+- ~~**Non touché, signalé** : la FAQ publique (`landing/Questions.tsx`) est
+  dans le lot d'une autre session.~~ *[Fait à l'intégration
+  (`integration/2026-09-26-d`, d6caa7a) : « au-delà de 50 travailleurs sur un
+  site ou de 50 salariés dans l'entreprise ».]*
+- **Revue finale de l'intégration (2026-09-26)** : « les seuils de onze et de
+  cinquante salariés se comptent sur l'entreprise » était trop général — le
+  local et l'emplacement de restauration se comptent par établissement
+  (R. 4228-22) ; les trois aides nomment désormais les seuils concernés (CSE,
+  règlement intérieur, mise à jour annuelle du DUERP). Le refus au-delà de 50
+  disait « CSSCT dédiée » : la CSSCT n'est imposée qu'à partir de trois cents
+  salariés (L. 2315-36, relu le 2026-09-26) ; retirée avec « bilan annuel »,
+  non sourcé.
 - ~~**Borne du produit** : `EFFECTIF_MAX` (50, ADR-031) reste lue sur le site ;
   l'effectif de l'entreprise n'est pas borné. Décision de produit non prise
   ici.~~ *[tranché le 2026-09-26 par la propriétaire : « c'est la limite de
@@ -2694,7 +2704,7 @@ F2. `controle-zip/route.ts` : « synthèse globale signée » devient
 « synthèse globale ».
 
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
-inchangée depuis `d34bb24`, et le lot ne touche pas `src/lib/referentiels`.
+inchangée depuis `d34bb24`, et le lot ne touche dans `src/lib/referentiels` qu'un commentaire (`corpus/citations-ecran.ts`, 383e7d5).
 
 ### Ce que la chronologie donne à voir
 

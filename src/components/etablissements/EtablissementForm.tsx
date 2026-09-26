@@ -147,7 +147,7 @@ export function EtablissementForm({
             name="effectifSurSite"
             label="Travailleurs sur ce site"
             requis
-            aide="Salariés et apprentis qui y travaillent régulièrement. L'effectif de l'entreprise, sur lequel se comptent les seuils de onze et de cinquante salariés, se modifie sur la fiche de l'entreprise — lien ci-dessous."
+            aide="Salariés et apprentis qui y travaillent régulièrement. L'effectif de l'entreprise, sur lequel se comptent les seuils du comité social et économique, du règlement intérieur et de la mise à jour annuelle du document unique, se modifie sur la fiche de l'entreprise — lien ci-dessous."
             // Un champ `type="number"` change de valeur à la molette, sur une
             // saisie déjà faite et sans que rien ne le signale. Le contrôle de
             // borne reste au serveur, où il est de toute façon rejoué.

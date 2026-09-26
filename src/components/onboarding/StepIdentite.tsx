@@ -330,7 +330,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 value={state.effectifEntreprise}
                 onChange={(e) => update({ effectifEntreprise: e.target.value })}
                 placeholder="8"
-                aide="Tous établissements confondus, apprentis non compris (art. L. 1111-3). Les seuils de onze et de cinquante salariés se comptent sur ce nombre. À partir de 50, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
+                aide="Tous établissements confondus, apprentis non compris (art. L. 1111-3). C'est sur lui que se comptent les seuils du comité social et économique, du règlement intérieur et de la mise à jour annuelle du document unique. À partir de 50, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
                 erreur={
                   refusEntreprise ? undefined : messagePour("effectifEntreprise")
                 }

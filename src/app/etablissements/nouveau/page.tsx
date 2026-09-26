@@ -69,7 +69,8 @@ export default async function EtablissementNouveauPage() {
             chemin pour le corriger (C37). Les seuils du comité social et
             économique et du règlement intérieur se comptent sur lui. */}
         <p className="m-0 mt-2 max-w-[66ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Les seuils de onze et de cinquante salariés se comptent sur
+          Les seuils du comité social et économique, du règlement intérieur
+          et de la mise à jour annuelle du document unique se comptent sur
           l&apos;effectif de l&apos;entreprise, tous établissements confondus :
           s&apos;il change avec ce site, mettez-le à jour.
         </p>
