@@ -24,10 +24,13 @@ import {
 } from "@/components/permis-feu/PermisFeuActions";
 import { getPermisFeu } from "@/lib/permis-feu/queries";
 import { LABEL_NATURE } from "@/lib/permis-feu/schema";
+import { dureeHhMm } from "@/lib/permis-feu/duree";
 import {
   GROUPES_LABEL,
   MESURES_PERMIS_FEU,
+  MESURES_RETIREES,
   mesuresParGroupe,
+  surListeAnterieure,
 } from "@/lib/permis-feu/referentiel";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import { etatPermisFeu } from "@/lib/calendrier/echeances";
@@ -38,12 +41,6 @@ const FMT_HEURE = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
   minute: "2-digit",
 });
-
-function dureeHhMm(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
-}
 
 function numero(n: number): string {
   return `PF-${String(n).padStart(3, "0")}`;
@@ -91,6 +88,16 @@ export default async function PermisFeuDetailPage({
 
   const mesuresCochees = new Set(permis.mesuresValidees);
   const groupes = mesuresParGroupe();
+  // Un permis établi avant le 2026-09-26 porte des identifiants que la liste
+  // n'a plus (`MESURES_RETIREES`) : ils s'affichent à part, avec leur libellé
+  // d'origine, et la liste courante ne se lit pas comme un manque.
+  const retireesCochees = MESURES_RETIREES.filter((m) => mesuresCochees.has(m.id));
+  const courantesCochees = MESURES_PERMIS_FEU.filter((m) => mesuresCochees.has(m.id)).length;
+  // Un permis établi sur une liste antérieure n'a pas pu cocher la liste
+  // courante : elle ne s'y compte pas comme un manque (contre-lecture du
+  // 2026-09-26). Sa date de création tranche le cas qu'aucun identifiant ne
+  // dit : un permis antérieur sans aucune mesure cochée.
+  const anterieur = surListeAnterieure(permis.mesuresValidees, permis.createdAt);
 
   // Signatures : on attend 2 signatures (donneur + prestataire).
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
@@ -173,12 +180,13 @@ export default async function PermisFeuDetailPage({
             </CarteFiche>
 
             <TitreSection
-              surtitre="Mesures tirées de l'INRS ED 6030"
+              surtitre="Une sélection de mesures de l'INRS ED 6030"
               titre="Mesures de prévention"
               droite={
                 <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
-                  {permis.mesuresValidees.length} sur{" "}
-                  {MESURES_PERMIS_FEU.length}
+                  {anterieur
+                    ? "Liste antérieure"
+                    : `${courantesCochees} sur ${MESURES_PERMIS_FEU.length}`}
                 </span>
               }
             />
@@ -186,21 +194,33 @@ export default async function PermisFeuDetailPage({
             <p className="m-0 -mt-2 max-w-[68ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               «&nbsp;Prioritaire&nbsp;» est un classement de Rojer&nbsp;:
               l&apos;INRS ne classe pas ces mesures.
+              {anterieur ? (
+                <>
+                  {" "}
+                  Ce permis a été établi sur une liste antérieure&nbsp;: les
+                  mesures ci-dessous n&apos;y figuraient pas
+                  {retireesCochees.length > 0
+                    ? ", et celles qu'il porte sont reprises plus bas."
+                    : "."}
+                </>
+              ) : null}
             </p>
 
             {(["avant", "pendant", "apres"] as const).map((g) => {
               // Le manque se compte en tête de groupe, il ne se répète pas
               // à chaque ligne : onze pastilles roses empilées ne
               // signalaient plus rien, elles remplissaient la carte.
-              const manquantesObligatoires = groupes[g].filter(
-                (m) => m.priorite === "obligatoire" && !mesuresCochees.has(m.id),
-              ).length;
+              const manquantesObligatoires = anterieur
+                ? 0
+                : groupes[g].filter(
+                    (m) => m.priorite === "obligatoire" && !mesuresCochees.has(m.id),
+                  ).length;
               return (
                 <CarteFiche
                   key={g}
                   titre={GROUPES_LABEL[g].label}
                   droite={
-                    manquantesObligatoires > 0 ? (
+                    anterieur ? null : manquantesObligatoires > 0 ? (
                       <PastilleFiche ton="retard">
                         {manquantesObligatoires} prioritaire
                         {manquantesObligatoires > 1 ? "s" : ""} non cochée
@@ -217,7 +237,7 @@ export default async function PermisFeuDetailPage({
                   <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                     {groupes[g].map((m) => {
                       const ok = mesuresCochees.has(m.id);
-                      const manque = m.priorite === "obligatoire" && !ok;
+                      const manque = !anterieur && m.priorite === "obligatoire" && !ok;
                       return (
                         <li
                           key={m.id}
@@ -262,6 +282,26 @@ export default async function PermisFeuDetailPage({
                 </CarteFiche>
               );
             })}
+
+            {retireesCochees.length > 0 && (
+              <CarteFiche titre="Cochées sur la liste antérieure">
+                <p className="m-0 -mt-2 mb-4 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                  Mesures retirées de la liste après confrontation à la
+                  brochure INRS ED 6030. Elles s&apos;affichent telles que ce
+                  permis les a portées.
+                </p>
+                <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                  {retireesCochees.map((m) => (
+                    <li key={m.id} className="text-[13.5px] leading-[1.5]">
+                      <span className="text-[color:var(--board-ink)]">{m.libelle}</span>
+                      <span className="mt-0.5 block text-[12px] text-[color:var(--board-slate-mid)]">
+                        {m.motif}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </CarteFiche>
+            )}
 
             {permis.mesuresNotes && (
               <BlocCreux>
@@ -427,7 +467,7 @@ export default async function PermisFeuDetailPage({
         >
           Le permis de feu enregistré ici nomme le donneur d&apos;ordre et
           l&apos;entreprise qui intervient, les travaux, les mesures
-          préventives cochées (INRS ED 6030) et la durée de surveillance après
+          préventives cochées et la durée de surveillance après
           travaux. La règle APSAD R43 (travaux par points chauds) est un
           référentiel de la profession de l&apos;assurance : ni un article de
           code, ni un arrêté. Un contrat d&apos;assurance peut y renvoyer.
