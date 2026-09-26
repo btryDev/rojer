@@ -4,8 +4,8 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-09-21
-**Référentiel** : `2026-09-21.3`
+**Généré le** : 2026-09-26
+**Référentiel** : `2026-09-26.1`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,12 +83,12 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**167 obligations**, **313 références** — 91 obligations en citent plus d'une.
+**167 obligations**, **314 références** — 91 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
 | 5 · lu à la source, verbatim relevé | 59 | 35 % | 67 | 148 | 47 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 97 | 58 % | 94 | 153 | 49 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 97 | 58 % | 94 | 154 | 49 % |
 | 3 · lu et daté, aucun verbatim | 11 | 7 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
@@ -108,7 +108,7 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 293 | 94 % |
+| ancrée | 294 | 94 % |
 | divergente | 0 | 0 % |
 | jamais constatée | 20 | 6 % |
 
@@ -124,7 +124,7 @@ repose sur un texte que personne n'a ouvert.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `aeration` | 11 | 16 | 3 | 8 | · | · | · | · | 11 / 11 — 100 % | 0 / 16 | 2026-08-26 → 2026-09-04 |
 | `ascenseur` | 8 | 17 | 4 | 4 | · | · | · | · | 8 / 8 — 100 % | 0 / 17 | 2026-08-26 → 2026-09-04 |
-| `co_activite` | 1 | 4 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 4 | 2026-08-31 |
+| `co_activite` | 1 | 5 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-08-31 → 2026-09-02 |
 | `compactage_dechets` | 1 | 5 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson_hotte` | 6 | 9 | 2 | 3 | 1 | · | · | · | 5 / 6 — 83 % | 1 / 9 | 2026-08-26 → 2026-09-01 |
 | `eclairage` | 1 | 2 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 2 | 2026-09-01 → 2026-09-02 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-04 |
-| `etablissement` | 64 | 116 | 15 | 46 | 3 | · | · | · | 61 / 64 — 95 % | 0 / 116 | 2026-08-26 → 2026-09-21 |
+| `etablissement` | 64 | 117 | 15 | 46 | 3 | · | · | · | 61 / 64 — 95 % | 0 / 117 | 2026-08-26 → 2026-09-21 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-01 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -172,12 +172,12 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-27 | 12 | 4 % | 9 |
 | 2026-08-31 | 73 | 23 % | 36 |
 | 2026-09-01 | 142 | 45 % | 89 |
-| 2026-09-02 | 17 | 5 % | 14 |
+| 2026-09-02 | 18 | 6 % | 15 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 7 | 2 % | 6 |
 | 2026-09-21 | 2 | 1 % | 2 |
 
-313 des 313 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-21.
+314 des 314 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-21.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -193,7 +193,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**289 articles dépouillés ne sont cités par aucune obligation**, répartis sur 42 corpus.
+**288 articles dépouillés ne sont cités par aucune obligation**, répartis sur 42 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -208,11 +208,11 @@ une relecture déjà faite.
 | `code-travail-epi` | 11 | 16 | 2026-09-04 |
 | `code-travail-formation-securite` | 9 | 26 | 2026-08-31 |
 | `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 |
-| `code-travail-co-activite` | 7 | 11 | 2026-08-31 → 2026-09-02 |
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
 | `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-04 |
 | `code-travail-vigilance` | 7 | 7 | 2026-09-02 |
 | `arrete-1980-livre-2` | 6 | 25 | 2026-09-01 → 2026-09-04 |
+| `code-travail-co-activite` | 6 | 11 | 2026-08-31 → 2026-09-02 |
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-21 |
 | `code-travail-matieres-inflammables` | 6 | 6 | 2026-09-02 |
@@ -273,7 +273,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `ascenseur-controle-technique-quinquennal` | ascenseur | equipement | 3 | 5 · première main | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-09-04 |
 | `ascenseur-rapport-annuel-activite` | ascenseur | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
 | `ascenseur-telealarme-liaison` | ascenseur | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
-| `co-activite-etablissement-protocole-securite` | co_activite | etablissement | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-08-31 |
+| `co-activite-etablissement-protocole-securite` | co_activite | etablissement | 5 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 5 | 2026-08-31 → 2026-09-02 |
 | `cuisson-erp-appareils-annuelle` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `cuisson-erp-verification-initiale` | cuisson_hotte | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-08-26 → 2026-09-01 |
 | `cuisson-gaz-installations-annuelle` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
@@ -423,7 +423,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 313 références, une par une
+## 9. Les 314 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -727,7 +727,8 @@ refaire pour la contredire.
 | `co-activite-etablissement-protocole-securite` | fondement | R. 4515-4 (les opérations de chargement ou de déchargement font l'objet d'un document écrit dit « protocole de sécurité », remplaçant le plan de prévention) | R. 4515-4 | code-travail-co-activite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `co-activite-etablissement-protocole-securite` | contexte 1 | R. 4515-1 (champ d'application : opérations réalisées par des entreprises extérieures transportant des marchandises en provenance ou à destination d'un lieu extérieur à l'enceinte de l'entreprise d'accueil) | R. 4515-1 | code-travail-co-activite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `co-activite-etablissement-protocole-securite` | contexte 2 | R. 4515-9 (opérations répétitives : un seul protocole, applicable tant que les conditions n'ont pas subi de modification significative) | R. 4515-9 | code-travail-co-activite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
-| `co-activite-etablissement-protocole-securite` | contexte 3 | R. 4515-11 (exemplaire daté et signé tenu à la disposition des comités sociaux et économiques et de l'inspection du travail) | R. 4515-11 | code-travail-co-activite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
+| `co-activite-etablissement-protocole-securite` | contexte 3 | R. 4515-8 (le protocole est établi préalablement à la réalisation de l'opération ; un protocole spécifique par opération non répétitive) | R. 4515-8 | code-travail-co-activite | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
+| `co-activite-etablissement-protocole-securite` | contexte 4 | R. 4515-11 (exemplaire daté et signé tenu à la disposition des comités sociaux et économiques et de l'inspection du travail) | R. 4515-11 | code-travail-co-activite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `signalisation-etablissement-risques-residuels` | fondement | Arrêté du 4 novembre 1993, art. 2 (mise en œuvre d'une signalisation de sécurité pour tout risque non évité par une protection collective ou par l'organisation du travail) | Arrêté 1993-11-04 art. 2 | arrete-1993-11-04-signalisation | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 2014-01-19 | 2014-01-19 | 4 · agent + verbatim | ancrée |
 | `signalisation-etablissement-alimentation-secours-presence` | fondement | Arrêté du 4 novembre 1993, art. 7 (alimentation de secours des signalisations qui ont besoin d'une source d'énergie) | Arrêté 1993-11-04 art. 7 | arrete-1993-11-04-signalisation | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 1993-12-17 | 1993-12-17 | 4 · agent + verbatim | ancrée |
 | `signalisation-etablissement-cheminements-evacuation` | fondement | Arrêté du 4 novembre 1993, art. 9 (balisage des cheminements d'évacuation par panneaux, et panneau additionnel « Sortie de secours » sur les dégagements réglementaires non utilisés habituellement) | Arrêté 1993-11-04 art. 9 | arrete-1993-11-04-signalisation | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 1993-12-17 | 1993-12-17 | 4 · agent + verbatim | ancrée |

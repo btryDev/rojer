@@ -1384,6 +1384,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // accident grave (R. 4141-8), modification des conditions (R. 4141-12), mise
     // à jour du document unique sur un fait (R. 4121-2, 2° et 3°). 162 + 5 = 167.
     { version: "2026-09-21.3", empreinte: "167-979e88706daaf366" },
+    // Aucune obligation n'entre ni ne sort : 167. Sept libellés rétablis dans
+    // les mots du texte après contre-lecture — R. 4624-31, R. 4624-28-2,
+    // R. 4141-8, R. 4141-12, R. 4463-5, R. 4463-7, R. 4121-2 —, et
+    // `R. 4515-8` cité par le protocole de sécurité, dont le fait générateur
+    // employait les mots sans nommer l'article.
+    { version: "2026-09-26.1", empreinte: "167-cfbe5dd387e13f05" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

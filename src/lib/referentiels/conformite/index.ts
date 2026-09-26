@@ -180,7 +180,11 @@ export const obligationsConformite: Obligation[] = [
 // internat restait sous l'ancien identifiant. Trouvé en relecture post-fusion.
 // La règle que le test énonce est la bonne, et elle a été lue à moitié : quand
 // l'empreinte change, la version change dans le MÊME commit.
-export const REFERENTIEL_VERSION = "2026-09-21.3";
+// `.1` le 2026-09-26 : aucune obligation n'entre ni ne sort. Les libellés de
+// sept obligations événementielles reprennent les mots de leur article, et le
+// protocole de sécurité cite `R. 4515-8`. Aucune échéance ne bouge — ces
+// lignes n'ont pas de date —, mais l'empreinte couvre le libellé.
+export const REFERENTIEL_VERSION = "2026-09-26.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
