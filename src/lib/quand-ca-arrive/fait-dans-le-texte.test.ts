@@ -56,67 +56,15 @@
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
+import {
+  entreGuillemets,
+  motsHorsTexte,
+  segmentsHorsTexte,
+} from "@/lib/verbatim/extrait-continu";
 
-const normaliser = (t: string) => t.replace(/[’‘]/g, "'").toLowerCase();
-const MOT = /[\p{L}\p{N}]+/gu;
-const FIN_DE_PROPOSITION = /^\s*(?:$|[,;:.—–…»«()[\]°!?])/;
-
-const DEBUT_DE_PROPOSITION = /(?:^|[,;:.—–…»«()[\]°!?])\s*$/;
-
-type Jeton = { mot: string; debutDeProposition: boolean; finDeProposition: boolean };
-
-function jetonsDuTexte(texte: string): Jeton[] {
-  const t = normaliser(texte);
-  return [...t.matchAll(MOT)].map((m) => ({
-    mot: m[0],
-    debutDeProposition: DEBUT_DE_PROPOSITION.test(t.slice(0, m.index!)),
-    finDeProposition: FIN_DE_PROPOSITION.test(t.slice(m.index! + m[0].length)),
-  }));
-}
-const mots = (t: string) => normaliser(t).match(MOT) ?? [];
-
-const singulier = (m: string) => (/[sx]$/.test(m) && m.length > 3 ? m.slice(0, -1) : m);
-const memeMot = (a: string, b: string) => a === b || singulier(a) === singulier(b);
-
-function estExtraitComplet(segment: string[], texte: Jeton[]): boolean {
-  if (segment.length === 0) return true;
-  for (let i = 0; i + segment.length <= texte.length; i++) {
-    if (
-      segment.every((m, k) => memeMot(m, texte[i + k].mot)) &&
-      texte[i].debutDeProposition &&
-      texte[i + segment.length - 1].finDeProposition
-    )
-      return true;
-  }
-  return false;
-}
-
-
-/** Les segments du fait qui ne sont pas un extrait complet d'un des textes. */
-function segmentsHorsTexte(fait: string, textes: string[]): string[] {
-  const sequences = textes.map(jetonsDuTexte);
-  return fait
-    .split(/[,;:.—]/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
-    .filter((s) => {
-      const j = mots(s);
-      return !sequences.some((t) => estExtraitComplet(j, t));
-    });
-}
-
-/** Les mots du libellé que le texte n'emploie pas. */
-function motsHorsTexte(libelle: string, textes: string[]): string[] {
-  const vocabulaire = new Set(textes.flatMap(mots).map(singulier));
-  return mots(libelle).filter((m) => !vocabulaire.has(singulier(m)));
-}
-
-/** Le passage entre guillemets d'une note : du premier « au dernier ». */
-const entreGuillemets = (note: string) => {
-  const a = note.indexOf("«");
-  const b = note.lastIndexOf("»");
-  return a >= 0 && b > a ? note.slice(a + 1, b) : "";
-};
+// La règle elle-même vit dans `verbatim/extrait-continu.ts` depuis le
+// 2026-09-26 : la garde des citations affichées la partage. Ce fichier garde
+// ce qui lui est propre — la source du verbatim, et les défauts qui l'éprouvent.
 
 /** Le verbatim consigné pour une obligation. */
 function verbatimDe(o: (typeof obligationsConformite)[number]): string[] {

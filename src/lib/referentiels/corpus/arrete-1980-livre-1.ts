@@ -34,7 +34,7 @@ export const ARRETE_1980_LIVRE_1: Corpus = {
   url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020303816/",
   etendue: "articles_cites",
   portee:
-    "Dispositions générales (GN 1 à GN 15) applicables à tous les ERP, des deux groupes. Ni PE 1 § 1 — qui écarte le Livre II en 5ᵉ catégorie — ni aucune autre exclusion ne les restreint. Ce corpus ne porte à ce jour QUE GN 1, et seulement pour ce qu'il définit : la nomenclature des types, dont l'énumération `TypeErp` du modèle est censée être le reflet. Les quatorze autres articles du Livre Ier ne sont pas dépouillés et ne figurent pas ici — l'étendue `articles_cites` le dit.",
+    "Dispositions générales (GN 1 à GN 15) applicables à tous les ERP, des deux groupes. Ni PE 1 § 1 — qui écarte le Livre II en 5ᵉ catégorie — ni aucune autre exclusion ne les restreint. Ce corpus porte à ce jour trois articles : GN 1, pour ce qu'il définit — la nomenclature des types, dont l'énumération `TypeErp` du modèle est censée être le reflet —, GN 10, l'article de champ, et GN 13, que l'écran du permis de feu cite. Les douze autres articles du Livre Ier ne sont pas dépouillés et ne figurent pas ici — l'étendue `articles_cites` le dit.",
   articles: [
     {
       ref: "GN 1",
@@ -111,6 +111,26 @@ export const ARRETE_1980_LIVRE_1: Corpus = {
       statut: "sans_objet",
       motif:
         "ARTICLE DE CHAMP, JAMAIS OUVERT AVANT LE 2026-09-21 — zéro occurrence de « GN 10 » dans tout le dépôt —, et il décide de l'application de tout ce que le référentiel tire de ce règlement. Trouvé en cherchant si le § 6 de `PE 27` valait pour un établissement existant.\n\nCE QU'IL NE CHANGE PAS : la quasi-totalité des obligations ERP du référentiel sont des VÉRIFICATIONS, des CONTRÔLES ou de l'ENTRETIEN — exactement ce que l'article excepte. Elles valent pour tous, et le registre de sécurité est une disposition administrative.\n\nCE QU'IL TOUCHE, mesuré en appelant le référentiel : cinq états permanents fondés sur ce règlement ne sont ni un contrôle, ni une vérification, ni un entretien — `incendie-erp-5-consignes-affichees` et `incendie-erp-5-instruction-personnel` (PE 27 § 4 et § 5), `incendie-erp-5-sommeil-consigne-chambres` (PE 33), `incendie-erp-5-sommeil-plans-affiches` (PE 35), `elec-erp-presence-personne-qualifiee` (EL 18). ~~Pour un établissement EXISTANT à l'entrée en vigueur de la disposition, ce règlement ne les impose pas de plein droit.~~ [2026-09-26 : qualification rayée — `GN 10`, relu en entier, ne date pas l'« existant » ; le rattacher à l'entrée en vigueur de chaque disposition est une lecture.] `PO 12` le confirme par l'exemple : il réimporte NOMMÉMENT « PE 27 (§ 5) » pour les hôtels existants — ce qui n'aurait aucun sens si le § 5 leur était déjà applicable.\n\nCE QUE LE PRODUIT NE SAIT PAS : l'âge de l'établissement au regard de chaque disposition. `Etablissement.dateAutorisationOuverture` existe et le moteur ne la lit pas ; ~~il faudrait en outre la date d'entrée en vigueur de chaque paragraphe, que personne n'a relevée~~ — RELEVÉES le 2026-09-21 : `PE 27` § 4 et § 5, `PE 33` § 2 et `PE 35` datent tous de l'arrêté du 22 juin 1990, en vigueur le 27 AOÛT 1990 ; `EL 18` § 2, dans sa rédaction actuelle, au plus tard du 7 avril 2002 (arrêté du 19 novembre 2001 — Légifrance a écrasé l'état antérieur). Pour les HÔTELS existants, `PO 8 § 1`, `PO 11` et `PO 12` réimportent nommément PE 27, PE 33 et PE 35 : GN 10 ne les en dispense pas. ~~La sur-application ne touche donc que des établissements ouverts avant 1990 et jamais modifiés.~~ [2026-09-26 : même lecture, rayée.] Les cinq lignes sont donc servies à TOUS les établissements du type — sur-application visible, du côté que ce dépôt choisit partout (« l'incertitude ne réduit jamais la couverture ») —, ~~et leur description le dit~~ [2026-09-26 : seules les deux lignes de `PE 27` citent `GN 10` ; `PE 33`, `PE 35` et `EL 18` n'en disent rien — à reprendre avec la décision A6]. La décision de demander la date, ou de retirer ces lignes aux établissements anciens, appartient à la propriétaire (dossier des décisions, A6).",
+    },
+    {
+      ref: "GN 13",
+      intitule: "Travaux dangereux",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020303866",
+      // Tel que la page l'affiche le 2026-09-26 : « Version en vigueur depuis
+      // le 15/08/1980 », « Modifié par Arrêté du 7 juillet 1983, v. init. ».
+      // La date de version antérieure au texte modificateur est celle de
+      // Légifrance ; relevée, pas corrigée.
+      versionEnVigueur: "1980-08-15",
+      modifiePar: { texte: "Arrêté du 7 juillet 1983, v. init." },
+      luLe: "2026-09-26",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Interdit à l'exploitant d'effectuer ou de faire effectuer, en présence du public, des travaux qui mettraient le public en danger ou gêneraient son évacuation.",
+      citationCle:
+        "L'exploitant ne peut effectuer ou faire effectuer, en présence du public, des travaux qui feraient courir un danger quelconque à ce dernier ou qui apporteraient une gêne pour son évacuation.",
+      statut: "sans_objet",
+      motif:
+        "Consigné le 2026-09-26 parce que l'écran du permis de feu en affiche le texte entre guillemets, et qu'aucun corpus ne le portait : l'extrait n'était confronté à rien (`verbatim/extraits-affiches.test.ts`). Un seul alinéa, section 4 « Travaux » du Livre Ier. C'est une INTERDICTION, sans pièce ni rythme : rien ne s'en inscrit au calendrier. Il ne prescrit pas de permis de feu — l'écran le dit déjà.",
     },
   ],
 };
