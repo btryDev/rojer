@@ -1501,6 +1501,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // `.9` ; même cas que `.8` (descriptions seules, empreinte inchangée).
     // 169 + 0 − 0 = 169.
     { version: "2026-09-26.10", empreinte: "169-b35a654fd2941809" },
+    // Pas de `.11` : la version ainsi numérotée (condition `non_infirmee` sur
+    // la quinzaine du groupe électrogène, 2026-09-27) a été annulée le jour
+    // même sans avoir quitté sa branche — la case du formulaire est binaire
+    // et décochée par défaut, « faux » n'y est pas une réponse. Son numéro
+    // n'est pas réemployé, comme `.3` : la prochaine version sera `.12`.
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
