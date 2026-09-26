@@ -205,7 +205,7 @@ export const CORPUS_PE: Corpus = {
       lecture: "agent_verbatim",
       statut: "sans_objet",
       motif:
-        "Impose l'existence et la manœuvrabilité des dispositifs de désenfumage, sans essai ni vérification récurrente. Le désenfumage figure en revanche dans la liste triennale de PE 4 § 2.",
+        "Impose l'existence et la manœuvrabilité des dispositifs de désenfumage, sans essai ni vérification récurrente. ~~Le désenfumage figure en revanche dans la liste triennale de PE 4 § 2.~~ [2026-09-27, C39 : faux. PE 4 relu sur Légifrance le 2026-09-26 (en vigueur depuis le 01/07/2026) : la liste du § 2 — chauffage, éclairage, installations électriques, installations de gaz, appareils de cuisson, circuits d'extraction, ascenseurs, moyens de secours, « etc. » — ne nomme pas le désenfumage. C'est le § 1 qui le nomme, pour une vérification « à la construction et avant l'ouverture » par des personnes ou organismes agréés, dans les seuls établissements avec locaux à sommeil.]",
     },
     {
       ref: "PE 15",

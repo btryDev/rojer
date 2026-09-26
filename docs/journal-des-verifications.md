@@ -2706,6 +2706,329 @@ F2. `controle-zip/route.ts` : « synthèse globale signée » devient
 **Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
 inchangée depuis `d34bb24`, et le lot ne touche dans `src/lib/referentiels` qu'un commentaire (`corpus/citations-ecran.ts`, 383e7d5).
 
+### C39 · 2026-09-26 — Les sœurs incendie : ce que la référence affichée dit du champ
+
+Trois questions, instruites avant toute retouche. Pour chacune, les
+`notesInternes` des sœurs ont été cherchées par article et par argument
+avant de décider.
+
+**A. `incendie-registre-securite` ne porte pas `champR422734`.** Textes relus
+sur Légifrance le 2026-09-26 :
+- `R. 4227-39` (LEGIARTI000024769386, en vigueur depuis le 10/11/2011)
+  s'ouvre sur « La consigne de sécurité incendie prévoit des essais et
+  visites périodiques du matériel et des exercices ». Il finit par « Leur
+  date et les observations […] sont consignées sur un registre tenu à la
+  disposition de l'inspection du travail ».
+- `R. 4227-37` (en vigueur du 10/11/2011 au 01/01/2027) : « Dans les
+  établissements mentionnés à l'article R. 4227-34, une consigne de sécurité
+  incendie est établie ».
+- `R. 4227-34` (LEGIARTI000018532067, en vigueur depuis le 01/05/2008) :
+  « plus de cinquante personnes, ainsi que ceux, quelle que soit leur
+  importance, où sont manipulées et mises en œuvre des matières
+  inflammables ».
+
+Le registre DE `R. 4227-39` est donc dans ce champ. Le rattachement passe
+par « la consigne » : c'est une lecture, la même que celle des deux sœurs
+(`incendie.ts:277` pour la consigne, `incendie.ts:327` pour l'exercice).
+Mais la ligne n'est pas ce registre-là. Son amendement (B) du 2026-08-31
+(`incendie.ts:436`) la fonde sur deux bases, sans seuil :
+- chez tout employeur : `L. 4711-1`, `L. 4711-2`, `D. 4711-2` et
+  `D. 4711-3` ;
+- dans tout ERP, 5ᵉ comprise : CCH `R. 143-44`.
+
+Le registre des essais et exercices est déjà porté, dans le champ, par
+`incendie-travail-exercice-semestriel`. **Pas d'alignement** : aligner
+priverait de la ligne tout employeur et tout ERP de 5ᵉ sous le seuil. Ce
+serait un faux négatif muet, et des lignes supprimées par la réconciliation.
+
+Ce qui se voyait pourtant, et qui est corrigé :
+- `R. 4227-39` était en `referencesLegales[0]`, « l'article qui fonde ».
+  Le guide « Par métier » l'affichait comme référence du registre du profil
+  « Bureau ». `L. 4711-1` prend la tête, et `R. 4227-39` passe en contexte
+  avec une note qui dit son champ.
+- La description disait l'obligation de `R. 4227-39` sans condition. Elle
+  dit maintenant ce que doit tout employeur, puis ce que doivent en plus les
+  établissements de `R. 4227-34`.
+
+Garde neuve dans `conformite.test.ts` : une obligation fondée sur
+`R. 4227-34` à `-39` porte `champR422734`. **Éprouvée** en remettant
+l'`incendie.ts` de `d4681ef` : `incendie-registre-securite: expected
+undefined to be true`. Restaurée, elle passe.
+
+Mouvement de l'état de vérification : le fondement du registre passe de
+« 5 · première main » (`R. 4227-39`) à « 4 · agent + verbatim »
+(`L. 4711-1`, relevé par agent le 2026-08-31). Sur le tableau des
+fondements, 74 − 1 = 73 au niveau 5 et 89 + 1 = 90 au niveau 4. Les
+obligations « mieux vérifiées sur leur fondement » passent de 11 − 1 = 10.
+
+**B. `incendie-erp-extincteurs-annuelle` (MS 38) en 5ᵉ catégorie.** Textes
+relus le 2026-09-26 :
+- le chemin de MS 38 : « Livre II : Dispositions applicables aux
+  établissements des quatre premières catégories » ;
+- le § 4, verbatim identique au corpus ;
+- `PE 1` (LEGIARTI000020374786, en vigueur depuis le 27/08/1990) : « Les
+  dispositions du livre II ne sont pas applicables sauf celles relevant
+  d'articles expressément mentionnés dans la suite du présent livre ».
+
+`PE 26` § 1 ne renvoie qu'à MS 39 (corpus `arrete-1980-livre-3.ts:317`).
+La politique sœur est la sur-application assumée, déjà écrite dans les
+notes de la ligne (`incendie.ts:676`), de sa jumelle décennale
+(`incendie.ts:732`), du désenfumage (`incendie.ts:854`), du groupe
+électrogène (`electricite.ts:555`) et de CH 58 (`aeration.ts:332`, bornage
+annulé). **Comportement inchangé.**
+
+Mais aucun écran ne le disait. La fiche (« Ce qui fonde cette
+obligation »), le guide « Par métier » (commerce, restauration) et la raison
+du pré-remplissage citaient « MS 38 § 4 » à un ERP de 5ᵉ sans réserve.
+C'est corrigé sur les deux lignes MS 38 :
+- la `reference` porte « — livre II, établissements des quatre premières
+  catégories » ;
+- la description nomme `PE 4` § 2 (« tous les trois ans au plus ») et dit
+  que le calendrier maintient l'échéance en 5ᵉ.
+
+**C. La raison de `personnes-presentes.ts`** pour une 1ʳᵉ à 3ᵉ catégorie
+disait « le public admis y atteint au moins 301 personnes, seuil franchi
+par le public seul ». CCH `R. 143-19` (LEGIARTI000043818977, en vigueur
+depuis le 01/07/2021) classe « d'après l'effectif du public et du
+personnel ». Il ajoute : « il y a lieu de majorer l'effectif du public de
+celui du personnel n'occupant pas des locaux indépendants ». La phrase est
+donc fausse pour une 3ᵉ catégorie à 290 clients et 11 salariés. Elle
+devient « au moins 301 personnes par son classement, public et personnel
+comptés ensemble, seuil de 51 franchi ».
+
+La conclusion tient : `R. 4227-34` compte aussi les personnes « occupées »,
+et le plancher (301) reste supérieur au seuil (51). La formule
+`plancher >= seuil` garde la phrase vraie pour tout seuil. L'assertion
+`not.toContain("public seul")` a été **éprouvée** en réinjectant les mots
+(`expected '…' not to contain 'public seul'`), puis restaurée.
+
+`version-moteur.test.ts` : NON. Les `raisons` ne sont ni écrites par
+`calendrier/actions.ts` ni lues par `reconciliation.ts`. Le relevé est
+recopié (`d6ce6130dcdbeea4` → `acc5dd2269f36cce`), sans incrément.
+
+**Applicabilité inchangée, prouvée par une grille** : 144 cas, soit
+{N5, M3, ERP sans catégorie, travail seul} × effectif {2, 30, 60} ×
+personnes présentes {non renseigné, 20, 80} × matières {non renseigné,
+oui} × équipements {aucun, tous}. `determineObligationsApplicables` a été
+lancé sur `d4681ef` puis après : les sorties sont identiques au caractère
+près. Le registre est rendu dans les 144 cas, l'annuelle des extincteurs
+dans les 54 cas ERP avec équipements.
+
+**Sceau** : `2026-09-26.10+169-b35a654fd2941809+moteur.4`. La version est
+neuve, l'empreinte inchangée (précédent `.8`) ; 169 + 0 − 0 = 169.
+
+**Seconde passe, le même jour, sur demande de la session de coordination.**
+
+**D. La même réserve pour toutes les sœurs du livre II servies aux N5.**
+Le livre III a été relu sur Légifrance le 2026-09-26, sur les pages des
+articles :
+- `PE 4` (en vigueur depuis le 01/07/2026). Le § 1 fait vérifier, « à la
+  construction et avant l'ouverture », par des personnes ou organismes
+  agréés, les SDI, le désenfumage et les installations électriques « dans
+  les établissements avec locaux à sommeil ». Il impose aussi un contrat
+  annuel d'entretien des SDI. Le § 2 dit : « Tous les trois ans au plus,
+  l'exploitant doit procéder, ou faire procéder, par des techniciens
+  compétents, aux opérations d'entretien et de vérification des
+  installations et des équipements techniques de son établissement ». Sa
+  liste nomme le chauffage, l'éclairage, les installations électriques, le
+  gaz, les appareils de cuisson, les circuits d'extraction, les ascenseurs,
+  les moyens de secours, et se termine par « etc. ».
+- `PE 15` § 1 (en vigueur depuis le 01/03/2006) : « leur mise en œuvre
+  devra être réalisée dans les conditions définies au livre II, titre Ier,
+  chapitre X ».
+- `PE 20` § 2 (LEGIARTI000024766756, en vigueur depuis le 22/05/2004) : la
+  même formule, pour le chapitre V.
+
+Quinze obligations, et non les sept de la demande : la garde a trouvé
+toutes les sœurs, y compris l'éclairage de sécurité (`EC 14`, deux lignes),
+la mise en service électrique (`GE 6` à `GE 8`) et les cinq lignes de
+cuisine (`GC 21`, `GC 22`, `GC 1`, `GC 8`, `MS 73`). Pour chacune :
+- chaque `reference` au livre II porte « — livre II, établissements des
+  quatre premières catégories » ;
+- la description dit ce que le livre III porte en 5ᵉ, puis « Le calendrier
+  y maintient pourtant cette échéance, par sur-application assumée ».
+
+Aucun renvoi n'est ajouté :
+- **désenfumage** : `PE 4` § 2 ne le nomme pas, et la description le dit
+  (« se termine par « etc. » ») ;
+- **CH 58 et cuisine** : `PE 20` § 2 et `PE 15` § 1 visent la « mise en
+  œuvre », et la description dit qu'ils ne parlent ni d'entretien ni de
+  vérification ;
+- **groupe électrogène** : sa note rapprochait `PE 4` § 1. Or le § 1 ne
+  vise que la construction et l'ouverture. La description cite le § 2, et
+  la note le dit.
+
+Garde neuve (`conformite.test.ts`) : toute référence au livre II (titre Ier,
+préfixes GE, CO, AM, DF, CH, GZ, EL, EC, AS, GC, MS) servie à un ERP que sa
+typologie peut classer en 5ᵉ dit son champ. **Éprouvée avant correction**,
+rouge sur 23 références : `expected [ …(23) ] to deeply equal []`, dont
+`incendie-erp-desenfumage-annuelle — Arrêté du 25 juin 1980, art. DF 10`.
+Verte après.
+
+**E. `L. 4711-1` en première main.** La page de l'article
+(LEGIARTI000006903383) a été lue deux fois, à l'aveugle puis de façon
+ciblée. Le verbatim est identique à la `citationCle`, la version est « en
+vigueur depuis le 01/05/2008 ». Aucune mention « Modifié par » ne s'affiche
+sur trois pages consultées : `modifiePar: null`, réponse déclarée. L'entrée
+passe à `premiere_main`, avec l'URL de l'article.
+
+Le fondement du registre remonte à « 5 · première main ». Mouvement du
+tableau des fondements depuis la première passe :
+- niveau 5 : 73 + 1 = 74 ;
+- niveau 4 : 90 − 1 = 89.
+
+Les lectures datées du 2026-08-31 passent de 63 à 62, celles du 2026-09-26
+de 26 à 27.
+
+**F. `etablissements/labels.ts` : établi, pas arbitré.**
+- « comptent le public admis, jamais les salariés » est un commentaire
+  JSDoc, il n'est pas affiché. Les libellés affichés
+  (`LABEL_CATEGORIE_ERP`) ne portent que les fourchettes. Les deux aides
+  affichées disent déjà public ET personnel, avec `R. 143-19` :
+  `StepTypologie.tsx` (« majoré de celui du personnel ») et
+  `EtablissementForm.tsx`.
+- La catégorie est DÉCLARÉE par un `<select>` au parcours et sur la fiche.
+  `onboarding/deduction-erp.ts` (`deduireCategorieErp*`) n'est importé par
+  aucun fichier hors tests. Rien n'est calculé.
+- Aucune correction : rien d'affiché n'est faux. Le commentaire reste
+  contraire au texte, et l'écart est déjà relevé au corpus.
+
+**Applicabilité** : la grille de 144 cas, relancée après cette passe, est
+identique au caractère près à celle de `d4681ef`. Sceau inchangé :
+`2026-09-26.10+169-b35a654fd2941809+moteur.4`. Seuls des descriptions, des
+`reference` et des notes ont bougé, sur la même branche non publiée.
+
+**Reste ouvert** : la lecture de `PE 20` § 2 et de `PE 15` § 1 — « mise en
+œuvre », vérification comprise ou non — que les notes de CH 58 demandent
+de trancher ensemble. La description le dit sans le trancher.
+
+**Troisième passe, le 2026-09-27, après contre-lecture de `546a54c`.** La
+contre-lecture n'a relevé aucun point grave. Sa grille de 1008 cas ne
+montre aucune différence d'applicabilité ni de génération, et les
+citations sont exactes. Les corrections :
+
+- **M1.** La phrase « par sur-application assumée » n'était gardée par
+  rien : retirée des huit descriptions d'`incendie.ts`, la suite restait
+  verte. La garde du livre II l'exige désormais des obligations dont
+  l'article FONDATEUR est du livre II et qui sont servies en 5ᵉ. Ce n'est
+  pas « une référence quelconque » : la visite de commission de 5ᵉ cite
+  `GE 4` pour dire qu'il ne s'y applique pas, et le contrôle quinquennal des
+  ascenseurs cite `AS 9` en contexte. Exiger d'elles la phrase la rendrait
+  fausse (première rédaction : rouge sur ces deux-là, restreinte).
+  **Éprouvée** : les huit phrases retirées d'`incendie.ts` donnent
+  `expected [ …(8) ] to deeply equal []`, avec les huit identifiants.
+  Restaurée, elle passe.
+- **F1.** `livre II(?!I)`. **Éprouvée** : la référence de `DF 10` réécrite
+  « — livre III » donne `incendie-erp-desenfumage-annuelle — Arrêté du 25
+  juin 1980, art. DF 10 — livre III`. Restaurée, elle passe.
+- **F2.** Motif de `PE 14` au corpus : « Le désenfumage figure en revanche
+  dans la liste triennale de PE 4 § 2 » est rayé et daté. La liste du § 2
+  ne le nomme pas ; c'est le § 1 qui le nomme, à la construction et avant
+  l'ouverture, avec locaux à sommeil.
+- **F3.** Commentaires. L'historique dit « version précédente `.9` ; même
+  cas que `.8` ». `.8` est bien le précédent d'une version neuve à
+  empreinte inchangée, puisque `.9` a déplacé l'empreinte ; les deux sont
+  donc nommés. `index.ts` décrit le périmètre réel : 18 obligations, soit le
+  registre et les 17 lignes du livre II. Ce compte a été mesuré en
+  comparant descriptions et références de `d4681ef` à celles de la branche.
+- **F4.** La description du registre cite la seconde branche de
+  `R. 4227-34` dans ses mots : « manipulées et mises en œuvre des matières
+  inflammables mentionnées à l'article R. 4227-22 ».
+- **F5.** Le pré-remplissage portait « MS 38 § 4 — livre II… » sans rien
+  sur la sur-application. `Entree.mention` est un champ à part : la forme
+  `motif (références).` de `raison` est tenue par un test. Il est posé dès
+  qu'une citation est du livre II : « En 5ᵉ catégorie, l'échéance est
+  maintenue par sur-application assumée : le détail est sur la fiche de
+  l'obligation. » Il est rendu dans le même paragraphe par
+  `PreRemplissagePanel`. **Éprouvé** : la mention retirée d'`entree()` et du
+  rendu fait tomber trois tests (valeur, équivalence « cite le livre II ⇔
+  mention », rendu jsdom). Restaurée, elle passe.
+
+**M2, NON FAIT, renvoyé à la coordination.**
+`elec-erp-groupe-electrogene-quinzaine` n'a pas la condition
+`aGroupeElectrogene` que porte `-annuel`. Mais `-annuel` NE GARDE PAS la
+ligne sur le non-renseigné :
+- `equipement_propriete_booleenne` rend `false` quand la propriété est
+  absente (`engine.ts:745`) ;
+- `engine.test.ts:542` le tient : « caracs absentes → EL 20 NON
+  applicable ».
+
+Mesuré sur un ERP de type M et une installation électrique :
+
+| catégorie | vrai | faux | absent |
+|---|---|---|---|
+| N5, N3 ou sans catégorie | quinzaine + annuel | quinzaine seule | quinzaine seule |
+
+Or l'absence est le cas courant : `creerEquipementsDepuisPreRemplissage`
+crée les équipements sans `caracteristiques`. Aligner « pareil » que
+`-annuel` éteindrait donc la quinzaine chez tous ces ERP, pas seulement
+chez ceux qui ont répondu `false`. Garder la ligne sur l'absent et
+l'éteindre sur `false` demande une condition qui n'existe pas : le type
+booléen confond absent et faux. Il faudrait écrire une sémantique neuve
+dans le moteur. Les deux consignes (« fais pareil » et « null garde la
+ligne ») ne tiennent pas ensemble : rien n'est changé, la version reste
+`.10`.
+
+**M2 posé puis ANNULÉ le 2026-09-27.** Une condition `non_infirmee` a été
+posée sur la quinzaine (`797634a`, référentiel `.11`), puis annulée par la
+coordination le même jour (`b131c6f`, revert). Rien n'a quitté la branche.
+
+LA RAISON DE L'ANNULATION : « faux » n'est pas une réponse. La case
+« Groupe électrogène de sécurité présent » du formulaire d'équipement
+(`EquipementForm.tsx`) est une case à cocher binaire, décochée par défaut
+(`defaultChecked={… ?? false}`), et le formulaire écrit toujours un
+booléen. Toute installation électrique enregistrée par le formulaire sans
+cocher la case porte donc `aGroupeElectrogene: false`, que la personne ait
+pensé ou non à la question. `non_infirmee` y éteignait la quinzaine : le
+faux négatif muet qu'on voulait éviter, déplacé du silence vers la case
+décochée.
+
+La grille de `797634a` ne le voyait pas. Elle traitait « faux » comme une
+réponse, et ses 24 pertes « groupe = faux » étaient exactement ce faux
+négatif.
+
+LA VRAIE CORRECTION est un choix à trois états — Oui / Non / Je ne sais
+pas —, par défaut « Je ne sais pas » (propriété absente). Le formulaire
+connaît déjà ce patron (`CHAMPS_TRI_ETAT`, `normaliserTriEtat`). Elle est à
+décider par la propriétaire, avec la question de
+`elec-erp-groupe-electrogene-annuel` :
+- ses `notesInternes` ne disent rien du non-renseigné ;
+- le « absent → non applicable » n'est écrit que dans
+  `CONDITIONS_STRICTES_JUSTIFIEES` (motif de non-régression : « l'obligation
+  n'a JAMAIS été appliquée sans réponse ») et constaté par
+  `engine.test.ts` ;
+- une installation créée par le pré-remplissage, sans `caracteristiques`,
+  ne la reçoit pas.
+
+**Version.** `.10` reste la version courante. `.11` est abandonnée et son
+numéro n'est pas réemployé, comme `.3` ; la prochaine sera `.12`. Le
+commentaire de `HISTORIQUE_EMPREINTES` le dit.
+
+**Grille de contrôle** (`032c5df` contre `d4681ef`, moteur et référentiel
+de production). Les 128 cas de la grille du groupe électrogène, au niveau
+(obligation, équipement), sont IDENTIQUES au caractère près. La quinzaine
+est servie dans les 72 cas ERP avec installation électrique, dont les 24
+« groupe = faux », comme en production.
+
+**Texte de la case, corrigé.** Il disait « Déclenche la vérification
+annuelle prévue par l'art. EL 20 du règlement ERP ». EL 20 traite des
+installations temporaires : il était cité à tort, et le référentiel l'avait
+corrigé dès l'audit 2026-08. La ligne gouvernée est mensuelle. Le nouveau
+texte est la constante `AIDE_GROUPE_ELECTROGENE` (`equipements/labels.ts`) :
+« Cochée, déclenche chaque mois l'entretien et l'essai du groupe
+électrogène de sécurité (art. EL 18 § 4 du règlement de sécurité — livre
+II, établissements des quatre premières catégories ; en 5ᵉ catégorie,
+échéance maintenue par sur-application assumée). »
+
+Il est lu contre le référentiel par `labels.test.ts` : seule ligne
+conditionnée sur la propriété, `mensuelle`, fondée sur EL 18 § 4 avec la
+réserve livre II, et jamais « EL 20 ». **Éprouvé** : EL 20 réinjecté à la
+place d'EL 18 § 4 donne `× ne cite pas EL 20` et `× parle de la seule
+ligne…`. Restauré, il passe.
+
+Le commentaire de `equipements/schema.ts:16` et les trois titres de tests
+du moteur qui disaient « EL 20 » sont corrigés.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

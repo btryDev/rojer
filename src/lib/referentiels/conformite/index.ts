@@ -205,7 +205,18 @@ export const obligationsConformite: Obligation[] = [
 // la formation de ses élus et le règlement intérieur (L. 2311-2, L. 1111-2,
 // L. 1111-3), l'établissement pour la restauration (R. 4228-22/-23). 169
 // obligations, aucune n'entre ni ne sort.
-export const REFERENTIEL_VERSION = "2026-09-26.9";
+// `.10` le 2026-09-26 (C39) : descriptions, références et notes seules, sur
+// dix-huit obligations. Le registre de sécurité cesse de citer R. 4227-39 en
+// premier (son champ est celui de R. 4227-34, la ligne vaut pour tout
+// employeur par L. 4711-1, relu en première main). Les dix-sept lignes
+// fondées sur le livre II et servies aux N5 — extincteurs (annuelle,
+// décennale), SSI, BAES, éclairage de sécurité (×2), désenfumage, RIA, groupe
+// électrogène (×2), mise en service électrique, CH 58, grande cuisine (×5) —
+// disent dans leur référence « livre II, établissements des quatre premières
+// catégories », et dans leur description ce que le livre III porte en 5ᵉ et
+// la sur-application assumée. Aucune typologie, aucun libellé : empreinte
+// inchangée, 169.
+export const REFERENTIEL_VERSION = "2026-09-26.10";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

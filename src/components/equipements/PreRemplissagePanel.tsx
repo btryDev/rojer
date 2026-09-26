@@ -11,6 +11,7 @@ type Suggestion = {
   categorie: CategorieEquipement;
   libelle: string;
   raison: string;
+  mention?: string;
 };
 
 type Props = {
@@ -98,6 +99,7 @@ export function PreRemplissagePanel({ etablissementId, suggestions }: Props) {
                   </p>
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                     {s.libelle} — {s.raison}
+                    {s.mention ? ` ${s.mention}` : null}
                   </p>
                 </label>
               </li>

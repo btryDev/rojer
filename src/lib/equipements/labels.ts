@@ -175,3 +175,17 @@ export function trierParCategorie<T extends { categorie: CategorieEquipement }>(
 ): T[] {
   return [...liste].sort((a, b) => ordreCategorie(a.categorie) - ordreCategorie(b.categorie));
 }
+
+/**
+ * L'aide de la case « Groupe électrogène de sécurité présent » (C39,
+ * 2026-09-27). Elle disait « Déclenche la vérification annuelle prévue par
+ * l'art. EL 20 du règlement ERP » : EL 20 traite des installations
+ * temporaires (cité à tort, corrigé au référentiel dès l'audit 2026-08 mais
+ * pas ici), et la ligne que la case gouverne est mensuelle. Cette ligne est
+ * `elec-erp-groupe-electrogene-annuel` — seule obligation conditionnée sur
+ * `aGroupeElectrogene` —, fondée sur EL 18 § 4 (`referencesLegales[0]`),
+ * article du livre II. `labels.test.ts` tient l'accord avec le référentiel et
+ * interdit « EL 20 ».
+ */
+export const AIDE_GROUPE_ELECTROGENE =
+  "Cochée, déclenche chaque mois l'entretien et l'essai du groupe électrogène de sécurité (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéance maintenue par sur-application assumée).";

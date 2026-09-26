@@ -68,3 +68,24 @@ describe("le bouton et le message ne se contredisent jamais", () => {
     expect(screen.getByText(/8 équipements ajoutés/)).toBeTruthy();
   });
 });
+
+describe("la mention de sur-application s'affiche avec la raison (C39)", () => {
+  it("rendue dans le même paragraphe que la citation", () => {
+    render(
+      <PreRemplissagePanel
+        etablissementId="e1"
+        suggestions={[
+          {
+            categorie: "EXTINCTEUR" as const,
+            libelle: "Extincteurs portatifs",
+            raison:
+              "Vérification annuelle (Arrêté du 25 juin 1980, art. MS 38 § 4 — livre II, établissements des quatre premières catégories).",
+            mention: "En 5ᵉ catégorie, l'échéance est maintenue par sur-application assumée.",
+          },
+        ]}
+      />,
+    );
+    const p = screen.getByText(/MS 38 § 4 — livre II/);
+    expect(p.textContent).toContain("sur-application assumée");
+  });
+});

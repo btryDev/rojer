@@ -677,6 +677,74 @@ describe("référentiel conformité — seuils d'effectif", () => {
     }
   });
 
+  it("une obligation FONDÉE sur un article du champ de R. 4227-34 porte ce champ (C39)", () => {
+    // R. 4227-34 pose le champ, R. 4227-37 (consigne) et R. 4227-38 (son
+    // contenu) y renvoient, R. 4227-39 (essais, exercices, leur registre)
+    // s'ouvre sur « La consigne de sécurité incendie prévoit ». Un article de
+    // ce groupe en `referencesLegales[0]` — « l'article qui fonde », convention
+    // du type — sur une ligne servie hors du champ serait une sur-application
+    // que la référence affichée présente comme le texte. Le cas inverse est
+    // permis, et c'est celui du registre de sécurité : il CITE R. 4227-39 en
+    // contexte, et il est fondé ailleurs (L. 4711-1 chez tout employeur, CCH
+    // R. 143-44 dans tout ERP).
+    const DU_CHAMP = /^R\. 4227-3[4-9]$/;
+    for (const o of obligationsConformite) {
+      const fondateur = o.referencesLegales[0];
+      if (DU_CHAMP.test(fondateur.article ?? fondateur.reference)) {
+        expect(o.typologies.champR422734, o.id).toBe(true);
+      }
+    }
+  });
+
+  it("toute référence au livre II servie à un ERP de 5ᵉ dit son champ (C39)", () => {
+    // PE 1 § 1 : « Les dispositions du livre II ne sont pas applicables sauf
+    // celles relevant d'articles expressément mentionnés dans la suite du
+    // présent livre ». Les lignes fondées sur le livre II et servies aux N5
+    // sont une sur-application ASSUMÉE — maintenue, pas retirée. Ce qui est
+    // exigé ici n'est donc pas de les borner, mais que la référence AFFICHÉE
+    // (fiche, guide, pré-remplissage) ne présente pas l'article comme dû en 5ᵉ
+    // au titre du texte. Le livre II, titre Ier, se reconnaît à ses préfixes
+    // de chapitre (GE, CO, AM, DF, CH, GZ, EL, EC, AS, GC, MS).
+    const LIVRE_2 = /^(GE|CO|AM|DF|CH|GZ|EL|EC|AS|GC|MS) \d/;
+    // `livre II(?!I)` : « livre III » n'est pas le livre II, et l'accepter
+    // laissait passer une référence qui dirait le contraire (contre-lecture
+    // de 546a54c).
+    const DIT_SON_CHAMP =
+      /livre II(?!I)|quatre premières catégories|4 premières catégories|PAS applicable en 5ᵉ/;
+    // La description dit la sur-application quand l'article FONDATEUR
+    // (`referencesLegales[0]`) est du livre II : sans elle, l'exploitant lit
+    // une référence réservée aux quatre premières catégories ET une échéance
+    // à son calendrier, sans savoir pourquoi les deux coexistent. Une ligne
+    // qui ne cite le livre II qu'en contexte n'est pas une sur-application et
+    // ne doit pas se dire telle : la visite de commission de 5ᵉ cite GE 4
+    // pour dire qu'il ne s'y applique PAS, le contrôle quinquennal des
+    // ascenseurs est fondé ailleurs et cite AS 9 pour les catégories 1 à 4.
+    const DIT_LA_SUR_APPLICATION = /sur-application assumée/;
+    const servieAuxN5 = (erp: unknown): boolean => {
+      if (erp === true) return true;
+      if (!erp || typeof erp !== "object") return false;
+      const categories = (erp as { categories?: string[] }).categories;
+      return !categories || categories.includes("N5");
+    };
+    const muettes: string[] = [];
+    const descriptionsMuettes: string[] = [];
+    for (const o of obligationsConformite) {
+      if (!servieAuxN5(o.typologies.erp)) continue;
+      for (const r of o.referencesLegales) {
+        if (!LIVRE_2.test(r.article ?? "")) continue;
+        if (!DIT_SON_CHAMP.test(r.reference)) {
+          muettes.push(`${o.id} — ${r.reference}`);
+        }
+      }
+      const fondeSurLeLivre2 = LIVRE_2.test(o.referencesLegales[0].article ?? "");
+      if (fondeSurLeLivre2 && !DIT_LA_SUR_APPLICATION.test(o.description ?? "")) {
+        descriptionsMuettes.push(o.id);
+      }
+    }
+    expect(muettes).toEqual([]);
+    expect(descriptionsMuettes).toEqual([]);
+  });
+
   it("`champR422734` n'est jamais posé sans `personnesPresentesMin`", () => {
     for (const o of obligationsConformite) {
       if (o.typologies.champR422734) {
@@ -1425,6 +1493,19 @@ describe("référentiel conformité — version et empreinte", () => {
     // établissement : les deux lignes de restauration). Les typologies sont
     // hachées, l'empreinte bouge ; 169 + 0 − 0 = 169.
     { version: "2026-09-26.9", empreinte: "169-b35a654fd2941809" },
+    // C39 : même empreinte, version neuve — descriptions et `reference`
+    // seules (registre de sécurité : L. 4711-1 en tête, R. 4227-39 dit dans
+    // le champ de R. 4227-34 ; extincteurs d'ERP : MS 38 dit au livre II,
+    // PE 4 § 2 nommé pour la 5ᵉ) ; puis, sur la même version non publiée,
+    // les dix-sept lignes du livre II servies aux N5. Version précédente
+    // `.9` ; même cas que `.8` (descriptions seules, empreinte inchangée).
+    // 169 + 0 − 0 = 169.
+    { version: "2026-09-26.10", empreinte: "169-b35a654fd2941809" },
+    // Pas de `.11` : la version ainsi numérotée (condition `non_infirmee` sur
+    // la quinzaine du groupe électrogène, 2026-09-27) a été annulée le jour
+    // même sans avoir quitté sa branche — la case du formulaire est binaire
+    // et décochée par défaut, « faux » n'y est pas une réponse. Son numéro
+    // n'est pas réemployé, comme `.3` : la prochaine version sera `.12`.
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

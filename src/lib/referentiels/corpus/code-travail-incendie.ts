@@ -182,14 +182,23 @@ export const CODE_TRAVAIL_INCENDIE: Corpus = {
       ref: "L. 4711-1",
       intitule:
         "Mentions obligatoires des attestations, consignes, résultats et rapports de vérification",
-      url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000006178110/",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006903383",
       versionEnVigueur: "2008-05-01",
+      // Relu en première main le 2026-09-26 (C39), devenu le fondement de
+      // `incendie-registre-securite` : page de l'article, deux lectures (à
+      // l'aveugle, puis ciblée), verbatim identique à `citationCle`. Page
+      // consultée trois fois — article, section, ancienne URL affichCode — :
+      // « Version en vigueur depuis le 01/05/2008 », aucune mention « Modifié
+      // par » affichée. `null` est donc la réponse déclarée « pas de texte
+      // modificateur à signaler » ; le texte de création (la recodification
+      // de 2008) n'est pas affiché et n'est pas deviné ici.
+      modifiePar: null,
       prescrit:
         "Tout employeur : les pièces des vérifications et contrôles de santé-sécurité qui lui incombent portent des mentions obligatoires fixées par voie réglementaire (D. 4711-2). Aucune condition d'effectif, d'équipement ni de classement ERP.",
       citationCle:
         "Les attestations, consignes, résultats et rapports relatifs aux vérifications et contrôles mis à la charge de l'employeur au titre de la santé et de la sécurité au travail comportent des mentions obligatoires déterminées par voie réglementaire.",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       statut: "retenu",
       obligations: ["incendie-registre-securite"],
     },

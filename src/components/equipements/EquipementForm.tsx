@@ -14,6 +14,7 @@ import {
   type ChampTriEtat,
 } from "@/lib/equipements/schema";
 import {
+  AIDE_GROUPE_ELECTROGENE,
   DESCRIPTION_CATEGORIE,
   LABEL_CATEGORIE_EQUIPEMENT,
 } from "@/lib/equipements/labels";
@@ -367,8 +368,7 @@ export function EquipementForm({
                     Groupe électrogène de sécurité présent
                   </p>
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                    Déclenche la vérification annuelle prévue par l&apos;art. EL
-                    20 du règlement ERP.
+                    {AIDE_GROUPE_ELECTROGENE}
                   </p>
                 </div>
               </label>

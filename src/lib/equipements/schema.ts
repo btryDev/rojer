@@ -13,7 +13,7 @@ import { FAMILLES_ESP } from "./esp";
  *
  * Les propriétés qui alimentent les conditions d'obligations du référentiel
  * (cf. `src/lib/referentiels/conformite/`) sont :
- *   - `aGroupeElectrogene`          → ERP, art. EL 20
+ *   - `aGroupeElectrogene`          → ERP, art. EL 18 § 4 (entretien et essai mensuels du groupe ; ~~EL 20~~, installations temporaires, cité à tort — corrigé le 2026-09-27)
  *   - `estLocalPollutionSpecifique` → travail, arrêté 08-10-1987 art. 4 § 2
  *   - `aSystemeDeRecyclage`         → travail, arrêté 08-10-1987 art. 4 b)
  *     (contrôle semestriel des gaines de recyclage, en SUS de l'annuel)

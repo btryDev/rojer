@@ -202,7 +202,16 @@ const RELEVE = {
   // vérification et le formulaire des prescriptions, réexporté par
   // `prescriptions/schema.ts`, absent de `calendrier/` et de
   // `prescriptions/actions.ts` (décision de la session de coordination).
-  empreinte: "d6ce6130dcdbeea4",
+  // Recopiée SANS incrément le 2026-09-26 (`lot/referentiel-soeurs-incendie`,
+  // C39) : la raison de `evaluerPersonnesPresentes` pour une 1ʳᵉ-3ᵉ catégorie
+  // ne dit plus « le public admis […] franchi par le public seul » — R. 143-19
+  // CCH classe d'après « l'effectif du public et du personnel » —, et la
+  // constante se renomme `PLANCHER_EFFECTIF_PAR_CATEGORIE`. NON : mêmes
+  // valeurs, mêmes branches, même état rendu ; seule une chaîne de `raisons`
+  // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
+  // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
+  // la persiste).
+  empreinte: "acc5dd2269f36cce",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

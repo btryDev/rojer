@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
-import { suggererEquipements } from "./pre-remplissage";
+import {
+  MENTION_SUR_APPLICATION_5E,
+  suggererEquipements,
+} from "./pre-remplissage";
 
 function categories(out: ReturnType<typeof suggererEquipements>): string[] {
   return out.map((e) => e.categorie).sort();
@@ -338,5 +341,42 @@ describe("suggererEquipements — aucune référence n'est écrite en dur", () =
     for (const ctx of CONTEXTES) {
       expect(() => suggererEquipements(ctx)).not.toThrow();
     }
+  });
+});
+
+describe("suggererEquipements — une citation du livre II dit la sur-application (C39)", () => {
+  // La référence dit « — livre II, établissements des quatre premières
+  // catégories » ; à côté d'une suggestion faite à un ERP de 5ᵉ, elle se lit
+  // comme « pas pour vous » alors que le calendrier pose l'échéance. La
+  // mention est ce qui réconcilie les deux, au même endroit.
+  const ERP = {
+    codeNaf: "47.11B",
+    estEtablissementTravail: true,
+    estERP: true,
+    estIGH: false,
+    estHabitation: false,
+  };
+
+  it("les extincteurs d'un ERP portent la mention", () => {
+    const e = suggererEquipements(ERP).find((x) => x.categorie === "EXTINCTEUR");
+    expect(e?.raison).toContain("MS 38 § 4 — livre II");
+    expect(e?.mention).toBe(MENTION_SUR_APPLICATION_5E);
+  });
+
+  it("une suggestion qui ne cite pas le livre II n'en porte pas", () => {
+    const e = suggererEquipements({ ...ERP, estERP: false }).find(
+      (x) => x.categorie === "EXTINCTEUR",
+    );
+    expect(e?.raison).not.toMatch(/livre II/);
+    expect(e?.mention).toBeUndefined();
+  });
+
+  it("toute raison qui cite le livre II porte la mention, et elle seule", () => {
+    for (const estERP of [true, false])
+      for (const naf of ["56.10A", "47.11B", "69.20Z", null]) {
+        for (const e of suggererEquipements({ ...ERP, codeNaf: naf, estERP })) {
+          expect(Boolean(e.mention), e.raison).toBe(/livre II(?!I)/.test(e.raison));
+        }
+      }
   });
 });
