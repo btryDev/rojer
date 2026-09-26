@@ -152,12 +152,16 @@ export async function GET(
   // L'ownership a déjà été vérifié par requireEtablissement en haut ; la
   // requête reste néanmoins bornée par `duerp.etablissementId`.
   let duerpNumeroVersion: number | null = null;
+  // `false` tant que la lecture des versions n'a pas abouti : une lecture en
+  // échec n'est pas « aucune version validée ».
+  let duerpLu = false;
   try {
     const versions = await prisma.duerpVersion.findMany({
       where: { duerp: { etablissementId: id } },
       orderBy: { numero: "desc" },
       select: { numero: true, snapshot: true, motif: true, createdAt: true },
     });
+    duerpLu = true;
     const versionCourante = versions[0] ?? null;
     if (versionCourante) {
       // L'historique imprimé en fin de document liste toutes les versions
@@ -299,8 +303,9 @@ export async function GET(
   if (permisFeuList.length > 0) {
     const txt = [
       `PERMIS DE FEU — 12 derniers mois (${permisFeuList.length})`,
-      `Recommandation INRS ED 6030 ; règle APSAD R43, référentiel de la profession de l'assurance.`,
-      `Ni l'une ni l'autre n'est un texte réglementaire — cf. le dossier de contrôle.`,
+      // ~~« règle APSAD R43 »~~ — rayé le 2026-09-26 : `permis-feu/referentiel.ts`
+      // ne tient plus rien d'APSAD, qui n'a jamais été lue.
+      `Mesures tirées de la brochure INRS ED 6030 (2e édition, août 2019) — ni article de code, ni arrêté.`,
       "",
       "────────────────────────────────────────────────────────────",
       ...permisFeuList.flatMap((p) => [
@@ -473,6 +478,8 @@ export async function GET(
     aDuerpPdf:
       duerpNumeroVersion !== null && `02_DUERP_v${duerpNumeroVersion}.pdf` in zip.files,
     presents: new Set(Object.keys(zip.files)),
+    regime: { estERP: etablissement.estERP, estIGH: etablissement.estIGH },
+    duerpLu,
     echecs,
     piecesPrestatairesManquantes,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
@@ -487,7 +494,7 @@ export async function GET(
     retards: {
       nbEnRetard: nbVerifsEnRetard,
       calendrier: fraicheur,
-      aucunEquipement: inventaire !== null,
+      inventaire,
     },
     avertissementCalendrier: phraseFraicheur(fraicheur),
     inventaire,

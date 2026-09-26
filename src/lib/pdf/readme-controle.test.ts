@@ -15,10 +15,12 @@ const base: Parameters<typeof genererReadme>[0] = {
   aCarnetSanitaire: false,
   nbEcheancesContractuelles: 0,
   etatDuerp: null,
-  retards: { nbEnRetard: 0, calendrier: { etat: "a_jour" }, aucunEquipement: false },
+  retards: { nbEnRetard: 0, calendrier: { etat: "a_jour" }, inventaire: null },
   avertissementCalendrier: null,
   inventaire: null,
   presents: new Set(["01_Dossier_conformite.pdf", "03_Registre_securite.pdf", "04_Plan_actions.pdf"]),
+  regime: { estERP: true, estIGH: false },
+  duerpLu: true,
   echecs: new Map(),
   piecesPrestatairesManquantes: 0,
 };
@@ -116,7 +118,7 @@ describe("le cadre légal du README dit ce que les textes disent (relus le 2026-
       "Attestations URSSAF prestataires < 6 mois",
       "QR code en entrée",
       "Formation sécurité du personnel à jour",
-      "R. 4226-16 et s.",
+      "art. R. 4226-16 et s. Code du travail",
       "Maintien en conformité",
       "Responsabilité finale",
       "(conservation : art. D. 4711-3, cinq ans)",
@@ -130,5 +132,58 @@ describe("le cadre légal du README dit ce que les textes disent (relus le 2026-
     expect(t).toContain("« sauf dispositions particulières »");
     expect(t).toContain("deux derniers contrôles ou vérifications");
     expect(t).toContain("entretenus et vérifiés suivant une périodicité appropriée");
+  });
+});
+
+describe("contre-lecture du 2026-09-26 : ce que le README affirmait sans l'avoir", () => {
+  const plat = (a: Parameters<typeof genererReadme>[0]) =>
+    aplati(genererReadme(a)).replace(/\s+/g, " ");
+
+  it("1. il ne renvoie plus à des articles que 01 ne porte pas ; il cite la liste du dossier", () => {
+    const t = plat(base);
+    expect(t).not.toContain("l'article de chacune est cité");
+    expect(t).toContain("R. 4226-16 et s. CT (électricité), R. 4222-20 CT (aération)");
+  });
+
+  it("2. une lecture des versions en échec ne dit pas « aucune version »", () => {
+    const t = plat({ ...base, duerpLu: false, echecs: new Map([["02_DUERP", "la génération a échoué"]]) });
+    expect(t).not.toContain("aucune version validée");
+    expect(t).not.toContain("aucune version figée");
+    expect(t).toContain("non déterminé (lecture des versions en échec)");
+    expect(t).toMatch(/02_DUERP\.pdf Non inclus — la génération a échoué/);
+  });
+
+  it("3. un prestataire sans pièce n'est pas annoncé avec ses attestations", () => {
+    const t = plat({ ...base, nbPrestataires: 1 });
+    expect(t).toContain("Aucune pièce (1 prestataire(s) déclaré(s))");
+    expect(t).not.toContain("RC Pro, Kbis (1)");
+    const avec = plat({ ...base, nbPrestataires: 1, presents: new Set([...base.presents, "Prestataires/Acme/", "Prestataires/Acme/Kbis.pdf"]) });
+    expect(avec).toContain("1 pièce(s)");
+  });
+
+  it("3. 05 à 08 suivent aussi ce que le ZIP contient", () => {
+    const t = plat({ ...base, nbPermisFeu: 2 });
+    // Compteur à 2, fichier absent : le README ne l'annonce pas.
+    expect(t).not.toContain("2 permis sur 12 mois");
+  });
+
+  it("6. le renvoi à 01 ne se fait pas quand 01 n'est pas dans le ZIP", () => {
+    const t = plat({
+      ...base,
+      presents: new Set(["03_Registre_securite.pdf"]),
+      retards: { nbEnRetard: 2, calendrier: { etat: "a_jour" }, inventaire: null },
+    });
+    expect(t).toContain("[!] 2 vérification(s) en retard");
+    expect(t).not.toContain("en retard — voir 01_Dossier_conformite.pdf");
+  });
+
+  it("10. les conseils sont dits comme tels, et « priorisés » dit le tri réel", () => {
+    const t = plat(base);
+    expect(t).toContain("lu en entier (conseil de Rojer)");
+    expect(t).not.toContain("(10 min)");
+    expect(t).not.toContain("priorisés");
+    expect(t).toContain("par échéance puis criticité");
+    expect(t).toContain("« La rédaction du permis de feu est obligatoire pour tous travaux par points chauds »");
+    expect(t).toContain("Installations et dispositifs techniques et de sécurité");
   });
 });

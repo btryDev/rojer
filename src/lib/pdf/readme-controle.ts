@@ -19,6 +19,7 @@ import {
 import type { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
 import { ligneDuerp, ligneVerifsEnRetard } from "./checklist-controle";
+import { referencesVerificationsPeriodiques, type RegimeDuRegistre } from "./mentions-registre";
 import type { LectureRetards } from "./fait-retards";
 
 /**
@@ -81,6 +82,11 @@ export function genererReadme(args: {
   echecs: ReadonlyMap<string, string>;
   /** Pièces de prestataires déclarées que le stockage n'a pas rendues. */
   piecesPrestatairesManquantes: number;
+  /** Le régime, pour les références qui n'en valent qu'un (`mentions-registre.ts`). */
+  regime: RegimeDuRegistre;
+  /** `false` quand la lecture des versions du DUERP a échoué : « aucune
+   *  version » serait alors une affirmation (contre-lecture du 2026-09-26). */
+  duerpLu: boolean;
 }): string {
   // Un fichier est décrit s'il est dans le ZIP ; sinon, on dit pourquoi.
   const absent = (cle: string, sinon: string) =>
@@ -124,27 +130,28 @@ export function genererReadme(args: {
       ? ` 02_DUERP_v${args.duerpNumeroVersion}.pdf           Document unique d'évaluation des risques`
       : args.duerpNumeroVersion !== null
         ? ` 02_DUERP_v${args.duerpNumeroVersion}.pdf           ${absent("02_DUERP", "Non inclus")}`
-        : " 02_DUERP.pdf                  Non inclus (aucune version validée)",
+        : !args.duerpLu
+          ? ` 02_DUERP.pdf                  ${absent("02_DUERP", "Non inclus — lecture des versions en échec")}`
+          : " 02_DUERP.pdf                  Non inclus (aucune version validée)",
     ligne("03_Registre_securite.pdf", "Rapports de vérifications périodiques", "Non inclus"),
-    ligne("04_Plan_actions.pdf", "Écarts ouverts priorisés", "Non inclus"),
-    args.aRegistreAccessibilite
-      ? " 05_Accessibilite_URL.txt      URL publique du registre d'accessibilité"
-      : " 05_Accessibilite_URL.txt      Non inclus (registre non publié)",
-    args.nbPermisFeu > 0
-      ? ` 06_Permis_de_feu.txt          ${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`
-      : " 06_Permis_de_feu.txt          Aucun permis émis sur 12 mois",
-    args.nbPlansPrevention > 0
-      ? ` 07_Plans_de_prevention.txt    ${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`
-      : " 07_Plans_de_prevention.txt    Aucun plan actif",
-    args.aCarnetSanitaire
-      ? " 08_Carnet_sanitaire.txt       Relevés ECS + analyses légionelles (arrêté 01-02-2010)"
-      : " 08_Carnet_sanitaire.txt       Non configuré",
-    args.nbPrestataires > 0
-      ? ` Prestataires/                 Attestations URSSAF, RC Pro, Kbis (${args.nbPrestataires})` +
-        (args.piecesPrestatairesManquantes > 0
-          ? ` — ${args.piecesPrestatairesManquantes} pièce(s) déclarée(s) non récupérée(s)`
-          : "")
-      : " Prestataires/                 Aucun prestataire déclaré",
+    ligne("04_Plan_actions.pdf", "Actions en cours, par échéance puis criticité", "Non inclus"),
+    // Tous sur `zip.files` (contre-lecture du 2026-09-26 : 05 à 08 et
+    // Prestataires/ restaient calculés sur des compteurs).
+    ligne("05_Accessibilite_URL.txt", "URL publique du registre d'accessibilité", "Non inclus (registre non publié)"),
+    ligne("06_Permis_de_feu.txt", `${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`, "Aucun permis émis sur 12 mois"),
+    ligne("07_Plans_de_prevention.txt", `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
+    ligne("08_Carnet_sanitaire.txt", "Relevés ECS + analyses légionelles (arrêté 01-02-2010)", "Non configuré"),
+    (() => {
+      const pieces = [...args.presents].filter((n) => n.startsWith("Prestataires/") && !n.endsWith("/")).length;
+      if (args.nbPrestataires === 0) return " Prestataires/                 Aucun prestataire déclaré";
+      const manquantes =
+        args.piecesPrestatairesManquantes > 0
+          ? ` ; ${args.piecesPrestatairesManquantes} pièce(s) déclarée(s) non récupérée(s)`
+          : "";
+      return pieces === 0
+        ? ` Prestataires/                 Aucune pièce (${args.nbPrestataires} prestataire(s) déclaré(s))${manquantes}`
+        : ` Prestataires/                 ${pieces} pièce(s) — attestations de vigilance, RC Pro, Kbis — pour ${args.nbPrestataires} prestataire(s)${manquantes}`;
+    })(),
     "",
     "────────────────────────────────────────────────────────────",
     " CHECKLIST AVANT LE CONTRÔLE",
@@ -157,24 +164,28 @@ export function genererReadme(args: {
     // confiance. Les autres cases restent vides — elles portent sur des faits
     // que le produit n'observe pas (une lecture, un affichage en entrée, une
     // signature avant travaux).
-    " [ ] Dossier de conformité lu en entier (10 min)",
-    ligneDuerp(args.etatDuerp),
-    ligneVerifsEnRetard(args.retards),
-    " [ ] Plan d'actions : tous écarts majeurs ont une date d'échéance",
+    // Les cases qui suivent sont des CONSEILS de Rojer, dits comme tels quand
+    // aucun texte ne les porte (contre-lecture du 2026-09-26).
+    " [ ] Dossier de conformité lu en entier (conseil de Rojer)",
+    ligneDuerp(args.etatDuerp, args.duerpLu),
+    ligneVerifsEnRetard(args.retards, args.presents.has("01_Dossier_conformite.pdf")),
+    " [ ] Plan d'actions : chaque écart majeur a une date d'échéance (conseil de Rojer)",
     // Relus sur Légifrance le 2026-09-26 (journal C34). ~~« < 6 mois »~~ sans
     // le seuil : R. 8222-1 ne rend la vérification obligatoire qu'à partir de
     // 5 000 € HT. ~~« affiché — QR code en entrée »~~ : l'arrêté du
     // 19 avril 2017 dit « consultable », et ne connaît ni affichage ni QR code.
     // ~~« Formation sécurité du personnel à jour »~~ : aucun critère de « à
     // jour » n'était donné ; les formations dues sont dans le calendrier.
-    " [ ] Attestations URSSAF des prestataires « datant de moins de six mois »,",
+    " [ ] Attestations de vigilance des prestataires « datant de moins de six mois »,",
     "     remises « lors de la conclusion et tous les six mois » (art. D. 8222-5),",
     "     pour toute opération « d'un montant au moins égal à 5 000 euros hors",
     "     taxes » (art. R. 8222-1)",
     " [ ] Registre public d'accessibilité (ERP) « consultable par le public sur",
     "     place au principal point d'accueil accessible de l'établissement », ou",
     "     mis en ligne (arrêté du 19 avril 2017, art. 3)",
-    " [ ] Permis de feu signés avant tout travail par point chaud",
+    " [ ] Permis de feu établi avant tout travail par points chauds — INRS ED 6030 :",
+    "     « La rédaction du permis de feu est obligatoire pour tous travaux par",
+    "     points chauds » (ni article de code, ni arrêté)",
     // Les DEUX cas de R. 4512-7 : « EE ≥ 400 h » taisait le 2°, les travaux
     // dangereux, « quelle que soit la durée prévisible de l'opération »
     // (contre-lecture du 2026-09-26). « Signés » n'était pas dans le texte :
@@ -187,10 +198,14 @@ export function genererReadme(args: {
     "────────────────────────────────────────────────────────────",
     "",
     " DUERP :                    art. R. 4121-1 à R. 4121-4 Code du travail",
-    // ~~« art. R. 4226-16 et s. »~~ : R. 4226-16 ne vise que les
-    // installations électriques. Chaque vérification cite son propre article.
-    " Vérifications :            l'article de chacune est cité dans",
-    "                            01_Dossier_conformite.pdf",
+    // ~~« art. R. 4226-16 et s. »~~ seul : R. 4226-16 ne vise que les
+    // installations électriques. ~~« l'article de chacune est cité dans
+    // 01_Dossier_conformite.pdf »~~ : faux, le tableau des retards n'en porte
+    // aucun (contre-lecture du 2026-09-26). La liste par domaine est celle du
+    // dossier, écrite une fois (`mentions-registre.ts`).
+    ...decouper(`Vérifications périodiques : ${referencesVerificationsPeriodiques(args.regime)}`, 60).map(
+      (l, i) => (i === 0 ? ` ${l}` : `                            ${l}`),
+    ),
     " Registre de sécurité :     art. R. 4323-25 et R. 4323-26 Code du travail",
     // ~~« (conservation : art. D. 4711-3, cinq ans) »~~ : l'article commence
     // par « Sauf dispositions particulières » et ajoute « les deux derniers
@@ -220,9 +235,9 @@ export function genererReadme(args: {
     " Carnet sanitaire eau :     arrêté du 1er février 2010 (ERP, eau chaude collective, points d'usage à risque)",
     // ~~« Maintien en conformité »~~ : l'article dit « entretenus et
     // vérifiés suivant une périodicité appropriée ».
-    " Installations de sécurité : art. R. 4224-17 Code du travail, « entretenus",
-    "                            et vérifiés suivant une périodicité",
-    "                            appropriée »",
+    " Installations et dispositifs techniques et de sécurité : art. R. 4224-17",
+    "                            Code du travail, « entretenus et vérifiés",
+    "                            suivant une périodicité appropriée »",
     "",
     // APSAD R43 et l'INRS ED 6030 figuraient dans la liste ci-dessus, entre
     // deux articles de code, sous le titre « CADRE LÉGAL ». Ce document est
@@ -238,10 +253,9 @@ export function genererReadme(args: {
     " INRS ED 6030 :             recommandation de l'Institut national de",
     "                            recherche et de sécurité. Ni article de",
     "                            code, ni arrêté.",
-    " Règle APSAD R43 :          référentiel de la profession de l'assurance",
-    "                            (travaux par points chauds). Ni article de",
-    "                            code, ni arrêté ; un contrat d'assurance",
-    "                            peut y renvoyer.",
+    // ~~« Règle APSAD R43 : référentiel de la profession de l'assurance … »~~
+    // — retiré le 2026-09-26 : plus aucune pièce du dossier ne la cite
+    // (`permis-feu/referentiel.ts` ne tient rien d'une règle jamais lue).
     "",
   );
   // Le même titre que ci-dessus vaudrait pour ces lignes, mais elles ne sont

@@ -140,7 +140,8 @@ export function PlanActionsDocument({ data }: { data: PlanActionsData }) {
           </Text>
           <Text>«&nbsp;{TEXTE_L4121_2}&nbsp;»</Text>
           <Text style={{ marginTop: 4 }}>
-            {ORDRE_SELON_L4121_2} Le type de chaque action ci-dessus est un
+            {ORDRE_SELON_L4121_2}{" "}
+            Le type de chaque action ci-dessus est un
             classement de Rojer.
           </Text>
           <Text style={{ marginTop: 4 }}>

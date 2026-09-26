@@ -26,8 +26,13 @@ export type LectureRetards = {
   nbEnRetard: number | null;
   /** L'état du calendrier, ou `null` s'il n'a pas pu être lu. */
   calendrier: FraicheurCalendrier | null;
-  /** `true` quand l'inventaire est lu ET vide (axe `inventaire` de la couverture). */
-  aucunEquipement: boolean;
+  /**
+   * Le fait « inventaire vide » de la couverture (`faitInventaire`), ou `null`.
+   * Son MOTIF est repris tel quel : la couverture distingue un parc jamais
+   * déclaré d'un parc entièrement retiré, et une seconde phrase aurait
+   * dérivé (contre-lecture du 2026-09-26).
+   */
+  inventaire: { motif: string } | null;
 };
 
 export type FaitRetards = {
@@ -40,14 +45,17 @@ export function faitRetards(l: LectureRetards): FaitRetards {
   if (l.nbEnRetard === null || l.calendrier === null) {
     return { coche: " ", texte: "Vérifications en retard : non déterminé" };
   }
+  // Un retard constaté d'abord, quel que soit l'état du calendrier — ce que
+  // l'en-tête promet. ~~`jamais_genere` testé avant~~ (contre-lecture du
+  // 2026-09-26) : l'ordre contredisait l'en-tête dans le seul cas d'une course.
+  if (l.nbEnRetard > 0) {
+    return { coche: "!", texte: `${l.nbEnRetard} vérification(s) en retard` };
+  }
   if (l.calendrier.etat === "jamais_genere") {
     return {
       coche: " ",
       texte: "Calendrier jamais calculé : aucun retard ne peut y être compté",
     };
-  }
-  if (l.nbEnRetard > 0) {
-    return { coche: "!", texte: `${l.nbEnRetard} vérification(s) en retard` };
   }
   if (calendrierIncertain(l.calendrier)) {
     return {
@@ -55,12 +63,8 @@ export function faitRetards(l: LectureRetards): FaitRetards {
       texte: "Aucune vérification en retard sur un calendrier à recalculer",
     };
   }
-  if (l.aucunEquipement) {
-    return {
-      coche: " ",
-      texte:
-        "Aucun équipement déclaré : aucune vérification d'équipement n'est inscrite au calendrier",
-    };
+  if (l.inventaire) {
+    return { coche: " ", texte: l.inventaire.motif.replace(/\.$/, "") };
   }
   return { coche: "x", texte: "Aucune vérification en retard à ce jour" };
 }
@@ -75,11 +79,12 @@ export function faitAttenteVide(l: Omit<LectureRetards, "nbEnRetard">): string {
   if (l.calendrier.etat === "jamais_genere") {
     return "Calendrier jamais calculé : aucune vérification n'y est encore inscrite.";
   }
-  if (l.aucunEquipement) {
-    return "Aucun équipement déclaré : aucune vérification d'équipement n'est inscrite au calendrier.";
-  }
+  // MÊME ORDRE que `faitRetards` (contre-lecture du 2026-09-26) : le README
+  // et le dossier disaient « calendrier à recalculer » là où le registre
+  // disait « aucun équipement », pour le même état.
   if (calendrierIncertain(l.calendrier)) {
     return "Aucune vérification en attente sur un calendrier à recalculer.";
   }
+  if (l.inventaire) return l.inventaire.motif;
   return "Aucune vérification en attente ou programmée.";
 }

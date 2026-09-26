@@ -341,9 +341,9 @@ export default async function ControlePage({
         {/* Pourquoi ça nous rassure */}
         <section className="mt-10">
           <WhyCard charte="board"
-            kicker="Notre engagement"
-            titre="Traçabilité totale — zéro IA, zéro reformulation."
-            enjeu="Chaque document de ce dossier a été généré à partir de vos saisies brutes, sans retraitement. Les références réglementaires sont sourcées Légifrance et INRS."
+            kicker="D'où viennent les pièces"
+            titre="Ce que vous avez saisi, et les textes qu'elles citent."
+            enjeu="Chaque document de ce dossier est généré à partir de ce que vous avez saisi dans Rojer. Les articles cités sont lus sur Légifrance ; la brochure INRS est nommée pour ce qu'elle est, ni article de code, ni arrêté."
             tonalite="info"
           >
             <p>

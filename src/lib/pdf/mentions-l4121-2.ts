@@ -24,7 +24,5 @@ function texte(): string {
 /** L'article entier, tel que le corpus le consigne. */
 export const TEXTE_L4121_2 = texte();
 
-/** Ce que l'article dit d'un ordre entre les mesures — et seulement cela. */
-export const ORDRE_SELON_L4121_2 =
-  "L'article n'établit d'ordre qu'en son 8° : il donne « la priorité » aux mesures " +
-  "de protection collective « sur les mesures de protection individuelle ».";
+/** Ce que l'article dit d'un ordre entre les mesures — écrit une fois, dans un module sans dépendance. */
+export { ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";

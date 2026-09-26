@@ -678,7 +678,7 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
           <Text style={s.small}>
             {faitAttenteVide({
               calendrier: data.calendrier,
-              aucunEquipement: data.inventaire !== null,
+              inventaire: data.inventaire,
             })}
           </Text>
         ) : (

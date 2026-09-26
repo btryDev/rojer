@@ -67,10 +67,15 @@ describe("ce qui ne vaut qu'en ERP ou en IGH n'est imprimé qu'à eux (relecture
     expect(destinatairesRegistre(bureau)).not.toContain("commission de sécurité");
   });
 
-  it("un ERP les lit ; un IGH lit la commission, pas le règlement ERP", () => {
+  it("un ERP les lit ; un IGH non ERP ne lit ni l'un ni l'autre", () => {
+    // IGH : `R. 146-35` fait tenir le registre par le propriétaire, et aucun
+    // texte cité ne met le document d'un employeur locataire à disposition
+    // de la commission de l'immeuble (contre-lecture du 2026-09-26 ; la
+    // version précédente de ce test l'attendait, sans argument).
     expect(mentionReglementErp(erp)).toContain("25 juin 1980");
     expect(destinatairesDossier(erp)).toContain("commission de sécurité");
-    expect(destinatairesRegistre(igh)).toContain("commission de sécurité");
+    expect(destinatairesRegistre(igh)).not.toContain("commission de sécurité");
+    expect(destinatairesDossier(igh)).not.toContain("commission de sécurité");
     expect(mentionReglementErp(igh)).toBe("");
   });
 });

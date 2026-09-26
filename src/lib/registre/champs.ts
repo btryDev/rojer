@@ -270,7 +270,7 @@ export const CHAMPS_PAR_SECTION: Readonly<Record<string, FormeSaisie>> = {
       },
       {
         cle: "organismesAgrees",
-        libelle: "Organismes agréés chargés des vérifications",
+        libelle: "Organismes chargés des vérifications",
         type: "texte_long",
         aide: "Ceux qui interviennent chez vous, avec leur téléphone.",
       },

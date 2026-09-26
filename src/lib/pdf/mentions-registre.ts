@@ -73,7 +73,12 @@ export function phraseRegistreIgh(r: RegimeDuRegistre): string | null {
 // à un bureau qui n'est ni ERP ni IGH, et qu'aucune commission ne visite à ce
 // titre. Même règle que pour `R. 143-44` ci-dessus : cité à qui il vise.
 
-const soumisACommission = (r: RegimeDuRegistre) => r.estERP || r.estIGH;
+// ~~`r.estERP || r.estIGH`~~ — ERP seul depuis la contre-lecture du
+// 2026-09-26 : en IGH, `R. 146-35` fait tenir le registre de sécurité par le
+// PROPRIÉTAIRE, et aucun texte cité ici ne met le document d'un employeur
+// locataire à la disposition de la commission de l'immeuble. Le registre le
+// dit déjà (`phraseRegistreIgh`) ; le lui adresser le contredisait.
+const soumisACommission = (r: RegimeDuRegistre) => r.estERP;
 
 /** Le règlement ERP, dans la ligne des vérifications périodiques — ERP seul. */
 export function mentionReglementErp(r: RegimeDuRegistre): string {
@@ -92,4 +97,20 @@ export function destinatairesRegistre(r: RegimeDuRegistre): string {
   return soumisACommission(r)
     ? "l'inspection du travail et de la commission de sécurité"
     : "l'inspection du travail";
+}
+
+/**
+ * Les articles des vérifications périodiques, par domaine — la ligne du
+ * dossier de conformité, UNE fois, que le README reprend.
+ *
+ * Le README écrivait « l'article de chacune est cité dans
+ * 01_Dossier_conformite.pdf » (C34) : faux, le tableau des retards du dossier
+ * ne porte aucune référence (contre-lecture du 2026-09-26). Les deux pièces
+ * citent désormais la même liste, domaine par domaine.
+ */
+export function referencesVerificationsPeriodiques(r: RegimeDuRegistre): string {
+  return (
+    "R. 4226-16 et s. CT (électricité), R. 4222-20 CT (aération), " +
+    `R. 4227-28 et s. CT (incendie)${mentionReglementErp(r)}`
+  );
 }

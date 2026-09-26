@@ -22,8 +22,8 @@ import {
 import { blocsPerimetre, chapeauPerimetre } from "./mentions-perimetre";
 import {
   destinatairesDossier,
-  mentionReglementErp,
   referencesRegistreDossier,
+  referencesVerificationsPeriodiques,
   type RegimeDuRegistre,
 } from "./mentions-registre";
 import {
@@ -487,7 +487,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
               faitRetards({
                 nbEnRetard: 0,
                 calendrier: data.calendrier,
-                aucunEquipement: data.couverture ? faitInventaire(data.couverture) !== null : false,
+                inventaire: data.couverture ? faitInventaire(data.couverture) : null,
               }).texte
             }
             .
@@ -669,9 +669,8 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                 PÉRIODIQUE : sous le mot « périodiques », c'était le mauvais
                 article. Le README du ZIP écrivait déjà R. 4226-16 — deux
                 documents du même dossier se contredisaient. */}
-            — Vérifications périodiques : articles R. 4226-16 et s. CT
-            (électricité), R. 4222-20 CT (aération), R. 4227-28 et s. CT
-            (incendie){mentionReglementErp(data.regime)}.
+            — Vérifications périodiques : articles{" "}
+            {referencesVerificationsPeriodiques(data.regime)}.
           </Text>
           <Text style={{ marginTop: 3 }}>
             {/* ~~« R. 143-44 CCH (ERP), R. 146-35 CCH (IGH) » à tous~~ —

@@ -121,7 +121,7 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     partie: "1",
     titre: "Services, intervenants et adresses utiles",
     attendu:
-      "Mairie, préfecture, médecin, inspection du travail, installateurs et organismes agréés — adresse et téléphone.",
+      "Mairie, préfecture, médecin, inspection du travail, installateurs et organismes chargés des vérifications — adresse et téléphone.",
   },
   // Le service de sécurité incendie au sens des articles MS 45 à MS 52 (poste
   // de sécurité, agents qualifiés SSIAP, chef d'équipe) relève du **Livre II**

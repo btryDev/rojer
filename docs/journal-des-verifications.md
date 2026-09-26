@@ -1666,7 +1666,9 @@ d'autres numéros de ligne. Le point 1 était déjà à moitié traité : le cas
    chaque échec (et le journalise côté serveur) ainsi que les pièces de
    prestataires non récupérées. Le README ne décrit que les fichiers
    réellement présents (`zip.files`) et dit « Non inclus — la génération a
-   échoué ». L'écran « Préparer un contrôle » ne dit plus « Chaque pièce est
+   échoué ». *[Au mesuré, après contre-lecture : c'était vrai de 01 à 04
+   seulement ; 05 à 08 et `Prestataires/` restaient calculés sur des
+   compteurs. Corrigé : tous lisent `zip.files`.]* L'écran « Préparer un contrôle » ne dit plus « Chaque pièce est
    vérifiée avant d'être mise au ZIP », ni « voir qui l'a modifiée et quand »
    : aucun journal d'audit ne le permet.
 7. **Un non-ERP** lisait « arrêté du 25 juin 1980 (règlement ERP) » et « la
@@ -1676,9 +1678,46 @@ d'autres numéros de ligne. Le point 1 était déjà à moitié traité : le cas
    identifiés dans chaque unité de travail » sans définir l'unité. Le DUERP ne
    lui attribue plus la définition, qu'il donne pour un découpage de Rojer.
 
+**Contre-lecture du même jour, onze points, tous pris.**
+- ~~« Vérifications : l'article de chacune est cité dans
+  01_Dossier_conformite.pdf »~~ était FAUX : le tableau des retards ne porte
+  aucune référence. Le README et le dossier citent désormais la même liste
+  par domaine, écrite une fois (`referencesVerificationsPeriodiques`).
+- Une lecture des versions du DUERP en échec ne dit plus « aucune version » :
+  « non déterminé (lecture des versions en échec) ».
+- `Prestataires/` compte ses pièces réelles, et un prestataire sans pièce
+  n'est plus annoncé « Attestations URSSAF, RC Pro, Kbis (1) ».
+- IGH non ERP : la commission de sécurité n'est plus nommée. `R. 146-35` fait
+  tenir le registre par le propriétaire, et aucun texte cité ne met le
+  document d'un employeur locataire à sa disposition. Le test qui
+  l'attendait, sans argument, est corrigé.
+- L'écran de contrôle ne dit plus « Traçabilité totale — zéro IA, zéro
+  reformulation », ni « saisies brutes, sans retraitement ».
+- Le renvoi à 01 disparaît quand 01 n'est pas dans le ZIP.
+- `faitRetards` et `faitAttenteVide` testent dans le même ordre ; un retard
+  constaté se dit avant tout, comme l'en-tête le promet ; le motif de
+  l'inventaire est repris de la couverture (« en service » pour un parc
+  retiré), et n'est plus réécrit.
+- Les conseils du README sont dits « conseil de Rojer ». « Priorisés »
+  devient le tri réel (statut, échéance, criticité). Le permis de feu est
+  dit par la phrase de l'INRS. « Installations et dispositifs techniques et
+  de sécurité » ; « attestations de vigilance ».
+- Les écrans (mesures d'un risque, synthèse du DUERP, formulaire d'action,
+  plan d'actions) attribuaient à `L. 4121-2` un ordre en cinq ou six rangs.
+  Ils citent le 8° et disent que l'ordre des types est un classement de
+  Rojer (`verbatim/l4121-2-ordre.ts`, sans dépendance au corpus, testé
+  contre lui). L'écran du registre cite `D. 4711-3` en entier au sens utile.
+  « Organismes agréés » (contacts, champ du registre) devient « organismes
+  chargés des vérifications ».
+- APSAD R43 n'est plus citée par le README (« référentiels cités »), ni par
+  le fichier 06, ni par l'écran de contrôle. La ligne du fichier 06 reprend
+  à l'identique celle de `lot/permis-feu-ed6030` (`dc29a20`), pour que les
+  deux lots se fusionnent sans conflit sur elle.
+
 **Épreuves.** Chaque règle nouvelle est neutralisée dans le vrai fichier, et
 son test retombe : « jamais calculé » ignoré, « sans valeur » rendu « sous la
-limite », commission rendue à tous. Le défaut d'origine de chaque point est
+limite », commission rendue à tous ; puis, après contre-lecture, `duerpLu`
+ignoré, commission rendue à l'IGH, ancien ordre de `faitAttenteVide`. Le défaut d'origine de chaque point est
 écrit dans son test (liste vide sur calendrier jamais calculé, valeur
 absente, DUERP annoncé malgré l'échec du rendu, bureau lisant la commission).
 **Non éprouvé** : le câblage de la route (`controle-zip/route.ts`), qu'aucun

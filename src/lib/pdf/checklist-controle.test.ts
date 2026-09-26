@@ -73,8 +73,9 @@ describe("la ligne DUERP n'invente pas de manquement", () => {
 
 describe("la ligne des retards ne coche jamais sur du vide", () => {
   const A_JOUR = { etat: "a_jour" } as const;
+  const INVENTAIRE_VIDE = { motif: "Aucun équipement n'est déclaré pour cet établissement." };
   const lu = (nbEnRetard: number | null, calendrier: FraicheurCalendrier | null = A_JOUR, aucunEquipement = false) =>
-    ligneVerifsEnRetard({ nbEnRetard, calendrier, aucunEquipement });
+    ligneVerifsEnRetard({ nbEnRetard, calendrier, inventaire: aucunEquipement ? INVENTAIRE_VIDE : null });
 
   it("NE PAS SAVOIR ne se coche pas", () => {
     // Le défaut d'origine : le compteur, initialisé à `0` hors du `try`,
@@ -96,7 +97,8 @@ describe("la ligne des retards ne coche jamais sur du vide", () => {
   it("zéro retard SANS AUCUN ÉQUIPEMENT ne se coche pas", () => {
     const l = lu(0, A_JOUR, true);
     expect(l).not.toContain("[x]");
-    expect(l).toContain("Aucun équipement déclaré");
+    // Le motif de la couverture, repris tel quel.
+    expect(l).toContain("Aucun équipement n'est déclaré pour cet établissement");
   });
 
   it("zéro retard sur un calendrier à recalculer ne se coche pas ; un retard constaté s'y annonce", () => {

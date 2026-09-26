@@ -42,7 +42,10 @@ export type EtatDuerpLu = ReturnType<typeof evaluerEtatDuerp>;
  * (`lib/pdf/builders.ts` : « vit dans `evaluerEtatDuerp` et NULLE PART
  * AILLEURS »).
  */
-export function ligneDuerp(etat: EtatDuerpLu | null): string {
+export function ligneDuerp(etat: EtatDuerpLu | null, lu = true): string {
+  // Une lecture en échec n'est pas « aucune version » (contre-lecture du
+  // 2026-09-26) : la case reste vide, et dit pourquoi.
+  if (!lu) return " [ ] DUERP : non déterminé (lecture des versions en échec)";
   if (etat === null || !etat.aVersionValidee) {
     return " [ ] DUERP : aucune version figée — à créer avant le contrôle";
   }
@@ -70,9 +73,12 @@ export function ligneDuerp(etat: EtatDuerpLu | null): string {
 // calendrier jamais calculé, ou sur un inventaire vide, n'est pas un fait
 // favorable. La règle vit dans `fait-retards.ts`, que le dossier de
 // conformité et le registre lisent aussi.
-export function ligneVerifsEnRetard(l: LectureRetards): string {
+//
+// Le renvoi à 01 ne se fait que si 01 est dans le ZIP : le compte est lu
+// avant le rendu, qui peut échouer (contre-lecture du 2026-09-26).
+export function ligneVerifsEnRetard(l: LectureRetards, dossierInclus = true): string {
   const f = faitRetards(l);
   return f.coche === "!"
-    ? ` [!] ${f.texte} — voir 01_Dossier_conformite.pdf`
+    ? ` [!] ${f.texte}${dossierInclus ? " — voir 01_Dossier_conformite.pdf" : ""}`
     : ` [${f.coche}] ${f.texte}`;
 }
