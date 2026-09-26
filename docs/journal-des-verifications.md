@@ -1607,6 +1607,84 @@ peuplement possible tant que rien ne rattache un poste au suivi individuel
 renforcé ; le DTA n'existe pas au modèle ; un plan ne connaît qu'une
 entreprise extérieure ; le seuil n'est pas recalculé en cours d'exécution.
 
+
+### C34 · 2026-09-26 — Les PDF et le ZIP de contrôle ne disent plus que ce qui est vrai
+
+**Constats** d'une relecture faite sur `abd0108`. Ils ont été revérifiés sur
+`integration/2026-09-26-b` (`eb75c0b`) avant correction ; tous tenaient, à
+d'autres numéros de ligne. Le point 1 était déjà à moitié traité : le cas
+« non lu » ne se cochait plus.
+
+1. **« Aucune vérification en retard »** se cochait, ou s'écrivait, sur une
+   liste VIDE, y compris quand le calendrier n'avait jamais été calculé ou
+   qu'aucun équipement n'était déclaré. La règle est écrite une fois
+   (`pdf/fait-retards.ts`) et lue par la checklist du README, le dossier de
+   conformité et le registre (liste des vérifications en attente). Elle
+   distingue : non lu, calendrier jamais calculé, N en retard, calendrier à
+   recalculer, aucun équipement, et seulement alors « aucune vérification en
+   retard à ce jour ». La fraîcheur du calendrier entre dans les données des
+   deux PDF. Le registre ne dit plus « Déclarez vos équipements » sans savoir
+   pourquoi la liste est vide.
+2. **Une analyse de légionelles sans valeur** était enregistrée « conforme »
+   (`carnet-sanitaire/actions.ts`), et le fichier 08 imprimait « sous la limite
+   de qualité ». Le résultat se lit désormais sur la VALEUR
+   (`resultatAnalyse` : sans valeur / sous la limite / limite atteinte, sur
+   l'article 4 de l'arrêté du 1er février 2010, déjà cité), à l'écran comme
+   dans le ZIP. Une valeur absente n'est plus écrite « conforme ». Les lignes
+   existantes s'affichent juste sans être réécrites. **Base locale** : 0
+   analyse, donc 0 ligne concernée. La production n'a pas été lue.
+3. **`L. 4121-2`**, relu sur Légifrance deux fois (1° à 9° ; seul le 8° emploie
+   « priorité »). Le plan d'actions imprimait une « hiérarchie » en six rangs
+   que l'article n'écrit pas, et le DUERP une paraphrase suivie de « l'ordre
+   imposé par l'article ». Les deux citent désormais l'article entier, lu au
+   corpus (`pdf/mentions-l4121-2.ts`, verbatim confronté à la lecture du jour),
+   et disent que « l'article n'établit d'ordre qu'en son 8° ». Le plan
+   d'actions dit que le type de chaque action est un classement de Rojer.
+4. **Le cadre légal du README**, relu à la source :
+   - `R. 4224-17` : « entretenus et vérifiés suivant une périodicité
+     appropriée », trois alinéas. Une première lecture en rendait trois
+     phrases et taisait la dernière ; la seconde l'a trouvée, et le corpus
+     est juste.
+   - `R. 8222-1` : 5 000 € HT. `D. 8222-5` : « lors de la conclusion et tous
+     les six mois », attestation « datant de moins de six mois ».
+   - Arrêté du 19 avril 2017, art. 3 : « consultable par le public sur place
+     au principal point d'accueil accessible de l'établissement », ou mis en
+     ligne. Ni affichage, ni QR code.
+   - `D. 4711-3` : cité avec « sauf dispositions particulières » et « les
+     deux derniers contrôles ou vérifications ».
+   - « Vérifications : art. R. 4226-16 et s. » (électricité seule) devient un
+     renvoi aux articles cités par le dossier de conformité.
+   - « Formation sécurité du personnel à jour », sans critère, et
+     « Responsabilité finale : employeur » sont retirés.
+5. **Le registre** affirmait des fiches « conservées hors de l'application »
+   que Rojer n'a jamais vues. Il dit désormais « non tenue(s) dans
+   l'application », et que Rojer ne sait pas si elles le sont ailleurs.
+   « Vérificateur agréé » devient « Vérificateur » sur les dix-huit fiches de
+   `registre/sections.ts`.
+6. **Le ZIP** sautait en silence les briques qui échouaient, et le README
+   annonçait `02_DUERP_vN.pdf` dès qu'une version existait. La route note
+   chaque échec (et le journalise côté serveur) ainsi que les pièces de
+   prestataires non récupérées. Le README ne décrit que les fichiers
+   réellement présents (`zip.files`) et dit « Non inclus — la génération a
+   échoué ». L'écran « Préparer un contrôle » ne dit plus « Chaque pièce est
+   vérifiée avant d'être mise au ZIP », ni « voir qui l'a modifiée et quand »
+   : aucun journal d'audit ne le permet.
+7. **Un non-ERP** lisait « arrêté du 25 juin 1980 (règlement ERP) » et « la
+   commission de sécurité ». Ces mentions sont conditionnées au régime, dans
+   `mentions-registre.ts`, comme `R. 143-44`.
+8. **`R. 4121-1`**, relu deux fois : il demande « un inventaire des risques
+   identifiés dans chaque unité de travail » sans définir l'unité. Le DUERP ne
+   lui attribue plus la définition, qu'il donne pour un découpage de Rojer.
+
+**Épreuves.** Chaque règle nouvelle est neutralisée dans le vrai fichier, et
+son test retombe : « jamais calculé » ignoré, « sans valeur » rendu « sous la
+limite », commission rendue à tous. Le défaut d'origine de chaque point est
+écrit dans son test (liste vide sur calendrier jamais calculé, valeur
+absente, DUERP annoncé malgré l'échec du rendu, bureau lisant la commission).
+**Non éprouvé** : le câblage de la route (`controle-zip/route.ts`), qu'aucun
+test n'importe. Le README est éprouvé sur ses entrées, pas sur ce que la
+route lui passe.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

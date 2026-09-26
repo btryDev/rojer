@@ -12,7 +12,7 @@ import {
   estReleveConforme,
   pointReleveSchema,
   releveTemperatureSchema,
-  SEUIL_LEGIONELLE_UFC_PAR_L,
+  resultatAnalyse,
 } from "./schema";
 
 export type CarnetActionState =
@@ -188,9 +188,11 @@ export async function ajouterAnalyseLegionelle(
     rapportNom = fichier.name;
   }
 
-  const conforme =
-    parsed.data.valeurUfcParL === undefined ||
-    parsed.data.valeurUfcParL < SEUIL_LEGIONELLE_UFC_PAR_L;
+  // ~~`valeurUfcParL === undefined ||`~~ : une analyse sans valeur n'est pas
+  // conforme (relecture du 2026-09-26). La colonne n'est plus lue pour
+  // l'affichage — `resultatAnalyse` lit la valeur — mais elle ne doit plus
+  // affirmer ce que personne n'a saisi.
+  const conforme = resultatAnalyse(parsed.data.valeurUfcParL) === "sous_limite";
 
   // Le fichier est déjà sur le disque : si l'insert échoue, il faut le
   // reprendre, sinon le stockage accumule des rapports que plus aucune ligne

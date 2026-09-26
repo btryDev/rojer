@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  destinatairesDossier,
+  destinatairesRegistre,
+  mentionReglementErp,
   phraseRegistreIgh,
   referencesRegistreDossier,
   referencesRegistreTenue,
@@ -50,5 +53,24 @@ describe("les articles du registre, selon le régime", () => {
       expect(referencesRegistreDossier(r)).toContain("R. 4323-25 et R. 4323-26 CT");
       expect(referencesRegistreTenue(r)).toContain("R. 4323-25 et R. 4323-26 CT");
     }
+  });
+});
+
+describe("ce qui ne vaut qu'en ERP ou en IGH n'est imprimé qu'à eux (relecture du 2026-09-26)", () => {
+  const bureau = { estERP: false, estIGH: false };
+  const erp = { estERP: true, estIGH: false };
+  const igh = { estERP: false, estIGH: true };
+
+  it("un bureau ni ERP ni IGH ne lit ni le règlement ERP ni la commission de sécurité — le défaut d'origine", () => {
+    expect(mentionReglementErp(bureau)).toBe("");
+    expect(destinatairesDossier(bureau)).not.toContain("commission de sécurité");
+    expect(destinatairesRegistre(bureau)).not.toContain("commission de sécurité");
+  });
+
+  it("un ERP les lit ; un IGH lit la commission, pas le règlement ERP", () => {
+    expect(mentionReglementErp(erp)).toContain("25 juin 1980");
+    expect(destinatairesDossier(erp)).toContain("commission de sécurité");
+    expect(destinatairesRegistre(igh)).toContain("commission de sécurité");
+    expect(mentionReglementErp(igh)).toBe("");
   });
 });

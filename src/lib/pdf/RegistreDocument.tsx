@@ -1,6 +1,9 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
+import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
+import { faitAttenteVide } from "./fait-retards";
 import {
+  destinatairesRegistre,
   phraseRegistreIgh,
   referencesRegistreTenue,
   type RegimeDuRegistre,
@@ -118,6 +121,8 @@ export type RegistreData = {
    * et c'est précisément le silence que ce champ existe pour rompre.
    */
   inventaire: ManqueCouverture | null;
+  /** L'état du calendrier, ou `null` s'il n'a pas pu être lu (`fait-retards.ts`). */
+  calendrier: FraicheurCalendrier | null;
   /** Les fiches dues, dans l'ordre du document. */
   parties: PartiePdf[];
   bilan: BilanPdf;
@@ -303,7 +308,9 @@ function piedDeFiche(fiche: FichePdf): string {
     return `Date ou mise à jour : le ${formatDateLongue(fiche.misAJourLe)}`;
   }
   if (fiche.source) return `Tenue depuis ${fiche.source}`;
-  return "Conservée hors de l'application";
+  // ~~« Conservée hors de l'application »~~ : Rojer n'a jamais vu cette
+  // fiche, et ne sait pas si elle existe ailleurs (relecture du 2026-09-26).
+  return "Non tenue dans l'application";
 }
 
 /** Une feuille du registre : son titre, son état, ce qu'elle porte, sa date. */
@@ -442,9 +449,8 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
       {/* Rien ne la recueille : le dire, plutôt que d'imprimer un blanc. */}
       {!fiche.champs && !fiche.colonnes && !fiche.tenues && (
         <Text style={[s.small, { marginTop: 5 }]}>
-          Cette fiche est due mais n&apos;est pas tenue dans l&apos;application.
-          Elle est conservée sur un autre support et se présente avec le présent
-          registre.
+          Cette fiche est due et n&apos;est pas tenue dans l&apos;application.
+          Rojer ne sait pas si elle est tenue sur un autre support.
         </Text>
       )}
 
@@ -565,7 +571,7 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             depuis le parc d&apos;équipements ou le calendrier,{" "}
             {data.bilan.aRemplir} restant à remplir, et{" "}
             {data.bilan.nonOutillees}{" "}
-            conservées hors de l&apos;application.
+            non tenues dans l&apos;application.
           </Text>
           <Text style={{ marginTop: 4 }}>
             Ce décompte dit ce que l&apos;application recueille, et rien
@@ -670,8 +676,10 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
         </Text>
         {data.verifsEnAttente.length === 0 ? (
           <Text style={s.small}>
-            Aucune vérification en cours. Déclarez vos équipements pour peupler
-            le calendrier.
+            {faitAttenteVide({
+              calendrier: data.calendrier,
+              aucunEquipement: data.inventaire !== null,
+            })}
           </Text>
         ) : (
           <View>
@@ -769,8 +777,8 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
           </Text>
           <Text>
             Ce registre réunit les fiches dues à cet établissement, leur contenu
-            et les rapports de vérification archivés, à tenir à disposition de
-            l&apos;inspection du travail et de la commission de sécurité. Les
+            et les rapports de vérification archivés, à tenir à disposition de{" "}
+            {destinatairesRegistre(data.regime)}. Les
             fichiers originaux des rapports sont conservés et téléchargeables
             depuis l&apos;application.
           </Text>

@@ -65,3 +65,31 @@ export function phraseRegistreIgh(r: RegimeDuRegistre): string | null {
     "propriétaire de l'immeuble ; le présent document n'en tient pas lieu."
   );
 }
+
+// ── Ce qui ne vaut qu'en ERP ou en IGH (relecture du 2026-09-26) ───────────
+//
+// Le dossier de conformité citait « arrêté du 25 juin 1980 (règlement ERP) »
+// et les deux PDF adressaient le document à « la commission de sécurité » —
+// à un bureau qui n'est ni ERP ni IGH, et qu'aucune commission ne visite à ce
+// titre. Même règle que pour `R. 143-44` ci-dessus : cité à qui il vise.
+
+const soumisACommission = (r: RegimeDuRegistre) => r.estERP || r.estIGH;
+
+/** Le règlement ERP, dans la ligne des vérifications périodiques — ERP seul. */
+export function mentionReglementErp(r: RegimeDuRegistre): string {
+  return r.estERP ? ", arrêté du 25 juin 1980 (règlement ERP)" : "";
+}
+
+/** À qui le dossier de conformité se présente. */
+export function destinatairesDossier(r: RegimeDuRegistre): string {
+  return soumisACommission(r)
+    ? "l'inspection, la commission de sécurité, l'assureur ou le bailleur"
+    : "l'inspection, l'assureur ou le bailleur";
+}
+
+/** À qui le registre se tient à disposition. */
+export function destinatairesRegistre(r: RegimeDuRegistre): string {
+  return soumisACommission(r)
+    ? "l'inspection du travail et de la commission de sécurité"
+    : "l'inspection du travail";
+}

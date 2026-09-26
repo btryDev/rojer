@@ -106,6 +106,23 @@ export type AnalyseLegionelleInput = z.infer<typeof analyseLegionelleSchema>;
 export const SEUIL_LEGIONELLE_UFC_PAR_L = 1000;
 
 /**
+ * Ce qu'une analyse dit, lu sur SA VALEUR — jamais sur la colonne `conforme`.
+ *
+ * LE DÉFAUT (relecture du 2026-09-26). Une analyse enregistrée SANS valeur
+ * était écrite `conforme: true`, et le fichier 08 du ZIP de contrôle imprimait
+ * « sous la limite de qualité (< 1 000 UFC/L) » pour un résultat que personne
+ * n'avait saisi. Une valeur absente n'est ni sous la limite, ni au-dessus :
+ * elle manque. Les lignes déjà en base portent `conforme: true` sans valeur ;
+ * lire le résultat sur la valeur les rend justes sans les réécrire.
+ */
+export type ResultatAnalyse = "sans_valeur" | "sous_limite" | "limite_atteinte";
+
+export function resultatAnalyse(valeurUfcParL: number | null | undefined): ResultatAnalyse {
+  if (valeurUfcParL === null || valeurUfcParL === undefined) return "sans_valeur";
+  return valeurUfcParL < SEUIL_LEGIONELLE_UFC_PAR_L ? "sous_limite" : "limite_atteinte";
+}
+
+/**
  * Vérifie si un relevé est conforme en fonction du seuil du point.
  * Pour ECS : température ≥ seuilMinCelsius (50 °C proposés par défaut).
  * Pour EFS : température ≤ seuilMinCelsius (traité comme plafond supérieur).

@@ -1,3 +1,4 @@
+import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
 import { describe, expect, it } from "vitest";
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import {
@@ -71,34 +72,61 @@ describe("la ligne DUERP n'invente pas de manquement", () => {
 });
 
 describe("la ligne des retards ne coche jamais sur du vide", () => {
+  const A_JOUR = { etat: "a_jour" } as const;
+  const lu = (nbEnRetard: number | null, calendrier: FraicheurCalendrier | null = A_JOUR, aucunEquipement = false) =>
+    ligneVerifsEnRetard({ nbEnRetard, calendrier, aucunEquipement });
+
   it("NE PAS SAVOIR ne se coche pas", () => {
     // Le défaut d'origine : le compteur, initialisé à `0` hors du `try`,
-    // restait à zéro quand la brique échouait ou quand le calendrier n'avait
-    // jamais été calculé — et le ZIP remis à l'inspecteur affirmait qu'aucune
-    // vérification n'était en retard.
-    const l = ligneVerifsEnRetard(null);
+    // restait à zéro quand la brique échouait.
+    const l = lu(null);
     expect(l).toContain("[ ]");
     expect(l).toContain("non déterminé");
     expect(l).not.toContain("[x]");
   });
 
-  it("zéro retard se coche, et n'est pas confondu avec l'inconnu", () => {
-    const l = ligneVerifsEnRetard(0);
+  it("zéro retard SUR UN CALENDRIER JAMAIS CALCULÉ ne se coche pas — le défaut du 2026-09-26", () => {
+    // Relecture du 2026-09-26 : une liste vide venue d'un calendrier jamais
+    // calculé cochait « [x] Aucune vérification en retard à ce jour ».
+    const l = lu(0, { etat: "jamais_genere" });
+    expect(l).not.toContain("[x]");
+    expect(l).toContain("Calendrier jamais calculé");
+  });
+
+  it("zéro retard SANS AUCUN ÉQUIPEMENT ne se coche pas", () => {
+    const l = lu(0, A_JOUR, true);
+    expect(l).not.toContain("[x]");
+    expect(l).toContain("Aucun équipement déclaré");
+  });
+
+  it("zéro retard sur un calendrier à recalculer ne se coche pas ; un retard constaté s'y annonce", () => {
+    const perime = { etat: "perime", sceauPose: "a", sceauAttendu: "b" } as const;
+    expect(lu(0, perime)).not.toContain("[x]");
+    expect(lu(2, perime)).toContain("[!] 2 vérification(s)");
+  });
+
+  it("zéro retard sur un calendrier à jour, avec des équipements, se coche", () => {
+    const l = lu(0);
     expect(l).toContain("[x]");
     expect(l).not.toContain("non déterminé");
   });
 
   it("un retard s'annonce, avec son compte et où le lire", () => {
-    const l = ligneVerifsEnRetard(3);
+    const l = lu(3);
     expect(l).toContain("[!]");
     expect(l).toContain("3 vérification(s)");
     expect(l).toContain("01_Dossier_conformite.pdf");
   });
 
-  it("les trois cas rendent trois lignes DISTINCTES", () => {
-    // Sans quoi l'union ne sert à rien : c'est la même exigence que sur les
-    // quatre états de `calendrier/fraicheur.ts`.
-    const lignes = [null, 0, 2].map(ligneVerifsEnRetard);
-    expect(new Set(lignes).size).toBe(3);
+  it("les cas rendent des lignes DISTINCTES", () => {
+    const lignes = [
+      lu(null),
+      lu(0, { etat: "jamais_genere" }),
+      lu(0, A_JOUR, true),
+      lu(0, { etat: "echec_regeneration" }),
+      lu(0),
+      lu(2),
+    ];
+    expect(new Set(lignes).size).toBe(lignes.length);
   });
 });

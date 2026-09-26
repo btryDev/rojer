@@ -38,6 +38,7 @@ import {
   type ManqueCouverture,
 } from "@/lib/perimetre/couverture";
 import { genererReadme } from "@/lib/pdf/readme-controle";
+import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
 
 /**
  * Assemble en un ZIP **tous** les documents qu'un inspecteur, un assureur,
@@ -103,6 +104,18 @@ export async function GET(
   // README se tait alors : il n'affirme pas un inventaire qu'il n'a pas lu.
   let inventaire: ManqueCouverture | null = null;
 
+  // CE QUI ÉCHOUE SE DIT (relecture du 2026-09-26). Les `catch {}` sautaient
+  // une brique en silence, et le README annonçait ses fichiers sans condition
+  // — `02_DUERP_vN.pdf` même quand son rendu avait échoué. Chaque échec est
+  // noté ici, par le nom du fichier qu'il prive, et le README ne décrit que ce
+  // que le ZIP contient vraiment (`zip.files`).
+  const echecs = new Map<string, string>();
+  const noterEchec = (fichier: string, e: unknown) => {
+    echecs.set(fichier, "la génération a échoué");
+    console.error(`controle-zip : ${fichier} non inclus`, e);
+  };
+  let piecesPrestatairesManquantes = 0;
+
   // ── 01 Dossier de conformité ────────────────────────────────────────
   try {
     const data = await construireDossierConformiteData(id);
@@ -115,8 +128,9 @@ export async function GET(
       const buf = await renderToBuffer(DossierConformiteDocument({ data }));
       zip.file("01_Dossier_conformite.pdf", new Uint8Array(buf));
     }
-  } catch {
-    // On continue même si une brique échoue.
+  } catch (e) {
+    // On continue même si une brique échoue — et on le dit.
+    noterEchec("01_Dossier_conformite.pdf", e);
   }
 
   // ── 02 DUERP (dernière version figée) ───────────────────────────────
@@ -183,9 +197,10 @@ export async function GET(
       );
       zip.file(`02_DUERP_v${versionCourante.numero}.pdf`, new Uint8Array(buf));
     }
-  } catch {
+  } catch (e) {
     // On continue même si une brique échoue : le README dira que le DUERP
-    // n'est pas inclus plutôt que de faire échouer tout le dossier.
+    // n'est pas inclus, et pourquoi, plutôt que de faire échouer le dossier.
+    noterEchec("02_DUERP", e);
   }
 
   // ── 03 Registre de sécurité ─────────────────────────────────────────
@@ -198,8 +213,8 @@ export async function GET(
       const buf = await renderToBuffer(RegistreDocument({ data }));
       zip.file("03_Registre_securite.pdf", new Uint8Array(buf));
     }
-  } catch {
-    /* noop */
+  } catch (e) {
+    noterEchec("03_Registre_securite.pdf", e);
   }
 
   // ── 04 Plan d'actions ───────────────────────────────────────────────
@@ -209,8 +224,8 @@ export async function GET(
       const buf = await renderToBuffer(PlanActionsDocument({ data }));
       zip.file("04_Plan_actions.pdf", new Uint8Array(buf));
     }
-  } catch {
-    /* noop */
+  } catch (e) {
+    noterEchec("04_Plan_actions.pdf", e);
   }
 
   // ── 05 Accessibilité (URL publique + QR si publié) ──────────────────
@@ -253,8 +268,11 @@ export async function GET(
         try {
           const buf = await storage.get(cle);
           sousDossier.file(nom, new Uint8Array(buf));
-        } catch {
-          /* fichier manquant, on ignore */
+        } catch (e) {
+          // Une pièce déclarée que le stockage ne rend pas : comptée, et
+          // annoncée par le README au lieu d'être ignorée.
+          piecesPrestatairesManquantes++;
+          console.error(`controle-zip : pièce prestataire non récupérée (${nom})`, e);
         }
       }
     }
@@ -433,7 +451,7 @@ export async function GET(
       `Analyses légionelles récentes (${carnetSan.analyses.length}) :`,
       "────────────────────────────────────────────────────────────",
       ...carnetSan.analyses.flatMap((a) => [
-        `  ${formaterDateFr(a.dateAnalyse)} · ${a.valeurUfcParL ?? "—"} UFC/L · ${a.conforme ? "sous la limite de qualité (< 1 000 UFC/L)" : "LIMITE DE QUALITÉ ATTEINTE (≥ 1 000 UFC/L)"}${a.laboratoire ? ` · ${a.laboratoire}` : ""}`,
+        `  ${formaterDateFr(a.dateAnalyse)} · ${a.valeurUfcParL ?? "—"} UFC/L · ${{ sous_limite: "sous la limite de qualité (< 1 000 UFC/L)", limite_atteinte: "LIMITE DE QUALITÉ ATTEINTE (≥ 1 000 UFC/L)", sans_valeur: "valeur non saisie" }[resultatAnalyse(a.valeurUfcParL)]}${a.laboratoire ? ` · ${a.laboratoire}` : ""}`,
         a.commentaire ? `    ${a.commentaire}` : "",
       ]),
       "",
@@ -450,7 +468,13 @@ export async function GET(
     adresse: etablissement.adresse,
     dateNow,
     duerpNumeroVersion,
-    aDuerpPdf: duerpNumeroVersion !== null,
+    // ~~`duerpNumeroVersion !== null`~~ : une version existante dont le rendu
+    // a échoué était annoncée présente.
+    aDuerpPdf:
+      duerpNumeroVersion !== null && `02_DUERP_v${duerpNumeroVersion}.pdf` in zip.files,
+    presents: new Set(Object.keys(zip.files)),
+    echecs,
+    piecesPrestatairesManquantes,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
     nbPermisFeu: permisFeuList.length,
@@ -460,7 +484,11 @@ export async function GET(
     ),
     nbEcheancesContractuelles: echeancesContractuelles.size,
     etatDuerp,
-    nbVerifsEnRetard,
+    retards: {
+      nbEnRetard: nbVerifsEnRetard,
+      calendrier: fraicheur,
+      aucunEquipement: inventaire !== null,
+    },
     avertissementCalendrier: phraseFraicheur(fraicheur),
     inventaire,
   });

@@ -21,6 +21,7 @@
 // elles peuvent être éprouvées.
 
 import type { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
+import { faitRetards, type LectureRetards } from "./fait-retards";
 
 export type EtatDuerpLu = ReturnType<typeof evaluerEtatDuerp>;
 
@@ -64,11 +65,14 @@ export function ligneDuerp(etat: EtatDuerpLu | null): string {
  * cocher cette case sur un dossier dont le calendrier n'avait jamais été
  * calculé.
  */
-export function ligneVerifsEnRetard(nb: number | null): string {
-  if (nb === null) {
-    return " [ ] Vérifications en retard : non déterminé (voir l'avertissement)";
-  }
-  return nb === 0
-    ? " [x] Aucune vérification en retard à ce jour"
-    : ` [!] ${nb} vérification(s) en retard — voir 01_Dossier_conformite.pdf`;
+//
+// ~~Zéro se cochait toujours~~ (relecture du 2026-09-26) : zéro sur un
+// calendrier jamais calculé, ou sur un inventaire vide, n'est pas un fait
+// favorable. La règle vit dans `fait-retards.ts`, que le dossier de
+// conformité et le registre lisent aussi.
+export function ligneVerifsEnRetard(l: LectureRetards): string {
+  const f = faitRetards(l);
+  return f.coche === "!"
+    ? ` [!] ${f.texte} — voir 01_Dossier_conformite.pdf`
+    : ` [${f.coche}] ${f.texte}`;
 }
