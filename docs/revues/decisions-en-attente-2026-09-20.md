@@ -43,13 +43,15 @@ Répondre « ok comme recommandé » à une ligne suffit.
 **Aucun n'est une décision de la propriétaire** : trois se tranchent sur le
 texte, le quatrième sur la charte. Ce qui reste, et qui le porte :]
 
-- **La scission `CH 57` / `CH 58`** — EN COURS, cette session
-  (`lot/evenementielles-cible`). La première question est la portée : en
-  5ᵉ catégorie, `PE 1` § 1 écarte le Livre II « sauf celles relevant d'articles
-  expressément mentionnés » (relu de première main le 2026-09-26), et `PE 20`
-  § 2 ne renvoie au chapitre V que pour la « mise en œuvre ». Reste à vérifier
-  qu'aucun autre article du Livre III ne mentionne `CH 57` ou `CH 58` avant de
-  retirer l'annuelle aux N5.
+- **La portée de `CH 57` / `CH 58` en 5ᵉ catégorie** — EXAMINÉE le 2026-09-26,
+  bornage tenté puis ANNULÉ après contre-lecture (journal C25) : la ligne reste
+  servie à tous les ERP, en sur-application assumée comme ses dix sœurs du
+  Livre II. **Question de lecture, à trancher sur pièces** : `PE 20` § 2 et
+  `PE 15` § 1 renvoient au chapitre V (chauffage) et X (cuisines) du livre II
+  pour la « mise en œuvre » des installations — ce renvoi emporte-t-il leurs
+  vérifications ? La réponse décide ensemble de `CH 58` et des `GC` en N5.
+  La scission ramonage / vérification vient après.
+- ~~Motif faux de `PE 31` au corpus~~ — rayé le 2026-09-26.
 - ~~**La divergence sur `R. 146-35` CCH** entre les deux PDF~~ — FAIT le
   2026-09-26 par la session `rojer-outils-62`, branche
   `lot/sorties-sans-equipement-et-igh` (`572675c`), NON FUSIONNÉE, contre-lecture
@@ -72,10 +74,8 @@ texte, le quatrième sur la charte. Ce qui reste, et qui le porte :]
   fausse (un dossier vierge rend 4 à 6 lignes) ; la charte tranche
   (interdit 15) : dire « aucun équipement déclaré » comme un fait, jusque dans
   le ZIP et les PDF.
-- **À reverser au corpus par cette session** (après la fusion de sa branche) :
-  le verbatim de `PE 20` § 2 (relu le 2026-09-26), la liste complète de
-  `PE 4` § 2, et le motif faux de `PE 31` (le référentiel ne porte pas le
-  ramonage).
+- **À reverser au corpus** : ~~le verbatim de `PE 20` § 2~~ (consigné le
+  2026-09-26), la liste complète de `PE 4` § 2 (reste à relever).
 
 Je ne formule pas de recommandation sur ces quatre-là sans avoir rouvert le code
 et les textes : ce serait deviner.

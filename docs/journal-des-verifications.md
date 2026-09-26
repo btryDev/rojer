@@ -999,6 +999,38 @@ et ce texte modificateur n'est pas ouvert — la règle du corpus refuse la
 **Appliqué :** référentiel `2026-09-26.2`, 167 obligations, aucune entrée ni
 sortie.
 
+### C25 · 2026-09-26 — `CH 58` en 5ᵉ catégorie : borné, puis rétabli le jour même
+
+**Ce qui a été fait, puis défait.** L'annuelle `CH 58` a été bornée aux
+catégories 1 à 4 (`7368621`), sur la lecture de `PE 1` § 1 (« Les
+dispositions du livre II ne sont pas applicables sauf celles relevant
+d'articles expressément mentionnés dans la suite du présent livre ») et
+d'un balayage où aucun article PE ne nomme `CH 57` ni `CH 58`. Une
+contre-lecture neutre l'a réfuté ; le commit est annulé (`8b7443a`).
+
+**Pourquoi.** (1) Un ERP dont la catégorie n'est pas renseignée perdait la
+ligne sans rien à la place : la règle du non-renseigné l'interdit. (2) Le
+dépôt avait DÉJÀ tranché ce cas pour dix obligations sœurs : sur-application
+assumée en 5ᵉ catégorie, ligne maintenue, parce que la retirer crée un faux
+négatif muet. Le commit rompait cette politique sans la citer. (3) `PE 20`
+§ 2 renvoie au « livre II, titre Ier, chapitre V » — celui de `CH 58` — pour
+la « mise en œuvre » : l'étendre ou non à la vérification est une
+interprétation, et `PE 15` § 1 pose la même question pour les cuisines
+(`GC`). (4) Un hôtel de 5ᵉ catégorie passait en sous-application. Et la
+réconciliation supprime les lignes sans trace : « archivée, rapports
+conservés » était faux pour elles.
+
+**La leçon.** J'avais dit à la propriétaire que « la réglementation
+tranche ». Elle tranchait sur `PE 1` ; elle ne tranchait pas sur `PE 20`
+§ 2, et le dépôt avait une politique écrite que je n'avais pas cherchée.
+Avant de retirer une ligne : chercher si une obligation sœur a déjà été
+jugée sur le même argument.
+
+**Reste.** La lecture de `PE 20` § 2 et de `PE 15` § 1 (« mise en œuvre » dans
+les conditions du chapitre V / X) : une seule question, qui décide de
+`CH 58` et des `GC` en 5ᵉ catégorie. Le motif de `PE 31` au corpus est rayé :
+il affirmait que le référentiel porte le ramonage des conduits de fumée.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
