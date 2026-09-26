@@ -30,7 +30,14 @@ describe("aide de la case groupe électrogène", () => {
     expect(o.referencesLegales[0].reference).toContain("EL 18 § 4");
     expect(AIDE_GROUPE_ELECTROGENE).toContain("art. EL 18 § 4");
     expect(AIDE_GROUPE_ELECTROGENE).toContain("chaque mois");
-    expect(AIDE_GROUPE_ELECTROGENE).not.toMatch(/annuel|quinze/i);
+    expect(AIDE_GROUPE_ELECTROGENE).not.toMatch(/annuel/i);
+    // Rien hors ERP, et la quinzaine ne dépend pas de la case : le texte le dit.
+    expect(AIDE_GROUPE_ELECTROGENE).toContain("recevant du public seulement");
+    const quinzaine = obligationParId("elec-erp-groupe-electrogene-quinzaine")!;
+    expect(quinzaine.periodicite).toBe("bimensuelle");
+    expect(quinzaine.conditions ?? []).toEqual([]);
+    expect(AIDE_GROUPE_ELECTROGENE).toContain("toutes les deux semaines");
+    expect(AIDE_GROUPE_ELECTROGENE).toContain("case cochée ou non");
   });
 
   it("porte la réserve du livre II, comme la référence de la ligne", () => {

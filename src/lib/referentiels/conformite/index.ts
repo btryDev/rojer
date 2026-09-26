@@ -214,8 +214,10 @@ export const obligationsConformite: Obligation[] = [
 // électrogène (×2), mise en service électrique, CH 58, grande cuisine (×5) —
 // disent dans leur référence « livre II, établissements des quatre premières
 // catégories », et dans leur description ce que le livre III porte en 5ᵉ et
-// la sur-application assumée. Aucune typologie, aucun libellé : empreinte
-// inchangée, 169.
+// la sur-application assumée. S'y ajoutent, à l'intégration du 2026-09-27
+// (C40), deux descriptions sans seuil inventé : la désignation du salarié
+// compétent (L. 4644-1) et sa formation. Aucune typologie, aucun libellé :
+// empreinte inchangée, 169.
 export const REFERENTIEL_VERSION = "2026-09-26.10";
 
 /**

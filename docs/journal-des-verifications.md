@@ -3042,8 +3042,11 @@ du moteur qui disaient « EL 20 » sont corrigés.
 ### C40 · 2026-09-26 — Suites de la revue finale de l'intégration d, et petits textes
 
 *Base : production `d4681ef`, branche `lot/suites-et-petits-textes`.
-Ni référentiel ni moteur touchés : aucune obligation, aucune raison du moteur,
-aucune empreinte ne change.*
+~~Ni référentiel ni moteur touchés~~ : le moteur n'est pas touché ; F4 change
+deux descriptions du référentiel (désignation L. 4644-1, formation du salarié
+désigné), couvertes par la version `.10` à l'intégration (`integration/2026-09-27`)
+— aucune obligation, aucune raison du moteur, aucune empreinte ne change.*
+*[Corrigé le 2026-09-27, revue finale de l'intégration.]*
 
 **Relu sur Légifrance le 2026-09-26**, chacun sur sa page propre, recopie
 intégrale demandée : `R. 4512-7` (en vigueur depuis le 01/05/2008 — identique
@@ -3229,9 +3232,10 @@ figée ancienne) et vérifié les six surfaces du lien. Cinq reprises :
   condition d'effectif ni condition de secteur. » ; et, trouvée par la garde
   étendue, la description de la formation du salarié désigné : « Elle est due
   dès le premier salarié désigné » → le deuxième alinéa cité. **Ni
-  `REFERENTIEL_VERSION` ni `HISTORIQUE_EMPREINTES` touchés** (un lot
+  `REFERENTIEL_VERSION` ni `HISTORIQUE_EMPREINTES` touchés** (~~un lot
   parallèle passe la version à `.11` ; la numérotation se fera à
-  l'intégration) ; `conformite.test.ts` vert — l'empreinte ne lit pas les
+  l'intégration~~ — la `.11` a été annulée ; ces deux descriptions sont
+  couvertes par la `.10`, 2026-09-27) ; `conformite.test.ts` vert — l'empreinte ne lit pas les
   descriptions. La garde `r4121-1-sans-seuil` balaie désormais
   `lib/referentiels/conformite`, commentaires dépliés, avec cinq phrases
   admises À LA LETTRE (commentaires et `notesInternes`, non affichés) et un

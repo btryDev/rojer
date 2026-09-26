@@ -186,6 +186,11 @@ export function trierParCategorie<T extends { categorie: CategorieEquipement }>(
  * `aGroupeElectrogene` —, fondée sur EL 18 § 4 (`referencesLegales[0]`),
  * article du livre II. `labels.test.ts` tient l'accord avec le référentiel et
  * interdit « EL 20 ».
+ *
+ * Revue finale du 2026-09-27 : la case s'affiche pour toute installation
+ * électrique, ERP ou non, et la quinzaine (`-quinzaine`) reste servie à tout
+ * ERP case décochée. Le texte dit donc les deux : rien hors ERP, et la
+ * vérification des niveaux indépendante de la case.
  */
 export const AIDE_GROUPE_ELECTROGENE =
-  "Cochée, déclenche chaque mois l'entretien et l'essai du groupe électrogène de sécurité (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéance maintenue par sur-application assumée).";
+  "Pour un établissement recevant du public seulement. Cochée, elle ajoute chaque mois l'entretien et l'essai du groupe électrogène de sécurité (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéance maintenue par sur-application assumée). La vérification des niveaux, toutes les deux semaines, est suivie pour toute installation électrique d'un établissement recevant du public, case cochée ou non.";

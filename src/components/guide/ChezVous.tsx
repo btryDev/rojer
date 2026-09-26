@@ -69,7 +69,7 @@ export function ChezVous({
           vise une personne sur sa fiche dans l&apos;équipe, une obligation
           qui naît d&apos;un événement sur la page « Quand ça arrive ». Les
           obligations de l&apos;écran « Ce qui doit être en place » ne
-          citent pas encore leur texte à l&apos;écran. Modifiez vos déclarations et cette section
+          citent pas leur texte à l&apos;écran. Modifiez vos déclarations et cette section
           se recalcule.
         </p>
       </header>
