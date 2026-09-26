@@ -2229,9 +2229,20 @@ rien : à supprimer, pas à fusionner.
 
 ---
 
-## 15. Un dossier qui n'a rien déclaré rend des listes vides, et ne le dit pas
+## ~~15. Un dossier qui n'a rien déclaré rend des listes vides, et ne le dit pas~~ — FAIT le 2026-09-26
 
-Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».
+> **Clos par `lot/sorties-sans-equipement-et-igh`**, sur décision de la
+> propriétaire : le seuil est zéro, et le fait se dit comme un fait. Un axe
+> `inventaire` est entré dans `perimetre/couverture.ts` — « Aucun équipement en
+> service n'est déclaré pour cet établissement. » —, sans score ni verdict. Il
+> atteint les quatre sorties remises à un tiers : le dossier de conformité (page
+> de garde, avant le score, et sous « Ce que ce dossier ne couvre pas »), le
+> registre de sécurité (sous « Composition de ce registre »), le README du ZIP
+> (« À lire avant le reste ») et l'écran « Préparer un contrôle ».
+> `couvertureDuRegime` n'y passe plus un parc fictif à zéro, qui lui aurait fait
+> affirmer le fait sans avoir lu le parc.
+
+~~Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».~~
 
 Ce lot a fermé un faux vert : les sorties qui rendent un état de conformité —
 le ZIP remis au contrôleur, les PDF, l'écran « Préparer un contrôle », les

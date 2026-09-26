@@ -66,6 +66,7 @@ function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
     effectifSurSite: 6,
     codeNaf: "56.10A",
     regimesTexte: "Établissement de travail, ERP type N cat. 5",
+    regime: { estERP: true, estIGH: false },
     genereLe: new Date("2026-09-01T10:00:00Z"),
     couverture: null,
     avertissementCalendrier: null,
@@ -197,5 +198,46 @@ describe("le dossier de conformité imprime les états permanents", () => {
       d.score = { ...d.score, niveau };
       await expect(pages(d)).resolves.toBeGreaterThan(0);
     }
+  });
+});
+
+describe("le dossier dit « aucun équipement déclaré » avant le score (§ 15)", () => {
+  const INVENTAIRE = {
+    motif: "Aucun équipement en service n'est déclaré pour cet établissement.",
+    consequence:
+      "Aucune vérification attachée à un équipement ne peut donc figurer au calendrier ni au registre.",
+  };
+
+  it("imprime le fait en page de garde, pas seulement en fin de dossier", async () => {
+    // Même phrase, même bloc en fin de dossier sous « Ce que ce dossier ne
+    // couvre pas » : seul l'axe diffère. Ce qui reste de différence est
+    // l'encadré de page de garde — celui qu'on lit avant le score.
+    const d = dossier(bloc(2));
+    const autreAxe = await taille({
+      ...d,
+      couverture: {
+        manques: [{ axe: "domaine_equipement", ...INVENTAIRE }],
+        indeterminations: [],
+      },
+    });
+    const inventaire = await taille({
+      ...d,
+      couverture: {
+        manques: [{ axe: "inventaire", ...INVENTAIRE }],
+        indeterminations: [],
+      },
+    });
+    expect(inventaire).toBeGreaterThan(autreAxe);
+  });
+});
+
+describe("les articles du registre suivent le régime", () => {
+  it("un établissement ni ERP ni IGH en lit moins qu'un ERP situé en IGH", async () => {
+    const d = dossier(bloc(2));
+    const aucun = await taille({ ...d, regime: { estERP: false, estIGH: false } });
+    const erp = await taille({ ...d, regime: { estERP: true, estIGH: false } });
+    const igh = await taille({ ...d, regime: { estERP: true, estIGH: true } });
+    expect(erp).toBeGreaterThan(aucun);
+    expect(igh).toBeGreaterThan(erp);
   });
 });

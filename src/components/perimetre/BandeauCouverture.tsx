@@ -63,7 +63,11 @@ function lienDeLAxe(
       return hrefs.duerp
         ? { href: hrefs.duerp, libelle: "Ouvrir le document unique" }
         : null;
+    // Même destination, et le même libellé à dessein : « Déclarer vos
+    // équipements » présumerait qu'il y en a à déclarer, ce que le fait ne dit
+    // pas — un bureau sans appareil soumis sort la même phrase.
     case "domaine_equipement":
+    case "inventaire":
       return hrefs.equipements
         ? { href: hrefs.equipements, libelle: "Voir les équipements" }
         : null;

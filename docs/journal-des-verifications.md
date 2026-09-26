@@ -850,6 +850,33 @@ Décision au dossier (A6).
 `PE 4 § 2` ». `PE 4 § 2` est un ENTRETIEN — précisément ce que GN 10 excepte.
 L'analogie ne valait pas ; elle est raturée dans la réserve de `PE 27`.
 
+### C21 · 2026-09-26 — `R. 146-35` CCH, relu pour trancher deux PDF qui se contredisaient
+
+**Lu, sur sa page propre** (LEGIARTI000043819153, version en vigueur depuis le
+2026-07-01) : structure demandée d'abord sans rien suggérer — un alinéa, une
+phrase d'annonce, six items 1° à 6°, rangé au chapitre VI « Immeubles de grande
+hauteur », section 5 « Mesures de contrôle ». Formulation décisive confirmée par
+deux lectures distinctes : « Il doit être tenu, par le propriétaire, un registre
+de sécurité sur lequel sont portés les renseignements indispensables au contrôle
+de la sécurité. » Puis : « Ce registre comprend, outre les pièces attendues aux
+articles R. 141-10 et R. 141-11 : […] ». **Consigné :** `src/lib/pdf/mentions-registre.ts`
+(le code), pas le corpus, que ce lot ne touchait pas.
+
+**Ce que la lecture a changé.** Le dossier de conformité imprimait
+« R. 143-44 CCH (ERP), R. 146-35 CCH (IGH) » à tout établissement, et le registre
+« R. 143-44 CCH » en titre à tout établissement. Les deux sont désormais
+conditionnés au régime ; `R. 146-35` n'est cité qu'à un IGH, et **avec son
+débiteur** — le propriétaire —, parce que le dirigeant qui lit le registre de
+Rojer n'est pas nécessairement celui qui tient le registre de l'immeuble. Il
+n'entre pas dans le titre du registre : ce document n'est pas celui-là.
+
+**Une mesure refaite en appelant le code.** Le commentaire du registre disait
+« le produit ne porte du régime IGH que deux obligations ». Le référentiel en
+rend **onze** qui admettent l'IGH : trois propres (`elec-igh-annuelle`,
+`incendie-igh-moyens-secours-annuelle`,
+`incendie-igh-charge-calorifique-quinquennale`) et huit d'ascenseur, ouvertes à
+tous les régimes.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

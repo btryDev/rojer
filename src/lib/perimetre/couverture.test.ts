@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   couvertureDeLEtablissement,
   couvertureDuRegime,
+  faitInventaire,
   riensASignaler,
   type AxeCouverture,
   type FaitsCouverture,
@@ -594,5 +595,57 @@ describe("axe effectif", () => {
     );
     // L'ordre est celui de l'énumération : le régime, puis la taille.
     expect(axes(c)).toEqual(["categorie_erp", "effectif"]);
+  });
+});
+
+/* ─── L'axe de l'inventaire — § 15 des chantiers ouverts ──────────────── */
+
+describe("axe de l'inventaire : aucun équipement déclaré", () => {
+  // Le cas réel : un dossier qui sort de l'onboarding. Trois étapes, aucune
+  // ne déclare d'équipement — le parc en service est vide.
+  const dossierNeuf = faits({
+    equipements: { nbSansObligation: 0, nbEquipements: 0 },
+  });
+
+  it("le dit, et comme un fait", () => {
+    const m = faitInventaire(couvertureDeLEtablissement(dossierNeuf));
+    expect(m?.axe).toBe("inventaire");
+    expect(m?.motif).toMatch(/^Aucun équipement/);
+  });
+
+  it("se tait dès qu'un seul équipement est en service", () => {
+    const c = couvertureDeLEtablissement(
+      faits({ equipements: { nbSansObligation: 0, nbEquipements: 1 } }),
+    );
+    expect(faitInventaire(c)).toBeNull();
+    expect(axes(c)).not.toContain("inventaire");
+  });
+
+  it("n'est pas affirmé par l'écran qui n'a pas lu le parc", () => {
+    // `couvertureDuRegime` ne reçoit que le régime. Il passait autrefois un
+    // parc fictif à zéro à l'entrée complète : depuis cet axe, ce zéro aurait
+    // fait dire « aucun équipement » à un écran qui n'a rien regardé.
+    for (const estIGH of [false, true]) {
+      const c = couvertureDuRegime({ ...regimeCouvert, estIGH });
+      expect(axes(c)).not.toContain("inventaire");
+    }
+  });
+
+  it("ne qualifie rien : ni verdict, ni score", () => {
+    const m = faitInventaire(couvertureDeLEtablissement(dossierNeuf));
+    const texte = `${m?.motif} ${m?.consequence}`.toLowerCase();
+    // Borne basse : les mots du verdict que la charte interdit (interdit 15,
+    // et la règle « Rojer calcule, il n'avise pas »).
+    for (const mot of ["conforme", "en règle", "complet", "à jour", "score"]) {
+      expect(texte).not.toContain(mot);
+    }
+    expect(texte).not.toMatch(/\d+\s*(%|\/\s*100)/);
+  });
+
+  it("ne se confond pas avec l'axe des équipements sans obligation", () => {
+    // Deux faits, deux phrases : le parc vide n'est pas un parc qui ne
+    // déclenche rien. Les deux ne peuvent pas sortir ensemble.
+    const c = couvertureDeLEtablissement(dossierNeuf);
+    expect(axes(c)).toEqual(["inventaire"]);
   });
 });

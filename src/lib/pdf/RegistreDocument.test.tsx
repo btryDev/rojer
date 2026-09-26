@@ -16,6 +16,8 @@ const data: RegistreData = {
   etablissement: "Le Comptoir",
   adresse: "1 rue des Lilas",
   genereLe: new Date("2026-08-26T10:00:00Z"),
+  regime: { estERP: true, estIGH: false },
+  inventaire: null,
   bilan: { dues: 4, outillees: 3, faites: 1, aRemplir: 1, tenuesAilleurs: 1, nonOutillees: 1 },
   parties: [
     {
@@ -54,6 +56,8 @@ function registreJournal(n: number): RegistreData {
     etablissement: "E",
     adresse: "A",
     genereLe: new Date("2026-01-01T00:00:00Z"),
+    regime: { estERP: false, estIGH: false },
+    inventaire: null,
     bilan: {
       dues: 1,
       outillees: 1,
@@ -112,4 +116,30 @@ describe("RegistreDocument", () => {
     expect(court).toBeGreaterThan(5);
     expect(long).toBeGreaterThan(court * 1.5);
   }, 60000);
+
+  // La taille du rendu, comme dans `DossierConformiteDocument.test.tsx` : le
+  // texte d'un PDF react-pdf n'est pas lisible dans le fichier produit.
+  const taille = async (d: RegistreData) =>
+    (await renderToBuffer(<RegistreDocument data={d} />)).length;
+
+  it("dit « aucun équipement déclaré » quand c'est le cas (§ 15)", async () => {
+    const sans = await taille(data);
+    const avec = await taille({
+      ...data,
+      inventaire: {
+        axe: "inventaire",
+        motif: "Aucun équipement en service n'est déclaré pour cet établissement.",
+        consequence: "Aucune vérification attachée à un équipement ne peut donc figurer au registre.",
+      },
+    });
+    expect(avec).toBeGreaterThan(sans);
+  }, 30000);
+
+  it("cite R. 143-44 à l'ERP seul, et R. 146-35 à l'IGH seul", async () => {
+    const aucun = await taille({ ...data, regime: { estERP: false, estIGH: false } });
+    const erp = await taille({ ...data, regime: { estERP: true, estIGH: false } });
+    const igh = await taille({ ...data, regime: { estERP: false, estIGH: true } });
+    expect(erp).toBeGreaterThan(aucun);
+    expect(igh).toBeGreaterThan(aucun);
+  }, 30000);
 });

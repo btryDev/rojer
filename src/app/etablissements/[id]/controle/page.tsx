@@ -7,6 +7,8 @@ import { countAlertesVigilance } from "@/lib/prestataires/queries";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
 import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
+import { couvertureDuDossier } from "@/lib/perimetre/faits";
+import { faitInventaire } from "@/lib/perimetre/couverture";
 import {
   etatSelonCalendrier,
   type EtatPiece,
@@ -52,6 +54,7 @@ export default async function ControlePage({
     nbRapports,
     registreAccessibilite,
     fraicheur,
+    couverture,
   ] = await Promise.all([
     getDashboardData(id),
     countAlertesVigilance(id),
@@ -69,6 +72,10 @@ export default async function ControlePage({
     // CE QU'ON SAIT AVANT DE COMPTER. C'est l'écran qu'on ouvre devant un
     // contrôleur : il ne peut affirmer « à jour » que s'il sait sur quoi.
     fraicheurCalendrier(id),
+    // Par la même entrée que le dossier de conformité et le registre du ZIP
+    // que cet écran fait télécharger : l'écran et les pièces disent le même
+    // fait de l'inventaire (`docs/chantiers-ouverts.md` § 15).
+    couvertureDuDossier(id),
   ]);
 
   // LE PATRON `etat-charge.ts`, APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
@@ -78,6 +85,12 @@ export default async function ControlePage({
   // adossée au calendrier ne dit « à jour » ; elle dit « à planifier », ce qui
   // est vrai dans les deux cas.
   const avertissement = phraseFraicheur(fraicheur);
+  // « Aucun équipement déclaré », dit comme un fait. Sans lui, cet écran
+  // montrait à un dossier vide un registre « 0 rapport archivé » et un plan
+  // d'actions « Aucune action en cours » — un silence qui ressemble à une
+  // réponse, devant la personne même à qui l'on remet le dossier. `null`
+  // aussi quand la couverture n'a pu être lue : on n'affirme rien.
+  const inventaire = couverture ? faitInventaire(couverture) : null;
   const selonCalendrier = (etat: EtatPiece): EtatPiece =>
     etatSelonCalendrier(fraicheur, etat);
 
@@ -220,6 +233,18 @@ export default async function ControlePage({
                 <p className="mt-4 max-w-prose rounded-md border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-4 py-3 text-[0.85rem] leading-relaxed text-[color:var(--board-ink)]/85">
                   {avertissement}
                 </p>
+              )}
+              {inventaire && (
+                <div className="mt-4 max-w-prose rounded-md border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-4 py-3 text-[0.85rem] leading-relaxed text-[color:var(--board-ink)]/85">
+                  <p className="font-semibold">{inventaire.motif}</p>
+                  <p className="mt-1">{inventaire.consequence}</p>
+                  <Link
+                    href={`/etablissements/${id}/equipements`}
+                    className="mt-2 inline-block text-[color:var(--board-blue-ink)] hover:underline"
+                  >
+                    Voir les équipements →
+                  </Link>
+                </div>
               )}
             </div>
 
