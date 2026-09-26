@@ -96,8 +96,8 @@ export default async function CarnetSanitairePage({
             surveillance. Rojer ne sait pas si c&apos;est votre cas, et ne le
             décide pas à votre place : il n&apos;inscrit rien à votre
             calendrier tant que vous n&apos;avez pas ouvert de carnet, puis
-            vous rappelle l&apos;analyse suivante un an après la dernière
-            saisie.
+            y inscrit l&apos;analyse suivante un an après la dernière saisie
+            — sans rappel par e-mail.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {/* L'extrait affiché ici était FABRIQUÉ : ni « bonne

@@ -42,6 +42,25 @@ const D = String.raw`(?<![\p{L}\p{N}_])`;
 const F = String.raw`(?![\p{L}\p{N}_])`;
 const mot = (corps: string) => new RegExp(`${D}(?:${corps})${F}`, "giu");
 
+// `averti`, `relanc`, « tenir informé » : la vérification du 2026-09-26 en a
+// fait passer quatre variantes (« Vous serez averti par courriel »…).
+const RACINE_ENVOI = String.raw`(?:envo[iy]\p{L}*|enverr\p{L}*|notifi\p{L}*|rappel\p{L}*|alert\p{L}*|averti\p{L}*|relanc\p{L}*|prévien\p{L}*|préviendr\p{L}*|(?:tien\p{L}*|tiendr\p{L}*|ten\p{L}*)\s+informée?s?|(?:recev|recevr|reç)\p{L}*(?!\s+(?:du|le|au)\s+public))`;
+const SUJET = String.raw`(?:vous|nous|il|elle|ils|elles|on|rojer|la\s+plateforme|l'application|le\s+destinataire|le\s+signataire|(?:le|votre)\s+prestataire)`;
+const PRONOM = String.raw`(?:vous|lui|leur|les|en)\s+`;
+const ENVOI_PROMIS = mot(
+  [
+    String.raw`(?<!(?:^|[^\p{L}])ne\s+)${SUJET}\s+(?:${PRONOM})?(?:va|vont|allons|allez|pourr\p{L}*|ser\p{L}*)?\s*(?:${PRONOM})?${RACINE_ENVOI}`,
+    String.raw`(?:un|une|des|le|la|les|chaque)\s+(?:e-?mails?|courriels?|notifications?|rappels?|relances?|alertes?|sms|messages?)\s+(?:vous|lui|leur|part|partent|partira|est\s+envoy|sera|seront)`,
+    // « vient d'être envoyé », « Lien envoyé », « liens envoyés ».
+    String.raw`vien\p{L}*\s+d'être\s+(?:envoy|adress|transmi)\p{L}*|(?:liens?|codes?|e-?mails?|courriels?|messages?)\s+envoyée?s?`,
+    // Le PASSIF seul, et pas sa négation : « la personne qui vous a envoyé ce
+    // lien » décrit ce qu'une personne a fait, « n'a été envoyé » le nie.
+    String.raw`(?<!(?:^|[^\p{L}])n')(?:(?:a|ont)\s+été|est|sont|sera|seront|serait)\s+(?:envoy|adress|transmi)\p{L}*`,
+    String.raw`(?:e-?mails?|courriels?|messages?|liens?)(?:\s+\p{L}+){0,3}\s+(?:vient\s+de\s+partir|va\s+partir|partira|part)`,
+    String.raw`(?:reçue?s?|envoyée?s?|transmise?s?|adressée?s?)\s+(?:par|dans)\s+(?:l'|le\s+|un\s+|votre\s+)?(?:e-?mail|courriel|sms|notification)`,
+  ].join("|"),
+);
+
 /** Les qualifications, en mots séparés par n'importe quel blanc — une phrase de JSX se coupe en fin de ligne. */
 const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
   // Les formes françaises, accent compris — pas `opposab\p{L}*`, qui avalait
@@ -64,8 +83,42 @@ const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
   // le produit promettrait qu'un document fait POUR le dirigeant.
   { nom: "vous couvre / vous protège", motif: mot(String.raw`vous\s+(?:couvre|couvrent|protège|protègent)|qui\s+protège|vous\s+protéger`) },
   { nom: "responsabilité engagée", motif: mot(String.raw`responsabilité\s+(?:est\s+|serait\s+|sera\s+)?engagée`) },
-  { nom: "valeur légale", motif: mot(String.raw`valeur\s+(?:légale|juridique|probante)`) },
+  // « probatoire » : la forme du corps du mail de signature, qui passait
+  // (contre-lecture du 2026-09-26).
+  { nom: "valeur légale", motif: mot(String.raw`valeur\s+(?:légale|juridique|probante|probatoire)`) },
   { nom: "premier document demandé", motif: mot(String.raw`premier\s+document\s+demandé`) },
+  // L'indice se dit « d'avancement » (décision de la propriétaire,
+  // 2026-09-26) : « conformité » y qualifiait un calcul interne.
+  { nom: "score de conformité", motif: mot(String.raw`scores?\s+de\s+conformité`) },
+  // La signature classée par Rojer (vérification du 2026-09-26) : « au sens
+  // de l'article 1367 », « eIDAS simple », « niveau simple ».
+  { nom: "signature qualifiée", motif: mot(String.raw`au\s+sens\s+de\s+l'article\s+136[67]|(?:eIDAS|niveau)\s+simple`) },
+  // PROMESSES QUE LE PRODUIT NE TIENT PAS (C38, 2026-09-26). Aucun rappel
+  // n'est envoyé — le dépôt n'a aucun driver d'envoi réel —, aucune action
+  // ne naît seule d'un écart, aucun dossier n'est « prêt » par construction.
+  // Les négations écrites pour le dire (« aucun rappel par e-mail ») ne
+  // tombent pas sous ces formes.
+  {
+    nom: "rappel promis",
+    motif: mot(
+      String.raw`e-?mail\s+vous\s+prévien\p{L}*|vous\s+(?:prévien|rappel|alert)\p{L}*|rappel\p{L}*\s+les\s+échéances|alertes?\s+J-\d+|escalade\s+si\s+retard`,
+    ),
+  },
+  { nom: "automatisme promis", motif: mot(String.raw`créée?s?\s+automatiquement|se\s+posent\s+seules|se\s+remplit\s+seul`) },
+  { nom: "prêt pour contrôle", motif: mot(String.raw`prêt\s+pour\s+(?:le\s+|un\s+)?contrôle`) },
+  { nom: "rien à préparer", motif: mot(String.raw`rien\s+à\s+préparer`) },
+  // L'ENVOI PROMIS, par RACINES (contre-lecture du 2026-09-26) : « Nous vous
+  // enverrons un courriel quinze jours avant chaque échéance » passait les
+  // formes ci-dessus. Les racines seules (`e-?mail`, `alerte`, `envo…`)
+  // touchent 288 lignes, identifiants et tons de pastille compris, et leur
+  // admission ligne à ligne serait une liste recopiée. La garde prend donc
+  // les racines dans leurs formes de PROMESSE : un sujet suivi d'un verbe
+  // d'envoi, à tout temps (« vous enverra », « va recevoir », « pourrez leur
+  // envoyer ») ; un envoi qui part vers quelqu'un (« un e-mail vous… ») ; le
+  // passif (« a été envoyé ») ; le départ (« vient de partir ») ; la
+  // réception (« reçu par email »). La négation (« ne vous enverra pas ») et
+  // « recevoir du public » ne tombent pas.
+  { nom: "envoi promis", motif: ENVOI_PROMIS },
 ];
 
 /**
@@ -81,9 +134,77 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
     // laissait passer toute autre phrase du même fichier qui l'emploie
     // (contre-lecture du 2026-09-26). Une seule entrée pour les deux mots
     // qu'elle porte (« en infraction », « opposable »).
-    ligne: "- Ne qualifie jamais juridiquement un état : ni « conforme », ni « en infraction », ni « opposable ». Les outils rendent des faits (dates, statuts, cotations) et les articles qui fondent une obligation ; ils ne rendent jamais de conclusion de droit, et il n'y en a pas à en tirer.",
+    // Ligne coupée le 2026-09-26 (C38) : la phrase qui promettait « les
+    // articles qui fondent une obligation » était fausse, et elle est passée à
+    // la ligne suivante, corrigée. L'admission ne porte plus que l'interdit.
+    ligne: "- Ne qualifie jamais juridiquement un état : ni « conforme », ni « en infraction », ni « opposable ».",
     motif:
       "La consigne donnée au modèle qui lit le serveur MCP : elle NOMME les mots pour les interdire.",
+  },
+  // Les e-mails d'authentification : Supabase Auth les envoie, eux (ADR-005).
+  {
+    fichier: "src/app/signup/verification-en-attente/page.tsx",
+    ligne: "Un lien de confirmation a été envoyé à",
+    motif: "Envoyé par Supabase Auth à l'inscription (`signUp`), pas par le driver de Rojer.",
+  },
+  {
+    fichier: "src/lib/auth/actions.ts",
+    ligne: '"Si un compte existe avec cette adresse, un e-mail de réinitialisation vient de partir.",',
+    motif: "Envoyé par Supabase Auth (`resetPasswordForEmail`), pas par le driver de Rojer.",
+  },
+  // Deux envois VRAIS, qui ne sont pas des e-mails.
+  {
+    fichier: "src/app/etablissements/[id]/connecter/page.tsx",
+    ligne: "enjeu=\"Les informations renvoyées par les outils sont envoyées à l'assistant que vous utilisez, et suivent alors ses propres règles de traitement et de conservation — pas celles de Rojer.\"",
+    motif: "Les réponses du connecteur MCP partent bien à l'assistant : c'est l'avertissement de la page.",
+  },
+  {
+    fichier: "src/components/salaries/FormulaireTitre.tsx",
+    ligne: "? \"L'avis d'aptitude vous est transmis et vous le conservez de votre côté (art. R. 4624-55) : Rojer n'en garde pas copie.\"",
+    motif: "Transmis par le médecin du travail (R. 4624-55), pas par Rojer.",
+  },
+  // Le flux de signature externe. ~~En attente de décision~~ — tranché le
+  // 2026-09-26 par la propriétaire : le bouton reste, et la demande est
+  // refusée AVANT le jeton tant que l'envoi n'est pas en service
+  // (`envoiEnService`). Ces deux phrases ne s'affichent donc qu'après un
+  // envoi réellement parti : la première sur `ok: true`, la seconde sur la
+  // page qu'ouvre le lien reçu.
+  // Les phrases du flux qui ne s'affichent qu'après un envoi réel (vérifié
+  // chacune le 2026-09-26 contre `envoiEnService`).
+  {
+    fichier: "src/components/signatures/DemanderSignatureForm.tsx",
+    ligne: "Lien envoyé",
+    motif: "Titre du bloc affiché sur `ok: true` seulement, après un envoi parti.",
+  },
+  {
+    fichier: "src/components/signatures/SignatureExterneForm.tsx",
+    ligne: "Code à 6 chiffres reçu dans l'email. Valable 10 minutes, 3 essais",
+    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
+  },
+  {
+    fichier: "src/lib/access-tokens/emission.ts",
+    ligne: "\"Trop de liens envoyés dans l'heure. Réessayez un peu plus tard.\",",
+    motif: "Limite de fréquence, comptée APRÈS le refus d'envoi hors service : ne s'affiche que l'envoi en service.",
+  },
+  {
+    fichier: "src/lib/signatures/actions.ts",
+    ligne: "message: `Un code vient d'être envoyé. Patientez ${renvoi.attendreSecondes} seconde${renvoi.attendreSecondes > 1 ? \"s\" : \"\"} avant d'en demander un autre.`,",
+    motif: "Délai de renvoi, contrôlé APRÈS le refus d'envoi hors service (test « refuse avant le délai de renvoi »).",
+  },
+  {
+    fichier: "src/lib/signatures/actions.ts",
+    ligne: "message: `Un nouveau code vient d'être envoyé à ${token.emailDestinataire}.`,",
+    motif: "Rendu après `envoyerMailAcces`, qui a réussi.",
+  },
+  {
+    fichier: "src/components/signatures/DemanderSignatureForm.tsx",
+    ligne: "Le destinataire va recevoir un email avec le lien et son code de",
+    motif: "Affichée sur `ok: true` seulement, c'est-à-dire après un envoi parti (`emettreAccessToken`).",
+  },
+  {
+    fichier: "src/components/signatures/SignatureExterneForm.tsx",
+    ligne: '<Label htmlFor="otp">Code reçu par email *</Label>',
+    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
   },
 ];
 
@@ -195,6 +316,104 @@ describe("aucune sortie ne qualifie juridiquement", () => {
         trouvees.some((t) => t.ou.startsWith(`${a.fichier}:`) && t.ligne === a.ligne),
         `${a.fichier} / ${a.ligne.slice(0, 60)}`,
       ).toBe(true);
+  });
+});
+
+describe("la garde des promesses éprouvée sur les phrases réelles de d34bb24 (C38)", () => {
+  it("voit chacune, telle qu'elle était écrite", () => {
+    const r = mkdtempSync(join(tmpdir(), "promesses-"));
+    try {
+      mkdirSync(join(r, "src/components"), { recursive: true });
+      writeFileSync(
+        join(r, "src/components/sonde.tsx"),
+        [
+          '    corps: "Un e-mail vous prévient avant la date, le brief ne montre que l\'utile.",',
+          '      "Alertes J-30 / J-7 / jour J, escalade si retard.",',
+          '          vérifications et <strong>vous rappelle les échéances</strong>{" "}',
+          '      "Action créée automatiquement depuis un écart de rapport.",',
+          '      "Vos équipements portent leur périodicité. Les dates se posent seules et se reportent.",',
+          '      aria-label="Prêt pour contrôle"',
+          "              vous n&apos;avez rien à préparer.",
+          '    corps: "Le tableau de bord montre ce qui arrive ; Rojer n\'envoie pas de rappel par e-mail.",',
+          "",
+        ].join("\n"),
+      );
+      const vues = qualificationsAffichees(r).map((t) => t.ou);
+      expect(vues).toEqual(
+        // 1 et 3 deux fois : « rappel promis » et « envoi promis » les voient.
+        [1, 1, 2, 2, 3, 3, 4, 5, 6, 7].map((l) => `src/components/sonde.tsx:${l}`),
+      );
+    } finally {
+      rmSync(r, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("l'envoi promis, par racines (contre-lecture du 2026-09-26)", () => {
+  const vuesDans = (lignes: string[]) => {
+    const r = mkdtempSync(join(tmpdir(), "envois-"));
+    try {
+      mkdirSync(join(r, "src/components"), { recursive: true });
+      writeFileSync(join(r, "src/components/sonde.tsx"), [...lignes, ""].join("\n"));
+      return qualificationsAffichees(r).map((t) => Number(t.ou.split(":").pop()));
+    } finally {
+      rmSync(r, { recursive: true, force: true });
+    }
+  };
+
+  it("voit la variante de la contre-lecture et les phrases réelles de ccd5cb8", () => {
+    expect(
+      vuesDans([
+        "Nous vous enverrons un courriel quinze jours avant chaque échéance, et une notification le jour même.",
+        'aide="Utilisé pour envoyer le lien de signature au technicien."',
+        "sans le rechercher, et vous pourrez leur envoyer un lien de",
+        "Vous pourrez toujours les ajouter plus tard ; la plateforme vous enverra",
+        "Le destinataire va recevoir un email avec le lien et son code de",
+        "Un lien de confirmation a été envoyé à",
+        '<Label htmlFor="otp">Code reçu par email *</Label>',
+        "Un e-mail part au prestataire dès l'échéance.",
+      ]),
+    ).toEqual([1, 3, 4, 5, 6, 7, 8]);
+  });
+
+  it("voit les quatre variantes de la vérification du 2026-09-26, et les phrases réelles du flux", () => {
+    expect(
+      vuesDans([
+        "Vous serez averti par courriel.",
+        "Nous vous tiendrons informé par e-mail.",
+        "Une relance part la veille de l'échéance.",
+        "Votre prestataire sera averti automatiquement.",
+        "Un code vient d'être envoyé. Patientez 30 secondes.",
+        "Code à 6 chiffres reçu dans l'email.",
+        "Lien envoyé",
+      ]),
+    ).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("voit la signature qualifiée, telle qu'elle était écrite", () => {
+    expect(
+      vuesDans([
+        "vous apposez une signature au sens de l'article 1367 du Code civil.",
+        'reference="Art. 1366 · 1367 Code civil · eIDAS simple"',
+        "910/2014 · niveau simple.",
+        "Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014.",
+      ]),
+    ).toEqual([1, 2, 3]);
+  });
+
+  it("laisse passer la négation, l'adresse enregistrée et le public reçu", () => {
+    // La ligne 2 ci-dessus passe aussi : « envoyer » sans sujet ni
+    // destinataire n'y est pas une promesse que la garde sache lire. Elle
+    // est corrigée à la main ; c'est la limite de la garde.
+    expect(
+      vuesDans([
+        "Rojer ne vous enverra pas d'alerte à cette date.",
+        "l'outil ne les fabrique pas et ne vous les rappellera pas.",
+        "Son adresse est enregistrée sur la fiche du prestataire.",
+        "Ce nombre vous est demandé si vous recevez du public.",
+        "Rojer n'envoie pas de rappel par e-mail : c'est en l'ouvrant que vous le voyez.",
+      ]),
+    ).toEqual([]);
   });
 });
 

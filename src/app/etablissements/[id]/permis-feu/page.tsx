@@ -52,11 +52,16 @@ export default async function PermisFeuListePage({
               Permis de feu
             </h1>
             <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Travaux par points chauds (soudage, découpe, meulage…).
-              L&apos;INRS (ED 6030) écrit&nbsp;: «&nbsp;La rédaction du permis
-              de feu est obligatoire pour tous travaux par points
-              chauds&nbsp;». Ni article de code, ni arrêté&nbsp;: voir
-              ci-dessous.
+              {/* ~~« L'INRS (ED 6030) écrit : « La rédaction du permis de feu
+                  est obligatoire… » »~~ — même attribué, « obligatoire » en
+                  tête de page se lit comme une obligation, et la page dit plus
+                  bas qu'aucun texte n'impose le permis de feu sous ce nom
+                  (revue de l'intégration, 2026-09-26). Aligné sur la case du
+                  README du ZIP. */}
+              Travaux par points chauds (soudage, découpe, meulage…). Rojer
+              propose un permis de feu, d&apos;après la brochure INRS
+              ED&nbsp;6030&nbsp;; aucun texte ne l&apos;impose sous ce nom
+              (voir plus bas).
             </p>
           </div>
 
@@ -128,7 +133,7 @@ export default async function PermisFeuListePage({
             Aucun texte n&apos;impose le permis de feu sous ce nom.
             L&apos;arrêté du 19 mars 1993 (art. 1er, point 21), qui liste les
             travaux dangereux pour lesquels un plan de prévention est établi
-            par écrit,
+            par écrit (art. R. 4512-7),
             mentionne les «&nbsp;Travaux de soudage oxyacétylénique exigeant
             le recours à un permis de feu&nbsp;». En ERP, l&apos;article
             GN&nbsp;13 du règlement de sécurité, intitulé «&nbsp;Travaux
@@ -182,9 +187,9 @@ export default async function PermisFeuListePage({
           </div>
           <p className="m-0 mt-3 text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             La règle APSAD R43 (travaux par points chauds) est un référentiel
-            publié par la profession de l&apos;assurance : ni un article de
-            code, ni un arrêté. Un contrat d&apos;assurance peut y renvoyer ;
-            Rojer ne lit pas le vôtre.
+            publié par la profession de l&apos;assurance, que Rojer n&apos;a
+            pas lu&nbsp;: ni un article de code, ni un arrêté. Un contrat
+            d&apos;assurance peut y renvoyer&nbsp;; Rojer ne lit pas le vôtre.
           </p>
         </WhyCard>
       </div>

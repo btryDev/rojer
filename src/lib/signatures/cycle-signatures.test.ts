@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * Le cycle de vie d'un objet signable face à ses signatures.
@@ -98,10 +98,12 @@ vi.mock("next/headers", () => ({ headers: async () => new Map() }));
 const { mailsEnvoyes } = vi.hoisted(() => ({
   mailsEnvoyes: [] as { to: string; subject: string; text: string }[],
 }));
+const { envoi } = vi.hoisted(() => ({ envoi: { enService: true } }));
 vi.mock("@/lib/email", () => ({
   sendMail: vi.fn(async (p: { to: string; subject: string; text: string }) => {
     mailsEnvoyes.push(p);
   }),
+  envoiEnService: () => envoi.enService,
   mailFrom: () => "no-reply@test.local",
   publicAppUrl: () => "http://localhost:3000",
 }));
@@ -111,6 +113,7 @@ import { marquerTermine, supprimerPermisFeu } from "@/lib/permis-feu/actions";
 import {
   demanderSignature,
   poserSignatureAvecToken,
+  renvoyerCodeOtp,
   signerEnCompteConnecte,
 } from "./actions";
 import { hashToken } from "@/lib/access-tokens/token";
@@ -435,5 +438,56 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
     expect(r.ok).toBe(false);
     expect(prismaMock.accessToken.create).not.toHaveBeenCalled();
     expect(mailsEnvoyes).toHaveLength(0);
+  });
+});
+
+describe("renvoi du code, envoi hors service (C38, 2026-09-26)", () => {
+  afterEach(() => {
+    envoi.enService = true;
+  });
+
+  it("refuse avant de renouveler : le code précédent reste celui qui signe", async () => {
+    envoi.enService = false;
+    const lien = lienValide("plan_prevention", "pp-1");
+    prismaMock.accessToken.lignes.push(lien);
+    const avant = { otpHash: lien.otpHash, otpExpireLe: lien.otpExpireLe };
+
+    const r = await renvoyerCodeOtp(JETON_CLAIR);
+
+    expect(r).toEqual({
+      status: "error",
+      message:
+        "Aucun nouveau code n'a été envoyé : l'envoi d'e-mails n'est pas encore en service dans Rojer. Le code précédent n'a pas été modifié.",
+    });
+    expect({ otpHash: lien.otpHash, otpExpireLe: lien.otpExpireLe }).toEqual(avant);
+    expect(prismaMock.accessToken.update).not.toHaveBeenCalled();
+    expect(mailsEnvoyes).toHaveLength(0);
+  });
+
+  it("refuse avant le délai de renvoi : pas de « Un code vient d'être envoyé » quand rien ne peut partir", async () => {
+    envoi.enService = false;
+    const lien = lienValide("plan_prevention", "pp-1");
+    // Un code tout juste émis : le délai de renvoi n'est pas écoulé.
+    lien.otpExpireLe = new Date(Date.now() + 10 * 60_000);
+    prismaMock.accessToken.lignes.push(lien);
+
+    const r = await renvoyerCodeOtp(JETON_CLAIR);
+
+    expect(r.status).toBe("error");
+    expect((r as { message: string }).message).toMatch(/^Aucun nouveau code n'a été envoyé/);
+  });
+
+  it("l'envoi en service, le code se renouvelle et part", async () => {
+    // Un code émis il y a plus longtemps que le délai minimal de renvoi.
+    const lien = lienValide("plan_prevention", "pp-1");
+    lien.otpExpireLe = new Date(Date.now() + 60_000);
+    prismaMock.accessToken.lignes.push(lien);
+    const avant = lien.otpHash;
+
+    const r = await renvoyerCodeOtp(JETON_CLAIR);
+
+    expect(r.status).toBe("success");
+    expect(lien.otpHash).not.toBe(avant);
+    expect(mailsEnvoyes).toHaveLength(1);
   });
 });

@@ -43,12 +43,12 @@ import { ZoomAuDefilement } from "./ZoomAuDefilement";
 const ALERTES = [
   {
     rang: "1",
-    titre: "Vérification électrique périodique",
+    titre: "Vérification périodique annuelle des installations électriques (travail)",
     detail: "Installation électrique principale — dépassée depuis hier",
   },
   {
     rang: "2",
-    titre: "Dégraissage des conduits de hotte",
+    titre: "Nettoyage ou remplacement des filtres de hotte (grandes cuisines ERP)",
     detail: "Cuisine — dépassée depuis six jours",
   },
 ];
@@ -80,17 +80,25 @@ const RAIL = [
  *  qu'une abstraction ne prouve rien. */
 const A_FAIRE = [
   {
-    titre: "Vérification électrique périodique (ERP 5ᵉ catégorie)",
+    // Des obligations RÉELLES du référentiel, à leur libellé exact, et à
+    // rythme daté (relecture du 2026-09-26) : ~~« électrique périodique (ERP
+    // 5ᵉ catégorie) »~~ n'existe plus depuis le 2026-08-27, ~~« moyens de
+    // lutte contre l'incendie »~~ est un état permanent, qui ne peut pas être
+    // « en retard de trois jours », et ~~« dégraissage des conduits »~~ n'est
+    // au référentiel sous aucun nom.
+    titre: "Vérification périodique annuelle des installations électriques (travail)",
     detail: "Vérification · en retard",
     jour: "J−1",
   },
   {
-    titre: "Présence et maintien des moyens de lutte contre l'incendie",
+    // Pas les extincteurs : la liste « prochaines échéances » plus bas les
+    // donne à venir, et une même ligne ne peut pas être les deux.
+    titre: "Entretien et vérification de l'ensemble des installations techniques (ERP 5ᵉ catégorie)",
     detail: "Vérification · en retard",
     jour: "J−3",
   },
   {
-    titre: "Dégraissage des conduits de hotte",
+    titre: "Nettoyage ou remplacement des filtres de hotte (grandes cuisines ERP)",
     detail: "Vérification · en retard",
     jour: "J−6",
   },
@@ -164,7 +172,7 @@ function ModuleScore() {
         />
       </div>
       <p className="mt-2 text-[0.6rem] text-[color:var(--board-slate-mid)]">
-        +6 depuis le mois dernier
+        Formule interne de Rojer — pas une attestation
       </p>
     </div>
   );
@@ -230,10 +238,11 @@ function ModuleVolumes() {
 }
 
 /** File — le même widget « À faire » que dans la fenêtre, en réduction. */
-const URGENCES = [
-  { titre: "Vérification électrique", jour: "J−1" },
-  { titre: "Moyens de lutte incendie", jour: "J−3" },
-];
+// ~~Une liste à part (« Moyens de lutte incendie », J−3)~~ : elle gardait
+// l'état permanent retiré d'`A_FAIRE` (contre-lecture du 2026-09-26). Les
+// lignes en retard d'`A_FAIRE`, lues telles quelles : les deux ne peuvent
+// plus se contredire.
+const URGENCES = A_FAIRE.filter((l) => l.detail.endsWith("en retard")).slice(0, 2);
 function ModuleAFaire() {
   return (
     <ul className="m-0 flex list-none flex-col p-0">
@@ -255,7 +264,11 @@ function ModuleAFaire() {
 }
 
 const MODULES = [
-  { titre: "Score de conformité", Contenu: ModuleScore, geste: null },
+  // ~~« Score de conformité »~~ sur la page publique, face à la FAQ « Rojer
+  // atteste-t-il de ma conformité ? Non » (relecture du 2026-09-26) : la
+  // jauge est un indice interne (`dashboard/score.ts`, « Formule interne,
+  // pas une norme officielle »), et elle est dite ainsi.
+  { titre: "Indice d'avancement", Contenu: ModuleScore, geste: null },
   {
     titre: "Prochaines échéances",
     Contenu: ModuleProchaines,

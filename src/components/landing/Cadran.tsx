@@ -35,11 +35,14 @@ const DOCUMENTS: Document[] = [
     numero: "01",
     famille: "Échéances",
     titre: "Le calendrier des vérifications",
-    corps: "Vous déclarez vos équipements une fois. Rojer en déduit les contrôles obligatoires, pose les dates et les repousse à mesure que les rapports arrivent.",
+    corps: "Vous déclarez vos équipements une fois. Rojer en déduit les vérifications qui les concernent ; quand le texte fixe un rythme, il pose les dates et les repousse à mesure que les rapports arrivent.",
     // Compté sur `obligationsConformite` (src/lib/referentiels/conformite).
     // À recompter quand le référentiel s'étend — un chiffre faux sur une
     // page publique se paie plus cher que pas de chiffre du tout.
-    reperes: ["169 obligations · 21 domaines", "Sources Légifrance et INRS"],
+    // ~~« Sources Légifrance et INRS »~~ : huit références citent le
+    // règlement (UE) 2024/573 (EUR-Lex), une seule l'INRS (compté en
+    // appelant le référentiel, relecture du 2026-09-26).
+    reperes: ["169 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
   },
   {
     numero: "02",
@@ -59,14 +62,19 @@ const DOCUMENTS: Document[] = [
     numero: "04",
     famille: "Suivi",
     titre: "Le plan d'actions",
-    corps: "Un rond vide n'est pas une faute : c'est ce qu'il reste à faire. Chaque écart ouvre une action, avec un responsable et une date.",
+    // ~~« Chaque écart ouvre une action »~~ : l'action se crée à la main depuis
+    // l'écart (`creerActionDepuisVerification`), rien ne s'ouvre seul.
+    corps: "Un rond vide n'est pas une faute : c'est ce qu'il reste à faire. Depuis un écart, vous ouvrez une action, avec un responsable et une date.",
     reperes: ["Hiérarchie des mesures", "Revu au fil de l'eau"],
   },
   {
     numero: "05",
     famille: "Public",
     titre: "Le registre d'accessibilité",
-    corps: "La page publique de votre établissement, l'attestation, l'affiche à QR code à coller à l'entrée. Prête à imprimer, jamais périmée.",
+    // ~~« l'attestation… jamais périmée »~~ (contre-lecture du 2026-09-26) :
+    // Rojer n'établit aucune attestation (il en garde le numéro), et la page
+    // dit ce que vous y tenez, datée de sa dernière mise à jour.
+    corps: "La page publique de votre établissement et l'affiche à QR code à coller à l'entrée, prête à imprimer. La page montre ce que vous y tenez, datée de sa dernière mise à jour.",
     reperes: ["Page publique", "Affiche QR"],
   },
   {

@@ -93,14 +93,23 @@ export default async function ConfirmationSignaturePage({
       {/* Valeur probante */}
       <section className="mt-8">
         <LegalBadge charte="board"
-          reference="Art. 1366 · 1367 Code civil · eIDAS simple"
+          reference="Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014"
           extrait="L'écrit électronique a la même force probante que l'écrit sur support papier, sous réserve que puisse être dûment identifiée la personne dont il émane et qu'il soit établi et conservé dans des conditions de nature à en garantir l'intégrité."
           defaultOpen
         >
-          Votre signature électronique est couverte par l&apos;article 1367
-          du Code civil et par le règlement européen eIDAS (UE) 910/2014 au
-          niveau « simple ». À tout moment, l&apos;intégrité du document
-          peut être revérifiée depuis la page « Vérifier l&apos;intégrité ».
+          {/* ~~« Votre signature électronique est couverte par l'article 1367
+              … et par eIDAS au niveau « simple » »~~ — une qualification
+              (relecture du 2026-09-26) : l'al. 2 de l'art. 1367, lu sur
+              Légifrance, ne présume la fiabilité que « dans des conditions
+              fixées par décret en Conseil d'Etat ». Le décret n'est pas relu
+              ici : la page dit ce que Rojer enregistre, sans conclure. */}
+          Rojer enregistre votre signature électronique avec son horodatage
+          et l&apos;empreinte du document tel qu&apos;il se présentait. La
+          fiabilité d&apos;une signature électronique n&apos;est présumée que
+          «&nbsp;dans des conditions fixées par décret en Conseil
+          d&apos;Etat&nbsp;» (art. 1367, al. 2, du Code civil). À tout
+          moment, l&apos;intégrité du document peut être revérifiée depuis la
+          page « Vérifier l&apos;intégrité ».
         </LegalBadge>
       </section>
 

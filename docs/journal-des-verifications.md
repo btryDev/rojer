@@ -2377,6 +2377,325 @@ des contrats de professionnalisation → 1 rouge. Restauré, vert.
   création, apprentis compris — surcompte, dans le sens qui ne retire rien.
 - L. 1251-54 (salariés temporaires) non ouvert.
 
+### C38 · 2026-09-26 — La page d'accueil, le guide et le connecteur ne promettent plus que ce que Rojer fait
+
+**Constats** : une relecture en 35 points de la page d'accueil, du guide
+« Comprendre » et du connecteur MCP. Chacun a été revérifié sur `d34bb24`
+avant correction. Les points 18 (CSSCT « 11 salariés et + ») et 19
+(« contrôles obligatoires » des vérificateurs) étaient déjà corrigés par
+`deb2c01` (C36) : la relecture avait lu un état antérieur. Les chiffres ont
+été comptés en appelant `obligationsConformite`, pas au grep :
+- 169 obligations sur 21 domaines ;
+- porteurs : 89 équipement, 66 établissement, 14 salarié ;
+- natures : 86 échéances récurrentes, 53 états permanents,
+  21 événementielles, 9 ponctuelles ; 74 en périodicité `autre` ;
+- sources : Code du travail 150, arrêtés 124, CCH 24, Code de
+  l'environnement 12, règlement (UE) 8 (EUR-Lex), INRS 1.
+
+1. **Les promesses que Rojer ne tient pas** sont retirées :
+   - « Un e-mail vous prévient avant la date » (`Etapes.tsx`, étape 3). La
+     page dit désormais « Rojer n'envoie pas de rappel par e-mail ». La
+     promesse est rayée au backlog. ~~Le seul envoi du dépôt est le lien
+     d'accès des signatures~~ : ce n'est pas le cas, voir plus bas.
+   - « Alertes J-30 / J-7 / jour J, escalade », « rappels », « vous
+     rappelle » (`OutilDetails`, `OutilsConformite`, carnet sanitaire).
+   - « Action créée automatiquement depuis un écart » et « Chaque écart
+     ouvre une action » : l'action s'ouvre à la main
+     (`creerActionDepuisVerification`).
+   - « Rojer en déduit les contrôles obligatoires », « les dates se posent
+     seules », « le calendrier se remplit seul » : une date ne se pose que
+     quand le texte fixe un rythme, et 74 obligations n'en ont pas.
+   - « Le jour d'un contrôle, vous n'avez rien à préparer » et « Quatre
+     documents. Tout ce qu'on vous demandera » : la page « Documents
+     obligatoires » en nomme d'autres.
+2. **La maquette du tableau de bord** montrait trois obligations absentes du
+   référentiel ou impossibles, décrites en regard :
+   - la « Vérification électrique périodique (ERP 5ᵉ catégorie) », qui
+     n'existe plus depuis le 2026-08-27 ;
+   - des « moyens de lutte contre l'incendie » en retard de trois jours,
+     alors que c'est un état permanent ;
+   - un « dégraissage des conduits de hotte » qui n'existe sous aucun nom.
+   Elles sont remplacées par des libellés exacts du référentiel, à rythme
+   daté. Le widget « Score de conformité 78/100 » contredisait la FAQ de la
+   même page (« Rojer atteste-t-il de ma conformité ? Non ») : il devient
+   « Indice d'avancement — Formule interne de Rojer, pas une attestation ».
+3. **Les sources** : « Légifrance et l'INRS » devient « Légifrance et
+   EUR-Lex » sur la page d'accueil (8 références au règlement (UE) 2024/573
+   contre 1 à l'INRS) et « Légifrance, EUR-Lex et INRS » dans le guide. Dans
+   le bloc des sources :
+   - « articles L. 4121 à L. 4641 » devient « Quatrième partie : santé et
+     sécurité au travail ». Le lien, relu, ouvre L. 4111-1 à L. 4831-1.
+   - Le CCH, l'arrêté du 25 juin 1980 et le règlement (UE) 2024/573
+     (EUR-Lex, ELI) sont ajoutés.
+   - Le pied du guide perd « Mis à jour 04/2026 » et porte
+     `REFERENTIEL_VERSION`.
+4. **Le périmètre, dit** dans la FAQ : la 5ᵉ catégorie
+   (`CATEGORIES_COUVERTES`), les ERP de 1ʳᵉ à 4ᵉ catégorie sans leurs
+   règles propres, le refus au-delà de 50 travailleurs (`EFFECTIF_MAX`) et
+   le refus d'un ERP situé en IGH. Sur la conservation, « quarante ans… une
+   obligation légale, pas un choix de notre part » est retiré : l'obligation
+   pèse sur l'employeur. La FAQ cite désormais R. 4121-4, « pendant une
+   durée de 40 ans à compter de leur élaboration ».
+5. **Par métier** (`lib/guide/metiers.ts`) :
+   - L'« exercice d'évacuation » du bureau et la « consigne incendie » du
+     commerce portent la condition de **R. 4227-34**, relu deux fois sur
+     Légifrance (« plus de cinquante personnes », « matières inflammables
+     mentionnées à l'article R. 4227-22 »). La condition est lue sur
+     `typologies.champR422734`, pas recopiée. La consigne du commerce
+     renvoie aussi à la consigne ERP.
+   - L'« installation électrique » de la restauration et du commerce
+     renvoyait au seul PE 4, « tous les 3 ans ». Elle distingue maintenant
+     le PE 4 (ERP) et `elec-travail-periodique-annuelle`.
+   - Le DUERP porte « chaque année dès 11 salariés », tiré des constantes
+     de `texte-r4121-2`.
+   - Le lien `#metiers` du pied de page pointait vers une section absente :
+     il est retiré.
+6. **Le guide** :
+   - « Chaque règle cite sa source » devient « la règle du DUERP cite sa
+     source ; chaque obligation cite la sienne sur sa fiche ».
+   - « obligatoire dès le premier salarié » devient « R. 4121-1 fait
+     transcrire l'évaluation… sans seuil d'effectif ».
+   - « 4 outils » devient « 5 outils ».
+   - Le carnet sanitaire est dit hors référentiel.
+   - La colonne « Ce que dit la loi » d'`OutilDetails` ne contient plus que
+     des citations, et la référence du calendrier est corrigée :
+     - DUERP : R. 4121-1 ; R. 4121-2 par ses constantes ; R. 4121-4.
+     - Calendrier : **R. 4323-23**, relu deux fois (LEGIARTI000018531479).
+       R. 4323-22, cité avant, est la vérification initiale.
+     - Registre : R. 4323-25.
+     - Plan d'actions : L. 4121-2 1° et 8°.
+     La ligne sur l'accès au registre est retirée : L. 4711-3 et L. 4711-4
+     ne sont pas relus dans ce lot.
+7. **Le permis de feu**, aligné sur la case du README (C33) :
+   - « INRS… obligatoire » devient « Rojer propose un permis de feu,
+     d'après la brochure INRS ED 6030 ; aucun texte ne l'impose sous ce
+     nom ».
+   - Le paragraphe de l'arrêté du 19 mars 1993 porte R. 4512-7.
+   - L'APSAD R43 est dit « que Rojer n'a pas lu », sur la liste et sur la
+     fiche.
+8. **La signature** : « Signature authentique » devient « Signature
+   enregistrée ». « Votre signature électronique est couverte par l'article
+   1367 » devient une phrase sans qualification, qui cite l'al. 2 (« dans
+   des conditions fixées par décret en Conseil d'Etat »).
+9. **Le connecteur MCP** :
+   - Sur un établissement inconnu, quatre outils sur cinq décrivaient un
+     dossier vide (« aucun équipement déclaré »). L'outil n'est plus
+     exécuté : la réponse dit « Établissement introuvable… rien n'est à
+     conclure de son contenu ».
+   - Une liste vide sans filtre ne dit plus « ne correspond à ces
+     critères ».
+   - `périodicité autre` devient « sans rythme écrit (le texte n'en fixe
+     pas) ».
+   - Les descriptions perdent « vérifications périodiques obligatoires »
+     et « échéances réglementaires ».
+   - La consigne ne dit plus que les outils rendent « les articles qui
+     fondent une obligation » : seul l'état du DUERP en cite.
+   - « (art. R. 4121-1) » n'est plus attaché à un état de l'application.
+
+**La garde** : `sans-qualification.test.ts` gagne quatre familles, « rappel
+promis », « automatisme promis », « prêt pour contrôle » et « rien à
+préparer ». Une sonde de huit lignes reprend sept phrases réelles de
+`d34bb24`, toutes vues (la deuxième deux fois : « Alertes » et
+« escalade »). La huitième est la phrase qui remplace l'étape 3 (« n'envoie
+pas de rappel par e-mail »), et elle passe. **Éprouvée en la cassant** : la phrase
+d'origine du carnet sanitaire, remise dans le fichier, fait échouer la garde
+(« carnet-sanitaire/page.tsx:98 — « vous rappelle » »). C'est cette garde qui
+l'avait trouvée, hors de la relecture.
+
+**Laissé, et signalé** (décisions de produit) :
+- ~~Dans l'application, le widget s'appelle encore « Score de conformité »
+  (`registry.ts`, `score.tsx`, dossier PDF « (indicateur interne) »).~~
+  Tranché le même jour : voir plus bas.
+- « dès le premier salarié » reste sur trois écrans de l'application : c'est
+  une lecture de R. 4121-1.
+- ~~« Le destinataire va recevoir un email » reste : c'est vrai.~~ C'est
+  faux, et la coordination l'a relevé le même jour. `getEmailDriver` ne
+  connaît que le driver `console`, qui lève en production. Toute autre
+  valeur de `EMAIL_DRIVER` lève aussi. Relevé sur Vercel, projet
+  `test-duerp`, noms seuls, valeurs non lues : ni `EMAIL_DRIVER`, ni
+  `SIGNATURE_MAIL_FROM`, ni `PUBLIC_APP_URL`.
+  En production, `demanderSignature` crée donc l'`AccessToken`, puis
+  `envoyerMailAcces` lève. Le demandeur reçoit une erreur générique, et le
+  jeton reste en base sans message. La phrase ne s'affiche qu'en
+  développement, où le message part à la console et à `/dev/boite-mail`,
+  pas au destinataire.
+  ~~La phrase est laissée~~ : tranché le même jour, voir plus bas.
+
+**Contre-lecture du 2026-09-26, sur `64ac8b0`.**
+
+G1. **Promesses d'envoi qui restaient.** Aucun appelant n'émet de jeton
+`depot_rapport`, et aucun driver n'envoie. Corrigé :
+- permis de feu : « Utilisé pour envoyer le lien de signature » devient
+  « Enregistrée sur le permis » ;
+- fiche prestataire : « Servira aussi à envoyer les liens… » devient
+  « Son adresse est enregistrée sur la fiche » ;
+- fiche prestataire : « la plateforme vous enverra une alerte 30 jours avant
+  expiration » devient la pastille « Expire bientôt », affichée à 30 jours
+  (`JOURS_ALERTE_EXPIRATION`), sans rappel par e-mail ;
+- annuaire vide : « vous pourrez leur envoyer un lien de dépôt » est retiré.
+
+Le flux de signature externe n'est pas touché, en attente de la décision
+de la propriétaire.
+
+M1. **La maquette.** `URGENCES` gardait « Moyens de lutte incendie J−3 ».
+Elle se lit désormais dans les lignes en retard d'`A_FAIRE`, et les deux ne
+peuvent plus se contredire.
+
+M2. **La signature, qualifiée ailleurs que sur `/signe`.** Deux endroits
+sont alignés sur `/signe` (art. 1367 al. 2, « dans des conditions fixées
+par décret en Conseil d'Etat ») :
+- le corps du mail (« la même valeur probatoire qu'une signature
+  manuscrite ») ;
+- les deux pieds de `/verifier` (« Fondement légal : … niveau simple »).
+
+« valeur probatoire » est ajouté à la garde. `citations-ecran` ne voit pas
+le Code civil : un numéro nu se confond avec les identifiants Légifrance, et
+le corpus n'a pas d'entrée pour ce code. Cette limite est écrite en tête du
+module.
+
+M3. **La garde des promesses, par racines.** Les racines seules touchent
+288 lignes, identifiants compris : ce serait une liste recopiée. La famille
+« envoi promis » les prend donc dans leurs formes de promesse :
+- sujet + verbe d'envoi, à tout temps ;
+- envoi vers quelqu'un ;
+- passif ;
+- départ ;
+- « reçu par ».
+
+Négations et « recevoir du public » exclues.
+
+Admises à la ligne exacte :
+- les deux e-mails de Supabase Auth, qui partent vraiment ;
+- l'avertissement MCP (« sont envoyées à l'assistant ») ;
+- l'avis d'aptitude « transmis » par le médecin (R. 4624-55) ;
+- les deux phrases du flux de signature, en attente.
+
+**Éprouvée** :
+- la variante de la contre-lecture (« Nous vous enverrons un courriel… »)
+  est vue ;
+- les phrases de `ccd5cb8` remises dans `FormulairePrestataire.tsx` et
+  `signatures/actions.ts` tombent (« la plateforme vous enverra »,
+  « valeur probatoire »).
+
+**Limite** : « Servira aussi à envoyer… », sans sujet ni destinataire,
+passe. Elle est dite dans la sonde.
+
+**Faibles** :
+- FAQ : « au-delà de 50 travailleurs sur un site » (la porte lit
+  `effectifSurSite`).
+- SourcesBloc : le lien du règlement de 1980 ouvrait la section du Livre Ier
+  seul. Il ouvre maintenant le texte (LEGITEXT000020303557, celui du corpus,
+  titre relu sur Légifrance).
+- OutilDetails :
+  - « export PDF signé » : le PDF n'est pas signé ;
+  - « dépôt en 1 clic » : un formulaire ;
+  - « index PDF » : le ZIP porte un `00_README.txt`.
+  Les trois sont réécrits.
+- Cadran : « l'attestation… jamais périmée » est retiré. Rojer n'établit
+  aucune attestation, et la page publique est datée de sa dernière mise à
+  jour.
+
+**Hors lot, noté** : `incendie-registre-securite` (R. 4227-39) ne porte pas
+`champR422734`, contrairement à ses sœurs. Le référentiel est scellé ; la
+politique sœur est à chercher avant d'y toucher.
+
+**Décision de la propriétaire, 2026-09-26 : la signature externe.** Le
+bouton reste, et le message dit vrai « le temps qu'on s'occupe de l'envoi
+des mails ». Mise en œuvre :
+- `lib/email` exporte `envoiEnService()`. Il lit la même règle que
+  `getEmailDriver` (`refusDuDriver`) : en production aujourd'hui, non ; en
+  développement, oui (console et `/dev/boite-mail`, inchangés).
+- `emettreAccessToken` refuse AVANT toute écriture et rend
+  `envoi_hors_service`. La demande lit « La demande n'a pas été envoyée :
+  l'envoi d'e-mails n'est pas encore en service dans Rojer. Aucun lien n'a
+  été créé. » Le jeton orphelin et l'erreur générique de Next disparaissent.
+- `renvoyerCodeOtp` refuse avant de renouveler : un code renouvelé puis
+  jamais envoyé rendait le précédent inutilisable. Aucun écran ne l'appelle
+  aujourd'hui ; c'est une server action, donc joignable par le réseau.
+- « Le destinataire va recevoir un email » et « Code reçu par email » ne
+  s'affichent plus qu'après un envoi parti. Leur admission dans la garde est
+  requalifiée.
+
+**Éprouvé en cassant**, trois cassures indépendantes, 5 tests tombés :
+- le refus retiré d'`emettreAccessToken` ;
+- le refus de `renvoyerCodeOtp` déplacé après le renouvellement ;
+- `envoiEnService` forcé à `true`.
+
+**Décision de la propriétaire, 2026-09-26 : « Indice d'avancement » dans
+l'application.** Le texte visible change sur :
+- le titre du widget (`registry.ts`) ;
+- les trois en-têtes et l'« Indice actuel » de `score.tsx` ;
+- ses deux `aria-label` et son info-bulle (« Formule interne de Rojer, pas
+  une attestation. L'indice agrège… ») ;
+- son sous-titre (« Formule interne de Rojer — pas une attestation ») ;
+- la page de garde du dossier de conformité (« Indice d'avancement (formule
+  interne de Rojer, pas une attestation) ») ;
+- la page établissement (« l'indice d'avancement »).
+
+Les identifiants ne bougent pas : l'`id` `score` du widget est porté par les
+préférences stockées. `scripts/mesure-score-adr034.ts` est un outil de
+mesure, non affiché ; il est laissé.
+
+La garde `sans-qualification` gagne « score de conformité ». Éprouvée : le
+titre d'origine, remis dans `registry.ts`, tombe.
+
+**Vérification du 2026-09-26, sur `383e7d5` : dernière passe.**
+
+M1. **La garde « envoi promis » laissait passer des variantes** : 5 vues sur
+12 phrases injectées. Elle gagne :
+- les racines `averti`, `relanc` et « tenir informé » ;
+- « vient d'être envoyé » ;
+- « Lien/code envoyé » ;
+- « reçu dans l'e-mail » ;
+- « votre prestataire » comme sujet.
+
+Sont désormais vues : « Vous serez averti par courriel », « Nous vous
+tiendrons informé par e-mail », « Une relance part la veille », « Votre
+prestataire sera averti automatiquement », et trois phrases réelles.
+
+Les phrases réelles du flux de signature sont admises à la ligne exacte,
+chacune vérifiée contre `envoiEnService` :
+- « Lien envoyé » : affichée sur `ok: true` ;
+- « reçu dans l'email » : sur la page que seul le lien reçu ouvre ;
+- « Trop de liens envoyés » : limite comptée après le refus ;
+- les deux « vient d'être envoyé » : délai de renvoi et succès.
+
+Correction d'ordre : le refus de `renvoyerCodeOtp` passait APRÈS le délai de
+renvoi. « Un code vient d'être envoyé. Patientez… » pouvait donc s'afficher
+envoi hors service. Il passe avant. Éprouvé : remis après, le test « refuse
+avant le délai de renvoi » tombe.
+
+`acces/[token]` (« la personne qui vous a envoyé ce lien ») n'est pas vue :
+l'actif passé d'une personne est exclu de la garde. Ces phrases décrivent
+ce qu'a fait la personne qui a envoyé le lien.
+
+`OutilDetails` : « ce que la plateforme génère, suit ou rappelle pour
+vous » devient « génère et suit pour vous aider à la tenir ». La garde ne la
+voyait pas, parce que des verbes s'intercalent entre le sujet et
+« rappelle ».
+
+M3. **La signature, encore classée** :
+- « vous apposez une signature au sens de l'article 1367 » est retiré ;
+- les badges « Art. 1366 · 1367 Code civil · eIDAS simple » de `/signe` et
+  `/acces` deviennent « Textes : art. 1366 et 1367 du Code civil ·
+  règlement (UE) n° 910/2014 », comme le pied de `/verifier` ;
+- la clé `HORS_CORPUS` d'`extraits-affiches` suit. L'extrait de l'art. 1366
+  reste confronté.
+
+Nouvelle famille « signature qualifiée » (`au sens de l'article 136[67]`,
+`eIDAS/niveau simple`). Éprouvée : les deux fichiers remis à `4d28064`
+tombent, ici et dans `extraits-affiches`.
+
+F1. Le sous-titre de SourcesBloc (« Règlement de sécurité… dans les ERP »)
+vise le règlement entier : le lien du texte est gardé. Celui du Livre III
+(LEGISCTA000020342841) servirait un sous-titre « 5ᵉ catégorie ».
+
+F2. `controle-zip/route.ts` : « synthèse globale signée » devient
+« synthèse globale ».
+
+**Sceau** : `2026-09-26.8+169-85f0fac08bca3950+moteur.4`. L'empreinte est
+inchangée depuis `d34bb24`, et le lot ne touche pas `src/lib/referentiels`.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

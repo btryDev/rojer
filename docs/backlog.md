@@ -47,10 +47,16 @@ décrocher son téléphone, et c'est lui notre utilisateur. Le rappel doit lui
 donner de quoi agir sans ouvrir l'application — ce qui arrive à échéance, à
 quelle date, et qui l'a fait la fois précédente.
 
-⚠️ La landing annonce déjà cette promesse : « Un e-mail vous prévient avant la
+~~⚠️ La landing annonce déjà cette promesse : « Un e-mail vous prévient avant la
 date » (`src/components/landing/Etapes.tsx`, étape 3). C'est aujourd'hui la
 seule promesse de la page qui ne soit pas livrée. À construire avant la mise
-en ligne publique, ou à retirer de la page en attendant.
+en ligne publique, ou à retirer de la page en attendant.~~ **Retirée le
+2026-09-26** (journal C38) : l'étape 3 dit « Rojer n'envoie pas de rappel par
+e-mail : c'est en l'ouvrant que vous le voyez », et la garde
+`sans-qualification.test.ts` (famille « rappel promis ») refuse qu'une page
+le promette de nouveau. Le rappel reste à construire. ~~Seules les signatures
+envoient un e-mail aujourd'hui~~ (corrigé le même jour) : rien ne part, le
+dépôt n'a aucun driver d'envoi réel (`lib/email/index.ts`, voir C38).
 
 ---
 

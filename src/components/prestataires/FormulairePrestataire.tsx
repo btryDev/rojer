@@ -134,8 +134,8 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
         <header>
           <h2 className="board-titre m-0 text-[17px]">Contact principal</h2>
           <p className="m-0 mt-1.5 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            L&apos;interlocuteur que vous sollicitez habituellement. Servira aussi à envoyer
-            les liens de dépôt de rapport et les demandes de signature.
+            L&apos;interlocuteur que vous sollicitez habituellement. Son adresse est
+            enregistrée sur la fiche du prestataire.
           </p>
         </header>
 
@@ -208,8 +208,9 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
           </LegalBadge>
           <p className="text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
             Téléversez les pièces justificatives dès maintenant si vous les avez.
-            Vous pourrez toujours les ajouter plus tard ; la plateforme vous enverra
-            une alerte 30 jours avant expiration.
+            Vous pourrez toujours les ajouter plus tard. Trente jours avant
+            l&apos;expiration d&apos;une pièce, sa fiche l&apos;affiche « Expire
+            bientôt » — sans rappel par e-mail.
           </p>
         </header>
 

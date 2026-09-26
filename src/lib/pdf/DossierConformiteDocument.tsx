@@ -294,7 +294,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
 
         <View style={{ marginTop: 60 }}>
           <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold" }}>
-            Score de conformité (indicateur interne)
+            Indice d&apos;avancement (formule interne de Rojer, pas une attestation)
           </Text>
           <ScoreLigne score={data.score} />
           {/* Sans cette ligne, la page de garde imprimait « 100/100 · Reste à

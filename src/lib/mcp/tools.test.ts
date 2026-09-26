@@ -57,8 +57,20 @@ const outil = (nom: string) => {
   return o;
 };
 
+/** La requête du nom (`getNomEtablissement`) : un établissement existe, par défaut. */
+const estRequeteDuNom = (args: { select?: Record<string, unknown> } | undefined) =>
+  Boolean(args?.select) && Object.keys(args!.select!).sort().join(",") === "adresse,raisonDisplay";
+
 beforeEach(() => {
-  prismaMock.etablissement.findUnique.mockReset().mockResolvedValue(null);
+  // Par défaut, l'établissement EXISTE (requête du nom), et le reste du dossier
+  // est vide. Avant le 2026-09-26, `null` partout faisait passer pour un
+  // dossier vide un établissement introuvable — le défaut même que l'outil ne
+  // commet plus (C38).
+  prismaMock.etablissement.findUnique
+    .mockReset()
+    .mockImplementation(async (args?: { select?: Record<string, unknown> }) =>
+      estRequeteDuNom(args) ? { raisonDisplay: "Le Comptoir", adresse: "1 rue des Lilas, 75011 Paris" } : null,
+    );
   prismaMock.duerp.findFirst.mockReset().mockResolvedValue(null);
   prismaMock.action.findMany.mockReset().mockResolvedValue([]);
   prismaMock.equipement.findMany.mockReset().mockResolvedValue([]);
@@ -638,13 +650,25 @@ describe("provenance de la réponse", () => {
     expect(texte.match(/Maak \(Toulouse\)/g)).toHaveLength(1);
   });
 
-  it("rend la réponse sans préfixe plutôt que d'échouer si le nom manque", async () => {
-    // Un établissement supprimé entre deux appels ne doit pas faire tomber
-    // l'outil : la donnée compte plus que son étiquette.
-    prismaMock.etablissement.findUnique.mockResolvedValue(null);
-    const texte = await outil("plan_actions").executer(ctx, {});
-    expect(texte).not.toContain("Établissement :");
-    expect(texte).toContain("Aucune action");
+  // ~~« rend la réponse sans préfixe plutôt que d'échouer si le nom manque »
+  // — la donnée compte plus que son étiquette~~ — rayé le 2026-09-26 (C38) :
+  // si le nom manque, l'établissement n'existe pas, et il n'y a pas de donnée.
+  // « Aucune action », « aucun équipement déclaré », « aucun DUERP ouvert »
+  // décrivaient alors un dossier vide qui n'existait pas.
+  it("sur un établissement introuvable, ne décrit aucun dossier — le défaut de l'audit", async () => {
+    prismaMock.etablissement.findUnique.mockReset().mockResolvedValue(null);
+    for (const o of OUTILS_MCP) {
+      const texte = await o.executer(ctx, {});
+      expect(texte, o.nom).toContain("Établissement introuvable pour ce connecteur");
+      expect(texte, o.nom).not.toMatch(/Aucune? (action|équipement|DUERP|vérification)/);
+    }
+  });
+
+  it("une liste vide sans filtre ne se dit pas « ne correspond à ces critères »", async () => {
+    const actions = await outil("plan_actions").executer(ctx, {});
+    expect(actions).toContain("Le plan d'actions ne contient aucune action.");
+    const filtrees = await outil("plan_actions").executer(ctx, { enRetard: true });
+    expect(filtrees).toContain("ne correspond à ces critères");
   });
 });
 

@@ -9,6 +9,7 @@ import { formaterDateFr } from "@/lib/dates";
 import { z } from "zod";
 import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
+import { envoiEnService } from "@/lib/email";
 import {
   decrementOtpEssais,
   marquerUtilise,
@@ -44,6 +45,10 @@ import { notFound } from "next/navigation";
 
 const MESSAGE_NON_SIGNABLE =
   "Ce document n'est plus à signer : il a été clos ou annulé.";
+
+/** Vrai à la lettre : le refus arrive avant le renouvellement du code. */
+const MESSAGE_RENVOI_HORS_SERVICE =
+  "Aucun nouveau code n'a été envoyé : l'envoi d'e-mails n'est pas encore en service dans Rojer. Le code précédent n'a pas été modifié.";
 
 /**
  * Les entrées de `demanderSignature`, validées. C'est une server action,
@@ -148,10 +153,15 @@ export async function demanderSignature(
     nomDestinataire: params.signataireNom,
     sujetMail: `Signature à apporter : ${libelle}`,
     messageMail:
+      // ~~« la même valeur probatoire qu'une signature manuscrite (art.
+      // 1366-1367 du Code civil, règlement eIDAS niveau simple) »~~ — une
+      // qualification (contre-lecture du 2026-09-26) : l'al. 2 de l'art. 1367
+      // ne présume la fiabilité que « dans des conditions fixées par décret en
+      // Conseil d'Etat ». Même texte que la page `/signe`.
       `Vous êtes invité(e) à signer électroniquement le document suivant : ` +
       `« ${libelle} ». ` +
-      `Cette signature a la même valeur probatoire qu'une signature manuscrite ` +
-      `(art. 1366-1367 du Code civil, règlement eIDAS niveau simple).`,
+      `Rojer enregistrera votre signature avec son horodatage et l'empreinte ` +
+      `du document tel qu'il se présentait.`,
   });
   if (!r.ok) return { ok: false, message: r.message };
   // Un accusé de réception, rien d'autre. Aucun appelant n'a besoin de
@@ -341,6 +351,13 @@ export async function renvoyerCodeOtp(
       status: "error",
       message: "Ce lien ne demande pas de code de confirmation.",
     };
+  }
+
+  // Avant le renouvellement : un code renouvelé puis jamais envoyé rendait le
+  // précédent inutilisable (C38, 2026-09-26). Et avant le délai de renvoi :
+  // « Un code vient d'être envoyé » ne se dit pas quand rien ne peut partir.
+  if (!envoiEnService()) {
+    return { status: "error", message: MESSAGE_RENVOI_HORS_SERVICE };
   }
 
   const maintenant = new Date();

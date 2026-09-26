@@ -54,7 +54,10 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
   },
   score: {
     id: "score",
-    titre: "Score de conformité",
+    // ~~« Score de conformité »~~ — décision de la propriétaire, 2026-09-26 :
+    // aligné sur l'accueil. L'`id` reste `score` : les préférences stockées
+    // le portent.
+    titre: "Indice d'avancement",
     description:
       "Indicateur global + détail par famille. Trois visualisations disponibles.",
     taille: "medium",

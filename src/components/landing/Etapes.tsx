@@ -53,17 +53,20 @@ const CONTACT = "contact@btry.fr";
 const ETAPES = [
   {
     titre: "Vous déclarez votre établissement",
-    corps: "Activité, effectif, locaux, équipements. Rojer en déduit vos obligations et leurs périodicités.",
+    corps: "Activité, effectif, locaux, équipements. Rojer en déduit les obligations qui vous concernent et, quand le texte en fixe un, leur rythme.",
     duree: "≈ 20 min",
   },
   {
-    titre: "Le calendrier se remplit seul",
-    corps: "Chaque équipement pose ses dates sur la frise : en retard, proche, ou calme. Rien à recopier d'une année sur l'autre.",
+    titre: "Le calendrier se remplit",
+    corps: "Quand le texte fixe un rythme, la vérification pose ses dates sur la frise : en retard, proche, ou calme. Les autres obligations s'y lisent sans date — un état à tenir, un événement qui déclenche.",
     duree: "Automatique",
   },
   {
     titre: "Vous traitez ce qui arrive à échéance",
-    corps: "Un e-mail vous prévient avant la date, le brief ne montre que l'utile. Le reste attend son tour.",
+    // ~~« Un e-mail vous prévient avant la date »~~ — retiré le 2026-09-26 :
+    // aucun rappel n'est envoyé, et l'envoi n'est pas une priorité de produit.
+    // Le dépôt n'a d'ailleurs aucun driver d'envoi réel (`lib/email`).
+    corps: "Le tableau de bord montre ce qui arrive à échéance ; le reste attend son tour. Rojer n'envoie pas de rappel par e-mail : c'est en l'ouvrant que vous le voyez.",
     duree: "Chaque semaine",
   },
 ];
@@ -134,7 +137,7 @@ export function Etapes({
               retrait : à l'aplomb du corps de texte, elle se lisait comme
               une quatrième ligne de l'étape 3. */}
           <p className="mt-9 font-mono text-[0.68rem] uppercase leading-[1.8] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
-            Référentiel construit depuis Légifrance et l&apos;INRS · 169
+            Référentiel construit depuis Légifrance et EUR-Lex · 169
             obligations sur 21 domaines · source citée pour chacune
           </p>
 

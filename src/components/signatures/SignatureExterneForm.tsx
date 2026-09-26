@@ -125,10 +125,13 @@ export function SignatureExterneForm({
       </div>
 
       <p className="text-[0.72rem] leading-relaxed text-[color:var(--muted-foreground)]">
-        En cliquant sur « Signer électroniquement », vous apposez une signature
-        au sens de l&apos;article 1367 du Code civil. Seront enregistrés :
-        votre email, votre adresse IP, l&apos;empreinte SHA-256 du document et
-        l&apos;horodatage serveur.
+        {/* ~~« vous apposez une signature au sens de l'article 1367 du Code
+            civil »~~ — une qualification (vérification du 2026-09-26) :
+            aligné sur `/verifier`. */}
+        En cliquant sur « Signer électroniquement », vous signez ce document.
+        Seront enregistrés : votre email, votre adresse IP, l&apos;empreinte
+        SHA-256 du document et l&apos;horodatage serveur. Textes : art. 1366 et
+        1367 du Code civil · règlement (UE) n° 910/2014.
       </p>
     </form>
   );

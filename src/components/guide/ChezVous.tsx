@@ -55,9 +55,10 @@ export function ChezVous({
           Ce que vous lisez ici est calculé depuis votre dossier —{" "}
           <strong>{raisonDisplay}</strong>, {data.duerp.effectifSurSite} travailleur
           {data.duerp.effectifSurSite > 1 ? "s" : ""} sur site
-          {regimes.length > 0 ? <> · {regimes.join(" · ")}</> : null}. Chaque
-          règle cite sa source ; modifiez vos déclarations et cette section
-          se recalcule.
+          {regimes.length > 0 ? <> · {regimes.join(" · ")}</> : null}. La
+          règle du DUERP cite sa source ci-dessous ; chaque obligation cite
+          la sienne sur sa fiche de vérification. Modifiez vos déclarations
+          et cette section se recalcule.
         </p>
       </header>
 
@@ -67,7 +68,8 @@ export function ChezVous({
           DUERP — rythme de mise à jour
         </p>
         <p className="mt-2 max-w-3xl text-[0.95rem] leading-relaxed">
-          Le document unique est obligatoire dès le premier salarié. Votre
+          L&apos;article R. 4121-1 fait transcrire l&apos;évaluation des
+          risques dans un document unique, sans seuil d&apos;effectif. Votre
           entreprise déclare{" "}
           <strong>
             {data.duerp.effectif} salarié{data.duerp.effectif > 1 ? "s" : ""}
@@ -136,8 +138,9 @@ export function ChezVous({
             {data.domaines.length > 0 ? (
               <>
                 Ce qui suit ne dépend d&apos;aucun équipement : ce sont les
-                obligations qui vous incombent comme employeur, dès le premier
-                salarié.
+                obligations de l&apos;établissement que vos déclarations
+                déclenchent. Celles qui visent une personne nommée se lisent
+                sur sa fiche, dans l&apos;équipe.
               </>
             ) : (
               <>

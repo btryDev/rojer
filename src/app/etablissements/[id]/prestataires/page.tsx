@@ -111,8 +111,7 @@ export default async function PrestatairesPage({
                 Commencez par ceux qui interviennent déjà : l&apos;organisme qui
                 vérifie vos installations électriques, celui qui contrôle vos
                 extincteurs, votre ascensoriste. Vous retrouverez leur contact
-                sans le rechercher, et vous pourrez leur envoyer un lien de
-                dépôt de rapport sans ressaisir leur adresse.
+                sans le rechercher.
               </p>
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Chaque prestataire porte ses pièces de vigilance. L&apos;écran

@@ -16,7 +16,7 @@ const ITEMS = [
   {
     n: "03",
     titre: "Plan d'actions",
-    description: "Ouvertes avec échéance, levées avec justificatif",
+    description: "Ouvertes avec échéance, levées — justificatif facultatif",
   },
 ] as const;
 
@@ -30,9 +30,12 @@ export function EnCasControle({
       <header className="mb-10 max-w-[56ch]">
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">§ En cas de contrôle</p>
         <h2 className="board-titre text-[clamp(22px,2.2vw,27px)] mt-3">
-          Quatre documents.
+          Quatre documents que Rojer tient.
           <br />
-          <span className="text-[color:var(--board-blue-ink)]">Tout ce qu&apos;on vous demandera.</span>
+          {/* ~~« Tout ce qu'on vous demandera »~~ : la page « Documents
+              obligatoires » en nomme d'autres, que Rojer ne produit pas
+              (relecture du 2026-09-26). */}
+          <span className="text-[color:var(--board-blue-ink)]">Les autres, la page « Documents obligatoires » les nomme.</span>
         </h2>
       </header>
 
@@ -124,7 +127,7 @@ function ControleStamp() {
     <div
       className="relative mx-auto size-[280px]"
       role="img"
-      aria-label="Prêt pour contrôle"
+      aria-label="Dossier exportable"
     >
       <svg
         viewBox={`0 0 ${taille} ${taille}`}
@@ -192,9 +195,12 @@ function ControleStamp() {
           Statut
         </span>
         <span className=" mt-2 text-[1.7rem] italic leading-[1.05] text-[color:var(--board-green-ink)]">
-          Prêt pour
+          {/* ~~« Prêt pour contrôle »~~, statique quel que soit l'état du
+              dossier (relecture du 2026-09-26) : ce qui est vrai de tout
+              dossier, c'est qu'il s'exporte. */}
+          Dossier
           <br />
-          contrôle
+          exportable
         </span>
       </div>
     </div>
