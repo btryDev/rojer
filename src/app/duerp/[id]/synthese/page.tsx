@@ -554,6 +554,7 @@ export default async function SynthesePage({
           (`lib/versions/motifs.ts`). L'énoncé et le geste se lisent d'un seul
           regard, au lieu que l'un ouvre la page et l'autre la ferme. */}
       <CarteMiseAJour
+        entrepriseId={duerp.entreprise.id}
         effectifs={{
           entreprise: duerp.entreprise.effectif,
           site: duerp.etablissement.effectifSurSite,

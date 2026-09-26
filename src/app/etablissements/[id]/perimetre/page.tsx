@@ -111,6 +111,7 @@ export default async function PerimetrePage({
           {couverture && !riensASignaler(couverture) ? (
             <BandeauCouverture
               couverture={couverture}
+              entrepriseId={etablissement.entrepriseId}
               hrefEtablissement={`${base}/modifier`}
               hrefDuerp={`${base}/duerp`}
               hrefEquipements={`${base}/equipements`}

@@ -14,6 +14,7 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import {
   CHAPITRE_R4512,
   CONSTAT_R4512_1,
@@ -22,6 +23,7 @@ import {
   CONSTAT_R4512_12,
   EXTRAIT_R4512_12,
   FAIT_DUREE_NON_RENSEIGNEE,
+  PHRASE_R4512_2,
   R4463_8,
   R4512_1,
   R4512_9,
@@ -166,6 +168,15 @@ describe("fiche du plan : ce qui s'y lit, dans les trois états de l'écrit", ()
     expect(lu).not.toMatch(/pendant les travaux/i);
   });
 
+  it("sans date d'inspection : le moment de R. 4512-2 dans ses mots, sans « obligatoire »", async () => {
+    // C40, suite : « obligatoire avant le démarrage des travaux (art.
+    // R. 4512-2 CT) » prêtait à R. 4512-2 le moment de R. 4512-6.
+    const { lu } = await rendreFiche({ dureeHeuresEstimee: null, travauxDangereux: false });
+    expect(contient(lu, "Aucune date d'inspection commune enregistrée.")).toBe(true);
+    expect(contient(lu, PHRASE_R4512_2)).toBe(true);
+    expect(lu).not.toMatch(/obligatoire avant le démarrage/i);
+  });
+
   it("la pastille précède la citation, article par article", async () => {
     const { html } = await rendreFiche({ dureeHeuresEstimee: null, travauxDangereux: false });
     const lu = texte(html);
@@ -231,6 +242,23 @@ describe("formulaire : ce qui s'y lit au premier affichage", async () => {
     ["R. 4512-12", URL_R4512_12],
   ])("pastille %s, avec son lien", (ref, href) => {
     expect(pastille(html, ref, href)).toBe(true);
+  });
+
+  it("la case des travaux dangereux : l'arrêté daté en toutes lettres, exemples tirés de sa liste", () => {
+    // C40, suite. Chaque exemple entre guillemets de la case est un point de
+    // l'article 1er de l'arrêté du 19 mars 1993, tel que le corpus le porte.
+    expect(contient(lu, "liste des travaux dangereux de l'arrêté du 19 mars 1993 ou, pour les travaux agricoles, de l'arrêté du ministre chargé de l'agriculture (art. R. 4512-7, 2°)")).toBe(true);
+    expect(lu).not.toContain("19-03-1993");
+    const liste = (
+      indexArticlesParRef().get("Arrêté 1993-03-19 art. 1er")?.article.citationCle ?? ""
+    ).replace(/\s+/g, " ");
+    expect(liste.length).toBeGreaterThan(0);
+    const debut = lu.indexOf("Parmi les vingt et un points de la liste");
+    expect(debut).toBeGreaterThan(-1);
+    const bloc = lu.slice(debut, lu.indexOf("…", debut));
+    const exemples = [...bloc.matchAll(/«\s*([^»]+?)\s*»/g)].map((m) => m[1].replace(/\s+/g, " "));
+    expect(exemples.length).toBe(4);
+    for (const e of exemples) expect(liste, e).toContain(e);
   });
 
   // Aucune durée saisie au premier affichage : l'état est indéterminé, et

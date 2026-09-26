@@ -242,6 +242,7 @@ export default async function RegistrePage({
         {couverture && (
           <BandeauCouverture
             couverture={couverture}
+            entrepriseId={etab.entrepriseId}
             hrefEtablissement={`${base}/modifier`}
             hrefEquipements={`${base}/equipements`}
           />

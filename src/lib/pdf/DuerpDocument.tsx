@@ -6,7 +6,11 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import { prioriser } from "@/lib/cotation";
-import { seuilEntrepriseAtteint } from "@/lib/matching/effectif-entreprise";
+import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
+import {
+  SEUIL_PROGRAMME_ANNUEL_PREVENTION,
+  seuilProgrammeAnnuelDuSnapshot,
+} from "@/lib/versions/seuil-programme-annuel";
 import { formaterDateCourteFr, formaterDateLongueFr } from "@/lib/dates";
 import { LABEL_STATUT, LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
 import { estHorsReferentiel } from "@/lib/risques/helpers";
@@ -151,6 +155,7 @@ export type Props = {
 
 export function DuerpDocument({ snapshot, historique, brouillon = false }: Props) {
   const { entreprise, unites, version, genereLe, motif } = snapshot;
+  const programmeAnnuel = seuilProgrammeAnnuelDuSnapshot(entreprise);
 
   // Unités qu'aucune unité type du référentiel sectoriel ne couvre : leur
   // inventaire ne doit rien au référentiel, il vient entièrement de
@@ -866,11 +871,16 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
 
         {/* La règle commune aux seuils d'entreprise (C37) : l'entreprise, ou
             le site au seuil par prudence. Une version figée avant C37 ne
-            porte que le site, et se lit comme avant. */}
-        {seuilEntrepriseAtteint(50, {
-          entreprise: entreprise.effectifEntreprise ?? entreprise.effectif,
-          site: entreprise.effectif,
-        }).atteint && (
+            porte que le site, et se lit comme avant
+            (`seuilProgrammeAnnuelDuSnapshot`).
+
+            « À CONFIRMER » (revue finale de l'intégration d, 2026-09-26). Le
+            titre « Entreprises d'au moins 50 salariés » s'imprimait aussi quand
+            l'entreprise était déclarée sous cinquante et que seul le site y
+            était : le document affirmait un seuil que le dossier ne tenait que
+            par prudence. La mention courte, la même que sur la checklist du
+            contrôle et l'outil MCP, le dit sous le paragraphe. */}
+        {programmeAnnuel.atteint && (
           <>
             <Text style={[s.small, { marginTop: 10 }]}>
               <Text style={{ fontFamily: "Helvetica-Bold" }}>
@@ -883,6 +893,11 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
               avec, pour chacune, les conditions d&apos;exécution, les
               indicateurs de résultats et l&apos;estimation du coût.
             </Text>
+            {programmeAnnuel.aConfirmer && (
+              <Text style={[s.small, { marginTop: 3 }]}>
+                {`Retenu par prudence, ${mentionAConfirmer(SEUIL_PROGRAMME_ANNUEL_PREVENTION)}.`}
+              </Text>
+            )}
           </>
         )}
 

@@ -55,7 +55,7 @@ export const obligationsOrganisationPrevention: Obligation[] = [
     domaine: "organisation_prevention",
     libelle: "Salarié désigné compétent en protection et prévention",
     description:
-      "L'employeur désigne un ou plusieurs salariés compétents pour s'occuper des activités de protection et de prévention des risques professionnels de l'entreprise. Cette désignation s'impose dès le premier salarié, sans condition d'effectif ni de secteur. Le ou les salariés désignés bénéficient d'une formation en matière de santé au travail, dans les conditions prévues pour la formation des membres du comité social et économique. À défaut de compétences internes, l'employeur peut faire appel à un intervenant en prévention des risques professionnels — mais l'obligation reste de désigner.",
+      "L'employeur désigne un ou plusieurs salariés compétents pour s'occuper des activités de protection et de prévention des risques professionnels de l'entreprise. L'article ne pose ni condition d'effectif ni condition de secteur. Le ou les salariés désignés bénéficient d'une formation en matière de santé au travail, dans les conditions prévues pour la formation des membres du comité social et économique. À défaut de compétences internes, l'employeur peut faire appel à un intervenant en prévention des risques professionnels — mais l'obligation reste de désigner.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",

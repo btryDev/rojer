@@ -188,7 +188,7 @@ export default async function PlanPreventionListePage({
             <strong>par écrit</strong> si les travaux atteignent{" "}
             <strong>400 h sur 12 mois</strong>{" "}
             OU figurent sur la liste des
-            travaux dangereux de l&apos;arrêté du 19-03-1993 (art. R. 4512-7).
+            travaux dangereux de l&apos;arrêté du 19 mars 1993 (art. R. 4512-7).
             Sous ce seuil, l&apos;inspection commune préalable et
             l&apos;accord sur les mesures restent dus.
           </p>

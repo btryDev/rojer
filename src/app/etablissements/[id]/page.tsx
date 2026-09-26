@@ -207,7 +207,7 @@ export default async function EtablissementPage({
       id: "duerp",
       titre: "Ouvrir votre DUERP",
       pourquoi:
-        "Le document unique d'évaluation des risques est obligatoire dès le premier salarié (art. R. 4121-1 du Code du travail). L'outil vous guide : secteur d'activité, puis unités de travail.",
+        "L'article R. 4121-1 du Code du travail : « L'employeur transcrit et met à jour dans un document unique les résultats de l'évaluation des risques pour la santé et la sécurité des travailleurs ». L'article ne fixe pas de seuil d'effectif. L'outil vous guide : secteur d'activité, puis unités de travail.",
       faite: duerpOuvert,
       href: `/etablissements/${id}/duerp`,
       cta: !duerpOuvert ? "Ouvrir le DUERP" : undefined,

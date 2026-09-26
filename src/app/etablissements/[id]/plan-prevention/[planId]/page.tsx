@@ -35,6 +35,7 @@ import {
   CONSTAT_R4512_12,
   FAIT_DUREE_NON_RENSEIGNEE,
   R4463_8,
+  PHRASE_R4512_2,
   R4512_1,
   R4512_9,
   R4512_11,
@@ -254,10 +255,13 @@ export default async function PlanPreventionDetailPage({
                   )}
                 </>
               ) : (
+                // « Obligatoire avant le démarrage des travaux » prêtait à
+                // R. 4512-2 le moment de R. 4512-6 (C40, suite) : l'article
+                // dit « préalablement à l'exécution de l'opération », et le
+                // dit dans la constante que le diagnostic cite déjà.
                 <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                  Aucune date d&apos;inspection commune enregistrée. Cette
-                  inspection est obligatoire avant le démarrage des travaux
-                  (art. R. 4512-2 CT).
+                  Aucune date d&apos;inspection commune enregistrée.{" "}
+                  {PHRASE_R4512_2}
                 </p>
               )}
             </CarteFiche>

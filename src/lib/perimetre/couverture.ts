@@ -150,6 +150,12 @@ export type ManqueCouverture = {
   motif: string;
   /** Ce que l'application ne sait donc pas lui dire. */
   consequence: string;
+  /**
+   * Vrai quand `motif` porte la phrase « à confirmer » d'un seuil
+   * d'entreprise, et avec elle la consigne « mettez-le à jour sur la fiche de
+   * l'entreprise » : l'écran l'accompagne du lien vers l'effectif (C37).
+   */
+  effectifAConfirmer?: true;
 };
 
 /**
@@ -712,6 +718,7 @@ function axeEffectif(
       axe: "effectif",
       motif: `${constat} À partir de cinquante salariés dans l'entreprise, les résultats de l'évaluation des risques débouchent sur un programme annuel de prévention (art. L. 4121-3-1, III, 1°).`,
       consequence: `Rojer ne produit pas ${nonPorte("le programme annuel de prévention des risques")}.`,
+      ...(seuil.aConfirmer ? { effectifAConfirmer: true as const } : {}),
     });
     return;
   }

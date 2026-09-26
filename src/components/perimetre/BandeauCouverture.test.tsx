@@ -29,6 +29,7 @@ function rendre(couverture: CouvertureEtablissement) {
   return render(
     <BandeauCouverture
       couverture={couverture}
+      entrepriseId="e"
       hrefEtablissement="/etablissements/x/modifier"
     />,
   );

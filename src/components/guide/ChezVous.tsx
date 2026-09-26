@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
+import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import {
   LABEL_DOMAINE,
   LABEL_PERIODICITE,
@@ -31,11 +32,18 @@ import {
 export function ChezVous({
   data,
   etablissementId,
+  entrepriseId,
   raisonDisplay,
   regimes,
 }: {
   data: ChezVousData;
   etablissementId: string;
+  /**
+   * Pour le lien vers l'effectif de l'entreprise : chaque phrase « à
+   * confirmer » dit « mettez-le à jour sur la fiche de l'entreprise », et une
+   * consigne sans chemin ne se suit pas (C37).
+   */
+  entrepriseId: string;
   raisonDisplay: string;
   /** Libellés courts des régimes déclarés, ex. ["Travail", "ERP · N5"]. */
   regimes: string[];
@@ -56,9 +64,13 @@ export function ChezVous({
           <strong>{raisonDisplay}</strong>, {data.duerp.effectifSurSite} travailleur
           {data.duerp.effectifSurSite > 1 ? "s" : ""} sur site
           {regimes.length > 0 ? <> · {regimes.join(" · ")}</> : null}. La
-          règle du DUERP cite sa source ci-dessous ; chaque obligation cite
-          la sienne sur sa fiche de vérification. Modifiez vos déclarations
-          et cette section se recalcule.
+          règle du DUERP cite sa source ci-dessous. Une vérification datée
+          cite la sienne sur sa fiche de vérification, une obligation qui
+          vise une personne sur sa fiche dans l&apos;équipe, une obligation
+          qui naît d&apos;un événement sur la page « Quand ça arrive ». Les
+          obligations de l&apos;écran « Ce qui doit être en place » ne
+          citent pas encore leur texte à l&apos;écran. Modifiez vos déclarations et cette section
+          se recalcule.
         </p>
       </header>
 
@@ -100,6 +112,13 @@ export function ChezVous({
             </>
           )}
         </p>
+        {data.duerp.aConfirmer ? (
+          <LienEffectifEntreprise
+            entrepriseId={entrepriseId}
+            effectif={null}
+            className="m-0 mt-2 text-[0.84rem] leading-relaxed"
+          />
+        ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
           <LegalBadge charte="board"
             reference="Art. R. 4121-2 CT"
@@ -195,6 +214,22 @@ export function ChezVous({
                     <> · déclenché par : {d.equipements.join(", ")}</>
                   )}
                 </p>
+                {d.aConfirmer ? (
+                  <div className="mt-2 text-[0.8rem] leading-relaxed text-[color:var(--board-slate-mid)]">
+                    <p className="m-0">
+                      <strong className="font-semibold text-[color:var(--board-ink)]">
+                        À confirmer
+                      </strong>{" "}
+                      — {d.aConfirmer.obligations.map((o) => `« ${o} »`).join(", ")}.{" "}
+                      {d.aConfirmer.phrase}
+                    </p>
+                    <LienEffectifEntreprise
+                      entrepriseId={entrepriseId}
+                      effectif={null}
+                      className="m-0 mt-1 text-[0.8rem] leading-relaxed"
+                    />
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

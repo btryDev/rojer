@@ -6,6 +6,10 @@ import {
   PHRASE_R4512_2,
   PHRASE_R4512_6,
   PHRASE_R4512_7,
+  R4512_7_1_SEUIL,
+  R4512_7_2_DUREE,
+  R4512_7_2_LISTE,
+  R4512_7_ECRIT,
   type EtatEcrit,
 } from "./annonces-plan";
 
@@ -35,7 +39,7 @@ import {
  * ce plan passe à l'ÉCRIT.
  *
  *   - Durée totale ≥ 400 h sur 12 mois : écrit obligatoire
- *   - Travaux sur liste dangereuse (arrêté 19-03-1993) : écrit obligatoire
+ *   - Travaux sur la liste de l'arrêté du 19 mars 1993 : écrit obligatoire
  *     indépendamment de la durée
  *
  * Le diagnostic ne répond donc qu'à la seconde question. Sous le seuil,
@@ -216,14 +220,34 @@ export function diagnostiquerPlan(params: {
   // 2008-05-01 (LEGIARTI000018529783).
   const seuil400 =
     params.dureeHeuresEstimee !== null && params.dureeHeuresEstimee >= 400;
+  // LES RAISONS CITENT LE TEXTE, ET LE FAIT QUI LE DÉCLENCHE (revue finale
+  // de l'intégration d, 2026-09-26). Elles disaient « Les travaux atteignent
+  // 400 h sur 12 mois (seuil art. R4512-7) » et « Les travaux figurent sur la
+  // liste dangereuse (arrêté 19-03-1993) » : deux paraphrases, dont la
+  // première affirmait un fait que le dossier ne tient pas — il tient une
+  // DURÉE ESTIMÉE, le texte parle d'heures « prévisible[s] ». Chaque raison
+  // porte désormais le fait saisi, puis le cas de R. 4512-7 entre guillemets,
+  // pris aux constantes d'`annonces-plan.ts` que `annonces-plan.test.ts`
+  // confronte au corpus. Relu sur Légifrance le 2026-09-26, en vigueur
+  // depuis le 2008-05-01 : identique.
+  // Le 2° renvoie à DEUX listes — « respectivement, par arrêté du ministre
+  // chargé du travail et par arrêté du ministre chargé de l'agriculture ».
+  // La seconde n'est pas lue au dépôt : elle est nommée, pas citée
+  // (contre-lecture de C40, 2026-09-27).
   if (seuil400) {
     raisons.push(
-      `Les travaux atteignent 400 h sur 12 mois (seuil art. R4512-7)`,
+      `Durée estimée : ${params.dureeHeuresEstimee} h. Art. R. 4512-7, 1° : ` +
+        `le plan est « ${R4512_7_ECRIT} » dès lors que l'opération représente ` +
+        `un nombre total d'heures de travail prévisible « ${R4512_7_1_SEUIL} ».`,
     );
   }
   if (params.travauxDangereux) {
     raisons.push(
-      `Les travaux figurent sur la liste dangereuse (arrêté 19-03-1993)`,
+      "Travaux déclarés dangereux. Art. R. 4512-7, 2° : " +
+        `« ${R4512_7_2_DUREE.charAt(0).toLowerCase()}${R4512_7_2_DUREE.slice(1)} », ` +
+        `le plan est « ${R4512_7_ECRIT} » lorsque les travaux sont au nombre ` +
+        `des « ${R4512_7_2_LISTE} » par arrêté (arrêté du 19 mars 1993 et, ` +
+        "pour les travaux agricoles, arrêté du ministre chargé de l'agriculture).",
     );
   }
   const ecritObligatoire = seuil400 || params.travauxDangereux;

@@ -217,10 +217,15 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529783",
       versionEnVigueur: "2008-05-01",
       // Verbatim relu sur sa page propre le 2026-09-26 (C30, diagnostic) :
-      // identique. `lecture` inchangée — la mention de version de la page
-      // n'a pas été relevée ce jour, et `premiere_main` la demande.
+      // identique. ~~`lecture` inchangée — la mention de version de la page
+      // n'a pas été relevée ce jour, et `premiere_main` la demande.~~
+      // [2026-09-26, C40 : relevée — recopie intégrale, identique ; la page
+      // porte « Version en vigueur depuis le 01/05/2008 » et « Création
+      // Décret n°2008-244 du 7 mars 2008 - art. (V) », sans modification :
+      // `null`, comme `R. 4512-1`.]
+      modifiePar: null,
       luLe: "2026-09-26",
-      lecture: "agent_verbatim",
+      lecture: "premiere_main",
       prescrit:
         "Le plan est établi par écrit et arrêté avant le commencement des travaux dans deux cas : au moins 400 heures de travail prévisibles sur une période inférieure ou égale à douze mois, ou travaux figurant sur la liste de travaux dangereux fixée par arrêté, quelle que soit la durée.",
       citationCle:

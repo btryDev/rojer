@@ -60,7 +60,7 @@ export async function exporterDonneesSalarie(
       etabliLe: new Date().toISOString(),
       responsableDeTraitement: s.etablissement.raisonDisplay,
       baseLegale:
-        "Article 6.1.c du RGPD — obligation légale de l'employeur (suivi des titres et habilitations exigés par le Code du travail). Le consentement n'est pas la base légale retenue : il ne serait pas libre en situation de subordination.",
+        "Article 6.1.c du RGPD — obligation légale de l'employeur (suivi de titres, formations et visites prévus par le Code du travail). Le consentement n'est pas la base légale retenue : il ne serait pas libre en situation de subordination.",
       cequiNestPasIci:
         "Rojer ne détient aucune donnée de santé. Sur une attestation ou une visite médicale — visite d'information et de prévention, suivi individuel renforcé, visite intermédiaire, attestation d'absence de contre-indication —, il n'enregistre que son existence et ses dates : ni motif, ni avis d'aptitude, ni restriction, ni document. Le dossier médical en santé au travail appartient au service de prévention et n'est pas accessible à l'employeur (L. 4624-8, R. 4624-55).",
     },
@@ -101,6 +101,23 @@ export async function exporterDonneesSalarie(
  * fondent ce qui est dit, pas pour faire sérieux.
  *
  * L'outil le fournit ; il n'informe pas à la place de l'employeur.
+ *
+ * CE QUE LE TEXTE NE DIT PLUS (revue finale de l'intégration d, 2026-09-26,
+ * décision E8 ouverte). « Parce que la loi l'impose », « que la
+ * réglementation lui impose de connaître », « exigés par le Code du travail »
+ * affirmaient, pour TOUS les titres suivis, une exigence que le Code ne pose
+ * pas partout : chaque titre du catalogue répond à un article du Code, mais
+ * tous ne conditionnent pas un travail — R. 4224-15 ne fait former un
+ * secouriste que dans « chaque atelier où sont accomplis des travaux
+ * dangereux » et certains chantiers ; L. 2315-18 dit que les membres de la
+ * délégation du personnel du CSE et le référent « bénéficient » de leur
+ * formation (tous deux relus sur Légifrance le 2026-09-26). Le texte dit
+ * désormais « prévus », et que certains le sont pour tout travailleur : la
+ * visite d'information et de prévention (R. 4624-10, « Tout travailleur
+ * bénéficie… », relu le 2026-09-27) — la première écriture de cette
+ * correction, « pour certains travaux ou certains postes », l'oubliait. Il n'arbitre pas E8 : la base 6.1.c, et les refus
+ * d'effacement (17.3.b) et d'opposition (21) qui s'en déduisent, restent
+ * tels quels jusqu'à la décision.
  */
 export function texteInformation({
   raisonSociale,
@@ -116,8 +133,10 @@ export function texteInformation({
 
   return `Information sur le suivi de vos titres et habilitations
 
-${raisonSociale} utilise un outil, Rojer, pour suivre les échéances des titres
-que vous détenez et que la réglementation lui impose de connaître.
+${raisonSociale} utilise un outil, Rojer, pour suivre les échéances des titres,
+formations et visites que le Code du travail prévoit : certains pour tout
+travailleur, comme la visite d'information et de prévention (art. R. 4624-10),
+d'autres pour certains travaux ou certains postes.
 
 CE QUI EST ENREGISTRÉ
 
@@ -143,9 +162,9 @@ R. 4624-55 du Code du travail).
 
 POURQUOI
 
-Parce que la loi l'impose à votre employeur. Certains travaux ne peuvent être
-confiés qu'à une personne titulaire d'un titre en cours de validité, et
-l'employeur doit pouvoir en justifier. La base légale de ce traitement est
+Parce que le Code du travail prévoit ces titres, formations et visites.
+Certains travaux ne peuvent être confiés qu'à une personne titulaire d'un
+titre en cours de validité, et l'employeur doit pouvoir en justifier. La base légale de ce traitement est
 l'article 6.1.c du RGPD — une obligation légale.
 
 Ce n'est donc pas un traitement fondé sur votre consentement, et il ne peut pas
