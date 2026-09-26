@@ -50,15 +50,25 @@ texte, le quatrième sur la charte. Ce qui reste, et qui le porte :]
   § 2 ne renvoie au chapitre V que pour la « mise en œuvre ». Reste à vérifier
   qu'aucun autre article du Livre III ne mentionne `CH 57` ou `CH 58` avant de
   retirer l'annuelle aux N5.
-- **La divergence sur `R. 146-35` CCH** entre les deux PDF — CONFIÉE le
-  2026-09-26 à la session `rojer-outils-62` (le texte vise le propriétaire
-  d'un IGH : retirer du PDF de dossier, conditionner au régime).
+- ~~**La divergence sur `R. 146-35` CCH** entre les deux PDF~~ — FAIT le
+  2026-09-26 par la session `rojer-outils-62`, branche
+  `lot/sorties-sans-equipement-et-igh` (`572675c`), NON FUSIONNÉE, contre-lecture
+  en cours : `R. 143-44` cité aux seuls ERP, `R. 146-35` aux seuls IGH avec son
+  débiteur (le propriétaire).
 - ~~**La règle de fusion « la plus ancienne »** de deux lignes de
   calendrier.~~ — CLOS le 2026-09-26 : conforme à `R. 4222-20` (« l'ensemble »)
   et à `PE 4` § 2 (« tous les trois ans au plus »), l'erreur va vers « à
   refaire ». Gardée telle quelle.
-- **§ 15** — un dossier qui n'a rien déclaré rend des listes vides sans le dire —
-  CONFIÉ le 2026-09-26 à la session `rojer-outils-62`. La prémisse était
+- ~~**§ 15** — un dossier qui n'a rien déclaré rend des listes vides sans le dire~~ —
+  FAIT le 2026-09-26, même branche, même état : « Aucun équipement en service
+  n'est déclaré pour cet établissement. » dans le ZIP, les deux PDF et
+  « Préparer un contrôle ».
+- **Ce que ce lot a vu et laissé, à reprendre** : un dossier vide sort encore
+  « 100/100 » ; le PDF du dossier cite l'arrêté du 25 juin 1980 à un non-ERP ;
+  le registre PDF parle de « la commission de sécurité » à un non-ERP et garde
+  l'injonction « Déclarez vos équipements… » ; la phrase de `.claude/CLAUDE.md`
+  sur l'onboarding (l. 597) est périmée — trois étapes, aucune ne déclare
+  d'équipement. La prémisse était
   fausse (un dossier vierge rend 4 à 6 lignes) ; la charte tranche
   (interdit 15) : dire « aucun équipement déclaré » comme un fait, jusque dans
   le ZIP et les PDF.
