@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => ({
-  regenerer: vi.fn(async (_id: string, _contexte: string) => true),
+  regenerer: vi.fn<(id: string, contexte: string) => Promise<boolean>>(
+    async () => true,
+  ),
   update: vi.fn(async () => ({})),
   findMany: vi.fn(async () => [{ id: "etab-1" }, { id: "etab-2" }]),
 }));
