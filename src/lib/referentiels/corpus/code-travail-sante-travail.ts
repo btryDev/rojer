@@ -15,7 +15,9 @@
 // -30) ne met aucun acte à la charge de l'employeur »~~ — FAUX pour la
 // préreprise, relevé par contre-lecture le jour même : c'est L. 4624-2-4, loi,
 // qui met à sa charge d'en informer le travailleur ; R. 4624-29 en fixe la
-// durée (plus de trente jours). Les deux sont retenus pour cette obligation.
+// durée (plus de trente jours). L. 4624-2-4 fonde l'obligation
+// `sante-travail-etablissement-information-possibilite-prereprise` ; R. 4624-29
+// n'en donne que la durée et reste `sans_objet` (précédent : R. 4624-28-1).
 //
 // CE QUE CE CORPUS A DE PARTICULIER, ET QUI DOIT SE LIRE AVANT DE L'ÉTENDRE.
 // C'est le seul corpus du référentiel dont toutes les obligations salarié
@@ -420,10 +422,9 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
         "Les travailleurs en arrêt de travail de plus de trente jours peuvent bénéficier d'une visite de préreprise, en vue de favoriser le maintien dans l'emploi.",
       citationCle:
         "En vue de favoriser le maintien dans l'emploi, les travailleurs en arrêt de travail d'une durée de plus de trente jours peuvent bénéficier d'une visite de préreprise.",
-      statut: "retenu",
-      obligations: ["sante-travail-etablissement-information-possibilite-prereprise"],
-      historique:
-        "Consigné `sans_objet` le matin du 2026-09-26, retenu l'après-midi : il ne met pas d'acte à la charge de l'employeur, mais il FIXE la « durée fixée par décret » à laquelle `L. 4624-2-4` rattache l'information que l'employeur doit au travailleur. Le motif d'alors : " + "Ouvre une POSSIBILITÉ au travailleur (« peuvent bénéficier ») ; aucun acte n'y est mis à la charge de l'employeur. Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Le texte modificateur est nommé tel que Légifrance l'affiche ; seul son article 5 est en cause, et il n'a pas été lu mot pour mot. La page porte aussi : « Conformément à l'article 6 du décret n° 2022-372 du 16 mars 2022, ces dispositions entrent en vigueur le 31 mars 2022 et s'appliquent aux arrêts de travail commençant après cette date. »",
+      statut: "sans_objet",
+      motif:
+        "DÉFINITION DE DURÉE, pas un acte : il fixe la « durée fixée par décret » à laquelle `L. 4624-2-4` rattache l'information que l'employeur doit au travailleur (obligation `sante-travail-etablissement-information-possibilite-prereprise`, qui le cite en seconde référence). Une définition qui sert une obligation portée par le corpus se range en `sans_objet` — même traitement que `R. 4624-28-1`. [2026-09-26 : brièvement `retenu` le même jour, rétabli après vérification.] Le motif d'origine : " + "Ouvre une POSSIBILITÉ au travailleur (« peuvent bénéficier ») ; aucun acte n'y est mis à la charge de l'employeur. Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Le texte modificateur est nommé tel que Légifrance l'affiche ; seul son article 5 est en cause, et il n'a pas été lu mot pour mot. La page porte aussi : « Conformément à l'article 6 du décret n° 2022-372 du 16 mars 2022, ces dispositions entrent en vigueur le 31 mars 2022 et s'appliquent aux arrêts de travail commençant après cette date. »",
     },
     {
       ref: "R. 4624-30",
