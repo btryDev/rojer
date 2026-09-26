@@ -50,6 +50,13 @@ export type LigneQuandCaArrive = {
    * article qui ne dit pas la phrase affichée (contre-lecture du 2026-09-21).
    */
   articles: string[];
+  /**
+   * La description, ou `null` quand elle ne dit rien de plus que le fait.
+   * Quand l'article n'a pas de ponctuation autour du fait, le fait est la
+   * phrase entière — et la page la montrait deux fois (`R. 4624-33`,
+   * contre-lecture du 2026-09-26).
+   */
+  description: string | null;
 };
 
 export type GroupeQuandCaArrive = {
@@ -107,10 +114,14 @@ export function lignesDepuis(
       fait: o.faitGenerateur,
       pieceAttendue: o.pieceAttendue,
       articles: o.referencesLegales.map((r) => r.article ?? r.reference),
+      description: memeTexte(o.description ?? "", o.faitGenerateur) ? null : (o.description ?? null),
     });
   }
   return lignes;
 }
+
+const nu = (t: string) => t.replace(/[\s.;:,]+$/u, "").trim();
+const memeTexte = (a: string, b: string) => nu(a) === nu(b);
 
 // L'ordre du Code : le numéro d'abord, puis L. avant R. avant D. — pas
 // l'alphabet, qui rangerait tous les « D. » avant les « L. ».

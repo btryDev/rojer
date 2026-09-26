@@ -1409,6 +1409,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // informe le médecin du travail de tout arrêt de moins de trente jours
     // pour accident du travail (R. 4624-33). 167 + 1 = 168.
     { version: "2026-09-26.6", empreinte: "168-6152eee279ea343c" },
+    // `L. 4624-2-4` : l'employeur informe le travailleur de la possibilité
+    // de solliciter l'examen de préreprise, trouvée par la contre-lecture du
+    // lot précédent. 168 + 1 = 169.
+    { version: "2026-09-26.7", empreinte: "169-85f0fac08bca3950" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1565,7 +1569,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(168);
+    ).toBe(169);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

@@ -46,10 +46,11 @@ import type { PorteurObligation } from "./types";
 
 /**
  * Le porteur de CHAQUE obligation du référentiel, relevé en appelant
- * `porteurDe` le 2026-09-21 : 167 lignes, 89 équipement, 64 établissement,
+ * `porteurDe` le 2026-09-26 : 169 lignes, 89 équipement, 66 établissement,
  * 14 salarié (~~154 / 51 au 2026-09-15~~ ; +2 au lot chaleur intense, +1 au
  * registre de dette, +2 avec `PE 27`, +3 avec les
- * événementielles de la chaleur intense, +5 avec celles du Code du travail). Pas un instantané vitest : une table lue et écrite à la main.
+ * événementielles de la chaleur intense, +5 avec celles du Code du travail,
+ * +2 le 2026-09-26 avec `R. 4624-33` et `L. 4624-2-4`). Pas un instantané vitest : une table lue et écrite à la main.
  *
  * POURQUOI UNE TABLE. Un identifiant ne dit pas son porteur, et rien dans le
  * référentiel ne se souvient de celui qu'il avait. Le 2026-08-31, le lot
@@ -211,6 +212,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "sante-travail-etablissement-adhesion-spst": "etablissement",
   "sante-travail-etablissement-examen-de-reprise": "etablissement",
   "sante-travail-etablissement-information-arret-accident-moins-trente-jours": "etablissement",
+  "sante-travail-etablissement-information-possibilite-prereprise": "etablissement",
   "sante-travail-etablissement-fiche-entreprise": "etablissement",
   "sante-travail-etablissement-fin-exposition-suivi-renforce": "etablissement",
   "sante-travail-etablissement-liste-postes-risques": "etablissement",

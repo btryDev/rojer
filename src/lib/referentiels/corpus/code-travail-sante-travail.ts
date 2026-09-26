@@ -10,8 +10,12 @@
 // paragraphe 2 de la sous-section 3 est entré le 2026-09-20 par R. 4624-31,
 // trouvé en ouvrant le texte modificateur de R. 4624-28-3. ~~R. 4624-29,
 // R. 4624-30, R. 4624-32 et R. 4624-33 restent dehors.~~ Lus le 2026-09-26 :
-// la préreprise (R. 4624-29, -30) et l'objet de l'examen (R. 4624-32) ne
-// mettent aucun acte à la charge de l'employeur ; R. 4624-33 en met un.
+// R. 4624-30 et l'objet de l'examen (R. 4624-32) ne mettent aucun acte à la
+// charge de l'employeur ; R. 4624-33 en met un. ~~« la préreprise (R. 4624-29,
+// -30) ne met aucun acte à la charge de l'employeur »~~ — FAUX pour la
+// préreprise, relevé par contre-lecture le jour même : c'est L. 4624-2-4, loi,
+// qui met à sa charge d'en informer le travailleur ; R. 4624-29 en fixe la
+// durée (plus de trente jours). Les deux sont retenus pour cette obligation.
 //
 // CE QUE CE CORPUS A DE PARTICULIER, ET QUI DOIT SE LIRE AVANT DE L'ÉTENDRE.
 // C'est le seul corpus du référentiel dont toutes les obligations salarié
@@ -388,6 +392,23 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
         "Obligation manquante jusqu'au 2026-09-21 (cause `evenement`), encodée avec la page « Quand ça arrive ». Son motif d'alors : OBLIGATION D'EMPLOYEUR PLEINE ET ENTIÈRE, DANS UN DOMAINE QUE LE PRODUIT SERT, et le référentiel ne la porte pas. Saisir le service de santé au travail dès la connaissance de la date de fin d'arrêt, pour un examen à tenir le jour de la reprise et au plus tard huit jours après : un acte, un destinataire, un délai chiffré.\n\nCE QU'ELLE APPREND SUR LA FRAÎCHEUR DU CORPUS. Sa version en vigueur date du 15 juin 2026 et vient du décret n° 2026-503 du 12 juin 2026 — un texte de trois mois que le dépôt n'avait jamais croisé, trouvé uniquement parce qu'on a ouvert le texte modificateur d'un article voisin. Le corpus est déclaré `articles_cites` et son en-tête dit ne pas lire le reste de la section, donc ce n'était pas un trou caché ; c'était un trou non cherché. — Son blocage : Le déclencheur événementiel, absent du modèle — même blocage que `R. 4624-28-2` deux entrées plus haut, et que `R. 4141-8`, `R. 4141-12` et `L. 8222-5` ailleurs. Le fait générateur est la fin d'un arrêt de travail, que le produit n'a aucun moyen de connaître : il ne détient ni arrêt, ni absence, ni date de reprise, et `docs/rgpd.md` § 2.3 explique pourquoi il ne détiendra pas la pièce médicale. L'ADR-022 nomme l'axe « événement » et s'arrête là.\n\nÀ NE PAS RÉSOUDRE PAR UNE ÉCHÉANCE PÉRIODIQUE : il n'y a pas de rythme ici, et en poser un réclamerait un examen de reprise à des salariés qui ne se sont jamais arrêtés.",
     },
     {
+      ref: "L. 4624-2-4",
+      intitule: "Examen de préreprise — l'employeur en informe le travailleur",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043891306",
+      versionEnVigueur: "2022-03-31",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "En cas d'absence de plus de la durée fixée par décret, le travailleur peut bénéficier d'un examen de préreprise ; l'employeur l'informe de la possibilité de le solliciter.",
+      citationCle:
+        "En cas d'absence au travail justifiée par une incapacité résultant de maladie ou d'accident d'une durée supérieure à une durée fixée par décret, le travailleur peut bénéficier d'un examen de préreprise par le médecin du travail, notamment pour étudier la mise en œuvre des mesures d'adaptation individuelles prévues à l'article L. 4624-3, organisé à l'initiative du travailleur, du médecin traitant, des services médicaux de l'assurance maladie ou du médecin du travail, dès lors que le retour du travailleur à son poste est anticipé. L'employeur informe le travailleur de la possibilité pour celui-ci de solliciter l'organisation de l'examen de préreprise.",
+      statut: "retenu",
+      obligations: ["sante-travail-etablissement-information-possibilite-prereprise"],
+      historique:
+        "Jamais ouvert avant le 2026-09-26, alors que `R. 4624-31` y renvoie (« visite de préreprise prévue à l'article L. 4624-2-4 ») : c'est une contre-lecture qui l'a ouvert, pour réfuter la phrase de ce corpus selon laquelle la préreprise n'imposait rien à l'employeur. Relu de première main le 2026-09-26 : deux alinéas, structure demandée en aveugle, recopie, puis requête ciblée sur « L'employeur informe » et « solliciter l'organisation de l'examen de préreprise ». Création par la loi n° 2021-1018 du 2 août 2021, art. 27, en vigueur le 31 mars 2022 ; aucune modification affichée : `modifiePar: null`.",
+    },
+    {
       ref: "R. 4624-29",
       intitule: "Visite de préreprise — qui peut en bénéficier",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045371016",
@@ -399,9 +420,10 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
         "Les travailleurs en arrêt de travail de plus de trente jours peuvent bénéficier d'une visite de préreprise, en vue de favoriser le maintien dans l'emploi.",
       citationCle:
         "En vue de favoriser le maintien dans l'emploi, les travailleurs en arrêt de travail d'une durée de plus de trente jours peuvent bénéficier d'une visite de préreprise.",
-      statut: "sans_objet",
-      motif:
-        "Ouvre une POSSIBILITÉ au travailleur (« peuvent bénéficier ») ; aucun acte n'y est mis à la charge de l'employeur. Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Le texte modificateur est nommé tel que Légifrance l'affiche ; seul son article 5 est en cause, et il n'a pas été lu mot pour mot. La page porte aussi : « Conformément à l'article 6 du décret n° 2022-372 du 16 mars 2022, ces dispositions entrent en vigueur le 31 mars 2022 et s'appliquent aux arrêts de travail commençant après cette date. »",
+      statut: "retenu",
+      obligations: ["sante-travail-etablissement-information-possibilite-prereprise"],
+      historique:
+        "Consigné `sans_objet` le matin du 2026-09-26, retenu l'après-midi : il ne met pas d'acte à la charge de l'employeur, mais il FIXE la « durée fixée par décret » à laquelle `L. 4624-2-4` rattache l'information que l'employeur doit au travailleur. Le motif d'alors : " + "Ouvre une POSSIBILITÉ au travailleur (« peuvent bénéficier ») ; aucun acte n'y est mis à la charge de l'employeur. Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Le texte modificateur est nommé tel que Légifrance l'affiche ; seul son article 5 est en cause, et il n'a pas été lu mot pour mot. La page porte aussi : « Conformément à l'article 6 du décret n° 2022-372 du 16 mars 2022, ces dispositions entrent en vigueur le 31 mars 2022 et s'appliquent aux arrêts de travail commençant après cette date. »",
     },
     {
       ref: "R. 4624-30",

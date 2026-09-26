@@ -526,11 +526,12 @@ export type ConditionApplication =
  * récurrente — elle porte alors `periodicite: "autre"`, et ce couple se lit
  * « elle revient, on ne sait pas à quel rythme ». C'est un état légitime —
  * ~~et le plus fréquent des quarante-trois~~ : mesuré en appelant le
- * 2026-09-21, `autre` compte soixante-quatre lignes, dont TROIS seulement sont
- * des échéances récurrentes ; CINQUANTE-DEUX sont des états permanents (le
- * cinquante-troisième état permanent du référentiel a un rythme :
- * `porte-auto-portail-piete-coulissant`), six des événementielles, trois des
- * ponctuelles. La phrase était fausse sur le nombre et sur le rang — et ma
+ * 2026-09-26, `autre` compte soixante-quatorze lignes (~~soixante-quatre au
+ * 2026-09-21~~ : les événementielles de « Quand ça arrive » sont venues
+ * depuis), dont TROIS seulement sont des échéances récurrentes ; CINQUANTE-DEUX
+ * sont des états permanents (le cinquante-troisième état permanent du
+ * référentiel a un rythme : `porte-auto-portail-piete-coulissant`), SEIZE des
+ * événementielles, trois des ponctuelles. La phrase était fausse sur le nombre et sur le rang — et ma
  * première correction l'était d'une unité, relevée par la contre-lecture.
  */
 export const NATURES_OBLIGATION = [

@@ -113,9 +113,11 @@ export default async function QuandCaArrivePage({
                     <p className="m-0 mt-1 max-w-[72ch] text-[14px] leading-[1.5] text-[color:var(--board-ink)]">
                       {l.obligation.libelle}
                     </p>
-                    <p className="m-0 mt-1.5 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                      {l.obligation.description}
-                    </p>
+                    {l.description && (
+                      <p className="m-0 mt-1.5 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                        {l.description}
+                      </p>
+                    )}
                     {l.pieceAttendue && (
                       <p className="m-0 mt-2 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                         Le texte attend un écrit : {l.pieceAttendue}.

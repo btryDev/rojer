@@ -1102,6 +1102,19 @@ ne décrit que des actes du médecin du travail, l'employeur étant destinataire
 de ses recommandations ; `R. 4624-32` dit l'objet de l'examen de reprise.
 `sans_objet`, motif écrit.
 
+**[Contre-lecture du jour même] ~~Trois n'imposent rien à l'employeur~~ — vrai
+pour ces trois articles, faux pour la préreprise :** `L. 4624-2-4`, que le lot
+n'avait pas ouvert, écrit « L'employeur informe le travailleur de la
+possibilité pour celui-ci de solliciter l'organisation de l'examen de
+préreprise », pour une absence « d'une durée supérieure à une durée fixée par
+décret » — plus de trente jours selon `R. 4624-29`. Relu de première main, deux
+lectures ; encodé en événementielle d'établissement ; `R. 4624-29` passe
+`retenu`. 168 + 1 = 169 (89 / 66 / 14). La même contre-lecture a fait retirer
+la redite de la page (une description identique au fait n'est plus affichée
+deux fois), rétabli l'ordre de la phrase d'onboarding de `.claude/CLAUDE.md`
+(le calendrier d'établissement naît AVANT la page Équipements) et remplacé des
+`\n` littéraux par de vrais sauts de ligne dans deux `notesInternes`.
+
 **Un impose.** `R. 4624-33` : « Le médecin du travail est informé par
 l'employeur de tout arrêt de travail d'une durée inférieure à trente jours pour
 cause d'accident du travail […] ». C'est le complément exact de

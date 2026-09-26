@@ -157,3 +157,17 @@ describe("« Quand ça arrive » — l'ordre des lignes", () => {
     ]);
   });
 });
+
+describe("« Quand ça arrive » — pas de redite", () => {
+  it("une description identique au fait n'est pas affichée une seconde fois", () => {
+    const l = lignes(etab()).find(
+      (x) => x.obligation.id === "sante-travail-etablissement-information-arret-accident-moins-trente-jours",
+    )!;
+    expect(l.description).toBeNull();
+  });
+
+  it("une description qui dit davantage reste affichée", () => {
+    const l = lignes(etab()).find((x) => x.obligation.id === "sante-travail-etablissement-examen-de-reprise")!;
+    expect(l.description).not.toBeNull();
+  });
+});

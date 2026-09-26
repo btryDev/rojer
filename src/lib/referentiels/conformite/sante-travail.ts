@@ -515,7 +515,45 @@ export const obligationsSanteTravail: Obligation[] = [
     porteur: "etablissement",
     transmet: [],
     notesInternes:
-      "ENCODÉE LE 2026-09-26 sur la page « Quand ça arrive » (ADR-037), le jour où l'article a été lu pour la première fois. Le produit n'observe pas le fait ; il dit la règle, sans date, sans état, sans case.\\n\\nLA SŒUR DE L'EXAMEN DE REPRISE, ET SON COMPLÉMENT EXACT. `R. 4624-31` couvre l'absence d'au moins trente jours pour accident du travail — l'employeur saisit le service, qui organise l'examen. Celle-ci couvre l'arrêt de MOINS de trente jours pour la même cause — l'employeur informe le médecin du travail, qui apprécie l'opportunité d'un nouvel examen. Les deux ne se recouvrent pas.\\n\\nLE FAIT EST LA PHRASE ENTIÈRE, parce que le texte n'a aucune ponctuation autour de « de tout arrêt de travail d'une durée inférieure à trente jours pour cause d'accident du travail » : un extrait plus court commencerait ou finirait au milieu d'une proposition, ce que la garde `fait-dans-le-texte.test.ts` refuse, à raison.\\n\\nAUCUN DÉLAI dans le texte : la page n'en affiche pas, et aucun champ « sous N jours » n'est ajouté.\\n\\nPORTÉE PAR L'ÉTABLISSEMENT, PAS PAR LE SALARIÉ, pour la même raison que `sante-travail-etablissement-examen-de-reprise` : la fiche d'un salarié ne doit rien laisser deviner d'un arrêt ni de sa cause (`docs/rgpd.md` § 2.3).",
+      "ENCODÉE LE 2026-09-26 sur la page « Quand ça arrive » (ADR-037), le jour où l'article a été lu pour la première fois. Le produit n'observe pas le fait ; il dit la règle, sans date, sans état, sans case.\n\nLA SŒUR DE L'EXAMEN DE REPRISE, ET SON COMPLÉMENT EXACT. `R. 4624-31` couvre l'absence d'au moins trente jours pour accident du travail — l'employeur saisit le service, qui organise l'examen. Celle-ci couvre l'arrêt de MOINS de trente jours pour la même cause — l'employeur informe le médecin du travail, qui apprécie l'opportunité d'un nouvel examen. Les deux ne se recouvrent pas.\n\nLE FAIT EST LA PHRASE ENTIÈRE, parce que le texte n'a aucune ponctuation autour de « de tout arrêt de travail d'une durée inférieure à trente jours pour cause d'accident du travail » : un extrait plus court commencerait ou finirait au milieu d'une proposition, ce que la garde `fait-dans-le-texte.test.ts` refuse, à raison.\n\nAUCUN DÉLAI dans le texte : la page n'en affiche pas, et aucun champ « sous N jours » n'est ajouté.\n\nPORTÉE PAR L'ÉTABLISSEMENT, PAS PAR LE SALARIÉ, pour la même raison que `sante-travail-etablissement-examen-de-reprise` : la fiche d'un salarié ne doit rien laisser deviner d'un arrêt ni de sa cause (`docs/rgpd.md` § 2.3).",
+  },
+
+  {
+    id: "sante-travail-etablissement-information-possibilite-prereprise",
+    domaine: "sante_travail",
+    libelle: "L'employeur informe le travailleur de la possibilité pour celui-ci de solliciter l'organisation de l'examen de préreprise",
+    description:
+      "« En cas d'absence au travail justifiée par une incapacité résultant de maladie ou d'accident d'une durée supérieure à une durée fixée par décret, le travailleur peut bénéficier d'un examen de préreprise par le médecin du travail, notamment pour étudier la mise en œuvre des mesures d'adaptation individuelles prévues à l'article L. 4624-3, organisé à l'initiative du travailleur, du médecin traitant, des services médicaux de l'assurance maladie ou du médecin du travail, dès lors que le retour du travailleur à son poste est anticipé. » « L'employeur informe le travailleur de la possibilité pour celui-ci de solliciter l'organisation de l'examen de préreprise. » (L. 4624-2-4) La durée fixée par décret : « En vue de favoriser le maintien dans l'emploi, les travailleurs en arrêt de travail d'une durée de plus de trente jours peuvent bénéficier d'une visite de préreprise. » (R. 4624-29)",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "L. 4624-2-4 (examen de préreprise ; l'employeur informe le travailleur de la possibilité de le solliciter)",
+        article: "L. 4624-2-4",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043891306",
+        note: "« En cas d'absence au travail justifiée par une incapacité résultant de maladie ou d'accident d'une durée supérieure à une durée fixée par décret, le travailleur peut bénéficier d'un examen de préreprise par le médecin du travail, notamment pour étudier la mise en œuvre des mesures d'adaptation individuelles prévues à l'article L. 4624-3, organisé à l'initiative du travailleur, du médecin traitant, des services médicaux de l'assurance maladie ou du médecin du travail, dès lors que le retour du travailleur à son poste est anticipé. L'employeur informe le travailleur de la possibilité pour celui-ci de solliciter l'organisation de l'examen de préreprise. » Relu le 2026-09-26 sur sa page propre, deux alinéas ; « L'employeur informe » et « solliciter l'organisation de l'examen de préreprise » confirmés par une requête ciblée. Création par la loi n° 2021-1018 du 2 août 2021, art. 27, en vigueur le 31 mars 2022.",
+        versionConstatee: "2022-03-31",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4624-29 (la durée fixée par décret : un arrêt de travail de plus de trente jours)",
+        article: "R. 4624-29",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045371016",
+        note: "« En vue de favoriser le maintien dans l'emploi, les travailleurs en arrêt de travail d'une durée de plus de trente jours peuvent bénéficier d'une visite de préreprise. » Relu le 2026-09-26 sur sa page propre.",
+        versionConstatee: "2022-03-31",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    faitGenerateur:
+      "En cas d'absence au travail justifiée par une incapacité résultant de maladie ou d'accident d'une durée supérieure à une durée fixée par décret",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    typologies: { travail: true },
+    porteur: "etablissement",
+    transmet: [],
+    notesInternes:
+      "ENCODÉE LE 2026-09-26 sur la page « Quand ça arrive » (ADR-037). Trouvée par la contre-lecture du lot `R. 4624-29` à `-33` : ce lot avait écrit que la préreprise n'imposait rien à l'employeur, en ne lisant que les articles réglementaires ; la loi, elle, lui impose d'informer le travailleur.\\n\\nLE FAIT EST LA PROPOSITION DE TÊTE DE L'ARTICLE, entière : « En cas d'absence … d'une durée supérieure à une durée fixée par décret ». La durée, plus de trente jours, vient de `R. 4624-29`, cité dans la description plutôt que substitué dans le fait — le fait reste un extrait du texte.\\n\\nAUCUN DÉLAI ni moment dans le texte : il ne dit pas QUAND l'employeur informe. Aucun champ, aucune date.\\n\\nPORTÉE PAR L'ÉTABLISSEMENT, comme l'examen de reprise et l'information du médecin sur un arrêt de moins de trente jours : la fiche d'un salarié ne doit rien laisser deviner d'un arrêt (`docs/rgpd.md` § 2.3).\\n\\nTROIS LIGNES SŒURS, qui ne se recouvrent pas : arrêt de plus de trente jours → informer le travailleur de la préreprise (celle-ci) ; fin d'un arrêt ouvrant l'examen de reprise → saisir le service (`R. 4624-31`) ; arrêt de moins de trente jours pour accident du travail → informer le médecin (`R. 4624-33`).",
   },
 
   {
