@@ -9,6 +9,7 @@ import {
   type MotifVersion,
   type VersionActionState,
 } from "@/lib/versions/motifs";
+import { TRANSMISSION_DUERP_SPST } from "@/lib/referentiels/conformite/textes-duerp";
 
 export function CreerVersionForm({
   duerpId,
@@ -107,6 +108,11 @@ export function CreerVersionForm({
       {state.status === "success" && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
           Version v{state.numero} créée. Le PDF est disponible ci-dessous.
+        </p>
+      )}
+      {state.status === "success" && (
+        <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+          {`« ${TRANSMISSION_DUERP_SPST} » (art. L. 4121-3-1, VI, du Code du travail). Rojer ne transmet pas le document et n'en garde pas trace.`}
         </p>
       )}
 

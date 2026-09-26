@@ -257,7 +257,7 @@ export function CotationForm({
             label="Dernières mesures physiques"
             type="date"
             defaultValue={initial.dateMesuresPhysiques ?? ""}
-            aide="Bruit (R. 4432), éclairement (R. 4223-4), ambiances thermiques, vibrations (R. 4441). À renseigner si l'activité impose une mesure par un organisme habilité."
+            aide="Date des dernières mesures physiques de ce risque, si des mesures ont été réalisées (bruit, éclairement, ambiances thermiques, vibrations)."
           />
         </div>
 

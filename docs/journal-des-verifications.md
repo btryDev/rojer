@@ -1089,6 +1089,30 @@ rend **onze** qui admettent l'IGH : trois propres (`elec-igh-annuelle`,
 `incendie-igh-moyens-secours-annuelle`,
 `incendie-igh-charge-calorifique-quinquennale`) et huit d'ascenseur, ouvertes à
 tous les régimes.
+### C31 · 2026-09-26 — Trois manques du document unique, dits à qui le tient
+
+**Le constat** (instruction des neuf manques « module », lecture seule) : le
+produit a le module du document unique, mais ne disait pas à qui le tient
+trois choses que le Code met à sa charge — la transmission au service de
+prévention et de santé au travail à chaque mise à jour (`L. 4121-3-1` VI),
+l'annexe d'exposition (`R. 4121-1-1`, dont l'absence n'était imprimée que si
+un risque portait une saisie), le renouvellement quinquennal d'un mesurage du
+bruit (`R. 4433-2`). Et l'aide du champ « Dernières mesures physiques »
+affirmait qu'une mesure se fait « par un organisme habilité » : pour le bruit,
+le texte dit « personnes compétentes ».
+
+**Relu.** `L. 4121-3-1` VI de première main, concordant avec l'instruction.
+`R. 4121-1-1` et `R. 4433-2` : verbatim du corpus, confirmé par l'instruction.
+
+**Appliqué.** `src/lib/referentiels/conformite/textes-duerp.ts`, une écriture
+par texte, confrontée au corpus par un test éprouvé sur l'ancien nom du
+service (« service de santé au travail ») ; message de validation d'une
+version ; mentions du PDF (transmission, annexe non produite — toujours) ;
+trois risques bruit ; aide du champ corrigée. Aucune obligation n'entre, le
+statut des trois reste `obligation_manquante` : les faire sortir est la
+décision E1. `R. 4434-9` n'est PAS annoncé : ses articles de renvoi ne sont
+pas lus.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

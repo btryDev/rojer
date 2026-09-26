@@ -26,6 +26,10 @@ import {
   MAJ_DUERP_INFORMATION_NOUVELLE,
   enMinuscule,
 } from "@/lib/referentiels/conformite/texte-r4121-2";
+import {
+  ANNEXE_EXPOSITION_NON_PRODUITE,
+  TRANSMISSION_DUERP_SPST,
+} from "@/lib/referentiels/conformite/textes-duerp";
 
 const s = StyleSheet.create({
   page: {
@@ -854,11 +858,15 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
             ses versions antérieures (loi du 2 août 2021) ;
           </Text>
           <Text>
+            {`• « ${TRANSMISSION_DUERP_SPST} » (art. L. 4121-3-1, VI) ;`}
+          </Text>
+          <Text>
             • tenu à disposition des travailleurs, du CSE le cas échéant, du
             médecin du travail, des agents de l&apos;inspection du travail et
             des agents des services de prévention de la Carsat.
           </Text>
         </View>
+        <Text style={{ marginTop: 8 }}>{ANNEXE_EXPOSITION_NON_PRODUITE}</Text>
 
         {entreprise.effectif >= 50 && (
           <>

@@ -237,7 +237,7 @@ export const bureau: Referentiel = {
     {
       id: "bur-bruit-openspace",
       libelle: "Bruit en bureaux ouverts",
-      description: "INRS Travail de bureau : « bruit en bureaux ouverts ». ED 840 fiche 11.",
+      description: "INRS Travail de bureau : « bruit en bureaux ouverts ». ED 840 fiche 11. « En cas de mesurage, celui-ci est renouvelé au moins tous les cinq ans. » (art. R. 4433-2)",
       unitesAssociees: ["bur-poste-ecran"],
       graviteParDefaut: 1,
       probabiliteParDefaut: 3,
