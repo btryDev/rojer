@@ -10,7 +10,14 @@ const etat = (
   dateDerniereVersion: Date | null,
   effectif: number,
   ouvert = true,
-) => evaluerEtatDuerp({ ouvert, dateDerniereVersion, effectif }, NOW);
+) => evaluerEtatDuerp(
+    {
+      ouvert,
+      dateDerniereVersion,
+      effectifs: { entreprise: effectif, site: effectif },
+    },
+    NOW,
+  );
 
 describe("evaluerEtatDuerp — pas de DUERP", () => {
   it("ne reproche rien à un dossier qui n'a pas commencé", () => {
@@ -83,7 +90,7 @@ describe("evaluerEtatDuerp — arithmétique calendaire", () => {
     // 2028 est bissextile : « + 365 jours » à partir du 1er mars 2027
     // tomberait le 29 février 2028, un jour trop tôt.
     const e = evaluerEtatDuerp(
-      { ouvert: true, dateDerniereVersion: instantCivil(2027, 3, 1), effectif: 20 },
+      { ouvert: true, dateDerniereVersion: instantCivil(2027, 3, 1), effectifs: { entreprise: 20, site: 20 } },
       instantCivil(2028, 2, 29, 12),
     );
     expect(e.dateLimiteMaj).toEqual(instantCivil(2028, 3, 1));

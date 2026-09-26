@@ -21,6 +21,7 @@ import {
   projeterEtablissement,
   type EquipementMatching,
   type SourceEtablissement,
+  phraseEffectifAConfirmer,
 } from "@/lib/matching";
 import type { Obligation } from "@/lib/referentiels/conformite";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
@@ -37,6 +38,13 @@ export type LigneEtatPermanent = {
   /** `null` = non déclaré. Sinon la date de la déclaration. */
   declareLe: Date | null;
   note: string | null;
+  /**
+   * La phrase « à confirmer » quand la ligne n'est retenue que par la prudence
+   * d'un seuil compté sur l'entreprise (C37, M1) — le CSE et le règlement
+   * intérieur vivent sur CET écran, et c'est ici que le dirigeant doit le lire.
+   * `null` sinon.
+   */
+  aConfirmer: string | null;
 };
 
 export type GroupeEtatsPermanents = {
@@ -145,6 +153,12 @@ export async function listerEtatsPermanents(
       pieceAttendue: o.pieceAttendue,
       declareLe: d?.declareLe ?? null,
       note: d?.note ?? null,
+      aConfirmer: app.effectifAConfirmer
+        ? phraseEffectifAConfirmer(
+            app.effectifAConfirmer,
+            "cette obligation ne vous concerne pas",
+          )
+        : null,
     };
 
     if (mode.compteDansLEnTete) {

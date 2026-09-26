@@ -14,6 +14,7 @@ import type {
 // Type seul : l'import est effacé à la compilation, il ne crée donc pas de
 // cycle avec `prescriptions/schema.ts`, qui importe une valeur d'ici.
 import type { SourcePrescription } from "@/lib/prescriptions/schema";
+import type { EffectifsDeclares } from "./effectif-entreprise";
 
 /**
  * Types utilisés par le moteur de matching (étape 5, ADR-005).
@@ -150,6 +151,12 @@ export type ObligationApplicable = {
    * référentiel pour tous les équipements déclencheurs.
    */
   surcharges?: Record<string, SurchargePeriodicite>;
+  /**
+   * Les deux effectifs déclarés, quand la ligne n'est retenue que par la
+   * prudence d'un seuil compté sur l'entreprise (`effectifRetenuPourSeuil`) —
+   * absent sinon. Les écrans l'affichent « à confirmer » (C37, M1).
+   */
+  effectifAConfirmer?: EffectifsDeclares;
 };
 
 // -----------------------------------------------------------------------------

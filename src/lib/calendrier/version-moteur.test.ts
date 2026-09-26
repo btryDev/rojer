@@ -123,13 +123,14 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 5,
-  // INCRÉMENTÉ le 2026-09-26 (C37, `lot/effectif-entreprise`) : les seuils du
-  // CSE, de la formation de ses élus et du règlement intérieur se comparent à
-  // l'effectif de l'ENTREPRISE (`effectifMaille`, `evaluerEffectif`). OUI, la
-  // régénération écrit autrement : une entreprise dont l'effectif déclaré
-  // atteint le seuil sans qu'aucun de ses sites l'atteigne voit la ligne
-  // apparaître. Aucune ne disparaît (le site au seuil retient « à confirmer »).
+  version: 4,
+  // Recopiée SANS incrément le 2026-09-26 (C37, `lot/effectif-entreprise`) :
+  // les seuils d'entreprise se comparent à `Entreprise.effectif`. NON, la
+  // régénération n'écrit pas autrement : les obligations d'établissement à
+  // seuil sont des états permanents, que le générateur saute, et la
+  // formation des élus naît des titres (contre-lecture : 256 couples, zéro
+  // calendrier différent). Un incrément à 5, posé d'abord, a été retiré avant
+  // livraison. Voir le commentaire de `VERSION_MOTEUR_CALENDRIER`.
   // INCRÉMENTÉ le 2026-09-20 (décision de la propriétaire) : le silence sur
   // les locaux à sommeil ne retient plus que là où le sommeil est plausible.
   // OUI, la régénération écrit autrement : les ERP de 5ᵉ catégorie hors de ces
@@ -197,7 +198,7 @@ const RELEVE = {
   // vérification et le formulaire des prescriptions, réexporté par
   // `prescriptions/schema.ts`, absent de `calendrier/` et de
   // `prescriptions/actions.ts` (décision de la session de coordination).
-  empreinte: "2a6cff9893c2c913",
+  empreinte: "3501f1d31416ed4c",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

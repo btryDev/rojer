@@ -74,21 +74,20 @@ import {
  * retour, s'il devait se faire, prendrait le numéro suivant — les versions ne
  * sont qu'une suite croissante.
  *
- * `5` (2026-09-26, C37, `lot/effectif-entreprise` — À SIGNALER À LA
- * PROPRIÉTAIRE AVANT DE FUSIONNER) : LES SEUILS COMPTÉS SUR L'ENTREPRISE SE
- * COMPARENT À L'EFFECTIF DE L'ENTREPRISE. `evaluerEffectif`
- * (`matching/engine.ts`) lit `effectifMaille` : le CSE, la formation de ses
- * élus et le règlement intérieur (L. 2311-2, L. 2315-18, L. 1311-2, comptés
- * selon L. 1111-2 sans les apprentis de L. 1111-3) se comparent à
- * `Entreprise.effectif` ; la restauration (R. 4228-22/-23, « décomptés par
- * établissement ») reste sur `effectifSurSite`. Des lignes peuvent APPARAÎTRE
- * — une entreprise déclarée à onze ou plus dont aucun site n'atteint onze —,
- * aucune ne peut disparaître : un site au seuil sous une entreprise déclarée
- * en dessous retient la ligne « à confirmer ». Le référentiel passe en même
- * temps à `2026-09-26.9`, ce qui désynchronise déjà chaque dossier : cet
- * incrément répond à la question du test, il ne régénère rien de plus.
+ * PAS DE `5` POUR C37 (2026-09-26, `lot/effectif-entreprise`). Les seuils
+ * comptés sur l'entreprise se comparent désormais à `Entreprise.effectif`
+ * (`effectifMaille`, `effectifRetenuPourSeuil`) : des obligations peuvent
+ * entrer dans l'applicabilité. Mais la question de ce fichier est « ce que la
+ * régénération ÉCRIT », et la réponse est NON : les quatre obligations
+ * d'établissement à seuil sont des états permanents (`periodicite: "autre"`),
+ * que le générateur saute, et la formation des élus naît des titres de
+ * salariés. Mesuré par la contre-lecture sur une grille de 256 couples
+ * (site, entreprise) : `genererProchainesVerifications` avant/après, zéro
+ * calendrier différent. Un incrément avait été posé, puis retiré avant toute
+ * livraison — précédent de `MARQUAGE_CONTRACTUEL_LONG`. Le passage du
+ * référentiel à `2026-09-26.9` resynchronise déjà le parc.
  */
-export const VERSION_MOTEUR_CALENDRIER = 5;
+export const VERSION_MOTEUR_CALENDRIER = 4;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la

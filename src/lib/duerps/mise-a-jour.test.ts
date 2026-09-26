@@ -6,7 +6,8 @@ import {
   PIED_MISE_A_JOUR,
 } from "./mise-a-jour";
 
-const tous = (effectif: number) => declencheursMiseAJour(effectif);
+const tous = (effectif: number) =>
+  declencheursMiseAJour({ entreprise: effectif, site: effectif });
 const rang = (effectif: number, r: "1°" | "2°" | "3°") => {
   const d = tous(effectif).find((x) => x.rang === r);
   if (!d) throw new Error(`rang ${r} absent`);

@@ -55,6 +55,11 @@ import type {
 } from "@/lib/referentiels/types-communs";
 import { sommeilPlausiblePourLeType } from "@/lib/referentiels/types-communs";
 import { evaluerPersonnesPresentes } from "./personnes-presentes";
+import {
+  effectifRetenuPourSeuil,
+  phraseEffectifAConfirmer,
+  type EffectifsDeclares,
+} from "./effectif-entreprise";
 import type {
   EquipementMatching,
   EtablissementMatching,
@@ -65,7 +70,18 @@ import type {
 // Étape 1 — Typologie
 // -----------------------------------------------------------------------------
 
-export type ResultatTypologie = { ok: true; raisons: string[] } | { ok: false };
+export type ResultatTypologie =
+  | {
+      ok: true;
+      raisons: string[];
+      /**
+       * Présent quand un seuil compté sur l'entreprise n'est atteint que par
+       * prudence (`effectifRetenuPourSeuil`) : les écrans le portent à côté
+       * de la ligne, pas seulement dans la raison (contre-lecture M1).
+       */
+      effectifAConfirmer?: EffectifsDeclares;
+    }
+  | { ok: false };
 
 /**
  * Évaluation d'un critère de régime : `absent` (non déclaré par
@@ -341,7 +357,10 @@ function evaluerLocauxSommeil(
 function evaluerEffectif(
   t: TypologieApplication,
   etab: EtablissementMatching,
-): { ok: true; raison: string } | { ok: false } | null {
+):
+  | { ok: true; raison: string; aConfirmer?: EffectifsDeclares }
+  | { ok: false }
+  | null {
   if (t.effectifMin === undefined && t.effectifMax === undefined) return null;
 
   // Cette raison est LUE PAR UN DIRIGEANT : le guide « Comprendre » l'affiche
@@ -358,12 +377,23 @@ function evaluerEffectif(
   if (t.effectifMaille === "entreprise") {
     const n = etab.effectifEntreprise;
     if (t.effectifMax !== undefined && n > t.effectifMax) return { ok: false };
-    if (t.effectifMin !== undefined && n < t.effectifMin) {
-      if (etab.effectifSurSite < t.effectifMin) return { ok: false };
-      return {
-        ok: true,
-        raison: `effectif déclaré de l'entreprise ${n}, mais ${etab.effectifSurSite} travailleurs sur ce site — obligation applicable ${seuil} dans l'entreprise, retenue par prudence, à confirmer : si l'écart ne tient pas aux apprentis, mettez à jour l'effectif de l'entreprise`,
+    if (t.effectifMin !== undefined) {
+      // La règle est celle de tous les lecteurs d'un seuil d'entreprise
+      // (`effectif-entreprise.ts`) — une seule, pour que le moteur et les
+      // écrans ne tiennent pas deux doctrines sur le même dossier.
+      const effectifs = {
+        entreprise: n,
+        site: etab.effectifSurSite,
       };
+      const retenu = effectifRetenuPourSeuil(t.effectifMin, effectifs);
+      if (retenu.valeur < t.effectifMin) return { ok: false };
+      if (retenu.aConfirmer) {
+        return {
+          ok: true,
+          aConfirmer: effectifs,
+          raison: `obligation applicable ${seuil} dans l'entreprise, retenue par prudence, à confirmer. ${phraseEffectifAConfirmer(effectifs, "cette obligation ne vous concerne pas")}`,
+        };
+      }
     }
     return {
       ok: true,
@@ -523,6 +553,8 @@ export function matchTypologie(
     if (!effectif.ok) return { ok: false };
     raisons.push(effectif.raison);
   }
+  const effectifAConfirmer =
+    effectif !== null && effectif.ok ? effectif.aConfirmer : undefined;
 
   // 3 bis. Personnes présentes (salariés + public) et champ R. 4227-34.
   //
@@ -606,7 +638,9 @@ export function matchTypologie(
     return { ok: false };
   }
 
-  return { ok: true, raisons };
+  return effectifAConfirmer
+    ? { ok: true, raisons, effectifAConfirmer }
+    : { ok: true, raisons };
 }
 
 // -----------------------------------------------------------------------------
@@ -854,6 +888,9 @@ export function evaluerObligation(
       equipementsConcernes: [],
       porteur: "etablissement",
       raisons,
+      ...(typo.effectifAConfirmer
+        ? { effectifAConfirmer: typo.effectifAConfirmer }
+        : {}),
     };
   }
 
@@ -874,6 +911,9 @@ export function evaluerObligation(
     equipementsConcernes: eq.declencheurs,
     porteur: "equipement",
     raisons,
+    ...(typo.effectifAConfirmer
+      ? { effectifAConfirmer: typo.effectifAConfirmer }
+      : {}),
   };
 }
 

@@ -76,11 +76,17 @@ export function ChezVous({
           {data.duerp.misAJourAnnuel ? (
             <>
               le 1° de l&apos;art. R. 4121-2, qui vise les entreprises
-              d&apos;au moins {SEUIL_MAJ_ANNUELLE_DUERP} salariés,
-              s&apos;applique — la mise à jour est réalisée{" "}
+              d&apos;au moins {SEUIL_MAJ_ANNUELLE_DUERP} salariés,{" "}
+              {data.duerp.aConfirmer
+                ? "est retenu ici par prudence"
+                : "s’applique"}{" "}
+              — la mise à jour est réalisée{" "}
               <strong>au moins chaque année</strong>. Elle l&apos;est aussi{" "}
               {enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)} ; et{" "}
               {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)}.
+              {data.duerp.aConfirmer ? (
+                <> À confirmer : {data.duerp.aConfirmer}</>
+              ) : null}
             </>
           ) : (
             <>

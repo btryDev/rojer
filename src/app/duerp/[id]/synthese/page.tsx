@@ -106,7 +106,10 @@ export default async function SynthesePage({
     {
       ouvert: true,
       dateDerniereVersion: derniereVersion?.createdAt ?? null,
-      effectif: duerp.entreprise.effectif,
+      effectifs: {
+        entreprise: duerp.entreprise.effectif,
+        site: duerp.etablissement.effectifSurSite,
+      },
     },
     aujourdhui,
   );
@@ -538,7 +541,12 @@ export default async function SynthesePage({
           nouvelle version, dont les motifs sont ces trois mêmes cas
           (`lib/versions/motifs.ts`). L'énoncé et le geste se lisent d'un seul
           regard, au lieu que l'un ouvre la page et l'autre la ferme. */}
-      <CarteMiseAJour effectif={duerp.entreprise.effectif} />
+      <CarteMiseAJour
+        effectifs={{
+          entreprise: duerp.entreprise.effectif,
+          site: duerp.etablissement.effectifSurSite,
+        }}
+      />
 
       <section className="carte-board px-7 py-6 sm:px-8">
         <div className="flex flex-wrap items-baseline justify-between gap-3">

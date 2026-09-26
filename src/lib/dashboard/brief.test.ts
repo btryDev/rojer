@@ -16,7 +16,7 @@ function duerpDe(ageJours: number | null, effectif = 20) {
       ouvert: true,
       dateDerniereVersion:
         ageJours === null ? null : new Date(now.getTime() - ageJours * 86_400_000),
-      effectif,
+      effectifs: { entreprise: effectif, site: effectif },
     },
     now,
   );

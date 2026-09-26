@@ -7,6 +7,7 @@ import { useTransition } from "react";
 import { Check, FileText } from "lucide-react";
 import { declarerEnPlace, retirerDeclaration } from "@/lib/etats-permanents/actions";
 import { formaterDateFr } from "@/lib/dates";
+import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import {
   libelleGeste,
   libelleRetour,
@@ -36,6 +37,7 @@ export function LigneEtat({
   mode,
   pieceAttendue,
   declareLe,
+  aConfirmer = null,
 }: {
   etablissementId: string;
   obligationId: string;
@@ -43,6 +45,12 @@ export function LigneEtat({
   mode: "etat" | "fait";
   pieceAttendue: string | null;
   declareLe: string | null;
+  /**
+   * « À confirmer » : la ligne n'est retenue que par la prudence d'un seuil
+   * compté sur l'entreprise (C37). La phrase dit de quoi conclure, le lien
+   * mène à l'effectif à corriger.
+   */
+  aConfirmer?: { phrase: string; entrepriseId: string } | null;
 }) {
   const [pending, startTransition] = useTransition();
   const declare = declareLe !== null;
@@ -70,6 +78,22 @@ export function LigneEtat({
             <FileText className="size-3 shrink-0" aria-hidden />
             Le texte attend un écrit : {pieceAttendue}
           </p>
+        )}
+
+        {aConfirmer && (
+          <div className="mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            <p className="m-0">
+              <strong className="font-semibold text-[color:var(--board-ink)]">
+                À confirmer.
+              </strong>{" "}
+              {aConfirmer.phrase}
+            </p>
+            <LienEffectifEntreprise
+              entrepriseId={aConfirmer.entrepriseId}
+              effectif={null}
+              className="m-0 mt-1 text-[12px] leading-[1.5]"
+            />
+          </div>
         )}
 
       </div>

@@ -15,6 +15,13 @@ export {
   type ResultatPrescriptions,
 } from "./prescriptions";
 export { projeterEtablissement, type SourceEtablissement } from "./projection";
+export {
+  effectifRetenuPourSeuil,
+  seuilEntrepriseAtteint,
+  phraseEffectifAConfirmer,
+  type EffectifsDeclares,
+  type EffectifRetenu,
+} from "./effectif-entreprise";
 export type {
   EquipementMatching,
   EtablissementMatching,

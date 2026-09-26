@@ -6,6 +6,7 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import { prioriser } from "@/lib/cotation";
+import { seuilEntrepriseAtteint } from "@/lib/matching/effectif-entreprise";
 import { formaterDateCourteFr, formaterDateLongueFr } from "@/lib/dates";
 import { LABEL_STATUT, LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
 import { estHorsReferentiel } from "@/lib/risques/helpers";
@@ -863,7 +864,13 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
         </View>
         <Text style={{ marginTop: 8 }}>{ANNEXE_EXPOSITION_NON_PRODUITE}</Text>
 
-        {entreprise.effectif >= 50 && (
+        {/* La règle commune aux seuils d'entreprise (C37) : l'entreprise, ou
+            le site au seuil par prudence. Une version figée avant C37 ne
+            porte que le site, et se lit comme avant. */}
+        {seuilEntrepriseAtteint(50, {
+          entreprise: entreprise.effectifEntreprise ?? entreprise.effectif,
+          site: entreprise.effectif,
+        }).atteint && (
           <>
             <Text style={[s.small, { marginTop: 10 }]}>
               <Text style={{ fontFamily: "Helvetica-Bold" }}>

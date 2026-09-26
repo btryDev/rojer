@@ -205,7 +205,10 @@ export async function GET(
         {
           ouvert: true,
           dateDerniereVersion: versionCourante.createdAt,
-          effectif: etablissement.entreprise.effectif,
+          effectifs: {
+            entreprise: etablissement.entreprise.effectif,
+            site: etablissement.effectifSurSite,
+          },
         },
         maintenant,
       );

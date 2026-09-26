@@ -31,6 +31,11 @@
 
 import { EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
 import {
+  phraseEffectifAConfirmer,
+  seuilEntrepriseAtteint,
+  type EffectifsDeclares,
+} from "@/lib/matching/effectif-entreprise";
+import {
   MAJ_DUERP_AMENAGEMENT_IMPORTANT,
   MAJ_DUERP_ANNUELLE,
   MAJ_DUERP_INFORMATION_NOUVELLE,
@@ -82,13 +87,24 @@ export const PIED_MISE_A_JOUR =
  * Les trois déclencheurs, dans l'ordre de l'article, quel que soit
  * l'effectif.
  */
-export function declencheursMiseAJour(effectif: number): DeclencheurMaj[] {
-  const soumisAnnuel = effectif >= EFFECTIF_MAJ_ANNUELLE;
+export function declencheursMiseAJour(
+  effectifs: EffectifsDeclares,
+): DeclencheurMaj[] {
+  // La règle commune à tous les seuils d'entreprise (C37) : le même dossier
+  // ne lit pas une doctrine ici et une autre sur le tableau de bord.
+  const seuil = seuilEntrepriseAtteint(EFFECTIF_MAJ_ANNUELLE, effectifs);
+  const soumisAnnuel = seuil.atteint;
+  const effectif = effectifs.entreprise;
   return [
     {
       rang: "1°",
       quand: MAJ_DUERP_ANNUELLE,
-      portee: soumisAnnuel
+      portee: seuil.aConfirmer
+        ? "Ce cas est suivi ici par prudence, à confirmer. " +
+          phraseEffectifAConfirmer(effectifs) +
+          " L'échéance court à partir de la date de votre dernière version " +
+          "validée."
+        : soumisAnnuel
         ? `Vous déclarez ${salaries(effectif)} : ce cas s'applique. ` +
           "L'échéance court à partir de la date de votre dernière version " +
           "validée — c'est le seul des trois cas que ce dossier peut suivre."

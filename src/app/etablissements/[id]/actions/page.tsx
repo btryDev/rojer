@@ -135,7 +135,10 @@ export default async function PlanActionsPage({
   const baseHref = `/etablissements/${id}/actions`;
   // Le calendrier de mise en œuvre n'est imposé qu'à partir de cinquante
   // salariés (L. 4121-3-1). En dessous, la tuile compte sans rien exiger.
-  const exigence = exigenceEcheanceActions(etab.entreprise.effectif);
+  const exigence = exigenceEcheanceActions({
+    entreprise: etab.entreprise.effectif,
+    site: etab.effectifSurSite,
+  });
   // Ce que les fiches ouvertes d'ici devront savoir pour y revenir : le
   // plan d'actions *avec ses filtres*, pas la liste par défaut.
   const depuisCetteListe = origineDepuis(baseHref, { origine, enCours });

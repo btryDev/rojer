@@ -18,7 +18,7 @@ function duerpDe(ageJours: number | null, effectif = 20): EtatDuerp {
         ageJours === null
           ? null
           : new Date(NOW.getTime() - ageJours * 86_400_000),
-      effectif,
+      effectifs: { entreprise: effectif, site: effectif },
     },
     NOW,
   );
