@@ -2817,14 +2817,90 @@ dans les 54 cas ERP avec équipements.
 **Sceau** : `2026-09-26.10+169-b35a654fd2941809+moteur.4`. La version est
 neuve, l'empreinte inchangée (précédent `.8`) ; 169 + 0 − 0 = 169.
 
-**Reste ouvert** :
-- `labels.ts` affiche toujours que les seuils de catégorie « comptent le
-  public admis, jamais les salariés ». L'écart avec `R. 143-19` est relevé
-  au corpus, non tranché.
-- Les autres sœurs du livre II citent leur article sans réserve de
-  catégorie (BAES, SSI, désenfumage, RIA, groupe électrogène, CH 58). MS 73
-  § 2 est cité en contexte des extincteurs.
-- `L. 4711-1`, devenu fondement, n'est relu que par agent.
+**Seconde passe, le même jour, sur demande de la session de coordination.**
+
+**D. La même réserve pour toutes les sœurs du livre II servies aux N5.**
+Le livre III a été relu sur Légifrance le 2026-09-26, sur les pages des
+articles :
+- `PE 4` (en vigueur depuis le 01/07/2026). Le § 1 fait vérifier, « à la
+  construction et avant l'ouverture », par des personnes ou organismes
+  agréés, les SDI, le désenfumage et les installations électriques « dans
+  les établissements avec locaux à sommeil ». Il impose aussi un contrat
+  annuel d'entretien des SDI. Le § 2 dit : « Tous les trois ans au plus,
+  l'exploitant doit procéder, ou faire procéder, par des techniciens
+  compétents, aux opérations d'entretien et de vérification des
+  installations et des équipements techniques de son établissement ». Sa
+  liste nomme le chauffage, l'éclairage, les installations électriques, le
+  gaz, les appareils de cuisson, les circuits d'extraction, les ascenseurs,
+  les moyens de secours, et se termine par « etc. ».
+- `PE 15` § 1 (en vigueur depuis le 01/03/2006) : « leur mise en œuvre
+  devra être réalisée dans les conditions définies au livre II, titre Ier,
+  chapitre X ».
+- `PE 20` § 2 (LEGIARTI000024766756, en vigueur depuis le 22/05/2004) : la
+  même formule, pour le chapitre V.
+
+Quinze obligations, et non les sept de la demande : la garde a trouvé
+toutes les sœurs, y compris l'éclairage de sécurité (`EC 14`, deux lignes),
+la mise en service électrique (`GE 6` à `GE 8`) et les cinq lignes de
+cuisine (`GC 21`, `GC 22`, `GC 1`, `GC 8`, `MS 73`). Pour chacune :
+- chaque `reference` au livre II porte « — livre II, établissements des
+  quatre premières catégories » ;
+- la description dit ce que le livre III porte en 5ᵉ, puis « Le calendrier
+  y maintient pourtant cette échéance, par sur-application assumée ».
+
+Aucun renvoi n'est ajouté :
+- **désenfumage** : `PE 4` § 2 ne le nomme pas, et la description le dit
+  (« se termine par « etc. » ») ;
+- **CH 58 et cuisine** : `PE 20` § 2 et `PE 15` § 1 visent la « mise en
+  œuvre », et la description dit qu'ils ne parlent ni d'entretien ni de
+  vérification ;
+- **groupe électrogène** : sa note rapprochait `PE 4` § 1. Or le § 1 ne
+  vise que la construction et l'ouverture. La description cite le § 2, et
+  la note le dit.
+
+Garde neuve (`conformite.test.ts`) : toute référence au livre II (titre Ier,
+préfixes GE, CO, AM, DF, CH, GZ, EL, EC, AS, GC, MS) servie à un ERP que sa
+typologie peut classer en 5ᵉ dit son champ. **Éprouvée avant correction**,
+rouge sur 23 références : `expected [ …(23) ] to deeply equal []`, dont
+`incendie-erp-desenfumage-annuelle — Arrêté du 25 juin 1980, art. DF 10`.
+Verte après.
+
+**E. `L. 4711-1` en première main.** La page de l'article
+(LEGIARTI000006903383) a été lue deux fois, à l'aveugle puis de façon
+ciblée. Le verbatim est identique à la `citationCle`, la version est « en
+vigueur depuis le 01/05/2008 ». Aucune mention « Modifié par » ne s'affiche
+sur trois pages consultées : `modifiePar: null`, réponse déclarée. L'entrée
+passe à `premiere_main`, avec l'URL de l'article.
+
+Le fondement du registre remonte à « 5 · première main ». Mouvement du
+tableau des fondements depuis la première passe :
+- niveau 5 : 73 + 1 = 74 ;
+- niveau 4 : 90 − 1 = 89.
+
+Les lectures datées du 2026-08-31 passent de 63 à 62, celles du 2026-09-26
+de 26 à 27.
+
+**F. `etablissements/labels.ts` : établi, pas arbitré.**
+- « comptent le public admis, jamais les salariés » est un commentaire
+  JSDoc, il n'est pas affiché. Les libellés affichés
+  (`LABEL_CATEGORIE_ERP`) ne portent que les fourchettes. Les deux aides
+  affichées disent déjà public ET personnel, avec `R. 143-19` :
+  `StepTypologie.tsx` (« majoré de celui du personnel ») et
+  `EtablissementForm.tsx`.
+- La catégorie est DÉCLARÉE par un `<select>` au parcours et sur la fiche.
+  `onboarding/deduction-erp.ts` (`deduireCategorieErp*`) n'est importé par
+  aucun fichier hors tests. Rien n'est calculé.
+- Aucune correction : rien d'affiché n'est faux. Le commentaire reste
+  contraire au texte, et l'écart est déjà relevé au corpus.
+
+**Applicabilité** : la grille de 144 cas, relancée après cette passe, est
+identique au caractère près à celle de `d4681ef`. Sceau inchangé :
+`2026-09-26.10+169-b35a654fd2941809+moteur.4`. Seuls des descriptions, des
+`reference` et des notes ont bougé, sur la même branche non publiée.
+
+**Reste ouvert** : la lecture de `PE 20` § 2 et de `PE 15` § 1 — « mise en
+œuvre », vérification comprise ou non — que les notes de CH 58 demandent
+de trancher ensemble. La description le dit sans le trancher.
 
 ### Ce que la chronologie donne à voir
 
