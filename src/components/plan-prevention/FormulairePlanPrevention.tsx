@@ -16,6 +16,18 @@ import {
   RUBRIQUES_R4512_8,
   URL_R4512_8,
 } from "@/lib/plan-prevention/contenu-r4512-8";
+import {
+  CHAPITRE_R4512,
+  CONSTAT_R4512_1,
+  CONSTAT_R4512_9,
+  CONSTAT_R4512_11,
+  R4463_8,
+  R4512_1,
+  R4512_9,
+  R4512_11,
+  URL_R4512_9,
+  URL_R4512_11,
+} from "@/lib/plan-prevention/annonces-plan";
 
 type PrestataireLite = {
   id: string;
@@ -217,7 +229,20 @@ export function FormulairePlanPrevention({
 
       {/* Les sections ne sont plus numérotées : la numérotation ne se garde
           que si l'ordre porte une information. */}
-      <SectionChamps titre="Entreprise extérieure" chapeau="Qui intervient chez vous.">
+      {/* R. 4512-1, dit ici parce que c'est la section qui nomme L'entreprise
+          extérieure, au singulier : le modèle n'en connaît qu'une par plan.
+          Le texte entre guillemets, l'antécédent de « le présent chapitre »
+          et le constat sur le produit hors des guillemets — rien d'autre.
+          `annonces-plan.ts` les écrit une fois. */}
+      <SectionChamps
+        titre="Entreprise extérieure"
+        chapeau={
+          <>
+            Qui intervient chez vous. Art. R. 4512-1 : « {R4512_1} »{" "}
+            {CHAPITRE_R4512} {CONSTAT_R4512_1}
+          </>
+        }
+      >
         {prestataires.length > 0 && (
           <fieldset className="m-0 border-0 p-0">
             <legend className="label-board">
@@ -480,7 +505,14 @@ export function FormulairePlanPrevention({
 
       <SectionChamps
         titre="Analyse conjointe des risques d'interférence"
-        chapeau="Pour chaque risque identifié lors de l'inspection, indiquez la mesure prise par chaque partie."
+        // R. 4463-8 cité entier : « le cas échéant » laisse l'appréciation
+        // aux employeurs, et c'est au texte de le dire, pas à un exemple.
+        chapeau={
+          <>
+            Pour chaque risque identifié lors de l&apos;inspection, indiquez la
+            mesure prise par chaque partie. Art. R. 4463-8 : « {R4463_8} »
+          </>
+        }
       >
         {/* Les risques sont séparés par un filet plein : le board sépare
             ainsi, ou pas du tout — il n'a pas de pointillé. */}
@@ -717,6 +749,31 @@ export function FormulairePlanPrevention({
             href={URL_R4512_8}
           />
         </div>
+
+        {/* DEUX PIÈCES QUE D'AUTRES ARTICLES FONT FIGURER DANS LE PLAN, et
+            pour lesquelles ce formulaire n'a pas de champ. Les taire laissait
+            croire que les cinq rubriques ci-dessus sont tout le plan. Le
+            constat est sur le produit ; ce qu'est une « entreprise
+            concernée » ou un « dossier technique », le texte le dit, pas nous. */}
+        {[
+          { ref: "R. 4512-9", texte: R4512_9, constat: CONSTAT_R4512_9, href: URL_R4512_9 },
+          { ref: "R. 4512-11", texte: R4512_11, constat: CONSTAT_R4512_11, href: URL_R4512_11 },
+        ].map((a) => (
+          <div
+            key={a.ref}
+            className="border-t border-[color:var(--board-slate-line)] pt-5"
+          >
+            <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+              Art. {a.ref}
+            </p>
+            <p className="m-0 mt-1.5 max-w-[70ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              « {a.texte} » {a.constat}
+            </p>
+            <div className="mt-2">
+              <LegalBadge charte="board" reference={`Art. ${a.ref} CT`} href={a.href} />
+            </div>
+          </div>
+        ))}
       </SectionChamps>
 
       {state.status === "error" && !state.fieldErrors && (

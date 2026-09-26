@@ -1089,6 +1089,76 @@ rend **onze** qui admettent l'IGH : trois propres (`elec-igh-annuelle`,
 `incendie-igh-moyens-secours-annuelle`,
 `incendie-igh-charge-calorifique-quinquennale`) et huit d'ascenseur, ouvertes à
 tous les régimes.
+
+### C30 · 2026-09-26 — Cinq manques du plan de prévention, dits à qui l'utilise
+
+**Le constat.** `R. 4512-1`, `R. 4512-9`, `R. 4512-11`, `R. 4512-12` et
+`R. 4463-8` sont `obligation_manquante`, cause `module`, et touchent la cible :
+le produit a le plan de prévention et n'en disait rien. Le lot les DIT sur
+les surfaces existantes ; il ne les encode pas. Pas de migration, pas de
+champ, statuts inchangés — les changer est une décision de produit.
+
+**Relu à la source, le 2026-09-26**, chacun sur sa page propre : structure
+(nombre d'alinéas, d'items, de phrases) demandée sans rien suggérer, recopie
+intégrale, puis questions fermées sur la formulation décisive — « informe
+par écrit », le débiteur « le chef de l'entreprise utilisatrice », l'absence
+de tout délai (`R. 4512-12`) ; « sont à nouveau applicables à ces derniers »
+(`R. 4512-1`) ; « Cette liste figure dans le plan de prévention. »
+(`R. 4512-9`) ; « sont joints au plan de prévention » et le nombre de phrases
+(`R. 4512-11` — la première réponse en annonçait deux pour une seule
+recopiée ; la question fermée en compte une) ; « tiennent compte, le cas
+échéant », et l'absence de « doivent » (`R. 4463-8`). **Les cinq verbatims du
+corpus sont exacts.** `R. 4512-1` et `-12` passent en `premiere_main`
+(`modifiePar: null`, leur page ne portant que la création par le décret
+n° 2008-244, comme `R. 4515-5` en C24) ; `-9`, `-11` et `R. 4463-8` restent
+`agent_verbatim`, leur texte modificateur n'étant pas ouvert en entier.
+
+**Une seule écriture.** `src/lib/plan-prevention/annonces-plan.ts` porte les
+cinq textes, entiers, et quatre constats sur le produit (« Rojer n'enregistre
+pas l'information prévue au 2°. », « Rojer ne rattache à un plan qu'une seule
+entreprise extérieure. », « Le plan tenu dans Rojer n'a pas de champ pour
+cette liste. », « … ne permet pas d'y joindre ces pièces. »). Surfaces :
+`recommandation` de `diagnostiquerPlan` quand l'écrit est obligatoire (donc la
+carte du formulaire), la fiche du plan (carte `R. 4512-12` sous la même
+condition ; carte « Ce que d'autres articles demandent au plan »), le
+formulaire (chapeaux « Entreprise extérieure » et « Analyse conjointe »,
+section « Contenu minimal »), le fichier 07 du ZIP (en-tête pour `-9`/`-11`,
+par plan pour `-12`). `R. 4463-8` est cité entier, PGC et PPSPS compris :
+couper laissait un sujet singulier devant « tiennent ».
+
+**La garde**, `annonces-plan.test.ts` : égalité de chaque texte au
+`citationCle` du corpus et de chaque URL à la sienne ; les constats sans mot
+de prescription ni délai ; `R. 4512-12` cité si et seulement si l'écrit est
+obligatoire ; aucune seconde copie dans `src/` hors corpus ; chaque surface
+importe et emploie le module. **Éprouvée** sur sept injections, toutes
+rouges : les paraphrases que le dépôt a déjà écrites (le `prescrit` de
+`R. 4463-8`, « du risque lié aux épisodes » ; `R. 4512-12` 2° sans « par
+écrit » ; « s'appliquent de nouveau » pour `R. 4512-1`, la paraphrase du
+brief de ce lot), un constat qui avise (« Pensez à informer l'inspection du
+travail avant le début des travaux. »), une copie recopiée dans la fiche, un
+chapeau de formulaire qui contourne la constante, une `recommandation` qui
+perd l'article. **Ce qu'elle ne prouve pas** : qu'une surface n'ajoute pas,
+à côté de la constante, une phrase de son cru ; la liste des mots de
+prescription est courte et nommée.
+
+**Rayé au corpus**, daté : les deux « pas de déclencheur / d'axe événement »
+(`R. 4512-1`, `R. 4512-12` — la page « Quand ça arrive » existe, ADR-037,
+sans que ces obligations y soient encodées), et les phrases devenues fausses
+(« aucun écran ne mentionne », « rien, à l'écran », « ni le formulaire, ni la
+fiche, ni le ZIP », « aucune section du formulaire », « RIEN n'y nomme la
+chaleur », « nulle part où la loger »). Aucune ligne de
+`docs/chantiers-ouverts.md` ne portait ces articles.
+
+**Appliqué :** référentiel inchangé (`2026-09-26.5`, 167 obligations) ; sceau
+du calendrier mesuré identique avant et après :
+`2026-09-26.5+167-66f005e23f039ca+moteur.4`. `registre-dette.test.ts` n'a pas
+bougé.
+
+**Reste**, faute de décision : les cinq demeurent des manques. Le 2° de
+`R. 4512-12` n'a ni date ni trace ; la liste de `R. 4512-9` n'a pas de
+peuplement possible tant que rien ne rattache un poste au suivi individuel
+renforcé ; le DTA n'existe pas au modèle ; un plan ne connaît qu'une
+entreprise extérieure.
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

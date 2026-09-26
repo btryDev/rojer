@@ -199,7 +199,7 @@ une relecture déjà faite.
 | --- | --- | --- | --- |
 | `arrete-1980-livre-3` | 51 | 59 | 2026-08-26 → 2026-09-26 |
 | `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 |
-| `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 |
+| `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-26 |
 | `arrete-1993-11-04-signalisation` | 14 | 21 | 2026-09-02 |
 | `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-20 |
 | `csp-eau-potable` | 11 | 11 | 2026-09-02 |
@@ -227,7 +227,7 @@ une relecture déjà faite.
 | `code-travail-electricite` | 2 | 8 | 2026-08-31 |
 | `arrete-2011-12-26-electricite` | 2 | 5 | 2026-08-26 |
 | `code-travail-sante-travail` | 2 | 16 | 2026-08-31 → 2026-09-20 |
-| `code-travail-chaleur-intense` | 2 | 8 | 2026-09-20 |
+| `code-travail-chaleur-intense` | 2 | 8 | 2026-09-20 → 2026-09-26 |
 | `code-travail-circulation-lieux` | 2 | 2 | 2026-09-21 |
 | `code-travail-epi-amont` | 2 | 2 | 2026-09-04 |
 | `arrete-1993-03-19-epi` | 2 | 4 | 2026-09-04 |
@@ -240,7 +240,7 @@ une relecture déjà faite.
 | `casf-definition-handicap` | 1 | 1 | 2026-09-03 |
 | `cch-registre-accessibilite` | 1 | 1 | 2026-09-04 |
 
-**20 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01), `code-travail-plan-prevention` (16 articles, lus 2026-09-02), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-20), `csp-eau-potable` (11 articles, lus 2026-09-02), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02), `code-travail-duerp-principes` (6 articles, lus 2026-09-02), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-21), `code-travail-matieres-inflammables` (6 articles, lus 2026-09-02), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03), `cch-classement-erp-igh` (3 articles, lus 2026-09-03), `arrete-1980-livre-1` (2 articles, lus 2026-09-03 → 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
+**20 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-26), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-20), `csp-eau-potable` (11 articles, lus 2026-09-02), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02), `code-travail-duerp-principes` (6 articles, lus 2026-09-02), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-21), `code-travail-matieres-inflammables` (6 articles, lus 2026-09-02), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03), `cch-classement-erp-igh` (3 articles, lus 2026-09-03), `arrete-1980-livre-1` (2 articles, lus 2026-09-03 → 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
 
 Le total du corpus, les articles jamais lus et ceux qui imposent une obligation que le référentiel ne porte pas sont tenus par `pnpm relecture`, qui les compte à la maille du corpus.
 

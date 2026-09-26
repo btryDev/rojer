@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { depuisCleJourCivil, depuisSaisieDateHeure } from "@/lib/dates";
+import { EXTRAIT_R4512_12 } from "./annonces-plan";
 
 /**
  * Plan de prévention — art. R. 4512-6 à R. 4512-12 du code du travail.
@@ -216,7 +217,11 @@ export function diagnostiquerPlan(params: {
     seuil400,
     raisons,
     recommandation: ecritObligatoire
-      ? "Un plan de prévention ÉCRIT est obligatoire avant démarrage des travaux."
+      ? // `R. 4512-12` se lit sous la même condition que cette branche : il
+        // s'ouvre sur « Lorsque l'établissement d'un plan de prévention par
+        // écrit est obligatoire, en application de l'article R. 4512-7 ». Il
+        // est cité entier, sans délai ajouté — l'article n'en fixe pas.
+        `Un plan de prévention ÉCRIT est obligatoire avant démarrage des travaux. Art. R. 4512-12 : « ${EXTRAIT_R4512_12} »`
       : "Le plan reste dû : il naît de l'analyse conjointe dès qu'un risque d'interférence existe, quelle que soit la durée (art. R. 4512-6). Ce sont les 400 heures qui commandent l'écrit, et elles ne sont pas atteintes ici. L'inspection commune préalable et l'accord sur les mesures, eux, restent à faire avant le début des travaux.",
   };
 }

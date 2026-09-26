@@ -160,7 +160,9 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051676941",
       versionEnVigueur: "2025-06-02",
       modifiePar: { texte: "Décret n° 2025-482 du 27 mai 2025 - art. 3 (création)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051676074" },
-      luLe: "2026-09-20",
+      // Relu le 2026-09-26 sur sa page propre ; `lecture` inchangée, comme
+      // les sept autres articles du chapitre.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Le plan de prévention (R. 4512-6), le plan général de coordination et le plan particulier de sécurité et de protection de la santé tiennent compte, le cas échéant, du risque lié aux épisodes de chaleur intense.",
@@ -169,7 +171,7 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       statut: "obligation_manquante",
       cause: "module",
       toucheLaCible: true,
-      motif: "Le module `PlanPrevention` porte le plan de R. 4512-6 et ses lignes de risques d'interférence, mais RIEN n'y nomme la chaleur — vérifié le 2026-09-20 : aucune occurrence de « chaleur » dans `src/lib/plan-prevention`. L'instruction du 2026-09-01 le croyait « déjà servi ». « Le cas échéant » laisse l'appréciation à l'employeur : ce qui manque est une invite à y penser, pas une échéance — le formulaire du plan est un répéteur libre, sans liste de risques proposée, donc il n'y a aujourd'hui nulle part où la loger. PGC et PPSPS sont des pièces de chantier du BTP, hors cible.",
+      motif: "Le module `PlanPrevention` porte le plan de R. 4512-6 et ses lignes de risques d'interférence, ~~mais RIEN n'y nomme la chaleur — vérifié le 2026-09-20 : aucune occurrence de « chaleur » dans `src/lib/plan-prevention`~~ [2026-09-26 : faux depuis ce jour, voir la fin de ce motif]. L'instruction du 2026-09-01 le croyait « déjà servi ». « Le cas échéant » laisse l'appréciation à l'employeur : ce qui manque est une invite à y penser, pas une échéance — le formulaire du plan est un répéteur libre, sans liste de risques proposée~~, donc il n'y a aujourd'hui nulle part où la loger~~ [2026-09-26 : le chapeau de la section d'analyse la loge]. PGC et PPSPS sont des pièces de chantier du BTP, hors cible. [2026-09-26 — annoncé à qui utilise le plan de prévention : l'article est cité entier, « le cas échéant » compris, dans le chapeau de la section « Analyse conjointe des risques d'interférence » du formulaire et dans la carte « Ce que d'autres articles demandent au plan » de la fiche. Cité entier, PGC et PPSPS compris : le couper aurait laissé un sujet singulier devant « tiennent ». Relu sur sa page propre le 2026-09-26 (structure en aveugle, recopie, question fermée sur « tiennent compte, le cas échéant ») : verbatim identique à celui du 2026-09-20. Aucune liste de risques n'est proposée, rien n'est encodé : statut inchangé.]",
     },
   ],
 };
