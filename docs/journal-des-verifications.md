@@ -2969,6 +2969,64 @@ dans le moteur. Les deux consignes (« fais pareil » et « null garde la
 ligne ») ne tiennent pas ensemble : rien n'est changé, la version reste
 `.10`.
 
+**M2 tranché par la coordination (option 2), le 2026-09-27.** Aucune forme
+neuve n'a été nécessaire. `equipement_propriete_non_infirmee` existait
+déjà (`types.ts`, sémantique « opt-out ») : absent ou `true` la
+satisfont, seul un `false` explicite la rend fausse. Elle sert déjà à
+`cuisson-erp-extinction-automatique-annuelle` et dans `aeration.ts`.
+Elle est posée sur `elec-erp-groupe-electrogene-quinzaine` seule ;
+`-annuel` n'est pas touchée.
+
+**Grille avant/après.** 128 cas : {N5, N3, ERP sans catégorie, travail
+seul} × effectif {2, 60} × personnes présentes {non renseigné, 80} ×
+groupe {vrai, faux, absent, pas d'installation électrique} × autres
+équipements {aucun, tous}. On compare l'ensemble des (obligation,
+équipement) servis :
+- 24 cas diffèrent, tous « groupe = faux », en ERP (N5, N3, sans
+  catégorie) ;
+- chacun a exactement `PERDU : [elec-erp-groupe-electrogene-quinzaine]
+  GAGNÉ : []` ;
+- les cas « vrai », « absent », « sans installation électrique » et
+  « travail seul » sont identiques.
+
+**Trois tests neufs** (`engine.test.ts`) : vrai → applicable, faux → non
+applicable, absent → applicable. Épreuves, chacune restaurée ensuite :
+1. `non_infirmee` réécrite dans le moteur pour traiter l'absent comme
+   faux (`=== true`) : `× quinzaine : propriété absente → applicable`.
+2. La condition de la quinzaine réécrite en `booleenne` : trois tests
+   tombent. Ce sont le test d'absence et les deux gardes « criticité ≥ 4
+   sans extinction au silence », du référentiel et du moteur.
+
+**Version.** `.10` n'est pas réécrite, `.11` est ajoutée
+(`169-d9690840528dde38`) et `REFERENTIEL_VERSION` passe à `.11`.
+
+**`version-moteur` : NON.** Aucun fichier du moteur n'a changé
+(`git diff` vide sur `engine.ts`) : la forme était déjà là. C'est
+l'empreinte du référentiel, donc le sceau `.11`, qui resynchronise le
+parc.
+
+**`-annuel` relue, à remonter à la propriétaire.** Ses `notesInternes`
+ne disent RIEN du non-renseigné. Le « absent → non applicable » n'est
+écrit que dans les tests :
+- `CONDITIONS_STRICTES_JUSTIFIEES` (`conformite.test.ts`), avec pour seul
+  motif, dans l'en-tête, « antérieures à l'amendement 2026-08 :
+  l'obligation n'a JAMAIS été appliquée sans réponse » ;
+- `engine.test.ts:542`, qui le constate (« condition par défaut = non
+  remplie »).
+
+C'est un argument de NON-RÉGRESSION (personne ne peut perdre ce qu'il n'a
+jamais eu), pas un argument sur le texte ni sur le non-renseigné. Or
+`creerEquipementsDepuisPreRemplissage` crée l'installation électrique sans
+`caracteristiques`. Un ERP pré-rempli qui a un groupe électrogène et n'a
+pas rouvert la fiche ne reçoit donc pas l'essai mensuel d'EL 18 § 4, et
+rien ne le lui signale : un faux négatif muet.
+
+**Texte affiché périmé, même équipement.** La case du formulaire dit
+« Déclenche la vérification annuelle prévue par l'art. EL 20 du règlement
+ERP ». EL 20 est l'article « cité à tort » selon les notes de `-annuel`,
+et la ligne est mensuelle ; la case gouverne désormais aussi la quinzaine.
+Non corrigé ici : hors du périmètre de la passe, relevé.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
