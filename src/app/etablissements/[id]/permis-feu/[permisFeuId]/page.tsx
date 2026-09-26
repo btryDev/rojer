@@ -469,8 +469,9 @@ export default async function PermisFeuDetailPage({
           l&apos;entreprise qui intervient, les travaux, les mesures
           préventives cochées et la durée de surveillance après
           travaux. La règle APSAD R43 (travaux par points chauds) est un
-          référentiel de la profession de l&apos;assurance : ni un article de
-          code, ni un arrêté. Un contrat d&apos;assurance peut y renvoyer.
+          référentiel de la profession de l&apos;assurance, que Rojer n&apos;a
+          pas lu&nbsp;: ni un article de code, ni un arrêté. Un contrat
+          d&apos;assurance peut y renvoyer.
         </LegalBadge>
       </div>
     </EcranFiche>

@@ -66,6 +66,20 @@ const QUALIFICATIONS: { nom: string; motif: RegExp }[] = [
   { nom: "responsabilité engagée", motif: mot(String.raw`responsabilité\s+(?:est\s+|serait\s+|sera\s+)?engagée`) },
   { nom: "valeur légale", motif: mot(String.raw`valeur\s+(?:légale|juridique|probante)`) },
   { nom: "premier document demandé", motif: mot(String.raw`premier\s+document\s+demandé`) },
+  // PROMESSES QUE LE PRODUIT NE TIENT PAS (C38, 2026-09-26). Aucun rappel
+  // n'est envoyé — le seul envoi du dépôt est le lien d'accès —, aucune action
+  // ne naît seule d'un écart, aucun dossier n'est « prêt » par construction.
+  // Les négations écrites pour le dire (« aucun rappel par e-mail ») ne
+  // tombent pas sous ces formes.
+  {
+    nom: "rappel promis",
+    motif: mot(
+      String.raw`e-?mail\s+vous\s+prévien\p{L}*|vous\s+(?:prévien|rappel|alert)\p{L}*|rappel\p{L}*\s+les\s+échéances|alertes?\s+J-\d+|escalade\s+si\s+retard`,
+    ),
+  },
+  { nom: "automatisme promis", motif: mot(String.raw`créée?s?\s+automatiquement|se\s+posent\s+seules|se\s+remplit\s+seul`) },
+  { nom: "prêt pour contrôle", motif: mot(String.raw`prêt\s+pour\s+(?:le\s+|un\s+)?contrôle`) },
+  { nom: "rien à préparer", motif: mot(String.raw`rien\s+à\s+préparer`) },
 ];
 
 /**
@@ -198,6 +212,35 @@ describe("aucune sortie ne qualifie juridiquement", () => {
         trouvees.some((t) => t.ou.startsWith(`${a.fichier}:`) && t.ligne === a.ligne),
         `${a.fichier} / ${a.ligne.slice(0, 60)}`,
       ).toBe(true);
+  });
+});
+
+describe("la garde des promesses éprouvée sur les phrases réelles de d34bb24 (C38)", () => {
+  it("voit chacune, telle qu'elle était écrite", () => {
+    const r = mkdtempSync(join(tmpdir(), "promesses-"));
+    try {
+      mkdirSync(join(r, "src/components"), { recursive: true });
+      writeFileSync(
+        join(r, "src/components/sonde.tsx"),
+        [
+          '    corps: "Un e-mail vous prévient avant la date, le brief ne montre que l\'utile.",',
+          '      "Alertes J-30 / J-7 / jour J, escalade si retard.",',
+          '          vérifications et <strong>vous rappelle les échéances</strong>{" "}',
+          '      "Action créée automatiquement depuis un écart de rapport.",',
+          '      "Vos équipements portent leur périodicité. Les dates se posent seules et se reportent.",',
+          '      aria-label="Prêt pour contrôle"',
+          "              vous n&apos;avez rien à préparer.",
+          '    corps: "Le tableau de bord montre ce qui arrive ; Rojer n\'envoie pas de rappel par e-mail.",',
+          "",
+        ].join("\n"),
+      );
+      const vues = qualificationsAffichees(r).map((t) => t.ou);
+      expect(vues).toEqual(
+        [1, 2, 2, 3, 4, 5, 6, 7].map((l) => `src/components/sonde.tsx:${l}`),
+      );
+    } finally {
+      rmSync(r, { recursive: true, force: true });
+    }
   });
 });
 

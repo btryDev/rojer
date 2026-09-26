@@ -1,5 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import {
+  MAJ_DUERP_AMENAGEMENT_IMPORTANT,
+  MAJ_DUERP_ANNUELLE,
+  MAJ_DUERP_INFORMATION_NOUVELLE,
+  enMinuscule,
+} from "@/lib/referentiels/conformite/texte-r4121-2";
 
 type Couleur = "vif" | "warm" | "ink" | "minium";
 
@@ -19,10 +25,13 @@ const DETAILS: OutilDetail[] = [
     titre: "DUERP",
     source: "Art. R. 4121-1 à R. 4121-4 · Code du travail",
     couleur: "vif",
+    // LA COLONNE « LOI » NE PORTE QUE LE TEXTE, CITÉ (revue de
+    // l'intégration, 2026-09-26) : ~~« à tout changement »~~ réécrivait les
+    // 2° et 3° de R. 4121-2 ; ceux-ci viennent des constantes de l'article.
     loi: [
-      "Inventaire écrit des risques par unité de travail.",
-      "Mise à jour ≥ 1 fois par an (11 salariés et +) et à tout changement.",
-      "Conservation 40 ans à compter de son élaboration (art. R. 4121-4).",
+      "R. 4121-1 : « un inventaire des risques identifiés dans chaque unité de travail de l'entreprise ou de l'établissement ».",
+      `R. 4121-2 : « ${MAJ_DUERP_ANNUELLE} » ; « ${enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)} » ; « ${enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} ».`,
+      "R. 4121-4 : tenus « pendant une durée de 40 ans à compter de leur élaboration ».",
     ],
     app: [
       "Trame pré-remplie adaptée à votre secteur NAF.",
@@ -34,13 +43,17 @@ const DETAILS: OutilDetail[] = [
   {
     n: "02",
     titre: "Vérifications",
+    // ~~« R. 4323-22 »~~ : c'est la vérification INITIALE ; les
+    // vérifications périodiques sont au R. 4323-23, relu sur Légifrance le
+    // 2026-09-26 (deux lectures). ~~« Périodicité imposée : annuelle,
+    // semestrielle… »~~ : l'article ne fixe aucun rythme, il le renvoie aux
+    // arrêtés.
     source:
-      "Art. R. 4323-22 · Arrêté du 25 juin 1980 (ERP) · CCH R. 143-44",
+      "Art. R. 4323-23 · Arrêté du 25 juin 1980 (ERP) · CCH R. 143-44",
     couleur: "warm",
     loi: [
-      "Contrôles réguliers des équipements à risque.",
-      "Périodicité imposée : annuelle, semestrielle, triennale…",
-      "Réalisés par organisme agréé, personne qualifiée ou exploitant.",
+      "R. 4323-23 : des arrêtés « déterminent les équipements de travail ou les catégories d'équipement de travail pour lesquels l'employeur procède ou fait procéder à des vérifications générales périodiques ».",
+      "« Ces arrêtés précisent la périodicité des vérifications, leur nature et leur contenu. »",
     ],
     app: [
       "Calendrier généré à partir de vos équipements déclarés.",
@@ -69,7 +82,7 @@ const DETAILS: OutilDetail[] = [
       // retirés le 2026-09-26 : R. 4323-25 ne vise que les vérifications
       // générales périodiques, aucun texte cité n'écrit « horodatée », et
       // l'accès au registre (L. 4711-3, L. 4711-4) n'est pas relu dans ce lot.
-      "Le résultat des vérifications générales périodiques y est consigné (R. 4323-25).",
+      "R. 4323-25 : « Le résultat des vérifications générales périodiques est consigné sur le ou les registres de sécurité mentionnés à l'article L. 4711-5. »",
     ],
     app: [
       "Dépôt en 1 clic, liaison automatique à la vérification.",
