@@ -189,8 +189,9 @@ export function genererReadme(args: {
     "                            recherche et de sécurité. Bonne pratique",
     "                            reconnue, sans valeur réglementaire propre.",
     " Règle APSAD R43 :          référentiel de la profession de l'assurance",
-    "                            (travaux par points chauds). Opposable par",
-    "                            votre contrat d'assurance, pas par le droit.",
+    "                            (travaux par points chauds). Ni article de",
+    "                            code, ni arrêté ; un contrat d'assurance",
+    "                            peut y renvoyer.",
     "",
   );
   // Le même titre que ci-dessus vaudrait pour ces lignes, mais elles ne sont

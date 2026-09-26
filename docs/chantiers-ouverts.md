@@ -362,7 +362,7 @@ fichier réellement stocké, et en fabriquer produirait des entrées de registre
 pointant vers un fichier absent ; et les déclarations d'états permanents non plus,
 l'ADR-027 disant qu'une déclaration se coche et ne se sème pas.
 
-## 5 bis. Les citations affichées entre guillemets — aucune garde ne les confronte au texte (2026-09-26)
+## ~~5 bis. Les citations affichées entre guillemets — aucune garde ne les confronte au texte (2026-09-26)~~ — CLOS LE 2026-09-26 (journal C28)
 
 Un `LegalBadge` porte un `extrait` : le texte de l'article, présenté comme
 une citation. `citations-ecran.ts` vérifie que l'ARTICLE cité est dépouillé ;
@@ -379,9 +379,26 @@ un avant de conclure. 8 citent un article absent du corpus sous cette clé
 (`R. 164-6` et `R. 143-44` CCH, `GN 13`, arrêtés de 2010 et 1993, Code civil)
 et ne sont donc confrontés à rien.
 
-**À faire :** une garde permanente sur ce modèle, qui traite « […] » comme une
+~~**À faire :** une garde permanente sur ce modèle, qui traite « […] » comme une
 élision admise ; les huit citations sans verbatim au corpus soit dépouillées,
-soit déclarées hors corpus avec leur motif.
+soit déclarées hors corpus avec leur motif.~~
+
+**Fait le 2026-09-26 (C28).** La garde est `src/lib/verbatim/extraits-affiches.test.ts`,
+sur la règle partagée avec `fait-dans-le-texte.test.ts` (`extrait-continu.ts`).
+Remesuré par elle : 24 extraits, **3 échecs à la première mesure, pas 5** —
+deux extraits qui s'écartaient du texte, et un article sans verbatim au corpus
+(`GN 13`, dont l'extrait était exact). [Précisé le 2026-09-26 après
+contre-lecture : le troisième échec mesuré est `GN 13`. Les deux citations
+fausses de `R. 4121-2` avaient été corrigées plus tôt, par `48cc576`, et
+n'entrent pas dans ces trois.] Les « huit sans verbatim »
+étaient pour cinq d'entre eux un défaut de clé de la sonde (`CCH R. 164-6`,
+`CCH R. 143-44`, les arrêtés de 2010 et 1993 sont au corpus sous une autre
+graphie) ; restaient `GN 13`, consigné au corpus (`non_couvert`, avec
+l'écran du permis de feu pour adresse), et le Code civil, déclaré
+hors corpus AVEC son verbatim relu. `R. 4323-23` passe (élision marquée).
+Corrigés : `L. 4121-3-1` (segments intervertis, durée reformulée),
+`L. 4121-2` (graphie de Légifrance). Ce que la garde ne prouve pas est écrit
+en tête du fichier.
 
 ## 6. Plus petit, mais mesuré
 

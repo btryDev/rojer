@@ -1173,6 +1173,118 @@ La mention de transmission continue désormais la liste du PDF (« il est :
 … transmis par l'employeur … ») ; le chapeau des informations complémentaires
 du formulaire de cotation ne promet plus « certaines annexes obligatoires ».
 
+### C28 · 2026-09-26 — La garde des extraits affichés : 24 mesurés, ~~3 écarts, tous corrigés dans l'extrait~~ 3 échecs — 2 extraits corrigés, 1 verbatim consigné
+
+**Constat.** Un `LegalBadge` montre un `extrait` entre guillemets comme le
+texte de l'article ; rien ne le confrontait au corpus (chantiers-ouverts
+§ 5 bis). **La garde** : `src/lib/verbatim/extraits-affiches.test.ts`, sur la
+règle de `fait-dans-le-texte.test.ts`, désormais partagée
+(`src/lib/verbatim/extrait-continu.ts`) — segments continus, début et fin de
+proposition, plus trois choses propres à une citation : « […] » coupe le
+segment et libère la proposition de son seul côté, « … » final est admis, les
+segments se suivent dans l'ordre d'un même texte. Le verbatim est la
+`citationCle` de l'article nommé dans `reference`. Une expression
+`extrait={…}` inconnue fait échouer le test ; un texte hors corpus s'y déclare
+avec son motif ET son verbatim, et reste confronté.
+
+**Mesuré : 24 extraits, 21 concordent, 3 échecs** — deux extraits qui
+s'écartaient du texte (`L. 4121-3-1`, `L. 4121-2`), corrigés dans l'extrait ;
+un article sans verbatim au corpus (`GN 13`), consigné, son extrait inchangé
+parce qu'exact. *[Précisé le 2026-09-26 après contre-lecture : le titre, le
+commit `752933f` et le § 5 bis disaient « 3 écarts » ; le diff n'en corrige
+que deux, et le troisième échec est `GN 13`. Les deux citations fausses de
+`R. 4121-2` avaient été corrigées plus tôt, par `48cc576`, et n'entrent pas
+dans ces trois.]* La sonde du matin en
+comptait 5 écarts et 8 « sans verbatim » : cinq de ces huit étaient au corpus
+sous une autre graphie de clé (`CCH R. 164-6`, `CCH R. 143-44`,
+`Arrêté 01-02-2010 art. 3`, `Arrêté 1993-03-19 art. 1er`). `R. 4323-23`
+concorde, son élision est marquée.
+
+**Lu, sur les pages propres, structure demandée d'abord sans rien suggérer,
+formulation décisive confirmée par une seconde lecture distincte :**
+
+- `L. 4121-3-1` (LEGIARTI000043893919, en vigueur depuis le 2022-03-31, modifié
+  par la loi n° 2021-1018, art. 3) : six parties I à VI ; le V traite de la
+  conservation. « V.-A.-Le document unique d'évaluation des risques
+  professionnels, dans ses versions successives, est conservé par l'employeur
+  […]. La durée, qui ne peut être inférieure à quarante ans, et les modalités
+  de conservation […] sont fixées par décret en Conseil d'Etat. » **L'extrait
+  affiché intervertissait deux segments et écrivait « pendant une durée qui ne
+  peut être inférieure à quarante ans »** — mots absents de l'article
+  (seconde lecture : « pendant une durée » n'y figure nulle part). Corrigé dans
+  l'extrait ; le V.A **consigné au corpus**, dans la `citationCle` existante,
+  entre le III et le VI, relus le même jour et identiques ; `luLe` au
+  2026-09-26.
+- `L. 4121-2` (LEGIARTI000033019913, en vigueur depuis le 2016-08-10) :
+  Légifrance imprime « met en oeuvre », « Eviter », « Evaluer » ; l'extrait
+  écrivait « œuvre », « Éviter », « Évaluer ». Confirmé par une seconde lecture
+  demandée sur ces trois graphies. Corrigé dans l'extrait — un relevé ne se
+  « corrige » pas, même règle que la `citationCle` de `GN 1`. `luLe` inchangé :
+  seuls le chapeau et les 1° à 3° ont été relus.
+- `GN 13` (LEGIARTI000020303866) : un alinéa, section 4 « Travaux » ; l'extrait
+  concorde mot pour mot, deux lectures. **Consigné au corpus**
+  (`arrete-1980-livre-1`) ~~, `sans_objet` : une interdiction, sans pièce ni
+  rythme~~ — reclassé `non_couvert` le même jour, `declareA` sur l'écran du
+  permis de feu : voir plus bas.
+  La page affiche « Version en vigueur depuis le 15/08/1980 » et « Modifié par
+  Arrêté du 7 juillet 1983, v. init. » : relevé tel quel, la contradiction
+  apparente des deux dates n'est pas tranchée.
+- Code civil, art. 1366 (LEGIARTI000032042461, en vigueur depuis le
+  2016-10-01) : une phrase ; l'extrait concorde, deux lectures. **Hors
+  corpus**, déclaré dans la garde avec son verbatim.
+
+**La règle a dû changer d'un cas, écrit.** « V.-A.-Le document » : le
+séparateur de numérotation de Légifrance ne comptait pas comme début de
+proposition, alors que « 1° » oui ; rien de ce qui suit un « V.-A.- » ne
+pouvait être cité. Un trait d'union seul ne compte toujours pas (testé).
+
+**Contre-lecture du même jour : trois trous, fermés.** (1) Le résolveur
+acceptait tout article d'un arrêté dès que la date concordait : l'arrêté EPI
+du 19 mars 1993 répondait à la pastille « Travaux dangereux » du même jour.
+Chaque mot qui qualifie l'arrêté dans la `reference` doit désormais figurer
+dans l'intitulé du corpus. *[Au mesuré : la première version ne retenait que
+les mots de quatre lettres et plus. « Arrêté du 19 mars 1993 · EPI » se
+résolvait donc encore vers les deux arrêtés. Les sigles en capitales comptent
+depuis la passe suivante, cherchés dans l'intitulé et dans la `ref` de
+l'article, qui porte « (EPI) ».]* (2) Le code nommé n'était pas lu :
+`articlesNommes("Art. R. 164-6 CT")` rendait `CCH R. 164-6`. Le code de la
+pastille doit désormais être celui de l'article (préfixe, sinon identifiant du
+corpus), et une pastille d'article de code qui n'en nomme aucun ne se
+rapproche de rien. (3) « .- » ouvrait aussi la LETTRE de numérotation : « a le
+document unique… » passait sur `L. 4121-3-1`, grâce au « A » de « V.-A.- ».
+Un mot suivi de « .- » n'ouvre plus de proposition. *[Au mesuré : cette règle
+refusait du même coup une citation qui GARDE la numérotation — « V.-A.-Le
+document unique… », « III.-Les résultats… », « VI.-Le document unique… »
+rendaient ["V"], ["III"], ["VI"]. Depuis la passe suivante, le numéro est
+retiré du texte contrôlé (jamais du verbatim), et ce qui le suit doit
+toujours ouvrir une proposition.]* Chaque cas est gardé en
+épreuve, et chaque correctif, neutralisé un à un, fait retomber la sienne.
+Les faits générateurs (`fait-dans-le-texte.test.ts`) restent verts.
+
+**Dernière passe, le même jour.** Les deux reprises ci-dessus (sigles,
+numérotation), chacune éprouvée : les trois citations numérotées passent, « a
+le document unique… » reste refusé ; « · EPI » ne rend plus que les articles
+de l'arrêté EPI. Chaque correctif neutralisé fait retomber son épreuve. Une
+entrée HORS_CORPUS doit porter verbatim, adresse Légifrance, `luLe` et
+version non vides — le type seul laissait passer une chaîne vide. **`GN 13`
+passe en `non_couvert`** avec `declareA` sur l'écran du permis de feu, sur le
+précédent de `R. 4323-63`. Aucune garde ne vérifie qu'un `declareA` désigne
+une surface réelle : `corpus.test.ts` compte seulement les manques « muets »
+(absents, « Non déclaré », `docs/`). Mouvement, mesuré en appelant le corpus :
+`non_couvert` 25 + 1 = 26, `sans_objet` 181 − 1 = 180, muets 19 → 19.
+`docs/couverture-declaree-du-produit.md` suit (26, et une famille
+« Travaux en présence du public »).
+
+**Éprouvée en la cassant** avec le défaut réel de `R. 4121-2`, remis dans
+`duerp/page.tsx` tel que `git show 48cc576^` le donne : refusé, un seul
+segment nommé — « La mise à jour du document unique d'évaluation des risques
+est réalisée ». Les deux écarts de ce jour sont gardés en épreuve.
+
+**Sceau inchangé**, mesuré avant et après :
+`2026-09-26.5+167-66f005e23f039ca+moteur.4`. `docs/etat-verification-referentiel.md`
+régénéré : articles dépouillés cités par aucune obligation 286 − 0 + 1
+(`GN 13`) = 287.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

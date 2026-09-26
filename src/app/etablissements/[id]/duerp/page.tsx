@@ -93,7 +93,7 @@ export default async function EtablissementDuerpPage({
               charte="board"
               reference="Art. L. 4121-3-1 CT"
               href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043893919"
-              extrait="Le document unique d'évaluation des risques professionnels […] est conservé, dans ses versions successives, […] pendant une durée qui ne peut être inférieure à quarante ans."
+              extrait="Le document unique d'évaluation des risques professionnels, dans ses versions successives, est conservé par l'employeur […]. La durée, qui ne peut être inférieure à quarante ans, et les modalités de conservation […] sont fixées par décret en Conseil d'Etat."
             >
               <p>
                 C&apos;est pour cela que l&apos;outil fige une version à

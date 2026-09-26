@@ -174,7 +174,7 @@ export default async function PlanActionsPage({
                 charte="board"
                 reference="Art. L. 4121-2 CT"
                 href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033019913"
-                extrait="L'employeur met en œuvre les mesures prévues à l'article L. 4121-1 sur le fondement des principes généraux de prévention suivants : 1° Éviter les risques ; 2° Évaluer les risques qui ne peuvent pas être évités ; 3° Combattre les risques à la source ; […]"
+                extrait="L'employeur met en oeuvre les mesures prévues à l'article L. 4121-1 sur le fondement des principes généraux de prévention suivants : 1° Eviter les risques ; 2° Evaluer les risques qui ne peuvent pas être évités ; 3° Combattre les risques à la source ; […]"
               >
                 <p>
                   C&apos;est la hiérarchie des mesures de prévention : supprimer
