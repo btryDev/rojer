@@ -18,6 +18,7 @@ function bureauSansRien(): EtablissementMatching {
   return {
     id: "etab-neuf",
     effectifSurSite: 6,
+    effectifEntreprise: 6,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: false,

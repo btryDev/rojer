@@ -54,7 +54,8 @@ export async function faitsDeCouverture(
     include: {
       // Le code NAF de l'entreprise : celui de l'établissement n'est
       // renseigné que lorsqu'il en diffère (cf. `illustration.ts`).
-      entreprise: { select: { codeNaf: true } },
+      // Et son effectif, que lisent les seuils comptés sur l'entreprise (C37).
+      entreprise: { select: { codeNaf: true, effectif: true } },
       // Le parc **en service** : un équipement désactivé ne génère plus rien.
       equipements: { where: { actif: true } },
       // Les retirés, comptés à part : ils portent des preuves que le registre
@@ -87,6 +88,7 @@ export async function faitsDeCouverture(
   const etabMatching = projeterEtablissement({
     id: etab.id,
     effectifSurSite: etab.effectifSurSite,
+    entreprise: { effectif: etab.entreprise.effectif },
     estEtablissementTravail: etab.estEtablissementTravail,
     estERP: etab.estERP,
     estIGH: etab.estIGH,

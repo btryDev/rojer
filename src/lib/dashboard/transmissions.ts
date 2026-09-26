@@ -161,7 +161,10 @@ export async function chargerTransmissions(
 ): Promise<Transmissions> {
   const etab = await prisma.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId } },
-    include: { equipements: { where: { actif: true } } },
+    include: {
+      equipements: { where: { actif: true } },
+      entreprise: { select: { effectif: true } },
+    },
   });
   if (!etab) return AUCUNE_TRANSMISSION;
 
@@ -186,6 +189,7 @@ export async function chargerTransmissions(
     {
       id: etab.id,
       effectifSurSite: etab.effectifSurSite,
+      effectifEntreprise: etab.entreprise.effectif,
       estEtablissementTravail: etab.estEtablissementTravail,
       estERP: etab.estERP,
       estIGH: etab.estIGH,

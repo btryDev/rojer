@@ -28,7 +28,23 @@ import type { EtablissementMatching } from "./types";
  * **pur** — ni Prisma, ni React — et doit le rester pour rester testable sans
  * base.
  */
-export type SourceEtablissement = EtablissementMatching;
+export type SourceEtablissement = Omit<
+  EtablissementMatching,
+  "effectifEntreprise"
+> &
+  (
+    | {
+        /**
+         * L'effectif de l'entreprise se lit sur l'ENTREPRISE, pas sur
+         * l'établissement (C37) : la projection le prend là où il vit, et
+         * chaque requête doit charger `entreprise.effectif` — une requête qui
+         * l'oublierait ne compile pas.
+         */
+        entreprise: { effectif: number };
+      }
+    /** Un établissement déjà projeté : la projection est idempotente. */
+    | { effectifEntreprise: number }
+  );
 
 /**
  * Projette un établissement vers l'entrée du moteur.
@@ -44,6 +60,10 @@ export function projeterEtablissement(
   return {
     id: etab.id,
     effectifSurSite: etab.effectifSurSite,
+    effectifEntreprise:
+      "effectifEntreprise" in etab
+        ? etab.effectifEntreprise
+        : etab.entreprise.effectif,
     estEtablissementTravail: etab.estEtablissementTravail,
     estERP: etab.estERP,
     estIGH: etab.estIGH,

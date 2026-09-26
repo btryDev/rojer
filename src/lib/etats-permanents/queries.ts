@@ -20,7 +20,7 @@ import {
   determineObligationsApplicables,
   projeterEtablissement,
   type EquipementMatching,
-  type EtablissementMatching,
+  type SourceEtablissement,
 } from "@/lib/matching";
 import type { Obligation } from "@/lib/referentiels/conformite";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
@@ -89,7 +89,7 @@ export type EtatsPermanentsDuDossier = {
  * seconde ici ferait deux états qui divergeraient.
  */
 export async function listerEtatsPermanents(
-  etablissement: EtablissementMatching,
+  etablissement: SourceEtablissement,
   equipements: EquipementMatching[],
 ): Promise<EtatsPermanentsDuDossier> {
   const applicables = determineObligationsApplicables(
@@ -229,7 +229,10 @@ export async function etatsPermanentsDuDossier(
 ): Promise<EtatsPermanentsDuDossier> {
   const etab = await prisma.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId } },
-    include: { equipements: { where: { actif: true } } },
+    include: {
+      equipements: { where: { actif: true } },
+      entreprise: { select: { effectif: true } },
+    },
   });
   // Un dossier qui n'est pas celui de l'utilisateur n'a rien à montrer, et
   // zéro sur zéro ne produit aucune indétermination : le score reste ce qu'il

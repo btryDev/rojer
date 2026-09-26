@@ -123,7 +123,13 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 4,
+  version: 5,
+  // INCRÉMENTÉ le 2026-09-26 (C37, `lot/effectif-entreprise`) : les seuils du
+  // CSE, de la formation de ses élus et du règlement intérieur se comparent à
+  // l'effectif de l'ENTREPRISE (`effectifMaille`, `evaluerEffectif`). OUI, la
+  // régénération écrit autrement : une entreprise dont l'effectif déclaré
+  // atteint le seuil sans qu'aucun de ses sites l'atteigne voit la ligne
+  // apparaître. Aucune ne disparaît (le site au seuil retient « à confirmer »).
   // INCRÉMENTÉ le 2026-09-20 (décision de la propriétaire) : le silence sur
   // les locaux à sommeil ne retient plus que là où le sommeil est plausible.
   // OUI, la régénération écrit autrement : les ERP de 5ᵉ catégorie hors de ces
@@ -191,7 +197,7 @@ const RELEVE = {
   // vérification et le formulaire des prescriptions, réexporté par
   // `prescriptions/schema.ts`, absent de `calendrier/` et de
   // `prescriptions/actions.ts` (décision de la session de coordination).
-  empreinte: "91badd776f7acbba",
+  empreinte: "03b932a11526f7b4",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

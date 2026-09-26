@@ -75,6 +75,7 @@ export async function chargerPagePrescriptions(
       prescriptionsParticulieres: {
         orderBy: { dateDocument: "desc" },
       },
+      entreprise: { select: { effectif: true } },
     },
   });
   if (!etab) return { prescriptions: [], obligations: [], equipements: [] };
@@ -109,6 +110,7 @@ export async function chargerPagePrescriptions(
     {
       id: etab.id,
       effectifSurSite: etab.effectifSurSite,
+      effectifEntreprise: etab.entreprise.effectif,
       estEtablissementTravail: etab.estEtablissementTravail,
       estERP: etab.estERP,
       estIGH: etab.estIGH,

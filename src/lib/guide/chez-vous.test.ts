@@ -13,6 +13,7 @@ function etabBureau(
   return {
     id: "etab-bureau",
     effectifSurSite: 12,
+    effectifEntreprise: 12,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: false,

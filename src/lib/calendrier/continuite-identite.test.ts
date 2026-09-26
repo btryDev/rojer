@@ -48,6 +48,7 @@ function internat(
   return {
     id: "etab-internat",
     effectifSurSite: 12,
+    effectifEntreprise: 12,
     estEtablissementTravail: true,
     estERP: true,
     estIGH: false,

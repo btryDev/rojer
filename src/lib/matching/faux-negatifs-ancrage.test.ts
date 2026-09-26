@@ -43,6 +43,7 @@ function bureauSansRien(
   return {
     id: "etab-bureau-nu",
     effectifSurSite: 12,
+    effectifEntreprise: 12,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: false,
@@ -65,6 +66,7 @@ function restoErpCat5SansRien(
   return {
     id: "etab-resto-nu",
     effectifSurSite: 8,
+    effectifEntreprise: 8,
     estEtablissementTravail: true,
     estERP: true,
     estIGH: false,
@@ -124,6 +126,7 @@ describe("faux négatif — tenue du registre de sécurité", () => {
     const habitation: EtablissementMatching = {
       id: "etab-hab-nu",
       effectifSurSite: 0,
+      effectifEntreprise: 0,
       estEtablissementTravail: false,
       estERP: false,
       estIGH: false,

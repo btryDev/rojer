@@ -83,6 +83,7 @@ export async function getFicheEquipement(id: string) {
           // qu'en bloc garde la raison sociale et l'adresse hors du matching,
           // et une omission ne compile pas.
           effectifSurSite: true,
+          entreprise: { select: { effectif: true } },
           estEtablissementTravail: true,
           estERP: true,
           estIGH: true,

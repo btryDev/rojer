@@ -22,6 +22,7 @@ function etabHabitation(
   return {
     id: "etab-hab",
     effectifSurSite: 3,
+    effectifEntreprise: 3,
     estEtablissementTravail: false,
     estERP: false,
     estIGH: false,

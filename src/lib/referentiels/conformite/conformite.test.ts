@@ -420,6 +420,7 @@ describe("référentiel conformité — anti-doublon", () => {
     ): EtablissementMatching => ({
       id: "sonde",
       effectifSurSite: 10,
+      effectifEntreprise: 10,
       estEtablissementTravail: false,
       estERP: true,
       estIGH: false,
@@ -1031,6 +1032,7 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
     const erpEtTravail = {
       id: "etab-mixte",
       effectifSurSite: 8,
+      effectifEntreprise: 8,
       estEtablissementTravail: true,
       estERP: true,
       estIGH: false,
@@ -1418,6 +1420,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // retirée de `incendie-travail-moyens-lutte`). L'empreinte ne lit pas les
     // descriptions ; la version, elle, date ce que les documents citent.
     { version: "2026-09-26.8", empreinte: "169-85f0fac08bca3950" },
+    // C37 : `effectifMaille` écrit sur les cinq typologies à seuil d'effectif
+    // (entreprise : CSE, formation des élus, règlement intérieur ;
+    // établissement : les deux lignes de restauration). Les typologies sont
+    // hachées, l'empreinte bouge ; 169 + 0 − 0 = 169.
+    { version: "2026-09-26.9", empreinte: "169-b35a654fd2941809" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2036,6 +2043,7 @@ describe("GH 61 § 5 — la quinquennale de la charge calorifique atteint l'occu
   const bureauEnIgh: EtablissementMatching = {
     id: "etab-igh",
     effectifSurSite: 8,
+    effectifEntreprise: 8,
     estEtablissementTravail: true,
     estERP: false,
     estIGH: true,
@@ -2163,6 +2171,7 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
     return {
       id: "sonde-ge4",
       effectifSurSite: 10,
+      effectifEntreprise: 10,
       estEtablissementTravail: false,
       estERP: true,
       estIGH: false,

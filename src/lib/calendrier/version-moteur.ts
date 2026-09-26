@@ -73,8 +73,22 @@ import {
  * supprimée. Le numéro 4 avait été réservé au retour arrière de l'ADR-036 : ce
  * retour, s'il devait se faire, prendrait le numéro suivant — les versions ne
  * sont qu'une suite croissante.
+ *
+ * `5` (2026-09-26, C37, `lot/effectif-entreprise` — À SIGNALER À LA
+ * PROPRIÉTAIRE AVANT DE FUSIONNER) : LES SEUILS COMPTÉS SUR L'ENTREPRISE SE
+ * COMPARENT À L'EFFECTIF DE L'ENTREPRISE. `evaluerEffectif`
+ * (`matching/engine.ts`) lit `effectifMaille` : le CSE, la formation de ses
+ * élus et le règlement intérieur (L. 2311-2, L. 2315-18, L. 1311-2, comptés
+ * selon L. 1111-2 sans les apprentis de L. 1111-3) se comparent à
+ * `Entreprise.effectif` ; la restauration (R. 4228-22/-23, « décomptés par
+ * établissement ») reste sur `effectifSurSite`. Des lignes peuvent APPARAÎTRE
+ * — une entreprise déclarée à onze ou plus dont aucun site n'atteint onze —,
+ * aucune ne peut disparaître : un site au seuil sous une entreprise déclarée
+ * en dessous retient la ligne « à confirmer ». Le référentiel passe en même
+ * temps à `2026-09-26.9`, ce qui désynchronise déjà chaque dossier : cet
+ * incrément répond à la question du test, il ne régénère rien de plus.
  */
-export const VERSION_MOTEUR_CALENDRIER = 4;
+export const VERSION_MOTEUR_CALENDRIER = 5;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la

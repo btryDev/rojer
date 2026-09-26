@@ -67,6 +67,7 @@ async function obligationDeclarable(
 
   const etablissement = await prisma.etablissement.findUnique({
     where: { id: etablissementId },
+    include: { entreprise: { select: { effectif: true } } },
   });
   if (!etablissement) return false;
 
