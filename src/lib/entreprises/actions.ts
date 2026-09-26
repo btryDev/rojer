@@ -126,7 +126,7 @@ export async function supprimerEntreprise(
         `Suppression impossible : ${nbVersions} version${nbVersions > 1 ? "s" : ""} ` +
         "de votre document unique d'évaluation des risques " +
         `${nbVersions > 1 ? "sont archivées" : "est archivée"} sur ce compte. ` +
-        "La loi impose de les conserver 40 ans (art. R. 4121-4 du Code du " +
+        "Le Code du travail les fait conserver 40 ans (art. R. 4121-4 du Code du " +
         "travail) : elles servent à prouver, des décennies plus tard, à quels " +
         "risques un salarié a été exposé. Ce refus s'applique même à une " +
         "demande d'effacement (art. 17.3 du RGPD, obligation légale). Vous " +

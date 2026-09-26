@@ -394,6 +394,24 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
         "Obligation manquante jusqu'au 2026-09-21 (cause `evenement`), encodée avec la page « Quand ça arrive ». Son motif d'alors : OBLIGATION D'EMPLOYEUR PLEINE ET ENTIÈRE, DANS UN DOMAINE QUE LE PRODUIT SERT, et le référentiel ne la porte pas. Saisir le service de santé au travail dès la connaissance de la date de fin d'arrêt, pour un examen à tenir le jour de la reprise et au plus tard huit jours après : un acte, un destinataire, un délai chiffré.\n\nCE QU'ELLE APPREND SUR LA FRAÎCHEUR DU CORPUS. Sa version en vigueur date du 15 juin 2026 et vient du décret n° 2026-503 du 12 juin 2026 — un texte de trois mois que le dépôt n'avait jamais croisé, trouvé uniquement parce qu'on a ouvert le texte modificateur d'un article voisin. Le corpus est déclaré `articles_cites` et son en-tête dit ne pas lire le reste de la section, donc ce n'était pas un trou caché ; c'était un trou non cherché. — Son blocage : Le déclencheur événementiel, absent du modèle — même blocage que `R. 4624-28-2` deux entrées plus haut, et que `R. 4141-8`, `R. 4141-12` et `L. 8222-5` ailleurs. Le fait générateur est la fin d'un arrêt de travail, que le produit n'a aucun moyen de connaître : il ne détient ni arrêt, ni absence, ni date de reprise, et `docs/rgpd.md` § 2.3 explique pourquoi il ne détiendra pas la pièce médicale. L'ADR-022 nomme l'axe « événement » et s'arrête là.\n\nÀ NE PAS RÉSOUDRE PAR UNE ÉCHÉANCE PÉRIODIQUE : il n'y a pas de rythme ici, et en poser un réclamerait un examen de reprise à des salariés qui ne se sont jamais arrêtés.",
     },
     {
+      ref: "R. 4624-55",
+      intitule: "Avis d'aptitude ou d'inaptitude — transmis au salarié et à l'employeur, qui le conserve",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033740738",
+      versionEnVigueur: "2017-01-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "L'avis est transmis au salarié et à l'employeur ; l'employeur le conserve pour pouvoir le présenter à l'inspecteur du travail et au médecin inspecteur du travail.",
+      citationCle:
+        "L'avis médical d'aptitude ou d'inaptitude émis par le médecin du travail est transmis au salarié ainsi qu'à l'employeur par tout moyen leur conférant une date certaine. L'employeur le conserve pour être en mesure de le présenter à tout moment, sur leur demande, à l'inspecteur du travail et au médecin inspecteur du travail. Une copie de l'avis est versée au dossier médical en santé au travail du travailleur.",
+      statut: "non_couvert",
+      motif:
+        "L'employeur CONSERVE l'avis : c'est une obligation, et Rojer ne la porte pas, par choix — le produit n'enregistre des visites que leur existence, leur date et leur échéance, jamais l'avis (`docs/rgpd.md` § 2.3). Consigné le 2026-09-26, quand l'écran de saisie d'un titre a cessé de dire que l'avis « ne vous est pas destiné » (faux : il est transmis à l'employeur). Relu de première main, un alinéa ; « Création Décret n° 2016-1908 du 27 décembre 2016 - art. 1 », en vigueur le 1er janvier 2017 : `modifiePar: null`.",
+      declareA:
+        "src/components/salaries/FormulaireTitre.tsx — l'encadré « Ne déposez pas le document » de la saisie d'un titre, qui dit, sur les seuls titres dont la visite produit un avis d'aptitude (examen du suivi individuel renforcé, R. 4624-25, et son renouvellement annuel en catégorie A), que l'avis est transmis à l'employeur, que celui-ci le conserve (art. R. 4624-55) et que Rojer n'en garde pas copie. Borné le 2026-09-26 : la phrase s'affichait aussi sur la VIP, qui donne une attestation de suivi (R. 4624-14).",
+    },
+    {
       ref: "L. 4624-2-4",
       intitule: "Examen de préreprise — l'employeur en informe le travailleur",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043891306",

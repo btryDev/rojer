@@ -4,32 +4,25 @@ import { AppTopbar } from "@/components/layout/AppTopbar";
 import { BlocConfig } from "@/components/mcp/BlocConfig";
 import { WhyCard } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
+import { DETAIL_OUTIL_PRODUIT } from "@/components/mcp/outils-produit";
+import { OUTILS_MCP } from "@/lib/mcp/tools";
 
 export const metadata = {
   title: "Connecter — Consulter votre dossier depuis un assistant",
 };
 
-/** Les trois outils servis par `scripts/mcp-server.ts`, décrits côté produit. */
-const OUTILS = [
-  {
-    nom: "fiche_etablissement",
-    titre: "Fiche de l'établissement",
-    detail:
-      "Raison sociale, adresse, régimes réglementaires, effectifs, et le volume du dossier (équipements, vérifications, actions).",
-  },
-  {
-    nom: "etat_duerp",
-    titre: "État du DUERP",
-    detail:
-      "Ancienneté de la dernière version validée, échéance de mise à jour annuelle, unités de travail et risques cotés.",
-  },
-  {
-    nom: "plan_actions",
-    titre: "Plan d'actions",
-    detail:
-      "Actions correctives avec leur statut, criticité, échéance et retard éventuel — filtrables.",
-  },
-];
+/**
+ * Les outils que le serveur enregistre (`OUTILS_MCP`), décrits côté produit.
+ * La liste et son nombre viennent du serveur : recopiés à la main, ils
+ * avaient divergé (« Cinq outils » au-dessus de trois lignes).
+ */
+const OUTILS = OUTILS_MCP.map((o) => ({
+  nom: o.nom,
+  titre: o.titre,
+  detail: DETAIL_OUTIL_PRODUIT[o.nom],
+}));
+
+const NOMBRE_EN_LETTRES = ["Aucun", "Un", "Deux", "Trois", "Quatre", "Cinq", "Six", "Sept", "Huit", "Neuf", "Dix"];
 
 export default async function ConnecterPage({
   params,
@@ -156,7 +149,7 @@ export default async function ConnecterPage({
               Ce que l&apos;assistant peut lire
             </h2>
             <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              Trois outils, tous en lecture seule, tous limités à{" "}
+              {NOMBRE_EN_LETTRES[OUTILS.length] ?? OUTILS.length} outils, tous en lecture seule, tous limités à{" "}
               <strong>{etablissement.raisonDisplay}</strong>. L&apos;assistant
               ne peut ni modifier une donnée, ni consulter un autre
               établissement — l&apos;identifiant est fixé au lancement, il

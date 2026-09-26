@@ -34,16 +34,16 @@ const ROLES: Role[] = [
     glyph: "+",
   },
   {
-    titre: "Organismes agréés",
+    titre: "Vérificateurs",
     sousTitre: "Vérifications",
     description:
-      "Électricité, ascenseurs, incendie — contrôles obligatoires.",
+      "Organisme agréé, personne qualifiée ou exploitant, selon la vérification.",
     glyph: "✓",
   },
   {
-    titre: "CSE / CSSCT",
-    sousTitre: "11 salariés et +",
-    description: "Consultation DUERP + plan de prévention.",
+    titre: "CSE",
+    sousTitre: "11 salariés et +, pendant douze mois consécutifs (L. 2311-2)",
+    description: "Consulté sur le document unique et ses mises à jour (L. 4121-3).",
     glyph: "◈",
   },
   {

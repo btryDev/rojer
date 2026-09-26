@@ -59,7 +59,7 @@ export default async function ModifierEntreprisePage({
         <p className="m-0 mt-1.5 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           La suppression efface l&apos;entreprise et le dossier de ses
           établissements. Elle est refusée dès qu&apos;une version du DUERP est
-          archivée : la loi impose de les conserver 40 ans.
+          archivée : le Code du travail les fait conserver 40 ans à compter de leur élaboration (art. R. 4121-4).
         </p>
         <div className="mt-4">
           <SupprimerEntrepriseButton id={id} perimetre={perimetre} />

@@ -263,7 +263,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
             <EvidenceDropzone
               name="kbis"
               label="Extrait Kbis"
-              hint="Datant de moins de 3 mois à l'embauche"
+              hint="Extrait K ou K bis (art. D. 8222-5, 2° a)"
             />
             <div className="space-y-1">
               <label

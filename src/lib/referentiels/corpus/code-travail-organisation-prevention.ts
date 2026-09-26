@@ -83,6 +83,24 @@ export const CODE_TRAVAIL_ORGANISATION_PREVENTION: Corpus = {
         "Les douze mois consécutifs ne sont pas calculés : le modèle ne porte que l'effectif courant, sans historique. La ligne apparaît au franchissement constaté, donc en avance sur l'échéance légale. L'article compte par ENTREPRISE, le moteur évalue par établissement (`effectifSurSite`) : une entreprise multi-sites dont aucun site n'atteint onze ne verra pas la ligne.",
     },
     {
+      ref: "L. 1111-3",
+      intitule: "Salariés non pris en compte dans le calcul des effectifs",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000019869554",
+      versionEnVigueur: "2016-01-01",
+      modifiePar: {
+        texte: "Ordonnance n° 2015-1578 du 3 décembre 2015 — art. 1.",
+      },
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "Écarte du calcul des effectifs de l'entreprise plusieurs catégories de salariés, en tête desquelles les apprentis.",
+      citationCle:
+        "Ne sont pas pris en compte dans le calcul des effectifs de l'entreprise : 1° Les apprentis",
+      statut: "sans_objet",
+      motif:
+        "Règle de calcul, sans échéance : elle sert les seuils des obligations (L. 2311-2 renvoie à L. 1111-2, que cet article complète), elle n'en crée aucune — même traitement que les définitions qui servent une obligation (précédent R. 4624-28-1). Consignée le 2026-09-26 parce que le repère d'effectif de l'onboarding la cite : le champ « Effectif travailleur » demande « Salariés + apprentis » et le repère comparait ce nombre aux seuils de onze salariés sans dire que ceux-ci se comptent sur l'entreprise et sans les apprentis. Relu de première main : seules la phrase d'ouverture et le 1° ont été lus mot pour mot ; les autres catégories et l'alinéa final ne sont pas recopiés ici. La page lue se dit « version en vigueur depuis le 01/01/2016 ».",
+    },
+    {
       ref: "L. 2315-18",
       intitule:
         "Formation en santé, sécurité et conditions de travail des membres de la délégation du personnel",

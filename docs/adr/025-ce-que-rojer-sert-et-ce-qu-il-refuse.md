@@ -94,8 +94,8 @@ est juste, mais il vaut aussi pour d'autres lignes qu'on garde.
 sont **servis**, comme les autres. Aucun dossier n'est refusé sur sa catégorie.
 
 Le motif est un fait de terrain qui tranche le débat : **la catégorie mesure le
-public reçu, pas l'effectif salarié.** Un restaurant de huit salariés qui reçoit
-trois cents couverts relève de la 3ᵉ catégorie. C'est exactement la cible du
+public reçu, pas l'effectif salarié.** Un restaurant de huit salariés qui ~~reçoit
+trois cents couverts relève de la 3ᵉ catégorie~~ peut accueillir quatre cents personnes à la fois relève de la 3ᵉ catégorie. *[Corrigé le 2026-09-26 : R. 143-19 CCH classe « d'après l'effectif du public et du personnel », majore le public du personnel, et met « 300 personnes et au-dessous » en 4ᵉ catégorie ; « trois cents couverts » était faux deux fois. La décision n'en dépend pas.]* C'est exactement la cible du
 produit, et le refuser au nom d'un chiffre qui ne parle pas de ses salariés
 serait une erreur de lecture du cadrage lui-même. La borne du produit est de
 **cinquante salariés** ; elle ne s'applique pas au public reçu.

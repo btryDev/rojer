@@ -273,12 +273,16 @@ export async function supprimerEquipement(
       statut: "desactive",
       message:
         "Équipement retiré du parc. Ses rapports de vérification et ses " +
-        "actions correctives sont conservés : la loi impose de pouvoir les " +
+        "actions correctives sont conservés. Pour les vérifications dues au " +
+        "titre de la santé et de la sécurité au travail, et sauf dispositions " +
+        "particulières, l'article D. 4711-3 du Code du " +
         // ~~L. 4711-5~~ : cette phrase dit « la loi impose de POUVOIR LES
         // PRÉSENTER », c'est-à-dire une conservation — et la conservation est
         // à D. 4711-3 (cinq ans, ou les deux derniers contrôles). L. 4711-5
         // n'impose rien : il autorise à réunir plusieurs registres en un seul.
-        "présenter en cas de contrôle (art. D. 4711-3 du Code du travail). " +
+        "travail fait conserver les documents des vérifications et contrôles " +
+        "« des cinq dernières années et, en tout état de cause, ceux des deux " +
+        "derniers contrôles ou vérifications ». " +
         "Il n'apparaît plus dans vos listes et ne génère plus d'échéance.",
     };
   }

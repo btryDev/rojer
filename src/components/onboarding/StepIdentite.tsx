@@ -49,7 +49,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
         </h2>
         <p className="m-0 mt-2.5 max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Ces informations servent à identifier vos obligations
-          réglementaires — elles ne sont jamais partagées.
+          réglementaires.
         </p>
       </div>
 
@@ -290,7 +290,7 @@ export function StepIdentite({ state, update, errors, blocage }: StepProps) {
                 value={state.effectifSurSite}
                 onChange={(e) => update({ effectifSurSite: e.target.value })}
                 placeholder="8"
-                aide="Salariés + apprentis présents régulièrement. Rojer s'arrête à 50 : au-delà, les obligations changent de nature (CSSCT dédiée, programme annuel de prévention) et l'outil ne les porte pas."
+                aide="Salariés + apprentis présents régulièrement. Rojer s'arrête à 50. À partir de 50 salariés, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
                 // Le refus de périmètre n'est pas rendu ici mais dans le bloc
                 // ci-dessous : il tient trois lignes et il porte une icône.
                 erreur={refus ? undefined : messagePour("effectifSurSite")}
@@ -379,7 +379,7 @@ function repereEffectif(
     return {
       titre: `${n} salarié${n > 1 ? "s" : ""}`,
       corps:
-        "Seuil CSSCT (11+) non atteint — certaines obligations sont allégées (élections, consultation CSE).",
+        "Sous onze salariés : pas de comité social et économique (art. L. 2311-2), et la mise à jour annuelle du document unique ne s'applique pas (art. R. 4121-2, 1°). Ces seuils se comptent sur l'entreprise, apprentis non compris (art. L. 1111-3).",
     };
   }
   // Au-delà d'EFFECTIF_MAX, l'appelant n'arrive jamais ici : `refusEffectif`
@@ -387,6 +387,6 @@ function repereEffectif(
   return {
     titre: `${n} salariés`,
     corps:
-      "Seuil CSE atteint — mise à jour annuelle du DUERP obligatoire, élection d'un CSE sous 12 mois.",
+      "À partir de onze salariés : un comité social et économique est mis en place si cet effectif est atteint pendant douze mois consécutifs (art. L. 2311-2), et le document unique est mis à jour au moins chaque année (art. R. 4121-2, 1°). Ces seuils se comptent sur l'entreprise, apprentis non compris (art. L. 1111-3).",
   };
 }

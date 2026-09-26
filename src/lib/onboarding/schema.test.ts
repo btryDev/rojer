@@ -180,7 +180,7 @@ describe("onboardingSchema", () => {
 
   // La borne du produit porte sur les TRAVAILLEURS. Le public reçu ne la
   // déclenche jamais : c'est ce qui permet de servir un restaurant de huit
-  // salariés classé en 3ᵉ catégorie parce qu'il sert trois cents couverts.
+  // salariés classé en 3ᵉ catégorie parce qu'il peut accueillir quatre cents personnes à la fois.
   it("accepte 50 salariés", () => {
     const res = onboardingSchema.safeParse({ ...base, effectifSurSite: 50 });
     expect(res.success).toBe(true);

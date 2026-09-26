@@ -479,15 +479,24 @@ export default async function VerificationDetailPage({
                 </li>
               ))}
             </ul>
-            <p className="m-0 mt-4 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Les installations que le texte nomme. La liste n&apos;est{" "}
-              <strong className="font-semibold">pas limitative</strong>{" "}
-              : elle
-              se termine par « etc. » et vise l&apos;ensemble de vos
-              installations techniques, y compris celles que vous n&apos;avez
-              pas déclarées ici. L&apos;échéance vous est due même si vous
-              n&apos;avez déclaré aucun appareil.
-            </p>
+            {obligation.id === "incendie-erp-pe4-entretien-installations-techniques" ? (
+              // Écrit pour PE 4 § 2, dont la liste finit par « etc. ». Il
+              // s'affichait pour toute obligation d'établissement qui nomme des
+              // équipements — la consigne de R. 4227-37 n'a ni « etc. » ni
+              // échéance (relecture du 2026-09-26).
+              <p className="m-0 mt-4 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                Les installations que le texte nomme. La liste n&apos;est{" "}
+                <strong className="font-semibold">pas limitative</strong>{" "}
+                : elle se termine par « etc. » et vise l&apos;ensemble de vos
+                installations techniques, y compris celles que vous n&apos;avez
+                pas déclarées ici. L&apos;échéance vous est due même si vous
+                n&apos;avez déclaré aucun appareil.
+              </p>
+            ) : (
+              <p className="m-0 mt-4 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                Les équipements que le texte nomme.
+              </p>
+            )}
           </div>
         </section>
       ) : null}

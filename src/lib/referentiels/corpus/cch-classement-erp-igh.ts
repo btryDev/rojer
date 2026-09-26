@@ -112,6 +112,42 @@ export const CCH_CLASSEMENT_ERP_IGH: Corpus = {
         "Aucune échéance n'en découle : l'article classe, il ne prescrit aucune vérification périodique. C'est le cas type du statut — « définition, renvoi, règle ponctuelle sans récurrence ».\n\nCE QU'IL SERT EST AILLEURS QUE DANS LE RÉFÉRENTIEL : il est la source de l'énumération `CategorieErp` du modèle, et `categories-erp.test.ts` en dérive la liste attendue ainsi que les seuils affichés au dirigeant. CONFRONTATION FAITE LE 2026-09-03, ET LA LISTE EST JUSTE : cinq catégories au texte, cinq au modèle, aucune en trop, aucune manquante — c'est la seule des trois listes ouvertes ce jour-là dont la source présumée était fausse SANS que le modèle le soit. Les seuils des libellés (1 500 / 701 / 301 / 700 / 300) collent au texte, chiffre pour chiffre.\n\nRÉSERVE, écrite pour ne pas la redécouvrir : l'article se lit avec `GN 2` de l'arrêté du 25 juin 1980, qui règle le classement d'un GROUPEMENT d'exploitations — plusieurs activités dans un même bâtiment non isolées entre elles forment un seul ERP, dont la catégorie s'obtient en additionnant les effectifs. Le modèle ne porte qu'une catégorie par établissement et ne sait pas représenter un groupement ; ce n'est pas un défaut de la liste, c'est une question de modélisation qui n'a pas été instruite.",
     },
     {
+      ref: "CCH R. 143-38",
+      intitule: "Visite de réception et autorisation d'ouverture",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819025",
+      versionEnVigueur: "2021-07-01",
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "Avant l'ouverture au public (ou la réouverture après plus de dix mois de fermeture), la commission procède à une visite de réception ; l'exploitant demande au maire l'autorisation d'ouverture, sauf pour les établissements de 5ᵉ catégorie sans locaux d'hébergement pour le public.",
+      citationCle:
+        "L'exploitant demande au maire l'autorisation d'ouverture, sauf dans le cas des établissements visés au premier alinéa de l'article R. 143-14 qui ne comportent pas de locaux d'hébergement pour le public.",
+      statut: "sans_objet",
+      motif:
+        "Règle ponctuelle d'ouverture, sans récurrence : rien à inscrire au calendrier d'un établissement ouvert. Consignée le 2026-09-26 parce que les écrans la citent : la catégorie d'un ERP « figure sur l'arrêté d'ouverture ou le procès-verbal de la commission de sécurité » était dit à tous, alors qu'un établissement de 5ᵉ catégorie sans hébergement peut n'avoir pas de procès-verbal de la commission de sécurité. Relu de première main : trois alinéas ; seule la phrase citée l'a été mot pour mot (l'outil de lecture a refusé la recopie intégrale), le reste en résumé. « Création Décret n° 2021-872 du 30 juin 2021 », en vigueur le 1er juillet 2021 : aucune modification, `modifiePar: null`.",
+    },
+    {
+      ref: "CCH R. 122-5",
+      intitule: "Autorisation d'ouverture d'un établissement recevant du public",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000052644820",
+      versionEnVigueur: "2025-11-21",
+      modifiePar: {
+        texte:
+          "Décret n° 2025-1100 du 19 novembre 2025 fixant les conditions de mise en œuvre des solutions d'effet équivalent liées à la sécurité contre l'incendie, transférant des dispositions réglementaires concernant la sécurité incendie des bâtiments à usage professionnel (BUP) dans le code de la construction et de l'habitation et modifiant certaines procédures d'instruction — art. 1.",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000052611335",
+      },
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
+      prescrit:
+        "I : l'autorisation d'ouverture prévue à L. 122-5 est délivrée au nom de l'État, sur l'attestation de R. 122-30 quand les travaux ont fait l'objet d'un permis de construire, sinon après avis de la commission, qui visite les établissements de 1ʳᵉ à 4ᵉ catégorie. II : la demande « au titre de l'incendie » n'est pas exigée en 5ᵉ catégorie sans locaux d'hébergement pour le public.",
+      citationCle:
+        "La demande d'autorisation d'ouverture prévue à l'article L. 122-5 au titre de l'incendie n'est pas exigée pour les établissements classés dans la 5e catégorie selon les dispositions de l'article R. 143-19 et qui ne comportent pas de locaux d'hébergement pour le public.",
+      statut: "sans_objet",
+      motif:
+        "Règle ponctuelle d'ouverture, sans récurrence : rien à inscrire au calendrier d'un établissement ouvert. Consignée le 2026-09-26 parce que les écrans la citent, À LA PLACE de R. 143-38 : la contre-lecture de C36 a montré que « un établissement de 5ᵉ catégorie sans hébergement n'a pas d'autorisation d'ouverture à demander » disait plus que le droit. L. 122-5 (version du 28 mai 2026, lu) subordonne l'ouverture de TOUT ERP à une autorisation, après contrôle de L. 161-1 (accessibilité) et, selon l'effectif et la nature, de L. 141-2 et L. 143-2 ; le II du présent article ne dispense la 5ᵉ sans hébergement que de la demande « au titre de l'incendie ». Les écrans disent donc cela et rien de plus : ils ne concluent plus que l'établissement « peut n'avoir ni l'un ni l'autre ». Lecture : la phrase citée confirmée mot pour mot en deux lectures ciblées (la première a corrigé « en application de » en « selon les dispositions de ») ; le I est résumé, l'outil l'ayant rendu en paraphrase.",
+    },
+    {
       ref: "CCH R. 146-3",
       intitule: "Définition de l'immeuble de grande hauteur",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819081",

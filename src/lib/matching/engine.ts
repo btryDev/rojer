@@ -474,7 +474,7 @@ export function matchTypologie(
   // Le silence retombait sur `effectifSurSite` et le nombre obtenu était traité
   // comme le total : sous le seuil, l'obligation disparaissait. Or un ERP reçoit
   // du public par définition ; répondre « 8 » pour un restaurant de huit
-  // salariés qui sert trois cents couverts est une chose qu'on sait fausse, et
+  // salariés qui peut accueillir quatre cents personnes à la fois est une chose qu'on sait fausse, et
   // elle faisait disparaître en silence la consigne de sécurité incendie et les
   // exercices semestriels — deux lignes qu'un inspecteur regarde en premier.
   //

@@ -38,6 +38,19 @@ type TitreDuCatalogue = {
 };
 
 /**
+ * Les titres dont la visite produit un avis d'aptitude : l'examen médical du
+ * suivi individuel renforcé (R. 4624-25), dont la visite annuelle de la
+ * catégorie A est le renouvellement (R. 4451-82). Une visite d'information et
+ * de prévention donne une attestation de suivi (R. 4624-14), la visite
+ * intermédiaire est faite par un professionnel de santé : leur dire « l'avis
+ * d'aptitude vous est transmis » annonçait un document qui n'existe pas.
+ */
+const DELIVRENT_UN_AVIS_D_APTITUDE = new Set([
+  "sante-travail-salarie-sir",
+  "sante-travail-salarie-sir-categorie-a",
+]);
+
+/**
  * La déclaration d'un titre détenu.
  *
  * C'est l'écran où la frontière sur la santé se tient, ou ne se tient pas.
@@ -185,10 +198,10 @@ export function FormulaireTitre({
             <strong>Ne déposez pas le document.</strong>{" "}
             Rojer enregistre
             qu&apos;une attestation ou une visite a eu lieu, sa date et son
-            échéance — rien d&apos;autre. Le motif médical, l&apos;avis
-            d&apos;aptitude et la pièce elle-même ne vous sont pas destinés et
-            n&apos;ont pas à transiter ici. Vous conservez l&apos;original de
-            votre côté, comme aujourd&apos;hui.
+            échéance — rien d&apos;autre.{" "}
+            {DELIVRENT_UN_AVIS_D_APTITUDE.has(titre.id)
+              ? "L'avis d'aptitude vous est transmis et vous le conservez de votre côté (art. R. 4624-55) : Rojer n'en garde pas copie."
+              : "Vous conservez le document de votre côté : Rojer n'en garde pas copie."}
           </p>
         </div>
       )}

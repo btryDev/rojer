@@ -196,7 +196,11 @@ export const obligationsConformite: Obligation[] = [
 // elle vit sur la page « Quand ça arrive ».
 // `.7` le 2026-09-26 : `L. 4624-2-4` entre (information du travailleur sur la
 // préreprise), événementielle, sans échéance.
-export const REFERENTIEL_VERSION = "2026-09-26.7";
+// `.8` le 2026-09-26 : description seule — `incendie-travail-moyens-lutte`
+// ne dit plus que la vérification annuelle des extincteurs est « la règle de
+// fait ». Empreinte inchangée, version neuve : deux documents qui citent la
+// même version doivent avoir lu le même texte.
+export const REFERENTIEL_VERSION = "2026-09-26.8";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

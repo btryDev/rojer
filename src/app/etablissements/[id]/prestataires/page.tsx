@@ -153,9 +153,7 @@ export default async function PrestatairesPage({
             Pour tout contrat d&apos;au moins <strong>5 000 € HT</strong>, vous
             vous faites remettre <strong>tous les six mois</strong>{" "}
             l&apos;attestation
-            de vigilance de votre prestataire, et vous en gardez trace. En cas de
-            travail dissimulé chez lui, cette trace écrite est ce qui vous
-            distingue.
+            de vigilance de votre prestataire, et vous en gardez trace.
           </p>
           <div className="mt-4">
             {/* L'URL pointait sur LEGIARTI000037389145, qui rend 404, et
