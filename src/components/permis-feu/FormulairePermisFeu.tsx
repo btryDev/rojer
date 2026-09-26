@@ -47,6 +47,12 @@ const PILULE_RETENUE =
  */
 const PILULE_COCHABLE = `${PILULE} ${PILULE_REPOS} has-[:checked]:bg-[color:var(--board-blue-pale)] has-[:checked]:text-[color:var(--board-blue-ink)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[color:var(--board-blue-strong)]`;
 
+/** Les champs dont l'erreur s'affiche à côté d'eux ; les autres, en bas du formulaire. */
+const CHAMPS_AVEC_ERREUR_RENDUE = new Set([
+  "batimentId", "dateDebut", "dateFin", "descriptionTravaux", "donneurOrdreNom", "lieu",
+  "mesuresValidees", "naturesTravaux", "prestataireContact", "prestataireEmail", "prestataireRaison",
+]);
+
 export function FormulairePermisFeu({
   etablissementId,
   prestataires,
@@ -385,11 +391,26 @@ export function FormulairePermisFeu({
         </div>
       </SectionChamps>
 
-      {state.status === "error" && !state.fieldErrors && (
-        <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-          {state.message}
-        </p>
-      )}
+      {/* Le message général ne se masque plus dès qu'il y a des erreurs de
+          champ : un champ sans `err()` rendu (durée, fonction, notes…)
+          restait muet (vérification du 2026-09-26). Toute erreur qu'aucun
+          champ n'affiche est listée ici, sans câblage champ par champ. */}
+      {state.status === "error" &&
+        (!state.fieldErrors ||
+          Object.keys(state.fieldErrors).some((k) => !CHAMPS_AVEC_ERREUR_RENDUE.has(k))) && (
+          <div role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+            <p className="m-0">{state.message}</p>
+            {state.fieldErrors ? (
+              <ul className="m-0 mt-1 pl-4">
+                {Object.entries(state.fieldErrors)
+                  .filter(([k]) => !CHAMPS_AVEC_ERREUR_RENDUE.has(k))
+                  .map(([k, msgs]) => (
+                    <li key={k}>{msgs?.[0]}</li>
+                  ))}
+              </ul>
+            ) : null}
+          </div>
+        )}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="board" size="board" type="submit" disabled={pending}>

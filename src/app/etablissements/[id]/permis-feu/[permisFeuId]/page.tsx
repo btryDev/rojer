@@ -24,6 +24,7 @@ import {
 } from "@/components/permis-feu/PermisFeuActions";
 import { getPermisFeu } from "@/lib/permis-feu/queries";
 import { LABEL_NATURE } from "@/lib/permis-feu/schema";
+import { dureeHhMm } from "@/lib/permis-feu/duree";
 import {
   GROUPES_LABEL,
   MESURES_PERMIS_FEU,
@@ -40,12 +41,6 @@ const FMT_HEURE = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
   minute: "2-digit",
 });
-
-function dureeHhMm(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
-}
 
 function numero(n: number): string {
   return `PF-${String(n).padStart(3, "0")}`;

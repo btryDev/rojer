@@ -1,5 +1,6 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
+import { dureeHhMm } from "@/lib/permis-feu/duree";
 import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
@@ -294,7 +295,7 @@ export async function GET(
         `  Prestataire : ${p.prestataireRaison} (${p.prestataireContact})`,
         `  Lieu : ${p.lieu}`,
         `  Période : ${formaterDateHeureFr(p.dateDebut)} → ${formaterDateHeureFr(p.dateFin)}`,
-        `  Surveillance : ${Math.round(p.dureeSurveillanceMinutes / 60)}h`,
+        `  Surveillance : ${dureeHhMm(p.dureeSurveillanceMinutes)}`,
         `  Travaux : ${p.naturesTravaux.join(", ")}`,
         `  Description : ${p.descriptionTravaux}`,
         // ~~« Mesures validées : N »~~ : le compte mêlait mesures courantes et

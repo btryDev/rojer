@@ -80,10 +80,11 @@ export default async function PermisFeuListePage({
                 Vos permis de feu
               </h2>
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Chaque travail par point chaud réalisé chez vous doit faire
-                l&apos;objet d&apos;un permis signé conjointement avec le
-                prestataire avant démarrage. Cette liste vous permet de
-                retrouver l&apos;historique complet.
+                Rojer propose un permis de feu pour chaque travail par points
+                chauds réalisé chez vous, signé par vous et par
+                l&apos;intervenant&nbsp;; aucun texte ne l&apos;impose sous ce
+                nom (voir plus bas). Cette liste vous permet de retrouver
+                l&apos;historique complet.
               </p>
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Créez votre premier permis dès qu&apos;un soudeur, un plombier

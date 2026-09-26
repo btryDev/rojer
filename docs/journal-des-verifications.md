@@ -1388,6 +1388,25 @@ passaient en vert.]*
   échangés (3 rouges), date de création ignorée (1), refus d'un identifiant
   retiré supprimé (1).
 
+**Vérification ciblée, le même jour : trois suites et un reste.**
+- Un refus serveur sur un champ qui n'affiche pas son erreur (durée,
+  fonction du donneur d'ordre, notes) restait muet. Le message général ne se
+  masque plus dès qu'il y a des erreurs de champ : toute erreur qu'aucun
+  champ n'affiche est listée en bas du formulaire. Un test confronte la liste
+  des champs rendus aux `err("…")` du source (épreuve : `lieu` retiré de la
+  liste → refusé).
+- La page de signature reçoit `createdAt`, pour AFFICHAGE seul :
+  `hash-objet.ts` a son propre `select`, sans lui, et l'empreinte d'un permis
+  signé ne bouge pas. Un permis ancien sans mesure y porte donc aussi la
+  mention « liste antérieure ».
+- Le ZIP arrondissait la surveillance à l'heure (90 min → « 2h ») ; il écrit
+  désormais comme la fiche (« 1h30 »), par une seule fonction
+  (`permis-feu/duree.ts`).
+- L'état vide de la liste des permis disait « doit faire l'objet d'un permis
+  signé conjointement », ce qui contredisait « Aucun texte n'impose le permis
+  de feu sous ce nom » sur la même page. Il dit désormais ce que Rojer
+  propose, et renvoie à ce paragraphe.
+
 **Ce qui n'est pas porté** : les autres lignes de la brochure — dégazage,
 contrôle d'atmosphère, bouteilles de gaz, supports incombustibles, issues,
 extinction des étincelles, refroidissement, colmatage. Elles n'ont jamais été

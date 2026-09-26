@@ -373,7 +373,7 @@ function detailPermis(c: ContenuPermisASigner) {
             ))}
           </ul>
         )}
-        {surListeAnterieure(c.mesuresValidees) ? (
+        {surListeAnterieure(c.mesuresValidees, c.createdAt) ? (
           <p className={CLASSE_TEXTE}>
             Ce permis a été établi sur une liste antérieure de mesures&nbsp;:
             les libellés ci-dessus sont ceux qu&apos;il portait.
