@@ -22,7 +22,7 @@ const DETAILS: OutilDetail[] = [
     loi: [
       "Inventaire écrit des risques par unité de travail.",
       "Mise à jour ≥ 1 fois par an (11 salariés et +) et à tout changement.",
-      "Conservation 40 ans (loi du 2 août 2021).",
+      "Conservation 40 ans à compter de son élaboration (art. R. 4121-4).",
     ],
     app: [
       "Trame pré-remplie adaptée à votre secteur NAF.",

@@ -173,9 +173,10 @@ export default async function PermisFeuListePage({
             />
           </div>
           <p className="m-0 mt-3 text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            Votre assureur l&apos;exigera probablement au titre de la règle
-            APSAD R43. C&apos;est un référentiel de la profession de
-            l&apos;assurance, opposable par votre contrat — pas par le droit.
+            La règle APSAD R43 (travaux par points chauds) est un référentiel
+            publié par la profession de l&apos;assurance : ni un article de
+            code, ni un arrêté. Un contrat d&apos;assurance peut y renvoyer ;
+            Rojer ne lit pas le vôtre.
           </p>
         </WhyCard>
       </div>

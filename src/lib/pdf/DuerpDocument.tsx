@@ -260,8 +260,7 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
               aussi réalisée {enMinuscule(MAJ_DUERP_AMENAGEMENT_IMPORTANT)}, et{" "}
               {enMinuscule(MAJ_DUERP_INFORMATION_NOUVELLE)} (2° et 3°).
               Conservation 40 ans à compter de son
-              élaboration, ainsi que ses versions antérieures (loi du 2 août
-              2021).
+              élaboration, ainsi que ses versions antérieures (art. R. 4121-4).
             </Text>
           </View>
         </View>
@@ -851,7 +850,7 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
           </Text>
           <Text>
             • conservé pendant 40 ans à compter de son élaboration, ainsi que
-            ses versions antérieures (loi du 2 août 2021) ;
+            ses versions antérieures (art. R. 4121-4) ;
           </Text>
           <Text>
             • tenu à disposition des travailleurs, du CSE le cas échéant, du

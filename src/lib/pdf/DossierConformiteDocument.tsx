@@ -640,7 +640,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             — Évaluation des risques professionnels : articles R. 4121-1 à
             R. 4121-4 du Code du travail. Mise à jour annuelle minimum
             (entreprises ≥ 11 salariés), conservation 40 ans des versions
-            (loi du 2 août 2021).
+            à compter de leur élaboration (art. R. 4121-4).
           </Text>
           <Text style={{ marginTop: 3 }}>
             — Principes généraux de prévention : article L. 4121-2 CT.
