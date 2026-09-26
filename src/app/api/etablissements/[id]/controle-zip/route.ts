@@ -24,6 +24,8 @@ import { PlanActionsDocument } from "@/lib/pdf/PlanActionsDocument";
 import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
+import { annoncesZip } from "@/lib/plan-prevention/annonces-plan";
+import { lignesR4512_12Zip } from "@/lib/plan-prevention/annonces-zip";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 import {
@@ -315,6 +317,10 @@ export async function GET(
     const txt = [
       `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
       `Art. R. 4512-6 à R. 4512-12 du code du travail.`,
+      // R. 4512-9 et R. 4512-11 valent pour tout plan, et ce fichier n'en
+      // porte aucune pièce : le lecteur doit l'apprendre ici plutôt que de
+      // conclure, d'un silence, que l'obligation n'existe pas.
+      ...annoncesZip.enTete(),
       "",
       "────────────────────────────────────────────────────────────",
       ...plansList.flatMap((p) => [
@@ -344,6 +350,11 @@ export async function GET(
         // ZIP est un inspecteur, un assureur ou un acquéreur, et une omission
         // silencieuse lui ferait lire un plan complet.
         ...contenuR4512_8(p),
+        // R. 4512-12, sous sa propre condition — écrit obligatoire au sens de
+        // R. 4512-7 — ou quand la durée manque et que Rojer ne peut pas dire
+        // qu'il ne l'est pas. Le même diagnostic que la fiche, appelé dans le
+        // module : la route passe le plan, elle ne décide rien.
+        ...lignesR4512_12Zip(p),
         "",
       ]),
     ].join("\n");

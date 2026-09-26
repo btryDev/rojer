@@ -89,6 +89,11 @@
 //
 // Lecture : `agent_verbatim`, relevés sur Légifrance le 2026-09-02, page de
 // section du chapitre puis fiche de chaque article pour l'URL et la version.
+// [2026-09-26 : `R. 4512-1`, `-9`, `-11` et `-12` relus sur leur page propre
+// pour le lot qui les annonce à l'écran (C30) ; verbatims inchangés.
+// `R. 4512-1` et `-12` passent en `premiere_main` avec `modifiePar: null` —
+// leur page ne porte que la création par le décret n° 2008-244 ; `-9` et
+// `-11` restent `agent_verbatim`, leur texte modificateur n'étant pas ouvert.]
 
 import type { Corpus } from "./types";
 
@@ -110,8 +115,11 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       intitule: "Nouveaux sous-traitants après le début de l'intervention",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529799",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
-      lecture: "agent_verbatim",
+      // La page porte « Création Décret n°2008-244 du 7 mars 2008 - art. (V) »
+      // et aucune modification depuis : `null`, comme `R. 4515-5` (C24).
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "Le recours à de nouveaux sous-traitants après le début de l'intervention fait recommencer, à leur égard, toutes les procédures du chapitre : inspection commune préalable, analyse conjointe des risques et plan de prévention.",
       citationCle:
@@ -120,14 +128,17 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       cause: "module",
       toucheLaCible: true,
       motif:
-        "L'article rend caduque, pour un nouvel arrivant, la procédure déjà accomplie : un plan signé le lundi ne couvre pas le sous-traitant arrivé le jeudi, et il faut refaire l'inspection commune avec lui. Le modèle `PlanPrevention` ne connaît qu'UNE entreprise extérieure par plan — `entrepriseExterieureRaison`, un seul `efChefNom`, un seul `efEffectifIntervenant` — et aucun champ ni aucun écran ne mentionne la sous-traitance en cascade. Un plan validé reste donc affiché « signé » quand le texte le tient pour inapplicable à la moitié des gens présents sur le site. Le blocage est double : événementiel, comme R. 4141-8 et R. 4141-12 — il n'y a pas de déclencheur « événement » au modèle —, et structurel, puisque le rattachement d'un plan à plusieurs entreprises n'existe pas. C'est le manque le plus silencieux du chapitre : rien, à l'écran, ne laisse deviner qu'une question se pose.",
+        "L'article rend caduque, pour un nouvel arrivant, la procédure déjà accomplie : un plan signé le lundi ne couvre pas le sous-traitant arrivé le jeudi, et il faut refaire l'inspection commune avec lui. Le modèle `PlanPrevention` ne connaît qu'UNE entreprise extérieure par plan — `entrepriseExterieureRaison`, un seul `efChefNom`, un seul `efEffectifIntervenant` — et aucun champ ~~ni aucun écran~~ ne mentionne la sous-traitance en cascade [2026-09-26 : deux écrans la mentionnent désormais, voir la fin de ce motif]. Un plan validé reste donc affiché « signé » quand le texte le tient pour inapplicable à la moitié des gens présents sur le site. Le blocage est double : événementiel, comme R. 4141-8 et R. 4141-12 ~~— il n'y a pas de déclencheur « événement » au modèle —~~ [2026-09-26 : rayé — la page « Quand ça arrive » existe (ADR-037) et porte des obligations événementielles ; celle-ci n'y est pas encodée], et structurel, puisque le rattachement d'un plan à plusieurs entreprises n'existe pas. ~~C'est le manque le plus silencieux du chapitre : rien, à l'écran, ne laisse deviner qu'une question se pose.~~ [2026-09-26 — annoncé à qui utilise le plan de prévention : l'article est cité entier dans le chapeau de la section « Entreprise extérieure » du formulaire et ~~dans la carte « Ce que d'autres articles demandent au plan » de la fiche~~ [2026-09-26, après contre-lecture : dans une carte propre « Art. R. 4512-1 » de la fiche — l'article ne demande rien AU PLAN], avec l'antécédent de « le présent chapitre » (R. 4512-1 à R. 4512-16) et le constat « Rojer ne rattache à un plan qu'une seule entreprise extérieure. » Textes écrits une fois dans `plan-prevention/annonces-plan.ts`, confrontés à ce verbatim par `annonces-plan.test.ts`. Le manque reste : rien n'est encodé, et le statut reste `obligation_manquante`.]",
     },
     {
       ref: "R. 4512-2",
       intitule: "Inspection commune préalable",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529795",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
+      // Verbatim relu sur sa page propre le 2026-09-26 (C30, diagnostic) :
+      // identique. `lecture` inchangée — la mention de version de la page
+      // n'a pas été relevée ce jour, et `premiere_main` la demande.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Une inspection commune des lieux de travail, des installations et des matériels mis à disposition est faite préalablement à l'exécution de toute opération réalisée par une entreprise extérieure, sans condition de durée ni de nature des travaux.",
@@ -187,7 +198,10 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       intitule: "Analyse conjointe des risques et plan de prévention",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529785",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
+      // Verbatim relu sur sa page propre le 2026-09-26 (C30, diagnostic) :
+      // identique. `lecture` inchangée — la mention de version de la page
+      // n'a pas été relevée ce jour, et `premiere_main` la demande.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Les chefs des entreprises utilisatrice et extérieures analysent en commun les risques d'interférence au vu de l'inspection commune ; lorsque ces risques existent, ils arrêtent d'un commun accord, avant le début des travaux, un plan de prévention définissant les mesures de chacun.",
@@ -202,7 +216,10 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       intitule: "Cas où le plan de prévention est établi par écrit",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529783",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
+      // Verbatim relu sur sa page propre le 2026-09-26 (C30, diagnostic) :
+      // identique. `lecture` inchangée — la mention de version de la page
+      // n'a pas été relevée ce jour, et `premiere_main` la demande.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Le plan est établi par écrit et arrêté avant le commencement des travaux dans deux cas : au moins 400 heures de travail prévisibles sur une période inférieure ou égale à douze mois, ou travaux figurant sur la liste de travaux dangereux fixée par arrêté, quelle que soit la durée.",
@@ -232,11 +249,15 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       intitule: "Liste des postes relevant du suivi individuel renforcé",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033769545",
       versionEnVigueur: "2017-01-01",
+      // `url` retirée le 2026-09-26 : elle pointait l'article lui-même, pas le
+      // décret (contre-lecture de C30). L'adresse du décret n'est pas relevée.
       modifiePar: {
         texte: "Décret n° 2016-1908 du 27 décembre 2016 - art. 17",
-        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033769545",
       },
-      luLe: "2026-09-02",
+      // Relu le 2026-09-26 sur sa page propre ; reste `agent_verbatim` : le
+      // décret n° 2016-1908, qui a donné la version en vigueur, n'est pas
+      // ouvert en entier, et la règle en tête de `types.ts` le demande.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Chaque entreprise concernée fournit la liste des postes occupés par les travailleurs susceptibles de relever du suivi individuel renforcé en raison des risques liés aux travaux réalisés dans l'entreprise utilisatrice ; cette liste figure dans le plan de prévention.",
@@ -246,7 +267,7 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       cause: "module",
       toucheLaCible: true,
       motif:
-        "Une pièce nommée, exigée dans le plan, et qui n'existe nulle part dans le produit : « Cette liste figure dans le plan de prévention » est une phrase impérative, pas une recommandation, et « chaque entreprise concernée » inclut l'entreprise utilisatrice pour ses propres travailleurs exposés. Aucun champ du modèle `PlanPrevention`, aucune section du formulaire, aucune ligne du PDF. Le blocage n'est pas seulement un champ manquant : le produit ne rattache aucun poste ni aucun salarié à un suivi individuel renforcé — le corpus `code-travail-sante-travail` a déjà buté sur la même absence à propos de R. 4624-28-2. Encoder la liste sans savoir qui la peuple produirait un champ vide qu'on cocherait.",
+        "Une pièce nommée, exigée dans le plan, et qui n'existe nulle part dans le produit : « Cette liste figure dans le plan de prévention » est une phrase impérative, pas une recommandation, et « chaque entreprise concernée » inclut l'entreprise utilisatrice pour ses propres travailleurs exposés. Aucun champ du modèle `PlanPrevention`, ~~aucune section du formulaire,~~ aucune ligne du PDF [2026-09-26 : le formulaire la NOMME désormais, sans champ — voir la fin de ce motif]. Le blocage n'est pas seulement un champ manquant : le produit ne rattache aucun poste ni aucun salarié à un suivi individuel renforcé — le corpus `code-travail-sante-travail` a déjà buté sur la même absence à propos de R. 4624-28-2. Encoder la liste sans savoir qui la peuple produirait un champ vide qu'on cocherait. [2026-09-26 — annoncé à qui utilise le plan de prévention : l'article est cité entier dans la section « Contenu minimal du plan » du formulaire, dans la carte « Ce que d'autres articles demandent au plan » de la fiche et en tête du fichier `07_Plans_de_prevention.txt` du ZIP de contrôle, suivi du constat « Le plan tenu dans Rojer n'a pas de champ pour cette liste. » (et, dans le ZIP, « Ce fichier ne la contient pas. »). Relu sur sa page propre le 2026-09-26 (structure demandée en aveugle, recopie, puis questions fermées sur la formulation décisive) : verbatim identique à celui du 2026-09-02. Le manque reste entier : aucun champ, statut inchangé.]",
     },
     {
       ref: "R. 4512-10",
@@ -268,11 +289,13 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       intitule: "Dossiers amiante joints au plan de prévention",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025819097",
       versionEnVigueur: "2021-07-01",
+      // `url` retirée le 2026-09-26 : même défaut que `R. 4512-9`.
       modifiePar: {
         texte: "Décret n° 2021-872 du 30 juin 2021 - art. 7",
-        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025819097",
       },
-      luLe: "2026-09-02",
+      // Relu le 2026-09-26 ; reste `agent_verbatim` : le décret n° 2021-872
+      // n'est pas ouvert en entier.
+      luLe: "2026-09-26",
       lecture: "agent_verbatim",
       prescrit:
         "Les dossiers techniques amiante, ou le cas échéant le rapport de repérage avant travaux, sont joints au plan de prévention.",
@@ -282,15 +305,18 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       cause: "module",
       toucheLaCible: true,
       motif:
-        "Une pièce que l'entreprise utilisatrice DÉTIENT — le dossier technique amiante est celui du propriétaire ou de l'exploitant de l'immeuble — et que le texte lui fait joindre au plan. Le produit ne connaît le DTA sous aucune forme : ni type de document, ni champ, ni pièce attendue du plan de prévention, balayage de `src/` le 2026-09-02. Le manque touche la cible de plein fouet : un local commercial ou un restaurant construit avant le 1er juillet 1997 a un DTA, et l'intervention d'un plombier ou d'un électricien dans ses faux plafonds est exactement le cas que l'article vise. La version lue est celle du décret n° 2021-872, qui a substitué le renvoi à R. 126-10 du CCH à l'ancien R. 111-45 recodifié — un renvoi de plus qui aurait été mort si l'article n'avait pas été rouvert. Ce qui empêche l'encodage n'est pas le modèle mais l'absence de toute notion d'amiante dans le produit, qui déborde ce lot.",
+        "Une pièce que l'entreprise utilisatrice DÉTIENT — le dossier technique amiante est celui du propriétaire ou de l'exploitant de l'immeuble — et que le texte lui fait joindre au plan. Le produit ne connaît le DTA sous aucune forme : ni type de document, ni champ, ni pièce attendue du plan de prévention, balayage de `src/` le 2026-09-02. Le manque touche la cible de plein fouet : un local commercial ou un restaurant construit avant le 1er juillet 1997 a un DTA, et l'intervention d'un plombier ou d'un électricien dans ses faux plafonds est exactement le cas que l'article vise. La version lue est celle du décret n° 2021-872, qui a substitué le renvoi à R. 126-10 du CCH à l'ancien R. 111-45 recodifié — un renvoi de plus qui aurait été mort si l'article n'avait pas été rouvert. Ce qui empêche l'encodage n'est pas le modèle mais l'absence de toute notion d'amiante dans le produit, qui déborde ce lot. [2026-09-26 — annoncé à qui utilise le plan de prévention : l'article est cité entier dans la section « Contenu minimal du plan » du formulaire, dans la carte « Ce que d'autres articles demandent au plan » de la fiche et en tête du fichier `07_Plans_de_prevention.txt` du ZIP de contrôle, suivi du constat « Le plan tenu dans Rojer ne permet pas d'y joindre ces pièces. » (et, dans le ZIP, « Ce fichier ne les contient pas. »). Relu sur sa page propre le 2026-09-26 (structure demandée en aveugle, recopie, puis questions fermées sur la formulation décisive) : verbatim identique à celui du 2026-09-02. Le produit ne connaît toujours pas le DTA : statut inchangé.]",
     },
     {
       ref: "R. 4512-12",
       intitule: "Tenue à disposition du plan écrit et information de l'inspection du travail",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018529773",
       versionEnVigueur: "2008-05-01",
-      luLe: "2026-09-02",
-      lecture: "agent_verbatim",
+      // « Création Décret n°2008-244 du 7 mars 2008 - art. (V) », aucune
+      // modification depuis : `null`, comme `R. 4515-5` (C24).
+      modifiePar: null,
+      luLe: "2026-09-26",
+      lecture: "premiere_main",
       prescrit:
         "Quand le plan écrit est obligatoire, il est tenu pendant toute la durée des travaux à la disposition de l'inspection du travail et des agents de prévention, et le chef de l'entreprise utilisatrice informe par écrit l'inspection du travail de l'ouverture des travaux.",
       citationCle:
@@ -299,7 +325,7 @@ export const CODE_TRAVAIL_PLAN_PREVENTION: Corpus = {
       cause: "module",
       toucheLaCible: true,
       motif:
-        "LE 2° EST UNE DÉMARCHE À FAIRE, PAS UN DOCUMENT À RANGER, et c'est le seul acte du chapitre qui sorte de l'entreprise : informer par écrit l'inspection du travail de l'ouverture des travaux, à la charge du chef de l'entreprise utilisatrice, dès que l'écrit est obligatoire. Rien dans le produit ne le nomme — ni le formulaire, ni la fiche de plan, ni le ZIP de contrôle —, alors que DEUX surfaces affichent la pastille « Art. R. 4512-6 à R. 4512-12 CT » et que la prose de la pastille parle de l'établissement conjoint du plan sans dire un mot de cette démarche. Un dirigeant qui lit l'écran conclut qu'il a fini quand il a signé. Le 1° est mieux servi — le plan est stocké et exportable — mais « pendant toute la durée des travaux » suppose de savoir que les travaux ont commencé, ce que `dateDebut` donne, sans qu'aucune surface le rapproche de l'exigence. Le blocage du 2° est celui des obligations événementielles : le déclencheur est l'ouverture des travaux, et le référentiel n'a pas d'axe pour ça.",
+        "LE 2° EST UNE DÉMARCHE À FAIRE, PAS UN DOCUMENT À RANGER, et c'est le seul acte du chapitre qui sorte de l'entreprise : informer par écrit l'inspection du travail de l'ouverture des travaux, à la charge du chef de l'entreprise utilisatrice, dès que l'écrit est obligatoire. ~~Rien dans le produit ne le nomme — ni le formulaire, ni la fiche de plan, ni le ZIP de contrôle —,~~ [2026-09-26 : les trois le nomment désormais, voir la fin de ce motif] alors que DEUX surfaces affichent la pastille « Art. R. 4512-6 à R. 4512-12 CT » et que la prose de la pastille parle de l'établissement conjoint du plan sans dire un mot de cette démarche. ~~Un dirigeant qui lit l'écran conclut qu'il a fini quand il a signé.~~ [2026-09-26 : faux depuis C30 dans les cas que le diagnostic voit — écrit obligatoire, ou durée non renseignée. RESTE VRAI dans un cas : durée saisie sous 400 h, travaux non déclarés dangereux, et les 400 h atteintes en cours d'exécution (R. 4512-7 1°, seconde phrase) — Rojer ne refait pas le diagnostic après validation, et R. 4512-12 ne s'affiche pas.] Le 1° est mieux servi — le plan est stocké et exportable — mais « pendant toute la durée des travaux » suppose de savoir que les travaux ont commencé, ce que `dateDebut` donne, sans qu'aucune surface le rapproche de l'exigence. Le blocage du 2° est celui des obligations événementielles : le déclencheur est l'ouverture des travaux~~, et le référentiel n'a pas d'axe pour ça~~ [2026-09-26 : rayé — la page « Quand ça arrive » existe (ADR-037) ; l'obligation n'y est pas encodée]. [2026-09-26 — annoncé à qui utilise le plan de prévention : ~~quand `diagnostiquerPlan` conclut à l'écrit obligatoire, et seulement alors — c'est la condition que l'article pose —,~~ [2026-09-26, après contre-lecture : quand `diagnostiquerPlan` conclut à l'écrit obligatoire ET quand la durée n'est pas renseignée sans travaux déclarés dangereux — Rojer ne peut alors pas dire que l'écrit n'est pas obligatoire, et l'article est cité sous sa condition écrite, précédé de « Durée non renseignée : Rojer ne peut pas dire si le seuil de R. 4512-7 est atteint. »] l'article est cité entier dans la `recommandation` du diagnostic (lue par la carte du formulaire, avec la pastille de l'article), dans une carte ~~« Art. R. 4512-12 · pendant les travaux »~~ [titre neutre « Art. R. 4512-12 » : le premier situait le 2° dans le temps] de la fiche avec le constat « Rojer n'enregistre pas l'information prévue au 2°. », et sous chaque plan concerné du fichier `07_Plans_de_prevention.txt`. Aucun délai n'est affiché : l'article n'en fixe pas. Relu sur sa page propre le 2026-09-26 (structure demandée en aveugle, recopie, puis questions fermées sur la formulation décisive) : verbatim identique à celui du 2026-09-02. Rien n'est encodé : statut inchangé.]",
     },
     {
       ref: "R. 4512-13",

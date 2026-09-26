@@ -57,3 +57,17 @@ describe("le README du ZIP dit « aucun équipement déclaré » (§ 15)", () =>
     expect(t).toContain(INVENTAIRE.motif);
   });
 });
+
+describe("le README dit les deux cas de l'écrit de R. 4512-7", () => {
+  // « EE ≥ 400 h » taisait le 2° : travaux dangereux, quelle que soit la
+  // durée prévisible de l'opération (contre-lecture du 2026-09-26).
+  it("1° et 2°, chacun dans ses mots", () => {
+    const t = aplati(genererReadme(base)).replace(/\s+/g, " ");
+    const ligne = t.slice(t.indexOf("Plans de prévention"), t.indexOf("Plans de prévention") + 400);
+    expect(ligne).toContain("art. R. 4512-7");
+    expect(ligne).toContain("égal au moins à 400 heures sur une période inférieure ou égale à douze mois");
+    expect(ligne).toContain("travaux dangereux figurant sur une liste fixée");
+    expect(ligne).toContain("quelle que soit la durée prévisible de l'opération");
+    expect(t).not.toContain("EE ≥ 400 h");
+  });
+});

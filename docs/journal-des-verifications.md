@@ -1458,6 +1458,155 @@ pas.**
 `docs/etat-verification-referentiel.md` régénéré : lus au 2026-08-31,
 68 − 1 = 67 ; lus au 2026-09-26, 17 + 1 = 18 (`R. 4121-4`).
 
+### C30 · 2026-09-26 — Cinq manques du plan de prévention, dits à qui l'utilise
+
+*C28 et C29 sont pris par des lots parallèles, sur d'autres branches ; ils
+n'apparaissent pas dans celle-ci.*
+
+**Le constat.** `R. 4512-1`, `R. 4512-9`, `R. 4512-11`, `R. 4512-12` et
+`R. 4463-8` sont `obligation_manquante`, cause `module`, et touchent la cible :
+le produit a le plan de prévention et n'en disait rien. Le lot les DIT sur
+les surfaces existantes ; il ne les encode pas. Pas de migration, pas de
+champ, statuts inchangés — les changer est une décision de produit.
+
+**Relu à la source, le 2026-09-26**, chacun sur sa page propre : structure
+demandée sans rien suggérer, recopie intégrale, puis questions fermées sur la
+formulation décisive — « informe par écrit », le débiteur « le chef de
+l'entreprise utilisatrice », l'absence de tout délai (`R. 4512-12`) ; « sont à
+nouveau applicables à ces derniers » (`R. 4512-1`) ; « Cette liste figure dans
+le plan de prévention. » (`R. 4512-9`) ; « sont joints au plan de prévention »
+et le nombre de phrases (`R. 4512-11` — la première réponse en annonçait deux
+pour une seule recopiée ; la question fermée en compte une) ; « tiennent
+compte, le cas échéant », et l'absence de « doivent » (`R. 4463-8`). **Les cinq
+verbatims du corpus sont exacts.** `R. 4512-1`, `-12` et `R. 4463-8` passent en
+`premiere_main` : leur page ne porte que leur création (décret n° 2008-244 pour
+les deux premiers, `modifiePar: null` comme `R. 4515-5` en C24 ; décret
+n° 2025-482, art. 3, déjà ouvert pour le corpus chaleur, pour le troisième).
+`-9` et `-11` restent `agent_verbatim`, leur texte modificateur n'étant pas
+ouvert ; leur `modifiePar.url`, qui pointait l'article lui-même et non le
+décret, est retirée.
+
+**Une seule écriture.** `src/lib/plan-prevention/annonces-plan.ts` porte les
+cinq textes, entiers, et cinq phrases de Rojer — quatre constats sur ce que le
+produit enregistre et le fait « Durée non renseignée : Rojer ne peut pas dire
+si le seuil de R. 4512-7 est atteint. ». Surfaces : la `recommandation` de
+`diagnostiquerPlan` (donc la carte du formulaire, avec la pastille de
+`R. 4512-12`), la fiche du plan (carte « Art. R. 4512-12 » ; carte « Ce que
+d'autres articles demandent au plan » pour `-9`, `-11` et `R. 4463-8`, la
+pastille avant la citation ; carte propre « Art. R. 4512-1 », qui ne demande
+rien au plan), le formulaire (chapeaux « Entreprise extérieure » et « Analyse
+conjointe » avec leurs pastilles, section « Contenu minimal »), le fichier 07
+du ZIP (en-tête pour `-9`/`-11`, `lignesR4512_12Zip(p)` par plan).
+`R. 4463-8` est cité entier, PGC et PPSPS compris : couper laissait un sujet
+singulier devant « tiennent ».
+
+**Trois états de l'écrit, pas deux** (corrigé après contre-lecture). La durée
+est facultative ; sans elle et sans travaux déclarés dangereux,
+`diagnostiquerPlan` rendait « non imposé », écrivait « elles ne sont pas
+atteintes ici » et taisait `R. 4512-12` partout. Il rend désormais `ecrit` :
+`obligatoire`, `non_impose` ou `indetermine`. Dans l'indéterminé, le
+diagnostic dit le fait, et `R. 4512-12` est cité sous sa condition écrite,
+sur les trois surfaces. `ecritObligatoire` garde son sens (obligatoire
+seulement) pour la pastille et la carte « Pourquoi l'écrit est obligatoire »
+de la fiche.
+
+**Le diagnostic, remis sur ses textes** (seconde reprise). `R. 4512-2`,
+`R. 4512-6` et `R. 4512-7` relus sur leur page propre le 2026-09-26, la
+formulation décisive confirmée deux fois ; verbatims du corpus exacts ; `luLe` passé au 2026-09-26, `lecture` laissée `agent_verbatim` (mention de version non relevée ce jour). Trois
+défauts du diagnostic, antérieurs au lot : (1) « quelle que soit la durée
+(art. R. 4512-6) » — `R. 4512-6` ne contient pas le mot « durée » ; ces mots
+ouvrent le 2° de `R. 4512-7` (« Quelle que soit la durée prévisible de
+l'opération »). (2) « L'inspection commune préalable et l'accord sur les
+mesures, eux, restent à faire avant le début des travaux » — l'inspection
+a lieu « préalablement à l'exécution de l'opération réalisée par une
+entreprise extérieure » (`R. 4512-2`, qui ne contient pas « travaux ») ;
+seul l'accord est « avant le début des travaux » (`R. 4512-6`) ; et « restent
+à faire » s'affichait même quand une inspection est datée. (3) « Ce sont les
+400 heures qui commandent l'écrit » taisait le 2° de `R. 4512-7`, comme
+« EE ≥ 400 h » dans `00_README.txt`. Désormais chaque article a sa phrase,
+ses mots entre guillemets et son moment (`PHRASE_R4512_2`, `_6`, `_7` dans
+`annonces-plan.ts`, fragments confrontés au verbatim de LEUR article) ; aucun
+« reste à faire » ; les deux cas de l'écrit partout, README compris ; sous le
+seuil, le fait « Durée saisie : N heures ; travaux non déclarés dangereux. »
+remplace la conclusion. `seuil.test.ts` tenait l'ancienne phrase ; ses deux
+tests sont réécrits sur les nouvelles, et deux s'ajoutent (« durée » jamais
+attribuée à `R. 4512-6`, les deux cas de l'écrit).
+
+**La garde, et ce qu'elle mesure.** Deux fichiers.
+`annonces-plan.test.ts` : chaque texte égal au `citationCle` du corpus et
+chaque URL à la sienne ; le chapeau et les deux items de `R. 4512-12`
+recomposent l'article ; les phrases de Rojer passent un filtre de mots de
+prescription (liste courte et nommée, frontières Unicode, apostrophe
+typographique) éprouvé sur quatre dérives ; dans les trois états, le
+diagnostic et les lignes du ZIP citent `R. 4512-12` entier ou pas du tout ;
+la route du ZIP appelle `lignesR4512_12Zip(p)` une fois, avec le plan de la
+boucle, et n'a aucune autre voie vers ces lignes (contrôle du SOURCE : la
+route n'est pas rendue en test) ; aucune seconde copie des textes dans
+`src/` hors corpus. `annonces-surfaces.test.tsx` REND la page réelle de la fiche dans les trois
+états et le formulaire au premier affichage (état indéterminé), et y cherche
+chaque texte ENTIER, chaque pastille avec son lien, l'ordre pastille →
+citation, l'absence de « pendant les travaux », et le contenu de la carte
+« Ce que d'autres articles demandent au plan » lu dans son HTML, du titre à
+la fin de sa liste. **Doublures, toutes** : `LegalBadge` (la vraie ne rend
+son lien qu'une fois dépliée ; la doublure rend référence et lien — **le lien
+n'est donc vérifié que sur la doublure**, pas sur la pastille réelle) ;
+`next/navigation` (`useRouter`, `usePathname`, `notFound`) ; les actions
+serveur de `plan-prevention/actions` ; `getPlanPrevention` de
+`plan-prevention/queries` (un plan construit par le test, sans base) ;
+`DemanderSignatureForm` ; `BoutonCloturer` et `BoutonSupprimerPlan`.
+**Ce qu'elle ne prouve pas** : qu'une surface n'ajoute pas une phrase de son
+cru à côté des textes ; les états « obligatoire » et « non imposé » du
+formulaire (qui ne se rendent qu'après saisie) ne sont tenus que par le
+diagnostic ; la route, par son source ; le lien de la pastille réelle.
+
+**Éprouvée.** ~~Vingt et une injections, toutes rouges~~ [2026-09-26 : faux
+— la vérification ciblée de `562f848` a rangé `R. 4512-1` dans la carte
+« demandent au plan » et la suite est restée verte ; le test qui devait
+l'interdire s'arrêtait sur la pastille « Art. R. 4512-1 CT », qui porte le
+même libellé que le titre qu'il cherchait]. Après correction : **vingt-huit
+injections, les vingt-huit rouges**, fichiers restaurés après chacune. Quatre
+exécutions ont figé vitest (constat « À faire », copie dans la fiche,
+« quelle que soit la durée (art. R. 4512-6) », 2° de R. 4512-7 retiré) : elles
+ont été arrêtées — seuls les processus de ce worktree, identifiés par leur
+répertoire —, puis rejouées une à une, rouges toutes les quatre. La liste : Les cinq défauts que la première garde laissait passer
+(condition de la carte forcée à vrai ; chapeau `R. 4512-12` supprimé de la
+fiche ; état écrit en dur dans la route, équivalent du `|| true`, et plan
+retouché ; `{CHAPITRE_R4512}` retiré du formulaire ; `R4512_9` tronqué en
+place, sur la fiche et sur le formulaire) ; les trois mots que le filtre
+ratait (« délais », « N’oubliez », « À faire ») ; la durée manquante rabattue
+sur « non imposé » ; le titre « pendant les travaux » rétabli ; la pastille
+remise après la citation ; un lien retiré du formulaire ; les sept de la
+première passe (paraphrases du corpus et du brief, constat qui avise, copie
+recopiée, constante contournée, recommandation amputée) ; et sept de la
+seconde reprise : `R. 4512-1` rangé dans la carte « demandent au plan »
+(l'injection exacte de la vérification ciblée), « Le plan reste dû […]
+quelle que soit la durée (art. R. 4512-6) » rétabli, « restent à faire »
+rétabli, l'inspection rattachée au moment de l'accord, le 2° de R. 4512-7
+retiré, « EE ≥ 400 h » rétabli dans le README, le seuil de R. 4512-7
+paraphrasé.
+
+**Rayé au corpus**, daté : les deux « pas de déclencheur / d'axe événement »
+(`R. 4512-1`, `R. 4512-12` — la page « Quand ça arrive » existe, ADR-037, sans
+que ces obligations y soient encodées), les phrases devenues fausses (« aucun
+écran ne mentionne », « rien, à l'écran », « ni le formulaire, ni la fiche, ni
+le ZIP », « aucune section du formulaire », « RIEN n'y nomme la chaleur »,
+« nulle part où la loger »), et « Un dirigeant qui lit l'écran conclut qu'il a
+fini quand il a signé », qui **reste vraie dans un cas** : durée saisie sous
+400 h, travaux non déclarés dangereux, et 400 h atteintes en cours
+d'exécution — Rojer ne refait pas le diagnostic après validation. Aucune
+ligne de `docs/chantiers-ouverts.md` ne portait ces articles.
+
+**Appliqué :** référentiel inchangé (`2026-09-26.5`, 167 obligations) ; sceau
+du calendrier mesuré identique avant et après :
+`2026-09-26.5+167-66f005e23f039ca+moteur.4`. `registre-dette.test.ts` n'a pas
+bougé.
+
+**Reste**, faute de décision : les cinq demeurent des manques. Le 2° de
+`R. 4512-12` n'a ni date ni trace ; la liste de `R. 4512-9` n'a pas de
+peuplement possible tant que rien ne rattache un poste au suivi individuel
+renforcé ; le DTA n'existe pas au modèle ; un plan ne connaît qu'une
+entreprise extérieure ; le seuil n'est pas recalculé en cours d'exécution.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
