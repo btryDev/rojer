@@ -187,7 +187,11 @@ export const obligationsConformite: Obligation[] = [
 // `.2` le 2026-09-26 : aucune entrée ni sortie. Les libellés des onze lignes
 // « Quand ça arrive » disent l'acte dans les mots du texte, sans condition ;
 // le protocole de sécurité cite `R. 4515-5` et `R. 4515-6`.
-export const REFERENTIEL_VERSION = "2026-09-26.2";
+// `.3` le 2026-09-26 : l'annuelle `CH 58` quitte la 5ᵉ catégorie (`PE 1`
+// § 1). C'est le premier changement de ce jour qui DÉPLACE des lignes de
+// calendrier : chaque N5 muni d'une VMC ou d'une CTA perd une ligne annuelle
+// par appareil, archivée avec ses rapports à la prochaine réconciliation.
+export const REFERENTIEL_VERSION = "2026-09-26.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -1395,6 +1395,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // le fait, extrait du texte. Le protocole de sécurité cite `R. 4515-5` et
     // `R. 4515-6`, dont sa description reprenait le contenu sans les nommer.
     { version: "2026-09-26.2", empreinte: "167-b9d48ac97814cdc1" },
+    // Toujours 167. L'annuelle `CH 58` est bornée aux catégories 1 à 4 : en
+    // 5ᵉ catégorie, `PE 1` § 1 écarte le livre II, et aucun article PE ne la
+    // mentionne. Un N5 garde la triennale `PE 4` § 2 ; ses lignes annuelles
+    // existantes sont archivées à la prochaine réconciliation, rapports
+    // conservés.
+    { version: "2026-09-26.3", empreinte: "167-f308942676ad4866" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
