@@ -289,6 +289,9 @@ export const onboardingSchema = z
       estERP: val.estERP,
       categorieErp: val.categorieErp,
       effectifSurSite: val.effectifSurSite,
+      // Posée au parcours depuis le 2026-09-27 : un « oui » rend le nombre sans
+      // objet, ici comme à la fiche (revue du lot 1).
+      manipuleMatieresR422722: val.manipuleMatieresR422722,
     });
     if (nombreDemande && val.personnesPresentesHabituellement === undefined) {
       ctx.addIssue({

@@ -235,3 +235,15 @@ describe("finaliserOnboarding — matières et chiffons au parcours (2026-09-27)
     expect(ecrit()).not.toHaveProperty("chiffonsImpregnes");
   });
 });
+
+describe("finaliserOnboarding — matières « oui », pas de nombre exigé (revue du lot 1)", () => {
+  // Même règle au serveur qu'au client. Éprouvé en retirant la ligne du schéma.
+  it("un restaurant N5 qui manipule des matières est créé sans nombre de personnes", async () => {
+    await expect(
+      finaliserOnboarding(
+        { status: "idle" },
+        formulaire({ estERP: "true", typeErp: "N", categorieErp: "N5", manipuleMatieresR422722: "oui" }),
+      ),
+    ).rejects.toThrow("NEXT_REDIRECT");
+  });
+});

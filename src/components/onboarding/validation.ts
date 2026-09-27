@@ -169,6 +169,9 @@ export function nombreDePersonnesDemande(s: OnboardingState): boolean {
     estERP: s.estERP === true,
     categorieErp: (s.categorieErp || null) as CategorieErp | null,
     effectifSurSite: Number.isInteger(effectif) ? effectif : null,
+    // Même règle que le serveur (`onboarding/schema.ts`) : matières « oui »,
+    // le nombre est sans objet (revue du lot 1).
+    manipuleMatieresR422722: s.manipuleMatieresR422722 === "oui",
   });
 }
 

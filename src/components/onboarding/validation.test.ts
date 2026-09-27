@@ -429,3 +429,23 @@ describe("étape 2 — aucune réponse de régime présélectionnée (2026-09-27
     expect(VALEURS_INITIALES.estHabitation).toBeNull();
   });
 });
+
+describe("matières « oui » : le nombre de personnes n'est plus demandé (revue du lot 1)", () => {
+  // Posée au parcours depuis le 2026-09-27, la question des matières ouvre à
+  // elle seule le champ de R. 4227-34 : exiger le nombre bloquerait pour rien.
+  // Éprouvé en retirant `manipuleMatieresR422722` de `nombreDePersonnesDemande`.
+  const erp5 = {
+    ...complet,
+    estERP: true,
+    typeErp: "N",
+    categorieErp: "N5",
+    effectifSurSite: "8",
+  };
+  it("demandé tant que les matières sont muettes ou « non »", () => {
+    expect(nombreDePersonnesDemande({ ...erp5, manipuleMatieresR422722: "" })).toBe(true);
+    expect(nombreDePersonnesDemande({ ...erp5, manipuleMatieresR422722: "non" })).toBe(true);
+  });
+  it("plus demandé sur un « oui »", () => {
+    expect(nombreDePersonnesDemande({ ...erp5, manipuleMatieresR422722: "oui" })).toBe(false);
+  });
+});

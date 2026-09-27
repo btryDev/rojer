@@ -50,7 +50,7 @@ export const LIBELLE_NOMBRE_DE_PERSONNES =
 export const MESSAGE_NOMBRE_DE_PERSONNES =
   "Indiquez combien de personnes peuvent se trouver habituellement dans vos locaux, salariés et public compris (nombre entier, de 1 à 99 999).";
 export const AIDE_NOMBRE_DE_PERSONNES =
-  "Le Code du travail vise les établissements « dans lesquels peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes » (art. R. 4227-34). Il leur impose un système d'alarme sonore, une consigne de sécurité incendie affichée (art. R. 4227-37), et des essais et exercices au moins tous les six mois (art. R. 4227-39). Comptez ensemble vos salariés et le public — clients, élèves, patients, visiteurs. Les mêmes obligations valent, quel que soit ce nombre, là où sont manipulées des matières inflammables : cette question-là figure sur la fiche de l'établissement.";
+  "Le Code du travail vise les établissements « dans lesquels peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes » (art. R. 4227-34). Il leur impose un système d'alarme sonore, une consigne de sécurité incendie affichée (art. R. 4227-37), et des essais et exercices au moins tous les six mois (art. R. 4227-39). Comptez ensemble vos salariés et le public — clients, élèves, patients, visiteurs. Les mêmes obligations valent, quel que soit ce nombre, là où sont manipulées des matières inflammables : si c'est votre cas, répondez « oui » à la question des matières, et ce nombre n'est plus demandé.";
 
 /**
  * Personnes habituellement présentes — R. 4227-34 CT, « occupées ou réunies ».
@@ -185,8 +185,10 @@ export function evaluerPersonnesPresentes(
  * de R. 4227-22 sont DÉCLARÉES manipulées, le champ est ouvert « quelle que soit
  * leur importance » : le moteur retient les deux lignes sans « à confirmer »,
  * que le nombre soit 30, 60 ou absent. L'exiger alors bloquerait une fiche pour
- * une réponse qui ne change rien (contre-lecture du 2026-09-20). Le parcours de
- * création ne pose pas la question des matières : il n'y passe jamais `true`.
+ * une réponse qui ne change rien (contre-lecture du 2026-09-20). ~~Le parcours de
+ * création ne pose pas la question des matières : il n'y passe jamais `true`.~~
+ * [2026-09-27 : il la pose depuis `ec9917c`, et passe la réponse ici — client
+ * (`onboarding/validation.ts`) et serveur (`onboarding/schema.ts`) ensemble.]
  */
 export function nombreDePersonnesADemander(etab: {
   estERP: boolean;
