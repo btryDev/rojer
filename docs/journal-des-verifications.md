@@ -4604,9 +4604,48 @@ abrogation différée au 2027-01-01 **sans version suivante**, relevée au corpu
 
 **Ce qui reste ouvert, écrit.** Le champ de la question des matières (manipulation
 contre entreposage, R. 4227-22 à -25). La marque des conditions d'équipement opt-out
-(groupe électrogène). La requalification de l'article de l'arrêté du 4 novembre 1993
-que la note désignait « candidat ». Les indéterminations de couverture hors de
-l'indice d'avancement (A3). La version 2027 de R. 4227-37.
+(groupe électrogène). ~~La requalification de l'article de l'arrêté du 4 novembre 1993
+que la note désignait « candidat ».~~ Les indéterminations de couverture hors de
+l'indice d'avancement (A3). La version 2027 de R. 4227-37. [2026-09-28, C53 :
+l'art. 14 est requalifié `retenu` (`f67f56d5`) ; le champ des matières, la marque
+opt-out et A3 sont instruits et attendent D24, D14 et D2.]
+
+
+### C53 · 2026-09-27/28 — Audit de bout en bout : du texte enregistré au réconciliateur
+
+*Branche `lot/audit-bout-en-bout`, sur `lot/couverture-reponse-absente` (`1cded3d8`).
+Rapport : `docs/revues/audit-bout-en-bout-2026-09-27.md` ; table du 7 bis :
+`docs/revues/audit-bout-en-bout-2026-09-27-annexe-7bis.md` ; décisions :
+`docs/revues/decisions-a-prendre-2026-09-27.md` (D1 à D24). Obligation nouvelle à
+part : `lot/audit-obligations-nouvelles`.*
+
+**Le résultat le plus utile n'est pas un défaut du code, c'est un défaut des
+gardes.** Cinq garanties du réconciliateur éprouvées en les cassant : trois
+laissaient la suite existante VERTE — la part moteur du sceau (`queries.test.ts`),
+l'écriture conditionnée sur la date et le statut lus, la non-convergence
+(`actions.test.ts`, dont le crochet tire avant la lecture des rapports). Le
+fichier de bout en bout (`d9b8c2bd`, `48417bbc`) les tient. De même, l'ordre
+« titre > ponctuel » cassé laissait `echeance-de-ligne.test.ts` vert.
+
+| Maillon | Vérifié | Corrigé | Décision |
+|---|---|---|---|
+| 1 corpus | 534 articles, 513 OK, 20 non vérifiables, 1 abrogation différée connue (`1310b435`) | GE 6 (`3615cb33`) | D15 |
+| 2 référentiel | aucune obligation morte (`88b34b80`) | — | — |
+| 3 moteur | bornes de chaque seuil (`360da522`) | A1 : personnes déclarées sous l'effectif (`2505c5b2`) | D7, D9 |
+| 4 datation | ordre des règles, 29/02, 31/03, heure d'été (`360da522`) | — | D8 |
+| 5 réconciliateur | a/b à g2, salarié revenu ; les quatre constats du 2026-09-09 clos | — | — |
+| 6 sorties | — | garde des surfaces (`c6293641`) | D3, D4, D5 |
+| 7 périmètre | 25 annonces = 25 `non_couvert` | — | D1, D2, D6 |
+| 7 bis | 518 articles relus par l'API | `974b7916`, `f67f56d5`, `1f4dee9c`, `9b0f735a`, `8002ff9b` | D10-D12, D16-D24 |
+| 8 GN 10 | texte relu | PE 33, PE 35 (`9b0f735a`) | D13 |
+
+**Une règle écrite a bloqué un encodage fondé, et c'est voulu.** Trois obligations
+de 5ᵉ catégorie que le texte impose (PE 27 § 2, PE 26 § 1, PE 11 § 1) ne sont pas
+codées : la réserve de PE 27 l'interdit tant que la classe GN 10 n'est pas
+tranchée (D21, après D13).
+
+**Aucune version.** Descriptions, références et corpus hors empreinte ; moteur 5
+recopié sans incrément (A1 part avec le lot 1, non livré). Aucune migration.
 
 ## Partie 2 — Registre des constats en suspens
 
