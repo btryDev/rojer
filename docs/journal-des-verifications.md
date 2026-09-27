@@ -4443,6 +4443,104 @@ sable (pas la clé d'API, pas ceux de production), que l'API Légifrance y est
 cochée, et les CGU acceptées ; puis `pnpm legifrance:verifier -- --ref
 "R. 4227-26"`.
 
+### C51 · 2026-09-27 — Le premier passage réel trié : artefacts du script, puis écarts du corpus
+
+*Branche `lot/legifrance-api`, sur C50 (`3d2e674`). Commits `882ce56`
+(script) et `0cd8b5e` (corpus). Aucune obligation du référentiel modifiée ;
+deux verbatims faux corrigés dans des notes. Rapports :
+`docs/revues/verification-legifrance-2026-09-27-premier-passage.md` (avant),
+`docs/revues/verification-legifrance-2026-09-27.md` (après).*
+
+**Compteurs, mêmes 531 articles, bac à sable PISTE.** (catégorie la plus grave)
+
+| | abrogé | citation | version | modificateur | non vérifiable | OK |
+|---|---:|---:|---:|---:|---:|---:|
+| Premier passage (C50) | 3 | 34 | 2 | 44 | 30 | 418 |
+| Script corrigé, corpus inchangé | 0 | 16 | 4 | 11 | 20 | 480 |
+| Corpus corrigé | 0 | 0 | 0 | 0 | 20 | 511 |
+
+Mouvement « modificateur » (articles touchés, cumul) : 49 − 38 (artefacts)
++ 2 (R. 4624-32, -33, masqués par l'ancien filtre) = 13, tous du corpus.
+Citation : 34 − 20 (artefacts) + 2 (annexe II de l'arrêté 2011-12-26 et
+arrêté 2012-08-07, devenus vérifiables) = 16, tous du corpus. Version :
+2 + PO 1 § 3 (devenu vérifiable) + L. 8222-2 (version future non relevée)
+= 4. Non vérifiable : 30 − 10 (5 annexes, 3 plages de l'arrêté 2017-11-20, l'arrêté
+2012-08-07 balisé « (art. N) », PO 1 § 3) = 20.
+
+**Ce que valent `linkType`, `linkOrientation`, `dateDebutCible`** (réponses
+brutes gardées hors dépôt ; en-tête de `modificateursCourants`).
+`dateDebutCible` n'est PAS le début de la version (R. 134-6 : 2026-03-07 pour
+une version du 2026-04-01 ; sentinelle 2999-01-01 sur les liens
+`MODIFICATION`) : le filtre de C50 fabriquait les « modificateurs
+différents ». L'orientation se lit avec le type : `MODIFIE`/`CREE`/`DEPLACE`
+« cible » et `MODIFICATION` « source » disent le même fait ; vu depuis
+l'article modificateur, les mêmes liens sont « source ». Sur 90 liens :
+MODIFIE/cible 44, MODIFICATION/source 23, CODIFICATION/source 16, CREE/cible
+6, DEPLACE/cible 1.
+
+**Artefacts corrigés dans le script**, un test chacun, chaque garde cassée
+puis rétablie (M1-M14 rouges ; casse, accents, chiffres, ponctuation
+interne : rouges) : filtre de date des liens ; texte porteur pris pour
+modificateur ; graphie ISO « Arrêté 1993-06-04 » ; `ABROGE_DIFF` suivi d'une
+`VIGUEUR_DIFF` lu comme une abrogation ; puces « ― » et « - » ; « 1. » /
+« 1° » ; espaces de l'API (« an , », « m/ s », « 5 e », « § 1.A »,
+guillemets droits) ; ponctuation des bords d'un fragment ; sauts de ligne et
+balises « (art. N) » comme coupures ; nota absent du texte comparé ;
+résolution de « PO 1 § 3 — … », des annexes, des plages « art. 26-28 ». Ce
+que la coupure aux sauts de ligne cède : un alinéa omis ENTRE deux lignes
+citées ne se voit plus (un mot changé, si).
+
+**Écarts du corpus corrigés** (texte de l'API, `lecture: "api_legifrance"` —
+valeur ajoutée à `SourceLecture`, degré de première main ; avant/après dans
+`historique`) : GC 1 (phrase d'introduction omise), EL 19 (quatre compléments
+omis), GH W 5 (§ 3 amputé ; modificateur : arrêté du 24 octobre 2016, pas du
+7 novembre), C. env. R. 543-79 (« ou d'un certificat équivalent… » omis),
+arrêté 2017-11-20 art. 15 (coquille « arrêté, Si » de Légifrance), CCH
+R. 134-6 (« examen semestriel **du bon état** des câbles »), arrêté
+2018-02-23 art. 26 (« avec » → « donnant lieu à »), R. 4624-28-3 (« A »),
+arrêté 1986 art. 97 (casse, « (**) ») et 100 (casse, « réceptacle »),
+R. 1321-43 (paraphrase remplacée par le 3° officiel), R. 4223-4 (tableau),
+arrêté 2017-04-19 art. 1er et 2 (compléments omis), CCH R. 146-3 (« (1) »),
+arrêté 2011-12-26 annexe II (« sera effectuée », pas « doit être »), arrêté
+2012-08-07 (« nécessaires »). URL de `modifiePar` pointant un autre texte :
+10 articles. `null` contredit par un DÉPLACEMENT : R. 4624-32, R. 4624-33,
+R. 4121-1. PO 1, PO 1 § 3, PO 7 : version du 2011-10-30, pas du 2018-01-01.
+L. 8222-2 : `versionFuture` 2026-12-26. GH 61 n'avait rien de faux (§ 5 puis
+§ 7 : l'écart venait du script).
+
+**Aucune citation corrigée ne change le sens d'une obligation** (rythme,
+seuil, destinataire). Les gardes `fait-dans-le-texte`, `extraits-affiches`,
+`citations-risques` sont restées vertes.
+
+**À décider (non fait).**
+1. `incendie-hotel-po-controle-annuel-electricite` déclare
+   `versionConstatee` 2018-01-01 ; le corpus lit désormais 2011-10-30 :
+   divergence visible dans `docs/etat-verification-referentiel.md`.
+2. R. 4227-37 au 2027-01-01 (décret n° 2025-1100, art. 3) : SEULE la dernière
+   phrase change — les « instructions » des autres établissements renvoient au
+   2e alinéa de CCH R. 141-7 au lieu du 1° de R. 4216-2. Champ (R. 4227-34),
+   consigne et locaux inchangés. Le nota confirme ce que `veille-textes.ts`
+   laissait « à confirmer » : application aux opérations de construction ou de
+   rénovation dont la demande d'autorisation d'urbanisme est déposée à compter
+   du 2027-01-01.
+3. L. 8222-2 au 2026-12-26 au plus tard (loi n° 2026-534, art. 95) : ajoute
+   « ou de l'article L. 8222-1-1 », article CRÉÉ par la même loi : le maître
+   de l'ouvrage vérifie périodiquement que le sous-traitant qu'il accepte
+   s'acquitte des formalités de L. 8221-3 et L. 8221-5 (documents fixés par
+   décret ; particuliers exclus). Obligation nouvelle, hors corpus.
+4. C. env. L. 512-7 : 2222-02-22 est la date conventionnelle de Légifrance
+   (entrée en vigueur à la publication d'un acte d'exécution européen) ; la
+   version future (loi n° 2025-794) ajoute l'élevage : sans effet sur le
+   stockage. Classé « version future à date non fixée ».
+
+**Non vérifiables restants (20)** : 17 brochures INRS, règlement UE
+2024/573, GE 6 (version différée au 2027-06-01, que `getArticleWithIdAndNum`
+ne trouve pas ; sommaires vides en bac à sable), arrêtés du 18 novembre 2004
+(citation paraphrasée) et du 1er décembre 2025 (sans citation).
+
+**Sorties.** `tsc` 0 ; `eslint` 0 erreur (2 avertissements préexistants) ;
+vitest 297 fichiers passés, 1 ignoré, 3993 tests passés, 4 ignorés.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
@@ -4987,6 +5085,9 @@ qu'on a vu mentir, avec la date et l'article sur lequel ça s'est produit.
 | **9** | **Deux lectures concordantes peuvent partager le même angle mort** — c'est la limite de la parade n° 8, et elle a failli coûter `GH 61` | 2026-09-04 | chercher un **second article** qui dit la même chose. `GH 5 § 3.1.4` a confirmé la quinquennale de `GH 61 § 5` : c'est le seul recoupement du dossier qui ne partageait aucun angle mort |
 | **10** | **Une lecture automatique peut aussi AJOUTER une conclusion de droit** que le texte ne porte pas | arrêté 1986, art. 62 : « contrôlable et remplaçable » rendu avec le commentaire « cela implique une obligation de vérification du propriétaire », que le texte ne dit pas (2026-09-04) | ne retenir que ce qui est **entre guillemets dans le texte** |
 | **11** | **Le fil d'Ariane rendu peut être faux** alors que l'article, lui, est le bon | arrêté 1986, art. 21 et 26 : chemin annoncé « Titre II » pour des articles du titre III (2026-09-04) | recouper le chemin sur les **articles voisins** avant de s'en servir pour appliquer une exclusion |
+| **12** | **`ABROGE_DIFF` n'est pas une abrogation** quand une version `VIGUEUR_DIFF` commence le jour même (API, C51) | R. 4227-37, L. 8222-2, C. env. L. 512-7 (2026-09-27) | lire `articleVersions` : l'état porte sur la VERSION |
+| **13** | **`dateDebutCible` n'est pas la date de la version modifiée** (API, C51) | CCH R. 134-6 : 2026-03-07 pour une version du 2026-04-01 ; 2999-01-01 sur les liens `MODIFICATION` | apparier le texte modificateur par son titre et son `JORFTEXT`, jamais par cette date |
+| **14** | **« 2222-02-22 » est une date conventionnelle** : entrée en vigueur non fixée | C. env. L. 512-7 (2026-09-27) | ne pas la recopier en `versionFuture` |
 
 **Trois contrôles suffisent à valider une page d'article**, et ils ont tenu sur
 les 82 lectures du 2026-09-04 : la page **annonce elle-même son numéro
