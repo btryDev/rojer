@@ -106,10 +106,18 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
   it("un article qui perd son adresse disparaît de la page", () => {
     // La projection lit le corpus, pas la table : un article couvert ou
     // reclassé cesse d'être annoncé, même si la table le nomme encore.
+    // L'article RESTE au corpus, couvert entre-temps : c'est le cas réel. Le
+    // retirer du corpus ne prouverait rien — une projection par la table le
+    // ferait disparaître aussi (épreuve du 2026-09-27 : la première écriture
+    // de ce test passait avec une projection qui ignorait le corpus).
     const corpusSans = CORPUS.map((c) => ({
       ...c,
-      articles: c.articles.filter((a) => a.ref !== "R. 4227-22"),
-    }));
+      articles: c.articles.map((a) =>
+        a.ref === "R. 4227-22"
+          ? { ...a, statut: "retenu" as const, obligations: ["x"] as [string], declareA: undefined }
+          : a,
+      ),
+    })) as unknown as typeof CORPUS;
     const refs = manquesAnnoncesDuDossier(corpusSans, EMPLOYEUR).flatMap((d) =>
       d.articles.map((a) => a.ref),
     );
