@@ -375,7 +375,11 @@ son échéance — plus strict que le texte, qui autorise l'employeur à en cons
 l'ADR-022, ~~**appliquée partout sauf à un attribut**~~ [2026-09-27 : **appliquée partout
 sauf à la catégorie et au type d'ERP** (restriction `types`), où l'absence écarte — la
 seconde exception, relevée en appelant le moteur sur 440 profils, retirait jusqu'à huit
-lignes ; la décision de la propriétaire attend les comptages de production
+lignes ; ~~la décision de la propriétaire attend les comptages de production~~
+[2026-09-27 : décision prise sur le comptage de production — zéro ERP sans type ou
+sans catégorie sur quatre établissements : pas d'option B, la base rend l'absence
+impossible (CHECK `Etablissement_erp_type_categorie_requis`, migration
+`20260927180000`, e029c41) ; `absence-erp.test.ts` lie l'asymétrie à la contrainte]
 (`docs/revues/analyse-reponse-absente-2026-09-27.md`)]. Ils étaient deux ; le second est
 rentré dans le rang le 2026-09-03. `personnesPresentesHabituellement` absent ne retombe
 plus sur `effectifSurSite` : le moteur en déduit une **borne basse** — le plancher de
