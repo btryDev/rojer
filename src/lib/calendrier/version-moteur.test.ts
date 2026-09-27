@@ -124,6 +124,9 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 5,
+  // Recopiée SANS incrément le 2026-09-28 (contre-revue du lot 1) :
+  // `absence.ts` importe `SEUIL_PERSONNES_R422734` au lieu de redéclarer 51.
+  // NON : même valeur.
   // Recopiée SANS incrément (revue du lot 1) : `PLANCHER_EFFECTIF_PAR_CATEGORIE`
   // devient exporté, pour que la politique de l'absence déclare la borne basse
   // qu'elle exempte. NON : même valeur, mêmes branches.
@@ -245,7 +248,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "e0840ccd5b481a89",
+  empreinte: "c0644a79bc5d533c",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

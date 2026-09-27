@@ -822,13 +822,13 @@ par une autre : dès la 3ᵉ catégorie d'ERP, le public dépasse 301, donc les 
 > n'a pas changé (version 4, empreinte re-relevée pour une extraction). Reste
 > ouvert : les dossiers anciens restés muets gardent leur « à confirmer »
 > jusqu'à ce qu'ils rouvrent leur fiche — ~~rien ne les y amène~~ [2026-09-27 : la
-> checklist du tableau de bord relance ~~, question par question (`ec9917c`)~~ — et
-> la première version (`ec9917c`) ne relançait que les matières et les chiffons, pas
-> ce nombre (revue indépendante du lot 1). Corrigé le même jour : la relance est
-> dérivée de la table `RELANCES` (`etablissements/relance.ts`), indexée par toutes
-> les questions que le moteur marque — nombre de personnes (renvoi à la fiche),
-> matières, chiffons, locaux à sommeil (oui/non dans la checklist) et type d'ERP
-> (renvoi à la fiche, inatteignable depuis la contrainte CHECK)] ; et
+> checklist du tableau de bord les relance, question par question, pour chaque
+> question que le moteur marque — la table `RELANCES` (`etablissements/relance.ts`)
+> en est indexée : nombre de personnes et type d'ERP par un renvoi à la fiche (le
+> type est inatteignable depuis la contrainte CHECK), matières, chiffons et locaux
+> à sommeil par un oui/non en place. La première version (`ec9917c`) ne relançait
+> que les matières et les chiffons ; relevé par la revue indépendante du lot 1,
+> corrigé le même jour] ; et
 > ~~`manipuleMatieresR422722` (§ 1) n'est toujours posée qu'à la fiche~~ [2026-09-27 :
 > posée à la création, avec les chiffons (`ec9917c`)].
 

@@ -17,7 +17,6 @@ import {
   relancesDuDossier,
   type QuestionOuiNon,
 } from "@/lib/etablissements/relance";
-import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
 import { DashboardGrid } from "@/components/dashboard/widgets/DashboardGrid";
 import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
@@ -36,6 +35,7 @@ import {
   getDashboardData,
   getModulesMatrice,
   listerEvenementsFenetre,
+  marquesAConfirmerDuRendu,
 } from "@/lib/dashboard/queries";
 import { listerEvenementsCalendrier } from "@/lib/calendrier/evenements";
 import { compterEtatEcheances } from "@/lib/calendrier/retards";
@@ -157,11 +157,9 @@ export default async function EtablissementPage({
       take: 4,
     }),
     // Les marques « à confirmer » : pour les échéances du board comme pour la
-    // relance plus bas — un seul calcul.
-    marquesAConfirmerDuDossier(prisma, {
-      id,
-      entreprise: { userId: etab.entreprise.userId },
-    }),
+    // relance plus bas — un seul calcul, partagé avec les fenêtres
+    // d'événements ci-dessus par `cache()`.
+    marquesAConfirmerDuRendu(id),
   ]);
 
   // Le filtre bâtiment se pose ici, une fois, sur la liste chargée entière —

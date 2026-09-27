@@ -46,8 +46,11 @@ describe("catégorie et type d'ERP : l'absence écarte parce que la base l'inter
       pose.test(sql),
       `La contrainte ${CONTRAINTE} manque : un ERP sans type ou sans catégorie redevient possible, et evaluerErp (engine.ts) écarterait alors ses obligations en silence. Rétablir la contrainte, ou faire retenir « à confirmer » par evaluerErp.`,
     ).toBe(true);
-    // `IF EXISTS` compris (revue du lot 1).
-    expect(sql).not.toMatch(new RegExp(`DROP CONSTRAINT (IF EXISTS )?"${CONTRAINTE}"`));
+    // `IF EXISTS` compris (revue du lot 1) ; casse, espacement et guillemets
+    // libres, comme Postgres les admet (contre-revue du lot 1).
+    expect(sql).not.toMatch(
+      new RegExp(`DROP\\s+CONSTRAINT\\s+(IF\\s+EXISTS\\s+)?"?${CONTRAINTE}"?`, "i"),
+    );
   });
 
   it("le moteur écarte bien — c'est ce comportement que la contrainte rend sûr", () => {

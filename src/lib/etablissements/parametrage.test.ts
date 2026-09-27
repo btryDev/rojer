@@ -7,9 +7,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => ({
   update: vi.fn(),
+  findUnique: vi.fn(async () => ({ estERP: true, typeErp: "O" as string | null })),
   regen: vi.fn(async () => true),
 }));
-vi.mock("@/lib/prisma", () => ({ prisma: { etablissement: { update: h.update } } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { etablissement: { update: h.update, findUnique: h.findUnique } } }));
 vi.mock("@/lib/auth/scope", () => ({ assertEtablissementOwnership: vi.fn() }));
 vi.mock("@/lib/calendrier/regeneration-sure", () => ({ regenererApresMutation: h.regen, MESSAGE_REGEN_ECHEC: "calendrier pas recalculé" }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -53,5 +54,19 @@ describe("régénération ratée : la réponse est acquise, et on le dit (revue 
     const r = await repondreMatieres("etab-1", { status: "idle" }, reponse("non"));
     expect(r.status).toBe("success_avec_avertissement");
     expect(h.update).toHaveBeenCalled();
+  });
+});
+
+describe("sommeil : la réponse suit le type, comme à la fiche (contre-revue du lot 1)", () => {
+  // Éprouvé en retirant la garde de `repondreSommeil`.
+  it.each([
+    ["type hors liste", { estERP: true, typeErp: "W" }],
+    ["pas ERP", { estERP: false, typeErp: null }],
+  ])("%s : refusée, rien n'est écrit", async (_nom, etab) => {
+    h.findUnique.mockResolvedValueOnce(etab);
+    const r = await repondreSommeil("etab-1", { status: "idle" }, reponse("oui"));
+    expect(r.status).toBe("error");
+    expect(h.update).not.toHaveBeenCalled();
+    expect(h.regen).not.toHaveBeenCalled();
   });
 });

@@ -32,10 +32,10 @@ import {
   type TypologieApplication,
 } from "@/lib/referentiels/types-communs";
 import type { EtablissementMatching, QuestionSansReponse } from "./types";
-import { PLANCHER_EFFECTIF_PAR_CATEGORIE } from "./personnes-presentes";
-
-/** « plus de cinquante personnes » (R. 4227-34). */
-const SEUIL_R4227_34 = 51;
+import {
+  PLANCHER_EFFECTIF_PAR_CATEGORIE,
+  SEUIL_PERSONNES_R422734,
+} from "./personnes-presentes";
 
 /** Les attributs d'établissement que le moteur lit et qui admettent `null`. */
 export type AttributNullable = {
@@ -128,10 +128,10 @@ export const POLITIQUE_ABSENCE = {
     },
     etablieAutrement: {
       si: (e) =>
-        e.effectifSurSite >= SEUIL_R4227_34 ||
+        e.effectifSurSite >= SEUIL_PERSONNES_R422734 ||
         (e.estERP &&
           e.categorieErp !== null &&
-          (PLANCHER_EFFECTIF_PAR_CATEGORIE[e.categorieErp] ?? 0) >= SEUIL_R4227_34),
+          (PLANCHER_EFFECTIF_PAR_CATEGORIE[e.categorieErp] ?? 0) >= SEUIL_PERSONNES_R422734),
       regle:
         "bornes basses d'`evaluerPersonnesPresentes` : la catégorie d'ERP (plancher de classement) et l'effectif du site établissent le seuil sans le nombre",
     },

@@ -13,7 +13,10 @@
 // recommandations (même réflexe que `statsActionsEnRetard`, qui refuse de
 // moyenner un retard sur une liste coupée).
 
-import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
+import {
+  marquesAConfirmerDuDossier,
+  type MarquesDuDossier,
+} from "@/lib/etablissements/marques-a-confirmer";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -142,6 +145,26 @@ export type EvenementFenetre = {
 };
 
 /**
+ * Les marques « à confirmer » du dossier, mémoïsées par `cache()` sur le rendu
+ * (contre-revue du lot 1) : le tableau de bord les demandait quatre fois — ses
+ * trois fenêtres d'événements et la relance —, et chaque calcul relit
+ * l'établissement et son parc. La portée est celle de la requête HTTP, comme
+ * `getDashboardData`, et la portée est celle de l'utilisateur connecté, lue
+ * ici comme dans `getDashboardData` — pas un propriétaire passé par l'appelant.
+ */
+export const marquesAConfirmerDuRendu = cache(
+  async function marquesAConfirmerDuRendu(
+    etablissementId: string,
+  ): Promise<MarquesDuDossier> {
+    const user = await requireUser();
+    return marquesAConfirmerDuDossier(prisma, {
+      id: etablissementId,
+      entreprise: { userId: user.id },
+    });
+  },
+);
+
+/**
  * Liste tous les événements de vérification sur une fenêtre glissante
  * de `joursHorizon` jours à partir d'aujourd'hui. Utilisé par les
  * widgets « Semaine » (7 j) et « 30 prochains jours », et par le flux calendrier.
@@ -176,7 +199,10 @@ export async function listerEvenementsFenetre(
   // trentième jour en entier, changements d'heure compris.
   const fin = ajouterJours(debutDuJour(now), joursHorizon);
 
-  const verifs = await prisma.verification.findMany({
+  // Les marques « à confirmer » (revue du lot 1), sous la même portée, lues en
+  // même temps que les lignes : elles n'en dépendent pas.
+  const [verifs, marques] = await Promise.all([
+    prisma.verification.findMany({
     // Composées et non diffusées, comme `listerVerifications` : la portée par
     // bâtiment pose un `OR`, et ce site n'échappait à l'écrasement que parce
     // que sa condition d'urgence porte `statut` et non `OR` — un accident, pas
@@ -210,13 +236,9 @@ export async function listerEvenementsFenetre(
       prescription: { select: { source: true } },
     },
     orderBy: { datePrevue: "asc" },
-  });
-
-  // Les marques « à confirmer » (revue du lot 1), sous la même portée.
-  const marques = await marquesAConfirmerDuDossier(prisma, {
-    id: etablissementId,
-    entreprise: { userId: user.id },
-  });
+    }),
+    marquesAConfirmerDuRendu(etablissementId),
+  ]);
 
   // Filtre par domaine côté TS, comme `listerVerifications` : le domaine
   // est porté par l'obligation en référentiel, pas en base.

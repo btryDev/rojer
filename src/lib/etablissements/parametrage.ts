@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { reponseSommeilSuivantLeType } from "./schema";
 import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
@@ -118,12 +119,16 @@ async function repondreQuestionDeLaFiche(
     | "chiffonsImpregnes"
     | "comporteLocauxSommeilPublic",
   formData: FormData,
+  /** Refuse une réponse que la fiche n'aurait pas gardée ; rend le message. */
+  garde?: (oui: boolean) => Promise<string | null>,
 ): Promise<ReponseParametrage> {
   await assertEtablissementOwnership(etablissementId);
   const parsed = reponseBooleenne.safeParse(formData.get("reponse"));
   if (!parsed.success) {
     return { status: "error", message: "Répondez oui ou non." };
   }
+  const refus = garde ? await garde(parsed.data === "oui") : null;
+  if (refus) return { status: "error", message: refus };
   await prisma.etablissement.update({
     where: { id: etablissementId },
     data: { [champ]: parsed.data === "oui" },
@@ -166,5 +171,23 @@ export async function repondreSommeil(
     etablissementId,
     "comporteLocauxSommeilPublic",
     formData,
+    // La même normalisation que la fiche (contre-revue du lot 1) : sur un type
+    // qui ne pose pas la question, `reponseSommeilSuivantLeType` remet la
+    // réponse à `null` — et ces actions n'écrivent jamais `null`. La réponse
+    // est donc refusée, plutôt qu'écrite là où plus aucun écran ne la montre.
+    async (oui) => {
+      const etab = await prisma.etablissement.findUnique({
+        where: { id: etablissementId },
+        select: { estERP: true, typeErp: true },
+      });
+      const garde = reponseSommeilSuivantLeType({
+        estERP: etab?.estERP ?? false,
+        typeErp: etab?.typeErp ?? null,
+        comporteLocauxSommeilPublic: oui,
+      });
+      return garde.comporteLocauxSommeilPublic === null
+        ? "La question des locaux à sommeil ne se pose pas pour ce type d'établissement."
+        : null;
+    },
   );
 }

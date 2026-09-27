@@ -304,7 +304,7 @@ export const onboardingSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["personnesPresentesHabituellement"],
-        message: `Ce nombre n'est demandé qu'aux établissements recevant du public dont ni la catégorie ni l'effectif n'établissent le seuil de ${SEUIL_PERSONNES_R422734} personnes.`,
+        message: `Ce nombre n'est demandé qu'aux établissements recevant du public dont ni la catégorie ni l'effectif n'établissent le seuil de ${SEUIL_PERSONNES_R422734} personnes, et où ne sont pas manipulées de matières inflammables — ce « oui » impose déjà les mêmes obligations.`,
       });
     }
     // Le seul cumul refusé (ADR-025 § 1) : un ERP en IGH relève du règlement
