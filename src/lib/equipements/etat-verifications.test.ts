@@ -343,3 +343,30 @@ describe("resumerEquipement", () => {
     expect(r.signaux).toEqual([{ cle: "faite", nb: 1, libelle: "1 faite" }]);
   });
 });
+
+describe("la marque « à confirmer » atteint la carte de l'appareil (revue du lot 1)", () => {
+  // Éprouvé en retirant la boucle sur `marques` de `repartirParEquipement`.
+  const ligne = {
+    equipementId: "eq1",
+    libelleObligation: "Contrat d'entretien",
+    statut: "planifiee",
+    datePrevue: new Date("2026-12-01T00:00:00Z"),
+    archiveLe: null,
+    derniereRealisation: null,
+    periodicite: "annuelle" as const,
+    obligationId: "o-marquee",
+  };
+  const NOW = new Date("2026-09-27T00:00:00Z");
+  it("une ligne ouverte marquée porte ses phrases jusqu'au résumé", () => {
+    const m = repartirParEquipement([ligne], NOW, new Map([["o-marquee", { phrases: ["phrase"] }]]));
+    expect(resumerEquipement(m.get("eq1")).aConfirmer).toEqual(["phrase"]);
+  });
+  it("une ligne archivée ne la porte pas", () => {
+    const m = repartirParEquipement(
+      [{ ...ligne, archiveLe: new Date("2026-09-01T00:00:00Z") }],
+      NOW,
+      new Map([["o-marquee", { phrases: ["phrase"] }]]),
+    );
+    expect(m.get("eq1")?.aConfirmer ?? []).toEqual([]);
+  });
+});

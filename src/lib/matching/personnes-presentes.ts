@@ -105,7 +105,7 @@ export type EvalPersonnesPresentes =
  * aussi les personnes « occupées », salariés compris, et 301 > 51 —, seule la
  * phrase change.
  */
-const PLANCHER_EFFECTIF_PAR_CATEGORIE: Partial<Record<CategorieErp, number>> = {
+export const PLANCHER_EFFECTIF_PAR_CATEGORIE: Partial<Record<CategorieErp, number>> = {
   N1: 1501,
   N2: 701,
   N3: 301,

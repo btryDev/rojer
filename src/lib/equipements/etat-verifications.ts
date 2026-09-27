@@ -9,6 +9,7 @@
 // Le calendrier répond « qu'est-ce qui tombe quand » ; cette lecture répond
 // « où en est chacun ». Deux questions, deux écrans, une seule donnée.
 
+import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
@@ -63,6 +64,12 @@ export type EtatEquipement = {
    *  d'une re-déduction depuis le référentiel : c'est ce qui a été généré
    *  qui fait foi, pas ce qui devrait l'être. */
   periodicites: Periodicite[];
+  /**
+   * Les phrases « à confirmer » des lignes OUVERTES de l'appareil, sans
+   * doublon (`matching/marques.ts`) — vide si rien ne les retient par prudence
+   * (revue du lot 1 : le parc listait ces échéances sans la mention).
+   */
+  aConfirmer: string[];
 };
 
 /**
@@ -95,12 +102,17 @@ export async function etatVerificationsParEquipement(
         // l'archivage l'a laissée.
         archiveLe: true,
         periodicite: true,
+        obligationId: true,
       },
       orderBy: { datePrevue: "asc" },
     }),
   );
+  const marques = await marquesAConfirmerDuDossier(prisma, {
+    id: etablissementId,
+    entreprise: { userId: user.id },
+  });
 
-  return repartirParEquipement(verifs, now);
+  return repartirParEquipement(verifs, now, marques.parObligation);
 }
 
 /** Ce que fait la lecture, sans la base : la partie testable. Les
@@ -120,8 +132,11 @@ export function repartirParEquipement(
      *  et `faites`, la ligne n'en porte plus. */
     derniereRealisation: Date | null;
     periodicite: Periodicite;
+    /** Pour la marque « à confirmer » ; absent dans les tests qui n'en parlent pas. */
+    obligationId?: string;
   }>,
   now: Date,
+  marques: ReadonlyMap<string, { phrases: readonly string[] }> = new Map(),
 ): Map<string, EtatEquipement> {
   const parEquipement = new Map<string, EtatEquipement>();
   // Les lignes de chaque appareil, gardées pour la prochaine échéance : elle
@@ -143,10 +158,16 @@ export function repartirParEquipement(
       proches: 0,
       faites: 0,
       periodicites: [],
+      aConfirmer: [],
     };
 
     if (!courant.periodicites.includes(v.periodicite)) {
       courant.periodicites.push(v.periodicite);
+    }
+    if (v.archiveLe === null && v.obligationId !== undefined) {
+      for (const phrase of marques.get(v.obligationId)?.phrases ?? []) {
+        if (!courant.aConfirmer.includes(phrase)) courant.aConfirmer.push(phrase);
+      }
     }
 
     // Les mêmes lectures que le calendrier, prises à la même source : le fait
@@ -267,12 +288,14 @@ export type ResumeEquipement = {
   /** Les signaux à afficher, du plus urgent au plus calme. Vide quand
    *  aucune vérification n'est rattachée — l'écran le dit alors en clair. */
   signaux: SignalEquipement[];
+  /** Les phrases « à confirmer » de l'appareil (`EtatEquipement.aConfirmer`). */
+  aConfirmer: string[];
 };
 
 export function resumerEquipement(
   etat: EtatEquipement | undefined,
 ): ResumeEquipement {
-  if (!etat) return { etat: "aPlanifier", signaux: [] };
+  if (!etat) return { etat: "aPlanifier", signaux: [], aConfirmer: [] };
 
   // Les mots ne sont plus écrits ici : `compteEtat` les prend à la table du
   // registre (`lib/calendrier/etats`), celle-là même qui donne déjà à la
@@ -309,5 +332,5 @@ export function resumerEquipement(
   // quelque chose : le tableau vide est réservé à celui qui n'en a
   // aucune, et c'est l'écran qui le dit en clair.
 
-  return { etat: dominant, signaux };
+  return { etat: dominant, signaux, aConfirmer: etat.aConfirmer };
 }

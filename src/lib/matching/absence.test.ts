@@ -155,11 +155,18 @@ describe("garde générique : une réponse absente ne retire rien en silence", (
           violations.push(`${attr} : passer de ${JSON.stringify(v)} à null retire « ${cle} » (${nom})`);
         }
 
-        // 2. Ce qu'un « non » retire et que le silence retient se dit.
-        if (v === false) {
-          for (const [cle, ligne] of aNull) {
-            if (!aV.has(cle) && !marquee(ligne)) {
-              violations.push(`${attr} : « ${cle} » retenue sur le silence sans marque « à confirmer » (${nom})`);
+        // 2. Ce qu'une réponse retire et que le silence retient se dit — pour
+        // TOUTE valeur (revue du lot 1 : le contrôle ne lisait que `false`).
+        // Exemptions DÉCLARÉES par la table : l'absence impossible en base, la
+        // ligne établie par une autre donnée, l'exception écrite.
+        if (p.sens === "retient_a_confirmer") {
+          const etablie = "etablieAutrement" in p && p.etablieAutrement.si(e);
+          const exceptee = "exception" in p && p.exception.si(e);
+          if (!etablie && !exceptee) {
+            for (const [cle, ligne] of aNull) {
+              if (!aV.has(cle) && !marquee(ligne)) {
+                violations.push(`${attr} : « ${cle} » retenue sur le silence sans marque « à confirmer », retirée par ${JSON.stringify(v)} (${nom})`);
+              }
             }
           }
         }

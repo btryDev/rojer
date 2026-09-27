@@ -128,6 +128,13 @@ type VerificationLite = {
    * lu du produit ne peut pas la présenter comme les autres.
    */
   prescription?: { source: string } | null;
+  /**
+   * Les phrases « à confirmer » de la ligne (`matching/marques.ts`), vide si
+   * rien ne la retient par prudence (revue du lot 1 : le board listait ces
+   * échéances sans la mention). Optionnel pour les fixtures ; la page le
+   * remplit toujours.
+   */
+  aConfirmer?: readonly string[];
 };
 
 type RapportLite = {

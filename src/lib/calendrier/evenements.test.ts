@@ -29,6 +29,7 @@ function verif(
     sansEcheance: false,
     type: "verification",
     contractuelle: false,
+    aConfirmer: [],
     equipement: "Tableau électrique",
     batiment,
   };
@@ -49,6 +50,7 @@ function titre(
     sansEcheance: false,
     type: "titre-salarie",
     contractuelle: false,
+    aConfirmer: [],
     equipement: "Camille Roy",
     batiment: null,
   };

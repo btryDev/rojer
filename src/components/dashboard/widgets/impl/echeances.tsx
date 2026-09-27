@@ -17,6 +17,7 @@
 // sur-titres et aux DATES, qui le gardent ici. C'est le libellé d'équipement
 // qui n'y avait pas droit — c'est une méta de ligne, pas une date.
 
+import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import {
   aUnRendezVous,
   CHAMP_ETAT,
@@ -208,6 +209,7 @@ export function WidgetProchainesEcheances({
                     {estEcheanceContractuelle(v) ? (
                       <MentionContractuelle />
                     ) : null}
+                    <MentionAConfirmer phrases={v.aConfirmer ?? []} />
                   </p>
                   {/* Méta de ligne, pas une date : elle n'a rien à faire en
                       monospace, et le `tracking` positif hors capitales
@@ -349,6 +351,7 @@ function TimelineEcheances({
                 />
                 <span className="flex-1 truncate">{v.libelleObligation}</span>
                 {estEcheanceContractuelle(v) ? <MentionContractuelle /> : null}
+                <MentionAConfirmer phrases={v.aConfirmer ?? []} />
                 <span className="font-mono text-[0.76rem] text-[color:var(--board-slate-mid)]">
                   {c.libelleDate}
                 </span>

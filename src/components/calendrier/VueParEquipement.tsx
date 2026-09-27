@@ -38,6 +38,7 @@
 //     nommés, les compteurs et le tiroir du mois visé. La règle reste
 //     visible dans les deux : c'est elle qu'on est venu lire.
 
+import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { useState } from "react";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -130,6 +131,8 @@ export type OccurrenceEquipement = {
    * le libellé est long manque là où il compte.
    */
   contractuelle?: boolean;
+  /** Les phrases « à confirmer » de l'occurrence (revue du lot 1). */
+  aConfirmer?: readonly string[];
   etat: RegistreLigne;
   /** Statut PEINT de vérification — absent hors du parc, où il n'existe pas. */
   statut?: StatutPeint;
@@ -504,6 +507,7 @@ function CarteEquipement({
                       <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
                         <span className="min-w-0 truncate">{o.meta}</span>
                         {o.contractuelle && <MentionContractuelle />}
+                        <MentionAConfirmer phrases={o.aConfirmer ?? []} />
                       </span>
                     </span>
                     {o.statut ? (

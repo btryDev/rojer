@@ -14,6 +14,7 @@
 // dérivations non triviales vivent dans `@/lib/dashboard/{brief,frise,
 // obligations}` où elles sont testées.
 
+import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import {
   Fragment,
   useCallback,
@@ -1759,6 +1760,7 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
           {/* La ligne la plus mise en avant du board ne peut pas être celle
               qui tait ce qu'elle est (ADR-032). */}
           {estEcheanceContractuelle(v) ? <MentionContractuelle /> : null}
+          <MentionAConfirmer phrases={v.aConfirmer ?? []} />
         </span>
       </div>
       {/* Le compte à rebours est la seule surface claire de la carte :

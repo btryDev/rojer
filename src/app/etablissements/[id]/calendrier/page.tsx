@@ -526,6 +526,8 @@ export default async function CalendrierPage({
             LABEL_PERIODICITE[v.periodicite] +
             (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
           contractuelle: estEcheanceContractuelle(v),
+          aConfirmer:
+            marquesAConfirmer.parObligation.get(v.obligationId)?.phrases ?? [],
           etat,
           // Même règle que la liste mensuelle : le rendez-vous suivant est
           // planifié, le fait porte le résultat de son rapport (ADR-034).

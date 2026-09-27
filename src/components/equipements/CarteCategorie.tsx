@@ -125,6 +125,7 @@ export function CarteCategorie({
             lieu={a.lieu}
             precision={a.precision}
             signaux={a.resume.signaux}
+            aConfirmer={a.resume.aConfirmer}
             horsReferentiel={a.horsReferentiel}
             href={a.href}
           />

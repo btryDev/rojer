@@ -4,6 +4,7 @@
 // Mini-agenda 7 jours : jour courant + 6 suivants, groupés par jour,
 // avec les vérifications planifiées dans cette fenêtre.
 
+import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import Link from "next/link";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { BentoCell } from "@/components/dashboard/BentoCell";
@@ -31,6 +32,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
       libelle: string;
       tone: "alerte" | "warn" | "ok";
       contractuelle: boolean;
+      aConfirmer: readonly string[];
       equipement: string;
     }[]
   >();
@@ -47,6 +49,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
       libelle: e.libelle,
       tone: e.tone,
       contractuelle: e.contractuelle,
+      aConfirmer: e.aConfirmer,
       equipement: e.equipement,
     });
     eventsParJour.set(key, arr);
@@ -117,6 +120,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
                       {e.contractuelle ? (
                         <MentionContractuelle className="ml-1.5 align-middle" />
                       ) : null}
+                      <MentionAConfirmer phrases={e.aConfirmer} className="ml-1.5 align-middle" />
                     </LienProvenance>
                   </li>
                 ))}

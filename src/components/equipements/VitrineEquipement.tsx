@@ -13,6 +13,7 @@
 // s'affiche en grand — c'est l'écran qui sait s'il y a plusieurs
 // bâtiments, et s'il en a déjà nommé un en tête.
 
+import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
@@ -59,6 +60,7 @@ export function VitrineEquipement({
   lieu,
   precision,
   signaux,
+  aConfirmer = [],
   horsReferentiel,
   href,
 }: {
@@ -71,6 +73,8 @@ export function VitrineEquipement({
    *  `null` — le cas courant — n'affiche rien. */
   precision?: string | null;
   signaux: SignalEquipement[];
+  /** Les phrases « à confirmer » de l'appareil (revue du lot 1). */
+  aConfirmer?: readonly string[];
   /** Le référentiel ne calcule aucune échéance pour cet appareil. Le
    *  silence ne doit jamais ressembler à une réponse : sans cette
    *  mention, un appareil muet et un appareil à jour affichent la même
@@ -130,6 +134,7 @@ export function VitrineEquipement({
               {horsReferentiel.libelle}
             </span>
           ) : null}
+          <MentionAConfirmer phrases={aConfirmer} />
           {signaux.length > 0 ? (
             signaux.map((s) => <Signal key={s.cle} signal={s} />)
           ) : horsReferentiel ? null : (

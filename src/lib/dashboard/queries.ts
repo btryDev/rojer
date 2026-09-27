@@ -13,6 +13,7 @@
 // recommandations (même réflexe que `statsActionsEnRetard`, qui refuse de
 // moyenner un retard sur une liste coupée).
 
+import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -130,6 +131,8 @@ export type EvenementFenetre = {
    *  affichent des libellés d'échéance comme les autres surfaces : sans ce
    *  drapeau, elles présentent une exigence d'assurance comme du droit. */
   contractuelle: boolean;
+  /** Les phrases « à confirmer » de la ligne, vide sinon (revue du lot 1). */
+  aConfirmer: readonly string[];
   /** L'appareil, ou « Tout l'établissement » (ADR-022). */
   equipement: string;
   /** Le bâtiment de l'équipement (ADR-019). `null` quand l'échéance porte sur
@@ -209,6 +212,12 @@ export async function listerEvenementsFenetre(
     orderBy: { datePrevue: "asc" },
   });
 
+  // Les marques « à confirmer » (revue du lot 1), sous la même portée.
+  const marques = await marquesAConfirmerDuDossier(prisma, {
+    id: etablissementId,
+    entreprise: { userId: user.id },
+  });
+
   // Filtre par domaine côté TS, comme `listerVerifications` : le domaine
   // est porté par l'obligation en référentiel, pas en base.
   const retenues = filtres?.domaine
@@ -234,6 +243,7 @@ export async function listerEvenementsFenetre(
         sansEcheance: !aUnRendezVous(v, now),
         type: typeDeVerification(v),
         contractuelle: estEcheanceContractuelle(v),
+        aConfirmer: marques.parObligation.get(v.obligationId)?.phrases ?? [],
         equipement: libellePorteur(v),
         // Pas d'équipement, pas de bâtiment : la ligne reste visible sous
         // tous les filtres par bâtiment (ADR-010, ADR-019).

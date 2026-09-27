@@ -32,6 +32,10 @@ import {
   type TypologieApplication,
 } from "@/lib/referentiels/types-communs";
 import type { EtablissementMatching, QuestionSansReponse } from "./types";
+import { PLANCHER_EFFECTIF_PAR_CATEGORIE } from "./personnes-presentes";
+
+/** « plus de cinquante personnes » (R. 4227-34). */
+const SEUIL_R4227_34 = 51;
 
 /** Les attributs d'établissement que le moteur lit et qui admettent `null`. */
 export type AttributNullable = {
@@ -63,6 +67,12 @@ export type PolitiqueAbsence<V> = {
        * membre général, lui, survit.
        */
       allegement?: { si: (t: TypologieApplication) => boolean; regle: string };
+      /**
+       * Quand une AUTRE donnée établit la ligne sans la réponse — une borne
+       * basse, par exemple —, la ligne présente au silence n'a pas à être
+       * marquée, même si une réponse déclarée la retirerait.
+       */
+      etablieAutrement?: { si: (e: EtablissementMatching) => boolean; regle: string };
     }
   | {
       /** L'absence écarte — admissible seulement si la base l'interdit. */
@@ -115,6 +125,15 @@ export const POLITIQUE_ABSENCE = {
       si: (e) => !e.estERP,
       regle:
         "ADR-022 § 7 : sans public, l'effectif salarié EST le total, pas une borne",
+    },
+    etablieAutrement: {
+      si: (e) =>
+        e.effectifSurSite >= SEUIL_R4227_34 ||
+        (e.estERP &&
+          e.categorieErp !== null &&
+          (PLANCHER_EFFECTIF_PAR_CATEGORIE[e.categorieErp] ?? 0) >= SEUIL_R4227_34),
+      regle:
+        "bornes basses d'`evaluerPersonnesPresentes` : la catégorie d'ERP (plancher de classement) et l'effectif du site établissent le seuil sans le nombre",
     },
     allegement: {
       si: (t) => t.horsChampR422734 === true,

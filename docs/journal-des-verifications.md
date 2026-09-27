@@ -4588,7 +4588,7 @@ sélectionné.
 
 | Étape | Commit | Ce qui change | Éprouvé |
 |---|---|---|---|
-| 1 — marques partout | `4e89cd1` | calendrier (liste, fiche), dossier PDF et ZIP, registre (écran, PDF), guide, MCP ; calcul au rendu, sans migration | clause MCP retirée → rouge |
+| 1 — marques ~~partout~~ | `4e89cd1` | calendrier (liste, fiche), dossier PDF et ZIP, registre (écran, PDF), guide, MCP ; calcul au rendu, sans migration [revue du lot 1 : « partout » était inexact — le tableau de bord, le parc et la vue par équipement du calendrier en manquaient ; ajoutés le même jour. Les bâtiments ne rendent qu'un compte : dette, `dette-chantier-porteur-echeance.md` § 7 ter] | clause MCP retirée → rouge |
 | 5 — matières | `e6b0fb6`, `0d94de1` | silence retenu « à confirmer » ; `VERSION_MOTEUR_CALENDRIER` 4 → 5 ; réconciliateur : rien de perdu, trace archivée | « silence = non » réintroduit → rouge |
 | 2 — A2 | `8618af3` | aucune réponse de régime présélectionnée ; porte serveur | trois couches, trois rouges |
 | A1 | `e9adbb3` | suggestions d'équipements : NAF de l'entreprise en repli | repli retiré → rouge |

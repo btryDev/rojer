@@ -108,6 +108,7 @@ export default async function EtablissementPage({
     nbRapports,
     prochainesVerifs,
     rapportsRecents,
+    marquesDuDossier,
   ] = await Promise.all([
     listerEquipementsDeLEtablissement(id),
     compterVerifsParEquipement(id),
@@ -154,6 +155,12 @@ export default async function EtablissementPage({
       include: { verification: true },
       orderBy: ORDRE_RAPPORT_PLUS_RECENT,
       take: 4,
+    }),
+    // Les marques « à confirmer » : pour les échéances du board comme pour la
+    // relance plus bas — un seul calcul.
+    marquesAConfirmerDuDossier(prisma, {
+      id,
+      entreprise: { userId: etab.entreprise.userId },
     }),
   ]);
 
@@ -281,10 +288,7 @@ export default async function EtablissementPage({
   // relançait que deux sur cinq). Une question oui/non se répond ici et reste
   // cochée ; une question à nombre renvoie à la fiche et s'efface quand le
   // silence cesse.
-  const { questions: questionsMuettes } = await marquesAConfirmerDuDossier(
-    prisma,
-    { id, entreprise: { userId: etab.entreprise.userId } },
-  );
+  const questionsMuettes = marquesDuDossier.questions;
   const ACTIONS_OUI_NON: Record<
     QuestionOuiNon,
     (id: string, prev: ReponseParametrage, fd: FormData) => Promise<ReponseParametrage>
@@ -426,6 +430,7 @@ export default async function EtablissementPage({
       equipement: {
         libelle: libellePorteur(v),
       },
+      aConfirmer: marquesDuDossier.parObligation.get(v.obligationId)?.phrases ?? [],
     })), aujourdhui),
     rapportsRecents: rapportsRecents.map((r) => ({
       id: r.id,

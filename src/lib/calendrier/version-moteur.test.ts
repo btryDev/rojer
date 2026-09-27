@@ -124,6 +124,9 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 5,
+  // Recopiée SANS incrément (revue du lot 1) : `PLANCHER_EFFECTIF_PAR_CATEGORIE`
+  // devient exporté, pour que la politique de l'absence déclare la borne basse
+  // qu'elle exempte. NON : même valeur, mêmes branches.
   // Recopiée SANS incrément le même jour (étape 6) : le moteur gagne le critère
   // `horsChampR422734` (R. 4227-37 al. 2), et le bloc du champ de R. 4227-34
   // cède la main au complément. NON : les deux seules obligations qui portent
@@ -237,7 +240,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "7e6fa932f2c84726",
+  empreinte: "b27cb20eb442a921",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -446,6 +446,17 @@ récent du référentiel après `R. 4225-2` ». Ce classement est faux lui aussi
 Ces superlatifs se périment à chaque dépouillement : **aucun ne devrait être
 écrit à la main.**
 
+### 7 ter. La charge par bâtiment ne dit pas ce qui est « à confirmer » (2026-09-27)
+
+La mention « à confirmer » atteint toutes les surfaces qui LISTENT des
+échéances (calendrier, fiche d'une ligne, tableau de bord, parc, dossier PDF et
+ZIP, registre, guide, MCP — revue du lot 1). Les bâtiments ne listent rien :
+`grouperChargeParBatiment` (`batiments/queries.ts`) ne rend qu'un compte,
+`nbEnRetard`. Une ligne retenue par prudence y est comptée comme les autres. La
+porter supposerait un second compte (« dont N à confirmer ») ; c'est la même
+question que D1 du dossier des décisions du lot 2 (les lignes « à confirmer »
+dans les retards et l'indice), et elle se tranchera avec elle.
+
 ---
 
 ## 8. Ce qui n'est PAS de la dette
