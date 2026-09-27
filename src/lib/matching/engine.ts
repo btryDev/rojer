@@ -124,6 +124,14 @@ function evaluerErp(
 
     // Restriction par type d'exploitation — même sémantique que la catégorie :
     // un ERP dont le type n'est pas renseigné ne satisfait pas la restriction.
+    //
+    // [2026-09-27] CES DEUX « ÉCARTE » NE TIENNENT QUE PARCE QUE LE CAS N'EXISTE
+    // PAS. Ils contredisent la règle du non-renseigné (ADR-022) ; l'analyse du
+    // 2026-09-27 a mesuré qu'une catégorie absente retirait jusqu'à huit lignes.
+    // Depuis ce jour, la base interdit un ERP sans type ou sans catégorie
+    // (contrainte `Etablissement_erp_type_categorie_requis`, zéro cas en
+    // production au comptage). `absence-erp.test.ts` fait tomber la suite si la
+    // contrainte disparaît — et il faudrait alors retenir « à confirmer » ici.
     if (critere.types && critere.types.length > 0) {
       if (!etab.typeErp || !critere.types.includes(etab.typeErp)) {
         return { etat: "mismatch" };
@@ -135,7 +143,9 @@ function evaluerErp(
 
     // Exclusion par type d'exploitation — sémantique INVERSE de la
     // restriction ci-dessus, et c'est voulu : un ERP dont le type n'est pas
-    // renseigné n'est PAS exclu. Une exclusion que l'on ne peut pas vérifier
+    // renseigné n'est PAS exclu. [2026-09-27 : un cas désormais impossible en
+    // base — voir la contrainte ci-dessus ; la branche reste pour les
+    // projections de test et de simulation.] Une exclusion que l'on ne peut pas vérifier
     // ne doit pas faire disparaître une ligne (cf. `TypologieApplication`).
     if (critere.typesExclus && critere.typesExclus.length > 0) {
       if (etab.typeErp && critere.typesExclus.includes(etab.typeErp)) {
@@ -176,7 +186,10 @@ function evaluerErp(
  * classe connue et visée → match ; classe connue et non visée → mismatch ;
  * classe absente → match, en le disant. Ce qui reste asymétrique — et doit le
  * rester — est `evaluerErp` sur la catégorie, où l'absence écarte : une
- * catégorie d'ERP se déclare toujours, elle.
+ * catégorie d'ERP se déclare toujours, elle. [2026-09-27 : « se déclare
+ * toujours » n'était vrai que des formulaires ; c'est désormais la base qui
+ * l'impose (contrainte `Etablissement_erp_type_categorie_requis`), et
+ * `absence-erp.test.ts` tient le lien.]
  */
 function evaluerIgh(
   critere: TypologieApplication["igh"],
@@ -499,8 +512,10 @@ function evaluerEffectif(
  *   - L'**exclusion par type** (`erp: { typesExclus: [...] }`) est elle aussi
  *     en ET, mais ne mord que sur un type CONNU : un ERP dont le `typeErp`
  *     n'est pas renseigné n'est pas exclu. C'est l'inverse de `types`, et
- *     pour la même raison — dans les deux cas, ne pas savoir ne retire
- *     jamais une ligne du calendrier.
+ *     ~~pour la même raison — dans les deux cas, ne pas savoir ne retire
+ *     jamais une ligne du calendrier~~ [2026-09-27 : faux pour `types`, qui
+ *     écarte sur un type absent. Ce qui le rend sûr est la contrainte en base
+ *     `Etablissement_erp_type_categorie_requis` — voir `evaluerErp`].
  *   - `effectifMin`/`effectifMax` restent en ET avec le reste.
  *   - Les `raisons` ne contiennent que les régimes effectivement matchés.
  */

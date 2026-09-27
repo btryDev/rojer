@@ -76,11 +76,16 @@ model Etablissement {
   estERP                  Boolean       @default(false)
   estIGH                  Boolean       @default(false)
   estHabitation           Boolean       @default(false)
+  // Nullables en colonne, mais un ERP porte TOUJOURS les deux : contrainte
+  // CHECK `Etablissement_erp_type_categorie_requis` (migration 20260927180000),
+  // que Prisma ne sait pas exprimer ici. Le moteur écarte sur leur absence
+  // (`evaluerErp`) parce que la base l'interdit — `absence-erp.test.ts`.
   typeErp                 TypeErp?
   categorieErp            CategorieErp?
   classeIgh               ClasseIgh?
   // Famille au sens de l'arrêté du 31 janvier 1986 (ADR-025 § 4). Nullable
-  // comme `categorieErp` : la contrainte « obligatoire si le régime est
+  // comme `categorieErp` [2026-09-27 : qui porte désormais une contrainte en
+  // base, voir plus haut ; la famille non] : la contrainte « obligatoire si le régime est
   // déclaré » vit dans les schémas de création, pas dans la colonne — les
   // dossiers d'habitation créés avant le 2026-09-01 n'en ont pas, et ils
   // continuent d'exister. Ce qu'ils portent à la place est une indétermination
