@@ -153,7 +153,7 @@ describe("composerRegistre — le catalogue réel", () => {
   });
 
   it("le seuil de R. 4227-34 commande les fiches d'exercices", () => {
-    const sous = composerRegistre(etabBureau({ personnesPresentesHabituellement: 30 }), []);
+    const sous = composerRegistre(etabBureau({ personnesPresentesHabituellement: 30, manipuleMatieresR422722: false }), []);
     expect(sous.map((d) => d.section.id)).not.toContain("exercices-themes");
 
     const au = composerRegistre(etabBureau({ personnesPresentesHabituellement: 51 }), []);
@@ -217,7 +217,8 @@ describe("catalogue — service de sécurité et 5ᵉ catégorie", () => {
   });
 
   it("un bureau non-ERP n'a aucune fiche de service de sécurité", () => {
-    const ids = composerRegistre(etabBureau(), []).map((d) => d.section.id);
+    // « non » déclaré : depuis le 2026-09-27, le silence sur les matières retient « à confirmer ».
+    const ids = composerRegistre(etabBureau({ manipuleMatieresR422722: false }), []).map((d) => d.section.id);
     expect(ids.filter((i) => i.startsWith("service-securite-"))).toEqual([]);
   });
 });
@@ -241,7 +242,7 @@ describe("catalogue — exercices : deux fondements lus en OU", () => {
   });
 
   it("ni l'un ni l'autre : un petit bureau non-ERP n'a pas la fiche", () => {
-    const ids = composerRegistre(etabBureau({ effectifSurSite: 8 }), []).map(
+    const ids = composerRegistre(etabBureau({ effectifSurSite: 8, manipuleMatieresR422722: false }), []).map(
       (d) => d.section.id,
     );
     expect(ids).not.toContain("exercices-themes");

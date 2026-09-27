@@ -123,7 +123,15 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 4,
+  version: 5,
+  // INCRÉMENTÉ le 2026-09-27 (décision de la propriétaire, option (i) de
+  // `docs/revues/analyse-reponse-absente-2026-09-27.md`) : le silence sur les
+  // matières de R. 4227-22 retient « à confirmer » au lieu de valoir « non ».
+  // OUI, la régénération écrit autrement : tout établissement de travail sous
+  // le seuil de R. 4227-34, muet sur la question, reçoit la ligne semestrielle
+  // `incendie-travail-exercice-semestriel`. Les marques `personnes_presentes` et
+  // `type_erp` ajoutées le même jour ne changent aucune ligne.
+  // Voir le commentaire de `VERSION_MOTEUR_CALENDRIER`.
   // Recopiée SANS incrément le 2026-09-27 (C45, `lot/manques-encoder-annoncer`) :
   // le moteur gagne un critère, `chiffonsImpregnes` (`evaluerChiffonsImpregnes`),
   // et la projection un champ. NON, la régénération n'écrit pas autrement : la
@@ -221,7 +229,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "ca099ca72e9c8451",
+  empreinte: "1d7da76de21483d1",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

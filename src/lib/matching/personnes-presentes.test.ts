@@ -143,7 +143,8 @@ describe("la question et le moteur disent la même chose", () => {
 
   it("la réponse tranche dans les deux sens : 40 retire les deux lignes, 60 les établit", () => {
     expect(retenues(etab({}))).toEqual(IDS);
-    expect(retenues(etab({ personnesPresentesHabituellement: 40 }))).toEqual([]);
+    // « non » déclaré : depuis le 2026-09-27, le silence sur les matières retient « à confirmer ».
+    expect(retenues(etab({ personnesPresentesHabituellement: 40, manipuleMatieresR422722: false }))).toEqual([]);
     expect(retenues(etab({ personnesPresentesHabituellement: 60 }))).toEqual(IDS);
     const raisons = determineObligationsApplicables(
       etab({ personnesPresentesHabituellement: 60 }),

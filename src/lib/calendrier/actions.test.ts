@@ -1480,3 +1480,82 @@ describe("ADR-036 — S1 à S7, de la base à la base", () => {
     expect(s7.statut).toBe("planifiee");
   });
 });
+
+describe("moteur 5 — un dossier existant muet sur les matières (2026-09-27)", () => {
+  // `VERSION_MOTEUR_CALENDRIER` passe à 5 : tout le parc est régénéré à sa
+  // prochaine ouverture, et les établissements de travail sous le seuil de
+  // R. 4227-34, muets sur les matières de R. 4227-22, reçoivent l'exercice
+  // semestriel « à confirmer ». Ce qui doit tenir : rien de ce que le dossier
+  // porte déjà — rapport, action — ne se perd, à l'arrivée de la ligne comme
+  // à son départ sur un « non ».
+  const EXERCICE = "incendie-travail-exercice-semestriel";
+
+  function dossierExistant(matieres: boolean | null) {
+    const etab = poserEtablissement([{ id: "eq-elec" }]);
+    etab.manipuleMatieresR422722 = matieres;
+    return etab;
+  }
+
+  it("l'exercice arrive ; la ligne porteuse d'un rapport et d'une action reste intacte", async () => {
+    dossierExistant(null);
+    db.verifications = [
+      ligne({
+        id: "v-elec",
+        equipementId: "eq-elec",
+        obligationId: ELEC_ANNUELLE,
+        nbRapports: 1,
+        nbActions: 1,
+        rapports: [{ dateRapport: new Date("2026-01-15T00:00:00Z"), resultat: "conforme" }],
+      }),
+    ];
+
+    const res = await genererCalendrier(ETAB_ID);
+
+    expect(res.deleted).toBe(0);
+    expect(lignesDe(EXERCICE)).toHaveLength(1);
+    const elec = db.verifications.find((v) => v.id === "v-elec");
+    expect(elec?.nbRapports).toBe(1);
+    expect(elec?.nbActions).toBe(1);
+    expect(elec?.archiveLe ?? null).toBeNull();
+  });
+
+  it("« non » après coup : l'exercice qui porte une trace est archivé, jamais supprimé", async () => {
+    dossierExistant(false);
+    db.verifications = [
+      ligne({
+        id: "v-exercice",
+        obligationId: EXERCICE,
+        libelleObligation: "Essais du matériel et exercices d'évacuation semestriels",
+        periodicite: "semestrielle",
+        realisateurRequis: ["exploitant"],
+        nbRapports: 1,
+        nbActions: 1,
+        rapports: [{ dateRapport: new Date("2026-03-01T00:00:00Z"), resultat: "conforme" }],
+      }),
+    ];
+
+    const res = await genererCalendrier(ETAB_ID);
+
+    expect(res.deleted).toBe(0);
+    const exercice = db.verifications.find((v) => v.id === "v-exercice");
+    expect(exercice?.archiveLe).toBeInstanceOf(Date);
+    expect(exercice?.nbRapports).toBe(1);
+    expect(exercice?.nbActions).toBe(1);
+  });
+
+  it("« non » sur une ligne sans trace : elle sort, c'est le bruit transitoire annoncé", async () => {
+    dossierExistant(false);
+    db.verifications = [
+      ligne({
+        id: "v-exercice",
+        obligationId: EXERCICE,
+        periodicite: "semestrielle",
+        realisateurRequis: ["exploitant"],
+      }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    expect(lignesDe(EXERCICE).filter((v) => !v.archiveLe)).toHaveLength(0);
+  });
+});

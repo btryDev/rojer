@@ -86,8 +86,19 @@ import {
  * calendrier différent. Un incrément avait été posé, puis retiré avant toute
  * livraison — précédent de `MARQUAGE_CONTRACTUEL_LONG`. Le passage du
  * référentiel à `2026-09-26.9` resynchronise déjà le parc.
+ *
+ * `5` (2026-09-27, décidé par la propriétaire — option (i) de
+ * `docs/revues/analyse-reponse-absente-2026-09-27.md`) : LE SILENCE SUR LES
+ * MATIÈRES DE R. 4227-22 NE VAUT PLUS « NON ». Depuis le 2026-09-03, un
+ * établissement de travail sous le seuil de R. 4227-34 et muet sur la question
+ * perdait la consigne (R. 4227-37) et les exercices semestriels (R. 4227-39) ;
+ * il les reçoit désormais « à confirmer », jusqu'à un « non » déclaré. La
+ * ligne SEMESTRIELLE entre donc au calendrier de ces dossiers : sans
+ * l'incrément, seuls les dossiers neufs ou mutés la recevraient. Elle porte sa
+ * marque sur toutes les surfaces (`matching/marques.ts`). Si la réponse devient
+ * « non », la ligne sort — archivée si elle porte une trace, jamais supprimée.
  */
-export const VERSION_MOTEUR_CALENDRIER = 4;
+export const VERSION_MOTEUR_CALENDRIER = 5;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la

@@ -186,7 +186,7 @@ describe("faux négatif — exercices et essais semestriels", () => {
    */
   it("un petit établissement hors du champ de R. 4227-34 ne le reçoit pas", () => {
     expect(
-      idsSansAucunEquipement(bureauSansRien({ effectifSurSite: 4 })),
+      idsSansAucunEquipement(bureauSansRien({ effectifSurSite: 4, manipuleMatieresR422722: false })),
     ).not.toContain("incendie-travail-exercice-semestriel");
   });
 });
@@ -211,7 +211,7 @@ describe("faux négatif — consigne de sécurité incendie affichée", () => {
 
   it("un établissement hors de ce champ ne la reçoit pas", () => {
     expect(
-      idsSansAucunEquipement(bureauSansRien({ effectifSurSite: 4 })),
+      idsSansAucunEquipement(bureauSansRien({ effectifSurSite: 4, manipuleMatieresR422722: false })),
     ).not.toContain("incendie-travail-consigne-affichee");
   });
 });

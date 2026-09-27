@@ -1679,7 +1679,7 @@ describe("moteur matching — seuil d'effectif de l'exercice semestriel d'évacu
 
   it("un salon de coiffure de 2 personnes ne reçoit plus l'exercice semestriel", () => {
     const res = determineObligationsApplicables(
-      etabBureau({ effectifSurSite: 2 }),
+      etabBureau({ effectifSurSite: 2, manipuleMatieresR422722: false }),
       [alarme()],
     );
     expect(idsObligations(res)).not.toContain(EXERCICE);
@@ -1687,7 +1687,7 @@ describe("moteur matching — seuil d'effectif de l'exercice semestriel d'évacu
 
   it("50 personnes exactement : sous le seuil (« plus de cinquante »)", () => {
     const res = determineObligationsApplicables(
-      etabBureau({ effectifSurSite: 50 }),
+      etabBureau({ effectifSurSite: 50, manipuleMatieresR422722: false }),
       [alarme()],
     );
     expect(idsObligations(res)).not.toContain(EXERCICE);
@@ -2010,17 +2010,27 @@ describe("moteur matching — champ disjonctif de R. 4227-34 (personnes présent
     expect(raison).toContain("R. 4227-22");
   });
 
-  it("2 salariés, matières non renseignées (null) → non applicable (opt-in : la branche n'ajoute que des cas)", () => {
+  // ~~« 2 salariés, matières non renseignées (null) → non applicable (opt-in :
+  // la branche n'ajoute que des cas) »~~ — renversé le 2026-09-27 (option (i),
+  // décision de la propriétaire) : ce silence retirait R. 4227-39 à tout
+  // établissement de travail sous le seuil depuis le 2026-09-03.
+  it("2 salariés, matières non renseignées (null) → retenu « à confirmer », et le dit", () => {
     const res = determineObligationsApplicables(
       etabBureau({ effectifSurSite: 2, manipuleMatieresR422722: null }),
       [alarme()],
     );
-    expect(idsObligations(res)).not.toContain(EXERCICE);
+    const exercice = res.find((o) => o.obligation.id === EXERCICE);
+    expect(exercice?.sansReponse).toEqual(["matieres_r4227_22"]);
+    const non = determineObligationsApplicables(
+      etabBureau({ effectifSurSite: 2, manipuleMatieresR422722: false }),
+      [alarme()],
+    );
+    expect(idsObligations(non)).not.toContain(EXERCICE);
   });
 
   it("la consigne affichée suit le même champ : 2 salariés sans matières → simples instructions, pas de consigne", () => {
     const res = determineObligationsApplicables(
-      etabBureau({ effectifSurSite: 2 }),
+      etabBureau({ effectifSurSite: 2, manipuleMatieresR422722: false }),
       [alarme(), extincteur()],
     );
     expect(idsObligations(res)).not.toContain(CONSIGNE);
@@ -2122,6 +2132,8 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
         effectifSurSite: 8,
         effectifEntreprise: 8,
         personnesPresentesHabituellement: 20,
+        // « non » déclaré : depuis le 2026-09-27, le silence sur les matières retient « à confirmer ».
+        manipuleMatieresR422722: false,
       }),
       [],
     );
@@ -2137,6 +2149,8 @@ describe("R. 4227-34 — ce que la catégorie d'ERP déduit, et ce qu'elle ne d�
         effectifSurSite: 8,
         effectifEntreprise: 8,
         personnesPresentesHabituellement: null,
+        // « non » déclaré : depuis le 2026-09-27, le silence sur les matières retient « à confirmer ».
+        manipuleMatieresR422722: false,
       }),
       [alarme(), extincteur()],
     );
