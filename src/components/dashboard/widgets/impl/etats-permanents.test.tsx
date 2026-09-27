@@ -107,9 +107,18 @@ vi.mock("@/lib/etats-permanents/queries", () => ({
   listerEtatsPermanents: async () => DOSSIER,
 }));
 // La ligne de l'écran porte des actions serveur ; seul son identifiant compte ici.
+// La ligne de l'écran porte des actions serveur ; on relève ce que la page lui
+// passe — l'obligation et l'article —, pas son rendu, que `LigneEtat.test.tsx`
+// tient à part.
 vi.mock("@/components/etats-permanents/LigneEtat", () => ({
-  LigneEtat: ({ obligationId }: { obligationId: string }) => (
-    <li data-obligation={obligationId} />
+  LigneEtat: ({
+    obligationId,
+    fondement,
+  }: {
+    obligationId: string;
+    fondement?: { reference: string } | null;
+  }) => (
+    <li data-obligation={obligationId} data-reference={fondement?.reference ?? ""} />
   ),
 }));
 
@@ -145,6 +154,19 @@ describe("widget « Ce qui doit être en place »", () => {
     // quoi deux relevés vides seraient égaux.
     expect(lignesEcran).toHaveLength(5);
     expect(lignesWidget).toEqual(lignesEcran);
+  });
+
+  it("l'écran passe à chaque ligne l'article que le widget cite", async () => {
+    const ecran = render(
+      await EtatsPermanentsPage({ params: Promise.resolve({ id: "etab-1" }) }),
+    );
+    const references = [...ecran.container.querySelectorAll("[data-obligation]")].map(
+      (e) => e.getAttribute("data-reference"),
+    );
+    expect(references).toEqual(
+      lignesDuWidget(DOSSIER).map((l) => l.fondement?.reference ?? ""),
+    );
+    expect(references.filter(Boolean)).toHaveLength(4);
   });
 
   it("dit l'état par les phrases de l'écran, sans compte ni qualification", () => {
