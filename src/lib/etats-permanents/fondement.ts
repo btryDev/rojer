@@ -47,24 +47,47 @@ function designation(article: string): string {
 }
 
 /**
- * La `reference` affichée nomme-t-elle CET article ?
+ * Les articles qu'une `reference` imprimée nomme : `R. 4544-10`, `art. 103`,
+ * `MS 38`. Un article de code précédé de « art. » (« CCH, art. R. 134-6 »)
+ * compte une fois, sous sa forme de code.
+ */
+function designationsNommees(reference: string): Set<string> {
+  const r = reference.replace(/\s+/g, " ");
+  const out = new Set<string>();
+  for (const m of r.matchAll(/\b[LRD]\. ?\d[\d-]*\d\b/g))
+    out.add(m[0].replace(/\. ?/, ". "));
+  for (const m of r.matchAll(/\bart\. ?(\d+(?:er)?)\b/gi))
+    out.add(`art. ${m[1]}`);
+  for (const m of r.matchAll(/\b[A-Z]{1,3} \d+\b/g)) out.add(m[0]);
+  return out;
+}
+
+/** Un intervalle : « R. 4323-1 à R. 4323-5 », « art. 12 à 15 ». */
+const INTERVALLE = /\sà\s+(?:[LRD]\.|art\.|\d|[A-Z]{1,3}\s\d)/;
+
+/**
+ * La `reference` affichée nomme-t-elle CET article, ET LUI SEUL ?
  *
  * LA QUESTION QUE LA PREMIÈRE ÉCRITURE NE POSAIT PAS (2026-09-27). La clé
  * `article` désigne un article ; la `reference` qu'on imprime peut en nommer
- * un intervalle — `elec-travail-habilitation-personnel` porte « R. 4544-9 à
- * R. 4544-11 » et la clé `R. 4544-10`. Déplier sous cette pastille le texte du
- * seul R. 4544-10, c'était faire lire au dirigeant un article sous le nom de
- * trois. Le texte ne s'affiche donc que si la pastille nomme l'article dont il
- * est tiré ; sinon elle ouvre Légifrance sans rien citer.
+ * plusieurs. `elec-travail-habilitation-personnel` imprime « R. 4544-9 à
+ * R. 4544-11 » sous la clé `R. 4544-10`.
+ *
+ * ET LA SECONDE ÉCRITURE NE LA POSAIT QU'À MOITIÉ (contre-lecture du même
+ * jour, M1) : elle vérifiait que l'article était NOMMÉ, pas qu'il l'était
+ * SEUL. « R. 4323-1 à R. 4323-5 » affichait le texte de R. 4323-1, « R. 4224-12
+ * et R. 4224-13 » celui de R. 4224-13, « CCH, art. R. 134-6 et R. 134-7 »
+ * celui de R. 134-6 — un article sous le nom de plusieurs. Le texte ne
+ * s'affiche désormais que si la référence ne nomme QUE l'article dont il est
+ * tiré ; sinon la pastille ouvre Légifrance sans rien citer.
  */
 export function referenceNommeLArticle(
   reference: string,
   article: string,
 ): boolean {
-  const d = designation(article).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?<![\\d-])${d}(?![\\d-])`).test(
-    reference.replace(/\s+/g, " "),
-  );
+  if (INTERVALLE.test(reference.replace(/\s+/g, " "))) return false;
+  const nommes = designationsNommees(reference);
+  return nommes.size === 1 && nommes.has(designation(article).replace(/\. ?/, ". "));
 }
 
 export function fondementDe(obligation: Obligation): FondementLigne | null {

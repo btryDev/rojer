@@ -25,7 +25,7 @@ const INDEX = indexArticlesParRef();
 
 describe("l'article cité sous une ligne « Ce qui doit être en place »", () => {
   it("le relevé voit les lignes de l'écran — sinon ce test ne contrôle rien", () => {
-    // Borne basse, pas un compte : 40 obligations au 2026-09-27.
+    // Borne basse, pas un compte : 53 obligations au 2026-09-27.
     expect(SUR_L_ECRAN.length).toBeGreaterThanOrEqual(30);
   });
 
@@ -57,19 +57,34 @@ describe("l'article cité sous une ligne « Ce qui doit être en place »", () =
     expect(fondementDe(sansCorpus)?.extrait).toBeNull();
   });
 
-  it("une pastille qui nomme un intervalle ne montre pas le texte d'un seul de ses articles", () => {
-    // Le cas qui a fait écrire `referenceNommeLArticle` (2026-09-27).
+  it("une pastille qui nomme plusieurs articles ne montre le texte d'aucun (M1)", () => {
+    // Les cas relevés : un intervalle, une conjonction, un « art. » de code.
     expect(referenceNommeLArticle("R. 4544-9 à R. 4544-11", "R. 4544-10")).toBe(false);
+    expect(referenceNommeLArticle("R. 4323-1 à R. 4323-5", "R. 4323-1")).toBe(false);
+    expect(referenceNommeLArticle("R. 4224-12 et R. 4224-13", "R. 4224-13")).toBe(false);
+    expect(referenceNommeLArticle("CCH, art. R. 134-6 et R. 134-7", "CCH R. 134-6")).toBe(false);
+    expect(referenceNommeLArticle("Arrêté du 1er août 2006, art. 12 à 15", "Arrêté 2006-08-01 art. 12")).toBe(false);
     expect(referenceNommeLArticle("R. 4544-11", "R. 4544-1")).toBe(false);
-    // Et les formes de clé qui ne sont pas celles de la référence passent.
+  });
+
+  it("une pastille qui nomme l'article seul le cite, quelle que soit la forme de la clé", () => {
+    expect(referenceNommeLArticle("R. 4323-56, alinéa 2 (attestation médicale)", "R. 4323-56")).toBe(true);
     expect(
       referenceNommeLArticle("Arrêté du 31 janvier 1986, art. 103 (registre)", "Arrêté 1986-01-31 art. 103"),
     ).toBe(true);
-    expect(referenceNommeLArticle("CCH, art. R. 134-6 et R. 134-7", "CCH R. 134-6")).toBe(true);
-    const intervalle = obligationsConformite.find(
-      (o) => o.id === "elec-travail-habilitation-personnel",
-    );
-    if (intervalle) expect(fondementDe(intervalle)?.extrait).toBeNull();
+    expect(referenceNommeLArticle("CCH, art. R. 134-6 (contrat d'entretien)", "CCH R. 134-6")).toBe(true);
+    expect(referenceNommeLArticle("Arrêté du 25 juin 1980, art. MS 38 § 4", "MS 38")).toBe(true);
+  });
+
+  it.each([
+    "elec-travail-habilitation-personnel",
+    "esp-personnel-formation",
+    "porte-auto-maintien-en-etat",
+    "ascenseur-entretien-contrat",
+  ])("%s : plusieurs articles nommés, aucun texte montré", (id) => {
+    const o = obligationsConformite.find((x) => x.id === id);
+    expect(o, `${id} a quitté le référentiel`).toBeDefined();
+    expect(fondementDe(o!)?.extrait).toBeNull();
   });
 
   it("le CSE et le règlement intérieur citent leur texte — le constat de C40", () => {

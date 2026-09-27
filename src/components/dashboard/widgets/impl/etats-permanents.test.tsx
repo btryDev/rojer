@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, waitFor } from "@testing-library/react";
 import type { Obligation } from "@/lib/referentiels/conformite";
 import type {
   EtatsPermanentsDuDossier,
@@ -78,7 +78,14 @@ const DOSSIER: EtatsPermanentsDuDossier = {
     {
       domaine: "organisation" as never,
       libelle: "Organisation",
-      lignes: [ligne("org-cse", { aConfirmer: "Phrase à confirmer." })],
+      lignes: [
+        ligne("org-cse", { aConfirmer: "Phrase à confirmer." }),
+        // Déclarée ET à confirmer : l'écran affiche les deux (M3).
+        ligne("org-ri", {
+          aConfirmer: "Phrase à confirmer.",
+          declareLe: new Date("2026-09-01T09:00:00Z"),
+        }),
+      ],
     },
   ],
   faits: [
@@ -89,8 +96,8 @@ const DOSSIER: EtatsPermanentsDuDossier = {
     }),
     ligne("fait-2", { mode: "fait", compteDansLEnTete: false, fondement: null }),
   ],
-  enPlace: 1,
-  total: 3,
+  enPlace: 2,
+  total: 4,
   faitsDates: 2,
   faitsDatesRenseignes: 1,
 };
@@ -122,6 +129,14 @@ vi.mock("@/components/etats-permanents/LigneEtat", () => ({
   ),
 }));
 
+// Le widget demande ses lignes à une action serveur ; ici, elle rend ce que
+// `lignesDuWidget` tire du même dossier — ce que fait l'action réelle
+// (`lecture-widget.ts`, tenu par la garde de source plus bas).
+const lecture = vi.hoisted(() => ({ rendre: null as null | (() => Promise<unknown>) }));
+vi.mock("@/lib/etats-permanents/lecture-widget", () => ({
+  lignesEtatsPermanentsPourWidget: () => lecture.rendre!(),
+}));
+
 import EtatsPermanentsPage from "@/app/etablissements/[id]/etats-permanents/page";
 import { WidgetEtatsPermanents } from "./etats-permanents";
 import { lignesDuWidget } from "@/lib/etats-permanents/widget";
@@ -133,12 +148,16 @@ const releve = (c: HTMLElement) =>
     e.getAttribute("data-obligation"),
   );
 
-function rendreWidget(d: EtatsPermanentsDuDossier) {
-  const bundle = {
-    etablissementId: "etab-1",
-    etatsPermanents: lignesDuWidget(d),
-  } as unknown as DashboardBundle;
-  return render(<WidgetEtatsPermanents bundle={bundle} />);
+async function rendreWidget(
+  d: EtatsPermanentsDuDossier,
+  rendre: () => Promise<unknown> = async () => lignesDuWidget(d),
+) {
+  lecture.rendre = rendre;
+  const bundle = { etablissementId: "etab-1" } as unknown as DashboardBundle;
+  const r = render(<WidgetEtatsPermanents bundle={bundle} />);
+  // La première peinture est « … » : on attend la réponse de l'action.
+  await waitFor(() => expect(r.container.textContent).not.toMatch(/…$/));
+  return r;
 }
 
 describe("widget « Ce qui doit être en place »", () => {
@@ -148,11 +167,11 @@ describe("widget « Ce qui doit être en place »", () => {
     );
     const lignesEcran = releve(ecran.container);
     cleanup();
-    const lignesWidget = releve(rendreWidget(DOSSIER).container);
+    const lignesWidget = releve((await rendreWidget(DOSSIER)).container);
 
     // Borne basse : les cinq lignes du dossier sont bien à l'écran — sans
     // quoi deux relevés vides seraient égaux.
-    expect(lignesEcran).toHaveLength(5);
+    expect(lignesEcran).toHaveLength(6);
     expect(lignesWidget).toEqual(lignesEcran);
   });
 
@@ -166,24 +185,28 @@ describe("widget « Ce qui doit être en place »", () => {
     expect(references).toEqual(
       lignesDuWidget(DOSSIER).map((l) => l.fondement?.reference ?? ""),
     );
-    expect(references.filter(Boolean)).toHaveLength(4);
+    expect(references.filter(Boolean)).toHaveLength(5);
   });
 
-  it("dit l'état par les phrases de l'écran, sans compte ni qualification", () => {
-    const { container } = rendreWidget(DOSSIER);
+  it("dit l'état par les mots de l'écran, sans compte ni qualification (M2, M3)", async () => {
+    const { container } = await rendreWidget(DOSSIER);
     const texte = (id: string) =>
       container.querySelector(`[data-obligation="${id}"]`)!.textContent ?? "";
     expect(texte("inc-1")).toContain("Déclaré en place le 12/08/2026");
-    expect(texte("inc-2")).toContain("À mettre en place");
-    expect(texte("org-cse")).toContain("À confirmer");
+    // Non déclarée : le geste de l'écran, pas un manque.
+    expect(texte("inc-2")).toContain("Déclarer en place");
+    expect(texte("org-cse")).toContain("À confirmer · Déclarer en place");
+    // Déclarée ET à confirmer : les deux, comme l'écran.
+    expect(texte("org-ri")).toContain("À confirmer · Déclaré en place le 01/09/2026");
     expect(texte("fait-1")).toContain("Fait le 01/07/2026");
-    expect(texte("fait-2")).toContain("Pas encore daté");
+    expect(texte("fait-2")).toContain("Marquer comme fait");
+    expect(container.textContent).not.toMatch(/À mettre en place|Pas encore daté|manqu/i);
     // Aucun chiffre agrégé : ni « 1 sur 3 », ni pourcentage.
     expect(container.textContent).not.toMatch(/\d+\s+sur\s+\d+|%/);
   });
 
-  it("cite l'article de chaque ligne qui en porte un, et mène à l'écran", () => {
-    const { container } = rendreWidget(DOSSIER);
+  it("cite l'article de chaque ligne qui en porte un, et mène à l'écran", async () => {
+    const { container } = await rendreWidget(DOSSIER);
     expect(container.textContent).toContain("Réf. inc-1");
     expect(container.textContent).toContain("Réf. org-cse");
     expect(
@@ -192,13 +215,44 @@ describe("widget « Ce qui doit être en place »", () => {
   });
 });
 
+describe("widget sans ligne, ou sans réponse", () => {
+  const vide: EtatsPermanentsDuDossier = {
+    groupes: [],
+    faits: [],
+    enPlace: 0,
+    total: 0,
+    faitsDates: 0,
+    faitsDatesRenseignes: 0,
+  };
+
+  it("vide : dit que cet écran n'a rien, sans prétendre que tout est au calendrier", async () => {
+    const { container } = await rendreWidget(vide);
+    expect(container.textContent).toContain("Rien à déclarer sur cet écran");
+    expect(container.textContent).not.toMatch(/toutes une date|figurent au calendrier/);
+  });
+
+  it("lecture en échec : renvoie à l'écran, ne se lit pas « rien à faire »", async () => {
+    const { container } = await rendreWidget(vide, () => Promise.reject(new Error("x")));
+    expect(container.textContent).toContain("n'a pas pu être lue");
+    expect(container.textContent).not.toContain("Rien à déclarer");
+  });
+});
+
 describe("même source que l'écran — le source, faute de pouvoir exécuter la page d'accueil", () => {
   const lire = (chemin: string) => readFileSync(join(RACINE, chemin), "utf8");
 
-  it("le tableau de bord lit l'entrée des états permanents et l'aplatit par `lignesDuWidget`", () => {
+  it("le widget lit l'entrée des états permanents et l'aplatit par `lignesDuWidget`", () => {
+    const action = lire("src/lib/etats-permanents/lecture-widget.ts");
+    expect(action).toMatch(/^"use server";/);
+    expect(action).toMatch(/assertEtablissementOwnership\(etablissementId\)/);
+    expect(action).toMatch(/lignesDuWidget\(await etatsPermanentsDuDossier\(etablissementId, user\.id\)\)/);
+  });
+
+  it("le tableau de bord ne lit PAS les états permanents à chaque affichage", () => {
+    // Le widget n'est pas au board par défaut ; les lire au rendu serveur,
+    // c'était un passage du moteur pour rien sur la plupart des tableaux.
     const accueil = lire("src/app/etablissements/[id]/page.tsx");
-    expect(accueil).toMatch(/etatsPermanentsDuDossier\(id, user\.id\)/);
-    expect(accueil).toMatch(/etatsPermanents: lignesDuWidget\(etatsPermanents\)/);
+    expect(accueil).not.toMatch(/etatsPermanentsDuDossier|lignesDuWidget/);
   });
 
   it("cette entrée est la lecture de l'écran, pas une seconde", () => {

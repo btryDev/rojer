@@ -314,7 +314,7 @@ ne dit pas :
 | **Versions de DUERP** | — | **40 ans** | `R. 4121-4` CT (loi du 2 août 2021) — **obligation** |
 | **Rapports et attestations de vérification** | Exploitation courante | **5 ans au moins**, et en tout état de cause les **deux dernières** vérifications | `D. 4711-3` CT — **obligation** |
 | **Salarié — identité et poste** | Durée de la relation de travail | Jusqu'à l'expiration des délais de prescription applicables | Référentiel CNIL, « gestion du dossier professionnel » (recommandation) |
-| **Salarié — titres et échéances** | Durée de validité du titre | Jusqu'au terme du délai de prescription de l'action en responsabilité | `D. 4711-3` par analogie : la preuve d'une habilitation se présente au même contrôle que le rapport qui l'accompagne |
+| **Salarié — titres et échéances** | Durée de la relation de travail | ~~Jusqu'au terme du délai de prescription de l'action en responsabilité~~ **Aucune durée fixée** : les titres restent jusqu'à ce que l'employeur les supprime, et la suppression est définitive | Pendant l'emploi : obligation légale de l'employeur (6.1.c, audit E8). Copie d'une attestation médicale : « pendant toute sa durée de validité » (`R. 4323-56`, `R. 4544-11-1`). ~~`D. 4711-3` par analogie~~ — décision de la propriétaire, 2026-09-27 : aucune conservation par analogie |
 | Actions correctives | Tant que la vérification liée existe | — | Suppression en cascade |
 | Fichiers physiques des rapports | Idem rapports | — | Supprimés avec la ligne |
 
@@ -344,11 +344,27 @@ Les versions figées (`DuerpVersion.snapshot`) sont conservées **40 ans**
 
 ### 4.3 Sortie d'un salarié de l'effectif
 
-Un salarié qui quitte l'entreprise est **désactivé, pas supprimé** tant que ses
-titres sont dans leur délai de conservation : la preuve qu'il était habilité au
-moment où il a opéré subsiste, et c'est elle qui protège l'employeur en cas de
-contrôle portant sur une période passée. Passé le délai, ses données sont
-effacées.
+**Ce que fait le produit aujourd'hui** (relevé dans le code le 2026-09-27) :
+
+- « Sortie de l'effectif » (`basculerActif`) passe `Salarie.actif` à `false`.
+  Réversible, sans confirmation. La fiche et ses titres restent entiers.
+- « Retirer » un titre (`retirerTitre`) le supprime en base
+  (`titreSalarie.deleteMany`). La confirmation dit que c'est définitif et
+  nomme l'export de la fiche (« Éditer ses données »).
+- Supprimer l'établissement ou l'entreprise efface en cascade les salariés et
+  leurs titres (`onDelete: Cascade`) ; la confirmation le dit.
+- **Il n'existe pas de geste qui supprime la fiche d'un salarié** (nom,
+  prénom, poste) sans supprimer tout l'établissement, et **aucune purge
+  automatique** : rien n'efface les données d'une personne sortie.
+
+~~Un salarié qui quitte l'entreprise est **désactivé, pas supprimé** tant que
+ses titres sont dans leur délai de conservation […]. Passé le délai, ses
+données sont effacées.~~ Le délai n'était fondé que sur `D. 4711-3` par
+analogie, et l'effacement annoncé n'était fait par rien. **Décision de la
+propriétaire, 2026-09-27** : « quand employeur supprime il est averti que data
+supprimé définitivement » ; aucune conservation par analogie. **Question
+ouverte, posée à la propriétaire** : que la sortie de l'effectif garde les
+données ; et l'absence de suppression d'une fiche.
 
 Cas particulier, à ne pas perdre de vue : `R. 4544-10` prévoit que les
 attestations d'aptitude délivrées avant le 01/10/2025 restent valides
@@ -404,14 +420,15 @@ s'exercent auprès de son employeur, qui est le responsable de traitement.
 - **Accès** (art. 15) — le salarié peut demander à son employeur les données le
   concernant. L'outil doit pouvoir les extraire pour une personne donnée.
 - **Rectification** (art. 16) — une date d'habilitation erronée se corrige.
-- **Effacement** (art. 17) — **limité** : les données conservées au titre d'une
-  obligation légale ne sont pas effaçables à la demande, exception de l'article
-  17.3.b. Le dire clairement vaut mieux que de promettre un droit qu'on ne peut
-  pas honorer. ~~(preuve d'habilitation, `D. 4711-3`)~~ — `D. 4711-3` ne vise
-  pas les titres, il ne fonde que la DURÉE, par analogie (§ 4). L'obligation
-  légale, c'est celle que chaque titre met à la charge de l'employeur envers
-  le salarié : décision E8 de la propriétaire, 2026-09-27, audit des titres
-  dans `src/lib/salaries/obligation-employeur.ts` (journal C42).
+- **Effacement** (art. 17) — **limité pendant l'emploi** : l'article 17.3.b
+  excepte le traitement nécessaire au respect d'une obligation légale, et
+  l'obligation légale est celle que chaque titre met à la charge de
+  l'employeur (décision E8, 2026-09-27 ; audit dans
+  `src/lib/salaries/obligation-employeur.ts`, journal C42). Hors de ce cadre,
+  aucun texte identifié ne fonde de refus : l'employeur peut supprimer les
+  titres, définitivement. ~~(preuve d'habilitation, `D. 4711-3`)~~ —
+  `D. 4711-3` ne vise pas les titres, et plus aucune durée ne s'en réclame
+  (§ 4).
 - **Opposition** (art. 21) — **sans objet** sur un traitement fondé sur 6.1.c :
   le droit d'opposition ne s'applique pas à une obligation légale. Le salarié
   ne peut pas s'opposer à ce que son habilitation soit suivie, pas plus qu'il
