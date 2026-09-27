@@ -3948,6 +3948,82 @@ nommés à zéro ; export qui promet « leurs pièces » ; échéances non compt
 toutes rouges. (La première injection « pdfUrl écrite » visait un fichier
 inexistant et n'a rien prouvé ; rejouée sur un fichier réel, rouge.)
 
+### C46 · 2026-09-27 — Le stockage des fichiers : Supabase en production, le disque local refusé
+
+*Base : `main` local `32c8957`, branche `lot/stockage-supabase`. Ni
+référentiel ni moteur ni schéma touchés ; aucune migration. Aucun texte de
+droit relu. (C45 est réservé par la coordination.)*
+
+**Le constat.** `storage/index.ts` n'avait qu'un pilote, `local`, qui écrit
+dans `process.cwd()/storage` — en lecture seule et éphémère sur Vercel.
+Relevé des variables du projet Vercel (noms seulement, sans déchiffrer, par le
+connecteur) : en Production `DATABASE_URL`, `DIRECT_URL`,
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `MCP_CLE`,
+`MCP_ETABLISSEMENT_ID` ; aucune `STORAGE_*`, pas de
+`SUPABASE_SERVICE_ROLE_KEY`. Tout dépôt de fichier en production échouait
+donc très probablement ; non observé, faute de dépôt.
+
+**Fait.**
+- `storage/supabase.ts` : `SupabaseFileStorage` implémente `FileStorage`
+  sur un client minimal (`ClientStockage`) que le client supabase-js
+  satisfait sans conversion — le compilateur le vérifie. Bucket privé
+  (`STORAGE_BUCKET`), clé `service_role` côté serveur, aucune URL signée : les
+  routes continuent de streamer. `put` en `upsert` avec le type MIME ;
+  `delete` sans erreur sur une clé absente ; erreurs traduites en
+  `ErreurStockage` / `FichierIntrouvable` (`storage/erreurs.ts`), qui nomment
+  l'opération et la clé, jamais la clé de service.
+- **`exists` par `list`, pas par `exists()`** — trouvé par le test
+  d'intégration : contre `supabase/storage-api:v1.19.0`, `exists()` (une
+  requête HEAD) a répondu « 400 Bad Request » pour un fichier PRÉSENT comme
+  pour un absent. La liste du dossier, filtrée sur le nom exact (`search` est
+  un préfixe), distingue les deux.
+- `getStorage()` : `local` refusé en production (motif qui nomme les
+  variables à poser), `supabase` refusé s'il manque `STORAGE_BUCKET`,
+  `SUPABASE_SERVICE_ROLE_KEY` ou `NEXT_PUBLIC_SUPABASE_URL` (nommées, jamais
+  leurs valeurs) ; `stockageEnService()` lit la même règle — patron
+  d'`email/index.ts`.
+- Les trois dépôts refusent AVANT toute écriture, avec « Le dépôt de fichiers
+  n'est pas encore configuré sur ce serveur. » : rapport de vérification ;
+  pièce de prestataire (sur son champ — un prestataire sans pièce se crée) ;
+  rapport de laboratoire du carnet sanitaire. Les trois formulaires affichent
+  ce message (`state.message`, ou l'erreur du champ).
+- `getStorage()` levait désormais hors d'un `try` à quatre endroits :
+  `libererFichiers` (une suppression d'établissement ou de salarié déjà
+  commitée aurait fini en erreur), `deletePiecesPrestataire`,
+  `supprimerRapport` (les deux passent par `libererFichiers`), l'export
+  contrôle (l'archive entière échouait — les pièces sont désormais comptées
+  manquantes) et la route du fichier (503 non configuré, 410 fichier absent,
+  502 panne ; c'était 500 et 410 pour tout).
+- `LocalFileStorage.get` lève `FichierIntrouvable` sur une clé absente, comme
+  le pilote Supabase.
+- `docs/deploiement-stockage.md` : variables (noms), gestes de la
+  propriétaire, comportement sur une clé absente ; `.env.example`.
+
+**Gardes, et ce qu'elles mesurent.** `supabase.test.ts` (client simulé :
+aller-retour, mime, upsert, clé absente, panne, exception du SDK, clé
+invalide, nom exact) ; `selection.test.ts` (développement → local ;
+production sans pilote ou `local` → refus motivé ; Supabase complet → client
+construit avec la clé de service, sans session ; chaque variable manquante
+nommée, aucune valeur dite ; pilote inconnu ; aucune variable secrète en
+`NEXT_PUBLIC_`) ; `depot-refuse.test.ts` (les trois dépôts refusés avec le
+message exact et sans écriture en base ; route 503 ; `libererFichiers` qui ne
+lève pas). **Intégration** : `supabase.integration.test.ts`, sauté par
+défaut, a tourné contre un `supabase/storage-api:v1.19.0` local (Postgres
+jetable, clé `service_role` signée localement) : aller-retour à l'octet près,
+type MIME relu par `info()`, écrasement, clé absente, bucket privé illisible
+sans clé — 4/4. **Ce qu'elles ne prouvent pas** : le projet Supabase hébergé
+(préfixe `/storage/v1`, que le test retire à la main ; version du service) ;
+que les variables seront posées.
+
+**Éprouvées** — local accepté en production ; variable manquante non
+détectée ; mime non transmis ; clé absente lue comme panne ; `exists` par
+préfixe ; clé qui remonte acceptée (injection d'abord non appliquée —
+échappement de l'antislash —, rejouée, rouge) ; exception brute non
+traduite ; chacun des trois dépôts sans refus préalable ; route et
+`libererFichiers` avec `getStorage()` hors du `try` ; clé de service lue en
+`NEXT_PUBLIC_` — toutes rouges. Et, avant correction, l'`exists()` du SDK
+était rouge contre le vrai service : c'est ce qui l'a fait remplacer.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
