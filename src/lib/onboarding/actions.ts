@@ -71,6 +71,8 @@ export async function finaliserOnboarding(
     // le schéma le rend `undefined`, et l'écriture ci-dessous est alors omise.
     comporteLocauxSommeilPublic: raw.comporteLocauxSommeilPublic,
     personnesPresentesHabituellement: raw.personnesPresentesHabituellement,
+    manipuleMatieresR422722: raw.manipuleMatieresR422722,
+    chiffonsImpregnes: raw.chiffonsImpregnes,
   };
 
   const parsed = onboardingSchema.safeParse(input);
@@ -110,8 +112,10 @@ export async function finaliserOnboarding(
         adresse: d.adresse,
         codeNaf: d.codeNaf,
         effectifSurSite: d.effectifSurSite,
-        // ~~`personnesPresentesHabituellement` et~~ `manipuleMatieresR422722`
-        // n'est plus demandé à l'onboarding (2026-09-01) : question de
+        // ~~`personnesPresentesHabituellement` et `manipuleMatieresR422722`
+        // n'est plus demandé à l'onboarding (2026-09-01)~~ [2026-09-27 : les
+        // matières et les chiffons y reviennent, en trois états — écrits
+        // seulement s'ils ont une réponse, ci-dessous] : question de
         // technicien au tout début d'un parcours. La colonne reste à `null` —
         // on ne sait pas encore — et la fiche établissement la porte.
         //
@@ -126,6 +130,12 @@ export async function finaliserOnboarding(
               personnesPresentesHabituellement:
                 d.personnesPresentesHabituellement,
             }),
+        ...(d.manipuleMatieresR422722 === undefined
+          ? {}
+          : { manipuleMatieresR422722: d.manipuleMatieresR422722 }),
+        ...(d.chiffonsImpregnes === undefined
+          ? {}
+          : { chiffonsImpregnes: d.chiffonsImpregnes }),
         estEtablissementTravail: d.estEtablissementTravail,
         estERP: d.estERP,
         estIGH: d.estIGH,

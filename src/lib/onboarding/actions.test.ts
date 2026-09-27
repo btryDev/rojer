@@ -207,3 +207,31 @@ describe("finaliserOnboarding — un régime sans réponse ne vaut pas « non »
     },
   );
 });
+
+describe("finaliserOnboarding — matières et chiffons au parcours (2026-09-27)", () => {
+  // Leur silence fait afficher des lignes « à confirmer » : la question est
+  // posée là où l'on répond. « Je ne sais pas encore » n'écrit rien — la
+  // colonne reste `null`, jamais un `false` que personne n'a déclaré.
+  // Éprouvé en retirant les deux champs de l'objet `input`.
+  const ecrit = () =>
+    h.tx.etablissement.create.mock.calls.at(-1)?.[0].data as Record<string, unknown>;
+
+  it("« oui » et « non » atteignent la base", async () => {
+    await expect(
+      finaliserOnboarding(
+        { status: "idle" },
+        formulaire({ manipuleMatieresR422722: "oui", chiffonsImpregnes: "non" }),
+      ),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(ecrit().manipuleMatieresR422722).toBe(true);
+    expect(ecrit().chiffonsImpregnes).toBe(false);
+  });
+
+  it("« je ne sais pas encore » n'écrit rien", async () => {
+    await expect(
+      finaliserOnboarding({ status: "idle" }, formulaire()),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(ecrit()).not.toHaveProperty("manipuleMatieresR422722");
+    expect(ecrit()).not.toHaveProperty("chiffonsImpregnes");
+  });
+});

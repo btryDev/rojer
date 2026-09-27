@@ -3,7 +3,7 @@ import {
   determineObligationsApplicables,
   type EtablissementMatching,
 } from "./index";
-import { marquesParObligation, phrasesAConfirmer } from "./marques";
+import { marquesParObligation, phrasesAConfirmer, questionsQuiRetiennent } from "./marques";
 import { PHRASE_SANS_REPONSE } from "./sans-reponse";
 import type { QuestionSansReponse } from "./types";
 import { evaluerSection } from "@/lib/registre/composition";
@@ -117,5 +117,21 @@ describe("PDF : la ligne de vérification porte sa marque", () => {
     const marques = new Map([[EXERCICE, { phrases: ["phrase"], effectif: false }]]);
     expect(ligneVerif(v, false, NOW, marques).aConfirmer).toEqual(["phrase"]);
     expect(ligneVerif(v, false, NOW).aConfirmer).toEqual([]);
+  });
+});
+
+describe("la relance ne pose que les questions dont le silence retient une ligne", () => {
+  it("bureau muet : matières et chiffons ; répondus : aucune", () => {
+    const muet = questionsQuiRetiennent(determineObligationsApplicables(etab(), []));
+    expect(muet).toContain("matieres_r4227_22");
+    expect(muet).toContain("chiffons_impregnes");
+    const repondu = questionsQuiRetiennent(
+      determineObligationsApplicables(
+        etab({ manipuleMatieresR422722: false, chiffonsImpregnes: true }),
+        [],
+      ),
+    );
+    expect(repondu).not.toContain("matieres_r4227_22");
+    expect(repondu).not.toContain("chiffons_impregnes");
   });
 });

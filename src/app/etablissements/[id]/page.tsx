@@ -6,9 +6,12 @@ import {
 import { QuestionParametrage } from "@/components/layout/QuestionParametrage";
 import { questionRepondue } from "@/lib/etablissements/questions";
 import {
+  repondreChiffons,
   repondreDemandesAssureur,
   repondreEpiPresents,
+  repondreMatieres,
 } from "@/lib/etablissements/parametrage";
+import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
 import { DashboardGrid } from "@/components/dashboard/widgets/DashboardGrid";
 import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
@@ -263,6 +266,56 @@ export default async function EtablissementPage({
       ),
     },
   ];
+  // ── La relance des dossiers muets (analyse du 2026-09-27, étape 3) ──
+  //
+  // Deux questions de la fiche dont le silence fait afficher des lignes « à
+  // confirmer ». Posées au parcours depuis ce jour ; les dossiers nés avant
+  // n'y ont jamais répondu, et rien ne les ramenait vers leur fiche. Chacune
+  // n'apparaît que si son silence retient une ligne CHEZ CE DOSSIER — ou si
+  // elle a déjà reçu une réponse, pour rester cochée. Elle s'efface donc
+  // d'elle-même : une relance, une fois.
+  const { questions: questionsMuettes } = await marquesAConfirmerDuDossier(
+    prisma,
+    { id, entreprise: { userId: etab.entreprise.userId } },
+  );
+  if (
+    questionRepondue(etab.manipuleMatieresR422722) ||
+    questionsMuettes.includes("matieres_r4227_22")
+  ) {
+    etapesOnboarding.push({
+      id: "matieres",
+      titre: "Dire si vous manipulez des matières explosives ou inflammables",
+      pourquoi:
+        "Matières classées explosives, comburantes ou extrêmement inflammables, manipulées et mises en œuvre chez vous. Si oui, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34 du Code du travail). Tant que la question n'a pas de réponse, ces lignes s'affichent « à confirmer ».",
+      faite: questionRepondue(etab.manipuleMatieresR422722),
+      question: (
+        <QuestionParametrage
+          action={repondreMatieres.bind(null, id)}
+          labelOui="Oui"
+          labelNon="Non"
+        />
+      ),
+    });
+  }
+  if (
+    questionRepondue(etab.chiffonsImpregnes) ||
+    questionsMuettes.includes("chiffons_impregnes")
+  ) {
+    etapesOnboarding.push({
+      id: "chiffons",
+      titre: "Dire si vous utilisez des chiffons imprégnés",
+      pourquoi:
+        "Chiffons, cotons ou papiers imprégnés d'huile, de graisse ou de liquides inflammables — un torchon de cuisine imbibé d'huile en est un. Si oui, ils se rangent après usage dans des récipients métalliques clos et étanches (art. R. 4227-26 du Code du travail). Tant que la question n'a pas de réponse, cette ligne s'affiche « à confirmer ».",
+      faite: questionRepondue(etab.chiffonsImpregnes),
+      question: (
+        <QuestionParametrage
+          action={repondreChiffons.bind(null, id)}
+          labelOui="Oui"
+          labelNon="Non"
+        />
+      ),
+    });
+  }
   const onboardingFini = etapesOnboarding.every((e) => e.faite);
 
   // Ancienneté du dernier rapport, en **jours civils** (Europe/Paris) :

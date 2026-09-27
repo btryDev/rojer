@@ -16,14 +16,18 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { determineObligationsApplicables } from "@/lib/matching";
 import {
   marquesParObligation,
+  questionsQuiRetiennent,
   type MarqueAConfirmer,
 } from "@/lib/matching/marques";
+import type { QuestionSansReponse } from "@/lib/matching/types";
 import { projeterEtablissement } from "@/lib/matching/projection";
 
 export type MarquesDuDossier = {
   parObligation: Map<string, MarqueAConfirmer>;
   /** Pour le lien « effectif de l'entreprise » ; `null` si le dossier est introuvable. */
   entrepriseId: string | null;
+  /** Les questions muettes de la fiche qui retiennent au moins une ligne. */
+  questions: QuestionSansReponse[];
 };
 
 export async function marquesAConfirmerDuDossier(
@@ -62,11 +66,10 @@ export async function marquesAConfirmerDuDossier(
       },
     },
   });
-  if (!etab) return { parObligation: new Map(), entrepriseId: null };
+  if (!etab) return { parObligation: new Map(), entrepriseId: null, questions: [] };
 
   const { equipements, entrepriseId, ...source } = etab;
-  const parObligation = marquesParObligation(
-    determineObligationsApplicables(
+  const applicables = determineObligationsApplicables(
       projeterEtablissement(source),
       equipements.map((eq) => ({
         id: eq.id,
@@ -77,7 +80,10 @@ export async function marquesAConfirmerDuDossier(
           unknown
         > | null,
       })),
-    ),
   );
-  return { parObligation, entrepriseId };
+  return {
+    parObligation: marquesParObligation(applicables),
+    entrepriseId,
+    questions: questionsQuiRetiennent(applicables),
+  };
 }

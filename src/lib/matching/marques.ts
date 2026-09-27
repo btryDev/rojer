@@ -11,7 +11,7 @@
 
 import { phraseEffectifAConfirmer } from "./effectif-entreprise";
 import { PHRASE_SANS_REPONSE } from "./sans-reponse";
-import type { ObligationApplicable } from "./types";
+import type { ObligationApplicable, QuestionSansReponse } from "./types";
 
 /** Les phrases « à confirmer » d'une ligne, vide si rien ne la retient par prudence. */
 export function phrasesAConfirmer(
@@ -57,4 +57,13 @@ export function marquesParObligation(
     }
   }
   return out;
+}
+
+/** Les questions de la fiche dont le silence retient au moins une ligne. */
+export function questionsQuiRetiennent(
+  applicables: readonly ObligationApplicable[],
+): QuestionSansReponse[] {
+  const out = new Set<QuestionSansReponse>();
+  for (const app of applicables) for (const q of app.sansReponse ?? []) out.add(q);
+  return [...out];
 }

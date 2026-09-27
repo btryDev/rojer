@@ -554,6 +554,23 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
           value={state.comporteLocauxSommeilPublic}
         />
       ) : null}
+      {/* Matières et chiffons (2026-09-27) : postés seulement s'ils ont une
+          réponse, comme le sommeil — « je ne sais pas encore » ne devient
+          jamais un `false` en base. */}
+      {state.manipuleMatieresR422722 ? (
+        <input
+          type="hidden"
+          name="manipuleMatieresR422722"
+          value={state.manipuleMatieresR422722}
+        />
+      ) : null}
+      {state.chiffonsImpregnes ? (
+        <input
+          type="hidden"
+          name="chiffonsImpregnes"
+          value={state.chiffonsImpregnes}
+        />
+      ) : null}
       {/* Le nombre de personnes n'est posté que si la question est À L'ÉCRAN
           pour l'état final : un nombre saisi puis rendu sans objet (effectif
           ou catégorie corrigés en revenant en arrière) reste dans l'état et

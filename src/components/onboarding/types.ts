@@ -48,6 +48,12 @@ export type OnboardingState = {
   // posée depuis le 2026-09-20 aux seuls dossiers que
   // `nombreDePersonnesADemander` désigne. Saisie texte, comme l'effectif.
   personnesPresentesHabituellement: string;
+
+  // Matières de R. 4227-22 (R. 4227-34) et chiffons imprégnés (R. 4227-26),
+  // posées au parcours depuis le 2026-09-27. Trois valeurs : "" (« je ne sais
+  // pas encore » — la colonne reste `null`), "oui", "non".
+  manipuleMatieresR422722: string;
+  chiffonsImpregnes: string;
   // `classeIgh` et `familleHabitation` ont quitté l'état du wizard le
   // 2026-09-03 : les deux sous-questions qui les remplissaient ont été
   // retirées, aucune obligation du référentiel ne dépendant de l'une ni de
@@ -71,6 +77,8 @@ export const VALEURS_INITIALES: OnboardingState = {
   categorieErp: "",
   comporteLocauxSommeilPublic: "",
   personnesPresentesHabituellement: "",
+  manipuleMatieresR422722: "",
+  chiffonsImpregnes: "",
 };
 
 export type StepProps = {

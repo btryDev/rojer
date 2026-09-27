@@ -417,6 +417,66 @@ export function StepTypologie({
                 vise « le propriétaire » sans mentionner de famille. Voir
                 `corpus/arrete-1986-habitation.ts`. */}
           </section>
+
+          {/* ─── Deux questions sur ce qui se fait chez vous (2026-09-27) ──
+              Posées ici parce que leur silence fait afficher des lignes « à
+              confirmer » — la consigne incendie et l'exercice semestriel
+              (R. 4227-34, -37, -39) pour les matières, le rangement des
+              chiffons gras (R. 4227-26). Le critère est celui qui a ramené le
+              nombre de personnes au parcours le 2026-09-20 : poser la question
+              là où la réponse change des lignes. Trois états : « je ne sais
+              pas encore » est une réponse, qui laisse la ligne affichée. */}
+          <section className="carte-board flex flex-col gap-6 px-7 py-6 sm:px-8">
+            <div>
+              <h3 className="board-titre m-0 text-[22px]">
+                Ce qui se fait dans vos locaux
+              </h3>
+              <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                Deux questions dont la réponse ajoute ou retire des
+                obligations. Si vous hésitez, laissez « Je ne sais pas encore » :
+                les lignes concernées s&apos;afficheront « à confirmer », et vous
+                pourrez répondre plus tard sur la fiche de l&apos;établissement.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <SousQuestion
+                question="Manipulez-vous et mettez-vous en œuvre des matières explosives ou inflammables ?"
+                aide="Matières classées explosives, comburantes ou extrêmement inflammables, ou dans un état physique susceptible d'engendrer une explosion ou une inflammation instantanée. Si oui, l'alarme sonore, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34 du Code du travail). Les entreposer sans les mettre en œuvre ne relève pas de cette question."
+              />
+              <select
+                id="manipuleMatieresR422722"
+                aria-label="Matières explosives ou inflammables"
+                value={state.manipuleMatieresR422722}
+                onChange={(e) =>
+                  update({ manipuleMatieresR422722: e.currentTarget.value })
+                }
+                className="champ-board"
+              >
+                <option value="">Je ne sais pas encore</option>
+                <option value="oui">Oui</option>
+                <option value="non">Non</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-3">
+              <SousQuestion
+                question="Utilisez-vous des chiffons, cotons ou papiers imprégnés d'huile, de graisse ou de liquides inflammables ?"
+                aide="Un torchon de cuisine imbibé d'huile en est un. Si oui, ils doivent être enfermés après usage dans des récipients métalliques clos et étanches (art. R. 4227-26 du Code du travail)."
+              />
+              <select
+                id="chiffonsImpregnes"
+                aria-label="Chiffons, cotons ou papiers imprégnés"
+                value={state.chiffonsImpregnes}
+                onChange={(e) =>
+                  update({ chiffonsImpregnes: e.currentTarget.value })
+                }
+                className="champ-board"
+              >
+                <option value="">Je ne sais pas encore</option>
+                <option value="oui">Oui</option>
+                <option value="non">Non</option>
+              </select>
+            </div>
+          </section>
     </div>
   );
 }

@@ -39,6 +39,11 @@ const nafRegex = /^\d{2}\.?\d{2}[A-Z]?$/;
 // On revalide ici la forme finale pour détecter un client-side bypass.
 const adresseRegex = /^.{3,},\s*\d{5}\s.{2,}$/;
 
+/** « oui » / « non » en booléen ; tout le reste — le vide compris — n'est pas une réponse. */
+function ouiNonOuSilence(v: unknown): boolean | undefined {
+  return v === "oui" ? true : v === "non" ? false : v === true || v === false ? v : undefined;
+}
+
 export const onboardingSchema = z
   .object({
     // ─── Étape 1 — Identité juridique + lieu ──────────────
@@ -153,8 +158,18 @@ export const onboardingSchema = z
     // `nombreDePersonnesADemander` : un ERP que ni sa catégorie ni son effectif
     // ne portent au-dessus du seuil de R. 4227-34. Pour eux elle est
     // obligatoire ; pour tous les autres elle n'est pas à l'écran et n'est pas
-    // acceptée. `manipuleMatieresR422722` ne revient PAS : sa décision de champ
-    // est en attente, et le silence n'y retire rien à personne.
+    // acceptée. ~~`manipuleMatieresR422722` ne revient PAS : sa décision de champ
+    // est en attente, et le silence n'y retire rien à personne.~~ [2026-09-27 :
+    // prémisse fausse depuis le 2026-09-03 — le silence retirait R. 4227-37 et
+    // -39 au travail seul sous le seuil. La question revient, voir plus bas.]
+    // ─── Matières de R. 4227-22 et chiffons imprégnés (2026-09-27) ──
+    //
+    // Posées au parcours, en trois états, parce que leur silence fait afficher
+    // des lignes « à confirmer » (analyse de la réponse absente, étape 3).
+    // `undefined` — « je ne sais pas encore » — traverse sans rien écrire : la
+    // colonne reste `null`, comme pour le sommeil.
+    manipuleMatieresR422722: z.preprocess(ouiNonOuSilence, z.boolean().optional()),
+    chiffonsImpregnes: z.preprocess(ouiNonOuSilence, z.boolean().optional()),
     personnesPresentesHabituellement: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
       z.coerce
@@ -345,4 +360,6 @@ export const onboardingValeursInitiales = {
   categorieErp: "" as string | undefined,
   comporteLocauxSommeilPublic: "" as string,
   personnesPresentesHabituellement: "" as string,
+  manipuleMatieresR422722: "" as string,
+  chiffonsImpregnes: "" as string,
 };

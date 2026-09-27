@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 
 /**
  * Les deux questions de paramétrage — ADR-025 § 7, ADR-032.
@@ -95,4 +96,48 @@ export async function repondreEpiPresents(
   });
   revalidatePath(`/etablissements/${etablissementId}`);
   return { status: "success" };
+}
+
+/**
+ * Les deux questions de la fiche dont le silence retient des lignes « à
+ * confirmer » (analyse du 2026-09-27, étape 3 — relance des dossiers muets).
+ * Posées aussi au parcours depuis ce jour ; ici pour les dossiers nés avant.
+ *
+ * Contrairement aux deux questions de paramétrage ci-dessus, la réponse change
+ * le calendrier : il est régénéré, comme après la fiche (`CHAMPS_STRUCTURANTS`).
+ */
+async function repondreQuestionDeLaFiche(
+  etablissementId: string,
+  champ: "manipuleMatieresR422722" | "chiffonsImpregnes",
+  formData: FormData,
+): Promise<ReponseParametrage> {
+  await assertEtablissementOwnership(etablissementId);
+  const parsed = reponseBooleenne.safeParse(formData.get("reponse"));
+  if (!parsed.success) {
+    return { status: "error", message: "Répondez oui ou non." };
+  }
+  await prisma.etablissement.update({
+    where: { id: etablissementId },
+    data: { [champ]: parsed.data === "oui" },
+  });
+  await regenererApresMutation(etablissementId, `parametrage/${champ}`);
+  revalidatePath(`/etablissements/${etablissementId}`);
+  revalidatePath(`/etablissements/${etablissementId}/calendrier`);
+  return { status: "success" };
+}
+
+export async function repondreMatieres(
+  etablissementId: string,
+  _prev: ReponseParametrage,
+  formData: FormData,
+): Promise<ReponseParametrage> {
+  return repondreQuestionDeLaFiche(etablissementId, "manipuleMatieresR422722", formData);
+}
+
+export async function repondreChiffons(
+  etablissementId: string,
+  _prev: ReponseParametrage,
+  formData: FormData,
+): Promise<ReponseParametrage> {
+  return repondreQuestionDeLaFiche(etablissementId, "chiffonsImpregnes", formData);
 }
