@@ -46,7 +46,7 @@ function client(options: { panne?: string; leve?: boolean } = {}) {
       return { data: noms.slice(0, o.limit).map((name) => ({ name })), error: null };
     }),
   };
-  const from = vi.fn((_: string) => bucket);
+  const from = vi.fn<(bucket: string) => BucketStockage>(() => bucket);
   const c: ClientStockage = { storage: { from } };
   return { c, from, bucket, fichiers };
 }
