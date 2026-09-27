@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import {
   MENTION_SUR_APPLICATION_5E,
+  contexteDesSuggestions,
   suggererEquipements,
 } from "./pre-remplissage";
 
@@ -378,5 +379,32 @@ describe("suggererEquipements — une citation du livre II dit la sur-applicatio
           expect(Boolean(e.mention), e.raison).toBe(/livre II(?!I)/.test(e.raison));
         }
       }
+  });
+});
+
+describe("un second établissement sans NAF propre (2026-09-27, A1)", () => {
+  // `Etablissement.codeNaf` n'est renseigné que s'il diffère de celui de
+  // l'entreprise. La page du parc le passait nu : un second restaurant sans
+  // NAF propre perdait la hotte, la cuisson et le froid. Éprouvé en passant
+  // `etab.codeNaf` seul dans `contexteDesSuggestions`.
+  const secondRestaurant = {
+    codeNaf: null,
+    entreprise: { codeNaf: "56.10A" },
+    estEtablissementTravail: true,
+    estERP: true,
+    estIGH: false,
+    estHabitation: false,
+  };
+
+  it("hérite du NAF de l'entreprise, et de ses suggestions sectorielles", () => {
+    const cats = categories(suggererEquipements(contexteDesSuggestions(secondRestaurant)));
+    expect(cats).toContain("HOTTE_PRO");
+    expect(cats).toContain("APPAREIL_CUISSON_ERP");
+  });
+
+  it("un NAF propre l'emporte sur celui de l'entreprise", () => {
+    expect(
+      contexteDesSuggestions({ ...secondRestaurant, codeNaf: "47.11B" }).codeNaf,
+    ).toBe("47.11B");
   });
 });

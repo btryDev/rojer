@@ -1,4 +1,5 @@
 import { obligationParId } from "@/lib/referentiels/conformite";
+import { nafEffectif } from "@/lib/perimetre/secteur";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
 /**
@@ -158,6 +159,38 @@ export type ContexteEtablissement = {
   estIGH: boolean;
   estHabitation: boolean;
 };
+
+/**
+ * Le contexte des suggestions, depuis un établissement ET son entreprise.
+ *
+ * LE NAF SE LIT AVEC SON REPLI (2026-09-27, A1 de l'analyse de la réponse
+ * absente). La page du parc passait `etab.codeNaf` nu, alors que ce champ n'est
+ * renseigné que s'il diffère de celui de l'entreprise — le formulaire le dit :
+ * « Si vide, on utilise le code NAF de l'entreprise ». Un second établissement
+ * sans NAF propre perdait toutes les suggestions sectorielles (froid, hotte,
+ * cuisson, éclairage de sécurité par secteur), sans rien pour le dire. Même
+ * repli que `perimetre/secteur.ts` (`nafEffectif`), et même moyen de ne pas
+ * l'oublier : l'entreprise est un paramètre requis.
+ */
+export function contexteDesSuggestions(etab: {
+  codeNaf: string | null;
+  entreprise: { codeNaf: string | null };
+  estEtablissementTravail: boolean;
+  estERP: boolean;
+  estIGH: boolean;
+  estHabitation: boolean;
+}): ContexteEtablissement {
+  return {
+    codeNaf: nafEffectif({
+      etablissement: etab.codeNaf,
+      entreprise: etab.entreprise.codeNaf,
+    }),
+    estEtablissementTravail: etab.estEtablissementTravail,
+    estERP: etab.estERP,
+    estIGH: etab.estIGH,
+    estHabitation: etab.estHabitation,
+  };
+}
 
 function normNaf(naf: string | null | undefined): string {
   return (naf ?? "").trim().toUpperCase();

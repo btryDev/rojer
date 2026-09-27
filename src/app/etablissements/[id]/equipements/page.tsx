@@ -18,7 +18,10 @@ import {
   resoudreFiltreBatiment,
   restreindreAuBatiment,
 } from "@/lib/batiments/filtre";
-import { suggererEquipements } from "@/lib/equipements/pre-remplissage";
+import {
+  contexteDesSuggestions,
+  suggererEquipements,
+} from "@/lib/equipements/pre-remplissage";
 import {
   etatVerificationsParEquipement,
   resumerEquipement,
@@ -84,13 +87,7 @@ export default async function EquipementsPage({
   const equipementsAffiches = restreindreAuBatiment(equipements, batimentFiltre);
   const parCategorie = grouperParCategorie(equipementsAffiches);
 
-  const suggestions = suggererEquipements({
-    codeNaf: etab.codeNaf,
-    estEtablissementTravail: etab.estEtablissementTravail,
-    estERP: etab.estERP,
-    estIGH: etab.estIGH,
-    estHabitation: etab.estHabitation,
-  });
+  const suggestions = suggererEquipements(contexteDesSuggestions(etab));
 
   // Les chiffres du bandeau ne comptent que le parc AFFICHÉ. Le compteur
   // de l'établissement (`compterEtatCalendrier`) embrasse aussi les
