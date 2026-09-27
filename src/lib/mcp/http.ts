@@ -154,7 +154,7 @@ function construireServeur(scope: ScopeMcp): McpServer {
 }
 
 /**
- * Termine un flux `subscriptions/listen` juste après son accusé de réception.
+ * Répond à un `subscriptions/listen` par un flux qui se termine aussitôt.
  *
  * POURQUOI. La révision 2026-07-28 fait porter les notifications de
  * changement par la réponse SSE d'un `subscriptions/listen`, qui « reste
@@ -168,82 +168,67 @@ function construireServeur(scope: ScopeMcp): McpServer {
  * CE QUE LA SPÉCIFICATION PERMET. « Subscriptions » § Cancellation : le
  * serveur peut mettre fin à un abonnement de lui-même ; il « SHOULD send a
  * successful `subscriptions/listen` response to signal a graceful end, then
- * close the stream ». Et l'accusé de réception « MUST » être le premier
- * message. D'où : on relaie l'accusé du SDK (qui a fait les validations —
- * version, en-têtes, filtre), on ajoute la réponse `complete`, on ferme, et
- * on annule le flux du SDK, ce qui le désabonne et arrête son minuteur.
+ * close the stream ». L'accusé de réception « MUST » être le premier
+ * message, et son filtre ne porte que ce que le serveur honore — ici rien
+ * (`listChanged: false`, aucune ressource).
  *
- * Un client qui reçoit la réponse `complete` sait que la fin est voulue ;
- * seule une coupure sans elle l'autorise à se reconnecter.
+ * ~~Relayer l'accusé en lisant le flux du SDK~~ (vérification du 2026-09-27,
+ * R1) : la lecture dépendait de son découpage — un `\r\n`, ou un commentaire
+ * `:` en tête, légaux tous deux en SSE, laissaient le flux ouvert ou
+ * perdaient l'accusé. Le flux du SDK n'est plus lu : le SDK garde ses
+ * validations (version, en-têtes, filtre — une erreur de sa part part telle
+ * quelle, en JSON), puis son flux est annulé sans être lu, et la réponse est
+ * écrite ici, avec l'`id` pris dans le corps de la requête. Même forme que
+ * la fin gracieuse du SDK (`teardown(true)` de son routeur d'écoute).
  */
-function terminerEcoute(reponse: Response): Response {
-  if (!reponse.body) return reponse;
-  const source = reponse.body.getReader();
-  const decodeur = new TextDecoder();
-  const encodeur = new TextEncoder();
+function reponseEcouteTerminee(id: string | number, source: Response): Response {
+  // Annulé sans être lu : désabonne le SDK et arrête son minuteur.
+  void source.body?.cancel().catch(() => {});
 
-  const flux = new ReadableStream<Uint8Array>({
-    async pull(controleur) {
-      // Un seul `pull` : il relaie l'accusé puis ferme.
-      let tampon = "";
-      let fin = -1;
-      while (fin < 0) {
-        const lu = await source.read();
-        if (lu.done) {
-          if (tampon) controleur.enqueue(encodeur.encode(tampon));
-          controleur.close();
-          return;
-        }
-        tampon += decodeur.decode(lu.value, { stream: true });
-        fin = tampon.indexOf("\n\n");
-      }
-      const accuse = tampon.slice(0, fin + 2);
-      controleur.enqueue(encodeur.encode(accuse));
-
-      // L'identifiant d'abonnement est l'`id` JSON-RPC du `listen` ; le SDK
-      // l'a posé dans le `_meta` de l'accusé.
-      const donnees = accuse
-        .split("\n")
-        .find((l) => l.startsWith("data: "))
-        ?.slice("data: ".length);
-      let id: unknown = null;
-      try {
-        id = donnees ? JSON.parse(donnees)?.params?._meta?.[SUBSCRIPTION_ID_META_KEY] ?? null : null;
-      } catch {
-        id = null;
-      }
-      if (id !== null) {
-        const complete = {
-          jsonrpc: "2.0",
-          id,
-          result: {
-            resultType: "complete",
-            _meta: {
-              [SUBSCRIPTION_ID_META_KEY]: id,
-              [SERVER_INFO_META_KEY]: {
-                name: NOM_SERVEUR,
-                version: VERSION_SERVEUR,
-              },
-            },
-          },
-        };
-        controleur.enqueue(
-          encodeur.encode(`event: message\ndata: ${JSON.stringify(complete)}\n\n`),
-        );
-      }
-      controleur.close();
-      await source.cancel().catch(() => {});
+  const trame = (message: unknown) =>
+    `event: message\ndata: ${JSON.stringify(message)}\n\n`;
+  const accuse = {
+    jsonrpc: "2.0",
+    method: "notifications/subscriptions/acknowledged",
+    params: {
+      notifications: {},
+      _meta: { [SUBSCRIPTION_ID_META_KEY]: id },
     },
-    cancel(raison) {
-      return source.cancel(raison).catch(() => {});
+  };
+  const complete = {
+    jsonrpc: "2.0",
+    id,
+    result: {
+      resultType: "complete",
+      _meta: {
+        [SUBSCRIPTION_ID_META_KEY]: id,
+        [SERVER_INFO_META_KEY]: { name: NOM_SERVEUR, version: VERSION_SERVEUR },
+      },
+    },
+  };
+
+  return new Response(trame(accuse) + trame(complete), {
+    status: 200,
+    headers: {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache, no-transform",
+      "x-accel-buffering": "no",
     },
   });
+}
 
-  return new Response(flux, {
-    status: reponse.status,
-    statusText: reponse.statusText,
-    headers: reponse.headers,
-  });
+/** L'`id` JSON-RPC d'un corps de requête, s'il est une chaîne ou un nombre. */
+async function idDeRequete(request: Request): Promise<string | number | null> {
+  try {
+    const corps: unknown = await request.json();
+    const id =
+      corps && typeof corps === "object" && !Array.isArray(corps)
+        ? (corps as { id?: unknown }).id
+        : undefined;
+    return typeof id === "string" || typeof id === "number" ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 const estFluxSse = (reponse: Response) =>
@@ -294,6 +279,8 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
     // toute discordance — il ne peut donc pas déguiser un autre échange.
     const estEcoute =
       request.headers.get("mcp-method") === "subscriptions/listen";
+    // Copie du corps pour en lire l'`id` sans priver le SDK du sien.
+    const idEcoute = estEcoute ? await idDeRequete(request.clone()) : null;
 
     const reponse = await handler.fetch(request, {
       authInfo: {
@@ -307,7 +294,16 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
       },
     });
 
-    return estEcoute && estFluxSse(reponse) ? terminerEcoute(reponse) : reponse;
+    // Le SDK a accepté l'écoute (il répond en flux) : on n'en lit rien, on
+    // répond et on ferme. S'il l'a refusée, son erreur JSON part telle quelle.
+    if (estEcoute && estFluxSse(reponse)) {
+      if (idEcoute !== null) return reponseEcouteTerminee(idEcoute, reponse);
+      // Accepté sans `id` lisible : ne devrait pas arriver (le SDK exige une
+      // requête). On ne garde pas pour autant un flux ouvert.
+      void reponse.body?.cancel().catch(() => {});
+      return new Response(null, { status: 500 });
+    }
+    return reponse;
   }
 
   return { servir, fermer: () => handler.close() };

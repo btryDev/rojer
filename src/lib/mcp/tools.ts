@@ -304,7 +304,9 @@ const outilFiche: OutilMcp<SchemaVide> = {
   schema: SCHEMA_VIDE,
   executer: async (ctx) => {
     const fiche = await getFicheEtablissement(ctx.scope.etablissementId);
-    if (!fiche) return "Établissement introuvable.";
+    // Déjà filtré par `avecEtablissement` ; si l'établissement disparaît
+    // entre les deux lectures, même réponse, même marquage.
+    if (!fiche) throw new ErreurOutilMcp(MESSAGE_ETABLISSEMENT_INTROUVABLE);
     return formaterFiche(fiche);
   },
 };

@@ -262,6 +262,19 @@ describe("établissement introuvable (MCP_ETABLISSEMENT_ID supprimé)", () => {
   });
 });
 
+describe("établissement disparu entre deux lectures", () => {
+  it("fiche_etablissement : même erreur d'outil, pas un texte ordinaire", async () => {
+    prismaMock.etablissement.findUnique
+      .mockResolvedValueOnce({ raisonDisplay: "Café du Port", adresse: "1 quai Neuf" })
+      .mockResolvedValueOnce(null);
+    const r = await resultat(await appel(24, "fiche_etablissement", {}));
+    expect(r.result?.isError).toBe(true);
+    expect(r.result?.content?.[0]?.text).toContain(
+      "Établissement introuvable pour ce connecteur",
+    );
+  });
+});
+
 describe("entrées refusées", () => {
   it("un etablissementId fourni par le client est refusé, pas ignoré", async () => {
     const r = await resultat(

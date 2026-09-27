@@ -4233,8 +4233,28 @@ branche `ErreurOutilMcp` (« n'a pas pu répondre ») ; sans `.strict()`
 **Suite** : 289 fichiers passés, 1 ignoré ; 3866 tests passés, 4 ignorés.
 `tsc` : 0. `eslint .` : 0 erreur, 2 avertissements hors périmètre
 (`SignatureExterneForm.tsx`). `next build` : compilé, `/api/mcp` et
-`/api/mcp/[cle]` en `ƒ`. **Ne prouvent pas** que le connecteur Claude.ai
+`/api/mcp/[cle]` en `ƒ`. *(Chiffres de `aa8faec` ; ceux de la reprise R1 sont
+ci-dessous.)* **Ne prouvent pas** que le connecteur Claude.ai
 cessera de rouvrir un `listen` : c'est le journal après déploiement.
+
+**Reprise R1 (vérification de `aa8faec`).** Le relais de l'accusé lisait
+le flux du SDK et cherchait `\n\n` : avec des fins de ligne `\r\n`, flux
+ouvert jusqu'à `maxDuration` et accusé jamais relayé ; avec un commentaire
+`:` en tête — le keep-alive que la spécification donne en exemple —, accusé
+perdu et fermeture sans `complete`. **Fait** : le flux du SDK n'est plus lu.
+Le SDK valide (son refus JSON passe tel quel) ; s'il accepte, son flux est
+annulé, l'`id` est lu dans le corps de la requête, et le serveur écrit
+lui-même l'accusé `{}` puis `complete`. `fiche_etablissement` sans fiche lève
+aussi `ErreurOutilMcp`. **Gardes** : `ecoute-decoupage.test.ts` — flux SDK
+sans fin découpé tel quel, commentaire en tête, CRLF : fermeture < 2 s,
+accusé puis `complete`, flux SDK annulé ; refus du SDK relayé ;
+`transport-http.test.ts` — fiche disparue entre deux lectures. **Éprouvées**
+— ancien relais remis : 2 rouges (commentaire : « expected [] to have a
+length of 2 » ; CRLF : ouvert à 2 003 ms) ; flux SDK non annulé : 3 rouges ;
+fiche en texte : 1 rouge (« expected undefined to be true »). Note : en
+`--pool=forks`, un fichier dont un test échoue pendant qu'un flux reste
+pendant a bloqué le processus jusqu'à l'alarme ; en `--pool=threads` les
+mêmes rouges sortent normalement. Sans effet sur la suite verte.
 
 ### Ce que la chronologie donne à voir
 
