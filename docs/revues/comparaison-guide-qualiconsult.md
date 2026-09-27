@@ -1,6 +1,8 @@
 # Comparaison — le référentiel Rojer face à un guide professionnel
 
-**2026-09-01.** Confrontation du référentiel (116 obligations, version `2026-08-31.4`)
+**2026-09-01.** Confrontation du référentiel (~~116 obligations, version `2026-08-31.4`~~
+[2026-09-28, audit de bout en bout : 172 obligations, version `2026-09-27.1` ; chaque ligne du guide qui touche la cible a
+reçu un état, `docs/revues/audit-bout-en-bout-2026-09-27-annexe-7bis.md` § 4])
 au *Guide des principales obligations réglementaires* du Groupe Qualiconsult,
 mis à jour en **novembre 2021**.
 
@@ -19,12 +21,15 @@ dangereuses (p. 31-34).
 
 **Lues en second temps, le 2026-09-01** : la suite de la sécurité incendie
 (p. 14-16) et le détail des équipements sous pression et frigorifiques
-(p. 25-28). Leurs résultats sont en fin de document. **Toutes les sections du
-périmètre sont donc confrontées.**
+(p. 25-28). Leurs résultats sont en fin de document. ~~**Toutes les sections du
+périmètre sont donc confrontées.**~~ [2026-09-28, audit de bout en bout : faux — la vérification annuelle des
+ascenseurs et monte-charges par l'employeur (arrêté du 29 décembre 2010, D10), les
+extincteurs CO₂ (D11), les systèmes de plus de 70 kW et toutes les lignes FORMATION
+(p. 17-35) avaient été omises ; relevées dans `docs/revues/audit-bout-en-bout-2026-09-27-annexe-7bis.md` § 4]
 
 **Non lu, et hors périmètre déclaré** : ICPE (p. 39-41), aires de jeux et
 équipements sportifs (p. 42), rayonnements ionisants et environnement
-(p. 35-38).
+(p. 35-38). [2026-09-28, audit de bout en bout : lus ; aucune ligne cible neuve, sauf les aires de jeux (D12)]
 
 ---
 
@@ -106,19 +111,25 @@ Le guide donne le détail que le lot D3 avait identifié comme un vrai trou :
 **Trois de ces objets concernent directement la cible** : un restaurant ou un
 commerce a un compacteur ou une benne à ordures ; une boulangerie a une machine
 à cylindres. `R. 4323-23` n'a été instruit chez nous que par sa branche levage,
-via l'arrêté du 1ᵉʳ mars 2004. **C'est le trou le plus net de cette
-comparaison.**
+via l'arrêté du 1ᵉʳ mars 2004. ~~**C'est le trou le plus net de cette
+comparaison.**~~ [2026-09-28, audit de bout en bout : `compactage-dechets-vgp-trimestrielle` encodé le 2026-09-02 ;
+les machines à cylindres sont celles « pour l'industrie du caoutchouc » (réserve de
+l'art. 1), la benne est un véhicule du collecteur]
 
 ### 2. Disconnecteurs — contrôle annuel
 
-`CdSP R. 1321-57`. Aucune trace au référentiel. Tout établissement raccordé au
+`CdSP R. 1321-57`. ~~Aucune trace au référentiel.~~ [2026-09-28, audit de bout en bout : R. 1321-57 `sans_objet`
+(motif écrit) ; la vérification et l'entretien a minima annuels des dispositifs
+(arrêté du 10 septembre 2021, art. 9 et 10) sont `non_couvert`, annoncés sur la page
+« Ce que Rojer ne couvre pas » depuis C45] Tout établissement raccordé au
 réseau d'eau potable en porte.
 
 ### 3. Signalisation de sécurité et ses alimentations de secours
 
 Arrêté du 04/11/93 : moyens et dispositifs de signalisation → mise en service
 puis **6 mois** ; alimentations de secours des signalisations → mise en service
-puis **1 an**. Aucune trace au référentiel.
+puis **1 an**. ~~Aucune trace au référentiel.~~ [2026-09-28, audit de bout en bout : neuf obligations
+`signalisation-*`, dont la semestrielle et l'annuelle]
 
 ### 4. Aération avec recyclage — un semestriel connu et bloqué
 
@@ -136,9 +147,10 @@ Ce n'est donc pas un oubli de lecture, c'est un **manque de modèle** — la mê
 famille que `comporteLocauxSommeilPublic`. Un attribut booléen sur l'équipement
 de ventilation débloque la ligne.
 
-**C'est le seul cas de cette comparaison où nous sommes moins-disants sur un
+~~**C'est le seul cas de cette comparaison où nous sommes moins-disants sur un
 texte que nous avons lu**, et le sens de l'erreur est le mauvais : un an au lieu
-de six mois, en faveur de l'exploitant.
+de six mois, en faveur de l'exploitant.~~ [2026-09-28, audit de bout en bout : clos — `aeration-travail-recyclage-semestriel`
+porte le semestriel]
 
 ---
 
@@ -152,10 +164,14 @@ sportifs et aires de jeux, IGH, rayonnements ionisants, ATEX, CEM, amiante,
 S'y ajoutent trois familles que le guide porte et que le produit déclare hors
 périmètre ou ne sert pas : le **bruit** (mesurage au moins tous les cinq ans),
 les **VLEP d'agents chimiques** (au moins une fois par an), les **niveaux
-d'éclairement** (périodicité laissée à l'employeur).
+d'éclairement** (périodicité laissée à l'employeur). [2026-09-28, audit de bout en bout : le bruit (R. 4433-2)
+est `non_couvert` au corpus ; l'entretien de l'éclairage (R. 4223-11) est porté par
+`eclairage-etablissement-regles-entretien` ; seule la VLEP reste sans état écrit
+au corpus (D12)]
 
 Les **légionelles** ne sont pas un manque : elles sont servies par le module
-`carnet-sanitaire`, hors référentiel.
+`carnet-sanitaire`, hors référentiel. [2026-09-28, audit de bout en bout : désormais `non_couvert` au corpus, annoncées
+sur la page du carnet sanitaire]
 
 ---
 
@@ -168,7 +184,8 @@ sans fondement. Il apporte **quatre pistes**, dont une déjà identifiée par un
 autre chemin et une déjà consignée par le corpus lui-même.
 
 Reste **deux pistes réellement neuves** — disconnecteurs, signalisation de
-sécurité — et une confirmation détaillée du trou des machines.
+sécurité — et une confirmation détaillée du trou des machines. [2026-09-28, audit de bout en bout : les deux pistes
+sont instruites, et le trou des machines refermé ; voir les ajouts ci-dessus]
 
 Aucune ne s'encode sur la foi de ce document. Chacune se dépouille à la source,
 selon la règle maison, avant d'exister.
@@ -199,7 +216,9 @@ vérification, pas une vérification de plus. **Pas un manque.**
 ## Équipements sous pression (p. 25-26) — une divergence, et elle est instructive
 
 Le guide donne **2 ans** pour l'inspection périodique ; nous portons
-`triennale`. Même arrêté du 20 novembre 2017.
+~~`triennale`~~ [2026-09-28, audit de bout en bout : `esp-inspection-periodique` est quadriennale, et
+`esp-inspection-periodique-generateur-vapeur` biennale ; la justification qui suit
+est périmée]. Même arrêté du 20 novembre 2017.
 
 **Aucun des deux ne se trompe** — ils ne parlent pas du même équipement. Notre
 propre description le dit déjà : « 4 ans pour la généralité des équipements,

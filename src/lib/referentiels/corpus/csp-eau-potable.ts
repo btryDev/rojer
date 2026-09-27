@@ -389,7 +389,7 @@ export const ARRETE_2021_09_10_RETOURS_EAU: Corpus = {
         "En présence de plusieurs fluides de catégories différentes dans le bâtiment, le dispositif de protection équipant le point de livraison est de niveau au moins équivalent au niveau de protection correspondant au fluide le plus dangereux circulant en son aval.",
       statut: "sans_objet",
       motif:
-        "Article d'ÉQUIPEMENT et de niveau, sans rendez-vous ni rythme : il dit ce qui doit être en place, jamais quand le refaire. Le seul rendez-vous que le dispositif engendre est aux articles 9 et 10 — vérification et entretien a minima annuels —, tous deux déjà au corpus et tous deux `obligation_manquante`. Même traitement que l'article 3, état permanent de l'installation.",
+        "Article d'ÉQUIPEMENT et de niveau, sans rendez-vous ni rythme : il dit ce qui doit être en place, jamais quand le refaire. Le seul rendez-vous que le dispositif engendre est aux articles 9 et 10 — vérification et entretien a minima annuels —, tous deux déjà au corpus et ~~tous deux `obligation_manquante`~~ [2026-09-28, audit de bout en bout : tous deux `non_couvert` et annoncés depuis C45]. Même traitement que l'article 3, état permanent de l'installation.",
     },
     {
       ref: "Arrêté 10-09-2021 art. 6",
