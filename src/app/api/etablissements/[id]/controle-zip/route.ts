@@ -371,7 +371,9 @@ export async function GET(
   const rapportsDeposes = await lire("Rapports/", [], () =>
     prisma.rapportVerification.findMany({
       where: { etablissementId: id },
-      orderBy: { dateRapport: "asc" },
+      // Pas d'`orderBy` : l'ordre des rapports vit dans
+      // `ORDRE_RAPPORT_PLUS_RECENT` (garde de `derniere-realisation.test.ts`),
+      // et les entrées portent leur date en tête de nom — l'archive les range.
       select: {
         id: true,
         fichierCle: true,
