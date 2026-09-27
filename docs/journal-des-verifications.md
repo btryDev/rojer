@@ -3818,6 +3818,95 @@ ces runs ont d'abord figé sous `--maxWorkers=2`, la machine étant chargée
 par des vitest d'autres sessions (non touchés) ; rejoués seuls en
 `--maxWorkers=1`.
 
+### C44 · 2026-09-27 — « Supprimer ce salarié », et les fichiers qu'une suppression laissait derrière elle
+
+*Base : production `771c8ae`, branche `lot/supprimer-salarie`. Ni référentiel
+ni moteur touchés ; aucune migration (`prisma migrate diff` entre les deux
+schémas : « This is an empty migration » — seuls des commentaires changent).
+Aucun texte de droit relu : le lot applique des décisions de la propriétaire.*
+
+**Les décisions.** « quand employeur supprime il est averti que data supprimé
+définitivement » (E8), puis, sur la question des lignes de calendrier posée
+avant de coder, « A et correction du défaut ».
+
+**Relevé avant de coder (point 3 du brief).** Ce qui vise un `Salarie` :
+`TitreSalarie` (Cascade) et `Verification.salarieId` (**Restrict**, ADR-023 :
+« Ses titres restent le temps de leur conservation (docs/rgpd.md § 4.3), puis
+il devient supprimable »). Le générateur supprime les lignes sans trace d'un
+salarié sorti ou d'un titre retiré, et ARCHIVE celles qui portent un rapport
+ou une action (`porteUnePreuve`, `calendrier/passe.ts`) : un salarié dont une
+ligne avait reçu une pièce n'était donc jamais supprimable. Sous chaque
+ligne, en cascade : `RapportVerification` (avec `fichierCle`) et `Action`.
+`Signature.objetId` n'a pas de clé étrangère : une signature de rapport
+survivait au rapport — déjà vrai de `supprimerRapport`. Rien d'autre :
+`DuerpVersion.snapshot` et `FicheRegistre.contenu` n'ont aucune relation vers
+un salarié ; les PDF n'impriment pas le nom (`libellePorteurSansNom`). Un
+texte libre saisi par l'employeur peut contenir un nom : non vérifiable.
+**Défaut préexistant** : une cascade en base ne libère pas le stockage ; seul
+`supprimerRapport` appelait `getStorage().delete` — la suppression d'un
+établissement ou d'une entreprise laissait rapports, pièces de prestataires et
+du registre d'accessibilité, analyses de légionelles.
+
+**Fait.**
+- `salaries/suppression.ts` : dans une transaction, les signatures des
+  rapports visés, les lignes du salarié (rapports et actions suivent), la
+  fiche (titres suivent) ; chaque écriture bornée à l'établissement, après
+  `assertEtablissementOwnership`. Fichiers libérés après, calendrier
+  régénéré, retour à l'équipe. `Restrict` gardé en base.
+- Confirmation (`phrases-suppression.ts`) : « La fiche de … et ses N titres
+  sont supprimés définitivement. Sont aussi supprimés définitivement, parce
+  que liés à ses titres : N rapports déposés, M actions et S signatures. Rien
+  ne se récupère ensuite. Pour en garder une trace, utilisez d'abord « Éditer
+  ses données » sur cette fiche. » Les nombres viennent de
+  `perimetreSuppressionSalarie`, même périmètre que l'effacement.
+- « Sortie de l'effectif » inchangée ; le texte sous une fiche sortie ne dit
+  plus « conservée parce que ses titres montrent qu'elle était habilitée »
+  (fondement retiré le 2026-09-27) mais que fiche et titres restent tant
+  qu'on ne la supprime pas, et nomme « Supprimer ce salarié ».
+- `suppression/fichiers.ts` : `clesDesEtablissements` lit, dans la
+  transaction de la suppression, les clés de stockage des tables de
+  `CLES_STOCKEES` ; `libererFichiers` les libère après, journalise chaque
+  échec sans lever. Branché sur `supprimerEtablissement` et
+  `supprimerEntreprise`. Les signatures d'un établissement partent déjà avec
+  lui (`Signature.etablissement`, Cascade). `DuerpVersion.pdfUrl` n'est pas
+  collecté : aucun code ne l'écrit, et une version figée rend
+  l'établissement insupprimable.
+- Textes : `droits.ts` (export et art. 13), `rgpd.md` § 4.3, ADR-023 (ligne
+  datée), commentaires du schéma, E8.
+
+**Gardes, et ce qu'elles mesurent.** `salaries/suppression.test.ts` tient une
+base en mémoire qui applique les règles du schéma — `Restrict` lève P2003,
+cascades, signatures sans clé étrangère, transaction qui restaure, `undefined`
+sans effet de filtre — et relit `schema.prisma` pour vérifier que ces règles
+sont celles du schéma : effacement complet et sélectif (le voisin, la ligne
+d'établissement, une signature d'un autre type restent), fichier libéré,
+isolation entre établissements et entre utilisateurs (le vrai
+`assertEtablissementOwnership`), stockage en échec sans retour arrière,
+périmètre = ce qui part, texte de la confirmation, sortie inchangée.
+`suppression/fichiers.test.ts` : toute colonne `…Cle` du schéma est collectée,
+et lue. `etablissements/actions.test.ts` et
+`entreprises/suppression-fichiers.test.ts` : fichiers libérés après la base,
+aucun sur un refus, échec du stockage journalisé sans rien annuler. **Ce
+qu'elles ne prouvent pas** : que PostgreSQL applique les cascades comme la
+base en mémoire (le relevé du schéma le rend probable, pas certain — aucun
+test du dépôt ne tourne sur une base réelle) ; que le fichier libéré a
+réellement disparu du stockage de production.
+
+**Éprouvées** — signatures oubliées ; lignes non effacées ; lignes effacées
+sans borne ; appartenance non vérifiée ; fichiers non libérés ; échec du
+stockage qui lève ; périmètre qui oublie les actions ; « définitivement »
+retiré ; export non nommé (d'abord VERT : l'injection avait touché le
+commentaire d'en-tête, pas le texte ; rejouée sur le texte, rouge) ; sortie
+qui supprime ; `Restrict` passé en `Cascade` ; colonne de clé oubliée ;
+collecte sans les prestataires ; fichiers libérés avant la base ; aucun
+fichier libéré (établissement, entreprise) ; collecte sur un seul
+établissement de l'entreprise. **Et une trouvée par l'épreuve** : retirer la
+borne d'établissement de la recherche de la fiche restait VERT, et retirer
+toutes les bornes aussi — la base en mémoire lisait `etablissementId:
+undefined` comme une valeur, pas comme l'absence de filtre qu'est la
+sémantique de Prisma. Corrigée (`6e04f87`), l'injection « aucune borne » est
+rouge. Vitest a figé à plusieurs reprises : rejoué sous minuteur.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
