@@ -3317,7 +3317,7 @@ régénéré : 317 − 0 + 5 = 322 articles dépouillés non cités (`L. 4624-1`
 `L. 4741-1` au corpus formation-sécurité, 9 → 10 ; aucun n'est cité par une
 obligation, aucun article déjà présent n'en sort).
 
-**L'audit.** Quatorze titres au catalogue (en appelant `cataloguerTitres()`) ;
+**L'audit** *[première forme — corrigée le même jour, « Contre-lecture » ci-dessous : plusieurs phrases ne disaient pas ce que la dernière colonne leur fait dire]*. Quatorze titres au catalogue (en appelant `cataloguerTitres()`) ;
 quatorze répondent au critère, douze sous une condition.
 
 | Titre | Fondateur | Phrase qui nomme l'employeur | Obligation de l'employeur envers le salarié |
@@ -3410,6 +3410,84 @@ l'obligation ; la garde exige depuis les deux phrases, rouge ensuite) ;
 « exigés par le Code » remis. Vitest a figé plusieurs fois sans rien écrire :
 lancé depuis `./node_modules/.bin/vitest`, stdin fermé, sous un minuteur ;
 l'injection rejouée quand il avait figé.
+
+**Contre-lecture de `6a0b993` (2026-09-27), et corrections.** Vérifié juste
+par la coordination : écran et widget (mêmes lignes, ordre, article), extraits
+d'alinéas, deux gardes cassées rouges, textes relus conformes au corpus,
+`rgpd.md` § 5.2, suite et build. Corrigé :
+
+- **G1** — `droits.ts` disait « Votre départ de l'entreprise n'efface donc pas
+  ces données » et, dans l'export, « Une sortie de l'effectif ne les efface
+  donc pas » : un « donc » qui présentait comme obligation légale une
+  conservation fondée sur `D. 4711-3` par analogie. **Décision de la
+  propriétaire, même jour** : « quand employeur supprime il est averti que
+  data supprimé définitivement » ; aucune conservation par analogie.
+  **Relevé dans le code** : « Sortie de l'effectif » (`basculerActif`) passe
+  `actif` à `false`, réversible, sans confirmation — fiche et titres restent ;
+  « Retirer » un titre (`retirerTitre`) fait `titreSalarie.deleteMany` ;
+  supprimer l'établissement ou l'entreprise efface salariés et titres en
+  cascade ; **aucun geste ne supprime la fiche d'un salarié seule, aucune
+  purge n'existe** — `docs/rgpd.md` § 4.3 annonçait « Passé le délai, ses
+  données sont effacées », ce que rien ne fait. Textes seuls changés :
+  `droits.ts` (export et art. 13), fiche du salarié, `rgpd.md` § 4 et § 5.2
+  disent ce qui se passe ; refus d'effacement limité à l'emploi (17.3.b) ;
+  confirmation du retrait d'un titre (« supprimés définitivement », export
+  « Éditer ses données » nommé — il existe sur la fiche) ; confirmations de
+  suppression d'établissement et d'entreprise (l'équipe et ses titres nommés,
+  « supprimé définitivement »). Même phrase trouvée en cherchant la politique
+  sœur : la fiche du salarié (« excepte ce qui est conservé au titre d'une
+  obligation légale »), deux commentaires (`salaries/queries.ts`,
+  `isolation.test.ts`) qui fondaient la conservation sur 17.3.b. **Questions
+  posées, comportement inchangé** : la sortie garde les données ; pas de
+  suppression d'une fiche seule ; pas de purge.
+- **M4, M5 — l'audit disait plus que ses phrases.** Tableau corrigé
+  (`obligation-employeur.ts` porte désormais la NATURE et le destinataire) :
+
+| Titre | Phrase retenue | Nature de l'obligation de l'employeur |
+|---|---|---|
+| VIP, VIP adaptée, SIR, visite intermédiaire | `L. 4622-1` : « Les employeurs relevant du présent titre organisent des services de prévention et de santé au travail. » (relu le 2026-09-27) ; le droit du travailleur est au fondateur (`R. 4624-10`, « Tout travailleur bénéficie ») | organiser le service qui réalise la visite. ~~`R. 4624-39`~~ : il met le COÛT à sa charge, il ne l'oblige pas à faire passer la visite |
+| SIR — catégorie A | `L. 4622-1`, rythme `R. 4451-82` | idem. ~~`R. 4451-57` « l'employeur classe »~~ : l'obligation de classer, pas de faire suivre ; le classement reste la condition |
+| Secouriste | `R. 4224-15` : « Un membre du personnel reçoit la formation de secouriste nécessaire pour donner les premiers secours en cas d'urgence » ; l'employeur est nommé par l'intitulé du titre, « Obligations de l'employeur pour l'utilisation des lieux de travail » | formation, **envers le collectif**, exécutée en formant ce salarié ; condition citée en entier (« … pendant plus de quinze jours où sont réalisés des travaux dangereux ») ; ~~`L. 4741-1`~~ |
+| Attestations médicales (conduite, voisinage) | inchangées | **conserver la copie**, pas fournir ; `droits.ts` le dit |
+| Salarié désigné compétent | `L. 4644-1` : « Le ou les salariés ainsi désignés par l'employeur bénéficient d'une formation en matière de santé au travail » | formation ; ~~le financement de `L. 2315-18`~~ |
+
+  `droits.ts` (« Pourquoi », base de l'export) dit ces natures et ce
+  destinataire, rien de plus ; `obligation-employeur.test.ts` exige que chaque
+  nature présente à l'audit y soit nommée. `R. 4624-39` et `R. 4451-57` restent
+  au corpus (`sans_objet`) ; leurs motifs disent désormais ce qu'ils fondent
+  (le coût des visites ; l'obligation de classer), et que l'audit ne s'y
+  appuie plus.
+- **M1** — la pastille citait un article sous le nom de plusieurs :
+  « R. 4323-1 à R. 4323-5 », « R. 4224-12 et R. 4224-13 », « CCH, art.
+  R. 134-6 et R. 134-7 ». Le test validait ce dernier. Désormais le texte ne
+  s'affiche que si la référence nomme l'article SEUL. Sur les 53 lignes
+  possibles de l'écran : 47 citent, 6 ouvrent Légifrance sans citer (les
+  trois ci-dessus, « R. 4544-9 à R. 4544-11 », « art. 8 et 9 » de l'arrêté
+  du 21 décembre 1993, et `R. 4463-2`, dont la parenthèse nomme aussi
+  `L. 4121-3-1`).
+- **M2, M3** — le widget disait « À mettre en place », « Pas encore daté »,
+  que l'écran n'emploie pas, et taisait « À confirmer » sur une ligne
+  déclarée. Il reprend le geste de l'écran (« Déclarer en place »,
+  « Marquer comme fait ») ou la phrase de déclaration, précédés de
+  « À confirmer » quand l'écran l'affiche.
+- **Faibles** — texte vide du widget, et celui de l'écran lui-même (politique
+  sœur), qui disaient « elles ont toutes une date » : faux pour « Quand ça
+  arrive » et l'équipe, réécrits. Le tableau de bord lisait les états
+  permanents à chaque affichage alors que le widget n'y est pas par défaut :
+  le widget les demande par une action serveur (`lecture-widget.ts`) une
+  fois monté ; le tableau de bord est revenu à sa version de production.
+  URL de `L. 4741-1` et `R. 4451-57` : gardées, ce sont les identifiants que
+  la recherche Légifrance datée du jour rend comme version en vigueur ; les
+  identifiants proposés (`LEGIARTI000020627480`, `LEGIARTI000037024611`)
+  ouvrent la même version en vigueur, par redirection.
+
+**Éprouvées** — M1 (« nommé » sans « seul ») ; « À mettre en place » remis ;
+déclaration avant « À confirmer » ; « n'efface donc pas » remis dans le texte,
+puis dans l'export ; ancienne phrase de la fiche ; équipe retirée de la
+confirmation d'établissement ; « définitivement » retiré du retrait d'un
+titre ; « pièce à conserver » tue dans « Pourquoi » ; lecture remise au
+tableau de bord ; ancien texte vide ; échec de lecture rendu comme liste
+vide — douze rouges, fichiers restaurés.
 
 ---
 
