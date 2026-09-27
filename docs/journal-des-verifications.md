@@ -4185,6 +4185,57 @@ posée en production est la bonne : c'est le journal du prochain déploiement.
 accepté ; `anon` accepté ; valeur au journal ; échec d'écriture non attrapé
 (rapport, prestataire, carnet) — huit rouges.
 
+### C48 · 2026-09-27 — Serveur MCP : le flux `subscriptions/listen` tenu 300 s, et la clé au journal
+
+*Base : production `42c0390`, branche `lot/mcp-audit` (`29e90f4`, `da2be03`).
+Audit : `docs/revues/audit-mcp-2026-09-27.md`.*
+
+**Le constat, en production** (journal Vercel, lu) : 143 « Task timed out
+after 300 seconds » sur `POST /api/mcp/[cle]` depuis le 2026-08-16, statut
+200, un toutes les 4 min 01 s ; et le chemin — clé comprise — sur chaque
+ligne.
+
+**Lu.** SDK `@modelcontextprotocol/server@2.0.0` (lockfile) :
+`createMcpHandler` sert 2026-07-28 et, sans état, l'ère 2025 (GET/DELETE →
+405) ; `createListenRouter.serve` tient le flux d'un `subscriptions/listen`
+ouvert avec un `keepalive` de 15 s jusqu'à l'abandon du client, même sur un
+filtre accordé vide ; `registerTool` annonce `listChanged: true` par défaut.
+Spécification 2026-07-28 (modelcontextprotocol.io, *Streamable HTTP*,
+*Subscriptions*, *Tools*, *Authorization*) : le serveur peut clore un
+abonnement par une réponse `complete` après l'accusé ; `listChanged` promet
+des notifications ; l'audience des jetons « MUST » être vérifiée.
+
+**Mesuré** (gestionnaire de route appelé en direct) : avant, `listen` encore
+ouvert à 35 004 ms quand le test l'a coupé ; `initialize` et `tools/call`,
+deux ères, fermés à la réponse. Après, `listen` fermé aussitôt, accusé puis
+`complete`.
+
+**Fait.** `listChanged: false` ; `terminerEcoute` (accusé du SDK relayé,
+réponse `complete`, flux SDK annulé) sur `Mcp-Method: subscriptions/listen` ;
+`maxDuration = 60` sur les deux routes ; `ErreurOutilMcp` pour l'établissement
+introuvable, rendue en `isError` (HTTP et stdio) ; schémas `.strict()` et
+`recherche` ≤ 200.
+
+**Pas fait — décisions** : rotation de `MCP_CLE` (au journal depuis août),
+bascule du connecteur sur `/api/mcp` OAuth, clé en `Authorization`, fenêtre
+à deux clés, audience OAuth, limitation de débit WAF, `localhost` en
+production. Le code ne peut pas dire si `MCP_ETABLISSEMENT_ID` désigne un
+établissement supprimé : seule la base le peut.
+
+**Gardes.** `transport-http.test.ts` (12) ; `tools.test.ts` (introuvable).
+**Éprouvées** — `listChanged: true` (2 rouges : accusé `{ toolsListChanged:
+true }`, `server/discover`) ; sans `terminerEcoute` (flux ouvert au plafond
+de 2 s) ; sans `maxDuration` sur `[cle]` puis sur la route OAuth ; sans la
+branche `ErreurOutilMcp` (« n'a pas pu répondre ») ; sans `.strict()`
+(2 rouges : Prisma appelé 2 fois, `additionalProperties` absent) ; sans
+`max(200)` — neuf rouges.
+
+**Suite** : 289 fichiers passés, 1 ignoré ; 3866 tests passés, 4 ignorés.
+`tsc` : 0. `eslint .` : 0 erreur, 2 avertissements hors périmètre
+(`SignatureExterneForm.tsx`). `next build` : compilé, `/api/mcp` et
+`/api/mcp/[cle]` en `ƒ`. **Ne prouvent pas** que le connecteur Claude.ai
+cessera de rouvrir un `listen` : c'est le journal après déploiement.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
