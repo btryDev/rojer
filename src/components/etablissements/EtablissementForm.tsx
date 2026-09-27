@@ -86,8 +86,14 @@ export function EtablissementForm({
 
   // États locaux pour le dépliage conditionnel ERP/IGH — cohérence UI
   // immédiate sans tour serveur.
-  const [estERP, setEstERP] = useState<boolean>(
-    valeursInitiales?.estERP ?? false,
+  // EN CRÉATION, AUCUNE RÉPONSE DE RÉGIME N'EST PRÉSÉLECTIONNÉE (2026-09-27,
+  // A2 — même règle qu'au parcours de création, relevée par la contre-lecture
+  // du lot) : une case vide valait « non », et un second établissement qui
+  // recevait du public naissait non-ERP en silence. En modification, la
+  // réponse est en base : la case la montre.
+  const enCreation = valeursInitiales === undefined;
+  const [estERP, setEstERP] = useState<boolean | null>(
+    valeursInitiales?.estERP ?? (enCreation ? null : false),
   );
   // Le type est suivi en état depuis le 2026-09-20 : la question du sommeil
   // n'existe que pour certains types, et doit apparaître ou disparaître au
@@ -98,11 +104,11 @@ export function EtablissementForm({
   const poseLocauxSommeil =
     estERP &&
     (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(typeErp);
-  const [estHabitation, setEstHabitation] = useState<boolean>(
-    valeursInitiales?.estHabitation ?? false,
+  const [estHabitation, setEstHabitation] = useState<boolean | null>(
+    valeursInitiales?.estHabitation ?? (enCreation ? null : false),
   );
-  const [estIGH, setEstIGH] = useState<boolean>(
-    valeursInitiales?.estIGH ?? false,
+  const [estIGH, setEstIGH] = useState<boolean | null>(
+    valeursInitiales?.estIGH ?? (enCreation ? null : false),
   );
 
   const err = (champ: string) =>
@@ -352,13 +358,15 @@ export function EtablissementForm({
             {/* ERP */}
             <div className="flex flex-col gap-3">
               <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  name="estERP"
-                  checked={estERP}
-                  onChange={(e) => setEstERP(e.currentTarget.checked)}
-                  className={CASE_A_COCHER}
-                />
+                {enCreation ? null : (
+                  <input
+                    type="checkbox"
+                    name="estERP"
+                    checked={estERP === true}
+                    onChange={(e) => setEstERP(e.currentTarget.checked)}
+                    className={CASE_A_COCHER}
+                  />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Établissement Recevant du Public (ERP)
@@ -370,6 +378,14 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
+              {enCreation && (
+                <ReponseOuiNon
+                  name="estERP"
+                  valeur={estERP}
+                  onChange={setEstERP}
+                  erreur={err("estERP")}
+                />
+              )}
 
               {estERP && (
                 /* TYPE ET CATÉGORIE PRENNENT LA LIGNE ENTIÈRE, ET C'EST UNE
@@ -405,7 +421,7 @@ export function EtablissementForm({
                       name="typeErp"
                       value={typeErp}
                       onChange={(e) => setTypeErp(e.currentTarget.value)}
-                      required={estERP}
+                      required={estERP === true}
                       className="champ-board"
                       aria-invalid={Boolean(err("typeErp"))}
                     >
@@ -427,7 +443,7 @@ export function EtablissementForm({
                       id="categorieErp"
                       name="categorieErp"
                       defaultValue={valeursInitiales?.categorieErp ?? ""}
-                      required={estERP}
+                      required={estERP === true}
                       className="champ-board"
                       aria-invalid={Boolean(err("categorieErp"))}
                       aria-describedby="categorieErp-aide"
@@ -560,13 +576,15 @@ export function EtablissementForm({
             {/* IGH */}
             <div className="flex flex-col gap-3">
               <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  name="estIGH"
-                  checked={estIGH}
-                  onChange={(e) => setEstIGH(e.currentTarget.checked)}
-                  className={CASE_A_COCHER}
-                />
+                {enCreation ? null : (
+                  <input
+                    type="checkbox"
+                    name="estIGH"
+                    checked={estIGH === true}
+                    onChange={(e) => setEstIGH(e.currentTarget.checked)}
+                    className={CASE_A_COCHER}
+                  />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Immeuble de Grande Hauteur (IGH)
@@ -577,6 +595,14 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
+              {enCreation && (
+                <ReponseOuiNon
+                  name="estIGH"
+                  valeur={estIGH}
+                  onChange={setEstIGH}
+                  erreur={err("estIGH")}
+                />
+              )}
 
               {/* LA QUESTION « CLASSE IGH » A ÉTÉ RETIRÉE LE 2026-09-03.
                   Elle était obligatoire, offrait les dix classes de R. 146-4,
@@ -604,13 +630,15 @@ export function EtablissementForm({
             {/* Habitation */}
             <div className="flex flex-col gap-3">
               <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  name="estHabitation"
-                  checked={estHabitation}
-                  onChange={(e) => setEstHabitation(e.currentTarget.checked)}
-                  className={CASE_A_COCHER}
-                />
+                {enCreation ? null : (
+                  <input
+                    type="checkbox"
+                    name="estHabitation"
+                    checked={estHabitation === true}
+                    onChange={(e) => setEstHabitation(e.currentTarget.checked)}
+                    className={CASE_A_COCHER}
+                  />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Immeuble d&apos;habitation
@@ -621,6 +649,14 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
+              {enCreation && (
+                <ReponseOuiNon
+                  name="estHabitation"
+                  valeur={estHabitation}
+                  onChange={setEstHabitation}
+                  erreur={err("estHabitation")}
+                />
+              )}
 
               {/* LA QUESTION « FAMILLE D'HABITATION » A ÉTÉ RETIRÉE LE
                   2026-09-03, trois jours après avoir été posée. Elle offrait
@@ -681,5 +717,46 @@ export function EtablissementForm({
         )}
       </div>
     </form>
+  );
+}
+
+/**
+ * Oui / Non, sans réponse présélectionnée et exigé (2026-09-27, A2). Posté
+ * « oui » ou « non » ; rien tant qu'aucun n'est choisi, et la porte refuse.
+ */
+function ReponseOuiNon({
+  name,
+  valeur,
+  onChange,
+  erreur,
+}: {
+  name: string;
+  valeur: boolean | null;
+  onChange: (v: boolean) => void;
+  erreur?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 pl-1">
+      <div className="flex gap-5 text-[13px] text-[color:var(--board-ink)]">
+        {(["oui", "non"] as const).map((v) => (
+          <label key={v} className="flex cursor-pointer items-center gap-2">
+            <input
+              type="radio"
+              name={name}
+              value={v}
+              required
+              checked={valeur === (v === "oui")}
+              onChange={() => onChange(v === "oui")}
+            />
+            {v === "oui" ? "Oui" : "Non"}
+          </label>
+        ))}
+      </div>
+      {erreur && (
+        <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+          {erreur}
+        </p>
+      )}
+    </div>
   );
 }

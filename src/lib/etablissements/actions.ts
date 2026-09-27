@@ -93,6 +93,7 @@ function typologieAChange(
 function normaliserFormData(fd: FormData): Record<string, unknown> {
   const raw = Object.fromEntries(fd);
   const bool = (k: string) => raw[k] !== undefined;
+  const regime = (k: string) => raw[k] !== undefined && raw[k] !== "non";
   return {
     raisonDisplay: raw.raisonDisplay,
     adresse: raw.adresse,
@@ -102,9 +103,11 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     manipuleMatieresR422722: raw.manipuleMatieresR422722,
     chiffonsImpregnes: raw.chiffonsImpregnes,
     estEtablissementTravail: bool("estEtablissementTravail"),
-    estERP: bool("estERP"),
-    estIGH: bool("estIGH"),
-    estHabitation: bool("estHabitation"),
+    // Case cochée (« on », modification) ou « oui » / « non » (création,
+    // 2026-09-27, A2). Absente en modification = case décochée = « non ».
+    estERP: regime("estERP"),
+    estIGH: regime("estIGH"),
+    estHabitation: regime("estHabitation"),
     typeErp: raw.typeErp || undefined,
     categorieErp: raw.categorieErp || undefined,
     natureActivite: raw.natureActivite,
@@ -157,6 +160,21 @@ export async function creerEtablissement(
   // schéma de modification — un dossier refusé à l'onboarding se serait alors
   // créé en deux clics par l'autre porte. C'est la porte, pas le parcours, qui
   // doit porter la règle.
+  // EN CRÉATION, LES TROIS RÉGIMES EXIGENT UNE RÉPONSE (2026-09-27, A2) : le
+  // formulaire les pose en Oui / Non sans présélection, et la porte refuse
+  // leur absence au lieu de la lire « non » — même règle qu'à l'onboarding.
+  const regimesSansReponse = (["estERP", "estIGH", "estHabitation"] as const).filter(
+    (k) => formData.get(k) !== "oui" && formData.get(k) !== "non",
+  );
+  if (regimesSansReponse.length > 0) {
+    return {
+      status: "error",
+      message: "Formulaire invalide",
+      fieldErrors: Object.fromEntries(
+        regimesSansReponse.map((k) => [k, ["Répondez oui ou non."]]),
+      ),
+    };
+  }
   const parsed = etablissementCreationSchema.safeParse(
     normaliserFormData(formData),
   );

@@ -37,7 +37,10 @@ export async function marquesAConfirmerDuDossier(
   const etab = await client.etablissement.findFirst({
     where,
     // Les seuls champs que lit le moteur, écrits en clair : ce module sert
-    // aussi le MCP, dont la garde relit ce qui sort de la base.
+    // aussi le MCP. ~~dont la garde relit ce qui sort de la base~~ [2026-09-27,
+    // contre-lecture : faux — `rgpd/frontiere-medicale.test.ts` ne balaie que
+    // `lib/mcp/`, `lib/pdf/` et `app/api/`, pas ce fichier. Rien de personnel
+    // n'en sort : seules des phrases du référentiel, par obligation.]
     select: {
       id: true,
       entrepriseId: true,

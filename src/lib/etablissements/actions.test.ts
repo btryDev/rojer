@@ -122,6 +122,14 @@ const { creerEtablissement, modifierEtablissement, supprimerEtablissement } =
   await import("./actions");
 
 /** Le formulaire poste toutes ses cases : les non cochées sont absentes. */
+/**
+ * Le formulaire de CRÉATION : les trois régimes y sont répondus en Oui / Non
+ * (2026-09-27, A2) — sans réponse, la porte refuse.
+ */
+function creation(over: Record<string, string> = {}): FormData {
+  return formulaire({ estERP: "non", estIGH: "non", estHabitation: "non", ...over });
+}
+
 function formulaire(over: Record<string, string> = {}): FormData {
   const fd = new FormData();
   fd.set("raisonDisplay", "Le Bistrot");
@@ -165,7 +173,7 @@ describe("creerEtablissement — le second dossier d'un compte (ADR-028)", () =>
     // Le faux Prisma rend TOUJOURS un établissement sur `findFirst` : c'est
     // exactement l'état qui déclenchait l'ancien renvoi.
     await expect(
-      creerEtablissement("ent-1", { status: "idle" }, formulaire()),
+      creerEtablissement("ent-1", { status: "idle" }, creation()),
     ).rejects.toThrow("NEXT_REDIRECT");
 
     expect(h.db.crees).toHaveLength(1);
@@ -176,7 +184,7 @@ describe("creerEtablissement — le second dossier d'un compte (ADR-028)", () =>
     // Tout établissement naît avec le sien : sans lui, les équipements du
     // second site n'auraient nulle part où être rangés.
     await expect(
-      creerEtablissement("ent-1", { status: "idle" }, formulaire()),
+      creerEtablissement("ent-1", { status: "idle" }, creation()),
     ).rejects.toThrow("NEXT_REDIRECT");
 
     expect(h.db.crees[0].batiments).toEqual({
@@ -189,7 +197,7 @@ describe("creerEtablissement — le second dossier d'un compte (ADR-028)", () =>
     // création du second : on aurait rempli un formulaire pour atterrir
     // ailleurs.
     await expect(
-      creerEtablissement("ent-1", { status: "idle" }, formulaire()),
+      creerEtablissement("ent-1", { status: "idle" }, creation()),
     ).rejects.toThrow("NEXT_REDIRECT");
 
     expect(h.db.cookiePose).toEqual({
@@ -204,7 +212,7 @@ describe("creerEtablissement — le second dossier d'un compte (ADR-028)", () =>
     // sans appareil doit pourtant ses obligations d'établissement (ADR-022), et
     // son tableau de bord se disait vide en attendant.
     await expect(
-      creerEtablissement("ent-1", { status: "idle" }, formulaire()),
+      creerEtablissement("ent-1", { status: "idle" }, creation()),
     ).rejects.toThrow("NEXT_REDIRECT");
 
     expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
@@ -466,5 +474,30 @@ describe("modifierEtablissement — la réponse sur le sommeil suit le type (202
     );
     expect(res.status).toBe("error");
     expect(h.db.etablissement.comporteLocauxSommeilPublic).toBeNull();
+  });
+});
+
+describe("creerEtablissement — aucun régime lu « non » sans réponse (2026-09-27, A2)", () => {
+  // La case vide valait « non » : un second établissement recevant du public
+  // naissait non-ERP. Éprouvé en retirant le refus `regimesSansReponse`.
+  it.each(["estERP", "estIGH", "estHabitation"])("%s absent : refus, rien n'est créé", async (champ) => {
+    const fd = creation();
+    fd.delete(champ);
+    const res = await creerEtablissement("ent-1", { status: "idle" }, fd);
+    expect(res.status).toBe("error");
+    expect(res.status === "error" && res.fieldErrors?.[champ]).toBeTruthy();
+  });
+
+  it("« oui » à l'ERP s'écrit vrai, « non » faux", async () => {
+    const avant = h.db.crees.length;
+    await creerEtablissement(
+      "ent-1",
+      { status: "idle" },
+      creation({ estERP: "oui", typeErp: "N", categorieErp: "N5" }),
+    ).catch(() => undefined);
+    const data = h.db.crees[avant] as Record<string, unknown>;
+    expect(data.estERP).toBe(true);
+    expect(data.estIGH).toBe(false);
+    expect(data.estHabitation).toBe(false);
   });
 });

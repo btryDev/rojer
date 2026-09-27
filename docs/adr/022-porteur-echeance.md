@@ -228,13 +228,16 @@ et le type d'ERP écartaient aussi — l'absence y est désormais interdite en b
 `matching/absence.ts` (`6a3b984`).] Toute condition d'établissement **nouvelle**
 suit la règle du non-renseigné.
 
-Le canal d'affichage manque : `EcheanceCalendrier.tone` est binaire et
+~~Le canal d'affichage manque : `EcheanceCalendrier.tone` est binaire et
 `EvenementGrille.tone` n'a que trois valeurs, `warn` étant pris par « à planifier ».
 Aucune obligation de ce lot n'a de condition incertaine — `PE 4 § 2` et
 `R. 4222-20` s'appliquent sans condition d'attribut — donc « à confirmer » n'a pas
 de porteur visuel à livrer maintenant. Les briques existent quand il le faudra :
 `a_confirmer` (`onboarding/deduction-erp.ts`), `indetermine` (`equipements/esp.ts`),
-`equipement_propriete_non_infirmee` (`matching/engine.ts`).
+`equipement_propriete_non_infirmee` (`matching/engine.ts`).~~ [2026-09-27 : le
+canal existe — `matching/marques.ts` traduit la marque une fois ; le calendrier
+(liste et fiche), le dossier PDF et le ZIP, le registre, le guide et le MCP la
+portent (`4e89cd1`). Sans tonalité propre : une mention, pas un état.]
 
 ### 8. Quatre natures ; une seule est datable aujourd'hui
 
