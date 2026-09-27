@@ -16,10 +16,14 @@ import { D8222_5_ANCIENNETE } from "./d8222-5";
  * - Attestation URSSAF : D. 8222-5 (relu sur Légifrance le 2026-09-27, en
  *   vigueur depuis le 01/01/2023) la fait remettre « lors de la conclusion
  *   et tous les six mois jusqu'à la fin de son exécution », et exige au 1°
- *   une attestation « datant de moins de six mois ». Deux dates comptent :
- *   la REMISE, d'où part la suivante, et l'ÉMISSION, qui doit précéder la
- *   remise de moins de six mois. Elles sont au modèle depuis le 2026-09-27
- *   (`attestationUrssafRemiseLe`, `attestationUrssafEmiseLe`).
+ *   une attestation « datant de moins de six mois ». Le texte cale le rythme
+ *   sur la conclusion du contrat (date absente du modèle) et ne dit pas à
+ *   quel instant mesurer l'ancienneté. LECTURE RETENUE par Rojer, pas phrase
+ *   du texte : la REMISE, d'où il fait partir la suivante, et l'ÉMISSION,
+ *   qu'il compare à la remise (cf.
+ *   `echeanceAttestationUrssaf`, `emiseMoinsDeSixMoisAvantRemise`). Elles
+ *   sont au modèle depuis le 2026-09-27 (`attestationUrssafRemiseLe`,
+ *   `attestationUrssafEmiseLe`).
  * - RC Pro : pas de périodicité légale — la police est contractuelle et
  *   porte sa propre date de fin. Seule cette date est utilisée.
  * - Extrait Kbis : le texte n'assortit pas la pièce d'une périodicité
@@ -166,8 +170,18 @@ function statutParDate(
  * jamais. La remise est désormais une date saisie ; `updatedAt` n'entre plus
  * dans cette borne, et un test rougit s'il y revient.
  *
- * Partagée avec le calendrier (`echeancesPrestataire`) : les deux surfaces
- * datent la même échéance.
+ * Lue par `vigilanceUrssaf`, que la fiche et le calendrier partagent.
+ *
+ * UNE LECTURE, PAS LE TEXTE. D. 8222-5 dit « lors de la conclusion et tous
+ * les six mois jusqu'à la fin de son exécution » : la grille qu'il décrit
+ * part de la CONCLUSION du contrat, dont la date n'est pas au modèle. Rojer
+ * compte six mois depuis la dernière remise saisie. C'est aussi prudent que
+ * la grille tant que les remises arrivent à l'heure ou en avance (remise en
+ * avance : Rojer redemande plus tôt que la grille) ; ce ne l'est PLUS pour
+ * une remise tardive — remise à conclusion + 7 mois, Rojer attend
+ * conclusion + 13 mois là où la grille dit + 12 : la grille se décale d'un
+ * mois. Signalé à la propriétaire (contre-lecture du 2026-09-27), modèle
+ * inchangé.
  */
 export function echeanceAttestationUrssaf(p: {
   attestationUrssafValableJusquA: Date | null;
@@ -186,6 +200,13 @@ export function echeanceAttestationUrssaf(p: {
  * L'attestation était-elle « datant de moins de six mois » à sa remise ?
  * `false` si elle a été émise six mois pile ou plus avant la remise — six
  * mois pile n'est pas « moins de six mois ». Comparé en jours civils.
+ *
+ * UNE LECTURE, PAS LE TEXTE. D. 8222-5 écrit « datant de moins de six mois »
+ * sans nommer l'instant où l'on mesure. Rojer mesure à la remise, moment où
+ * le donneur d'ordre se la fait remettre. Une lecture plus stricte — moins de
+ * six mois à tout instant — ferait redemander à émission + six mois, avant
+ * remise + six mois : Rojer ne l'applique pas, et ce n'est donc pas la
+ * lecture la plus prudente.
  */
 export function emiseMoinsDeSixMoisAvantRemise(
   emiseLe: Date,
@@ -210,13 +231,49 @@ export function emiseMoinsDeSixMoisAvantRemise(
  * rien et n'est pas lue. Une retouche de la fiche peut donc faire repasser
  * du rose à l'ardoise — jamais à « à jour ».
  */
-function depotAncien(p: Prestataire, now: Date): boolean {
-  // Même bascule que l'échéance datée : le lendemain des six mois, pas le jour.
-  return estEnRetard(ajouterMois(p.updatedAt, MOIS_RENOUVELLEMENT_URSSAF), now);
+/** Les champs de la fiche que lit le statut de l'attestation — la fiche
+ *  et le calendrier passent par la même fonction (`vigilanceUrssaf`). */
+export type ChampsAttestationUrssaf = Pick<
+  Prestataire,
+  | "attestationUrssafCle"
+  | "attestationUrssafValableJusquA"
+  | "attestationUrssafRemiseLe"
+  | "attestationUrssafEmiseLe"
+  | "updatedAt"
+>;
+
+/** Une attestation est au dossier dès qu'une trace en existe : la pièce,
+ *  ou l'une de ses dates. */
+export function attestationUrssafPresente(
+  p: Omit<ChampsAttestationUrssaf, "updatedAt">,
+): boolean {
+  return Boolean(
+    p.attestationUrssafCle ||
+      p.attestationUrssafValableJusquA ||
+      p.attestationUrssafRemiseLe ||
+      p.attestationUrssafEmiseLe,
+  );
 }
 
-function vigilanceUrssaf(
-  p: Prestataire,
+/** Remise vide : le jour à partir duquel rien n'a été déposé depuis plus de
+ *  six mois (lendemain de `updatedAt` + six mois). Au plus tard : la remise
+ *  réelle, antérieure à tout dépôt, appelait la suivante plus tôt. */
+export function finDuRepliDepot(p: Pick<Prestataire, "updatedAt">): Date {
+  return ajouterMois(p.updatedAt, MOIS_RENOUVELLEMENT_URSSAF);
+}
+
+function depotAncien(p: Pick<Prestataire, "updatedAt">, now: Date): boolean {
+  // Même bascule que l'échéance datée : le lendemain des six mois, pas le jour.
+  return estEnRetard(finDuRepliDepot(p), now);
+}
+
+/**
+ * LE statut de l'attestation URSSAF. La fiche (`computeVigilance`) et le
+ * calendrier (`echeancesPrestataire`) le lisent ici tous les deux : aucune
+ * des deux surfaces ne réécrit la règle.
+ */
+export function vigilanceUrssaf(
+  p: ChampsAttestationUrssaf,
   now: Date,
 ): {
   statut: StatutPiece;
@@ -226,12 +283,7 @@ function vigilanceUrssaf(
 } {
   const remise = p.attestationUrssafRemiseLe;
   const emise = p.attestationUrssafEmiseLe;
-  const presente = Boolean(
-    p.attestationUrssafCle ||
-      p.attestationUrssafValableJusquA ||
-      remise ||
-      emise,
-  );
+  const presente = attestationUrssafPresente(p);
   if (!presente) {
     return {
       statut: "manquante",
@@ -338,7 +390,7 @@ export function mentionUrssaf(v: VigilanceSnapshot): string | undefined {
   const phrases: string[] = [];
   if (v.urssaf === "emission_hors_delai" && v.urssafEmiseLe && v.urssafRemiseLe) {
     phrases.push(
-      `Émise le ${d(v.urssafEmiseLe)}, six mois ou plus avant sa remise le ${d(v.urssafRemiseLe)} (art. D. 8222-5 : attestation « ${D8222_5_ANCIENNETE} »).`,
+      `Émise le ${d(v.urssafEmiseLe)}, six mois ou plus avant sa remise le ${d(v.urssafRemiseLe)}. L'art. D. 8222-5 veut une attestation « ${D8222_5_ANCIENNETE} » ; Rojer la mesure à la remise.`,
     );
   } else if (v.urssafRemiseLe) {
     phrases.push(
@@ -347,7 +399,7 @@ export function mentionUrssaf(v: VigilanceSnapshot): string | undefined {
   }
   if (v.urssafRemiseSuivante) {
     phrases.push(
-      `Remise suivante le ${d(v.urssafRemiseSuivante)} (art. D. 8222-5 : « tous les six mois »).`,
+      `Remise suivante le ${d(v.urssafRemiseSuivante)} : Rojer compte six mois depuis la dernière remise (art. D. 8222-5 : « tous les six mois »).`,
     );
   }
   const manque = v.urssafDatesNonRenseignees;

@@ -43,7 +43,9 @@ const AFFICHE_L_ECHEANCE: Record<StatutPiece, boolean> = {
   a_jour: true,
   expire_bientot: true,
   expiree: true,
-  emission_hors_delai: true,
+  // « Valide 155 j de plus » à côté de « À redemander » se contredisait
+  // (contre-lecture du 2026-09-27) : l'échéance datée n'est plus ce qui presse.
+  emission_hors_delai: false,
   manquante: false,
   a_dater: false,
   a_dater_depot_ancien: false,

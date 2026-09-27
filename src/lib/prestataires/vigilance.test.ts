@@ -10,7 +10,11 @@ import {
   mentionUrssaf,
   messageExpiration,
 } from "./vigilance";
-import { erreursDatesAttestation, remiseAttestationSchema } from "./schema";
+import {
+  erreursDatesAttestation,
+  estJourCivilReel,
+  remiseAttestationSchema,
+} from "./schema";
 
 /**
  * Les fichiers d'une surface qui s'affiche où un nom donné apparaît.
@@ -603,6 +607,22 @@ describe("saisie des dates de l'attestation (formulaires)", () => {
     expect(erreursDatesAttestation(jour("2026-08-10"), jour("2026-08-10"), NOW)).toEqual([]);
     expect(erreursDatesAttestation(jour("2026-08-10"), jour("2025-01-01"), NOW)).toEqual([]);
     expect(erreursDatesAttestation(undefined, undefined, NOW)).toEqual([]);
+  });
+
+  it("une saisie hors format ou inexistante rend une erreur de champ, jamais une exception", () => {
+    for (const saisie of ["2026-13-45", "2026-02-30", "abc", "20260801"]) {
+      const r = remiseAttestationSchema.safeParse({ attestationUrssafRemiseLe: saisie });
+      expect(r.success, saisie).toBe(false);
+      if (!r.success) {
+        expect(r.error.flatten().fieldErrors.attestationUrssafRemiseLe, saisie).toBeDefined();
+      }
+    }
+    // Le 29 février d'une année bissextile existe.
+    expect(
+      remiseAttestationSchema.safeParse({ attestationUrssafRemiseLe: "2024-02-29" }).success,
+    ).toBe(true);
+    expect(estJourCivilReel("2026-02-30")).toBe(false);
+    expect(estJourCivilReel("2026-12-31")).toBe(true);
   });
 
   it("le schéma de la fiche porte la règle", () => {

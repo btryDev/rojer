@@ -202,6 +202,13 @@ export default async function PrestataireDetailPage({
               <p className="m-0 mt-4 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 {`L'art. D. 8222-5 fait remettre l'attestation « ${D8222_5_RYTHME} », et la veut « ${D8222_5_ANCIENNETE} ». Le prestataire la génère depuis son espace URSSAF ; un courriel suffit à l'obtenir.`}
               </p>
+              {/* CE QUE ROJER LIT DANS LE TEXTE, DIT COMME UNE LECTURE
+                  (contre-lecture du 2026-09-27). Le texte part de la
+                  conclusion du contrat, dont Rojer n'a pas la date ; il ne dit
+                  pas à quel instant mesurer « moins de six mois ». */}
+              <p className="m-0 mt-2 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
+                {`Le texte part de la conclusion du contrat, dont Rojer n'enregistre pas la date. Rojer compte six mois depuis la dernière remise saisie, et mesure l'ancienneté de l'attestation à sa remise. Une remise tardive décale donc d'autant la date suivante.`}
+              </p>
               <div className="mt-4">
                 <FormulaireDatesAttestation
                   action={enregistrerDatesAttestation.bind(null, id, p.id)}

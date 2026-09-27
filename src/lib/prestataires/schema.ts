@@ -64,11 +64,24 @@ const optionalTrimmed = (max = 200) =>
     z.string().max(max).optional(),
   );
 
+/** « AAAA-MM-JJ » désigne-t-il un jour qui existe ? « 2026-02-30 » et
+ *  « 2026-13-45 » passent le format et ne sont pas des dates : sans ce
+ *  contrôle, le premier devenait le 1er mars et le second faisait lever une
+ *  RangeError à la comparaison (contre-lecture du 2026-09-27). */
+export function estJourCivilReel(cle: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(cle);
+  if (!m) return false;
+  const [annee, mois, jour] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (mois < 1 || mois > 12 || jour < 1) return false;
+  return jour <= new Date(Date.UTC(annee, mois, 0)).getUTCDate();
+}
+
 const optionalDate = z.preprocess(
   (v) => (v === "" || v === null ? undefined : v),
   z
     .string()
     .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
+    .refine(estJourCivilReel, "Cette date n'existe pas")
     .optional()
     .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
 );
@@ -123,9 +136,13 @@ function verifierDatesAttestation(
   v: { attestationUrssafRemiseLe?: Date; attestationUrssafEmiseLe?: Date },
   ctx: { addIssue: (issue: { code: "custom"; path: string[]; message: string }) => void },
 ) {
+  // Un champ déjà refusé (format, date inexistante) arrive ici tel quel,
+  // chaîne brute : zod 4 déroule le raffinement de l'objet malgré l'échec
+  // d'un champ. On ne compare que des dates.
+  const date = (x: unknown) => (x instanceof Date ? x : undefined);
   for (const e of erreursDatesAttestation(
-    v.attestationUrssafRemiseLe,
-    v.attestationUrssafEmiseLe,
+    date(v.attestationUrssafRemiseLe),
+    date(v.attestationUrssafEmiseLe),
     new Date(),
   )) {
     ctx.addIssue({ code: "custom", path: [e.champ], message: e.message });

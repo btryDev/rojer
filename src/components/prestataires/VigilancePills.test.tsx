@@ -82,6 +82,19 @@ describe("la pastille URSSAF dit ses dates, ou qu'elles manquent", () => {
     expect(screen.getByText(/Remise suivante le .* « tous les six mois »/)).toBeTruthy();
   });
 
+  it("émission hors délai : « À redemander », sans « Valide … j de plus »", () => {
+    // Remise le 1er août, émise huit mois plus tôt : la remise suivante est
+    // loin, mais la pièce est à redemander. Le compte à rebours la
+    // contredirait (contre-lecture du 2026-09-27).
+    const v = rendre({
+      attestationUrssafRemiseLe: jour("2026-08-01"),
+      attestationUrssafEmiseLe: jour("2025-12-01"),
+    });
+    expect(v.urssaf).toBe("emission_hors_delai");
+    expect(screen.getByText("À redemander")).toBeTruthy();
+    expect(screen.queryByText(/Valide .* de plus/)).toBeNull();
+  });
+
   it("la RC Pro ne porte aucune mention", () => {
     // Borne haute : une mention posée sur toutes les pièces cesserait de
     // signaler quoi que ce soit.

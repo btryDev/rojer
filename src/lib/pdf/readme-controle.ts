@@ -49,16 +49,25 @@ function decouper(texte: string, largeur: number): string[] {
  * les six mois ») et l'émission (« datant de moins de six mois »). Pas de
  * statut : des dates, ou « non renseignée ».
  */
-export function lignesDatesAttestations(
-  dates: { raisonSociale: string; remiseLe: string | null; emiseLe: string | null }[],
-): string[] {
+export type DatesAttestation = {
+  raisonSociale: string;
+  /** `false` : aucune attestation au dossier (ni pièce, ni date). */
+  presente: boolean;
+  remiseLe: string | null;
+  emiseLe: string | null;
+};
+
+/** Une ligne : les deux dates, ou ce qui manque. */
+export function ligneDatesAttestation(d: DatesAttestation): string {
+  if (!d.presente) return `${d.raisonSociale} : aucune attestation de vigilance au dossier`;
+  return `${d.raisonSociale} : ${d.remiseLe ? `remise le ${d.remiseLe}` : "date de remise non renseignée"} ; ${d.emiseLe ? `émise le ${d.emiseLe}` : "date d'émission non renseignée"}`;
+}
+
+export function lignesDatesAttestations(dates: DatesAttestation[]): string[] {
   if (dates.length === 0) return [];
   return [
     "   Attestations de vigilance (art. D. 8222-5) :",
-    ...dates.map(
-      (d) =>
-        `   - ${d.raisonSociale} : ${d.remiseLe ? `remise le ${d.remiseLe}` : "date de remise non renseignée"} ; ${d.emiseLe ? `émise le ${d.emiseLe}` : "date d'émission non renseignée"}`,
-    ),
+    ...dates.map((d) => `   - ${ligneDatesAttestation(d)}`),
   ];
 }
 
@@ -107,7 +116,7 @@ export function genererReadme(args: {
    *  (art. D. 8222-5), déjà formatées ; `null` = non renseignée. Le README
    *  dit la date quand elle existe, « non renseignée » sinon — jamais un
    *  vide qu'un tiers lirait comme « rien à signaler ». */
-  datesAttestations?: { raisonSociale: string; remiseLe: string | null; emiseLe: string | null }[];
+  datesAttestations?: DatesAttestation[];
   /** Le régime, pour les références qui n'en valent qu'un (`mentions-registre.ts`). */
   regime: RegimeDuRegistre;
   /** `false` quand la lecture des versions du DUERP a échoué : « aucune

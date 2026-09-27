@@ -233,8 +233,8 @@ export const CORPUS: readonly Corpus[] = [
   // `D. 8222-5` —, son ANCRAGE ne l'est pas. Le module compte le semestre
   // depuis `prestataire.updatedAt`, quand le texte le compte depuis la
   // conclusion puis chaque remise ; toute retouche de la fiche repousse
-  // l'échéance. [Corrigé le 2026-09-27, B2 / C43 : le semestre part
-  // de la date de remise saisie.] Le seuil de 5 000 € HT est à jour et bien attribué à
+  // l'échéance. [2026-09-27, B2 / C43 : le semestre part de la
+  // dernière remise saisie — une lecture, le texte cale sur la conclusion.] Le seuil de 5 000 € HT est à jour et bien attribué à
   // `R. 8222-1` — il valait 3 000 euros, sans « hors taxes », jusqu'au
   // 2015-05-01. Le périmètre, lui, n'est PAS tranché ici : ce chapitre est du
   // droit du travail non santé-sécurité, et le produit le sert quand même.

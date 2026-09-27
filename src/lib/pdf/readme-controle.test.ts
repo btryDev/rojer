@@ -110,8 +110,9 @@ describe("le README ne décrit que ce que le ZIP contient (relecture du 2026-09-
       ...base,
       nbPrestataires: 2,
       datesAttestations: [
-        { raisonSociale: "Alpha", remiseLe: "01/03/2026", emiseLe: "20/02/2026" },
-        { raisonSociale: "Beta", remiseLe: null, emiseLe: null },
+        { raisonSociale: "Alpha", presente: true, remiseLe: "01/03/2026", emiseLe: "20/02/2026" },
+        { raisonSociale: "Beta", presente: true, remiseLe: null, emiseLe: null },
+        { raisonSociale: "Gamma", presente: false, remiseLe: null, emiseLe: null },
       ],
     });
     expect(t).toContain("Attestations de vigilance (art. D. 8222-5) :");
@@ -119,6 +120,9 @@ describe("le README ne décrit que ce que le ZIP contient (relecture du 2026-09-
     expect(t).toContain(
       "- Beta : date de remise non renseignée ; date d'émission non renseignée",
     );
+    // Sans attestation au dossier, la ligne le dit, sans dates « non
+    // renseignées » d'une pièce qui n'existe pas.
+    expect(t).toContain("- Gamma : aucune attestation de vigilance au dossier");
   });
 
   it("sans prestataire, aucune ligne de dates", () => {
