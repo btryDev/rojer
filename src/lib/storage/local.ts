@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { FileStorage, StorageKey } from "./types";
+import { FichierIntrouvable } from "./erreurs";
 
 /**
  * Implémentation filesystem locale du `FileStorage`.
@@ -36,7 +37,15 @@ export class LocalFileStorage implements FileStorage {
 
   async get(key: StorageKey): Promise<Buffer> {
     const full = this.resolveKey(key);
-    return fs.readFile(full);
+    try {
+      return await fs.readFile(full);
+    } catch (err: unknown) {
+      // Même contrat que le pilote Supabase : une clé absente est
+      // `FichierIntrouvable`, que les routes traduisent en « introuvable ».
+      if ((err as NodeJS.ErrnoException)?.code === "ENOENT")
+        throw new FichierIntrouvable(key);
+      throw err;
+    }
   }
 
   async delete(key: StorageKey): Promise<void> {

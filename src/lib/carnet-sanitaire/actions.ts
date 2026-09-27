@@ -5,7 +5,12 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
-import { getStorage, cleRapport } from "@/lib/storage";
+import {
+  getStorage,
+  cleRapport,
+  MESSAGE_DEPOT_NON_CONFIGURE,
+  stockageEnService,
+} from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
 import {
   analyseLegionelleSchema,
@@ -179,6 +184,11 @@ export async function ajouterAnalyseLegionelle(
     const val = validerFichier(fichier);
     if (!val.ok) {
       return { status: "error", message: val.erreur };
+    }
+    // Rapport de laboratoire joint, mais pas de stockage configuré : refus
+    // avec le motif exact, avant toute écriture (2026-09-27).
+    if (!stockageEnService()) {
+      return { status: "error", message: MESSAGE_DEPOT_NON_CONFIGURE };
     }
     const id = randomUUID();
     const cle = cleRapport(etablissementId, `legio_${id}`, fichier.name);

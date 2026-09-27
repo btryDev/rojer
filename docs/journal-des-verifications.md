@@ -3818,6 +3818,136 @@ ces runs ont d'abord figé sous `--maxWorkers=2`, la machine étant chargée
 par des vitest d'autres sessions (non touchés) ; rejoués seuls en
 `--maxWorkers=1`.
 
+### C44 · 2026-09-27 — « Supprimer ce salarié », et les fichiers qu'une suppression laissait derrière elle
+
+*Base : production `771c8ae`, branche `lot/supprimer-salarie`. Ni référentiel
+ni moteur touchés ; aucune migration (`prisma migrate diff` entre les deux
+schémas : « This is an empty migration » — seuls des commentaires changent).
+Aucun texte de droit relu : le lot applique des décisions de la propriétaire.*
+
+**Les décisions.** « quand employeur supprime il est averti que data supprimé
+définitivement » (E8), puis, sur la question des lignes de calendrier posée
+avant de coder, « A et correction du défaut ».
+
+**Relevé avant de coder (point 3 du brief).** Ce qui vise un `Salarie` :
+`TitreSalarie` (Cascade) et `Verification.salarieId` (**Restrict**, ADR-023 :
+« Ses titres restent le temps de leur conservation (docs/rgpd.md § 4.3), puis
+il devient supprimable »). Le générateur supprime les lignes sans trace d'un
+salarié sorti ou d'un titre retiré, et ARCHIVE celles qui portent un rapport
+ou une action (`porteUnePreuve`, `calendrier/passe.ts`) : un salarié dont une
+ligne avait reçu une pièce n'était donc jamais supprimable. Sous chaque
+ligne, en cascade : `RapportVerification` (avec `fichierCle`) et `Action`.
+`Signature.objetId` n'a pas de clé étrangère : une signature de rapport
+survivait au rapport — déjà vrai de `supprimerRapport`. Rien d'autre :
+`DuerpVersion.snapshot` et `FicheRegistre.contenu` n'ont aucune relation vers
+un salarié ; les PDF n'impriment pas le nom (`libellePorteurSansNom`). Un
+texte libre saisi par l'employeur peut contenir un nom : non vérifiable.
+**Défaut préexistant** : une cascade en base ne libère pas le stockage ; seul
+`supprimerRapport` appelait `getStorage().delete` — la suppression d'un
+établissement ou d'une entreprise laissait rapports, pièces de prestataires et
+du registre d'accessibilité, analyses de légionelles.
+
+**Fait.**
+- `salaries/suppression.ts` : dans une transaction, les signatures des
+  rapports visés, les lignes du salarié (rapports et actions suivent), la
+  fiche (titres suivent) ; chaque écriture bornée à l'établissement, après
+  `assertEtablissementOwnership`. Fichiers libérés après, calendrier
+  régénéré, retour à l'équipe. `Restrict` gardé en base.
+- Confirmation (`phrases-suppression.ts`) : « La fiche de … et ses N titres
+  sont supprimés définitivement. Sont aussi supprimés définitivement, parce
+  que liés à ses titres : N rapports déposés, M actions et S signatures. Rien
+  ne se récupère ensuite. Pour en garder une trace, utilisez d'abord « Éditer
+  ses données » sur cette fiche. » Les nombres viennent de
+  `perimetreSuppressionSalarie`, même périmètre que l'effacement.
+- « Sortie de l'effectif » inchangée ; le texte sous une fiche sortie ne dit
+  plus « conservée parce que ses titres montrent qu'elle était habilitée »
+  (fondement retiré le 2026-09-27) mais que fiche et titres restent tant
+  qu'on ne la supprime pas, et nomme « Supprimer ce salarié ».
+- `suppression/fichiers.ts` : `clesDesEtablissements` lit, dans la
+  transaction de la suppression, les clés de stockage des tables de
+  `CLES_STOCKEES` ; `libererFichiers` les libère après, journalise chaque
+  échec sans lever. Branché sur `supprimerEtablissement` et
+  `supprimerEntreprise`. Les signatures d'un établissement partent déjà avec
+  lui (`Signature.etablissement`, Cascade). `DuerpVersion.pdfUrl` n'est pas
+  collecté : aucun code ne l'écrit, et une version figée rend
+  l'établissement insupprimable.
+- Textes : `droits.ts` (export et art. 13), `rgpd.md` § 4.3, ADR-023 (ligne
+  datée), commentaires du schéma, E8.
+
+**Gardes, et ce qu'elles mesurent.** `salaries/suppression.test.ts` tient une
+base en mémoire qui applique les règles du schéma — `Restrict` lève P2003,
+cascades, signatures sans clé étrangère, transaction qui restaure, `undefined`
+sans effet de filtre — et relit `schema.prisma` pour vérifier que ces règles
+sont celles du schéma : effacement complet et sélectif (le voisin, la ligne
+d'établissement, une signature d'un autre type restent), fichier libéré,
+isolation entre établissements et entre utilisateurs (le vrai
+`assertEtablissementOwnership`), stockage en échec sans retour arrière,
+périmètre = ce qui part, texte de la confirmation, sortie inchangée.
+`suppression/fichiers.test.ts` : toute colonne `…Cle` du schéma est collectée,
+et lue. `etablissements/actions.test.ts` et
+`entreprises/suppression-fichiers.test.ts` : fichiers libérés après la base,
+aucun sur un refus, échec du stockage journalisé sans rien annuler. **Ce
+qu'elles ne prouvent pas** : que PostgreSQL applique les cascades comme la
+base en mémoire (le relevé du schéma le rend probable, pas certain — aucun
+test du dépôt ne tourne sur une base réelle) ; que le fichier libéré a
+réellement disparu du stockage de production.
+
+**Éprouvées** — signatures oubliées ; lignes non effacées ; lignes effacées
+sans borne ; appartenance non vérifiée ; fichiers non libérés ; échec du
+stockage qui lève ; périmètre qui oublie les actions ; « définitivement »
+retiré ; export non nommé (d'abord VERT : l'injection avait touché le
+commentaire d'en-tête, pas le texte ; rejouée sur le texte, rouge) ; sortie
+qui supprime ; `Restrict` passé en `Cascade` ; colonne de clé oubliée ;
+collecte sans les prestataires ; fichiers libérés avant la base ; aucun
+fichier libéré (établissement, entreprise) ; collecte sur un seul
+établissement de l'entreprise. **Et une trouvée par l'épreuve** : retirer la
+borne d'établissement de la recherche de la fiche restait VERT, et retirer
+toutes les bornes aussi — la base en mémoire lisait `etablissementId:
+undefined` comme une valeur, pas comme l'absence de filtre qu'est la
+sémantique de Prisma. Corrigée (`6e04f87`), l'injection « aucune borne » est
+rouge. Vitest a figé à plusieurs reprises : rejoué sous minuteur.
+
+**Contre-lecture de `a8b96c3` (2026-09-27), sur une vraie base PostgreSQL
+jetable** (session de coordination ; test gardé hors dépôt) : effacement exact
+table par table, voisins et lignes d'établissement intacts, aucune signature
+orpheline, décompte = ce qui part, isolation, et `supprimerEtablissement`
+libère exactement les 8 clés que la base contient. Corrigé :
+
+- **M1, M2** — depuis `bb03cdd` (2026-08-27), `rapports/actions.ts` refuse tout
+  dépôt sur une ligne de salarié : le compte de rapports et de signatures vaut
+  zéro pour toute donnée postérieure, alors que la confirmation, `droits.ts`,
+  `rgpd.md` § 4.3 et ADR-023 annonçaient « rapports déposés (fichiers
+  compris) ». La branche d'effacement reste (filet pour des données
+  antérieures) ; les textes disent que Rojer ne garde pas de document sur un
+  titre, et la confirmation ne nomme rapports et signatures que s'il y en a.
+  Elle disait aussi « Pour en garder une trace, utilisez d'abord « Éditer ses
+  données » » : l'export ne contient que l'identité et les titres avec leurs
+  dates ; elle le dit désormais.
+- **M3** — `rgpd.md` disait sans réserve que les fichiers « sont libérés » :
+  réserve exacte ajoutée (la base d'abord ; un échec laisse le fichier et
+  n'est journalisé que côté serveur).
+- **F4** — les lignes de calendrier partaient sans être comptées : la
+  confirmation dit « et ses N échéances au calendrier ».
+- **F5** — la garde du schéma ne voyait que `…Cle`. Elle lit toute colonne
+  `String` en `…Url`, `…Key`, `…Chemin`, `…Path`, `fichier…`, `pdf…`, contre
+  `CLES_STOCKEES` et `COLONNES_ECARTEES` (motif obligatoire). Relevé en
+  appelant le code : `DuerpVersion.pdfUrl` ET les trois pièces du registre
+  d'accessibilité ne sont écrites nulle part — traitées de même, écartées
+  « jamais écrites », et la garde tombe si du code les écrit. Éprouvée avec
+  `photoUrl`.
+- **F6** — retirer `etablissementId` de l'effacement des lignes restait vert :
+  test ajouté (une ligne d'un autre établissement qui vise la même fiche —
+  incohérente mais permise par la base — n'est jamais effacée ; la garde
+  Restrict fait échouer l'effacement, tout est restauré).
+- **F7** — ADR-023 : « C'est cette trace qui prouve… protège l'employeur »
+  rayé et daté.
+
+**Éprouvées** — lignes sans borne (F6) ; `photoUrl` au schéma ; `pdfUrl` et
+`attestationCle` écrites dans un module ; une écartée retirée ; rapports
+nommés à zéro ; export qui promet « leurs pièces » ; échéances non comptées —
+toutes rouges. (La première injection « pdfUrl écrite » visait un fichier
+inexistant et n'a rien prouvé ; rejouée sur un fichier réel, rouge.)
+
 ### C45 · 2026-09-27 — Les 42 manques de la cible : trois encodés, vingt-cinq annoncés, quinze hors cadre
 
 *Base : production `771c8ae`, branche `lot/manques-encoder-annoncer`. Entrée :
@@ -3899,6 +4029,82 @@ donne pas d'adresse aux `non_couvert`, parce que sa seule place était la
 section des exclusions, où un manque devient une non-question. Il tient
 toujours qu'aucun `non_couvert` n'y entre, et désormais que ceux que la page
 annonce sont des `non_couvert`, dans leur propre section.
+
+### C46 · 2026-09-27 — Le stockage des fichiers : Supabase en production, le disque local refusé
+
+*Base : `main` local `32c8957`, branche `lot/stockage-supabase`. Ni
+référentiel ni moteur ni schéma touchés ; aucune migration. Aucun texte de
+droit relu. Numéro C46 donné par la coordination.*
+
+**Le constat.** `storage/index.ts` n'avait qu'un pilote, `local`, qui écrit
+dans `process.cwd()/storage` — en lecture seule et éphémère sur Vercel.
+Relevé des variables du projet Vercel (noms seulement, sans déchiffrer, par le
+connecteur) : en Production `DATABASE_URL`, `DIRECT_URL`,
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `MCP_CLE`,
+`MCP_ETABLISSEMENT_ID` ; aucune `STORAGE_*`, pas de
+`SUPABASE_SERVICE_ROLE_KEY`. Tout dépôt de fichier en production échouait
+donc très probablement ; non observé, faute de dépôt.
+
+**Fait.**
+- `storage/supabase.ts` : `SupabaseFileStorage` implémente `FileStorage`
+  sur un client minimal (`ClientStockage`) que le client supabase-js
+  satisfait sans conversion — le compilateur le vérifie. Bucket privé
+  (`STORAGE_BUCKET`), clé `service_role` côté serveur, aucune URL signée : les
+  routes continuent de streamer. `put` en `upsert` avec le type MIME ;
+  `delete` sans erreur sur une clé absente ; erreurs traduites en
+  `ErreurStockage` / `FichierIntrouvable` (`storage/erreurs.ts`), qui nomment
+  l'opération et la clé, jamais la clé de service.
+- **`exists` par `list`, pas par `exists()`** — trouvé par le test
+  d'intégration : contre `supabase/storage-api:v1.19.0`, `exists()` (une
+  requête HEAD) a répondu « 400 Bad Request » pour un fichier PRÉSENT comme
+  pour un absent. La liste du dossier, filtrée sur le nom exact (`search` est
+  un préfixe), distingue les deux.
+- `getStorage()` : `local` refusé en production (motif qui nomme les
+  variables à poser), `supabase` refusé s'il manque `STORAGE_BUCKET`,
+  `SUPABASE_SERVICE_ROLE_KEY` ou `NEXT_PUBLIC_SUPABASE_URL` (nommées, jamais
+  leurs valeurs) ; `stockageEnService()` lit la même règle — patron
+  d'`email/index.ts`.
+- Les trois dépôts refusent AVANT toute écriture, avec « Le dépôt de fichiers
+  n'est pas encore configuré sur ce serveur. » : rapport de vérification ;
+  pièce de prestataire (sur son champ — un prestataire sans pièce se crée) ;
+  rapport de laboratoire du carnet sanitaire. Les trois formulaires affichent
+  ce message (`state.message`, ou l'erreur du champ).
+- `getStorage()` levait désormais hors d'un `try` à cinq endroits :
+  `libererFichiers` (une suppression d'établissement ou de salarié déjà
+  commitée aurait fini en erreur), `deletePiecesPrestataire`,
+  `supprimerRapport` (les deux passent par `libererFichiers`), l'export
+  contrôle (l'archive entière échouait — les pièces sont désormais comptées
+  manquantes) et la route du fichier (503 non configuré, 410 fichier absent,
+  502 panne ; c'était 500 et 410 pour tout).
+- `LocalFileStorage.get` lève `FichierIntrouvable` sur une clé absente, comme
+  le pilote Supabase.
+- `docs/deploiement-stockage.md` : variables (noms), gestes de la
+  propriétaire, comportement sur une clé absente ; `.env.example`.
+
+**Gardes, et ce qu'elles mesurent.** `supabase.test.ts` (client simulé :
+aller-retour, mime, upsert, clé absente, panne, exception du SDK, clé
+invalide, nom exact) ; `selection.test.ts` (développement → local ;
+production sans pilote ou `local` → refus motivé ; Supabase complet → client
+construit avec la clé de service, sans session ; chaque variable manquante
+nommée, aucune valeur dite ; pilote inconnu ; aucune variable secrète en
+`NEXT_PUBLIC_`) ; `depot-refuse.test.ts` (les trois dépôts refusés avec le
+message exact et sans écriture en base ; route 503 ; `libererFichiers` qui ne
+lève pas). **Intégration** : `supabase.integration.test.ts`, sauté par
+défaut, a tourné contre un `supabase/storage-api:v1.19.0` local (Postgres
+jetable, clé `service_role` signée localement) : aller-retour à l'octet près,
+type MIME relu par `info()`, écrasement, clé absente, bucket privé illisible
+sans clé — 4/4. **Ce qu'elles ne prouvent pas** : le projet Supabase hébergé
+(préfixe `/storage/v1`, que le test retire à la main ; version du service) ;
+que les variables seront posées.
+
+**Éprouvées** — local accepté en production ; variable manquante non
+détectée ; mime non transmis ; clé absente lue comme panne ; `exists` par
+préfixe ; clé qui remonte acceptée (injection d'abord non appliquée —
+échappement de l'antislash —, rejouée, rouge) ; exception brute non
+traduite ; chacun des trois dépôts sans refus préalable ; route et
+`libererFichiers` avec `getStorage()` hors du `try` ; clé de service lue en
+`NEXT_PUBLIC_` — toutes rouges. Et, avant correction, l'`exists()` du SDK
+était rouge contre le vrai service : c'est ce qui l'a fait remplacer.
 
 ### Ce que la chronologie donne à voir
 

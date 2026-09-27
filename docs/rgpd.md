@@ -352,10 +352,26 @@ Les versions figées (`DuerpVersion.snapshot`) sont conservées **40 ans**
   (`titreSalarie.deleteMany`). La confirmation dit que c'est définitif et
   nomme l'export de la fiche (« Éditer ses données »).
 - Supprimer l'établissement ou l'entreprise efface en cascade les salariés et
-  leurs titres (`onDelete: Cascade`) ; la confirmation le dit.
-- **Il n'existe pas de geste qui supprime la fiche d'un salarié** (nom,
-  prénom, poste) sans supprimer tout l'établissement, et **aucune purge
-  automatique** : rien n'efface les données d'une personne sortie.
+  leurs titres (`onDelete: Cascade`) ; la confirmation le dit. Depuis le
+  2026-09-27 (C44), les fichiers stockés qui en dépendent — rapports, pièces
+  des prestataires, analyses de légionelles — sont libérés après la
+  suppression en base ; ils restaient auparavant dans le stockage. **Réserve** :
+  la base est effacée d'abord ; un fichier dont la libération échoue reste
+  dans le stockage, et l'échec n'est journalisé que côté serveur — l'employeur
+  n'en est pas averti. (Les trois pièces prévues au registre d'accessibilité
+  et `DuerpVersion.pdfUrl` ne sont écrites par aucun code : rien à libérer.)
+- ~~**Il n'existe pas de geste qui supprime la fiche d'un salarié**~~ —
+  **« Supprimer ce salarié »** (`supprimerSalarie`, 2026-09-27, journal C44)
+  efface définitivement, dans une transaction, la fiche, ses titres, ses
+  lignes de calendrier et leurs actions. Rojer ne garde aucun document sur un
+  titre : le dépôt d'un rapport sur la ligne d'un salarié est refusé depuis le
+  2026-08-27 (`rapports/actions.ts`) ; un rapport antérieur partirait avec,
+  fichier (même réserve que ci-dessus) et signatures compris. La confirmation
+  compte ce qui part, ne nomme rapports et signatures que s'il y en a, et dit
+  ce que l'export « Éditer ses données » contient : l'identité et les titres
+  avec leurs dates, aucune pièce.
+- **Aucune purge automatique** : rien n'efface d'office les données d'une
+  personne sortie ; c'est le geste de l'employeur.
 
 ~~Un salarié qui quitte l'entreprise est **désactivé, pas supprimé** tant que
 ses titres sont dans leur délai de conservation […]. Passé le délai, ses
@@ -363,8 +379,10 @@ données sont effacées.~~ Le délai n'était fondé que sur `D. 4711-3` par
 analogie, et l'effacement annoncé n'était fait par rien. **Décision de la
 propriétaire, 2026-09-27** : « quand employeur supprime il est averti que data
 supprimé définitivement » ; aucune conservation par analogie. **Question
-ouverte, posée à la propriétaire** : que la sortie de l'effectif garde les
-données ; et l'absence de suppression d'une fiche.
+ouverte, posée à la propriétaire** : ~~que la sortie de l'effectif garde les
+données ; et l'absence de suppression d'une fiche.~~ Tranché le même jour : la
+sortie reste un choix de l'employeur, réversible, qui garde tout ; « Supprimer
+ce salarié » efface définitivement.
 
 Cas particulier, à ne pas perdre de vue : `R. 4544-10` prévoit que les
 attestations d'aptitude délivrées avant le 01/10/2025 restent valides

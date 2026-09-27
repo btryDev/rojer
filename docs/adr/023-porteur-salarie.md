@@ -70,10 +70,26 @@ de prévention. Sans lui, ces obligations n'auraient d'autre date de départ que
 « aujourd'hui », c'est-à-dire un retard inventé le jour de la saisie.
 
 `actif` plutôt qu'une suppression : un salarié qui quitte l'entreprise garde ses
-titres tant qu'ils sont dans leur délai de conservation. C'est cette trace qui
+titres ~~tant qu'ils sont dans leur délai de conservation. C'est cette trace qui
 prouve qu'il était habilité **au moment où il a opéré**, et c'est elle qui
 protège l'employeur lors d'un contrôle portant sur une période passée
-(`docs/rgpd.md` § 4.3).
+(`docs/rgpd.md` § 4.3).~~ *[Rayé le 2026-09-27, E8 : aucun texte identifié ne
+fonde cette conservation, et la propriétaire a écarté la conservation par
+analogie. Voir la ligne datée ci-dessous.]*
+
+**[2026-09-27 — décision de la propriétaire.]** ~~« tant qu'ils sont dans leur
+délai de conservation »~~ : ce délai n'était fondé que sur `D. 4711-3` par
+analogie, et la propriétaire a écarté toute conservation par analogie (E8).
+`actif` reste — la sortie de l'effectif est un choix de l'employeur, réversible,
+qui garde tout. S'y ajoute « Supprimer ce salarié » (`salaries/suppression.ts`),
+voulu par la propriétaire (« quand employeur supprime il est averti que data
+supprimé définitivement », puis l'option A) : la fiche, ses titres, ses lignes
+de calendrier et leurs actions sont effacés dans une transaction, après une
+confirmation qui les compte. Rapports et signatures de ces rapports partiraient
+aussi, mais il ne peut s'en trouver que d'antérieurs au 2026-08-27 : depuis,
+`rapports/actions.ts` refuse tout dépôt sur une ligne de salarié. `Verification.salarieId` reste `onDelete:
+Restrict` : ce chemin efface les lignes explicitement avant la fiche, et la
+garde tient pour tout autre. Journal C44.
 
 ### 1 bis. Les instances viennent d'une déclaration, pas d'une dérivation
 

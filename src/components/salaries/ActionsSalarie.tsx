@@ -3,7 +3,13 @@
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
-import { basculerActif, retirerTitre } from "@/lib/salaries/actions";
+import {
+  basculerActif,
+  retirerTitre,
+  supprimerSalarie,
+} from "@/lib/salaries/actions";
+import { detailSuppressionSalarie } from "@/lib/salaries/phrases-suppression";
+import type { PerimetreSuppressionSalarie } from "@/lib/salaries/suppression";
 
 /**
  * Sortie et retour dans l'effectif.
@@ -11,8 +17,9 @@ import { basculerActif, retirerTitre } from "@/lib/salaries/actions";
  * L'action n'est pas « supprimer », et le libellé le dit : elle marque la
  * fiche, et les titres restent. ~~La preuve […] doit survivre au départ
  * (`docs/rgpd.md` § 4.3)~~ — aucun texte identifié ne le fonde (E8,
- * 2026-09-27) ; que la sortie garde les données est une question posée à la
- * propriétaire. Supprimer la fiche emporterait ses titres en cascade.
+ * 2026-09-27). La propriétaire a tranché le même jour : la sortie reste ce
+ * qu'elle est, un choix de l'employeur qui garde tout ; qui veut effacer a
+ * `SupprimerSalarieButton`, juste en dessous.
  *
  * Le geste est donc réversible, et sans confirmation (relevé le 2026-09-27,
  * revue finale ; `docs/rgpd.md` § 4.3 le dit).
@@ -99,6 +106,51 @@ export function RetirerTitreButton({
       >
         {pending ? "Retrait…" : "Retirer"}
       </button>
+      {confirmation}
+    </>
+  );
+}
+
+/**
+ * « Supprimer ce salarié » — l'effacement définitif (décision de la
+ * propriétaire, 2026-09-27). La confirmation compte ce qui part — le
+ * périmètre est lu côté serveur par la même requête que l'effacement — et
+ * nomme l'export qui existe sur la fiche, « Éditer ses données ».
+ */
+export function SupprimerSalarieButton({
+  etablissementId,
+  salarieId,
+  nom,
+  perimetre,
+}: {
+  etablissementId: string;
+  salarieId: string;
+  nom: string;
+  perimetre: PerimetreSuppressionSalarie;
+}) {
+  const [pending, startTransition] = useTransition();
+  const { demander, confirmation } = useConfirmation();
+
+  return (
+    <>
+      <Button
+        variant="boardClair"
+        size="boardSm"
+        disabled={pending}
+        onClick={() =>
+          demander({
+            titre: `Supprimer ${nom} et tout ce qui le concerne ?`,
+            detail: detailSuppressionSalarie(nom, perimetre),
+            agir: "Supprimer définitivement",
+            alors: () =>
+              startTransition(async () => {
+                await supprimerSalarie(etablissementId, salarieId);
+              }),
+          })
+        }
+      >
+        {pending ? "Suppression…" : "Supprimer ce salarié"}
+      </Button>
       {confirmation}
     </>
   );

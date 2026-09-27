@@ -65,6 +65,10 @@ vi.mock("@/lib/storage", async () => {
       },
     }),
     cleRapport: (etab: string, id: string, nom: string) => `rapports/${etab}/${id}-${nom}`,
+    // Le stockage est en service ici : ces tests regardent la ligne, pas la
+    // configuration (le refus est tenu par `storage/depot-refuse.test.ts`).
+    stockageEnService: () => true,
+    MESSAGE_DEPOT_NON_CONFIGURE: "non configuré",
   };
 });
 

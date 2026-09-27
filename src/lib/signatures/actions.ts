@@ -271,6 +271,8 @@ export async function poserSignatureAvecToken(
       message:
         h.raison === "fichier_introuvable"
           ? "Le document à signer n'est plus accessible sur le serveur. Demandez à votre interlocuteur de le re-téléverser."
+          : h.raison === "stockage_non_configure"
+            ? "Le stockage des fichiers n'est pas encore configuré sur ce serveur : le document ne peut pas être lu pour être signé."
           : h.raison === "objet_introuvable"
             ? "Le document à signer n'existe plus."
             : "La signature de ce type de document n'est pas encore disponible.",
@@ -414,6 +416,7 @@ export async function signerEnCompteConnecte(params: {
       raison:
         | "objet_introuvable"
         | "fichier_introuvable"
+        | "stockage_non_configure"
         | "non_implemente"
         | "non_signable";
     }

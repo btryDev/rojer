@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { prisma } from "@/lib/prisma";
-import { getStorage } from "@/lib/storage";
+import { getStorage, type FileStorage } from "@/lib/storage";
 import { publicAppUrl } from "@/lib/email";
 import {
   MOIS_FENETRE_HISTORIQUE,
@@ -303,7 +303,15 @@ export async function GET(
   }));
   if (prestataires.length > 0) {
     const dossierPrestataires = zip.folder("Prestataires") ?? zip;
-    const storage = getStorage();
+    // Un stockage non configuré ne fait pas échouer l'archive entière : les
+    // pièces sont comptées manquantes et le README le dit, comme une pièce que
+    // le stockage ne rend pas (2026-09-27, `lot/stockage-supabase`).
+    let storage: FileStorage | null = null;
+    try {
+      storage = getStorage();
+    } catch (e) {
+      console.error("controle-zip : stockage indisponible", e);
+    }
     for (const p of prestataires) {
       const safeDir = nomDossierArchive(p.raisonSociale, "Prestataire");
       const sousDossier = dossierPrestataires.folder(safeDir) ?? dossierPrestataires;
@@ -329,6 +337,7 @@ export async function GET(
       ] as const) {
         if (!cle) continue;
         try {
+          if (!storage) throw new Error("stockage indisponible");
           const buf = await storage.get(cle);
           sousDossier.file(nom, new Uint8Array(buf));
           piecesPrestataires[type]++;

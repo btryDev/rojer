@@ -1,5 +1,9 @@
 "use server";
 
+import {
+  clesDesEtablissements,
+  libererFichiers,
+} from "@/lib/suppression/fichiers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -164,8 +168,22 @@ export async function supprimerEntreprise(
     };
   }
 
+  // Même règle que la suppression d'un établissement : clés lues dans la
+  // transaction, fichiers libérés après (`suppression/fichiers.ts`).
+  let cles: string[];
   try {
-    await prisma.entreprise.delete({ where: { id } });
+    cles = await prisma.$transaction(async (tx) => {
+      const etabs = await tx.etablissement.findMany({
+        where: { entrepriseId: id },
+        select: { id: true },
+      });
+      const c = await clesDesEtablissements(
+        tx,
+        etabs.map((e) => e.id),
+      );
+      await tx.entreprise.delete({ where: { id } });
+      return c;
+    });
   } catch (err) {
     // Filet de sécurité : une version a pu être figée entre le comptage et la
     // suppression. L'utilisateur ne doit jamais voir une erreur Prisma brute.
@@ -179,6 +197,8 @@ export async function supprimerEntreprise(
         "support si vous souhaitez fermer le compte.",
     };
   }
+
+  await libererFichiers(cles, "entreprises/suppression");
 
   revalidatePath("/entreprises");
   redirect("/entreprises");

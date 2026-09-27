@@ -1,0 +1,146 @@
+/**
+ * Les fichiers stockés qu'une suppression emporte, et leur libération.
+ *
+ * LE DÉFAUT QUI FAIT CE MODULE (2026-09-27, décision de la propriétaire :
+ * « A et correction du défaut »). Une suppression en base — établissement,
+ * entreprise — effaçait les lignes en cascade et laissait leurs fichiers dans
+ * le stockage : rapports de vérification, pièces des prestataires, analyses
+ * de légionelles. Seul `supprimerRapport` libérait le sien. Des pièces qu'on disait « supprimées définitivement »
+ * restaient donc lisibles par qui détient la clé.
+ *
+ * LA RÈGLE, en trois temps, sur le patron de `supprimerRapport` :
+ *   1. collecter les clés AVANT la suppression en base — après, les lignes qui
+ *      les portaient n'existent plus ;
+ *   2. supprimer en base ;
+ *   3. libérer les fichiers. Un échec du stockage n'annule PAS l'effacement en
+ *      base (il est déjà commité, et le défaire rendrait visibles des données
+ *      qu'on a dit supprimées) : il est journalisé, clé par clé.
+ *
+ * `CLES_STOCKEES` énumère les colonnes du schéma qui portent une clé de
+ * stockage ÉCRITE par le code ; `COLONNES_ECARTEES`, celles qui en ont la
+ * forme sans en être, chacune avec son motif. `fichiers.test.ts` relit
+ * `schema.prisma` : toute colonne `String` dont le nom évoque un fichier
+ * (`…Cle`, `…Url`, `…Key`, `…Chemin`, `…Path`, `fichier…`, `pdf…`) doit figurer
+ * dans l'une ou l'autre ; et une colonne écartée comme « jamais écrite » fait
+ * échouer le test le jour où du code l'écrit.
+ */
+
+import type { Prisma } from "@prisma/client";
+import { getStorage } from "@/lib/storage";
+
+/** Modèle → colonnes qui portent une clé de stockage. */
+export const CLES_STOCKEES = {
+  RapportVerification: ["fichierCle"],
+  Prestataire: ["attestationUrssafCle", "assuranceRcProCle", "kbisCle"],
+  AnalyseLegionelle: ["rapportCle"],
+} as const;
+
+/**
+ * Les colonnes qui ont le nom d'un fichier sans être une clé qu'on libère.
+ *
+ * `jamaisEcrite` : aucun code ne remplit la colonne (relevé le 2026-09-27) ;
+ * il n'y a donc aucun fichier à libérer, et la garde tombe dès qu'une écriture
+ * apparaît. Les quatre sont traitées de même — la contre-lecture l'a demandé :
+ * `DuerpVersion.pdfUrl` et les trois pièces du registre d'accessibilité
+ * étaient l'une écartée, les autres collectées, sans raison de différer.
+ */
+export const COLONNES_ECARTEES: Record<
+  string,
+  { motif: string; jamaisEcrite: boolean }
+> = {
+  "DuerpVersion.pdfUrl": {
+    motif:
+      "Jamais écrite (controle-zip/route.ts le dit). Et une version figée rend l'établissement insupprimable (R. 4121-4).",
+    jamaisEcrite: true,
+  },
+  "RegistreAccessibilite.attestationCle": {
+    motif: "Jamais écrite : le registre d'accessibilité n'a pas de dépôt de pièce.",
+    jamaisEcrite: true,
+  },
+  "RegistreAccessibilite.agendaAdapCle": {
+    motif: "Jamais écrite : idem.",
+    jamaisEcrite: true,
+  },
+  "RegistreAccessibilite.attestationFormationCle": {
+    motif: "Jamais écrite : idem.",
+    jamaisEcrite: true,
+  },
+  "RapportVerification.fichierNomOriginal": {
+    motif: "Métadonnée du fichier (son nom d'origine), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
+  "RapportVerification.fichierMime": {
+    motif: "Métadonnée du fichier (son type), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
+};
+
+type Client = Prisma.TransactionClient;
+
+const nonNulles = (l: (string | null)[]) =>
+  l.filter((c): c is string => typeof c === "string" && c.length > 0);
+
+/**
+ * Toutes les clés de stockage que la suppression de ces établissements
+ * emporte — chaque modèle de `CLES_STOCKEES`, par son chemin jusqu'à
+ * l'établissement.
+ */
+export async function clesDesEtablissements(
+  tx: Client,
+  etablissementIds: string[],
+): Promise<string[]> {
+  if (etablissementIds.length === 0) return [];
+  const dans = { in: etablissementIds };
+  const [rapports, prestataires, analyses] = await Promise.all([
+    tx.rapportVerification.findMany({
+      where: { etablissementId: dans },
+      select: { fichierCle: true },
+    }),
+    tx.prestataire.findMany({
+      where: { etablissementId: dans },
+      select: { attestationUrssafCle: true, assuranceRcProCle: true, kbisCle: true },
+    }),
+    tx.analyseLegionelle.findMany({
+      where: { carnet: { etablissementId: dans } },
+      select: { rapportCle: true },
+    }),
+  ]);
+  return nonNulles([
+    ...rapports.map((r) => r.fichierCle),
+    ...prestataires.flatMap((p) => [p.attestationUrssafCle, p.assuranceRcProCle, p.kbisCle]),
+    ...analyses.map((a) => a.rapportCle),
+  ]);
+}
+
+/**
+ * Libère les fichiers, APRÈS que la base a tranché. Ne lève jamais : un
+ * échec est journalisé et compté, l'effacement en base reste acquis.
+ */
+export async function libererFichiers(
+  cles: string[],
+  contexte: string,
+): Promise<{ liberes: number; echecs: number }> {
+  const uniques = [...new Set(cles)];
+  if (uniques.length === 0) return { liberes: 0, echecs: 0 };
+  // `getStorage()` LÈVE quand le stockage n'est pas configuré (en production,
+  // `local` est refusé — `storage/index.ts`). Appelé hors du `try`, il faisait
+  // échouer une suppression DÉJÀ COMMITÉE en base (2026-09-27,
+  // `lot/stockage-supabase`) : c'est un échec de libération comme un autre.
+  let stockage: ReturnType<typeof getStorage>;
+  try {
+    stockage = getStorage();
+  } catch (err) {
+    console.error(`[${contexte}] stockage indisponible, ${uniques.length} fichier(s) non libéré(s)`, err);
+    return { liberes: 0, echecs: uniques.length };
+  }
+  let echecs = 0;
+  for (const cle of uniques) {
+    try {
+      await stockage.delete(cle);
+    } catch (err) {
+      echecs += 1;
+      console.error(`[${contexte}] fichier non libéré : ${cle}`, err);
+    }
+  }
+  return { liberes: uniques.length - echecs, echecs };
+}

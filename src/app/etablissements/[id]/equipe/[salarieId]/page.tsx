@@ -11,7 +11,9 @@ import {
 import {
   BasculerEffectif,
   RetirerTitreButton,
+  SupprimerSalarieButton,
 } from "@/components/salaries/ActionsSalarie";
+import { perimetreSuppressionSalarie } from "@/lib/salaries/suppression";
 import { FormulaireTitre } from "@/components/salaries/FormulaireTitre";
 import { lireProvenance } from "@/lib/navigation/provenance";
 import { requireEtablissement } from "@/lib/auth/scope";
@@ -113,6 +115,9 @@ export default async function SalarieDetailPage({
   const now = new Date();
   const s = await getSalarie(id, salarieId, now);
   if (!s) notFound();
+  // Ce que « Supprimer ce salarié » emporterait, compté par la requête même
+  // de l'effacement (`suppression.ts`) : la confirmation annonce ce qui part.
+  const perimetre = await perimetreSuppressionSalarie(id, salarieId);
 
   const catalogue = cataloguerTitres();
   const dejaDeclares = s.titres.map((t) => t.obligationId);
@@ -177,14 +182,23 @@ export default async function SalarieDetailPage({
                     salarieId={s.id}
                     actif={s.actif}
                   />
+                  {perimetre && (
+                    <SupprimerSalarieButton
+                      etablissementId={id}
+                      salarieId={s.id}
+                      nom={`${s.prenom} ${s.nom}`}
+                      perimetre={perimetre}
+                    />
+                  )}
                 </div>
               </div>
 
               {!s.actif && (
                 <p className="m-0 mt-4 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   Cette personne ne fait plus partie de l&apos;effectif. Sa fiche
-                  est conservée parce que ses titres montrent qu&apos;elle était
-                  habilitée au moment où elle a travaillé.
+                  et ses titres restent enregistrés tant que vous ne la
+                  supprimez pas : « Supprimer ce salarié » les efface
+                  définitivement.
                 </p>
               )}
             </section>

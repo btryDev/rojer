@@ -81,9 +81,9 @@ export async function exporterDonneesSalarie(
     })),
     conservation: {
       regle:
-        "Pendant l'emploi, les titres sont traités au titre d'une obligation légale de l'employeur (art. 6.1.c du RGPD). Le Code du travail fait conserver par l'employeur la copie d'une attestation médicale de conduite ou de travail au voisinage de pièces sous tension « pendant toute sa durée de validité » (art. R. 4323-56 et R. 4544-11-1) ; Rojer n'en enregistre que les dates. Une sortie de l'effectif marque la fiche comme sortie : les titres restent enregistrés jusqu'à ce que l'employeur les supprime. Aucun texte identifié par Rojer ne fixe la durée de conservation après le départ.",
+        "Pendant l'emploi, les titres sont traités au titre d'une obligation légale de l'employeur (art. 6.1.c du RGPD). Le Code du travail fait conserver par l'employeur la copie d'une attestation médicale de conduite ou de travail au voisinage de pièces sous tension « pendant toute sa durée de validité » (art. R. 4323-56 et R. 4544-11-1) ; Rojer n'en enregistre que les dates. Une sortie de l'effectif marque la fiche comme sortie : la fiche et les titres restent enregistrés jusqu'à ce que l'employeur les supprime. « Supprimer ce salarié » efface définitivement la fiche, ses titres, ses échéances au calendrier et les actions qui y sont liées. Rojer ne garde aucun document sur un titre : un rapport déposé avant que Rojer ne refuse ces dépôts (2026-08-27) partirait avec, fichier et signatures compris. Aucun texte identifié par Rojer ne fixe la durée de conservation après le départ.",
       effacement:
-        "Pendant l'emploi, le droit à l'effacement est limité : l'article 17.3.b du RGPD excepte le traitement nécessaire au respect d'une obligation légale. Hors de ce cadre, Rojer n'a identifié aucun texte qui fonde un refus. Un titre que l'employeur supprime est effacé définitivement, sans récupération possible.",
+        "Pendant l'emploi, le droit à l'effacement est limité : l'article 17.3.b du RGPD excepte le traitement nécessaire au respect d'une obligation légale. Hors de ce cadre, Rojer n'a identifié aucun texte qui fonde un refus. Un titre que l'employeur supprime, ou une fiche qu'il supprime avec tout ce qui s'y rattache, est effacé définitivement, sans récupération possible.",
       opposition:
         "Le droit d'opposition (art. 21) est sans objet sur un traitement fondé sur une obligation légale.",
     },
@@ -129,8 +129,10 @@ export async function exporterDonneesSalarie(
  * analogie. Le texte dit donc ce que fait le produit aujourd'hui, sans
  * fondement inventé : la sortie de l'effectif garde les titres (un marquage,
  * réversible) ; la suppression d'un titre, ou de l'établissement, efface
- * définitivement. Que la sortie garde les données est une question posée à
- * la propriétaire ; le comportement n'est pas changé ici.
+ * définitivement. ~~Que la sortie garde les données est une question posée à
+ * la propriétaire~~ — tranché le même jour : la sortie reste un choix de
+ * l'employeur qui garde tout, et « Supprimer ce salarié » efface la fiche et
+ * tout ce qui s'y rattache (`suppression.ts`, journal C44).
  *
  * CE QUE LE TEXTE NE DIT PLUS (revue finale de l'intégration d, 2026-09-26,
  * décision E8 alors ouverte). « Parce que la loi l'impose », « que la
@@ -215,10 +217,11 @@ pièces sous tension « pendant toute sa durée de validité » (art. R. 4323-56
 R. 4544-11-1) ; Rojer n'en enregistre que les dates.
 
 Si vous quittez l'entreprise, votre fiche est marquée comme sortie de
-l'effectif ; vos titres restent enregistrés jusqu'à ce que votre employeur les
-supprime. La durée de conservation après votre départ n'est pas fixée par un
-texte que Rojer ait identifié. Un titre que votre employeur supprime est
-effacé définitivement.
+l'effectif ; votre fiche et vos titres restent enregistrés jusqu'à ce que votre
+employeur les supprime. La durée de conservation après votre départ n'est pas
+fixée par un texte que Rojer ait identifié. Un titre que votre employeur
+supprime est effacé définitivement ; s'il supprime votre fiche, elle est
+effacée définitivement avec vos titres et tout ce qui s'y rattache.
 
 VOS DROITS
 
@@ -229,7 +232,7 @@ VOS DROITS
     L'article 17.3.b du RGPD excepte le traitement nécessaire au respect d'une
     obligation légale. Hors de ce cadre, adressez votre demande à votre
     employeur : Rojer n'a identifié aucun texte qui fonde un refus, et votre
-    employeur peut supprimer vos titres — définitivement.
+    employeur peut supprimer vos titres ou votre fiche — définitivement.
   — Opposition : sans objet ici. Le droit d'opposition ne s'applique pas à un
     traitement fondé sur une obligation légale, pas plus qu'on ne peut
     s'opposer à l'établissement de son bulletin de paie.

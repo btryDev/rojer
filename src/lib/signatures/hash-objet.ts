@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getStorage } from "@/lib/storage";
+import { StockageNonConfigure, getStorage } from "@/lib/storage";
 import { sha256Hex } from "./hash";
 import type { ObjetSignable } from "@prisma/client";
 
@@ -71,7 +71,11 @@ export type HashResult =
   | { ok: true; hash: string; nomDocument: string | null }
   | {
       ok: false;
-      raison: "objet_introuvable" | "fichier_introuvable" | "non_implemente";
+      raison:
+        | "objet_introuvable"
+        | "fichier_introuvable"
+        | "stockage_non_configure"
+        | "non_implemente";
     };
 
 export async function calculerHashObjet(
@@ -94,7 +98,13 @@ export async function calculerHashObjet(
         hash: sha256Hex(buf),
         nomDocument: rapport.fichierNomOriginal,
       };
-    } catch {
+    } catch (e) {
+      // Un serveur sans stockage configuré n'a PERDU aucun fichier : il ne
+      // peut pas en lire. Le confondre avec « fichier introuvable » faisait
+      // demander un nouveau dépôt qui aurait été refusé à son tour
+      // (2026-09-27, `lot/stockage-supabase`).
+      if (e instanceof StockageNonConfigure)
+        return { ok: false, raison: "stockage_non_configure" };
       return { ok: false, raison: "fichier_introuvable" };
     }
   }

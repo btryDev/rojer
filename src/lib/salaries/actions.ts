@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { libererFichiers } from "@/lib/suppression/fichiers";
+import { effacerSalarie } from "./suppression";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
@@ -267,4 +270,27 @@ export async function retirerTitre(
     where: { id: titreId, salarie: { id: salarieId, etablissementId } },
   });
   await regenererEtRafraichir(etablissementId);
+}
+
+/**
+ * « Supprimer ce salarié » — effacement définitif de la fiche, de ses titres,
+ * de ses lignes de calendrier, de leurs rapports (fichiers compris), de leurs
+ * actions et des signatures de ces rapports (`suppression.ts`, décision de la
+ * propriétaire du 2026-09-27). À ne pas confondre avec `basculerActif`, qui
+ * garde tout.
+ *
+ * Les fichiers sont libérés APRÈS la transaction ; un échec du stockage est
+ * journalisé et n'annule pas l'effacement (`suppression/fichiers.ts`).
+ */
+export async function supprimerSalarie(
+  etablissementId: string,
+  salarieId: string,
+): Promise<void> {
+  await assertEtablissementOwnership(etablissementId);
+  const efface = await effacerSalarie(etablissementId, salarieId);
+  if (efface) {
+    await libererFichiers(efface.cles, "salaries/suppression");
+    await regenererEtRafraichir(etablissementId);
+  }
+  redirect(`/etablissements/${etablissementId}/equipe`);
 }

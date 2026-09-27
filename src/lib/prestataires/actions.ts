@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { getStorage } from "@/lib/storage";
+import {
+  getStorage,
+  MESSAGE_DEPOT_NON_CONFIGURE,
+  stockageEnService,
+} from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
 import { DomainePrestataire } from "@prisma/client";
 import {
@@ -66,7 +70,10 @@ export async function creerPrestataire(
   }
 
   const prestataireId = `pre_${randomUUID()}`;
-  const storage = getStorage();
+  // Le stockage n'est demandé que si une pièce est jointe : un prestataire
+  // sans pièce se crée même sur un serveur sans stockage configuré. Une pièce
+  // jointe, elle, est refusée avec le motif exact (2026-09-27).
+  const storage = stockageEnService() ? getStorage() : null;
 
   // Upload des pièces éventuelles
   const piecesUploadees: Array<{
@@ -90,6 +97,7 @@ export async function creerPrestataire(
 
     const val = validerFichier(fichier);
     if (!val.ok) return { error: val.erreur };
+    if (!storage) return { error: MESSAGE_DEPOT_NON_CONFIGURE };
 
     const cle = clePiecePrestataire(
       etablissementId,
@@ -111,7 +119,7 @@ export async function creerPrestataire(
       "attestationUrssafNom",
     );
     if (urssaf && "error" in urssaf) {
-      await Promise.all(piecesUploadees.map((p) => storage.delete(p.cle).catch(() => {})));
+      await Promise.all(piecesUploadees.map((p) => storage?.delete(p.cle).catch(() => {})));
       return {
         status: "error",
         message: urssaf.error,
@@ -126,7 +134,7 @@ export async function creerPrestataire(
       "assuranceRcProNom",
     );
     if (rcPro && "error" in rcPro) {
-      await Promise.all(piecesUploadees.map((p) => storage.delete(p.cle).catch(() => {})));
+      await Promise.all(piecesUploadees.map((p) => storage?.delete(p.cle).catch(() => {})));
       return {
         status: "error",
         message: rcPro.error,
@@ -136,7 +144,7 @@ export async function creerPrestataire(
 
     const kbis = await traiterPiece("kbis", "kbis", "kbisCle", "kbisNom");
     if (kbis && "error" in kbis) {
-      await Promise.all(piecesUploadees.map((p) => storage.delete(p.cle).catch(() => {})));
+      await Promise.all(piecesUploadees.map((p) => storage?.delete(p.cle).catch(() => {})));
       return {
         status: "error",
         message: kbis.error,
@@ -171,7 +179,7 @@ export async function creerPrestataire(
     });
   } catch (err) {
     // Nettoyage best-effort des fichiers uploadés si la création DB a cassé.
-    await Promise.all(piecesUploadees.map((p) => storage.delete(p.cle).catch(() => {})));
+    await Promise.all(piecesUploadees.map((p) => storage?.delete(p.cle).catch(() => {})));
     throw err;
   }
 
