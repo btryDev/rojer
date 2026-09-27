@@ -44,6 +44,7 @@ function lignes(n: number, prefixe: string) {
     domaine: "Incendie / sécurité",
     ecritAttendu: i % 3 === 0 ? "registre de sécurité" : null,
     declaration: i % 2 === 0 ? "Déclaré en place le 12/08/2026" : "Aucune déclaration",
+    aConfirmer: [] as string[],
   }));
 }
 

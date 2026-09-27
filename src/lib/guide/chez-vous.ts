@@ -14,6 +14,7 @@
  * node comme le moteur de matching qu'il consomme.
  */
 
+import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import {
   phraseEffectifAConfirmer,
   seuilEntrepriseAtteint,
@@ -56,6 +57,13 @@ export type ChezVousDomaine = {
    * l'entreprise (`LienEffectifEntreprise`).
    */
   aConfirmer: { obligations: string[]; phrase: string } | null;
+  /**
+   * Les obligations du bloc retenues sur le silence d'une question de la
+   * fiche, chacune avec ses phrases (`PHRASE_SANS_REPONSE`). Vide sinon.
+   * Ajouté le 2026-09-27 : le guide ne lisait que l'effectif, et une ligne
+   * retenue sur une question muette s'y lisait comme due.
+   */
+  sansReponse: { obligation: string; phrases: string[] }[];
 };
 
 export type ChezVous = {
@@ -119,8 +127,9 @@ const RANG_PERIODICITE: Record<Periodicite, number> = {
  * à 9, site à 12 : « Organisation de la prévention · N obligations », et une
  * raison qui disait « cette obligation » sans dire laquelle.
  *
- * La raison du moteur n'est pas réécrite (elle est aussi celle que le
- * calendrier conserve) ; le guide la NOMME, et en retire la phrase longue, que
+ * La raison du moteur n'est pas réécrite ~~(elle est aussi celle que le
+ * calendrier conserve)~~ [2026-09-27 : faux — le calendrier ne conserve aucune
+ * raison ; il porte désormais la marque, par `matching/marques.ts`] ; le guide la NOMME, et en retire la phrase longue, que
  * le bloc porte une seule fois, avec le lien (`ChezVousDomaine.aConfirmer`).
  * Si la raison ne se termine pas par la phrase attendue — le moteur l'aurait
  * reformulée —, elle est gardée entière : on nomme sans rien perdre.
@@ -154,6 +163,7 @@ export function construireChezVous(
       raisons: string[];
       equipements: Set<string>;
       aConfirmer: string[];
+      sansReponse: { obligation: string; phrases: string[] }[];
     }
   >();
 
@@ -170,6 +180,7 @@ export function construireChezVous(
         raisons: [],
         equipements: new Set(),
         aConfirmer: [],
+        sansReponse: [],
       };
       parDomaine.set(d, agg);
     }
@@ -180,6 +191,12 @@ export function construireChezVous(
       if (!agg.raisons.includes(raison)) agg.raisons.push(raison);
     }
     if (a.effectifAConfirmer) agg.aConfirmer.push(a.obligation.libelle);
+    if (a.sansReponse && a.sansReponse.length > 0) {
+      agg.sansReponse.push({
+        obligation: a.obligation.libelle,
+        phrases: a.sansReponse.map((q) => PHRASE_SANS_REPONSE[q]),
+      });
+    }
     for (const eq of a.equipementsConcernes) {
       agg.equipements.add(eq.libelle);
       categoriesDeclenchantes.add(eq.categorie);
@@ -200,6 +217,7 @@ export function construireChezVous(
       realisateurs: [...agg.realisateurs],
       raisons: agg.raisons,
       equipements: [...agg.equipements],
+      sansReponse: agg.sansReponse,
       aConfirmer:
         agg.aConfirmer.length > 0
           ? {

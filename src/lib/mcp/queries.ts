@@ -35,6 +35,7 @@ import {
   STATUTS_ACTION_OUVERTE,
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
+import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
 import { prismaMcp } from "./prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
@@ -522,6 +523,11 @@ export type VerificationLue = {
    * Elle n'élargit pas le `select` minimal au sens RGPD.
    */
   contractuelle: boolean;
+  /**
+   * Les phrases « à confirmer » de la ligne (`matching/marques.ts`), vide si
+   * rien ne la retient par prudence.
+   */
+  aConfirmer: readonly string[];
 };
 
 export type FiltresVerificationsMcp = {
@@ -546,10 +552,14 @@ export async function listerVerifications(
   filtres: FiltresVerificationsMcp,
   now: Date,
 ): Promise<VerificationLue[]> {
-  const brutes = await prismaMcp.verification.findMany({
+  const [brutes, marques] = await Promise.all([
+    prismaMcp.verification.findMany({
     where: { etablissementId },
     orderBy: { datePrevue: "asc" },
     select: {
+      // L'identifiant de l'obligation, pour la marque « à confirmer » —
+      // une clé du référentiel, rien de l'établissement ni d'une personne.
+      obligationId: true,
       libelleObligation: true,
       periodicite: true,
       datePrevue: true,
@@ -579,7 +589,13 @@ export async function listerVerifications(
         select: { dateRapport: true },
       },
     },
-  });
+    }),
+    // Les lignes retenues par prudence le disent aussi à l'assistant (analyse
+    // du 2026-09-27, § 6.3) : sans le mot, il restituerait comme due une
+    // ligne que seul un silence de la fiche fait exister. La portée est celle
+    // du jeton, déjà établie.
+    marquesAConfirmerDuDossier(prismaMcp, { id: etablissementId }),
+  ]);
 
   let lues: VerificationLue[] = brutes.map((v) => ({
     libelleObligation: v.libelleObligation,
@@ -610,6 +626,7 @@ export async function listerVerifications(
         ? 0
         : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),
+    aConfirmer: marques.parObligation.get(v.obligationId)?.phrases ?? [],
   }));
 
   // Triée sur l'échéance projetée, pour que l'ordre rendu ne dépende pas de

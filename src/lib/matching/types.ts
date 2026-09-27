@@ -192,7 +192,8 @@ export type QuestionSansReponse =
   | "chiffons_impregnes"
   | "locaux_sommeil_public"
   | "matieres_r4227_22"
-  | "type_erp";
+  | "type_erp"
+  | "personnes_presentes";
 
 // -----------------------------------------------------------------------------
 // Prescriptions particulières (ADR-035)

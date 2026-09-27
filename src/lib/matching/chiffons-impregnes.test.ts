@@ -88,13 +88,15 @@ describe("C45, M1 — le silence d'une question à trois états se porte à côt
     expect(oui.ok && oui.sansReponse).toBeUndefined();
   });
 
-  it("locaux à sommeil : silence d'un type qui pose la question ⇒ `sansReponse` ; sans type, la raison seule", () => {
+  // ~~« sans type, la raison seule »~~ — 2026-09-27 : sans type, la marque
+  // renvoie à la question que la fiche pose bel et bien, le type d'ERP.
+  it("locaux à sommeil : silence d'un type qui pose la question ⇒ `sansReponse` ; sans type, `type_erp`", () => {
     const t = { erp: { categories: ["N5" as const] }, locauxSommeilPublic: true };
     const erp = { estERP: true, categorieErp: "N5" as const, comporteLocauxSommeilPublic: null };
     const hotel = matchTypologie(t, bureau({ ...erp, typeErp: "O" }));
     expect(hotel.ok && hotel.sansReponse).toEqual(["locaux_sommeil_public"]);
     const sansType = matchTypologie(t, bureau({ ...erp, typeErp: null }));
     expect(sansType.ok).toBe(true);
-    expect(sansType.ok && sansType.sansReponse).toBeUndefined();
+    expect(sansType.ok && sansType.sansReponse).toEqual(["type_erp"]);
   });
 });

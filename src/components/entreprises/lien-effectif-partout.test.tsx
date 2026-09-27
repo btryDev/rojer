@@ -42,6 +42,9 @@ const { construireChezVous } = await import("@/lib/guide/chez-vous");
 const { couvertureDeLEtablissement } = await import(
   "@/lib/perimetre/couverture"
 );
+const { BlocAConfirmer } = await import("@/components/calendrier/BlocAConfirmer");
+const { marquesParObligation } = await import("@/lib/matching/marques");
+const { determineObligationsApplicables } = await import("@/lib/matching");
 const { phraseEffectifAConfirmer } = await import(
   "@/lib/matching/effectif-entreprise"
 );
@@ -186,6 +189,27 @@ describe("« cette obligation » nomme l'obligation dans un bloc qui en agrège 
   });
 });
 
+describe("la fiche d'une ligne « à confirmer » (2026-09-27)", () => {
+  it("la marque d'effectif du moteur porte le lien de l'entreprise", () => {
+    // `matching/marques.ts` traduit `effectifAConfirmer` pour le calendrier,
+    // la fiche d'une vérification, les PDF et le MCP. Seule la fiche a de
+    // quoi porter un lien : `BlocAConfirmer`.
+    const marques = marquesParObligation(
+      determineObligationsApplicables(etab(12, 9), []),
+    );
+    const marque = [...marques.values()].find((m) => m.effectif);
+    expect(marque, "le dossier de la revue doit porter une marque d'effectif").toBeDefined();
+    const html = renderToStaticMarkup(
+      <BlocAConfirmer
+        marque={marque!}
+        hrefFicheEtablissement="/etablissements/etab-1/modifier"
+        entrepriseId={ENTREPRISE}
+      />,
+    );
+    exigerLeLien(html);
+  });
+});
+
 describe("recensement des appelants de phraseEffectifAConfirmer (borne haute)", () => {
   it("chaque appelant a sa surface rendue ci-dessus", () => {
     const racine = join(process.cwd(), "src");
@@ -208,6 +232,7 @@ describe("recensement des appelants de phraseEffectifAConfirmer (borne haute)", 
     //  mise-a-jour.ts     → carte des trois cas (2e test)
     //  couverture.ts      → bandeau (3e test)
     //  etats-permanents/queries.ts → LigneEtat (4e test)
+    //  matching/marques.ts → BlocAConfirmer (test ci-dessus, 2026-09-27)
     expect(appelants.sort()).toEqual(
       [
         "lib/duerps/mise-a-jour.ts",
@@ -215,6 +240,7 @@ describe("recensement des appelants de phraseEffectifAConfirmer (borne haute)", 
         "lib/guide/chez-vous.ts",
         "lib/matching/effectif-entreprise.ts",
         "lib/matching/engine.ts",
+        "lib/matching/marques.ts",
         "lib/perimetre/couverture.ts",
       ].sort(),
     );

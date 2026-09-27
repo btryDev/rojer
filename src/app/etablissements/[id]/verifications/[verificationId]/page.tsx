@@ -9,6 +9,10 @@ import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { CreerActionVerifForm } from "@/components/actions/CreerActionVerifForm";
 import { getVerification } from "@/lib/calendrier/queries";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
+import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
+import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
+import { requireUser } from "@/lib/auth/require-user";
 import {
   MARQUAGE_CONTRACTUEL,
   MARQUAGE_CONTRACTUEL_LONG,
@@ -110,6 +114,15 @@ export default async function VerificationDetailPage({
   const depuisCetteFiche = `/etablissements/${id}/verifications/${verificationId}`;
 
   const obligation = obligationParId(v.obligationId);
+  // La ligne est-elle retenue par prudence ? Même calcul que le calendrier
+  // (`matching/marques.ts`) : la fiche d'une ligne ne peut pas taire ce que
+  // la liste dit.
+  const utilisateur = await requireUser();
+  const marques = await marquesAConfirmerDuDossier(prisma, {
+    id,
+    entreprise: { userId: utilisateur.id },
+  });
+  const marque = marques.parObligation.get(v.obligationId) ?? null;
   // Les catégories que le TEXTE nomme, pas celles que l'établissement a
   // déclarées. Restreindre à ce qui est déclaré ferait disparaître la section
   // chez celui qui n'a rien déclaré — précisément le cas que cette obligation
@@ -352,6 +365,7 @@ export default async function VerificationDetailPage({
         pastilles={
           <>
             {contractuelle && <MentionContractuelle />}
+            <MentionAConfirmer phrases={marque?.phrases ?? []} />
             {/* En retard, la pastille d'état dit déjà « En retard » : une
                 seconde pastille rose aurait dit la même chose. Le compte de
                 jours la remplace alors, plutôt que de s'y ajouter — un retard
@@ -401,6 +415,16 @@ export default async function VerificationDetailPage({
           ) : null
         }
       />
+
+      {marque ? (
+        <section className="carte-board px-7 py-5 sm:px-8">
+          <BlocAConfirmer
+            marque={marque}
+            hrefFicheEtablissement={`/etablissements/${id}/modifier`}
+            entrepriseId={marques.entrepriseId}
+          />
+        </section>
+      ) : null}
 
       {/* Ce qui fonde l'obligation — replié : on le consulte une fois, on
           ne le relit pas à chaque visite. */}

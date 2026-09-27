@@ -171,9 +171,14 @@ function TableauEtats({ lignes }: { lignes: LigneEtatPermanentPdf[] }) {
       </View>
       {lignes.map((l, i) => (
         <View key={i} style={s.row} wrap={false}>
-          <Text style={[s.td, { width: "40%", paddingRight: 4 }]}>
-            {l.libelle}
-          </Text>
+          <View style={{ width: "40%", paddingRight: 4 }}>
+            <Text style={s.td}>{l.libelle}</Text>
+            {l.aConfirmer.length > 0 && (
+              <Text style={[s.small, { marginTop: 2 }]}>
+                {`À confirmer. ${l.aConfirmer.join(" ")}`}
+              </Text>
+            )}
+          </View>
           <Text style={[s.td, { width: "18%" }]}>{l.domaine}</Text>
           <Text style={[s.td, { width: "20%", paddingRight: 4 }]}>
             {l.ecritAttendu ?? "—"}
@@ -517,6 +522,11 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                   {v.contractuelle && (
                     <Text style={[s.small, { color: BOARD.ambreEncre }]}>
                       {MARQUAGE_CONTRACTUEL}
+                    </Text>
+                  )}
+                  {v.aConfirmer.length > 0 && (
+                    <Text style={[s.small, { marginTop: 2 }]}>
+                      {`À confirmer. ${v.aConfirmer.join(" ")}`}
                     </Text>
                   )}
                 </View>

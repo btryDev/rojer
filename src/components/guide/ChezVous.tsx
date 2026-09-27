@@ -230,6 +230,24 @@ export function ChezVous({
                     />
                   </div>
                 ) : null}
+                {d.sansReponse.length > 0 ? (
+                  <div className="mt-2 text-[0.8rem] leading-relaxed text-[color:var(--board-slate-mid)]">
+                    {d.sansReponse.map((l) => (
+                      <p key={l.obligation} className="m-0">
+                        <strong className="font-semibold text-[color:var(--board-ink)]">
+                          À confirmer
+                        </strong>{" "}
+                        — « {l.obligation} ». {l.phrases.join(" ")}
+                      </p>
+                    ))}
+                    <Link
+                      href={`${base}/modifier`}
+                      className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                    >
+                      Répondre sur la fiche de l&apos;établissement
+                    </Link>
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

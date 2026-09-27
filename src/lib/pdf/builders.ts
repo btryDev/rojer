@@ -77,6 +77,8 @@ import type { DossierData } from "./DossierConformiteDocument";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { faitInventaire } from "@/lib/perimetre/couverture";
 import { blocEtatsPermanents } from "./mentions-etats-permanents";
+import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
+import type { MarqueAConfirmer } from "@/lib/matching/marques";
 import {
   fraicheurCalendrier,
   phraseFraicheur,
@@ -225,6 +227,8 @@ export function ligneVerif(
   v: VerificationListee,
   multiBatiments: boolean,
   now: Date,
+  /** Les marques « à confirmer » du dossier, par obligation (`marquesAConfirmerDuDossier`). */
+  marques: ReadonlyMap<string, MarqueAConfirmer> = new Map(),
 ): LigneVerif {
   return {
     id: v.id,
@@ -238,6 +242,7 @@ export function ligneVerif(
     statut: statutAffiche(v, now) ?? (v.statut as StatutPeint),
     domaine: obligationParId(v.obligationId)?.domaine ?? null,
     contractuelle: estEcheanceContractuelle(v),
+    aConfirmer: marques.get(v.obligationId)?.phrases ?? [],
   };
 }
 
@@ -293,7 +298,7 @@ export async function construireRegistreData(
   // quarante-neuf fiches et la date de génération se lisent au même instant.
   const now = new Date();
 
-  const [rapports, verifs, couverture, fraicheur] = await Promise.all([
+  const [rapports, verifs, couverture, fraicheur, marques] = await Promise.all([
     listerRapportsDeLEtablissement(etablissementId),
     listerVerifications(etablissementId),
     // Par la même entrée que le dossier de conformité, pour que les deux PDF
@@ -302,6 +307,12 @@ export async function construireRegistreData(
     // périmètre, et ce lot ne l'y ajoute pas.
     couvertureDuDossier(etablissementId),
     fraicheurCalendrier(etablissementId),
+    requireUser().then((user) =>
+      marquesAConfirmerDuDossier(prisma, {
+        id: etablissementId,
+        entreprise: { userId: user.id },
+      }),
+    ),
   ]);
 
   const lignesRapports: LigneRapport[] = rapports.map((r) => ({
@@ -332,7 +343,7 @@ export async function construireRegistreData(
   // ligne.
   const verifsEnAttente: LigneVerif[] = verifs
     .filter(estEnAttenteDeRapport)
-    .map((v) => ligneVerif(v, multiBatiments, now))
+    .map((v) => ligneVerif(v, multiBatiments, now, marques.parObligation))
     .sort(parEcheanceImprimee);
 
   // Le registre, fiche par fiche — ce que le document doit être. Il ne
@@ -400,7 +411,11 @@ export async function construireRegistreData(
 
 /** Une fiche mise à plat pour le rendu — texte seulement, rien de calculé. */
 function ficheDuPdf(
-  due: { section: { id: string; titre: string; attendu: string }; raisons: string[] },
+  due: {
+    section: { id: string; titre: string; attendu: string };
+    raisons: string[];
+    aConfirmer: string[];
+  },
   saisie: ReturnType<typeof saisiePourSection>,
   contenu: { champs?: Record<string, string | null>; lignes?: { valeurs: Record<string, string | null> }[] } | undefined,
   completude: Completude,
@@ -412,6 +427,7 @@ function ficheDuPdf(
     titre: due.section.titre,
     attendu: due.section.attendu,
     raisons: due.raisons,
+    aConfirmer: due.aConfirmer,
     etat: libelleCompletude(completude),
     ton: tonCompletude(completude),
     misAJourLe,
@@ -490,6 +506,7 @@ export async function construireDossierConformiteData(
     // coup. Il ne régénère rien — `regeneration-sure.ts` réserve la
     // réparation aux deux pages d'entrée.
     fraicheur,
+    marques,
   ] = await Promise.all([
       compterActions(etablissementId),
       construirePlanActionsData(etablissementId),
@@ -513,6 +530,12 @@ export async function construireDossierConformiteData(
       // vérifications en retard » suivies de 3 lignes.
       etatsPermanentsDuDossier(etablissementId, user.id),
       fraicheurCalendrier(etablissementId),
+      // Les lignes retenues par prudence le disent aussi dans le document
+      // remis à un tiers (analyse du 2026-09-27, § 6.3).
+      marquesAConfirmerDuDossier(prisma, {
+        id: etablissementId,
+        entreprise: { userId: user.id },
+      }),
     ]);
 
   const now = new Date();
@@ -628,7 +651,7 @@ export async function construireDossierConformiteData(
     // lignes de tableau : le nombre annoncé et le détail imprimé ne peuvent
     // plus diverger.
     verifsEnRetard: etatVerifs.enRetard
-      .map((v) => ligneVerif(v, multiBatiments, now))
+      .map((v) => ligneVerif(v, multiBatiments, now, marques.parObligation))
       .sort(parEcheanceImprimee),
     actionsEnCours:
       plan?.actions.filter(

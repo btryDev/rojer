@@ -514,6 +514,11 @@ function formaterVerifications(verifs: VerificationLue[], filtre = true): string
       v.contractuelle
         ? "engagement d'assurance, pas une obligation légale"
         : null,
+      // Même raison : une ligne que seul le silence de la fiche retient ne
+      // se restitue pas comme due.
+      v.aConfirmer.length > 0
+        ? `à confirmer : ${v.aConfirmer.join(" ")}`
+        : null,
     ]
       .filter(Boolean)
       .join(", ");

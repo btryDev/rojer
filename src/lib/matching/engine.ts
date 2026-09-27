@@ -361,9 +361,14 @@ function evaluerLocauxSommeil(
       // déclaré de la liste. Sans type, répondre suppose d'abord de le
       // déclarer : la raison le dit, un « à confirmer » renverrait vers une
       // question que la fiche n'affiche pas.
-      ...(etab.typeErp != null
-        ? { sansReponse: "locaux_sommeil_public" as const }
-        : {}),
+      //
+      // [2026-09-27 : sans type, la marque renvoie à la question que la fiche
+      // pose bel et bien — le type d'ERP, exigé — plutôt qu'à rien. La ligne
+      // n'est retenue que parce que le type manque.]
+      sansReponse:
+        etab.typeErp != null
+          ? ("locaux_sommeil_public" as const)
+          : ("type_erp" as const),
     };
   }
 
@@ -695,6 +700,12 @@ export function matchTypologie(
       (seuil.etat === "indetermine" && !brancheMatieres)
     ) {
       raisons.push(seuil.raison);
+    }
+    // La prudence du nombre de personnes se DIT à l'écran, pas seulement dans
+    // la raison (analyse du 2026-09-27, § 6.3) : un ERP muet recevait sa
+    // consigne et ses exercices sans rien qui les distingue d'une ligne due.
+    if (seuil.etat === "indetermine" && !brancheMatieres) {
+      sansReponse.push("personnes_presentes");
     }
     if (brancheMatieres) {
       raisons.push(

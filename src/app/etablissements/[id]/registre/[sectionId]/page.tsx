@@ -121,6 +121,8 @@ export default async function FicheDuRegistrePage({
               titre={courante.due.section.titre}
               attendu={courante.due.section.attendu}
               raisons={courante.due.raisons}
+              aConfirmer={courante.due.aConfirmer}
+              hrefFiche={`/etablissements/${id}/modifier`}
               completude={courante.completude}
             />
             <CorpsFicheRegistre

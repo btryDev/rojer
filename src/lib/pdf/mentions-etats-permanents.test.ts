@@ -217,7 +217,8 @@ describe("ce que le dossier de conformité dit des états permanents", () => {
   });
 
   it("ne laisse pas passer la note libre du dirigeant", () => {
-    // Le contrat de sortie est fermé à quatre champs, comme celui de
+    // Le contrat de sortie est fermé à cinq champs (le cinquième, 2026-09-27 :
+    // les phrases « à confirmer » que calcule le moteur), comme celui de
     // `mentions-perimetre.ts`. La donnée qu'il arrête est nommée : la note est
     // du texte écrit par un dirigeant sur sa propre conformité, pour lui-même,
     // et ce document part chez un inspecteur, un assureur ou un acquéreur.
@@ -227,6 +228,7 @@ describe("ce que le dossier de conformité dit des états permanents", () => {
     const bloc = blocEtatsPermanents(d);
     for (const l of [...bloc.etats, ...bloc.faits]) {
       expect(Object.keys(l).sort()).toEqual([
+        "aConfirmer",
         "declaration",
         "domaine",
         "ecritAttendu",
@@ -266,5 +268,23 @@ describe("ce que le dossier de conformité dit des états permanents", () => {
     expect(bloc.chapeau).toBeNull();
     expect(bloc.compteur).toBeNull();
     expect(bloc.etats).toEqual([]);
+  });
+});
+
+describe("la marque « à confirmer » passe au document (2026-09-27)", () => {
+  // Analyse du 2026-09-27, § 6.3 : `ligne()` ne recopiait ni `aConfirmer` ni
+  // `questionsSansReponse` — l'écran disait « à confirmer », le document remis
+  // à un tiers affirmait la ligne. Éprouvé en retirant le champ de `ligne()`.
+  it("recopie la phrase d'effectif et celles des questions muettes", () => {
+    const d = dossier(1, 0);
+    d.groupes[0].lignes[0] = {
+      ...d.groupes[0].lignes[0],
+      aConfirmer: "phrase d'effectif",
+      questionsSansReponse: ["phrase de question"],
+    };
+    expect(blocEtatsPermanents(d).etats[0].aConfirmer).toEqual([
+      "phrase d'effectif",
+      "phrase de question",
+    ]);
   });
 });

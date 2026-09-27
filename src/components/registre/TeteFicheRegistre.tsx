@@ -9,6 +9,7 @@
 // est la question qu'on se pose en arrivant, pas celle qu'on découvre après
 // avoir tout lu.
 
+import Link from "next/link";
 import type { Completude } from "@/lib/registre/completude";
 import { PastilleCompletude } from "./PastilleCompletude";
 
@@ -17,6 +18,8 @@ export function TeteFicheRegistre({
   titre,
   attendu,
   raisons,
+  aConfirmer = [],
+  hrefFiche,
   completude,
 }: {
   partie: { id: string; titre: string };
@@ -25,6 +28,10 @@ export function TeteFicheRegistre({
   attendu?: string;
   /** Pourquoi elle figure au registre de cet établissement. */
   raisons?: readonly string[];
+  /** Les phrases « à confirmer » de la fiche (`SectionDue.aConfirmer`). */
+  aConfirmer?: readonly string[];
+  /** La fiche de l'établissement, où l'on répond. */
+  hrefFiche?: string;
   completude: Completude;
 }) {
   return (
@@ -57,6 +64,27 @@ export function TeteFicheRegistre({
           </span>{" "}
           {raisons.join(" · ")}
         </p>
+      )}
+
+      {aConfirmer.length > 0 && (
+        <div className="m-0 mt-2 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          {aConfirmer.map((phrase) => (
+            <p key={phrase} className="m-0">
+              <strong className="font-semibold text-[color:var(--board-ink)]">
+                À confirmer.
+              </strong>{" "}
+              {phrase}
+            </p>
+          ))}
+          {hrefFiche && (
+            <Link
+              href={hrefFiche}
+              className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+            >
+              Répondre sur la fiche de l&apos;établissement
+            </Link>
+          )}
+        </div>
       )}
     </section>
   );

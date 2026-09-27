@@ -74,6 +74,13 @@ export type LigneEtatPermanentPdf = {
   ecritAttendu: string | null;
   /** Ce que l'employeur a déclaré, ou son absence. Jamais vide. */
   declaration: string;
+  /**
+   * Les phrases « à confirmer » que l'écran porte déjà (C45, M1), vide si
+   * rien ne retient la ligne par prudence. Cinquième champ, ajouté le
+   * 2026-09-27 : ces phrases sont calculées par le moteur, jamais écrites par
+   * le dirigeant — la fermeture du contrat, qui arrête la note libre, tient.
+   */
+  aConfirmer: string[];
 };
 
 export type BlocEtatsPermanents = {
@@ -197,6 +204,8 @@ function ligne(l: {
   mode: "etat" | "fait";
   pieceAttendue: string | null;
   declareLe: Date | null;
+  aConfirmer: string | null;
+  questionsSansReponse: readonly string[];
 }): LigneEtatPermanentPdf {
   return {
     libelle: l.obligation.libelle,
@@ -205,6 +214,10 @@ function ligne(l: {
     declaration: l.declareLe
       ? phraseDeclaration(l.mode, formatDateCourte(l.declareLe))
       : sansDeclaration(l.mode),
+    aConfirmer: [
+      ...(l.aConfirmer ? [l.aConfirmer] : []),
+      ...l.questionsSansReponse,
+    ],
   };
 }
 

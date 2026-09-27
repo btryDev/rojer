@@ -23,7 +23,8 @@ const ETAB = "etab_du_porteur";
 const { prismaMock, verifierMock, chercherMock } = vi.hoisted(() => ({
   prismaMock: {
     $on: vi.fn(),
-    etablissement: { findUnique: vi.fn() },
+    // `findFirst` : les marques « à confirmer » (`marquesAConfirmerDuDossier`), rien par défaut.
+    etablissement: { findUnique: vi.fn(), findFirst: vi.fn().mockResolvedValue(null) },
     duerp: { findFirst: vi.fn() },
     action: { findMany: vi.fn() },
     entreprise: { findUnique: vi.fn() },

@@ -16,6 +16,8 @@ export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
     "La fiche de l'établissement ne dit pas s'il comporte des locaux à sommeil pour le public : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   type_erp:
     "La fiche de l'établissement ne précise pas le type de l'établissement recevant du public : cette ligne s'affiche tant qu'il n'est pas renseigné, et peut changer ou disparaître une fois qu'il l'est.",
+  personnes_presentes:
+    "La fiche de l'établissement ne dit pas combien de personnes y sont habituellement présentes, public compris : cette ligne s'affiche tant que ce nombre n'est pas renseigné.",
   matieres_r4227_22:
     "La fiche de l'établissement ne dit pas si des matières explosives ou inflammables y sont manipulées et mises en œuvre : cette ligne s'affiche tant que la réponse n'est pas « non ».",
 };

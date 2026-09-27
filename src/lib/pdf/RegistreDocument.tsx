@@ -53,6 +53,13 @@ export type LigneVerif = {
    * produit ne peut pas soutenir, et le papier ne se corrige pas après coup.
    */
   contractuelle: boolean;
+  /**
+   * Les phrases « à confirmer » de la ligne (`matching/marques.ts`), vide si
+   * rien ne la retient par prudence. Même raison que `contractuelle` : un
+   * document remis à un tiers ne peut pas présenter comme due une ligne que
+   * seul un silence de la fiche fait exister (analyse du 2026-09-27).
+   */
+  aConfirmer: readonly string[];
 };
 
 /**
@@ -68,6 +75,8 @@ export type FichePdf = {
   titre: string;
   attendu: string;
   raisons: string[];
+  /** Les phrases « à confirmer » de la fiche, vide sinon (2026-09-27). */
+  aConfirmer: string[];
   /** L'état de remplissage, dans les mots de l'écran. */
   etat: string;
   ton: "faite" | "renvoi" | "attente" | "muet";
@@ -347,6 +356,11 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
           </Text>
         </View>
         <Text style={[s.small, { marginTop: 3 }]}>{fiche.attendu}</Text>
+        {fiche.aConfirmer.length > 0 && (
+          <Text style={[s.small, { marginTop: 3 }]}>
+            {`À confirmer. ${fiche.aConfirmer.join(" ")}`}
+          </Text>
+        )}
       </View>
 
       {/* Forme « établissement » ou « formulaire » : des questions, des
@@ -717,6 +731,11 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                       ]}
                     >
                       {MARQUAGE_CONTRACTUEL}
+                    </Text>
+                  )}
+                  {v.aConfirmer.length > 0 && (
+                    <Text style={[s.small, { marginTop: 2 }]}>
+                      {`À confirmer. ${v.aConfirmer.join(" ")}`}
                     </Text>
                   )}
                 </View>

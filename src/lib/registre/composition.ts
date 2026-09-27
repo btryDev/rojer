@@ -15,6 +15,7 @@
 //
 // Module **pur** : ni Prisma, ni React, ni horloge.
 
+import { phrasesAConfirmer } from "@/lib/matching/marques";
 import { matchTypologie } from "@/lib/matching";
 import type {
   EquipementMatching,
@@ -34,6 +35,17 @@ export type SectionDue = {
    * satisfait — jamais vide.
    */
   raisons: string[];
+  /**
+   * Les phrases « à confirmer » quand seule la prudence retient la fiche —
+   * une question de la fiche restée muette (`matching/marques.ts`). Vide
+   * sinon. Ajouté le 2026-09-27 : la fiche due par le seul silence sur les
+   * matières (R. 4227-34) se lisait comme une fiche certaine.
+   *
+   * Des phrases seulement, sans le drapeau d'effectif de `MarqueAConfirmer` :
+   * aucune section n'écrit de seuil d'effectif (`sections.ts`, vérifié le
+   * 2026-09-27), donc aucune phrase n'y renvoie à la fiche de l'entreprise.
+   */
+  aConfirmer: string[];
 };
 
 export type PartieDue = {
@@ -71,6 +83,7 @@ export function evaluerSection(
   equipements: EquipementMatching[],
 ): SectionDue | null {
   const raisons: string[] = [];
+  let aConfirmer: string[] = [];
 
   if (section.typologies) {
     // Un tableau se lit en OU : la première typologie qui matche emporte la
@@ -85,6 +98,7 @@ export function evaluerSection(
       .find((r) => r.ok);
     if (!matchee || !matchee.ok) return null;
     raisons.push(...matchee.raisons);
+    aConfirmer = phrasesAConfirmer(matchee);
   }
 
   if (section.categoriesEquipement) {
@@ -106,7 +120,7 @@ export function evaluerSection(
     raisons.push("fiche due dans tous les cas");
   }
 
-  return { section, raisons };
+  return { section, raisons, aConfirmer };
 }
 
 /**

@@ -24,7 +24,7 @@ import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
     $on: vi.fn(),
-    etablissement: { findUnique: vi.fn() },
+    etablissement: { findUnique: vi.fn(), findFirst: vi.fn() },
     duerp: { findFirst: vi.fn() },
     action: { findMany: vi.fn() },
     equipement: { findMany: vi.fn() },
@@ -71,6 +71,9 @@ beforeEach(() => {
     .mockImplementation(async (args?: { select?: Record<string, unknown> }) =>
       estRequeteDuNom(args) ? { raisonDisplay: "Le Comptoir", adresse: "1 rue des Lilas, 75011 Paris" } : null,
     );
+  // Les marques « à confirmer » (`marquesAConfirmerDuDossier`) : par défaut,
+  // rien à marquer.
+  prismaMock.etablissement.findFirst.mockReset().mockResolvedValue(null);
   prismaMock.duerp.findFirst.mockReset().mockResolvedValue(null);
   prismaMock.action.findMany.mockReset().mockResolvedValue([]);
   prismaMock.equipement.findMany.mockReset().mockResolvedValue([]);
@@ -736,5 +739,62 @@ describe("le serveur MCP nomme toutes les catégories", () => {
       "Ces libellés sont la clé en minuscules, underscores compris : c'est ce " +
         "que le repli fait déjà, et le dirigeant n'y lit pas un objet.",
     ).toEqual([]);
+  });
+});
+
+describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", () => {
+  // Analyse du 2026-09-27, § 6.3 : le MCP restituait comme due une ligne que
+  // seul le silence de la fiche fait exister. Éprouvé en retirant la clause
+  // `à confirmer` de `formaterVerifications` : ce test rougit.
+  const bureauMuet = {
+    id: ETABLISSEMENT_ID,
+    effectifSurSite: 3,
+    estEtablissementTravail: true,
+    estERP: false,
+    estIGH: false,
+    estHabitation: false,
+    typeErp: null,
+    categorieErp: null,
+    classeIgh: null,
+    familleHabitation: null,
+    personnesPresentesHabituellement: null,
+    manipuleMatieresR422722: null,
+    comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
+    entreprise: { effectif: 3 },
+    equipements: [],
+  };
+  const ligneExercice = {
+    obligationId: "incendie-travail-exercice-semestriel",
+    libelleObligation: "Essais du matériel et exercices d'évacuation semestriels",
+    periodicite: "semestrielle",
+    datePrevue: jour("2026-09-01"),
+    archiveLe: null,
+    statut: "planifiee",
+    equipement: null,
+    prescription: null,
+    salarieId: null,
+    rapports: [],
+  };
+
+  it("muet sur les matières : la ligne porte « à confirmer » et la phrase", async () => {
+    prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
+    prismaMock.verification.findMany.mockResolvedValue([ligneExercice]);
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("à confirmer : La fiche de l'établissement ne dit pas si des matières");
+    // La lecture porte la portée du jeton.
+    expect(prismaMock.etablissement.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: ETABLISSEMENT_ID } }),
+    );
+  });
+
+  it("« non » déclaré : plus de marque", async () => {
+    prismaMock.etablissement.findFirst.mockResolvedValue({
+      ...bureauMuet,
+      manipuleMatieresR422722: false,
+    });
+    prismaMock.verification.findMany.mockResolvedValue([ligneExercice]);
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).not.toContain("à confirmer");
   });
 });

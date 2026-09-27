@@ -6,6 +6,10 @@ import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
+import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
+import { requireUser } from "@/lib/auth/require-user";
+import { prisma } from "@/lib/prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
   aUnRendezVous,
@@ -136,6 +140,7 @@ function LigneEcheance({
   titre,
   meta,
   contractuelle,
+  aConfirmer = [],
   pastille,
   registre,
 }: {
@@ -162,6 +167,13 @@ function LigneEcheance({
    * exactement là où il compte.
    */
   contractuelle?: boolean;
+  /**
+   * Les phrases « à confirmer » de la ligne (`matching/marques.ts`) : la
+   * fiche ne dit pas, et c'est ce silence qui la retient. Vide sinon. Même
+   * raison que `contractuelle` d'être un champ et pas un morceau de `meta` :
+   * `meta` est tronqué.
+   */
+  aConfirmer?: readonly string[];
   pastille: React.ReactNode;
   registre: RegistreLigne;
 }) {
@@ -209,6 +221,7 @@ function LigneEcheance({
         <p className="m-0 flex items-baseline gap-2 text-[14.5px] font-semibold leading-[1.3] tracking-[-0.015em] text-[color:var(--board-ink)]">
           <span className="min-w-0 truncate">{titre}</span>
           {contractuelle && <MentionContractuelle />}
+          <MentionAConfirmer phrases={aConfirmer} />
         </p>
         {/* Nature puis complément. Le mot est visible : une icône seule
             disparaît en niveaux de gris et pour qui n'y voit pas. */}
@@ -283,6 +296,7 @@ export default async function CalendrierPage({
     equipementsTous,
     motifsSansEcheance,
     verifsDuLieu,
+    marquesAConfirmer,
   ] = await Promise.all([
       listerVerifications(id, {
         domaine: filtreDomaine,
@@ -309,6 +323,16 @@ export default async function CalendrierPage({
       // domaines sauf celui qu'on vient de choisir. Dans le même
       // `Promise.all`, donc sans allonger le rendu.
       listerVerifications(id, { batimentId: filtreBatiment }),
+      // Les lignes retenues par prudence, qui le disent (analyse du
+      // 2026-09-27, § 6.3). Calculées au rendu, par le moteur, comme l'écran
+      // des états permanents : la ligne persistée ne porte pas la marque, et
+      // une réponse donnée sur la fiche doit la lever sans régénération.
+      requireUser().then((user) =>
+        marquesAConfirmerDuDossier(prisma, {
+          id,
+          entreprise: { userId: user.id },
+        }),
+      ),
     ]);
   const aujourdhui = new Date();
   // La lecture par équipement suit le même bâtiment que le reste.
@@ -1024,7 +1048,9 @@ export default async function CalendrierPage({
             savoir quoi faire, y taire une obligation écartée aurait été
             grave. Cet axe est parti avec sa cause : la ligne est désormais
             servie « à confirmer » au lieu d'être retirée, donc elle est là,
-            sous les yeux, et un bandeau qui annoncerait son absence
+            sous les yeux [2026-09-27 : « servie à confirmer » était faux
+            jusqu'à ce jour — la ligne était là, mais rien ne la marquait.
+            Elle porte désormais `MentionAConfirmer`], et un bandeau qui annoncerait son absence
             au-dessus d'elle dirait le contraire de ce que la page montre.
             Ce que l'outil ne couvre pas se lit sur « Ce que Rojer ne couvre
             pas » et en tête du registre de sécurité. */}
@@ -1208,6 +1234,11 @@ export default async function CalendrierPage({
                                 (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "")
                               }
                               contractuelle={estEcheanceContractuelle(v)}
+                              aConfirmer={
+                                marquesAConfirmer.parObligation.get(
+                                  v.obligationId,
+                                )?.phrases ?? []
+                              }
                               pastille={
                                 // Trois lectures, trois pastilles (ADR-034) :
                                 // le rendez-vous suivant est « planifié », le
