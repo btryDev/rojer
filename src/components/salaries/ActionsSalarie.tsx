@@ -14,8 +14,8 @@ import { basculerActif, retirerTitre } from "@/lib/salaries/actions";
  * 2026-09-27) ; que la sortie garde les données est une question posée à la
  * propriétaire. Supprimer la fiche emporterait ses titres en cascade.
  *
- * Le geste est donc réversible, et la confirmation dit ce qui se passe
- * vraiment plutôt que d'agiter un avertissement.
+ * Le geste est donc réversible, et sans confirmation (relevé le 2026-09-27,
+ * revue finale ; `docs/rgpd.md` § 4.3 le dit).
  */
 export function BasculerEffectif({
   etablissementId,

@@ -3441,191 +3441,6 @@ garde PE 4 rouge, reçu `["cuisson-erp-verification-initiale"]`, 1 failed |
 `× ne pose le groupe électrogène qu'en ERP…`, 1 failed | 10 passed. Fichiers
 restaurés après chacune.
 
-### C43 · 2026-09-27 — Vigilance : les six mois partent de la remise de l'attestation (B2)
-
-*Base : production `8bb6b0b`, branche `lot/vigilance-date-attestation`.
-Décision B2 du fichier `docs/revues/decisions-en-attente-2026-09-20.md`,
-option (b), décidée par la propriétaire le 2026-09-27 (priorité). Une
-migration additive ; aucun référentiel, aucun moteur touchés.*
-
-**Relu sur Légifrance le 2026-09-27**, sur sa page propre
-(`LEGIARTI000046078939`, en vigueur depuis le 01/01/2023, décret
-n° 2022-1015 du 19 juillet 2022, art. 9) — structure d'abord, puis
-confirmation ciblée : `D. 8222-5` fait se faire remettre les pièces « lors de
-la conclusion et tous les six mois jusqu'à la fin de son exécution », et le 1°
-exige une attestation « datant de moins de six mois dont elle s'assure de
-l'authenticité ». ~~Deux dates comptent donc : la **remise**, d'où part la
-suivante, et l'**émission**, qui doit précéder la remise de moins de six
-mois.~~ *[Corrigé à la contre-lecture du 2026-09-27 : c'était une lecture
-présentée comme le texte.]* **Ce que dit le texte** : une grille calée sur la
-**conclusion** du contrat, puis « tous les six mois » ; une attestation
-« datant de moins de six mois », sans nommer l'instant où l'on mesure.
-**Lecture retenue par Rojer** : la suivante part de la dernière **remise**
-saisie, et l'ancienneté de l'attestation (son **émission**) se mesure à la
-remise. **Prudence** : aussi prudente que la grille tant que les remises
-arrivent à l'heure ou en avance (une remise en avance fait redemander plus
-tôt) ; **pas prudente pour une remise tardive** — remise à conclusion +
-7 mois, Rojer attend la suivante à + 13 mois quand la grille dit + 12 : la
-grille se décale d'autant, et la date de conclusion n'est pas au modèle. Et
-mesurer l'ancienneté à la remise n'est pas la lecture la plus stricte (« moins
-de six mois » à tout instant ferait redemander à émission + six mois). La
-fiche le dit en clair ; modèle inchangé, remonté à la propriétaire par la
-coordination. `D. 8222-7` (étranger, en vigueur depuis le 01/01/2012) : même rythme
-(« lors de la conclusion du contrat et tous les six mois »), pièces
-différentes, hors du modèle — non encodé. Texte identique au `citationCle` du
-corpus ; `motif` et `bloquePar` de `D. 8222-5` corrigés (ils décrivaient
-l'ancrage sur `updatedAt` comme actuel).
-
-**Constat → avant / après.**
-
-- **Modèle.** Avant : aucune date de remise ni d'émission ; la borne
-  semestrielle partait de `prestataire.updatedAt`. Après :
-  `Prestataire.attestationUrssafRemiseLe` et `attestationUrssafEmiseLe`,
-  `DateTime?`. Migration `20260927130000_prestataire_dates_attestation_vigilance` :
-  deux `ALTER TABLE "Prestataire" ADD COLUMN … TIMESTAMP(3)`, sans défaut ni
-  remplissage — aucune date existante ne dit quand une pièce a été remise.
-- **Calcul** (`prestataires/vigilance.ts`). L'échéance est la plus proche
-  entre la validité saisie et remise + six mois (`echeanceAttestationUrssaf`,
-  partagée avec le calendrier). Émission six mois pile ou plus avant la
-  remise : « À redemander » (six mois pile n'est pas « moins de six mois »).
-  Remise ou émission vide : « Date non renseignée », ardoise, **jamais « à
-  jour »**. `updatedAt` ne sert plus qu'à AGGRAVER : remise vide et rien
-  déposé depuis plus de six mois ⇒ « À redemander » (rose) — `updatedAt` est
-  postérieur à tout dépôt, la déduction ne tient que dans ce sens.
-- **Écrans.** Avant, sur la fiche : « Rojer n'enregistre pas la date à
-  laquelle vous avez reçu l'attestation : il compte les six mois depuis la
-  dernière modification de cette fiche… », et sous la pastille « Échéance
-  comptée depuis la dernière modification de la fiche… ». Après : la phrase
-  est retirée ; la pastille dit « Date non renseignée » + « Dates de remise
-  et d'émission non renseignées. À saisir sur la fiche du prestataire. », ou,
-  datée, « Expire dans 22 j » + « Remise le 01 mars 2026, émise le 20 février
-  2026. Remise suivante le 01 septembre 2026 : Rojer compte six mois depuis
-  la dernière remise (art. D. 8222-5 : « tous les six mois »). » *(texte
-  repris à la contre-lecture : l'attribution au texte seul est retirée)*.
-  Sous le rappel des deux citations, la fiche ajoute : « Le texte part de la
-  conclusion du contrat, dont Rojer n'enregistre pas la date. Rojer compte six
-  mois depuis la dernière remise saisie, et mesure l'ancienneté de
-  l'attestation à sa remise. Une remise tardive décale donc d'autant la date
-  suivante. » Deux champs « Remise le » / « Émise le » à la création et un
-  formulaire sur la fiche (`enregistrerDatesAttestation`, n'écrit que ces deux
-  colonnes) ; refusés : date future, émission après la remise ; admise (et
-  montrée) : émission ancienne. Le tableau de bord compte sur
-  `etatLePlusGrave`, comme l'annuaire.
-- **ZIP de contrôle.** README, sous `Prestataires/` : « - Alpha : remise le
-  01/03/2026 ; émise le 20/02/2026 », ou « date de remise non renseignée ;
-  date d'émission non renseignée », ou « aucune attestation de vigilance au
-  dossier » ; `Prestataires/<raison>/Dates_attestation_vigilance.txt` porte
-  « Attestation URSSAF (art. D. 8222-5) — <raison> : … », et n'est écrit que
-  si une attestation est au dossier (~~« - attestation : … »~~, corrigé à la
-  contre-lecture).
-- **Calendrier.** ~~L'attestation y est datée par la même règle~~ : il ne
-  lisait que l'échéance, et disait « ok » au 1er mars 2027 d'une pièce « À
-  redemander », rien d'une pièce « à dater » (contre-lecture). Il lit
-  désormais LE statut de la fiche (`vigilanceUrssaf`, partagée) : « ok » pour
-  « à jour » et « expire bientôt », « alerte » pour le reste — y compris « à
-  dater », ardoise sur la fiche mais le calendrier n'a que deux tons ; entrée
-  « date(s) … non renseignée(s) » posée à aujourd'hui.
-
-**Éprouvées, chacune cassée puis restaurée** : `updatedAt` réinjecté comme
-source (9 rouges dont « une retouche de la fiche ne déplace plus
-l'échéance ») ; dates vides rendues « à jour » (6 rouges) ; six mois pile
-accepté (1) ; repli `updatedAt` retiré (1) ; `mentionUrssaf` retirée de la
-carte (balayage, 1) ; palliatif remis sur la fiche, coupé en fin de ligne
-(1 — la première version du balayage le laissait passer, blancs désormais
-écrasés) ; validation émission > remise retirée (2) ; calendrier rendu à la
-seule validité (1) ; `NOT NULL DEFAULT` dans la migration (2) ; champ rendu
-obligatoire au schéma (1) ; « Valide … j de plus » réaffiché sur une pièce
-à dater (1).
-
-**Ce qui reste** : la vérification d'authenticité auprès de l'URSSAF et les
-quatre pièces au choix du 2° ne sont servies par rien (inchangé). Une fiche
-existante reste « Date non renseignée » tant que le dirigeant ne saisit pas
-les dates : c'est voulu. **Au déploiement**, aucune fiche ne porte ces dates :
-toute fiche avec une attestation au dossier passe au moins en « Date non
-renseignée », et toute fiche avec une attestation et **non modifiée depuis
-plus de six mois** passe en « À redemander » (rose) ; le compteur « en alerte »
-du tableau de bord monte d'autant. ~~Au calendrier, chacune de ces
-attestations devient une entrée en alerte, comptée dans les retards de la
-famille « papiers ».~~ *[Corrigé le 2026-09-27, décision de la coordination :
-une date absente n'est pas un retard.]* Au calendrier, une attestation « à
-dater » est une entrée en ton alerte (un geste est dû, jamais « ok »),
-d'origine « date(s) … non renseignée(s) », marquée `sansEcheance` : **le
-compteur de retards ne monte pas pour les dates absentes** — ni `repartirRetards`
-(barre latérale, bandeau du calendrier, tableau de bord), ni le « sous 30 j »,
-ni la règle annuelle (comptée « sans date »), ni le pli d'un mois, ni le
-filtre « en retard seulement », ni la grille, la frise ou la météo, qui ne la
-posent sur aucun jour. La liste du calendrier la montre sans date, pastille
-ardoise « Date non renseignée ». La barre latérale compte toujours le
-prestataire, mais ne rougit que pour une pièce en retard ; « Préparer un
-contrôle » dit « N prestataire(s) avec une pièce non fournie ou une date non
-renseignée », état « à planifier », au lieu de « … expirées ou expirant » en
-« en retard ». Seule « À redemander » (rien déposé depuis plus de six mois,
-ou émission hors délai) monte le compteur de retards.
-
-**« Rien déposé depuis plus de six mois » est-il un retard constaté ?** Oui,
-dans la mesure où le code peut l'affirmer. `updatedAt` est postérieur à toute
-écriture sur la fiche, et la pièce n'est déposée qu'à la création (aucun
-chemin de redépôt) ; la remise physique précède le dépôt. Donc la pièce au
-dossier a été remise il y a plus de six mois. Et c'est vrai QUELLE QUE SOIT la
-lecture : toute fenêtre de plus de six mois contient au moins une date de la
-grille calée sur la conclusion, si bien qu'une remise était due depuis celle
-du dossier — que l'on compte depuis la remise (lecture de Rojer) ou depuis la
-conclusion. Ce que le code ne sait pas, et qu'il ne sait pas non plus pour
-« expirée » : si le contrat court encore (« jusqu'à la fin de son
-exécution »), s'il atteint 5 000 € HT (`R. 8222-1`), et si une attestation plus
-récente a été reçue sans être déposée. Le retard est donc constaté **sur le
-dossier que Rojer tient**, au même titre qu'une attestation expirée ; compté.
-
-**Contre-lecture de `16531b7` (2026-09-27), et ses corrections.** Sans point
-grave. M1 : « Valide 155 j de plus » ne s'affiche plus à côté de « À
-redemander » (émission hors délai). M2 : le calendrier lit le statut de la
-fiche (`vigilanceUrssaf`, `tonDuStatutPiece`) ; un test fixe l'accord statut
-par statut, et exige que chaque statut de `REGISTRE_DU_STATUT` y soit
-confronté. M3 : l'ancrage sur la remise et la mesure à la remise sont dites
-comme une lecture (ci-dessus, au corpus, sur la fiche, dans la mention de la
-pastille). F4 : une saisie « 2026-13-45 », « 2026-02-30 », « abc » ou
-« 20260801 » rend une erreur de champ ; avant, « 2026-02-30 » devenait le
-1er mars, « abc » levait `RangeError: Invalid time value` (zod 4 déroule le
-raffinement de l'objet malgré l'échec d'un champ). F5 : ci-dessus. F7 : le
-libellé du fichier du ZIP.
-
-**Éprouvées, chacune cassée puis restaurée** : M1 remis à « true » →
-`× émission hors délai : « À redemander », sans « Valide … j de plus »`
-(1 failed | 3 passed) ; M2, ton recalculé par la date seule → `× a_dater`,
-`× a_dater_depot_ancien`, `× emission_hors_delai` (3 failed | 46 passed) ;
-M2, entrée « à dater » tue → `× a_dater : même verdict des deux côtés`
-(1 failed | 48 passed) ; F4, contrôle de date réelle retiré → « 2026-02-30:
-expected true to be false » (1 failed | 39 passed) ; F4, garde `instanceof
-Date` retirée → `RangeError: Invalid time value` (1 failed | 39 passed) ;
-F7, absence d'attestation ignorée au README (1 failed | 20 passed). Trois de
-ces runs ont d'abord figé sous `--maxWorkers=2`, la machine étant chargée
-par des vitest d'autres sessions (non touchés) ; rejoués seuls en
-`--maxWorkers=1`.
-
-### Ce que la chronologie donne à voir
-
-1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
-   nuit du 26 : ~40 constats, deux fondements corrigés. Le lot D3 : quatre
-   familles fondées, zéro encodée. Ce n'est pas une négligence — c'est
-   presque toujours une cause nommée (un porteur qui n'existe pas, un attribut
-   que le formulaire ne pose pas, une valeur absente d'une énumération). Mais
-   la cause est écrite dans un commit, et le constat meurt avec.
-2. **Ce qui est appliqué est ce qui ne demande pas de lecture.** URL,
-   identifiants, ordres de références. Tout ce qui suppose de rouvrir un
-   article attend.
-3. **Le même article est mis en cause quatre fois en onze jours** (`L. 4711-5`,
-   les 20, 26, 28 et 31 août) sans qu'aucun passage sache des autres.
-4. **Une lecture d'agent non recoupée se trompe souvent** : 2 sur 11 accusations
-   tenaient le 27 août ; 3 sur 6 « faux négatifs » du brief du 31 n'en étaient
-   pas ; 3 références de brief sur 4 étaient fausses au lot 8. Le dispositif
-   qui rattrape cela — briefs contredits, contre-vérification indépendante,
-   agents qui refusent — fonctionne, et c'est la meilleure nouvelle du dossier.
-5. **Les instruments ont été construits, et ils sont bons.** Corpus, clé
-   d'article, `versionConstatee`, `relectureDue`, `lecture`,
-   `obligation_manquante`, `reserve`, `pnpm veille`, `pnpm relecture`,
-   `urls-legifrance.test.ts`. Ce qui manquait n'était pas l'outillage : c'était
-   le fil de l'histoire.
-
 ### C42 · 2026-09-27 — E8 tranchée : l'audit des quatorze titres ; l'article sous chaque état permanent, et son widget
 
 *Base : production `8bb6b0b`, branche `lot/e8-titres-et-widget-etats`. Ni
@@ -3841,6 +3656,191 @@ tableau de bord ; ancien texte vide ; échec de lecture rendu comme liste
 vide — douze rouges, fichiers restaurés.
 
 ---
+
+### C43 · 2026-09-27 — Vigilance : les six mois partent de la remise de l'attestation (B2)
+
+*Base : production `8bb6b0b`, branche `lot/vigilance-date-attestation`.
+Décision B2 du fichier `docs/revues/decisions-en-attente-2026-09-20.md`,
+option (b), décidée par la propriétaire le 2026-09-27 (priorité). Une
+migration additive ; aucun référentiel, aucun moteur touchés.*
+
+**Relu sur Légifrance le 2026-09-27**, sur sa page propre
+(`LEGIARTI000046078939`, en vigueur depuis le 01/01/2023, décret
+n° 2022-1015 du 19 juillet 2022, art. 9) — structure d'abord, puis
+confirmation ciblée : `D. 8222-5` fait se faire remettre les pièces « lors de
+la conclusion et tous les six mois jusqu'à la fin de son exécution », et le 1°
+exige une attestation « datant de moins de six mois dont elle s'assure de
+l'authenticité ». ~~Deux dates comptent donc : la **remise**, d'où part la
+suivante, et l'**émission**, qui doit précéder la remise de moins de six
+mois.~~ *[Corrigé à la contre-lecture du 2026-09-27 : c'était une lecture
+présentée comme le texte.]* **Ce que dit le texte** : une grille calée sur la
+**conclusion** du contrat, puis « tous les six mois » ; une attestation
+« datant de moins de six mois », sans nommer l'instant où l'on mesure.
+**Lecture retenue par Rojer** : la suivante part de la dernière **remise**
+saisie, et l'ancienneté de l'attestation (son **émission**) se mesure à la
+remise. **Prudence** : aussi prudente que la grille tant que les remises
+arrivent à l'heure ou en avance (une remise en avance fait redemander plus
+tôt) ; **pas prudente pour une remise tardive** — remise à conclusion +
+7 mois, Rojer attend la suivante à + 13 mois quand la grille dit + 12 : la
+grille se décale d'autant, et la date de conclusion n'est pas au modèle. Et
+mesurer l'ancienneté à la remise n'est pas la lecture la plus stricte (« moins
+de six mois » à tout instant ferait redemander à émission + six mois). La
+fiche le dit en clair ; modèle inchangé, remonté à la propriétaire par la
+coordination. `D. 8222-7` (étranger, en vigueur depuis le 01/01/2012) : même rythme
+(« lors de la conclusion du contrat et tous les six mois »), pièces
+différentes, hors du modèle — non encodé. Texte identique au `citationCle` du
+corpus ; `motif` et `bloquePar` de `D. 8222-5` corrigés (ils décrivaient
+l'ancrage sur `updatedAt` comme actuel).
+
+**Constat → avant / après.**
+
+- **Modèle.** Avant : aucune date de remise ni d'émission ; la borne
+  semestrielle partait de `prestataire.updatedAt`. Après :
+  `Prestataire.attestationUrssafRemiseLe` et `attestationUrssafEmiseLe`,
+  `DateTime?`. Migration `20260927130000_prestataire_dates_attestation_vigilance` :
+  deux `ALTER TABLE "Prestataire" ADD COLUMN … TIMESTAMP(3)`, sans défaut ni
+  remplissage — aucune date existante ne dit quand une pièce a été remise.
+- **Calcul** (`prestataires/vigilance.ts`). L'échéance est la plus proche
+  entre la validité saisie et remise + six mois (`echeanceAttestationUrssaf`,
+  partagée avec le calendrier). Émission six mois pile ou plus avant la
+  remise : « À redemander » (six mois pile n'est pas « moins de six mois »).
+  Remise ou émission vide : « Date non renseignée », ardoise, **jamais « à
+  jour »**. `updatedAt` ne sert plus qu'à AGGRAVER : remise vide et rien
+  déposé depuis plus de six mois ⇒ « À redemander » (rose) — `updatedAt` est
+  postérieur à tout dépôt, la déduction ne tient que dans ce sens.
+- **Écrans.** Avant, sur la fiche : « Rojer n'enregistre pas la date à
+  laquelle vous avez reçu l'attestation : il compte les six mois depuis la
+  dernière modification de cette fiche… », et sous la pastille « Échéance
+  comptée depuis la dernière modification de la fiche… ». Après : la phrase
+  est retirée ; la pastille dit « Date non renseignée » + « Dates de remise
+  et d'émission non renseignées. À saisir sur la fiche du prestataire. », ou,
+  datée, « Expire dans 22 j » + « Remise le 01 mars 2026, émise le 20 février
+  2026. Remise suivante le 01 septembre 2026 : Rojer compte six mois depuis
+  la dernière remise (art. D. 8222-5 : « tous les six mois »). » *(texte
+  repris à la contre-lecture : l'attribution au texte seul est retirée)*.
+  Sous le rappel des deux citations, la fiche ajoute : « Le texte part de la
+  conclusion du contrat, dont Rojer n'enregistre pas la date. Rojer compte six
+  mois depuis la dernière remise saisie, et mesure l'ancienneté de
+  l'attestation à sa remise. Une remise tardive décale donc d'autant la date
+  suivante. » Deux champs « Remise le » / « Émise le » à la création et un
+  formulaire sur la fiche (`enregistrerDatesAttestation`, n'écrit que ces deux
+  colonnes) ; refusés : date future, émission après la remise ; admise (et
+  montrée) : émission ancienne. Le tableau de bord compte sur
+  `etatLePlusGrave`, comme l'annuaire.
+- **ZIP de contrôle.** README, sous `Prestataires/` : « - Alpha : remise le
+  01/03/2026 ; émise le 20/02/2026 », ou « date de remise non renseignée ;
+  date d'émission non renseignée », ou « aucune attestation de vigilance au
+  dossier » ; `Prestataires/<raison>/Dates_attestation_vigilance.txt` porte
+  « Attestation URSSAF (art. D. 8222-5) — <raison> : … », et n'est écrit que
+  si une attestation est au dossier (~~« - attestation : … »~~, corrigé à la
+  contre-lecture).
+- **Calendrier.** ~~L'attestation y est datée par la même règle~~ : il ne
+  lisait que l'échéance, et disait « ok » au 1er mars 2027 d'une pièce « À
+  redemander », rien d'une pièce « à dater » (contre-lecture). Il lit
+  désormais LE statut de la fiche (`vigilanceUrssaf`, partagée) : « ok » pour
+  « à jour » et « expire bientôt », « alerte » pour le reste — y compris « à
+  dater », ardoise sur la fiche mais le calendrier n'a que deux tons ; entrée
+  « date(s) … non renseignée(s) » posée à aujourd'hui.
+
+**Éprouvées, chacune cassée puis restaurée** : `updatedAt` réinjecté comme
+source (9 rouges dont « une retouche de la fiche ne déplace plus
+l'échéance ») ; dates vides rendues « à jour » (6 rouges) ; six mois pile
+accepté (1) ; repli `updatedAt` retiré (1) ; `mentionUrssaf` retirée de la
+carte (balayage, 1) ; palliatif remis sur la fiche, coupé en fin de ligne
+(1 — la première version du balayage le laissait passer, blancs désormais
+écrasés) ; validation émission > remise retirée (2) ; calendrier rendu à la
+seule validité (1) ; `NOT NULL DEFAULT` dans la migration (2) ; champ rendu
+obligatoire au schéma (1) ; « Valide … j de plus » réaffiché sur une pièce
+à dater (1).
+
+**Ce qui reste** : la vérification d'authenticité auprès de l'URSSAF et les
+quatre pièces au choix du 2° ne sont servies par rien (inchangé). Une fiche
+existante reste « Date non renseignée » tant que le dirigeant ne saisit pas
+les dates : c'est voulu. **Au déploiement**, aucune fiche ne porte ces dates :
+toute fiche avec une attestation au dossier passe au moins en « Date non
+renseignée », et toute fiche avec une attestation et **non modifiée depuis
+plus de six mois** passe en « À redemander » (rose) ; le compteur « en alerte »
+du tableau de bord monte d'autant. ~~Au calendrier, chacune de ces
+attestations devient une entrée en alerte, comptée dans les retards de la
+famille « papiers ».~~ *[Corrigé le 2026-09-27, décision de la coordination :
+une date absente n'est pas un retard.]* Au calendrier, une attestation « à
+dater » est une entrée en ton alerte (un geste est dû, jamais « ok »),
+d'origine « date(s) … non renseignée(s) », marquée `sansEcheance` : **le
+compteur de retards ne monte pas pour les dates absentes** — ni `repartirRetards`
+(barre latérale, bandeau du calendrier, tableau de bord), ni le « sous 30 j »,
+ni la règle annuelle (comptée « sans date »), ni le pli d'un mois, ni le
+filtre « en retard seulement », ni la grille, la frise ou la météo, qui ne la
+posent sur aucun jour. La liste du calendrier la montre sans date, pastille
+ardoise « Date non renseignée ». La barre latérale compte toujours le
+prestataire, mais ne rougit que pour une pièce en retard ; « Préparer un
+contrôle » dit « N prestataire(s) avec une pièce non fournie ou une date non
+renseignée », état « à planifier », au lieu de « … expirées ou expirant » en
+« en retard ». Seule « À redemander » (rien déposé depuis plus de six mois,
+ou émission hors délai) monte le compteur de retards.
+
+**« Rien déposé depuis plus de six mois » est-il un retard constaté ?** Oui,
+dans la mesure où le code peut l'affirmer. `updatedAt` est postérieur à toute
+écriture sur la fiche, et la pièce n'est déposée qu'à la création (aucun
+chemin de redépôt) ; la remise physique précède le dépôt. Donc la pièce au
+dossier a été remise il y a plus de six mois. Et c'est vrai QUELLE QUE SOIT la
+lecture : toute fenêtre de plus de six mois contient au moins une date de la
+grille calée sur la conclusion, si bien qu'une remise était due depuis celle
+du dossier — que l'on compte depuis la remise (lecture de Rojer) ou depuis la
+conclusion. Ce que le code ne sait pas, et qu'il ne sait pas non plus pour
+« expirée » : si le contrat court encore (« jusqu'à la fin de son
+exécution »), s'il atteint 5 000 € HT (`R. 8222-1`), et si une attestation plus
+récente a été reçue sans être déposée. Le retard est donc constaté **sur le
+dossier que Rojer tient**, au même titre qu'une attestation expirée ; compté.
+
+**Contre-lecture de `16531b7` (2026-09-27), et ses corrections.** Sans point
+grave. M1 : « Valide 155 j de plus » ne s'affiche plus à côté de « À
+redemander » (émission hors délai). M2 : le calendrier lit le statut de la
+fiche (`vigilanceUrssaf`, `tonDuStatutPiece`) ; un test fixe l'accord statut
+par statut, et exige que chaque statut de `REGISTRE_DU_STATUT` y soit
+confronté. M3 : l'ancrage sur la remise et la mesure à la remise sont dites
+comme une lecture (ci-dessus, au corpus, sur la fiche, dans la mention de la
+pastille). F4 : une saisie « 2026-13-45 », « 2026-02-30 », « abc » ou
+« 20260801 » rend une erreur de champ ; avant, « 2026-02-30 » devenait le
+1er mars, « abc » levait `RangeError: Invalid time value` (zod 4 déroule le
+raffinement de l'objet malgré l'échec d'un champ). F5 : ci-dessus. F7 : le
+libellé du fichier du ZIP.
+
+**Éprouvées, chacune cassée puis restaurée** : M1 remis à « true » →
+`× émission hors délai : « À redemander », sans « Valide … j de plus »`
+(1 failed | 3 passed) ; M2, ton recalculé par la date seule → `× a_dater`,
+`× a_dater_depot_ancien`, `× emission_hors_delai` (3 failed | 46 passed) ;
+M2, entrée « à dater » tue → `× a_dater : même verdict des deux côtés`
+(1 failed | 48 passed) ; F4, contrôle de date réelle retiré → « 2026-02-30:
+expected true to be false » (1 failed | 39 passed) ; F4, garde `instanceof
+Date` retirée → `RangeError: Invalid time value` (1 failed | 39 passed) ;
+F7, absence d'attestation ignorée au README (1 failed | 20 passed). Trois de
+ces runs ont d'abord figé sous `--maxWorkers=2`, la machine étant chargée
+par des vitest d'autres sessions (non touchés) ; rejoués seuls en
+`--maxWorkers=1`.
+
+### Ce que la chronologie donne à voir
+
+1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
+   nuit du 26 : ~40 constats, deux fondements corrigés. Le lot D3 : quatre
+   familles fondées, zéro encodée. Ce n'est pas une négligence — c'est
+   presque toujours une cause nommée (un porteur qui n'existe pas, un attribut
+   que le formulaire ne pose pas, une valeur absente d'une énumération). Mais
+   la cause est écrite dans un commit, et le constat meurt avec.
+2. **Ce qui est appliqué est ce qui ne demande pas de lecture.** URL,
+   identifiants, ordres de références. Tout ce qui suppose de rouvrir un
+   article attend.
+3. **Le même article est mis en cause quatre fois en onze jours** (`L. 4711-5`,
+   les 20, 26, 28 et 31 août) sans qu'aucun passage sache des autres.
+4. **Une lecture d'agent non recoupée se trompe souvent** : 2 sur 11 accusations
+   tenaient le 27 août ; 3 sur 6 « faux négatifs » du brief du 31 n'en étaient
+   pas ; 3 références de brief sur 4 étaient fausses au lot 8. Le dispositif
+   qui rattrape cela — briefs contredits, contre-vérification indépendante,
+   agents qui refusent — fonctionne, et c'est la meilleure nouvelle du dossier.
+5. **Les instruments ont été construits, et ils sont bons.** Corpus, clé
+   d'article, `versionConstatee`, `relectureDue`, `lecture`,
+   `obligation_manquante`, `reserve`, `pnpm veille`, `pnpm relecture`,
+   `urls-legifrance.test.ts`. Ce qui manquait n'était pas l'outillage : c'était
+   le fil de l'histoire.
 
 ## Partie 2 — Registre des constats en suspens
 

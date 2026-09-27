@@ -16,8 +16,12 @@
 -- lignes chez tout ERP ayant enregistré son installation électrique par le
 -- formulaire. On retire donc la clé quand elle vaut `false` : elle redevient
 -- « pas encore répondu ». Un `false` écrit APRÈS ce lot est un « Non » choisi
--- dans le menu, et n'est pas concerné — cette migration ne s'exécute qu'une
--- fois, au déploiement qui met le menu en ligne.
+-- dans le menu, et n'est pas concerné. Elle s'exécute une fois, pendant le
+-- build Vercel (`prisma migrate deploy`), donc AVANT la bascule : un
+-- enregistrement fait par l'ancien code pendant le build réécrirait un `false`
+-- qui se lirait ensuite comme un « Non ». Fenêtre courte, données de
+-- production fictives au 2026-09-27 (dit par la propriétaire) ; à rejouer à
+-- la main, borné à l'heure de bascule, si de vraies données existaient.
 --
 -- CE QUI N'EST PAS TOUCHÉ. `true` (case cochée : une réponse). Les autres
 -- clés du JSON. Toutes catégories confondues : hors installation électrique,
