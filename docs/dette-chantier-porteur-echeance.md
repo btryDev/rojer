@@ -167,7 +167,10 @@ pas « non ».
 **Deux attributs d'établissement faisaient l'inverse**, et étaient recensés dans
 l'ADR :
 
-- `manipuleMatieresR422722` — absent, lu « non ». **Reste.**
+- ~~`manipuleMatieresR422722` — absent, lu « non ». **Reste.**~~ **Corrigé le
+  2026-09-27** (`e6b0fb6`, `0d94de1`) : son silence retirait R. 4227-37 et -39 au
+  travail seul sous le seuil depuis le 2026-09-03 ; il retient désormais « à
+  confirmer ». Posé à la création depuis `ec9917c`.
 - `personnesPresentesHabituellement` — absent, retombant sur `effectifSurSite`.
   **Corrigé le 2026-09-03** : le nombre manquant n'est plus remplacé, il est
   borné par le bas (catégorie d'ERP, puis effectif salarié), et l'obligation est

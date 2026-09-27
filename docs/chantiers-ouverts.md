@@ -29,10 +29,13 @@ l'établissement de travail seul où l'effectif EST le total. L'axe `public_recu
 de la couverture est parti avec sa cause, et `matching/public-recu.ts` avec lui.
 
 **Ce qui reste est le second attribut**, que l'ADR-022 recensait avec le
-premier : `manipuleMatieresR422722` absent est lu « non ». Il ne retire rien
+premier : ~~`manipuleMatieresR422722` absent est lu « non ». Il ne retire rien
 aujourd'hui — sa branche n'ajoute des cas qu'à un champ déjà ouvert par le seuil
 de personnes présentes. Il en retirerait le jour où une obligation s'appuierait
-sur cette branche seule, et le corpus dit lequel :
+sur cette branche seule~~ [2026-09-27 : faux depuis le 2026-09-03, corrigé — le
+silence retient « à confirmer » (`e6b0fb6`, `0d94de1`) et la question est posée à la
+création (`ec9917c`). Ce qui suit reste OUVERT : le champ de la question,
+manipulation contre entreposage], et le corpus dit lequel :
 `code-travail-matieres-inflammables.ts` a relevé le 2026-09-02 que `R. 4227-22`
 oblige sans condition d'effectif ni d'équipement, qu'il vise « entreposées OU
 manipulées » là où l'attribut ne demande que la manipulation, et que deux états
@@ -818,8 +821,10 @@ par une autre : dès la 3ᵉ catégorie d'ERP, le public dépasse 301, donc les 
 > portent à 51), réponse due, exigée aussi par le schéma de la fiche. Le moteur
 > n'a pas changé (version 4, empreinte re-relevée pour une extraction). Reste
 > ouvert : les dossiers anciens restés muets gardent leur « à confirmer »
-> jusqu'à ce qu'ils rouvrent leur fiche — rien ne les y amène ; et
-> `manipuleMatieresR422722` (§ 1) n'est toujours posée qu'à la fiche.
+> jusqu'à ce qu'ils rouvrent leur fiche — ~~rien ne les y amène~~ [2026-09-27 : la
+> checklist du tableau de bord les relance, question par question (`ec9917c`)] ; et
+> ~~`manipuleMatieresR422722` (§ 1) n'est toujours posée qu'à la fiche~~ [2026-09-27 :
+> posée à la création, avec les chiffons (`ec9917c`)].
 
 Il y a probablement **d'autres cas du même genre**, et il se peut aussi que le
 produit les traite déjà très bien — c'est à mesurer, pas à supposer.

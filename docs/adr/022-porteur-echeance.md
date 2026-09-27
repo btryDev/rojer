@@ -214,12 +214,19 @@ l'établissement reçoit du public. Un établissement de travail seul reste comp
 son effectif, qui y est le total et non une borne. Voir `evaluerPersonnesPresentes`
 dans `src/lib/matching/engine.ts`.
 
-**Le premier reste**, et c'est la seule entorse qui subsiste : `champR422734` est
+~~**Le premier reste**, et c'est la seule entorse qui subsiste : `champR422734` est
 une branche qui ne fait qu'AJOUTER des cas à un champ déjà ouvert par le seuil, si
 bien que le silence n'y retire rien tant qu'une autre porte existe. Il en retirerait
 le jour où une obligation s'appuierait sur cette branche seule — le corpus
-`code-travail-matieres-inflammables.ts` le dit article en main. Toute condition
-d'établissement **nouvelle** suit la règle du non-renseigné.
+`code-travail-matieres-inflammables.ts` le dit article en main.~~ **[2026-09-27 :
+faux depuis le 2026-09-03** — ce jour-là le travail seul sous la borne est devenu
+« non atteint », et la branche matières est restée son seul chemin vers R. 4227-37
+et -39. **Rentré dans le rang le 2026-09-27** (`e6b0fb6`, `0d94de1`) : le silence
+retient « à confirmer ». Ce n'était pas non plus « la seule entorse » : la catégorie
+et le type d'ERP écartaient aussi — l'absence y est désormais interdite en base
+(`e029c41`). La politique de chaque attribut est déclarée une fois,
+`matching/absence.ts` (`6a3b984`).] Toute condition d'établissement **nouvelle**
+suit la règle du non-renseigné.
 
 Le canal d'affichage manque : `EcheanceCalendrier.tone` est binaire et
 `EvenementGrille.tone` n'a que trois valeurs, `warn` étant pris par « à planifier ».

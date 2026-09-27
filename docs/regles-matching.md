@@ -49,15 +49,18 @@ Pour chaque `Obligation` du référentiel :
 > `igh: true | {classes}`, `habitation: true`) s'appliquent désormais
 > **en OU entre eux** : l'établissement doit en satisfaire au moins un.
 > Une obligation déclarant `{ travail: true, erp: true, igh: true }`
-> (les 6 obligations ascenseurs) s'applique donc aux établissements de
+> (les ~~6~~ obligations ascenseurs — huit, remesuré en appelant le 2026-09-27)
+> s'applique donc aux établissements de
 > travail **ou** ERP **ou** IGH — c'était l'intention rédactionnelle, mais
 > l'ancien moteur évaluait ces lignes en ET, si bien qu'un ERP non-IGH
 > avec ascenseur ne recevait aucune obligation ascenseur. Les critères
 > **négatifs** (`travail: false`, `erp: false`, …) restent des exclusions
 > en ET, et `effectifMin`/`effectifMax` restent en ET avec le reste.
-> Sans effet sur le reste du référentiel : toutes les autres obligations
+> ~~Sans effet sur le reste du référentiel : toutes les autres obligations
 > ne déclarent qu'un seul régime positif, et pour un critère unique
-> OU ≡ ET.
+> OU ≡ ET.~~ [2026-09-27, remesuré en appelant : dix-sept obligations
+> déclarent plusieurs régimes positifs — les huit ascenseurs, le registre de
+> sécurité et huit contrôles d'étanchéité des fluides frigorigènes.]
 
 > **Amendement 2026-08 — restriction par type d'exploitation ERP.** La
 > `TypologieApplication.erp` accepte désormais `{ types: [...] }`, en plus de
@@ -142,7 +145,8 @@ obligations mal rédigées — un test dédié le vérifie dans le référentiel
 `erp: true` et `erp: { categories: ["N1", …, "N5"] }` ne sont **pas**
 équivalents, alors que les deux formes cohabitaient dans le référentiel.
 La seconde exige en plus que `categorieErp` soit renseignée : un ERP dont
-la catégorie est inconnue perd l'obligation. Écrire une restriction qui
+la catégorie est inconnue perd l'obligation. [2026-09-27 : un cas désormais
+impossible — la base interdit un ERP sans catégorie ni type (`e029c41`).] Écrire une restriction qui
 n'exclut rien revient donc à créer un faux négatif silencieux.
 
 Convention retenue, verrouillée par un test :
@@ -183,9 +187,11 @@ R. 146-35 (IGH) reste cité sans `igh: true`, mais parce que l'IGH est hors
 périmètre produit — pas parce que la référence serait accessoire. À activer le
 jour où l'IGH entre au périmètre.
 
-**Limite connue.** `categoriesEquipement` ancre l'obligation à un extincteur ou
+~~**Limite connue.** `categoriesEquipement` ancre l'obligation à un extincteur ou
 une alarme déclarés : un établissement qui n'a ni l'un ni l'autre ne reçoit
-aucune ligne, alors que le registre est dû sans condition d'équipement. Le
+aucune ligne, alors que le registre est dû sans condition d'équipement.~~
+[2026-09-27 : périmé — le registre est porté par l'établissement (ADR-022) et
+présent sans équipement, remesuré en appelant le moteur.] Le
 moteur exige au moins une catégorie, parce que `Verification.equipementId` n'est
 pas nullable. Corriger ce faux négatif est une décision de schéma, pas de
 référentiel.
@@ -374,7 +380,8 @@ cohérence du référentiel
   compté sur les personnes présentes** (amendement 2026-08-25, **sens du repli
   corrigé le 2026-09-03**). Le moteur connaît deux données d'établissement,
   `personnesPresentesHabituellement` (salariés + public) et
-  `manipuleMatieresR422722` (absent = non). Le premier absent ne se remplace
+  `manipuleMatieresR422722` (~~absent = non~~ absent = « à confirmer » depuis le
+  2026-09-27, `e6b0fb6`). Le premier absent ne se remplace
   plus par `effectifSurSite` : il se **borne par le bas**, et une borne basse
   ne conclut que vers le haut. La catégorie d'ERP en est une — dès la 3ᵉ, le
   public seul dépasse trois cents personnes —, l'effectif salarié en est une

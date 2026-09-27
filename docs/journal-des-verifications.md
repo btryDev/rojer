@@ -4565,6 +4565,49 @@ vitest 297 fichiers passés, 1 ignoré, 3993 tests passés, 4 ignorés.
    `urls-legifrance.test.ts`. Ce qui manquait n'était pas l'outillage : c'était
    le fil de l'histoire.
 
+### C52 · 2026-09-27 — La réponse absente : ce que le silence retirait, et ce qui ne s'affichait pas
+
+*Branche `lot/couverture-reponse-absente`, sur `837b147`. Analyse avant décision :
+`docs/revues/analyse-reponse-absente-2026-09-27.md` (`1b534de`, contre-lecture
+neutre intégrée `175e151`). Décisions de la propriétaire le même jour.*
+
+**Le constat de départ était sous-estimé d'un facteur sept.** La contre-vérification
+annonçait trois obligations perdues sur `categorieErp` null — mesuré sur UN profil.
+Le moteur appelé sur 316 profils, parc complet : 22 lignes distinctes perdues, au plus
+8 pour un même dossier ; 40 profils ERP sur 40 en perdent. `manipuleMatieresR422722`
+null, lu « non », retirait R. 4227-37 et -39 à tout établissement de travail de moins
+de 51 personnes depuis le 2026-09-03 — contrairement à ce qu'écrivaient
+`.claude/CLAUDE.md`, l'ADR-022, `chantiers-ouverts.md` et la décision A4.
+
+**Plus profond que le constat.** (1) Aucune politique de l'absence déclarée : onze
+points de décision, trois sens, quatre canaux de marque. (2) Deux questions dont le
+silence change des lignes n'étaient posées qu'à la fiche. (3) Aucune marque « à
+confirmer » n'atteignait le calendrier, le dossier PDF, le ZIP, le registre ni le MCP.
+(4) Au parcours de création, « ERP ? » valait « non » par défaut, bouton déjà
+sélectionné.
+
+| Étape | Commit | Ce qui change | Éprouvé |
+|---|---|---|---|
+| 1 — marques partout | `4e89cd1` | calendrier (liste, fiche), dossier PDF et ZIP, registre (écran, PDF), guide, MCP ; calcul au rendu, sans migration | clause MCP retirée → rouge |
+| 5 — matières | `e6b0fb6`, `0d94de1` | silence retenu « à confirmer » ; `VERSION_MOTEUR_CALENDRIER` 4 → 5 ; réconciliateur : rien de perdu, trace archivée | « silence = non » réintroduit → rouge |
+| 2 — A2 | `8618af3` | aucune réponse de régime présélectionnée ; porte serveur | trois couches, trois rouges |
+| A1 | `e9adbb3` | suggestions d'équipements : NAF de l'entreprise en repli | repli retiré → rouge |
+| 3 — questions | `ec9917c` | matières et chiffons posés à la création ; relance des muets sur la checklist | champs retirés, régénération retirée → rouges |
+| catégorie ERP | `e029c41` | contrainte CHECK `Etablissement_erp_type_categorie_requis` (production : 0 cas sur 4) ; vérifiée sur base locale | migration retirée → rouge nommant la contrainte |
+| 4 — politique | `6a3b984`, `caabe12` | `matching/absence.ts` + garde générique | (a) et (b) réintroduits → rouges nommant l'attribut ; attribut omis → ne compile pas |
+| 6 — obligations | `85cbbfd` | `incendie-travail-alarme-sonore` (R. 4227-34), `incendie-travail-instructions-evacuation` (R. 4227-37 al. 2) ; référentiel `2026-09-27.1`, 170 + 2 − 0 = 172 | instructions données au silence → rouges |
+
+**Textes relus sur l'API** (sandbox PISTE) : R. 4227-21 à -41, R. 4411-6, R. 4216-2.
+`legifrance:verifier` sur les cinq articles cités : 4 OK, R. 4216-2 « abrogé » —
+abrogation différée au 2027-01-01 **sans version suivante**, relevée au corpus et à la
+`relectureDue` de la ligne.
+
+**Ce qui reste ouvert, écrit.** Le champ de la question des matières (manipulation
+contre entreposage, R. 4227-22 à -25). La marque des conditions d'équipement opt-out
+(groupe électrogène). La requalification de l'article de l'arrêté du 4 novembre 1993
+que la note désignait « candidat ». Les indéterminations de couverture hors de
+l'indice d'avancement (A3). La version 2027 de R. 4227-37.
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

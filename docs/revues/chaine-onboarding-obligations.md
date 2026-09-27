@@ -114,13 +114,13 @@ des 19 catégories, sans caractéristique).
 | `estERP` | Base B : 32 → 25. Base C : +21 nettes, avec 2 échanges (l'éclairage de sécurité « travail » cède la place au « ERP »). |
 | `categorieErp` | N5 → N4 : −5 / +1. N5 → N3 : −5 / +1. N5 → N2 : −5 / +2. `null` : −5 sans compensation. **La 5ᵉ catégorie reçoit plus que la 3ᵉ** (32 contre 28) — anomalie déjà consignée au § 8 de `chantiers-ouverts.md`, confirmée ici. |
 | `typeErp` | Effet réel, mais **par échange, jamais par compteur**. N5 : type O ajoute `incendie-hotel-po-controle-annuel-electricite`. N4 : les types O, R, U, J — et **`null`** — reçoivent la visite triennale au lieu de la quinquennale. N1/N2 : le type V bascule de la triennale à la quinquennale. |
-| `estIGH` | **Nul sans équipement** (base A : 25 → 25). Base C : +2 (`elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`). Les 8 autres obligations `igh` sont déjà servies par la branche `travail` de leur disjonction. |
+| `estIGH` | ~~**Nul sans équipement** (base A : 25 → 25).~~ [2026-09-27, remesuré en appelant : faux depuis l'entrée de `incendie-igh-charge-calorifique-quinquennale` (2026-09-04) — 126 profils changent.] Base C : +2 (`elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`). Les 8 autres obligations `igh` sont déjà servies par la branche `travail` de leur disjonction. |
 | `classeIgh` | **Aucun effet, dans aucune des 11 valeurs (10 classes + `null`), sur aucune des deux bases.** |
 | `estHabitation` | Base B : +3. Base C : +5 (les deux VMC gaz s'ajoutent). |
 | `familleHabitation` | **Aucun effet, dans aucune des 6 valeurs (5 familles + `null`), sur aucune des deux bases.** |
 | `personnesPresentesHabituellement` | Base B : `null` = 32 (les 2 obligations `R. 4227-34` retenues « à confirmer »), 10 ou 50 = 30 (elles partent), 51 ou 300 = 32. Base A : `null` = 25, 51 = 27. |
-| `manipuleMatieresR422722` | Base A : `null` = 25, `true` = 27, `false` = 25. **`null` se comporte donc exactement comme `false`** — la dernière violation de la règle du non-renseigné, celle que le `CLAUDE.md` recense. Sans effet sur base B, où l'indétermination ERP a déjà retenu les deux lignes. |
-| `comporteLocauxSommeilPublic` | Base B : `null` = 32, `true` = 32 (même ensemble), `false` = 28. Sans effet hors 5ᵉ catégorie. |
+| `manipuleMatieresR422722` | Base A : `null` = 25, `true` = 27, `false` = 25. **`null` se comporte donc exactement comme `false`** — la dernière violation de la règle du non-renseigné, celle que le `CLAUDE.md` recense. [2026-09-27 : corrigé — le silence retient « à confirmer » (`e6b0fb6`, `0d94de1`).] Sans effet sur base B, où l'indétermination ERP a déjà retenu les deux lignes. |
+| `comporteLocauxSommeilPublic` | Base B : `null` = 32, `true` = 32 (même ensemble), `false` = 28. ~~Sans effet hors 5ᵉ catégorie.~~ [2026-09-27 : faux — agit aussi en 4ᵉ catégorie de type R.] |
 
 ---
 
@@ -258,7 +258,7 @@ Trois, et ils sont exactement les trois qui commandent des obligations :
 | Champ | Obligations commandées | Ce que coûte l'absence à l'accueil, **mesuré** |
 | --- | --- | --- |
 | `personnesPresentesHabituellement` | `incendie-travail-consigne-affichee`, `incendie-travail-exercice-semestriel` | **Rien pour un ERP.** Le moteur déduit une borne basse — la catégorie franchit seule le seuil de 51 dès la 3ᵉ — et retient « à confirmer » en dessous. Base B mesurée : `null` donne le même ensemble que `51`. **Pour un établissement de travail seul, en revanche, l'obligation est écartée** : base A à `null` = 25, à `51` = 27. Le commentaire du code l'assume — l'effectif salarié y *est* le total, ce n'est plus une borne. |
-| `manipuleMatieresR422722` | les deux mêmes | Base A : `null` = 25, `true` = 27. **`null` est lu « non »** — la dernière violation de la règle du non-renseigné, celle que le `CLAUDE.md` recense encore. Sans conséquence sur un ERP, où l'autre branche du OU a déjà retenu les lignes. |
+| `manipuleMatieresR422722` | les deux mêmes | Base A : `null` = 25, `true` = 27. **`null` est lu « non »** — la dernière violation de la règle du non-renseigné, celle que le `CLAUDE.md` recense encore. [2026-09-27 : corrigé (`e6b0fb6`, `0d94de1`).] Sans conséquence sur un ERP, où l'autre branche du OU a déjà retenu les lignes. |
 | `comporteLocauxSommeilPublic` | `incendie-erp-5-visite-commission` et les trois lignes de sommeil de 5ᵉ | **Rien.** `null` donne le même ensemble que `true` : les quatre lignes sont retenues « à confirmer ». Seul un « non » explicite les retire (32 → 28). |
 
 **Ces trois retraits sont conformes à la ligne du § 8 de `chantiers-ouverts.md`** — « on ne

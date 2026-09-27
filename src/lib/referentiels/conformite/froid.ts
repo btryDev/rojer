@@ -125,7 +125,9 @@
  * périodicité de l'écrasante majorité des parcs de TPE/PME. Répondre ne fait
  * que déplacer l'échéance vers le palier exact — jamais la faire disparaître.
  *
- * La seule réponse qui retire des obligations est le « oui » explicite à la
+ * ~~La seule réponse qui retire des obligations est~~ [2026-09-27, remesuré en
+ * appelant : DEUX réponses les retirent — le « oui » à `estChargeSousSeuilControle`
+ * (hors du champ des deux textes, voir `AU_DESSUS_DU_SEUIL`) et] le « oui » explicite à la
  * dispense des équipements hermétiquement scellés (art. 5 : scellé, étiqueté
  * comme tel, et sous 10 t CO2e ou 2 kg selon l'annexe du fluide). Elle est
  * posée en `infirmee` sur les huit obligations : tant qu'elle n'a pas été
