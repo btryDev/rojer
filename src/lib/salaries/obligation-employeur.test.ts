@@ -14,7 +14,11 @@
 import { describe, expect, it } from "vitest";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import { cataloguerTitres } from "./catalogue";
-import { OBLIGATION_EMPLOYEUR } from "./obligation-employeur";
+import { texteInformation } from "./droits";
+import {
+  OBLIGATION_EMPLOYEUR,
+  type NatureObligation,
+} from "./obligation-employeur";
 
 const espaces = (t: string) => t.replace(/\s+/g, " ").trim();
 const INDEX = indexArticlesParRef();
@@ -44,8 +48,11 @@ describe("chaque titre suivi est une obligation de l'employeur envers le salari�
       expect(lu, `${o.article} absent du corpus`).toBeDefined();
       expect(lu!.article.statut).not.toBe("non_depouille");
       expect(espaces(lu!.article.citationCle ?? "")).toContain(espaces(o.phrase));
-      // La phrase nomme l'employeur — c'est l'objet de l'audit.
-      expect(o.phrase).toMatch(/employeur/);
+      // L'employeur est nommé — dans la phrase, ou dans l'intitulé de la
+      // division qui porte un article écrit sans sujet (non confrontable au
+      // corpus, qui ne porte pas ces intitulés : relu le 2026-09-27).
+      if (o.employeurNommePar === "phrase") expect(o.phrase).toMatch(/employeur/);
+      else expect(o.employeurNommePar.intituleDeDivision).toMatch(/employeur/);
     },
   );
 
@@ -56,4 +63,29 @@ describe("chaque titre suivi est une obligation de l'employeur envers le salari�
       expect(titre.referencesLegales.map((r) => r.article)).toContain(o.fondateur);
     },
   );
+});
+
+describe("le texte au salarié dit chaque nature d'obligation que l'audit établit", () => {
+  // Contre-lecture du 2026-09-27 (M4/M5) : le texte rangeait tout sous
+  // « formation, visite, habilitation ou autorisation », alors que l'audit
+  // compte des pièces à conserver et une obligation envers le collectif.
+  // Chaque nature présente à l'audit doit être dite, par ses mots.
+  const MOTS: Record<NatureObligation, RegExp> = {
+    formation: /vous former ou vous faire former/,
+    habilitation: /une habilitation/,
+    autorisation: /une autorisation/,
+    piece_a_conserver: /conserver la copie d'une attestation médicale pendant sa\s+durée de validité/,
+    service_de_sante: /organiser le service de prévention et de santé au\s+travail qui réalise vos visites/,
+  };
+  const texte = texteInformation({ raisonSociale: "X", titresSuivis: [] });
+  const entrees = Object.values(OBLIGATION_EMPLOYEUR);
+
+  it.each([...new Set(entrees.map((o) => o.nature))])("%s", (nature) => {
+    expect(texte).toMatch(MOTS[nature]);
+  });
+
+  it("l'obligation envers le collectif est dite comme telle", () => {
+    expect(entrees.some((o) => o.envers === "collectif")).toBe(true);
+    expect(texte).toMatch(/pour le secourisme, envers l'ensemble du personnel/);
+  });
 });

@@ -109,12 +109,14 @@ export function detailSuppressionEntreprise(p: PerimetreEntreprise): string {
       : n === 1
         ? `Son établissement, ${noms}, part avec elle, et avec lui les ` +
           `${groupeLignes(p.lignes)} de son dossier : équipements, ` +
-          "vérifications, rapports téléversés, plan d'actions, registres."
+          "vérifications, rapports téléversés, plan d'actions, registres, " +
+          "et les fiches de l'équipe avec leurs titres."
         : `Ses ${n} établissements — ${noms} — partent avec elle, et avec eux ` +
           `les ${groupeLignes(p.lignes)} de leur dossier : équipements, ` +
-          "vérifications, rapports téléversés, plan d'actions, registres.";
+          "vérifications, rapports téléversés, plan d'actions, registres, " +
+          "et les fiches de l'équipe avec leurs titres.";
 
-  return `${cePartant} Rien ne se récupère ensuite. ${clauseConservation(p.versionsDuerp)}`;
+  return `${cePartant} Rien ne se récupère ensuite : tout est supprimé définitivement. ${clauseConservation(p.versionsDuerp)}`;
 }
 
 /** Le détail de la carte de suppression d'un établissement. */
@@ -124,6 +126,7 @@ export function detailSuppressionEtablissement(
   return (
     `${p.nom} part, et avec lui les ${groupeLignes(p.lignes)} de son ` +
     "dossier : équipements, vérifications, rapports téléversés, plan " +
-    `d'actions, registre. Rien ne se récupère ensuite. ${clauseConservation(p.versionsDuerp)}`
+    "d'actions, registre, et les fiches de l'équipe avec leurs titres. " +
+    `Rien ne se récupère ensuite : tout est supprimé définitivement. ${clauseConservation(p.versionsDuerp)}`
   );
 }

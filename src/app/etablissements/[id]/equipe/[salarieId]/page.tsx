@@ -459,10 +459,13 @@ export default async function SalarieDetailPage({
                 </Link>
               </div>
               <p className="m-0 mt-3 max-w-[64ch] text-[12px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                Le droit à l&apos;effacement est limité sur ces données :
-                l&apos;article 17.3.b du RGPD excepte ce qui est conservé au
-                titre d&apos;une obligation légale. Mieux vaut le lui dire que
-                lui promettre un droit qu&apos;on ne peut pas honorer.
+                Pendant l&apos;emploi, le droit à l&apos;effacement est limité :
+                l&apos;article 17.3.b du RGPD excepte le traitement nécessaire
+                au respect d&apos;une obligation légale. Une sortie de
+                l&apos;effectif garde ses titres ; la durée de conservation
+                après un départ n&apos;est pas fixée par un texte que Rojer ait
+                identifié. Un titre que vous retirez est effacé
+                définitivement.
               </p>
             </CarteFiche>
 

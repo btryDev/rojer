@@ -243,9 +243,11 @@ export async function libellesTitresDeclares(
   etablissementId: string,
 ): Promise<string[]> {
   // Sans `actif: true`, délibérément — le seul `where` du module dans ce cas.
-  // Le traitement se poursuit après le départ d'une personne (art. 17.3.b), et
-  // le texte d'information doit décrire le traitement réel, pas seulement sa
-  // part en cours.
+  // Le traitement se poursuit, en fait, après le départ d'une personne — sa
+  // durée n'est fixée par aucun texte identifié, et c'est une décision ouverte
+  // (E8, 2026-09-27) ; ~~(art. 17.3.b)~~ ne la fonde pas. Le texte
+  // d'information doit décrire le traitement réel, pas seulement sa part en
+  // cours.
   const etablissement = await portee();
   const lignes = await prisma.titreSalarie.groupBy({
     by: ["obligationId"],

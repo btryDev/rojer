@@ -8,10 +8,11 @@ import { basculerActif, retirerTitre } from "@/lib/salaries/actions";
 /**
  * Sortie et retour dans l'effectif.
  *
- * L'action n'est pas « supprimer », et le libellé le dit. La preuve qu'une
- * personne était habilitée au moment où elle a opéré couvre l'employeur sur
- * une période passée : elle doit survivre au départ (`docs/rgpd.md` § 4.3).
- * Supprimer la fiche emporterait ses titres en cascade.
+ * L'action n'est pas « supprimer », et le libellé le dit : elle marque la
+ * fiche, et les titres restent. ~~La preuve […] doit survivre au départ
+ * (`docs/rgpd.md` § 4.3)~~ — aucun texte identifié ne le fonde (E8,
+ * 2026-09-27) ; que la sortie garde les données est une question posée à la
+ * propriétaire. Supprimer la fiche emporterait ses titres en cascade.
  *
  * Le geste est donc réversible, et la confirmation dit ce qui se passe
  * vraiment plutôt que d'agiter un avertissement.
@@ -77,9 +78,15 @@ export function RetirerTitreButton({
         onClick={() =>
           demander({
             titre: `Retirer « ${libelle} » de cette fiche ?`,
+            // Décision de la propriétaire, 2026-09-27 : « quand employeur
+            // supprime il est averti que data supprimé définitivement ». Le
+            // bouton « Éditer ses données » de la même fiche exporte ce qui
+            // est enregistré sur la personne (art. 15) : c'est lui qu'on nomme.
             detail:
-              "Ses dates et sa référence légale s'effacent, et avec elles la " +
-              "trace que cette personne était habilitée. Pour un " +
+              "Ses dates et son repère sont supprimés définitivement, et avec " +
+              "eux la trace que cette personne était habilitée : rien ne se " +
+              "récupère ensuite. Pour en garder une trace, utilisez d'abord " +
+              "« Éditer ses données » sur cette fiche. Pour un " +
               "renouvellement, ne retirez rien : redéclarez le même titre " +
               "avec ses nouvelles dates.",
             agir: "Retirer le titre",
