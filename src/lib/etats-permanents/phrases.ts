@@ -127,3 +127,28 @@ export function libelleGeste(mode: "etat" | "fait"): string {
 export function libelleRetour(): string {
   return "Revenir dessus";
 }
+
+/**
+ * L'état d'une ligne en quelques mots, pour une surface qui n'a pas la place
+ * du bouton — le widget du tableau de bord (2026-09-27).
+ *
+ * Il ne dit rien que l'écran ne dise : la phrase de la déclaration (la même,
+ * `phraseDeclaration`), « À confirmer » (la mention de `LigneEtat`), sinon le
+ * geste qui reste à faire. Pas « manquant », pas « non conforme » : une ligne
+ * non déclarée est une question sans réponse (`phraseRestantes`).
+ */
+export function etatDeLaLigne({
+  mode,
+  declareLe,
+  aConfirmer,
+}: {
+  mode: "etat" | "fait";
+  /** La date de la déclaration, déjà formatée ; `null` = non déclarée. */
+  declareLe: string | null;
+  aConfirmer: boolean;
+}): string {
+  if (declareLe !== null) return phraseDeclaration(mode, declareLe);
+  if (aConfirmer) return "À confirmer";
+  if (mode === "etat") return "À mettre en place";
+  return "Pas encore daté";
+}

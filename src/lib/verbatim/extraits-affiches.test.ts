@@ -61,6 +61,13 @@ const EXPRESSIONS: Record<string, string | { motif: string }> = {
   // corpus elle-même, lue par `documentsObligatoires()`. L'extrait EST le
   // verbatim ; le confronter à lui-même ne prouverait rien.
   "f.citationCle": { motif: "la citationCle du corpus, affichée telle quelle" },
+  // `PastilleFondement.tsx` (écran « Ce qui doit être en place » et son
+  // widget) : la citationCle de l'article en tête des références, lue par
+  // `etats-permanents/fondement.ts` et affichée telle quelle.
+  // `fondement.test.ts` confronte chaque ligne possible au corpus.
+  "fondement.extrait": {
+    motif: "la citationCle du corpus, affichée telle quelle (fondement.test.ts)",
+  },
 };
 
 /**

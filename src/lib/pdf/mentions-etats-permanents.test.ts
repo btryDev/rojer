@@ -44,6 +44,7 @@ function ligne(p: Partial<LigneEtatPermanent> & { id?: string }): LigneEtatPerma
     declareLe: null,
     note: null,
     aConfirmer: null,
+    fondement: null,
     ...p,
   };
 }

@@ -38,6 +38,7 @@ import {
 import { WidgetAnciennete } from "./impl/anciennete";
 import { WidgetSemaine } from "./impl/semaine";
 import { WidgetMeteo } from "./impl/meteo";
+import { WidgetEtatsPermanents } from "./impl/etats-permanents";
 import type { LayoutItem, WidgetDefinition, WidgetId } from "./types";
 
 export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
@@ -353,6 +354,20 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
     Component: WidgetMeteo,
+  },
+  "etats-permanents": {
+    id: "etats-permanents",
+    titre: "Ce qui doit être en place",
+    description:
+      "Les obligations sans date de l'écran du même nom — CSE, règlement intérieur, consignes… — avec leur état et l'article qui les fonde.",
+    taille: "medium",
+    variants: [{ id: "default", label: "Défaut" }],
+    defaultVariant: "default",
+    Component: WidgetEtatsPermanents,
+    // Disponible dans le tiroir, hors du board par défaut : la propriétaire a
+    // dit « peut-être » (2026-09-27), et le board par défaut est une
+    // composition arrêtée (`layout.test.ts`). L'y monter est sa décision.
+    exclueDuDefaut: true,
   },
 };
 

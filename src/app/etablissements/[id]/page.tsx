@@ -32,6 +32,9 @@ import { listerEvenementsCalendrier } from "@/lib/calendrier/evenements";
 import { compterEtatEcheances } from "@/lib/calendrier/retards";
 import { assurerCalendrierAJour } from "@/lib/calendrier/regeneration-sure";
 import { statsActionsEnRetard } from "@/lib/actions/queries";
+import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
+import { lignesDuWidget } from "@/lib/etats-permanents/widget";
+import { requireUser } from "@/lib/auth/require-user";
 import { prisma } from "@/lib/prisma";
 import { ORDRE_RAPPORT_PLUS_RECENT } from "@/lib/rapports/derniere-realisation";
 import { composantesCiviles, joursCivilsEntre } from "@/lib/dates";
@@ -99,6 +102,7 @@ export default async function EtablissementPage({
     nbRapports,
     prochainesVerifs,
     rapportsRecents,
+    etatsPermanents,
   ] = await Promise.all([
     listerEquipementsDeLEtablissement(id),
     compterVerifsParEquipement(id),
@@ -146,6 +150,9 @@ export default async function EtablissementPage({
       orderBy: ORDRE_RAPPORT_PLUS_RECENT,
       take: 4,
     }),
+    // La lecture de l'écran « Ce qui doit être en place », pas une seconde
+    // (`etats-permanents/widget.ts`) : le widget liste ce que l'écran liste.
+    requireUser().then((user) => etatsPermanentsDuDossier(id, user.id)),
   ]);
 
   // Le filtre bâtiment se pose ici, une fois, sur la liste chargée entière —
@@ -390,6 +397,7 @@ export default async function EtablissementPage({
     // serveur : `getMonth()` sur un instant de fin de mois à 23 h
     // renvoyait le mois suivant sur un hôte à l'est de Paris.
     moisCourant: composantesCiviles(aujourdhui).mois - 1,
+    etatsPermanents: lignesDuWidget(etatsPermanents),
   };
 
   return (

@@ -16,6 +16,7 @@ import type { EvenementGrille } from "@/lib/calendrier/grille";
 import type { EtatEcheances } from "@/lib/calendrier/retards";
 import type { ModulesMatrice } from "@/lib/dashboard/obligations";
 import type { StatsRetardActions } from "@/lib/actions/queries";
+import type { LigneWidgetEtat } from "@/lib/etats-permanents/widget";
 
 export type Taille = "small" | "medium" | "large";
 // small = 2 col · medium = 3 col · large = 6 col (grille à 6 colonnes)
@@ -48,7 +49,8 @@ export type WidgetId =
   | "anciennete"
   | "semaine"
   | "flux-registre"
-  | "meteo";
+  | "meteo"
+  | "etats-permanents";
 
 export type LayoutItem = {
   widgetId: WidgetId;
@@ -251,6 +253,13 @@ export type DashboardBundle = {
   duerpDernier: DuerpLite | null;
   jourDernierRapport: number | null;
   moisCourant: number;
+  /**
+   * Les lignes de l'écran « Ce qui doit être en place », dans son ordre, avec
+   * leur article (`etats-permanents/widget.ts`). Lues par la même entrée que
+   * l'écran — `etatsPermanentsDuDossier` — et jamais filtrées par bâtiment :
+   * ces obligations sont celles de l'établissement.
+   */
+  etatsPermanents: LigneWidgetEtat[];
 };
 
 /* ─── Définition d'un widget dans le registre ─────────────── */

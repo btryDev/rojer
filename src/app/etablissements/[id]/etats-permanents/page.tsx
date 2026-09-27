@@ -195,6 +195,7 @@ export default async function EtatsPermanentsPage({
                             }
                           : null
                       }
+                      fondement={l.fondement}
                     />
                   ))}
                 </ul>
@@ -270,6 +271,7 @@ export default async function EtatsPermanentsPage({
                             }
                           : null
                       }
+                      fondement={l.fondement}
                     />
                   ))}
                 </ul>
