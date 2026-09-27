@@ -4369,6 +4369,80 @@ rendu sans régime (9 716 contre 9 731 octets), citation comprise. Il lit
 désormais le texte de l'arbre de rendu (`elementsDansLOrdre`), comme le test
 voisin. Éprouvé : R. 143-44 cité à tous les régimes → rouge.
 
+### C50 · 2026-09-27 — L'API Légifrance : un script qui relit le corpus contre le texte officiel
+
+*Base : `main` + une note de backlog (`3fe04ea`), branche
+`lot/legifrance-api`. Ni référentiel, ni moteur, ni schéma ; aucune
+migration. Outillage seulement : aucun article du corpus n'est touché. Numéro
+C50 donné par la coordination.*
+
+**Pourquoi.** La relecture sur Légifrance passait par un outil web qui
+résume parfois ; `lecture: "agent_verbatim"` le dit (« vaut constat, pas
+garantie »). La propriétaire a souscrit à l'API officielle (DILA, PISTE), en
+bac à sable.
+
+**Lu avant d'écrire** (cité en tête de `src/lib/legifrance/client.ts`) : FAQ
+API Légifrance, « Exemples d'utilisation de l'API » (DILA, 17/09/2025),
+« Open data et API », et le contrat Swagger Légifrance 2.4.2. Retenus : jeton
+`client_credentials` (`scope=openid`) sur `sandbox-oauth.piste.gouv.fr` /
+`oauth.piste.gouv.fr` ; API sur
+`{sandbox-api|api}.piste.gouv.fr/dila/legifrance/lf-engine-app` ;
+`/consult/getArticle {id}` et `/consult/getArticleWithIdAndNum {id: LEGITEXT,
+num}`. **Les quotas ne sont publiés en chiffres nulle part** (« détaillés sur
+le portail PISTE ») : délai de 300 ms par défaut, 429 et 5xx repris.
+
+**Fait.**
+- `src/lib/legifrance/client.ts` : jeton en cache, renouvelé 60 s avant
+  expiration, un seul renouvellement sur 401 ; appels en série espacés ;
+  429/5xx/panne repris trois fois au plus (`Retry-After`, sinon 1-2-4 s) ;
+  erreurs typées (`configuration`, `authentification`, `quota`, `http`,
+  `reseau`, `reponse`) dont le texte passe par un masque (identifiant, secret,
+  jeton). Garde « serveur seulement » équivalente à `server-only` (paquet
+  non résolu hors Next) : refus d'être évalué avec un `window`.
+- `src/lib/legifrance/normalisation.ts` : la citation est-elle un extrait
+  exact ? Normalisation documentée (espaces Unicode, apostrophes, guillemets,
+  tirets, ponctuation haute, « 1 ° », « 1ᵉʳ », « §3 ») ; élisions `[…]` en
+  fragments ordonnés ; sinon diff mot à mot contre le passage le plus proche.
+- `src/lib/legifrance/verification.ts` : résolution (LEGIARTI/JORFARTI de
+  l'URL ; sinon code + numéro ; règlement ERP et arrêtés par texte + numéro ;
+  INRS, règlement UE, annexes : non vérifiable), lecture de la version
+  VIGUEUR quand le corpus pointe une version ancienne, quatre comparaisons
+  (citation, `versionEnVigueur`, `modifiePar`, abrogation), rapport.
+- `scripts/verifier-corpus-legifrance.ts`, `pnpm legifrance:verifier`
+  (`--ref`, `--corpus`, `--env-file`, `--rapport`, `--delai`) ; sortie 0 / 1
+  (écart) / 2 (configuration, authentification).
+- `docs/outils/legifrance-api.md` : inscription, variables, bac à sable et
+  production, lecture du rapport, points ouverts.
+
+**Gardes.** `client.test.ts`, `normalisation.test.ts`,
+`verification.test.ts` — sans réseau, réponses simulées. **Ne prouvent pas** :
+la forme réelle des réponses (dates en epoch ou en chaîne, sens de
+`linkOrientation`, valeurs de `linkType`) ; le comportement de
+`getArticleWithIdAndNum` sur un `JORFTEXT` et sur le règlement ERP.
+
+**Éprouvées** (chaque garde cassée, suite rouge, puis rétablie) : casse
+ignorée ; accents effacés ; ordre des fragments ignoré ; ligne des espaces
+retirée ; chiffres neutralisés ; jeton jamais en cache ; marge d'expiration
+retirée ; 429 non repris ; reprises non bornées ; `Retry-After` ignoré ;
+masque retiré ; 401 renouvelé sans fin ; garde serveur retirée ; délai
+ignoré ; version en vigueur non suivie ; abrogation non détectée ; `null`
+contredit par une création ; erreur d'authentification avalée ; date du
+modificateur ignorée ; article de code absent classé non vérifiable ; écart
+de citation tu ; version non comparée — toutes rouges. **Une restée verte** :
+réduire la classe d'espaces à `\s` — ce n'est pas une garde manquante, `\s`
+couvre déjà en JavaScript l'insécable et la fine insécable ; la liste
+explicite ne sert qu'au lecteur.
+
+**Premier passage réel : NON FAIT.** Les trois variables sont présentes dans
+`.env.local` (relevé par nom, valeurs non lues). Le jeton est refusé :
+`invalid_client` (HTTP 400), en bac à sable comme en production, en envoyant
+les identifiants dans le corps comme en HTTP Basic. Rien n'a donc été lu par
+l'API, et aucun écart du corpus n'est établi par ce lot. À faire côté PISTE :
+vérifier que ce sont les « Identifiants OAuth » de l'application de bac à
+sable (pas la clé d'API, pas ceux de production), que l'API Légifrance y est
+cochée, et les CGU acceptées ; puis `pnpm legifrance:verifier -- --ref
+"R. 4227-26"`.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

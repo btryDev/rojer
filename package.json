@@ -25,7 +25,8 @@
     "mesure:score": "tsx scripts/mesure-score-adr034.ts",
     "veille": "tsx scripts/veille-worklist.ts",
     "relecture": "tsx scripts/export-relecture.ts",
-    "verification": "tsx scripts/export-verification.ts"
+    "verification": "tsx scripts/export-verification.ts",
+    "legifrance:verifier": "tsx scripts/verifier-corpus-legifrance.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
