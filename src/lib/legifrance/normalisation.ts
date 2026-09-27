@@ -16,7 +16,22 @@
 //     (« celle-ci ») ; ailleurs, entouré d'une espace (« I.-La » = « I. - La ») ;
 //  5. ponctuation haute : pas d'espace avant : ; ! ? ni avant ) , ni après ( ;
 //  6. numérotation : « 1 ° » = « 1° », « º » (indicateur ordinal) = « ° »,
-//     « ᵉʳ » = « er », « ᵉ » = « e », « §3 » = « § 3 ».
+//     « ᵉʳ » = « er », « ᵉ » = « e », « §3 » = « § 3 » ; « 5 e » = « 5e »
+//     (exposant rendu par l'API avec une espace : CCH R. 122-5) ;
+//  7. listes (C51, relevé sur les réponses réelles du 2026-09-27) :
+//     - le tiret « ― » (U+2015) est un tiret (EL 19) ;
+//     - un tiret qui OUVRE un élément de liste — en début de fragment, ou
+//       après « : », « ; », « . » — est une puce, pas un mot : effacé des
+//       deux côtés (DF 10, arrêté 1987-10-08 art. 3 : l'API rend « - », le
+//       corpus l'a omis ; arrêté 2017-11-20 art. 15 : l'inverse) ;
+//     - un numéro d'élément en début d'élément s'écrit « 1° » ou « 1. »
+//       (CCH R. 134-2 : « 1. La fermeture… » à l'API) : ramené à « 1° ». Le
+//       chiffre, lui, reste comparé ;
+//  8. espaces parasites de l'API : avant « , » et « . » (« an , »,
+//     « montagne . »), après « / » (« m/ s »), et « § 1.A » = « § 1. A » ;
+//  9. guillemets droits : l'API écrit « " examen … levage " » ; toute
+//     espace contre un « " » est effacée, des deux côtés (l'API en laisse
+//     parfois un seul, non fermé : on n'apparie pas).
 //
 // Ce qu'elle NE neutralise PAS : la casse, les accents (« A cet effet » et
 // « À cet effet » restent deux textes), la ponctuation autre que ses espaces,
@@ -24,8 +39,15 @@
 // et le rapport montre lequel.
 //
 // Les coupures : `[…]`, `[...]`, `(…)`, `(...)` et un `…` isolé marquent une
-// élision. La citation est alors découpée en fragments, et chaque fragment
+// élision ; `(art. N)` balise le début d'un article dans une citation qui en
+// assemble plusieurs. La citation est alors découpée en fragments, et chaque fragment
 // doit se trouver dans le texte officiel, DANS L'ORDRE.
+//
+// Les BORDS d'un fragment (C51) : la ponctuation qui ouvre ou ferme un
+// fragment n'est pas comparée. Le corpus ferme sa citation par un point là
+// où le texte continue par une virgule (« à cet effet. » / « à cet effet, »),
+// ou rouvre après une élision par « . » ou « ; ». À l'intérieur d'un
+// fragment, la ponctuation reste comparée.
 
 export function normaliser(texte: string): string {
   return (
@@ -37,8 +59,12 @@ export function normaliser(texte: string): string {
       .replace(/[\u2019\u2018\u02bc\u2032]/g, "'")
       .replace(/[\u00ab\u201c\u201e]\s*/g, '"')
       .replace(/\s*[\u00bb\u201d]/g, '"')
-      // 4. tirets
-      .replace(/[\u2013\u2014\u2011\u2010\u2212]/g, "-")
+      // 9. guillemets droits : aucune espace de part et d'autre (pas
+      // d'appariement : l'annexe II de l'arrêté 2011-12-26 en ouvre un sans le
+      // fermer, « dit " quadriennal , rédigé »)
+      .replace(/\s*"\s*/g, '"')
+      // 4. tirets (7. « ― » compris)
+      .replace(/[\u2012\u2013\u2014\u2015\u2011\u2010\u2212]/g, "-")
       .replace(/\s*-\s*/g, "-")
       // …puis un tiret qui ne lie pas deux lettres ou chiffres est un séparateur :
       // « I.-L'employeur » et « I. - L'employeur » donnent tous deux « I. - L'employeur »,
@@ -52,9 +78,19 @@ export function normaliser(texte: string): string {
       .replace(/\u1d49/g, "e")
       .replace(/\s*\u00b0/g, "\u00b0")
       .replace(/\u00a7\s*/g, "\u00a7 ")
-      // 5. ponctuation haute
-      .replace(/\s+([:;!?)])/g, "$1")
+      .replace(/(\d) (er|re|e|ème)(?=[\s,.;:)]|$)/gu, "$1$2")
+      // 5. ponctuation haute ; 8. espace avant « , » et « . »
+      .replace(/\s+([:;!?),.])/g, "$1")
       .replace(/\(\s+/g, "(")
+      // 8. « m/ s », « § 1.A »
+      .replace(/\/\s+(?=\p{L})/gu, "/")
+      .replace(/(\d)\.(?=\p{Lu})/gu, "$1. ")
+      .replace(/ +/g, " ")
+      .trim()
+      // 7. puces de liste : un tiret qui ouvre un élément
+      .replace(/(^|[:;.]) ?- /g, "$1 ")
+      // 7. numéro d'élément « 1. » = « 1° », en début d'élément
+      .replace(/(^|[:;.] )(\d+)\. (?=\S)/g, "$1$2\u00b0 ")
       .replace(/ +/g, " ")
       .trim()
   );
@@ -79,7 +115,18 @@ export function texteDepuisHtml(html: string): string {
     .replace(/&amp;/g, "&");
 }
 
-const ELISION = /\s*(?:\[\s*(?:\u2026|\.\.\.)\s*\]|\(\s*(?:\u2026|\.\.\.)\s*\)|(?:^|\s)\u2026(?=\s|$))\s*/g;
+// Un saut de ligne dans une citation du corpus sépare deux ALINÉAS cités, qui
+// peuvent ne pas se suivre dans le texte (GH 61 cite le § 5 puis le § 7 ;
+// l'arrêté 1986-01-31 art. 78-1, le 2° puis le 7°) : il coupe en fragments,
+// comme une élision, et l'ordre reste exigé (C51). Ce que cela cède : un
+// alinéa omis ENTRE deux lignes citées ne se voit pas ; un mot changé dans
+// une ligne, si.
+const ALINEA = /\s*\n\s*/;
+
+// Une balise « (art. 26) » ou « (art. 1er) » est une annotation du corpus,
+// qui assemble plusieurs articles : elle coupe comme une élision (C51).
+const ELISION =
+  /\s*(?:\[\s*(?:\u2026|\.\.\.)\s*\]|\(\s*(?:\u2026|\.\.\.)\s*\)|\(art\.\s*\d+(?:er)?\)|(?:^|\s)\u2026(?=\s|$))\s*/g;
 
 /** Les fragments d'une citation, coupée à ses élisions, guillemets englobants retirés. */
 export function fragmentsDeCitation(citation: string): string[] {
@@ -88,9 +135,15 @@ export function fragmentsDeCitation(citation: string): string[] {
   const m = /^[\u00ab"\u201c]\s*([\s\S]*?)\s*[\u00bb"\u201d]$/.exec(c);
   if (m) c = m[1];
   return c
-    .split(ELISION)
-    .map((f) => normaliser(f))
+    .split(ALINEA)
+    .flatMap((l) => l.split(ELISION))
+    .map((f) => sansBords(normaliser(f)))
     .filter((f) => f.length > 0);
+}
+
+/** La ponctuation qui ouvre ou ferme un fragment n'est pas comparée (voir l'en-tête). */
+export function sansBords(fragment: string): string {
+  return fragment.replace(/^[.,;:\s]+/, "").replace(/[.,;:\s]+$/, "");
 }
 
 export type DiffMot =

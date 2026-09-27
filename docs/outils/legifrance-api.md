@@ -86,8 +86,17 @@ le rapport complet du jour).
   (« Arrêté 2004-03-01 art. 19 ») avec un `LEGITEXT`/`JORFTEXT` dans l'URL
   de l'article ou du corpus → même méthode, avec les graphies possibles du
   numéro (« PE 4 » puis « PE4 », « 1er » puis « 1 »).
-- Brochure INRS, règlement européen, annexe, arrêté sans identifiant de texte
-  → **non vérifiable**, raison donnée.
+- « PO 1 § 3 — … » : le paragraphe et le libellé n'empêchent pas de lire PO 1.
+- Annexe d'arrêté (« Arrêté 2011-12-26 annexe II », « Annexe à l'article
+  PO 11 ») → même méthode, numéro « Annexe II », « Annexe » (relevé C51 :
+  Légifrance numérote ainsi ses annexes).
+- Plage d'articles d'arrêté (« art. 26-28 », borne haute > borne basse ;
+  « 78-1 » reste un article) ou arrêté cité entier dont la citation balise ses
+  articles « (art. 1er) … (art. 4) » → chaque article lu, textes mis bout à
+  bout ; version = la plus récente ; un article absent rend la plage
+  non vérifiable.
+- Brochure INRS, règlement européen, arrêté cité entier sans article ni
+  balise, arrêté sans identifiant de texte → **non vérifiable**, raison donnée.
 
 Si l'article lu n'est pas la version en vigueur (le corpus pointe une version
 ancienne), la version `VIGUEUR` de `articleVersions` est lue à son tour, et
@@ -96,24 +105,38 @@ c'est elle qu'on compare.
 **Comparer.**
 
 1. *Citation* — la `citationCle` est-elle un extrait exact du texte en vigueur
-   (`texteHtml`, sinon `texte`) ? Normalisation, appliquée des deux côtés :
-   espaces Unicode (insécables, fines) ; apostrophes et guillemets
-   typographiques ; tirets ; espace avant `: ; ! ? )` ; « 1 ° » = « 1° »,
-   « 1ᵉʳ » = « 1er », « §3 » = « § 3 ». Les élisions (`[…]`, `(…)`, `…`)
-   coupent la citation en fragments qui doivent se suivre dans l'ordre.
+   (`texteHtml`, sinon `texte`, suivi du `nota`) ? Normalisation, appliquée
+   des deux côtés : espaces Unicode (insécables, fines) ; apostrophes et
+   guillemets typographiques ; espaces contre un guillemet droit ; tirets, et
+   « ― » ; espace avant `: ; ! ? ) , .` ; « 1 ° » = « 1° », « 1ᵉʳ » = « 1er »,
+   « 5 e » = « 5e », « §3 » = « § 3 », « § 1.A » = « § 1. A », « m/ s » =
+   « m/s » ; puce de liste (tiret qui ouvre un élément) effacée ; numéro
+   d'élément « 1. » = « 1° ». Les élisions (`[…]`, `(…)`, `…`), les balises
+   « (art. N) » et les sauts de ligne coupent la citation en fragments qui
+   doivent se suivre dans l'ordre ; la ponctuation qui ouvre ou ferme un
+   fragment n'est pas comparée.
    **Ni la casse, ni les accents, ni un mot, ni un chiffre** ne sont
    normalisés — `normalisation.test.ts` l'éprouve en changeant un mot.
 2. *Version* — `versionEnVigueur` du corpus = `dateDebut` de la version en
    vigueur ? Si le corpus date une version différée (`VIGUEUR_DIFF`), c'est dit.
-3. *Modificateur* — le texte qui a produit la version en vigueur (les
-   `lienModifications` dont `dateDebutCible` = `dateDebut`, sens « cible »
-   préféré ; à défaut, pour une version unique, le texte porteur) désigne-t-il
-   le même texte que `modifiePar` ? Même texte = même `JORFTEXT`, sinon même
+3. *Modificateur* — le texte qui a produit la version en vigueur (ses
+   `lienModifications` de modification, création ou déplacement —
+   `CODIFICATION`, citations, abrogations exclues ; à défaut le texte de
+   codification ; à défaut, pour une version unique, le texte porteur)
+   désigne-t-il le même texte que `modifiePar` ? Même texte = même `JORFTEXT`, sinon même
    numéro (« 2025-482 »), sinon même nature et même date de signature.
    `modifiePar: null` (« rien à signaler ») n'est contredit que par un lien de
-   MODIFICATION, pas par une création. `modifiePar` absent : pas comparé.
-4. *Abrogation* — état `ABROGE`, `ABROGE_DIFF`, `TRANSFERE`, `PERIME`,
-   `ANNULE`, `DISJOINT`, ou aucune version en vigueur.
+   MODIFICATION ou un DÉPLACEMENT, pas par une création. `modifiePar`
+   absent : pas comparé. Quand le titre concorde mais que l'URL du corpus
+   porte un autre `JORFTEXT`, le constat le dit.
+4. *Abrogation* — état `ABROGE`, `ABROGE_DIFF` sans version suivante,
+   `TRANSFERE`, `PERIME`, `ANNULE`, `DISJOINT`, ou aucune version en vigueur.
+   Une version `ABROGE_DIFF` suivie d'une `VIGUEUR_DIFF` qui commence le jour
+   de sa fin est une **modification programmée** : « version différente » si
+   `versionFuture` ne porte pas cette date, section « Versions futures
+   programmées » du rapport dans tous les cas. « 2222-02-22 » est la date
+   conventionnelle de Légifrance pour une entrée en vigueur non fixée : signalée,
+   pas comparée.
 
 **Rythme.** Un appel au plus toutes les 300 ms (`--delai`), en série ; jeton
 mis en cache et renouvelé 60 s avant son expiration ; un 401 renouvelle le
@@ -149,11 +172,18 @@ d'un « — » la comparaison qui n'a pas pu se faire (pas de `citationCle`, de
 
 ## 7. Points ouverts
 
-- **Sens des liens de modification.** Le Swagger ne documente pas les valeurs
-  de `linkOrientation` ni de `linkType`. Le filtre retient les liens datés de
-  la version en vigueur, « cible » de préférence ; à confirmer sur les
-  premières réponses réelles, et à corriger dans `modificateursCourants` si
-  les « modificateur différent » du premier passage le démentent.
+- ~~**Sens des liens de modification.**~~ Tranché le 2026-09-27 (C51) sur les
+  réponses brutes : voir l'en-tête de `modificateursCourants`. `dateDebutCible`
+  n'est pas la date de la version (entrée en vigueur de l'article
+  modificateur, ou sentinelle 2999-01-01) ; `linkOrientation` se lit avec
+  `linkType` (`MODIFIE`/`CREE`/`DEPLACE` « cible » et `MODIFICATION`
+  « source » disent le même fait) ; vu depuis l'article du texte modificateur,
+  les mêmes liens sont « source » (loi n° 2026-534, art. 95 → L. 8222-1-1
+  `CREE`/« source »).
+- **Règlement ERP à version différée.** GE 6 (version au 2027-06-01) reste
+  non vérifiable : `getArticleWithIdAndNum` ne le trouve pas, et les points
+  de sommaire (`/consult/legi/tableMatieres`, `/consult/legiPart`,
+  `/consult/getSectionByCid`) rendent une réponse vide en bac à sable.
 - **Articles d'arrêtés par numéro.** `getArticleWithIdAndNum` est documentée
   pour un `LEGITEXT` ; son comportement avec un `JORFTEXT` ou sur le
   règlement ERP n'est pas documenté. Sans résultat, l'article est « non

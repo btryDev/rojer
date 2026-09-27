@@ -200,6 +200,9 @@ export type ArticleApi = {
   etat?: string;
   texte?: string;
   texteHtml?: string;
+  /** Le nota de l'article (Légifrance l'affiche sous le texte) : date d'application, renvoi. */
+  nota?: string;
+  notaHtml?: string;
   dateDebut?: number | string;
   dateFin?: number | string;
   idTexte?: string;

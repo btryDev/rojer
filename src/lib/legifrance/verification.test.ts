@@ -295,3 +295,173 @@ describe("dates et textes", () => {
     expect(memeTexte(cleTexte("le texte"), cleTexte("un autre"))).toBeUndefined();
   });
 });
+
+// C51 — ce que les réponses RÉELLES ont appris au script. Les fixtures
+// reprennent la forme relevée (dates en chaîne, sentinelle 2999-01-01).
+describe("C51 : modificateur, liens réels", () => {
+  const URL_ART = "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053629124";
+  /** CCH R. 134-6, version du 2026-04-01 : le lien porte dateDebutCible 2026-03-07. */
+  const R134_6: ArticleApi = {
+    id: "LEGIARTI000053629124",
+    etat: "VIGUEUR",
+    texte: "Le contrat d'entretien comporte la vérification du bon état des câbles.",
+    dateDebut: J("2026-04-01"),
+    articleVersions: [
+      { id: "LEGIARTI000043818737", etat: "MODIFIE", dateDebut: J("2021-07-01") },
+      { id: "LEGIARTI000053629124", etat: "VIGUEUR", dateDebut: J("2026-04-01") },
+    ],
+    lienModifications: [
+      { linkType: "CODIFICATION", linkOrientation: "source", textCid: "JORFTEXT000043808633", textTitle: "Décret n°2021-872 du 30 juin 2021 - art.", dateSignaTexte: undefined, dateDebutCible: undefined },
+      { linkType: "MODIFIE", linkOrientation: "cible", textCid: "JORFTEXT000053626113", textTitle: "Décret n°2026-166 du 4 mars 2026 - art. 1", dateSignaTexte: "2026-03-04", dateDebutCible: "2026-03-07" },
+    ],
+  };
+
+  it("dateDebutCible n'est pas la date de la version : le texte modificateur est reconnu", async () => {
+    const { s } = source({ LEGIARTI000053629124: R134_6 });
+    const r = await verifier(article({ ref: "CCH R. 134-6", url: URL_ART, modifiePar: { texte: "Décret n° 2026-166 du 4 mars 2026 - art. 1" } }), s);
+    expect(r.categorie).toBe("ok");
+    expect(r.officiel?.modificateurs.map((m) => m.titre)).toEqual(["Décret n°2026-166 du 4 mars 2026 - art. 1"]);
+  });
+
+  it("épreuve : un autre décret, ou le texte de codification, reste un écart", async () => {
+    const { s } = source({ LEGIARTI000053629124: R134_6 });
+    for (const texte of ["Décret n° 2025-1100 du 19 novembre 2025 - art. 1", "Décret n° 2021-872 du 30 juin 2021"]) {
+      expect((await verifier(article({ url: URL_ART, modifiePar: { texte } }), s)).categorie).toBe("modificateur_different");
+    }
+  });
+
+  it("lien « v. init. » signé APRÈS la date de la version (GC 21, règlement ERP reconsolidé) : reconnu", async () => {
+    const gc21: ArticleApi = {
+      ...R134_6,
+      id: "LEGIARTI000020344053",
+      dateDebut: J("1980-08-15"),
+      articleVersions: [{ id: "LEGIARTI000020344053", etat: "VIGUEUR", dateDebut: J("1980-08-15") }],
+      textTitles: [{ cid: "JORFTEXT000000290033", titre: "Arrêté du 25 juin 1980" }],
+      lienModifications: [{ linkType: "MODIFICATION", linkOrientation: "source", textCid: "JORFTEXT000000786494", textTitle: "Arrêté du 10 octobre 2005 - art. Annexe, v. init.", dateSignaTexte: "2005-10-10", dateDebutCible: "2999-01-01" }],
+    };
+    const { s } = source({ LEGIARTI000020344053: gc21 });
+    const url = "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020344053";
+    expect((await verifier(article({ url, modifiePar: { texte: "Arrêté du 10 octobre 2005 - art. Annexe, v. init." } }), s)).categorie).toBe("ok");
+    // épreuve : le texte porteur n'est plus pris pour le modificateur
+    expect((await verifier(article({ url, modifiePar: { texte: "Arrêté du 25 juin 1980" } }), s)).categorie).toBe("modificateur_different");
+  });
+
+  it("DEPLACE contredit un null ; le texte de codification seul ne le contredit pas", async () => {
+    const deplace = { ...R134_6, lienModifications: [{ linkType: "DEPLACE", linkOrientation: "cible", textCid: "JORFTEXT000045365883", textTitle: "Décret n°2022-372 du 16 mars 2022 - art. 5", dateSignaTexte: "2022-03-16" }] };
+    const { s } = source({ LEGIARTI000053629124: deplace });
+    expect((await verifier(article({ url: URL_ART, modifiePar: null }), s)).categorie).toBe("modificateur_different");
+    const codif = { ...R134_6, lienModifications: [R134_6.lienModifications![0]] };
+    const { s: s2 } = source({ LEGIARTI000053629124: codif });
+    expect((await verifier(article({ url: URL_ART, modifiePar: null }), s2)).categorie).toBe("ok");
+  });
+
+  it("MODIFICATION / source, sentinelle 2999-01-01 (règlement ERP, MS 38) : reconnu", async () => {
+    const ms38: ArticleApi = {
+      ...R134_6,
+      id: "LEGIARTI000020382888",
+      dateDebut: J("2008-10-08"),
+      lienModifications: [{ linkType: "MODIFICATION", linkOrientation: "source", textCid: "JORFTEXT000019140491", textTitle: "Arrêté du 26 juin 2008 - art. 2, v. init.", dateSignaTexte: "2008-06-26", dateDebutCible: "2999-01-01" }],
+    };
+    const { s } = source({ LEGIARTI000020382888: ms38 });
+    const url = "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382888";
+    expect((await verifier(article({ url, modifiePar: { texte: "Arrêté du 26 juin 2008 - art. 2, v. init." } }), s)).categorie).toBe("ok");
+    expect((await verifier(article({ url, modifiePar: { texte: "Arrêté du 25 juin 1980" } }), s)).categorie).toBe("modificateur_different");
+  });
+
+  it("le titre concorde mais l'URL du corpus pointe un autre JORFTEXT : écart, et c'est l'URL qui est nommée", async () => {
+    const { s } = source({ LEGIARTI000053629124: R134_6 });
+    const r = await verifier(
+      article({ url: URL_ART, modifiePar: { texte: "Décret n° 2026-166 du 4 mars 2026", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001" } }),
+      s,
+    );
+    expect(r.categorie).toBe("modificateur_different");
+    expect(r.constats[0].detail).toContain("l'URL du corpus pointe JORFTEXT000000000001, Légifrance JORFTEXT000053626113");
+  });
+
+  it("cleTexte lit la graphie ISO de l'API (« Arrêté 1993-06-04 art. 1 JORF 15 juin 1993 »)", () => {
+    expect(cleTexte("Arrêté 1993-06-04 art. 1 JORF 15 juin 1993").date).toBe("1993-06-04");
+    expect(memeTexte(cleTexte("Arrêté du 4 juin 1993 - art. 1"), cleTexte("Arrêté 1993-06-04 art. 1 JORF 15 juin 1993"))).toBe(true);
+    expect(memeTexte(cleTexte("Arrêté du 15 juin 1993"), cleTexte("Arrêté 1993-06-04 art. 1 JORF 15 juin 1993"))).toBe(false);
+  });
+});
+
+describe("C51 : nota, versions futures, résolutions", () => {
+  const URL_ART = "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531912";
+
+  it("le nota suit le texte : une citation qui le reprend est exacte ; un mot changé dans le nota, non", async () => {
+    const avecNota = { ...EN_VIGUEUR, nota: "Conformément à l'article 11 de l'arrêté du 19 juin 2015, les présentes dispositions sont applicables." };
+    const { s } = source({ LEGIARTI000018531912: avecNota });
+    const ok = await verifier(article({ url: URL_ART, citationCle: "des extincteurs. Conformément à l'article 11 de l'arrêté du 19 juin 2015" }), s);
+    expect(ok.categorie).toBe("ok");
+    const ko = await verifier(article({ url: URL_ART, citationCle: "Conformément à l'article 12 de l'arrêté du 19 juin 2015" }), s);
+    expect(ko.categorie).toBe("ecart_citation");
+  });
+
+  const programme = (dateSuivante: string): ArticleApi => ({
+    ...EN_VIGUEUR,
+    etat: "ABROGE_DIFF",
+    dateFin: J(dateSuivante),
+    articleVersions: [
+      { id: EN_VIGUEUR.id, etat: "ABROGE_DIFF", dateDebut: J("2008-05-01"), dateFin: J(dateSuivante) },
+      { id: "LEGIARTI000052645197", etat: "VIGUEUR_DIFF", dateDebut: J(dateSuivante) },
+    ],
+  });
+
+  it("ABROGE_DIFF suivi d'une VIGUEUR_DIFF : version future, pas abrogation", async () => {
+    const { s } = source({ LEGIARTI000018531912: programme("2027-01-01") });
+    const connue = await verifier(article({ url: URL_ART, versionFuture: "2027-01-01" }), s);
+    expect(connue.categorie).toBe("ok");
+    expect(connue.officiel?.versionSuivante).toEqual({ id: "LEGIARTI000052645197", dateDebut: "2027-01-01" });
+    const ignoree = await verifier(article({ url: URL_ART }), s);
+    expect(ignoree.categorie).toBe("version_differente");
+    expect(ignoree.constats[0].detail).toContain("version future programmée au 2027-01-01");
+  });
+
+  it("date conventionnelle 2222-02-22 : signalée au rapport, pas comparée", async () => {
+    const { s } = source({ LEGIARTI000018531912: programme("2222-02-22") });
+    const r = await verifier(article({ url: URL_ART }), s);
+    expect(r.categorie).toBe("ok");
+    expect(rendreRapport([r], { date: "d", env: "sandbox", selection: "s", appels: 1, reprises: 0 })).toContain("date non fixée (2222-02-22)");
+  });
+
+  it("épreuve : ABROGE_DIFF sans version suivante reste une abrogation", async () => {
+    const seul = { ...programme("2027-01-01"), articleVersions: [programme("2027-01-01").articleVersions![0]] };
+    const { s } = source({ LEGIARTI000018531912: seul });
+    expect((await verifier(article({ url: URL_ART, versionFuture: "2027-01-01" }), s)).categorie).toBe("abroge");
+  });
+
+  it("résolution : « PO 1 § 3 — … », annexes, plages, arrêté balisé", () => {
+    const erp = { id: "arrete-1980-livre-3", url: "" };
+    expect(resoudreCible(article({ ref: "PO 1 § 3 — contrôle biennal" }), erp)).toMatchObject({ par: "texte_et_numero", nums: ["PO 1", "PO1"] });
+    expect(resoudreCible(article({ ref: "Annexe à l'article PO 11" }), erp)).toMatchObject({ nums: ["Annexe à l'article PO 11"] });
+    const arrete = { id: "a", url: "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000025046978/" };
+    expect(resoudreCible(article({ ref: "Arrêté 2011-12-26 annexe II" }), arrete)).toMatchObject({ nums: ["Annexe II"] });
+    expect(resoudreCible(article({ ref: "Arrêté 2004-03-01 annexe" }), arrete)).toMatchObject({ nums: ["Annexe"] });
+    expect(resoudreCible(article({ ref: "Arrêté 2017-11-20 art. 26-28" }), arrete)).toEqual({ par: "plage", textes: ["JORFTEXT000025046978"], nums: [["26"], ["27"], ["28"]] });
+    // « 78-1 » est un article, pas une plage
+    expect(resoudreCible(article({ ref: "Arrêté 1986-01-31 art. 78-1" }), arrete)).toMatchObject({ par: "texte_et_numero", nums: ["78-1"] });
+    expect(resoudreCible(article({ ref: "Arrêté 2012-08-07", citationCle: "(art. 1er) Le propriétaire […] (art. 3) Le contrôleur" }), arrete)).toEqual({
+      par: "plage",
+      textes: ["JORFTEXT000025046978"],
+      nums: [["1er", "1"], ["3"]],
+    });
+    const nu = resoudreCible(article({ ref: "Arrêté 2025-12-01" }), arrete);
+    expect(nu.par).toBe("aucun");
+  });
+
+  it("plage : chaque article lu, textes mis bout à bout ; un article absent rend la plage introuvable", async () => {
+    const art = (id: string, texte: string, d: string): ArticleApi => ({ ...EN_VIGUEUR, id, texte, dateDebut: J(d), articleVersions: [{ id, etat: "VIGUEUR", dateDebut: J(d) }] });
+    const T = "JORFTEXT000036128632";
+    const parNum = {
+      [`${T}|26`]: art("A26", "Un équipement peut faire l'objet d'interventions.", "2018-01-01"),
+      [`${T}|27`]: art("A27", "Les réparations sont notées.", "2025-09-08"),
+    };
+    const { s } = source({}, parNum);
+    const c = { id: "esp", url: `https://www.legifrance.gouv.fr/loda/id/${T}` };
+    const r = await verifier(article({ ref: "Arrêté 2017-11-20 art. 26-27", citationCle: "(art. 26) Un équipement peut faire l'objet d'interventions. (art. 27) Les réparations sont notées.", versionEnVigueur: "2025-09-08" }), s, c);
+    expect(r.categorie).toBe("ok");
+    expect(r.officiel?.id).toBe("A26+A27");
+    const { s: s2 } = source({}, { [`${T}|26`]: parNum[`${T}|26`] });
+    expect((await verifier(article({ ref: "Arrêté 2017-11-20 art. 26-27" }), s2, c)).categorie).toBe("non_verifiable");
+  });
+});

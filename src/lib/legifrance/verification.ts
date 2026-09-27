@@ -78,7 +78,18 @@ const REGLEMENT_ERP = ["JORFTEXT000000290033", "LEGITEXT000020303557"];
 export type Cible =
   | { par: "id"; id: string }
   | { par: "texte_et_numero"; textes: string[]; nums: string[]; code: boolean }
+  /**
+   * Plusieurs articles d'un même arrêté, lus un à un et comparés comme un
+   * seul texte, dans l'ordre (C51) : « art. 26-28 », ou un arrêté cité
+   * entier dont la citation balise ses articles « (art. 1er) ».
+   */
+  | { par: "plage"; textes: string[]; nums: string[][] }
   | { par: "aucun"; raison: string };
+
+/** Les balises « (art. 26) », « (art. 1er) » d'une citation qui assemble plusieurs articles. */
+export const BALISE_ARTICLE = /\(art\.\s*(\d+)(er)?\)/g;
+
+const ROMAIN = /^[IVXL]+$/;
 
 function idsTexte(url: string | undefined): string[] {
   return url ? [...url.matchAll(/(LEGITEXT|JORFTEXT)\d{12}/g)].map((m) => m[0]) : [];
@@ -117,8 +128,15 @@ export function resoudreCible(a: ArticleDepouille, c: Pick<Corpus, "id" | "url">
     return { par: "texte_et_numero", textes: [texte], nums: [num], code: true };
   }
 
-  // Règlement de sécurité ERP : « PE 4 », « MS 38 », « GH U 16 ».
-  const erp = /^([A-Z]{1,3}(?: [A-Z])?) (\d+(?:-\d+)?)$/.exec(a.ref.trim());
+  // Règlement de sécurité ERP : « PE 4 », « MS 38 », « GH U 16 » — et
+  // « PO 1 § 3 — contrôle… » : le paragraphe et le libellé ne changent pas
+  // l'article à lire (C51).
+  const erp = /^([A-Z]{1,3}(?: [A-Z])?) (\d+(?:-\d+)?)(?:\s+(?:§|\u2014|-|\().*)?$/.exec(a.ref.trim());
+  if (/^arrete-1980/.test(c.id) && /^Annexe\b/i.test(a.ref.trim())) {
+    // « Annexe à l'article PO 11 » : Légifrance la numérote ainsi (relevé C51).
+    const textes = [...new Set([...idsTexte(url), ...idsTexte(c.url), ...REGLEMENT_ERP])];
+    return { par: "texte_et_numero", textes, nums: [a.ref.trim()], code: false };
+  }
   if (erp && /^arrete-1980/.test(c.id)) {
     const textes = [...new Set([...idsTexte(url), ...idsTexte(c.url), ...REGLEMENT_ERP])];
     return {
@@ -129,17 +147,40 @@ export function resoudreCible(a: ArticleDepouille, c: Pick<Corpus, "id" | "url">
     };
   }
 
+  const textesArrete = [...new Set([...idsTexte(url), ...idsTexte(c.url)])];
+  const numsDe = (n: string, er?: string) => (er ? [`${n}er`, n] : [n]);
+
   // Article d'arrêté : « Arrêté 2004-03-01 art. 19 », « … art. 1er », « … art. 26 § 3 ».
   const ar = /\bart\.\s*(\d+(?:-\d+)?)(er)?\b/.exec(a.ref);
   if (ar) {
-    const textes = [...new Set([...idsTexte(url), ...idsTexte(c.url)])];
-    if (textes.length === 0) {
+    if (textesArrete.length === 0) {
       return { par: "aucun", raison: "article d'arrêté sans identifiant de texte (LEGITEXT/JORFTEXT) au corpus" };
     }
-    const nums = ar[2] ? [`${ar[1]}er`, ar[1]] : [ar[1]];
-    return { par: "texte_et_numero", textes, nums, code: false };
+    // « art. 7-11 » : une PLAGE si la borne haute dépasse la basse (« 78-1 »
+    // reste l'article 78-1). Relevé C51 : l'arrêté du 20 novembre 2017 n'a pas
+    // d'article « 7-11 », il a les articles 7 à 11.
+    const plage = /^(\d+)-(\d+)$/.exec(ar[1]);
+    if (plage && Number(plage[2]) > Number(plage[1]) && Number(plage[2]) - Number(plage[1]) <= 20) {
+      const nums: string[][] = [];
+      for (let k = Number(plage[1]); k <= Number(plage[2]); k++) nums.push(numsDe(String(k), k === 1 ? "er" : undefined));
+      return { par: "plage", textes: textesArrete, nums };
+    }
+    return { par: "texte_et_numero", textes: textesArrete, nums: numsDe(ar[1], ar[2]), code: false };
   }
-  if (/\bannexe\b/i.test(a.ref)) return { par: "aucun", raison: "annexe : pas un article numéroté" };
+  // Annexe d'arrêté : « Arrêté 2004-03-01 annexe », « Arrêté 2011-12-26 annexe II ».
+  const an = /\bannexe(?:\s+([IVXL]+))?\s*$/i.exec(a.ref.trim());
+  if (an && textesArrete.length > 0 && (an[1] === undefined || ROMAIN.test(an[1]))) {
+    return { par: "texte_et_numero", textes: textesArrete, nums: [an[1] ? `Annexe ${an[1]}` : "Annexe"], code: false };
+  }
+  // Arrêté cité entier, citation balisée « (art. 1er) … » : ces articles-là.
+  const balises = [...(a.citationCle ?? "").matchAll(BALISE_ARTICLE)];
+  if (/^Arrêté\s/.test(a.ref) && balises.length > 0 && textesArrete.length > 0) {
+    return { par: "plage", textes: textesArrete, nums: balises.map((b) => numsDe(b[1], b[2])) };
+  }
+  if (/\bannexe\b/i.test(a.ref)) return { par: "aucun", raison: "annexe sans identifiant de texte au corpus" };
+  if (/^Arrêté\s/.test(a.ref)) {
+    return { par: "aucun", raison: "arrêté cité entier, sans article désigné ni citation balisée « (art. N) »" };
+  }
   return { par: "aucun", raison: "référence sans numéro d'article ni identifiant LEGIARTI" };
 }
 
@@ -161,6 +202,9 @@ export function jourCivil(d: number | string | undefined | null): string | undef
     day: "2-digit",
   }).format(new Date(n));
 }
+
+/** Date conventionnelle de Légifrance : entrée en vigueur différée, non encore fixée. */
+export const DATE_NON_FIXEE = "2222-02-22";
 
 const ETATS_FIN = new Set(["ABROGE", "ABROGE_DIFF", "TRANSFERE", "PERIME", "ANNULE", "DISJOINT"]);
 
@@ -196,6 +240,8 @@ export async function lireArticle(src: SourceArticles, cible: Cible): Promise<Le
         if (demande) break boucle;
       }
     }
+  } else if (cible.par === "plage") {
+    return lirePlage(src, cible, tentatives);
   }
   if (!demande) return { trouve: false, tentatives };
   let courant = demande;
@@ -205,6 +251,53 @@ export async function lireArticle(src: SourceArticles, cible: Cible): Promise<Le
     courant = (await src.getArticle(v.id)) ?? demande;
   }
   return { trouve: true, tentatives, demande, courant };
+}
+
+/**
+ * Une plage d'articles lue comme un seul texte : chaque article en vigueur,
+ * dans l'ordre ; le texte est leur suite (nota compris), la version est la
+ * plus récente, et les modificateurs sont ceux de l'article le plus récent.
+ * Un article absent rend la plage introuvable : on ne compare pas un morceau.
+ */
+async function lirePlage(
+  src: SourceArticles,
+  cible: Extract<Cible, { par: "plage" }>,
+  tentatives: string[],
+): Promise<Lecture> {
+  const lus: ArticleApi[] = [];
+  for (const nums of cible.nums) {
+    let trouve: ArticleApi | null = null;
+    boucle: for (const t of cible.textes) {
+      for (const n of nums) {
+        tentatives.push(`getArticleWithIdAndNum(${t}, « ${n} »)`);
+        trouve = await src.getArticleWithIdAndNum(t, n);
+        if (trouve) break boucle;
+      }
+    }
+    if (!trouve) return { trouve: false, tentatives };
+    lus.push(trouve);
+  }
+  const date = (x: ArticleApi) => jourCivil(x.dateDebut) ?? "";
+  const recent = [...lus].sort((x, y) => date(y).localeCompare(date(x)))[0];
+  const texte = lus
+    .map((x) => {
+      const corps = x.texteHtml ? texteDepuisHtml(x.texteHtml) : (x.texte ?? "");
+      const nota = x.notaHtml ? texteDepuisHtml(x.notaHtml) : (x.nota ?? "");
+      return nota.trim() ? `${corps} ${nota}` : corps;
+    })
+    .join(" ");
+  const pire = lus.find((x) => x.etat !== "VIGUEUR");
+  const assemble: ArticleApi = {
+    id: lus.map((x) => x.id ?? "?").join("+"),
+    etat: pire?.etat ?? "VIGUEUR",
+    dateFin: pire?.dateFin,
+    texte,
+    dateDebut: recent.dateDebut,
+    articleVersions: pire?.articleVersions ?? recent.articleVersions,
+    lienModifications: recent.lienModifications,
+    textTitles: recent.textTitles,
+  };
+  return { trouve: true, tentatives, demande: assemble, courant: assemble };
 }
 
 // ---------------------------------------------------------------------------
@@ -222,23 +315,83 @@ export type Modificateur = {
 };
 
 /**
- * Les liens qui ont produit la version courante : ceux dont la date de début
- * de la cible est la date de début de la version. Faute de quoi (lien non
- * daté), aucun — on ne devine pas.
+ * CE QUE VALENT `linkType`, `linkOrientation` et `dateDebutCible` — relevé
+ * sur les réponses BRUTES du premier passage réel (2026-09-27, 83 articles
+ * en écart relus, JSON gardés hors dépôt). Trois exemples au texte
+ * modificateur connu :
  *
- * Le SENS du lien (`linkOrientation`) n'est pas documenté au Swagger. Le
- * filtre retient donc tous les sens à la bonne date, en préférant « cible »
- * s'il en existe : un article porte les liens vers les textes qui l'ont
- * modifié avec le sens « cible » dans les données LEGI. À confirmer au
- * premier passage réel (docs/outils/legifrance-api.md, « points ouverts »).
+ *   CCH R. 134-6 (version du 2026-04-01) :
+ *     { linkType: "CODIFICATION", linkOrientation: "source",
+ *       textTitle: "Décret n°2021-872 du 30 juin 2021 - art.",
+ *       dateSignaTexte: null, dateDebutCible: null }
+ *     { linkType: "MODIFIE", linkOrientation: "cible",
+ *       textTitle: "Décret n°2026-166 du 4 mars 2026 - art. 1",
+ *       dateSignaTexte: "2026-03-04", datePubliTexte: "2026-03-06",
+ *       dateDebutCible: "2026-03-07" }
+ *   R. 4223-11 (version du 2018-01-01) :
+ *     { linkType: "MODIFIE", linkOrientation: "cible",
+ *       textTitle: "Décret n°2017-1819 du 29 décembre 2017 - art. 3",
+ *       dateSignaTexte: "2017-12-29", dateDebutCible: "2017-12-31" }
+ *   MS 38 (règlement ERP, version du 2008-10-08) :
+ *     { linkType: "MODIFICATION", linkOrientation: "source",
+ *       textTitle: "Arrêté du 26 juin 2008 - art. 2, v. init.",
+ *       dateSignaTexte: "2008-06-26", dateDebutCible: "2999-01-01" }
+ *
+ * Ce qu'on en tire :
+ *  - `dateDebutCible` N'EST PAS la date de début de la version produite.
+ *    C'est l'entrée en vigueur de l'article du texte modificateur (le
+ *    lendemain de sa publication : 2026-03-07, 2017-12-31), ou la sentinelle
+ *    « 2999-01-01 » (liens `MODIFICATION`), ou `null` (`CODIFICATION`).
+ *    Le filtre « dateDebutCible = début de la version » de C50 écartait donc
+ *    à tort le bon texte. Des 49 articles touchés par un constat
+ *    « modificateur différent » au premier passage, 38 ne le sont plus une
+ *    fois ce filtre retiré et le texte porteur ramené au rang de dernier
+ *    recours (C51, corpus inchangé) ; les 11 autres étaient des écarts du
+ *    corpus (URL d'un autre texte, texte modificateur faux).
+ *  - `linkOrientation` ne dit PAS à lui seul le sens : il se lit avec
+ *    `linkType`. Deux conventions coexistent dans LEGI, pour le même fait
+ *    (« ce texte a modifié cet article ») :
+ *      · verbe au participe, orientation « cible » — `MODIFIE`, `CREE`,
+ *        `DEPLACE` : l'article est la cible, le texte nommé l'auteur (codes,
+ *        arrêtés consolidés récemment) ;
+ *      · substantif, orientation « source » — `MODIFICATION` : le texte nommé
+ *        est la source de la modification (règlement ERP, arrêtés consolidés
+ *        anciennement ; « v. init. » = il a produit la version initiale de
+ *        cet identifiant).
+ *    `CODIFICATION` / « source » nomme le texte de codification — l'origine
+ *    de l'article dans le code, pas le texte de la version courante.
+ *    Observé sur 90 liens : MODIFIE/cible 44, MODIFICATION/source 23,
+ *    CODIFICATION/source 16, CREE/cible 6, DEPLACE/cible 1.
+ *    Vu depuis l'article du texte modificateur, les mêmes liens sont
+ *    « source » : la loi n° 2026-534, art. 95 (LEGIARTI000054312195) porte
+ *    { linkType: "CREE", linkOrientation: "source", articleNum: "L8222-1-1" }.
+ *    L'orientation est donc celle de l'article LU dans le lien.
+ *  - `lienModifications` porte les liens de la version DEMANDÉE, pas de tout
+ *    l'historique : l'arrêté 1986-01-31 art. 1 (trois versions) n'en a qu'un,
+ *    celui de 2020 ; CSP R. 1321-23 (sept versions), un seul, celui de 2022.
+ *
+ *  - Aucune date ne départage les liens : les articles du règlement ERP
+ *    reconsolidés en 2009 portent une version datée du 1980-08-15 et un lien
+ *    « v. init. » vers un arrêté SIGNÉ APRÈS (GC 21 : arrêté du 10 octobre
+ *    2005 ; EC 15 : du 19 novembre 2001). Un filtre « signé avant le début de
+ *    la version », essayé au premier correctif, les écartait à tort.
+ *  - `DEPLACE` / « cible » : l'article a été renuméroté ou déplacé par le
+ *    texte nommé (R. 4624-32, R. 4624-33 : décret n° 2022-372 ; R. 4121-1 :
+ *    décret n° 2011-354). C'est le texte de la version en vigueur, et il
+ *    contredit un `modifiePar: null`.
+ *
+ * Donc : les modificateurs de la version courante sont ses liens de
+ * modification, de création ou de déplacement (`CODIFICATION`, citations et
+ * abrogations exclues). Faute de quoi, le texte de codification ; faute de
+ * quoi, pour une version unique, le texte porteur.
  */
+const LIENS_HORS_MODIFICATION = /CODIFICATION|CITATION|ABROG|PERIM|ANNUL|DISJOINT|CONCORD/i;
+
 export function modificateursCourants(a: ArticleApi): Modificateur[] {
-  const debut = jourCivil(a.dateDebut);
-  const liens = (a.lienModifications ?? []).filter(
-    (l) => debut !== undefined && jourCivil(l.dateDebutCible) === debut && !/CITATION/i.test(l.linkType ?? ""),
-  );
-  const cibles = liens.filter((l) => (l.linkOrientation ?? "").toLowerCase() === "cible");
-  const retenus = cibles.length > 0 ? cibles : liens;
+  const liens = a.lienModifications ?? [];
+  const modifiants = liens.filter((l) => !LIENS_HORS_MODIFICATION.test(l.linkType ?? ""));
+  const codification = liens.filter((l) => /CODIFICATION/i.test(l.linkType ?? ""));
+  const retenus = modifiants.length > 0 ? modifiants : codification;
   const vus = new Set<string>();
   const out: Modificateur[] = [];
   for (const l of retenus) {
@@ -249,7 +402,7 @@ export function modificateursCourants(a: ArticleApi): Modificateur[] {
   }
   if (out.length > 0) return out;
   const t = a.textTitles?.[0];
-  // Pas de lien daté : si la version courante est la première, c'est le texte porteur qui l'a produite.
+  // Aucun lien : si la version courante est la première, c'est le texte porteur qui l'a produite.
   const premiere = (a.articleVersions ?? []).length <= 1;
   if (t && premiere) {
     return [
@@ -291,6 +444,11 @@ export function cleTexte(titre: string, url?: string): CleTexte {
   const d = /\bdu\s+(\d{1,2})(?:er)?\s+([a-zéû]+)\s+(\d{4})/i.exec(titre);
   if (d && MOIS[d[2].toLowerCase()]) {
     k.date = `${d[3]}-${MOIS[d[2].toLowerCase()]}-${d[1].padStart(2, "0")}`;
+  } else {
+    // Graphie ISO relevée à l'API (C51) : « Arrêté 1993-06-04 art. 1 JORF 15 juin 1993 ».
+    // La date de SIGNATURE est la première ; celle du JORF qui suit n'est pas lue.
+    const iso = /^\s*(?:décret|arrêté|loi|ordonnance)\s+(\d{4}-\d{2}-\d{2})\b/i.exec(titre);
+    if (iso) k.date = iso[1];
   }
   return k;
 }
@@ -324,6 +482,8 @@ export type ResultatArticle = {
     dateDebut?: string;
     modificateurs: Modificateur[];
     idDemandePerime?: boolean;
+    /** Version `VIGUEUR_DIFF` qui succède à une version `ABROGE_DIFF`. */
+    versionSuivante?: { id?: string; dateDebut?: string };
   };
   /** Pour trier les écarts de citation : distance cumulée en mots. */
   distanceCitation?: number;
@@ -383,9 +543,33 @@ export function analyser(
   const constats: Constat[] = [];
   const compare = { ...base.compare };
 
-  // 4. abrogé / transféré
+  // 4. abrogé / transféré — ou version future programmée.
+  //
+  // `ABROGE_DIFF` est l'état d'une VERSION qui prend fin à une date connue,
+  // pas celui d'un article qui disparaît : relevé au passage réel du
+  // 2026-09-27, R. 4227-37, L. 8222-2 et C. env. L. 512-7 sont tous trois
+  // `ABROGE_DIFF` ET suivis d'une version `VIGUEUR_DIFF` commençant le jour
+  // même de la fin (décret 2025-1100, loi 2026-534, loi 2025-794). C'est une
+  // modification programmée ; seule une version `ABROGE_DIFF` sans suivante
+  // est une abrogation différée. La date « 2222-02-22 » est la date
+  // conventionnelle de Légifrance pour une entrée en vigueur non encore
+  // fixée (L. 512-7 : « à la date de publication de l'acte d'exécution »
+  // européen) : elle se signale, elle ne se compare pas.
   const etat = courant.etat ?? "";
-  if (ETATS_FIN.has(etat)) {
+  const fin = jourCivil(courant.dateFin);
+  const suivante =
+    etat === "ABROGE_DIFF"
+      ? (courant.articleVersions ?? []).find((v) => v.etat === "VIGUEUR_DIFF" && jourCivil(v.dateDebut) === fin)
+      : undefined;
+  if (suivante) {
+    const date = jourCivil(suivante.dateDebut);
+    if (date !== DATE_NON_FIXEE && a.versionFuture !== date) {
+      constats.push({
+        categorie: "version_differente",
+        detail: `version future programmée au ${date} (${suivante.id ?? "?"}, VIGUEUR_DIFF) ; corpus versionFuture : ${a.versionFuture ?? "absente"}`,
+      });
+    }
+  } else if (ETATS_FIN.has(etat)) {
     constats.push({
       categorie: "abroge",
       detail: `état « ${etat} »${courant.dateFin && etat !== "ABROGE_DIFF" ? ` depuis le ${jourCivil(courant.dateFin)}` : ""}${etat === "ABROGE_DIFF" ? ` — abrogation différée au ${jourCivil(courant.dateFin) ?? "?"}` : ""}`,
@@ -395,7 +579,11 @@ export function analyser(
   }
 
   // 1. citation
-  const texte = courant.texteHtml ? texteDepuisHtml(courant.texteHtml) : (courant.texte ?? "");
+  // Le nota suit le texte, comme Légifrance l'affiche : le corpus le cite
+  // parfois pour la date d'application (arrêté 1986-01-31 art. 103, C51).
+  const corps = courant.texteHtml ? texteDepuisHtml(courant.texteHtml) : (courant.texte ?? "");
+  const nota = courant.notaHtml ? texteDepuisHtml(courant.notaHtml) : (courant.nota ?? "");
+  const texte = corps.trim() !== "" && nota.trim() !== "" ? `${corps} ${nota}` : corps;
   let comparaison: ComparaisonCitation | undefined;
   let distance: number | undefined;
   if (a.citationCle && texte.trim() !== "") {
@@ -434,7 +622,7 @@ export function analyser(
   const modifs = modificateursCourants(courant);
   if (a.modifiePar !== undefined) {
     compare.modificateur = true;
-    const creation = modifs.every((m) => m.source === "texte" || /CREATION|CREE/i.test(m.type ?? ""));
+    const creation = modifs.every((m) => m.source === "texte" || /CREATION|CREE|CODIFICATION/i.test(m.type ?? ""));
     if (a.modifiePar === null) {
       // « Rien à signaler » : contredit seulement par un lien qui MODIFIE la version courante.
       if (modifs.length > 0 && !creation) {
@@ -450,13 +638,27 @@ export function analyser(
       });
     } else {
       const cleCorpus = cleTexte(a.modifiePar.texte, a.modifiePar.url);
-      const verdicts = modifs.map((m) =>
-        memeTexte(cleCorpus, { ...cleTexte(m.titre), jorftext: m.cid?.startsWith("JORFTEXT") ? m.cid : undefined, date: m.dateSignature ?? cleTexte(m.titre).date }),
-      );
+      const clesApi = modifs.map((m) => ({
+        ...cleTexte(m.titre),
+        jorftext: m.cid?.startsWith("JORFTEXT") ? m.cid : undefined,
+        date: m.dateSignature ?? cleTexte(m.titre).date,
+      }));
+      const verdicts = clesApi.map((k) => memeTexte(cleCorpus, k));
       if (!verdicts.some((v) => v === true)) {
+        // Le titre concorde (numéro ou date) mais le JORFTEXT de l'URL du
+        // corpus désigne un autre texte : c'est l'URL qui est en cause, le dire.
+        const urlSeule = cleCorpus.jorftext
+          ? clesApi.find((k) => memeTexte({ ...cleCorpus, jorftext: undefined }, { ...k, jorftext: undefined }) === true)
+          : undefined;
         constats.push({
           categorie: "modificateur_different",
-          detail: `corpus : « ${a.modifiePar.texte} » ; Légifrance : ${modifs.map((m) => m.titre).join(" ; ")}${verdicts.every((v) => v === undefined) ? " (identité non établie : ni JORFTEXT, ni numéro, ni date comparables)" : ""}`,
+          detail: `corpus : « ${a.modifiePar.texte} » ; Légifrance : ${modifs.map((m) => m.titre).join(" ; ")}${
+            urlSeule
+              ? ` (même titre, mais l'URL du corpus pointe ${cleCorpus.jorftext}, Légifrance ${urlSeule.jorftext ?? "?"})`
+              : verdicts.every((v) => v === undefined)
+                ? " (identité non établie : ni JORFTEXT, ni numéro, ni date comparables)"
+                : ""
+          }`,
         });
       }
     }
@@ -474,6 +676,7 @@ export function analyser(
       dateDebut: debut,
       modificateurs: modifs,
       idDemandePerime: demande.id !== courant.id,
+      versionSuivante: suivante ? { id: suivante.id, dateDebut: jourCivil(suivante.dateDebut) } : undefined,
     },
   };
 }
@@ -629,6 +832,18 @@ export function rendreRapport(
       );
     }
     L.push(`- Appels : ${r.tentatives.join(" ; ") || "aucun"}`);
+    L.push("");
+  }
+  const futures = rs.filter((r) => r.officiel?.versionSuivante);
+  if (futures.length) {
+    L.push(`## Versions futures programmées (${futures.length})`);
+    L.push("");
+    L.push("Version en vigueur `ABROGE_DIFF` suivie d'une version `VIGUEUR_DIFF` : une modification programmée, pas une abrogation. « 2222-02-22 » = date non encore fixée (convention Légifrance).");
+    L.push("");
+    for (const r of futures) {
+      const v = r.officiel!.versionSuivante!;
+      L.push(`- ${r.ref} (\`${r.corpusId}\`, ${r.statut}) : \`${v.id ?? "?"}\` à compter du ${v.dateDebut === DATE_NON_FIXEE ? "— date non fixée (2222-02-22)" : v.dateDebut}.`);
+    }
     L.push("");
   }
   L.push("## Tous les articles");
