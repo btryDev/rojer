@@ -88,7 +88,7 @@ export const obligationsAscenseurs: Obligation[] = [
     domaine: "ascenseur",
     libelle: "Contrat d'entretien avec prestations minimales (ascenseur)",
     description:
-      "Le propriétaire fait exécuter l'entretien de l'ascenseur par une entreprise spécialisée dans le cadre d'un contrat écrit. Le contrat définit les prestations minimales fixées par R. 134-6 : une visite toutes les six semaines, la vérification toutes les six semaines des serrures de portes palières et des moyens d'alerte et de communication avec un service d'intervention, l'examen semestriel du bon état des câbles, la vérification annuelle des parachutes et le nettoyage annuel de la cuvette et du toit de cabine.",
+      "Le propriétaire fait exécuter l'entretien de l'ascenseur par une entreprise spécialisée dans le cadre d'un contrat écrit. Le contrat définit les prestations minimales fixées par R. 134-6 : une visite toutes les six semaines, la vérification toutes les six semaines des serrures de portes palières et des moyens d'alerte et de communication avec un service d'intervention, l'examen semestriel du bon état des câbles, la vérification annuelle des parachutes et le nettoyage annuel de la cuvette et du toit de cabine. Deux actes restent hors du contrat, à la charge du propriétaire : le remplacement des moyens d'alerte qui fonctionnent sur le réseau téléphonique commuté fixe ou un réseau mobile de troisième génération ou antérieur, et la réparation ou le remplacement des pièces importantes usées (R. 134-6, 2° d) et dernier alinéa ; R. 134-7, I a). La description, établie contradictoirement, de l'état initial de l'installation et le plan d'entretien sont annexés au contrat ; à sa signature, le propriétaire remet à l'entreprise la description de l'installation et la notice des instructions nécessaires à l'entretien (R. 134-7, I). En cas de changement de prestataire, un état des lieux initial et contradictoire est dressé avec le nouveau et annexé au nouveau contrat (arrêté du 18 novembre 2004, art. 4).",
     referencesLegales: [
       {
         source: "CCH",
@@ -194,7 +194,7 @@ export const obligationsAscenseurs: Obligation[] = [
     domaine: "ascenseur",
     libelle: "Contrôle technique quinquennal (ascenseur)",
     description:
-      "Tous les cinq ans, le propriétaire fait réaliser un contrôle technique de l'ascenseur (R. 134-11) par un contrôleur technique agréé, un organisme habilité ou une personne certifiée (R. 134-12). Le rapport, remis au propriétaire dans le mois suivant la fin de l'intervention, est transmis par lui à l'entreprise d'entretien (R. 134-13) ; toute personne disposant d'un titre d'occupation dans l'immeuble peut en obtenir communication (L. 134-4).",
+      "Tous les cinq ans, le propriétaire fait réaliser un contrôle technique de l'ascenseur (R. 134-11) par un contrôleur technique agréé, un organisme habilité ou une personne certifiée (R. 134-12). Le rapport, remis au propriétaire dans le mois suivant la fin de l'intervention, est transmis par lui à l'entreprise d'entretien (R. 134-13) ; toute personne disposant d'un titre d'occupation dans l'immeuble peut en obtenir communication (L. 134-4). Pour le contrôle, le propriétaire met à la disposition du contrôleur les informations et documents en sa possession que fixe l'arrêté du 7 août 2012 (art. 1er) : notice d'instructions et déclaration CE de conformité, ou, pour les appareils plus anciens, le dossier technique.",
     referencesLegales: [
       {
         source: "CCH",

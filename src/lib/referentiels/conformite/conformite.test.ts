@@ -2748,3 +2748,19 @@ describe("ce que le texte fait établir est dit en entier (2026-09-27, lot 2, 7 
     expect(obligationParId(id)?.description).toContain(phrase);
   });
 });
+
+describe("ce que le texte fait établir est dit en entier (2026-09-28, lot 2, 7 bis G1 et G2 M7)", () => {
+  // Accessoires d'articles RETENUS, lus par l'API, que ni l'obligation ni une
+  // réserve ne disaient : CCH R. 134-6 dernier al. et 2° d), R. 134-7 I,
+  // arrêté du 18 novembre 2004 art. 4, arrêté du 7 août 2012 art. 1er, arrêté
+  // du 20 novembre 2017 art. 6 III. Éprouvé en retirant l'une d'elles.
+  it.each([
+    ["ascenseur-entretien-contrat", "pièces importantes usées"],
+    ["ascenseur-entretien-contrat", "état initial de l'installation"],
+    ["ascenseur-entretien-contrat", "changement de prestataire"],
+    ["ascenseur-controle-technique-quinquennal", "à la disposition du contrôleur"],
+    ["esp-dossier-suivi", "liste des récipients fixes"],
+  ] as const)("%s dit « %s »", (id, phrase) => {
+    expect(obligationParId(id)?.description).toContain(phrase);
+  });
+});

@@ -199,7 +199,7 @@ export const obligationsEquipementSousPression: Obligation[] = [
     domaine: "equipement_sous_pression",
     libelle: "Tenue du dossier de suivi (équipement sous pression)",
     description:
-      "L'exploitant tient un dossier permettant de retrouver à tout moment l'historique de l'équipement : déclaration, contrôles, inspections, requalifications, interventions de réparation.",
+      "L'exploitant tient un dossier permettant de retrouver à tout moment l'historique de l'équipement : déclaration, contrôles, inspections, requalifications, interventions de réparation. Il tient en outre à jour la liste des récipients fixes, générateurs de vapeur et tuyauteries soumis, y compris ceux au chômage, avec pour chacun le type, le régime de surveillance et les dates de la dernière et de la prochaine inspection et requalification ; il la tient à la disposition des agents chargés de la surveillance (arrêté du 20 novembre 2017, art. 6 III).",
     referencesLegales: [
       {
         source: "ARRETE",
