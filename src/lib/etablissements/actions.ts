@@ -1,5 +1,9 @@
 "use server";
 
+import {
+  clesDesEtablissements,
+  libererFichiers,
+} from "@/lib/suppression/fichiers";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -369,8 +373,17 @@ export async function supprimerEtablissement(
     };
   }
 
+  // Les clés des fichiers stockés, lues DANS la transaction de la
+  // suppression : après, les lignes qui les portaient n'existent plus
+  // (`suppression/fichiers.ts`, 2026-09-27). Elles ne sont libérées qu'une
+  // fois la base d'accord.
+  let cles: string[];
   try {
-    await prisma.etablissement.delete({ where: { id } });
+    cles = await prisma.$transaction(async (tx) => {
+      const c = await clesDesEtablissements(tx, [id]);
+      await tx.etablissement.delete({ where: { id } });
+      return c;
+    });
   } catch (err) {
     // Filet de sécurité : une version de DUERP a pu être créée entre le
     // comptage et la suppression, ou un autre `Restrict` a été ajouté depuis.
@@ -385,6 +398,10 @@ export async function supprimerEtablissement(
       exportHref: `/etablissements/${id}/controle`,
     };
   }
+
+  // La base a tranché : les fichiers se libèrent. Un échec est journalisé et
+  // n'annule rien — l'établissement est supprimé.
+  await libererFichiers(cles, "etablissements/suppression");
 
   revalidatePath(`/entreprises/${etab.entrepriseId}`);
   redirect(`/entreprises/${etab.entrepriseId}`);

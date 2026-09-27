@@ -60,17 +60,41 @@ const h = vi.hoisted(() => {
     duerpVersion: {
       count: async () => db.nbVersionsDuerp,
     },
+    // Les tables qui portent une clé de stockage (`suppression/fichiers.ts`).
+    rapportVerification: {
+      findMany: async () => [{ fichierCle: "rap/1.pdf" }, { fichierCle: "rap/2.pdf" }],
+    },
+    prestataire: {
+      findMany: async () => [
+        { attestationUrssafCle: "presta/urssaf.pdf", assuranceRcProCle: null, kbisCle: "presta/kbis.pdf" },
+      ],
+    },
+    registreAccessibilite: {
+      findMany: async () => [
+        { attestationCle: null, agendaAdapCle: "acc/adap.pdf", attestationFormationCle: null },
+      ],
+    },
+    analyseLegionelle: {
+      findMany: async () => [{ rapportCle: "leg/analyse.pdf" }],
+    },
+    // Transaction sans isolation : le corps reçoit le même client. Suffisant
+    // pour l'ordre des écritures, qui est ce que ces tests regardent.
+    $transaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn(prisma),
   };
+
+  const stockage = { delete: vi.fn(async (_cle: string) => {}) };
 
   return {
     db,
     prisma,
+    stockage,
     genererCalendrier: vi.fn(async () => ({})),
     marquerCalendrierPerime: vi.fn(async () => {}),
   };
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
+vi.mock("@/lib/storage", () => ({ getStorage: () => h.stockage }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/headers", () => ({
   cookies: async () => ({
@@ -306,6 +330,56 @@ describe("supprimerEtablissement — conservation 40 ans", () => {
       "NEXT_REDIRECT",
     );
     expect(h.db.supprimes).toEqual(["etab-1"]);
+  });
+});
+
+describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09-27)", () => {
+  const TOUTES = [
+    "acc/adap.pdf",
+    "leg/analyse.pdf",
+    "presta/kbis.pdf",
+    "presta/urssaf.pdf",
+    "rap/1.pdf",
+    "rap/2.pdf",
+  ];
+
+  it("libère chaque fichier de chaque table, après la suppression en base", async () => {
+    h.db.nbVersionsDuerp = 0;
+    h.db.supprimes = [];
+    h.stockage.delete.mockReset();
+    h.stockage.delete.mockImplementation(async (_cle: string) => {
+      // Libéré APRÈS que la base a tranché.
+      expect(h.db.supprimes).toEqual(["etab-1"]);
+    });
+    await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.stockage.delete.mock.calls.map((c) => c[0]).sort()).toEqual(TOUTES);
+  });
+
+  it("un refus de la base ne libère aucun fichier", async () => {
+    h.db.nbVersionsDuerp = 0;
+    h.stockage.delete.mockReset();
+    const original = h.prisma.etablissement.delete;
+    h.prisma.etablissement.delete = async () => {
+      throw Object.assign(new Error("P2003"), { code: "P2003" });
+    };
+    const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await supprimerEtablissement("etab-1");
+    expect(res.statut).toBe("refus");
+    expect(h.stockage.delete).not.toHaveBeenCalled();
+    h.prisma.etablissement.delete = original;
+    erreur.mockRestore();
+  });
+
+  it("un échec du stockage n'annule pas la suppression : journalisé, et on redirige", async () => {
+    h.db.nbVersionsDuerp = 0;
+    h.db.supprimes = [];
+    h.stockage.delete.mockReset();
+    h.stockage.delete.mockRejectedValue(new Error("stockage indisponible"));
+    const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.supprimes).toEqual(["etab-1"]);
+    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(6);
+    erreur.mockRestore();
   });
 });
 
