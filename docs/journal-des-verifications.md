@@ -4185,6 +4185,66 @@ posée en production est la bonne : c'est le journal du prochain déploiement.
 accepté ; `anon` accepté ; valeur au journal ; échec d'écriture non attrapé
 (rapport, prestataire, carnet) — huit rouges.
 
+### C49 · 2026-09-27 — Relire ce qui a été déposé : analyses, pièces de prestataires, rapports au ZIP
+
+*Base : `main` `42c0390` (production), branche `lot/relire-fichiers-deposes`.
+Ni référentiel, ni moteur, ni schéma ; aucune migration. Numéro C49 donné par
+la coordination.*
+
+**Les constats.** (1) `AnalyseLegionelle.rapportCle` s'écrivait
+(`carnet-sanitaire/actions.ts`) et ne se relisait nulle part. (2) Les pièces
+des prestataires ne se relisaient que par le ZIP. (3) Le ZIP de contrôle
+déposé au test ne portait aucun rapport de vérification (sept entrées). Est-ce
+voulu ? Cherché dans le commentaire de la route, le README
+(`pdf/readme-controle.ts`), les ADR : **rien ne l'écarte**. Le README
+présentait `03_Registre_securite.pdf` comme « Rapports de vérifications
+périodiques », alors que le registre n'en porte que l'INDEX et écrit « Les
+fichiers originaux des rapports sont conservés et téléchargeables depuis
+l'application » (`RegistreDocument.tsx`) — ce qu'un tiers qui reçoit le ZIP ne
+peut pas faire. Jugé non voulu.
+
+**Fait.**
+- `storage/servir.ts` : la lecture d'un fichier et ses trois échecs (503 non
+  configuré, 410 absent, 502 panne), commune aux trois routes ; le type vient
+  du dépôt, ou de l'extension (`mimeDepuisNom`, les quatre types acceptés au
+  dépôt ; tout autre se télécharge) ; `nosniff`.
+- `/api/analyses-legionelles/[id]/rapport` et
+  `/api/prestataires/[id]/pieces/{urssaf|rcpro|kbis}` : appartenance dans le
+  `findFirst` même (carnet → établissement → entreprise → utilisateur ;
+  prestataire → établissement → entreprise → utilisateur) ; 403 hors
+  périmètre comme inexistant, 404 à soi sans pièce ou type inconnu (sans
+  lire la base : `Object.hasOwn`, pas `in`). `/api/rapports/[id]/fichier`
+  s'appuie sur le même module.
+- Liens : « Ouvrir le rapport (nom) » sur une analyse qui en a un ; « Ouvrir
+  l'attestation URSSAF / RC Pro / le Kbis » pour chaque pièce fournie, par la
+  table `prestataires/pieces.ts`, lue aussi par la route.
+- ZIP : `Rapports/` (fichiers des rapports de vérification de
+  l'établissement, nommés jour civil _ équipement ou obligation _ nom
+  d'origine, assainis, dédoublonnés) et `08_Carnet_sanitaire_analyses/`
+  (rapports de laboratoire des analyses listées au 08). Un fichier illisible
+  est compté manquant, l'archive se construit (`controle/fichiers-zip.ts`).
+  README : 03 = « Registre des vérifications, index des rapports » ;
+  `Rapports/` et `08_…_analyses/` disent ce qui est joint et ce qui ne l'a pas
+  été — jamais un déposé compté joint.
+
+**Gardes.** `api/fichiers-isolation.test.ts` : base en mémoire qui applique le
+`where` de la route comme Prisma (une condition absente ne filtre pas) — à
+soi : 200, contenu, type ; à l'autre compte : 403 sans lecture du stockage ;
+inexistant = hors périmètre ; 404 ; 503/410/502 sur les trois routes.
+`controle/fichiers-zip.test.ts` (noms assainis et uniques, aucun `..`,
+manquants comptés, rien sans fichier) ; `pdf/readme-controle.test.ts` ;
+`controle/branchements.test.ts` (source : ZIP, README, deux liens). **Ne
+prouvent pas** : le rendu réel du ZIP (la route rend des PDF, non exécutée en
+test) ; le poids d'un ZIP à beaucoup de rapports sur une fonction Vercel.
+
+**Éprouvées** — filtre utilisateur retiré de chacune des trois routes ; `in`
+au lieu de `Object.hasOwn` (d'abord VERT : le résultat est aussi un 404 ; la
+garde exige depuis qu'un type inconnu ne lise pas la base, rouge) ; 410 rendu
+502 ; type non déduit ; échec qui fait tomber l'archive ; nom non assaini
+(injection d'abord non appliquée — échappement du `$` —, rejouée, rouge) ;
+`Rapports/` non joint ; manquants tus au README ; déposés comptés joints ;
+lien du carnet retiré — toutes rouges.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
