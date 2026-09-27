@@ -3407,6 +3407,40 @@ Corpus : `PE 15`, `PE 20`, `CH 57`, `GC 21` passent en `premiere_main`
 `PE 15`, `PE 20`, `GC 21` reçoivent la leur. URL de section au corpus
 exporté : 26 → 24 (compté en appelant `CORPUS`, avant et après).
 
+**Contre-lecture de `8f49696` (2026-09-27), et ses corrections.** Rendue sans
+point grave (migration rejouée sur 14 lignes témoins, rejeu `UPDATE 0` ;
+seules les deux lignes d'EL 18 § 4 bougent ; PE 15 / PE 20 et la phrase PE 4
+vérifiés). Cinq reprises :
+- **F1** — `modifier/page.tsx` : « Les sept questions à trois états » →
+  renvoi à `CHAMPS_TRI_ETAT`, sans nombre.
+- **F2** — cinq descriptions récurrentes : « Le calendrier y maintient… »
+  faisait renvoyer « y » au calendrier ; → « En 5ᵉ catégorie, le calendrier
+  maintient pourtant cette échéance, par sur-application assumée. »
+  `cuisson-erp-verification-initiale` (ponctuelle) ne s'accole plus à la
+  triennale : elle dit ce que PE 15 § 1 dit — la « mise en œuvre » dans les
+  conditions du chapitre X — et que l'examen à la mise en service y est
+  compté par une lecture, sans parler de sur-application. La garde livre II
+  admet désormais « est une lecture » à côté de « sur-application assumée » ;
+  la garde PE 4 se borne aux échéances récurrentes et interdit à une
+  ponctuelle « trois ans » ou « sur-application ».
+- **F3** — la question du groupe électrogène n'est posée ni affichée hors
+  ERP (`erpSeulement` dans `CATEGORIES_TRI_ETAT`, `questionsTriEtatPour`) :
+  fiche et formulaire (création et modification) reçoivent `estERP` ; régime
+  inconnu ⇒ la question reste. Fiche : « les obligations restent au
+  calendrier » quand la propriété en porte plus d'une.
+- **F4** — le test de la migration rougit si `THEN NULL` devient `THEN '{}'`.
+- **F5** — `-annuel`, notes : « La quinzaine ne vit donc que dans la
+  description… » rayé et daté (la ligne `-quinzaine` existe depuis le
+  2026-08-26).
+
+**Éprouvées** : `THEN '{}'::jsonb` → `× un JSON vidé repasse à NULL…`,
+1 failed | 4 passed ; phrase de sur-application accolée à l'examen initial →
+garde PE 4 rouge, reçu `["cuisson-erp-verification-initiale"]`, 1 failed |
+94 passed ; « est une lecture » retiré de l'examen initial → garde livre II
+(C39) rouge sur la même ligne, 1 failed | 94 passed ; `erpSeulement` retiré →
+`× ne pose le groupe électrogène qu'en ERP…`, 1 failed | 10 passed. Fichiers
+restaurés après chacune.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

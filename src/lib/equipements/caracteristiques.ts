@@ -17,7 +17,7 @@
 
 import {
   CATEGORIES_AERATION,
-  CATEGORIES_TRI_ETAT,
+  questionsTriEtatPour,
   type ChampTriEtat,
 } from "./schema";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
@@ -68,6 +68,8 @@ function bool(v: unknown): boolean | undefined {
 export function caracteristiquesLisibles(
   categorie: CategorieEquipement,
   brut: unknown,
+  /** Le régime de l'établissement, quand il est connu (C41). */
+  contexte?: { estERP?: boolean },
 ): CaracteristiqueLisible[] {
   const c =
     brut !== null && typeof brut === "object" && !Array.isArray(brut)
@@ -125,8 +127,8 @@ export function caracteristiquesLisibles(
   // Les questions à trois états, mais seulement celles qui concernent la
   // catégorie : afficher « Levage de personnes » sur un extincteur ferait
   // douter de tout le reste de la fiche.
-  for (const { champ, categories } of CATEGORIES_TRI_ETAT) {
-    if (!categories.includes(categorie)) continue;
+  // Et, hors ERP, pas celles qui ne gouvernent que des obligations d'ERP.
+  for (const { champ } of questionsTriEtatPour(categorie, contexte?.estERP)) {
     const v = bool(c[champ]);
     out.push({
       cle: champ,

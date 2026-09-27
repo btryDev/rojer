@@ -719,7 +719,11 @@ describe("référentiel conformité — seuils d'effectif", () => {
     // ne doit pas se dire telle : la visite de commission de 5ᵉ cite GE 4
     // pour dire qu'il ne s'y applique PAS, le contrôle quinquennal des
     // ascenseurs est fondé ailleurs et cite AS 9 pour les catégories 1 à 4.
-    const DIT_LA_SUR_APPLICATION = /sur-application assumée/;
+    // Ou, depuis le 2026-09-27 (C41), qu'elle y est servie par une LECTURE
+    // d'un renvoi du livre III, dite comme telle : un examen à la mise en
+    // service que PE 15 § 1 peut couvrir (« mise en œuvre ») n'est pas une
+    // sur-application, et l'écrire le serait à tort.
+    const DIT_LA_SUR_APPLICATION = /sur-application assumée|est une lecture/;
     const servieAuxN5 = (erp: unknown): boolean => {
       if (erp === true) return true;
       if (!erp || typeof erp !== "object") return false;
@@ -745,7 +749,7 @@ describe("référentiel conformité — seuils d'effectif", () => {
     expect(descriptionsMuettes).toEqual([]);
   });
 
-  it("une ligne qui invoque PE 15 § 1 ou PE 20 § 2 nomme la ligne qui porte PE 4 § 2 en 5ᵉ (C41)", () => {
+  it("une échéance récurrente qui invoque PE 15 § 1 ou PE 20 § 2 nomme la ligne qui porte PE 4 § 2 en 5ᵉ ; un examen ponctuel ne s'y accole pas (C41)", () => {
     // PE 15 § 1 et PE 20 § 2 renvoient au livre II la « mise en œuvre » des
     // installations autorisées en 4ᵉ ; au livre II, l'entretien et la
     // vérification forment une section à part (GC 21-22, CH 57-58). Le rythme
@@ -759,12 +763,22 @@ describe("référentiel conformité — seuils d'effectif", () => {
     const invoquent = obligationsConformite.filter((o) =>
       /PE 15 § 1|PE 20 § 2/.test(o.description ?? ""),
     );
-    // Borne basse : sans elle, un renommage de la phrase viderait le test.
-    expect(invoquent.length).toBeGreaterThan(0);
-    const muettes = invoquent
+    // Un rythme se compare à un rythme : seules les échéances récurrentes
+    // nomment la triennale. Un examen à la mise en service ne l'est pas, et
+    // l'y accoler dirait qu'il se refait tous les trois ans.
+    const recurrentes = invoquent.filter((o) => o.nature === "echeance_recurrente");
+    const ponctuelles = invoquent.filter((o) => o.nature === "ponctuelle");
+    // Bornes basses : sans elles, un renommage de la phrase viderait le test.
+    expect(recurrentes.length).toBeGreaterThan(0);
+    expect(ponctuelles.length).toBeGreaterThan(0);
+    const muettes = recurrentes
       .filter((o) => !(o.description ?? "").includes(`« ${pe4.libelle} »`))
       .map((o) => o.id);
     expect(muettes).toEqual([]);
+    const accolees = ponctuelles
+      .filter((o) => /trois ans|sur-application/.test(o.description ?? ""))
+      .map((o) => o.id);
+    expect(accolees).toEqual([]);
   });
 
   it("`champR422734` n'est jamais posé sans `personnesPresentesMin`", () => {

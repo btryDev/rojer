@@ -60,6 +60,16 @@ describe("migration C41 — les « non » de l'ancienne case groupe électrogèn
     expect(new Set(retraits)).toEqual(new Set(["aGroupeElectrogene"]));
   });
 
+  it("un JSON vidé repasse à NULL, pas à un objet vide", () => {
+    // `serialiserCaracteristiques` écrit `null` pour un équipement sans
+    // caractéristique ; `'{}'` en ferait un second état pour la même absence.
+    const sql = sqlExecutable();
+    expect(sql).toContain(
+      `WHEN ("caracteristiques" - 'aGroupeElectrogene') = '{}'::jsonb THEN NULL`,
+    );
+    expect(sql).not.toMatch(/THEN\s+'\{\}'/);
+  });
+
   it("ne touche qu'aux données : une seule instruction, un UPDATE", () => {
     const sql = sqlExecutable();
     const instructions = sql.split(";").map((s) => s.trim()).filter(Boolean);

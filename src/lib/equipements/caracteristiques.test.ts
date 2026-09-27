@@ -90,6 +90,25 @@ describe("caracteristiquesLisibles", () => {
     expect(hotte.map((x) => x.cle)).not.toContain("aGroupeElectrogene");
   });
 
+  it("ne pose le groupe électrogène qu'en ERP, ou quand le régime est inconnu (C41)", () => {
+    const cles = (estERP?: boolean) =>
+      caracteristiquesLisibles("INSTALLATION_ELECTRIQUE", {}, { estERP }).map(
+        (x) => x.cle,
+      );
+    // Hors ERP, la question ne gouverne rien : « Pas encore répondu » y
+    // annoncerait une attente que rien n'attend.
+    expect(cles(false)).not.toContain("aGroupeElectrogene");
+    expect(cles(true)).toContain("aGroupeElectrogene");
+    // Régime inconnu : dans le doute, la question reste.
+    expect(cles(undefined)).toContain("aGroupeElectrogene");
+    const enErp = caracteristiquesLisibles(
+      "INSTALLATION_ELECTRIQUE",
+      {},
+      { estERP: true },
+    ).find((x) => x.cle === "aGroupeElectrogene");
+    expect(enErp).toMatchObject({ valeur: "Pas encore répondu", enAttente: true });
+  });
+
   it("réserve le local à pollution spécifique aux catégories d'aération", () => {
     // Le formulaire écrit `false` pour toutes les autres catégories : une
     // case décochée et une case jamais posée sont indistinguables dans un

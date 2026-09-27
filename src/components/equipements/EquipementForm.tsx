@@ -8,8 +8,8 @@ import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
 import {
   CATEGORIES_AERATION,
   CATEGORIES_EQUIPEMENT,
-  CATEGORIES_TRI_ETAT,
   VALEURS_TRI_ETAT,
+  questionsTriEtatPour,
   valeurTriEtat,
   type ChampTriEtat,
 } from "@/lib/equipements/schema";
@@ -187,6 +187,9 @@ type Props = {
   batiments?: { id: string; nom: string }[];
   libelleSubmit: string;
   labelAnnuler?: { libelle: string; href: string };
+  /** Le régime de l'établissement : hors ERP, la question du groupe
+   *  électrogène ne décide de rien et n'est pas posée (C41). */
+  estERP?: boolean;
 };
 
 function toIsoDate(d: Date | null | undefined): string {
@@ -201,6 +204,7 @@ export function EquipementForm({
   batiments = [],
   libelleSubmit,
   labelAnnuler,
+  estERP,
 }: Props) {
   const multiBatiments = batiments.length > 1;
   const [state, formAction, pending] = useActionState<
@@ -220,9 +224,7 @@ export function EquipementForm({
   const estEsp = categorie === "EQUIPEMENT_SOUS_PRESSION";
 
   // Questions à trois états applicables à la catégorie sélectionnée.
-  const questions = CATEGORIES_TRI_ETAT.filter((r) =>
-    r.categories.includes(categorie),
-  );
+  const questions = questionsTriEtatPour(categorie, estERP);
   const afficherCaracteristiques =
     estAeration || estEsp || questions.length > 0;
 

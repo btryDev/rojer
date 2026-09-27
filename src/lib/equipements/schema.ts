@@ -163,11 +163,18 @@ export const CATEGORIES_TRI_ETAT: readonly {
   champ: ChampTriEtat;
   categories: readonly CategorieEquipement[];
   message: string;
+  /**
+   * La question ne gouverne que des obligations `erp` : hors ERP, elle ne
+   * décide de rien, et « Pas encore répondu » sur la fiche d'un bureau serait
+   * une question en attente que rien n'attend (C41).
+   */
+  erpSeulement?: true;
 }[] = [
   {
     champ: "aGroupeElectrogene",
     categories: ["INSTALLATION_ELECTRIQUE"],
     message: "Spécifique aux installations électriques",
+    erpSeulement: true,
   },
   {
     champ: "estVmcGaz",
@@ -230,6 +237,19 @@ export const CATEGORIES_TRI_ETAT: readonly {
     message: "Spécifique aux installations frigorifiques",
   },
 ];
+
+/**
+ * Les questions à trois états à poser pour une catégorie. `estERP` inconnu
+ * (`undefined`) ne retire rien : dans le doute, la question reste posée.
+ */
+export function questionsTriEtatPour(
+  categorie: CategorieEquipement,
+  estERP?: boolean,
+): typeof CATEGORIES_TRI_ETAT {
+  return CATEGORIES_TRI_ETAT.filter(
+    (r) => r.categories.includes(categorie) && !(r.erpSeulement && estERP === false),
+  );
+}
 
 /** Valeurs du `<select>` de l'interface — partagées avec `EquipementForm`. */
 export const VALEURS_TRI_ETAT = [
