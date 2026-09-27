@@ -13,7 +13,7 @@ import { FAMILLES_ESP } from "./esp";
  *
  * Les propriétés qui alimentent les conditions d'obligations du référentiel
  * (cf. `src/lib/referentiels/conformite/`) sont :
- *   - `aGroupeElectrogene`          → ERP, art. EL 18 § 4 (entretien et essai mensuels du groupe ; ~~EL 20~~, installations temporaires, cité à tort — corrigé le 2026-09-27)
+ *   - `aGroupeElectrogene`          → ERP, art. EL 18 § 4, ses deux périodicités (niveaux tous les quinze jours, essai mensuel ; ~~EL 20~~, installations temporaires, cité à tort — corrigé le 2026-09-27). Trois états depuis le 2026-09-27 (C41) : seul un « non » explicite éteint les deux lignes.
  *   - `estLocalPollutionSpecifique` → travail, arrêté 08-10-1987 art. 4 § 2
  *   - `aSystemeDeRecyclage`         → travail, arrêté 08-10-1987 art. 4 b)
  *     (contrôle semestriel des gaines de recyclage, en SUS de l'annuel)
@@ -66,9 +66,16 @@ import { FAMILLES_ESP } from "./esp";
  *
  * ── Booléens à deux états contre booléens à trois états ────────────────────
  *
- * Les deux premières propriétés sont des **cases à cocher** : décochée vaut
- * « non ». C'est acceptable parce qu'elles gouvernent des obligations en
- * « opt-in » (l'obligation n'apparaît qu'après une réponse positive).
+ * `estLocalPollutionSpecifique` et `aSystemeDeRecyclage` sont des **cases à
+ * cocher** : décochée vaut « non ». C'est acceptable parce qu'elles gouvernent
+ * des obligations en « opt-in » (l'obligation n'apparaît qu'après une réponse
+ * positive).
+ *
+ * `aGroupeElectrogene` en était une jusqu'au 2026-09-27 (C41) : décochée par
+ * défaut, elle écrivait `false` sur toute installation électrique, réponse ou
+ * non. Elle est passée en trois états, et les `false` écrits avant ce jour
+ * ont été effacés par la migration `20260927120000_groupe_electrogene_tri_etat`
+ * — aucun n'était une réponse.
  *
  * Celles de `CHAMPS_TRI_ETAT` bornent au contraire des obligations **déjà publiées**, de
  * criticité élevée, en « opt-out » : elles restent applicables tant que le
@@ -131,6 +138,7 @@ export const CATEGORIES_AERATION: readonly CategorieEquipement[] = [
  * `CHAMPS_TRI_ETAT.length`, qui ne ment jamais.
  */
 export const CHAMPS_TRI_ETAT = [
+  "aGroupeElectrogene",
   "estVmcGaz",
   "aExtinctionAutomatique",
   "sertAuLevageDePersonnes",
@@ -156,6 +164,11 @@ export const CATEGORIES_TRI_ETAT: readonly {
   categories: readonly CategorieEquipement[];
   message: string;
 }[] = [
+  {
+    champ: "aGroupeElectrogene",
+    categories: ["INSTALLATION_ELECTRIQUE"],
+    message: "Spécifique aux installations électriques",
+  },
   {
     champ: "estVmcGaz",
     categories: ["VMC"],
@@ -275,7 +288,6 @@ export const equipementSchema = z
       z.coerce.number().int().min(1).max(9999).optional(),
     ),
     // Cases à cocher (deux états).
-    aGroupeElectrogene: z.coerce.boolean().optional(),
     estLocalPollutionSpecifique: z.coerce.boolean().optional(),
     aSystemeDeRecyclage: z.coerce.boolean().optional(),
     nbVehiculesParkingCouvert: z.preprocess(
@@ -310,6 +322,7 @@ export const equipementSchema = z
       z.coerce.number().min(0).max(1000000).optional(),
     ),
     // Questions à trois états (oui / non / pas encore répondu).
+    aGroupeElectrogene: triEtat,
     estVmcGaz: triEtat,
     aExtinctionAutomatique: triEtat,
     sertAuLevageDePersonnes: triEtat,
@@ -330,18 +343,8 @@ export const equipementSchema = z
   .superRefine((val, ctx) => {
     // Cohérence catégorie ↔ propriétés : une propriété spécifique ne doit
     // pas être positionnée pour une catégorie incompatible.
-    if (
-      val.aGroupeElectrogene !== undefined &&
-      val.aGroupeElectrogene &&
-      val.categorie !== "INSTALLATION_ELECTRIQUE"
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["aGroupeElectrogene"],
-        message: "Spécifique aux installations électriques",
-      });
-    }
-
+    // (`aGroupeElectrogene` est contrôlé plus bas, avec les autres questions
+    // à trois états, par `CATEGORIES_TRI_ETAT`.)
     const categoriesPollutionOk: readonly (typeof val.categorie)[] = [
       "VMC",
       "CTA",
@@ -415,7 +418,6 @@ export function normaliserFormDataEquipement(
     dateMiseEnService: raw.dateMiseEnService,
     datePeremption: raw.datePeremption,
     nombre: raw.nombre,
-    aGroupeElectrogene: caseCochee("aGroupeElectrogene"),
     estLocalPollutionSpecifique: caseCochee("estLocalPollutionSpecifique"),
     aSystemeDeRecyclage: caseCochee("aSystemeDeRecyclage"),
     nbVehiculesParkingCouvert: raw.nbVehiculesParkingCouvert,
@@ -442,8 +444,6 @@ export function serialiserCaracteristiques(
 ): Record<string, unknown> | null {
   const out: Record<string, unknown> = {};
   if (val.nombre !== undefined) out.nombre = val.nombre;
-  if (val.aGroupeElectrogene !== undefined)
-    out.aGroupeElectrogene = val.aGroupeElectrogene;
   if (val.estLocalPollutionSpecifique !== undefined)
     out.estLocalPollutionSpecifique = val.estLocalPollutionSpecifique;
   if (val.aSystemeDeRecyclage !== undefined)

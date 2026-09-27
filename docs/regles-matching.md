@@ -214,11 +214,11 @@ sont considérées comme **triviallement satisfaites** pour lui.
   valeur: 250,
 }
 
-// Condition sur une propriété booléenne (ex. présence groupe électrogène)
+// Condition sur une propriété booléenne (ex. local à pollution spécifique)
 {
   type: "equipement_propriete_booleenne",
-  categorie: "INSTALLATION_ELECTRIQUE",
-  propriete: "aGroupeElectrogene",
+  categorie: "VMC",
+  propriete: "estLocalPollutionSpecifique",
   valeur: true,
 }
 
@@ -260,12 +260,14 @@ Côté formulaire, ces propriétés sont donc des questions à **trois états**
 (oui / non / « je ne sais pas encore ») et non des cases à cocher : une
 case décochée ne distingue pas « non » de « pas encore répondu ».
 
-Trois conditions strictes sur des obligations de criticité ≥ 4 sont
+Deux conditions strictes sur des obligations de criticité ≥ 4 sont
 antérieures à cette règle et explicitement tolérées
-(`elec-erp-groupe-electrogene-annuel`,
-`aeration-travail-locaux-pollution-specifique`,
+(`aeration-travail-locaux-pollution-specifique`,
 `aeration-erp-ps-surveillance-qualite-air-sup-250`) : elles n'ont jamais
-été appliquées sans réponse, donc personne ne peut les perdre. La liste
+été appliquées sans réponse, donc personne ne peut les perdre. Une
+troisième, `elec-erp-groupe-electrogene-annuel`, en est sortie le
+2026-09-27 (C41) : la case est devenue une question à trois états, et les
+deux lignes d'EL 18 § 4 portent une condition `non_infirmee`. La liste
 est figée dans les tests ; toute nouvelle entrée doit être justifiée.
 
 ### Exclusivité PS 32

@@ -218,7 +218,14 @@ export const obligationsConformite: Obligation[] = [
 // (C40), deux descriptions sans seuil inventé : la désignation du salarié
 // compétent (L. 4644-1) et sa formation. Aucune typologie, aucun libellé :
 // empreinte inchangée, 169.
-export const REFERENTIEL_VERSION = "2026-09-26.10";
+// `.11` annulée le 2026-09-27, jamais publiée ; numéro non réemployé.
+// `.12` le 2026-09-27 (C41) : la question du groupe électrogène passe en
+// trois états, et les deux lignes d'EL 18 § 4 (quinzaine, mois) portent la
+// même condition `non_infirmee` — sans réponse ou « oui », les deux ; « non »,
+// aucune. Chez un ERP dont l'installation électrique n'a pas de réponse, la
+// ligne mensuelle ENTRE au calendrier. Les `false` de l'ancienne case sont
+// effacés par migration. 169 obligations, aucune n'entre ni ne sort.
+export const REFERENTIEL_VERSION = "2026-09-26.12";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

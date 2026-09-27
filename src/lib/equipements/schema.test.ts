@@ -264,7 +264,7 @@ describe("normaliserFormDataEquipement", () => {
     const out = normaliserFormDataEquipement(
       fd({ libelle: "Transpalette", categorie: "EQUIPEMENT_LEVAGE" }),
     );
-    expect(out.aGroupeElectrogene).toBe(false);
+    expect(out.estLocalPollutionSpecifique).toBe(false);
     expect(out.sertAuLevageDePersonnes).toBeUndefined();
     expect(out.aAccessoiresDeLevage).toBeUndefined();
   });
@@ -284,6 +284,48 @@ describe("normaliserFormDataEquipement", () => {
       expect(res.data.sertAuLevageDePersonnes).toBe(true);
       expect(res.data.aAccessoiresDeLevage).toBe(false);
     }
+  });
+});
+
+describe("groupe électrogène — trois états (C41)", () => {
+  function fd(entries: Record<string, string>): FormData {
+    const f = new FormData();
+    for (const [k, v] of Object.entries(entries)) f.append(k, v);
+    return f;
+  }
+  function stocke(groupe?: string) {
+    const entries: Record<string, string> = {
+      libelle: "TGBT",
+      categorie: "INSTALLATION_ELECTRIQUE",
+    };
+    if (groupe !== undefined) entries.aGroupeElectrogene = groupe;
+    const res = equipementSchema.safeParse(
+      normaliserFormDataEquipement(fd(entries)),
+    );
+    expect(res.success).toBe(true);
+    return res.success ? serialiserCaracteristiques(res.data) : undefined;
+  }
+
+  it("« Je ne sais pas encore » (valeur vide) ou champ absent : la clé n'est PAS écrite", () => {
+    // C'était une case décochée par défaut, qui écrivait `false` à chaque
+    // enregistrement. Ce `false` éteindrait désormais les deux lignes
+    // d'EL 18 § 4 : le silence doit rester une absence.
+    expect(stocke("")).not.toHaveProperty("aGroupeElectrogene");
+    expect(stocke()).not.toHaveProperty("aGroupeElectrogene");
+  });
+
+  it("« Oui » écrit `true`, « Non » écrit `false`", () => {
+    expect(stocke("oui")).toMatchObject({ aGroupeElectrogene: true });
+    expect(stocke("non")).toMatchObject({ aGroupeElectrogene: false });
+  });
+
+  it("refuse une réponse, même « non », hors installation électrique", () => {
+    const res = equipementSchema.safeParse({
+      libelle: "Hotte",
+      categorie: "HOTTE_PRO",
+      aGroupeElectrogene: "non",
+    });
+    expect(res.success).toBe(false);
   });
 });
 
@@ -349,7 +391,6 @@ describe("cohérence schéma ↔ référentiel d'obligations", () => {
     // condition que l'utilisateur ne peut jamais satisfaire ni infirmer.
     const collectees = new Set<string>([
       ...CHAMPS_TRI_ETAT,
-      "aGroupeElectrogene",
       "estLocalPollutionSpecifique",
       "aSystemeDeRecyclage",
       "nbVehiculesParkingCouvert",

@@ -65,7 +65,6 @@ type Valeurs = {
   familleEsp?: string | null;
   pressionMaxAdmissibleBar?: number | null;
   volumeLitres?: number | null;
-  aGroupeElectrogene?: boolean;
   estLocalPollutionSpecifique?: boolean;
   aSystemeDeRecyclage?: boolean;
   nbVehiculesParkingCouvert?: number | null;
@@ -73,7 +72,7 @@ type Valeurs = {
 } & Partial<Record<ChampTriEtat, boolean | null>>;
 
 /**
- * Libellés des sept questions à trois états.
+ * Libellés des questions à trois états.
  *
  * Elles bornent des obligations réelles : y répondre « non » retire une
  * échéance du calendrier. Deux exigences de rédaction, donc — être
@@ -89,6 +88,15 @@ const QUESTIONS_TRI_ETAT: Record<
   ChampTriEtat,
   { question: string; aide: string }
 > = {
+  // Une case à cocher jusqu'au 2026-09-27 (C41) : décochée par défaut, elle
+  // écrivait « non » sur toute installation électrique, réponse ou pas, et ce
+  // « non » ne pouvait rien éteindre sans éteindre aussi les silences. En trois
+  // états, « Je ne sais pas encore » garde les deux lignes d'EL 18 § 4 ; seul
+  // un « non » choisi les retire.
+  aGroupeElectrogene: {
+    question: "Un groupe électrogène de sécurité est-il présent ?",
+    aide: AIDE_GROUPE_ELECTROGENE,
+  },
   estVmcGaz: {
     question: "Cette VMC est-elle raccordée à des appareils à gaz ?",
     aide: "On parle de « VMC-Gaz » : la ventilation évacue aussi les produits de combustion de chaudières ou de chauffe-eau au gaz. Si oui, entretien et vérification annuels donnant lieu à un certificat remis au propriétaire ou au syndic (arrêté du 23 février 2018, art. 26 § 5°)."
@@ -207,7 +215,6 @@ export function EquipementForm({
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
 
-  const estElec = categorie === "INSTALLATION_ELECTRIQUE";
   const estAeration = CATEGORIES_AERATION.includes(categorie);
   const estVmc = categorie === "VMC";
   const estEsp = categorie === "EQUIPEMENT_SOUS_PRESSION";
@@ -217,7 +224,7 @@ export function EquipementForm({
     r.categories.includes(categorie),
   );
   const afficherCaracteristiques =
-    estElec || estAeration || estEsp || questions.length > 0;
+    estAeration || estEsp || questions.length > 0;
 
   return (
     <form action={formAction} className="flex flex-col gap-8">
@@ -355,25 +362,6 @@ export function EquipementForm({
           </header>
 
           <div className="flex flex-col gap-5">
-            {estElec && (
-              <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  name="aGroupeElectrogene"
-                  defaultChecked={valeursInitiales?.aGroupeElectrogene ?? false}
-                  className={CASE_A_COCHER}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
-                    Groupe électrogène de sécurité présent
-                  </p>
-                  <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                    {AIDE_GROUPE_ELECTROGENE}
-                  </p>
-                </div>
-              </label>
-            )}
-
             {estAeration && (
               <label className="flex cursor-pointer items-start gap-3">
                 <input

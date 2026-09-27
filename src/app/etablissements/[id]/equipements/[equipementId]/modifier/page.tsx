@@ -23,7 +23,6 @@ type Caracteristiques = Partial<
   Pick<
     EquipementInput,
     | "nombre"
-    | "aGroupeElectrogene"
     | "estLocalPollutionSpecifique"
     | "aSystemeDeRecyclage"
     | "nbVehiculesParkingCouvert"
@@ -132,7 +131,6 @@ export default async function ModifierEquipementPage({
               dateMiseEnService: eq.dateMiseEnService,
               datePeremption: eq.datePeremption,
               nombre: caracs.nombre ?? null,
-              aGroupeElectrogene: caracs.aGroupeElectrogene,
               estLocalPollutionSpecifique: caracs.estLocalPollutionSpecifique,
               aSystemeDeRecyclage: caracs.aSystemeDeRecyclage,
               nbVehiculesParkingCouvert:

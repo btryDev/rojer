@@ -70,7 +70,8 @@ vi.mock("@/lib/calendrier/reconciliation", () => ({
   marquerCalendrierPerime: h.marquerCalendrierPerime,
 }));
 
-const { reactiverEquipement, supprimerEquipement } = await import("./actions");
+const { modifierEquipement, reactiverEquipement, supprimerEquipement } =
+  await import("./actions");
 
 beforeEach(() => {
   h.db.equipements = [{ id: "eq-1", etablissementId: "etab-1", actif: true }];
@@ -170,5 +171,40 @@ describe("reactiverEquipement", () => {
     expect(res).toEqual({ ok: true });
     expect(h.db.equipements[0].actif).toBe(true);
     expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
+  });
+});
+
+describe("modifierEquipement — le groupe électrogène en trois états (C41)", () => {
+  function formulaire(groupe: string): FormData {
+    const fd = new FormData();
+    fd.set("libelle", "TGBT");
+    fd.set("categorie", "INSTALLATION_ELECTRIQUE");
+    fd.set("aGroupeElectrogene", groupe);
+    return fd;
+  }
+  const dernierUpdate = () =>
+    h.db.equipements[0] as unknown as { caracteristiques?: unknown };
+
+  it("« Je ne sais pas encore » efface un « non » déjà enregistré", async () => {
+    // Le formulaire réécrit le JSON entier à chaque enregistrement : la clé
+    // absente de la soumission disparaît de la base, et le « non » avec elle.
+    Object.assign(h.db.equipements[0], {
+      caracteristiques: { aGroupeElectrogene: false },
+    });
+    await modifierEquipement("eq-1", { status: "idle" }, formulaire(""));
+    expect(dernierUpdate().caracteristiques).not.toHaveProperty(
+      "aGroupeElectrogene",
+    );
+  });
+
+  it("« Non » s'écrit `false`, « Oui » s'écrit `true`", async () => {
+    await modifierEquipement("eq-1", { status: "idle" }, formulaire("non"));
+    expect(dernierUpdate().caracteristiques).toMatchObject({
+      aGroupeElectrogene: false,
+    });
+    await modifierEquipement("eq-1", { status: "idle" }, formulaire("oui"));
+    expect(dernierUpdate().caracteristiques).toMatchObject({
+      aGroupeElectrogene: true,
+    });
   });
 });

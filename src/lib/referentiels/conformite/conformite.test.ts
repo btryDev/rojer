@@ -760,7 +760,9 @@ describe("référentiel conformité — non-régression des obligations critique
    * pour une raison nommée. Le critère commun : aucun établissement ne peut
    * perdre en silence une obligation qu'il avait déjà.
    *
-   *  - les trois premières sont antérieures à l'amendement 2026-08 :
+   *  - celles qui ne portent pas de commentaire sont antérieures à
+   *    l'amendement 2026-08 (`elec-erp-groupe-electrogene-annuel` en était
+   *    jusqu'au 2026-09-27, C41) :
    *    l'obligation n'a JAMAIS été appliquée sans réponse ;
    *  - `levage-vgp-semestrielle-chariot-gerbeur` est une obligation neuve, que
    *    personne ne peut donc perdre, et dont la couverture par défaut reste
@@ -772,7 +774,9 @@ describe("référentiel conformité — non-régression des obligations critique
    * rédigée en `non_infirmee` ou en `infirmee`.
    */
   const CONDITIONS_STRICTES_JUSTIFIEES = new Set([
-    "elec-erp-groupe-electrogene-annuel",
+    // ~~"elec-erp-groupe-electrogene-annuel"~~ — retirée le 2026-09-27 (C41) :
+    // la question est passée en trois états et la condition en `non_infirmee`,
+    // elle n'est plus stricte.
     // Obligation neuve créée le 2026-08-26 (arrêté du 1er mars 2004, art. 23 b) :
     // aucun équipement déjà en base ne peut la perdre, et
     // `levage-vgp-semestrielle-personnes` couvre l'appareil tant que la question
@@ -1508,6 +1512,15 @@ describe("référentiel conformité — version et empreinte", () => {
     // même sans avoir quitté sa branche — la case du formulaire est binaire
     // et décochée par défaut, « faux » n'y est pas une réponse. Son numéro
     // n'est pas réemployé, comme `.3` : la prochaine version sera `.12`.
+    //
+    // C41 (2026-09-27) : la case devient une question à trois états, et les
+    // deux lignes d'EL 18 § 4 portent la même condition `non_infirmee` sur
+    // `aGroupeElectrogene` — `-annuel` quitte la forme stricte, `-quinzaine`
+    // en gagne une. Les conditions sont hachées, l'empreinte bouge. Aucune
+    // obligation n'entre ni ne sort : 169 + 0 − 0 = 169. Les `false` écrits
+    // par l'ancienne case sont effacés par la migration
+    // `20260927120000_groupe_electrogene_tri_etat`.
+    { version: "2026-09-26.12", empreinte: "169-fd2eaf2750ad7a5f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

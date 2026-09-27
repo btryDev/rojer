@@ -28,6 +28,7 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
  * gaz ? ») ; la fiche relit une réponse, elle nomme la propriété.
  */
 export const LIBELLE_CARACTERISTIQUE: Record<ChampTriEtat, string> = {
+  aGroupeElectrogene: "Groupe électrogène de sécurité",
   estVmcGaz: "VMC raccordée au gaz",
   aExtinctionAutomatique: "Extinction automatique en cuisine",
   sertAuLevageDePersonnes: "Sert au levage de personnes",
@@ -79,15 +80,6 @@ export function caracteristiquesLisibles(
       cle: "nombre",
       libelle: "Nombre d'appareils",
       valeur: String(c.nombre),
-    });
-  }
-
-  const groupe = bool(c.aGroupeElectrogene);
-  if (categorie === "INSTALLATION_ELECTRIQUE" && groupe !== undefined) {
-    out.push({
-      cle: "aGroupeElectrogene",
-      libelle: "Groupe électrogène de sécurité",
-      valeur: groupe ? "Oui" : "Non",
     });
   }
 

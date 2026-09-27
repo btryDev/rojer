@@ -520,30 +520,39 @@ describe("moteur matching — typologie habitation", () => {
 // TESTS — conditions d'équipement
 // ============================================================================
 
-describe("moteur matching — conditions booléennes (groupe électrogène)", () => {
-  it("ERP avec groupe électrogène déclaré → EL 18 § 4 mensuel applicable", () => {
+describe("moteur matching — groupe électrogène en trois états (C41)", () => {
+  const GE = [
+    "elec-erp-groupe-electrogene-annuel",
+    "elec-erp-groupe-electrogene-quinzaine",
+  ];
+  const lignesGe = (res: ReturnType<typeof determineObligationsApplicables>) =>
+    idsObligations(res).filter((id) => GE.includes(id)).sort();
+
+  it("« oui » → les deux lignes d'EL 18 § 4", () => {
     const res = determineObligationsApplicables(etabErpCat3(), [
-      elec({
-        caracteristiques: { aGroupeElectrogene: true },
-      }),
+      elec({ caracteristiques: { aGroupeElectrogene: true } }),
     ]);
-    expect(idsObligations(res)).toContain("elec-erp-groupe-electrogene-annuel");
+    expect(lignesGe(res)).toEqual(GE);
   });
 
-  it("ERP SANS groupe électrogène → EL 18 § 4 mensuel NON applicable", () => {
+  it("sans réponse → les deux lignes (le silence n'éteint rien)", () => {
+    expect(
+      lignesGe(determineObligationsApplicables(etabErpCat3(), [elec()])),
+    ).toEqual(GE);
+    expect(
+      lignesGe(
+        determineObligationsApplicables(etabErpCat3(), [
+          elec({ caracteristiques: { nombre: 2 } }),
+        ]),
+      ),
+    ).toEqual(GE);
+  });
+
+  it("« non » explicite → aucune des deux", () => {
     const res = determineObligationsApplicables(etabErpCat3(), [
       elec({ caracteristiques: { aGroupeElectrogene: false } }),
     ]);
-    expect(idsObligations(res)).not.toContain(
-      "elec-erp-groupe-electrogene-annuel",
-    );
-  });
-
-  it("ERP avec caracs absentes → EL 18 § 4 mensuel NON applicable (condition par défaut = non remplie)", () => {
-    const res = determineObligationsApplicables(etabErpCat3(), [elec()]);
-    expect(idsObligations(res)).not.toContain(
-      "elec-erp-groupe-electrogene-annuel",
-    );
+    expect(lignesGe(res)).toEqual([]);
   });
 });
 
@@ -1297,7 +1306,6 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       // S'AJOUTE à cet annuel, qui reste dû tant que la question n'a pas reçu
       // « oui ». Aucun équipement en base ne peut donc rien perdre.
       "aeration-travail-recyclage-semestriel",
-      "elec-erp-groupe-electrogene-annuel",
       // Obligation neuve du 2026-09-01 (arrêté du 20 novembre 2017, art. 15 :
       // deux ans pour les générateurs de vapeur). Elle porte l'égalité
       // `familleEsp = generateur_vapeur`, qui est stricte ; sa jumelle
