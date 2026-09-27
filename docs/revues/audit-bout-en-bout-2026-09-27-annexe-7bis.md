@@ -17,14 +17,15 @@ chaque manque sont au § 0, qui fait foi sur les tables.
 |---|---|---|---|
 | G1 | GE 6 lu par l'identifiant de son article (url) | corrigé | `3615cb33` |
 | G1 | n° 62 PE 27 § 2 ; encodages proposés 1 à 3 (alarme, dotation, dégagements N5) | décision — la réserve GN 10 de PE 27 interdit d'en ajouter | D21 (après D13) |
-| G1 | n° 103 R. 134-6 2° d) ; proposés 4 à 9 (PE 18, PE 24, PE 15/19/21, PE 27 § 2 c), GZ 13, PE 4 § 3, GH 5 § 4, `prescrit` de l'arrêté 2025-12-01) | décision | D21, D23 |
+| G1 | n° 103 R. 134-6 2° d) ; proposés 4 à 9 (PE 18, PE 24, PE 15/19/21, GZ 13, PE 4 § 3, GH 5 § 4, `prescrit` de l'arrêté 2025-12-01) | décision ; le remplacement est dit dans la description (`1f4dee9c`, `205199d3`), son échéance reste à décider | D23 |
+| G1 | proposé 8 : PE 27 § 2 c) | décision | D21 |
 | G1 | n° 59 PE 4 § 3 (mise en demeure) | décision (réserve ADR-035) | D23 |
-| G1 | n° 104, 106, 114, 115 (ascenseur : pièces usées hors contrat, état initial et plan d'entretien, état des lieux au changement de prestataire, documents au contrôleur) | corrigés : dits dans les obligations d'ascenseur qui les portent, comme M4 | `1f4dee9c` |
-| G1 | les 19 autres SANS ÉTAT | classés : livre II, hôtels, IGH, habitation (PE 1 § 1) | § D « Classés » de G1 |
+| G1 | n° 104, 106, 114, 115 (ascenseur : pièces usées hors contrat, état initial et plan d'entretien, état des lieux au changement de prestataire, documents au contrôleur) | corrigés : dits dans les obligations d'ascenseur qui les portent, comme M4 | `1f4dee9c`, relus contre le texte `205199d3` |
+| G1 | les 20 autres SANS ÉTAT | classés : livre II, hôtels, IGH, habitation (PE 1 § 1) | § D « Classés » de G1 |
 | G2 | M1 dotation en extincteurs (R. 4227-29) | encodé comme obligation NOUVELLE d'établissement, `incendie-travail-moyens-lutte` inchangée (sa note la garde portée par l'équipement) | branche `lot/audit-obligations-nouvelles` |
 | G2 | M2 éclairage de sécurité installé | décision (dispense de l'art. 5 hors corpus) | D22 |
 | G2 | M3 R. 543-79, M4 notice BAES, M5 R. 4227-38 8°, M6 R. 4544-10 al. 2, M8 R. 4227-40, (ii) arr. 1993 art. 14 | corrigés | `f67f56d5` |
-| G2 | M7 arr. 2017 art. 6 III (liste des ESP soumis) | corrigé | `1f4dee9c` |
+| G2 | M7 arr. 2017 art. 6 III (liste des ESP soumis) | corrigé | `1f4dee9c`, `205199d3` |
 | G2 | N1 à N5 (art. 5 de 1993, R. 4323-97, -95, -101/-102, -104 3°-4°) | décision | D23 |
 | G2 | (i) champ de la question des matières | décision : garder la question | D24 |
 | G3 | L. 4141-1 al. 2 | corrigé | `974b7916` |
@@ -32,7 +33,7 @@ chaque manque sont au § 0, qui fait foi sur les tables.
 | G3 | L. 4121-3 al. 2 1° | décision | D17 |
 | G3 | R. 4512-3, R. 4512-4 | décision | D18 |
 | G3 | R. 4323-81 à -88 | décision | D19 |
-| G3 | D. 4622-2 al. 2 ; R. 4451-57 | décision (hors cible) | D20 |
+| G3 | D. 4622-2 al. 2 (hors cible) ; R. 4451-57 (motif à confirmer ou reclasser) | décision | D20 |
 | Guide | n° 2 vérification annuelle des ascenseurs par l'employeur (arrêté du 29-12-2010) | décision (obligation nouvelle de rythme) | D10 |
 | Guide | CO₂ > 30 bar ; écarts écrits dans une revue seulement | décision | D11, D12 |
 

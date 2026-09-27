@@ -11,12 +11,20 @@ reste va dans `docs/revues/decisions-a-prendre-2026-09-27.md` (D1 à D24).
 Chaque maillon dit ce qui est **vérifié**, ce qui était un **défaut** et a été
 corrigé, et ce qui attend une **décision**, avec la preuve : commit, test, ou sortie
 relevée. Un test ajouté ici a été éprouvé en injectant la violation qu'il interdit ;
-la casse et la sortie rouge sont dans le message du commit.
+la casse est décrite dans le message du commit ou dans l'en-tête du fichier de test,
+et la sortie rouge est citée ci-dessous. Une contre-lecture neutre en a rejoué six
+le 2026-09-28, avec les mêmes sorties.
 
 **Hashs.** La branche a été rebasée deux fois le 2026-09-27 (sur les corrections de
 la revue du lot 1, puis sur `1cded3d8`). Les hashs cités ici sont ceux d'aujourd'hui.
 Les messages de commit antérieurs au rebase citent parfois l'ancien : `05acd12` →
-`1310b435`, `c70a069` → `2505c5b2`, `56c35fc` → `9b0f735a`, `2967030` → `f67f56d5`.
+`1310b435`, `c70a069` → `2505c5b2`, `56c35fc` → `9b0f735a`, `2967030` → `f67f56d5` ;
+l'en-tête généré de `verification-legifrance-2026-09-27-lot2.md` dit « Corpus à
+`71294cb` », aujourd'hui `feeb952e`.
+
+**Fichiers temporaires.** `2505c5b2` a embarqué trois fichiers d'audit temporaires
+(`zz-m5-*.tmp*`), retirés par le commit suivant, `2135985f`. Ils n'existent dans
+aucun arbre de fin de branche.
 
 ---
 
@@ -25,7 +33,8 @@ Les messages de commit antérieurs au rebase citent parfois l'ancien : `05acd12`
 **Vérifié.**
 - `pnpm legifrance:verifier` sur tout le corpus (`1310b435`, rapport
   `docs/revues/verification-legifrance-2026-09-27-lot2.md`) : 534 articles, 513 OK,
-  20 non vérifiables (fiches INRS, règlement UE 2024/573, arrêtés cités entiers), 0
+  20 non vérifiables (fiches INRS, règlement UE 2024/573, arrêtés cités entiers,
+  et GE 6 — corrigé ci-dessous), 0
   introuvable, 0 écart de citation, 0 version différente, 1 « abrogé / transféré ».
   Ce dernier est R. 4216-2, en abrogation différée au 2027-01-01 et déjà relevé au
   corpus par le lot 1.
@@ -33,12 +42,14 @@ Les messages de commit antérieurs au rebase citent parfois l'ancien : `05acd12`
   existant).
 
 **Défaut corrigé.** GE 6 n'était pas résolu : son URL pointait une section, pas
-l'article en abrogation différée. Elle pointe désormais LEGIARTI000020380169, et la
-vérification rend « GE 6 : OK » (`3615cb33`).
+l'article en abrogation différée. Elle pointe désormais LEGIARTI000020380169
+(`3615cb33`). Relevé le 2026-09-28, `pnpm legifrance:verifier -- --ref "GE 6"` :
+« [1/1] GE 6 (arrete-1980-livre-2) : OK ».
 
 **Décision.** D15 : treize obligations citent un article `retenu` qui ne les nomme
-pas. Le sens inverse du lien n'est gardé par aucun test ; le test proposé, rouge par
-construction, attend cette décision.
+pas. Le sens inverse du lien n'est gardé par aucun test. Un test a été écrit
+pendant l'audit ; il est rouge par construction et n'est pas commité — il se pose
+avec la décision.
 
 ## Maillon 2 — Référentiel : aucune obligation morte
 
@@ -70,8 +81,8 @@ rougit.
 
 **Décisions.**
 - D7 : les vérifications de levage sont en double. L'art. 23 de l'arrêté du
-  1er mars 2004 donne un seul rythme par appareil ; son cas de test est retiré en
-  attendant la décision.
+  1er mars 2004 donne un seul rythme par appareil. Le cas écrit pendant l'audit
+  n'est pas commité ; `seuils-derives.test.ts` dit en tête qu'il n'est pas tenu.
 - D9 : faut-il un avertissement à la fiche quand le nombre déclaré est sous
   l'effectif ?
 
@@ -84,13 +95,16 @@ L'ordre entre les règles et le calendrier civil de Paris sont ajoutés dans
 - titre > ponctuel soldé : rouge, alors que `echeance-de-ligne.test.ts` restait vert
   sous la même casse ;
 - rapport > héritage > mise en service : `realisationHeritee ?? realisee` rend
-  3 rouges ;
-- 29/02 en annuel et 31/03 en trimestriel : l'écrêtage de fin de mois retiré rend
-  2 rouges ;
+  « Tests 3 failed | 100 passed (103) » sur les deux fichiers — 1 rouge dans le
+  nouveau, 2 dans la table existante ;
+- 29/02 en annuel et 31/03 en trimestriel : l'écrêtage de fin de mois retiré
+  (`dates/index.ts:296`) rend « Tests 2 failed | 3 passed (5) » ;
 - passage à l'heure d'été : le pas de six mois en UTC rend 1 rouge.
 
-**Décision.** D8 : un ponctuel antérieur au suivi affiche 4 228 jours de retard,
-quand la règle 4 écarte ce passé pour les rythmes cycliques.
+**Décision.** D8 : un ponctuel antérieur au suivi affiche des années de retard
+(mise en service le 2015-03-01 : 4 228 jours au 2026-09-27, par le calcul), quand la
+règle 4 écarte ce passé pour les rythmes cycliques. La sortie de la sonde n'est pas
+dans le dépôt.
 
 ## Maillon 5 — Réconciliateur
 
@@ -145,9 +159,10 @@ Au tableau de bord, un seul calcul par rendu depuis `4e07e1a2`.
 
 ## Maillon 7 — Périmètre annoncé
 
-**Vérifié.** Les 25 annonces de « Ce que Rojer ne couvre pas » correspondent
-exactement aux 25 articles `non_couvert` adressés à la page. Aucune annonce n'est
-fausse.
+**Vérifié, par une sonde de session** (sortie non commitée : « ANNONCES: 25 /
+non_couvert adressés page: 25 doublons: [] »). Les 25 annonces de « Ce que Rojer ne
+couvre pas » correspondent exactement aux 25 articles `non_couvert` adressés à la
+page. Aucune annonce n'est fausse. Aucun test ne tient cette égalité.
 
 **Décisions.**
 - D6 : 15 `obligation_manquante` qui touchent la cible ne sont dites qu'au § 7 de
@@ -172,8 +187,9 @@ La table complète, avec les suites données à chaque manque, est dans
 **Comptes au relevé.**
 - G1 : 141 prescriptions (76 portées, 34 annoncées, 4 écartées sur un motif qui
   tient, 1 écartée sur un motif qui ne tient pas, 26 sans état).
-- G3 : 229 articles (66 portés, 42 annoncés, 116 motifs qui tiennent, 6 fragiles,
-  3 qui ne tiennent plus, 4 sans état).
+- G3 : 229 articles, découpés en 239 lignes (66 portées, 42 annoncées, 2
+  écartées, 116 motifs qui tiennent, 6 fragiles, 3 qui ne tiennent plus, 4 sans
+  état).
 - G2 ne donne pas de compte global. Il marque S les prescriptions sans état et S°
   celles qu'une politique sœur écrite classerait `sans_objet`.
 - La plupart des sans-état de G1 ne touchent pas la cible d'après le texte : livre
@@ -182,17 +198,21 @@ La table complète, avec les suites données à chaque manque, est dans
 **Corrigés.** Tous ont un texte relu, une politique sœur et un test éprouvé.
 - `974b7916` : L. 4141-1 al. 2 (G3).
 - `f67f56d5`, six prescriptions (G2) : R. 4227-38 8°, R. 4227-40, arrêté du
-  4 novembre 1993 art. 14 (requalifié `retenu`), C. env. R. 543-79, R. 4544-10
-  al. 2, arrêté du 14 décembre 2011 art. 11.
+  4 novembre 1993 art. 14, C. env. R. 543-79, R. 4544-10 al. 2, arrêté du
+  14 décembre 2011 art. 11. Le sujet du commit dit « d'articles retenus » : deux ne
+  l'étaient pas avant lui — l'art. 14 était `sans_objet` et passe `retenu`, et
+  R. 4227-40 entre au corpus.
 - `1f4dee9c`, cinq accessoires d'articles retenus :
   - G1 n° 104, 106, 114 et 115 : CCH R. 134-6 2° d) et dernier alinéa, R. 134-7 I,
     arrêté du 18 novembre 2004 art. 4, arrêté du 7 août 2012 art. 1er ;
   - G2 M7 : arrêté du 20 novembre 2017 art. 6 III.
+  La contre-lecture a relevé que ces phrases disaient plus ou moins que le texte ;
+  elles sont ramenées au plus près des articles par `205199d3`.
 - `9b0f735a` (Qualiconsult et GN 10) : PE 33 et PE 35 citent GN 10 ; l'URL de GN 10
   est corrigée ; l'aide de la catégorie levage ne cite plus d'appareils exclus.
-- `8002ff9b` : onze affirmations périmées de `comparaison-guide-qualiconsult.md`
-  rayées et datées, plus un motif de corpus périmé (arrêté du 10 septembre 2021,
-  art. 5).
+- `8002ff9b` : onze affirmations périmées de `comparaison-guide-qualiconsult.md`,
+  sept rayées et quatre annotées, toutes datées ; plus un motif de corpus périmé
+  (arrêté du 10 septembre 2021, art. 5).
 
 **Obligation nouvelle, sur une branche à part.** La dotation en extincteurs de
 R. 4227-29, portée par l'établissement, est sur `lot/audit-obligations-nouvelles`.
@@ -209,8 +229,8 @@ respecte.
 - Champ de la question des matières : D24, garder la question telle quelle ; le
   type 3 de l'alarme est dit (`f67f56d5`).
 - Arrêté de 1993, art. 14 : requalifié `retenu` (`f67f56d5`).
-- Marque des conditions d'équipement opt-out : D14 ; le test proposé suppose
-  l'option B.
+- Marque des conditions d'équipement opt-out : D14. Le test écrit pendant l'audit
+  suppose l'option B ; il n'est pas commité.
 - A3, l'indice qui ignore les indéterminations : D2.
 
 ## 8 — GN 10, établissements existants
@@ -242,3 +262,7 @@ recommande d'entériner l'option (a).
 - Les fichiers de travail des sous-agents (extractions JSON de l'API, texte du
   guide) sont hors dépôt ; ils se refont.
 - G2 ne donne pas de compte global de ses prescriptions.
+- Plusieurs chiffres viennent de sondes de session, non commitées : 25 = 25 et les
+  15 manques muets (D6), les scores de D2, les 42 conditions et 14 lignes de D14, le
+  dossier de production de D1. Ils se refont en appelant le code ; aucun test ne les
+  tient.

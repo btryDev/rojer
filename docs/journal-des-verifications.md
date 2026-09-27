@@ -4635,14 +4635,21 @@ fichier de bout en bout (`d9b8c2bd`, `48417bbc`) les tient. De même, l'ordre
 | 4 datation | ordre des règles, 29/02, 31/03, heure d'été (`360da522`) | — | D8 |
 | 5 réconciliateur | a/b à g2, salarié revenu ; les quatre constats du 2026-09-09 clos | — | — |
 | 6 sorties | — | garde des surfaces (`c6293641`) | D3, D4, D5 |
-| 7 périmètre | 25 annonces = 25 `non_couvert` | — | D1, D2, D6 |
-| 7 bis | 518 articles relus par l'API | `974b7916`, `f67f56d5`, `1f4dee9c`, `9b0f735a`, `8002ff9b` | D10-D12, D16-D24 |
+| 7 périmètre | 25 annonces = 25 `non_couvert` (sonde de session, non commitée) | — | D1, D2, D6 |
+| 7 bis | 518 articles relus par l'API (136 + 153 + 229) | `974b7916`, `f67f56d5`, `1f4dee9c` et `205199d3`, `9b0f735a`, `8002ff9b` | D10-D12, D16-D24 |
 | 8 GN 10 | texte relu | PE 33, PE 35 (`9b0f735a`) | D13 |
 
 **Une règle écrite a bloqué un encodage fondé, et c'est voulu.** Trois obligations
 de 5ᵉ catégorie que le texte impose (PE 27 § 2, PE 26 § 1, PE 11 § 1) ne sont pas
 codées : la réserve de PE 27 l'interdit tant que la classe GN 10 n'est pas
 tranchée (D21, après D13).
+
+**La contre-lecture neutre a trouvé nos propres phrases trop larges.** Les cinq
+accessoires dits par `1f4dee9c` résumaient le texte en ajoutant ou en perdant des
+mots — « restent hors du contrat » là où R. 134-7 I a) ne les exclut que des clauses
+minimales, « appareils plus anciens » là où l'arrêté de 2012 distingue selon la
+conformité à la directive. Ramenés au texte par `205199d3`. Un résumé de texte se
+relit contre le texte comme un encodage.
 
 **Aucune version.** Descriptions, références et corpus hors empreinte ; moteur 5
 recopié sans incrément (A1 part avec le lot 1, non livré). Aucune migration.
