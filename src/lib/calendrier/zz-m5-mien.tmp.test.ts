@@ -1,0 +1,316 @@
+// À FAIRE VIVRE À : src/lib/calendrier/reconciliateur-bout-en-bout.test.ts
+//
+// Maillon 5 de l'audit de bout en bout (lot 2, 2026-09-27). Ce que les suites
+// existantes tiennent par morceaux — la comparaison du sceau avec un prisma
+// bouchonné (`queries.test.ts`), la réparation à l'affichage avec
+// `calendrierDesynchronise` bouchonné (`regeneration-sure.test.ts`) — est
+// rejoué ici D'UN BOUT À L'AUTRE : vrai `assurerCalendrierAJour`, vraie
+// `calendrierDesynchronise`, vraie régénération, sur le faux client.
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { EquipementFaux, LigneFausse } from "./faux-prisma";
+import {
+  REFERENTIEL_VERSION,
+  empreinteReferentiel,
+} from "@/lib/referentiels/conformite";
+import {
+  SCEAU_CALENDRIER,
+  VERSION_MOTEUR_CALENDRIER,
+  sceauCalendrier,
+} from "./version-moteur";
+import { depuisCleJourCivil } from "@/lib/dates";
+import { estVerificationEnRetard } from "@/lib/dates/retard";
+
+const h = vi.hoisted(async () => {
+  const { fauxPrisma, magasinVide } = await import("./faux-prisma");
+  const db = magasinVide();
+  const modeles = new Set<string>();
+  const brut = fauxPrisma(db);
+  // Relève chaque modèle que le code touche : la régénération ne doit
+  // atteindre ni `declarationEtatPermanent` ni aucun autre modèle que les
+  // siens.
+  const prisma = new Proxy(brut, {
+    get(cible, cle, recepteur) {
+      if (typeof cle === "string") modeles.add(cle);
+      return Reflect.get(cible, cle, recepteur);
+    },
+  });
+  return { db, prisma, modeles };
+});
+
+vi.mock("@/lib/prisma", async () => ({ prisma: (await h).prisma }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/auth/require-user", () => ({
+  requireUser: vi.fn(async () => ({ id: "user-1", email: null })),
+  getOptionalUser: vi.fn(async () => ({ id: "user-1", email: null })),
+}));
+
+const { db, modeles } = await h;
+const { genererCalendrier } = await import("./actions");
+const { assurerCalendrierAJour } = await import("./regeneration-sure");
+
+const ETAB_ID = "etab-1";
+const ELEC_ANNUELLE = "elec-travail-periodique-annuelle";
+const ELEC_MISE_EN_SERVICE = "elec-travail-mise-en-service";
+const d = (cle: string) => depuisCleJourCivil(cle);
+
+function poserEtablissement(
+  equipements: Partial<EquipementFaux>[],
+  sceau: string | null = null,
+) {
+  const etab = {
+    id: ETAB_ID,
+    userId: "user-1",
+    effectifSurSite: 5,
+    effectifEntreprise: 5,
+    estEtablissementTravail: true,
+    estERP: false,
+    estIGH: false,
+    estHabitation: false,
+    typeErp: null,
+    categorieErp: null,
+    classeIgh: null,
+    familleHabitation: null,
+    personnesPresentesHabituellement: null,
+    manipuleMatieresR422722: null,
+    comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
+    referentielVersionCalendrier: sceau,
+    prescriptionsParticulieres: [],
+    equipements: equipements.map((e) => ({
+      libelle: `Équipement ${e.id}`,
+      categorie: "INSTALLATION_ELECTRIQUE",
+      caracteristiques: null,
+      actif: true,
+      dateMiseEnService: null,
+      ...e,
+    })) as EquipementFaux[],
+  };
+  db.etablissements = [etab];
+  return etab;
+}
+
+function ligne(p: Partial<LigneFausse> & { id: string }): LigneFausse {
+  return {
+    etablissementId: ETAB_ID,
+    equipementId: null,
+    salarieId: null,
+    obligationId: ELEC_ANNUELLE,
+    libelleObligation: "Vérification annuelle",
+    periodicite: "annuelle",
+    realisateurRequis: ["personne_qualifiee"],
+    datePrevue: d("2020-01-01"),
+    statut: "planifiee",
+    suiviDepuis: d("2020-01-01"),
+    nbRapports: 0,
+    nbActions: 0,
+    ...p,
+  };
+}
+
+const lue = (id: string) => db.verifications.find((v) => v.id === id);
+const ecritures = () =>
+  db.journal.filter((j) =>
+    /deleteMany|updateMany|createMany|etablissement\.update/.test(j.operation),
+  );
+
+beforeEach(() => {
+  db.etablissements = [];
+  db.salaries = [];
+  db.titres = [];
+  db.verifications = [];
+  db.faireEchouer = null;
+  db.apresLecture = null;
+  db.journal = [];
+  modeles.clear();
+  vi.unstubAllEnvs();
+});
+
+// ---------------------------------------------------------------------------
+// a + b — le sceau change, l'ouverture régénère
+// ---------------------------------------------------------------------------
+
+describe("a/b — un sceau périmé est réparé à l'ouverture, de bout en bout", () => {
+  const empreinte = empreinteReferentiel();
+  const cas: [string, string][] = [
+    ["(a) version du référentiel antérieure", sceauCalendrier("2026-09-26.9", empreinte, VERSION_MOTEUR_CALENDRIER)],
+    ["(a) empreinte différente, version identique", sceauCalendrier(REFERENTIEL_VERSION, "154-0000000000000000", VERSION_MOTEUR_CALENDRIER)],
+    ["(b) moteur précédent, référentiel identique", sceauCalendrier(REFERENTIEL_VERSION, empreinte, VERSION_MOTEUR_CALENDRIER - 1)],
+    ["(b) moteur 0 (forme d'avant la constante)", sceauCalendrier(REFERENTIEL_VERSION, empreinte, 0)],
+  ];
+
+  it.each(cas)("%s → régénère, pose le sceau courant, puis ne fait plus rien", async (_nom, ancien) => {
+    expect(ancien).not.toBe(SCEAU_CALENDRIER);
+    poserEtablissement([{ id: "eq-1" }], ancien);
+
+    await expect(assurerCalendrierAJour(ETAB_ID)).resolves.toBe(true);
+    expect(db.etablissements[0].referentielVersionCalendrier).toBe(SCEAU_CALENDRIER);
+    expect(db.verifications.some((v) => v.equipementId === "eq-1")).toBe(true);
+
+    db.journal = [];
+    await expect(assurerCalendrierAJour(ETAB_ID)).resolves.toBe(false);
+    expect(ecritures()).toEqual([]);
+  });
+
+  it("le sceau courant ne régénère rien", async () => {
+    poserEtablissement([{ id: "eq-1" }], SCEAU_CALENDRIER);
+    await expect(assurerCalendrierAJour(ETAB_ID)).resolves.toBe(false);
+    expect(db.verifications).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// c — la périodicité change au référentiel pour une ligne existante
+// ---------------------------------------------------------------------------
+// Le référentiel dit « annuelle » ; la ligne en base porte encore « triennale »
+// (écrite par un référentiel antérieur). C'est le constat B du 2026-09-09.
+
+describe("c — une périodicité changée au référentiel réaligne la ligne ouverte", () => {
+  it("sans rapport : date recalculée depuis la mise en service", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2025-06-01") }]);
+    db.verifications = [
+      ligne({ id: "c1", equipementId: "eq-1", periodicite: "triennale", datePrevue: d("2028-06-01"), suiviDepuis: d("2025-09-10") }),
+    ];
+    await genererCalendrier(ETAB_ID);
+    expect(lue("c1")?.periodicite).toBe("annuelle");
+    expect(lue("c1")?.datePrevue).toEqual(d("2026-06-01"));
+  });
+
+  it("avec rapport : dernier rapport + nouveau rythme, rapport conservé", async () => {
+    poserEtablissement([{ id: "eq-1" }]);
+    db.verifications = [
+      ligne({
+        id: "c2", equipementId: "eq-1", periodicite: "triennale",
+        datePrevue: d("2029-03-01"), suiviDepuis: d("2024-01-01"),
+        rapports: [{ dateRapport: d("2026-03-01"), resultat: "conforme" }], nbRapports: 1,
+      }),
+    ];
+    await genererCalendrier(ETAB_ID);
+    expect(lue("c2")?.periodicite).toBe("annuelle");
+    expect(lue("c2")?.datePrevue).toEqual(d("2027-03-01"));
+    expect(lue("c2")?.nbRapports).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// d — disparition puis retour d'un porteur (équipement)
+// ---------------------------------------------------------------------------
+
+describe("d — un appareil désactivé puis réactivé", () => {
+  it("avec trace : archivée puis rouverte, même identifiant, rapport et action intacts", async () => {
+    poserEtablissement([{ id: "eq-1" }]);
+    db.verifications = [
+      ligne({
+        id: "d1", equipementId: "eq-1", datePrevue: d("2027-03-01"), suiviDepuis: d("2024-01-01"),
+        rapports: [{ dateRapport: d("2026-03-01"), resultat: "conforme" }], nbRapports: 1, nbActions: 1,
+      }),
+    ];
+    await genererCalendrier(ETAB_ID);
+    expect(lue("d1")?.archiveLe ?? null).toBeNull();
+
+    db.etablissements[0].equipements[0].actif = false;
+    await genererCalendrier(ETAB_ID);
+    expect(lue("d1")?.archiveLe).toBeInstanceOf(Date);
+
+    db.etablissements[0].equipements[0].actif = true;
+    await genererCalendrier(ETAB_ID);
+    expect(lue("d1")?.archiveLe ?? null).toBeNull();
+    expect(lue("d1")?.datePrevue).toEqual(d("2027-03-01"));
+    expect(lue("d1")?.nbRapports).toBe(1);
+    expect(lue("d1")?.nbActions).toBe(1);
+
+    const r = await genererCalendrier(ETAB_ID);
+    expect(r.created + r.updated + r.deleted + r.archived).toBe(0);
+  });
+
+  it("LIMITE ÉCRITE (chantiers-ouverts § 11) — sans trace, le retard ne survit pas à l'aller-retour", async () => {
+    // Caractérise le comportement actuel ; ne le valide pas.
+    poserEtablissement([{ id: "eq-1" }]);
+    db.verifications = [
+      ligne({ id: "d2", equipementId: "eq-1", statut: "a_planifier", datePrevue: d("2020-01-01"), suiviDepuis: d("2020-01-01") }),
+    ];
+    await genererCalendrier(ETAB_ID);
+    const avant = lue("d2")!;
+    expect(estVerificationEnRetard({ ...avant, archiveLe: avant.archiveLe ?? null }, new Date())).toBe(true);
+
+    db.etablissements[0].equipements[0].actif = false;
+    await genererCalendrier(ETAB_ID);
+    expect(lue("d2")).toBeUndefined();
+
+    db.etablissements[0].equipements[0].actif = true;
+    await genererCalendrier(ETAB_ID);
+    const neuve = db.verifications.find((v) => v.obligationId === ELEC_ANNUELLE && v.equipementId === "eq-1")!;
+    expect(neuve.id).not.toBe("d2");
+    expect(estVerificationEnRetard({ ...neuve, archiveLe: neuve.archiveLe ?? null }, new Date())).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// e — jamais de perte : un écrivain qui ne s'arrête pas
+// ---------------------------------------------------------------------------
+
+describe("e — trois passes sans converger", () => {
+  it("rend la main, garde la preuve, et efface le sceau pour que l'ouverture suivante reprenne", async () => {
+    // Ligne applicable, planifiée sans source : le plan la réécrit « à
+    // planifier », par un `updateMany` conditionné sur la date lue.
+    poserEtablissement([{ id: "eq-1" }]);
+    db.verifications = [ligne({ id: "e1", equipementId: "eq-1", statut: "planifiee" })];
+    let n = 0;
+    const ecrivain = () => {
+      n += 1;
+      const v = lue("e1");
+      // À chaque passe, entre la lecture et l'écriture : une action, et la
+      // date qui bouge — chaque passe voit un monde que la suivante ne
+      // reconnaît pas.
+      if (v) { v.nbActions += 1; v.datePrevue = new Date(v.datePrevue.getTime() + 86_400_000); }
+      db.apresLecture = ecrivain;
+    };
+    db.apresLecture = ecrivain;
+
+    await genererCalendrier(ETAB_ID);
+    db.apresLecture = null;
+
+    expect(n).toBe(3);
+    expect(lue("e1")).toBeDefined();
+    expect(lue("e1")?.nbActions).toBe(3);
+    expect(db.etablissements[0].referentielVersionCalendrier ?? null).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// f — états permanents : jamais générés, déclaration jamais touchée
+// ---------------------------------------------------------------------------
+
+describe("f — la régénération ne touche que ses quatre modèles", () => {
+  it("aucun accès à `declarationEtatPermanent` ni à un autre modèle", async () => {
+    poserEtablissement([{ id: "eq-1" }]);
+    await assurerCalendrierAJour(ETAB_ID);
+    await genererCalendrier(ETAB_ID);
+    const touches = [...modeles].filter((m) => !m.startsWith("$") && m !== "then");
+    expect(touches.sort()).toEqual(
+      ["etablissement", "rapportVerification", "titreSalarie", "verification"],
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// g — constat 2 du 2026-09-09 : mise en service ancienne, deux passages
+// ---------------------------------------------------------------------------
+
+describe("g2 — une mise en service de 2015, créée puis repassée", () => {
+  it("la seconde passe n'écrit rien, le statut ne bouge pas", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2015-06-01") }]);
+    await genererCalendrier(ETAB_ID);
+    const photo = JSON.stringify(db.verifications);
+    const mes = db.verifications.find((v) => v.obligationId === ELEC_MISE_EN_SERVICE)!;
+    expect(mes.datePrevue).toEqual(d("2015-06-01"));
+
+    db.journal = [];
+    const r = await genererCalendrier(ETAB_ID);
+    expect(r.created + r.updated + r.deleted + r.archived).toBe(0);
+    expect(ecritures()).toEqual([]);
+    expect(JSON.stringify(db.verifications)).toBe(photo);
+  });
+});
+
+vi.mock("./actions", async () => await import("./zz-m5-mut.tmp"));

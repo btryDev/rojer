@@ -127,6 +127,11 @@ const RELEVE = {
   // Recopiée SANS incrément (revue du lot 1) : `PLANCHER_EFFECTIF_PAR_CATEGORIE`
   // devient exporté, pour que la politique de l'absence déclare la borne basse
   // qu'elle exempte. NON : même valeur, mêmes branches.
+  // Recopiée SANS incrément le 2026-09-27 (lot 2, maillon 3) : le total de
+  // personnes présentes ne descend plus sous l'effectif du site. OUI, cela
+  // peut écrire autrement (un exercice semestriel revient là où un nombre
+  // déclaré trop bas l'avait écarté) — mais la version 5 n'a pas été livrée,
+  // elle part avec le lot 1 : on y reste, comme la version 4 le 2026-09-20.
   // Recopiée SANS incrément le même jour (étape 6) : le moteur gagne le critère
   // `horsChampR422734` (R. 4227-37 al. 2), et le bloc du champ de R. 4227-34
   // cède la main au complément. NON : les deux seules obligations qui portent

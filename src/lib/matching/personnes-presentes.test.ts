@@ -156,3 +156,17 @@ describe("la question et le moteur disent la même chose", () => {
     expect(raisons).not.toContain("à confirmer");
   });
 });
+
+describe("le nombre déclaré ne descend pas sous l'effectif du site (2026-09-27, lot 2)", () => {
+  // R. 4227-34 compte les personnes « occupées » : les salariés du site en
+  // sont. Déclaré 40 avec 60 salariés sur site, la consigne disparaissait.
+  // Éprouvé en rétablissant `declare >= seuil` seul.
+  it("60 salariés, 40 déclarés : le champ de R. 4227-34 est atteint", () => {
+    const r = determineObligationsApplicables(
+      etab({ effectifSurSite: 60, effectifEntreprise: 60, personnesPresentesHabituellement: 40, manipuleMatieresR422722: false }),
+      [],
+    ).map((o) => o.obligation.id);
+    expect(r).toContain("incendie-travail-consigne-affichee");
+    expect(r).not.toContain("incendie-travail-instructions-evacuation");
+  });
+});

@@ -123,14 +123,23 @@ export function evaluerPersonnesPresentes(
   seuil: number,
   etab: EtablissementPourLeSeuil,
 ): EvalPersonnesPresentes {
-  // Le chiffre déclaré tranche seul, dans les deux sens : il n'y a plus de
-  // borne, il y a le total.
+  // Le chiffre déclaré tranche, dans les deux sens : il n'y a plus de borne,
+  // il y a le total. ~~seul~~ [2026-09-27, lot 2, maillon 3 : le total compte
+  // les personnes « occupées » — salariés du site compris. Un nombre déclaré
+  // INFÉRIEUR à l'effectif du site se contredit (saisi à 45, le site passé à
+  // 60, rien ne le remet à jour), et il faisait disparaître en silence la
+  // consigne, l'alarme et les exercices. On retient le plus grand des deux :
+  // l'effectif du site est lui aussi compté par le texte.]
   const declare = etab.personnesPresentesHabituellement;
   if (declare !== null && declare !== undefined) {
-    return declare >= seuil
+    const total = Math.max(declare, etab.effectifSurSite);
+    return total >= seuil
       ? {
           etat: "atteint",
-          raison: `${declare} personnes habituellement présentes (seuil ${seuil})`,
+          raison:
+            total === declare
+              ? `${declare} personnes habituellement présentes (seuil ${seuil})`
+              : `${etab.effectifSurSite} salariés sur site, au-delà des ${declare} personnes déclarées — seuil de ${seuil} franchi par l'effectif seul`,
         }
       : { etat: "non_atteint" };
   }
