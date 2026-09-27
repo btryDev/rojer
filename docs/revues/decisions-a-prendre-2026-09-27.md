@@ -366,3 +366,42 @@ exercices à qui ne fait que stocker, contre le texte ; une seconde question
 rouvrirait la décision C45. Le type 3 de l'alarme au-delà de 50 personnes quand les
 matières sont entreposées est désormais dit dans la description de l'alarme
 (`f67f56d5`).
+
+## D25 — Merger `lot/audit-obligations-nouvelles` ? (la dotation en extincteurs, R. 4227-29)
+
+**Ce que fait la branche.** Elle crée `incendie-travail-extincteurs-dotation`, état
+permanent porté par l'établissement, servi à TOUT employeur (`typologies: { travail:
+true }`). Référentiel `2026-09-27.2`, 172 + 1 = 173. C'est une obligation nouvelle
+et un changement de ce que voit le dirigeant — à la propriétaire, comme D16 et D22.
+
+**Pourquoi elle diffère de D16 et D22.** R. 4227-29 est déjà `retenu` au corpus
+(`code-travail-incendie.ts`), sans seuil ni dispense : « Le premier secours contre
+l'incendie est assuré par des extincteurs en nombre suffisant et maintenus en bon
+état de fonctionnement. Il existe au moins un extincteur portatif à eau pulvérisée
+d'une capacité minimale de 6 litres pour 200 mètres carrés de plancher. Il existe au
+moins un appareil par niveau. » (API, LEGIARTI000018532079). Rien à dépouiller
+d'abord, à la différence de R. 4228-19 (D16) et de l'arrêté du 14 décembre 2011
+art. 5 (D22) ; rien qui sur-applique : le texte ne connaît aucun employeur sans
+extincteur.
+
+**Le doublon qu'elle crée** (relevé par la revue indépendante). La ligne d'appareil
+`incendie-travail-moyens-lutte` (`incendie.ts:202-206`) garde le libellé
+« Présence et maintien en état… » et la description « doivent être dotés… » : un
+établissement de N extincteurs voit N lignes « présence » ET la ligne « dotation ».
+La garde anti-doublon ne le voit pas — les deux lignes n'ont pas le même premier
+fondement (R. 4227-28 contre R. 4227-29).
+
+**Options.**
+- **(a)** Réduire la ligne d'appareil au maintien en état : libellé, description,
+  test. Codé sur cette branche, en commit séparé, pour suivre le sort de D25. Le
+  libellé entre dans `empreinteReferentiel` : version `2026-09-27.3`, régénération
+  de chaque dossier à sa prochaine ouverture — mais les deux obligations sont des
+  états permanents, que le générateur saute : aucune ligne de calendrier n'est
+  écrite, seul le sceau change. L'écran « Ce qui doit être en place » lit le libellé
+  au rendu ; les déclarations (`DeclarationEtatPermanent`) sont rangées par
+  `obligationId`, pas par libellé.
+- **(b)** Garder les deux libellés tels quels.
+
+**Recommandation : merger, avec (a).** Sans la branche, un employeur qui n'a déclaré
+aucun extincteur ne reçoit rien de R. 4227-29 ; avec elle mais sans (a), il lit la
+dotation deux fois.
