@@ -238,7 +238,9 @@ export const obligationsConformite: Obligation[] = [
 // (instructions d'évacuation hors du champ, typologie neuve
 // `horsChampR422734`). 170 + 2 − 0 = 172. Deux états permanents : aucune ligne
 // de calendrier n'est écrite.
-export const REFERENTIEL_VERSION = "2026-09-27.1";
+// `2026-09-27.2` (lot 2, audit) : la dotation de R. 4227-29 entre, portée par
+// l'établissement (`incendie-travail-extincteurs-dotation`). 172 + 1 − 0 = 173.
+export const REFERENTIEL_VERSION = "2026-09-27.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

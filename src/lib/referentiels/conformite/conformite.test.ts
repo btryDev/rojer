@@ -1595,6 +1595,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // `horsChampR422734`). Aucune n'en sort : 170 + 2 − 0 = 172. Deux états
     // permanents : aucune ligne de calendrier n'est écrite.
     { version: "2026-09-27.1", empreinte: "172-9f662eff8ef1a2bb" },
+    // Lot 2 (audit de bout en bout, 7 bis G2 M1) : une obligation entre,
+    // `incendie-travail-extincteurs-dotation` — la dotation de R. 4227-29,
+    // portée par l'établissement. Aucune n'en sort : 172 + 1 − 0 = 173. État
+    // permanent : aucune ligne de calendrier.
+    { version: "2026-09-27.2", empreinte: "173-3e9d2b03a798e3c5" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1751,7 +1756,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(172);
+    ).toBe(173);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

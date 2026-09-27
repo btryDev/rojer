@@ -234,6 +234,38 @@ export const obligationsIncendie: Obligation[] = [
       "AMENDEMENT 2026-08-27, audit systématique des périodicités sans source porteuse. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-28 et R. 4227-29. Section R. 4227-28 à R. 4227-41 relue à la source : AUCUN de ces articles ne fixe de périodicité annuelle, pour quoi que ce soit. La seule périodicité de toute la section est celle de R. 4227-39, « au moins tous les six mois », et elle porte sur les exercices et essais, pas sur les extincteurs. R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme.\n\nLa vérification annuelle des extincteurs existe bien, mais elle vient de la norme NF S 61-919 et des contrats de maintenance, pas du Code du travail. Une norme n'est pas opposable par elle-même. C'est le même motif que la règle APSAD R4 retirée en août.\n\n`periodicite` passe à `autre` : l'obligation reste, parce que doter l'établissement de moyens de lutte et les maintenir en état est bien exigé, mais le produit cesse d'afficher une date que le droit ne donne pas. Les ERP ne perdent rien : `incendie-erp-extincteurs-annuelle` porte l'annuelle pour eux, fondée sur MS 73.\n\nNATURE : ÉTAT PERMANENT (ADR-026). C'est la lecture que l'amendement du 2026-08-27 avait faite du texte — « R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme » — sans qu'aucun champ ne puisse la porter. Elle l'est désormais, et `periodicite: \"autre\"` cesse d'être le seul indice.",
   },
   {
+    // 2026-09-27, lot 2 (7 bis G2, M1). L'objet de R. 4227-29 — être DOTÉ
+    // d'extincteurs — n'était porté que par une obligation d'appareil : un
+    // établissement qui n'a déclaré aucun extincteur ne recevait rien.
+    id: "incendie-travail-extincteurs-dotation",
+    domaine: "incendie",
+    libelle: "Établissement doté d'extincteurs en nombre suffisant (travail)",
+    description:
+      "« Le premier secours contre l'incendie est assuré par des extincteurs en nombre suffisant et maintenus en bon état de fonctionnement. Il existe au moins un extincteur portatif à eau pulvérisée d'une capacité minimale de 6 litres pour 200 mètres carrés de plancher. Il existe au moins un appareil par niveau. Lorsque les locaux présentent des risques d'incendie particuliers, notamment des risques électriques, ils sont dotés d'extincteurs dont le nombre et le type sont appropriés aux risques. » (R. 4227-29) Cette ligne porte la DOTATION de l'établissement ; le maintien en état de chaque appareil déclaré est porté à part.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-29",
+        article: "R. 4227-29",
+        url:
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532079/",
+        note: "Relu sur l'API Légifrance le 2026-09-27 (LEGIARTI000018532079, en vigueur depuis le 2008-05-01) — texte cité dans la description.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 5,
+    transmet: [],
+    porteur: "etablissement",
+    typologies: { travail: true },
+    equipementsEnContexte: ["EXTINCTEUR"],
+    notesInternes:
+      "VERBATIM RELU SUR L'API LE 2026-09-27 (lot 2, audit de bout en bout, 7 bis G2 M1). R. 4227-29 impose d'abord d'ÊTRE DOTÉ — un extincteur portatif de 6 litres pour 200 m², un par niveau, des appareils adaptés aux risques particuliers. Le référentiel ne le portait que par `incendie-travail-moyens-lutte`, portée par l'équipement EXTINCTEUR : un établissement de travail sans extincteur déclaré — exactement celui qui en manque — ne recevait aucune ligne. Mesuré en appelant le moteur : un bureau sans équipement, rien ; avec un EXTINCTEUR, une ligne.\n\nPOURQUOI UNE LIGNE NEUVE ET PAS LE RÉANCRAGE DE `incendie-travail-moyens-lutte`. Les notesInternes de `signalisation-equipements-incendie` écrivent que le maintien en état se constate APPAREIL PAR APPAREIL, et que les deux lignes d'équipement se lisent côte à côte : une décision écrite, que ce lot ne défait pas. La dotation, elle, est un fait de l'ÉTABLISSEMENT. Politique sœur : `incendie-travail-alarme-sonore` (lot 1, R. 4227-34 — « l'obligation est d'AVOIR l'alarme ; la conditionner à une alarme déclarée la ferait disparaître exactement chez qui n'en a pas »), et la consigne réancrée le 2026-08-31. `EXTINCTEUR` en contexte seulement.\n\nÉtat matériel : `pieceAttendue: null`. Aucun rythme dans le texte. Criticité 5, celle de la ligne d'appareil. Code du travail : GN 10 ne la concerne pas.",
+  },
+  {
     id: "incendie-travail-consigne-affichee",
     relectureDue: {
       le: "2027-01-01",

@@ -47,7 +47,7 @@ export const CODE_TRAVAIL_INCENDIE: Corpus = {
       luLe: "2026-09-01",
       lecture: "premiere_main",
       statut: "retenu",
-      obligations: ["incendie-travail-moyens-lutte"],
+      obligations: ["incendie-travail-moyens-lutte", "incendie-travail-extincteurs-dotation"],
     },
     {
       ref: "R. 4227-14",
