@@ -224,7 +224,10 @@ export const obligationsConformite: Obligation[] = [
 // même condition `non_infirmee` — sans réponse ou « oui », les deux ; « non »,
 // aucune. Chez un ERP dont l'installation électrique n'a pas de réponse, la
 // ligne mensuelle ENTRE au calendrier. Les `false` de l'ancienne case sont
-// effacés par migration. 169 obligations, aucune n'entre ni ne sort.
+// effacés par migration. Sur la même version, descriptions seules : les six
+// lignes du livre II qui invoquent PE 15 § 1 ou PE 20 § 2 (grande cuisine ×5,
+// CH 58) nomment la ligne triennale de PE 4 § 2, déjà au calendrier de tout
+// N5. 169 obligations, aucune n'entre ni ne sort.
 export const REFERENTIEL_VERSION = "2026-09-26.12";
 
 /**

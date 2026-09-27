@@ -745,6 +745,28 @@ describe("référentiel conformité — seuils d'effectif", () => {
     expect(descriptionsMuettes).toEqual([]);
   });
 
+  it("une ligne qui invoque PE 15 § 1 ou PE 20 § 2 nomme la ligne qui porte PE 4 § 2 en 5ᵉ (C41)", () => {
+    // PE 15 § 1 et PE 20 § 2 renvoient au livre II la « mise en œuvre » des
+    // installations autorisées en 4ᵉ ; au livre II, l'entretien et la
+    // vérification forment une section à part (GC 21-22, CH 57-58). Le rythme
+    // que le livre III impose en 5ᵉ sur ces objets est PE 4 § 2, et il est
+    // déjà au calendrier de tout N5 : la description le dit, par le libellé
+    // que l'exploitant voit, lu ici dans le référentiel et non recopié.
+    const pe4 = obligationParId("incendie-erp-pe4-entretien-installations-techniques")!;
+    expect(pe4.periodicite).toBe("triennale");
+    expect(pe4.typologies.erp).toEqual({ categories: ["N5"] });
+    expect(pe4.referencesLegales[0].reference).toContain("PE 4 § 2");
+    const invoquent = obligationsConformite.filter((o) =>
+      /PE 15 § 1|PE 20 § 2/.test(o.description ?? ""),
+    );
+    // Borne basse : sans elle, un renommage de la phrase viderait le test.
+    expect(invoquent.length).toBeGreaterThan(0);
+    const muettes = invoquent
+      .filter((o) => !(o.description ?? "").includes(`« ${pe4.libelle} »`))
+      .map((o) => o.id);
+    expect(muettes).toEqual([]);
+  });
+
   it("`champR422734` n'est jamais posé sans `personnesPresentesMin`", () => {
     for (const o of obligationsConformite) {
       if (o.typologies.champR422734) {
@@ -1519,7 +1541,9 @@ describe("référentiel conformité — version et empreinte", () => {
     // en gagne une. Les conditions sont hachées, l'empreinte bouge. Aucune
     // obligation n'entre ni ne sort : 169 + 0 − 0 = 169. Les `false` écrits
     // par l'ancienne case sont effacés par la migration
-    // `20260927120000_groupe_electrogene_tri_etat`.
+    // `20260927120000_groupe_electrogene_tri_etat`. Sur la même version,
+    // descriptions seules (hors empreinte) : les lignes qui invoquent PE 15 § 1
+    // ou PE 20 § 2 nomment la ligne triennale de PE 4 § 2.
     { version: "2026-09-26.12", empreinte: "169-fd2eaf2750ad7a5f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];

@@ -86,11 +86,14 @@ export const CORPUS_PE: Corpus = {
       // 13 de cet arrêté rend la rédaction nouvelle de PE 4 « applicable à partir
       // du 1er juillet 2026 ». C'est bien la version que cette entrée porte, lue
       // de première main le 2026-08-27 ; il ne manquait que le nom du texte.
+      // Relu le 2026-09-27 (C41) : la page affiche « Modifié par Arrêté du 1er
+      // décembre 2025 - art. 3 » et « - art. 4 ». Citation inchangée, § 2 recopié
+      // à l'identique.
       modifiePar: {
-        texte: "Arrêté du 1er décembre 2025 (NOR INTE2529354A) - art. 13 pour la date d'application",
+        texte: "Arrêté du 1er décembre 2025 (NOR INTE2529354A) - art. 3 et art. 4 ; art. 13 pour la date d'application",
         url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000053020948",
       },
-      luLe: "2026-09-26",
+      luLe: "2026-09-27",
       lecture: "premiere_main",
       citationCle:
         "§ 2. Tous les trois ans au plus, l'exploitant doit procéder, ou faire procéder, par des techniciens compétents, aux opérations d'entretien et de vérification des installations et des équipements techniques de son établissement (chauffage, éclairage, installations électriques, installations de gaz, appareils de cuisson, circuits d'extraction de l'air vicié, des buées et des graisses des grandes cuisines, des offices de remise en température et des îlots, ascenseurs, moyens de secours, etc.).",
@@ -210,11 +213,20 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 15",
       intitule: "Règles d'installation et dispositions générales (cuisson)",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766677",
       versionEnVigueur: "2006-03-01",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      modifiePar: {
+        texte: "Arrêté du 10 octobre 2005, v. init.",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000240955",
+      },
+      luLe: "2026-09-27",
+      lecture: "premiere_main",
+      citationCle:
+        "§ 1. Les dispositions de la présente section sont applicables aux installations d'appareils de cuisson ou de remise en température destinés à la restauration situés dans les locaux accessibles ou non au public. Toutefois, les installations autorisées dans les établissements de 4e catégorie sont également autorisées dans les établissements de 5e catégorie de même type. Dans ce cas, leur mise en œuvre devra être réalisée dans les conditions définies au livre II, titre Ier, chapitre X.",
       statut: "hors_perimetre",
       exclusion: "construction",
+      motif:
+        "Lu en entier le 2026-09-27 (§ 1 à § 7) : champ de la section, définitions (appareils de cuisson, de remise en température, « grande cuisine » au-delà de 20 kW, office, îlot, module), marquage CE, fixation, arrêt d'urgence, interdiction des combustibles F+. Aucun rythme, aucun entretien, aucune vérification. CE QUE LE TEXTE DIT, ET CE QUI RESTE UNE LECTURE (C41, relu le 2026-09-27). Le texte dit : le renvoi vise la « mise en œuvre » d'installations « autorisées dans les établissements de 4e catégorie », et « dans ce cas » seulement. Il ne définit pas « mise en œuvre » et ne nomme ni l'entretien ni la vérification. Au livre II, l'entretien et la vérification ne sont pas mêlés aux règles d'installation : au chapitre X, ils forment la « Section 7 : Entretien et vérifications » (GC 21, GC 22), après six sections d'installation (dispositions générales, grandes cuisines, offices, îlots, modules, appareils des locaux accessibles ou non) ; au chapitre V, la « Section 9 : Entretien et vérification » (CH 57, CH 58). Aucun intitulé de section de ces deux chapitres ne dit « mise en œuvre ». Y lire l'entretien et la vérification annuels du livre II est donc une lecture que le découpage du chapitre ne soutient pas ; l'exclure en est une aussi, plus proche du texte. Le rythme que le livre III impose en 5ᵉ sur ces objets est PE 4 § 2 (trois ans au plus), porté par `incendie-erp-pe4-entretien-installations-techniques`. Aucune applicabilité ne change : les lignes du livre II servies aux N5 restent une sur-application assumée, et leur description nomme désormais la ligne triennale.",
     },
     {
       ref: "PE 16",
@@ -258,14 +270,18 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 20",
       intitule: "Généralités (chauffage, ventilation)",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766756",
       versionEnVigueur: "2004-05-22",
-      luLe: "2026-09-26",
-      lecture: "agent_verbatim",
+      // La page de l'article n'affiche aucune mention « Modifié par »
+      // (relevé le 2026-09-27) : réponse déclarée, pas une absence.
+      modifiePar: null,
+      luLe: "2026-09-27",
+      lecture: "premiere_main",
       citationCle:
         "§ 1. Les installations visées à la présente section doivent être réalisées dans les conditions définies dans la suite du présent règlement. § 2. Toutefois, les installations autorisées dans les établissements de 4e catégorie sont également autorisées dans les établissements de 5e catégorie du même type. Dans ce cas, leur mise en œuvre devra être réalisée dans les conditions définies au livre II, titre Ier, chapitre V.",
       statut: "sans_objet",
       motif:
-        "Article d'articulation renvoyant au Livre II pour les installations admises en 4e catégorie. Ne prescrit rien en propre.",
+        "Article d'articulation renvoyant au Livre II pour les installations admises en 4e catégorie. Ne prescrit rien en propre. Lu en entier le 2026-09-27 : deux paragraphes, rien d'autre. CE QUE LE TEXTE DIT, ET CE QUI RESTE UNE LECTURE (C41, relu le 2026-09-27). Le texte dit : le renvoi vise la « mise en œuvre » d'installations « autorisées dans les établissements de 4e catégorie », et « dans ce cas » seulement. Il ne définit pas « mise en œuvre » et ne nomme ni l'entretien ni la vérification. Au livre II, l'entretien et la vérification ne sont pas mêlés aux règles d'installation : au chapitre X (renvoi de PE 15), ils forment la « Section 7 : Entretien et vérifications » (GC 21, GC 22), après six sections d'installation (dispositions générales, grandes cuisines, offices, îlots, modules, appareils des locaux accessibles ou non) ; au chapitre V (renvoi de PE 20), la « Section 9 : Entretien et vérification » (CH 57, CH 58). Aucun intitulé de section de ces deux chapitres ne dit « mise en œuvre ». Y lire l'entretien et la vérification annuels du livre II est donc une lecture que le découpage du chapitre ne soutient pas ; l'exclure en est une aussi, plus proche du texte. Le rythme que le livre III impose en 5ᵉ sur ces objets est PE 4 § 2 (trois ans au plus), porté par `incendie-erp-pe4-entretien-installations-techniques`. Aucune applicabilité ne change : les lignes du livre II servies aux N5 restent une sur-application assumée, et leur description nomme désormais la ligne triennale.",
     },
     {
       ref: "PE 21",

@@ -3001,7 +3001,9 @@ LA VRAIE CORRECTION est un choix à trois états — Oui / Non / Je ne sais
 pas —, par défaut « Je ne sais pas » (propriété absente). Le formulaire
 connaît déjà ce patron (`CHAMPS_TRI_ETAT`, `normaliserTriEtat`). Elle est à
 décider par la propriétaire, avec la question de
-`elec-erp-groupe-electrogene-annuel` :
+`elec-erp-groupe-electrogene-annuel` *[tranché par la propriétaire et fait le
+2026-09-27 : C41 — trois états, `non_infirmee` sur les deux lignes, migration
+des anciens `false`]* :
 - ses `notesInternes` ne disent rien du non-renseigné ;
 - le « absent → non applicable » n'est écrit que dans
   `CONDITIONS_STRICTES_JUSTIFIEES` (motif de non-régression : « l'obligation
@@ -3250,6 +3252,160 @@ postes ». Relevé : `r4121-1-sans-seuil` 1 failed | 2 passed (description) et
 passed — fichiers restaurés après chacune. Vitest a figé deux fois sur
 l'injection de la description ; seuls les processus de ce worktree ont été
 arrêtés, l'injection rejouée seule.
+
+### C41 · 2026-09-27 — Le groupe électrogène en trois états ; PE 15 § 1 et PE 20 § 2 relus avec le plan des chapitres qu'ils visent
+
+*Base : production `8bb6b0b`, branche `lot/groupe-electrogene-et-pe15-pe20`.
+Moteur (`engine.ts`) non touché. Référentiel `2026-09-26.12` (`.11` annulée,
+numéro non réemployé). Une migration de données.*
+
+**Partie 1 — décidé par la propriétaire.** La case « Groupe électrogène de
+sécurité présent », décochée par défaut, devient une question à trois états
+(`CHAMPS_TRI_ETAT`, `CATEGORIES_TRI_ETAT` : installation électrique seule) :
+Oui / Non / Je ne sais pas encore, ce dernier par défaut, qui n'écrit pas la
+propriété. `elec-erp-groupe-electrogene-annuel` passe de
+`equipement_propriete_booleenne` à `equipement_propriete_non_infirmee`, et
+`elec-erp-groupe-electrogene-quinzaine` reçoit la même condition
+(`CONDITION_GROUPE_ELECTROGENE`). `-annuel` sort de
+`CONDITIONS_STRICTES_JUSTIFIEES` et de la liste stricte d'`engine.test.ts`.
+La fiche d'équipement dit « Pas encore répondu » par la boucle commune. La
+fonction morte `normaliserFormData` d'`equipements/actions.ts`, qui recopiait
+l'ancienne convention de la case, est retirée.
+
+**Grille avant / après** (moteur appelé ; installation électrique + « autres »
+= rien, ou hotte, appareil de cuisson ERP, extincteur, BAES) — lignes du
+groupe électrogène, taille de l'ensemble, et tout ce qui bouge :
+
+| cas | `8bb6b0b` | branche | mouvement |
+|---|---|---|---|
+| N5 / N3 / sans catégorie · vrai | annuel + quinzaine | annuel + quinzaine | aucun |
+| N5 / N3 / sans catégorie · absent | quinzaine | annuel + quinzaine | **+ `-annuel`** |
+| N5 / N3 / sans catégorie · faux | quinzaine | aucune | − `-quinzaine` |
+| travail seul · vrai / faux / absent | aucune | aucune | aucun |
+
+Par cellule, dans les 24 : 55→55, 67→67 ; 54→55, 66→67 (absent, +1) ;
+54→53, 66→65 (faux, −1) — N5 ; même mouvement en N3 (54/67 → 55/68 pour
+l'absent) et sans catégorie (51/63 → 52/64) ; travail seul 47 et 51
+inchangés. Aucune autre obligation ne bouge. Le « faux » ne perd la quinzaine
+qu'avec un « Non » choisi après ce lot : les `false` antérieurs sont effacés.
+
+**Données existantes : migration, pas lecture datée.**
+`20260927120000_groupe_electrogene_tri_etat` retire la clé
+`aGroupeElectrogene` quand elle vaut `false` (JSON à `NULL` s'il ne reste
+rien), toutes catégories : le formulaire l'écrivait partout, et nulle part
+c'était une réponse. `true` et les autres clés ne sont pas touchés. Écartée,
+la lecture « ignorer un `false` antérieur à la date du lot » : il n'y a pas de
+date par champ, seul `Equipement.updatedAt`, qu'une modification de libellé
+fait avancer — un ancien `false`, repassé par la page d'édition au menu
+(« Non »), serait devenu une réponse sans que personne ne l'ait donnée. Et
+elle aurait mis au moteur une règle de date permanente. La migration est
+additive (données seules), rejouable, et ne s'exécute qu'une fois.
+Coût assumé : un « non » réellement donné (case décochée après avoir été
+cochée) redevient « pas encore répondu » — indiscernable, et l'erreur est
+dans le sens visible (deux lignes réapparaissent, la fiche dit « Pas encore
+répondu », un « Non » les retire).
+**Elle part au déploiement** : `package.json` → `"build": "prisma generate &&
+next build && prisma migrate deploy"`. Elle n'a pas été appliquée à une base
+partagée.
+
+Exécutée pour de vrai sur un Postgres 17 jetable (conteneur lancé et arrêté
+par ce lot, port 5499) après `prisma migrate deploy` de toute la chaîne :
+huit équipements témoins. Première passe `UPDATE 4` —
+`{"aGroupeElectrogene": false}` → `NULL` ;
+`{"nombre": 2, "aGroupeElectrogene": false, "aSystemeDeRecyclage": false,
+"estLocalPollutionSpecifique": false}` → la même chose sans la clé ; hotte et
+levage portant `false` → clé retirée ; `true`, absent, `NULL` et la chaîne
+`"false"` inchangés. Seconde passe `UPDATE 0`, état identique.
+Test : `src/lib/migration-groupe-electrogene.test.ts` (lecture du fichier,
+comme `migrations-contraintes.test.ts`).
+
+**Texte** (`AIDE_GROUPE_ELECTROGENE`) : « Pour un établissement recevant du
+public seulement. Avec « Oui » ou « Je ne sais pas encore », le calendrier
+suit la vérification des niveaux toutes les deux semaines et l'entretien avec
+essai chaque mois (art. EL 18 § 4 du règlement de sécurité — livre II,
+établissements des quatre premières catégories ; en 5ᵉ catégorie, échéances
+maintenues par sur-application assumée). Avec « Non », les deux sont
+retirées. En cas de doute, laissez « Je ne sais pas encore ». »
+`labels.test.ts` le lit contre le référentiel (deux lignes gouvernées, leur
+condition, leurs rythmes, EL 18 § 4, livre II) et contre les libellés du
+menu : les guillemets du texte sont exactement ceux de `VALEURS_TRI_ETAT`.
+
+**Éprouvées, en les cassant** (sortie relevée, fichiers restaurés) :
+- migration élargie à `IN ('false'::jsonb, 'true'::jsonb)` →
+  `× ne vise que la valeur false…`, 1 failed | 3 passed ;
+- condition partagée remise en `equipement_propriete_booleenne` →
+  5 failed | 237 passed (`× gouverne les deux lignes…`,
+  `× sans réponse → les deux lignes`, les deux gardes « criticité ≥ 4 »,
+  l'empreinte) ;
+- normaliseur qui rend `false` au silence → 5 failed | 159 passed, dont
+  `× « Je ne sais pas encore » … la clé n'est PAS écrite` et
+  `× « Je ne sais pas encore » efface un « non » déjà enregistré` ;
+- la phrase PE 4 § 2 retirée de la description CH 58 →
+  `× une ligne qui invoque PE 15 § 1 ou PE 20 § 2 nomme la ligne…`,
+  reçu `["aeration-erp-chauffage-ventilation-annuelle"]`.
+
+**Partie 2 — PE 15 § 1, PE 20 § 2 : la « mise en œuvre » comprend-elle
+l'entretien et la vérification ?** Lus sur Légifrance le 2026-09-27, plan
+d'abord, puis article par article :
+- `PE 15` (en vigueur depuis le 01/03/2006, modifié par l'arrêté du
+  10 octobre 2005), en entier, § 1 à § 7 — `LEGIARTI000024766677`. § 1 :
+  « Toutefois, les installations autorisées dans les établissements de 4e
+  catégorie sont également autorisées dans les établissements de 5e catégorie
+  de même type. Dans ce cas, leur mise en œuvre devra être réalisée dans les
+  conditions définies au livre II, titre Ier, chapitre X. » Les § 2 à § 7 :
+  définitions, marquage CE, fixation, arrêt d'urgence, combustibles F+.
+  Aucun entretien, aucune vérification.
+- `PE 20` (depuis le 22/05/2004, aucune mention « Modifié par »),
+  `LEGIARTI000024766756` : deux paragraphes ; § 2, même phrase, « chapitre V ».
+- Livre III : « Chapitre II : Règles techniques », section 4 « Installations
+  de cuisson » (PE 15-19), section 5 « Chauffage, ventilation » (PE 20-23).
+  Seul `PE 4` porte « Vérifications techniques » (chapitre Ier).
+- Livre II, titre Ier, **chapitre X** : sections 1 à 6 d'installation
+  (dispositions générales, grandes cuisines, offices, îlots, modules, appareils
+  des locaux accessibles ou non), puis **« Section 7 : Entretien et
+  vérifications »** (GC 21, GC 22). **Chapitre V** : sections 1 à 8
+  (généralités, implantation, stockage, distribution abrogée, chauffage, eau
+  chaude, traitement d'air, appareils indépendants), puis **« Section 9 :
+  Entretien et vérification »** (CH 57, CH 58). Aucun intitulé ne dit « mise
+  en œuvre ».
+- `GC 21` (LEGIARTI000020344053) relu en entier, mot pour mot ; `CH 57`
+  aussi. `CH 58 § 1` et `GC 22 § 1` mot pour mot (renvoi à la section II du
+  chapitre Ier) ; leurs § 2 n'ont été rendus qu'en paraphrase — et une fois,
+  pour chacun, en texte qui n'est pas celui de l'article : non retenu, leur
+  citation reste celle du 2026-09-01 et leur lecture `agent_verbatim`.
+- `PE 4` (depuis le 01/07/2026, « Modifié par Arrêté du 1er décembre 2025 -
+  art. 3 » et « - art. 4 ») : § 2 identique au `citationCle` — « appareils de
+  cuisson, circuits d'extraction de l'air vicié, des buées et des graisses des
+  grandes cuisines, des offices de remise en température et des îlots », et
+  « chauffage », « tous les trois ans au plus ».
+
+**Conclusion sur le texte.** Ce que le texte dit : le renvoi vise la mise en
+œuvre d'installations autorisées en 4ᵉ, « dans ce cas » seulement ; il ne
+définit pas « mise en œuvre » et ne nomme ni l'entretien ni la vérification ;
+dans les chapitres visés, l'entretien et la vérification forment une section
+séparée des règles d'installation. Ce qui reste une lecture : y inclure
+l'entretien et la vérification annuels — le découpage ne la soutient pas ;
+les exclure est aussi une lecture, plus proche du texte. Le texte ne commande
+donc pas clairement un changement d'applicabilité : **aucune ne change**,
+la sur-application assumée des sœurs reste. Ce que le livre III impose en 5ᵉ
+sur ces objets, PE 4 § 2, est porté par
+`incendie-erp-pe4-entretien-installations-techniques` (N5, triennale, porteur
+établissement). Les six lignes qui invoquent PE 15 § 1 ou PE 20 § 2 —
+`cuisson-erp-filtres-hebdomadaire`, `cuisson-erp-verification-initiale`,
+`cuisson-erp-appareils-annuelle`, `cuisson-erp-circuits-extraction-nettoyage`,
+`cuisson-erp-extinction-automatique-annuelle`,
+`aeration-erp-chauffage-ventilation-annuelle` — le disent désormais :
+« Ce rythme de trois ans figure déjà au calendrier de tout établissement de
+5ᵉ catégorie, sous « Entretien et vérification de l'ensemble des
+installations techniques (ERP 5ᵉ catégorie) ». » Garde : `conformite.test.ts`,
+règle (invoquer PE 15 § 1 / PE 20 § 2 ⇒ nommer le libellé lu au référentiel)
+et borne basse, sans liste. Grille : les 24 cellules ci-dessus ne bougent que
+sur le groupe électrogène — les descriptions ne changent aucun ensemble.
+Corpus : `PE 15`, `PE 20`, `CH 57`, `GC 21` passent en `premiere_main`
+(2026-09-27) avec `modifiePar` ; `PE 4` relu ; `CH 58`, `GC 22` gagnent
+`modifiePar` et une URL d'article à la place de leur URL de section ;
+`PE 15`, `PE 20`, `GC 21` reçoivent la leur. URL de section au corpus
+exporté : 26 → 24 (compté en appelant `CORPUS`, avant et après).
 
 ### Ce que la chronologie donne à voir
 
