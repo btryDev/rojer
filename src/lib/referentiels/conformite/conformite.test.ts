@@ -2755,10 +2755,10 @@ describe("ce que le texte fait établir est dit en entier (2026-09-28, lot 2, 7 
   // arrêté du 18 novembre 2004 art. 4, arrêté du 7 août 2012 art. 1er, arrêté
   // du 20 novembre 2017 art. 6 III. Éprouvé en retirant l'une d'elles.
   it.each([
-    ["ascenseur-entretien-contrat", "pièces importantes usées"],
+    ["ascenseur-entretien-contrat", "pièces importantes de l'installation"],
     ["ascenseur-entretien-contrat", "état initial de l'installation"],
     ["ascenseur-entretien-contrat", "changement de prestataire"],
-    ["ascenseur-controle-technique-quinquennal", "à la disposition du contrôleur"],
+    ["ascenseur-controle-technique-quinquennal", "à la disposition du contrôleur technique"],
     ["esp-dossier-suivi", "liste des récipients fixes"],
   ] as const)("%s dit « %s »", (id, phrase) => {
     expect(obligationParId(id)?.description).toContain(phrase);
