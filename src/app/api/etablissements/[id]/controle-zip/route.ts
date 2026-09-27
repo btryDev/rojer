@@ -42,7 +42,7 @@ import {
   faitInventaire,
   type ManqueCouverture,
 } from "@/lib/perimetre/couverture";
-import { genererReadme } from "@/lib/pdf/readme-controle";
+import { genererReadme, lignesDatesAttestations } from "@/lib/pdf/readme-controle";
 import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
 
 /**
@@ -286,6 +286,23 @@ export async function GET(
     for (const p of prestataires) {
       const safeDir = nomDossierArchive(p.raisonSociale, "Prestataire");
       const sousDossier = dossierPrestataires.folder(safeDir) ?? dossierPrestataires;
+      // Les deux dates que D. 8222-5 fait compter, à côté de la pièce : la
+      // date quand elle existe, « non renseignée » sinon (C43). Même
+      // rédaction que le README (`lignesDatesAttestations`).
+      sousDossier.file(
+        "Dates_attestation_vigilance.txt",
+        [
+          `${p.raisonSociale}`,
+          ...lignesDatesAttestations([
+            {
+              raisonSociale: "attestation",
+              remiseLe: p.attestationUrssafRemiseLe ? formaterDateFr(p.attestationUrssafRemiseLe) : null,
+              emiseLe: p.attestationUrssafEmiseLe ? formaterDateFr(p.attestationUrssafEmiseLe) : null,
+            },
+          ]).map((l) => l.trimStart()),
+          "",
+        ].join("\n"),
+      );
       // Le nom d'origine de la pièce vient du poste du prestataire : il est
       // conservé en base pour l'affichage, il ne devient un nom d'entrée
       // d'archive qu'assaini. L'export est fait pour être décompressé chez
@@ -527,6 +544,17 @@ export async function GET(
     piecesPrestataires,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
+    datesAttestations: echecs.has("Prestataires/")
+      ? []
+      : prestataires.map((p) => ({
+          raisonSociale: p.raisonSociale,
+          remiseLe: p.attestationUrssafRemiseLe
+            ? formaterDateFr(p.attestationUrssafRemiseLe)
+            : null,
+          emiseLe: p.attestationUrssafEmiseLe
+            ? formaterDateFr(p.attestationUrssafEmiseLe)
+            : null,
+        })),
     nbPermisFeu: permisFeuList.length,
     nbPlansPrevention: plansList.length,
     aCarnetSanitaire: Boolean(

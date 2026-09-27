@@ -1,4 +1,4 @@
-import { depuisCleJourCivil } from "@/lib/dates";
+import { depuisCleJourCivil, joursCivilsEntre } from "@/lib/dates";
 import { z } from "zod";
 import { DomainePrestataire } from "@prisma/client";
 
@@ -73,6 +73,70 @@ const optionalDate = z.preprocess(
     .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
 );
 
+/**
+ * Les deux dates de l'attestation de vigilance (art. D. 8222-5), vérifiées
+ * ensemble. Fonction pure, horloge injectée : les schémas l'appellent avec
+ * l'heure du serveur, les tests avec la leur.
+ *
+ * - aucune des deux dans le futur : la remise est un fait accompli, et une
+ *   attestation n'est pas émise demain ;
+ * - l'émission ne suit pas la remise : on ne remet pas une pièce pas encore
+ *   émise.
+ *
+ * Une émission de plus de six mois avant la remise n'est PAS refusée : c'est
+ * un fait que l'écran doit montrer (« À redemander »), pas une saisie à
+ * empêcher — la refuser cacherait précisément ce que D. 8222-5 fait vérifier.
+ */
+export function erreursDatesAttestation(
+  remiseLe: Date | undefined,
+  emiseLe: Date | undefined,
+  now: Date,
+): { champ: "attestationUrssafRemiseLe" | "attestationUrssafEmiseLe"; message: string }[] {
+  const erreurs: ReturnType<typeof erreursDatesAttestation> = [];
+  if (remiseLe && joursCivilsEntre(now, remiseLe) > 0) {
+    erreurs.push({
+      champ: "attestationUrssafRemiseLe",
+      message: "La date de remise ne peut pas être dans le futur",
+    });
+  }
+  if (emiseLe && joursCivilsEntre(now, emiseLe) > 0) {
+    erreurs.push({
+      champ: "attestationUrssafEmiseLe",
+      message: "La date d'émission ne peut pas être dans le futur",
+    });
+  }
+  if (remiseLe && emiseLe && joursCivilsEntre(remiseLe, emiseLe) > 0) {
+    erreurs.push({
+      champ: "attestationUrssafEmiseLe",
+      message: "L'attestation ne peut pas être émise après sa remise",
+    });
+  }
+  return erreurs;
+}
+
+const datesAttestation = {
+  attestationUrssafRemiseLe: optionalDate,
+  attestationUrssafEmiseLe: optionalDate,
+};
+
+function verifierDatesAttestation(
+  v: { attestationUrssafRemiseLe?: Date; attestationUrssafEmiseLe?: Date },
+  ctx: { addIssue: (issue: { code: "custom"; path: string[]; message: string }) => void },
+) {
+  for (const e of erreursDatesAttestation(
+    v.attestationUrssafRemiseLe,
+    v.attestationUrssafEmiseLe,
+    new Date(),
+  )) {
+    ctx.addIssue({ code: "custom", path: [e.champ], message: e.message });
+  }
+}
+
+/** La saisie, sur la fiche, d'une remise d'attestation. */
+export const remiseAttestationSchema = z
+  .object(datesAttestation)
+  .superRefine(verifierDatesAttestation);
+
 export const prestataireSchema = z.object({
   raisonSociale: z
     .string()
@@ -112,10 +176,11 @@ export const prestataireSchema = z.object({
   ),
 
   attestationUrssafValableJusquA: optionalDate,
+  ...datesAttestation,
   assuranceRcProValableJusquA: optionalDate,
   kbisDateEmission: optionalDate,
 
   notesInternes: optionalTrimmed(1000),
-});
+}).superRefine(verifierDatesAttestation);
 
 export type PrestataireInput = z.infer<typeof prestataireSchema>;

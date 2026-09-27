@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Handshake } from "lucide-react";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { LABEL_DOMAINE } from "@/lib/prestataires/schema";
-import { MENTION_ANCRAGE_URSSAF } from "@/lib/prestataires/vigilance";
+import { mentionUrssaf } from "@/lib/prestataires/vigilance";
 import type { PrestataireAvecVigilance } from "@/lib/prestataires/queries";
 import { VigilancePiecePill } from "./VigilancePills";
 
@@ -105,11 +105,7 @@ export function PrestataireCard({
             libelle="Attestation URSSAF"
             statut={vigilance.urssaf}
             jours={vigilance.urssafExpireDans}
-            mention={
-              vigilance.urssafPlafonneeParLeSemestre
-                ? MENTION_ANCRAGE_URSSAF
-                : undefined
-            }
+            mention={mentionUrssaf(vigilance)}
           />
           <VigilancePiecePill
             libelle="RC Pro"

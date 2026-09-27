@@ -10,6 +10,7 @@ import {
 } from "@/lib/dates";
 import { estEnRetard } from "@/lib/dates/retard";
 import { etatAutreEcheance } from "./etats";
+import { echeanceAttestationUrssaf } from "@/lib/prestataires/vigilance";
 
 /**
  * Registre des sources d'échéances du calendrier — cf. ADR-010.
@@ -353,12 +354,19 @@ export function echeanceDuerp({
 
 /** Expirations datées des pièces de vigilance d'un prestataire —
  *  URSSAF et RC Pro. Une pièce sans date (manquante) n'a pas de place
- *  sur un calendrier : c'est l'alerte vigilance qui la porte. */
+ *  sur un calendrier : c'est l'alerte vigilance qui la porte.
+ *
+ *  L'attestation URSSAF est datée par `echeanceAttestationUrssaf`, la même
+ *  règle que la fiche : la plus proche entre la validité saisie et la remise
+ *  suivante, « tous les six mois » (D. 8222-5). ~~La seule validité~~
+ *  jusqu'au 2026-09-27 : une validité lointaine restait au calendrier bien
+ *  après la remise due. */
 export function echeancesPrestataire(
   p: {
     id: string;
     raisonSociale: string;
     attestationUrssafValableJusquA: Date | null;
+    attestationUrssafRemiseLe: Date | null;
     assuranceRcProValableJusquA: Date | null;
   },
   aujourdhui: Date,
@@ -366,15 +374,16 @@ export function echeancesPrestataire(
 ): EcheanceCalendrier[] {
   const href = `/etablissements/${etablissementId}/prestataires/${p.id}`;
   const out: EcheanceCalendrier[] = [];
-  if (p.attestationUrssafValableJusquA) {
+  const dateUrssaf = echeanceAttestationUrssaf(p);
+  if (dateUrssaf) {
     out.push({
       id: `prestataire-${p.id}-urssaf`,
       type: "attestation",
       famille: FAMILLE_DE_TYPE.attestation,
       libelle: `Attestation URSSAF — ${p.raisonSociale}`,
       origine: "à redemander au prestataire",
-      date: p.attestationUrssafValableJusquA,
-      tone: tonPourDate(p.attestationUrssafValableJusquA, aujourdhui),
+      date: dateUrssaf,
+      tone: tonPourDate(dateUrssaf, aujourdhui),
       href,
       batiment: null,
     });
@@ -641,6 +650,7 @@ const sourcePrestataires: SourceEcheances = async ({
       id: true,
       raisonSociale: true,
       attestationUrssafValableJusquA: true,
+      attestationUrssafRemiseLe: true,
       assuranceRcProValableJusquA: true,
     },
   });

@@ -2,19 +2,24 @@ import type { Prestataire } from "@prisma/client";
 import {
   JOURS_ALERTE_EXPIRATION,
   ajouterMois,
+  formaterDateLongueFr,
   joursCivilsEntre,
 } from "@/lib/dates";
 import { estEnRetard } from "@/lib/dates/retard";
+import { D8222_5_ANCIENNETE } from "./d8222-5";
 
 /**
  * Calcul de l'état de vigilance d'un prestataire au regard des obligations
  * du donneur d'ordre (art. L. 8222-1 et D. 8222-5 CT).
  *
  * Jalons réglementaires :
- * - Attestation URSSAF : le donneur d'ordre doit s'en faire remettre une
- *   **tous les six mois** jusqu'à la fin de l'exécution du contrat, pour
- *   tout contrat ≥ 5 000 € HT (art. D. 8222-5 1°). C'est la seule
- *   périodicité que le texte fixe, et la seule que ce module applique.
+ * - Attestation URSSAF : D. 8222-5 (relu sur Légifrance le 2026-09-27, en
+ *   vigueur depuis le 01/01/2023) la fait remettre « lors de la conclusion
+ *   et tous les six mois jusqu'à la fin de son exécution », et exige au 1°
+ *   une attestation « datant de moins de six mois ». Deux dates comptent :
+ *   la REMISE, d'où part la suivante, et l'ÉMISSION, qui doit précéder la
+ *   remise de moins de six mois. Elles sont au modèle depuis le 2026-09-27
+ *   (`attestationUrssafRemiseLe`, `attestationUrssafEmiseLe`).
  * - RC Pro : pas de périodicité légale — la police est contractuelle et
  *   porte sa propre date de fin. Seule cette date est utilisée.
  * - Extrait Kbis : le texte n'assortit pas la pièce d'une périodicité
@@ -38,35 +43,60 @@ import { estEnRetard } from "@/lib/dates/retard";
 /** Fenêtre d'alerte avant expiration — l'horizon partagé du produit. */
 export const SEUIL_ALERTE_JOURS = JOURS_ALERTE_EXPIRATION;
 
-/** Périodicité de remise de l'attestation de vigilance (art. D. 8222-5 1°). */
+/** « tous les six mois » et « datant de moins de six mois » (art. D. 8222-5). */
 export const MOIS_RENOUVELLEMENT_URSSAF = 6;
 
-/**
- * Ce que la borne semestrielle mesure, écrit pour celui qui la lit.
- *
- * Une seule phrase, ici et pas dans les écrans, parce que deux surfaces
- * l'affichent — la carte de l'annuaire et la fiche — et qu'une mention qui
- * diverge d'un écran à l'autre laisse chercher lequel dit vrai. Elle ne
- * s'affiche que sur `urssafPlafonneeParLeSemestre` : quand la date saisie
- * décide, il n'y a rien à corriger dans la lecture du chiffre.
- */
-export const MENTION_ANCRAGE_URSSAF =
-  "Échéance comptée depuis la dernière modification de la fiche : la date de remise de l'attestation n'est pas enregistrée.";
+export { D8222_5_ANCIENNETE, D8222_5_RYTHME } from "./d8222-5";
 
+/**
+ * - `a_dater` : une date du texte (remise, émission) n'est pas renseignée,
+ *   et rien d'autre ne presse. Jamais « à jour » : sans la remise, rien ne
+ *   dit d'où partent les six mois ; sans l'émission, rien ne dit que la
+ *   pièce datait de moins de six mois.
+ * - `a_dater_depot_ancien` : la remise n'est pas renseignée ET rien n'a été
+ *   déposé sur la fiche depuis plus de six mois (cf. `depotAncien`).
+ * - `emission_hors_delai` : émise six mois ou plus avant sa remise.
+ */
 export type StatutPiece =
   | "a_jour"
   | "expire_bientot"
   | "expiree"
-  | "manquante";
+  | "manquante"
+  | "a_dater"
+  | "a_dater_depot_ancien"
+  | "emission_hors_delai";
+
+/**
+ * Le registre de chaque statut — SOURCE UNIQUE de la couleur d'une pièce et
+ * de `etatLePlusGrave`. `null` : rien à faire.
+ */
+export const REGISTRE_DU_STATUT: Record<
+  StatutPiece,
+  "enRetard" | "proche" | "aPlanifier" | null
+> = {
+  a_jour: null,
+  expire_bientot: "proche",
+  expiree: "enRetard",
+  // Une pièce jamais fournie n'est pas en retard : rien n'a d'échéance tant
+  // qu'il n'y a pas de document. L'ardoise, comme « à planifier ».
+  manquante: "aPlanifier",
+  a_dater: "aPlanifier",
+  a_dater_depot_ancien: "enRetard",
+  emission_hors_delai: "enRetard",
+};
+
+export type DateAttestation = "remise" | "emission";
 
 export type VigilanceSnapshot = {
-  /** Pièces expirées — le seul cas qui justifie le rose. */
+  /** Pièces au registre « en retard » — expirée, ou attestation à
+   *  redemander (`a_dater_depot_ancien`, `emission_hors_delai`). Le seul cas
+   *  qui justifie le rose. */
   piecesExpirees: number;
   /** Pièces qui expirent dans moins de 30 jours. */
   piecesProches: number;
   /**
-   * Pièces jamais fournies. **Ce n'est pas un retard** : rien n'a d'échéance
-   * tant qu'il n'y a pas de document. Elles portent l'ardoise, comme
+   * Pièces jamais fournies, ou attestation dont une date du texte n'est pas
+   * renseignée. **Ce n'est pas un retard** : elles portent l'ardoise, comme
    * « à planifier » au calendrier.
    */
   piecesManquantes: number;
@@ -77,22 +107,20 @@ export type VigilanceSnapshot = {
    */
   etatLePlusGrave: "enRetard" | "proche" | "aPlanifier" | null;
   urssaf: StatutPiece;
-  /** Jours civils restants — négatif si la pièce n'est plus opposable. */
+  /** Jours civils jusqu'à `urssafARedemanderLe` — négatif une fois passée. */
   urssafExpireDans: number | null;
   /**
-   * Date à laquelle l'attestation cesse d'être opposable : la plus proche
-   * entre la validité saisie et la limite du rythme semestriel.
+   * La plus proche entre la validité saisie et la remise suivante (remise
+   * + six mois). `null` si aucune des deux n'est connue. Ne dépend JAMAIS de
+   * `updatedAt`.
    */
-  urssafOpposableJusquA: Date | null;
-  /**
-   * `true` quand c'est le rythme semestriel — et non la date saisie — qui
-   * détermine le statut. L'interface **doit** alors dire d'où la borne est
-   * comptée : elle part de `updatedAt`, la dernière modification de la fiche,
-   * et non d'une remise d'attestation (cf. `opposabiliteUrssaf`). Sans cette
-   * mention, l'écran présente comme une échéance de vigilance une date que
-   * n'importe quelle retouche de la fiche repousse de six mois.
-   */
-  urssafPlafonneeParLeSemestre: boolean;
+  urssafARedemanderLe: Date | null;
+  urssafRemiseLe: Date | null;
+  urssafEmiseLe: Date | null;
+  /** Remise + six mois : « tous les six mois », `null` sans remise. */
+  urssafRemiseSuivante: Date | null;
+  /** Les dates du texte que la fiche ne porte pas (pièce présente). */
+  urssafDatesNonRenseignees: DateAttestation[];
   rcPro: StatutPiece;
   rcProExpireDans: number | null;
   kbis: "present" | "absent";
@@ -128,61 +156,122 @@ function statutParDate(
 }
 
 /**
- * Date de fin d'opposabilité de l'attestation URSSAF.
+ * La date à laquelle l'attestation est à redemander : la plus proche entre
+ * la validité saisie et la remise suivante, « tous les six mois » depuis la
+ * dernière remise (D. 8222-5).
  *
- * L'article D. 8222-5 1° impose de se faire remettre une attestation « lors
- * de la conclusion et tous les six mois jusqu'à la fin de son exécution ».
- * Le texte compte donc depuis la conclusion du contrat, puis depuis chaque
- * remise. Le produit ne détient ni l'une ni l'autre de ces dates.
+ * ~~Comptée depuis `updatedAt`~~ jusqu'au 2026-09-27 (décision B2) : toute
+ * écriture sur la fiche — un téléphone, une note — repoussait la limite de
+ * six mois sans qu'aucune attestation ait été remise, et l'alerte n'arrivait
+ * jamais. La remise est désormais une date saisie ; `updatedAt` n'entre plus
+ * dans cette borne, et un test rougit s'il y revient.
  *
- * CE QUE CETTE FONCTION MESURE RÉELLEMENT, ET IL FAUT LE DIRE EN ENTIER.
- * Elle compte les six mois depuis `updatedAt` — la dernière modification de
- * la fiche —, sur ce raisonnement : la pièce en dossier n'a **pas pu** être
- * déposée après cette date, donc six mois plus tard elle a nécessairement
- * plus de six mois. La déduction ne vaut que dans ce sens, et c'est le seul
- * qu'on utilise : une fiche modifiée récemment ne permet de conclure à rien,
- * on s'en remet alors à la date de validité saisie. La borne obtenue est
- * toujours plus tardive que l'échéance réelle — le module n'alerte jamais à
- * tort.
- *
- * LE PRIX DE CETTE APPROXIMATION N'EST PAS L'IMPRÉCISION, C'EST LE SENS DE
- * L'ERREUR. `updatedAt` bouge à **toute** écriture sur la fiche : un numéro
- * de téléphone corrigé, une note interne ajoutée, un domaine coché repoussent
- * la limite de six mois pleins, alors qu'aucune attestation n'a été remise.
- * Un prestataire dont la fiche est retouchée deux fois l'an n'atteint jamais
- * la borne, et l'écran reste vert indéfiniment. C'est un faux négatif que
- * rien, dans le calcul, ne peut rattraper.
- *
- * LE REMÈDE EST UN CHAMP, PAS UNE FORMULE : une date de remise de
- * l'attestation, saisie avec la pièce. Elle n'existe pas au modèle, et
- * l'ajouter est une migration. Tant qu'elle manque, les surfaces qui
- * affichent cette borne disent d'où elle est comptée — c'est la seule chose
- * qu'on puisse faire sans mentir : voir la carte « Obligation de vigilance »
- * de la fiche prestataire et la mention portée par `VigilancePiecePill`.
- *
- * On retient la plus proche des deux bornes. Sans ce plafond, une saisie
- * « valable jusqu'au 31/12/2030 » restait verte indéfiniment alors que
- * l'obligation de renouvellement, elle, courait toujours.
+ * Partagée avec le calendrier (`echeancesPrestataire`) : les deux surfaces
+ * datent la même échéance.
  */
-function opposabiliteUrssaf(
-  p: Prestataire,
-): { date: Date | null; plafonnee: boolean } {
+export function echeanceAttestationUrssaf(p: {
+  attestationUrssafValableJusquA: Date | null;
+  attestationUrssafRemiseLe: Date | null;
+}): Date | null {
+  const suivante = p.attestationUrssafRemiseLe
+    ? ajouterMois(p.attestationUrssafRemiseLe, MOIS_RENOUVELLEMENT_URSSAF)
+    : null;
   const saisie = p.attestationUrssafValableJusquA;
-  if (!saisie) return { date: null, plafonnee: false };
-  const limiteSemestrielle = ajouterMois(
-    p.updatedAt,
-    MOIS_RENOUVELLEMENT_URSSAF,
+  if (!suivante) return saisie;
+  if (!saisie) return suivante;
+  return suivante.getTime() < saisie.getTime() ? suivante : saisie;
+}
+
+/**
+ * L'attestation était-elle « datant de moins de six mois » à sa remise ?
+ * `false` si elle a été émise six mois pile ou plus avant la remise — six
+ * mois pile n'est pas « moins de six mois ». Comparé en jours civils.
+ */
+export function emiseMoinsDeSixMoisAvantRemise(
+  emiseLe: Date,
+  remiseLe: Date,
+): boolean {
+  return (
+    joursCivilsEntre(
+      remiseLe,
+      ajouterMois(emiseLe, MOIS_RENOUVELLEMENT_URSSAF),
+    ) > 0
   );
-  const plafonnee = limiteSemestrielle.getTime() < saisie.getTime();
-  return { date: plafonnee ? limiteSemestrielle : saisie, plafonnee };
+}
+
+/**
+ * LE SEUL EMPLOI QUI RESTE À `updatedAt`, ET IL NE PEUT QU'AGGRAVER.
+ *
+ * Sans date de remise, le statut est « à dater » (ardoise). Mais `updatedAt`
+ * est postérieur à tout dépôt de pièce sur la fiche : s'il date de plus de
+ * six mois, la pièce en dossier a été remise il y a plus de six mois, et la
+ * remise suivante est passée. Dans ce sens-là la déduction tient, et elle est
+ * plus prudente que le vide ; dans l'autre (fiche récente), elle ne prouve
+ * rien et n'est pas lue. Une retouche de la fiche peut donc faire repasser
+ * du rose à l'ardoise — jamais à « à jour ».
+ */
+function depotAncien(p: Prestataire, now: Date): boolean {
+  // Même bascule que l'échéance datée : le lendemain des six mois, pas le jour.
+  return estEnRetard(ajouterMois(p.updatedAt, MOIS_RENOUVELLEMENT_URSSAF), now);
+}
+
+function vigilanceUrssaf(
+  p: Prestataire,
+  now: Date,
+): {
+  statut: StatutPiece;
+  joursRestants: number | null;
+  aRedemanderLe: Date | null;
+  datesNonRenseignees: DateAttestation[];
+} {
+  const remise = p.attestationUrssafRemiseLe;
+  const emise = p.attestationUrssafEmiseLe;
+  const presente = Boolean(
+    p.attestationUrssafCle ||
+      p.attestationUrssafValableJusquA ||
+      remise ||
+      emise,
+  );
+  if (!presente) {
+    return {
+      statut: "manquante",
+      joursRestants: null,
+      aRedemanderLe: null,
+      datesNonRenseignees: [],
+    };
+  }
+  const datesNonRenseignees: DateAttestation[] = [
+    ...(remise ? [] : (["remise"] as const)),
+    ...(emise ? [] : (["emission"] as const)),
+  ];
+  const aRedemanderLe = echeanceAttestationUrssaf(p);
+  const parDate = aRedemanderLe
+    ? statutParDate(aRedemanderLe, now, SEUIL_ALERTE_JOURS)
+    : { statut: "a_jour" as StatutPiece, joursRestants: null };
+  const base = { joursRestants: parDate.joursRestants, aRedemanderLe, datesNonRenseignees };
+
+  // Du plus grave au moins grave. Une échéance datée passée l'emporte : elle
+  // est un fait saisi.
+  if (parDate.statut === "expiree") return { statut: "expiree", ...base };
+  if (remise && emise && !emiseMoinsDeSixMoisAvantRemise(emise, remise)) {
+    return { statut: "emission_hors_delai", ...base };
+  }
+  if (!remise && depotAncien(p, now)) {
+    return { statut: "a_dater_depot_ancien", ...base };
+  }
+  if (parDate.statut === "expire_bientot") {
+    return { statut: "expire_bientot", ...base };
+  }
+  // Jamais « à jour » tant qu'une date du texte manque.
+  if (datesNonRenseignees.length > 0) return { statut: "a_dater", ...base };
+  return { statut: "a_jour", ...base };
 }
 
 export function computeVigilance(
   prestataire: Prestataire,
   now: Date = new Date(),
 ): VigilanceSnapshot {
-  const opposabilite = opposabiliteUrssaf(prestataire);
-  const u = statutParDate(opposabilite.date, now, SEUIL_ALERTE_JOURS);
+  const u = vigilanceUrssaf(prestataire, now);
   const r = statutParDate(
     prestataire.assuranceRcProValableJusquA,
     now,
@@ -190,25 +279,18 @@ export function computeVigilance(
   );
   const kbis: "present" | "absent" = prestataire.kbisCle ? "present" : "absent";
 
-  // Trois comptes, pas un. `alertesOuvertes` fondait « expirée », « expire
-  // bientôt » et « jamais fournie » dans le même chiffre, que les écrans
-  // peignaient ensuite en rose — si bien qu'une carte pouvait afficher une
-  // tête « en retard » au-dessus d'une pastille « Non fournie » en ardoise,
-  // se contredisant elle-même. Rien n'a d'échéance tant qu'il n'y a pas de
-  // document : une pièce absente n'est pas en retard (charte, interdits 3 et 4).
-  const pieces = [u.statut, r.statut];
-  const piecesExpirees = pieces.filter((s) => s === "expiree").length;
-  const piecesProches = pieces.filter((s) => s === "expire_bientot").length;
-  const piecesManquantes = pieces.filter((s) => s === "manquante").length;
+  // Trois comptes, pas un, lus sur le registre de chaque statut. Rien n'a
+  // d'échéance tant qu'il n'y a pas de document : une pièce absente n'est
+  // pas en retard (charte, interdits 3 et 4).
+  const registres = [u.statut, r.statut].map((s) => REGISTRE_DU_STATUT[s]);
+  const piecesExpirees = registres.filter((s) => s === "enRetard").length;
+  const piecesProches = registres.filter((s) => s === "proche").length;
+  const piecesManquantes = registres.filter((s) => s === "aPlanifier").length;
 
   /** Tout ce qui n'est pas à jour, pour un compteur de volume. Ne sert JAMAIS
    *  à choisir une couleur : c'est `etatLePlusGrave` qui le fait. */
   const alertesOuvertes = piecesExpirees + piecesProches + piecesManquantes;
 
-  /**
-   * L'état à peindre : le plus grave réellement présent, ou `null` si tout
-   * est à jour. C'est lui que les cartes et les compteurs doivent lire.
-   */
   const etatLePlusGrave: "enRetard" | "proche" | "aPlanifier" | null =
     piecesExpirees > 0
       ? "enRetard"
@@ -218,6 +300,7 @@ export function computeVigilance(
           ? "aPlanifier"
           : null;
 
+  const remise = prestataire.attestationUrssafRemiseLe;
   return {
     piecesExpirees,
     piecesProches,
@@ -225,8 +308,13 @@ export function computeVigilance(
     etatLePlusGrave,
     urssaf: u.statut,
     urssafExpireDans: u.joursRestants,
-    urssafOpposableJusquA: opposabilite.date,
-    urssafPlafonneeParLeSemestre: opposabilite.plafonnee,
+    urssafARedemanderLe: u.aRedemanderLe,
+    urssafRemiseLe: remise,
+    urssafEmiseLe: prestataire.attestationUrssafEmiseLe,
+    urssafRemiseSuivante: remise
+      ? ajouterMois(remise, MOIS_RENOUVELLEMENT_URSSAF)
+      : null,
+    urssafDatesNonRenseignees: u.datesNonRenseignees,
     rcPro: r.statut,
     rcProExpireDans: r.joursRestants,
     kbis,
@@ -236,6 +324,47 @@ export function computeVigilance(
       : null,
     alertesOuvertes,
   };
+}
+
+/**
+ * Ce que la pastille URSSAF dit sous son statut : les dates du texte, ou ce
+ * qui manque. Une seule rédaction, ici, parce que deux surfaces l'affichent
+ * — la carte de l'annuaire et la fiche. Aucune qualification : des dates, et
+ * les mots de D. 8222-5 entre guillemets.
+ */
+export function mentionUrssaf(v: VigilanceSnapshot): string | undefined {
+  if (v.urssaf === "manquante") return undefined;
+  const d = formaterDateLongueFr;
+  const phrases: string[] = [];
+  if (v.urssaf === "emission_hors_delai" && v.urssafEmiseLe && v.urssafRemiseLe) {
+    phrases.push(
+      `Émise le ${d(v.urssafEmiseLe)}, six mois ou plus avant sa remise le ${d(v.urssafRemiseLe)} (art. D. 8222-5 : attestation « ${D8222_5_ANCIENNETE} »).`,
+    );
+  } else if (v.urssafRemiseLe) {
+    phrases.push(
+      `Remise le ${d(v.urssafRemiseLe)}${v.urssafEmiseLe ? `, émise le ${d(v.urssafEmiseLe)}` : ""}.`,
+    );
+  }
+  if (v.urssafRemiseSuivante) {
+    phrases.push(
+      `Remise suivante le ${d(v.urssafRemiseSuivante)} (art. D. 8222-5 : « tous les six mois »).`,
+    );
+  }
+  const manque = v.urssafDatesNonRenseignees;
+  if (manque.length === 2) {
+    phrases.push("Dates de remise et d'émission non renseignées.");
+  } else if (manque[0] === "remise") {
+    phrases.push("Date de remise non renseignée.");
+  } else if (manque[0] === "emission") {
+    phrases.push("Date d'émission non renseignée.");
+  }
+  if (v.urssaf === "a_dater_depot_ancien") {
+    phrases.push("Rien n'a été déposé sur cette fiche depuis plus de six mois.");
+  }
+  if (manque.length > 0) {
+    phrases.push("À saisir sur la fiche du prestataire.");
+  }
+  return phrases.join(" ");
 }
 
 export function messageExpiration(jours: number | null): string {

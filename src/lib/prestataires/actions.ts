@@ -8,7 +8,11 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { getStorage } from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
 import { DomainePrestataire } from "@prisma/client";
-import { prestataireSchema, DOMAINES_PRESTATAIRE } from "./schema";
+import {
+  prestataireSchema,
+  remiseAttestationSchema,
+  DOMAINES_PRESTATAIRE,
+} from "./schema";
 import {
   clePiecePrestataire,
   deletePiecesPrestataire,
@@ -47,6 +51,8 @@ export async function creerPrestataire(
     contactEmail: formData.get("contactEmail"),
     contactTelephone: formData.get("contactTelephone"),
     attestationUrssafValableJusquA: formData.get("attestationUrssafValableJusquA"),
+    attestationUrssafRemiseLe: formData.get("attestationUrssafRemiseLe"),
+    attestationUrssafEmiseLe: formData.get("attestationUrssafEmiseLe"),
     assuranceRcProValableJusquA: formData.get("assuranceRcProValableJusquA"),
     kbisDateEmission: formData.get("kbisDateEmission"),
     notesInternes: formData.get("notesInternes"),
@@ -152,6 +158,8 @@ export async function creerPrestataire(
         attestationUrssafCle: urssaf && !("error" in urssaf) ? urssaf.cle : null,
         attestationUrssafNom: urssaf && !("error" in urssaf) ? urssaf.nom : null,
         attestationUrssafValableJusquA: parsed.data.attestationUrssafValableJusquA,
+        attestationUrssafRemiseLe: parsed.data.attestationUrssafRemiseLe,
+        attestationUrssafEmiseLe: parsed.data.attestationUrssafEmiseLe,
         assuranceRcProCle: rcPro && !("error" in rcPro) ? rcPro.cle : null,
         assuranceRcProNom: rcPro && !("error" in rcPro) ? rcPro.nom : null,
         assuranceRcProValableJusquA: parsed.data.assuranceRcProValableJusquA,
@@ -171,6 +179,54 @@ export async function creerPrestataire(
   revalidatePath(`/etablissements/${etablissementId}`);
 
   return { status: "success", prestataireId };
+}
+
+export type RemiseAttestationState =
+  | { status: "idle" }
+  | { status: "error"; message: string; fieldErrors?: Record<string, string[]> }
+  | { status: "success" };
+
+/**
+ * Enregistre les deux dates de l'attestation de vigilance (art. D. 8222-5) :
+ * remise et émission. Seules ces deux colonnes sont écrites — la pièce, sa
+ * validité et le reste de la fiche ne bougent pas. Un champ vidé efface la
+ * date : l'écran redit alors « non renseignée ».
+ */
+export async function enregistrerDatesAttestation(
+  etablissementId: string,
+  prestataireId: string,
+  _prev: RemiseAttestationState,
+  formData: FormData,
+): Promise<RemiseAttestationState> {
+  await assertEtablissementOwnership(etablissementId);
+
+  const parsed = remiseAttestationSchema.safeParse({
+    attestationUrssafRemiseLe: formData.get("attestationUrssafRemiseLe"),
+    attestationUrssafEmiseLe: formData.get("attestationUrssafEmiseLe"),
+  });
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: "Dates invalides",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const { count } = await prisma.prestataire.updateMany({
+    where: { id: prestataireId, etablissementId },
+    data: {
+      attestationUrssafRemiseLe: parsed.data.attestationUrssafRemiseLe ?? null,
+      attestationUrssafEmiseLe: parsed.data.attestationUrssafEmiseLe ?? null,
+    },
+  });
+  if (count === 0) {
+    return { status: "error", message: "Prestataire introuvable" };
+  }
+
+  revalidatePath(`/etablissements/${etablissementId}/prestataires/${prestataireId}`);
+  revalidatePath(`/etablissements/${etablissementId}/prestataires`);
+  revalidatePath(`/etablissements/${etablissementId}`);
+  return { status: "success" };
 }
 
 export async function supprimerPrestataire(

@@ -1185,7 +1185,9 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // l'attestation « datant de moins de six mois » (le produit ne stocke
       // aucune date d'émission), la vérification d'authenticité auprès de
       // l'URSSAF, et le fait que le 2° offre QUATRE pièces au choix là où le
-      // produit n'a qu'un champ Kbis.
+      // produit n'a qu'un champ Kbis. [2026-09-27, C43 : ancrage et émission
+      // corrigés — remise et émission saisies ; restent l'authenticité et
+      // les quatre pièces.]
       "D. 8222-5",
       // D. 8222-7 : le même rythme et le même point de départ pour un
       // cocontractant établi à l'étranger, mais une liste de pièces

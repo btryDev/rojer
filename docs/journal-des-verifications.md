@@ -3251,6 +3251,79 @@ passed — fichiers restaurés après chacune. Vitest a figé deux fois sur
 l'injection de la description ; seuls les processus de ce worktree ont été
 arrêtés, l'injection rejouée seule.
 
+### C43 · 2026-09-27 — Vigilance : les six mois partent de la remise de l'attestation (B2)
+
+*Base : production `8bb6b0b`, branche `lot/vigilance-date-attestation`.
+Décision B2 du fichier `docs/revues/decisions-en-attente-2026-09-20.md`,
+option (b), décidée par la propriétaire le 2026-09-27 (priorité). Une
+migration additive ; aucun référentiel, aucun moteur touchés.*
+
+**Relu sur Légifrance le 2026-09-27**, sur sa page propre
+(`LEGIARTI000046078939`, en vigueur depuis le 01/01/2023, décret
+n° 2022-1015 du 19 juillet 2022, art. 9) — structure d'abord, puis
+confirmation ciblée : `D. 8222-5` fait se faire remettre les pièces « lors de
+la conclusion et tous les six mois jusqu'à la fin de son exécution », et le 1°
+exige une attestation « datant de moins de six mois dont elle s'assure de
+l'authenticité ». Deux dates comptent donc : la **remise**, d'où part la
+suivante, et l'**émission**, qui doit précéder la remise de moins de six
+mois. `D. 8222-7` (étranger, en vigueur depuis le 01/01/2012) : même rythme
+(« lors de la conclusion du contrat et tous les six mois »), pièces
+différentes, hors du modèle — non encodé. Texte identique au `citationCle` du
+corpus ; `motif` et `bloquePar` de `D. 8222-5` corrigés (ils décrivaient
+l'ancrage sur `updatedAt` comme actuel).
+
+**Constat → avant / après.**
+
+- **Modèle.** Avant : aucune date de remise ni d'émission ; la borne
+  semestrielle partait de `prestataire.updatedAt`. Après :
+  `Prestataire.attestationUrssafRemiseLe` et `attestationUrssafEmiseLe`,
+  `DateTime?`. Migration `20260927120000_prestataire_dates_attestation_vigilance` :
+  deux `ALTER TABLE "Prestataire" ADD COLUMN … TIMESTAMP(3)`, sans défaut ni
+  remplissage — aucune date existante ne dit quand une pièce a été remise.
+- **Calcul** (`prestataires/vigilance.ts`). L'échéance est la plus proche
+  entre la validité saisie et remise + six mois (`echeanceAttestationUrssaf`,
+  partagée avec le calendrier). Émission six mois pile ou plus avant la
+  remise : « À redemander » (six mois pile n'est pas « moins de six mois »).
+  Remise ou émission vide : « Date non renseignée », ardoise, **jamais « à
+  jour »**. `updatedAt` ne sert plus qu'à AGGRAVER : remise vide et rien
+  déposé depuis plus de six mois ⇒ « À redemander » (rose) — `updatedAt` est
+  postérieur à tout dépôt, la déduction ne tient que dans ce sens.
+- **Écrans.** Avant, sur la fiche : « Rojer n'enregistre pas la date à
+  laquelle vous avez reçu l'attestation : il compte les six mois depuis la
+  dernière modification de cette fiche… », et sous la pastille « Échéance
+  comptée depuis la dernière modification de la fiche… ». Après : la phrase
+  est retirée ; la pastille dit « Date non renseignée » + « Dates de remise
+  et d'émission non renseignées. À saisir sur la fiche du prestataire. », ou,
+  datée, « Expire dans 22 j » + « Remise le 01 mars 2026, émise le 20 février
+  2026. Remise suivante le 01 septembre 2026 (art. D. 8222-5 : « tous les six
+  mois ») ». Deux champs « Remise le » / « Émise le » à la création et un
+  formulaire sur la fiche (`enregistrerDatesAttestation`, n'écrit que ces deux
+  colonnes) ; refusés : date future, émission après la remise ; admise (et
+  montrée) : émission ancienne. Le tableau de bord compte sur
+  `etatLePlusGrave`, comme l'annuaire.
+- **ZIP de contrôle.** README, sous `Prestataires/` : « - Alpha : remise le
+  01/03/2026 ; émise le 20/02/2026 », ou « date de remise non renseignée ;
+  date d'émission non renseignée » ; même ligne dans
+  `Prestataires/<raison>/Dates_attestation_vigilance.txt`.
+- **Calendrier.** L'attestation y est datée par la même règle ; une validité
+  lointaine n'y reste plus après la remise due.
+
+**Éprouvées, chacune cassée puis restaurée** : `updatedAt` réinjecté comme
+source (9 rouges dont « une retouche de la fiche ne déplace plus
+l'échéance ») ; dates vides rendues « à jour » (6 rouges) ; six mois pile
+accepté (1) ; repli `updatedAt` retiré (1) ; `mentionUrssaf` retirée de la
+carte (balayage, 1) ; palliatif remis sur la fiche, coupé en fin de ligne
+(1 — la première version du balayage le laissait passer, blancs désormais
+écrasés) ; validation émission > remise retirée (2) ; calendrier rendu à la
+seule validité (1) ; `NOT NULL DEFAULT` dans la migration (2) ; champ rendu
+obligatoire au schéma (1) ; « Valide … j de plus » réaffiché sur une pièce
+à dater (1).
+
+**Ce qui reste** : la vérification d'authenticité auprès de l'URSSAF et les
+quatre pièces au choix du 2° ne sont servies par rien (inchangé). Une fiche
+existante reste « Date non renseignée » tant que le dirigeant ne saisit pas
+les dates : c'est voulu.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

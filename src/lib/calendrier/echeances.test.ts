@@ -260,7 +260,25 @@ describe("echeancesPrestataire", () => {
   const base = {
     id: "p1",
     raisonSociale: "Vérif Élec SARL",
+    attestationUrssafRemiseLe: null,
   };
+
+  it("date l'attestation URSSAF à la remise suivante quand elle précède la validité", () => {
+    // D. 8222-5 : « tous les six mois ». Remise le 1er mars, validité saisie
+    // lointaine : le calendrier porte le 1er septembre, comme la fiche.
+    const out = echeancesPrestataire(
+      {
+        ...base,
+        attestationUrssafValableJusquA: jour("2030-12-31"),
+        attestationUrssafRemiseLe: jour("2026-03-01"),
+        assuranceRcProValableJusquA: null,
+      },
+      AUJOURDHUI,
+      "etab1",
+    );
+    expect(out).toHaveLength(1);
+    expect(cleJourCivil(out[0].date)).toBe("2026-09-01");
+  });
 
   it("produit une échéance par pièce datée, avec le bon ton", () => {
     const out = echeancesPrestataire(

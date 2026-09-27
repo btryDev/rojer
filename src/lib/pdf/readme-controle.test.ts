@@ -105,6 +105,26 @@ describe("le README ne décrit que ce que le ZIP contient (relecture du 2026-09-
     expect(t).toMatch(/03_Registre_securite\.pdf\s+Rapports de vérifications/);
   });
 
+  it("les dates de l'attestation de vigilance : la date quand elle existe, « non renseignée » sinon", () => {
+    const t = genererReadme({
+      ...base,
+      nbPrestataires: 2,
+      datesAttestations: [
+        { raisonSociale: "Alpha", remiseLe: "01/03/2026", emiseLe: "20/02/2026" },
+        { raisonSociale: "Beta", remiseLe: null, emiseLe: null },
+      ],
+    });
+    expect(t).toContain("Attestations de vigilance (art. D. 8222-5) :");
+    expect(t).toContain("- Alpha : remise le 01/03/2026 ; émise le 20/02/2026");
+    expect(t).toContain(
+      "- Beta : date de remise non renseignée ; date d'émission non renseignée",
+    );
+  });
+
+  it("sans prestataire, aucune ligne de dates", () => {
+    expect(genererReadme(base)).not.toContain("Attestations de vigilance (art. D. 8222-5)");
+  });
+
   it("des pièces de prestataires non récupérées sont comptées", () => {
     const t = genererReadme({ ...base, nbPrestataires: 2, piecesPrestatairesManquantes: 1 });
     expect(t).toContain("1 pièce(s) déclarée(s) non récupérée(s)");

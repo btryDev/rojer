@@ -13,8 +13,14 @@ import { VigilancePiecePill } from "@/components/prestataires/VigilancePills";
 import { SupprimerPrestataireButton } from "@/components/prestataires/SupprimerPrestataireButton";
 import { getPrestataire } from "@/lib/prestataires/queries";
 import { LABEL_DOMAINE } from "@/lib/prestataires/schema";
-import { MENTION_ANCRAGE_URSSAF } from "@/lib/prestataires/vigilance";
-import { formaterDateLongueFr } from "@/lib/dates";
+import {
+  D8222_5_ANCIENNETE,
+  D8222_5_RYTHME,
+  mentionUrssaf,
+} from "@/lib/prestataires/vigilance";
+import { enregistrerDatesAttestation } from "@/lib/prestataires/actions";
+import { FormulaireDatesAttestation } from "@/components/prestataires/FormulaireDatesAttestation";
+import { cleJourCivil, formaterDateLongueFr } from "@/lib/dates";
 
 /**
  * La fiche d'un prestataire, en charte board (`docs/charte-board.md`).
@@ -160,11 +166,7 @@ export default async function PrestataireDetailPage({
                   libelle="Attestation URSSAF"
                   statut={p.vigilance.urssaf}
                   jours={p.vigilance.urssafExpireDans}
-                  mention={
-                    p.vigilance.urssafPlafonneeParLeSemestre
-                      ? MENTION_ANCRAGE_URSSAF
-                      : undefined
-                  }
+                  mention={mentionUrssaf(p.vigilance)}
                 />
                 <VigilancePiecePill
                   libelle="RC Pro"
@@ -192,29 +194,29 @@ export default async function PrestataireDetailPage({
                 </span>
               </div>
 
+              {/* Retiré le 2026-09-27 (décision B2, journal C43) : la phrase
+                  qui avouait que les six mois partaient de `updatedAt`, et
+                  que toute retouche de la fiche les repoussait. C'était le
+                  palliatif ; la borne part désormais de la date de remise
+                  saisie ci-dessous. */}
               <p className="m-0 mt-4 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                L&apos;attestation de vigilance se redemande tous les six mois
-                tant que le contrat court (art. D. 8222-5). Le prestataire la
-                génère depuis son espace URSSAF ; un courriel suffit à
-                l&apos;obtenir.
+                {`L'art. D. 8222-5 fait remettre l'attestation « ${D8222_5_RYTHME} », et la veut « ${D8222_5_ANCIENNETE} ». Le prestataire la génère depuis son espace URSSAF ; un courriel suffit à l'obtenir.`}
               </p>
-              {/* CE QUE LE PRODUIT MESURE, DIT SOUS LA RÈGLE QU'IL RAPPELLE.
-                  D. 8222-5 compte les six mois depuis la conclusion du
-                  contrat, puis depuis chaque remise. Rojer ne détient aucune
-                  de ces deux dates et compte depuis `updatedAt`, la dernière
-                  écriture sur la fiche. La borne obtenue est toujours plus
-                  tardive que l'échéance réelle — jamais d'alerte à tort —,
-                  mais toute retouche la repousse de six mois pleins sans
-                  qu'aucune attestation ait été remise. Le remède est une date
-                  de remise au modèle ; tant qu'elle manque, la phrase reste
-                  (cf. `lib/prestataires/vigilance.ts`). */}
-              <p className="m-0 mt-2 max-w-[64ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                Rojer n&apos;enregistre pas la date à laquelle vous avez reçu
-                l&apos;attestation : il compte les six mois depuis la dernière
-                modification de cette fiche. Toute retouche — un téléphone, une
-                note — repousse donc la date affichée, sans qu&apos;une
-                attestation ait été remise.
-              </p>
+              <div className="mt-4">
+                <FormulaireDatesAttestation
+                  action={enregistrerDatesAttestation.bind(null, id, p.id)}
+                  remiseLe={
+                    p.attestationUrssafRemiseLe
+                      ? cleJourCivil(p.attestationUrssafRemiseLe)
+                      : undefined
+                  }
+                  emiseLe={
+                    p.attestationUrssafEmiseLe
+                      ? cleJourCivil(p.attestationUrssafEmiseLe)
+                      : undefined
+                  }
+                />
+              </div>
               <div className="mt-3">
                 {/* LEGIARTI000037389145 rend 404. Identifiant relu à la
                     source le 2026-08-28. */}
