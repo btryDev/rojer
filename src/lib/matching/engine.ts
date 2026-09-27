@@ -55,6 +55,15 @@ import type {
 } from "@/lib/referentiels/types-communs";
 import { sommeilPlausiblePourLeType } from "@/lib/referentiels/types-communs";
 import { evaluerPersonnesPresentes } from "./personnes-presentes";
+import { POLITIQUE_ABSENCE } from "./absence";
+
+/**
+ * La marque d'une ligne que seul le type d'ERP manquant retient. Le type écarte
+ * sur sa propre absence (`POLITIQUE_ABSENCE.typeErp`, garanti par la base) ;
+ * mais une EXCLUSION par type, ou le sommeil, retiennent sur ce silence — et
+ * c'est la question du type que la fiche pose.
+ */
+const QUESTION_TYPE_ERP: QuestionSansReponse = "type_erp";
 import {
   effectifRetenuPourSeuil,
   phraseEffectifAConfirmer,
@@ -329,7 +338,7 @@ function evaluerChiffonsImpregnes(
     ok: true,
     raison:
       "usage de chiffons, cotons ou papiers imprégnés non renseigné — obligation retenue par prudence, à confirmer",
-    sansReponse: "chiffons_impregnes",
+    sansReponse: POLITIQUE_ABSENCE.chiffonsImpregnes.question,
   };
 }
 
@@ -380,8 +389,8 @@ function evaluerLocauxSommeil(
       // n'est retenue que parce que le type manque.]
       sansReponse:
         etab.typeErp != null
-          ? ("locaux_sommeil_public" as const)
-          : ("type_erp" as const),
+          ? POLITIQUE_ABSENCE.comporteLocauxSommeilPublic.question
+          : QUESTION_TYPE_ERP,
     };
   }
 
@@ -704,7 +713,7 @@ export function matchTypologie(
       raisons.push(
         "manipulation de matières visées par R. 4227-22 non renseignée — obligation retenue par prudence, à confirmer (champ R. 4227-34, quel que soit l'effectif)",
       );
-      sansReponse.push("matieres_r4227_22");
+      sansReponse.push(POLITIQUE_ABSENCE.manipuleMatieresR422722.question);
     }
 
     // La raison « à confirmer » ne se dit que si rien d'autre n'établit le
@@ -720,7 +729,7 @@ export function matchTypologie(
     // la raison (analyse du 2026-09-27, § 6.3) : un ERP muet recevait sa
     // consigne et ses exercices sans rien qui les distingue d'une ligne due.
     if (seuil.etat === "indetermine" && !brancheMatieres) {
-      sansReponse.push("personnes_presentes");
+      sansReponse.push(POLITIQUE_ABSENCE.personnesPresentesHabituellement.question);
     }
     if (brancheMatieres) {
       raisons.push(
@@ -744,7 +753,7 @@ export function matchTypologie(
     t.erp.typesExclus.length > 0 &&
     (etab.typeErp === null || etab.typeErp === undefined)
   ) {
-    sansReponse.push("type_erp");
+    sansReponse.push(QUESTION_TYPE_ERP);
   }
 
   // 3 ter. Locaux à sommeil pour le public (ET).
