@@ -4259,6 +4259,116 @@ mêmes rouges sortent normalement. Sans effet sur la suite verte.
 passés, 4 ignorés. `tsc` : 0. `eslint .` : 0 erreur, 2 avertissements hors
 périmètre. `next build` : compilé, `/api/mcp` et `/api/mcp/[cle]` en `ƒ`.
 
+### C49 · 2026-09-27 — Relire ce qui a été déposé : analyses, pièces de prestataires, rapports au ZIP
+
+*Base : `main` `42c0390` (production), branche `lot/relire-fichiers-deposes`.
+Ni référentiel, ni moteur, ni schéma ; aucune migration. Numéro C49 donné par
+la coordination.*
+
+**Les constats.** (1) `AnalyseLegionelle.rapportCle` s'écrivait
+(`carnet-sanitaire/actions.ts`) et ne se relisait nulle part. (2) Les pièces
+des prestataires ne se relisaient que par le ZIP. (3) Le ZIP de contrôle
+déposé au test ne portait aucun rapport de vérification (sept entrées). Est-ce
+voulu ? Cherché dans le commentaire de la route, le README
+(`pdf/readme-controle.ts`), les ADR : **rien ne l'écarte**. Le README
+présentait `03_Registre_securite.pdf` comme « Rapports de vérifications
+périodiques », alors que le registre n'en porte que l'INDEX et écrit « Les
+fichiers originaux des rapports sont conservés et téléchargeables depuis
+l'application » (`RegistreDocument.tsx`) — ce qu'un tiers qui reçoit le ZIP ne
+peut pas faire. Jugé non voulu.
+
+**Fait.**
+- `storage/servir.ts` : la lecture d'un fichier et ses trois échecs (503 non
+  configuré, 410 absent, 502 panne), commune aux trois routes ; le type vient
+  du dépôt, ou de l'extension (`mimeDepuisNom`, les quatre types acceptés au
+  dépôt ; tout autre se télécharge) ; `nosniff`.
+- `/api/analyses-legionelles/[id]/rapport` et
+  `/api/prestataires/[id]/pieces/{urssaf|rcpro|kbis}` : appartenance dans le
+  `findFirst` même (carnet → établissement → entreprise → utilisateur ;
+  prestataire → établissement → entreprise → utilisateur) ; 403 hors
+  périmètre comme inexistant, 404 à soi sans pièce ou type inconnu (sans
+  lire la base : `Object.hasOwn`, pas `in`). `/api/rapports/[id]/fichier`
+  s'appuie sur le même module.
+- Liens : « Ouvrir le rapport (nom) » sur une analyse qui en a un ; « Ouvrir
+  l'attestation URSSAF / RC Pro / le Kbis » pour chaque pièce fournie, par la
+  table `prestataires/pieces.ts`, lue aussi par la route.
+- ZIP : `Rapports/` (fichiers des rapports de vérification de
+  l'établissement, nommés jour civil _ équipement ou obligation _ nom
+  d'origine, assainis, dédoublonnés) et `08_Carnet_sanitaire_analyses/`
+  (rapports de laboratoire des analyses listées au 08). Un fichier illisible
+  est compté manquant, l'archive se construit (`controle/fichiers-zip.ts`).
+  README : 03 = « Registre des vérifications, index des rapports » ;
+  `Rapports/` et `08_…_analyses/` disent ce qui est joint et ce qui ne l'a pas
+  été — jamais un déposé compté joint.
+
+**Gardes.** `api/fichiers-isolation.test.ts` : base en mémoire qui applique le
+`where` de la route comme Prisma (une condition absente ne filtre pas) — à
+soi : 200, contenu, type ; à l'autre compte : 403 sans lecture du stockage ;
+inexistant = hors périmètre ; 404 ; 503/410/502 sur les trois routes.
+`controle/fichiers-zip.test.ts` (noms assainis et uniques, aucun `..`,
+manquants comptés, rien sans fichier) ; `pdf/readme-controle.test.ts` ;
+`controle/branchements.test.ts` (source : ZIP, README, deux liens). **Ne
+prouvent pas** : le rendu réel du ZIP (la route rend des PDF, non exécutée en
+test) ; le poids d'un ZIP à beaucoup de rapports sur une fonction Vercel.
+
+**Éprouvées** — filtre utilisateur retiré de chacune des trois routes ; `in`
+au lieu de `Object.hasOwn` (d'abord VERT : le résultat est aussi un 404 ; la
+garde exige depuis qu'un type inconnu ne lise pas la base, rouge) ; 410 rendu
+502 ; type non déduit ; échec qui fait tomber l'archive ; nom non assaini
+(injection d'abord non appliquée — échappement du `$` —, rejouée, rouge) ;
+`Rapports/` non joint ; manquants tus au README ; déposés comptés joints ;
+lien du carnet retiré — toutes rouges.
+
+**Contre-lecture de `1a5de27` (2026-09-27), sur une vraie base** : aucun
+point grave — isolation des trois routes, types exotiques, en-têtes (CRLF,
+`filename*`), zip-slip (13 noms hostiles), manquants comptés. Corrigé :
+
+- **M1** — `Rapports/` prenait tous les rapports, y compris ceux des lignes
+  de salarié antérieurs à `bb03cdd` : nominatifs, parfois médicaux, remis à un
+  tiers. Filtrés (`verification: { salarieId: null }`) ; le README dit combien
+  sont écartés, ou la règle seule si le comptage échoue (le comptage n'est pas
+  `lire` : son échec ne prive pas `Rapports/`).
+- **M2** — le type enregistré en base était servi tel quel : `text/html` ou
+  `image/svg+xml` en `inline`. Liste blanche (`TYPES_SERVIS`, les quatre types
+  du dépôt) ; hors liste, le type du nom ou `application/octet-stream` +
+  `attachment`. `Content-Security-Policy: sandbox`, `no-store`.
+- **Faibles** — antislash neutralisé dans `filename` ; la troncature à 120
+  caractères garde l'extension (`noms.ts`) ; le registre dit que les
+  originaux sont aussi dans `Rapports/` du ZIP ; le README dit « 5 dernières
+  analyses ».
+- **Taille du ZIP.** « The maximum payload size for the request body or the
+  response body of a Vercel Function is 4.5 MB » ; le guide Vercel sur ce
+  plafond recommande « streaming functions, which don't have this limit »
+  (relus le 2026-09-27). La route rendait `generateAsync` d'un bloc : trois
+  rapports de 2 Mo suffisaient. Désormais `zipEnFlux` (`generateInternalStream`
+  → `ReadableStream`), `maxDuration = 300` (maximum Hobby, défaut Pro), et
+  les lectures du stockage menées quatre à la fois. Les fichiers sont lus AVANT
+  que le flux commence : un échec reste compté au README.
+
+**Gardes ajoutées.** Un ZIP de plus de 4,5 Mo (trois pièces incompressibles
+de 2 Mo) traverse une `Response` réelle et se relit octet pour octet ; le flux
+livre plusieurs morceaux ; jamais plus de quatre lectures à la fois ; types
+hostiles servis en téléchargement ; sandbox, nosniff, no-store ; nom de
+fichier qui ne ferme pas l'en-tête ; extension gardée ; README des salariés
+écartés ; source de la route (filtre salarié, flux, `maxDuration`). **Ne
+prouvent pas** : que le serveur de Next en production transmet le flux sans
+le remettre en bloc (vérifié sur une `Response` Web, pas sur `next start`
+derrière la plateforme) — à constater au premier ZIP lourd en production ;
+et que l'exclusion des rapports de salarié tient à l'exécution : la route
+n'est pas exécutée en test, la garde lit sa source.
+
+**Éprouvées** — rapports de salarié joints ; réponse d'un bloc ; flux d'un
+seul morceau ; lectures non bornées ; type de la base servi tel quel ; sans
+sandbox ; antislash non neutralisé ; extension perdue ; salariés tus au
+README ; `maxDuration` retiré — dix rouges.
+
+**Un test existant tombé, et réécrit.** `RegistreDocument.test.tsx` vérifiait
+« R. 143-44 à l'ERP seul » par la TAILLE du PDF : la phrase sur `Rapports/`
+a changé coupure et compression, et le rendu ERP est sorti plus court que le
+rendu sans régime (9 716 contre 9 731 octets), citation comprise. Il lit
+désormais le texte de l'arbre de rendu (`elementsDansLOrdre`), comme le test
+voisin. Éprouvé : R. 143-44 cité à tous les régimes → rouge.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La

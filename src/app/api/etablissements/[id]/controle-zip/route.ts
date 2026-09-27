@@ -32,6 +32,14 @@ import {
   lignesR4512_12Zip,
 } from "@/lib/plan-prevention/annonces-zip";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
+import { joindreFichiers, zipEnFlux } from "@/lib/controle/fichiers-zip";
+
+/**
+ * Durée maximale de la fonction : lire les pièces, rendre quatre PDF et
+ * streamer l'archive. 300 s, le maximum du plan Hobby et le défaut du Pro
+ * (documentation Vercel « Functions limits », relue le 2026-09-27).
+ */
+export const maxDuration = 300;
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 import {
   fraicheurCalendrier,
@@ -79,6 +87,9 @@ function datesAttestationZip(p: {
  *   04_Plan_actions.pdf          — écarts ouverts priorisés (existant)
  *   05_Accessibilite_URL.txt     — URL publique du registre (si publié)
  *   Prestataires/                — attestations URSSAF, RC Pro, Kbis
+ *   Rapports/                    — fichiers des rapports de vérification déposés
+ *   06, 07, 08                   — permis de feu, plans de prévention, carnet sanitaire
+ *   08_Carnet_sanitaire_analyses/ — rapports de laboratoire déposés
  */
 export async function GET(
   _req: Request,
@@ -154,6 +165,23 @@ export async function GET(
       noterEchec(fichier, e, "la lecture a échoué");
       return repli;
     }
+  };
+
+  // Le stockage, demandé une fois et à la première pièce : un stockage non
+  // configuré ne fait pas échouer l'archive — les pièces sont comptées
+  // manquantes et le README le dit (`lot/stockage-supabase`, puis
+  // `lot/relire-fichiers-deposes` pour les rapports et les analyses).
+  let stockageLu: FileStorage | null | undefined;
+  const stockage = (): FileStorage | null => {
+    if (stockageLu === undefined) {
+      try {
+        stockageLu = getStorage();
+      } catch (e) {
+        console.error("controle-zip : stockage indisponible", e);
+        stockageLu = null;
+      }
+    }
+    return stockageLu;
   };
 
   // ── 01 Dossier de conformité ────────────────────────────────────────
@@ -303,15 +331,8 @@ export async function GET(
   }));
   if (prestataires.length > 0) {
     const dossierPrestataires = zip.folder("Prestataires") ?? zip;
-    // Un stockage non configuré ne fait pas échouer l'archive entière : les
-    // pièces sont comptées manquantes et le README le dit, comme une pièce que
-    // le stockage ne rend pas (2026-09-27, `lot/stockage-supabase`).
-    let storage: FileStorage | null = null;
-    try {
-      storage = getStorage();
-    } catch (e) {
-      console.error("controle-zip : stockage indisponible", e);
-    }
+    // Stockage partagé, lu à la première pièce (`stockage()`, plus haut).
+    const storage = stockage();
     for (const p of prestataires) {
       const safeDir = nomDossierArchive(p.raisonSociale, "Prestataire");
       const sousDossier = dossierPrestataires.folder(safeDir) ?? dossierPrestataires;
@@ -350,6 +371,55 @@ export async function GET(
       }
     }
   }
+
+  // ── Rapports/ — les fichiers des rapports de vérification déposés ────
+  // Le registre (03) n'en porte que l'index ; le tiers qui reçoit ce ZIP
+  // n'a pas accès à l'application (`controle/fichiers-zip.ts`, 2026-09-27).
+  const rapportsDeposes = await lire("Rapports/", [], () =>
+    prisma.rapportVerification.findMany({
+      // PAS LES RAPPORTS DES LIGNES DE SALARIÉ (contre-lecture du 2026-09-27,
+      // M1). Depuis `bb03cdd` aucun dépôt n'y est possible, mais des rapports
+      // antérieurs peuvent exister : documents nominatifs, parfois médicaux,
+      // dans un ZIP remis à un tiers. Ils n'y entrent pas ; le README le dit.
+      where: { etablissementId: id, verification: { salarieId: null } },
+      // Pas d'`orderBy` : l'ordre des rapports vit dans
+      // `ORDRE_RAPPORT_PLUS_RECENT` (garde de `derniere-realisation.test.ts`),
+      // et les entrées portent leur date en tête de nom — l'archive les range.
+      select: {
+        id: true,
+        fichierCle: true,
+        fichierNomOriginal: true,
+        dateRapport: true,
+        verification: {
+          select: { libelleObligation: true, equipement: { select: { libelle: true } } },
+        },
+      },
+    }),
+  );
+  // Combien sont écartés, pour le dire. Un comptage en échec ne prive pas
+  // Rapports/ (ce n'est pas `lire`) : le README dit alors la règle sans nombre.
+  let rapportsSalariesEcartes: number | null;
+  try {
+    rapportsSalariesEcartes = await prisma.rapportVerification.count({
+      where: { etablissementId: id, verification: { salarieId: { not: null } } },
+    });
+  } catch (e) {
+    console.error("controle-zip : comptage des rapports de salarié en échec", e);
+    rapportsSalariesEcartes = null;
+  }
+  const rapportsZip = await joindreFichiers(
+    zip,
+    "Rapports",
+    rapportsDeposes.map((r) => ({
+      id: r.id,
+      cle: r.fichierCle,
+      nomOriginal: r.fichierNomOriginal,
+      date: r.dateRapport,
+      etiquette: r.verification.equipement?.libelle ?? r.verification.libelleObligation,
+    })),
+    rapportsDeposes.length > 0 ? stockage() : null,
+    "rapport.pdf",
+  );
 
   // ── 06 Permis de feu (12 derniers mois) ─────────────────────────────
   // Fenêtre en **mois calendaires** : `Date.now() - 365 jours` glisse d'un
@@ -548,6 +618,24 @@ export async function GET(
       .join("\n");
     zip.file("08_Carnet_sanitaire.txt", txt);
   }
+  // Les rapports de laboratoire des analyses listées au 08, quand ils ont
+  // été déposés : ils vont avec (2026-09-27).
+  const analysesAvecRapport = (carnetSan?.analyses ?? []).filter(
+    (a): a is typeof a & { rapportCle: string } => Boolean(a.rapportCle),
+  );
+  const analysesZip = await joindreFichiers(
+    zip,
+    "08_Carnet_sanitaire_analyses",
+    analysesAvecRapport.map((a) => ({
+      id: a.id,
+      cle: a.rapportCle,
+      nomOriginal: a.rapportNom,
+      date: a.dateAnalyse,
+      etiquette: a.laboratoire,
+    })),
+    analysesAvecRapport.length > 0 ? stockage() : null,
+    "rapport-analyse.pdf",
+  );
 
   // ── 00 README ───────────────────────────────────────────────────────
   const readme = genererReadme({
@@ -566,6 +654,9 @@ export async function GET(
     echecs,
     piecesPrestatairesManquantes,
     piecesPrestataires,
+    rapportsZip,
+    rapportsSalariesEcartes,
+    analysesZip,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
     datesAttestations: echecs.has("Prestataires/")
@@ -589,10 +680,11 @@ export async function GET(
   zip.file("00_README.txt", readme);
 
   // ── Génération ──────────────────────────────────────────────────────
-  const buffer = await zip.generateAsync({ type: "uint8array" });
+  // En flux : au-delà de 4,5 Mo, une réponse d'un bloc est refusée par Vercel
+  // (`zipEnFlux`). Sans Content-Length, par construction.
   const filename = `Dossier_controle_${slugifyFilename(etablissement.raisonDisplay)}_${cleJourCivil(maintenant)}.zip`;
 
-  return new NextResponse(new Uint8Array(buffer), {
+  return new NextResponse(zipEnFlux(zip), {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${filename}"`,

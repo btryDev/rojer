@@ -138,13 +138,26 @@ describe("RegistreDocument", () => {
     expect(avec).toBeGreaterThan(sans);
   }, 30000);
 
-  it("cite R. 143-44 à l'ERP seul, et R. 146-35 à l'IGH seul", async () => {
-    const aucun = await taille({ ...data, regime: { estERP: false, estIGH: false } });
-    const erp = await taille({ ...data, regime: { estERP: true, estIGH: false } });
-    const igh = await taille({ ...data, regime: { estERP: false, estIGH: true } });
-    expect(erp).toBeGreaterThan(aucun);
-    expect(igh).toBeGreaterThan(aucun);
-  }, 30000);
+  it("cite R. 143-44 à l'ERP seul, et R. 146-35 à l'IGH seul", () => {
+    // ~~Par la taille du PDF~~ (2026-09-27, `lot/relire-fichiers-deposes`) :
+    // une phrase ajoutée ailleurs dans la page a changé la coupure des lignes
+    // et la compression, et le rendu ERP est sorti PLUS COURT que le rendu
+    // sans régime, avec la citation en plus. La taille n'était qu'un
+    // substitut ; l'arbre de rendu dit le texte.
+    const textes = (regime: { estERP: boolean; estIGH: boolean }) =>
+      elementsDansLOrdre(RegistreDocument({ data: { ...data, regime } }))
+        .map(texteDirect)
+        .join("\n");
+    const aucun = textes({ estERP: false, estIGH: false });
+    const erp = textes({ estERP: true, estIGH: false });
+    const igh = textes({ estERP: false, estIGH: true });
+    expect(erp).toContain("R. 143-44");
+    expect(aucun).not.toContain("R. 143-44");
+    expect(igh).not.toContain("R. 143-44");
+    expect(igh).toContain("R. 146-35");
+    expect(aucun).not.toContain("R. 146-35");
+    expect(erp).not.toContain("R. 146-35");
+  });
 
   it("ne met pas R. 146-35 dans le titre du registre, et le nomme à part en IGH", () => {
     // Ce document n'est pas le registre de l'immeuble (R. 146-35 : « tenu,

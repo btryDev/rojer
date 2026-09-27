@@ -9,6 +9,7 @@
 //
 // Module **pur** : la route lui passe ce qu'elle a lu.
 
+import type { CompteFichiers } from "@/lib/controle/fichiers-zip";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import {
   R4512_7_1_SEUIL,
@@ -112,6 +113,13 @@ export function genererReadme(args: {
   piecesPrestatairesManquantes: number;
   /** Pièces de prestataires RÉELLEMENT mises au ZIP, par type. */
   piecesPrestataires: { attestation: number; rcPro: number; kbis: number };
+  /** Fichiers des rapports de vérification : déposés, mis au ZIP, non récupérés. */
+  rapportsZip?: CompteFichiers;
+  /** Rapports de lignes de salarié, écartés du ZIP (documents nominatifs) ;
+   *  `null` si le comptage a échoué — la règle est alors dite sans nombre. */
+  rapportsSalariesEcartes?: number | null;
+  /** Rapports de laboratoire des analyses listées au 08 : idem. */
+  analysesZip?: CompteFichiers;
   /** Les deux dates de l'attestation de vigilance de chaque prestataire
    *  (art. D. 8222-5), déjà formatées ; `null` = non renseignée. Le README
    *  dit la date quand elle existe, « non renseignée » sinon — jamais un
@@ -128,6 +136,21 @@ export function genererReadme(args: {
     args.echecs.has(cle) ? `Non inclus — ${args.echecs.get(cle)}` : sinon;
   const ligne = (nom: string, description: string, sinon: string) =>
     ` ${nom.padEnd(30)}${args.presents.has(nom) ? description : absent(nom, sinon)}`;
+  // Un dossier de fichiers déposés : ce qui y est, et ce qui n'a pas pu être
+  // lu — jamais un nombre de déposés présenté comme un nombre de joints.
+  const ligneFichiers = (
+    nom: string,
+    quoi: string,
+    aucun: string,
+    c: CompteFichiers | undefined,
+  ) => {
+    const tete = ` ${nom.padEnd(30)}`;
+    if (args.echecs.has(nom)) return `${tete}${absent(nom, "Non inclus")}`;
+    if (!c || c.deposes === 0) return `${tete}${aucun}`;
+    const manquants =
+      c.manquants > 0 ? ` ; ${c.manquants} déposé(s) non récupéré(s)` : "";
+    return `${tete}${c.inclus} ${quoi}${manquants}`;
+  };
   const lignes: string[] = [];
   lignes.push(
     `DOSSIER DE CONFORMITÉ — ${args.raisonSociale}`,
@@ -168,7 +191,18 @@ export function genererReadme(args: {
         : !args.duerpLu
           ? ` 02_DUERP.pdf                  ${absent("02_DUERP", "Non inclus — lecture des versions en échec")}`
           : " 02_DUERP.pdf                  Non inclus (aucune version validée)",
-    ligne("03_Registre_securite.pdf", "Rapports de vérifications périodiques", "Non inclus"),
+    // ~~« Rapports de vérifications périodiques »~~ : le registre porte
+    // l'INDEX des rapports ; leurs fichiers sont dans Rapports/ (2026-09-27).
+    ligne("03_Registre_securite.pdf", "Registre des vérifications, index des rapports", "Non inclus"),
+    ligneFichiers("Rapports/", "fichier(s) de rapport de vérification", "Aucun rapport déposé", args.rapportsZip),
+    ...(args.rapportsSalariesEcartes === null
+      ? ["   Les rapports déposés sur le titre d'un salarié ne sont jamais joints :", "   documents nominatifs, conservés dans l'application."]
+      : args.rapportsSalariesEcartes !== undefined && args.rapportsSalariesEcartes > 0
+        ? [
+            `   ${args.rapportsSalariesEcartes} rapport(s) déposé(s) sur le titre d'un salarié non joint(s) :`,
+            "   documents nominatifs, conservés dans l'application.",
+          ]
+        : []),
     ligne("04_Plan_actions.pdf", "Actions ouvertes puis en cours, chacune par échéance puis criticité", "Non inclus"),
     // Tous sur `zip.files` (contre-lecture du 2026-09-26 : 05 à 08 et
     // Prestataires/ restaient calculés sur des compteurs).
@@ -176,6 +210,9 @@ export function genererReadme(args: {
     ligne("06_Permis_de_feu.txt", `${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`, "Aucun permis émis sur 12 mois"),
     ligne("07_Plans_de_prevention.txt", `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
     ligne("08_Carnet_sanitaire.txt", "Relevés ECS + analyses légionelles (arrêté 01-02-2010)", "Non configuré"),
+    ...(args.analysesZip && args.analysesZip.deposes > 0
+      ? [ligneFichiers("08_Carnet_sanitaire_analyses/", "rapport(s) de laboratoire (5 dernières analyses)", "", args.analysesZip)]
+      : []),
     (() => {
       if (args.echecs.has("Prestataires/"))
         return ` Prestataires/                 ${absent("Prestataires/", "Non inclus")}`;

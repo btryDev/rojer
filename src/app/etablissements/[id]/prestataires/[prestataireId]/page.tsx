@@ -12,6 +12,13 @@ import { lireProvenance } from "@/lib/navigation/provenance";
 import { VigilancePiecePill } from "@/components/prestataires/VigilancePills";
 import { SupprimerPrestataireButton } from "@/components/prestataires/SupprimerPrestataireButton";
 import { getPrestataire } from "@/lib/prestataires/queries";
+import { PIECES, urlPiece, type TypePiece } from "@/lib/prestataires/pieces";
+
+const LIBELLES_PIECES: [TypePiece, string][] = [
+  ["urssaf", "Ouvrir l'attestation URSSAF"],
+  ["rcpro", "Ouvrir l'attestation RC Pro"],
+  ["kbis", "Ouvrir le Kbis"],
+];
 import { LABEL_DOMAINE } from "@/lib/prestataires/schema";
 import {
   D8222_5_ANCIENNETE,
@@ -193,6 +200,28 @@ export default async function PrestataireDetailPage({
                   </span>
                 </span>
               </div>
+
+              {/* Les pièces fournies se rouvrent ici (2026-09-27) : elles ne se
+                  relisaient que par le ZIP de contrôle. Une pièce par lien, et
+                  seulement celles qui ont été déposées. */}
+              {LIBELLES_PIECES.some(([piece]) => p[PIECES[piece].cle]) && (
+                <ul className="m-0 mt-3 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0">
+                  {LIBELLES_PIECES.filter(([piece]) => p[PIECES[piece].cle]).map(
+                    ([piece, libelle]) => (
+                      <li key={piece}>
+                        <a
+                          href={urlPiece(p.id, piece)}
+                          target="_blank"
+                          rel="noopener"
+                          className="text-[12.5px] font-medium text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
+                        >
+                          {libelle}
+                        </a>
+                      </li>
+                    ),
+                  )}
+                </ul>
+              )}
 
               {/* Retiré le 2026-09-27 (décision B2, journal C43) : la phrase
                   qui avouait que les six mois partaient de `updatedAt`, et
