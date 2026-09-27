@@ -156,7 +156,6 @@ describe("les exclusions déclarées projettent le corpus", () => {
     const annonces = manquesAnnoncesDuDossier(CORPUS, {
       travail: true,
       epiPresents: null,
-      nbPrestataires: 1,
     }).flatMap((d) => d.articles.map((a) => a.ref));
     expect(annonces.length).toBeGreaterThan(0);
     expect(annonces.filter((ref) => projetes.has(ref))).toEqual([]);

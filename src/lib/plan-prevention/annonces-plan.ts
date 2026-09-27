@@ -3,16 +3,24 @@
  * DIT — dans leurs mots, UNE fois.
  *
  * POURQUOI CE MODULE EXISTE. `R. 4512-1`, `R. 4512-9`, `R. 4512-11`,
- * `R. 4512-12` et `R. 4463-8` sont au corpus en `obligation_manquante`, cause
+ * `R. 4512-12` et `R. 4463-8` ~~sont~~ étaient (jusqu'au 2026-09-27) au corpus en `obligation_manquante`, cause
  * `module` : le produit a le plan de prévention, et n'en disait rien à qui
  * l'utilise. Un dirigeant qui lisait l'écran concluait qu'il avait fini quand
  * il avait signé — l'information écrite de l'inspection du travail, la liste
  * des postes, les dossiers amiante, les nouveaux sous-traitants, la chaleur
  * n'étaient nommés nulle part. Le 2026-09-26, ils sont DITS sur les surfaces
  * existantes : le formulaire, la fiche du plan, le diagnostic, et le fichier
- * `07_Plans_de_prevention.txt` du ZIP de contrôle. Ils ne sont pas ENCODÉS :
+ * `07_Plans_de_prevention.txt` du ZIP de contrôle. ~~Ils ne sont pas ENCODÉS :
  * aucun champ, aucune échéance, aucune migration — le statut au corpus reste
- * `obligation_manquante`, parce que le changer est une décision de produit.
+ * `obligation_manquante`, parce que le changer est une décision de produit.~~
+ *
+ * [2026-09-27, C45 — la décision est prise. Les cinq sont `non_couvert` au
+ * corpus. `R. 4512-1`, `-9`, `-11` et `R. 4463-8` sont en plus ANNONCÉS sur la
+ * page « Ce que Rojer ne couvre pas ». `R. 4512-12` a une trace : la date,
+ * facultative, à laquelle l'inspection du travail a été informée
+ * (`PlanPrevention.inspectionTravailInformeeLe`, migration 20260927140000) ;
+ * son adresse est la carte « Art. R. 4512-12 » de la fiche. Rien n'a
+ * d'échéance.]
  *
  * CE QUI EST AFFICHÉ EST LE TEXTE. Chaque constante est l'article, ou une
  * proposition entière de l'article, telle que le corpus la consigne — relue

@@ -1141,7 +1141,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // Deux surfaces affichent la pastille « R. 4512-6 à R. 4512-12 » sans en
       // dire un mot ; un dirigeant qui les lit conclut qu'il a fini quand il a
       // signé.
-      // ~~"R. 4512-12"~~ — 2026-09-27, C45 : 2° tracé sur le plan, `sans_objet` sur le patron de R. 4512-6 (porté par le module).
+      // ~~"R. 4512-12"~~ — 2026-09-27, C45 : 2° tracé sur le plan, ~~`sans_objet` sur le patron de R. 4512-6~~ `non_couvert` (contre-lecture M2), adresse : la carte « Art. R. 4512-12 » de la fiche du plan.
       // ── Lot « vigilance prestataires », 2026-09-02 : le chapitre II du
       // titre II de la HUITIÈME partie, aux deux étages du Code — sept
       // articles législatifs sur sept, huit réglementaires sur huit, plus les
@@ -1479,7 +1479,7 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // employeur (`perimetre/manques-annonces.ts`). Décision de la propriétaire
     // du 2026-09-27. Les vingt-quatre autres articles passés `non_couvert` le
     // même jour naissent AVEC cette adresse : ils entrent au compte des
-    // `non_couvert` (27 → 52) sans entrer à celui des muets. L'adresse est
+    // `non_couvert` (27 → 53 avec `L. 4121-3-1` et `R. 4512-12`) sans entrer à celui des muets. L'adresse est
     // vérifiée, cette fois — `manques-annonces.test.ts` tient l'égalité entre
     // les articles qui la citent et ce que la page projette —, ce qui ferme
     // pour eux la limite 2 ci-dessus (« jamais que l'adresse citée existe »).

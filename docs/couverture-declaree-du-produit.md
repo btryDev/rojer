@@ -152,7 +152,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ Les 52 articles (2026-09-27, C45) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ Les 53 articles (2026-09-27, C45 après contre-lecture) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les vingt-cinq
 annoncés le 2026-09-27, que la page « Ce que Rojer ne couvre pas » projette au
@@ -163,11 +163,12 @@ voyait tous, y compris les onze articles propres aux hôtels.
 2026-09-03, 20 → 25 le 2026-09-20 (arrêté du 1er février 2010, légionelles, et
 l'article 36 de l'arrêté du 23 juin 1978 : cinq entrées, avec une adresse
 visible — voir leur famille au § 3), 25 → 26 le 2026-09-26 (`GN 13`, voir sa
-famille au § 3), puis 26 → 27 le même jour (`R. 4624-55`), puis 27 → 52 le
+famille au § 3), puis 26 → 27 le même jour (`R. 4624-55`), puis ~~27 → 52~~ 27 → 53 le
 2026-09-27 (C45).**
 
-**Le mouvement du 2026-09-27, article par article : 27 + 25 − 0 = 52.** Aucune
-sortie. Vingt-cinq entrées, toutes venues de `obligation_manquante` :
+**Le mouvement du 2026-09-27, article par article : ~~27 + 25 − 0 = 52~~
+27 + 26 − 0 = 53** (contre-lecture M2 : `R. 4512-12` entre à son tour). Aucune
+sortie. ~~Vingt-cinq~~ Vingt-six entrées, toutes venues de `obligation_manquante` :
 
 - vingt-quatre ANNONCÉES par décision de la propriétaire du 2026-09-27, avec une
   adresse visible (`ADRESSE_MANQUES_ANNONCES`) — `R. 4227-22`, `R. 4227-23`,
@@ -178,14 +179,22 @@ sortie. Vingt-cinq entrées, toutes venues de `obligation_manquante` :
   `D. 8222-5`, `D. 8222-7` ; `L. 4121-3`, `R. 4121-1-1` ; `R. 4433-2` ;
   `L. 4141-5`, `R. 4323-106` ; `R. 4225-3` ;
 - une, `L. 4121-3-1`, dont le VI est désormais TRACÉ sur la version validée du
-  document unique et dont le III 1° (programme annuel à cinquante salariés)
-  reste non porté — annoncé par l'axe `effectif` depuis la décision E2.
+  document unique (une date facultative, aucun rappel) et dont le III 1°
+  (programme annuel à cinquante salariés) reste non porté — annoncé par l'axe
+  `effectif` depuis la décision E2 ;
+- une, `R. 4512-12`, dont le 2° est TRACÉ sur le plan (la date à laquelle
+  l'inspection du travail a été informée, facultative) : Rojer n'accomplit
+  pas la démarche, et le dit sur la carte « Art. R. 4512-12 » de la fiche du
+  plan, qui est son adresse.
 
 `R. 4323-63`, déjà compté, reçoit la même adresse que les vingt-quatre : il
 était le seul `non_couvert` sans `declareA`. Trois autres des quarante-deux
-quittent `obligation_manquante` sans entrer ici : `R. 4227-26` (encodé,
+~~quittent `obligation_manquante` sans entrer ici : `R. 4227-26` (encodé,
 `retenu`), `R. 4512-12` (2° tracé sur le plan, `sans_objet` sur le patron de
-`R. 4512-6`) — et les quinze HORS CADRE restent `obligation_manquante`,
+`R. 4512-6`)~~ — [contre-lecture M2 : `sans_objet` était faux, le 2° crée une
+démarche que Rojer n'accomplit pas ; `R. 4512-12` est compté ci-dessus] un
+seul quitte `obligation_manquante` sans entrer ici : `R. 4227-26` (encodé,
+`retenu`) — et les quinze HORS CADRE restent `obligation_manquante`,
 listés au § 7. Neuf articles du
 chapitre III du Livre III (locaux à sommeil) sont sortis de cette liste, et le
 § 3 dit comment. Le « 28 » et les « 27 » qui subsistent plus bas, au § 3 bis et
@@ -231,7 +240,7 @@ couverture.
 
 ---
 
-## 3. Les 52 articles lus et non portés
+## 3. Les 53 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -461,8 +470,9 @@ recopiés ici. Entre parenthèses : à quel dossier la page les montre.
   `Arrêté 10-09-2021 art. 10`, `Arrêté 10-09-2021 art. 12`.
 - **Plan de prévention** (employeur ; restent aussi cités sur le formulaire,
   la fiche et le ZIP) — `R. 4463-8`, `R. 4512-1`, `R. 4512-9`, `R. 4512-11`.
-- **Vigilance à l'égard des cocontractants** (tout dossier ; `D. 8222-7` au
-  seul dossier qui a saisi un prestataire) — `L. 8222-1`, `L. 8222-5`,
+- **Vigilance à l'égard des cocontractants** (tout dossier ; ~~`D. 8222-7` au
+  seul dossier qui a saisi un prestataire~~ `D. 8222-7` aussi : un annuaire
+  vide est un silence, pas un « non » — contre-lecture M4) — `L. 8222-1`, `L. 8222-5`,
   `D. 8222-5`, `D. 8222-7`. L'encodage de `L. 8222-5` dans « Quand ça arrive »
   attend la décision B1 : il n'est pas fait.
 - **Document unique** (employeur) — `L. 4121-3`, `R. 4121-1-1`.
@@ -470,6 +480,16 @@ recopiés ici. Entre parenthèses : à quel dossier la page les montre.
 - **Formation** (employeur ; `R. 4323-106` sauf « non » aux équipements de
   protection individuelle) — `L. 4141-5`, `R. 4323-106`.
 - **Boissons** (employeur) — `R. 4225-3`.
+
+### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
+
+`R. 4512-12`
+
+Le 2° impose au chef de l'entreprise utilisatrice d'informer par écrit
+l'inspection du travail de l'ouverture des travaux, quand le plan écrit est
+obligatoire. Rojer ne fait pas la démarche ; il garde, si on la note, la date
+à laquelle elle a été faite. Adresse : la carte « Art. R. 4512-12 » de la
+fiche du plan (et le ZIP de contrôle).
 
 ### Document unique, programme annuel — 1 article (2026-09-27)
 

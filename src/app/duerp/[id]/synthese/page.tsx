@@ -623,6 +623,7 @@ export default async function SynthesePage({
                       transmiseLe={
                         v.transmiseSpstLe ? cleJourCivil(v.transmiseSpstLe) : null
                       }
+                      valideeLe={cleJourCivil(v.createdAt)}
                       transmiseLeTexte={
                         v.transmiseSpstLe
                           ? formaterDateLongueFr(v.transmiseSpstLe)

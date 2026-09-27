@@ -29,6 +29,7 @@ import type { DomaineObligation } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
 import { ordonnerLignes } from "./ordre";
 import { fondementDe, type FondementLigne } from "./fondement";
+import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;
@@ -46,6 +47,13 @@ export type LigneEtatPermanent = {
    * `null` sinon.
    */
   aConfirmer: string | null;
+  /**
+   * Les phrases « à confirmer » des questions à trois états de la fiche
+   * restées sans réponse, quand leur silence retient la ligne (C45, M1 —
+   * `PHRASE_SANS_REPONSE`). Vide sinon. Même rang que `aConfirmer` : l'écran
+   * et le widget les disent à côté de la ligne.
+   */
+  questionsSansReponse: string[];
   /**
    * L'article en tête des références de l'obligation, et sa `citationCle`
    * (`fondement.ts`). Porté par la ligne pour que l'écran et le widget du
@@ -166,6 +174,9 @@ export async function listerEtatsPermanents(
             "cette obligation ne vous concerne pas",
           )
         : null,
+      questionsSansReponse: (app.sansReponse ?? []).map(
+        (q) => PHRASE_SANS_REPONSE[q],
+      ),
       fondement: fondementDe(o),
     };
 

@@ -150,7 +150,17 @@ export async function noterTransmissionSpst(
   formData: FormData,
 ): Promise<TraceTransmissionState> {
   await requireDuerp(duerpId);
-  const lu = lireDateDeclaree(formData.get("transmiseSpstLe"), new Date());
+  const version = await prisma.duerpVersion.findFirst({
+    where: { id: versionId, duerpId },
+    select: { createdAt: true },
+  });
+  if (!version) return { status: "error", message: "Version introuvable" };
+
+  // Une version ne se transmet pas avant d'avoir été validée.
+  const lu = lireDateDeclaree(formData.get("transmiseSpstLe"), new Date(), {
+    date: version.createdAt,
+    message: "La date ne peut pas précéder la validation de cette version",
+  });
   if (!lu.ok) return { status: "error", message: lu.message };
 
   const { count } = await prisma.duerpVersion.updateMany({

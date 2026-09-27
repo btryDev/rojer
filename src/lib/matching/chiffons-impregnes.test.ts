@@ -79,3 +79,22 @@ describe("R. 4227-26 — chiffons, cotons et papiers imprégnés", () => {
     expect(o.porteur).toBe("etablissement");
   });
 });
+
+describe("C45, M1 — le silence d'une question à trois états se porte à côté de la ligne", () => {
+  it("chiffons : silence ⇒ `sansReponse`, oui ⇒ rien", () => {
+    const silence = matchTypologie(typologie(), bureau({ chiffonsImpregnes: null }));
+    expect(silence.ok && silence.sansReponse).toEqual(["chiffons_impregnes"]);
+    const oui = matchTypologie(typologie(), bureau({ chiffonsImpregnes: true }));
+    expect(oui.ok && oui.sansReponse).toBeUndefined();
+  });
+
+  it("locaux à sommeil : silence d'un type qui pose la question ⇒ `sansReponse` ; sans type, la raison seule", () => {
+    const t = { erp: { categories: ["N5" as const] }, locauxSommeilPublic: true };
+    const erp = { estERP: true, categorieErp: "N5" as const, comporteLocauxSommeilPublic: null };
+    const hotel = matchTypologie(t, bureau({ ...erp, typeErp: "O" }));
+    expect(hotel.ok && hotel.sansReponse).toEqual(["locaux_sommeil_public"]);
+    const sansType = matchTypologie(t, bureau({ ...erp, typeErp: null }));
+    expect(sansType.ok).toBe(true);
+    expect(sansType.ok && sansType.sansReponse).toBeUndefined();
+  });
+});

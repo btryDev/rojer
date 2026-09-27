@@ -168,7 +168,7 @@ export async function faitsDeCouverture(
 }
 
 /**
- * Les faits que `manques-annonces.ts` projette (C45) : trois, et aucun
+ * Les faits que `manques-annonces.ts` projette (C45) : deux, et aucun
  * déduit. Rend `null` si l'établissement n'appartient pas à l'utilisateur —
  * jamais un jeu de faits par défaut, qui annoncerait à un dossier introuvable.
  */
@@ -181,13 +181,11 @@ export async function faitsManquesAnnonces(
     select: {
       estEtablissementTravail: true,
       epiPresents: true,
-      _count: { select: { prestataires: true } },
     },
   });
   if (!etab) return null;
   return {
     travail: etab.estEtablissementTravail,
     epiPresents: etab.epiPresents,
-    nbPrestataires: etab._count.prestataires,
   };
 }

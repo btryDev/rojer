@@ -130,6 +130,10 @@ const RELEVE = {
   // seule obligation qui porte ce critère est un état permanent
   // (`periodicite: "autre"`), que le générateur saute (`estSansRendezVous`).
   // Le passage du référentiel à `2026-09-26.13` resynchronise déjà le parc.
+  // Recopiée une seconde fois, SANS incrément, le même jour (contre-lecture de
+  // C45, M1) : le moteur rend en plus `sansReponse`, les questions à trois
+  // états restées muettes qui retiennent une ligne. Une métadonnée d'écran :
+  // aucune ligne n'entre ni ne sort, aucune date ne bouge. NON.
   // Recopiée SANS incrément le 2026-09-26 (C37, `lot/effectif-entreprise`) :
   // les seuils d'entreprise se comparent à `Entreprise.effectif`. NON, la
   // régénération n'écrit pas autrement : les obligations d'établissement à
@@ -217,7 +221,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "9e1476343e890969",
+  empreinte: "ca099ca72e9c8451",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

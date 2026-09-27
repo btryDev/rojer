@@ -18,6 +18,7 @@ export function TransmissionSpstForm({
   numero,
   transmiseLe,
   transmiseLeTexte,
+  valideeLe,
 }: {
   duerpId: string;
   versionId: string;
@@ -26,6 +27,8 @@ export function TransmissionSpstForm({
   transmiseLe: string | null;
   /** La même date, formatée côté serveur. */
   transmiseLeTexte: string | null;
+  /** Clé « AAAA-MM-JJ » de la validation : la transmission ne la précède pas. */
+  valideeLe: string;
 }) {
   const action = noterTransmissionSpst.bind(null, duerpId, versionId);
   const [state, formAction, pending] = useActionState<
@@ -50,6 +53,7 @@ export function TransmissionSpstForm({
           name="transmiseSpstLe"
           type="date"
           defaultValue={transmiseLe ?? ""}
+          min={valideeLe}
           className="champ-board mt-1 max-w-[12rem]"
         />
       </div>

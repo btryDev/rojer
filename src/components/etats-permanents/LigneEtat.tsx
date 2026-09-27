@@ -3,6 +3,7 @@
 /** Le caractère d'attente, nommé pour qu'aucun ternaire ne porte de littéral. */
 const ATTENTE = "…";
 
+import Link from "next/link";
 import { useTransition } from "react";
 import { Check, FileText } from "lucide-react";
 import { declarerEnPlace, retirerDeclaration } from "@/lib/etats-permanents/actions";
@@ -40,6 +41,7 @@ export function LigneEtat({
   pieceAttendue,
   declareLe,
   aConfirmer = null,
+  questionsSansReponse = null,
   fondement = null,
 }: {
   etablissementId: string;
@@ -54,6 +56,12 @@ export function LigneEtat({
    * mène à l'effectif à corriger.
    */
   aConfirmer?: { phrase: string; entrepriseId: string } | null;
+  /**
+   * « À confirmer » : la ligne n'est retenue que par le silence d'une question
+   * à trois états de la fiche (C45, M1 — `PHRASE_SANS_REPONSE`). Une phrase
+   * par question, et le lien vers la fiche où y répondre.
+   */
+  questionsSansReponse?: { phrases: string[]; hrefFiche: string } | null;
   /** L'article qui fonde la ligne, et son texte (`fondement.ts`). */
   fondement?: FondementLigne | null;
 }) {
@@ -106,6 +114,25 @@ export function LigneEtat({
               effectif={null}
               className="m-0 mt-1 text-[12px] leading-[1.5]"
             />
+          </div>
+        )}
+
+        {questionsSansReponse && questionsSansReponse.phrases.length > 0 && (
+          <div className="mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+            {questionsSansReponse.phrases.map((phrase) => (
+              <p key={phrase} className="m-0">
+                <strong className="font-semibold text-[color:var(--board-ink)]">
+                  À confirmer.
+                </strong>{" "}
+                {phrase}
+              </p>
+            ))}
+            <Link
+              href={questionsSansReponse.hrefFiche}
+              className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+            >
+              Répondre sur la fiche de l&apos;établissement
+            </Link>
           </div>
         )}
 

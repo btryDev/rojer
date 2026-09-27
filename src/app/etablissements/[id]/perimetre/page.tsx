@@ -161,9 +161,10 @@ export default async function PerimetrePage({
                 suit pas
               </h2>
               <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Rojer ne les rappelle pas et n&apos;en garde aucune trace.
-                Elles sont nommées ici parce qu&apos;elles peuvent concerner
-                votre établissement ; aucune n&apos;est tranchée pour vous.
+                Rojer ne les suit pas, ou seulement en partie : chaque domaine
+                dit ce que l&apos;outil ne suit pas. Elles sont nommées ici
+                parce qu&apos;elles peuvent concerner votre établissement ;
+                aucune n&apos;est tranchée pour vous.
                 Une obligation que cet outil ne traite pas reste due si un texte
                 l&apos;impose.
               </p>

@@ -33,4 +33,15 @@ describe("une date déclarée (C45)", () => {
     expect(lireDateDeclaree("27/09/2026", NOW).ok).toBe(false);
     expect(lireDateDeclaree(42, NOW).ok).toBe(false);
   });
+
+  it("refuse une date antérieure au fait qui la rend possible, et accepte le jour même", () => {
+    const validee = { date: depuisCleJourCivil("2026-09-20"), message: "Avant la validation" };
+    expect(lireDateDeclaree("2026-09-19", NOW, validee)).toEqual({
+      ok: false,
+      message: "Avant la validation",
+    });
+    expect(lireDateDeclaree("2026-09-20", NOW, validee).ok).toBe(true);
+    // Le vide efface toujours, borne ou pas.
+    expect(lireDateDeclaree("", NOW, validee)).toEqual({ ok: true, date: null });
+  });
 });

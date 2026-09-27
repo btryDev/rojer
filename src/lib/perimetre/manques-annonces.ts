@@ -13,13 +13,17 @@
 // tout le monde. Ce module ne projette que des articles qui visent la cible
 // (restaurant, commerce, bureau), et chacun ne s'affiche qu'au dossier qu'il
 // PEUT concerner : un bureau qui a répondu « non » aux équipements de
-// protection individuelle ne lit pas la formation au port ; un dossier sans
-// prestataire ne lit pas le cocontractant étranger. La question que l'axe
+// protection individuelle ne lit pas la formation au port. ~~Un dossier sans
+// prestataire ne lit pas le cocontractant étranger.~~ [Contre-lecture M4 :
+// zéro prestataire saisi est un silence, pas un « non » ; aucun fait déclaré
+// n'exclut `D. 8222-7`, il est donc annoncé à tous.] La question que l'axe
 // retiré n'avait pas — « que couvre-t-on ? » — a été tranchée pour ces
 // articles-ci par la décision du 2026-09-27.
 //
 // LE SENS DU DOUTE. Une condition ne retire un article que sur un fait
-// DÉCLARÉ : « non » aux EPI, aucun salarié, aucun prestataire saisi. Le
+// DÉCLARÉ : « non » aux EPI, aucun salarié. ~~Aucun prestataire saisi~~ n'en
+// est pas un : l'annuaire vide dit qu'on n'a rien saisi, pas qu'on ne
+// contracte avec personne (M4). Le
 // silence ne retire rien — l'incertitude ne réduit jamais la couverture, et
 // une annonce se lit sans coût.
 //
@@ -43,8 +47,6 @@ export type FaitsManquesAnnonces = {
   travail: boolean;
   /** `Etablissement.epiPresents` : `null` = pas de réponse, jamais « non ». */
   epiPresents: boolean | null;
-  /** Le nombre de prestataires saisis — seul « zéro » décide, jamais le compte. */
-  nbPrestataires: number;
 };
 
 /**
@@ -57,9 +59,7 @@ type Condition =
   /** Un employeur : le Code du travail, quatrième partie. */
   | "travail"
   /** Un employeur qui n'a pas répondu « non » aux équipements de protection. */
-  | "travail_epi"
-  /** Un dossier qui a saisi au moins un prestataire. */
-  | "prestataires";
+  | "travail_epi";
 
 function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
   switch (c) {
@@ -69,8 +69,6 @@ function concerne(c: Condition, f: FaitsManquesAnnonces): boolean {
       return f.travail;
     case "travail_epi":
       return f.travail && f.epiPresents !== false;
-    case "prestataires":
-      return f.nbPrestataires > 0;
   }
 }
 
@@ -133,6 +131,12 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
 type Annonce = {
   domaine: CleDomaine;
   condition: Condition;
+  /**
+   * L'intitulé à lire sous « ce que l'outil ne suit pas », quand celui du
+   * corpus nomme l'article entier et non la part que Rojer ne suit pas
+   * (contre-lecture F2). Absent : l'intitulé du corpus.
+   */
+  intitule?: string;
   /** Ce que l'outil ne suit pas, propre à l'article, quand le domaine ne le dit pas. */
   phrase?: string;
 };
@@ -158,7 +162,11 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   "Arrêté 10-09-2021 art. 9": { domaine: "eau", condition: "tous" },
   "Arrêté 10-09-2021 art. 10": { domaine: "eau", condition: "tous" },
   "Arrêté 10-09-2021 art. 12": { domaine: "eau", condition: "tous" },
-  "R. 4463-8": { domaine: "plan_prevention", condition: "travail" },
+  "R. 4463-8": {
+    domaine: "plan_prevention",
+    condition: "travail",
+    intitule: "Prise en compte, dans le plan de prévention, des risques liés aux épisodes de chaleur intense",
+  },
   "R. 4512-1": { domaine: "plan_prevention", condition: "travail" },
   "R. 4512-9": { domaine: "plan_prevention", condition: "travail" },
   "R. 4512-11": { domaine: "plan_prevention", condition: "travail" },
@@ -167,10 +175,14 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   "D. 8222-5": { domaine: "vigilance", condition: "tous" },
   "D. 8222-7": {
     domaine: "vigilance",
-    condition: "prestataires",
+    condition: "tous",
     phrase: `Rojer ne distingue pas ${nonPorte("le cocontractant établi ou domicilié à l'étranger")} : les pièces à se faire remettre sont alors celles de l'article D. 8222-7.`,
   },
-  "L. 4121-3": { domaine: "document_unique", condition: "travail" },
+  "L. 4121-3": {
+    domaine: "document_unique",
+    condition: "travail",
+    intitule: "Évaluation des risques : prise en compte de l'impact différencié de l'exposition selon le sexe",
+  },
   "R. 4121-1-1": { domaine: "document_unique", condition: "travail" },
   "R. 4433-2": { domaine: "bruit", condition: "travail" },
   "L. 4141-5": {
@@ -225,7 +237,7 @@ export function manquesAnnoncesDuDossier(
       const liste = parDomaine.get(annonce.domaine) ?? [];
       liste.push({
         ref: a.ref,
-        intitule: a.intitule,
+        intitule: annonce.intitule ?? a.intitule,
         url: a.url,
         corpus: c.intitule,
         ...(annonce.phrase ? { phrase: annonce.phrase } : {}),

@@ -310,7 +310,7 @@ export function EtablissementForm({
               id="chiffonsImpregnes-aide"
               className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
             >
-              Un torchon de cuisine gras en fait partie. L&apos;art. R. 4227-26
+              Un torchon de cuisine imbibé d&apos;huile en relève. L&apos;art. R. 4227-26
               du Code du travail demande qu&apos;après usage ils soient enfermés
               dans des récipients métalliques clos et étanches. Si vous
               répondez non, Rojer ne l&apos;affiche pas ; si vous ne savez pas,

@@ -4014,8 +4014,9 @@ touché au corpus.
   `docs/couverture-declaree-du-produit.md`, motif d'une ligne chacun, égalité
   tenue par `doc-couverture.test.ts`.
 
-**Mouvements.** `non_couvert` : 27 + 25 − 0 = 52 (les vingt-quatre annoncés
-et `L. 4121-3-1`). `obligation_manquante` : 57 − 27 = 30, dont 15 dans la
+**Mouvements.** `non_couvert` : ~~27 + 25 − 0 = 52~~ 27 + 26 − 0 = 53 (les
+vingt-quatre annoncés, `L. 4121-3-1` et `R. 4512-12` — voir la contre-lecture
+ci-dessous). `obligation_manquante` : 57 − 27 = 30, dont 15 dans la
 cible (42 − 1 encodé − 2 tracés − 24 annoncés). Référentiel : 169 + 1 = 170
 (établissement 66 → 67).
 
@@ -4029,6 +4030,36 @@ donne pas d'adresse aux `non_couvert`, parce que sa seule place était la
 section des exclusions, où un manque devient une non-question. Il tient
 toujours qu'aucun `non_couvert` n'y entre, et désormais que ceux que la page
 annonce sont des `non_couvert`, dans leur propre section.
+
+**Contre-lecture du 2026-09-27 (sur `862f97b`), et ses suites.** Rien de grave ;
+la fusion avec `main` (`592054d`) n'a porté qu'un conflit, ce journal, où C44,
+C45 et C46 sont gardés.
+
+- **M1.** Le « à confirmer » du silence n'était dit nulle part : l'écran « Ce
+  qui doit être en place » ne le tirait que des seuils d'effectif. Le moteur
+  porte désormais, à côté de la ligne, les questions à trois états restées
+  sans réponse (`sansReponse` : chiffons ; locaux à sommeil quand la fiche
+  pose la question), avec une phrase par question (`matching/sans-reponse.ts`)
+  et un lien vers la fiche. Rendu testé pour « oui » (pas de mention) et pour
+  le silence (mention, phrase, lien) ; « non » ne rend pas la ligne.
+- **M2.** `R. 4512-12` n'est pas `sans_objet` : le 2° crée une démarche que
+  Rojer n'accomplit pas. `non_couvert`, adresse la carte « Art. R. 4512-12 »
+  de la fiche du plan. ~~27 + 25 = 52~~ 27 + 26 = **53**.
+- **M3.** `L. 4121-3-1` : le VI est « tracé » (date facultative, aucun
+  rappel), et non « servi ».
+- **M4.** `D. 8222-7` est annoncé à tout dossier : zéro prestataire saisi est
+  un silence, pas un « non ». Le fait « nombre de prestataires » est retiré de
+  la projection, plus rien ne le lit.
+- **F1 à F5.** L'introduction de la section ne dit plus « aucune trace » (la
+  vigilance tient des dates) ; `L. 4121-3` et `R. 4463-8` s'y lisent sous un
+  intitulé qui nomme la part non suivie ; l'aide de la question dit « un
+  torchon de cuisine imbibé d'huile en relève » ; l'en-tête d'`annonces-plan.ts`
+  est raturé ; `R. 4512-11` et `L. 4141-5` repassent en `agent_verbatim` —
+  leur texte modificateur (décret n° 2021-872, art. 7 ; loi n° 2026-534,
+  art. 70) n'a pas pu être lu, la page de la loi ne rendant que la liste de
+  ce qu'elle modifie. Point ouvert pour `L. 4141-5`.
+- **Détail.** Une date de transmission antérieure à la validation de la
+  version est refusée (et le champ porte `min`).
 
 ### C46 · 2026-09-27 — Le stockage des fichiers : Supabase en production, le disque local refusé
 

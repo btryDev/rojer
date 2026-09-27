@@ -25,6 +25,12 @@ const FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 export function lireDateDeclaree(
   valeur: unknown,
   now: Date,
+  /**
+   * Le fait avant lequel l'acte ne peut pas avoir eu lieu, avec ce qu'on en
+   * dit : une version ne se transmet pas avant d'avoir été validée
+   * (contre-lecture de C45). Comparé au jour civil.
+   */
+  auPlusTot?: { date: Date; message: string },
 ): LectureDateDeclaree {
   if (valeur === null || valeur === undefined) return { ok: true, date: null };
   if (typeof valeur !== "string") {
@@ -42,6 +48,9 @@ export function lireDateDeclaree(
   }
   if (joursCivilsEntre(now, date) > 0) {
     return { ok: false, message: "La date ne peut pas être dans le futur" };
+  }
+  if (auPlusTot && joursCivilsEntre(auPlusTot.date, date) < 0) {
+    return { ok: false, message: auPlusTot.message };
   }
   return { ok: true, date };
 }

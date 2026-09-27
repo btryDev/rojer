@@ -169,7 +169,21 @@ export type ObligationApplicable = {
    * absent sinon. Les écrans l'affichent « à confirmer » (C37, M1).
    */
   effectifAConfirmer?: EffectifsDeclares;
+  /**
+   * Les questions à trois états de la fiche restées sans réponse, quand leur
+   * silence retient la ligne par prudence (C45, M1). Absent sinon. Les écrans
+   * l'affichent « à confirmer », avec la phrase de `PHRASE_SANS_REPONSE`.
+   */
+  sansReponse?: QuestionSansReponse[];
 };
+
+/**
+ * Une question à trois états de la fiche établissement dont le silence
+ * retient une obligation « à confirmer ». Fermé : une question neuve se
+ * nomme ici et reçoit sa phrase dans `sans-reponse.ts`, sans quoi rien ne
+ * compile.
+ */
+export type QuestionSansReponse = "chiffons_impregnes" | "locaux_sommeil_public";
 
 // -----------------------------------------------------------------------------
 // Prescriptions particulières (ADR-035)
