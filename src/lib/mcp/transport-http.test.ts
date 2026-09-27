@@ -293,4 +293,10 @@ describe("plafond de la plateforme", () => {
     expect(route.maxDuration).toBeGreaterThan(0);
     expect(route.maxDuration).toBeLessThanOrEqual(60);
   });
+
+  it("la route OAuth aussi", async () => {
+    const oauth = await import("@/app/api/mcp/route");
+    expect(oauth.maxDuration).toBeGreaterThan(0);
+    expect(oauth.maxDuration).toBeLessThanOrEqual(60);
+  });
 });
