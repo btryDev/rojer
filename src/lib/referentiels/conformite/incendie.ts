@@ -277,6 +277,103 @@ export const obligationsIncendie: Obligation[] = [
       "Amendement 2026-08-25 (relecture Légifrance R. 4227-34, -37, -38) : la consigne affichée n'est due que dans les établissements de R. 4227-34, par renvoi exprès de R. 4227-37 ; hors de ce champ le texte ne demande que des « instructions » d'évacuation. L'obligation était encodée sans seuil (sur-application à tout employeur) et sa description exigeait une « mise à jour à chaque changement notable » qui ne figure dans aucun des deux articles — retirée. La périodicité annuelle est une convention de rappel, aucun texte ne fixe de périodicité à la consigne. R. 4227-37 porte une version future au 01/01/2027 : à relire à cette date.\n\nAMENDEMENT 2026-08-27, même audit. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-37, qui ne porte aucune périodicité — vérifié sur toute la section. Aucun texte n'impose de réafficher ou de réviser la consigne chaque année.\n\n`periodicite` passe à `autre`. L'affichage de la consigne est une obligation PERMANENTE, pas une échéance : elle est due tant que l'établissement entre dans le champ de R. 4227-34, et elle se met à jour quand l'organisation change — pas à date fixe. Ce qui est bien périodique, dans la même sous-section, ce sont les exercices et essais semestriels de R. 4227-39, portés par `incendie-travail-exercice-semestriel`.\n\nAMENDEMENT 2026-08-31, lot « faux négatifs d'ancrage ». `categoriesEquipement: [EXTINCTEUR, ALARME_INCENDIE]` est retiré au profit du porteur établissement (ADR-022). R. 4227-37 relu au verbatim ce jour : il ne mentionne aucun équipement. Le champ de l'obligation est celui de R. 4227-34, et il est DÉJÀ encodé — `personnesPresentesMin: 51` et `champR422734`. La liste d'équipements ne restreignait donc rien de ce que le texte restreint : elle ajoutait une condition que le texte n'écrit pas, et qui produisait un faux négatif chez tout établissement du champ de R. 4227-34 n'ayant déclaré ni extincteur ni alarme. Les deux catégories passent en `equipementsEnContexte`, à titre indicatif — c'est bien le matériel que la consigne doit désigner (R. 4227-38 1°), mais le désigner n'est pas en avoir déclaré un dans l'outil.\n\nNATURE : ÉTAT PERMANENT, `pieceAttendue: \"consigne de sécurité incendie\"` (ADR-026). R. 4227-37 fait ÉTABLIR la consigne avant de la faire afficher : c'est un écrit, et son contenu est fixé par R. 4227-38. Deux affichages voisins n'en sont pas — l'affichage des coordonnées (D. 4711-1) et l'avis d'accès au DUERP (R. 4121-4) portent `pieceAttendue: null`, parce que ce que le texte exige y est l'affichage lui-même, pas la détention d'une pièce.\n\nAMENDEMENT 2026-09-01, lot « traçabilité ». `R. 4227-38` était nommé dans la prose de `reference` (« R. 4227-37 et R. 4227-38 ») et dans la description, mais la clé `article` ne désignait que le 37 : l'article était donc irrattachable au corpus, où il n'existait pas. Ouvert à la source ce jour (LEGIARTI000024769384, version en vigueur depuis le 10 novembre 2011, sans terme programmé — contrairement à R. 4227-37 qui, lui, s'arrête au 1er janvier 2027). Il entre au corpus avec son verbatim intégral et devient une `ReferenceLegale` à part entière ; `reference` se réduit à « R. 4227-37 » pour le premier élément, qui reste l'article fondateur. Aucun champ d'empreinte n'est touché : `referencesLegales` en est hors, et R. 4227-38 ne porte ni champ d'application ni périodicité propres.",
   },
   {
+    // 2026-09-27, analyse de la réponse absente, § 1 et étape 6 — décision de
+    // la propriétaire (« je valide tout le reste »). Le complément de la
+    // consigne, que le texte écrit dans la même phrase et que le référentiel
+    // ne portait pas.
+    id: "incendie-travail-instructions-evacuation",
+    relectureDue: {
+      le: "2027-01-01",
+      motif:
+        "R. 4227-37 et R. 4216-2 portent tous deux un terme au 1er janvier 2027 (décret n° 2025-1100) : la version future de R. 4227-37 renvoie, pour les « autres établissements », au deuxième alinéa de l'article R. 141-7 du CCH. Relire les deux, et vérifier que le champ reste le complément de R. 4227-34.",
+    },
+    domaine: "incendie",
+    libelle: "Instructions d'évacuation établies",
+    description:
+      "Hors du champ de l'article R. 4227-34 — moins de cinquante et une personnes habituellement présentes, et aucune manipulation de matières explosives ou inflammables —, le texte ne demande pas la consigne de sécurité incendie affichée, mais « des instructions […] permettant d'assurer l'évacuation des personnes présentes dans les locaux », dans les conditions de l'article R. 4216-2 : l'évacuation rapide de la totalité des occupants, ou leur évacuation différée lorsqu'elle est rendue nécessaire, dans des conditions de sécurité maximale. Tant que l'une des deux réponses manque sur la fiche, c'est la consigne qui s'affiche, « à confirmer ».",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-37",
+        article: "R. 4227-37",
+        url:
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024769379/",
+        note: "« Dans les autres établissements, des instructions sont établies, permettant d'assurer l'évacuation des personnes présentes dans les locaux dans les conditions prévues au 1° de l'article R. 4216-2. » Second alinéa, relu sur l'API Légifrance le 2026-09-27 (LEGIARTI000024769379, en vigueur du 2011-11-10 au 2027-01-01).",
+        versionConstatee: "2011-11-10",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4216-2",
+        article: "R. 4216-2",
+        url:
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024769367/",
+        note: "« Les bâtiments et les locaux sont conçus et réalisés de manière à permettre en cas de sinistre : 1° L'évacuation rapide de la totalité des occupants ou leur évacuation différée, lorsque celle-ci est rendue nécessaire, dans des conditions de sécurité maximale ; […] » Relu sur l'API Légifrance le 2026-09-27 (LEGIARTI000024769367, en vigueur du 2011-11-10 au 2027-01-01). Il ne donne que les conditions de l'évacuation : l'obligation vient de R. 4227-37.",
+        versionConstatee: "2011-11-10",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "instructions d'évacuation",
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    porteur: "etablissement",
+    typologies: { travail: true, personnesPresentesMin: 51, horsChampR422734: true },
+    notesInternes:
+      "VERBATIM RELU SUR L'API LÉGIFRANCE LE 2026-09-27 (analyse `docs/revues/analyse-reponse-absente-2026-09-27.md`, § 1). R. 4227-37 fait deux choses dans une phrase chacune : la consigne affichée dans le champ de R. 4227-34, des instructions d'évacuation « dans les autres établissements ». Le référentiel ne portait que la première ; un bureau de huit salariés ne recevait ni l'une ni l'autre.\n\nPOLITIQUE SŒUR : la paire de l'exclusion par type (`typesExclus` / `types`, GE 4 § 1) et la règle du non-renseigné (ADR-022 § 7) — la forme qui porte la règle générale survit au silence, l'allègement ne se donne pas sur une absence supposée. Ici la consigne est la règle du champ et le silence la retient « à confirmer » ; les instructions sont l'allègement, servies seulement quand la fiche ÉTABLIT le hors-champ (`horsChampR422734` : seuil non atteint ET matières « non »). Les deux lignes s'excluent par construction : aucun établissement ne reçoit les deux.\n\nÉcrit, pas un état matériel : « des instructions sont établies » — même lecture que la consigne « établie », d'où `pieceAttendue`. Aucune périodicité dans le texte. Criticité 3, comme la consigne.\n\nL'API ne rend pas R. 4227-37 ni R. 4216-2 par leur numéro (`getArticleWithIdAndNum` → null) : leur version en vigueur est `ABROGE_DIFF`, terme au 2027-01-01. Relus par leur identifiant.",
+  },
+  {
+    // 2026-09-27, même analyse, § 1 et étape 6. L'objet même de R. 4227-34 —
+    // être équipé d'une alarme sonore —, que le corpus relevait comme manque
+    // (`arrete-1993-11-04-signalisation.ts`) : seules les vérifications en
+    // découlaient au référentiel.
+    id: "incendie-travail-alarme-sonore",
+    domaine: "incendie",
+    libelle: "Système d'alarme sonore installé",
+    description:
+      "Les établissements où peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes, public compris, et ceux, quel que soit leur effectif, où sont manipulées et mises en œuvre des matières explosives ou inflammables, sont équipés d'un système d'alarme sonore (R. 4227-34). L'alarme générale est donnée par bâtiment quand l'établissement en compte plusieurs, isolés entre eux (R. 4227-35) ; son signal ne se confond avec aucun autre, il est audible de tout point du bâtiment pendant le temps de l'évacuation, avec une autonomie d'au moins cinq minutes (R. 4227-36).",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-34",
+        article: "R. 4227-34",
+        url:
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532067/",
+        note: "« Les établissements dans lesquels peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes, ainsi que ceux, quelle que soit leur importance, où sont manipulées et mises en œuvre des matières inflammables mentionnées à l'article R. 4227-22 sont équipés d'un système d'alarme sonore. » Relu sur l'API Légifrance le 2026-09-27 (LEGIARTI000018532067, en vigueur depuis le 2008-05-01).",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-35",
+        article: "R. 4227-35",
+        url:
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532065/",
+        note: "« L'alarme sonore générale est donnée par bâtiment si l'établissement comporte plusieurs bâtiments isolés entre eux. » Relu sur l'API le 2026-09-27.",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-36",
+        article: "R. 4227-36",
+        url:
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532063/",
+        note: "« Le signal sonore d'alarme générale est tel qu'il ne permet pas la confusion avec d'autres signalisations utilisées dans l'établissement. Il est audible de tout point du bâtiment pendant le temps nécessaire à l'évacuation, avec une autonomie minimale de cinq minutes. » Relu sur l'API le 2026-09-27.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [],
+    porteur: "etablissement",
+    typologies: { travail: true, personnesPresentesMin: 51, champR422734: true },
+    equipementsEnContexte: ["ALARME_INCENDIE"],
+    notesInternes:
+      "VERBATIM RELU SUR L'API LÉGIFRANCE LE 2026-09-27 (R. 4227-34 à -36). R. 4227-34 est l'article de champ auquel la consigne (R. 4227-37) et les exercices (R. 4227-39) renvoient, mais son objet propre — ÊTRE ÉQUIPÉ d'une alarme sonore — n'était porté par aucune obligation : le corpus le relevait (`arrete-1993-11-04-signalisation.ts`, « l'INSTALLATION de l'alarme n'est portée par aucune obligation »).\n\nPOLITIQUE SŒUR : la consigne affichée (`incendie-travail-consigne-affichee`), réancrée sur l'établissement le 2026-08-31 (lot « faux négatifs d'ancrage ») parce qu'une liste d'équipements ajoutait une condition que le texte n'écrit pas. Même raison ici, et plus forte : l'obligation est d'AVOIR l'alarme ; la conditionner à une alarme déclarée la ferait disparaître exactement chez qui n'en a pas. `ALARME_INCENDIE` n'est qu'en contexte. Même champ, et même traitement du silence (règle du non-renseigné : matières muettes ⇒ « à confirmer »).\n\nÉtat matériel, pas un écrit : `pieceAttendue: null`. R. 4227-35 et -36 en donnent les caractéristiques ; ils ne créent pas d'obligation autonome. Criticité 4 : sans alarme, l'évacuation n'est pas déclenchée.",
+  },
+  {
     // C45 (2026-09-27). Premier des quatre « à encoder » de l'évaluation des
     // manques du même jour, décision de la propriétaire.
     id: "incendie-travail-chiffons-impregnes-recipients-clos",

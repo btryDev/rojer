@@ -116,11 +116,21 @@ export const POLITIQUE_ABSENCE = {
       regle:
         "ADR-022 § 7 : sans public, l'effectif salarié EST le total, pas une borne",
     },
+    allegement: {
+      si: (t) => t.horsChampR422734 === true,
+      regle:
+        "les instructions d'évacuation (R. 4227-37, al. 2) ne remplacent la consigne que sur un champ établi négatif",
+    },
   },
   manipuleMatieresR422722: {
     valeurs: [true, false],
     sens: "retient_a_confirmer",
     question: "matieres_r4227_22",
+    allegement: {
+      si: (t) => t.horsChampR422734 === true,
+      regle:
+        "les instructions d'évacuation (R. 4227-37, al. 2) ne remplacent la consigne que sur un champ établi négatif",
+    },
   },
   comporteLocauxSommeilPublic: {
     valeurs: [true, false],

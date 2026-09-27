@@ -524,6 +524,15 @@ describe("référentiel conformité — anti-doublon", () => {
       raison:
         "CELLE-CI EN EST PEUT-ÊTRE UNE, ET LA QUESTION EST OUVERTE. Elle n'apparaît que depuis le 2026-09-01 : `levage-examen-adequation-mise-en-service` se fondait sur l'article 5, qui DÉFINIT l'examen d'adéquation sans l'imposer, et le lot A l'a recalée sur l'article 14, seul article qui l'exige. Or c'est déjà le fondement de `levage-epreuve-initiale-fonctionnement`, dont la description reprend les quatre actes du I — examen d'adéquation a), examen de montage b), épreuve statique c), épreuve dynamique d). L'examen d'adéquation est donc décrit deux fois, une fois seul et une fois dans l'énumération. LA QUESTION QUI TRANCHE : l'article 14 fonde-t-il UNE vérification à quatre volets — auquel cas la ligne d'adéquation est un fragment à fondre — ou quatre actes séparables, sachant que le d) porte une exception qui ne vaut que pour lui (épreuve dynamique non exigée pour les appareils mus par la force humaine) et que les trois autres n'en ont pas ? Le fondre est un retrait de ligne : décision de la propriétaire, hors mandat du lot A. Le défaut de fondement, lui, était réel et est corrigé ; la déclaration ne le masque pas, elle rend visible ce qu'il découvre.",
     },
+    // ── Apparue le 2026-09-27, analyse de la réponse absente ─────────────
+    {
+      paire: [
+        "incendie-travail-consigne-affichee",
+        "incendie-travail-instructions-evacuation",
+      ],
+      raison:
+        "Instruit le 2026-09-27, ce n'est PAS un doublon : ce sont les deux branches exclusives d'un même article. R. 4227-37, relu sur l'API Légifrance, fait établir et afficher une consigne « dans les établissements mentionnés à l'article R. 4227-34 », et « dans les autres établissements », des instructions d'évacuation. La consigne porte `champR422734`, les instructions son complément `horsChampR422734` : aucun établissement ne reçoit les deux, et le silence retient la consigne « à confirmer » — l'allègement ne se donne que sur un hors-champ établi. Le test ne compare que la clé d'article ; il ne voit pas les deux alinéas.",
+    },
     // ── Apparue le 2026-09-01 avec le lot C ────────────────────────────
     {
       paire: [
@@ -688,11 +697,21 @@ describe("référentiel conformité — seuils d'effectif", () => {
     // permis, et c'est celui du registre de sécurité : il CITE R. 4227-39 en
     // contexte, et il est fondé ailleurs (L. 4711-1 chez tout employeur, CCH
     // R. 143-44 dans tout ERP).
+    //
+    // Ou son COMPLÉMENT, depuis le 2026-09-27 : R. 4227-37 fonde aussi, dans
+    // son second alinéa, les instructions d'évacuation des « autres
+    // établissements » — qui portent `horsChampR422734`. L'un ou l'autre, jamais
+    // aucun : une ligne fondée sur ce groupe sans le dire serait servie hors de
+    // ce que le texte vise.
     const DU_CHAMP = /^R\. 4227-3[4-9]$/;
     for (const o of obligationsConformite) {
       const fondateur = o.referencesLegales[0];
       if (DU_CHAMP.test(fondateur.article ?? fondateur.reference)) {
-        expect(o.typologies.champR422734, o.id).toBe(true);
+        expect(
+          o.typologies.champR422734 === true ||
+            o.typologies.horsChampR422734 === true,
+          o.id,
+        ).toBe(true);
       }
     }
   });
@@ -1568,6 +1587,14 @@ describe("référentiel conformité — version et empreinte", () => {
     // `chiffonsImpregnes` (seul un « non » déclaré la retire). Aucune n'en
     // sort : 169 + 1 − 0 = 170. Migration `20260927140000`.
     { version: "2026-09-26.13", empreinte: "170-7190810116effc99" },
+    // 2026-09-27, analyse de la réponse absente, étape 6 : deux obligations
+    // entrent, relues sur l'API Légifrance — l'installation de l'alarme sonore
+    // (R. 4227-34, `incendie-travail-alarme-sonore`) et les instructions
+    // d'évacuation des établissements hors du champ (R. 4227-37 al. 2,
+    // `incendie-travail-instructions-evacuation`, typologie neuve
+    // `horsChampR422734`). Aucune n'en sort : 170 + 2 − 0 = 172. Deux états
+    // permanents : aucune ligne de calendrier n'est écrite.
+    { version: "2026-09-27.1", empreinte: "172-9f662eff8ef1a2bb" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1724,7 +1751,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(170);
+    ).toBe(172);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

@@ -571,6 +571,19 @@ export type TypologieApplication = {
    *   https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532067
    */
   champR422734?: true;
+  /**
+   * Le COMPLÉMENT du champ de R. 4227-34 — « dans les autres établissements »
+   * (R. 4227-37, second alinéa, qui y fait établir des instructions
+   * d'évacuation). Évalué avec le même `personnesPresentesMin` que le champ.
+   *
+   * Satisfait seulement si l'établissement est HORS DU CHAMP DE FAÇON ÉTABLIE :
+   * le seuil de personnes non atteint ET les matières de R. 4227-22 déclarées
+   * « non ». C'est un allègement — l'obligation plus légère que la consigne —,
+   * et un allègement ne se donne pas sur une absence supposée (ADR-022 § 7) :
+   * tant qu'une des deux réponses manque, c'est la consigne qui est retenue,
+   * « à confirmer ». Ajouté le 2026-09-27 (analyse de la réponse absente, § 1).
+   */
+  horsChampR422734?: true;
 };
 
 // -----------------------------------------------------------------------------

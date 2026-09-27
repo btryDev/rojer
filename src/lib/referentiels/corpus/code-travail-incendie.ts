@@ -130,7 +130,57 @@ export const CODE_TRAVAIL_INCENDIE: Corpus = {
       luLe: "2026-09-01",
       lecture: "premiere_main",
       statut: "retenu",
-      obligations: ["incendie-travail-exercice-semestriel"],
+      // `incendie-travail-alarme-sonore` le 2026-09-27 : l'objet propre de
+      // l'article — être équipé — n'était porté par aucune obligation.
+      obligations: [
+        "incendie-travail-exercice-semestriel",
+        "incendie-travail-alarme-sonore",
+      ],
+    },
+    {
+      ref: "R. 4227-35",
+      intitule: "Alarme générale donnée par bâtiment",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532065/",
+      prescrit:
+        "Quand l'établissement comporte plusieurs bâtiments isolés entre eux, l'alarme sonore générale de R. 4227-34 est donnée par bâtiment. Caractéristique de l'alarme, pas d'obligation autonome.",
+      citationCle:
+        "L'alarme sonore générale est donnée par bâtiment si l'établissement comporte plusieurs bâtiments isolés entre eux.",
+      versionEnVigueur: "2008-05-01",
+      modifiePar: null,
+      luLe: "2026-09-27",
+      lecture: "premiere_main",
+      statut: "retenu",
+      obligations: ["incendie-travail-alarme-sonore"],
+    },
+    {
+      ref: "R. 4227-36",
+      intitule: "Caractéristiques du signal d'alarme générale",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532063/",
+      prescrit:
+        "Le signal ne se confond avec aucune autre signalisation de l'établissement ; il est audible de tout point du bâtiment pendant le temps de l'évacuation, avec une autonomie d'au moins cinq minutes. Caractéristique de l'alarme de R. 4227-34, pas d'obligation autonome.",
+      citationCle:
+        "Le signal sonore d'alarme générale est tel qu'il ne permet pas la confusion avec d'autres signalisations utilisées dans l'établissement. Il est audible de tout point du bâtiment pendant le temps nécessaire à l'évacuation, avec une autonomie minimale de cinq minutes.",
+      versionEnVigueur: "2008-05-01",
+      modifiePar: null,
+      luLe: "2026-09-27",
+      lecture: "premiere_main",
+      statut: "retenu",
+      obligations: ["incendie-travail-alarme-sonore"],
+    },
+    {
+      ref: "R. 4216-2",
+      intitule: "Conception des bâtiments : évacuation, accès des secours, propagation",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024769367/",
+      prescrit:
+        "Obligation du maître d'ouvrage (conception des bâtiments). Cité ici pour son seul 1°, auquel R. 4227-37 renvoie les conditions des instructions d'évacuation : évacuation rapide de la totalité des occupants, ou évacuation différée lorsqu'elle est rendue nécessaire, dans des conditions de sécurité maximale. ABROGÉ AU 2027-01-01, SANS VERSION SUIVANTE (état `ABROGE_DIFF`, relevé par l'API et par `legifrance:verifier` le 2026-09-27) : ce n'est pas une modification programmée. La version 2027 de R. 4227-37 renvoie à la place au deuxième alinéa de R. 141-7 du CCH — à lire à cette date (`relectureDue` de `incendie-travail-instructions-evacuation`).",
+      citationCle:
+        "Les bâtiments et les locaux sont conçus et réalisés de manière à permettre en cas de sinistre : 1° L'évacuation rapide de la totalité des occupants ou leur évacuation différée, lorsque celle-ci est rendue nécessaire, dans des conditions de sécurité maximale ; 2° L'accès de l'extérieur et l'intervention des services de secours et de lutte contre l'incendie ; 3° La limitation de la propagation de l'incendie à l'intérieur et à l'extérieur des bâtiments.",
+      versionEnVigueur: "2011-11-10",
+      modifiePar: { texte: "Décret n° 2011-1461 du 7 novembre 2011" },
+      luLe: "2026-09-27",
+      lecture: "premiere_main",
+      statut: "retenu",
+      obligations: ["incendie-travail-instructions-evacuation"],
     },
     {
       ref: "R. 4227-37",
@@ -146,7 +196,12 @@ export const CODE_TRAVAIL_INCENDIE: Corpus = {
       luLe: "2026-09-01",
       lecture: "premiere_main",
       statut: "retenu",
-      obligations: ["incendie-travail-consigne-affichee"],
+      // Le second alinéa — les instructions d'évacuation des « autres
+      // établissements » — encodé le 2026-09-27.
+      obligations: [
+        "incendie-travail-consigne-affichee",
+        "incendie-travail-instructions-evacuation",
+      ],
     },
     {
       ref: "R. 4227-38",

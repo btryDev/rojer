@@ -233,7 +233,12 @@ export const obligationsConformite: Obligation[] = [
 // permanent d'établissement sous la typologie neuve `chiffonsImpregnes`. 169 +
 // 1 − 0 = 170. Aucune échéance datée : le générateur saute les états
 // permanents, aucune ligne de calendrier n'est écrite.
-export const REFERENTIEL_VERSION = "2026-09-26.13";
+// `2026-09-27.1` (analyse de la réponse absente, étape 6) : deux obligations
+// entrent, R. 4227-34 (installation de l'alarme sonore) et R. 4227-37 al. 2
+// (instructions d'évacuation hors du champ, typologie neuve
+// `horsChampR422734`). 170 + 2 − 0 = 172. Deux états permanents : aucune ligne
+// de calendrier n'est écrite.
+export const REFERENTIEL_VERSION = "2026-09-27.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

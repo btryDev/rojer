@@ -124,6 +124,11 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 5,
+  // Recopiée SANS incrément le même jour (étape 6) : le moteur gagne le critère
+  // `horsChampR422734` (R. 4227-37 al. 2), et le bloc du champ de R. 4227-34
+  // cède la main au complément. NON : les deux seules obligations qui portent
+  // ces critères neufs sont des états permanents, que le générateur saute ; le
+  // bloc du champ rend le même verdict pour toute obligation qui existait.
   // Recopiée SANS incrément le même jour (étape 4) : le moteur lit les clés de
   // ses marques dans `matching/absence.ts` au lieu de les écrire en dur. NON :
   // mêmes clés, mêmes lignes, mêmes écritures — la garde générique le vérifie.
@@ -232,7 +237,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "5ebafe87fac82bbd",
+  empreinte: "7e6fa932f2c84726",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

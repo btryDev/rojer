@@ -696,7 +696,12 @@ export function matchTypologie(
   // ne doit pas passer sans filtre — un critère que l'on ne sait pas vérifier
   // ne s'ignore jamais en silence.
   const sansReponse: QuestionSansReponse[] = [];
-  if (t.personnesPresentesMin !== undefined || t.champR422734 === true) {
+  // Le complément (`horsChampR422734`) lit le même seuil dans l'autre sens :
+  // il a son propre bloc, plus bas.
+  if (
+    (t.personnesPresentesMin !== undefined || t.champR422734 === true) &&
+    t.horsChampR422734 !== true
+  ) {
     const matieres = etab.manipuleMatieresR422722;
     const brancheMatieres = t.champR422734 === true && matieres === true;
     const matieresNonRenseignees =
@@ -754,6 +759,22 @@ export function matchTypologie(
     (etab.typeErp === null || etab.typeErp === undefined)
   ) {
     sansReponse.push(QUESTION_TYPE_ERP);
+  }
+
+  // 3 bis ter. Hors du champ de R. 4227-34, établi (R. 4227-37, al. 2).
+  //
+  // Le complément du bloc 3 bis : les « autres établissements » à qui le
+  // texte fait établir des instructions d'évacuation au lieu de la consigne.
+  // Un allègement, donc seulement sur un champ ÉTABLI négatif — seuil non
+  // atteint et matières déclarées « non » (`TypologieApplication.horsChampR422734`).
+  if (t.horsChampR422734 === true) {
+    if (t.personnesPresentesMin === undefined) return { ok: false };
+    const seuil = evaluerPersonnesPresentes(t.personnesPresentesMin, etab);
+    if (seuil.etat !== "non_atteint") return { ok: false };
+    if (etab.manipuleMatieresR422722 !== false) return { ok: false };
+    raisons.push(
+      `hors du champ de R. 4227-34 : moins de ${t.personnesPresentesMin} personnes habituellement présentes, et aucune manipulation de matières visées par R. 4227-22 déclarée`,
+    );
   }
 
   // 3 ter. Locaux à sommeil pour le public (ET).
