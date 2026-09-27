@@ -241,3 +241,85 @@ D. 4622-2 al. 2 (service autonome, seuil de 500 salariés par D. 4622-5) : une
 réserve « hors cible ». R. 4451-57 (classement des travailleurs exposés aux
 rayonnements) : un acte, pas une définition ; son motif récent (audit E8) est
 argumenté — à confirmer ou reclasser.
+
+## D21 — Trois obligations de 5ᵉ catégorie que le texte impose, retenues par la réserve GN 10
+
+**Textes** (API, arrêté du 25 juin 1980, livre III) :
+- **PE 27 § 2** (LEGIARTI000053888118, en vigueur au 2026-05-01) : « Tous les
+  établissements sont équipés d'un système d'alarme selon les modalités définies
+  ci-dessous : a) L'alarme générale est donnée… par bâtiment… ; b) Le signal
+  sonore… audible de tout point du bâtiment… ; c) Le personnel… doit être informé
+  de la caractéristique du signal… ; d) Le choix du matériel d'alarme est laissé à
+  l'initiative de l'exploitant… ; e) Le système d'alarme doit être maintenu en bon
+  état de fonctionnement. » Le moteur, sur un restaurant et un commerce N5 sans
+  équipement : aucune ligne d'alarme.
+- **PE 26 § 1** (LEGIARTI000024766855) : « Les établissements doivent être dotés
+  d'au moins un extincteur portatif… avec un minimum d'un appareil pour 300 mètres
+  carrés et un appareil par niveau. » Classé `sans_objet` (« règle de dotation,
+  sans récurrence ») — motif contredit par la politique sœur des états permanents.
+- **PE 11 § 1** (LEGIARTI000024751142) : « aucun dépôt, aucun matériel, aucun objet
+  ne doit faire obstacle à la circulation des personnes ». Classé `sans_objet`
+  (« permanente et non datée ») — motif périmé depuis l'ADR-026.
+
+**Pourquoi ce n'est pas codé.** La réserve de PE 27 au corpus
+(`arrete-1980-livre-3.ts`) écrit : « N'en pas ajouter un troisième tant que la
+propriétaire n'a pas tranché la classe entière (dossier des décisions, A6) » — ces
+trois dispositions ne sont ni administratives, ni des contrôles, ni de l'entretien :
+GN 10 § 1 les écarte pour un établissement existant. C'est une règle écrite ; ce lot
+la respecte.
+
+**Recommandation.** Trancher A6 en (a) (D13), puis encoder les trois en états
+permanents d'établissement, N5, avec la mention GN 10 comme PE 27 § 4 et § 5 —
+politique sœur : `incendie-travail-alarme-sonore`, `incendie-travail-extincteurs-dotation`
+(branche `lot/audit-obligations-nouvelles`). Le même jour, reclasser PE 26 et PE 11
+en `retenu` ; PE 27 § 2 c) se replie dans `incendie-erp-5-instruction-personnel`.
+
+## D22 — L'éclairage de sécurité installé (R. 4227-14)
+
+**Texte** : « Les établissements disposent d'un éclairage de sécurité ». Les deux
+lignes « travail » ne naissent que d'un `BAES` déclaré : un bureau sans BAES n'a rien.
+**Pourquoi ce n'est pas codé** : l'arrêté du 14 décembre 2011 (art. 5, lu hors corpus
+par l'audit) dispense certains petits locaux sous trois conditions — une ligne pour
+tous sur-appliquerait, et la dispense n'est pas au corpus. **Recommandation** :
+dépouiller l'art. 5, puis encoder la dotation (établissement) en disant la dispense —
+l'erreur resterait visible pour qui la subit.
+
+## D23 — Corpus : motifs qui ne tiennent plus ou fragiles (7 bis)
+
+À reclasser ou récrire, chacun avec le texte relu par l'API (tables
+`lot2/table-7bis-G1.md`, `-G2.md`, `-G3.md`) :
+- **PE 18 § 1** (personnel présent pendant le fonctionnement des appareils de
+  cuisson en salle) — sœur `elec-erp-presence-personne-qualifiee` ; mais le fait
+  « îlot en salle » n'existe pas au modèle.
+- **PE 24** (§ 1 fiches multiples interdites ; § 2 éclairage de sécurité
+  d'évacuation) — attribut de surface à créer.
+- **PE 15 § 7, PE 19, PE 21** : interdictions d'usage, motifs absents ou faux
+  (« construction ») — notion nouvelle au référentiel.
+- **GZ 13 `toucheLaCible`** : PE 10 B § 2 (en vigueur au 2026-07-01) fait vérifier
+  selon GZ 13 les installations de gaz des « autres établissements » que ceux de
+  PE 2 § 3 — dire si ces « autres » touchent la cible suppose la lecture de PE 2 § 3.
+- **PE 4 § 3, GH 5 § 4** (vérifications sur mise en demeure) : réserve au titre de
+  l'ADR-035.
+- **R. 134-6 2° d)** (remplacement des moyens d'alerte d'ascenseur sur RTC/3G) :
+  écarté à tort comme « couvert par le contrat d'entretien » — R. 134-7 I a)
+  l'exclut du contrat. Une caractéristique d'ascenseur à créer.
+- **Arrêté du 4 novembre 1993, art. 5** (formation à la signalisation) : `retenu` sur
+  `formation-securite-etablissement-organisation` ; **R. 4323-97** (conditions
+  d'usage des EPI après consultation du CSE) : `obligation_manquante`, à trancher ;
+  **R. 4323-95, R. 4321-4** (EPI fournis gratuitement, entretenus) : au moins
+  `obligation_manquante` ; **R. 4323-101/-102, R. 4323-104 3° et 4°** : priorité
+  faible.
+- **Arrêté du 1er décembre 2025** : son `prescrit` omet PE 2, PE 7, PE 9, PE 21 et
+  PE 27 § 6, qu'il modifie.
+
+## D24 — La question des matières (point ouvert du lot 1)
+
+R. 4227-22 vise les matières « entreposées ou manipulées » ; R. 4227-34 celles
+« manipulées et mises en œuvre ». La question sert R. 4227-34 mot pour mot, son aide
+dit que l'entreposage n'est pas suivi, et R. 4227-22 à -25 sont annoncés à tout
+employeur quelle que soit la réponse (`manques-annonces.ts`). **Recommandation :
+garder la question telle quelle** — l'élargir imposerait alarme, consigne et
+exercices à qui ne fait que stocker, contre le texte ; une seconde question
+rouvrirait la décision C45. Le type 3 de l'alarme au-delà de 50 personnes quand les
+matières sont entreposées est désormais dit dans la description de l'alarme
+(`2967030`).
