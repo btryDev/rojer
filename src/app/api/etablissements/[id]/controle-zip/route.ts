@@ -32,7 +32,14 @@ import {
   lignesR4512_12Zip,
 } from "@/lib/plan-prevention/annonces-zip";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
-import { joindreFichiers } from "@/lib/controle/fichiers-zip";
+import { joindreFichiers, zipEnFlux } from "@/lib/controle/fichiers-zip";
+
+/**
+ * Durée maximale de la fonction : lire les pièces, rendre quatre PDF et
+ * streamer l'archive. 300 s, le maximum du plan Hobby et le défaut du Pro
+ * (documentation Vercel « Functions limits », relue le 2026-09-27).
+ */
+export const maxDuration = 300;
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 import {
   fraicheurCalendrier,
@@ -370,7 +377,11 @@ export async function GET(
   // n'a pas accès à l'application (`controle/fichiers-zip.ts`, 2026-09-27).
   const rapportsDeposes = await lire("Rapports/", [], () =>
     prisma.rapportVerification.findMany({
-      where: { etablissementId: id },
+      // PAS LES RAPPORTS DES LIGNES DE SALARIÉ (contre-lecture du 2026-09-27,
+      // M1). Depuis `bb03cdd` aucun dépôt n'y est possible, mais des rapports
+      // antérieurs peuvent exister : documents nominatifs, parfois médicaux,
+      // dans un ZIP remis à un tiers. Ils n'y entrent pas ; le README le dit.
+      where: { etablissementId: id, verification: { salarieId: null } },
       // Pas d'`orderBy` : l'ordre des rapports vit dans
       // `ORDRE_RAPPORT_PLUS_RECENT` (garde de `derniere-realisation.test.ts`),
       // et les entrées portent leur date en tête de nom — l'archive les range.
@@ -385,6 +396,17 @@ export async function GET(
       },
     }),
   );
+  // Combien sont écartés, pour le dire. Un comptage en échec ne prive pas
+  // Rapports/ (ce n'est pas `lire`) : le README dit alors la règle sans nombre.
+  let rapportsSalariesEcartes: number | null;
+  try {
+    rapportsSalariesEcartes = await prisma.rapportVerification.count({
+      where: { etablissementId: id, verification: { salarieId: { not: null } } },
+    });
+  } catch (e) {
+    console.error("controle-zip : comptage des rapports de salarié en échec", e);
+    rapportsSalariesEcartes = null;
+  }
   const rapportsZip = await joindreFichiers(
     zip,
     "Rapports",
@@ -633,6 +655,7 @@ export async function GET(
     piecesPrestatairesManquantes,
     piecesPrestataires,
     rapportsZip,
+    rapportsSalariesEcartes,
     analysesZip,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
@@ -657,10 +680,11 @@ export async function GET(
   zip.file("00_README.txt", readme);
 
   // ── Génération ──────────────────────────────────────────────────────
-  const buffer = await zip.generateAsync({ type: "uint8array" });
+  // En flux : au-delà de 4,5 Mo, une réponse d'un bloc est refusée par Vercel
+  // (`zipEnFlux`). Sans Content-Length, par construction.
   const filename = `Dossier_controle_${slugifyFilename(etablissement.raisonDisplay)}_${cleJourCivil(maintenant)}.zip`;
 
-  return new NextResponse(new Uint8Array(buffer), {
+  return new NextResponse(zipEnFlux(zip), {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${filename}"`,

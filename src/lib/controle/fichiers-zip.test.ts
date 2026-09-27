@@ -5,7 +5,13 @@
 import JSZip from "jszip";
 import { describe, expect, it, vi } from "vitest";
 import type { FileStorage } from "@/lib/storage";
-import { joindreFichiers, type FichierDepose } from "./fichiers-zip";
+import { randomBytes } from "node:crypto";
+import {
+  joindreFichiers,
+  LECTURES_SIMULTANEES,
+  zipEnFlux,
+  type FichierDepose,
+} from "./fichiers-zip";
 
 const f = (id: string, cle: string, nom: string | null, etiquette: string | null): FichierDepose => ({
   id,
@@ -68,5 +74,58 @@ describe("joindreFichiers", () => {
     expect(await joindreFichiers(zip, "Rapports", [], s, "r.pdf")).toEqual({ deposes: 0, inclus: 0, manquants: 0 });
     expect(Object.keys(zip.files)).toEqual([]);
     expect(s.get).not.toHaveBeenCalled();
+  });
+});
+
+describe("lectures en parallèle borné", () => {
+  it(`jamais plus de ${LECTURES_SIMULTANEES} lectures à la fois, toutes faites`, async () => {
+    let enCours = 0;
+    let max = 0;
+    const s: FileStorage = {
+      put: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      get: vi.fn(async (cle: string) => {
+        enCours++;
+        max = Math.max(max, enCours);
+        await new Promise((r) => setTimeout(r, 5));
+        enCours--;
+        return Buffer.from(cle);
+      }),
+    };
+    const fichiers = Array.from({ length: 11 }, (_, i) => f(`id${i}`, `k${i}`, `r${i}.pdf`, null));
+    const c = await joindreFichiers(new JSZip(), "Rapports", fichiers, s, "r.pdf");
+    expect(c).toEqual({ deposes: 11, inclus: 11, manquants: 0 });
+    expect(max).toBe(LECTURES_SIMULTANEES);
+  });
+});
+
+describe("l'archive en flux", () => {
+  it("un ZIP de plus de 4,5 Mo sort entier par une Response réelle, octet pour octet", async () => {
+    const zip = new JSZip();
+    // Incompressible : trois « rapports » de 2 Mo font une archive de plus de 6 Mo.
+    const pieces = [randomBytes(2_000_000), randomBytes(2_000_000), randomBytes(2_000_000)];
+    pieces.forEach((p, i) => zip.file(`Rapports/r${i}.pdf`, p));
+    const reponse = new Response(zipEnFlux(zip));
+    const octets = new Uint8Array(await reponse.arrayBuffer());
+    expect(octets.byteLength).toBeGreaterThan(4.5 * 1024 * 1024);
+    const relu = await JSZip.loadAsync(octets);
+    for (const [i, p] of pieces.entries()) {
+      const b = await relu.file(`Rapports/r${i}.pdf`)!.async("uint8array");
+      expect(Buffer.from(b).equals(p)).toBe(true);
+    }
+  });
+
+  it("le flux livre plusieurs morceaux — ce n'est pas un bloc déguisé", async () => {
+    const zip = new JSZip();
+    zip.file("a.bin", randomBytes(3_000_000));
+    const lecteur = zipEnFlux(zip).getReader();
+    let morceaux = 0;
+    for (;;) {
+      const { done } = await lecteur.read();
+      if (done) break;
+      morceaux++;
+    }
+    expect(morceaux).toBeGreaterThan(1);
   });
 });

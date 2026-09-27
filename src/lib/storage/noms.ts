@@ -28,13 +28,19 @@ export function nomEntreeArchive(nom: string | null | undefined, defaut: string)
   // On ne garde que le dernier segment : `dossier/piece.pdf` est un chemin,
   // pas un nom de fichier.
   const dernierSegment = brut.split(/[/\\]/).pop() ?? "";
-  const assaini = dernierSegment
+  const nettoye = dernierSegment
     .replace(CARACTERES_INTERDITS, "_")
     // `..`, `...` et leurs variantes ne désignent aucun fichier réel : seuls
     // des points en tête restent une remontée une fois le reste nettoyé.
     .replace(/^\.+/, "")
-    .slice(0, 120)
     .trim();
+  // La troncature à 120 garde l'EXTENSION (contre-lecture du 2026-09-27) :
+  // « …rapport-tres-long.pdf » coupé devenait un fichier sans type.
+  const ext = /\.[A-Za-z0-9]{1,10}$/.exec(nettoye)?.[0] ?? "";
+  const assaini =
+    nettoye.length <= 120
+      ? nettoye
+      : `${nettoye.slice(0, 120 - ext.length)}${ext}`;
   return assaini.length > 0 ? assaini : defaut;
 }
 

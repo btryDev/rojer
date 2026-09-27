@@ -17,11 +17,19 @@ describe("branchements des fichiers déposés", () => {
   it("le ZIP joint les rapports et les rapports d'analyse, et le README les compte", () => {
     expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*"Rapports",/);
     expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*"08_Carnet_sanitaire_analyses",/);
-    expect(zip).toMatch(/rapportsZip,\s*analysesZip,/);
+    expect(zip).toMatch(/rapportsZip,\s*rapportsSalariesEcartes,\s*analysesZip,/);
   });
 
-  it("le ZIP lit les rapports de CET établissement", () => {
-    expect(zip).toMatch(/rapportVerification\.findMany\(\{\s*where: \{ etablissementId: id \}/);
+  it("le ZIP lit les rapports de CET établissement, et jamais ceux d'une ligne de salarié (M1)", () => {
+    expect(zip).toMatch(
+      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: \{ etablissementId: id, verification: \{ salarieId: null \} \}/,
+    );
+  });
+
+  it("le ZIP répond en flux, avec une durée maximale posée", () => {
+    expect(zip).toMatch(/new NextResponse\(zipEnFlux\(zip\)/);
+    expect(zip).not.toMatch(/generateAsync/);
+    expect(zip).toMatch(/export const maxDuration = \d+;/);
   });
 
   it("le carnet ouvre le rapport d'une analyse qui en a un", () => {

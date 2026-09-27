@@ -52,17 +52,53 @@ export async function joindreFichiers(
   const compte: CompteFichiers = { deposes: fichiers.length, inclus: 0, manquants: 0 };
   if (fichiers.length === 0) return compte;
   const cible = zip.folder(dossier) ?? zip;
+  // Les noms d'abord, dans l'ordre : le dédoublonnage ne dépend pas de l'ordre
+  // d'arrivée des lectures.
   const pris = new Set<string>();
-  for (const f of fichiers) {
-    const nom = nomDansLArchive(f, pris, defaut);
-    try {
-      if (!stockage) throw new Error("stockage indisponible");
-      cible.file(nom, new Uint8Array(await stockage.get(f.cle)));
-      compte.inclus++;
-    } catch (e) {
-      compte.manquants++;
-      console.error(`controle-zip : fichier non récupéré (${dossier}/${nom})`, e);
+  const taches = fichiers.map((f) => ({ f, nom: nomDansLArchive(f, pris, defaut) }));
+  // Lectures EN PARALLÈLE BORNÉ (contre-lecture du 2026-09-27) : une à une,
+  // vingt rapports faisaient vingt allers-retours au stockage ; toutes
+  // ensemble, autant de connexions ouvertes d'un coup.
+  let suivante = 0;
+  const ouvrier = async () => {
+    while (suivante < taches.length) {
+      const { f, nom } = taches[suivante++];
+      try {
+        if (!stockage) throw new Error("stockage indisponible");
+        cible.file(nom, new Uint8Array(await stockage.get(f.cle)));
+        compte.inclus++;
+      } catch (e) {
+        compte.manquants++;
+        console.error(`controle-zip : fichier non récupéré (${dossier}/${nom})`, e);
+      }
     }
-  }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(LECTURES_SIMULTANEES, taches.length) }, ouvrier),
+  );
   return compte;
+}
+
+/** Lectures du stockage menées de front pour un dossier du ZIP. */
+export const LECTURES_SIMULTANEES = 4;
+
+/**
+ * L'archive en FLUX (contre-lecture du 2026-09-27). Vercel refuse une réponse
+ * de plus de 4,5 Mo — sauf en flux (« streaming functions, which don't have
+ * this limit », guide Vercel relu le même jour) —, et trois rapports de 2 Mo
+ * suffisaient à la dépasser quand la route rendait `generateAsync` d'un bloc.
+ * Les fichiers sont déjà lus quand le flux commence : un échec de lecture
+ * reste compté au README, il n'interrompt pas un téléchargement entamé.
+ */
+export function zipEnFlux(zip: JSZip): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    start(controleur) {
+      zip
+        .generateInternalStream({ type: "uint8array", streamFiles: true })
+        .on("data", (morceau) => controleur.enqueue(morceau))
+        .on("error", (e) => controleur.error(e))
+        .on("end", () => controleur.close())
+        .resume();
+    },
+  });
 }

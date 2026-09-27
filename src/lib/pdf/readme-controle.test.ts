@@ -118,7 +118,16 @@ describe("le README ne décrit que ce que le ZIP contient (relecture du 2026-09-
       analysesZip: { deposes: 1, inclus: 1, manquants: 0 },
     });
     expect(t).toMatch(/Rapports\/\s+2 fichier\(s\) de rapport de vérification ; 1 déposé\(s\) non récupéré\(s\)/);
-    expect(t).toMatch(/08_Carnet_sanitaire_analyses\/\s+1 rapport\(s\) de laboratoire$/m);
+    expect(t).toMatch(/08_Carnet_sanitaire_analyses\/\s+1 rapport\(s\) de laboratoire \(5 dernières analyses\)$/m);
+
+    // Les rapports de salarié écartés : dits, avec leur nombre, ou la règle.
+    expect(genererReadme({ ...base, rapportsSalariesEcartes: 2 })).toMatch(
+      /2 rapport\(s\) déposé\(s\) sur le titre d'un salarié non joint\(s\)/,
+    );
+    expect(genererReadme({ ...base, rapportsSalariesEcartes: null })).toMatch(
+      /Les rapports déposés sur le titre d'un salarié ne sont jamais joints/,
+    );
+    expect(genererReadme({ ...base, rapportsSalariesEcartes: 0 })).not.toMatch(/titre d'un salarié/);
 
     const echec = genererReadme({
       ...base,

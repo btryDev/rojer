@@ -42,13 +42,21 @@ export async function servirFichier(opts: {
     );
   }
 
-  const mime = opts.mime || mimeDepuisNom(opts.nomOriginal);
+  // LISTE BLANCHE (contre-lecture du 2026-09-27, M2) : le type enregistré en
+  // base était servi tel quel ; un `text/html` ou un `image/svg+xml` serait
+  // sorti en `inline`, et une page servie depuis notre domaine est une porte
+  // vers du XSS stocké. Hors des quatre types acceptés au dépôt : on déduit
+  // du nom, et à défaut on télécharge.
+  const mime =
+    opts.mime && (TYPES_SERVIS as readonly string[]).includes(opts.mime)
+      ? opts.mime
+      : mimeDepuisNom(opts.nomOriginal);
   // Encodage RFC 5987 du nom, pour les accents et caractères spéciaux.
   const filenameAscii = opts.nomOriginal
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^\x20-\x7e]/g, "_")
-    .replace(/"/g, "_");
+    .replace(/["\\]/g, "_");
   const filenameUtf8 = encodeURIComponent(opts.nomOriginal);
   // Un type inconnu ne s'affiche pas dans le navigateur : il se télécharge.
   const disposition = mime === "application/octet-stream" ? "attachment" : "inline";
@@ -60,8 +68,11 @@ export async function servirFichier(opts: {
       "Content-Type": mime,
       "Content-Length": String(data.byteLength),
       "Content-Disposition": `${disposition}; filename="${filenameAscii}"; filename*=UTF-8''${filenameUtf8}`,
-      "Cache-Control": "private, max-age=60",
+      // `no-store` : une pièce nominative ne reste dans aucun cache.
+      "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
+      // Même servi `inline`, le document n'exécute rien dans notre origine.
+      "Content-Security-Policy": "sandbox",
     },
   });
 }
@@ -71,6 +82,14 @@ export async function servirFichier(opts: {
  * rapports d'analyse). Les quatre types que le dépôt accepte
  * (`rapports/validator.ts`) ; tout le reste se télécharge.
  */
+/** Les seuls types servis tels quels : ceux que le dépôt accepte (`rapports/validator.ts`). */
+export const TYPES_SERVIS = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+] as const;
+
 export function mimeDepuisNom(nom: string): string {
   const ext = /\.([a-z0-9]+)$/i.exec(nom)?.[1]?.toLowerCase();
   switch (ext) {

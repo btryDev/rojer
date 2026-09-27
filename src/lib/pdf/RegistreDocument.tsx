@@ -780,7 +780,8 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             et les rapports de vérification archivés, à tenir à disposition de{" "}
             {destinatairesRegistre(data.regime)}. Les
             fichiers originaux des rapports sont conservés et téléchargeables
-            depuis l&apos;application.
+            depuis l&apos;application ; le dossier de contrôle exporté les joint,
+            dans son dossier « Rapports/ ».
           </Text>
           {phraseRegistreIgh(data.regime) && (
             <Text style={{ marginTop: 4 }}>{phraseRegistreIgh(data.regime)}</Text>

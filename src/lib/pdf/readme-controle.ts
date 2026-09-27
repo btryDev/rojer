@@ -115,6 +115,9 @@ export function genererReadme(args: {
   piecesPrestataires: { attestation: number; rcPro: number; kbis: number };
   /** Fichiers des rapports de vérification : déposés, mis au ZIP, non récupérés. */
   rapportsZip?: CompteFichiers;
+  /** Rapports de lignes de salarié, écartés du ZIP (documents nominatifs) ;
+   *  `null` si le comptage a échoué — la règle est alors dite sans nombre. */
+  rapportsSalariesEcartes?: number | null;
   /** Rapports de laboratoire des analyses listées au 08 : idem. */
   analysesZip?: CompteFichiers;
   /** Les deux dates de l'attestation de vigilance de chaque prestataire
@@ -192,6 +195,14 @@ export function genererReadme(args: {
     // l'INDEX des rapports ; leurs fichiers sont dans Rapports/ (2026-09-27).
     ligne("03_Registre_securite.pdf", "Registre des vérifications, index des rapports", "Non inclus"),
     ligneFichiers("Rapports/", "fichier(s) de rapport de vérification", "Aucun rapport déposé", args.rapportsZip),
+    ...(args.rapportsSalariesEcartes === null
+      ? ["   Les rapports déposés sur le titre d'un salarié ne sont jamais joints :", "   documents nominatifs, conservés dans l'application."]
+      : args.rapportsSalariesEcartes !== undefined && args.rapportsSalariesEcartes > 0
+        ? [
+            `   ${args.rapportsSalariesEcartes} rapport(s) déposé(s) sur le titre d'un salarié non joint(s) :`,
+            "   documents nominatifs, conservés dans l'application.",
+          ]
+        : []),
     ligne("04_Plan_actions.pdf", "Actions ouvertes puis en cours, chacune par échéance puis criticité", "Non inclus"),
     // Tous sur `zip.files` (contre-lecture du 2026-09-26 : 05 à 08 et
     // Prestataires/ restaient calculés sur des compteurs).
@@ -200,7 +211,7 @@ export function genererReadme(args: {
     ligne("07_Plans_de_prevention.txt", `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
     ligne("08_Carnet_sanitaire.txt", "Relevés ECS + analyses légionelles (arrêté 01-02-2010)", "Non configuré"),
     ...(args.analysesZip && args.analysesZip.deposes > 0
-      ? [ligneFichiers("08_Carnet_sanitaire_analyses/", "rapport(s) de laboratoire", "", args.analysesZip)]
+      ? [ligneFichiers("08_Carnet_sanitaire_analyses/", "rapport(s) de laboratoire (5 dernières analyses)", "", args.analysesZip)]
       : []),
     (() => {
       if (args.echecs.has("Prestataires/"))
