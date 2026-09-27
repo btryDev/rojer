@@ -27,7 +27,7 @@ sépare **le texte dit** de **lecture**.
      - 3 sens : retient et le dit, retient sans le dire, écarte ;
      - 4 canaux de marque : `sansReponse`, `effectifAConfirmer`, texte de `raisons`, rien.
   2. Deux questions dont la réponse fait apparaître des lignes (matières, chiffons) ne sont posées **qu'à la fiche**, et rien ne ramène un dossier ancien vers sa fiche.
-  3. Une ligne retenue « à confirmer » **n'est marquée ni dans le calendrier, ni dans le dossier PDF, ni dans le ZIP, ni dans le MCP**. Seul l'écran des états permanents porte la marque (§ 6.3).
+  3. Une ligne retenue « à confirmer » **n'est marquée ni dans le calendrier, ni dans le dossier PDF, ni dans le ZIP, ni dans le MCP**. Seul l'écran des états permanents porte la marque avec son lien ; l'écran du registre en montre le texte, sans lien (§ 6.3, amendé après contre-lecture).
 - **Une rustine :** l'option (i) seule, comme l'option B seule. Toutes deux ajoutent des lignes datées que le calendrier affiche comme **certaines**, parce que la marque n'y arrive pas :
   - (i) ajoute une échéance semestrielle à chaque petit établissement muet sur les matières ;
   - B ajoute jusqu'à 9 lignes datées à un ERP sans catégorie, dont une vérification **hebdomadaire**.
@@ -56,9 +56,9 @@ Relevé par l'API le 2026-09-27. Les identifiants `LEGIARTI` sont ceux que l'API
 - **R. 4227-37**, version en vigueur (du 2011-11-10 au 2027-01-01, LEGIARTI000024769379, état `ABROGE_DIFF`) : « Dans les établissements mentionnés à l'article R. 4227-34, une consigne de sécurité incendie est établie et affichée de manière très apparente : 1° […] ; 2° […]. **Dans les autres établissements, des instructions sont établies, permettant d'assurer l'évacuation des personnes présentes** dans les locaux dans les conditions prévues au 1° de l'article R. 4216-2. »
   - La version au 2027-01-01 (LEGIARTI000052645197) garde le champ et renvoie désormais à R. 141-7 du CCH pour les « autres établissements ».
 - **R. 4227-38** : le contenu de la consigne, en huit points.
-- **R. 4227-39** : « Ces exercices et essais périodiques ont lieu **au moins tous les six mois**. Leur date et les observations […] sont consignées sur un registre. »
+- **R. 4227-39** : « Ces exercices et essais périodiques ont lieu **au moins tous les six mois**. Leur date et les observations […] sont consignées sur un registre tenu à la disposition de l'inspection du travail. »
 - **R. 4411-6** (depuis le 2015-06-06) : le Code du travail classe désormais les substances d'après l'annexe I du règlement CLP n° 1272/2008.
-  - R. 4227-22 garde le vocabulaire d'avant, « extrêmement inflammables », qui n'est plus une catégorie de classement.
+  - R. 4227-22 garde le vocabulaire de classement d'avant (« classées […] extrêmement inflammables »). *[Déplacé en lecture après contre-lecture : dire que ce n'est « plus une catégorie de classement » est une inférence — le CLP connaît « gaz extrêmement inflammable », H220.]*
 
 **Lecture.** Aucune de ces lectures n'est vérifiable sur Légifrance.
 
@@ -107,7 +107,7 @@ Le corpus relève un second manque (`arrete-1993-11-04-signalisation.ts:416`) : 
 | classeIgh, familleHabitation | retirés le 2026-09-03 | retirés | toujours | — (aucune obligation ne les lit) |
 | effectifSurSite, Entreprise.effectif | exigés | exigé / fiche entreprise | non (NOT NULL) | — |
 
-**Ce qui ramène un dossier ancien vers sa fiche.** Uniquement le lien « Répondre sur la fiche » d'une ligne d'état permanent (`LigneEtat.tsx:124-134`). Il n'existe que pour les quatre valeurs de `QuestionSansReponse`, et ne couvre aucune ligne datée. `chantiers-ouverts.md:821` : « rien ne les y amène ».
+**Ce qui ramène un dossier ancien vers sa fiche.** Uniquement le lien « Répondre sur la fiche » d'une ligne d'état permanent (`LigneEtat.tsx:130-135`). Il n'existe que pour les quatre valeurs de `QuestionSansReponse`, et ne couvre aucune ligne datée. `chantiers-ouverts.md:821` : « rien ne les y amène ».
 
 **Déduire sans deviner ?**
 
@@ -261,7 +261,7 @@ Relevé par une recherche en lecture seule, chaque point vérifié à la ligne c
 | # | Où | Sur null ou sans réponse |
 |---|---|---|
 | **A2** | `components/onboarding/types.ts:62` (`estERP: false`), `StepTypologie.tsx:123` (« Non » actif par défaut), `onboarding/schema.ts:96` (`.default(false)`) | **Le dossier devient non-ERP sans réponse** : accessibilité « non applicable » (`sidebar-nav.ts:489`), matrice des modules (`dashboard/obligations.ts:141`), aucune obligation ERP. Idem pour IGH et habitation. **Vérifié à la lecture de ces trois lignes.** |
-| A1 | `app/etablissements/[id]/equipements/page.tsx:88` | `codeNaf: etab.codeNaf` sans repli sur celui de l'entreprise, alors que le formulaire promet ce repli (`EtablissementForm.tsx:141`) : les suggestions d'équipements disparaissent pour un second établissement |
+| A1 | `app/etablissements/[id]/equipements/page.tsx:88` | `codeNaf: etab.codeNaf` sans repli sur celui de l'entreprise, alors que le formulaire promet ce repli (`EtablissementForm.tsx:141`) : les suggestions **sectorielles** (froid, hotte, cuisson, éclairage de sécurité par secteur) disparaissent pour un second établissement sans NAF propre ; les règles de base de `suggererEquipements` n'en dépendent pas (`pre-remplissage.ts:273+`) |
 | A3 | `dashboard/score.ts:173-186` | les indéterminations de `couverture.ts` (catégorie null) n'entrent pas dans l'indice ; le tableau de bord n'affiche pas `BandeauCouverture` |
 | A5 | `mcp/tools.ts:128-139` | `.filter(Boolean)` sur `[typeErp, categorieErp]` : le MCP dit « ERP » sans signaler le manque |
 | A6 | `pdf/builders.ts:389`, `controle-zip/route.ts:195,652` | le registre et le README du ZIP ignorent la catégorie manquante ; seul `01_Dossier_conformite.pdf` imprime les indéterminations |
@@ -276,6 +276,7 @@ Relevé par une recherche en lecture seule, chaque point vérifié à la ligne c
 - **MCP.** L'outil `verifications` lit les lignes persistées, sans marque.
 - **Guide.** `effectifAConfirmer` est affiché par domaine ; `sansReponse` n'est pas lu.
 - **Écran des états permanents.** Seul à tout porter, phrase et lien (`LigneEtat.tsx:104-136`). Le widget ne rend qu'un préfixe « À confirmer · ».
+- **Écran du registre de sécurité** *(ajouté après contre-lecture)* : il affiche les `raisons`, donc le texte « à confirmer » (`TeteFicheRegistre.tsx:53-58`), sans lien vers la fiche. Mais `SectionDue` ne porte que `section` et `raisons` et perd `sansReponse` (`registre/composition.ts`), et le PDF du registre n'imprime pas les raisons.
 - **Conséquence :**
   - les lignes datées retenues par prudence s'affichent comme **certaines** sur toutes les surfaces sauf le guide ;
   - l'exercice semestriel d'un ERP muet sur le nombre de personnes est dans ce cas dès aujourd'hui, sur `main` ;
@@ -283,7 +284,7 @@ Relevé par une recherche en lecture seule, chaque point vérifié à la ligne c
 
 ### 6.4 Pourquoi 3 au lieu de 22, et quels autres constats sont faux pour la même raison
 
-La contre-vérification avait appelé le moteur sur **un** profil : restaurant N5, sans équipement. Sur ce profil, la catégorie null perd bien 3 obligations. Sur 40 profils ERP, sans équipement ou avec toutes les catégories, **les 40** en perdent au moins une, et jusqu'à 18 lignes (ERP O, 8 salariés, parc complet).
+La contre-vérification avait appelé le moteur sur **un** profil : restaurant N5, sans équipement. Sur ce profil, la catégorie null perd bien 3 obligations. Sur 40 profils ERP, sans équipement ou avec toutes les catégories, **les 40** en perdent au moins une. ~~et jusqu'à 18 lignes (ERP O, 8 salariés, parc complet)~~ *[corrigé après contre-lecture : passer d'une catégorie déclarée à null fait perdre **au plus 8 lignes** (440 profils recomptés : 22 types × 5 catégories × 2 parcs × 2 moteurs, aucun à 0) ; 18 est l'union N1 à N5 absente sous null pour un ERP O au parc complet, c'est-à-dire ce que l'option B **ajouterait**.]*
 
 Constats de la documentation recomptés **en appelant le moteur** (130 profils × 2 parcs, `837b147` et `e6b0fb6`) :
 
@@ -293,6 +294,7 @@ Constats de la documentation recomptés **en appelant le moteur** (130 profils �
 | `CLAUDE.md:376-379`, `chantiers-ouverts.md:32-34`, `dette-…:177-180`, `adr/022:217-221`, `onboarding/schema.ts:149-150`, décision A4 | matières absentes « ne retire rien aujourd'hui » | **FAUX** depuis le 2026-09-03 (6 profils, 2 lignes) |
 | `CLAUDE.md:165-167` | bureau de 6, 12 et 55 personnes : 39, 40 et 43 obligations | **FAUX** : 42, 43, 46 sur `main` |
 | `CLAUDE.md:254-258` | restaurant N3 alarme + CTA « 34 → 36 », 5ᵉ « 37 » | **FAUX** (périmé) : 51 et 50 |
+| `engine.ts:494-498` *(ajouté après contre-lecture)* | « dans les deux cas, ne pas savoir ne retire jamais une ligne » | **FAUX** pour `types`, qui écarte sur null (`engine.ts:128`) |
 | `regles-matching.md:52,58-60` | « 6 obligations ascenseurs », un seul régime positif ailleurs | **FAUX** : 17 obligations à plusieurs régimes |
 | `regles-matching.md:186-190` | registre de sécurité ancré à un équipement | **FAUX** (périmé) : présent sans équipement |
 | `froid.ts:128` | « la seule réponse qui retire… est le oui… hermétiquement scellés » | **FAUX** : « sous le seuil » retire aussi (0 ligne) |
@@ -325,9 +327,31 @@ Dans cet ordre, parce que chaque étape rend la suivante vraie.
 
 Sur `e6b0fb6` : à garder pour l'étape 5. Le livrer seul serait la rustine décrite au § 4.
 
+**Deux précisions de la contre-lecture.**
+- **L'étape 1 doit inclure le registre de sécurité.** Il passe par le même `matchTypologie` avec `champR422734` (`registre/sections.ts:171,195,206`) : sous (i), un bureau non ERP de 3 personnes muet sur les matières reçoit 3 fiches de plus (`service-securite-evacuation`, `exercices-themes`, `exercices-comptes-rendus`). Le § 5 ne les comptait pas.
+- **Le bruit n'est « borné par la relance » que pour les lignes sur lesquelles personne n'a agi.** Une ligne qui porte un rapport, une action ou un statut réalisé est archivée, jamais supprimée, quand la réponse devient « non » (`calendrier/actions.ts:188-204`, `:316`).
+
 ## 8. Corrections de texte proposées (non appliquées)
 
 - `.claude/CLAUDE.md` § « Règle du non-renseigné » : rayer « appliquée partout sauf à un attribut » et « elle ne retire rien aujourd'hui ». Écrire à la place : « appliquée partout sauf à la catégorie et au type d'ERP (`types`), où l'absence écarte ; et, jusqu'au 2026-09-27, aux matières de R. 4227-22, dont le silence retirait R. 4227-37 et -39 aux établissements de travail seul sous le seuil depuis le 2026-09-03 ». Rayer aussi les comptes 39/40/43 et 34/36/37 (§ 6.4).
 - `calendrier/page.tsx:1021-1030` et `guide/chez-vous.ts:122` : le commentaire affirme une marque que le calendrier ne porte pas.
 - `froid.ts:128`, `regles-matching.md:52,58-60,186-190` : les autres constats faux du § 6.4.
 
+
+---
+
+## 9. Contre-lecture neutre (2026-09-27)
+
+Un sous-agent a été briefé sur l'observable : ouvrir chaque `fichier:ligne` cité, recompter les chiffres en appelant les deux moteurs, comparer les verbatims au corpus, chercher un angle oublié.
+
+- **Vérifié** : les citations des §§ 1 à 3, 6.2 et 6.3, sauf les écarts ci-dessous ; la grille et la base locale du § 5, recomptées à l'identique ; les verbatims de R. 4227-22, -34 et -37 (version 2011), mot pour mot.
+- **Écarts, corrigés dans le texte ci-dessus** (rayés ou marqués « après contre-lecture ») :
+  - « 18 lignes » : la perte maximale est de 8 lignes, et 18 est ce que B ajouterait ;
+  - A1 surévalué ;
+  - le registre de sécurité montre le texte « à confirmer » ;
+  - la citation de R. 4227-39 était tronquée ;
+  - une inférence sur R. 4411-6 figurait sous « le texte dit » ;
+  - le commentaire `engine.ts:494-498` est faux ;
+  - la ligne citée de `LigneEtat.tsx` était décalée.
+- **Non vérifiable dans le dépôt** : la version 2027 de R. 4227-37 et R. 4411-6 ne sont pas au corpus. Ils ont été lus sur l'API, dans les identifiants cités au § 1.
+- **Angles oubliés, ajoutés au § 7** : le registre de sécurité, et l'archivage des lignes qui portent une trace.
