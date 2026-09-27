@@ -7,6 +7,39 @@ l'architecture sort d'ici sous forme d'ADR avant d'être codé.
 
 ---
 
+## Connecteur MCP par compte — avec Better Auth, à la migration
+
+**État** (2026-09-27) : le connecteur de Claude.ai passe par l'adresse à clé
+`/api/mcp/<clé>` (clé changée le 2026-09-27 : l'ancienne apparaissait en clair
+dans les journaux Vercel, cf. `docs/revues/audit-mcp-2026-09-27.md`, S1/S2).
+L'accès par compte `/api/mcp` existe côté serveur de ressource (ADR-013, étapes
+1 à 3), mais **n'a jamais été terminé** : ni serveur OAuth Supabase activé, ni
+enregistrement dynamique des clients, ni page `/oauth/consent` (ADR-013,
+étapes 4 et 5). Essayé le 2026-09-27 depuis Claude.ai : « L'enregistrement
+automatique du client n'est pas pris en charge ».
+
+**Décision de la propriétaire (2026-09-27)** : ne pas le terminer avec
+Supabase. La base part sur Clever Cloud et l'authentification sur Better
+Auth ; l'accès par compte du MCP se fera à ce moment-là, avec Better Auth
+comme serveur d'autorisation (enregistrement dynamique des clients, page de
+consentement, jetons portant l'audience du serveur MCP — ce qui règle aussi
+le point 8 de l'ADR-013). **De toute manière revu à la migration**, puisque
+toute l'authentification sera refaite.
+
+À faire alors :
+1. Serveur d'autorisation Better Auth pour `/api/mcp` : découverte RFC 8414,
+   métadonnées RFC 9728 (déjà servies, à repointer), DCR, consentement.
+2. Vérification du jeton dans `src/lib/mcp/acces-oauth.ts` réécrite pour
+   Better Auth (aujourd'hui `getClaims` Supabase), cloisonnement inchangé :
+   `sub → Entreprise.userId → Etablissement`.
+3. Test de bout en bout avec Claude Code, puis Claude.ai.
+4. Retrait de la route `/api/mcp/[cle]` et des variables `MCP_CLE`,
+   `MCP_ETABLISSEMENT_ID` ; mise à jour de la page « Connecter ».
+5. Reprendre les recommandations restantes de l'audit MCP : limitation de
+   débit (S4), `localhost` en production (S8), efficience (E1–E4).
+
+---
+
 ## Système d'alerte — à concevoir dans son ensemble
 
 **État** : rien de livré. Seuls les e-mails transactionnels existent (OTP,

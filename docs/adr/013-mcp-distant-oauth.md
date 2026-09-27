@@ -124,3 +124,13 @@ Reste à valider, et qui ne peut pas l'être en local :
 - **le point 8** : le sort réservé par Supabase au paramètre `resource` (RFC 8707).
 
 Note sur le test avec un client réel : claude.ai ne joint que des URL publiques (egress `160.79.104.0/21`) et ne verra donc jamais un `localhost`. Deux clients savent en revanche parler à un serveur local — l'inspecteur MCP et Claude Code, ce dernier utilisant une redirection en boucle locale (RFC 8252). C'est par eux que passera la validation du flux complet avant tout déploiement.
+
+## Note du 2026-09-27 — suspendu jusqu'à la migration Better Auth
+
+Les étapes 4 et 5 (serveur OAuth Supabase, DCR, page `/oauth/consent`) n'ont
+jamais été faites : un essai depuis Claude.ai le 2026-09-27 a échoué sur
+l'enregistrement automatique du client. La propriétaire a décidé de ne pas
+les terminer avec Supabase : l'authentification basculera sur Better Auth avec
+la base sur Clever Cloud, et l'accès par compte du MCP sera construit à ce
+moment-là (cf. `docs/backlog.md`, « Connecteur MCP par compte »). D'ici là, la
+route à clé reste le seul accès ; sa clé a été changée le 2026-09-27.
