@@ -3354,9 +3354,37 @@ les dates : c'est voulu. **Au déploiement**, aucune fiche ne porte ces dates :
 toute fiche avec une attestation au dossier passe au moins en « Date non
 renseignée », et toute fiche avec une attestation et **non modifiée depuis
 plus de six mois** passe en « À redemander » (rose) ; le compteur « en alerte »
-du tableau de bord monte d'autant. Au calendrier, chacune de ces
+du tableau de bord monte d'autant. ~~Au calendrier, chacune de ces
 attestations devient une entrée en alerte, comptée dans les retards de la
-famille « papiers ».
+famille « papiers ».~~ *[Corrigé le 2026-09-27, décision de la coordination :
+une date absente n'est pas un retard.]* Au calendrier, une attestation « à
+dater » est une entrée en ton alerte (un geste est dû, jamais « ok »),
+d'origine « date(s) … non renseignée(s) », marquée `sansEcheance` : **le
+compteur de retards ne monte pas pour les dates absentes** — ni `repartirRetards`
+(barre latérale, bandeau du calendrier, tableau de bord), ni le « sous 30 j »,
+ni la règle annuelle (comptée « sans date »), ni le pli d'un mois, ni le
+filtre « en retard seulement », ni la grille, la frise ou la météo, qui ne la
+posent sur aucun jour. La liste du calendrier la montre sans date, pastille
+ardoise « Date non renseignée ». La barre latérale compte toujours le
+prestataire, mais ne rougit que pour une pièce en retard ; « Préparer un
+contrôle » dit « N prestataire(s) avec une pièce non fournie ou une date non
+renseignée », état « à planifier », au lieu de « … expirées ou expirant » en
+« en retard ». Seule « À redemander » (rien déposé depuis plus de six mois,
+ou émission hors délai) monte le compteur de retards.
+
+**« Rien déposé depuis plus de six mois » est-il un retard constaté ?** Oui,
+dans la mesure où le code peut l'affirmer. `updatedAt` est postérieur à toute
+écriture sur la fiche, et la pièce n'est déposée qu'à la création (aucun
+chemin de redépôt) ; la remise physique précède le dépôt. Donc la pièce au
+dossier a été remise il y a plus de six mois. Et c'est vrai QUELLE QUE SOIT la
+lecture : toute fenêtre de plus de six mois contient au moins une date de la
+grille calée sur la conclusion, si bien qu'une remise était due depuis celle
+du dossier — que l'on compte depuis la remise (lecture de Rojer) ou depuis la
+conclusion. Ce que le code ne sait pas, et qu'il ne sait pas non plus pour
+« expirée » : si le contrat court encore (« jusqu'à la fin de son
+exécution »), s'il atteint 5 000 € HT (`R. 8222-1`), et si une attestation plus
+récente a été reçue sans être déposée. Le retard est donc constaté **sur le
+dossier que Rojer tient**, au même titre qu'une attestation expirée ; compté.
 
 **Contre-lecture de `16531b7` (2026-09-27), et ses corrections.** Sans point
 grave. M1 : « Valide 155 j de plus » ne s'affiche plus à côté de « À

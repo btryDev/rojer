@@ -319,6 +319,23 @@ export function vigilanceUrssaf(
   return { statut: "a_jour", ...base };
 }
 
+/**
+ * Les prestataires qui appellent un geste, ventilés par GRAVITÉ. Seul
+ * `enRetard` peut se dire « en retard » ou porter le rouge : une pièce non
+ * fournie ou une date non renseignée (`aPlanifier`) demande un geste, pas un
+ * rattrapage (contre-lecture du 2026-09-27).
+ */
+export function ventilerVigilance(
+  etats: VigilanceSnapshot["etatLePlusGrave"][],
+): { enRetard: number; proche: number; aPlanifier: number; total: number } {
+  const n = (x: VigilanceSnapshot["etatLePlusGrave"]) =>
+    etats.filter((e) => e === x).length;
+  const enRetard = n("enRetard");
+  const proche = n("proche");
+  const aPlanifier = n("aPlanifier");
+  return { enRetard, proche, aPlanifier, total: enRetard + proche + aPlanifier };
+}
+
 export function computeVigilance(
   prestataire: Prestataire,
   now: Date = new Date(),

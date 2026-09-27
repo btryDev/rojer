@@ -215,6 +215,19 @@ export type EcheanceCalendrier = {
   dateFin?: Date;
   /** Mêmes tons que la grille : dépassé = alerte, sinon ok. */
   tone: "alerte" | "ok";
+  /**
+   * Rojer ne sait pas dater cette échéance : une date de la pièce n'est pas
+   * renseignée (attestation URSSAF « à dater »). Le ton reste `alerte` — un
+   * geste est dû, jamais « ok » —, mais UNE DATE ABSENTE N'EST PAS UN RETARD
+   * (même règle que `pdf/fait-retards.ts` : « Rojer ne sait pas » n'est pas
+   * « pas fait »). Aucun compteur ni libellé « en retard » ne la compte
+   * (`repartirRetards`, `repartirSous30j`, la règle annuelle, le pli d'un
+   * mois, le filtre « en retard seulement »), et aucune grille ni frise ne la
+   * pose sur un jour (`fusionnerEvenements`) : elle reste dans la liste du
+   * calendrier, sans date. Même traitement que les vérifications
+   * `sansEcheance`.
+   */
+  sansEcheance?: true;
   href: string;
   /** Où ça se passe (ADR-019). `null` = l'établissement entier : mise à
    *  jour du DUERP, attestation d'un prestataire, action née d'un risque.
@@ -454,6 +467,7 @@ export function echeancesPrestataire(
       origine: urssaf.origine,
       date: urssaf.date,
       tone: urssaf.tone,
+      ...(urssaf.statut === "a_dater" ? { sansEcheance: true as const } : {}),
       href,
       batiment: null,
     });

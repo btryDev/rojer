@@ -346,7 +346,8 @@ export default async function CalendrierPage({
         autresEcheances.filter(
           (e) =>
             (!filtreFamille || filtreFamille === e.famille) &&
-            (!filtreUrgent || e.tone === "alerte"),
+            // « En retard seulement » : une date absente n'en est pas un.
+            (!filtreUrgent || (e.tone === "alerte" && !e.sansEcheance)),
         ),
         filtreBatiment,
       );
@@ -624,7 +625,9 @@ export default async function CalendrierPage({
   // colorait la case de mars quand la liste la montrait en septembre
   // (relecture, 2026-09-15).
   for (const l of lignes) {
-    if (l.genre !== "autre") continue;
+    // Une échéance sans date (pièce « à dater ») n'a pas de case de mois :
+    // la poser aujourd'hui l'y peindrait en retard. La liste la montre.
+    if (l.genre !== "autre" || l.e.sansEcheance) continue;
     const { e, etat } = l;
     let f = parFamille.get(e.famille);
     if (!f) {
@@ -1142,7 +1145,7 @@ export default async function CalendrierPage({
                 nbEnRetard: liste.filter((l) =>
                   l.genre === "verif"
                     ? l.registre === "enRetard"
-                    : l.e.tone === "alerte",
+                    : l.e.tone === "alerte" && !l.e.sansEcheance,
                 ).length,
                 // Ce que la règle ne place pas : la carte le dit, sans
                 // quoi son total et celui de l'instrument se contredisent.
@@ -1232,15 +1235,20 @@ export default async function CalendrierPage({
                             // méta le dit EN TÊTE — au bout, la troncature
                             // l'effaçait, et la tuile « 25 SEPT. » se relisait
                             // comme le début des travaux (2026-09-15).
-                            date={ligne.date}
+                            date={e.sansEcheance ? null : ligne.date}
                             type={e.type}
                             titre={e.libelle}
                             meta={avecMentionFin(metaAutre(e), ligne.fin)}
                             // La tuile-date suffit pour le futur : seule
-                            // l'alerte mérite une pastille.
-                            registre={ligne.etat}
+                            // l'alerte mérite une pastille. Une date absente
+                            // porte l'ardoise et son mot, jamais « En retard ».
+                            registre={e.sansEcheance ? "aPlanifier" : ligne.etat}
                             pastille={
-                              e.tone === "alerte" ? (
+                              e.sansEcheance ? (
+                                <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-slate-pale)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-slate-ink)]">
+                                  Date non renseignée
+                                </span>
+                              ) : e.tone === "alerte" ? (
                                 <span className="inline-flex items-center whitespace-nowrap rounded-full bg-[color:var(--board-signal)] px-[13px] py-[6px] text-[12px] font-semibold text-[color:var(--board-signal-ink)]">
                                   En retard
                                 </span>

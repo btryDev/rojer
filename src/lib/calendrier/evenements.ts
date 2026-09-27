@@ -103,6 +103,9 @@ export function fusionnerEvenements({
     : filtrerParBatiment(
         autres.filter(
           (e) =>
+            // Sans date connue, rien à poser sur un jour — comme les
+            // vérifications `sansEcheance` ci-dessus.
+            !e.sansEcheance &&
             (!famille || famille === e.famille) &&
             (!urgentsSeulement || e.tone === "alerte"),
         ),

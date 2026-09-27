@@ -179,10 +179,12 @@ export function estDatable<V extends VerificationLue>(
   l: LigneMois<V>,
   now: Date,
 ): boolean {
+  // Une autre échéance « sans échéance » (date de pièce non renseignée)
+  // n'a pas de barre non plus : sa date est aujourd'hui, faute de mieux.
+  if (l.genre !== "verif") return !l.e.sansEcheance;
   return (
-    l.genre !== "verif" ||
-    (l.registre !== "aPlanifier" &&
-      (l.lecture === "realisation" || aUnRendezVous(l.v, now)))
+    l.registre !== "aPlanifier" &&
+    (l.lecture === "realisation" || aUnRendezVous(l.v, now))
   );
 }
 
