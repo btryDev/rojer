@@ -157,15 +157,20 @@ describe("texteInformation — art. 13", () => {
     expect(texte).toContain("Attestation médicale (habilitation électrique)");
   });
 
-  it("n'affirme pas pour tous les titres une exigence que le Code ne pose pas partout (E8 ouverte)", () => {
-    // Chaque titre répond à un article du Code du travail, mais tous ne
-    // conditionnent pas un travail (R. 4224-15, L. 2315-18). La décision E8
-    // reste ouverte : le texte dit « prévus », il ne dit plus « impose ».
+  it("dit l'obligation de l'employeur envers le salarié, et rien de plus (E8, tranchée le 2026-09-27)", () => {
+    // L'audit des titres (`obligation-employeur.ts`) trouve pour chacun le
+    // texte qui le met à la charge de l'employeur envers le salarié — pour la
+    // plupart sous une condition. Le texte le dit ; il ne dit pas que chaque
+    // titre est exigé de chaque salarié.
+    // Dans l'ouverture, qui dit ce qui est suivi, ET dans « Pourquoi », qui
+    // fonde la base légale : l'une sans l'autre laisserait un « prévoit » là
+    // où le salarié lit ce qu'on suit de lui.
+    expect(texte).toMatch(/visites que le Code du travail met à la charge de votre employeur\s+envers vous/);
+    expect(texte).toMatch(/obligation que\s+le Code du travail met à la charge de votre employeur envers vous/);
     expect(texte).not.toMatch(/la loi l'impose|lui impose de connaître|exigés par le Code/);
-    expect(texte).toContain("prévoit");
     // La VIP est due à « Tout travailleur » (R. 4624-10) : l'ouverture ne
-    // peut pas réduire le suivi à « certains travaux ou certains postes ».
-    expect(texte).toMatch(/certains pour tout\s+travailleur, comme la visite d'information et de prévention/);
+    // peut pas réduire le suivi à des postes particuliers.
+    expect(texte).toMatch(/certains pour tout travailleur, comme la visite d'information et\s+de prévention/);
   });
 
   it("le dit franchement quand rien n'est encore suivi", () => {

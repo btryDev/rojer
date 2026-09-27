@@ -52,12 +52,14 @@ export const CODE_TRAVAIL_ORGANISATION_PREVENTION: Corpus = {
         "Désignation d'un ou plusieurs salariés compétents en protection et prévention",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043893856",
       versionEnVigueur: "2022-03-31",
-      luLe: "2026-08-31",
+      luLe: "2026-09-27",
       lecture: "agent_verbatim",
       prescrit:
         "L'employeur désigne un ou plusieurs salariés compétents pour s'occuper des activités de protection et de prévention des risques professionnels ; à défaut de compétences internes, il peut faire appel à un intervenant extérieur.",
+      // ALINÉA 2 AJOUTÉ le 2026-09-27 (audit E8, journal C42), relu sur
+      // Légifrance en question fermée — « à leur demande » n'y figure pas.
       citationCle:
-        "I.-L'employeur désigne un ou plusieurs salariés compétents pour s'occuper des activités de protection et de prévention des risques professionnels de l'entreprise.",
+        "I.-L'employeur désigne un ou plusieurs salariés compétents pour s'occuper des activités de protection et de prévention des risques professionnels de l'entreprise. […] Le ou les salariés ainsi désignés par l'employeur bénéficient d'une formation en matière de santé au travail dans les conditions prévues aux articles L. 2315-16 à L. 2315-18.",
       statut: "retenu",
       obligations: [
         "prevention-etablissement-salarie-designe",
@@ -125,12 +127,15 @@ export const CODE_TRAVAIL_ORGANISATION_PREVENTION: Corpus = {
         "Formation en santé, sécurité et conditions de travail des membres de la délégation du personnel",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000036761949",
       versionEnVigueur: "2022-03-31",
-      luLe: "2026-08-31",
+      luLe: "2026-09-27",
       lecture: "agent_verbatim",
       prescrit:
         "Les membres de la délégation du personnel du CSE et le référent harcèlement bénéficient d'une formation en santé, sécurité et conditions de travail, d'une durée minimale de cinq jours au premier mandat et de trois jours au renouvellement ; l'employeur la finance.",
+      // PREMIER ET DERNIER ALINÉAS AJOUTÉS le 2026-09-27 (audit E8, journal
+      // C42), relus sur Légifrance : texte intégral demandé, puis question
+      // fermée sur le financement par l'employeur.
       citationCle:
-        "La formation est d'une durée minimale de cinq jours lors du premier mandat des membres de la délégation du personnel. En cas de renouvellement de ce mandat, la formation est d'une durée minimale : 1° De trois jours pour chaque membre de la délégation du personnel, quelle que soit la taille de l'entreprise ; 2° De cinq jours pour les membres de la commission santé, sécurité et conditions de travail dans les entreprises d'au moins trois cents salariés.",
+        "Les membres de la délégation du personnel du comité social et économique et le référent prévu au dernier alinéa de l'article L. 2314-1 bénéficient de la formation nécessaire à l'exercice de leurs missions en matière de santé, de sécurité et de conditions de travail prévues au chapitre II du présent titre, dans des conditions déterminées par décret en Conseil d'Etat. La formation est d'une durée minimale de cinq jours lors du premier mandat des membres de la délégation du personnel. En cas de renouvellement de ce mandat, la formation est d'une durée minimale : 1° De trois jours pour chaque membre de la délégation du personnel, quelle que soit la taille de l'entreprise ; 2° De cinq jours pour les membres de la commission santé, sécurité et conditions de travail dans les entreprises d'au moins trois cents salariés. Sans préjudice des dispositions de l'article L. 2315-22-1, le financement de la formation prévue au premier alinéa du présent article est pris en charge par l'employeur dans des conditions prévues par décret en Conseil d'Etat.",
       statut: "retenu",
       obligations: ["formation-securite-salarie-cse-sst"],
       reserve:

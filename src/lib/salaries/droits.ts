@@ -60,7 +60,7 @@ export async function exporterDonneesSalarie(
       etabliLe: new Date().toISOString(),
       responsableDeTraitement: s.etablissement.raisonDisplay,
       baseLegale:
-        "Article 6.1.c du RGPD — obligation légale de l'employeur (suivi de titres, formations et visites prévus par le Code du travail). Le consentement n'est pas la base légale retenue : il ne serait pas libre en situation de subordination.",
+        "Article 6.1.c du RGPD — obligation légale de l'employeur envers le salarié : chaque titre, formation ou visite suivi dans Rojer est une formation, une visite, une habilitation ou une autorisation que le Code du travail met à la charge de l'employeur envers le travailleur, pour certains sous une condition (un poste, une désignation, un mandat). Le consentement n'est pas la base légale retenue : il ne serait pas libre en situation de subordination.",
       cequiNestPasIci:
         "Rojer ne détient aucune donnée de santé. Sur une attestation ou une visite médicale — visite d'information et de prévention, suivi individuel renforcé, visite intermédiaire, attestation d'absence de contre-indication —, il n'enregistre que son existence et ses dates : ni motif, ni avis d'aptitude, ni restriction, ni document. Le dossier médical en santé au travail appartient au service de prévention et n'est pas accessible à l'employeur (L. 4624-8, R. 4624-55).",
     },
@@ -102,8 +102,20 @@ export async function exporterDonneesSalarie(
  *
  * L'outil le fournit ; il n'informe pas à la place de l'employeur.
  *
+ * E8, TRANCHÉE PAR LA PROPRIÉTAIRE LE 2026-09-27 : « une obligation légale
+ * pour l'employeur vis-à-vis du salarié. Mais c'est la même ligne que pour
+ * tout Rojer : on ne fait rien et on n'annonce rien qui ne soit pas légal. »
+ * L'audit des quatorze titres du catalogue (`obligation-employeur.ts`, journal
+ * C42) trouve pour chacun le texte qui met à la charge de l'employeur, envers
+ * le salarié, une formation, une visite, une habilitation ou une autorisation
+ * — pour douze sous une condition. Le texte le dit désormais, et rien de plus :
+ * « que le Code du travail met à la charge de votre employeur envers vous ».
+ * La base 6.1.c, et les refus d'effacement (17.3.b) et d'opposition (21) qui
+ * s'en déduisent, reposent sur cet audit ; un titre entré au catalogue sans y
+ * figurer fait échouer `obligation-employeur.test.ts`.
+ *
  * CE QUE LE TEXTE NE DIT PLUS (revue finale de l'intégration d, 2026-09-26,
- * décision E8 ouverte). « Parce que la loi l'impose », « que la
+ * décision E8 alors ouverte). « Parce que la loi l'impose », « que la
  * réglementation lui impose de connaître », « exigés par le Code du travail »
  * affirmaient, pour TOUS les titres suivis, une exigence que le Code ne pose
  * pas partout : chaque titre du catalogue répond à un article du Code, mais
@@ -115,9 +127,10 @@ export async function exporterDonneesSalarie(
  * désormais « prévus », et que certains le sont pour tout travailleur : la
  * visite d'information et de prévention (R. 4624-10, « Tout travailleur
  * bénéficie… », relu le 2026-09-27) — la première écriture de cette
- * correction, « pour certains travaux ou certains postes », l'oubliait. Il n'arbitre pas E8 : la base 6.1.c, et les refus
- * d'effacement (17.3.b) et d'opposition (21) qui s'en déduisent, restent
- * tels quels jusqu'à la décision.
+ * correction, « pour certains travaux ou certains postes », l'oubliait.
+ * « Exigés » et « impose » restent absents pour TOUS les titres : l'audit
+ * ne dit pas que chaque titre est exigé de chaque salarié, il dit que chacun
+ * est à la charge de l'employeur envers celui qu'il vise.
  */
 export function texteInformation({
   raisonSociale,
@@ -134,9 +147,10 @@ export function texteInformation({
   return `Information sur le suivi de vos titres et habilitations
 
 ${raisonSociale} utilise un outil, Rojer, pour suivre les échéances des titres,
-formations et visites que le Code du travail prévoit : certains pour tout
-travailleur, comme la visite d'information et de prévention (art. R. 4624-10),
-d'autres pour certains travaux ou certains postes.
+formations et visites que le Code du travail met à la charge de votre employeur
+envers vous : certains pour tout travailleur, comme la visite d'information et
+de prévention (art. R. 4624-10), d'autres selon votre poste, une désignation
+ou un mandat.
 
 CE QUI EST ENREGISTRÉ
 
@@ -162,10 +176,11 @@ R. 4624-55 du Code du travail).
 
 POURQUOI
 
-Parce que le Code du travail prévoit ces titres, formations et visites.
-Certains travaux ne peuvent être confiés qu'à une personne titulaire d'un
-titre en cours de validité, et l'employeur doit pouvoir en justifier. La base légale de ce traitement est
-l'article 6.1.c du RGPD — une obligation légale.
+Parce que chacun de ces titres, formations et visites est une obligation que
+le Code du travail met à la charge de votre employeur envers vous. Certains
+travaux ne peuvent être confiés qu'à une personne titulaire d'un titre en cours
+de validité, et l'employeur doit pouvoir en justifier. La base légale de ce
+traitement est l'article 6.1.c du RGPD — une obligation légale de l'employeur.
 
 Ce n'est donc pas un traitement fondé sur votre consentement, et il ne peut pas
 l'être : un consentement donné à son employeur n'est pas considéré comme libre.
