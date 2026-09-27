@@ -53,10 +53,13 @@ l'article en abrogation différée. Elle pointe désormais LEGIARTI000020380169
 (`3615cb33`). Relevé le 2026-09-28, `pnpm legifrance:verifier -- --ref "GE 6"` :
 « [1/1] GE 6 (arrete-1980-livre-2) : OK ».
 
-**Décision.** D15 : treize obligations citent un article `retenu` qui ne les nomme
-pas. Le sens inverse du lien n'est gardé par aucun test. Un test a été écrit
-pendant l'audit ; il est rouge par construction et n'est pas commité — il se pose
-avec la décision.
+~~**Décision.** D15 : treize obligations citent un article `retenu` qui ne les nomme
+pas.~~ [2026-09-28, revue indépendante : classement interne, fait dans le lot.]
+**Défaut corrigé.** Treize obligations citaient un article `retenu` qui ne les
+nommait pas ; elles sont rattachées, et le sens inverse est gardé par
+`renvoisManquants()` et deux tests (`6f2e3daa`). Épreuve :
+`elec-travail-rapport-quadriennal` retiré de R. 4226-16 → « Tests 1 failed |
+25 passed (26) ».
 
 ## Maillon 2 — Référentiel : aucune obligation morte
 
@@ -226,7 +229,11 @@ R. 4227-29, portée par l'établissement, est sur `lot/audit-obligations-nouvell
 Elle ne passe pas par `incendie-travail-moyens-lutte` : la note de cette obligation
 la garde portée par l'équipement.
 
-**Décisions** : D10 à D12 (guide), D16 à D24 (7 bis). D21 est à lire en premier.
+**Classés dans le lot** (`e193cd31`, ex-D12, texte relu par l'API) : R. 4722-26,
+GE 8, PE 4 § 3, R. 4412-5 à -8 et -10.
+
+**Décisions** : D10, D11 et le reste de D12 (guide), D16 à D24 (7 bis). D21 est à
+lire en premier.
 Trois obligations de 5ᵉ catégorie que le texte impose (alarme PE 27 § 2, dotation
 PE 26 § 1, dégagements PE 11 § 1) ne sont pas codées. La réserve de PE 27 l'interdit
 tant que la classe GN 10 n'est pas tranchée : c'est une règle écrite, et ce lot la

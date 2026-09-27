@@ -175,15 +175,36 @@ requalification périodique. »
 (`equipement-sous-pression.ts:195`). Un extincteur CO₂ est dans presque toutes les
 cuisines de la cible. **Recommandation :** l'annoncer, au moins.
 
-## D12 — Écarts écrits dans une revue et pas dans le code
+## ~~D12 — Écarts écrits dans une revue et pas dans le code~~ — fait en partie le 2026-09-28 ; le reste est une décision
 
-CEM, VLEP, amiante, aires de jeux, systèmes thermodynamiques de plus de 70 kW,
+~~CEM, VLEP, amiante, aires de jeux, systèmes thermodynamiques de plus de 70 kW,
 radon (R. 4451-14), rythme annuel RPS, vérifications « sur demande » de l'autorité
 (GE 8 § 3, PE 4 § 3, R. 4722-26), évaluation du risque chimique (R. 4412-5 à -10),
 eaux sanitaires : leur refus n'est écrit que dans
 `docs/revues/comparaison-guide-qualiconsult.md`, pas dans `EXCLUSIONS`
 (`corpus/perimetre.ts`) ni au corpus. **Recommandation :** écrire chaque écart au
-corpus avec son motif — une ligne de classement, pas un encodage.
+corpus avec son motif — une ligne de classement, pas un encodage.~~
+
+[2026-09-28, revue indépendante du lot 2 : « du classement interne », à faire dans
+le lot. **Fait** (`e193cd31`), chaque article relu par l'API et vérifié (« OK 7 ») :
+R. 4722-26 `hors_perimetre` / `sans_destinataire_exploitant` et GE 8 `sans_objet`
+(le § 3 sur mise en demeure classé comme l'arrêté du 21 décembre 2004, art. 7) ;
+PE 4 § 3 dit dans la réserve de PE 4 ; R. 4412-5, -6, -7, -8, -10 `sans_objet`, comme
+R. 4423-1. Eaux sanitaires : aucune obligation dans la ligne du guide
+(« conseillé »), et l'eau chaude sanitaire des ERP est déjà au corpus (arrêté du
+1er février 2010, `non_couvert`, annoncé) — rien à écrire.
+
+**Reste, et c'est une décision, pas un classement.** CEM, VLEP, amiante, aires de
+jeux, systèmes de plus de 70 kW, radon : ce sont des obligations réelles. Elles ne se
+rangent qu'en `obligation_manquante`, avec un verdict `toucheLaCible` ; or un « oui »
+change la liste du § 7 de `docs/couverture-declaree-du-produit.md`, que la
+propriétaire a arrêtée le 2026-09-27 et que `doc-couverture.test.ts` tient égale au
+corpus. R. 4412-9 (résultats de l'évaluation chimique communiqués au CSE et au
+médecin du travail) est un acte distinct, pas une déclinaison. Le rythme annuel des
+RPS vient d'un accord interprofessionnel, pas d'un article réglementaire : le
+classer suppose de dire si l'accord étendu s'impose à la cible. **Recommandation :**
+dépouiller ces textes, un par un, et soumettre à la propriétaire ceux qui touchent
+la cible — même procédure que les quarante-deux du 2026-09-27.]
 
 ## D13 — GN 10 : entériner l'option (a) de A6
 
@@ -205,14 +226,23 @@ appareil muet marquerait son jumeau) ; (B) un canal équipement —
 `proprietesSansReponse` par `equipementId` ; (C) un bandeau de dossier.
 **Recommandation : (B)**, sans migration.
 
-## D15 — Le lien inverse corpus → obligation (treize cas)
+## ~~D15 — Le lien inverse corpus → obligation (treize cas)~~ — fait le 2026-09-28
 
-**Constat** (maillon 1). Treize obligations citent un article `retenu` qui ne les
+~~**Constat** (maillon 1). Treize obligations citent un article `retenu` qui ne les
 nomme pas dans `obligations` ; aucun test ne le voit (`liensRetenusRompus` ne
 vérifie que l'autre sens). Certains sont des citations de contraste (GE 4 cité pour
 montrer ce qu'il ne couvre pas). **Recommandation :** les rattacher un par un, et
 verrouiller le sens inverse par un test — sauf les citations de contraste, qu'il
-faut alors marquer comme telles.
+faut alors marquer comme telles.~~
+
+[2026-09-28, revue indépendante du lot 2 : « du classement interne », à faire dans
+le lot. **Fait** (`6f2e3daa`). Les treize sont rattachés : la politique écrite du
+corpus nomme, dans la liste d'un article retenu, toute obligation qui le cite, en
+fondement comme en contexte (L. 1311-2, R. 4463-3, R. 4227-39, arrêté du 4 novembre
+1993 art. 7) — aucune n'est une citation de contraste au sens où il faudrait un
+marqueur, la nature de la citation restant dans sa `note`. `renvoisManquants()` et
+deux tests dans `corpus.test.ts` ferment le sens inverse ; éprouvé en retirant un
+rattachement dans la source.]
 
 ## D16 — R. 4228-19 : l'interdiction de prendre ses repas dans les locaux de travail
 
@@ -310,8 +340,9 @@ l'erreur resterait visible pour qui la subit.
 - **GZ 13 `toucheLaCible`** : PE 10 B § 2 (en vigueur au 2026-07-01) fait vérifier
   selon GZ 13 les installations de gaz des « autres établissements » que ceux de
   PE 2 § 3 — dire si ces « autres » touchent la cible suppose la lecture de PE 2 § 3.
-- **PE 4 § 3, GH 5 § 4** (vérifications sur mise en demeure) : réserve au titre de
-  l'ADR-035.
+- **~~PE 4 § 3,~~ GH 5 § 4** (vérifications sur mise en demeure) : réserve au titre de
+  l'ADR-035. [2026-09-28 : PE 4 § 3 dit dans la réserve de PE 4, et GE 8 § 3 classé
+  (`e193cd31`, D12) ; reste GH 5 § 4, IGH, hors cible.]
 - **R. 134-6 2° d)** (remplacement des moyens d'alerte d'ascenseur sur RTC/3G) :
   écarté à tort comme « couvert par le contrat d'entretien » — R. 134-7 I a)
   l'exclut du contrat. Une caractéristique d'ascenseur à créer. [2026-09-28 : le remplacement est DIT dans la description d'`ascenseur-entretien-contrat` (`1f4dee9c`) ; son échéance reste à décider.]

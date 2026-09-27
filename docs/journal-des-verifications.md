@@ -4629,14 +4629,14 @@ fichier de bout en bout (`d9b8c2bd`, `48417bbc`) les tient. De même, l'ordre
 
 | Maillon | Vérifié | Corrigé | Décision |
 |---|---|---|---|
-| 1 corpus | 534 articles, 513 OK, 20 non vérifiables, 1 abrogation différée connue (`1310b435`) | GE 6 (`3615cb33`) | D15 |
+| 1 corpus | 534 articles, 513 OK, 20 non vérifiables, 1 abrogation différée connue (`1310b435`) | GE 6 (`3615cb33`) ; lien inverse, treize rattachés (`6f2e3daa`) | ~~D15~~ |
 | 2 référentiel | aucune obligation morte (`88b34b80`) | — | — |
 | 3 moteur | bornes de chaque seuil (`360da522`) | A1 : personnes déclarées sous l'effectif (`2505c5b2`) | D7, D9 |
 | 4 datation | ordre des règles, 29/02, 31/03, heure d'été (`360da522`) | — | D8 |
 | 5 réconciliateur | a/b à g2, salarié revenu ; les quatre constats du 2026-09-09 clos | — | — |
 | 6 sorties | — | garde des surfaces (`c6293641`) | D3, D4, D5 |
 | 7 périmètre | 25 annonces = 25 `non_couvert` (sonde de session, non commitée) | — | D1, D2, D6 |
-| 7 bis | 518 articles relus par l'API (136 + 153 + 229) | `974b7916`, `f67f56d5`, `1f4dee9c` et `205199d3`, `9b0f735a`, `8002ff9b` | D10-D12, D16-D24 |
+| 7 bis | 518 articles relus par l'API (136 + 153 + 229) | `974b7916`, `f67f56d5`, `1f4dee9c` et `205199d3`, `9b0f735a`, `8002ff9b`, `e193cd31` (ex-D12, en partie) | D10-D12, D16-D24 |
 | 8 GN 10 | texte relu | PE 33, PE 35 (`9b0f735a`) | D13 |
 
 **Une règle écrite a bloqué un encodage fondé, et c'est voulu.** Trois obligations

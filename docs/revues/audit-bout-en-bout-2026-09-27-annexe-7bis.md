@@ -35,7 +35,9 @@ chaque manque sont au § 0, qui fait foi sur les tables.
 | G3 | R. 4323-81 à -88 | décision | D19 |
 | G3 | D. 4622-2 al. 2 (hors cible) ; R. 4451-57 (motif à confirmer ou reclasser) | décision | D20 |
 | Guide | n° 2 vérification annuelle des ascenseurs par l'employeur (arrêté du 29-12-2010) | décision (obligation nouvelle de rythme) | D10 |
-| Guide | CO₂ > 30 bar ; écarts écrits dans une revue seulement | décision | D11, D12 |
+| Guide | CO₂ > 30 bar | décision | D11 |
+| Guide | écarts écrits dans une revue seulement : « sur demande » (GE 8 § 3, PE 4 § 3, R. 4722-26), évaluation chimique (R. 4412-5 à -8, -10), eaux sanitaires | classés au corpus ou sans objet | `e193cd31` |
+| Guide | CEM, VLEP, amiante, aires de jeux, > 70 kW, radon, R. 4412-9, rythme RPS | décision (un `toucheLaCible` change la liste du § 7) | D12 |
 
 ## 1. G1 — ERP, CCH, IGH, habitation, accessibilité
 Relevé du 2026-09-27, agent G1 (préfixe zz-g1). Worktree `wt-cov`, branche `lot/audit-bout-en-bout`.
