@@ -2705,3 +2705,20 @@ describe("successions déclarées — `succedeA` et `absorbePar` ne se recouvren
     }
   });
 });
+
+describe("GN 10 dit sur tout état permanent fondé sur le livre III (2026-09-27, lot 2)", () => {
+  // A6 : ces lignes sont servies à tout ERP de 5ᵉ catégorie, et leur
+  // description cite GN 10 — sur-application visible. PE 27 le faisait, PE 33
+  // et PE 35 non. Éprouvé en retirant la phrase de PE 33.
+  it("un état permanent fondé sur un article PE cite GN 10 dans sa description", () => {
+    const muets = obligationsConformite
+      .filter(
+        (o) =>
+          o.nature === "etat_permanent" &&
+          /^PE \d/.test(o.referencesLegales[0].article ?? o.referencesLegales[0].reference) &&
+          !(o.description ?? "").includes("GN 10"),
+      )
+      .map((o) => o.id);
+    expect(muets).toEqual([]);
+  });
+});

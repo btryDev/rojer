@@ -69,7 +69,11 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   STOCKAGE_MATIERE_DANGEREUSE:
     "Liquides inflammables, gaz, produits chimiques en quantité significative.",
   EQUIPEMENT_LEVAGE:
-    "Palan, transpalette électrique, monte-charge, hayon élévateur.",
+    // ~~« transpalette électrique, monte-charge »~~ (2026-09-27, lot 2) :
+    // l'arrêté du 1er mars 2004 exclut les monte-charges installés à demeure,
+    // et un transpalette qui ne lève la charge que pour la déplacer ne la
+    // change pas de niveau (art. 2 a) — voir `conformite/levage.ts`.
+    "Palan, gerbeur, chariot élévateur, hayon élévateur.",
   INSTALLATION_FRIGORIFIQUE:
     "Chambre froide, vitrine ou meuble réfrigéré, groupe froid. Contrôle d'étanchéité du fluide frigorigène.",
   // L'aide dit ce que la catégorie couvre ET ce qu'elle ne couvre pas. Les

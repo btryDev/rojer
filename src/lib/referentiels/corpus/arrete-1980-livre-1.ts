@@ -99,7 +99,10 @@ export const ARRETE_1980_LIVRE_1: Corpus = {
     {
       ref: "GN 10",
       intitule: "Application du règlement aux établissements existants",
-      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020303853",
+      // ~~LEGIARTI000020303853~~ : version antérieure ; la version en vigueur
+      // depuis le 23 janvier 2010, relue par l'API le 2026-09-27, est
+      // LEGIARTI000021231106 (lot 2).
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000021231106",
       versionEnVigueur: "2010-01-23",
       modifiePar: { texte: "Arrêté du 24 septembre 2009 - art. (V)" },
       luLe: "2026-09-26",
