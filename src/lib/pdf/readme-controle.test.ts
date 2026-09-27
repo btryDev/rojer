@@ -102,7 +102,30 @@ describe("le README ne décrit que ce que le ZIP contient (relecture du 2026-09-
     });
     expect(t).toMatch(/01_Dossier_conformite\.pdf\s+Non inclus — la génération a échoué/);
     expect(t).toMatch(/04_Plan_actions\.pdf\s+Non inclus/);
-    expect(t).toMatch(/03_Registre_securite\.pdf\s+Rapports de vérifications/);
+    // Le registre porte l'INDEX des rapports ; les fichiers sont dans Rapports/
+    // (2026-09-27) — le README ne doit pas laisser croire qu'ils sont au 03.
+    expect(t).toMatch(/03_Registre_securite\.pdf\s+Registre des vérifications, index des rapports/);
+  });
+
+  it("Rapports/ et les rapports d'analyse : ce qui est joint, ce qui manque, jamais un déposé compté joint", () => {
+    const aucun = genererReadme(base);
+    expect(aucun).toMatch(/Rapports\/\s+Aucun rapport déposé/);
+    expect(aucun).not.toMatch(/08_Carnet_sanitaire_analyses/);
+
+    const t = genererReadme({
+      ...base,
+      rapportsZip: { deposes: 3, inclus: 2, manquants: 1 },
+      analysesZip: { deposes: 1, inclus: 1, manquants: 0 },
+    });
+    expect(t).toMatch(/Rapports\/\s+2 fichier\(s\) de rapport de vérification ; 1 déposé\(s\) non récupéré\(s\)/);
+    expect(t).toMatch(/08_Carnet_sanitaire_analyses\/\s+1 rapport\(s\) de laboratoire$/m);
+
+    const echec = genererReadme({
+      ...base,
+      echecs: new Map([["Rapports/", "la lecture a échoué"]]),
+      rapportsZip: { deposes: 0, inclus: 0, manquants: 0 },
+    });
+    expect(echec).toMatch(/Rapports\/\s+Non inclus — la lecture a échoué/);
   });
 
   it("les dates de l'attestation de vigilance : la date quand elle existe, « non renseignée » sinon", () => {

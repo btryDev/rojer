@@ -353,6 +353,19 @@ export default async function CarnetSanitairePage({
                           {a.commentaire}
                         </p>
                       )}
+                      {/* Le rapport de laboratoire déposé, rouvert par sa route
+                          (2026-09-27) : il s'écrivait et ne se relisait nulle part. */}
+                      {a.rapportCle && (
+                        <a
+                          href={`/api/analyses-legionelles/${a.id}/rapport`}
+                          target="_blank"
+                          rel="noopener"
+                          className="mt-2 inline-block text-[12.5px] font-medium text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
+                        >
+                          Ouvrir le rapport
+                          {a.rapportNom ? ` (${a.rapportNom})` : ""}
+                        </a>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
                       {a.valeurUfcParL !== null && (
