@@ -59,7 +59,7 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       luLe: "2026-08-31",
       lecture: "agent_verbatim",
       prescrit:
-        "L'employeur organise et dispense une information des travailleurs sur les risques pour leur santé et leur sécurité, et sur les mesures prises pour y remédier.",
+        "L'employeur organise et dispense une information des travailleurs sur les risques pour leur santé et leur sécurité, et sur les mesures prises pour y remédier ; et, second alinéa, sur les risques que les produits ou procédés utilisés peuvent faire peser sur la santé publique ou l'environnement, et les mesures prises pour y remédier. [Second alinéa ajouté le 2026-09-27, lot 2 : il n'était porté que par la citation.]",
       citationCle:
         "L'employeur organise et dispense une information des travailleurs sur les risques pour la santé et la sécurité et les mesures prises pour y remédier. Il organise et dispense également une information des travailleurs sur les risques que peuvent faire peser sur la santé publique ou l'environnement les produits ou procédés de fabrication utilisés ou mis en œuvre par l'établissement ainsi que sur les mesures prises pour y remédier.",
       statut: "retenu",

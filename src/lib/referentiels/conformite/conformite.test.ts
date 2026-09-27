@@ -2722,3 +2722,13 @@ describe("GN 10 dit sur tout état permanent fondé sur le livre III (2026-09-27
     expect(muets).toEqual([]);
   });
 });
+
+describe("L. 4141-1 porté en ses deux alinéas (2026-09-27, lot 2)", () => {
+  // Le second alinéa — risques pour la santé publique ou l'environnement — ne
+  // vivait que dans la citation du corpus. Éprouvé en le retirant.
+  it("la ligne d'information dit aussi le second alinéa", () => {
+    expect(obligationParId("formation-securite-etablissement-information")?.description).toContain(
+      "santé publique ou l'environnement",
+    );
+  });
+});
