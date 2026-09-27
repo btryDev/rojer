@@ -43,8 +43,17 @@ Rojer n'écrit rien lui-même dans le projet Supabase ni sur Vercel.
    un nom (par exemple `rojer-fichiers`), **Public bucket : désactivé**. Aucune
    policy à ajouter : la clé `service_role` n'en a pas besoin, et sans policy
    personne d'autre ne lit le bucket.
-2. **Supabase** → **Settings** → **API Keys** : copier la clé **`service_role`**
-   (dite aussi *secret*).
+2. **Supabase** → **Settings** → **API Keys** → onglet **Legacy API keys** :
+   copier la clé **`service_role`** — un JWT qui commence par `eyJ`, en trois
+   parties séparées par des points. **Pas** la clé `sb_secret_…` du nouvel
+   onglet : supabase-js la pose sur `Authorization: Bearer`, où la
+   documentation de Supabase dit de ne pas la mettre, et Storage répond
+   « Invalid Compact JWS ». **Pas** non plus le « JWT secret » du projet.
+   *(Précisé le 2026-09-27, après le premier dépôt en production, journal C47.)*
+   Coller la valeur seule : blancs et guillemets aux bords sont retirés, mais
+   une coupure au milieu ne l'est pas. Au déploiement suivant, le journal du
+   serveur (Vercel → Logs) écrit la forme reconnue — par exemple « JWT à trois
+   segments, rôle « service_role », 219 caractères » —, jamais la valeur.
 3. **Vercel** → le projet → **Settings** → **Environment Variables**, pour
    l'environnement **Production** (et **Preview** si l'on veut déposer depuis
    une préversion — elle écrirait alors dans le même bucket) :
