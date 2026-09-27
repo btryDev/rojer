@@ -4255,6 +4255,9 @@ fiche en texte : 1 rouge (« expected undefined to be true »). Note : en
 `--pool=forks`, un fichier dont un test échoue pendant qu'un flux reste
 pendant a bloqué le processus jusqu'à l'alarme ; en `--pool=threads` les
 mêmes rouges sortent normalement. Sans effet sur la suite verte.
+**Suite après R1** (`52f0686`) : 290 fichiers passés, 1 ignoré ; 3874 tests
+passés, 4 ignorés. `tsc` : 0. `eslint .` : 0 erreur, 2 avertissements hors
+périmètre. `next build` : compilé, `/api/mcp` et `/api/mcp/[cle]` en `ƒ`.
 
 ### Ce que la chronologie donne à voir
 
