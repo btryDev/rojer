@@ -7,44 +7,89 @@
 // Et chaque colonne énumérée doit être LUE par `clesDesEtablissements` : le
 // test exécute la collecte sur un client simulé qui rend une clé par colonne.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CLES_STOCKEES, clesDesEtablissements } from "./fichiers";
+import { CLES_STOCKEES, COLONNES_ECARTEES, clesDesEtablissements } from "./fichiers";
 
 const schema = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "prisma", "schema.prisma"),
   "utf8",
 );
 
-/** Modèle → colonnes `String` dont le nom finit par `Cle`, lues au schéma. */
-function colonnesDeCle(): Record<string, string[]> {
-  const out: Record<string, string[]> = {};
+/**
+ * Les colonnes `String` dont le nom évoque un fichier, lues au schéma :
+ * `…Cle`, `…Url`, `…Key`, `…Chemin`, `…Path`, et tout nom qui contient
+ * `fichier` ou `pdf` (contre-lecture du 2026-09-27 : la première garde ne
+ * voyait que `…Cle`, et `DuerpVersion.pdfUrl` lui échappait).
+ */
+const EVOQUE_UN_FICHIER = /(Cle|Url|Key|Chemin|Path)$|fichier|pdf/i;
+function colonnesDeFichier(source: string): string[] {
+  const out: string[] = [];
   let modele: string | null = null;
-  for (const ligne of schema.split("\n")) {
+  for (const ligne of source.split("\n")) {
     const m = /^model (\w+) \{/.exec(ligne);
     if (m) modele = m[1];
     else if (/^\}/.test(ligne)) modele = null;
     else if (modele) {
-      const c = /^\s+(\w+Cle)\s+String\??/.exec(ligne);
-      if (c) (out[modele] ??= []).push(c[1]);
+      const c = /^\s+(\w+)\s+String\??(?:\s|$)/.exec(ligne);
+      if (c && EVOQUE_UN_FICHIER.test(c[1])) out.push(`${modele}.${c[1]}`);
     }
+  }
+  return out.sort();
+}
+
+const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+function sources(dossier: string): string[] {
+  const out: string[] = [];
+  for (const e of readdirSync(dossier)) {
+    const p = join(dossier, e);
+    if (statSync(p).isDirectory()) out.push(...sources(p));
+    else if (/\.tsx?$/.test(p) && !/\.test\./.test(p)) out.push(p);
   }
   return out;
 }
 
 describe("les fichiers stockés qu'une suppression emporte", () => {
-  it("toute colonne de clé du schéma est collectée — et rien d'imaginaire", () => {
-    const attendu = Object.fromEntries(
-      Object.entries(CLES_STOCKEES).map(([m, c]) => [m, [...c].sort()]),
-    );
-    const lu = Object.fromEntries(
-      Object.entries(colonnesDeCle()).map(([m, c]) => [m, c.sort()]),
-    );
-    expect(lu).toEqual(attendu);
+  it("toute colonne qui évoque un fichier est collectée ou écartée avec son motif", () => {
+    const connues = [
+      ...Object.entries(CLES_STOCKEES).flatMap(([m, cs]) => cs.map((c) => `${m}.${c}`)),
+      ...Object.keys(COLONNES_ECARTEES),
+    ].sort();
+    expect(colonnesDeFichier(schema)).toEqual(connues);
     // Borne basse : le relevé voit des colonnes, sinon il ne contrôle rien.
-    expect(Object.keys(lu).length).toBeGreaterThanOrEqual(4);
+    expect(colonnesDeFichier(schema).length).toBeGreaterThanOrEqual(10);
+    for (const [col, e] of Object.entries(COLONNES_ECARTEES))
+      expect(e.motif.trim(), col).not.toBe("");
+  });
+
+  it("le relevé voit une colonne nouvelle — éprouvé sur « photoUrl »", () => {
+    const avecPhoto = schema.replace(
+      "model Prestataire {",
+      "model Prestataire {\n  photoUrl String?",
+    );
+    expect(colonnesDeFichier(avecPhoto)).toContain("Prestataire.photoUrl");
+  });
+
+  it("une colonne écartée comme « jamais écrite » ne l'est toujours pas", () => {
+    const ici = join(RACINE, "src", "lib", "suppression", "fichiers.ts");
+    const code = sources(join(RACINE, "src"))
+      .filter((f) => f !== ici)
+      .map((f) =>
+        readFileSync(f, "utf8")
+          .replace(/\/\*[\s\S]*?\*\//g, "")
+          .replace(/^\s*\/\/.*$/gm, ""),
+      )
+      .join("\n");
+    for (const [col, e] of Object.entries(COLONNES_ECARTEES)) {
+      if (!e.jamaisEcrite) continue;
+      const champ = col.split(".")[1];
+      expect(
+        new RegExp(`\\b${champ}\\b`).test(code),
+        `${col} apparaît dans le code : si elle est écrite, la collecter (CLES_STOCKEES).`,
+      ).toBe(false);
+    }
   });
 
   it("chaque colonne énumérée est lue par la collecte", async () => {
@@ -56,7 +101,6 @@ describe("les fichiers stockés qu'une suppression emporte", () => {
     const tx = {
       rapportVerification: table("RapportVerification"),
       prestataire: table("Prestataire"),
-      registreAccessibilite: table("RegistreAccessibilite"),
       analyseLegionelle: table("AnalyseLegionelle"),
     };
     const cles = await clesDesEtablissements(tx as never, ["e"]);

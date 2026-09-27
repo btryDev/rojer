@@ -108,6 +108,12 @@ const h = vi.hoisted(() => {
       },
     },
     verification: {
+      count: async ({ where }: { where: L }) =>
+        db.verifications.filter(
+          (v) =>
+            eq(where.salarieId, v.salarieId) &&
+            eq(where.etablissementId, v.etablissementId),
+        ).length,
       deleteMany: async ({ where }: { where: L }) => {
         const ids = new Set(
           db.verifications
@@ -256,6 +262,19 @@ describe("isolation", () => {
   });
 });
 
+describe("l'effacement des lignes est borné à l'établissement (F6)", () => {
+  it("une ligne d'un autre établissement qui vise la même fiche n'est jamais effacée", async () => {
+    // Donnée incohérente — une ligne d'etab-b qui vise sal-1 —, que la base
+    // n'interdit pas. L'effacement ne doit pas la toucher : il échoue (la
+    // garde Restrict mord sur la fiche) et la transaction restaure tout.
+    h.db.verifications.push({ id: "v-b", etablissementId: "etab-b", salarieId: "sal-1" });
+    const avant = structuredClone(h.db);
+    await expect(supprimerSalarie("etab-a", "sal-1")).rejects.toThrow(/P2003/);
+    expect(h.db).toEqual(avant);
+    expect(h.stockage.delete).not.toHaveBeenCalled();
+  });
+});
+
 describe("le stockage qui échoue n'annule pas l'effacement", () => {
   it("la base reste effacée, l'échec est journalisé, rien ne lève", async () => {
     h.stockage.delete.mockRejectedValue(new Error("stockage indisponible"));
@@ -271,9 +290,10 @@ describe("le stockage qui échoue n'annule pas l'effacement", () => {
 describe("la confirmation compte juste", () => {
   it("compte ce que l'effacement emporte — le même périmètre", async () => {
     const p = await perimetreSuppressionSalarie("etab-a", "sal-1");
-    expect(p).toEqual({ titres: 2, rapports: 1, actions: 1, signatures: 1 });
+    expect(p).toEqual({ titres: 2, echeances: 2, rapports: 1, actions: 1, signatures: 1 });
     // Et c'est bien ce qui part.
     const avant = {
+      echeances: h.db.verifications.length,
       rapports: h.db.rapports.length,
       actions: h.db.actions.length,
       signatures: h.db.signatures.length,
@@ -282,6 +302,7 @@ describe("la confirmation compte juste", () => {
     await supprimerSalarie("etab-a", "sal-1");
     expect({
       titres: avant.titres - h.db.titres.length,
+      echeances: avant.echeances - h.db.verifications.length,
       rapports: avant.rapports - h.db.rapports.length,
       actions: avant.actions - h.db.actions.length,
       signatures: avant.signatures - h.db.signatures.length,
@@ -292,35 +313,65 @@ describe("la confirmation compte juste", () => {
     expect(await perimetreSuppressionSalarie("etab-a2", "sal-1")).toBeNull();
   });
 
-  it("dit ce qui part, que c'est définitif, et nomme l'export", () => {
+  it("dit ce qui part, que c'est définitif, et ce que l'export garde (M1, M2, F4)", () => {
     const t = detailSuppressionSalarie("Léa Martin", {
       titres: 2,
-      rapports: 1,
-      actions: 3,
-      signatures: 1,
+      echeances: 3,
+      rapports: 0,
+      actions: 1,
+      signatures: 0,
     });
-    expect(t).toContain("La fiche de Léa Martin et ses 2 titres sont supprimés définitivement.");
     expect(t).toContain(
-      "Sont aussi supprimés définitivement, parce que liés à ses titres : 1 rapport déposé, 3 actions et 1 signature.",
+      "La fiche de Léa Martin, ses 2 titres et ses 3 échéances au calendrier sont supprimés définitivement.",
     );
+    expect(t).toContain(
+      "Sont aussi supprimés définitivement, parce que liés à ses échéances : 1 action.",
+    );
+    // Aucun dépôt n'est possible sur une ligne de salarié : à zéro, ni
+    // rapport ni signature ne sont nommés.
+    expect(t).not.toMatch(/rapport|signature/);
     expect(t).toContain("Rien ne se récupère ensuite.");
-    expect(t).toContain("« Éditer ses données »");
+    // L'export : ce qu'il contient, sans laisser croire qu'il garde une pièce.
+    expect(t).toContain(
+      "« Éditer ses données », sur cette fiche, exporte d'abord son identité et ses titres avec leurs dates",
+    );
+    expect(t).not.toMatch(/pièce|document|fichier/);
     // Aucune qualification juridique, aucun conseil.
     expect(t).not.toMatch(/obligation|légal|RGPD|conseill|devriez|recommand/i);
   });
 
-  it("sans titre ni pièce : la fiche seule, sans liste vide", () => {
-    const t = detailSuppressionSalarie("Paul Durand", {
+  it("des rapports antérieurs à la garde du 2026-08-27 : nommés, puisqu'ils partent", () => {
+    const t = detailSuppressionSalarie("P", {
+      titres: 1,
+      echeances: 1,
+      rapports: 2,
+      actions: 0,
+      signatures: 1,
+    });
+    expect(t).toContain(
+      "La fiche de P, son titre et son échéance au calendrier sont supprimés définitivement.",
+    );
+    expect(t).toContain(": 2 rapports déposés et 1 signature.");
+  });
+
+  it("sans titre ni échéance : la fiche seule ; avec un seul : sans virgule orpheline", () => {
+    const vide = detailSuppressionSalarie("Paul Durand", {
       titres: 0,
+      echeances: 0,
       rapports: 0,
       actions: 0,
       signatures: 0,
     });
-    expect(t).toContain("La fiche de Paul Durand est supprimée définitivement.");
-    expect(t).not.toContain("Sont aussi");
-    const un = detailSuppressionSalarie("P", { titres: 1, rapports: 2, actions: 0, signatures: 0 });
-    expect(un).toContain("et son titre sont supprimés définitivement");
-    expect(un).toContain(": 2 rapports déposés.");
+    expect(vide).toContain("La fiche de Paul Durand est supprimée définitivement.");
+    expect(vide).not.toContain("Sont aussi");
+    const un = detailSuppressionSalarie("P", {
+      titres: 1,
+      echeances: 0,
+      rapports: 0,
+      actions: 0,
+      signatures: 0,
+    });
+    expect(un).toContain("La fiche de P et son titre sont supprimés définitivement.");
   });
 });
 

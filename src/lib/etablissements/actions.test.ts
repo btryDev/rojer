@@ -69,11 +69,6 @@ const h = vi.hoisted(() => {
         { attestationUrssafCle: "presta/urssaf.pdf", assuranceRcProCle: null, kbisCle: "presta/kbis.pdf" },
       ],
     },
-    registreAccessibilite: {
-      findMany: async () => [
-        { attestationCle: null, agendaAdapCle: "acc/adap.pdf", attestationFormationCle: null },
-      ],
-    },
     analyseLegionelle: {
       findMany: async () => [{ rapportCle: "leg/analyse.pdf" }],
     },
@@ -335,7 +330,6 @@ describe("supprimerEtablissement — conservation 40 ans", () => {
 
 describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09-27)", () => {
   const TOUTES = [
-    "acc/adap.pdf",
     "leg/analyse.pdf",
     "presta/kbis.pdf",
     "presta/urssaf.pdf",
@@ -378,7 +372,7 @@ describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09
     const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.supprimes).toEqual(["etab-1"]);
-    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(6);
+    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(5);
     erreur.mockRestore();
   });
 });

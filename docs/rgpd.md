@@ -354,15 +354,22 @@ Les versions figées (`DuerpVersion.snapshot`) sont conservées **40 ans**
 - Supprimer l'établissement ou l'entreprise efface en cascade les salariés et
   leurs titres (`onDelete: Cascade`) ; la confirmation le dit. Depuis le
   2026-09-27 (C44), les fichiers stockés qui en dépendent — rapports, pièces
-  des prestataires et du registre d'accessibilité, analyses de légionelles —
-  sont libérés après la suppression en base ; ils restaient auparavant dans le
-  stockage.
+  des prestataires, analyses de légionelles — sont libérés après la
+  suppression en base ; ils restaient auparavant dans le stockage. **Réserve** :
+  la base est effacée d'abord ; un fichier dont la libération échoue reste
+  dans le stockage, et l'échec n'est journalisé que côté serveur — l'employeur
+  n'en est pas averti. (Les trois pièces prévues au registre d'accessibilité
+  et `DuerpVersion.pdfUrl` ne sont écrites par aucun code : rien à libérer.)
 - ~~**Il n'existe pas de geste qui supprime la fiche d'un salarié**~~ —
   **« Supprimer ce salarié »** (`supprimerSalarie`, 2026-09-27, journal C44)
   efface définitivement, dans une transaction, la fiche, ses titres, ses
-  lignes de calendrier, leurs rapports (fichiers compris, libérés du stockage
-  après la transaction), leurs actions et les signatures de ces rapports. La
-  confirmation compte ce qui part et nomme l'export « Éditer ses données ».
+  lignes de calendrier et leurs actions. Rojer ne garde aucun document sur un
+  titre : le dépôt d'un rapport sur la ligne d'un salarié est refusé depuis le
+  2026-08-27 (`rapports/actions.ts`) ; un rapport antérieur partirait avec,
+  fichier (même réserve que ci-dessus) et signatures compris. La confirmation
+  compte ce qui part, ne nomme rapports et signatures que s'il y en a, et dit
+  ce que l'export « Éditer ses données » contient : l'identité et les titres
+  avec leurs dates, aucune pièce.
 - **Aucune purge automatique** : rien n'efface d'office les données d'une
   personne sortie ; c'est le geste de l'employeur.
 

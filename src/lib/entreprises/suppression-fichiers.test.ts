@@ -25,7 +25,6 @@ const h = vi.hoisted(() => {
       },
     },
     prestataire: { findMany: async () => [{ attestationUrssafCle: null, assuranceRcProCle: "presta/rc.pdf", kbisCle: null }] },
-    registreAccessibilite: { findMany: async () => [] },
     analyseLegionelle: { findMany: async () => [{ rapportCle: "leg/1.pdf" }] },
     $transaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn(prisma),
   };

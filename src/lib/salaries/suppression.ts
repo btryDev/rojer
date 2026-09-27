@@ -5,9 +5,16 @@
  * DÉCISION DE LA PROPRIÉTAIRE, 2026-09-27 : « quand employeur supprime il est
  * averti que data supprimé définitivement », puis, sur la question des lignes
  * de calendrier, « A » : la fiche, ses titres, ses lignes de calendrier
- * (`Verification.salarieId`), leurs rapports — fichiers compris —, leurs
- * actions, et les signatures posées sur ces rapports partent ensemble, dans une
- * transaction. Une signature dont l'objet a disparu ne prouve plus rien.
+ * (`Verification.salarieId`), leurs actions, leurs rapports — fichiers
+ * compris — et les signatures posées sur ces rapports partent ensemble, dans
+ * une transaction. Une signature dont l'objet a disparu ne prouve plus rien.
+ *
+ * DES RAPPORTS, IL N'Y EN A PAS — en principe. Depuis `bb03cdd` (2026-08-27),
+ * `rapports/actions.ts` refuse tout dépôt sur une ligne de salarié (« Rojer en
+ * enregistre l'existence et les dates, jamais le document »). La branche qui
+ * efface rapports, fichiers et signatures reste : c'est le filet pour des
+ * données antérieures à cette garde. La confirmation ne les nomme que si le
+ * compte n'est pas nul (contre-lecture du 2026-09-27, M1).
  *
  * `Verification.salarieId` reste `onDelete: Restrict` en base : la garde tient
  * pour tout AUTRE chemin. Celui-ci efface les lignes explicitement, avant la
@@ -22,6 +29,8 @@ import { prisma } from "@/lib/prisma";
 /** Ce que la suppression emporte, compté pour la confirmation. */
 export type PerimetreSuppressionSalarie = {
   titres: number;
+  /** Ses lignes de calendrier — ouvertes, ou archivées parce qu'elles portent une action. */
+  echeances: number;
   rapports: number;
   actions: number;
   signatures: number;
@@ -48,7 +57,8 @@ export async function perimetreSuppressionSalarie(
     where: surSesLignes(etablissementId, salarieId),
     select: { id: true },
   });
-  const [actions, signatures] = await Promise.all([
+  const [echeances, actions, signatures] = await Promise.all([
+    prisma.verification.count({ where: { salarieId, etablissementId } }),
     prisma.action.count({ where: surSesLignes(etablissementId, salarieId) }),
     prisma.signature.count({
       where: {
@@ -60,6 +70,7 @@ export async function perimetreSuppressionSalarie(
   ]);
   return {
     titres: s._count.titres,
+    echeances,
     rapports: rapports.length,
     actions,
     signatures,

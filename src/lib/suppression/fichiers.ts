@@ -4,9 +4,8 @@
  * LE DÉFAUT QUI FAIT CE MODULE (2026-09-27, décision de la propriétaire :
  * « A et correction du défaut »). Une suppression en base — établissement,
  * entreprise — effaçait les lignes en cascade et laissait leurs fichiers dans
- * le stockage : rapports de vérification, pièces des prestataires, pièces du
- * registre d'accessibilité, analyses de légionelles. Seul `supprimerRapport`
- * libérait le sien. Des pièces qu'on disait « supprimées définitivement »
+ * le stockage : rapports de vérification, pièces des prestataires, analyses
+ * de légionelles. Seul `supprimerRapport` libérait le sien. Des pièces qu'on disait « supprimées définitivement »
  * restaient donc lisibles par qui détient la clé.
  *
  * LA RÈGLE, en trois temps, sur le patron de `supprimerRapport` :
@@ -18,10 +17,12 @@
  *      qu'on a dit supprimées) : il est journalisé, clé par clé.
  *
  * `CLES_STOCKEES` énumère les colonnes du schéma qui portent une clé de
- * stockage ; `fichiers.test.ts` relit `schema.prisma` et fait échouer toute
- * colonne `…Cle` qui n'y figure pas. `DuerpVersion.pdfUrl` n'y est pas : aucun
- * code ne l'écrit (`controle-zip/route.ts` le dit), et une version figée rend
- * de toute façon l'établissement insupprimable (R. 4121-4).
+ * stockage ÉCRITE par le code ; `COLONNES_ECARTEES`, celles qui en ont la
+ * forme sans en être, chacune avec son motif. `fichiers.test.ts` relit
+ * `schema.prisma` : toute colonne `String` dont le nom évoque un fichier
+ * (`…Cle`, `…Url`, `…Key`, `…Chemin`, `…Path`, `fichier…`, `pdf…`) doit figurer
+ * dans l'une ou l'autre ; et une colonne écartée comme « jamais écrite » fait
+ * échouer le test le jour où du code l'écrit.
  */
 
 import type { Prisma } from "@prisma/client";
@@ -31,13 +32,48 @@ import { getStorage } from "@/lib/storage";
 export const CLES_STOCKEES = {
   RapportVerification: ["fichierCle"],
   Prestataire: ["attestationUrssafCle", "assuranceRcProCle", "kbisCle"],
-  RegistreAccessibilite: [
-    "attestationCle",
-    "agendaAdapCle",
-    "attestationFormationCle",
-  ],
   AnalyseLegionelle: ["rapportCle"],
 } as const;
+
+/**
+ * Les colonnes qui ont le nom d'un fichier sans être une clé qu'on libère.
+ *
+ * `jamaisEcrite` : aucun code ne remplit la colonne (relevé le 2026-09-27) ;
+ * il n'y a donc aucun fichier à libérer, et la garde tombe dès qu'une écriture
+ * apparaît. Les quatre sont traitées de même — la contre-lecture l'a demandé :
+ * `DuerpVersion.pdfUrl` et les trois pièces du registre d'accessibilité
+ * étaient l'une écartée, les autres collectées, sans raison de différer.
+ */
+export const COLONNES_ECARTEES: Record<
+  string,
+  { motif: string; jamaisEcrite: boolean }
+> = {
+  "DuerpVersion.pdfUrl": {
+    motif:
+      "Jamais écrite (controle-zip/route.ts le dit). Et une version figée rend l'établissement insupprimable (R. 4121-4).",
+    jamaisEcrite: true,
+  },
+  "RegistreAccessibilite.attestationCle": {
+    motif: "Jamais écrite : le registre d'accessibilité n'a pas de dépôt de pièce.",
+    jamaisEcrite: true,
+  },
+  "RegistreAccessibilite.agendaAdapCle": {
+    motif: "Jamais écrite : idem.",
+    jamaisEcrite: true,
+  },
+  "RegistreAccessibilite.attestationFormationCle": {
+    motif: "Jamais écrite : idem.",
+    jamaisEcrite: true,
+  },
+  "RapportVerification.fichierNomOriginal": {
+    motif: "Métadonnée du fichier (son nom d'origine), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
+  "RapportVerification.fichierMime": {
+    motif: "Métadonnée du fichier (son type), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
+};
 
 type Client = Prisma.TransactionClient;
 
@@ -55,7 +91,7 @@ export async function clesDesEtablissements(
 ): Promise<string[]> {
   if (etablissementIds.length === 0) return [];
   const dans = { in: etablissementIds };
-  const [rapports, prestataires, registres, analyses] = await Promise.all([
+  const [rapports, prestataires, analyses] = await Promise.all([
     tx.rapportVerification.findMany({
       where: { etablissementId: dans },
       select: { fichierCle: true },
@@ -63,10 +99,6 @@ export async function clesDesEtablissements(
     tx.prestataire.findMany({
       where: { etablissementId: dans },
       select: { attestationUrssafCle: true, assuranceRcProCle: true, kbisCle: true },
-    }),
-    tx.registreAccessibilite.findMany({
-      where: { etablissementId: dans },
-      select: { attestationCle: true, agendaAdapCle: true, attestationFormationCle: true },
     }),
     tx.analyseLegionelle.findMany({
       where: { carnet: { etablissementId: dans } },
@@ -76,7 +108,6 @@ export async function clesDesEtablissements(
   return nonNulles([
     ...rapports.map((r) => r.fichierCle),
     ...prestataires.flatMap((p) => [p.attestationUrssafCle, p.assuranceRcProCle, p.kbisCle]),
-    ...registres.flatMap((r) => [r.attestationCle, r.agendaAdapCle, r.attestationFormationCle]),
     ...analyses.map((a) => a.rapportCle),
   ]);
 }
