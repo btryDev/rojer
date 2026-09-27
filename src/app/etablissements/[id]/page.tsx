@@ -10,7 +10,13 @@ import {
   repondreDemandesAssureur,
   repondreEpiPresents,
   repondreMatieres,
+  repondreSommeil,
+  type ReponseParametrage,
 } from "@/lib/etablissements/parametrage";
+import {
+  relancesDuDossier,
+  type QuestionOuiNon,
+} from "@/lib/etablissements/relance";
 import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
 import { DashboardGrid } from "@/components/dashboard/widgets/DashboardGrid";
 import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
@@ -268,53 +274,54 @@ export default async function EtablissementPage({
   ];
   // ── La relance des dossiers muets (analyse du 2026-09-27, étape 3) ──
   //
-  // Deux questions de la fiche dont le silence fait afficher des lignes « à
-  // confirmer ». Posées au parcours depuis ce jour ; les dossiers nés avant
-  // n'y ont jamais répondu, et rien ne les ramenait vers leur fiche. Chacune
-  // n'apparaît que si son silence retient une ligne CHEZ CE DOSSIER — ou si
-  // elle a déjà reçu une réponse, pour rester cochée. Elle s'efface donc
-  // d'elle-même : une relance, une fois.
+  // Toute question de la fiche dont le silence retient une ligne « à
+  // confirmer » CHEZ CE DOSSIER — la table `RELANCES` est indexée par
+  // `QuestionSansReponse`, donc une question que le moteur marquerait sans
+  // relance ne compile pas (revue du lot 1 : la première version n'en
+  // relançait que deux sur cinq). Une question oui/non se répond ici et reste
+  // cochée ; une question à nombre renvoie à la fiche et s'efface quand le
+  // silence cesse.
   const { questions: questionsMuettes } = await marquesAConfirmerDuDossier(
     prisma,
     { id, entreprise: { userId: etab.entreprise.userId } },
   );
-  if (
-    questionRepondue(etab.manipuleMatieresR422722) ||
-    questionsMuettes.includes("matieres_r4227_22")
-  ) {
-    etapesOnboarding.push({
-      id: "matieres",
-      titre: "Dire si vous manipulez des matières explosives ou inflammables",
-      pourquoi:
-        "Matières classées explosives, comburantes ou extrêmement inflammables, manipulées et mises en œuvre chez vous. Si oui, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34 du Code du travail). Tant que la question n'a pas de réponse, ces lignes s'affichent « à confirmer ».",
-      faite: questionRepondue(etab.manipuleMatieresR422722),
-      question: (
-        <QuestionParametrage
-          action={repondreMatieres.bind(null, id)}
-          labelOui="Oui"
-          labelNon="Non"
-        />
-      ),
-    });
-  }
-  if (
-    questionRepondue(etab.chiffonsImpregnes) ||
-    questionsMuettes.includes("chiffons_impregnes")
-  ) {
-    etapesOnboarding.push({
-      id: "chiffons",
-      titre: "Dire si vous utilisez des chiffons imprégnés",
-      pourquoi:
-        "Chiffons, cotons ou papiers imprégnés d'huile, de graisse ou de liquides inflammables — un torchon de cuisine imbibé d'huile en est un. Si oui, ils se rangent après usage dans des récipients métalliques clos et étanches (art. R. 4227-26 du Code du travail). Tant que la question n'a pas de réponse, cette ligne s'affiche « à confirmer ».",
-      faite: questionRepondue(etab.chiffonsImpregnes),
-      question: (
-        <QuestionParametrage
-          action={repondreChiffons.bind(null, id)}
-          labelOui="Oui"
-          labelNon="Non"
-        />
-      ),
-    });
+  const ACTIONS_OUI_NON: Record<
+    QuestionOuiNon,
+    (id: string, prev: ReponseParametrage, fd: FormData) => Promise<ReponseParametrage>
+  > = {
+    matieres_r4227_22: repondreMatieres,
+    chiffons_impregnes: repondreChiffons,
+    locaux_sommeil_public: repondreSommeil,
+  };
+  for (const { question, relance, faite } of relancesDuDossier(questionsMuettes, {
+    manipuleMatieresR422722: etab.manipuleMatieresR422722,
+    chiffonsImpregnes: etab.chiffonsImpregnes,
+    comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
+  })) {
+    etapesOnboarding.push(
+      relance.mode === "oui_non"
+        ? {
+            id: `relance-${question}`,
+            titre: relance.titre,
+            pourquoi: relance.pourquoi,
+            faite,
+            question: (
+              <QuestionParametrage
+                action={ACTIONS_OUI_NON[relance.question].bind(null, id)}
+                labelOui="Oui"
+                labelNon="Non"
+              />
+            ),
+          }
+        : {
+            id: `relance-${question}`,
+            titre: relance.titre,
+            pourquoi: relance.pourquoi,
+            faite,
+            href: `/etablissements/${id}/modifier`,
+            cta: "Répondre sur la fiche",
+          },
+    );
   }
   const onboardingFini = etapesOnboarding.every((e) => e.faite);
 

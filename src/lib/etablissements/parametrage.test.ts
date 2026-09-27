@@ -11,10 +11,10 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: { etablissement: { update: h.update } } }));
 vi.mock("@/lib/auth/scope", () => ({ assertEtablissementOwnership: vi.fn() }));
-vi.mock("@/lib/calendrier/regeneration-sure", () => ({ regenererApresMutation: h.regen }));
+vi.mock("@/lib/calendrier/regeneration-sure", () => ({ regenererApresMutation: h.regen, MESSAGE_REGEN_ECHEC: "calendrier pas recalculé" }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { repondreMatieres, repondreChiffons } = await import("./parametrage");
+const { repondreMatieres, repondreChiffons, repondreSommeil } = await import("./parametrage");
 
 const reponse = (v: string) => {
   const fd = new FormData();
@@ -31,6 +31,7 @@ describe("relance des questions muettes", () => {
   it.each([
     ["manipuleMatieresR422722", repondreMatieres],
     ["chiffonsImpregnes", repondreChiffons],
+    ["comporteLocauxSommeilPublic", repondreSommeil],
   ] as const)("%s : « non » s'écrit false, et le calendrier est régénéré", async (champ, action) => {
     const r = await action("etab-1", { status: "idle" }, reponse("non"));
     expect(r.status).toBe("success");
@@ -42,5 +43,15 @@ describe("relance des questions muettes", () => {
     const r = await repondreMatieres("etab-1", { status: "idle" }, reponse(""));
     expect(r.status).toBe("error");
     expect(h.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("régénération ratée : la réponse est acquise, et on le dit (revue du lot 1)", () => {
+  // Comme `modifierEtablissement`. Éprouvé en rendant `success` sans condition.
+  it("rend success_avec_avertissement quand le calendrier n'a pas suivi", async () => {
+    h.regen.mockResolvedValueOnce(false);
+    const r = await repondreMatieres("etab-1", { status: "idle" }, reponse("non"));
+    expect(r.status).toBe("success_avec_avertissement");
+    expect(h.update).toHaveBeenCalled();
   });
 });

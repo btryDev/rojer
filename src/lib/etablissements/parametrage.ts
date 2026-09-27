@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
+import {
+  MESSAGE_REGEN_ECHEC,
+  regenererApresMutation,
+} from "@/lib/calendrier/regeneration-sure";
 
 /**
  * Les deux questions de paramétrage — ADR-025 § 7, ADR-032.
@@ -35,7 +38,9 @@ import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 export type ReponseParametrage =
   | { status: "idle" }
   | { status: "error"; message: string }
-  | { status: "success" };
+  | { status: "success" }
+  /** La réponse est enregistrée, la régénération du calendrier a échoué. */
+  | { status: "success_avec_avertissement"; message: string };
 
 /** `"oui"`/`"non"` et rien d'autre — pas de repli silencieux sur « non ». */
 const reponseBooleenne = z.enum(["oui", "non"]);
@@ -108,7 +113,10 @@ export async function repondreEpiPresents(
  */
 async function repondreQuestionDeLaFiche(
   etablissementId: string,
-  champ: "manipuleMatieresR422722" | "chiffonsImpregnes",
+  champ:
+    | "manipuleMatieresR422722"
+    | "chiffonsImpregnes"
+    | "comporteLocauxSommeilPublic",
   formData: FormData,
 ): Promise<ReponseParametrage> {
   await assertEtablissementOwnership(etablissementId);
@@ -120,10 +128,17 @@ async function repondreQuestionDeLaFiche(
     where: { id: etablissementId },
     data: { [champ]: parsed.data === "oui" },
   });
-  await regenererApresMutation(etablissementId, `parametrage/${champ}`);
+  const regenere = await regenererApresMutation(
+    etablissementId,
+    `parametrage/${champ}`,
+  );
   revalidatePath(`/etablissements/${etablissementId}`);
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
-  return { status: "success" };
+  // Comme `modifierEtablissement` : la réponse est acquise, mais le dirigeant
+  // doit savoir que le calendrier n'a pas encore suivi (revue du lot 1).
+  return regenere
+    ? { status: "success" }
+    : { status: "success_avec_avertissement", message: MESSAGE_REGEN_ECHEC };
 }
 
 export async function repondreMatieres(
@@ -140,4 +155,16 @@ export async function repondreChiffons(
   formData: FormData,
 ): Promise<ReponseParametrage> {
   return repondreQuestionDeLaFiche(etablissementId, "chiffonsImpregnes", formData);
+}
+
+export async function repondreSommeil(
+  etablissementId: string,
+  _prev: ReponseParametrage,
+  formData: FormData,
+): Promise<ReponseParametrage> {
+  return repondreQuestionDeLaFiche(
+    etablissementId,
+    "comporteLocauxSommeilPublic",
+    formData,
+  );
 }

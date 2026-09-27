@@ -46,11 +46,11 @@ export function QuestionParametrage({
   // le même booléen pour les deux rouvrirait le détail à chaque rendu.
   const [choix, setChoix] = useState<"oui" | "non" | null>(null);
 
-  if (state.status === "success") {
+  if (state.status === "success" || state.status === "success_avec_avertissement") {
     return (
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
-          Réponse enregistrée.
+          {state.status === "success" ? "Réponse enregistrée." : state.message}
         </p>
         {choix === "oui" && suite && (
           <Link
