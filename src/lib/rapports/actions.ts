@@ -5,7 +5,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { cleRapport, getStorage } from "@/lib/storage";
+import {
+  cleRapport,
+  getStorage,
+  MESSAGE_DEPOT_NON_CONFIGURE,
+  stockageEnService,
+} from "@/lib/storage";
+import { libererFichiers } from "@/lib/suppression/fichiers";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
   LigneModifieeEntreTemps,
@@ -82,6 +88,14 @@ export async function uploadRapport(
   }
 
   // 2. Fichier
+  //
+  // LE STOCKAGE D'ABORD (2026-09-27, `lot/stockage-supabase`). Un rapport EST
+  // un fichier : si le serveur n'a pas de stockage configuré, rien de ce qui
+  // suit ne peut aboutir, et l'utilisateur doit lire pourquoi — pas une erreur
+  // générique au moment d'écrire.
+  if (!stockageEnService()) {
+    return { status: "error", message: MESSAGE_DEPOT_NON_CONFIGURE };
+  }
   const fichier = formData.get("fichier");
   if (!(fichier instanceof File)) {
     return {
@@ -334,7 +348,9 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
   });
 
   // La base a tranché : on peut libérer le fichier.
-  await getStorage().delete(rap.fichierCle).catch(() => {});
+  // Par `libererFichiers` : un stockage indisponible ne fait pas échouer une
+  // suppression commitée, et l'échec est journalisé (2026-09-27).
+  await libererFichiers([rap.fichierCle], "rapports/suppression");
   // La suppression est commitée et le fichier libéré : le recalage ne peut
   // plus, en échouant, faire remonter une erreur sur une opération faite.
   await regenererApresMutation(rap.etablissementId, "rapports/suppression");

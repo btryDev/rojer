@@ -1,40 +1,106 @@
 import path from "node:path";
+import { createClient } from "@supabase/supabase-js";
 import { LocalFileStorage } from "./local";
+import { SupabaseFileStorage, type ClientStockage } from "./supabase";
+import { StockageNonConfigure } from "./erreurs";
 import type { FileStorage } from "./types";
 
 export type { FileStorage, StorageKey } from "./types";
+export {
+  ErreurStockage,
+  FichierIntrouvable,
+  MESSAGE_DEPOT_NON_CONFIGURE,
+  MESSAGE_FICHIER_INTROUVABLE,
+  StockageNonConfigure,
+} from "./erreurs";
 
 /**
- * Factory — renvoie l'implémentation de stockage à utiliser côté serveur.
+ * Factory — renvoie l'implémentation de stockage à utiliser côté serveur,
+ * choisie par `STORAGE_DRIVER`.
  *
- * Stratégie V2 :
- *   - pour le MVP on utilise le filesystem local dans `./storage/rapports/`
- *     (configurable via `STORAGE_LOCAL_PATH`)
- *   - pour migrer vers Supabase Storage / S3, implémenter une nouvelle
- *     classe (cf. `src/lib/storage/types.ts`) et brancher ici via une
- *     variable `STORAGE_DRIVER`.
+ *   - `local` (défaut en développement) : le disque, sous `STORAGE_LOCAL_PATH`
+ *     ou `./storage`. **Refusé en production** : sur Vercel, le disque est en
+ *     lecture seule et éphémère, et aucun fichier n'y survit (2026-09-27,
+ *     `lot/stockage-supabase`). Refus sur le patron de `email/index.ts` et de
+ *     son driver `console`.
+ *   - `supabase` : Supabase Storage, bucket privé `STORAGE_BUCKET`, clé
+ *     `SUPABASE_SERVICE_ROLE_KEY` (serveur seulement), URL du projet
+ *     `NEXT_PUBLIC_SUPABASE_URL` (déjà posée pour l'authentification).
  *
- * Attention : sur un environnement sans filesystem persistant (Vercel
- * serverless en prod), cette implémentation n'est pas adaptée. Un ticket
- * infra est à prévoir avant le premier déploiement public.
+ * Un pilote S3 (migration prévue vers Clever Cloud) s'ajoutera ici, derrière
+ * la même interface. Procédure côté propriétaire : `docs/deploiement-stockage.md`.
  */
+
+const VARIABLES_SUPABASE = [
+  "STORAGE_BUCKET",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "NEXT_PUBLIC_SUPABASE_URL",
+] as const;
+
+/**
+ * Pourquoi le stockage n'est pas utilisable ici, ou `null` s'il l'est. UNE
+ * règle, lue par `getStorage` (qui lève) et par `stockageEnService` (qui
+ * répond avant qu'on lise le formulaire) : les deux ne peuvent pas se
+ * contredire. Le motif nomme les variables, jamais leur valeur.
+ */
+function refusDuStockage(): string | null {
+  const driver = process.env.STORAGE_DRIVER ?? "local";
+  if (driver === "local") {
+    return process.env.NODE_ENV === "production"
+      ? `STORAGE_DRIVER vaut « local »${process.env.STORAGE_DRIVER ? "" : " (non défini)"} en production : ` +
+          "le disque du serveur est en lecture seule et éphémère, aucun fichier " +
+          "déposé n'y survivrait. Poser STORAGE_DRIVER=supabase, STORAGE_BUCKET " +
+          "et SUPABASE_SERVICE_ROLE_KEY (docs/deploiement-stockage.md)."
+      : null;
+  }
+  if (driver === "supabase") {
+    const manquantes = VARIABLES_SUPABASE.filter((v) => !process.env[v]);
+    return manquantes.length === 0
+      ? null
+      : `STORAGE_DRIVER vaut « supabase », mais ${manquantes.join(", ")} ` +
+          `${manquantes.length > 1 ? "ne sont pas définies" : "n'est pas définie"}.`;
+  }
+  return `Driver de stockage non supporté : ${driver}. Utiliser « local » (développement) ou « supabase ».`;
+}
+
+/**
+ * Le dépôt de fichiers peut-il marcher ici ? À appeler AVANT de lire le
+ * fichier du formulaire ou d'écrire en base : un dépôt refusé doit le dire —
+ * `MESSAGE_DEPOT_NON_CONFIGURE` — plutôt que d'échouer au milieu.
+ */
+export function stockageEnService(): boolean {
+  return refusDuStockage() === null;
+}
+
 let _storage: FileStorage | null = null;
 
 export function getStorage(): FileStorage {
   if (_storage) return _storage;
+  const refus = refusDuStockage();
+  if (refus) throw new StockageNonConfigure(refus);
 
-  const driver = process.env.STORAGE_DRIVER ?? "local";
-
-  if (driver === "local") {
-    const root =
-      process.env.STORAGE_LOCAL_PATH ?? path.join(process.cwd(), "storage");
-    _storage = new LocalFileStorage(root);
+  if ((process.env.STORAGE_DRIVER ?? "local") === "supabase") {
+    const client = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false } },
+    );
+    // Sans conversion : le client supabase-js satisfait `ClientStockage` tel
+    // quel, et le compilateur le vérifie à chaque montée de version.
+    const stockage: ClientStockage = client;
+    _storage = new SupabaseFileStorage(stockage, process.env.STORAGE_BUCKET!);
     return _storage;
   }
 
-  throw new Error(
-    `Driver de stockage non supporté : ${driver}. Utiliser "local" ou ajouter une implémentation.`,
-  );
+  const root =
+    process.env.STORAGE_LOCAL_PATH ?? path.join(process.cwd(), "storage");
+  _storage = new LocalFileStorage(root);
+  return _storage;
+}
+
+/** Pour les tests : oublie le pilote construit, la configuration a changé. */
+export function __oublierPiloteStockage(): void {
+  _storage = null;
 }
 
 /**

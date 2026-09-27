@@ -120,9 +120,21 @@ export async function libererFichiers(
   cles: string[],
   contexte: string,
 ): Promise<{ liberes: number; echecs: number }> {
+  const uniques = [...new Set(cles)];
+  if (uniques.length === 0) return { liberes: 0, echecs: 0 };
+  // `getStorage()` LÈVE quand le stockage n'est pas configuré (en production,
+  // `local` est refusé — `storage/index.ts`). Appelé hors du `try`, il faisait
+  // échouer une suppression DÉJÀ COMMITÉE en base (2026-09-27,
+  // `lot/stockage-supabase`) : c'est un échec de libération comme un autre.
+  let stockage: ReturnType<typeof getStorage>;
+  try {
+    stockage = getStorage();
+  } catch (err) {
+    console.error(`[${contexte}] stockage indisponible, ${uniques.length} fichier(s) non libéré(s)`, err);
+    return { liberes: 0, echecs: uniques.length };
+  }
   let echecs = 0;
-  const stockage = getStorage();
-  for (const cle of new Set(cles)) {
+  for (const cle of uniques) {
     try {
       await stockage.delete(cle);
     } catch (err) {
@@ -130,5 +142,5 @@ export async function libererFichiers(
       console.error(`[${contexte}] fichier non libéré : ${cle}`, err);
     }
   }
-  return { liberes: new Set(cles).size - echecs, echecs };
+  return { liberes: uniques.length - echecs, echecs };
 }

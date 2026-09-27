@@ -1,4 +1,4 @@
-import { getStorage } from "@/lib/storage";
+import { libererFichiers } from "@/lib/suppression/fichiers";
 
 /**
  * Organisation des clés de stockage pour les pièces justificatives d'un
@@ -33,14 +33,15 @@ export async function deletePiecesPrestataire(prestataire: {
   assuranceRcProCle?: string | null;
   kbisCle?: string | null;
 }): Promise<void> {
-  const storage = getStorage();
-  await Promise.allSettled([
-    prestataire.attestationUrssafCle
-      ? storage.delete(prestataire.attestationUrssafCle)
-      : Promise.resolve(),
-    prestataire.assuranceRcProCle
-      ? storage.delete(prestataire.assuranceRcProCle)
-      : Promise.resolve(),
-    prestataire.kbisCle ? storage.delete(prestataire.kbisCle) : Promise.resolve(),
-  ]);
+  // Par `libererFichiers` : aucune clé, aucun appel ; un stockage non
+  // configuré ou en panne est journalisé sans faire échouer la suppression du
+  // prestataire, déjà faite en base (2026-09-27).
+  await libererFichiers(
+    [
+      prestataire.attestationUrssafCle,
+      prestataire.assuranceRcProCle,
+      prestataire.kbisCle,
+    ].filter((c): c is string => typeof c === "string" && c.length > 0),
+    "prestataires/suppression",
+  );
 }
