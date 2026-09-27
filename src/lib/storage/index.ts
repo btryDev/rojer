@@ -1,3 +1,8 @@
+// Serveur seulement : la clé `service_role` et le client qui la porte ne
+// doivent jamais entrer dans un bundle navigateur. Next remplace ce module
+// par un module vide côté serveur, et par une erreur de compilation côté
+// client (2026-09-27).
+import "server-only";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { LocalFileStorage } from "./local";
