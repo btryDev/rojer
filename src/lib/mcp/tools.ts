@@ -83,6 +83,25 @@ Restitue ce que les outils rendent, sans le compléter.
 
 Rojer calcule, il n'avise pas.`;
 
+/**
+ * Erreur qu'un outil destine au client, texte compris.
+ *
+ * Le transport la rend en résultat `isError` avec son message, au lieu du
+ * « n'a pas pu répondre » générique réservé aux pannes. La spécification
+ * range ces cas parmi les « tool execution errors », rendus dans le résultat
+ * et non en erreur de protocole : le modèle les lit, et ne les confond pas
+ * avec un contenu de dossier.
+ */
+export class ErreurOutilMcp extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ErreurOutilMcp";
+  }
+}
+
+export const MESSAGE_ETABLISSEMENT_INTROUVABLE =
+  "Établissement introuvable pour ce connecteur : son dossier ne peut pas être lu, et rien n'est à conclure de son contenu.";
+
 /** Portée de la session : l'établissement que le serveur a le droit de lire. */
 export type ScopeMcp = { etablissementId: string };
 
@@ -269,12 +288,20 @@ const STATUTS: readonly [StatutAction, ...StatutAction[]] = [
   "abandonnee",
 ];
 
-const outilFiche: OutilMcp<z.ZodObject<Record<string, never>>> = {
+// Les schémas sont `.strict()` (audit du 2026-09-27) : un argument inconnu —
+// un `etablissementId` glissé par un client — est REFUSÉ, et non plus
+// silencieusement retiré. Dans le schéma JSON annoncé, c'est
+// `additionalProperties: false`, la forme que la spécification recommande
+// pour un outil sans paramètre.
+const SCHEMA_VIDE = z.object({}).strict();
+type SchemaVide = typeof SCHEMA_VIDE;
+
+const outilFiche: OutilMcp<SchemaVide> = {
   nom: "fiche_etablissement",
   titre: "Fiche de l'établissement",
   description:
     "Identité de l'établissement suivi : raison sociale, adresse, régimes réglementaires (travail, ERP, IGH, habitation), effectifs, et volume du dossier (équipements, vérifications, actions). À appeler en premier pour savoir de quel établissement on parle.",
-  schema: z.object({}),
+  schema: SCHEMA_VIDE,
   executer: async (ctx) => {
     const fiche = await getFicheEtablissement(ctx.scope.etablissementId);
     if (!fiche) return "Établissement introuvable.";
@@ -282,12 +309,12 @@ const outilFiche: OutilMcp<z.ZodObject<Record<string, never>>> = {
   },
 };
 
-const outilDuerp: OutilMcp<z.ZodObject<Record<string, never>>> = {
+const outilDuerp: OutilMcp<SchemaVide> = {
   nom: "etat_duerp",
   titre: "État du DUERP",
   description:
     "État du document unique d'évaluation des risques professionnels : ancienneté de la dernière version validée, échéance de mise à jour annuelle (art. R. 4121-2, applicable à partir de 11 salariés), unités de travail et risques cotés avec leur criticité. À appeler pour toute question sur les risques évalués ou la fraîcheur du DUERP.",
-  schema: z.object({}),
+  schema: SCHEMA_VIDE,
   executer: async (ctx) => {
     const etat = await getEtatDuerp(ctx.scope.etablissementId, ctx.now);
     return formaterEtatDuerp(etat);
@@ -314,7 +341,7 @@ const schemaActions = z.object({
     .max(100)
     .optional()
     .describe("Criticité minimale des actions retournées."),
-});
+}).strict();
 
 const outilActions: OutilMcp<typeof schemaActions> = {
   nom: "plan_actions",
@@ -494,12 +521,12 @@ function formaterVerifications(verifs: VerificationLue[], filtre = true): string
   return [entete, "", ...lignes].join("\n");
 }
 
-const outilEquipements: OutilMcp<z.ZodObject<Record<string, never>>> = {
+const outilEquipements: OutilMcp<SchemaVide> = {
   nom: "equipements",
   titre: "Équipements déclarés",
   description:
     "Équipements déclarés de l'établissement (extincteurs, installation électrique, blocs de secours, ventilation, ascenseur…) avec leur catégorie, leur localisation, leur date de mise en service, et le nombre de vérifications en retard ou à planifier pour chacun. À appeler pour savoir de quel matériel dispose l'établissement.",
-  schema: z.object({}),
+  schema: SCHEMA_VIDE,
   executer: async (ctx) => {
     const equipements = await listerEquipements(ctx.scope.etablissementId, ctx.now);
     return formaterEquipements(equipements);
@@ -509,6 +536,9 @@ const outilEquipements: OutilMcp<z.ZodObject<Record<string, never>>> = {
 const schemaVerifications = z.object({
   recherche: z
     .string()
+    // Un filtre, pas un document : borné pour qu'une entrée démesurée ne
+    // parte pas dans une comparaison par ligne du calendrier.
+    .max(200)
     .optional()
     .describe(
       "Filtre texte sur l'obligation, l'équipement ou sa catégorie — par exemple « extincteur » ou « électrique ».",
@@ -526,7 +556,7 @@ const schemaVerifications = z.object({
     .describe(
       "Ne garder que les vérifications non réalisées dont l'échéance tombe dans ce nombre de jours, échéances dépassées comprises, ainsi que celles sans échéance connue (dues, jamais faites), listées en premier.",
     ),
-});
+}).strict();
 
 /**
  * Préfixe la réponse d'un outil par l'état du calendrier, quand il n'est pas à
@@ -615,9 +645,11 @@ function avecEtablissement<S extends z.ZodTypeAny>(
       // faux dit comme un fait (relecture du 2026-09-26). L'outil n'est plus
       // exécuté.
       const nom = await getNomEtablissement(ctx.scope.etablissementId);
-      if (!nom) {
-        return "Établissement introuvable pour ce connecteur : son dossier ne peut pas être lu, et rien n'est à conclure de son contenu.";
-      }
+      // ~~Rendu comme un texte ordinaire~~ (audit du 2026-09-27) : rien ne
+      // le distinguait d'une réponse réussie. C'est le cas d'un
+      // `MCP_ETABLISSEMENT_ID` qui désigne un établissement supprimé — une
+      // requête, une réponse, marquée en erreur.
+      if (!nom) throw new ErreurOutilMcp(MESSAGE_ETABLISSEMENT_INTROUVABLE);
       const texte = await outil.executer(ctx, args);
       return `Établissement : ${nom}\n\n${texte}`;
     },

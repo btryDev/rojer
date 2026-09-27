@@ -28,8 +28,15 @@ import {
   hostHeaderValidationResponse,
   originValidationResponse,
   McpServer,
+  SERVER_INFO_META_KEY,
+  SUBSCRIPTION_ID_META_KEY,
 } from "@modelcontextprotocol/server";
-import { CONSIGNE_SERVEUR, OUTILS_MCP, type ScopeMcp } from "./tools";
+import {
+  CONSIGNE_SERVEUR,
+  ErreurOutilMcp,
+  OUTILS_MCP,
+  type ScopeMcp,
+} from "./tools";
 
 export const NOM_SERVEUR = "rojer";
 export const VERSION_SERVEUR = "0.1.0";
@@ -81,7 +88,15 @@ export type OptionsServeurHttp = {
 function construireServeur(scope: ScopeMcp): McpServer {
   const server = new McpServer(
     { name: NOM_SERVEUR, version: VERSION_SERVEUR },
-    { instructions: CONSIGNE_SERVEUR },
+    {
+      instructions: CONSIGNE_SERVEUR,
+      // ~~Le défaut du SDK, `listChanged: true`~~ (audit du 2026-09-27) : la
+      // liste des outils est fixée au déploiement, et rien ici ne publie
+      // jamais sur le bus d'événements. Annoncer le contraire invitait un
+      // client 2026-07-28 à ouvrir un `subscriptions/listen` — un flux qui
+      // attend des notifications qui ne viendront pas.
+      capabilities: { tools: { listChanged: false } },
+    },
   );
 
   for (const outil of OUTILS_MCP) {
@@ -102,6 +117,17 @@ function construireServeur(scope: ScopeMcp): McpServer {
           const texte = await outil.executer({ scope, now: new Date() }, args);
           return { content: [{ type: "text" as const, text: texte }] };
         } catch (erreur) {
+          // Une erreur que l'outil destine au client (établissement
+          // introuvable) : elle part telle quelle, marquée `isError` pour
+          // que le modèle ne la lise pas comme un contenu de dossier. Une
+          // ligne au journal, sans trace : ce n'est pas une panne.
+          if (erreur instanceof ErreurOutilMcp) {
+            console.warn(`[${NOM_SERVEUR}] ${outil.nom} : ${erreur.message}`);
+            return {
+              isError: true,
+              content: [{ type: "text" as const, text: erreur.message }],
+            };
+          }
           // Le client reçoit un message court ; le détail reste dans les
           // journaux. Une trace d'exécution renvoyée à un client distant
           // renseigne sur la structure interne et peut porter des fragments
@@ -126,6 +152,102 @@ function construireServeur(scope: ScopeMcp): McpServer {
 
   return server;
 }
+
+/**
+ * Termine un flux `subscriptions/listen` juste après son accusé de réception.
+ *
+ * POURQUOI. La révision 2026-07-28 fait porter les notifications de
+ * changement par la réponse SSE d'un `subscriptions/listen`, qui « reste
+ * ouverte jusqu'à ce que le client ou le serveur la ferme ». Le SDK la tient
+ * ouverte indéfiniment (un commentaire `keepalive` toutes les 15 s). Sur une
+ * fonction serverless, indéfiniment veut dire jusqu'au plafond de la
+ * plateforme : c'était les 143 « Task timed out after 300 seconds » relevés
+ * en production depuis le 2026-08-16, chacun gardant une instance — et sa
+ * connexion à la base — pour rien : ce serveur n'émet aucune notification.
+ *
+ * CE QUE LA SPÉCIFICATION PERMET. « Subscriptions » § Cancellation : le
+ * serveur peut mettre fin à un abonnement de lui-même ; il « SHOULD send a
+ * successful `subscriptions/listen` response to signal a graceful end, then
+ * close the stream ». Et l'accusé de réception « MUST » être le premier
+ * message. D'où : on relaie l'accusé du SDK (qui a fait les validations —
+ * version, en-têtes, filtre), on ajoute la réponse `complete`, on ferme, et
+ * on annule le flux du SDK, ce qui le désabonne et arrête son minuteur.
+ *
+ * Un client qui reçoit la réponse `complete` sait que la fin est voulue ;
+ * seule une coupure sans elle l'autorise à se reconnecter.
+ */
+function terminerEcoute(reponse: Response): Response {
+  if (!reponse.body) return reponse;
+  const source = reponse.body.getReader();
+  const decodeur = new TextDecoder();
+  const encodeur = new TextEncoder();
+
+  const flux = new ReadableStream<Uint8Array>({
+    async pull(controleur) {
+      // Un seul `pull` : il relaie l'accusé puis ferme.
+      let tampon = "";
+      let fin = -1;
+      while (fin < 0) {
+        const lu = await source.read();
+        if (lu.done) {
+          if (tampon) controleur.enqueue(encodeur.encode(tampon));
+          controleur.close();
+          return;
+        }
+        tampon += decodeur.decode(lu.value, { stream: true });
+        fin = tampon.indexOf("\n\n");
+      }
+      const accuse = tampon.slice(0, fin + 2);
+      controleur.enqueue(encodeur.encode(accuse));
+
+      // L'identifiant d'abonnement est l'`id` JSON-RPC du `listen` ; le SDK
+      // l'a posé dans le `_meta` de l'accusé.
+      const donnees = accuse
+        .split("\n")
+        .find((l) => l.startsWith("data: "))
+        ?.slice("data: ".length);
+      let id: unknown = null;
+      try {
+        id = donnees ? JSON.parse(donnees)?.params?._meta?.[SUBSCRIPTION_ID_META_KEY] ?? null : null;
+      } catch {
+        id = null;
+      }
+      if (id !== null) {
+        const complete = {
+          jsonrpc: "2.0",
+          id,
+          result: {
+            resultType: "complete",
+            _meta: {
+              [SUBSCRIPTION_ID_META_KEY]: id,
+              [SERVER_INFO_META_KEY]: {
+                name: NOM_SERVEUR,
+                version: VERSION_SERVEUR,
+              },
+            },
+          },
+        };
+        controleur.enqueue(
+          encodeur.encode(`event: message\ndata: ${JSON.stringify(complete)}\n\n`),
+        );
+      }
+      controleur.close();
+      await source.cancel().catch(() => {});
+    },
+    cancel(raison) {
+      return source.cancel(raison).catch(() => {});
+    },
+  });
+
+  return new Response(flux, {
+    status: reponse.status,
+    statusText: reponse.statusText,
+    headers: reponse.headers,
+  });
+}
+
+const estFluxSse = (reponse: Response) =>
+  (reponse.headers.get("content-type") ?? "").startsWith("text/event-stream");
 
 /** Refus par défaut, volontairement muet — cf. `servir`. */
 const refusMuet = () =>
@@ -167,7 +289,13 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
 
     const scope = resolution.scope;
 
-    return handler.fetch(request, {
+    // Lu AVANT l'appel : le SDK consomme le corps. L'en-tête est exigé par
+    // la révision 2026-07-28 et confronté au corps par le SDK, qui rejette
+    // toute discordance — il ne peut donc pas déguiser un autre échange.
+    const estEcoute =
+      request.headers.get("mcp-method") === "subscriptions/listen";
+
+    const reponse = await handler.fetch(request, {
       authInfo: {
         // Le SDK exige la forme d'un jeton vérifié ; on la remplit avec ce
         // que l'on sait réellement. `extra.scope` est ce que lit le factory.
@@ -178,6 +306,8 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
         extra: { scope },
       },
     });
+
+    return estEcoute && estFluxSse(reponse) ? terminerEcoute(reponse) : reponse;
   }
 
   return { servir, fermer: () => handler.close() };

@@ -34,7 +34,7 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
 
-import { OUTILS_MCP, type ContexteMcp } from "./tools";
+import { ErreurOutilMcp, OUTILS_MCP, type ContexteMcp } from "./tools";
 import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
 import { getEtatDuerp, listerActions } from "./queries";
 
@@ -657,10 +657,19 @@ describe("provenance de la réponse", () => {
   // décrivaient alors un dossier vide qui n'existait pas.
   it("sur un établissement introuvable, ne décrit aucun dossier — le défaut de l'audit", async () => {
     prismaMock.etablissement.findUnique.mockReset().mockResolvedValue(null);
+    // Depuis l'audit du 2026-09-27, l'outil ÉCHOUE (`ErreurOutilMcp`), et le
+    // transport rend le message en `isError` : un texte ordinaire se lisait
+    // comme une réponse réussie.
     for (const o of OUTILS_MCP) {
-      const texte = await o.executer(ctx, {});
-      expect(texte, o.nom).toContain("Établissement introuvable pour ce connecteur");
-      expect(texte, o.nom).not.toMatch(/Aucune? (action|équipement|DUERP|vérification)/);
+      const echec = await o.executer(ctx, {}).then(
+        (texte: string) => ({ texte, erreur: null as unknown }),
+        (erreur: unknown) => ({ texte: null, erreur }),
+      );
+      expect(echec.texte, o.nom).toBeNull();
+      expect(echec.erreur, o.nom).toBeInstanceOf(ErreurOutilMcp);
+      const message = (echec.erreur as Error).message;
+      expect(message, o.nom).toContain("Établissement introuvable pour ce connecteur");
+      expect(message, o.nom).not.toMatch(/Aucune? (action|équipement|DUERP|vérification)/);
     }
   });
 
