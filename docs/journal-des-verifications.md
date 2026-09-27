@@ -4245,6 +4245,49 @@ garde exige depuis qu'un type inconnu ne lise pas la base, rouge) ; 410 rendu
 `Rapports/` non joint ; manquants tus au README ; déposés comptés joints ;
 lien du carnet retiré — toutes rouges.
 
+**Contre-lecture de `1a5de27` (2026-09-27), sur une vraie base** : aucun
+point grave — isolation des trois routes, types exotiques, en-têtes (CRLF,
+`filename*`), zip-slip (13 noms hostiles), manquants comptés. Corrigé :
+
+- **M1** — `Rapports/` prenait tous les rapports, y compris ceux des lignes
+  de salarié antérieurs à `bb03cdd` : nominatifs, parfois médicaux, remis à un
+  tiers. Filtrés (`verification: { salarieId: null }`) ; le README dit combien
+  sont écartés, ou la règle seule si le comptage échoue (le comptage n'est pas
+  `lire` : son échec ne prive pas `Rapports/`).
+- **M2** — le type enregistré en base était servi tel quel : `text/html` ou
+  `image/svg+xml` en `inline`. Liste blanche (`TYPES_SERVIS`, les quatre types
+  du dépôt) ; hors liste, le type du nom ou `application/octet-stream` +
+  `attachment`. `Content-Security-Policy: sandbox`, `no-store`.
+- **Faibles** — antislash neutralisé dans `filename` ; la troncature à 120
+  caractères garde l'extension (`noms.ts`) ; le registre dit que les
+  originaux sont aussi dans `Rapports/` du ZIP ; le README dit « 5 dernières
+  analyses ».
+- **Taille du ZIP.** « The maximum payload size for the request body or the
+  response body of a Vercel Function is 4.5 MB » ; le guide Vercel sur ce
+  plafond recommande « streaming functions, which don't have this limit »
+  (relus le 2026-09-27). La route rendait `generateAsync` d'un bloc : trois
+  rapports de 2 Mo suffisaient. Désormais `zipEnFlux` (`generateInternalStream`
+  → `ReadableStream`), `maxDuration = 300` (maximum Hobby, défaut Pro), et
+  les lectures du stockage menées quatre à la fois. Les fichiers sont lus AVANT
+  que le flux commence : un échec reste compté au README.
+
+**Gardes ajoutées.** Un ZIP de plus de 4,5 Mo (trois pièces incompressibles
+de 2 Mo) traverse une `Response` réelle et se relit octet pour octet ; le flux
+livre plusieurs morceaux ; jamais plus de quatre lectures à la fois ; types
+hostiles servis en téléchargement ; sandbox, nosniff, no-store ; nom de
+fichier qui ne ferme pas l'en-tête ; extension gardée ; README des salariés
+écartés ; source de la route (filtre salarié, flux, `maxDuration`). **Ne
+prouvent pas** : que le serveur de Next en production transmet le flux sans
+le remettre en bloc (vérifié sur une `Response` Web, pas sur `next start`
+derrière la plateforme) — à constater au premier ZIP lourd en production ;
+et que l'exclusion des rapports de salarié tient à l'exécution : la route
+n'est pas exécutée en test, la garde lit sa source.
+
+**Éprouvées** — rapports de salarié joints ; réponse d'un bloc ; flux d'un
+seul morceau ; lectures non bornées ; type de la base servi tel quel ; sans
+sandbox ; antislash non neutralisé ; extension perdue ; salariés tus au
+README ; `maxDuration` retiré — dix rouges.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
