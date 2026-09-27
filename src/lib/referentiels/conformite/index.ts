@@ -240,7 +240,10 @@ export const obligationsConformite: Obligation[] = [
 // de calendrier n'est écrite.
 // `2026-09-27.2` (lot 2, audit) : la dotation de R. 4227-29 entre, portée par
 // l'établissement (`incendie-travail-extincteurs-dotation`). 172 + 1 − 0 = 173.
-export const REFERENTIEL_VERSION = "2026-09-27.2";
+// `2026-09-27.3` (lot 2, D25 option (a)) : `incendie-travail-moyens-lutte`
+// réduite au maintien en état — son libellé change, pas son périmètre. 173 + 0 −
+// 0 = 173. États permanents : aucune ligne de calendrier.
+export const REFERENTIEL_VERSION = "2026-09-27.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

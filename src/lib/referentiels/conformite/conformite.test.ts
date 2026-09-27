@@ -1600,6 +1600,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // portée par l'établissement. Aucune n'en sort : 172 + 1 − 0 = 173. État
     // permanent : aucune ligne de calendrier.
     { version: "2026-09-27.2", empreinte: "173-3e9d2b03a798e3c5" },
+    // D25, option (a) : la ligne d'appareil `incendie-travail-moyens-lutte` est
+    // réduite au maintien en état, la dotation n'étant dite qu'une fois, par
+    // l'établissement. Libellé seul : 173 + 0 − 0 = 173. États permanents.
+    { version: "2026-09-27.3", empreinte: "173-fb19a4cabf15ba60" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2767,5 +2771,17 @@ describe("ce que le texte fait établir est dit en entier (2026-09-28, lot 2, 7 
     ["esp-dossier-suivi", "liste des récipients fixes"],
   ] as const)("%s dit « %s »", (id, phrase) => {
     expect(obligationParId(id)?.description).toContain(phrase);
+  });
+});
+
+describe("R. 4227-29 dit une fois : la dotation par l'établissement, le maintien par l'appareil (D25, option (a))", () => {
+  // Revue indépendante du lot 2 : la ligne d'appareil disait encore « Présence »
+  // et « doivent être dotés », et N extincteurs faisaient lire N fois la
+  // dotation. Éprouvé en rétablissant l'ancien libellé.
+  it("la ligne d'appareil ne parle plus de dotation", () => {
+    const o = obligationParId("incendie-travail-moyens-lutte")!;
+    expect(o.libelle).not.toMatch(/présence|doté/i);
+    expect(o.description).not.toMatch(/doivent être dotés/);
+    expect(obligationParId("incendie-travail-extincteurs-dotation")?.porteur).toBe("etablissement");
   });
 });
