@@ -114,7 +114,7 @@ vraie `calendrierDesynchronise` et la vraie régénération, sur le faux client.
 
 | Demandé | Cas du fichier | Épreuve |
 |---|---|---|
-| Changement de version du référentiel ; **passage de `VERSION_MOTEUR_CALENDRIER`** | a/b : sceau périmé (référentiel, empreinte, moteur précédent, moteur 0) → régénère, pose le sceau, puis plus rien | sceau comparé sans sa part moteur → (b) rouge ; **`queries.test.ts` restait vert** |
+| Changement de version du référentiel ; **passage de `VERSION_MOTEUR_CALENDRIER`** | a/b : sceau périmé (référentiel, empreinte, moteur précédent, moteur 0) → régénère, pose le sceau, puis plus rien | sceau comparé sans sa part moteur → (b) rouge ; **`queries.test.ts` restait vert** — rejoué le 2026-09-28 sur les deux fichiers : « Tests 2 failed \| 36 passed (38) », les deux rouges dans le nouveau |
 | Changement de périodicité | c : sans rapport, date recalculée depuis la mise en service ; avec rapport, dernier rapport + nouveau rythme | — |
 | Disparition et retour d'un porteur : équipement | d : archivée puis rouverte, même identifiant, rapport et action intacts | `archiveLe: null` retiré d'`aMettreAJour` → rouge |
 | … : salarié sorti puis revenu | d bis : même aller-retour sur un titre de salarié | même casse → « d » et « d bis » rouges |
