@@ -30,7 +30,12 @@
 
 import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
-import { CONSIGNE_SERVEUR, OUTILS_MCP, type ScopeMcp } from "@/lib/mcp/tools";
+import {
+  CONSIGNE_SERVEUR,
+  ErreurOutilMcp,
+  OUTILS_MCP,
+  type ScopeMcp,
+} from "@/lib/mcp/tools";
 import { prismaMcp } from "@/lib/mcp/prisma";
 
 const NOM_SERVEUR = "rojer-demo";
@@ -111,6 +116,15 @@ async function main(): Promise<void> {
           );
           return { content: [{ type: "text" as const, text: texte }] };
         } catch (erreur) {
+          // Même contrat que le transport HTTP (`@/lib/mcp/http`) : une
+          // erreur destinée au client part avec son texte.
+          if (erreur instanceof ErreurOutilMcp) {
+            trace(`${outil.nom} : ${erreur.message}`);
+            return {
+              isError: true,
+              content: [{ type: "text" as const, text: erreur.message }],
+            };
+          }
           // Message court côté client, détail complet côté opérateur : la
           // pile d'appels et l'URL de connexion n'ont rien à faire dans une
           // conversation.

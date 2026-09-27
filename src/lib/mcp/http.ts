@@ -28,8 +28,15 @@ import {
   hostHeaderValidationResponse,
   originValidationResponse,
   McpServer,
+  SERVER_INFO_META_KEY,
+  SUBSCRIPTION_ID_META_KEY,
 } from "@modelcontextprotocol/server";
-import { CONSIGNE_SERVEUR, OUTILS_MCP, type ScopeMcp } from "./tools";
+import {
+  CONSIGNE_SERVEUR,
+  ErreurOutilMcp,
+  OUTILS_MCP,
+  type ScopeMcp,
+} from "./tools";
 
 export const NOM_SERVEUR = "rojer";
 export const VERSION_SERVEUR = "0.1.0";
@@ -81,7 +88,15 @@ export type OptionsServeurHttp = {
 function construireServeur(scope: ScopeMcp): McpServer {
   const server = new McpServer(
     { name: NOM_SERVEUR, version: VERSION_SERVEUR },
-    { instructions: CONSIGNE_SERVEUR },
+    {
+      instructions: CONSIGNE_SERVEUR,
+      // ~~Le défaut du SDK, `listChanged: true`~~ (audit du 2026-09-27) : la
+      // liste des outils est fixée au déploiement, et rien ici ne publie
+      // jamais sur le bus d'événements. Annoncer le contraire invitait un
+      // client 2026-07-28 à ouvrir un `subscriptions/listen` — un flux qui
+      // attend des notifications qui ne viendront pas.
+      capabilities: { tools: { listChanged: false } },
+    },
   );
 
   for (const outil of OUTILS_MCP) {
@@ -102,6 +117,17 @@ function construireServeur(scope: ScopeMcp): McpServer {
           const texte = await outil.executer({ scope, now: new Date() }, args);
           return { content: [{ type: "text" as const, text: texte }] };
         } catch (erreur) {
+          // Une erreur que l'outil destine au client (établissement
+          // introuvable) : elle part telle quelle, marquée `isError` pour
+          // que le modèle ne la lise pas comme un contenu de dossier. Une
+          // ligne au journal, sans trace : ce n'est pas une panne.
+          if (erreur instanceof ErreurOutilMcp) {
+            console.warn(`[${NOM_SERVEUR}] ${outil.nom} : ${erreur.message}`);
+            return {
+              isError: true,
+              content: [{ type: "text" as const, text: erreur.message }],
+            };
+          }
           // Le client reçoit un message court ; le détail reste dans les
           // journaux. Une trace d'exécution renvoyée à un client distant
           // renseigne sur la structure interne et peut porter des fragments
@@ -126,6 +152,87 @@ function construireServeur(scope: ScopeMcp): McpServer {
 
   return server;
 }
+
+/**
+ * Répond à un `subscriptions/listen` par un flux qui se termine aussitôt.
+ *
+ * POURQUOI. La révision 2026-07-28 fait porter les notifications de
+ * changement par la réponse SSE d'un `subscriptions/listen`, qui « reste
+ * ouverte jusqu'à ce que le client ou le serveur la ferme ». Le SDK la tient
+ * ouverte indéfiniment (un commentaire `keepalive` toutes les 15 s). Sur une
+ * fonction serverless, indéfiniment veut dire jusqu'au plafond de la
+ * plateforme : c'était les 143 « Task timed out after 300 seconds » relevés
+ * en production depuis le 2026-08-16, chacun gardant une instance — et sa
+ * connexion à la base — pour rien : ce serveur n'émet aucune notification.
+ *
+ * CE QUE LA SPÉCIFICATION PERMET. « Subscriptions » § Cancellation : le
+ * serveur peut mettre fin à un abonnement de lui-même ; il « SHOULD send a
+ * successful `subscriptions/listen` response to signal a graceful end, then
+ * close the stream ». L'accusé de réception « MUST » être le premier
+ * message, et son filtre ne porte que ce que le serveur honore — ici rien
+ * (`listChanged: false`, aucune ressource).
+ *
+ * ~~Relayer l'accusé en lisant le flux du SDK~~ (vérification du 2026-09-27,
+ * R1) : la lecture dépendait de son découpage — un `\r\n`, ou un commentaire
+ * `:` en tête, légaux tous deux en SSE, laissaient le flux ouvert ou
+ * perdaient l'accusé. Le flux du SDK n'est plus lu : le SDK garde ses
+ * validations (version, en-têtes, filtre — une erreur de sa part part telle
+ * quelle, en JSON), puis son flux est annulé sans être lu, et la réponse est
+ * écrite ici, avec l'`id` pris dans le corps de la requête. Même forme que
+ * la fin gracieuse du SDK (`teardown(true)` de son routeur d'écoute).
+ */
+function reponseEcouteTerminee(id: string | number, source: Response): Response {
+  // Annulé sans être lu : désabonne le SDK et arrête son minuteur.
+  void source.body?.cancel().catch(() => {});
+
+  const trame = (message: unknown) =>
+    `event: message\ndata: ${JSON.stringify(message)}\n\n`;
+  const accuse = {
+    jsonrpc: "2.0",
+    method: "notifications/subscriptions/acknowledged",
+    params: {
+      notifications: {},
+      _meta: { [SUBSCRIPTION_ID_META_KEY]: id },
+    },
+  };
+  const complete = {
+    jsonrpc: "2.0",
+    id,
+    result: {
+      resultType: "complete",
+      _meta: {
+        [SUBSCRIPTION_ID_META_KEY]: id,
+        [SERVER_INFO_META_KEY]: { name: NOM_SERVEUR, version: VERSION_SERVEUR },
+      },
+    },
+  };
+
+  return new Response(trame(accuse) + trame(complete), {
+    status: 200,
+    headers: {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache, no-transform",
+      "x-accel-buffering": "no",
+    },
+  });
+}
+
+/** L'`id` JSON-RPC d'un corps de requête, s'il est une chaîne ou un nombre. */
+async function idDeRequete(request: Request): Promise<string | number | null> {
+  try {
+    const corps: unknown = await request.json();
+    const id =
+      corps && typeof corps === "object" && !Array.isArray(corps)
+        ? (corps as { id?: unknown }).id
+        : undefined;
+    return typeof id === "string" || typeof id === "number" ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+const estFluxSse = (reponse: Response) =>
+  (reponse.headers.get("content-type") ?? "").startsWith("text/event-stream");
 
 /** Refus par défaut, volontairement muet — cf. `servir`. */
 const refusMuet = () =>
@@ -167,7 +274,15 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
 
     const scope = resolution.scope;
 
-    return handler.fetch(request, {
+    // Lu AVANT l'appel : le SDK consomme le corps. L'en-tête est exigé par
+    // la révision 2026-07-28 et confronté au corps par le SDK, qui rejette
+    // toute discordance — il ne peut donc pas déguiser un autre échange.
+    const estEcoute =
+      request.headers.get("mcp-method") === "subscriptions/listen";
+    // Copie du corps pour en lire l'`id` sans priver le SDK du sien.
+    const idEcoute = estEcoute ? await idDeRequete(request.clone()) : null;
+
+    const reponse = await handler.fetch(request, {
       authInfo: {
         // Le SDK exige la forme d'un jeton vérifié ; on la remplit avec ce
         // que l'on sait réellement. `extra.scope` est ce que lit le factory.
@@ -178,6 +293,17 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
         extra: { scope },
       },
     });
+
+    // Le SDK a accepté l'écoute (il répond en flux) : on n'en lit rien, on
+    // répond et on ferme. S'il l'a refusée, son erreur JSON part telle quelle.
+    if (estEcoute && estFluxSse(reponse)) {
+      if (idEcoute !== null) return reponseEcouteTerminee(idEcoute, reponse);
+      // Accepté sans `id` lisible : ne devrait pas arriver (le SDK exige une
+      // requête). On ne garde pas pour autant un flux ouvert.
+      void reponse.body?.cancel().catch(() => {});
+      return new Response(null, { status: 500 });
+    }
+    return reponse;
   }
 
   return { servir, fermer: () => handler.close() };

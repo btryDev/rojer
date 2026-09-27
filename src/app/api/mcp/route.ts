@@ -32,6 +32,14 @@ import { creerHandlerMcpHttp } from "@/lib/mcp/http";
 // porteur : une réponse mise en cache serait une fuite entre utilisateurs.
 export const dynamic = "force-dynamic";
 
+// Plafond d'exécution (audit du 2026-09-27). Aucun échange de ce serveur ne
+// dure plus de quelques secondes : des lectures bornées à un établissement.
+// Sans plafond déclaré, la plateforme applique le sien — 300 s —, et c'est
+// ce qu'ont duré les 143 flux `subscriptions/listen` restés ouverts. La
+// cause est corrigée dans `@/lib/mcp/http` ; ce plafond borne ce qu'on n'a
+// pas prévu.
+export const maxDuration = 60;
+
 const config = lireConfigOauthMcp();
 const verifier = creerVerificateurSupabase();
 
