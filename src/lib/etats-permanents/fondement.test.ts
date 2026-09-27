@@ -12,7 +12,10 @@
 // parlant — c'est l'ordre du référentiel, que ce module ne juge pas.
 
 import { describe, expect, it } from "vitest";
-import { obligationsConformite } from "@/lib/referentiels/conformite";
+import {
+  obligationsConformite,
+  type Obligation,
+} from "@/lib/referentiels/conformite";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import { figureSurLEcranEnPlace } from "./regle";
 import { fondementDe, referenceNommeLArticle } from "./fondement";
@@ -47,12 +50,10 @@ describe("l'article cité sous une ligne « Ce qui doit être en place »", () =
 
   it("un article absent du corpus n'invente pas de citation", () => {
     const o = SUR_L_ECRAN[0];
-    const sansCorpus = {
+    const sansCorpus: Obligation = {
       ...o,
-      referencesLegales: [
-        { ...o.referencesLegales[0], article: "R. 9999-99" },
-      ],
-    };
+      referencesLegales: [{ ...o.referencesLegales[0], article: "R. 9999-99" }],
+    } as Obligation;
     expect(fondementDe(sansCorpus)?.extrait).toBeNull();
   });
 

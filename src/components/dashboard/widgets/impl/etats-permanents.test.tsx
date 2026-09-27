@@ -138,7 +138,7 @@ function rendreWidget(d: EtatsPermanentsDuDossier) {
     etablissementId: "etab-1",
     etatsPermanents: lignesDuWidget(d),
   } as unknown as DashboardBundle;
-  return render(<WidgetEtatsPermanents bundle={bundle} variant="default" />);
+  return render(<WidgetEtatsPermanents bundle={bundle} />);
 }
 
 describe("widget « Ce qui doit être en place »", () => {
