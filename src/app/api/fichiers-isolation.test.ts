@@ -39,7 +39,7 @@ const h = vi.hoisted(() => {
 
   const prisma = {
     rapportVerification: { findFirst: trouver(rapports, (w) => w.etablissement?.entreprise?.userId) },
-    prestataire: { findFirst: trouver(prestataires, (w) => w.etablissement?.entreprise?.userId) },
+    prestataire: { findFirst: vi.fn(trouver(prestataires, (w) => w.etablissement?.entreprise?.userId)) },
     analyseLegionelle: { findFirst: trouver(analyses, (w) => w.carnet?.etablissement?.entreprise?.userId) },
   };
   const get = vi.fn(async (cle: string) => Buffer.from(`contenu:${cle}`));
@@ -103,7 +103,12 @@ describe("chaque route sert le fichier de son propriétaire, et seulement lui", 
     expect((await appel.analyse("ana-a-vide")).status).toBe(404);
     expect((await appel.piece("pre-a", "rcpro")).status).toBe(404);
     expect((await appel.piece("pre-a", "../../etc")).status).toBe(404);
+    // Un type inconnu ne va pas jusqu'à la base — « toString » compris, que
+    // `in` aurait trouvé sur le prototype.
+    const lectures = vi.mocked(h.prisma.prestataire.findFirst).mock.calls.length;
     expect((await appel.piece("pre-a", "toString")).status).toBe(404);
+    expect((await appel.piece("pre-a", "inconnu")).status).toBe(404);
+    expect(vi.mocked(h.prisma.prestataire.findFirst).mock.calls.length).toBe(lectures);
     expect(h.get).not.toHaveBeenCalled();
   });
 });
