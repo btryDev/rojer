@@ -5,6 +5,7 @@ import {
   couverture,
   EXCLUSIONS,
   liensRetenusRompus,
+  renvoisManquants,
   articlesNonCouverts,
   obligationsManquantes,
   obligationsSurTextesNonDepouilles,
@@ -185,10 +186,61 @@ describe("corpus — forme des dépouillements", () => {
     // rompt le lien dans le sens couvert. Quatre des cinq recalages de clé du
     // lot A rougissent à la réinjection par ce chemin.
     //
-    // Fermer l'autre sens ferait échouer les onze `CORPUS_NE_RENVOIE_PAS`
+    // ~~Fermer l'autre sens ferait échouer les onze `CORPUS_NE_RENVOIE_PAS`
     // existants d'un coup — ils sont la matière du lot D. À reprendre APRÈS
-    // lui, pas ici : un test qui naît rouge se désarme.
+    // lui, pas ici : un test qui naît rouge se désarme.~~ [2026-09-28 : fermé
+    // par le test suivant, après rattachement des treize écarts restants
+    // (audit de bout en bout, D15).]
     expect(liensRetenusRompus()).toEqual([]);
+  });
+
+  it("l'autre sens : une obligation qui cite un article retenu y est nommée", () => {
+    // Fondement OU contexte : la liste d'un article retenu nomme tout ce qui
+    // s'y appuie (`renvoisManquants`, politique écrite à sa définition).
+    expect(renvoisManquants()).toEqual([]);
+  });
+
+  it("l'autre sens est gardé : retirer un nom d'un article retenu rougit", () => {
+    // Éprouvé sur une copie : chaque article retenu qui nomme au moins une
+    // obligation qui le cite, privé de ce nom, doit produire exactement cet
+    // écart. Rien n'est recopié — les cas viennent du corpus.
+    const cites = new Set(
+      obligationsConformite.flatMap((o) =>
+        o.referencesLegales.flatMap((r) => (r.article ? [`${r.article}|${o.id}`] : [])),
+      ),
+    );
+    let eprouves = 0;
+    for (const c of CORPUS) {
+      for (const a of c.articles) {
+        if (a.statut !== "retenu") continue;
+        const id = a.obligations.find((x) => cites.has(`${a.ref}|${x}`));
+        if (!id) continue;
+        // Un article présent dans deux corpus garde son nom par l'autre.
+        const ailleurs = CORPUS.some(
+          (k) => k !== c && k.articles.some((b) => b.ref === a.ref && b.statut === "retenu" && b.obligations.includes(id)),
+        );
+        if (ailleurs) continue;
+        const mute = CORPUS.map((k) =>
+          k !== c
+            ? k
+            : {
+                ...k,
+                articles: k.articles.map((b) =>
+                  b === a && b.statut === "retenu"
+                    ? { ...b, obligations: b.obligations.filter((x) => x !== id) }
+                    : b,
+                ),
+              },
+        ) as Corpus[];
+        expect(renvoisManquants(mute), `${a.ref} sans ${id}`).toContainEqual({
+          article: a.ref,
+          obligation: id,
+        });
+        eprouves++;
+      }
+    }
+    // Borne basse : la garde a été éprouvée sur des cas réels.
+    expect(eprouves).toBeGreaterThan(100);
   });
 
   it("la couverture ne se déclare complète que si tout est lu", () => {

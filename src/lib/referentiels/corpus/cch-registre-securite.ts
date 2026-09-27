@@ -126,6 +126,8 @@ export const CCH_REGISTRE_SECURITE: Corpus = {
         "incendie-erp-visite-commission-cat4-triennale",
         "incendie-erp-visite-commission-cat4-quinquennale",
         "incendie-erp-5-visite-commission",
+        "incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale",
+        "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale",
       ],
       citationCle:
         "« Ces établissements doivent faire l'objet, dans les conditions fixées au règlement de sécurité, de visites périodiques de contrôle et de visites inopinées effectuées par la commission de sécurité compétente. »",

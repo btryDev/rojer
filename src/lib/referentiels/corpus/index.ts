@@ -1,6 +1,7 @@
 // Les corpus déclarés, et ce que leur dépouillement permet d'affirmer.
 
 import { obligationsConformite } from "../conformite";
+import type { Obligation } from "../conformite/types";
 import { ARRETE_1980_LIVRE_1 } from "./arrete-1980-livre-1";
 import { ARRETE_1980_LIVRE_2 } from "./arrete-1980-livre-2";
 import { CORPUS_PE } from "./arrete-1980-livre-3";
@@ -469,6 +470,46 @@ export function liensRetenusRompus(): {
     }
   }
   return rompus;
+}
+
+/**
+ * L'AUTRE SENS du lien : les obligations qui citent un article « retenu » sans
+ * que son entrée de corpus les nomme (`CORPUS_NE_RENVOIE_PAS` de
+ * `pnpm relecture`, qui n'échoue pas).
+ *
+ * Fermé le 2026-09-28 (audit de bout en bout, D15) : treize écarts rattachés.
+ * La liste `obligations` d'un article retenu nomme TOUTES les obligations qui
+ * le citent, en fondement comme en contexte — c'est la politique déjà suivie
+ * par L. 1311-2, R. 4463-3, R. 4227-39 et l'art. 7 de l'arrêté du 4 novembre
+ * 1993, cités « en contexte » et nommés. Ce qu'une citation est pour
+ * l'obligation se lit dans la `note` de la référence, pas dans le corpus.
+ * Sans ce sens, retirer ou reclasser un article ne signale pas toutes les
+ * obligations qui s'y appuient.
+ *
+ * Paramétrée pour que le test puisse l'éprouver sur une copie mutée.
+ */
+export function renvoisManquants(
+  corpus: readonly Corpus[] = CORPUS,
+  obligations: readonly Obligation[] = obligationsConformite,
+): { article: string; obligation: string }[] {
+  const nommees = new Map<string, Set<string>>();
+  for (const c of corpus) {
+    for (const a of c.articles) {
+      if (a.statut !== "retenu") continue;
+      const s = nommees.get(a.ref) ?? new Set<string>();
+      for (const id of a.obligations) s.add(id);
+      nommees.set(a.ref, s);
+    }
+  }
+  const manquants: { article: string; obligation: string }[] = [];
+  for (const o of obligations) {
+    for (const r of o.referencesLegales) {
+      if (r.article && nommees.has(r.article) && !nommees.get(r.article)!.has(o.id)) {
+        manquants.push({ article: r.article, obligation: o.id });
+      }
+    }
+  }
+  return manquants;
 }
 
 /**

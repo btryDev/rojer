@@ -108,7 +108,10 @@ export const CODE_TRAVAIL_ELECTRICITE: Corpus = {
       citationCle:
         "L'employeur procède ou fait procéder, périodiquement, à la vérification des installations électriques afin de s'assurer qu'elles sont maintenues en conformité avec les règles de santé et de sécurité qui leur sont applicables.",
       statut: "retenu",
-      obligations: ["elec-travail-periodique-annuelle"],
+      obligations: [
+        "elec-travail-periodique-annuelle",
+        "elec-travail-rapport-quadriennal",
+      ],
     },
     {
       ref: "R. 4226-19",
@@ -156,6 +159,7 @@ export const CODE_TRAVAIL_ELECTRICITE: Corpus = {
         "elec-travail-habilitation-personnel",
         "elec-salarie-habilitation",
         "elec-travail-carnet-prescriptions",
+        "elec-salarie-attestation-medicale-voisinage",
       ],
       reserve:
         "LE TRIENNAL NE VIENT PAS D'ICI, et l'article le prouve en creux : relu le 2026-09-01, il ne porte aucune durée. « L'employeur délivre, maintient ou renouvelle l'habilitation selon les modalités contenues dans les normes mentionnées à l'article R. 4544-3 » — soit la NF C 18-510, que R. 4544-3 qualifie lui-même de recommandation et que ce dépôt n'accepte pas comme source opposable. Cette réserve-là reste entière.\n\nLE CARNET DE PRESCRIPTIONS EST ENCODÉ DEPUIS LE MÊME JOUR (lot C) : `elec-travail-carnet-prescriptions`, état permanent, pièce attendue « carnet de prescriptions ». L'article met QUATRE actes à la charge de l'employeur — délivrer l'habilitation, s'assurer de la formation préalable, remettre le carnet, subordonner la validité au voisinage à l'attestation médicale — et le référentiel en portait trois. Le quatrième alinéa a sa ligne, distincte de l'habilitation : celle-ci est une décision, celui-là une pièce, et un employeur peut avoir habilité sans avoir remis.\n\n« CHAQUE TRAVAILLEUR » NE VEUT PAS DIRE TOUT L'EFFECTIF, et c'est le chemin qui le dit : Quatrième partie > Livre V > Titre IV > Chapitre IV > SECTION 4 « Travailleurs autorisés à effectuer des opérations ». Le carnet est dû à qui est habilité. Le produit ne sait pas qui l'est — le déclencheur reste l'installation électrique déclarée, et `transmet` nomme le trou.",

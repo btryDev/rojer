@@ -61,6 +61,7 @@ export const CODE_TRAVAIL_LEVAGE: Corpus = {
         // `R. 4323-23` n'a jamais été un article de levage, seule sa lecture
         // l'était. La périodicité vient de l'arrêté du 5 mars 1993, art. 1er.
         "compactage-dechets-vgp-trimestrielle",
+        "prevention-etablissement-liste-personnes-qualifiees",
       ],
     },
     {
