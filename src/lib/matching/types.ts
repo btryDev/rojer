@@ -88,9 +88,14 @@ export type EtablissementMatching = {
   personnesPresentesHabituellement: number | null;
   /**
    * Manipulation et mise en œuvre de matières visées par R. 4227-22
-   * (explosives, comburantes, extrêmement inflammables). `null` ⇒ lu comme
-   * « non » : cette branche ne fait qu'ajouter des cas, aucun établissement
-   * ne peut perdre une obligation par son silence.
+   * (explosives, comburantes, extrêmement inflammables).
+   *
+   * ~~`null` ⇒ lu comme « non » : cette branche ne fait qu'ajouter des cas,
+   * aucun établissement ne peut perdre une obligation par son silence.~~
+   * [2026-09-27 : faux depuis le 2026-09-03 — l'établissement de travail seul
+   * sous la borne perdait R. 4227-37 et -39. `null` suit désormais la règle du
+   * non-renseigné : quand rien d'autre n'ouvre le champ de R. 4227-34, la
+   * ligne est retenue « à confirmer » (`sansReponse: matieres_r4227_22`).]
    *
    * Requis pour la même raison que le champ ci-dessus, et par le même
    * incident.
@@ -183,7 +188,11 @@ export type ObligationApplicable = {
  * nomme ici et reçoit sa phrase dans `sans-reponse.ts`, sans quoi rien ne
  * compile.
  */
-export type QuestionSansReponse = "chiffons_impregnes" | "locaux_sommeil_public";
+export type QuestionSansReponse =
+  | "chiffons_impregnes"
+  | "locaux_sommeil_public"
+  | "matieres_r4227_22"
+  | "type_erp";
 
 // -----------------------------------------------------------------------------
 // Prescriptions particulières (ADR-035)

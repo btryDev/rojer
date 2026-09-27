@@ -586,13 +586,14 @@ export function matchTypologie(
   }
 
   // 2. Régimes positifs (OU) — au moins un déclaré doit matcher.
+  const regimeErp = evaluerErp(t.erp, etab);
   const regimes: EvalRegime[] = [
     t.travail === true
       ? etab.estEtablissementTravail
         ? { etat: "match", raison: "établissement de travail (salariés)" }
         : { etat: "mismatch" }
       : { etat: "absent" },
-    evaluerErp(t.erp, etab),
+    regimeErp,
     evaluerIgh(t.igh, etab),
     evaluerHabitation(t.habitation, etab),
   ];
@@ -648,24 +649,43 @@ export function matchTypologie(
   // seul n'en reçoit pas. C'est la même dissymétrie qu'`opposabiliteUrssaf`,
   // dont le commentaire dit la même chose de `updatedAt`.
   //
-  // `manipuleMatieresR422722` absent ⇒ « non ». Cette branche ne fait
+  // ~~`manipuleMatieresR422722` absent ⇒ « non ». Cette branche ne fait
   // qu'ajouter des cas à un champ déjà ouvert par le seuil, aucun établissement
-  // ne perd d'obligation par son silence — mais c'est la seconde entorse à la
-  // règle du non-renseigné recensée par `.claude/CLAUDE.md`, et elle reste.
+  // ne perd d'obligation par son silence~~ — FAUX depuis le 2026-09-03, relevé
+  // en appelant le moteur le 2026-09-27 : ce jour-là, l'établissement de
+  // travail seul sous la borne est devenu `non_atteint`, et la branche matières
+  // est restée son SEUL chemin vers R. 4227-37 et -39. Un bureau de huit
+  // salariés muet sur la question perdait la consigne et les exercices
+  // semestriels que le même bureau reçoit en répondant « oui ».
+  //
+  // Le silence suit donc la règle du non-renseigné, comme les chiffons
+  // (R. 4227-26) : seul un « non » DÉCLARÉ ferme la branche. Quand rien d'autre
+  // n'ouvre le champ, la ligne est retenue « à confirmer » et le dit.
   //
   // Le critère est évalué dès que **l'une** des deux branches est déclarée :
   // une obligation qui n'écrirait que `champR422734` (branche matières seule)
   // ne doit pas passer sans filtre — un critère que l'on ne sait pas vérifier
   // ne s'ignore jamais en silence.
+  const sansReponse: QuestionSansReponse[] = [];
   if (t.personnesPresentesMin !== undefined || t.champR422734 === true) {
-    const brancheMatieres =
-      t.champR422734 === true && etab.manipuleMatieresR422722 === true;
+    const matieres = etab.manipuleMatieresR422722;
+    const brancheMatieres = t.champR422734 === true && matieres === true;
+    const matieresNonRenseignees =
+      t.champR422734 === true && (matieres === null || matieres === undefined);
     const seuil =
       t.personnesPresentesMin === undefined
         ? { etat: "non_atteint" as const }
         : evaluerPersonnesPresentes(t.personnesPresentesMin, etab);
 
-    if (seuil.etat === "non_atteint" && !brancheMatieres) return { ok: false };
+    if (seuil.etat === "non_atteint" && !brancheMatieres) {
+      if (!matieresNonRenseignees) return { ok: false };
+      // Seul le silence sur les matières retient la ligne : c'est donc cette
+      // question, et elle seule, qu'un « non » lèverait.
+      raisons.push(
+        "manipulation de matières visées par R. 4227-22 non renseignée — obligation retenue par prudence, à confirmer (champ R. 4227-34, quel que soit l'effectif)",
+      );
+      sansReponse.push("matieres_r4227_22");
+    }
 
     // La raison « à confirmer » ne se dit que si rien d'autre n'établit le
     // champ : quand les matières sont déclarées, l'obligation est due de façon
@@ -683,9 +703,26 @@ export function matchTypologie(
     }
   }
 
+  // 3 bis bis. Type d'ERP non renseigné face à une EXCLUSION par type.
+  //
+  // La ligne est retenue — c'est le membre général d'une paire (GE 4 § 1 et
+  // ses voisins), celui qui survit au silence —, mais elle ne l'est que parce
+  // que le type manque : déclaré, il peut la remplacer par le membre
+  // spécifique ou l'écarter. Elle le dit donc, comme toute ligne que le silence
+  // retient (relevé en appelant le moteur le 2026-09-27 : la raison écrivait
+  // « exclusion non vérifiable », aucun écran ne le portait).
+  if (
+    regimeErp.etat === "match" &&
+    typeof t.erp === "object" &&
+    t.erp.typesExclus !== undefined &&
+    t.erp.typesExclus.length > 0 &&
+    (etab.typeErp === null || etab.typeErp === undefined)
+  ) {
+    sansReponse.push("type_erp");
+  }
+
   // 3 ter. Locaux à sommeil pour le public (ET).
   const sommeil = evaluerLocauxSommeil(t.locauxSommeilPublic, etab);
-  const sansReponse: QuestionSansReponse[] = [];
   if (sommeil !== null) {
     if (!sommeil.ok) return { ok: false };
     raisons.push(sommeil.raison);
