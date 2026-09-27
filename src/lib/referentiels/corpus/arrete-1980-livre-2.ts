@@ -215,7 +215,10 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
     {
       ref: "GE 6",
       intitule: "Vérifications techniques — généralités",
-      url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020303884/",
+      // ~~URL de section~~ (2026-09-27, lot 2) : la version en vigueur de GE 6
+      // est à abrogation différée, et `legifrance:verifier` ne la résolvait pas
+      // par son numéro ; lue par l'identifiant de l'article.
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020380169",
       versionEnVigueur: "2007-11-19",
       versionFuture: "2027-06-01",
       luLe: "2026-09-01",
