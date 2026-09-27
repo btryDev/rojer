@@ -451,7 +451,7 @@ export const obligationsFroid: Obligation[] = [
     domaine: "froid",
     libelle: "Contrôle d'étanchéité après modification du circuit frigorifique",
     description:
-      "Toute modification affectant le circuit frigorifique impose un nouveau contrôle d'étanchéité, indépendamment du calendrier périodique. Après réparation d'une fuite, le contrôle est refait sur l'installation remise en fonctionnement.",
+      "Toute modification affectant le circuit frigorifique impose un nouveau contrôle d'étanchéité, indépendamment du calendrier périodique. Après réparation d'une fuite, le contrôle est refait sur l'installation remise en fonctionnement. Quand une fuite est constatée, l'opérateur en remet le constat au détenteur, « lequel prend toutes mesures pour remédier à la fuite qui a été constatée » (C. env., R. 543-79).",
     referencesLegales: [REF_ENVIRONNEMENT_RENOUVELLEMENT, REF_REGLEMENT_ART_5],
     periodicite: "autre",
     nature: "evenementielle",

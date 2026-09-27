@@ -2732,3 +2732,19 @@ describe("L. 4141-1 porté en ses deux alinéas (2026-09-27, lot 2)", () => {
     );
   });
 });
+
+describe("ce que le texte fait établir est dit en entier (2026-09-27, lot 2, 7 bis G2)", () => {
+  // Chaque phrase ci-dessous était une prescription d'un article RETENU, lue
+  // par l'API, que ni l'obligation ni une réserve ne portait. Éprouvé en
+  // retirant l'une d'elles.
+  it.each([
+    ["incendie-travail-consigne-affichee", "de donner l'alarme"],
+    ["incendie-travail-consigne-affichee", "communiquée à l'inspection du travail"],
+    ["incendie-travail-alarme-sonore", "au moins de type 4"],
+    ["froid-controle-etancheite-apres-modification", "remédier à la fuite"],
+    ["elec-salarie-habilitation", "formation théorique et pratique"],
+    ["incendie-travail-eclairage-securite-essai-mensuel", "notice descriptive"],
+  ] as const)("%s dit « %s »", (id, phrase) => {
+    expect(obligationParId(id)?.description).toContain(phrase);
+  });
+});

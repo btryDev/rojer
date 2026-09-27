@@ -243,7 +243,7 @@ export const obligationsIncendie: Obligation[] = [
     domaine: "incendie",
     libelle: "Consigne de sécurité incendie établie et affichée",
     description:
-      "Dans les établissements mentionnés à l'article R. 4227-34 (plus de cinquante personnes occupées ou réunies habituellement, ou manipulation de matières visées par R. 4227-22, quel que soit l'effectif), une consigne de sécurité incendie est établie et affichée de manière très apparente : dans chaque local de plus de cinq personnes et dans les locaux à matières inflammables, sinon dans chaque local ou dégagement desservant un groupe de locaux. Elle indique le matériel d'extinction et de secours, les personnes chargées de l'activer, de diriger l'évacuation des travailleurs et du public, les mesures pour les personnes handicapées, les moyens d'alerte, les personnes chargées d'aviser les sapeurs-pompiers, l'adresse et le numéro du service de secours (R. 4227-38). Les autres établissements établissent de simples instructions d'évacuation.",
+      "Dans les établissements mentionnés à l'article R. 4227-34 (plus de cinquante personnes occupées ou réunies habituellement, ou manipulation de matières visées par R. 4227-22, quel que soit l'effectif), une consigne de sécurité incendie est établie et affichée de manière très apparente : dans chaque local de plus de cinq personnes et dans les locaux à matières inflammables, sinon dans chaque local ou dégagement desservant un groupe de locaux. Elle indique le matériel d'extinction et de secours, les personnes chargées de l'activer, de diriger l'évacuation des travailleurs et du public, les mesures pour les personnes handicapées, les moyens d'alerte, les personnes chargées d'aviser les sapeurs-pompiers, l'adresse et le numéro du service de secours, et le devoir, pour toute personne apercevant un début d'incendie, de donner l'alarme et de mettre en œuvre les moyens de premier secours sans attendre les travailleurs spécialement désignés (R. 4227-38). « La consigne de sécurité incendie est communiquée à l'inspection du travail. » (R. 4227-40) Les autres établissements établissent de simples instructions d'évacuation.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -262,6 +262,15 @@ export const obligationsIncendie: Obligation[] = [
           "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024769384/",
         note: "« La consigne de sécurité incendie indique : 1° Le matériel d'extinction et de secours qui se trouve dans le local ou à ses abords ; [...] 8° Le devoir, pour toute personne apercevant un début d'incendie, de donner l'alarme et de mettre en œuvre les moyens de premier secours, sans attendre l'arrivée des travailleurs spécialement désignés. » Verbatim relevé le 2026-09-01. C'est de cet article que la description tient ses huit points ; il n'ajoute ni champ ni périodicité, il donne le contenu de l'écrit que R. 4227-37 fait établir.",
         versionConstatee: "2011-11-10",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-40",
+        article: "R. 4227-40",
+        url:
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532053/",
+        note: "« La consigne de sécurité incendie est communiquée à l'inspection du travail. » Relu sur l'API le 2026-09-27 (lot 2), en vigueur depuis le 2008-05-01. Même champ que la consigne.",
+        versionConstatee: "2008-05-01",
       },
     ],
     periodicite: "autre",
@@ -331,7 +340,7 @@ export const obligationsIncendie: Obligation[] = [
     domaine: "incendie",
     libelle: "Système d'alarme sonore installé",
     description:
-      "Les établissements où peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes, public compris, et ceux, quel que soit leur effectif, où sont manipulées et mises en œuvre des matières explosives ou inflammables, sont équipés d'un système d'alarme sonore (R. 4227-34). L'alarme générale est donnée par bâtiment quand l'établissement en compte plusieurs, isolés entre eux (R. 4227-35) ; son signal ne se confond avec aucun autre, il est audible de tout point du bâtiment pendant le temps de l'évacuation, avec une autonomie d'au moins cinq minutes (R. 4227-36).",
+      "Les établissements où peuvent se trouver occupées ou réunies habituellement plus de cinquante personnes, public compris, et ceux, quel que soit leur effectif, où sont manipulées et mises en œuvre des matières explosives ou inflammables, sont équipés d'un système d'alarme sonore (R. 4227-34). L'alarme générale est donnée par bâtiment quand l'établissement en compte plusieurs, isolés entre eux (R. 4227-35) ; son signal ne se confond avec aucun autre, il est audible de tout point du bâtiment pendant le temps de l'évacuation, avec une autonomie d'au moins cinq minutes (R. 4227-36). L'arrêté du 4 novembre 1993 (art. 14) en fixe le type : « Un équipement d'alarme au moins de type 3 doit être installé dans les établissements dont l'effectif est supérieur à 700 personnes et dans ceux dont l'effectif est supérieur à 50 personnes lorsque sont entreposées ou manipulées des substances ou mélanges visés à l'article R. 4227-22 du code du travail. Un équipement d'alarme au moins de type 4 doit être installé dans les autres établissements visés à l'article R. 4227-34 du code du travail. »",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -359,6 +368,15 @@ export const obligationsIncendie: Obligation[] = [
           "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532063/",
         note: "« Le signal sonore d'alarme générale est tel qu'il ne permet pas la confusion avec d'autres signalisations utilisées dans l'établissement. Il est audible de tout point du bâtiment pendant le temps nécessaire à l'évacuation, avec une autonomie minimale de cinq minutes. » Relu sur l'API le 2026-09-27.",
         versionConstatee: "2008-05-01",
+      },
+      {
+        source: "ARRETE",
+        reference: "Arrêté du 4 novembre 1993, art. 14",
+        article: "Arrêté 1993-11-04 art. 14",
+        url:
+          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000028480696",
+        note: "Le TYPE de l'équipement d'alarme (type 3 au-delà de 700 personnes, et au-delà de 50 personnes quand les matières de R. 4227-22 sont entreposées ou manipulées ; type 4 dans les autres établissements de R. 4227-34). Relu sur l'API le 2026-09-27 (lot 2) ; ne change pas le champ de l'obligation.",
+        versionConstatee: "2014-01-19",
       },
     ],
     periodicite: "autre",
@@ -579,7 +597,7 @@ export const obligationsIncendie: Obligation[] = [
     domaine: "incendie",
     libelle: "Essai mensuel de l'éclairage de sécurité (lieu de travail)",
     description:
-      "Une fois par mois, l'employeur vérifie le passage à la position de fonctionnement en cas de défaillance de l'alimentation normale et l'allumage de toutes les lampes, ainsi que l'efficacité de la commande de mise en position de repos à distance et de la remise automatique en position de veille au retour de l'alimentation normale. Le résultat est porté au registre. Sur une installation constituée de blocs autonomes à système automatique de test intégré (SATI), ces opérations peuvent être effectuées automatiquement.",
+      "Une fois par mois, l'employeur vérifie le passage à la position de fonctionnement en cas de défaillance de l'alimentation normale et l'allumage de toutes les lampes, ainsi que l'efficacité de la commande de mise en position de repos à distance et de la remise automatique en position de veille au retour de l'alimentation normale. Le résultat est porté au registre. Sur une installation constituée de blocs autonomes à système automatique de test intégré (SATI), ces opérations peuvent être effectuées automatiquement. Une notice descriptive des conditions de maintenance et de fonctionnement, avec les caractéristiques des pièces de rechange, est annexée au registre (arrêté du 14 décembre 2011, art. 11).",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -634,7 +652,7 @@ export const obligationsIncendie: Obligation[] = [
     domaine: "incendie",
     libelle: "Vérification semestrielle de l'autonomie de l'éclairage de sécurité (lieu de travail)",
     description:
-      "Une fois tous les six mois, l'employeur vérifie l'autonomie d'au moins une heure de l'éclairage de sécurité. Dans les établissements comportant des périodes de fermeture, l'opération est conduite de telle manière qu'au début de chaque période d'ouverture l'installation ait retrouvé l'autonomie prescrite. Le résultat est porté au registre.",
+      "Une fois tous les six mois, l'employeur vérifie l'autonomie d'au moins une heure de l'éclairage de sécurité. Dans les établissements comportant des périodes de fermeture, l'opération est conduite de telle manière qu'au début de chaque période d'ouverture l'installation ait retrouvé l'autonomie prescrite. Le résultat est porté au registre. Une notice descriptive des conditions de maintenance et de fonctionnement, avec les caractéristiques des pièces de rechange, est annexée au registre (arrêté du 14 décembre 2011, art. 11).",
     referencesLegales: [
       {
         source: "ARRETE",

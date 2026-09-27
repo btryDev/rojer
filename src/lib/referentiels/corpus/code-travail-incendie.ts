@@ -204,6 +204,20 @@ export const CODE_TRAVAIL_INCENDIE: Corpus = {
       ],
     },
     {
+      ref: "R. 4227-40",
+      intitule: "Consigne de sécurité incendie communiquée à l'inspection du travail",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532053/",
+      prescrit:
+        "Communiquer à l'inspection du travail la consigne de sécurité incendie de R. 4227-37. Même champ que la consigne ; porté dans sa description (2026-09-27, lot 2 — l'article n'était cité nulle part dans le dépôt).",
+      citationCle: "La consigne de sécurité incendie est communiquée à l'inspection du travail.",
+      versionEnVigueur: "2008-05-01",
+      modifiePar: null,
+      luLe: "2026-09-27",
+      lecture: "premiere_main",
+      statut: "retenu",
+      obligations: ["incendie-travail-consigne-affichee"],
+    },
+    {
       ref: "R. 4227-38",
       intitule: "Contenu de la consigne de sécurité incendie",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024769384/",

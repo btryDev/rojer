@@ -273,7 +273,7 @@ export const obligationsElectricite: Obligation[] = [
     domaine: "electricite",
     libelle: "Habilitation électrique du travailleur désigné",
     description:
-      "L'employeur délivre à un travailleur désigné une habilitation adaptée aux opérations qu'il lui confie sur des installations électriques ou dans leur voisinage, puis la maintient ou la renouvelle. Aucune durée de validité n'est écrite dans le Code : il renvoie aux modalités de normes qu'il qualifie lui-même de recommandées. La date de fin que porte le titre est donc celle de qui l'a délivré, pas celle du droit — c'est à ce titre-là qu'elle se saisit ici, et Rojer n'en calcule aucune.",
+      "L'employeur délivre à un travailleur désigné une habilitation adaptée aux opérations qu'il lui confie sur des installations électriques ou dans leur voisinage, puis la maintient ou la renouvelle. Aucune durée de validité n'est écrite dans le Code : il renvoie aux modalités de normes qu'il qualifie lui-même de recommandées. La date de fin que porte le titre est donc celle de qui l'a délivré, pas celle du droit — c'est à ce titre-là qu'elle se saisit ici, et Rojer n'en calcule aucune. « Avant de délivrer l'habilitation, l'employeur s'assure que le travailleur a reçu la formation théorique et pratique qui lui confère la connaissance des risques liés à l'électricité et des mesures à prendre pour intervenir en sécurité lors de l'exécution des opérations qui lui sont confiées. » (R. 4544-10)",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",

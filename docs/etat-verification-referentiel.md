@@ -83,12 +83,12 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**172 obligations**, **325 références** — 94 obligations en citent plus d'une.
+**172 obligations**, **327 références** — 94 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 70 | 41 % | 78 | 170 | 52 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 91 | 53 % | 88 | 143 | 44 % |
+| 5 · lu à la source, verbatim relevé | 69 | 40 % | 78 | 171 | 52 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 92 | 53 % | 88 | 144 | 44 % |
 | 3 · lu et daté, aucun verbatim | 11 | 6 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
@@ -98,7 +98,7 @@ repose sur un texte que personne n'a ouvert.
 
 **11 obligations (6 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
-**11 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-registre-securite`, `incendie-erp-extincteurs-annuelle`, `incendie-igh-charge-calorifique-quinquennale`, `ascenseur-controle-technique-quinquennal`, `stockage-dangereux-ventilation-locaux`, `sante-travail-etablissement-adhesion-spst`.
+**12 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `incendie-erp-extincteurs-annuelle`, `incendie-igh-charge-calorifique-quinquennale`, `ascenseur-controle-technique-quinquennal`, `stockage-dangereux-ventilation-locaux`, `sante-travail-etablissement-adhesion-spst`.
 
 **Aucune référence n'est au bas de l'échelle** : les 2 degrés « au corpus, aucune trace de lecture » et « rien à ouvrir » sont vides. Toute référence du référentiel porte une clé d'article, cette clé est connue d'un corpus, et cet article porte une date et un moyen de lecture. Ces degrés restent dans l'échelle parce que leur disparition ne se verrait pas si l'échelle ne les nommait plus.
 
@@ -108,7 +108,7 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 304 | 94 % |
+| ancrée | 306 | 94 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 20 | 6 % |
 
@@ -133,7 +133,7 @@ repose sur un texte que personne n'a ouvert.
 | `equipement_sous_pression` | 7 | 8 | 7 | · | · | · | · | · | 7 / 7 — 100 % | 1 / 8 | 2026-09-01 → 2026-09-27 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
-| `incendie` | 39 | 79 | 24 | 8 | 7 | · | · | · | 32 / 39 — 82 % | 0 / 79 | 2026-08-26 → 2026-09-27 |
+| `incendie` | 39 | 81 | 23 | 9 | 7 | · | · | · | 32 / 39 — 82 % | 0 / 81 | 2026-08-26 → 2026-09-27 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 10 | 27 | 9 | 1 | · | · | · | · | 10 / 10 — 100 % | 0 / 27 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-27 |
-| `etablissement` | 69 | 128 | 26 | 40 | 3 | · | · | · | 66 / 69 — 96 % | 0 / 128 | 2026-08-26 → 2026-09-27 |
+| `etablissement` | 69 | 130 | 25 | 41 | 3 | · | · | · | 66 / 69 — 96 % | 0 / 130 | 2026-08-26 → 2026-09-27 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -171,14 +171,14 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 32 | 10 % | 31 |
 | 2026-08-27 | 10 | 3 % | 7 |
 | 2026-08-31 | 58 | 18 % | 28 |
-| 2026-09-01 | 129 | 40 % | 83 |
-| 2026-09-02 | 17 | 5 % | 14 |
+| 2026-09-01 | 129 | 39 % | 83 |
+| 2026-09-02 | 18 | 6 % | 15 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 25 | 8 % | 20 |
-| 2026-09-27 | 37 | 11 % | 35 |
+| 2026-09-27 | 38 | 12 % | 36 |
 
-325 des 325 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
+327 des 327 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -194,7 +194,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**321 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
+**320 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -202,8 +202,8 @@ une relecture déjà faite.
 | `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 → 2026-09-27 |
 | `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-27 |
 | `inrs-documentaire` | 15 | 16 | 2026-09-03 → 2026-09-26 |
-| `arrete-1993-11-04-signalisation` | 14 | 21 | 2026-09-02 |
 | `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-27 |
+| `arrete-1993-11-04-signalisation` | 13 | 21 | 2026-09-02 |
 | `csp-eau-potable` | 11 | 11 | 2026-09-02 → 2026-09-27 |
 | `arrete-2010-02-01-legionelles` | 11 | 11 | 2026-09-20 |
 | `code-travail-eclairage` | 11 | 12 | 2026-09-02 → 2026-09-27 |
@@ -312,6 +312,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-5-sommeil-plans-affiches` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-erp-alarme-verification-hebdomadaire` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-04 |
 | `incendie-registre-securite` | incendie | etablissement | 10 | 5 · première main | 4 · agent + verbatim | 0 / 10 | 2026-08-31 → 2026-09-26 |
+| `incendie-travail-alarme-sonore` | incendie | etablissement | 4 | 5 · première main | 4 · agent + verbatim | 0 / 4 | 2026-09-01 → 2026-09-27 |
 | `information-etablissement-affichages-obligatoires` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `information-etablissement-avis-acces-duerp` | information_travailleurs | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-26 |
 | `levage-examen-etat-conservation` | levage | equipement | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-09-01 |
@@ -403,9 +404,8 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
 | `incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
 | `incendie-erp-visite-commission-cat4-triennale` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
-| `incendie-travail-alarme-sonore` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-09-01 → 2026-09-27 |
 | `incendie-travail-chiffons-impregnes-recipients-clos` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
-| `incendie-travail-consigne-affichee` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
+| `incendie-travail-consigne-affichee` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-09-01 → 2026-09-27 |
 | `incendie-travail-eclairage-securite-autonomie-semestrielle` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
 | `incendie-travail-eclairage-securite-essai-mensuel` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
 | `incendie-travail-exercice-semestriel` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
@@ -433,7 +433,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 325 références, une par une
+## 9. Les 327 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -473,11 +473,13 @@ refaire pour la contredire.
 | `incendie-travail-moyens-lutte` | contexte 1 | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-consigne-affichee` | fondement | R. 4227-37 | R. 4227-37 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-consigne-affichee` | contexte 1 | R. 4227-38 | R. 4227-38 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
+| `incendie-travail-consigne-affichee` | contexte 2 | R. 4227-40 | R. 4227-40 | code-travail-incendie | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-instructions-evacuation` | fondement | R. 4227-37 | R. 4227-37 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-instructions-evacuation` | contexte 1 | R. 4216-2 | R. 4216-2 | code-travail-incendie | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-alarme-sonore` | fondement | R. 4227-34 | R. 4227-34 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-alarme-sonore` | contexte 1 | R. 4227-35 | R. 4227-35 | code-travail-incendie | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-alarme-sonore` | contexte 2 | R. 4227-36 | R. 4227-36 | code-travail-incendie | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
+| `incendie-travail-alarme-sonore` | contexte 3 | Arrêté du 4 novembre 1993, art. 14 | Arrêté 1993-11-04 art. 14 | arrete-1993-11-04-signalisation | retenu | 2026-09-02 | agent_verbatim | ✓ | ✓ | 2014-01-19 | 2014-01-19 | 4 · agent + verbatim | ancrée |
 | `incendie-travail-chiffons-impregnes-recipients-clos` | fondement | R. 4227-26 | R. 4227-26 | code-travail-matieres-inflammables | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-exercice-semestriel` | fondement | R. 4227-39 | R. 4227-39 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-exercice-semestriel` | contexte 1 | R. 4227-34 | R. 4227-34 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |

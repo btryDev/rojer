@@ -411,9 +411,12 @@ export const ARRETE_1993_11_04_SIGNALISATION: Corpus = {
         "Précise le type d'équipement d'alarme exigé par R. 4227-34 à R. 4227-36 : au moins le type 3 au-delà de 700 personnes, et au-delà de 50 personnes lorsque sont entreposées ou manipulées des substances de R. 4227-22 ; au moins le type 4 dans les autres établissements de R. 4227-34 ; au moins le type 2 a ou 2 b si le chef d'établissement souhaite une temporisation.",
       citationCle:
         "Les systèmes d'alarme sonores exigés aux articles R. 4227-34 à R. 4227-36 du code du travail sont constitués d'équipements d'alarme dont les types sont précisés dans l'annexe IV. Un équipement d'alarme au moins de type 3 doit être installé dans les établissements dont l'effectif est supérieur à 700 personnes et dans ceux dont l'effectif est supérieur à 50 personnes lorsque sont entreposées ou manipulées des substances ou mélanges visés à l'article R. 4227-22 du code du travail. Un équipement d'alarme au moins de type 4 doit être installé dans les autres établissements visés à l'article R. 4227-34 du code du travail. Toutefois, si le chef d'établissement souhaite disposer d'une temporisation il doit installer un équipement d'alarme du type 2 a ou 2 b au minimum et respecter toutes les contraintes liées à ce type.",
-      statut: "sans_objet",
-      motif:
-        "Donne la caractéristique technique du système d'alarme sonore que R. 4227-34 fait installer ; il ne crée pas l'obligation, il la spécifie, et R. 4227-34 est déjà `retenu` au corpus `code-travail-incendie`. Même rapport que R. 4227-38 au contenu de la consigne de R. 4227-37. DEUX CHOSES À NE PAS PERDRE. D'abord, ~~un manque subsiste ailleurs : l'entrée de R. 4227-34 ne nomme que `incendie-travail-exercice-semestriel`, si bien que l'INSTALLATION de l'alarme n'est portée par aucune obligation — le manque appartient à cet article-là et n'est pas recompté ici~~ [2026-09-27 : manque fermé — `incendie-travail-alarme-sonore` porte l'installation (`85cbbfd`), et l'entrée de R. 4227-34 la nomme]. Ensuite, le seuil de 700 personnes et le régime de temporisation sont hors cible produit, mais celui de 50 personnes croisé aux matières de R. 4227-22 ne l'est pas : une réserve de restaurant peut y tomber. CANDIDAT À REQUALIFICATION EN `retenu` le jour où l'installation de l'alarme est encodée. [2026-09-27 : elle l'est (`85cbbfd`) ; la requalification de cet article N'EST PAS FAITE — elle suppose de relire l'article pour dire ce que l'obligation doit en citer. Reste ouvert.]",
+      // ~~`sans_objet`~~ → `retenu` le 2026-09-27 (lot 2) : la condition que le
+      // motif posait est remplie — l'installation de l'alarme est encodée
+      // (`85cbbfd`). Politique sœur : R. 4227-35 et -36, caractéristiques de la
+      // même alarme, sont retenus sur la même obligation.
+      statut: "retenu",
+      obligations: ["incendie-travail-alarme-sonore"],
     },
     {
       ref: "Arrêté 1993-11-04 art. 15",
