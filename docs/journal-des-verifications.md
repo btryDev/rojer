@@ -3275,6 +3275,142 @@ arrêtés, l'injection rejouée seule.
    `urls-legifrance.test.ts`. Ce qui manquait n'était pas l'outillage : c'était
    le fil de l'histoire.
 
+### C42 · 2026-09-27 — E8 tranchée : l'audit des quatorze titres ; l'article sous chaque état permanent, et son widget
+
+*Base : production `8bb6b0b`, branche `lot/e8-titres-et-widget-etats`. Ni
+référentiel ni moteur touchés : aucune obligation, aucune description, aucune
+empreinte. Le corpus, lui, l'est — cinq articles entrés, deux verbatims
+complétés (ci-dessous).*
+
+**La règle, dite par la propriétaire** (relayée par la coordination) : « Change
+juste les titres, mais si ce qui est du contenu n'est pas de la réglementation
+alors ça n'a pas lieu d'être », puis « une obligation légale pour l'employeur
+vis-à-vis du salarié. Mais c'est la même ligne que pour tout Rojer : on ne fait
+rien et on n'annonce rien qui ne soit pas légal. » Critère appliqué : un texte
+met-il à la charge de l'employeur, envers ce salarié, une formation, une
+visite, une habilitation ou une autorisation ?
+
+**Relu sur Légifrance le 2026-09-27** (WebFetch ; texte intégral demandé, puis
+question fermée sur la phrase qui tranche) : `L. 4644-1` (« à leur demande »
+n'y figure pas), `L. 2315-18` (financement par l'employeur : oui), `L. 2315-16`,
+`R. 4224-15` (fil d'Ariane : « Titre II : Obligations de l'employeur pour
+l'utilisation des lieux de travail »), `R. 4624-10`, `L. 4624-1` (premier
+alinéa : ne nomme pas l'employeur), `R. 4624-39`, `L. 4745-1` (« Le fait de
+méconnaître », sans sujet), `L. 4741-1` (« le fait pour l'employeur » ; vise le
+titre IV du livre Ier, le titre II du livre II, le livre III, le titre IV du
+livre V : cinq « oui »), `R. 4323-55` (fil d'Ariane), `R. 4323-56`,
+`R. 4544-10`, `R. 4544-11-1`, `L. 4141-2`, `L. 4622-1`, `R. 4451-57`
+(« l'employeur classe »).
+
+**Écrit au corpus** — tous `agent_verbatim` : une lecture par WebFetch est
+rapportée par un lecteur automatique (piège n° 8), elle n'est pas de première
+main. `code-travail-sante-travail` : `L. 4624-1`, `R. 4624-39`, `L. 4745-1`,
+`R. 4451-57`, en `sans_objet` (ils ne créent aucune échéance ; le motif dit ce
+qu'ils fondent). `code-travail-formation-securite` : `L. 4741-1`, idem.
+`code-travail-organisation-prevention` : la `citationCle` de `L. 4644-1` reçoit
+son second alinéa, celle de `L. 2315-18` ses premier et dernier alinéas ; `luLe`
+passé au 2026-09-27. **`R. 4624-39` : `modifiePar` absent**, et ce n'est pas un
+oubli — la page, interrogée deux fois, n'affiche aucune mention « Modifié
+par » ; la question reste posée. `docs/etat-verification-referentiel.md`
+régénéré : 317 − 0 + 5 = 322 articles dépouillés non cités (`L. 4624-1`,
+`R. 4624-39`, `L. 4745-1`, `R. 4451-57` au corpus santé-travail, 5 → 9 ;
+`L. 4741-1` au corpus formation-sécurité, 9 → 10 ; aucun n'est cité par une
+obligation, aucun article déjà présent n'en sort).
+
+**L'audit.** Quatorze titres au catalogue (en appelant `cataloguerTitres()`) ;
+quatorze répondent au critère, douze sous une condition.
+
+| Titre | Fondateur | Phrase qui nomme l'employeur | Obligation de l'employeur envers le salarié |
+|---|---|---|---|
+| Formation à la conduite d'équipements mobiles ou de levage | `R. 4323-55` | `L. 4741-1` : « le fait pour l'employeur ou son délégataire de méconnaître […] 3° Livre III » | oui, si la conduite lui est confiée. Le fondateur dit « est réservée aux travailleurs qui ont reçu une formation adéquate », sans sujet |
+| Autorisation de conduite | `R. 4323-56` al. 1 | « subordonnée à l'obtention d'une autorisation de conduite délivrée par l'employeur » | oui, pour les équipements qu'un arrêté soumet à autorisation (`R. 4323-57`) |
+| Attestation médicale — conduite | `R. 4323-56` al. 2 | « Elle est présentée par le travailleur à l'employeur, qui en conserve une copie pendant toute sa durée de validité. » | oui, s'il détient une autorisation de conduite |
+| Habilitation électrique | `R. 4544-10` | « L'habilitation, délivrée par l'employeur, spécifie la nature des opérations » | oui, si des opérations électriques lui sont confiées |
+| Attestation médicale — voisinage sous tension | `R. 4544-11-1` | « Elle est présentée par le travailleur à l'employeur, qui en conserve une copie » | oui, si l'habilitation vise le voisinage de pièces nues sous tension (`R. 4544-10`) |
+| Formation à la sécurité | `L. 4141-2` | « L'employeur organise une formation pratique et appropriée à la sécurité au bénéfice : 1° Des travailleurs qu'il embauche » | oui, sans condition (embauche, changement de poste, temporaires, reprise) |
+| Formation du salarié désigné compétent | `L. 4644-1` I al. 2 | `L. 2315-18`, par renvoi : « le financement de la formation […] est pris en charge par l'employeur » | oui, s'il a été désigné |
+| Formation SSCT, membre du CSE | `L. 2315-18` | même phrase | oui, s'il est membre de la délégation du personnel ou référent |
+| Secouriste | `R. 4224-15` | `L. 4741-1` : « le fait pour l'employeur […] 2° Titre II du livre II » | oui, dans un atelier à travaux dangereux ou sur un chantier d'au moins vingt travailleurs. Le fondateur dit « Un membre du personnel reçoit », sans sujet |
+| Visite d'information et de prévention | `R. 4624-10` | `R. 4624-39` : « Le temps et les frais de transport nécessités par ces visites et ces examens sont pris en charge par l'employeur. » | oui, sans condition (« Tout travailleur ») |
+| VIP, modalités adaptées | `R. 4624-17`, `-18` | même phrase | oui, selon l'état de santé, l'âge, le travail de nuit, moins de dix-huit ans |
+| Suivi individuel renforcé | `R. 4624-22`, `-28` | même phrase | oui, sur un poste à risques particuliers |
+| SIR — visite intermédiaire | `R. 4624-28` | même phrase | oui, sous SIR |
+| SIR — catégorie A | `R. 4451-82` | `R. 4451-57` : « l'employeur classe » | oui, s'il est classé en catégorie A |
+
+**Ce qui tient à une lecture, et doit être su.** Quatre fondateurs écrivent
+sans sujet (les visites « Tout travailleur bénéficie », `R. 4224-15`,
+`R. 4323-55`). Pour eux l'employeur est nommé par un autre article — une
+disposition pénale (`L. 4741-1`) ou une charge (`R. 4624-39`, avec `L. 4622-1`
+qui fait organiser le service par les employeurs). C'est l'état du Code, pas
+une extrapolation ; mais un relecteur juriste pourrait préférer un autre
+article porteur, et c'est à lui de le dire.
+
+**Appliqué.** `src/lib/salaries/obligation-employeur.ts` porte l'audit en code.
+`salaries/droits.ts` : base « Article 6.1.c du RGPD — obligation légale de
+l'employeur envers le salarié : chaque titre […] que le Code du travail met à
+la charge de l'employeur envers le travailleur, pour certains sous une
+condition » ; texte d'information : « que le Code du travail met à la charge de
+votre employeur envers vous » et, sous « Pourquoi », « chacun de ces titres
+[…] est une obligation que le Code du travail met à la charge de votre
+employeur envers vous ». « Exigés », « impose » restent absents : l'audit ne
+dit pas que chaque titre est dû par chaque salarié. `docs/rgpd.md` § 5.2 ne
+fonde plus le refus d'effacement sur `D. 4711-3`. E8 au fichier des décisions,
+avec la règle dans les mots de la propriétaire.
+
+**Laissé, et signalé** : la conservation APRÈS la sortie de l'effectif. La
+règle fonde le suivi pendant l'emploi ; seuls `R. 4323-56` et `R. 4544-11-1`
+font conserver une pièce, et « pendant toute sa durée de validité ». « Votre
+départ de l'entreprise n'efface donc pas ces données » repose encore sur
+`D. 4711-3` par analogie. À décider.
+
+**États permanents : l'article sous chaque ligne, et un widget.** L'écran
+« Ce qui doit être en place » ne citait aucun texte (constat de C40). Chaque
+ligne porte désormais un `LegalBadge` : `referencesLegales[0]` de l'obligation,
+et la `citationCle` du corpus **si et seulement si la référence imprimée nomme
+l'article dont elle est tirée** (`etats-permanents/fondement.ts`). Trouvé en
+posant cette garde : `elec-travail-habilitation-personnel` imprime « R. 4544-9
+à R. 4544-11 » sous la clé `R. 4544-10` ; montrer le texte du seul
+R. 4544-10 sous le nom de trois articles aurait été une citation fausse. Ces
+lignes-là ouvrent Légifrance sans citer. Le widget « Ce qui doit être en
+place » (`dashboard/widgets/impl/etats-permanents.tsx`, dans le tiroir, hors
+du board par défaut : la propriétaire a dit « peut-être ») liste les mêmes
+lignes, par la même lecture (`etatsPermanentsDuDossier` →
+`listerEtatsPermanents`), avec leur état — la phrase de déclaration de
+l'écran, « À confirmer », « À mettre en place » ou « Pas encore daté » — et
+leur article. Aucun compte, aucune qualification. Le guide ne dit plus que
+cet écran ne cite pas ses textes.
+
+**Gardes, et ce qu'elles mesurent.** `salaries/obligation-employeur.test.ts` :
+tout titre du catalogue est à l'audit, toute entrée d'audit a son titre,
+chaque phrase est mot pour mot dans la `citationCle` de son article et nomme
+l'employeur, chaque fondateur est cité par le titre. `salaries.test.ts` : les
+deux phrases de `droits.ts`. `etats-permanents/fondement.test.ts` : pour les
+obligations de l'écran, la pastille nomme l'article dont elle montre le texte,
+qui est la `citationCle` entière. `widgets/impl/etats-permanents.test.tsx` :
+la page RÉELLE, rendue avec ses lectures remplacées par un dossier fabriqué,
+et le widget listent les mêmes lignes, dans le même ordre, avec le même
+article ; le tableau de bord lit l'entrée des états permanents (source).
+`LigneEtat.test.tsx` : la pastille est rendue. `extraits-affiches.test.ts` :
+`fondement.extrait` inscrit parmi les expressions confrontées ailleurs. **Ce
+qu'elles ne prouvent pas** : que la phrase d'audit met l'obligation à la
+charge de l'employeur envers CE salarié (lecture humaine, ci-dessus) ; que le
+tableau de bord, exécuté, montre le widget (contrôle de source, pas de rendu).
+
+**Éprouvées** — chaque injection appliquée, la suite ciblée rouge, le fichier
+restauré : widget sans « ce qui revient » ; widget qui le met en tête ; page
+sans cette section ; état « Conforme » ; compte « 1 sur N » dans le widget ;
+extrait montré sous un intervalle ; extrait = `prescrit` ; extrait inventé
+hors corpus ; expression retirée de `extraits-affiches` ; tableau de bord
+lisant une autre source ; pastille retirée de `LigneEtat` (d'abord VERTE : la
+garde manquait, `LigneEtat.test.tsx` écrit, rouge ensuite) ; page ne passant
+plus l'article ; bouton mort à la place du texte clair ; titre retiré de
+l'audit ; phrase paraphrasée ; fondateur inventé ; « prévoit » remis dans
+l'ouverture de `droits.ts` (d'abord VERT — « Pourquoi » disait encore
+l'obligation ; la garde exige depuis les deux phrases, rouge ensuite) ;
+« exigés par le Code » remis. Vitest a figé plusieurs fois sans rien écrire :
+lancé depuis `./node_modules/.bin/vitest`, stdin fermé, sous un minuteur ;
+l'injection rejouée quand il avait figé.
+
 ---
 
 ## Partie 2 — Registre des constats en suspens

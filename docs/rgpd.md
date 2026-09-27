@@ -405,9 +405,13 @@ s'exercent auprès de son employeur, qui est le responsable de traitement.
   concernant. L'outil doit pouvoir les extraire pour une personne donnée.
 - **Rectification** (art. 16) — une date d'habilitation erronée se corrige.
 - **Effacement** (art. 17) — **limité** : les données conservées au titre d'une
-  obligation légale (preuve d'habilitation, `D. 4711-3`) ne sont pas effaçables
-  à la demande, exception de l'article 17.3.b. Le dire clairement vaut mieux
-  que de promettre un droit qu'on ne peut pas honorer.
+  obligation légale ne sont pas effaçables à la demande, exception de l'article
+  17.3.b. Le dire clairement vaut mieux que de promettre un droit qu'on ne peut
+  pas honorer. ~~(preuve d'habilitation, `D. 4711-3`)~~ — `D. 4711-3` ne vise
+  pas les titres, il ne fonde que la DURÉE, par analogie (§ 4). L'obligation
+  légale, c'est celle que chaque titre met à la charge de l'employeur envers
+  le salarié : décision E8 de la propriétaire, 2026-09-27, audit des titres
+  dans `src/lib/salaries/obligation-employeur.ts` (journal C42).
 - **Opposition** (art. 21) — **sans objet** sur un traitement fondé sur 6.1.c :
   le droit d'opposition ne s'applique pas à une obligation légale. Le salarié
   ne peut pas s'opposer à ce que son habilitation soit suivie, pas plus qu'il
