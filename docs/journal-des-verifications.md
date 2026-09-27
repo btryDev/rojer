@@ -4288,6 +4288,13 @@ seul morceau ; lectures non bornées ; type de la base servi tel quel ; sans
 sandbox ; antislash non neutralisé ; extension perdue ; salariés tus au
 README ; `maxDuration` retiré — dix rouges.
 
+**Un test existant tombé, et réécrit.** `RegistreDocument.test.tsx` vérifiait
+« R. 143-44 à l'ERP seul » par la TAILLE du PDF : la phrase sur `Rapports/`
+a changé coupure et compression, et le rendu ERP est sorti plus court que le
+rendu sans régime (9 716 contre 9 731 octets), citation comprise. Il lit
+désormais le texte de l'arbre de rendu (`elementsDansLOrdre`), comme le test
+voisin. Éprouvé : R. 143-44 cité à tous les régimes → rouge.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
