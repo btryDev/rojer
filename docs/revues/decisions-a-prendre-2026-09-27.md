@@ -1,6 +1,6 @@
 # Décisions à prendre — lot 2, audit de bout en bout (2026-09-27)
 
-Branche `lot/audit-bout-en-bout`, sur `lot/couverture-reponse-absente` (`285e084`).
+Branche `lot/audit-bout-en-bout`, sur `lot/couverture-reponse-absente` (`1cded3d8`, après le rebase du 2026-09-27 sur les corrections de la revue du lot 1).
 Tenu pendant l'absence de la propriétaire, sous la règle que la session de
 coordination a transmise : ce qu'une règle déjà écrite décide, ou qu'un texte relu
 par l'API Légifrance fonde clairement, est tranché et codé ; le reste est consigné
@@ -141,7 +141,7 @@ l'origine du suivi). Changement de ce que voit le dirigeant : décision.
 
 ## D9 — Le nombre de personnes déclaré sous l'effectif du site
 
-Corrigé côté moteur (`c70a069` : on retient le plus grand des deux). **Reste à
+Corrigé côté moteur (`2505c5b2` : on retient le plus grand des deux). **Reste à
 décider** : la fiche doit-elle refuser un nombre déclaré inférieur à l'effectif
 du site ? Recommandation : un avertissement, pas un refus — le moteur est déjà
 juste.
@@ -184,7 +184,7 @@ le règlement « ne s'applique pas aux établissements existants » sauf disposi
 administratives, contrôles et vérifications techniques, entretien ; § 2, travaux :
 seules les parties modifiées. Aucun mot sur un changement d'exploitant ou
 d'activité ; aucune date de l'« existant ». **Recommandation :** entériner (a) —
-servir à tous en le disant (fait pour PE 27, PE 33, PE 35 : `56c35fc`). Filtrer par
+servir à tous en le disant (fait pour PE 27, PE 33, PE 35 : `9b0f735a`). Filtrer par
 une date serait une lecture qu'aucun texte n'écrit.
 
 ## D14 — La marque « à confirmer » des conditions d'équipement opt-out
@@ -287,7 +287,7 @@ l'erreur resterait visible pour qui la subit.
 ## D23 — Corpus : motifs qui ne tiennent plus ou fragiles (7 bis)
 
 À reclasser ou récrire, chacun avec le texte relu par l'API (tables
-`lot2/table-7bis-G1.md`, `-G2.md`, `-G3.md`) :
+`docs/revues/audit-bout-en-bout-2026-09-27-annexe-7bis.md`) :
 - **PE 18 § 1** (personnel présent pendant le fonctionnement des appareils de
   cuisson en salle) — sœur `elec-erp-presence-personne-qualifiee` ; mais le fait
   « îlot en salle » n'existe pas au modèle.
@@ -302,7 +302,7 @@ l'erreur resterait visible pour qui la subit.
   l'ADR-035.
 - **R. 134-6 2° d)** (remplacement des moyens d'alerte d'ascenseur sur RTC/3G) :
   écarté à tort comme « couvert par le contrat d'entretien » — R. 134-7 I a)
-  l'exclut du contrat. Une caractéristique d'ascenseur à créer.
+  l'exclut du contrat. Une caractéristique d'ascenseur à créer. [2026-09-28 : le remplacement est DIT dans la description d'`ascenseur-entretien-contrat` (`1f4dee9c`) ; son échéance reste à décider.]
 - **Arrêté du 4 novembre 1993, art. 5** (formation à la signalisation) : `retenu` sur
   `formation-securite-etablissement-organisation` ; **R. 4323-97** (conditions
   d'usage des EPI après consultation du CSE) : `obligation_manquante`, à trancher ;
@@ -322,4 +322,4 @@ garder la question telle quelle** — l'élargir imposerait alarme, consigne et
 exercices à qui ne fait que stocker, contre le texte ; une seconde question
 rouvrirait la décision C45. Le type 3 de l'alarme au-delà de 50 personnes quand les
 matières sont entreposées est désormais dit dans la description de l'alarme
-(`2967030`).
+(`f67f56d5`).
