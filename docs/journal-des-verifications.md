@@ -3952,7 +3952,7 @@ inexistant et n'a rien prouvé ; rejouée sur un fichier réel, rouge.)
 
 *Base : `main` local `32c8957`, branche `lot/stockage-supabase`. Ni
 référentiel ni moteur ni schéma touchés ; aucune migration. Aucun texte de
-droit relu. (C45 est réservé par la coordination.)*
+droit relu. Numéro C46 donné par la coordination.*
 
 **Le constat.** `storage/index.ts` n'avait qu'un pilote, `local`, qui écrit
 dans `process.cwd()/storage` — en lecture seule et éphémère sur Vercel.
@@ -3987,7 +3987,7 @@ donc très probablement ; non observé, faute de dépôt.
   pièce de prestataire (sur son champ — un prestataire sans pièce se crée) ;
   rapport de laboratoire du carnet sanitaire. Les trois formulaires affichent
   ce message (`state.message`, ou l'erreur du champ).
-- `getStorage()` levait désormais hors d'un `try` à quatre endroits :
+- `getStorage()` levait désormais hors d'un `try` à cinq endroits :
   `libererFichiers` (une suppression d'établissement ou de salarié déjà
   commitée aurait fini en erreur), `deletePiecesPrestataire`,
   `supprimerRapport` (les deux passent par `libererFichiers`), l'export
