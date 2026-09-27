@@ -2,12 +2,19 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { Prestataire } from "@prisma/client";
-import { joursCivilsEntre } from "@/lib/dates";
+import { cleJourCivil } from "@/lib/dates";
 import {
   MOIS_RENOUVELLEMENT_URSSAF,
   computeVigilance,
+  echeanceAttestationUrssaf,
+  mentionUrssaf,
   messageExpiration,
 } from "./vigilance";
+import {
+  erreursDatesAttestation,
+  estJourCivilReel,
+  remiseAttestationSchema,
+} from "./schema";
 
 /**
  * Les fichiers d'une surface qui s'affiche où un nom donné apparaît.
@@ -57,6 +64,21 @@ const NOW_SOIR = new Date("2026-08-10T21:30:00Z");
 
 /** Date civile telle que Prisma la rend : minuit UTC. */
 const jour = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
+/** Le jour civil de Paris d'une date : ce que l'écran affiche. `ajouterMois`
+ *  garde l'heure de Paris, donc minuit UTC en hiver devient 23:00 UTC la
+ *  veille en été — même jour civil, instant différent. */
+const civil = (d: Date | null) => (d ? cleJourCivil(d) : null);
+
+/**
+ * Remise et émission renseignées, lointaines de toute borne : la remise
+ * suivante tombe le 1er février 2027. Les cas qui testent l'échelle de la
+ * validité les portent, sans quoi l'attestation dirait « Date non
+ * renseignée » — ce qui est la règle, mais pas ce qu'ils mesurent.
+ */
+const DATES_OK = {
+  attestationUrssafRemiseLe: jour("2026-08-01"),
+  attestationUrssafEmiseLe: jour("2026-07-25"),
+};
 
 function prestataireFake(p: Partial<Prestataire>): Prestataire {
   return {
@@ -72,6 +94,8 @@ function prestataireFake(p: Partial<Prestataire>): Prestataire {
     attestationUrssafCle: null,
     attestationUrssafNom: null,
     attestationUrssafValableJusquA: null,
+    attestationUrssafRemiseLe: null,
+    attestationUrssafEmiseLe: null,
     assuranceRcProCle: null,
     assuranceRcProNom: null,
     assuranceRcProValableJusquA: null,
@@ -80,8 +104,8 @@ function prestataireFake(p: Partial<Prestataire>): Prestataire {
     kbisDateEmission: null,
     notesInternes: null,
     createdAt: jour("2026-08-01"),
-    // Fiche à jour par défaut : le contrôle de fraîcheur semestriel ne
-    // s'applique pas, chaque cas de base ne teste que la date de validité.
+    // Fiche modifiée ce jour par défaut : le repli « rien déposé depuis plus
+    // de six mois » ne s'applique pas.
     updatedAt: NOW,
     ...p,
   };
@@ -93,13 +117,14 @@ describe("computeVigilance — échelle de validité", () => {
     expect(v.urssaf).toBe("manquante");
     expect(v.rcPro).toBe("manquante");
     expect(v.kbis).toBe("absent");
-    expect(v.urssafOpposableJusquA).toBeNull();
+    expect(v.urssafARedemanderLe).toBeNull();
     expect(v.alertesOuvertes).toBe(2);
   });
 
   it("compte en jours civils, pas en tranches de 24 h", () => {
     const v = computeVigilance(
       prestataireFake({
+        ...DATES_OK,
         attestationUrssafValableJusquA: jour("2026-09-15"),
         assuranceRcProValableJusquA: jour("2027-02-06"),
         kbisCle: "kbis/key",
@@ -119,6 +144,7 @@ describe("computeVigilance — échelle de validité", () => {
     // 02:00 à Paris. À 9 h, l'écart valait −7 h et l'arrondi vers le bas
     // annonçait « Expirée il y a 1 j » sur une pièce encore valable.
     const p = prestataireFake({
+      ...DATES_OK,
       attestationUrssafValableJusquA: jour("2026-08-10"),
     });
     for (const horloge of [NOW, NOW_SOIR]) {
@@ -131,7 +157,7 @@ describe("computeVigilance — échelle de validité", () => {
 
   it("bascule en expirée au minuit suivant, pas avant", () => {
     const veille = computeVigilance(
-      prestataireFake({ attestationUrssafValableJusquA: jour("2026-08-09") }),
+      prestataireFake({ ...DATES_OK, attestationUrssafValableJusquA: jour("2026-08-09") }),
       NOW,
     );
     expect(veille.urssaf).toBe("expiree");
@@ -143,7 +169,7 @@ describe("computeVigilance — échelle de validité", () => {
 
   it("annonce « expire demain » la veille du dernier jour", () => {
     const v = computeVigilance(
-      prestataireFake({ attestationUrssafValableJusquA: jour("2026-08-11") }),
+      prestataireFake({ ...DATES_OK, attestationUrssafValableJusquA: jour("2026-08-11") }),
       NOW,
     );
     expect(v.urssafExpireDans).toBe(1);
@@ -152,11 +178,11 @@ describe("computeVigilance — échelle de validité", () => {
 
   it("alerte à trente jours pile, pas à trente et un", () => {
     const dans30 = computeVigilance(
-      prestataireFake({ attestationUrssafValableJusquA: jour("2026-09-09") }),
+      prestataireFake({ ...DATES_OK, attestationUrssafValableJusquA: jour("2026-09-09") }),
       NOW,
     );
     const dans31 = computeVigilance(
-      prestataireFake({ attestationUrssafValableJusquA: jour("2026-09-10") }),
+      prestataireFake({ ...DATES_OK, attestationUrssafValableJusquA: jour("2026-09-10") }),
       NOW,
     );
     expect(dans30.urssaf).toBe("expire_bientot");
@@ -166,6 +192,7 @@ describe("computeVigilance — échelle de validité", () => {
   it("compte une alerte par pièce à durée de validité qui n'est pas à jour", () => {
     const v = computeVigilance(
       prestataireFake({
+        ...DATES_OK,
         attestationUrssafValableJusquA: jour("2026-08-01"), // expirée
         assuranceRcProValableJusquA: jour("2026-08-20"), // expire bientôt
       }),
@@ -175,74 +202,69 @@ describe("computeVigilance — échelle de validité", () => {
   });
 });
 
-describe("computeVigilance — rythme semestriel (art. D. 8222-5 1°)", () => {
-  it("plafonne une validité lointaine à six mois après le dernier dépôt", () => {
-    const v = computeVigilance(
-      prestataireFake({
-        attestationUrssafValableJusquA: jour("2030-12-31"),
-        updatedAt: NOW,
-      }),
-      NOW,
-    );
-    expect(v.urssafPlafonneeParLeSemestre).toBe(true);
-    // Six mois après le 10 août : le 10 février suivant, à la même heure
-    // civile de Paris (09:00) — donc 08:00 UTC, l'heure d'hiver étant
-    // revenue entre-temps. C'est l'arithmétique calendaire qui décide, pas
-    // un multiple de 86 400 000.
-    expect(v.urssafOpposableJusquA?.toISOString()).toBe(
-      "2027-02-10T08:00:00.000Z",
-    );
-    expect(v.urssaf).toBe("a_jour");
-    expect(v.urssafExpireDans).toBe(184);
-  });
+describe("attestation URSSAF — la remise pilote les six mois (art. D. 8222-5)", () => {
+  // « lors de la conclusion et tous les six mois jusqu'à la fin de son
+  // exécution » : la remise suivante tombe six mois calendaires après la
+  // dernière remise, et ce jour-là compte encore (« aujourd'hui »).
+  const avecRemise = (remise: string, extra: Partial<Prestataire> = {}) =>
+    prestataireFake({
+      attestationUrssafCle: "urssaf/key",
+      attestationUrssafRemiseLe: jour(remise),
+      attestationUrssafEmiseLe: jour("2026-01-20"),
+      ...extra,
+    });
 
-  it("ne laisse plus une saisie lointaine rester verte indéfiniment", () => {
-    // Fiche non touchée depuis huit mois : l'attestation en dossier a
-    // nécessairement plus de six mois, quelle que soit la date saisie.
-    const v = computeVigilance(
-      prestataireFake({
-        attestationUrssafValableJusquA: jour("2030-12-31"),
-        updatedAt: new Date("2025-12-10T07:00:00Z"),
-      }),
-      NOW,
-    );
-    expect(v.urssaf).toBe("expiree");
-    expect(v.urssafPlafonneeParLeSemestre).toBe(true);
-    // L'URSSAF plafonnée et la RC Pro non renseignée : deux alertes.
-    expect(v.alertesOuvertes).toBe(2);
-  });
-
-  it("prévient dans le mois qui précède la limite semestrielle", () => {
-    const v = computeVigilance(
-      prestataireFake({
-        attestationUrssafValableJusquA: jour("2030-12-31"),
-        // Limite au 25 août : dans quinze jours.
-        updatedAt: new Date("2026-02-25T07:00:00Z"),
-      }),
-      NOW,
-    );
+  it("six mois pile : la remise suivante est aujourd'hui", () => {
+    const v = computeVigilance(avecRemise("2026-02-10"), NOW);
+    expect(civil(v.urssafARedemanderLe)).toBe("2026-08-10");
+    expect(civil(v.urssafRemiseSuivante)).toBe("2026-08-10");
+    expect(v.urssafExpireDans).toBe(0);
     expect(v.urssaf).toBe("expire_bientot");
-    expect(v.urssafExpireDans).toBe(15);
+    expect(messageExpiration(v.urssafExpireDans)).toBe("Expire aujourd'hui");
   });
 
-  it("laisse la date saisie décider quand elle tombe avant la limite", () => {
+  it("la veille des six mois : demain", () => {
+    const v = computeVigilance(avecRemise("2026-02-11"), NOW);
+    expect(v.urssafExpireDans).toBe(1);
+    expect(v.urssaf).toBe("expire_bientot");
+  });
+
+  it("le lendemain des six mois : à redemander, en retard", () => {
+    const v = computeVigilance(avecRemise("2026-02-09"), NOW);
+    expect(v.urssafExpireDans).toBe(-1);
+    expect(v.urssaf).toBe("expiree");
+    expect(v.etatLePlusGrave).toBe("enRetard");
+  });
+
+  it("alerte à trente jours de la remise suivante, pas à trente et un", () => {
+    expect(computeVigilance(avecRemise("2026-03-09"), NOW).urssaf).toBe("expire_bientot");
+    expect(computeVigilance(avecRemise("2026-03-10"), NOW).urssaf).toBe("a_jour");
+  });
+
+  it("une validité saisie plus proche que la remise suivante l'emporte", () => {
     const v = computeVigilance(
-      prestataireFake({
-        attestationUrssafValableJusquA: jour("2026-10-01"),
-        updatedAt: NOW,
-      }),
+      avecRemise("2026-08-01", { attestationUrssafValableJusquA: jour("2026-09-01") }),
       NOW,
     );
-    expect(v.urssafPlafonneeParLeSemestre).toBe(false);
-    expect(v.urssafOpposableJusquA).toEqual(jour("2026-10-01"));
-    expect(v.urssafExpireDans).toBe(52);
+    expect(civil(v.urssafARedemanderLe)).toBe("2026-09-01");
+    expect(civil(v.urssafRemiseSuivante)).toBe("2027-02-01");
   });
 
-  it("n'applique le plafond qu'à l'URSSAF — la RC Pro n'a pas de périodicité légale", () => {
+  it("une validité lointaine ne repousse pas la remise suivante", () => {
+    const v = computeVigilance(
+      avecRemise("2026-03-01", { attestationUrssafValableJusquA: jour("2030-12-31") }),
+      NOW,
+    );
+    expect(civil(v.urssafARedemanderLe)).toBe("2026-09-01");
+    expect(v.urssafExpireDans).toBe(22);
+    expect(v.urssaf).toBe("expire_bientot");
+  });
+
+  it("n'applique le rythme qu'à l'URSSAF — la RC Pro n'a pas de périodicité légale", () => {
     const v = computeVigilance(
       prestataireFake({
         assuranceRcProValableJusquA: jour("2027-06-30"),
-        updatedAt: new Date("2024-01-01T07:00:00Z"),
+        attestationUrssafRemiseLe: jour("2024-01-01"),
       }),
       NOW,
     );
@@ -251,6 +273,125 @@ describe("computeVigilance — rythme semestriel (art. D. 8222-5 1°)", () => {
 
   it("garde six mois pour périodicité — la constante est celle du texte", () => {
     expect(MOIS_RENOUVELLEMENT_URSSAF).toBe(6);
+  });
+});
+
+describe("attestation URSSAF — « datant de moins de six mois » (art. D. 8222-5, 1°)", () => {
+  const remiseLe10Aout = (emise: string) =>
+    prestataireFake({
+      attestationUrssafCle: "urssaf/key",
+      attestationUrssafRemiseLe: jour("2026-08-10"),
+      attestationUrssafEmiseLe: jour(emise),
+    });
+
+  it("émise six mois pile avant la remise : ce n'est pas « moins de six mois »", () => {
+    const v = computeVigilance(remiseLe10Aout("2026-02-10"), NOW);
+    expect(v.urssaf).toBe("emission_hors_delai");
+    expect(v.etatLePlusGrave).toBe("enRetard");
+    expect(mentionUrssaf(v)).toContain("« datant de moins de six mois »");
+  });
+
+  it("émise la veille des six mois : l'attestation est à jour", () => {
+    const v = computeVigilance(remiseLe10Aout("2026-02-11"), NOW);
+    expect(v.urssaf).toBe("a_jour");
+    // La RC Pro, non fournie, garde l'ardoise ; l'URSSAF ne pèse plus.
+    expect(v.piecesExpirees).toBe(0);
+  });
+
+  it("émise le jour de la remise : à jour", () => {
+    expect(computeVigilance(remiseLe10Aout("2026-08-10"), NOW).urssaf).toBe("a_jour");
+  });
+
+  it("une remise suivante déjà passée l'emporte sur l'écart d'émission", () => {
+    const v = computeVigilance(
+      prestataireFake({
+        attestationUrssafRemiseLe: jour("2026-01-01"),
+        attestationUrssafEmiseLe: jour("2025-01-01"),
+      }),
+      NOW,
+    );
+    expect(v.urssaf).toBe("expiree");
+  });
+});
+
+describe("attestation URSSAF — dates vides : jamais « à jour »", () => {
+  const VALIDITE_LOINTAINE = { attestationUrssafValableJusquA: jour("2030-12-31") };
+
+  it("sans remise ni émission, la pièce est « à dater », pas à jour", () => {
+    const v = computeVigilance(
+      prestataireFake({ attestationUrssafCle: "urssaf/key", ...VALIDITE_LOINTAINE }),
+      NOW,
+    );
+    expect(v.urssaf).toBe("a_dater");
+    expect(v.urssafDatesNonRenseignees).toEqual(["remise", "emission"]);
+    expect(v.etatLePlusGrave).toBe("aPlanifier");
+    expect(mentionUrssaf(v)).toContain("Dates de remise et d'émission non renseignées.");
+    expect(mentionUrssaf(v)).toContain("À saisir sur la fiche du prestataire.");
+  });
+
+  it("l'émission seule manquante suffit à refuser « à jour »", () => {
+    const v = computeVigilance(
+      prestataireFake({ attestationUrssafRemiseLe: jour("2026-08-01") }),
+      NOW,
+    );
+    expect(v.urssaf).toBe("a_dater");
+    expect(v.urssafDatesNonRenseignees).toEqual(["emission"]);
+    expect(mentionUrssaf(v)).toContain("Date d'émission non renseignée.");
+    // La remise, elle, est dite, avec la suivante.
+    expect(mentionUrssaf(v)).toContain("Remise suivante le");
+  });
+
+  it("une pièce déposée sans aucune date n'a pas d'échéance, et n'est pas à jour", () => {
+    const v = computeVigilance(prestataireFake({ attestationUrssafCle: "urssaf/key" }), NOW);
+    expect(v.urssaf).toBe("a_dater");
+    expect(v.urssafExpireDans).toBeNull();
+    expect(v.urssafARedemanderLe).toBeNull();
+  });
+
+  it("aucune combinaison de dates manquantes ne rend « à jour »", () => {
+    // Borne basse de la règle, balayée plutôt que citée : chaque manière
+    // d'avoir une pièce (clé, validité, remise, émission) sans l'une des deux
+    // dates du texte.
+    const presences: Partial<Prestataire>[] = [
+      { attestationUrssafCle: "k" },
+      VALIDITE_LOINTAINE,
+      { attestationUrssafRemiseLe: jour("2026-08-01") },
+      { attestationUrssafEmiseLe: jour("2026-08-01") },
+      { attestationUrssafCle: "k", ...VALIDITE_LOINTAINE, attestationUrssafRemiseLe: jour("2026-08-01") },
+    ];
+    for (const p of presences) {
+      const v = computeVigilance(prestataireFake(p), NOW);
+      expect(v.urssaf, JSON.stringify(p)).not.toBe("a_jour");
+      expect(v.etatLePlusGrave, JSON.stringify(p)).not.toBeNull();
+    }
+  });
+
+  it("le repli sur `updatedAt` ne fait qu'aggraver : plus de six mois sans dépôt, c'est à redemander", () => {
+    // `updatedAt` est postérieur à tout dépôt : plus de six mois sans
+    // écriture sur la fiche, la pièce en dossier a plus de six mois de remise.
+    const ancien = computeVigilance(
+      prestataireFake({
+        attestationUrssafCle: "urssaf/key",
+        ...VALIDITE_LOINTAINE,
+        updatedAt: new Date("2026-02-09T07:00:00Z"),
+      }),
+      NOW,
+    );
+    expect(ancien.urssaf).toBe("a_dater_depot_ancien");
+    expect(ancien.etatLePlusGrave).toBe("enRetard");
+    expect(mentionUrssaf(ancien)).toContain(
+      "Rien n'a été déposé sur cette fiche depuis plus de six mois.",
+    );
+    // Six mois pile : pas encore — même bascule que l'échéance datée.
+    const pile = computeVigilance(
+      prestataireFake({
+        attestationUrssafCle: "urssaf/key",
+        ...VALIDITE_LOINTAINE,
+        updatedAt: new Date("2026-02-10T07:00:00Z"),
+      }),
+      NOW,
+    );
+    expect(pile.urssaf).toBe("a_dater");
   });
 });
 
@@ -322,6 +463,7 @@ describe("etatLePlusGrave — la couleur ne se déduit pas du compte", () => {
   it("une pièce expirée l'emporte sur tout le reste", () => {
     const v = computeVigilance(
       prestataireFake({
+        ...DATES_OK,
         attestationUrssafValableJusquA: jour("2026-07-01"),
         assuranceRcProValableJusquA: null,
       }),
@@ -334,6 +476,7 @@ describe("etatLePlusGrave — la couleur ne se déduit pas du compte", () => {
   it("une échéance proche l'emporte sur une absence, pas sur une expiration", () => {
     const v = computeVigilance(
       prestataireFake({
+        ...DATES_OK,
         attestationUrssafValableJusquA: jour("2026-08-20"),
         assuranceRcProValableJusquA: null,
       }),
@@ -347,6 +490,7 @@ describe("etatLePlusGrave — la couleur ne se déduit pas du compte", () => {
   it("rien à signaler quand les deux pièces sont à jour", () => {
     const v = computeVigilance(
       prestataireFake({
+        ...DATES_OK,
         attestationUrssafValableJusquA: jour("2026-09-20"),
         assuranceRcProValableJusquA: jour("2027-06-01"),
       }),
@@ -358,95 +502,139 @@ describe("etatLePlusGrave — la couleur ne se déduit pas du compte", () => {
 });
 
 /**
- * L'ancrage de la borne semestrielle, et ce qu'il coûte.
+ * L'ancrage des six mois — décision B2, 2026-09-27.
  *
- * D. 8222-5 compte les six mois « lors de la conclusion et tous les six mois
- * jusqu'à la fin de son exécution » : depuis la conclusion du contrat, puis
- * depuis chaque remise. Le modèle ne détient aucune de ces deux dates, et
- * `opposabiliteUrssaf` compte depuis `updatedAt`.
- *
- * Ces tests ne réparent pas l'ancrage — il faudrait une date de remise au
- * modèle, donc une migration. Ils **rendent son effet visible**, de sorte que
- * le jour où le champ arrivera, l'écart à corriger soit écrit noir sur blanc
- * plutôt qu'à redécouvrir.
+ * Jusqu'à cette date, la borne partait de `updatedAt` : toute écriture sur la
+ * fiche la repoussait de six mois, et l'alerte n'arrivait jamais. Elle part
+ * désormais de la remise saisie. Ces tests rougissent si `updatedAt` redevient
+ * la source.
  */
-describe("l'ancrage de la borne semestrielle (D. 8222-5)", () => {
-  const LOINTAINE = jour("2030-12-31");
+describe("l'échéance ne dépend plus de la dernière modification de la fiche", () => {
+  const REMISE = jour("2026-03-01");
 
-  it("une retouche de la fiche repousse la borne de six mois", () => {
-    // Deux fiches identiques, même attestation, même date de validité. La
-    // seule différence est une écriture sur la fiche — un téléphone corrigé,
-    // une note ajoutée : `updatedAt` bouge, la borne suit.
-    const jamaisRetouchee = computeVigilance(
-      prestataireFake({
-        attestationUrssafValableJusquA: LOINTAINE,
-        updatedAt: new Date("2026-03-10T07:00:00Z"),
-      }),
+  it("une retouche de la fiche ne déplace plus l'échéance", () => {
+    const instantanes = [
+      new Date("2024-01-01T07:00:00Z"),
+      new Date("2026-03-10T07:00:00Z"),
       NOW,
+    ].map((updatedAt) =>
+      computeVigilance(
+        prestataireFake({
+          attestationUrssafValableJusquA: jour("2030-12-31"),
+          attestationUrssafRemiseLe: REMISE,
+          attestationUrssafEmiseLe: jour("2026-02-20"),
+          updatedAt,
+        }),
+        NOW,
+      ),
     );
-    const retoucheeCeJour = computeVigilance(
-      prestataireFake({
-        attestationUrssafValableJusquA: LOINTAINE,
-        updatedAt: NOW,
-      }),
-      NOW,
-    );
-
-    expect(jamaisRetouchee.urssafPlafonneeParLeSemestre).toBe(true);
-    expect(retoucheeCeJour.urssafPlafonneeParLeSemestre).toBe(true);
-    expect(
-      retoucheeCeJour.urssafExpireDans! - jamaisRetouchee.urssafExpireDans!,
-      "La borne ne dépend plus de `updatedAt` : si c'est parce qu'une date " +
-        "de remise est enfin au modèle, ce test a rempli son office et se " +
-        "remplace par celui de la vraie règle.",
-    ).toBeGreaterThan(0);
+    for (const v of instantanes) {
+      // La valeur, pas seulement l'égalité entre elles : six mois après la
+      // remise, pas après une écriture.
+      expect(civil(v.urssafARedemanderLe)).toBe("2026-09-01");
+      expect(v.urssafExpireDans).toBe(22);
+      expect(v.urssaf).toBe("expire_bientot");
+    }
   });
 
-  it("le décalage vaut exactement le retard de la dernière écriture", () => {
-    // La borne haute du test précédent : sans elle, un écart d'un seul jour
-    // le ferait passer alors que l'ancrage aurait changé de nature. Cinq mois
-    // sans retouche, cinq mois de borne en moins — au jour près.
-    const cinqMois = computeVigilance(
-      prestataireFake({
-        attestationUrssafValableJusquA: LOINTAINE,
-        updatedAt: new Date("2026-03-10T07:00:00Z"),
-      }),
-      NOW,
-    );
-    const aJour = computeVigilance(
-      prestataireFake({
-        attestationUrssafValableJusquA: LOINTAINE,
-        updatedAt: NOW,
-      }),
-      NOW,
-    );
+  it("le calendrier date l'attestation par la même règle, sans `updatedAt`", () => {
     expect(
-      aJour.urssafExpireDans! - cinqMois.urssafExpireDans!,
-    ).toBe(joursCivilsEntre(new Date("2026-03-10T07:00:00Z"), NOW));
+      civil(
+        echeanceAttestationUrssaf({
+          attestationUrssafValableJusquA: jour("2030-12-31"),
+          attestationUrssafRemiseLe: REMISE,
+        }),
+      ),
+    ).toBe("2026-09-01");
   });
 
-  it("les surfaces qui affichent cette borne disent d'où elle est comptée", () => {
-    // LA GARANTIE, ET ELLE PORTE SUR LES ÉCRANS. `urssafExpireDans` se lit
-    // « Expire dans 12 j » : sur une attestation plafonnée, ce chiffre ne
-    // date pas la pièce mais la dernière écriture sur la fiche. Un écran qui
-    // l'affiche sans lire `urssafPlafonneeParLeSemestre` ne peut pas le dire,
-    // et présente donc une échéance de vigilance qu'aucune remise ne fonde.
-    //
-    // Pas de liste d'écrans ici : c'est le balayage qui trouve les fichiers,
-    // pour qu'un écran neuf soit couvert sans que personne y pense.
+  it("les surfaces qui affichent l'échéance URSSAF disent ses dates", () => {
+    // Un écran qui affiche `urssafExpireDans` sans `mentionUrssaf` montre
+    // « Expire dans 22 j » sans dire depuis quelle remise, ni qu'une date
+    // manque. Balayage, pas liste : un écran neuf est tenu d'office.
     const fautifs = fichiersAffichant("urssafExpireDans").filter(
-      (f) => !readFileSync(f, "utf8").includes("urssafPlafonneeParLeSemestre"),
+      (f) => !readFileSync(f, "utf8").includes("mentionUrssaf("),
     );
-    expect(
-      fautifs,
-      "Ces surfaces affichent l'échéance URSSAF sans distinguer le cas où " +
-        "elle est comptée depuis `updatedAt` (cf. `MENTION_ANCRAGE_URSSAF`).",
-    ).toEqual([]);
+    expect(fautifs).toEqual([]);
   });
 
   it("le balayage voit vraiment un écran, sinon il ne prouve rien", () => {
-    // Borne haute du balayage : à zéro fichier trouvé, le test précédent
-    // passerait au vert en ne mesurant plus rien.
     expect(fichiersAffichant("urssafExpireDans").length).toBeGreaterThan(0);
+  });
+
+  it("le palliatif ne revient sur aucun écran", () => {
+    // La phrase qui avouait l'ancrage sur la fiche, et sa constante.
+    // Blancs écrasés : une phrase de JSX se coupe en fin de ligne, et la
+    // coupure seule suffisait à faire passer la phrase sous la garde.
+    const traces = [
+      "MENTION_ANCRAGE_URSSAF",
+      "urssafPlafonneeParLeSemestre",
+      "dernière modification de cette fiche",
+      "dernière modification de la fiche",
+    ];
+    const ecrans = fichiersAffichant("prestataire").concat(
+      fichiersAffichant("Prestataire"),
+    );
+    expect(ecrans.length).toBeGreaterThan(0);
+    for (const f of ecrans) {
+      const plat = readFileSync(f, "utf8").replace(/\s+/g, " ");
+      for (const trace of traces) {
+        expect(plat.includes(trace), `${f} : ${trace}`).toBe(false);
+      }
+    }
+  });
+});
+
+
+describe("saisie des dates de l'attestation (formulaires)", () => {
+  it("refuse une remise ou une émission dans le futur, et une émission après la remise", () => {
+    const champs = (r?: string, e?: string) =>
+      erreursDatesAttestation(r ? jour(r) : undefined, e ? jour(e) : undefined, NOW).map(
+        (x) => `${x.champ}: ${x.message}`,
+      );
+    expect(champs("2026-08-11")).toEqual([
+      "attestationUrssafRemiseLe: La date de remise ne peut pas être dans le futur",
+    ]);
+    expect(champs(undefined, "2026-08-11")).toEqual([
+      "attestationUrssafEmiseLe: La date d'émission ne peut pas être dans le futur",
+    ]);
+    expect(champs("2026-08-01", "2026-08-02")).toEqual([
+      "attestationUrssafEmiseLe: L'attestation ne peut pas être émise après sa remise",
+    ]);
+  });
+
+  it("accepte aujourd'hui, le même jour, et une émission ancienne — un fait à montrer, pas à cacher", () => {
+    expect(erreursDatesAttestation(jour("2026-08-10"), jour("2026-08-10"), NOW)).toEqual([]);
+    expect(erreursDatesAttestation(jour("2026-08-10"), jour("2025-01-01"), NOW)).toEqual([]);
+    expect(erreursDatesAttestation(undefined, undefined, NOW)).toEqual([]);
+  });
+
+  it("une saisie hors format ou inexistante rend une erreur de champ, jamais une exception", () => {
+    for (const saisie of ["2026-13-45", "2026-02-30", "abc", "20260801"]) {
+      const r = remiseAttestationSchema.safeParse({ attestationUrssafRemiseLe: saisie });
+      expect(r.success, saisie).toBe(false);
+      if (!r.success) {
+        expect(r.error.flatten().fieldErrors.attestationUrssafRemiseLe, saisie).toBeDefined();
+      }
+    }
+    // Le 29 février d'une année bissextile existe.
+    expect(
+      remiseAttestationSchema.safeParse({ attestationUrssafRemiseLe: "2024-02-29" }).success,
+    ).toBe(true);
+    expect(estJourCivilReel("2026-02-30")).toBe(false);
+    expect(estJourCivilReel("2026-12-31")).toBe(true);
+  });
+
+  it("le schéma de la fiche porte la règle", () => {
+    const r = remiseAttestationSchema.safeParse({
+      attestationUrssafRemiseLe: "2026-08-01",
+      attestationUrssafEmiseLe: "2026-08-05",
+    });
+    expect(r.success).toBe(false);
+    const ok = remiseAttestationSchema.safeParse({
+      attestationUrssafRemiseLe: "",
+      attestationUrssafEmiseLe: "",
+    });
+    expect(ok.success && ok.data).toEqual({});
   });
 });

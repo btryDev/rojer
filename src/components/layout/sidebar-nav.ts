@@ -165,6 +165,10 @@ export type SidebarCounts = {
   enRetardTotal?: number;
   actions?: number;
   prestatairesAlertes?: number;
+  /** Parmi eux, ceux dont une pièce est EN RETARD (expirée, à redemander) :
+   *  seuls ceux-là rougissent le badge. Une pièce non fournie ou une date
+   *  non renseignée demande un geste, pas un rattrapage. */
+  prestatairesEnRetard?: number;
   /** Titres de salariés dont l'échéance est dépassée, effectif actif
    *  seulement. Un titre sans terme écrit n'y entre pas : il n'est pas en
    *  attente, il n'a simplement pas de rendez-vous (ADR-023 § 6). */
@@ -349,7 +353,7 @@ export function construireSections({
       href: href("/prestataires"),
       Icon: Users,
       count: counts?.prestatairesAlertes,
-      alert: (counts?.prestatairesAlertes ?? 0) > 0,
+      alert: (counts?.prestatairesEnRetard ?? 0) > 0,
     },
   ];
 

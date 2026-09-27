@@ -8,6 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { EvidenceDropzone, LegalBadge } from "@/components/ui-kit";
 import type { PrestataireActionState } from "@/lib/prestataires/actions";
+import { ChampsDatesAttestation } from "./ChampsDatesAttestation";
 import {
   DOMAINES_PRESTATAIRE,
   LABEL_DOMAINE,
@@ -235,6 +236,10 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
                 type="date"
               />
             </div>
+            {/* Les deux dates que D. 8222-5 fait compter : la remise, d'où
+                part la suivante « tous les six mois », et l'émission, qui
+                doit précéder la remise de moins de six mois. */}
+            <ChampsDatesAttestation erreur={err} />
           </div>
 
           <div className="space-y-2">

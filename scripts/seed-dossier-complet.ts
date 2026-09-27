@@ -701,6 +701,10 @@ const PRESTATAIRES = [
     contactEmail: "contact@verif-elec-atlantique.fr",
     contactTelephone: "02 40 12 34 56",
     urssafJours: 214, // à jour
+    // Remise et émission (D. 8222-5) : sans elles, la pièce dit « Date non
+    // renseignée », jamais « à jour ». Remise suivante ≈ J+163.
+    urssafRemiseJours: -20,
+    urssafEmiseJours: -26,
     rcProJours: 168,
     kbisJours: -320,
   },
@@ -713,6 +717,8 @@ const PRESTATAIRES = [
     contactEmail: "sav@securite-incendie-ouest.fr",
     contactTelephone: "02 51 88 40 12",
     urssafJours: 17, // expire bientôt — seuil d'alerte à 30 jours
+    urssafRemiseJours: -160, // remise suivante ≈ J+22
+    urssafEmiseJours: -171,
     rcProJours: 96,
     kbisJours: -180,
   },
@@ -725,6 +731,8 @@ const PRESTATAIRES = [
     contactEmail: "interventions@froid-ventilation-loire.fr",
     contactTelephone: "02 40 76 55 09",
     urssafJours: -23, // expirée
+    urssafRemiseJours: -205, // remise suivante passée depuis ≈ 22 j
+    urssafEmiseJours: -212,
     rcProJours: 41,
     kbisJours: -95,
   },
@@ -1226,6 +1234,8 @@ async function main(): Promise<void> {
         // document pas encore téléversé) et suffisant pour la vigilance. En
         // fabriquer une clé de fichier pointerait vers un fichier absent.
         attestationUrssafValableJusquA: jours(p.urssafJours),
+        attestationUrssafRemiseLe: jours(p.urssafRemiseJours),
+        attestationUrssafEmiseLe: jours(p.urssafEmiseJours),
         assuranceRcProValableJusquA: jours(p.rcProJours),
         kbisDateEmission: jours(p.kbisJours),
       },

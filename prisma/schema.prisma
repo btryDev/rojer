@@ -960,6 +960,14 @@ model Prestataire {
   attestationUrssafCle           String?
   attestationUrssafNom           String?
   attestationUrssafValableJusquA DateTime?
+  // Les deux dates que D. 8222-5 fait compter (lu sur Légifrance le
+  // 2026-09-27) : la pièce se remet « lors de la conclusion et tous les six
+  // mois jusqu'à la fin de son exécution » (remise), et l'attestation doit
+  // être « datant de moins de six mois » (émission). Nullables : aucune
+  // fiche existante ne les porte, et le vide se dit « non renseignée »,
+  // jamais « à jour » (`lib/prestataires/vigilance.ts`).
+  attestationUrssafRemiseLe      DateTime?
+  attestationUrssafEmiseLe       DateTime?
 
   // Assurance Responsabilité Civile Professionnelle
   assuranceRcProCle           String?

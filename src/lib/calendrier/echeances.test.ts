@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
+import type { Prestataire } from "@prisma/client";
 import { cleJourCivil } from "@/lib/dates";
+import {
+  REGISTRE_DU_STATUT,
+  computeVigilance,
+  type StatutPiece,
+} from "@/lib/prestataires/vigilance";
 import type { FamilleEcheance } from "./echeances";
 import {
   MOIS_ANALYSE_LEGIONELLES,
@@ -260,7 +266,29 @@ describe("echeancesPrestataire", () => {
   const base = {
     id: "p1",
     raisonSociale: "Vérif Élec SARL",
+    attestationUrssafCle: null,
+    attestationUrssafRemiseLe: null,
+    attestationUrssafEmiseLe: null,
+    updatedAt: AUJOURDHUI,
   };
+
+  it("date l'attestation URSSAF à la remise suivante quand elle précède la validité", () => {
+    // D. 8222-5 : « tous les six mois ». Remise le 1er mars, validité saisie
+    // lointaine : le calendrier porte le 1er septembre, comme la fiche.
+    const out = echeancesPrestataire(
+      {
+        ...base,
+        attestationUrssafValableJusquA: jour("2030-12-31"),
+        attestationUrssafRemiseLe: jour("2026-03-01"),
+        attestationUrssafEmiseLe: jour("2026-02-20"),
+        assuranceRcProValableJusquA: null,
+      },
+      AUJOURDHUI,
+      "etab1",
+    );
+    expect(out).toHaveLength(1);
+    expect(cleJourCivil(out[0].date)).toBe("2026-09-01");
+  });
 
   it("produit une échéance par pièce datée, avec le bon ton", () => {
     const out = echeancesPrestataire(
@@ -508,4 +536,83 @@ describe("filtrerParBatiment", () => {
       "duerp",
     ]);
   });
+});
+
+/**
+ * L'ACCORD FICHE ↔ CALENDRIER, statut par statut (contre-lecture du
+ * 2026-09-27 : le calendrier disait « ok » au 1er mars 2027 d'une attestation
+ * que la fiche disait « À redemander », et taisait celle « à dater »).
+ *
+ * Pour chaque statut de pièce, une fiche qui le produit ; la fiche
+ * (`computeVigilance`) et le calendrier (`echeancesPrestataire`) sont lus
+ * côte à côte. La règle d'accord : une entrée existe si et seulement si une
+ * attestation est au dossier, et le calendrier dit « ok » si et seulement si
+ * la fiche ne demande rien ou prévient (registre nul ou « proche »). Le
+ * calendrier n'a que deux tons : l'ardoise d'une pièce « à dater » y est une
+ * alerte, jamais un « ok ».
+ */
+describe("l'attestation URSSAF : la fiche et le calendrier disent la même chose", () => {
+  const fiche = (p: Partial<Prestataire>): Prestataire => ({
+    id: "p1",
+    etablissementId: "e1",
+    raisonSociale: "Vérif Élec SARL",
+    siret: null,
+    estOrganismeAgree: false,
+    domaines: [],
+    contactNom: "Nom",
+    contactEmail: "a@b.fr",
+    contactTelephone: null,
+    attestationUrssafCle: "k",
+    attestationUrssafNom: null,
+    attestationUrssafValableJusquA: null,
+    attestationUrssafRemiseLe: null,
+    attestationUrssafEmiseLe: null,
+    assuranceRcProCle: null,
+    assuranceRcProNom: null,
+    assuranceRcProValableJusquA: null,
+    kbisCle: null,
+    kbisNom: null,
+    kbisDateEmission: null,
+    notesInternes: null,
+    createdAt: AUJOURDHUI,
+    updatedAt: AUJOURDHUI,
+    ...p,
+  });
+  const CAS: Record<StatutPiece, Partial<Prestataire>> = {
+    a_jour: { attestationUrssafRemiseLe: jour("2026-08-01"), attestationUrssafEmiseLe: jour("2026-07-25") },
+    expire_bientot: { attestationUrssafRemiseLe: jour("2026-02-20"), attestationUrssafEmiseLe: jour("2026-02-15") },
+    expiree: { attestationUrssafRemiseLe: jour("2026-01-20"), attestationUrssafEmiseLe: jour("2026-01-15") },
+    manquante: { attestationUrssafCle: null },
+    a_dater: { attestationUrssafValableJusquA: jour("2030-12-31") },
+    a_dater_depot_ancien: {
+      attestationUrssafValableJusquA: jour("2030-12-31"),
+      updatedAt: new Date("2026-01-15T07:00:00Z"),
+    },
+    emission_hors_delai: { attestationUrssafRemiseLe: jour("2026-08-01"), attestationUrssafEmiseLe: jour("2025-12-01") },
+  };
+
+  it("chaque statut est couvert — aucun ne se glisse sans être confronté", () => {
+    expect(Object.keys(CAS).sort()).toEqual(Object.keys(REGISTRE_DU_STATUT).sort());
+  });
+
+  for (const [statut, p] of Object.entries(CAS) as [StatutPiece, Partial<Prestataire>][]) {
+    it(`${statut} : même verdict des deux côtés`, () => {
+      const f = fiche(p);
+      const v = computeVigilance(f, AUJOURDHUI);
+      expect(v.urssaf, "la fixture produit bien ce statut").toBe(statut);
+      const urssaf = echeancesPrestataire(f, AUJOURDHUI, "etab1").find((e) =>
+        e.id.endsWith("-urssaf"),
+      );
+      if (statut === "manquante") {
+        expect(urssaf).toBeUndefined();
+        return;
+      }
+      expect(urssaf, "une entrée au calendrier").toBeDefined();
+      const registre = REGISTRE_DU_STATUT[v.urssaf];
+      expect(urssaf!.tone).toBe(registre === null || registre === "proche" ? "ok" : "alerte");
+      if (statut === "a_dater") {
+        expect(urssaf!.origine).toContain("non renseignée");
+      }
+    });
+  }
 });

@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { requireEtablissement } from "@/lib/auth/scope";
-import { computeVigilance, type VigilanceSnapshot } from "./vigilance";
+import {
+  computeVigilance,
+  ventilerVigilance,
+  type VigilanceSnapshot,
+} from "./vigilance";
 
 export async function listPrestataires(etablissementId: string) {
   const { etablissement } = await requireEtablissement(etablissementId);
@@ -49,6 +53,17 @@ export async function countAlertesVigilance(
     (acc, p) => acc + (p.vigilance.etatLePlusGrave !== null ? 1 : 0),
     0,
   );
+}
+
+/**
+ * Les mêmes prestataires, ventilés par gravité (`ventilerVigilance`) : ce que
+ * lisent les surfaces qui disent « en retard » ou peignent le rouge — la
+ * barre latérale et « Préparer un contrôle ». Une date non renseignée y est
+ * `aPlanifier`, jamais `enRetard`.
+ */
+export async function compterVigilanceParGravite(etablissementId: string) {
+  const prestataires = await listPrestataires(etablissementId);
+  return ventilerVigilance(prestataires.map((p) => p.vigilance.etatLePlusGrave));
 }
 
 export type PrestataireAvecVigilance = Awaited<

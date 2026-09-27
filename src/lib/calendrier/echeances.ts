@@ -10,6 +10,13 @@ import {
 } from "@/lib/dates";
 import { estEnRetard } from "@/lib/dates/retard";
 import { etatAutreEcheance } from "./etats";
+import {
+  REGISTRE_DU_STATUT,
+  finDuRepliDepot,
+  vigilanceUrssaf,
+  type ChampsAttestationUrssaf,
+  type StatutPiece,
+} from "@/lib/prestataires/vigilance";
 
 /**
  * Registre des sources d'échéances du calendrier — cf. ADR-010.
@@ -208,6 +215,19 @@ export type EcheanceCalendrier = {
   dateFin?: Date;
   /** Mêmes tons que la grille : dépassé = alerte, sinon ok. */
   tone: "alerte" | "ok";
+  /**
+   * Rojer ne sait pas dater cette échéance : une date de la pièce n'est pas
+   * renseignée (attestation URSSAF « à dater »). Le ton reste `alerte` — un
+   * geste est dû, jamais « ok » —, mais UNE DATE ABSENTE N'EST PAS UN RETARD
+   * (même règle que `pdf/fait-retards.ts` : « Rojer ne sait pas » n'est pas
+   * « pas fait »). Aucun compteur ni libellé « en retard » ne la compte
+   * (`repartirRetards`, `repartirSous30j`, la règle annuelle, le pli d'un
+   * mois, le filtre « en retard seulement »), et aucune grille ni frise ne la
+   * pose sur un jour (`fusionnerEvenements`) : elle reste dans la liste du
+   * calendrier, sans date. Même traitement que les vérifications
+   * `sansEcheance`.
+   */
+  sansEcheance?: true;
   href: string;
   /** Où ça se passe (ADR-019). `null` = l'établissement entier : mise à
    *  jour du DUERP, attestation d'un prestataire, action née d'un risque.
@@ -351,14 +371,85 @@ export function echeanceDuerp({
   };
 }
 
-/** Expirations datées des pièces de vigilance d'un prestataire —
- *  URSSAF et RC Pro. Une pièce sans date (manquante) n'a pas de place
- *  sur un calendrier : c'est l'alerte vigilance qui la porte. */
+/** Le ton du calendrier pour un statut de pièce : « ok » seulement là où la
+ *  fiche ne demande rien ou prévient (registre nul ou « proche »). */
+export function tonDuStatutPiece(statut: StatutPiece): "alerte" | "ok" {
+  const registre = REGISTRE_DU_STATUT[statut];
+  return registre === null || registre === "proche" ? "ok" : "alerte";
+}
+
+/** L'entrée de calendrier de l'attestation URSSAF, depuis le statut de la
+ *  fiche. `null` : aucune attestation au dossier. */
+export function echeanceCalendrierUrssaf(
+  p: ChampsAttestationUrssaf,
+  aujourdhui: Date,
+): { date: Date; tone: "alerte" | "ok"; origine: string; statut: StatutPiece } | null {
+  const u = vigilanceUrssaf(p, aujourdhui);
+  const tone = tonDuStatutPiece(u.statut);
+  switch (u.statut) {
+    case "manquante":
+      return null;
+    case "a_jour":
+    case "expire_bientot":
+    case "expiree":
+      // Ces trois statuts portent toujours une échéance datée.
+      return {
+        date: u.aRedemanderLe ?? aujourdhui,
+        tone,
+        origine: "à redemander au prestataire",
+        statut: u.statut,
+      };
+    case "emission_hors_delai":
+      return {
+        date: p.attestationUrssafRemiseLe ?? aujourdhui,
+        tone,
+        origine: "à redemander : émise six mois ou plus avant sa remise",
+        statut: u.statut,
+      };
+    case "a_dater_depot_ancien":
+      return {
+        date: finDuRepliDepot(p),
+        tone,
+        origine:
+          "à redemander : date de remise non renseignée, rien déposé depuis plus de six mois",
+        statut: u.statut,
+      };
+    case "a_dater":
+      return {
+        date: aujourdhui,
+        tone,
+        origine:
+          u.datesNonRenseignees.length === 2
+            ? "dates de remise et d'émission non renseignées"
+            : u.datesNonRenseignees[0] === "remise"
+              ? "date de remise non renseignée"
+              : "date d'émission non renseignée",
+        statut: u.statut,
+      };
+  }
+}
+
+/** Échéances des pièces de vigilance d'un prestataire — URSSAF et RC Pro.
+ *  Une pièce absente (manquante) n'a pas de place sur un calendrier : c'est
+ *  l'alerte vigilance qui la porte.
+ *
+ *  L'ATTESTATION URSSAF SUIT LE STATUT DE LA FICHE, LU À LA MÊME FONCTION
+ *  (`vigilanceUrssaf`) — aucune règle réécrite ici (contre-lecture du
+ *  2026-09-27 : le calendrier datait l'attestation par la seule échéance, et
+ *  disait « ok » au 1er mars 2027 d'une pièce que la fiche disait « À
+ *  redemander »). Le ton suit le registre du statut (`REGISTRE_DU_STATUT`) :
+ *  « ok » pour « à jour » et « expire bientôt », « alerte » pour tout le
+ *  reste. Le calendrier n'a que ces deux tons : une attestation « à dater »,
+ *  ardoise sur la fiche, y est en alerte — jamais « ok ». La date posée :
+ *   - échéance datée (à jour, bientôt, expirée) : la remise suivante ou la
+ *     validité, la plus proche ;
+ *   - émission hors délai : le jour de la remise concernée ;
+ *   - rien déposé depuis plus de six mois : la fin de ce repli (au plus tard) ;
+ *   - date non renseignée : aujourd'hui, faute de date à poser. */
 export function echeancesPrestataire(
-  p: {
+  p: ChampsAttestationUrssaf & {
     id: string;
     raisonSociale: string;
-    attestationUrssafValableJusquA: Date | null;
     assuranceRcProValableJusquA: Date | null;
   },
   aujourdhui: Date,
@@ -366,15 +457,17 @@ export function echeancesPrestataire(
 ): EcheanceCalendrier[] {
   const href = `/etablissements/${etablissementId}/prestataires/${p.id}`;
   const out: EcheanceCalendrier[] = [];
-  if (p.attestationUrssafValableJusquA) {
+  const urssaf = echeanceCalendrierUrssaf(p, aujourdhui);
+  if (urssaf) {
     out.push({
       id: `prestataire-${p.id}-urssaf`,
       type: "attestation",
       famille: FAMILLE_DE_TYPE.attestation,
       libelle: `Attestation URSSAF — ${p.raisonSociale}`,
-      origine: "à redemander au prestataire",
-      date: p.attestationUrssafValableJusquA,
-      tone: tonPourDate(p.attestationUrssafValableJusquA, aujourdhui),
+      origine: urssaf.origine,
+      date: urssaf.date,
+      tone: urssaf.tone,
+      ...(urssaf.statut === "a_dater" ? { sansEcheance: true as const } : {}),
       href,
       batiment: null,
     });
@@ -640,7 +733,11 @@ const sourcePrestataires: SourceEcheances = async ({
     select: {
       id: true,
       raisonSociale: true,
+      attestationUrssafCle: true,
       attestationUrssafValableJusquA: true,
+      attestationUrssafRemiseLe: true,
+      attestationUrssafEmiseLe: true,
+      updatedAt: true,
       assuranceRcProValableJusquA: true,
     },
   });

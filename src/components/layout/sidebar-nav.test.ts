@@ -367,6 +367,7 @@ describe("construireSections — badges", () => {
         equipements: 13,
         enRetardTotal: 5,
         prestatairesAlertes: 1,
+        prestatairesEnRetard: 1,
         actions: 5,
       },
     }).flatMap((s) => s.items);
@@ -378,6 +379,20 @@ describe("construireSections — badges", () => {
     expect(parId("actions")?.count).toBe(5);
     expect(parId("actions")?.alert).toBeFalsy();
     expect(parId("prestataires")).toMatchObject({ count: 1, alert: true });
+  });
+
+  it("ne rougit pas les prestataires pour une pièce non fournie ou une date non renseignée", () => {
+    // Une date absente n'est pas un retard (contre-lecture du 2026-09-27) :
+    // le badge compte les prestataires qui appellent un geste, et ne passe
+    // au rouge que si l'un d'eux est EN RETARD.
+    const items = construireSections({
+      etablissementId: ID,
+      counts: { prestatairesAlertes: 2, prestatairesEnRetard: 0 },
+    }).flatMap((s) => s.items);
+    expect(items.find((i) => i.id === "prestataires")).toMatchObject({
+      count: 2,
+      alert: false,
+    });
   });
 
   it("donne au calendrier le retard de toutes les familles", () => {

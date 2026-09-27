@@ -1,7 +1,10 @@
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import type { StatutPiece } from "@/lib/prestataires/vigilance";
-import { messageExpiration } from "@/lib/prestataires/vigilance";
+import {
+  REGISTRE_DU_STATUT,
+  messageExpiration,
+} from "@/lib/prestataires/vigilance";
 import { CHAMP_ETAT, ENCRE_ETAT, type RegistreLigne } from "@/lib/calendrier/etats";
 
 /**
@@ -15,21 +18,37 @@ import { CHAMP_ETAT, ENCRE_ETAT, type RegistreLigne } from "@/lib/calendrier/eta
  * ambre ici et paille ailleurs, et l'utilisateur lit deux états là où il n'y
  * en a qu'un.
  */
-const ETAT_DE_LA_PIECE: Record<StatutPiece, RegistreLigne> = {
-  a_jour: "faite",
-  expire_bientot: "proche",
-  expiree: "enRetard",
-  // Une pièce qui n'a jamais été fournie n'est pas en retard : rien n'a
-  // d'échéance tant qu'il n'y a pas de document. C'est l'ardoise, comme
-  // « à planifier » au calendrier — l'absence de rendez-vous, pas l'urgence.
-  manquante: "aPlanifier",
-};
+/**
+ * Le registre vient de `REGISTRE_DU_STATUT` (`lib/prestataires/vigilance`),
+ * qui décide aussi de `etatLePlusGrave` : la pastille et la tête de carte ne
+ * peuvent plus diverger. `null` (rien à faire) se peint « faite ».
+ */
+function etatDeLaPiece(statut: StatutPiece): RegistreLigne {
+  return REGISTRE_DU_STATUT[statut] ?? "faite";
+}
 
 const LABEL: Record<StatutPiece, string> = {
   a_jour: "À jour",
   expire_bientot: "Expire bientôt",
   expiree: "Expirée",
   manquante: "Non fournie",
+  // Une date du texte manque : ni « à jour », ni un retard qu'on ne sait pas.
+  a_dater: "Date non renseignée",
+  a_dater_depot_ancien: "À redemander",
+  emission_hors_delai: "À redemander",
+};
+
+/** Les statuts dont l'échéance en jours se lit sans contredire le statut. */
+const AFFICHE_L_ECHEANCE: Record<StatutPiece, boolean> = {
+  a_jour: true,
+  expire_bientot: true,
+  expiree: true,
+  // « Valide 155 j de plus » à côté de « À redemander » se contredisait
+  // (contre-lecture du 2026-09-27) : l'échéance datée n'est plus ce qui presse.
+  emission_hors_delai: false,
+  manquante: false,
+  a_dater: false,
+  a_dater_depot_ancien: false,
 };
 
 export function VigilancePiecePill({
@@ -43,18 +62,15 @@ export function VigilancePiecePill({
   statut: StatutPiece;
   jours: number | null;
   /**
-   * D'où l'échéance affichée est comptée, quand ce n'est pas de la date
-   * saisie sur la pièce. Le seul emploi aujourd'hui est l'attestation URSSAF
-   * plafonnée par le rythme semestriel : la borne y part de la dernière
-   * modification de la fiche, faute de date de remise au modèle. Sans cette
-   * ligne, « Expire dans 12 j » se lit comme une échéance de la pièce, alors
-   * qu'une retouche de la fiche la repousse de six mois
-   * (cf. `lib/prestataires/vigilance.ts`).
+   * Les dates d'où l'échéance est comptée, ou celles qui manquent — pour
+   * l'attestation URSSAF, `mentionUrssaf` (remise, émission, remise
+   * suivante, « non renseignée »). Sans elle, « Date non renseignée » ne dit
+   * pas laquelle.
    */
   mention?: string;
   className?: string;
 }) {
-  const etat = ETAT_DE_LA_PIECE[statut];
+  const etat = etatDeLaPiece(statut);
 
   return (
     <span
@@ -71,8 +87,12 @@ export function VigilancePiecePill({
             règle (« expire aujourd'hui » le jour dit, expirée seulement à
             partir du lendemain) est tenue par `lib/prestataires/vigilance`,
             source unique — le composant ne la recalcule pas.
-            Sur une pièce absente, la ligne répéterait le statut : on la tait. */}
-        {statut !== "manquante" && (
+            Sur une pièce absente, ou sans aucune date d'échéance, la ligne
+            répéterait le statut : on la tait. Et sur une attestation « à
+            dater » : la seule date connue y est la validité saisie, et
+            « Valide 1604 j de plus » à côté de « Date non renseignée » se
+            lirait comme un « à jour » que le calcul refuse. */}
+        {AFFICHE_L_ECHEANCE[statut] && jours !== null && (
           <span className="mt-0.5 block text-[11.5px] leading-[1.4] text-[color:var(--board-slate-mid)]">
             {messageExpiration(jours)}
           </span>

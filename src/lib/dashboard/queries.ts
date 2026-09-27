@@ -585,7 +585,10 @@ export async function getModulesMatrice(
     prestataires: {
       total: prestataires.length,
       enAlerte: prestataires.filter(
-        (p) => computeVigilance(p).alertesOuvertes > 0,
+        // Sur la gravité, comme l'annuaire et « Préparer un contrôle »
+        // (`countAlertesVigilance`) : une attestation dont une date du texte
+        // n'est pas renseignée y compte, elle n'est jamais « à jour ».
+        (p) => computeVigilance(p, now).etatLePlusGrave !== null,
       ).length,
     },
   };

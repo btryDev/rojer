@@ -132,7 +132,8 @@ export function repartirRetards(
     parFamille[FAMILLE_DE_TYPE[t]] += verifsEnRetard[t];
   }
   for (const e of autres) {
-    if (e.tone === "alerte") parFamille[e.famille] += 1;
+    // Une date absente n'est pas un retard (`EcheanceCalendrier.sansEcheance`).
+    if (e.tone === "alerte" && !e.sansEcheance) parFamille[e.famille] += 1;
   }
 
   return totaliser(parFamille);
@@ -158,7 +159,7 @@ export function repartirSous30j(
     parFamille[FAMILLE_DE_TYPE[t]] += verifsAVenir[t];
   }
   for (const e of autres) {
-    if (e.tone === "alerte") continue;
+    if (e.tone === "alerte" || e.sansEcheance) continue;
     // La date EN JEU : la fin d'une opération en cours, pas son début passé —
     // la même que la règle du calendrier, pour que les deux « sous 30 j »
     // comptent la même chose (`dateEnJeuAutre`).

@@ -45,6 +45,11 @@
 //    mois la limite semestrielle d'une attestation qu'on n'a pas redemandée.
 //    C'est un défaut d'ancrage, pas de rythme, et il se corrige par une donnée
 //    qui manque — la date de remise de l'attestation.
+//    [2026-09-27, décision B2 : `attestationUrssafRemiseLe` et
+//    `attestationUrssafEmiseLe` sont au modèle ; la borne part de la
+//    dernière remise, `updatedAt` n'y entre plus (journal C43). C'est une
+//    LECTURE : le texte cale sur la conclusion, absente du modèle, et une
+//    remise tardive décale la grille d'autant.]
 //
 // 2. LE SEUIL EST À JOUR, ET IL A BIEN BOUGÉ. `R. 8222-1` : « toute opération
 //    d'un montant au moins égal à 5 000 euros hors taxes », version en vigueur
@@ -79,7 +84,9 @@
 // 5. TROIS EXIGENCES DE `D. 8222-5` NE SONT SERVIES PAR RIEN. (a) L'attestation
 //    doit dater « de moins de six mois » à la remise — le produit stocke une
 //    date de fin de validité, jamais une date d'émission, et ne peut donc pas
-//    le vérifier. (b) Le donneur d'ordre « s'assure de l'authenticité auprès
+//    le vérifier. [2026-09-27 : l'émission est saisie et comparée à la
+//    remise — lecture retenue, le texte ne nomme pas l'instant de mesure ;
+//    C43.] (b) Le donneur d'ordre « s'assure de l'authenticité auprès
 //    de l'organisme de recouvrement » : aucune surface ne le demande ni ne le
 //    trace. (c) Le 2° n'exige un extrait d'immatriculation QUE lorsque celle-ci
 //    est obligatoire ou pour une profession réglementée, et il offre QUATRE
@@ -489,9 +496,9 @@ export const CODE_TRAVAIL_VIGILANCE_MODALITES: Corpus = {
       cause: "relation_tiers",
       toucheLaCible: true,
       motif:
-        "L'article central du module Prestataires, et le seul du dossier qui chiffre quoi que ce soit : « lors de la conclusion et tous les six mois jusqu'à la fin de son exécution ». LE RYTHME DU PRODUIT EST CELUI DU TEXTE — MOIS_RENOUVELLEMENT_URSSAF vaut 6 — MAIS SON ANCRAGE NE L'EST PAS : `opposabiliteUrssaf()` compte les six mois depuis `prestataire.updatedAt`, la dernière modification de la fiche, quand le texte les compte depuis la conclusion puis depuis chaque remise. La déduction n'est valable que dans un sens, le module le dit, et le sens est celui qui alerte TARD : toute retouche de la fiche — un téléphone, une note — repousse de six mois une limite qu'aucune remise d'attestation n'a renouvelée. Trois exigences de l'article ne sont par ailleurs servies par rien : l'attestation doit dater de MOINS DE SIX MOIS à la remise (le produit stocke une fin de validité, jamais une date d'émission), le donneur d'ordre doit S'ASSURER DE L'AUTHENTICITÉ auprès de l'URSSAF (aucune surface ne le demande ni ne le trace), et le 2° n'exige un extrait d'immatriculation que si celle-ci est obligatoire, en offrant QUATRE pièces au choix (le produit n'a qu'un champ Kbis). Aucune de ces exigences ne se solde aujourd'hui, et aucune Obligation du référentiel ne les porte.",
+        "L'article central du module Prestataires, et le seul du dossier qui chiffre quoi que ce soit : « lors de la conclusion et tous les six mois jusqu'à la fin de son exécution ». LE RYTHME DU PRODUIT EST CELUI DU TEXTE — MOIS_RENOUVELLEMENT_URSSAF vaut 6 — SON ANCRAGE, LUI, EST UNE LECTURE. Le texte cale la grille sur la CONCLUSION du contrat, puis tous les six mois ; il ne nomme pas l'instant où « datant de moins de six mois » se mesure. Jusqu'au 2026-09-27, le module comptait depuis `prestataire.updatedAt`, que toute retouche de la fiche repoussait. Depuis (décision B2, journal C43), il compte six mois depuis la dernière remise saisie (`attestationUrssafRemiseLe`) et compare l'émission saisie (`attestationUrssafEmiseLe`) à la remise. Cette lecture est aussi prudente que la grille tant que les remises sont à l'heure ou en avance ; elle ne l'est plus pour une REMISE TARDIVE, qui décale la grille d'autant (remise à conclusion + 7 mois : suivante attendue à + 13, la grille dit + 12) — la date de conclusion n'est pas au modèle. Mesurer l'ancienneté à la remise n'est pas non plus la lecture la plus stricte (« moins de six mois » à tout instant ferait redemander à émission + six mois). Signalé à la propriétaire le 2026-09-27, modèle inchangé. Tant que ces dates sont vides, l'écran dit « non renseignée », jamais « à jour ». Deux exigences de l'article ne sont servies par rien : le donneur d'ordre doit S'ASSURER DE L'AUTHENTICITÉ auprès de l'URSSAF (aucune surface ne le demande ni ne le trace), et le 2° n'exige un extrait d'immatriculation que si celle-ci est obligatoire, en offrant QUATRE pièces au choix (le produit n'a qu'un champ Kbis). Aucune Obligation du référentiel ne porte l'article.",
       bloquePar:
-        "Le même triple blocage que L. 8222-1 — pas de porteur pour une relation contractuelle, pas de contrat dans le modèle, périmètre non tranché — auquel s'ajoutent ici deux données qui n'existent pas et qui seraient nécessaires même si le reste était levé : la date de remise de chaque attestation, qui seule permettrait d'ancrer le semestre où le texte l'ancre, et la date d'émission de l'attestation, qui seule permettrait de vérifier le « moins de six mois ». Aucune des deux ne se déduit de ce que la fiche contient.",
+        "Le même triple blocage que L. 8222-1 — pas de porteur pour une relation contractuelle, pas de contrat dans le modèle, périmètre non tranché — ~~auquel s'ajoutaient deux données absentes du modèle~~ : la date de remise et la date d'émission de l'attestation y sont depuis le 2026-09-27 (C43), portées par la fiche du prestataire.",
     },
     {
       ref: "D. 8222-6",

@@ -3,7 +3,7 @@ import { AppTopbar } from "@/components/layout/AppTopbar";
 import { LegalBadge, WhyCard, StatusPill } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { getDashboardData } from "@/lib/dashboard/queries";
-import { countAlertesVigilance } from "@/lib/prestataires/queries";
+import { compterVigilanceParGravite } from "@/lib/prestataires/queries";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
 import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
@@ -48,7 +48,7 @@ export default async function ControlePage({
 
   const [
     dashboard,
-    prestatairesAlertes,
+    vigilance,
     nbPrestataires,
     duerpVersion,
     nbRapports,
@@ -57,7 +57,7 @@ export default async function ControlePage({
     couverture,
   ] = await Promise.all([
     getDashboardData(id),
-    countAlertesVigilance(id),
+    compterVigilanceParGravite(id),
     prisma.prestataire.count({ where: { etablissementId: id } }),
     prisma.duerpVersion.findFirst({
       where: { duerp: { etablissementId: id } },
@@ -167,18 +167,29 @@ export default async function ControlePage({
     },
     {
       titre: "Attestations prestataires",
+      // ~~« N attestations URSSAF/RC Pro expirées ou expirant », état « en
+      // retard »~~ pour TOUT prestataire qui appelait un geste — pièce non
+      // fournie et date non renseignée comprises (contre-lecture du
+      // 2026-09-27). Une date absente n'est pas un retard : la gravité
+      // décide du mot et de l'état (`ventilerVigilance`).
       description: nbPrestataires
-        ? prestatairesAlertes > 0
-          ? `${prestatairesAlertes} attestation${prestatairesAlertes > 1 ? "s" : ""} URSSAF/RC Pro expirée${prestatairesAlertes > 1 ? "s" : ""} ou expirant.`
-          : `${nbPrestataires} prestataire${nbPrestataires > 1 ? "s" : ""} · pièces à jour.`
+        ? vigilance.enRetard > 0
+          ? `${vigilance.enRetard} prestataire${vigilance.enRetard > 1 ? "s" : ""} avec une pièce expirée ou à redemander.`
+          : vigilance.proche > 0
+            ? `${vigilance.proche} prestataire${vigilance.proche > 1 ? "s" : ""} avec une pièce qui expire sous 30 jours.`
+            : vigilance.aPlanifier > 0
+              ? `${vigilance.aPlanifier} prestataire${vigilance.aPlanifier > 1 ? "s" : ""} avec une pièce non fournie ou une date non renseignée.`
+              : `${nbPrestataires} prestataire${nbPrestataires > 1 ? "s" : ""} · pièces à jour.`
         : "Aucun prestataire déclaré.",
       present: nbPrestataires > 0,
       etat:
         nbPrestataires === 0
           ? "a_planifier"
-          : prestatairesAlertes > 0
+          : vigilance.enRetard > 0
             ? "en_retard"
-            : "a_jour",
+            : vigilance.total > 0
+              ? "a_planifier"
+              : "a_jour",
       reference: "Art. L. 8222-1 CT",
     },
   ];

@@ -42,8 +42,29 @@ import {
   faitInventaire,
   type ManqueCouverture,
 } from "@/lib/perimetre/couverture";
-import { genererReadme } from "@/lib/pdf/readme-controle";
+import {
+  genererReadme,
+  ligneDatesAttestation,
+  type DatesAttestation,
+} from "@/lib/pdf/readme-controle";
+import { attestationUrssafPresente } from "@/lib/prestataires/vigilance";
 import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
+
+/** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
+function datesAttestationZip(p: {
+  raisonSociale: string;
+  attestationUrssafCle: string | null;
+  attestationUrssafValableJusquA: Date | null;
+  attestationUrssafRemiseLe: Date | null;
+  attestationUrssafEmiseLe: Date | null;
+}): DatesAttestation {
+  return {
+    raisonSociale: p.raisonSociale,
+    presente: attestationUrssafPresente(p),
+    remiseLe: p.attestationUrssafRemiseLe ? formaterDateFr(p.attestationUrssafRemiseLe) : null,
+    emiseLe: p.attestationUrssafEmiseLe ? formaterDateFr(p.attestationUrssafEmiseLe) : null,
+  };
+}
 
 /**
  * Assemble en un ZIP **tous** les documents qu'un inspecteur, un assureur,
@@ -286,6 +307,17 @@ export async function GET(
     for (const p of prestataires) {
       const safeDir = nomDossierArchive(p.raisonSociale, "Prestataire");
       const sousDossier = dossierPrestataires.folder(safeDir) ?? dossierPrestataires;
+      // Les dates de l'attestation de vigilance, à côté de la pièce : la
+      // date quand elle existe, « non renseignée » sinon (C43). Pas de
+      // fichier pour un prestataire sans attestation au dossier : il ne
+      // dirait rien d'une pièce qui n'y est pas.
+      const dates = datesAttestationZip(p);
+      if (dates.presente) {
+        sousDossier.file(
+          "Dates_attestation_vigilance.txt",
+          `Attestation URSSAF (art. D. 8222-5) — ${ligneDatesAttestation(dates)}\n`,
+        );
+      }
       // Le nom d'origine de la pièce vient du poste du prestataire : il est
       // conservé en base pour l'affichage, il ne devient un nom d'entrée
       // d'archive qu'assaini. L'export est fait pour être décompressé chez
@@ -527,6 +559,9 @@ export async function GET(
     piecesPrestataires,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
+    datesAttestations: echecs.has("Prestataires/")
+      ? []
+      : prestataires.map(datesAttestationZip),
     nbPermisFeu: permisFeuList.length,
     nbPlansPrevention: plansList.length,
     aCarnetSanitaire: Boolean(
