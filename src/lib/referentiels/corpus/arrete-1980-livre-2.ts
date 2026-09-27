@@ -34,10 +34,12 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       intitule: "Entretien",
       url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020304588/",
       versionEnVigueur: "1980-08-15",
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      // Aucune mention « Modifié par » sur la page de la section (2026-09-27).
+      modifiePar: null,
+      luLe: "2026-09-27",
+      lecture: "premiere_main",
       prescrit:
-        "Article d'ENTRETIEN, non de vérification : entretien régulier et maintien en bon état, plus une seule périodicité chiffrée — le ramonage et le nettoyage annuels des conduits de fumée, des cheminées et de TOUS les appareils. La vérification technique annuelle, elle, est à CH 58.",
+        "Livre II > Titre Ier > Chapitre V > « Section 9 : Entretien et vérification » (CH 57, CH 58), section distincte des huit sections d'installation du chapitre — relevé le 2026-09-27 (C41) pour le renvoi de PE 20 § 2. Article d'ENTRETIEN, non de vérification : entretien régulier et maintien en bon état, plus une seule périodicité chiffrée — le ramonage et le nettoyage annuels des conduits de fumée, des cheminées et de TOUS les appareils. La vérification technique annuelle, elle, est à CH 58.",
       citationCle:
         "Les installations doivent être entretenues régulièrement et maintenues en bon état de fonctionnement. En particulier, les conduits de fumée, les cheminées et tous les appareils doivent être ramonés et nettoyés une fois par an.",
       statut: "retenu",
@@ -48,8 +50,20 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
     {
       ref: "CH 58",
       intitule: "Vérifications techniques",
-      url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020304588/",
+      url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000052232581",
       versionEnVigueur: "2025-09-10",
+      modifiePar: {
+        texte: "Arrêté du 1er septembre 2025 - articles 3, 4 et 5",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000052211580",
+      },
+      // 2026-09-27 (C41) : § 1 relu mot pour mot (« Les installations doivent
+      // être vérifiées, y compris leur fonctionnement, dans les conditions
+      // prévues à la section II du chapitre Ier du présent titre. ») ; place
+      // relevée : « Section 9 : Entretien et vérification ». Le § 2 n'a PAS pu
+      // être recopié mot pour mot ce jour-là — l'outil de lecture rendait une
+      // paraphrase, puis un texte qui n'est pas celui de l'article. La
+      // citation ci-dessous reste donc celle du 2026-09-01, et la lecture reste
+      // `agent_verbatim`.
       luLe: "2026-09-01",
       lecture: "agent_verbatim",
       citationCle:
@@ -89,8 +103,16 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
     {
       ref: "GC 21",
       intitule: "Entretien des installations de cuisson",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020344053",
+      // La page affiche « Version en vigueur depuis le 15/08/1980 » ET
+      // « Modifié par Arrêté du 10 octobre 2005 - art. Annexe, v. init. » :
+      // recopié tel qu'affiché (2026-09-27).
       versionEnVigueur: "1980-08-15",
-      luLe: "2026-08-26",
+      modifiePar: {
+        texte: "Arrêté du 10 octobre 2005 - art. Annexe, v. init.",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000240955",
+      },
+      luLe: "2026-09-27",
       lecture: "premiere_main",
       statut: "retenu",
       obligations: [
@@ -98,15 +120,26 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         "cuisson-erp-filtres-hebdomadaire",
       ],
       citationCle:
-        "« § 2. Au moins une fois par an, il doit être procédé au ramonage des conduits d\'évacuation et à la vérification de leur vacuité. […] Les filtres doivent être nettoyés ou remplacés aussi souvent que nécessaire et, en tout cas, au minimum une fois par semaine. »",
+        "§ 1. Les appareils de cuisson et de remise en température doivent être entretenus régulièrement et maintenus en bon état de fonctionnement. […] § 2. Au moins une fois par an, il doit être procédé au ramonage des conduits d'évacuation et à la vérification de leur vacuité. Pendant les périodes d'activité, les appareils de cuisson et de remise en température, le circuit d'extraction d'air vicié, de buées et de graisses, y compris les ventilateurs et récupérateurs de chaleur éventuels, doivent être nettoyés chaque fois qu'il est nécessaire. Les filtres doivent être nettoyés ou remplacés aussi souvent que nécessaire et, en tout cas, au minimum une fois par semaine. § 3. Un livret d'entretien sur lequel l'exploitant est tenu de noter les dates des vérifications et des opérations d'entretien effectuées sur les installations et appareils visés aux § 1 et 2 ci-dessus doit être annexé au registre de sécurité de l'établissement.",
       prescrit:
-        "DEUX rythmes : ramonage annuel des conduits avec vérification de leur vacuité, et nettoyage ou remplacement des filtres au minimum HEBDOMADAIRE. Le second ne produisait aucune échéance avant le 2026-08-26 — il vivait dans le libellé d\'une référence. Le § 3 impose en outre de noter les dates des vérifications et opérations d\'entretien, et d\'annexer ce relevé au registre de sécurité.",
+        "Livre II > Titre Ier > Chapitre X > « Section 7 : Entretien et vérifications » (GC 21, GC 22), section distincte des six sections d'installation du chapitre — relevé le 2026-09-27 (C41) pour le renvoi de PE 15 § 1. DEUX rythmes : ramonage annuel des conduits avec vérification de leur vacuité, et nettoyage ou remplacement des filtres au minimum HEBDOMADAIRE. Le second ne produisait aucune échéance avant le 2026-08-26 — il vivait dans le libellé d\'une référence. Le § 3 impose en outre de noter les dates des vérifications et opérations d\'entretien, et d\'annexer ce relevé au registre de sécurité.",
     },
     {
       ref: "GC 22",
       intitule: "Vérifications techniques",
-      url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020317519/",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317599",
       versionEnVigueur: "1980-08-15",
+      modifiePar: {
+        texte: "Arrêté du 10 octobre 2005 - art. Annexe, v. init.",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000240955",
+      },
+      // 2026-09-27 (C41) : § 1 relu mot pour mot (« Les installations
+      // d'appareils de cuisson ou de remise en température doivent être
+      // vérifiées dans les conditions prévues à la section II du chapitre Ier
+      // du présent titre. ») et place relevée (« Section 7 : Entretien et
+      // vérifications »). Le § 2 n'a été rendu qu'en paraphrase, concordante
+      // avec la citation du 2026-09-01 mais non recopiée : la lecture reste
+      // `agent_verbatim`.
       luLe: "2026-09-01",
       lecture: "agent_verbatim",
       prescrit:

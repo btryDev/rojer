@@ -23,7 +23,9 @@ export async function getEquipement(id: string) {
   const user = await requireUser();
   return prisma.equipement.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
-    include: { etablissement: { select: { id: true, raisonDisplay: true } } },
+    include: {
+      etablissement: { select: { id: true, raisonDisplay: true, estERP: true } },
+    },
   });
 }
 

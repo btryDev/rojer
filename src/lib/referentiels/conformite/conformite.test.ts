@@ -719,7 +719,11 @@ describe("référentiel conformité — seuils d'effectif", () => {
     // ne doit pas se dire telle : la visite de commission de 5ᵉ cite GE 4
     // pour dire qu'il ne s'y applique PAS, le contrôle quinquennal des
     // ascenseurs est fondé ailleurs et cite AS 9 pour les catégories 1 à 4.
-    const DIT_LA_SUR_APPLICATION = /sur-application assumée/;
+    // Ou, depuis le 2026-09-27 (C41), qu'elle y est servie par une LECTURE
+    // d'un renvoi du livre III, dite comme telle : un examen à la mise en
+    // service que PE 15 § 1 peut couvrir (« mise en œuvre ») n'est pas une
+    // sur-application, et l'écrire le serait à tort.
+    const DIT_LA_SUR_APPLICATION = /sur-application assumée|est une lecture/;
     const servieAuxN5 = (erp: unknown): boolean => {
       if (erp === true) return true;
       if (!erp || typeof erp !== "object") return false;
@@ -745,6 +749,38 @@ describe("référentiel conformité — seuils d'effectif", () => {
     expect(descriptionsMuettes).toEqual([]);
   });
 
+  it("une échéance récurrente qui invoque PE 15 § 1 ou PE 20 § 2 nomme la ligne qui porte PE 4 § 2 en 5ᵉ ; un examen ponctuel ne s'y accole pas (C41)", () => {
+    // PE 15 § 1 et PE 20 § 2 renvoient au livre II la « mise en œuvre » des
+    // installations autorisées en 4ᵉ ; au livre II, l'entretien et la
+    // vérification forment une section à part (GC 21-22, CH 57-58). Le rythme
+    // que le livre III impose en 5ᵉ sur ces objets est PE 4 § 2, et il est
+    // déjà au calendrier de tout N5 : la description le dit, par le libellé
+    // que l'exploitant voit, lu ici dans le référentiel et non recopié.
+    const pe4 = obligationParId("incendie-erp-pe4-entretien-installations-techniques")!;
+    expect(pe4.periodicite).toBe("triennale");
+    expect(pe4.typologies.erp).toEqual({ categories: ["N5"] });
+    expect(pe4.referencesLegales[0].reference).toContain("PE 4 § 2");
+    const invoquent = obligationsConformite.filter((o) =>
+      /PE 15 § 1|PE 20 § 2/.test(o.description ?? ""),
+    );
+    // Un rythme se compare à un rythme : seules les échéances récurrentes
+    // nomment la triennale. Un examen à la mise en service ne l'est pas, et
+    // l'y accoler dirait qu'il se refait tous les trois ans.
+    const recurrentes = invoquent.filter((o) => o.nature === "echeance_recurrente");
+    const ponctuelles = invoquent.filter((o) => o.nature === "ponctuelle");
+    // Bornes basses : sans elles, un renommage de la phrase viderait le test.
+    expect(recurrentes.length).toBeGreaterThan(0);
+    expect(ponctuelles.length).toBeGreaterThan(0);
+    const muettes = recurrentes
+      .filter((o) => !(o.description ?? "").includes(`« ${pe4.libelle} »`))
+      .map((o) => o.id);
+    expect(muettes).toEqual([]);
+    const accolees = ponctuelles
+      .filter((o) => /trois ans|sur-application/.test(o.description ?? ""))
+      .map((o) => o.id);
+    expect(accolees).toEqual([]);
+  });
+
   it("`champR422734` n'est jamais posé sans `personnesPresentesMin`", () => {
     for (const o of obligationsConformite) {
       if (o.typologies.champR422734) {
@@ -760,7 +796,9 @@ describe("référentiel conformité — non-régression des obligations critique
    * pour une raison nommée. Le critère commun : aucun établissement ne peut
    * perdre en silence une obligation qu'il avait déjà.
    *
-   *  - les trois premières sont antérieures à l'amendement 2026-08 :
+   *  - celles qui ne portent pas de commentaire sont antérieures à
+   *    l'amendement 2026-08 (`elec-erp-groupe-electrogene-annuel` en était
+   *    jusqu'au 2026-09-27, C41) :
    *    l'obligation n'a JAMAIS été appliquée sans réponse ;
    *  - `levage-vgp-semestrielle-chariot-gerbeur` est une obligation neuve, que
    *    personne ne peut donc perdre, et dont la couverture par défaut reste
@@ -772,7 +810,9 @@ describe("référentiel conformité — non-régression des obligations critique
    * rédigée en `non_infirmee` ou en `infirmee`.
    */
   const CONDITIONS_STRICTES_JUSTIFIEES = new Set([
-    "elec-erp-groupe-electrogene-annuel",
+    // ~~"elec-erp-groupe-electrogene-annuel"~~ — retirée le 2026-09-27 (C41) :
+    // la question est passée en trois états et la condition en `non_infirmee`,
+    // elle n'est plus stricte.
     // Obligation neuve créée le 2026-08-26 (arrêté du 1er mars 2004, art. 23 b) :
     // aucun équipement déjà en base ne peut la perdre, et
     // `levage-vgp-semestrielle-personnes` couvre l'appareil tant que la question
@@ -1508,6 +1548,17 @@ describe("référentiel conformité — version et empreinte", () => {
     // même sans avoir quitté sa branche — la case du formulaire est binaire
     // et décochée par défaut, « faux » n'y est pas une réponse. Son numéro
     // n'est pas réemployé, comme `.3` : la prochaine version sera `.12`.
+    //
+    // C41 (2026-09-27) : la case devient une question à trois états, et les
+    // deux lignes d'EL 18 § 4 portent la même condition `non_infirmee` sur
+    // `aGroupeElectrogene` — `-annuel` quitte la forme stricte, `-quinzaine`
+    // en gagne une. Les conditions sont hachées, l'empreinte bouge. Aucune
+    // obligation n'entre ni ne sort : 169 + 0 − 0 = 169. Les `false` écrits
+    // par l'ancienne case sont effacés par la migration
+    // `20260927120000_groupe_electrogene_tri_etat`. Sur la même version,
+    // descriptions seules (hors empreinte) : les lignes qui invoquent PE 15 § 1
+    // ou PE 20 § 2 nomment la ligne triennale de PE 4 § 2.
+    { version: "2026-09-26.12", empreinte: "169-fd2eaf2750ad7a5f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

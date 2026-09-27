@@ -177,20 +177,20 @@ export function trierParCategorie<T extends { categorie: CategorieEquipement }>(
 }
 
 /**
- * L'aide de la case « Groupe électrogène de sécurité présent » (C39,
- * 2026-09-27). Elle disait « Déclenche la vérification annuelle prévue par
- * l'art. EL 20 du règlement ERP » : EL 20 traite des installations
- * temporaires (cité à tort, corrigé au référentiel dès l'audit 2026-08 mais
- * pas ici), et la ligne que la case gouverne est mensuelle. Cette ligne est
- * `elec-erp-groupe-electrogene-annuel` — seule obligation conditionnée sur
- * `aGroupeElectrogene` —, fondée sur EL 18 § 4 (`referencesLegales[0]`),
- * article du livre II. `labels.test.ts` tient l'accord avec le référentiel et
- * interdit « EL 20 ».
+ * L'aide de la question « Un groupe électrogène de sécurité est-il présent ? ».
  *
- * Revue finale du 2026-09-27 : la case s'affiche pour toute installation
- * électrique, ERP ou non, et la quinzaine (`-quinzaine`) reste servie à tout
- * ERP case décochée. Le texte dit donc les deux : rien hors ERP, et la
- * vérification des niveaux indépendante de la case.
+ * C39 (2026-09-27) : elle citait EL 20 — installations temporaires — et
+ * annonçait une vérification annuelle, là où la ligne est mensuelle et fondée
+ * sur EL 18 § 4 (`referencesLegales[0]`), article du livre II.
+ *
+ * C41 (2026-09-27) : la case à cocher devient une question à trois états
+ * (`CHAMPS_TRI_ETAT`), et les deux lignes d'EL 18 § 4 — la quinzaine des
+ * niveaux et l'essai mensuel — portent la même condition `non_infirmee`. Le
+ * texte dit donc ce que fait chacune des trois réponses, avec les libellés
+ * mêmes du `<select>` (`VALEURS_TRI_ETAT`) : « Oui » et « Je ne sais pas
+ * encore » gardent les deux, « Non » les retire. Il ne dit rien de plus que
+ * ce que le calendrier fait ; `labels.test.ts` tient l'accord avec le
+ * référentiel et avec les libellés.
  */
 export const AIDE_GROUPE_ELECTROGENE =
-  "Pour un établissement recevant du public seulement. Cochée, elle ajoute chaque mois l'entretien et l'essai du groupe électrogène de sécurité (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéance maintenue par sur-application assumée). La vérification des niveaux, toutes les deux semaines, est suivie pour toute installation électrique d'un établissement recevant du public, case cochée ou non.";
+  "Pour un établissement recevant du public seulement. Avec « Oui » ou « Je ne sais pas encore », le calendrier suit la vérification des niveaux toutes les deux semaines et l'entretien avec essai chaque mois (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéances maintenues par sur-application assumée). Avec « Non », les deux sont retirées. En cas de doute, laissez « Je ne sais pas encore ».";

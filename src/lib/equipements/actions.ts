@@ -70,29 +70,6 @@ export type EquipementActionState =
     }
   | { status: "success"; id: string };
 
-/**
- * Normalise les données du formulaire avant validation Zod :
- *  - les checkboxes HTML envoient la valeur du `value` attribut ou rien ;
- *    on convertit en booléen
- *  - les selects vides arrivent en string "" ; on les transforme en undefined
- *  - les champs numériques vides arrivent en "" ; Zod les rendra undefined
- */
-function normaliserFormData(fd: FormData): Record<string, unknown> {
-  const raw = Object.fromEntries(fd);
-  const bool = (k: string) => raw[k] !== undefined;
-  return {
-    libelle: raw.libelle,
-    categorie: raw.categorie || undefined,
-    batimentId: raw.batimentId || undefined,
-    localisation: raw.localisation,
-    dateMiseEnService: raw.dateMiseEnService,
-    nombre: raw.nombre,
-    aGroupeElectrogene: bool("aGroupeElectrogene"),
-    estLocalPollutionSpecifique: bool("estLocalPollutionSpecifique"),
-    nbVehiculesParkingCouvert: raw.nbVehiculesParkingCouvert,
-    notes: raw.notes,
-  };
-}
 export async function creerEquipement(
   etablissementId: string,
   _prev: EquipementActionState,

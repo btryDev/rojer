@@ -114,6 +114,7 @@ export default async function EquipementDetailPage({
   const caracteristiques = caracteristiquesLisibles(
     eq.categorie,
     eq.caracteristiques,
+    { estERP: eq.etablissement.estERP },
   );
 
   // Le rendez-vous de tête : la première ligne datée de « à faire ». Une
@@ -230,9 +231,15 @@ export default async function EquipementDetailPage({
   // lui ouvre aucune ligne. L'y ajouter aurait affiché la promesse inverse de
   // ce que la carte « Ce qui se déclenche sur cet appareil » explique deux
   // blocs plus bas.
-  const proprietesPortees = new Set(
-    obligations.flatMap((o) => o.conditions?.map((c) => c.propriete) ?? []),
-  );
+  // Compté, pas seulement su : le groupe électrogène en porte deux (EL 18 § 4,
+  // quinzaine et mois), et « l'obligation reste » y disait une ligne de trop
+  // peu (C41).
+  const lignesParPropriete = new Map<string, number>();
+  for (const o of obligations) {
+    for (const p of new Set(o.conditions?.map((c) => c.propriete) ?? [])) {
+      lignesParPropriete.set(p, (lignesParPropriete.get(p) ?? 0) + 1);
+    }
+  }
 
   return (
     <EcranFiche
@@ -416,9 +423,11 @@ export default async function EquipementDetailPage({
                     {c.enAttente ? (
                       <span className="text-[color:var(--board-slate-soft)]">
                         {c.valeur}
-                        {proprietesPortees.has(c.cle)
-                          ? " — l'obligation reste au calendrier"
-                          : ""}
+                        {(lignesParPropriete.get(c.cle) ?? 0) > 1
+                          ? " — les obligations restent au calendrier"
+                          : lignesParPropriete.has(c.cle)
+                            ? " — l'obligation reste au calendrier"
+                            : ""}
                       </span>
                     ) : (
                       c.valeur

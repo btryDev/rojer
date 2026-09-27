@@ -71,6 +71,7 @@ export default async function NouvelEquipementPage({
                   }
                 : undefined
             }
+            estERP={etab.estERP}
             libelleSubmit="Créer l'équipement"
             labelAnnuler={{
               libelle: "Annuler",

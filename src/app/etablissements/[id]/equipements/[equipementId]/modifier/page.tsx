@@ -23,7 +23,6 @@ type Caracteristiques = Partial<
   Pick<
     EquipementInput,
     | "nombre"
-    | "aGroupeElectrogene"
     | "estLocalPollutionSpecifique"
     | "aSystemeDeRecyclage"
     | "nbVehiculesParkingCouvert"
@@ -132,7 +131,6 @@ export default async function ModifierEquipementPage({
               dateMiseEnService: eq.dateMiseEnService,
               datePeremption: eq.datePeremption,
               nombre: caracs.nombre ?? null,
-              aGroupeElectrogene: caracs.aGroupeElectrogene,
               estLocalPollutionSpecifique: caracs.estLocalPollutionSpecifique,
               aSystemeDeRecyclage: caracs.aSystemeDeRecyclage,
               nbVehiculesParkingCouvert:
@@ -140,7 +138,7 @@ export default async function ModifierEquipementPage({
               familleEsp: caracs.familleEsp ?? null,
               pressionMaxAdmissibleBar: caracs.pressionMaxAdmissibleBar ?? null,
               volumeLitres: caracs.volumeLitres ?? null,
-              // Les sept questions à trois états doivent être repassées au
+              // Les questions à trois états (`CHAMPS_TRI_ETAT`) doivent être repassées au
               // formulaire, sinon l'édition les efface : le `<select>` repart à
               // « Je ne sais pas encore », rien n'est soumis, et
               // `serialiserCaracteristiques` ne réécrit pas la clé. Un « non »
@@ -153,6 +151,7 @@ export default async function ModifierEquipementPage({
               notes: caracs.notes ?? null,
               ...reponsesTriEtat(caracs),
             }}
+            estERP={eq.etablissement.estERP}
             libelleSubmit="Enregistrer"
             labelAnnuler={{
               libelle: "Annuler",
