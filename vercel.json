@@ -9,7 +9,8 @@
       "feat/*": false,
       "spike/*": false,
       "perf/*": false,
-      "worktree-*": false
+      "worktree-*": false,
+      "integration/*": false
     }
   }
 }
