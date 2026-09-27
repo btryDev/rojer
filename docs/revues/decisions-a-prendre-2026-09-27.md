@@ -163,6 +163,14 @@ technique.
 
 ## D11 — La requalification des extincteurs CO₂ (plus de 30 bar)
 
+**Texte** (API, arrêté du 20 novembre 2017, art. 18 I, LEGIARTI000036131133, en
+vigueur depuis le 2018-01-01, relu le 2026-09-28) : « Pour les extincteurs soumis à
+une pression maximale admissible de plus de 30 bar, la requalification périodique
+est réalisée à l'occasion du premier rechargement effectué plus de six ans après la
+requalification précédente, sans que le délai entre deux requalifications
+périodiques ne puisse excéder dix ans. Les autres extincteurs ne sont pas soumis à
+requalification périodique. »
+
 **Constat.** Écartée sans être annoncée : « Le manque est donc un silence »
 (`equipement-sous-pression.ts:195`). Un extincteur CO₂ est dans presque toutes les
 cuisines de la cible. **Recommandation :** l'annoncer, au moins.
@@ -219,9 +227,13 @@ propre, pour tout employeur.
 ## D17 — L. 4121-3 : le CSE consulté sur le document unique
 
 **Texte** (API) : « Le comité social et économique est consulté sur le document
-unique d'évaluation des risques professionnels et sur ses mises à jour ». Ni motif
-ni annonce. Cible : 11 à 50 salariés. **Recommandation :** écrire l'écart au corpus
-(politique sœur EPI) et l'annoncer dans le domaine `document_unique`.
+unique d'évaluation des risques professionnels et sur ses mises à jour ».
+L. 4121-3 est DÉJÀ `non_couvert` et annoncé (`code-travail-duerp.ts:141`,
+`manques-annonces.ts:181`) — mais au titre d'une autre phrase : l'impact différencié
+de l'exposition selon le sexe. C'est l'alinéa sur le CSE (al. 2, 1°) qui n'a ni motif
+ni annonce. Cible : 11 à 50 salariés. **Recommandation :** l'écrire dans le motif de
+l'entrée existante et dans l'intitulé de son annonce (domaine `document_unique`),
+comme une seconde prescription non couverte du même article.
 
 ## D18 — R. 4512-3 et R. 4512-4 (plan de prévention)
 

@@ -4648,11 +4648,20 @@ tranchée (D21, après D13).
 accessoires dits par `1f4dee9c` résumaient le texte en ajoutant ou en perdant des
 mots — « restent hors du contrat » là où R. 134-7 I a) ne les exclut que des clauses
 minimales, « appareils plus anciens » là où l'arrêté de 2012 distingue selon la
-conformité à la directive. Ramenés au texte par `205199d3`. Un résumé de texte se
-relit contre le texte comme un encodage.
+conformité à la directive. Ramenés au texte par `205199d3` — ~~pour les cinq~~
+[2026-09-28, revue indépendante : pas tous ; « selon la date et le mode
+d'installation » disait encore plus que l'art. 1er de l'arrêté de 2012, et « pour
+l'ensemble de ses équipements » n'est pas dans l'art. 6 III. Corrigés au commit
+suivant]. Un résumé de texte se relit contre le texte comme un encodage.
 
 **Aucune version.** Descriptions, références et corpus hors empreinte ; moteur 5
 recopié sans incrément (A1 part avec le lot 1, non livré). Aucune migration.
+
+**CONDITION DE MERGE.** A1 change ce que le moteur écrit sans incrément, au motif que
+la version 5 n'est pas livrée. Le lot 1 n'est PAS dans `main` (`1cded3d8` n'est pas
+un ancêtre d'`origin/main` au 2026-09-28) : `lot/couverture-reponse-absente` et
+`lot/audit-bout-en-bout` se mergent ENSEMBLE. Mergée seule après un lot 1 déployé,
+cette branche changerait des écritures sous une version déjà servie.
 
 ## Partie 2 — Registre des constats en suspens
 

@@ -301,10 +301,14 @@ export const onboardingSchema = z
       });
     }
     if (!nombreDemande && val.personnesPresentesHabituellement !== undefined) {
+      // « la consigne, l'alarme et les exercices », pas « les mêmes
+      // obligations » : le TYPE de l'alarme (arrêté du 4 novembre 1993,
+      // art. 14 : 3 ou 4) dépend encore du nombre. Le champ de la question des
+      // matières est en décision (D24, `docs/revues/decisions-a-prendre-2026-09-27.md`).
       ctx.addIssue({
         code: "custom",
         path: ["personnesPresentesHabituellement"],
-        message: `Ce nombre n'est demandé qu'aux établissements recevant du public dont ni la catégorie ni l'effectif n'établissent le seuil de ${SEUIL_PERSONNES_R422734} personnes, et où ne sont pas manipulées de matières inflammables — ce « oui » impose déjà les mêmes obligations.`,
+        message: `Ce nombre n'est demandé qu'aux établissements recevant du public dont ni la catégorie ni l'effectif n'établissent le seuil de ${SEUIL_PERSONNES_R422734} personnes, et où ne sont pas manipulées de matières inflammables — ce « oui » impose déjà la consigne, l'alarme et les exercices.`,
       });
     }
     // Le seul cumul refusé (ADR-025 § 1) : un ERP en IGH relève du règlement

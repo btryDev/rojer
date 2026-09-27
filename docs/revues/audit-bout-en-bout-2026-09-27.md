@@ -4,6 +4,13 @@ Branche `lot/audit-bout-en-bout`, sur `lot/couverture-reponse-absente` (`1cded3d
 Commande de la session de coordination, pour la propriétaire : « est-ce que tout ce
 qui concerne le périmètre est là et fonctionnel ». Mené les 27 et 28 septembre.
 
+**CONDITION DE MERGE.** A1 (maillon 3) change ce que le moteur écrit sans incrément
+de `VERSION_MOTEUR_CALENDRIER`, au motif que la version 5 n'est pas livrée. Le lot 1
+n'est pas dans `main` (`1cded3d8` n'est pas un ancêtre d'`origin/main` au
+2026-09-28) : `lot/couverture-reponse-absente` et cette branche se mergent ENSEMBLE.
+Mergée seule après un lot 1 déployé, elle changerait des écritures sous une version
+déjà servie.
+
 Règle de décision reçue avec la commande : ce qu'une règle déjà écrite décide, ou
 qu'un texte relu par l'API Légifrance fonde clairement, est tranché et codé ; le
 reste va dans `docs/revues/decisions-a-prendre-2026-09-27.md` (D1 à D24).
