@@ -8,6 +8,7 @@ import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import {
   getStorage,
   MESSAGE_DEPOT_NON_CONFIGURE,
+  MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
 } from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
@@ -106,7 +107,15 @@ export async function creerPrestataire(
       fichier.name,
     );
     const buffer = Buffer.from(await fichier.arrayBuffer());
-    await storage.put(cle, buffer, val.mime);
+    // Même règle que le dépôt d'un rapport (2026-09-27) : l'échec d'écriture
+    // rend un message métier sur le champ ; les pièces déjà écrites sont
+    // reprises par l'appelant, rien n'est écrit en base.
+    try {
+      await storage.put(cle, buffer, val.mime);
+    } catch (e) {
+      console.error(`[prestataires/depot] écriture du fichier impossible (${cle})`, e);
+      return { error: MESSAGE_ECHEC_ENREGISTREMENT };
+    }
     piecesUploadees.push({ champ: champCle, cle, nom: fichier.name });
     return { cle, nom: fichier.name, cleChamp: champCle, nomChamp: champNom };
   }

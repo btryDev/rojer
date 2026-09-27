@@ -9,6 +9,7 @@ import {
   cleRapport,
   getStorage,
   MESSAGE_DEPOT_NON_CONFIGURE,
+  MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
 } from "@/lib/storage";
 import { libererFichiers } from "@/lib/suppression/fichiers";
@@ -177,8 +178,17 @@ export async function uploadRapport(
   const rapportId = `rap_${randomUUID()}`;
   const cle = cleRapport(verif.etablissementId, rapportId, fichier.name);
 
+  // L'écriture qui échoue — service indisponible, clé refusée (« Invalid
+  // Compact JWS », production du 2026-09-27) — rend un message métier, pas
+  // l'erreur générique de Next ; rien n'est encore écrit en base. Le détail
+  // va au journal du serveur.
   const storage = getStorage();
-  await storage.put(cle, buffer, val.mime);
+  try {
+    await storage.put(cle, buffer, val.mime);
+  } catch (e) {
+    console.error(`[rapports/depot] écriture du fichier impossible (${cle})`, e);
+    return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
+  }
 
   const resultat = parsed.data.resultat;
   const dateRapport = parsed.data.dateRapport;

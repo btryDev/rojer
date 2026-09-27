@@ -26,7 +26,9 @@ const VARIABLES = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "STORAGE_LOCAL_PATH",
 ] as const;
-const CLE_SERVICE = "sb_secret_valeur_qui_ne_doit_pas_sortir";
+const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
+// Une clé service_role au format JWT : la seule forme acceptée (C47).
+const CLE_SERVICE = `${b64({ alg: "HS256", typ: "JWT" })}.${b64({ role: "service_role" })}.signature_qui_ne_doit_pas_sortir`;
 let avant: Record<string, string | undefined>;
 
 function poser(env: Partial<Record<(typeof VARIABLES)[number], string>>) {
@@ -103,6 +105,46 @@ describe("getStorage — le pilote selon les variables", () => {
       expect(creer).not.toHaveBeenCalled();
     },
   );
+
+  it("une clé collée avec blancs et guillemets est nettoyée avant d'être passée au client", () => {
+    poser({
+      NODE_ENV: "production",
+      ...SUPABASE_COMPLET,
+      SUPABASE_SERVICE_ROLE_KEY: `  "${CLE_SERVICE}"\n`,
+      NEXT_PUBLIC_SUPABASE_URL: " https://projet.supabase.co\n",
+    });
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    expect(stockageEnService()).toBe(true);
+    getStorage();
+    expect(creer).toHaveBeenCalledWith("https://projet.supabase.co", CLE_SERVICE, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    // Le journal dit la forme et la longueur, jamais la valeur.
+    const journal = info.mock.calls.map((c) => String(c[0])).join("\n");
+    expect(journal).toMatch(/JWT à trois segments, rôle « service_role »/);
+    expect(journal).not.toContain("signature_qui_ne_doit_pas_sortir");
+    info.mockRestore();
+  });
+
+  it.each([
+    ["sb_secret_nouveau_format_secret", /clé secrète au nouveau format/],
+    [`${b64({ alg: "HS256" })}.${b64({ role: "anon" })}.sig`, /rôle « anon »/],
+  ])("clé %s : refusée avant tout appel, motif clair, valeur tue", (cle, forme) => {
+    poser({ NODE_ENV: "production", ...SUPABASE_COMPLET, SUPABASE_SERVICE_ROLE_KEY: cle });
+    const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(stockageEnService()).toBe(false);
+    let message = "";
+    try {
+      getStorage();
+    } catch (e) {
+      message = (e as Error).message;
+    }
+    expect(message).toMatch(/utilisez la clé service_role au format JWT/);
+    expect(message).toMatch(forme);
+    expect(message).not.toContain(cle);
+    expect(creer).not.toHaveBeenCalled();
+    erreur.mockRestore();
+  });
 
   it("un pilote inconnu est refusé", () => {
     poser({ NODE_ENV: "production", STORAGE_DRIVER: "s3" });

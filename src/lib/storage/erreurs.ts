@@ -16,6 +16,13 @@
 export const MESSAGE_DEPOT_NON_CONFIGURE =
   "Le dépôt de fichiers n'est pas encore configuré sur ce serveur.";
 
+/**
+ * Le message à l'écran quand le stockage est configuré mais que l'écriture a
+ * échoué (2026-09-27 : « Invalid Compact JWS » remontait en erreur générique).
+ */
+export const MESSAGE_ECHEC_ENREGISTREMENT =
+  "Le fichier n'a pas pu être enregistré. Réessayez ; si l'erreur persiste, signalez-la.";
+
 /** Le message à l'écran quand une ligne pointe vers un fichier absent. */
 export const MESSAGE_FICHIER_INTROUVABLE =
   "Le fichier n'est pas disponible : il n'a pas été retrouvé dans le stockage.";

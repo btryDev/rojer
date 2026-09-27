@@ -4024,6 +4024,54 @@ traduite ; chacun des trois dépôts sans refus préalable ; route et
 `NEXT_PUBLIC_` — toutes rouges. Et, avant correction, l'`exists()` du SDK
 était rouge contre le vrai service : c'est ce qui l'a fait remplacer.
 
+### C47 · 2026-09-27 — « Invalid Compact JWS » : la clé de service jugée sur sa forme
+
+*Base : `main` `592054d` (déployé), branche `lot/stockage-supabase-suite`.*
+
+**Le constat, en production** (variables posées par la propriétaire :
+`STORAGE_DRIVER=supabase`, `STORAGE_BUCKET=rojer-fichiers`,
+`SUPABASE_SERVICE_ROLE_KEY`) : deux dépôts de rapport, deux fois « ErreurStockage
+: Stockage Supabase : échec de l'écriture pour « rapports/… .pdf » (Invalid
+Compact JWS) », en 500 générique à l'écran. La propriétaire dit avoir posé la
+clé `service_role` legacy (`eyJ…`).
+
+**Lu.** supabase-js 2.104.0 (lockfile) : `fetchWithAuth` pose `apikey: clé`
+ET `Authorization: Bearer clé` (le client est construit sans session, donc
+le jeton d'accès retombe sur la clé). Documentation Supabase « API keys »
+(relue le 2026-09-27) : « Publishable and secret keys are short strings, not
+JWTs » ; « Send publishable and secret keys on the `apikey` header, not on
+`Authorization: Bearer` » ; « Both key systems work at the same time ». Rien
+sur Storage avec les nouvelles clés. « Invalid Compact JWS » est la réponse
+d'un en-tête `Authorization` qui ne porte pas un JWT bien formé : clé
+`sb_secret_…`, ou JWT abîmé par le collage (blanc, retour à la ligne,
+guillemet), ou autre valeur (le « JWT secret » du projet). **Non tranché
+d'ici laquelle** : la valeur posée n'est pas lue, et ne doit pas l'être. Le
+journal le dira au prochain déploiement.
+
+**Fait.** `storage/cle-service.ts` : `nettoyer` (blancs, guillemets droits et
+typographiques aux bords) appliqué à la clé, à l'URL et au bucket ;
+`formeDeLaCle` (JWT et son rôle lu dans la charge utile — non secrète —,
+`sb_secret`, `sb_publishable`, autre, vide) et `diagnostic` (la forme et la
+longueur) : écrits au journal à la construction du pilote et dans le motif de
+refus, jamais la valeur ni la signature. Seule une clé JWT de rôle
+`service_role` est acceptée ; toute autre forme est refusée AVANT tout appel,
+avec « utilisez la clé service_role au format JWT ». Les trois dépôts
+attrapent l'échec d'écriture et rendent « Le fichier n'a pas pu être
+enregistré. Réessayez ; si l'erreur persiste, signalez-la. », sans écriture
+en base. `docs/deploiement-stockage.md` : l'onglet « Legacy API keys », et
+ce qu'il ne faut pas coller.
+
+**Gardes.** `cle-service.test.ts` (nettoyage, formes, rôle `anon` refusé,
+aucune valeur ni signature dans le diagnostic ni le refus) ;
+`selection.test.ts` (clé collée avec blancs et guillemets passée propre au
+client ; `sb_secret` et `anon` refusés sans appel ; journal sans la valeur) ;
+`depot-echec.test.ts` (les trois dépôts). **Ne prouvent pas** que la clé
+posée en production est la bonne : c'est le journal du prochain déploiement.
+
+**Éprouvées** — sans trim ; clé passée brute au client ; `sb_secret`
+accepté ; `anon` accepté ; valeur au journal ; échec d'écriture non attrapé
+(rapport, prestataire, carnet) — huit rouges.
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
