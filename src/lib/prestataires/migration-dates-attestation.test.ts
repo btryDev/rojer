@@ -13,7 +13,7 @@ const RACINE = process.cwd();
 const SQL = readFileSync(
   join(
     RACINE,
-    "prisma/migrations/20260927120000_prestataire_dates_attestation_vigilance/migration.sql",
+    "prisma/migrations/20260927130000_prestataire_dates_attestation_vigilance/migration.sql",
   ),
   "utf8",
 );
@@ -25,7 +25,7 @@ const instructions = SQL.split("\n")
   .map((i) => i.replace(/\s+/g, " ").trim())
   .filter(Boolean);
 
-describe("migration 20260927120000 — dates de l'attestation de vigilance", () => {
+describe("migration 20260927130000 — dates de l'attestation de vigilance", () => {
   it("n'ajoute que les deux colonnes nullables, sans défaut ni remplissage", () => {
     expect(instructions).toEqual([
       'ALTER TABLE "Prestataire" ADD COLUMN "attestationUrssafRemiseLe" TIMESTAMP(3)',

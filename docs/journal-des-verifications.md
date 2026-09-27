@@ -3277,7 +3277,7 @@ l'ancrage sur `updatedAt` comme actuel).
 - **Modèle.** Avant : aucune date de remise ni d'émission ; la borne
   semestrielle partait de `prestataire.updatedAt`. Après :
   `Prestataire.attestationUrssafRemiseLe` et `attestationUrssafEmiseLe`,
-  `DateTime?`. Migration `20260927120000_prestataire_dates_attestation_vigilance` :
+  `DateTime?`. Migration `20260927130000_prestataire_dates_attestation_vigilance` :
   deux `ALTER TABLE "Prestataire" ADD COLUMN … TIMESTAMP(3)`, sans défaut ni
   remplissage — aucune date existante ne dit quand une pièce a été remise.
 - **Calcul** (`prestataires/vigilance.ts`). L'échéance est la plus proche
