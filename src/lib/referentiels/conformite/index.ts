@@ -228,7 +228,12 @@ export const obligationsConformite: Obligation[] = [
 // lignes du livre II qui invoquent PE 15 § 1 ou PE 20 § 2 (grande cuisine ×5,
 // CH 58) nomment la ligne triennale de PE 4 § 2, déjà au calendrier de tout
 // N5. 169 obligations, aucune n'entre ni ne sort.
-export const REFERENTIEL_VERSION = "2026-09-26.12";
+// `.13` le 2026-09-27 (C45) : une obligation entre, R. 4227-26 (chiffons,
+// cotons et papiers imprégnés, récipients métalliques clos et étanches), état
+// permanent d'établissement sous la typologie neuve `chiffonsImpregnes`. 169 +
+// 1 − 0 = 170. Aucune échéance datée : le générateur saute les états
+// permanents, aucune ligne de calendrier n'est écrite.
+export const REFERENTIEL_VERSION = "2026-09-26.13";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

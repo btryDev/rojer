@@ -28,6 +28,7 @@
 // été recoupé par un second lecteur.
 
 import type { Corpus } from "./types";
+import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
 const URL = (id: string) =>
   `https://www.legifrance.gouv.fr/codes/article_lc/${id}`;
@@ -118,19 +119,17 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       intitule: "Passeport de prévention",
       url: URL("LEGIARTI000054336916"),
       versionEnVigueur: "2026-06-27",
-      luLe: "2026-08-31",
+      modifiePar: {"texte": "LOI n° 2026-534 du 25 juin 2026 - art. 70"},
+      luLe: "2026-09-27",
       lecture: "agent_verbatim",
       prescrit:
         "L'employeur (ou son tiers déclarant) renseigne dans le passeport de prévention les attestations, certificats, certifications et diplômes obtenus par ses salariés à l'issue des formations santé-sécurité qu'il a dispensées.",
       citationCle:
         "Il est créé un passeport de prévention afin de faciliter le respect par les employeurs de leur obligation de formation prévue à l'article L. 4141-2. Il comporte les attestations, certificats, certifications professionnelles et diplômes obtenus dans le cadre des formations relatives à la santé et à la sécurité au travail mentionnées au même article L. 4141-2.",
-      statut: "obligation_manquante",
-      cause: "a_trancher",
-      toucheLaCible: true,
+      statut: "non_couvert",
+      declareA: ADRESSE_MANQUES_ANNONCES,
       motif:
-        "L'article met à la charge de l'employeur le renseignement du passeport de prévention (III, 1°) pour les formations qu'il dispense. C'est une obligation d'exploitant, non couverte par le référentiel. Il est aussi le seul endroit du chapitre où le droit affirme que la formation à la sécurité PRODUIT une pièce nominative — attestation, certificat, diplôme — ce qui est l'argument le plus fort en faveur du porteur salarié retenu pour `formation-securite-salarie-accueil`.",
-      bloquePar:
-        "Le passeport est un service national tiers : il est intégré au système d'information du compte personnel de formation et géré par la Caisse des dépôts et consignations (II). Rien de ce que l'outil détiendrait ne pourrait solder l'obligation, qui se remplit chez un tiers ; et le V renvoie les modalités de mise en œuvre au comité national de prévention et de santé au travail, à défaut à un décret en Conseil d'État. Encoder une échéance là-dessus aujourd'hui reviendrait à annoncer un rendez-vous dans un système auquel le produit n'est pas raccordé.",
+        "L'article met à la charge de l'employeur le renseignement du passeport de prévention (III, 1°) pour les formations qu'il dispense. C'est une obligation d'exploitant, non couverte par le référentiel. Il est aussi le seul endroit du chapitre où le droit affirme que la formation à la sécurité PRODUIT une pièce nominative — attestation, certificat, diplôme — ce qui est l'argument le plus fort en faveur du porteur salarié retenu pour `formation-securite-salarie-accueil`.\n\n[2026-09-27, C45 — ANNONCÉ, par décision de la propriétaire du 2026-09-27 (évaluation des 42 manques qui touchent la cible). Passé de `obligation_manquante` (cause `a_trancher`, touchait la cible) à `non_couvert` : nommé sur la page « Ce que Rojer ne couvre pas », domaine « Formation », à tout dossier dont l'établissement emploie des travailleurs (`estEtablissementTravail`). Rien n'est encodé ; la phrase de l'écran reste « une obligation que cet outil ne traite pas reste due si un texte l'impose ». Relu en première main sur Légifrance le 2026-09-27 (C45), page de l'article : structure demandée à l'aveugle, puis confirmation ciblée de la formulation décisive. Écart : formulation décisive identique ; la page porte la version du 2026-06-27, modifiée par la loi n° 2026-534 du 25 juin 2026, art. 70 — `modifiePar` rempli, la loi n'est pas ouverte. Blocage écrit à la lecture, conservé ici avec le champ `bloquePar` que le statut `non_couvert` ne porte pas : « Le passeport est un service national tiers : il est intégré au système d'information du compte personnel de formation et géré par la Caisse des dépôts et consignations (II). Rien de ce que l'outil détiendrait ne pourrait solder l'obligation, qui se remplit chez un tiers ; et le V renvoie les modalités de mise en œuvre au comité national de prévention et de santé au travail, à défaut à un décret en Conseil d'État. Encoder une échéance là-dessus aujourd'hui reviendrait à annoncer un rendez-vous dans un système auquel le produit n'est pas raccordé. »] [2026-09-27, contre-lecture F5 — `agent_verbatim`, et non `premiere_main` comme C45 l'avait d'abord écrit. L'article L. 4141-5 a été relu sur sa page, verbatim identique. Le texte modificateur, la loi n° 2026-534 du 25 juin 2026, art. 70, n'a PAS pu être lu : sa page `loda` n'affiche que la liste des articles qu'il crée ou modifie (L. 6356-1 à L. 6356-7, abrogation de L. 6355-1 à L. 6355-23), pas son texte, et la page du JO rendue par l'outil de lecture porte une mention de non-conformité à la Constitution qu'il n'a pas été possible de rattacher à cet article avec certitude. Point ouvert, à relire à la main : la version en vigueur de L. 4141-5 affichée par Légifrance est celle du 2026-06-27.]",
     },
 
     // -------------------------------------------------------------------------

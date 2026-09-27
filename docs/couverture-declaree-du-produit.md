@@ -152,16 +152,50 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-Les 27 articles ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ Les 53 articles (2026-09-27, C45 après contre-lecture) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
-restreint aux établissements que leur chapitre vise.** Un bureau tertiaire les
+restreint aux établissements que leur chapitre vise** — sauf les vingt-cinq
+annoncés le 2026-09-27, que la page « Ce que Rojer ne couvre pas » projette au
+seul dossier qu'ils peuvent concerner (§ 3 ter). Un bureau tertiaire les
 voyait tous, y compris les onze articles propres aux hôtels.
 
 **Le chiffre a bougé cinq fois : 28 → 19 le 2026-09-01, 19 → 20 le
 2026-09-03, 20 → 25 le 2026-09-20 (arrêté du 1er février 2010, légionelles, et
 l'article 36 de l'arrêté du 23 juin 1978 : cinq entrées, avec une adresse
 visible — voir leur famille au § 3), 25 → 26 le 2026-09-26 (`GN 13`, voir sa
-famille au § 3), puis 26 → 27 le même jour (`R. 4624-55`).** Neuf articles du
+famille au § 3), puis 26 → 27 le même jour (`R. 4624-55`), puis ~~27 → 52~~ 27 → 53 le
+2026-09-27 (C45).**
+
+**Le mouvement du 2026-09-27, article par article : ~~27 + 25 − 0 = 52~~
+27 + 26 − 0 = 53** (contre-lecture M2 : `R. 4512-12` entre à son tour). Aucune
+sortie. ~~Vingt-cinq~~ Vingt-six entrées, toutes venues de `obligation_manquante` :
+
+- vingt-quatre ANNONCÉES par décision de la propriétaire du 2026-09-27, avec une
+  adresse visible (`ADRESSE_MANQUES_ANNONCES`) — `R. 4227-22`, `R. 4227-23`,
+  `R. 4227-24`, `R. 4227-25` ; `R. 1321-60`, `Arrêté 10-09-2021 art. 4`,
+  `Arrêté 10-09-2021 art. 8`, `Arrêté 10-09-2021 art. 9`,
+  `Arrêté 10-09-2021 art. 10`, `Arrêté 10-09-2021 art. 12` ; `R. 4463-8`,
+  `R. 4512-1`, `R. 4512-9`, `R. 4512-11` ; `L. 8222-1`, `L. 8222-5`,
+  `D. 8222-5`, `D. 8222-7` ; `L. 4121-3`, `R. 4121-1-1` ; `R. 4433-2` ;
+  `L. 4141-5`, `R. 4323-106` ; `R. 4225-3` ;
+- une, `L. 4121-3-1`, dont le VI est désormais TRACÉ sur la version validée du
+  document unique (une date facultative, aucun rappel) et dont le III 1°
+  (programme annuel à cinquante salariés) reste non porté — annoncé par l'axe
+  `effectif` depuis la décision E2 ;
+- une, `R. 4512-12`, dont le 2° est TRACÉ sur le plan (la date à laquelle
+  l'inspection du travail a été informée, facultative) : Rojer n'accomplit
+  pas la démarche, et le dit sur la carte « Art. R. 4512-12 » de la fiche du
+  plan, qui est son adresse.
+
+`R. 4323-63`, déjà compté, reçoit la même adresse que les vingt-quatre : il
+était le seul `non_couvert` sans `declareA`. Trois autres des quarante-deux
+~~quittent `obligation_manquante` sans entrer ici : `R. 4227-26` (encodé,
+`retenu`), `R. 4512-12` (2° tracé sur le plan, `sans_objet` sur le patron de
+`R. 4512-6`)~~ — [contre-lecture M2 : `sans_objet` était faux, le 2° crée une
+démarche que Rojer n'accomplit pas ; `R. 4512-12` est compté ci-dessus] un
+seul quitte `obligation_manquante` sans entrer ici : `R. 4227-26` (encodé,
+`retenu`) — et les quinze HORS CADRE restent `obligation_manquante`,
+listés au § 7. Neuf articles du
 chapitre III du Livre III (locaux à sommeil) sont sortis de cette liste, et le
 § 3 dit comment. Le « 28 » et les « 27 » qui subsistent plus bas, au § 3 bis et
 dans ce qui en découle, comptent les articles du 2026-08-28 : ils racontent une
@@ -206,9 +240,9 @@ couverture.
 
 ---
 
-## 3. Les 27 articles lus et non portés
+## 3. Les 53 articles lus et non portés
 
-~~Cinq familles~~ Neuf familles (compte refait le 2026-09-26), une dixième étant sortie de la liste le 2026-09-01 (voir
+~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
 été rédigés par la personne qui a lu l'article, et une reformulation ici
 vieillirait à part de la source.
@@ -388,9 +422,11 @@ risque.
 > de conformité : il n'y a pas de rendez-vous à inscrire, il y a un risque à
 > évaluer et une dérogation à justifier.
 
-**Cet article-ci n'a jamais eu l'adresse visible dont parle le § 3 bis.** Il est
+~~**Cet article-ci n'a jamais eu l'adresse visible dont parle le § 3 bis.** Il est
 entré au corpus le 2026-09-01, plus de trois jours après le retrait de la carte,
-et il n'a donc jamais été annoncé à personne. Les « 27 » du § 3 bis restent 27 :
+et il n'a donc jamais été annoncé à personne.~~ [2026-09-27, C45 : il a une
+adresse visible — la page « Ce que Rojer ne couvre pas », domaine « Travail en
+hauteur », à tout dossier d'employeur. `MUETS` passe de 19 à 18.] Les « 27 » du § 3 bis restent 27 :
 ils comptent une histoire, pas un état.
 
 ### Travaux en présence du public, tous ERP — 1 article (2026-09-26)
@@ -415,6 +451,54 @@ elle ne se nie pas.
 **Celui-ci a une adresse visible** : l'encadré « Ne déposez pas le document » de
 la saisie d'un titre, qui dit que l'employeur conserve l'avis et que Rojer n'en
 garde pas copie.
+
+### ANNONCÉS LE 2026-09-27 (C45) — neuf familles, vingt-cinq articles
+
+Tous portent la même adresse, `ADRESSE_MANQUES_ANNONCES`
+(`src/lib/referentiels/corpus/adresses.ts`) : la section « Ce que l'outil ne
+suit pas » de la page « Ce que Rojer ne couvre pas », que
+`src/lib/perimetre/manques-annonces.ts` projette. Leurs motifs sont ceux du
+corpus, chacun complété d'une note datée du 2026-09-27 ; ils ne sont pas
+recopiés ici. Entre parenthèses : à quel dossier la page les montre.
+
+- **Matières explosives et inflammables** (employeur) — `R. 4227-22`,
+  `R. 4227-23`, `R. 4227-24`, `R. 4227-25`.
+- **Travail en hauteur** (employeur) — `R. 4323-63`, ci-dessus.
+- **Réseaux intérieurs d'eau** (tout dossier : le texte vise le propriétaire
+  des réseaux intérieurs) — `R. 1321-60`, `Arrêté 10-09-2021 art. 4`,
+  `Arrêté 10-09-2021 art. 8`, `Arrêté 10-09-2021 art. 9`,
+  `Arrêté 10-09-2021 art. 10`, `Arrêté 10-09-2021 art. 12`.
+- **Plan de prévention** (employeur ; restent aussi cités sur le formulaire,
+  la fiche et le ZIP) — `R. 4463-8`, `R. 4512-1`, `R. 4512-9`, `R. 4512-11`.
+- **Vigilance à l'égard des cocontractants** (tout dossier ; ~~`D. 8222-7` au
+  seul dossier qui a saisi un prestataire~~ `D. 8222-7` aussi : un annuaire
+  vide est un silence, pas un « non » — contre-lecture M4) — `L. 8222-1`, `L. 8222-5`,
+  `D. 8222-5`, `D. 8222-7`. L'encodage de `L. 8222-5` dans « Quand ça arrive »
+  attend la décision B1 : il n'est pas fait.
+- **Document unique** (employeur) — `L. 4121-3`, `R. 4121-1-1`.
+- **Bruit** (employeur) — `R. 4433-2`.
+- **Formation** (employeur ; `R. 4323-106` sauf « non » aux équipements de
+  protection individuelle) — `L. 4141-5`, `R. 4323-106`.
+- **Boissons** (employeur) — `R. 4225-3`.
+
+### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
+
+`R. 4512-12`
+
+Le 2° impose au chef de l'entreprise utilisatrice d'informer par écrit
+l'inspection du travail de l'ouverture des travaux, quand le plan écrit est
+obligatoire. Rojer ne fait pas la démarche ; il garde, si on la note, la date
+à laquelle elle a été faite. Adresse : la carte « Art. R. 4512-12 » de la
+fiche du plan (et le ZIP de contrôle).
+
+### Document unique, programme annuel — 1 article (2026-09-27)
+
+`L. 4121-3-1`
+
+Le VI (transmission au service de prévention et de santé au travail à chaque
+mise à jour) est tracé depuis C45 : une date facultative sur chaque version
+validée. Reste non porté le III 1°, le programme annuel à cinquante salariés et
+plus ; son adresse est l'axe `effectif` de la page, décision E2.
 
 ---
 
@@ -556,8 +640,15 @@ La carte du tableau de bord est retirée. Ce qui reste :
   interroge le schéma au lieu de le décrire), et les articles `hors_perimetre`
   du corpus, groupés par motif d'exclusion.
 
-  **Elle ne donne PAS d'adresse aux 27 articles `non_couvert`**, et un test le
-  verrouille. La tentation était forte — la page ressemble à l'endroit où les
+  ~~**Elle ne donne PAS d'adresse aux 27 articles `non_couvert`**, et un test le
+  verrouille.~~ [2026-09-27, C45 : elle en annonce vingt-cinq, par décision de
+  la propriétaire, dans une QUATRIÈME section qui leur est propre — « Ce que
+  l'outil ne suit pas » —, jamais parmi les exclusions. Le test
+  (`perimetre/exclusions.test.ts`) est transformé, pas retiré : il tient
+  toujours qu'aucun `non_couvert` n'est projeté parmi les exclusions, et
+  désormais que ceux que la page annonce sont des `non_couvert`, dans leur
+  section. Le paragraphe qui suit dit pourquoi la frontière compte ; il reste
+  vrai.] La tentation était forte — la page ressemble à l'endroit où les
   mettre — mais ce serait exactement la confusion que `corpus/perimetre.ts`
   interdit en tête de fichier : ranger un manque parmi les exclusions le fait
   disparaître du décompte, il cesse d'être une dette pour devenir une
@@ -587,3 +678,34 @@ Elle est écrivable : le corpus porte des clés d'article, le moteur rend les
 obligations applicables pour un couple (typologie, parc). C'est probablement le
 premier chiffre à produire pour trancher « ce que Rojer fait réellement, et pour
 qui ».
+
+---
+
+## 7. Hors cadre — couvert par la clause générale des mentions légales (à rédiger)
+
+Décision de la propriétaire du 2026-09-27, sur l'évaluation des quarante-deux
+obligations manquantes qui touchent la cible : **quinze** relèvent de la clause
+générale, et de rien d'autre. Rien au produit — ni écran, ni annonce, ni ligne.
+Elles restent `obligation_manquante` au corpus : ce sont des obligations
+réelles, et le compte les garde. La clause reste à rédiger ; sa formulation à
+tenir est celle des écrans : « une obligation que cet outil ne traite pas reste
+due si un texte l'impose ». `doc-couverture.test.ts` tient l'égalité entre
+cette liste et les `obligation_manquante` qui touchent la cible.
+
+| Article | Motif, en une ligne |
+|---|---|
+| `R. 4323-61` | Points d'ancrage et arrêt de chute : un restaurant, un commerce ou un bureau ne travaille pas sur toiture avec harnais ; une question pour ce cas serait du zèle. |
+| `R. 4323-69` | Montage et démontage des échafaudages : c'est l'entreprise qui monte, pas la cible. |
+| `R. 4323-70` | Notice et note de calcul d'échafaudage : aucune catégorie d'équipement « échafaudage », et la cible n'en érige pas. |
+| `R. 4323-72` | Vérification des éléments avant montage d'échafaudage : même motif. |
+| `Arrêté 21-12-2004 art. 4` | Vérification d'échafaudage avant mise ou remise en service : même motif. |
+| `Arrêté 21-12-2004 art. 5` | Examen quotidien de l'échafaudage : même motif, et le modèle n'a pas de rythme journalier. |
+| `Arrêté 21-12-2004 art. 6` | Examen approfondi trimestriel de l'échafaudage : même motif. |
+| `Arrêté 1993-11-04 art. 4` | Consultation des représentants du personnel sur la signalisation : le texte vise des instances abrogées, et y lire le CSE serait interpréter. |
+| `Arrêté 1993-11-04 art. 8` | Signalisation adaptée aux capacités auditives ou visuelles limitées : donnée de santé, que Rojer ne détient pas par choix (`docs/rgpd.md`). |
+| `Arrêté 1993-11-04 art. 13` | Marquage des voies de circulation : une question « des véhicules circulent-ils dans vos locaux ? » serait de faible valeur pour la cible. |
+| `Arrêté 1993-11-04 annexe III` | Surveillance ou ampoule auxiliaire d'un signal lumineux de danger grave : quasi jamais dans la cible. |
+| `R. 4224-3` | Circulation sûre des piétons et des véhicules : une obligation de résultat, sans acte ni pièce ; une case cochée ressemblerait à une preuve (ADR-027). |
+| `R. 4223-4` | Niveaux d'éclairement minimaux : un résultat que le dirigeant ne mesure pas ; une case serait une fausse preuve. |
+| `R. 4434-9` | Vérification de l'efficacité des mesures de prévention du bruit : son champ tient à `R. 4434-1` à `R. 4434-8`, non lus ; l'annoncer serait affirmer. |
+| `Arrêté 1993-03-05 art. 2` | Vérification annuelle des centrifugeuses et engins de terrassement : quasi jamais dans la cible, et « centrifugeuse » n'est pas défini. |

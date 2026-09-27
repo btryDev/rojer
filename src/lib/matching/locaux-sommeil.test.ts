@@ -40,6 +40,7 @@ function etabErp5(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
     ...over,
   };
 }

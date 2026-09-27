@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-09-27
-**Référentiel** : `2026-09-26.12`
+**Référentiel** : `2026-09-26.13`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,20 +83,20 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**169 obligations**, **319 références** — 92 obligations en citent plus d'une.
+**170 obligations**, **320 références** — 92 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 66 | 39 % | 74 | 163 | 51 % |
+| 5 · lu à la source, verbatim relevé | 67 | 39 % | 75 | 164 | 51 % |
 | 4 · lu à la source par un agent, verbatim rapporté | 92 | 54 % | 89 | 144 | 45 % |
-| 3 · lu et daté, aucun verbatim | 11 | 7 % | 6 | 12 | 4 % |
+| 3 · lu et daté, aucun verbatim | 11 | 6 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**158 obligations sur 169 (93 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**159 obligations sur 170 (94 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
-**11 obligations (7 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
+**11 obligations (6 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
 **11 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-registre-securite`, `incendie-erp-extincteurs-annuelle`, `incendie-igh-charge-calorifique-quinquennale`, `ascenseur-controle-technique-quinquennal`, `stockage-dangereux-ventilation-locaux`, `sante-travail-etablissement-adhesion-spst`.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 299 | 94 % |
+| ancrée | 300 | 94 % |
 | divergente | 0 | 0 % |
 | jamais constatée | 20 | 6 % |
 
-**11 obligations sur 169 (7 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**11 obligations sur 170 (6 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **Aucune divergence** entre la version qu'une obligation déclare avoir constatée et celle que le corpus déclare avoir lue. Les deux moitiés du dépôt disent la même chose partout où elles parlent toutes les deux.
 
@@ -133,7 +133,7 @@ repose sur un texte que personne n'a ouvert.
 | `equipement_sous_pression` | 7 | 8 | 7 | · | · | · | · | · | 7 / 7 — 100 % | 1 / 8 | 2026-09-01 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 |
-| `incendie` | 36 | 73 | 20 | 9 | 7 | · | · | · | 29 / 36 — 81 % | 0 / 73 | 2026-08-26 → 2026-09-27 |
+| `incendie` | 37 | 74 | 21 | 9 | 7 | · | · | · | 30 / 37 — 81 % | 0 / 74 | 2026-08-26 → 2026-09-27 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 10 | 27 | 9 | 1 | · | · | · | · | 10 / 10 — 100 % | 0 / 27 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-27 |
-| `etablissement` | 66 | 122 | 22 | 41 | 3 | · | · | · | 63 / 66 — 95 % | 0 / 122 | 2026-08-26 → 2026-09-27 |
+| `etablissement` | 67 | 123 | 23 | 41 | 3 | · | · | · | 64 / 67 — 96 % | 0 / 123 | 2026-08-26 → 2026-09-27 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -171,14 +171,14 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 44 | 14 % | 35 |
 | 2026-08-27 | 10 | 3 % | 7 |
 | 2026-08-31 | 58 | 18 % | 28 |
-| 2026-09-01 | 139 | 44 % | 89 |
+| 2026-09-01 | 139 | 43 % | 89 |
 | 2026-09-02 | 17 | 5 % | 14 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 25 | 8 % | 20 |
-| 2026-09-27 | 9 | 3 % | 8 |
+| 2026-09-27 | 10 | 3 % | 9 |
 
-319 des 319 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
+320 des 320 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -194,31 +194,31 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**322 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
+**321 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
 | `arrete-1980-livre-3` | 51 | 59 | 2026-08-26 → 2026-09-27 |
-| `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 |
-| `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-26 |
+| `code-travail-travail-en-hauteur` | 33 | 33 | 2026-09-01 → 2026-09-27 |
+| `code-travail-plan-prevention` | 16 | 16 | 2026-09-02 → 2026-09-27 |
 | `inrs-documentaire` | 15 | 16 | 2026-09-03 → 2026-09-26 |
 | `arrete-1993-11-04-signalisation` | 14 | 21 | 2026-09-02 |
-| `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-20 |
-| `csp-eau-potable` | 11 | 11 | 2026-09-02 |
+| `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-27 |
+| `csp-eau-potable` | 11 | 11 | 2026-09-02 → 2026-09-27 |
 | `arrete-2010-02-01-legionelles` | 11 | 11 | 2026-09-20 |
 | `code-travail-eclairage` | 11 | 12 | 2026-09-02 |
-| `code-travail-epi` | 11 | 16 | 2026-09-04 |
+| `code-travail-epi` | 11 | 16 | 2026-09-04 → 2026-09-27 |
 | `code-travail-formation-securite` | 10 | 27 | 2026-08-31 → 2026-09-27 |
 | `code-travail-sante-travail` | 9 | 26 | 2026-08-31 → 2026-09-27 |
-| `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 |
+| `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 → 2026-09-27 |
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
 | `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-04 |
-| `code-travail-vigilance` | 7 | 7 | 2026-09-02 |
+| `code-travail-vigilance` | 7 | 7 | 2026-09-02 → 2026-09-27 |
 | `arrete-1980-livre-2` | 6 | 25 | 2026-09-01 → 2026-09-04 |
-| `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-26 |
-| `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-21 |
-| `code-travail-matieres-inflammables` | 6 | 6 | 2026-09-02 |
+| `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-27 |
+| `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-manutention-ecran` | 5 | 7 | 2026-09-26 |
+| `code-travail-matieres-inflammables` | 5 | 6 | 2026-09-02 → 2026-09-27 |
 | `cch-classement-erp-igh` | 5 | 5 | 2026-09-03 → 2026-09-26 |
 | `arrete-2011-12-30-igh` | 4 | 6 | 2026-09-03 → 2026-09-04 |
 | `code-travail-co-activite` | 4 | 11 | 2026-08-31 → 2026-09-02 |
@@ -227,31 +227,31 @@ une relecture déjà faite.
 | `arrete-1980-livre-1` | 3 | 3 | 2026-09-03 → 2026-09-26 |
 | `arrete-2018-02-23-gaz-habitation` | 3 | 4 | 2026-08-26 |
 | `arrete-1993-03-05-machines` | 3 | 5 | 2026-09-02 |
-| `code-travail-duerp` | 3 | 5 | 2026-09-02 |
+| `code-travail-duerp` | 3 | 5 | 2026-09-02 → 2026-09-27 |
 | `code-travail-electricite` | 2 | 8 | 2026-08-31 |
 | `arrete-2011-12-26-electricite` | 2 | 5 | 2026-08-26 |
 | `code-travail-organisation-prevention` | 2 | 10 | 2026-09-26 |
 | `code-travail-agents-biologiques` | 2 | 2 | 2026-09-26 |
 | `code-travail-travail-de-nuit` | 2 | 2 | 2026-09-26 |
-| `code-travail-chaleur-intense` | 2 | 8 | 2026-09-20 → 2026-09-26 |
+| `code-travail-chaleur-intense` | 2 | 8 | 2026-09-20 → 2026-09-27 |
 | `code-travail-circulation-lieux` | 2 | 2 | 2026-09-21 |
 | `code-travail-epi-amont` | 2 | 2 | 2026-09-04 |
 | `arrete-1993-03-19-epi` | 2 | 4 | 2026-09-04 |
 | `cch-registre-securite` | 1 | 6 | 2026-09-20 |
 | `code-travail-risque-chimique` | 1 | 8 | 2026-09-02 |
-| `code-travail-locaux-sociaux` | 1 | 5 | 2026-08-31 |
+| `code-travail-locaux-sociaux` | 1 | 5 | 2026-09-27 |
 | `code-travail-service-prevention-sante` | 1 | 4 | 2026-08-31 |
 | `arrete-1993-03-19-travaux-dangereux` | 1 | 1 | 2026-09-03 |
 | `casf-definition-handicap` | 1 | 1 | 2026-09-03 |
 | `cch-registre-accessibilite` | 1 | 1 | 2026-09-04 |
 
-**22 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-26), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-20), `csp-eau-potable` (11 articles, lus 2026-09-02), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-26), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-21), `code-travail-matieres-inflammables` (6 articles, lus 2026-09-02), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-26), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
+**21 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01 → 2026-09-27), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-27), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-27), `csp-eau-potable` (11 articles, lus 2026-09-02 → 2026-09-27), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02 → 2026-09-27), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02 → 2026-09-27), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-27), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-27), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-26), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
 
 Le total du corpus, les articles jamais lus et ceux qui imposent une obligation que le référentiel ne porte pas sont tenus par `pnpm relecture`, qui les compte à la maille du corpus.
 
 ---
 
-## 8. Les 169 obligations
+## 8. Les 170 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -403,6 +403,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
 | `incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
 | `incendie-erp-visite-commission-cat4-triennale` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
+| `incendie-travail-chiffons-impregnes-recipients-clos` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `incendie-travail-consigne-affichee` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `incendie-travail-eclairage-securite-autonomie-semestrielle` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
 | `incendie-travail-eclairage-securite-essai-mensuel` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
@@ -430,7 +431,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 319 références, une par une
+## 9. Les 320 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -470,6 +471,7 @@ refaire pour la contredire.
 | `incendie-travail-moyens-lutte` | contexte 1 | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-consigne-affichee` | fondement | R. 4227-37 | R. 4227-37 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-consigne-affichee` | contexte 1 | R. 4227-38 | R. 4227-38 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
+| `incendie-travail-chiffons-impregnes-recipients-clos` | fondement | R. 4227-26 | R. 4227-26 | code-travail-matieres-inflammables | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-exercice-semestriel` | fondement | R. 4227-39 | R. 4227-39 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-exercice-semestriel` | contexte 1 | R. 4227-34 | R. 4227-34 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-registre-securite` | fondement | L. 4711-1 — mentions obligatoires des pièces de vérification | L. 4711-1 | code-travail-incendie | retenu | 2026-09-26 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |

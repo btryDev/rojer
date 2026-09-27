@@ -48,6 +48,7 @@ function poserEtablissement(): EtablissementFaux {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
     referentielVersionCalendrier: null,
     prescriptionsParticulieres: [],
     equipements: [],

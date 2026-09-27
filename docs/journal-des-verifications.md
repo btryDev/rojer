@@ -3948,6 +3948,119 @@ nommés à zéro ; export qui promet « leurs pièces » ; échéances non compt
 toutes rouges. (La première injection « pdfUrl écrite » visait un fichier
 inexistant et n'a rien prouvé ; rejouée sur un fichier réel, rouge.)
 
+### C45 · 2026-09-27 — Les 42 manques de la cible : trois encodés, vingt-cinq annoncés, quinze hors cadre
+
+*Base : production `771c8ae`, branche `lot/manques-encoder-annoncer`. Entrée :
+l'évaluation des quarante-deux `obligation_manquante` qui touchent la cible,
+recommandations validées par la propriétaire le 2026-09-27 (4 à encoder, 23 à
+annoncer, 15 hors cadre). Une migration additive
+(`20260927140000_traces_c45_chiffons_duerp_plan`, trois colonnes nullables) ;
+le référentiel passe à `2026-09-26.13` (169 + 1 − 0 = 170) ; moteur de
+calendrier inchangé (voir plus bas).*
+
+**Relus en première main sur Légifrance le 2026-09-27**, chacun sur sa page
+propre (adresse du champ `url` du corpus), structure demandée à l'aveugle puis
+confirmation ciblée de la formulation décisive — vingt-huit articles :
+`R. 4227-22` à `R. 4227-26`, `R. 1321-60` CSP, arrêté du 10 septembre 2021
+art. 4, 8, 9, 10 et 12, `R. 4463-8`, `R. 4512-1`, `-9`, `-11`, `-12`,
+`L. 8222-1`, `L. 8222-5`, `D. 8222-5`, `D. 8222-7`, `L. 4121-3`,
+`L. 4121-3-1`, `R. 4121-1-1`, `R. 4433-2`, `L. 4141-5`, `R. 4323-106`,
+`R. 4225-3`, `R. 4323-63`. Aucun écart de verbatim avec les `citationCle`.
+Trois compléments : `R. 4225-3` n'avait pas de `citationCle` (posée, troisième
+phrase comprise) ; `L. 4141-5` est dans sa version du 2026-06-27, modifiée par
+la loi n° 2026-534 du 25 juin 2026, art. 70 (`modifiePar` rempli, loi non
+ouverte) ; `D. 8222-7` renvoie bien à `L. 8222-4`, pas à `L. 8222-1`. Le mot
+« torchons » n'est pas dans `R. 4227-26` : l'écran le donne en exemple, hors
+des guillemets. Les quinze hors cadre n'ont pas été rouverts : rien d'eux n'est
+touché au corpus.
+
+**Constat → avant / après.**
+
+- **`R. 4227-26` (chiffons) — ENCODÉ.** Avant : `obligation_manquante`, cause
+  `activite_exercee`. Après : `incendie-travail-chiffons-impregnes-recipients-clos`,
+  état permanent d'établissement, typologie `{ travail, chiffonsImpregnes }`.
+  Une question à trois états sur la fiche établissement (« Utilisez-vous des
+  chiffons, cotons ou papiers imprégnés d'huile, de graisse ou de liquides
+  inflammables ? » — Je ne sais pas / Oui / Non), colonne
+  `Etablissement.chiffonsImpregnes`. « Non » retire la ligne de « Ce qui doit
+  être en place » ; « je ne sais pas » la laisse, « à confirmer »
+  (`evaluerChiffonsImpregnes`). Rien à dater. Corpus : `retenu`, ancien motif
+  en `historique`.
+- **`L. 4121-3-1`, VI (transmission du DUERP) — TRACÉ.** Avant : annoncé au
+  formulaire de validation (« Rojer ne transmet pas le document et n'en garde
+  pas trace ») et au PDF. Après : `DuerpVersion.transmiseSpstLe`, date
+  facultative saisie sur chaque version de l'historique ; sans date, « date non
+  renseignée », jamais « non transmise ». Le message du formulaire dit où la
+  noter. Aucune ligne au référentiel : `retenu` est donc impossible (il exige
+  un `Obligation.id`) ; l'article passe `non_couvert`, pour son III 1°
+  (programme annuel), déjà annoncé par l'axe `effectif` (E2).
+- **`R. 4512-12`, 2° (inspection du travail) — TRACÉ.** Avant : « Rojer
+  n'enregistre pas l'information prévue au 2°. » (fiche, ZIP). Après :
+  `PlanPrevention.inspectionTravailInformeeLe`, saisie depuis la carte
+  « Art. R. 4512-12 » de la fiche, imprimée sous le plan dans le ZIP ; constat
+  « Rojer n'informe pas l'inspection du travail : il garde la date de cette
+  information, si vous la notez. ». Même déclencheur qu'avant (le diagnostic).
+  Corpus : `sans_objet`, sur le patron de `R. 4512-6` et `-7` (module).
+- **`L. 8222-5` — NON ENCODÉ**, attend B1 ; annoncé avec les autres.
+- **Vingt-cinq ANNONCÉS** (`non_couvert`, `declareA` = `ADRESSE_MANQUES_ANNONCES`),
+  sur une quatrième section de la page « Ce que Rojer ne couvre pas », « Ce
+  que l'outil ne suit pas », neuf domaines, chacun projeté au seul dossier
+  qu'il peut concerner (`perimetre/manques-annonces.ts`) : employeur pour le
+  Code du travail ; tout dossier pour l'eau et la vigilance ; `D. 8222-7` s'il
+  y a un prestataire ; `R. 4323-106` sauf « non » aux EPI. Aucun compte, aucun
+  score ; chaque sujet passe par `nonPorte(…)`. `R. 4323-63` y reçoit sa
+  première adresse : `MUETS` 19 → 18.
+- **Quinze HORS CADRE** : rien au produit ; § 7 de
+  `docs/couverture-declaree-du-produit.md`, motif d'une ligne chacun, égalité
+  tenue par `doc-couverture.test.ts`.
+
+**Mouvements.** `non_couvert` : ~~27 + 25 − 0 = 52~~ 27 + 26 − 0 = 53 (les
+vingt-quatre annoncés, `L. 4121-3-1` et `R. 4512-12` — voir la contre-lecture
+ci-dessous). `obligation_manquante` : 57 − 27 = 30, dont 15 dans la
+cible (42 − 1 encodé − 2 tracés − 24 annoncés). Référentiel : 169 + 1 = 170
+(établissement 66 → 67).
+
+**Moteur de calendrier : pas d'incrément.** La seule obligation neuve est un
+état permanent (`periodicite: "autre"`), que le générateur saute : la
+régénération n'écrit aucune ligne de plus ni de moins. Le passage du
+référentiel à `.13` resynchronise déjà le parc (précédent C37).
+
+**Le verrou transformé.** `perimetre/exclusions.test.ts` tenait que la page ne
+donne pas d'adresse aux `non_couvert`, parce que sa seule place était la
+section des exclusions, où un manque devient une non-question. Il tient
+toujours qu'aucun `non_couvert` n'y entre, et désormais que ceux que la page
+annonce sont des `non_couvert`, dans leur propre section.
+
+**Contre-lecture du 2026-09-27 (sur `862f97b`), et ses suites.** Rien de grave ;
+la fusion avec `main` (`592054d`) n'a porté qu'un conflit, ce journal, où C44,
+C45 et C46 sont gardés.
+
+- **M1.** Le « à confirmer » du silence n'était dit nulle part : l'écran « Ce
+  qui doit être en place » ne le tirait que des seuils d'effectif. Le moteur
+  porte désormais, à côté de la ligne, les questions à trois états restées
+  sans réponse (`sansReponse` : chiffons ; locaux à sommeil quand la fiche
+  pose la question), avec une phrase par question (`matching/sans-reponse.ts`)
+  et un lien vers la fiche. Rendu testé pour « oui » (pas de mention) et pour
+  le silence (mention, phrase, lien) ; « non » ne rend pas la ligne.
+- **M2.** `R. 4512-12` n'est pas `sans_objet` : le 2° crée une démarche que
+  Rojer n'accomplit pas. `non_couvert`, adresse la carte « Art. R. 4512-12 »
+  de la fiche du plan. ~~27 + 25 = 52~~ 27 + 26 = **53**.
+- **M3.** `L. 4121-3-1` : le VI est « tracé » (date facultative, aucun
+  rappel), et non « servi ».
+- **M4.** `D. 8222-7` est annoncé à tout dossier : zéro prestataire saisi est
+  un silence, pas un « non ». Le fait « nombre de prestataires » est retiré de
+  la projection, plus rien ne le lit.
+- **F1 à F5.** L'introduction de la section ne dit plus « aucune trace » (la
+  vigilance tient des dates) ; `L. 4121-3` et `R. 4463-8` s'y lisent sous un
+  intitulé qui nomme la part non suivie ; l'aide de la question dit « un
+  torchon de cuisine imbibé d'huile en relève » ; l'en-tête d'`annonces-plan.ts`
+  est raturé ; `R. 4512-11` et `L. 4141-5` repassent en `agent_verbatim` —
+  leur texte modificateur (décret n° 2021-872, art. 7 ; loi n° 2026-534,
+  art. 70) n'a pas pu être lu, la page de la loi ne rendant que la liste de
+  ce qu'elle modifie. Point ouvert pour `L. 4141-5`.
+- **Détail.** Une date de transmission antérieure à la validation de la
+  version est refusée (et le champ porte `min`).
+
 ### C46 · 2026-09-27 — Le stockage des fichiers : Supabase en production, le disque local refusé
 
 *Base : `main` local `32c8957`, branche `lot/stockage-supabase`. Ni

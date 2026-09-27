@@ -111,6 +111,18 @@ export type EtablissementMatching = {
    * un allègement de régime, ce qui est le même choix vu de l'autre côté.
    */
   comporteLocauxSommeilPublic: boolean | null;
+  /**
+   * Des chiffons, cotons ou papiers imprégnés de liquides inflammables ou de
+   * matières grasses sont-ils utilisés dans l'établissement (R. 4227-26 CT) ?
+   * Question à trois états, posée une fois (C45).
+   *
+   * Requis pour la même raison que les trois champs ci-dessus : un champ
+   * optionnel s'omet dans une projection sans que rien ne le signale.
+   *
+   * `null` ne retire rien : l'état permanent est retenu « à confirmer »
+   * (cf. `evaluerChiffonsImpregnes`). Seul un « non » déclaré le retire.
+   */
+  chiffonsImpregnes: boolean | null;
 };
 
 export type EquipementMatching = {
@@ -157,7 +169,21 @@ export type ObligationApplicable = {
    * absent sinon. Les écrans l'affichent « à confirmer » (C37, M1).
    */
   effectifAConfirmer?: EffectifsDeclares;
+  /**
+   * Les questions à trois états de la fiche restées sans réponse, quand leur
+   * silence retient la ligne par prudence (C45, M1). Absent sinon. Les écrans
+   * l'affichent « à confirmer », avec la phrase de `PHRASE_SANS_REPONSE`.
+   */
+  sansReponse?: QuestionSansReponse[];
 };
+
+/**
+ * Une question à trois états de la fiche établissement dont le silence
+ * retient une obligation « à confirmer ». Fermé : une question neuve se
+ * nomme ici et reçoit sa phrase dans `sans-reponse.ts`, sans quoi rien ne
+ * compile.
+ */
+export type QuestionSansReponse = "chiffons_impregnes" | "locaux_sommeil_public";
 
 // -----------------------------------------------------------------------------
 // Prescriptions particulières (ADR-035)

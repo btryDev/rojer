@@ -57,6 +57,9 @@ const CHAMPS_STRUCTURANTS = [
   "effectifSurSite",
   "personnesPresentesHabituellement",
   "manipuleMatieresR422722",
+  // R. 4227-26 (C45) : « non » retire un état permanent, « oui » ou « je ne
+  // sais pas » le retient. Structurant pour la même raison que la suivante.
+  "chiffonsImpregnes",
   // Répondre « non » à la question des locaux à sommeil retire quatre lignes
   // de PE 4 § 1, PE 33, PE 35 et PE 37 ; répondre « oui » les fixe. Dans les
   // deux cas le calendrier change, donc le champ est structurant — l'omettre
@@ -97,6 +100,7 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     effectifSurSite: raw.effectifSurSite,
     personnesPresentesHabituellement: raw.personnesPresentesHabituellement,
     manipuleMatieresR422722: raw.manipuleMatieresR422722,
+    chiffonsImpregnes: raw.chiffonsImpregnes,
     estEtablissementTravail: bool("estEtablissementTravail"),
     estERP: bool("estERP"),
     estIGH: bool("estIGH"),
@@ -258,6 +262,7 @@ export async function modifierEtablissement(
       effectifSurSite: true,
       personnesPresentesHabituellement: true,
       manipuleMatieresR422722: true,
+      chiffonsImpregnes: true,
       comporteLocauxSommeilPublic: true,
     },
   });

@@ -13,6 +13,12 @@
 //   3. **Hors périmètre déclaré** — les articles lus dont aucune obligation
 //      d'exploitant ne découle, avec le motif qui les écarte.
 //
+//   1 bis. **Ce que l'outil ne suit pas, et qui peut concerner ce dossier**
+//      (C45, décision de la propriétaire du 2026-09-27) — vingt-cinq articles
+//      `non_couvert` du corpus, groupés par domaine, chacun projeté au seul
+//      dossier qu'il peut concerner (`perimetre/manques-annonces.ts`). Propre
+//      au dossier comme la section 1, d'où sa place juste après elle.
+//
 // L'ordre n'est pas indifférent : ce qui est propre au dossier d'abord, parce
 // que c'est ce que le dirigeant est venu chercher ; ce qui est vrai du produit
 // ensuite.
@@ -24,15 +30,20 @@
 // plus — ni « conforme », ni « non conforme ». Une obligation que le produit ne
 // traite pas reste due si un texte l'impose ; c'est tout ce que cette page dit.
 //
-// Il ne déclare rien : les trois sections projettent `couverture.ts`,
-// `perimetre/exclusions.ts` et le corpus. Une phrase écrite ici serait une
+// Il ne déclare rien : les ~~trois~~ quatre sections projettent `couverture.ts`,
+// `perimetre/manques-annonces.ts`, `perimetre/exclusions.ts` et le corpus. Une phrase écrite ici serait une
 // quatrième source de vérité sur ce que le produit couvre.
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { BandeauCouverture } from "@/components/perimetre/BandeauCouverture";
 import { requireEtablissement } from "@/lib/auth/scope";
-import { couvertureDuDossier } from "@/lib/perimetre/faits";
+import {
+  couvertureDuDossier,
+  faitsManquesAnnonces,
+} from "@/lib/perimetre/faits";
+import { manquesAnnoncesDuDossier } from "@/lib/perimetre/manques-annonces";
+import { CORPUS } from "@/lib/referentiels/corpus";
 import { riensASignaler } from "@/lib/perimetre/couverture";
 import { porte } from "@/lib/perimetre/non-couverture";
 import {
@@ -62,6 +73,10 @@ export default async function PerimetrePage({
   const base = `/etablissements/${id}`;
 
   const couverture = await couvertureDuDossier(id);
+  const faitsManques = await faitsManquesAnnonces(id);
+  const manques = faitsManques
+    ? manquesAnnoncesDuDossier(CORPUS, faitsManques)
+    : [];
   const refus = refusAlEntree();
   const exclusions = exclusionsDeclarees();
 
@@ -84,9 +99,10 @@ export default async function PerimetrePage({
             Ce que Rojer ne couvre pas
           </h1>
           <p className="m-0 mt-[11px] max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Trois choses différentes, dites séparément : ce qui manque à ce
-            dossier, les régimes que l&apos;outil refuse d&apos;ouvrir, et les
-            textes lus dont il ne tire aucune obligation. Rien ici n&apos;est
+            Quatre choses différentes, dites séparément : ce qui manque à ce
+            dossier, les obligations que l&apos;outil ne suit pas et qui
+            peuvent vous concerner, les régimes qu&apos;il refuse d&apos;ouvrir,
+            et les textes lus dont il ne tire aucune obligation. Rien ici n&apos;est
             compté ni additionné — une obligation que cet outil ne traite pas
             reste due si un texte l&apos;impose.
           </p>
@@ -124,12 +140,78 @@ export default async function PerimetrePage({
               <p className="m-0 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Aucun manque n&apos;est identifié sur ce dossier à ce jour.
                 Cela ne veut pas dire qu&apos;il est complet : le référentiel de
-                l&apos;outil a un périmètre, ce que les deux parties ci-dessous
+                l&apos;outil a un périmètre, ce que les parties ci-dessous
                 décrivent, et le droit n&apos;en a pas.
               </p>
             </div>
           )}
         </section>
+
+        {/* ─── 1 bis. Ce que l'outil ne suit pas ─────────────────────── */}
+        {/* C45. Des articles lus, qui imposent quelque chose, que Rojer ne
+            porte pas — annoncés au seul dossier qu'ils peuvent concerner.
+            Ni compte ni score : un domaine, ce que l'outil ne suit pas, et les
+            articles qui le fondent. */}
+        {manques.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div>
+              <SurTitre>§ Ce que l&apos;outil ne suit pas</SurTitre>
+              <h2 className="board-titre m-0 mt-2 text-[22px]">
+                Des obligations qui peuvent vous concerner, et que Rojer ne
+                suit pas
+              </h2>
+              <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                Rojer ne les suit pas, ou seulement en partie : chaque domaine
+                dit ce que l&apos;outil ne suit pas. Elles sont nommées ici
+                parce qu&apos;elles peuvent concerner votre établissement ;
+                aucune n&apos;est tranchée pour vous.
+                Une obligation que cet outil ne traite pas reste due si un texte
+                l&apos;impose.
+              </p>
+            </div>
+
+            <ul className="m-0 flex list-none flex-col gap-4 p-0">
+              {manques.map((d) => (
+                <li key={d.cle} className="carte-board px-7 py-6 sm:px-8">
+                  <h3 className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
+                    {d.titre}
+                  </h3>
+                  {d.phrase ? (
+                    <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                      {d.phrase}
+                    </p>
+                  ) : null}
+                  <div className="mt-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-5 py-4">
+                    <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+                      Articles lus
+                    </p>
+                    <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
+                      {d.articles.map((a) => (
+                        <li
+                          key={`${d.cle}-${a.ref}`}
+                          className="text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]"
+                        >
+                          <span className="font-mono tabular-nums">
+                            {a.ref}
+                          </span>
+                          {a.intitule ? ` — ${a.intitule}` : null}
+                          {a.phrase ? (
+                            <span className="mt-0.5 block text-[12.5px] text-[color:var(--board-slate-mid)]">
+                              {a.phrase}
+                            </span>
+                          ) : null}
+                          <span className="block text-[11px] text-[color:var(--board-slate-soft)]">
+                            {a.corpus}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* ─── 2. Refusé à l'entrée ──────────────────────────────────── */}
         <section className="flex flex-col gap-4">

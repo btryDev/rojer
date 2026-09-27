@@ -43,7 +43,7 @@ export function lignesDuWidget(
     etat: etatDeLaLigne({
       mode: l.mode,
       declareLe: l.declareLe ? formaterDateFr(l.declareLe) : null,
-      aConfirmer: l.aConfirmer !== null,
+      aConfirmer: l.aConfirmer !== null || l.questionsSansReponse.length > 0,
     }),
     fondement: l.fondement,
   }));

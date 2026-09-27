@@ -223,6 +223,13 @@ export const etablissementSchema = z
       (v) => (v === "oui" ? true : v === "non" ? false : v === true || v === false ? v : null),
       z.boolean().nullable(),
     ),
+    // R. 4227-26 CT (C45) : chiffons, cotons, papiers imprégnés. Trois états,
+    // même règle : vide (« je ne sais pas ») = `null`, jamais « non ». Le moteur
+    // retient l'état permanent sur `null` et ne le retire que sur `false`.
+    chiffonsImpregnes: z.preprocess(
+      (v) => (v === "oui" ? true : v === "non" ? false : v === true || v === false ? v : null),
+      z.boolean().nullable(),
+    ),
     estEtablissementTravail: z.coerce.boolean().default(true),
     estERP: z.coerce.boolean().default(false),
     estIGH: z.coerce.boolean().default(false),

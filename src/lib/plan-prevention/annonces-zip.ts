@@ -10,11 +10,21 @@
 import { annoncesZip } from "./annonces-plan";
 import { diagnostiquerPlan } from "./schema";
 
-export function lignesR4512_12Zip(plan: {
-  dureeHeuresEstimee: number | null;
-  travauxDangereux: boolean;
-}): string[] {
-  return annoncesZip.parPlan(diagnostiquerPlan(plan).ecrit);
+export function lignesR4512_12Zip(
+  plan: {
+    dureeHeuresEstimee: number | null;
+    travauxDangereux: boolean;
+    /** R. 4512-12, 2° (C45) : la date déclarée, ou `null`. */
+    inspectionTravailInformeeLe: Date | null;
+  },
+  formater: (d: Date) => string,
+): string[] {
+  return annoncesZip.parPlan(
+    diagnostiquerPlan(plan).ecrit,
+    plan.inspectionTravailInformeeLe
+      ? formater(plan.inspectionTravailInformeeLe)
+      : null,
+  );
 }
 
 /**

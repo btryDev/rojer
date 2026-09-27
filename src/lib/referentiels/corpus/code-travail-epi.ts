@@ -80,6 +80,7 @@
 // une sur ces pages.
 
 import type { Corpus } from "./types";
+import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
 /**
  * La section 9 du chapitre III, en entier : seize articles sur seize.
@@ -414,19 +415,16 @@ export const CODE_TRAVAIL_EPI: Corpus = {
       // Page de l'article : « Création Décret n°2008-244 du 7 mars 2008 -
       // art. (V) », aucune ligne « Modifié par ».
       modifiePar: null,
-      luLe: "2026-09-04",
+      luLe: "2026-09-27",
       lecture: "premiere_main",
       prescrit:
         "L'employeur fait bénéficier les travailleurs devant utiliser un équipement de protection individuelle d'une « formation adéquate », comportant « en tant que de besoin » un ENTRAÎNEMENT AU PORT. Le renouvellement est prescrit mais non chiffré : « aussi souvent que nécessaire pour que l'équipement soit utilisé conformément à la consigne d'utilisation » — c'est-à-dire par référence à la consigne de R. 4323-105, et non à une durée.",
       citationCle:
         "L'employeur fait bénéficier les travailleurs devant utiliser un équipement de protection individuelle d'une formation adéquate comportant, en tant que de besoin, un entraînement au port de cet équipement. Cette formation est renouvelée aussi souvent que nécessaire pour que l'équipement soit utilisé conformément à la consigne d'utilisation.",
-      statut: "obligation_manquante",
-      cause: "a_trancher",
-      toucheLaCible: true,
+      statut: "non_couvert",
+      declareA: ADRESSE_MANQUES_ANNONCES,
       motif:
-        "Une formation que le référentiel ne porte pas : aucune obligation du domaine `formation_securite` ne cite cet article, et aucune ne vise le port d'un équipement de protection individuelle. ⚠ ET LE TEXTE NE POSE AUCUNE PÉRIODICITÉ — c'est le point à ne pas franchir. « Aussi souvent que nécessaire » n'est pas un rythme : le renouvellement est indexé sur un RÉSULTAT (que l'équipement soit utilisé conformément à la consigne), pas sur une durée. Lui donner trois ans par analogie avec une formation voisine, ou un an par analogie avec la vérification de l'arrêté, fabriquerait une échéance que personne ne peut opposer. Ce que le texte permet d'affirmer sans le forcer : la formation est due, elle vise des personnes nommées, et son renouvellement n'a pas de terme légal.",
-      bloquePar:
-        "Deux choses, dont une seule est technique. (1) LE PORTEUR. C'est une obligation de PERSONNE — « les travailleurs devant utiliser un équipement » —, donc porteur `salarie` au sens de l'ADR-023, avec un `TitreSalarie` déclaré. Le porteur existe et sait le faire. (2) LA PÉRIODICITÉ, qui n'existe pas. `periodicite: \"autre\"` la porterait sans mentir, mais produirait un état permanent nominatif — « formation au port des EPI » — dont rien ne dirait quand il expire, et l'ADR-027 interdit la déclaration qui ressemble à une preuve. Trancher entre « une ligne sans terme » et « pas de ligne » est une décision de produit, pas une lecture de texte, et elle n'appartient pas à ce lot.",
+        "Une formation que le référentiel ne porte pas : aucune obligation du domaine `formation_securite` ne cite cet article, et aucune ne vise le port d'un équipement de protection individuelle. ⚠ ET LE TEXTE NE POSE AUCUNE PÉRIODICITÉ — c'est le point à ne pas franchir. « Aussi souvent que nécessaire » n'est pas un rythme : le renouvellement est indexé sur un RÉSULTAT (que l'équipement soit utilisé conformément à la consigne), pas sur une durée. Lui donner trois ans par analogie avec une formation voisine, ou un an par analogie avec la vérification de l'arrêté, fabriquerait une échéance que personne ne peut opposer. Ce que le texte permet d'affirmer sans le forcer : la formation est due, elle vise des personnes nommées, et son renouvellement n'a pas de terme légal.\n\n[2026-09-27, C45 — ANNONCÉ, par décision de la propriétaire du 2026-09-27 (évaluation des 42 manques qui touchent la cible). Passé de `obligation_manquante` (cause `a_trancher`, touchait la cible) à `non_couvert` : nommé sur la page « Ce que Rojer ne couvre pas », domaine « Formation », à tout dossier dont l'établissement emploie des travailleurs (`estEtablissementTravail`), sauf si l'établissement a répondu non à la question des équipements de protection individuelle (`epiPresents === false`) ; sans réponse, il est annoncé. Rien n'est encodé ; la phrase de l'écran reste « une obligation que cet outil ne traite pas reste due si un texte l'impose ». Relu en première main sur Légifrance le 2026-09-27 (C45), page de l'article : structure demandée à l'aveugle, puis confirmation ciblée de la formulation décisive. Écart : verbatim identique à la `citationCle`. Blocage écrit à la lecture, conservé ici avec le champ `bloquePar` que le statut `non_couvert` ne porte pas : « Deux choses, dont une seule est technique. (1) LE PORTEUR. C'est une obligation de PERSONNE — « les travailleurs devant utiliser un équipement » —, donc porteur `salarie` au sens de l'ADR-023, avec un `TitreSalarie` déclaré. Le porteur existe et sait le faire. (2) LA PÉRIODICITÉ, qui n'existe pas. `periodicite: \"autre\"` la porterait sans mentir, mais produirait un état permanent nominatif — « formation au port des EPI » — dont rien ne dirait quand il expire, et l'ADR-027 interdit la déclaration qui ressemble à une preuve. Trancher entre « une ligne sans terme » et « pas de ligne » est une décision de produit, pas une lecture de texte, et elle n'appartient pas à ce lot. »]",
     },
   ],
 };

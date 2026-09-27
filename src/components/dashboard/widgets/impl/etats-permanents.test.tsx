@@ -54,6 +54,7 @@ function ligne(
     declareLe: null,
     note: null,
     aConfirmer: null,
+    questionsSansReponse: [],
     fondement: {
       reference: `Réf. ${id}`,
       href: `https://www.legifrance.gouv.fr/${id}`,

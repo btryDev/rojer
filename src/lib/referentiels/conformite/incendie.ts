@@ -277,6 +277,35 @@ export const obligationsIncendie: Obligation[] = [
       "Amendement 2026-08-25 (relecture Légifrance R. 4227-34, -37, -38) : la consigne affichée n'est due que dans les établissements de R. 4227-34, par renvoi exprès de R. 4227-37 ; hors de ce champ le texte ne demande que des « instructions » d'évacuation. L'obligation était encodée sans seuil (sur-application à tout employeur) et sa description exigeait une « mise à jour à chaque changement notable » qui ne figure dans aucun des deux articles — retirée. La périodicité annuelle est une convention de rappel, aucun texte ne fixe de périodicité à la consigne. R. 4227-37 porte une version future au 01/01/2027 : à relire à cette date.\n\nAMENDEMENT 2026-08-27, même audit. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-37, qui ne porte aucune périodicité — vérifié sur toute la section. Aucun texte n'impose de réafficher ou de réviser la consigne chaque année.\n\n`periodicite` passe à `autre`. L'affichage de la consigne est une obligation PERMANENTE, pas une échéance : elle est due tant que l'établissement entre dans le champ de R. 4227-34, et elle se met à jour quand l'organisation change — pas à date fixe. Ce qui est bien périodique, dans la même sous-section, ce sont les exercices et essais semestriels de R. 4227-39, portés par `incendie-travail-exercice-semestriel`.\n\nAMENDEMENT 2026-08-31, lot « faux négatifs d'ancrage ». `categoriesEquipement: [EXTINCTEUR, ALARME_INCENDIE]` est retiré au profit du porteur établissement (ADR-022). R. 4227-37 relu au verbatim ce jour : il ne mentionne aucun équipement. Le champ de l'obligation est celui de R. 4227-34, et il est DÉJÀ encodé — `personnesPresentesMin: 51` et `champR422734`. La liste d'équipements ne restreignait donc rien de ce que le texte restreint : elle ajoutait une condition que le texte n'écrit pas, et qui produisait un faux négatif chez tout établissement du champ de R. 4227-34 n'ayant déclaré ni extincteur ni alarme. Les deux catégories passent en `equipementsEnContexte`, à titre indicatif — c'est bien le matériel que la consigne doit désigner (R. 4227-38 1°), mais le désigner n'est pas en avoir déclaré un dans l'outil.\n\nNATURE : ÉTAT PERMANENT, `pieceAttendue: \"consigne de sécurité incendie\"` (ADR-026). R. 4227-37 fait ÉTABLIR la consigne avant de la faire afficher : c'est un écrit, et son contenu est fixé par R. 4227-38. Deux affichages voisins n'en sont pas — l'affichage des coordonnées (D. 4711-1) et l'avis d'accès au DUERP (R. 4121-4) portent `pieceAttendue: null`, parce que ce que le texte exige y est l'affichage lui-même, pas la détention d'une pièce.\n\nAMENDEMENT 2026-09-01, lot « traçabilité ». `R. 4227-38` était nommé dans la prose de `reference` (« R. 4227-37 et R. 4227-38 ») et dans la description, mais la clé `article` ne désignait que le 37 : l'article était donc irrattachable au corpus, où il n'existait pas. Ouvert à la source ce jour (LEGIARTI000024769384, version en vigueur depuis le 10 novembre 2011, sans terme programmé — contrairement à R. 4227-37 qui, lui, s'arrête au 1er janvier 2027). Il entre au corpus avec son verbatim intégral et devient une `ReferenceLegale` à part entière ; `reference` se réduit à « R. 4227-37 » pour le premier élément, qui reste l'article fondateur. Aucun champ d'empreinte n'est touché : `referencesLegales` en est hors, et R. 4227-38 ne porte ni champ d'application ni périodicité propres.",
   },
   {
+    // C45 (2026-09-27). Premier des quatre « à encoder » de l'évaluation des
+    // manques du même jour, décision de la propriétaire.
+    id: "incendie-travail-chiffons-impregnes-recipients-clos",
+    domaine: "incendie",
+    libelle:
+      "Chiffons, cotons et papiers imprégnés enfermés après usage dans des récipients métalliques clos et étanches",
+    description:
+      "« Les chiffons, cotons et papiers imprégnés de liquides inflammables ou de matières grasses sont, après usage, enfermés dans des récipients métalliques clos et étanches. » L'article vise les matières grasses comme les liquides inflammables : un torchon de cuisine imbibé d'huile en relève. Il ne pose ni condition d'effectif, ni échéance. Cette ligne s'affiche parce que vous avez répondu oui, ou que la question de la fiche établissement n'a pas de réponse ; elle disparaît si vous répondez non.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-26",
+        article: "R. 4227-26",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532089",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    porteur: "etablissement",
+    typologies: { travail: true, chiffonsImpregnes: true },
+    notesInternes:
+      "VERBATIM RELU SUR LÉGIFRANCE LE 2026-09-27 (C45), page de l'article, structure demandée à l'aveugle puis questions fermées : « Les chiffons, cotons et papiers imprégnés de liquides inflammables ou de matières grasses sont, après usage, enfermés dans des récipients métalliques clos et étanches. » Version en vigueur depuis le 2008-05-01, création par le décret n° 2008-244 du 7 mars 2008, aucune modification affichée. Le mot « torchons » n'est PAS dans le texte : la description le donne comme exemple, hors des guillemets.\n\nPOURQUOI UNE QUESTION ET PAS LE CODE NAF. L'article ne dépend ni de `R. 4227-22` ni de l'activité déclarée : sa phrase est autonome. Le déclencheur est un fait que seul le dirigeant connaît, demandé une fois sur la fiche établissement (`Etablissement.chiffonsImpregnes`, trois états). « Non » retire la ligne ; « je ne sais pas » et le silence la retiennent « à confirmer » (règle du non-renseigné, `evaluerChiffonsImpregnes`). Rien à dater ni à saisir ensuite : « à quel moment on déclare un chiffon ? » — jamais.\n\nÉTAT PERMANENT, `periodicite: \"autre\"` : le texte n'écrit aucune durée, il prescrit un geste après chaque usage. Aucune pièce attendue : rien ne se remet à un tiers. `typologies.travail` : l'article est au livre II de la quatrième partie du Code du travail, il vise les lieux de travail.\n\nCriticité 3 : l'auto-échauffement des textiles gras est une cause d'incendie connue (d'après le corpus), mais le manquement ne met pas en danger à lui seul comme un moyen de secours absent.",
+  },
+  {
     id: "incendie-travail-exercice-semestriel",
     relectureDue: {
       le: "2027-01-01",

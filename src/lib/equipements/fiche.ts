@@ -95,6 +95,7 @@ export async function getFicheEquipement(id: string) {
           personnesPresentesHabituellement: true,
           manipuleMatieresR422722: true,
           comporteLocauxSommeilPublic: true,
+          chiffonsImpregnes: true,
         },
       },
       // Le lieu de l'appareil. Le parc renvoie ici en disant qu'un appareil

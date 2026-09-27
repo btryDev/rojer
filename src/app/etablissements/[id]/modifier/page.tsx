@@ -57,6 +57,7 @@ export default async function ModifierEtablissementPage({
               personnesPresentesHabituellement:
                 etab.personnesPresentesHabituellement,
               manipuleMatieresR422722: etab.manipuleMatieresR422722,
+              chiffonsImpregnes: etab.chiffonsImpregnes,
               estEtablissementTravail: etab.estEtablissementTravail,
               estERP: etab.estERP,
               estIGH: etab.estIGH,

@@ -459,7 +459,7 @@ export async function GET(
         // R. 4512-7 — ou quand la durée manque et que Rojer ne peut pas dire
         // qu'il ne l'est pas. Le même diagnostic que la fiche, appelé dans le
         // module : la route passe le plan, elle ne décide rien.
-        ...lignesR4512_12Zip(p),
+        ...lignesR4512_12Zip(p, formaterDateFr),
         "",
       ]),
     ].join("\n");

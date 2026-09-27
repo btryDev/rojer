@@ -122,6 +122,14 @@ model Etablissement {
   personnesPresentesHabituellement Int?
   manipuleMatieresR422722          Boolean?
 
+  // R. 4227-26 CT (C45, 2026-09-27) : « Les chiffons, cotons et papiers
+  // imprégnés de liquides inflammables ou de matières grasses sont, après
+  // usage, enfermés dans des récipients métalliques clos et étanches. »
+  // Question posée une fois, à trois états. `null` = « je ne sais pas » ou pas
+  // encore répondu : l'état permanent s'affiche (règle du non-renseigné) ;
+  // `false` le retire. Cf. migration 20260927140000.
+  chiffonsImpregnes                Boolean?
+
   // Renseignements portés par la fiche « Renseignements généraux » du registre
   // de sécurité (CCH R. 143-44). Ils vivent ici et non dans `FicheRegistre` :
   // ce sont des faits d'établissement, et la fiche établissement les montre
@@ -384,6 +392,11 @@ model DuerpVersion {
   pdfUrl    String?
   motif     String?
   createdAt DateTime @default(now())
+  // L. 4121-3-1, VI, CT (C45) : « transmis par l'employeur à chaque mise à
+  // jour au service de prévention et de santé au travail auquel il adhère ».
+  // Trace facultative, déclarée par l'employeur : Rojer ne transmet rien.
+  // `null` = non renseignée, jamais « non transmise ».
+  transmiseSpstLe DateTime?
 
   @@unique([duerpId, numero])
 }
@@ -1382,6 +1395,11 @@ model PlanPrevention {
   // R. 4512-7 ne porte que le seuil de l'écrit. Relu à la source le 2026-09-02.)
   inspectionDate         DateTime?
   inspectionParticipants String?   @db.Text
+
+  // R. 4512-12, 2°, CT (C45) : « Le chef de l'entreprise utilisatrice informe
+  // par écrit l'inspection du travail de l'ouverture des travaux. » Date
+  // facultative, déclarée ; aucun délai n'est affiché, le texte n'en fixe pas.
+  inspectionTravailInformeeLe DateTime?
 
   // ── Contenu minimal du plan — art. R. 4512-8 ────────────────────────
   // « Les mesures prévues par le plan de prévention comportent AU MOINS les

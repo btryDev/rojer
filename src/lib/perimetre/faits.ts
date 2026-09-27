@@ -23,6 +23,7 @@ import {
 import { projeterEtablissement } from "@/lib/matching";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { correspondanceSecteur } from "./secteur";
+import type { FaitsManquesAnnonces } from "./manques-annonces";
 import {
   couvertureDeLEtablissement,
   type CouvertureEtablissement,
@@ -100,6 +101,7 @@ export async function faitsDeCouverture(
     personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
     comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
+    chiffonsImpregnes: etab.chiffonsImpregnes,
   });
 
   const sansEcheance = reperterSansEcheance(etabMatching, equipementsMatching);
@@ -162,5 +164,28 @@ export async function faitsDeCouverture(
       entreprise: etab.entreprise.effectif,
       seuilServi: EFFECTIF_MAX,
     },
+  };
+}
+
+/**
+ * Les faits que `manques-annonces.ts` projette (C45) : deux, et aucun
+ * déduit. Rend `null` si l'établissement n'appartient pas à l'utilisateur —
+ * jamais un jeu de faits par défaut, qui annoncerait à un dossier introuvable.
+ */
+export async function faitsManquesAnnonces(
+  etablissementId: string,
+): Promise<FaitsManquesAnnonces | null> {
+  const user = await requireUser();
+  const etab = await prisma.etablissement.findFirst({
+    where: { id: etablissementId, entreprise: { userId: user.id } },
+    select: {
+      estEtablissementTravail: true,
+      epiPresents: true,
+    },
+  });
+  if (!etab) return null;
+  return {
+    travail: etab.estEtablissementTravail,
+    epiPresents: etab.epiPresents,
   };
 }

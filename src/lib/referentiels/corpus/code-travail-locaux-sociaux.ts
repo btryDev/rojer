@@ -23,6 +23,7 @@
 // 2026-08-31 portent « cinquante ».
 
 import type { Corpus } from "./types";
+import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
 export const CODE_TRAVAIL_LOCAUX_SOCIAUX: Corpus = {
   id: "code-travail-locaux-sociaux",
@@ -89,17 +90,17 @@ export const CODE_TRAVAIL_LOCAUX_SOCIAUX: Corpus = {
       intitule: "Boisson non alcoolisée gratuite en conditions particulières",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000036483598",
       versionEnVigueur: "2018-01-01",
-      luLe: "2026-08-31",
-      lecture: "agent_verbatim",
+      modifiePar: {"texte": "Décret n° 2017-1819 du 29 décembre 2017 - art. 3"},
+      luLe: "2026-09-27",
+      lecture: "premiere_main",
       prescrit:
         "Lorsque des conditions particulières de travail conduisent les travailleurs à se désaltérer fréquemment, l'employeur met gratuitement à leur disposition au moins une boisson non alcoolisée ; la liste des postes concernés est établie après avis du médecin du travail et du CSE.",
-      statut: "obligation_manquante",
-      cause: "activite_exercee",
-      toucheLaCible: true,
+      citationCle:
+        "Lorsque des conditions particulières de travail conduisent les travailleurs à se désaltérer fréquemment, l'employeur met gratuitement à leur disposition au moins une boisson non alcoolisée. La liste des postes de travail concernés est établie par l'employeur, après avis du médecin du travail et du comité social et économique. Les boissons et les aromatisants mis à disposition sont choisis en tenant compte des souhaits exprimés par les travailleurs et après avis du médecin du travail.",
+      statut: "non_couvert",
+      declareA: ADRESSE_MANQUES_ANNONCES,
       motif:
-        "L'article impose une mise à disposition gratuite de boisson, et une liste de postes tenue par l'employeur — deux actes réels, qu'aucune obligation du référentiel ne porte. Il n'est pas encodé parce que son champ dépend de « conditions particulières de travail » que le produit ne sait pas qualifier : ni le parc d'équipements ni le code NAF ne les donnent. Le déduire serait le cinquième déclencheur, l'activité réellement exercée, non implémenté. Encodé sans condition, l'article se serait affiché à tout dossier, y compris un bureau où il ne s'applique pas ; encodé sur une condition inventée, il n'aurait plus rien signifié. Il est décrit dans la description de `locaux-etablissement-eau-potable`, où il informe sans produire de ligne.",
-      bloquePar:
-        "cinquième déclencheur (activité réellement exercée) non implémenté — ADR-022",
+        "L'article impose une mise à disposition gratuite de boisson, et une liste de postes tenue par l'employeur — deux actes réels, qu'aucune obligation du référentiel ne porte. Il n'est pas encodé parce que son champ dépend de « conditions particulières de travail » que le produit ne sait pas qualifier : ni le parc d'équipements ni le code NAF ne les donnent. Le déduire serait le cinquième déclencheur, l'activité réellement exercée, non implémenté. Encodé sans condition, l'article se serait affiché à tout dossier, y compris un bureau où il ne s'applique pas ; encodé sur une condition inventée, il n'aurait plus rien signifié. Il est décrit dans la description de `locaux-etablissement-eau-potable`, où il informe sans produire de ligne.\n\n[2026-09-27, C45 — ANNONCÉ, par décision de la propriétaire du 2026-09-27 (évaluation des 42 manques qui touchent la cible). Passé de `obligation_manquante` (cause `activite_exercee`, touchait la cible) à `non_couvert` : nommé sur la page « Ce que Rojer ne couvre pas », domaine « Boissons », à tout dossier dont l'établissement emploie des travailleurs (`estEtablissementTravail`). Rien n'est encodé ; la phrase de l'écran reste « une obligation que cet outil ne traite pas reste due si un texte l'impose ». Relu en première main sur Légifrance le 2026-09-27 (C45), page de l'article : structure demandée à l'aveugle, puis confirmation ciblée de la formulation décisive. Écart : le corpus n'avait pas de `citationCle` ; elle est posée, verbatim relevé le 2026-09-27, troisième phrase comprise, que le `prescrit` omettait. Blocage écrit à la lecture, conservé ici avec le champ `bloquePar` que le statut `non_couvert` ne porte pas : « cinquième déclencheur (activité réellement exercée) non implémenté — ADR-022 »]",
     },
     {
       ref: "R. 4228-22",

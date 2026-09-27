@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { lireDateDeclaree } from "@/lib/traces/date-declaree";
 import {
   ligneSchema,
   planPreventionSchema,
@@ -262,4 +263,44 @@ export async function supprimerPlan(planId: string): Promise<void> {
   });
   revalidatePath(`/etablissements/${etabId}/plan-prevention`);
   redirect(`/etablissements/${etabId}/plan-prevention`);
+}
+
+export type TraceInspectionState =
+  | { status: "idle" }
+  | { status: "error"; message: string }
+  | { status: "success" };
+
+/**
+ * Note la date à laquelle le chef de l'entreprise utilisatrice a informé par
+ * écrit l'inspection du travail de l'ouverture des travaux — R. 4512-12, 2°,
+ * CT (C45, 2026-09-27). Une trace déclarée, facultative : Rojer n'informe
+ * personne. Le champ vide l'efface ; une date future est refusée ; aucun
+ * délai n'est vérifié, le texte n'en fixe pas.
+ */
+export async function noterInformationInspection(
+  planId: string,
+  _prev: TraceInspectionState,
+  formData: FormData,
+): Promise<TraceInspectionState> {
+  const plan = await prisma.planPrevention.findUnique({
+    where: { id: planId },
+    select: { etablissementId: true },
+  });
+  if (!plan) return { status: "error", message: "Plan introuvable" };
+  await assertEtablissementOwnership(plan.etablissementId);
+
+  const lu = lireDateDeclaree(
+    formData.get("inspectionTravailInformeeLe"),
+    new Date(),
+  );
+  if (!lu.ok) return { status: "error", message: lu.message };
+
+  await prisma.planPrevention.update({
+    where: { id: planId },
+    data: { inspectionTravailInformeeLe: lu.date },
+  });
+  revalidatePath(
+    `/etablissements/${plan.etablissementId}/plan-prevention/${planId}`,
+  );
+  return { status: "success" };
 }

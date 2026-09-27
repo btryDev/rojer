@@ -197,6 +197,14 @@ export default async function EtatsPermanentsPage({
                             }
                           : null
                       }
+                      questionsSansReponse={
+                        l.questionsSansReponse.length > 0
+                          ? {
+                              phrases: l.questionsSansReponse,
+                              hrefFiche: `/etablissements/${id}/modifier`,
+                            }
+                          : null
+                      }
                       fondement={l.fondement}
                     />
                   ))}
@@ -270,6 +278,14 @@ export default async function EtatsPermanentsPage({
                           ? {
                               phrase: l.aConfirmer,
                               entrepriseId: etablissement.entrepriseId,
+                            }
+                          : null
+                      }
+                      questionsSansReponse={
+                        l.questionsSansReponse.length > 0
+                          ? {
+                              phrases: l.questionsSansReponse,
+                              hrefFiche: `/etablissements/${id}/modifier`,
                             }
                           : null
                       }

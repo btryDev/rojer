@@ -516,6 +516,16 @@ export type TypologieApplication = {
    * s'encode, la moitié qui protège est déjà là et éprouvée.
    */
   locauxSommeilPublic?: boolean;
+  /**
+   * R. 4227-26 CT (C45, 2026-09-27) : l'obligation ne vaut que là où des
+   * chiffons, cotons ou papiers imprégnés de liquides inflammables ou de
+   * matières grasses sont utilisés. Évalué sur `Etablissement.chiffonsImpregnes`.
+   *
+   * Un seul sens, `true`, et la règle du non-renseigné sans exception : seul
+   * un « non » déclaré retire la ligne ; « je ne sais pas » et le silence la
+   * retiennent « à confirmer ». Ni NAF ni effectif : l'article n'en pose pas.
+   */
+  chiffonsImpregnes?: true;
   effectifMin?: number;
   effectifMax?: number;
   /**

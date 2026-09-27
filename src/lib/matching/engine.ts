@@ -64,6 +64,7 @@ import type {
   EquipementMatching,
   EtablissementMatching,
   ObligationApplicable,
+  QuestionSansReponse,
 } from "./types";
 
 // -----------------------------------------------------------------------------
@@ -80,6 +81,13 @@ export type ResultatTypologie =
        * de la ligne, pas seulement dans la raison (contre-lecture M1).
        */
       effectifAConfirmer?: EffectifsDeclares;
+      /**
+       * Les questions à trois états restées sans réponse qui retiennent la
+       * ligne par prudence (C45, contre-lecture M1). Même mécanique que
+       * `effectifAConfirmer` : la raison le dit, et les écrans le portent à
+       * côté de la ligne. Absent quand aucune ne joue.
+       */
+      sansReponse?: QuestionSansReponse[];
     }
   | { ok: false };
 
@@ -267,7 +275,50 @@ function evaluerHabitation(
  * `null` (le critère est absent de l'obligation) ⇒ aucune contrainte : cette
  * fonction ne se prononce pas.
  */
-type EvalLocauxSommeil = { ok: false } | { ok: true; raison: string };
+type EvalLocauxSommeil =
+  | { ok: false }
+  | {
+      ok: true;
+      raison: string;
+      /** Retenue sur le silence d'une question que la fiche pose : à confirmer. */
+      sansReponse?: QuestionSansReponse;
+    };
+
+/**
+ * R. 4227-26 CT — des chiffons, cotons ou papiers imprégnés sont-ils utilisés ?
+ * (C45, 2026-09-27)
+ *
+ * La règle du non-renseigné, sans aménagement : seul un « non » DÉCLARÉ
+ * retire l'obligation. « Je ne sais pas » et le silence d'un dossier antérieur
+ * à la question la retiennent, et la raison dit « à confirmer ». Un dirigeant
+ * qui lit une ligne qu'il ne doit pas a une chance de s'en apercevoir ;
+ * l'inverse n'en a aucune.
+ *
+ * Aucune condition de type d'ERP, de NAF ni d'effectif : l'article n'en pose
+ * pas. C'est la question, et elle seule, qui borne.
+ *
+ * `null` (critère absent de l'obligation) ⇒ cette fonction ne se prononce pas.
+ */
+function evaluerChiffonsImpregnes(
+  critere: TypologieApplication["chiffonsImpregnes"],
+  etab: EtablissementMatching,
+): EvalLocauxSommeil | null {
+  if (critere === undefined) return null;
+  const declare = etab.chiffonsImpregnes;
+  if (declare === false) return { ok: false };
+  if (declare === true) {
+    return {
+      ok: true,
+      raison: "chiffons, cotons ou papiers imprégnés déclarés",
+    };
+  }
+  return {
+    ok: true,
+    raison:
+      "usage de chiffons, cotons ou papiers imprégnés non renseigné — obligation retenue par prudence, à confirmer",
+    sansReponse: "chiffons_impregnes",
+  };
+}
 
 function evaluerLocauxSommeil(
   critere: TypologieApplication["locauxSommeilPublic"],
@@ -306,6 +357,13 @@ function evaluerLocauxSommeil(
       ok: true,
       raison:
         "présence de locaux à sommeil pour le public non renseignée — obligation retenue par prudence, à confirmer",
+      // Porté à l'écran seulement quand la fiche POSE la question — un type
+      // déclaré de la liste. Sans type, répondre suppose d'abord de le
+      // déclarer : la raison le dit, un « à confirmer » renverrait vers une
+      // question que la fiche n'affiche pas.
+      ...(etab.typeErp != null
+        ? { sansReponse: "locaux_sommeil_public" as const }
+        : {}),
     };
   }
 
@@ -627,9 +685,19 @@ export function matchTypologie(
 
   // 3 ter. Locaux à sommeil pour le public (ET).
   const sommeil = evaluerLocauxSommeil(t.locauxSommeilPublic, etab);
+  const sansReponse: QuestionSansReponse[] = [];
   if (sommeil !== null) {
     if (!sommeil.ok) return { ok: false };
     raisons.push(sommeil.raison);
+    if (sommeil.sansReponse) sansReponse.push(sommeil.sansReponse);
+  }
+
+  // 3 quater. Chiffons imprégnés, R. 4227-26 (ET).
+  const chiffons = evaluerChiffonsImpregnes(t.chiffonsImpregnes, etab);
+  if (chiffons !== null) {
+    if (!chiffons.ok) return { ok: false };
+    raisons.push(chiffons.raison);
+    if (chiffons.sansReponse) sansReponse.push(chiffons.sansReponse);
   }
 
   // Si aucune contrainte de typologie n'a été posée ET aucune raison n'a
@@ -639,9 +707,12 @@ export function matchTypologie(
     return { ok: false };
   }
 
-  return effectifAConfirmer
-    ? { ok: true, raisons, effectifAConfirmer }
-    : { ok: true, raisons };
+  return {
+    ok: true,
+    raisons,
+    ...(effectifAConfirmer ? { effectifAConfirmer } : {}),
+    ...(sansReponse.length > 0 ? { sansReponse } : {}),
+  };
 }
 
 // -----------------------------------------------------------------------------
@@ -892,6 +963,7 @@ export function evaluerObligation(
       ...(typo.effectifAConfirmer
         ? { effectifAConfirmer: typo.effectifAConfirmer }
         : {}),
+      ...(typo.sansReponse ? { sansReponse: typo.sansReponse } : {}),
     };
   }
 
@@ -915,6 +987,7 @@ export function evaluerObligation(
     ...(typo.effectifAConfirmer
       ? { effectifAConfirmer: typo.effectifAConfirmer }
       : {}),
+    ...(typo.sansReponse ? { sansReponse: typo.sansReponse } : {}),
   };
 }
 
