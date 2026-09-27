@@ -33,13 +33,16 @@ const h = vi.hoisted(() => {
     actions: [] as L[],
     signatures: [] as L[],
   };
+  // Comme Prisma : une clé `undefined` dans un `where` ne filtre pas.
+  const eq = (attendu: unknown, valeur: unknown) =>
+    attendu === undefined || attendu === valeur;
   const deVerif = (id: unknown) => db.verifications.find((v) => v.id === id);
   const surLigne = (w: { verification?: L }) => (l: L) => {
     const v = deVerif(l.verificationId);
     return (
       !!v &&
-      v.salarieId === w.verification?.salarieId &&
-      v.etablissementId === w.verification?.etablissementId
+      eq(w.verification?.salarieId, v.salarieId) &&
+      eq(w.verification?.etablissementId, v.etablissementId)
     );
   };
   const signatureVisee = (w: {
@@ -47,7 +50,7 @@ const h = vi.hoisted(() => {
     objetType: unknown;
     objetId: { in: unknown[] };
   }) => (s: L) =>
-    s.etablissementId === w.etablissementId &&
+    eq(w.etablissementId, s.etablissementId) &&
     s.objetType === w.objetType &&
     w.objetId.in.includes(s.objetId);
 
@@ -61,7 +64,7 @@ const h = vi.hoisted(() => {
     salarie: {
       findFirst: async ({ where }: { where: L }) => {
         const s = db.salaries.find(
-          (x) => x.id === where.id && x.etablissementId === where.etablissementId,
+          (x) => eq(where.id, x.id) && eq(where.etablissementId, x.etablissementId),
         );
         if (!s) return null;
         return {
@@ -71,12 +74,12 @@ const h = vi.hoisted(() => {
       },
       updateMany: async ({ where, data }: { where: L; data: L }) => {
         for (const s of db.salaries)
-          if (s.id === where.id && s.etablissementId === where.etablissementId)
+          if (eq(where.id, s.id) && eq(where.etablissementId, s.etablissementId))
             Object.assign(s, data);
       },
       deleteMany: async ({ where }: { where: L }) => {
         const vises = db.salaries.filter(
-          (s) => s.id === where.id && s.etablissementId === where.etablissementId,
+          (s) => eq(where.id, s.id) && eq(where.etablissementId, s.etablissementId),
         );
         for (const s of vises)
           if (db.verifications.some((v) => v.salarieId === s.id))
@@ -110,8 +113,8 @@ const h = vi.hoisted(() => {
           db.verifications
             .filter(
               (v) =>
-                v.salarieId === where.salarieId &&
-                v.etablissementId === where.etablissementId,
+                eq(where.salarieId, v.salarieId) &&
+                eq(where.etablissementId, v.etablissementId),
             )
             .map((v) => v.id),
         );
