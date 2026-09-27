@@ -3907,6 +3907,47 @@ undefined` comme une valeur, pas comme l'absence de filtre qu'est la
 sémantique de Prisma. Corrigée (`6e04f87`), l'injection « aucune borne » est
 rouge. Vitest a figé à plusieurs reprises : rejoué sous minuteur.
 
+**Contre-lecture de `a8b96c3` (2026-09-27), sur une vraie base PostgreSQL
+jetable** (session de coordination ; test gardé hors dépôt) : effacement exact
+table par table, voisins et lignes d'établissement intacts, aucune signature
+orpheline, décompte = ce qui part, isolation, et `supprimerEtablissement`
+libère exactement les 8 clés que la base contient. Corrigé :
+
+- **M1, M2** — depuis `bb03cdd` (2026-08-27), `rapports/actions.ts` refuse tout
+  dépôt sur une ligne de salarié : le compte de rapports et de signatures vaut
+  zéro pour toute donnée postérieure, alors que la confirmation, `droits.ts`,
+  `rgpd.md` § 4.3 et ADR-023 annonçaient « rapports déposés (fichiers
+  compris) ». La branche d'effacement reste (filet pour des données
+  antérieures) ; les textes disent que Rojer ne garde pas de document sur un
+  titre, et la confirmation ne nomme rapports et signatures que s'il y en a.
+  Elle disait aussi « Pour en garder une trace, utilisez d'abord « Éditer ses
+  données » » : l'export ne contient que l'identité et les titres avec leurs
+  dates ; elle le dit désormais.
+- **M3** — `rgpd.md` disait sans réserve que les fichiers « sont libérés » :
+  réserve exacte ajoutée (la base d'abord ; un échec laisse le fichier et
+  n'est journalisé que côté serveur).
+- **F4** — les lignes de calendrier partaient sans être comptées : la
+  confirmation dit « et ses N échéances au calendrier ».
+- **F5** — la garde du schéma ne voyait que `…Cle`. Elle lit toute colonne
+  `String` en `…Url`, `…Key`, `…Chemin`, `…Path`, `fichier…`, `pdf…`, contre
+  `CLES_STOCKEES` et `COLONNES_ECARTEES` (motif obligatoire). Relevé en
+  appelant le code : `DuerpVersion.pdfUrl` ET les trois pièces du registre
+  d'accessibilité ne sont écrites nulle part — traitées de même, écartées
+  « jamais écrites », et la garde tombe si du code les écrit. Éprouvée avec
+  `photoUrl`.
+- **F6** — retirer `etablissementId` de l'effacement des lignes restait vert :
+  test ajouté (une ligne d'un autre établissement qui vise la même fiche —
+  incohérente mais permise par la base — n'est jamais effacée ; la garde
+  Restrict fait échouer l'effacement, tout est restauré).
+- **F7** — ADR-023 : « C'est cette trace qui prouve… protège l'employeur »
+  rayé et daté.
+
+**Éprouvées** — lignes sans borne (F6) ; `photoUrl` au schéma ; `pdfUrl` et
+`attestationCle` écrites dans un module ; une écartée retirée ; rapports
+nommés à zéro ; export qui promet « leurs pièces » ; échéances non comptées —
+toutes rouges. (La première injection « pdfUrl écrite » visait un fichier
+inexistant et n'a rien prouvé ; rejouée sur un fichier réel, rouge.)
+
 ### Ce que la chronologie donne à voir
 
 1. **Le dépôt lit beaucoup et applique peu, et l'écart est systématique.** La
