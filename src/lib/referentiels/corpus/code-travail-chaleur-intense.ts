@@ -30,6 +30,7 @@
 // (`R. 4463-1`). Aucun seuil de température n'est donc écrit nulle part.
 
 import type { Corpus } from "./types";
+import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
 export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
   id: "code-travail-chaleur-intense",
@@ -165,16 +166,15 @@ export const CODE_TRAVAIL_CHALEUR_INTENSE: Corpus = {
       // déjà ouvert pour ce corpus (voir `portee`) ; même traitement que
       // `R. 4512-1` et `-12`. Les sept autres articles du chapitre restent
       // `agent_verbatim` : ils n'ont pas été relus ce jour.
-      luLe: "2026-09-26",
+      luLe: "2026-09-27",
       lecture: "premiere_main",
       prescrit:
         "Le plan de prévention (R. 4512-6), le plan général de coordination et le plan particulier de sécurité et de protection de la santé tiennent compte, le cas échéant, du risque lié aux épisodes de chaleur intense.",
       citationCle:
         "Le plan de prévention prévu à l'article R. 4512-6, le plan général de coordination prévu à l'article L. 4532-8, et le plan particulier de sécurité et de protection de la santé prévu à l'article L. 4532-9 tiennent compte, le cas échéant, des risques liés à l'exposition aux épisodes de chaleur intense.",
-      statut: "obligation_manquante",
-      cause: "module",
-      toucheLaCible: true,
-      motif: "Le module `PlanPrevention` porte le plan de R. 4512-6 et ses lignes de risques d'interférence, ~~mais RIEN n'y nomme la chaleur — vérifié le 2026-09-20 : aucune occurrence de « chaleur » dans `src/lib/plan-prevention`~~ [2026-09-26 : faux depuis ce jour, voir la fin de ce motif]. L'instruction du 2026-09-01 le croyait « déjà servi ». « Le cas échéant » laisse l'appréciation à l'employeur : ce qui manque est une invite à y penser, pas une échéance — le formulaire du plan est un répéteur libre, sans liste de risques proposée~~, donc il n'y a aujourd'hui nulle part où la loger~~ [2026-09-26 : le chapeau de la section d'analyse la loge]. PGC et PPSPS sont des pièces de chantier du BTP, hors cible. [2026-09-26 — annoncé à qui utilise le plan de prévention : l'article est cité entier, « le cas échéant » compris, dans le chapeau de la section « Analyse conjointe des risques d'interférence » du formulaire et dans la carte « Ce que d'autres articles demandent au plan » de la fiche. Cité entier, PGC et PPSPS compris : le couper aurait laissé un sujet singulier devant « tiennent ». Relu sur sa page propre le 2026-09-26 (structure en aveugle, recopie, question fermée sur « tiennent compte, le cas échéant ») : verbatim identique à celui du 2026-09-20. Aucune liste de risques n'est proposée, rien n'est encodé : statut inchangé.]",
+      statut: "non_couvert",
+      declareA: ADRESSE_MANQUES_ANNONCES,
+      motif: "Le module `PlanPrevention` porte le plan de R. 4512-6 et ses lignes de risques d'interférence, ~~mais RIEN n'y nomme la chaleur — vérifié le 2026-09-20 : aucune occurrence de « chaleur » dans `src/lib/plan-prevention`~~ [2026-09-26 : faux depuis ce jour, voir la fin de ce motif]. L'instruction du 2026-09-01 le croyait « déjà servi ». « Le cas échéant » laisse l'appréciation à l'employeur : ce qui manque est une invite à y penser, pas une échéance — le formulaire du plan est un répéteur libre, sans liste de risques proposée~~, donc il n'y a aujourd'hui nulle part où la loger~~ [2026-09-26 : le chapeau de la section d'analyse la loge]. PGC et PPSPS sont des pièces de chantier du BTP, hors cible. [2026-09-26 — annoncé à qui utilise le plan de prévention : l'article est cité entier, « le cas échéant » compris, dans le chapeau de la section « Analyse conjointe des risques d'interférence » du formulaire et dans la carte « Ce que d'autres articles demandent au plan » de la fiche. Cité entier, PGC et PPSPS compris : le couper aurait laissé un sujet singulier devant « tiennent ». Relu sur sa page propre le 2026-09-26 (structure en aveugle, recopie, question fermée sur « tiennent compte, le cas échéant ») : verbatim identique à celui du 2026-09-20. Aucune liste de risques n'est proposée, rien n'est encodé : statut inchangé.]\n\n[2026-09-27, C45 — ANNONCÉ, par décision de la propriétaire du 2026-09-27 (évaluation des 42 manques qui touchent la cible). Passé de `obligation_manquante` (cause `module`, touchait la cible) à `non_couvert` : nommé sur la page « Ce que Rojer ne couvre pas », domaine « Plan de prévention », à tout dossier dont l'établissement emploie des travailleurs (`estEtablissementTravail`) ; il reste aussi cité là où il l'était, sur le formulaire, la fiche du plan et le ZIP de contrôle. Rien n'est encodé ; la phrase de l'écran reste « une obligation que cet outil ne traite pas reste due si un texte l'impose ». Relu en première main sur Légifrance le 2026-09-27 (C45), page de l'article : structure demandée à l'aveugle, puis confirmation ciblée de la formulation décisive. Écart : verbatim identique à la `citationCle`.]",
     },
   ],
 };

@@ -430,6 +430,7 @@ describe("référentiel conformité — anti-doublon", () => {
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic,
+      chiffonsImpregnes: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     });
@@ -1150,6 +1151,7 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic: null,
+      chiffonsImpregnes: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };
@@ -1559,6 +1561,13 @@ describe("référentiel conformité — version et empreinte", () => {
     // descriptions seules (hors empreinte) : les lignes qui invoquent PE 15 § 1
     // ou PE 20 § 2 nomment la ligne triennale de PE 4 § 2.
     { version: "2026-09-26.12", empreinte: "169-fd2eaf2750ad7a5f" },
+    // C45 (2026-09-27) : une obligation entre, R. 4227-26 — chiffons, cotons
+    // et papiers imprégnés enfermés après usage dans des récipients métalliques
+    // clos et étanches (`incendie-travail-chiffons-impregnes-recipients-clos`),
+    // état permanent d'établissement conditionné par la typologie neuve
+    // `chiffonsImpregnes` (seul un « non » déclaré la retire). Aucune n'en
+    // sort : 169 + 1 − 0 = 170. Migration `20260927140000`.
+    { version: "2026-09-26.13", empreinte: "170-7190810116effc99" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1715,7 +1724,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(169);
+    ).toBe(170);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -2187,6 +2196,7 @@ describe("GH 61 § 5 — la quinquennale de la charge calorifique atteint l'occu
     classeIgh: null,
     familleHabitation: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
   };
@@ -2315,6 +2325,7 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic,
+      chiffonsImpregnes: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };

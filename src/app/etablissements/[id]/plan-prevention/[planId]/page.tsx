@@ -14,6 +14,7 @@ import {
   type FaitFiche,
 } from "@/components/ui-kit";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
+import { InformationInspectionForm } from "@/components/plan-prevention/InformationInspectionForm";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import {
   BoutonCloturer,
@@ -52,6 +53,7 @@ import {
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import { etatPlanPrevention } from "@/lib/calendrier/echeances";
 import {
+  cleJourCivil,
   FUSEAU_REFERENCE,
   formaterDateCourteFr,
   formaterDateLongueFr,
@@ -216,6 +218,20 @@ export default async function PlanPreventionDetailPage({
                 <p className="m-0 mt-3 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {CONSTAT_R4512_12}
                 </p>
+                {/* C45 : la trace déclarée du 2°. */}
+                <InformationInspectionForm
+                  planId={plan.id}
+                  informeeLe={
+                    plan.inspectionTravailInformeeLe
+                      ? cleJourCivil(plan.inspectionTravailInformeeLe)
+                      : null
+                  }
+                  informeeLeTexte={
+                    plan.inspectionTravailInformeeLe
+                      ? formaterDateLongueFr(plan.inspectionTravailInformeeLe)
+                      : null
+                  }
+                />
               </CarteFiche>
             )}
             <CarteFiche titre="Nature des travaux">

@@ -72,22 +72,41 @@ describe("registre de dette — les obligations manquantes", () => {
       // sur le module de vigilance, plus l'absence de surface.
       evenement: [0, 1],
       categorie_equipement: [5, 6],
-      attribut_etablissement: [4, 2],
-      destinataire: [5, 1],
-      activite_exercee: [6, 1],
-      relation_tiers: [3, 0],
+      // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
+      // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
+      attribut_etablissement: [1, 2],
+      // 5 → 0 le 2026-09-27 (C45) : `R. 1321-60` et les art. 4, 9, 10, 12 de
+      // l'arrêté du 10 septembre 2021, annoncés (`non_couvert`).
+      destinataire: [0, 1],
+      // 6 → 4 le 2026-09-27 (C45) : `R. 4227-26` encodé (retenu), `R. 4225-3`
+      // annoncé. Restent quatre HORS CADRE (`R. 4323-61`, `-69`, arrêté 1993
+      // art. 8 et annexe III).
+      activite_exercee: [4, 1],
+      // 3 → 0 le 2026-09-27 (C45) : `L. 8222-1`, `D. 8222-5`, `D. 8222-7`
+      // annoncés.
+      relation_tiers: [0, 0],
       // 7 → 9 le 2026-09-21 : `R. 4431-2` ouvert, les deux manques du bruit ne
       // sont plus un texte à lire mais une donnée que le DUERP ne recueille pas.
-      module: [9, 0],
+      // 9 → 1 le 2026-09-27 (C45) : `L. 4121-3-1` (VI tracé, III 1° annoncé)
+      // et `R. 4512-12` (2° tracé) encodés au module ; `R. 4463-8`,
+      // `R. 4121-1-1`, `R. 4512-1`, `-9`, `-11`, `R. 4433-2` annoncés. Reste
+      // `R. 4434-9`, HORS CADRE.
+      module: [1, 0],
       // 4 → 1 le même jour : trois lectures faites. Reste la « centrifugeuse »
       // de l'arrêté du 5 mars 1993, qui ne se tranche pas en ouvrant un article.
       texte_a_lire: [1, 0],
       // 7 → 8 : `R. 4224-3`, trouvé en l'ouvrant pour un autre.
-      a_trancher: [9, 1],
+      // 9 → 3 le 2026-09-27 (C45) : `L. 4141-5`, `L. 4121-3`, `L. 8222-5`,
+      // `R. 4227-22`, `R. 4227-25`, `R. 4323-106` annoncés. Restent trois HORS
+      // CADRE (`R. 4224-3`, `R. 4223-4`, arrêté 1993-11-04 art. 4).
+      a_trancher: [3, 1],
       perimetre: [0, 3],
     });
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(42);
-    expect(manquantes.length).toBe(57);
+    // 42 → 15 et 57 → 30 le 2026-09-27 (C45) : 42 − 1 encodé (`R. 4227-26`)
+    // − 2 tracés au module (`L. 4121-3-1`, `R. 4512-12`) − 24 annoncés = 15,
+    // les quinze HORS CADRE de `docs/couverture-declaree-du-produit.md`.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(15);
+    expect(manquantes.length).toBe(30);
   });
 });
 

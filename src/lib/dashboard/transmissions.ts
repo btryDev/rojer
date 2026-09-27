@@ -210,6 +210,7 @@ export async function chargerTransmissions(
       personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
       manipuleMatieresR422722: etab.manipuleMatieresR422722,
       comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
+      chiffonsImpregnes: etab.chiffonsImpregnes,
     },
     etab.equipements.map((eq) => ({
       id: eq.id,

@@ -58,6 +58,7 @@ function etab(site: number, entreprise: number) {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
   };
 }
 
@@ -124,6 +125,7 @@ describe("tous les lecteurs d'un seuil d'entreprise lisent la même règle", () 
         classeIgh: null,
         familleHabitation: null,
         comporteLocauxSommeilPublic: null,
+        chiffonsImpregnes: null,
       },
       duerp: null,
       equipements: { nbSansObligation: 0, nbEquipements: 1, nbRetires: 0 },

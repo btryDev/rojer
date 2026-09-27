@@ -34,6 +34,7 @@ function etabBureau(over: Partial<EtablissementMatching> = {}): EtablissementMat
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
     ...over,
   };
 }
@@ -56,6 +57,7 @@ function etabRestoErpCat5(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
     ...over,
   };
 }
@@ -76,6 +78,7 @@ function etabErpCat3(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
   };
 }
 
@@ -95,6 +98,7 @@ function etabIgh(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
   };
 }
 
@@ -114,6 +118,7 @@ function etabHabitationPure(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
   };
 }
 
@@ -822,6 +827,7 @@ describe("moteur matching — cohérence avec le référentiel", () => {
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
+      chiffonsImpregnes: null,
     };
     const eqComplet: EquipementMatching[] = [
       elec({ caracteristiques: { aGroupeElectrogene: true } }),
@@ -1231,6 +1237,7 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
   };
 
   /** Un équipement sans caractéristiques pour chacune des catégories. */

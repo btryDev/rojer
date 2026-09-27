@@ -737,7 +737,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // détiendrait ne pourrait solder une obligation qui se remplit chez un
       // tiers, et le V de l'article renvoie encore ses modalités au comité
       // national de prévention et de santé au travail.
-      "L. 4141-5",
+      // ~~"L. 4141-5"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4141-8 et R. 4141-12 : formation à la sécurité après un accident
       // grave (ou des accidents répétés au même poste), et après modification
       // des conditions de circulation ou d'exploitation. Toutes deux réelles,
@@ -794,7 +794,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // déclencheur, non implémenté. La liste des postes concernés, que
       // l'employeur tient après avis du médecin du travail et du CSE, est
       // bloquée par le même manque.
-      "R. 4225-3",
+      // ~~"R. 4225-3"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // ── Lot D1, 2026-09-01 : le travail en hauteur. Bloc contigu, ajouté en
       // fin de liste À DESSEIN — le lot B est en train de supprimer cette
       // liste exhaustive, et un bloc d'un seul tenant se retire d'un coup
@@ -997,7 +997,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // sans clause de date — donc opposable aux bâtiments existants, à la
       // différence des trois suivantes. Bloquée par l'absence de catégorie
       // d'équipement.
-      "R. 1321-60",
+      // ~~"R. 1321-60"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // Les CINQ entrées de l'arrêté du 10 septembre 2021, pris pour
       // l'application de R. 1321-61. Elles partagent DEUX blocages, et le
       // second est le plus inhabituel du référentiel : l'article 2 de l'arrêté
@@ -1016,33 +1016,33 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // l'adaptation en cas de modification des réseaux, et son V les preuves
       // d'efficacité tenues à la disposition de l'autorité sanitaire. Trois
       // obligations d'exploitation, pas une règle de chantier.
-      "Arrêté 10-09-2021 art. 4",
+      // ~~"Arrêté 10-09-2021 art. 4"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // Art. 9 : vérification, « a minima à fréquence annuelle ».
       // Art. 8 : entré le 2026-09-20 en `sans_objet`, corrigé le jour même en
       // `obligation_manquante` par la contre-lecture du lot. Plaque « eau non
       // potable », robinet verrouillable, repérage des canalisations : un état
       // permanent au sens de l'ADR-026, comme l'art. 12 plus bas. Le classer
       // `sans_objet` faisait sortir un manque réel du décompte.
-      "Arrêté 10-09-2021 art. 8",
-      "Arrêté 10-09-2021 art. 9",
+      // ~~"Arrêté 10-09-2021 art. 8"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
+      // ~~"Arrêté 10-09-2021 art. 9"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // Art. 10 : entretien, « a minima à une fréquence annuelle », et le seul
       // texte du dossier qui écrive le mot « disconnecteur ». Deux articles et
       // non un, parce que l'entretien exige un opérateur qualifié au sens de
       // la loi du 5 juillet 1996 quand la vérification n'exige rien de tel :
       // les fondre ferait disparaître la seule exigence opposable à un
       // prestataire.
-      "Arrêté 10-09-2021 art. 10",
+      // ~~"Arrêté 10-09-2021 art. 10"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // Art. 12 : fichier sanitaire des réseaux intérieurs — état permanent au
       // sens de l'ADR-026. À ne pas confondre avec le carnet sanitaire du
       // produit, qui suit des températures d'ECS et des analyses de
       // légionelles ; celui-ci est un plan des réseaux et un journal
       // d'interventions sur les dispositifs anti-retour.
-      "Arrêté 10-09-2021 art. 12",
+      // ~~"Arrêté 10-09-2021 art. 12"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // ── Lot chaleur intense, 2026-09-20. Trois obligations déclenchées par
       // un ÉPISODE, que le produit n'observe pas (eau fraîche, travailleur
       // vulnérable, mise en œuvre), et la prise en compte au plan de prévention.
       // ~~"R. 4463-4", "R. 4463-5", "R. 4463-7"~~ — encodées le 2026-09-21.
-      "R. 4463-8",
+      // ~~"R. 4463-8"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // ── Lot « lectures en attente », 2026-09-21 : trouvé en ouvrant les deux
       // articles auxquels l'article 13 de l'arrêté de signalisation renvoie.
       "R. 4224-3",
@@ -1066,7 +1066,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // permanent d'établissement conviendrait — mais le fait que le texte
       // exige que l'ÉVALUATION en tienne compte : une case à cocher y
       // répondrait en apparence et pas en fait.
-      "L. 4121-3",
+      // ~~"L. 4121-3"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // L. 4121-3-1 : deux manques, et le premier vaut pour toute la cible. Le
       // VI fait transmettre le document unique au service de prévention et de
       // santé au travail À CHAQUE MISE À JOUR, sans seuil d'effectif — porté
@@ -1076,7 +1076,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // salariés pile — DANS la cible de l'ADR-031 —, un programme annuel de
       // prévention avec coût, indicateurs de résultat, ressources et
       // calendrier, que le modèle `Action` ne sait pas porter.
-      "L. 4121-3-1",
+      // ~~"L. 4121-3-1"~~ — 2026-09-27, C45 : VI tracé sur la version validée, `non_couvert` pour le III 1° (axe `effectif`).
       // R. 4121-1-1 : l'annexe du document unique — données collectives
       // d'exposition et PROPORTION de salariés exposés aux facteurs de
       // L. 4161-1 au-delà des seuils. Le PDF imprime déjà une page à ce numéro
@@ -1087,7 +1087,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // n'en fixe plus depuis 2017 — où ils vivent aujourd'hui n'a pas été
       // établi, et encoder sans le savoir fabriquerait une exigence chiffrée
       // sur un renvoi en l'air.
-      "R. 4121-1-1",
+      // ~~"R. 4121-1-1"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4121-2 : l'article le plus exposé du lot, et celui dont la lecture
       // était la plus attendue — il s'affiche sur l'écran de synthèse AVEC un
       // seuil d'effectif. Le seuil est JUSTE (« Au moins chaque année dans les
@@ -1125,23 +1125,23 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // l'intervention rend toute la procédure applicable à nouveau. Le modèle
       // ne connaît qu'UNE entreprise extérieure par plan, et rien à l'écran ne
       // laisse deviner qu'une question se pose. Événementiel ET structurel.
-      "R. 4512-1",
+      // ~~"R. 4512-1"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4512-9 : la liste des postes relevant du suivi individuel renforcé,
       // que le texte fait FIGURER dans le plan. Aucun champ, et le blocage est
       // celui qu'a déjà rencontré R. 4624-28-2 — le produit ne rattache aucun
       // poste à un suivi renforcé.
-      "R. 4512-9",
+      // ~~"R. 4512-9"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4512-11 : les dossiers techniques amiante joints au plan. Une pièce
       // que l'entreprise utilisatrice DÉTIENT, et dont le produit n'a aucune
       // notion. Touche la cible : un local d'avant le 1er juillet 1997 a un
       // DTA, et le plombier dans les faux plafonds est le cas visé.
-      "R. 4512-11",
+      // ~~"R. 4512-11"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4512-12 : la seule DÉMARCHE du chapitre qui sorte de l'entreprise —
       // informer par écrit l'inspection du travail de l'ouverture des travaux.
       // Deux surfaces affichent la pastille « R. 4512-6 à R. 4512-12 » sans en
       // dire un mot ; un dirigeant qui les lit conclut qu'il a fini quand il a
       // signé.
-      "R. 4512-12",
+      // ~~"R. 4512-12"~~ — 2026-09-27, C45 : 2° tracé sur le plan, `sans_objet` sur le patron de R. 4512-6 (porté par le module).
       // ── Lot « vigilance prestataires », 2026-09-02 : le chapitre II du
       // titre II de la HUITIÈME partie, aux deux étages du Code — sept
       // articles législatifs sur sept, huit réglementaires sur huit, plus les
@@ -1165,7 +1165,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // salarié, équipement), pas de contrat dans le modèle (ni montant ni
       // date de conclusion, les deux données dont R. 8222-1 et D. 8222-5 font
       // dépendre l'assujettissement et son point de départ), et le périmètre.
-      "L. 8222-1",
+      // ~~"L. 8222-1"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // L. 8222-5 : l'injonction due AUSSITÔT après signalement écrit d'un
       // agent de contrôle, d'un syndicat ou d'une IRP, par lettre recommandée
       // avec avis de réception (R. 8222-2). Distincte de la vérification
@@ -1174,7 +1174,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // l'annuaire ne connaît pas. Aucune surface ne la mentionne. Bloquée par
       // le déclencheur événementiel, absent du modèle — même blocage que
       // R. 4141-8, R. 4141-12 et L. 4121-3-1 VI.
-      "L. 8222-5",
+      // ~~"L. 8222-5"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // D. 8222-5 : l'article central du module, et celui dont la lecture était
       // la plus attendue. LE RYTHME EST JUSTE — « tous les six mois », et
       // MOIS_RENOUVELLEMENT_URSSAF vaut 6 —, L'ANCRAGE NE L'EST PAS : le
@@ -1188,7 +1188,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // produit n'a qu'un champ Kbis. [2026-09-27, C43 : remise et émission
       // saisies, lues comme point de départ et instant de mesure — une
       // lecture ; restent l'authenticité et les quatre pièces.]
-      "D. 8222-5",
+      // ~~"D. 8222-5"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // D. 8222-7 : le même rythme et le même point de départ pour un
       // cocontractant établi à l'étranger, mais une liste de pièces
       // entièrement différente — identification TVA au sens de l'article
@@ -1197,7 +1197,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // pays. `prestataireSchema` est fermé sur trois documents nommés et
       // exige un SIRET à quatorze chiffres. Le manque n'est pas seulement une
       // absence : l'écran affiche à la place la liste française.
-      "D. 8222-7",
+      // ~~"D. 8222-7"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // ── Lot « les sept épars », 2026-09-02 : les citations d'écran qu'aucun
       // regroupement ne rassemblait. Bloc contigu et en fin de liste, pour la
       // raison écrite par le lot D1 — il se retirera d'un coup le jour où
@@ -1243,7 +1243,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // la seule saisie d'une date ne l'exigerait que de celui qui a déjà
       // mesuré — le faux négatif d'ancrage corrigé sur R. 4227-34 le
       // 2026-08-31, refait en connaissance de cause.
-      "R. 4433-2",
+      // ~~"R. 4433-2"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4434-9 : « L'employeur vérifie l'efficacité des mesures prises en
       // application du présent chapitre. » Classée ici et NON `non_couvert`,
       // bien que le domaine du bruit ne soit pas servi : `non_couvert` dit
@@ -1264,25 +1264,25 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // `stockage-dangereux-ventilation-locaux` se fonde sur R. 4222-20 et se
       // déclenche sur la catégorie STOCKAGE_MATIERE_DANGEREUSE, quand
       // R. 4227-22 oblige sans condition d'équipement.
-      "R. 4227-22",
+      // ~~"R. 4227-22"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4227-23 : la signalisation de l'interdiction de fumer aux
       // emplacements À L'AIR LIBRE. Le domaine `signalisation`, encodé le même
       // jour, ne la porte pas : son champ est l'arrêté du 4 novembre 1993.
       // Bloquée par un attribut — rien ne dit qu'un établissement manipule ces
       // matières DEHORS. Son renvoi à « L. 3511-7 du code de la santé
       // publique » est mort depuis le 19 mai 2016 (recodifié L. 3512-8).
-      "R. 4227-23",
+      // ~~"R. 4227-23"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4227-24 : dix mètres d'une issue, portes vers l'extérieur, grilles
       // ouvrables de l'intérieur. L'article le plus LARGE de la section — il
       // ajoute au champ de R. 4227-22 les substances « facilement
       // inflammables », un cran en dessous —, donc le seul que l'attribut du
       // modèle ne peut pas déclencher sans sous-appliquer.
-      "R. 4227-24",
+      // ~~"R. 4227-24"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4227-25 : ne pas déposer ni laisser séjourner ces matières dans les
       // escaliers, passages et couloirs. Obligation de NE PAS FAIRE : une case
       // à cocher à vie y répondrait en apparence, le manquement naissant d'un
       // carton posé un mardi et retiré le jeudi.
-      "R. 4227-25",
+      // ~~"R. 4227-25"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // R. 4227-26 : les chiffons et papiers imprégnés de liquides
       // inflammables OU DE MATIÈRES GRASSES, enfermés après usage dans des
       // récipients métalliques clos et étanches. L'article de la section qui
@@ -1291,7 +1291,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // champ est autonome — il ne dépend pas de R. 4227-22 —, donc son
       // déclenchement suppose le cinquième déclencheur de l'ADR-022,
       // « activité réellement exercée », non implémenté.
-      "R. 4227-26",
+      // ~~"R. 4227-26"~~ — 2026-09-27, C45 : encodé, `retenu` (`incendie-travail-chiffons-impregnes-recipients-clos`).
       // R. 4323-105 A QUITTÉ CETTE LISTE LE 2026-09-04, l'après-midi du jour
       // où elle l'avait rejointe. Le matin, son `bloquePar` disait « rien de
       // technique » — et c'était vrai : la consigne d'utilisation se porte par
@@ -1311,7 +1311,7 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // fabriquerait une échéance que personne ne peut opposer — c'est le même
       // refus que pour R. 4323-69, où les « cinq ans » venaient d'une
       // recommandation CNAM et non d'un texte.
-      "R. 4323-106",
+      // ~~"R. 4323-106"~~ — 2026-09-27, C45 : annoncé, `non_couvert` (page « Ce que Rojer ne couvre pas »).
       // Arrêté du 19 mars 1993 (EPI) art. 1er : LA VÉRIFICATION GÉNÉRALE
       // PÉRIODIQUE À DOUZE MOIS, pour cinq familles nommées et pour elles
       // seules. Une seule touche les secteurs cibles — « systèmes de protection
@@ -1472,7 +1472,21 @@ describe("corpus — ce qu'on ne couvre pas, et où on le dit", () => {
     // protège donc toujours contre l'ARRIVÉE d'un manque muet — un 20ᵉ le
     // ferait tomber — et toujours pas contre la PERTE d'une adresse existante,
     // pour la raison expliquée plus haut.
-    const MUETS = 19;
+    // ⚠ **18 DEPUIS LE 2026-09-27 (C45)**, et par la SECONDE voie — celle
+    // que le paragraphe du 2026-09-01 réservait, « donner une adresse visible ».
+    // `R. 4323-63`, l'escabeau, n'avait jamais eu d'adresse : il est désormais
+    // nommé sur la page « Ce que Rojer ne couvre pas », au dossier d'un
+    // employeur (`perimetre/manques-annonces.ts`). Décision de la propriétaire
+    // du 2026-09-27. Les vingt-quatre autres articles passés `non_couvert` le
+    // même jour naissent AVEC cette adresse : ils entrent au compte des
+    // `non_couvert` (27 → 52) sans entrer à celui des muets. L'adresse est
+    // vérifiée, cette fois — `manques-annonces.test.ts` tient l'égalité entre
+    // les articles qui la citent et ce que la page projette —, ce qui ferme
+    // pour eux la limite 2 ci-dessus (« jamais que l'adresse citée existe »).
+    //
+    // Le cliquet reste saturé : 18 muets, tous `docs/`. Toujours pas de
+    // protection contre la PERTE d'une adresse, sauf pour les vingt-cinq.
+    const MUETS = 18;
     // Une note interne n'est pas une annonce à l'exploitant. `declareA`
     // mélange aujourd'hui les deux natures — une adresse produit et un
     // document de travail — et cette distinction reste à trancher (lot 3) ;

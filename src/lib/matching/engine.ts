@@ -269,6 +269,41 @@ function evaluerHabitation(
  */
 type EvalLocauxSommeil = { ok: false } | { ok: true; raison: string };
 
+/**
+ * R. 4227-26 CT — des chiffons, cotons ou papiers imprégnés sont-ils utilisés ?
+ * (C45, 2026-09-27)
+ *
+ * La règle du non-renseigné, sans aménagement : seul un « non » DÉCLARÉ
+ * retire l'obligation. « Je ne sais pas » et le silence d'un dossier antérieur
+ * à la question la retiennent, et la raison dit « à confirmer ». Un dirigeant
+ * qui lit une ligne qu'il ne doit pas a une chance de s'en apercevoir ;
+ * l'inverse n'en a aucune.
+ *
+ * Aucune condition de type d'ERP, de NAF ni d'effectif : l'article n'en pose
+ * pas. C'est la question, et elle seule, qui borne.
+ *
+ * `null` (critère absent de l'obligation) ⇒ cette fonction ne se prononce pas.
+ */
+function evaluerChiffonsImpregnes(
+  critere: TypologieApplication["chiffonsImpregnes"],
+  etab: EtablissementMatching,
+): EvalLocauxSommeil | null {
+  if (critere === undefined) return null;
+  const declare = etab.chiffonsImpregnes;
+  if (declare === false) return { ok: false };
+  if (declare === true) {
+    return {
+      ok: true,
+      raison: "chiffons, cotons ou papiers imprégnés déclarés",
+    };
+  }
+  return {
+    ok: true,
+    raison:
+      "usage de chiffons, cotons ou papiers imprégnés non renseigné — obligation retenue par prudence, à confirmer",
+  };
+}
+
 function evaluerLocauxSommeil(
   critere: TypologieApplication["locauxSommeilPublic"],
   etab: EtablissementMatching,
@@ -630,6 +665,13 @@ export function matchTypologie(
   if (sommeil !== null) {
     if (!sommeil.ok) return { ok: false };
     raisons.push(sommeil.raison);
+  }
+
+  // 3 quater. Chiffons imprégnés, R. 4227-26 (ET).
+  const chiffons = evaluerChiffonsImpregnes(t.chiffonsImpregnes, etab);
+  if (chiffons !== null) {
+    if (!chiffons.ok) return { ok: false };
+    raisons.push(chiffons.raison);
   }
 
   // Si aucune contrainte de typologie n'a été posée ET aucune raison n'a

@@ -15,12 +15,27 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { articlesNonCouverts } from "./index";
+import { CORPUS, articlesNonCouverts } from "./index";
 
 const CHEMIN = "docs/couverture-declaree-du-produit.md";
 
 function documentCouverture(): string {
   return readFileSync(path.join(process.cwd(), CHEMIN), "utf8");
+}
+
+/**
+ * Le titre de la section HORS CADRE (C45, 2026-09-27). Elle liste des
+ * `obligation_manquante`, pas des `non_couvert` : ses références ne sont pas
+ * des surnuméraires du § 3, elles ont leur propre égalité, tenue plus bas.
+ */
+const HORS_CADRE = "## 7. Hors cadre — couvert par la clause générale des mentions légales (à rédiger)";
+
+/** Le document sans sa section hors cadre, et la section seule. */
+function decoupe(doc: string): { avant: string; horsCadre: string } {
+  const i = doc.indexOf(HORS_CADRE);
+  return i < 0
+    ? { avant: doc, horsCadre: "" }
+    : { avant: doc.slice(0, i), horsCadre: doc.slice(i) };
 }
 
 /**
@@ -59,7 +74,8 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     // L'autre sens, et il compte autant : un article couvert depuis, ou
     // requalifié en `obligation_manquante`, laisserait le document affirmer
     // un manque qui n'existe plus. C'est la moitié qu'on oublie.
-    const doc = documentCouverture();
+    // Hors de la section hors cadre (C45), qui a sa propre garde ci-dessous.
+    const doc = decoupe(documentCouverture()).avant;
     const declarees = new Set(articlesNonCouverts().map((a) => a.ref));
 
     // Les références du document : tout ce qui ressemble à une référence
@@ -99,5 +115,23 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
         `${CHEMIN} en annonce un autre nombre. Mettez-le à jour, ainsi que les ` +
         `autres occurrences du chiffre dans le document.`,
     ).toBe(true);
+  });
+
+  it("C45 — la section hors cadre liste exactement les obligations manquantes qui touchent la cible", () => {
+    // Décision de la propriétaire du 2026-09-27 : sur les quarante-deux, quinze
+    // relèvent de la clause générale des mentions légales, et restent
+    // `obligation_manquante`. La liste du document et celle du corpus ne
+    // doivent diverger dans aucun sens : un article encodé ou annoncé depuis
+    // qui y resterait promettrait une exclusion qui n'est plus ; un manque
+    // de la cible entré depuis et absent d'ici ne serait couvert par rien.
+    const { horsCadre } = decoupe(documentCouverture());
+    expect(horsCadre, `${CHEMIN} n'a plus de section « ${HORS_CADRE} ».`).not.toBe("");
+    const listees = [...horsCadre.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]).sort();
+    const duCorpus = CORPUS.flatMap((c) =>
+      c.articles.flatMap((a) =>
+        a.statut === "obligation_manquante" && a.toucheLaCible ? [a.ref] : [],
+      ),
+    ).sort();
+    expect(listees).toEqual(duCorpus);
   });
 });

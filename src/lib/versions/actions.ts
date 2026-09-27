@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireDuerp } from "@/lib/auth/scope";
+import { lireDateDeclaree } from "@/lib/traces/date-declaree";
 import { construireSnapshot } from "./snapshot-builder";
 import {
   estConflitDeNumeroVersion,
@@ -118,4 +120,45 @@ export async function creerVersion(
     message:
       "Une autre validation de version est en cours sur ce DUERP. Rechargez la page et réessayez.",
   };
+}
+
+export type TraceTransmissionState =
+  | { status: "idle" }
+  | { status: "error"; message: string }
+  | { status: "success" };
+
+/**
+ * Note la date à laquelle l'employeur a transmis une version validée au
+ * service de prévention et de santé au travail — L. 4121-3-1, VI, CT :
+ * « Le document unique d'évaluation des risques professionnels est transmis
+ * par l'employeur à chaque mise à jour au service de prévention et de santé au
+ * travail auquel il adhère. » (C45, 2026-09-27)
+ *
+ * Une TRACE déclarée, facultative : Rojer ne transmet rien, et ne tient pas
+ * une version sans date pour « non transmise » — il dit « non renseignée ».
+ * Le champ vide efface la trace. Une date future est refusée ; aucune autre
+ * borne, le texte ne fixant aucun délai.
+ *
+ * Portée : `requireDuerp` établit que le DUERP appartient au demandeur, et
+ * l'écriture ne touche que les versions de CE DUERP (`updateMany` sur le
+ * couple) — un identifiant de version d'un autre dossier ne rend rien.
+ */
+export async function noterTransmissionSpst(
+  duerpId: string,
+  versionId: string,
+  _prev: TraceTransmissionState,
+  formData: FormData,
+): Promise<TraceTransmissionState> {
+  await requireDuerp(duerpId);
+  const lu = lireDateDeclaree(formData.get("transmiseSpstLe"), new Date());
+  if (!lu.ok) return { status: "error", message: lu.message };
+
+  const { count } = await prisma.duerpVersion.updateMany({
+    where: { id: versionId, duerpId },
+    data: { transmiseSpstLe: lu.date },
+  });
+  if (count === 0) return { status: "error", message: "Version introuvable" };
+
+  revalidatePath(`/duerp/${duerpId}/synthese`);
+  return { status: "success" };
 }

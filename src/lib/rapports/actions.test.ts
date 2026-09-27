@@ -102,6 +102,7 @@ function poserEtablissement(equipements: Partial<EquipementFaux>[] = [{ id: "eq-
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
+      chiffonsImpregnes: null,
       referentielVersionCalendrier: null,
       prescriptionsParticulieres: [],
       equipements: equipements.map((e) => ({

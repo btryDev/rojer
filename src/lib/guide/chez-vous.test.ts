@@ -25,6 +25,7 @@ function etabBureau(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
     ...over,
   };
 }

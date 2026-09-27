@@ -56,6 +56,7 @@ export type EtablissementFaux = {
   personnesPresentesHabituellement: number | null;
   manipuleMatieresR422722: boolean | null;
   comporteLocauxSommeilPublic: boolean | null;
+  chiffonsImpregnes: boolean | null;
   referentielVersionCalendrier?: string | null;
   equipements: EquipementFaux[];
   prescriptionsParticulieres: { id: string; actif: boolean }[];

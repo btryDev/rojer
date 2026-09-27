@@ -43,8 +43,14 @@ import {
   URL_R4512_12,
   annoncesZip,
   citeR4512_12,
+  ligneInformationInspection,
 } from "./annonces-plan";
 import { lignesR4512_12Zip } from "./annonces-zip";
+import { depuisCleJourCivil, formaterDateFr } from "@/lib/dates";
+
+/** Le ZIP d'un plan sans trace du 2° (C45) : « date non renseignée ». */
+const zipSansTrace = (plan: { dureeHeuresEstimee: number | null; travauxDangereux: boolean }) =>
+  lignesR4512_12Zip({ ...plan, inspectionTravailInformeeLe: null }, formaterDateFr);
 import { diagnostiquerPlan } from "./schema";
 
 const article = (ref: string) => indexArticlesParRef().get(ref)?.article;
@@ -128,6 +134,8 @@ describe("les phrases de Rojer n'avisent pas", () => {
     ["R. 4512-9", CONSTAT_R4512_9],
     ["R. 4512-11", CONSTAT_R4512_11],
     ["R. 4512-12", CONSTAT_R4512_12],
+    ["R. 4512-12, trace notée", ligneInformationInspection("27/09/2026")],
+    ["R. 4512-12, trace absente", ligneInformationInspection(null)],
     ["durée non renseignée", FAIT_DUREE_NON_RENSEIGNEE],
     ["chapitre, hors guillemets", CHAPITRE_R4512.replace(/«[^»]*»/g, "")],
   ])("%s", (_ref, phrase) => {
@@ -160,7 +168,7 @@ describe("trois états de l'écrit, et R. 4512-12 dans deux", () => {
 
   it.each(cas)("$nom : diagnostic et ZIP citent R. 4512-12 entier, ou pas du tout", ({ plan, ecrit }) => {
     const d = diagnostiquerPlan(plan);
-    const zip = lignesR4512_12Zip(plan).join("\n");
+    const zip = zipSansTrace(plan).join("\n");
     const cite = ecrit !== "non_impose";
     expect(citeR4512_12(d.ecrit)).toBe(cite);
     for (const t of [d.recommandation, zip]) {
@@ -175,7 +183,7 @@ describe("trois états de l'écrit, et R. 4512-12 dans deux", () => {
     const d = diagnostiquerPlan(plan);
     expect(d.recommandation).toContain(FAIT_DUREE_NON_RENSEIGNEE);
     expect(d.recommandation).not.toMatch(/pas atteintes/);
-    expect(lignesR4512_12Zip(plan).join("\n")).toContain(FAIT_DUREE_NON_RENSEIGNEE);
+    expect(zipSansTrace(plan).join("\n")).toContain(FAIT_DUREE_NON_RENSEIGNEE);
   });
 
   it("le fait n'est dit que dans l'indéterminé", () => {
@@ -185,8 +193,31 @@ describe("trois états de l'écrit, et R. 4512-12 dans deux", () => {
       { dureeHeuresEstimee: 12, travauxDangereux: false },
     ]) {
       expect(diagnostiquerPlan(plan).recommandation).not.toContain(FAIT_DUREE_NON_RENSEIGNEE);
-      expect(lignesR4512_12Zip(plan).join("\n")).not.toContain(FAIT_DUREE_NON_RENSEIGNEE);
+      expect(zipSansTrace(plan).join("\n")).not.toContain(FAIT_DUREE_NON_RENSEIGNEE);
     }
+  });
+
+  it("C45 : la trace du 2° se lit sous le plan — la date déclarée, ou qu'elle ne l'est pas", () => {
+    const plan = { dureeHeuresEstimee: 400, travauxDangereux: false };
+    expect(zipSansTrace(plan).join("\n")).toContain(
+      "Information écrite de l'inspection du travail (2°) : date non renseignée",
+    );
+    const avecTrace = lignesR4512_12Zip(
+      { ...plan, inspectionTravailInformeeLe: depuisCleJourCivil("2026-09-21") },
+      formaterDateFr,
+    ).join("\n");
+    expect(avecTrace).toContain(
+      `Information écrite de l'inspection du travail (2°) : ${formaterDateFr(depuisCleJourCivil("2026-09-21"))}`,
+    );
+    // Jamais « non informée » : Rojer ne le sait pas.
+    expect(zipSansTrace(plan).join("\n")).not.toMatch(/non inform/i);
+    // Et rien quand l'article ne se cite pas : pas de trace orpheline.
+    expect(
+      lignesR4512_12Zip(
+        { dureeHeuresEstimee: 12, travauxDangereux: false, inspectionTravailInformeeLe: depuisCleJourCivil("2026-09-21") },
+        formaterDateFr,
+      ),
+    ).toEqual([]);
   });
 
   it("l'en-tête du fichier 07 porte R. 4512-9 et R. 4512-11 entiers, avec leur constat", () => {
@@ -208,7 +239,7 @@ describe("la route du ZIP passe le plan, elle ne décide rien", () => {
   const route = lire("app/api/etablissements/[id]/controle-zip/route.ts");
   it("un seul appel, avec le plan de la boucle", () => {
     expect(route.match(/lignesR4512_12Zip\(/g)?.length).toBe(1);
-    expect(route).toContain("...lignesR4512_12Zip(p),");
+    expect(route).toContain("...lignesR4512_12Zip(p, formaterDateFr),");
   });
   it("aucune autre voie vers les lignes de R. 4512-12", () => {
     expect(route).not.toMatch(/annoncesZip\.parPlan|diagnostiquerPlan|EXTRAIT_R4512_12/);

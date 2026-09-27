@@ -5,6 +5,7 @@ import {
   etablissementCreationSchema,
 } from "@/lib/etablissements/schema";
 import { CORPUS, EXCLUSIONS, articlesNonCouverts } from "@/lib/referentiels/corpus";
+import { manquesAnnoncesDuDossier } from "./manques-annonces";
 
 /**
  * Un dossier que la porte accepte. Recopié depuis le module — délibérément :
@@ -126,16 +127,41 @@ describe("les exclusions déclarées projettent le corpus", () => {
     expect(projetes).toEqual(duCorpus);
   });
 
-  it("ne laisse JAMAIS entrer un article `non_couvert`", () => {
+  it("ne laisse JAMAIS entrer un article `non_couvert` — la page les annonce À PART", () => {
     // La confusion à empêcher, et elle n'est pas de vocabulaire : ranger un
     // manque parmi les exclusions le fait disparaître du décompte — il cesse
-    // d'être une dette pour devenir une non-question. Les 28 articles
-    // `non_couvert` ont leur propre suivi (`docs/couverture-declaree-du-produit.md`).
+    // d'être une dette pour devenir une non-question. ~~Les 28 articles
+    // `non_couvert` ont leur propre suivi (`docs/couverture-declaree-du-produit.md`).~~
+    //
+    // TRANSFORMÉ LE 2026-09-27 (C45), PAS RETIRÉ. Ce test verrouillait que la
+    // page « Ce que Rojer ne couvre pas » ne donne pas d'adresse aux articles
+    // `non_couvert`, et la raison était la bonne : la seule place qu'elle leur
+    // offrait était la section des exclusions, où un manque devient une
+    // non-question. La propriétaire a décidé le 2026-09-27 d'y ANNONCER
+    // vingt-cinq d'entre eux. Ils ont donc une section à eux (« Ce que
+    // l'outil ne suit pas », `manques-annonces.ts`), qui dit « l'outil ne suit
+    // pas » là où la section des exclusions dit « aucune obligation n'en
+    // découle ». La moitié qui compte tient toujours, et elle tient désormais
+    // dans les deux sens :
+    //  1. aucun `non_couvert` n'est projeté parmi les exclusions ;
+    //  2. ceux que la page annonce le sont dans LEUR section, et ne sont que
+    //     des `non_couvert` — un `hors_perimetre` qui s'y glisserait
+    //     changerait une non-question en dette, l'erreur retournée.
     const projetes = new Set(
       exclusionsDeclarees().flatMap((e) => e.articles.map((a) => a.ref)),
     );
     const manques = articlesNonCouverts().map((a) => a.ref);
     expect(manques.filter((ref) => projetes.has(ref))).toEqual([]);
+
+    const annonces = manquesAnnoncesDuDossier(CORPUS, {
+      travail: true,
+      epiPresents: null,
+      nbPrestataires: 1,
+    }).flatMap((d) => d.articles.map((a) => a.ref));
+    expect(annonces.length).toBeGreaterThan(0);
+    expect(annonces.filter((ref) => projetes.has(ref))).toEqual([]);
+    const nonCouverts = new Set(manques);
+    expect(annonces.filter((ref) => !nonCouverts.has(ref))).toEqual([]);
   });
 
   it("cite le corpus mot pour mot, sans reformuler", () => {

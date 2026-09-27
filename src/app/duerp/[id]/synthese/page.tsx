@@ -4,6 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { CarteMiseAJour } from "@/components/duerps/CarteMiseAJour";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import { CreerVersionForm } from "@/components/duerps/CreerVersionForm";
+import { TransmissionSpstForm } from "@/components/duerps/TransmissionSpstForm";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import {
   activitesDuSecteur,
@@ -16,6 +17,7 @@ import { getDuerp } from "@/lib/duerps/queries";
 import { construireSynthese } from "@/lib/duerps/synthese";
 import { LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
 import {
+  cleJourCivil,
   formaterDateCourteFr,
   formaterDateFr,
   formaterDateLongueFr,
@@ -612,6 +614,21 @@ export default async function SynthesePage({
                         « {v.motif} »
                       </p>
                     )}
+                    {/* L. 4121-3-1, VI (C45) : la trace déclarée de la
+                        transmission. Rojer ne transmet rien. */}
+                    <TransmissionSpstForm
+                      duerpId={id}
+                      versionId={v.id}
+                      numero={v.numero}
+                      transmiseLe={
+                        v.transmiseSpstLe ? cleJourCivil(v.transmiseSpstLe) : null
+                      }
+                      transmiseLeTexte={
+                        v.transmiseSpstLe
+                          ? formaterDateLongueFr(v.transmiseSpstLe)
+                          : null
+                      }
+                    />
                   </div>
                 </div>
                 <a

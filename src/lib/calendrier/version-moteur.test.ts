@@ -124,6 +124,12 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 4,
+  // Recopiée SANS incrément le 2026-09-27 (C45, `lot/manques-encoder-annoncer`) :
+  // le moteur gagne un critère, `chiffonsImpregnes` (`evaluerChiffonsImpregnes`),
+  // et la projection un champ. NON, la régénération n'écrit pas autrement : la
+  // seule obligation qui porte ce critère est un état permanent
+  // (`periodicite: "autre"`), que le générateur saute (`estSansRendezVous`).
+  // Le passage du référentiel à `2026-09-26.13` resynchronise déjà le parc.
   // Recopiée SANS incrément le 2026-09-26 (C37, `lot/effectif-entreprise`) :
   // les seuils d'entreprise se comparent à `Entreprise.effectif`. NON, la
   // régénération n'écrit pas autrement : les obligations d'établissement à
@@ -211,7 +217,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "acc5dd2269f36cce",
+  empreinte: "9e1476343e890969",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

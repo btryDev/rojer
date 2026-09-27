@@ -55,6 +55,7 @@ function bureauSansRien(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
     ...over,
   };
 }
@@ -78,6 +79,7 @@ function restoErpCat5SansRien(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: null,
     ...over,
   };
 }
@@ -138,6 +140,7 @@ describe("faux négatif — tenue du registre de sécurité", () => {
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
+      chiffonsImpregnes: null,
     };
     expect(idsSansAucunEquipement(habitation)).not.toContain(
       "incendie-registre-securite",

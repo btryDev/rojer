@@ -3,9 +3,13 @@
  * PORTE pas, mais qu'il DIT — une seule écriture chacune, lue par toutes les
  * surfaces, et confrontée au verbatim du corpus par `textes-duerp.test.ts`.
  *
- * POURQUOI ICI. Ces trois obligations sont au corpus en `obligation_manquante`,
+ * POURQUOI ICI. ~~Ces trois obligations sont au corpus en `obligation_manquante`,
  * `cause: "module"` (`L. 4121-3-1`, `R. 4121-1-1`, `R. 4433-2`) : le produit n'a ni la
- * trace d'une transmission, ni l'annexe d'exposition. Le 2026-09-26, une
+ * trace d'une transmission, ni l'annexe d'exposition.~~ [2026-09-27, C45 : la
+ * transmission a désormais une trace déclarée sur chaque version validée
+ * (`DuerpVersion.transmiseSpstLe`) ; `R. 4121-1-1` et `R. 4433-2` sont passés
+ * `non_couvert`, annoncés sur la page « Ce que Rojer ne couvre pas », et
+ * `L. 4121-3-1` aussi, pour son III 1° seul — voir son entrée de corpus.] Le 2026-09-26, une
  * instruction a constaté que rien ne les disait à qui tient son document
  * unique : la transmission n'apparaissait nulle part, et la phrase « ce n'est
  * pas l'annexe de R. 4121-1-1 » ne s'imprimait que si un risque portait une

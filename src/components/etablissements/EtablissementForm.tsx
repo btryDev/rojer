@@ -42,6 +42,7 @@ type Valeurs = {
   effectifSurSite?: number;
   personnesPresentesHabituellement?: number | null;
   manipuleMatieresR422722?: boolean | null;
+  chiffonsImpregnes?: boolean | null;
   estEtablissementTravail?: boolean;
   estERP?: boolean;
   estIGH?: boolean;
@@ -276,6 +277,44 @@ export function EtablissementForm({
               l&apos;effectif. Les entreposer sans les mettre en œuvre ne relève
               pas de cette question — d&apos;autres articles de la même section
               le visent, que Rojer ne suit pas.
+            </p>
+          </div>
+
+          {/* R. 4227-26 CT (C45). Une question, posée une fois, à trois
+              états. « Non » retire la ligne de « Ce qui doit être en place » ;
+              « Je ne sais pas » la laisse affichée — règle du non-renseigné.
+              Rien à dater ni à saisir ensuite. */}
+          <div className="sm:col-span-2">
+            <label className="label-board" htmlFor="chiffonsImpregnes">
+              Utilisez-vous des chiffons, cotons ou papiers imprégnés
+              d&apos;huile, de graisse ou de liquides inflammables ?
+            </label>
+            <select
+              id="chiffonsImpregnes"
+              name="chiffonsImpregnes"
+              className="champ-board"
+              aria-describedby="chiffonsImpregnes-aide"
+              defaultValue={
+                valeursInitiales?.chiffonsImpregnes === true
+                  ? "oui"
+                  : valeursInitiales?.chiffonsImpregnes === false
+                    ? "non"
+                    : ""
+              }
+            >
+              <option value="">Je ne sais pas</option>
+              <option value="oui">Oui</option>
+              <option value="non">Non</option>
+            </select>
+            <p
+              id="chiffonsImpregnes-aide"
+              className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+            >
+              Un torchon de cuisine gras en fait partie. L&apos;art. R. 4227-26
+              du Code du travail demande qu&apos;après usage ils soient enfermés
+              dans des récipients métalliques clos et étanches. Si vous
+              répondez non, Rojer ne l&apos;affiche pas ; si vous ne savez pas,
+              il l&apos;affiche.
             </p>
           </div>
         </div>
