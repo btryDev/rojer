@@ -531,12 +531,14 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
         name="estEtablissementTravail"
         value={state.estEtablissementTravail ? "true" : "false"}
       />
-      <input type="hidden" name="estERP" value={state.estERP ? "true" : "false"} />
-      <input type="hidden" name="estIGH" value={state.estIGH ? "true" : "false"} />
+      {/* Vide tant que la question n'a pas de réponse : la porte refuse
+          alors le formulaire, au lieu de lire « non » (2026-09-27, A2). */}
+      <input type="hidden" name="estERP" value={reponseOuiNon(state.estERP)} />
+      <input type="hidden" name="estIGH" value={reponseOuiNon(state.estIGH)} />
       <input
         type="hidden"
         name="estHabitation"
-        value={state.estHabitation ? "true" : "false"}
+        value={reponseOuiNon(state.estHabitation)}
       />
       <input type="hidden" name="typeErp" value={state.typeErp} />
       <input type="hidden" name="categorieErp" value={state.categorieErp} />
@@ -566,4 +568,9 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
       ) : null}
     </>
   );
+}
+
+/** `true`/`false` postés tels quels ; sans réponse, une chaîne vide. */
+function reponseOuiNon(v: boolean | null): string {
+  return v === null ? "" : v ? "true" : "false";
 }

@@ -93,9 +93,16 @@ export const onboardingSchema = z
 
     // ─── Étape 3 — Typologie (ADR-004, flags cumulables) ────
     estEtablissementTravail: z.coerce.boolean().default(true),
-    estERP: z.coerce.boolean().default(false),
-    estIGH: z.coerce.boolean().default(false),
-    estHabitation: z.coerce.boolean().default(false),
+    // ~~`z.coerce.boolean().default(false)`~~ (2026-09-27, A2) : le défaut
+    // faisait d'une question passée un « non », et `coerce` d'une chaîne vide
+    // aussi. La réponse est exigée.
+    estERP: z.boolean({ message: "Indiquez si l'établissement reçoit du public." }),
+    estIGH: z.boolean({
+      message: "Indiquez si l'établissement est situé dans un immeuble de grande hauteur.",
+    }),
+    estHabitation: z.boolean({
+      message: "Indiquez si vous gérez un immeuble d'habitation.",
+    }),
     typeErp: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),
       z.enum(TYPE_ERP).optional(),
@@ -331,9 +338,9 @@ export const onboardingValeursInitiales = {
   effectifSurSite: "" as string | number,
   effectifEntreprise: "" as string | number,
   estEtablissementTravail: true,
-  estERP: false,
-  estIGH: false,
-  estHabitation: false,
+  estERP: null as boolean | null,
+  estIGH: null as boolean | null,
+  estHabitation: null as boolean | null,
   typeErp: "" as string | undefined,
   categorieErp: "" as string | undefined,
   comporteLocauxSommeilPublic: "" as string,

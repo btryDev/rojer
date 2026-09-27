@@ -133,6 +133,12 @@ describe("le formulaire ne se soumet qu'à la dernière étape", () => {
     await souffler();
     screen.getByRole("button", { name: /Suivant/ }).click();
     await souffler();
+    // Aucune réponse de régime n'est présélectionnée (2026-09-27, A2) : on
+    // répond « non » aux trois, comme un bureau.
+    for (const id of ["estERP-non", "estIGH-non", "estHabitation-non"]) {
+      (document.getElementById(id) as HTMLButtonElement).click();
+      await souffler();
+    }
     screen.getByRole("button", { name: /Suivant/ }).click();
     await souffler();
     expect(screen.getByRole("button", { name: /Créer mon espace/ })).toBeTruthy();
@@ -422,5 +428,24 @@ describe("la question du nombre de personnes au parcours (2026-09-20)", () => {
     expect(screen.getByLabelText(LIBELLE).getAttribute("aria-invalid")).toBe(
       "true",
     );
+  });
+});
+
+describe("aucune réponse de régime présélectionnée (2026-09-27, A2)", () => {
+  it("à l'étape 2, aucun bouton Oui/Non n'est actif, et « Suivant » retient au champ ERP", async () => {
+    render(<WizardShell />);
+    remplirEtape1();
+    await souffler();
+    screen.getByRole("button", { name: /Suivant/ }).click();
+    await souffler();
+    for (const b of [
+      ...screen.getAllByRole("button", { name: /^Oui$/ }),
+      ...screen.getAllByRole("button", { name: /^Non$/ }),
+    ]) {
+      expect(b.getAttribute("aria-pressed")).toBe("false");
+    }
+    screen.getByRole("button", { name: /Suivant/ }).click();
+    await souffler();
+    expect(screen.getByText(/votre établissement reçoit-il du public/)).toBeTruthy();
   });
 });

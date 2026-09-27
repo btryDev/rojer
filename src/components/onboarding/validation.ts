@@ -166,7 +166,7 @@ export function nombreDePersonnesDemande(s: OnboardingState): boolean {
   const saisi = s.effectifSurSite.trim();
   const effectif = saisi === "" ? NaN : Number(saisi);
   return nombreDePersonnesADemander({
-    estERP: s.estERP,
+    estERP: s.estERP === true,
     categorieErp: (s.categorieErp || null) as CategorieErp | null,
     effectifSurSite: Number.isInteger(effectif) ? effectif : null,
   });
@@ -174,6 +174,16 @@ export function nombreDePersonnesDemande(s: OnboardingState): boolean {
 
 /** Étape 2 — les régimes (ADR-004), et les deux questions qui en dépendent. */
 export function validerTypologie(s: OnboardingState): Blocage | null {
+  // Les trois questions de régime exigent une réponse (2026-09-27, A2) : le
+  // silence y valait « non », et un établissement recevant du public qui
+  // passait la question perdait toutes ses obligations ERP sans le savoir.
+  if (s.estERP === null)
+    return {
+      champ: "estERP",
+      message: "Répondez : votre établissement reçoit-il du public ?",
+    };
+  // L'IGH et l'habitation se vérifient après les sous-questions de l'ERP,
+  // dans l'ordre où la page les pose : le refus se rend au premier champ vide.
   if (!s.estEtablissementTravail && !s.estERP && !s.estIGH && !s.estHabitation)
     return {
       message: "Cochez au moins un régime (travail, ERP, IGH ou habitation).",
@@ -248,6 +258,17 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
   // Les deux sous-questions sont retirées du parcours, et ces deux refus avec
   // elles : un refus qui garde une donnée dont rien ne dépend est une étape de
   // plus, pas une garantie.
+  if (s.estIGH === null)
+    return {
+      champ: "estIGH",
+      message:
+        "Répondez : votre établissement est-il situé dans un immeuble de grande hauteur ?",
+    };
+  if (s.estHabitation === null)
+    return {
+      champ: "estHabitation",
+      message: "Répondez : gérez-vous un immeuble d'habitation ?",
+    };
   return null;
 }
 

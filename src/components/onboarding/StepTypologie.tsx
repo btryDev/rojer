@@ -113,14 +113,18 @@ export function StepTypologie({
 
             <div className="flex flex-wrap gap-3">
               <BoutonOuiNon
-                actif={state.estERP}
+                id="estERP"
+                actif={state.estERP === true}
                 label="Oui"
                 onClick={() =>
                   update({ estERP: true })
                 }
               />
               <BoutonOuiNon
-                actif={!state.estERP && (state.typeErp === "" || state.typeErp === undefined)}
+                // Actif sur la seule réponse « non » donnée — jamais par défaut
+                // (2026-09-27, A2).
+                id="estERP-non"
+                actif={state.estERP === false}
                 label="Non"
                 onClick={() =>
                   update({
@@ -136,6 +140,11 @@ export function StepTypologie({
                 }
               />
             </div>
+            {messagePour("estERP") && (
+              <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                {messagePour("estERP")}
+              </p>
+            )}
 
             {state.estERP && (
               <div className="flex flex-col gap-5">
@@ -340,16 +349,23 @@ export function StepTypologie({
 
             <div className="flex flex-wrap gap-3">
               <BoutonOuiNon
-                actif={state.estIGH}
+                id="estIGH"
+                actif={state.estIGH === true}
                 label="Oui"
                 onClick={() => update({ estIGH: true })}
               />
               <BoutonOuiNon
-                actif={!state.estIGH}
+                id="estIGH-non"
+                actif={state.estIGH === false}
                 label="Non"
                 onClick={() => update({ estIGH: false })}
               />
             </div>
+            {messagePour("estIGH") && (
+              <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                {messagePour("estIGH")}
+              </p>
+            )}
             {/* La sous-question « Quelle est la nature de l'immeuble ? » a été
                 retirée le 2026-09-03. Elle proposait les dix classes de
                 l'article R. 146-4 du CCH et n'ouvrait aucune obligation : les
@@ -374,16 +390,23 @@ export function StepTypologie({
             </div>
             <div className="flex flex-wrap gap-3">
               <BoutonOuiNon
-                actif={state.estHabitation}
+                id="estHabitation"
+                actif={state.estHabitation === true}
                 label="Oui"
                 onClick={() => update({ estHabitation: true })}
               />
               <BoutonOuiNon
-                actif={!state.estHabitation}
+                id="estHabitation-non"
+                actif={state.estHabitation === false}
                 label="Non"
                 onClick={() => update({ estHabitation: false })}
               />
             </div>
+            {messagePour("estHabitation") && (
+              <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                {messagePour("estHabitation")}
+              </p>
+            )}
             {/* La sous-question « À quelle famille l'immeuble appartient-il ? »
                 a été retirée le 2026-09-03, avec l'aide qui la présentait comme
                 décisive — « ne le devinez pas : il change les obligations qui
@@ -425,16 +448,20 @@ function SousQuestion({
 }
 
 function BoutonOuiNon({
+  id,
   actif,
   label,
   onClick,
 }: {
+  /** Cible du refus « répondez » (`Blocage.champ`), sur le premier bouton. */
+  id?: string;
   actif: boolean;
   label: string;
   onClick: () => void;
 }) {
   return (
     <button
+      id={id}
       type="button"
       onClick={onClick}
       aria-pressed={actif}

@@ -60,9 +60,11 @@ export async function finaliserOnboarding(
     effectifSurSite: raw.effectifSurSite,
     effectifEntreprise: raw.effectifEntreprise,
     estEtablissementTravail: raw.estEtablissementTravail === "true",
-    estERP: raw.estERP === "true",
-    estIGH: raw.estIGH === "true",
-    estHabitation: raw.estHabitation === "true",
+    // Sans réponse, `undefined` : le schéma refuse, au lieu de lire « non »
+    // (2026-09-27, A2).
+    estERP: ouiNon(raw.estERP),
+    estIGH: ouiNon(raw.estIGH),
+    estHabitation: ouiNon(raw.estHabitation),
     typeErp: raw.typeErp || undefined,
     categorieErp: raw.categorieErp || undefined,
     // Vide = « je ne sais pas encore », et le vide ne se coerce pas en `false` :
@@ -168,4 +170,9 @@ export async function finaliserOnboarding(
   revalidatePath("/");
   revalidatePath(`/entreprises/${result.entrepriseId}`);
   redirect(`/etablissements/${result.id}/equipements?bienvenue=1`);
+}
+
+/** « true » / « false » postés ; tout le reste — le vide compris — n'est pas une réponse. */
+function ouiNon(v: FormDataEntryValue | undefined): boolean | undefined {
+  return v === "true" ? true : v === "false" ? false : undefined;
 }

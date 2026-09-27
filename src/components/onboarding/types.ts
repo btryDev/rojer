@@ -26,9 +26,14 @@ export type OnboardingState = {
   effectifEntreprise: string;
 
   estEtablissementTravail: boolean;
-  estERP: boolean;
-  estIGH: boolean;
-  estHabitation: boolean;
+  // `null` = pas encore répondu (2026-09-27, analyse de la réponse absente,
+  // A2). Ces trois réponses valaient « non » d'office, et le bouton « Non »
+  // s'affichait déjà sélectionné : un dirigeant qui passait la question
+  // devenait non-ERP en silence, et toutes les obligations ERP disparaissaient.
+  // La réponse est désormais exigée avant de passer à la suite.
+  estERP: boolean | null;
+  estIGH: boolean | null;
+  estHabitation: boolean | null;
 
   typeErp: string;
   categorieErp: string;
@@ -59,9 +64,9 @@ export const VALEURS_INITIALES: OnboardingState = {
   effectifSurSite: "",
   effectifEntreprise: "",
   estEtablissementTravail: true,
-  estERP: false,
-  estIGH: false,
-  estHabitation: false,
+  estERP: null,
+  estIGH: null,
+  estHabitation: null,
   typeErp: "",
   categorieErp: "",
   comporteLocauxSommeilPublic: "",

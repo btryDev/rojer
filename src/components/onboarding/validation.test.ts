@@ -29,6 +29,11 @@ const complet: OnboardingState = {
   effectifSurSite: "4",
   effectifEntreprise: "4",
   estEtablissementTravail: true,
+  // Les trois régimes répondus : aucune réponse n'est présélectionnée depuis
+  // le 2026-09-27 (A2).
+  estERP: false,
+  estIGH: false,
+  estHabitation: false,
 };
 
 describe("étape 1 — la porte ne se ferme plus sur le secteur", () => {
@@ -403,5 +408,24 @@ describe("étape 1 — l'effectif de l'entreprise (C37)", () => {
     expect(
       validerIdentite({ ...complet, effectifSurSite: "1", effectifEntreprise: "0" }),
     ).toBeNull();
+  });
+});
+
+describe("étape 2 — aucune réponse de régime présélectionnée (2026-09-27, A2)", () => {
+  // Le silence valait « non » : un établissement recevant du public qui passait
+  // la question devenait non-ERP, et ses obligations ERP disparaissaient.
+  // Éprouvé en retirant le refus `estERP === null` de `validerTypologie`.
+  it.each(["estERP", "estIGH", "estHabitation"] as const)(
+    "%s sans réponse : refus, au champ",
+    (champ) => {
+      const b = validerTypologie({ ...complet, [champ]: null });
+      expect(b?.champ).toBe(champ);
+    },
+  );
+
+  it("l'état initial n'a répondu à aucune des trois", () => {
+    expect(VALEURS_INITIALES.estERP).toBeNull();
+    expect(VALEURS_INITIALES.estIGH).toBeNull();
+    expect(VALEURS_INITIALES.estHabitation).toBeNull();
   });
 });

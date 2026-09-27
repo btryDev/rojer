@@ -1492,7 +1492,8 @@ describe("moteur 5 — un dossier existant muet sur les matières (2026-09-27)",
 
   function dossierExistant(matieres: boolean | null) {
     const etab = poserEtablissement([{ id: "eq-elec" }]);
-    etab.manipuleMatieresR422722 = matieres;
+    (etab as { manipuleMatieresR422722: boolean | null }).manipuleMatieresR422722 =
+      matieres;
     return etab;
   }
 

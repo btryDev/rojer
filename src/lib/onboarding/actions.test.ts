@@ -75,6 +75,11 @@ function formulaire(over: Record<string, string> = {}): FormData {
   fd.set("effectifSurSite", "6");
   fd.set("effectifEntreprise", "6");
   fd.set("estEtablissementTravail", "true");
+  // Les trois régimes répondus « non » : sans réponse, la porte refuse
+  // (2026-09-27, A2).
+  fd.set("estERP", "false");
+  fd.set("estIGH", "false");
+  fd.set("estHabitation", "false");
   for (const [k, v] of Object.entries(over)) fd.set(k, v);
   return fd;
 }
@@ -185,4 +190,20 @@ describe("les deux effectifs (C37)", () => {
       res.status === "error" && res.fieldErrors?.effectifEntreprise?.[0],
     ).toBeTruthy();
   });
+});
+
+describe("finaliserOnboarding — un régime sans réponse ne vaut pas « non » (2026-09-27, A2)", () => {
+  // `raw.estERP === "true"` faisait d'un champ vide un « non » : un ERP muet
+  // naissait non-ERP. Éprouvé en rétablissant cette lecture.
+  it.each(["estERP", "estIGH", "estHabitation"])(
+    "%s vide : refus, et rien n'est créé",
+    async (champ) => {
+      const res = await finaliserOnboarding(
+        { status: "idle" },
+        formulaire({ [champ]: "" }),
+      );
+      expect(res.status).toBe("error");
+      expect(h.tx.etablissement.create).not.toHaveBeenCalled();
+    },
+  );
 });
