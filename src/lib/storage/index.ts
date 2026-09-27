@@ -8,11 +8,13 @@ import { createClient } from "@supabase/supabase-js";
 import { LocalFileStorage } from "./local";
 import { SupabaseFileStorage, type ClientStockage } from "./supabase";
 import { StockageNonConfigure } from "./erreurs";
+import { diagnostic, formeDeLaCle, nettoyer, refusDeLaCle } from "./cle-service";
 import type { FileStorage } from "./types";
 
 export type { FileStorage, StorageKey } from "./types";
 export {
   ErreurStockage,
+  MESSAGE_ECHEC_ENREGISTREMENT,
   FichierIntrouvable,
   MESSAGE_DEPOT_NON_CONFIGURE,
   MESSAGE_FICHIER_INTROUVABLE,
@@ -59,11 +61,18 @@ function refusDuStockage(): string | null {
       : null;
   }
   if (driver === "supabase") {
-    const manquantes = VARIABLES_SUPABASE.filter((v) => !process.env[v]);
-    return manquantes.length === 0
-      ? null
-      : `STORAGE_DRIVER vaut « supabase », mais ${manquantes.join(", ")} ` +
-          `${manquantes.length > 1 ? "ne sont pas définies" : "n'est pas définie"}.`;
+    // Nettoyées avant d'être jugées : une variable faite d'un seul retour à la
+    // ligne est « manquante », pas présente.
+    const manquantes = VARIABLES_SUPABASE.filter((v) => !nettoyer(process.env[v]));
+    if (manquantes.length > 0)
+      return (
+        `STORAGE_DRIVER vaut « supabase », mais ${manquantes.join(", ")} ` +
+        `${manquantes.length > 1 ? "ne sont pas définies" : "n'est pas définie"}.`
+      );
+    // La FORME de la clé, jugée avant tout appel : une clé mal collée ou d'un
+    // autre format partait jusqu'à Storage, qui répondait « Invalid Compact
+    // JWS » (production, 2026-09-27). `cle-service.ts`.
+    return refusDeLaCle(formeDeLaCle(nettoyer(process.env.SUPABASE_SERVICE_ROLE_KEY)));
   }
   return `Driver de stockage non supporté : ${driver}. Utiliser « local » (développement) ou « supabase ».`;
 }
@@ -82,18 +91,27 @@ let _storage: FileStorage | null = null;
 export function getStorage(): FileStorage {
   if (_storage) return _storage;
   const refus = refusDuStockage();
-  if (refus) throw new StockageNonConfigure(refus);
+  if (refus) {
+    // Le motif nomme la variable et la FORME de la clé, jamais sa valeur ; il
+    // va au journal du serveur, l'écran dit `MESSAGE_DEPOT_NON_CONFIGURE`.
+    console.error(`[stockage] non configuré : ${refus}`);
+    throw new StockageNonConfigure(refus);
+  }
 
   if ((process.env.STORAGE_DRIVER ?? "local") === "supabase") {
-    const client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
+    const cle = nettoyer(process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const url = nettoyer(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.info(
+      `[stockage] pilote supabase, bucket « ${nettoyer(process.env.STORAGE_BUCKET)} », ` +
+        `clé : ${diagnostic(formeDeLaCle(cle))}`,
     );
+    const client = createClient(url, cle, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
     // Sans conversion : le client supabase-js satisfait `ClientStockage` tel
     // quel, et le compilateur le vérifie à chaque montée de version.
     const stockage: ClientStockage = client;
-    _storage = new SupabaseFileStorage(stockage, process.env.STORAGE_BUCKET!);
+    _storage = new SupabaseFileStorage(stockage, nettoyer(process.env.STORAGE_BUCKET));
     return _storage;
   }
 

@@ -9,6 +9,7 @@ import {
   getStorage,
   cleRapport,
   MESSAGE_DEPOT_NON_CONFIGURE,
+  MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
 } from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
@@ -193,7 +194,14 @@ export async function ajouterAnalyseLegionelle(
     const id = randomUUID();
     const cle = cleRapport(etablissementId, `legio_${id}`, fichier.name);
     const buffer = Buffer.from(await fichier.arrayBuffer());
-    await getStorage().put(cle, buffer, val.mime);
+    // Même règle que le dépôt d'un rapport (2026-09-27) : message métier,
+    // rien d'écrit en base.
+    try {
+      await getStorage().put(cle, buffer, val.mime);
+    } catch (e) {
+      console.error(`[carnet-sanitaire/depot] écriture du fichier impossible (${cle})`, e);
+      return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
+    }
     rapportCle = cle;
     rapportNom = fichier.name;
   }

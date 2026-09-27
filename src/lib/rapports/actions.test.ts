@@ -69,6 +69,7 @@ vi.mock("@/lib/storage", async () => {
     // configuration (le refus est tenu par `storage/depot-refuse.test.ts`).
     stockageEnService: () => true,
     MESSAGE_DEPOT_NON_CONFIGURE: "non configuré",
+    MESSAGE_ECHEC_ENREGISTREMENT: "échec d'enregistrement",
   };
 });
 
