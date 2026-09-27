@@ -80,8 +80,9 @@ import {
 import {
   estDeclencheeParUnFait,
   estSansRendezVous,
-  modeDeclaration,
+  modeSurLEcranEnPlace,
 } from "@/lib/etats-permanents/regle";
+import { estPorteeParSalarie } from "@/lib/referentiels/conformite/types";
 
 /**
  * `faits` est entrée le 2026-09-21 (ADR-037), et elle RATTRAPE un angle mort de
@@ -114,7 +115,10 @@ export type Surface = (typeof SURFACES)[number];
 export function surfacesDe(o: Obligation): Surface[] {
   const atteintes: Surface[] = [];
   if (!estSansRendezVous(o.periodicite)) atteintes.push("calendrier");
-  if (modeDeclaration(o) !== null) atteintes.push("etats_permanents");
+  // ~~`modeDeclaration(o) !== null`~~ (2026-09-27, lot 2, maillon 6) : la règle
+  // nue attribuait l'écran à deux titres salarié que l'écran écarte. On compte
+  // l'écran comme l'écran se compte.
+  if (modeSurLEcranEnPlace(o) !== null) atteintes.push("etats_permanents");
   // Le MÊME prédicat que les trois fiches appellent — jamais sa paraphrase.
   if (estDeclencheeParUnFait(o)) atteintes.push("faits");
   return atteintes;
@@ -124,7 +128,15 @@ export function surfacesDe(o: Obligation): Surface[] {
 export function obligationsSansSurface(
   obligations: readonly Obligation[] = obligationsConformite,
 ): Obligation[] {
-  return obligations.filter((o) => surfacesDe(o).length === 0);
+  // Un titre porté par un salarié est LISTÉ sur l'écran Équipe
+  // (`cataloguerTitres`, même prédicat) : un dirigeant l'y voit, même quand
+  // aucune des trois surfaces de décision ne le date (2026-09-27, lot 2,
+  // maillon 6 — la garde disait « sans surface » deux titres ponctuels
+  // qu'Équipe montre). Équipe n'est pas une surface de décision : elle ne
+  // décide du sort d'aucune ligne, d'où son absence de `SURFACES`.
+  return obligations.filter(
+    (o) => surfacesDe(o).length === 0 && !estPorteeParSalarie(o),
+  );
 }
 
 /**
@@ -160,7 +172,9 @@ export type InscriptionSansSurface = {
 // ~~9~~ → 3 le 2026-09-21 : les six obligations ÉVÉNEMENTIELLES ont une
 // surface (ADR-037). Restent les trois PONCTUELLES, qui se SOLDENT et
 // appellent un autre mécanisme — question Q2 de l'ADR, non tranchée.
-export const PLAFOND_SANS_SURFACE = 3;
+// → 1 le 2026-09-27 (lot 2, maillon 6) : deux des trois sont des titres
+// salarié, listés sur l'écran Équipe. Reste `stockage-dangereux-declaration-icpe`.
+export const PLAFOND_SANS_SURFACE = 1;
 
 /**
  * Les obligations dont l'absence de surface est constatée, datée et assumée.
@@ -188,16 +202,6 @@ export const SANS_SURFACE: Readonly<Record<string, InscriptionSansSurface>> = {
     inscriteLe: "2026-09-04",
     motif:
       "Nature `ponctuelle` : la qualification ICPE est faite une fois, avant exploitation, et ne se refait qu'au changement des quantités stockées — fait que le produit n'observe pas. Aucune surface ne sert les obligations ponctuelles : l'écran des états permanents les écarte parce qu'une case cochée à vie y serait juste mais sans rappel de la pièce, et le calendrier n'a pas de rendez-vous à leur donner. Décision de conception, non tranchée.",
-  },
-  "formation-securite-salarie-designe-competent": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `ponctuelle` : aucun texte ne date le renouvellement de cette formation — `L. 2315-17` court sur quatre ans de mandat, qu'un salarié désigné ne détient pas. Elle est due une fois, à la désignation. Aucune surface ne sert les obligations ponctuelles.",
-  },
-  "secours-salarie-secouriste": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `ponctuelle` : le Code ne donne aucune durée de validité à la formation, le titre est acquis une fois. Aucune surface ne sert cette nature. Réserve portée par la ligne elle-même et non comblée : le départ du salarié formé rend l'obligation à nouveau due, et ce fait EST observable (`Salarie.actif`) sans que rien ne s'en serve — ce n'est pas un défaut de nature, c'est un rapprochement qui n'est pas fait.",
   },
 };
 

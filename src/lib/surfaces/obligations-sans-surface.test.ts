@@ -14,6 +14,7 @@ import {
   orphelinesNonInscrites,
   surfacesDe,
 } from "./obligations-sans-surface";
+import { modeSurLEcranEnPlace } from "@/lib/etats-permanents/regle";
 
 /**
  * Une obligation orpheline FABRIQUÉE, pour éprouver la garde en la cassant.
@@ -198,5 +199,22 @@ describe("les deux obligations tranchées le 2026-09-04", () => {
     expect(r45159?.statut === "retenu" ? r45159.reserve : undefined).toContain(
       "SECOND régime",
     );
+  });
+});
+
+describe("l'écran en place compté comme l'écran le compte (2026-09-27, lot 2)", () => {
+  // `surfacesDe` lisait `modeDeclaration` nu et attribuait l'écran « Ce qui doit
+  // être en place » à deux titres salarié que l'écran écarte. Éprouvé en
+  // rétablissant `modeDeclaration(o) !== null` : ce test rougit sur
+  // `elec-salarie-habilitation` et `conduite-salarie-autorisation`.
+  it("n'attribue l'écran « en place » qu'aux obligations que l'écran liste", () => {
+    const faux = obligationsConformite
+      .filter(
+        (o) =>
+          surfacesDe(o).includes("etats_permanents") !==
+          (modeSurLEcranEnPlace(o) !== null),
+      )
+      .map((o) => o.id);
+    expect(faux).toEqual([]);
   });
 });
