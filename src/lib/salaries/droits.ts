@@ -60,7 +60,7 @@ export async function exporterDonneesSalarie(
       etabliLe: new Date().toISOString(),
       responsableDeTraitement: s.etablissement.raisonDisplay,
       baseLegale:
-        "Article 6.1.c du RGPD — obligation légale de l'employeur (suivi de titres, formations et visites prévus par le Code du travail). Le consentement n'est pas la base légale retenue : il ne serait pas libre en situation de subordination.",
+        "Article 6.1.c du RGPD — obligation légale de l'employeur. Chaque titre, formation ou visite suivi dans Rojer répond à une obligation que le Code du travail met à la charge de l'employeur, envers le travailleur ou, pour le secourisme, envers l'ensemble du personnel, le plus souvent sous une condition (un poste, une désignation, un mandat) : selon le titre, former ou faire former, délivrer une habilitation ou une autorisation, conserver la copie d'une attestation médicale pendant sa durée de validité, ou organiser le service de prévention et de santé au travail qui réalise les visites. Le consentement n'est pas la base légale retenue : il ne serait pas libre en situation de subordination.",
       cequiNestPasIci:
         "Rojer ne détient aucune donnée de santé. Sur une attestation ou une visite médicale — visite d'information et de prévention, suivi individuel renforcé, visite intermédiaire, attestation d'absence de contre-indication —, il n'enregistre que son existence et ses dates : ni motif, ni avis d'aptitude, ni restriction, ni document. Le dossier médical en santé au travail appartient au service de prévention et n'est pas accessible à l'employeur (L. 4624-8, R. 4624-55).",
     },
@@ -81,9 +81,9 @@ export async function exporterDonneesSalarie(
     })),
     conservation: {
       regle:
-        "Les titres sont conservés cinq ans — la durée que l'article D. 4711-3 fixe pour les documents des vérifications et contrôles, reprise par analogie : l'article ne vise pas les titres eux-mêmes —, et au-delà tant qu'ils servent de preuve d'habilitation sur une période travaillée.",
+        "Pendant l'emploi, les titres sont traités au titre d'une obligation légale de l'employeur (art. 6.1.c du RGPD). Le Code du travail fait conserver par l'employeur la copie d'une attestation médicale de conduite ou de travail au voisinage de pièces sous tension « pendant toute sa durée de validité » (art. R. 4323-56 et R. 4544-11-1) ; Rojer n'en enregistre que les dates. Une sortie de l'effectif marque la fiche comme sortie : les titres restent enregistrés jusqu'à ce que l'employeur les supprime. Aucun texte identifié par Rojer ne fixe la durée de conservation après le départ.",
       effacement:
-        "Le droit à l'effacement est limité sur ces données : l'article 17.3.b du RGPD excepte ce qui est conservé au titre d'une obligation légale. Une sortie de l'effectif ne les efface donc pas.",
+        "Pendant l'emploi, le droit à l'effacement est limité : l'article 17.3.b du RGPD excepte le traitement nécessaire au respect d'une obligation légale. Hors de ce cadre, Rojer n'a identifié aucun texte qui fonde un refus. Un titre que l'employeur supprime est effacé définitivement, sans récupération possible.",
       opposition:
         "Le droit d'opposition (art. 21) est sans objet sur un traitement fondé sur une obligation légale.",
     },
@@ -102,8 +102,38 @@ export async function exporterDonneesSalarie(
  *
  * L'outil le fournit ; il n'informe pas à la place de l'employeur.
  *
+ * E8, TRANCHÉE PAR LA PROPRIÉTAIRE LE 2026-09-27 : « une obligation légale
+ * pour l'employeur vis-à-vis du salarié. Mais c'est la même ligne que pour
+ * tout Rojer : on ne fait rien et on n'annonce rien qui ne soit pas légal. »
+ * L'audit des quatorze titres du catalogue (`obligation-employeur.ts`, journal
+ * C42) trouve pour chacun le texte qui met une obligation à la charge de
+ * l'employeur, et dit laquelle : former ou faire former, délivrer une
+ * habilitation ou une autorisation, conserver la copie d'une attestation,
+ * organiser le service qui réalise les visites — envers le travailleur, ou,
+ * pour le secourisme, envers le personnel. Le texte dit ces natures, et rien
+ * de plus ; `obligation-employeur.test.ts` exige qu'il les nomme toutes.
+ *
+ * CE QUI N'EST PAS DIT, EN ATTENDANT UNE DÉCISION (contre-lecture du
+ * 2026-09-27, G1). L'audit fonde le traitement PENDANT l'emploi. Rien, dans
+ * les textes identifiés, ne fixe combien de temps garder les titres d'une
+ * personne sortie de l'effectif : seules deux pièces se conservent « pendant
+ * toute sa durée de validité » (R. 4323-56, R. 4544-11-1). La première
+ * écriture disait « cinq ans » par analogie avec D. 4711-3, puis « Votre
+ * départ de l'entreprise n'efface donc pas ces données » : un « donc » qui
+ * présentait comme une obligation légale ce qui n'en est pas une connue. Le
+ * texte ne refuse l'effacement que dans le cadre que les textes fondent, et
+ * dit que la durée après le départ n'est pas fixée.
+ *
+ * DÉCISION DE LA PROPRIÉTAIRE, 2026-09-27 : « quand employeur supprime il est
+ * averti que data supprimé définitivement ». Aucune conservation par
+ * analogie. Le texte dit donc ce que fait le produit aujourd'hui, sans
+ * fondement inventé : la sortie de l'effectif garde les titres (un marquage,
+ * réversible) ; la suppression d'un titre, ou de l'établissement, efface
+ * définitivement. Que la sortie garde les données est une question posée à
+ * la propriétaire ; le comportement n'est pas changé ici.
+ *
  * CE QUE LE TEXTE NE DIT PLUS (revue finale de l'intégration d, 2026-09-26,
- * décision E8 ouverte). « Parce que la loi l'impose », « que la
+ * décision E8 alors ouverte). « Parce que la loi l'impose », « que la
  * réglementation lui impose de connaître », « exigés par le Code du travail »
  * affirmaient, pour TOUS les titres suivis, une exigence que le Code ne pose
  * pas partout : chaque titre du catalogue répond à un article du Code, mais
@@ -115,9 +145,9 @@ export async function exporterDonneesSalarie(
  * désormais « prévus », et que certains le sont pour tout travailleur : la
  * visite d'information et de prévention (R. 4624-10, « Tout travailleur
  * bénéficie… », relu le 2026-09-27) — la première écriture de cette
- * correction, « pour certains travaux ou certains postes », l'oubliait. Il n'arbitre pas E8 : la base 6.1.c, et les refus
- * d'effacement (17.3.b) et d'opposition (21) qui s'en déduisent, restent
- * tels quels jusqu'à la décision.
+ * correction, « pour certains travaux ou certains postes », l'oubliait.
+ * « Exigés » et « impose » restent absents pour TOUS les titres : l'audit
+ * ne dit pas que chaque titre est exigé de chaque salarié.
  */
 export function texteInformation({
   raisonSociale,
@@ -134,9 +164,10 @@ export function texteInformation({
   return `Information sur le suivi de vos titres et habilitations
 
 ${raisonSociale} utilise un outil, Rojer, pour suivre les échéances des titres,
-formations et visites que le Code du travail prévoit : certains pour tout
-travailleur, comme la visite d'information et de prévention (art. R. 4624-10),
-d'autres pour certains travaux ou certains postes.
+formations et visites qui répondent à une obligation que le Code du travail met
+à la charge de votre employeur : certains pour tout travailleur, comme la
+visite d'information et de prévention (art. R. 4624-10), d'autres selon votre
+poste, une désignation ou un mandat.
 
 CE QUI EST ENREGISTRÉ
 
@@ -162,33 +193,43 @@ R. 4624-55 du Code du travail).
 
 POURQUOI
 
-Parce que le Code du travail prévoit ces titres, formations et visites.
-Certains travaux ne peuvent être confiés qu'à une personne titulaire d'un
-titre en cours de validité, et l'employeur doit pouvoir en justifier. La base légale de ce traitement est
-l'article 6.1.c du RGPD — une obligation légale.
+Parce que chacun de ces titres, formations et visites répond à une obligation
+que le Code du travail met à la charge de votre employeur — envers vous, ou,
+pour le secourisme, envers l'ensemble du personnel —, le plus souvent sous une
+condition : votre poste, une désignation, un mandat. Selon le titre, votre
+employeur doit vous former ou vous faire former, vous délivrer une habilitation
+ou une autorisation, conserver la copie d'une attestation médicale pendant sa
+durée de validité, ou organiser le service de prévention et de santé au
+travail qui réalise vos visites. La base légale de ce traitement est
+l'article 6.1.c du RGPD — une obligation légale de l'employeur.
 
 Ce n'est donc pas un traitement fondé sur votre consentement, et il ne peut pas
 l'être : un consentement donné à son employeur n'est pas considéré comme libre.
 
 COMBIEN DE TEMPS
 
-Vos titres sont conservés cinq ans, et au-delà tant qu'ils prouvent que vous
-étiez habilité pendant une période où vous avez travaillé. Cinq ans, c'est la
-durée que l'article D. 4711-3 du Code du travail fixe pour les documents des
-vérifications et contrôles ; elle est reprise ici par analogie, cet article ne
-visant pas les titres eux-mêmes.
+Pendant que vous faites partie de l'effectif, vos titres sont suivis au titre
+de ces obligations. Le Code du travail fait conserver par votre employeur la
+copie d'une attestation médicale de conduite ou de travail au voisinage de
+pièces sous tension « pendant toute sa durée de validité » (art. R. 4323-56 et
+R. 4544-11-1) ; Rojer n'en enregistre que les dates.
 
-Votre départ de l'entreprise n'efface donc pas ces données. Votre fiche est
-marquée comme sortie de l'effectif, et les titres restent.
+Si vous quittez l'entreprise, votre fiche est marquée comme sortie de
+l'effectif ; vos titres restent enregistrés jusqu'à ce que votre employeur les
+supprime. La durée de conservation après votre départ n'est pas fixée par un
+texte que Rojer ait identifié. Un titre que votre employeur supprime est
+effacé définitivement.
 
 VOS DROITS
 
   — Accès : vous pouvez demander à votre employeur la liste de ce qui est
     enregistré vous concernant. Il peut vous l'éditer en un clic.
   — Rectification : une date erronée se corrige, demandez-la.
-  — Effacement : limité sur ces données. L'article 17.3.b du RGPD excepte ce
-    qui est conservé au titre d'une obligation légale. Nous préférons vous le
-    dire que vous promettre un droit que nous ne pourrions pas honorer.
+  — Effacement : limité pendant que vous faites partie de l'effectif.
+    L'article 17.3.b du RGPD excepte le traitement nécessaire au respect d'une
+    obligation légale. Hors de ce cadre, adressez votre demande à votre
+    employeur : Rojer n'a identifié aucun texte qui fonde un refus, et votre
+    employeur peut supprimer vos titres — définitivement.
   — Opposition : sans objet ici. Le droit d'opposition ne s'applique pas à un
     traitement fondé sur une obligation légale, pas plus qu'on ne peut
     s'opposer à l'établissement de son bulletin de paie.

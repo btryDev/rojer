@@ -231,7 +231,8 @@ beforeEach(() => {
     // Sortie de l'effectif, chez A. Son nom la placerait **première** par
     // ordre alphabétique : seul `actif: "desc"` la renvoie en fin de liste.
     // Et son titre ne doit pas disparaître du texte d'information (art. 13),
-    // le traitement se poursuivant après son départ (art. 17.3.b).
+    // le traitement se poursuivant, en fait, après son départ (durée non
+    // fixée par un texte identifié — E8 ; ~~art. 17.3.b~~ ne la fonde pas).
     {
       id: "sal-a-partie",
       etablissementId: ETAB_A,
@@ -434,8 +435,8 @@ describe("le propriétaire lit son propre dossier", () => {
   });
 
   it("libellesTitresDeclares décrit AUSSI le titre d'une personne partie", async () => {
-    // Sans `actif: true`, délibérément (art. 17.3.b) : le traitement se
-    // poursuit après le départ, et le texte d'information remis aux salariés
+    // Sans `actif: true`, délibérément : le traitement se poursuit, en fait,
+    // après le départ (sa durée est une décision ouverte, E8), et le texte d'information remis aux salariés
     // doit décrire le traitement réel. Ajouter `actif: true` au `where` fait
     // tomber ce test de 2 à 1 — c'est ce qui garde la propriété.
     expect(await libellesTitresDeclares(ETAB_A)).toHaveLength(2);

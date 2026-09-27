@@ -48,7 +48,8 @@ export type WidgetId =
   | "anciennete"
   | "semaine"
   | "flux-registre"
-  | "meteo";
+  | "meteo"
+  | "etats-permanents";
 
 export type LayoutItem = {
   widgetId: WidgetId;

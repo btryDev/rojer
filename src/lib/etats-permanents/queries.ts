@@ -28,6 +28,7 @@ import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import type { DomaineObligation } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
 import { ordonnerLignes } from "./ordre";
+import { fondementDe, type FondementLigne } from "./fondement";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;
@@ -45,6 +46,12 @@ export type LigneEtatPermanent = {
    * `null` sinon.
    */
   aConfirmer: string | null;
+  /**
+   * L'article en tête des références de l'obligation, et sa `citationCle`
+   * (`fondement.ts`). Porté par la ligne pour que l'écran et le widget du
+   * tableau de bord citent le même texte sans le rechercher chacun.
+   */
+  fondement: FondementLigne | null;
 };
 
 export type GroupeEtatsPermanents = {
@@ -159,6 +166,7 @@ export async function listerEtatsPermanents(
             "cette obligation ne vous concerne pas",
           )
         : null,
+      fondement: fondementDe(o),
     };
 
     if (mode.compteDansLEnTete) {

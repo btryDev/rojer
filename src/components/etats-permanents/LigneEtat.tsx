@@ -8,6 +8,8 @@ import { Check, FileText } from "lucide-react";
 import { declarerEnPlace, retirerDeclaration } from "@/lib/etats-permanents/actions";
 import { formaterDateFr } from "@/lib/dates";
 import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
+import { PastilleFondement } from "./PastilleFondement";
+import type { FondementLigne } from "@/lib/etats-permanents/fondement";
 import {
   libelleGeste,
   libelleRetour,
@@ -38,6 +40,7 @@ export function LigneEtat({
   pieceAttendue,
   declareLe,
   aConfirmer = null,
+  fondement = null,
 }: {
   etablissementId: string;
   obligationId: string;
@@ -51,6 +54,8 @@ export function LigneEtat({
    * mène à l'effectif à corriger.
    */
   aConfirmer?: { phrase: string; entrepriseId: string } | null;
+  /** L'article qui fonde la ligne, et son texte (`fondement.ts`). */
+  fondement?: FondementLigne | null;
 }) {
   const [pending, startTransition] = useTransition();
   const declare = declareLe !== null;
@@ -67,6 +72,14 @@ export function LigneEtat({
         <p className="m-0 text-[13.5px] leading-[1.45] text-[color:var(--board-ink)]">
           {libelle}
         </p>
+
+        {/* L'article, sous le libellé — 2026-09-27. Cet écran était le seul
+            où une obligation ne citait pas son texte (C40). */}
+        {fondement && (
+          <div className="mt-1.5">
+            <PastilleFondement fondement={fondement} />
+          </div>
+        )}
 
         {/* L'écrit que le texte attend, quand il en attend un.
             L'écran ne le collecte pas — aucune surface de dépôt ici (ADR-027) —

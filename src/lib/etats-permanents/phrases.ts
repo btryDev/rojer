@@ -127,3 +127,32 @@ export function libelleGeste(mode: "etat" | "fait"): string {
 export function libelleRetour(): string {
   return "Revenir dessus";
 }
+
+/**
+ * L'état d'une ligne en quelques mots, pour une surface qui n'a pas la place
+ * du bouton — le widget du tableau de bord (2026-09-27).
+ *
+ * LES MOTS DE L'ÉCRAN, ET RIEN D'AUTRE (contre-lecture du 2026-09-27, M2 et
+ * M3). La première écriture disait « À mettre en place » et « Pas encore
+ * daté » : des mots que l'écran n'emploie pas, et qui font d'une ligne non
+ * déclarée un manque — alors que l'écran dit « Une ligne non déclarée n'est
+ * pas un manquement constaté ». Elle faisait aussi passer la déclaration
+ * avant « À confirmer », si bien qu'une ligne déclarée ET à confirmer taisait
+ * ce que l'écran affiche. Désormais : la phrase de la déclaration
+ * (`phraseDeclaration`) ou, à défaut, le geste de l'écran (`libelleGeste`) ;
+ * précédés de « À confirmer » quand l'écran l'affiche, déclarée ou non.
+ */
+export function etatDeLaLigne({
+  mode,
+  declareLe,
+  aConfirmer,
+}: {
+  mode: "etat" | "fait";
+  /** La date de la déclaration, déjà formatée ; `null` = non déclarée. */
+  declareLe: string | null;
+  aConfirmer: boolean;
+}): string {
+  const base =
+    declareLe !== null ? phraseDeclaration(mode, declareLe) : libelleGeste(mode);
+  return aConfirmer ? `À confirmer · ${base}` : base;
+}

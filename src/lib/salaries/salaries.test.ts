@@ -1,8 +1,13 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { salarieSchema, titreSchema } from "./schema";
 import { cataloguerTitres, titreParId } from "./catalogue";
 import { classerTitre } from "./queries";
 import { texteInformation } from "./droits";
+
+const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 const LE_3_MARS = "2026-03-03";
 
@@ -144,8 +149,16 @@ describe("texteInformation — art. 13", () => {
     expect(texte).toMatch(/limité/i);
   });
 
-  it("nomme la durée de conservation et son fondement", () => {
-    expect(texte).toContain("D. 4711-3");
+  it("ne dit de la conservation que ce qu'un texte fonde (G1, 2026-09-27)", () => {
+    // Pendant l'emploi : l'obligation légale. Pour deux pièces : « pendant
+    // toute sa durée de validité ». Après le départ : aucun texte identifié,
+    // et le texte le dit au lieu d'en inventer un.
+    expect(texte).toMatch(/pendant toute sa durée de validité » \(art\. R\. 4323-56 et\s+R\. 4544-11-1/);
+    expect(texte).toMatch(/après votre départ n'est pas fixée par un\s+texte que Rojer ait identifié/);
+    // Décision de la propriétaire, 2026-09-27 : la suppression est dite
+    // définitive ; et ce que fait la sortie de l'effectif est dit tel quel.
+    expect(texte).toMatch(/effacé définitivement/);
+    expect(texte).toMatch(/vos titres restent enregistrés jusqu'à ce que votre employeur les\s+supprime/);
   });
 
   it("indique le recours à la CNIL", () => {
@@ -157,15 +170,16 @@ describe("texteInformation — art. 13", () => {
     expect(texte).toContain("Attestation médicale (habilitation électrique)");
   });
 
-  it("n'affirme pas pour tous les titres une exigence que le Code ne pose pas partout (E8 ouverte)", () => {
-    // Chaque titre répond à un article du Code du travail, mais tous ne
-    // conditionnent pas un travail (R. 4224-15, L. 2315-18). La décision E8
-    // reste ouverte : le texte dit « prévus », il ne dit plus « impose ».
+  it("dit l'obligation de l'employeur, et sa nature, sans rien de plus (E8, tranchée le 2026-09-27)", () => {
+    // L'audit (`obligation-employeur.ts`) dit, titre par titre, ce que le
+    // Code met à la charge de l'employeur ; le texte en nomme chaque nature
+    // (garde : `obligation-employeur.test.ts`). Il ne dit pas que chaque titre
+    // est exigé de chaque salarié.
+    expect(texte).toMatch(/répondent à une obligation que le Code du travail met\s+à la charge de votre employeur/);
     expect(texte).not.toMatch(/la loi l'impose|lui impose de connaître|exigés par le Code/);
-    expect(texte).toContain("prévoit");
     // La VIP est due à « Tout travailleur » (R. 4624-10) : l'ouverture ne
-    // peut pas réduire le suivi à « certains travaux ou certains postes ».
-    expect(texte).toMatch(/certains pour tout\s+travailleur, comme la visite d'information et de prévention/);
+    // peut pas réduire le suivi à des postes particuliers.
+    expect(texte).toMatch(/certains pour tout travailleur, comme la\s+visite d'information et de prévention/);
   });
 
   it("le dit franchement quand rien n'est encore suivi", () => {
@@ -173,3 +187,32 @@ describe("texteInformation — art. 13", () => {
     expect(vide).toMatch(/aucun titre suivi/i);
   });
 });
+
+describe("ce que le salarié et l'employeur lisent de la conservation (G1, 2026-09-27)", () => {
+  // Le texte d'information se teste rendu ; l'export (art. 15) et la fiche
+  // d'un salarié passent par la base ou le rendu serveur. Leur SOURCE est
+  // donc lue, commentaires retirés : aucune de ces phrases ne doit y revenir.
+  const sansCommentaires = (chemin: string) =>
+    readFileSync(join(RACINE, chemin), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "")
+      .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, "");
+  const INTERDITS = [
+    /n'efface donc pas/,
+    /Une sortie de l'effectif ne les efface/,
+    /conservés cinq ans/,
+    /D\. 4711-3/,
+    /excepte ce qui est conservé au(?:\s|&apos;|')/,
+  ];
+
+  it.each(["src/lib/salaries/droits.ts", "src/app/etablissements/[id]/equipe/[salarieId]/page.tsx"])(
+    "%s n'affirme rien de l'après-départ qu'un texte ne fonde pas",
+    (chemin) => {
+      const source = sansCommentaires(chemin);
+      for (const motif of INTERDITS) expect(source, String(motif)).not.toMatch(motif);
+      expect(source).toMatch(/(?:n(?:'|&apos;)est\s+pas\s+fixée\s+par\s+un\s+texte\s+que\s+Rojer\s+ait\s+identifié|Aucun texte identifié par Rojer ne fixe la durée)/);
+      expect(source).toMatch(/effacée?\s+définitivement/);
+    },
+  );
+});
+

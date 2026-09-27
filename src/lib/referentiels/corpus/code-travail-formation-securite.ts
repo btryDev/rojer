@@ -457,5 +457,22 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       reserve:
         "C'est la SEULE durée chiffrée de tout le chapitre, et ce n'est pas une périodicité : elle court depuis l'affectation du travailleur, pas depuis la formation précédente. Le modèle n'exprime pas un délai à compter d'un fait d'emploi — `Periodicite` décrit une récurrence, et `TitreSalarie.delivreLe` est la date de la formation reçue, pas celle de l'embauche. Le mois est donc rappelé en description de l'obligation ; il n'est pas calculé.",
     },
+    {
+      ref: "L. 4741-1",
+      intitule:
+        "Infractions aux règles de santé et de sécurité — responsabilité pénale de l'employeur",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032376248",
+      versionEnVigueur: "2016-07-01",
+      modifiePar: { texte: "Ordonnance n° 2016-413 du 7 avril 2016, art. 2" },
+      luLe: "2026-09-27",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Punit d'une amende de 10 000 euros, appliquée autant de fois qu'il y a de travailleurs concernés, l'employeur ou son délégataire qui méconnaît par sa faute personnelle les dispositions énumérées — dont le titre IV du livre Ier, le titre II du livre II, le livre III et le titre IV du livre V — et leurs décrets d'application.",
+      citationCle:
+        "Est puni d'une amende de 10 000 euros, le fait pour l'employeur ou son délégataire de méconnaître par sa faute personnelle les dispositions suivantes et celles des décrets en Conseil d'Etat pris pour leur application : 1° Titres Ier, III et IV ainsi que section 2 du chapitre IV du titre V du livre Ier ; 2° Titre II du livre II ; 3° Livre III ; 4° Livre IV ; 5° Titre Ier, chapitres II et IV à VI du titre II, chapitre IV du titre III et titre IV du livre V ; 6° Chapitre II du titre II du présent livre.",
+      statut: "sans_objet",
+      motif:
+        "Ouvert le 2026-09-27 pour l'audit E8 (journal C42). Disposition pénale : elle ne crée aucune obligation. Elle dit À QUI incombent celles que des articles écrivent sans sujet — « Un membre du personnel reçoit la formation de secouriste » (R. 4224-15, titre II du livre II), « La conduite […] est réservée aux travailleurs qui ont reçu une formation adéquate » (R. 4323-55, livre III) : « le fait pour l'employeur ou son délégataire de méconnaître ». Relevé par WebFetch, texte intégral puis cinq questions fermées sur l'énumération (toutes « oui »). Les deux derniers alinéas (récidive, amende par travailleur) ne sont pas repris dans la citation.",
+    },
   ],
 };

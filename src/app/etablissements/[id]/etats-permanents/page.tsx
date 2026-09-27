@@ -161,8 +161,10 @@ export default async function EtatsPermanentsPage({
               </h2>
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Aucune des obligations que votre dossier déclenche n&apos;est un
-                état à constituer : elles ont toutes une date, et vous les
-                trouverez au calendrier.
+                état à constituer ou un fait à dater sans rythme écrit. Les
+                autres sont au calendrier quand elles ont une date, sur
+                « Quand ça arrive » quand elles naissent d&apos;un événement,
+                et sur la fiche de chaque personne quand elles la visent.
               </p>
             </div>
           </section>
@@ -195,6 +197,7 @@ export default async function EtatsPermanentsPage({
                             }
                           : null
                       }
+                      fondement={l.fondement}
                     />
                   ))}
                 </ul>
@@ -270,6 +273,7 @@ export default async function EtatsPermanentsPage({
                             }
                           : null
                       }
+                      fondement={l.fondement}
                     />
                   ))}
                 </ul>

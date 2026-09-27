@@ -553,5 +553,68 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       reserve:
         "UNE ANNÉE EST UN DÉLAI, PAS UNE PÉRIODICITÉ : c'est un point de départ unique, pas un rythme de renouvellement. Le produit ne porte pas la date d'adhésion au service, donc ce délai n'engendre aucune ligne de calendrier ; il est rappelé dans la description de l'obligation. Aucune transmission `attribut_absent` n'est déclarée : l'attribut manquant ne conditionne pas l'applicabilité, seulement la date d'exigibilité.",
     },
+    {
+      ref: "L. 4624-1",
+      intitule: "Suivi individuel de l'état de santé — principe",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043909039",
+      versionEnVigueur: "2023-01-01",
+      modifiePar: { texte: "Loi n° 2021-1018 du 2 août 2021, art. 31 (VD)" },
+      luLe: "2026-09-27",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Tout travailleur bénéficie d'un suivi individuel de son état de santé, assuré par les professionnels de santé du service ; l'alinéa ne nomme pas l'employeur.",
+      citationCle:
+        "Tout travailleur bénéficie, au titre de la surveillance de l'état de santé des travailleurs prévue à l'article L. 4622-2, d'un suivi individuel de son état de santé assuré par le médecin du travail, le médecin praticien correspondant et, sous l'autorité du médecin du travail, par le collaborateur médecin mentionné à l'article L. 4623-1, l'interne en médecine du travail et l'infirmier.",
+      statut: "sans_objet",
+      motif:
+        "Ouvert le 2026-09-27 pour l'audit E8 (lot e8-titres-et-widget-etats, journal C42) : chaque titre du catalogue salarié doit reposer sur un texte qui met à la charge de l'employeur, envers le salarié, une formation, une visite, une habilitation ou une autorisation (règle de la propriétaire, 2026-09-27). Les articles de visite écrivent « Tout travailleur bénéficie » sans nommer l'employeur ; ce premier alinéa est le principe dont elles relèvent, et L. 4745-1 en sanctionne la méconnaissance. Il fonde un droit du travailleur, pas une échéance : les visites sont encodées sur leurs articles propres (R. 4624-10, -16, -17, -22, -28). Seul le premier alinéa a été relevé mot pour mot (WebFetch, question fermée « mentionne-t-il l'employeur ? » : non) ; les alinéas suivants ne sont pas lus."
+    },
+    {
+      ref: "R. 4624-39",
+      intitule: "Temps et frais de transport des visites et examens",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045677277",
+      versionEnVigueur: "2022-04-28",
+      luLe: "2026-09-27",
+      lecture: "agent_verbatim",
+      prescrit:
+        "Le temps des visites et examens médicaux est pris sur les heures de travail sans retenue de salaire, ou rémunéré comme temps de travail effectif ; le temps et les frais de transport sont pris en charge par l'employeur.",
+      citationCle:
+        "Le temps nécessité par les visites et les examens médicaux, y compris les examens complémentaires, est soit pris sur les heures de travail des travailleurs sans qu'aucune retenue de salaire puisse être opérée, soit rémunéré comme temps de travail effectif lorsque ces examens ne peuvent avoir lieu pendant les heures de travail. Le temps et les frais de transport nécessités par ces visites et ces examens sont pris en charge par l'employeur.",
+      statut: "sans_objet",
+      motif:
+        "Ouvert le 2026-09-27 pour l'audit E8 (lot e8-titres-et-widget-etats, journal C42) : chaque titre du catalogue salarié doit reposer sur un texte qui met à la charge de l'employeur, envers le salarié, une formation, une visite, une habilitation ou une autorisation (règle de la propriétaire, 2026-09-27). Les articles de visite écrivent « Tout travailleur bénéficie » sans nommer l'employeur ; il met le COÛT des visites à la charge de l'employeur (« sont pris en charge par l'employeur ») — il ne l'oblige pas à les faire passer. L'audit retient donc L. 4622-1 (« Les employeurs […] organisent des services de prévention et de santé au travail ») ; la première forme de l'audit citait cet article-ci, la contre-lecture du 2026-09-27 l'a corrigé. Il ne crée aucune échéance. Relevé mot pour mot (WebFetch, texte intégral demandé, puis question fermée sur la phrase décisive). `modifiePar` absent, et c'est la réponse : la page, interrogée deux fois, n'affiche aucune mention « Modifié par » ou « Création » — seulement « en vigueur depuis le 28/04/2022 ». La question n'est pas close."
+    },
+    {
+      ref: "L. 4745-1",
+      intitule: "Infractions aux règles relatives à la médecine du travail",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033024930",
+      versionEnVigueur: "2017-01-01",
+      modifiePar: { texte: "Loi n° 2016-1088 du 8 août 2016, art. 102 (V)" },
+      luLe: "2026-09-27",
+      lecture: "agent_verbatim",
+      prescrit:
+        "La méconnaissance des articles L. 4621-1 à L. 4624-9 et L. 4644-1 et de leurs règlements d'application est punie, en cas de récidive dans les trois ans, de quatre mois d'emprisonnement et de 3 750 euros d'amende ; affichage du jugement aux portes de l'établissement.",
+      citationCle:
+        "Le fait de méconnaître les dispositions des articles L. 4621-1 à L. 4624-9 et L. 4644-1 et des règlements pris pour leur application est puni, en cas de récidive dans le délai de trois ans, d'un emprisonnement de quatre mois et d'une amende de 3 750 euros.",
+      statut: "sans_objet",
+      motif:
+        "Ouvert le 2026-09-27 pour l'audit E8 (lot e8-titres-et-widget-etats, journal C42) : chaque titre du catalogue salarié doit reposer sur un texte qui met à la charge de l'employeur, envers le salarié, une formation, une visite, une habilitation ou une autorisation (règle de la propriétaire, 2026-09-27). Les articles de visite écrivent « Tout travailleur bénéficie » sans nommer l'employeur ; la phrase ne dit pas « pour l'employeur » (question fermée posée : « Le fait de méconnaître », sans sujet). Disposition pénale : elle ne crée aucune obligation, elle sanctionne celles de L. 4621-1 à L. 4624-9 — donc le suivi de L. 4624-1 — et de L. 4644-1 (salarié désigné compétent et sa formation). Relevé mot pour mot (WebFetch, texte intégral) ; la seconde phrase (affichage aux portes de l'établissement) n'est pas reprise dans la citation."
+    },
+    {
+      ref: "R. 4451-57",
+      intitule: "Classement des travailleurs exposés aux rayonnements ionisants",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000047715528",
+      versionEnVigueur: "2023-06-23",
+      modifiePar: { texte: "Décret n° 2023-489 du 21 juin 2023, art. 1" },
+      luLe: "2026-09-27",
+      lecture: "agent_verbatim",
+      prescrit:
+        "L'employeur classe les travailleurs exposés au regard de la dose évaluée ; ce classement ouvre le suivi individuel renforcé de R. 4451-82.",
+      citationCle:
+        "Au regard de la dose évaluée en application du 4° de l'article R. 4451-53, l'employeur classe :",
+      statut: "sans_objet",
+      motif:
+        "Ouvert le 2026-09-27 pour l'audit E8 (lot e8-titres-et-widget-etats, journal C42) : chaque titre du catalogue salarié doit reposer sur un texte qui met à la charge de l'employeur, envers le salarié, une formation, une visite, une habilitation ou une autorisation (règle de la propriétaire, 2026-09-27). Les articles de visite écrivent « Tout travailleur bénéficie » sans nommer l'employeur ; c'est l'employeur qui classe le travailleur en catégorie A (question fermée : oui), classement dont R. 4451-82 fait naître le suivi annuel encodé (`sante-travail-salarie-sir-categorie-a`). C'est l'obligation de CLASSER, pas de faire suivre : l'audit s'appuie sur L. 4622-1 et R. 4451-82, le classement n'est que la condition (contre-lecture du 2026-09-27). Seule la première phrase du I a été relevée ; les catégories et leurs seuils ne sont pas lus. Il n'est pas encodé : rien dans le modèle ne dit la dose évaluée d'un salarié."
+    },
   ],
 };
