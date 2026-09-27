@@ -256,6 +256,37 @@ describe("d — un appareil désactivé puis réactivé", () => {
   });
 });
 
+describe("d bis — un salarié sorti de l'effectif, puis revenu", () => {
+  // Le même aller-retour qu'un appareil, sur le troisième porteur : la ligne
+  // d'un titre dont le détenteur part est archivée si elle porte une trace
+  // (décision du 2026-09-17), et doit revenir, la même, à son retour.
+  const TITRE = "elec-salarie-attestation-medicale-voisinage";
+  it("avec trace : archivée puis rouverte, même identifiant, action intacte", async () => {
+    poserEtablissement([]);
+    db.salaries = [{ id: "sal-1", etablissementId: ETAB_ID, actif: true, nom: "N", prenom: "P" }];
+    db.titres = [{ obligationId: TITRE, salarieId: "sal-1", delivreLe: d("2024-03-01"), echeanceLe: d("2029-03-01") }];
+    db.verifications = [
+      ligne({
+        id: "s1", salarieId: "sal-1", obligationId: TITRE, libelleObligation: "Attestation médicale",
+        periodicite: "quinquennale", datePrevue: d("2029-03-01"), suiviDepuis: d("2024-03-01"), nbActions: 1,
+      }),
+    ];
+    await genererCalendrier(ETAB_ID);
+    expect(lue("s1")?.archiveLe ?? null).toBeNull();
+
+    db.salaries[0].actif = false;
+    await genererCalendrier(ETAB_ID);
+    expect(lue("s1")?.archiveLe).toBeInstanceOf(Date);
+
+    db.salaries[0].actif = true;
+    await genererCalendrier(ETAB_ID);
+    expect(lue("s1")?.archiveLe ?? null).toBeNull();
+    expect(lue("s1")?.datePrevue).toEqual(d("2029-03-01"));
+    expect(lue("s1")?.nbActions).toBe(1);
+    expect(db.verifications.filter((v) => v.obligationId === TITRE)).toHaveLength(1);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // e — jamais de perte : un écrivain qui ne s'arrête pas
 // ---------------------------------------------------------------------------
