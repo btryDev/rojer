@@ -153,13 +153,15 @@ export const CCH_CLASSEMENT_ERP_IGH: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819081",
       versionEnVigueur: "2021-07-01",
       modifiePar: DECRET_2021_872,
-      luLe: "2026-09-03",
-      lecture: "agent_verbatim",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       prescrit:
         "Article de CHAMP : il dit ce qu'est un immeuble de grande hauteur — plancher bas du dernier niveau à plus de 50 mètres pour l'habitation, à plus de 28 mètres pour tout le reste, mesuré depuis le niveau du sol le plus haut utilisable par les engins de secours. Il pose aussi l'exception qui fait naître la classe GHZ : l'immeuble à usage principal d'habitation entre 28 et 50 mètres n'est PAS un IGH lorsque ses locaux non résidentiels remplissent les conditions d'isolement fixées par le règlement — et l'est, en GHZ, lorsqu'ils ne les remplissent pas.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « l'article R. 111-1 ; », après « l'article R. 111-1 (1) ; » ; appel de note du texte officiel.",
       citationCle:
         "I. - Constitue un immeuble de grande hauteur, pour l'application du présent chapitre, tout corps de bâtiment dont le plancher bas du dernier niveau est situé, par rapport au niveau du sol le plus haut utilisable pour les engins des services publics de secours et de lutte contre l'incendie :\n" +
-        "- à plus de 50 mètres pour les immeubles à usage d'habitation, tels qu'ils sont définis par l'article R. 111-1 ;\n" +
+        "- à plus de 50 mètres pour les immeubles à usage d'habitation, tels qu'ils sont définis par l'article R. 111-1 (1) ;\n" +
         "- à plus de 28 mètres pour tous les autres immeubles.\n" +
         "Ne constitue pas un immeuble de grande hauteur l'immeuble à usage principal d'habitation dont le plancher bas du dernier niveau est situé à plus de 28 mètres et au plus à 50 mètres, et dont les locaux autres que ceux à usage d'habitation répondent, pour ce qui concerne le risque incendie, à des conditions d'isolement par rapport aux locaux à usage d'habitation, fixées par l'arrêté mentionné à l'article R. 146-5.\n" +
         "II. - Fait partie intégrante de l'immeuble de grande hauteur l'ensemble des éléments porteurs et des sous-sols de l'immeuble.",

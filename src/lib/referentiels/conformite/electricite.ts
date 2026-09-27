@@ -648,7 +648,7 @@ export const obligationsElectricite: Obligation[] = [
         article: "Arrêté 2011-12-26 annexe II",
         url:
           "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000025100353",
-        note: "« Une mise à jour complète de l'ensemble des renseignements descriptifs doit être effectuée tous les quatre ans ; elle donnera lieu à un rapport, dit \"quadriennal\", rédigé comme un rapport de visite initiale. » Verbatim relevé en première main le 2026-08-26.",
+        note: "« Une mise à jour complète de l'ensemble des renseignements descriptifs sera effectuée tous les quatre ans ; elle donnera lieu à un rapport, dit \" quadriennal , rédigé comme un rapport de visite initiale. » Verbatim relevé le 2026-08-26, recopié de l'API Légifrance le 2026-09-27 (C51) : le texte dit « sera effectuée », non « doit être effectuée » ; le guillemet non fermé est celui de Légifrance.",
         versionConstatee: "2011-12-30",
       },
       {

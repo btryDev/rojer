@@ -296,10 +296,13 @@ export const CODE_TRAVAIL_VIGILANCE: Corpus = {
       intitule: "Solidarité financière du donneur d'ordre",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006904824",
       versionEnVigueur: "2008-05-01",
+      versionFuture: "2026-12-26",
       luLe: "2026-09-02",
       lecture: "agent_verbatim",
       prescrit:
         "Qui méconnaît L. 8222-1, ou recourt aux services de celui qui exerce un travail dissimulé, est tenu solidairement au paiement des impôts, cotisations, aides publiques et rémunérations dus par celui-ci.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionFuture null → 2026-12-26 : la version en vigueur est ABROGE_DIFF et suivie d'une version VIGUEUR_DIFF (LEGIARTI000054335516) issue de la loi n° 2026-534 du 25 juin 2026, art. 95 (V), qui ajoute « ou de l'article L. 8222-1-1 » ; entrée en vigueur « à une date fixée par décret, et au plus tard six mois après la promulgation » (nota).",
       citationCle:
         "Toute personne qui méconnaît les dispositions de l'article L. 8222-1, ainsi que toute personne condamnée pour avoir recouru directement ou par personne interposée aux services de celui qui exerce un travail dissimulé, est tenue solidairement avec celui qui a fait l'objet d'un procès-verbal pour délit de travail dissimulé : 1° Au paiement des impôts, taxes et cotisations obligatoires ainsi que des pénalités et majorations dus par celui-ci au Trésor ou aux organismes de protection sociale ; 2° Le cas échéant, au remboursement des sommes correspondant au montant des aides publiques dont il a bénéficié ; 3° Au paiement des rémunérations, indemnités et charges dues par lui à raison de l'emploi de salariés n'ayant pas fait l'objet de l'une des formalités prévues aux articles L. 1221-10, relatif à la déclaration préalable à l'embauche et L. 3243-2, relatif à la délivrance du bulletin de paie.",
       statut: "sans_objet",

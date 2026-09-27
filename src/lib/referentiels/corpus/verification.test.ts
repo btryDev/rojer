@@ -157,6 +157,12 @@ describe("l'ancre de veille, tenue à part de la lecture", () => {
     ).toBe("divergent");
   });
 
+  it("une citation relue par l'API Légifrance vaut première main (C51) ; un relevé d'agent, non", () => {
+    expect(degreDeReference(REF, { ...COMPLET, lecture: "api_legifrance" })).toBe("premiere_main");
+    expect(degreDeReference(REF, { ...COMPLET, lecture: "api_legifrance", citationCle: undefined })).toBe("lu_sans_verbatim");
+    expect(degreDeReference(REF, { ...COMPLET, lecture: "agent_verbatim" })).toBe("agent_verbatim");
+  });
+
   it("ne dépend pas du degré de lecture, ni l'inverse", () => {
     // Les deux axes existent parce qu'ils ne disent pas la même chose. Ce test
     // le rend exigible : un texte lu à la source avec verbatim peut n'avoir

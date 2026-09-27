@@ -91,12 +91,14 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       intitule:
         "Domaine d'application et définitions — seuil de la « grande cuisine »",
       versionEnVigueur: "1980-08-15",
-      luLe: "2026-08-26",
-      lecture: "premiere_main",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: ["cuisson-erp-verification-initiale"],
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « § 3. Un local », après « § 3. Pour l'application du présent règlement : Un local » ; phrase d'introduction omise sans marque d'élision.",
       citationCle:
-        '« § 3. Un local ou un groupement de locaux non isolés entre eux comportant des appareils de cuisson et des appareils de remise en température dont la puissance utile totale est supérieure à 20 kW est appelé "grande cuisine". »',
+        '« § 3. Pour l\'application du présent règlement : Un local ou un groupement de locaux non isolés entre eux comportant des appareils de cuisson et des appareils de remise en température dont la puissance utile totale est supérieure à 20 kW est appelé "grande cuisine". »',
       prescrit:
         "Définit le seuil qui déclenche tout le chapitre X : 20 kW de puissance utile totale, et RIEN D'AUTRE. Aucune mention d'un nombre de couverts, ici ni ailleurs dans le chapitre. Le référentiel annonçait « > 20 kW ou production > 500 couverts simultanés, cf. art. GC 1 » — second critère inventé, corrigé le 2026-08-26. GC 1 distingue par ailleurs la grande cuisine de l'office de remise en température, de l'îlot de cuisson et du module ou conteneur spécialisé, qui relèvent de sections distinctes.",
     },
@@ -330,17 +332,19 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000020303557/LEGISCTA000020314182/",
       prescrit:
         "TROIS PARAGRAPHES, ET ILS NE DISENT PAS LA MÊME CHOSE. § 1 : renvoi de régime à la section II du chapitre Ier (GE 6 et s.). § 2 : conformité des installations NEUVES OU AYANT FAIT L'OBJET DE TRAVAUX, vérifiée dans les conditions de GE 7 et GE 8 § 1. § 3 : c'est LUI qui porte l'annuelle, pour les installations NON MODIFIÉES, dans les conditions de GE 10 — avec une liste close d'articles couverts dont EC 13 et EC 14 § 3, ce qui rattache l'éclairage de sécurité à cette annuelle. Chemin : Livre II > Titre Ier > Chapitre VII > Section 4 — donc écarté en 5ᵉ catégorie par PE 1 § 1.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « des installations ; … des essais ; … des installations d'éclairage ; … contre la foudre. », après « des installations et appareils d'utilisation ; … des essais incombant à l'exploitant ; … des installations d'éclairage normal et de sécurité et des appareils d'éclairage ; … contre la foudre (paratonnerre). » ; quatre compléments omis sans marque d'élision ; rythme annuel et objets inchangés.",
       citationCle:
-        "§ 3. Les vérifications périodiques des installations non modifiées doivent être effectuées annuellement dans les conditions prévues à l'article GE 10. Elles concernent les articles suivants à condition qu'ils soient applicables à l'établissement : ― EL 4 (§ 4) ; EL 5 (§ 1, 4 et 5) ; EL 8 (§ 3) ; EL 10 (§ 4) ; EL 11 (§ 3, 4 et 7) ; EL 15 (§ 3) ; EL 17 et EL 18 ; ― EC 5 (§ 5) ; EC 6 (§ 5 et 6) ; EC 7 ; EC 9 (§ 1) ; EC 13 et EC 14 (§ 3). Elles ont pour objet de s'assurer : de l'absence de modifications depuis la dernière vérification ; de l'état d'entretien et de maintenance des installations ; de l'existence d'un relevé des essais ; du maintien en l'état des installations d'éclairage ; du bon état apparent des éventuelles installations extérieures de protection contre la foudre.",
+        "§ 3. Les vérifications périodiques des installations non modifiées doivent être effectuées annuellement dans les conditions prévues à l'article GE 10. Elles concernent les articles suivants à condition qu'ils soient applicables à l'établissement : ― EL 4 (§ 4) ; EL 5 (§ 1, 4 et 5) ; EL 8 (§ 3) ; EL 10 (§ 4) ; EL 11 (§ 3, 4 et 7) ; EL 15 (§ 3) ; EL 17 et EL 18 ; ― EC 5 (§ 5) ; EC 6 (§ 5 et 6) ; EC 7 ; EC 9 (§ 1) ; EC 13 et EC 14 (§ 3). Elles ont pour objet de s'assurer : ― de l'absence de modifications depuis la dernière vérification ; ― de l'état d'entretien et de maintenance des installations et appareils d'utilisation ; ― de l'existence d'un relevé des essais incombant à l'exploitant ; ― du maintien en l'état des installations d'éclairage normal et de sécurité et des appareils d'éclairage ; ― du bon état apparent des éventuelles installations extérieures de protection contre la foudre (paratonnerre).",
       versionEnVigueur: "2010-01-23",
       modifiePar: { texte: "Arrêté du 24 septembre 2009 - art. (V)" },
-      luLe: "2026-09-01",
+      luLe: "2026-09-27",
       // LU DEUX FOIS LE MÊME JOUR par deux lots qui s'ignoraient. Les deux
       // relevés concordent sur le fond — le § 3 porte l'annuelle — et chacun
       // a rapporté ce que l'autre n'avait pas : la liste close d'articles d'un
       // côté, la structure des trois paragraphes de l'autre, et une réserve
       // différente chacun. Les deux réserves sont conservées ci-dessous.
-      lecture: "premiere_main",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: [
         "elec-erp-cat1-4-annuelle",

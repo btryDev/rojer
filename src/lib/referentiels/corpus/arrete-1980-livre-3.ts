@@ -494,11 +494,13 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PO 1",
       intitule: "Généralités",
-      versionEnVigueur: "2018-01-01",
+      versionEnVigueur: "2011-10-30",
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "retenu",
       obligations: ["incendie-hotel-po-controle-annuel-electricite"],
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
       citationCle:
         "« § 3. L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans, à l'exception des installations électriques et des systèmes de détection incendie qui doivent être contrôlés annuellement. Le contrôle des ascenseurs relève des dispositions particulières précisées dans le cadre de l'article AS 9 du règlement. »",
       prescrit:
@@ -507,9 +509,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PO 1 § 3 — contrôle biennal des installations techniques",
       intitule: "Le volet biennal, qui porte sur « l'ensemble »",
-      versionEnVigueur: "2018-01-01",
+      versionEnVigueur: "2011-10-30",
       luLe: "2026-08-26",
       lecture: "premiere_main",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
       statut: "obligation_manquante",
       cause: "perimetre",
       toucheLaCible: false,
@@ -521,9 +525,11 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PO 7",
       intitule: "Instruction et entraînement du personnel, deux fois par an",
-      versionEnVigueur: "2018-01-01",
+      versionEnVigueur: "2011-10-30",
       luLe: "2026-08-26",
       lecture: "premiere_main",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
       statut: "obligation_manquante",
       cause: "perimetre",
       toucheLaCible: false,

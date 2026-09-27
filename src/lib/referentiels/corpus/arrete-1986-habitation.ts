@@ -168,10 +168,14 @@ const ARRETE_2015_06_19 = {
   url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000030769405",
 };
 
-/** Le modificateur des articles 1er et 102. */
+/**
+ * Le modificateur des articles 1er et 102. URL corrigée le 2026-09-27 (C51) :
+ * elle pointait le texte porteur (arrêté de 1986) ; l'API rend
+ * JORFTEXT000042731478 pour l'arrêté du 7 décembre 2020.
+ */
 const ARRETE_2020_12_07 = {
   texte: "Arrêté du 7 décembre 2020 - art. 1",
-  url: URL_TEXTE,
+  url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000042731478",
 };
 
 export const ARRETE_1986_HABITATION: Corpus = {
@@ -292,13 +296,15 @@ export const ARRETE_1986_HABITATION: Corpus = {
       versionEnVigueur: "2026-08-03",
       modifiePar: {
         texte: "Arrêté du 27 juillet 2026 - art. 1 (article créé)",
-        url: URL_TEXTE,
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000054596627",
       },
       luLe: "2026-09-03",
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
       cause: "destinataire",
       toucheLaCible: false,
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : URL de modifiePar : l'URL du texte porteur (arrêté de 1986) remplacée par celle de l'arrêté du 27 juillet 2026 que l'API rend (JORFTEXT000054596627). La citation (2° puis 7°, sur deux lignes) est exacte : l'écart du premier passage venait du script, qui ne coupait pas aux sauts de ligne.",
       citationCle:
         "2° Le parc de stationnement relève d'un propriétaire unique. Le propriétaire unique ou la personne qu'il désigne expressément pour assurer la gestion du parc est dénommée, pour l'application du présent article, le gestionnaire.\n" +
         "7° Le gestionnaire assure le suivi et le contrôle des boxes affectés au stockage. Il procède à un contrôle visuel de chaque box affecté au stockage au moins une fois par an et à chaque changement d'utilisateur. Ce contrôle a pour but de s'assurer du respect des dispositions prévues au 4° et de la déclaration mentionnée au 6°. Les résultats du contrôle sont consignés dans le registre mentionné à l'article 101 et tenus à la disposition de l'autorité compétente. Les boxes affectés au stockage sont identifiés dans un document tenu à jour par le gestionnaire et annexé au registre mentionné à l'article 101.",
@@ -313,12 +319,14 @@ export const ARRETE_1986_HABITATION: Corpus = {
       url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006828535",
       versionEnVigueur: "1986-03-05",
       modifiePar: null,
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "hors_perimetre",
       exclusion: "construction",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « coupe-feu … (×3) ; norme en vigueur et asservi », après « Coupe-feu … (×3) ; norme en vigueur (**) et asservi » ; casse et appel de note (**) du texte officiel.",
       citationCle:
-        "Les ascenseurs ne sont pas considérés comme des moyens d'évacuation […] Les parois des cages d'ascenseurs doivent être : coupe-feu de degré une demi-heure pour les bâtiments de deuxième famille ; coupe-feu de degré une heure pour les bâtiments de troisième famille A ; coupe-feu de degré une heure pour les bâtiments de troisième famille B et de quatrième famille. […] Dans les habitations de la quatrième famille, les ascenseurs doivent comporter un dispositif d'appel et de commande prioritaire d'une cabine au moins par batterie, destiné à mettre ces appareils à la disposition des sapeurs-pompiers dès leur arrivée sur les lieux. Ce dispositif doit être conforme à la norme en vigueur et asservi à la détection ; la cabine ne doit pas pouvoir s'arrêter au niveau sinistré.",
+        "Les ascenseurs ne sont pas considérés comme des moyens d'évacuation […] Les parois des cages d'ascenseurs doivent être : Coupe-feu de degré une demi-heure pour les bâtiments de deuxième famille ; Coupe-feu de degré une heure pour les bâtiments de troisième famille A ; Coupe-feu de degré une heure pour les bâtiments de troisième famille B et de quatrième famille. […] Dans les habitations de la quatrième famille, les ascenseurs doivent comporter un dispositif d'appel et de commande prioritaire d'une cabine au moins par batterie, destiné à mettre ces appareils à la disposition des sapeurs-pompiers dès leur arrivée sur les lieux. Ce dispositif doit être conforme à la norme en vigueur (**) et asservi à la détection ; la cabine ne doit pas pouvoir s'arrêter au niveau sinistré.",
       motif:
         "C'EST L'ARTICLE QUE LE LOT EST VENU CHERCHER, ET IL NE DONNE PAS CE QU'ON EN ATTENDAIT. Le seul article de l'arrêté qui parle d'ascenseurs et de familles ne prescrit que des degrés coupe-feu de parois et un équipement de cabine : rien qui pèse sur l'exploitant à date, rien qui conditionne l'entretien ou le contrôle technique. Il ne fonde donc AUCUNE restriction de famille sur les sept obligations d'ascenseur du référentiel, qui viennent du CCH et non de ce texte. Le dispositif d'appel prioritaire de la 4ᵉ famille est en revanche une « installation fonctionnant automatiquement » au sens de l'article 101, et il entre à ce titre dans la vérification annuelle — par la voie de sa présence, pas par une règle de famille.",
     },
@@ -358,12 +366,14 @@ export const ARRETE_1986_HABITATION: Corpus = {
       url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006828538",
       versionEnVigueur: "2015-10-01",
       modifiePar: ARRETE_2015_06_19,
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: ["habitation-consignes-plans-intervention"],
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « ascenseurs : les consignes … d'incendie ; les plans … réceptacles », après « ascenseurs : Les consignes … d'incendie : Les plans … réceptacle » ; casse, ponctuation et singulier du texte officiel.",
       citationCle:
-        "Le propriétaire ou, le cas échéant, la personne responsable désignée par ses soins, est tenu d'afficher dans les halls d'entrée, près des accès aux escaliers et aux ascenseurs : les consignes à respecter en cas d'incendie ; les plans de sous-sols et du rez-de-chaussée. Les consignes particulières à chaque type d'immeuble à respecter en cas d'incendie doivent être également affichées dans les parcs de stationnement, s'il en existe, à proximité des accès aux escaliers et aux ascenseurs. A minima, les éléments suivants figurent sur les plans d'intervention : - l'emplacement des cloisonnements principaux et des cheminements des sous-sols ; - l'indication des dégagements, voies intérieures ou cours permettant d'atteindre l'extérieur du bâtiment ; - l'emplacement des ascenseurs et monte-charge, avec leurs accès ; - l'emplacement des locaux poubelles et réceptacles s'il existe un vide-ordures ; - l'emplacement des moyens de secours, notamment les prises de colonnes sèches et les commandes de désenfumage.",
+        "Le propriétaire ou, le cas échéant, la personne responsable désignée par ses soins, est tenu d'afficher dans les halls d'entrée, près des accès aux escaliers et aux ascenseurs : Les consignes à respecter en cas d'incendie : Les plans de sous-sols et du rez-de-chaussée. Les consignes particulières à chaque type d'immeuble à respecter en cas d'incendie doivent être également affichées dans les parcs de stationnement, s'il en existe, à proximité des accès aux escaliers et aux ascenseurs. A minima, les éléments suivants figurent sur les plans d'intervention : - l'emplacement des cloisonnements principaux et des cheminements des sous-sols ; - l'indication des dégagements, voies intérieures ou cours permettant d'atteindre l'extérieur du bâtiment ; - l'emplacement des ascenseurs et monte-charge, avec leurs accès ; - l'emplacement des locaux poubelles et réceptacle s'il existe un vide-ordures ; - l'emplacement des moyens de secours, notamment les prises de colonnes sèches et les commandes de désenfumage.",
       prescrit:
         "Affichage permanent, à la charge du propriétaire, dans les halls et près des accès aux escaliers et ascenseurs. Aucune famille n'est mentionnée : l'obligation vise les quatre. La liste des cinq éléments du plan d'intervention vient de l'arrêté du 19 juin 2015 et ne s'impose, aux termes de son article d'application, qu'aux bâtiments dont le permis de construire a été déposé après le 1er octobre 2015 ; l'affichage des consignes, lui, est d'origine et ne connaît pas cette borne.",
     },

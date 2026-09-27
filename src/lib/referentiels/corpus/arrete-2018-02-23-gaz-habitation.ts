@@ -25,15 +25,17 @@ export const ARRETE_2018_02_23_GAZ_HABITATION: Corpus = {
       ref: "Arrêté 23-02-2018 art. 26",
       intitule: "Entretien des installations",
       versionEnVigueur: "2023-01-01",
-      luLe: "2026-08-26",
-      lecture: "premiere_main",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: [
         "aeration-habitation-vmc-gaz-annuelle",
         "aeration-habitation-vmc-gaz-quinquennale",
       ],
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « […] avec l'établissement d'un certificat », après « […] donnant lieu à l'établissement d'un certificat » ; mot « avec » absent du texte.",
       citationCle:
-        "« 5° Les installations collectives de ventilation mécanique contrôlée - gaz, auxquelles sont raccordés des appareils à gaz font l'objet d'opérations périodiques d'entretien et de vérification […] avec l'établissement d'un certificat remis au propriétaire ou au syndic et attestant de leur réalisation effective : Les opérations à une fréquence au moins égale à une fois par an portent sur : […] Les opérations à une fréquence au moins égale à une fois tous les cinq ans portent sur : […] »",
+        "« 5° Les installations collectives de ventilation mécanique contrôlée - gaz, auxquelles sont raccordés des appareils à gaz font l'objet d'opérations périodiques d'entretien et de vérification […] donnant lieu à l'établissement d'un certificat remis au propriétaire ou au syndic et attestant de leur réalisation effective : Les opérations à une fréquence au moins égale à une fois par an portent sur : […] Les opérations à une fréquence au moins égale à une fois tous les cinq ans portent sur : […] »",
       prescrit:
         "DEUX périodicités minimales sur les VMC-gaz : annuelle (nettoyage des pales, pièces d'usure, caractéristiques de fonctionnement, détection de défaut) et quinquennale (réglage global du réseau aéraulique, vérification d'ensemble du dispositif de sécurité collective appareil par appareil). Exige un CERTIFICAT remis au propriétaire ou au syndic — et non un contrat écrit, qui relève du § 3° et porte sur un autre objet.",
     },

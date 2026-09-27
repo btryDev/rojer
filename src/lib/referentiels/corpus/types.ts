@@ -223,6 +223,19 @@ export type SourceLecture =
    */
   | "agent_verbatim"
   /**
+   * Relu par l'API officielle Légifrance (DILA, via PISTE) : la citation est
+   * recopiée MOT POUR MOT de la réponse de l'API, et la date de version et le
+   * texte modificateur sont ceux que l'API rend. Posé le 2026-09-27 (C51) pour
+   * les articles corrigés d'après `pnpm legifrance:verifier`.
+   *
+   * Pas un relevé d'agent : rien ne transite par un outil qui résume, et le
+   * script recompare la citation au texte officiel à chaque passage — c'est
+   * le recoupement qui manque à `agent_verbatim`. Classé au degré de
+   * `premiere_main` (`degreDeReference`). Ce qu'il ne dit pas : que la
+   * personne qui encode a relu l'obligation que l'article fonde.
+   */
+  | "api_legifrance"
+  /**
    * Lu ailleurs qu'à la source — reproduction consolidée, base
    * professionnelle, résumé. NE PEUT PAS fonder une entrée du référentiel :
    * deux reproductions concordantes peuvent dériver du même relevé, et aucune

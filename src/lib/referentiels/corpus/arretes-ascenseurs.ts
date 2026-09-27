@@ -44,13 +44,15 @@ export const ARRETES_ASCENSEURS: Corpus = {
       // Le texte consolidé porte cette mention ; ses articles 1, 3, 4, 5 et son
       // annexe en relèvent, en vigueur au 15/05/2026.
       modifiePar: { texte: "Arrêté du 4 mars 2026 - art. 2" },
-      luLe: "2026-09-01",
-      lecture: "premiere_main",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: ["ascenseur-controle-technique-quinquennal"],      prescrit:
         "NE PORTE AUCUNE PÉRIODICITÉ. Les cinq ans viennent de R. 134-11 ; cet arrêté ne fixe que les MODALITÉS du contrôle technique. Huit articles et une annexe. L'article 1er met à la charge du propriétaire la mise à disposition du contrôleur technique des informations et documents nécessaires ; l'article 2 l'oblige, quand le contrôleur l'a demandé, à mettre celui-ci en relation avec l'entreprise titulaire du contrat d'entretien pour être accompagné pendant le contrôle ; l'article 4 impose que le rapport soit remis au propriétaire dans les trente jours suivant la visite — délai à la charge du contrôleur, pas de l'exploitant. Versions successives : 1er octobre 2012, puis 15 mai 2026 (arrêté du 4 mars 2026, NOR VLOL2524719A) qui a réécrit les articles 1, 3, 4 et 5 ; les articles 2, 7 et 8 sont restés en version du 1er octobre 2012. Aucune version future programmée au-delà du 15 mai 2026.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « nécessaire à la bonne exécution », après « nécessaires à la bonne exécution » ; accord du texte officiel.",
       citationCle:
-        "(art. 1er) Le propriétaire de l'ascenseur met à la disposition du contrôleur technique les informations et documents suivants, en sa possession, nécessaire à la bonne exécution des contrôles : […] (art. 4) Ce rapport est remis au propriétaire dans un délai de trente jours suivant la visite de contrôle de l'ascenseur.",
+        "(art. 1er) Le propriétaire de l'ascenseur met à la disposition du contrôleur technique les informations et documents suivants, en sa possession, nécessaires à la bonne exécution des contrôles : […] (art. 4) Ce rapport est remis au propriétaire dans un délai de trente jours suivant la visite de contrôle de l'ascenseur.",
     },
   ],
 };

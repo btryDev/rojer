@@ -26,8 +26,8 @@ export const FROID_FLUIDES: Corpus = {
       intitule:
         "Contrôle d'étanchéité des équipements — obligation du détenteur",
       versionEnVigueur: "2025-01-01",
-      luLe: "2026-08-26",
-      lecture: "premiere_main",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: [
         "froid-controle-etancheite-mise-en-service",
@@ -39,8 +39,10 @@ export const FROID_FLUIDES: Corpus = {
         "froid-controle-etancheite-semestriel-500t-detection",
         "froid-controle-etancheite-apres-modification",
       ],
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « … prévue à l'article R. 543-99. Ce contrôle », après « … prévue à l'article R. 543-99 ou d'un certificat équivalent délivré dans un des Etats membres de l'Union européenne et traduit en langue française. Ce contrôle » ; l'alternative du certificat européen était omise sans marque d'élision ; le débiteur (le détenteur), le déclencheur et les rythmes sont inchangés.",
       citationCle:
-        "« Le détenteur d'un équipement dont la charge en HCFC est supérieure à deux kilogrammes, ou dont la charge en HFC ou PFC est supérieure à cinq tonnes équivalent CO2 […] fait procéder, lors de la mise en service de cet équipement, à un contrôle d'étanchéité […] par un opérateur disposant de l'attestation de capacité prévue à l'article R. 543-99. Ce contrôle est ensuite périodiquement renouvelé dans les conditions définies par arrêté du ministre chargé de l'environnement. »",
+        "« Le détenteur d'un équipement dont la charge en HCFC est supérieure à deux kilogrammes, ou dont la charge en HFC ou PFC est supérieure à cinq tonnes équivalent CO2 […] fait procéder, lors de la mise en service de cet équipement, à un contrôle d'étanchéité […] par un opérateur disposant de l'attestation de capacité prévue à l'article R. 543-99 ou d'un certificat équivalent délivré dans un des Etats membres de l'Union européenne et traduit en langue française. Ce contrôle est ensuite périodiquement renouvelé dans les conditions définies par arrêté du ministre chargé de l'environnement. »",
       prescrit:
         "Impose au détenteur le contrôle d'étanchéité à la mise en service, son renouvellement périodique, et un constat écrit en cas de fuite. Renvoie encore au règlement (UE) n° 517/2014, abrogé.",
     },

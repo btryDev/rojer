@@ -350,12 +350,14 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
         texte: "Décret n° 2022-372 du 16 mars 2022, art. 3",
         url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000045365883",
       },
-      luLe: "2026-09-20",
-      lecture: "agent_verbatim",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       prescrit:
         "Charge LE MÉDECIN DU TRAVAIL d'établir un état des lieux des expositions du travailleur aux facteurs de risques professionnels de L. 4161-1, sur la base du dossier médical en santé au travail, des déclarations du travailleur et de celles de ses employeurs successifs. À l'issue de la visite, il remet le document au travailleur et le verse au dossier médical ; lorsque le document fait état d'une exposition, il met en place la surveillance post-exposition ou post-professionnelle, transmet le document au médecin traitant si nécessaire et avec l'accord du travailleur, et informe le travailleur des démarches lorsqu'il remplit les conditions du dispositif.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « À l'issue », après « A l'issue » ; capitale non accentuée au texte officiel.",
       citationCle:
-        "Le médecin du travail établit un état des lieux des expositions du travailleur aux facteurs de risques professionnels mentionnés à l'article L. 4161-1. […] À l'issue de la visite, le médecin du travail remet au travailleur le document […] et le verse au dossier médical en santé au travail.",
+        "Le médecin du travail établit un état des lieux des expositions du travailleur aux facteurs de risques professionnels mentionnés à l'article L. 4161-1. […] A l'issue de la visite, le médecin du travail remet au travailleur le document […] et le verse au dossier médical en santé au travail.",
       statut: "hors_perimetre",
       exclusion: "sans_destinataire_exploitant",
       motif:
@@ -468,11 +470,13 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       intitule: "Examen de reprise — son objet",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045371021",
       versionEnVigueur: "2022-03-18",
-      modifiePar: null,
+      modifiePar: { texte: "Décret n° 2022-372 du 16 mars 2022 - art. 5 (déplacement)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000045365883" },
       luLe: "2026-09-26",
       lecture: "premiere_main",
       prescrit:
         "L'examen de reprise vérifie la compatibilité du poste avec l'état de santé, examine les propositions d'aménagement ou de reclassement de l'employeur, préconise, et émet le cas échéant un avis d'inaptitude.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : modifiePar null remplacé : l'API rend pour la version en vigueur un seul lien, DEPLACE (« Décret n° 2022-372 du 16 mars 2022 - art.  ») — l'article a été déplacé ou renuméroté par ce texte ; aucun lien MODIFIE ne l'accompagne.",
       citationCle:
         "L'examen de reprise a pour objet : 1° De vérifier si le poste de travail que doit reprendre le travailleur ou le poste de reclassement auquel il doit être affecté est compatible avec son état de santé ; 2° D'examiner les propositions d'aménagement ou d'adaptation du poste repris par le travailleur ou de reclassement faites par l'employeur à la suite des préconisations émises le cas échéant par le médecin du travail lors de la visite de préreprise ; 3° De préconiser l'aménagement, l'adaptation du poste ou le reclassement du travailleur ; 4° D'émettre, le cas échéant, un avis d'inaptitude.",
       statut: "sans_objet",
@@ -484,7 +488,7 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       intitule: "Arrêt de moins de trente jours pour accident du travail — information du médecin du travail",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045371018",
       versionEnVigueur: "2022-03-18",
-      modifiePar: null,
+      modifiePar: { texte: "Décret n° 2022-372 du 16 mars 2022 - art. 5 (déplacement)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000045365883" },
       luLe: "2026-09-26",
       lecture: "premiere_main",
       prescrit:
@@ -494,7 +498,7 @@ export const CODE_TRAVAIL_SANTE_TRAVAIL: Corpus = {
       statut: "retenu",
       obligations: ["sante-travail-etablissement-information-arret-accident-moins-trente-jours"],
       historique:
-        "Jamais lu avant le 2026-09-26 (le corpus le déclarait « dehors »). Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Les deux passages décisifs — « par l'employeur » et « d'une durée inférieure à trente jours pour cause d'accident du travail » — confirmés par une requête ciblée. `modifiePar: null` : Légifrance n'affiche aucune mention « Création » ni « Modifié par » pour la version en vigueur depuis le 18/03/2022 (vérifié aussi sur la page datée) ; le texte qui l'a produite n'est pas établi.",
+        "Jamais lu avant le 2026-09-26 (le corpus le déclarait « dehors »). Relu le 2026-09-26 sur sa page propre : structure demandée en aveugle, puis recopie intégrale. Les deux passages décisifs — « par l'employeur » et « d'une durée inférieure à trente jours pour cause d'accident du travail » — confirmés par une requête ciblée. `modifiePar: null` : Légifrance n'affiche aucune mention « Création » ni « Modifié par » pour la version en vigueur depuis le 18/03/2022 (vérifié aussi sur la page datée) ; le texte qui l'a produite n'est pas établi. C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : modifiePar null remplacé : l'API rend pour la version en vigueur un seul lien, DEPLACE (« Décret n° 2022-372 du 16 mars 2022 - art.  ») — l'article a été déplacé ou renuméroté par ce texte ; aucun lien MODIFIE ne l'accompagne.",
     },
     {
       ref: "R. 4624-28",

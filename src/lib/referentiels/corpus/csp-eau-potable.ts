@@ -92,12 +92,14 @@ export const CSP_EAU_POTABLE: Corpus = {
       versionEnVigueur: "2023-01-01",
       modifiePar: {
         texte: "Décret n° 2022-1720 du 29 décembre 2022, art. 1er",
-        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000046839457",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000046837663",
       },
       luLe: "2026-09-02",
       lecture: "agent_verbatim",
       prescrit:
         "Impose à la PERSONNE RESPONSABLE DE LA PRODUCTION OU DE LA DISTRIBUTION D'EAU une surveillance permanente de la qualité des eaux destinées à la consommation humaine, comprenant notamment la vérification régulière des mesures de protection de la ressource et du fonctionnement des installations, un programme de tests et d'analyses sur points critiques, et LA TENUE D'UN FICHIER SANITAIRE recueillant l'ensemble des informations collectées. S'y ajoutent la vérification de l'efficacité du traitement de désinfection et, au-dessus de 10 000 habitants desservis, une étude de vulnérabilité transmise au préfet.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : URL de modifiePar JORFTEXT000046839457 → JORFTEXT000046837663 : l'identifiant que l'API rend pour ce texte ; le titre concordait.",
       citationCle:
         "la personne responsable de la production ou de la distribution d'eau est tenue de mettre en œuvre une surveillance permanente afin de garantir la qualité des eaux destinées à la consommation humaine. Cette surveillance comprend notamment : 1° Une vérification régulière des mesures prises pour la protection de la ressource utilisée et du fonctionnement des installations ; 2° Un programme de tests et d'analyses effectués sur des points jugés critiques déterminés en fonction des dangers et des risques identifiés [...] ; 3° La tenue d'un fichier sanitaire recueillant l'ensemble des informations collectées à ce titre.",
       statut: "sans_objet",
@@ -112,14 +114,16 @@ export const CSP_EAU_POTABLE: Corpus = {
       versionEnVigueur: "2023-01-01",
       modifiePar: {
         texte: "Décret n° 2022-1720 du 29 décembre 2022, art. 1er",
-        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000046839457",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000046837663",
       },
-      luLe: "2026-09-02",
-      lecture: "agent_verbatim",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       prescrit:
         "Article de définition : il range les installations d'eau destinée à la consommation humaine en trois catégories — 1° les réseaux publics de distribution, 2° les installations non raccordées à un réseau public, 3° le réseau intérieur de distribution équipant les immeubles desservis.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : la citationCle était une reformulation du 3° (« Le réseau intérieur de distribution comprenant l'installation privée de distribution, constituée des canalisations… ») : remplacée par le 3° officiel de la version du 2023-01-01, qui ajoute « les autres réseaux de canalisations, réservoirs et équipements raccordés ». URL de modifiePar : JORFTEXT000046839457 → JORFTEXT000046837663 (identifiant du décret n° 2022-1720 selon l'API). Article sans_objet : aucune obligation touchée.",
       citationCle:
-        "3° Le réseau intérieur de distribution comprenant l'installation privée de distribution, constituée des canalisations et des appareillages installés entre les robinets normalement utilisés pour la consommation humaine et le réseau public de distribution, lorsqu'ils ne relèvent pas de la personne responsable de la production ou de la distribution d'eau.",
+        "3° Le réseau intérieur de distribution équipant les immeubles desservis par les réseaux ou installations mentionnés aux 1° et 2° qui comprend : - l'installation privée de distribution d'eau destinée à la consommation humaine, c'est-à-dire les canalisations et appareillages installés entre les robinets qui sont normalement utilisés pour les eaux destinées à la consommation humaine, dans des lieux publics comme dans des lieux privés, et le réseau public de distribution mais seulement lorsqu'ils ne relèvent pas de la responsabilité de la personne responsable de la production ou de la distribution d'eau ; - les autres réseaux de canalisations, réservoirs et équipements raccordés de manière permanente ou temporaire.",
       statut: "sans_objet",
       motif:
         "Définition pure : il ne prescrit rien à personne. Il est ici parce que tout le paragraphe 4 s'écrit par renvoi à ses trois alinéas, et que confondre le 1° (réseau public, à la charge du distributeur) avec le 3° (réseau intérieur, à la charge de celui qui tient le bâtiment) suffit à attribuer une obligation au mauvais destinataire — c'est très exactement l'erreur que le guide professionnel a commise.",
@@ -166,12 +170,14 @@ export const CSP_EAU_POTABLE: Corpus = {
       versionEnVigueur: "2023-01-01",
       modifiePar: {
         texte: "Décret n° 2022-1720 du 29 décembre 2022, art. 1er",
-        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000046839457",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000046837663",
       },
       luLe: "2026-09-02",
       lecture: "agent_verbatim",
       prescrit:
         "Le propriétaire du réseau intérieur élabore à sa charge une évaluation des risques et une surveillance des installations (programme de tests et d'analyses, vérification régulière des mesures prises, tenue à jour d'un fichier sanitaire), et prend sans délai les mesures de gestion si un risque pour la santé est mis en évidence.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : URL de modifiePar JORFTEXT000046839457 → JORFTEXT000046837663 : l'identifiant que l'API rend pour ce texte ; le titre concordait.",
       citationCle:
         "Le présent article n'est pas applicable aux propriétaires du réseau intérieur de distribution d'eau fournissant moins de dix mètres cubes par jour en moyenne ou approvisionnant moins de cinquante personnes dans l'exercice d'une activité commerciale ou publique.",
       statut: "sans_objet",
@@ -203,12 +209,14 @@ export const CSP_EAU_POTABLE: Corpus = {
       versionEnVigueur: "2023-01-01",
       modifiePar: {
         texte: "Décret n° 2022-1720 du 29 décembre 2022, art. 1er",
-        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000046839457",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000046837663",
       },
       luLe: "2026-09-02",
       lecture: "agent_verbatim",
       prescrit:
         "Un réseau intérieur ne peut pas être alimenté par une ressource non autorisée, sauf dérogation du préfet, et ne doit pas pouvoir perturber le réseau auquel il est raccordé ni contaminer l'eau distribuée, notamment par retour d'eau ; un arrêté dit où placer des dispositifs de protection, et c'est aux propriétaires des installations de les mettre en place et de les entretenir.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : URL de modifiePar JORFTEXT000046839457 → JORFTEXT000046837663 : l'identifiant que l'API rend pour ce texte ; le titre concordait.",
       citationCle:
         "Un arrêté des ministres chargés de la santé et de la construction, pris après avis de l'Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail, définit les cas où il y a lieu de mettre en place des dispositifs de protection et les prescriptions techniques applicables à ces dispositifs. Il appartient aux propriétaires des installations de mettre en place et d'entretenir ces dispositifs.",
       statut: "sans_objet",

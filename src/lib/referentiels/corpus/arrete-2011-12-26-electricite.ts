@@ -61,12 +61,14 @@ export const ARRETE_2011_12_26_ELECTRICITE: Corpus = {
       intitule:
         "Contenu des rapports de vérification et éléments de traçabilité",
       versionEnVigueur: "2011-12-30",
-      luLe: "2026-08-26",
-      lecture: "premiere_main",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: ["elec-travail-rapport-quadriennal"],
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « descriptifs. Une mise à jour … doit être effectuée … dit \"quadriennal\", rédigé », après « descriptifs Une mise à jour … sera effectuée … dit \" quadriennal , rédigé » ; « doit être » n'est pas au texte, qui dit « sera » ; le titre du 3.5 n'a pas de point ; le guillemet non fermé est celui de Légifrance ; rythme quadriennal inchangé.",
       citationCle:
-        '« 3.5. Mise à jour des renseignements descriptifs. Une mise à jour complète de l\'ensemble des renseignements descriptifs doit être effectuée tous les quatre ans ; elle donnera lieu à un rapport, dit "quadriennal", rédigé comme un rapport de visite initiale. »',
+        '« 3.5. Mise à jour des renseignements descriptifs Une mise à jour complète de l\'ensemble des renseignements descriptifs sera effectuée tous les quatre ans ; elle donnera lieu à un rapport, dit " quadriennal , rédigé comme un rapport de visite initiale. »',
       prescrit:
         "Fixe le contenu des rapports, et au point 3.5 une PÉRIODICITÉ que le référentiel ignorait : le rapport quadriennal. C'est ce qui empêche la vérification périodique de dériver — les rapports périodiques ne consignent que les non-conformités, sur la foi d'un descriptif établi une fois. Le point 4 impose en outre à l'organisme de conserver, à chaque vérification périodique, la liste des appareils, circuits et dispositifs différentiels vérifiés : obligation pesant sur le vérificateur, pas sur l'exploitant, donc hors du calendrier.",
     },

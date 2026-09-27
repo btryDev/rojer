@@ -88,12 +88,14 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
       versionEnVigueur: "2017-01-01",
       modifiePar: {
         texte: "Décret n° 2016-1908 du 27 décembre 2016 - art. 10",
-        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000033729065",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000033723789",
       },
       luLe: "2026-09-02",
       lecture: "agent_verbatim",
       prescrit:
         "Article de CHAMP, pas de prescription. Il ouvre la section 2 (agents CMR) en la rendant applicable aux activités où les travailleurs sont exposés ou susceptibles de l'être à des agents cancérogènes, mutagènes ou toxiques pour la reproduction, et il écarte pour elles la section 1 (agents chimiques dangereux) SAUF sept blocs qu'il énumère : les définitions, les mesures contre les dangers physico-chimiques (R. 4412-17 et R. 4412-18), l'intervention en espace confiné (R. 4412-22), les vérifications périodiques des installations et appareils de protection collective, les mesures en cas d'accident ou d'incident, la notice de poste (R. 4412-39) et le suivi de l'état de santé.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : URL de modifiePar JORFTEXT000033729065 → JORFTEXT000033723789 : l'identifiant que l'API rend pour ce texte ; le titre concordait.",
       citationCle:
         "Les dispositions de la présente section sont applicables aux activités dans lesquelles les travailleurs sont exposés ou susceptibles d'être exposés au cours de leur travail à des agents chimiques cancérogènes mutagènes ou toxiques pour la reproduction.",
       statut: "sans_objet",

@@ -107,7 +107,7 @@ export const DEGRES: readonly Degre[] = [
     court: "première main",
     titre: "lu à la source, verbatim relevé",
     affirme:
-      "le texte a été ouvert sur Légifrance par la personne qui l'encode, à une date connue, et la phrase décisive est recopiée dans le dépôt",
+      "le texte a été ouvert sur Légifrance par la personne qui l'encode, ou relu par l'API officielle Légifrance, à une date connue, et la phrase décisive est recopiée dans le dépôt",
     pourquoiDistinct:
       "le verbatim est relisible sans rouvrir le texte, et le relevé n'a pas transité par un tiers",
   },
@@ -249,7 +249,11 @@ export function degreDeReference(
   if (!article.luLe || !article.lecture) return "sans_trace_de_lecture";
   if (article.lecture === "indirect") return "lecture_indirecte";
   if (!article.citationCle) return "lu_sans_verbatim";
-  return article.lecture === "premiere_main" ? "premiere_main" : "agent_verbatim";
+  // `api_legifrance` : verbatim recopié de l'API officielle et recomparé par
+  // le script à chaque passage — le recoupement qui manque à un relevé d'agent.
+  return article.lecture === "premiere_main" || article.lecture === "api_legifrance"
+    ? "premiere_main"
+    : "agent_verbatim";
 }
 
 /** L'ancre de veille d'une référence. Exportée pour la même raison. */

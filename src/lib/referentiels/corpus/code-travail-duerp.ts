@@ -230,11 +230,13 @@ export const CODE_TRAVAIL_DUERP: Corpus = {
       intitule: "Transcription des résultats de l'évaluation",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000023795562",
       versionEnVigueur: "2011-04-01",
-      modifiePar: null,
+      modifiePar: { texte: "Décret n° 2011-354 du 30 mars 2011 - art. 1 (déplacement)", url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000023792126" },
       luLe: "2026-09-02",
       lecture: "agent_verbatim",
       prescrit:
         "L'employeur transcrit et met à jour dans un document unique les résultats de l'évaluation des risques ; cette évaluation comporte un inventaire des risques identifiés dans chaque unité de travail, y compris ceux liés aux ambiances thermiques.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : modifiePar null remplacé : l'API rend pour la version en vigueur un seul lien, DEPLACE (« Décret n° 2011-354 du 30 mars 2011 - art.  ») — l'article a été déplacé ou renuméroté par ce texte ; aucun lien MODIFIE ne l'accompagne.",
       citationCle:
         "L'employeur transcrit et met à jour dans un document unique les résultats de l'évaluation des risques pour la santé et la sécurité des travailleurs à laquelle il procède en application de l'article L. 4121-3. Cette évaluation comporte un inventaire des risques identifiés dans chaque unité de travail de l'entreprise ou de l'établissement, y compris ceux liés aux ambiances thermiques.",
       statut: "sans_objet",

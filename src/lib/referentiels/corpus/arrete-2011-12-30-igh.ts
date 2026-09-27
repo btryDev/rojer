@@ -221,15 +221,16 @@ export const ARRETE_2011_12_30_IGH: Corpus = {
       url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000033336961/",
       versionEnVigueur: "2017-01-01",
       modifiePar: {
-        texte:
-          "Arrêté du 7 novembre 2016 modifiant l'arrêté du 30 décembre 2011",
-        url: URL_TEXTE,
+        texte: "Arrêté du 24 octobre 2016 - art. 1",
+        url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000033335301",
       },
-      luLe: "2026-09-03",
-      lecture: "agent_verbatim",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "non_couvert",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : « § 3 (extrait). » devient « § 3. […] » (la première phrase du § 3, sur les rondes, était omise) ; modifiePar « Arrêté du 7 novembre 2016 modifiant l'arrêté du 30 décembre 2011 » (URL du texte porteur) remplacé par le lien que l'API rend pour la version du 2017-01-01 : « Arrêté du 24 octobre 2016 - art. 1 » (JORFTEXT000033335301).",
       citationCle:
-        "§ 2. Les occupants de chaque compartiment sont tenus de participer au service local de sécurité. Il est composé d'un chef de compartiment et d'agents désignés parmi le personnel permanent de chaque entreprise au prorata de son effectif. Le nombre d'occupants ainsi désignés est égal au vingt-cinquième au moins des occupants du compartiment, avec un minimum de six.\n§ 3 (extrait). Le service central de sécurité incendie et d'assistance à personnes organise des exercices d'évacuation périodiques dans les conditions prévues à l'article GH 60 § 2 et les occupants sont tenus d'y participer.",
+        "§ 2. Les occupants de chaque compartiment sont tenus de participer au service local de sécurité. Il est composé d'un chef de compartiment et d'agents désignés parmi le personnel permanent de chaque entreprise au prorata de son effectif. Le nombre d'occupants ainsi désignés est égal au vingt-cinquième au moins des occupants du compartiment, avec un minimum de six.\n§ 3. […] Le service central de sécurité incendie et d'assistance à personnes organise des exercices d'évacuation périodiques dans les conditions prévues à l'article GH 60 § 2 et les occupants sont tenus d'y participer.",
       motif:
         "LA SEULE OBLIGATION D'UN CHAPITRE DE CLASSE QUI PÈSE VRAIMENT SUR L'EMPLOYEUR OCCUPANT, et c'est pour cela qu'elle est dépouillée : c'était le meilleur candidat à une restriction `igh: { classes: [...] }`, et il ne tient pas. Trois raisons, dans l'ordre où elles mordent.\n\n(1) ELLE NE DISTINGUE PAS GH W1 DE GH W2. Le § 1 les distingue bien — un chef d'équipe pour GH W1, trois agents en permanence pour GH W2 — mais il compose le service CENTRAL, « sous la direction du chef de sécurité incendie de l'immeuble », c'est-à-dire du côté du propriétaire. Le § 2, celui de l'occupant, ne mentionne aucune des deux. Or GH W1 et GH W2 sont précisément les deux valeurs que le modèle offre : la question posée au dirigeant ne pourrait donc jamais moduler cette ligne.\n\n(2) GH 66 EN FAIT LE MAUVAIS ANCRAGE. Le déclencheur réel est d'occuper un COMPARTIMENT DE BUREAUX dans un IGH, ce que le produit sait déjà par la typologie de l'établissement ; la classe DÉCLARÉE de la tour, elle, peut être GH U ou GH Z pour ce même plateau.\n\n(3) LE PRODUIT NE LA COUVRE PAS, ET LE DIT. `non_couvert` et non `obligation_manquante` : l'obligation existe et vise un établissement que le produit sert, mais le service de sécurité incendie des IGH est déclaré hors couverture sur la page « Ce que Rojer ne couvre pas ». C'est aussi un ÉTAT PERMANENT — désigner des agents parmi son personnel permanent — et non une échéance ; la participation aux exercices du § 3 est portée par le service central, donc par le propriétaire, l'occupant n'étant tenu que d'y participer.",
       declareA:

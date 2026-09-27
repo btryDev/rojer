@@ -50,8 +50,8 @@ export const CCH_ASCENSEURS: Corpus = {
       ref: "CCH R. 134-6",
       versionEnVigueur: "2026-04-01",
       modifiePar: { texte: "Décret n° 2026-166 du 4 mars 2026 - art. 1" },
-      luLe: "2026-09-01",
-      lecture: "premiere_main",
+      luLe: "2026-09-27",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: [
         "ascenseur-entretien-contrat",
@@ -67,8 +67,10 @@ export const CCH_ASCENSEURS: Corpus = {
         "ascenseur-visite-six-semaines",
       ],      prescrit:
         "Version réécrite par le décret n° 2026-166 du 4 mars 2026, en vigueur au 1er avril 2026. Définit l'objet de l'entretien — assurer le bon fonctionnement et maintenir le niveau de sécurité de R. 134-2 — puis énumère les DISPOSITIONS MINIMALES que prend le propriétaire, en deux blocs. 1° Opérations et vérifications PÉRIODIQUES : visite toutes les six semaines ; vérification toutes les six semaines de l'efficacité des serrures ; examen SEMESTRIEL des câbles et vérification ANNUELLE des parachutes ; nettoyage annuel de la cuvette, du toit de cabine et du local des machines ; lubrification et nettoyage des pièces ; vérification toutes les six semaines du bon fonctionnement des moyens d'alerte. 2° Opérations OCCASIONNELLES : réparation ou remplacement des petites pièces usées ; mesures d'entretien destinées à supprimer les défauts ; en cas d'incident, intervention pour dégager les personnes bloquées ; remplacement des moyens d'alerte quand il est nécessaire. Trois rythmes distincts dans un seul article, tous en fréquence minimale — c'est ce qui fonde quatre obligations du référentiel à partir d'une seule clé de corpus.",
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : citationCle recopiée du texte de l'API — avant « c) L'examen semestriel des câbles », après « c) L'examen semestriel du bon état des câbles » ; l'objet de l'examen est précisé (le bon état des câbles) ; rythme semestriel et débiteur inchangés.",
       citationCle:
-        "L'entretien d'un ascenseur a pour objet d'assurer son bon fonctionnement et de maintenir le niveau de sécurité défini à l'article R. 134-2. […] le propriétaire d'une installation d'ascenseur prend les dispositions minimales suivantes : 1° Opérations et vérifications périodiques : a) Une visite toutes les six semaines […] b) La vérification toutes les six semaines de l'efficacité des serrures […] c) L'examen semestriel des câbles et la vérification annuelle des parachutes […] f) La vérification toutes les six semaines du bon fonctionnement des moyens d'alerte […]",
+        "L'entretien d'un ascenseur a pour objet d'assurer son bon fonctionnement et de maintenir le niveau de sécurité défini à l'article R. 134-2. […] le propriétaire d'une installation d'ascenseur prend les dispositions minimales suivantes : 1° Opérations et vérifications périodiques : a) Une visite toutes les six semaines […] b) La vérification toutes les six semaines de l'efficacité des serrures […] c) L'examen semestriel du bon état des câbles et la vérification annuelle des parachutes […] f) La vérification toutes les six semaines du bon fonctionnement des moyens d'alerte […]",
     },
     {
       ref: "CCH R. 134-7",

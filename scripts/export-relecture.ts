@@ -100,6 +100,7 @@ function rendreCondition(c: ConditionApplication): string {
 const LECTURE_LISIBLE: Record<SourceLecture, string> = {
   premiere_main: "première main",
   agent_verbatim: "agent (verbatim non recoupé)",
+  api_legifrance: "API Légifrance (verbatim recomparé par script)",
   indirect: "indirect — ne peut pas fonder",
 };
 

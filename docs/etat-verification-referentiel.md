@@ -51,7 +51,7 @@ réellement distinguable dans les types du corpus.
 
 | rang | degré | ce que le dépôt permet d'affirmer | pourquoi ce barreau est à part |
 | --- | --- | --- | --- |
-| 5 | **lu à la source, verbatim relevé** | le texte a été ouvert sur Légifrance par la personne qui l'encode, à une date connue, et la phrase décisive est recopiée dans le dépôt | le verbatim est relisible sans rouvrir le texte, et le relevé n'a pas transité par un tiers |
+| 5 | **lu à la source, verbatim relevé** | le texte a été ouvert sur Légifrance par la personne qui l'encode, ou relu par l'API officielle Légifrance, à une date connue, et la phrase décisive est recopiée dans le dépôt | le verbatim est relisible sans rouvrir le texte, et le relevé n'a pas transité par un tiers |
 | 4 | **lu à la source par un agent, verbatim rapporté** | un agent a ouvert le texte à une date connue et en a rapporté la phrase décisive — constat, pas garantie : le verbatim n'a pas été recoupé | le corpus porte déjà cette réserve dans SourceLecture ; l'aplatir sur le degré précédent la ferait disparaître |
 | 3 | **lu et daté, aucun verbatim** | le texte a été ouvert à une date connue ; ce qu'il dit n'est nulle part dans le dépôt | rien n'est relisible : contrôler ou contredire l'encodage suppose de rouvrir le texte |
 | 2 | **lu ailleurs qu'à la source** | quelqu'un a lu une reproduction, un résumé ou une base professionnelle — aucune date de version ne fait foi | le corpus déclare lui-même qu'une lecture indirecte ne peut pas fonder une entrée du référentiel |
@@ -87,8 +87,8 @@ repose sur un texte que personne n'a ouvert.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 67 | 39 % | 75 | 164 | 51 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 92 | 54 % | 89 | 144 | 45 % |
+| 5 · lu à la source, verbatim relevé | 68 | 40 % | 76 | 165 | 52 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 91 | 54 % | 88 | 143 | 45 % |
 | 3 · lu et daté, aucun verbatim | 11 | 6 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
@@ -108,13 +108,13 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 300 | 94 % |
-| divergente | 0 | 0 % |
+| ancrée | 299 | 93 % |
+| divergente | 1 | 0 % |
 | jamais constatée | 20 | 6 % |
 
 **11 obligations sur 170 (6 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
-**Aucune divergence** entre la version qu'une obligation déclare avoir constatée et celle que le corpus déclare avoir lue. Les deux moitiés du dépôt disent la même chose partout où elles parlent toutes les deux.
+**1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
 ---
 
@@ -122,18 +122,18 @@ repose sur un texte que personne n'a ouvert.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `aeration` | 11 | 16 | 3 | 8 | · | · | · | · | 11 / 11 — 100 % | 0 / 16 | 2026-08-26 → 2026-09-27 |
-| `ascenseur` | 8 | 17 | 4 | 4 | · | · | · | · | 8 / 8 — 100 % | 0 / 17 | 2026-08-26 → 2026-09-04 |
+| `aeration` | 11 | 16 | 3 | 8 | · | · | · | · | 11 / 11 — 100 % | 0 / 16 | 2026-08-27 → 2026-09-27 |
+| `ascenseur` | 8 | 17 | 4 | 4 | · | · | · | · | 8 / 8 — 100 % | 0 / 17 | 2026-08-26 → 2026-09-27 |
 | `co_activite` | 1 | 7 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 7 | 2026-08-31 → 2026-09-26 |
 | `compactage_dechets` | 1 | 5 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson_hotte` | 6 | 9 | 2 | 3 | 1 | · | · | · | 5 / 6 — 83 % | 1 / 9 | 2026-08-26 → 2026-09-27 |
 | `eclairage` | 1 | 2 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 2 | 2026-09-01 → 2026-09-02 |
-| `electricite` | 15 | 24 | 2 | 11 | 2 | · | · | · | 13 / 15 — 87 % | 2 / 24 | 2026-08-26 → 2026-09-26 |
+| `electricite` | 15 | 24 | 2 | 11 | 2 | · | · | · | 13 / 15 — 87 % | 2 / 24 | 2026-08-26 → 2026-09-27 |
 | `epi` | 2 | 7 | 2 | · | · | · | · | · | 2 / 2 — 100 % | 0 / 7 | 2026-09-04 |
-| `equipement_sous_pression` | 7 | 8 | 7 | · | · | · | · | · | 7 / 7 — 100 % | 1 / 8 | 2026-09-01 |
+| `equipement_sous_pression` | 7 | 8 | 7 | · | · | · | · | · | 7 / 7 — 100 % | 1 / 8 | 2026-09-01 → 2026-09-27 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
-| `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 |
-| `incendie` | 37 | 74 | 21 | 9 | 7 | · | · | · | 30 / 37 — 81 % | 0 / 74 | 2026-08-26 → 2026-09-27 |
+| `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
+| `incendie` | 37 | 74 | 22 | 8 | 7 | · | · | · | 30 / 37 — 81 % | 0 / 74 | 2026-08-26 → 2026-09-27 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 10 | 27 | 9 | 1 | · | · | · | · | 10 / 10 — 100 % | 0 / 27 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -157,7 +157,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-27 |
-| `etablissement` | 67 | 123 | 23 | 41 | 3 | · | · | · | 64 / 67 — 96 % | 0 / 123 | 2026-08-26 → 2026-09-27 |
+| `etablissement` | 67 | 123 | 24 | 40 | 3 | · | · | · | 64 / 67 — 96 % | 0 / 123 | 2026-08-26 → 2026-09-27 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -168,15 +168,15 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 
 | date de lecture | références | part | obligations concernées |
 | --- | --- | --- | --- |
-| 2026-08-26 | 44 | 14 % | 35 |
+| 2026-08-26 | 32 | 10 % | 31 |
 | 2026-08-27 | 10 | 3 % | 7 |
 | 2026-08-31 | 58 | 18 % | 28 |
-| 2026-09-01 | 139 | 43 % | 89 |
+| 2026-09-01 | 127 | 40 % | 81 |
 | 2026-09-02 | 17 | 5 % | 14 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 25 | 8 % | 20 |
-| 2026-09-27 | 10 | 3 % | 9 |
+| 2026-09-27 | 34 | 11 % | 33 |
 
 320 des 320 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
 
@@ -206,24 +206,24 @@ une relecture déjà faite.
 | `arrete-2021-09-10-retours-eau` | 14 | 14 | 2026-09-02 → 2026-09-27 |
 | `csp-eau-potable` | 11 | 11 | 2026-09-02 → 2026-09-27 |
 | `arrete-2010-02-01-legionelles` | 11 | 11 | 2026-09-20 |
-| `code-travail-eclairage` | 11 | 12 | 2026-09-02 |
+| `code-travail-eclairage` | 11 | 12 | 2026-09-02 → 2026-09-27 |
 | `code-travail-epi` | 11 | 16 | 2026-09-04 → 2026-09-27 |
 | `code-travail-formation-securite` | 10 | 27 | 2026-08-31 → 2026-09-27 |
 | `code-travail-sante-travail` | 9 | 26 | 2026-08-31 → 2026-09-27 |
 | `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 → 2026-09-27 |
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
-| `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-04 |
+| `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-27 |
 | `code-travail-vigilance` | 7 | 7 | 2026-09-02 → 2026-09-27 |
 | `arrete-1980-livre-2` | 6 | 25 | 2026-09-01 → 2026-09-04 |
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-manutention-ecran` | 5 | 7 | 2026-09-26 |
 | `code-travail-matieres-inflammables` | 5 | 6 | 2026-09-02 → 2026-09-27 |
-| `cch-classement-erp-igh` | 5 | 5 | 2026-09-03 → 2026-09-26 |
-| `arrete-2011-12-30-igh` | 4 | 6 | 2026-09-03 → 2026-09-04 |
+| `cch-classement-erp-igh` | 5 | 5 | 2026-09-03 → 2026-09-27 |
+| `arrete-2011-12-30-igh` | 4 | 6 | 2026-09-03 → 2026-09-27 |
 | `code-travail-co-activite` | 4 | 11 | 2026-08-31 → 2026-09-02 |
 | `code-travail-travail-dissimule` | 4 | 4 | 2026-09-02 |
-| `arrete-2017-04-19-registre-accessibilite` | 4 | 4 | 2026-09-03 |
+| `arrete-2017-04-19-registre-accessibilite` | 4 | 4 | 2026-09-03 → 2026-09-27 |
 | `arrete-1980-livre-1` | 3 | 3 | 2026-09-03 → 2026-09-26 |
 | `arrete-2018-02-23-gaz-habitation` | 3 | 4 | 2026-08-26 |
 | `arrete-1993-03-05-machines` | 3 | 5 | 2026-09-02 |
@@ -245,7 +245,7 @@ une relecture déjà faite.
 | `casf-definition-handicap` | 1 | 1 | 2026-09-03 |
 | `cch-registre-accessibilite` | 1 | 1 | 2026-09-04 |
 
-**21 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01 → 2026-09-27), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-27), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-27), `csp-eau-potable` (11 articles, lus 2026-09-02 → 2026-09-27), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02 → 2026-09-27), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02 → 2026-09-27), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-27), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-27), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-26), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
+**21 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01 → 2026-09-27), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-27), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-27), `csp-eau-potable` (11 articles, lus 2026-09-02 → 2026-09-27), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02 → 2026-09-27), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02 → 2026-09-27), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-27), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-27), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-27), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03 → 2026-09-27), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
 
 Le total du corpus, les articles jamais lus et ceux qui imposent une obligation que le référentiel ne porte pas sont tenus par `pnpm relecture`, qui les compte à la maille du corpus.
 
@@ -275,17 +275,17 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `aeration-travail-mise-en-service` | aeration | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-08-27 → 2026-09-01 |
 | `aeration-travail-recyclage-semestriel` | aeration | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `ascenseur-carnet-entretien` | ascenseur | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
-| `ascenseur-controle-technique-quinquennal` | ascenseur | equipement | 3 | 5 · première main | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-09-04 |
+| `ascenseur-controle-technique-quinquennal` | ascenseur | equipement | 3 | 5 · première main | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-09-27 |
 | `ascenseur-rapport-annuel-activite` | ascenseur | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
 | `ascenseur-telealarme-liaison` | ascenseur | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
 | `co-activite-etablissement-protocole-securite` | co_activite | etablissement | 7 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 7 | 2026-08-31 → 2026-09-26 |
 | `cuisson-erp-appareils-annuelle` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
-| `cuisson-erp-verification-initiale` | cuisson_hotte | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-08-26 → 2026-09-01 |
+| `cuisson-erp-verification-initiale` | cuisson_hotte | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-09-27 |
 | `cuisson-gaz-installations-annuelle` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `eclairage-etablissement-regles-entretien` | eclairage | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-02 |
-| `elec-erp-groupe-electrogene-annuel` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
+| `elec-erp-groupe-electrogene-annuel` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `elec-erp-groupe-electrogene-quinzaine` | electricite | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
-| `elec-erp-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
+| `elec-erp-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `elec-erp-presence-personne-qualifiee` | electricite | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-salarie-attestation-medicale-voisinage` | electricite | salarie | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
 | `elec-salarie-habilitation` | electricite | salarie | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
@@ -293,7 +293,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `elec-travail-consignation-registre` | electricite | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-31 → 2026-09-01 |
 | `elec-travail-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
 | `elec-travail-periodique-annuelle` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-26 |
-| `elec-travail-rapport-quadriennal` | electricite | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-26 → 2026-09-01 |
+| `elec-travail-rapport-quadriennal` | electricite | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `conduite-salarie-autorisation` | formation_securite | salarie | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-31 |
 | `conduite-salarie-formation` | formation_securite | salarie | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-08-31 |
 | `formation-securite-etablissement-apres-accident-grave` | formation_securite | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-26 |
@@ -304,7 +304,6 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `formation-securite-salarie-accueil` | formation_securite | salarie | 7 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 7 | 2026-08-31 |
 | `formation-securite-salarie-cse-sst` | formation_securite | salarie | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-08-31 → 2026-09-27 |
 | `formation-securite-salarie-designe-competent` | formation_securite | salarie | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-08-31 → 2026-09-27 |
-| `habitation-consignes-plans-intervention` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `habitation-registre-securite` | incendie | etablissement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 |
 | `habitation-verification-annuelle-installations-securite` | incendie | etablissement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 |
 | `incendie-erp-5-consignes-affichees` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-26 |
@@ -359,38 +358,39 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `stockage-dangereux-ventilation-locaux` | stockage_dangereux | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
 | `stockage-dangereux-verification-etancheite` | stockage_dangereux | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
 | `aeration-controle-installations-r4222-20` | aeration | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-27 |
-| `aeration-habitation-vmc-gaz-annuelle` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-08-26 |
-| `aeration-habitation-vmc-gaz-quinquennale` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-08-26 |
-| `ascenseur-entretien-contrat` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
-| `ascenseur-examen-annuel-securite` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
-| `ascenseur-examen-semestriel-secours` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
-| `ascenseur-visite-six-semaines` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
+| `aeration-habitation-vmc-gaz-annuelle` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
+| `aeration-habitation-vmc-gaz-quinquennale` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
+| `ascenseur-entretien-contrat` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-27 |
+| `ascenseur-examen-annuel-securite` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-27 |
+| `ascenseur-examen-semestriel-secours` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-27 |
+| `ascenseur-visite-six-semaines` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-27 |
 | `compactage-dechets-vgp-trimestrielle` | compactage_dechets | equipement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson-erp-circuits-extraction-nettoyage` | cuisson_hotte | equipement | 1 | 5 · première main | 5 · première main | 1 / 1 | 2026-09-27 |
 | `cuisson-erp-filtres-hebdomadaire` | cuisson_hotte | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
-| `elec-erp-cat1-4-annuelle` | electricite | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
+| `elec-erp-cat1-4-annuelle` | electricite | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `incendie-hotel-po-controle-annuel-electricite` | electricite | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 |
 | `epi-etablissement-consigne-utilisation` | epi | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-04 |
 | `epi-verification-generale-periodique` | epi | equipement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-09-04 |
 | `esp-declaration-mise-en-service` | equipement_sous_pression | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `esp-dossier-suivi` | equipement_sous_pression | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
-| `esp-inspection-periodique` | equipement_sous_pression | equipement | 1 | 5 · première main | 5 · première main | 1 / 1 | 2026-09-01 |
-| `esp-inspection-periodique-generateur-vapeur` | equipement_sous_pression | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
+| `esp-inspection-periodique` | equipement_sous_pression | equipement | 1 | 5 · première main | 5 · première main | 1 / 1 | 2026-09-27 |
+| `esp-inspection-periodique-generateur-vapeur` | equipement_sous_pression | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `esp-intervention-reparation` | equipement_sous_pression | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
 | `esp-personnel-formation` | equipement_sous_pression | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
 | `esp-requalification-decennale` | equipement_sous_pression | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
 | `formation-securite-etablissement-travail-sur-ecran` | formation_securite | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
-| `froid-controle-etancheite-annuel` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 |
-| `froid-controle-etancheite-annuel-50t-detection` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 |
-| `froid-controle-etancheite-apres-modification` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 |
-| `froid-controle-etancheite-biennal-detection` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 |
-| `froid-controle-etancheite-mise-en-service` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 |
-| `froid-controle-etancheite-semestriel-500t-detection` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 |
-| `froid-controle-etancheite-semestriel-50t` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 |
-| `froid-controle-etancheite-trimestriel-500t` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 |
+| `froid-controle-etancheite-annuel` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 → 2026-09-27 |
+| `froid-controle-etancheite-annuel-50t-detection` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 → 2026-09-27 |
+| `froid-controle-etancheite-apres-modification` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 → 2026-09-27 |
+| `froid-controle-etancheite-biennal-detection` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 → 2026-09-27 |
+| `froid-controle-etancheite-mise-en-service` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 → 2026-09-27 |
+| `froid-controle-etancheite-semestriel-500t-detection` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 → 2026-09-27 |
+| `froid-controle-etancheite-semestriel-50t` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 → 2026-09-27 |
+| `froid-controle-etancheite-trimestriel-500t` | froid | equipement | 2 | 5 · première main | 5 · première main | 2 / 2 | 2026-08-26 → 2026-09-27 |
+| `habitation-consignes-plans-intervention` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `incendie-erp-5-sommeil-contrat-entretien-sdi` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `incendie-erp-5-visite-commission` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-09-01 |
-| `incendie-erp-baes-annuelle` | incendie | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
+| `incendie-erp-baes-annuelle` | incendie | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `incendie-erp-desenfumage-annuelle` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
 | `incendie-erp-eclairage-securite-autonomie-semestrielle` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
 | `incendie-erp-eclairage-securite-essai-mensuel` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
@@ -453,16 +453,16 @@ refaire pour la contredire.
 | `elec-salarie-attestation-medicale-voisinage` | fondement | R. 4544-11-1 | R. 4544-11-1 | code-travail-electricite | retenu | 2026-08-27 | premiere_main | — | ✓ | 2025-10-01 | 2025-10-01 | 5 · première main | ancrée |
 | `elec-salarie-attestation-medicale-voisinage` | contexte 1 | R. 4544-10 (habilitation délivrée à un travailleur désigné) | R. 4544-10 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2025-10-01 | 2025-10-01 | 4 · agent + verbatim | ancrée |
 | `elec-erp-mise-en-service` | fondement | Arrêté du 25 juin 1980, art. GE 6 à GE 8 (vérifications par organismes agréés, rapport RVRAT) — livre II, établissements des quatre premières catégories | GE 6 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2007-11-19 | 2007-11-19 | 4 · agent + verbatim | ancrée |
-| `elec-erp-mise-en-service` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 § 2 (installations neuves ou modifiées) — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
-| `elec-erp-cat1-4-annuelle` | fondement | Arrêté du 25 juin 1980, art. EL 19 § 3 (vérifications périodiques des installations non modifiées) | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
+| `elec-erp-mise-en-service` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 § 2 (installations neuves ou modifiées) — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
+| `elec-erp-cat1-4-annuelle` | fondement | Arrêté du 25 juin 1980, art. EL 19 § 3 (vérifications périodiques des installations non modifiées) | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
 | `elec-erp-groupe-electrogene-quinzaine` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 4 (première périodicité) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 4 · agent + verbatim | ancrée |
 | `elec-erp-presence-personne-qualifiee` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 2 (présence physique d'une personne qualifiée) | EL 18 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 4 · agent + verbatim | ancrée |
 | `elec-erp-groupe-electrogene-annuel` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 4 (entretien et essais des groupes électrogènes de sécurité) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 4 · agent + verbatim | ancrée |
-| `elec-erp-groupe-electrogene-annuel` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 (vérification annuelle) — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
+| `elec-erp-groupe-electrogene-annuel` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 (vérification annuelle) — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
 | `elec-igh-annuelle` | fondement | Arrêté du 30 décembre 2011 (règlement IGH), art. GH 5 (vérifications techniques par organismes agréés) | GH 5 | arrete-2011-12-30-igh | retenu | 2026-09-04 | agent_verbatim | ✓ | — | 2026-01-01 | — | 3 · lu sans verbatim | jamais constatée |
-| `incendie-hotel-po-controle-annuel-electricite` | fondement | Arrêté du 25 juin 1980, art. PO 1 § 3 (règles spécifiques aux hôtels) | PO 1 | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
+| `incendie-hotel-po-controle-annuel-electricite` | fondement | Arrêté du 25 juin 1980, art. PO 1 § 3 (règles spécifiques aux hôtels) | PO 1 | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2011-10-30 | 2018-01-01 | 5 · première main | divergente |
 | `incendie-hotel-po-controle-annuel-electricite` | contexte 1 | Arrêté du 25 juin 1980, art. PO 8 § 1 (extension aux hôtels existants) | PO 8 | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
-| `elec-travail-rapport-quadriennal` | fondement | Arrêté du 26 décembre 2011, annexe II, point 3.5 (mise à jour des renseignements descriptifs) | Arrêté 2011-12-26 annexe II | arrete-2011-12-26-electricite | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2011-12-30 | 2011-12-30 | 5 · première main | ancrée |
+| `elec-travail-rapport-quadriennal` | fondement | Arrêté du 26 décembre 2011, annexe II, point 3.5 (mise à jour des renseignements descriptifs) | Arrêté 2011-12-26 annexe II | arrete-2011-12-26-electricite | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2011-12-30 | 2011-12-30 | 5 · première main | ancrée |
 | `elec-travail-rapport-quadriennal` | contexte 1 | R. 4226-16 (vérification périodique annuelle) | R. 4226-16 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2011-07-01 | 2011-07-01 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-pe4-entretien-installations-techniques` | fondement | Arrêté du 25 juin 1980, art. PE 4 § 2 | PE 4 | arrete-1980-livre-3 | retenu | 2026-09-27 | premiere_main | — | ✓ | 2026-07-01 | 2026-07-01 | 5 · première main | ancrée |
 | `incendie-erp-pe4-entretien-installations-techniques` | contexte 1 | Arrêté du 25 juin 1980, art. PE 2 § 3 | PE 2 | arrete-1980-livre-3 | sans_objet | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-01-01 | 2026-01-01 | 5 · première main | ancrée |
@@ -501,7 +501,7 @@ refaire pour la contredire.
 | `incendie-erp-ssi-triennale` | fondement | Arrêté du 25 juin 1980, art. MS 73 § 2 (vérification triennale par organisme agréé des SSI de catégorie A ou B) | MS 73 | arrete-1980-livre-2 | retenu | 2026-08-26 | agent_verbatim | ✓ | — | 1980-08-15 | 1980-08-15 | 3 · lu sans verbatim | ancrée |
 | `incendie-erp-alarme-verification-hebdomadaire` | fondement | Arrêté du 25 juin 1980, art. MS 69 deuxième alinéa (l'exploitant s'assure une fois par semaine au moins du bon fonctionnement de l'installation) | MS 69 | arrete-1980-livre-2 | retenu | 2026-09-04 | agent_verbatim | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 4 · agent + verbatim | ancrée |
 | `incendie-erp-baes-annuelle` | fondement | Arrêté du 25 juin 1980, art. EC 15 — livre II, établissements des quatre premières catégories | EC 15 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
-| `incendie-erp-baes-annuelle` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
+| `incendie-erp-baes-annuelle` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
 | `incendie-erp-desenfumage-annuelle` | fondement | Arrêté du 25 juin 1980, art. DF 10 — livre II, établissements des quatre premières catégories | DF 10 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2007-10-28 | 2007-10-28 | 5 · première main | ancrée |
 | `incendie-erp-ria-annuelle` | fondement | Arrêté du 25 juin 1980, art. MS 73 (appareils et installations fixes) — livre II, établissements des quatre premières catégories | MS 73 | arrete-1980-livre-2 | retenu | 2026-08-26 | agent_verbatim | ✓ | — | 1980-08-15 | 1980-08-15 | 3 · lu sans verbatim | ancrée |
 | `incendie-erp-5-visite-commission` | fondement | CCH, art. R. 143-41 (visites périodiques de la commission) | CCH R. 143-41 | cch-registre-securite | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2021-07-01 | 2021-07-01 | 5 · première main | ancrée |
@@ -537,7 +537,7 @@ refaire pour la contredire.
 | `habitation-registre-securite` | fondement | Arrêté du 31 janvier 1986, art. 103 (contenu minimal du registre) | Arrêté 1986-01-31 art. 103 | arrete-1986-habitation | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2015-10-01 | 2015-10-01 | 4 · agent + verbatim | ancrée |
 | `habitation-registre-securite` | contexte 1 | Arrêté du 31 janvier 1986, art. 101 in fine (le registre justifie l'entretien) | Arrêté 1986-01-31 art. 101 | arrete-1986-habitation | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1986-03-05 | 1986-03-05 | 4 · agent + verbatim | ancrée |
 | `habitation-registre-securite` | contexte 2 | Arrêté du 31 janvier 1986, art. 104 (présentation aux agents assermentés) | Arrêté 1986-01-31 art. 104 | arrete-1986-habitation | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1986-03-05 | 1986-03-05 | 4 · agent + verbatim | ancrée |
-| `habitation-consignes-plans-intervention` | fondement | Arrêté du 31 janvier 1986, art. 100 (affichage des consignes et des plans d'intervention) | Arrêté 1986-01-31 art. 100 | arrete-1986-habitation | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2015-10-01 | 2015-10-01 | 4 · agent + verbatim | ancrée |
+| `habitation-consignes-plans-intervention` | fondement | Arrêté du 31 janvier 1986, art. 100 (affichage des consignes et des plans d'intervention) | Arrêté 1986-01-31 art. 100 | arrete-1986-habitation | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2015-10-01 | 2015-10-01 | 5 · première main | ancrée |
 | `aeration-controle-installations-r4222-20` | fondement | R. 4222-20 | R. 4222-20 | code-travail-risque-chimique | retenu | 2026-08-27 | premiere_main | — | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `aeration-controle-installations-r4222-20` | contexte 1 | R. 4222-22 | R. 4222-22 | code-travail-risque-chimique | sans_objet | 2026-08-27 | premiere_main | — | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `aeration-controle-installations-r4222-20` | contexte 2 | Arrêté du 8 octobre 1987, art. 3 | Arrêté 1987-10-08 art. 3 | arrete-1987-10-08-aeration | retenu | 2026-08-27 | premiere_main | ✓ | ✓ | 1988-04-01 | 1988-04-01 | 5 · première main | ancrée |
@@ -552,27 +552,27 @@ refaire pour la contredire.
 | `aeration-erp-filtres-visite-periodique` | fondement | Arrêté du 25 juin 1980, art. CH 39 § 3 (visite périodique par l'utilisateur, périodicité ramenée à trois mois en l'absence de système de mesure et d'alarme permanent) | CH 39 | arrete-1980-livre-2 | retenu | 2026-09-04 | agent_verbatim | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 4 · agent + verbatim | ancrée |
 | `aeration-erp-ps-surveillance-qualite-air-inf-250` | fondement | Arrêté du 25 juin 1980, art. PS 32 (rédaction arrêté du 9 mai 2006) | PS 32 | arrete-1980-livre-4-parcs | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2006-07-09 | 2006-07-09 | 4 · agent + verbatim | ancrée |
 | `aeration-erp-ps-surveillance-qualite-air-sup-250` | fondement | Arrêté du 25 juin 1980, art. PS 32 (rédaction arrêté du 9 mai 2006) | PS 32 | arrete-1980-livre-4-parcs | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2006-07-09 | 2006-07-09 | 4 · agent + verbatim | ancrée |
-| `aeration-habitation-vmc-gaz-quinquennale` | fondement | Arrêté du 23 février 2018, art. 26 § 5° (opérations quinquennales sur les VMC-gaz) | Arrêté 23-02-2018 art. 26 | arrete-2018-02-23-gaz-habitation | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 5 · première main | ancrée |
-| `aeration-habitation-vmc-gaz-annuelle` | fondement | Arrêté du 23 février 2018, art. 26 § 5° (opérations annuelles sur les VMC-gaz) | Arrêté 23-02-2018 art. 26 | arrete-2018-02-23-gaz-habitation | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 5 · première main | ancrée |
+| `aeration-habitation-vmc-gaz-quinquennale` | fondement | Arrêté du 23 février 2018, art. 26 § 5° (opérations quinquennales sur les VMC-gaz) | Arrêté 23-02-2018 art. 26 | arrete-2018-02-23-gaz-habitation | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 5 · première main | ancrée |
+| `aeration-habitation-vmc-gaz-annuelle` | fondement | Arrêté du 23 février 2018, art. 26 § 5° (opérations annuelles sur les VMC-gaz) | Arrêté 23-02-2018 art. 26 | arrete-2018-02-23-gaz-habitation | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2023-01-01 | 2023-01-01 | 5 · première main | ancrée |
 | `cuisson-erp-filtres-hebdomadaire` | fondement | Arrêté du 25 juin 1980, art. GC 21 § 2 (entretien des installations de cuisson) — livre II, établissements des quatre premières catégories | GC 21 | arrete-1980-livre-2 | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
 | `cuisson-erp-verification-initiale` | fondement | Arrêté du 25 juin 1980, art. GC 22 § 1 (vérification dans les conditions de la section II du chapitre Ier) — livre II, établissements des quatre premières catégories | GC 22 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 4 · agent + verbatim | ancrée |
 | `cuisson-erp-verification-initiale` | contexte 1 | Arrêté du 25 juin 1980, art. GE 6 à GE 8 (vérifications par organismes agréés) — livre II, établissements des quatre premières catégories | GE 6 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2007-11-19 | 2007-11-19 | 4 · agent + verbatim | ancrée |
-| `cuisson-erp-verification-initiale` | contexte 2 | Arrêté du 25 juin 1980, art. GC 1 § 3 (définition de la « grande cuisine ») — livre II, établissements des quatre premières catégories | GC 1 | arrete-1980-livre-2 | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
+| `cuisson-erp-verification-initiale` | contexte 2 | Arrêté du 25 juin 1980, art. GC 1 § 3 (définition de la « grande cuisine ») — livre II, établissements des quatre premières catégories | GC 1 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
 | `cuisson-erp-appareils-annuelle` | fondement | Arrêté du 25 juin 1980, art. GC 22 — livre II, établissements des quatre premières catégories | GC 22 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 4 · agent + verbatim | ancrée |
 | `cuisson-gaz-installations-annuelle` | fondement | Arrêté du 25 juin 1980, art. GZ 15 (vérifications techniques périodiques, ex GZ 30) | GZ 15 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2026-01-01 | 2026-01-01 | 4 · agent + verbatim | ancrée |
 | `cuisson-erp-circuits-extraction-nettoyage` | fondement | Arrêté du 25 juin 1980, art. GC 21 § 2 (ramonage annuel, nettoyage des circuits, filtres hebdomadaires) — livre II, établissements des quatre premières catégories | GC 21 | arrete-1980-livre-2 | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 1980-08-15 | — | 5 · première main | jamais constatée |
 | `cuisson-erp-extinction-automatique-annuelle` | fondement | Arrêté du 25 juin 1980, art. MS 73 § 2 (vérification annuelle des moyens de secours) — livre II, établissements des quatre premières catégories | MS 73 | arrete-1980-livre-2 | retenu | 2026-08-26 | agent_verbatim | ✓ | — | 1980-08-15 | 1980-08-15 | 3 · lu sans verbatim | ancrée |
 | `cuisson-erp-extinction-automatique-annuelle` | contexte 1 | Arrêté du 25 juin 1980, art. GC 8 (obligation d'installation du dispositif) — livre II, établissements des quatre premières catégories | GC 8 | arrete-1980-livre-2 | retenu | 2026-08-27 | premiere_main | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
-| `ascenseur-visite-six-semaines` | fondement | CCH, art. R. 134-6 (prestations minimales du contrat d'entretien) | CCH R. 134-6 | cch-ascenseurs | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
+| `ascenseur-visite-six-semaines` | fondement | CCH, art. R. 134-6 (prestations minimales du contrat d'entretien) | CCH R. 134-6 | cch-ascenseurs | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
 | `ascenseur-visite-six-semaines` | contexte 1 | Arrêté du 18 novembre 2004 (entretien), annexe — colonne « intervalle maximum de six semaines » | Arrêté 2004-11-18 | arretes-ascenseurs | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
-| `ascenseur-entretien-contrat` | fondement | CCH, art. R. 134-6 et R. 134-7 (ex R. 125-2 et R. 125-2-1) | CCH R. 134-6 | cch-ascenseurs | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
+| `ascenseur-entretien-contrat` | fondement | CCH, art. R. 134-6 et R. 134-7 (ex R. 125-2 et R. 125-2-1) | CCH R. 134-6 | cch-ascenseurs | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
 | `ascenseur-entretien-contrat` | contexte 1 | Arrêté du 18 novembre 2004 relatif à l'entretien des installations d'ascenseurs, art. 2 et annexe | Arrêté 2004-11-18 | arretes-ascenseurs | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
-| `ascenseur-examen-semestriel-secours` | fondement | CCH, art. R. 134-6 (examen semestriel du bon état des câbles) | CCH R. 134-6 | cch-ascenseurs | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
+| `ascenseur-examen-semestriel-secours` | fondement | CCH, art. R. 134-6 (examen semestriel du bon état des câbles) | CCH R. 134-6 | cch-ascenseurs | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
 | `ascenseur-examen-semestriel-secours` | contexte 1 | Arrêté du 18 novembre 2004 (entretien), annexe — opérations semestrielles | Arrêté 2004-11-18 | arretes-ascenseurs | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
 | `ascenseur-examen-annuel-securite` | fondement | Arrêté du 18 novembre 2004 (entretien), annexe — opérations annuelles | Arrêté 2004-11-18 | arretes-ascenseurs | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
-| `ascenseur-examen-annuel-securite` | contexte 1 | CCH, art. R. 134-6 (vérification annuelle des parachutes) | CCH R. 134-6 | cch-ascenseurs | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
+| `ascenseur-examen-annuel-securite` | contexte 1 | CCH, art. R. 134-6 (vérification annuelle des parachutes) | CCH R. 134-6 | cch-ascenseurs | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 5 · première main | ancrée |
 | `ascenseur-controle-technique-quinquennal` | fondement | CCH, art. R. 134-11 à R. 134-13 (ex R. 125-2-4 et s.) | CCH R. 134-11 | cch-ascenseurs | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-05-15 | 2026-05-15 | 5 · première main | ancrée |
-| `ascenseur-controle-technique-quinquennal` | contexte 1 | Arrêté du 7 août 2012 relatif aux contrôles techniques à réaliser dans les installations d'ascenseurs | Arrêté 2012-08-07 | arretes-ascenseurs | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2026-05-15 | 2026-05-15 | 5 · première main | ancrée |
+| `ascenseur-controle-technique-quinquennal` | contexte 1 | Arrêté du 7 août 2012 relatif aux contrôles techniques à réaliser dans les installations d'ascenseurs | Arrêté 2012-08-07 | arretes-ascenseurs | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2026-05-15 | 2026-05-15 | 5 · première main | ancrée |
 | `ascenseur-controle-technique-quinquennal` | contexte 2 | Arrêté du 25 juin 1980, art. AS 9 (ERP des 4 premières catégories : vérification par un organisme agréé tous les cinq ans) | AS 9 | arrete-1980-livre-2 | retenu | 2026-09-04 | agent_verbatim | ✓ | ✓ | 2008-10-08 | 2008-10-08 | 4 · agent + verbatim | ancrée |
 | `ascenseur-carnet-entretien` | fondement | CCH, art. R. 134-7 III (carnet d'entretien — régime du contrat) | CCH R. 134-7 | cch-ascenseurs | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 4 · agent + verbatim | ancrée |
 | `ascenseur-carnet-entretien` | contexte 1 | CCH, art. R. 134-10 (carnet d'entretien — propriétaire assurant l'entretien par ses propres moyens) | CCH R. 134-10 | cch-ascenseurs | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2021-07-01 | 2021-07-01 | 5 · première main | ancrée |
@@ -590,8 +590,8 @@ refaire pour la contredire.
 | `porte-auto-portail-piete-coulissant` | fondement | Arrêté du 21 décembre 1993 (portes et portails automatiques), art. 2 et 5 (passages de véhicules) | Arrêté 1993-12-21 art. 2 | arrete-1993-12-21-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1994-07-13 | 1994-07-13 | 4 · agent + verbatim | ancrée |
 | `esp-declaration-mise-en-service` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 7 à 11 | Arrêté 2017-11-20 art. 7-11 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
 | `esp-declaration-mise-en-service` | contexte 1 | R. 557-14-1 et s. (suivi en service) | C. env. R. 557-14-1 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2016-12-31 | 2016-12-31 | 5 · première main | ancrée |
-| `esp-inspection-periodique` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 15 | Arrêté 2017-11-20 art. 15 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2018-01-01 | — | 5 · première main | jamais constatée |
-| `esp-inspection-periodique-generateur-vapeur` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 15, I | Arrêté 2017-11-20 art. 15 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
+| `esp-inspection-periodique` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 15 | Arrêté 2017-11-20 art. 15 | esp-suivi-en-service | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2018-01-01 | — | 5 · première main | jamais constatée |
+| `esp-inspection-periodique-generateur-vapeur` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 15, I | Arrêté 2017-11-20 art. 15 | esp-suivi-en-service | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
 | `esp-requalification-decennale` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 18 et 19 | Arrêté 2017-11-20 art. 18-19 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
 | `esp-dossier-suivi` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 6 (dossier d'exploitation) | Arrêté 2017-11-20 art. 6 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
 | `esp-intervention-reparation` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 26 à 28 | Arrêté 2017-11-20 art. 26-28 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2025-09-08 | 2025-09-08 | 5 · première main | ancrée |
@@ -636,21 +636,21 @@ refaire pour la contredire.
 | `levage-registre-securite-consignation` | fondement | R. 4323-25 | R. 4323-25 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `levage-registre-securite-consignation` | contexte 1 | R. 4323-26 | R. 4323-26 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `levage-registre-securite-consignation` | contexte 2 | R. 4323-27 | R. 4323-27 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `froid-controle-etancheite-mise-en-service` | fondement | R. 543-79, al. 1 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
+| `froid-controle-etancheite-mise-en-service` | fondement | R. 543-79, al. 1 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
 | `froid-controle-etancheite-mise-en-service` | contexte 1 | Règlement (UE) 2024/573, art. 5 | Règlement UE 2024/573 art. 5 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2024-02-20 | — | 5 · première main | jamais constatée |
 | `froid-controle-etancheite-annuel` | fondement | Règlement (UE) 2024/573, art. 5 | Règlement UE 2024/573 art. 5 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2024-02-20 | — | 5 · première main | jamais constatée |
-| `froid-controle-etancheite-annuel` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
+| `froid-controle-etancheite-annuel` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
 | `froid-controle-etancheite-biennal-detection` | fondement | Règlement (UE) 2024/573, art. 5 | Règlement UE 2024/573 art. 5 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2024-02-20 | — | 5 · première main | jamais constatée |
-| `froid-controle-etancheite-biennal-detection` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
+| `froid-controle-etancheite-biennal-detection` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
 | `froid-controle-etancheite-semestriel-50t` | fondement | Règlement (UE) 2024/573, art. 5 | Règlement UE 2024/573 art. 5 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2024-02-20 | — | 5 · première main | jamais constatée |
-| `froid-controle-etancheite-semestriel-50t` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
+| `froid-controle-etancheite-semestriel-50t` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
 | `froid-controle-etancheite-annuel-50t-detection` | fondement | Règlement (UE) 2024/573, art. 5 | Règlement UE 2024/573 art. 5 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2024-02-20 | — | 5 · première main | jamais constatée |
-| `froid-controle-etancheite-annuel-50t-detection` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
+| `froid-controle-etancheite-annuel-50t-detection` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
 | `froid-controle-etancheite-trimestriel-500t` | fondement | Règlement (UE) 2024/573, art. 5 | Règlement UE 2024/573 art. 5 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2024-02-20 | — | 5 · première main | jamais constatée |
-| `froid-controle-etancheite-trimestriel-500t` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
+| `froid-controle-etancheite-trimestriel-500t` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
 | `froid-controle-etancheite-semestriel-500t-detection` | fondement | Règlement (UE) 2024/573, art. 5 | Règlement UE 2024/573 art. 5 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2024-02-20 | — | 5 · première main | jamais constatée |
-| `froid-controle-etancheite-semestriel-500t-detection` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
-| `froid-controle-etancheite-apres-modification` | fondement | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
+| `froid-controle-etancheite-semestriel-500t-detection` | contexte 1 | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
+| `froid-controle-etancheite-apres-modification` | fondement | R. 543-79, al. 2 | C. env. R. 543-79 | froid-fluides-frigorigenes | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2025-01-01 | — | 5 · première main | jamais constatée |
 | `froid-controle-etancheite-apres-modification` | contexte 1 | Règlement (UE) 2024/573, art. 5 | Règlement UE 2024/573 art. 5 | froid-fluides-frigorigenes | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2024-02-20 | — | 5 · première main | jamais constatée |
 | `formation-securite-etablissement-organisation` | fondement | L. 4141-2 (formation pratique et appropriée à la sécurité, bénéficiaires) | L. 4141-2 | code-travail-formation-securite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `formation-securite-etablissement-organisation` | contexte 1 | R. 4141-3 (objet et contenu de la formation) | R. 4141-3 | code-travail-formation-securite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
