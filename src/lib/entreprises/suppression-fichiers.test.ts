@@ -29,7 +29,7 @@ const h = vi.hoisted(() => {
     analyseLegionelle: { findMany: async () => [{ rapportCle: "leg/1.pdf" }] },
     $transaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn(prisma),
   };
-  const stockage = { delete: vi.fn(async (_cle: string) => {}) };
+  const stockage = { delete: vi.fn<(cle: string) => Promise<void>>(async () => {}) };
   return { db, prisma, stockage };
 });
 

@@ -82,7 +82,7 @@ const h = vi.hoisted(() => {
     $transaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn(prisma),
   };
 
-  const stockage = { delete: vi.fn(async (_cle: string) => {}) };
+  const stockage = { delete: vi.fn<(cle: string) => Promise<void>>(async () => {}) };
 
   return {
     db,
@@ -347,7 +347,7 @@ describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09
     h.db.nbVersionsDuerp = 0;
     h.db.supprimes = [];
     h.stockage.delete.mockReset();
-    h.stockage.delete.mockImplementation(async (_cle: string) => {
+    h.stockage.delete.mockImplementation(async () => {
       // Libéré APRÈS que la base a tranché.
       expect(h.db.supprimes).toEqual(["etab-1"]);
     });

@@ -136,7 +136,7 @@ const h = vi.hoisted(() => {
       }
     },
   };
-  const stockage = { delete: vi.fn(async (_cle: string) => {}) };
+  const stockage = { delete: vi.fn<(cle: string) => Promise<void>>(async () => {}) };
   return { db, prisma, stockage, requireUser: vi.fn() };
 });
 
