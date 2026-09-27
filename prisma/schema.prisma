@@ -575,9 +575,13 @@ model Verification {
   // n'a pas de raison de refuser ce qu'aucune contrainte ne lui interdit.
   //
   // C'est le même garde-fou que `DuerpVersion.duerp`, et la même forme : la
-  // base refuse, et le produit offre la sortie prévue — un salarié qui part est
-  // DÉSACTIVÉ (`actif: false`), pas supprimé. Ses titres restent le temps de
-  // leur conservation (docs/rgpd.md § 4.3), puis il devient supprimable.
+  // base refuse. ~~Ses titres restent le temps de leur conservation
+  // (docs/rgpd.md § 4.3), puis il devient supprimable.~~ Décision de la
+  // propriétaire, 2026-09-27 (ADR-023, journal C44) : aucune conservation par
+  // analogie ; « Supprimer ce salarié » (`salaries/suppression.ts`) efface
+  // EXPLICITEMENT ses lignes — rapports, actions et signatures compris — avant
+  // la fiche, après une confirmation qui les compte. La garde reste pour tout
+  // autre chemin.
   salarie   Salarie? @relation(fields: [salarieId], references: [id], onDelete: Restrict)
 
   obligationId      String
@@ -1709,10 +1713,10 @@ model Salarie {
   /// le jour de la saisie, c'est-à-dire un retard inventé.
   entreLe DateTime?
 
-  /// Désactivé plutôt que supprimé quand la personne quitte l'entreprise : la
-  /// preuve qu'elle était habilitée AU MOMENT où elle a opéré doit survivre à
-  /// son départ, c'est elle qui couvre l'employeur sur une période passée
-  /// (docs/rgpd.md § 4.3).
+  /// « Sortie de l'effectif » : un marquage réversible, qui garde la fiche et
+  /// ses titres — un choix de l'employeur. Effacer, c'est « Supprimer ce
+  /// salarié » (`salaries/suppression.ts`, décision de la propriétaire du
+  /// 2026-09-27 ; docs/rgpd.md § 4.3).
   actif Boolean @default(true)
 
   titres    TitreSalarie[]

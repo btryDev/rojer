@@ -75,6 +75,19 @@ prouve qu'il était habilité **au moment où il a opéré**, et c'est elle qui
 protège l'employeur lors d'un contrôle portant sur une période passée
 (`docs/rgpd.md` § 4.3).
 
+**[2026-09-27 — décision de la propriétaire.]** ~~« tant qu'ils sont dans leur
+délai de conservation »~~ : ce délai n'était fondé que sur `D. 4711-3` par
+analogie, et la propriétaire a écarté toute conservation par analogie (E8).
+`actif` reste — la sortie de l'effectif est un choix de l'employeur, réversible,
+qui garde tout. S'y ajoute « Supprimer ce salarié » (`salaries/suppression.ts`),
+voulu par la propriétaire (« quand employeur supprime il est averti que data
+supprimé définitivement », puis l'option A) : la fiche, ses titres, ses lignes
+de calendrier, leurs rapports (fichiers compris), leurs actions et les
+signatures de ces rapports sont effacés dans une transaction, après une
+confirmation qui les compte. `Verification.salarieId` reste `onDelete:
+Restrict` : ce chemin efface les lignes explicitement avant la fiche, et la
+garde tient pour tout autre. Journal C44.
+
 ### 1 bis. Les instances viennent d'une déclaration, pas d'une dérivation
 
 C'est la correction que l'instruction a imposée à ce lot, et elle rectifie une

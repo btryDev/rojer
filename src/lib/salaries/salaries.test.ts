@@ -154,11 +154,13 @@ describe("texteInformation — art. 13", () => {
     // toute sa durée de validité ». Après le départ : aucun texte identifié,
     // et le texte le dit au lieu d'en inventer un.
     expect(texte).toMatch(/pendant toute sa durée de validité » \(art\. R\. 4323-56 et\s+R\. 4544-11-1/);
-    expect(texte).toMatch(/après votre départ n'est pas fixée par un\s+texte que Rojer ait identifié/);
+    expect(texte).toMatch(/après\s+votre\s+départ\s+n'est\s+pas\s+fixée\s+par\s+un\s+texte\s+que\s+Rojer\s+ait\s+identifié/);
     // Décision de la propriétaire, 2026-09-27 : la suppression est dite
     // définitive ; et ce que fait la sortie de l'effectif est dit tel quel.
     expect(texte).toMatch(/effacé définitivement/);
-    expect(texte).toMatch(/vos titres restent enregistrés jusqu'à ce que votre employeur les\s+supprime/);
+    expect(texte).toMatch(/votre\s+fiche\s+et\s+vos\s+titres\s+restent\s+enregistrés\s+jusqu'à\s+ce\s+que\s+votre\s+employeur\s+les\s+supprime/);
+    // « Supprimer ce salarié » (C44) : la fiche aussi s'efface, et c'est dit.
+    expect(texte).toMatch(/s'il\s+supprime\s+votre\s+fiche,\s+elle\s+est\s+effacée\s+définitivement/);
   });
 
   it("indique le recours à la CNIL", () => {
