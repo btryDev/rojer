@@ -245,7 +245,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "b27cb20eb442a921",
+  empreinte: "e0840ccd5b481a89",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
