@@ -124,6 +124,9 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 5,
+  // Recopiée SANS incrément le même jour (étape 4) : le moteur lit les clés de
+  // ses marques dans `matching/absence.ts` au lieu de les écrire en dur. NON :
+  // mêmes clés, mêmes lignes, mêmes écritures — la garde générique le vérifie.
   // INCRÉMENTÉ le 2026-09-27 (décision de la propriétaire, option (i) de
   // `docs/revues/analyse-reponse-absente-2026-09-27.md`) : le silence sur les
   // matières de R. 4227-22 retient « à confirmer » au lieu de valoir « non ».
@@ -229,7 +232,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "1d7da76de21483d1",
+  empreinte: "5ebafe87fac82bbd",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
