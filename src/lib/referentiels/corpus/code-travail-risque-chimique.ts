@@ -41,6 +41,81 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
         "Le motif de l'entrée quand elle était `obligation_manquante` (lot A, 2026-09-01), conservé : LA CONSIGNE D'UTILISATION N'EST PORTÉE PAR AUCUNE OBLIGATION. C'est un état permanent, avec une pièce écrite — la consigne disant les dispositions prises pour la ventilation et les mesures à prendre en cas de panne —, un avis de deux instances (médecin du travail, CSE), et aucun porteur au référentiel. L'article 2 b) de l'arrêté du 8 octobre 1987 la vise du même mouvement, sous son ancienne numérotation R. 232-5-9, et R. 4224-17 l'agrège nommément au dossier de maintenance des lieux de travail : trois textes la nomment, le produit ne la demande à personne.\n\nCLASSÉ ICI LE 2026-09-01 (lot A), après retrait de la seule obligation qui s'y adossait. `aeration-travail-mise-en-service` le citait pour fonder un contrôle à la mise en service : l'article n'en impose aucun — ni « vérification », ni « contrôle », ni « mise en service » n'y figurent, le seul acte prescrit est la rédaction d'une consigne. Le délai d'un mois qu'elle décrit vient de l'article 2 a) de l'arrêté du 8 octobre 1987, qui la porte désormais. Le lot A ne crée pas d'obligation : le manque est nommé, pas comblé.",
     },
     {
+      ref: "R. 4412-5",
+      intitule: "Évaluation des risques chimiques",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018530944",
+      versionEnVigueur: "2008-05-01",
+      luLe: "2026-09-28",
+      lecture: "api_legifrance",
+      prescrit:
+        "L'employeur évalue les risques pour toute activité susceptible d'exposer à des agents chimiques dangereux, et renouvelle cette évaluation périodiquement, notamment à toute modification importante des conditions de travail. Aucun rythme chiffré.",
+      citationCle:
+        "L'employeur évalue les risques encourus pour la santé et la sécurité des travailleurs pour toute activité susceptible de présenter un risque d'exposition à des agents chimiques dangereux.",
+      statut: "sans_objet",
+      motif:
+        "La déclinaison aux agents chimiques dangereux de l'évaluation des risques, que le DUERP porte comme son objet : aucune échéance propre. Même classement que R. 4423-1 (agents biologiques). Relu par l'API le 2026-09-28 (audit de bout en bout, D12) : le refus n'était écrit que dans une revue. « Renouvelée périodiquement » ne fixe aucun rythme ; la mise à jour du document unique, elle, est portée (R. 4121-2).",
+    },
+    {
+      ref: "R. 4412-6",
+      intitule: "Éléments pris en compte dans l'évaluation des risques chimiques",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045386457",
+      versionEnVigueur: "2022-03-31",
+      luLe: "2026-09-28",
+      lecture: "api_legifrance",
+      prescrit:
+        "Liste ce dont l'employeur tient compte pour évaluer les risques chimiques : propriétés dangereuses, informations du fournisseur, nature, degré et durée de l'exposition, conditions d'activité, effets combinés, valeurs limites, etc.",
+      citationCle:
+        "Pour l'évaluation des risques, l'employeur prend en compte, notamment :",
+      statut: "sans_objet",
+      motif:
+        "La déclinaison aux agents chimiques dangereux de l'évaluation des risques, que le DUERP porte comme son objet : aucune échéance propre. Même classement que R. 4423-1 (agents biologiques). Relu par l'API le 2026-09-28 (audit de bout en bout, D12) : le refus n'était écrit que dans une revue. Contenu de l'évaluation, pas un acte distinct.",
+    },
+    {
+      ref: "R. 4412-7",
+      intitule: "Étendue de l'évaluation des risques chimiques",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045386463",
+      versionEnVigueur: "2022-03-31",
+      luLe: "2026-09-28",
+      lecture: "api_legifrance",
+      prescrit:
+        "L'évaluation couvre toutes les activités, entretien et maintenance compris.",
+      citationCle:
+        "L'évaluation des risques inclut toutes les activités au sein de l'entreprise ou de l'établissement, y compris l'entretien et la maintenance.",
+      statut: "sans_objet",
+      motif:
+        "La déclinaison aux agents chimiques dangereux de l'évaluation des risques, que le DUERP porte comme son objet : aucune échéance propre. Même classement que R. 4423-1 (agents biologiques). Relu par l'API le 2026-09-28 (audit de bout en bout, D12) : le refus n'était écrit que dans une revue. Étendue de l'évaluation, pas un acte distinct.",
+    },
+    {
+      ref: "R. 4412-8",
+      intitule: "Activité nouvelle impliquant des agents chimiques dangereux",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018530937",
+      versionEnVigueur: "2008-05-01",
+      luLe: "2026-09-28",
+      lecture: "api_legifrance",
+      prescrit:
+        "Aucune activité nouvelle impliquant des agents chimiques dangereux avant l'évaluation des risques et la mise en œuvre des mesures de prévention.",
+      citationCle:
+        "Toute activité nouvelle impliquant des agents chimiques dangereux ne peut être entreprise qu'après réalisation de l'évaluation des risques et mise en œuvre des mesures de prévention appropriées.",
+      statut: "sans_objet",
+      motif:
+        "La déclinaison aux agents chimiques dangereux de l'évaluation des risques, que le DUERP porte comme son objet : aucune échéance propre. Même classement que R. 4423-1 (agents biologiques). Relu par l'API le 2026-09-28 (audit de bout en bout, D12) : le refus n'était écrit que dans une revue. Une condition préalable, sans date ni pièce propre.",
+    },
+    {
+      ref: "R. 4412-10",
+      intitule: "Résultats de l'évaluation consignés dans le document unique",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018530933",
+      versionEnVigueur: "2008-05-01",
+      luLe: "2026-09-28",
+      lecture: "api_legifrance",
+      prescrit:
+        "Les résultats de l'évaluation des risques chimiques sont consignés dans le document unique.",
+      citationCle:
+        "Les résultats de l'évaluation des risques sont consignés dans le document unique d'évaluation des risques prévu à l'article R. 4121-1 .",
+      statut: "sans_objet",
+      motif:
+        "La déclinaison aux agents chimiques dangereux de l'évaluation des risques, que le DUERP porte comme son objet : aucune échéance propre. Même classement que R. 4423-1 (agents biologiques). Relu par l'API le 2026-09-28 (audit de bout en bout, D12) : le refus n'était écrit que dans une revue. La consignation est celle du document unique, que le module DUERP porte.",
+    },
+    {
       ref: "R. 4412-11",
       intitule:
         "Mesures de prévention du risque d'exposition aux agents chimiques dangereux",

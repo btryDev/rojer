@@ -183,5 +183,21 @@ export const CODE_TRAVAIL_ELECTRICITE: Corpus = {
       reserve:
         "MÊME CONSTAT QUE SUR L'ENTRÉE JUMELLE du corpus incendie, refait ici le 2026-09-01 pour que la branche électricité ne se lise pas seule : le verbe est « est autorisé à », c'est une FACULTÉ. `elec-travail-consignation-registre` a heureusement un vrai fondement — R. 4226-19, qui impose la consignation —, de sorte que L. 4711-5 n'y ajoute que la forme permise. La question a été ouverte quatre fois en onze jours ; l'entrée existe pour qu'elle ne le soit pas une cinquième.",
     },
+    {
+      ref: "R. 4722-26",
+      intitule: "Vérification des installations électriques demandée par l'inspection du travail",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043128412",
+      versionEnVigueur: "2021-02-13",
+      luLe: "2026-09-28",
+      lecture: "api_legifrance",
+      prescrit:
+        "L'agent de contrôle de l'inspection du travail peut demander à l'employeur de faire vérifier par un organisme accrédité la conformité de tout ou partie des installations électriques.",
+      citationCle:
+        "L'agent de contrôle de l'inspection du travail peut demander à l'employeur de faire vérifier, par un organisme accrédité, la conformité de tout ou partie des installations électriques fixes ou temporaires aux dispositions qui leur sont applicables.",
+      statut: "hors_perimetre",
+      exclusion: "sans_destinataire_exploitant",
+      motif:
+        "La vérification n'est due que si l'inspection du travail la demande : une procédure que l'exploitant subit, pas une échéance qu'il tient. Même classement que l'arrêté du 21 décembre 2004, art. 7 (vérification des échafaudages sur demande de l'inspection du travail). Relu par l'API le 2026-09-28 (audit de bout en bout, D12) : le refus n'était écrit que dans une revue. La demande reçue peut se saisir comme prescription particulière (ADR-035).",
+    },
   ],
 };

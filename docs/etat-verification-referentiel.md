@@ -194,7 +194,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**320 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
+**327 articles dépouillés ne sont cités par aucune obligation**, répartis sur 46 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -211,10 +211,11 @@ une relecture déjà faite.
 | `code-travail-formation-securite` | 10 | 27 | 2026-08-31 → 2026-09-27 |
 | `code-travail-sante-travail` | 9 | 26 | 2026-08-31 → 2026-09-27 |
 | `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 → 2026-09-27 |
+| `arrete-1980-livre-2` | 7 | 26 | 2026-09-01 → 2026-09-28 |
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
 | `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-27 |
 | `code-travail-vigilance` | 7 | 7 | 2026-09-02 → 2026-09-27 |
-| `arrete-1980-livre-2` | 6 | 25 | 2026-09-01 → 2026-09-04 |
+| `code-travail-risque-chimique` | 6 | 13 | 2026-09-02 → 2026-09-28 |
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-manutention-ecran` | 5 | 7 | 2026-09-26 |
@@ -225,10 +226,10 @@ une relecture déjà faite.
 | `code-travail-travail-dissimule` | 4 | 4 | 2026-09-02 |
 | `arrete-2017-04-19-registre-accessibilite` | 4 | 4 | 2026-09-03 → 2026-09-27 |
 | `arrete-1980-livre-1` | 3 | 3 | 2026-09-03 → 2026-09-26 |
+| `code-travail-electricite` | 3 | 9 | 2026-08-31 → 2026-09-28 |
 | `arrete-2018-02-23-gaz-habitation` | 3 | 4 | 2026-08-26 |
 | `arrete-1993-03-05-machines` | 3 | 5 | 2026-09-02 |
 | `code-travail-duerp` | 3 | 5 | 2026-09-02 → 2026-09-27 |
-| `code-travail-electricite` | 2 | 8 | 2026-08-31 |
 | `arrete-2011-12-26-electricite` | 2 | 5 | 2026-08-26 |
 | `code-travail-organisation-prevention` | 2 | 10 | 2026-09-26 |
 | `code-travail-agents-biologiques` | 2 | 2 | 2026-09-26 |
@@ -238,7 +239,6 @@ une relecture déjà faite.
 | `code-travail-epi-amont` | 2 | 2 | 2026-09-04 |
 | `arrete-1993-03-19-epi` | 2 | 4 | 2026-09-04 |
 | `cch-registre-securite` | 1 | 6 | 2026-09-20 |
-| `code-travail-risque-chimique` | 1 | 8 | 2026-09-02 |
 | `code-travail-locaux-sociaux` | 1 | 5 | 2026-09-27 |
 | `code-travail-service-prevention-sante` | 1 | 4 | 2026-08-31 |
 | `arrete-1993-03-19-travaux-dangereux` | 1 | 1 | 2026-09-03 |
