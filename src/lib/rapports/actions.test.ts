@@ -597,7 +597,9 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     expect(ligne().statut).toBe("a_planifier");
     // ~~`d("2026-01-05")`~~ [2026-09-28, D8 : la mise en service précède
     // l'origine de la ligne ; le ponctuel rouvert se date de l'origine.]
-    expect(ligne().datePrevue).toEqual(d(cleJourCivil(ligne().suiviDepuis)));
+    // L'origine de la ligne est une donnée du montage (`ORIGINE`, 2026-01-15),
+    // pas lue sur la ligne testée : un `suiviDepuis` faux ne passerait pas.
+    expect(ligne().datePrevue).toEqual(ORIGINE);
     await attendreConfluence();
   });
 

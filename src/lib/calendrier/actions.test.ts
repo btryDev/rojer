@@ -1163,11 +1163,14 @@ describe("genererCalendrier — mise en service", () => {
     const mes = new Date("2015-06-01T00:00:00Z");
     poserEtablissement([{ id: "eq-1", dateMiseEnService: mes }]);
 
+    // L'origine d'une ligne neuve est le jour de sa création : prise sur
+    // l'horloge ICI, pas relue sur la ligne testée (contre-lecture du lot 3).
+    const aujourdhui = depuisCleJourCivil(cleJourCivil(new Date()));
     await genererCalendrier(ETAB_ID);
 
     const oneShot = lignesDe(ELEC_MISE_EN_SERVICE);
     expect(oneShot).toHaveLength(1);
-    const origine = depuisCleJourCivil(cleJourCivil(oneShot[0].suiviDepuis));
+    const origine = aujourdhui;
     expect(oneShot[0].datePrevue).toEqual(origine);
     expect(oneShot[0].statut).toBe("a_planifier");
 

@@ -369,12 +369,15 @@ describe("f — la régénération ne touche que ses quatre modèles", () => {
 describe("g2 — une mise en service de 2015, créée puis repassée", () => {
   it("la seconde passe n'écrit rien, le statut ne bouge pas", async () => {
     poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2015-06-01") }]);
+    // L'origine d'une ligne neuve est le jour de sa création : prise sur
+    // l'horloge ICI, pas relue sur la ligne testée (contre-lecture du lot 3).
+    const aujourdhui = d(cleJourCivil(new Date()));
     await genererCalendrier(ETAB_ID);
     const photo = JSON.stringify(db.verifications);
     const mes = db.verifications.find((v) => v.obligationId === ELEC_MISE_EN_SERVICE)!;
     // ~~`d("2015-06-01")`~~ [2026-09-28, D8 : une mise en service antérieure
     // au suivi date le ponctuel à l'origine.]
-    expect(mes.datePrevue).toEqual(d(cleJourCivil(mes.suiviDepuis)));
+    expect(mes.datePrevue).toEqual(aujourdhui);
 
     db.journal = [];
     const r = await genererCalendrier(ETAB_ID);
@@ -389,7 +392,11 @@ describe("g2 — une mise en service de 2015, créée puis repassée", () => {
 // ---------------------------------------------------------------------------
 
 describe("D8 — le ponctuel posé à une mise en service antérieure au suivi est redaté, sans perte", () => {
-  it("même identifiant, action et rapport gardés, date ramenée à l'origine ; la passe suivante n'écrit rien", async () => {
+  // ~~« même identifiant, action et rapport gardés »~~ [2026-09-28,
+  // contre-lecture du lot 3 : le montage ne posait aucun rapport. Un ponctuel
+  // qui a un rapport est soldé, et D8 ne redate pas un ponctuel soldé — c'est
+  // le second cas ci-dessous.]
+  it("même identifiant, action gardée, date ramenée à l'origine ; la passe suivante n'écrit rien", async () => {
     // L'état qu'un moteur 5 a écrit en production : la ligne datée du
     // 2015-06-01, « à planifier », onze ans de retard, avec une action.
     poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2015-06-01") }]);
@@ -412,6 +419,31 @@ describe("D8 — le ponctuel posé à une mise en service antérieure au suivi e
     const r = await genererCalendrier(ETAB_ID);
     expect(r.created + r.updated + r.deleted + r.archived).toBe(0);
     expect(ecritures()).toEqual([]);
+  });
+});
+
+describe("D8 — un ponctuel SOLDÉ antérieur au suivi n'est pas redaté", () => {
+  it("rapport et action gardés, date et statut inchangés ; la passe suivante n'écrit rien", async () => {
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2015-06-01") }]);
+    db.verifications = [
+      ligne({
+        id: "p2", equipementId: "eq-1", obligationId: ELEC_MISE_EN_SERVICE, libelleObligation: "Vérification initiale",
+        periodicite: "mise_en_service_uniquement", realisateurRequis: ["organisme_accredite"],
+        datePrevue: d("2015-06-01"), statut: "realisee_conforme", suiviDepuis: d("2026-01-15"),
+        rapports: [{ dateRapport: d("2015-07-01"), resultat: "conforme" }], nbRapports: 1, nbActions: 1,
+      }),
+    ];
+    await genererCalendrier(ETAB_ID);
+    const apres = lue("p2")!;
+    expect(apres.datePrevue).toEqual(d("2015-06-01"));
+    expect(apres.statut).toBe("realisee_conforme");
+    expect(apres.nbRapports).toBe(1);
+    expect(apres.nbActions).toBe(1);
+    expect(apres.archiveLe ?? null).toBeNull();
+
+    db.journal = [];
+    const r = await genererCalendrier(ETAB_ID);
+    expect(r.created + r.updated + r.deleted + r.archived).toBe(0);
   });
 });
 
