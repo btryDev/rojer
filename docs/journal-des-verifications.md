@@ -4672,10 +4672,10 @@ décisions : D26, D27 (`docs/revues/decisions-a-prendre-2026-09-27.md`).*
 
 | Décision | Commit | Ce qui change | Éprouvé |
 |---|---|---|---|
-| D8 | `fd4a156f` | le ponctuel ouvert antérieur au suivi est daté de l'origine, pas de la mise en service ; moteur 5 → 6 | clamp retiré → « 5 failed \| 109 passed (114) » |
+| D8 | `fd4a156f`, `fba08e5a` | le ponctuel ouvert antérieur au suivi est daté de l'origine, pas de la mise en service ; le soldé ne bouge pas ; moteur 5 → 6 | clamp retiré → « 5 failed \| 109 passed (114) » (115 au HEAD : D7 a ajouté un test) ; soldé redaté → « 1 failed \| 16 passed (17) » |
 | D7 | `215c1671` | un seul rythme de VGP par appareil de levage ; l'annuelle retirée avec trace est archivée ; référentiel `2026-09-28.1` | lettre de (a) → « 8 failed \| 22 passed (30) » ; trace ignorée → 3 rouges |
-| D1 | `b3dd9a71`, `360a2514` | `retenueParPrudence` : la ligne marquée « à confirmer » sort des retards et de l'indice ; « À confirmer » au lieu de « En retard » (PDF, registre, MCP, fiche) | prudence retirée → « 4 failed \| 56 passed (60) », et neuf autres casses |
-| D2 | `e685afef` | l'indice reçoit les questions de couverture : « Reste à renseigner » au lieu de « Situation satisfaisante » | `qualifier` sans couverture → « 2 failed \| 48 passed (50) » |
+| D1 | `b3dd9a71`, `360a2514`, `2ec8e224`, `454fb2fa` | `retenueParPrudence` : la ligne marquée « à confirmer » sort des retards et de l'indice ; « À confirmer » au lieu de « En retard » (PDF, registre, MCP, fiche) | prudence retirée → « 4 failed \| 56 passed (60) », et neuf autres casses |
+| D2 | `e685afef`, `454fb2fa` | l'indice reçoit les questions de couverture : « Reste à renseigner » au lieu de « Situation satisfaisante » | `qualifier` sans couverture → « 2 failed \| 48 passed (50) » |
 
 **La lettre d'une option n'est pas l'option.** D7 (a) prescrivait `infirmee` sur la
 personne et la force humaine pour l'annuelle. Appliquée telle quelle, la garde des
@@ -4685,7 +4685,14 @@ perdait toute VGP. Ce qui a été codé tient l'intention — un seul rythme —
 
 **Ce que D1 n'atteint pas encore, nommé** (D26) : la fiche équipement, les tuiles du
 calendrier, le filtre « en retard seulement », le choix de la carte « Prochaine
-échéance ».
+échéance ». [2026-09-28, contre-lecture neutre : cette liste
+n'était pas complète. Les barres et l'anneau du tableau de bord comptaient encore la
+ligne en retard — corrigé (`2ec8e224`) ; la règle annuelle, l'en-tête de mois et le
+mois déplié du calendrier sont ajoutés à D26. Deux gardes passaient vertes une fois
+cassées — la prudence des zones, la couverture transmise par le dossier PDF — et
+sont désormais éprouvées (`454fb2fa`). Trois tests D8 comparaient la date au
+`suiviDepuis` de la ligne testée ; ils comparent à une origine prise hors d'elle
+(`fba08e5a`).]
 
 **Écriture en production.** Moteur 6 : chaque dossier se régénère à sa prochaine
 ouverture ; seules les lignes ponctuelles antérieures au suivi et les VGP de levage

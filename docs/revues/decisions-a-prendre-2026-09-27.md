@@ -19,7 +19,8 @@ Un prédicat, `retenueParPrudence` (`calendrier/prudence.ts`), dérivé des marq
 du dossier (`marquesAConfirmerDuDossier`) ; lu par le compteur du calendrier (barre
 latérale, bandeau, tableau de bord), le score, le dossier PDF (bloc « Retenues à
 confirmer »), le registre (écran et PDF : « À confirmer »), la fiche de
-vérification, le parc, les zones, le MCP (`a_confirmer`). Restent sans la marque,
+vérification, le parc, les zones, le MCP (`a_confirmer`), et depuis `2ec8e224` les
+barres et l'anneau du tableau de bord. Restent sans la marque,
 nommés : la fiche équipement, les tuiles du calendrier et les compteurs de la vue
 par équipement (`RegistreLigne` n'a pas d'état « à confirmer »), le filtre « en
 retard seulement », le choix de la carte « Prochaine échéance » — D26.]
@@ -448,12 +449,18 @@ dotation deux fois.
 ## D26 — Les lecteurs de retard que D1 n'atteint pas encore
 
 **Constat** (lot 3). Une ligne retenue par prudence sort des retards et de l'indice,
-mais quatre lecteurs la peignent encore comme un retard ou peuvent la choisir :
+mais des lecteurs la peignent encore comme un retard ou peuvent la choisir
+(liste complétée le 2026-09-28 par la contre-lecture neutre — la première en
+nommait quatre) :
 la fiche équipement (`equipements/fiche.ts`, aucune marque reçue) ; les tuiles du
 calendrier et les compteurs de sa vue par équipement (`RegistreLigne` n'a pas
 d'état « à confirmer ») ; le filtre « en retard seulement » (`urgenceSeule`, une
 clause SQL — la ligne y reste, marquée) ; le choix de la carte « Prochaine
-échéance » (`prochaineEcheanceConnue`). **Options :** (a) un état « à confirmer »
+échéance » (`prochaineEcheanceConnue` ; `prochaineDate` n'est lu par aucun
+composant aujourd'hui) ; au calendrier encore, la règle annuelle
+(`regle-annee.ts`, « dont N en retard »), l'en-tête rouge de chaque mois
+(`nbEnRetard`, `calendrier/page.tsx`) et le mois déplié à l'arrivée (le premier
+mois qui a un retard) — tous lisent `registre === "enRetard"`, comme les tuiles. **Options :** (a) un état « à confirmer »
 dans `RegistreLigne` et la fiche équipement, la prudence dans le choix de la carte ;
 (b) les laisser, nommés. **Recommandation : (a)** pour la fiche et les tuiles —
 c'est la même affirmation « en retard » que D1 a retirée ailleurs ; le filtre peut
