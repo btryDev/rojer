@@ -534,7 +534,17 @@ nouveau court depuis ce rapport). (b) Garder : la ligne neuve repart « à plani
 repartir l'appareil « à planifier » affirme qu'il n'a jamais été vérifié. Change le
 calendrier : moteur ou référentiel neuf, test du réconciliateur.
 
-## D29 — La VGP au silence sur la force humaine : trois mois ou six ?
+## ~~D29 — La VGP au silence sur la force humaine : trois mois ou six ?~~ — tranchée le 2026-09-28, option (a), `afc33f1a`
+
+[2026-09-28, décision de la propriétaire : option (a). Trois mois au silence, avec la
+mention « retenue faute de réponse » (`1f80dd26`, `c3013c4a`). `afc33f1a` : les
+questions dont le silence change le rythme de la VGP — dérivées du moteur, pas
+recopiées : personnes, force humaine, chariot / appareil du II ; pas les accessoires
+— sont exigées à la déclaration et à la modification d'un appareil de levage (écran :
+sans « Je ne sais pas encore », sans présélection ; serveur : refus nommé). Un
+appareil ancien sans réponse se voit poser la question à sa prochaine modification ;
+les appareils muets sont relancés au tableau de bord, une question à la fois, réponse
+écrite et calendrier régénéré.]
 
 **Constat** (contre-revue du lot 3). Depuis `1f80dd26`, le silence retient le rythme
 le plus exigeant qu'une réponse possible donnerait : un appareil muet sur la force

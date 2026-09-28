@@ -4688,6 +4688,14 @@ Casses : règle d'avant → « 4 failed | 26 passed (30) » ; trimestrielle stri
 « 7 failed | 23 passed (30) » ; trace ignorée → « 4 failed | 14 passed (18) » ;
 prudence sans la clause → « 2 failed | 5 passed (7) ».
 
+**D29 (a), tranchée par la propriétaire le 2026-09-28** (`afc33f1a`) : au silence sur la
+force humaine, trois mois et la mention ; les réponses dont le silence change le
+rythme de la VGP (personnes, force humaine, chariot / appareil du II — dérivées du
+moteur) exigées à la déclaration et à la modification, à l'écran et au serveur ; les
+appareils muets relancés au tableau de bord. Casses : dérivation amputée → « 1 failed
+| 6 passed (7) » ; écran → « 1 failed | 1 passed (2) » ; porte serveur → « 3 failed |
+16 passed (19) » ; régénération de la relance → « 2 failed | 17 passed (19) ».
+
 **La lettre d'une option n'est pas l'option.** D7 (a) prescrivait `infirmee` sur la
 personne et la force humaine pour l'annuelle. Appliquée telle quelle, la garde des
 27 combinaisons rougissait huit fois : une condition `infirmee` est vraie au
