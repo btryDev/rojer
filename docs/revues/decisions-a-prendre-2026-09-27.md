@@ -12,7 +12,17 @@ que chaque option change.
 
 ---
 
-## D1 — Les lignes « à confirmer » dans l'indice et les retards (ouverte par le lot 1)
+## ~~D1 — Les lignes « à confirmer » dans l'indice et les retards (ouverte par le lot 1)~~ — fait le 2026-09-28, option (a), `b3dd9a71` et `360a2514`
+
+[2026-09-28, lot 3 `lot/affichage-honnete`, décision de la propriétaire : option (a).
+Un prédicat, `retenueParPrudence` (`calendrier/prudence.ts`), dérivé des marques
+du dossier (`marquesAConfirmerDuDossier`) ; lu par le compteur du calendrier (barre
+latérale, bandeau, tableau de bord), le score, le dossier PDF (bloc « Retenues à
+confirmer »), le registre (écran et PDF : « À confirmer »), la fiche de
+vérification, le parc, les zones, le MCP (`a_confirmer`). Restent sans la marque,
+nommés : la fiche équipement, les tuiles du calendrier et les compteurs de la vue
+par équipement (`RegistreLigne` n'a pas d'état « à confirmer »), le filtre « en
+retard seulement », le choix de la carte « Prochaine échéance » — D26.]
 
 **Constat** (contre-lecture du lot 1). Avec `VERSION_MOTEUR_CALENDRIER` à 5, un
 établissement de travail de moins de cinquante et une personnes, muet sur les
@@ -38,7 +48,14 @@ compteur de retards et le score.
 
 ---
 
-## D2 — L'indice d'avancement ignore les indéterminations de couverture (A3)
+## ~~D2 — L'indice d'avancement ignore les indéterminations de couverture (A3)~~ — fait le 2026-09-28, option (a), `e685afef`
+
+[2026-09-28, lot 3, décision de la propriétaire : option (a). `EntreeScoreConformite`
+reçoit la couverture (`couvertureDuDossier`, la même entrée que la page « Ce que
+Rojer ne couvre pas ») ; tant qu'une question reste ouverte, « Situation
+satisfaisante » devient « Reste à renseigner », au tableau de bord et au dossier PDF.
+Deux maillons sans test : le builder PDF qui transmet la couverture, le texte du
+widget (non monté en test).]
 
 **Constat, par appel** (maillon 7). Même restaurant, tout à jour, tout déclaré en
 place : catégorie N5 → 45 applicables, 0 indétermination, score 100 « Situation
@@ -110,7 +127,20 @@ aucun.
 **Recommandation.** Rédiger la clause (chantier « mentions légales et cadre »,
 déjà ouvert), ou, d'ici là, les porter sur la page de non-couverture.
 
-## D7 — Les vérifications de levage en doublon
+## ~~D7 — Les vérifications de levage en doublon~~ — fait le 2026-09-28, `215c1671`
+
+[2026-09-28, lot 3, décision de la propriétaire : option (a) — un seul rythme de VGP
+par appareil (arrêté du 1er mars 2004, art. 23, relu par l'API, LEGIARTI000006680469).
+La lettre de (a) — `infirmee` sur la personne et la force humaine pour l'annuelle —
+laissait deux lignes au silence (une `infirmee` est vraie sur une absence) et aurait
+privé de VGP un appareil manuel sans levage de personnes : l'annuelle exige
+« personnes = non » (`booleenne`), sans condition sur la force humaine ; un chariot
+garde sa semestrielle. Au silence, la semestrielle « personnes » reste — la plus
+exigeante des deux lignes qu'il faisait naître —, SANS marque « à confirmer » : le
+canal des conditions d'équipement n'existe pas (D14). Garde sur les 27 combinaisons
+(`matching/levage-un-rythme.test.ts`) ; réconciliateur : l'annuelle retirée qui porte
+un rapport ou une action est archivée, sans trace supprimée. Référentiel
+`2026-09-28.1`. Lectures de l'art. 23 restées ouvertes : D27.]
 
 **Constat** (maillon 3). `levage-vgp-annuelle-charges` n'exclut que
 `estChariotOuGerbeur` (`levage.ts:181`). Sans aucune réponse : annuelle +
@@ -128,7 +158,16 @@ corriger le commentaire.
 **Recommandation : (a).** C'est un changement de rythme sur des lignes en service
 — d'où la décision : il retire une ligne à des appareils qui en portent deux.
 
-## D8 — Un ponctuel antérieur au suivi affiche des années de retard
+## ~~D8 — Un ponctuel antérieur au suivi affiche des années de retard~~ — fait le 2026-09-28, `fd4a156f`
+
+[2026-09-28, lot 3, décision de la propriétaire. Le ponctuel OUVERT dont la mise en
+service précède l'origine du suivi est daté de l'origine (règle 2 de
+`echeance-de-ligne.ts`, limite de la règle 4) ; à l'origine ou après, il garde sa
+date et son retard ; le ponctuel soldé n'est pas redaté. Le test « ponctuel ouvert —
+mise en service passée » figeait 2015-03-01 (4 228 jours) : il attend l'origine, et
+six autres tests qui figeaient la même chose sont amendés, rayés et datés.
+`VERSION_MOTEUR_CALENDRIER` 5 → 6 : les dossiers concernés sont réécrits à leur
+prochaine ouverture ; le réconciliateur garde l'id et l'action.]
 
 **Constat** (maillon 4). Mise en service 2015, ponctuel : échéance au 2015-03-01, à
 planifier, 4 228 jours de retard au 2026-09-27. Le même appareil en rythme
@@ -405,3 +444,35 @@ fondement (R. 4227-28 contre R. 4227-29).
 **Recommandation : merger, avec (a).** Sans la branche, un employeur qui n'a déclaré
 aucun extincteur ne reçoit rien de R. 4227-29 ; avec elle mais sans (a), il lit la
 dotation deux fois.
+
+## D26 — Les lecteurs de retard que D1 n'atteint pas encore
+
+**Constat** (lot 3). Une ligne retenue par prudence sort des retards et de l'indice,
+mais quatre lecteurs la peignent encore comme un retard ou peuvent la choisir :
+la fiche équipement (`equipements/fiche.ts`, aucune marque reçue) ; les tuiles du
+calendrier et les compteurs de sa vue par équipement (`RegistreLigne` n'a pas
+d'état « à confirmer ») ; le filtre « en retard seulement » (`urgenceSeule`, une
+clause SQL — la ligne y reste, marquée) ; le choix de la carte « Prochaine
+échéance » (`prochaineEcheanceConnue`). **Options :** (a) un état « à confirmer »
+dans `RegistreLigne` et la fiche équipement, la prudence dans le choix de la carte ;
+(b) les laisser, nommés. **Recommandation : (a)** pour la fiche et les tuiles —
+c'est la même affirmation « en retard » que D1 a retirée ailleurs ; le filtre peut
+rester, la ligne y étant marquée.
+
+## D27 — Levage : les lectures de l'art. 23 que D7 n'a pas tranchées
+
+**Texte** (API, arrêté du 1er mars 2004, art. 23, LEGIARTI000006680469) : douze mois ;
+« toutefois » six mois (a) ou trois mois (b). Relevé par le lot 3, laissé tel quel :
+- l'art. 23 a) vise aussi les appareils « listés au III de l'article 20 » — manuels,
+  non conçus pour lever des personnes : lu ainsi, force humaine « oui » et personnes
+  « non » donneraient six mois, pas les douze du référentiel ;
+- chariot « oui », personnes « oui », force humaine « oui » donnent six mois (le
+  chariot l'emporte) quand le b) en donnerait trois ;
+- au silence sur la force humaine ou le chariot, le rythme retenu n'est pas le plus
+  exigeant possible (trois ou six mois le seraient) ;
+- `levage-examen-etat-conservation` reste annuelle et sans condition EN PLUS de
+  chaque VGP, alors que l'art. 22-II fait de l'examen une partie de la VGP : un
+  chariot porte une VGP semestrielle et un examen annuel — le doublon de D7, sur une
+  autre ligne.
+**Recommandation :** relire l'art. 20 III et l'art. 22 par l'API, puis trancher les
+quatre ensemble ; chacun change un rythme en service.

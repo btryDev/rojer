@@ -4663,6 +4663,34 @@ un ancêtre d'`origin/main` au 2026-09-28) : `lot/couverture-reponse-absente` et
 `lot/audit-bout-en-bout` se mergent ENSEMBLE. Mergée seule après un lot 1 déployé,
 cette branche changerait des écritures sous une version déjà servie.
 
+
+### C54 · 2026-09-28 — Affichage honnête : ce que le silence retient ne compte pas comme un manquement
+
+*Branche `lot/affichage-honnete`, sur `main` = `54e63c5f` (lots 1 et 2 déployés).
+Décisions de la propriétaire : D1, D2, D7, D8 selon les recommandations. Nouvelles
+décisions : D26, D27 (`docs/revues/decisions-a-prendre-2026-09-27.md`).*
+
+| Décision | Commit | Ce qui change | Éprouvé |
+|---|---|---|---|
+| D8 | `fd4a156f` | le ponctuel ouvert antérieur au suivi est daté de l'origine, pas de la mise en service ; moteur 5 → 6 | clamp retiré → « 5 failed \| 109 passed (114) » |
+| D7 | `215c1671` | un seul rythme de VGP par appareil de levage ; l'annuelle retirée avec trace est archivée ; référentiel `2026-09-28.1` | lettre de (a) → « 8 failed \| 22 passed (30) » ; trace ignorée → 3 rouges |
+| D1 | `b3dd9a71`, `360a2514` | `retenueParPrudence` : la ligne marquée « à confirmer » sort des retards et de l'indice ; « À confirmer » au lieu de « En retard » (PDF, registre, MCP, fiche) | prudence retirée → « 4 failed \| 56 passed (60) », et neuf autres casses |
+| D2 | `e685afef` | l'indice reçoit les questions de couverture : « Reste à renseigner » au lieu de « Situation satisfaisante » | `qualifier` sans couverture → « 2 failed \| 48 passed (50) » |
+
+**La lettre d'une option n'est pas l'option.** D7 (a) prescrivait `infirmee` sur la
+personne et la force humaine pour l'annuelle. Appliquée telle quelle, la garde des
+27 combinaisons rougissait huit fois : une condition `infirmee` est vraie au
+silence, donc deux lignes restaient, et un appareil manuel sans levage de personnes
+perdait toute VGP. Ce qui a été codé tient l'intention — un seul rythme — et le dit.
+
+**Ce que D1 n'atteint pas encore, nommé** (D26) : la fiche équipement, les tuiles du
+calendrier, le filtre « en retard seulement », le choix de la carte « Prochaine
+échéance ».
+
+**Écriture en production.** Moteur 6 : chaque dossier se régénère à sa prochaine
+ouverture ; seules les lignes ponctuelles antérieures au suivi et les VGP de levage
+en double changent, sans perte (réconciliateur, cas D7 et D8).
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états
