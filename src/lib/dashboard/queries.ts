@@ -413,7 +413,7 @@ export async function compterObligationsParMois(
   const debut = instantCivil(annee, 1, 1);
   const fin = instantCivil(annee + 1, 1, 1);
 
-  const verifs = await prisma.verification.findMany({
+  const [verifs, marques] = await Promise.all([prisma.verification.findMany({
     where: {
       etablissementId,
       etablissement: { entreprise: { userId: user.id } },
@@ -450,6 +450,7 @@ export async function compterObligationsParMois(
       // obligation éteinte continue de peindre des barres.
       archiveLe: true,
       libelleObligation: true,
+      obligationId: true,
       // TOUS les rapports réalisés de la ligne, et pas seulement ceux de
       // l'année : un rapport hors de l'année suffit à écarter le repli sur
       // `datePrevue` d'une ponctuelle consommée (`repartirParMois`). Une date
@@ -459,7 +460,11 @@ export async function compterObligationsParMois(
         select: { dateRapport: true },
       },
     },
-  });
+  }),
+    // D1 (a) : les barres et l'anneau lisent la même prudence que le bandeau
+    // (contre-lecture du lot 3 — ils comptaient encore la ligne en retard).
+    marquesAConfirmerDuRendu(etablissementId),
+  ]);
 
   // Les mêmes lectures que le calendrier (`lecturesCalendrier`) pour
   // l'échéance ouverte ; tous les rapports pour l'historique.
@@ -467,6 +472,7 @@ export async function compterObligationsParMois(
     verifs.map(({ rapports, ...v }) => ({ ...v, rapportsRealises: rapports })),
     annee,
     new Date(),
+    retenueParPrudence(marques.parObligation),
   );
 }
 

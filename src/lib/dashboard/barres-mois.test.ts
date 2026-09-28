@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { instantCivil } from "@/lib/dates";
 import { repartirParMois } from "./barres-mois";
+import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 
 /** 10 septembre 2026, 8 h à Paris. */
 const NOW = instantCivil(2026, 9, 10, 8);
@@ -19,6 +20,7 @@ const ligne = (o: {
   periodicite: o.periodicite ?? "trimestrielle",
   archiveLe: o.archiveLe ?? null,
   libelleObligation: "Vérification trimestrielle",
+  obligationId: "o-trimestrielle",
   rapportsRealises: (o.rapports ?? []).map((dateRapport) => ({ dateRapport })),
 });
 
@@ -36,6 +38,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       [ligne({ datePrevue: le(9, 15), rapports: [le(3, 12), le(6, 11)] })],
       2026,
       NOW,
+      AUCUNE_PRUDENCE,
     ).mois;
     expect(barres[2].couvert).toBe(1);
     expect(barres[5].couvert).toBe(1);
@@ -57,6 +60,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
+      AUCUNE_PRUDENCE,
     ).mois;
     expect(segments(barres[8])).toEqual([2, 1, 0]);
   });
@@ -66,6 +70,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       [ligne({ datePrevue: le(3, 1, 2027), rapports: [le(12, 1, 2025), le(4, 2)] })],
       2026,
       NOW,
+      AUCUNE_PRUDENCE,
     ).mois;
     expect(barres.reduce((n, b) => n + b.couvert, 0)).toBe(1);
     expect(barres[3].couvert).toBe(1);
@@ -78,6 +83,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       [ligne({ datePrevue: le(6, 1), rapports: [le(3, 1)] })],
       2026,
       NOW,
+      AUCUNE_PRUDENCE,
     ).mois;
     expect(segments(barres[2])).toEqual([1, 0, 0]);
     expect(segments(barres[5])).toEqual([0, 0, 1]);
@@ -94,6 +100,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
+      AUCUNE_PRUDENCE,
     ).mois;
     expect(segments(barres[1])).toEqual([1, 0, 0]);
   });
@@ -110,6 +117,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
+      AUCUNE_PRUDENCE,
     ).mois;
     expect(barres.every((b) => b.couvert === 0)).toBe(true);
   });
@@ -127,6 +135,7 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
+      AUCUNE_PRUDENCE,
     );
     expect(sansEcheance).toEqual({ retard: 2, aVenir: 1 });
     expect(mois.reduce((n, b) => n + b.aVenir + b.retard, 0)).toBe(1);
@@ -136,9 +145,9 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
   it("un retard d'une année passée ne se reporte que sur l'année en cours", () => {
     const sansDate = [ligne({ datePrevue: le(12, 1, 2025), statut: "a_planifier" })];
     // Vue de 2026, l'année de NOW : dû maintenant, compté.
-    expect(repartirParMois(sansDate, 2026, NOW).sansEcheance.retard).toBe(1);
+    expect(repartirParMois(sansDate, 2026, NOW, AUCUNE_PRUDENCE).sansEcheance.retard).toBe(1);
     // Vue d'une année future : rien n'y est en retard.
-    expect(repartirParMois(sansDate, 2027, NOW).sansEcheance.retard).toBe(0);
+    expect(repartirParMois(sansDate, 2027, NOW, AUCUNE_PRUDENCE).sansEcheance.retard).toBe(0);
   });
 
   it("un retard DATÉ de l'an dernier compte dans l'année en cours, hors des barres", () => {
@@ -146,16 +155,16 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
     // d'octobre dernier est manquée faisait dire « 0 en retard » à l'anneau
     // 2026, sous un bandeau « 1 en retard ».
     const datee = [ligne({ datePrevue: le(10, 1, 2025) })];
-    const vue2026 = repartirParMois(datee, 2026, NOW);
+    const vue2026 = repartirParMois(datee, 2026, NOW, AUCUNE_PRUDENCE);
     expect(vue2026.retardsAnterieurs).toBe(1);
     expect(vue2026.sansEcheance.retard).toBe(0);
     expect(vue2026.mois.every((b) => b.retard === 0)).toBe(true);
     // Vue de 2025 : il reste sur son mois, et n'est pas « antérieur ».
-    const vue2025 = repartirParMois(datee, 2025, NOW);
+    const vue2025 = repartirParMois(datee, 2025, NOW, AUCUNE_PRUDENCE);
     expect(vue2025.mois[9].retard).toBe(1);
     expect(vue2025.retardsAnterieurs).toBe(0);
     // Vue de 2027 : rien.
-    expect(repartirParMois(datee, 2027, NOW).retardsAnterieurs).toBe(0);
+    expect(repartirParMois(datee, 2027, NOW, AUCUNE_PRUDENCE).retardsAnterieurs).toBe(0);
   });
 
   it("une ligne archivée garde tous ses faits et ne pose aucune échéance", () => {
@@ -169,9 +178,25 @@ describe("repartirParMois — chaque rapport réalisé compte dans son mois", ()
       ],
       2026,
       NOW,
+      AUCUNE_PRUDENCE,
     ).mois;
     expect(barres[1].couvert).toBe(1);
     expect(barres[4].couvert).toBe(1);
     expect(barres.every((b) => b.aVenir === 0 && b.retard === 0)).toBe(true);
+  });
+});
+
+describe("repartirParMois — D1 (a) : la ligne retenue par prudence ne pose aucune échéance", () => {
+  // Contre-lecture du lot 3 : les barres et l'anneau du tableau de bord
+  // comptaient encore « en retard » la ligne que le bandeau ne compte plus.
+  // Éprouvé en retirant `if (prudence(v)) continue`.
+  it("échue et marquée : ni retard ni à venir ; ses rapports restent couverts", () => {
+    const l = ligne({ datePrevue: le(6, 15), rapports: [le(3, 12)] });
+    const sans = repartirParMois([l], 2026, NOW, AUCUNE_PRUDENCE);
+    const avec = repartirParMois([l], 2026, NOW, (v) => v.obligationId === l.obligationId);
+    expect(sans.mois[5].retard).toBe(1);
+    expect(avec.mois[5].retard).toBe(0);
+    expect(avec.mois[5].aVenir).toBe(0);
+    expect(avec.mois[2].couvert).toBe(1);
   });
 });

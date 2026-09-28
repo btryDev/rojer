@@ -6,6 +6,7 @@
 import { composantesCiviles } from "@/lib/dates";
 import { aUnRendezVous, lecturesCalendrier } from "@/lib/calendrier/etats";
 import type { VerificationDatee } from "@/lib/dates/retard";
+import type { RetenueParPrudence } from "@/lib/calendrier/prudence";
 
 export type BarMois = {
   mois: number; // 0-11
@@ -65,6 +66,7 @@ export type BarresAnnee = {
 export function repartirParMois(
   lignes: ReadonlyArray<
     VerificationDatee & {
+      obligationId: string;
       /** Les dates de TOUS les rapports réalisés de la ligne, pas seulement
        *  ceux de l'année : l'existence d'un rapport hors de l'année décide du
        *  repli ci-dessus. */
@@ -73,6 +75,10 @@ export function repartirParMois(
   >,
   annee: number,
   now: Date,
+  /** D1 (a), 2026-09-28 : une ligne que seul le silence de la fiche retient ne
+   *  pose aucune échéance — ni « retard », ni « à venir » —, comme elle sort des
+   *  compteurs (`repartirVerifications`). Ses rapports restent des faits. */
+  prudence: RetenueParPrudence,
 ): BarresAnnee {
   const buckets: BarMois[] = Array.from({ length: 12 }, (_, i) => ({
     mois: i,
@@ -107,6 +113,7 @@ export function repartirParMois(
         else for (const r of v.rapportsRealises) poser(r.dateRapport, "couvert");
         continue;
       }
+      if (prudence(v)) continue;
       const segment = lec.registre === "enRetard" ? "retard" : "aVenir";
       // UNE ÉCHÉANCE CONNUE, ET ELLE SEULE, SE POSE SUR UN MOIS. Une ligne
       // « à planifier » posait sa date de GÉNÉRATION : le mois de création du
