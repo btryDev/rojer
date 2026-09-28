@@ -4677,6 +4677,17 @@ décisions : D26, D27 (`docs/revues/decisions-a-prendre-2026-09-27.md`).*
 | D1 | `b3dd9a71`, `360a2514`, `2ec8e224`, `454fb2fa` | `retenueParPrudence` : la ligne marquée « à confirmer » sort des retards et de l'indice ; « À confirmer » au lieu de « En retard » (PDF, registre, MCP, fiche) | prudence retirée → « 4 failed \| 56 passed (60) », et neuf autres casses |
 | D2 | `e685afef`, `454fb2fa` | l'indice reçoit les questions de couverture : « Reste à renseigner » au lieu de « Situation satisfaisante » | `qualifier` sans couverture → « 2 failed \| 48 passed (50) » |
 
+**Revue indépendante (2026-09-28) : moins-disant contre un texte clair, corrigé.**
+L'art. 23 a) fixe six mois pour les appareils du III de l'art. 20 — manuels, non conçus
+pour lever des personnes ; le lot servait l'annuelle, et sa garde l'affirmait conforme.
+`1f80dd26` : obligation nouvelle `levage-vgp-semestrielle-force-humaine`, question
+« chariot » élargie à la liste du II, silence au rythme le plus exigeant ; référentiel
+`2026-09-28.2` (174). `f9234c89` : une ligne rythmée par une prescription (ADR-035)
+n'est jamais prudente — `prescriptionId` requis dans le type, l'oubli ne compile pas.
+Casses : règle d'avant → « 4 failed | 26 passed (30) » ; trimestrielle stricte →
+« 7 failed | 23 passed (30) » ; trace ignorée → « 4 failed | 14 passed (18) » ;
+prudence sans la clause → « 2 failed | 5 passed (7) ».
+
 **La lettre d'une option n'est pas l'option.** D7 (a) prescrivait `infirmee` sur la
 personne et la force humaine pour l'annuelle. Appliquée telle quelle, la garde des
 27 combinaisons rougissait huit fois : une condition `infirmee` est vraie au

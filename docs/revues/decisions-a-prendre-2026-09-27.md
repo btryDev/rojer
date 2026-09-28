@@ -145,6 +145,19 @@ canal des conditions d'équipement n'existe pas (D14). Garde sur les 27 combinai
 un rapport ou une action est archivée, sans trace supprimée. Référentiel
 `2026-09-28.1`. Lectures de l'art. 23 restées ouvertes : D27.]
 
+[2026-09-28, revue indépendante du lot 3 : la règle ci-dessus était MOINS-DISANTE
+contre un texte clair. Art. 23 a) : six mois pour les appareils « listés aux II et III
+de l'article 20 » ; art. 20 III (API, LEGIARTI000006680466) : ceux « non conçus
+spécialement pour lever des personnes, mus par la force humaine employée
+directement ». Un palan manuel recevait l'annuelle. `1f80dd26` : le texte dit six mois
+pour l'appareil manuel qui ne lève pas de personnes — obligation nouvelle
+`levage-vgp-semestrielle-force-humaine` (le modèle ne combine les conditions qu'en ET,
+et « II ou III » est un OU) ; la question « chariot » nomme la liste entière du II ;
+au silence, le rythme le plus exigeant qu'une réponse possible donnerait (trois mois
+au silence complet). La garde (`levage-un-rythme.test.ts`) tient la règle du texte
+(`rythmeDuTexte`), pas une table. Référentiel `2026-09-28.2`, 173 + 1 − 0 = 174 ;
+moteur 6 inchangé, non livré.]
+
 **Constat** (maillon 3). `levage-vgp-annuelle-charges` n'exclut que
 `estChariotOuGerbeur` (`levage.ts:181`). Sans aucune réponse : annuelle +
 semestrielle « personnes » ; force humaine « oui » : annuelle + trimestrielle ;
@@ -471,17 +484,34 @@ rester, la ligne y étant marquée.
 ## D27 — Levage : les lectures de l'art. 23 que D7 n'a pas tranchées
 
 **Texte** (API, arrêté du 1er mars 2004, art. 23, LEGIARTI000006680469) : douze mois ;
-« toutefois » six mois (a) ou trois mois (b). Relevé par le lot 3, laissé tel quel :
-- l'art. 23 a) vise aussi les appareils « listés au III de l'article 20 » — manuels,
+« toutefois » six mois (a) ou trois mois (b). ~~Relevé par le lot 3, laissé tel quel :~~
+[2026-09-28, revue indépendante du lot 3 : trois des quatre points étaient tranchés par
+le texte, et sont corrigés par `1f80dd26` — voir D7.]
+- ~~l'art. 23 a) vise aussi les appareils « listés au III de l'article 20 » — manuels,
   non conçus pour lever des personnes : lu ainsi, force humaine « oui » et personnes
-  « non » donneraient six mois, pas les douze du référentiel ;
-- chariot « oui », personnes « oui », force humaine « oui » donnent six mois (le
-  chariot l'emporte) quand le b) en donnerait trois ;
-- au silence sur la force humaine ou le chariot, le rythme retenu n'est pas le plus
-  exigeant possible (trois ou six mois le seraient) ;
+  « non » donneraient six mois, pas les douze du référentiel ;~~ [le texte dit six
+  mois (art. 20 III, LEGIARTI000006680466) : `levage-vgp-semestrielle-force-humaine`]
+- ~~chariot « oui », personnes « oui », force humaine « oui » donnent six mois (le
+  chariot l'emporte) quand le b) en donnerait trois ;~~ [trois mois désormais]
+- ~~au silence sur la force humaine ou le chariot, le rythme retenu n'est pas le plus
+  exigeant possible (trois ou six mois le seraient) ;~~ [le silence retient le rythme
+  le plus exigeant qu'une réponse possible donnerait ; au silence complet, trois mois]
 - `levage-examen-etat-conservation` reste annuelle et sans condition EN PLUS de
   chaque VGP, alors que l'art. 22-II fait de l'examen une partie de la VGP : un
   chariot porte une VGP semestrielle et un examen annuel — le doublon de D7, sur une
   autre ligne.
-**Recommandation :** relire l'art. 20 III et l'art. 22 par l'API, puis trancher les
-quatre ensemble ; chacun change un rythme en service.
+
+**Restent ouverts** (2026-09-28) :
+- **Transport de personnes sans poste de travail.** Une seule propriété
+  (`sertAuLevageDePersonnes`) couvre le transport de personnes ET l'élévation d'un
+  poste de travail. Le b) ne vise que le poste : un appareil MANUEL qui transporte des
+  personnes sans élever de poste reçoit la trimestrielle, là où le texte dirait six mois
+  (a, III) ou douze. Sur-application, visible par qui la subit.
+- **Un appareil du II, manuel, qui élève un poste de travail.** Deux dérogations
+  s'appliquent (six mois par le II, trois par le b) ; la plus courte est retenue, qui
+  les satisfait toutes deux. Le texte ne dit pas laquelle prime.
+- L'examen de l'état de conservation, ci-dessus.
+
+**Recommandation :** scinder `sertAuLevageDePersonnes` en « transport de personnes » et
+« élévation d'un poste de travail » (le texte les distingue) ; relire l'art. 22 par
+l'API pour l'examen. Chacun change un rythme en service.
