@@ -56,6 +56,9 @@ export const CODE_TRAVAIL_LEVAGE: Corpus = {
         // périodicité à l'arrêté, ici l'article 23 b) de l'arrêté du 1er mars
         // 2004. Article rouvert à la source ce jour avant l'ajout.
         "levage-vgp-trimestrielle-force-humaine",
+        // 2026-09-28 : la semestrielle de l'appareil manuel (art. 23 a → 20-III),
+        // même fondement que les autres VGP de levage.
+        "levage-vgp-semestrielle-force-humaine",
         // La branche HORS LEVAGE, encodée le 2026-09-02. Elle se rattache au
         // même article habilitant que les six précédentes, et c'est le point :
         // `R. 4323-23` n'a jamais été un article de levage, seule sa lecture

@@ -67,7 +67,7 @@ export const ARRETE_2004_03_01_LEVAGE: Corpus = {
       luLe: "2026-09-01",
       lecture: "premiere_main",
       statut: "retenu",
-      obligations: ["levage-vgp-semestrielle-chariot-gerbeur"],      prescrit:
+      obligations: ["levage-vgp-semestrielle-chariot-gerbeur", "levage-vgp-semestrielle-force-humaine"],      prescrit:
         "Sept paragraphes romains. Le I énumère les cinq cas qui déclenchent la vérification de remise en service de l'article 19 : changement de site, changement de configuration ou de conditions d'utilisation sur un même site, démontage suivi de remontage, remplacement ou réparation ou transformation importante d'un organe essentiel, accident provoqué par la défaillance d'un organe essentiel. Le II dispense de cette vérification, en cas de simple changement de site, les appareils ne nécessitant pas de support particulier — liste où figurent notamment les chariots élévateurs, les hayons élévateurs, les grues auxiliaires de chargement sur véhicules, les monte-meubles et les PEMP — à condition qu'ils aient subi une VGP depuis moins de six mois. Le III fait de même pour les appareils mus par la force humaine. Ce sont ces listes du II et du III que l'article 23 a) reprend pour ramener la VGP à six mois : dans le référentiel, l'article 20 n'est donc pas cité pour la remise en service mais comme la liste des appareils à VGP semestrielle.",
       citationCle:
         "I. - La vérification lors de la remise en service des appareils de levage, prévue à l'article 19, doit être effectuée dans les cas suivants : […] II. - En cas de changement de site d'utilisation, les appareils de levage ne nécessitant pas l'installation de support particulier sont dispensés de la vérification de remise en service définie à l'article 19 du présent arrêté, sous réserve qu'ils aient fait l'objet, dans la même configuration d'emploi : […]",
@@ -112,6 +112,8 @@ export const ARRETE_2004_03_01_LEVAGE: Corpus = {
         // élévation un poste de travail. » — et c'est mot pour mot le champ de
         // l'obligation. Article rouvert à la source ce jour avant l'ajout.
         "levage-vgp-trimestrielle-force-humaine",
+        // 2026-09-28 : le III de l'art. 20, auquel le a) renvoie.
+        "levage-vgp-semestrielle-force-humaine",
       ],      prescrit:
         "Fixe la PÉRIODICITÉ de la vérification générale périodique des appareils soumis à l'article 22 : douze mois en principe. Deux dérogations, en échéance fixe et non en plafond : six mois pour les appareils listés aux II et III de l'article 20 et pour ceux, mus par une énergie autre que la force humaine directe, servant au transport de personnes ou à déplacer en élévation un poste de travail ; trois mois pour les appareils mus par la force humaine employée directement servant à déplacer en élévation un poste de travail. L'article écrit « doit avoir lieu tous les douze mois » et « cette périodicité est de » — c'est bien un rythme, pas un maximum, à la différence de l'arrêté ESP du 20 novembre 2017.",
       citationCle:

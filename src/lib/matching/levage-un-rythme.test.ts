@@ -20,6 +20,19 @@
 // de l'annuelle rendue `infirmee` (la lettre de l'option (a)) — rouge au
 // silence, deux lignes ; la condition « chariot non infirmé » retirée de la
 // semestrielle « personnes » — rouge, deux semestrielles.
+//
+// REVUE INDÉPENDANTE DU LOT 3 (2026-09-28). ~~Le rythme attendu suivait
+// « l'ordre que le référentiel tranche » (chariot d'abord, puis personnes)~~ :
+// il ne lisait pas le III de l'art. 20, auquel le a) renvoie, et affirmait
+// conformes douze mois que le texte fixe à six (appareil manuel ne levant pas
+// de personnes). Le rythme attendu est désormais celui du TEXTE, écrit comme
+// une règle (`rythmeDuTexte`), et le silence se juge par le principe : une
+// réponse absente retient le rythme le plus exigeant qu'une réponse possible
+// donnerait. Art. 20 (API, LEGIARTI000006680466) : II, la liste — chariots
+// élévateurs, hayons élévateurs, grues auxiliaires, monte-meubles, plates-formes
+// élévatrices mobiles de personnes… ; III, « les appareils de levage, non
+// conçus spécialement pour lever des personnes, mus par la force humaine
+// employée directement ».
 import { describe, expect, it } from "vitest";
 import { determineObligationsApplicables } from "./engine";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
@@ -69,7 +82,7 @@ const nom = (r: Reponse[]) =>
   PROPRIETES.map((p, i) => `${p}=${r[i] === undefined ? "?" : r[i] ? "oui" : "non"}`).join(" ");
 
 describe("levage : un seul rythme de VGP par appareil (D7)", () => {
-  it("bornes : quatre lignes de VGP lisent les réponses, 27 combinaisons", () => {
+  it("bornes : les lignes de VGP lisent les réponses, 27 combinaisons", () => {
     expect(VGP.size).toBeGreaterThanOrEqual(3);
     expect(COMBINAISONS).toHaveLength(27);
   });
@@ -79,26 +92,44 @@ describe("levage : un seul rythme de VGP par appareil (D7)", () => {
     expect(l.map((a) => a.obligation.id), nom(r)).toHaveLength(1);
   });
 
-  it("réponses complètes : le rythme que l'art. 23 donne, chariot en premier", () => {
-    // Le texte, lu dans l'ordre que le référentiel tranche : chariot ou
-    // gerbeur (art. 20-II) → six mois ; sinon levage de personnes → trois mois
-    // à la force humaine (b), six sinon (a) ; sinon douze.
+  /**
+   * L'art. 23, pour un appareil dont on connaît les trois réponses.
+   * `chariot` : de la liste du II de l'art. 20 ; `personnes` : lever des
+   * personnes ou élever un poste de travail ; `humaine` : mû par la force
+   * humaine employée directement.
+   *  - b) trois mois : mû par la force humaine ET élève un poste de travail ;
+   *  - a) six mois : liste du II ; OU manuel et non conçu pour lever des
+   *    personnes (III) ; OU motorisé et transporte des personnes ou élève un
+   *    poste de travail ;
+   *  - sinon douze mois.
+   * Quand deux dérogations s'appliquent (un appareil du II, manuel, élevant un
+   * poste de travail), la plus courte satisfait les deux.
+   */
+  const rythmeDuTexte = (chariot: boolean, personnes: boolean, humaine: boolean) =>
+    humaine && personnes ? 3 : chariot || humaine || personnes ? 6 : 12;
+
+  it("réponses complètes : le rythme que le texte donne (art. 23, art. 20-II et III)", () => {
     for (const r of COMBINAISONS.filter((c) => c.every((v) => v !== undefined))) {
       const [chariot, personnes, humaine] = r as boolean[];
-      const attendu = chariot ? 6 : personnes ? (humaine ? 3 : 6) : 12;
-      expect(moisDe(r), nom(r)).toBe(attendu);
+      expect(moisDe(r), nom(r)).toBe(rythmeDuTexte(chariot, personnes, humaine));
     }
   });
 
-  it("au silence, la ligne la plus exigeante des deux que le silence faisait naître reste", () => {
-    // Avant D7, un appareil sans réponse recevait l'annuelle ET la semestrielle
-    // « personnes » : c'est la semestrielle qui reste.
-    expect(moisDe([undefined, undefined, undefined])).toBe(6);
-    // Jamais moins exigeant que la réponse « non » partout, qui est le seul
-    // cas où l'annuelle vaut.
+  it("au silence, le rythme le plus exigeant qu'une réponse possible donnerait", () => {
+    // ~~« au silence, la ligne la plus exigeante des deux que le silence
+    // faisait naître reste » (six mois)~~ [2026-09-28 : le principe porte sur
+    // les RÉPONSES possibles, pas sur les lignes que l'ancien encodage faisait
+    // naître. Au silence complet, l'appareil peut être manuel et élever un
+    // poste de travail : trois mois.]
+    const possibles = (v: Reponse) => (v === undefined ? [true, false] : [v]);
     for (const r of COMBINAISONS) {
-      const toutNon = r.map((v) => (v === undefined ? false : v));
-      expect(moisDe(r), nom(r)).toBeLessThanOrEqual(moisDe(toutNon));
+      const [c, p, h] = r;
+      const attendu = Math.min(
+        ...possibles(c).flatMap((cc) =>
+          possibles(p).flatMap((pp) => possibles(h).map((hh) => rythmeDuTexte(cc, pp, hh))),
+        ),
+      );
+      expect(moisDe(r), nom(r)).toBe(attendu);
     }
   });
 });

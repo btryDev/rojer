@@ -247,7 +247,11 @@ export const obligationsConformite: Obligation[] = [
 // appareil — conditions de l'annuelle, de la trimestrielle et de la
 // semestrielle « personnes ». 173 + 0 − 0 = 173. Des lignes sortent : celles
 // qu'un appareil portait en double (archivées si elles portent une trace).
-export const REFERENTIEL_VERSION = "2026-09-28.1";
+// `2026-09-28.2` (revue indépendante du lot 3) : les VGP de levage suivent
+// l'art. 23 et le III de l'art. 20 — `levage-vgp-semestrielle-force-humaine`
+// entre (appareil manuel ne levant pas de personnes, six mois) ; au silence, la
+// ligne la plus exigeante. 173 + 1 − 0 = 174.
+export const REFERENTIEL_VERSION = "2026-09-28.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

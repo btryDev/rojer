@@ -833,12 +833,19 @@ describe("référentiel conformité — non-régression des obligations critique
     // ~~"elec-erp-groupe-electrogene-annuel"~~ — retirée le 2026-09-27 (C41) :
     // la question est passée en trois états et la condition en `non_infirmee`,
     // elle n'est plus stricte.
-    // Obligation neuve créée le 2026-08-26 (arrêté du 1er mars 2004, art. 23 b) :
-    // aucun équipement déjà en base ne peut la perdre, et
-    // `levage-vgp-semestrielle-personnes` couvre l'appareil tant que la question
-    // sur la force humaine n'a pas reçu « oui » — elle porte pour cela une
-    // condition `infirmee` sur la même propriété.
-    "levage-vgp-trimestrielle-force-humaine",
+    // ~~"levage-vgp-trimestrielle-force-humaine"~~ — retirée le 2026-09-28
+    // (revue indépendante du lot 3) : ses deux conditions sont `non_infirmee`,
+    // elle est servie au silence et n'est plus stricte.
+    // 2026-09-28, même revue : l'art. 23 a) met l'appareil MANUEL qui ne lève
+    // pas de personnes à six mois (art. 20-III). Obligation neuve — personne ne
+    // peut la perdre — et, au silence sur les personnes, la trimestrielle (plus
+    // exigeante) couvre l'appareil (`matching/levage-un-rythme.test.ts`).
+    "levage-vgp-semestrielle-force-humaine",
+    // 2026-09-28, même revue : la semestrielle « personnes » exige « motorisé »
+    // (art. 23 a, second tiret). Au silence sur la force humaine, la
+    // trimestrielle — plus exigeante — la remplace ; aucun appareil n'est sans
+    // VGP, et le réconciliateur archive la ligne qui porte une trace.
+    "levage-vgp-semestrielle-personnes",
     // D7, option (a), décision de la propriétaire du 2026-09-28 : l'annuelle
     // S'ÉTEINT au silence sur le levage de personnes, par dessein — c'est ce
     // qui fait « un seul rythme par appareil ». Ce que la règle protège tient :
@@ -930,8 +937,11 @@ describe("référentiel conformité — non-régression des obligations critique
     // l'annuelle le récuse.
     const pivot = (id: string) =>
       obligationParId(id)?.conditions?.find((c) => c.propriete === "estChariotOuGerbeur")?.type;
-    expect(pivot("levage-vgp-semestrielle-chariot-gerbeur")).toBe("equipement_propriete_booleenne");
-    expect(pivot("levage-vgp-annuelle-charges")).toBe("equipement_propriete_infirmee");
+    // [2026-09-28, revue indépendante : ~~booleenne / infirmee~~ — le « non » au
+    // chariot ne dit pas que l'appareil n'est pas de la liste du II ; au
+    // silence, six mois, pas douze. L'annuelle exige le « non ».]
+    expect(pivot("levage-vgp-semestrielle-chariot-gerbeur")).toBe("equipement_propriete_non_infirmee");
+    expect(pivot("levage-vgp-annuelle-charges")).toBe("equipement_propriete_booleenne");
   });
 
   it("les six contrôles d'étanchéité du froid s'excluent sur les mêmes propriétés", () => {
@@ -1606,6 +1616,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // 23 de l'arrêté du 1er mars 2004). Conditions seules : 173 + 0 − 0 = 173.
     // La ligne en double sort — archivée si elle porte une trace.
     { version: "2026-09-28.1", empreinte: "173-8084ca0f263ef84f" },
+    // Revue indépendante du lot 3 : l'art. 23 a) renvoie au III de l'art. 20 —
+    // l'appareil manuel qui ne lève pas de personnes est à six mois. Une
+    // obligation entre, `levage-vgp-semestrielle-force-humaine` ; la
+    // partition des VGP suit le texte, et la ligne la plus exigeante reste au
+    // silence. Aucune n'en sort : 173 + 1 − 0 = 174.
+    { version: "2026-09-28.2", empreinte: "174-59f4d9aa1d4a1764" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1762,7 +1778,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(173);
+    ).toBe(174);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

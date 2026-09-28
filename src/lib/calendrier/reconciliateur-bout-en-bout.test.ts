@@ -454,6 +454,8 @@ describe("D8 — un ponctuel SOLDÉ antérieur au suivi n'est pas redaté", () =
 describe("D7 — levage : l'annuelle en double sort, sans perte", () => {
   const ANNUELLE = "levage-vgp-annuelle-charges";
   const PERSONNES = "levage-vgp-semestrielle-personnes";
+  const TRIMESTRIELLE = "levage-vgp-trimestrielle-force-humaine";
+  const MANUELLE = "levage-vgp-semestrielle-force-humaine";
   const vgp = (id: string, equipementId: string, obligationId: string, p: Partial<LigneFausse> = {}) =>
     ligne({
       id, equipementId, obligationId, libelleObligation: obligationId,
@@ -462,7 +464,11 @@ describe("D7 — levage : l'annuelle en double sort, sans perte", () => {
       datePrevue: d("2027-01-10"), suiviDepuis: d("2026-01-10"), ...p,
     });
 
-  it("sans réponse : l'annuelle avec rapport est archivée, celle sans trace supprimée, la semestrielle reste", async () => {
+  // ~~« sans réponse : … la semestrielle reste »~~ [2026-09-28, revue
+  // indépendante du lot 3 : au silence, le texte permet trois mois (appareil
+  // manuel élevant un poste de travail) — c'est la trimestrielle qui reste ;
+  // les deux lignes d'avant sortent, archivées si elles portent une trace.]
+  it("sans réponse : les deux VGP d'avant sortent — archivées avec trace, supprimées sans —, la trimestrielle naît", async () => {
     // L'état qu'écrivait le référentiel d'avant D7 : deux VGP par appareil muet.
     poserEtablissement([
       { id: "palan-1", categorie: "EQUIPEMENT_LEVAGE" },
@@ -483,14 +489,43 @@ describe("D7 — levage : l'annuelle en double sort, sans perte", () => {
     expect(lue("a1")?.archiveLe).toBeInstanceOf(Date);
     expect(lue("a1")?.nbRapports).toBe(1);
     expect(lue("a1")?.nbActions).toBe(1);
-    // Sans trace : supprimée.
-    expect(lue("a2")).toBeUndefined();
-    // La plus exigeante reste, ouverte, sur chaque appareil.
-    for (const id of ["s1", "s2"]) expect(lue(id)?.archiveLe ?? null).toBeNull();
+    // Sans trace : supprimées.
+    for (const id of ["a2", "s1", "s2"]) expect(lue(id)).toBeUndefined();
+    // Une VGP, et une seule, ouverte sur chaque appareil : la trimestrielle.
     const ouvertes = (eq: string) =>
-      db.verifications.filter((v) => v.equipementId === eq && !v.archiveLe && [ANNUELLE, PERSONNES].includes(v.obligationId));
-    expect(ouvertes("palan-1").map((v) => v.obligationId)).toEqual([PERSONNES]);
-    expect(ouvertes("palan-2").map((v) => v.obligationId)).toEqual([PERSONNES]);
+      db.verifications.filter((v) => v.equipementId === eq && !v.archiveLe && v.obligationId.startsWith("levage-vgp-") && v.obligationId !== "levage-vgp-accessoires-annuelle");
+    expect(ouvertes("palan-1").map((v) => v.obligationId)).toEqual([TRIMESTRIELLE]);
+    expect(ouvertes("palan-2").map((v) => v.obligationId)).toEqual([TRIMESTRIELLE]);
+
+    db.journal = [];
+    const r = await genererCalendrier(ETAB_ID);
+    expect(r.created + r.updated + r.deleted + r.archived).toBe(0);
+  });
+
+  it("manuel, sans personnes (art. 20-III) : l'annuelle d'avant sort — archivée avec trace —, la semestrielle naît", async () => {
+    // L'état qu'écrivait le moteur 6 avant la revue : l'annuelle pour un palan
+    // à main déclaré « non » aux personnes et au chariot.
+    poserEtablissement([
+      { id: "palan-3", categorie: "EQUIPEMENT_LEVAGE", caracteristiques: { estMuParForceHumaine: true, sertAuLevageDePersonnes: false, estChariotOuGerbeur: false } },
+      { id: "palan-4", categorie: "EQUIPEMENT_LEVAGE", caracteristiques: { estMuParForceHumaine: true, sertAuLevageDePersonnes: false, estChariotOuGerbeur: false } },
+    ]);
+    db.verifications = [
+      vgp("a3", "palan-3", ANNUELLE, {
+        rapports: [{ dateRapport: d("2026-01-10"), resultat: "conforme" }], nbRapports: 1, nbActions: 1,
+      }),
+      vgp("a4", "palan-4", ANNUELLE),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    expect(lue("a3")?.archiveLe).toBeInstanceOf(Date);
+    expect(lue("a3")?.nbRapports).toBe(1);
+    expect(lue("a3")?.nbActions).toBe(1);
+    expect(lue("a4")).toBeUndefined();
+    for (const eq of ["palan-3", "palan-4"]) {
+      const ouvertes = db.verifications.filter((v) => v.equipementId === eq && !v.archiveLe && v.obligationId.startsWith("levage-vgp-") && v.obligationId !== "levage-vgp-accessoires-annuelle");
+      expect(ouvertes.map((v) => v.obligationId), eq).toEqual([MANUELLE]);
+    }
 
     db.journal = [];
     const r = await genererCalendrier(ETAB_ID);

@@ -996,7 +996,10 @@ describe("moteur matching — faux positifs structurels corrigés", () => {
 
   it("un transpalette dont on a répondu « non » perd la VGP semestrielle « personnes »", () => {
     const res = determineObligationsApplicables(etabBureau(), [
-      levage({ sertAuLevageDePersonnes: false, aAccessoiresDeLevage: false }),
+      // [2026-09-28, revue indépendante du lot 3 : « motorisé, pas de la liste
+      // du II » dit aussi — sans quoi l'art. 20-III ou 20-II pourrait
+      // s'appliquer, et la VGP resterait à six mois.]
+      levage({ sertAuLevageDePersonnes: false, aAccessoiresDeLevage: false, estMuParForceHumaine: false, estChariotOuGerbeur: false }),
     ]);
     const ids = idsObligations(res);
     expect(ids).not.toContain("levage-vgp-semestrielle-personnes");
@@ -1007,7 +1010,9 @@ describe("moteur matching — faux positifs structurels corrigés", () => {
 
   it("une nacelle déclarée comme telle conserve la VGP semestrielle", () => {
     const res = determineObligationsApplicables(etabBureau(), [
-      levage({ sertAuLevageDePersonnes: true }),
+      // [2026-09-28 : motorisée — mue à la main, elle relèverait de la
+      // trimestrielle (art. 23 b), que le silence sur la force humaine retient.]
+      levage({ sertAuLevageDePersonnes: true, estMuParForceHumaine: false }),
     ]);
     expect(idsObligations(res)).toContain("levage-vgp-semestrielle-personnes");
   });
@@ -1018,7 +1023,10 @@ describe("moteur matching — faux positifs structurels corrigés", () => {
   it("un gerbeur déclaré passe à la VGP semestrielle et perd l'annuelle", () => {
     const ids = idsObligations(
       determineObligationsApplicables(etabBureau(), [
-        levage({ estChariotOuGerbeur: true }),
+        // [2026-09-28 : ~~`{ estChariotOuGerbeur: true }` seul~~ — au silence
+        // sur la force humaine et les personnes, la trimestrielle (23 b) est
+        // la plus exigeante possible ; motorisé et sans personnes, le II vaut.]
+        levage({ estChariotOuGerbeur: true, estMuParForceHumaine: false, sertAuLevageDePersonnes: false }),
       ]),
     );
     expect(ids).toContain("levage-vgp-semestrielle-chariot-gerbeur");
@@ -1030,7 +1038,9 @@ describe("moteur matching — faux positifs structurels corrigés", () => {
     // personnes — sans lui, c'est la semestrielle « personnes » qui vaut.]
     const ids = idsObligations(
       determineObligationsApplicables(etabBureau(), [
-        levage({ estChariotOuGerbeur: false, sertAuLevageDePersonnes: false }),
+        // [2026-09-28, revue indépendante : et le « non » à la force humaine —
+        // l'art. 23 a) met l'appareil manuel (art. 20-III) à six mois.]
+        levage({ estChariotOuGerbeur: false, sertAuLevageDePersonnes: false, estMuParForceHumaine: false }),
       ]),
     );
     expect(ids).toContain("levage-vgp-annuelle-charges");
@@ -1042,10 +1052,15 @@ describe("moteur matching — faux positifs structurels corrigés", () => {
     // le silence faisait naître l'annuelle ET la semestrielle « personnes » ;
     // la plus exigeante reste, seule. Le silence n'éteint toujours rien : il
     // laisse la VGP à six mois.]
+    // [2026-09-28, revue indépendante du lot 3 : ~~la semestrielle
+    // « personnes »~~ — au silence, l'appareil peut être manuel et élever un
+    // poste de travail : la trimestrielle (art. 23 b) est la plus exigeante
+    // que le texte permet, et c'est elle qui reste.]
     const ids = idsObligations(
       determineObligationsApplicables(etabBureau(), [levage(null)]),
     );
-    expect(ids).toContain("levage-vgp-semestrielle-personnes");
+    expect(ids).toContain("levage-vgp-trimestrielle-force-humaine");
+    expect(ids).not.toContain("levage-vgp-semestrielle-personnes");
     expect(ids).not.toContain("levage-vgp-annuelle-charges");
     expect(ids).not.toContain("levage-vgp-semestrielle-chariot-gerbeur");
   });
@@ -1338,14 +1353,22 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       // levage de personnes, par dessein — la semestrielle « personnes » couvre
       // l'appareil (`matching/levage-un-rythme.test.ts`, 27 combinaisons).
       "levage-vgp-annuelle-charges",
-      // Obligation neuve : personne ne peut la perdre, et la VGP annuelle
-      // couvre l'appareil tant que la question n'a pas reçu « oui ».
+      // ~~Obligation neuve : personne ne peut la perdre, et la VGP annuelle
+      // couvre l'appareil tant que la question n'a pas reçu « oui ».~~
+      // [2026-09-28 : elle exige « non » à la force humaine et aux personnes ;
+      // au silence sur l'une ou l'autre, une ligne PLUS exigeante la remplace
+      // (trimestrielle, semestrielle III ou « personnes »).]
       "levage-vgp-semestrielle-chariot-gerbeur",
-      // Obligation neuve créée le 2026-08-26 (art. 23 b) : personne ne peut la
-      // perdre, et `levage-vgp-semestrielle-personnes` couvre l'appareil tant
-      // que la question sur la force humaine n'a pas reçu « oui » — elle porte
-      // pour cela une condition `infirmee` sur la même propriété.
-      "levage-vgp-trimestrielle-force-humaine",
+      // Obligation neuve du 2026-09-28 (art. 23 a → art. 20-III) : personne ne
+      // peut la perdre, et au silence sur les personnes la trimestrielle, plus
+      // exigeante, couvre l'appareil.
+      "levage-vgp-semestrielle-force-humaine",
+      // 2026-09-28 : « motorisé » exigé (`booleenne` false sur la force
+      // humaine) — au silence, la trimestrielle, plus exigeante, la remplace ;
+      // le réconciliateur archive la ligne qui porte une trace.
+      "levage-vgp-semestrielle-personnes",
+      // ~~"levage-vgp-trimestrielle-force-humaine"~~ — retirée le 2026-09-28 :
+      // ses conditions sont passées en `non_infirmee`, elle n'est plus stricte.
     ]);
   });
 });

@@ -193,6 +193,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "levage-vgp-accessoires-annuelle": "equipement",
   "levage-vgp-annuelle-charges": "equipement",
   "levage-vgp-semestrielle-chariot-gerbeur": "equipement",
+  "levage-vgp-semestrielle-force-humaine": "equipement",
   "levage-vgp-semestrielle-personnes": "equipement",
   "levage-vgp-trimestrielle-force-humaine": "equipement",
   "locaux-etablissement-eau-potable": "etablissement",

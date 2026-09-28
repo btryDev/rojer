@@ -132,12 +132,18 @@ const QUESTIONS_TRI_ETAT: Record<
   estMuParForceHumaine: {
     question:
       "Cet appareil est-il mû par la force humaine employée directement ?",
-    aide: "Un treuil à manivelle, un palan à chaîne actionné à la main, une nacelle poussée et montée à la force du bras — par opposition à un appareil motorisé, électrique, hydraulique ou thermique. Si oui ET qu'il sert à élever un poste de travail, la vérification a lieu tous les trois mois et non tous les six.",
+    // 2026-09-28 (revue indépendante du lot 3) : l'aide ne disait que le
+    // 23 b) ; le 23 a) met aussi à six mois l'appareil manuel qui ne lève pas
+    // de personnes (art. 20-III).
+    aide: "Un treuil à manivelle, un palan à chaîne actionné à la main, une nacelle poussée et montée à la force du bras — par opposition à un appareil motorisé, électrique, hydraulique ou thermique. Si oui, la vérification générale a lieu tous les six mois — tous les trois mois s'il sert à élever un poste de travail — et non tous les douze.",
   },
   estChariotOuGerbeur: {
+    // 2026-09-28 (revue indépendante du lot 3) : la question ne nommait que
+    // trois des appareils de la liste du II de l'art. 20 ; un « non » ne
+    // disait donc pas que l'appareil n'en était pas, et l'annuelle suivait.
     question:
-      "Cet appareil est-il un chariot élévateur, un gerbeur ou un hayon élévateur ?",
-    aide: "Un engin qui soulève une charge en hauteur, au-delà de ce qu'il faut pour la décoller du sol. Si oui, la vérification générale a lieu tous les six mois et non tous les ans. Un transpalette qui ne fait que décoller la palette pour la rouler : répondez « non », il n'est pas concerné par ces vérifications.",
+      "Cet appareil est-il un chariot élévateur, un gerbeur, un hayon élévateur ou un autre appareil de la liste ci-dessous ?",
+    aide: "Liste de l'arrêté du 1er mars 2004 (art. 20-II) : chariots élévateurs et gerbeurs, hayons élévateurs, grues auxiliaires de chargement sur véhicule, grues à tour à montage rapide, bras ou portiques de levage pour bennes amovibles, monte-meubles, monte-matériaux de chantier, engins de terrassement équipés pour le levage, grues mobiles, tracteurs poseurs de canalisations, plates-formes élévatrices mobiles de personnes. Si oui, la vérification générale a lieu tous les six mois et non tous les ans. Un transpalette qui ne fait que décoller la palette pour la rouler : répondez « non », il n'est pas concerné par ces vérifications.",
   },
   aAccessoiresDeLevage: {
     question: "Utilisez-vous des accessoires de levage avec cet appareil ?",

@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-09-28
-**Référentiel** : `2026-09-28.1`
+**Référentiel** : `2026-09-28.2`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,18 +83,18 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**173 obligations**, **328 références** — 94 obligations en citent plus d'une.
+**174 obligations**, **331 références** — 95 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 70 | 40 % | 79 | 172 | 52 % |
+| 5 · lu à la source, verbatim relevé | 71 | 41 % | 80 | 175 | 53 % |
 | 4 · lu à la source par un agent, verbatim rapporté | 92 | 53 % | 88 | 144 | 44 % |
 | 3 · lu et daté, aucun verbatim | 11 | 6 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**162 obligations sur 173 (94 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**163 obligations sur 174 (94 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **11 obligations (6 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 307 | 94 % |
+| ancrée | 310 | 94 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 20 | 6 % |
 
-**11 obligations sur 173 (6 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**11 obligations sur 174 (6 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -135,7 +135,7 @@ repose sur un texte que personne n'a ouvert.
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
 | `incendie` | 40 | 82 | 24 | 9 | 7 | · | · | · | 33 / 40 — 83 % | 0 / 82 | 2026-08-26 → 2026-09-27 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
-| `levage` | 10 | 27 | 9 | 1 | · | · | · | · | 10 / 10 — 100 % | 0 / 27 | 2026-08-26 → 2026-09-02 |
+| `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
 | `organisation_prevention` | 9 | 13 | 2 | 7 | · | · | · | · | 9 / 9 — 100 % | 0 / 13 | 2026-08-31 → 2026-09-27 |
 | `porte_portail` | 5 | 8 | · | 5 | · | · | · | · | 5 / 5 — 100 % | 0 / 8 | 2026-09-01 |
@@ -146,7 +146,7 @@ repose sur un texte que personne n'a ouvert.
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
-**17 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (8), `co_activite` (1), `compactage_dechets` (1), `eclairage` (1), `epi` (2), `equipement_sous_pression` (7), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (10), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (9), `stockage_dangereux` (6).
+**17 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (8), `co_activite` (1), `compactage_dechets` (1), `eclairage` (1), `epi` (2), `equipement_sous_pression` (7), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (9), `stockage_dangereux` (6).
 
 Aucun domaine n'est entièrement dépourvu de verbatim.
 
@@ -156,7 +156,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 89 | 165 | 44 | 37 | 8 | · | · | · | 81 / 89 — 91 % | 20 / 165 | 2026-08-26 → 2026-09-27 |
+| `equipement` | 90 | 168 | 45 | 37 | 8 | · | · | · | 82 / 90 — 91 % | 20 / 168 | 2026-08-26 → 2026-09-27 |
 | `etablissement` | 70 | 131 | 26 | 41 | 3 | · | · | · | 67 / 70 — 96 % | 0 / 131 | 2026-08-26 → 2026-09-27 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
@@ -171,14 +171,14 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 32 | 10 % | 31 |
 | 2026-08-27 | 10 | 3 % | 7 |
 | 2026-08-31 | 58 | 18 % | 28 |
-| 2026-09-01 | 130 | 40 % | 84 |
+| 2026-09-01 | 133 | 40 % | 85 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 14 | 4 % | 8 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 25 | 8 % | 20 |
-| 2026-09-27 | 38 | 12 % | 36 |
+| 2026-09-27 | 38 | 11 % | 36 |
 
-328 des 328 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
+331 des 331 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -251,7 +251,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 173 obligations
+## 8. Les 174 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -419,6 +419,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `levage-vgp-accessoires-annuelle` | levage | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `levage-vgp-annuelle-charges` | levage | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-09-01 → 2026-09-02 |
 | `levage-vgp-semestrielle-chariot-gerbeur` | levage | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
+| `levage-vgp-semestrielle-force-humaine` | levage | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-09-01 |
 | `levage-vgp-semestrielle-personnes` | levage | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `levage-vgp-trimestrielle-force-humaine` | levage | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `locaux-etablissement-emplacement-restauration` | locaux_sociaux | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-26 |
@@ -434,7 +435,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 328 références, une par une
+## 9. Les 331 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -634,6 +635,9 @@ refaire pour la contredire.
 | `levage-vgp-semestrielle-chariot-gerbeur` | contexte 3 | Arrêté du 1er mars 2004, annexe | Arrêté 2004-03-01 annexe | arrete-2004-03-01-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-01-09 | 2011-01-09 | 5 · première main | ancrée |
 | `levage-vgp-trimestrielle-force-humaine` | fondement | Arrêté du 1er mars 2004, art. 23 b) (périodicité de 3 mois) | Arrêté 2004-03-01 art. 23 | arrete-2004-03-01-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2005-03-31 | 2005-03-31 | 5 · première main | ancrée |
 | `levage-vgp-trimestrielle-force-humaine` | contexte 1 | R. 4323-23 | R. 4323-23 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
+| `levage-vgp-semestrielle-force-humaine` | fondement | Arrêté du 1er mars 2004, art. 23 a) (six mois) | Arrêté 2004-03-01 art. 23 | arrete-2004-03-01-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2005-03-31 | 2005-03-31 | 5 · première main | ancrée |
+| `levage-vgp-semestrielle-force-humaine` | contexte 1 | Arrêté du 1er mars 2004, art. 20-III | Arrêté 2004-03-01 art. 20 | arrete-2004-03-01-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2005-03-31 | 2005-03-31 | 5 · première main | ancrée |
+| `levage-vgp-semestrielle-force-humaine` | contexte 2 | R. 4323-23 | R. 4323-23 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `levage-vgp-semestrielle-personnes` | fondement | Arrêté du 1er mars 2004, art. 23 (périodicité de 6 mois pour les appareils servant au transport de personnes ou à l'élévation d'un poste de travail) | Arrêté 2004-03-01 art. 23 | arrete-2004-03-01-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2005-03-31 | 2005-03-31 | 5 · première main | ancrée |
 | `levage-vgp-semestrielle-personnes` | contexte 1 | R. 4323-23 | R. 4323-23 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `levage-vgp-accessoires-annuelle` | fondement | Arrêté du 1er mars 2004, art. 24 (vérification périodique des accessoires) | Arrêté 2004-03-01 art. 24 | arrete-2004-03-01-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
