@@ -243,7 +243,11 @@ export const obligationsConformite: Obligation[] = [
 // `2026-09-27.3` (lot 2, D25 option (a)) : `incendie-travail-moyens-lutte`
 // réduite au maintien en état — son libellé change, pas son périmètre. 173 + 0 −
 // 0 = 173. États permanents : aucune ligne de calendrier.
-export const REFERENTIEL_VERSION = "2026-09-27.3";
+// `2026-09-28.1` (lot 3, D7 option (a)) : levage, un seul rythme de VGP par
+// appareil — conditions de l'annuelle, de la trimestrielle et de la
+// semestrielle « personnes ». 173 + 0 − 0 = 173. Des lignes sortent : celles
+// qu'un appareil portait en double (archivées si elles portent une trace).
+export const REFERENTIEL_VERSION = "2026-09-28.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -414,3 +414,54 @@ describe("D8 — le ponctuel posé à une mise en service antérieure au suivi e
     expect(ecritures()).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// D7 — la VGP en double sort : archivée si elle porte une trace
+// ---------------------------------------------------------------------------
+
+describe("D7 — levage : l'annuelle en double sort, sans perte", () => {
+  const ANNUELLE = "levage-vgp-annuelle-charges";
+  const PERSONNES = "levage-vgp-semestrielle-personnes";
+  const vgp = (id: string, equipementId: string, obligationId: string, p: Partial<LigneFausse> = {}) =>
+    ligne({
+      id, equipementId, obligationId, libelleObligation: obligationId,
+      periodicite: obligationId === ANNUELLE ? "annuelle" : "semestrielle",
+      realisateurRequis: ["personne_qualifiee", "organisme_agree"],
+      datePrevue: d("2027-01-10"), suiviDepuis: d("2026-01-10"), ...p,
+    });
+
+  it("sans réponse : l'annuelle avec rapport est archivée, celle sans trace supprimée, la semestrielle reste", async () => {
+    // L'état qu'écrivait le référentiel d'avant D7 : deux VGP par appareil muet.
+    poserEtablissement([
+      { id: "palan-1", categorie: "EQUIPEMENT_LEVAGE" },
+      { id: "palan-2", categorie: "EQUIPEMENT_LEVAGE" },
+    ]);
+    db.verifications = [
+      vgp("a1", "palan-1", ANNUELLE, {
+        rapports: [{ dateRapport: d("2026-01-10"), resultat: "conforme" }], nbRapports: 1, nbActions: 1,
+      }),
+      vgp("s1", "palan-1", PERSONNES, { datePrevue: d("2026-07-10") }),
+      vgp("a2", "palan-2", ANNUELLE),
+      vgp("s2", "palan-2", PERSONNES, { datePrevue: d("2026-07-10") }),
+    ];
+
+    await genererCalendrier(ETAB_ID);
+
+    // Trace : archivée, même identifiant, rapport et action attachés.
+    expect(lue("a1")?.archiveLe).toBeInstanceOf(Date);
+    expect(lue("a1")?.nbRapports).toBe(1);
+    expect(lue("a1")?.nbActions).toBe(1);
+    // Sans trace : supprimée.
+    expect(lue("a2")).toBeUndefined();
+    // La plus exigeante reste, ouverte, sur chaque appareil.
+    for (const id of ["s1", "s2"]) expect(lue(id)?.archiveLe ?? null).toBeNull();
+    const ouvertes = (eq: string) =>
+      db.verifications.filter((v) => v.equipementId === eq && !v.archiveLe && [ANNUELLE, PERSONNES].includes(v.obligationId));
+    expect(ouvertes("palan-1").map((v) => v.obligationId)).toEqual([PERSONNES]);
+    expect(ouvertes("palan-2").map((v) => v.obligationId)).toEqual([PERSONNES]);
+
+    db.journal = [];
+    const r = await genererCalendrier(ETAB_ID);
+    expect(r.created + r.updated + r.deleted + r.archived).toBe(0);
+  });
+});

@@ -839,6 +839,15 @@ describe("référentiel conformité — non-régression des obligations critique
     // sur la force humaine n'a pas reçu « oui » — elle porte pour cela une
     // condition `infirmee` sur la même propriété.
     "levage-vgp-trimestrielle-force-humaine",
+    // D7, option (a), décision de la propriétaire du 2026-09-28 : l'annuelle
+    // S'ÉTEINT au silence sur le levage de personnes, par dessein — c'est ce
+    // qui fait « un seul rythme par appareil ». Ce que la règle protège tient :
+    // aucun appareil n'est laissé sans VGP, parce que la semestrielle
+    // « personnes » (`non_infirmee`) le couvre au silence, et la plus
+    // exigeante des deux reste. `matching/levage-un-rythme.test.ts` le prouve
+    // sur les 27 combinaisons de réponses ; le réconciliateur archive la ligne
+    // annuelle qui porte une trace (`reconciliateur-bout-en-bout.test.ts`, D7).
+    "levage-vgp-annuelle-charges",
     "aeration-travail-locaux-pollution-specifique",
     // Obligation neuve du 2026-09-01 (arrêté du 8 octobre 1987, art. 4 b) :
     // aucun équipement déjà en base ne peut la perdre, et
@@ -911,29 +920,18 @@ describe("référentiel conformité — non-régression des obligations critique
     }
   });
 
-  it("les deux VGP de levage s'excluent sur la même propriété", () => {
-    // Le couple annuelle / semestrielle doit couvrir les trois états de la
-    // réponse sans jamais laisser un appareil sans échéance, ni lui en donner
-    // deux pour un seul acte de vérification.
-    const annuelle = obligationParId("levage-vgp-annuelle-charges");
-    const semestrielle = obligationParId(
-      "levage-vgp-semestrielle-chariot-gerbeur",
-    );
-    expect(annuelle?.conditions).toEqual([
-      {
-        type: "equipement_propriete_infirmee",
-        categorie: "EQUIPEMENT_LEVAGE",
-        propriete: "estChariotOuGerbeur",
-      },
-    ]);
-    expect(semestrielle?.conditions).toEqual([
-      {
-        type: "equipement_propriete_booleenne",
-        categorie: "EQUIPEMENT_LEVAGE",
-        propriete: "estChariotOuGerbeur",
-        valeur: true,
-      },
-    ]);
+  it("les VGP de levage s'excluent sur le chariot ou gerbeur (D7 : la partition entière est éprouvée ailleurs)", () => {
+    // ~~Le couple annuelle / semestrielle doit couvrir les trois états de la
+    // réponse~~ [2026-09-28, D7 : quatre VGP, trois réponses. Recopier leurs
+    // conditions ici se réparerait en recopiant ; la partition — une ligne et
+    // une seule pour chacune des 27 combinaisons — est dans
+    // `matching/levage-un-rythme.test.ts`.] Reste ici le pivot que D7 garde :
+    // la semestrielle du chariot est la seule à exiger le « oui », et
+    // l'annuelle le récuse.
+    const pivot = (id: string) =>
+      obligationParId(id)?.conditions?.find((c) => c.propriete === "estChariotOuGerbeur")?.type;
+    expect(pivot("levage-vgp-semestrielle-chariot-gerbeur")).toBe("equipement_propriete_booleenne");
+    expect(pivot("levage-vgp-annuelle-charges")).toBe("equipement_propriete_infirmee");
   });
 
   it("les six contrôles d'étanchéité du froid s'excluent sur les mêmes propriétés", () => {
@@ -1604,6 +1602,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // réduite au maintien en état, la dotation n'étant dite qu'une fois, par
     // l'établissement. Libellé seul : 173 + 0 − 0 = 173. États permanents.
     { version: "2026-09-27.3", empreinte: "173-fb19a4cabf15ba60" },
+    // Lot 3, D7 option (a) : levage, un seul rythme de VGP par appareil (art.
+    // 23 de l'arrêté du 1er mars 2004). Conditions seules : 173 + 0 − 0 = 173.
+    // La ligne en double sort — archivée si elle porte une trace.
+    { version: "2026-09-28.1", empreinte: "173-8084ca0f263ef84f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

@@ -182,9 +182,21 @@ export const obligationsLevage: Obligation[] = [
         categorie: "EQUIPEMENT_LEVAGE",
         propriete: "estChariotOuGerbeur",
       },
+      {
+        // UN SEUL RYTHME PAR APPAREIL (D7, option (a), 2026-09-28). Les douze
+        // mois ne valent que pour l'appareil dont on SAIT qu'il ne sert pas au
+        // levage de personnes : au silence, c'est la semestrielle « personnes »
+        // (`non_infirmee`) qui reste — la plus exigeante des deux lignes que le
+        // silence faisait naître ensemble. `booleenne` et non `infirmee` :
+        // `infirmee` est satisfaite au silence, et laissait les deux lignes.
+        type: "equipement_propriete_booleenne",
+        categorie: "EQUIPEMENT_LEVAGE",
+        propriete: "sertAuLevageDePersonnes",
+        valeur: false,
+      },
     ],
     notesInternes:
-      "Les douze mois sont le principe de l'article 23 de l'arrêté du 1er mars 2004, pas une règle universelle : le même article ramène la périodicité à six mois pour les appareils listés au II de son article 20, dont les chariots élévateurs. La condition `infirmee` écarte donc cette obligation au profit de `levage-vgp-semestrielle-chariot-gerbeur` dès que le dirigeant répond « oui » — et seulement alors. Tant que la question n'a pas été posée, c'est la périodicité annuelle qui reste affichée : une périodicité trop longue est un écart visible et corrigeable, l'absence totale d'échéance sur une obligation de criticité 5 ne le serait pas.",
+      "UN SEUL RYTHME PAR APPAREIL DEPUIS LE 2026-09-28 (D7, option (a)) : l'art. 23 (API, LEGIARTI000006680469, en vigueur depuis le 2005-03-31) pose douze mois « toutefois » six ou trois — un rythme, pas deux. Priorité : chariot ou gerbeur (`booleenne`) ; sinon levage de personnes non infirmé, trois mois si mû par la force humaine, six sinon ; sinon — levage de personnes répondu « non » — douze mois. `estMuParForceHumaine` N'EST PAS une condition de cette ligne, contrairement à la lettre de l'option (a) : un appareil manuel qui ne sert pas au levage de personnes ne relève pas du b) (« utilisés pour déplacer en élévation un poste de travail »), et la condition l'aurait laissé sans aucune VGP.\n\nLes douze mois sont le principe de l'article 23 de l'arrêté du 1er mars 2004, pas une règle universelle : le même article ramène la périodicité à six mois pour les appareils listés au II de son article 20, dont les chariots élévateurs. La condition `infirmee` écarte donc cette obligation au profit de `levage-vgp-semestrielle-chariot-gerbeur` dès que le dirigeant répond « oui » — et seulement alors. ~~Tant que la question n'a pas été posée, c'est la périodicité annuelle qui reste affichée : une périodicité trop longue est un écart visible et corrigeable, l'absence totale d'échéance sur une obligation de criticité 5 ne le serait pas.~~ [2026-09-28, D7 option (a) : au silence sur le levage de personnes, ce n'est plus l'annuelle qui reste mais la semestrielle « personnes », la plus exigeante des deux lignes que le silence faisait naître ensemble. L'argument tient toujours — aucun appareil n'est laissé sans échéance.]",
   },
   {
     id: "levage-vgp-semestrielle-chariot-gerbeur",
@@ -254,7 +266,7 @@ export const obligationsLevage: Obligation[] = [
       },
     ],
     notesInternes:
-      "Obligation créée en 2026-08 : le référentiel ne connaissait que la VGP annuelle et une VGP semestrielle réservée au levage de personnes, si bien qu'un gerbeur ou un chariot élévateur — l'appareil de levage le plus courant en commerce et en réserve — héritait d'une périodicité annuelle contraire à l'article 23. Condition stricte (`booleenne`) assumée bien que la criticité soit de 5 : l'obligation est nouvelle, aucun équipement déjà en base ne peut la perdre, et la couverture par défaut reste assurée par `levage-vgp-annuelle-charges`, qui s'applique tant que la question n'a pas reçu « oui ». Le critère de champ n'est ni la motorisation ni le nom de l'engin mais le changement de niveau significatif de la charge (art. 2 a) — voir l'en-tête du fichier.\n\nAmendement 2026-08-26 : R. 4323-23 était en refs[0] ici, alors que les trois autres obligations de VGP du fichier mettent l'arrêté du 1er mars 2004 en premier. Même rôle juridique, deux traitements — et le test anti-doublon compare sur refs[0], donc l'incohérence le rendait aveugle entre ces obligations. L'arrêté passe fondateur partout : R. 4323-23 renvoie la périodicité à un arrêté, c'est l'arrêté qui la fixe.",
+      "Obligation créée en 2026-08 : le référentiel ne connaissait que la VGP annuelle et une VGP semestrielle réservée au levage de personnes, si bien qu'un gerbeur ou un chariot élévateur — l'appareil de levage le plus courant en commerce et en réserve — héritait d'une périodicité annuelle contraire à l'article 23. Condition stricte (`booleenne`) assumée bien que la criticité soit de 5 : l'obligation est nouvelle, aucun équipement déjà en base ne peut la perdre, et la couverture par défaut reste assurée ~~par `levage-vgp-annuelle-charges`, qui s'applique tant que la question n'a pas reçu « oui »~~ [2026-09-28, D7 : par la semestrielle « personnes » tant que le levage de personnes n'a pas reçu « non », par l'annuelle ensuite]. Le critère de champ n'est ni la motorisation ni le nom de l'engin mais le changement de niveau significatif de la charge (art. 2 a) — voir l'en-tête du fichier.\n\nAmendement 2026-08-26 : R. 4323-23 était en refs[0] ici, alors que les trois autres obligations de VGP du fichier mettent l'arrêté du 1er mars 2004 en premier. Même rôle juridique, deux traitements — et le test anti-doublon compare sur refs[0], donc l'incohérence le rendait aveugle entre ces obligations. L'arrêté passe fondateur partout : R. 4323-23 renvoie la périodicité à un arrêté, c'est l'arrêté qui la fixe.",
   },
     {
     id: "levage-vgp-trimestrielle-force-humaine",
@@ -303,6 +315,13 @@ export const obligationsLevage: Obligation[] = [
         categorie: "EQUIPEMENT_LEVAGE",
         propriete: "sertAuLevageDePersonnes",
       },
+      {
+        // D7 (2026-09-28) : un chariot ou gerbeur garde SA ligne, la
+        // semestrielle de l'art. 20-II — un seul rythme par appareil.
+        type: "equipement_propriete_infirmee",
+        categorie: "EQUIPEMENT_LEVAGE",
+        propriete: "estChariotOuGerbeur",
+      },
     ],
     notesInternes:
       "Créée le 2026-08-26. Le référentiel ne connaissait aucune périodicité trimestrielle : l'article 23 distingue six mois pour les appareils mus par une énergie AUTRE que la force humaine (a) et trois mois pour ceux mus par la force humaine employée directement (b), et seule la première branche était encodée. Un treuil à manivelle ou un palan à chaîne servant à élever un poste de travail recevait donc six mois au lieu de trois.\n\nLa propriété `estMuParForceHumaine` a été créée pour cela — elle n'existait pas, ce qui m'avait fait présenter à tort le manque comme non corrigeable. Condition stricte (`booleenne`) bien que la criticité soit de 5 : l'obligation est nouvelle, aucun équipement déjà en base ne peut la perdre, et la couverture par défaut reste assurée par la semestrielle, qui s'applique tant que la question n'a pas reçu « oui ».",
@@ -312,7 +331,7 @@ export const obligationsLevage: Obligation[] = [
     domaine: "levage",
     libelle: "Vérification générale semestrielle (levage de personnes)",
     description:
-      "Les appareils de levage mus par une énergie autre que la force humaine employée directement, utilisés pour le transport des personnes ou pour déplacer en élévation un poste de travail, font l'objet d'une VGP tous les six mois par une personne qualifiée. Les plates-formes élévatrices mobiles de personnes y sont visées directement par la liste de l'article 20-II. Lorsque l'appareil est mû par la force humaine employée directement, l'article 23 b) ramène la périodicité à trois mois — cas non encodé, faute d'une propriété d'équipement qui le distingue.",
+      "Les appareils de levage mus par une énergie autre que la force humaine employée directement, utilisés pour le transport des personnes ou pour déplacer en élévation un poste de travail, font l'objet d'une VGP tous les six mois par une personne qualifiée. Les plates-formes élévatrices mobiles de personnes y sont visées directement par la liste de l'article 20-II. Lorsque l'appareil est mû par la force humaine employée directement et utilisé pour déplacer en élévation un poste de travail, l'article 23 b) ramène la périodicité à trois mois.",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -361,6 +380,13 @@ export const obligationsLevage: Obligation[] = [
         type: "equipement_propriete_infirmee",
         categorie: "EQUIPEMENT_LEVAGE",
         propriete: "estMuParForceHumaine",
+      },
+      {
+        // D7 (2026-09-28) : chariot ou gerbeur « oui » → sa propre
+        // semestrielle ; les deux lignes à six mois ne coexistent plus.
+        type: "equipement_propriete_infirmee",
+        categorie: "EQUIPEMENT_LEVAGE",
+        propriete: "estChariotOuGerbeur",
       },
     ],
     notesInternes:

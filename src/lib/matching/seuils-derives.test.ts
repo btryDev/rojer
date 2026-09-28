@@ -2,9 +2,10 @@
 // Bornes de chaque seuil, DÉRIVÉES du référentiel (aucune liste recopiée) :
 // effectifMin/effectifMax à la maille écrite, personnesPresentesMin ; puis
 // l'anomalie A1 du lot 2 (maillon 3), corrigée le 2026-09-27 (`Math.max` de
-// `evaluerPersonnesPresentes`) et tenue ici. L'anomalie A2 (deux VGP de
+// `evaluerPersonnesPresentes`) et tenue ici. ~~L'anomalie A2 (deux VGP de
 // levage sur le silence) n'est pas tenue : elle attend la décision D7
-// (`docs/revues/decisions-a-prendre-2026-09-27.md`).
+// (`docs/revues/decisions-a-prendre-2026-09-27.md`).~~ [2026-09-28 : D7
+// tranchée, A2 tenue par `levage-un-rythme.test.ts`, sur les 27 combinaisons.]
 //
 // Éprouvé en cassant (2026-09-28) : `n < effectifMin` devenu `<=` (engine.ts)
 // et le total ramené au seul nombre déclaré (personnes-presentes.ts) — rouge.

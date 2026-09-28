@@ -1025,21 +1025,28 @@ describe("moteur matching — faux positifs structurels corrigés", () => {
     expect(ids).not.toContain("levage-vgp-annuelle-charges");
   });
 
-  it("un appareil déclaré « non » garde la VGP annuelle et n'a pas la semestrielle", () => {
+  it("un appareil déclaré « non » (chariot, levage de personnes) garde la VGP annuelle et n'a pas la semestrielle", () => {
+    // [2026-09-28, D7 : l'annuelle exige aussi le « non » au levage de
+    // personnes — sans lui, c'est la semestrielle « personnes » qui vaut.]
     const ids = idsObligations(
       determineObligationsApplicables(etabBureau(), [
-        levage({ estChariotOuGerbeur: false }),
+        levage({ estChariotOuGerbeur: false, sertAuLevageDePersonnes: false }),
       ]),
     );
     expect(ids).toContain("levage-vgp-annuelle-charges");
     expect(ids).not.toContain("levage-vgp-semestrielle-chariot-gerbeur");
   });
 
-  it("sans réponse, la VGP annuelle reste due — le silence n'éteint aucune échéance", () => {
+  it("sans réponse, une VGP reste due — le silence n'éteint aucune échéance (AMENDÉ D7)", () => {
+    // ~~sans réponse, la VGP annuelle reste due~~ [2026-09-28, D7 option (a) :
+    // le silence faisait naître l'annuelle ET la semestrielle « personnes » ;
+    // la plus exigeante reste, seule. Le silence n'éteint toujours rien : il
+    // laisse la VGP à six mois.]
     const ids = idsObligations(
       determineObligationsApplicables(etabBureau(), [levage(null)]),
     );
-    expect(ids).toContain("levage-vgp-annuelle-charges");
+    expect(ids).toContain("levage-vgp-semestrielle-personnes");
+    expect(ids).not.toContain("levage-vgp-annuelle-charges");
     expect(ids).not.toContain("levage-vgp-semestrielle-chariot-gerbeur");
   });
 
@@ -1327,6 +1334,10 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       "froid-controle-etancheite-semestriel-500t-detection",
       "froid-controle-etancheite-semestriel-50t",
       "froid-controle-etancheite-trimestriel-500t",
+      // D7, option (a) (2026-09-28) : l'annuelle s'éteint au silence sur le
+      // levage de personnes, par dessein — la semestrielle « personnes » couvre
+      // l'appareil (`matching/levage-un-rythme.test.ts`, 27 combinaisons).
+      "levage-vgp-annuelle-charges",
       // Obligation neuve : personne ne peut la perdre, et la VGP annuelle
       // couvre l'appareil tant que la question n'a pas reçu « oui ».
       "levage-vgp-semestrielle-chariot-gerbeur",
