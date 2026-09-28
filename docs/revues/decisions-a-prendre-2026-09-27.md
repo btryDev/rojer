@@ -55,8 +55,10 @@ compteur de retards et le score.
 reçoit la couverture (`couvertureDuDossier`, la même entrée que la page « Ce que
 Rojer ne couvre pas ») ; tant qu'une question reste ouverte, « Situation
 satisfaisante » devient « Reste à renseigner », au tableau de bord et au dossier PDF.
-Deux maillons sans test : le builder PDF qui transmet la couverture, le texte du
-widget (non monté en test).]
+~~Deux maillons sans test : le builder PDF qui transmet la couverture, le texte du
+widget (non monté en test).~~ [2026-09-28, revue indépendante : périmé depuis
+`454fb2fa` — `pdf/builders-couverture.test.ts` tient le builder PDF. Un maillon
+sans test : le texte du widget (non monté en test).]
 
 **Constat, par appel** (maillon 7). Même restaurant, tout à jour, tout déclaré en
 place : catégorie N5 → 45 applicables, 0 indétermination, score 100 « Situation
