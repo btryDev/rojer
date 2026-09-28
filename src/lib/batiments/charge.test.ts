@@ -19,6 +19,8 @@ const h = vi.hoisted(() => {
     batiments: [] as Array<Record<string, unknown>>,
     verifs: [] as Array<Record<string, unknown>>,
     requetes: [] as unknown[],
+    /** Les marques « à confirmer » du dossier (D1 (a)) : vides sauf au test qui les éprouve. */
+    marques: new Map<string, { phrases: string[]; effectif: boolean }>(),
   };
   const prisma = {
     batiment: { findMany: async () => db.batiments },
@@ -38,7 +40,7 @@ vi.mock("@/lib/auth/require-user", () => ({ requireUser: h.requireUser }));
 // (`calendrier/prudence.test.ts`).
 vi.mock("@/lib/etablissements/marques-du-rendu", () => ({
   marquesAConfirmerDuRendu: async () => ({
-    parObligation: new Map(),
+    parObligation: h.db.marques,
     entrepriseId: null,
     questions: [],
   }),
@@ -161,8 +163,10 @@ describe("listerBatimentsAvecCharge", () => {
       archiveLe?: string;
       /** La colonne gelée (ADR-034), que plus aucun prédicat ne lit. */
       actif?: boolean;
+      obligationId?: string;
     } = {},
   ) => ({
+    obligationId: o.obligationId ?? "obligation-annuelle",
     statut: o.statut ?? "planifiee",
     datePrevue: new Date(datePrevue),
     archiveLe: o.archiveLe ? new Date(o.archiveLe) : null,
@@ -187,6 +191,22 @@ describe("listerBatimentsAvecCharge", () => {
       { id: RESERVE, nom: "Réserve", complementAdresse: null, ordre: 1, _count: { equipements: 1 } },
     ];
     h.db.verifs = [];
+    h.db.marques = new Map();
+  });
+
+  it("D1 (a) : une ligne retenue par prudence ne rougit pas sa zone", async () => {
+    // Contre-lecture du lot 3 : la prudence des zones n'était éprouvée par
+    // aucun test (les marques simulées étaient toujours vides). Éprouvé en
+    // passant AUCUNE_PRUDENCE dans `listerBatimentsAvecCharge`.
+    h.db.verifs = [
+      ligne(PRINCIPAL, "2026-08-20T00:00:00+02:00", { obligationId: "obligation-muette" }),
+      ligne(RESERVE, "2026-08-18T00:00:00+02:00"),
+    ];
+    h.db.marques = new Map([["obligation-muette", { phrases: ["à confirmer"], effectif: false }]]);
+    const charge = await listerBatimentsAvecCharge("etab-1", NOW);
+    const de = (id: string) => charge.find((b) => b.id === id)?.nbEnRetard;
+    expect(de(PRINCIPAL)).toBe(0);
+    expect(de(RESERVE)).toBe(1);
   });
 
   it("ventile les retards par bâtiment sans en perdre ni en doubler", async () => {

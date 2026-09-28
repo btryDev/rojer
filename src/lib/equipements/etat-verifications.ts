@@ -10,6 +10,7 @@
 // « où en est chacun ». Deux questions, deux écrans, une seule donnée.
 
 import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
+import { retenueParSaMarque } from "@/lib/calendrier/prudence";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
@@ -166,10 +167,11 @@ export function repartirParEquipement(
     }
     // Retenue par prudence (D1 (a)) : une ligne ouverte que seul le silence
     // de la fiche retient. Elle porte sa mention, et ne rougit pas l'appareil.
+    // Le prédicat partagé, pas une recopie (contre-lecture du lot 3).
     const prudente =
       v.archiveLe === null &&
       v.obligationId !== undefined &&
-      (marques.get(v.obligationId)?.phrases.length ?? 0) > 0;
+      retenueParSaMarque({ aConfirmer: marques.get(v.obligationId)?.phrases });
     if (prudente && v.obligationId !== undefined) {
       for (const phrase of marques.get(v.obligationId)?.phrases ?? []) {
         if (!courant.aConfirmer.includes(phrase)) courant.aConfirmer.push(phrase);
