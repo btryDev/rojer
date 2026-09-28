@@ -16,6 +16,7 @@ function verif(
 ) {
   return {
     obligationId: "obligation-test",
+    prescriptionId: null,
     statut,
     datePrevue: new Date(datePrevueIso),
     derniereRealisation: (derniereRealisationIso === null

@@ -362,6 +362,7 @@ describe("compterEtatCalendrier — D1 (a), la prudence (2026-09-28)", () => {
   const exerciceEchu = {
     id: "v-exercice",
     obligationId: "incendie-travail-exercice-semestriel",
+    prescriptionId: null,
     statut: "planifiee",
     datePrevue: jour("2026-03-01"),
     salarieId: null,

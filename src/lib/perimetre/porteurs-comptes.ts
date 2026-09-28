@@ -92,6 +92,9 @@ export type LigneSondee = {
   /** Aucune obligation réelle : la sonde n'est retenue par la prudence
    *  d'aucun dossier (D1 (a)). */
   obligationId: string;
+  /** Une SONDE, pas un dossier : aucune prescription, `null` déclaré ici
+   *  (revue indépendante du lot 3, prudence et prescriptions). */
+  prescriptionId: string | null;
   equipementId: string | null;
   salarieId: string | null;
   libelleObligation: string;
@@ -118,6 +121,7 @@ export function sondes(now: Date): {
   const hier = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const commun = {
     obligationId: "sonde-de-perimetre",
+    prescriptionId: null,
     libelleObligation: "Sonde de périmètre",
     statut: "planifiee",
     datePrevue: hier,

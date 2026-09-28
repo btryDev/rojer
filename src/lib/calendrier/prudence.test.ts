@@ -9,6 +9,7 @@ import { calculerScoreDepuisEtat } from "@/lib/dashboard/score";
 import {
   AUCUNE_PRUDENCE,
   retenueParPrudence,
+  retenueParSaMarque,
   statutAffichePrudent,
 } from "./prudence";
 
@@ -56,6 +57,7 @@ function lignesEchues(e: EtablissementMatching) {
     .filter((a) => a.obligation.nature !== "etat_permanent")
     .map((a) => ({
       obligationId: a.obligation.id,
+      prescriptionId: null as string | null,
       libelleObligation: a.obligation.libelle,
       statut: "planifiee",
       datePrevue: new Date("2026-03-01T00:00:00Z"),
@@ -136,5 +138,34 @@ describe("D1 (a) : la ligne retenue par prudence ne compte ni en retard ni dans 
     expect(statutAffichePrudent(l, NOW, retenueParPrudence(marquesDe(repondu)))).toBe(
       "en_retard",
     );
+  });
+});
+
+describe("une ligne rythmée par une prescription n'est jamais prudente (revue indépendante du lot 3)", () => {
+  // Sa périodicité vient d'une autorité (ADR-035), pas du seul référentiel :
+  // le silence de la fiche ne la rend pas incertaine. Éprouvé en retirant la
+  // clause `prescriptionId === null` de `retenueParPrudence` et de
+  // `retenueParSaMarque`.
+  const muet = bureau();
+
+  it("le prédicat : marquée ET prescrite → pas prudente ; marquée sans prescription → prudente", () => {
+    const marques = marquesDe(muet);
+    const [l] = lignesEchues(muet).filter((x) => marques.has(x.obligationId));
+    const prudence = retenueParPrudence(marques);
+    expect(prudence(l)).toBe(true);
+    expect(prudence({ ...l, prescriptionId: "presc-1" })).toBe(false);
+    expect(retenueParSaMarque({ aConfirmer: ["phrase"], prescriptionId: null })).toBe(true);
+    expect(retenueParSaMarque({ aConfirmer: ["phrase"], prescriptionId: "presc-1" })).toBe(false);
+  });
+
+  it("à travers repartirVerifications : la ligne prescrite reste en retard, et compte dans le total", () => {
+    const marques = marquesDe(muet);
+    const [l] = lignesEchues(muet).filter((x) => marques.has(x.obligationId));
+    const prescrite = { ...l, prescriptionId: "presc-1" };
+    const etat = repartirVerifications([prescrite], NOW, retenueParPrudence(marques));
+    expect(etat.enRetard).toEqual([prescrite]);
+    expect(etat.retenuesParPrudence).toHaveLength(0);
+    expect(etat.total).toBe(1);
+    expect(statutAffichePrudent(prescrite, NOW, retenueParPrudence(marques))).toBe("en_retard");
   });
 });

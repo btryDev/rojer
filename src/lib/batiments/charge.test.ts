@@ -53,6 +53,7 @@ const NOW = new Date("2026-08-21T14:30:00+02:00");
 function verif(datePrevue: string, statut = "planifiee") {
   return {
     obligationId: "obligation-test",
+    prescriptionId: null,
     statut,
     datePrevue: new Date(datePrevue),
     derniereRealisation: null,
@@ -86,6 +87,7 @@ describe("charge d'un bâtiment", () => {
       [
         {
           obligationId: "obligation-test",
+          prescriptionId: null,
           statut: "realisee_conforme",
           datePrevue: new Date("2026-07-01T00:00:00+02:00"),
           derniereRealisation: null,
@@ -167,6 +169,7 @@ describe("listerBatimentsAvecCharge", () => {
     } = {},
   ) => ({
     obligationId: o.obligationId ?? "obligation-annuelle",
+    prescriptionId: null,
     statut: o.statut ?? "planifiee",
     datePrevue: new Date(datePrevue),
     archiveLe: o.archiveLe ? new Date(o.archiveLe) : null,
@@ -227,6 +230,7 @@ describe("listerBatimentsAvecCharge", () => {
     const somme = charge.reduce((n, b) => n + b.nbEnRetard, 0);
     const toutes = h.db.verifs as unknown as Array<{
       obligationId: string;
+      prescriptionId: string | null;
       statut: string;
       datePrevue: Date;
       periodicite: string;

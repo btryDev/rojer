@@ -218,9 +218,10 @@ console.log(
 
 for (const d of DOSSIERS) {
   // Mesure historique de l'ADR-034 : aucun dossier réel, donc aucune ligne
-  // retenue par prudence (D1 (a) est postérieure à la mesure).
+  // retenue par prudence (D1 (a) est postérieure à la mesure) ; aucune
+  // prescription non plus, déclarée `null` ici — une mesure, pas un dossier.
   const apres = repartirVerifications(
-    d.faits.map((f) => ({ ...ligneApres(f), obligationId: "mesure" })),
+    d.faits.map((f) => ({ ...ligneApres(f), obligationId: "mesure", prescriptionId: null })),
     MAINTENANT,
     AUCUNE_PRUDENCE,
   );

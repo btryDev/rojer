@@ -100,6 +100,7 @@ describe("PDF : la ligne de vérification porte sa marque", () => {
   const v = {
     id: "v1",
     obligationId: EXERCICE,
+    prescriptionId: null,
     libelleObligation: "Essais du matériel et exercices d'évacuation semestriels",
     periodicite: "semestrielle",
     statut: "planifiee",

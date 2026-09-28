@@ -32,6 +32,7 @@ const verif = (
   archiveLe: o.archiveLe ? jour(o.archiveLe) : null,
   derniereRealisation: o.derniereRealisation ? jour(o.derniereRealisation) : null,
   periodicite: o.periodicite ?? ("annuelle" as const),
+  prescriptionId: null as string | null,
 });
 
 describe("repartirParEquipement", () => {
@@ -355,6 +356,7 @@ describe("la marque « à confirmer » atteint la carte de l'appareil (revue du 
     derniereRealisation: null,
     periodicite: "annuelle" as const,
     obligationId: "o-marquee",
+    prescriptionId: null,
   };
   const NOW = new Date("2026-09-27T00:00:00Z");
   it("une ligne ouverte marquée porte ses phrases jusqu'au résumé", () => {

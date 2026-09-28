@@ -206,6 +206,9 @@ export async function compterEtatCalendrier(
         salarieId: true,
         // L'obligation, pour le prédicat « retenue par prudence » (D1 (a)).
         obligationId: true,
+        // La prescription : une ligne qu'une autorité rythme n'est jamais
+        // prudente (revue indépendante du lot 3).
+        prescriptionId: true,
       },
     }),
     marquesAConfirmerDuRendu(etablissementId),

@@ -21,6 +21,7 @@ const ligne = (o: {
   archiveLe: o.archiveLe ?? null,
   libelleObligation: "Vérification trimestrielle",
   obligationId: "o-trimestrielle",
+  prescriptionId: null as string | null,
   rapportsRealises: (o.rapports ?? []).map((dateRapport) => ({ dateRapport })),
 });
 

@@ -67,9 +67,12 @@ export function repartirVerifications<
   // `derniereRealisation` — la date du dernier rapport réalisé (ADR-034) —
   // est REQUISE : c'est elle, et non plus la ligne, qui dit ce qui a été fait
   // sur la fenêtre. Un appelant qui l'omettrait viderait `realisees12m`.
+  // `prescriptionId` est requis pour la même raison : la prudence ne vaut pas
+  // pour une ligne rythmée par une prescription (revue indépendante, lot 3).
   T extends VerificationDatee & {
     derniereRealisation: Date | null;
     obligationId: string;
+    prescriptionId: string | null;
   },
 >(
   toutes: readonly T[],

@@ -766,6 +766,7 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
   };
   const ligneExercice = {
     obligationId: "incendie-travail-exercice-semestriel",
+    prescriptionId: null,
     libelleObligation: "Essais du matériel et exercices d'évacuation semestriels",
     periodicite: "semestrielle",
     datePrevue: jour("2026-09-01"),

@@ -29,6 +29,7 @@ function verif(partial: Partial<VerificationTenue> = {}): VerificationTenue {
   return {
     id: "v1",
     obligationId: "extincteur-annuelle",
+    prescriptionId: null,
     libelleObligation: "Vérification annuelle des extincteurs",
     datePrevue: new Date("2026-11-02T00:00:00Z"),
     derniereRealisation: null,

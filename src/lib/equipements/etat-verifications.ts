@@ -104,6 +104,8 @@ export async function etatVerificationsParEquipement(
         archiveLe: true,
         periodicite: true,
         obligationId: true,
+        // Une ligne rythmée par une prescription n'est jamais prudente.
+        prescriptionId: true,
       },
       orderBy: { datePrevue: "asc" },
     }),
@@ -135,6 +137,9 @@ export function repartirParEquipement(
     periodicite: Periodicite;
     /** Pour la marque « à confirmer » ; absent dans les tests qui n'en parlent pas. */
     obligationId?: string;
+    /** REQUIS : une ligne rythmée par une prescription (ADR-035) n'est jamais
+     *  retenue par prudence (revue indépendante du lot 3). */
+    prescriptionId: string | null;
   }>,
   now: Date,
   marques: ReadonlyMap<string, { phrases: readonly string[] }> = new Map(),
@@ -171,7 +176,10 @@ export function repartirParEquipement(
     const prudente =
       v.archiveLe === null &&
       v.obligationId !== undefined &&
-      retenueParSaMarque({ aConfirmer: marques.get(v.obligationId)?.phrases });
+      retenueParSaMarque({
+        aConfirmer: marques.get(v.obligationId)?.phrases,
+        prescriptionId: v.prescriptionId,
+      });
     if (prudente && v.obligationId !== undefined) {
       for (const phrase of marques.get(v.obligationId)?.phrases ?? []) {
         if (!courant.aConfirmer.includes(phrase)) courant.aConfirmer.push(phrase);

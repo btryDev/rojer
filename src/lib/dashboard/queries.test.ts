@@ -28,6 +28,8 @@ type LigneVerif = {
   id: string;
   /** Pour la prudence (D1 (a)) : absent des tests qui n'en parlent pas. */
   obligationId?: string;
+  /** Une ligne rythmée par une prescription n'est jamais prudente. */
+  prescriptionId?: string | null;
   etablissementId: string;
   equipementId: string;
   statut: string;
@@ -316,6 +318,9 @@ function verif(p: Partial<LigneVerif> & { id: string }): LigneVerif {
     // prédicats, qui testent `!== null` — chaque ligne du fichier serait alors
     // lue comme archivée, et tous les compteurs tomberaient à zéro en silence.
     archiveLe: null,
+    // Même raison que `archiveLe` : `undefined` n'est pas `null`, et la
+    // prudence ne vaut que pour une ligne sans prescription (revue du lot 3).
+    prescriptionId: null,
     libelleObligation: `Obligation ${p.id}`,
     ...p,
   };

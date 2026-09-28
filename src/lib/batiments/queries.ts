@@ -170,6 +170,8 @@ export async function listerBatimentsAvecCharge(
       archiveLe: true,
       libelleObligation: true,
       obligationId: true,
+      // La prudence ne vaut pas pour une ligne rythmée par une prescription.
+      prescriptionId: true,
       equipement: { select: { batimentId: true, actif: true } },
     },
   });
@@ -213,6 +215,7 @@ export function grouperChargeParBatiment<
     archiveLe: Date | null;
     libelleObligation: string;
     obligationId: string;
+    prescriptionId: string | null;
     equipement: { batimentId: string; actif: boolean } | null;
   },
 >(

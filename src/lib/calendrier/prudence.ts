@@ -24,8 +24,16 @@ import {
 import type { MarqueAConfirmer } from "@/lib/matching/marques";
 import { statutAffiche, type StatutPeint } from "./etats";
 
+/**
+ * Ce que la prudence lit d'une ligne. `prescriptionId` est REQUIS, et non
+ * facultatif : une lecture qui l'oublierait dans son `select` le rendrait
+ * `undefined`, donc « sans prescription », et la ligne rythmée par une autorité
+ * sortirait des retards en silence. Requis, l'oubli ne compile pas.
+ */
+export type LignePrudence = { obligationId: string; prescriptionId: string | null };
+
 /** Vrai quand la ligne n'est retenue que par le silence de la fiche. */
-export type RetenueParPrudence = (v: { obligationId: string }) => boolean;
+export type RetenueParPrudence = (v: LignePrudence) => boolean;
 
 /**
  * Le prédicat d'un dossier, depuis ses marques. Une obligation marquée l'est
@@ -35,7 +43,13 @@ export type RetenueParPrudence = (v: { obligationId: string }) => boolean;
 export function retenueParPrudence(
   marques: ReadonlyMap<string, MarqueAConfirmer>,
 ): RetenueParPrudence {
-  return (v) => (marques.get(v.obligationId)?.phrases.length ?? 0) > 0;
+  // UNE LIGNE RYTHMÉE PAR UNE PRESCRIPTION N'EST JAMAIS PRUDENTE (revue
+  // indépendante du lot 3). Sa périodicité vient d'une autorité — assureur,
+  // commission, inspection (ADR-035) —, pas du seul référentiel : le silence de
+  // la fiche ne la rend pas incertaine, et elle reste en retard.
+  return (v) =>
+    v.prescriptionId === null &&
+    (marques.get(v.obligationId)?.phrases.length ?? 0) > 0;
 }
 
 /**
@@ -52,8 +66,11 @@ export const AUCUNE_PRUDENCE: RetenueParPrudence = () => false;
  * sert) : les widgets du tableau de bord reçoivent la ligne, pas la carte des
  * marques. Même source, donc même verdict que `retenueParPrudence`.
  */
-export function retenueParSaMarque(v: { aConfirmer?: readonly string[] }): boolean {
-  return (v.aConfirmer?.length ?? 0) > 0;
+export function retenueParSaMarque(v: {
+  aConfirmer?: readonly string[];
+  prescriptionId: string | null;
+}): boolean {
+  return v.prescriptionId === null && (v.aConfirmer?.length ?? 0) > 0;
 }
 
 /**
@@ -62,7 +79,7 @@ export function retenueParSaMarque(v: { aConfirmer?: readonly string[] }): boole
  * (`estVerificationEnRetard`) ; une ligne retenue par prudence non plus.
  */
 export function estEnRetardQuiCompte(
-  v: VerificationDatee & { obligationId: string },
+  v: VerificationDatee & LignePrudence,
   now: Date,
   prudence: RetenueParPrudence,
 ): boolean {
@@ -75,7 +92,7 @@ export function estEnRetardQuiCompte(
  * sa place de preuve dans `realisees12m`.
  */
 export function estRetenueParPrudence(
-  v: VerificationDatee & { obligationId: string },
+  v: VerificationDatee & LignePrudence,
   prudence: RetenueParPrudence,
 ): boolean {
   return !estVerificationArchivee(v) && prudence(v);
@@ -87,7 +104,7 @@ export function estRetenueParPrudence(
  * reste planifiée, une ligne faite garde son résultat.
  */
 export function statutAffichePrudent(
-  v: VerificationDatee & { obligationId: string },
+  v: VerificationDatee & LignePrudence,
   now: Date,
   prudence: RetenueParPrudence,
 ): StatutPeint | undefined {
@@ -101,7 +118,7 @@ export function statutAffichePrudent(
  */
 export function statutPeintPrudent(
   statut: StatutPeint,
-  v: { obligationId: string },
+  v: LignePrudence,
   prudence: RetenueParPrudence,
 ): StatutPeint {
   return statut === "en_retard" && prudence(v) ? "a_confirmer" : statut;

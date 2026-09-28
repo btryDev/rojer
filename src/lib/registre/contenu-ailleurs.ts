@@ -63,6 +63,9 @@ export type VerificationTenue = {
   id: string;
   /** L'obligation, pour la prudence (D1 (a)). */
   obligationId: string;
+  /** Requis : une ligne rythmée par une prescription n'est jamais prudente
+   *  (revue indépendante du lot 3). */
+  prescriptionId: string | null;
   libelleObligation: string;
   datePrevue: Date | null;
   /** Le dernier rapport réalisé (ADR-034) — c'est lui qui dit « faite le »,

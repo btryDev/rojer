@@ -129,6 +129,13 @@ type VerificationLite = {
    */
   prescription?: { source: string } | null;
   /**
+   * La prescription dont la ligne tient son rythme (ADR-035), `null` sinon.
+   * REQUIS : une ligne rythmée par une autorité n'est jamais « retenue par
+   * prudence » (`retenueParSaMarque`), et un champ facultatif oublié la ferait
+   * sortir des retards en silence (revue indépendante du lot 3).
+   */
+  prescriptionId: string | null;
+  /**
    * Les phrases « à confirmer » de la ligne (`matching/marques.ts`), vide si
    * rien ne la retient par prudence (revue du lot 1 : le board listait ces
    * échéances sans la mention). Optionnel pour les fixtures ; la page le

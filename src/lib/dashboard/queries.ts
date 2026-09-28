@@ -305,6 +305,8 @@ export async function compterVerifsParEquipement(
         // L'obligation, pour la prudence (D1 (a)) : la pastille rouge d'un
         // appareil ne compte pas une ligne que seul le silence retient.
         obligationId: true,
+        // … sauf si une prescription la rythme (revue indépendante, lot 3).
+        prescriptionId: true,
         statut: true,
         datePrevue: true,
         periodicite: true,
@@ -451,6 +453,7 @@ export async function compterObligationsParMois(
       archiveLe: true,
       libelleObligation: true,
       obligationId: true,
+      prescriptionId: true,
       // TOUS les rapports réalisés de la ligne, et pas seulement ceux de
       // l'année : un rapport hors de l'année suffit à écarter le repli sur
       // `datePrevue` d'une ponctuelle consommée (`repartirParMois`). Une date
@@ -758,6 +761,8 @@ export const getDashboardData = cache(async function getDashboardData(
         // une ligne que seul le silence de la fiche retient ne compte ni en
         // retard ni dans l'indice.
         obligationId: true,
+        // … sauf si une prescription la rythme (revue indépendante, lot 3).
+        prescriptionId: true,
         // La source de la prescription, pour que le board dise ce qu'une
         // ligne contractuelle est (ADR-032). Le tableau de bord est l'écran
         // le plus lu du produit : une échéance d'assureur qui s'y présente

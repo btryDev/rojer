@@ -38,6 +38,7 @@ import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
 import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
 import {
   retenueParPrudence,
+  type LignePrudence,
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
 import { prismaMcp } from "./prisma";
@@ -399,7 +400,7 @@ export type EtatVerification =
   | "a_confirmer";
 
 function etatDe(
-  v: VerificationDatee & { obligationId: string },
+  v: VerificationDatee & LignePrudence,
   now: Date,
   prudence: RetenueParPrudence,
 ): EtatVerification {
@@ -466,6 +467,9 @@ export async function listerEquipements(
           // L'identifiant de l'obligation, pour la prudence (D1 (a)) — une
           // clé du référentiel, rien de l'établissement ni d'une personne.
           obligationId: true,
+          // L'identifiant de la prescription, sans rien d'elle : une ligne
+          // rythmée par une autorité n'est jamais prudente (revue du lot 3).
+          prescriptionId: true,
           statut: true,
           datePrevue: true,
           periodicite: true,
@@ -584,6 +588,9 @@ export async function listerVerifications(
       // L'identifiant de l'obligation, pour la marque « à confirmer » —
       // une clé du référentiel, rien de l'établissement ni d'une personne.
       obligationId: true,
+      // L'identifiant de la prescription, sans rien d'elle : une ligne
+      // rythmée par une autorité n'est jamais prudente (revue du lot 3).
+      prescriptionId: true,
       libelleObligation: true,
       periodicite: true,
       datePrevue: true,

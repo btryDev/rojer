@@ -67,6 +67,8 @@ export function repartirParMois(
   lignes: ReadonlyArray<
     VerificationDatee & {
       obligationId: string;
+      /** Une ligne rythmée par une prescription n'est jamais prudente. */
+      prescriptionId: string | null;
       /** Les dates de TOUS les rapports réalisés de la ligne, pas seulement
        *  ceux de l'année : l'existence d'un rapport hors de l'année décide du
        *  repli ci-dessus. */

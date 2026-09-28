@@ -425,6 +425,7 @@ export default async function EtablissementPage({
       // les deux, qui la jetait — trois couches justes séparément, et une
       // pastille qui n'apparaît nulle part.
       prescription: v.prescription,
+      prescriptionId: v.prescriptionId,
       equipement: {
         libelle: libellePorteur(v),
       },

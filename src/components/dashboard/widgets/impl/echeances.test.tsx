@@ -29,6 +29,7 @@ const ligne = (id: string, iso: string, statut = "planifiee") => ({
   archiveLe: null,
   equipement: { libelle: `Appareil ${id}` },
   prescription: null,
+  prescriptionId: null as string | null,
 });
 
 const bundle = (
