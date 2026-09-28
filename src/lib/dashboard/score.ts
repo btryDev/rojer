@@ -62,6 +62,20 @@ export type Score = {
    * de savoir ce qui reste non renseigné.
    */
   indetermines: number;
+  /**
+   * Combien de questions de COUVERTURE restent ouvertes
+   * (`perimetre/couverture.ts`, `indeterminations`) : la donnée qui décide de
+   * ce que l'outil couvre manque — un DUERP aux réponses d'activités
+   * incomplètes, une catégorie d'ERP non renseignée.
+   *
+   * D2 (a), décision de la propriétaire du 2026-09-28 : même mécanisme que les
+   * états permanents — ni au dénominateur ni à la pénalité, mais « Situation
+   * satisfaisante » devient « Reste à renseigner » tant qu'il en reste. Avant,
+   * un restaurant sans catégorie sortait à 100 « Situation satisfaisante »
+   * avec une indétermination affichée sur une autre page. Rendu à part, pour
+   * que l'interface dise laquelle des deux choses reste.
+   */
+  indeterminationsCouverture: number;
 };
 
 export const SEUIL_SATISFAISANT = 80;
@@ -105,6 +119,15 @@ export type EntreeScoreConformite = {
    * voir `calculerScoreDepuisEtat`.
    */
   etatsPermanents: { total: number; enPlace: number };
+  /**
+   * Les questions de couverture ouvertes du dossier (D2 (a)). **Requis, pour
+   * la raison même des états permanents** : un appelant qui l'omettrait
+   * noterait « satisfaisante » un dossier dont l'outil ne sait pas ce qu'il
+   * couvre. `indeterminations` est la longueur de la liste que
+   * `couvertureDuDossier` rend — `0` quand le dossier est introuvable n'arrive
+   * pas : l'appelant n'a alors pas de score à calculer.
+   */
+  couverture: { indeterminations: number };
 };
 
 function niveauDepuisValeur(v: number): Score["niveau"] {
@@ -207,6 +230,15 @@ export function calculerScoreDepuisEtat(e: EntreeScoreConformite): Score {
     );
   }
 
-  const niveau = qualifier(valeur, indetermines);
-  return { valeur, niveau, libelle: LIBELLE_NIVEAU[niveau], indetermines };
+  const indeterminationsCouverture = Math.max(0, e.couverture.indeterminations);
+  // Les deux sources d'indétermination empêchent la même conclusion, et
+  // seulement celle-là (`qualifier`) : un retard réel garde sa voix.
+  const niveau = qualifier(valeur, indetermines + indeterminationsCouverture);
+  return {
+    valeur,
+    niveau,
+    libelle: LIBELLE_NIVEAU[niveau],
+    indetermines,
+    indeterminationsCouverture,
+  };
 }

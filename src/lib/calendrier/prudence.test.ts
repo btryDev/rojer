@@ -109,6 +109,7 @@ describe("D1 (a) : la ligne retenue par prudence ne compte ni en retard ni dans 
         actions: { ouvertesTotal: 0, enRetard: 0 },
         duerp: null,
         etatsPermanents: { total: 0, enPlace: 0 },
+        couverture: { indeterminations: 0 },
       }).valeur;
     };
     expect(score(retenueParPrudence(marques))).toBe(100);

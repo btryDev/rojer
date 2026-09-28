@@ -10,6 +10,7 @@
 // stats de vérification (on part d'une moyenne par famille). Données
 // locales uniquement : aucune query supplémentaire.
 
+import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
 import { BentoCell } from "@/components/dashboard/BentoCell";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { formaterDateFr } from "@/lib/dates";
@@ -227,6 +228,18 @@ export function WidgetScore({
                 ? "1 point reste à confirmer"
                 : `${dashboard.score.indetermines} points restent à confirmer`}{" "}
               dans «&nbsp;Ce qui doit être en place&nbsp;».
+            </p>
+          )}
+          {/* D2 (a) : la seconde source de « Reste à renseigner » — une
+              question de couverture ouverte (`perimetre/couverture.ts`).
+              Sans elle, la pastille changeait de mot sans que rien ne dise
+              pourquoi. */}
+          {dashboard.score.indeterminationsCouverture > 0 && (
+            <p className="text-center text-[0.78rem] leading-snug text-[color:var(--board-slate-mid)]">
+              {dashboard.score.indeterminationsCouverture === 1
+                ? "1 question de couverture reste ouverte"
+                : `${dashboard.score.indeterminationsCouverture} questions de couverture restent ouvertes`}{" "}
+              dans «&nbsp;{LABEL_ITEM.perimetre}&nbsp;».
             </p>
           )}
         </div>

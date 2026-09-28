@@ -594,6 +594,9 @@ export async function construireDossierConformiteData(
       total: etatsPermanents.total,
       enPlace: etatsPermanents.enPlace,
     },
+    // D2 (a) : la même couverture que la section « Ce que ce dossier ne
+    // couvre pas », lue par la même entrée que le tableau de bord.
+    couverture: { indeterminations: couverture?.indeterminations.length ?? 0 },
   });
 
   const criticiteMax =

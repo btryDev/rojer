@@ -15,6 +15,7 @@
 
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { retenueParPrudence } from "@/lib/calendrier/prudence";
+import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -707,6 +708,7 @@ export const getDashboardData = cache(async function getDashboardData(
     etatsPermanents,
     rapports12m,
     marquesDossier,
+    couverture,
   ] = await Promise.all([
     // Un seul passage sur les vérifications qui comptent : les occurrences
     // ouvertes (toutes, sans plafond — leur nombre est borné par le
@@ -826,6 +828,10 @@ export const getDashboardData = cache(async function getDashboardData(
     // Les marques « à confirmer » : mémoïsées sur le rendu, partagées avec les
     // fenêtres d'événements et le compteur de retards de la même page.
     marquesAConfirmerDuRendu(etablissementId),
+    // D2 (a) : les questions de couverture ouvertes. Par la même entrée que
+    // l'écran « Périmètre » et le dossier PDF : deux lectures finiraient par
+    // dire deux choses.
+    couvertureDuDossier(etablissementId),
   ]);
 
   // Répartition unique, partagée avec les documents générés : quatre
@@ -863,6 +869,7 @@ export const getDashboardData = cache(async function getDashboardData(
     },
     duerp: etatDuerp.ouvert ? etatDuerp : null,
     etatsPermanents,
+    couverture: { indeterminations: couverture?.indeterminations.length ?? 0 },
   });
 
   const recommandations = genererRecommandations(

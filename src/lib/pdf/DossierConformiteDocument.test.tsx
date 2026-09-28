@@ -78,6 +78,7 @@ function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
       niveau: "indetermine",
       libelle: "Reste à renseigner",
       indetermines: 12,
+      indeterminationsCouverture: 0,
     },
     etatsPermanents,
     duerp: null,
@@ -295,5 +296,20 @@ describe("D1 (a) : la ligne retenue par prudence s'imprime à part, marquée (20
   it("absente : rien n'est ajouté", () => {
     const t = textes({ ...dossier(bloc(2)), verifsAConfirmer: [] });
     expect(t).not.toContain("Retenues à confirmer");
+  });
+});
+
+describe("D2 (a) : la page de garde dit la question de couverture (2026-09-28)", () => {
+  // Éprouvé en retirant le bloc `phraseIndeterminationsCouverture` du JSX.
+  const avec = (n: number): DossierData => {
+    const d = dossier(bloc(2));
+    return { ...d, score: { ...d.score, indeterminationsCouverture: n } };
+  };
+  const textes = (d: DossierData) =>
+    elementsDansLOrdre(DossierConformiteDocument({ data: d })).map(texteDirect);
+
+  it("une question ouverte : la phrase est rendue ; aucune : rien", () => {
+    expect(textes(avec(1)).some((t) => t.startsWith("Une question reste ouverte"))).toBe(true);
+    expect(textes(avec(0)).some((t) => t.includes("question reste ouverte"))).toBe(false);
   });
 });

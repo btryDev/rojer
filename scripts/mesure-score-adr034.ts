@@ -142,6 +142,8 @@ function score(verifs: { total: number; enRetard: number }): number {
     actions: { ouvertesTotal: 0, enRetard: 0 },
     duerp: null,
     etatsPermanents: { total: 0, enPlace: 0 },
+    // Une valeur de score, pas un niveau : la couverture ne la change pas.
+    couverture: { indeterminations: 0 },
   };
   return calculerScoreDepuisEtat(entree).valeur;
 }

@@ -243,12 +243,20 @@ const h = vi.hoisted(() => {
 
   // Les marques « à confirmer » du dossier, vides par défaut (D1 (a)).
   const marques = new Map<string, { phrases: string[]; effectif: boolean }>();
-  return { db, prisma, marques };
+  // Les questions de couverture ouvertes (D2 (a)), aucune par défaut.
+  const couverture = {
+    manques: [] as unknown[],
+    indeterminations: [] as unknown[],
+  };
+  return { db, prisma, marques, couverture };
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 // Les marques « à confirmer » ont leur propre porte (`marques-du-rendu.ts`) ;
 // ce fichier ne les éprouve pas, `h.marques` les pose quand un test le veut.
+vi.mock("@/lib/perimetre/faits", () => ({
+  couvertureDuDossier: async () => h.couverture,
+}));
 vi.mock("@/lib/etablissements/marques-du-rendu", () => ({
   marquesAConfirmerDuRendu: async () => ({
     parObligation: h.marques,
@@ -328,6 +336,7 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
   h.db.verifications = [];
   h.marques.clear();
+  h.couverture.indeterminations = [];
   h.db.actions = [];
   h.db.duerp = null;
   h.db.nbEquipements = 3;
@@ -939,5 +948,23 @@ describe("getDashboardData — D1 (a), la ligne retenue par prudence (2026-09-28
     const du = await getDashboardData(ETAB);
     expect(du.compteurs.verifsEnRetard).toBe(1);
     expect(du.score.valeur).toBeLessThan(100);
+  });
+});
+
+describe("getDashboardData — D2 (a), les questions de couverture (2026-09-28)", () => {
+  // Éprouvé en passant `{ indeterminations: 0 }` au score dans
+  // `getDashboardData` : le niveau reste « satisfaisante ».
+  it("une question ouverte : 100 « Reste à renseigner » ; aucune : « Situation satisfaisante »", async () => {
+    h.couverture.indeterminations = [
+      { axe: "secteur_duerp", motif: "m", quoiFaire: "q" },
+    ];
+    const ouverte = await getDashboardData(ETAB);
+    expect(ouverte.score.valeur).toBe(100);
+    expect(ouverte.score.libelle).toBe("Reste à renseigner");
+    expect(ouverte.score.indeterminationsCouverture).toBe(1);
+
+    h.couverture.indeterminations = [];
+    const close = await getDashboardData(ETAB);
+    expect(close.score.libelle).toBe("Situation satisfaisante");
   });
 });

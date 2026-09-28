@@ -32,6 +32,7 @@ const base = (p: Partial<EntreeScoreConformite> = {}): EntreeScoreConformite => 
   actions: { ouvertesTotal: 0, enRetard: 0 },
   duerp: duerpDe(120),
   etatsPermanents: { total: 12, enPlace: 12 },
+  couverture: { indeterminations: 0 },
   ...p,
 });
 
@@ -42,6 +43,7 @@ describe("calculerScoreDepuisEtat", () => {
       actions: { ouvertesTotal: 0, enRetard: 0 },
       duerp: null,
       etatsPermanents: { total: 0, enPlace: 0 },
+      couverture: { indeterminations: 0 },
     });
     expect(s.valeur).toBe(100);
     expect(s.niveau).toBe("satisfaisante");
@@ -75,6 +77,7 @@ describe("calculerScoreDepuisEtat", () => {
       verifs: { total: 1, enRetard: 1 },
       actions: { ouvertesTotal: 1, enRetard: 1 },
       etatsPermanents: { total: 6, enPlace: 6 },
+      couverture: { indeterminations: 0 },
       duerp: duerpDe(900),
     });
     expect(s.valeur).toBeGreaterThanOrEqual(0);
@@ -85,6 +88,7 @@ describe("calculerScoreDepuisEtat", () => {
       verifs: { total: 2, enRetard: 2 },
       actions: { ouvertesTotal: 2, enRetard: 2 },
       etatsPermanents: { total: 6, enPlace: 6 },
+      couverture: { indeterminations: 0 },
       duerp: duerpDe(900),
     });
     expect(s.niveau).toBe("rattrapage");
@@ -98,6 +102,7 @@ describe("calculerScoreDepuisEtat", () => {
       verifs: { total: 10, enRetard: 4 },
       actions: { ouvertesTotal: 5, enRetard: 2 },
       etatsPermanents: { total: 6, enPlace: 6 },
+      couverture: { indeterminations: 0 },
       duerp: duerpDe(200),
     });
     expect(s.valeur).toBeGreaterThanOrEqual(50);
@@ -110,6 +115,7 @@ describe("calculerScoreDepuisEtat", () => {
       verifs: { total: 8, enRetard: 1 },
       actions: { ouvertesTotal: 3, enRetard: 1 },
       etatsPermanents: { total: 6, enPlace: 6 },
+      couverture: { indeterminations: 0 },
       duerp: duerpDe(280),
     });
     expect(calculerScoreDepuisEtat(e)).toEqual(calculerScoreDepuisEtat(e));
@@ -148,11 +154,13 @@ describe("calculerScoreDepuisEtat — DUERP", () => {
       actions: { ouvertesTotal: 0, enRetard: 0 },
       duerp: null,
       etatsPermanents: { total: 0, enPlace: 0 },
+      couverture: { indeterminations: 0 },
     });
     const avec = calculerScoreDepuisEtat({
       verifs: { total: 3, enRetard: 1 },
       actions: { ouvertesTotal: 0, enRetard: 0 },
       etatsPermanents: { total: 0, enPlace: 0 },
+      couverture: { indeterminations: 0 },
       duerp: duerpDe(null),
     });
     // Le dénominateur grandit (4 au lieu de 3) mais la pénalité aussi : le
@@ -175,6 +183,7 @@ describe("calculerScoreDepuisEtat — les états permanents", () => {
       actions: { ouvertesTotal: 0, enRetard: 0 },
       duerp: null,
       etatsPermanents: { total: 13, enPlace: 0 },
+      couverture: { indeterminations: 0 },
     });
     expect(s.niveau).toBe("indetermine");
     expect(s.indetermines).toBe(13);
@@ -186,6 +195,7 @@ describe("calculerScoreDepuisEtat — les états permanents", () => {
       actions: { ouvertesTotal: 0, enRetard: 0 },
       duerp: null,
       etatsPermanents: { total: 13, enPlace: 13 },
+      couverture: { indeterminations: 0 },
     });
     expect(s.niveau).toBe("satisfaisante");
     expect(s.indetermines).toBe(0);
@@ -200,6 +210,7 @@ describe("calculerScoreDepuisEtat — les états permanents", () => {
       actions: { ouvertesTotal: 2, enRetard: 2 },
       duerp: duerpDe(900),
       etatsPermanents: { total: 12, enPlace: 1 },
+      couverture: { indeterminations: 0 },
     });
     expect(s.niveau).toBe("rattrapage");
     expect(s.indetermines).toBe(11);
@@ -227,5 +238,30 @@ describe("calculerScoreDepuisEtat — les états permanents", () => {
     );
     expect(s.indetermines).toBe(0);
     expect(s.niveau).toBe("satisfaisante");
+  });
+});
+
+describe("D2 (a) : les questions de couverture empêchent de conclure (2026-09-28)", () => {
+  // Même mécanisme que les états permanents : ni au dénominateur ni à la
+  // pénalité. Éprouvé en retirant `indeterminationsCouverture` de `qualifier`.
+  it("tout à jour, une question ouverte : 100, « Reste à renseigner »", () => {
+    const s = calculerScoreDepuisEtat(base({ couverture: { indeterminations: 1 } }));
+    expect(s.valeur).toBe(100);
+    expect(s.niveau).toBe("indetermine");
+    expect(s.libelle).toBe("Reste à renseigner");
+    expect(s.indeterminationsCouverture).toBe(1);
+    expect(s.indetermines).toBe(0);
+  });
+
+  it("aucune question : « Situation satisfaisante »", () => {
+    expect(calculerScoreDepuisEtat(base()).niveau).toBe("satisfaisante");
+  });
+
+  it("un retard réel garde sa voix : « À surveiller » n'est pas remplacé", () => {
+    const s = calculerScoreDepuisEtat(
+      base({ verifs: { total: 10, enRetard: 4 }, couverture: { indeterminations: 1 } }),
+    );
+    expect(s.niveau).not.toBe("indetermine");
+    expect(s.niveau).not.toBe("satisfaisante");
   });
 });

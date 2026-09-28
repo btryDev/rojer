@@ -31,6 +31,7 @@ import {
   type BlocEtatsPermanents,
   type LigneEtatPermanentPdf,
 } from "./mentions-etats-permanents";
+import { phraseIndeterminationsCouverture } from "./mentions-couverture";
 
 export type DossierData = {
   entreprise: string;
@@ -323,6 +324,23 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
               }}
             >
               {phraseIndetermines(data.score.indetermines)}
+            </Text>
+          )}
+          {/* D2 (a) : la seconde source d'indétermination du score. */}
+          {phraseIndeterminationsCouverture(
+            data.score.indeterminationsCouverture,
+          ) && (
+            <Text
+              style={{
+                fontSize: 9,
+                color: BOARD.ardoiseMoyenne,
+                marginTop: 8,
+                maxWidth: 380,
+              }}
+            >
+              {phraseIndeterminationsCouverture(
+                data.score.indeterminationsCouverture,
+              )}
             </Text>
           )}
         </View>

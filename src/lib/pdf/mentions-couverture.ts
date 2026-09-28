@@ -81,3 +81,27 @@ export function phrasesMethodologie(ctx: ContexteMentions): string[] {
 export function quandSansReponse(brouillon: boolean): string {
   return brouillon ? "à ce jour" : "à la date de validation";
 }
+
+/**
+ * Ce que la page de garde ajoute sous la note quand une question de COUVERTURE
+ * reste ouverte (D2 (a), 2026-09-28) — le pendant de `phraseIndetermines`,
+ * pour la seconde source d'indétermination du score.
+ *
+ * Sans elle, la note imprimait « 100/100 · Reste à renseigner » pour un dossier
+ * dont tous les états sont déclarés, sans rien qui dise ce qui reste. Le
+ * détail est dans la section « Ce que ce dossier ne couvre pas », que ce
+ * document porte déjà : la phrase y renvoie, sans nommer d'écran — le lecteur
+ * n'a pas accès à l'application.
+ */
+export function phraseIndeterminationsCouverture(n: number): string | null {
+  if (n <= 0) return null;
+  const sujet =
+    n === 1
+      ? "Une question reste ouverte sur ce que cet outil couvre pour l'établissement"
+      : `${n} questions restent ouvertes sur ce que cet outil couvre pour l'établissement`;
+  return (
+    `${sujet}. Elle${n === 1 ? "" : "s"} ne pénalise${n === 1 ? "" : "nt"} pas la note, ` +
+    `elle${n === 1 ? "" : "s"} l'empêche${n === 1 ? "" : "nt"} de conclure. ` +
+    "Le détail figure à la fin du dossier."
+  );
+}
