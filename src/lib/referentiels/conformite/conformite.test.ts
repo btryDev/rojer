@@ -1622,6 +1622,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // partition des VGP suit le texte, et la ligne la plus exigeante reste au
     // silence. Aucune n'en sort : 173 + 1 − 0 = 174.
     { version: "2026-09-28.2", empreinte: "174-59f4d9aa1d4a1764" },
+    // Contre-revue des corrections du lot 3 : quatre libellés de VGP de levage
+    // réduits au rythme et à son fondement (`libelleVgp`), la réponse manquante
+    // dite dans la description. Libellés seuls : 174 + 0 − 0 = 174.
+    { version: "2026-09-28.3", empreinte: "174-748bfcc14b5ff8dd" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

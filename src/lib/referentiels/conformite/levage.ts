@@ -41,6 +41,27 @@
 
 import type { Obligation } from "./types";
 
+/**
+ * CE QU'UNE RÉPONSE ABSENTE LAISSE OUVERT, DIT UNE FOIS (contre-revue des
+ * corrections du lot 3, 2026-09-28). Quatre lignes de VGP sont servies au
+ * silence sur une réponse de la fiche (conditions `non_infirmee`) : un chariot
+ * électrique muet sur la force humaine reçoit la trimestrielle. Le libellé ne
+ * peut donc pas affirmer « appareil manuel » : il dit le rythme et son
+ * fondement, et la description dit, au conditionnel, que la ligne peut n'être
+ * retenue que faute de réponse. Le canal « à confirmer » des conditions
+ * d'équipement n'existe pas (D14) : aucune raison par ligne, la phrase est dans
+ * la description. Des chaînes, pas une fonction : ce fichier est une donnée
+ * (`DONNEES_REFERENTIEL`, `version-moteur.test.ts`).
+ */
+export const FAUTE_DE_REPONSE_LEVAGE = {
+  estMuParForceHumaine:
+    "Si la fiche de l'équipement n'y répond pas encore, la ligne est retenue faute de réponse sur la force humaine : répondre sur la fiche de l'équipement.",
+  sertAuLevageDePersonnes:
+    "Si la fiche de l'équipement n'y répond pas encore, la ligne est retenue faute de réponse sur le levage de personnes ou d'un poste de travail : répondre sur la fiche de l'équipement.",
+  estChariotOuGerbeur:
+    "Si la fiche de l'équipement n'y répond pas encore, la ligne est retenue faute de réponse sur la liste du II de l'article 20 : répondre sur la fiche de l'équipement.",
+} as const;
+
 export const obligationsLevage: Obligation[] = [
   {
     id: "levage-examen-adequation-mise-en-service",
@@ -207,10 +228,13 @@ export const obligationsLevage: Obligation[] = [
   {
     id: "levage-vgp-semestrielle-chariot-gerbeur",
     domaine: "levage",
-    libelle:
-      "Vérification générale périodique semestrielle (chariot élévateur, gerbeur, hayon et autres appareils de l'art. 20-II)",
+    libelle: "Vérification générale périodique semestrielle (arrêté du 1er mars 2004, art. 23 a) et art. 20-II)",
+    // ~~Vérification générale périodique semestrielle (chariot élévateur, gerbeur, hayon et autres appareils de l'art. 20-II)~~ [2026-09-28, contre-revue du lot 3 : affirmait un fait
+    // que le silence laisse ouvert ; le rythme et son fondement seulement.]
     description:
-      "Les appareils de levage listés au II de l'article 20 de l'arrêté du 1er mars 2004 — chariots élévateurs (et gerbeurs), hayons élévateurs, grues auxiliaires de chargement sur véhicule, monte-meubles, monte-matériaux de chantier, grues mobiles, plates-formes élévatrices mobiles de personnes, entre autres — font l'objet d'une vérification générale périodique tous les six mois, et non tous les douze. La vérification porte sur l'état de conservation de l'appareil et sur les essais de fonctionnement des dispositifs de sécurité (freins, limiteurs, organes de suspension).",
+      "Les appareils de levage listés au II de l'article 20 de l'arrêté du 1er mars 2004 — chariots élévateurs (et gerbeurs), hayons élévateurs, grues auxiliaires de chargement sur véhicule, monte-meubles, monte-matériaux de chantier, grues mobiles, plates-formes élévatrices mobiles de personnes, entre autres — font l'objet d'une vérification générale périodique tous les six mois, et non tous les douze. La vérification porte sur l'état de conservation de l'appareil et sur les essais de fonctionnement des dispositifs de sécurité (freins, limiteurs, organes de suspension)." +
+      " " +
+      FAUTE_DE_REPONSE_LEVAGE.estChariotOuGerbeur,
     referencesLegales: [
       {
         source: "ARRETE",
@@ -292,10 +316,15 @@ export const obligationsLevage: Obligation[] = [
     {
     id: "levage-vgp-trimestrielle-force-humaine",
     domaine: "levage",
-    libelle:
-      "Vérification générale trimestrielle (appareil manuel élevant un poste de travail)",
+    libelle: "Vérification générale périodique trimestrielle (arrêté du 1er mars 2004, art. 23 b))",
+    // ~~Vérification générale trimestrielle (appareil manuel élevant un poste de travail)~~ [2026-09-28, contre-revue du lot 3 : affirmait un fait
+    // que le silence laisse ouvert ; le rythme et son fondement seulement.]
     description:
-      "Les appareils de levage mus par la force humaine employée directement, utilisés pour déplacer en élévation un poste de travail, font l'objet d'une vérification générale périodique tous les trois mois par une personne qualifiée. Elle comporte l'examen de l'état de conservation prévu à l'article 9 et les essais des b et c de l'article 6.",
+      "Les appareils de levage mus par la force humaine employée directement, utilisés pour déplacer en élévation un poste de travail, font l'objet d'une vérification générale périodique tous les trois mois par une personne qualifiée. Elle comporte l'examen de l'état de conservation prévu à l'article 9 et les essais des b et c de l'article 6." +
+      " " +
+      FAUTE_DE_REPONSE_LEVAGE.estMuParForceHumaine +
+      " " +
+      FAUTE_DE_REPONSE_LEVAGE.sertAuLevageDePersonnes,
     referencesLegales: [
       {
         source: "ARRETE",
@@ -344,10 +373,13 @@ export const obligationsLevage: Obligation[] = [
   {
     id: "levage-vgp-semestrielle-force-humaine",
     domaine: "levage",
-    libelle:
-      "Vérification générale semestrielle (appareil manuel ne servant pas à lever des personnes)",
+    libelle: "Vérification générale périodique semestrielle (arrêté du 1er mars 2004, art. 23 a) et art. 20-III)",
+    // ~~Vérification générale semestrielle (appareil manuel ne servant pas à lever des personnes)~~ [2026-09-28, contre-revue du lot 3 : affirmait un fait
+    // que le silence laisse ouvert ; le rythme et son fondement seulement.]
     description:
-      "Les appareils de levage non conçus spécialement pour lever des personnes et mus par la force humaine employée directement — palan à chaîne, treuil à manivelle, potence à bras — font l'objet d'une vérification générale périodique tous les six mois par une personne qualifiée (arrêté du 1er mars 2004, art. 23 a), qui renvoie au III de l'article 20).",
+      "Les appareils de levage non conçus spécialement pour lever des personnes et mus par la force humaine employée directement — palan à chaîne, treuil à manivelle, potence à bras — font l'objet d'une vérification générale périodique tous les six mois par une personne qualifiée (arrêté du 1er mars 2004, art. 23 a), qui renvoie au III de l'article 20)." +
+      " " +
+      FAUTE_DE_REPONSE_LEVAGE.estMuParForceHumaine,
     referencesLegales: [
       {
         source: "ARRETE",
@@ -407,9 +439,13 @@ export const obligationsLevage: Obligation[] = [
 {
     id: "levage-vgp-semestrielle-personnes",
     domaine: "levage",
-    libelle: "Vérification générale semestrielle (levage de personnes)",
+    libelle: "Vérification générale périodique semestrielle (arrêté du 1er mars 2004, art. 23 a))",
+    // ~~Vérification générale semestrielle (levage de personnes)~~ [2026-09-28, contre-revue du lot 3 : affirmait un fait
+    // que le silence laisse ouvert ; le rythme et son fondement seulement.]
     description:
-      "Les appareils de levage mus par une énergie autre que la force humaine employée directement, utilisés pour le transport des personnes ou pour déplacer en élévation un poste de travail, font l'objet d'une VGP tous les six mois par une personne qualifiée. Les plates-formes élévatrices mobiles de personnes y sont visées directement par la liste de l'article 20-II. Lorsque l'appareil est mû par la force humaine employée directement et utilisé pour déplacer en élévation un poste de travail, l'article 23 b) ramène la périodicité à trois mois.",
+      "Les appareils de levage mus par une énergie autre que la force humaine employée directement, utilisés pour le transport des personnes ou pour déplacer en élévation un poste de travail, font l'objet d'une VGP tous les six mois par une personne qualifiée. Les plates-formes élévatrices mobiles de personnes y sont visées directement par la liste de l'article 20-II. Lorsque l'appareil est mû par la force humaine employée directement et utilisé pour déplacer en élévation un poste de travail, l'article 23 b) ramène la périodicité à trois mois." +
+      " " +
+      FAUTE_DE_REPONSE_LEVAGE.sertAuLevageDePersonnes,
     referencesLegales: [
       {
         source: "ARRETE",

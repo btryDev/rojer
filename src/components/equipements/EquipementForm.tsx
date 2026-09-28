@@ -127,7 +127,10 @@ const QUESTIONS_TRI_ETAT: Record<
   },
   sertAuLevageDePersonnes: {
     question: "Cet appareil sert-il à lever des personnes ?",
-    aide: "Nacelle, plate-forme élévatrice, ou tout appareil utilisé même occasionnellement pour élever quelqu'un. Si oui, la vérification générale passe de annuelle à semestrielle. Un transpalette ou un monte-charge de marchandises : répondez « non ».",
+    // 2026-09-28 (contre-revue du lot 3) : ~~« passe de annuelle à
+    // semestrielle »~~ — incomplet : l'art. 23 b) met à trois mois l'appareil
+    // mû par la force humaine qui élève un poste de travail.
+    aide: "Nacelle, plate-forme élévatrice, ou tout appareil utilisé même occasionnellement pour élever quelqu'un. Si oui, la vérification générale a lieu tous les six mois — tous les trois mois pour un appareil mû par la force humaine qui élève un poste de travail (arrêté du 1er mars 2004, art. 23). Un transpalette ou un monte-charge de marchandises : répondez « non ».",
   },
   estMuParForceHumaine: {
     question:
@@ -143,7 +146,10 @@ const QUESTIONS_TRI_ETAT: Record<
     // disait donc pas que l'appareil n'en était pas, et l'annuelle suivait.
     question:
       "Cet appareil est-il un chariot élévateur, un gerbeur, un hayon élévateur ou un autre appareil de la liste ci-dessous ?",
-    aide: "Liste de l'arrêté du 1er mars 2004 (art. 20-II) : chariots élévateurs et gerbeurs, hayons élévateurs, grues auxiliaires de chargement sur véhicule, grues à tour à montage rapide, bras ou portiques de levage pour bennes amovibles, monte-meubles, monte-matériaux de chantier, engins de terrassement équipés pour le levage, grues mobiles, tracteurs poseurs de canalisations, plates-formes élévatrices mobiles de personnes. Si oui, la vérification générale a lieu tous les six mois et non tous les ans. Un transpalette qui ne fait que décoller la palette pour la rouler : répondez « non », il n'est pas concerné par ces vérifications.",
+    // 2026-09-28 (contre-revue du lot 3) : la liste reprend les qualificatifs
+    // de l'art. 20-II tels que l'API les donne (LEGIARTI000006680466) ; l'art.
+    // 20 ne dit que « chariots élévateurs », les gerbeurs viennent de l'annexe.
+    aide: "Liste de l'arrêté du 1er mars 2004 (art. 20-II) : grues auxiliaires de chargement sur véhicules ; grues à tour à montage rapide ou automatisé, sur stabilisateurs ; bras ou portiques de levage pour bennes amovibles ; hayons élévateurs ; monte-meubles ; monte-matériaux de chantier ; engins de terrassement équipés pour le levage ; grues mobiles automotrices ou sur véhicule porteur, ne nécessitant pas de montage ou de démontage de parties importantes ; chariots élévateurs ; tracteurs poseurs de canalisations ; plates-formes élévatrices mobiles de personnes. Les gerbeurs y sont rattachés par l'annexe de l'arrêté, qui les range avec les « chariots automoteurs élévateurs à conducteur porté ou non ». Si oui, la vérification générale a lieu au moins tous les six mois — tous les trois mois pour un appareil mû par la force humaine qui élève un poste de travail — et non tous les ans. Un transpalette qui ne fait que décoller la palette pour la rouler : répondez « non », il n'est pas concerné par ces vérifications.",
   },
   aAccessoiresDeLevage: {
     question: "Utilisez-vous des accessoires de levage avec cet appareil ?",

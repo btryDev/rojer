@@ -36,6 +36,7 @@
 import { describe, expect, it } from "vitest";
 import { determineObligationsApplicables } from "./engine";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
+import { FAUTE_DE_REPONSE_LEVAGE } from "@/lib/referentiels/conformite/levage";
 import type { EtablissementMatching } from "./types";
 
 const PROPRIETES = ["estChariotOuGerbeur", "sertAuLevageDePersonnes", "estMuParForceHumaine"] as const;
@@ -130,6 +131,32 @@ describe("levage : un seul rythme de VGP par appareil (D7)", () => {
         ),
       );
       expect(moisDe(r), nom(r)).toBe(attendu);
+    }
+  });
+});
+
+describe("levage : le libellé ne dit pas un fait que le silence laisse ouvert (contre-revue du lot 3)", () => {
+  // Un chariot électrique muet sur la force humaine reçoit la trimestrielle :
+  // son libellé ne peut pas dire « appareil manuel élevant un poste de
+  // travail ». Pour toute combinaison, la ligne servie qui ne l'est QUE par le
+  // silence sur une réponse (condition `non_infirmee` sur cette réponse,
+  // absente) a un libellé réduit au rythme et à son fondement, et une
+  // description qui dit la réponse manquante. Rien n'est recopié : les
+  // conditions et les combinaisons viennent du référentiel et du moteur.
+  // Éprouvé en remettant l'ancien libellé de la trimestrielle.
+  it.each(COMBINAISONS.map((r) => [nom(r), r] as const))("%s", (_n, r) => {
+    const o = lignes(r)[0].obligation;
+    const conds = "conditions" in o ? (o.conditions ?? []) : [];
+    const ouvertes = PROPRIETES.filter(
+      (p, i) =>
+        r[i] === undefined &&
+        conds.some((c) => c.propriete === p && c.type === "equipement_propriete_non_infirmee"),
+    );
+    for (const p of ouvertes) {
+      expect(o.libelle, `${o.id} : ${p} sans réponse`).toMatch(
+        /^Vérification générale périodique \w+ \(arrêté du 1er mars 2004, art\. /,
+      );
+      expect(o.description, `${o.id} : ${p} sans réponse`).toContain(FAUTE_DE_REPONSE_LEVAGE[p]);
     }
   });
 });

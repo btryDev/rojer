@@ -251,7 +251,10 @@ export const obligationsConformite: Obligation[] = [
 // l'art. 23 et le III de l'art. 20 — `levage-vgp-semestrielle-force-humaine`
 // entre (appareil manuel ne levant pas de personnes, six mois) ; au silence, la
 // ligne la plus exigeante. 173 + 1 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-09-28.2";
+// `2026-09-28.3` (contre-revue des corrections du lot 3) : les libellés de
+// quatre VGP de levage — servies au silence sur une réponse — disent le rythme
+// et son fondement, plus un fait non déclaré. Libellés seuls : 174 + 0 − 0 = 174.
+export const REFERENTIEL_VERSION = "2026-09-28.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
