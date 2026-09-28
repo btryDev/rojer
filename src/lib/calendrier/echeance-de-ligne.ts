@@ -201,11 +201,16 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
   //    l'ÉVÉNEMENT quand on le connaît : datée de « maintenant », une chambre
   //    froide de 2015 était réputée due aujourd'hui, et le restait à perpétuité.
   if (!estCyclique(f.periodicite)) {
-    const datePrevue = f.miseEnService ?? debutDuJour(f.origine);
     // Soldé : le seul cas où un statut réalisé reste sur la ligne. SA
-    // réalisation, pas l'héritée — un legs ne solde pas un ponctuel.
+    // réalisation, pas l'héritée — un legs ne solde pas un ponctuel. Daté de
+    // l'événement : aucun lecteur ne tire de retard d'un ponctuel soldé, et le
+    // redater réécrirait des lignes pour rien.
     if (solde !== null) {
-      return { datePrevue, statut: solde, source: "ponctuel_solde" };
+      return {
+        datePrevue: f.miseEnService ?? debutDuJour(f.origine),
+        statut: solde,
+        source: "ponctuel_solde",
+      };
     }
     // Règle civile (ADR-011), AU JOUR DE L'ORIGINE et non au jour du calcul :
     // c'est la dépendance à `now` que l'audit n'avait pas vue, et qui faisait
@@ -213,8 +218,17 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
     // lendemain — deux passes, deux états, pour une donnée immobile.
     const aVenir =
       f.miseEnService !== null && !estEnRetard(f.miseEnService, f.origine);
+    // LA LIMITE DE LA RÈGLE 4, APPLIQUÉE AU PONCTUEL (D8, décision de la
+    // propriétaire, 2026-09-28). Ouvert, il était daté de la mise en service
+    // quelle qu'elle fût : une chambre froide de 2015 suivie depuis 2026
+    // affichait 4 228 jours de retard, quand le même appareil en rythme
+    // cyclique n'en montrait aucun — la règle 4 écarte ce passé, « annoncer
+    // sept ans de retard serait inventer ». Une mise en service ANTÉRIEURE à
+    // l'origine date donc le ponctuel à l'origine ; à l'origine ou après, elle
+    // reste la date — le contrôle réellement dû pendant le suivi garde son
+    // jour, et son retard.
     return {
-      datePrevue,
+      datePrevue: aVenir ? f.miseEnService! : debutDuJour(f.origine),
       statut: aVenir ? "planifiee" : "a_planifier",
       source: "ponctuel_ouvert",
     };

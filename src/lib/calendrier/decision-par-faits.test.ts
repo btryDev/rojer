@@ -343,7 +343,9 @@ describe("la décision par les faits — rien hors de la fonction (la garde du l
     // statut, et la décision nommait la source `legs_statut_realise`.~~ Le
     // contrôle de santé du 2026-09-19 n'en comptait aucun en production, et
     // aucun chemin du produit n'en fabrique : un statut réalisé ne survit pas
-    // sans rapport réalisé. La ligne se date de sa mise en service (règle 2).
+    // sans rapport réalisé. ~~La ligne se date de sa mise en service (règle 2).~~
+    // [2026-09-28, D8 : la mise en service (20/04) précède le suivi (25/04) ;
+    // la ligne rouverte se date de l'origine, comme la règle 4 le fait.]
     const s = scenario(
       [applicable(ponctuel, [EQ])],
       (g) =>
@@ -356,7 +358,7 @@ describe("la décision par les faits — rien hors de la fonction (la garde du l
     );
     const apres = etat(s.faits, s.existantes[0]);
     expect(apres.statut).toBe("a_planifier");
-    expect(apres.datePrevue).toEqual(d("2025-04-20"));
+    expect(apres.datePrevue).toEqual(d("2025-04-25"));
     expect(planVide(s.rejouer(s.faits, J_400))).toBe(true);
   });
 

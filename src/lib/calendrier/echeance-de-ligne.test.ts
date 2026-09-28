@@ -106,6 +106,10 @@ type Rangee = {
 /** Le jour des tests de réconciliation de `generateur.test.ts`. */
 const NOW_RECONCILIATION = "2026-08-11T09:00:00Z";
 
+/** Le retard au 2026-09-27 d'un ponctuel daté de l'origine du 2026-01-15 : ce
+ *  que D8 laisse, là où la date de mise en service en donnait 4 228. */
+const RETARD_D8 = 255;
+
 const TABLE: Rangee[] = [
   // --------------------------------------------------------------------------
   // Les sept scénarios de l'audit du 2026-09-17, rejoués au 17/09/2026
@@ -260,20 +264,33 @@ const TABLE: Rangee[] = [
     attendu: { jour: "2026-01-15", statut: "planifiee", source: "ponctuel_ouvert" },
   },
   {
-    cas: "ponctuel ouvert — mise en service passée (generateur.test)",
+    cas: "ponctuel ouvert — mise en service ANTÉRIEURE au suivi (generateur.test, AMENDÉ D8)",
     recit:
-      "« datée de l'événement, pas d'aujourd'hui ». Datée de `now`, l'occurrence se redatait à chaque régénération : une chambre froide de 2015 était réputée due aujourd'hui, dix ans plus tard, et le resterait indéfiniment. Ce qui manque est une pièce, pas un rendez-vous : « à planifier ».",
+      "AMENDÉ LE 2026-09-28 (D8, décision de la propriétaire). Cette rangée FIGEAIT le comportement que D8 corrige : elle attendait le 2015-03-01, soit 4 228 jours de retard au 2026-09-27 pour une chambre froide de 2015 que Rojer ne suit que depuis 2026 — quand le même appareil en rythme cyclique n'en montre aucun, la règle 4 écartant ce passé. Elle attend désormais l'origine. Ce qui ne change pas : ni `now` (le motif d'origine de la rangée — une date redatée à chaque régénération), ni « à planifier » : ce qui manque est une pièce, pas un rendez-vous.",
     faits: ligne({
       rythme: "mise_en_service_uniquement",
       origine: "2026-01-15T00:00:00Z",
       miseEnService: "2015-03-01T00:00:00Z",
     }),
     attendu: {
-      jour: "2015-03-01",
+      jour: "2026-01-15",
       statut: "a_planifier",
       source: "ponctuel_ouvert",
-      instant: new Date("2015-03-01T00:00:00Z"),
+      instant: depuisCleJourCivil("2026-01-15"),
     },
+    retard: { au: "2026-09-27", jours: RETARD_D8 },
+  },
+  {
+    cas: "ponctuel ouvert — mise en service APRÈS l'origine, passée depuis (D8 : le contrôle dû pendant le suivi garde son jour)",
+    recit:
+      "Le contrôle unique né pendant que Rojer suivait la ligne est réel : daté de la mise en service, et son retard se garde — la limite de D8 ne vaut que pour un passé que le dossier ne connaît pas. « Planifiée » au jour de l'origine, le retard se LIT sur la date.",
+    faits: ligne({
+      rythme: "mise_en_service_uniquement",
+      origine: "2026-01-15",
+      miseEnService: "2026-03-01",
+    }),
+    attendu: { jour: "2026-03-01", statut: "planifiee", source: "ponctuel_ouvert" },
+    retard: { au: "2026-03-11", jours: 10 },
   },
   {
     cas: "ponctuel ouvert — aucune mise en service connue (generateur.test)",
@@ -343,7 +360,8 @@ const TABLE: Rangee[] = [
       miseEnService: "2026-01-10",
       rapport: { le: "2026-02-01", resultat: "non_verifiable" },
     }),
-    attendu: { jour: "2026-01-10", statut: "a_planifier", source: "ponctuel_ouvert" },
+    // AMENDÉ D8 (2026-09-28) : mise en service antérieure à l'origine → l'origine.
+    attendu: { jour: "2026-01-15", statut: "a_planifier", source: "ponctuel_ouvert" },
   },
   {
     cas: "ponctuel — la suppression du rapport qui le soldait le rouvre",
@@ -354,7 +372,8 @@ const TABLE: Rangee[] = [
       origine: "2026-01-15",
       miseEnService: "2026-01-10",
     }),
-    attendu: { jour: "2026-01-10", statut: "a_planifier", source: "ponctuel_ouvert" },
+    // AMENDÉ D8 (2026-09-28) : mise en service antérieure à l'origine → l'origine.
+    attendu: { jour: "2026-01-15", statut: "a_planifier", source: "ponctuel_ouvert" },
   },
   {
     cas: "cyclique — un « non vérifiable » passé par erreur ne fait PAS rouler la ligne",
@@ -1266,8 +1285,12 @@ describe("echeanceDeLigne — propriétés", () => {
       } else if (rendu.source === "origine") {
         rejoues = { ...r.faits, origine: rendu.datePrevue };
       } else if (rendu.source === "ponctuel_ouvert" || rendu.source === "ponctuel_solde") {
+        // Le fait que la date EST : la mise en service quand elle la rend,
+        // l'origine sinon — y compris la mise en service antérieure au suivi,
+        // que D8 remplace par l'origine.
         rejoues =
-          r.faits.miseEnService !== null
+          r.faits.miseEnService !== null &&
+          r.faits.miseEnService.getTime() === rendu.datePrevue.getTime()
             ? { ...r.faits, miseEnService: rendu.datePrevue }
             : { ...r.faits, origine: rendu.datePrevue };
       }

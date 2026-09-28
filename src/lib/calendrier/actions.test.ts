@@ -1151,9 +1151,15 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
 });
 
 describe("genererCalendrier — mise en service", () => {
-  it("date la ligne one-shot de la mise en service, pas de maintenant", async () => {
-    // Une chambre froide installée en 2015 ne doit pas hériter, dix ans plus
-    // tard, d'une échéance réputée due aujourd'hui. La date suit l'événement.
+  it("date la ligne one-shot d'un fait, jamais de l'horloge de chaque passe (AMENDÉ D8)", async () => {
+    // ~~Une chambre froide installée en 2015 ne doit pas hériter, dix ans plus
+    // tard, d'une échéance réputée due aujourd'hui. La date suit l'événement.~~
+    // [2026-09-28, D8 : ce test attendait la mise en service de 2015, soit onze
+    // ans de retard sur un appareil que Rojer commence à suivre. Une mise en
+    // service ANTÉRIEURE au suivi date désormais le ponctuel à l'origine —
+    // `suiviDepuis`, persistée à la création. Le motif d'origine tient : la
+    // date est un fait stocké, elle ne glisse pas avec l'horloge (la seconde
+    // passe ne la touche pas).]
     const mes = new Date("2015-06-01T00:00:00Z");
     poserEtablissement([{ id: "eq-1", dateMiseEnService: mes }]);
 
@@ -1161,7 +1167,12 @@ describe("genererCalendrier — mise en service", () => {
 
     const oneShot = lignesDe(ELEC_MISE_EN_SERVICE);
     expect(oneShot).toHaveLength(1);
-    expect(oneShot[0].datePrevue).toEqual(mes);
+    const origine = depuisCleJourCivil(cleJourCivil(oneShot[0].suiviDepuis));
+    expect(oneShot[0].datePrevue).toEqual(origine);
+    expect(oneShot[0].statut).toBe("a_planifier");
+
+    await genererCalendrier(ETAB_ID);
+    expect(lignesDe(ELEC_MISE_EN_SERVICE)[0].datePrevue).toEqual(origine);
   });
 });
 

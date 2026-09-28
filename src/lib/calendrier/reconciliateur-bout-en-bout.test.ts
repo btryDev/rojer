@@ -29,7 +29,7 @@ import {
   VERSION_MOTEUR_CALENDRIER,
   sceauCalendrier,
 } from "./version-moteur";
-import { depuisCleJourCivil } from "@/lib/dates";
+import { cleJourCivil, depuisCleJourCivil } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 
 const h = vi.hoisted(async () => {
@@ -372,12 +372,45 @@ describe("g2 — une mise en service de 2015, créée puis repassée", () => {
     await genererCalendrier(ETAB_ID);
     const photo = JSON.stringify(db.verifications);
     const mes = db.verifications.find((v) => v.obligationId === ELEC_MISE_EN_SERVICE)!;
-    expect(mes.datePrevue).toEqual(d("2015-06-01"));
+    // ~~`d("2015-06-01")`~~ [2026-09-28, D8 : une mise en service antérieure
+    // au suivi date le ponctuel à l'origine.]
+    expect(mes.datePrevue).toEqual(d(cleJourCivil(mes.suiviDepuis)));
 
     db.journal = [];
     const r = await genererCalendrier(ETAB_ID);
     expect(r.created + r.updated + r.deleted + r.archived).toBe(0);
     expect(ecritures()).toEqual([]);
     expect(JSON.stringify(db.verifications)).toBe(photo);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// D8 — un ponctuel déjà posé à sa mise en service antérieure au suivi
+// ---------------------------------------------------------------------------
+
+describe("D8 — le ponctuel posé à une mise en service antérieure au suivi est redaté, sans perte", () => {
+  it("même identifiant, action et rapport gardés, date ramenée à l'origine ; la passe suivante n'écrit rien", async () => {
+    // L'état qu'un moteur 5 a écrit en production : la ligne datée du
+    // 2015-06-01, « à planifier », onze ans de retard, avec une action.
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2015-06-01") }]);
+    db.verifications = [
+      ligne({
+        id: "p1", equipementId: "eq-1", obligationId: ELEC_MISE_EN_SERVICE, libelleObligation: "Vérification initiale",
+        periodicite: "mise_en_service_uniquement", realisateurRequis: ["organisme_accredite"],
+        datePrevue: d("2015-06-01"), statut: "a_planifier", suiviDepuis: d("2026-01-15"), nbActions: 1,
+      }),
+    ];
+    await genererCalendrier(ETAB_ID);
+    const apres = lue("p1")!;
+    expect(apres.datePrevue).toEqual(d("2026-01-15"));
+    expect(apres.statut).toBe("a_planifier");
+    expect(apres.nbActions).toBe(1);
+    expect(apres.archiveLe ?? null).toBeNull();
+    expect(db.verifications.filter((v) => v.obligationId === ELEC_MISE_EN_SERVICE)).toHaveLength(1);
+
+    db.journal = [];
+    const r = await genererCalendrier(ETAB_ID);
+    expect(r.created + r.updated + r.deleted + r.archived).toBe(0);
+    expect(ecritures()).toEqual([]);
   });
 });

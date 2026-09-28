@@ -595,7 +595,9 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     await retirer("rap-mes");
 
     expect(ligne().statut).toBe("a_planifier");
-    expect(ligne().datePrevue).toEqual(d("2026-01-05"));
+    // ~~`d("2026-01-05")`~~ [2026-09-28, D8 : la mise en service précède
+    // l'origine de la ligne ; le ponctuel rouvert se date de l'origine.]
+    expect(ligne().datePrevue).toEqual(d(cleJourCivil(ligne().suiviDepuis)));
     await attendreConfluence();
   });
 

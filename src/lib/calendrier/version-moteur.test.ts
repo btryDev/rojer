@@ -123,7 +123,14 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 5,
+  version: 6,
+  // INCRÉMENTÉ le 2026-09-28 (D8, décision de la propriétaire) : le ponctuel
+  // ouvert dont la mise en service précède l'origine est daté de l'origine.
+  // OUI, cela écrit autrement : les lignes posées à une mise en service
+  // antérieure au suivi sont redatées — en place, sans perte (test « D8 » de
+  // `reconciliateur-bout-en-bout.test.ts`). Écriture en production à la
+  // prochaine ouverture de chaque dossier concerné : à signaler à la
+  // propriétaire avant de fusionner.
   // Recopiée SANS incrément le 2026-09-28 (contre-revue du lot 1) :
   // `absence.ts` importe `SEUIL_PERSONNES_R422734` au lieu de redéclarer 51.
   // NON : même valeur.
@@ -248,7 +255,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "c0644a79bc5d533c",
+  empreinte: "a5f5118cd730b18c",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

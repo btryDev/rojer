@@ -321,9 +321,12 @@ describe("câblage — mise en service uniquement (règle 2)", () => {
     // qui manque est une pièce au dossier, pas un rendez-vous.
   });
 
-  it("mise en service passée → la ligne est datée de l'événement, pas d'aujourd'hui", () => {
-    // Datée de `now`, l'occurrence se redatait à chaque régénération : une
-    // chambre froide de 2015 était réputée due aujourd'hui, dix ans plus tard.
+  it("mise en service ANTÉRIEURE au suivi → la ligne est datée de l'origine (AMENDÉ D8)", () => {
+    // ~~Datée de `now`, l'occurrence se redatait à chaque régénération : une
+    // chambre froide de 2015 était réputée due aujourd'hui, dix ans plus tard.~~
+    // [2026-09-28, D8 : ce test attendait le 2015-03-01 — onze ans de retard
+    // sur un appareil dont le suivi commence. Daté de l'ORIGINE, persistée à la
+    // création, et non de l'horloge de chaque passe : la date ne glisse pas.]
     const miseEnService = new Date("2015-03-01T00:00:00Z");
     const [ligne] = creees(
       genererProchainesVerifications([applique(o(), [fakeEquipement()])], {
@@ -331,7 +334,7 @@ describe("câblage — mise en service uniquement (règle 2)", () => {
       }),
       NOW_MES,
     );
-    expect(ligne.datePrevue.getTime()).toBe(miseEnService.getTime());
+    expect(ligne.datePrevue.getTime()).toBe(debutDuJour(NOW_MES).getTime());
     expect(ligne.statut).toBe("a_planifier");
   });
 

@@ -97,8 +97,19 @@ import {
  * l'incrément, seuls les dossiers neufs ou mutés la recevraient. Elle porte sa
  * marque sur toutes les surfaces (`matching/marques.ts`). Si la réponse devient
  * « non », la ligne sort — archivée si elle porte une trace, jamais supprimée.
+ *
+ * `6` (2026-09-28, D8, décidé par la propriétaire) : LE PONCTUEL OUVERT SUIT LA
+ * LIMITE DE LA RÈGLE 4. Une mise en service ANTÉRIEURE à l'origine du suivi le
+ * datait de la mise en service — une chambre froide de 2015 suivie depuis 2026
+ * affichait onze ans de retard, quand le même appareil en rythme cyclique n'en
+ * montrait aucun. Il est désormais daté de l'origine (`echeance-de-ligne.ts`,
+ * règle 2). Sans l'incrément, les lignes déjà posées garderaient leur date de
+ * 2015 jusqu'à une mutation du dossier. La régénération les redate EN PLACE :
+ * même identifiant, rapports et actions gardés
+ * (`reconciliateur-bout-en-bout.test.ts`, « D8 »). Un ponctuel soldé, ou dont
+ * la mise en service tombe à l'origine ou après, ne bouge pas.
  */
-export const VERSION_MOTEUR_CALENDRIER = 5;
+export const VERSION_MOTEUR_CALENDRIER = 6;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la
