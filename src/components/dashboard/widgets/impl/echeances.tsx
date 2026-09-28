@@ -29,6 +29,7 @@ import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { BentoCell } from "@/components/dashboard/BentoCell";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
+import { retenueParSaMarque } from "@/lib/calendrier/prudence";
 import { libelleEcart } from "../temps";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
@@ -62,7 +63,9 @@ function classifier(
   // Là où la date s'afficherait, la phrase partagée, comme aux PDF et à la
   // fiche : un tiret se lisait « donnée manquante » (relecture des libellés).
   const echeanceConnue = aUnRendezVous(v, aujourdhui);
-  if (estVerificationEnRetard(v, aujourdhui)) {
+  // D1 (a) : une ligne que seul le silence de la fiche retient n'est pas en
+  // alerte — elle s'affiche, avec sa mention « à confirmer », sans le rouge.
+  if (estVerificationEnRetard(v, aujourdhui) && !retenueParSaMarque(v)) {
     return {
       tone: "alerte",
       libelleDate: echeanceConnue
@@ -87,7 +90,13 @@ function classifier(
 function retardsSansDateHorsListe(bundle: DashboardBundle): number {
   const { prochainesVerifs, aujourdhui } = bundle;
   const listes = prochainesVerifs.filter(
-    (v) => estVerificationEnRetard(v, aujourdhui) && !aUnRendezVous(v, aujourdhui),
+    // Même compte que l'agrégat (`compterEtatCalendrier`), qui ne compte plus
+    // les lignes retenues par prudence (D1 (a)) : sans ce filtre, la
+    // soustraction retirerait des lignes que l'agrégat n'a pas comptées.
+    (v) =>
+      estVerificationEnRetard(v, aujourdhui) &&
+      !retenueParSaMarque(v) &&
+      !aUnRendezVous(v, aujourdhui),
   ).length;
   return Math.max(0, bundle.echeances.verifsEnRetardSansEcheance - listes);
 }

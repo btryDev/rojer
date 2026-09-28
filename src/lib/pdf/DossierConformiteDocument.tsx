@@ -98,6 +98,12 @@ export type DossierData = {
   };
   rapportsRecents: LigneRapport[]; // 10 plus récents
   verifsEnRetard: LigneVerif[]; // toutes
+  /**
+   * Les lignes que seul le silence de la fiche retient (D1 (a)) : imprimées à
+   * part, marquées « à confirmer », jamais parmi les retards. Requis : un
+   * document qui les omettrait les tairait à qui le lit.
+   */
+  verifsAConfirmer: LigneVerif[];
   actionsEnCours: LignePlanActions[]; // toutes
 };
 
@@ -535,6 +541,33 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                 </Text>
                 <Text style={[s.td, { width: "14%" }]}>
                   {v.domaine ? LABEL_DOMAINE[v.domaine] : "—"}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* D1 (a) : ce que seul le silence de la fiche retient. Affiché, et
+            marqué — pas parmi les retards : rien n'établit que l'obligation
+            est due, et ce document part chez un tiers. */}
+        {data.verifsAConfirmer.length > 0 && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={s.h2}>Retenues à confirmer</Text>
+            <Text style={s.small}>
+              Ces obligations sont affichées parce qu&apos;une question de la
+              fiche est restée sans réponse. Elles ne sont comptées ni en retard
+              ni dans l&apos;indice ; la réponse les confirme ou les retire.
+            </Text>
+            {data.verifsAConfirmer.map((v) => (
+              <View key={v.id} style={s.row} wrap={false}>
+                <View style={{ width: "74%", paddingRight: 4 }}>
+                  <Text style={s.td}>{v.libelleObligation}</Text>
+                  <Text style={[s.small, { marginTop: 2 }]}>
+                    {`À confirmer. ${v.aConfirmer.join(" ")}`}
+                  </Text>
+                </View>
+                <Text style={[s.td, { width: "26%" }]}>
+                  {v.equipementLibelle}
                 </Text>
               </View>
             ))}

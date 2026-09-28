@@ -380,7 +380,13 @@ export function classerVerification(
  * qui la posait était une seconde source du retard. Le retard est un ÉTAT du
  * jour, calculé sur la date : il n'a sa valeur qu'ici.
  */
-export type StatutPeint = StatutVerification | "en_retard";
+/**
+ * `a_confirmer` (D1 (a), 2026-09-28) : une échéance passée que seul le silence
+ * de la fiche retient — peinte « à confirmer », jamais « en retard ». Aucune
+ * fonction de ce module ne la produit : elle ne sort que de
+ * `statutAffichePrudent` (`./prudence`), qui reçoit les marques du dossier.
+ */
+export type StatutPeint = StatutVerification | "en_retard" | "a_confirmer";
 
 /**
  * Le statut à PEINDRE pour un état — une table, et une seule.

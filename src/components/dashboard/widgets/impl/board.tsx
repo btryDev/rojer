@@ -52,6 +52,7 @@ import {
 } from "@/lib/dashboard/frise";
 import { composantesCiviles } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
+import { retenueParSaMarque } from "@/lib/calendrier/prudence";
 import {
   badgeEcart,
   compteARebours,
@@ -1732,10 +1733,10 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
   // `archiveLe` porte l'archivage (ADR-034) : sans lui, une ligne dont
   // l'obligation ne s'applique plus — date la plus ancienne, donc première du
   // tri — s'affichait ici en compte à rebours rouge.
-  const enRetard = estVerificationEnRetard(
-    v,
-    aujourdhui,
-  );
+  // D1 (a) : une ligne que seul le silence de la fiche retient ne vire pas
+  // au rouge ; sa mention « à confirmer » dit pourquoi elle est là.
+  const enRetard =
+    estVerificationEnRetard(v, aujourdhui) && !retenueParSaMarque(v);
 
   return (
     <CarteBoard

@@ -456,6 +456,9 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   ne_s_applique_plus: "ne s'applique plus",
   // Le mot du calendrier (`LIBELLE_SANS_RENDEZ_VOUS`), en minuscule.
   sans_rendez_vous: "sans rendez-vous",
+  // D1 (a) : ni « en retard » ni un verdict — la ligne tient à une question
+  // restée sans réponse, que la mention « à confirmer » nomme.
+  a_confirmer: "à confirmer",
 };
 
 function formaterVerifications(verifs: VerificationLue[], filtre = true): string {

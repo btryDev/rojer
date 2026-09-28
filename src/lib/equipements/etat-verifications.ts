@@ -164,7 +164,13 @@ export function repartirParEquipement(
     if (!courant.periodicites.includes(v.periodicite)) {
       courant.periodicites.push(v.periodicite);
     }
-    if (v.archiveLe === null && v.obligationId !== undefined) {
+    // Retenue par prudence (D1 (a)) : une ligne ouverte que seul le silence
+    // de la fiche retient. Elle porte sa mention, et ne rougit pas l'appareil.
+    const prudente =
+      v.archiveLe === null &&
+      v.obligationId !== undefined &&
+      (marques.get(v.obligationId)?.phrases.length ?? 0) > 0;
+    if (prudente && v.obligationId !== undefined) {
       for (const phrase of marques.get(v.obligationId)?.phrases ?? []) {
         if (!courant.aConfirmer.includes(phrase)) courant.aConfirmer.push(phrase);
       }
@@ -182,8 +188,11 @@ export function repartirParEquipement(
         continue;
       }
 
-      if (lecture.registre === "enRetard") courant.enRetard += 1;
-      else if (lecture.registre === "aPlanifier") courant.aPlanifier += 1;
+      // D1 (a) : une échéance passée retenue par prudence n'est pas un retard
+      // de l'appareil ; la mention « à confirmer » la porte.
+      if (lecture.registre === "enRetard") {
+        if (!prudente) courant.enRetard += 1;
+      } else if (lecture.registre === "aPlanifier") courant.aPlanifier += 1;
       else {
         courant.aVenir += 1;
         if (lecture.registre === "proche") courant.proches += 1;
@@ -191,6 +200,10 @@ export function repartirParEquipement(
     }
 
     parEquipement.set(v.equipementId, courant);
+    // Une ligne retenue par prudence ne devient pas « la prochaine échéance »
+    // de l'appareil : prise pour telle, sa date passée ferait de l'appareil un
+    // appareil en retard (D1 (a)).
+    if (prudente) continue;
     const lignes = lignesParEquipement.get(v.equipementId) ?? [];
     lignes.push(v);
     lignesParEquipement.set(v.equipementId, lignes);

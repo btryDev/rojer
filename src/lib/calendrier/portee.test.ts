@@ -448,7 +448,11 @@ describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
       .replace(/^\s*\/\/.*$/gm, "");
     expect(code).toContain('const archivee = etat === "archivee";');
     expect(code).toContain("const depotOuvert = !archivee;");
-    expect(code).toContain("const statutJour = statutAffiche(v, aujourdhui);");
+    // `statutAffichePrudent` (D1 (a), 2026-09-28) enveloppe `statutAffiche` :
+    // l'extinction se lit toujours par elle, et la prudence s'y ajoute.
+    expect(code).toContain(
+      "const statutJour = statutAffichePrudent(v, aujourdhui, prudence);",
+    );
     expect(code).toContain("depotOuvert ? (");
   });
 });

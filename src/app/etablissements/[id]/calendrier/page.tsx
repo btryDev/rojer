@@ -7,9 +7,11 @@ import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
-import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
-import { requireUser } from "@/lib/auth/require-user";
-import { prisma } from "@/lib/prisma";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import {
+  retenueParPrudence,
+  statutPeintPrudent,
+} from "@/lib/calendrier/prudence";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import {
   aUnRendezVous,
@@ -327,14 +329,12 @@ export default async function CalendrierPage({
       // 2026-09-27, § 6.3). Calculées au rendu, par le moteur, comme l'écran
       // des états permanents : la ligne persistée ne porte pas la marque, et
       // une réponse donnée sur la fiche doit la lever sans régénération.
-      requireUser().then((user) =>
-        marquesAConfirmerDuDossier(prisma, {
-          id,
-          entreprise: { userId: user.id },
-        }),
-      ),
+      // Mémoïsées sur le rendu, et partagées avec le compte du bandeau
+      // (`compterEtatCalendrier`), qui en tire la même prudence (D1 (a)).
+      marquesAConfirmerDuRendu(id),
     ]);
   const aujourdhui = new Date();
+  const prudence = retenueParPrudence(marquesAConfirmer.parObligation);
   // La lecture par équipement suit le même bâtiment que le reste.
   const equipements = restreindreAuBatiment(equipementsTous, filtreBatiment);
   // …et les motifs d'absence d'échéance suivent les mêmes appareils. Sans
@@ -531,7 +531,9 @@ export default async function CalendrierPage({
           etat,
           // Même règle que la liste mensuelle : le rendez-vous suivant est
           // planifié, le fait porte le résultat de son rapport (ADR-034).
-          statut: statutDeLaLecture(lec, v),
+          // D1 (a) : « à confirmer », pas « en retard », sur une ligne que
+          // seul le silence de la fiche retient.
+          statut: statutPeintPrudent(statutDeLaLecture(lec, v), v, prudence),
         });
       }
     }
@@ -1250,7 +1252,11 @@ export default async function CalendrierPage({
                                 // « fait le 1er juin » affichait « En retard »
                                 // dès que l'échéance suivante était passée.
                                 <BadgeStatut
-                                  statut={statutDeLaLecture(ligne, v)}
+                                  statut={statutPeintPrudent(
+                                    statutDeLaLecture(ligne, v),
+                                    v,
+                                    prudence,
+                                  )}
                                 />
                               }
                               registre={ligne.registre}

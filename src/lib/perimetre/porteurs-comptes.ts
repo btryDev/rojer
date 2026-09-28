@@ -89,6 +89,9 @@ export const ORDRE_PORTEURS: readonly PorteurObligation[] = [
  * qu'une agrégation la garde ou la jette.
  */
 export type LigneSondee = {
+  /** Aucune obligation réelle : la sonde n'est retenue par la prudence
+   *  d'aucun dossier (D1 (a)). */
+  obligationId: string;
   equipementId: string | null;
   salarieId: string | null;
   libelleObligation: string;
@@ -114,6 +117,7 @@ export function sondes(now: Date): {
 }[] {
   const hier = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const commun = {
+    obligationId: "sonde-de-perimetre",
     libelleObligation: "Sonde de périmètre",
     statut: "planifiee",
     datePrevue: hier,

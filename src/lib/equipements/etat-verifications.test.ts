@@ -370,3 +370,16 @@ describe("la marque « à confirmer » atteint la carte de l'appareil (revue du 
     expect(m.get("eq1")?.aConfirmer ?? []).toEqual([]);
   });
 });
+
+describe("D1 (a) : une ligne retenue par prudence ne rougit pas l'appareil", () => {
+  // Éprouvé en comptant `enRetard` sans lire la prudence.
+  it("échue et marquée : ni retard ni prochaine échéance, la mention reste ; sans marque : un retard", () => {
+    const ligne = { ...verif("eq1", "2026-03-01"), obligationId: "ob-1" };
+    const marques = new Map([["ob-1", { phrases: ["phrase"] }]]);
+    const prudent = repartirParEquipement([ligne], AUJOURDHUI, marques).get("eq1")!;
+    expect(prudent.enRetard).toBe(0);
+    expect(prudent.prochaine).toBeNull();
+    expect(prudent.aConfirmer).toEqual(["phrase"]);
+    expect(repartirParEquipement([ligne], AUJOURDHUI).get("eq1")!.enRetard).toBe(1);
+  });
+});

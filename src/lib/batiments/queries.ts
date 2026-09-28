@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { repartirVerifications } from "@/lib/pdf/etat-verifications";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import {
+  AUCUNE_PRUDENCE,
+  retenueParPrudence,
+  type RetenueParPrudence,
+} from "@/lib/calendrier/prudence";
 import {
   porteursComptesPar,
   type LigneSondee,
@@ -133,9 +139,12 @@ export async function listerBatimentsAvecCharge(
   etablissementId: string,
   now: Date,
 ): Promise<BatimentCharge[]> {
-  const [user, batiments] = await Promise.all([
+  const [user, batiments, marques] = await Promise.all([
     requireUser(),
     listerBatimentsDeLEtablissement(etablissementId),
+    // D1 (a) : la pastille d'une zone ne compte pas en retard une ligne que
+    // seul le silence de la fiche retient — même compte que le calendrier.
+    marquesAConfirmerDuRendu(etablissementId),
   ]);
 
   const verifs = await prisma.verification.findMany({
@@ -160,11 +169,17 @@ export async function listerBatimentsAvecCharge(
       // `select` ne compile plus.
       archiveLe: true,
       libelleObligation: true,
+      obligationId: true,
       equipement: { select: { batimentId: true, actif: true } },
     },
   });
 
-  return grouperChargeParBatiment(batiments, verifs, now);
+  return grouperChargeParBatiment(
+    batiments,
+    verifs,
+    now,
+    retenueParPrudence(marques.parObligation),
+  );
 }
 
 /**
@@ -197,9 +212,15 @@ export function grouperChargeParBatiment<
     periodicite: string;
     archiveLe: Date | null;
     libelleObligation: string;
+    obligationId: string;
     equipement: { batimentId: string; actif: boolean } | null;
   },
->(batiments: B[], verifs: readonly V[], now: Date): (B & { nbEnRetard: number })[] {
+>(
+  batiments: B[],
+  verifs: readonly V[],
+  now: Date,
+  prudence: RetenueParPrudence,
+): (B & { nbEnRetard: number })[] {
   const parBatiment = new Map<string, V[]>();
   for (const v of verifs) {
     // Sans équipement, pas de zone : c'est ici, et nulle part ailleurs, que
@@ -222,6 +243,7 @@ export function grouperChargeParBatiment<
         derniereRealisation: null,
       })),
       now,
+      prudence,
     );
     // Seul le retard est rendu : la pastille d'un volume ne dit qu'une
     // chose. `nbSous30j` était calculé, typé et sérialisé jusqu'au client
@@ -255,6 +277,7 @@ export function porteursDeLaPlaqueZones(
             : null,
         })),
         now,
+        AUCUNE_PRUDENCE,
       ).reduce((n, b) => n + b.nbEnRetard, 0),
     now,
   );

@@ -21,7 +21,7 @@
 // défaut qu'on veut voir tomber.
 
 import { describe, expect, it } from "vitest";
-import { elementsDansLOrdre } from "./arbre-rendu.test-utils";
+import { elementsDansLOrdre, texteDirect } from "./arbre-rendu.test-utils";
 import { renderToBuffer } from "@react-pdf/renderer";
 import {
   DossierConformiteDocument,
@@ -90,6 +90,7 @@ function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
     },
     rapportsRecents: [],
     verifsEnRetard: [],
+    verifsAConfirmer: [],
     actionsEnCours: [],
   };
 }
@@ -263,5 +264,36 @@ describe("les articles du registre suivent le régime", () => {
     const igh = await taille({ ...d, regime: { estERP: true, estIGH: true } });
     expect(erp).toBeGreaterThan(aucun);
     expect(igh).toBeGreaterThan(erp);
+  });
+});
+
+describe("D1 (a) : la ligne retenue par prudence s'imprime à part, marquée (2026-09-28)", () => {
+  // Éprouvé en retirant le bloc « Retenues à confirmer » du JSX : la phrase
+  // disparaît de l'arbre et ce test tombe. Que la ligne ne soit pas parmi les
+  // retards, c'est `repartirVerifications` qui le tient
+  // (`calendrier/prudence.test.ts`) : le builder imprime ses deux ensembles.
+  const ligne = {
+    id: "v-exercice",
+    libelleObligation: "Essais du matériel et exercices d'évacuation semestriels",
+    equipementLibelle: "Tout l'établissement",
+    datePrevue: new Date("2026-03-01T00:00:00Z"),
+    echeanceConnue: true,
+    statut: "a_confirmer" as const,
+    domaine: null,
+    contractuelle: false,
+    aConfirmer: ["La fiche de l'établissement ne dit pas si des matières inflammables y sont manipulées."],
+  };
+  const textes = (d: DossierData) =>
+    elementsDansLOrdre(DossierConformiteDocument({ data: d })).map(texteDirect);
+
+  it("présente : le titre et la mention « À confirmer » sont rendus", () => {
+    const t = textes({ ...dossier(bloc(2)), verifsAConfirmer: [ligne] });
+    expect(t).toContain("Retenues à confirmer");
+    expect(t.some((x) => x.startsWith("À confirmer. La fiche"))).toBe(true);
+  });
+
+  it("absente : rien n'est ajouté", () => {
+    const t = textes({ ...dossier(bloc(2)), verifsAConfirmer: [] });
+    expect(t).not.toContain("Retenues à confirmer");
   });
 });

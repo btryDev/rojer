@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 import { construireBrief, type EntreeBrief } from "./brief";
 import { repartirRetards } from "@/lib/calendrier/retards";
 import {
@@ -145,7 +146,7 @@ describe("le compteur que le titre coiffe", () => {
     // compteur du produit qui ne laisse personne dehors.
     const comptes = porteursComptesPar(
       (lignes: LigneSondee[]) =>
-        repartirVerifications(lignes, AUJOURDHUI).enRetard.length,
+        repartirVerifications(lignes, AUJOURDHUI, AUCUNE_PRUDENCE).enRetard.length,
       AUJOURDHUI,
     );
     expect([...comptes].sort()).toEqual([...porteursDuReferentiel()].sort());

@@ -797,4 +797,27 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
     const texte = await outil("verifications").executer(ctx, {});
     expect(texte).not.toContain("à confirmer");
   });
+
+  // D1 (a), 2026-09-28 : échue, la ligne prudente n'est pas « en retard » pour
+  // l'assistant — ni dans son état, ni dans l'en-tête, ni en jours de retard.
+  // Éprouvé en rendant « en_retard » sans lire la prudence dans `etatDe`.
+  const exerciceEchu = { ...ligneExercice, datePrevue: jour("2026-03-01") };
+
+  it("muet, échue : « à confirmer », aucune en retard", async () => {
+    prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
+    prismaMock.verification.findMany.mockResolvedValue([exerciceEchu]);
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("aucune en retard");
+    expect(texte).not.toContain("jour(s) de retard");
+  });
+
+  it("« oui » déclaré, échue : la ligne est due, et en retard", async () => {
+    prismaMock.etablissement.findFirst.mockResolvedValue({
+      ...bureauMuet,
+      manipuleMatieresR422722: true,
+    });
+    prismaMock.verification.findMany.mockResolvedValue([exerciceEchu]);
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("dont 1 en retard");
+  });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 import { repartirVerifications } from "./etat-verifications";
 
 // Horloge de référence : mardi 23 avril 2026, 09:00 heure de Paris.
@@ -14,6 +15,7 @@ function verif(
   periodicite: string = "annuelle",
 ) {
   return {
+    obligationId: "obligation-test",
     statut,
     datePrevue: new Date(datePrevueIso),
     derniereRealisation: (derniereRealisationIso === null
@@ -46,7 +48,7 @@ describe("repartirVerifications", () => {
       ),
     ];
 
-    const etat = repartirVerifications(verifs, NOW);
+    const etat = repartirVerifications(verifs, NOW, AUCUNE_PRUDENCE);
 
     expect(etat.enRetard).toHaveLength(3);
     expect(etat.aPlanifier).toHaveLength(1);
@@ -60,7 +62,7 @@ describe("repartirVerifications", () => {
     // l'obligation, c'est la date.
     const etat = repartirVerifications(
       [verif("a_planifier", "2026-04-22T00:00:00Z")],
-      NOW,
+      NOW, AUCUNE_PRUDENCE
     );
     expect(etat.enRetard).toHaveLength(1);
     expect(etat.aPlanifier).toHaveLength(0);
@@ -72,7 +74,7 @@ describe("repartirVerifications", () => {
         verif("planifiee", "2026-04-23T00:00:00Z"),
         verif("a_planifier", "2026-04-23T00:00:00Z"),
       ],
-      NOW,
+      NOW, AUCUNE_PRUDENCE
     );
     expect(etat.enRetard).toHaveLength(0);
     expect(etat.aVenir).toHaveLength(1);
@@ -84,7 +86,7 @@ describe("repartirVerifications", () => {
     // catégorie et ne gonfle donc pas le dénominateur du score.
     const etat = repartirVerifications(
       [verif("planifiee", "2026-11-02T00:00:00Z")],
-      NOW,
+      NOW, AUCUNE_PRUDENCE
     );
     expect(etat.total).toBe(0);
   });
@@ -97,7 +99,7 @@ describe("repartirVerifications", () => {
         verif("a_planifier", "2026-06-01T00:00:00Z"),
         verif("a_planifier", "2026-07-01T00:00:00Z"),
       ],
-      NOW,
+      NOW, AUCUNE_PRUDENCE
     );
     expect(etat.aPlanifier).toHaveLength(2);
     expect(etat.total).toBe(2);
@@ -112,7 +114,7 @@ describe("repartirVerifications", () => {
         // La veille de la borne : sortie de la fenêtre.
         verif("realisee_conforme", "2025-04-22T00:00:00Z", "2025-04-22T00:00:00Z", "mise_en_service_uniquement"),
       ],
-      NOW,
+      NOW, AUCUNE_PRUDENCE
     );
     expect(etat.realisees12m).toHaveLength(1);
   });
@@ -125,7 +127,7 @@ describe("repartirVerifications", () => {
     // fois, dans le retard : l'échéance ouverte prime (amendement du
     // 2026-09-12), et sa réalisation ne la fait pas compter une seconde fois.
     const gelee = verif("realisee_conforme", "2026-03-01T00:00:00Z", "2025-03-01T00:00:00Z");
-    const etat = repartirVerifications([gelee], NOW);
+    const etat = repartirVerifications([gelee], NOW, AUCUNE_PRUDENCE);
     expect(etat.enRetard).toHaveLength(1);
     expect(etat.realisees12m).toHaveLength(0);
     expect(etat.total).toBe(1);
@@ -147,7 +149,7 @@ describe("repartirVerifications", () => {
       derniereRealisation: new Date("2026-01-06T00:00:00Z"),
     };
 
-    const etat = repartirVerifications([consommee], NOW);
+    const etat = repartirVerifications([consommee], NOW, AUCUNE_PRUDENCE);
 
     expect(etat.enRetard).toHaveLength(0);
     expect(etat.realisees12m).toHaveLength(1);
@@ -168,7 +170,7 @@ describe("repartirVerifications", () => {
       derniereRealisation: new Date("2026-01-20T00:00:00Z"),
     };
 
-    const etat = repartirVerifications([archivee], NOW);
+    const etat = repartirVerifications([archivee], NOW, AUCUNE_PRUDENCE);
 
     expect(etat.enRetard).toHaveLength(0);
     expect(etat.aPlanifier).toHaveLength(0);
@@ -186,7 +188,7 @@ describe("repartirVerifications", () => {
       archiveLe: new Date("2026-03-15T00:00:00Z"),
     };
 
-    expect(repartirVerifications([archivee], NOW).total).toBe(0);
+    expect(repartirVerifications([archivee], NOW, AUCUNE_PRUDENCE).total).toBe(0);
   });
 
   it("les quatre ensembles restent disjoints (pas de double compte)", () => {
@@ -196,7 +198,7 @@ describe("repartirVerifications", () => {
       verif("planifiee", "2026-04-24T00:00:00Z"),
       verif("realisee_observations", "2026-03-01T00:00:00Z", "2026-03-02T00:00:00Z"),
     ];
-    const etat = repartirVerifications(verifs, NOW);
+    const etat = repartirVerifications(verifs, NOW, AUCUNE_PRUDENCE);
     const tous = [
       ...etat.enRetard,
       ...etat.aPlanifier,
@@ -217,7 +219,7 @@ describe("repartirVerifications", () => {
       ...verif("planifiee", "2026-05-10T00:00:00Z"),
       derniereRealisation: new Date("2026-03-02T00:00:00Z"),
     };
-    const etat = repartirVerifications([roulee], NOW);
+    const etat = repartirVerifications([roulee], NOW, AUCUNE_PRUDENCE);
     expect(etat.aVenir).toHaveLength(1);
     expect(etat.realisees12m).toHaveLength(0);
     expect(etat.total).toBe(1);
@@ -230,7 +232,7 @@ describe("repartirVerifications", () => {
       ...verif("planifiee", "2026-12-10T00:00:00Z"),
       derniereRealisation: new Date("2026-03-02T00:00:00Z"),
     };
-    const etat = repartirVerifications([roulee], NOW);
+    const etat = repartirVerifications([roulee], NOW, AUCUNE_PRUDENCE);
     expect(etat.realisees12m).toHaveLength(1);
     expect(etat.total).toBe(1);
   });
@@ -241,7 +243,7 @@ describe("repartirVerifications", () => {
       ...verif("planifiee", "2026-04-01T00:00:00Z"),
       derniereRealisation: new Date("2025-04-01T00:00:00Z"),
     };
-    const etat = repartirVerifications([roulee], NOW);
+    const etat = repartirVerifications([roulee], NOW, AUCUNE_PRUDENCE);
     expect(etat.enRetard).toHaveLength(1);
     expect(etat.realisees12m).toHaveLength(0);
     expect(etat.total).toBe(1);
@@ -268,8 +270,8 @@ describe("repartirVerifications", () => {
       })),
     ];
 
-    const a = repartirVerifications(dossier(recent), NOW);
-    const b = repartirVerifications(dossier(vieux), NOW);
+    const a = repartirVerifications(dossier(recent), NOW, AUCUNE_PRUDENCE);
+    const b = repartirVerifications(dossier(vieux), NOW, AUCUNE_PRUDENCE);
     expect(a.total).toBe(10);
     expect(b.total).toBe(10);
     expect(a.enRetard).toHaveLength(3);

@@ -33,10 +33,15 @@ import {
   aUnRendezVous,
   LIBELLE_SANS_ECHEANCE,
   LIBELLE_SANS_RENDEZ_VOUS,
-  statutAffiche,
   type StatutPeint,
 } from "@/lib/calendrier/etats";
 import type { SectionRegistre } from "./sections";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import {
+  retenueParPrudence,
+  statutAffichePrudent,
+  type RetenueParPrudence,
+} from "@/lib/calendrier/prudence";
 
 /**
  * Ce que la fonction pure attend, réduit au strict nécessaire.
@@ -56,6 +61,8 @@ export type EquipementTenu = {
 
 export type VerificationTenue = {
   id: string;
+  /** L'obligation, pour la prudence (D1 (a)). */
+  obligationId: string;
   libelleObligation: string;
   datePrevue: Date | null;
   /** Le dernier rapport réalisé (ADR-034) — c'est lui qui dit « faite le »,
@@ -140,13 +147,14 @@ export async function lireContenuTenuAilleurs(
   // requêtes, et la mémoïsation de la page fait le reste. Le PDF, lui, passe
   // par `contenuTenuAilleursDepuis` avec un parc déjà chargé.
   if (!section.categoriesEquipement?.length) return null;
-  const [equipements, verifications] = await Promise.all([
+  const [equipements, verifications, marques] = await Promise.all([
     PARTIES_INVENTAIRE.has(partieId)
       ? listerEquipementsDeLEtablissement(etablissementId)
       : Promise.resolve([]),
     PARTIES_VERIFICATIONS.has(partieId)
       ? listerVerifications(etablissementId)
       : Promise.resolve([]),
+    marquesAConfirmerDuRendu(etablissementId),
   ]);
   return contenuTenuAilleursDepuis(
     etablissementId,
@@ -155,6 +163,7 @@ export async function lireContenuTenuAilleurs(
     equipements,
     verifications,
     new Date(),
+    retenueParPrudence(marques.parObligation),
   );
 }
 
@@ -171,6 +180,9 @@ export function contenuTenuAilleursDepuis(
   /** L'horloge, injectée (ADR-011) : la pastille d'une fiche dit l'état du
    *  jour, et le PDF compose quarante-neuf fiches sur un seul instant. */
   now: Date,
+  /** Requise (D1 (a)) : la fiche remise en contrôle ne peint pas « en
+   *  retard » une ligne que seul le silence de la fiche retient. */
+  prudence: RetenueParPrudence,
 ): ContenuAilleurs | null {
   const categories = section.categoriesEquipement;
   if (!categories || categories.length === 0) return null;
@@ -261,7 +273,11 @@ export function contenuTenuAilleursDepuis(
               ? v.archiveLe
                 ? undefined
                 : v.statut
-              : statutAffiche({ ...v, datePrevue: v.datePrevue }, now),
+              : statutAffichePrudent(
+                  { ...v, datePrevue: v.datePrevue },
+                  now,
+                  prudence,
+                ),
           contractuelle: estEcheanceContractuelle(v),
         })),
       source: { libelle: "votre calendrier", href: `${base}/calendrier` },

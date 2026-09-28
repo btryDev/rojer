@@ -11,6 +11,7 @@ const LABEL: Record<StatutPeint, string> = {
   realisee_observations: "Observations",
   realisee_ecart_majeur: "Écart majeur",
   en_retard: "En retard",
+  a_confirmer: "À confirmer",
 };
 
 // Champs saturés du board éditorial, encre de la même famille : rose
@@ -36,6 +37,10 @@ const CLASSE: Record<StatutPeint, string> = {
     "bg-[color:var(--board-signal)] text-[color:var(--board-signal-ink)]",
   en_retard:
     "bg-[color:var(--board-signal)] text-[color:var(--board-signal-ink)]",
+  // L'ardoise, comme « à planifier » et le niveau « Reste à renseigner » du
+  // score : ni le rose du retard, que rien n'établit, ni le vert.
+  a_confirmer:
+    "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]",
 };
 
 export function BadgeStatut({ statut }: Props) {

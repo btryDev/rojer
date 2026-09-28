@@ -36,6 +36,10 @@ import {
 } from "@/lib/dates/retard";
 import { JOURS_HORIZON_PROCHE, ajouterJours } from "@/lib/dates";
 import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
+import {
+  retenueParPrudence,
+  type RetenueParPrudence,
+} from "@/lib/calendrier/prudence";
 import { prismaMcp } from "./prisma";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { libellePorteurSansNom } from "@/lib/calendrier/labels";
@@ -386,9 +390,19 @@ export type EtatVerification =
    * rendez-vous (limite 1, 2026-09-15). Sans cet état, elle tombait dans
    * « planifiée » — une échéance que personne n'attend.
    */
-  | "sans_rendez_vous";
+  | "sans_rendez_vous"
+  /**
+   * Échéance passée d'une ligne que seul le silence de la fiche retient (D1
+   * (a), 2026-09-28). Pas « en retard » : rien n'établit que l'obligation est
+   * due, et l'assistant le répéterait au dirigeant.
+   */
+  | "a_confirmer";
 
-function etatDe(v: VerificationDatee, now: Date): EtatVerification {
+function etatDe(
+  v: VerificationDatee & { obligationId: string },
+  now: Date,
+  prudence: RetenueParPrudence,
+): EtatVerification {
   // EN PREMIER, avant même le réalisé : une ligne archivée peut porter une
   // réalisation, et « réalisée » laisserait croire qu'elle compte encore.
   if (estVerificationArchivee(v)) return "ne_s_applique_plus";
@@ -400,7 +414,9 @@ function etatDe(v: VerificationDatee, now: Date): EtatVerification {
   // en retard ». Relevé en relecture le 2026-09-12.
   if (estVerificationRealisee(v)) return "realisee";
   if (lignePortantSansRendezVous(v)) return "sans_rendez_vous";
-  if (estVerificationEnRetard(v, now)) return "en_retard";
+  if (estVerificationEnRetard(v, now)) {
+    return prudence(v) ? "a_confirmer" : "en_retard";
+  }
   if (estVerificationAPlanifier(v, now)) return "a_planifier";
   if (estVerificationAVenir(v, now, JOURS_HORIZON_PROCHE)) return "a_venir";
   return "planifiee";
@@ -427,8 +443,8 @@ export async function listerEquipements(
   etablissementId: string,
   now: Date,
 ): Promise<EquipementLu[]> {
-  const equipements = trierParCategorie(
-    await prismaMcp.equipement.findMany({
+  const [lus, marques] = await Promise.all([
+    prismaMcp.equipement.findMany({
     where: { etablissementId },
     // Voir `equipements/labels.ts` : l'ordre des catégories n'est pas celui de
     // l'enum PostgreSQL, il se pose après la lecture.
@@ -447,6 +463,9 @@ export async function listerEquipements(
         // ce serveur relit le SOURCE, et une constante lui cacherait ce qui
         // sort.
         select: {
+          // L'identifiant de l'obligation, pour la prudence (D1 (a)) — une
+          // clé du référentiel, rien de l'établissement ni d'une personne.
+          obligationId: true,
           statut: true,
           datePrevue: true,
           periodicite: true,
@@ -456,10 +475,15 @@ export async function listerEquipements(
       },
     },
     }),
-  );
+    // D1 (a) : une ligne que seul le silence de la fiche retient ne compte pas
+    // dans les retards de son appareil. La portée est celle du jeton.
+    marquesAConfirmerDuDossier(prismaMcp, { id: etablissementId }),
+  ]);
+  const equipements = trierParCategorie(lus);
+  const prudence = retenueParPrudence(marques.parObligation);
 
   return equipements.map((e) => {
-    const etats = e.verifications.map((v) => etatDe(v, now));
+    const etats = e.verifications.map((v) => etatDe(v, now, prudence));
     return {
       libelle: e.libelle,
       categorie: e.categorie,
@@ -597,6 +621,7 @@ export async function listerVerifications(
     marquesAConfirmerDuDossier(prismaMcp, { id: etablissementId }),
   ]);
 
+  const prudence = retenueParPrudence(marques.parObligation);
   let lues: VerificationLue[] = brutes.map((v) => ({
     libelleObligation: v.libelleObligation,
     // Une échéance portée par l'établissement (ADR-022) n'a pas d'appareil :
@@ -612,7 +637,7 @@ export async function listerVerifications(
     archiveLe: v.archiveLe,
     derniereRealisation: derniereRealisation(v.rapports),
     statut: v.statut,
-    etat: etatDe(v, now),
+    etat: etatDe(v, now, prudence),
     // ZÉRO POUR UNE LIGNE ARCHIVÉE, et pas seulement pour une ligne réalisée.
     // `etatDe` a été rendu conscient de l'archivage, ce champ-ci ne l'était
     // pas — et `formaterVerifications` imprime LES DEUX. L'assistant recevait
@@ -622,6 +647,8 @@ export async function listerVerifications(
     joursRetard:
       estVerificationRealisee(v) ||
       estVerificationArchivee(v) ||
+      // D1 (a) : pas de décompte de retard sur une ligne retenue par prudence.
+      prudence(v) ||
       !aUnRendezVous(v, now)
         ? 0
         : joursDeRetard(v.datePrevue, now),

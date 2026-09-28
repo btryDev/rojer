@@ -26,16 +26,19 @@ import {
 } from "@/lib/dates";
 import {
   estActionEnRetard,
-  estVerificationEnRetard,
   estVerificationRealisee,
 } from "@/lib/dates/retard";
+import {
+  estEnRetardQuiCompte,
+  retenueParPrudence,
+  statutAffichePrudent,
+} from "@/lib/calendrier/prudence";
 import {
   aUnRendezVous,
   classerVerification,
   LIBELLE_AUCUNE_VERIFICATION,
   LIBELLE_SANS_ECHEANCE,
   LIBELLE_SANS_RENDEZ_VOUS,
-  statutAffiche,
 } from "@/lib/calendrier/etats";
 import {
   FAMILLE_DE_TYPE,
@@ -158,7 +161,11 @@ export default async function VerificationDetailPage({
   // pastille de retard parlent de la même échéance que le classement.
   const echeance = v.datePrevue;
   const joursRestants = joursCivilsEntre(aujourdhui, echeance);
-  const enRetard = estVerificationEnRetard(v, aujourdhui);
+  // D1 (a) : une échéance passée que seul le silence de la fiche retient
+  // n'est pas peinte en retard. Elle garde sa date et sa mention « à
+  // confirmer » (BlocAConfirmer) ; ni pastille rose, ni décompte de jours.
+  const prudence = retenueParPrudence(marques.parObligation);
+  const enRetard = estEnRetardQuiCompte(v, aujourdhui, prudence);
 
   /**
    * La ligne n'a pas de rendez-vous : sa `datePrevue` est une date de
@@ -184,7 +191,7 @@ export default async function VerificationDetailPage({
   const archivee = etat === "archivee";
   const sansRendezVous = !archivee && !aUnRendezVous(v, aujourdhui);
   // `undefined` sur une ligne éteinte : aucun statut à peindre.
-  const statutJour = statutAffiche(v, aujourdhui);
+  const statutJour = statutAffichePrudent(v, aujourdhui, prudence);
   // On ne dépose pas sur une obligation qui ne s'applique plus : le dépôt
   // ferait rouler une ligne éteinte. Le serveur le refuse aussi
   // (`uploadRapport`) — l'écran ne fait que ne pas le proposer.

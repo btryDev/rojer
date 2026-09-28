@@ -143,6 +143,8 @@ const LIBELLE_STATUT_VERIF: Record<StatutPeint, string> = {
   a_planifier: "À planifier",
   planifiee: "Planifiée",
   en_retard: "En retard",
+  // D1 (a) : une échéance que seul le silence de la fiche retient.
+  a_confirmer: "À confirmer",
   realisee_conforme: "Conforme",
   realisee_observations: "Observations",
   realisee_ecart_majeur: "Écart majeur",

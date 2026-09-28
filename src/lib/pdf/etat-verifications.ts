@@ -19,6 +19,10 @@ import {
   estVerificationEnRetard,
   type VerificationDatee,
 } from "@/lib/dates/retard";
+import {
+  estRetenueParPrudence,
+  type RetenueParPrudence,
+} from "@/lib/calendrier/prudence";
 
 /** Répartition en quatre catégories **disjointes**. */
 export type EtatVerifications<T> = {
@@ -33,6 +37,12 @@ export type EtatVerifications<T> = {
   realisees12m: T[];
   /** Somme des quatre — dénominateur du score de conformité. */
   total: number;
+  /**
+   * Les lignes ouvertes que seul le silence de la fiche retient (D1 (a),
+   * 2026-09-28). HORS des quatre ensembles et du total : elles s'affichent,
+   * marquées « à confirmer », sans compter ni en retard ni dans l'indice.
+   */
+  retenuesParPrudence: T[];
 };
 
 /**
@@ -57,8 +67,28 @@ export function repartirVerifications<
   // `derniereRealisation` — la date du dernier rapport réalisé (ADR-034) —
   // est REQUISE : c'est elle, et non plus la ligne, qui dit ce qui a été fait
   // sur la fenêtre. Un appelant qui l'omettrait viderait `realisees12m`.
-  T extends VerificationDatee & { derniereRealisation: Date | null },
->(verifs: readonly T[], now: Date): EtatVerifications<T> {
+  T extends VerificationDatee & {
+    derniereRealisation: Date | null;
+    obligationId: string;
+  },
+>(
+  toutes: readonly T[],
+  now: Date,
+  /**
+   * **Requise** (D1 (a)) : le prédicat « retenue par prudence » du dossier,
+   * tiré de ses marques (`retenueParPrudence`). Optionnelle, elle aurait été
+   * oubliée par l'appelant suivant — et le compteur aurait recompté en retard
+   * ce que le tableau de bord venait de cesser de compter.
+   */
+  prudence: RetenueParPrudence,
+): EtatVerifications<T> {
+  // D1 (a) : une ligne que seul le silence retient n'entre ni dans les
+  // retards ni dans l'indice. Mise à part AVANT les quatre ensembles, pour
+  // qu'aucun ne la voie — le dénominateur non plus.
+  const retenuesParPrudence = toutes.filter((v) =>
+    estRetenueParPrudence(v, prudence),
+  );
+  const verifs = toutes.filter((v) => !estRetenueParPrudence(v, prudence));
   // Borne de la fenêtre d'historique : le **jour civil** situé douze mois en
   // arrière, pris à minuit heure de Paris. Sans `debutDuJour`, la borne
   // hérite de l'heure courante et une vérification réalisée pile douze mois
@@ -121,5 +151,6 @@ export function repartirVerifications<
     realisees12m,
     total:
       enRetard.length + aPlanifier.length + aVenir.length + realisees12m.length,
+    retenuesParPrudence,
   };
 }

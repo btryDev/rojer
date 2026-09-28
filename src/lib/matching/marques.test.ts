@@ -118,6 +118,15 @@ describe("PDF : la ligne de vérification porte sa marque", () => {
     expect(ligneVerif(v, false, NOW, marques).aConfirmer).toEqual(["phrase"]);
     expect(ligneVerif(v, false, NOW).aConfirmer).toEqual([]);
   });
+
+  it("D1 (a) : échue et marquée ⇒ « à confirmer », jamais « en retard »", () => {
+    // Le registre PDF imprime cette colonne dans un document remis en
+    // contrôle. Éprouvé en rendant `statutAffiche` nu dans `ligneVerif`.
+    const APRES = new Date("2026-04-01T00:00:00Z");
+    const marques = new Map([[EXERCICE, { phrases: ["phrase"], effectif: false }]]);
+    expect(ligneVerif(v, false, APRES, marques).statut).toBe("a_confirmer");
+    expect(ligneVerif(v, false, APRES).statut).toBe("en_retard");
+  });
 });
 
 describe("la relance ne pose que les questions dont le silence retient une ligne", () => {

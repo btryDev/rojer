@@ -26,6 +26,8 @@ const jour = (n: number) => ajouterJours(AUJOURDHUI, n);
 
 type LigneVerif = {
   id: string;
+  /** Pour la prudence (D1 (a)) : absent des tests qui n'en parlent pas. */
+  obligationId?: string;
   etablissementId: string;
   equipementId: string;
   statut: string;
@@ -239,10 +241,21 @@ const h = vi.hoisted(() => {
     },
   };
 
-  return { db, prisma };
+  // Les marques « à confirmer » du dossier, vides par défaut (D1 (a)).
+  const marques = new Map<string, { phrases: string[]; effectif: boolean }>();
+  return { db, prisma, marques };
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
+// Les marques « à confirmer » ont leur propre porte (`marques-du-rendu.ts`) ;
+// ce fichier ne les éprouve pas, `h.marques` les pose quand un test le veut.
+vi.mock("@/lib/etablissements/marques-du-rendu", () => ({
+  marquesAConfirmerDuRendu: async () => ({
+    parObligation: h.marques,
+    entrepriseId: null,
+    questions: [],
+  }),
+}));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: "user-1" }),
 }));
@@ -314,6 +327,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
   h.db.verifications = [];
+  h.marques.clear();
   h.db.actions = [];
   h.db.duerp = null;
   h.db.nbEquipements = 3;
@@ -903,5 +917,27 @@ describe("compterObligationsParMois", () => {
     expect(barres.map((b) => b.couvert)).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]);
     expect(barres[8].aVenir).toBe(1);
     expect(barres.reduce((n, b) => n + b.retard, 0)).toBe(0);
+  });
+});
+
+describe("getDashboardData — D1 (a), la ligne retenue par prudence (2026-09-28)", () => {
+  // Le score et le compteur du tableau de bord : une ligne échue que seul le
+  // silence de la fiche retient n'y entre pas. Éprouvé en passant
+  // `AUCUNE_PRUDENCE` à `repartirVerifications` dans `getDashboardData`.
+  const OBLIGATION = "incendie-travail-exercice-semestriel";
+
+  it("marquée : ni retard ni pénalité ; sans marque : un retard, et l'indice le paie", async () => {
+    h.db.verifications.push(
+      verif({ id: "ex", obligationId: OBLIGATION, datePrevue: jour(-40) }),
+    );
+    h.marques.set(OBLIGATION, { phrases: ["phrase"], effectif: false });
+    const prudent = await getDashboardData(ETAB);
+    expect(prudent.compteurs.verifsEnRetard).toBe(0);
+    expect(prudent.score.valeur).toBe(100);
+
+    h.marques.clear();
+    const du = await getDashboardData(ETAB);
+    expect(du.compteurs.verifsEnRetard).toBe(1);
+    expect(du.score.valeur).toBeLessThan(100);
   });
 });

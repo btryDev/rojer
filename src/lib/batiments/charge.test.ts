@@ -1,4 +1,5 @@
 // La charge affichée sur une carte-bâtiment du hero.
+import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 //
 // `listerBatimentsAvecCharge` ouvre la base ; ce qu'on vérifie ici est la
 // seule chose qui pourrait diverger silencieusement : que le comptage passe
@@ -33,6 +34,15 @@ const h = vi.hoisted(() => {
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: h.requireUser }));
+// Aucune marque « à confirmer » ici : la prudence a ses propres tests
+// (`calendrier/prudence.test.ts`).
+vi.mock("@/lib/etablissements/marques-du-rendu", () => ({
+  marquesAConfirmerDuRendu: async () => ({
+    parObligation: new Map(),
+    entrepriseId: null,
+    questions: [],
+  }),
+}));
 
 const { listerBatimentsAvecCharge } = await import("./queries");
 
@@ -40,6 +50,7 @@ const NOW = new Date("2026-08-21T14:30:00+02:00");
 
 function verif(datePrevue: string, statut = "planifiee") {
   return {
+    obligationId: "obligation-test",
     statut,
     datePrevue: new Date(datePrevue),
     derniereRealisation: null,
@@ -55,12 +66,12 @@ function verif(datePrevue: string, statut = "planifiee") {
 
 describe("charge d'un bâtiment", () => {
   it("ne compte pas en retard une échéance du jour même", () => {
-    const etat = repartirVerifications([verif("2026-08-21T00:00:00+02:00")], NOW);
+    const etat = repartirVerifications([verif("2026-08-21T00:00:00+02:00")], NOW, AUCUNE_PRUDENCE);
     expect(etat.enRetard).toHaveLength(0);
   });
 
   it("compte en retard l'échéance de la veille", () => {
-    const etat = repartirVerifications([verif("2026-08-20T00:00:00+02:00")], NOW);
+    const etat = repartirVerifications([verif("2026-08-20T00:00:00+02:00")], NOW, AUCUNE_PRUDENCE);
     expect(etat.enRetard).toHaveLength(1);
   });
 
@@ -72,6 +83,7 @@ describe("charge d'un bâtiment", () => {
     const etat = repartirVerifications(
       [
         {
+          obligationId: "obligation-test",
           statut: "realisee_conforme",
           datePrevue: new Date("2026-07-01T00:00:00+02:00"),
           derniereRealisation: null,
@@ -81,19 +93,20 @@ describe("charge d'un bâtiment", () => {
         },
       ],
       NOW,
+      AUCUNE_PRUDENCE,
     );
     expect(etat.enRetard).toHaveLength(0);
   });
 
   it("range dans « sous 30 jours » ce qui tombe dans l'horizon proche", () => {
-    const etat = repartirVerifications([verif("2026-09-10T00:00:00+02:00")], NOW);
+    const etat = repartirVerifications([verif("2026-09-10T00:00:00+02:00")], NOW, AUCUNE_PRUDENCE);
     expect(etat.aVenir).toHaveLength(1);
     expect(etat.enRetard).toHaveLength(0);
   });
 
   it("laisse hors des deux compteurs une échéance lointaine", () => {
     // Ni un retard, ni un engagement de la période : la carte n'en dit rien.
-    const etat = repartirVerifications([verif("2027-03-01T00:00:00+01:00")], NOW);
+    const etat = repartirVerifications([verif("2027-03-01T00:00:00+01:00")], NOW, AUCUNE_PRUDENCE);
     expect(etat.enRetard).toHaveLength(0);
     expect(etat.aVenir).toHaveLength(0);
   });
@@ -106,6 +119,7 @@ describe("charge d'un bâtiment", () => {
         verif("2026-08-21T00:00:00+02:00"),
       ],
       NOW,
+      AUCUNE_PRUDENCE,
     );
     const somme =
       etat.enRetard.length +
@@ -192,6 +206,7 @@ describe("listerBatimentsAvecCharge", () => {
     // que le hero met côte à côte, et c'est elle qui doit tenir.
     const somme = charge.reduce((n, b) => n + b.nbEnRetard, 0);
     const toutes = h.db.verifs as unknown as Array<{
+      obligationId: string;
       statut: string;
       datePrevue: Date;
       periodicite: string;
@@ -201,7 +216,7 @@ describe("listerBatimentsAvecCharge", () => {
     expect(somme).toBe(
       repartirVerifications(
         toutes.map((v) => ({ ...v, derniereRealisation: null })),
-        NOW,
+        NOW, AUCUNE_PRUDENCE
       ).enRetard.length,
     );
   });

@@ -11,6 +11,10 @@ import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { repartirVerifications } from "./etat-verifications";
 import {
+  retenueParPrudence,
+  statutAffichePrudent,
+} from "@/lib/calendrier/prudence";
+import {
   estVerificationArchivee,
   estVerificationRealisee,
   lignePortantSansRendezVous,
@@ -18,7 +22,6 @@ import {
 } from "@/lib/dates/retard";
 import {
   aUnRendezVous,
-  statutAffiche,
   type StatutPeint,
 } from "@/lib/calendrier/etats";
 
@@ -239,7 +242,12 @@ export function ligneVerif(
     // `undefined` n'arrive pas : les deux tableaux n'admettent ni ligne
     // archivée, ni ligne sans rendez-vous (`estEnAttenteDeRapport`,
     // `repartirVerifications`). Le repli garde le type du document.
-    statut: statutAffiche(v, now) ?? (v.statut as StatutPeint),
+    // « À confirmer » là où la date seule dirait « en retard » (D1 (a)) :
+    // une ligne que seul le silence de la fiche retient ne s'imprime pas en
+    // retard dans un document remis à un tiers.
+    statut:
+      statutAffichePrudent(v, now, retenueParPrudence(marques)) ??
+      (v.statut as StatutPeint),
     domaine: obligationParId(v.obligationId)?.domaine ?? null,
     contractuelle: estEcheanceContractuelle(v),
     aConfirmer: marques.get(v.obligationId)?.phrases ?? [],
@@ -379,6 +387,7 @@ export async function construireRegistreData(
         equipements,
         verifs,
         now,
+        retenueParPrudence(marques.parObligation),
       );
       completudes.push(completude);
       return ficheDuPdf(
@@ -539,7 +548,13 @@ export async function construireDossierConformiteData(
     ]);
 
   const now = new Date();
-  const etatVerifs = repartirVerifications(verifs, now);
+  // Les lignes retenues par prudence sortent des compteurs, du score et du
+  // tableau « à rattraper » (D1 (a)) ; elles s'impriment à part, marquées.
+  const etatVerifs = repartirVerifications(
+    verifs,
+    now,
+    retenueParPrudence(marques.parObligation),
+  );
 
   const duerp = etab.duerps[0] ?? null;
   const derniereVersion = duerp?.versions[0] ?? null;
@@ -651,6 +666,11 @@ export async function construireDossierConformiteData(
     // lignes de tableau : le nombre annoncé et le détail imprimé ne peuvent
     // plus diverger.
     verifsEnRetard: etatVerifs.enRetard
+      .map((v) => ligneVerif(v, multiBatiments, now, marques.parObligation))
+      .sort(parEcheanceImprimee),
+    // D1 (a) : ce que seul le silence de la fiche retient — affiché, marqué,
+    // hors des retards et de l'indice.
+    verifsAConfirmer: etatVerifs.retenuesParPrudence
       .map((v) => ligneVerif(v, multiBatiments, now, marques.parObligation))
       .sort(parEcheanceImprimee),
     actionsEnCours:

@@ -334,6 +334,57 @@ describe("compterEtatCalendrier", () => {
   });
 });
 
+describe("compterEtatCalendrier — D1 (a), la prudence (2026-09-28)", () => {
+  // Le compte que lisent la sidebar, le bandeau du calendrier et le tableau de
+  // bord (`compterEtatEcheances`). Les marques viennent du MOTEUR, appelé par
+  // `marquesAConfirmerDuDossier` sur la fiche que rend le mock : un bureau de
+  // trois personnes muet sur les matières de R. 4227-22, cas même de D1.
+  // Éprouvé en retirant la prudence de `repartirVerifications`.
+  const bureau = (matieres: boolean | null) => ({
+    id: "etab-1",
+    entrepriseId: "ent-1",
+    effectifSurSite: 3,
+    estEtablissementTravail: true,
+    estERP: false,
+    estIGH: false,
+    estHabitation: false,
+    typeErp: null,
+    categorieErp: null,
+    classeIgh: null,
+    familleHabitation: null,
+    personnesPresentesHabituellement: null,
+    manipuleMatieresR422722: matieres,
+    comporteLocauxSommeilPublic: null,
+    chiffonsImpregnes: false,
+    entreprise: { effectif: 3 },
+    equipements: [],
+  });
+  const exerciceEchu = {
+    id: "v-exercice",
+    obligationId: "incendie-travail-exercice-semestriel",
+    statut: "planifiee",
+    datePrevue: jour("2026-03-01"),
+    salarieId: null,
+    periodicite: "semestrielle",
+    archiveLe: null,
+    libelleObligation: "Essais du matériel et exercices d'évacuation semestriels",
+  };
+
+  it("muet : l'exercice échu n'est pas un retard ; « oui » : il l'est", async () => {
+    prismaMock.verification.findMany.mockResolvedValue([exerciceEchu]);
+
+    prismaMock.etablissement.findFirst.mockResolvedValue(bureau(null));
+    const muet = await compterEtatCalendrier("etab-1", NOW);
+    expect(muet.enRetard).toBe(0);
+    // Et la ventilation qui nourrit les familles (`repartirRetards`) aussi.
+    expect(Object.values(muet.enRetardParType).reduce((a, b) => a + b, 0)).toBe(0);
+
+    prismaMock.etablissement.findFirst.mockResolvedValue(bureau(true));
+    const repondu = await compterEtatCalendrier("etab-1", NOW);
+    expect(repondu.enRetard).toBe(1);
+  });
+});
+
 describe("grouperParMois", () => {
   it("range chaque occurrence dans son mois civil de Paris", () => {
     const ligne = (id: string, d: Date) =>

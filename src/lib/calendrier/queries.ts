@@ -15,6 +15,8 @@ import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisation
 // lui pour que l'en-tête de la page, le tableau de bord et le dossier de
 // conformité annoncent nécessairement les mêmes nombres.
 import { repartirVerifications } from "@/lib/pdf/etat-verifications";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import { retenueParPrudence } from "./prudence";
 import { porteeBatiment, toutesLesConditions, urgenceSeule } from "./portee";
 import { aUnRendezVous } from "./etats";
 import {
@@ -169,8 +171,13 @@ export async function compterEtatCalendrier(
   filtres: { batimentId?: string } = {},
 ) {
   const user = await requireUser();
-  const verifs = await joindreDernieresRealisations(
-    await prisma.verification.findMany({
+  // Les marques « à confirmer », lues EN MÊME TEMPS que les lignes (D1 (a)) :
+  // une ligne que seul le silence de la fiche retient ne compte pas en retard,
+  // ni dans la sidebar, ni au bandeau, ni au tableau de bord — les trois
+  // lisent ce compte. Mémoïsées sur le rendu : la page qui les lit aussi ne
+  // les recalcule pas.
+  const [lignes, marques] = await Promise.all([
+    prisma.verification.findMany({
       where: toutesLesConditions(
         {
           etablissementId,
@@ -197,11 +204,19 @@ export async function compterEtatCalendrier(
         // Le porteur, pour ventiler par famille (ADR-016) : une ligne à
         // porteur salarié est un titre, pas un contrôle d'appareil.
         salarieId: true,
+        // L'obligation, pour le prédicat « retenue par prudence » (D1 (a)).
+        obligationId: true,
       },
     }),
-  );
+    marquesAConfirmerDuRendu(etablissementId),
+  ]);
+  const verifs = await joindreDernieresRealisations(lignes);
 
-  const etat = repartirVerifications(verifs, now);
+  const etat = repartirVerifications(
+    verifs,
+    now,
+    retenueParPrudence(marques.parObligation),
+  );
   return {
     enRetard: etat.enRetard.length,
     // Le même prédicat que chaque surface qui place une date.

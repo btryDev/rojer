@@ -13,10 +13,8 @@
 // recommandations (même réflexe que `statsActionsEnRetard`, qui refuse de
 // moyenner un retard sur une liste coupée).
 
-import {
-  marquesAConfirmerDuDossier,
-  type MarquesDuDossier,
-} from "@/lib/etablissements/marques-a-confirmer";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import { retenueParPrudence } from "@/lib/calendrier/prudence";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -144,25 +142,9 @@ export type EvenementFenetre = {
   batiment: BatimentEcheance | null;
 };
 
-/**
- * Les marques « à confirmer » du dossier, mémoïsées par `cache()` sur le rendu
- * (contre-revue du lot 1) : le tableau de bord les demandait quatre fois — ses
- * trois fenêtres d'événements et la relance —, et chaque calcul relit
- * l'établissement et son parc. La portée est celle de la requête HTTP, comme
- * `getDashboardData`, et la portée est celle de l'utilisateur connecté, lue
- * ici comme dans `getDashboardData` — pas un propriétaire passé par l'appelant.
- */
-export const marquesAConfirmerDuRendu = cache(
-  async function marquesAConfirmerDuRendu(
-    etablissementId: string,
-  ): Promise<MarquesDuDossier> {
-    const user = await requireUser();
-    return marquesAConfirmerDuDossier(prisma, {
-      id: etablissementId,
-      entreprise: { userId: user.id },
-    });
-  },
-);
+// `marquesAConfirmerDuRendu` vit dans `etablissements/marques-du-rendu.ts`
+// depuis le 2026-09-28 (D1 (a)) ; réexportée pour les appelants existants.
+export { marquesAConfirmerDuRendu };
 
 /**
  * Liste tous les événements de vérification sur une fenêtre glissante
@@ -248,6 +230,7 @@ export async function listerEvenementsFenetre(
       )
     : verifs;
 
+  const prudence = retenueParPrudence(marques.parObligation);
   return retenues.flatMap((v) =>
     // `derniereRealisation: null` est un choix, pas un oubli : cette fenêtre
     // n'annonce que des échéances et écarte les réalisations juste en
@@ -261,7 +244,12 @@ export async function listerEvenementsFenetre(
         id: v.id,
         libelle: libelleCourt(v.libelleObligation),
         date: lec.date,
-        tone: TON_REGISTRE[lec.registre],
+        // D1 (a) : une échéance passée que seul le silence de la fiche
+        // retient n'est pas une alerte — l'attention, comme « à planifier ».
+        tone:
+          lec.registre === "enRetard" && prudence(v)
+            ? "warn"
+            : TON_REGISTRE[lec.registre],
         sansEcheance: !aUnRendezVous(v, now),
         type: typeDeVerification(v),
         contractuelle: estEcheanceContractuelle(v),
@@ -304,8 +292,8 @@ export async function compterVerifsParEquipement(
     ajouterMois(now, -MOIS_FENETRE_HISTORIQUE),
   );
 
-  const verifs = await joindreDernieresRealisations(
-    await prisma.verification.findMany({
+  const [lignes, marques] = await Promise.all([
+    prisma.verification.findMany({
       where: {
         etablissementId,
         etablissement: { entreprise: { userId: user.id } },
@@ -313,6 +301,9 @@ export async function compterVerifsParEquipement(
       select: {
         id: true,
         equipementId: true,
+        // L'obligation, pour la prudence (D1 (a)) : la pastille rouge d'un
+        // appareil ne compte pas une ligne que seul le silence retient.
+        obligationId: true,
         statut: true,
         datePrevue: true,
         periodicite: true,
@@ -324,7 +315,10 @@ export async function compterVerifsParEquipement(
         libelleObligation: true,
       },
     }),
-  );
+    marquesAConfirmerDuRendu(etablissementId),
+  ]);
+  const verifs = await joindreDernieresRealisations(lignes);
+  const prudence = retenueParPrudence(marques.parObligation);
 
   const map = new Map<string, StatsEquipement>();
   const getStats = (id: string): StatsEquipement => {
@@ -356,7 +350,8 @@ export async function compterVerifsParEquipement(
     // dernier, et les contrôles faits se comptent sur les rapports, juste en
     // dessous.
     const etat = classerVerification(v, now);
-    if (etat === "enRetard") s.enRetard += 1;
+    // D1 (a) : retenue par prudence, la ligne ne rougit pas l'appareil.
+    if (etat === "enRetard" && !prudence(v)) s.enRetard += 1;
     else if (etat === "aPlanifier") s.aPlanifier += 1;
     else if (etat === "proche") s.sous30j += 1;
 
@@ -711,6 +706,7 @@ export const getDashboardData = cache(async function getDashboardData(
     nbRapports,
     etatsPermanents,
     rapports12m,
+    marquesDossier,
   ] = await Promise.all([
     // Un seul passage sur les vérifications qui comptent : les occurrences
     // ouvertes (toutes, sans plafond — leur nombre est borné par le
@@ -750,6 +746,10 @@ export const getDashboardData = cache(async function getDashboardData(
         // les faussait tous les trois d'un coup.
         archiveLe: true,
         libelleObligation: true,
+        // L'obligation, pour le prédicat « retenue par prudence » (D1 (a)) :
+        // une ligne que seul le silence de la fiche retient ne compte ni en
+        // retard ni dans l'indice.
+        obligationId: true,
         // La source de la prescription, pour que le board dise ce qu'une
         // ligne contractuelle est (ADR-032). Le tableau de bord est l'écran
         // le plus lu du produit : une échéance d'assureur qui s'y présente
@@ -823,13 +823,18 @@ export const getDashboardData = cache(async function getDashboardData(
         ...WHERE_RAPPORT_REALISE,
       },
     }),
+    // Les marques « à confirmer » : mémoïsées sur le rendu, partagées avec les
+    // fenêtres d'événements et le compteur de retards de la même page.
+    marquesAConfirmerDuRendu(etablissementId),
   ]);
 
   // Répartition unique, partagée avec les documents générés : quatre
-  // ensembles disjoints, dont la somme sert de dénominateur au score.
+  // ensembles disjoints, dont la somme sert de dénominateur au score. Les
+  // lignes retenues par prudence en sortent (D1 (a)).
   const etatVerifs = repartirVerifications(
     await joindreDernieresRealisations(verifications),
     now,
+    retenueParPrudence(marquesDossier.parObligation),
   );
   const actionsEnRetard = actionsOuvertes.filter((a) =>
     estActionEnRetard(a, now),

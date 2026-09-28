@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 import {
   contenuTenuAilleursDepuis,
   type VerificationTenue,
@@ -27,6 +28,7 @@ const sectionExtincteurs: SectionRegistre = {
 function verif(partial: Partial<VerificationTenue> = {}): VerificationTenue {
   return {
     id: "v1",
+    obligationId: "extincteur-annuelle",
     libelleObligation: "Vérification annuelle des extincteurs",
     datePrevue: new Date("2026-11-02T00:00:00Z"),
     derniereRealisation: null,
@@ -53,6 +55,7 @@ function lignesDe(verifications: VerificationTenue[], now: Date = NOW) {
     [],
     verifications,
     now,
+    AUCUNE_PRUDENCE,
   );
   return contenu?.lignes ?? [];
 }
@@ -230,5 +233,18 @@ describe("registre — marquage des échéances contractuelles", () => {
       verif({ prescription: { source: "demande_assureur" } }),
     ]);
     expect(ligne.meta ?? "").not.toContain("assurance");
+  });
+});
+
+describe("D1 (a) : la fiche remise en contrôle ne peint pas « en retard » une ligne prudente", () => {
+  // Éprouvé en rendant `statutAffiche` nu dans `contenuTenuAilleursDepuis`.
+  it("échue et retenue par prudence ⇒ « à confirmer » ; sans prudence ⇒ « en retard »", () => {
+    const v = verif({ statut: "planifiee", datePrevue: new Date("2026-03-01T00:00:00Z") });
+    const prudente = contenuTenuAilleursDepuis(
+      "etab-1", "3.1", sectionExtincteurs, [], [v], NOW,
+      (l) => l.obligationId === v.obligationId,
+    );
+    expect(prudente?.lignes[0]?.statut).toBe("a_confirmer");
+    expect(lignesDe([v])[0]?.statut).toBe("en_retard");
   });
 });

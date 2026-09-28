@@ -29,6 +29,7 @@ import {
   type EntreeScoreConformite,
 } from "../src/lib/dashboard/score";
 import { repartirVerifications } from "../src/lib/pdf/etat-verifications";
+import { AUCUNE_PRUDENCE } from "../src/lib/calendrier/prudence";
 import { ajouterMois, cleJourCivil, debutDuJour } from "../src/lib/dates";
 import type { VerificationDatee } from "../src/lib/dates/retard";
 
@@ -214,7 +215,13 @@ console.log(
 );
 
 for (const d of DOSSIERS) {
-  const apres = repartirVerifications(d.faits.map(ligneApres), MAINTENANT);
+  // Mesure historique de l'ADR-034 : aucun dossier réel, donc aucune ligne
+  // retenue par prudence (D1 (a) est postérieure à la mesure).
+  const apres = repartirVerifications(
+    d.faits.map((f) => ({ ...ligneApres(f), obligationId: "mesure" })),
+    MAINTENANT,
+    AUCUNE_PRUDENCE,
+  );
   const immobile = repartirAvant(d.faits.map((f) => ligneAvant(f, false)));
   const vivant = repartirAvant(d.faits.map((f) => ligneAvant(f, true)));
 
