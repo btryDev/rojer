@@ -10,7 +10,7 @@
 // « où en est chacun ». Deux questions, deux écrans, une seule donnée.
 
 import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
-import { retenueParSaMarque } from "@/lib/calendrier/prudence";
+import { porteSaMarque, retenueParSaMarque } from "@/lib/calendrier/prudence";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
@@ -170,21 +170,23 @@ export function repartirParEquipement(
     if (!courant.periodicites.includes(v.periodicite)) {
       courant.periodicites.push(v.periodicite);
     }
-    // Retenue par prudence (D1 (a)) : une ligne ouverte que seul le silence
-    // de la fiche retient. Elle porte sa mention, et ne rougit pas l'appareil.
-    // Le prédicat partagé, pas une recopie (contre-lecture du lot 3).
-    const prudente =
-      v.archiveLe === null &&
-      v.obligationId !== undefined &&
-      retenueParSaMarque({
-        aConfirmer: marques.get(v.obligationId)?.phrases,
-        prescriptionId: v.prescriptionId,
-      });
-    if (prudente && v.obligationId !== undefined) {
-      for (const phrase of marques.get(v.obligationId)?.phrases ?? []) {
+    // DEUX USAGES, DÉCOUPLÉS (contre-revue du lot 3, 2026-09-28) :
+    //  - la MENTION suit la marque — une ligne ouverte que le silence de la
+    //    fiche retient la porte, prescrite ou non, comme au dossier PDF ;
+    //  - la PRUDENCE (D1 (a)) décide du retard — seulement sans prescription :
+    //    une ligne rythmée par une autorité rougit l'appareil.
+    // Les prédicats partagés, pas une recopie.
+    const phrases =
+      v.archiveLe === null && v.obligationId !== undefined
+        ? (marques.get(v.obligationId)?.phrases ?? [])
+        : [];
+    const ligneMarquee = { aConfirmer: phrases, prescriptionId: v.prescriptionId };
+    if (porteSaMarque(ligneMarquee)) {
+      for (const phrase of phrases) {
         if (!courant.aConfirmer.includes(phrase)) courant.aConfirmer.push(phrase);
       }
     }
+    const prudente = retenueParSaMarque(ligneMarquee);
 
     // Les mêmes lectures que le calendrier, prises à la même source : le fait
     // (sur le dernier rapport) et l'échéance ouverte (ADR-034). Un compte

@@ -61,6 +61,22 @@ export function retenueParPrudence(
 export const AUCUNE_PRUDENCE: RetenueParPrudence = () => false;
 
 /**
+ * DEUX NOTIONS, À NE PAS CONFONDRE (contre-revue du lot 3, 2026-09-28).
+ *
+ *  - La ligne PORTE une marque « à confirmer » : le silence de la fiche est ce
+ *    qui retient son obligation. La MENTION s'affiche alors partout, que la
+ *    ligne soit prescrite ou non — une prescription (ADR-035) ne s'applique
+ *    qu'à une obligation déjà applicable, et ne dit rien de ce silence.
+ *  - La ligne est RETENUE PAR PRUDENCE : elle sort des retards et de l'indice.
+ *    Seulement sans prescription — ce qu'une autorité a rythmé reste en retard.
+ *
+ * `porteSaMarque` dit la première, `retenueParSaMarque` la seconde.
+ */
+export function porteSaMarque(v: { aConfirmer?: readonly string[] }): boolean {
+  return (v.aConfirmer?.length ?? 0) > 0;
+}
+
+/**
  * La même prudence, lue sur une ligne qui PORTE déjà ses phrases « à confirmer »
  * (`aConfirmer`, rempli depuis `marquesAConfirmerDuDossier` par la page qui la
  * sert) : les widgets du tableau de bord reçoivent la ligne, pas la carte des
@@ -70,7 +86,7 @@ export function retenueParSaMarque(v: {
   aConfirmer?: readonly string[];
   prescriptionId: string | null;
 }): boolean {
-  return v.prescriptionId === null && (v.aConfirmer?.length ?? 0) > 0;
+  return v.prescriptionId === null && porteSaMarque(v);
 }
 
 /**
