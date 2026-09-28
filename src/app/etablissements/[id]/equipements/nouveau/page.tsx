@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { questionsExigeesParCategorie } from "@/lib/equipements/reponses-exigees";
 import { EquipementForm } from "@/components/equipements/EquipementForm";
 import { creerEquipement } from "@/lib/equipements/actions";
 import { getEtablissement } from "@/lib/etablissements/queries";
@@ -72,6 +73,7 @@ export default async function NouvelEquipementPage({
                 : undefined
             }
             estERP={etab.estERP}
+            questionsExigees={questionsExigeesParCategorie()}
             libelleSubmit="Créer l'équipement"
             labelAnnuler={{
               libelle: "Annuler",

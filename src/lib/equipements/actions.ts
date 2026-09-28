@@ -15,11 +15,19 @@ import {
   regenererApresMutation,
 } from "@/lib/calendrier/regeneration-sure";
 import {
+  CHAMPS_TRI_ETAT,
   equipementSchema,
   normaliserFormDataEquipement,
+  normaliserTriEtat,
   serialiserCaracteristiques,
+  type ChampTriEtat,
 } from "./schema";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import {
+  questionsExigeesPour,
+  reponsesExigeesManquantes,
+} from "./reponses-exigees";
+import type { ReponseParametrage } from "@/lib/etablissements/parametrage";
 
 /**
  * Toute mutation d'équipement invalide le calendrier de vérifications : on
@@ -83,6 +91,10 @@ export async function creerEquipement(
       message: "Formulaire invalide",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
+  }
+  const exigees = reponsesExigeesManquantes(parsed.data);
+  if (exigees) {
+    return { status: "error", message: "Formulaire invalide", fieldErrors: exigees };
   }
 
   const caracs = serialiserCaracteristiques(parsed.data);
@@ -149,6 +161,10 @@ export async function modifierEquipement(
       message: "Formulaire invalide",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
+  }
+  const exigees = reponsesExigeesManquantes(parsed.data);
+  if (exigees) {
+    return { status: "error", message: "Formulaire invalide", fieldErrors: exigees };
   }
 
   const caracs = serialiserCaracteristiques(parsed.data);
@@ -332,4 +348,62 @@ export async function creerEquipementsDepuisPreRemplissage(
     created: result.count,
     ...(regen.ok ? {} : { avertissement: regen.message }),
   };
+}
+
+/**
+ * La relance d'un appareil muet (D29 (a)) : une question exigée, répondue
+ * depuis le tableau de bord. Même patron que les questions de la fiche
+ * (`etablissements/parametrage.ts`) : l'appartenance d'abord, par
+ * l'établissement de l'appareil ; « oui » ou « non », jamais de repli ; la
+ * propriété écrite dans le JSON sans toucher aux autres ; le calendrier
+ * régénéré, et son échec dit plutôt que tu.
+ */
+export async function repondreQuestionEquipement(
+  equipementId: string,
+  champ: ChampTriEtat,
+  _prev: ReponseParametrage,
+  formData: FormData,
+): Promise<ReponseParametrage> {
+  const eq = await prisma.equipement.findUnique({
+    where: { id: equipementId },
+    select: { etablissementId: true, categorie: true, caracteristiques: true },
+  });
+  if (!eq) return { status: "error", message: "Équipement introuvable." };
+  await assertEtablissementOwnership(eq.etablissementId);
+
+  // Seule une question que la décision exige pour CETTE catégorie : l'action
+  // n'écrit pas n'importe quelle clé qu'on lui poste.
+  if (
+    !(CHAMPS_TRI_ETAT as readonly string[]).includes(champ) ||
+    !questionsExigeesPour(eq.categorie as CategorieEquipement).includes(champ)
+  ) {
+    return { status: "error", message: "Question inconnue pour cet appareil." };
+  }
+  const brut = formData.get("reponse");
+  const reponse = brut === "oui" || brut === "non" ? normaliserTriEtat(brut) : undefined;
+  if (reponse === undefined) {
+    return { status: "error", message: "Répondez oui ou non." };
+  }
+
+  const avant =
+    eq.caracteristiques !== null &&
+    typeof eq.caracteristiques === "object" &&
+    !Array.isArray(eq.caracteristiques)
+      ? (eq.caracteristiques as Record<string, unknown>)
+      : {};
+  await prisma.equipement.update({
+    where: { id: equipementId },
+    data: {
+      caracteristiques: { ...avant, [champ]: reponse } as Prisma.InputJsonValue,
+    },
+  });
+
+  const regen = await regenererCalendrier(eq.etablissementId);
+  revalidatePath(`/etablissements/${eq.etablissementId}`);
+  revalidatePath(`/etablissements/${eq.etablissementId}/equipements`);
+  revalidatePath(`/etablissements/${eq.etablissementId}/equipements/${equipementId}`);
+  revalidatePath(`/etablissements/${eq.etablissementId}/calendrier`);
+  return regen.ok
+    ? { status: "success" }
+    : { status: "success_avec_avertissement", message: regen.message };
 }

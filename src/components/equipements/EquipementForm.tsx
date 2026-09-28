@@ -202,6 +202,10 @@ type Props = {
   /** Le régime de l'établissement : hors ERP, la question du groupe
    *  électrogène ne décide de rien et n'est pas posée (C41). */
   estERP?: boolean;
+  /** D29 (a) : par catégorie, les questions dont la réponse est EXIGÉE — calculées
+   *  au serveur (`questionsExigeesParCategorie`, qui appelle le moteur) et
+   *  passées ici, la catégorie changeant côté client. */
+  questionsExigees?: Partial<Record<CategorieEquipement, readonly ChampTriEtat[]>>;
 };
 
 function toIsoDate(d: Date | null | undefined): string {
@@ -217,6 +221,7 @@ export function EquipementForm({
   libelleSubmit,
   labelAnnuler,
   estERP,
+  questionsExigees = {},
 }: Props) {
   const multiBatiments = batiments.length > 1;
   const [state, formAction, pending] = useActionState<
@@ -461,6 +466,7 @@ export function EquipementForm({
                 champ={champ}
                 defaut={valeurTriEtat(valeursInitiales?.[champ])}
                 erreur={err(champ)}
+                exigee={(questionsExigees[categorie] ?? []).includes(champ)}
               />
             ))}
           </div>
@@ -522,10 +528,14 @@ function QuestionTriEtat({
   champ,
   defaut,
   erreur,
+  exigee = false,
 }: {
   champ: ChampTriEtat;
   defaut: string;
   erreur?: string;
+  /** D29 (a) : « Je ne sais pas encore » n'est pas offert, et aucune réponse
+   *  n'est présélectionnée — le serveur refuse l'absence (comme A2). */
+  exigee?: boolean;
 }) {
   const { question, aide } = QUESTIONS_TRI_ETAT[champ];
   return (
@@ -535,6 +545,7 @@ function QuestionTriEtat({
         htmlFor={champ}
       >
         {question}
+        {exigee ? " *" : ""}
       </label>
       <Aide id={`${champ}-aide`}>{aide}</Aide>
       <select
@@ -544,12 +555,26 @@ function QuestionTriEtat({
         className="champ-board mt-2 sm:w-64"
         aria-describedby={`${champ}-aide`}
         aria-invalid={Boolean(erreur)}
+        required={exigee}
       >
-        {VALEURS_TRI_ETAT.map((v) => (
-          <option key={v.value} value={v.value}>
-            {v.label}
-          </option>
-        ))}
+        {exigee ? (
+          <>
+            <option value="" disabled>
+              Répondez oui ou non
+            </option>
+            {VALEURS_TRI_ETAT.filter((v) => v.value !== "").map((v) => (
+              <option key={v.value} value={v.value}>
+                {v.label}
+              </option>
+            ))}
+          </>
+        ) : (
+          VALEURS_TRI_ETAT.map((v) => (
+            <option key={v.value} value={v.value}>
+              {v.label}
+            </option>
+          ))
+        )}
       </select>
       <Erreur message={erreur} />
     </div>

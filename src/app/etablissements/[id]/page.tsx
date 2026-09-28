@@ -22,6 +22,9 @@ import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
+import { appareilsMuets } from "@/lib/equipements/reponses-exigees";
+import { LIBELLE_CARACTERISTIQUE } from "@/lib/equipements/caracteristiques";
+import { repondreQuestionEquipement } from "@/lib/equipements/actions";
 import {
   listerBatimentsAvecCharge,
   porteursDeLaPlaqueZones,
@@ -324,6 +327,28 @@ export default async function EtablissementPage({
             cta: "Répondre sur la fiche",
           },
     );
+  }
+  // ── La relance des appareils muets (D29 (a), 2026-09-28) ──
+  //
+  // Un appareil de levage sans réponse sur une question dont le silence change
+  // le rythme de sa VGP : le moteur retient le rythme le plus court, et la
+  // question se répond ici, appareil par appareil. Les appareils nés du
+  // pré-remplissage, sans caractéristiques, arrivent tous par ici.
+  for (const { equipementId, libelle, champ } of appareilsMuets(equipements)) {
+    etapesOnboarding.push({
+      id: `relance-equipement-${equipementId}-${champ}`,
+      titre: `« ${libelle} » — ${LIBELLE_CARACTERISTIQUE[champ]} ?`,
+      pourquoi:
+        "La réponse décide du rythme de sa vérification générale périodique — trois, six ou douze mois (arrêté du 1er mars 2004, art. 23). Tant qu'elle manque, Rojer retient le rythme le plus court.",
+      faite: false,
+      question: (
+        <QuestionParametrage
+          action={repondreQuestionEquipement.bind(null, equipementId, champ)}
+          labelOui="Oui"
+          labelNon="Non"
+        />
+      ),
+    });
   }
   const onboardingFini = etapesOnboarding.every((e) => e.faite);
 

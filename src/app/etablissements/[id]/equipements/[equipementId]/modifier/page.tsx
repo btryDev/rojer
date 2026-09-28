@@ -5,6 +5,7 @@ import {
   type ChampTriEtat,
   type EquipementInput,
 } from "@/lib/equipements/schema";
+import { questionsExigeesParCategorie } from "@/lib/equipements/reponses-exigees";
 import { EquipementForm } from "@/components/equipements/EquipementForm";
 import { modifierEquipement } from "@/lib/equipements/actions";
 import { getEquipement } from "@/lib/equipements/queries";
@@ -152,6 +153,7 @@ export default async function ModifierEquipementPage({
               ...reponsesTriEtat(caracs),
             }}
             estERP={eq.etablissement.estERP}
+            questionsExigees={questionsExigeesParCategorie()}
             libelleSubmit="Enregistrer"
             labelAnnuler={{
               libelle: "Annuler",
