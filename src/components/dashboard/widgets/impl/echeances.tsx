@@ -44,7 +44,12 @@ import type { DashboardBundle } from "../types";
 function classifier(
   v: DashboardBundle["prochainesVerifs"][number],
   aujourdhui: Date,
-): { tone: "alerte" | "warn" | "ok"; libelleDate: string } {
+): {
+  tone: "alerte" | "warn" | "ok";
+  libelleDate: string;
+  /** D1 (a) : échue, mais retenue par le seul silence de la fiche. */
+  aConfirmer?: true;
+} {
   // Même prédicat que partout ailleurs (ADR-011) : le retard commence à
   // minuit, heure de Paris, du jour qui suit l'échéance — et c'est la
   // date qui le décide, pas le statut. La liste ne porte que des
@@ -65,7 +70,18 @@ function classifier(
   const echeanceConnue = aUnRendezVous(v, aujourdhui);
   // D1 (a) : une ligne que seul le silence de la fiche retient n'est pas en
   // alerte — elle s'affiche, avec sa mention « à confirmer », sans le rouge.
-  if (estVerificationEnRetard(v, aujourdhui) && !retenueParSaMarque(v)) {
+  if (estVerificationEnRetard(v, aujourdhui) && retenueParSaMarque(v)) {
+    // Échue, mais seul le silence de la fiche la retient : l'attention, pas
+    // l'alerte — et ni « Planifié » ni « Dépassé », que rien n'établit.
+    return {
+      tone: "warn",
+      libelleDate: echeanceConnue
+        ? formaterDateCourteFr(v.datePrevue)
+        : LIBELLE_SANS_ECHEANCE,
+      aConfirmer: true,
+    };
+  }
+  if (estVerificationEnRetard(v, aujourdhui)) {
     return {
       tone: "alerte",
       libelleDate: echeanceConnue
@@ -174,8 +190,9 @@ export function WidgetProchainesEcheances({
               : c.tone === "warn"
                 ? "aPlanifier"
                 : "lointain";
-          const pillLabel =
-            c.tone === "alerte"
+          const pillLabel = c.aConfirmer
+            ? "À confirmer"
+            : c.tone === "alerte"
               ? "Dépassé"
               : c.tone === "warn"
                 ? "À planifier"

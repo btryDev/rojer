@@ -120,3 +120,25 @@ describe("widget « Prochaines échéances » — les retards sans date hors des
     );
   });
 });
+
+describe("widget « Prochaines échéances » — D1 (a), la ligne retenue par prudence (2026-09-28)", () => {
+  // Échue, mais seul le silence de la fiche la retient : ni « Dépassé » ni
+  // « Planifié ». Éprouvé en retirant la branche prudente de `classifier`.
+  it("dit « À confirmer », jamais « Dépassé » ; sans marque, « Dépassé »", () => {
+    const echue = ligne("p1", "2026-09-01");
+    const prudente = render(
+      <WidgetProchainesEcheances
+        bundle={bundle([{ ...echue, aConfirmer: ["phrase"] } as ReturnType<typeof ligne>])}
+        variant="liste"
+      />,
+    ).container.textContent ?? "";
+    expect(prudente).toContain("À confirmer");
+    expect(prudente).not.toContain("Dépassé");
+    cleanup();
+
+    const due = render(
+      <WidgetProchainesEcheances bundle={bundle([echue])} variant="liste" />,
+    ).container.textContent ?? "";
+    expect(due).toContain("Dépassé");
+  });
+});
