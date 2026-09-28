@@ -515,3 +515,42 @@ le texte, et sont corrigés par `1f80dd26` — voir D7.]
 **Recommandation :** scinder `sertAuLevageDePersonnes` en « transport de personnes » et
 « élévation d'un poste de travail » (le texte les distingue) ; relire l'art. 22 par
 l'API pour l'examen. Chacun change un rythme en service.
+
+## D28 — Un appareil qui change de VGP repart sans son dernier contrôle
+
+**Constat** (contre-revue du lot 3). Les cinq VGP de levage (`levage.ts` :
+`-annuelle-charges`, `-semestrielle-chariot-gerbeur`, `-semestrielle-personnes`,
+`-semestrielle-force-humaine`, `-trimestrielle-force-humaine`) ne se déclarent aucune
+succession (`succedeA` absent, vérifié par `grep`). Quand une réponse sur la fiche de
+l'appareil — ou le passage au référentiel `2026-09-28.2` — fait changer sa VGP,
+l'ancienne ligne est archivée avec ses rapports, et la nouvelle naît « à planifier » :
+un palan vérifié en janvier ne sait plus qu'il l'a été.
+
+**Options.** (a) Les lignes de VGP d'un même appareil héritent du dernier rapport
+réalisé (déclarer la succession entre elles, mécanisme de `succedeA` ; le rythme
+nouveau court depuis ce rapport). (b) Garder : la ligne neuve repart « à planifier ».
+
+**Recommandation : (a).** Le contrôle a eu lieu ; seul son rythme change. Faire
+repartir l'appareil « à planifier » affirme qu'il n'a jamais été vérifié. Change le
+calendrier : moteur ou référentiel neuf, test du réconciliateur.
+
+## D29 — La VGP au silence sur la force humaine : trois mois ou six ?
+
+**Constat** (contre-revue du lot 3). Depuis `1f80dd26`, le silence retient le rythme
+le plus exigeant qu'une réponse possible donnerait : un appareil muet sur la force
+humaine qui peut lever des personnes reçoit la trimestrielle (art. 23 b)), chariots
+électriques compris — quand, avant, un chariot déclaré recevait six mois. Cela
+réécrit des lignes en service au merge.
+
+**Options.**
+- **(a)** Garder trois mois au silence, avec la mention qui dit pourquoi (codée dans
+  tous les cas), la question « force humaine » rendue obligatoire à la déclaration
+  d'un appareil de levage, et la relance des appareils muets.
+- **(b)** Six mois au silence, en acceptant de sous-appliquer à l'appareil manuel qui
+  élève un poste de travail.
+
+**Recommandation : (a).** C'est la règle du non-renseigné (« l'incertitude ne réduit
+jamais la couverture »), et l'erreur reste visible pour qui la subit : le libellé dit
+pourquoi, et une réponse la lève. (b) cache l'erreur à celui qui la subirait. La
+question obligatoire et la relance ne sont PAS codées tant que la propriétaire n'a
+pas tranché.
