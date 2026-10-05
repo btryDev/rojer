@@ -437,12 +437,15 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
     intitule:
       "Des salariés travaillent-ils habituellement entre minuit et 5 heures ?",
     risqueIdAssocie: "trv-travail-nuit",
-    // R. 4624-18 : le travailleur de nuit de L. 3122-5 passe sa visite
-    // PRÉALABLEMENT à l'affectation. La question ne qualifie pas le
-    // travailleur de nuit (voir plus haut) ; c'est pourquoi le titre se lit
-    // sur la fiche comme « si cette personne est concernée », jamais comme dû
-    // à tout l'effectif.
-    declencheTitres: ["sante-travail-salarie-vip-adaptee"],
+    // PAS DE `declencheTitres`, et c'est délibéré (relecture du 2026-10-05).
+    // La VIP adaptée est fondée sur R. 4624-17 et R. 4624-18, qui la rendent
+    // due aussi au travailleur handicapé, au pensionné d'invalidité et au
+    // moins de dix-huit ans : un « non » à cette question aurait fait dire à
+    // la fiche d'un apprenti que la visite n'était due à personne. Et la
+    // question ne qualifie pas le travailleur de nuit de L. 3122-5 — voir
+    // plus haut. Les notesInternes de `sante-travail-salarie-vip-adaptee`
+    // l'interdisaient déjà : ce serait détourner une réponse d'établissement
+    // en donnée individuelle.
   },
   {
     // Ne prononce jamais « agent biologique » : un dirigeant de TPE ne sait

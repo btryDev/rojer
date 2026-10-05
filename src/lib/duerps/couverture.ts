@@ -64,7 +64,8 @@ export type UniteCouverture = UniteEvaluable & {
  * Une clé absente et une valeur `undefined` disent la même chose — « personne
  * n'a répondu » — et ne disent surtout pas « non ». C'est la doctrine que
  * `QuestionTransverseRow.tsx` tient à l'écran (aucun des deux boutons mis en
- * avant tant que le refus n'est pas persisté) et que `estHorsReferentiel`
+ * avant tant que rien n'est répondu — le refus y est persisté depuis
+ * l'ADR-038) et que `estHorsReferentiel`
  * tient sur les snapshots (`undefined` n'est pas un `null`) : sur un document
  * conservé quarante ans, écrire une réponse que personne n'a donnée est une
  * faute plus grave que d'avouer qu'on n'a pas posé la question.

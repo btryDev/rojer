@@ -48,6 +48,18 @@ export function QuestionTransverseRow({
   // croyant avoir répondu.
   const repondre = (valeur: boolean | null) => {
     if (valeur === VALEUR[reponse]) return;
+    // Quitter un « oui » supprime le risque, sa cotation et ses actions
+    // (cascade). Le « Non » le faisait déjà sans prévenir ; « retirer ma
+    // réponse », lien d'apparence anodine, en est devenu une seconde porte
+    // (relecture du 2026-10-05). On demande, sur les deux.
+    if (
+      reponse === "oui" &&
+      !window.confirm(
+        `Le risque « ${libelleRisque} » sera retiré de votre DUERP, avec sa cotation et ses actions. Continuer ?`,
+      )
+    ) {
+      return;
+    }
     setEchec(false);
     startTransition(async () => {
       try {

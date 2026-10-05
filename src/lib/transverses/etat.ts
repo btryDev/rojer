@@ -61,3 +61,18 @@ export function questionTransverseParId(
 ): QuestionDetection | undefined {
   return questionsDetectionTransverses.find((q) => q.id === id);
 }
+
+/**
+ * Les titres du catalogue salarié dont la question répond « non » : ceux que
+ * le dirigeant a déclaré, dans les mots de l'article, ne concerner personne.
+ * Un silence n'y entre jamais.
+ */
+export function titresDontLaQuestionRepondNon(
+  repondues: readonly QuestionTransverseRepondue[],
+): ReadonlySet<string> {
+  return new Set(
+    repondues
+      .filter((x) => x.reponse === "non")
+      .flatMap((x) => x.question.declencheTitres ?? []),
+  );
+}

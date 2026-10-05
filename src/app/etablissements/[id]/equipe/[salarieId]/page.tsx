@@ -27,7 +27,8 @@ import { declarerTitre } from "@/lib/salaries/actions";
 import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-evenementielles";
 import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
 import { chargerReponsesTransverses } from "@/lib/transverses/queries";
-import type { ObligationPorteeParSalarie } from "@/lib/referentiels/conformite";
+import { CarteTitresDuDuerp } from "@/components/salaries/CarteTitresDuDuerp";
+import { ReferenceFondatrice } from "@/components/salaries/ReferenceFondatrice";
 import {
   CHAMP_ETAT,
   ENCRE_ETAT,
@@ -415,78 +416,13 @@ export default async function SalarieDetailPage({
               )}
             </CarteFiche>
 
-            {/* CE QUE LE DUERP REND DÛ À UNE PARTIE DE L'EFFECTIF (ADR-038).
-                Le produit ne déduit pas qui conduit un engin ou opère sur
-                l'installation électrique : il lit la réponse du document unique
-                à une question rédigée sur l'article qui fonde le titre, et la
-                pose ici. Les trois réponses se montrent — le « non » aussi,
-                pour rester visible et corrigeable par qui le subit. Un seul
-                questionnaire : le lien mène à la question du DUERP. */}
-            <CarteFiche titreFort="Formations liées aux risques du poste">
-              <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Ces titres ne sont dus qu&apos;aux salariés exposés au fait que
-                décrit chaque question. C&apos;est votre évaluation des risques
-                qui dit si ce fait existe dans l&apos;établissement ; vous seul
-                savez si cette personne est concernée — si elle l&apos;est,
-                déclarez son titre ci-dessous.
-              </p>
-              <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
-                {duerpDeLaFiche.map(({ question, reponse, titres }) => (
-                  <li
-                    key={question.id}
-                    className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-4 py-3.5"
-                  >
-                    <p className="m-0 text-[13.5px] font-semibold leading-tight text-[color:var(--board-slate-ink)]">
-                      {question.intitule}
-                    </p>
-                    <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                      {reponse === "oui"
-                        ? "Votre DUERP répond oui."
-                        : reponse === "non"
-                          ? "Votre DUERP répond non : ces titres ne sont proposés à personne. Si c'est inexact, corrigez la réponse."
-                          : "Votre évaluation des risques n'a pas encore répondu à cette question."}{" "}
-                      <Link
-                        href={lienVersLaQuestion(question.id)}
-                        className="text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
-                      >
-                        {reponse === "sans_reponse"
-                          ? "Répondre dans le DUERP →"
-                          : "Voir la question dans le DUERP →"}
-                      </Link>
-                    </p>
-                    {reponse === "oui" && (
-                      <ul className="m-0 mt-3 flex list-none flex-col gap-3 p-0">
-                        {titres.map(({ obligation, condition, dernierTitreLe }) => (
-                          <li key={obligation.id}>
-                            <p className="m-0 text-[13px] font-semibold leading-tight text-[color:var(--board-slate-ink)]">
-                              {obligation.libelle}
-                            </p>
-                            {condition && (
-                              <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                                {/^ils? /.test(condition) ? "Dû s'" : "Dû si "}
-                                {condition}.
-                              </p>
-                            )}
-                            <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                              {dernierTitreLe
-                                ? `Titre déclaré pour cette personne, délivré le ${formaterDateLongueFr(dernierTitreLe)}.`
-                                : "Aucun titre déclaré pour cette personne. Ce n'est pas un retard : Rojer ne sait pas si elle est concernée."}
-                            </p>
-                            <ReferenceFondatrice obligation={obligation} />
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {reponse === "non" && (
-                      <p className="m-0 mt-2 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                        Titres concernés :{" "}
-                        {titres.map((t) => t.obligation.libelle).join(" ; ")}.
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </CarteFiche>
+            {/* Ce que le DUERP rend dû à une partie de l'effectif (ADR-038) :
+                au-dessus du formulaire, comme la carte précédente — on lit ce
+                qui est dû avant ce qu'on peut saisir. */}
+            <CarteTitresDuDuerp
+              questions={duerpDeLaFiche}
+              lienVersLaQuestion={lienVersLaQuestion}
+            />
 
             <CarteFiche titreFort="Déclarer un titre">
               {catalogue.length === 0 ? (
@@ -568,38 +504,5 @@ export default async function SalarieDetailPage({
         }
       />
     </EcranFiche>
-  );
-}
-
-/**
- * Le premier article que le référentiel cite pour une obligation, en badge
- * quand il a une adresse Légifrance. Partagé par les deux cartes de ce qui
- * est dû — l'une ne doit pas citer autrement que l'autre.
- */
-function ReferenceFondatrice({
-  obligation,
-}: {
-  obligation: ObligationPorteeParSalarie;
-}) {
-  return (
-    <div className="mt-2.5 flex flex-wrap items-center gap-3">
-      {obligation.referencesLegales.slice(0, 1).map((r) =>
-        r.url ? (
-          <LegalBadge
-            key={r.article ?? r.reference}
-            charte="board"
-            reference={r.reference}
-            href={r.url}
-          />
-        ) : (
-          <span
-            key={r.article ?? r.reference}
-            className="font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]"
-          >
-            § {r.reference}
-          </span>
-        ),
-      )}
-    </div>
   );
 }

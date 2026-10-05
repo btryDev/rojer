@@ -2425,3 +2425,10 @@ bloquante pour la branche :
    ses titres sur toutes les fiches, avec « si elle est concernée, déclarez son
    titre ». Le refus nominatif demanderait de stocker l'exposition d'une
    personne — une donnée à instruire au regard du RGPD avant d'être un champ.
+5. **L'étape « questions transverses » reste cochée** sur les DUERP validés
+   avant l'ADR-038 (`transversesRepondues`), alors que deux questions y sont
+   neuves et sans réponse. Seule la fiche salarié le signale. Rouvrir l'étape
+   changerait l'avancement de tous les dossiers existants : à décider.
+6. **« Formations liées aux risques du poste »** regroupe aussi des
+   attestations médicales et une autorisation, qui ne sont pas des
+   formations. Titre validé par la propriétaire ; signalé par la relecture.

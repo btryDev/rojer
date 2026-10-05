@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { rapprocher } from "./transmissions";
+import {
+  repondreAuxQuestionsTransverses,
+  titresDontLaQuestionRepondNon,
+} from "@/lib/transverses/etat";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { supposeUnTiers } from "@/lib/prestataires/domaines";
 import { genererRecommandations, type EntreeRecos } from "./recommandations";
@@ -172,6 +176,28 @@ describe("rapprochement des transmissions (ADR-024)", () => {
       rapprocher([o], ["electricite"], new Set(["levage-caces-titre"]))
         .obligationsSupposantUnePersonne,
     ).toEqual([]);
+  });
+
+  it("se tait sur le « non » du DUERP au fait qui rend le titre dû — et sur lui seul (ADR-038)", () => {
+    // Sur le référentiel réel : l'obligation d'établissement qui transmet
+    // vers l'habilitation, et la réponse du DUERP lue par la règle partagée.
+    const elec = obligationsConformite.find(
+      (o) => o.id === "elec-travail-habilitation-personnel",
+    )!;
+    const signal = (actifs: string[], brut: unknown) =>
+      rapprocher(
+        [elec],
+        ["electricite"],
+        new Set(),
+        titresDontLaQuestionRepondNon(repondreAuxQuestionsTransverses(actifs, brut)),
+      ).obligationsSupposantUnePersonne;
+    expect(signal([], { "q-operations-electriques": false })).toEqual([]);
+    // Le silence ne fait pas taire : un DUERP qui n'a pas répondu n'a rien déclaré.
+    expect(signal([], null)).toHaveLength(1);
+    // Le « oui » non plus.
+    expect(signal(["trv-operations-electriques"], null)).toHaveLength(1);
+    // Un « non » à une autre question non plus.
+    expect(signal([], { "q-conduite-engins": false })).toHaveLength(1);
   });
 });
 

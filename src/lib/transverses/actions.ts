@@ -57,7 +57,7 @@ export async function repondreQuestionTransverse(
   questionId: string,
   reponse: boolean | null,
 ): Promise<void> {
-  await requireDuerp(duerpId);
+  const { duerp } = await requireDuerp(duerpId);
   const question = questionTransverseParId(questionId);
   if (!question) throw new Error(`Question transverse inconnue : ${questionId}`);
   const ref = risquesTransverses.find((r) => r.id === question.risqueIdAssocie);
@@ -73,12 +73,18 @@ export async function repondreQuestionTransverse(
     });
 
     if (reponse === true) {
+      // Deux « oui » simultanés (deux onglets) lisent tous deux « absent » et
+      // créent tous deux : le second se heurte à l'unicité
+      // (uniteId, referentielId). C'est la réponse qu'il voulait écrire — le
+      // risque existe —, donc `upsert` plutôt qu'une erreur à l'écran.
       if (!existant) {
         const gravite = ref.graviteParDefaut;
         const probabilite = ref.probabiliteParDefaut;
         const maitrise = ref.maitriseParDefaut ?? 2;
-        await tx.risque.create({
-          data: {
+        await tx.risque.upsert({
+          where: { uniteId_referentielId: { uniteId: unite.id, referentielId } },
+          update: {},
+          create: {
             uniteId: unite.id,
             referentielId,
             libelle: ref.libelle,
@@ -110,6 +116,9 @@ export async function repondreQuestionTransverse(
 
   revalidatePath(`/duerp/${duerpId}/transverses`);
   revalidatePath(`/duerp/${duerpId}/synthese`);
+  // Les fiches salarié lisent ces réponses (« Formations liées aux risques du
+  // poste ») ; le tableau de bord aussi (`dashboard/transmissions.ts`).
+  revalidatePath(`/etablissements/${duerp.etablissementId}`, "layout");
 }
 
 export async function validerTransverses(duerpId: string): Promise<void> {

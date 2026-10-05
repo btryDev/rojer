@@ -40,8 +40,19 @@ const h = vi.hoisted(() => {
             r.uniteId === where.uniteId_referentielId.uniteId &&
             r.referentielId === where.uniteId_referentielId.referentielId,
         ) ?? null,
-      create: async ({ data }: { data: { uniteId: string; referentielId: string } }) => {
-        const r = { id: `r${++n}`, uniteId: data.uniteId, referentielId: data.referentielId };
+      upsert: async ({
+        where,
+        create,
+      }: {
+        where: { uniteId_referentielId: { uniteId: string; referentielId: string } };
+        create: { uniteId: string; referentielId: string };
+      }) => {
+        const k = where.uniteId_referentielId;
+        const deja = db.risques.find(
+          (r) => r.uniteId === k.uniteId && r.referentielId === k.referentielId,
+        );
+        if (deja) return deja;
+        const r = { id: `r${++n}`, uniteId: create.uniteId, referentielId: create.referentielId };
         db.risques.push(r);
         return r;
       },
@@ -69,14 +80,39 @@ const h = vi.hoisted(() => {
     },
   };
   const prisma = {
-    $transaction: async (f: (t: typeof tx) => Promise<unknown>) => f(tx),
+    // Une transaction qui ANNULE : l'état est photographié avant et rétabli si
+    // le corps lève. Sans cela, « lève si le DUERP a disparu » prouvait la
+    // levée sans prouver que le risque supprimé juste avant revenait.
+    $transaction: async (f: (t: typeof tx) => Promise<unknown>) => {
+      const photo = {
+        risques: [...db.risques],
+        unites: [...db.unites],
+        colonne: db.colonne,
+      };
+      try {
+        return await f(tx);
+      } catch (e) {
+        db.risques = photo.risques;
+        db.unites = photo.unites;
+        db.colonne = photo.colonne;
+        throw e;
+      }
+    },
     // Tout chemin d'écriture hors transaction est une faute : ces modèles-ci
     // ne servent qu'à le détecter.
-    risque: { create: () => db.horsTransaction++, delete: () => db.horsTransaction++ },
+    risque: {
+      create: () => db.horsTransaction++,
+      upsert: () => db.horsTransaction++,
+      delete: () => db.horsTransaction++,
+    },
     uniteTravail: { create: () => db.horsTransaction++ },
     $executeRaw: () => db.horsTransaction++,
   };
-  return { db, prisma, requireDuerp: vi.fn(async () => ({})) };
+  return {
+    db,
+    prisma,
+    requireDuerp: vi.fn(async () => ({ duerp: { id: "d1", etablissementId: "e1" } })),
+  };
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
@@ -143,8 +179,13 @@ describe("repondreQuestionTransverse", () => {
     expect(h.db.colonne).toBeNull();
   });
 
-  it("lève si le DUERP a disparu entre la garde et l'écriture", async () => {
+  it("lève si le DUERP a disparu entre la garde et l'écriture, sans rien laisser derrière", async () => {
+    await repondreQuestionTransverse(DUERP, Q, true);
     h.db.lignesTouchees = 0;
     await expect(repondreQuestionTransverse(DUERP, Q, false)).rejects.toThrow(/introuvable/);
+    // Le « non » a supprimé le risque avant d'échouer sur la colonne : la
+    // transaction doit le rendre. Sans annulation, la question deviendrait
+    // « sans réponse » sur une écriture que l'écran a déclarée en échec.
+    expect(relue()).toBe("oui");
   });
 });

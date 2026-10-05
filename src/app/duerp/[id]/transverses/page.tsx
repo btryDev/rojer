@@ -23,9 +23,14 @@ export default async function TransversesPage({
   const uniteTransverse = duerp.unites.find((u) => u.estTransverse);
   // Trois états — oui, non, sans réponse — lus par la règle partagée avec la
   // fiche salarié (ADR-038) : l'écran ne relit pas les risques à sa façon.
+  // TOUTES les unités transverses, pas la première : le schéma n'interdit pas
+  // d'en avoir deux (création concurrente), et la fiche salarié
+  // (`transverses/queries.ts`) les lit toutes — les deux écrans ne doivent pas
+  // pouvoir répondre différemment à la même question.
   const repondues = repondreAuxQuestionsTransverses(
-    (uniteTransverse?.risques ?? [])
-      .map((r) => r.referentielId)
+    duerp.unites
+      .filter((u) => u.estTransverse)
+      .flatMap((u) => u.risques.map((r) => r.referentielId))
       .filter((x): x is string => Boolean(x)),
     duerp.reponsesTransverses,
   );
