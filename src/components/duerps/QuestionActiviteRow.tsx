@@ -10,11 +10,11 @@ import { repondreActivite } from "@/lib/activites/actions";
  * Le traitement de l'absence de réponse est repris tel quel de
  * `QuestionTransverseRow` : tant que rien n'a été répondu, **aucun** des deux
  * boutons n'est mis en avant. Mettre « Non » en évidence par défaut afficherait
- * une réponse que personne n'a donnée, sur un document à valeur légale — la
- * différence avec les transverses, c'est qu'ici le « non » est bel et bien
- * persistable (`exercee === false`), donc l'écran distingue trois états là où
- * les transverses n'en distinguent que deux. Et les trois sont atteignables
- * dans les deux sens : « retirer ma réponse » ramène au silence.
+ * une réponse que personne n'a donnée, sur un document à valeur légale. Le
+ * « non » est persistable (`exercee === false`), donc l'écran distingue trois
+ * états — les transverses aussi depuis l'ADR-038, qui leur a repris ce geste.
+ * Et les trois sont atteignables dans les deux sens : « retirer ma réponse »
+ * ramène au silence.
  *
  * Répondre « oui » ne bloque rien et n'ajoute aucun risque : c'est une
  * déclaration de périmètre, pas une étape d'évaluation. C'est aussi pourquoi

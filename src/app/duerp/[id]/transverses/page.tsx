@@ -7,10 +7,8 @@ import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { activitesDuSecteur } from "@/lib/activites/reponses";
 import { construireEtapes } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
-import {
-  questionsDetectionTransverses,
-  risquesTransverses,
-} from "@/lib/referentiels";
+import { risquesTransverses } from "@/lib/referentiels";
+import { repondreAuxQuestionsTransverses } from "@/lib/transverses/etat";
 
 export default async function TransversesPage({
   params,
@@ -23,10 +21,13 @@ export default async function TransversesPage({
 
   const unitesSaisies = duerp.unites.filter((u) => !u.estTransverse);
   const uniteTransverse = duerp.unites.find((u) => u.estTransverse);
-  const risquesTransversesActifs = new Set(
+  // Trois états — oui, non, sans réponse — lus par la règle partagée avec la
+  // fiche salarié (ADR-038) : l'écran ne relit pas les risques à sa façon.
+  const repondues = repondreAuxQuestionsTransverses(
     (uniteTransverse?.risques ?? [])
       .map((r) => r.referentielId)
       .filter((x): x is string => Boolean(x)),
+    duerp.reponsesTransverses,
   );
 
   const unitesOk = unitesSaisies.length > 0;
@@ -59,17 +60,17 @@ export default async function TransversesPage({
       </header>
 
       <ul className="m-0 flex list-none flex-col gap-3 p-0">
-        {questionsDetectionTransverses.map((q) => {
+        {repondues.map(({ question: q, reponse }) => {
           const risque = risquesParId.get(q.risqueIdAssocie);
           if (!risque) return null;
           return (
             <QuestionTransverseRow
               key={q.id}
               duerpId={id}
-              referentielId={q.risqueIdAssocie}
+              questionId={q.id}
               intitule={q.intitule}
               libelleRisque={risque.libelle}
-              active={risquesTransversesActifs.has(q.risqueIdAssocie)}
+              reponse={reponse}
             />
           );
         })}
