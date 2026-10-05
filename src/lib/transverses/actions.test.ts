@@ -40,21 +40,26 @@ const h = vi.hoisted(() => {
             r.uniteId === where.uniteId_referentielId.uniteId &&
             r.referentielId === where.uniteId_referentielId.referentielId,
         ) ?? null,
-      upsert: async ({
-        where,
-        create,
+      // `createMany` + `skipDuplicates` : un doublon sur
+      // (uniteId, referentielId) est ignoré, comme ON CONFLICT DO NOTHING.
+      createMany: async ({
+        data,
+        skipDuplicates,
       }: {
-        where: { uniteId_referentielId: { uniteId: string; referentielId: string } };
-        create: { uniteId: string; referentielId: string };
+        data: { uniteId: string; referentielId: string }[];
+        skipDuplicates?: boolean;
       }) => {
-        const k = where.uniteId_referentielId;
-        const deja = db.risques.find(
-          (r) => r.uniteId === k.uniteId && r.referentielId === k.referentielId,
-        );
-        if (deja) return deja;
-        const r = { id: `r${++n}`, uniteId: create.uniteId, referentielId: create.referentielId };
-        db.risques.push(r);
-        return r;
+        let count = 0;
+        for (const d of data) {
+          const deja = db.risques.some(
+            (r) => r.uniteId === d.uniteId && r.referentielId === d.referentielId,
+          );
+          if (deja && !skipDuplicates) throw new Error("P2002");
+          if (deja) continue;
+          db.risques.push({ id: `r${++n}`, uniteId: d.uniteId, referentielId: d.referentielId });
+          count++;
+        }
+        return { count };
       },
       delete: async ({ where }: { where: { id: string } }) => {
         db.risques = db.risques.filter((r) => r.id !== where.id);
@@ -102,7 +107,7 @@ const h = vi.hoisted(() => {
     // ne servent qu'à le détecter.
     risque: {
       create: () => db.horsTransaction++,
-      upsert: () => db.horsTransaction++,
+      createMany: () => db.horsTransaction++,
       delete: () => db.horsTransaction++,
     },
     uniteTravail: { create: () => db.horsTransaction++ },

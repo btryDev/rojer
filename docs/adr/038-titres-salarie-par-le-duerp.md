@@ -76,7 +76,7 @@ le fait évaluer ; il ne le demandait pas.
 
 Les verbatims cités viennent du corpus, relus sur Légifrance aux dates de
 `luLe` (`R. 4544-9` le 2026-08-31, `R. 4544-10` le 2026-09-01, `R. 4323-55` et
-`-56` le 2026-08-31, `R. 4624-18` le 2026-08-31). `citations-risques.test.ts`
+`-56` le 2026-08-31). `citations-risques.test.ts`
 confronte chaque citation au verbatim. Aucun article n'a été relu pour ce lot.
 
 ## 5. Relecture du 2026-10-05
@@ -98,7 +98,7 @@ points à corriger, tous corrigés sur la branche :
 - La lecture `chargerReponsesTransverses` n'avait pas de test d'isolation.
 - Le tableau de bord contredisait la fiche sur un « non » (§ 2.6).
 
-Corrigés au passage : deux « oui » simultanés (`upsert`), lecture de toutes
+Corrigés au passage : deux « oui » simultanés (`createMany` + `skipDuplicates`, vérifié sur PostgreSQL), lecture de toutes
 les unités transverses par l'écran comme par la fiche, confirmation avant de
 quitter un « oui » (le risque et ses actions partent en cascade),
 revalidation des pages de l'établissement, une transaction simulée qui annule

@@ -2432,3 +2432,8 @@ bloquante pour la branche :
 6. **« Formations liées aux risques du poste »** regroupe aussi des
    attestations médicales et une autorisation, qui ne sont pas des
    formations. Titre validé par la propriétaire ; signalé par la relecture.
+7. **Un engin déclaré et un « non » à la conduite.** Un chariot ou une nacelle
+   actif, avec « non » à `q-conduite-engins` : le tableau de bord suit le
+   DUERP et se tait, et rien ne relève la contradiction. Ce n'est pas faux en
+   droit — un équipement peut ne pas être conduit —, mais c'est la résolution
+   que le dirigeant voit le moins. Même cas pour l'installation électrique.

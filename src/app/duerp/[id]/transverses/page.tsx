@@ -8,7 +8,10 @@ import { activitesDuSecteur } from "@/lib/activites/reponses";
 import { construireEtapes } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { risquesTransverses } from "@/lib/referentiels";
-import { repondreAuxQuestionsTransverses } from "@/lib/transverses/etat";
+import {
+  repondreAuxQuestionsTransverses,
+  risquesTransversesActifs,
+} from "@/lib/transverses/etat";
 
 export default async function TransversesPage({
   params,
@@ -28,10 +31,7 @@ export default async function TransversesPage({
   // (`transverses/queries.ts`) les lit toutes — les deux écrans ne doivent pas
   // pouvoir répondre différemment à la même question.
   const repondues = repondreAuxQuestionsTransverses(
-    duerp.unites
-      .filter((u) => u.estTransverse)
-      .flatMap((u) => u.risques.map((r) => r.referentielId))
-      .filter((x): x is string => Boolean(x)),
+    risquesTransversesActifs(duerp.unites),
     duerp.reponsesTransverses,
   );
 

@@ -65,6 +65,15 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
     }
   });
 
+  it("ne dit pas qu'un « oui » rend chaque titre dû à tous les exposés", () => {
+    // L'autorisation de conduite et les attestations ne sont dues que sous
+    // condition (R. 4323-56 « certains équipements », R. 4544-10 voisinage de
+    // pièces nues sous tension) : la carte renvoie à la condition de chaque
+    // titre, elle ne la généralise pas (contre-relecture du 2026-10-05, N3).
+    expect(ETATS.oui().html).not.toMatch(/sont dus aux|sont concernés/i);
+    expect(ETATS.oui().html).toContain("à quelle condition");
+  });
+
   it("écrit « s'il », jamais « si il »", () => {
     expect(ETATS.oui().html).not.toMatch(/\bsi ils?\b/i);
   });

@@ -498,12 +498,17 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
     risqueIdAssocie: "trv-addictions",
   },
   {
+    // « Des travailleurs », et non « des salariés » comme les autres
+    // questions : c'est le mot de R. 4544-9 et de R. 4323-55, et un « non »
+    // fait désormais taire le tableau de bord (ADR-038 § 2.6). Demander
+    // « des salariés » laissait répondre « non » l'établissement dont seuls
+    // des intérimaires conduisent le chariot (contre-relecture du 2026-10-05).
     // Le verbe et le complément sont ceux de R. 4544-9 ; les exemples entre
     // parenthèses sont des opérations, pas des usages, pour que la question
     // ne ramasse pas quiconque branche une prise (ADR-038).
     id: "q-operations-electriques",
     intitule:
-      "Des salariés effectuent-ils des opérations sur les installations électriques ou dans leur voisinage (intervention, dépannage, raccordement, travaux près de pièces nues sous tension) ?",
+      "Des travailleurs effectuent-ils des opérations sur les installations électriques ou dans leur voisinage (intervention, dépannage, raccordement, travaux près de pièces nues sous tension) ?",
     risqueIdAssocie: "trv-operations-electriques",
     declencheTitres: [
       "elec-salarie-habilitation",
@@ -516,7 +521,7 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
     // norme ou d'une recommandation CACES.
     id: "q-conduite-engins",
     intitule:
-      "Des salariés conduisent-ils des équipements de travail mobiles automoteurs ou servant au levage (chariot élévateur, transpalette électrique, nacelle, grue) ?",
+      "Des travailleurs conduisent-ils des équipements de travail mobiles automoteurs ou servant au levage (chariot élévateur, transpalette électrique, nacelle, grue) ?",
     risqueIdAssocie: "trv-conduite-engins",
     declencheTitres: [
       "conduite-salarie-formation",

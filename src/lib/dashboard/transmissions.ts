@@ -27,6 +27,7 @@ import { domainesSansPrestataire } from "@/lib/prestataires/domaines";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import {
   repondreAuxQuestionsTransverses,
+  risquesTransversesActifs,
   titresDontLaQuestionRepondNon,
 } from "@/lib/transverses/etat";
 import type {
@@ -256,9 +257,7 @@ export async function chargerTransmissions(
     duerp
       ? titresDontLaQuestionRepondNon(
           repondreAuxQuestionsTransverses(
-            duerp.unites
-              .flatMap((u) => u.risques.map((r) => r.referentielId))
-              .filter((x): x is string => x !== null),
+            risquesTransversesActifs(duerp.unites),
             duerp.reponsesTransverses,
           ),
         )

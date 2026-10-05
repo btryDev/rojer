@@ -199,6 +199,26 @@ describe("rapprochement des transmissions (ADR-024)", () => {
     // Un « non » à une autre question non plus.
     expect(signal([], { "q-conduite-engins": false })).toHaveLength(1);
   });
+
+  it("vaut aussi pour le levage : le « non » à la conduite fait taire, le silence non", () => {
+    // Toutes les obligations d'établissement qui transmettent vers un titre
+    // gouverné, pas la seule électricité : c'est la réunion qui est garantie.
+    const versGouverne = obligationsConformite.filter((o) =>
+      o.transmet.some(
+        (t) => t.vers === "salarie_designe" && t.titre === "conduite-salarie-formation",
+      ),
+    );
+    expect(versGouverne.length).toBeGreaterThan(0);
+    const signal = (brut: unknown) =>
+      rapprocher(
+        versGouverne,
+        ["levage"],
+        new Set(),
+        titresDontLaQuestionRepondNon(repondreAuxQuestionsTransverses([], brut)),
+      ).obligationsSupposantUnePersonne;
+    expect(signal({ "q-conduite-engins": false })).toEqual([]);
+    expect(signal(null)).toHaveLength(versGouverne.length);
+  });
 });
 
 describe("règles 9-10 : une transmission ne passe jamais devant une urgence", () => {

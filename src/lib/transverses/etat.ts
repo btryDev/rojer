@@ -76,3 +76,22 @@ export function titresDontLaQuestionRepondNon(
       .flatMap((x) => x.question.declencheTitres ?? []),
   );
 }
+
+/**
+ * Les `referentielId` des risques portés par les unités transverses d'un
+ * DUERP — TOUTES, pas la première : le schéma n'interdit pas d'en avoir deux.
+ * Un seul chemin pour l'écran des questions, la fiche salarié et le tableau
+ * de bord : trois copies de cette ligne avaient fini par lire des unités
+ * différentes (relecture du 2026-10-05, C2).
+ */
+export function risquesTransversesActifs(
+  unites: readonly {
+    estTransverse?: boolean;
+    risques: readonly { referentielId: string | null }[];
+  }[],
+): string[] {
+  return unites
+    .filter((u) => u.estTransverse !== false)
+    .flatMap((u) => u.risques.map((r) => r.referentielId))
+    .filter((x): x is string => x !== null);
+}

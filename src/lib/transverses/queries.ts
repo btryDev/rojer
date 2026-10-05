@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
-import { repondreAuxQuestionsTransverses, type QuestionTransverseRepondue } from "./etat";
+import {
+  repondreAuxQuestionsTransverses,
+  risquesTransversesActifs,
+  type QuestionTransverseRepondue,
+} from "./etat";
 
 /**
  * Les réponses du DUERP d'un établissement aux questions transverses, pour un
@@ -27,11 +31,11 @@ export async function chargerReponsesTransverses(
     },
   });
   if (!duerp) return null;
-  const actifs = duerp.unites
-    .flatMap((u) => u.risques.map((r) => r.referentielId))
-    .filter((x): x is string => x !== null);
   return {
     duerpId: duerp.id,
-    repondues: repondreAuxQuestionsTransverses(actifs, duerp.reponsesTransverses),
+    repondues: repondreAuxQuestionsTransverses(
+      risquesTransversesActifs(duerp.unites),
+      duerp.reponsesTransverses,
+    ),
   };
 }

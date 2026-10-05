@@ -76,24 +76,31 @@ export async function repondreQuestionTransverse(
       // Deux « oui » simultanés (deux onglets) lisent tous deux « absent » et
       // créent tous deux : le second se heurte à l'unicité
       // (uniteId, referentielId). C'est la réponse qu'il voulait écrire — le
-      // risque existe —, donc `upsert` plutôt qu'une erreur à l'écran.
+      // risque existe —, donc on ne lève pas.
+      //
+      // `createMany` + `skipDuplicates`, et non `upsert` : relevé sur la base
+      // locale le 2026-10-05, l'`upsert` à `update: {}` sur cette clé composée
+      // est ÉMULÉ par Prisma 6 — un SELECT puis un INSERT, sans ON CONFLICT —,
+      // donc la course restait entière. `skipDuplicates` émet
+      // `INSERT … ON CONFLICT DO NOTHING`, que PostgreSQL arbitre.
       if (!existant) {
         const gravite = ref.graviteParDefaut;
         const probabilite = ref.probabiliteParDefaut;
         const maitrise = ref.maitriseParDefaut ?? 2;
-        await tx.risque.upsert({
-          where: { uniteId_referentielId: { uniteId: unite.id, referentielId } },
-          update: {},
-          create: {
-            uniteId: unite.id,
-            referentielId,
-            libelle: ref.libelle,
-            description: ref.description,
-            gravite,
-            probabilite,
-            maitrise,
-            criticite: calculerCriticite({ gravite, probabilite, maitrise }),
-          },
+        await tx.risque.createMany({
+          data: [
+            {
+              uniteId: unite.id,
+              referentielId,
+              libelle: ref.libelle,
+              description: ref.description,
+              gravite,
+              probabilite,
+              maitrise,
+              criticite: calculerCriticite({ gravite, probabilite, maitrise }),
+            },
+          ],
+          skipDuplicates: true,
         });
       }
     } else if (existant) {

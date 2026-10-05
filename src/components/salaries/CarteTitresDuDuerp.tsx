@@ -25,7 +25,7 @@ import { ReferenceFondatrice } from "./ReferenceFondatrice";
  * que l'écran omet.
  */
 export const PHRASE_REPONSE: Record<ReponseTransverse, string> = {
-  oui: "Votre DUERP répond oui : des salariés de l'établissement sont concernés. Si cette personne en fait partie, déclarez ses titres ci-dessous.",
+  oui: "Votre DUERP répond oui : le fait existe dans l'établissement. Chaque titre dit à quelle condition il est dû ; si cette personne la remplit, déclarez-le ci-dessous.",
   non: "Votre DUERP répond non. Si cette personne est pourtant concernée, corrigez la réponse et déclarez ses titres ci-dessous.",
   sans_reponse:
     "Votre évaluation des risques n'a pas encore répondu à cette question.",
@@ -41,11 +41,10 @@ export function CarteTitresDuDuerp({
   return (
     <CarteFiche titreFort="Formations liées aux risques du poste">
       <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-        Chaque question ci-dessous vient de votre évaluation des risques. Les
-        titres qu&apos;elle nomme sont dus aux salariés exposés au fait
-        qu&apos;elle décrit : c&apos;est le DUERP qui dit si ce fait existe dans
-        l&apos;établissement, et vous seul savez si cette personne est
-        concernée.
+        Chaque question ci-dessous vient de votre évaluation des risques.
+        C&apos;est le DUERP qui dit si le fait qu&apos;elle décrit existe dans
+        l&apos;établissement ; chaque titre dit à quelle condition il est dû,
+        et vous seul savez si cette personne la remplit.
       </p>
       <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
         {questions.map(({ question, reponse, titres }) => (
