@@ -383,6 +383,13 @@ model Duerp {
   // côté unités, et elle vaut ici pour la même raison — ce qui est écrit dans
   // une version validée est relu tel quel pendant quarante ans.
   reponsesActivitesNonCouvertes Json?
+  // Les « non » aux questions transverses (ADR-038). Même format et même
+  // écriture que la colonne précédente (`duerps/reponses-fermees.ts`), mais
+  // une seule valeur y vit : `false`. Le « oui » se lit sur la présence du
+  // `Risque` dans l'unité transverse — la seule source de vérité qu'il avait
+  // déjà —, pour qu'aucun état ne soit écrit deux fois. Clé absente et pas de
+  // risque = sans réponse : jamais un « non ».
+  reponsesTransverses           Json?
   createdAt                     DateTime       @default(now())
   updatedAt                     DateTime       @updatedAt
 }

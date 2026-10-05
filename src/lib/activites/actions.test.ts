@@ -44,10 +44,15 @@ const h = vi.hoisted(() => {
     // Un seul UPDATE, appliqué clé à clé : la sémantique de `jsonb_set` avec
     // `create_missing`, y compris le repli sur un objet vide quand la colonne
     // n'est pas un objet JSON (NULL, scalaire, tableau).
-    $executeRaw: async (
-      strings: TemplateStringsArray,
-      ...valeurs: unknown[]
-    ): Promise<number> => {
+    // L'écriture passe par `ecrireReponseFermee`, qui compose un
+    // `Prisma.sql` : le nom de colonne y est inliné (`Prisma.raw`), les
+    // valeurs restent liées. On lit donc `strings` et `values` de l'objet —
+    // exactement ce que Prisma enverra au moteur.
+    $executeRaw: async (requete: {
+      strings: readonly string[];
+      values: unknown[];
+    }): Promise<number> => {
+      const { strings, values: valeurs } = requete;
       db.requetes.push({ sql: strings.join("?"), valeurs });
       if (db.lignesTouchees === 0) return 0;
 

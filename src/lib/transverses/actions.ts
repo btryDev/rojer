@@ -1,10 +1,13 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireDuerp } from "@/lib/auth/scope";
 import { calculerCriticite } from "@/lib/cotation";
+import { ecrireReponseFermee } from "@/lib/duerps/ecrire-reponse-fermee";
 import { risquesTransverses } from "@/lib/referentiels";
+import { questionTransverseParId } from "./etat";
 
 /**
  * Cloisonnement : `duerpId` vient du client. Sans garde, `validerTransverses`
@@ -13,12 +16,15 @@ import { risquesTransverses } from "@/lib/referentiels";
  * jusqu'à `Entreprise.userId` et répond 404 sinon.
  */
 
-async function obtenirUniteTransverse(duerpId: string) {
-  const existante = await prisma.uniteTravail.findFirst({
+async function obtenirUniteTransverse(
+  tx: Prisma.TransactionClient,
+  duerpId: string,
+) {
+  const existante = await tx.uniteTravail.findFirst({
     where: { duerpId, estTransverse: true },
   });
   if (existante) return existante;
-  return prisma.uniteTravail.create({
+  return tx.uniteTravail.create({
     data: {
       duerpId,
       nom: "Risques transverses",
@@ -28,46 +34,79 @@ async function obtenirUniteTransverse(duerpId: string) {
 }
 
 /**
- * Active ou désactive un risque transverse pour un DUERP.
- * Activation = crée un risque dans l'unité virtuelle avec cotation par défaut.
- * Désactivation = supprime le risque si présent.
+ * Enregistre la réponse d'un DUERP à une question transverse : oui, non, ou
+ * `null` pour retirer la réponse (ADR-038). Remplace `toggleRisqueTransverse`,
+ * qui ne savait qu'ajouter ou supprimer le risque — et donc ne savait pas dire
+ * « non » autrement que par le silence.
+ *
+ * - « oui » crée le risque s'il manque, avec la cotation par défaut, et efface
+ *   un « non » antérieur ;
+ * - « non » supprime le risque s'il existe et écrit `false` ;
+ * - `null` supprime le risque s'il existe et retire la clé : sans réponse.
+ *
+ * Le risque reste la seule vérité du « oui » (`transverses/etat.ts`). Les deux
+ * écritures — le risque et la colonne — partent dans une même transaction :
+ * une réponse à moitié écrite laisserait un « non » à côté d'un risque, ou un
+ * risque supprimé sans son « non ».
+ *
+ * Supprimer le risque emporte sa cotation et ses actions (cascade) : c'était
+ * déjà le cas du « Non » de `toggleRisqueTransverse`, rien ne change ici.
  */
-export async function toggleRisqueTransverse(
+export async function repondreQuestionTransverse(
   duerpId: string,
-  referentielId: string,
+  questionId: string,
+  reponse: boolean | null,
 ): Promise<void> {
   await requireDuerp(duerpId);
-
-  const ref = risquesTransverses.find((r) => r.id === referentielId);
-  if (!ref) throw new Error(`Risque transverse inconnu : ${referentielId}`);
-
-  const unite = await obtenirUniteTransverse(duerpId);
-
-  const existant = await prisma.risque.findUnique({
-    where: {
-      uniteId_referentielId: { uniteId: unite.id, referentielId },
-    },
-  });
-
-  if (existant) {
-    await prisma.risque.delete({ where: { id: existant.id } });
-  } else {
-    const gravite = ref.graviteParDefaut;
-    const probabilite = ref.probabiliteParDefaut;
-    const maitrise = ref.maitriseParDefaut ?? 2;
-    await prisma.risque.create({
-      data: {
-        uniteId: unite.id,
-        referentielId,
-        libelle: ref.libelle,
-        description: ref.description,
-        gravite,
-        probabilite,
-        maitrise,
-        criticite: calculerCriticite({ gravite, probabilite, maitrise }),
-      },
-    });
+  const question = questionTransverseParId(questionId);
+  if (!question) throw new Error(`Question transverse inconnue : ${questionId}`);
+  const ref = risquesTransverses.find((r) => r.id === question.risqueIdAssocie);
+  if (!ref) {
+    throw new Error(`Risque transverse inconnu : ${question.risqueIdAssocie}`);
   }
+  const referentielId = ref.id;
+
+  await prisma.$transaction(async (tx) => {
+    const unite = await obtenirUniteTransverse(tx, duerpId);
+    const existant = await tx.risque.findUnique({
+      where: { uniteId_referentielId: { uniteId: unite.id, referentielId } },
+    });
+
+    if (reponse === true) {
+      if (!existant) {
+        const gravite = ref.graviteParDefaut;
+        const probabilite = ref.probabiliteParDefaut;
+        const maitrise = ref.maitriseParDefaut ?? 2;
+        await tx.risque.create({
+          data: {
+            uniteId: unite.id,
+            referentielId,
+            libelle: ref.libelle,
+            description: ref.description,
+            gravite,
+            probabilite,
+            maitrise,
+            criticite: calculerCriticite({ gravite, probabilite, maitrise }),
+          },
+        });
+      }
+    } else if (existant) {
+      await tx.risque.delete({ where: { id: existant.id } });
+    }
+
+    // « oui » efface la clé : il se lit sur le risque, et un `false` resté là
+    // contredirait le document le jour où le risque serait retiré ailleurs.
+    const lignes = await ecrireReponseFermee(
+      tx,
+      "reponsesTransverses",
+      duerpId,
+      question.id,
+      reponse === false ? false : null,
+    );
+    // `requireDuerp` vient de garantir la ligne : zéro veut dire qu'elle a
+    // disparu entre-temps, et l'écran afficherait une réponse non enregistrée.
+    if (lignes === 0) throw new Error(`DUERP introuvable à l'écriture : ${duerpId}`);
+  });
 
   revalidatePath(`/duerp/${duerpId}/transverses`);
   revalidatePath(`/duerp/${duerpId}/synthese`);

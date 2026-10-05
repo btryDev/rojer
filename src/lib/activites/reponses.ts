@@ -12,39 +12,19 @@
 
 import { trouverReferentielParId } from "@/lib/referentiels";
 import type { ActiviteNonCouverte } from "@/lib/referentiels/types";
+import {
+  lireReponsesFermees,
+  type ReponsesFermees,
+} from "@/lib/duerps/reponses-fermees";
 
 /**
  * Les réponses aux questions d'activités hors couverture, telles qu'elles
- * vivent dans `Duerp.reponsesActivitesNonCouvertes` (ADR-020).
- *
- * Trois états, et c'est tout l'intérêt du format : `true` (activité exercée),
- * `false` (refus délibéré), **clé absente** (question jamais tranchée). Le
- * troisième n'est pas un `false` par défaut — un DUERP part chez un tiers, et
- * lui faire dire « le dirigeant a déclaré ne pas faire de boucherie » alors
- * que personne n'a répondu serait une affirmation inventée.
+ * vivent dans `Duerp.reponsesActivitesNonCouvertes` (ADR-020). Le format et sa
+ * lecture tolérante sont communs aux réponses fermées du DUERP
+ * (`duerps/reponses-fermees.ts`) ; les deux noms restent pour les appelants.
  */
-export type ReponsesActivites = Record<string, boolean>;
-
-/**
- * Lit la colonne JSON en réponses exploitables. Tolérante par construction :
- * `null` (aucune réponse jamais donnée), un tableau, un scalaire ou une
- * valeur non booléenne rendent tous une réponse absente, jamais un `false`.
- *
- * La tolérance n'est pas de la complaisance : la colonne est un `Json` libre,
- * elle peut avoir été écrite par une version antérieure du produit ou par une
- * main humaine en base. Tout ce qui n'est pas un « oui » ou un « non »
- * lisible est traité comme « on ne sait pas ».
- */
-export function lireReponsesActivites(brut: unknown): ReponsesActivites {
-  if (brut === null || typeof brut !== "object" || Array.isArray(brut)) {
-    return {};
-  }
-  const reponses: ReponsesActivites = {};
-  for (const [cle, valeur] of Object.entries(brut as Record<string, unknown>)) {
-    if (typeof valeur === "boolean") reponses[cle] = valeur;
-  }
-  return reponses;
-}
+export type ReponsesActivites = ReponsesFermees;
+export const lireReponsesActivites = lireReponsesFermees;
 
 /**
  * Les activités hors couverture déclarées par le référentiel du secteur

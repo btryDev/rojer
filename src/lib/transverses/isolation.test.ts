@@ -6,11 +6,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * `validerTransverses` faisait un `duerp.update` sur l'identifiant brut reçu
  * du client : n'importe quel DUERP pouvait être marqué « transverses
  * répondues », ce qui fait disparaître l'étape du parcours d'un autre client
- * et fausse son avancement. `toggleRisqueTransverse` créait ou supprimait des
- * risques dans son document. Aucune RLS ne rattrape ça en base.
+ * et fausse son avancement. `toggleRisqueTransverse` — devenu
+ * `repondreQuestionTransverse` (ADR-038) — créait ou supprimait des risques
+ * dans son document. Aucune RLS ne rattrape ça en base.
  */
 
-const { prismaMock, requireUserMock } = vi.hoisted(() => {
+const { prismaMock, transactionMock, requireUserMock } = vi.hoisted(() => {
   const modele = () => ({
     findFirst: vi.fn().mockResolvedValue(null),
     findUnique: vi.fn().mockResolvedValue(null),
@@ -25,22 +26,28 @@ const { prismaMock, requireUserMock } = vi.hoisted(() => {
       uniteTravail: modele(),
       risque: modele(),
     },
+    // Hors des modèles : `aucuneEcriture` parcourt ceux-ci. Toute écriture de
+    // `repondreQuestionTransverse` passe par la transaction ; ne pas l'ouvrir
+    // suffit à prouver qu'aucune n'est partie.
+    transactionMock: vi.fn(),
     requireUserMock: vi.fn(),
   };
 });
 
-vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/prisma", () => ({
+  prisma: { ...prismaMock, $transaction: transactionMock },
+}));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: requireUserMock,
   getOptionalUser: vi.fn(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { toggleRisqueTransverse, validerTransverses } from "./actions";
-import { risquesTransverses } from "@/lib/referentiels";
+import { repondreQuestionTransverse, validerTransverses } from "./actions";
+import { questionsDetectionTransverses } from "@/lib/referentiels";
 
 const USER = { id: "user-legitime", email: "dirigeant@exemple.fr" };
-const UN_RISQUE_TRANSVERSE = risquesTransverses[0].id;
+const UNE_QUESTION = questionsDetectionTransverses[0].id;
 
 function estNotFound(e: unknown): boolean {
   const digest = (e as { digest?: unknown }).digest;
@@ -53,6 +60,7 @@ function aucuneEcriture(): void {
     expect(modele.update).not.toHaveBeenCalled();
     expect(modele.delete).not.toHaveBeenCalled();
   }
+  expect(transactionMock).not.toHaveBeenCalled();
 }
 
 beforeEach(() => {
@@ -66,20 +74,21 @@ beforeEach(() => {
 });
 
 describe("risques transverses — DUERP d'un autre client", () => {
-  it("toggleRisqueTransverse refuse et n'écrit rien", async () => {
+  it("repondreQuestionTransverse refuse et n'écrit rien", async () => {
     await expect(
-      toggleRisqueTransverse("duerp-autre-client", UN_RISQUE_TRANSVERSE),
+      repondreQuestionTransverse("duerp-autre-client", UNE_QUESTION, true),
     ).rejects.toSatisfy(estNotFound);
     aucuneEcriture();
   });
 
-  it("toggleRisqueTransverse refuse avant de créer l'unité transverse", async () => {
+  it("repondreQuestionTransverse refuse avant de créer l'unité transverse", async () => {
     // Le garde passe avant `obtenirUniteTransverse`, qui crée une unité si
     // elle n'existe pas : sans lui, un simple appel polluait le DUERP visé.
     await expect(
-      toggleRisqueTransverse("duerp-autre-client", UN_RISQUE_TRANSVERSE),
+      repondreQuestionTransverse("duerp-autre-client", UNE_QUESTION, false),
     ).rejects.toSatisfy(estNotFound);
     expect(prismaMock.uniteTravail.create).not.toHaveBeenCalled();
+    expect(transactionMock).not.toHaveBeenCalled();
   });
 
   it("validerTransverses refuse et n'écrit rien", async () => {

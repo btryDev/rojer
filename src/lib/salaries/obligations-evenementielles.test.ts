@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { estDeclencheeParUnFait } from "@/lib/etats-permanents/regle";
 import { obligationsDeclencheesParUnFait } from "./obligations-evenementielles";
-import { cataloguerTitres } from "./catalogue";
+import { cataloguerTitres, titresGouvernesParUneQuestion } from "./catalogue";
+import { titresDuDuerpPourUnePersonne } from "./titres-du-duerp";
 
 const jour = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 
@@ -26,15 +27,31 @@ describe("ce qu'un fait rend dû à une personne", () => {
     // répare en la recopiant, donc elle cesse de vérifier. Ici, ajouter une
     // obligation salarié événementielle au référentiel sans qu'elle atteigne
     // la fiche fait tomber ce test tout seul.
-    const attendues = obligationsConformite
+    //
+    // Depuis l'ADR-038, la fiche a DEUX surfaces pour ces obligations : cette
+    // carte pour ce qui est dû à tous, et la carte du DUERP pour ce qu'une
+    // question transverse gouverne. La borne porte sur leur réunion — une
+    // obligation qui ne serait ni ici ni là ferait tomber le test — et sur
+    // leur séparation : aucune n'est aux deux endroits.
+    const gouvernes = titresGouvernesParUneQuestion();
+    const retenues = obligationsConformite
       .filter((o) => o.porteur === "salarie")
       .filter((o) => estDeclencheeParUnFait(o))
-      .map((o) => o.id)
-      .sort();
+      .map((o) => o.id);
     const rendues = obligationsDeclencheesParUnFait()
       .map((l) => l.obligation.id)
       .sort();
-    expect(rendues).toEqual(attendues);
+    expect(rendues).toEqual(retenues.filter((id) => !gouvernes.has(id)).sort());
+
+    const surLaCarteDuDuerp = new Set(
+      titresDuDuerpPourUnePersonne(null, []).flatMap((q) =>
+        q.titres.map((t) => t.obligation.id),
+      ),
+    );
+    const nullePart = retenues.filter(
+      (id) => !rendues.includes(id) && !surLaCarteDuDuerp.has(id),
+    );
+    expect(nullePart).toEqual([]);
   });
 
   it("laisse dehors les titres que le catalogue propose et qui ne sont pas de ce genre", () => {
