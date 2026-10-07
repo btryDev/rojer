@@ -88,6 +88,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "ascenseur-erp-verification-quinquennale-as9": "equipement",
   "ascenseur-erp-verification-remise-en-service-as9": "equipement",
   "ascenseur-examen-annuel-securite": "equipement",
+  "ascenseur-hotel-5-verification-quinquennale-as9": "equipement",
+  "ascenseur-hotel-5-verification-remise-en-service-as9": "equipement",
   "ascenseur-examen-semestriel-secours": "equipement",
   "ascenseur-rapport-annuel-activite": "equipement",
   "ascenseur-telealarme-liaison": "equipement",

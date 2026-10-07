@@ -64,7 +64,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     domaine: "formation_securite",
     libelle: "Organiser la formation à la sécurité des salariés",
     description:
-      "L'employeur organise une formation pratique et appropriée à la sécurité pour les travailleurs qu'il embauche, ceux qui changent de poste ou de technique, les salariés temporaires, et — à la demande du médecin du travail — ceux qui reprennent après un arrêt d'au moins vingt et un jours. Elle porte sur les conditions de circulation, les conditions d'exécution du travail et la conduite à tenir en cas d'accident. La formation « est répétée périodiquement » (L. 4141-2) : le Code renvoie ce rythme à un règlement qui ne l'a pas fixé, ou à un accord collectif. Rojer retient au moins une fois par an, en plus de chaque embauche, changement de poste ou de technique et retour d'un arrêt long.",
+      "L'employeur organise une formation pratique et appropriée à la sécurité pour les travailleurs qu'il embauche, ceux qui changent de poste ou de technique, les salariés temporaires, et — à la demande du médecin du travail — ceux qui reprennent après un arrêt d'au moins vingt et un jours. Elle porte sur les conditions de circulation, les conditions d'exécution du travail et la conduite à tenir en cas d'accident. La formation « est répétée périodiquement » (L. 4141-2) : le Code renvoie ce rythme à un règlement qui ne l'a pas fixé, ou à un accord collectif. Rojer retient par défaut au moins une fois par an, en plus de chaque embauche, changement de poste ou de technique et retour d'un arrêt long.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",

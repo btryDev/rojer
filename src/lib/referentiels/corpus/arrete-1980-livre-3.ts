@@ -42,15 +42,19 @@ export const CORPUS_PE: Corpus = {
     {
       ref: "PE 1",
       intitule: "Objet. - Textes applicables",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020374786",
       versionEnVigueur: "1990-08-27",
       modifiePar: null,
-      luLe: "2026-09-26",
-      lecture: "premiere_main",
+      // ~~luLe: "2026-09-26", lecture: "premiere_main"~~ — relu le 2026-10-07
+      // par l'API PISTE en BAC À SABLE (C60) : LEGIARTI000020374786, seule
+      // version, en vigueur depuis le 1990-08-27. Texte inchangé.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
       citationCle:
         "Le présent livre complète les dispositions du livre Ier du règlement de sécurité. Il fixe les prescriptions applicables aux établissements classés dans le deuxième groupe, visé à l'article GN 1 (§ 2 a). Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre.",
       statut: "sans_objet",
       motif:
-        "Article de champ d'application : il énonce que le Livre III complète le Livre Ier, vise le deuxième groupe (GN 1 § 2 a) et écarte le Livre II sauf renvoi exprès. Il n'impose rien à l'exploitant, mais c'est lui qui commande le classement de tout le reste du corpus.",
+        "Article de champ d'application : il énonce que le Livre III complète le Livre Ier, vise le deuxième groupe (GN 1 § 2 a) et écarte le Livre II sauf renvoi exprès. Il n'impose rien à l'exploitant, mais c'est lui qui commande le classement de tout le reste du corpus. [2026-10-07, C60] Cité en référence par les lignes AS 9 : premier fondement de leur borne aux catégories 1 à 4 (`ascenseur-erp-verification-quinquennale-as9`, `ascenseur-erp-verification-remise-en-service-as9`), et du renvoi exprès qui ouvre AS 9 aux hôtels de 5ᵉ catégorie par PO 1 § 3 (`ascenseur-hotel-5-verification-quinquennale-as9`, `ascenseur-hotel-5-verification-remise-en-service-as9`). Il reste `sans_objet` : il ne prescrit rien, il dit où le reste s'applique.",
     },
     {
       ref: "PE 2",
@@ -349,7 +353,7 @@ export const CORPUS_PE: Corpus = {
       prescrit:
         "Trois paragraphes. § 1 : au moins un extincteur portatif installé dans les conditions de MS 39, en atténuation de cet article — un appareil pour 300 m² et un par niveau. § 2 : colonnes sèches dans les escaliers protégés des établissements dont le plancher bas le plus élevé est à plus de 18 m de la voie accessible aux engins des sapeurs-pompiers. § 3 : l'appareil ou le dispositif d'extinction non apparent est signalé par un panneau conforme aux signaux normalisés de localisation (norme NF X 08-003). PE 26 n'ouvre le Livre II que sur MS 39.",
       citationCle:
-        "§ 1. Les établissements doivent être dotés d'au moins un extincteur portatif installé dans les conditions définies par l'article MS 39 et en atténuation de cet article avec un minimum d'un appareil pour 300 mètres carrés et un appareil par niveau. § 3. Lorsqu'un appareil ou un dispositif d'extinction n'est pas apparent, il doit être signalé par un panneau conforme aux signaux normalisés d'indication de localisation d'un équipement de lutte contre l'incendie ou d'un autre moyen d'alarme ou d'alerte définis à la norme NF X 08-003 relative aux couleurs et signaux de sécurité.",
+        "§ 1. Les établissements doivent être dotés d'au moins un extincteur portatif installé dans les conditions définies par l'article MS 39 et en atténuation de cet article avec un minimum d'un appareil pour 300 mètres carrés et un appareil par niveau. […] § 3. Lorsqu'un appareil ou un dispositif d'extinction n'est pas apparent, il doit être signalé par un panneau conforme aux signaux normalisés d'indication de localisation d'un équipement de lutte contre l'incendie ou d'un autre moyen d'alarme ou d'alerte définis à la norme NF X 08-003 relative aux couleurs et signaux de sécurité.",
       statut: "retenu",
       obligations: ["signalisation-erp-5-extincteurs-identification"],
       reserve:
@@ -504,16 +508,24 @@ export const CORPUS_PE: Corpus = {
       ref: "PO 1",
       intitule: "Généralités",
       versionEnVigueur: "2011-10-30",
-      luLe: "2026-08-26",
-      lecture: "premiere_main",
+      // ~~luLe: "2026-08-26", lecture: "premiere_main"~~ — relu le 2026-10-07
+      // par l'API PISTE en BAC À SABLE (C60) : LEGIARTI000024770707, en
+      // vigueur depuis le 2011-10-30. Texte inchangé.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
       statut: "retenu",
-      obligations: ["incendie-hotel-po-controle-annuel-electricite"],
+      obligations: [
+        "incendie-hotel-po-controle-annuel-electricite",
+        // 2026-10-07 (C60) : le renvoi du § 3 à AS 9 pour les ascenseurs.
+        "ascenseur-hotel-5-verification-quinquennale-as9",
+        "ascenseur-hotel-5-verification-remise-en-service-as9",
+      ],
       historique:
         "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
       citationCle:
         "« § 3. L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans, à l'exception des installations électriques et des systèmes de détection incendie qui doivent être contrôlés annuellement. Le contrôle des ascenseurs relève des dispositions particulières précisées dans le cadre de l'article AS 9 du règlement. »",
       prescrit:
-        "Chapitre IV — hôtels (type O) de 5ᵉ catégorie. Trois rythmes : biennal sur l'ensemble des installations techniques, annuel sur les installations électriques et les systèmes de détection incendie, renvoi à AS 9 pour les ascenseurs. Le volet électrique est porté depuis le 2026-08-26 : il comblait un vrai trou, `elec-erp-cat1-4-annuelle` s'arrêtant aux quatre premières catégories. Le volet détection est déjà couvert par `incendie-erp-ssi-annuelle`, qui vaut pour tous les ERP. Le volet biennal est déclaré à part. Lu en première main le 2026-08-26.",
+        "Chapitre IV — hôtels (type O) de 5ᵉ catégorie. Trois rythmes : biennal sur l'ensemble des installations techniques, annuel sur les installations électriques et les systèmes de détection incendie, renvoi à AS 9 pour les ascenseurs. Le volet électrique est porté depuis le 2026-08-26 : il comblait un vrai trou, `elec-erp-cat1-4-annuelle` s'arrêtant aux quatre premières catégories. Le volet détection est déjà couvert par `incendie-erp-ssi-annuelle`, qui vaut pour tous les ERP. Le volet biennal est déclaré à part. Lu en première main le 2026-08-26. [2026-10-07, C60] Le renvoi aux ascenseurs est porté : `ascenseur-hotel-5-verification-quinquennale-as9` et sa jumelle de remise en service. PE 1 § 1 n'ouvre le livre II en 5ᵉ que sur renvoi exprès ; celui-ci en est un.",
     },
     {
       ref: "PO 1 § 3 — contrôle biennal des installations techniques",
@@ -611,10 +623,18 @@ export const CORPUS_PE: Corpus = {
       ref: "PO 8",
       intitule: "Champ d'application des prescriptions aux hôtels EXISTANTS",
       versionEnVigueur: "2011-10-30",
-      luLe: "2026-08-26",
-      lecture: "premiere_main",
+      // ~~luLe: "2026-08-26", lecture: "premiere_main"~~ — relu le 2026-10-07
+      // par l'API PISTE en BAC À SABLE (C60) : LEGIARTI000024771000, en
+      // vigueur depuis le 2011-10-30. Texte inchangé.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
       statut: "retenu",
-      obligations: ["incendie-hotel-po-controle-annuel-electricite"],
+      obligations: [
+        "incendie-hotel-po-controle-annuel-electricite",
+        // 2026-10-07 (C60) : PO 1 (§ 3) réimporté, renvoi à AS 9 compris.
+        "ascenseur-hotel-5-verification-quinquennale-as9",
+        "ascenseur-hotel-5-verification-remise-en-service-as9",
+      ],
       citationCle:
         "« § 1. Les prescriptions définies dans la présente section sont applicables en complément des articles PE 4, PE 24, PE 26, PE 27, PE 32, PE 36, PO 1 (§ 3) et PO 5. »",
       prescrit:

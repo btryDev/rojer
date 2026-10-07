@@ -69,7 +69,7 @@ export const obligationsStockageDangereux: Obligation[] = [
     domaine: "stockage_dangereux",
     libelle: "Formation du personnel manipulant des matières dangereuses",
     description:
-      "Les salariés qui manipulent des substances ou mélanges dangereux reçoivent une formation et des informations sur les précautions à prendre (R. 4412-38). Pour les agents cancérogènes, mutagènes ou toxiques pour la reproduction, le texte ajoute que l'information et la formation « sont répétées régulièrement » (R. 4412-88), sans en fixer le rythme : Rojer retient au moins une fois par an.",
+      "Les salariés qui manipulent des substances ou mélanges dangereux reçoivent une formation et des informations sur les précautions à prendre (R. 4412-38). Pour les agents cancérogènes, mutagènes ou toxiques pour la reproduction, le texte ajoute que l'information et la formation « sont répétées régulièrement » (R. 4412-88), sans en fixer le rythme : Rojer retient par défaut au moins une fois par an.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",

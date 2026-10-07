@@ -141,7 +141,11 @@ describe("registre de dette — les réserves de lecture", () => {
     // protection collective qu'il vise aussi restent dehors.
     // Intégration des cinq lots (2026-10-07) : 90 + 2 (lot 1) − 7 (lot 5)
     // + 1 (lot 3) = 86.
-    expect(n).toBe(86);
+    // 86 → 87 le même jour (C60, revue indépendante de la relecture) :
+    // `MS 15` entre au corpus, retenu pour son § 4 (armoires de RIA
+    // signalées) ; ses § 1 à § 3, règles d'implantation, restent dehors.
+    // 86 + 1 − 0 = 87.
+    expect(n).toBe(87);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

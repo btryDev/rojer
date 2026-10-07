@@ -152,9 +152,9 @@ export const obligationsEpi: Obligation[] = [
     id: "epi-maintien-etat-conformite",
     domaine: "epi",
     libelle:
-      "Maintien en état de conformité de l'équipement de protection individuelle, vérifié au moins une fois par an",
+      "Maintien en état de conformité de l'équipement de protection individuelle, vérification annuelle par défaut",
     description:
-      "Les moyens de protection, quel que soit leur utilisateur, sont maintenus en état de conformité avec les règles techniques de conception et de construction applicables lors de leur mise en service, y compris au regard de la notice d'instructions (R. 4322-1). Le texte ne fixe aucun rythme : Rojer retient au moins une vérification par an, par une personne compétente ou en interne. Cette ligne vise les équipements de protection individuelle courants — casque, gants, chaussures, lunettes, protections auditives. Les harnais antichute, appareils respiratoires et gilets de sauvetage gonflables ont leur propre vérification de douze mois, écrite par l'arrêté du 19 mars 1993.",
+      "Les moyens de protection, quel que soit leur utilisateur, sont maintenus en état de conformité avec les règles techniques de conception et de construction applicables lors de leur mise en service, y compris au regard de la notice d'instructions (R. 4322-1). Le texte ne fixe aucun rythme : Rojer retient par défaut au moins une vérification par an, par une personne compétente ou en interne. Cette ligne vise les équipements de protection individuelle courants — casque, gants, chaussures, lunettes, protections auditives. Les harnais antichute, appareils respiratoires et gilets de sauvetage gonflables ont leur propre vérification de douze mois, écrite par l'arrêté du 19 mars 1993.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",

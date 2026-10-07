@@ -20,6 +20,7 @@ import { determineObligationsApplicables, matchTypologie } from "@/lib/matching"
 import type { EtablissementMatching } from "@/lib/matching";
 import { CORPUS } from "../corpus";
 import { periodiciteEffective, referencesCitees } from "./rythme-retenu";
+import { DESCRIPTION_GN_10 } from "./texte-gn10";
 import {
   SCEAU_CALENDRIER,
   VERSION_MOTEUR_CALENDRIER,
@@ -776,8 +777,13 @@ describe("référentiel conformité — seuils d'effectif", () => {
     // à son calendrier, sans savoir pourquoi les deux coexistent. Une ligne
     // qui ne cite le livre II qu'en contexte n'est pas une sur-application et
     // ne doit pas se dire telle : la visite de commission de 5ᵉ cite GE 4
-    // pour dire qu'il ne s'y applique PAS, le contrôle quinquennal des
-    // ascenseurs est fondé ailleurs et cite AS 9 pour les catégories 1 à 4.
+    // pour dire qu'il ne s'y applique PAS. ~~le contrôle quinquennal des
+    // ascenseurs est fondé ailleurs et cite AS 9 pour les catégories 1 à 4.~~
+    // [2026-10-07, C60 : faux depuis le lot 1 de la relecture du préventeur —
+    // la ligne CCH ne cite plus AS 9, qui a ses lignes N1–N4. Le cas vivant
+    // est celui des hôtels de 5ᵉ : leur contrôle d'ascenseur est FONDÉ sur
+    // PO 1 § 3, qui renvoie expressément à AS 9 (PE 1 § 1), et cite AS 9 en
+    // contexte avec la mention « livre II, applicable … par le renvoi exprès ».]
     // Ou, depuis le 2026-09-27 (C41), qu'elle y est servie par une LECTURE
     // d'un renvoi du livre III, dite comme telle : un examen à la mise en
     // service que PE 15 § 1 peut couvrir (« mise en œuvre ») n'est pas une
@@ -1690,8 +1696,14 @@ describe("référentiel conformité — version et empreinte", () => {
     // obligation touchée. Lot 3 : les rythmes retenus entrent (NF S 61-919
     // pour les extincteurs hors ERP, défaut annuel là où le texte impose de
     // refaire l'acte sans chiffre) ; cinq obligations neuves, détail à
-    // `REFERENTIEL_VERSION`. 166 + 5 − 0 = 171.
-    { version: "2026-10-07.5", empreinte: "171-637b0e8a330eee34" },
+    // `REFERENTIEL_VERSION`. 166 + 5 − 0 = 171. Puis, version toujours jamais
+    // servie, les corrections de contenu de la revue indépendante (C60) : AS 9
+    // aux hôtels de 5ᵉ par le renvoi de PO 1 § 3 — deux lignes neuves,
+    // `ascenseur-hotel-5-verification-quinquennale-as9` et sa jumelle de
+    // remise en service ; libellés et descriptions ramenés au texte ; halon
+    // dans `typeExtincteur`. 171 + 2 − 0 = 173. ~~171-637b0e8a330eee34~~ :
+    // empreinte de l'intégration avant C60, jamais scellée par un calendrier.
+    { version: "2026-10-07.5", empreinte: "173-7324273780278b5f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1848,7 +1860,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(171);
+    ).toBe(173);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -2843,16 +2855,34 @@ describe("GN 10 dit sur tout état permanent fondé sur le livre III (2026-09-27
   // A6 : ces lignes sont servies à tout ERP de 5ᵉ catégorie, et leur
   // description cite GN 10 — sur-application visible. PE 27 le faisait, PE 33
   // et PE 35 non. Éprouvé en retirant la phrase de PE 33.
-  it("un état permanent fondé sur un article PE cite GN 10 dans sa description", () => {
+  //
+  // 2026-10-07 (C60, revue indépendante de la relecture du préventeur) : la
+  // phrase est la constante `DESCRIPTION_GN_10`, entière — « GN 10 » seul
+  // laissait passer une citation tronquée ou divergente —, et la garde
+  // s'étend aux états permanents fondés sur MS 39 (et MS 38, MS 15 qui
+  // l'accompagnent), dont `signalisation-erp-extincteurs-identification`,
+  // fondée sur le livre II et servie aux N1–N4, que le filtre « PE » ne
+  // voyait pas. Éprouvé en retirant la constante de cette ligne-là.
+  const FONDE_SUR_LE_REGLEMENT = /^(PE \d|MS 39$)/;
+  const fondateur = (o: (typeof obligationsConformite)[number]) =>
+    o.referencesLegales[0].article ?? o.referencesLegales[0].reference;
+  it("un état permanent fondé sur un article PE ou sur MS 39 cite GN 10 entier dans sa description", () => {
     const muets = obligationsConformite
       .filter(
         (o) =>
           o.nature === "etat_permanent" &&
-          /^PE \d/.test(o.referencesLegales[0].article ?? o.referencesLegales[0].reference) &&
-          !(o.description ?? "").includes("GN 10"),
+          FONDE_SUR_LE_REGLEMENT.test(fondateur(o)) &&
+          !(o.description ?? "").includes(DESCRIPTION_GN_10),
       )
       .map((o) => o.id);
     expect(muets).toEqual([]);
+  });
+  it("la garde voit les deux familles (borne basse)", () => {
+    const vus = obligationsConformite.filter(
+      (o) => o.nature === "etat_permanent" && FONDE_SUR_LE_REGLEMENT.test(fondateur(o)),
+    );
+    expect(vus.some((o) => fondateur(o) === "MS 39")).toBe(true);
+    expect(vus.filter((o) => /^PE \d/.test(fondateur(o))).length).toBeGreaterThanOrEqual(4);
   });
 });
 

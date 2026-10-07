@@ -51,7 +51,9 @@ import { TYPES_EXTINCTEUR } from "./extincteur";
  *     `typeExtincteur`, ci-dessous.]
  *   - `typeExtincteur`              → NF S 61-919 (août 2001), annexe A,
  *     tableau A.1 : la maintenance additionnelle approfondie à 5 et 15 ans ne
- *     vise ni le CO2 ni la poudre à opercule scellé (C59 lot 3, ADR-039).
+ *     vise ni le CO2 ni la poudre à opercule scellé (C59 lot 3, ADR-039), ni
+ *     le halon, à qui le tableau ne donne pas non plus de révision à dix ans
+ *     (« Voir note 3 ») — valeur `halon` entrée le 2026-10-07 (C60).
  *     Seconde propriété d'ÉNUMÉRATION, lue par `enum_differente`.
  *
  * `dessertLocauxSommeil` a été RETIRÉ le 2026-09-01 (lot A11). Il portait à lui

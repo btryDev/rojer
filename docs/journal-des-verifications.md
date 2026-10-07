@@ -4920,6 +4920,108 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   R. 4322-1 ne porte que les EPI, pas les équipements de travail ni la
   protection collective (réserve au corpus).
 
+### C60 · 2026-10-07 — Revue indépendante de la relecture du préventeur : corrections de contenu
+
+- **Quand · par quoi** : 2026-10-07, branche `fix/relecture-jc-contenu` sur
+  `integration/relecture-jc` (`2b7c8bcf`), après les six revues indépendantes en
+  lecture seule (`relecture-jc-2026-10/synthese-revue.md`). Référentiel toujours
+  `2026-10-07.5`, jamais servi : sa ligne d'empreinte est réécrite, pas
+  doublée. **171 + 2 − 0 = 173.** Les corrections d'interface et de type
+  (mention, grille, prescriptions, annonces) sont une passe parallèle,
+  `fix/relecture-jc-code`.
+- **Sur quoi** : API Légifrance **sandbox** par le client du dépôt
+  (`src/lib/legifrance/client.ts`, identifiants lus dans `.env.local` du dépôt
+  principal, rien n'y est écrit) : PO 1 (LEGIARTI000024770707), PO 8
+  (LEGIARTI000024771000), PE 1 (LEGIARTI000020374786), GC 22
+  (LEGIARTI000020317599), PE 26, GN 10, MS 38, MS 39, MS 73, MS 14 à MS 17 ;
+  plan du texte (titre du livre II, au jour et au 2027-06-15). NF S 61-919 sur
+  le scan : p. 10 (§ 9, § 10.1), p. 11 (§ 11), p. 12 (tableau A.1 et ses
+  notes), p. 18 (annexe E). Annotations des deux PDF du préventeur, par pypdf.
+- **Comment lu** : API (bac à sable — égalité avec la production non
+  vérifiée) ; norme en première main ; annotations extraites du PDF, pas
+  retapées.
+- **Ce qui en sort** :
+  - **AS 9 aux hôtels de 5ᵉ — tranché sur le texte.** PE 1 § 1 n'ouvre le
+    livre II en 5ᵉ que sur renvoi exprès ; PO 1 § 3 (« Le contrôle des
+    ascenseurs relève des dispositions particulières précisées dans le cadre
+    de l'article AS 9 du règlement ») en est un, et PO 8 § 1 le réimporte pour
+    les hôtels existants. AS 9 n'a qu'une prescription : le renvoi l'importe
+    entière. Lecture dite comme telle en description. Deux lignes N5 / type O,
+    fondées sur PO 1 : `ascenseur-hotel-5-verification-quinquennale-as9`,
+    `ascenseur-hotel-5-verification-remise-en-service-as9` (organisme agréé).
+  - **Borne N1–N4 des lignes AS 9** : PE 1 § 1 et le titre du livre II
+    (« Dispositions applicables aux établissements des quatre premières
+    catégories », inchangé au plan du 2027-06-15) en premier fondement, PE 1
+    cité en référence ; GE 7 § 1 et GN 1 § 2 en appui. Motif de
+    `relectureDue` réécrit : le GE 7 du 2027-06-01 vise « les établissements
+    soumis aux dispositions du présent livre ».
+  - **MS 38** : § 1 et § 3 à la citation, relu ce jour. « MS 38 § 1 énumère »
+    rayé (« tels que » : liste indicative). **RIA en N1–N4** : MS 39 est dans
+    la sous-section « Appareils mobiles et moyens divers », les RIA ont la
+    leur (MS 14 à MS 17) ; c'est MS 15 § 4 (« ceux-ci doivent être signalés »)
+    qui porte la signalisation de leurs armoires — entré au corpus, RIA
+    rattaché à `signalisation-erp-extincteurs-identification`. PE 26 : § 2
+    sauté marqué « […] ».
+  - **Citations du préventeur** : recopiées des annotations, fautes comprises
+    (« défférents [sic] », « 7 aout 2012 », « ( personne certifiée) ») ; les
+    versions précédentes étaient reconstituées.
+  - **GN 10** : une constante de référence (`texte-gn10.ts`), confrontée au
+    corpus ; les six descriptions la recopient en littéral — un fichier de
+    données n'importe pas de valeur (`version-moteur.test.ts`), forme de
+    `texte-r4121-2.ts` — et la garde exige la phrase entière, étendue aux
+    états permanents fondés sur MS 39.
+    Éprouvée : constante retirée de la ligne N1–N4 → « 1 failed » ; citation
+    du corpus altérée → `texte-gn10.test.ts` « 1 failed ».
+  - **Extincteurs** : halon — la note 3 dit « vidés selon une méthode
+    permettant de récupérer le halon », pas « jamais rechargé » ; l'annuelle
+    vaut pour lui (A.1 : 1 an). Valeur `halon` ajoutée à `typeExtincteur` :
+    `enum_differente` sur la maintenance approfondie (« — ») et sur la
+    révision hors ERP (« Voir note 3 », aucun intervalle) ; la décennale ERP
+    (MS 38 § 4) reste. Éprouvée : condition de la révision neutralisée →
+    « 1 failed ». § 9 (étiquette) et annexe E (formation de la personne
+    compétente, recyclage « au moins tous les cinq ans » — rythme du
+    prestataire, pas de l'établissement) entrés au corpus `normes`, statut
+    `norme`, sans obligation ; cités par la description de l'annuelle hors
+    ERP. Origine des intervalles de révision (§ 10.1 : fabrication, recharge,
+    révision) contre mise en service : nommée en description et note.
+    Coïncidence révision / maintenance approfondie à la naissance d'un
+    extincteur de plus de dix ans ou sans date : nommée, comportement
+    inchangé (décision 12 de la synthèse). Maintenance approfondie : la
+    description dit que dix ans est l'écart entre 5 et 15.
+  - **Libellés des défauts annuels** : RIA, désenfumage (« annuels par
+    défaut »), EPI (« vérification annuelle par défaut ») ; les six
+    descriptions disent « Rojer retient par défaut ». Note héritée de
+    `incendie-travail-moyens-lutte` : MS 38 § 4, pas MS 73.
+  - **SSI triennale** : « approfondie » retiré (absent de MS 73 § 2) ; la
+    description dit le silence de la question A/B (ligne servie) ; réserve
+    écrite sur « par une personne ou un organisme agréé » (réalisateur
+    `organisme_agree` inchangé, faute de valeur).
+  - **Commentaires périmés du lot 5** rayés : `esp.ts`, `hors-referentiel.ts`,
+    `aeration.ts`, `equipement-sous-pression.ts`, `signalisation.ts`,
+    `.claude/CLAUDE.md` (comptes remesurés : 90 / 69 / 14 = 173).
+- **GC 22 « idem code du travail » (p. 15) — NON ENCODÉ, écart et motif.**
+  GC 22 § 2 fait vérifier tous les ans les grandes cuisines pour quatre
+  objets : entretien des installations et appareils, ventilation et
+  évacuation des buées et graisses, signalisation des dispositifs de sécurité,
+  manœuvre des arrêts d'urgence. Lu en lieu de travail : (1) la ventilation et
+  l'extraction ont déjà un rythme ÉCRIT — `R. 4222-20` et l'arrêté du
+  8 octobre 1987 (`aeration-controle-installations-r4222-20`, annuelle,
+  porteur établissement, `HOTTE_PRO` en contexte) ; un défaut annuel de
+  `R. 4224-17` y ferait doublon. (2) Le reste porte sur les APPAREILS de
+  cuisson et leurs dispositifs : ce sont des équipements de travail (livre
+  III, `R. 4322-1` « maintenus en état de conformité »), et `R. 4224-17`
+  (livre II, « installations et dispositifs techniques et de sécurité des
+  lieux de travail ») ne les vise pas par son texte — les y ranger serait une
+  lecture plus large que celle retenue pour le RIA et le désenfumage, qui sont
+  des installations du lieu. (3) La catégorie `APPAREIL_CUISSON_ERP` se
+  définit par l'ERP (« situés en cuisine d'un ERP ») : une ligne
+  `erp: false` sur elle ne naîtrait presque jamais. Question remise : faut-il
+  un défaut annuel de `R. 4322-1` sur les appareils de cuisson ?
+- **Ce qui reste** : affichage de la mention et des périodicités avec
+  `premierDelai` (« décennale » pour 5 puis 15), aide du champ type
+  (« 20 ans au plus », halon), commentaire d'`engine.ts` — passe « code ».
+  Lectures en bac à sable.
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états
