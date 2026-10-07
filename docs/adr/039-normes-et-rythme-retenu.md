@@ -203,3 +203,31 @@ Elle ne qualifie pas : ni « opposable », ni « valeur légale »
   garde sa nature.
 - Les comptes de l'ADR-026 (§ 2, croisement nature × périodicité) restent
   justes : ils comptent le texte.
+
+## 7. Le rythme retenu est un plancher face à une prescription — 2026-10-07
+
+[Ajouté le 2026-10-07, revue indépendante de la relecture du préventeur,
+correction 10 ; journal, C61.]
+
+La préséance du § 3 a un revers que le § 3 ne disait pas : **une prescription
+moins stricte qu'un rythme retenu est écartée**, et la ligne garde le rythme
+retenu. Exemple : une demande d'assureur « tous les 2 ans » sur une obligation
+au défaut annuel n'est pas appliquée ; la ligne reste annuelle.
+`prescriptionRenforce` le tient (`matching/prescriptions.ts`) : elle n'admet
+qu'une prescription strictement plus stricte que le rythme effectif, ou égale
+à un rythme retenu.
+
+C'est la conséquence voulue du § 5 (« le défaut est un plancher ») : un acte
+qui allège ne s'enregistre pas plus face à un rythme retenu que face à un
+rythme du texte, et il se conserve en pièce. Mais le motif affiché ne peut pas
+être le même. Face au texte, Rojer écrit « Le référentiel impose déjà… » ;
+face à un rythme retenu, il écrit « Rojer retient déjà « annuelle » pour cette
+obligation (rythme retenu par défaut ; le texte n'écrit pas de rythme) et
+garde ce rythme face à une prescription moins stricte. » — sans qualifier la
+portée du rythme (`sans-qualification.test.ts`). La phrase est écrite une fois
+(`motifPrescriptionNonRetenue`), pour le moteur et pour le formulaire.
+
+Ce que cette section ne tranche pas : si un acte d'autorité moins strict
+devrait l'emporter sur un DÉFAUT (et non sur une norme). C'est la décision 2
+de la synthèse de revue, laissée à la propriétaire ; tant qu'elle n'est pas
+prise, le plancher tient.

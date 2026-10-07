@@ -10,7 +10,8 @@ import {
   estPrescriptionLevee,
   type PrescriptionMatching,
 } from "@/lib/matching";
-import { obligationParId } from "@/lib/referentiels/conformite";
+import { obligationParId, OBLIGATIONS_RETIREES } from "@/lib/referentiels/conformite";
+import { libelleObligationRetiree } from "@/lib/matching/obligation-retiree";
 
 export type EtatPrescription =
   | { etat: "active"; detail: string }
@@ -132,6 +133,31 @@ export async function chargerPagePrescriptions(
   const ignorees = new Map(
     res.ignorees.map((i) => [i.prescription.id, i.raison]),
   );
+  // Une prescription peut viser une obligation que Rojer ne suit plus
+  // (`OBLIGATIONS_RETIREES`) : la page affichait son id brut. Le dernier
+  // libellé connu est celui de ses lignes de suivi — une seule requête pour
+  // toutes les cibles retirées du dossier, aucune s'il n'y en a pas.
+  const ciblesRetirees = [
+    ...new Set(
+      etab.prescriptionsParticulieres.flatMap((p) =>
+        p.obligationId && OBLIGATIONS_RETIREES[p.obligationId] ? [p.obligationId] : [],
+      ),
+    ),
+  ];
+  const derniersLibelles = new Map<string, string>();
+  if (ciblesRetirees.length > 0) {
+    const lignes = await prisma.verification.findMany({
+      where: { etablissementId: etab.id, obligationId: { in: ciblesRetirees } },
+      select: { obligationId: true, libelleObligation: true },
+      orderBy: { updatedAt: "desc" },
+    });
+    for (const l of lignes) {
+      if (!derniersLibelles.has(l.obligationId)) {
+        derniersLibelles.set(l.obligationId, l.libelleObligation);
+      }
+    }
+  }
+
   const prescriptions = etab.prescriptionsParticulieres.map((p) => {
     let etat: EtatPrescription;
     const raison = ignorees.get(p.id);
@@ -162,7 +188,8 @@ export async function chargerPagePrescriptions(
       etat,
       lignesAvecPreuve: preuves.get(p.id) ?? 0,
       libelleObligationCiblee: p.obligationId
-        ? (obligationParId(p.obligationId)?.libelle ?? p.obligationId)
+        ? (obligationParId(p.obligationId)?.libelle ??
+          libelleObligationRetiree(p.obligationId, derniersLibelles.get(p.obligationId)))
         : null,
     };
   });

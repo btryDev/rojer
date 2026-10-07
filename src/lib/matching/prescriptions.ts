@@ -13,6 +13,8 @@ import {
 } from "@/lib/referentiels/types-communs";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import type { RythmeRetenu } from "@/lib/referentiels/conformite/types";
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { raisonObligationRetiree } from "./obligation-retiree";
 import type {
   EquipementMatching,
   ObligationApplicable,
@@ -88,6 +90,29 @@ export function prescriptionRenforce(
     PERIODICITE_EN_JOURS[candidate] !== null &&
     candidate === o.rythmeRetenu.periodicite
   );
+}
+
+/**
+ * Pourquoi une prescription ne renforce pas : le rythme qu'elle n'atteint pas
+ * et d'où il vient. Écrit une fois pour le moteur (`ignorees`) et pour le
+ * formulaire (`prescriptions/schema.ts`).
+ *
+ * Face à un rythme RETENU, ne pas écrire « le référentiel impose » (revue du
+ * 2026-10-07) : ce rythme est un choix de Rojer — une norme qu'il retient, ou
+ * le défaut annuel —, pas une exigence du texte. C'est aussi un plancher :
+ * une prescription moins stricte est écartée et la ligne garde le rythme
+ * retenu (ADR-039, section du 2026-10-07).
+ */
+export function motifPrescriptionNonRetenue(o: {
+  periodicite: Periodicite;
+  rythmeRetenu?: RythmeRetenu;
+  premierDelai?: Periodicite;
+}): string {
+  const p = periodiciteEffective(o);
+  const mention = mentionRythmeRetenu(o);
+  return mention
+    ? `Rojer retient déjà « ${p} » pour cette obligation (${mention.court.charAt(0).toLowerCase()}${mention.court.slice(1)} ; le texte n'écrit pas de rythme) et garde ce rythme face à une prescription moins stricte.`
+    : `Le référentiel impose déjà un rythme au moins aussi strict (« ${p} »).`;
 }
 
 export type ResultatPrescriptions = {
@@ -212,7 +237,10 @@ export function appliquerPrescriptions(
       if (!oa) {
         ignorees.push({
           prescription: p,
+          // Une obligation RETIRÉE n'est pas une obligation qui ne s'applique
+          // pas : c'est Rojer qui ne la suit plus (revue du 2026-10-07).
           raison:
+            raisonObligationRetiree(p.obligationId) ??
             "L'obligation ciblée ne s'applique pas (ou plus) à votre établissement d'après le référentiel : la prescription n'a rien à renforcer.",
         });
         continue;
@@ -220,7 +248,7 @@ export function appliquerPrescriptions(
       if (!prescriptionRenforce(p.periodicite, oa.obligation)) {
         ignorees.push({
           prescription: p,
-          raison: `Le référentiel impose déjà un rythme au moins aussi strict (${periodiciteEffective(oa.obligation)}) : la prescription est rattrapée par le référentiel.`,
+          raison: `${motifPrescriptionNonRetenue(oa.obligation)} La prescription n'est pas appliquée.`,
         });
         continue;
       }
