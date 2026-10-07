@@ -311,6 +311,10 @@ export const obligationsConformite: Obligation[] = [
 // (RIA, désenfumage, EPI) et de la triennale SSI ramenés au texte ; valeur
 // `halon` de `typeExtincteur`, qui retire la maintenance approfondie et la
 // révision hors ERP. Compte : 171 + 2 − 0 = 173.
+// C62, même version (jamais servie), revue finale : le libellé de
+// `signalisation-erp-extincteurs-identification` devient neutre — la ligne est
+// portée par l'extincteur comme par le RIA, et chacun lisait l'exigence de
+// l'autre. Compte : 173 + 0 − 0 = 173.
 export const REFERENTIEL_VERSION = "2026-10-07.5";
 
 /**

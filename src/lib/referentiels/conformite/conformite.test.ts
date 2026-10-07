@@ -1703,7 +1703,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // remise en service ; libellés et descriptions ramenés au texte ; halon
     // dans `typeExtincteur`. 171 + 2 − 0 = 173. ~~171-637b0e8a330eee34~~ :
     // empreinte de l'intégration avant C60, jamais scellée par un calendrier.
-    { version: "2026-10-07.5", empreinte: "173-7324273780278b5f" },
+    // Puis C62 (revue finale, même version jamais servie) : libellé neutre de
+    // `signalisation-erp-extincteurs-identification`, portée par l'extincteur
+    // comme par le RIA. 173 + 0 − 0 = 173. ~~173-7324273780278b5f~~ :
+    // empreinte après C60, jamais scellée.
+    { version: "2026-10-07.5", empreinte: "173-2543b2a5149c8d07" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
