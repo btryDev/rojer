@@ -198,7 +198,10 @@ export const obligationsAeration: Obligation[] = [
     criticite: 4,
     transmet: [],
     typologies: { travail: true },
-    categoriesEquipement: ["VMC", "CTA", "HOTTE_PRO"],
+    // ~~"HOTTE_PRO"~~ — retirée des catégories le 2026-10-07 : relecture
+    // préventeur du 30/09, p. 14 de la grille, « traité dans le VMC : à
+    // supprimer dans les hottes » ; décision de la propriétaire du 07/10.
+    categoriesEquipement: ["VMC", "CTA"],
     conditions: [
       {
         type: "equipement_propriete_booleenne",
@@ -212,15 +215,9 @@ export const obligationsAeration: Obligation[] = [
         propriete: "estLocalPollutionSpecifique",
         valeur: true,
       },
-      {
-        type: "equipement_propriete_booleenne",
-        categorie: "HOTTE_PRO",
-        propriete: "estLocalPollutionSpecifique",
-        valeur: true,
-      },
     ],
     notesInternes:
-      "Corrigé à l'audit 2026-08 : l'ancienne version imposait un contrôle SEMESTRIEL à tout local à pollution spécifique en citant « art. 3 § II ». L'art. 3 vise les locaux à pollution NON spécifique ; l'art. 4 (pollution spécifique) prévoit un contrôle annuel, le semestriel ne concernant que les installations avec recyclage de l'air. Le formulaire n'avait pas de propriété « recyclage » : le contrôle semestriel était mentionné dans la description mais pas planifié.\n\nRÉSOLU LE 2026-09-01 : `aSystemeDeRecyclage` existe, et `aeration-travail-recyclage-semestriel` porte le contrôle du b). La description ci-dessus garde sa dernière phrase — elle dit au dirigeant que le semestriel existe même s'il n'a pas encore répondu à la question.",
+      "HOTTE RETIRÉE LE 2026-10-07 — relecture préventeur du 30/09 (grille p. 14, « traité dans le VMC : à supprimer dans les hottes »), décision de la propriétaire du 07/10. La ligne paraissait deux fois au même établissement, sous la VMC ou la CTA et sous la hotte, pour un seul contrôle de l'installation de ventilation du local. Elle ne naît plus que d'une VMC ou d'une CTA. Effet sur les calendriers : la ligne portée par une hotte n'est plus engendrée — archivée si elle porte une trace, supprimée sinon. CE QUE LE RETRAIT LAISSE PASSER : un établissement qui n'a déclaré qu'une hotte dans un local à pollution spécifique, sans VMC ni CTA, perd ce contrôle annuel. Le semestriel des gaines de recyclage (`aeration-travail-recyclage-semestriel`) garde, lui, la hotte : la remarque du préventeur ne le visait pas.\n\nCorrigé à l'audit 2026-08 : l'ancienne version imposait un contrôle SEMESTRIEL à tout local à pollution spécifique en citant « art. 3 § II ». L'art. 3 vise les locaux à pollution NON spécifique ; l'art. 4 (pollution spécifique) prévoit un contrôle annuel, le semestriel ne concernant que les installations avec recyclage de l'air. Le formulaire n'avait pas de propriété « recyclage » : le contrôle semestriel était mentionné dans la description mais pas planifié.\n\nRÉSOLU LE 2026-09-01 : `aSystemeDeRecyclage` existe, et `aeration-travail-recyclage-semestriel` porte le contrôle du b). La description ci-dessus garde sa dernière phrase — elle dit au dirigeant que le semestriel existe même s'il n'a pas encore répondu à la question.",
   },
 
   {

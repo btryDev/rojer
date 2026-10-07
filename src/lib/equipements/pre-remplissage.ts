@@ -303,7 +303,11 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
   // ---------------------------------------------------------------------------
   // Règles de base — quasi universelles dès qu'il y a un bâtiment
   // ---------------------------------------------------------------------------
-  if (ctx.estEtablissementTravail || ctx.estERP || ctx.estIGH) {
+  // ~~`|| ctx.estIGH`~~ — 2026-10-07 : `elec-igh-annuelle` est retirée
+  // (périmètre, relecture préventeur du 30/09, décision de la propriétaire du
+  // 07/10). Un IGH sans régime travail ni ERP n'a plus de texte à citer pour
+  // cette suggestion ; elle aurait été servie sans fondement.
+  if (ctx.estEtablissementTravail || ctx.estERP) {
     // Les fondements suivent le régime : citer l'article du Code du travail à
     // un ERP qui n'emploie personne, ou l'arrêté ERP à un employeur qui
     // n'accueille pas de public, revenait à justifier la suggestion par un
@@ -323,9 +327,6 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
       fondements.push({
         obligationId: "incendie-erp-pe4-entretien-installations-techniques",
       });
-    }
-    if (ctx.estIGH) {
-      fondements.push({ obligationId: "elec-igh-annuelle" });
     }
 
     ajoute({
@@ -375,14 +376,11 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
   // ---------------------------------------------------------------------------
   // Typologie IGH → moyens renforcés
   // ---------------------------------------------------------------------------
+  // ~~Désenfumage mécanique, fondé sur `incendie-igh-moyens-secours-annuelle`~~
+  // — retiré le 2026-10-07 avec l'obligation (périmètre, relecture préventeur
+  // du 30/09, décision de la propriétaire du 07/10). L'ascenseur reste : son
+  // contrôle technique (CCH) vaut pour tous les régimes, IGH compris.
   if (ctx.estIGH) {
-    ajoute({
-      categorie: "DESENFUMAGE",
-      libelle: "Désenfumage mécanique",
-      motif:
-        "Moyens de secours vérifiés annuellement par organisme agréé en immeuble de grande hauteur",
-      fondements: [{ obligationId: "incendie-igh-moyens-secours-annuelle" }],
-    });
     ajoute({
       categorie: "ASCENSEUR",
       libelle: "Ascenseur(s)",

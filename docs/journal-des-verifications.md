@@ -4723,8 +4723,9 @@ en double changent, sans perte (réconciliateur, cas D7 et D8).
 (Julien Chantoin) du 2026-10-05 ; plan validé et verbatim dans
 `relecture-jc-2026-10/` (hors dépôt). **Textes relus le 2026-10-07 par l'API PISTE
 en environnement BAC À SABLE** : versions de 2026 présentes, mais l'égalité avec la
-production n'a pas été vérifiée. Référentiel `2026-10-07.1`, une seule version pour
-le lot.*
+production n'a pas été vérifiée. Référentiel `2026-10-07.1` sur la branche, jamais
+servi : le lot est livré sous `2026-10-07.5`, version de l'intégration des cinq lots
+(C55 à C59).*
 
 | Item | Ce qui a été lu | Ce qui change |
 |---|---|---|
@@ -4735,6 +4736,64 @@ le lot.*
 | 5 · Catégorie | — | Affichage de `ALARME_INCENDIE` : « SSI et équipement d'alarme incendie » (`equipements/labels.ts`, `mcp/tools.ts`), enum inchangé. Le libellé d'équipement proposé par le pré-remplissage du bureau (« Alarme incendie », motif R. 4227-34) n'est pas un libellé de catégorie : inchangé |
 | 6 · Visites de la commission | — (aucun texte relu : question de modèle) | **NON IMPLÉMENTÉ, EN ATTENTE DE DÉCISION.** Le préventeur répond « une information » : la visite est déclenchée par l'administration (CCH R. 143-41, GE 4, PE 37), et les neuf lignes (`incendie-erp-5-visite-commission`, les huit `incendie-erp-visite-commission-cat*`) portent `organisme_agree` et une échéance récurrente comptée comme celle de l'exploitant. Aucun mécanisme existant ne la présente comme une information sans changer le modèle : pas de valeur `Realisateur` pour l'administration (enum Prisma) ; `nature` est une propriété du texte, qui fixe bien un rythme ; `estSansRendezVous` effacerait le rythme ; `EXCLUES_DU_FAIT_DATE` (`etats-permanents/regle.ts`) ne vaut que sans rendez-vous. Deux options remises au délégant : (A) champ TS `initiative: "administration"` lu par le calendrier, l'indice et l'affichage, sans migration ; (B) valeur `commission_securite` ajoutée à l'enum `Realisateur` (migration additive) et dont se déduit la présentation « pour information » |
 
+### C56 · 2026-10-07 — Relecture du préventeur, lot 5 : périmètre
+
+*Branche `lot/relecture-jc-5`, sur `origin/main` = `0299e288`. Entrées : la grille
+annotée du référentiel `2026-09-28.3` (relecture du 30/09) ; décision de la
+propriétaire du 07/10 : appliquer les retraits demandés. Aucun texte rouvert : ce
+sont des décisions de périmètre, pas des lectures. Référentiel `2026-10-07.2` sur la
+branche, jamais servi : le lot est livré sous `2026-10-07.5` (intégration, C55 à C59).*
+
+**IGH — « IGH non traité par Rojer » (p. 4, 6, 9, 10, 34).** Retirées, sans
+absorbant : `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
+`incendie-igh-charge-calorifique-quinquennale`. `GH 5` et `GH 61` passent
+`non_couvert`, annoncés sur l'axe `igh` de la page « Ce que Rojer ne couvre pas »,
+la charge calorifique de l'occupant (GH 61 § 5) nommée en premier : le texte
+l'impose toujours à l'employeur locataire, c'est le produit qui ne la porte plus.
+La typologie `igh` reste au modèle et sur les huit lignes d'ascenseur ; la
+question IGH reste à l'onboarding (refus de l'ERP en IGH, annonce). 174 → 171.
+Garde neuve éprouvée : `typologies: { igh: true }` posé sur une ligne vivante →
+« 2 failed | 1 passed | 105 skipped (108) ».
+
+**Équipements sous pression — « à exclure sauf pour compresseur : requalification
+tous les 10 ans » (p. 20).** Seule `esp-requalification-decennale` reste. Retirées,
+sans absorbant : `esp-declaration-mise-en-service`, `esp-inspection-periodique`,
+`esp-inspection-periodique-generateur-vapeur`, `esp-dossier-suivi`,
+`esp-intervention-reparation`, `esp-personnel-formation`. Corpus : arrêté du
+20 novembre 2017 art. 6, 7-11, 15, 26-28 → `non_couvert` (adresse : l'aide de la
+catégorie au formulaire d'équipement) ; `R. 4323-1` → `non_couvert`, annoncé à tout
+employeur (domaine « Formation ») ; `C. env. R. 557-14-1` → `sans_objet` (article de
+champ, toujours lu par le verdict de suivi en service). La requalification n'est PAS
+bornée aux compresseurs : décision ouverte. Plus aucune obligation ne porte les formes
+`enum_egale` / `enum_differente` ni `premierDelai` ; leurs tests passent sur des
+lignes synthétiques (éprouvé : générale sans sa différence → « 2 failed | 5 passed »).
+171 → 165.
+
+**Stockage de matières dangereuses — « à exclure sauf 3 derniers points » (p. 21).**
+La page lue (`pdftotext -layout -f 21`) range sept lignes ; les trois dernières sont
+bien les fiches de données de sécurité, la formation du personnel et la
+signalisation des aires de stockage — elles restent. Retirées, sans absorbant :
+`stockage-dangereux-retention`, `stockage-dangereux-ventilation-locaux`,
+`stockage-dangereux-declaration-icpe`, `stockage-dangereux-verification-etancheite`.
+Corpus : `C. env. L. 512-1`, `L. 512-7`, `L. 512-8`, arrêté du 1er juin 2015 art. 22,
+`R. 4412-11`, `R. 4412-17` → `non_couvert` (adresse : l'aide de la catégorie au
+formulaire d'équipement) ; `R. 4222-20` et l'arrêté du 8 octobre 1987 art. 4 restent
+retenus par l'aération. Le registre des obligations sans surface se vide
+(`PLAFOND_SANS_SURFACE` 1 → 0) ; le domaine prestataire `stockage_dangereux` devient
+inatteignable. **À croiser avec le lot 3** du plan, qui prévoyait un « défaut annuel »
+pour l'étanchéité des stockages (R. 4412-11) : la ligne qu'il visait n'existe plus.
+165 → 161.
+
+**Hotte — « traité dans le VMC : à supprimer dans les hottes » (p. 14).** La page
+lue range quatre lignes sous la hotte ; l'annotation tombe sur le « Contrôle annuel
+des installations en locaux à pollution spécifique »
+(`aeration-travail-locaux-pollution-specifique`), la même ligne que sous la VMC et la
+CTA. Ce n'est pas une ligne sœur : c'est la même obligation, déclenchée par trois
+catégories. `HOTTE_PRO` sort de ses catégories et de ses conditions ; aucun id
+retiré. Une ligne portée par une hotte est archivée si elle porte une trace,
+supprimée sinon. Ce que le retrait laisse passer, écrit à la ligne : une hotte seule,
+sans VMC ni CTA déclarée, ne porte plus ce contrôle. Le semestriel des gaines de
+recyclage garde la hotte (non annoté) : question ouverte. 161 → 161.
 
 ## Partie 2 — Registre des constats en suspens
 

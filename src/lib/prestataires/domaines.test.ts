@@ -198,7 +198,16 @@ describe("les domaines dont la contrepartie n'est pas encore atteinte", () => {
         "erreur en soi — mettez la liste à jour, et vérifiez que le commentaire " +
         "de `DOMAINES_PRESTATAIRE_ATTENDUS` dit toujours la vérité sur ce que " +
         "le rapprochement fait et ne fait pas.",
-    ).toEqual(["formation_securite", "secours"]);
+    ).toEqual([
+      "formation_securite",
+      "secours",
+      // 2026-10-07 : le contrôle annuel de la ventilation des locaux de
+      // stockage, seule ligne du domaine réalisée par un tiers, est retiré
+      // (relecture préventeur du 30/09, décision de la propriétaire du 07/10).
+      // Restent les fiches de données de sécurité et la formation, tenues par
+      // l'exploitant. Le commentaire de la table le dit.
+      "stockage_dangereux",
+    ]);
   });
 });
 

@@ -785,6 +785,11 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
               `incendie-igh-charge-calorifique-quinquennale`) et huit
               d'ascenseur, ouvertes à tous les régimes.
 
+              2026-10-07 : les trois lignes propres à l'IGH sont RETIRÉES
+              (périmètre, relecture préventeur du 30/09, décision de la
+              propriétaire du 07/10). Restent les huit d'ascenseur ; la phrase
+              du registre IGH (`phraseRegistreIgh`) ne dépend d'aucune d'elles.
+
               TRANCHÉ LE 2026-09-26, par le texte. R. 146-35, relu sur sa page
               Légifrance : « Il doit être tenu, par le propriétaire, un registre
               de sécurité […] ». Il n'entre donc pas dans le titre — ce document

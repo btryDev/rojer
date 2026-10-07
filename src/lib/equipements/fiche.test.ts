@@ -182,7 +182,9 @@ describe("lignesAFaire", () => {
     // Événementielle : pas sur l'écran, pas de verbe.
     expect(detail("froid-controle-etancheite-apres-modification")).toBe("Sans rendez-vous");
     // Échéance récurrente sans rythme écrit : sur l'écran, sous « fait le ».
-    expect(detail("stockage-dangereux-verification-etancheite")).toBe(
+    // ~~`stockage-dangereux-verification-etancheite`~~ — retirée le 2026-10-07
+    // (relecture préventeur du 30/09) ; même nature et même rythme :
+    expect(detail("stockage-dangereux-formation-personnel")).toBe(
       "Sans rendez-vous — à déclarer faite",
     );
   });

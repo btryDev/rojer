@@ -1482,75 +1482,11 @@ export const obligationsIncendie: Obligation[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // IGH
+  // IGH — retiré le 2026-10-07 (périmètre, relecture préventeur du 30/09,
+  // décision de la propriétaire du 07/10) : `incendie-igh-moyens-secours-annuelle`
+  // et `incendie-igh-charge-calorifique-quinquennale` sont dans
+  // `OBLIGATIONS_RETIREES`. Leurs identifiants ne doivent jamais être réemployés.
   // ---------------------------------------------------------------------------
-  {
-    id: "incendie-igh-moyens-secours-annuelle",
-    domaine: "incendie",
-    libelle: "Vérification annuelle des moyens de secours et SSI (IGH)",
-    description:
-      "Dans les immeubles de grande hauteur, le propriétaire fait vérifier annuellement par un organisme agréé les moyens de secours (art. GH 51 à GH 55), les scénarios et le fonctionnement du SSI, les dispositifs de sécurité, les interphones et télécommunications de sécurité. Le désenfumage mécanique est vérifié par cinquième chaque année (100 % en cinq ans).",
-    referencesLegales: [
-      {
-        source: "ARRETE",
-        reference: "Arrêté du 30 décembre 2011 (règlement IGH), art. GH 5 (vérifications techniques par organismes agréés)",
-        article: "GH 5",
-        url:
-          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000025169258",
-        versionConstatee: "2026-01-01",
-      },
-    ],
-    periodicite: "annuelle",
-    nature: "echeance_recurrente",
-    pieceAttendue: null,
-    realisateurs: ["organisme_agree"],
-    criticite: 5,
-    transmet: [],
-    typologies: { igh: true },
-    categoriesEquipement: ["ALARME_INCENDIE", "EXTINCTEUR", "DESENFUMAGE"],
-    notesInternes:
-      "Corrigé à l'audit 2026-08 : l'ancienne version citait « GH 60 à GH 63 ». GH 60 traite de la surveillance, des exercices et de l'information des locataires. Les vérifications techniques périodiques sont à l'article GH 5.",
-  },
-  {
-    id: "incendie-igh-charge-calorifique-quinquennale",
-    domaine: "incendie",
-    libelle:
-      "Rapport de vérification de la charge calorifique (occupant d'un IGH)",
-    description:
-      "Dans un immeuble de grande hauteur, l'occupant de locaux autres que d'habitation — l'employeur qui y loue des bureaux ou un commerce — fait établir par un organisme agréé un rapport de vérification de conformité de la charge calorifique, puis le fait renouveler tous les cinq ans. Le locataire doit en outre pouvoir justifier au propriétaire ou au mandataire de sécurité que les locaux qu'il occupe ne dépassent pas les charges calorifiques autorisées.",
-    referencesLegales: [
-      {
-        source: "ARRETE",
-        reference:
-          "Arrêté du 30 décembre 2011 (règlement IGH), art. GH 61 § 5 (rapport de vérification de la charge calorifique, à la charge des occupants)",
-        article: "GH 61",
-        url:
-          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000025170361",
-        note: "« Dans les locaux autres que les locaux d'habitation, LES OCCUPANTS sont tenus de faire établir, par un ORGANISME AGRÉÉ, un rapport de vérification de conformité de la charge calorifique. Ce rapport est établi dans l'année qui suit l'installation dans les lieux ou toute modification importante de l'aménagement, PUIS PÉRIODIQUEMENT TOUS LES CINQ ANS. » Le § 7 ajoute : « Les locataires autres que ceux occupant des locaux d'habitation doivent pouvoir justifier au propriétaire ou au mandataire de sécurité que les locaux qu'ils occupent ne dépassent pas les charges calorifiques autorisées. » Article lu en entier le 2026-09-04 : sept paragraphes, dont aucun autre ne porte de périodicité ni ne nomme l'occupant (§ 1 à § 4 et § 6 fixent des plafonds en MJ/m²). Relevé quatre fois, sur trois URL distinctes ; le premier appel de la veille avait rendu le § 5 amputé de sa seconde phrase, celle qui porte les cinq ans.",
-        versionConstatee: "2012-04-01",
-      },
-      {
-        source: "ARRETE",
-        reference:
-          "Arrêté du 30 décembre 2011 (règlement IGH), art. GH 5 § 3.1.4 (la quinquennale au tableau des vérifications techniques)",
-        article: "GH 5",
-        url:
-          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000052234026",
-        note: "Contexte, et surtout CONTRE-VÉRIFICATION PAR UN SECOND ARTICLE : « 3.1.4. Tous les cinq ans : les évaluations de la charge calorifique visée à l'article GH 61. » Lu le 2026-09-04 sur deux URL distinctes. Le même article porte la phrase qui articule les deux régimes et qui n'avait jamais été relevée : « Les vérifications techniques concernant un même type d'installation, HORMIS LES VÉRIFICATIONS DE LA CHARGE CALORIFIQUE, sont exécutées dans l'ensemble de l'immeuble sous la responsabilité d'un même organisme agréé. » L'exception dit pourquoi : la charge calorifique est la seule vérification que GH 5 ne fait pas passer par le propriétaire, parce que GH 61 § 5 la met à la charge de chaque occupant, local par local.",
-        versionConstatee: "2026-01-01",
-      },
-    ],
-    periodicite: "quinquennale",
-    nature: "echeance_recurrente",
-    pieceAttendue: null,
-    realisateurs: ["organisme_agree"],
-    criticite: 4,
-    transmet: [],
-    porteur: "etablissement",
-    typologies: { igh: true },
-    notesInternes:
-      "ENTRÉE LE 2026-09-04. C'est la PREMIÈRE obligation IGH du référentiel qui vise l'OCCUPANT, et c'est tout son intérêt : les deux autres (`elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`) sont fondées sur GH 5, dont la phrase d'attaque est « LES PROPRIÉTAIRES font effectuer… ». Le produit sert un employeur locataire de bureaux dans une tour (ADR-031) et ne lui devait, du règlement IGH, que des lignes dont il n'est pas le débiteur.\n\nLA RAISON DE NON-ENCODAGE QUI TENAIT LA PLACE ÉTAIT FAUSSE, et c'est le motif de ce lot. Le corpus rangeait cette quinquennale avec les paratonnerres, « faute de catégorie d'équipement ». Elle n'en a jamais eu besoin : son porteur est l'établissement (ADR-022), et ce porteur existe depuis le 2026-08-31. Un motif faux fait plus de mal qu'un manque nu, parce qu'il clôt la question — celui-ci l'a close du 2026-08-27, jour où il a été écrit, au 2026-09-03, jour où le lot suivant a rouvert GH 61 et vu qu'il était faux.\n\nPAS DE RESTRICTION DE CLASSE, ET C'EST UNE LECTURE, PAS UN OUBLI. `typologies: { igh: true }` sans `classes`. GH 61 est au titre Ier (dispositions générales), chapitre III « obligations des propriétaires et des occupants » : il s'applique quelle que soit la classe. Et le lot du 2026-09-03 a établi que la classe n'est pas le bon objet — GH 66 fait du classement l'affaire de « l'usage principal de l'immeuble », si bien qu'un plateau de bureaux dans une tour classée GH U relève des dispositions GH W. La question a été retirée du produit le même jour.\n\nCE QUI N'EST PAS PORTÉ, ET IL FAUT LE LIRE AVANT DE CROIRE LA LIGNE COMPLÈTE. Le § 5 porte DEUX délais, et un seul est encodable. « Dans l'année qui suit l'installation dans les lieux ou toute modification importante de l'aménagement » est un plafond de PREMIER CYCLE, déclenché par un événement — emménagement, réaménagement. Le champ `premierDelai` existe pour ça, mais le générateur ne le lit que sur la branche `misesEnService`, qui est indexée par équipement (`generateur.ts`) : sur un porteur établissement, `eq.id` est `null` et le champ ne serait jamais lu. L'écrire quand même donnerait une donnée juste et un comportement inexistant. Faute d'une date d'installation dans les lieux au modèle, la ligne sans historique tombe en `a_planifier` immédiat — le sens d'erreur voulu, celui que l'occupant voit et peut corriger, jamais celui qui se tait.\n\nCRITICITÉ 4 ET NON 5. La mise en danger directe est portée par les plafonds eux-mêmes (§ 1 à § 4 : 480 MJ/m², 680 sous sprinkleur), qui sont des états de l'aménagement ; le § 5 impose d'en faire ÉTABLIR la preuve. Un manquement se paie d'abord devant le propriétaire ou le mandataire de sécurité (§ 7), pas en flamme.\n\n`pieceAttendue: null` : l'obligation porte sur un ACTE — faire établir une vérification —, et le rapport en est la trace. Même traitement que les vérifications annuelles ; ce n'est pas `R. 4226-19`, où l'écrit EST l'obligation.\n\nRÉALISATEUR SUR LE MOT DU TEXTE : « par un organisme agréé », donc `organisme_agree` seul. Ni `personne_qualifiee` ni `bureau_controle` — l'arrêté du 31 janvier 1986 se contente d'« organismes ou techniciens compétents » à son article 103, celui-ci exige l'agrément, et confondre les deux enverrait un occupant vers la mauvaise prestation dans un sens comme dans l'autre.",
-  },
 
   // ---------------------------------------------------------------------------
   // Habitation — arrêté du 31 janvier 1986 (titre VIII, obligations des

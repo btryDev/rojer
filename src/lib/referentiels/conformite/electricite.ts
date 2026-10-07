@@ -483,7 +483,7 @@ export const obligationsElectricite: Obligation[] = [
     categoriesEquipement: ["INSTALLATION_ELECTRIQUE"],
     conditions: CONDITION_GROUPE_ELECTROGENE,
     notesInternes:
-      "Créée le 2026-08-26. EL 18 § 4 fixe DEUX périodicités minimales, et le référentiel n'en portait qu'une : l'obligation unique était encodée « mensuelle », si bien que la vérification des niveaux tous les quinze jours ne produisait aucune échéance. Elle ne vivait que dans la prose d'une description — sur un matériel dont le seul rôle est de démarrer quand tout le reste a lâché.\n\nLa valeur `bimensuelle` a été ajoutée à l'énumération et à la base pour cela : le choix se réduisait auparavant à `hebdomadaire`, qui double la charge réelle, ou `mensuelle`, qui tait l'obligation. Conversion à quatorze jours et non quinze — un multiple de sept fait retomber l'échéance le même jour de la semaine.\n\nSur-application assumée en 5ᵉ catégorie, comme les autres obligations de ce fichier fondées sur le Livre II : EL 18 relève du Livre II, écarté par PE 1 § 1, et ce qui traite du même objet en N5 est PE 4 § 2. La ligne est maintenue pour ne pas créer un faux négatif muet.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ ».\n\nTROIS ÉTATS — 2026-09-27 (C41). La question « groupe électrogène de sécurité présent » était une case décochée par défaut : elle écrivait `false` sur toute installation électrique, réponse ou non. Elle devient Oui / Non / Je ne sais pas encore, et les deux lignes d'EL 18 § 4 portent la même condition `non_infirmee` (`CONDITION_GROUPE_ELECTROGENE`) : sans réponse ou « oui », les deux ; « non » choisi, aucune. Les `false` antérieurs, qui n'étaient pas des réponses, sont effacés par la migration `20260927120000_groupe_electrogene_tri_etat`.\n\nLIBELLÉ RÉÉCRIT LE 2026-10-07 (relecture du préventeur, Julien Chantoin : « il s'agit d'un examen visuel »). L'ancien libellé — « Vérification des niveaux du groupe électrogène de sécurité » — ne nommait que les niveaux et laissait lire un contrôle technique du groupe ; le premier tiret d'EL 18 § 4 vise aussi le dispositif de réchauffage du moteur et l'état de la source de démarrage, sans essai de fonctionnement (l'essai de démarrage est au second tiret, mensuel). Le libellé reprend désormais l'objet du tiret mot pour mot : « vérification du niveau d'huile, d'eau et de combustible, du dispositif de réchauffage du moteur et de l'état de la source utilisée pour le démarrage ». LE MOT « VISUEL » N'EST PAS ÉCRIT DANS LE LIBELLÉ : EL 18 § 4 dit « vérification », jamais « examen visuel » ; c'est la qualification du préventeur, consignée ici et non affichée comme un mot du texte. Le libellé est dans l'empreinte : historique `2026-10-07.1`.",
+      "Créée le 2026-08-26. EL 18 § 4 fixe DEUX périodicités minimales, et le référentiel n'en portait qu'une : l'obligation unique était encodée « mensuelle », si bien que la vérification des niveaux tous les quinze jours ne produisait aucune échéance. Elle ne vivait que dans la prose d'une description — sur un matériel dont le seul rôle est de démarrer quand tout le reste a lâché.\n\nLa valeur `bimensuelle` a été ajoutée à l'énumération et à la base pour cela : le choix se réduisait auparavant à `hebdomadaire`, qui double la charge réelle, ou `mensuelle`, qui tait l'obligation. Conversion à quatorze jours et non quinze — un multiple de sept fait retomber l'échéance le même jour de la semaine.\n\nSur-application assumée en 5ᵉ catégorie, comme les autres obligations de ce fichier fondées sur le Livre II : EL 18 relève du Livre II, écarté par PE 1 § 1, et ce qui traite du même objet en N5 est PE 4 § 2. La ligne est maintenue pour ne pas créer un faux négatif muet.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ ».\n\nTROIS ÉTATS — 2026-09-27 (C41). La question « groupe électrogène de sécurité présent » était une case décochée par défaut : elle écrivait `false` sur toute installation électrique, réponse ou non. Elle devient Oui / Non / Je ne sais pas encore, et les deux lignes d'EL 18 § 4 portent la même condition `non_infirmee` (`CONDITION_GROUPE_ELECTROGENE`) : sans réponse ou « oui », les deux ; « non » choisi, aucune. Les `false` antérieurs, qui n'étaient pas des réponses, sont effacés par la migration `20260927120000_groupe_electrogene_tri_etat`.\n\nLIBELLÉ RÉÉCRIT LE 2026-10-07 (relecture du préventeur, Julien Chantoin : « il s'agit d'un examen visuel »). L'ancien libellé — « Vérification des niveaux du groupe électrogène de sécurité » — ne nommait que les niveaux et laissait lire un contrôle technique du groupe ; le premier tiret d'EL 18 § 4 vise aussi le dispositif de réchauffage du moteur et l'état de la source de démarrage, sans essai de fonctionnement (l'essai de démarrage est au second tiret, mensuel). Le libellé reprend désormais l'objet du tiret mot pour mot : « vérification du niveau d'huile, d'eau et de combustible, du dispositif de réchauffage du moteur et de l'état de la source utilisée pour le démarrage ». LE MOT « VISUEL » N'EST PAS ÉCRIT DANS LE LIBELLÉ : EL 18 § 4 dit « vérification », jamais « examen visuel » ; c'est la qualification du préventeur, consignée ici et non affichée comme un mot du texte. Le libellé est dans l'empreinte : historique `2026-10-07.5` (intégration de la relecture du préventeur ; `.1` sur la branche du lot 1).",
   },
   {
     id: "elec-erp-presence-personne-qualifiee",
@@ -569,34 +569,11 @@ export const obligationsElectricite: Obligation[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // IGH (arrêté du 30 décembre 2011)
+  // IGH (arrêté du 30 décembre 2011) — `elec-igh-annuelle` retirée le
+  // 2026-10-07 (périmètre, relecture préventeur du 30/09, décision de la
+  // propriétaire du 07/10), inscrite dans `OBLIGATIONS_RETIREES` : l'identifiant
+  // ne doit jamais être réemployé.
   // ---------------------------------------------------------------------------
-  {
-    id: "elec-igh-annuelle",
-    domaine: "electricite",
-    libelle: "Vérification annuelle des installations électriques (IGH)",
-    description:
-      "Le propriétaire d'un immeuble de grande hauteur fait vérifier annuellement, par un organisme agréé, les installations électriques et l'éclairage des parties communes. Les installations de protection contre la foudre sont vérifiées tous les deux ans.",
-    referencesLegales: [
-      {
-        source: "ARRETE",
-        reference: "Arrêté du 30 décembre 2011 (règlement IGH), art. GH 5 (vérifications techniques par organismes agréés)",
-        article: "GH 5",
-        url:
-          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000025169258",
-      },
-    ],
-    periodicite: "annuelle",
-    nature: "echeance_recurrente",
-    pieceAttendue: null,
-    realisateurs: ["organisme_agree"],
-    criticite: 5,
-    transmet: [],
-    typologies: { igh: true },
-    categoriesEquipement: ["INSTALLATION_ELECTRIQUE"],
-    notesInternes:
-      "Corrigé à l'audit 2026-08 : l'ancienne version citait GH 50, qui traite de l'alerte (dispositifs phoniques vers le PC sécurité). Les vérifications techniques périodiques sont à l'article GH 5.",
-  },
   {
     id: "incendie-hotel-po-controle-annuel-electricite",
     domaine: "electricite",

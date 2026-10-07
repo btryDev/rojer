@@ -127,7 +127,17 @@ describe("registre de dette — les réserves de lecture", () => {
     // au corpus et `PE 26` passe de `sans_objet` à `retenu` pour
     // l'identification des extincteurs ; chacun garde dehors la dotation
     // (MS 39 § 2, PE 26 § 1), et PE 26 son § 2 (colonnes sèches).
-    expect(n).toBe(92);
+    // 90 → 88 le 2026-10-07 (lot 5, compté depuis 90) : `GH 5` et `GH 61` cessent d'être retenus (IGH
+    // retiré, relecture préventeur du 30/09, décision de la propriétaire du
+    // 07/10). Leurs réserves passent dans `historique`, barrées ; le manque
+    // est désormais `non_couvert`, compté ailleurs.
+    // 88 → 87 le même jour : `R. 4323-1` cesse d'être retenu avec
+    // `esp-personnel-formation` ; sa réserve passe dans `historique`.
+    // 87 → 83 le même jour : `C. env. L. 512-7`, `L. 512-8`, l'arrêté du
+    // 1er juin 2015 art. 22 et `R. 4412-11` cessent d'être retenus (stockage
+    // « sauf 3 derniers points ») ; leurs réserves passent dans `historique`.
+    // Intégration des lots 1 et 5 (2026-10-07) : 90 + 2 (lot 1) − 7 (lot 5) = 85.
+    expect(n).toBe(85);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

@@ -336,7 +336,15 @@ function axeRegime(
       // faux dans le sens qui trompe le plus : sous-annoncer une ligne dont le
       // lecteur est justement le débiteur. Ce qui reste non porté est nommé
       // avec la même précision qu'avant.
-      consequence: `Le règlement de sécurité des IGH impose bien davantage que ce que cet outil en connaît. L'outil porte les vérifications annuelles de son article GH 5, qui incombent au propriétaire de l'immeuble, et le rapport quinquennal de conformité de la charge calorifique de son article GH 61, qui vous incombe à vous en tant qu'occupant. Du reste, il ne porte rien — ${nonPorte("le service de sécurité permanent")}, ${nonPorte("les dispositions propres à la classe de l'immeuble")}. Ce que vous lisez ici ne couvre pas votre régime.`,
+      //
+      // ~~« L'outil porte les vérifications annuelles de son article GH 5 […]
+      // et le rapport quinquennal […] de son article GH 61 »~~ — RÉÉCRITE LE
+      // 2026-10-07 : les trois obligations IGH sont retirées du référentiel
+      // (périmètre, relecture préventeur du 30/09, décision de la propriétaire
+      // du 07/10 ; `OBLIGATIONS_RETIREES`). La phrase dit donc que le régime
+      // n'est pas traité, et nomme en premier ce qui pèse sur l'occupant
+      // lui-même : c'est la ligne que ce retrait lui ôte.
+      consequence: `Le règlement de sécurité des immeubles de grande hauteur n'est pas traité par cet outil : ni ${nonPorte("le rapport quinquennal de conformité de la charge calorifique de son article GH 61")}, qui vous incombe en tant qu'occupant, ni ${nonPorte("les vérifications périodiques de son article GH 5")}, qui incombent au propriétaire de l'immeuble, ni ${nonPorte("le service de sécurité permanent")}, ni ${nonPorte("les dispositions propres à la classe de l'immeuble")}. Ce que vous lisez ici ne couvre pas votre régime.`,
     });
     return;
   }

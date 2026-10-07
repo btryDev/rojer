@@ -693,6 +693,12 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // Ce qu'il faut retenir pour les entrées suivantes : une entrée de cette
       // liste que rien ne bloque au modèle n'attend pas un ADR, elle attend une
       // heure de travail. Celle-ci en a demandé une.
+      //
+      // [2026-10-07] L'obligation est RETIRÉE avec tout l'IGH (périmètre,
+      // relecture préventeur du 30/09, décision de la propriétaire du 07/10) :
+      // GH 61 est désormais `non_couvert`, annoncé sur la page « Ce que Rojer
+      // ne couvre pas ». Il ne revient pas dans cette liste : le manque est
+      // choisi et dit, il n'attend plus d'encodage.
       // ── Lot « les sept articles du Livre II », 2026-09-04. Quatre entrées
       // pour sept articles lus, et c'est le résultat qu'il faut lire dans les
       // deux sens : trois des sept étaient encodables et le sont

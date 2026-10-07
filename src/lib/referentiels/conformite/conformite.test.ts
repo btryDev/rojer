@@ -222,8 +222,17 @@ describe("référentiel conformité — couverture P1", () => {
     expect(obligationsCuissonHotte.length).toBeGreaterThanOrEqual(4);
     expect(obligationsAscenseurs.length).toBeGreaterThanOrEqual(5);
     expect(obligationsPortesPortails.length).toBeGreaterThanOrEqual(4);
-    expect(obligationsEquipementSousPression.length).toBeGreaterThanOrEqual(5);
-    expect(obligationsStockageDangereux.length).toBeGreaterThanOrEqual(5);
+    // ~~`toBeGreaterThanOrEqual(5)`~~ — 2026-10-07 : seule la requalification
+    // décennale reste (relecture préventeur du 30/09, décision du 07/10).
+    expect(obligationsEquipementSousPression.map((o) => o.id)).toEqual([
+      "esp-requalification-decennale",
+    ]);
+    // ~~`toBeGreaterThanOrEqual(5)`~~ — 2026-10-07 : « à exclure sauf 3 derniers
+    // points » ; le troisième vit au domaine signalisation.
+    expect(obligationsStockageDangereux.map((o) => o.id)).toEqual([
+      "stockage-dangereux-fiches-donnees",
+      "stockage-dangereux-formation-personnel",
+    ]);
     expect(obligationsLevage.length).toBeGreaterThanOrEqual(7);
   });
 
@@ -491,14 +500,9 @@ describe("référentiel conformité — anti-doublon", () => {
       raison:
         "Instruit à l'intégration du 2026-09-02, et c'est une paire née de deux branches qui ne se voyaient pas : le carnet de prescriptions a été encodé l'après-midi par un lot, quand une réserve écrite le matin par un autre disait qu'il n'était « encodé nulle part ». `R. 4544-10` porte les deux — le quatrième alinéa remet un carnet de prescriptions À CHAQUE travailleur, charge d'employeur due dès qu'on opère sur l'installation ; le premier délivre l'habilitation « à un travailleur désigné », titre nominatif qui n'existe que par personne déclarée. Un employeur peut avoir remis les carnets sans qu'aucune habilitation soit à jour, et l'inverse. Les fondre ferait cocher « fait » pour l'un en réglant l'autre. Le test ne compare que la clé d'article, et `R. 4544-10` en institue deux ; c'est le troisième couple de ce genre sur ce seul article.",
     },
-    {
-      paire: [
-        "aeration-controle-installations-r4222-20",
-        "stockage-dangereux-ventilation-locaux",
-      ],
-      raison:
-        "Même article fondateur (R. 4222-20), mais deux régimes distincts de l'arrêté du 8 octobre 1987 : l'article 3 pour les locaux à pollution NON spécifique, l'article 4 pour les locaux à pollution spécifique — dont relève un local de stockage de matières dangereuses. Le discriminant est la référence de CONTEXTE, que ce test ne compare pas (il ne regarde que le fondateur, par convention). Ce n'est pas un doublon.",
-    },
+    // ~~{ paire: ["aeration-controle-installations-r4222-20", "stockage-dangereux-ventilation-locaux"] }~~ — sortie le 2026-10-07 : au moins
+    // une des deux est retirée (périmètre, relecture préventeur du 30/09,
+    // décision de la propriétaire du 07/10). La paire n'existe plus.
     {
       paire: [
         "porte-auto-verification-initiale",
@@ -507,14 +511,9 @@ describe("référentiel conformité — anti-doublon", () => {
       raison:
         "Instruit le 2026-08-27, ce n'est PAS un doublon. La clé canonique est la même (`Arrêté 1993-12-21 art. 2`) parce que l'article 2 pose le champ d'application commun, mais les deux obligations renvoient à des dispositions distinctes du même arrêté : « art. 2 à 4 — installations neuves » d'un côté, « art. 2 et 5 — passages de véhicules » de l'autre. Un article peut fonder plusieurs actes ; ce test ne compare que le fondateur, il ne sait pas les distinguer.",
     },
-    {
-      paire: [
-        "stockage-dangereux-retention",
-        "stockage-dangereux-verification-etancheite",
-      ],
-      raison:
-        "Ce n'est pas un doublon, mais la raison qui le disait était fausse et a été réécrite le 2026-09-01 (lot A). Elle affirmait que R. 4412-11 fonde « entretien régulier des équipements de stockage » : l'article, lu en entier à la source, ne l'écrit pas. Ce qui distingue vraiment les deux lignes est leur NATURE, et elle est déclarée : `stockage-dangereux-retention` est un `etat_permanent` — la rétention est en place ou elle ne l'est pas — et `stockage-dangereux-verification-etancheite` une `echeance_recurrente` — l'acte revient, sans rythme connu. Un état et un acte ne se cochent pas de la même façon et ne se prouvent pas par la même chose. Le 7° de l'article fonde le premier (procédures de stockage sûres), le 2° le second (procédures d'entretien régulières) ; seul l'article est commun, et aucune des deux n'a pour l'instant de texte qui DATE l'acte — voir les notes internes de la seconde.",
-    },
+    // ~~{ paire: ["stockage-dangereux-retention", "stockage-dangereux-verification-etancheite"] }~~ — sortie le 2026-10-07 : au moins
+    // une des deux est retirée (périmètre, relecture préventeur du 30/09,
+    // décision de la propriétaire du 07/10). La paire n'existe plus.
     // ── Apparue le 2026-09-01 avec le recalage des fondements (lot A) ──
     {
       paire: [
@@ -881,14 +880,10 @@ describe("référentiel conformité — non-régression des obligations critique
     "froid-controle-etancheite-annuel-50t-detection",
     "froid-controle-etancheite-trimestriel-500t",
     "froid-controle-etancheite-semestriel-500t-detection",
-    // Créée le 2026-09-01 (arrêté du 20 novembre 2017, art. 15 : deux ans pour
-    // les générateurs de vapeur). Même critère que le chariot élévateur, et il
-    // est rempli pour les deux mêmes raisons : l'obligation est NEUVE — aucun
-    // équipement déjà en base ne peut la perdre —, et la couverture par défaut
-    // reste assurée par `esp-inspection-periodique`, qui porte sur la même
-    // propriété la condition `enum_differente` correspondante et s'applique
-    // donc tant que `familleEsp` n'a pas été renseignée.
-    "esp-inspection-periodique-generateur-vapeur",
+    // ~~"esp-inspection-periodique-generateur-vapeur"~~ (créée le 2026-09-01,
+    // art. 15 : deux ans pour les générateurs de vapeur) — retirée le
+    // 2026-10-07 avec sa jumelle générale (périmètre, relecture préventeur du
+    // 30/09, décision de la propriétaire du 07/10).
   ]);
 
   /**
@@ -1063,7 +1058,8 @@ describe("référentiel conformité — non-régression des obligations critique
       ["levage-vgp-semestrielle-personnes", "sertAuLevageDePersonnes"],
       ["levage-vgp-accessoires-annuelle", "aAccessoiresDeLevage"],
       ["esp-requalification-decennale", "estSoumisSuiviEnService"],
-      ["esp-inspection-periodique", "estSoumisSuiviEnService"],
+      // ~~["esp-inspection-periodique", "estSoumisSuiviEnService"]~~ — retirée
+      // le 2026-10-07 (relecture préventeur du 30/09).
     ];
     for (const [id, propriete] of attendus) {
       const o = obligationParId(id);
@@ -1626,19 +1622,18 @@ describe("référentiel conformité — version et empreinte", () => {
     // réduits au rythme et à son fondement (`libelleVgp`), la réponse manquante
     // dite dans la description. Libellés seuls : 174 + 0 − 0 = 174.
     { version: "2026-09-28.3", empreinte: "174-748bfcc14b5ff8dd" },
-    // Relecture du préventeur, lot 1 (2026-10-07) — une seule version pour le
-    // lot, réécrite à chaque commit du lot tant qu'elle n'a rien scellé (même
-    // cas que `2026-09-20.1`). (1) Ascenseur : AS 9 prend deux lignes à lui,
-    // bornées aux ERP N1–N4 (quinquennale, et remise en service après
-    // transformation importante). 174 + 2 − 0 = 176. (2) MS 38 § 4 : les deux
-    // lignes d'extincteurs d'ERP passent à `personne_competente` (« par une
-    // personne ou un organisme compétent »), sans agrément. 176 + 0 − 0 = 176.
-    // (3) Identification des extincteurs en ERP, sœurs de l'art. 10 de
-    // l'arrêté du 4 novembre 1993 : N1–N4 (MS 38 § 3, MS 39), N5 (PE 26 § 1
-    // et § 3). Deux états permanents d'équipement : 176 + 2 − 0 = 178.
-    // (4) EL 18 § 4 : le libellé de la quinzaine du groupe électrogène reprend
-    // tout l'objet du premier tiret. Libellé seul : 178 + 0 − 0 = 178.
-    { version: "2026-10-07.1", empreinte: "178-72ee72dd1c5ea327" },
+    // Relecture du préventeur du 30/09, intégration des cinq lots
+    // (`lot/relecture-jc-1` à `-5`). Chaque branche avait sa ligne, `.1` à
+    // `.4` ; aucune n'a scellé de calendrier, elles ne figurent pas ici (même
+    // cas que `2026-09-20.1`). Lot 1 : AS 9 en deux lignes d'ascenseur (ERP
+    // N1–N4), MS 38 § 4 par une personne compétente, identification des
+    // extincteurs en ERP (N1–N4, N5), libellé d'EL 18 § 4. 174 + 4 − 0 = 178.
+    // Lot 5 (périmètre, décision de la propriétaire du 07/10) : l'IGH sort
+    // (3), les équipements sous pression ne gardent que la requalification
+    // (6 `esp-*` retirées), le stockage de matières dangereuses ses trois
+    // derniers points (4 `stockage-dangereux-*` retirées) ; HOTTE_PRO quitte
+    // `aeration-travail-locaux-pollution-specifique`. 178 + 0 − 13 = 165.
+    { version: "2026-10-07.5", empreinte: "165-864f8f4cc9ac12b4" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1795,7 +1790,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(178);
+    ).toBe(165);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -2236,24 +2231,18 @@ describe("référentiel conformité — d'où vient le chiffre", () => {
 });
 
 // ---------------------------------------------------------------------------
-// GH 61 § 5 — la seule obligation du règlement IGH qui vise l'OCCUPANT
+// IGH — le règlement sort du référentiel (2026-10-07)
 // ---------------------------------------------------------------------------
 //
-// Ce bloc existe parce que la restriction qu'il interdit a été ÉPROUVÉE EN LA
-// POSANT, le 2026-09-04. Injecter `igh: { classes: ["GHW1", "GHW2"] }` sur
-// cette ligne — la restriction que l'intuition suggère, puisqu'il s'agit de
-// bureaux — la fait DISPARAÎTRE du calendrier d'un établissement qui déclare
-// `classeIgh: "GHU"`. C'est exactement le faux négatif que GH 66 prédit : le
-// classement d'une tour mixte retient « l'usage principal de l'immeuble », donc
-// un plateau de bureaux peut vivre dans une tour classée GH U, et son occupant
-// doit la même vérification. Sans ce test, la restriction se reposerait un jour
-// sur un raisonnement plausible, et rien ne l'arrêterait.
-//
-// Le premier cas — classe non renseignée — ne discrimine RIEN aujourd'hui :
-// `evaluerIgh` retient sur l'attribut absent. Il est là quand même, parce que
-// c'est le cas nominal depuis que la question a été retirée du produit
-// (2026-09-03), et qu'une dissymétrie qui bougerait le casserait.
-describe("GH 61 § 5 — la quinquennale de la charge calorifique atteint l'occupant", () => {
+// ~~GH 61 § 5 — la seule obligation du règlement IGH qui vise l'OCCUPANT.~~
+// Le bloc qui gardait `incendie-igh-charge-calorifique-quinquennale` (entrée
+// le 2026-09-04) est remplacé le 2026-10-07 : l'obligation est retirée avec
+// `elec-igh-annuelle` et `incendie-igh-moyens-secours-annuelle` — périmètre,
+// relecture préventeur du 30/09, décision de la propriétaire du 07/10
+// (`OBLIGATIONS_RETIREES`). Ce qui reste à garder est l'inverse : aucune ligne
+// ne doit plus naître du SEUL régime IGH. La typologie `igh` reste au modèle et
+// sur les huit lignes d'ascenseur, ouvertes à tous les régimes (CCH).
+describe("IGH — aucune obligation ne naît plus du seul régime IGH", () => {
   const bureauEnIgh: EtablissementMatching = {
     id: "etab-igh",
     effectifSurSite: 8,
@@ -2273,29 +2262,32 @@ describe("GH 61 § 5 — la quinquennale de la charge calorifique atteint l'occu
   };
 
   const idsDe = (etab: EtablissementMatching) =>
-    determineObligationsApplicables(etab, []).map((a) => a.obligation.id);
+    determineObligationsApplicables(etab, [])
+      .map((a) => a.obligation.id)
+      .sort();
 
-  it("tombe sur un bureau en IGH sans classe déclarée ET SANS AUCUN ÉQUIPEMENT", () => {
-    // Porteur établissement : le parc vide ne doit rien lui retirer. C'était
-    // tout l'objet de l'ADR-022, et c'est ce qui distingue cette ligne des
-    // deux autres obligations IGH, portées par des équipements.
-    expect(idsDe(bureauEnIgh)).toContain(
-      "incendie-igh-charge-calorifique-quinquennale",
-    );
+  it("aucune obligation vivante n'est ouverte au seul régime IGH", () => {
+    // Éprouvé en le cassant : rétablir `typologies: { igh: true }` sur une
+    // seule ligne la fait apparaître ici.
+    const ighSeul = obligationsConformite
+      .filter((o) => {
+        const t = o.typologies;
+        return (
+          t.igh !== undefined &&
+          t.igh !== false &&
+          !t.travail &&
+          !t.erp &&
+          !t.habitation
+        );
+      })
+      .map((o) => o.id);
+    expect(ighSeul).toEqual([]);
   });
 
-  it("tombe aussi sur un plateau de bureaux dans une tour classée GH U", () => {
-    expect(idsDe({ ...bureauEnIgh, classeIgh: "GHU" })).toContain(
-      "incendie-igh-charge-calorifique-quinquennale",
-    );
-  });
-
-  it("ne tombe pas sur un établissement qui n'est pas en IGH", () => {
-    // La borne basse : sans ce cas, la ligne pourrait s'appliquer partout et
-    // les deux cas ci-dessus passeraient quand même.
-    expect(idsDe({ ...bureauEnIgh, estIGH: false })).not.toContain(
-      "incendie-igh-charge-calorifique-quinquennale",
-    );
+  it("un bureau en IGH sans équipement doit exactement ce qu'il doit hors IGH", () => {
+    // La borne qui manquait à l'assertion ci-dessus : une ligne d'établissement
+    // bornée par une condition sur `estIGH` passerait le filtre de typologie.
+    expect(idsDe(bureauEnIgh)).toEqual(idsDe({ ...bureauEnIgh, estIGH: false }));
   });
 });
 
@@ -2803,7 +2795,8 @@ describe("ce que le texte fait établir est dit en entier (2026-09-28, lot 2, 7 
     ["ascenseur-entretien-contrat", "état initial de l'installation"],
     ["ascenseur-entretien-contrat", "changement de prestataire"],
     ["ascenseur-controle-technique-quinquennal", "à la disposition du contrôleur technique"],
-    ["esp-dossier-suivi", "liste des récipients fixes"],
+    // ~~["esp-dossier-suivi", "liste des récipients fixes"]~~ — retirée le
+    // 2026-10-07 (relecture préventeur du 30/09, décision du 07/10).
   ] as const)("%s dit « %s »", (id, phrase) => {
     expect(obligationParId(id)?.description).toContain(phrase);
   });
