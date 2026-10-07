@@ -1653,6 +1653,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // réduits au rythme et à son fondement (`libelleVgp`), la réponse manquante
     // dite dans la description. Libellés seuls : 174 + 0 − 0 = 174.
     { version: "2026-09-28.3", empreinte: "174-748bfcc14b5ff8dd" },
+    // C55 lot 3, relecture du préventeur (ADR-039) : les rythmes retenus
+    // entrent au référentiel — NF S 61-919 pour les extincteurs hors ERP,
+    // défaut annuel là où le texte impose de refaire l'acte sans chiffre.
+    // Mouvement du compte : voir `REFERENTIEL_VERSION`.
+    { version: "2026-10-07.4", empreinte: "174-76c226a2fef23810" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

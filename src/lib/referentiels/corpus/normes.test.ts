@@ -112,17 +112,18 @@ describe("corpus des normes (ADR-039)", () => {
       "incendie-travail-extincteurs-dotation",
     );
 
-    // Et les deux réunis ferment la boucle.
+    // Et les deux réunis ferment la boucle. L'entrée garde les obligations
+    // livrées qui la citent (depuis le lot 3, C55) et nomme la fixture en plus.
     expect(
       liensNormesRompus(
-        corpusMute.map((c) =>
+        CORPUS.map((c) =>
           c.id !== NORMES.id
             ? c
             : {
                 ...c,
                 articles: c.articles.map((a) =>
                   a.ref === "NF S 61-919 § 5.1.1" && a.statut === "norme"
-                    ? { ...a, obligations: [o.id] }
+                    ? { ...a, obligations: [...a.obligations, o.id] }
                     : a,
                 ),
               },

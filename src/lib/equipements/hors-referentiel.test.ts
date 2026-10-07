@@ -74,28 +74,23 @@ describe("reperterSansEcheance — le référentiel réel", () => {
     expect(m.has("eq1")).toBe(false);
   });
 
-  it("signale un extincteur en lieu de travail non-ERP, faute d'échéance légale", () => {
-    // CHANGEMENT DE COMPORTEMENT, 2026-08-27. L'extincteur figurait ici comme
-    // exemple d'équipement produisant une échéance. Il n'en produit plus chez
-    // un employeur non-ERP : la section R. 4227-28 à R. 4227-41 du code du
-    // travail, relue à la source, ne fixe AUCUNE périodicité annuelle. La
-    // vérification annuelle des extincteurs vient de la norme NF S 61-919 et
-    // des contrats de maintenance, pas du droit opposable.
+  it("ne signale plus un extincteur en lieu de travail non-ERP : la norme NF S 61-919 en date la maintenance", () => {
+    // DEUXIÈME CHANGEMENT DE COMPORTEMENT, 2026-10-07 (C55 lot 3, ADR-039).
+    // Du 2026-08-27 au 2026-10-07, ce test attendait `aucune_echeance_datable` :
+    // la section R. 4227-28 à R. 4227-41 ne fixe aucune périodicité, et la
+    // vérification annuelle venant de la norme NF S 61-919, le dépôt la tenait
+    // pour « pas du droit opposable ». L'ADR-039 admet qu'une norme LUE donne
+    // le rythme : `incendie-travail-moyens-lutte` porte `rythmeRetenu` (§ 5.1.1,
+    // annuelle), et l'appareil a désormais une échéance — marquée « Rythme de
+    // la norme NF S 61-919 », jamais présentée comme un article de loi.
     //
-    // Les ERP ne sont pas concernés : `incendie-erp-extincteurs-annuelle`
-    // porte l'annuelle pour eux, fondée sur MS 73.
-    //
-    // Le motif rendu est `aucune_echeance_datable`, et non
-    // `aucune_obligation_applicable` : le modèle distingue bien « rien ne
-    // s'applique » de « quelque chose s'applique, sans date ». C'est le bon
-    // motif ici — des obligations pèsent sur cet extincteur (en être doté, le
-    // maintenir en état, le rendre accessible), elles n'ont simplement pas
-    // d'échéance légale.
+    // Le motif `aucune_echeance_datable` reste le bon pour ce qui n'a ni texte
+    // ni norme qui date : il est éprouvé sur un référentiel injecté plus bas.
     const m = reperterSansEcheance(etablissement({ estERP: false }), [
       equipement("eq1", "EXTINCTEUR"),
     ]);
 
-    expect(m.get("eq1")).toBe("aucune_echeance_datable");
+    expect(m.has("eq1")).toBe(false);
   });
 
   it("distingue « l'outil ne connaît pas cet appareil » de « il le connaît, mais pas chez vous »", () => {

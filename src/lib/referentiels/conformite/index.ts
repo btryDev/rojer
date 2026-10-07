@@ -254,7 +254,11 @@ export const obligationsConformite: Obligation[] = [
 // `2026-09-28.3` (contre-revue des corrections du lot 3) : les libellés de
 // quatre VGP de levage — servies au silence sur une réponse — disent le rythme
 // et son fondement, plus un fait non déclaré. Libellés seuls : 174 + 0 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-09-28.3";
+// `2026-10-07.4` (C55 lot 3, relecture du préventeur, ADR-039) : les rythmes
+// retenus entrent. Extincteurs hors ERP : maintenance annuelle de la norme
+// NF S 61-919 (`incendie-travail-moyens-lutte`, désormais `erp: false` — la
+// partition avec l'annuelle de MS 38 § 4). Compte : 174 + 0 − 0 = 174.
+export const REFERENTIEL_VERSION = "2026-10-07.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -701,7 +701,12 @@ describe("moteur matching — scénarios intégrés", () => {
     expect(ids).toContain("elec-erp-mise-en-service");
     expect(ids).toContain("elec-travail-consignation-registre");
     // Incendie
-    expect(ids).toContain("incendie-travail-moyens-lutte");
+    // 2026-10-07 (C55 lot 3) : la maintenance annuelle de la norme NF S 61-919
+    // ne vise plus que le lieu de travail HORS ERP — l'annuelle de MS 38 § 4,
+    // écrite par le texte, l'emporte chez un ERP (une seule annuelle par
+    // extincteur, `extincteurs-partition.test.ts`).
+    expect(ids).not.toContain("incendie-travail-moyens-lutte");
+    expect(ids).toContain("incendie-travail-extincteurs-dotation");
     expect(ids).toContain("incendie-erp-extincteurs-annuelle");
     expect(ids).toContain("incendie-erp-ssi-annuelle");
     expect(ids).toContain("incendie-erp-baes-annuelle");

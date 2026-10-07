@@ -79,9 +79,11 @@ describe("periodiciteEffective", () => {
     expect(periodiciteEffective(sans)).toBe("autre");
   });
 
-  it("aucune obligation livrée ne porte encore de rythme retenu (le contenu est le lot 3)", () => {
-    // Borne haute du LOT, pas de l'invariant : à retirer quand le lot 3 en posera.
-    expect(obligationsConformite.filter((o) => o.rythmeRetenu)).toEqual([]);
+  // « Aucune obligation livrée ne porte encore de rythme retenu » : borne haute
+  // du lot 2, retirée le 2026-10-07 par le lot 3 (C55), qui en pose.
+  it("le référentiel livré porte des rythmes retenus (borne basse, C55 lot 3)", () => {
+    const motifs = new Set(obligationsConformite.map((o) => o.rythmeRetenu?.motif));
+    expect(motifs.has("norme")).toBe(true);
   });
 
   it("la norme d'un rythme retenu fait partie des références citées", () => {
