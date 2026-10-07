@@ -1696,8 +1696,14 @@ describe("référentiel conformité — version et empreinte", () => {
     // obligation touchée. Lot 3 : les rythmes retenus entrent (NF S 61-919
     // pour les extincteurs hors ERP, défaut annuel là où le texte impose de
     // refaire l'acte sans chiffre) ; cinq obligations neuves, détail à
-    // `REFERENTIEL_VERSION`. 166 + 5 − 0 = 171.
-    { version: "2026-10-07.5", empreinte: "171-637b0e8a330eee34" },
+    // `REFERENTIEL_VERSION`. 166 + 5 − 0 = 171. Puis, version toujours jamais
+    // servie, les corrections de contenu de la revue indépendante (C60) : AS 9
+    // aux hôtels de 5ᵉ par le renvoi de PO 1 § 3 — deux lignes neuves,
+    // `ascenseur-hotel-5-verification-quinquennale-as9` et sa jumelle de
+    // remise en service ; libellés et descriptions ramenés au texte ; halon
+    // dans `typeExtincteur`. 171 + 2 − 0 = 173. ~~171-637b0e8a330eee34~~ :
+    // empreinte de l'intégration avant C60, jamais scellée par un calendrier.
+    { version: "2026-10-07.5", empreinte: "173-7324273780278b5f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1854,7 +1860,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(171);
+    ).toBe(173);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

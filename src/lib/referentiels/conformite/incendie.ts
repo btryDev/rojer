@@ -26,7 +26,6 @@
  *   extincteurs hors ERP est le lot 3. APSAD R4 reste exclue.]
  */
 
-import { DESCRIPTION_GN_10 } from "./texte-gn10";
 import type { Obligation, ReferenceLegale, RythmeRetenu } from "./types";
 
 // -----------------------------------------------------------------------------
@@ -1466,8 +1465,7 @@ export const obligationsIncendie: Obligation[] = [
     libelle:
       "Consigne d'incendie affichée dans chaque chambre (ERP 5ᵉ avec locaux à sommeil)",
     description:
-      "Dans les établissements de 5ᵉ catégorie comportant des locaux à sommeil, une consigne d'incendie est affichée dans chaque chambre. Elle est rédigée en français et complétée par une bande dessinée illustrant les consignes. L'article PE 33 appartient aux dispositions applicables aux établissements de 5ᵉ catégorie, approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990 ; sa rédaction actuelle est en vigueur depuis le 4 novembre 2011. " +
-      DESCRIPTION_GN_10,
+      "Dans les établissements de 5ᵉ catégorie comportant des locaux à sommeil, une consigne d'incendie est affichée dans chaque chambre. Elle est rédigée en français et complétée par une bande dessinée illustrant les consignes. L'article PE 33 appartient aux dispositions applicables aux établissements de 5ᵉ catégorie, approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990 ; sa rédaction actuelle est en vigueur depuis le 4 novembre 2011. Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -1498,8 +1496,7 @@ export const obligationsIncendie: Obligation[] = [
     libelle:
       "Plan de l'établissement, plans d'orientation et de repérage affichés (ERP 5ᵉ avec locaux à sommeil)",
     description:
-      "Dans les établissements de 5ᵉ catégorie comportant des locaux à sommeil, trois affichages sont dus : un plan de l'établissement dans le hall d'entrée, un plan d'orientation simplifié à chaque étage près de l'accès aux escaliers, et un plan sommaire de repérage de chaque chambre par rapport aux dégagements à utiliser en cas d'incendie, fixé dans chaque chambre. L'article PE 35 appartient aux dispositions applicables aux établissements de 5ᵉ catégorie, approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990 ; sa rédaction est celle d'origine. " +
-      DESCRIPTION_GN_10,
+      "Dans les établissements de 5ᵉ catégorie comportant des locaux à sommeil, trois affichages sont dus : un plan de l'établissement dans le hall d'entrée, un plan d'orientation simplifié à chaque étage près de l'accès aux escaliers, et un plan sommaire de repérage de chaque chambre par rapport aux dégagements à utiliser en cas d'incendie, fixé dans chaque chambre. L'article PE 35 appartient aux dispositions applicables aux établissements de 5ᵉ catégorie, approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990 ; sa rédaction est celle d'origine. Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -1532,8 +1529,7 @@ export const obligationsIncendie: Obligation[] = [
     libelle:
       "Personnel instruit des conduites à tenir en cas d'incendie et entraîné à la manœuvre des moyens de secours (ERP de 5ᵉ catégorie)",
     description:
-      "Dans un établissement recevant du public de 5ᵉ catégorie, le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours. L'article PE 27 appartient aux dispositions applicables aux établissements de 5ᵉ catégorie, approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990 ; sa rédaction actuelle est en vigueur depuis le 1er mai 2026 (arrêté du 4 février 2026). " +
-      DESCRIPTION_GN_10,
+      "Dans un établissement recevant du public de 5ᵉ catégorie, le personnel doit être instruit sur les conduites à tenir en cas d'incendie et être entraîné à la manœuvre des moyens de secours. L'article PE 27 appartient aux dispositions applicables aux établissements de 5ᵉ catégorie, approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990 ; sa rédaction actuelle est en vigueur depuis le 1er mai 2026 (arrêté du 4 février 2026). Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -1562,8 +1558,7 @@ export const obligationsIncendie: Obligation[] = [
     libelle:
       "Consignes incendie affichées bien en vue : numéro des sapeurs-pompiers, adresse du centre de secours, dispositions immédiates (ERP de 5ᵉ catégorie)",
     description:
-      "Dans un établissement recevant du public de 5ᵉ catégorie, des consignes précises, affichées bien en vue, doivent indiquer le numéro d'appel des sapeurs-pompiers, l'adresse du centre de secours le plus proche et les dispositions immédiates à prendre en cas de sinistre. L'article PE 27 appartient aux dispositions applicables aux établissements de 5ᵉ catégorie, approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990 ; sa rédaction actuelle est en vigueur depuis le 1er mai 2026 (arrêté du 4 février 2026). " +
-      DESCRIPTION_GN_10,
+      "Dans un établissement recevant du public de 5ᵉ catégorie, des consignes précises, affichées bien en vue, doivent indiquer le numéro d'appel des sapeurs-pompiers, l'adresse du centre de secours le plus proche et les dispositions immédiates à prendre en cas de sinistre. L'article PE 27 appartient aux dispositions applicables aux établissements de 5ᵉ catégorie, approuvées par l'arrêté du 22 juin 1990, en vigueur depuis le 27 août 1990 ; sa rédaction actuelle est en vigueur depuis le 1er mai 2026 (arrêté du 4 février 2026). Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
     referencesLegales: [
       {
         source: "ARRETE",

@@ -103,7 +103,6 @@
  * substances dangereuses (art. 11) se pose sur l'aire de stockage déclarée.
  */
 
-import { DESCRIPTION_GN_10 } from "./texte-gn10";
 import type { Obligation } from "./types";
 
 export const obligationsSignalisation: Obligation[] = [
@@ -237,8 +236,7 @@ export const obligationsSignalisation: Obligation[] = [
     libelle:
       "Extincteur de couleur rouge, emplacement des moyens d'extinction repéré par une signalisation durable, armoire de robinet d'incendie armé signalée (ERP des quatre premières catégories)",
     description:
-      "Dans un établissement recevant du public des quatre premières catégories, l'extincteur est de couleur rouge, afin de faciliter sa localisation tant par le personnel que par le public (MS 38 § 3). Les moyens d'extinction sont répartis de préférence dans les dégagements, en des endroits visibles et facilement accessibles ; ils peuvent être protégés à condition de faire l'objet d'une signalisation claire, et leur emplacement est repéré par une signalisation durable (MS 39 § 1). Les extincteurs portatifs sont accrochés à un élément fixe, avec une signalisation durable (MS 39 § 2). Si les robinets d'incendie armés sont placés dans des armoires ou coffrets, ceux-ci sont signalés et ne comportent pas de dispositif de condamnation (MS 15 § 4). " +
-      DESCRIPTION_GN_10,
+      "Dans un établissement recevant du public des quatre premières catégories, l'extincteur est de couleur rouge, afin de faciliter sa localisation tant par le personnel que par le public (MS 38 § 3). Les moyens d'extinction sont répartis de préférence dans les dégagements, en des endroits visibles et facilement accessibles ; ils peuvent être protégés à condition de faire l'objet d'une signalisation claire, et leur emplacement est repéré par une signalisation durable (MS 39 § 1). Les extincteurs portatifs sont accrochés à un élément fixe, avec une signalisation durable (MS 39 § 2). Si les robinets d'incendie armés sont placés dans des armoires ou coffrets, ceux-ci sont signalés et ne comportent pas de dispositif de condamnation (MS 15 § 4). Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -287,8 +285,7 @@ export const obligationsSignalisation: Obligation[] = [
     libelle:
       "Emplacement de l'extincteur repéré par une signalisation durable, panneau de localisation de l'appareil d'extinction non apparent (ERP de 5ᵉ catégorie)",
     description:
-      "Dans un établissement recevant du public de 5ᵉ catégorie, l'extincteur portatif est installé dans les conditions de l'article MS 39 (PE 26 § 1) : son emplacement est repéré par une signalisation durable, et il est accroché à un élément fixe, avec une signalisation durable. Lorsqu'un appareil ou un dispositif d'extinction n'est pas apparent, il est signalé par un panneau conforme aux signaux normalisés d'indication de localisation d'un équipement de lutte contre l'incendie (PE 26 § 3). " +
-      DESCRIPTION_GN_10,
+      "Dans un établissement recevant du public de 5ᵉ catégorie, l'extincteur portatif est installé dans les conditions de l'article MS 39 (PE 26 § 1) : son emplacement est repéré par une signalisation durable, et il est accroché à un élément fixe, avec une signalisation durable. Lorsqu'un appareil ou un dispositif d'extinction n'est pas apparent, il est signalé par un panneau conforme aux signaux normalisés d'indication de localisation d'un équipement de lutte contre l'incendie (PE 26 § 3). Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
     referencesLegales: [
       {
         source: "ARRETE",

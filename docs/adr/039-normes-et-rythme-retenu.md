@@ -190,7 +190,7 @@ Elle ne qualifie pas : ni « opposable », ni « valeur légale »
   formation annuels selon les corrections du préventeur), et déplace l'empreinte.
   [2026-10-07, lot 3 livré (`lot/relecture-jc-3`, référentiel `2026-10-07.4`
   sur la branche, 174 + 5 − 0 = 179 ; servi sous `2026-10-07.5` avec les quatre
-  autres lots de la relecture, 171 obligations) : neuf obligations portent un rythme retenu — trois de la
+  autres lots de la relecture, ~~171~~ 173 obligations — 2026-10-07, C60 : + 2, AS 9 aux hôtels de 5ᵉ) : neuf obligations portent un rythme retenu — trois de la
   NF S 61-919, six par défaut annuel. Partout où l'ERP a un rythme écrit pour
   le même acte, la ligne de lieu de travail porte `erp: false` (partition de
   typologie, pas `ExclusionMutuelle`). « À 5 et 15 ans » s'exprime sans

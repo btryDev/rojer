@@ -1,6 +1,7 @@
-// La phrase de `texte-gn10.ts` est lue par six descriptions. Si elle s'écarte
-// du texte, les six s'en écartent ensemble : ce test la confronte au verbatim
-// que le corpus consigne pour GN 10.
+// La phrase de `texte-gn10.ts` est la référence des six descriptions qui la
+// recopient en littéral (les fichiers de données n'importent pas de valeur) ;
+// `conformite.test.ts` les tient égales à elle, ce test la confronte au
+// verbatim que le corpus consigne pour GN 10.
 
 import { describe, expect, it } from "vitest";
 import { indexArticlesParRef } from "@/lib/referentiels/corpus";

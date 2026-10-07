@@ -16,9 +16,13 @@
  * `citationCle` de l'entrée ; `conformite.test.ts` exige que tout état
  * permanent fondé sur le livre III ou sur MS 39 porte cette phrase entière.
  *
- * Module sans dépendance : les fichiers de données du référentiel
- * l'importent, et l'empreinte (`empreinteReferentiel`) lit la description
- * telle qu'elle est composée, donc une correction ici la déplace.
+ * LES FICHIERS DE DONNÉES N'IMPORTENT PAS CETTE CONSTANTE, ils écrivent la
+ * phrase en littéral : un fichier de `DONNEES_REFERENTIEL` ne porte ni
+ * fonction ni import de valeur (`version-moteur.test.ts`), sans quoi il
+ * sortirait du relevé du moteur. C'est la forme de `texte-r4121-2.ts` : la
+ * constante est la référence, et `conformite.test.ts` exige que chaque
+ * description concernée la contienne mot pour mot — une copie qui diverge
+ * rougit, au lieu de passer.
  */
 
 /** Le texte de GN 10, § 1 et § 2, tel que le corpus le consigne. */
