@@ -254,7 +254,20 @@ export const obligationsConformite: Obligation[] = [
 // `2026-09-28.3` (contre-revue des corrections du lot 3) : les libellés de
 // quatre VGP de levage — servies au silence sur une réponse — disent le rythme
 // et son fondement, plus un fait non déclaré. Libellés seuls : 174 + 0 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-09-28.3";
+// `2026-10-07.1` (relecture du préventeur, lot 1 — une seule version pour le
+// lot, chaque commit réécrit sa ligne d'historique tant qu'elle n'a rien
+// scellé) : (1) ascenseur, AS 9 sort de la ligne CCH et prend deux lignes à
+// lui, bornées aux ERP N1–N4 — `ascenseur-erp-verification-quinquennale-as9`
+// et `ascenseur-erp-verification-remise-en-service-as9` (événementielle).
+// 174 + 2 − 0 = 176. (2) MS 38 § 4 : extincteurs d'ERP, annuelle et décennale,
+// par `personne_competente` au lieu de personne qualifiée ou organisme agréé.
+// 176 + 0 − 0 = 176. (3) Identification des extincteurs en ERP :
+// `signalisation-erp-extincteurs-identification` (N1–N4, MS 38 § 3, MS 39) et
+// `signalisation-erp-5-extincteurs-identification` (N5, PE 26). 176 + 2 − 0 =
+// 178. États permanents : aucune ligne de calendrier. (4) EL 18 § 4 : libellé
+// de `elec-erp-groupe-electrogene-quinzaine` dans les mots du tiret. 178 + 0 −
+// 0 = 178.
+export const REFERENTIEL_VERSION = "2026-10-07.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -1626,6 +1626,19 @@ describe("référentiel conformité — version et empreinte", () => {
     // réduits au rythme et à son fondement (`libelleVgp`), la réponse manquante
     // dite dans la description. Libellés seuls : 174 + 0 − 0 = 174.
     { version: "2026-09-28.3", empreinte: "174-748bfcc14b5ff8dd" },
+    // Relecture du préventeur, lot 1 (2026-10-07) — une seule version pour le
+    // lot, réécrite à chaque commit du lot tant qu'elle n'a rien scellé (même
+    // cas que `2026-09-20.1`). (1) Ascenseur : AS 9 prend deux lignes à lui,
+    // bornées aux ERP N1–N4 (quinquennale, et remise en service après
+    // transformation importante). 174 + 2 − 0 = 176. (2) MS 38 § 4 : les deux
+    // lignes d'extincteurs d'ERP passent à `personne_competente` (« par une
+    // personne ou un organisme compétent »), sans agrément. 176 + 0 − 0 = 176.
+    // (3) Identification des extincteurs en ERP, sœurs de l'art. 10 de
+    // l'arrêté du 4 novembre 1993 : N1–N4 (MS 38 § 3, MS 39), N5 (PE 26 § 1
+    // et § 3). Deux états permanents d'équipement : 176 + 2 − 0 = 178.
+    // (4) EL 18 § 4 : le libellé de la quinzaine du groupe électrogène reprend
+    // tout l'objet du premier tiret. Libellé seul : 178 + 0 − 0 = 178.
+    { version: "2026-10-07.1", empreinte: "178-72ee72dd1c5ea327" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1782,7 +1795,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(174);
+    ).toBe(178);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

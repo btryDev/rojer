@@ -4717,6 +4717,25 @@ sont désormais éprouvées (`454fb2fa`). Trois tests D8 comparaient la date au
 ouverture ; seules les lignes ponctuelles antérieures au suivi et les VGP de levage
 en double changent, sans perte (réconciliateur, cas D7 et D8).
 
+### C55 · 2026-10-07 — Relecture du préventeur, lot 1 : corrections sans changement de modèle
+
+*Branche `lot/relecture-jc-1`, sur `origin/main` = `0299e288`. Retour du préventeur
+(Julien Chantoin) du 2026-10-05 ; plan validé et verbatim dans
+`relecture-jc-2026-10/` (hors dépôt). **Textes relus le 2026-10-07 par l'API PISTE
+en environnement BAC À SABLE** : versions de 2026 présentes, mais l'égalité avec la
+production n'a pas été vérifiée. Référentiel `2026-10-07.1`, une seule version pour
+le lot.*
+
+| Item | Ce qui a été lu | Ce qui change |
+|---|---|---|
+| 1 · Ascenseur | CCH R. 134-11 (LEGIARTI000053629116, 2026-05-15), R. 134-12, R. 134-13 ; AS 9 ; GE 7 § 1 ; GN 1 § 2 | AS 9 sort de la ligne CCH et prend deux lignes, bornées aux ERP N1–N4 : quinquennale par organisme agréé, et remise en service après transformation importante (événementielle). La ligne CCH garde son id, tous régimes. Pas de `succedeA`. GE 7 entre au corpus. 174 → 176 |
+| 2 · MS 38 § 4 | MS 38 (LEGIARTI000020382888, 2008-10-08) | « par une personne ou un organisme compétent » : les deux lignes d'extincteurs d'ERP (annuelle, décennale) passent de `personne_qualifiee` + `organisme_agree` à `personne_competente`. Aucune valeur de `Realisateur` ne dit « organisme compétent » (enum Prisma) : écrit dans les notes |
+| 3 · Identification en ERP | MS 38 § 3, MS 39 (LEGIARTI000020382896), PE 26 § 1 à § 3 (LEGIARTI000024766855, relu par `src/lib/legifrance/client.ts`, bac à sable) | Deux états permanents d'équipement, sœurs de l'art. 10 de l'arrêté du 4 novembre 1993 : `signalisation-erp-extincteurs-identification` (N1–N4 : rouge, emplacement repéré) et `signalisation-erp-5-extincteurs-identification` (N5 : MS 39 par renvoi, panneau si non apparent ; RIA inclus pour le § 3). MS 39 entre au corpus, PE 26 passe de `sans_objet` à `retenu` ; dotation (MS 39 § 2, PE 26 § 1) et colonnes sèches (PE 26 § 2) en réserve. 176 → 178 |
+| 4 · EL 18 § 4 | EL 18 (LEGIARTI000038485456, 2019-07-01) | Libellé de `elec-erp-groupe-electrogene-quinzaine` : tout l'objet du premier tiret (« vérification du niveau d'huile, d'eau et de combustible, du dispositif de réchauffage du moteur et de l'état de la source utilisée pour le démarrage ») au lieu des seuls « niveaux ». « Examen visuel » (le préventeur) n'est pas un mot du texte : consigné en note, pas affiché |
+| 5 · Catégorie | — | Affichage de `ALARME_INCENDIE` : « SSI et équipement d'alarme incendie » (`equipements/labels.ts`, `mcp/tools.ts`), enum inchangé. Le libellé d'équipement proposé par le pré-remplissage du bureau (« Alarme incendie », motif R. 4227-34) n'est pas un libellé de catégorie : inchangé |
+| 6 · Visites de la commission | — (aucun texte relu : question de modèle) | **NON IMPLÉMENTÉ, EN ATTENTE DE DÉCISION.** Le préventeur répond « une information » : la visite est déclenchée par l'administration (CCH R. 143-41, GE 4, PE 37), et les neuf lignes (`incendie-erp-5-visite-commission`, les huit `incendie-erp-visite-commission-cat*`) portent `organisme_agree` et une échéance récurrente comptée comme celle de l'exploitant. Aucun mécanisme existant ne la présente comme une information sans changer le modèle : pas de valeur `Realisateur` pour l'administration (enum Prisma) ; `nature` est une propriété du texte, qui fixe bien un rythme ; `estSansRendezVous` effacerait le rythme ; `EXCLUES_DU_FAIT_DATE` (`etats-permanents/regle.ts`) ne vaut que sans rendez-vous. Deux options remises au délégant : (A) champ TS `initiative: "administration"` lu par le calendrier, l'indice et l'affichage, sans migration ; (B) valeur `commission_securite` ajoutée à l'enum `Realisateur` (migration additive) et dont se déduit la présentation « pour information » |
+
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

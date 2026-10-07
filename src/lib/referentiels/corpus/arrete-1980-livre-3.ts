@@ -340,13 +340,22 @@ export const CORPUS_PE: Corpus = {
       // « annuel ». ~~Cité par la description de `resto-incendie`.~~ [Retiré
       // de cette description le même jour, sur contre-lecture : la périodicité
       // en ERP relève du module de conformité. Le relevé reste.]
-      luLe: "2026-09-26",
-      lecture: "premiere_main",
+      // ~~luLe: "2026-09-26", lecture: "premiere_main"~~ — relu le 2026-10-07
+      // par l'API PISTE en BAC À SABLE, § 1 à § 3 (relecture du préventeur) :
+      // LEGIARTI000024766855, en vigueur depuis le 2008-10-08, aucune version
+      // future.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
+      prescrit:
+        "Trois paragraphes. § 1 : au moins un extincteur portatif installé dans les conditions de MS 39, en atténuation de cet article — un appareil pour 300 m² et un par niveau. § 2 : colonnes sèches dans les escaliers protégés des établissements dont le plancher bas le plus élevé est à plus de 18 m de la voie accessible aux engins des sapeurs-pompiers. § 3 : l'appareil ou le dispositif d'extinction non apparent est signalé par un panneau conforme aux signaux normalisés de localisation (norme NF X 08-003). PE 26 n'ouvre le Livre II que sur MS 39.",
       citationCle:
-        "§ 1. Les établissements doivent être dotés d'au moins un extincteur portatif installé dans les conditions définies par l'article MS 39 et en atténuation de cet article avec un minimum d'un appareil pour 300 mètres carrés et un appareil par niveau.",
-      statut: "sans_objet",
-      motif:
-        "Impose au moins un extincteur portatif installé selon MS 39, un appareil pour 300 m² et un par niveau. C'est une règle de dotation et de dimensionnement, sans récurrence. Point décisif du dépouillement : PE 26 n'ouvre le Livre II que sur MS 39, qui n'est pas un article de vérification.",
+        "§ 1. Les établissements doivent être dotés d'au moins un extincteur portatif installé dans les conditions définies par l'article MS 39 et en atténuation de cet article avec un minimum d'un appareil pour 300 mètres carrés et un appareil par niveau. § 3. Lorsqu'un appareil ou un dispositif d'extinction n'est pas apparent, il doit être signalé par un panneau conforme aux signaux normalisés d'indication de localisation d'un équipement de lutte contre l'incendie ou d'un autre moyen d'alarme ou d'alerte définis à la norme NF X 08-003 relative aux couleurs et signaux de sécurité.",
+      statut: "retenu",
+      obligations: ["signalisation-erp-5-extincteurs-identification"],
+      reserve:
+        "DEUX PARAGRAPHES RESTENT SANS LIGNE. (1) La DOTATION du § 1 — un appareil pour 300 m², un par niveau — n'est portée par aucune ligne d'ERP (seul le Code du travail a sa ligne de dotation, `incendie-travail-extincteurs-dotation`) ; seule l'installation « dans les conditions définies par l'article MS 39 » est portée, par `signalisation-erp-5-extincteurs-identification`. (2) Le § 2, colonnes sèches au-delà de 18 m, est une règle de construction que le parc ne déclare pas (aucune catégorie « colonne sèche »). Lecture du 2026-10-07 en BAC À SABLE PISTE : égalité avec la production non vérifiée.",
+      historique:
+        "2026-10-07 — ~~statut: \"sans_objet\", motif: « Impose au moins un extincteur portatif installé selon MS 39, un appareil pour 300 m² et un par niveau. C'est une règle de dotation et de dimensionnement, sans récurrence. Point décisif du dépouillement : PE 26 n'ouvre le Livre II que sur MS 39, qui n'est pas un article de vérification. »~~ Classement levé à la relecture du préventeur (« Idem ERP cat N1 à N5 MS39 PE26 ») : le § 3, jamais relevé jusque-là (la citation s'arrêtait au § 1), et le renvoi du § 1 à MS 39 fondent un état permanent — l'identification des moyens d'extinction —, que le statut `sans_objet` ignorait parce qu'il ne cherchait qu'une récurrence.",
     },
     {
       ref: "PE 27",
