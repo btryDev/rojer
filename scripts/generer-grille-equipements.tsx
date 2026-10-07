@@ -54,6 +54,10 @@ import { LIBELLE_CARACTERISTIQUE } from "@/lib/equipements/caracteristiques";
 import { LABEL_FAMILLE_ESP } from "@/lib/equipements/esp";
 import type { FamilleEsp } from "@/lib/equipements/esp";
 import {
+  LABEL_TYPE_EXTINCTEUR,
+  type TypeExtincteur,
+} from "@/lib/equipements/extincteur";
+import {
   CATEGORIES_AERATION,
   CATEGORIES_TRI_ETAT,
 } from "@/lib/equipements/schema";
@@ -150,6 +154,9 @@ const LIBELLE_CASE: Record<string, string> = {
   aGroupeElectrogene: "Groupe électrogène de sécurité",
   estLocalPollutionSpecifique: "Local à pollution spécifique",
   nbVehiculesParkingCouvert: "Véhicules en parking couvert",
+  // La question énumérée : sans elle, la colonne imprimait
+  // `typeExtincteur : sauf « co2 »` (revue du 2026-10-07).
+  typeExtincteur: "Type d'extincteur",
 };
 
 function texteCondition(c: ConditionApplication): string {
@@ -182,6 +189,9 @@ function libelleValeurEnum(propriete: string, valeur: string): string {
   if (propriete === "familleEsp" && valeur in LABEL_FAMILLE_ESP) {
     return `« ${LABEL_FAMILLE_ESP[valeur as FamilleEsp]} »`;
   }
+  if (propriete === "typeExtincteur" && valeur in LABEL_TYPE_EXTINCTEUR) {
+    return `« ${LABEL_TYPE_EXTINCTEUR[valeur as TypeExtincteur]} »`;
+  }
   return `« ${valeur} »`;
 }
 
@@ -195,6 +205,8 @@ function questionsCategorie(c: CategorieEquipement): string[] {
   const q: string[] = [];
   if (c === "INSTALLATION_ELECTRIQUE") q.push("Groupe électrogène de sécurité");
   if (CATEGORIES_AERATION.includes(c)) q.push("Local à pollution spécifique");
+  // Le type borne la maintenance approfondie (NF S 61-919, tableau A.1).
+  if (c === "EXTINCTEUR") q.push(LIBELLE_CASE.typeExtincteur);
   for (const { champ, categories } of CATEGORIES_TRI_ETAT) {
     if (categories.includes(c)) q.push(LIBELLE_CARACTERISTIQUE[champ]);
   }

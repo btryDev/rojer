@@ -206,12 +206,16 @@ const QUESTIONS_TRI_ETAT: Record<
   estDesenfumageMecanique: {
     question:
       "Ce désenfumage est-il mécanique (fumées extraites par des ventilateurs) ?",
-    aide: "Un désenfumage mécanique évacue les fumées par des ventilateurs ; un désenfumage naturel, par des ouvrants, exutoires ou trappes en façade ou en toiture. Avec « Oui », et si l'établissement dispose aussi d'un SSI de catégorie A ou B (question suivante), le calendrier ajoute une vérification tous les trois ans par un organisme agréé (règlement de sécurité, art. DF 10 § 3 — établissements des quatre premières catégories) ; la vérification annuelle reste. Tant que vous n'avez pas répondu « Oui », elle n'apparaît pas.",
+    // Revue du 2026-10-07 : l'aide disait « et si l'établissement dispose aussi
+    // d'un SSI de catégorie A ou B » — plus restrictive que le code, qui sert
+    // la triennale tant que la question SSI n'a pas reçu « Non »
+    // (`equipement_propriete_non_infirmee`).
+    aide: "Un désenfumage mécanique évacue les fumées par des ventilateurs ; un désenfumage naturel, par des ouvrants, exutoires ou trappes en façade ou en toiture. Avec « Oui », le calendrier ajoute une vérification tous les trois ans par un organisme agréé (règlement de sécurité, art. DF 10 § 3 — établissements des quatre premières catégories), sauf si vous répondez « Non » à la question sur le système de sécurité incendie qui s'affiche alors ; la vérification annuelle reste. Tant que vous n'avez pas répondu « Oui », elle n'apparaît pas.",
   },
   etablissementASsiCategorieAouB: {
     question:
       "L'établissement dispose-t-il d'un système de sécurité incendie (SSI) de catégorie A ou B ?",
-    aide: "La vérification tous les trois ans du désenfumage dépend des deux installations à la fois (art. DF 10 § 3) : la question est donc posée ici, même si votre SSI a sa propre fiche — répondez de la même façon. Pour un désenfumage mécanique, « Oui » ou « Je ne sais pas encore » garde la vérification triennale au calendrier ; « Non » la retire.",
+    aide: "La vérification tous les trois ans du désenfumage dépend des deux installations à la fois (art. DF 10 § 3) : la question est donc posée ici, même si votre SSI a sa propre fiche — répondez de la même façon. Pour un désenfumage mécanique, « Oui » ou « Je ne sais pas encore » fait apparaître la vérification triennale au calendrier ; « Non » la retire.",
   },
 };
 
@@ -271,6 +275,16 @@ export function EquipementForm({
 
   // Questions à trois états applicables à la catégorie sélectionnée.
   const questions = questionsTriEtatPour(categorie, estERP);
+
+  // DF 10 § 3 (lot 4, revue du 2026-10-07) : la question du SSI A ou B ne
+  // décide de rien tant que le désenfumage n'est pas déclaré mécanique — la
+  // triennale exige les deux. Elle n'est donc montrée qu'après un « Oui ».
+  // Masquée, sa valeur part quand même, en champ caché : le serveur l'accepte
+  // toujours, et une réponse déjà donnée ne s'efface pas parce qu'on a changé
+  // l'autre.
+  const [desenfumageMecanique, setDesenfumageMecanique] = useState(
+    valeurTriEtat(valeursInitiales?.estDesenfumageMecanique),
+  );
   const afficherCaracteristiques =
     estAeration || estEsp || estExtincteur || questions.length > 0;
 
@@ -505,9 +519,9 @@ export function EquipementForm({
                   révision à dix ans, une maintenance additionnelle approfondie
                   à 5 et 15 ans pour les extincteurs à eau, à mousse et à
                   poudre — à 15 ans seulement pour la poudre à opercule scellé,
-                  aucune pour le CO₂. Elle prévoit aussi une durée de vie de 20
-                  ans au plus, non fixée pour le CO₂ : vous pouvez la reporter
-                  en date de péremption ci-dessus.
+                  aucune pour le CO₂. Elle indique aussi que la durée de vie
+                  prévue ne devrait pas dépasser 20 ans, sauf pour le CO₂ :
+                  vous pouvez la reporter en date de péremption ci-dessus.
                 </p>
                 {err("typeExtincteur") && (
                   <p
@@ -535,15 +549,30 @@ export function EquipementForm({
               />
             )}
 
-            {questions.map(({ champ }) => (
-              <QuestionTriEtat
-                key={champ}
-                champ={champ}
-                defaut={valeurTriEtat(valeursInitiales?.[champ])}
-                erreur={err(champ)}
-                exigee={(questionsExigees[categorie] ?? []).includes(champ)}
-              />
-            ))}
+            {questions.map(({ champ }) =>
+              champ === "etablissementASsiCategorieAouB" &&
+              desenfumageMecanique !== "oui" ? (
+                <input
+                  key={champ}
+                  type="hidden"
+                  name={champ}
+                  value={valeurTriEtat(valeursInitiales?.[champ])}
+                />
+              ) : (
+                <QuestionTriEtat
+                  key={champ}
+                  champ={champ}
+                  defaut={valeurTriEtat(valeursInitiales?.[champ])}
+                  erreur={err(champ)}
+                  exigee={(questionsExigees[categorie] ?? []).includes(champ)}
+                  onChange={
+                    champ === "estDesenfumageMecanique"
+                      ? setDesenfumageMecanique
+                      : undefined
+                  }
+                />
+              ),
+            )}
           </div>
         </section>
       )}
@@ -604,10 +633,13 @@ function QuestionTriEtat({
   defaut,
   erreur,
   exigee = false,
+  onChange,
 }: {
   champ: ChampTriEtat;
   defaut: string;
   erreur?: string;
+  /** La valeur choisie, pour une question dont dépend l'affichage d'une autre. */
+  onChange?: (valeur: string) => void;
   /** D29 (a) : « Je ne sais pas encore » n'est pas offert, et aucune réponse
    *  n'est présélectionnée — le serveur refuse l'absence (comme A2). */
   exigee?: boolean;
@@ -627,6 +659,7 @@ function QuestionTriEtat({
         id={champ}
         name={champ}
         defaultValue={defaut}
+        onChange={onChange ? (e) => onChange(e.currentTarget.value) : undefined}
         className="champ-board mt-2 sm:w-64"
         aria-describedby={`${champ}-aide`}
         aria-invalid={Boolean(erreur)}
