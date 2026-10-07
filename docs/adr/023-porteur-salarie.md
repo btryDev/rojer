@@ -234,6 +234,16 @@ suppression, et aucun test du générateur ne peut attraper l'oubli.
 
 ### 6. L'habilitation électrique est un état permanent, pas une échéance
 
+> **Amendé par l'ADR-039 (2026-10-07).** Le motif ci-dessous — « une norme, que
+> le référentiel exclut comme source opposable » — ne tient plus : une norme
+> peut donner un rythme, sous `rythmeRetenu` avec `motif: "norme"`, et
+> `periodicite` reste `autre` (le rythme du texte). Le triennal de la
+> NF C 18-510 **ne revient pas pour autant ici** : la norme est entrée au
+> corpus `normes` en lecture `indirect` (seul l'arrêté du 5 juillet 2024 qui la
+> cite a été lu), son paragraphe de recyclage est « à préciser », et un rythme
+> retenu ne peut pas citer une norme lue indirectement. Le rétablir est une
+> décision de contenu (lot 3), après lecture de la norme à la source.
+
 C'est la décision de contenu de ce lot, et elle repose sur une relecture en
 première main du 2026-08-27.
 

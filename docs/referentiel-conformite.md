@@ -9,8 +9,31 @@ toute personne qui écrit, relit ou audite le contenu de
 
 **Aucune obligation n'entre dans le référentiel sans référence légale
 vérifiable** sur Légifrance ou sur une source institutionnelle reconnue
-(INRS). Les normes privées (APSAD, NF non visées par un texte) et les
-recommandations non opposables ne suffisent pas.
+(INRS). ~~Les normes privées (APSAD, NF non visées par un texte) et les
+recommandations non opposables ne suffisent pas.~~
+
+**Amendé par l'ADR-039 (2026-10-07).** Une norme homologuée (NF, EN) peut
+fonder une obligation ou un rythme, même si aucun texte ne la rend
+obligatoire. Elle se cite sous la source `NORME`, comme norme — intitulé,
+édition, paragraphe ou annexe —, avec une clé `article` présente au corpus
+`src/lib/referentiels/corpus/normes.ts`, et jamais comme un article de loi.
+APSAD, CACES et recommandations non normatives restent exclus.
+
+**Rythme vague, rythme retenu.** Quand le texte impose une vérification, un
+entretien ou une action récurrente sans chiffrer le rythme (« périodicité
+appropriée », « régulièrement », « répétée périodiquement », « maintenus en
+bon état »), `periodicite` reste `autre` — c'est le texte — et l'obligation
+porte un `rythmeRetenu` :
+
+- `{ motif: "norme", periodicite, norme, reference }` quand une norme lue
+  écrit le rythme ;
+- `{ motif: "defaut_annuel", periodicite: "annuelle", texteVague }` sinon,
+  `texteVague` recopié mot pour mot d'une citation du corpus.
+
+Un rythme écrit (texte, puis norme) l'emporte toujours. Le rythme retenu est
+affiché partout comme tel (« Rythme de la norme … », « Rythme retenu par
+défaut : le texte dit « … » »). « Chaque fois que nécessaire » n'est pas un
+rythme vague : c'est un déclencheur événementiel.
 
 Raisons :
 

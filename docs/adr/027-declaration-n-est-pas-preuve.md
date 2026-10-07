@@ -99,11 +99,21 @@ sans savoir ce qu'on affirme détenir.
 
 ## Ce que la décision interdit explicitement
 
-- **Aucune relance, sous aucune forme**, y compris un badge « à revoir ». Aucun
+- ~~**Aucune relance, sous aucune forme**, y compris un badge « à revoir ». Aucun
   des textes concernés n'écrit de rythme : en poser un serait une périodicité
   inventée, ce que ce dépôt a déjà eu à retirer — un « triennal » qui venait
   d'une norme NF et non du droit. La date de déclaration s'affiche, le dirigeant
-  juge lui-même.
+  juge lui-même.~~
+  **Amendé par l'ADR-039 (2026-10-07).** Sur CET écran, toujours aucune
+  relance : ce qui s'y montre n'a pas de rythme. Mais la prémisse a changé —
+  quand le texte impose un entretien ou une vérification à rythme vague
+  (« maintenus en bon état », « périodicité appropriée »), l'obligation reçoit
+  un `rythmeRetenu` (norme lue, ou défaut annuel déclaré comme défaut). Son
+  rythme effectif n'est plus `autre` : elle **quitte cet écran pour le
+  calendrier**, exactement comme sous une prescription qui lui donne un
+  rythme, et la règle « une surface, jamais deux » tient par
+  `estSansRendezVous(periodiciteEffective(o))`. Le rythme n'est pas inventé :
+  il est déclaré, et chaque surface dit d'où il vient.
 - **Aucun historique de déclarations.** Redéclarer redate la ligne, elle ne
   s'empile pas. Un historique ressemblerait à une trace, et une trace ressemble à
   une preuve.

@@ -8,10 +8,17 @@ import type {
 /**
  * Référentiel d'obligations réglementaires (ADR-003).
  *
- * Règle absolue : chaque `Obligation` cite **au moins une** référence primaire
- * vérifiable sur Légifrance (Code du travail, CCH, arrêté) ou sur une source
- * institutionnelle reconnue (INRS). Pas de normes privées (APSAD, NF),
- * pas de recommandations sans force opposable.
+ * Règle absolue : chaque `Obligation` cite **au moins une** référence
+ * vérifiable : un texte sur Légifrance (Code du travail, CCH, arrêté), une
+ * source institutionnelle reconnue (INRS), ou — depuis l'ADR-039, 2026-10-07 —
+ * une norme homologuée (NF, EN) lue et entrée au corpus `normes`, citée comme
+ * norme et jamais comme un article de loi. ~~Pas de normes privées (APSAD,
+ * NF)~~ ; toujours pas d'APSAD, de CACES ni de recommandation sans force.
+ *
+ * Le rythme du TEXTE est `periodicite`. Quand le texte ne le chiffre pas mais
+ * impose de refaire l'acte, `rythmeRetenu` porte le rythme d'une norme lue ou
+ * le défaut annuel, déclaré comme tel ; `periodiciteEffective(o)` est la seule
+ * lecture qui date une ligne (ADR-039).
  *
  * Les obligations vivent en TypeScript versionné avec le code (pas en base),
  * ce qui garantit l'auditabilité via l'historique Git (ADR-003).
@@ -766,7 +773,8 @@ type ObligationCommune = {
   /** Texte long optionnel pour la fiche détaillée et le registre. */
   description?: string;
   /**
-   * Liste non vide de références. Au moins une source primaire opposable.
+   * Liste non vide de références. Au moins une source primaire — texte, ou
+   * norme citée comme norme (ADR-039).
    *
    * Convention d'ordre : `referencesLegales[0]` est l'article qui **fonde**
    * l'obligation — celui qu'on citerait seul devant un inspecteur. Les

@@ -14,7 +14,9 @@
  *
  * Aucune norme privée (APSAD, NF C 15-100) n'est citée comme obligation : ces
  * normes définissent des règles de l'art, mais l'opposabilité vient du texte
- * réglementaire qui les vise.
+ * réglementaire qui les vise. [2026-10-07, ADR-039 : une norme NF peut
+ * désormais fonder un rythme, citée comme norme (`rythmeRetenu`). Aucune n'est
+ * posée dans ce fichier à ce jour.]
  */
 
 import type { ConditionApplication, Obligation } from "./types";

@@ -65,6 +65,21 @@ Sources primaires libres d'accès uniquement :
 - **Arrêtés sectoriels** (Légifrance, Journal Officiel)
 - **INRS** : fiches techniques, guides sectoriels
 - **Ministère du Travail** : guides de l'employeur, fiches ED
+- **Normes homologuées** (NF, EN) — depuis l'ADR-039 (2026-10-07) : une norme
+  peut fonder une obligation ou un rythme, même si aucun texte ne la rend
+  obligatoire. Elle se cite **comme norme** (source `NORME`, intitulé, édition,
+  paragraphe), lue et entrée au corpus `normes`, jamais comme un article de loi.
+  APSAD, CACES, recommandations CNAM : toujours exclus
+
+**Rythme vague → annuel, déclaré comme défaut (ADR-039).** Quand un texte
+impose une vérification, un entretien ou une action récurrente avec un rythme
+vague (« périodicité appropriée », « régulièrement », « répétée
+périodiquement », « maintenus en bon état »), Rojer retient **au moins une fois
+par an** — `rythmeRetenu: { motif: "defaut_annuel" }`, avec la citation vague
+mot pour mot. Un rythme écrit (texte, puis norme) l'emporte toujours. Le défaut
+s'affiche comme défaut, jamais comme cité. « Chaque fois que nécessaire » est un
+déclencheur événementiel, hors règle. `periodicite` reste le rythme du texte ;
+`periodiciteEffective(o)` est la seule lecture qui date une ligne.
 
 **Attention** : aucune base de données commerciale ne doit être recopiée. Le référentiel est reconstruit depuis les textes officiels, avec traçabilité de la source pour chaque obligation. La fiche AOCR dans `spec/` est une base de travail, pas une source citable.
 
@@ -553,6 +568,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     premier pas, sinon « à planifier » à l'origine du suivi (`suiviDepuis`) ;
     la fonction ne lit aucune horloge, et le réconciliateur ne garde que ses
     protections. La bascule est en production depuis le 2026-09-19 (moteur 3)
+39. **039** — Une norme peut donner le rythme, et un rythme vague devient
+    annuel, déclaré comme tel (**acceptée le 2026-10-07**, décisions (a) et (b)
+    de la propriétaire). Source `NORME`, corpus `normes`, `rythmeRetenu` à côté
+    de `periodicite`, `periodiciteEffective(o)`, mention « Rythme de la norme … »
+    / « Rythme retenu par défaut ». Amende les ADR-003, 023 § 6, 026 § 2, 027
+    et 032
 
 **Sept ADR ont été déplacées le 2026-09-01** (« six » disait la phrase, qui en
 énumère sept), chacune portant en tête le renvoi
@@ -664,7 +685,7 @@ Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse 
 3. **Écrire des ADR** pour chaque décision qui engage l'architecture.
 4. **Commits atomiques** et messages explicites.
 5. **Tests écrits en même temps que le code.** Les règles métier critiques (matching, cotation, calendrier, vigilance, boucle DUERP) ont une couverture renforcée.
-6. **Ne jamais inventer une référence réglementaire.** Si la source n'est pas vérifiable sur Légifrance ou INRS, l'obligation n'entre pas dans le référentiel.
+6. **Ne jamais inventer une référence réglementaire.** Si la source n'est pas vérifiable sur Légifrance ou INRS — ou, depuis l'ADR-039, dans une norme homologuée lue et entrée au corpus `normes` —, l'obligation n'entre pas dans le référentiel. Un rythme que ni le texte ni une norme n'écrivent n'est pas inventé : c'est le **défaut annuel** de l'ADR-039, déclaré comme tel et affiché comme défaut, et seulement là où le texte impose de refaire l'acte.
 7. **Pas de LLM** pour traiter, reformuler, classer ou analyser du contenu utilisateur.
 8. **Pas de conseil juridique automatisé.** L'outil aide à structurer et rappelle les obligations, il ne dit jamais « vous êtes conforme ».
 9. **RGPD** : hébergement UE, politique de rétention explicite, export et suppression possibles à tout moment.
