@@ -840,8 +840,9 @@ export type RythmeRetenu =
        * (`controlerRythmeRetenu` le vérifie) : l'en déduire demanderait de
        * découper une chaîne libre — « NF S 61-919 (août 2001), § 5.1.1 … » —,
        * la reconnaissance par motif que C61 a retirée au profit du statut de
-       * corpus. Et le retirer déplacerait l'empreinte (le champ y entre) sans
-       * rien changer à une ligne.
+       * corpus. Il n'entre pas dans l'empreinte (seule la clé
+       * `reference.article` y entre) : c'est un libellé, pas une donnée qui
+       * date une ligne.
        */
       norme: string;
       /** La citation de la norme : source `NORME`, clé au corpus `normes`. */
