@@ -13,6 +13,7 @@ import {
 import { obligationParId, OBLIGATIONS_RETIREES } from "@/lib/referentiels/conformite";
 import { libelleObligationRetiree } from "@/lib/matching/obligation-retiree";
 import { derniersLibellesConnus } from "./libelles-retires";
+import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 
 export type EtatPrescription =
   | { etat: "active"; detail: string }
@@ -169,8 +170,8 @@ export async function chargerPagePrescriptions(
         etat: "active",
         detail:
           p.effet === "renforce_periodicite"
-            ? `Périodicité portée à « ${p.periodicite} ».`
-            : `Obligation propre à votre établissement, ${p.periodicite}.`,
+            ? `Périodicité portée à « ${LABEL_PERIODICITE[p.periodicite]} ».`
+            : `Obligation propre à votre établissement, ${LABEL_PERIODICITE[p.periodicite]}.`,
       };
     }
     return {
