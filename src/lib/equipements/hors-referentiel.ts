@@ -34,6 +34,7 @@
 // rendus par le moteur — la même sortie que celle qui nourrit le
 // générateur d'occurrences, donc exactement ce que le calendrier montre.
 
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { determineObligationsApplicables } from "@/lib/matching";
@@ -182,7 +183,7 @@ export function reperterSansEcheance(
   // (cf. generateur.ts), donc elle ne compte pas comme une échéance.
   const declenchees = new Map<string, { total: number; datables: number }>();
   for (const a of applicables) {
-    const datable = a.obligation.periodicite !== "autre";
+    const datable = periodiciteEffective(a.obligation) !== "autre";
     for (const eq of a.equipementsConcernes) {
       const c = declenchees.get(eq.id) ?? { total: 0, datables: 0 };
       c.total += 1;

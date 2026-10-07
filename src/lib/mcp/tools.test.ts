@@ -33,6 +33,21 @@ const { prismaMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("./prisma", () => ({ prismaMcp: prismaMock }));
+// ADR-039 : aucune obligation livrée ne porte encore de rythme retenu (lot 3).
+// Pour éprouver que la mention voyage jusqu'à l'assistant, une ligne FICTIVE
+// en reçoit une ; toutes les autres reçoivent `null`, ce que la fonction réelle
+// rend aujourd'hui pour chacune.
+const ID_RYTHME_FICTIF = "fixture-rythme-retenu";
+vi.mock("@/lib/referentiels/conformite/mention-de-ligne", () => ({
+  mentionRythmeDeVerification: (v: { obligationId: string }) =>
+    v.obligationId === ID_RYTHME_FICTIF
+      ? {
+          motif: "defaut_annuel",
+          court: "Rythme retenu par défaut",
+          long: "Le texte dit « périodicité appropriée » ; rythme retenu par défaut : annuel.",
+        }
+      : null,
+}));
 
 import { ErreurOutilMcp, OUTILS_MCP, type ContexteMcp } from "./tools";
 import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
@@ -777,6 +792,15 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
     salarieId: null,
     rapports: [],
   };
+
+  it("un rythme retenu voyage avec la ligne, en toutes lettres (ADR-039)", async () => {
+    prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
+    prismaMock.verification.findMany.mockResolvedValue([
+      { ...ligneExercice, obligationId: ID_RYTHME_FICTIF, periodicite: "annuelle" },
+    ]);
+    const texte = await outil("verifications").executer(ctx, {});
+    expect(texte).toContain("Le texte dit « périodicité appropriée » ; rythme retenu par défaut : annuel.");
+  });
 
   it("muet sur les matières : la ligne porte « à confirmer » et la phrase", async () => {
     prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);

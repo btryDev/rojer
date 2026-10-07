@@ -70,6 +70,16 @@ entrées sans qu'aucune puisse omettre sa nature.
 
 ### 2. La nature est une propriété du TEXTE, jamais de ce que le produit sait en faire
 
+> **Amendé par l'ADR-039 (2026-10-07)** — sans en changer la règle. Le couple
+> `echeance_recurrente` + `autre` reste l'état légitime du TEXTE, et la nature
+> comme `periodicite` continuent de dire ce que le texte écrit. Ce qui change :
+> « on ne sait pas à quel rythme » n'est plus la fin de l'histoire. Quand le
+> texte écrit un rythme vague (« répétée périodiquement », « régulièrement »,
+> « périodicité appropriée »), l'obligation reçoit un `rythmeRetenu` — annuel
+> par défaut, ou celui d'une norme lue —, affiché comme tel, et c'est
+> `periodiciteEffective(o)` qui date la ligne. Le croisement ci-dessous compte
+> le texte ; il reste juste.
+
 C'est la règle qui empêche le champ de redevenir un synonyme de `periodicite`.
 
 Une échéance récurrente dont l'article ne chiffre pas le rythme **reste

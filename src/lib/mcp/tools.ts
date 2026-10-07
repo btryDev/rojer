@@ -518,6 +518,8 @@ function formaterVerifications(verifs: VerificationLue[], filtre = true): string
       v.contractuelle
         ? "engagement d'assurance, pas une obligation légale"
         : null,
+      // ADR-039 : un rythme que le texte n'écrit pas se dit comme tel.
+      v.rythmeRetenu,
       // Même raison : une ligne que seul le silence de la fiche retient ne
       // se restitue pas comme due.
       v.aConfirmer.length > 0

@@ -46,6 +46,11 @@ import type {
   SourceLecture,
 } from "../src/lib/referentiels/corpus/types";
 import type { TypologieApplication } from "../src/lib/referentiels/types-communs";
+import { mentionRythmeRetenu } from "../src/lib/referentiels/conformite/mention-rythme";
+import {
+  periodiciteEffective,
+  referencesCitees,
+} from "../src/lib/referentiels/conformite/rythme-retenu";
 
 // -----------------------------------------------------------------------------
 // Index du corpus, par clé canonique
@@ -121,7 +126,12 @@ const SANS_RECURRENCE = new Set(["mise_en_service_uniquement", "autre"]);
  * absent de la citation. C'est justement ce qu'il faut aller vérifier.
  */
 function periodiciteSansTexteporteur(o: Obligation): boolean {
-  if (SANS_RECURRENCE.has(o.periodicite)) return false;
+  // Le rythme EFFECTIF (ADR-039). Un rythme retenu a son origine déclarée :
+  // une norme lue (source NORME), ou le défaut annuel avec le mot du texte.
+  // Ce n'est pas un chiffre sans texte porteur — c'est un chiffre qui dit
+  // d'où il vient, et la colonne `rythmeRetenu` le montre au relecteur.
+  if (SANS_RECURRENCE.has(periodiciteEffective(o))) return false;
+  if (o.rythmeRetenu) return false;
   return !o.referencesLegales.some((r) => PORTE_UN_CHIFFRE.has(r.source));
 }
 
@@ -147,7 +157,12 @@ function alertes(
     if (art.statut === "retenu" && !art.obligations.includes(o.id)) {
       a.push("CORPUS_NE_RENVOIE_PAS"); // l'article ne se sait pas fondateur de celle-ci
     }
-    if (rang === 0 && art.statut !== "retenu" && art.statut !== "non_depouille") {
+    if (
+      rang === 0 &&
+      art.statut !== "retenu" &&
+      art.statut !== "norme" &&
+      art.statut !== "non_depouille"
+    ) {
       // Le corpus classe l'article autrement que « retenu » alors qu'une
       // obligation le donne pour fondement. PE 4 est le cas d'école : son § 2
       // fonde la vérification triennale des ERP de 5ᵉ catégorie ET crée une
@@ -216,6 +231,8 @@ type Ligne = {
   domaine: string;
   libelle: string;
   periodicite: string;
+  /** ADR-039 : le rythme retenu et sa mention, vide quand le texte le chiffre. */
+  rythmeRetenu: string;
   realisateurs: string;
   criticite: number;
   champ: string;
@@ -241,7 +258,11 @@ type Ligne = {
 function lignes(): Ligne[] {
   const out: Ligne[] = [];
   for (const o of obligationsConformite) {
-    o.referencesLegales.forEach((r, i) => {
+    const mention = mentionRythmeRetenu(o);
+    const nbTexte = o.referencesLegales.length;
+    // La norme d'un rythme retenu sort en ligne à elle, rang « rythme retenu » :
+    // le relecteur doit la voir comme il voit un arrêté qui porte un chiffre.
+    referencesCitees(o).forEach((r, i) => {
       const e = r.article ? PAR_ARTICLE.get(r.article) : undefined;
       const art = e?.article;
       out.push({
@@ -249,12 +270,16 @@ function lignes(): Ligne[] {
         domaine: o.domaine,
         libelle: o.libelle,
         periodicite: o.periodicite,
+        rythmeRetenu: mention
+          ? `${periodiciteEffective(o)} — ${mention.long}`
+          : "",
         realisateurs: o.realisateurs.join(" ou "),
         criticite: o.criticite,
         champ: rendreTypologies(o.typologies),
         conditions: (o.conditions ?? []).map(rendreCondition).join(" ET "),
         transmet: o.transmet.map(rendreTransmission).join(" ; "),
-        rang: i === 0 ? "fondement" : `contexte ${i}`,
+        rang:
+          i >= nbTexte ? "rythme retenu" : i === 0 ? "fondement" : `contexte ${i}`,
         source: r.source,
         reference: r.reference,
         article: r.article ?? "",
@@ -280,7 +305,7 @@ function lignes(): Ligne[] {
 // -----------------------------------------------------------------------------
 
 const COLONNES: (keyof Ligne)[] = [
-  "obligation", "domaine", "libelle", "periodicite", "realisateurs",
+  "obligation", "domaine", "libelle", "periodicite", "rythmeRetenu", "realisateurs",
   "criticite", "champ", "conditions", "transmet", "rang", "source", "reference",
   "article", "url", "versionConstatee", "corpus", "statutCorpus", "lecture",
   "luLe", "versionEnVigueur", "prescrit", "verbatim", "note", "alertes",
@@ -299,7 +324,7 @@ function csv(rows: Ligne[]): string {
 
 function md(rows: Ligne[]): string {
   const cols: (keyof Ligne)[] = [
-    "obligation", "rang", "reference", "article", "periodicite",
+    "obligation", "rang", "reference", "article", "periodicite", "rythmeRetenu",
     "statutCorpus", "lecture", "transmet", "verbatim", "alertes",
   ];
   const cell = (v: string | number) =>

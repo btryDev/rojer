@@ -26,6 +26,12 @@ type TitreDuCatalogue = {
    */
   periodicite: Periodicite;
   /**
+   * La phrase de la mention de rythme retenu (ADR-039), quand le rythme n'est
+   * pas écrit par le texte : l'aide ne doit pas alors parler de « la durée
+   * écrite dans le texte ».
+   */
+  rythmeRetenu?: string | null;
+  /**
    * Le titre déjà déclaré sur cette personne que le droit interdit de cumuler
    * avec celui-ci, et la phrase qui le fonde. Calculé côté serveur — la
    * fermeture par symétrie de la table vit dans `lib/salaries/catalogue.ts`,
@@ -223,7 +229,9 @@ export function FormulaireTitre({
           erreur={err("echeanceLe")}
           aide={
             titre && LABEL_PERIODICITE[titre.periodicite] && !SANS_DUREE.has(titre.periodicite)
-              ? `Si le document porte une date de fin, saisissez-la : elle prime toujours. Laissée vide, Rojer la calcule à partir de la date de délivrance et de la durée écrite dans le texte (${LABEL_PERIODICITE[titre.periodicite]}) — une durée qui est souvent un maximum légal, que le service de santé au travail peut avoir raccourci.`
+              ? titre.rythmeRetenu
+                ? `Si le document porte une date de fin, saisissez-la : elle prime toujours. Laissée vide, Rojer la calcule à partir de la date de délivrance et d'un rythme que le texte n'écrit pas (${LABEL_PERIODICITE[titre.periodicite]}). ${titre.rythmeRetenu}`
+                : `Si le document porte une date de fin, saisissez-la : elle prime toujours. Laissée vide, Rojer la calcule à partir de la date de délivrance et de la durée écrite dans le texte (${LABEL_PERIODICITE[titre.periodicite]}) — une durée qui est souvent un maximum légal, que le service de santé au travail peut avoir raccourci.`
               : "Laissez vide si aucune date n'est portée sur le titre. Aucun texte ne donne de durée de validité à ce titre : Rojer n'inventera pas d'échéance."
           }
         />

@@ -11,6 +11,8 @@ import {
   PERIODICITE_EN_JOURS,
   type Periodicite,
 } from "@/lib/referentiels/types-communs";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import type { RythmeRetenu } from "@/lib/referentiels/conformite/types";
 import type {
   EquipementMatching,
   ObligationApplicable,
@@ -62,6 +64,30 @@ export function estPeriodicitePlusStricte(
   if (c === null) return false;
   if (r === null) return true;
   return c < r;
+}
+
+/**
+ * Une prescription qui vise cette obligation est-elle retenue ? (ADR-039 § 3,
+ * préséance.) Écrite une fois, pour le moteur et pour le formulaire.
+ *
+ * - Face à un rythme écrit par le TEXTE : seulement si elle est STRICTEMENT
+ *   plus stricte (inchangé, ADR-035) — à égalité, le texte la rattrape.
+ * - Face à un rythme RETENU par Rojer (norme ou défaut annuel) : dès qu'elle
+ *   est AU MOINS AUSSI stricte. Le rythme retenu est un choix du produit, pas
+ *   un acte ; un arrêté ou une demande d'assureur qui fixe le même rythme est
+ *   une raison plus forte que la nôtre, et doit rester visible avec son
+ *   marquage (ADR-032) au lieu de s'effacer derrière un défaut.
+ */
+export function prescriptionRenforce(
+  candidate: Periodicite,
+  o: { periodicite: Periodicite; rythmeRetenu?: RythmeRetenu },
+): boolean {
+  if (estPeriodicitePlusStricte(candidate, periodiciteEffective(o))) return true;
+  return (
+    o.rythmeRetenu !== undefined &&
+    PERIODICITE_EN_JOURS[candidate] !== null &&
+    candidate === o.rythmeRetenu.periodicite
+  );
 }
 
 export type ResultatPrescriptions = {
@@ -191,10 +217,10 @@ export function appliquerPrescriptions(
         });
         continue;
       }
-      if (!estPeriodicitePlusStricte(p.periodicite, oa.obligation.periodicite)) {
+      if (!prescriptionRenforce(p.periodicite, oa.obligation)) {
         ignorees.push({
           prescription: p,
-          raison: `Le référentiel impose déjà un rythme au moins aussi strict (${oa.obligation.periodicite}) : la prescription est rattrapée par le référentiel.`,
+          raison: `Le référentiel impose déjà un rythme au moins aussi strict (${periodiciteEffective(oa.obligation)}) : la prescription est rattrapée par le référentiel.`,
         });
         continue;
       }

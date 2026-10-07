@@ -154,6 +154,7 @@ Rejetée en l'état : la fiche AOCR contient 481 obligations mais mélange sourc
 
 ## Notes de conformité
 
-- Chaque obligation du référentiel doit citer une référence **Légifrance vérifiable**.
-- Les obligations issues de règles APSAD, de normes NF ou de recommandations INRS sans valeur réglementaire ne sont **pas** ajoutées au référentiel (ou sont ajoutées avec un marqueur `categorie: "bonne_pratique"` et ne déclenchent pas d'échéance opposable). Règle rappelée dans CLAUDE.md.
+- Chaque obligation du référentiel doit citer une référence **Légifrance vérifiable**. (ADR-039 : un rythme peut en outre venir d'une norme lue, citée au corpus `normes`, ou d'un défaut annuel déclaré comme tel. Une norme peut même fonder l'obligation, citée comme norme.)
+- ~~Les obligations issues de règles APSAD, de normes NF ou de recommandations INRS sans valeur réglementaire ne sont **pas** ajoutées au référentiel (ou sont ajoutées avec un marqueur `categorie: "bonne_pratique"` et ne déclenchent pas d'échéance opposable). Règle rappelée dans CLAUDE.md.~~
+  **Amendé par l'ADR-039 (2026-10-07).** Une norme (NF, EN) peut fonder une obligation ou un rythme : elle se cite sous la source `NORME`, comme norme (intitulé, édition, paragraphe), jamais comme un article de loi. Le marqueur `bonne_pratique` n'a jamais été construit et ne le sera pas : c'est la mention de rythme retenu qui distingue la norme du texte. APSAD et recommandations non normatives restent hors du référentiel.
 - Le référentiel ne doit **jamais** affirmer qu'un utilisateur est « conforme ». Il lui dit « voici les obligations qui s'appliquent à vous ».

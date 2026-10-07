@@ -1,3 +1,4 @@
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { compterActions, listerActions, origineDeLAction } from "@/lib/actions/queries";
@@ -251,6 +252,7 @@ export function ligneVerif(
     domaine: obligationParId(v.obligationId)?.domaine ?? null,
     contractuelle: estEcheanceContractuelle(v),
     aConfirmer: marques.get(v.obligationId)?.phrases ?? [],
+    rythmeRetenu: mentionRythmeDeVerification(v)?.long ?? null,
   };
 }
 

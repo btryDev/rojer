@@ -283,9 +283,19 @@ describe("D1 (a) : la ligne retenue par prudence s'imprime à part, marquée (20
     domaine: null,
     contractuelle: false,
     aConfirmer: ["La fiche de l'établissement ne dit pas si des matières inflammables y sont manipulées."],
+    rythmeRetenu: null,
   };
   const textes = (d: DossierData) =>
     elementsDansLOrdre(DossierConformiteDocument({ data: d })).map(texteDirect);
+
+  it("un rythme retenu s'imprime sous l'obligation en retard, avec son origine (ADR-039)", () => {
+    const mention = "Le texte dit « périodicité appropriée » ; rythme retenu par défaut : annuel.";
+    const t = textes({
+      ...dossier(bloc(2)),
+      verifsEnRetard: [{ ...ligne, statut: "en_retard" as const, aConfirmer: [], rythmeRetenu: mention }],
+    });
+    expect(t).toContain(mention);
+  });
 
   it("présente : le titre et la mention « À confirmer » sont rendus", () => {
     const t = textes({ ...dossier(bloc(2)), verifsAConfirmer: [ligne] });

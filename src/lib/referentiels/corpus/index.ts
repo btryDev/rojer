@@ -36,6 +36,8 @@ import { CODE_TRAVAIL_EQUIPEMENTS_INFORMATION } from "./code-travail-equipements
 import { ESP_SUIVI_EN_SERVICE } from "./esp-suivi-en-service";
 import { ICPE_STOCKAGE } from "./icpe-stockage";
 import { INRS_DOCUMENTAIRE } from "./inrs-documentaire";
+import { NORMES } from "./normes";
+import { referencesCitees } from "../conformite/rythme-retenu";
 import { CODE_TRAVAIL_LEVAGE } from "./code-travail-levage";
 import { FROID_FLUIDES } from "./froid-fluides";
 import { CODE_TRAVAIL_FORMATION_SECURITE } from "./code-travail-formation-securite";
@@ -124,6 +126,9 @@ export const CORPUS: readonly Corpus[] = [
   ARRETE_1980_LIVRE_4_PARCS,
   ARRETE_2018_02_23_GAZ_HABITATION,
   INRS_DOCUMENTAIRE,
+  // ADR-039, 2026-10-07 — les normes homologuées lues, dont un rythme peut
+  // être retenu. Ni droit ni brochure : statut `norme`.
+  NORMES,
   ARRETES_MODIFICATIFS_ERP,
   // Lot 7 — les textes qui portent les obligations de salarié.
   CODE_TRAVAIL_FORMATION_SECURITE,
@@ -416,7 +421,7 @@ export function obligationsSurTextesNonDepouilles(): string[] {
   const lues = referencesDepouillees();
   return obligationsConformite
     .filter((o) =>
-      o.referencesLegales.some((r) => !r.article || !lues.has(r.article)),
+      referencesCitees(o).some((r) => !r.article || !lues.has(r.article)),
     )
     .map((o) => o.id);
 }
@@ -435,7 +440,7 @@ export function articlesCitesNonDepouilles(): {
   const lues = referencesDepouillees();
   const par = new Map<string, string[]>();
   for (const o of obligationsConformite) {
-    for (const r of o.referencesLegales) {
+    for (const r of referencesCitees(o)) {
       if (!r.article || lues.has(r.article)) continue;
       par.set(r.article, [...(par.get(r.article) ?? []), o.id]);
     }
@@ -466,6 +471,50 @@ export function liensRetenusRompus(): {
         if (!o || !o.referencesLegales.some((r) => r.article === a.ref)) {
           rompus.push({ corpus: c.id, ref: a.ref, obligation: id });
         }
+      }
+    }
+  }
+  return rompus;
+}
+
+/**
+ * Le lien entre une NORME du corpus et les obligations qui la citent, dans
+ * les deux sens (ADR-039).
+ *
+ * Une entrée `norme` nomme les obligations dont le rythme retenu — ou une
+ * référence — la cite ; une obligation qui cite une norme y est nommée. Le
+ * même contrat que `liensRetenusRompus` et `renvoisManquants` pour le droit,
+ * écrit une fois pour les deux sens parce qu'une norme n'a pas d'autre lien
+ * au référentiel que celui-ci. Paramétrée pour être éprouvée sur une copie.
+ */
+export function liensNormesRompus(
+  corpus: readonly Corpus[] = CORPUS,
+  obligations: readonly Obligation[] = obligationsConformite,
+): { norme: string; obligation: string; sens: string }[] {
+  const parId = new Map(obligations.map((o) => [o.id, o]));
+  const nommees = new Map<string, Set<string>>();
+  const rompus: { norme: string; obligation: string; sens: string }[] = [];
+  for (const c of corpus) {
+    for (const a of c.articles) {
+      if (a.statut !== "norme") continue;
+      nommees.set(a.ref, new Set(a.obligations));
+      for (const id of a.obligations) {
+        const o = parId.get(id);
+        if (!o || !referencesCitees(o).some((r) => r.article === a.ref)) {
+          rompus.push({ norme: a.ref, obligation: id, sens: "la norme nomme une obligation qui ne la cite pas" });
+        }
+      }
+    }
+  }
+  for (const o of obligations) {
+    for (const r of referencesCitees(o)) {
+      if (r.source !== "NORME") continue;
+      if (!r.article || !nommees.get(r.article)?.has(o.id)) {
+        rompus.push({
+          norme: r.article ?? "(sans clé)",
+          obligation: o.id,
+          sens: "l'obligation cite une norme dont l'entrée ne la nomme pas",
+        });
       }
     }
   }
@@ -576,7 +625,7 @@ export function referencesSansCle(): {
   reference: string;
 }[] {
   return obligationsConformite.flatMap((o) =>
-    o.referencesLegales
+    referencesCitees(o)
       .filter((r) => !r.article)
       .map((r) => ({ obligation: o.id, reference: r.reference })),
   );

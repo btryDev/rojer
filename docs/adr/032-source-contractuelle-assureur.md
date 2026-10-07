@@ -12,6 +12,14 @@
   d'exception, et une requête distincte de celle du calendrier est exactement
   l'endroit où l'exception s'installe sans bruit
 - **Amende** l'ADR-035 (prescriptions particulières) · **Découle de** l'ADR-025
+- **Amendée par l'ADR-039 (2026-10-07)** : « NF » sort de la liste des
+  référentiels privés que le produit s'interdit. Une norme (NF, EN) peut
+  donner un rythme ou fonder une obligation, citée comme norme et marquée
+  « Rythme de la norme … » — jamais comme du droit. APSAD, CACES et
+  recommandations CNAM restent de ce côté-ci de la ligne. Le marquage
+  contractuel ne change pas ; une prescription d'assureur au moins aussi
+  stricte qu'un rythme RETENU (norme ou défaut) s'applique et reste marquée
+  (ADR-039 § 3, préséance).
 
 ## Le problème
 
@@ -23,7 +31,9 @@ l'inspection.
 
 Le produit n'avait aucun endroit pour les recevoir. Pire : il **s'interdit par
 construction** de traiter les référentiels privés comme des sources opposables —
-CACES, recommandations CNAM, APSAD, NF, INRS — et il a raison de le faire. Un
+CACES, recommandations CNAM, APSAD, ~~NF~~, INRS — et il a raison de le faire.
+(2026-10-07, ADR-039 : une norme NF ou EN peut désormais donner un rythme, citée
+comme norme ; elle reste distinguée du droit par sa propre mention.) Un
 guide commercial soumis cette semaine présentait des recyclages CACES
 quinquennaux comme des obligations : c'est faux, et c'est précisément le genre
 d'affirmation que le dépôt refuse de porter.
@@ -65,4 +75,6 @@ Une source contractuelle **par acte reçu**, jamais un référentiel privé enco
 La différence est nette : l'assureur d'un dirigeant lui a écrit quelque chose, et
 le dirigeant le saisit. Le jour où quelqu'un proposera d'encoder « le référentiel
 APSAD R4 » comme un domaine d'obligations, la réponse est non — et cette ADR est
-la raison.
+la raison. (Une norme homologuée, NF ou EN, n'est pas visée par ce refus depuis
+l'ADR-039 : elle entre par le corpus `normes` et la mention de rythme retenu, pas
+comme un domaine.)

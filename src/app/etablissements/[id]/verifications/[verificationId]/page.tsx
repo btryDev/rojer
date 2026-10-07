@@ -9,6 +9,9 @@ import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { CreerActionVerifForm } from "@/components/actions/CreerActionVerifForm";
 import { getVerification } from "@/lib/calendrier/queries";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
+import { referencesCitees } from "@/lib/referentiels/conformite/rythme-retenu";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
 import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
@@ -245,6 +248,9 @@ export default async function VerificationDetailPage({
   // engage : c'est le dernier endroit où elle peut encore se lire comme une
   // obligation légale, et le premier où on ira vérifier.
   const contractuelle = estEcheanceContractuelle(v);
+  // ADR-039. Le rythme que Rojer retient là où le texte n'en écrit pas : la
+  // fiche dit d'où il vient, à côté de la date qu'il produit.
+  const rythmeRetenu = mentionRythmeDeVerification(v);
 
   const faits: FaitFiche[] = [
     // L'extinction d'abord, et elle prend la place de l'échéance : une
@@ -341,6 +347,13 @@ export default async function VerificationDetailPage({
       note: MARQUAGE_CONTRACTUEL_LONG,
     });
   }
+  if (rythmeRetenu) {
+    faits.push({
+      cle: "Rythme",
+      valeur: rythmeRetenu.court,
+      note: rythmeRetenu.long,
+    });
+  }
 
   return (
     <EcranFiche provenance={provenance} canonique={calendrier}>
@@ -372,6 +385,7 @@ export default async function VerificationDetailPage({
         pastilles={
           <>
             {contractuelle && <MentionContractuelle />}
+            <MentionRythmeRetenu mention={rythmeRetenu} />
             <MentionAConfirmer phrases={marque?.phrases ?? []} />
             {/* En retard, la pastille d'état dit déjà « En retard » : une
                 seconde pastille rose aurait dit la même chose. Le compte de
@@ -443,8 +457,8 @@ export default async function VerificationDetailPage({
             </span>
             <span className="flex items-center gap-3">
               <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
-                {obligation.referencesLegales.length} référence
-                {obligation.referencesLegales.length > 1 ? "s" : ""}
+                {referencesCitees(obligation).length} référence
+                {referencesCitees(obligation).length > 1 ? "s" : ""}
               </span>
               <span
                 aria-hidden
@@ -455,7 +469,9 @@ export default async function VerificationDetailPage({
             </span>
           </summary>
           <ul className="m-0 list-none border-t border-[color:var(--board-slate-line)] p-0">
-            {obligation.referencesLegales.map((ref, idx) => (
+            {/* La norme d'un rythme retenu y figure, sous son libellé
+                « Norme » (ADR-039) : citée comme norme, jamais comme un article. */}
+            {referencesCitees(obligation).map((ref, idx) => (
               <li
                 key={idx}
                 className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--board-slate-line)] px-7 py-4 first:border-t-0 sm:px-8"

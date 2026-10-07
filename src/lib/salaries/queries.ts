@@ -1,3 +1,5 @@
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
@@ -90,7 +92,7 @@ export function etatDuTitre(
   now: Date,
 ): EtatTitre {
   if (!salarieActif || obligation === undefined) return "archivee";
-  return classerTitre(titre, obligation.periodicite, now);
+  return classerTitre(titre, periodiciteEffective(obligation), now);
 }
 
 const SELECTION_TITRE = {
@@ -177,9 +179,11 @@ export async function getSalarie(
          * recalculer — et `echeanceLe` reste lisible à côté pour ce qu'il est,
          * la date de fin portée par la pièce.
          */
-        echeance: echeanceDuTitre(t, o?.periodicite),
+        echeance: echeanceDuTitre(t, o ? periodiciteEffective(o) : undefined),
         /** Le rythme qui a produit une échéance calculée — la fiche le nomme. */
-        periodicite: o?.periodicite ?? null,
+        periodicite: o ? periodiciteEffective(o) : null,
+        /** D'où vient ce rythme quand le texte n'en écrit pas (ADR-039). */
+        rythmeRetenu: o ? mentionRythmeRetenu(o) : null,
         etat: etatDuTitre(t, o, s.actif, now),
       };
     }),
@@ -218,7 +222,7 @@ export async function compterTitresEnRetard(
     // saisie le comptait encore au badge (2026-09-15).
     const obligation = titreParId(t.obligationId);
     if (obligation === undefined) return false;
-    const echeance = echeanceDuTitre(t, obligation.periodicite);
+    const echeance = echeanceDuTitre(t, periodiciteEffective(obligation));
     return echeance !== null && estEnRetard(echeance, now);
   }).length;
 }

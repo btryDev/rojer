@@ -87,6 +87,9 @@ export function genererReadme(args: {
   /** Échéances nées d'une demande d'assureur et imprimées dans ce dossier
    *  (ADR-032). Zéro = rien à annoncer, et rien n'est écrit. */
   nbEcheancesContractuelles: number;
+  /** Les mentions de rythme retenu (ADR-039) des échéances imprimées dans ce
+   *  dossier, par identifiant de ligne. Vide = rien à annoncer. */
+  rythmesRetenus: ReadonlyMap<string, string>;
   /** L'état du DUERP tel que `evaluerEtatDuerp` le rend — la seule règle du
    *  dépôt qui connaisse le seuil d'effectif de R. 4121-2. `null` quand aucune
    *  version n'est figée, ou que sa lecture a échoué. */
@@ -378,6 +381,27 @@ export function genererReadme(args: {
       ` « ${MARQUAGE_CONTRACTUEL} »`,
       " là où elle apparaît. Aucune référence légale ne leur est",
       " attachée.",
+      "",
+    );
+  }
+  // ADR-039 : une échéance dont le texte n'écrit pas le rythme, et dont Rojer
+  // a RETENU un — celui d'une norme, ou au moins une fois par an par défaut.
+  // Même règle que ci-dessus : rien n'est écrit quand il n'y en a pas, et
+  // chaque phrase est la mention même que porte la ligne, pas un résumé.
+  if (args.rythmesRetenus.size > 0) {
+    const n = args.rythmesRetenus.size;
+    const phrases = [...new Set(args.rythmesRetenus.values())].sort();
+    lignes.push(
+      "────────────────────────────────────────────────────────────",
+      " RYTHMES RETENUS PAR ROJER, NON ÉCRITS PAR LE TEXTE",
+      "────────────────────────────────────────────────────────────",
+      "",
+      ` ${n} échéance${n > 1 ? "s" : ""} de ce dossier ${n > 1 ? "ont" : "a"} un rythme que le texte`,
+      " n'écrit pas. Rojer l'a retenu : celui d'une norme, citée comme",
+      " norme, ou au moins une fois par an quand le texte dit seulement",
+      " de refaire l'acte. Chacune porte sa mention :",
+      "",
+      ...phrases.map((p) => ` - ${p}`),
       "",
     );
   }

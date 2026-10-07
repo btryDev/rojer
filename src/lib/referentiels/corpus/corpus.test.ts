@@ -259,6 +259,7 @@ describe("corpus — forme des dépouillements", () => {
           cv.horsPerimetre +
           cv.nonCouverts +
           cv.obligationsManquantes +
+          cv.normes +
           cv.nonDepouilles,
         `${c.id} : la somme des statuts ne fait pas le total — un statut manque au compte`,
       ).toBe(cv.total);

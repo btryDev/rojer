@@ -20,6 +20,10 @@
  *   que tels. L'obligation opposable vient de l'arrêté du 25 juin 1980 (art.
  *   MS 38) et du Code du travail R. 4227-29. On cite les deux, sans les normes
  *   privées.
+ *   [2026-10-07, ADR-039 : une norme NF peut désormais donner le RYTHME d'une
+ *   obligation dont le texte ne le chiffre pas — `rythmeRetenu`, motif
+ *   « norme ». NF S 61-919 est au corpus `normes` ; l'appliquer aux
+ *   extincteurs hors ERP est le lot 3. APSAD R4 reste exclue.]
  */
 
 import type { Obligation, ReferenceLegale } from "./types";

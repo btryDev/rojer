@@ -64,6 +64,7 @@
 import type { ObligationApplicable } from "@/lib/matching";
 import type { Obligation } from "../referentiels/conformite";
 import type { Periodicite } from "../referentiels/types-communs";
+import { periodiciteEffective } from "../referentiels/conformite/rythme-retenu";
 
 /**
  * Le générateur produit-il une ligne de calendrier pour cette périodicité ?
@@ -88,9 +89,9 @@ export function estSansRendezVous(periodicite: Periodicite): boolean {
  */
 export function estEtatADeclarer(
   o: Obligation,
-  periodiciteEffective: Periodicite = o.periodicite,
+  rythme: Periodicite = periodiciteEffective(o),
 ): boolean {
-  return o.nature === "etat_permanent" && estSansRendezVous(periodiciteEffective);
+  return o.nature === "etat_permanent" && estSansRendezVous(rythme);
 }
 
 /**
@@ -104,10 +105,10 @@ export function estEtatADeclarer(
  */
 export function estFaitADater(
   o: Obligation,
-  periodiciteEffective: Periodicite = o.periodicite,
+  rythme: Periodicite = periodiciteEffective(o),
 ): boolean {
   if (o.nature !== "echeance_recurrente") return false;
-  if (!estSansRendezVous(periodiciteEffective)) return false;
+  if (!estSansRendezVous(rythme)) return false;
   return !EXCLUES_DU_FAIT_DATE.has(o.id);
 }
 
@@ -158,10 +159,10 @@ const EXCLUES_DU_FAIT_DATE: ReadonlySet<string> = new Set([
  */
 export function estDeclencheeParUnFait(
   o: Obligation,
-  periodiciteEffective: Periodicite = o.periodicite,
+  rythme: Periodicite = periodiciteEffective(o),
 ): boolean {
   return (
-    o.nature === "evenementielle" && estSansRendezVous(periodiciteEffective)
+    o.nature === "evenementielle" && estSansRendezVous(rythme)
   );
 }
 
@@ -189,12 +190,12 @@ export type ModeDeclaration =
  */
 export function modeDeclaration(
   o: Obligation,
-  periodiciteEffective: Periodicite = o.periodicite,
+  rythme: Periodicite = periodiciteEffective(o),
 ): ModeDeclaration | null {
-  if (estEtatADeclarer(o, periodiciteEffective)) {
+  if (estEtatADeclarer(o, rythme)) {
     return { mode: "etat", compteDansLEnTete: true };
   }
-  if (estFaitADater(o, periodiciteEffective)) {
+  if (estFaitADater(o, rythme)) {
     return { mode: "fait", compteDansLEnTete: false };
   }
   return null;
@@ -271,7 +272,10 @@ export function modeDeclarationApplique(
   const surcharge = app.equipementsConcernes
     .map((eq) => app.surcharges?.[eq.id])
     .find((s) => s !== undefined);
-  return modeDeclaration(o, surcharge?.periodicite ?? o.periodicite);
+  // Le rythme du référentiel est l'effectif (ADR-039) : une obligation `autre`
+  // qui reçoit un rythme retenu quitte cet écran pour le calendrier, comme
+  // sous une prescription — une surface, jamais deux.
+  return modeDeclaration(o, surcharge?.periodicite ?? periodiciteEffective(o));
 }
 
 /**

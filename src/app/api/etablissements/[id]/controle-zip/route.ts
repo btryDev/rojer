@@ -123,6 +123,8 @@ export async function GET(
   // porte. Si une brique échoue, ses lignes ne sont pas imprimées et ne sont
   // donc pas annoncées — c'est cohérent, pas un oubli.
   const echeancesContractuelles = new Set<string>();
+  // ADR-039 : même collecte pour les rythmes retenus, par identifiant de ligne.
+  const rythmesRetenus = new Map<string, string>();
 
   // DEUX FAITS QUI PEUVENT ÊTRE INCONNUS, ET QUI DOIVENT LE DIRE.
   //
@@ -190,6 +192,7 @@ export async function GET(
     if (data) {
       for (const v of data.verifsEnRetard) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
+        if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
       }
       nbVerifsEnRetard = data.verifsEnRetard.length;
       inventaire = data.couverture ? faitInventaire(data.couverture) : null;
@@ -287,6 +290,7 @@ export async function GET(
     if (data) {
       for (const v of data.verifsEnAttente) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
+        if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
       }
       const buf = await renderToBuffer(RegistreDocument({ data }));
       zip.file("03_Registre_securite.pdf", new Uint8Array(buf));
@@ -668,6 +672,7 @@ export async function GET(
       carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0),
     ),
     nbEcheancesContractuelles: echeancesContractuelles.size,
+    rythmesRetenus,
     etatDuerp,
     retards: {
       nbEnRetard: nbVerifsEnRetard,
