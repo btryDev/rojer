@@ -4733,9 +4733,65 @@ en double changent, sans perte (réconciliateur, cas D7 et D8).
   CO2), § 11 (« ne devrait pas dépasser 20 ans », non retenu comme rythme).
   Le § 4 recommande à l'utilisateur des inspections trimestrielles : relevé,
   non retenu (« Il est recommandé »).
-- **Ce qui reste** : aucune obligation ne retient encore ces rythmes (lot 3).
+- **Ce qui reste** : ~~aucune obligation ne retient encore ces rythmes (lot 3).~~
+  [2026-10-07 : voir C55 lot 3 ci-dessous.]
   NF C 18-510 ne peut fonder aucun rythme tant que son texte n'est pas lu —
   `controlerRythmeRetenu` le refuse.
+
+### C55 lot 3 · 2026-10-07 — Les rythmes retenus posés : NF S 61-919 hors ERP, défaut annuel là où rien n'est écrit
+
+- **Quand · par quoi** : 2026-10-07, lot 3 de la relecture du préventeur
+  (`lot/relecture-jc-3`, sur `lot/relecture-jc-2`), décisions de la
+  propriétaire du même jour : normes admises ; rythme vague = au moins
+  annuel ; EPI : vérification annuelle sur tous les EPI ; formation :
+  annuelle. Référentiel `2026-10-07.4`.
+- **Sur quoi** : NF S 61-919 § 10.1 (scan p. 10, nouveau au corpus) et
+  tableau A.1 / § 11 (p. 11-12, relus) ; API Légifrance **sandbox** (client
+  du dépôt) : R. 4412-38, R. 4412-87, **R. 4412-88** (nouveau au corpus),
+  R. 4412-89, R. 4412-39 ; `relecture-jc-2026-10/textes.md` pour R. 4224-17,
+  R. 4322-1, R. 4141-2/-3/-4/-13, R. 4227-28/-29.
+- **Comment lu** : norme en première main sur le scan ; articles par l'API
+  (bac à sable — l'égalité avec la production n'est pas vérifiée,
+  `reponses.md`).
+- **Ce qui en sort** (9 obligations à rythme retenu, 5 neuves ; 174 + 5 − 0 =
+  179) :
+  - **Norme** — `incendie-travail-moyens-lutte` (annuelle, § 5.1.1) ;
+    `incendie-travail-extincteurs-revision-atelier-decennale` (neuve, § 10.1) ;
+    `incendie-travail-extincteurs-maintenance-approfondie` (neuve, annexe A :
+    `premierDelai` quinquennal + décennal = 5 et 15 ans ; question neuve
+    `typeExtincteur`, CO2 et poudre à opercule exclus). Les deux lignes ERP
+    (MS 38 § 4) citent la norme en seconde référence, leur rythme reste écrit.
+  - **Défaut annuel** — `formation-securite-etablissement-organisation`
+    (« répétée périodiquement », L. 4141-2) ; `stockage-dangereux-formation-
+    personnel` (« Elles sont répétées régulièrement », **R. 4412-88**, champ
+    CMR : sur-application assumée) ; `epi-maintien-etat-conformite` (neuve,
+    « maintenus en état de conformité », R. 4322-1, catégorie `EPI` seule) ;
+    `incendie-travail-ria-entretien-verification` et
+    `incendie-travail-desenfumage-entretien-verification` (neuves,
+    « périodicité appropriée », R. 4224-17) ; `signalisation-etablissement-
+    entretien` (« régulièrement nettoyés, entretenus, vérifiés », art. 15).
+  - **Anti-doublon par partition de typologie** (`erp: false`) : partout où
+    l'ERP a un rythme ÉCRIT pour le même acte (MS 38 § 4, MS 73, DF 10), la
+    ligne de lieu de travail se retire chez un ERP. `ExclusionMutuelle` ne vaut
+    qu'entre titres de salarié. Garde : `extincteurs-partition.test.ts` (une
+    annuelle et une seule par extincteur, RIA, désenfumage, six profils).
+  - **Écartés, avec la raison** : alarme (semestrielle écrite de l'art. 15,
+    signaux acoustiques) ; `porte-auto-maintien-en-etat` (semestrielle écrite,
+    arrêté du 21 décembre 1993 art. 9) ; `eclairage-etablissement-regles-
+    entretien` (R. 4223-11 : l'employeur fixe le rythme) ;
+    `ascenseur-entretien-contrat` (rythmes écrits) ;
+    `incendie-travail-extincteurs-dotation` (doublon avec la maintenance par
+    appareil) ; habilitation (NF C 18-510 `indirect`, paragraphe « à
+    préciser » : aucun rythme posé).
+  - **Corrigé au passage** : trois tests lisaient `o.periodicite` là où le
+    rythme effectif décide (anti-doublon de `conformite.test.ts`, frontière
+    calendrier / écran de `regle.test.ts`) ; R. 4322-1 `sans_objet` → `retenu`.
+- **Ce qui reste** : poudre à opercule (une MAA à 15 ans) non datée — aucune
+  `Periodicite` de quinze ans sans toucher l'énumération Prisma ; durée de vie
+  (§ 11, conditionnel) dite dans l'aide du formulaire, pas une échéance ;
+  formation stockage bornée aux CMR faute d'attribut « présence de CMR » ;
+  R. 4322-1 ne porte que les EPI, pas les équipements de travail ni la
+  protection collective (réserve au corpus).
 
 ## Partie 2 — Registre des constats en suspens
 

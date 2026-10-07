@@ -109,9 +109,9 @@ On refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement.
 3. **Bureau / services tertiaires**
 
 ### Référentiel de conformité (vérifications)
-Livré : **~~170~~ ~~172~~ 173 obligations sur 21 domaines** (169 + 1 le 2026-09-27, C45 : `R. 4227-26` ; 170 + 2 le même jour, `lot/couverture-reponse-absente` : `R. 4227-34`, installation de l'alarme, et `R. 4227-37` al. 2, instructions d'évacuation) — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
+Livré : **~~170~~ ~~172~~ ~~173~~ 179 obligations sur 21 domaines** (169 + 1 le 2026-09-27, C45 : `R. 4227-26` ; 170 + 2 le même jour, `lot/couverture-reponse-absente` : `R. 4227-34`, installation de l'alarme, et `R. 4227-37` al. 2, instructions d'évacuation ; 174 le 2026-09-28, levage ; puis 174 + 5 − 0 = 179 le 2026-10-07, C55 lot 3 de la relecture du préventeur, ADR-039 : révision en atelier et maintenance approfondie des extincteurs hors ERP (NF S 61-919), maintien en état des EPI (`R. 4322-1`), entretien du RIA et du désenfumage en lieu de travail hors ERP (`R. 4224-17`) — remesuré en appelant `obligationsConformite`) — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
 
-**89 d'entre elles sont déclenchées par un équipement déclaré, ~~soixante-six~~
+**~~89~~ 95 d'entre elles (2026-10-07, en appelant `porteurDe` : 90 au 2026-09-28, + 5 au lot 3 C55) sont déclenchées par un équipement déclaré, ~~soixante-six~~
 ~~soixante-sept~~ ~~soixante-neuf~~ soixante-dix (2026-09-27, C45 : `R. 4227-26`, 169 + 1 = 170 ; puis `R. 4227-34` et `R. 4227-37` al. 2, 170 + 2 = 172 ; puis la dotation de `R. 4227-29`, 172 + 1 = 173) sont portées par l'établissement, quatorze par un salarié** — remesuré en
 appelant `obligationsConformite` et `porteurDe` le 2026-09-21 (lot chaleur
 intense : deux états permanents d'établissement, `R. 4463-2` et `R. 4463-6` ;
@@ -219,7 +219,7 @@ Rojer couvre les obligations de **santé-sécurité au travail et de sécurité 
 — Code du travail, CCH, et Code de l'environnement quand il porte sur la sécurité des
 installations ou des personnes. Une obligation y naît de cinq déclencheurs possibles :
 
-1. **Équipement déclaré** — 89 obligations livrées (mesuré le 2026-09-11)
+1. **Équipement déclaré** — ~~89~~ 95 obligations livrées (mesuré le 2026-09-11 ; 95 remesuré en appelant le 2026-10-07, C55 lot 3)
 2. **Statut d'employeur** — dès un salarié. **15 obligations livrées au lot 7**
    (2026-08-31) : formation à la sécurité, information et accès au DUERP, VIP, suivi
    individuel renforcé et sa visite intermédiaire, liste des postes à risques, matériel
@@ -257,8 +257,8 @@ l'ADR-022, sans mécanisme.
 
 Répartition remesurée le 2026-09-20 (~~le 2026-09-11, inchangée depuis la
 scission de la colonne R de `GE 4 § 1`, le 2026-09-08~~) :
-**89 équipement, ~~66~~ ~~67~~ ~~69~~ 70 établissement, 14 salarié**
-(total ~~169~~ ~~170~~ ~~172~~ 173, remesuré en appelant le 2026-09-27 — la dotation de `R. 4227-29` ; 172 le même jour — `R. 4227-34` et `R. 4227-37` al. 2 ; 170 le même jour — C45, `R. 4227-26` ; 169 le 2026-09-26 — `R. 4624-33`, `L. 4624-2-4` ; 167 le 2026-09-21 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
+**~~89~~ 95 équipement, ~~66~~ ~~67~~ ~~69~~ 70 établissement, 14 salarié**
+(total ~~169~~ ~~170~~ ~~172~~ ~~173~~ 179, remesuré en appelant le 2026-10-07 — C55 lot 3, cinq lignes d'équipement à rythme retenu ; 173 le 2026-09-27 — la dotation de `R. 4227-29` ; 172 le même jour — `R. 4227-34` et `R. 4227-37` al. 2 ; 170 le même jour — C45, `R. 4227-26` ; 169 le 2026-09-26 — `R. 4624-33`, `L. 4624-2-4` ; 167 le 2026-09-21 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
 `porteurDe`, pas au grep. Les quatre entrées du lot sont, dans l'ordre où elles
 apparaissent au référentiel : `aeration-erp-filtres-visite-periodique`
 (`CH 39 § 3`, visite TRIMESTRIELLE des filtres de ventilation par l'utilisateur,
