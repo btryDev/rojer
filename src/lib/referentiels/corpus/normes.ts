@@ -46,6 +46,40 @@ export const NORMES: Corpus = {
       obligations: ["incendie-travail-moyens-lutte", "incendie-erp-extincteurs-annuelle"],
     },
     {
+      ref: "NF S 61-919 § 9",
+      intitule:
+        "NF S 61-919 (août 2001) — § 9, étiquette de maintenance",
+      versionEnVigueur: "2001-08-20",
+      modifiePar: null,
+      luLe: "2026-10-07",
+      lecture: "premiere_main",
+      prescrit:
+        "Les données de maintenance figurent sur une étiquette qui ne cache aucun marquage du fabricant : vérifié, date de recharge, date de maintenance additionnelle approfondie, nom et adresse de la société qualifiée, marque de la personne compétente, date de la maintenance ou des vérifications, date de la précédente révision en atelier — chaque date en année et mois.",
+      citationCle:
+        "9.1 Les données relatives à la maintenance doivent figurer sur une étiquette qui ne cache aucun des marquages du fabricant. 9.2 Les données suivantes doivent être fournies sur l'étiquette : — vérifié ; — date de recharge (année et mois) avec précision éventuelle de l'agent extincteur si nécessaire ; — date de maintenance additionnelle approfondie (année et mois) ; — nom et adresse de la société qualifiée ; — marque identifiant clairement la personne compétente ; — date (année et mois) de réalisation de la maintenance ou des vérifications ; — date (année et mois) de la précédente révision en atelier. NOTE Il y a également lieu de marquer l'année et le mois de la maintenance suivante si la législation l'exige.",
+      statut: "norme",
+      motif:
+        "p. 10 du scan, lue le 2026-10-07 (C60, revue indépendante de la relecture du préventeur, qui demandait de citer l'étiquette et la formation de la personne compétente). L'étiquette est la PREUVE de l'acte que le § 5.1.1 rythme, pas un acte de plus : elle ne fonde aucun rythme, et aucune obligation ne la retient. Elle est citée dans la description de `incendie-travail-moyens-lutte`, la ligne annuelle hors ERP. En ERP, MS 38 § 4 écrit sa propre étiquette (« Les années et les mois des vérifications doivent apparaître sur l'étiquette »).",
+      obligations: [],
+    },
+    {
+      ref: "NF S 61-919 annexe E",
+      intitule:
+        "NF S 61-919 (août 2001) — annexe E (normative), formation et expérience de la personne compétente",
+      versionEnVigueur: "2001-08-20",
+      modifiePar: null,
+      luLe: "2026-10-07",
+      lecture: "premiere_main",
+      prescrit:
+        "La personne compétente est formée — trois mois d'expérience de terrain au moins, des cours d'une durée recommandée d'au moins 32 h, un examen supervisé par un organisme indépendant — et suit des stages de recyclage au moins tous les cinq ans.",
+      citationCle:
+        "La personne compétente doit être formée : la formation doit comprendre au moins trois mois d'expérience sur le terrain et la participation à des cours de formation dont la durée recommandée est d'au moins 32 h. À l'issue de ce stage de formation, la personne compétente doit réussir un examen qui doit être supervisé par un organisme indépendant. Le stage de formation est organisé par un fabricant ou tout autre organisme reconnu. La personne compétente doit assister à des stages de recyclage au moins tous les cinq ans. Un organisme professionnel désigné effectuera une validation des acquis pour les personnels vérificateurs qui opéraient avant la mise en place du présent document.",
+      statut: "norme",
+      motif:
+        "p. 18 du scan, lue le 2026-10-07 (C60). Annexe NORMATIVE (avant-propos). Elle porte un rythme — « des stages de recyclage au moins tous les cinq ans » — mais il pèse sur la PERSONNE COMPÉTENTE, salariée du prestataire, pas sur l'établissement qui fait maintenir ses extincteurs : il ne fonde aucune échéance du référentiel, et aucune obligation ne la retient. Elle dit ce que « personne compétente » veut dire dans le § 5.1.1 que `incendie-travail-moyens-lutte` retient, et sa description la cite.",
+      obligations: [],
+    },
+    {
       ref: "NF S 61-919 § 10.1",
       intitule:
         "NF S 61-919 (août 2001) — § 10.1, intervalles de révision en atelier des extincteurs d'incendie portatifs",
@@ -76,10 +110,10 @@ export const NORMES: Corpus = {
       prescrit:
         "Intervalles maximaux par type d'extincteur portatif : maintenance 1 an (tous types) ; maintenance additionnelle approfondie à 5 et 15 ans (mousse, eau, poudre), à 15 ans (poudre à opercule scellé et pression permanente), sans objet pour halon et CO2 ; révision en atelier 10 ans (tous types sauf halon, « voir note 3 ») ; durée de vie prévue 20 ans, non fixée pour le CO2.",
       citationCle:
-        "Les procédures de maintenance doivent être réalisées aux intervalles donnés dans le tableau A.1. [Tableau A.1 — Intervalles maximaux de maintenance et durée de vie utile prévue :] à mousse, eau et à base d'eau : 1 an / à 5 et 15 ans / 10 ans / 20 ans ; à poudre : 1 an / à 5 et 15 ans / 10 ans / 20 ans ; à poudre — avec opercule scellé, à pression permanente : 1 an / 15 ans / 10 ans / 20 ans ; au halon : 1 an / — / Voir note 3 / Voir note 3 ; au CO2 : 1 an / — / 10 ans / Non fixée. [Sous le tableau :] Les intervalles partent de la date d'installation de l'extincteur d'incendie mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps.",
+        "Les procédures de maintenance doivent être réalisées aux intervalles donnés dans le tableau A.1. [Tableau A.1 — Intervalles maximaux de maintenance et durée de vie utile prévue :] à mousse, eau et à base d'eau : 1 an / à 5 et 15 ans / 10 ans / 20 ans ; à poudre : 1 an / à 5 et 15 ans / 10 ans / 20 ans ; à poudre — avec opercule scellé, à pression permanente : 1 an / 15 ans / 10 ans / 20 ans ; au halon : 1 an / — / Voir note 3 / Voir note 3 ; au CO2 : 1 an / — / 10 ans / Non fixée. [Notes du tableau :] NOTE 3 Les extincteurs portatifs à halon ne doivent pas être déchargés mais vidés selon une méthode permettant de récupérer le halon (voir annexe G). [Sous le tableau :] Les intervalles partent de la date d'installation de l'extincteur d'incendie mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps.",
       statut: "norme",
       motif:
-        "Annexe NORMATIVE (avant-propos : « Les annexes A, B, C, D et E sont normatives »), p. 12 du scan, lue le 2026-10-07. Colonnes du tableau dans l'ordre : maintenance (annexe B) / maintenance additionnelle approfondie et renouvellement de la charge (annexe C) / révision en atelier et renouvellement de la charge (annexe D) / durée de vie prévue. « [Tableau A.1 …] » et « [Sous le tableau :] » sont des repères de ce relevé, pas du texte. Le rythme décennal de révision recoupe `MS 38` § 4 (« révision tous les dix ans ») pour les ERP, qui le portent déjà par le droit. ~~Aucune obligation ne la retient encore.~~ [2026-10-07, C59 lot 3 : `incendie-travail-extincteurs-maintenance-approfondie` en retient la colonne « maintenance additionnelle approfondie » — premier pas de cinq ans, puis dix — pour les types eau, mousse et poudre ; la poudre à opercule (15 ans seulement) n'est pas datée, aucune périodicité ne valant quinze ans. La décennale de révision est retenue par l'entrée § 10.1.]",
+        "Annexe NORMATIVE (avant-propos : « Les annexes A, B, C, D et E sont normatives »), p. 12 du scan, lue le 2026-10-07. Colonnes du tableau dans l'ordre : maintenance (annexe B) / maintenance additionnelle approfondie et renouvellement de la charge (annexe C) / révision en atelier et renouvellement de la charge (annexe D) / durée de vie prévue. « [Tableau A.1 …] » et « [Sous le tableau :] » sont des repères de ce relevé, pas du texte. Le rythme décennal de révision recoupe `MS 38` § 4 (« révision tous les dix ans ») pour les ERP, qui le portent déjà par le droit. ~~Aucune obligation ne la retient encore.~~ [2026-10-07, C59 lot 3 : `incendie-travail-extincteurs-maintenance-approfondie` en retient la colonne « maintenance additionnelle approfondie » — premier pas de cinq ans, puis dix — pour les types eau, mousse et poudre ; la poudre à opercule (15 ans seulement) n'est pas datée, aucune périodicité ne valant quinze ans. La décennale de révision est retenue par l'entrée § 10.1.] [2026-10-07, C60, revue indépendante : la NOTE 3, relue sur le scan p. 12, est ajoutée à la citation — c'est elle que le tableau renvoie pour le halon, en révision et en durée de vie, et elle ne dit rien d'une recharge : « vidés selon une méthode permettant de récupérer le halon ». Le halon a une maintenance annuelle (« 1 an ») ; il n'a ni maintenance approfondie (« — ») ni intervalle de révision. La valeur `halon` de `typeExtincteur` les lui retire (`enum_differente` sur la maintenance approfondie et sur la révision hors ERP).]",
       obligations: ["incendie-travail-extincteurs-maintenance-approfondie"],
     },
     {
@@ -96,7 +130,7 @@ export const NORMES: Corpus = {
         "À l'exception des extincteurs portatifs à dioxyde de carbone (voir 10.3) ou des cartouches de gaz, la durée de vie prévue d'un extincteur portatif ne devrait pas dépasser 20 ans.",
       statut: "norme",
       motif:
-        "p. 11 du scan, lue le 2026-10-07. « Ne devrait pas » : une durée de vie PRÉVUE, conditionnelle — ce n'est pas un rythme, et rien ici ne la ferait entrer au calendrier. Relevée pour que la question ne se rouvre pas. Aucune obligation ne la retient.",
+        "p. 11 du scan, lue le 2026-10-07. « Ne devrait pas » : une durée de vie PRÉVUE, conditionnelle — ce n'est pas un rythme, et rien ici ne la ferait entrer au calendrier. Relevée pour que la question ne se rouvre pas. Aucune obligation ne la retient. [2026-10-07, C60] L'aide du champ « Type d'extincteur » (`EquipementForm.tsx`) écrit « une durée de vie de 20 ans au plus » : plus ferme que « ne devrait pas dépasser ». Correction d'interface signalée à la passe « code », pas faite ici.",
       obligations: [],
     },
     {

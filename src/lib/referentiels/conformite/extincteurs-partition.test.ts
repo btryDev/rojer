@@ -129,6 +129,8 @@ describe("maintenance additionnelle approfondie : le type décide", () => {
     [undefined, 1],
     ["co2", 0],
     ["poudre_opercule_pression_permanente", 0],
+    // 2026-10-07 (C60) : le tableau A.1 écrit « — » pour le halon.
+    ["halon", 0],
   ] as const)("type %s → %i ligne", (type, n) => {
     expect(lignes(type)).toHaveLength(n);
   });
@@ -138,4 +140,21 @@ describe("maintenance additionnelle approfondie : le type décide", () => {
     expect(l.periodicite).toBe("decennale");
     expect(l.sources.premierPas).toBe("quinquennale");
   });
+});
+
+/**
+ * Le halon (C60, 2026-10-07) : le tableau A.1 lui donne la maintenance
+ * annuelle (« 1 an ») et renvoie sa révision à la note 3 (« Voir note 3 »),
+ * qui ne donne aucun intervalle. Hors ERP, il garde l'annuelle et perd la
+ * révision à dix ans ; en ERP, MS 38 § 4 écrit « une révision tous les dix
+ * ans » pour tout extincteur, et la décennale reste.
+ */
+describe("extincteur au halon : l'annuelle reste, la révision suit le régime", () => {
+  for (const { nom, e } of PROFILS) {
+    it(nom, () => {
+      const rythmes = rythmesDeLAppareil(e, "EXTINCTEUR", { typeExtincteur: "halon" });
+      expect(rythmes.filter((r) => r === "annuelle"), nom).toHaveLength(1);
+      expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(e.estERP ? 1 : 0);
+    });
+  }
 });

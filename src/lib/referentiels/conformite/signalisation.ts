@@ -387,7 +387,7 @@ export const obligationsSignalisation: Obligation[] = [
     libelle:
       "Entretien régulier des moyens et dispositifs de signalisation (nettoyage, réparation, remplacement)",
     description:
-      "Les moyens et dispositifs de signalisation sont, selon le cas, régulièrement nettoyés, entretenus, vérifiés et réparés, et remplacés si nécessaire, de manière à conserver leurs qualités intrinsèques ou de fonctionnement. Le texte n'écrit aucun rythme pour cet entretien : le rythme chiffré qu'il porte — au moins chaque semestre — ne vaut que pour les signaux lumineux et acoustiques, et fait l'objet d'une obligation distincte. Pour les panneaux, couleurs et autres dispositifs, Rojer retient au moins un entretien et une vérification par an.",
+      "Les moyens et dispositifs de signalisation sont, selon le cas, régulièrement nettoyés, entretenus, vérifiés et réparés, et remplacés si nécessaire, de manière à conserver leurs qualités intrinsèques ou de fonctionnement. Le texte n'écrit aucun rythme pour cet entretien : le rythme chiffré qu'il porte — au moins chaque semestre — ne vaut que pour les signaux lumineux et acoustiques, et fait l'objet d'une obligation distincte. Pour les panneaux, couleurs et autres dispositifs, Rojer retient par défaut au moins un entretien et une vérification par an.",
     referencesLegales: [
       {
         source: "ARRETE",

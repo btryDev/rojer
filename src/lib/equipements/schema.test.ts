@@ -183,7 +183,7 @@ describe("typeExtincteur (NF S 61-919, tableau A.1)", () => {
 
   it("refuse une valeur hors du tableau, et hors d'un extincteur", () => {
     expect(
-      equipementSchema.safeParse({ libelle: "E", categorie: "EXTINCTEUR", typeExtincteur: "halon" }).success,
+      equipementSchema.safeParse({ libelle: "E", categorie: "EXTINCTEUR", typeExtincteur: "inconnu" }).success,
     ).toBe(false);
     expect(
       equipementSchema.safeParse({ libelle: "R", categorie: "RIA", typeExtincteur: "co2" }).success,
