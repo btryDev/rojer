@@ -113,7 +113,10 @@ export const EXPLICATION_SANS_ECHEANCE: Record<MotifSansEcheance, string> = {
  * `aucune_echeance_datable` en est délibérément exclu, et c'est tout l'intérêt
  * de la fonction : là, des obligations s'appliquent bel et bien, aucun texte
  * n'en écrit le rythme. Un stockage de matières dangereuses sans volume
- * renseigné relève de la rétention et des fiches de données de sécurité ; lui
+ * renseigné ~~relève de la rétention et des fiches de données de sécurité~~
+ * [2026-10-07, C60 : la rétention est retirée au lot 5 de la relecture du
+ * préventeur ; le domaine ne garde que les fiches de données de sécurité, la
+ * formation et la signalisation] relève des fiches de données de sécurité ; lui
  * dire que « rien ne s'applique » serait faux, et faux dans le sens qui rassure.
  * Les trois motifs ont été séparés pour cette raison — les recompter ensemble
  * dans les écrans annulait le travail.
