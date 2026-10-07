@@ -33,6 +33,7 @@ import { retenueParSaMarque } from "@/lib/calendrier/prudence";
 import { libelleEcart } from "../temps";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import type { DashboardBundle } from "../types";
 
 // Toutes les fonctions temporelles reçoivent la date de référence du
@@ -235,6 +236,7 @@ export function WidgetProchainesEcheances({
                     {estEcheanceContractuelle(v) ? (
                       <MentionContractuelle />
                     ) : null}
+                    <MentionRythmeRetenu mention={v.rythmeRetenu} />
                     <MentionAConfirmer phrases={v.aConfirmer ?? []} />
                   </p>
                   {/* Méta de ligne, pas une date : elle n'a rien à faire en
@@ -346,7 +348,8 @@ function TimelineEcheances({
                 role="tooltip"
               >
                 {v.libelleObligation}
-                {estEcheanceContractuelle(v) ? " (assurance)" : ""} ·{" "}
+                {estEcheanceContractuelle(v) ? " (assurance)" : ""}
+                {v.rythmeRetenu ? ` (${v.rythmeRetenu.court})` : ""} ·{" "}
                 {c.libelleDate}
               </span>
             </div>
@@ -377,6 +380,7 @@ function TimelineEcheances({
                 />
                 <span className="flex-1 truncate">{v.libelleObligation}</span>
                 {estEcheanceContractuelle(v) ? <MentionContractuelle /> : null}
+                <MentionRythmeRetenu mention={v.rythmeRetenu} />
                 <MentionAConfirmer phrases={v.aConfirmer ?? []} />
                 <span className="font-mono text-[0.76rem] text-[color:var(--board-slate-mid)]">
                   {c.libelleDate}

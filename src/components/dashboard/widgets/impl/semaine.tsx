@@ -12,6 +12,8 @@ import { cleJourCivil } from "@/lib/dates";
 import { colonnesJours } from "../temps";
 import type { DashboardBundle } from "../types";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 
 export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
   const { evenementsSemaine = [], etablissementId } = bundle;
@@ -32,6 +34,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
       libelle: string;
       tone: "alerte" | "warn" | "ok";
       contractuelle: boolean;
+      rythmeRetenu: MentionRythme | null;
       aConfirmer: readonly string[];
       equipement: string;
     }[]
@@ -49,6 +52,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
       libelle: e.libelle,
       tone: e.tone,
       contractuelle: e.contractuelle,
+      rythmeRetenu: e.rythmeRetenu,
       aConfirmer: e.aConfirmer,
       equipement: e.equipement,
     });
@@ -120,6 +124,7 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
                       {e.contractuelle ? (
                         <MentionContractuelle className="ml-1.5 align-middle" />
                       ) : null}
+                      <MentionRythmeRetenu mention={e.rythmeRetenu} className="ml-1.5 align-middle" />
                       <MentionAConfirmer phrases={e.aConfirmer} className="ml-1.5 align-middle" />
                     </LienProvenance>
                   </li>

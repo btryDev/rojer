@@ -77,6 +77,7 @@ import {
 import type { DashboardBundle } from "../types";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 
 /* ─── Primitives partagées ──────────────────────────────────── */
 
@@ -1761,6 +1762,7 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
           {/* La ligne la plus mise en avant du board ne peut pas être celle
               qui tait ce qu'elle est (ADR-032). */}
           {estEcheanceContractuelle(v) ? <MentionContractuelle /> : null}
+          <MentionRythmeRetenu mention={v.rythmeRetenu} />
           <MentionAConfirmer phrases={v.aConfirmer ?? []} />
         </span>
       </div>

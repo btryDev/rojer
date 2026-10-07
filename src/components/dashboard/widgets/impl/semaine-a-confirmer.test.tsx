@@ -21,6 +21,7 @@ const evenement = (aConfirmer: string[]) => ({
   sansEcheance: false,
   type: "verification" as const,
   contractuelle: false,
+  rythmeRetenu: null,
   aConfirmer,
   equipement: "Tout l'établissement",
   batiment: null,

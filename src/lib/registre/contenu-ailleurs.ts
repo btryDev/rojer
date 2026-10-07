@@ -25,6 +25,8 @@ import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { listerVerifications } from "@/lib/calendrier/queries";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 import {
   estVerificationRealisee,
   lignePortantSansRendezVous,
@@ -119,6 +121,10 @@ export type LigneTenue = {
    *  fait une mention à part, jamais un mot noyé dans `meta` — qui est
    *  tronqué. */
   contractuelle?: boolean;
+  /** D'où vient le rythme quand Rojer le retient (ADR-039 § 5), `null`
+   *  sinon. Même raison que `contractuelle` : une mention à part, jamais un
+   *  mot dans `meta`. */
+  rythmeRetenu?: MentionRythme | null;
 };
 
 export type ContenuAilleurs = {
@@ -282,6 +288,7 @@ export function contenuTenuAilleursDepuis(
                   prudence,
                 ),
           contractuelle: estEcheanceContractuelle(v),
+          rythmeRetenu: mentionRythmeDeVerification(v),
         })),
       source: { libelle: "votre calendrier", href: `${base}/calendrier` },
       vide: "Aucune vérification n'est encore programmée pour ce matériel. Elle apparaîtra ici dès que votre calendrier en portera une.",

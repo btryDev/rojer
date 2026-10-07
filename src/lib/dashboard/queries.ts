@@ -62,6 +62,8 @@ import {
 } from "@/lib/calendrier/portee";
 import { libellePorteur } from "@/lib/calendrier/labels";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 import {
   genererRecommandations,
   type Recommandation,
@@ -133,6 +135,11 @@ export type EvenementFenetre = {
    *  affichent des libellés d'échéance comme les autres surfaces : sans ce
    *  drapeau, elles présentent une exigence d'assurance comme du droit. */
   contractuelle: boolean;
+  /** D'où vient le rythme quand Rojer le retient (ADR-039), `null` sinon.
+   *  Requis, comme `contractuelle` : l'ADR-039 § 5 interdit un rythme retenu
+   *  sans marquage « sur quelque surface que ce soit », et le board est la
+   *  plus lue. Lu au référentiel par `obligationId` — aucune requête. */
+  rythmeRetenu: MentionRythme | null;
   /** Les phrases « à confirmer » de la ligne, vide sinon (revue du lot 1). */
   aConfirmer: readonly string[];
   /** L'appareil, ou « Tout l'établissement » (ADR-022). */
@@ -254,6 +261,7 @@ export async function listerEvenementsFenetre(
         sansEcheance: !aUnRendezVous(v, now),
         type: typeDeVerification(v),
         contractuelle: estEcheanceContractuelle(v),
+        rythmeRetenu: mentionRythmeDeVerification(v),
         aConfirmer: marques.parObligation.get(v.obligationId)?.phrases ?? [],
         equipement: libellePorteur(v),
         // Pas d'équipement, pas de bâtiment : la ligne reste visible sous

@@ -16,6 +16,7 @@ import type { EvenementGrille } from "@/lib/calendrier/grille";
 import type { EtatEcheances } from "@/lib/calendrier/retards";
 import type { ModulesMatrice } from "@/lib/dashboard/obligations";
 import type { StatsRetardActions } from "@/lib/actions/queries";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 
 export type Taille = "small" | "medium" | "large";
 // small = 2 col · medium = 3 col · large = 6 col (grille à 6 colonnes)
@@ -142,6 +143,13 @@ type VerificationLite = {
    * remplit toujours.
    */
   aConfirmer?: readonly string[];
+  /**
+   * D'où vient le rythme quand Rojer le retient (ADR-039 § 5 : jamais sans
+   * marquage), `null` sinon — calculé au serveur
+   * (`mentionRythmeDeVerification`), le board est un composant client.
+   * Optionnel pour les fixtures ; la page le remplit toujours.
+   */
+  rythmeRetenu?: MentionRythme | null;
 };
 
 type RapportLite = {

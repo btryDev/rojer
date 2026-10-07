@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import {
   OnboardingChecklist,
   type EtapeOnboarding,
@@ -455,6 +456,9 @@ export default async function EtablissementPage({
         libelle: libellePorteur(v),
       },
       aConfirmer: marquesDuDossier.parObligation.get(v.obligationId)?.phrases ?? [],
+      // ADR-039 § 5 : le rythme retenu se dit sur le board comme ailleurs. Lu
+      // au référentiel par `obligationId`, déjà chargé — aucune requête.
+      rythmeRetenu: mentionRythmeDeVerification(v),
     })), aujourdhui),
     rapportsRecents: rapportsRecents.map((r) => ({
       id: r.id,
