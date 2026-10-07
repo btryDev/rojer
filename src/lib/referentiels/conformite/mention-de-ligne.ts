@@ -22,8 +22,8 @@ export function mentionRythmeDeVerification(v: {
 }): MentionRythme | null {
   // Une ligne née d'une prescription — surchargée, ou sur mesure — tient son
   // rythme de l'acte, pas de Rojer : pas de mention (préséance, ADR-039 § 3).
-  const surchargee = v.prescriptionId != null || v.prescription != null;
-  return mentionRythmeDeLigne(obligationParId(v.obligationId), {
-    prescriptionId: surchargee ? "prescription" : null,
-  });
+  return mentionRythmeDeLigne(
+    obligationParId(v.obligationId),
+    v.prescriptionId != null || v.prescription != null,
+  );
 }

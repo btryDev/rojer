@@ -774,6 +774,16 @@ export type ExclusionMutuelle = {
 };
 
 /**
+ * Un rythme qu'on peut retenir : une durée. `autre` n'en est pas un, et
+ * `mise_en_service_uniquement` est un acte unique (ADR-039 § 3, règle 1). Le
+ * type le tient ; `controlerRythmeRetenu` le redit pour un `as` ou un JSON.
+ */
+export type PeriodiciteRetenue = Exclude<
+  Periodicite,
+  "autre" | "mise_en_service_uniquement"
+>;
+
+/**
  * Le rythme que Rojer RETIENT là où le texte impose de refaire l'acte sans
  * chiffrer le rythme (ADR-039).
  *
@@ -802,8 +812,8 @@ export type ExclusionMutuelle = {
 export type RythmeRetenu =
   | {
       motif: "norme";
-      /** Le rythme que la norme écrit. Jamais `autre` ni `mise_en_service_uniquement`. */
-      periodicite: Periodicite;
+      /** Le rythme que la norme écrit. */
+      periodicite: PeriodiciteRetenue;
       /** L'intitulé court, tel qu'il s'affiche : « NF S 61-919 ». */
       norme: string;
       /** La citation de la norme : source `NORME`, clé au corpus `normes`. */
