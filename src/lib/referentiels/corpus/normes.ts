@@ -130,7 +130,7 @@ export const NORMES: Corpus = {
         "À l'exception des extincteurs portatifs à dioxyde de carbone (voir 10.3) ou des cartouches de gaz, la durée de vie prévue d'un extincteur portatif ne devrait pas dépasser 20 ans.",
       statut: "norme",
       motif:
-        "p. 11 du scan, lue le 2026-10-07. « Ne devrait pas » : une durée de vie PRÉVUE, conditionnelle — ce n'est pas un rythme, et rien ici ne la ferait entrer au calendrier. Relevée pour que la question ne se rouvre pas. Aucune obligation ne la retient. [2026-10-07, C60] L'aide du champ « Type d'extincteur » (`EquipementForm.tsx`) écrit « une durée de vie de 20 ans au plus » : plus ferme que « ne devrait pas dépasser ». Correction d'interface signalée à la passe « code », pas faite ici.",
+        "p. 11 du scan, lue le 2026-10-07. « Ne devrait pas » : une durée de vie PRÉVUE, conditionnelle — ce n'est pas un rythme, et rien ici ne la ferait entrer au calendrier. Relevée pour que la question ne se rouvre pas. Aucune obligation ne la retient. [2026-10-07, C60] ~~L'aide du champ « Type d'extincteur » (`EquipementForm.tsx`) écrit « une durée de vie de 20 ans au plus » : plus ferme que « ne devrait pas dépasser ». Correction d'interface signalée à la passe « code », pas faite ici.~~ [2026-10-07, C62 : corrigé par C61 — l'aide écrit « la durée de vie prévue ne devrait pas dépasser 20 ans ».]",
       obligations: [],
     },
     {
