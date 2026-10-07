@@ -784,6 +784,18 @@ export type PeriodiciteRetenue = Exclude<
 >;
 
 /**
+ * Une référence de norme qui peut donner un rythme : citée sous `NORME`, et
+ * avec sa clé au corpus `normes` (`article`), sans laquelle
+ * `controlerRythmeRetenu` ne peut pas vérifier qu'elle a été lue. Le type
+ * tient ces deux règles ; le contrôle les redit pour un `as` ou un JSON.
+ * (2026-10-07, C62 : `RythmeRetenu.reference` acceptait toute référence.)
+ */
+export type ReferenceNorme = ReferenceLegale & {
+  source: "NORME";
+  article: string;
+};
+
+/**
  * Le rythme que Rojer RETIENT là où le texte impose de refaire l'acte sans
  * chiffrer le rythme (ADR-039).
  *
@@ -814,10 +826,19 @@ export type RythmeRetenu =
       motif: "norme";
       /** Le rythme que la norme écrit. */
       periodicite: PeriodiciteRetenue;
-      /** L'intitulé court, tel qu'il s'affiche : « NF S 61-919 ». */
+      /**
+       * L'intitulé court, tel qu'il s'affiche : « NF S 61-919 ».
+       *
+       * Gardé à côté de `reference.reference`, qui commence par lui
+       * (`controlerRythmeRetenu` le vérifie) : l'en déduire demanderait de
+       * découper une chaîne libre — « NF S 61-919 (août 2001), § 5.1.1 … » —,
+       * la reconnaissance par motif que C61 a retirée au profit du statut de
+       * corpus. Et le retirer déplacerait l'empreinte (le champ y entre) sans
+       * rien changer à une ligne.
+       */
       norme: string;
       /** La citation de la norme : source `NORME`, clé au corpus `normes`. */
-      reference: ReferenceLegale;
+      reference: ReferenceNorme;
       /** Le mot vague du texte, s'il y en a un — affiché en complément. */
       texteVague?: string;
     }

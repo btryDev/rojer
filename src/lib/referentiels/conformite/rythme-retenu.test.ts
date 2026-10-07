@@ -24,7 +24,7 @@ import {
   periodiciteEffective,
   referencesCitees,
 } from "./rythme-retenu";
-import { porteurDe, type Obligation, type RythmeRetenu } from "./types";
+import { porteurDe, type Obligation, type ReferenceLegale, type RythmeRetenu } from "./types";
 
 /**
  * Le rythme retenu (ADR-039), éprouvé sur des obligations FABRIQUÉES : le lot 2
@@ -132,7 +132,10 @@ describe("controlerRythmeRetenu — chaque règle rougit quand on la casse", () 
   it("3. une norme doit être citée sous NORME, lue, au corpus des normes", () => {
     const base = extincteursNorme();
     const r = base.rythmeRetenu as Extract<RythmeRetenu, { motif: "norme" }>;
-    const varier = (reference: typeof r.reference, norme = r.norme) =>
+    // `ReferenceLegale` et non `typeof r.reference` : le type de
+    // `RythmeRetenu` interdit déjà ces fautes ; le contrôle doit les voir
+    // passer par un `as` ou un JSON.
+    const varier = (reference: ReferenceLegale, norme = r.norme) =>
       controlerRythmeRetenu({ ...base, rythmeRetenu: { ...r, reference, norme } } as Obligation, articleDe).join();
 
     expect(varier({ ...r.reference, source: "ARRETE" })).toMatch(/pas « NORME »/);

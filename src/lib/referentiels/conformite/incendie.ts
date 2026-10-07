@@ -26,7 +26,7 @@
  *   extincteurs hors ERP est le lot 3. APSAD R4 reste exclue.]
  */
 
-import type { Obligation, ReferenceLegale, RythmeRetenu } from "./types";
+import type { Obligation, ReferenceLegale, ReferenceNorme, RythmeRetenu } from "./types";
 
 // -----------------------------------------------------------------------------
 // NF S 61-919 — le rythme des extincteurs hors ERP (ADR-039, C59 lot 3)
@@ -38,7 +38,7 @@ import type { Obligation, ReferenceLegale, RythmeRetenu } from "./types";
 // -----------------------------------------------------------------------------
 
 /** NF S 61-919 § 5.1.1 : la maintenance annuelle par la personne compétente. */
-const REFERENCE_NF_S_61_919_ANNUELLE: ReferenceLegale = {
+const REFERENCE_NF_S_61_919_ANNUELLE: ReferenceNorme = {
   source: "NORME",
   reference:
     "NF S 61-919 (août 2001), § 5.1.1 (maintenance annuelle par la personne compétente)",
@@ -48,7 +48,7 @@ const REFERENCE_NF_S_61_919_ANNUELLE: ReferenceLegale = {
 };
 
 /** NF S 61-919 § 10.1 et annexe A : la révision en atelier, dix ans au plus. */
-const REFERENCE_NF_S_61_919_REVISION: ReferenceLegale = {
+const REFERENCE_NF_S_61_919_REVISION: ReferenceNorme = {
   source: "NORME",
   reference:
     "NF S 61-919 (août 2001), § 10.1 et annexe A, tableau A.1 (révision en atelier : 10 ans)",
