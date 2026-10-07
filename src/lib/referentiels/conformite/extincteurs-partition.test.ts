@@ -60,11 +60,12 @@ function rythmesDeLExtincteur(e: EtablissementMatching): Periodicite[] {
     .map((l) => l.periodicite);
 }
 
-describe("extincteur : une annuelle et une seule, quel que soit le régime", () => {
+describe("extincteur : une annuelle et une décennale, une seule de chaque, quel que soit le régime", () => {
   for (const { nom, e } of PROFILS) {
     it(nom, () => {
       const rythmes = rythmesDeLExtincteur(e);
       expect(rythmes.filter((r) => r === "annuelle"), nom).toHaveLength(1);
+      expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(1);
     });
   }
 });

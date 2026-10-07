@@ -257,7 +257,10 @@ export const obligationsConformite: Obligation[] = [
 // `2026-10-07.4` (C55 lot 3, relecture du préventeur, ADR-039) : les rythmes
 // retenus entrent. Extincteurs hors ERP : maintenance annuelle de la norme
 // NF S 61-919 (`incendie-travail-moyens-lutte`, désormais `erp: false` — la
-// partition avec l'annuelle de MS 38 § 4). Compte : 174 + 0 − 0 = 174.
+// partition avec l'annuelle de MS 38 § 4). Révision en atelier à dix ans
+// (NF S 61-919 § 10.1), même partition : entre
+// `incendie-travail-extincteurs-revision-atelier-decennale`.
+// Compte : 174 + 1 − 0 = 175.
 export const REFERENTIEL_VERSION = "2026-10-07.4";
 
 /**
