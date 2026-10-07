@@ -265,7 +265,13 @@ export const obligationsConformite: Obligation[] = [
 // Formation : défaut annuel sur `formation-securite-etablissement-organisation`
 // (L. 4141-2, « répétée périodiquement ») et `stockage-dangereux-formation-
 // personnel` (R. 4412-88, « Elles sont répétées régulièrement »).
-// Compte : 174 + 2 − 0 = 176.
+// Défaut annuel de R. 4224-17 en lieu de travail hors ERP, partition avec
+// les annuelles ERP écrites (MS 73, DF 10) : entrent
+// `incendie-travail-ria-entretien-verification` et
+// `incendie-travail-desenfumage-entretien-verification` ; l'entretien de la
+// signalisation (arrêté du 4 novembre 1993, art. 15, « régulièrement »)
+// reçoit le défaut. L'alarme reste à la semestrielle écrite du même article.
+// Compte : 174 + 4 − 0 = 178.
 export const REFERENTIEL_VERSION = "2026-10-07.4";
 
 /**

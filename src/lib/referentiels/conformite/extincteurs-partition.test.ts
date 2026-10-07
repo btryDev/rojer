@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { genererProchainesVerifications } from "@/lib/calendrier/generateur";
 import { determineObligationsApplicables } from "@/lib/matching";
 import type { EtablissementMatching } from "@/lib/matching";
-import { CATEGORIES_ERP, type Periodicite } from "../types-communs";
+import {
+  CATEGORIES_ERP,
+  type CategorieEquipement,
+  type Periodicite,
+} from "../types-communs";
 
 /**
  * Un extincteur, un seul rythme par acte — quel que soit le régime (C55 lot 3,
@@ -51,14 +55,20 @@ const PROFILS: { nom: string; e: EtablissementMatching }[] = [
   },
 ];
 
-function rythmesDeLExtincteur(e: EtablissementMatching): Periodicite[] {
+function rythmesDeLAppareil(
+  e: EtablissementMatching,
+  categorie: CategorieEquipement,
+): Periodicite[] {
   const applicables = determineObligationsApplicables(e, [
-    { id: "eq-ext", libelle: "Extincteur", categorie: "EXTINCTEUR", caracteristiques: null },
+    { id: "eq", libelle: categorie, categorie, caracteristiques: null },
   ]);
   return genererProchainesVerifications(applicables)
-    .filter((l) => l.equipementId === "eq-ext")
+    .filter((l) => l.equipementId === "eq")
     .map((l) => l.periodicite);
 }
+
+const rythmesDeLExtincteur = (e: EtablissementMatching) =>
+  rythmesDeLAppareil(e, "EXTINCTEUR");
 
 describe("extincteur : une annuelle et une décennale, une seule de chaque, quel que soit le régime", () => {
   for (const { nom, e } of PROFILS) {
@@ -67,5 +77,21 @@ describe("extincteur : une annuelle et une décennale, une seule de chaque, quel
       expect(rythmes.filter((r) => r === "annuelle"), nom).toHaveLength(1);
       expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(1);
     });
+  }
+});
+
+/**
+ * Même partition pour le RIA et le désenfumage (item 6 du lot 3) : en ERP,
+ * MS 73 et DF 10 écrivent l'annuelle ; en lieu de travail hors ERP, Rojer
+ * retient le défaut annuel de `R. 4224-17`. Une annuelle, une seule.
+ */
+describe("RIA et désenfumage : une annuelle et une seule, quel que soit le régime", () => {
+  for (const categorie of ["RIA", "DESENFUMAGE"] as const) {
+    for (const { nom, e } of PROFILS) {
+      it(`${categorie} — ${nom}`, () => {
+        const rythmes = rythmesDeLAppareil(e, categorie);
+        expect(rythmes.filter((r) => r === "annuelle"), nom).toHaveLength(1);
+      });
+    }
   }
 });

@@ -323,6 +323,76 @@ export const obligationsIncendie: Obligation[] = [
       "CRÉÉE LE 2026-10-07 (C55 lot 3, item 2 ; relecture du préventeur, ADR-039). Le préventeur, p. 6 du référentiel annoté, sur la révision décennale ERP : « valable pour tous les établissements » ; à la question « sur quel texte repose son application hors ERP ? », sa réponse renvoie à la norme. Le Code du travail ne fixe aucune révision (`R. 4227-28` à `R. 4227-41` relus, aucune périodicité hors `R. 4227-39`). La NF S 61-919, lue sur le scan p. 10 et p. 12 le 2026-10-07 : § 10.1 « Tous les extincteurs portatifs doivent être soumis à une révision en atelier effectuée par le fabricant ou un centre de révision à intervalles ne dépassant pas ceux donnés à l'annexe A » ; tableau A.1, colonne « Révision en atelier et renouvellement de la charge (annexe D) » : 10 ans pour l'eau, la mousse, la poudre (avec ou sans opercule) et le CO2 ; « Voir note 3 » pour le halon (vidé et récupéré, plus rechargé).\n\nPOURQUOI UNE LIGNE À PART : même motif que la jumelle ERP `incendie-erp-extincteurs-revision-decennale` — deux actes, deux dates, deux preuves. Le modèle ne porte qu'un rythme par obligation.\n\nNATURE ÉCHÉANCE RÉCURRENTE et non état permanent comme l'annuelle : la révision est un ACTE daté (démontage en atelier), que la norme répète à intervalle maximal. `periodicite: \"autre\"` reste le rythme du TEXTE (`R. 4227-29` n'en chiffre aucun) ; le décennal est `rythmeRetenu`, motif « norme ». `texteVague` = « maintenus en bon état de fonctionnement », mot pour mot de `R. 4227-29` : il s'affiche en complément de la norme.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`, la même partition que `incendie-travail-moyens-lutte`. Chez un ERP, la décennale de MS 38 § 4 est écrite par le texte et l'emporte ; elle est servie à tout ERP, 5ᵉ catégorie comprise (sur-application assumée). `extincteurs-partition.test.ts` tient « une décennale et une seule » par extincteur sur six profils.\n\nORIGINE DES INTERVALLES : § 10.1 les fait partir « de la date de fabrication ou de la dernière recharge effective ou de la révision en atelier » ; l'annexe A, « de la date d'installation […] mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps ». Le produit ne connaît que la mise en service déclarée de l'appareil : la première échéance part d'elle (ADR-036, règle 4) — elle ne vaut que si elle tombe à l'origine du suivi ou après ; sinon la ligne naît « à planifier ». Un dirigeant qui connaît la date de la dernière révision la saisit par un rapport, et le rythme repart de là.\n\nRÉALISATEURS : « le fabricant ou un centre de révision » (§ 10.1). `fabricant` existe ; le centre de révision est un prestataire qualifié, `personne_qualifiee`. Criticité 4, comme la jumelle ERP : un extincteur non révisé depuis onze ans reste un extincteur maintenu dans l'année.",
   },
   {
+    id: "incendie-travail-ria-entretien-verification",
+    domaine: "incendie",
+    libelle:
+      "Entretien et vérification du robinet d'incendie armé, au moins une fois par an (travail, hors ERP)",
+    description:
+      "Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée (R. 4224-17). Le texte ne fixe pas cette périodicité : Rojer retient au moins une fois par an pour le robinet d'incendie armé. En ERP, la vérification annuelle des RIA est écrite par le règlement de sécurité (MS 73) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée)",
+        article: "R. 4224-17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197",
+        note: "« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (LEGIARTI000018532197, en vigueur depuis le 2008-05-01). Le texte ne nomme aucun équipement : y ranger cet équipement est une LECTURE (`relecture-jc-2026-10/reponses.md` Q1), celle du préventeur.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "defaut_annuel",
+      periodicite: "annuelle",
+      texteVague: "périodicité appropriée",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    // Partition avec la ligne ERP, dont le rythme est écrit (ADR-039).
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["RIA"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C55 lot 3, item 6 b ; relecture du préventeur, ADR-039). Le préventeur, sur l'identification des RIA en lieu de travail : « entretien et vérification annuelle ». Avant ce lot, un employeur non-ERP qui déclarait un RIA ne recevait que l'état permanent d'identification (`signalisation-incendie-moyens-lutte`, arrêté du 4 novembre 1993, art. 10) : aucune échéance. Aucun article de la section R. 4227-28 à R. 4227-41 ne nomme le RIA ; `R. 4224-17` vise « les installations et dispositifs techniques et de sécurité des lieux de travail » sans en nommer aucun — un RIA en est un par LECTURE.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`. En ERP, `incendie-erp-ria-annuelle` (MS 73 § 2, « au moins une fois par an ») porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ catégorie comprise, par sur-application assumée ; un rythme écrit l'emporte toujours. Un RIA reçoit donc une annuelle et une seule, quel que soit le régime.\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17` ; `periodicite: \"autre\"` reste le rythme du texte, `rythmeRetenu` porte l'annuelle PAR DÉFAUT (ADR-039 (b)), affichée comme défaut. Un rythme plus serré (contrat, assureur) se saisit en prescription et l'emporte dès qu'il est au moins aussi strict.\n\nNATURE ÉCHÉANCE RÉCURRENTE : « entretenus et vérifiés » sont des actes qui reviennent, pas un état. La ligne naît « à planifier » (ADR-036), sans retard rétroactif.\n\nRÉALISATEURS : le texte n'en nomme aucun ; le préventeur dit « entretien et vérification ». `personne_competente` et `personne_qualifiee`, comme l'annuelle du même acte ailleurs. Criticité 4, celle de la ligne ERP.",
+  },
+  {
+    id: "incendie-travail-desenfumage-entretien-verification",
+    domaine: "incendie",
+    libelle:
+      "Entretien et vérification des installations de désenfumage, au moins une fois par an (travail, hors ERP)",
+    description:
+      "Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée (R. 4224-17). Le texte ne fixe pas cette périodicité : Rojer retient au moins une fois par an pour les installations de désenfumage. En ERP, la vérification annuelle du désenfumage est écrite par le règlement de sécurité (DF 10) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée)",
+        article: "R. 4224-17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197",
+        note: "« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (LEGIARTI000018532197, en vigueur depuis le 2008-05-01). Le texte ne nomme aucun équipement : y ranger cet équipement est une LECTURE (`relecture-jc-2026-10/reponses.md` Q1), celle du préventeur.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "defaut_annuel",
+      periodicite: "annuelle",
+      texteVague: "périodicité appropriée",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    // Partition avec la ligne ERP, dont le rythme est écrit (ADR-039).
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["DESENFUMAGE"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C55 lot 3, item 6 c ; relecture du préventeur, ADR-039). Le préventeur, p. 10 du référentiel annoté, en marge de la vérification annuelle du désenfumage en ERP : « idem code du travail : préco ». Avant ce lot, un employeur non-ERP qui déclarait un désenfumage ne recevait RIEN (`hors-referentiel.test.ts` : `aucune_obligation_applicable`). `R. 4224-17` vise « les installations et dispositifs techniques et de sécurité des lieux de travail » sans en nommer aucun — le désenfumage en est un par LECTURE. Les articles du Code du travail qui imposent le désenfumage à la construction (R. 4216-13 et suivants, maître d'ouvrage) n'ont pas été rouverts ici : ils ne portent pas l'entretien.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`. En ERP, `incendie-erp-desenfumage-annuelle` (DF 10 § 2, « La périodicité des vérifications est de un an ») porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ catégorie comprise, par sur-application assumée. Le désenfumage reçoit donc une annuelle et une seule, quel que soit le régime. La triennale de DF 10 § 3 (lot 4) ne concerne que l'ERP.\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17` ; `periodicite: \"autre\"` reste le rythme du texte, `rythmeRetenu` porte l'annuelle PAR DÉFAUT (ADR-039 (b)), affichée comme défaut. Un rythme plus serré (contrat, assureur) se saisit en prescription et l'emporte dès qu'il est au moins aussi strict.\n\nNATURE ÉCHÉANCE RÉCURRENTE : « entretenus et vérifiés » sont des actes qui reviennent, pas un état. La ligne naît « à planifier » (ADR-036), sans retard rétroactif.\n\nRÉALISATEURS : le texte n'en nomme aucun ; le préventeur dit « entretien et vérification ». `personne_competente` et `personne_qualifiee`, comme l'annuelle du même acte ailleurs. Criticité 4, celle de la ligne ERP.",
+  },
+  {
     // 2026-09-27, lot 2 (7 bis G2, M1). L'objet de R. 4227-29 — être DOTÉ
     // d'extincteurs — n'était porté que par une obligation d'appareil : un
     // établissement qui n'a déclaré aucun extincteur ne recevait rien.

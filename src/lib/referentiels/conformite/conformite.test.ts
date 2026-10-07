@@ -551,6 +551,15 @@ describe("référentiel conformité — anti-doublon", () => {
       raison:
         "CELLE-CI EN EST PEUT-ÊTRE UNE, ET LA QUESTION EST OUVERTE. Elle n'apparaît que depuis le 2026-09-01 : `levage-examen-adequation-mise-en-service` se fondait sur l'article 5, qui DÉFINIT l'examen d'adéquation sans l'imposer, et le lot A l'a recalée sur l'article 14, seul article qui l'exige. Or c'est déjà le fondement de `levage-epreuve-initiale-fonctionnement`, dont la description reprend les quatre actes du I — examen d'adéquation a), examen de montage b), épreuve statique c), épreuve dynamique d). L'examen d'adéquation est donc décrit deux fois, une fois seul et une fois dans l'énumération. LA QUESTION QUI TRANCHE : l'article 14 fonde-t-il UNE vérification à quatre volets — auquel cas la ligne d'adéquation est un fragment à fondre — ou quatre actes séparables, sachant que le d) porte une exception qui ne vaut que pour lui (épreuve dynamique non exigée pour les appareils mus par la force humaine) et que les trois autres n'en ont pas ? Le fondre est un retrait de ligne : décision de la propriétaire, hors mandat du lot A. Le défaut de fondement, lui, était réel et est corrigé ; la déclaration ne le masque pas, elle rend visible ce qu'il découvre.",
     },
+    // ── Apparue le 2026-10-07, C55 lot 3 (rythmes retenus, ADR-039) ─────
+    {
+      paire: [
+        "signalisation-etablissement-entretien",
+        "signalisation-etablissement-alimentations-secours-annuelle",
+      ],
+      raison:
+        "Instruit le 2026-10-07, ce n'est PAS un doublon. L'article 15 de l'arrêté du 4 novembre 1993 porte trois prescriptions dans une phrase et demie : l'entretien « régulier » des moyens et dispositifs de signalisation, la vérification semestrielle des signaux lumineux et acoustiques, et la vérification ANNUELLE DES ALIMENTATIONS DE SECOURS. Depuis le lot 3, l'entretien reçoit le défaut annuel de l'ADR-039 : les deux lignes ont le même fondateur et le même rythme effectif, mais pas le même objet — les panneaux, couleurs et bandes d'un côté, la source d'énergie de secours de l'autre — ni la même source du rythme (défaut d'un côté, texte de l'autre). Le test ne compare que la clé d'article.",
+    },
     // ── Apparue le 2026-09-27, analyse de la réponse absente ─────────────
     {
       paire: [
@@ -1661,7 +1670,7 @@ describe("référentiel conformité — version et empreinte", () => {
     // entrent au référentiel — NF S 61-919 pour les extincteurs hors ERP,
     // défaut annuel là où le texte impose de refaire l'acte sans chiffre.
     // Mouvement du compte : voir `REFERENTIEL_VERSION`.
-    { version: "2026-10-07.4", empreinte: "176-8317b8a6116c51c8" },
+    { version: "2026-10-07.4", empreinte: "178-91ccc803f04a27d" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1818,7 +1827,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(176);
+    ).toBe(178);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

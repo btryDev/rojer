@@ -1150,15 +1150,18 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // par défaut, ADR-039). La scission du 2026-09-04 tient : la
         // vérification de l'arrêté ne vise que les trois catégories nommées.]
         // Réglementations ERP pures : rien ne les vise chez un employeur seul.
-        "DESENFUMAGE",
+        // [2026-10-07, C55 lot 3 : DESENFUMAGE SORT DE CETTE LISTE —
+        // `incendie-travail-desenfumage-entretien-verification`, défaut annuel
+        // de R. 4224-17 (ADR-039), lieu de travail hors ERP.]
         "APPAREIL_CUISSON_ERP",
         "HOTTE_PRO",
         // RIA A QUITTÉ CETTE LISTE LE 2026-09-02, et le trou qu'elle notait
         // est comblé, pas contourné. La note disait : « la seule obligation
         // qui vise la catégorie est `incendie-erp-ria-annuelle`, fondée sur
         // MS 73 — donc `erp: true` [...] aucun texte du référentiel ne pose de
-        // périodicité propre aux RIA hors ERP ». C'est toujours vrai des
-        // PÉRIODICITÉS, et ce n'est plus vrai de la couverture : l'article 10
+        // périodicité propre aux RIA hors ERP ». ~~C'est toujours vrai des
+        // PÉRIODICITÉS~~ [2026-10-07, C55 lot 3 : plus vrai — le défaut annuel
+        // de R. 4224-17 (ADR-039) date l'entretien du RIA hors ERP], et ce n'est plus vrai de la couverture : l'article 10
         // de l'arrêté du 4 novembre 1993 impose d'identifier les équipements
         // de lutte contre l'incendie par une coloration rouge et un panneau de
         // localisation, sans condition de régime — `signalisation-incendie-

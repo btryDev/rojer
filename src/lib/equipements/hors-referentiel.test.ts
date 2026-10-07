@@ -94,15 +94,26 @@ describe("reperterSansEcheance — le référentiel réel", () => {
   });
 
   it("distingue « l'outil ne connaît pas cet appareil » de « il le connaît, mais pas chez vous »", () => {
-    // Le désenfumage n'est porté que par des obligations ERP : chez un
-    // employeur non-ERP, la catégorie est couverte mais rien ne s'applique.
+    // ~~Le désenfumage n'est porté que par des obligations ERP : chez un
+    // employeur non-ERP, la catégorie est couverte mais rien ne s'applique.~~
+    // [2026-10-07, C55 lot 3 : le désenfumage d'un lieu de travail hors ERP
+    // reçoit le défaut annuel de R. 4224-17 (ADR-039). L'exemple passe à la
+    // cuisson ERP, que rien ne vise chez un employeur seul.]
     const m = reperterSansEcheance(etablissement({ estERP: false }), [
-      equipement("eq1", "DESENFUMAGE"),
+      equipement("eq1", "APPAREIL_CUISSON_ERP"),
       equipement("eq2", "AUTRE"),
     ]);
 
     expect(m.get("eq1")).toBe("aucune_obligation_applicable");
     expect(m.get("eq2")).toBe("categorie_hors_referentiel");
+  });
+
+  it("ne signale plus un désenfumage en lieu de travail non-ERP (défaut annuel de R. 4224-17)", () => {
+    const m = reperterSansEcheance(etablissement({ estERP: false }), [
+      equipement("eq1", "DESENFUMAGE"),
+    ]);
+
+    expect(m.has("eq1")).toBe(false);
   });
 
   it("ne signale plus le même désenfumage dès que l'établissement est un ERP", () => {
