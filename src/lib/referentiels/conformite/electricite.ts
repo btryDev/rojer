@@ -566,34 +566,11 @@ export const obligationsElectricite: Obligation[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // IGH (arrêté du 30 décembre 2011)
+  // IGH (arrêté du 30 décembre 2011) — `elec-igh-annuelle` retirée le
+  // 2026-10-07 (périmètre, relecture préventeur du 30/09, décision de la
+  // propriétaire du 07/10), inscrite dans `OBLIGATIONS_RETIREES` : l'identifiant
+  // ne doit jamais être réemployé.
   // ---------------------------------------------------------------------------
-  {
-    id: "elec-igh-annuelle",
-    domaine: "electricite",
-    libelle: "Vérification annuelle des installations électriques (IGH)",
-    description:
-      "Le propriétaire d'un immeuble de grande hauteur fait vérifier annuellement, par un organisme agréé, les installations électriques et l'éclairage des parties communes. Les installations de protection contre la foudre sont vérifiées tous les deux ans.",
-    referencesLegales: [
-      {
-        source: "ARRETE",
-        reference: "Arrêté du 30 décembre 2011 (règlement IGH), art. GH 5 (vérifications techniques par organismes agréés)",
-        article: "GH 5",
-        url:
-          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000025169258",
-      },
-    ],
-    periodicite: "annuelle",
-    nature: "echeance_recurrente",
-    pieceAttendue: null,
-    realisateurs: ["organisme_agree"],
-    criticite: 5,
-    transmet: [],
-    typologies: { igh: true },
-    categoriesEquipement: ["INSTALLATION_ELECTRIQUE"],
-    notesInternes:
-      "Corrigé à l'audit 2026-08 : l'ancienne version citait GH 50, qui traite de l'alerte (dispositifs phoniques vers le PC sécurité). Les vérifications techniques périodiques sont à l'article GH 5.",
-  },
   {
     id: "incendie-hotel-po-controle-annuel-electricite",
     domaine: "electricite",

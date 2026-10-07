@@ -4717,6 +4717,24 @@ sont désormais éprouvées (`454fb2fa`). Trois tests D8 comparaient la date au
 ouverture ; seules les lignes ponctuelles antérieures au suivi et les VGP de levage
 en double changent, sans perte (réconciliateur, cas D7 et D8).
 
+### Relecture du préventeur, lot 5 · 2026-10-07 — périmètre
+
+*Branche `lot/relecture-jc-5`, sur `origin/main` = `0299e288`. Entrées : la grille
+annotée du référentiel `2026-09-28.3` (relecture du 30/09) ; décision de la
+propriétaire du 07/10 : appliquer les retraits demandés. Aucun texte rouvert : ce
+sont des décisions de périmètre, pas des lectures. Référentiel `2026-10-07.2`.*
+
+**IGH — « IGH non traité par Rojer » (p. 4, 6, 9, 10, 34).** Retirées, sans
+absorbant : `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
+`incendie-igh-charge-calorifique-quinquennale`. `GH 5` et `GH 61` passent
+`non_couvert`, annoncés sur l'axe `igh` de la page « Ce que Rojer ne couvre pas »,
+la charge calorifique de l'occupant (GH 61 § 5) nommée en premier : le texte
+l'impose toujours à l'employeur locataire, c'est le produit qui ne la porte plus.
+La typologie `igh` reste au modèle et sur les huit lignes d'ascenseur ; la
+question IGH reste à l'onboarding (refus de l'ERP en IGH, annonce). 174 → 171.
+Garde neuve éprouvée : `typologies: { igh: true }` posé sur une ligne vivante →
+« 2 failed | 1 passed | 105 skipped (108) ».
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

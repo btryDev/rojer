@@ -254,7 +254,12 @@ export const obligationsConformite: Obligation[] = [
 // `2026-09-28.3` (contre-revue des corrections du lot 3) : les libellés de
 // quatre VGP de levage — servies au silence sur une réponse — disent le rythme
 // et son fondement, plus un fait non déclaré. Libellés seuls : 174 + 0 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-09-28.3";
+// `2026-10-07.2` (relecture du préventeur du 30/09, lot 5 — périmètre ;
+// décision de la propriétaire du 07/10) : l'IGH sort du référentiel —
+// `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
+// `incendie-igh-charge-calorifique-quinquennale` (`OBLIGATIONS_RETIREES`).
+// 174 + 0 − 3 = 171.
+export const REFERENTIEL_VERSION = "2026-10-07.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
@@ -333,6 +338,30 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
     porteur: "etablissement",
     motif:
       "Retirée le 2026-09-02, créée le 2026-09-01. Elle portait GE 4 § 1 en UNE ligne `triennale` bornée à N1–N4, faute d'avoir pu lire le corps du tableau à la source. Le tableau a depuis été relevé et vérifié case par case sur le fac-similé du Journal officiel : il croise le type et la catégorie, et donne trois OU cinq ans. `periodicite` étant un scalaire, il faut une ligne par bloc — six, qui forment une partition. `absorbePar` désigne celle des six qui hérite du plus grand nombre d'établissements, mais aucune ne la reprend à elle seule : un dossier de 3ᵉ ou 4ᵉ catégorie bascule sur une autre, et un établissement de culte passe de trois à cinq ans. L'id ne doit jamais être réemployé — c'est ce que ce registre garantit.\n\nCE CHAMP EST LU DEPUIS LE 2026-09-10, et cette entrée-ci est la seule des cinq à ne pas se laisser lire entièrement. La réconciliation reporte l'historique d'une ligne retirée vers son absorbant DÉCLARÉ, à la condition que celui-ci s'applique au dossier. Or `absorbePar` est un pointeur unique là où il faudrait une partition : pour un ERP de 3ᵉ ou 4ᵉ catégorie, l'absorbant nommé ici n'est pas applicable — c'est une autre des six qui l'est —, donc AUCUN report n'a lieu et la ligne d'origine est archivée seule. Le dossier perd la continuité de sa visite de commission, précisément pour la population que le motif ci-dessus signale comme mal servie. Le mécanisme couvre donc cette entrée EN PARTIE, et il faut le savoir avant de s'y fier. Ce qui manque n'est pas du code : c'est une déclaration capable de dire « selon la catégorie, l'un OU l'autre ». Les quatre autres entrées ne posent pas ce problème, leur absorbant étant porté par l'établissement, donc applicable à tout dossier.",
+  },
+  // Relecture du préventeur du 30/09, lot 5 (périmètre) — décision de la
+  // propriétaire du 07/10 d'appliquer les retraits demandés. La réconciliation
+  // ne connaît plus ces identifiants : une ligne qui porte une trace (rapport,
+  // action, réalisation) est ARCHIVÉE avec sa preuve, une ligne sans trace est
+  // supprimée (`generateur.ts`, boucle des lignes non générées). Rien n'est
+  // repris ailleurs : `absorbePar` est `null`.
+  "elec-igh-annuelle": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la grille « IGH non traité par Rojer » : la vérification annuelle des installations électriques d'un IGH (arrêté du 30 décembre 2011, art. GH 5) incombe au PROPRIÉTAIRE de l'immeuble, pas à l'employeur locataire que le produit sert. Aucun absorbant : le régime IGH sort du référentiel, et la page « Ce que Rojer ne couvre pas » (axe `igh`) le dit. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "incendie-igh-moyens-secours-annuelle": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Annotée « IGH non traité » sur chacune des pages de la grille où elle paraissait (alarme, extincteurs, désenfumage) : la vérification annuelle des moyens de secours et du SSI d'un IGH (GH 5) incombe au propriétaire de l'immeuble. Aucun absorbant ; la page « Ce que Rojer ne couvre pas » (axe `igh`) annonce le régime comme non traité. Les lignes qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "incendie-igh-charge-calorifique-quinquennale": {
+    absorbePar: null,
+    porteur: "etablissement",
+    motif:
+      "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Annotée « non traité » par le préventeur. C'était la seule ligne IGH dont l'OCCUPANT est le débiteur (GH 61 § 5, rapport quinquennal de conformité de la charge calorifique par organisme agréé) : la retirer est une décision de périmètre, pas une lecture du texte, qui continue de l'imposer. La page « Ce que Rojer ne couvre pas » (axe `igh`) le dit nommément à l'occupant. Aucun absorbant ; la ligne d'établissement est archivée si elle porte une trace, supprimée sinon.",
   },
 };
 

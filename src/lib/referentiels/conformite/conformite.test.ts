@@ -1626,6 +1626,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // réduits au rythme et à son fondement (`libelleVgp`), la réponse manquante
     // dite dans la description. Libellés seuls : 174 + 0 − 0 = 174.
     { version: "2026-09-28.3", empreinte: "174-748bfcc14b5ff8dd" },
+    // Relecture du préventeur du 30/09, lot 5 (périmètre), décision de la
+    // propriétaire du 07/10. L'IGH sort : `elec-igh-annuelle`,
+    // `incendie-igh-moyens-secours-annuelle`,
+    // `incendie-igh-charge-calorifique-quinquennale`. 174 + 0 − 3 = 171.
+    // Lignes archivées si elles portent une trace, supprimées sinon.
+    { version: "2026-10-07.2", empreinte: "171-80492fd7979f1065" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1782,7 +1788,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(174);
+    ).toBe(171);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -2223,24 +2229,18 @@ describe("référentiel conformité — d'où vient le chiffre", () => {
 });
 
 // ---------------------------------------------------------------------------
-// GH 61 § 5 — la seule obligation du règlement IGH qui vise l'OCCUPANT
+// IGH — le règlement sort du référentiel (2026-10-07)
 // ---------------------------------------------------------------------------
 //
-// Ce bloc existe parce que la restriction qu'il interdit a été ÉPROUVÉE EN LA
-// POSANT, le 2026-09-04. Injecter `igh: { classes: ["GHW1", "GHW2"] }` sur
-// cette ligne — la restriction que l'intuition suggère, puisqu'il s'agit de
-// bureaux — la fait DISPARAÎTRE du calendrier d'un établissement qui déclare
-// `classeIgh: "GHU"`. C'est exactement le faux négatif que GH 66 prédit : le
-// classement d'une tour mixte retient « l'usage principal de l'immeuble », donc
-// un plateau de bureaux peut vivre dans une tour classée GH U, et son occupant
-// doit la même vérification. Sans ce test, la restriction se reposerait un jour
-// sur un raisonnement plausible, et rien ne l'arrêterait.
-//
-// Le premier cas — classe non renseignée — ne discrimine RIEN aujourd'hui :
-// `evaluerIgh` retient sur l'attribut absent. Il est là quand même, parce que
-// c'est le cas nominal depuis que la question a été retirée du produit
-// (2026-09-03), et qu'une dissymétrie qui bougerait le casserait.
-describe("GH 61 § 5 — la quinquennale de la charge calorifique atteint l'occupant", () => {
+// ~~GH 61 § 5 — la seule obligation du règlement IGH qui vise l'OCCUPANT.~~
+// Le bloc qui gardait `incendie-igh-charge-calorifique-quinquennale` (entrée
+// le 2026-09-04) est remplacé le 2026-10-07 : l'obligation est retirée avec
+// `elec-igh-annuelle` et `incendie-igh-moyens-secours-annuelle` — périmètre,
+// relecture préventeur du 30/09, décision de la propriétaire du 07/10
+// (`OBLIGATIONS_RETIREES`). Ce qui reste à garder est l'inverse : aucune ligne
+// ne doit plus naître du SEUL régime IGH. La typologie `igh` reste au modèle et
+// sur les huit lignes d'ascenseur, ouvertes à tous les régimes (CCH).
+describe("IGH — aucune obligation ne naît plus du seul régime IGH", () => {
   const bureauEnIgh: EtablissementMatching = {
     id: "etab-igh",
     effectifSurSite: 8,
@@ -2260,29 +2260,32 @@ describe("GH 61 § 5 — la quinquennale de la charge calorifique atteint l'occu
   };
 
   const idsDe = (etab: EtablissementMatching) =>
-    determineObligationsApplicables(etab, []).map((a) => a.obligation.id);
+    determineObligationsApplicables(etab, [])
+      .map((a) => a.obligation.id)
+      .sort();
 
-  it("tombe sur un bureau en IGH sans classe déclarée ET SANS AUCUN ÉQUIPEMENT", () => {
-    // Porteur établissement : le parc vide ne doit rien lui retirer. C'était
-    // tout l'objet de l'ADR-022, et c'est ce qui distingue cette ligne des
-    // deux autres obligations IGH, portées par des équipements.
-    expect(idsDe(bureauEnIgh)).toContain(
-      "incendie-igh-charge-calorifique-quinquennale",
-    );
+  it("aucune obligation vivante n'est ouverte au seul régime IGH", () => {
+    // Éprouvé en le cassant : rétablir `typologies: { igh: true }` sur une
+    // seule ligne la fait apparaître ici.
+    const ighSeul = obligationsConformite
+      .filter((o) => {
+        const t = o.typologies;
+        return (
+          t.igh !== undefined &&
+          t.igh !== false &&
+          !t.travail &&
+          !t.erp &&
+          !t.habitation
+        );
+      })
+      .map((o) => o.id);
+    expect(ighSeul).toEqual([]);
   });
 
-  it("tombe aussi sur un plateau de bureaux dans une tour classée GH U", () => {
-    expect(idsDe({ ...bureauEnIgh, classeIgh: "GHU" })).toContain(
-      "incendie-igh-charge-calorifique-quinquennale",
-    );
-  });
-
-  it("ne tombe pas sur un établissement qui n'est pas en IGH", () => {
-    // La borne basse : sans ce cas, la ligne pourrait s'appliquer partout et
-    // les deux cas ci-dessus passeraient quand même.
-    expect(idsDe({ ...bureauEnIgh, estIGH: false })).not.toContain(
-      "incendie-igh-charge-calorifique-quinquennale",
-    );
+  it("un bureau en IGH sans équipement doit exactement ce qu'il doit hors IGH", () => {
+    // La borne qui manquait à l'assertion ci-dessus : une ligne d'établissement
+    // bornée par une condition sur `estIGH` passerait le filtre de typologie.
+    expect(idsDe(bureauEnIgh)).toEqual(idsDe({ ...bureauEnIgh, estIGH: false }));
   });
 });
 

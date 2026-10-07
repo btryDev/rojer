@@ -94,7 +94,7 @@ On refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement.
 3. **Bureau / services tertiaires**
 
 ### Référentiel de conformité (vérifications)
-Livré : **~~170~~ ~~172~~ 173 obligations sur 21 domaines** (169 + 1 le 2026-09-27, C45 : `R. 4227-26` ; 170 + 2 le même jour, `lot/couverture-reponse-absente` : `R. 4227-34`, installation de l'alarme, et `R. 4227-37` al. 2, instructions d'évacuation) — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
+Livré : **~~170~~ ~~172~~ ~~173~~ ~~174~~ 171 obligations sur 21 domaines** (171 le 2026-10-07, remesuré en appelant : 174 − 3, l'IGH sort du référentiel — `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`, `incendie-igh-charge-calorifique-quinquennale`, relecture préventeur du 30/09, décision de la propriétaire du 07/10 ; 174 le 2026-09-28 avec `levage-vgp-semestrielle-force-humaine` ; 169 + 1 le 2026-09-27, C45 : `R. 4227-26` ; 170 + 2 le même jour, `lot/couverture-reponse-absente` : `R. 4227-34`, installation de l'alarme, et `R. 4227-37` al. 2, instructions d'évacuation) — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
 
 **89 d'entre elles sont déclenchées par un équipement déclaré, ~~soixante-six~~
 ~~soixante-sept~~ ~~soixante-neuf~~ soixante-dix (2026-09-27, C45 : `R. 4227-26`, 169 + 1 = 170 ; puis `R. 4227-34` et `R. 4227-37` al. 2, 170 + 2 = 172 ; puis la dotation de `R. 4227-29`, 172 + 1 = 173) sont portées par l'établissement, quatorze par un salarié** — remesuré en
@@ -242,8 +242,8 @@ l'ADR-022, sans mécanisme.
 
 Répartition remesurée le 2026-09-20 (~~le 2026-09-11, inchangée depuis la
 scission de la colonne R de `GE 4 § 1`, le 2026-09-08~~) :
-**89 équipement, ~~66~~ ~~67~~ ~~69~~ 70 établissement, 14 salarié**
-(total ~~169~~ ~~170~~ ~~172~~ 173, remesuré en appelant le 2026-09-27 — la dotation de `R. 4227-29` ; 172 le même jour — `R. 4227-34` et `R. 4227-37` al. 2 ; 170 le même jour — C45, `R. 4227-26` ; 169 le 2026-09-26 — `R. 4624-33`, `L. 4624-2-4` ; 167 le 2026-09-21 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
+**~~89~~ ~~90~~ 88 équipement, ~~66~~ ~~67~~ ~~69~~ ~~70~~ 69 établissement, 14 salarié**
+(total ~~169~~ ~~170~~ ~~172~~ ~~173~~ ~~174~~ 171, remesuré en appelant le 2026-10-07 — 90/70/14 = 174 avant, l'IGH retiré : −2 équipement, −1 établissement ; 174 le 2026-09-28 avec la VGP semestrielle de levage, équipement ; 173, remesuré en appelant le 2026-09-27 — la dotation de `R. 4227-29` ; 172 le même jour — `R. 4227-34` et `R. 4227-37` al. 2 ; 170 le même jour — C45, `R. 4227-26` ; 169 le 2026-09-26 — `R. 4624-33`, `L. 4624-2-4` ; 167 le 2026-09-21 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
 `porteurDe`, pas au grep. Les quatre entrées du lot sont, dans l'ordre où elles
 apparaissent au référentiel : `aeration-erp-filtres-visite-periodique`
 (`CH 39 § 3`, visite TRIMESTRIELLE des filtres de ventilation par l'utilisateur,
@@ -264,7 +264,8 @@ comptes du 2026-09-04 sont périmés — 51 en 3ᵉ catégorie, 50 en 5ᵉ, rest
 salariés, alarme et CTA déclarées. La 3ᵉ passe désormais devant la 5ᵉ.] La quarante-sixième obligation
 d'établissement était entrée le même jour : `incendie-igh-charge-calorifique-quinquennale`,
 le rapport quinquennal de conformité de la charge calorifique que `GH 61 § 5` met à la
-charge des **occupants** d'un IGH. La dernière est entrée le
+charge des **occupants** d'un IGH *(retirée le 2026-10-07 avec tout l'IGH — périmètre,
+relecture préventeur du 30/09, décision de la propriétaire du 07/10)*. La dernière est entrée le
 même jour avec le dépouillement intégral de l'arrêté du 5 mars 1993 : le domaine
 `compactage_dechets`, une seule ligne, la vérification générale périodique
 TRIMESTRIELLE des presses à balles et des compacteurs à déchets
@@ -429,8 +430,17 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
   équipements sportifs, piscines. La CLASSE d'IGH n'est plus demandée depuis le
   2026-09-03 (`GH 5` s'adresse aux « propriétaires » sans varier par classe,
   `GH 66` fait du classement l'affaire de l'usage principal de l'immeuble).
-  L'**IGH seul est servi** : **onze obligations portent la typologie `igh`**,
-  remesuré en appelant le 2026-09-04 — le « neuf » qui figurait ici était périmé
+  ~~L'**IGH seul est servi** : **onze obligations portent la typologie `igh`**,~~
+  **[2026-10-07 — le règlement IGH n'est plus traité.** Relecture préventeur du
+  30/09 (« IGH non traité par Rojer »), décision de la propriétaire du 07/10 :
+  les trois lignes propres à l'IGH sont dans `OBLIGATIONS_RETIREES`, `GH 5` et
+  `GH 61` passent `non_couvert`, et la page « Ce que Rojer ne couvre pas » (axe
+  `igh`) le dit, charge calorifique de l'occupant en tête. **Huit obligations
+  portent encore la typologie `igh`, toutes d'ascenseur et ouvertes à tous les
+  régimes** — remesuré en appelant. La question IGH reste posée à l'onboarding
+  et dans la fiche établissement : elle sert encore au refus d'un ERP en IGH et
+  à l'annonce de non-couverture.] Ce qui suit est l'état antérieur, barré :
+  ~~remesuré en appelant le 2026-09-04 — le « neuf » qui figurait ici était périmé
   avant même le lot qui l'a corrigé. **Dix d'entre elles pèsent sur l'exploitant
   ou le propriétaire de l'immeuble, pas sur l'employeur qui y loue des bureaux.
   La onzième est l'exception, et elle est entrée le 2026-09-04** :
@@ -441,7 +451,7 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
   locataire est lui-même le débiteur. Le corpus la portait en
   `obligation_manquante` depuis le 2026-09-03 avec une raison de non-encodage
   fausse — « faute de catégorie d'équipement » —, alors que son porteur est
-  l'établissement depuis l'ADR-022
+  l'établissement depuis l'ADR-022~~
 - **ATEX, rayonnements ionisants, amiante, plomb, radon, CMR** : non couverts,
   mais **déclarés** et non refusés — le dossier se crée et la page
   « Ce que Rojer ne couvre pas » le dit en permanence

@@ -152,7 +152,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ Les 53 articles (2026-09-27, C45 après contre-lecture) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ Les 55 articles (2026-10-07, l'IGH retiré) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les vingt-cinq
 annoncés le 2026-09-27, que la page « Ce que Rojer ne couvre pas » projette au
@@ -240,7 +240,16 @@ couverture.
 
 ---
 
-## 3. Les 53 articles lus et non portés
+**Le mouvement du 2026-10-07 : 53 + 2 − 0 = 55.** `GH 5` et `GH 61` passent de
+`retenu` à `non_couvert` : les trois obligations IGH qu'ils fondaient sont
+retirées du référentiel (relecture préventeur du 30/09, « IGH non traité par
+Rojer » ; décision de la propriétaire du 07/10). Les deux ont une adresse
+visible : la page « Ce que Rojer ne couvre pas », axe `igh`. Voir leur famille
+au § 3.
+
+---
+
+## 3. Les 55 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -339,7 +348,27 @@ pas été ouvert.
 > composant. Le modèle ne porte ni l'un ni l'autre. Ces règles pèsent sur le
 > distributeur et le propriétaire d'immeuble collectif, à la marge du périmètre.
 
-### Immeubles de grande hauteur — 1 article
+### Immeubles de grande hauteur — ~~1 article~~ 3 articles (2026-10-07)
+
+`GH 5`
+
+> RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09,
+> décision de la propriétaire du 07/10. Le préventeur a annoté la grille « IGH non
+> traité par Rojer » sur chaque ligne fondée ici. L'article impose bien des
+> vérifications périodiques, mais à « LES PROPRIÉTAIRES » de l'immeuble : le
+> produit a choisi de ne pas les porter, et le dit. Ce n'est pas
+> `hors_perimetre` : l'obligation existe et un dossier IGH peut entrer dans
+> l'outil (ADR-031).
+
+`GH 61`
+
+> RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09
+> (« non traité »), décision de la propriétaire du 07/10. Le § 5 n'a pas changé :
+> il met toujours le rapport quinquennal de conformité de la charge calorifique
+> à la charge des OCCUPANTS, donc de l'employeur locataire. C'est pourquoi
+> l'article est `non_couvert` et non `hors_perimetre` : l'obligation pèse sur
+> l'utilisateur, le produit choisit de ne pas la porter, et la page « Ce que
+> Rojer ne couvre pas » la nomme à l'occupant.
 
 `GH W 5`
 

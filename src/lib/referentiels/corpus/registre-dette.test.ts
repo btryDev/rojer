@@ -123,7 +123,11 @@ describe("registre de dette — les réserves de lecture", () => {
     // 89 → 90 le 2026-09-21 : `PE 27`, encodé pour ses § 4 et § 5, garde
     // dehors ses § 1, § 2, § 3 — et son § 6, que la première écriture de cette
     // réserve avait oublié (l'article a SIX paragraphes, pas cinq).
-    expect(n).toBe(90);
+    // 90 → 88 le 2026-10-07 : `GH 5` et `GH 61` cessent d'être retenus (IGH
+    // retiré, relecture préventeur du 30/09, décision de la propriétaire du
+    // 07/10). Leurs réserves passent dans `historique`, barrées ; le manque
+    // est désormais `non_couvert`, compté ailleurs.
+    expect(n).toBe(88);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

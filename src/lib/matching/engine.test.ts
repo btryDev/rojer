@@ -357,24 +357,20 @@ describe("moteur matching — typologie ERP", () => {
   });
 });
 
+// ~~GH 5 : `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`~~ —
+// retirées le 2026-10-07 (périmètre, relecture préventeur du 30/09, décision
+// de la propriétaire du 07/10). Le régime IGH ne déclenche plus rien en propre ;
+// la typologie reste lue par les lignes d'ascenseur (bloc suivant).
 describe("moteur matching — typologie IGH", () => {
-  it("IGH avec élec → déclenche GH 50 annuelle", () => {
-    const res = determineObligationsApplicables(etabIgh(), [elec()]);
-    expect(idsObligations(res)).toContain("elec-igh-annuelle");
-  });
-
-  it("IGH avec alarme + extincteur + désenfumage → moyens de secours annuels GH 60 s.", () => {
-    const res = determineObligationsApplicables(etabIgh(), [
-      alarme(),
-      extincteur(),
-      desenfumage(),
-    ]);
-    expect(idsObligations(res)).toContain("incendie-igh-moyens-secours-annuelle");
-  });
-
-  it("bureau non-IGH → pas de GH 50", () => {
-    const res = determineObligationsApplicables(etabBureau(), [elec()]);
-    expect(idsObligations(res)).not.toContain("elec-igh-annuelle");
+  it("IGH avec élec, alarme, extincteur, désenfumage → rien de plus que hors IGH", () => {
+    const parc = [elec(), alarme(), extincteur(), desenfumage()];
+    const enIgh = idsObligations(determineObligationsApplicables(etabIgh(), parc));
+    const horsIgh = idsObligations(
+      determineObligationsApplicables({ ...etabIgh(), estIGH: false }, parc),
+    );
+    expect([...enIgh].sort()).toEqual([...horsIgh].sort());
+    expect(enIgh).not.toContain("elec-igh-annuelle");
+    expect(enIgh).not.toContain("incendie-igh-moyens-secours-annuelle");
   });
 });
 
@@ -736,10 +732,10 @@ describe("moteur matching — scénarios intégrés", () => {
     }
   });
 
-  it("IGH + ERP cat 1 — cumul des deux régimes (élec)", () => {
+  it("IGH + ERP cat 1 — cumul des régimes servis (élec)", () => {
+    // ~~`elec-igh-annuelle`~~ retirée le 2026-10-07 : l'IGH ne s'y ajoute plus.
     const res = determineObligationsApplicables(etabIgh(), [elec()]);
     const ids = idsObligations(res);
-    expect(ids).toContain("elec-igh-annuelle");
     expect(ids).toContain("elec-erp-cat1-4-annuelle");
     expect(ids).toContain("elec-travail-periodique-annuelle");
   });
@@ -881,7 +877,8 @@ describe("moteur matching — cohérence avec le référentiel", () => {
 
   it("evaluerObligation en direct renvoie null si typologie incompatible", () => {
     const res = evaluerObligation(
-      obligationsElectricite.find((o) => o.id === "elec-igh-annuelle")!,
+      // ~~`elec-igh-annuelle`~~ (retirée le 2026-10-07) : une ligne ERP seule.
+      obligationsElectricite.find((o) => o.id === "elec-erp-cat1-4-annuelle")!,
       etabBureau(),
       [elec()],
     );
