@@ -228,6 +228,88 @@ export const obligationsSignalisation: Obligation[] = [
   },
 
   {
+    // CRÉÉE LE 2026-10-07 (relecture du préventeur : « Idem ERP cat N1 à N5
+    // MS39 PE26 », en regard de la ligne ci-dessus). Sœur ERP, quatre
+    // premières catégories ; la 5ᵉ a sa ligne juste en dessous.
+    id: "signalisation-erp-extincteurs-identification",
+    domaine: "signalisation",
+    libelle:
+      "Extincteur de couleur rouge, emplacement repéré par une signalisation durable (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des quatre premières catégories, l'extincteur est de couleur rouge, afin de faciliter sa localisation tant par le personnel que par le public (MS 38 § 3). Les moyens d'extinction sont répartis de préférence dans les dégagements, en des endroits visibles et facilement accessibles ; ils peuvent être protégés à condition de faire l'objet d'une signalisation claire, et leur emplacement est repéré par une signalisation durable (MS 39 § 1). Les extincteurs portatifs sont accrochés à un élément fixe, avec une signalisation durable (MS 39 § 2). Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 39 § 1 et § 2 (emplacement repéré par une signalisation durable) — livre II, établissements des quatre premières catégories",
+        article: "MS 39",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382896",
+        note: "« Ils peuvent être protégés à condition de faire l'objet d'une signalisation claire. Ils ne doivent pas apporter de gêne à la circulation des personnes et leur emplacement, repéré par une signalisation durable, doit être tel que leur efficacité ne risque pas d'être compromise par les variations éventuelles de température survenant dans l'établissement. » § 2 : « Ils doivent être accrochés à un élément fixe, avec une signalisation durable, sans placer la poignée de portage à plus de 1,20 m du sol. » Relu le 2026-10-07 par l'API Légifrance (PISTE) en BAC À SABLE : LEGIARTI000020382896, en vigueur depuis le 2008-10-08, aucune version future.",
+        versionConstatee: "2008-10-08",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 38 § 3 (l'extincteur est de couleur rouge) — livre II, établissements des quatre premières catégories",
+        article: "MS 38",
+        url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000020303557/LEGISCTA000020317639/",
+        note: "« Afin de faciliter sa localisation tant par le personnel que par le public, il doit être de couleur rouge. » Le sujet est « Un extincteur » (§ 3). Relu le 2026-10-07 en bac à sable PISTE : LEGIARTI000020382888, 2008-10-08.",
+        versionConstatee: "2008-10-08",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    categoriesEquipement: ["EXTINCTEUR"],
+    transmet: [],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07, relecture du préventeur (Julien Chantoin, retour du 2026-10-05), annotation portée sur `signalisation-incendie-moyens-lutte` : « Idem ERP cat N1 à N5 MS39 PE26 ». La sœur du Code du travail (arrêté du 4 novembre 1993, art. 10) ne vaut que pour `travail` ; un ERP sans salarié — ou l'ERP d'un employeur, au titre du règlement de sécurité — n'avait aucune ligne d'identification des moyens d'extinction.\n\nDEUX LIGNES ET NON UNE, parce que les textes ne sont pas les mêmes selon le groupe. En 1re à 4e catégorie : MS 38 § 3 (« il doit être de couleur rouge », dit de l'extincteur) et MS 39 (« leur emplacement, repéré par une signalisation durable »), deux articles du Livre II. En 5e catégorie, PE 1 § 1 écarte le Livre II sauf renvoi exprès ; PE 26 § 1 renvoie à MS 39 et non à MS 38 — la couleur rouge n'y est donc pas exigée au titre du règlement — et PE 26 § 3 ajoute le panneau pour l'appareil non apparent. D'où `signalisation-erp-5-extincteurs-identification`.\n\nPORTEUR ÉQUIPEMENT, `EXTINCTEUR` seul : MS 38 § 1 énumère les moyens d'extinction visés : « extincteurs portatifs ; extincteurs sur roues ; seaux et seaux pompes d'incendie ». Le RIA, que porte la sœur du Code du travail, n'est pas dans l'énumération de MS 38 § 1 et n'est pas rattaché ici.\n\nNATURE : ÉTAT PERMANENT (ADR-026), comme la sœur ; `pieceAttendue: null`. Réalisateur `exploitant`, comme la sœur : le texte ne réserve la signalisation à aucun tiers. Criticité 3, comme la sœur.\n\nGN 10 DIT DANS LA DESCRIPTION, comme les autres états permanents du règlement (PE 27, PE 33, PE 35) : hors entretien et vérifications, le règlement ne s'applique pas aux établissements existants, sauf travaux. La ligne est servie à tout établissement de la catégorie — sur-application visible, que la description rend lisible.",
+  },
+
+  {
+    // CRÉÉE LE 2026-10-07 — même annotation du préventeur, 5ᵉ catégorie.
+    id: "signalisation-erp-5-extincteurs-identification",
+    domaine: "signalisation",
+    libelle:
+      "Emplacement de l'extincteur repéré par une signalisation durable, panneau de localisation de l'appareil d'extinction non apparent (ERP de 5ᵉ catégorie)",
+    description:
+      "Dans un établissement recevant du public de 5ᵉ catégorie, l'extincteur portatif est installé dans les conditions de l'article MS 39 (PE 26 § 1) : son emplacement est repéré par une signalisation durable, et il est accroché à un élément fixe, avec une signalisation durable. Lorsqu'un appareil ou un dispositif d'extinction n'est pas apparent, il est signalé par un panneau conforme aux signaux normalisés d'indication de localisation d'un équipement de lutte contre l'incendie (PE 26 § 3). Les dispositions générales du règlement de sécurité écrivent, à l'article GN 10 (rédaction en vigueur depuis le 23 janvier 2010, arrêté du 24 septembre 2009) : « § 1. A l'exception des dispositions à caractère administratif, de celles relatives aux contrôles et aux vérifications techniques ainsi qu'à l'entretien, le présent règlement ne s'applique pas aux établissements existants. § 2. Lorsque des travaux de remplacement d'installation, d'aménagement ou d'agrandissement sont entrepris dans ces établissements, les dispositions du présent règlement sont applicables aux seules parties de la construction ou des installations modifiées. Toutefois, si ces modifications ont pour effet d'accroître le risque de l'ensemble de l'établissement, notamment si une évacuation différée est rendue nécessaire, des mesures de sécurité complémentaires peuvent être imposées après avis de la commission de sécurité. »",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PE 26 § 1 et § 3 (extincteur installé dans les conditions de MS 39 ; panneau de localisation de l'appareil non apparent) — livre III, établissements de 5ᵉ catégorie",
+        article: "PE 26",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766855",
+        note: "« § 1. Les établissements doivent être dotés d'au moins un extincteur portatif installé dans les conditions définies par l'article MS 39 et en atténuation de cet article avec un minimum d'un appareil pour 300 mètres carrés et un appareil par niveau. » « § 3. Lorsqu'un appareil ou un dispositif d'extinction n'est pas apparent, il doit être signalé par un panneau conforme aux signaux normalisés d'indication de localisation d'un équipement de lutte contre l'incendie ou d'un autre moyen d'alarme ou d'alerte définis à la norme NF X 08-003 relative aux couleurs et signaux de sécurité. » Relu le 2026-10-07 par l'API Légifrance (PISTE) en BAC À SABLE : LEGIARTI000024766855, en vigueur depuis le 2008-10-08, aucune version future.",
+        versionConstatee: "2008-10-08",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. MS 39 § 1 et § 2 (emplacement repéré par une signalisation durable) — livre II, établissements des quatre premières catégories, applicable en 5ᵉ par le renvoi exprès de PE 26 § 1",
+        article: "MS 39",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382896",
+        note: "« […] leur emplacement, repéré par une signalisation durable, doit être tel que leur efficacité ne risque pas d'être compromise par les variations éventuelles de température survenant dans l'établissement. » § 2 : « Ils doivent être accrochés à un élément fixe, avec une signalisation durable, sans placer la poignée de portage à plus de 1,20 m du sol. » Relu le 2026-10-07 en bac à sable PISTE (LEGIARTI000020382896, 2008-10-08).",
+        versionConstatee: "2008-10-08",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: null,
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    typologies: { erp: { categories: ["N5"] } },
+    categoriesEquipement: ["EXTINCTEUR", "RIA"],
+    transmet: [],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 avec `signalisation-erp-extincteurs-identification`, sur la même annotation du préventeur (« Idem ERP cat N1 à N5 MS39 PE26 »). PE 26 n'était au corpus qu'en `sans_objet` (« règle de dotation et de dimensionnement ») et sa citation s'arrêtait au § 1 : le § 3 — le panneau de l'appareil non apparent — n'avait jamais été relevé. Verbatim des § 1 à § 3 relu le 2026-10-07 par l'API PISTE (bac à sable), via `src/lib/legifrance/client.ts`.\n\nCE QUE LE TEXTE EXIGE EN 5ᵉ, ET CE QU'IL N'EXIGE PAS. PE 26 § 1 renvoie à MS 39 — emplacement repéré par une signalisation durable, extincteur accroché avec une signalisation durable. Il ne renvoie pas à MS 38 : la couleur rouge n'est pas exigée en 5ᵉ au titre du règlement de sécurité, et le libellé ne la mentionne pas (chez un employeur, l'art. 10 de l'arrêté du 4 novembre 1993 l'exige par `signalisation-incendie-moyens-lutte`). PE 26 § 3 ne vaut que « lorsqu'un appareil ou un dispositif d'extinction n'est pas apparent » : la visibilité est un constat de terrain qu'aucune propriété ne porte, la ligne sur-applique donc cette moitié, comme la sœur du Code du travail sur sa dispense symétrique ; la condition est écrite dans la description. La norme NF X 08-003 citée par le § 3 n'est pas reprise en libellé : « signaux normalisés » suffit à dire ce que le texte exige.\n\n`RIA` AJOUTÉ À `EXTINCTEUR`, pour le seul § 3, qui vise « un appareil ou un dispositif d'extinction » sans les distinguer — même lecture que la sœur. Le § 1 et MS 39 ne visent que l'extincteur portatif ; un RIA déclaré en 5ᵉ reçoit donc une ligne dont la moitié MS 39 ne le concerne pas, ce que la description laisse lisible (« l'extincteur portatif »).\n\nNATURE : ÉTAT PERMANENT, réalisateur `exploitant`, criticité 3 : comme la sœur.\n\nGN 10 DIT DANS LA DESCRIPTION, comme les autres états permanents du règlement (PE 27, PE 33, PE 35) : hors entretien et vérifications, le règlement ne s'applique pas aux établissements existants, sauf travaux. La ligne est servie à tout établissement de la catégorie — sur-application visible, que la description rend lisible.",
+  },
+
+  {
     id: "signalisation-stockage-substances-dangereuses",
     domaine: "signalisation",
     libelle:

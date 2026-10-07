@@ -1633,7 +1633,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // transformation importante). 174 + 2 − 0 = 176. (2) MS 38 § 4 : les deux
     // lignes d'extincteurs d'ERP passent à `personne_competente` (« par une
     // personne ou un organisme compétent »), sans agrément. 176 + 0 − 0 = 176.
-    { version: "2026-10-07.1", empreinte: "176-fc2075422cf0e800" },
+    // (3) Identification des extincteurs en ERP, sœurs de l'art. 10 de
+    // l'arrêté du 4 novembre 1993 : N1–N4 (MS 38 § 3, MS 39), N5 (PE 26 § 1
+    // et § 3). Deux états permanents d'équipement : 176 + 2 − 0 = 178.
+    { version: "2026-10-07.1", empreinte: "178-11ef1ce169af23e5" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1790,7 +1793,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(176);
+    ).toBe(178);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

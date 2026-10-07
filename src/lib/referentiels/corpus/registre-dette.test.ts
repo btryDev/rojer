@@ -123,7 +123,11 @@ describe("registre de dette — les réserves de lecture", () => {
     // 89 → 90 le 2026-09-21 : `PE 27`, encodé pour ses § 4 et § 5, garde
     // dehors ses § 1, § 2, § 3 — et son § 6, que la première écriture de cette
     // réserve avait oublié (l'article a SIX paragraphes, pas cinq).
-    expect(n).toBe(90);
+    // 90 → 92 le 2026-10-07 (relecture du préventeur, lot 1) : `MS 39` entre
+    // au corpus et `PE 26` passe de `sans_objet` à `retenu` pour
+    // l'identification des extincteurs ; chacun garde dehors la dotation
+    // (MS 39 § 2, PE 26 § 1), et PE 26 son § 2 (colonnes sèches).
+    expect(n).toBe(92);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

@@ -312,9 +312,34 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         // obligation du référentiel » ; elle l'est désormais, par une ligne
         // distincte. Article rouvert à la source avant l'encodage.
         "incendie-erp-extincteurs-revision-decennale",
+        // Ajoutée le 2026-10-07 (relecture du préventeur) : le § 3 — « il doit
+        // être de couleur rouge » — fonde, avec MS 39, l'identification des
+        // extincteurs en ERP des quatre premières catégories.
+        "signalisation-erp-extincteurs-identification",
       ],
       reserve:
         "LA SUR-APPLICATION EN 5ᵉ CATÉGORIE RESTE, et elle vaut pour les deux lignes. Le chemin le dit — Livre II > Titre Ier > Chapitre XI > Section 2 > Sous-section 9 —, et PE 1 § 1 écarte le Livre II en 5ᵉ catégorie sans que le Livre III rouvre MS 38. Les deux obligations sont maintenues au même périmètre, sur l'analyse portée par les `notesInternes` de `incendie-erp-extincteurs-annuelle` ; restreindre l'une sans l'autre serait incohérent.",
+    },
+    {
+      // ENTRÉ LE 2026-10-07 (relecture du préventeur : « Idem ERP cat N1 à N5
+      // MS39 PE26 »). Cité jusque-là dans des notes, jamais dépouillé.
+      ref: "MS 39",
+      intitule: "Emplacement (moyens d'extinction)",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382896",
+      versionEnVigueur: "2008-10-08",
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
+      prescrit:
+        "Deux paragraphes sur l'implantation des moyens d'extinction. § 1 : répartis de préférence dans les dégagements, en des endroits visibles et facilement accessibles ; protégés seulement s'ils font l'objet d'une signalisation claire ; sans gêne à la circulation ; emplacement repéré par une signalisation durable et tel que leur efficacité ne soit pas compromise par les variations de température. § 2 : extincteurs portatifs répartis et appropriés aux risques, au minimum un appareil pour 200 m² et par niveau, deux par établissement, accrochés à un élément fixe, avec une signalisation durable, poignée à 1,20 m du sol au plus. Applicable en 5ᵉ catégorie par le renvoi de PE 26 § 1. Lu le 2026-10-07 par l'API PISTE en BAC À SABLE : LEGIARTI000020382896, aucune version future.",
+      citationCle:
+        "§ 1. Les moyens d'extinction doivent être répartis de préférence dans les dégagements, en des endroits visibles et facilement accessibles. Ils peuvent être protégés à condition de faire l'objet d'une signalisation claire. Ils ne doivent pas apporter de gêne à la circulation des personnes et leur emplacement, repéré par une signalisation durable, doit être tel que leur efficacité ne risque pas d'être compromise par les variations éventuelles de température survenant dans l'établissement.",
+      statut: "retenu",
+      obligations: [
+        "signalisation-erp-extincteurs-identification",
+        "signalisation-erp-5-extincteurs-identification",
+      ],
+      reserve:
+        "LA DOTATION DU § 2 N'EST PORTÉE PAR AUCUNE LIGNE D'ERP : « un minimum d'un appareil pour 200 m² et par niveau, avec un minimum de deux par établissement » (en 5ᵉ, PE 26 § 1 l'atténue à un pour 300 m² et un par niveau). Le Code du travail a sa ligne de dotation (`incendie-travail-extincteurs-dotation`, R. 4227-29), pas le règlement de sécurité. Non encodé le 2026-10-07 : hors du lot de la relecture, qui ne portait que l'identification.",
     },
     {
       ref: "MS 73",

@@ -232,6 +232,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "secours-etablissement-mesures": "etablissement",
   "secours-etablissement-signalement-chaleur-intense": "etablissement",
   "secours-salarie-secouriste": "salarie",
+  "signalisation-erp-5-extincteurs-identification": "equipement",
+  "signalisation-erp-extincteurs-identification": "equipement",
   "signalisation-etablissement-alimentation-secours-presence": "etablissement",
   "signalisation-etablissement-alimentations-secours-annuelle": "etablissement",
   "signalisation-etablissement-cheminements-evacuation": "etablissement",

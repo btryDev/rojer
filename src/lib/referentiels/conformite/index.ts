@@ -261,7 +261,10 @@ export const obligationsConformite: Obligation[] = [
 // et `ascenseur-erp-verification-remise-en-service-as9` (événementielle).
 // 174 + 2 − 0 = 176. (2) MS 38 § 4 : extincteurs d'ERP, annuelle et décennale,
 // par `personne_competente` au lieu de personne qualifiée ou organisme agréé.
-// 176 + 0 − 0 = 176.
+// 176 + 0 − 0 = 176. (3) Identification des extincteurs en ERP :
+// `signalisation-erp-extincteurs-identification` (N1–N4, MS 38 § 3, MS 39) et
+// `signalisation-erp-5-extincteurs-identification` (N5, PE 26). 176 + 2 − 0 =
+// 178. États permanents : aucune ligne de calendrier.
 export const REFERENTIEL_VERSION = "2026-10-07.1";
 
 /**
