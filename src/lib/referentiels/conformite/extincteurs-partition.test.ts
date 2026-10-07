@@ -58,17 +58,22 @@ const PROFILS: { nom: string; e: EtablissementMatching }[] = [
 function rythmesDeLAppareil(
   e: EtablissementMatching,
   categorie: CategorieEquipement,
+  caracteristiques: Record<string, unknown> | null = null,
 ): Periodicite[] {
   const applicables = determineObligationsApplicables(e, [
-    { id: "eq", libelle: categorie, categorie, caracteristiques: null },
+    { id: "eq", libelle: categorie, categorie, caracteristiques },
   ]);
   return genererProchainesVerifications(applicables)
     .filter((l) => l.equipementId === "eq")
     .map((l) => l.periodicite);
 }
 
+// Un extincteur au CO2 : le tableau A.1 ne lui donne que l'annuelle et la
+// révision à dix ans — pas de maintenance approfondie, dont le rythme effectif
+// (décennal après un premier pas de cinq ans) se compterait sinon ici. Elle a
+// son propre bloc plus bas.
 const rythmesDeLExtincteur = (e: EtablissementMatching) =>
-  rythmesDeLAppareil(e, "EXTINCTEUR");
+  rythmesDeLAppareil(e, "EXTINCTEUR", { typeExtincteur: "co2" });
 
 describe("extincteur : une annuelle et une décennale, une seule de chaque, quel que soit le régime", () => {
   for (const { nom, e } of PROFILS) {
@@ -94,4 +99,43 @@ describe("RIA et désenfumage : une annuelle et une seule, quel que soit le rég
       });
     }
   }
+});
+
+/**
+ * La maintenance additionnelle approfondie (NF S 61-919, tableau A.1) dépend
+ * du TYPE d'extincteur (item 3 du lot 3) : eau, mousse, poudre → à 5 et
+ * 15 ans ; CO2 → aucune ; poudre à opercule scellé → 15 ans seulement, non
+ * datée. Au silence, la ligne reste : la règle la plus exigeante survit.
+ */
+describe("maintenance additionnelle approfondie : le type décide", () => {
+  const MAA = "incendie-travail-extincteurs-maintenance-approfondie";
+  const lignes = (typeExtincteur: string | undefined) => {
+    const applicables = determineObligationsApplicables(etab({}), [
+      {
+        id: "eq",
+        libelle: "Extincteur",
+        categorie: "EXTINCTEUR",
+        caracteristiques: typeExtincteur ? { typeExtincteur } : null,
+      },
+    ]);
+    return genererProchainesVerifications(applicables, {
+      misesEnService: new Map([["eq", new Date("2026-03-01T00:00:00Z")]]),
+    }).filter((l) => l.obligationId === MAA);
+  };
+
+  it.each([
+    ["eau_mousse", 1],
+    ["poudre", 1],
+    [undefined, 1],
+    ["co2", 0],
+    ["poudre_opercule_pression_permanente", 0],
+  ] as const)("type %s → %i ligne", (type, n) => {
+    expect(lignes(type)).toHaveLength(n);
+  });
+
+  it("premier pas de cinq ans, puis dix : « à 5 et 15 ans »", () => {
+    const [l] = lignes("poudre");
+    expect(l.periodicite).toBe("decennale");
+    expect(l.sources.premierPas).toBe("quinquennale");
+  });
 });

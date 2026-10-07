@@ -183,6 +183,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-travail-eclairage-securite-essai-mensuel": "equipement",
   "incendie-travail-exercice-semestriel": "etablissement",
   "incendie-travail-extincteurs-dotation": "etablissement",
+  "incendie-travail-extincteurs-maintenance-approfondie": "equipement",
   "incendie-travail-extincteurs-revision-atelier-decennale": "equipement",
   "incendie-travail-instructions-evacuation": "etablissement",
   "incendie-travail-moyens-lutte": "equipement",

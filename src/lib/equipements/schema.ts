@@ -3,6 +3,7 @@ import { z } from "zod";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { FAMILLES_ESP } from "./esp";
+import { TYPES_EXTINCTEUR } from "./extincteur";
 
 /**
  * Schéma de validation d'un équipement. Les propriétés spécifiques à une
@@ -36,8 +37,13 @@ import { FAMILLES_ESP } from "./esp";
  *   - `estChargeSuperieure500TCo2`  → règlement (UE) 2024/573, art. 5 (palier)
  *   - `familleEsp`                  → arrêté du 20 novembre 2017, art. 15 :
  *     inspection périodique biennale des générateurs de vapeur, distinguée du
- *     régime général. Seule propriété d'ÉNUMÉRATION de cette liste ; les
- *     autres sont des booléens ou des nombres.
+ *     régime général. ~~Seule propriété d'ÉNUMÉRATION de cette liste ; les
+ *     autres sont des booléens ou des nombres.~~ [2026-10-07 : elle a une sœur,
+ *     `typeExtincteur`, ci-dessous.]
+ *   - `typeExtincteur`              → NF S 61-919 (août 2001), annexe A,
+ *     tableau A.1 : la maintenance additionnelle approfondie à 5 et 15 ans ne
+ *     vise ni le CO2 ni la poudre à opercule scellé (C55 lot 3, ADR-039).
+ *     Seconde propriété d'ÉNUMÉRATION, lue par `enum_differente`.
  *
  * `dessertLocauxSommeil` a été RETIRÉ le 2026-09-01 (lot A11). Il portait à lui
  * seul la restriction « locaux à sommeil » de PE 37, faute d'attribut
@@ -333,6 +339,13 @@ export const equipementSchema = z
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
       z.enum(FAMILLES_ESP).optional(),
     ),
+    // Type d'extincteur portatif (NF S 61-919, tableau A.1) — lu par le
+    // moteur depuis le 2026-10-07 : il décide de la maintenance additionnelle
+    // approfondie (`incendie-travail-extincteurs-maintenance-approfondie`).
+    typeExtincteur: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.enum(TYPES_EXTINCTEUR).optional(),
+    ),
     pressionMaxAdmissibleBar: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
       z.coerce.number().min(0).max(10000).optional(),
@@ -400,6 +413,17 @@ export const equipementSchema = z
       });
     }
 
+    // Le type d'extincteur (NF S 61-919, tableau A.1) ne se dit que d'un
+    // extincteur : ailleurs, il éteindrait ou allumerait une maintenance
+    // approfondie sur un appareil qui n'en a pas.
+    if (val.typeExtincteur !== undefined && val.categorie !== "EXTINCTEUR") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["typeExtincteur"],
+        message: "Applicable uniquement à un extincteur",
+      });
+    }
+
     // Questions à trois états : même contrôle de cohérence. On rejette dès
     // qu'une réponse (oui OU non) est donnée hors de la catégorie visée —
     // une réponse « non » hors catégorie n'a pas plus de sens qu'un « oui ».
@@ -443,6 +467,8 @@ export function normaliserFormDataEquipement(
     nbVehiculesParkingCouvert: raw.nbVehiculesParkingCouvert,
     // Plaque constructeur d'un équipement sous pression (cf. `esp.ts`).
     familleEsp: raw.familleEsp,
+    // Type d'extincteur (cf. `extincteur.ts`).
+    typeExtincteur: raw.typeExtincteur,
     pressionMaxAdmissibleBar: raw.pressionMaxAdmissibleBar,
     volumeLitres: raw.volumeLitres,
     notes: raw.notes,
@@ -471,6 +497,7 @@ export function serialiserCaracteristiques(
   if (val.nbVehiculesParkingCouvert !== undefined)
     out.nbVehiculesParkingCouvert = val.nbVehiculesParkingCouvert;
   if (val.familleEsp !== undefined) out.familleEsp = val.familleEsp;
+  if (val.typeExtincteur !== undefined) out.typeExtincteur = val.typeExtincteur;
   if (val.pressionMaxAdmissibleBar !== undefined)
     out.pressionMaxAdmissibleBar = val.pressionMaxAdmissibleBar;
   if (val.volumeLitres !== undefined) out.volumeLitres = val.volumeLitres;

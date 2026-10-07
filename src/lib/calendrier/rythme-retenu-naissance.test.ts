@@ -3,7 +3,11 @@ import { debutDuJour } from "@/lib/dates";
 import type { EquipementMatching, ObligationApplicable } from "@/lib/matching/types";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import { porteurDe, type Obligation } from "@/lib/referentiels/conformite/types";
+import {
+  estPorteeParEquipement,
+  porteurDe,
+  type Obligation,
+} from "@/lib/referentiels/conformite/types";
 import { genererProchainesVerifications, reconcilierCalendrier } from "./generateur";
 
 /**
@@ -27,7 +31,7 @@ const ANCIENNE = new Date("2015-03-01T00:00:00Z");
 function applicable(o: Obligation): ObligationApplicable {
   const porteur = porteurDe(o);
   const equipements: EquipementMatching[] =
-    porteur === "equipement" && "categoriesEquipement" in o
+    estPorteeParEquipement(o)
       ? [{ id: `eq-${o.id}`, libelle: "Appareil", categorie: o.categoriesEquipement[0], caracteristiques: null }]
       : [];
   return { obligation: o, equipementsConcernes: equipements, porteur, raisons: ["fixture"] };

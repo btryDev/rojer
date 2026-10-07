@@ -33,6 +33,7 @@ export const CODE_TRAVAIL_INCENDIE: Corpus = {
       obligations: [
         "incendie-travail-moyens-lutte",
         "incendie-travail-extincteurs-revision-atelier-decennale",
+        "incendie-travail-extincteurs-maintenance-approfondie",
       ],
     },
     {
@@ -54,6 +55,7 @@ export const CODE_TRAVAIL_INCENDIE: Corpus = {
         "incendie-travail-moyens-lutte",
         "incendie-travail-extincteurs-dotation",
         "incendie-travail-extincteurs-revision-atelier-decennale",
+        "incendie-travail-extincteurs-maintenance-approfondie",
       ],
     },
     {

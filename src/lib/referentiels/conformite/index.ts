@@ -271,7 +271,10 @@ export const obligationsConformite: Obligation[] = [
 // `incendie-travail-desenfumage-entretien-verification` ; l'entretien de la
 // signalisation (arrêté du 4 novembre 1993, art. 15, « régulièrement »)
 // reçoit le défaut. L'alarme reste à la semestrielle écrite du même article.
-// Compte : 174 + 4 − 0 = 178.
+// Maintenance additionnelle approfondie à 5 et 15 ans (NF S 61-919, annexe
+// A), selon la question neuve `typeExtincteur` : entre
+// `incendie-travail-extincteurs-maintenance-approfondie`.
+// Compte : 174 + 5 − 0 = 179.
 export const REFERENTIEL_VERSION = "2026-10-07.4";
 
 /**

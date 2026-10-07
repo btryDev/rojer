@@ -323,6 +323,69 @@ export const obligationsIncendie: Obligation[] = [
       "CRÉÉE LE 2026-10-07 (C55 lot 3, item 2 ; relecture du préventeur, ADR-039). Le préventeur, p. 6 du référentiel annoté, sur la révision décennale ERP : « valable pour tous les établissements » ; à la question « sur quel texte repose son application hors ERP ? », sa réponse renvoie à la norme. Le Code du travail ne fixe aucune révision (`R. 4227-28` à `R. 4227-41` relus, aucune périodicité hors `R. 4227-39`). La NF S 61-919, lue sur le scan p. 10 et p. 12 le 2026-10-07 : § 10.1 « Tous les extincteurs portatifs doivent être soumis à une révision en atelier effectuée par le fabricant ou un centre de révision à intervalles ne dépassant pas ceux donnés à l'annexe A » ; tableau A.1, colonne « Révision en atelier et renouvellement de la charge (annexe D) » : 10 ans pour l'eau, la mousse, la poudre (avec ou sans opercule) et le CO2 ; « Voir note 3 » pour le halon (vidé et récupéré, plus rechargé).\n\nPOURQUOI UNE LIGNE À PART : même motif que la jumelle ERP `incendie-erp-extincteurs-revision-decennale` — deux actes, deux dates, deux preuves. Le modèle ne porte qu'un rythme par obligation.\n\nNATURE ÉCHÉANCE RÉCURRENTE et non état permanent comme l'annuelle : la révision est un ACTE daté (démontage en atelier), que la norme répète à intervalle maximal. `periodicite: \"autre\"` reste le rythme du TEXTE (`R. 4227-29` n'en chiffre aucun) ; le décennal est `rythmeRetenu`, motif « norme ». `texteVague` = « maintenus en bon état de fonctionnement », mot pour mot de `R. 4227-29` : il s'affiche en complément de la norme.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`, la même partition que `incendie-travail-moyens-lutte`. Chez un ERP, la décennale de MS 38 § 4 est écrite par le texte et l'emporte ; elle est servie à tout ERP, 5ᵉ catégorie comprise (sur-application assumée). `extincteurs-partition.test.ts` tient « une décennale et une seule » par extincteur sur six profils.\n\nORIGINE DES INTERVALLES : § 10.1 les fait partir « de la date de fabrication ou de la dernière recharge effective ou de la révision en atelier » ; l'annexe A, « de la date d'installation […] mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps ». Le produit ne connaît que la mise en service déclarée de l'appareil : la première échéance part d'elle (ADR-036, règle 4) — elle ne vaut que si elle tombe à l'origine du suivi ou après ; sinon la ligne naît « à planifier ». Un dirigeant qui connaît la date de la dernière révision la saisit par un rapport, et le rythme repart de là.\n\nRÉALISATEURS : « le fabricant ou un centre de révision » (§ 10.1). `fabricant` existe ; le centre de révision est un prestataire qualifié, `personne_qualifiee`. Criticité 4, comme la jumelle ERP : un extincteur non révisé depuis onze ans reste un extincteur maintenu dans l'année.",
   },
   {
+    id: "incendie-travail-extincteurs-maintenance-approfondie",
+    domaine: "incendie",
+    libelle:
+      "Maintenance additionnelle approfondie de l'extincteur, à 5 et 15 ans (travail ; eau, mousse, poudre)",
+    description:
+      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29). Pour les extincteurs à eau, à mousse et à poudre, la norme NF S 61-919 (août 2001) prévoit, en plus de la maintenance annuelle et de la révision en atelier à dix ans, une maintenance additionnelle approfondie avec renouvellement de la charge si nécessaire, à 5 et à 15 ans (annexe A, tableau A.1). Les intervalles partent de la date d'installation. C'est une norme, citée comme norme. Elle ne vise pas les extincteurs au CO2, ni ceux à poudre à opercule scellé et pression permanente, dont l'unique maintenance approfondie tombe à 15 ans et que Rojer ne date pas. Les années 5 et 10, la maintenance approfondie et la révision incluent la maintenance annuelle.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-29",
+        article: "R. 4227-29",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532079/",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-28",
+        article: "R. 4227-28",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532081/",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    // « à 5 et 15 ans » : premier pas de cinq ans depuis la mise en service,
+    // puis dix ans — 5, 15 (puis 25, au-delà de la durée de vie prévue).
+    premierDelai: "quinquennale",
+    rythmeRetenu: {
+      motif: "norme",
+      periodicite: "decennale",
+      norme: "NF S 61-919",
+      reference: {
+        source: "NORME",
+        reference:
+          "NF S 61-919 (août 2001), annexe A, tableau A.1 (maintenance additionnelle approfondie : à 5 et 15 ans)",
+        article: "NF S 61-919 annexe A",
+      },
+      texteVague: "maintenus en bon état de fonctionnement",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 3,
+    transmet: [],
+    typologies: { travail: true },
+    categoriesEquipement: ["EXTINCTEUR"],
+    conditions: [
+      {
+        type: "equipement_propriete_enum_differente",
+        categorie: "EXTINCTEUR",
+        propriete: "typeExtincteur",
+        valeur: "co2",
+      },
+      {
+        type: "equipement_propriete_enum_differente",
+        categorie: "EXTINCTEUR",
+        propriete: "typeExtincteur",
+        valeur: "poudre_opercule_pression_permanente",
+      },
+    ],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C55 lot 3, item 3 ; ADR-039, normes admises par décision de la propriétaire du 07/10). NF S 61-919, annexe A (normative), tableau A.1, lu p. 12 du scan : colonne « Maintenance additionnelle approfondie et renouvellement de la charge, si nécessaire (annexe C) » — « à 5 et 15 ans » pour les types à mousse, eau et à base d'eau, et à poudre ; « 15 ans » pour la poudre à opercule scellé et pression permanente ; « — » pour le halon et le CO2. Sous le tableau : « Les intervalles partent de la date d'installation de l'extincteur d'incendie mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps. La maintenance n'est effectuée que les années 1, 2, 3, 4, 6, 7, 8, 9, 11 et ainsi de suite. L'année 5, la maintenance étendue, et l'année 10, la révision, incluent la maintenance et la maintenance supplémentaire. »\n\nCE QUE LE MODÈLE EXPRIME, ET COMMENT. « À 5 et 15 ans » n'est pas un rythme quinquennal (pas de MAA à 10 ans : la révision en atelier l'inclut) mais un PREMIER PAS de cinq ans suivi d'un pas de dix : `premierDelai: \"quinquennale\"` + `rythmeRetenu` décennal (motif « norme »). Le générateur lit le premier pas (`premierPas(premierDelai, periodiciteEffective(o), surcharge)`) sur la mise en service de l'appareil — la date d'installation que la norme prend pour origine —, puis la réalisation fait repartir le rythme de dix ans : 5, 15. La troisième occurrence (25 ans) tombe au-delà de la durée de vie prévue (§ 11, 20 ans) : l'appareil devrait être sorti du parc avant. Aucune extension de `rythmeRetenu` n'a été nécessaire : `premierDelai` est un champ commun, que le lot 2 laissait libre.\n\nLE TYPE. Question énumérée `typeExtincteur` (`lib/equipements/extincteur.ts`, sans migration : JSON `caracteristiques`), sur le modèle de `familleEsp`. Deux conditions `enum_differente` (CO2, poudre à opercule) : satisfaites au SILENCE — un extincteur dont le type n'est pas dit garde la maintenance approfondie, la règle la plus exigeante, du côté que le dirigeant voit.\n\nCE QUI N'EST PAS ENCODÉ. (1) La poudre à opercule scellé et pression permanente : une seule maintenance approfondie, à 15 ans. Aucune `Periodicite` ne vaut quinze ans, et en ajouter une toucherait l'énumération Prisma (`Verification.periodicite`) — hors mandat (pas de migration). Nommé dans la description. (2) La durée de vie (§ 11, « ne devrait pas dépasser 20 ans », sauf CO2) : CONDITIONNEL, ce n'est pas une échéance — l'aide du champ « Type d'extincteur » la dit, et renvoie à la date de péremption de la fiche (affichée « Périmé depuis », jamais réclamée). (3) La coïncidence des années 5 et 10 avec la maintenance annuelle, que la norme fait inclure : deux lignes au calendrier pour une visite ; un seul rapport peut être déposé sur les deux.\n\nPAS DE PARTITION AVEC L'ERP : aucun texte ERP n'écrit de maintenance approfondie (MS 38 § 4 ne connaît que l'annuelle et la décennale). Un ERP employeur la reçoit par sa typologie de travail ; un ERP sans salarié ne la reçoit pas — la ligne se fonde sur `R. 4227-29`, qui ne vise que l'employeur. RÉALISATEURS : la norme confie la maintenance à « la personne compétente » ; `personne_qualifiee` pour le prestataire. Criticité 3 : moins que la révision (4) et l'annuelle (5).",
+  },
+  {
     id: "incendie-travail-ria-entretien-verification",
     domaine: "incendie",
     libelle:
