@@ -22,6 +22,7 @@ import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
 import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
+import type { SectionRegistre } from "@/lib/registre/sections";
 import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 
@@ -150,12 +151,12 @@ describe("tableau de bord", () => {
 });
 
 describe("registre web — une fiche tenue ailleurs", () => {
-  const section = {
+  const section: SectionRegistre = {
     id: "verifications-moyens-extinction",
     partie: "3.1",
     titre: "Vérifications des moyens d'extinction",
     attendu: "Vérifications périodiques des extincteurs.",
-    categoriesEquipement: ["EXTINCTEUR" as const],
+    categoriesEquipement: ["EXTINCTEUR"],
   };
   const ligne = (prescriptionId: string | null) => ({
     id: "v1",

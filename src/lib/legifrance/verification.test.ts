@@ -74,6 +74,17 @@ async function verifier(a: ArticleDepouille, src: SourceArticles, c = CORPUS_CT)
 }
 
 describe("resoudreCible", () => {
+  it("une norme se reconnaît à son statut de corpus, pas à son préfixe (revue du 2026-10-07)", () => {
+    const norme = (ref: string) =>
+      resoudreCible(article({ ref, statut: "norme", motif: "m" } as Partial<ArticleDepouille>), { id: "normes", url: "" });
+    expect(norme("NF S 61-919 § 5.1.1")).toMatchObject({ par: "aucun", raison: expect.stringMatching(/^norme homologuée/) });
+    expect(norme("EN 3-7 § 4")).toMatchObject({ par: "aucun", raison: expect.stringMatching(/^norme homologuée/) });
+    // Une clé de droit qui commencerait par « NF » n'est pas une norme.
+    expect(
+      resoudreCible(article({ ref: "NF 12" }), { id: "arrete-1980-livre-2", url: "" }),
+    ).not.toMatchObject({ raison: expect.stringMatching(/^norme homologuée/) });
+  });
+
   it.each<[string, string | undefined, string, unknown]>([
     ["R. 4227-26", "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531912", "code-travail-incendie", { par: "id", id: "LEGIARTI000018531912" }],
     ["R. 4227-29", "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000018489127/", "code-travail-incendie", { par: "texte_et_numero", textes: ["LEGITEXT000006072050"], nums: ["R4227-29"], code: true }],
