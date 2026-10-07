@@ -26,7 +26,45 @@
  *   extincteurs hors ERP est le lot 3. APSAD R4 reste exclue.]
  */
 
-import type { Obligation, ReferenceLegale } from "./types";
+import type { Obligation, ReferenceLegale, RythmeRetenu } from "./types";
+
+// -----------------------------------------------------------------------------
+// NF S 61-919 — le rythme des extincteurs hors ERP (ADR-039, C59 lot 3)
+//
+// Le Code du travail fait maintenir les extincteurs « en bon état de
+// fonctionnement » (R. 4227-29) sans dire à quel rythme. La norme NF S 61-919
+// (août 2001), lue sur le scan remis par le préventeur, l'écrit. Elle se cite
+// comme norme : source `NORME`, clé au corpus `normes`.
+// -----------------------------------------------------------------------------
+
+/** NF S 61-919 § 5.1.1 : la maintenance annuelle par la personne compétente. */
+const REFERENCE_NF_S_61_919_ANNUELLE: ReferenceLegale = {
+  source: "NORME",
+  reference:
+    "NF S 61-919 (août 2001), § 5.1.1 (maintenance annuelle par la personne compétente)",
+  article: "NF S 61-919 § 5.1.1",
+  note:
+    "« La personne compétente doit effectuer tous les ans, avec une tolérance de plus ou moins deux mois, la maintenance, conformément au présent document. » Norme homologuée, citée comme norme : aucun texte en vigueur ne la rend obligatoire (ADR-039).",
+};
+
+/** NF S 61-919 § 10.1 et annexe A : la révision en atelier, dix ans au plus. */
+const REFERENCE_NF_S_61_919_REVISION: ReferenceLegale = {
+  source: "NORME",
+  reference:
+    "NF S 61-919 (août 2001), § 10.1 et annexe A, tableau A.1 (révision en atelier : 10 ans)",
+  article: "NF S 61-919 § 10.1",
+  note:
+    "« Tous les extincteurs portatifs doivent être soumis à une révision en atelier effectuée par le fabricant ou un centre de révision à intervalles ne dépassant pas ceux donnés à l'annexe A. » Le tableau A.1 donne dix ans pour tous les types, sauf le halon. Norme homologuée, citée comme norme (ADR-039).",
+};
+
+/** Le rythme annuel que la norme écrit et que `R. 4227-29` ne chiffre pas. */
+const RYTHME_NF_S_61_919_ANNUEL: RythmeRetenu = {
+  motif: "norme",
+  periodicite: "annuelle",
+  norme: "NF S 61-919",
+  reference: REFERENCE_NF_S_61_919_ANNUELLE,
+  texteVague: "maintenus en bon état de fonctionnement",
+};
 
 // -----------------------------------------------------------------------------
 // GE 4 § 1 — le tableau des visites périodiques de commission, case par case
@@ -205,9 +243,10 @@ export const obligationsIncendie: Obligation[] = [
   {
     id: "incendie-travail-moyens-lutte",
     domaine: "incendie",
-    libelle: "Maintien en bon état de fonctionnement de l'extincteur (travail)",
+    libelle:
+      "Maintenance annuelle de l'extincteur, pour le maintenir en bon état de fonctionnement (travail, hors ERP)",
     description:
-      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29), pour que tout commencement d'incendie puisse être rapidement et efficacement combattu (R. 4227-28). Le nombre d'extincteurs dont l'établissement doit être doté fait l'objet d'une ligne d'établissement distincte.",
+      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29), pour que tout commencement d'incendie puisse être rapidement et efficacement combattu (R. 4227-28). Le Code du travail ne fixe pas le rythme de cet entretien ; la norme NF S 61-919 (août 2001) le fixe : « La personne compétente doit effectuer tous les ans, avec une tolérance de plus ou moins deux mois, la maintenance » (§ 5.1.1). C'est une norme, citée comme norme. En ERP, la vérification annuelle est écrite par le règlement de sécurité (MS 38 § 4) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas. Le nombre d'extincteurs dont l'établissement doit être doté fait l'objet d'une ligne d'établissement distincte.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -227,15 +266,194 @@ export const obligationsIncendie: Obligation[] = [
       },
     ],
     periodicite: "autre",
+    rythmeRetenu: RYTHME_NF_S_61_919_ANNUEL,
     nature: "etat_permanent",
     pieceAttendue: null,
     realisateurs: ["personne_qualifiee", "personne_competente"],
     criticite: 5,
     transmet: [],
-    typologies: { travail: true },
+    // `erp: false` : la partition avec `incendie-erp-extincteurs-annuelle`
+    // (ADR-039, « un rythme écrit l'emporte toujours »). Voir les notes.
+    typologies: { travail: true, erp: false },
     categoriesEquipement: ["EXTINCTEUR"],
     notesInternes:
-      "RÉDUITE AU MAINTIEN EN ÉTAT LE 2026-09-28 (D25, option (a), revue indépendante du lot 2) : la dotation de R. 4227-29 est portée par `incendie-travail-extincteurs-dotation` ; le libellé « Présence et maintien en état des moyens de lutte » et la description « doivent être dotés » la faisaient lire une fois par extincteur en plus de la ligne d'établissement. « Accessibles » retiré : le mot n'est ni dans R. 4227-28 ni dans R. 4227-29.\n\nAMENDEMENT 2026-08-27, audit systématique des périodicités sans source porteuse. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-28 et R. 4227-29. Section R. 4227-28 à R. 4227-41 relue à la source : AUCUN de ces articles ne fixe de périodicité annuelle, pour quoi que ce soit. La seule périodicité de toute la section est celle de R. 4227-39, « au moins tous les six mois », et elle porte sur les exercices et essais, pas sur les extincteurs. R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme.\n\nLa vérification annuelle des extincteurs existe bien, mais elle vient de la norme NF S 61-919 et des contrats de maintenance, pas du Code du travail. Une norme n'est pas opposable par elle-même. C'est le même motif que la règle APSAD R4 retirée en août.\n\n`periodicite` passe à `autre` : l'obligation reste, parce que doter l'établissement de moyens de lutte et les maintenir en état est bien exigé, mais le produit cesse d'afficher une date que le droit ne donne pas. Les ERP ne perdent rien : `incendie-erp-extincteurs-annuelle` porte l'annuelle pour eux, fondée sur MS 73.\n\nNATURE : ÉTAT PERMANENT (ADR-026). C'est la lecture que l'amendement du 2026-08-27 avait faite du texte — « R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme » — sans qu'aucun champ ne puisse la porter. Elle l'est désormais, et `periodicite: \"autre\"` cesse d'être le seul indice.",
+      "RYTHME DE LA NORME NF S 61-919, LE 2026-10-07 (C59 lot 3, relecture du préventeur, ADR-039). Le préventeur : « Préco annuelle » ; la propriétaire a tranché le 07/10 que les normes sont admises. `R. 4227-29` dit « maintenus en bon état de fonctionnement » sans rythme ; la NF S 61-919 (août 2001) l'écrit, § 5.1.1 : « La personne compétente doit effectuer tous les ans, avec une tolérance de plus ou moins deux mois, la maintenance, conformément au présent document. » `periodicite` reste `autre` (le rythme du TEXTE) ; `rythmeRetenu` porte l'annuelle de la norme, et la ligne passe de l'écran « en place » au calendrier, née « à planifier » (ADR-036, aucun retard rétroactif). L'amendement du 2026-08-27 ci-dessous (« une norme n'est pas opposable par elle-même ») est AMENDÉ par l'ADR-039 : il reste vrai qu'aucun texte ne rend la norme obligatoire, mais une norme lue peut désormais donner le rythme, affiché « Rythme de la norme NF S 61-919 ».\n\nPARTITION AVEC L'ERP — `typologies: { travail: true, erp: false }`. Un établissement ERP ET de travail recevait cette ligne ET `incendie-erp-extincteurs-annuelle` : deux annuelles pour le même extincteur. L'annuelle ERP est écrite par le TEXTE (MS 38 § 4, « une vérification annuelle ») ; un rythme écrit l'emporte toujours, donc c'est celle-ci qui se retire chez un ERP. `ExclusionMutuelle` n'était pas l'outil : elle ne vaut qu'entre titres de salarié (`exclusion.test.ts`). L'ERP ne perd rien de `R. 4227-29` : la dotation (`incendie-travail-extincteurs-dotation`, établissement, `travail: true`) le cite toujours en entier, « maintenus en bon état de fonctionnement » compris, et l'annuelle ERP porte l'acte. Elle est servie à TOUT ERP, 5ᵉ catégorie comprise (sur-application assumée, notes de `incendie-erp-extincteurs-annuelle`) : chaque établissement de travail qui déclare un extincteur reçoit donc exactement UNE annuelle — `extincteurs-partition.test.ts` le tient sur la catégorie inconnue et les cinq catégories. SI L'ANNUELLE ERP EST UN JOUR RESTREINTE AUX QUATRE PREMIÈRES CATÉGORIES, CETTE PARTITION DOIT L'ÊTRE DU MÊME MOUVEMENT — le test rougira.\n\nLIBELLÉ : « maintenance annuelle », le mot de la norme (§ 5.1.1), et « hors ERP ». Réalisateurs inchangés : la norme dit « la personne compétente ».\n\nRÉDUITE AU MAINTIEN EN ÉTAT LE 2026-09-28 (D25, option (a), revue indépendante du lot 2) : la dotation de R. 4227-29 est portée par `incendie-travail-extincteurs-dotation` ; le libellé « Présence et maintien en état des moyens de lutte » et la description « doivent être dotés » la faisaient lire une fois par extincteur en plus de la ligne d'établissement. « Accessibles » retiré : le mot n'est ni dans R. 4227-28 ni dans R. 4227-29.\n\nAMENDEMENT 2026-08-27, audit systématique des périodicités sans source porteuse. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-28 et R. 4227-29. Section R. 4227-28 à R. 4227-41 relue à la source : AUCUN de ces articles ne fixe de périodicité annuelle, pour quoi que ce soit. La seule périodicité de toute la section est celle de R. 4227-39, « au moins tous les six mois », et elle porte sur les exercices et essais, pas sur les extincteurs. R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme.\n\nLa vérification annuelle des extincteurs existe bien, mais elle vient de la norme NF S 61-919 et des contrats de maintenance, pas du Code du travail. ~~Une norme n'est pas opposable par elle-même. C'est le même motif que la règle APSAD R4 retirée en août.~~ [2026-10-07, ADR-039 : une norme lue peut donner le rythme ; APSAD R4 reste exclue — ce n'est pas une norme homologuée.]\n\n`periodicite` passe à `autre` : l'obligation reste, parce que doter l'établissement de moyens de lutte et les maintenir en état est bien exigé, ~~mais le produit cesse d'afficher une date que le droit ne donne pas~~ [2026-10-07 : la date revient, par `rythmeRetenu` et marquée « Rythme de la norme NF S 61-919 » ; `periodicite` reste `autre`]. Les ERP ne perdent rien : `incendie-erp-extincteurs-annuelle` porte l'annuelle pour eux, fondée sur MS 73.\n\nNATURE : ÉTAT PERMANENT (ADR-026). C'est la lecture que l'amendement du 2026-08-27 avait faite du texte — « R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme » — sans qu'aucun champ ne puisse la porter. Elle l'est désormais, et `periodicite: \"autre\"` cesse d'être le seul indice.",
+  },
+  {
+    id: "incendie-travail-extincteurs-revision-atelier-decennale",
+    domaine: "incendie",
+    libelle:
+      "Révision en atelier de l'extincteur, tous les dix ans au plus (travail, hors ERP)",
+    description:
+      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29). Outre sa maintenance annuelle, la norme NF S 61-919 (août 2001) le soumet à une révision en atelier, par le fabricant ou un centre de révision, à intervalles ne dépassant pas ceux de son annexe A : dix ans (§ 10.1, tableau A.1). C'est une norme, citée comme norme. En ERP, la révision tous les dix ans est écrite par le règlement de sécurité (MS 38 § 4) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-29",
+        article: "R. 4227-29",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532079/",
+        note: "« Le premier secours contre l'incendie est assuré par des extincteurs en nombre suffisant et maintenus en bon état de fonctionnement. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (`relecture-jc-2026-10/textes.md`) : aucun rythme.",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-28",
+        article: "R. 4227-28",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532081/",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "norme",
+      periodicite: "decennale",
+      norme: "NF S 61-919",
+      reference: REFERENCE_NF_S_61_919_REVISION,
+      texteVague: "maintenus en bon état de fonctionnement",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_qualifiee", "fabricant"],
+    criticite: 4,
+    transmet: [],
+    // Même partition que l'annuelle : en ERP, MS 38 § 4 écrit la décennale.
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["EXTINCTEUR"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C59 lot 3, item 2 ; relecture du préventeur, ADR-039). Le préventeur, p. 6 du référentiel annoté, sur la révision décennale ERP : « valable pour tous les établissements » ; à la question « sur quel texte repose son application hors ERP ? », sa réponse renvoie à la norme. Le Code du travail ne fixe aucune révision (`R. 4227-28` à `R. 4227-41` relus, aucune périodicité hors `R. 4227-39`). La NF S 61-919, lue sur le scan p. 10 et p. 12 le 2026-10-07 : § 10.1 « Tous les extincteurs portatifs doivent être soumis à une révision en atelier effectuée par le fabricant ou un centre de révision à intervalles ne dépassant pas ceux donnés à l'annexe A » ; tableau A.1, colonne « Révision en atelier et renouvellement de la charge (annexe D) » : 10 ans pour l'eau, la mousse, la poudre (avec ou sans opercule) et le CO2 ; « Voir note 3 » pour le halon (vidé et récupéré, plus rechargé).\n\nPOURQUOI UNE LIGNE À PART : même motif que la jumelle ERP `incendie-erp-extincteurs-revision-decennale` — deux actes, deux dates, deux preuves. Le modèle ne porte qu'un rythme par obligation.\n\nNATURE ÉCHÉANCE RÉCURRENTE et non état permanent comme l'annuelle : la révision est un ACTE daté (démontage en atelier), que la norme répète à intervalle maximal. `periodicite: \"autre\"` reste le rythme du TEXTE (`R. 4227-29` n'en chiffre aucun) ; le décennal est `rythmeRetenu`, motif « norme ». `texteVague` = « maintenus en bon état de fonctionnement », mot pour mot de `R. 4227-29` : il s'affiche en complément de la norme.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`, la même partition que `incendie-travail-moyens-lutte`. Chez un ERP, la décennale de MS 38 § 4 est écrite par le texte et l'emporte ; elle est servie à tout ERP, 5ᵉ catégorie comprise (sur-application assumée). `extincteurs-partition.test.ts` tient « une décennale et une seule » par extincteur sur six profils.\n\nORIGINE DES INTERVALLES : § 10.1 les fait partir « de la date de fabrication ou de la dernière recharge effective ou de la révision en atelier » ; l'annexe A, « de la date d'installation […] mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps ». Le produit ne connaît que la mise en service déclarée de l'appareil : la première échéance part d'elle (ADR-036, règle 4) — elle ne vaut que si elle tombe à l'origine du suivi ou après ; sinon la ligne naît « à planifier ». Un dirigeant qui connaît la date de la dernière révision la saisit par un rapport, et le rythme repart de là.\n\nRÉALISATEURS : « le fabricant ou un centre de révision » (§ 10.1). `fabricant` existe ; le centre de révision est un prestataire qualifié, `personne_qualifiee`. Criticité 4, comme la jumelle ERP : un extincteur non révisé depuis onze ans reste un extincteur maintenu dans l'année.",
+  },
+  {
+    id: "incendie-travail-extincteurs-maintenance-approfondie",
+    domaine: "incendie",
+    libelle:
+      "Maintenance additionnelle approfondie de l'extincteur, à 5 et 15 ans (travail ; eau, mousse, poudre)",
+    description:
+      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29). Pour les extincteurs à eau, à mousse et à poudre, la norme NF S 61-919 (août 2001) prévoit, en plus de la maintenance annuelle et de la révision en atelier à dix ans, une maintenance additionnelle approfondie avec renouvellement de la charge si nécessaire, à 5 et à 15 ans (annexe A, tableau A.1). Les intervalles partent de la date d'installation. C'est une norme, citée comme norme. Elle ne vise pas les extincteurs au CO2, ni ceux à poudre à opercule scellé et pression permanente, dont l'unique maintenance approfondie tombe à 15 ans et que Rojer ne date pas. Les années 5 et 10, la maintenance approfondie et la révision incluent la maintenance annuelle.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-29",
+        article: "R. 4227-29",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532079/",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-28",
+        article: "R. 4227-28",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532081/",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    // « à 5 et 15 ans » : premier pas de cinq ans depuis la mise en service,
+    // puis dix ans — 5, 15 (puis 25, au-delà de la durée de vie prévue).
+    premierDelai: "quinquennale",
+    rythmeRetenu: {
+      motif: "norme",
+      periodicite: "decennale",
+      norme: "NF S 61-919",
+      reference: {
+        source: "NORME",
+        reference:
+          "NF S 61-919 (août 2001), annexe A, tableau A.1 (maintenance additionnelle approfondie : à 5 et 15 ans)",
+        article: "NF S 61-919 annexe A",
+      },
+      texteVague: "maintenus en bon état de fonctionnement",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 3,
+    transmet: [],
+    typologies: { travail: true },
+    categoriesEquipement: ["EXTINCTEUR"],
+    conditions: [
+      {
+        type: "equipement_propriete_enum_differente",
+        categorie: "EXTINCTEUR",
+        propriete: "typeExtincteur",
+        valeur: "co2",
+      },
+      {
+        type: "equipement_propriete_enum_differente",
+        categorie: "EXTINCTEUR",
+        propriete: "typeExtincteur",
+        valeur: "poudre_opercule_pression_permanente",
+      },
+    ],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C59 lot 3, item 3 ; ADR-039, normes admises par décision de la propriétaire du 07/10). NF S 61-919, annexe A (normative), tableau A.1, lu p. 12 du scan : colonne « Maintenance additionnelle approfondie et renouvellement de la charge, si nécessaire (annexe C) » — « à 5 et 15 ans » pour les types à mousse, eau et à base d'eau, et à poudre ; « 15 ans » pour la poudre à opercule scellé et pression permanente ; « — » pour le halon et le CO2. Sous le tableau : « Les intervalles partent de la date d'installation de l'extincteur d'incendie mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps. La maintenance n'est effectuée que les années 1, 2, 3, 4, 6, 7, 8, 9, 11 et ainsi de suite. L'année 5, la maintenance étendue, et l'année 10, la révision, incluent la maintenance et la maintenance supplémentaire. »\n\nCE QUE LE MODÈLE EXPRIME, ET COMMENT. « À 5 et 15 ans » n'est pas un rythme quinquennal (pas de MAA à 10 ans : la révision en atelier l'inclut) mais un PREMIER PAS de cinq ans suivi d'un pas de dix : `premierDelai: \"quinquennale\"` + `rythmeRetenu` décennal (motif « norme »). Le générateur lit le premier pas (`premierPas(premierDelai, periodiciteEffective(o), surcharge)`) sur la mise en service de l'appareil — la date d'installation que la norme prend pour origine —, puis la réalisation fait repartir le rythme de dix ans : 5, 15. La troisième occurrence (25 ans) tombe au-delà de la durée de vie prévue (§ 11, 20 ans) : l'appareil devrait être sorti du parc avant. Aucune extension de `rythmeRetenu` n'a été nécessaire : `premierDelai` est un champ commun, que le lot 2 laissait libre.\n\nLE TYPE. Question énumérée `typeExtincteur` (`lib/equipements/extincteur.ts`, sans migration : JSON `caracteristiques`), sur le modèle de `familleEsp`. Deux conditions `enum_differente` (CO2, poudre à opercule) : satisfaites au SILENCE — un extincteur dont le type n'est pas dit garde la maintenance approfondie, la règle la plus exigeante, du côté que le dirigeant voit.\n\nCE QUI N'EST PAS ENCODÉ. (1) La poudre à opercule scellé et pression permanente : une seule maintenance approfondie, à 15 ans. Aucune `Periodicite` ne vaut quinze ans, et en ajouter une toucherait l'énumération Prisma (`Verification.periodicite`) — hors mandat (pas de migration). Nommé dans la description. (2) La durée de vie (§ 11, « ne devrait pas dépasser 20 ans », sauf CO2) : CONDITIONNEL, ce n'est pas une échéance — l'aide du champ « Type d'extincteur » la dit, et renvoie à la date de péremption de la fiche (affichée « Périmé depuis », jamais réclamée). (3) La coïncidence des années 5 et 10 avec la maintenance annuelle, que la norme fait inclure : deux lignes au calendrier pour une visite ; un seul rapport peut être déposé sur les deux.\n\nPAS DE PARTITION AVEC L'ERP : aucun texte ERP n'écrit de maintenance approfondie (MS 38 § 4 ne connaît que l'annuelle et la décennale). Un ERP employeur la reçoit par sa typologie de travail ; un ERP sans salarié ne la reçoit pas — la ligne se fonde sur `R. 4227-29`, qui ne vise que l'employeur. RÉALISATEURS : la norme confie la maintenance à « la personne compétente » ; `personne_qualifiee` pour le prestataire. Criticité 3 : moins que la révision (4) et l'annuelle (5).",
+  },
+  {
+    id: "incendie-travail-ria-entretien-verification",
+    domaine: "incendie",
+    libelle:
+      "Entretien et vérification du robinet d'incendie armé, au moins une fois par an (travail, hors ERP)",
+    description:
+      "Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée (R. 4224-17). Le texte ne fixe pas cette périodicité : Rojer retient au moins une fois par an pour le robinet d'incendie armé. En ERP, la vérification annuelle des RIA est écrite par le règlement de sécurité (MS 73) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée)",
+        article: "R. 4224-17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197",
+        note: "« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (LEGIARTI000018532197, en vigueur depuis le 2008-05-01). Le texte ne nomme aucun équipement : y ranger cet équipement est une LECTURE (`relecture-jc-2026-10/reponses.md` Q1), celle du préventeur.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "defaut_annuel",
+      periodicite: "annuelle",
+      texteVague: "périodicité appropriée",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    // Partition avec la ligne ERP, dont le rythme est écrit (ADR-039).
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["RIA"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C59 lot 3, item 6 b ; relecture du préventeur, ADR-039). Le préventeur, sur l'identification des RIA en lieu de travail : « entretien et vérification annuelle ». Avant ce lot, un employeur non-ERP qui déclarait un RIA ne recevait que l'état permanent d'identification (`signalisation-incendie-moyens-lutte`, arrêté du 4 novembre 1993, art. 10) : aucune échéance. Aucun article de la section R. 4227-28 à R. 4227-41 ne nomme le RIA ; `R. 4224-17` vise « les installations et dispositifs techniques et de sécurité des lieux de travail » sans en nommer aucun — un RIA en est un par LECTURE.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`. En ERP, `incendie-erp-ria-annuelle` (MS 73 § 2, « au moins une fois par an ») porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ catégorie comprise, par sur-application assumée ; un rythme écrit l'emporte toujours. Un RIA reçoit donc une annuelle et une seule, quel que soit le régime.\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17` ; `periodicite: \"autre\"` reste le rythme du texte, `rythmeRetenu` porte l'annuelle PAR DÉFAUT (ADR-039 (b)), affichée comme défaut. Un rythme plus serré (contrat, assureur) se saisit en prescription et l'emporte dès qu'il est au moins aussi strict.\n\nNATURE ÉCHÉANCE RÉCURRENTE : « entretenus et vérifiés » sont des actes qui reviennent, pas un état. La ligne naît « à planifier » (ADR-036), sans retard rétroactif.\n\nRÉALISATEURS : le texte n'en nomme aucun ; le préventeur dit « entretien et vérification ». `personne_competente` et `personne_qualifiee`, comme l'annuelle du même acte ailleurs. Criticité 4, celle de la ligne ERP.",
+  },
+  {
+    id: "incendie-travail-desenfumage-entretien-verification",
+    domaine: "incendie",
+    libelle:
+      "Entretien et vérification des installations de désenfumage, au moins une fois par an (travail, hors ERP)",
+    description:
+      "Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée (R. 4224-17). Le texte ne fixe pas cette périodicité : Rojer retient au moins une fois par an pour les installations de désenfumage. En ERP, la vérification annuelle du désenfumage est écrite par le règlement de sécurité (DF 10) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée)",
+        article: "R. 4224-17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197",
+        note: "« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (LEGIARTI000018532197, en vigueur depuis le 2008-05-01). Le texte ne nomme aucun équipement : y ranger cet équipement est une LECTURE (`relecture-jc-2026-10/reponses.md` Q1), celle du préventeur.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "defaut_annuel",
+      periodicite: "annuelle",
+      texteVague: "périodicité appropriée",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    // Partition avec la ligne ERP, dont le rythme est écrit (ADR-039).
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["DESENFUMAGE"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C59 lot 3, item 6 c ; relecture du préventeur, ADR-039). Le préventeur, p. 10 du référentiel annoté, en marge de la vérification annuelle du désenfumage en ERP : « idem code du travail : préco ». Avant ce lot, un employeur non-ERP qui déclarait un désenfumage ne recevait RIEN (`hors-referentiel.test.ts` : `aucune_obligation_applicable`). `R. 4224-17` vise « les installations et dispositifs techniques et de sécurité des lieux de travail » sans en nommer aucun — le désenfumage en est un par LECTURE. Les articles du Code du travail qui imposent le désenfumage à la construction (R. 4216-13 et suivants, maître d'ouvrage) n'ont pas été rouverts ici : ils ne portent pas l'entretien.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`. En ERP, `incendie-erp-desenfumage-annuelle` (DF 10 § 2, « La périodicité des vérifications est de un an ») porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ catégorie comprise, par sur-application assumée. Le désenfumage reçoit donc une annuelle et une seule, quel que soit le régime. La triennale de DF 10 § 3 (lot 4) ne concerne que l'ERP.\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17` ; `periodicite: \"autre\"` reste le rythme du texte, `rythmeRetenu` porte l'annuelle PAR DÉFAUT (ADR-039 (b)), affichée comme défaut. Un rythme plus serré (contrat, assureur) se saisit en prescription et l'emporte dès qu'il est au moins aussi strict.\n\nNATURE ÉCHÉANCE RÉCURRENTE : « entretenus et vérifiés » sont des actes qui reviennent, pas un état. La ligne naît « à planifier » (ADR-036), sans retard rétroactif.\n\nRÉALISATEURS : le texte n'en nomme aucun ; le préventeur dit « entretien et vérification ». `personne_competente` et `personne_qualifiee`, comme l'annuelle du même acte ailleurs. Criticité 4, celle de la ligne ERP.",
   },
   {
     // 2026-09-27, lot 2 (7 bis G2, M1). L'objet de R. 4227-29 — être DOTÉ
@@ -843,6 +1061,9 @@ export const obligationsIncendie: Obligation[] = [
           "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317755/",
         versionConstatee: "1980-08-15",
       },
+      // C59 lot 3 : la norme en seconde référence — le rythme reste celui de
+      // MS 38 § 4, écrit par le texte ; la norme dit comment la maintenance se fait.
+      REFERENCE_NF_S_61_919_ANNUELLE,
     ],
     periodicite: "annuelle",
     nature: "echeance_recurrente",
@@ -902,6 +1123,9 @@ export const obligationsIncendie: Obligation[] = [
         note: "« Un extincteur doit faire l'objet d'une vérification annuelle et d'une révision tous les dix ans par une personne ou un organisme compétent. Il doit être marqué d'une étiquette clairement identifiable apposée par la personne ou l'organisme ayant réalisé CETTE DERNIÈRE. » Article rouvert à la source le 2026-09-01 avant l'encodage, version en vigueur du 08/10/2008 : le § 4 porte DEUX rythmes dans une seule phrase, et l'étiquette se rattache grammaticalement à la révision — « cette dernière » —, pas à la vérification annuelle.",
         versionConstatee: "2008-10-08",
       },
+      // C59 lot 3 : la norme en seconde référence — le rythme reste celui de
+      // MS 38 § 4, écrit par le texte ; la norme dit comment la révision se fait.
+      REFERENCE_NF_S_61_919_REVISION,
     ],
     periodicite: "decennale",
     nature: "echeance_recurrente",

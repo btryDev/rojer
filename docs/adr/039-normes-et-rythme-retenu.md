@@ -188,6 +188,16 @@ Elle ne qualifie pas : ni « opposable », ni « valeur légale »
 
 - Le lot 3 pose les rythmes retenus (extincteurs hors ERP : NF S 61-919 ; EPI,
   formation annuels selon les corrections du préventeur), et déplace l'empreinte.
+  [2026-10-07, lot 3 livré (`lot/relecture-jc-3`, référentiel `2026-10-07.4`
+  sur la branche, 174 + 5 − 0 = 179 ; servi sous `2026-10-07.5` avec les quatre
+  autres lots de la relecture, 171 obligations) : neuf obligations portent un rythme retenu — trois de la
+  NF S 61-919, six par défaut annuel. Partout où l'ERP a un rythme écrit pour
+  le même acte, la ligne de lieu de travail porte `erp: false` (partition de
+  typologie, pas `ExclusionMutuelle`). « À 5 et 15 ans » s'exprime sans
+  étendre le modèle : `premierDelai` + rythme retenu. Les gardes qui lisaient
+  `o.periodicite` là où le rythme effectif décide (anti-doublon, frontière
+  calendrier / écran « en place ») lisent `periodiciteEffective`. Détail :
+  journal, C59.]
 - `nature.test.ts` : « un rythme chiffré impose `echeance_recurrente` » reste
   lu sur `periodicite`, le rythme du texte ; un état permanent à rythme retenu
   garde sa nature.

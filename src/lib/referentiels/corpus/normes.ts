@@ -42,8 +42,28 @@ export const NORMES: Corpus = {
         "5.1.1 L'utilisateur doit s'assurer que les extincteurs portatifs ainsi que les cartouches de gaz sont vérifiés et entretenus, s'il y a lieu, comme indiqué à l'annexe B. La personne compétente doit effectuer tous les ans, avec une tolérance de plus ou moins deux mois, la maintenance, conformément au présent document. Ce laps de temps peut être raccourci notamment en raisons d'exigences dues à l'environnement ou à des risques.",
       statut: "norme",
       motif:
-        "Norme française homologuée par décision du directeur général d'AFNOR le 20 juillet 2001, pour prendre effet le 20 août 2001 (page de garde ; remplace XP S 61-919 de mai 1998). Lue le 2026-10-07 sur le scan remis par le préventeur, pages 1 à 12, et recoupée le même jour sur les mêmes pages par la session qui l'encode. Elle écrit un rythme ANNUEL de maintenance des extincteurs portatifs, que `R. 4227-29` (« maintenus en bon état de fonctionnement ») ne chiffre pas. Aucun texte en vigueur trouvé ne la rend obligatoire ni n'y renvoie (recherche plein texte API Légifrance sandbox, `relecture-jc-2026-10/reponses.md` Q7) : c'est une norme, citée comme norme. Le § 4, voisin, RECOMMANDE à l'utilisateur des inspections « au minimum trimestrielle[s] et de préférence mensuelle[s] » (« Il est recommandé », « Il convient ») : relevé, non retenu — le § 5.1.1 dit « doit ». Aucune obligation ne la retient encore : c'est le lot 3.",
-      obligations: [],
+        "Norme française homologuée par décision du directeur général d'AFNOR le 20 juillet 2001, pour prendre effet le 20 août 2001 (page de garde ; remplace XP S 61-919 de mai 1998). Lue le 2026-10-07 sur le scan remis par le préventeur, pages 1 à 12, et recoupée le même jour sur les mêmes pages par la session qui l'encode. Elle écrit un rythme ANNUEL de maintenance des extincteurs portatifs, que `R. 4227-29` (« maintenus en bon état de fonctionnement ») ne chiffre pas. Aucun texte en vigueur trouvé ne la rend obligatoire ni n'y renvoie (recherche plein texte API Légifrance sandbox, `relecture-jc-2026-10/reponses.md` Q7) : c'est une norme, citée comme norme. Le § 4, voisin, RECOMMANDE à l'utilisateur des inspections « au minimum trimestrielle[s] et de préférence mensuelle[s] » (« Il est recommandé », « Il convient ») : relevé, non retenu — le § 5.1.1 dit « doit ». ~~Aucune obligation ne la retient encore : c'est le lot 3.~~ [2026-10-07, C59 lot 3 : `incendie-travail-moyens-lutte` en retient le rythme annuel (lieu de travail hors ERP) ; `incendie-erp-extincteurs-annuelle` la cite en seconde référence, son rythme restant celui de MS 38 § 4.]",
+      obligations: ["incendie-travail-moyens-lutte", "incendie-erp-extincteurs-annuelle"],
+    },
+    {
+      ref: "NF S 61-919 § 10.1",
+      intitule:
+        "NF S 61-919 (août 2001) — § 10.1, intervalles de révision en atelier des extincteurs d'incendie portatifs",
+      versionEnVigueur: "2001-08-20",
+      modifiePar: null,
+      luLe: "2026-10-07",
+      lecture: "premiere_main",
+      prescrit:
+        "Tout extincteur portatif est soumis à une révision en atelier, par le fabricant ou un centre de révision, à intervalles ne dépassant pas ceux de l'annexe A (dix ans, tableau A.1), comptés de la date de fabrication, de la dernière recharge effective ou de la dernière révision en atelier.",
+      citationCle:
+        "Tous les extincteurs portatifs doivent être soumis à une révision en atelier effectuée par le fabricant ou un centre de révision à intervalles ne dépassant pas ceux donnés à l'annexe A. Il est facile de le faire en remettant en état chaque année un pourcentage approprié de chaque type d'extincteur portatif. Il faut se conformer aux règlements nationaux en matière d'environnement en ce qui concerne la destruction des agents extincteurs. L'annexe A donne les intervalles spécifiés, partant dans chaque cas de la date de fabrication ou de la dernière recharge effective ou de la révision en atelier de l'extincteur portatif concerné.",
+      statut: "norme",
+      motif:
+        "p. 10 du scan, lue le 2026-10-07 (C59 lot 3). Le premier alinéa du § 10.1 (« Le calendrier de maintenance spécifié à l'annexe B est conçu pour garantir… ») est descriptif, non relevé. Les dix ans se lisent au tableau A.1 (entrée « NF S 61-919 annexe A »), colonne « Révision en atelier et renouvellement de la charge » : 10 ans pour tous les types sauf le halon (« Voir note 3 »). « Doivent » : un rythme, pas une recommandation. `incendie-travail-extincteurs-revision-atelier-decennale` en retient le rythme décennal en lieu de travail hors ERP ; `incendie-erp-extincteurs-revision-decennale` la cite en seconde référence, son rythme restant celui de MS 38 § 4.",
+      obligations: [
+        "incendie-travail-extincteurs-revision-atelier-decennale",
+        "incendie-erp-extincteurs-revision-decennale",
+      ],
     },
     {
       ref: "NF S 61-919 annexe A",
@@ -59,8 +79,8 @@ export const NORMES: Corpus = {
         "Les procédures de maintenance doivent être réalisées aux intervalles donnés dans le tableau A.1. [Tableau A.1 — Intervalles maximaux de maintenance et durée de vie utile prévue :] à mousse, eau et à base d'eau : 1 an / à 5 et 15 ans / 10 ans / 20 ans ; à poudre : 1 an / à 5 et 15 ans / 10 ans / 20 ans ; à poudre — avec opercule scellé, à pression permanente : 1 an / 15 ans / 10 ans / 20 ans ; au halon : 1 an / — / Voir note 3 / Voir note 3 ; au CO2 : 1 an / — / 10 ans / Non fixée. [Sous le tableau :] Les intervalles partent de la date d'installation de l'extincteur d'incendie mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps.",
       statut: "norme",
       motif:
-        "Annexe NORMATIVE (avant-propos : « Les annexes A, B, C, D et E sont normatives »), p. 12 du scan, lue le 2026-10-07. Colonnes du tableau dans l'ordre : maintenance (annexe B) / maintenance additionnelle approfondie et renouvellement de la charge (annexe C) / révision en atelier et renouvellement de la charge (annexe D) / durée de vie prévue. « [Tableau A.1 …] » et « [Sous le tableau :] » sont des repères de ce relevé, pas du texte. Le rythme décennal de révision recoupe `MS 38` § 4 (« révision tous les dix ans ») pour les ERP, qui le portent déjà par le droit. Aucune obligation ne la retient encore.",
-      obligations: [],
+        "Annexe NORMATIVE (avant-propos : « Les annexes A, B, C, D et E sont normatives »), p. 12 du scan, lue le 2026-10-07. Colonnes du tableau dans l'ordre : maintenance (annexe B) / maintenance additionnelle approfondie et renouvellement de la charge (annexe C) / révision en atelier et renouvellement de la charge (annexe D) / durée de vie prévue. « [Tableau A.1 …] » et « [Sous le tableau :] » sont des repères de ce relevé, pas du texte. Le rythme décennal de révision recoupe `MS 38` § 4 (« révision tous les dix ans ») pour les ERP, qui le portent déjà par le droit. ~~Aucune obligation ne la retient encore.~~ [2026-10-07, C59 lot 3 : `incendie-travail-extincteurs-maintenance-approfondie` en retient la colonne « maintenance additionnelle approfondie » — premier pas de cinq ans, puis dix — pour les types eau, mousse et poudre ; la poudre à opercule (15 ans seulement) n'est pas datée, aucune périodicité ne valant quinze ans. La décennale de révision est retenue par l'entrée § 10.1.]",
+      obligations: ["incendie-travail-extincteurs-maintenance-approfondie"],
     },
     {
       ref: "NF S 61-919 § 11",

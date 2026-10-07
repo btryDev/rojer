@@ -24,6 +24,10 @@ import {
   verdictSuiviEnService,
   type FamilleEsp,
 } from "@/lib/equipements/esp";
+import {
+  LABEL_TYPE_EXTINCTEUR,
+  TYPES_EXTINCTEUR,
+} from "@/lib/equipements/extincteur";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import type { EquipementActionState } from "@/lib/equipements/actions";
 
@@ -63,6 +67,7 @@ type Valeurs = {
   datePeremption?: Date | null;
   nombre?: number | null;
   familleEsp?: string | null;
+  typeExtincteur?: string | null;
   pressionMaxAdmissibleBar?: number | null;
   volumeLitres?: number | null;
   estLocalPollutionSpecifique?: boolean;
@@ -262,11 +267,12 @@ export function EquipementForm({
   const estAeration = CATEGORIES_AERATION.includes(categorie);
   const estVmc = categorie === "VMC";
   const estEsp = categorie === "EQUIPEMENT_SOUS_PRESSION";
+  const estExtincteur = categorie === "EXTINCTEUR";
 
   // Questions à trois états applicables à la catégorie sélectionnée.
   const questions = questionsTriEtatPour(categorie, estERP);
   const afficherCaracteristiques =
-    estAeration || estEsp || questions.length > 0;
+    estAeration || estEsp || estExtincteur || questions.length > 0;
 
   return (
     <form action={formAction} className="flex flex-col gap-8">
@@ -466,6 +472,52 @@ export function EquipementForm({
                 aide="Art. PS 32 du règlement ERP — à renseigner uniquement si la VMC ventile un parc de stationnement couvert d'un ERP. Au-dessus de 250 véhicules, contrôle annuel ; sinon biennal."
                 erreur={err("nbVehiculesParkingCouvert")}
               />
+            )}
+
+            {estExtincteur && (
+              /* Le type décide de la maintenance additionnelle approfondie
+                 (NF S 61-919, tableau A.1). Sans réponse, Rojer la garde : la
+                 règle la plus exigeante survit au silence. */
+              <div className="flex flex-col gap-2 sm:w-[28rem]">
+                <label className="label-board" htmlFor="typeExtincteur">
+                  Type d&apos;extincteur
+                </label>
+                <select
+                  id="typeExtincteur"
+                  name="typeExtincteur"
+                  defaultValue={valeursInitiales?.typeExtincteur ?? ""}
+                  aria-describedby="typeExtincteur-aide"
+                  className="champ-board"
+                >
+                  <option value="">Je ne sais pas encore</option>
+                  {TYPES_EXTINCTEUR.map((t) => (
+                    <option key={t} value={t}>
+                      {LABEL_TYPE_EXTINCTEUR[t]}
+                    </option>
+                  ))}
+                </select>
+                <p
+                  id="typeExtincteur-aide"
+                  className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]"
+                >
+                  Indiqué sur l&apos;étiquette de l&apos;appareil. La norme NF S
+                  61-919 prévoit, en plus de la maintenance annuelle et de la
+                  révision à dix ans, une maintenance additionnelle approfondie
+                  à 5 et 15 ans pour les extincteurs à eau, à mousse et à
+                  poudre — à 15 ans seulement pour la poudre à opercule scellé,
+                  aucune pour le CO₂. Elle prévoit aussi une durée de vie de 20
+                  ans au plus, non fixée pour le CO₂ : vous pouvez la reporter
+                  en date de péremption ci-dessus.
+                </p>
+                {err("typeExtincteur") && (
+                  <p
+                    id="typeExtincteur-erreur"
+                    className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]"
+                  >
+                    {err("typeExtincteur")}
+                  </p>
+                )}
+              </div>
             )}
 
             {estEsp && (

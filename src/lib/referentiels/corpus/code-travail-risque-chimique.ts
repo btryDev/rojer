@@ -198,6 +198,29 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
         "CHAMP RESTREINT AUX CMR, confirmé par le chemin relevé le 2026-09-01 : Livre IV, Titre Ier, Chapitre II, SECTION 2 « Dispositions particulières aux agents chimiques dangereux cancérogènes, mutagènes et toxiques pour la reproduction », sous-section 6. R. 4412-38, lui, relève de la Section 1, commune à tous les agents chimiques dangereux. La référence porte déjà la mention « agents CMR uniquement » ; elle est exacte. Rien à corriger, l'entrée existe pour que le détour ne se refasse pas.",
     },
     {
+      ref: "R. 4412-88",
+      intitule:
+        "Information et formation à la sécurité des travailleurs exposés aux agents CMR : adaptées, répétées régulièrement",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018530733",
+      versionEnVigueur: "2008-05-01",
+      // Relu sur l'API Légifrance (PISTE, bac à sable) le 2026-10-07 (C59
+      // lot 3) : LEGIARTI000018530733, VIGUEUR depuis le 2008-05-01, version
+      // de création (décret n° 2008-244), aucune version future. Il porte le
+      // rythme vague de la formation, « Elles sont répétées régulièrement »,
+      // que ni R. 4412-38 ni R. 4412-87 n'écrivent. Champ : agents CMR, comme
+      // R. 4412-87 — la ligne qui le cite sur-applique à tout stockage, ses
+      // notes le disent.
+      modifiePar: null,
+      luLe: "2026-10-07",
+      lecture: "premiere_main",
+      prescrit:
+        "L'information et la formation à la sécurité des travailleurs exposés aux agents CMR (R. 4412-87) s'adaptent à l'évolution des risques et à l'apparition de risques nouveaux, et sont répétées régulièrement. Aucun chiffre.",
+      citationCle:
+        "L'information et la formation à la sécurité sont adaptées à l'évolution des risques et à l'apparition de risques nouveaux. Elles sont répétées régulièrement. Elles favorisent une application des règles de prévention adaptée à l'évolution des connaissances et des techniques.",
+      statut: "retenu",
+      obligations: ["stockage-dangereux-formation-personnel"],
+    },
+    {
       ref: "R. 4222-20",
       versionEnVigueur: "2008-05-01",
       luLe: "2026-08-27",

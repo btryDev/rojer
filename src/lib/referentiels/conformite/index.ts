@@ -281,6 +281,27 @@ export const obligationsConformite: Obligation[] = [
 // et la triennale SSI de MS 73 § 2 reçoit sa condition A/B en `non_infirmee`.
 // 165 + 1 − 0 = 166. Au silence, rien ne sort ; la ligne neuve n'apparaît
 // qu'au « oui » sur le désenfumage mécanique.
+// Lot 2 (ADR-039) : source NORME, `rythmeRetenu`, mention ; aucune obligation
+// touchée. Lot 3 (C59, ADR-039) : les rythmes retenus entrent. Extincteurs hors ERP : maintenance annuelle de la norme
+// NF S 61-919 (`incendie-travail-moyens-lutte`, désormais `erp: false` — la
+// partition avec l'annuelle de MS 38 § 4). Révision en atelier à dix ans
+// (NF S 61-919 § 10.1), même partition : entre
+// `incendie-travail-extincteurs-revision-atelier-decennale`.
+// EPI : `epi-maintien-etat-conformite` (R. 4322-1, défaut annuel, catégorie
+// `EPI` seule — l'arrêté du 19 mars 1993 garde ses trois catégories).
+// Formation : défaut annuel sur `formation-securite-etablissement-organisation`
+// (L. 4141-2, « répétée périodiquement ») et `stockage-dangereux-formation-
+// personnel` (R. 4412-88, « Elles sont répétées régulièrement »).
+// Défaut annuel de R. 4224-17 en lieu de travail hors ERP, partition avec
+// les annuelles ERP écrites (MS 73, DF 10) : entrent
+// `incendie-travail-ria-entretien-verification` et
+// `incendie-travail-desenfumage-entretien-verification` ; l'entretien de la
+// signalisation (arrêté du 4 novembre 1993, art. 15, « régulièrement »)
+// reçoit le défaut. L'alarme reste à la semestrielle écrite du même article.
+// Maintenance additionnelle approfondie à 5 et 15 ans (NF S 61-919, annexe
+// A), selon la question neuve `typeExtincteur` : entre
+// `incendie-travail-extincteurs-maintenance-approfondie`.
+// Compte : 166 + 5 − 0 = 171.
 export const REFERENTIEL_VERSION = "2026-10-07.5";
 
 /**

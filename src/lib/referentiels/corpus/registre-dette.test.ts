@@ -136,8 +136,12 @@ describe("registre de dette — les réserves de lecture", () => {
     // 87 → 83 le même jour : `C. env. L. 512-7`, `L. 512-8`, l'arrêté du
     // 1er juin 2015 art. 22 et `R. 4412-11` cessent d'être retenus (stockage
     // « sauf 3 derniers points ») ; leurs réserves passent dans `historique`.
-    // Intégration des lots 1 et 5 (2026-10-07) : 90 + 2 (lot 1) − 7 (lot 5) = 85.
-    expect(n).toBe(85);
+    // 90 → 91 le 2026-10-07 (compté depuis 90) (lot 3, C59) : `R. 4322-1` passe de `sans_objet` à
+    // `retenu` pour les seuls EPI ; les équipements de travail et moyens de
+    // protection collective qu'il vise aussi restent dehors.
+    // Intégration des cinq lots (2026-10-07) : 90 + 2 (lot 1) − 7 (lot 5)
+    // + 1 (lot 3) = 86.
+    expect(n).toBe(86);
     expect(reservesDeLecture().length).toBe(n);
   });
 });
