@@ -18,7 +18,11 @@
  * dans la table ci-dessous. La table recopie mot pour mot la citation du
  * corpus, et un test l'y retrouve.
  *
- * Module feuille : types seulement, et la table des libellés.
+ * ~~Module feuille : types seulement, et la table des libellés.~~
+ * [2026-10-07, C62 : inexact — le module importe aussi deux valeurs,
+ * `LABEL_PERIODICITE` (`calendrier/labels`) et `periodiciteEffective`
+ * (`rythme-retenu`), toutes deux sans dépendance au corpus ni à la base. Il
+ * reste importable d'un composant ou d'une requête sans tirer le référentiel.]
  */
 
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
