@@ -873,8 +873,11 @@ type ObligationCommune = {
    * simplement pas de place pour les deux valeurs.
    * [2026-10-07 : `esp-inspection-periodique` est retirée (périmètre,
    * relecture préventeur du 30/09, décision de la propriétaire du 07/10).
-   * AUCUNE obligation vivante ne porte plus ce champ ; le générateur le lit
-   * toujours, et ses tests l'éprouvent sur des lignes synthétiques.]
+   * ~~AUCUNE obligation vivante ne porte plus ce champ~~ ; le générateur le lit
+   * toujours, et ses tests l'éprouvent sur des lignes synthétiques.
+   * [Intégration du 2026-10-07 : le lot 3 (ADR-039) le réemploie —
+   * `incendie-travail-extincteurs-maintenance-approfondie`, premier pas à cinq ans, puis
+   * le rythme retenu décennal (NF S 61-919, annexe A).]]
    *
    * **Ce n'est pas une exception ESP.** `PE 4` porte aussi un premier délai
    * distinct de son rythme, et le règlement des chaufferies un troisième.

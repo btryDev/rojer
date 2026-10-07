@@ -4767,6 +4767,9 @@ champ, toujours lu par le verdict de suivi en service). La requalification n'est
 bornée aux compresseurs : décision ouverte. Plus aucune obligation ne porte les formes
 `enum_egale` / `enum_differente` ni `premierDelai` ; leurs tests passent sur des
 lignes synthétiques (éprouvé : générale sans sa différence → « 2 failed | 5 passed »).
+[Intégration du 2026-10-07 : le lot 3 (C59) réemploie `enum_differente` et
+`premierDelai` sur `incendie-travail-extincteurs-maintenance-approfondie` ; les tests
+synthétiques du lot 5 passent inchangés.]
 171 → 165.
 
 **Stockage de matières dangereuses — « à exclure sauf 3 derniers points » (p. 21).**

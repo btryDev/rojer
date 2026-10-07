@@ -1,4 +1,30 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+/**
+ * Une obligation FABRIQUÉE pour le second verbe (« à déclarer faite »).
+ * Depuis l'intégration de la relecture du préventeur (2026-10-07), aucune
+ * obligation livrée n'est plus une échéance récurrente sans rythme écrit ni
+ * retenu : `stockage-dangereux-verification-etancheite` est retirée (lot 5),
+ * et `stockage-dangereux-formation-personnel`, qui la remplaçait ici, reçoit
+ * un rythme retenu annuel (lot 3, ADR-039). Le cas se fabrique donc, comme
+ * dans `etats-permanents/regle.test.ts` et `rythme-retenu.test.ts` : la ligne
+ * livrée, dépouillée de son rythme retenu, sous un id qui n'existe pas.
+ */
+const ID_FAIT_FABRIQUE = "fabriquee-echeance-recurrente-sans-rythme";
+vi.mock("@/lib/referentiels/conformite", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@/lib/referentiels/conformite")>();
+  return {
+    ...mod,
+    obligationParId: (id: string) => {
+      if (id !== "fabriquee-echeance-recurrente-sans-rythme") return mod.obligationParId(id);
+      const base = mod.obligationParId("stockage-dangereux-formation-personnel");
+      if (base === undefined) return undefined;
+      const { rythmeRetenu: _retire, ...sansRythme } = base;
+      void _retire;
+      return { ...sansRythme, id };
+    },
+  };
+});
 import {
   chapeauAFaire,
   libelleDelai,
@@ -183,8 +209,10 @@ describe("lignesAFaire", () => {
     expect(detail("froid-controle-etancheite-apres-modification")).toBe("Sans rendez-vous");
     // Échéance récurrente sans rythme écrit : sur l'écran, sous « fait le ».
     // ~~`stockage-dangereux-verification-etancheite`~~ — retirée le 2026-10-07
-    // (relecture préventeur du 30/09) ; même nature et même rythme :
-    expect(detail("stockage-dangereux-formation-personnel")).toBe(
+    // (relecture préventeur du 30/09) ; ~~même nature et même rythme :
+    // `stockage-dangereux-formation-personnel`~~ — rythme retenu annuel depuis
+    // le lot 3 (ADR-039). Cas fabriqué, voir `ID_FAIT_FABRIQUE`.
+    expect(detail(ID_FAIT_FABRIQUE)).toBe(
       "Sans rendez-vous — à déclarer faite",
     );
   });
