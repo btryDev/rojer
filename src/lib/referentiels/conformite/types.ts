@@ -291,6 +291,15 @@ export const SOURCES_LEGALES = [
   // qu'on soit tenté de ranger ces obligations sous CODE_TRAVAIL, qui ne les
   // porte pas (ADR-022).
   "CSS",
+  // Une norme homologuée — NF, EN —, depuis l'ADR-039 (2026-10-07). Elle peut
+  // fonder une obligation ou un rythme même si aucun texte ne la rend
+  // obligatoire, et elle se cite COMME NORME : intitulé, édition, paragraphe
+  // ou annexe. Jamais comme un article de loi — c'est pourquoi elle a sa
+  // source et son libellé, et ne se range sous aucune des sources de droit
+  // ci-dessus. Toute référence `NORME` porte une clé `article` présente au
+  // corpus `corpus/normes.ts` (test). APSAD, CACES, recommandations CNAM ne
+  // sont pas des normes au sens de cette source et restent dehors.
+  "NORME",
 ] as const;
 
 export type SourceLegale = (typeof SOURCES_LEGALES)[number];
@@ -313,6 +322,7 @@ export const LIBELLE_SOURCE: Record<SourceLegale, string> = {
   REGLEMENT_UE: "Règlement européen",
   CSP: "Code de la santé publique",
   CSS: "Code de la sécurité sociale",
+  NORME: "Norme",
 };
 
 export type ReferenceLegale = {
@@ -763,6 +773,54 @@ export type ExclusionMutuelle = {
   motif: string;
 };
 
+/**
+ * Le rythme que Rojer RETIENT là où le texte impose de refaire l'acte sans
+ * chiffrer le rythme (ADR-039).
+ *
+ * `periodicite` reste le rythme du TEXTE — `autre` pour « périodicité
+ * appropriée », « répétée périodiquement », « maintenus en bon état ». Ce champ
+ * se pose à côté, et seulement là : un rythme écrit l'emporte toujours, d'abord
+ * celui du texte, puis celui d'une norme. Deux motifs, et deux seulement :
+ *
+ *  - `norme` : une norme homologuée lue (corpus `normes`) écrit le rythme. La
+ *    référence est de source `NORME` ; `norme` est l'intitulé court qui
+ *    s'affiche (« NF S 61-919 ») et par lequel `reference.reference` commence.
+ *  - `defaut_annuel` : rien n'écrit le rythme. Rojer retient AU MOINS UNE FOIS
+ *    PAR AN, et l'affiche comme un défaut. `texteVague` est le mot du texte,
+ *    recopié tel quel d'une citation du corpus — c'est lui qui s'affiche
+ *    (« Le texte dit « périodicité appropriée » »), et un test vérifie qu'il y
+ *    est.
+ *
+ * Les règles que le type ne peut pas porter sont tenues par
+ * `controlerRythmeRetenu` (`rythme-retenu.ts`) et ses tests : `periodicite`
+ * doit être `autre`, la nature ni `evenementielle` ni `ponctuelle`, la norme
+ * lue autrement qu'indirectement, le texte vague présent dans une citation.
+ *
+ * **Entre dans `empreinteReferentiel()`** : il décide de l'existence et de la
+ * date d'une ligne.
+ */
+export type RythmeRetenu =
+  | {
+      motif: "norme";
+      /** Le rythme que la norme écrit. Jamais `autre` ni `mise_en_service_uniquement`. */
+      periodicite: Periodicite;
+      /** L'intitulé court, tel qu'il s'affiche : « NF S 61-919 ». */
+      norme: string;
+      /** La citation de la norme : source `NORME`, clé au corpus `normes`. */
+      reference: ReferenceLegale;
+      /** Le mot vague du texte, s'il y en a un — affiché en complément. */
+      texteVague?: string;
+    }
+  | {
+      motif: "defaut_annuel";
+      /** Le défaut est un plancher, « au moins une fois par an » : rien d'autre. */
+      periodicite: "annuelle";
+      /** Le mot du texte, recopié d'une citation lue : « périodicité appropriée ». */
+      texteVague: string;
+    };
+
+export type MotifRythmeRetenu = RythmeRetenu["motif"];
+
 /** Champs communs à toutes les obligations, quel que soit leur porteur. */
 type ObligationCommune = {
   /** Identifiant stable, versionné avec le code. Jamais réutilisé. */
@@ -784,7 +842,15 @@ type ObligationCommune = {
    * catégorie d'équipement et la même périodicité, sont un doublon.
    */
   referencesLegales: [ReferenceLegale, ...ReferenceLegale[]];
+  /** Le rythme du TEXTE. Pour le rythme qui date une ligne, lire
+   *  `periodiciteEffective(o)` (`rythme-retenu.ts`), jamais ce champ seul. */
   periodicite: Periodicite;
+  /**
+   * Le rythme retenu là où le texte n'en chiffre pas (ADR-039). Absent presque
+   * partout : seul un `periodicite: "autre"` sur une obligation qui revient
+   * (récurrente, ou état à maintenir) peut le porter. Voir `RythmeRetenu`.
+   */
+  rythmeRetenu?: RythmeRetenu;
   /**
    * Le plafond du PREMIER cycle, quand le texte en fixe un distinct du rythme.
    *

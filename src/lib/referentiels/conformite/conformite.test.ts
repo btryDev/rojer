@@ -19,6 +19,7 @@ import {
 import { determineObligationsApplicables, matchTypologie } from "@/lib/matching";
 import type { EtablissementMatching } from "@/lib/matching";
 import { CORPUS } from "../corpus";
+import { referencesCitees } from "./rythme-retenu";
 import {
   SCEAU_CALENDRIER,
   VERSION_MOTEUR_CALENDRIER,
@@ -155,14 +156,40 @@ describe("référentiel conformité — invariants structurels", () => {
     // européens d'application directe — le contrôle d'étanchéité des fluides
     // frigorigènes ne tient ses seuils et ses périodicités que du règlement
     // (UE) 2024/573, le code de l'environnement renvoyant encore au texte que
-    // celui-ci abroge. Aucune autre origine n'est admise : pas de norme privée,
-    // pas de site commercial, pas de blog technique.
+    // celui-ci abroge. Aucune autre origine n'est admise : pas de site
+    // commercial, pas de blog technique.
+    //
+    // UNE NORME (ADR-039) n'a pas d'adresse d'article : elle se consulte chez
+    // l'AFNOR. Sa référence ne porte donc pas d'URL, ou celle de la notice de
+    // l'éditeur — jamais Légifrance, qui la ferait lire comme du droit. Et la
+    // réciproque : aucune référence de droit ne pointe l'AFNOR. La norme du
+    // rythme retenu passe par le même contrôle (`referencesCitees`).
+    const DROIT =
+      /^https:\/\/(www\.)?(legifrance\.gouv\.fr|inrs\.fr|eur-lex\.europa\.eu)\//;
+    const AFNOR = /^https:\/\/(www\.|norminfo\.|www\.boutique\.)?afnor\.org\//;
     for (const o of obligationsConformite) {
-      for (const ref of o.referencesLegales) {
-        if (ref.url) {
-          expect(ref.url).toMatch(
-            /^https:\/\/(www\.)?(legifrance\.gouv\.fr|inrs\.fr|eur-lex\.europa\.eu)\//,
-          );
+      for (const ref of referencesCitees(o)) {
+        if (!ref.url) continue;
+        expect(ref.url, `${o.id} → ${ref.reference}`).toMatch(
+          ref.source === "NORME" ? AFNOR : DROIT,
+        );
+      }
+    }
+  });
+
+  it("une norme se cite comme norme, et rien d'autre ne se cite comme norme", () => {
+    // ADR-039 : la source `NORME` existe pour qu'une norme ne se range sous
+    // aucune source de droit. Le contrôle est sur la clé : une référence de
+    // source `NORME` désigne un intitulé de norme (« NF … », « EN … »), et une
+    // clé de norme n'est jamais rangée sous une autre source.
+    const NOM_DE_NORME = /^(NF|EN|ISO)\s/;
+    for (const o of obligationsConformite) {
+      for (const ref of referencesCitees(o)) {
+        const ou = `${o.id} → ${ref.reference} (${ref.source})`;
+        if (ref.source === "NORME") {
+          expect(ref.article ?? "", ou).toMatch(NOM_DE_NORME);
+        } else {
+          expect(NOM_DE_NORME.test(ref.article ?? ""), ou).toBe(false);
         }
       }
     }

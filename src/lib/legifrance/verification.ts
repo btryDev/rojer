@@ -103,6 +103,9 @@ export function resoudreCible(a: ArticleDepouille, c: Pick<Corpus, "id" | "url">
   if (/^INRS\b/.test(a.ref) || /inrs\.fr/.test(url)) {
     return { par: "aucun", raison: "brochure INRS : hors Légifrance" };
   }
+  if (/^NF\s/.test(a.ref)) {
+    return { par: "aucun", raison: "norme homologuée : hors Légifrance (AFNOR, ADR-039)" };
+  }
   if (/^Règlement\s+UE\b/i.test(a.ref)) {
     return { par: "aucun", raison: "règlement européen : hors fonds de l'API Légifrance (EUR-Lex)" };
   }

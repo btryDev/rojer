@@ -70,10 +70,13 @@ describe("aucun document n'entre sans fondement vérifiable", () => {
     for (const { doc, f } of tousLesFondements()) {
       const ou = `${doc} → ${f.article} : ${f.url}`;
       const hote = new URL(f.url).hostname;
-      expect(
-        hote === "www.legifrance.gouv.fr" || hote === "www.inrs.fr",
-        ou,
-      ).toBe(true);
+      // Une norme (ADR-039) se consulte chez l'AFNOR, et seulement là ; une
+      // référence de droit n'y pointe jamais.
+      const admis =
+        f.source === "NORME"
+          ? ["www.afnor.org", "norminfo.afnor.org", "www.boutique.afnor.org"]
+          : ["www.legifrance.gouv.fr", "www.inrs.fr"];
+      expect(admis.includes(hote), ou).toBe(true);
       if (hote === "www.legifrance.gouv.fr") {
         // LEGIARTI pour un article de code, JORFTEXT pour un texte publié au
         // Journal officiel. Une URL de recherche ou de sommaire ne désigne rien
@@ -83,11 +86,21 @@ describe("aucun document n'entre sans fondement vérifiable", () => {
     }
   });
 
-  it("ne cite aucune norme privée — elles ne sont pas opposables", () => {
-    // NF, APSAD, CACES, recommandations de la CNAM : elles circulent comme du
+  it("ne cite une norme que COMME norme, et jamais un référentiel privé", () => {
+    // APSAD, CACES, recommandations de la CNAM : elles circulent comme du
     // droit dans les documents commerciaux du secteur, et un dirigeant ne les
     // distingue pas d'un article. Les citer ici reviendrait à lui imposer ce
     // que personne ne peut lui imposer.
+    //
+    // AMENDÉ PAR L'ADR-039 (2026-10-07) : une norme homologuée (NF, EN) peut
+    // fonder une obligation, à condition d'être citée comme norme — source
+    // `NORME`. Le motif « NF » reste interdit partout AILLEURS : une norme
+    // glissée dans la citation d'un article de droit est exactement la
+    // confusion que la source sert à empêcher.
+    for (const { doc, f } of tousLesFondements()) {
+      if (f.source !== "NORME") continue;
+      expect(f.article, `${doc} → ${f.article}`).toMatch(/^(NF|EN|ISO)\s/);
+    }
     const interdits = [
       /\bNF\s/i,
       /\bAPSAD\b/i,
@@ -97,7 +110,7 @@ describe("aucun document n'entre sans fondement vérifiable", () => {
     ];
     for (const { doc, f } of tousLesFondements()) {
       const texte = `${f.reference} ${f.article} ${f.citationCle ?? ""}`;
-      for (const motif of interdits) {
+      for (const motif of f.source === "NORME" ? interdits.slice(1) : interdits) {
         expect(motif.test(texte), `${doc} → ${f.article} · ${motif}`).toBe(
           false,
         );

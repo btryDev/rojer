@@ -4717,6 +4717,26 @@ sont désormais éprouvées (`454fb2fa`). Trois tests D8 comparaient la date au
 ouverture ; seules les lignes ponctuelles antérieures au suivi et les VGP de levage
 en double changent, sans perte (réconciliateur, cas D7 et D8).
 
+### C55 · 2026-10-07 — NF S 61-919 lue, NF C 18-510 entrée sans être lue (ADR-039, lot relecture-jc-2)
+
+- **Quand · par quoi** : 2026-10-07, lot 2 de la relecture du préventeur
+  (`lot/relecture-jc-2`), après les décisions (a) et (b) de la propriétaire.
+- **Sur quoi** : NF S 61-919 (août 2001, homologuée le 20 juillet 2001, effet
+  au 20 août 2001), scan remis par le préventeur, pages 1 à 12 ; arrêté du
+  5 juillet 2024, art. 1 (relu par l'API Légifrance sandbox, `reponses.md` Q7).
+- **Comment lu** : NF S 61-919 en première main sur le scan (recoupé par la
+  session qui encode) ; NF C 18-510 **non ouverte** — connue par l'arrêté qui
+  la cite, lecture `indirect`.
+- **Ce qui en sort** : corpus `normes` (statut `norme`) — § 5.1.1 (maintenance
+  « tous les ans, avec une tolérance de plus ou moins deux mois »), annexe A
+  tableau A.1 (1 an ; 5 et 15 ans ; révision 10 ans ; vie 20 ans, non fixée
+  CO2), § 11 (« ne devrait pas dépasser 20 ans », non retenu comme rythme).
+  Le § 4 recommande à l'utilisateur des inspections trimestrielles : relevé,
+  non retenu (« Il est recommandé »).
+- **Ce qui reste** : aucune obligation ne retient encore ces rythmes (lot 3).
+  NF C 18-510 ne peut fonder aucun rythme tant que son texte n'est pas lu —
+  `controlerRythmeRetenu` le refuse.
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

@@ -16,9 +16,10 @@
 // version constatée et le jour où elle a été relevée. **Un document sans
 // fondement vérifiable n'entre pas** — `documents-obligatoires.test.ts` fait
 // tomber la construction plutôt que de laisser passer une ligne invérifiable.
-// Aucune norme privée : ni NF, ni APSAD, ni CACES, ni recommandation de la
-// CNAM. Elles ne sont pas opposables, et les citer ici les ferait passer pour
-// du droit.
+// Aucun référentiel privé : ni APSAD, ni CACES, ni recommandation de la CNAM.
+// Les citer ici les ferait passer pour du droit. Une norme homologuée (NF, EN)
+// est admise depuis l'ADR-039, citée COMME norme (source `NORME`) ; aucun
+// document de cette liste n'en cite à ce jour.
 //
 // CE QUE LA LISTE NE FAIT PAS. Elle ne qualifie la situation de personne : ni
 // « conforme », ni « non conforme ». Elle ne compte pas non plus — dix

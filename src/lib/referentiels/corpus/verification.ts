@@ -38,6 +38,7 @@
 import { obligationsConformite } from "../conformite";
 import type { Obligation, ReferenceLegale } from "../conformite/types";
 import { porteurDe, type PorteurObligation } from "../conformite/types";
+import { referencesCitees } from "../conformite/rythme-retenu";
 import { CORPUS, indexArticlesParRef } from "./index";
 import type { ArticleDepouille } from "./types";
 
@@ -303,7 +304,9 @@ export function mesurerObligation(
   o: Obligation,
   index: Map<string, { corpusId: string; article: ArticleDepouille }>,
 ): ObligationMesuree {
-  const references = o.referencesLegales.map((r, position) => {
+  // La norme d'un rythme retenu se mesure comme une référence de contexte :
+  // c'est elle qui porte le chiffre (ADR-039).
+  const references = referencesCitees(o).map((r, position) => {
     const e = r.article ? index.get(r.article) : undefined;
     const a = e?.article;
     return {
@@ -472,7 +475,7 @@ export function lecturesNonCitees(): {
 }[] {
   const cites = new Set(
     obligationsConformite.flatMap((o) =>
-      o.referencesLegales
+      referencesCitees(o)
         .map((r) => r.article)
         .filter((a): a is string => Boolean(a)),
     ),
