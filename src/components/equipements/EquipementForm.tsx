@@ -522,9 +522,12 @@ export function EquipementForm({
                   révision à dix ans, une maintenance additionnelle approfondie
                   à 5 et 15 ans pour les extincteurs à eau, à mousse et à
                   poudre — à 15 ans seulement pour la poudre à opercule scellé,
-                  aucune pour le CO₂. Elle indique aussi que la durée de vie
-                  prévue ne devrait pas dépasser 20 ans, sauf pour le CO₂ :
-                  vous pouvez la reporter en date de péremption ci-dessus.
+                  aucune pour le CO₂ ni pour le halon. Un extincteur au halon
+                  n&apos;a pas de révision en atelier : la norme demande qu&apos;il
+                  soit vidé selon une méthode permettant de récupérer le halon.
+                  Elle indique aussi que la durée de vie prévue ne devrait pas
+                  dépasser 20 ans, sauf pour le CO₂ et le halon : vous pouvez
+                  la reporter en date de péremption ci-dessus.
                 </p>
                 {err("typeExtincteur") && (
                   <p
