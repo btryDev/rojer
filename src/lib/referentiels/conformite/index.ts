@@ -260,7 +260,9 @@ export const obligationsConformite: Obligation[] = [
 // partition avec l'annuelle de MS 38 § 4). Révision en atelier à dix ans
 // (NF S 61-919 § 10.1), même partition : entre
 // `incendie-travail-extincteurs-revision-atelier-decennale`.
-// Compte : 174 + 1 − 0 = 175.
+// EPI : `epi-maintien-etat-conformite` (R. 4322-1, défaut annuel, catégorie
+// `EPI` seule — l'arrêté du 19 mars 1993 garde ses trois catégories).
+// Compte : 174 + 2 − 0 = 176.
 export const REFERENTIEL_VERSION = "2026-10-07.4";
 
 /**

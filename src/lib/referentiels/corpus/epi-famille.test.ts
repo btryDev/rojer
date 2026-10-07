@@ -46,7 +46,9 @@
 //      rangement pointer dans le vide.
 //
 // La troisième propriété est la conséquence des deux premières et se vérifie
-// à part : aucune obligation portée par équipement ne cite `EPI`.
+// à part : ~~aucune obligation portée par équipement ne cite `EPI`~~ aucune
+// obligation à rythme ÉCRIT ne cite `EPI` — depuis le 2026-10-07 (C55 lot 3),
+// le seul défaut annuel de `R. 4322-1` la vise, par décision de la propriétaire.
 
 import { describe, expect, it } from "vitest";
 import { CORPUS } from "./index";
@@ -159,24 +161,41 @@ describe("EPI — une famille, pas un régime", () => {
     ).toEqual(attendues);
   });
 
-  it("aucune obligation ne vise la famille non vérifiable", () => {
+  it("aucune obligation à rythme ÉCRIT ne vise la famille non vérifiable", () => {
     // La propriété qui protège le dirigeant : le casque, les gants et les
-    // chaussures restent en `EPI`, et rien ne leur réclame de rendez-vous.
-    const fautives = obligationsConformite
+    // chaussures restent en `EPI`, et la vérification de l'arrêté — douze
+    // mois, personne qualifiée, criticité 5 — ne les vise pas.
+    //
+    // AMENDÉ LE 2026-10-07 (C55 lot 3), sur décision de la propriétaire :
+    // « EPI : vérification annuelle sur TOUS les EPI ». Une obligation vise
+    // désormais `EPI`, et une seule forme est admise : un rythme retenu PAR
+    // DÉFAUT (ADR-039 (b)), fondé sur `R. 4322-1`, que chaque surface affiche
+    // comme un défaut. Un rythme écrit — celui de l'arrêté —, ou une norme, sur
+    // cette catégorie, reste la faute que cette garde existe pour empêcher.
+    const visant = obligationsConformite
       .filter(estPorteeParEquipement)
       .filter((o) =>
         (o.categoriesEquipement as readonly string[]).includes(
           FAMILLE_NON_VERIFIABLE,
         ),
+      );
+    const fautives = visant
+      .filter(
+        (o) =>
+          o.rythmeRetenu?.motif !== "defaut_annuel" ||
+          o.referencesLegales[0].article !== "R. 4322-1",
       )
       .map((o) => o.id);
     expect(
       fautives,
       `Ces obligations visent \`${FAMILLE_NON_VERIFIABLE}\`, qui couvre le ` +
         "casque, les gants et les chaussures de sécurité — que l'arrêté du " +
-        "19 mars 1993 ne soumet à aucune vérification. Visez les catégories " +
-        "que l'arrêté nomme, ou n'encodez rien.",
+        "19 mars 1993 ne soumet à aucune vérification. Seul le défaut annuel " +
+        "de R. 4322-1 (ADR-039) peut les viser ; visez sinon les catégories " +
+        "que l'arrêté nomme.",
     ).toEqual([]);
+    // Borne basse : la décision du 07/10 est appliquée.
+    expect(visant.map((o) => o.id)).toContain("epi-maintien-etat-conformite");
   });
 
   it("l'article est retenu, et il nomme l'obligation qui en découle", () => {

@@ -1144,7 +1144,11 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // rendez-vous annuel à qui a déclaré des gants, le défaut même que la
         // catégorie du compacteur a été écrite pour éviter. La lecture de
         // l'arrêté décidera peut-être de la scinder en deux.
-        "EPI",
+        // [2026-10-07, C55 lot 3 : SORTIE DE CETTE LISTE. Sur décision de la
+        // propriétaire (« vérification annuelle sur TOUS les EPI »),
+        // `epi-maintien-etat-conformite` vise `EPI` (R. 4322-1, rythme retenu
+        // par défaut, ADR-039). La scission du 2026-09-04 tient : la
+        // vérification de l'arrêté ne vise que les trois catégories nommées.]
         // Réglementations ERP pures : rien ne les vise chez un employeur seul.
         "DESENFUMAGE",
         "APPAREIL_CUISSON_ERP",
@@ -1207,7 +1211,11 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // rendez-vous annuel à qui a déclaré des gants, le défaut même que la
         // catégorie du compacteur a été écrite pour éviter. La lecture de
         // l'arrêté décidera peut-être de la scinder en deux.
-        "EPI",
+        // [2026-10-07, C55 lot 3 : SORTIE DE CETTE LISTE. Sur décision de la
+        // propriétaire (« vérification annuelle sur TOUS les EPI »),
+        // `epi-maintien-etat-conformite` vise `EPI` (R. 4322-1, rythme retenu
+        // par défaut, ADR-039). La scission du 2026-09-04 tient : la
+        // vérification de l'arrêté ne vise que les trois catégories nommées.]
       ],
     },
   ];

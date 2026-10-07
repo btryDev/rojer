@@ -117,6 +117,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "elec-travail-periodique-annuelle": "equipement",
   "elec-travail-rapport-quadriennal": "equipement",
   "epi-etablissement-consigne-utilisation": "etablissement",
+  "epi-maintien-etat-conformite": "equipement",
   "epi-verification-generale-periodique": "equipement",
   "esp-declaration-mise-en-service": "equipement",
   "esp-dossier-suivi": "equipement",

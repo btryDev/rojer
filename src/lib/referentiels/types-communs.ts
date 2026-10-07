@@ -637,11 +637,16 @@ export const CATEGORIES_EQUIPEMENT = [
   "COMPACTEUR_PRESSE_DECHETS_MOTORISE",
   // Une famille, et non un régime — c'est ce qui la distingue de toutes les
   // autres entrées de cette liste. Un harnais antichute relève d'une
-  // vérification périodique, un casque de chantier n'en relève pas. Aucune
+  // vérification périodique, un casque de chantier n'en relève pas. ~~Aucune
   // obligation ne la vise, et il ne faut PAS en attacher une avant d'avoir lu
   // R. 4323-95 à R. 4323-99 et l'arrêté qui fixe la liste des EPI soumis à
   // vérification : le faire réclamerait un rendez-vous annuel à qui a déclaré
-  // des gants. La lecture dira peut-être de scinder cette valeur en deux.
+  // des gants. La lecture dira peut-être de scinder cette valeur en deux.~~
+  // [Lu et scindé le 2026-09-04. Puis, le 2026-10-07 (C55 lot 3), par décision
+  // de la propriétaire — « vérification annuelle sur TOUS les EPI » — une
+  // obligation la vise : `epi-maintien-etat-conformite` (R. 4322-1), rythme
+  // retenu PAR DÉFAUT (ADR-039), affiché comme tel. Le rendez-vous annuel à
+  // qui a déclaré des gants est désormais voulu, et dit comme un défaut.]
   "EPI",
   // Les trois catégories vérifiables, scindées le 2026-09-04 après lecture de
   // l'arrêté du 19 mars 1993 : lui seul nomme les EPI soumis à vérification, et

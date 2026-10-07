@@ -84,6 +84,7 @@ describe("periodiciteEffective", () => {
   it("le référentiel livré porte des rythmes retenus (borne basse, C55 lot 3)", () => {
     const motifs = new Set(obligationsConformite.map((o) => o.rythmeRetenu?.motif));
     expect(motifs.has("norme")).toBe(true);
+    expect(motifs.has("defaut_annuel")).toBe(true);
   });
 
   it("la norme d'un rythme retenu fait partie des références citées", () => {
