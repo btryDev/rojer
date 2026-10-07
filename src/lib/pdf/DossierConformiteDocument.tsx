@@ -548,6 +548,11 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                       {MARQUAGE_CONTRACTUEL}
                     </Text>
                   )}
+                  {v.rythmeRetenu && (
+                    <Text style={[s.small, { marginTop: 2 }]}>
+                      {v.rythmeRetenu}
+                    </Text>
+                  )}
                   {v.aConfirmer.length > 0 && (
                     <Text style={[s.small, { marginTop: 2 }]}>
                       {`À confirmer. ${v.aConfirmer.join(" ")}`}

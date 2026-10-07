@@ -20,6 +20,7 @@
 //
 // Lecture seule : aucune fonction d'écriture n'a sa place dans ce fichier.
 
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { trierParCategorie } from "@/lib/equipements/labels";
 import type { CategorieEquipement, StatutAction } from "@prisma/client";
 import { evaluerEtatDuerp, type EtatDuerp } from "@/lib/dashboard/duerp";
@@ -552,6 +553,13 @@ export type VerificationLue = {
    */
   contractuelle: boolean;
   /**
+   * La mention de rythme retenu (ADR-039), ou `null` : le rythme que le texte
+   * n'écrit pas et que Rojer retient — celui d'une norme, ou le défaut annuel.
+   * Même raison que `contractuelle` : l'assistant ne peut pas deviner qu'une
+   * périodicité ne vient pas du texte, et la phrase doit voyager avec la ligne.
+   */
+  rythmeRetenu: string | null;
+  /**
    * Les phrases « à confirmer » de la ligne (`matching/marques.ts`), vide si
    * rien ne la retient par prudence.
    */
@@ -660,6 +668,7 @@ export async function listerVerifications(
         ? 0
         : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),
+    rythmeRetenu: mentionRythmeDeVerification(v)?.long ?? null,
     aConfirmer: marques.parObligation.get(v.obligationId)?.phrases ?? [],
   }));
 

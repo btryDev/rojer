@@ -38,6 +38,8 @@ import {
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
 import { CORPUS } from "@/lib/referentiels/corpus";
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import {
   CATEGORIES_EQUIPEMENT,
   PERIODICITE_EN_JOURS,
@@ -70,6 +72,8 @@ const LABEL_SOURCE: Record<string, string> = {
   DECRET: "Décret",
   INRS: "INRS",
   REGLEMENT_UE: "Règlement (UE)",
+  // ADR-039 : une norme se cite comme norme, jamais sous une source de droit.
+  NORME: "Norme",
 };
 
 /**
@@ -206,8 +210,8 @@ function obligationsDe(c: CategorieEquipement): Obligation[] {
     .sort(
       (a, b) =>
         b.criticite - a.criticite ||
-        (PERIODICITE_EN_JOURS[a.periodicite] ?? 1e9) -
-          (PERIODICITE_EN_JOURS[b.periodicite] ?? 1e9),
+        (PERIODICITE_EN_JOURS[periodiciteEffective(a)] ?? 1e9) -
+          (PERIODICITE_EN_JOURS[periodiciteEffective(b)] ?? 1e9),
     );
 }
 
@@ -229,8 +233,8 @@ function parDomaine(obligations: Obligation[]): Map<string, Obligation[]> {
     l.sort(
       (a, b) =>
         b.criticite - a.criticite ||
-        (PERIODICITE_EN_JOURS[a.periodicite] ?? 1e9) -
-          (PERIODICITE_EN_JOURS[b.periodicite] ?? 1e9),
+        (PERIODICITE_EN_JOURS[periodiciteEffective(a)] ?? 1e9) -
+          (PERIODICITE_EN_JOURS[periodiciteEffective(b)] ?? 1e9),
     );
   }
   return m;
@@ -320,9 +324,15 @@ function LigneObligation({ o }: { o: Obligation }) {
           {LIBELLE_NATURE[o.nature]}
         </Text>
       </View>
-      <Text style={[s.td, cell, { width: C.periodicite }]}>
-        {LABEL_PERIODICITE[o.periodicite]}
-      </Text>
+      <View style={[cell, { width: C.periodicite }]}>
+        <Text style={s.td}>{LABEL_PERIODICITE[periodiciteEffective(o)]}</Text>
+        {/* ADR-039 : un rythme que le texte n'écrit pas dit d'où il vient. */}
+        {o.rythmeRetenu && (
+          <Text style={[s.small, { marginTop: 1 }]}>
+            {t(mentionRythmeRetenu(o)!.court)}
+          </Text>
+        )}
+      </View>
       <Text style={[s.td, cell, { width: C.realisateur }]}>
         {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
       </Text>
@@ -461,7 +471,7 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
         </View>
         {lignes.map(({ categorie, obligations }) => {
           const rythmes = [
-            ...new Set(obligations.map((o) => LABEL_PERIODICITE[o.periodicite])),
+            ...new Set(obligations.map((o) => LABEL_PERIODICITE[periodiciteEffective(o)])),
           ];
           const questions = questionsCategorie(categorie);
           return (
@@ -673,13 +683,18 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
               </Text>
               <Text style={[s.small, { marginTop: 1 }]}>
                 {o.id} · {LABEL_DOMAINE[o.domaine]} · {LIBELLE_NATURE[o.nature]}{" "}
-                · {LABEL_PERIODICITE[o.periodicite]} · criticité {o.criticite}/5
+                · {LABEL_PERIODICITE[periodiciteEffective(o)]} · criticité {o.criticite}/5
                 · par {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
               </Text>
               <Text style={[s.small, { marginTop: 1 }]}>
                 Régime : {texteTypologie(o.typologies)} · Condition :{" "}
                 {conditionsTexte(o)}
               </Text>
+              {o.rythmeRetenu && (
+                <Text style={[s.small, { marginTop: 1 }]}>
+                  {t(mentionRythmeRetenu(o)!.long)}
+                </Text>
+              )}
               {o.description && (
                 <Text style={[s.td, { marginTop: 4 }]}>{t(o.description)}</Text>
               )}

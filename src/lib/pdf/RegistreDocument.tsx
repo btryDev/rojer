@@ -60,6 +60,12 @@ export type LigneVerif = {
    * seul un silence de la fiche fait exister (analyse du 2026-09-27).
    */
   aConfirmer: readonly string[];
+  /**
+   * La phrase de la mention de rythme retenu (ADR-039), ou `null` : un
+   * rythme que le texte n'écrit pas s'imprime avec son origine — la norme
+   * citée comme norme, ou le défaut annuel et le mot du texte.
+   */
+  rythmeRetenu: string | null;
 };
 
 /**
@@ -733,6 +739,11 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                       ]}
                     >
                       {MARQUAGE_CONTRACTUEL}
+                    </Text>
+                  )}
+                  {v.rythmeRetenu && (
+                    <Text style={[s.small, { marginTop: 2 }]}>
+                      {v.rythmeRetenu}
                     </Text>
                   )}
                   {v.aConfirmer.length > 0 && (

@@ -1,3 +1,4 @@
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -181,6 +182,8 @@ export async function getSalarie(
         echeance: echeanceDuTitre(t, o ? periodiciteEffective(o) : undefined),
         /** Le rythme qui a produit une échéance calculée — la fiche le nomme. */
         periodicite: o ? periodiciteEffective(o) : null,
+        /** D'où vient ce rythme quand le texte n'en écrit pas (ADR-039). */
+        rythmeRetenu: o ? mentionRythmeRetenu(o) : null,
         etat: etatDuTitre(t, o, s.actif, now),
       };
     }),

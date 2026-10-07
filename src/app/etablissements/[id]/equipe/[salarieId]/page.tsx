@@ -1,3 +1,5 @@
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { notFound } from "next/navigation";
 import {
@@ -290,6 +292,13 @@ export default async function SalarieDetailPage({
                               ? ` · pas de date de fin sur la pièce · échéance calculée au ${formaterDateLongueFr(t.echeance)} (délivrance + ${LABEL_PERIODICITE[t.periodicite].toLowerCase()})`
                               : " · aucune date de fin portée sur le titre"}
                         </p>
+                        {/* ADR-039 : un rythme que le texte n'écrit pas se
+                            dit comme tel, à côté de l'échéance qu'il calcule. */}
+                        {t.rythmeRetenu && (
+                          <p className="m-0 mt-1.5">
+                            <MentionRythmeRetenu mention={t.rythmeRetenu} />
+                          </p>
+                        )}
                         {t.note && (
                           <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
                             {t.note}
@@ -444,6 +453,7 @@ export default async function SalarieDetailPage({
                       description: o.description,
                       pieceMedicale: o.pieceMedicale,
                       periodicite: periodiciteEffective(o),
+                      rythmeRetenu: mentionRythmeRetenu(o)?.long ?? null,
                       bloquePar: bloquant
                         ? { libelle: bloquant.titre.libelle, motif: bloquant.motif }
                         : undefined,
