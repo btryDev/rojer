@@ -5577,3 +5577,47 @@ délibéré.
 
 Ce journal porte ce que le code ne sait pas dire : **qui a lu quoi, quand,
 comment — et ce qu'on en a fait.**
+
+### C61 · 2026-10-07 — Revue indépendante de la relecture du préventeur : corrections de code
+
+- **Quand · par quoi** : 2026-10-07, branche `fix/relecture-jc-code` (sur
+  `integration/relecture-jc`, 2b7c8bcf), d'après
+  `relecture-jc-2026-10/synthese-revue.md`. Aucun texte rouvert : les
+  citations utilisées (R. 4544-10, NF S 61-919 § 11) sont celles déjà au
+  corpus. Aucune obligation modifiée, aucune empreinte déplacée ; le contenu
+  du référentiel est corrigé à part (C60).
+- **Ce qui en sort** :
+  - Mention de rythme retenu (ADR-039 § 5) posée sur le tableau de bord
+    (échéances, prochaine échéance, semaine), le registre web et le guide ;
+    test de rendu par surface.
+  - Mention d'une norme : « première échéance à 5 ans, puis tous les 10 ans »
+    pour la maintenance approfondie (`premierDelai`), au lieu de « périodicité
+    tous les 10 ans ».
+  - `RythmeRetenu` (norme) : `periodicite` restreinte à une durée ;
+    `aUnRythmeRetenu` (mort) et le faux `prescriptionId` de `mention-de-ligne`
+    retirés ; `liensRompus(statut)` remplace trois fonctions recopiées ; une
+    norme se reconnaît à son statut de corpus, plus à `/^NF\s/`.
+  - Grille : « Type d'extincteur » et ses libellés. Aide : la durée de vie
+    « ne devrait pas dépasser 20 ans » (§ 11, conditionnel).
+  - DF 10 § 3 : la question du SSI A/B n'est posée qu'après « mécanique :
+    oui » ; aides alignées sur le code ; test « LIMITE ASSUMÉE » commenté à
+    inverser.
+  - Prescriptions : face à un rythme retenu, « Rojer retient déjà… » au lieu
+    de « le référentiel impose » ; plancher annuel écrit à l'ADR-039 § 7 ;
+    obligation retirée : « Rojer ne suit plus cette obligation », libellé
+    lisible, renvoi vers l'obligation sur mesure.
+  - Annonces : la phrase citée par un `declareA` est retrouvée dans
+    `DESCRIPTION_CATEGORIE` (test).
+  - Habilitation : « Rythme renvoyé aux normes (R. 4544-10) » au lieu de
+    « Sans terme écrit », sur la fiche salarié, l'aide du titre et la grille.
+- **Ce qui reste, côté contenu (lot C60 ou suivant)** :
+  - `incendie.ts` : annoter `REFERENCE_NF_S_61_919_ANNUELLE` et
+    `_REVISION` en `ReferenceLegale & { source: "NORME"; article: string }`
+    pour que `RythmeRetenu.reference` se resserre ; le champ `norme` ne peut
+    être retiré qu'avec les trois `norme:` de ce fichier.
+  - `corpus/code-travail-risque-chimique.ts` : R. 4412-11 et R. 4412-17 ne
+    peuvent entrer dans `ANNONCES` que si leur `declareA` devient
+    `ADRESSE_MANQUES_ANNONCES` (le test des deux sens l'exige) ; l'aide du
+    stockage cesserait alors d'être leur adresse.
+  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
+    dirigeant, remplaceraient la lecture du motif de relecteur (date, tête).
