@@ -288,6 +288,14 @@ export function EquipementForm({
   const [desenfumageMecanique, setDesenfumageMecanique] = useState(
     valeurTriEtat(valeursInitiales?.[champMecanique]),
   );
+  // La réponse SSI est tenue en état, contrôlée : masquée, c'est elle qui part
+  // en champ caché, et reposée, c'est elle qui revient. [2026-10-07, C62 :
+  // le champ caché renvoyait `valeursInitiales` — un « non » donné pendant la
+  // saisie se perdait si l'on repassait le mécanique à « je ne sais pas ».]
+  const champSsi: ChampTriEtat = "etablissementASsiCategorieAouB";
+  const [ssiAouB, setSsiAouB] = useState(
+    valeurTriEtat(valeursInitiales?.[champSsi]),
+  );
   const afficherCaracteristiques =
     estAeration || estEsp || estExtincteur || questions.length > 0;
 
@@ -556,25 +564,27 @@ export function EquipementForm({
             )}
 
             {questions.map(({ champ }) =>
-              champ === "etablissementASsiCategorieAouB" &&
-              desenfumageMecanique !== "oui" ? (
+              champ === champSsi && desenfumageMecanique !== "oui" ? (
                 <input
                   key={champ}
                   type="hidden"
                   name={champ}
-                  value={valeurTriEtat(valeursInitiales?.[champ])}
+                  value={ssiAouB}
                 />
               ) : (
                 <QuestionTriEtat
                   key={champ}
                   champ={champ}
                   defaut={valeurTriEtat(valeursInitiales?.[champ])}
+                  valeur={champ === champSsi ? ssiAouB : undefined}
                   erreur={err(champ)}
                   exigee={(questionsExigees[categorie] ?? []).includes(champ)}
                   onChange={
-                    champ === "estDesenfumageMecanique"
+                    champ === champMecanique
                       ? setDesenfumageMecanique
-                      : undefined
+                      : champ === champSsi
+                        ? setSsiAouB
+                        : undefined
                   }
                 />
               ),
@@ -640,9 +650,13 @@ function QuestionTriEtat({
   erreur,
   exigee = false,
   onChange,
+  valeur,
 }: {
   champ: ChampTriEtat;
   defaut: string;
+  /** La valeur, quand le formulaire la tient (champ contrôlé) ; sinon
+   *  `defaut` sert de valeur initiale et le `<select>` se tient seul. */
+  valeur?: string;
   erreur?: string;
   /** La valeur choisie, pour une question dont dépend l'affichage d'une autre. */
   onChange?: (valeur: string) => void;
@@ -664,7 +678,7 @@ function QuestionTriEtat({
       <select
         id={champ}
         name={champ}
-        defaultValue={defaut}
+        {...(valeur !== undefined ? { value: valeur } : { defaultValue: defaut })}
         onChange={onChange ? (e) => onChange(e.currentTarget.value) : undefined}
         className="champ-board mt-2 sm:w-64"
         aria-describedby={`${champ}-aide`}
