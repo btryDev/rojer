@@ -261,7 +261,9 @@ export const obligationsConformite: Obligation[] = [
 // 174 + 0 − 3 = 171. Équipements sous pression : seule la requalification
 // décennale reste — six lignes `esp-*` retirées. 171 − 6 = 165. Stockage de
 // matières dangereuses : « sauf les 3 derniers points » — quatre lignes
-// `stockage-dangereux-*` retirées. 165 − 4 = 161.
+// `stockage-dangereux-*` retirées. 165 − 4 = 161. Hotte : le contrôle annuel
+// des locaux à pollution spécifique ne naît plus que d'une VMC ou d'une CTA
+// (« traité dans le VMC : à supprimer dans les hottes »). 161 + 0 − 0 = 161.
 export const REFERENTIEL_VERSION = "2026-10-07.2";
 
 /**

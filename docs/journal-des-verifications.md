@@ -4764,6 +4764,17 @@ inatteignable. **À croiser avec le lot 3** du plan, qui prévoyait un « défau
 pour l'étanchéité des stockages (R. 4412-11) : la ligne qu'il visait n'existe plus.
 165 → 161.
 
+**Hotte — « traité dans le VMC : à supprimer dans les hottes » (p. 14).** La page
+lue range quatre lignes sous la hotte ; l'annotation tombe sur le « Contrôle annuel
+des installations en locaux à pollution spécifique »
+(`aeration-travail-locaux-pollution-specifique`), la même ligne que sous la VMC et la
+CTA. Ce n'est pas une ligne sœur : c'est la même obligation, déclenchée par trois
+catégories. `HOTTE_PRO` sort de ses catégories et de ses conditions ; aucun id
+retiré. Une ligne portée par une hotte est archivée si elle porte une trace,
+supprimée sinon. Ce que le retrait laisse passer, écrit à la ligne : une hotte seule,
+sans VMC ni CTA déclarée, ne porte plus ce contrôle. Le semestriel des gaines de
+recyclage garde la hotte (non annoté) : question ouverte. 161 → 161.
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

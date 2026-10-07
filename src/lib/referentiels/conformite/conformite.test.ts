@@ -1632,7 +1632,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // `esp-*` retirées. 171 − 6 = 165.
     // Stockage de matières dangereuses, « sauf 3 derniers points » : quatre
     // lignes retirées. 165 − 4 = 161.
-    { version: "2026-10-07.2", empreinte: "161-ccc1a483ea5bd76f" },
+    // Hotte (p. 14, « traité dans le VMC : à supprimer dans les hottes ») :
+    // `aeration-travail-locaux-pollution-specifique` perd HOTTE_PRO de ses
+    // catégories. Champ seul : 161 + 0 − 0 = 161.
+    { version: "2026-10-07.2", empreinte: "161-75902d20a91522e2" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

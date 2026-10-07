@@ -628,13 +628,24 @@ describe("moteur matching — conditions booléennes (local pollution spécifiqu
     expect(ids).toContain("aeration-travail-locaux-pollution-specifique");
   });
 
-  it("travail avec hotte pollution spécifique → contrôle annuel applicable (VMC/CTA/HOTTE_PRO)", () => {
-    const res = determineObligationsApplicables(etabBureau(), [
-      { ...hotte(), caracteristiques: { estLocalPollutionSpecifique: true } },
-    ]);
-    expect(idsObligations(res)).toContain(
-      "aeration-travail-locaux-pollution-specifique",
-    );
+  // ~~« travail avec hotte pollution spécifique → contrôle annuel applicable
+  // (VMC/CTA/HOTTE_PRO) »~~ — 2026-10-07 : la hotte ne porte plus ce contrôle
+  // (relecture préventeur du 30/09, « traité dans le VMC : à supprimer dans
+  // les hottes » ; décision de la propriétaire du 07/10).
+  it("hotte pollution spécifique → l'annuel n'est porté que par la VMC", () => {
+    const hottePs = {
+      ...hotte(),
+      caracteristiques: { estLocalPollutionSpecifique: true },
+    };
+    const declencheurs = (eqs: EquipementMatching[]) =>
+      determineObligationsApplicables(etabBureau(), eqs)
+        .filter((a) => a.obligation.id === "aeration-travail-locaux-pollution-specifique")
+        .flatMap((a) => a.equipementsConcernes.map((e) => e.id));
+    // Hotte seule : la ligne ne naît pas.
+    expect(declencheurs([hottePs])).toEqual([]);
+    // Hotte et VMC du même local : une seule ligne, portée par la VMC.
+    const vmcPs = vmc({ caracteristiques: { estLocalPollutionSpecifique: true } });
+    expect(declencheurs([hottePs, vmcPs])).toEqual([vmcPs.id]);
   });
 });
 
