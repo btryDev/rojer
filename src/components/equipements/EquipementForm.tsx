@@ -282,8 +282,11 @@ export function EquipementForm({
   // Masquée, sa valeur part quand même, en champ caché : le serveur l'accepte
   // toujours, et une réponse déjà donnée ne s'efface pas parce qu'on a changé
   // l'autre.
+  // Lue comme les autres questions à trois états (`valeursInitiales?.[champ]`) :
+  // la page les repasse en bloc (`reponsesTriEtat`).
+  const champMecanique: ChampTriEtat = "estDesenfumageMecanique";
   const [desenfumageMecanique, setDesenfumageMecanique] = useState(
-    valeurTriEtat(valeursInitiales?.estDesenfumageMecanique),
+    valeurTriEtat(valeursInitiales?.[champMecanique]),
   );
   const afficherCaracteristiques =
     estAeration || estEsp || estExtincteur || questions.length > 0;
