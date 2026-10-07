@@ -3,7 +3,9 @@ import { genererProchainesVerifications, periodicitesEffectives } from "@/lib/ca
 import {
   estEtatADeclarer,
   estFaitADater,
+  figureSurLEcranEnPlace,
   modeDeclaration,
+  modeDeclarationApplique,
 } from "@/lib/etats-permanents/regle";
 import {
   appliquerPrescriptions,
@@ -199,6 +201,11 @@ describe("générateur et états permanents : une surface, jamais deux", () => {
     expect(estEtatADeclarer(o)).toBe(false);
     expect(estFaitADater(o)).toBe(false);
     expect(modeDeclaration(o)).toBeNull();
+    // La garde de l'action et les liens vers l'écran passent par ces deux-là :
+    // un POST « déclarer en place » sur une ligne passée au calendrier serait
+    // la double surface que l'ADR-027 interdit.
+    expect(modeDeclarationApplique(applicable(o))).toBeNull();
+    expect(figureSurLEcranEnPlace(o)).toBe(false);
     expect(genererProchainesVerifications([applicable(o)])).toHaveLength(1);
   });
 
