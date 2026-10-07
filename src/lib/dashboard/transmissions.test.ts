@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { rapprocher } from "./transmissions";
+import {
+  repondreAuxQuestionsTransverses,
+  titresDontLaQuestionRepondNon,
+} from "@/lib/transverses/etat";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { supposeUnTiers } from "@/lib/prestataires/domaines";
 import { genererRecommandations, type EntreeRecos } from "./recommandations";
@@ -172,6 +176,48 @@ describe("rapprochement des transmissions (ADR-024)", () => {
       rapprocher([o], ["electricite"], new Set(["levage-caces-titre"]))
         .obligationsSupposantUnePersonne,
     ).toEqual([]);
+  });
+
+  it("se tait sur le « non » du DUERP au fait qui rend le titre dû — et sur lui seul (ADR-038)", () => {
+    // Sur le référentiel réel : l'obligation d'établissement qui transmet
+    // vers l'habilitation, et la réponse du DUERP lue par la règle partagée.
+    const elec = obligationsConformite.find(
+      (o) => o.id === "elec-travail-habilitation-personnel",
+    )!;
+    const signal = (actifs: string[], brut: unknown) =>
+      rapprocher(
+        [elec],
+        ["electricite"],
+        new Set(),
+        titresDontLaQuestionRepondNon(repondreAuxQuestionsTransverses(actifs, brut)),
+      ).obligationsSupposantUnePersonne;
+    expect(signal([], { "q-operations-electriques": false })).toEqual([]);
+    // Le silence ne fait pas taire : un DUERP qui n'a pas répondu n'a rien déclaré.
+    expect(signal([], null)).toHaveLength(1);
+    // Le « oui » non plus.
+    expect(signal(["trv-operations-electriques"], null)).toHaveLength(1);
+    // Un « non » à une autre question non plus.
+    expect(signal([], { "q-conduite-engins": false })).toHaveLength(1);
+  });
+
+  it("vaut aussi pour le levage : le « non » à la conduite fait taire, le silence non", () => {
+    // Toutes les obligations d'établissement qui transmettent vers un titre
+    // gouverné, pas la seule électricité : c'est la réunion qui est garantie.
+    const versGouverne = obligationsConformite.filter((o) =>
+      o.transmet.some(
+        (t) => t.vers === "salarie_designe" && t.titre === "conduite-salarie-formation",
+      ),
+    );
+    expect(versGouverne.length).toBeGreaterThan(0);
+    const signal = (brut: unknown) =>
+      rapprocher(
+        versGouverne,
+        ["levage"],
+        new Set(),
+        titresDontLaQuestionRepondNon(repondreAuxQuestionsTransverses([], brut)),
+      ).obligationsSupposantUnePersonne;
+    expect(signal({ "q-conduite-engins": false })).toEqual([]);
+    expect(signal(null)).toHaveLength(versGouverne.length);
   });
 });
 

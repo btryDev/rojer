@@ -359,6 +359,72 @@ export const risquesTransverses: RisqueReferentiel[] = [
       },
     ],
   },
+  {
+    // Ajouté 2026-10-05 (ADR-038). Les lignes « risque électrique » des
+    // secteurs (`resto-electrisation`, `bur-electrique`) visent l'INSTALLATION
+    // — sa vérification, l'usage des appareils — et sont proposées d'office
+    // par unité. Aucune ne demandait si quelqu'un OPÈRE sur l'installation,
+    // qui est le fait de R. 4544-9 : c'est lui, et non la présence d'une
+    // installation, qui rend l'habilitation due. La question existe pour
+    // poser ce fait-là, avec les mots du texte.
+    //
+    // Sources : uniquement le Code, relu au corpus `code-travail-electricite`
+    // (R. 4544-9 le 2026-08-31, R. 4544-10 le 2026-09-01). Aucune fiche INRS
+    // n'est citée : la ligne ne décrit pas un danger, elle décrit un fait
+    // réglementé.
+    id: "trv-operations-electriques",
+    libelle: "Opérations sur les installations électriques ou dans leur voisinage",
+    description:
+      "« Les opérations sur les installations électriques ou dans leur voisinage ne peuvent être effectuées que par des travailleurs habilités. » (art. R. 4544-9) L'usage courant des appareils — brancher, allumer — n'est pas une opération sur l'installation.",
+    unitesAssociees: [],
+    graviteParDefaut: 4,
+    probabiliteParDefaut: 1,
+    mesuresRecommandees: [
+      {
+        id: "trv-elec-habilitation",
+        libelle:
+          "Formation théorique et pratique, puis habilitation délivrée par l'employeur, qui « spécifie la nature des opérations qu'il est autorisé à effectuer » (art. R. 4544-10)",
+        type: "formation",
+      },
+      {
+        id: "trv-elec-carnet",
+        libelle:
+          "Carnet de prescriptions : « L'employeur remet à chaque travailleur un carnet de prescriptions […] » (art. R. 4544-10)",
+        type: "organisationnelle",
+      },
+    ],
+  },
+  {
+    // Ajouté 2026-10-05 (ADR-038). `q-routier` demande si l'on conduit un
+    // VÉHICULE sur la route ; R. 4323-55 vise les ÉQUIPEMENTS DE TRAVAIL
+    // mobiles automoteurs et de levage — chariot, nacelle, grue —, qu'aucune
+    // question ne demandait. Deux faits, deux régimes : le premier relève de
+    // l'évaluation générale, le second réserve la conduite à des travailleurs
+    // formés et, pour certains équipements, autorisés.
+    //
+    // Sources : corpus `code-travail-conduite`, relu le 2026-08-31.
+    id: "trv-conduite-engins",
+    libelle: "Conduite d'équipements de travail mobiles automoteurs ou servant au levage",
+    description:
+      "« La conduite des équipements de travail mobiles automoteurs et des équipements de travail servant au levage est réservée aux travailleurs qui ont reçu une formation adéquate. » (art. R. 4323-55)",
+    unitesAssociees: [],
+    graviteParDefaut: 4,
+    probabiliteParDefaut: 2,
+    mesuresRecommandees: [
+      {
+        id: "trv-engins-formation",
+        libelle:
+          "Formation adéquate à la conduite : « Cette formation est complétée et réactualisée chaque fois que nécessaire. » (art. R. 4323-55)",
+        type: "formation",
+      },
+      {
+        id: "trv-engins-autorisation",
+        libelle:
+          "Autorisation de conduite : « La conduite de certains équipements présentant des risques particuliers, en raison de leurs caractéristiques ou de leur objet, est subordonnée à l'obtention d'une autorisation de conduite délivrée par l'employeur. » (art. R. 4323-56)",
+        type: "organisationnelle",
+      },
+    ],
+  },
 ];
 
 export const questionsDetectionTransverses: QuestionDetection[] = [
@@ -371,6 +437,15 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
     intitule:
       "Des salariés travaillent-ils habituellement entre minuit et 5 heures ?",
     risqueIdAssocie: "trv-travail-nuit",
+    // PAS DE `declencheTitres`, et c'est délibéré (relecture du 2026-10-05).
+    // La VIP adaptée est fondée sur R. 4624-17 et R. 4624-18, qui la rendent
+    // due aussi au travailleur handicapé, au pensionné d'invalidité et au
+    // moins de dix-huit ans : un « non » à cette question aurait fait dire à
+    // la fiche d'un apprenti que la visite n'était due à personne. Et la
+    // question ne qualifie pas le travailleur de nuit de L. 3122-5 — voir
+    // plus haut. Les notesInternes de `sante-travail-salarie-vip-adaptee`
+    // l'interdisaient déjà : ce serait détourner une réponse d'établissement
+    // en donnée individuelle.
   },
   {
     // Ne prononce jamais « agent biologique » : un dirigeant de TPE ne sait
@@ -421,5 +496,37 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
     intitule:
       "Existe-t-il des situations connues ou suspectées de consommation d'alcool ou de substances psychoactives en lien avec le travail ?",
     risqueIdAssocie: "trv-addictions",
+  },
+  {
+    // « Des travailleurs », et non « des salariés » comme les autres
+    // questions : c'est le mot de R. 4544-9 et de R. 4323-55, et un « non »
+    // fait désormais taire le tableau de bord (ADR-038 § 2.6). Demander
+    // « des salariés » laissait répondre « non » l'établissement dont seuls
+    // des intérimaires conduisent le chariot (contre-relecture du 2026-10-05).
+    // Le verbe et le complément sont ceux de R. 4544-9 ; les exemples entre
+    // parenthèses sont des opérations, pas des usages, pour que la question
+    // ne ramasse pas quiconque branche une prise (ADR-038).
+    id: "q-operations-electriques",
+    intitule:
+      "Des travailleurs effectuent-ils des opérations sur les installations électriques ou dans leur voisinage (intervention, dépannage, raccordement, travaux près de pièces nues sous tension) ?",
+    risqueIdAssocie: "trv-operations-electriques",
+    declencheTitres: [
+      "elec-salarie-habilitation",
+      "elec-salarie-attestation-medicale-voisinage",
+    ],
+  },
+  {
+    // Les termes sont ceux de R. 4323-55. Les exemples nomment des
+    // équipements que le texte vise par catégorie ; aucun ne vient d'une
+    // norme ou d'une recommandation CACES.
+    id: "q-conduite-engins",
+    intitule:
+      "Des travailleurs conduisent-ils des équipements de travail mobiles automoteurs ou servant au levage (chariot élévateur, transpalette électrique, nacelle, grue) ?",
+    risqueIdAssocie: "trv-conduite-engins",
+    declencheTitres: [
+      "conduite-salarie-formation",
+      "conduite-salarie-autorisation",
+      "conduite-salarie-attestation-medicale",
+    ],
   },
 ];

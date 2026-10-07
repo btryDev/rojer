@@ -16,6 +16,12 @@
  *
  * ## Pourquoi la liste ne dépend pas du salarié
  *
+ * ~~Deux obligations~~ — depuis l'ADR-038 (2026-10-05), seules celles qu'AUCUNE
+ * question transverse du DUERP ne gouverne : la formation à la conduite a
+ * quitté cette liste pour `titres-du-duerp.ts`, où elle n'apparaît que si le
+ * DUERP déclare que des salariés conduisent des engins. Ce qui reste ici est
+ * dû à tout l'effectif.
+ *
  * Elle est la même pour tout le monde, et c'est exact plutôt que grossier.
  * `evaluerObligation` rend `null` pour le porteur `salarie` (ADR-023) : le
  * moteur reçoit un établissement et des équipements, jamais ce qu'une personne
@@ -35,7 +41,7 @@
 
 import { estDeclencheeParUnFait } from "@/lib/etats-permanents/regle";
 import type { ObligationPorteeParSalarie } from "@/lib/referentiels/conformite";
-import { cataloguerTitres } from "./catalogue";
+import { cataloguerTitres, titresGouvernesParUneQuestion } from "./catalogue";
 
 /**
  * Une obligation que le poste d'une personne rend due, avec ce que le dossier
@@ -69,18 +75,22 @@ export type TitreLu = { obligationId: string; delivreLe: Date };
 export function obligationsDeclencheesParUnFait(
   titres: readonly TitreLu[] = [],
 ): ObligationDeclenchee[] {
+  const gouvernes = titresGouvernesParUneQuestion();
   return cataloguerTitres()
-    .filter((o) => estDeclencheeParUnFait(o))
-    .map((obligation) => {
-      const dates = titres
-        .filter((t) => t.obligationId === obligation.id)
-        .map((t) => t.delivreLe);
-      return {
-        obligation,
-        dernierTitreLe:
-          dates.length === 0
-            ? null
-            : dates.reduce((a, b) => (b > a ? b : a)),
-      };
-    });
+    .filter((o) => estDeclencheeParUnFait(o) && !gouvernes.has(o.id))
+    .map((obligation) => ({
+      obligation,
+      dernierTitreLe: dateDuDernierTitre(titres, obligation.id),
+    }));
+}
+
+/** La délivrance la plus récente d'un titre parmi ceux d'une personne, ou `null`. */
+export function dateDuDernierTitre(
+  titres: readonly TitreLu[],
+  obligationId: string,
+): Date | null {
+  const dates = titres
+    .filter((t) => t.obligationId === obligationId)
+    .map((t) => t.delivreLe);
+  return dates.length === 0 ? null : dates.reduce((a, b) => (b > a ? b : a));
 }

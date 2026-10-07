@@ -209,7 +209,7 @@ export const obligationsElectricite: Obligation[] = [
         // reproche sans issue.
         titre: "elec-salarie-habilitation",
         motif:
-          "R. 4544-10 fait délivrer l'habilitation à un travailleur désigné : l'obligation suppose une personne nommée. Le produit ne peut pas deviner qui opère sur ou à proximité des installations — ce serait le cinquième déclencheur, non implémenté (ADR-023) — mais il peut dire qu'aucune personne n'est déclarée.",
+          "R. 4544-10 fait délivrer l'habilitation à un travailleur désigné : l'obligation suppose une personne nommée. Le produit ne devine pas qui opère sur ou à proximité des installations (ADR-023) : il lit la réponse du DUERP à la question qui le demande (ADR-038), se tait si elle est « non », et dit sinon qu'aucune personne n'est déclarée.",
       },
     ],
     typologies: { travail: true },
@@ -257,7 +257,7 @@ export const obligationsElectricite: Obligation[] = [
         // travailleur » HABILITÉ, donc à qui détient précisément ce titre-là.
         titre: "elec-salarie-habilitation",
         motif:
-          "Le carnet se remet « à chaque travailleur » habilité : la pièce est nominative, il y en a autant que de personnes habilitées. Le produit ne peut pas deviner qui opère sur les installations — ce serait le cinquième déclencheur, non implémenté (ADR-023) — mais il peut dire qu'aucune personne n'est déclarée.",
+          "Le carnet se remet « à chaque travailleur » habilité : la pièce est nominative, il y en a autant que de personnes habilitées. Le produit ne devine pas qui opère sur les installations (ADR-023) : il lit la réponse du DUERP à la question qui le demande (ADR-038), se tait si elle est « non », et dit sinon qu'aucune personne n'est déclarée.",
       },
     ],
     typologies: { travail: true },

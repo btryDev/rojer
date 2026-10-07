@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { estDeclencheeParUnFait } from "@/lib/etats-permanents/regle";
 import { obligationsDeclencheesParUnFait } from "./obligations-evenementielles";
-import { cataloguerTitres } from "./catalogue";
+import { cataloguerTitres, titresGouvernesParUneQuestion } from "./catalogue";
 
 const jour = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 
@@ -26,15 +26,24 @@ describe("ce qu'un fait rend dû à une personne", () => {
     // répare en la recopiant, donc elle cesse de vérifier. Ici, ajouter une
     // obligation salarié événementielle au référentiel sans qu'elle atteigne
     // la fiche fait tomber ce test tout seul.
-    const attendues = obligationsConformite
+    //
+    // Depuis l'ADR-038, la fiche a DEUX surfaces pour ces obligations : cette
+    // carte, et celle du DUERP pour ce qu'une question transverse gouverne.
+    // La borne porte donc sur leur réunion, confrontée au référentiel : une
+    // obligation retenue par la règle qui n'est rendue ici ET qu'aucune
+    // question ne gouverne fait tomber le test. Que la carte du DUERP NOMME
+    // bien les titres gouvernés, dans chaque état, est éprouvé sur le rendu
+    // (`components/salaries/CarteTitresDuDuerp.test.tsx`), pas ici.
+    const gouvernes = titresGouvernesParUneQuestion();
+    const rendues = new Set(
+      obligationsDeclencheesParUnFait().map((l) => l.obligation.id),
+    );
+    const nullePart = obligationsConformite
       .filter((o) => o.porteur === "salarie")
       .filter((o) => estDeclencheeParUnFait(o))
       .map((o) => o.id)
-      .sort();
-    const rendues = obligationsDeclencheesParUnFait()
-      .map((l) => l.obligation.id)
-      .sort();
-    expect(rendues).toEqual(attendues);
+      .filter((id) => !rendues.has(id) && !gouvernes.has(id));
+    expect(nullePart).toEqual([]);
   });
 
   it("laisse dehors les titres que le catalogue propose et qui ne sont pas de ce genre", () => {

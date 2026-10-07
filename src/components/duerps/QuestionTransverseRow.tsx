@@ -1,70 +1,135 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { toggleRisqueTransverse } from "@/lib/transverses/actions";
+import { useConfirmation } from "@/components/ui-kit/Confirmation";
+import { repondreQuestionTransverse } from "@/lib/transverses/actions";
+import type { ReponseTransverse } from "@/lib/transverses/etat";
 
 /**
  * Une question transverse, et son couple Oui / Non.
  *
- * Seul « Oui » peut apparaître sélectionné : `active` se déduit de l'existence
- * d'un `Risque` en base, et répondre « Non » supprime cette ligne
- * (`toggleRisqueTransverse`). Un « non » délibéré et une question jamais lue
- * produisent donc le même état — mettre « Non » en évidence par défaut
+ * Trois états depuis l'ADR-038, comme `QuestionActiviteRow` dont le geste est
+ * repris : le « non » est persisté (`Duerp.reponsesTransverses`), donc il peut
+ * enfin s'afficher sélectionné ; tant que rien n'a été répondu, **aucun** des
+ * deux boutons n'est mis en avant — mettre « Non » en évidence par défaut
  * afficherait une réponse que personne n'a donnée, sur un document à valeur
- * légale. Tant que le refus n'est pas persisté, l'absence de réponse se montre
- * comme telle : aucun des deux boutons n'est mis en avant.
+ * légale. « Retirer ma réponse » ramène au silence.
+ *
+ * Le `id` de la ligne est celui de la question : la fiche d'un salarié y
+ * renvoie directement quand la réponse manque (« Formations liées aux risques
+ * du poste »). Un seul questionnaire, celui du document unique.
  */
 type Props = {
   duerpId: string;
-  referentielId: string;
+  questionId: string;
   intitule: string;
   libelleRisque: string;
-  active: boolean;
+  reponse: ReponseTransverse;
+};
+
+const VALEUR: Record<ReponseTransverse, boolean | null> = {
+  oui: true,
+  non: false,
+  sans_reponse: null,
 };
 
 export function QuestionTransverseRow({
   duerpId,
-  referentielId,
+  questionId,
   intitule,
   libelleRisque,
-  active,
+  reponse,
 }: Props) {
   const [pending, startTransition] = useTransition();
+  const [echec, setEchec] = useState(false);
+  const { demander, confirmation } = useConfirmation();
 
-  const set = (desiredActive: boolean) => {
-    if (desiredActive === active) return;
+  // Même raison que `QuestionActiviteRow` : un rejet perdu dans la transition
+  // laissait la ligne dans son état précédent, et le dirigeant repartait en
+  // croyant avoir répondu.
+  const envoyer = (valeur: boolean | null) => {
+    setEchec(false);
     startTransition(async () => {
-      await toggleRisqueTransverse(duerpId, referentielId);
+      try {
+        await repondreQuestionTransverse(duerpId, questionId, valeur);
+      } catch {
+        setEchec(true);
+      }
     });
   };
 
+  const repondre = (valeur: boolean | null) => {
+    if (valeur === VALEUR[reponse]) return;
+    // Quitter un « oui » supprime le risque, sa cotation et ses actions
+    // (cascade). Le « Non » le faisait déjà sans prévenir ; « retirer ma
+    // réponse », lien d'apparence anodine, en est devenu une seconde porte
+    // (relecture du 2026-10-05). On demande, sur les deux — dans la page, par
+    // le kit : un `confirm()` natif peut être neutralisé par le navigateur et
+    // rendre le bouton inerte (`interface/confirmations-natives.ts`).
+    if (reponse === "oui") {
+      demander({
+        titre: `Retirer le risque « ${libelleRisque} » de votre DUERP ?`,
+        detail:
+          "Sa cotation et les actions qui lui sont rattachées partent avec lui.",
+        agir: "Retirer le risque",
+        alors: () => envoyer(valeur),
+      });
+      return;
+    }
+    envoyer(valeur);
+  };
+
   return (
-    <li className="carte-board px-7 py-6 sm:px-8">
+    <li id={questionId} className="carte-board scroll-mt-6 px-7 py-6 sm:px-8">
       <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
         {intitule}
       </p>
       <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         Si oui → ajoute le risque « {libelleRisque} » à votre DUERP.
       </p>
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button
-          variant={active ? "board" : "boardClair"}
+          variant={reponse === "oui" ? "board" : "boardClair"}
           size="boardSm"
           disabled={pending}
-          onClick={() => set(true)}
+          onClick={() => repondre(true)}
         >
           Oui
         </Button>
         <Button
-          variant="boardClair"
+          variant={reponse === "non" ? "board" : "boardClair"}
           size="boardSm"
           disabled={pending}
-          onClick={() => set(false)}
+          onClick={() => repondre(false)}
         >
           Non
         </Button>
+        {reponse === "sans_reponse" ? (
+          <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+            Sans réponse
+          </span>
+        ) : (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => repondre(null)}
+            className="text-[12.5px] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline disabled:opacity-50"
+          >
+            retirer ma réponse
+          </button>
+        )}
       </div>
+      {confirmation}
+      {echec && (
+        <p
+          role="alert"
+          className="m-0 mt-3 text-[12.5px] text-[color:var(--board-signal-ink)]"
+        >
+          Cette réponse n&apos;a pas pu être enregistrée. Rechargez la page,
+          puis réessayez.
+        </p>
+      )}
     </li>
   );
 }

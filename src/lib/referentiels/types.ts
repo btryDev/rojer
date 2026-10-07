@@ -56,6 +56,19 @@ export type QuestionDetection = {
   intitule: string;
   risqueIdAssocie: string;
   uniteCible?: string;
+  /**
+   * Les titres du catalogue salarié (`salaries/catalogue.ts`) qu'un « oui »
+   * rend dus à une partie de l'effectif (ADR-038).
+   *
+   * C'est le SEUL lien entre le document unique et la fiche d'un salarié :
+   * il part de la question, jamais d'une mesure recommandée — une mesure est
+   * une recommandation INRS, un titre est une obligation du Code, et les
+   * relier par la mesure aurait fait passer l'une pour l'autre. Une question
+   * n'en porte que si le fait qu'elle demande est, mot pour mot, celui que
+   * l'article fondateur du titre vise ; `titres-du-duerp.test.ts` exige que
+   * chaque identifiant soit un titre du catalogue.
+   */
+  declencheTitres?: readonly string[];
 };
 
 /**

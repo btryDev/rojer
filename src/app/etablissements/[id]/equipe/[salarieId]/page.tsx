@@ -25,6 +25,10 @@ import {
 } from "@/lib/salaries/catalogue";
 import { declarerTitre } from "@/lib/salaries/actions";
 import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-evenementielles";
+import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
+import { chargerReponsesTransverses } from "@/lib/transverses/queries";
+import { CarteTitresDuDuerp } from "@/components/salaries/CarteTitresDuDuerp";
+import { ReferenceFondatrice } from "@/components/salaries/ReferenceFondatrice";
 import {
   CHAMP_ETAT,
   ENCRE_ETAT,
@@ -135,6 +139,19 @@ export default async function SalarieDetailPage({
   // due à TOUS les travailleurs. Ce qui varie d'une fiche à l'autre est la date
   // du dernier titre déclaré, pas la liste.
   const declenchees = obligationsDeclencheesParUnFait(s.titres);
+
+  // Ce que la réponse du DUERP aux questions transverses rend dû à une partie
+  // de l'effectif (ADR-038). `null` : pas de DUERP — la carte le dit et mène à
+  // sa création, au lieu de se taire.
+  const transverses = await chargerReponsesTransverses(id);
+  const duerpDeLaFiche = titresDuDuerpPourUnePersonne(
+    transverses?.repondues ?? null,
+    s.titres,
+  );
+  const lienVersLaQuestion = (questionId: string) =>
+    transverses
+      ? `/duerp/${transverses.duerpId}/transverses#${questionId}`
+      : `/etablissements/${id}/duerp`;
 
   const action = declarerTitre.bind(null, id, salarieId);
   const provenance = lireProvenance(de, id);
@@ -340,8 +357,8 @@ export default async function SalarieDetailPage({
             </CarteFiche>
 
             {/* CE QUE LE CALENDRIER NE PEUT PAS PORTER, ET QUI EST DÛ QUAND
-                MÊME. Deux obligations du catalogue sont `evenementielle` et
-                `autre` : elles reviennent, sans qu'aucun texte n'écrive de
+                MÊME. Les obligations du catalogue `evenementielle` et `autre`
+                qu'aucune question du DUERP ne gouverne (ADR-038) : elles reviennent, sans qu'aucun texte n'écrive de
                 rythme, sur un fait que le produit n'observe pas. Le générateur
                 ne leur ouvre donc aucune occurrence et « Ce qui doit être en
                 place » les refuse — jusqu'ici elles n'existaient que dans le
@@ -363,8 +380,8 @@ export default async function SalarieDetailPage({
                   <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                     Ces obligations ne tombent à aucune date : elles sont dues à
                     un <strong className="font-semibold">fait</strong>{" "}
-                    — une embauche, un changement de poste, la prise en main
-                    d&apos;un engin. Rojer ne voit aucun de ces faits, donc il
+                    — une embauche, un changement de poste ou de technique.
+                    Rojer ne voit aucun de ces faits, donc il
                     n&apos;ouvre ici ni échéance ni retard. Chaque ligne dit à
                     quoi elle se déclenche ; vous seul savez quand le fait
                     arrive.
@@ -391,31 +408,21 @@ export default async function SalarieDetailPage({
                             ? `Un titre est déclaré pour cette obligation, délivré le ${formaterDateLongueFr(dernierTitreLe)}. Il ne la referme pas : elle redevient due au fait suivant.`
                             : "Aucun titre n'est déclaré pour cette obligation. Ce n'est pas un retard : aucune date ne dit quand elle était due."}
                         </p>
-                        <div className="mt-2.5 flex flex-wrap items-center gap-3">
-                          {obligation.referencesLegales.slice(0, 1).map((r) =>
-                            r.url ? (
-                              <LegalBadge
-                                key={r.article ?? r.reference}
-                                charte="board"
-                                reference={r.reference}
-                                href={r.url}
-                              />
-                            ) : (
-                              <span
-                                key={r.article ?? r.reference}
-                                className="font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]"
-                              >
-                                § {r.reference}
-                              </span>
-                            ),
-                          )}
-                        </div>
+                        <ReferenceFondatrice obligation={obligation} />
                       </li>
                     ))}
                   </ul>
                 </>
               )}
             </CarteFiche>
+
+            {/* Ce que le DUERP rend dû à une partie de l'effectif (ADR-038) :
+                au-dessus du formulaire, comme la carte précédente — on lit ce
+                qui est dû avant ce qu'on peut saisir. */}
+            <CarteTitresDuDuerp
+              questions={duerpDeLaFiche}
+              lienVersLaQuestion={lienVersLaQuestion}
+            />
 
             <CarteFiche titreFort="Déclarer un titre">
               {catalogue.length === 0 ? (

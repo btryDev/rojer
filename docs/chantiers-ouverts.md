@@ -2404,3 +2404,36 @@ ne le vérifie, quand l'arrêté vise les points d'usage à risque de certains
 
 **À ne pas confondre** avec `csp-eau-potable`, qui est dépouillé et porte la
 protection contre les retours d'eau : un autre texte, un autre objet.
+
+## 17. Les titres que le DUERP rend dus — ce que l'ADR-038 laisse ouvert (2026-10-05)
+
+Branche `lot/duerp-questions-titres`, non fusionnée. Quatre suites, aucune
+bloquante pour la branche :
+
+1. **Migration prod** `20261005120000_duerp_reponses_transverses` (additive,
+   une colonne `JSONB` nullable) : à appliquer par la propriétaire au merge.
+2. **Les « non » transverses n'entrent pas dans le document imprimé.** Le
+   snapshot d'une version fige les risques, pas les refus. Un DUERP qui part
+   chez un tiers ne dit donc pas « le dirigeant a déclaré qu'aucun salarié ne
+   conduit d'engin ». À décider : l'imprimer, comme les activités de
+   l'ADR-020, ou non.
+3. **Gestes et postures, écran, chimique** : la question ou le risque existe
+   au DUERP, l'obligation est portée par l'établissement, aucun titre n'est au
+   catalogue. Les y faire entrer relève du filtre à trois conditions, article
+   par article.
+4. **Pas de « ne concerne pas cette personne ».** Un « oui » au DUERP affiche
+   ses titres sur toutes les fiches, avec « si elle est concernée, déclarez son
+   titre ». Le refus nominatif demanderait de stocker l'exposition d'une
+   personne — une donnée à instruire au regard du RGPD avant d'être un champ.
+5. **L'étape « questions transverses » reste cochée** sur les DUERP validés
+   avant l'ADR-038 (`transversesRepondues`), alors que deux questions y sont
+   neuves et sans réponse. Seule la fiche salarié le signale. Rouvrir l'étape
+   changerait l'avancement de tous les dossiers existants : à décider.
+6. **« Formations liées aux risques du poste »** regroupe aussi des
+   attestations médicales et une autorisation, qui ne sont pas des
+   formations. Titre validé par la propriétaire ; signalé par la relecture.
+7. **Un engin déclaré et un « non » à la conduite.** Un chariot ou une nacelle
+   actif, avec « non » à `q-conduite-engins` : le tableau de bord suit le
+   DUERP et se tait, et rien ne relève la contradiction. Ce n'est pas faux en
+   droit — un équipement peut ne pas être conduit —, mais c'est la résolution
+   que le dirigeant voit le moins. Même cas pour l'installation électrique.
