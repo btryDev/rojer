@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { useConfirmation } from "@/components/ui-kit/Confirmation";
 import { repondreQuestionTransverse } from "@/lib/transverses/actions";
 import type { ReponseTransverse } from "@/lib/transverses/etat";
 
@@ -42,24 +43,12 @@ export function QuestionTransverseRow({
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [echec, setEchec] = useState(false);
+  const { demander, confirmation } = useConfirmation();
 
   // Même raison que `QuestionActiviteRow` : un rejet perdu dans la transition
   // laissait la ligne dans son état précédent, et le dirigeant repartait en
   // croyant avoir répondu.
-  const repondre = (valeur: boolean | null) => {
-    if (valeur === VALEUR[reponse]) return;
-    // Quitter un « oui » supprime le risque, sa cotation et ses actions
-    // (cascade). Le « Non » le faisait déjà sans prévenir ; « retirer ma
-    // réponse », lien d'apparence anodine, en est devenu une seconde porte
-    // (relecture du 2026-10-05). On demande, sur les deux.
-    if (
-      reponse === "oui" &&
-      !window.confirm(
-        `Le risque « ${libelleRisque} » sera retiré de votre DUERP, avec sa cotation et ses actions. Continuer ?`,
-      )
-    ) {
-      return;
-    }
+  const envoyer = (valeur: boolean | null) => {
     setEchec(false);
     startTransition(async () => {
       try {
@@ -68,6 +57,27 @@ export function QuestionTransverseRow({
         setEchec(true);
       }
     });
+  };
+
+  const repondre = (valeur: boolean | null) => {
+    if (valeur === VALEUR[reponse]) return;
+    // Quitter un « oui » supprime le risque, sa cotation et ses actions
+    // (cascade). Le « Non » le faisait déjà sans prévenir ; « retirer ma
+    // réponse », lien d'apparence anodine, en est devenu une seconde porte
+    // (relecture du 2026-10-05). On demande, sur les deux — dans la page, par
+    // le kit : un `confirm()` natif peut être neutralisé par le navigateur et
+    // rendre le bouton inerte (`interface/confirmations-natives.ts`).
+    if (reponse === "oui") {
+      demander({
+        titre: `Retirer le risque « ${libelleRisque} » de votre DUERP ?`,
+        detail:
+          "Sa cotation et les actions qui lui sont rattachées partent avec lui.",
+        agir: "Retirer le risque",
+        alors: () => envoyer(valeur),
+      });
+      return;
+    }
+    envoyer(valeur);
   };
 
   return (
@@ -110,6 +120,7 @@ export function QuestionTransverseRow({
           </button>
         )}
       </div>
+      {confirmation}
       {echec && (
         <p
           role="alert"
