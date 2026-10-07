@@ -259,7 +259,9 @@ export const obligationsConformite: Obligation[] = [
 // scellé) : (1) ascenseur, AS 9 sort de la ligne CCH et prend deux lignes à
 // lui, bornées aux ERP N1–N4 — `ascenseur-erp-verification-quinquennale-as9`
 // et `ascenseur-erp-verification-remise-en-service-as9` (événementielle).
-// 174 + 2 − 0 = 176.
+// 174 + 2 − 0 = 176. (2) MS 38 § 4 : extincteurs d'ERP, annuelle et décennale,
+// par `personne_competente` au lieu de personne qualifiée ou organisme agréé.
+// 176 + 0 − 0 = 176.
 export const REFERENTIEL_VERSION = "2026-10-07.1";
 
 /**

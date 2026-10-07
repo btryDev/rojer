@@ -1630,8 +1630,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // lot, réécrite à chaque commit du lot tant qu'elle n'a rien scellé (même
     // cas que `2026-09-20.1`). (1) Ascenseur : AS 9 prend deux lignes à lui,
     // bornées aux ERP N1–N4 (quinquennale, et remise en service après
-    // transformation importante). 174 + 2 − 0 = 176.
-    { version: "2026-10-07.1", empreinte: "176-f56c423c59029112" },
+    // transformation importante). 174 + 2 − 0 = 176. (2) MS 38 § 4 : les deux
+    // lignes d'extincteurs d'ERP passent à `personne_competente` (« par une
+    // personne ou un organisme compétent »), sans agrément. 176 + 0 − 0 = 176.
+    { version: "2026-10-07.1", empreinte: "176-fc2075422cf0e800" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

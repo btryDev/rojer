@@ -4729,6 +4729,7 @@ le lot.*
 | Item | Ce qui a été lu | Ce qui change |
 |---|---|---|
 | 1 · Ascenseur | CCH R. 134-11 (LEGIARTI000053629116, 2026-05-15), R. 134-12, R. 134-13 ; AS 9 ; GE 7 § 1 ; GN 1 § 2 | AS 9 sort de la ligne CCH et prend deux lignes, bornées aux ERP N1–N4 : quinquennale par organisme agréé, et remise en service après transformation importante (événementielle). La ligne CCH garde son id, tous régimes. Pas de `succedeA`. GE 7 entre au corpus. 174 → 176 |
+| 2 · MS 38 § 4 | MS 38 (LEGIARTI000020382888, 2008-10-08) | « par une personne ou un organisme compétent » : les deux lignes d'extincteurs d'ERP (annuelle, décennale) passent de `personne_qualifiee` + `organisme_agree` à `personne_competente`. Aucune valeur de `Realisateur` ne dit « organisme compétent » (enum Prisma) : écrit dans les notes |
 
 ## Partie 2 — Registre des constats en suspens
 
