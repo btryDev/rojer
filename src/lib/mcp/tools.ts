@@ -388,7 +388,8 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
   EPI_RESPIRATOIRE: "appareil de protection respiratoire",
   EPI_GILET_SAUVETAGE: "gilet de sauvetage gonflable",
   BAES: "bloc autonome d'éclairage de sécurité",
-  ALARME_INCENDIE: "alarme incendie",
+  // Aligné le 2026-10-07 sur `LABEL_CATEGORIE_EQUIPEMENT` (préventeur).
+  ALARME_INCENDIE: "SSI et équipement d'alarme incendie",
   DESENFUMAGE: "désenfumage",
   VMC: "ventilation mécanique",
   CTA: "centrale de traitement d'air",

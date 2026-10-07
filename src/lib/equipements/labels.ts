@@ -13,7 +13,9 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   EXTINCTEUR: "Extincteurs",
   RIA: "Robinets d'incendie armés (RIA)",
   BAES: "Éclairage de sécurité (BAES)",
-  ALARME_INCENDIE: "Alarme incendie / SSI",
+  // 2026-10-07 : ~~« Alarme incendie / SSI »~~ — libellé demandé par le
+  // préventeur (relecture du 2026-10-05). L'enum ne change pas.
+  ALARME_INCENDIE: "SSI et équipement d'alarme incendie",
   DESENFUMAGE: "Désenfumage",
   VMC: "Ventilation (VMC)",
   CTA: "Centrale de traitement d'air (CTA)",
