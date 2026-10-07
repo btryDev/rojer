@@ -327,6 +327,10 @@ export const equipementSchema = z
     // via les formes `enum_differente` et `enum_egale` de `ConditionApplication`.
     // Conséquence pratique : sa valeur n'est plus un simple confort de saisie,
     // et en changer une modifie une échéance de criticité 5.
+    // [2026-10-07 : PÉRIMÉ. Les deux inspections sont retirées (relecture
+    // préventeur du 30/09, décision de la propriétaire du 07/10) ; plus aucune
+    // obligation ne lit `familleEsp`. Elle ne sert de nouveau qu'au verdict
+    // indicatif `verdictSuiviEnService`.]
     // `pressionMaxAdmissibleBar` et `volumeLitres`, eux, ne sont toujours pas
     // lus par le moteur.
     familleEsp: z.preprocess(

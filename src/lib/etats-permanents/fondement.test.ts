@@ -78,7 +78,8 @@ describe("l'article cité sous une ligne « Ce qui doit être en place »", () =
 
   it.each([
     "elec-travail-habilitation-personnel",
-    "esp-personnel-formation",
+    // ~~"esp-personnel-formation"~~ — retirée le 2026-10-07 (périmètre,
+    // relecture préventeur du 30/09, décision de la propriétaire du 07/10).
     "porte-auto-maintien-en-etat",
     "ascenseur-entretien-contrat",
   ])("%s : plusieurs articles nommés, aucun texte montré", (id) => {

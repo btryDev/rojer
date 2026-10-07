@@ -127,7 +127,9 @@ describe("registre de dette — les réserves de lecture", () => {
     // retiré, relecture préventeur du 30/09, décision de la propriétaire du
     // 07/10). Leurs réserves passent dans `historique`, barrées ; le manque
     // est désormais `non_couvert`, compté ailleurs.
-    expect(n).toBe(88);
+    // 88 → 87 le même jour : `R. 4323-1` cesse d'être retenu avec
+    // `esp-personnel-formation` ; sa réserve passe dans `historique`.
+    expect(n).toBe(87);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

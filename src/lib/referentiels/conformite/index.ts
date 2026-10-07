@@ -258,7 +258,8 @@ export const obligationsConformite: Obligation[] = [
 // décision de la propriétaire du 07/10) : l'IGH sort du référentiel —
 // `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
 // `incendie-igh-charge-calorifique-quinquennale` (`OBLIGATIONS_RETIREES`).
-// 174 + 0 − 3 = 171.
+// 174 + 0 − 3 = 171. Équipements sous pression : seule la requalification
+// décennale reste — six lignes `esp-*` retirées. 171 − 6 = 165.
 export const REFERENTIEL_VERSION = "2026-10-07.2";
 
 /**
@@ -362,6 +363,42 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
     porteur: "etablissement",
     motif:
       "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Annotée « non traité » par le préventeur. C'était la seule ligne IGH dont l'OCCUPANT est le débiteur (GH 61 § 5, rapport quinquennal de conformité de la charge calorifique par organisme agréé) : la retirer est une décision de périmètre, pas une lecture du texte, qui continue de l'imposer. La page « Ce que Rojer ne couvre pas » (axe `igh`) le dit nommément à l'occupant. Aucun absorbant ; la ligne d'établissement est archivée si elle porte une trace, supprimée sinon.",
+  },
+  "esp-declaration-mise-en-service": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Déclaration et contrôle de mise en service (arrêté du 20 novembre 2017, art. 7 à 11). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-inspection-periodique": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Inspection périodique quadriennale (arrêté du 20 novembre 2017, art. 15). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-inspection-periodique-generateur-vapeur": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Inspection périodique biennale des générateurs de vapeur (arrêté du 20 novembre 2017, art. 15, I). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-dossier-suivi": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Tenue du dossier de suivi (arrêté du 20 novembre 2017, art. 6) — état permanent. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-intervention-reparation": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Contrôle après intervention notable (arrêté du 20 novembre 2017, art. 26 à 28) — événementielle. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-personnel-formation": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Formation et information des opérateurs (Code du travail, R. 4323-1 à R. 4323-5) — état permanent. Le Code du travail continue de s'appliquer à tout équipement de travail : c'est la ligne propre aux ESP qui sort, pas l'article. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
 };
 

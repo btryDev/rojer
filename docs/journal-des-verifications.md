@@ -4735,6 +4735,20 @@ question IGH reste à l'onboarding (refus de l'ERP en IGH, annonce). 174 → 171
 Garde neuve éprouvée : `typologies: { igh: true }` posé sur une ligne vivante →
 « 2 failed | 1 passed | 105 skipped (108) ».
 
+**Équipements sous pression — « à exclure sauf pour compresseur : requalification
+tous les 10 ans » (p. 20).** Seule `esp-requalification-decennale` reste. Retirées,
+sans absorbant : `esp-declaration-mise-en-service`, `esp-inspection-periodique`,
+`esp-inspection-periodique-generateur-vapeur`, `esp-dossier-suivi`,
+`esp-intervention-reparation`, `esp-personnel-formation`. Corpus : arrêté du
+20 novembre 2017 art. 6, 7-11, 15, 26-28 → `non_couvert` (adresse : l'aide de la
+catégorie au formulaire d'équipement) ; `R. 4323-1` → `non_couvert`, annoncé à tout
+employeur (domaine « Formation ») ; `C. env. R. 557-14-1` → `sans_objet` (article de
+champ, toujours lu par le verdict de suivi en service). La requalification n'est PAS
+bornée aux compresseurs : décision ouverte. Plus aucune obligation ne porte les formes
+`enum_egale` / `enum_differente` ni `premierDelai` ; leurs tests passent sur des
+lignes synthétiques (éprouvé : générale sans sa différence → « 2 failed | 5 passed »).
+171 → 165.
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

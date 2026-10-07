@@ -152,7 +152,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ Les 55 articles (2026-10-07, l'IGH retiré) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ Les 60 articles (2026-10-07, l'IGH et les équipements sous pression retirés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les vingt-cinq
 annoncés le 2026-09-27, que la page « Ce que Rojer ne couvre pas » projette au
@@ -240,16 +240,22 @@ couverture.
 
 ---
 
-**Le mouvement du 2026-10-07 : 53 + 2 − 0 = 55.** `GH 5` et `GH 61` passent de
+**Le mouvement du 2026-10-07 : 53 + 2 + 5 − 0 = 60.** `GH 5` et `GH 61` passent de
 `retenu` à `non_couvert` : les trois obligations IGH qu'ils fondaient sont
 retirées du référentiel (relecture préventeur du 30/09, « IGH non traité par
 Rojer » ; décision de la propriétaire du 07/10). Les deux ont une adresse
 visible : la page « Ce que Rojer ne couvre pas », axe `igh`. Voir leur famille
-au § 3.
+au § 3. Puis cinq articles avec le retrait de six lignes `esp-*` (« à exclure
+sauf pour compresseur : requalification tous les 10 ans ») : `Arrêté 2017-11-20 art. 6`,
+`Arrêté 2017-11-20 art. 7-11`, `Arrêté 2017-11-20 art. 15`, `Arrêté 2017-11-20 art. 26-28`
+— adresse : l'aide de la catégorie « Équipement sous pression » du formulaire
+d'équipement — et `R. 4323-1`, qui ne fondait que la formation des opérateurs
+d'ESP et vise tout employeur — adresse : `ADRESSE_MANQUES_ANNONCES`, domaine
+« Formation ». `C. env. R. 557-14-1`, article de champ, passe `sans_objet`.
 
 ---
 
-## 3. Les 55 articles lus et non portés
+## 3. Les 60 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -507,7 +513,9 @@ recopiés ici. Entre parenthèses : à quel dossier la page les montre.
 - **Document unique** (employeur) — `L. 4121-3`, `R. 4121-1-1`.
 - **Bruit** (employeur) — `R. 4433-2`.
 - **Formation** (employeur ; `R. 4323-106` sauf « non » aux équipements de
-  protection individuelle) — `L. 4141-5`, `R. 4323-106`.
+  protection individuelle) — `L. 4141-5`, `R. 4323-106` ; et depuis le
+  2026-10-07 `R. 4323-1` (employeur), entré avec le retrait de
+  `esp-personnel-formation` — voir sa famille ci-dessous.
 - **Boissons** (employeur) — `R. 4225-3`.
 
 ### Plan de prévention, information de l'inspection du travail — 1 article (2026-09-27)
@@ -528,6 +536,37 @@ Le VI (transmission au service de prévention et de santé au travail à chaque
 mise à jour) est tracé depuis C45 : une date facultative sur chaque version
 validée. Reste non porté le III 1°, le programme annuel à cinquante salariés et
 plus ; son adresse est l'axe `effectif` de la page, décision E2.
+
+### Équipements sous pression — 4 articles (2026-10-07)
+
+`Arrêté 2017-11-20 art. 6`, `Arrêté 2017-11-20 art. 7-11`,
+`Arrêté 2017-11-20 art. 15`, `Arrêté 2017-11-20 art. 26-28`
+
+> RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09
+> (« à exclure sauf pour compresseur : requalification tous les 10 ans »),
+> décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant
+> d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le
+> produit a choisi de ne pas le porter, et le dit à la déclaration de
+> l'équipement.
+
+(Motif commun aux quatre, chacun complété au corpus de la ligne qu'il fondait.)
+**Adresse visible** : l'aide de la catégorie « Équipement sous pression » du
+formulaire d'équipement (`DESCRIPTION_CATEGORIE`), qui dit ce que Rojer suit —
+la requalification périodique, seule restée — et ce qu'il ne suit pas.
+
+### Information sur les équipements de travail, tous employeurs — 1 article (2026-10-07)
+
+`R. 4323-1`
+
+> L'OBLIGATION QUI LE CITAIT EST RETIRÉE LE 2026-10-07 — `esp-personnel-formation`,
+> périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10.
+> L'article, lui, vise toujours tout employeur qui confie un équipement de
+> travail : il n'est ni sans objet ni hors périmètre. Le référentiel ne le
+> portait que pour les équipements sous pression (voir `historique`) ; il ne le
+> porte plus du tout, et la page « Ce que Rojer ne couvre pas » le dit à tout
+> employeur.
+
+**Adresse visible** : `ADRESSE_MANQUES_ANNONCES`, domaine « Formation ».
 
 ---
 

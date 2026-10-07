@@ -64,8 +64,12 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   ASCENSEUR: "Ascenseur électrique ou hydraulique. Contrôle technique quinquennal.",
   PORTE_AUTO: "Porte motorisée piétonne (entrée automatique).",
   PORTAIL_AUTO: "Portail motorisé de véhicule.",
+  // La seconde phrase est l'ADRESSE de non-couverture des articles de l'arrêté
+  // du 20 novembre 2017 passés `non_couvert` le 2026-10-07 (relecture
+  // préventeur du 30/09, décision de la propriétaire du 07/10) : leur
+  // `declareA` la cite mot pour mot. La changer, c'est changer l'annonce.
   EQUIPEMENT_SOUS_PRESSION:
-    "Compresseurs, chaudières, réservoirs d'air comprimé.",
+    "Compresseurs, chaudières, réservoirs d'air comprimé. Rojer ne suit, pour ces équipements, que la requalification périodique ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention.",
   STOCKAGE_MATIERE_DANGEREUSE:
     "Liquides inflammables, gaz, produits chimiques en quantité significative.",
   EQUIPEMENT_LEVAGE:

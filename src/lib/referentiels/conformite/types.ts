@@ -797,6 +797,10 @@ type ObligationCommune = {
    * échangeant une sur-application visible contre une sous-application que
    * personne ne peut voir, sur une ligne de criticité 5. Le modèle n'avait
    * simplement pas de place pour les deux valeurs.
+   * [2026-10-07 : `esp-inspection-periodique` est retirée (périmètre,
+   * relecture préventeur du 30/09, décision de la propriétaire du 07/10).
+   * AUCUNE obligation vivante ne porte plus ce champ ; le générateur le lit
+   * toujours, et ses tests l'éprouvent sur des lignes synthétiques.]
    *
    * **Ce n'est pas une exception ESP.** `PE 4` porte aussi un premier délai
    * distinct de son rythme, et le règlement des chaufferies un troisième.

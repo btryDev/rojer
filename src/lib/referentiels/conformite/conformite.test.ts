@@ -222,7 +222,11 @@ describe("référentiel conformité — couverture P1", () => {
     expect(obligationsCuissonHotte.length).toBeGreaterThanOrEqual(4);
     expect(obligationsAscenseurs.length).toBeGreaterThanOrEqual(5);
     expect(obligationsPortesPortails.length).toBeGreaterThanOrEqual(4);
-    expect(obligationsEquipementSousPression.length).toBeGreaterThanOrEqual(5);
+    // ~~`toBeGreaterThanOrEqual(5)`~~ — 2026-10-07 : seule la requalification
+    // décennale reste (relecture préventeur du 30/09, décision du 07/10).
+    expect(obligationsEquipementSousPression.map((o) => o.id)).toEqual([
+      "esp-requalification-decennale",
+    ]);
     expect(obligationsStockageDangereux.length).toBeGreaterThanOrEqual(5);
     expect(obligationsLevage.length).toBeGreaterThanOrEqual(7);
   });
@@ -881,14 +885,10 @@ describe("référentiel conformité — non-régression des obligations critique
     "froid-controle-etancheite-annuel-50t-detection",
     "froid-controle-etancheite-trimestriel-500t",
     "froid-controle-etancheite-semestriel-500t-detection",
-    // Créée le 2026-09-01 (arrêté du 20 novembre 2017, art. 15 : deux ans pour
-    // les générateurs de vapeur). Même critère que le chariot élévateur, et il
-    // est rempli pour les deux mêmes raisons : l'obligation est NEUVE — aucun
-    // équipement déjà en base ne peut la perdre —, et la couverture par défaut
-    // reste assurée par `esp-inspection-periodique`, qui porte sur la même
-    // propriété la condition `enum_differente` correspondante et s'applique
-    // donc tant que `familleEsp` n'a pas été renseignée.
-    "esp-inspection-periodique-generateur-vapeur",
+    // ~~"esp-inspection-periodique-generateur-vapeur"~~ (créée le 2026-09-01,
+    // art. 15 : deux ans pour les générateurs de vapeur) — retirée le
+    // 2026-10-07 avec sa jumelle générale (périmètre, relecture préventeur du
+    // 30/09, décision de la propriétaire du 07/10).
   ]);
 
   /**
@@ -1063,7 +1063,8 @@ describe("référentiel conformité — non-régression des obligations critique
       ["levage-vgp-semestrielle-personnes", "sertAuLevageDePersonnes"],
       ["levage-vgp-accessoires-annuelle", "aAccessoiresDeLevage"],
       ["esp-requalification-decennale", "estSoumisSuiviEnService"],
-      ["esp-inspection-periodique", "estSoumisSuiviEnService"],
+      // ~~["esp-inspection-periodique", "estSoumisSuiviEnService"]~~ — retirée
+      // le 2026-10-07 (relecture préventeur du 30/09).
     ];
     for (const [id, propriete] of attendus) {
       const o = obligationParId(id);
@@ -1631,7 +1632,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // `incendie-igh-moyens-secours-annuelle`,
     // `incendie-igh-charge-calorifique-quinquennale`. 174 + 0 − 3 = 171.
     // Lignes archivées si elles portent une trace, supprimées sinon.
-    { version: "2026-10-07.2", empreinte: "171-80492fd7979f1065" },
+    // Même version, même lot (une seule par lot) : les équipements sous
+    // pression ne gardent que la requalification décennale — six lignes
+    // `esp-*` retirées. 171 − 6 = 165.
+    { version: "2026-10-07.2", empreinte: "165-fb6af2b3275d1899" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1788,7 +1792,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(171);
+    ).toBe(165);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
@@ -2793,7 +2797,8 @@ describe("ce que le texte fait établir est dit en entier (2026-09-28, lot 2, 7 
     ["ascenseur-entretien-contrat", "état initial de l'installation"],
     ["ascenseur-entretien-contrat", "changement de prestataire"],
     ["ascenseur-controle-technique-quinquennal", "à la disposition du contrôleur technique"],
-    ["esp-dossier-suivi", "liste des récipients fixes"],
+    // ~~["esp-dossier-suivi", "liste des récipients fixes"]~~ — retirée le
+    // 2026-10-07 (relecture préventeur du 30/09, décision du 07/10).
   ] as const)("%s dit « %s »", (id, phrase) => {
     expect(obligationParId(id)?.description).toContain(phrase);
   });

@@ -1073,9 +1073,22 @@ describe("moteur matching — faux positifs structurels corrigés", () => {
     ]);
     const ids = idsObligations(res);
     expect(ids).not.toContain("esp-requalification-decennale");
-    expect(ids).not.toContain("esp-inspection-periodique");
-    // La formation des opérateurs relève du Code du travail : elle demeure.
-    expect(ids).toContain("esp-personnel-formation");
+    // ~~La formation des opérateurs relève du Code du travail : elle demeure.~~
+    // `esp-personnel-formation` et `esp-inspection-periodique` sont retirées le
+    // 2026-10-07 (périmètre, relecture préventeur du 30/09). Borne haute : le
+    // même compresseur, SANS la réponse « non », garde la requalification.
+    expect(
+      idsObligations(
+        determineObligationsApplicables(etabBureau(), [
+          {
+            id: "eq-compresseur",
+            libelle: "Compresseur d'atelier",
+            categorie: "EQUIPEMENT_SOUS_PRESSION",
+            caracteristiques: {},
+          },
+        ]),
+      ),
+    ).toContain("esp-requalification-decennale");
   });
 
   it("une VMC d'habitation non raccordée au gaz perd l'obligation VMC-Gaz", () => {
@@ -1332,12 +1345,9 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       // S'AJOUTE à cet annuel, qui reste dû tant que la question n'a pas reçu
       // « oui ». Aucun équipement en base ne peut donc rien perdre.
       "aeration-travail-recyclage-semestriel",
-      // Obligation neuve du 2026-09-01 (arrêté du 20 novembre 2017, art. 15 :
-      // deux ans pour les générateurs de vapeur). Elle porte l'égalité
-      // `familleEsp = generateur_vapeur`, qui est stricte ; sa jumelle
-      // `esp-inspection-periodique` porte la différence, satisfaite au silence,
-      // et couvre donc l'équipement tant que la famille n'est pas saisie.
-      "esp-inspection-periodique-generateur-vapeur",
+      // ~~"esp-inspection-periodique-generateur-vapeur"~~ — retirée le
+      // 2026-10-07 (périmètre, relecture préventeur du 30/09, décision de la
+      // propriétaire du 07/10), avec sa jumelle générale.
       // Cinq paliers non nominaux du contrôle d'étanchéité : obligations
       // neuves, et `froid-controle-etancheite-annuel` couvre l'installation
       // tant qu'aucune question n'a reçu « oui ».
@@ -2276,9 +2286,49 @@ describe("les raisons se lisent, elles ne se décodent pas", () => {
 // y compris aucune — il doit s'appliquer EXACTEMENT une des deux lignes, jamais
 // zéro (faux négatif muet) et jamais deux (deux inspections pour un seul acte).
 // -----------------------------------------------------------------------------
+// [2026-10-07] Les deux inspections réelles sont RETIRÉES du référentiel
+// (périmètre, relecture préventeur du 30/09, décision de la propriétaire du
+// 07/10) : plus aucune obligation ne porte les formes `enum_egale` /
+// `enum_differente`. Le couple est rejoué ici sur deux obligations
+// SYNTHÉTIQUES, clones de la requalification décennale qui reste, avec les
+// conditions exactes des lignes retirées : c'est la forme du moteur qu'on
+// garde, pas une ligne du référentiel. `evaluerObligation` remplace
+// `determineObligationsApplicables`, qui ne lit que le référentiel vivant.
 describe("moteur matching — inspection périodique ESP : le couple d'énumération", () => {
-  const GENERALE = "esp-inspection-periodique";
-  const BIENNALE = "esp-inspection-periodique-generateur-vapeur";
+  const GENERALE = "synthetique-esp-generale";
+  const BIENNALE = "synthetique-esp-generateur-vapeur";
+  const MODELE = obligationsConformite.find(
+    (o) => o.id === "esp-requalification-decennale",
+  )!;
+  const SUIVI = {
+    type: "equipement_propriete_non_infirmee",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "estSoumisSuiviEnService",
+  } as const;
+  const ENUM = {
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "generateur_vapeur",
+  } as const;
+  const SYNTHETIQUES = [
+    {
+      ...MODELE,
+      id: GENERALE,
+      conditions: [SUIVI, { ...ENUM, type: "equipement_propriete_enum_differente" }],
+    },
+    {
+      ...MODELE,
+      id: BIENNALE,
+      conditions: [SUIVI, { ...ENUM, type: "equipement_propriete_enum_egale" }],
+    },
+  ] as Obligation[];
+  const applicables = (
+    etab: EtablissementMatching,
+    eqs: EquipementMatching[],
+  ): string[] =>
+    SYNTHETIQUES.filter((o) => evaluerObligation(o, etab, eqs) !== null).map(
+      (o) => o.id,
+    );
 
   function esp(caracteristiques: Record<string, unknown> | null) {
     return {
@@ -2291,9 +2341,7 @@ describe("moteur matching — inspection périodique ESP : le couple d'énuméra
 
   /** Les deux lignes du couple qui s'appliquent, dans l'ordre. */
   function couple(caracteristiques: Record<string, unknown> | null): string[] {
-    const ids = idsObligations(
-      determineObligationsApplicables(etabBureau(), [esp(caracteristiques)]),
-    );
+    const ids = applicables(etabBureau(), [esp(caracteristiques)]);
     return [GENERALE, BIENNALE].filter((id) => ids.includes(id));
   }
 
@@ -2352,16 +2400,14 @@ describe("moteur matching — inspection périodique ESP : le couple d'énuméra
     // `familleEsp` n'est contraint à aucune catégorie côté schéma : rien
     // n'empêche d'écrire la clé sur une hotte. C'est la `categorie` portée par
     // la condition qui doit l'empêcher de mordre, pas la discipline de saisie.
-    const ids = idsObligations(
-      determineObligationsApplicables(etabBureau(), [
-        {
-          id: "eq-hotte",
-          libelle: "Hotte de cuisson",
-          categorie: "HOTTE_PRO" as const,
-          caracteristiques: { familleEsp: "generateur_vapeur" },
-        },
-      ]),
-    );
+    const ids = applicables(etabBureau(), [
+      {
+        id: "eq-hotte",
+        libelle: "Hotte de cuisson",
+        categorie: "HOTTE_PRO" as const,
+        caracteristiques: { familleEsp: "generateur_vapeur" },
+      },
+    ]);
     expect(ids).not.toContain(BIENNALE);
     expect(ids).not.toContain(GENERALE);
   });

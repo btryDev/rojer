@@ -196,6 +196,14 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
     phrase: `Rojer ne suit pas ${nonPorte("la formation au port des équipements de protection individuelle")} : le texte la renouvelle aussi souvent que nécessaire, sans fixer de durée.`,
   },
   "R. 4225-3": { domaine: "boissons", condition: "travail" },
+  // 2026-10-07 : l'obligation qui le citait pour les seuls équipements sous
+  // pression est retirée (relecture préventeur du 30/09, décision de la
+  // propriétaire du 07/10). L'article vise tout employeur.
+  "R. 4323-1": {
+    domaine: "formation",
+    condition: "travail",
+    phrase: `Rojer ne suit pas ${nonPorte("l'information des travailleurs chargés de l'utilisation ou de la maintenance des équipements de travail")} : conditions d'utilisation, consignes de la notice du fabricant, conduite à tenir face aux situations anormales prévisibles.`,
+  },
 };
 
 export type ArticleAnnonce = {
