@@ -127,13 +127,16 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
         "Liste en sept points les mesures d'organisation par lesquelles l'employeur supprime ou réduit au minimum le risque d'exposition. Aucun contrôle daté, aucune périodicité, aucun dispositif matériel nommé : le 7° est le seul point à toucher au stockage, et il vise des « procédures de travail adéquates ».",
       citationCle:
         "L'employeur définit et applique les mesures de prévention visant à supprimer ou à réduire au minimum le risque d'exposition à des agents chimiques dangereux : […] 7° En concevant des procédures de travail adéquates, notamment des dispositions assurant la sécurité lors de la manutention, du stockage et du transport sur le lieu de travail des agents chimiques dangereux et des déchets contenant de tels agents.",
-      statut: "retenu",
-      obligations: [
-        "stockage-dangereux-retention",
-        "stockage-dangereux-verification-etancheite",
-      ],
-      reserve:
-        "NI « RÉTENTION » NI « ÉTANCHÉITÉ » N'Y FIGURENT — constat du 2026-09-01, article lu en entier à la source, les sept alinéas relevés. Le rapport du 2026-08-27 le soutenait ; il est confirmé. Ce que le chapitre porte de plus proche est R. 4412-17, qui vise « les risques de débordement ou d'éclaboussures, ainsi que de déversement par rupture des parois des cuves, bassins, réservoirs et récipients de toute nature » : c'est une exigence de résultat sur les contenants, sans acte de contrôle daté ni mot de rétention. La rétention d'un volume est prescrite ailleurs — art. 22 de l'arrêté ministériel du 1er juin 2015, hors code du travail.\n\nCE QUE LE LOT A A FAIT ET N'A PAS FAIT, le 2026-09-01. Fait : les deux formulations qui faisaient dire à l'article ce qu'il ne dit pas sont recalées sur le verbatim — la `reference` de `stockage-dangereux-verification-etancheite` annonçait « entretien régulier des équipements de stockage » et sa note interne affirmait que l'article « écrit que l'exploitant vérifie RÉGULIÈREMENT » ; le 2° dit « des procédures d'entretien régulières », qui est un dispositif d'organisation et non un acte. Pas fait : trouver le texte qui DATE l'acte. La sous-section 3 entière (R. 4412-11 à R. 4412-22) a été ouverte, aucun article n'en porte. Le seul candidat hors chapitre est R. 4224-17 — « entretenus et vérifiés suivant une périodicité appropriée » —, écarté délibérément : y ranger un bac de rétention est une interprétation, pas une lecture. La ligne est MAINTENUE, la décision revient à la propriétaire ; le détail est dans les notes internes de l'obligation.",
+      // ~~statut: "retenu", obligations: [ "stockage-dangereux-retention", "stockage-dangereux-verification-etancheite", ]~~ — 2026-10-07 :
+      // `non_couvert` (périmètre, relecture préventeur du 30/09, décision de la
+      // propriétaire du 07/10).
+      statut: "non_couvert",
+      motif:
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf 3 derniers points » sur la page « Stockage de matières dangereuses »), décision de la propriétaire du 07/10. Ce que l'article impose, relevé ci-dessus, n'a pas changé ; le produit a choisi de ne plus le porter et le dit à la déclaration du stockage. Fondait `stockage-dangereux-retention` et `stockage-dangereux-verification-etancheite`. L'article vise tout employeur exposant ses travailleurs à des agents chimiques dangereux : ni sans objet ni hors périmètre.",
+      declareA:
+        "Formulaire de déclaration d'un équipement, aide de la catégorie « Stockage de matières dangereuses » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.STOCKAGE_MATIERE_DANGEREUSE`) : « Rojer suit, pour ce stockage, les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage ; il ne suit ni le régime des installations classées (ICPE), ni la capacité de rétention, ni la vérification de l'état du stockage, ni la ventilation des locaux de stockage. »",
+      historique:
+        "RÉSERVE DE LECTURE DU TEMPS OÙ L'ARTICLE ÉTAIT RETENU (jusqu'au 2026-10-07) — ~~NI « RÉTENTION » NI « ÉTANCHÉITÉ » N'Y FIGURENT — constat du 2026-09-01, article lu en entier à la source, les sept alinéas relevés. Le rapport du 2026-08-27 le soutenait ; il est confirmé. Ce que le chapitre porte de plus proche est R. 4412-17, qui vise « les risques de débordement ou d'éclaboussures, ainsi que de déversement par rupture des parois des cuves, bassins, réservoirs et récipients de toute nature » : c'est une exigence de résultat sur les contenants, sans acte de contrôle daté ni mot de rétention. La rétention d'un volume est prescrite ailleurs — art. 22 de l'arrêté ministériel du 1er juin 2015, hors code du travail.\n\nCE QUE LE LOT A A FAIT ET N'A PAS FAIT, le 2026-09-01. Fait : les deux formulations qui faisaient dire à l'article ce qu'il ne dit pas sont recalées sur le verbatim — la `reference` de `stockage-dangereux-verification-etancheite` annonçait « entretien régulier des équipements de stockage » et sa note interne affirmait que l'article « écrit que l'exploitant vérifie RÉGULIÈREMENT » ; le 2° dit « des procédures d'entretien régulières », qui est un dispositif d'organisation et non un acte. Pas fait : trouver le texte qui DATE l'acte. La sous-section 3 entière (R. 4412-11 à R. 4412-22) a été ouverte, aucun article n'en porte. Le seul candidat hors chapitre est R. 4224-17 — « entretenus et vérifiés suivant une périodicité appropriée » —, écarté délibérément : y ranger un bac de rétention est une interprétation, pas une lecture. La ligne est MAINTENUE, la décision revient à la propriétaire ; le détail est dans les notes internes de l'obligation.~~",
     },
     {
       ref: "R. 4412-38",
@@ -210,13 +213,15 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
         // parce qu'elles ne sont PAS des fragments : la mise en service est
         // un acte distinct (une seule fois, dans le mois qui suit), et le
         // volet stockage relève de l'article 4 de l'arrêté du 8 octobre 1987
-        // — les locaux à pollution spécifique, autre régime.
+        // — les locaux à pollution spécifique, autre régime. [2026-10-07 : le
+        // volet stockage est retiré — relecture préventeur du 30/09, décision
+        // de la propriétaire du 07/10. Seule la mise en service reste.]
         //
         // Un troisième, `aeration-travail-entretien-annuel`, a été RETIRÉ le
         // 2026-08-27 : même acte, même rythme, même arrêté que l'obligation
         // qui porte l'article entier (ADR-022).
         "aeration-travail-mise-en-service",
-        "stockage-dangereux-ventilation-locaux",
+        // ~~"stockage-dangereux-ventilation-locaux"~~ — retirée le 2026-10-07.
       ],
       reserve:
         "L'article ne fixe aucun rythme : il dit « régulièrement ». Le rythme encodé (annuel) vient de la chaîne R. 4222-22 → arrêté du 8 octobre 1987, art. 3, « au minimum une fois par an » en local à pollution non spécifique — le cas des trois secteurs cibles. L'article 4 du même arrêté vise les locaux à pollution spécifique : même rythme annuel, plus un contrôle semestriel réservé aux installations avec recyclage. Ce semestriel N'EST PORTÉ NULLE PART — une première rédaction de cette réserve le disait « porté ailleurs » en citant un identifiant inventé, corrigé le 2026-08-27. Il est décrit dans `aeration-travail-locaux-pollution-specifique` sans y être planifié, faute d'une propriété d'équipement « recyclage » : c'est un manque réel, antérieur au chantier du porteur. Si un secteur à pollution spécifique entrait au périmètre, le porteur établissement ne suffirait plus à lui seul.",
@@ -239,11 +244,14 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
       versionEnVigueur: "2008-05-01",
       luLe: "2026-08-27",
       lecture: "premiere_main",
-      statut: "retenu",
-      obligations: [
-        "stockage-dangereux-retention",
-        "stockage-dangereux-verification-etancheite",
-      ],
+      // ~~statut: "retenu", obligations: [ "stockage-dangereux-retention", "stockage-dangereux-verification-etancheite", ]~~ — 2026-10-07 :
+      // `non_couvert` (périmètre, relecture préventeur du 30/09, décision de la
+      // propriétaire du 07/10).
+      statut: "non_couvert",
+      motif:
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf 3 derniers points » sur la page « Stockage de matières dangereuses »), décision de la propriétaire du 07/10. Ce que l'article impose, relevé ci-dessus, n'a pas changé ; le produit a choisi de ne plus le porter et le dit à la déclaration du stockage. Fondait, en référence de contexte, `stockage-dangereux-retention` et `stockage-dangereux-verification-etancheite`.",
+      declareA:
+        "Formulaire de déclaration d'un équipement, aide de la catégorie « Stockage de matières dangereuses » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.STOCKAGE_MATIERE_DANGEREUSE`) : « Rojer suit, pour ce stockage, les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage ; il ne suit ni le régime des installations classées (ICPE), ni la capacité de rétention, ni la vérification de l'état du stockage, ni la ventilation des locaux de stockage. »",
       citationCle:
         "« Ces mesures portent, notamment, sur le stockage, la manutention et l'isolement des agents chimiques incompatibles. A cet effet, l'employeur prend les mesures appropriées pour empêcher : […] 2° Les risques de débordement ou d'éclaboussures, ainsi que de déversement par rupture des parois des cuves, bassins, réservoirs et récipients de toute nature contenant des produits susceptibles de provoquer des brûlures d'origine thermique ou chimique. »",
       prescrit:

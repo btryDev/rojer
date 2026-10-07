@@ -4749,6 +4749,21 @@ bornée aux compresseurs : décision ouverte. Plus aucune obligation ne porte le
 lignes synthétiques (éprouvé : générale sans sa différence → « 2 failed | 5 passed »).
 171 → 165.
 
+**Stockage de matières dangereuses — « à exclure sauf 3 derniers points » (p. 21).**
+La page lue (`pdftotext -layout -f 21`) range sept lignes ; les trois dernières sont
+bien les fiches de données de sécurité, la formation du personnel et la
+signalisation des aires de stockage — elles restent. Retirées, sans absorbant :
+`stockage-dangereux-retention`, `stockage-dangereux-ventilation-locaux`,
+`stockage-dangereux-declaration-icpe`, `stockage-dangereux-verification-etancheite`.
+Corpus : `C. env. L. 512-1`, `L. 512-7`, `L. 512-8`, arrêté du 1er juin 2015 art. 22,
+`R. 4412-11`, `R. 4412-17` → `non_couvert` (adresse : l'aide de la catégorie au
+formulaire d'équipement) ; `R. 4222-20` et l'arrêté du 8 octobre 1987 art. 4 restent
+retenus par l'aération. Le registre des obligations sans surface se vide
+(`PLAFOND_SANS_SURFACE` 1 → 0) ; le domaine prestataire `stockage_dangereux` devient
+inatteignable. **À croiser avec le lot 3** du plan, qui prévoyait un « défaut annuel »
+pour l'étanchéité des stockages (R. 4412-11) : la ligne qu'il visait n'existe plus.
+165 → 161.
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

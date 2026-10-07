@@ -106,6 +106,10 @@ export const DOMAINES_PRESTATAIRE_ATTENDUS: Record<
   ascenseur: ["ascenseur", "bureau_controle"],
   porte_portail: ["porte_automatique"],
   equipement_sous_pression: ["equipement_pression", "bureau_controle"],
+  // INATTEIGNABLE depuis le 2026-10-07 : la seule ligne du domaine réalisée
+  // par un tiers (`stockage-dangereux-ventilation-locaux`) est retirée ; les
+  // deux qui restent sont tenues par l'exploitant. L'entrée est gardée pour le
+  // jour où une obligation appellera de nouveau ce prestataire.
   stockage_dangereux: ["stockage_dangereux"],
   levage: ["levage", "bureau_controle"],
   froid: ["froid"],

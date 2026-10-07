@@ -70,8 +70,11 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // `declareA` la cite mot pour mot. La changer, c'est changer l'annonce.
   EQUIPEMENT_SOUS_PRESSION:
     "Compresseurs, chaudières, réservoirs d'air comprimé. Rojer ne suit, pour ces équipements, que la requalification périodique ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention.",
+  // Même rôle que l'aide des équipements sous pression : la seconde phrase est
+  // l'adresse de non-couverture des articles passés `non_couvert` le
+  // 2026-10-07 (ICPE, R. 4412-11, R. 4412-17, arrêté du 1er juin 2015 art. 22).
   STOCKAGE_MATIERE_DANGEREUSE:
-    "Liquides inflammables, gaz, produits chimiques en quantité significative.",
+    "Liquides inflammables, gaz, produits chimiques en quantité significative. Rojer suit, pour ce stockage, les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage ; il ne suit ni le régime des installations classées (ICPE), ni la capacité de rétention, ni la vérification de l'état du stockage, ni la ventilation des locaux de stockage.",
   EQUIPEMENT_LEVAGE:
     // ~~« transpalette électrique, monte-charge »~~ (2026-09-27, lot 2) :
     // l'arrêté du 1er mars 2004 exclut les monte-charges installés à demeure,

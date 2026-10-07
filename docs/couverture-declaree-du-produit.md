@@ -152,7 +152,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ Les 60 articles (2026-10-07, l'IGH et les équipements sous pression retirés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les vingt-cinq
 annoncés le 2026-09-27, que la page « Ce que Rojer ne couvre pas » projette au
@@ -240,7 +240,7 @@ couverture.
 
 ---
 
-**Le mouvement du 2026-10-07 : 53 + 2 + 5 − 0 = 60.** `GH 5` et `GH 61` passent de
+**Le mouvement du 2026-10-07 : 53 + 2 + 5 + 6 − 0 = 66.** `GH 5` et `GH 61` passent de
 `retenu` à `non_couvert` : les trois obligations IGH qu'ils fondaient sont
 retirées du référentiel (relecture préventeur du 30/09, « IGH non traité par
 Rojer » ; décision de la propriétaire du 07/10). Les deux ont une adresse
@@ -252,10 +252,15 @@ sauf pour compresseur : requalification tous les 10 ans ») : `Arrêté 2017-11-
 d'équipement — et `R. 4323-1`, qui ne fondait que la formation des opérateurs
 d'ESP et vise tout employeur — adresse : `ADRESSE_MANQUES_ANNONCES`, domaine
 « Formation ». `C. env. R. 557-14-1`, article de champ, passe `sans_objet`.
+Puis six articles avec le retrait de quatre lignes `stockage-dangereux-*`
+(« à exclure sauf 3 derniers points ») : `C. env. L. 512-1`, `C. env. L. 512-7`,
+`C. env. L. 512-8`, `Arrêté 2015-06-01 art. 22`, `R. 4412-11`, `R. 4412-17` —
+adresse : l'aide de la catégorie « Stockage de matières dangereuses » du
+formulaire d'équipement.
 
 ---
 
-## 3. Les 60 articles lus et non portés
+## 3. Les 66 articles lus et non portés
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -553,6 +558,23 @@ plus ; son adresse est l'axe `effectif` de la page, décision E2.
 **Adresse visible** : l'aide de la catégorie « Équipement sous pression » du
 formulaire d'équipement (`DESCRIPTION_CATEGORIE`), qui dit ce que Rojer suit —
 la requalification périodique, seule restée — et ce qu'il ne suit pas.
+
+### Stockage de matières dangereuses — 6 articles (2026-10-07)
+
+`C. env. L. 512-1`, `C. env. L. 512-7`, `C. env. L. 512-8`,
+`Arrêté 2015-06-01 art. 22`, `R. 4412-11`, `R. 4412-17`
+
+> RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09
+> (« à exclure sauf 3 derniers points » sur la page « Stockage de matières
+> dangereuses »), décision de la propriétaire du 07/10. Ce que l'article impose,
+> relevé ci-dessus, n'a pas changé ; le produit a choisi de ne plus le porter et
+> le dit à la déclaration du stockage.
+
+(Motif commun aux six, chacun complété au corpus de la ligne qu'il fondait.)
+**Adresse visible** : l'aide de la catégorie « Stockage de matières
+dangereuses » du formulaire d'équipement (`DESCRIPTION_CATEGORIE`), qui dit ce
+que Rojer suit — fiches de données de sécurité, formation, signalisation — et ce
+qu'il ne suit pas.
 
 ### Information sur les équipements de travail, tous employeurs — 1 article (2026-10-07)
 

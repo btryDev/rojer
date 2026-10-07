@@ -259,7 +259,9 @@ export const obligationsConformite: Obligation[] = [
 // `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
 // `incendie-igh-charge-calorifique-quinquennale` (`OBLIGATIONS_RETIREES`).
 // 174 + 0 − 3 = 171. Équipements sous pression : seule la requalification
-// décennale reste — six lignes `esp-*` retirées. 171 − 6 = 165.
+// décennale reste — six lignes `esp-*` retirées. 171 − 6 = 165. Stockage de
+// matières dangereuses : « sauf les 3 derniers points » — quatre lignes
+// `stockage-dangereux-*` retirées. 165 − 4 = 161.
 export const REFERENTIEL_VERSION = "2026-10-07.2";
 
 /**
@@ -399,6 +401,30 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
     porteur: "equipement",
     motif:
       "Formation et information des opérateurs (Code du travail, R. 4323-1 à R. 4323-5) — état permanent. Le Code du travail continue de s'appliquer à tout équipement de travail : c'est la ligne propre aux ESP qui sort, pas l'article. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "stockage-dangereux-declaration-icpe": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Vérification du régime ICPE applicable (C. env., L. 512-1, L. 512-7, L. 512-8) — obligation ponctuelle, seule inscrite au registre des obligations sans surface, qui se vide. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "stockage-dangereux-retention": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Capacité de rétention (R. 4412-11, R. 4412-17 ; arrêté du 1er juin 2015, art. 22) — état permanent. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "stockage-dangereux-verification-etancheite": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Vérification régulière de l'état du stockage (R. 4412-11, 2°) — échéance récurrente sans rythme écrit. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "stockage-dangereux-ventilation-locaux": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Ventilation des locaux de stockage et contrôle annuel (R. 4222-20 ; arrêté du 8 octobre 1987, art. 4) — les deux textes continuent de fonder les lignes d'aération. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
 };
 

@@ -83,22 +83,22 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**165 obligations**, **320 références** — 93 obligations en citent plus d'une.
+**161 obligations**, **310 références** — 89 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 65 | 39 % | 74 | 168 | 53 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 92 | 56 % | 87 | 143 | 45 % |
+| 5 · lu à la source, verbatim relevé | 65 | 40 % | 73 | 165 | 53 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 88 | 55 % | 84 | 136 | 44 % |
 | 3 · lu et daté, aucun verbatim | 8 | 5 % | 4 | 9 | 3 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**157 obligations sur 165 (95 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**153 obligations sur 161 (95 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **8 obligations (5 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
-**11 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `incendie-erp-extincteurs-annuelle`, `ascenseur-controle-technique-quinquennal`, `stockage-dangereux-ventilation-locaux`, `sante-travail-etablissement-adhesion-spst`.
+**10 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `incendie-erp-extincteurs-annuelle`, `ascenseur-controle-technique-quinquennal`, `sante-travail-etablissement-adhesion-spst`.
 
 **Aucune référence n'est au bas de l'échelle** : les 2 degrés « au corpus, aucune trace de lecture » et « rien à ouvrir » sont vides. Toute référence du référentiel porte une clé d'article, cette clé est connue d'un corpus, et cet article porte une date et un moyen de lecture. Ces degrés restent dans l'échelle parce que leur disparition ne se verrait pas si l'échelle ne les nommait plus.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 301 | 94 % |
+| ancrée | 291 | 94 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 18 | 6 % |
 
-**9 obligations sur 165 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 161 (6 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -142,11 +142,11 @@ repose sur un texte que personne n'a ouvert.
 | `sante_travail` | 13 | 22 | 3 | 9 | 1 | · | · | · | 12 / 13 — 92 % | 0 / 22 | 2026-08-31 → 2026-09-26 |
 | `secours` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-20 |
 | `signalisation` | 9 | 10 | · | 9 | · | · | · | · | 9 / 9 — 100 % | 0 / 10 | 2026-09-02 |
-| `stockage_dangereux` | 6 | 13 | · | 6 | · | · | · | · | 6 / 6 — 100 % | 0 / 13 | 2026-08-27 → 2026-09-01 |
+| `stockage_dangereux` | 2 | 3 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 3 | 2026-09-01 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
-**17 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (8), `co_activite` (1), `compactage_dechets` (1), `eclairage` (1), `epi` (2), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (9), `stockage_dangereux` (6).
+**17 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (8), `co_activite` (1), `compactage_dechets` (1), `eclairage` (1), `epi` (2), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (9), `stockage_dangereux` (2).
 
 Aucun domaine n'est entièrement dépourvu de verbatim.
 
@@ -156,7 +156,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 82 | 159 | 39 | 37 | 6 | · | · | · | 76 / 82 — 93 % | 18 / 159 | 2026-08-26 → 2026-09-27 |
+| `equipement` | 78 | 149 | 39 | 33 | 6 | · | · | · | 72 / 78 — 92 % | 18 / 149 | 2026-08-26 → 2026-09-27 |
 | `etablissement` | 69 | 129 | 26 | 41 | 2 | · | · | · | 67 / 69 — 97 % | 0 / 129 | 2026-08-26 → 2026-09-27 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
@@ -169,16 +169,16 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | date de lecture | références | part | obligations concernées |
 | --- | --- | --- | --- |
 | 2026-08-26 | 32 | 10 % | 31 |
-| 2026-08-27 | 10 | 3 % | 7 |
-| 2026-08-31 | 58 | 18 % | 28 |
-| 2026-09-01 | 128 | 40 % | 81 |
+| 2026-08-27 | 7 | 2 % | 4 |
+| 2026-08-31 | 58 | 19 % | 28 |
+| 2026-09-01 | 121 | 39 % | 77 |
 | 2026-09-02 | 18 | 6 % | 15 |
 | 2026-09-04 | 10 | 3 % | 5 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 25 | 8 % | 20 |
-| 2026-09-27 | 36 | 11 % | 34 |
+| 2026-09-27 | 36 | 12 % | 34 |
 
-320 des 320 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
+310 des 310 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-09-27.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -194,7 +194,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**335 articles dépouillés ne sont cités par aucune obligation**, répartis sur 48 corpus.
+**341 articles dépouillés ne sont cités par aucune obligation**, répartis sur 49 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -210,19 +210,20 @@ une relecture déjà faite.
 | `code-travail-epi` | 11 | 16 | 2026-09-04 → 2026-09-27 |
 | `code-travail-formation-securite` | 10 | 27 | 2026-08-31 → 2026-09-27 |
 | `code-travail-sante-travail` | 9 | 26 | 2026-08-31 → 2026-09-27 |
+| `code-travail-risque-chimique` | 8 | 13 | 2026-08-27 → 2026-09-28 |
 | `code-travail-vigilance-modalites` | 8 | 8 | 2026-09-02 → 2026-09-27 |
 | `arrete-1980-livre-2` | 7 | 26 | 2026-09-01 → 2026-09-28 |
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
 | `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-27 |
 | `code-travail-vigilance` | 7 | 7 | 2026-09-02 → 2026-09-27 |
 | `arrete-2011-12-30-igh` | 6 | 6 | 2026-09-03 → 2026-09-27 |
-| `code-travail-risque-chimique` | 6 | 13 | 2026-09-02 → 2026-09-28 |
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `esp-suivi-en-service` | 5 | 6 | 2026-09-01 → 2026-09-27 |
 | `code-travail-manutention-ecran` | 5 | 7 | 2026-09-26 |
 | `code-travail-matieres-inflammables` | 5 | 6 | 2026-09-02 → 2026-09-27 |
 | `cch-classement-erp-igh` | 5 | 5 | 2026-09-03 → 2026-09-27 |
+| `icpe-stockage` | 4 | 4 | 2026-09-01 |
 | `code-travail-co-activite` | 4 | 11 | 2026-08-31 → 2026-09-02 |
 | `code-travail-travail-dissimule` | 4 | 4 | 2026-09-02 |
 | `arrete-2017-04-19-registre-accessibilite` | 4 | 4 | 2026-09-03 → 2026-09-27 |
@@ -247,13 +248,13 @@ une relecture déjà faite.
 | `casf-definition-handicap` | 1 | 1 | 2026-09-03 |
 | `cch-registre-accessibilite` | 1 | 1 | 2026-09-04 |
 
-**23 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01 → 2026-09-27), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-27), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-27), `csp-eau-potable` (11 articles, lus 2026-09-02 → 2026-09-27), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02 → 2026-09-27), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02 → 2026-09-27), `arrete-2011-12-30-igh` (6 articles, lus 2026-09-03 → 2026-09-27), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-27), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-27), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-27), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03 → 2026-09-27), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `code-travail-equipements-information` (1 articles, lus 2026-09-01), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
+**24 corpus ne sont cités nulle part** — `code-travail-travail-en-hauteur` (33 articles, lus 2026-09-01 → 2026-09-27), `code-travail-plan-prevention` (16 articles, lus 2026-09-02 → 2026-09-27), `arrete-2021-09-10-retours-eau` (14 articles, lus 2026-09-02 → 2026-09-27), `csp-eau-potable` (11 articles, lus 2026-09-02 → 2026-09-27), `arrete-2010-02-01-legionelles` (11 articles, lus 2026-09-20), `code-travail-vigilance-modalites` (8 articles, lus 2026-09-02 → 2026-09-27), `arrete-2004-12-21-echafaudages` (7 articles, lus 2026-09-01), `code-travail-vigilance` (7 articles, lus 2026-09-02 → 2026-09-27), `arrete-2011-12-30-igh` (6 articles, lus 2026-09-03 → 2026-09-27), `code-travail-duerp-principes` (6 articles, lus 2026-09-02 → 2026-09-27), `code-travail-bruit-vibrations` (6 articles, lus 2026-09-02 → 2026-09-27), `cch-classement-erp-igh` (5 articles, lus 2026-09-03 → 2026-09-27), `icpe-stockage` (4 articles, lus 2026-09-01), `code-travail-travail-dissimule` (4 articles, lus 2026-09-02), `arrete-2017-04-19-registre-accessibilite` (4 articles, lus 2026-09-03 → 2026-09-27), `arrete-1980-livre-1` (3 articles, lus 2026-09-03 → 2026-09-26), `code-travail-agents-biologiques` (2 articles, lus 2026-09-26), `code-travail-travail-de-nuit` (2 articles, lus 2026-09-26), `code-travail-circulation-lieux` (2 articles, lus 2026-09-21), `code-travail-epi-amont` (2 articles, lus 2026-09-04), `code-travail-equipements-information` (1 articles, lus 2026-09-01), `arrete-1993-03-19-travaux-dangereux` (1 articles, lus 2026-09-03), `casf-definition-handicap` (1 articles, lus 2026-09-03), `cch-registre-accessibilite` (1 articles, lus 2026-09-04). Le dépouillement est fait, aucune obligation ne s'y branche encore.
 
 Le total du corpus, les articles jamais lus et ceux qui imposent une obligation que le référentiel ne porte pas sont tenus par `pnpm relecture`, qui les compte à la maille du corpus.
 
 ---
 
-## 8. Les 165 obligations
+## 8. Les 161 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -351,12 +352,8 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `signalisation-etablissement-signaux-lumineux-acoustiques-semestrielle` | signalisation | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
 | `signalisation-incendie-moyens-lutte` | signalisation | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
 | `signalisation-stockage-substances-dangereuses` | signalisation | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
-| `stockage-dangereux-declaration-icpe` | stockage_dangereux | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 |
 | `stockage-dangereux-fiches-donnees` | stockage_dangereux | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `stockage-dangereux-formation-personnel` | stockage_dangereux | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
-| `stockage-dangereux-retention` | stockage_dangereux | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-08-27 → 2026-09-01 |
-| `stockage-dangereux-ventilation-locaux` | stockage_dangereux | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
-| `stockage-dangereux-verification-etancheite` | stockage_dangereux | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
 | `aeration-controle-installations-r4222-20` | aeration | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-27 |
 | `aeration-habitation-vmc-gaz-annuelle` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `aeration-habitation-vmc-gaz-quinquennale` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
@@ -428,7 +425,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 320 références, une par une
+## 9. Les 310 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -590,16 +587,6 @@ refaire pour la contredire.
 | `porte-auto-maintien-en-etat` | contexte 1 | R. 4224-17 | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `porte-auto-portail-piete-coulissant` | fondement | Arrêté du 21 décembre 1993 (portes et portails automatiques), art. 2 et 5 (passages de véhicules) | Arrêté 1993-12-21 art. 2 | arrete-1993-12-21-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1994-07-13 | 1994-07-13 | 4 · agent + verbatim | ancrée |
 | `esp-requalification-decennale` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 18 et 19 | Arrêté 2017-11-20 art. 18-19 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
-| `stockage-dangereux-declaration-icpe` | fondement | C. env., art. L. 512-8 — régime de la DÉCLARATION (section 3) | C. env. L. 512-8 | icpe-stockage | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2017-03-01 | 2017-03-01 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-declaration-icpe` | contexte 1 | C. env., art. L. 512-7 — régime de l'ENREGISTREMENT, dit autorisation simplifiée (section 2) | C. env. L. 512-7 | icpe-stockage | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2020-12-09 | 2020-12-09 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-declaration-icpe` | contexte 2 | C. env., art. L. 512-1 — régime de l'AUTORISATION environnementale (section 1) | C. env. L. 512-1 | icpe-stockage | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2017-03-01 | 2017-03-01 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-retention` | fondement | R. 4412-11 (procédures de stockage sûres des agents chimiques dangereux) | R. 4412-11 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-retention` | contexte 1 | Arrêté du 1er juin 2015 (rubriques 4331/4734, enregistrement), art. 22 — valeurs de rétention ; texte relatif aux installations classées de ce régime | Arrêté 2015-06-01 art. 22 | icpe-stockage | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2022-01-01 | 2022-01-01 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-retention` | contexte 2 | R. 4412-17 (prévention des débordements et ruptures de parois des récipients) | R. 4412-17 | code-travail-risque-chimique | retenu | 2026-08-27 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `stockage-dangereux-verification-etancheite` | fondement | R. 4412-11, 2° (procédures d'entretien régulières du matériel de stockage) | R. 4412-11 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-verification-etancheite` | contexte 1 | R. 4412-17 (prévention des débordements et ruptures de parois des récipients) | R. 4412-17 | code-travail-risque-chimique | retenu | 2026-08-27 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `stockage-dangereux-ventilation-locaux` | fondement | R. 4222-20 | R. 4222-20 | code-travail-risque-chimique | retenu | 2026-08-27 | premiere_main | — | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `stockage-dangereux-ventilation-locaux` | contexte 1 | Arrêté du 8 octobre 1987, art. 4 (locaux à pollution spécifique) | Arrêté 1987-10-08 art. 4 | arrete-1987-10-08-aeration | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1988-04-01 | 1988-04-01 | 4 · agent + verbatim | ancrée |
 | `stockage-dangereux-fiches-donnees` | fondement | R. 4412-38 (accès des travailleurs aux fiches de données de sécurité) | R. 4412-38 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `stockage-dangereux-formation-personnel` | fondement | R. 4412-38 (agents chimiques dangereux) | R. 4412-38 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `stockage-dangereux-formation-personnel` | contexte 1 | R. 4412-87 (agents CMR uniquement) | R. 4412-87 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |

@@ -227,7 +227,12 @@ describe("référentiel conformité — couverture P1", () => {
     expect(obligationsEquipementSousPression.map((o) => o.id)).toEqual([
       "esp-requalification-decennale",
     ]);
-    expect(obligationsStockageDangereux.length).toBeGreaterThanOrEqual(5);
+    // ~~`toBeGreaterThanOrEqual(5)`~~ — 2026-10-07 : « à exclure sauf 3 derniers
+    // points » ; le troisième vit au domaine signalisation.
+    expect(obligationsStockageDangereux.map((o) => o.id)).toEqual([
+      "stockage-dangereux-fiches-donnees",
+      "stockage-dangereux-formation-personnel",
+    ]);
     expect(obligationsLevage.length).toBeGreaterThanOrEqual(7);
   });
 
@@ -495,14 +500,9 @@ describe("référentiel conformité — anti-doublon", () => {
       raison:
         "Instruit à l'intégration du 2026-09-02, et c'est une paire née de deux branches qui ne se voyaient pas : le carnet de prescriptions a été encodé l'après-midi par un lot, quand une réserve écrite le matin par un autre disait qu'il n'était « encodé nulle part ». `R. 4544-10` porte les deux — le quatrième alinéa remet un carnet de prescriptions À CHAQUE travailleur, charge d'employeur due dès qu'on opère sur l'installation ; le premier délivre l'habilitation « à un travailleur désigné », titre nominatif qui n'existe que par personne déclarée. Un employeur peut avoir remis les carnets sans qu'aucune habilitation soit à jour, et l'inverse. Les fondre ferait cocher « fait » pour l'un en réglant l'autre. Le test ne compare que la clé d'article, et `R. 4544-10` en institue deux ; c'est le troisième couple de ce genre sur ce seul article.",
     },
-    {
-      paire: [
-        "aeration-controle-installations-r4222-20",
-        "stockage-dangereux-ventilation-locaux",
-      ],
-      raison:
-        "Même article fondateur (R. 4222-20), mais deux régimes distincts de l'arrêté du 8 octobre 1987 : l'article 3 pour les locaux à pollution NON spécifique, l'article 4 pour les locaux à pollution spécifique — dont relève un local de stockage de matières dangereuses. Le discriminant est la référence de CONTEXTE, que ce test ne compare pas (il ne regarde que le fondateur, par convention). Ce n'est pas un doublon.",
-    },
+    // ~~{ paire: ["aeration-controle-installations-r4222-20", "stockage-dangereux-ventilation-locaux"] }~~ — sortie le 2026-10-07 : au moins
+    // une des deux est retirée (périmètre, relecture préventeur du 30/09,
+    // décision de la propriétaire du 07/10). La paire n'existe plus.
     {
       paire: [
         "porte-auto-verification-initiale",
@@ -511,14 +511,9 @@ describe("référentiel conformité — anti-doublon", () => {
       raison:
         "Instruit le 2026-08-27, ce n'est PAS un doublon. La clé canonique est la même (`Arrêté 1993-12-21 art. 2`) parce que l'article 2 pose le champ d'application commun, mais les deux obligations renvoient à des dispositions distinctes du même arrêté : « art. 2 à 4 — installations neuves » d'un côté, « art. 2 et 5 — passages de véhicules » de l'autre. Un article peut fonder plusieurs actes ; ce test ne compare que le fondateur, il ne sait pas les distinguer.",
     },
-    {
-      paire: [
-        "stockage-dangereux-retention",
-        "stockage-dangereux-verification-etancheite",
-      ],
-      raison:
-        "Ce n'est pas un doublon, mais la raison qui le disait était fausse et a été réécrite le 2026-09-01 (lot A). Elle affirmait que R. 4412-11 fonde « entretien régulier des équipements de stockage » : l'article, lu en entier à la source, ne l'écrit pas. Ce qui distingue vraiment les deux lignes est leur NATURE, et elle est déclarée : `stockage-dangereux-retention` est un `etat_permanent` — la rétention est en place ou elle ne l'est pas — et `stockage-dangereux-verification-etancheite` une `echeance_recurrente` — l'acte revient, sans rythme connu. Un état et un acte ne se cochent pas de la même façon et ne se prouvent pas par la même chose. Le 7° de l'article fonde le premier (procédures de stockage sûres), le 2° le second (procédures d'entretien régulières) ; seul l'article est commun, et aucune des deux n'a pour l'instant de texte qui DATE l'acte — voir les notes internes de la seconde.",
-    },
+    // ~~{ paire: ["stockage-dangereux-retention", "stockage-dangereux-verification-etancheite"] }~~ — sortie le 2026-10-07 : au moins
+    // une des deux est retirée (périmètre, relecture préventeur du 30/09,
+    // décision de la propriétaire du 07/10). La paire n'existe plus.
     // ── Apparue le 2026-09-01 avec le recalage des fondements (lot A) ──
     {
       paire: [
@@ -1635,7 +1630,9 @@ describe("référentiel conformité — version et empreinte", () => {
     // Même version, même lot (une seule par lot) : les équipements sous
     // pression ne gardent que la requalification décennale — six lignes
     // `esp-*` retirées. 171 − 6 = 165.
-    { version: "2026-10-07.2", empreinte: "165-fb6af2b3275d1899" },
+    // Stockage de matières dangereuses, « sauf 3 derniers points » : quatre
+    // lignes retirées. 165 − 4 = 161.
+    { version: "2026-10-07.2", empreinte: "161-ccc1a483ea5bd76f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1792,7 +1789,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(165);
+    ).toBe(161);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

@@ -129,7 +129,10 @@ describe("registre de dette — les réserves de lecture", () => {
     // est désormais `non_couvert`, compté ailleurs.
     // 88 → 87 le même jour : `R. 4323-1` cesse d'être retenu avec
     // `esp-personnel-formation` ; sa réserve passe dans `historique`.
-    expect(n).toBe(87);
+    // 87 → 83 le même jour : `C. env. L. 512-7`, `L. 512-8`, l'arrêté du
+    // 1er juin 2015 art. 22 et `R. 4412-11` cessent d'être retenus (stockage
+    // « sauf 3 derniers points ») ; leurs réserves passent dans `historique`.
+    expect(n).toBe(83);
     expect(reservesDeLecture().length).toBe(n);
   });
 });
