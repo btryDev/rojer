@@ -87,8 +87,8 @@ repose sur un texte que personne n'a ouvert.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 76 | 43 % | 84 | 183 | 54 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 91 | 51 % | 88 | 143 | 42 % |
+| 5 · lu à la source, verbatim relevé | 79 | 44 % | 87 | 186 | 55 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 88 | 49 % | 85 | 140 | 41 % |
 | 3 · lu et daté, aucun verbatim | 11 | 6 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
@@ -128,7 +128,7 @@ repose sur un texte que personne n'a ouvert.
 | `compactage_dechets` | 1 | 5 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson_hotte` | 6 | 9 | 2 | 3 | 1 | · | · | · | 5 / 6 — 83 % | 1 / 9 | 2026-08-26 → 2026-09-27 |
 | `eclairage` | 1 | 2 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 2 | 2026-09-01 → 2026-09-02 |
-| `electricite` | 15 | 24 | 2 | 11 | 2 | · | · | · | 13 / 15 — 87 % | 2 / 24 | 2026-08-26 → 2026-09-27 |
+| `electricite` | 15 | 24 | 5 | 8 | 2 | · | · | · | 13 / 15 — 87 % | 2 / 24 | 2026-08-26 → 2026-10-07 |
 | `epi` | 2 | 7 | 2 | · | · | · | · | · | 2 / 2 — 100 % | 0 / 7 | 2026-09-04 |
 | `equipement_sous_pression` | 7 | 8 | 7 | · | · | · | · | · | 7 / 7 — 100 % | 1 / 8 | 2026-09-01 → 2026-09-27 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
@@ -156,8 +156,8 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 94 | 175 | 50 | 36 | 8 | · | · | · | 86 / 94 — 91 % | 20 / 175 | 2026-08-26 → 2026-10-07 |
-| `etablissement` | 70 | 131 | 26 | 41 | 3 | · | · | · | 67 / 70 — 96 % | 0 / 131 | 2026-08-26 → 2026-09-27 |
+| `equipement` | 94 | 175 | 52 | 34 | 8 | · | · | · | 86 / 94 — 91 % | 20 / 175 | 2026-08-26 → 2026-10-07 |
+| `etablissement` | 70 | 131 | 27 | 40 | 3 | · | · | · | 67 / 70 — 96 % | 0 / 131 | 2026-08-26 → 2026-10-07 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -171,13 +171,13 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 32 | 9 % | 31 |
 | 2026-08-27 | 10 | 3 % | 7 |
 | 2026-08-31 | 58 | 17 % | 28 |
-| 2026-09-01 | 133 | 39 % | 85 |
+| 2026-09-01 | 130 | 38 % | 82 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 13 | 4 % | 7 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 25 | 7 % | 20 |
 | 2026-09-27 | 38 | 11 % | 36 |
-| 2026-10-07 | 8 | 2 % | 5 |
+| 2026-10-07 | 11 | 3 % | 8 |
 
 338 des 338 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
 
@@ -283,10 +283,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `cuisson-erp-verification-initiale` | cuisson_hotte | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-09-27 |
 | `cuisson-gaz-installations-annuelle` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `eclairage-etablissement-regles-entretien` | eclairage | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-02 |
-| `elec-erp-groupe-electrogene-annuel` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
-| `elec-erp-groupe-electrogene-quinzaine` | electricite | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-erp-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
-| `elec-erp-presence-personne-qualifiee` | electricite | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-salarie-attestation-medicale-voisinage` | electricite | salarie | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
 | `elec-salarie-habilitation` | electricite | salarie | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-travail-carnet-prescriptions` | electricite | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
@@ -372,6 +369,9 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `cuisson-erp-circuits-extraction-nettoyage` | cuisson_hotte | equipement | 1 | 5 · première main | 5 · première main | 1 / 1 | 2026-09-27 |
 | `cuisson-erp-filtres-hebdomadaire` | cuisson_hotte | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `elec-erp-cat1-4-annuelle` | electricite | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
+| `elec-erp-groupe-electrogene-annuel` | electricite | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-27 → 2026-10-07 |
+| `elec-erp-groupe-electrogene-quinzaine` | electricite | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
+| `elec-erp-presence-personne-qualifiee` | electricite | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
 | `incendie-hotel-po-controle-annuel-electricite` | electricite | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 |
 | `epi-etablissement-consigne-utilisation` | epi | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-04 |
 | `epi-verification-generale-periodique` | epi | equipement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-09-04 |
@@ -464,9 +464,9 @@ refaire pour la contredire.
 | `elec-erp-mise-en-service` | fondement | Arrêté du 25 juin 1980, art. GE 6 à GE 8 (vérifications par organismes agréés, rapport RVRAT) — livre II, établissements des quatre premières catégories | GE 6 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2007-11-19 | 2007-11-19 | 4 · agent + verbatim | ancrée |
 | `elec-erp-mise-en-service` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 § 2 (installations neuves ou modifiées) — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
 | `elec-erp-cat1-4-annuelle` | fondement | Arrêté du 25 juin 1980, art. EL 19 § 3 (vérifications périodiques des installations non modifiées) | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
-| `elec-erp-groupe-electrogene-quinzaine` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 4 (première périodicité) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 4 · agent + verbatim | ancrée |
-| `elec-erp-presence-personne-qualifiee` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 2 (présence physique d'une personne qualifiée) | EL 18 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 4 · agent + verbatim | ancrée |
-| `elec-erp-groupe-electrogene-annuel` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 4 (entretien et essais des groupes électrogènes de sécurité) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 4 · agent + verbatim | ancrée |
+| `elec-erp-groupe-electrogene-quinzaine` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 4 (première périodicité) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 5 · première main | ancrée |
+| `elec-erp-presence-personne-qualifiee` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 2 (présence physique d'une personne qualifiée) | EL 18 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 5 · première main | ancrée |
+| `elec-erp-groupe-electrogene-annuel` | fondement | Arrêté du 25 juin 1980, art. EL 18 § 4 (entretien et essais des groupes électrogènes de sécurité) — livre II, établissements des quatre premières catégories | EL 18 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2019-07-01 | 2019-07-01 | 5 · première main | ancrée |
 | `elec-erp-groupe-electrogene-annuel` | contexte 1 | Arrêté du 25 juin 1980, art. EL 19 (vérification annuelle) — livre II, établissements des quatre premières catégories | EL 19 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 2010-01-23 | 2010-01-23 | 5 · première main | ancrée |
 | `elec-igh-annuelle` | fondement | Arrêté du 30 décembre 2011 (règlement IGH), art. GH 5 (vérifications techniques par organismes agréés) | GH 5 | arrete-2011-12-30-igh | retenu | 2026-09-04 | agent_verbatim | ✓ | — | 2026-01-01 | — | 3 · lu sans verbatim | jamais constatée |
 | `incendie-hotel-po-controle-annuel-electricite` | fondement | Arrêté du 25 juin 1980, art. PO 1 § 3 (règles spécifiques aux hôtels) | PO 1 | arrete-1980-livre-3 | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2011-10-30 | 2018-01-01 | 5 · première main | divergente |

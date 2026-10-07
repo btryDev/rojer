@@ -275,8 +275,11 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       intitule: "Maintenance, exploitation",
       url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020314182/",
       versionEnVigueur: "2019-07-01",
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-01", lecture: "agent_verbatim"~~ — relu le 2026-10-07
+      // par l'API PISTE en BAC À SABLE (relecture du préventeur, § 4) :
+      // LEGIARTI000038485456, même version, citation ci-dessous identique.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
       prescrit:
         "Quatre paragraphes, dont trois que le référentiel ne porte pas. § 1 : entretien et réparation des défectuosités dès leur constatation. § 2 : PRÉSENCE PHYSIQUE d'une personne qualifiée pendant la présence du public en 1re et 2e catégorie, imposable en 3e et 4e après avis de la commission de sécurité. § 3 : renvoi de l'éclairage de sécurité à EC 13 et EC 14. § 4 : entretien et essais des groupes électrogènes de sécurité, quinzaine et mois, consignés dans un registre d'entretien.",
       citationCle:

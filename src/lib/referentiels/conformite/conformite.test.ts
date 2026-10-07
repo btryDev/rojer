@@ -1636,7 +1636,9 @@ describe("référentiel conformité — version et empreinte", () => {
     // (3) Identification des extincteurs en ERP, sœurs de l'art. 10 de
     // l'arrêté du 4 novembre 1993 : N1–N4 (MS 38 § 3, MS 39), N5 (PE 26 § 1
     // et § 3). Deux états permanents d'équipement : 176 + 2 − 0 = 178.
-    { version: "2026-10-07.1", empreinte: "178-11ef1ce169af23e5" },
+    // (4) EL 18 § 4 : le libellé de la quinzaine du groupe électrogène reprend
+    // tout l'objet du premier tiret. Libellé seul : 178 + 0 − 0 = 178.
+    { version: "2026-10-07.1", empreinte: "178-72ee72dd1c5ea327" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

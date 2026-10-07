@@ -264,7 +264,9 @@ export const obligationsConformite: Obligation[] = [
 // 176 + 0 − 0 = 176. (3) Identification des extincteurs en ERP :
 // `signalisation-erp-extincteurs-identification` (N1–N4, MS 38 § 3, MS 39) et
 // `signalisation-erp-5-extincteurs-identification` (N5, PE 26). 176 + 2 − 0 =
-// 178. États permanents : aucune ligne de calendrier.
+// 178. États permanents : aucune ligne de calendrier. (4) EL 18 § 4 : libellé
+// de `elec-erp-groupe-electrogene-quinzaine` dans les mots du tiret. 178 + 0 −
+// 0 = 178.
 export const REFERENTIEL_VERSION = "2026-10-07.1";
 
 /**
