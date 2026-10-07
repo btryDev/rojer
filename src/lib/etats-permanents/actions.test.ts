@@ -50,11 +50,15 @@ beforeEach(() => {
 
 /** Une obligation que cet écran accepte réellement, prise au référentiel. */
 function uneObligationDeclarable(): string {
-  // `formation-securite-etablissement-organisation` : porteur établissement,
-  // périodicité `autre`, applicable à tout employeur — donc à un bureau de six
-  // personnes sans le moindre équipement.
+  // `information-etablissement-affichages-obligatoires` (D. 4711-1) : porteur
+  // établissement, état permanent, périodicité `autre` SANS rythme retenu,
+  // applicable à tout employeur — donc à un bureau de six personnes sans le
+  // moindre équipement. Le témoin était
+  // `formation-securite-etablissement-organisation` jusqu'au 2026-10-07 : le
+  // lot 3 (C55) lui a donné un rythme retenu annuel, elle est passée au
+  // calendrier, et la garde la refuse désormais — à juste titre.
   const o = obligationsConformite.find(
-    (x) => x.id === "formation-securite-etablissement-organisation",
+    (x) => x.id === "information-etablissement-affichages-obligatoires",
   );
   if (!o) throw new Error("l'obligation témoin a disparu du référentiel");
   return o.id;

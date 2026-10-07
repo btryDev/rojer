@@ -83,12 +83,12 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**176 obligations**, **338 références** — 97 obligations en citent plus d'une.
+**176 obligations**, **339 références** — 97 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 73 | 41 % | 82 | 182 | 54 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 92 | 52 % | 88 | 144 | 43 % |
+| 5 · lu à la source, verbatim relevé | 73 | 41 % | 82 | 183 | 54 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 92 | 52 % | 88 | 144 | 42 % |
 | 3 · lu et daté, aucun verbatim | 11 | 6 % | 6 | 12 | 4 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
@@ -108,7 +108,7 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 313 | 93 % |
+| ancrée | 314 | 93 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 24 | 7 % |
 
@@ -142,7 +142,7 @@ repose sur un texte que personne n'a ouvert.
 | `sante_travail` | 13 | 22 | 3 | 9 | 1 | · | · | · | 12 / 13 — 92 % | 0 / 22 | 2026-08-31 → 2026-09-26 |
 | `secours` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-20 |
 | `signalisation` | 9 | 10 | · | 9 | · | · | · | · | 9 / 9 — 100 % | 0 / 10 | 2026-09-02 |
-| `stockage_dangereux` | 6 | 13 | · | 6 | · | · | · | · | 6 / 6 — 100 % | 0 / 13 | 2026-08-27 → 2026-09-01 |
+| `stockage_dangereux` | 6 | 14 | · | 6 | · | · | · | · | 6 / 6 — 100 % | 0 / 14 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
@@ -156,7 +156,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 92 | 175 | 47 | 37 | 8 | · | · | · | 84 / 92 — 91 % | 24 / 175 | 2026-08-26 → 2026-10-07 |
+| `equipement` | 92 | 176 | 47 | 37 | 8 | · | · | · | 84 / 92 — 91 % | 24 / 176 | 2026-08-26 → 2026-10-07 |
 | `etablissement` | 70 | 131 | 26 | 41 | 3 | · | · | · | 67 / 70 — 96 % | 0 / 131 | 2026-08-26 → 2026-09-27 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
@@ -177,9 +177,9 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 25 | 7 % | 20 |
 | 2026-09-27 | 38 | 11 % | 36 |
-| 2026-10-07 | 4 | 1 % | 4 |
+| 2026-10-07 | 5 | 1 % | 5 |
 
-338 des 338 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
+339 des 339 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -216,7 +216,7 @@ une relecture déjà faite.
 | `arrete-2004-12-21-echafaudages` | 7 | 7 | 2026-09-01 |
 | `arrete-1986-habitation` | 7 | 12 | 2026-09-01 → 2026-09-27 |
 | `code-travail-vigilance` | 7 | 7 | 2026-09-02 → 2026-09-27 |
-| `code-travail-risque-chimique` | 6 | 13 | 2026-09-02 → 2026-09-28 |
+| `code-travail-risque-chimique` | 6 | 14 | 2026-09-02 → 2026-09-28 |
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-manutention-ecran` | 5 | 7 | 2026-09-26 |
@@ -356,7 +356,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `signalisation-stockage-substances-dangereuses` | signalisation | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
 | `stockage-dangereux-declaration-icpe` | stockage_dangereux | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 |
 | `stockage-dangereux-fiches-donnees` | stockage_dangereux | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
-| `stockage-dangereux-formation-personnel` | stockage_dangereux | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
+| `stockage-dangereux-formation-personnel` | stockage_dangereux | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-10-07 |
 | `stockage-dangereux-retention` | stockage_dangereux | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-08-27 → 2026-09-01 |
 | `stockage-dangereux-ventilation-locaux` | stockage_dangereux | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
 | `stockage-dangereux-verification-etancheite` | stockage_dangereux | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
@@ -439,7 +439,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 338 références, une par une
+## 9. Les 339 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -631,6 +631,7 @@ refaire pour la contredire.
 | `stockage-dangereux-fiches-donnees` | fondement | R. 4412-38 (accès des travailleurs aux fiches de données de sécurité) | R. 4412-38 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `stockage-dangereux-formation-personnel` | fondement | R. 4412-38 (agents chimiques dangereux) | R. 4412-38 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
 | `stockage-dangereux-formation-personnel` | contexte 1 | R. 4412-87 (agents CMR uniquement) | R. 4412-87 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
+| `stockage-dangereux-formation-personnel` | contexte 2 | R. 4412-88 (agents CMR uniquement : information et formation « répétées régulièrement ») | R. 4412-88 | code-travail-risque-chimique | retenu | 2026-10-07 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `levage-examen-adequation-mise-en-service` | fondement | Arrêté du 1er mars 2004, art. 14-I a) (vérification à la mise en service : examen d'adéquation) | Arrêté 2004-03-01 art. 14 | arrete-2004-03-01-levage | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2005-03-31 | 2005-03-31 | 5 · première main | ancrée |
 | `levage-examen-adequation-mise-en-service` | contexte 1 | Arrêté du 1er mars 2004, art. 5-I (définition de l'examen d'adéquation) | Arrêté 2004-03-01 art. 5 | arrete-2004-03-01-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2005-03-31 | 2005-03-31 | 5 · première main | ancrée |
 | `levage-examen-adequation-mise-en-service` | contexte 2 | R. 4323-22 | R. 4323-22 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |

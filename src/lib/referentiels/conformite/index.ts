@@ -262,6 +262,9 @@ export const obligationsConformite: Obligation[] = [
 // `incendie-travail-extincteurs-revision-atelier-decennale`.
 // EPI : `epi-maintien-etat-conformite` (R. 4322-1, défaut annuel, catégorie
 // `EPI` seule — l'arrêté du 19 mars 1993 garde ses trois catégories).
+// Formation : défaut annuel sur `formation-securite-etablissement-organisation`
+// (L. 4141-2, « répétée périodiquement ») et `stockage-dangereux-formation-
+// personnel` (R. 4412-88, « Elles sont répétées régulièrement »).
 // Compte : 174 + 2 − 0 = 176.
 export const REFERENTIEL_VERSION = "2026-10-07.4";
 

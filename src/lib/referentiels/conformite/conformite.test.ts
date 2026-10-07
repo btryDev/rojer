@@ -1661,7 +1661,7 @@ describe("référentiel conformité — version et empreinte", () => {
     // entrent au référentiel — NF S 61-919 pour les extincteurs hors ERP,
     // défaut annuel là où le texte impose de refaire l'acte sans chiffre.
     // Mouvement du compte : voir `REFERENTIEL_VERSION`.
-    { version: "2026-10-07.4", empreinte: "176-c43f6c208293e2da" },
+    { version: "2026-10-07.4", empreinte: "176-8317b8a6116c51c8" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

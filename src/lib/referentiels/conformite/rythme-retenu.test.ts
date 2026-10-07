@@ -41,6 +41,17 @@ function avec(id: string, rythmeRetenu: RythmeRetenu, extra: Partial<Obligation>
   return { ...base, id: `fixture-${id}`, rythmeRetenu, ...extra } as Obligation;
 }
 
+/**
+ * L'obligation livrée, DÉPOUILLÉE de son rythme retenu. Depuis le lot 3 (C55),
+ * `formation-securite-etablissement-organisation` en porte un ; les tests qui
+ * comparent « sans » et « avec » partent donc d'une copie qui n'en a pas.
+ */
+function sansRythme(id: string): Obligation {
+  const base = obligationParId(id);
+  if (!base) throw new Error(`fixture : ${id} introuvable`);
+  return { ...base, rythmeRetenu: undefined } as Obligation;
+}
+
 /** `L. 4141-2` : « Cette formation est répétée périodiquement… ». Établissement. */
 const formationDefaut = () =>
   avec("formation-securite-etablissement-organisation", {
@@ -75,7 +86,7 @@ describe("periodiciteEffective", () => {
     const o = formationDefaut();
     expect(o.periodicite).toBe("autre");
     expect(periodiciteEffective(o)).toBe("annuelle");
-    const sans = obligationParId("formation-securite-etablissement-organisation")!;
+    const sans = sansRythme("formation-securite-etablissement-organisation");
     expect(periodiciteEffective(sans)).toBe("autre");
   });
 
@@ -159,12 +170,15 @@ describe("controlerRythmeRetenu — chaque règle rougit quand on la casse", () 
 
 describe("empreinte", () => {
   it("un rythme retenu déplace l'empreinte ; son absence ne déplace rien", () => {
-    const sans = obligationParId("formation-securite-etablissement-organisation")!;
+    const sans = sansRythme("formation-securite-etablissement-organisation");
     const avecR = { ...formationDefaut(), id: sans.id };
     expect(empreinteReferentiel([avecR])).not.toBe(empreinteReferentiel([sans]));
     // Un champ explicitement `undefined` produit la même chaîne qu'avant.
-    expect(empreinteReferentiel([{ ...sans, rythmeRetenu: undefined }])).toBe(
-      empreinteReferentiel([sans]),
+    // (`sans` porte la clé à `undefined` ; `nue` ne la porte pas du tout.)
+    const nue: Record<string, unknown> = { ...sans };
+    delete nue.rythmeRetenu;
+    expect(empreinteReferentiel([sans])).toBe(
+      empreinteReferentiel([nue as Obligation]),
     );
     // Passer du défaut à une norme, au même rythme, la déplace aussi.
     const norme = {
@@ -186,7 +200,7 @@ function applicable(o: Obligation, equipements: EquipementMatching[] = []): Obli
 
 describe("générateur et états permanents : une surface, jamais deux", () => {
   it("une récurrente `autre` à rythme retenu naît au calendrier, annuelle", () => {
-    const sans = obligationParId("formation-securite-etablissement-organisation")!;
+    const sans = sansRythme("formation-securite-etablissement-organisation");
     expect(genererProchainesVerifications([applicable(sans)])).toEqual([]);
     const lignes = genererProchainesVerifications([applicable(formationDefaut())]);
     expect(lignes).toHaveLength(1);

@@ -22,6 +22,7 @@ import {
   modeDeclarationApplique,
 } from "./regle";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 
 /**
  * Le point de ce lot n'est pas qu'un test passe : c'est qu'une obligation sans
@@ -120,7 +121,9 @@ describe("le critère de l'écran", () => {
     // calendrier et une case ici. C'est le défaut que la journée du 2026-08-31
     // a passé à retirer sur deux widgets jumeaux.
     const piegees = obligationsConformite.filter(
-      (o) => o.nature === "etat_permanent" && !estSansRendezVous(o.periodicite),
+      // Rythme EFFECTIF (ADR-039, C55 lot 3) : un état permanent à rythme
+      // retenu produit lui aussi une ligne de calendrier.
+      (o) => o.nature === "etat_permanent" && !estSansRendezVous(periodiciteEffective(o)),
     );
     expect(
       piegees.length,
@@ -164,7 +167,10 @@ describe("la frontière avec le calendrier", () => {
     const doubles: string[] = [];
     for (const o of obligationsConformite) {
       const surEcran = modeDeclaration(o) !== null;
-      const auCalendrier = !estSansRendezVous(o.periodicite);
+      // Rythme EFFECTIF : c'est lui que le générateur lit (ADR-039). Lu sur
+      // `o.periodicite`, ce test ne voyait pas une ligne `autre` à rythme
+      // retenu restée déclarable — la double surface qu'il interdit.
+      const auCalendrier = !estSansRendezVous(periodiciteEffective(o));
       if (surEcran && auCalendrier) doubles.push(o.id);
     }
     expect(
@@ -181,7 +187,10 @@ describe("la frontière avec le calendrier", () => {
     // qu'une déclaration leur mentirait.
     const orphelines: string[] = [];
     for (const o of obligationsConformite) {
-      if (!estSansRendezVous(o.periodicite)) continue;
+      // Le rythme EFFECTIF (ADR-039) : une ligne `autre` à rythme retenu a un
+      // rendez-vous, et le générateur la prend. Lu sur `o.periodicite`, ce
+      // test la déclarait orpheline (C55 lot 3, 2026-10-07).
+      if (!estSansRendezVous(periodiciteEffective(o))) continue;
       if (modeDeclaration(o) !== null) continue;
       if (porteurDe(o) === "salarie") continue; // surface propre : écran Équipe
       if (o.nature === "evenementielle" || o.nature === "ponctuelle") continue;

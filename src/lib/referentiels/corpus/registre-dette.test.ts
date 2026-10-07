@@ -123,7 +123,10 @@ describe("registre de dette — les réserves de lecture", () => {
     // 89 → 90 le 2026-09-21 : `PE 27`, encodé pour ses § 4 et § 5, garde
     // dehors ses § 1, § 2, § 3 — et son § 6, que la première écriture de cette
     // réserve avait oublié (l'article a SIX paragraphes, pas cinq).
-    expect(n).toBe(90);
+    // 90 → 91 le 2026-10-07 (C55 lot 3) : `R. 4322-1` passe de `sans_objet` à
+    // `retenu` pour les seuls EPI ; les équipements de travail et moyens de
+    // protection collective qu'il vise aussi restent dehors.
+    expect(n).toBe(91);
     expect(reservesDeLecture().length).toBe(n);
   });
 });
