@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { EquipementForm } from "./EquipementForm";
 import {
   CATEGORIES_A_REPONSE_EXIGEE,
@@ -57,5 +57,45 @@ describe("EquipementForm : les questions exigées (D29 (a))", () => {
       />,
     );
     expect(container.querySelector<HTMLSelectElement>(`select[name="${champ}"]`)!.value).toBe("non");
+  });
+});
+
+describe("EquipementForm : la question du SSI A ou B suit le désenfumage mécanique (DF 10 § 3)", () => {
+  // Revue du 2026-10-07. La triennale exige les deux installations : tant que
+  // le désenfumage n'est pas déclaré mécanique, la question du SSI ne décide
+  // de rien et n'est pas posée. Sa valeur part en champ caché : le serveur
+  // l'accepte toujours. Éprouvé en rendant la question inconditionnelle.
+  const SSI = "etablissementASsiCategorieAouB";
+  const MECA = "estDesenfumageMecanique";
+
+  it("masquée tant que « mécanique » ne vaut pas « oui », montrée après", () => {
+    const { container } = render(
+      <EquipementForm
+        action={action}
+        libelleSubmit="Créer"
+        estERP
+        valeursInitiales={{ categorie: "DESENFUMAGE", [SSI]: false }}
+      />,
+    );
+    expect(container.querySelector(`select[name="${SSI}"]`)).toBeNull();
+    const cache = container.querySelector<HTMLInputElement>(`input[type="hidden"][name="${SSI}"]`);
+    expect(cache?.value).toBe("non");
+    fireEvent.change(container.querySelector<HTMLSelectElement>(`select[name="${MECA}"]`)!, {
+      target: { value: "oui" },
+    });
+    expect(container.querySelector(`select[name="${SSI}"]`)).not.toBeNull();
+    expect(container.querySelector(`input[type="hidden"][name="${SSI}"]`)).toBeNull();
+  });
+
+  it("déjà « oui » : posée d'emblée", () => {
+    const { container } = render(
+      <EquipementForm
+        action={action}
+        libelleSubmit="Enregistrer"
+        estERP
+        valeursInitiales={{ categorie: "DESENFUMAGE", [MECA]: true }}
+      />,
+    );
+    expect(container.querySelector(`select[name="${SSI}"]`)).not.toBeNull();
   });
 });

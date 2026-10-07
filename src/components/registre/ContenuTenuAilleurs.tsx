@@ -15,6 +15,7 @@ import Link from "next/link";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import type { ContenuAilleurs } from "@/lib/registre/contenu-ailleurs";
 
 // Les lignes arrivent en donnée pure (`lib/registre/contenu-ailleurs`) : ce
@@ -40,6 +41,9 @@ export function ContenuTenuAilleurs({ lignes, source, vide }: ContenuAilleurs) {
                         comme réglementaire est l'erreur la plus coûteuse du
                         lot (ADR-032). */}
                     {ligne.contractuelle && <MentionContractuelle />}
+                    {/* ADR-039 § 5 : un rythme que Rojer retient ne s'y lit
+                        pas comme celui du texte. */}
+                    <MentionRythmeRetenu mention={ligne.rythmeRetenu} />
                   </span>
                   {ligne.meta && (
                     <span className="mt-0.5 block truncate text-[12.5px] text-[color:var(--board-slate-mid)]">

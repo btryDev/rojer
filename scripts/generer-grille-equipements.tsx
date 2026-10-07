@@ -40,6 +40,7 @@ import {
 import { CORPUS } from "@/lib/referentiels/corpus";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import { libelleRythme } from "@/lib/referentiels/conformite/renvoi-aux-normes";
 import {
   CATEGORIES_EQUIPEMENT,
   PERIODICITE_EN_JOURS,
@@ -54,12 +55,15 @@ import { LIBELLE_CARACTERISTIQUE } from "@/lib/equipements/caracteristiques";
 import { LABEL_FAMILLE_ESP } from "@/lib/equipements/esp";
 import type { FamilleEsp } from "@/lib/equipements/esp";
 import {
+  LABEL_TYPE_EXTINCTEUR,
+  type TypeExtincteur,
+} from "@/lib/equipements/extincteur";
+import {
   CATEGORIES_AERATION,
   CATEGORIES_TRI_ETAT,
 } from "@/lib/equipements/schema";
 import {
   LABEL_DOMAINE,
-  LABEL_PERIODICITE,
   LABEL_REALISATEUR,
 } from "@/lib/calendrier/labels";
 import { BOARD, stylesCommuns as s } from "@/lib/pdf/styles";
@@ -150,6 +154,9 @@ const LIBELLE_CASE: Record<string, string> = {
   aGroupeElectrogene: "Groupe électrogène de sécurité",
   estLocalPollutionSpecifique: "Local à pollution spécifique",
   nbVehiculesParkingCouvert: "Véhicules en parking couvert",
+  // La question énumérée : sans elle, la colonne imprimait
+  // `typeExtincteur : sauf « co2 »` (revue du 2026-10-07).
+  typeExtincteur: "Type d'extincteur",
 };
 
 function texteCondition(c: ConditionApplication): string {
@@ -182,6 +189,9 @@ function libelleValeurEnum(propriete: string, valeur: string): string {
   if (propriete === "familleEsp" && valeur in LABEL_FAMILLE_ESP) {
     return `« ${LABEL_FAMILLE_ESP[valeur as FamilleEsp]} »`;
   }
+  if (propriete === "typeExtincteur" && valeur in LABEL_TYPE_EXTINCTEUR) {
+    return `« ${LABEL_TYPE_EXTINCTEUR[valeur as TypeExtincteur]} »`;
+  }
   return `« ${valeur} »`;
 }
 
@@ -195,6 +205,8 @@ function questionsCategorie(c: CategorieEquipement): string[] {
   const q: string[] = [];
   if (c === "INSTALLATION_ELECTRIQUE") q.push("Groupe électrogène de sécurité");
   if (CATEGORIES_AERATION.includes(c)) q.push("Local à pollution spécifique");
+  // Le type borne la maintenance approfondie (NF S 61-919, tableau A.1).
+  if (c === "EXTINCTEUR") q.push(LIBELLE_CASE.typeExtincteur);
   for (const { champ, categories } of CATEGORIES_TRI_ETAT) {
     if (categories.includes(c)) q.push(LIBELLE_CARACTERISTIQUE[champ]);
   }
@@ -325,7 +337,7 @@ function LigneObligation({ o }: { o: Obligation }) {
         </Text>
       </View>
       <View style={[cell, { width: C.periodicite }]}>
-        <Text style={s.td}>{LABEL_PERIODICITE[periodiciteEffective(o)]}</Text>
+        <Text style={s.td}>{libelleRythme(o)}</Text>
         {/* ADR-039 : un rythme que le texte n'écrit pas dit d'où il vient. */}
         {o.rythmeRetenu && (
           <Text style={[s.small, { marginTop: 1 }]}>
@@ -471,7 +483,7 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
         </View>
         {lignes.map(({ categorie, obligations }) => {
           const rythmes = [
-            ...new Set(obligations.map((o) => LABEL_PERIODICITE[periodiciteEffective(o)])),
+            ...new Set(obligations.map((o) => libelleRythme(o))),
           ];
           const questions = questionsCategorie(categorie);
           return (
@@ -683,7 +695,7 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
               </Text>
               <Text style={[s.small, { marginTop: 1 }]}>
                 {o.id} · {LABEL_DOMAINE[o.domaine]} · {LIBELLE_NATURE[o.nature]}{" "}
-                · {LABEL_PERIODICITE[periodiciteEffective(o)]} · criticité {o.criticite}/5
+                · {libelleRythme(o)} · criticité {o.criticite}/5
                 · par {o.realisateurs.map((r) => LABEL_REALISATEUR[r]).join(" ou ")}
               </Text>
               <Text style={[s.small, { marginTop: 1 }]}>

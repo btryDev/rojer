@@ -5,8 +5,10 @@ import {
   REALISATEURS,
 } from "@/lib/referentiels/types-communs";
 import { obligationParId } from "@/lib/referentiels/conformite";
-import { prescriptionRenforce } from "@/lib/matching/prescriptions";
-import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import {
+  motifPrescriptionNonRetenue,
+  prescriptionRenforce,
+} from "@/lib/matching/prescriptions";
 import { SOURCES_PRESCRIPTION } from "./sources";
 import { cleJourCivil } from "@/lib/dates";
 
@@ -92,7 +94,7 @@ export const prescriptionRenforceSchema = base
       ctx.addIssue({
         code: "custom",
         path: ["periodicite"],
-        message: `Le référentiel impose déjà « ${periodiciteEffective(o)} » : Rojer n'enregistre qu'une prescription qui renforce vos obligations. Un allègement se conserve en pièce, mais n'est pas pris en compte.`,
+        message: `${motifPrescriptionNonRetenue(o)} Rojer n'enregistre qu'une prescription qui renforce vos obligations. Un allègement se conserve en pièce, mais n'est pas pris en compte.`,
       });
     }
   });

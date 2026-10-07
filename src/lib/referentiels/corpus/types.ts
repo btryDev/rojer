@@ -217,7 +217,7 @@ export type StatutArticle =
    * `obligations` nomme celles dont le `rythmeRetenu` (ou une référence) la
    * cite. Vide est une réponse : la norme est lue, aucune obligation ne la
    * retient encore. Le lien est tenu dans les deux sens par
-   * `liensNormesRompus()`.
+   * `liensRompus("norme")`.
    *
    * Une norme lue `indirect` — par un texte qui la cite, sans son texte à
    * elle — peut figurer ici pour être comptée, mais ne fonde aucun rythme

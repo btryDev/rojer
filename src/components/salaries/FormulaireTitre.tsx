@@ -31,6 +31,8 @@ type TitreDuCatalogue = {
    * écrite dans le texte ».
    */
   rythmeRetenu?: string | null;
+  /** Le Code renvoie le rythme aux normes sans l'écrire (R. 4544-10). */
+  renvoiAuxNormes?: string | null;
   /**
    * Le titre déjà déclaré sur cette personne que le droit interdit de cumuler
    * avec celui-ci, et la phrase qui le fonde. Calculé côté serveur — la
@@ -232,7 +234,9 @@ export function FormulaireTitre({
               ? titre.rythmeRetenu
                 ? `Si le document porte une date de fin, saisissez-la : elle prime toujours. Laissée vide, Rojer la calcule à partir de la date de délivrance et d'un rythme que le texte n'écrit pas (${LABEL_PERIODICITE[titre.periodicite]}). ${titre.rythmeRetenu}`
                 : `Si le document porte une date de fin, saisissez-la : elle prime toujours. Laissée vide, Rojer la calcule à partir de la date de délivrance et de la durée écrite dans le texte (${LABEL_PERIODICITE[titre.periodicite]}) — une durée qui est souvent un maximum légal, que le service de santé au travail peut avoir raccourci.`
-              : "Laissez vide si aucune date n'est portée sur le titre. Aucun texte ne donne de durée de validité à ce titre : Rojer n'inventera pas d'échéance."
+              : titre?.renvoiAuxNormes
+                ? `Laissez vide si aucune date n'est portée sur le titre. ${titre.renvoiAuxNormes}`
+                : "Laissez vide si aucune date n'est portée sur le titre. Aucun texte ne donne de durée de validité à ce titre : Rojer n'inventera pas d'échéance."
           }
         />
       </div>

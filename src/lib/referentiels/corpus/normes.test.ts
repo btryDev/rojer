@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { obligationsConformite, obligationParId } from "../conformite";
 import { referencesCitees } from "../conformite/rythme-retenu";
 import type { Obligation } from "../conformite/types";
-import { CORPUS, indexArticlesParRef, liensNormesRompus } from "./index";
+import { CORPUS, indexArticlesParRef, liensRompus } from "./index";
 import { NORMES } from "./normes";
 import type { Corpus } from "./types";
 
@@ -85,13 +85,13 @@ describe("corpus des normes (ADR-039)", () => {
   });
 
   it("le lien norme ↔ obligation tient dans les deux sens", () => {
-    expect(liensNormesRompus()).toEqual([]);
+    expect(liensRompus("norme")).toEqual([]);
   });
 
   it("les deux sens sont gardés : chacun rougit sur une copie mutée", () => {
     // Sens 1 : une obligation cite la norme, l'entrée ne la nomme pas.
     const o = avecNorme();
-    const sens1 = liensNormesRompus(CORPUS, [...obligationsConformite, o]);
+    const sens1 = liensRompus("norme", CORPUS, [...obligationsConformite, o]);
     expect(sens1.map((r) => r.obligation)).toContain(o.id);
 
     // Sens 2 : l'entrée nomme une obligation qui ne la cite pas.
@@ -107,7 +107,7 @@ describe("corpus des normes (ADR-039)", () => {
             ),
           },
     );
-    const sens2 = liensNormesRompus(corpusMute, obligationsConformite);
+    const sens2 = liensRompus("norme", corpusMute, obligationsConformite);
     expect(sens2.map((r) => r.obligation)).toContain(
       "incendie-travail-extincteurs-dotation",
     );
@@ -115,7 +115,7 @@ describe("corpus des normes (ADR-039)", () => {
     // Et les deux réunis ferment la boucle. L'entrée garde les obligations
     // livrées qui la citent (depuis le lot 3, C59) et nomme la fixture en plus.
     expect(
-      liensNormesRompus(
+      liensRompus("norme", 
         CORPUS.map((c) =>
           c.id !== NORMES.id
             ? c

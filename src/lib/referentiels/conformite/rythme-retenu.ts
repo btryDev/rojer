@@ -38,11 +38,6 @@ export function periodiciteEffective(o: AvecRythme): Periodicite {
   return o.rythmeRetenu?.periodicite ?? o.periodicite;
 }
 
-/** Le rythme effectif est-il retenu par Rojer plutôt qu'écrit par le texte ? */
-export function aUnRythmeRetenu(o: AvecRythme): boolean {
-  return o.rythmeRetenu !== undefined;
-}
-
 /**
  * Toutes les références qu'une obligation cite, la norme de son rythme
  * retenu comprise.
@@ -107,9 +102,11 @@ export function controlerRythmeRetenu(
       `${ici} : nature « ${o.nature} ». Seule une obligation qui revient (échéance récurrente, état à maintenir) reçoit un rythme retenu.`,
     );
   }
-  // Le rythme retenu doit être un rythme.
-  if (r.periodicite === "autre" || r.periodicite === "mise_en_service_uniquement") {
-    v.push(`${ici} : « ${r.periodicite} » n'est pas un rythme.`);
+  // Le rythme retenu doit être un rythme. Le type le tient
+  // (`PeriodiciteRetenue`) ; un `as` ou un JSON ne le tiendraient pas.
+  const rythme = r.periodicite as Periodicite;
+  if (rythme === "autre" || rythme === "mise_en_service_uniquement") {
+    v.push(`${ici} : « ${rythme} » n'est pas un rythme.`);
   }
 
   if (r.motif === "norme") {

@@ -15,6 +15,10 @@
  */
 
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import {
+  mentionRythmeRetenu,
+  type MentionRythme,
+} from "@/lib/referentiels/conformite/mention-rythme";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import {
   phraseEffectifAConfirmer,
@@ -44,6 +48,13 @@ export type ChezVousDomaine = {
   nbObligations: number;
   /** Périodicités distinctes, de la plus fréquente à la plus espacée. */
   periodicites: Periodicite[];
+  /**
+   * Celles de ces périodicités que Rojer RETIENT là où le texte n'en écrit
+   * pas, chacune avec sa mention (ADR-039 § 5 : jamais sans marquage). Une par
+   * couple rythme × origine (« annuelle » de la norme, « annuelle » par
+   * défaut) ; vide quand tout le domaine est rythmé par les textes.
+   */
+  rythmesRetenus: { periodicite: Periodicite; mention: MentionRythme }[];
   /** Profils de réalisateur distincts requis sur le domaine. */
   realisateurs: Realisateur[];
   /** Raisons d'applicabilité (mode explain), dédupliquées. */
@@ -160,6 +171,7 @@ export function construireChezVous(
     {
       nb: number;
       periodicites: Set<Periodicite>;
+      rythmesRetenus: Map<string, { periodicite: Periodicite; mention: MentionRythme }>;
       realisateurs: Set<Realisateur>;
       raisons: string[];
       equipements: Set<string>;
@@ -177,6 +189,7 @@ export function construireChezVous(
       agg = {
         nb: 0,
         periodicites: new Set(),
+        rythmesRetenus: new Map(),
         realisateurs: new Set(),
         raisons: [],
         equipements: new Set(),
@@ -186,7 +199,15 @@ export function construireChezVous(
       parDomaine.set(d, agg);
     }
     agg.nb += 1;
-    agg.periodicites.add(periodiciteEffective(a.obligation));
+    const periodicite = periodiciteEffective(a.obligation);
+    agg.periodicites.add(periodicite);
+    const mention = mentionRythmeRetenu(a.obligation);
+    if (mention) {
+      agg.rythmesRetenus.set(`${periodicite}|${mention.court}`, {
+        periodicite,
+        mention,
+      });
+    }
     for (const r of a.obligation.realisateurs) agg.realisateurs.add(r);
     for (const raison of raisonsNommees(a)) {
       if (!agg.raisons.includes(raison)) agg.raisons.push(raison);
@@ -214,6 +235,9 @@ export function construireChezVous(
       nbObligations: agg.nb,
       periodicites: [...agg.periodicites].sort(
         (a, b) => RANG_PERIODICITE[a] - RANG_PERIODICITE[b],
+      ),
+      rythmesRetenus: [...agg.rythmesRetenus.values()].sort(
+        (a, b) => RANG_PERIODICITE[a.periodicite] - RANG_PERIODICITE[b.periodicite],
       ),
       realisateurs: [...agg.realisateurs],
       raisons: agg.raisons,

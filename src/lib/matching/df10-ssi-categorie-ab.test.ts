@@ -141,6 +141,14 @@ describe("DF 10 § 3 — triennale du désenfumage mécanique en présence d'un 
   it("LIMITE ASSUMÉE : c'est la réponse posée sur le désenfumage qui décide, pas celle de l'alarme", () => {
     // Le moteur n'évalue que l'appareil déclencheur. Un « oui » sur l'alarme ne
     // rattrape pas un « non » sur le désenfumage — et réciproquement.
+    //
+    // CE TEST FIGE UN DÉFAUT, IL NE GARDE PAS UNE RÈGLE (revue du 2026-10-07).
+    // DF 10 § 3 dépend d'un fait de l'ÉTABLISSEMENT (« un système de sécurité
+    // incendie de catégorie A ou B »), que le modèle demande sur chaque
+    // désenfumage faute de condition sur le parc. À INVERSER quand la
+    // condition sur le parc existera (ou que la question passera en champ de
+    // l'établissement, décision 13 de la synthèse) : alors l'alarme déclarée
+    // A/B devra décider, et ces deux attentes changeront de sens.
     expect(
       ids(erp("N2"), [alarme(true), desenfumage(true, false)]),
     ).not.toContain(DF_TRIENNALE);

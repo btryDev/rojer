@@ -163,7 +163,7 @@ describe("controlerRythmeRetenu — chaque règle rougit quand on la casse", () 
     const serre = { ...o, rythmeRetenu: { ...o.rythmeRetenu!, periodicite: "semestrielle" } } as Obligation;
     expect(controlerRythmeRetenu(serre, articleDe).join()).toMatch(/le défaut est annuel/);
     const n = extincteursNorme();
-    const sansRythme = { ...n, rythmeRetenu: { ...n.rythmeRetenu!, periodicite: "autre" } } as Obligation;
+    const sansRythme = { ...n, rythmeRetenu: { ...n.rythmeRetenu!, periodicite: "autre" } } as unknown as Obligation;
     expect(controlerRythmeRetenu(sansRythme, articleDe).join()).toMatch(/n'est pas un rythme/);
   });
 });
@@ -278,8 +278,8 @@ describe("préséance avec une prescription (ADR-039 § 3)", () => {
     expect(s?.raison).toMatch(/Engagement d'assurance/);
     const [ligne] = genererProchainesVerifications(r.applicables);
     expect(ligne.prescriptionId).toBe("presc-assureur");
-    expect(mentionRythmeDeLigne(o, ligne)).toBeNull();
-    expect(mentionRythmeDeLigne(o, { prescriptionId: null })).not.toBeNull();
+    expect(mentionRythmeDeLigne(o, ligne.prescriptionId != null)).toBeNull();
+    expect(mentionRythmeDeLigne(o, false)).not.toBeNull();
   });
 });
 
@@ -293,6 +293,18 @@ describe("la mention", () => {
     expect(d.court).toBe("Rythme retenu par défaut");
     expect(d.long).toBe("Le texte dit « répétée périodiquement » ; rythme retenu par défaut : annuel.");
     expect(mentionRythmeRetenu(obligationParId("incendie-erp-extincteurs-annuelle")!)).toBeNull();
+  });
+
+  it("dit le premier pas quand il diffère du rythme (revue du 2026-10-07)", () => {
+    // « tous les 10 ans » seul annonçait la première maintenance approfondie
+    // à dix ans ; la norme la place à cinq, puis quinze.
+    const o = obligationParId("incendie-travail-extincteurs-maintenance-approfondie")!;
+    expect(o.premierDelai).toBe("quinquennale");
+    const m = mentionRythmeRetenu(o)!;
+    expect(m.long).toContain("première échéance à 5 ans, puis tous les 10 ans");
+    expect(m.long).not.toMatch(/périodicité tous/);
+    // Sans premier délai, le rythme seul.
+    expect(mentionRythmeRetenu(extincteursNorme())!.long).toContain(" : tous les ans.");
   });
 
   it("ne qualifie rien", () => {

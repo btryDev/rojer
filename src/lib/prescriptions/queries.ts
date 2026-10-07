@@ -10,7 +10,9 @@ import {
   estPrescriptionLevee,
   type PrescriptionMatching,
 } from "@/lib/matching";
-import { obligationParId } from "@/lib/referentiels/conformite";
+import { obligationParId, OBLIGATIONS_RETIREES } from "@/lib/referentiels/conformite";
+import { libelleObligationRetiree } from "@/lib/matching/obligation-retiree";
+import { derniersLibellesConnus } from "./libelles-retires";
 
 export type EtatPrescription =
   | { etat: "active"; detail: string }
@@ -132,6 +134,16 @@ export async function chargerPagePrescriptions(
   const ignorees = new Map(
     res.ignorees.map((i) => [i.prescription.id, i.raison]),
   );
+  // Une prescription peut viser une obligation que Rojer ne suit plus
+  // (`OBLIGATIONS_RETIREES`) : la page affichait son id brut.
+  const derniersLibelles = await derniersLibellesConnus(etab.id, [
+    ...new Set(
+      etab.prescriptionsParticulieres.flatMap((p) =>
+        p.obligationId && OBLIGATIONS_RETIREES[p.obligationId] ? [p.obligationId] : [],
+      ),
+    ),
+  ]);
+
   const prescriptions = etab.prescriptionsParticulieres.map((p) => {
     let etat: EtatPrescription;
     const raison = ignorees.get(p.id);
@@ -162,7 +174,8 @@ export async function chargerPagePrescriptions(
       etat,
       lignesAvecPreuve: preuves.get(p.id) ?? 0,
       libelleObligationCiblee: p.obligationId
-        ? (obligationParId(p.obligationId)?.libelle ?? p.obligationId)
+        ? (obligationParId(p.obligationId)?.libelle ??
+          libelleObligationRetiree(p.obligationId, derniersLibelles.get(p.obligationId)))
         : null,
     };
   });

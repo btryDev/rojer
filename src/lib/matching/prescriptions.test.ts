@@ -5,8 +5,14 @@ import {
   porteurDe,
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
+import { obligationParId } from "@/lib/referentiels/conformite";
+import {
+  libelleObligationRetiree,
+  raisonObligationRetiree,
+} from "./obligation-retiree";
 import {
   appliquerPrescriptions,
+  motifPrescriptionNonRetenue,
   estObligationSurMesure,
   estPeriodicitePlusStricte,
   estPrescriptionLevee,
@@ -154,7 +160,7 @@ describe("prescriptions — renforce_periodicite", () => {
     );
     expect(res.applicables[0].surcharges).toBeUndefined();
     expect(res.ignorees).toHaveLength(1);
-    expect(res.ignorees[0].raison).toContain("rattrapée par le référentiel");
+    expect(res.ignorees[0].raison).toContain("Le référentiel impose déjà un rythme au moins aussi strict");
   });
 
   it("accepte n'importe quel rythme sur une obligation permanente (`autre`)", () => {
@@ -478,5 +484,70 @@ describe("prescriptions — marquage des sources contractuelles (ADR-032)", () =
     expect(ligne.prescription.obligationId).toBeNull();
     // Un article du Code s'écrit « L. 4121-1 », « R. 4227-34 », « D. 4711-1 ».
     expect(ligne.raisons.join(" ")).not.toMatch(/\b[LRD]\.\s?\d{3,}/);
+  });
+});
+
+describe("prescription visant une obligation retirée (revue du 2026-10-07)", () => {
+  // « Ne s'applique pas » était faux dans le sens qui coûte : le texte vaut
+  // peut-être toujours, c'est Rojer qui a cessé de le suivre.
+  it("dit que Rojer ne la suit plus, et propose l'obligation sur mesure", () => {
+    const res = appliquerPrescriptions(
+      [],
+      [
+        prescription({
+          id: "p-esp",
+          effet: "renforce_periodicite",
+          obligationId: "esp-inspection-periodique",
+          periodicite: "annuelle",
+        }),
+      ],
+      [],
+      NOW,
+    );
+    const raison = res.ignorees[0].raison;
+    expect(raison).toContain("Rojer ne suit plus cette obligation");
+    expect(raison).toContain("retirée du référentiel le 2026-10-07");
+    expect(raison).toContain("obligation sur mesure");
+    expect(raison).not.toContain("ne s'applique pas");
+  });
+
+  it("nomme l'absorbant quand il y en a un", () => {
+    expect(raisonObligationRetiree("aeration-travail-entretien-annuel")).toContain(
+      `reprise par « ${obligationParId("aeration-controle-installations-r4222-20")!.libelle} »`,
+    );
+  });
+
+  it("une obligation inconnue, ni livrée ni retirée, garde l'ancien motif", () => {
+    expect(raisonObligationRetiree("inconnue")).toBeNull();
+    const res = appliquerPrescriptions(
+      [],
+      [prescription({ id: "p-x", effet: "renforce_periodicite", obligationId: "inconnue" })],
+      [],
+      NOW,
+    );
+    expect(res.ignorees[0].raison).toContain("ne s'applique pas (ou plus)");
+  });
+
+  it("un libellé lisible : le dernier connu, sinon l'objet du motif, sinon l'id", () => {
+    expect(libelleObligationRetiree("esp-inspection-periodique", "Inspection ESP")).toBe("Inspection ESP");
+    expect(libelleObligationRetiree("esp-declaration-mise-en-service")).toBe(
+      "Déclaration et contrôle de mise en service (arrêté du 20 novembre 2017, art. 7 à 11)",
+    );
+    // Un motif qui commence par la date ne nomme pas d'objet.
+    expect(libelleObligationRetiree("elec-igh-annuelle")).toBe("elec-igh-annuelle");
+  });
+});
+
+describe("motif d'une prescription non retenue (revue du 2026-10-07)", () => {
+  it("face à un rythme retenu, ne dit pas « le référentiel impose »", () => {
+    const retenue = obligationParId("incendie-travail-extincteurs-maintenance-approfondie")!;
+    const m = motifPrescriptionNonRetenue(retenue);
+    expect(m).toContain("Rojer retient déjà « decennale »");
+    expect(m).toContain("(rythme de la norme NF S 61-919 ; le texte n'écrit pas de rythme)");
+    expect(m).not.toMatch(/impose/);
+  });
+
+  it("face à un rythme du texte, le dit", () => {
+    expect(motifPrescriptionNonRetenue(extincteursAnnuelle)).toContain("Le référentiel impose déjà");
   });
 });

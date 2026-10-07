@@ -124,6 +124,12 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-07 (revue de la relecture du
+  // préventeur, C61) : `matching/prescriptions.ts` écrit autrement le motif
+  // d'une prescription écartée (face à un rythme retenu ; obligation retirée,
+  // `matching/obligation-retiree.ts`) et lit pour cela `mention-rythme.ts`.
+  // NON : `ignorees` n'est lu que par la page des prescriptions, aucune
+  // ligne ni date n'est écrite autrement ; `PeriodiciteRetenue` est un type.
   // Recopiée SANS incrément le 2026-10-07 (ADR-039, lot relecture-jc-2) : le
   // générateur, le réconciliateur, les états permanents et les prescriptions
   // lisent désormais `periodiciteEffective(o)` au lieu de `o.periodicite`.
@@ -264,7 +270,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "b0d4552cb6fba117",
+  empreinte: "b4984136384610af",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
