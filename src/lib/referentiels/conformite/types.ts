@@ -457,6 +457,13 @@ export type RelectureDue = {
  *  - `equipement_propriete_enum_egale` : propriété absente ⇒ condition NON
  *    satisfaite. C'est l'« opt-in » du couple d'énumération : la ligne
  *    spécifique n'apparaît qu'une fois la valeur explicitement choisie.
+ *    [2026-10-07, C62 : AUCUNE obligation vivante ne porte plus cette forme —
+ *    ses seules lignes, les inspections ESP par famille, sont retirées
+ *    (périmètre, décision de la propriétaire du 07/10), et le lot 3 ne
+ *    réemploie que `enum_differente` (compté en appelant
+ *    `obligationsConformite`). Le moteur la lit toujours, et
+ *    `engine.test.ts` (« le couple d'énumération ») l'éprouve sur des lignes
+ *    synthétiques.]
  *  - `equipement_propriete_enum_differente` : propriété absente ⇒ condition
  *    SATISFAITE. C'est le miroir, et il est le seul des deux à pouvoir porter
  *    la règle générale : tant que la famille n'a pas été renseignée, c'est
