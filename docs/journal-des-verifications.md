@@ -5017,10 +5017,109 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   définit par l'ERP (« situés en cuisine d'un ERP ») : une ligne
   `erp: false` sur elle ne naîtrait presque jamais. Question remise : faut-il
   un défaut annuel de `R. 4322-1` sur les appareils de cuisson ?
-- **Ce qui reste** : affichage de la mention et des périodicités avec
+- **Ce qui reste** : ~~affichage de la mention et des périodicités avec
   `premierDelai` (« décennale » pour 5 puis 15), aide du champ type
-  (« 20 ans au plus », halon), commentaire d'`engine.ts` — passe « code ».
-  Lectures en bac à sable.
+  (« 20 ans au plus », halon), commentaire d'`engine.ts` — passe « code ».~~
+  [2026-10-07, C62 : faits depuis — la mention avec `premierDelai` et l'aide
+  « ne devrait pas dépasser 20 ans » par C61 (`fix/relecture-jc-code`), le
+  halon dans l'aide du type par `710a8f3c`, le commentaire d'`engine.ts`
+  (`enum_egale` sans ligne vivante) par C62 `1fd93cd8`.] Lectures en bac à
+  sable.
+
+### C61 · 2026-10-07 — Revue indépendante de la relecture du préventeur : corrections de code
+
+- **Quand · par quoi** : 2026-10-07, branche `fix/relecture-jc-code` (sur
+  `integration/relecture-jc`, 2b7c8bcf), d'après
+  `relecture-jc-2026-10/synthese-revue.md`. Aucun texte rouvert : les
+  citations utilisées (R. 4544-10, NF S 61-919 § 11) sont celles déjà au
+  corpus. Aucune obligation modifiée, aucune empreinte déplacée ; le contenu
+  du référentiel est corrigé à part (C60).
+- **Ce qui en sort** :
+  - Mention de rythme retenu (ADR-039 § 5) posée sur le tableau de bord
+    (échéances, prochaine échéance, semaine), le registre web et le guide ;
+    test de rendu par surface.
+  - Mention d'une norme : « première échéance à 5 ans, puis tous les 10 ans »
+    pour la maintenance approfondie (`premierDelai`), au lieu de « périodicité
+    tous les 10 ans ».
+  - `RythmeRetenu` (norme) : `periodicite` restreinte à une durée ;
+    `aUnRythmeRetenu` (mort) et le faux `prescriptionId` de `mention-de-ligne`
+    retirés ; `liensRompus(statut)` remplace trois fonctions recopiées ; une
+    norme se reconnaît à son statut de corpus, plus à `/^NF\s/`.
+  - Grille : « Type d'extincteur » et ses libellés. Aide : la durée de vie
+    « ne devrait pas dépasser 20 ans » (§ 11, conditionnel).
+  - DF 10 § 3 : la question du SSI A/B n'est posée qu'après « mécanique :
+    oui » ; aides alignées sur le code ; test « LIMITE ASSUMÉE » commenté à
+    inverser.
+  - Prescriptions : face à un rythme retenu, « Rojer retient déjà… » au lieu
+    de « le référentiel impose » ; plancher annuel écrit à l'ADR-039 § 7 ;
+    obligation retirée : « Rojer ne suit plus cette obligation », libellé
+    lisible, renvoi vers l'obligation sur mesure.
+  - Annonces : la phrase citée par un `declareA` est retrouvée dans
+    `DESCRIPTION_CATEGORIE` (test).
+  - Habilitation : « Rythme renvoyé aux normes (R. 4544-10) » au lieu de
+    « Sans terme écrit », sur la fiche salarié, l'aide du titre et la grille.
+- **Ce qui reste, côté contenu ~~(lot C60 ou suivant)~~** [2026-10-07, C62 :
+  C60 et C61 tournaient en parallèle et ne se voyaient pas ; C60 n'a fait
+  aucun des trois points ci-dessous. Le premier est fait par C62
+  (`61a697e3`) ; les deux autres restent ouverts, avec leur responsable, en
+  C62] :
+  - `incendie.ts` : annoter `REFERENCE_NF_S_61_919_ANNUELLE` et
+    `_REVISION` en `ReferenceLegale & { source: "NORME"; article: string }`
+    pour que `RythmeRetenu.reference` se resserre ; le champ `norme` ne peut
+    être retiré qu'avec les trois `norme:` de ce fichier.
+  - `corpus/code-travail-risque-chimique.ts` : R. 4412-11 et R. 4412-17 ne
+    peuvent entrer dans `ANNONCES` que si leur `declareA` devient
+    `ADRESSE_MANQUES_ANNONCES` (le test des deux sens l'exige) ; l'aide du
+    stockage cesserait alors d'être leur adresse.
+  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
+    dirigeant, remplaceraient la lecture du motif de relecteur (date, tête).
+
+### C62 · 2026-10-07 — Fusion des corrections de la revue (C60 + C61) : dernière passe
+
+- **Quand · par quoi** : 2026-10-07, branche `integration/relecture-jc`, après
+  la fusion de `fix/relecture-jc-contenu` (C60) et `fix/relecture-jc-code`
+  (C61), deux passes parallèles qui ne se voyaient pas, et la revue finale de
+  l'ensemble. Aucun texte rouvert. Référentiel toujours `2026-10-07.5`, jamais
+  servi : ligne d'empreinte réécrite, en appelant `empreinteReferentiel()`,
+  `173-7324273780278b5f` → `173-2543b2a5149c8d07`. **173 + 0 − 0 = 173.**
+- **Ce qui en sort** :
+  - Journal réconcilié : C61 remis à sa place, à la suite de C60 (il était
+    tombé après la clôture de la Partie 3) ; « ce qui reste » de C60 rayé ;
+    l'attribution à C60 des trois points de C61 corrigée.
+  - `RythmeRetenu` (norme) : `reference` typée `ReferenceNorme` (source
+    `NORME`, clé `article` requise), références NF S 61-919 annotées. Le champ
+    `norme` est gardé : c'est l'intitulé affiché, qu'on ne déduirait de
+    `reference.reference` qu'en découpant une chaîne libre (`61a697e3`).
+  - `enum_egale` : aucune obligation ne la porte plus (compté en appelant) ;
+    dit à la définition et au moteur. Le couple synthétique d'`engine.test.ts`
+    l'exerce — éprouvé : branche faussée (silence ⇒ satisfaite) → « 3 failed »
+    (`1fd93cd8`).
+  - Libellé de `signalisation-erp-extincteurs-identification` neutre : la
+    ligne est portée par l'extincteur comme par le RIA, chacun lisait
+    l'exigence de l'autre (`0c160371`). Seul changement de contenu.
+  - Formulaire d'équipement : la réponse SSI masquée part avec la valeur
+    choisie pendant la saisie, plus l'initiale ; test du scénario, rouge avant
+    (`6c27ffa0`).
+  - Prescriptions : dernier libellé des obligations retirées lu en parallèle
+    des preuves ; périodicité du motif affiché par la page en clair
+    (`LABEL_PERIODICITE`). Commentaire « types seulement » de
+    `renvoi-aux-normes.ts` barré.
+- **Ce qui reste ouvert, et qui le porte** :
+  - `R. 4412-11` et `R. 4412-17` dans `ANNONCES` — **en attente de la
+    propriétaire** : la rubrique de non-couverture où les annoncer est à
+    choisir (leur `declareA` devrait devenir `ADRESSE_MANQUES_ANNONCES`, et
+    l'aide du stockage cesserait d'être leur adresse).
+  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
+    dirigeant — **à faire**, passe de code suivante.
+  - Le motif de surcharge écrit par le moteur (`matching/prescriptions.ts`,
+    « Périodicité portée à « semestrielle » ») garde le code brut —
+    **à faire** : `LABEL_PERIODICITE` vit dans `calendrier/labels.ts`, dont
+    l'import de type vers `echeances.ts` fait entrer Prisma dans la fermeture
+    du passage à blanc (`passage-a-blanc.test.ts`, qui suit aussi les
+    `import type`) ; il faut d'abord sortir la table dans un module feuille.
+  - Les décisions de la synthèse de la revue (1, 2, 4 à 14) restent à la
+    propriétaire ; la décision 3 (widgets) est faite par C61, exigée par
+    l'ADR-039 § 5.
 
 ## Partie 2 — Registre des constats en suspens
 
@@ -5679,47 +5778,3 @@ délibéré.
 
 Ce journal porte ce que le code ne sait pas dire : **qui a lu quoi, quand,
 comment — et ce qu'on en a fait.**
-
-### C61 · 2026-10-07 — Revue indépendante de la relecture du préventeur : corrections de code
-
-- **Quand · par quoi** : 2026-10-07, branche `fix/relecture-jc-code` (sur
-  `integration/relecture-jc`, 2b7c8bcf), d'après
-  `relecture-jc-2026-10/synthese-revue.md`. Aucun texte rouvert : les
-  citations utilisées (R. 4544-10, NF S 61-919 § 11) sont celles déjà au
-  corpus. Aucune obligation modifiée, aucune empreinte déplacée ; le contenu
-  du référentiel est corrigé à part (C60).
-- **Ce qui en sort** :
-  - Mention de rythme retenu (ADR-039 § 5) posée sur le tableau de bord
-    (échéances, prochaine échéance, semaine), le registre web et le guide ;
-    test de rendu par surface.
-  - Mention d'une norme : « première échéance à 5 ans, puis tous les 10 ans »
-    pour la maintenance approfondie (`premierDelai`), au lieu de « périodicité
-    tous les 10 ans ».
-  - `RythmeRetenu` (norme) : `periodicite` restreinte à une durée ;
-    `aUnRythmeRetenu` (mort) et le faux `prescriptionId` de `mention-de-ligne`
-    retirés ; `liensRompus(statut)` remplace trois fonctions recopiées ; une
-    norme se reconnaît à son statut de corpus, plus à `/^NF\s/`.
-  - Grille : « Type d'extincteur » et ses libellés. Aide : la durée de vie
-    « ne devrait pas dépasser 20 ans » (§ 11, conditionnel).
-  - DF 10 § 3 : la question du SSI A/B n'est posée qu'après « mécanique :
-    oui » ; aides alignées sur le code ; test « LIMITE ASSUMÉE » commenté à
-    inverser.
-  - Prescriptions : face à un rythme retenu, « Rojer retient déjà… » au lieu
-    de « le référentiel impose » ; plancher annuel écrit à l'ADR-039 § 7 ;
-    obligation retirée : « Rojer ne suit plus cette obligation », libellé
-    lisible, renvoi vers l'obligation sur mesure.
-  - Annonces : la phrase citée par un `declareA` est retrouvée dans
-    `DESCRIPTION_CATEGORIE` (test).
-  - Habilitation : « Rythme renvoyé aux normes (R. 4544-10) » au lieu de
-    « Sans terme écrit », sur la fiche salarié, l'aide du titre et la grille.
-- **Ce qui reste, côté contenu (lot C60 ou suivant)** :
-  - `incendie.ts` : annoter `REFERENCE_NF_S_61_919_ANNUELLE` et
-    `_REVISION` en `ReferenceLegale & { source: "NORME"; article: string }`
-    pour que `RythmeRetenu.reference` se resserre ; le champ `norme` ne peut
-    être retiré qu'avec les trois `norme:` de ce fichier.
-  - `corpus/code-travail-risque-chimique.ts` : R. 4412-11 et R. 4412-17 ne
-    peuvent entrer dans `ANNONCES` que si leur `declareA` devient
-    `ADRESSE_MANQUES_ANNONCES` (le test des deux sens l'exige) ; l'aide du
-    stockage cesserait alors d'être leur adresse.
-  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
-    dirigeant, remplaceraient la lecture du motif de relecteur (date, tête).
