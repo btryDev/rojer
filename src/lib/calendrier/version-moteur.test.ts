@@ -124,6 +124,15 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-07 (ADR-039, lot relecture-jc-2) : le
+  // générateur, le réconciliateur, les états permanents et les prescriptions
+  // lisent désormais `periodiciteEffective(o)` au lieu de `o.periodicite`.
+  // NON : aucune obligation livrée ne porte de `rythmeRetenu`, la fonction rend
+  // donc partout `o.periodicite` — mêmes lignes, mêmes dates. Le lot 3, qui en
+  // posera, déplacera l'empreinte du RÉFÉRENTIEL, donc le sceau. Une seule
+  // règle écrit autrement dès aujourd'hui, et seulement face à un rythme
+  // retenu : une prescription ÉGALE à lui s'applique (`prescriptionRenforce`) —
+  // sans objet tant qu'aucun n'existe.
   // INCRÉMENTÉ le 2026-09-28 (D8, décision de la propriétaire) : le ponctuel
   // ouvert dont la mise en service précède l'origine est daté de l'origine.
   // OUI, cela écrit autrement : les lignes posées à une mise en service
@@ -255,7 +264,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "a5f5118cd730b18c",
+  empreinte: "b0d4552cb6fba117",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

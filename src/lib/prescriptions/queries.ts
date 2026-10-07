@@ -1,3 +1,4 @@
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { cleJourCivil } from "@/lib/dates";
@@ -171,7 +172,7 @@ export async function chargerPagePrescriptions(
     obligations: applicables.map((a) => ({
       id: a.obligation.id,
       libelle: a.obligation.libelle,
-      periodicite: a.obligation.periodicite,
+      periodicite: periodiciteEffective(a.obligation),
     })),
     equipements: etab.equipements.map((e) => ({
       id: e.id,

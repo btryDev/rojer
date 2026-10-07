@@ -1,3 +1,4 @@
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { notFound } from "next/navigation";
 import {
   CarteFiche,
@@ -442,7 +443,7 @@ export default async function SalarieDetailPage({
                       libelle: o.libelle,
                       description: o.description,
                       pieceMedicale: o.pieceMedicale,
-                      periodicite: o.periodicite,
+                      periodicite: periodiciteEffective(o),
                       bloquePar: bloquant
                         ? { libelle: bloquant.titre.libelle, motif: bloquant.motif }
                         : undefined,

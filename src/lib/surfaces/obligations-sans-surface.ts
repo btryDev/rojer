@@ -73,6 +73,7 @@
 // tant qu'elle ne l'est pas ce module sous-estime la couverture — il alerte
 // donc trop, jamais trop peu, ce qui est le bon sens de l'erreur.
 
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import {
   obligationsConformite,
   type Obligation,
@@ -114,7 +115,7 @@ export type Surface = (typeof SURFACES)[number];
  */
 export function surfacesDe(o: Obligation): Surface[] {
   const atteintes: Surface[] = [];
-  if (!estSansRendezVous(o.periodicite)) atteintes.push("calendrier");
+  if (!estSansRendezVous(periodiciteEffective(o))) atteintes.push("calendrier");
   // ~~`modeDeclaration(o) !== null`~~ (2026-09-27, lot 2, maillon 6) : la règle
   // nue attribuait l'écran à deux titres salarié que l'écran écarte. On compte
   // l'écran comme l'écran se compte.

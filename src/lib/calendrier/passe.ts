@@ -27,6 +27,7 @@
 // d'idempotence temporelle du passage à blanc replanifie à J+400 sur la lecture
 // d'aujourd'hui.
 
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import type { Prisma } from "@prisma/client";
 import {
   appliquerPrescriptions,
@@ -324,7 +325,7 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
     if (o !== undefined && estPorteeParSalarie(o)) {
       obligationsEncoreApplicables.add(t.obligationId);
       // Aucune surcharge ne vise un titre : le rythme est celui du référentiel.
-      periodicites.set(t.obligationId, o.periodicite);
+      periodicites.set(t.obligationId, periodiciteEffective(o));
     }
   }
 

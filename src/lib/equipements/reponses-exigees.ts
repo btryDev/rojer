@@ -21,6 +21,7 @@
 // Module serveur : il appelle le moteur, donc charge le référentiel. Le
 // formulaire reçoit le résultat en propriété, il ne l'importe pas.
 
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { determineObligationsApplicables } from "@/lib/matching";
 import type { EtablissementMatching } from "@/lib/matching/types";
 import {
@@ -67,7 +68,7 @@ export function rythmeServi(categorie: CategorieEquipement, reponses: Reponses):
     // Les lignes que l'APPAREIL porte, seules : l'établissement sonde en sert
     // d'autres (une semestrielle de signalisation), qui ne disent rien de lui.
     .filter((a) => a.porteur === "equipement")
-    .map((a) => PERIODICITE_EN_JOURS[a.obligation.periodicite])
+    .map((a) => PERIODICITE_EN_JOURS[periodiciteEffective(a.obligation)])
     .filter((j): j is number => j !== null);
   return jours.length === 0 ? null : Math.min(...jours);
 }

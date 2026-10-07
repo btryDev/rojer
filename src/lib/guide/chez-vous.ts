@@ -14,6 +14,7 @@
  * node comme le moteur de matching qu'il consomme.
  */
 
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import {
   phraseEffectifAConfirmer,
@@ -185,7 +186,7 @@ export function construireChezVous(
       parDomaine.set(d, agg);
     }
     agg.nb += 1;
-    agg.periodicites.add(a.obligation.periodicite);
+    agg.periodicites.add(periodiciteEffective(a.obligation));
     for (const r of a.obligation.realisateurs) agg.realisateurs.add(r);
     for (const raison of raisonsNommees(a)) {
       if (!agg.raisons.includes(raison)) agg.raisons.push(raison);

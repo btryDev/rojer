@@ -14,6 +14,7 @@
 // Les trois métiers listés sont ceux du périmètre DUERP validé —
 // restauration, commerce de détail, bureau/tertiaire. Rien d'autre.
 
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 import {
@@ -79,7 +80,7 @@ function ligne(nom: string, id: string): LigneMetier | null {
     nom,
     libelle: o.libelle,
     reference: o.referencesLegales[0]?.reference ?? "",
-    rythme: LABEL_PERIODICITE[o.periodicite],
+    rythme: LABEL_PERIODICITE[periodiciteEffective(o)],
     ...(o.typologies?.champR422734 ? { condition: CONDITION_R4227_34 } : {}),
   };
 }

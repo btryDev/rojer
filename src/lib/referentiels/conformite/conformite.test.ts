@@ -19,7 +19,7 @@ import {
 import { determineObligationsApplicables, matchTypologie } from "@/lib/matching";
 import type { EtablissementMatching } from "@/lib/matching";
 import { CORPUS } from "../corpus";
-import { referencesCitees } from "./rythme-retenu";
+import { periodiciteEffective, referencesCitees } from "./rythme-retenu";
 import {
   SCEAU_CALENDRIER,
   VERSION_MOTEUR_CALENDRIER,
@@ -2246,6 +2246,45 @@ describe("référentiel conformité — d'où vient le chiffre", () => {
         "article de code porte vraiment le chiffre, ajoutez l'obligation à " +
         "`PERIODICITE_SUR_CODE_JUSTIFIEE` avec le verbatim qui le prouve.",
     ).toEqual([]);
+  });
+
+  // ADR-039 : le rythme EFFECTIF peut venir d'ailleurs que du texte — d'une
+  // norme lue, ou du défaut annuel déclaré. Le test ci-dessus lit `periodicite`,
+  // le rythme du texte, et reste tel quel. Celui-ci lit le rythme effectif et
+  // admet ces deux origines, et elles seules.
+  const sansOrigine = (liste: readonly Obligation[]) => {
+    const PORTEUSES = new Set(["ARRETE", "REGLEMENT_UE", "INRS"]);
+    return liste
+      .filter((o) => {
+        const e = periodiciteEffective(o);
+        return e !== "autre" && e !== "mise_en_service_uniquement";
+      })
+      .filter((o) => {
+        const r = o.rythmeRetenu;
+        if (r?.motif === "norme") return r.reference.source !== "NORME";
+        if (r?.motif === "defaut_annuel") return r.texteVague.trim() === "";
+        return (
+          !o.referencesLegales.some((ref) => PORTEUSES.has(ref.source)) &&
+          !(o.id in PERIODICITE_SUR_CODE_JUSTIFIEE)
+        );
+      })
+      .map((o) => o.id);
+  };
+
+  it("tout rythme effectif a une origine : un texte porteur, une norme, ou un défaut déclaré", () => {
+    expect(sansOrigine(obligationsConformite)).toEqual([]);
+    // Éprouvé : un rythme retenu sans origine rougit, un rythme retenu sourcé passe.
+    const base = obligationsConformite.find(
+      (o) => o.id === "formation-securite-etablissement-organisation",
+    )!;
+    const defaut = { ...base, rythmeRetenu: { motif: "defaut_annuel", periodicite: "annuelle", texteVague: "répétée périodiquement" } } as Obligation;
+    const muet = { ...base, rythmeRetenu: { motif: "defaut_annuel", periodicite: "annuelle", texteVague: "" } } as Obligation;
+    const normeMalRangee = {
+      ...base,
+      rythmeRetenu: { motif: "norme", periodicite: "annuelle", norme: "NF S 61-919", reference: { source: "ARRETE", reference: "NF S 61-919", article: "NF S 61-919 § 5.1.1" } },
+    } as Obligation;
+    expect(sansOrigine([defaut])).toEqual([]);
+    expect(sansOrigine([muet, normeMalRangee])).toHaveLength(2);
   });
 });
 

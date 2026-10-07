@@ -21,6 +21,7 @@
  * moteur a besoin de savoir, comme elle le fait pour les états permanents.
  */
 
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import {
   determineObligationsApplicables,
   projeterEtablissement,
@@ -80,11 +81,11 @@ export type GroupeQuandCaArrive = {
  */
 export function releveDeLaPage(
   o: Obligation,
-  periodiciteEffective = o.periodicite,
+  rythme = periodiciteEffective(o),
 ): boolean {
   return (
     porteurDe(o) === "etablissement" &&
-    estDeclencheeParUnFait(o, periodiciteEffective)
+    estDeclencheeParUnFait(o, rythme)
   );
 }
 

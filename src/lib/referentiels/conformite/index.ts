@@ -427,6 +427,21 @@ export function empreinteReferentiel(
         // sans effet, ce qui est le défaut qu'on vient de corriger sur
         // `absorbePar`.
         canonique(o.succedeA ?? []),
+        // Le rythme retenu (ADR-039) décide de l'existence et de la date
+        // d'une ligne : il entre. Mais EN SEGMENT AJOUTÉ, et seulement quand il
+        // est présent — une obligation qui n'en porte pas produit exactement la
+        // chaîne d'avant, donc l'ADR-039 seul ne déplace ni l'empreinte ni
+        // `REFERENTIEL_VERSION`. Le motif y entre avec le rythme : passer d'un
+        // défaut à une norme change ce que la ligne affiche de son origine.
+        ...(o.rythmeRetenu
+          ? [
+              `rythme:${o.rythmeRetenu.periodicite}:${o.rythmeRetenu.motif}:${
+                o.rythmeRetenu.motif === "norme"
+                  ? (o.rythmeRetenu.reference.article ?? "")
+                  : ""
+              }`,
+            ]
+          : []),
       ].join("|"),
     )
     .sort()
@@ -462,3 +477,4 @@ export function obligationsParDomaine(
 ): Obligation[] {
   return obligationsConformite.filter((o) => o.domaine === domaine);
 }
+export * from "./rythme-retenu";
