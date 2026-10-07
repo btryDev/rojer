@@ -277,6 +277,10 @@ export const obligationsConformite: Obligation[] = [
 // `stockage-dangereux-*` retirées. 169 − 4 = 165. Hotte : le contrôle annuel
 // des locaux à pollution spécifique ne naît plus que d'une VMC ou d'une CTA
 // (« traité dans le VMC : à supprimer dans les hottes »). 165 + 0 − 0 = 165.
+// Lot 4 : DF 10 § 3 entre (`incendie-erp-desenfumage-triennale-mecanique-ssi`),
+// et la triennale SSI de MS 73 § 2 reçoit sa condition A/B en `non_infirmee`.
+// 165 + 1 − 0 = 166. Au silence, rien ne sort ; la ligne neuve n'apparaît
+// qu'au « oui » sur le désenfumage mécanique.
 export const REFERENTIEL_VERSION = "2026-10-07.5";
 
 /**

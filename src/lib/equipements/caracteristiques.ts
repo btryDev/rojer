@@ -41,6 +41,9 @@ export const LIBELLE_CARACTERISTIQUE: Record<ChampTriEtat, string> = {
   estChargeSuperieure50TCo2: "Charge de fluide au-delà de 50 t éq. CO₂",
   estChargeSuperieure500TCo2: "Charge de fluide au-delà de 500 t éq. CO₂",
   aDetectionDeFuites: "Détection fixe des fuites",
+  estSsiCategorieAouB: "SSI de catégorie A ou B",
+  estDesenfumageMecanique: "Désenfumage mécanique",
+  etablissementASsiCategorieAouB: "SSI de catégorie A ou B dans l'établissement",
 };
 
 export type CaracteristiqueLisible = {

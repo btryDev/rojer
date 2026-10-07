@@ -4795,6 +4795,51 @@ supprimée sinon. Ce que le retrait laisse passer, écrit à la ligne : une hott
 sans VMC ni CTA déclarée, ne porte plus ce contrôle. Le semestriel des gaines de
 recyclage garde la hotte (non annoté) : question ouverte. 161 → 161.
 
+### C57 · 2026-10-07 — Relecture du préventeur, lot 4 : `DF 10 § 3` encodé, la triennale SSI bornée aux catégories A et B
+
+*Branche `lot/relecture-jc-4`, sur `origin/main` = `0299e288`. Entrées :
+`relecture-jc-2026-10/` (plan, annotations du préventeur du 05/10, `textes.md`).*
+
+**Lu.** `DF 10` (LEGIARTI000020382687, en vigueur depuis le 28/10/2007, sans
+version future) et `MS 73` (LEGIARTI000020317755, version unique depuis le
+15/08/1980), par `getArticleWithIdAndNum` du client du dépôt, en **bac à sable**
+PISTE, le 2026-10-07. `MS 73` manquait à `textes.md` : relu à part, son § 2
+verbatim est au corpus.
+
+**Appliqué.**
+- `incendie-erp-desenfumage-triennale-mecanique-ssi` (neuve) : `DF 10 § 3`,
+  triennale, organisme agréé, ERP N1-N4, sur le désenfumage. Deux questions à
+  trois états posées sur l'appareil : `estDesenfumageMecanique` (opt-in) et
+  `etablissementASsiCategorieAouB` (`non_infirmee`).
+- `incendie-erp-ssi-triennale` : condition `estSsiCategorieAouB` (`non_infirmee`,
+  ligne publiée de criticité 4) — la sur-application que la réserve de `DF 10`
+  citait en preuve devient corrigeable par le dirigeant.
+- `incendie-erp-desenfumage-annuelle` : référence précisée au § 2.
+- Référentiel `2026-10-07.3` sur la branche, 174 + 1 − 0 = 175 ; jamais servi :
+  livré sous `2026-10-07.5` (intégration des cinq lots, C55 à C59).
+
+**Le cumul est une lecture, pas le texte.** `DF 10 § 3` n'écrit ni « en
+remplacement » ni « en outre ». Le préventeur a répondu « elle s'y ajoute » à la
+relecture du 05/10, lecture retenue par la propriétaire : l'annuelle reste, la
+triennale s'y ajoute. Dit dans les `notesInternes` de la triennale et dans sa
+description.
+
+**Contourné, pas résolu.** Le moteur n'évalue que l'appareil déclencheur : la
+présence d'un SSI A/B se demande au désenfumage, pas à l'alarme. La réponse se
+donne donc deux fois et rien ne vérifie qu'elles concordent ; un test le fixe
+comme limite assumée.
+
+**Restent dehors (réserve `MS 73`).** Les sprinkleurs, soumis à la même
+triennale, sans catégorie d'équipement ; « par une personne ou un organisme
+agréé », que la ligne SSI rend par `organisme_agree` seul.
+
+**Éprouvé** (`df10-ssi-categorie-ab.test.ts`) : condition A/B retirée →
+« 1 failed | 16 passed (17) » ; « mécanique » retirée → « 2 failed | 15 passed
+(17) » ; SSI A/B du désenfumage retirée → « 2 failed | 15 passed (17) » ;
+« mécanique » en `non_infirmee` → « 1 failed | 16 passed (17) » ; A/B de la
+triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
+`conformite.test.ts`, « 2 failed | 107 passed (109) ».
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

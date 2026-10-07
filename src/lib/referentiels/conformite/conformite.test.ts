@@ -884,6 +884,15 @@ describe("référentiel conformité — non-régression des obligations critique
     // art. 15 : deux ans pour les générateurs de vapeur) — retirée le
     // 2026-10-07 avec sa jumelle générale (périmètre, relecture préventeur du
     // 30/09, décision de la propriétaire du 07/10).
+    // 2026-10-07 (lot 4, relecture du préventeur) : DF 10 § 3, triennale par
+    // organisme agréé quand existent un désenfumage MÉCANIQUE et un SSI de
+    // catégorie A ou B. Obligation NEUVE — personne ne peut la perdre —, qui
+    // s'AJOUTE à `incendie-erp-desenfumage-annuelle` (lecture du préventeur,
+    // le texte n'écrit pas le cumul) : l'annuelle reste due quoi qu'on réponde.
+    // Seule la question « mécanique » est stricte : au silence, la triennale
+    // tomberait sur tout désenfumage naturel d'ERP N1-N4. Celle du SSI est en
+    // `non_infirmee`.
+    "incendie-erp-desenfumage-triennale-mecanique-ssi",
   ]);
 
   /**
@@ -1633,7 +1642,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // (6 `esp-*` retirées), le stockage de matières dangereuses ses trois
     // derniers points (4 `stockage-dangereux-*` retirées) ; HOTTE_PRO quitte
     // `aeration-travail-locaux-pollution-specifique`. 178 + 0 − 13 = 165.
-    { version: "2026-10-07.5", empreinte: "165-864f8f4cc9ac12b4" },
+    // Lot 4 : DF 10 § 3 entre, `incendie-erp-desenfumage-triennale-mecanique-ssi`
+    // (désenfumage mécanique ET SSI de catégorie A ou B, triennale par
+    // organisme agréé, en plus de l'annuelle) ; `incendie-erp-ssi-triennale`
+    // reçoit la condition A/B de MS 73 § 2 (`non_infirmee`). 165 + 1 − 0 = 166.
+    { version: "2026-10-07.5", empreinte: "166-9f7acf58fd178daa" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1790,7 +1803,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(165);
+    ).toBe(166);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
