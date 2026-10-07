@@ -4717,6 +4717,19 @@ sont désormais éprouvées (`454fb2fa`). Trois tests D8 comparaient la date au
 ouverture ; seules les lignes ponctuelles antérieures au suivi et les VGP de levage
 en double changent, sans perte (réconciliateur, cas D7 et D8).
 
+### C55 · 2026-10-07 — Relecture du préventeur, lot 1 : corrections sans changement de modèle
+
+*Branche `lot/relecture-jc-1`, sur `origin/main` = `0299e288`. Retour du préventeur
+(Julien Chantoin) du 2026-10-05 ; plan validé et verbatim dans
+`relecture-jc-2026-10/` (hors dépôt). **Textes relus le 2026-10-07 par l'API PISTE
+en environnement BAC À SABLE** : versions de 2026 présentes, mais l'égalité avec la
+production n'a pas été vérifiée. Référentiel `2026-10-07.1`, une seule version pour
+le lot.*
+
+| Item | Ce qui a été lu | Ce qui change |
+|---|---|---|
+| 1 · Ascenseur | CCH R. 134-11 (LEGIARTI000053629116, 2026-05-15), R. 134-12, R. 134-13 ; AS 9 ; GE 7 § 1 ; GN 1 § 2 | AS 9 sort de la ligne CCH et prend deux lignes, bornées aux ERP N1–N4 : quinquennale par organisme agréé, et remise en service après transformation importante (événementielle). La ligne CCH garde son id, tous régimes. Pas de `succedeA`. GE 7 entre au corpus. 174 → 176 |
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

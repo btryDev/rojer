@@ -1626,6 +1626,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // réduits au rythme et à son fondement (`libelleVgp`), la réponse manquante
     // dite dans la description. Libellés seuls : 174 + 0 − 0 = 174.
     { version: "2026-09-28.3", empreinte: "174-748bfcc14b5ff8dd" },
+    // Relecture du préventeur, lot 1 (2026-10-07) — une seule version pour le
+    // lot, réécrite à chaque commit du lot tant qu'elle n'a rien scellé (même
+    // cas que `2026-09-20.1`). (1) Ascenseur : AS 9 prend deux lignes à lui,
+    // bornées aux ERP N1–N4 (quinquennale, et remise en service après
+    // transformation importante). 174 + 2 − 0 = 176.
+    { version: "2026-10-07.1", empreinte: "176-f56c423c59029112" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1782,7 +1788,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(174);
+    ).toBe(176);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
