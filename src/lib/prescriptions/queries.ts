@@ -88,8 +88,20 @@ export async function chargerPagePrescriptions(
   // prescription, sur ses seules lignes visées — un dossier en porte peu.
   // L'ancien `_count` par `prescriptionId` suivait l'effet, pas l'histoire
   // (2026-09-15).
-  const preuves = new Map<string, number>(
-    await Promise.all(
+  //
+  // Une prescription peut viser une obligation que Rojer ne suit plus
+  // (`OBLIGATIONS_RETIREES`) : la page affichait son id brut. Le dernier
+  // libellé connu se lit en même temps que les preuves, dont il ne dépend pas
+  // (2026-10-07, C62).
+  const retireesVisees = [
+    ...new Set(
+      etab.prescriptionsParticulieres.flatMap((p) =>
+        p.obligationId && OBLIGATIONS_RETIREES[p.obligationId] ? [p.obligationId] : [],
+      ),
+    ),
+  ];
+  const [comptesPreuves, derniersLibelles] = await Promise.all([
+    Promise.all(
       etab.prescriptionsParticulieres.map(
         async (p) =>
           [
@@ -98,7 +110,9 @@ export async function chargerPagePrescriptions(
           ] as const,
       ),
     ),
-  );
+    derniersLibellesConnus(etab.id, retireesVisees),
+  ]);
+  const preuves = new Map<string, number>(comptesPreuves);
 
   const equipements = etab.equipements.map((eq) => ({
     id: eq.id,
@@ -134,16 +148,6 @@ export async function chargerPagePrescriptions(
   const ignorees = new Map(
     res.ignorees.map((i) => [i.prescription.id, i.raison]),
   );
-  // Une prescription peut viser une obligation que Rojer ne suit plus
-  // (`OBLIGATIONS_RETIREES`) : la page affichait son id brut.
-  const derniersLibelles = await derniersLibellesConnus(etab.id, [
-    ...new Set(
-      etab.prescriptionsParticulieres.flatMap((p) =>
-        p.obligationId && OBLIGATIONS_RETIREES[p.obligationId] ? [p.obligationId] : [],
-      ),
-    ),
-  ]);
-
   const prescriptions = etab.prescriptionsParticulieres.map((p) => {
     let etat: EtatPrescription;
     const raison = ignorees.get(p.id);
