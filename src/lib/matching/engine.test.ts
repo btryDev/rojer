@@ -1349,6 +1349,10 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       "froid-controle-etancheite-semestriel-500t-detection",
       "froid-controle-etancheite-semestriel-50t",
       "froid-controle-etancheite-trimestriel-500t",
+      // Obligation neuve du 2026-10-07 (DF 10 § 3) : la triennale par
+      // organisme agréé S'AJOUTE à `incendie-erp-desenfumage-annuelle`, qui
+      // reste due quoi qu'on réponde. Stricte sur « mécanique » seulement.
+      "incendie-erp-desenfumage-triennale-mecanique-ssi",
       // D7, option (a) (2026-09-28) : l'annuelle s'éteint au silence sur le
       // levage de personnes, par dessein — la semestrielle « personnes » couvre
       // l'appareil (`matching/levage-un-rythme.test.ts`, 27 combinaisons).

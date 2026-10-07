@@ -920,6 +920,7 @@ export const obligationsIncendie: Obligation[] = [
         article: "MS 73",
         url:
           "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317755/",
+        note: "« De plus, les systèmes de sécurité incendie de catégories A et B et les systèmes d'extinction automatique du type sprinkleur doivent être vérifiés tous les trois ans par une personne ou un organisme agréé. » (§ 2, seconde phrase). Relu le 2026-10-07 sur l'API Légifrance (PISTE, bac à sable), LEGIARTI000020317755, en vigueur depuis le 15/08/1980.",
         versionConstatee: "1980-08-15",
       },
     ],
@@ -933,6 +934,15 @@ export const obligationsIncendie: Obligation[] = [
       erp: { categories: ["N1", "N2", "N3", "N4"] },
     },
     categoriesEquipement: ["ALARME_INCENDIE"],
+    conditions: [
+      {
+        type: "equipement_propriete_non_infirmee",
+        categorie: "ALARME_INCENDIE",
+        propriete: "estSsiCategorieAouB",
+      },
+    ],
+    notesInternes:
+      "CONDITION A/B AJOUTÉE LE 2026-10-07 (lot 4, relecture du préventeur du 05/10). Le libellé disait « SSI de catégorie A ou B » depuis l'origine et la ligne n'en portait aucune condition : elle tombait sur toute ALARME_INCENDIE déclarée en ERP des quatre premières catégories, quelle que soit la catégorie du SSI — la sur-application que la réserve de `DF 10` au corpus citait en preuve depuis le 2026-09-01. `MS 73 § 2`, relu le 2026-10-07 : « les systèmes de sécurité incendie de catégories A et B et les systèmes d'extinction automatique du type sprinkleur doivent être vérifiés tous les trois ans par une personne ou un organisme agréé ».\n\nFORME `non_infirmee`, ET CE N'EST PAS UN CHOIX. Ligne déjà publiée, criticité 4 : la règle du dépôt (`conformite.test.ts`) impose une forme qui survit au silence. Toutes les alarmes déjà déclarées gardent donc la triennale tant que le dirigeant n'a pas répondu « non » à « Ce SSI est-il de catégorie A ou B ? » ; la sur-application ne disparaît qu'à la réponse, et elle est désormais corrigeable par lui.\n\nCE QUE LA LIGNE NE PORTE TOUJOURS PAS : les SPRINKLEURS, que le même § 2 soumet à la même triennale. Aucune catégorie d'équipement ne les déclare ; ce n'est pas l'objet de ce lot.\n\nRÉALISATEUR : le texte écrit « par une personne ou un organisme agréé » ; la ligne dit `organisme_agree` seul. Relevé, non modifié ici."
   },
   {
     id: "incendie-erp-alarme-verification-hebdomadaire",
@@ -1011,10 +1021,11 @@ export const obligationsIncendie: Obligation[] = [
     referencesLegales: [
       {
         source: "ARRETE",
-        reference: "Arrêté du 25 juin 1980, art. DF 10 — livre II, établissements des quatre premières catégories",
+        reference: "Arrêté du 25 juin 1980, art. DF 10 § 2 (la périodicité des vérifications est de un an) — livre II, établissements des quatre premières catégories",
         article: "DF 10",
         url:
-          "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000020303557/",
+          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000020382687",
+        note: "« § 2. La périodicité des vérifications est de un an. » Relu le 2026-10-07 sur l'API Légifrance (PISTE, bac à sable), LEGIARTI000020382687, en vigueur depuis le 28/10/2007, sans version future. Le § 3 — triennale par organisme agréé quand existent un désenfumage mécanique et un SSI de catégorie A ou B — est porté par `incendie-erp-desenfumage-triennale-mecanique-ssi`.",
         versionConstatee: "2007-10-28",
       },
     ],
@@ -1027,7 +1038,51 @@ export const obligationsIncendie: Obligation[] = [
     typologies: { erp: true },
     categoriesEquipement: ["DESENFUMAGE"],
     notesInternes:
-      "Sur-application assumée en 5ᵉ catégorie (constatée 2026-08-26, dépouillement du Livre III). L'article cité relève du Livre II du règlement de sécurité — « Dispositions applicables aux établissements des quatre premières catégories » — et PE 1 § 1 dispose que « les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre ». Le Livre III a été dépouillé article par article : PE 26 n'ouvre le Livre II que sur MS 39, PE 27 que sur MS 70, ni l'un ni l'autre n'étant un article de vérification. L'article cité ne fonde donc PAS cette obligation en N5. Ce qui la fonde en N5 est PE 4 § 2 — « tous les trois ans au plus », par techniciens compétents — et, chez un employeur, le Code du travail, qui s'applique indépendamment du classement ERP. La ligne est MAINTENUE volontairement : la retirer créerait un faux négatif muet chez 100 % des utilisateurs, alors qu'une sur-application visible et documentée reste corrigeable. À reprendre lorsque le référentiel saura porter PE 4 § 2, dont le porteur est l'établissement et non un équipement.\n\nÉtat au 2026-08-27 (ADR-022) : le référentiel sait désormais le porter — `incendie-erp-pe4-entretien-installations-techniques` existe, portée par l'établissement, triennale, et elle atteint tous les ERP y compris ceux qui n'ont rien déclaré. La condition annoncée ci-dessus est donc à moitié levée, et à moitié seulement. Ce qui manque est un point de DROIT, pas de modèle : cette ligne-ci n'est pas seulement fondée sur le Livre II, sa note dit qu'elle l'est aussi, chez un employeur, sur le Code du travail — lequel s'applique indépendamment du classement ERP. Tant que cela n'a pas été vérifié article par article sur Légifrance, retirer la ligne supprimerait chez l'utilisateur une échéance dont on n'a PAS établi qu'elle n'est pas due, et le ferait en silence : sans rapport ni action attachés, la réconciliation la supprime physiquement (ADR-012). La relecture réglementaire de ces six lignes est un chantier distinct, à mener avec la skill de veille ; ce n'est pas un effet de bord du chantier du porteur.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ »."
+      "Sur-application assumée en 5ᵉ catégorie (constatée 2026-08-26, dépouillement du Livre III). L'article cité relève du Livre II du règlement de sécurité — « Dispositions applicables aux établissements des quatre premières catégories » — et PE 1 § 1 dispose que « les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre ». Le Livre III a été dépouillé article par article : PE 26 n'ouvre le Livre II que sur MS 39, PE 27 que sur MS 70, ni l'un ni l'autre n'étant un article de vérification. L'article cité ne fonde donc PAS cette obligation en N5. Ce qui la fonde en N5 est PE 4 § 2 — « tous les trois ans au plus », par techniciens compétents — et, chez un employeur, le Code du travail, qui s'applique indépendamment du classement ERP. La ligne est MAINTENUE volontairement : la retirer créerait un faux négatif muet chez 100 % des utilisateurs, alors qu'une sur-application visible et documentée reste corrigeable. À reprendre lorsque le référentiel saura porter PE 4 § 2, dont le porteur est l'établissement et non un équipement.\n\nÉtat au 2026-08-27 (ADR-022) : le référentiel sait désormais le porter — `incendie-erp-pe4-entretien-installations-techniques` existe, portée par l'établissement, triennale, et elle atteint tous les ERP y compris ceux qui n'ont rien déclaré. La condition annoncée ci-dessus est donc à moitié levée, et à moitié seulement. Ce qui manque est un point de DROIT, pas de modèle : cette ligne-ci n'est pas seulement fondée sur le Livre II, sa note dit qu'elle l'est aussi, chez un employeur, sur le Code du travail — lequel s'applique indépendamment du classement ERP. Tant que cela n'a pas été vérifié article par article sur Légifrance, retirer la ligne supprimerait chez l'utilisateur une échéance dont on n'a PAS établi qu'elle n'est pas due, et le ferait en silence : sans rapport ni action attachés, la réconciliation la supprime physiquement (ADR-012). La relecture réglementaire de ces six lignes est un chantier distinct, à mener avec la skill de veille ; ce n'est pas un effet de bord du chantier du porteur.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ ».\n\nPRÉCISÉE AU § 2 LE 2026-10-07 (lot 4, relecture du préventeur du 05/10). La référence citait « DF 10 » sans paragraphe, et l'URL pointait le texte entier. Elle désigne désormais le § 2, qui porte seul l'annuelle (« La périodicité des vérifications est de un an. »), et l'article lui-même. Rythme, réalisateur, périmètre : inchangés. Le § 3 a désormais sa ligne, `incendie-erp-desenfumage-triennale-mecanique-ssi` ; cette annuelle n'est PAS conditionnée par lui — voir les notes de la triennale sur le cumul, que le texte n'écrit pas."
+  },
+  {
+    id: "incendie-erp-desenfumage-triennale-mecanique-ssi",
+    domaine: "incendie",
+    libelle:
+      "Vérification triennale par organisme agréé du désenfumage mécanique, en présence d'un SSI de catégorie A ou B (ERP des 4 premières catégories)",
+    description:
+      "Lorsque l'établissement dispose à la fois d'une installation de désenfumage mécanique et d'un système de sécurité incendie (SSI) de catégorie A ou B, les vérifications du désenfumage sont effectuées tous les trois ans par un organisme agréé. Cette vérification triennale s'ajoute à la vérification annuelle, qui reste au calendrier : le texte n'écrit pas ce cumul, c'est la lecture retenue. L'article relève du livre II du règlement de sécurité, qui vise les établissements des quatre premières catégories. La ligne n'apparaît qu'après la réponse « oui » à la question « désenfumage mécanique » ; la réponse « non » à la question sur le SSI la retire.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. DF 10 § 3 (désenfumage mécanique et SSI de catégorie A ou B : vérifications tous les trois ans par un organisme agréé) — livre II, établissements des quatre premières catégories",
+        article: "DF 10",
+        url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000020382687",
+        note: "« § 3. Lorsque existent une installation de désenfumage mécanique et un système de sécurité incendie de catégorie A ou B, les vérifications sont effectuées tous les trois ans par un organisme agréé. » Relu le 2026-10-07 sur l'API Légifrance (PISTE, bac à sable), LEGIARTI000020382687, en vigueur depuis le 28/10/2007, sans version future.",
+        versionConstatee: "2007-10-28",
+      },
+    ],
+    periodicite: "triennale",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["organisme_agree"],
+    criticite: 4,
+    transmet: [],
+    typologies: {
+      erp: { categories: ["N1", "N2", "N3", "N4"] },
+    },
+    categoriesEquipement: ["DESENFUMAGE"],
+    conditions: [
+      {
+        type: "equipement_propriete_booleenne",
+        categorie: "DESENFUMAGE",
+        propriete: "estDesenfumageMecanique",
+        valeur: true,
+      },
+      {
+        type: "equipement_propriete_non_infirmee",
+        categorie: "DESENFUMAGE",
+        propriete: "etablissementASsiCategorieAouB",
+      },
+    ],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (lot 4, relecture du préventeur du 05/10). Le corpus portait `DF 10 § 3` en réserve depuis le 2026-09-01, avec trois causes de non-encodage : (1) le moteur ne sait pas faire un ET entre deux catégories d'équipement, (2) rien ne dit la catégorie d'un SSI, (3) le cumul avec l'annuelle n'était pas tranché. Les trois sont levées ou contournées, et chacune l'est par un choix écrit ici.\n\nLE CUMUL N'EST PAS DANS LE TEXTE. `DF 10 § 3` écrit « les vérifications sont effectuées tous les trois ans par un organisme agréé » et ne dit ni qu'il remplace le § 2, ni qu'il s'y ajoute. À la question posée le 30/09 (« la triennale par organisme agréé remplace-t-elle l'annuelle du § 2, ou s'y ajoute-t-elle ? »), le préventeur a répondu, à la relecture du 05/10 : « elle s'y ajoute ». C'est SA LECTURE, retenue par la propriétaire ; le référentiel l'encode donc en ligne distincte, sans toucher à `incendie-erp-desenfumage-annuelle`, et la description dit au dirigeant que c'est une lecture. Si une source contraire était produite, c'est l'annuelle qu'il faudrait borner par `infirmee` sur les mêmes deux questions, pas cette ligne qu'il faudrait retirer.\n\n(1) LE « ET » ENTRE DEUX INSTALLATIONS : QUESTION POSÉE AU DÉSENFUMAGE LUI-MÊME. `matchEquipements` évalue les conditions sur l'équipement déclencheur et lui seul ; une condition portant sur un AUTRE équipement du parc (« l'établissement a-t-il une ALARME_INCENDIE répondant oui à `estSsiCategorieAouB` ? ») demanderait une variante neuve de `ConditionApplication`, une branche au moteur, sa sémantique du silence à inventer (aucune alarme déclarée ? une alarme sans réponse ?), et sa répercussion sur la grille, la fiche et `reponses-exigees`. Le lot ne l'a pas fait : la question « l'établissement dispose-t-il d'un SSI de catégorie A ou B ? » est posée sur le désenfumage (`etablissementASsiCategorieAouB`). Elle a aussi un mérite propre : le SSI n'a pas à être déclaré au parc pour que la ligne naisse, alors qu'une condition sur le parc l'aurait exigé. Son coût, écrit pour être repris : la réponse se donne deux fois, ici et sur l'alarme, et rien ne vérifie qu'elles concordent.\n\n(2) LA CATÉGORIE DU SSI : UN BOOLÉEN SUFFIT. La réserve disait que la catégorie est une énumération (A à E) et que le trois-états ne suffisait pas. Pour ce que les textes en font — `DF 10 § 3` et `MS 73 § 2` ne distinguent que « A ou B » du reste —, la question fermée « de catégorie A ou B ? » porte exactement l'information utile, sans migration ni énumération.\n\nLE SILENCE, ET POURQUOI LES DEUX QUESTIONS NE LE TRAITENT PAS PAREIL. Ligne NEUVE : personne ne peut la perdre, et l'annuelle — qui reste due quoi qu'on réponde — couvre l'appareil par défaut. La règle du dépôt (`conformite.test.ts`, « une obligation criticité ≥ 4 ne se conditionne pas sur le silence ») ne l'oblige donc à rien, et le choix se fait sur « qui verrait l'erreur » :\n— `estDesenfumageMecanique` en opt-in (`booleenne`). Servir la triennale au silence la ferait tomber sur tout désenfumage d'ERP des quatre premières catégories, naturel compris, soit un faux positif de masse sur une visite d'organisme agréé ; c'est le précédent de `aeration-travail-recyclage-semestriel`. Le prix : un désenfumage mécanique jamais qualifié n'a pas la triennale. La question reste « Pas encore répondu » sur la fiche de l'appareil.\n— `etablissementASsiCategorieAouB` en opt-out (`non_infirmee`). Une fois le mécanique déclaré, la population est petite et la sur-application est visible et se corrige par un « non » ; la sous-application, elle, ne se verrait qu'au passage de la commission. C'est le même sens que la condition A/B posée le même jour sur `incendie-erp-ssi-triennale`.\n\nPÉRIMÈTRE N1 À N4, par lecture du champ : `DF 10` est au Livre II, que `PE 1 § 1` écarte en 5ᵉ catégorie, et le Livre III ne le rouvre pas (PE 4 § 1 ne vise que la vérification à la construction et avant l'ouverture, en locaux à sommeil). Ligne neuve, donc sans l'héritage de sur-application de l'annuelle — même raisonnement que `incendie-erp-alarme-verification-hebdomadaire`.\n\n`realisateurs: [\"organisme_agree\"]` : le texte écrit « par un organisme agréé », sans alternative. Criticité 4, celle de l'annuelle dont elle complète l'objet."
   },
   {
     id: "incendie-erp-ria-annuelle",

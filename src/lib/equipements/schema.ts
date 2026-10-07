@@ -34,6 +34,15 @@ import { FAMILLES_ESP } from "./esp";
  *     (l'intervalle entre deux contrôles d'étanchéité est doublé)
  *   - `estChargeSuperieure50TCo2`   → règlement (UE) 2024/573, art. 5 (palier)
  *   - `estChargeSuperieure500TCo2`  → règlement (UE) 2024/573, art. 5 (palier)
+ *   - `estSsiCategorieAouB`         → ERP N1-N4, art. MS 73 § 2 : triennale
+ *     des SSI « de catégories A et B » (sur l'ALARME_INCENDIE ; trois états,
+ *     seul un « non » retire la triennale — 2026-10-07, lot 4 relecture JC)
+ *   - `estDesenfumageMecanique`     → ERP N1-N4, art. DF 10 § 3 (sur le
+ *     DESENFUMAGE ; trois états, seul un « oui » fait naître la triennale)
+ *   - `etablissementASsiCategorieAouB` → ERP N1-N4, art. DF 10 § 3 (sur le
+ *     DESENFUMAGE : le moteur ne lit que l'appareil déclencheur, la présence
+ *     d'un SSI A/B dans l'établissement se demande donc au désenfumage
+ *     lui-même ; seul un « non » l'éteint)
  *   - `familleEsp`                  → arrêté du 20 novembre 2017, art. 15 :
  *     inspection périodique biennale des générateurs de vapeur, distinguée du
  *     régime général. Seule propriété d'ÉNUMÉRATION de cette liste ; les
@@ -151,6 +160,9 @@ export const CHAMPS_TRI_ETAT = [
   "estChargeSuperieure500TCo2",
   "aDetectionDeFuites",
   "estMuParForceHumaine",
+  "estSsiCategorieAouB",
+  "estDesenfumageMecanique",
+  "etablissementASsiCategorieAouB",
 ] as const;
 
 export type ChampTriEtat = (typeof CHAMPS_TRI_ETAT)[number];
@@ -235,6 +247,26 @@ export const CATEGORIES_TRI_ETAT: readonly {
     champ: "aDetectionDeFuites",
     categories: ["INSTALLATION_FRIGORIFIQUE"],
     message: "Spécifique aux installations frigorifiques",
+  },
+  // 2026-10-07 (lot 4, relecture du préventeur) : MS 73 § 2 et DF 10 § 3. Les
+  // trois ne gouvernent que des lignes ERP des quatre premières catégories.
+  {
+    champ: "estSsiCategorieAouB",
+    categories: ["ALARME_INCENDIE"],
+    message: "Spécifique aux systèmes de sécurité incendie",
+    erpSeulement: true,
+  },
+  {
+    champ: "estDesenfumageMecanique",
+    categories: ["DESENFUMAGE"],
+    message: "Spécifique aux installations de désenfumage",
+    erpSeulement: true,
+  },
+  {
+    champ: "etablissementASsiCategorieAouB",
+    categories: ["DESENFUMAGE"],
+    message: "Spécifique aux installations de désenfumage",
+    erpSeulement: true,
   },
 ];
 
@@ -355,6 +387,9 @@ export const equipementSchema = z
     estChargeSuperieure50TCo2: triEtat,
     estChargeSuperieure500TCo2: triEtat,
     aDetectionDeFuites: triEtat,
+    estSsiCategorieAouB: triEtat,
+    estDesenfumageMecanique: triEtat,
+    etablissementASsiCategorieAouB: triEtat,
     notes: z.preprocess(
       (v) => (typeof v === "string" ? v.trim() || undefined : v),
       z.string().max(1000).optional(),

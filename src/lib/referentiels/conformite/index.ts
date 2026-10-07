@@ -254,7 +254,12 @@ export const obligationsConformite: Obligation[] = [
 // `2026-09-28.3` (contre-revue des corrections du lot 3) : les libellés de
 // quatre VGP de levage — servies au silence sur une réponse — disent le rythme
 // et son fondement, plus un fait non déclaré. Libellés seuls : 174 + 0 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-09-28.3";
+// `2026-10-07.3` (lot 4, relecture du préventeur) : DF 10 § 3 entre
+// (`incendie-erp-desenfumage-triennale-mecanique-ssi`), et la triennale SSI de
+// MS 73 § 2 reçoit sa condition A/B en `non_infirmee`. 174 + 1 − 0 = 175. Au
+// silence, rien ne sort ; la ligne neuve n'apparaît qu'au « oui » sur le
+// désenfumage mécanique.
+export const REFERENTIEL_VERSION = "2026-10-07.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

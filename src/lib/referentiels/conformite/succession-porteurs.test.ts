@@ -154,6 +154,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-erp-alarme-verification-hebdomadaire": "equipement",
   "incendie-erp-baes-annuelle": "equipement",
   "incendie-erp-desenfumage-annuelle": "equipement",
+  "incendie-erp-desenfumage-triennale-mecanique-ssi": "equipement",
   "incendie-erp-eclairage-securite-autonomie-semestrielle": "equipement",
   "incendie-erp-eclairage-securite-essai-mensuel": "equipement",
   "incendie-erp-extincteurs-annuelle": "equipement",

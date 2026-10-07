@@ -889,6 +889,15 @@ describe("référentiel conformité — non-régression des obligations critique
     // propriété la condition `enum_differente` correspondante et s'applique
     // donc tant que `familleEsp` n'a pas été renseignée.
     "esp-inspection-periodique-generateur-vapeur",
+    // 2026-10-07 (lot 4, relecture du préventeur) : DF 10 § 3, triennale par
+    // organisme agréé quand existent un désenfumage MÉCANIQUE et un SSI de
+    // catégorie A ou B. Obligation NEUVE — personne ne peut la perdre —, qui
+    // s'AJOUTE à `incendie-erp-desenfumage-annuelle` (lecture du préventeur,
+    // le texte n'écrit pas le cumul) : l'annuelle reste due quoi qu'on réponde.
+    // Seule la question « mécanique » est stricte : au silence, la triennale
+    // tomberait sur tout désenfumage naturel d'ERP N1-N4. Celle du SSI est en
+    // `non_infirmee`.
+    "incendie-erp-desenfumage-triennale-mecanique-ssi",
   ]);
 
   /**
@@ -1626,6 +1635,14 @@ describe("référentiel conformité — version et empreinte", () => {
     // réduits au rythme et à son fondement (`libelleVgp`), la réponse manquante
     // dite dans la description. Libellés seuls : 174 + 0 − 0 = 174.
     { version: "2026-09-28.3", empreinte: "174-748bfcc14b5ff8dd" },
+    // Lot 4 de la relecture du préventeur (2026-10-07) : DF 10 § 3 entre,
+    // `incendie-erp-desenfumage-triennale-mecanique-ssi` (désenfumage
+    // mécanique ET SSI de catégorie A ou B, triennale par organisme agréé, en
+    // plus de l'annuelle). `incendie-erp-ssi-triennale` reçoit la condition
+    // A/B de MS 73 § 2 (`non_infirmee` : rien ne sort au silence) ;
+    // `incendie-erp-desenfumage-annuelle` est précisée au § 2 (références
+    // seules, hors empreinte). Aucune n'en sort : 174 + 1 − 0 = 175.
+    { version: "2026-10-07.3", empreinte: "175-32822573f0a0345d" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1782,7 +1799,7 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(174);
+    ).toBe(175);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

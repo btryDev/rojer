@@ -185,6 +185,29 @@ const QUESTIONS_TRI_ETAT: Record<
       "Un système fixe de détection des fuites est-il installé sur cette installation ?",
     aide: "Un détecteur permanent, relié à une alarme, qui signale une fuite de fluide frigorigène sans intervention humaine — à ne pas confondre avec le contrôle d'étanchéité lui-même, ni avec une sonde de température. S'il y en a un, le règlement double l'intervalle entre deux contrôles. En cas de doute, laissez « Je ne sais pas encore » : c'est l'intervalle le plus court qui reste affiché.",
   },
+  // 2026-10-07 (lot 4, relecture du préventeur). MS 73 § 2 ne vise que les
+  // « systèmes de sécurité incendie de catégories A et B » ; la triennale
+  // tombait jusqu'ici sur toute alarme d'ERP des quatre premières catégories.
+  // Ligne déjà publiée : le silence la garde, seul un « non » la retire.
+  estSsiCategorieAouB: {
+    question:
+      "Ce système de sécurité incendie (SSI) est-il de catégorie A ou B ?",
+    aide: "Les SSI sont classés en cinq catégories, de A à E. La catégorie figure dans les documents de l'installation ou sur le rapport de vérification ; votre installateur ou votre vérificateur la connaît. Avec « Oui » ou « Je ne sais pas encore », le calendrier garde la vérification tous les trois ans par une personne ou un organisme agréé (règlement de sécurité, art. MS 73 § 2 — établissements des quatre premières catégories). Avec « Non », elle est retirée ; la vérification annuelle reste.",
+  },
+  // DF 10 § 3 : « Lorsque existent une installation de désenfumage mécanique
+  // et un système de sécurité incendie de catégorie A ou B ». Ligne neuve,
+  // qui s'AJOUTE à l'annuelle : le silence sur le mécanique ne la fait pas
+  // naître (voir `incendie-erp-desenfumage-triennale-mecanique-ssi`).
+  estDesenfumageMecanique: {
+    question:
+      "Ce désenfumage est-il mécanique (fumées extraites par des ventilateurs) ?",
+    aide: "Un désenfumage mécanique évacue les fumées par des ventilateurs ; un désenfumage naturel, par des ouvrants, exutoires ou trappes en façade ou en toiture. Avec « Oui », et si l'établissement dispose aussi d'un SSI de catégorie A ou B (question suivante), le calendrier ajoute une vérification tous les trois ans par un organisme agréé (règlement de sécurité, art. DF 10 § 3 — établissements des quatre premières catégories) ; la vérification annuelle reste. Tant que vous n'avez pas répondu « Oui », elle n'apparaît pas.",
+  },
+  etablissementASsiCategorieAouB: {
+    question:
+      "L'établissement dispose-t-il d'un système de sécurité incendie (SSI) de catégorie A ou B ?",
+    aide: "La vérification tous les trois ans du désenfumage dépend des deux installations à la fois (art. DF 10 § 3) : la question est donc posée ici, même si votre SSI a sa propre fiche — répondez de la même façon. Pour un désenfumage mécanique, « Oui » ou « Je ne sais pas encore » garde la vérification triennale au calendrier ; « Non » la retire.",
+  },
 };
 
 type Props = {
