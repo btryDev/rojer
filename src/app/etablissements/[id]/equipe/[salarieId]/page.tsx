@@ -1,5 +1,6 @@
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { notFound } from "next/navigation";
 import {
@@ -294,6 +295,11 @@ export default async function SalarieDetailPage({
                         </p>
                         {/* ADR-039 : un rythme que le texte n'écrit pas se
                             dit comme tel, à côté de l'échéance qu'il calcule. */}
+                        {t.renvoiAuxNormes && !t.echeanceLe && (
+                          <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                            {t.renvoiAuxNormes.long}
+                          </p>
+                        )}
                         {t.rythmeRetenu && (
                           <p className="m-0 mt-1.5">
                             <MentionRythmeRetenu mention={t.rythmeRetenu} />
@@ -358,7 +364,12 @@ export default async function SalarieDetailPage({
                         {t.echeanceLe === null &&
                         (t.etat === "enRetard" || t.etat === "proche")
                           ? MOT_DE_L_ECHEANCE_CALCULEE[t.etat]
-                          : MOT_DE_L_ETAT[t.etat]}
+                          : t.etat === "aPlanifier" && t.renvoiAuxNormes
+                            ? // « Sans terme écrit » est vrai du Code et
+                              // incomplet : il renvoie le rythme aux normes
+                              // (revue de fidélité du 2026-10-07).
+                              t.renvoiAuxNormes.court
+                            : MOT_DE_L_ETAT[t.etat]}
                       </span>
                     </li>
                   ))}
@@ -454,6 +465,7 @@ export default async function SalarieDetailPage({
                       pieceMedicale: o.pieceMedicale,
                       periodicite: periodiciteEffective(o),
                       rythmeRetenu: mentionRythmeRetenu(o)?.long ?? null,
+                      renvoiAuxNormes: renvoiAuxNormes(o)?.long ?? null,
                       bloquePar: bloquant
                         ? { libelle: bloquant.titre.libelle, motif: bloquant.motif }
                         : undefined,

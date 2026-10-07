@@ -1,4 +1,5 @@
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -184,6 +185,8 @@ export async function getSalarie(
         periodicite: o ? periodiciteEffective(o) : null,
         /** D'où vient ce rythme quand le texte n'en écrit pas (ADR-039). */
         rythmeRetenu: o ? mentionRythmeRetenu(o) : null,
+        /** Le Code renvoie le rythme aux normes sans l'écrire (R. 4544-10). */
+        renvoiAuxNormes: o ? renvoiAuxNormes(o) : null,
         etat: etatDuTitre(t, o, s.actif, now),
       };
     }),
