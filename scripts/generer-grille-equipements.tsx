@@ -27,8 +27,16 @@
 // Les deux options lisent des données de RELECTURE, tenues hors du dépôt
 // (`src/lib/pdf/entrees-grille-relecture.ts`) :
 //   --propositions-audit  [{ id, motif }] : lignes que nous proposons de passer
-//                         au niveau audit, marquées « Proposé » avec leur motif.
-//                         Elles n'entrent pas au référentiel ;
+//                         au niveau audit. ~~Marquées « Proposé » avec leur
+//                         motif.~~ [2026-10-09, C67 : depuis la décision de la
+//                         propriétaire du 2026-10-08, elles portent la MÊME
+//                         mention que les lignes déjà au niveau audit —
+//                         `MENTION_NIVEAU_AUDIT`, « Audit », en couleur —, sans
+//                         motif ni statut.] Le `motif` reste exigé dans le JSON
+//                         (`lirePropositionsAudit` le refuse vide) : c'est la
+//                         trace, pour nous, de pourquoi la ligne est proposée.
+//                         Il n'est plus imprimé. Elles n'entrent pas au
+//                         référentiel ;
 //   --annexe-relecture    { intro?, remarques: [{ page, objet?, remarque, fait,
 //                         statut }], questions: [] } : la réponse aux remarques
 //                         du relecteur, imprimée en tête du document.
@@ -47,6 +55,7 @@ import {
 } from "@/lib/pdf/entrees-grille-relecture";
 import {
   estNiveauAudit,
+  MENTION_NIVEAU_AUDIT,
   nombreObligationsSuivies,
   obligationsConformite,
   REFERENTIEL_VERSION,
@@ -414,7 +423,7 @@ function LigneObligation({
           { width: C.audit, fontFamily: "Helvetica-Bold", color: BOARD.ambreEncre },
         ]}
       >
-        {estNiveauAudit(o) || proposition ? "Audit" : ""}
+        {estNiveauAudit(o) || proposition ? MENTION_NIVEAU_AUDIT : ""}
       </Text>
     </View>
     </View>

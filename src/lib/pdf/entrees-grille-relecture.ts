@@ -3,9 +3,16 @@
 // au niveau audit, et la réponse aux remarques du relecteur.
 //
 // Ce sont des données de relecture, lues dans des fichiers JSON tenus hors du
-// dépôt. Une proposition n'entre jamais au référentiel : elle s'imprime à côté
+// dépôt. Une proposition n'entre jamais au référentiel. ~~Elle s'imprime à côté
 // de la ligne, pour avis. Seul un `niveau: "audit"` posé au référentiel, après
-// décision, fait une ligne « Audit » (ADR-042).
+// décision, fait une ligne « Audit » (ADR-042).~~ [2026-10-09, C67 : depuis la
+// décision de la propriétaire du 2026-10-08, la grille imprime UNE seule
+// mention, `MENTION_NIVEAU_AUDIT` (« Audit »), en couleur, sur les lignes au
+// niveau audit (ADR-042) ET sur les lignes proposées — sans distinguer les
+// deux, sans motif ni statut.] Le `motif` reste exigé ici et n'est plus
+// imprimé : il garde dans le fichier de relecture la raison de la proposition,
+// pour qui reprendra la décision ; le rendre facultatif ferait des
+// propositions sans raison.
 //
 // Les lecteurs ci-dessous refusent ce qu'ils ne comprennent pas plutôt que de
 // l'ignorer : une proposition sur un id inconnu imprimerait une grille où la
