@@ -153,7 +153,9 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
       statut: "retenu",
       obligations: [
         "stockage-dangereux-fiches-donnees",
-        "stockage-dangereux-formation-personnel",
+        // ~~"stockage-dangereux-formation-personnel"~~ — 2026-10-08 (C64) :
+        // une ligne d'établissement, due dès qu'un stockage est déclaré.
+        "stockage-dangereux-etablissement-formation-personnel",
       ],
       reserve:
         "LE CSE EST DESTINATAIRE AU MÊME TITRE QUE LES TRAVAILLEURS — « L'employeur veille à ce que les travailleurs AINSI QUE LE COMITÉ SOCIAL ET ÉCONOMIQUE » —, et aucune des deux obligations qui citent l'article ne le porte : l'une nomme les fiches, l'autre la formation des salariés qui manipulent. Relevé le 2026-09-01, non corrigé.",
@@ -193,7 +195,8 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
       citationCle:
         "L'employeur organise, en liaison avec le comité social et économique et le médecin du travail, l'information et la formation à la sécurité des travailleurs susceptibles d'être exposés à l'action d'agents cancérogènes, mutagènes ou toxiques pour la reproduction.",
       statut: "retenu",
-      obligations: ["stockage-dangereux-formation-personnel"],
+      // ~~["stockage-dangereux-formation-personnel"]~~ — 2026-10-08 (C64).
+      obligations: ["stockage-dangereux-etablissement-formation-personnel"],
       reserve:
         "CHAMP RESTREINT AUX CMR, confirmé par le chemin relevé le 2026-09-01 : Livre IV, Titre Ier, Chapitre II, SECTION 2 « Dispositions particulières aux agents chimiques dangereux cancérogènes, mutagènes et toxiques pour la reproduction », sous-section 6. R. 4412-38, lui, relève de la Section 1, commune à tous les agents chimiques dangereux. La référence porte déjà la mention « agents CMR uniquement » ; elle est exacte. Rien à corriger, l'entrée existe pour que le détour ne se refasse pas.",
     },
@@ -208,8 +211,9 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
       // de création (décret n° 2008-244), aucune version future. Il porte le
       // rythme vague de la formation, « Elles sont répétées régulièrement »,
       // que ni R. 4412-38 ni R. 4412-87 n'écrivent. Champ : agents CMR, comme
-      // R. 4412-87 — la ligne qui le cite sur-applique à tout stockage, ses
-      // notes le disent.
+      // R. 4412-87 — ~~la ligne qui le cite sur-applique à tout stockage, ses
+      // notes le disent~~. 2026-10-08 (C64) : il n'est plus que contexte ; le
+      // rythme vague de la ligne est pris dans L. 4141-2, de portée générale.
       modifiePar: null,
       luLe: "2026-10-07",
       lecture: "premiere_main",
@@ -218,7 +222,8 @@ export const CODE_TRAVAIL_RISQUE_CHIMIQUE: Corpus = {
       citationCle:
         "L'information et la formation à la sécurité sont adaptées à l'évolution des risques et à l'apparition de risques nouveaux. Elles sont répétées régulièrement. Elles favorisent une application des règles de prévention adaptée à l'évolution des connaissances et des techniques.",
       statut: "retenu",
-      obligations: ["stockage-dangereux-formation-personnel"],
+      // ~~["stockage-dangereux-formation-personnel"]~~ — 2026-10-08 (C64).
+      obligations: ["stockage-dangereux-etablissement-formation-personnel"],
     },
     {
       ref: "R. 4222-20",

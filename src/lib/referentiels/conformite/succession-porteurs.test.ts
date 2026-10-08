@@ -256,7 +256,10 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "signalisation-stockage-substances-dangereuses": "equipement",
   "stockage-dangereux-declaration-icpe": "equipement",
   "stockage-dangereux-fiches-donnees": "equipement",
-  "stockage-dangereux-formation-personnel": "equipement",
+  // 2026-10-08 (C64) : succède à `stockage-dangereux-formation-personnel`
+  // (équipement, retirée avec `absorbePar` — report d'échéance servi).
+  "stockage-dangereux-etablissement-formation-personnel": "etablissement",
+  "stockage-dangereux-formation-personnel": "equipement",  // retirée le 2026-10-08 (C64), absorbée
   "stockage-dangereux-retention": "equipement",
   "stockage-dangereux-ventilation-locaux": "equipement",
   "stockage-dangereux-verification-etancheite": "equipement",

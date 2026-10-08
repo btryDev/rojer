@@ -173,7 +173,8 @@ describe("les deux obligations tranchées le 2026-09-04", () => {
     // par le fournisseur des agents chimiques » : un état à constituer puis à
     // maintenir. L'« actualisation » qui l'avait fait ranger en
     // `evenementielle` est au 1° du même article, et elle est portée par
-    // `stockage-dangereux-formation-personnel`.
+    // ~~`stockage-dangereux-formation-personnel`~~
+    // `stockage-dangereux-etablissement-formation-personnel` (2026-10-08, C64).
     const o = obligationsConformite.find(
       (x) => x.id === "stockage-dangereux-fiches-donnees",
     );

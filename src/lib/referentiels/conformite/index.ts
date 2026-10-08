@@ -326,6 +326,12 @@ export const obligationsConformite: Obligation[] = [
 // conditions `enum_differente` sur `familleEsp` écartent les familles
 // déclarées autres que `recipient_gaz_groupe2` ; le silence et « Autre / je
 // ne sais pas » gardent la ligne. Compte : 171 + 0 − 0 = 171.
+// (A) La formation au risque chimique : une ligne d'établissement, due dès
+// qu'un stockage de matières dangereuses est déclaré (champ neuf
+// `siEquipementDeclare`, qui entre à l'empreinte), au défaut annuel de
+// L. 4141-2 — entre `stockage-dangereux-etablissement-formation-personnel`,
+// sort `stockage-dangereux-formation-personnel` (`OBLIGATIONS_RETIREES`,
+// `absorbePar`). Compte : 171 + 1 − 1 = 171.
 export const REFERENTIEL_VERSION = "2026-10-07.5";
 
 /**
@@ -490,6 +496,17 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
     motif:
       "Ventilation des locaux de stockage et contrôle annuel (R. 4222-20 ; arrêté du 8 octobre 1987, art. 4) — les deux textes continuent de fonder les lignes d'aération. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
+  // 2026-10-08 (C64) — « on respecte les décisions de Julien » : la formation
+  // au risque chimique devient UNE ligne d'établissement, due dès qu'un
+  // stockage est déclaré (`siEquipementDeclare`). Nouvel identifiant, et
+  // celui-ci inscrit ici : le report d'échéance équipement → établissement
+  // n'est servi qu'à une obligation retirée (`succession-porteurs.test.ts`).
+  "stockage-dangereux-formation-personnel": {
+    absorbePar: "stockage-dangereux-etablissement-formation-personnel",
+    porteur: "equipement",
+    motif:
+      "Formation du personnel manipulant des matières dangereuses (R. 4412-38), portée par chaque stockage déclaré : une ligne PAR stockage. Retirée le 2026-10-08 (C64) au profit de `stockage-dangereux-etablissement-formation-personnel`, une ligne pour l'établissement, due dès qu'au moins un stockage est déclaré, au défaut annuel de L. 4141-2 (préventeur : « obligation annuelle de formation » ; décision de la propriétaire du 08/10). En production l'identifiant était `autre`, sans rythme ni ligne de calendrier ; la version 2026-10-07.5, qui lui donnait un défaut annuel, n'a jamais été servie.",
+  },
 };
 
 /**
@@ -589,6 +606,12 @@ export function empreinteReferentiel(
         // chaîne d'avant, donc l'ADR-039 seul ne déplace ni l'empreinte ni
         // `REFERENTIEL_VERSION`. Le motif y entre avec le rythme : passer d'un
         // défaut à une norme change ce que la ligne affiche de son origine.
+        // `siEquipementDeclare` (2026-10-08, C64) décide de l'EXISTENCE de
+        // la ligne d'établissement : il entre, en segment ajouté et seulement
+        // quand il est présent, comme le rythme retenu ci-dessous.
+        ...(o.porteur === "etablissement" && o.siEquipementDeclare
+          ? [`si:${canonique(o.siEquipementDeclare)}`]
+          : []),
         ...(o.rythmeRetenu
           ? [
               `rythme:${o.rythmeRetenu.periodicite}:${o.rythmeRetenu.motif}:${

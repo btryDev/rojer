@@ -90,7 +90,8 @@ describe("nature d'obligation (ADR-026)", () => {
     const cas = {
       "secours-salarie-secouriste": "ponctuelle",
       "froid-controle-etancheite-apres-modification": "evenementielle",
-      "stockage-dangereux-formation-personnel": "echeance_recurrente",
+      // ~~"stockage-dangereux-formation-personnel"~~ — 2026-10-08 (C64).
+      "stockage-dangereux-etablissement-formation-personnel": "echeance_recurrente",
     } as const;
 
     for (const [id, attendue] of Object.entries(cas)) {

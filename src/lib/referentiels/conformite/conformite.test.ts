@@ -257,9 +257,11 @@ describe("référentiel conformité — couverture P1", () => {
     ]);
     // ~~`toBeGreaterThanOrEqual(5)`~~ — 2026-10-07 : « à exclure sauf 3 derniers
     // points » ; le troisième vit au domaine signalisation.
+    // ~~"stockage-dangereux-formation-personnel"~~ — 2026-10-08 (C64) : une
+    // ligne d'établissement, due dès qu'un stockage est déclaré.
     expect(obligationsStockageDangereux.map((o) => o.id)).toEqual([
       "stockage-dangereux-fiches-donnees",
-      "stockage-dangereux-formation-personnel",
+      "stockage-dangereux-etablissement-formation-personnel",
     ]);
     expect(obligationsLevage.length).toBeGreaterThanOrEqual(7);
   });
@@ -581,7 +583,8 @@ describe("référentiel conformité — anti-doublon", () => {
     {
       paire: [
         "stockage-dangereux-fiches-donnees",
-        "stockage-dangereux-formation-personnel",
+        // ~~"stockage-dangereux-formation-personnel"~~ — 2026-10-08 (C64).
+        "stockage-dangereux-etablissement-formation-personnel",
       ],
       raison:
         "Instruit le 2026-08-27, ce n'est PAS un doublon. `R. 4412-38` fonde d'un côté « l'accès des travailleurs aux fiches de données de sécurité » — une pièce à tenir disponible — et de l'autre leur formation. Un document et un enseignement ne sont pas le même acte, même sous le même article.",
@@ -1717,7 +1720,13 @@ describe("référentiel conformité — version et empreinte", () => {
     // compresseurs — quatre conditions `enum_differente` sur `familleEsp` ;
     // le silence et « je ne sais pas » gardent la ligne. 171 + 0 − 0 = 171.
     // ~~171-b161063e19bd746~~ : empreinte après (B), jamais scellée.
-    { version: "2026-10-07.5", empreinte: "171-59b93c7c5781b6c8" },
+    // (A) la formation au risque chimique devient une ligne d'établissement,
+    // due dès qu'un stockage est déclaré (`siEquipementDeclare`, qui entre à
+    // l'empreinte) : `stockage-dangereux-etablissement-formation-personnel`
+    // entre, `stockage-dangereux-formation-personnel` sort (retirée, absorbée).
+    // 171 + 1 − 1 = 171. ~~171-59b93c7c5781b6c8~~ : empreinte après (C),
+    // jamais scellée.
+    { version: "2026-10-07.5", empreinte: "171-9bfaadbae946dc7c" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

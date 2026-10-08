@@ -1077,6 +1077,8 @@ export type ObligationPorteeParEquipement = ObligationCommune & {
   conditions?: ConditionApplication[];
   /** Interdit ici : le contexte n'a de sens que pour un porteur établissement. */
   equipementsEnContexte?: never;
+  /** Interdit ici : un équipement déclenche déjà, une ligne par équipement. */
+  siEquipementDeclare?: never;
 };
 
 /**
@@ -1101,6 +1103,31 @@ export type ObligationPorteeParEtablissement = ObligationCommune & {
    * par « etc. », le produit ne doit pas prétendre le contraire.
    */
   equipementsEnContexte?: CategorieEquipement[];
+  /**
+   * L'obligation n'existe que si l'établissement a déclaré AU MOINS UN
+   * équipement de l'une de ces catégories — et elle produit alors UNE ligne,
+   * pas une par équipement (2026-10-08, C64 ; ADR-022, amendement du même
+   * jour).
+   *
+   * Le cas qui l'a fait naître : la formation du personnel au risque chimique
+   * (`stockage-dangereux-etablissement-formation-personnel`). Portée par le
+   * stockage déclaré, elle donnait une ligne PAR stockage — trois armoires,
+   * trois formations annuelles —, alors que l'acte est dû aux travailleurs de
+   * l'établissement, une fois. Le stockage n'est pas son porteur, c'est son
+   * DÉCLENCHEUR : la présence d'agents chimiques dangereux (R. 4412-38) que
+   * le produit ne lit qu'à travers lui.
+   *
+   * À distinguer d'`equipementsEnContexte`, qui n'est qu'indicatif : la ligne
+   * existe même si aucun équipement n'est déclaré. Ici, sans équipement de la
+   * catégorie, le moteur rend `null`. Absent = la règle de l'ADR-022 (due
+   * même si rien n'est déclaré).
+   *
+   * **Entre dans `empreinteReferentiel()`** : il décide de l'existence d'une
+   * ligne. En segment ajouté, et seulement quand il est présent, comme
+   * `rythmeRetenu` — les obligations qui n'en portent pas gardent leur
+   * chaîne.
+   */
+  siEquipementDeclare?: [CategorieEquipement, ...CategorieEquipement[]];
 };
 
 /**
@@ -1123,6 +1150,8 @@ export type ObligationPorteeParSalarie = ObligationCommune & {
   conditions?: never;
   /** Interdit : le contexte d'équipement n'a de sens que pour l'établissement. */
   equipementsEnContexte?: never;
+  /** Interdit : un titre naît d'une déclaration de l'employeur (ADR-023). */
+  siEquipementDeclare?: never;
   /**
    * Les titres que le droit interdit de cumuler avec celui-ci. **Requis, et
    * c'est le point** — troisième champ de ce type après `transmet` et
