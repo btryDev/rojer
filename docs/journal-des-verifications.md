@@ -5479,6 +5479,32 @@ ce lot sert **`2026-10-08.4`**.]
      `174-e2d28b70856335ac`, en appelant. Relevé du moteur ~~`df2b06b8dd0dd531`~~
      → `9ea22cc6ca8d74f9`, recopié sans incrément (porte audit en amont,
      état permanent). Les réponses déjà en base restent sans lecteur.
+- **Mineurs d'une revue, 2026-10-09** (aucun texte rouvert, empreinte et
+  relevé du moteur inchangés) :
+  1. *Fiche d'un masque ou d'un gilet* (`0ba94bb6`) — une ligne archivée sous
+     l'ancien id `epi-verification-generale-periodique` faisait annoncer
+     « Une obligation du référentiel s'applique à cet appareil » avec le
+     libellé de l'antichute. `obligationsDeLEquipement` saute les lignes
+     archivées ; deux tests (`fiche.test.ts`), le premier rouge filtre retiré.
+  2. *Portées de corpus* (`c807e6f2`) — `code-travail-epi` et
+     `arrete-1993-03-19-epi` disaient les cinq familles portées par l'ancien
+     id : rayé, daté, nouvelle répartition (antichute servie ; respiratoire
+     et gilet au niveau audit).
+  3. *Commentaires de la grille* (`a22d2ef8`) — « Proposé » avec son motif
+     rayé : une seule mention, `MENTION_NIVEAU_AUDIT` (« Audit »), en
+     couleur, pour l'audit et les propositions ; le littéral cède à la
+     constante. Le `motif` reste exigé dans le JSON, il n'est plus imprimé.
+  4. *Deux gardes décoratives rendues réelles* (`cf8bce47`) — le catalogue
+     sans titre audit passait sans le filtre ; le `!estNiveauAudit(o)` de la
+     boucle des titres de `passe.ts` n'était couvert par rien. Une obligation
+     salarié réelle est marquée pour l'occasion (`cataloguerTitres` prend le
+     référentiel en paramètre ; `obligationParId` doublé dans
+     `calendrier/niveau-audit.test.ts`). Éprouvées : filtre du catalogue
+     retiré → 1 rouge ; filtre de la passe retiré → 1 rouge ; restaurées par
+     `git checkout cf8bce47 --`.
+  5. *Titre de la rubrique* (`e0c425fb`) — ~~« obligations légales suivies
+     hors du quotidien de Rojer »~~ → « obligations légales que Rojer ne
+     suit pas au quotidien » ; légende de la grille et ADR-042 alignés.
 
 ## Partie 2 — Registre des constats en suspens
 
