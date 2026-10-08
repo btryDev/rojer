@@ -45,6 +45,21 @@ export function phraseFormation(reponse: ReponseTransverse, nature: string): str
   return `Formation que l'établissement organise pour les travailleurs concernés — à faire suivre à cette personne si elle l'est. ${suivi}`;
 }
 
+/**
+ * Ce qu'on dit d'un titre sur la fiche. Après un « non », il n'est pas dû :
+ * le dire, comme pour les formations — la passe Chrome du 2026-10-08 a vu
+ * l'habilitation listée sous un « non » sans que rien ne le précise.
+ */
+export function phraseTitre(reponse: ReponseTransverse, dernierTitreLe: Date | null): string {
+  const declare = dernierTitreLe
+    ? `Titre déclaré pour cette personne, délivré le ${formaterDateLongueFr(dernierTitreLe)}.`
+    : null;
+  if (reponse === "non") {
+    return `${declare ? `${declare} ` : ""}Non dû tant que vous répondez non. Si cette personne est pourtant concernée, corrigez la réponse.`;
+  }
+  return declare ?? "Aucun titre déclaré pour cette personne. Ce n'est pas un retard : Rojer ne sait pas si elle est concernée.";
+}
+
 export function CarteTitresDuDuerp({
   questions,
   lienVersLaQuestion,
@@ -107,9 +122,7 @@ export function CarteTitresDuDuerp({
                     </p>
                   )}
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                    {dernierTitreLe
-                      ? `Titre déclaré pour cette personne, délivré le ${formaterDateLongueFr(dernierTitreLe)}.`
-                      : "Aucun titre déclaré pour cette personne. Ce n'est pas un retard : Rojer ne sait pas si elle est concernée."}
+                    {phraseTitre(reponse, dernierTitreLe)}
                   </p>
                   <ReferenceFondatrice obligation={obligation} />
                 </li>

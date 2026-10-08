@@ -36,9 +36,17 @@ export default async function EquipePage({
   const titresDeclares = await libellesTitresDeclares(id);
   const catalogue = cataloguerTitres();
   const faits = await chargerFaitsActivite(id);
-  const sansReponse = faits
-    ? FAITS_ACTIVITE.filter((f) => faits[f.champ] === null).length
-    : 0;
+  // Les faits sans réponse, NOMMÉS : la passe Chrome du 2026-10-08 a vu le
+  // bandeau compter juste et lister les cinq, réponses comprises.
+  const NOM_COURT: Record<(typeof FAITS_ACTIVITE)[number]["champ"], string> = {
+    manutentionManuelle: "manutention",
+    travailSurEcran: "écran",
+    operationsElectriques: "électricité",
+    conduiteEngins: "engins",
+    expositionCMR: "CMR",
+  };
+  const muets = faits ? FAITS_ACTIVITE.filter((f) => faits[f.champ] === null) : [];
+  const sansReponse = muets.length;
 
   const enRetard = equipe
     .filter((s) => s.actif)
@@ -109,7 +117,7 @@ export default async function EquipePage({
             </p>
             <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               {sansReponse > 0
-                ? `${sansReponse} question${sansReponse > 1 ? "s" : ""} sans réponse : manutention, écran, électricité, engins, CMR. Elles décident des formations et du suivi dus à une partie de l'effectif.`
+                ? `${sansReponse} question${sansReponse > 1 ? "s" : ""} sans réponse : ${muets.map((f) => NOM_COURT[f.champ]).join(", ")}. Elles décident des formations et du suivi dus à une partie de l'effectif.`
                 : "Les formations et le suivi dus à une partie de l'effectif s'affichent sur la fiche de chaque personne."}
             </p>
           </div>

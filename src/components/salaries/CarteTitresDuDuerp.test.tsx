@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
 import type { ReponsesFaitsActivite } from "@/lib/etablissements/faits-activite";
-import { CarteTitresDuDuerp, PHRASE_REPONSE, phraseFormation } from "./CarteTitresDuDuerp";
+import { CarteTitresDuDuerp, PHRASE_REPONSE, phraseFormation, phraseTitre } from "./CarteTitresDuDuerp";
 
 const tous = (v: boolean | null): ReponsesFaitsActivite => ({
   manutentionManuelle: v,
@@ -88,5 +88,11 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
       expect(phraseFormation("non", nature)).not.toMatch(/Ce qui doit être en place|Quand ça arrive/);
       expect(phraseFormation("oui", nature)).toMatch(/Ce qui doit être en place|Quand ça arrive/);
     }
+  });
+
+  it("après un « non », un titre est dit non dû — pas « aucun titre déclaré » comme s'il l'était", () => {
+    expect(phraseTitre("non", null)).toMatch(/Non dû/);
+    expect(phraseTitre("oui", null)).not.toMatch(/Non dû/);
+    expect(phraseTitre("non", new Date("2025-01-02"))).toMatch(/délivré le .*Non dû/);
   });
 });
