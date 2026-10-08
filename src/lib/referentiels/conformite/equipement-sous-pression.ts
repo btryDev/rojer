@@ -91,13 +91,36 @@ export const FAMILLES_ESP_NON_COMPRESSEUR = [
   "tuyauterie",
 ] as const;
 
-const CONDITION_COMPRESSEUR: ConditionApplication[] =
-  FAMILLES_ESP_NON_COMPRESSEUR.map((valeur) => ({
+// Écrites une à une, et non par un `.map` sur la liste ci-dessus : ce fichier
+// est une DONNÉE du référentiel, exclue du sceau du moteur
+// (`version-moteur.test.ts`, `DONNEES_REFERENTIEL`), et n'y porte aucune
+// fonction. `esp-compresseurs.test.ts` tient l'accord entre les deux.
+const CONDITION_COMPRESSEUR: ConditionApplication[] = [
+  {
     type: "equipement_propriete_enum_differente",
     categorie: "EQUIPEMENT_SOUS_PRESSION",
     propriete: "familleEsp",
-    valeur,
-  }));
+    valeur: "recipient_gaz_groupe1",
+  },
+  {
+    type: "equipement_propriete_enum_differente",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "recipient_vapeur",
+  },
+  {
+    type: "equipement_propriete_enum_differente",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "generateur_vapeur",
+  },
+  {
+    type: "equipement_propriete_enum_differente",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "tuyauterie",
+  },
+];
 
 // ~~`GENERATEUR_VAPEUR` / `HORS_GENERATEUR_VAPEUR`~~ — le couple qui scindait
 // l'inspection périodique de l'article 15 (2026-09-01) est retiré le 2026-10-07
