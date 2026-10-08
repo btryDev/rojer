@@ -130,7 +130,9 @@ describe("niveau audit — (a) aucune ligne", () => {
   it("la voie des titres salarié ne produit aucune ligne pour une obligation audit", () => {
     // Aucun titre n'est au niveau audit aujourd'hui : la garde se pose sur une
     // obligation salarié réelle, marquée pour l'occasion.
-    const titre = obligationsConformite.find((o) => o.porteur === "salarie")!;
+    const titre = obligationsConformite.find(
+      (o) => o.porteur === "salarie" && !estNiveauAudit(o),
+    )!;
     const marque = { ...titre, niveau: "audit" } as Obligation;
     const titres = new Map([
       [
