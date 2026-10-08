@@ -9,9 +9,9 @@ import { ReferenceFondatrice } from "./ReferenceFondatrice";
  * CE QUE LE DUERP REND DÛ À UNE PARTIE DE L'EFFECTIF (ADR-038).
  *
  * Le produit ne déduit pas qui conduit un engin ou opère sur l'installation
- * électrique : il lit la réponse du document unique à une question rédigée sur
- * l'article qui fonde le titre, et la pose sur la fiche. Un seul
- * questionnaire : chaque ligne mène à la question du DUERP.
+ * électrique : il lit un fait d'activité de l'établissement (ADR-041), posé une
+ * fois et repris par le DUERP. Chaque ligne mène à l'écran « Évaluer les
+ * risques de vos salariés », où la question se répond.
  *
  * Les titres sont NOMMÉS DANS LES TROIS ÉTATS, avec leur condition. Une
  * première rédaction ne les nommait que sur « oui » : sur tous les dossiers
@@ -25,10 +25,10 @@ import { ReferenceFondatrice } from "./ReferenceFondatrice";
  * que l'écran omet.
  */
 export const PHRASE_REPONSE: Record<ReponseTransverse, string> = {
-  oui: "Votre DUERP répond oui : le fait existe dans l'établissement. Chaque titre dit à quelle condition il est dû ; si cette personne la remplit, déclarez-le ci-dessous.",
-  non: "Votre DUERP répond non. Si cette personne est pourtant concernée, corrigez la réponse et déclarez ses titres ci-dessous.",
+  oui: "Vous avez répondu oui : le fait existe dans l'établissement. Chaque titre dit à quelle condition il est dû ; si cette personne la remplit, déclarez-le ci-dessous.",
+  non: "Vous avez répondu non. Si cette personne est pourtant concernée, corrigez la réponse et déclarez ses titres ci-dessous.",
   sans_reponse:
-    "Votre évaluation des risques n'a pas encore répondu à cette question.",
+    "Vous n'avez pas encore répondu à cette question.",
 };
 
 export function CarteTitresDuDuerp({
@@ -41,29 +41,27 @@ export function CarteTitresDuDuerp({
   return (
     <CarteFiche titreFort="Formations liées aux risques du poste">
       <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-        Chaque question ci-dessous vient de votre évaluation des risques.
-        C&apos;est le DUERP qui dit si le fait qu&apos;elle décrit existe dans
-        l&apos;établissement ; chaque titre dit à quelle condition il est dû,
-        et vous seul savez si cette personne la remplit.
+        Chaque question dit si un fait existe dans l&apos;établissement — la
+        même réponse que dans votre DUERP. Chaque titre dit à quelle condition
+        il est dû, et vous seul savez si cette personne la remplit.
       </p>
       <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
-        {questions.map(({ question, reponse, titres }) => (
+        {questions.map(({ champ, intitule, reponse, titres }) => (
           <li
-            key={question.id}
+            key={champ}
+            id={champ}
             className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-4 py-3.5"
           >
             <p className="m-0 text-[13.5px] font-semibold leading-tight text-[color:var(--board-slate-ink)]">
-              {question.intitule}
+              {intitule}
             </p>
             <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               {PHRASE_REPONSE[reponse]}{" "}
               <Link
-                href={lienVersLaQuestion(question.id)}
+                href={lienVersLaQuestion(champ)}
                 className="text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
               >
-                {reponse === "sans_reponse"
-                  ? "Répondre dans le DUERP →"
-                  : "Voir la question dans le DUERP →"}
+                {reponse === "sans_reponse" ? "Répondre →" : "Modifier la réponse →"}
               </Link>
             </p>
             <ul className="m-0 mt-3 flex list-none flex-col gap-3 p-0">

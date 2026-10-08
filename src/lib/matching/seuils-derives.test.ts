@@ -18,7 +18,7 @@ const etab = (p: Partial<EtablissementMatching> = {}): EtablissementMatching => 
   id: "e", effectifSurSite: 10, effectifEntreprise: 10, estEtablissementTravail: true,
   estERP: false, estIGH: false, estHabitation: false, typeErp: null, categorieErp: null,
   classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
-  manipuleMatieresR422722: false, comporteLocauxSommeilPublic: null, chiffonsImpregnes: null, ...p,
+  manipuleMatieresR422722: false, comporteLocauxSommeilPublic: null, chiffonsImpregnes: null, manutentionManuelle: null, travailSurEcran: null, operationsElectriques: null, conduiteEngins: null, expositionCMR: null, epiPresents: null, ...p,
 });
 const ok = (id: string, e: EtablissementMatching) => {
   const o = obligationsConformite.find((x) => x.id === id)!;

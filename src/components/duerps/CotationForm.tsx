@@ -276,8 +276,10 @@ export function CotationForm({
             <span className="block max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Cancérogène, Mutagène ou toxique pour la Reproduction
               (art. R. 4412-59 et suivants). À cocher si un ou plusieurs
-              salariés sont exposés — cela déclenche des obligations renforcées
-              (liste nominative, suivi médical, substitution prioritaire).
+              salariés sont exposés. Cocher la case déclare aussi
+              l&apos;exposition pour l&apos;établissement : le suivi individuel
+              renforcé de l&apos;état de santé (art. R. 4624-23) est alors
+              proposé sur la fiche des salariés, dans Équipe.
             </span>
           </span>
         </label>

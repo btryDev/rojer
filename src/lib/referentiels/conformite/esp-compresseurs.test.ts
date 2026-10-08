@@ -27,6 +27,12 @@ const ETAB: EtablissementMatching = {
   manipuleMatieresR422722: null,
   comporteLocauxSommeilPublic: null,
   chiffonsImpregnes: null,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
 };
 
 function avec(caracteristiques: Record<string, unknown> | null): boolean {

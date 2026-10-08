@@ -70,6 +70,12 @@ describe("catégorie et type d'ERP : l'absence écarte parce que la base l'inter
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
       chiffonsImpregnes: null,
+      manutentionManuelle: null,
+      travailSurEcran: null,
+      operationsElectriques: null,
+      conduiteEngins: null,
+      expositionCMR: null,
+      epiPresents: null,
     };
     expect(matchTypologie({ erp: { categories: ["N5"] } }, erpSansCategorie).ok).toBe(false);
     expect(

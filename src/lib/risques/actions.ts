@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture";
 import { requireRisque, requireUnite } from "@/lib/auth/scope";
 import { calculerCriticite } from "@/lib/cotation";
 import { tousRisquesConnus } from "@/lib/referentiels";
@@ -197,7 +198,7 @@ export async function enregistrerCotation(
   _prev: CotationActionState,
   formData: FormData,
 ): Promise<CotationActionState> {
-  const { duerpId, uniteId } = await requireRisque(risqueId);
+  const { duerpId, uniteId, etablissementId } = await requireRisque(risqueId);
 
   const entries = Object.fromEntries(formData);
   const parsed = cotationSchema.safeParse(entries);
@@ -226,6 +227,14 @@ export async function enregistrerCotation(
       cotationSaisie: true,
     },
   });
+
+  // Une exposition CMR cochée vaut « oui » pour l'établissement (ADR-041) :
+  // le suivi individuel renforcé (R. 4624-23, I, 3°) est alors proposé sur les
+  // fiches salarié. Décocher ne vaut pas « non » — un autre risque peut porter
+  // l'exposition, et une case vide n'a jamais été une réponse.
+  if (risque.exposeCMR) {
+    await ecrireFaitActivite(etablissementId, "expositionCMR", true, "si_vierge");
+  }
 
   // Alerte de sous-évaluation : on compare la gravité et la probabilité
   // isolément aux défauts du référentiel, pas la criticité agrégée.

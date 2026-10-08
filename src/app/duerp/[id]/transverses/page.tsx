@@ -30,9 +30,13 @@ export default async function TransversesPage({
   // d'en avoir deux (création concurrente), et la fiche salarié
   // (`transverses/queries.ts`) les lit toutes — les deux écrans ne doivent pas
   // pouvoir répondre différemment à la même question.
+  const actifs = risquesTransversesActifs(duerp.unites);
+  // Les questions qui posent un fait d'activité se lisent sur l'établissement
+  // (ADR-041) : la même réponse qu'Équipe et la fiche.
   const repondues = repondreAuxQuestionsTransverses(
-    risquesTransversesActifs(duerp.unites),
+    actifs,
     duerp.reponsesTransverses,
+    duerp.etablissement,
   );
 
   const unitesOk = unitesSaisies.length > 0;
@@ -76,6 +80,9 @@ export default async function TransversesPage({
               intitule={q.intitule}
               libelleRisque={risque.libelle}
               reponse={reponse}
+              // Un « non » donné hors du DUERP laisse un risque déjà travaillé
+              // au document (`risque-transverse.ts`) : la ligne le dit.
+              risqueConserve={reponse !== "oui" && actifs.includes(q.risqueIdAssocie)}
             />
           );
         })}
