@@ -91,6 +91,8 @@ describe("contraste des couples champ/encre", () => {
     archivee: 4.5,
     // Même ardoise encore (limite 1, 2026-09-15).
     sansRendezVous: 4.5,
+    // Même ardoise (C64, la visite de la commission « pour information »).
+    pourInformation: 4.5,
   };
 
   it("chaque encre est lisible sur son propre champ", () => {

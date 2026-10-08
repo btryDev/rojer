@@ -71,7 +71,7 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // préventeur du 30/09, décision de la propriétaire du 07/10) : leur
   // `declareA` la cite mot pour mot. La changer, c'est changer l'annonce.
   EQUIPEMENT_SOUS_PRESSION:
-    "Compresseurs, chaudières, réservoirs d'air comprimé. Rojer ne suit, pour ces équipements, que la requalification périodique ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention.",
+    "Compresseurs, chaudières, réservoirs d'air comprimé. Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention.",
   // Même rôle que l'aide des équipements sous pression : la seconde phrase est
   // l'adresse de non-couverture des articles passés `non_couvert` le
   // 2026-10-07 (ICPE, R. 4412-11, R. 4412-17, arrêté du 1er juin 2015 art. 22).

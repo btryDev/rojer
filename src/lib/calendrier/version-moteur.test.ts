@@ -270,7 +270,14 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "b4984136384610af",
+  // Recopiée SANS incrément le 2026-10-08 (C64, item A) : `engine.ts` lit
+  // `siEquipementDeclare` (une obligation d'établissement qui n'existe que si
+  // une catégorie est déclarée) et `index.ts` le fait entrer à l'empreinte du
+  // référentiel. NON au sens de la question : sur le référentiel tel qu'il
+  // était, le moteur rend exactement les mêmes lignes — la branche ne mord que
+  // sur une obligation qui porte le champ, et la seule qui le porte est NEUVE,
+  // ce qui déplace déjà l'empreinte du référentiel, donc le sceau. ~~b4984136384610af~~.
+  empreinte: "8113bee280b53454",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

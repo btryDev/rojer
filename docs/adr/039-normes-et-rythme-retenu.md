@@ -198,6 +198,17 @@ Elle ne qualifie pas : ni « opposable », ni « valeur légale »
   `o.periodicite` là où le rythme effectif décide (anti-doublon, frontière
   calendrier / écran « en place ») lisent `periodiciteEffective`. Détail :
   journal, C59.]
+  [2026-10-08, C64 — amendement : toujours neuf rythmes retenus (trois de la
+  norme, six par défaut), remesuré en appelant. La formation au risque
+  chimique change d'identifiant et de porteur —
+  `stockage-dangereux-etablissement-formation-personnel`, une ligne pour
+  l'établissement dès qu'un stockage est déclaré (`siEquipementDeclare`,
+  ADR-022 amendée) — au lieu d'une ligne annuelle PAR stockage. Son
+  `texteVague` n'est plus pris dans R. 4412-88 (« Elles sont répétées
+  régulièrement »), qui ne vise que les CMR, mais dans L. 4141-2 (« répétée
+  périodiquement »), de portée générale : la règle 4 du § 3 demande un mot
+  vague recopié d'une citation lue, et ce mot doit venir d'un texte qui couvre
+  le champ de la ligne.]
 - `nature.test.ts` : « un rythme chiffré impose `echeance_recurrente` » reste
   lu sur `periodicite`, le rythme du texte ; un état permanent à rythme retenu
   garde sa nature.

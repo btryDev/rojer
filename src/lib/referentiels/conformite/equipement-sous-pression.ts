@@ -19,9 +19,21 @@
  * dans `OBLIGATIONS_RETIREES`, sans absorbant : `esp-declaration-mise-en-service`,
  * `esp-inspection-periodique`, `esp-inspection-periodique-generateur-vapeur`,
  * `esp-dossier-suivi`, `esp-intervention-reparation`, `esp-personnel-formation`.
- * La requalification n'est PAS bornée aux compresseurs (famille
+ * ~~La requalification n'est PAS bornée aux compresseurs (famille
  * `recipient_gaz_groupe2`) : un équipement dont la famille n'est pas saisie la
- * perdrait en silence. Décision ouverte.
+ * perdrait en silence. Décision ouverte.~~
+ *
+ * [2026-10-08, C64 — DÉCISION PRISE : « on respecte les décisions de Julien ».
+ * La requalification est BORNÉE AUX COMPRESSEURS, sans rien faire perdre au
+ * silence : quatre conditions `equipement_propriete_enum_differente` sur
+ * `familleEsp` écartent les familles déclarées autres que le compresseur
+ * (`recipient_gaz_groupe1`, `recipient_vapeur`, `generateur_vapeur`,
+ * `tuyauterie`). Restent servis : la famille `recipient_gaz_groupe2` (air
+ * comprimé, azote — le compresseur d'air et son réservoir), la famille non
+ * saisie, et « Autre / je ne sais pas » — une réponse qui ne dit pas que
+ * l'appareil n'est pas un compresseur. Le modèle n'est pas étendu : la forme
+ * `enum_differente` est satisfaite à l'absence, et leur conjonction exprime
+ * « tout sauf ces quatre familles ».]
  */
 
 import type { ConditionApplication, Obligation } from "./types";
@@ -58,6 +70,58 @@ const CONDITION_SUIVI_EN_SERVICE: ConditionApplication[] = [
   },
 ];
 
+/**
+ * Les familles d'équipement sous pression DÉCLARÉES qui ne sont pas un
+ * compresseur (2026-10-08, C64 ; préventeur : « à exclure sauf pour
+ * compresseur : requalification tous les 10 ans »). Une famille déclarée
+ * parmi elles écarte la requalification ; `recipient_gaz_groupe2` (air
+ * comprimé), `autre` (« je ne sais pas ») et le silence la gardent — le sens
+ * de l'erreur est la sur-application visible, corrigeable par une réponse.
+ *
+ * Écrite en dur plutôt que dérivée de `FAMILLES_ESP` (`equipements/esp.ts`) :
+ * le référentiel n'importe pas les modules d'équipement, et une famille neuve
+ * ajoutée à l'énumération doit être classée par quelqu'un — la laisser servir
+ * la ligne par défaut est le sens prudent. `esp-compresseurs.test.ts` tient la
+ * partition contre l'énumération.
+ */
+export const FAMILLES_ESP_NON_COMPRESSEUR = [
+  "recipient_gaz_groupe1",
+  "recipient_vapeur",
+  "generateur_vapeur",
+  "tuyauterie",
+] as const;
+
+// Écrites une à une, et non par un `.map` sur la liste ci-dessus : ce fichier
+// est une DONNÉE du référentiel, exclue du sceau du moteur
+// (`version-moteur.test.ts`, `DONNEES_REFERENTIEL`), et n'y porte aucune
+// fonction. `esp-compresseurs.test.ts` tient l'accord entre les deux.
+const CONDITION_COMPRESSEUR: ConditionApplication[] = [
+  {
+    type: "equipement_propriete_enum_differente",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "recipient_gaz_groupe1",
+  },
+  {
+    type: "equipement_propriete_enum_differente",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "recipient_vapeur",
+  },
+  {
+    type: "equipement_propriete_enum_differente",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "generateur_vapeur",
+  },
+  {
+    type: "equipement_propriete_enum_differente",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "tuyauterie",
+  },
+];
+
 // ~~`GENERATEUR_VAPEUR` / `HORS_GENERATEUR_VAPEUR`~~ — le couple qui scindait
 // l'inspection périodique de l'article 15 (2026-09-01) est retiré le 2026-10-07
 // avec les deux inspections qu'il bornait (voir l'en-tête du domaine).
@@ -87,8 +151,8 @@ export const obligationsEquipementSousPression: Obligation[] = [
     transmet: [],
     typologies: { travail: true },
     categoriesEquipement: ["EQUIPEMENT_SOUS_PRESSION"],
-    conditions: CONDITION_SUIVI_EN_SERVICE,
+    conditions: [...CONDITION_SUIVI_EN_SERVICE, ...CONDITION_COMPRESSEUR],
     notesInternes:
-      "PLAFOND, PAS RYTHME — ET `decennale` EST POURTANT LE BON BARREAU. Lot B, 2026-09-01 : article 18 rouvert sur Légifrance, les six tirets du I recopiés un par un. Le cadrage rangeait cette ligne parmi « quatre plafonds encodés comme des rythmes » ; la lecture confirme le défaut de LECTURE et infirme le défaut de VALEUR.\n\nCE QUE L'ÉCHELLE VISE, ET POURQUOI ELLE NE MORD PAS ICI. Deux ans : bouteilles pour appareils respiratoires de plongée subaquatique, récipients mobiles en matériaux autres que métalliques. Trois ans : récipients ou tuyauteries contenant fluor, fluorure de bore, fluorure d'hydrogène, trichlorure de bore, chlorure d'hydrogène, bromure d'hydrogène, dioxyde d'azote, phosgène ou sulfure d'hydrogène, lorsqu'ils ne peuvent être exempts d'impuretés corrosives. Six ans : récipients ou tuyauteries à fluide toxique au sens du CLP ou corrosif vis-à-vis des parois, récipients mobiles non métalliques ayant subi les essais de vieillissement, bouteilles de plongée à inspection au moins annuelle. Aucun de ces objets n'entre dans un restaurant, un commerce de détail ou un bureau. Le compresseur d'atelier est un récipient de gaz du GROUPE 2 (air) : il relève des « autres récipients », donc de dix ans. Et le générateur de vapeur est NOMMÉMENT à dix ans dans cet article — c'est à l'inspection périodique de l'article 15, et là seulement, qu'il relève de deux ans [2026-10-07, C60 : l'inspection périodique de l'article 15 n'est plus portée — ses lignes sont retirées au lot 5 de la relecture du préventeur]. Pour la cible du produit, le cas résiduel EST le cas.\n\nLE SENS DE L'ERREUR RÉSIDUELLE : aucun. `decennale` ne sur-applique ni ne sous-applique sur cette cible, puisqu'il n'existe pas d'autre barreau à lui opposer. Ce qui restait faux était la DESCRIPTION, qui annonçait « tous les dix ans » — un rythme — là où le texte écrit « l'échéance maximale ». Corrigé ci-dessus. La valeur, elle, est laissée telle quelle, et cette immobilité est un résultat, pas une omission.\n\nDEUX CHOSES QUE CETTE LIGNE NE PORTE PAS, nommées et délibérément non encodées.\n\n(1) LES EXTINCTEURS DE PLUS DE 30 BAR. « Pour les extincteurs soumis à une pression maximale admissible de plus de 30 bar, la requalification périodique est réalisée à l'occasion du premier rechargement effectué plus de six ans après la requalification précédente, sans que le délai entre deux requalifications périodiques ne puisse excéder dix ans. Les autres extincteurs ne sont pas soumis à requalification périodique. » Ce n'est pas une périodicité : c'est une échéance conditionnée à un ÉVÉNEMENT — le rechargement — sous un plafond de dix ans. Aucune erreur n'en résulte aujourd'hui : cette obligation est bornée à la catégorie `EQUIPEMENT_SOUS_PRESSION`, et `EXTINCTEUR` est une catégorie d'équipement distincte qu'elle n'atteint pas. Le manque est donc un silence, jamais une sur-application. À NE PAS CONFONDRE avec la révision décennale de `MS 38 § 4`, qui est une obligation ERP distincte, relevée par ailleurs : les encoder l'une pour l'autre créerait un doublon sur un fondement faux.\n\n(2) LE FAIT GÉNÉRATEUR DU II. « La requalification périodique d'un équipement sous pression fixe est renouvelée lorsque celui-ci fait l'objet à la fois d'une installation dans un autre établissement ET d'un changement d'exploitant. » Les deux conditions sont cumulatives. Le produit n'observe ni le déplacement d'un équipement entre établissements ni le changement d'exploitant : c'est le même trou que celui ~~déjà nommé sur `esp-intervention-reparation`~~ [2026-10-07, C60 : ligne retirée au lot 5 ; le renvoi garde sa valeur d'exemple] — une obligation événementielle sans fait observable. Un dirigeant qui rachète un compresseur avec le fonds et le réinstalle chez lui doit une requalification que le produit ne réclamera pas. Le déblocage n'est pas au référentiel : il suppose que le modèle sache qu'un équipement a changé de main.",
+      "BORNÉE AUX COMPRESSEURS LE 2026-10-08 (C64). Préventeur, grille de relecture du 30/09 : « à exclure sauf pour compresseur : requalification tous les 10 ans » ; décision de la propriétaire du 08/10 : « on respecte les décisions de Julien ». Le compresseur est la famille `recipient_gaz_groupe2` (« Récipient de gaz non dangereux (groupe 2 : air comprimé, azote…) », `equipements/esp.ts`). Quatre conditions `enum_differente` écartent les autres familles DÉCLARÉES (`FAMILLES_ESP_NON_COMPRESSEUR`) ; la famille non saisie et « Autre / je ne sais pas » gardent la ligne — un compresseur dont la famille n'est pas saisie ne perd pas sa requalification sans que personne ne le voie. Effet sur un calendrier : une ligne existante d'un appareil déclaré générateur de vapeur, récipient de vapeur, récipient de gaz du groupe 1 ou tuyauterie cesse d'être générée (archivée si elle porte une trace, ADR-034).\n\nPLAFOND, PAS RYTHME — ET `decennale` EST POURTANT LE BON BARREAU. Lot B, 2026-09-01 : article 18 rouvert sur Légifrance, les six tirets du I recopiés un par un. Le cadrage rangeait cette ligne parmi « quatre plafonds encodés comme des rythmes » ; la lecture confirme le défaut de LECTURE et infirme le défaut de VALEUR.\n\nCE QUE L'ÉCHELLE VISE, ET POURQUOI ELLE NE MORD PAS ICI. Deux ans : bouteilles pour appareils respiratoires de plongée subaquatique, récipients mobiles en matériaux autres que métalliques. Trois ans : récipients ou tuyauteries contenant fluor, fluorure de bore, fluorure d'hydrogène, trichlorure de bore, chlorure d'hydrogène, bromure d'hydrogène, dioxyde d'azote, phosgène ou sulfure d'hydrogène, lorsqu'ils ne peuvent être exempts d'impuretés corrosives. Six ans : récipients ou tuyauteries à fluide toxique au sens du CLP ou corrosif vis-à-vis des parois, récipients mobiles non métalliques ayant subi les essais de vieillissement, bouteilles de plongée à inspection au moins annuelle. Aucun de ces objets n'entre dans un restaurant, un commerce de détail ou un bureau. Le compresseur d'atelier est un récipient de gaz du GROUPE 2 (air) : il relève des « autres récipients », donc de dix ans. Et le générateur de vapeur est NOMMÉMENT à dix ans dans cet article — c'est à l'inspection périodique de l'article 15, et là seulement, qu'il relève de deux ans [2026-10-07, C60 : l'inspection périodique de l'article 15 n'est plus portée — ses lignes sont retirées au lot 5 de la relecture du préventeur]. Pour la cible du produit, le cas résiduel EST le cas.\n\nLE SENS DE L'ERREUR RÉSIDUELLE : aucun. `decennale` ne sur-applique ni ne sous-applique sur cette cible, puisqu'il n'existe pas d'autre barreau à lui opposer. Ce qui restait faux était la DESCRIPTION, qui annonçait « tous les dix ans » — un rythme — là où le texte écrit « l'échéance maximale ». Corrigé ci-dessus. La valeur, elle, est laissée telle quelle, et cette immobilité est un résultat, pas une omission.\n\nDEUX CHOSES QUE CETTE LIGNE NE PORTE PAS, nommées et délibérément non encodées.\n\n(1) LES EXTINCTEURS DE PLUS DE 30 BAR. « Pour les extincteurs soumis à une pression maximale admissible de plus de 30 bar, la requalification périodique est réalisée à l'occasion du premier rechargement effectué plus de six ans après la requalification précédente, sans que le délai entre deux requalifications périodiques ne puisse excéder dix ans. Les autres extincteurs ne sont pas soumis à requalification périodique. » Ce n'est pas une périodicité : c'est une échéance conditionnée à un ÉVÉNEMENT — le rechargement — sous un plafond de dix ans. Aucune erreur n'en résulte aujourd'hui : cette obligation est bornée à la catégorie `EQUIPEMENT_SOUS_PRESSION`, et `EXTINCTEUR` est une catégorie d'équipement distincte qu'elle n'atteint pas. Le manque est donc un silence, jamais une sur-application. À NE PAS CONFONDRE avec la révision décennale de `MS 38 § 4`, qui est une obligation ERP distincte, relevée par ailleurs : les encoder l'une pour l'autre créerait un doublon sur un fondement faux.\n\n(2) LE FAIT GÉNÉRATEUR DU II. « La requalification périodique d'un équipement sous pression fixe est renouvelée lorsque celui-ci fait l'objet à la fois d'une installation dans un autre établissement ET d'un changement d'exploitant. » Les deux conditions sont cumulatives. Le produit n'observe ni le déplacement d'un équipement entre établissements ni le changement d'exploitant : c'est le même trou que celui ~~déjà nommé sur `esp-intervention-reparation`~~ [2026-10-07, C60 : ligne retirée au lot 5 ; le renvoi garde sa valeur d'exemple] — une obligation événementielle sans fait observable. Un dirigeant qui rachète un compresseur avec le fonds et le réinstalle chez lui doit une requalification que le produit ne réclamera pas. Le déblocage n'est pas au référentiel : il suppose que le modèle sache qu'un équipement a changé de main.",
   },
 ];

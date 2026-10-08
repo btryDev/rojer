@@ -4,7 +4,7 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-10-07
+**Généré le** : 2026-10-08
 **Référentiel** : `2026-10-07.5`
 **Régénérer** : `pnpm verification --ecrire`
 
@@ -83,18 +83,18 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**173 obligations**, **342 références** — 98 obligations en citent plus d'une.
+**171 obligations**, **335 références** — 96 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 84 | 49 % | 90 | 204 | 60 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 86 | 50 % | 83 | 134 | 39 % |
+| 5 · lu à la source, verbatim relevé | 82 | 48 % | 88 | 196 | 59 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 86 | 50 % | 83 | 135 | 40 % |
 | 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**170 obligations sur 173 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**168 obligations sur 171 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **3 obligations (2 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 318 | 93 % |
+| ancrée | 311 | 93 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 7 % |
 
-**9 obligations sur 173 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 171 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -123,7 +123,7 @@ repose sur un texte que personne n'a ouvert.
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `aeration` | 11 | 16 | 3 | 8 | · | · | · | · | 11 / 11 — 100 % | 0 / 16 | 2026-08-27 → 2026-09-27 |
-| `ascenseur` | 12 | 30 | 9 | 3 | · | · | · | · | 12 / 12 — 100 % | 0 / 30 | 2026-08-26 → 2026-10-07 |
+| `ascenseur` | 10 | 22 | 7 | 3 | · | · | · | · | 10 / 10 — 100 % | 0 / 22 | 2026-08-26 → 2026-10-07 |
 | `co_activite` | 1 | 7 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 7 | 2026-08-31 → 2026-09-26 |
 | `compactage_dechets` | 1 | 5 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson_hotte` | 6 | 9 | 3 | 3 | · | · | · | · | 6 / 6 — 100 % | 1 / 9 | 2026-08-27 → 2026-10-07 |
@@ -142,11 +142,11 @@ repose sur un texte que personne n'a ouvert.
 | `sante_travail` | 13 | 22 | 3 | 9 | 1 | · | · | · | 12 / 13 — 92 % | 0 / 22 | 2026-08-31 → 2026-09-26 |
 | `secours` | 4 | 4 | · | 4 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-20 |
 | `signalisation` | 11 | 15 | 2 | 9 | · | · | · | · | 11 / 11 — 100 % | 0 / 15 | 2026-09-02 → 2026-10-07 |
-| `stockage_dangereux` | 2 | 4 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 4 | 2026-09-01 → 2026-10-07 |
+| `stockage_dangereux` | 2 | 5 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 5 | 2026-08-31 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
-**18 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (12), `co_activite` (1), `compactage_dechets` (1), `cuisson_hotte` (6), `eclairage` (1), `epi` (3), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (11), `stockage_dangereux` (2).
+**18 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (10), `co_activite` (1), `compactage_dechets` (1), `cuisson_hotte` (6), `eclairage` (1), `epi` (3), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (11), `stockage_dangereux` (2).
 
 Aucun domaine n'est entièrement dépourvu de verbatim.
 
@@ -156,8 +156,8 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 90 | 181 | 57 | 32 | 1 | · | · | · | 89 / 90 — 99 % | 23 / 181 | 2026-08-26 → 2026-10-07 |
-| `etablissement` | 69 | 129 | 27 | 40 | 2 | · | · | · | 67 / 69 — 97 % | 0 / 129 | 2026-08-26 → 2026-10-07 |
+| `equipement` | 87 | 170 | 55 | 31 | 1 | · | · | · | 86 / 87 — 99 % | 23 / 170 | 2026-08-26 → 2026-10-07 |
+| `etablissement` | 70 | 133 | 27 | 41 | 2 | · | · | · | 68 / 70 — 97 % | 0 / 133 | 2026-08-26 → 2026-10-07 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -170,16 +170,16 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | --- | --- | --- | --- |
 | 2026-08-26 | 25 | 7 % | 25 |
 | 2026-08-27 | 7 | 2 % | 4 |
-| 2026-08-31 | 58 | 17 % | 28 |
-| 2026-09-01 | 120 | 35 % | 74 |
+| 2026-08-31 | 59 | 18 % | 29 |
+| 2026-09-01 | 120 | 36 % | 74 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 10 | 3 % | 5 |
 | 2026-09-20 | 3 | 1 % | 2 |
 | 2026-09-26 | 25 | 7 % | 20 |
 | 2026-09-27 | 36 | 11 % | 34 |
-| 2026-10-07 | 40 | 12 % | 23 |
+| 2026-10-07 | 32 | 10 % | 21 |
 
-342 des 342 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
+335 des 335 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -256,7 +256,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 173 obligations
+## 8. Les 171 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -347,8 +347,8 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `signalisation-etablissement-signaux-lumineux-acoustiques-semestrielle` | signalisation | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
 | `signalisation-incendie-moyens-lutte` | signalisation | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
 | `signalisation-stockage-substances-dangereuses` | signalisation | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-02 |
+| `stockage-dangereux-etablissement-formation-personnel` | stockage_dangereux | etablissement | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-08-31 → 2026-10-07 |
 | `stockage-dangereux-fiches-donnees` | stockage_dangereux | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
-| `stockage-dangereux-formation-personnel` | stockage_dangereux | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-10-07 |
 | `aeration-controle-installations-r4222-20` | aeration | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-27 |
 | `aeration-habitation-vmc-gaz-annuelle` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `aeration-habitation-vmc-gaz-quinquennale` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
@@ -358,8 +358,6 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `ascenseur-erp-verification-remise-en-service-as9` | ascenseur | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-07 |
 | `ascenseur-examen-annuel-securite` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-27 |
 | `ascenseur-examen-semestriel-secours` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-27 |
-| `ascenseur-hotel-5-verification-quinquennale-as9` | ascenseur | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-07 |
-| `ascenseur-hotel-5-verification-remise-en-service-as9` | ascenseur | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-07 |
 | `ascenseur-visite-six-semaines` | ascenseur | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-27 |
 | `compactage-dechets-vgp-trimestrielle` | compactage_dechets | equipement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson-erp-circuits-extraction-nettoyage` | cuisson_hotte | equipement | 1 | 5 · première main | 5 · première main | 1 / 1 | 2026-09-27 |
@@ -439,7 +437,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 342 références, une par une
+## 9. Les 335 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -603,14 +601,6 @@ refaire pour la contredire.
 | `ascenseur-erp-verification-remise-en-service-as9` | fondement | Arrêté du 25 juin 1980, art. AS 9 (vérification avant remise en service faisant suite à une transformation importante) | AS 9 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2008-10-08 | 2008-10-08 | 5 · première main | ancrée |
 | `ascenseur-erp-verification-remise-en-service-as9` | contexte 1 | Arrêté du 25 juin 1980, art. PE 1 § 1 (le livre II, « Dispositions applicables aux établissements des quatre premières catégories », n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) — livre III | PE 1 | arrete-1980-livre-3 | sans_objet | 2026-10-07 | api_legifrance | — | ✓ | 1990-08-27 | 1990-08-27 | 5 · première main | ancrée |
 | `ascenseur-erp-verification-remise-en-service-as9` | contexte 2 | Arrêté du 25 juin 1980, art. GE 7 § 1 (organismes agréés dans les établissements des 1re, 2e, 3e et 4e catégories) | GE 7 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2007-11-19 | 2007-11-19 | 5 · première main | ancrée |
-| `ascenseur-hotel-5-verification-quinquennale-as9` | fondement | Arrêté du 25 juin 1980, art. PO 1 § 3 (le contrôle des ascenseurs relève d'AS 9) — livre III, hôtels de 5ᵉ catégorie | PO 1 | arrete-1980-livre-3 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
-| `ascenseur-hotel-5-verification-quinquennale-as9` | contexte 1 | Arrêté du 25 juin 1980, art. PO 8 § 1 (PO 1 § 3 applicable aux hôtels existants) — livre III, hôtels de 5ᵉ catégorie | PO 8 | arrete-1980-livre-3 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
-| `ascenseur-hotel-5-verification-quinquennale-as9` | contexte 2 | Arrêté du 25 juin 1980, art. AS 9 (vérification par un organisme agréé tous les cinq ans) — livre II, applicable aux hôtels de 5ᵉ catégorie par le renvoi exprès de PO 1 § 3 | AS 9 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2008-10-08 | 2008-10-08 | 5 · première main | ancrée |
-| `ascenseur-hotel-5-verification-quinquennale-as9` | contexte 3 | Arrêté du 25 juin 1980, art. PE 1 § 1 (le livre II n'est applicable en 5ᵉ catégorie que par renvoi exprès) — livre III | PE 1 | arrete-1980-livre-3 | sans_objet | 2026-10-07 | api_legifrance | — | ✓ | 1990-08-27 | 1990-08-27 | 5 · première main | ancrée |
-| `ascenseur-hotel-5-verification-remise-en-service-as9` | fondement | Arrêté du 25 juin 1980, art. PO 1 § 3 (le contrôle des ascenseurs relève d'AS 9) — livre III, hôtels de 5ᵉ catégorie | PO 1 | arrete-1980-livre-3 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
-| `ascenseur-hotel-5-verification-remise-en-service-as9` | contexte 1 | Arrêté du 25 juin 1980, art. PO 8 § 1 (PO 1 § 3 applicable aux hôtels existants) — livre III, hôtels de 5ᵉ catégorie | PO 8 | arrete-1980-livre-3 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2011-10-30 | 2011-10-30 | 5 · première main | ancrée |
-| `ascenseur-hotel-5-verification-remise-en-service-as9` | contexte 2 | Arrêté du 25 juin 1980, art. AS 9 (vérification avant remise en service faisant suite à une transformation importante) — livre II, applicable aux hôtels de 5ᵉ catégorie par le renvoi exprès de PO 1 § 3 | AS 9 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2008-10-08 | 2008-10-08 | 5 · première main | ancrée |
-| `ascenseur-hotel-5-verification-remise-en-service-as9` | contexte 3 | Arrêté du 25 juin 1980, art. PE 1 § 1 (le livre II n'est applicable en 5ᵉ catégorie que par renvoi exprès) — livre III | PE 1 | arrete-1980-livre-3 | sans_objet | 2026-10-07 | api_legifrance | — | ✓ | 1990-08-27 | 1990-08-27 | 5 · première main | ancrée |
 | `ascenseur-carnet-entretien` | fondement | CCH, art. R. 134-7 III (carnet d'entretien — régime du contrat) | CCH R. 134-7 | cch-ascenseurs | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 4 · agent + verbatim | ancrée |
 | `ascenseur-carnet-entretien` | contexte 1 | CCH, art. R. 134-10 (carnet d'entretien — propriétaire assurant l'entretien par ses propres moyens) | CCH R. 134-10 | cch-ascenseurs | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2021-07-01 | 2021-07-01 | 5 · première main | ancrée |
 | `ascenseur-rapport-annuel-activite` | fondement | CCH, art. R. 134-7 III (rapport annuel d'activité — régime du contrat d'entretien) | CCH R. 134-7 | cch-ascenseurs | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2026-04-01 | 2026-04-01 | 4 · agent + verbatim | ancrée |
@@ -627,9 +617,10 @@ refaire pour la contredire.
 | `porte-auto-portail-piete-coulissant` | fondement | Arrêté du 21 décembre 1993 (portes et portails automatiques), art. 2 et 5 (passages de véhicules) | Arrêté 1993-12-21 art. 2 | arrete-1993-12-21-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1994-07-13 | 1994-07-13 | 4 · agent + verbatim | ancrée |
 | `esp-requalification-decennale` | fondement | Arrêté du 20 novembre 2017 (suivi en service des ESP), art. 18 et 19 | Arrêté 2017-11-20 art. 18-19 | esp-suivi-en-service | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 5 · première main | ancrée |
 | `stockage-dangereux-fiches-donnees` | fondement | R. 4412-38 (accès des travailleurs aux fiches de données de sécurité) | R. 4412-38 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-formation-personnel` | fondement | R. 4412-38 (agents chimiques dangereux) | R. 4412-38 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-formation-personnel` | contexte 1 | R. 4412-87 (agents CMR uniquement) | R. 4412-87 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
-| `stockage-dangereux-formation-personnel` | contexte 2 | R. 4412-88 (agents CMR uniquement : information et formation « répétées régulièrement ») | R. 4412-88 | code-travail-risque-chimique | retenu | 2026-10-07 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
+| `stockage-dangereux-etablissement-formation-personnel` | fondement | R. 4412-38 (agents chimiques dangereux) | R. 4412-38 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
+| `stockage-dangereux-etablissement-formation-personnel` | contexte 1 | L. 4141-2 (formation à la sécurité « répétée périodiquement ») | L. 4141-2 | code-travail-formation-securite | retenu | 2026-08-31 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
+| `stockage-dangereux-etablissement-formation-personnel` | contexte 2 | R. 4412-87 (agents CMR uniquement) | R. 4412-87 | code-travail-risque-chimique | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2018-01-01 | 2018-01-01 | 4 · agent + verbatim | ancrée |
+| `stockage-dangereux-etablissement-formation-personnel` | contexte 3 | R. 4412-88 (agents CMR uniquement : information et formation « répétées régulièrement ») | R. 4412-88 | code-travail-risque-chimique | retenu | 2026-10-07 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `levage-examen-adequation-mise-en-service` | fondement | Arrêté du 1er mars 2004, art. 14-I a) (vérification à la mise en service : examen d'adéquation) | Arrêté 2004-03-01 art. 14 | arrete-2004-03-01-levage | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2005-03-31 | 2005-03-31 | 5 · première main | ancrée |
 | `levage-examen-adequation-mise-en-service` | contexte 1 | Arrêté du 1er mars 2004, art. 5-I (définition de l'examen d'adéquation) | Arrêté 2004-03-01 art. 5 | arrete-2004-03-01-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2005-03-31 | 2005-03-31 | 5 · première main | ancrée |
 | `levage-examen-adequation-mise-en-service` | contexte 2 | R. 4323-22 | R. 4323-22 | code-travail-levage | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |

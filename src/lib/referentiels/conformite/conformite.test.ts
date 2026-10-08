@@ -257,9 +257,11 @@ describe("référentiel conformité — couverture P1", () => {
     ]);
     // ~~`toBeGreaterThanOrEqual(5)`~~ — 2026-10-07 : « à exclure sauf 3 derniers
     // points » ; le troisième vit au domaine signalisation.
+    // ~~"stockage-dangereux-formation-personnel"~~ — 2026-10-08 (C64) : une
+    // ligne d'établissement, due dès qu'un stockage est déclaré.
     expect(obligationsStockageDangereux.map((o) => o.id)).toEqual([
       "stockage-dangereux-fiches-donnees",
-      "stockage-dangereux-formation-personnel",
+      "stockage-dangereux-etablissement-formation-personnel",
     ]);
     expect(obligationsLevage.length).toBeGreaterThanOrEqual(7);
   });
@@ -581,7 +583,8 @@ describe("référentiel conformité — anti-doublon", () => {
     {
       paire: [
         "stockage-dangereux-fiches-donnees",
-        "stockage-dangereux-formation-personnel",
+        // ~~"stockage-dangereux-formation-personnel"~~ — 2026-10-08 (C64).
+        "stockage-dangereux-etablissement-formation-personnel",
       ],
       raison:
         "Instruit le 2026-08-27, ce n'est PAS un doublon. `R. 4412-38` fonde d'un côté « l'accès des travailleurs aux fiches de données de sécurité » — une pièce à tenir disponible — et de l'autre leur formation. Un document et un enseignement ne sont pas le même acte, même sous le même article.",
@@ -1707,7 +1710,23 @@ describe("référentiel conformité — version et empreinte", () => {
     // `signalisation-erp-extincteurs-identification`, portée par l'extincteur
     // comme par le RIA. 173 + 0 − 0 = 173. ~~173-7324273780278b5f~~ :
     // empreinte après C60, jamais scellée.
-    { version: "2026-10-07.5", empreinte: "173-2543b2a5149c8d07" },
+    // Puis C64 (2026-10-08, décisions de la propriétaire « on respecte les
+    // décisions de Julien », même version jamais servie) : (B) les deux
+    // lignes AS 9 des hôtels de 5ᵉ entrées au C60 sont supprimées — le
+    // préventeur borne AS 9 aux N1–N4 —, sans `OBLIGATIONS_RETIREES` : nées
+    // et retirées sous cette version, aucune ligne en base ne porte leur id.
+    // 173 + 0 − 2 = 171. ~~173-2543b2a5149c8d07~~ : empreinte après C62,
+    // jamais scellée. (C) `esp-requalification-decennale` bornée aux
+    // compresseurs — quatre conditions `enum_differente` sur `familleEsp` ;
+    // le silence et « je ne sais pas » gardent la ligne. 171 + 0 − 0 = 171.
+    // ~~171-b161063e19bd746~~ : empreinte après (B), jamais scellée.
+    // (A) la formation au risque chimique devient une ligne d'établissement,
+    // due dès qu'un stockage est déclaré (`siEquipementDeclare`, qui entre à
+    // l'empreinte) : `stockage-dangereux-etablissement-formation-personnel`
+    // entre, `stockage-dangereux-formation-personnel` sort (retirée, absorbée).
+    // 171 + 1 − 1 = 171. ~~171-59b93c7c5781b6c8~~ : empreinte après (C),
+    // jamais scellée.
+    { version: "2026-10-07.5", empreinte: "171-9bfaadbae946dc7c" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1864,7 +1883,9 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(173);
+      // ~~173~~ — 2026-10-08 (C64) : 173 + 0 − 2 (AS 9 aux hôtels de 5ᵉ,
+      // supprimées avant d'avoir été servies) = 171.
+    ).toBe(171);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

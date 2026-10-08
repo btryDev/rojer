@@ -125,6 +125,8 @@ export async function GET(
   const echeancesContractuelles = new Set<string>();
   // ADR-039 : même collecte pour les rythmes retenus, par identifiant de ligne.
   const rythmesRetenus = new Map<string, string>();
+  // C64 : les visites de la commission de sécurité, « pour information ».
+  const visitesPourInformation = new Set<string>();
 
   // DEUX FAITS QUI PEUVENT ÊTRE INCONNUS, ET QUI DOIVENT LE DIRE.
   //
@@ -291,6 +293,7 @@ export async function GET(
       for (const v of data.verifsEnAttente) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
         if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
+        if (v.pourInformation) visitesPourInformation.add(v.id);
       }
       const buf = await renderToBuffer(RegistreDocument({ data }));
       zip.file("03_Registre_securite.pdf", new Uint8Array(buf));
@@ -673,6 +676,7 @@ export async function GET(
     ),
     nbEcheancesContractuelles: echeancesContractuelles.size,
     rythmesRetenus,
+    visitesPourInformation,
     etatDuerp,
     retards: {
       nbEnRetard: nbVerifsEnRetard,

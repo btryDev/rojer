@@ -80,6 +80,10 @@ export const CODE_TRAVAIL_FORMATION_SECURITE: Corpus = {
       obligations: [
         "formation-securite-etablissement-organisation",
         "formation-securite-salarie-accueil",
+        // 2026-10-08 (C64) : son « répétée périodiquement » donne le défaut
+        // annuel de la formation au risque chimique (R. 4412-38 3°), lue
+        // comme une formation à la sécurité ; R. 4412-88 ne vise que les CMR.
+        "stockage-dangereux-etablissement-formation-personnel",
       ],
       reserve:
         "La dernière phrase — « Cette formation est répétée périodiquement dans des conditions déterminées par voie réglementaire ou par convention ou accord collectif de travail » — n'est portée par aucune échéance du produit, et ne peut pas l'être. Le pouvoir réglementaire n'a fixé aucune durée dans les vingt articles R. 4141-*, et la seconde branche renvoie aux conventions et accords collectifs, que l'outil ne lit pas. La périodicité de l'obligation reste donc « autre » : un état à maintenir, pas un rendez-vous. Y écrire un an ou trois ans reviendrait à fabriquer une échéance qui se présenterait à un contrôle sans qu'aucun texte ne la porte.",

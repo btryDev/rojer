@@ -23,6 +23,7 @@ import {
   estRetenueParPrudence,
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 
 /** Répartition en quatre catégories **disjointes**. */
 export type EtatVerifications<T> = {
@@ -43,6 +44,14 @@ export type EtatVerifications<T> = {
    * marquées « à confirmer », sans compter ni en retard ni dans l'indice.
    */
   retenuesParPrudence: T[];
+  /**
+   * Les lignes « pour information » — la visite de la commission de sécurité,
+   * à l'initiative de l'administration (C64, 2026-10-08). HORS des quatre
+   * ensembles, du total et de l'indice, archivées ou non : ce n'est pas une
+   * échéance de l'exploitant, et un procès-verbal déposé n'y fait pas monter
+   * la note. Elles s'affichent avec leur rythme, peintes « Pour information ».
+   */
+  pourInformation: T[];
 };
 
 /**
@@ -88,10 +97,16 @@ export function repartirVerifications<
   // D1 (a) : une ligne que seul le silence retient n'entre ni dans les
   // retards ni dans l'indice. Mise à part AVANT les quatre ensembles, pour
   // qu'aucun ne la voie — le dénominateur non plus.
-  const retenuesParPrudence = toutes.filter((v) =>
+  //
+  // C64 : une ligne « pour information » sort AVANT la prudence, et de tout —
+  // y compris de `realisees12m`. C'est ici, et nulle part ailleurs, que les
+  // compteurs et l'indice décident de ce qui compte.
+  const pourInformation = toutes.filter((v) => estLignePourInformation(v));
+  const comptables = toutes.filter((v) => !estLignePourInformation(v));
+  const retenuesParPrudence = comptables.filter((v) =>
     estRetenueParPrudence(v, prudence),
   );
-  const verifs = toutes.filter((v) => !estRetenueParPrudence(v, prudence));
+  const verifs = comptables.filter((v) => !estRetenueParPrudence(v, prudence));
   // Borne de la fenêtre d'historique : le **jour civil** situé douze mois en
   // arrière, pris à minuit heure de Paris. Sans `debutDuJour`, la borne
   // hérite de l'heure courante et une vérification réalisée pile douze mois
@@ -155,5 +170,6 @@ export function repartirVerifications<
     total:
       enRetard.length + aPlanifier.length + aVenir.length + realisees12m.length,
     retenuesParPrudence,
+    pourInformation,
   };
 }

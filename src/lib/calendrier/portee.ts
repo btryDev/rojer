@@ -1,3 +1,4 @@
+import { OBLIGATIONS_A_L_INITIATIVE_DE_L_ADMINISTRATION } from "@/lib/referentiels/conformite/initiative";
 import type { Prisma } from "@prisma/client";
 import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
 import { PERIODICITES_SANS_SUITE } from "./periodicite";
@@ -117,7 +118,18 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
     // 2026-09-13 a réduit la troisième branche recopiée ici à un seul statut
     // réalisé, et rien n'a rougi. Ce qui attend, ET dont la DATE est passée —
     // la date seule, comme `estVerificationEnRetard` (retrait de `depassee`).
-    AND: [echeanceAttendue(), { datePrevue: { lt: debut } }],
+    AND: [
+      echeanceAttendue(),
+      { datePrevue: { lt: debut } },
+      // C64 (2026-10-08) : la visite de la commission de sécurité, « pour
+      // information », n'est jamais une urgence de l'exploitant — le pendant
+      // SQL de `classerVerification` → `pourInformation`.
+      {
+        obligationId: {
+          notIn: [...OBLIGATIONS_A_L_INITIATIVE_DE_L_ADMINISTRATION],
+        },
+      },
+    ],
   };
 }
 

@@ -431,6 +431,8 @@ export default async function EtablissementPage({
     // cacher une vraie échéance (`echeancesDuTableauDeBord`).
     ...echeancesDuTableauDeBord(prochainesVerifs.map((v) => ({
       id: v.id,
+      // C64 : la visite de la commission se reconnaît par lui, « pour information ».
+      obligationId: v.obligationId,
       libelleObligation: v.libelleObligation,
       // L'échéance OUVERTE : les widgets trient, comptent à rebours et
       // classent sur cette date.

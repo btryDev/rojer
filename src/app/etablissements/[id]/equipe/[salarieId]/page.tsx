@@ -70,6 +70,8 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   // Un TITRE n'est jamais classé ainsi (`classerTitre`) : la table est fermée
   // sur les états d'une ligne, et le mot est le même que celui du calendrier.
   sansRendezVous: LIBELLE_SANS_RENDEZ_VOUS,
+  // Un titre ne l'est jamais non plus — la table est fermée (C64).
+  pourInformation: "Pour information",
 };
 
 /**

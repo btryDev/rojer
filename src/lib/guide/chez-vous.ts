@@ -14,6 +14,7 @@
  * node comme le moteur de matching qu'il consomme.
  */
 
+import { estPourInformation } from "@/lib/referentiels/conformite/initiative";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import {
   mentionRythmeRetenu,
@@ -208,7 +209,12 @@ export function construireChezVous(
         mention,
       });
     }
-    for (const r of a.obligation.realisateurs) agg.realisateurs.add(r);
+    // C64 : la visite de la commission de sécurité n'apporte pas son
+    // `organisme_agree` — l'acte est à l'initiative de l'administration, et
+    // le champ ne le garde que faute de valeur dans l'enum Prisma.
+    if (!estPourInformation(a.obligation)) {
+      for (const r of a.obligation.realisateurs) agg.realisateurs.add(r);
+    }
     for (const raison of raisonsNommees(a)) {
       if (!agg.raisons.includes(raison)) agg.raisons.push(raison);
     }

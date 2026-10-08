@@ -15,6 +15,7 @@ const base: Parameters<typeof genererReadme>[0] = {
   aCarnetSanitaire: false,
   nbEcheancesContractuelles: 0,
   rythmesRetenus: new Map<string, string>(),
+  visitesPourInformation: new Set<string>(),
   etatDuerp: null,
   retards: { nbEnRetard: 0, calendrier: { etat: "a_jour" }, inventaire: null },
   avertissementCalendrier: null,

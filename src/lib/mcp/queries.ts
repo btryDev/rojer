@@ -20,6 +20,7 @@
 //
 // Lecture seule : aucune fonction d'écriture n'a sa place dans ce fichier.
 
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { trierParCategorie } from "@/lib/equipements/labels";
 import type { CategorieEquipement, StatutAction } from "@prisma/client";
@@ -398,9 +399,15 @@ export type EtatVerification =
    * (a), 2026-09-28). Pas « en retard » : rien n'établit que l'obligation est
    * due, et l'assistant le répéterait au dirigeant.
    */
-  | "a_confirmer";
+  | "a_confirmer"
+  /**
+   * La visite de la commission de sécurité, à l'initiative de l'administration
+   * (C64, 2026-10-08) : ni en retard, ni à planifier, ni à venir pour
+   * l'exploitant. L'assistant la rend « pour information ».
+   */
+  | "pour_information";
 
-function etatDe(
+export function etatDe(
   v: VerificationDatee & LignePrudence,
   now: Date,
   prudence: RetenueParPrudence,
@@ -416,6 +423,8 @@ function etatDe(
   // en retard ». Relevé en relecture le 2026-09-12.
   if (estVerificationRealisee(v)) return "realisee";
   if (lignePortantSansRendezVous(v)) return "sans_rendez_vous";
+  // C64 : avant tout prédicat d'échéance — ce n'est pas celle de l'exploitant.
+  if (estLignePourInformation(v)) return "pour_information";
   if (estVerificationEnRetard(v, now)) {
     return prudence(v) ? "a_confirmer" : "en_retard";
   }

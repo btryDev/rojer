@@ -1,3 +1,4 @@
+import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
 import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
@@ -66,6 +67,12 @@ export type LigneVerif = {
    * citée comme norme, ou le défaut annuel et le mot du texte.
    */
   rythmeRetenu: string | null;
+  /**
+   * La visite de la commission de sécurité, à l'initiative de l'administration
+   * (C64) : imprimée « Pour information », jamais en retard. Requis, comme
+   * `contractuelle` : le README du ZIP l'annonce d'après ce champ.
+   */
+  pourInformation: boolean;
 };
 
 /**
@@ -151,6 +158,9 @@ const LIBELLE_STATUT_VERIF: Record<StatutPeint, string> = {
   en_retard: "En retard",
   // D1 (a) : une échéance que seul le silence de la fiche retient.
   a_confirmer: "À confirmer",
+  // C64 : la visite de la commission de sécurité, à l'initiative de
+  // l'administration — la phrase longue, écrite une fois (`initiative.ts`).
+  pour_information: MENTION_POUR_INFORMATION,
   realisee_conforme: "Conforme",
   realisee_observations: "Observations",
   realisee_ecart_majeur: "Écart majeur",

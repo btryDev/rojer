@@ -17,7 +17,10 @@ vi.mock("@/lib/referentiels/conformite", async (importOriginal) => {
     ...mod,
     obligationParId: (id: string) => {
       if (id !== "fabriquee-echeance-recurrente-sans-rythme") return mod.obligationParId(id);
-      const base = mod.obligationParId("stockage-dangereux-formation-personnel");
+      // ~~"stockage-dangereux-formation-personnel"~~ — retirée le 2026-10-08
+      // (C64) au profit d'une ligne d'établissement ; le cas se fabrique sur
+      // celle-ci, dépouillée de son rythme retenu.
+      const base = mod.obligationParId("stockage-dangereux-etablissement-formation-personnel");
       if (base === undefined) return undefined;
       const { rythmeRetenu: _retire, ...sansRythme } = base;
       void _retire;

@@ -303,9 +303,10 @@ export const obligationsConformite: Obligation[] = [
 // `incendie-travail-extincteurs-maintenance-approfondie`.
 // Compte : 166 + 5 − 0 = 171.
 // C60, même version (jamais servie), revue indépendante de la relecture :
-// AS 9 s'applique aux hôtels de 5ᵉ catégorie par le renvoi exprès de PO 1 § 3
+// ~~AS 9 s'applique aux hôtels de 5ᵉ catégorie par le renvoi exprès de PO 1 § 3
 // (PO 8 § 1, PE 1 § 1) — entrent `ascenseur-hotel-5-verification-quinquennale-as9`
-// et `ascenseur-hotel-5-verification-remise-en-service-as9` (N5, type O).
+// et `ascenseur-hotel-5-verification-remise-en-service-as9` (N5, type O).~~
+// [2026-10-08, C64 : supprimées, voir plus bas.]
 // Lignes AS 9 N1–N4 fondées d'abord sur PE 1 § 1 ; identification des
 // extincteurs N1–N4 étendue au RIA (MS 15 § 4) ; libellés des défauts annuels
 // (RIA, désenfumage, EPI) et de la triennale SSI ramenés au texte ; valeur
@@ -315,6 +316,22 @@ export const obligationsConformite: Obligation[] = [
 // `signalisation-erp-extincteurs-identification` devient neutre — la ligne est
 // portée par l'extincteur comme par le RIA, et chacun lisait l'exigence de
 // l'autre. Compte : 173 + 0 − 0 = 173.
+// C64, même version (jamais servie), 2026-10-08 — « on respecte les décisions
+// de Julien » (décision de la propriétaire) :
+// (B) les deux lignes AS 9 des hôtels de 5ᵉ sont supprimées, sans
+// `OBLIGATIONS_RETIREES` (nées et retirées sous cette version) ; le renvoi de
+// PO 1 § 3 reste lu, en réserve de PO 1 et PO 8. Compte : 173 + 0 − 2 = 171.
+// (C) `esp-requalification-decennale` bornée aux compresseurs (« à exclure
+// sauf pour compresseur : requalification tous les 10 ans ») : quatre
+// conditions `enum_differente` sur `familleEsp` écartent les familles
+// déclarées autres que `recipient_gaz_groupe2` ; le silence et « Autre / je
+// ne sais pas » gardent la ligne. Compte : 171 + 0 − 0 = 171.
+// (A) La formation au risque chimique : une ligne d'établissement, due dès
+// qu'un stockage de matières dangereuses est déclaré (champ neuf
+// `siEquipementDeclare`, qui entre à l'empreinte), au défaut annuel de
+// L. 4141-2 — entre `stockage-dangereux-etablissement-formation-personnel`,
+// sort `stockage-dangereux-formation-personnel` (`OBLIGATIONS_RETIREES`,
+// `absorbePar`). Compte : 171 + 1 − 1 = 171.
 export const REFERENTIEL_VERSION = "2026-10-07.5";
 
 /**
@@ -479,6 +496,17 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
     motif:
       "Ventilation des locaux de stockage et contrôle annuel (R. 4222-20 ; arrêté du 8 octobre 1987, art. 4) — les deux textes continuent de fonder les lignes d'aération. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
+  // 2026-10-08 (C64) — « on respecte les décisions de Julien » : la formation
+  // au risque chimique devient UNE ligne d'établissement, due dès qu'un
+  // stockage est déclaré (`siEquipementDeclare`). Nouvel identifiant, et
+  // celui-ci inscrit ici : le report d'échéance équipement → établissement
+  // n'est servi qu'à une obligation retirée (`succession-porteurs.test.ts`).
+  "stockage-dangereux-formation-personnel": {
+    absorbePar: "stockage-dangereux-etablissement-formation-personnel",
+    porteur: "equipement",
+    motif:
+      "Formation du personnel manipulant des matières dangereuses (R. 4412-38), portée par chaque stockage déclaré : une ligne PAR stockage. Retirée le 2026-10-08 (C64) au profit de `stockage-dangereux-etablissement-formation-personnel`, une ligne pour l'établissement, due dès qu'au moins un stockage est déclaré, au défaut annuel de L. 4141-2 (préventeur : « obligation annuelle de formation » ; décision de la propriétaire du 08/10). En production l'identifiant était `autre`, sans rythme ni ligne de calendrier ; la version 2026-10-07.5, qui lui donnait un défaut annuel, n'a jamais été servie.",
+  },
 };
 
 /**
@@ -578,6 +606,12 @@ export function empreinteReferentiel(
         // chaîne d'avant, donc l'ADR-039 seul ne déplace ni l'empreinte ni
         // `REFERENTIEL_VERSION`. Le motif y entre avec le rythme : passer d'un
         // défaut à une norme change ce que la ligne affiche de son origine.
+        // `siEquipementDeclare` (2026-10-08, C64) décide de l'EXISTENCE de
+        // la ligne d'établissement : il entre, en segment ajouté et seulement
+        // quand il est présent, comme le rythme retenu ci-dessous.
+        ...(o.porteur === "etablissement" && o.siEquipementDeclare
+          ? [`si:${canonique(o.siEquipementDeclare)}`]
+          : []),
         ...(o.rythmeRetenu
           ? [
               `rythme:${o.rythmeRetenu.periodicite}:${o.rythmeRetenu.motif}:${
