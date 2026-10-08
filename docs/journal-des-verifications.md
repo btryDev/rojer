@@ -4941,14 +4941,17 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   vérifiée) ; norme en première main ; annotations extraites du PDF, pas
   retapées.
 - **Ce qui en sort** :
-  - **AS 9 aux hôtels de 5ᵉ — tranché sur le texte.** PE 1 § 1 n'ouvre le
+  - ~~**AS 9 aux hôtels de 5ᵉ — tranché sur le texte.** PE 1 § 1 n'ouvre le
     livre II en 5ᵉ que sur renvoi exprès ; PO 1 § 3 (« Le contrôle des
     ascenseurs relève des dispositions particulières précisées dans le cadre
     de l'article AS 9 du règlement ») en est un, et PO 8 § 1 le réimporte pour
     les hôtels existants. AS 9 n'a qu'une prescription : le renvoi l'importe
     entière. Lecture dite comme telle en description. Deux lignes N5 / type O,
     fondées sur PO 1 : `ascenseur-hotel-5-verification-quinquennale-as9`,
-    `ascenseur-hotel-5-verification-remise-en-service-as9` (organisme agréé).
+    `ascenseur-hotel-5-verification-remise-en-service-as9` (organisme agréé).~~
+    [2026-10-08, C64 : les deux lignes sont supprimées avant d'avoir été
+    servies — le préventeur borne AS 9 aux N1–N4 ; la lecture du renvoi reste
+    en réserve de PO 1 et PO 8 (`72145395`).]
   - **Borne N1–N4 des lignes AS 9** : PE 1 § 1 et le titre du livre II
     (« Dispositions applicables aux établissements des quatre premières
     catégories », inchangé au plan du 2027-06-15) en premier fondement, PE 1
@@ -5120,6 +5123,58 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   - Les décisions de la synthèse de la revue (1, 2, 4 à 14) restent à la
     propriétaire ; la décision 3 (widgets) est faite par C61, exigée par
     l'ADR-039 § 5.
+
+### C64 · 2026-10-08 — « On respecte les décisions de Julien » : commission pour information, AS 9, ESP, formation stockage
+
+- **Quand · par quoi** : 2026-10-08, branche `fix/relecture-jc-commission`
+  (base `integration/relecture-jc`, `32de8b76`). Décisions de la propriétaire
+  du même jour : la décision 2 de la synthèse de revue (option A, sans
+  migration), puis « on respecte les décisions de Julien » (le préventeur).
+  Aucun texte rouvert sur Légifrance : les verbatims utilisés étaient au
+  corpus (L. 4141-2, R. 4412-38/-87/-88, PO 1, PO 8, AS 9). Référentiel
+  toujours `2026-10-07.5`, jamais servi : ligne d'empreinte réécrite en
+  appelant `empreinteReferentiel()`, `173-2543b2a5149c8d07` →
+  `171-b161063e19bd746` (B) → `171-59b93c7c5781b6c8` (C) →
+  `171-9bfaadbae946dc7c` (A ; la décision 2 ne la déplace pas).
+  **173 − 2 (B) + 0 (C) + 1 − 1 (A) + 0 (décision 2) = 171** — 87 équipement,
+  70 établissement, 14 salarié.
+- **Ce qui en sort** :
+  - **Commission de sécurité « pour information »** (`b5e104ea`). Champ
+    `initiative: "administration"` sur les neuf lignes de visite (PE 37 et
+    GE 4 § 1) ; `estPourInformation` et sa projection client. La ligne reste
+    au calendrier avec son rythme, peinte « Pour information — visite à
+    l'initiative de l'administration » ; elle sort des retards, des « à
+    faire », de l'indice et des urgences ; réalisateur affiché « Commission
+    de sécurité » (`realisateurs` et l'enum Prisma inchangés). Hors
+    empreinte : rien de ce que le moteur écrit ne change. Gardes éprouvées :
+    répartition et classement faussés → 5 rouges ; champ retiré d'une ligne
+    → 2 rouges.
+  - **B — AS 9 aux hôtels de 5ᵉ supprimées** (`72145395`) sans
+    `OBLIGATIONS_RETIREES` (nées et retirées sous `.5`). Réserves à PO 1 et
+    PO 8 : « question posée au préventeur ; il borne AS 9 aux N1-N4 ».
+  - **C — ESP : requalification bornée aux compresseurs** (`18d17e2b`,
+    `9c4092aa`) par quatre `enum_differente` sur `familleEsp` ; silence et
+    « je ne sais pas » gardent la ligne. Éprouvé : conditions retirées → 2
+    rouges.
+  - **A — formation au risque chimique : une ligne par établissement**
+    (`e2734066`). Champ neuf `siEquipementDeclare` (ADR-022 amendée) ; nouvel
+    id `stockage-dangereux-etablissement-formation-personnel`, l'ancien retiré
+    avec `absorbePar` ; `texteVague` pris dans L. 4141-2 (« répétée
+    périodiquement ») au lieu de R. 4412-88 (CMR seuls) — lecture écrite en
+    notesInternes, ADR-039 § 6 amendée. Calendriers : aucune ligne annuelle
+    par stockage n'est jamais née (`.5` jamais servie) ; en production l'ancien
+    id était `autre`, sans ligne. Sceau du moteur recopié sans incrément.
+    Éprouvé : garde du moteur retirée → 2 rouges.
+  - **D — hotte** : rien. Julien n'a pas annoté le contrôle semestriel du
+    recyclage ; la hotte le garde (décision 14 de la synthèse).
+- **Ce qui reste ouvert, et qui le porte** :
+  - Une `DeclarationEtatPermanent` ou une prescription posée en production sur
+    `stockage-dangereux-formation-personnel` ne suit pas le nouvel id —
+    **à compter en production** avant la mise en service (propriétaire).
+  - `sansQualification` : la mention « pour information » ne qualifie rien
+    (test vert). Le guide « Comprendre » n'affiche pas la commission comme
+    réalisateur : il agrège par domaine, et l'organisme agréé de la visite
+    n'y est simplement plus apporté.
 
 ## Partie 2 — Registre des constats en suspens
 
