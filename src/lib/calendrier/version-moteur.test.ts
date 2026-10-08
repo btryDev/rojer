@@ -124,6 +124,16 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-08 (ADR-040, délai de grâce) :
+  // `calendrier/grace.ts` entre au relevé, et `actions.ts` écrit
+  // `graceJusquAu` dans le `createMany`. NON, la régénération n'écrit pas
+  // autrement CE QUE CE RELEVÉ GARDE : mêmes lignes, mêmes dates, même statut,
+  // même archivage — la colonne neuve n'est posée qu'à la naissance d'une
+  // ligne, et aucun `update` n'y touche. Un incrément ne la rétro-remplirait
+  // pas (les lignes existantes ne sont pas recréées) ; il ferait seulement de
+  // la prochaine passe de chaque dossier une « reprise », ce que le passage du
+  // référentiel de la relecture du préventeur fait déjà. La grâce est lue par
+  // `delaiDeGrace` (`lib/dates/retard.ts`), une lecture, hors moteur.
   // Recopiée SANS incrément le 2026-10-07 (revue de la relecture du
   // préventeur, C61) : `matching/prescriptions.ts` écrit autrement le motif
   // d'une prescription écartée (face à un rythme retenu ; obligation retirée,
@@ -270,7 +280,7 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "b4984136384610af",
+  empreinte: "5d02a6094169844b",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
