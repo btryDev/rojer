@@ -202,7 +202,10 @@ export async function commitImport(
       await tx.action.createMany({ data: ecritures.actions });
     }
     if (faits) await reprendreFaitsDansDuerp(tx, duerpId, faits);
-  });
+  },
+  // Une transaction interactive a 5 s par défaut ; un DUERP importé peut
+  // porter des centaines de risques et d'actions (relecture du 2026-10-08).
+  { timeout: 30_000 });
 
   revalidatePath(`/etablissements/${etablissementId}`);
   revalidatePath(`/duerp/${duerpId}/risques`);
