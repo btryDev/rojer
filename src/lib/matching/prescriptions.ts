@@ -12,7 +12,7 @@ import {
   type Periodicite,
 } from "@/lib/referentiels/types-communs";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import type { RythmeRetenu } from "@/lib/referentiels/conformite/types";
+import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { raisonObligationRetiree } from "./obligation-retiree";
 import type {
@@ -82,7 +82,7 @@ export function estPeriodicitePlusStricte(
  */
 export function prescriptionRenforce(
   candidate: Periodicite,
-  o: { periodicite: Periodicite; rythmeRetenu?: RythmeRetenu },
+  o: Pick<Obligation, "periodicite" | "rythmeRetenu">,
 ): boolean {
   if (estPeriodicitePlusStricte(candidate, periodiciteEffective(o))) return true;
   return (
@@ -103,11 +103,9 @@ export function prescriptionRenforce(
  * une prescription moins stricte est écartée et la ligne garde le rythme
  * retenu (ADR-039, section du 2026-10-07).
  */
-export function motifPrescriptionNonRetenue(o: {
-  periodicite: Periodicite;
-  rythmeRetenu?: RythmeRetenu;
-  premierDelai?: Periodicite;
-}): string {
+export function motifPrescriptionNonRetenue(
+  o: Pick<Obligation, "periodicite" | "rythmeRetenu" | "premierDelai">,
+): string {
   const p = periodiciteEffective(o);
   const mention = mentionRythmeRetenu(o);
   return mention
