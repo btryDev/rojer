@@ -2322,9 +2322,12 @@ describe("les raisons se lisent, elles ne se décodent pas", () => {
 // [2026-10-07] Les deux inspections réelles sont RETIRÉES du référentiel
 // (périmètre, relecture préventeur du 30/09, décision de la propriétaire du
 // 07/10) : plus aucune obligation ne porte les formes `enum_egale` /
-// `enum_differente` [intégration du 2026-10-07 : le lot 3 réemploie
+// `enum_differente` ~~[intégration du 2026-10-07 : le lot 3 réemploie
 // `enum_differente`, deux fois, sur `incendie-travail-extincteurs-maintenance-approfondie`
-// (`typeExtincteur`) ; `enum_egale` reste sans ligne vivante]. Le couple est rejoué ici sur deux obligations
+// (`typeExtincteur`) ; `enum_egale` reste sans ligne vivante]~~ [2026-10-08,
+// C66 : la maintenance approfondie est retirée ; `enum_differente` ne sert plus
+// que les quatre conditions `familleEsp` de `esp-requalification-decennale`,
+// `enum_egale` reste sans ligne vivante]. Le couple est rejoué ici sur deux obligations
 // SYNTHÉTIQUES, clones de la requalification décennale qui reste, avec les
 // conditions exactes des lignes retirées : c'est la forme du moteur qu'on
 // garde, pas une ligne du référentiel. `evaluerObligation` remplace

@@ -46,8 +46,9 @@ import { FAMILLES_ESP } from "./esp";
  *   - `familleEsp`                  → arrêté du 20 novembre 2017, art. 15 :
  *     inspection périodique biennale des générateurs de vapeur, distinguée du
  *     régime général. ~~Seule propriété d'ÉNUMÉRATION de cette liste ; les
- *     autres sont des booléens ou des nombres.~~ [2026-10-07 : elle a une sœur,
- *     `typeExtincteur`, ci-dessous.]
+ *     autres sont des booléens ou des nombres.~~ ~~[2026-10-07 : elle a une sœur,
+ *     `typeExtincteur`, ci-dessous.]~~ [2026-10-08, C66 : redevenue la seule —
+ *     `typeExtincteur` est retirée.]
  *   - ~~`typeExtincteur`              → NF S 61-919 (août 2001), annexe A,
  *     tableau A.1 : la maintenance additionnelle approfondie à 5 et 15 ans ne
  *     vise ni le CO2 ni la poudre à opercule scellé (C59 lot 3, ADR-039), ni
@@ -58,9 +59,12 @@ import { FAMILLES_ESP } from "./esp";
  *     non demandé par le préventeur, décision de la propriétaire. Les valeurs
  *     déjà saisies restent dans le JSON `caracteristiques`, inertes : aucun
  *     lecteur ne les lit (le moteur ne lit que les propriétés qu'une
- *     condition nomme, `caracteristiquesLisibles` que les siennes), et la
- *     clé disparaît à la prochaine modification de l'appareil, qui réécrit
- *     le JSON par `serialiserCaracteristiques`.]
+ *     condition nomme, `caracteristiquesLisibles` que les siennes). La clé
+ *     disparaît quand le formulaire de modification réécrit le JSON
+ *     (`serialiserCaracteristiques`) ; elle SURVIT à une réponse donnée à
+ *     une question à trois états (`equipements/actions.ts`, qui fusionne
+ *     `{ ...avant, [champ]: reponse }`) — inerte dans les deux cas (revue du
+ *     2026-10-08).]
  *
  * `dessertLocauxSommeil` a été RETIRÉ le 2026-09-01 (lot A11). Il portait à lui
  * seul la restriction « locaux à sommeil » de PE 37, faute d'attribut
