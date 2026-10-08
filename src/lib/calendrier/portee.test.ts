@@ -290,6 +290,42 @@ describe("urgenceSeule — le pendant SQL d'`estVerificationEnRetard`", () => {
       }
     }
   });
+
+  it("juge la grâce au jour passé en `graceAu`, pas à la borne d'une année (barres-mois)", () => {
+    // Revue du 2026-10-08 sur C63 : `compterObligationsParMois` borne `debut`
+    // au 1er janvier de l'année affichée. Une ligne née à l'automne avec une
+    // grâce expirée en janvier est en retard aujourd'hui ; jugée au
+    // 1er janvier, sa grâce courait encore et la clause l'écartait.
+    const NOW = new Date("2027-01-20T10:00:00.000Z");
+    const AUJOURDHUI = new Date("2027-01-19T23:00:00.000Z");
+    const PREMIER_JANVIER = new Date("2026-12-31T23:00:00.000Z");
+    const ligne = {
+      statut: "a_planifier",
+      periodicite: "annuelle",
+      datePrevue: new Date("2026-10-14T22:00:00.000Z"),
+      archiveLe: null,
+      graceJusquAu: new Date("2027-01-14T23:00:00.000Z"),
+      libelleObligation: "x",
+    };
+    expect(estVerificationEnRetard(ligne, NOW)).toBe(true);
+    expect(
+      evaluer(urgenceSeule(PREMIER_JANVIER, AUJOURDHUI) as Record<string, unknown>, ligne),
+    ).toBe(true);
+    // Le défaut relevé, gardé visible : sans `graceAu`, la borne de l'année
+    // juge la grâce et la ligne disparaît.
+    expect(evaluer(urgenceSeule(PREMIER_JANVIER) as Record<string, unknown>, ligne)).toBe(false);
+  });
+
+  it("les barres de l'année passent aujourd'hui en `graceAu`", () => {
+    // La garde de l'appelant : le test ci-dessus prouve la clause, celui-ci
+    // que `compterObligationsParMois` s'en sert avec le jour courant.
+    const source = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "../dashboard/queries.ts"),
+      "utf-8",
+    );
+    expect(source).toMatch(/urgenceSeule\(debut,\s*debutDuJour\(new Date\(\)\)\)/);
+    expect(source).not.toMatch(/urgenceSeule\(debut\)/);
+  });
 });
 
 describe("echeanceAttendue — le pendant SQL d'`estVerificationRealisee`", () => {

@@ -110,7 +110,21 @@ export function portantUnePreuve(): Prisma.VerificationWhereInput {
   };
 }
 
-export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
+/**
+ * Ce qui attend, ouvert, daté avant `debut`, hors délai de grâce et hors
+ * lignes « pour information » — le pendant SQL d'`estEnRetardQuiCompte`.
+ *
+ * `graceAu` est le JOUR où la grâce se juge (ADR-040) ; il vaut `debut` par
+ * défaut, ce qui est juste quand `debut` est le jour courant. Un appelant qui
+ * passe une autre borne — les barres d'une année, bornées au 1er janvier —
+ * doit passer aujourd'hui : juger la grâce au 1er janvier écarterait une ligne
+ * dont la grâce court encore ce jour-là et a expiré depuis (revue du
+ * 2026-10-08 sur C63, `compterObligationsParMois`).
+ */
+export function urgenceSeule(
+  debut: Date,
+  graceAu: Date = debut,
+): Prisma.VerificationWhereInput {
   return {
     // Une ligne éteinte n'est jamais urgente, quel que soit son statut gelé.
     archiveLe: null,
@@ -129,7 +143,7 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
           notIn: [...OBLIGATIONS_A_L_INITIATIVE_DE_L_ADMINISTRATION],
         },
       },
-      horsGrace(debut),
+      horsGrace(graceAu),
     ],
   };
 }

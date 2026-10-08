@@ -448,7 +448,10 @@ export async function compterObligationsParMois(
         // taisait ce que le bandeau annonçait. La clause partagée « attendue,
         // ouverte, datée avant » (`urgenceSeule`), composée et non recopiée ;
         // un sur-ensemble, que `repartirParMois` trie.
-        urgenceSeule(debut),
+        // La grâce (ADR-040) se juge AUJOURD'HUI, pas au 1er janvier de
+        // l'année affichée : sinon une ligne dont la grâce a expiré en cours
+        // d'année est écartée ici et comptée par le bandeau.
+        urgenceSeule(debut, debutDuJour(new Date())),
         // Une ligne couverte dans l'année : un rapport réalisé y est daté
         // (ADR-034 — la réalisation vit sur le rapport, plus sur la ligne).
         {
