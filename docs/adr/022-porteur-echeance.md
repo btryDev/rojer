@@ -16,6 +16,10 @@
   (`stockage-dangereux-etablissement-formation-personnel`) en est le premier
   cas — portée par chaque stockage, elle donnait une formation annuelle par
   armoire. Sans le champ, la règle du § 4 reste : due même sans équipement.
+- **Amendée le 2026-10-08 (ADR-042)** : une obligation dont le champ est
+  atteint peut ne pas être servie. Au NIVEAU AUDIT (`niveau: "audit"`),
+  `evaluerObligation` la rend `null` : elle reste au référentiel, sans ligne,
+  et la page « Ce que Rojer ne couvre pas » la nomme.
 
 ## Contexte
 
