@@ -1760,6 +1760,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // (R. 4224-17, défaut annuel, travail hors ERP ; le préventeur : « si
     // présent maintenance vérification annuelle »). 171 + 1 − 0 = 172.
     { version: "2026-10-08.2", empreinte: "172-ea7623eb617ce82" },
+    // ADR-041 (C65, livrée après C66) : le critère `activite` conditionne cinq
+    // obligations existantes à un fait d'activité de l'établissement. Aucune
+    // entrée, aucune sortie — 172. La `.1` de sa branche n'a jamais été servie.
+    { version: "2026-10-08.3", empreinte: "172-f59cb53a644d6458" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

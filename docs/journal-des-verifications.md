@@ -6063,9 +6063,10 @@ comment — et ce qu'on en a fait.**
   (base `cb68c367`). Décisions de la propriétaire des 2026-10-07 et
   2026-10-08 : « tout ce qui peut engendrer une formation » se répond depuis
   Équipe, sans remplir le DUERP, et s'y retrouve rempli ; « déclenché par le DU
-  et dans la législation → répercuté ». Référentiel `2026-10-07.5` →
-  `2026-10-08.1` : `171-9bfaadbae946dc7c` → `171-ad093776135f4092`, relevé en
-  appelant `empreinteReferentiel()`.
+  et dans la législation → répercuté ». Livrée APRÈS C66 (rebase sur `f2ea34ac`) : référentiel `2026-10-08.2` →
+  `2026-10-08.3`, `172-ea7623eb617ce82` → `172-f59cb53a644d6458`, relevé en
+  appelant `empreinteReferentiel()` (la `.1` de la branche, sur `.5`, n'a
+  jamais été servie).
 - **Relu sur l'API Légifrance (sandbox)** : R. 4541-2, R. 4541-8, R. 4542-1,
   R. 4542-16, R. 4412-38, R. 4412-87, R. 4544-9, R. 4544-10, R. 4323-55,
   R. 4323-56, R. 4624-10, R. 4624-22, R. 4624-23, R. 4141-20, R. 4433-2,
@@ -6078,7 +6079,7 @@ comment — et ce qu'on en a fait.**
 - **Ce qui change** : le critère `activite` conditionne cinq obligations
   existantes (gestes et postures, formation écran, habilitation du personnel,
   carnet de prescriptions, consigne EPI). Aucune obligation n'entre ni ne
-  sort : 171 + 0 − 0 = 171. Moteur de calendrier recopié SANS incrément : les
+  sort : 172 + 0 − 0 = 172. Moteur de calendrier recopié SANS incrément : les
   cinq sont à `periodicite: "autre"` sans rythme retenu, le générateur n'en
   produit aucune ligne.
 - **Ce qui n'est pas fait** : la formation et les FDS du risque chimique
