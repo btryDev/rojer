@@ -168,6 +168,7 @@ function verif(p: Partial<VerificationDatee> = {}): VerificationDatee {
     // `null` = ligne OUVERTE. Les cas archivés passent une date (ADR-034) ; le
     // libellé, lui, ne décide plus de rien et reste celui du référentiel.
     archiveLe: null,
+    graceJusquAu: null,
     libelleObligation: "Vérification périodique",
     ...p,
   };
@@ -500,6 +501,7 @@ describe("lignes archivées", () => {
       statut: "planifiee",
       datePrevue: HIER,
       archiveLe: ARCHIVE_LE,
+      graceJusquAu: null,
     });
     expect(estVerificationArchivee(v)).toBe(true);
     expect(
@@ -515,6 +517,7 @@ describe("lignes archivées", () => {
           statut: "a_planifier",
           datePrevue: DEMAIN,
           archiveLe: ARCHIVE_LE,
+          graceJusquAu: null,
         }),
         AUJOURDHUI,
       ),
@@ -525,6 +528,7 @@ describe("lignes archivées", () => {
           statut: "planifiee",
           datePrevue: DEMAIN,
           archiveLe: ARCHIVE_LE,
+          graceJusquAu: null,
         }),
         AUJOURDHUI,
         JOURS_HORIZON_PROCHE,

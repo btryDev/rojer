@@ -475,6 +475,7 @@ export async function listerEquipements(
           datePrevue: true,
           periodicite: true,
           archiveLe: true,
+          graceJusquAu: true,
           libelleObligation: true,
         },
       },
@@ -522,6 +523,8 @@ export type VerificationLue = {
    * champ une ligne éteinte à date passée ressort « en retard » à perpétuité.
    */
   archiveLe: Date | null;
+  /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
+  graceJusquAu: Date | null;
   /** La date du dernier rapport réalisé (ADR-034). La ligne ne porte plus que
    *  l'échéance ouverte : c'est ici que l'assistant lit ce qui a été fait. */
   derniereRealisation: Date | null;
@@ -607,6 +610,7 @@ export async function listerVerifications(
       // En clair, et non par une constante partagée, pour la même raison que
       // `rapports` plus bas — la garde RGPD relit le source de ce serveur.
       archiveLe: true,
+      graceJusquAu: true,
       statut: true,
       equipement: { select: { libelle: true, categorie: true } },
       // La source de la prescription, et rien d'autre d'elle : de quoi dire
@@ -650,6 +654,7 @@ export async function listerVerifications(
     // ci-dessous aussi.
     datePrevue: v.datePrevue,
     archiveLe: v.archiveLe,
+    graceJusquAu: v.graceJusquAu,
     derniereRealisation: derniereRealisation(v.rapports),
     statut: v.statut,
     etat: etatDe(v, now, prudence),

@@ -445,6 +445,7 @@ export default async function EtablissementPage({
       // non sur la confiance qu'ils font à une clause située trois cents
       // lignes plus haut (ADR-034).
       archiveLe: v.archiveLe,
+      graceJusquAu: v.graceJusquAu,
       // La source de la prescription traverse jusqu'au board, sans quoi le
       // marquage contractuel n'y paraît jamais (ADR-032). La requête la
       // chargeait déjà et le type l'acceptait : c'est cette projection, entre

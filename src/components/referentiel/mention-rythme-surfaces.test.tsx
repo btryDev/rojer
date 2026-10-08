@@ -77,6 +77,7 @@ const verif = (rythmeRetenu: MentionRythme | null) => ({
   statut: "planifiee",
   periodicite: "annuelle",
   archiveLe: null,
+  graceJusquAu: null,
   equipement: { libelle: "Extincteur hall" },
   prescription: null,
   prescriptionId: null as string | null,
@@ -167,6 +168,7 @@ describe("registre web — une fiche tenue ailleurs", () => {
     derniereRealisation: null,
     periodicite: "annuelle",
     archiveLe: null,
+    graceJusquAu: null,
     statut: "planifiee" as const,
     equipement: { libelle: "Extincteur hall", categorie: "EXTINCTEUR" },
   });

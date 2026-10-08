@@ -168,6 +168,7 @@ export async function listerBatimentsAvecCharge(
       // par `startsWith` ; c'est un champ depuis le N3, et son absence du
       // `select` ne compile plus.
       archiveLe: true,
+      graceJusquAu: true,
       libelleObligation: true,
       obligationId: true,
       // La prudence ne vaut pas pour une ligne rythmée par une prescription.
@@ -213,6 +214,8 @@ export function grouperChargeParBatiment<
     datePrevue: Date;
     periodicite: string;
     archiveLe: Date | null;
+    /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
+    graceJusquAu: Date | null;
     libelleObligation: string;
     obligationId: string;
     prescriptionId: string | null;

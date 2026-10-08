@@ -139,6 +139,8 @@ export type EntreeRecos = {
      * que l'ADR supprime. Requis, l'oubli ne compile pas.
      */
     archiveLe: Date | null;
+    /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
+    graceJusquAu: Date | null;
     libelleObligation: string;
     equipementLibelle: string;
   }>;

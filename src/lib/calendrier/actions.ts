@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { SCEAU_CALENDRIER } from "./version-moteur";
 import { lireEntrees, planifier } from "./passe";
+import { graceANaissance } from "./grace";
 import { marquerCalendrierPerime } from "./reconciliation";
 import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
 
@@ -209,6 +210,16 @@ async function regenererUnePasse(
   }
 
   if (plan.aCreer.length > 0) {
+    // LE DÉLAI DE GRÂCE (ADR-040) : décidé sur le repère que la lecture a vu,
+    // AVANT que cette passe n'écrive le sien plus bas. Présent et différent du
+    // sceau courant, il dit que la passe reprend un changement du référentiel
+    // ou du moteur — les lignes qu'elle crée en sont nées. Le même pour toutes :
+    // c'est la cause de la passe, pas un fait de chaque ligne.
+    const grace = graceANaissance(
+      etab.referentielVersionCalendrier,
+      SCEAU_CALENDRIER,
+      now,
+    );
     // `skipDuplicates` : deux régénérations concurrentes (déclaration
     // d'équipement dans un onglet, dépôt de rapport dans l'autre) peuvent
     // calculer la même création. La contrainte d'unicité tranche, sans
@@ -231,6 +242,7 @@ async function regenererUnePasse(
           // poserait quelques millisecondes plus tard, parfois le lendemain
           // civil. Écrite ici une fois pour toutes ; aucun `update` n'y touche.
           suiviDepuis: now,
+          graceJusquAu: grace,
         })),
         skipDuplicates: true,
       }),

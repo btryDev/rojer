@@ -89,6 +89,8 @@ export type VerificationTenue = {
    * éteinte. Neuvième surface, trouvée en relecture le 2026-09-12.
    */
   archiveLe: Date | null;
+  /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
+  graceJusquAu: Date | null;
   statut: StatutVerification;
   /** `null` = l'échéance porte sur l'établissement, pas sur un appareil
    *  (ADR-022). Une telle ligne n'a pas de catégorie, donc pas de fiche de

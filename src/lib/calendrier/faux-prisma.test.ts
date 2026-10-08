@@ -125,6 +125,32 @@ describe("faux-prisma — verification.createMany exige `suiviDepuis`", () => {
     ).rejects.toThrow(/suiviDepuis absent/);
   });
 
+  it("refuse une insertion qui ne NOMME pas la grâce (ADR-040), `null` compris", async () => {
+    // La colonne est nullable en base : une insertion qui l'omettrait passerait
+    // sans bruit, et une ligne née d'un changement du référentiel naîtrait sans
+    // grâce. Le faux client exige donc la clé, comme pour `suiviDepuis`.
+    const { prisma } = client();
+    await expect(
+      prisma.verification.createMany({
+        data: [
+          {
+            etablissementId: "etab-1",
+            obligationId: "o-2",
+            equipementId: null,
+            salarieId: null,
+            libelleObligation: "x",
+            periodicite: "annuelle",
+            realisateurRequis: [],
+            datePrevue: new Date("2026-01-01T00:00:00Z"),
+            statut: "a_planifier",
+            prescriptionId: null,
+            suiviDepuis: new Date("2026-01-01T00:00:00Z"),
+          },
+        ],
+      }),
+    ).rejects.toThrow(/graceJusquAu absent/);
+  });
+
   it("pose la ligne avec l'origine fournie, telle quelle", async () => {
     const { db, prisma } = client();
     const origine = new Date("2026-09-18T08:00:00Z");
@@ -142,6 +168,7 @@ describe("faux-prisma — verification.createMany exige `suiviDepuis`", () => {
           statut: "a_planifier",
           prescriptionId: null,
           suiviDepuis: origine,
+          graceJusquAu: null,
         },
       ],
     });

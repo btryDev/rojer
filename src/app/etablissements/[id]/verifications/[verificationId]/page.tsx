@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronDown, FileText } from "lucide-react";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
+import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { BadgeResultat } from "@/components/rapports/BadgeResultat";
 import { SupprimerRapportButton } from "@/components/rapports/SupprimerRapportButton";
 import { UploadRapportForm } from "@/components/rapports/UploadRapportForm";
@@ -402,6 +403,14 @@ export default async function VerificationDetailPage({
             {statutJour === undefined || statutJour === "en_retard" ? null : (
               <BadgeStatut statut={statutJour} />
             )}
+            {/* Le délai de grâce d'une ligne née d'un changement du
+                référentiel (ADR-040) : il s'ajoute à « À planifier », il ne
+                date rien. */}
+            {mentionDelaiDeGrace(v, aujourdhui) ? (
+              <PastilleFiche>
+                {mentionDelaiDeGrace(v, aujourdhui, { enTete: true })}
+              </PastilleFiche>
+            ) : null}
             {enRetard && sansRendezVous ? (
               // Dû et jamais fait, SANS échéance connue : compter des jours
               // depuis la date de génération mesurerait l'âge du dossier, pas

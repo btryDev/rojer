@@ -23,6 +23,7 @@ const ligne = (
   datePrevue: LE_JOUR,
   periodicite,
   archiveLe,
+  graceJusquAu: null,
   // Un libellé NORMAL des deux côtés : depuis l'ADR-034 (N3) il ne porte plus
   // aucun marqueur, et c'est précisément ce que ces cas doivent éprouver.
   libelleObligation: "Vérification du désenfumage",

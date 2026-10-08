@@ -102,6 +102,7 @@ export async function etatVerificationsParEquipement(
         // reste comptée sur la carte de son appareil, avec le statut gelé où
         // l'archivage l'a laissée.
         archiveLe: true,
+        graceJusquAu: true,
         periodicite: true,
         obligationId: true,
         // Une ligne rythmée par une prescription n'est jamais prudente.
@@ -131,6 +132,8 @@ export function repartirParEquipement(
     /** `null` = ligne ouverte (ADR-034). `lecturesCalendrier` ne rend rien
      *  d'une ligne archivée, hors la preuve qu'elle porte. */
     archiveLe: Date | null;
+    /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
+    graceJusquAu: Date | null;
     /** Le dernier rapport réalisé (ADR-034) : c'est lui qui fait `derniere`
      *  et `faites`, la ligne n'en porte plus. */
     derniereRealisation: Date | null;

@@ -28,6 +28,7 @@ const ARCHIVE_LE = new Date("2026-07-01T00:00:00.000Z");
 const roulee = {
   statut: "planifiee",
   archiveLe: null,
+  graceJusquAu: null,
   datePrevue: jours(120),
   libelleObligation: "Vérification périodique",
   periodicite: "annuelle",
@@ -39,6 +40,7 @@ const roulee = {
 const soldee = {
   statut: "realisee_conforme",
   archiveLe: null,
+  graceJusquAu: null,
   datePrevue: jours(120),
   libelleObligation: "Vérification périodique",
   periodicite: "annuelle",
@@ -87,6 +89,7 @@ describe("ce qui ne réclame plus rien", () => {
     const oneShot = {
       statut: "realisee_conforme",
       archiveLe: null,
+      graceJusquAu: null,
       datePrevue: jours(-185),
       libelleObligation: "Vérification à la mise en service",
       periodicite: "mise_en_service_uniquement",

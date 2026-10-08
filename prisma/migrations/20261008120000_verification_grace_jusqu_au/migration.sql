@@ -1,0 +1,22 @@
+-- ============================================================================
+-- Délai de grâce d'une ligne née d'un changement du référentiel — ADR-040 —
+-- 2026-10-08
+--
+-- UNE COLONNE, NULLABLE, SANS DÉFAUT. `Verification.graceJusquAu` est écrite
+-- une fois, à la création de la ligne, par la passe qui reprend un dossier
+-- dont le sceau du calendrier a changé (référentiel ou moteur) : le jour
+-- jusqu'auquel une ligne « à planifier » n'est pas comptée en retard. NULL se
+-- lit « aucune grâce » — c'est le sort de toutes les lignes existantes, qui
+-- gardent exactement leur lecture d'avant, et de toute ligne née d'une
+-- création d'établissement ou d'une mutation de l'utilisateur.
+--
+-- ADDITIVE, ET INERTE POUR LE CODE EN LIGNE : Vercel joue `prisma migrate
+-- deploy` avant de servir le code qui la lit (cf. `20260918090000`). Aucun
+-- rétro-remplissage : la cause de naissance d'une ligne existante n'a été
+-- gardée nulle part, et la deviner serait inventer.
+--
+-- FORME : `TIMESTAMP(3)` nullable, ce que Prisma attend pour `DateTime?` —
+-- `derive-schema.yml` compare migrations et schéma.
+-- ============================================================================
+
+ALTER TABLE "Verification" ADD COLUMN "graceJusquAu" TIMESTAMP(3);

@@ -27,6 +27,7 @@ const ligne = (id: string, iso: string, statut = "planifiee") => ({
   statut,
   periodicite: "annuelle",
   archiveLe: null,
+  graceJusquAu: null,
   equipement: { libelle: `Appareil ${id}` },
   prescription: null,
 });
