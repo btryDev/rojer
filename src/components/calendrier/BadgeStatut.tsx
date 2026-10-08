@@ -1,4 +1,8 @@
 import type { StatutPeint } from "@/lib/calendrier/etats";
+import {
+  LIBELLE_POUR_INFORMATION,
+  MENTION_POUR_INFORMATION,
+} from "@/lib/referentiels/conformite/initiative";
 
 // Ce que la pastille PEINT, pas ce que la ligne stocke : « en retard » est un
 // état du jour calculé sur la date (`statutAffiche`), jamais une valeur en base.
@@ -12,6 +16,9 @@ const LABEL: Record<StatutPeint, string> = {
   realisee_ecart_majeur: "Écart majeur",
   en_retard: "En retard",
   a_confirmer: "À confirmer",
+  // C64 : la visite de la commission de sécurité. La phrase longue est dans
+  // l'infobulle (`title`) — la pastille garde la largeur des autres.
+  pour_information: LIBELLE_POUR_INFORMATION,
 };
 
 // Champs saturés du board éditorial, encre de la même famille : rose
@@ -41,12 +48,16 @@ const CLASSE: Record<StatutPeint, string> = {
   // score : ni le rose du retard, que rien n'établit, ni le vert.
   a_confirmer:
     "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]",
+  // L'ardoise aussi : une information, ni une alerte ni un acquis.
+  pour_information:
+    "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]",
 };
 
 export function BadgeStatut({ statut }: Props) {
   return (
     <span
       className={`inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-[6px] text-[12px] font-semibold ${CLASSE[statut]}`}
+      title={statut === "pour_information" ? MENTION_POUR_INFORMATION : undefined}
     >
       {LABEL[statut]}
     </span>

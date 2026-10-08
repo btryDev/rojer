@@ -159,7 +159,11 @@ export function urgenceCategorie(appareils: AppareilListe[]): number {
     // alors que ses cartes annoncent « aucune vérification rattachée ».
     if (a.resume.signaux.length === 0) return max;
     const e = a.resume.etat;
-    const rang = e === "aPlanifier" ? 1.5 : PRIORITE_ETAT[e];
+    // « Pour information » (C64) ne fait rien remonter : ce n'est pas un
+    // état de l'exploitant — et la visite de la commission n'est portée par
+    // aucun appareil.
+    const rang =
+      e === "aPlanifier" ? 1.5 : e === "pourInformation" ? 0 : PRIORITE_ETAT[e];
     return Math.max(max, rang);
   }, 0);
 }

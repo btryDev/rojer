@@ -10,6 +10,12 @@ import { CreerActionVerifForm } from "@/components/actions/CreerActionVerifForm"
 import { getVerification } from "@/lib/calendrier/queries";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import {
+  estLignePourInformation,
+  libelleRealisateurs,
+  MENTION_POUR_INFORMATION,
+} from "@/lib/referentiels/conformite/initiative";
+import { MentionPourInformation } from "@/components/calendrier/MentionPourInformation";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { referencesCitees } from "@/lib/referentiels/conformite/rythme-retenu";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
@@ -200,10 +206,14 @@ export default async function VerificationDetailPage({
   // (`uploadRapport`) — l'écran ne fait que ne pas le proposer.
   const depotOuvert = !archivee;
 
+  // C64 : la visite de la commission de sécurité n'est pas un rendez-vous de
+  // l'exploitant — ni retard (`estEnRetardQuiCompte`), ni « Dans N jours ».
+  const pourInformation = etat === "pourInformation";
   const urgent =
     !archivee &&
     !sansRendezVous &&
     !enRetard &&
+    !pourInformation &&
     // Une obligation sans rendez-vous suivant, déjà faite, garde son statut
     // réalisé mais plus de date à attendre : pas de « Dans N jours » à côté du
     // badge « Conforme ». Sur une obligation périodique, en revanche, un
@@ -328,9 +338,16 @@ export default async function VerificationDetailPage({
           },
     {
       cle: "Réalisateur requis",
-      valeur: v.realisateurRequis
-        .map((r) => LABEL_REALISATEUR[r])
-        .join(", "),
+      // C64 : « Commission de sécurité » sur la visite à l'initiative de
+      // l'administration — `realisateurRequis` garde `organisme_agree`, faute
+      // de valeur dans l'enum Prisma.
+      valeur: libelleRealisateurs(
+        v,
+        v.realisateurRequis.map((r) => LABEL_REALISATEUR[r]),
+      ).join(", "),
+      ...(estLignePourInformation(v)
+        ? { note: MENTION_POUR_INFORMATION + "." }
+        : {}),
     },
   ];
 
@@ -387,6 +404,7 @@ export default async function VerificationDetailPage({
             {contractuelle && <MentionContractuelle />}
             <MentionRythmeRetenu mention={rythmeRetenu} />
             <MentionAConfirmer phrases={marque?.phrases ?? []} />
+            {pourInformation && <MentionPourInformation />}
             {/* En retard, la pastille d'état dit déjà « En retard » : une
                 seconde pastille rose aurait dit la même chose. Le compte de
                 jours la remplace alors, plutôt que de s'y ajouter — un retard

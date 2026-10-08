@@ -460,6 +460,8 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   // D1 (a) : ni « en retard » ni un verdict — la ligne tient à une question
   // restée sans réponse, que la mention « à confirmer » nomme.
   a_confirmer: "à confirmer",
+  // C64 : la phrase même des autres surfaces, en minuscule d'attaque.
+  pour_information: "pour information — visite à l'initiative de l'administration",
 };
 
 function formaterVerifications(verifs: VerificationLue[], filtre = true): string {

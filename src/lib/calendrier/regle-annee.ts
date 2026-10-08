@@ -163,7 +163,9 @@ export function etatDeLaLigne<V extends VerificationLue>(
   // dates passées en retard) est écarté des barres par `estDatable` ; si la
   // ligne arrive quand même ici, sa date de génération se classe comme une
   // date ordinaire plutôt que d'inventer un état de barre.
-  return l.registre === "aPlanifier" ? classerDate(l.date, now) : l.registre;
+  return l.registre === "aPlanifier" || l.registre === "pourInformation"
+    ? classerDate(l.date, now)
+    : l.registre;
 }
 
 /**
@@ -184,6 +186,10 @@ export function estDatable<V extends VerificationLue>(
   if (l.genre !== "verif") return !l.e.sansEcheance;
   return (
     l.registre !== "aPlanifier" &&
+    // C64 : la visite de la commission, « pour information », n'occupe aucune
+    // barre — une barre compte un état de l'exploitant. Elle reste listée au
+    // mois, peinte « Pour information ».
+    l.registre !== "pourInformation" &&
     (l.lecture === "realisation" || aUnRendezVous(l.v, now))
   );
 }

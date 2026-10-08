@@ -106,6 +106,13 @@ type EquipementLite = {
 
 type VerificationLite = {
   id: string;
+  /**
+   * L'obligation de la ligne. REQUIS depuis le C64 (2026-10-08) : c'est par
+   * lui que le widget reconnaît la visite de la commission de sécurité, « pour
+   * information » (`estLignePourInformation`) — un champ facultatif oublié la
+   * ferait compter en retard en silence.
+   */
+  obligationId: string;
   libelleObligation: string;
   datePrevue: Date;
   statut: string;

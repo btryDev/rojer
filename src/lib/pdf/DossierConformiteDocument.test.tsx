@@ -92,6 +92,7 @@ function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
     rapportsRecents: [],
     verifsEnRetard: [],
     verifsAConfirmer: [],
+    verifsPourInformation: [],
     actionsEnCours: [],
   };
 }
@@ -284,6 +285,7 @@ describe("D1 (a) : la ligne retenue par prudence s'imprime à part, marquée (20
     contractuelle: false,
     aConfirmer: ["La fiche de l'établissement ne dit pas si des matières inflammables y sont manipulées."],
     rythmeRetenu: null,
+    pourInformation: false,
   };
   const textes = (d: DossierData) =>
     elementsDansLOrdre(DossierConformiteDocument({ data: d })).map(texteDirect);
@@ -295,6 +297,23 @@ describe("D1 (a) : la ligne retenue par prudence s'imprime à part, marquée (20
       verifsEnRetard: [{ ...ligne, statut: "en_retard" as const, aConfirmer: [], rythmeRetenu: mention }],
     });
     expect(t).toContain(mention);
+  });
+
+  it("C64 : la visite de la commission s'imprime « Pour information », à part des retards", () => {
+    const visite = {
+      ...ligne,
+      id: "v-commission",
+      libelleObligation: "Visite périodique de la commission de sécurité",
+      statut: "pour_information" as const,
+      aConfirmer: [],
+      pourInformation: true,
+    };
+    const avec = textes({ ...dossier(bloc(2)), verifsPourInformation: [visite] });
+    expect(avec).toContain("Pour information");
+    expect(avec).toContain(visite.libelleObligation);
+    const sans = textes({ ...dossier(bloc(2)), verifsPourInformation: [] });
+    expect(sans).not.toContain(visite.libelleObligation);
+    expect(sans).not.toContain("Pour information");
   });
 
   it("présente : le titre et la mention « À confirmer » sont rendus", () => {

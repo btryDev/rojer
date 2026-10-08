@@ -1,3 +1,4 @@
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
@@ -253,6 +254,7 @@ export function ligneVerif(
     contractuelle: estEcheanceContractuelle(v),
     aConfirmer: marques.get(v.obligationId)?.phrases ?? [],
     rythmeRetenu: mentionRythmeDeVerification(v)?.long ?? null,
+    pourInformation: estLignePourInformation(v),
   };
 }
 
@@ -676,6 +678,13 @@ export async function construireDossierConformiteData(
     // D1 (a) : ce que seul le silence de la fiche retient — affiché, marqué,
     // hors des retards et de l'indice.
     verifsAConfirmer: etatVerifs.retenuesParPrudence
+      .map((v) => ligneVerif(v, multiBatiments, now, marques.parObligation))
+      .sort(parEcheanceImprimee),
+    // C64 : la visite de la commission de sécurité — affichée avec sa date,
+    // « pour information », hors des retards et de l'indice. Les lignes
+    // archivées n'y sont pas : elles ne s'appliquent plus.
+    verifsPourInformation: etatVerifs.pourInformation
+      .filter((v) => v.archiveLe == null)
       .map((v) => ligneVerif(v, multiBatiments, now, marques.parObligation))
       .sort(parEcheanceImprimee),
     actionsEnCours:

@@ -24,6 +24,7 @@ import {
   type VerificationDatee,
   lignePortantSansRendezVous,
 } from "@/lib/dates/retard";
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { JOURS_HORIZON_PROCHE } from "@/lib/dates";
 import { statutDepuisResultat } from "@/lib/rapports/schema";
 // Type seul : effacé à la compilation, donc ce module reste utilisable côté
@@ -60,7 +61,13 @@ export type RegistreLigne =
   // en retard — il n'y a pas d'échéance à manquer —, ni à planifier — il n'y a
   // rien à caler —, ni archivée — l'obligation s'applique. Elle se tient en
   // place, sur l'écran de l'ADR-027 (`lignePortantSansRendezVous`, `retard.ts`).
-  | "sansRendezVous";
+  | "sansRendezVous"
+  // UNE LIGNE « POUR INFORMATION » (C64, 2026-10-08) : la visite de la
+  // commission de sécurité, à l'initiative de l'administration
+  // (`conformite/initiative.ts`). Elle garde sa date et son rythme, elle se
+  // pose au calendrier, mais n'est ni en retard, ni proche, ni à planifier
+  // pour l'exploitant — aucun compteur d'état ne la compte.
+  | "pourInformation";
 
 /**
  * Urgence relative, pour trancher quand une case ne peut porter qu'un
@@ -87,6 +94,8 @@ export const TON_REGISTRE: Record<RegistreLigne, "alerte" | "warn" | "ok"> = {
   archivee: "ok",
   // Sans rendez-vous : rien à signaler au calendrier ; l'état se tient ailleurs.
   sansRendezVous: "ok",
+  // Pour information : rien à signaler à l'exploitant (C64).
+  pourInformation: "ok",
   proche: "ok",
   lointain: "ok",
   faite: "ok",
@@ -104,6 +113,8 @@ export const CHAMP_ETAT: Record<RegistreLigne, string> = {
   // ce qui n'est plus dû).
   archivee: "var(--board-slate-pale)",
   sansRendezVous: "var(--board-slate-pale)",
+  // L'ardoise : une information, ni une alerte ni un acquis (C64).
+  pourInformation: "var(--board-slate-pale)",
 };
 
 /** Encre lisible sur le champ correspondant. Jamais de blanc sur le rose. */
@@ -115,6 +126,7 @@ export const ENCRE_ETAT: Record<RegistreLigne, string> = {
   aPlanifier: "var(--board-slate-mid)",
   archivee: "var(--board-slate-mid)",
   sansRendezVous: "var(--board-slate-mid)",
+  pourInformation: "var(--board-slate-mid)",
 };
 
 /**
@@ -194,6 +206,7 @@ export const LIBELLE_ETAT: Record<
     plusieurs: "ne s'appliquent plus",
   },
   sansRendezVous: { un: "sans rendez-vous", plusieurs: "sans rendez-vous" },
+  pourInformation: { un: "pour information", plusieurs: "pour information" },
 };
 
 /**
@@ -211,6 +224,7 @@ export const LIBELLE_ETAT_COURT: Record<RegistreLigne, string> = {
   aPlanifier: "à planif.",
   archivee: "sans objet",
   sansRendezVous: "sans rendez-vous",
+  pourInformation: "pour information",
 };
 
 /** « 1 dépassée », « 5 dépassées » — le compte et son mot, accordés. */
@@ -364,6 +378,14 @@ export function classerVerification(
   // Avant le retard : sa date est une ancienne échéance, que `classerDate`
   // lirait « en retard » (limite 1, 2026-09-15).
   if (lignePortantSansRendezVous(v)) return "sansRendezVous";
+  // C64 : avant le retard et « à planifier » — la visite de la commission
+  // n'est l'échéance de personne chez l'exploitant. Lue par `obligationId`
+  // QUAND la ligne le porte : une projection qui ne le sélectionnerait pas
+  // classerait la visite « en retard » — l'erreur du côté visible, jamais un
+  // retard effacé en silence.
+  if (estLignePourInformation(v as { obligationId?: string | null })) {
+    return "pourInformation";
+  }
   if (estVerificationEnRetard(v, now)) return "enRetard";
   // Le prédicat, pas le statut brut : une lecture recopiée ici a déjà divergé
   // de lui une fois (retrait de `depassee`, phase A).
@@ -386,7 +408,18 @@ export function classerVerification(
  * fonction de ce module ne la produit : elle ne sort que de
  * `statutAffichePrudent` (`./prudence`), qui reçoit les marques du dossier.
  */
-export type StatutPeint = StatutVerification | "en_retard" | "a_confirmer";
+/**
+ * `pour_information` (C64, 2026-10-08) : une ligne à l'initiative de
+ * l'administration — la visite de la commission de sécurité. Ni en retard, ni
+ * à planifier, ni planifiée par l'exploitant : peinte « Pour information ».
+ * Elle ne sort, elle aussi, que de `./prudence` (`statutAffichePrudent`,
+ * `statutPeintPrudent`), qui lit `estLignePourInformation`.
+ */
+export type StatutPeint =
+  | StatutVerification
+  | "en_retard"
+  | "a_confirmer"
+  | "pour_information";
 
 /**
  * Le statut à PEINDRE pour un état — une table, et une seule.
@@ -425,6 +458,10 @@ function statutDuRegistre(
       return "planifiee";
     case "faite":
       return statut as StatutVerification;
+    // C64 : la visite de la commission de sécurité — ni en retard, ni à
+    // planifier, ni planifiée par l'exploitant.
+    case "pourInformation":
+      return "pour_information";
   }
 }
 

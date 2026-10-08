@@ -1,3 +1,4 @@
+import type { InitiativeObligation } from "./initiative";
 import type {
   CategorieEquipement,
   Periodicite,
@@ -1001,6 +1002,31 @@ type ObligationCommune = {
   faitGenerateur?: string;
   /** Réalisateurs acceptés. Au moins un. En général 1, parfois 2 (ex. "personne qualifiée OU organisme agréé"). */
   realisateurs: [Realisateur, ...Realisateur[]];
+  /**
+   * Qui DÉCLENCHE l'acte, quand ce n'est pas l'exploitant (2026-10-08, C64).
+   *
+   * `"administration"` : la visite périodique de la commission de sécurité.
+   * La ligne reste visible avec son rythme, se peint « Pour information —
+   * visite à l'initiative de l'administration », et n'est comptée nulle part
+   * comme une échéance de l'exploitant — ni retard, ni « à faire », ni indice.
+   * L'exploitant peut y déposer le procès-verbal. Une seule fonction le lit,
+   * `estPourInformation` (`./initiative`), et sa projection client
+   * `estLignePourInformation`.
+   *
+   * `realisateurs` reste `organisme_agree` sur ces lignes : l'enum Prisma
+   * `Realisateur` n'a pas de valeur pour la commission, et la colonne
+   * `Verification.realisateurRequis` le recopie. Le marqueur décide de ce qui
+   * s'affiche (« Commission de sécurité ») ; le champ ne change pas, et
+   * aucune migration n'est faite.
+   *
+   * **N'entre pas dans `empreinteReferentiel()`** : il ne change ni
+   * l'existence, ni le nombre, ni la date, ni le statut stocké d'une ligne —
+   * le générateur et le réconciliateur ne le lisent pas. Il change ce que les
+   * surfaces en COMPTENT et en affichent, au rendu, sur les lignes telles
+   * qu'elles sont : une réconciliation forcée de tous les dossiers ne
+   * produirait rien de différent.
+   */
+  initiative?: InitiativeObligation;
   /** 1 = informatif, 5 = vital (mise en danger directe si manquement). */
   criticite: 1 | 2 | 3 | 4 | 5;
   /** Régimes auxquels l'obligation s'applique. */

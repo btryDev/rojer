@@ -29,7 +29,12 @@ import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { BentoCell } from "@/components/dashboard/BentoCell";
 import { formaterDateCourteFr } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
-import { retenueParSaMarque } from "@/lib/calendrier/prudence";
+import {
+  horsDesComptesDeLExploitant,
+  retenueParSaMarque,
+} from "@/lib/calendrier/prudence";
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
+import { MentionPourInformation } from "@/components/calendrier/MentionPourInformation";
 import { libelleEcart } from "../temps";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
@@ -69,6 +74,16 @@ function classifier(
   // Là où la date s'afficherait, la phrase partagée, comme aux PDF et à la
   // fiche : un tiret se lisait « donnée manquante » (relecture des libellés).
   const echeanceConnue = aUnRendezVous(v, aujourdhui);
+  // C64 : la visite de la commission de sécurité n'est pas une échéance de
+  // l'exploitant — ni alerte ni attention, sa date reste lisible.
+  if (estLignePourInformation(v)) {
+    return {
+      tone: "ok",
+      libelleDate: echeanceConnue
+        ? formaterDateCourteFr(v.datePrevue)
+        : LIBELLE_SANS_ECHEANCE,
+    };
+  }
   // D1 (a) : une ligne que seul le silence de la fiche retient n'est pas en
   // alerte — elle s'affiche, avec sa mention « à confirmer », sans le rouge.
   if (estVerificationEnRetard(v, aujourdhui) && retenueParSaMarque(v)) {
@@ -112,7 +127,8 @@ function retardsSansDateHorsListe(bundle: DashboardBundle): number {
     // soustraction retirerait des lignes que l'agrégat n'a pas comptées.
     (v) =>
       estVerificationEnRetard(v, aujourdhui) &&
-      !retenueParSaMarque(v) &&
+      // C64 : ni la prudence ni la visite de la commission ne comptent.
+      !horsDesComptesDeLExploitant(v) &&
       !aUnRendezVous(v, aujourdhui),
   ).length;
   return Math.max(0, bundle.echeances.verifsEnRetardSansEcheance - listes);
@@ -238,6 +254,7 @@ export function WidgetProchainesEcheances({
                     ) : null}
                     <MentionRythmeRetenu mention={v.rythmeRetenu} />
                     <MentionAConfirmer phrases={v.aConfirmer ?? []} />
+                    {estLignePourInformation(v) ? <MentionPourInformation /> : null}
                   </p>
                   {/* Méta de ligne, pas une date : elle n'a rien à faire en
                       monospace, et le `tracking` positif hors capitales
@@ -382,6 +399,7 @@ function TimelineEcheances({
                 {estEcheanceContractuelle(v) ? <MentionContractuelle /> : null}
                 <MentionRythmeRetenu mention={v.rythmeRetenu} />
                 <MentionAConfirmer phrases={v.aConfirmer ?? []} />
+                {estLignePourInformation(v) ? <MentionPourInformation /> : null}
                 <span className="font-mono text-[0.76rem] text-[color:var(--board-slate-mid)]">
                   {c.libelleDate}
                 </span>

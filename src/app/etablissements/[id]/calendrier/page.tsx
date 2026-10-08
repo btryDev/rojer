@@ -484,6 +484,10 @@ export default async function CalendrierPage({
         e.aPlanifier += 1;
         continue;
       }
+      // C64 : la visite de la commission, « pour information », ne compte
+      // dans aucune pilule de la vue par porteur ; la liste mensuelle la
+      // montre, peinte « Pour information ».
+      if (lec.registre === "pourInformation") continue;
       const etat = lec.registre;
       // SANS ÉCHÉANCE CONNUE, EN RETARD : elle compte, et n'occupe aucune
       // date (`aUnRendezVous`). Posée sur sa date de génération, elle peignait

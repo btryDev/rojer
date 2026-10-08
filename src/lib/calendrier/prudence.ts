@@ -22,6 +22,7 @@ import {
   type VerificationDatee,
 } from "@/lib/dates/retard";
 import type { MarqueAConfirmer } from "@/lib/matching/marques";
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { statutAffiche, type StatutPeint } from "./etats";
 
 /**
@@ -90,6 +91,22 @@ export function retenueParSaMarque(v: {
 }
 
 /**
+ * LA LIGNE NE COMPTE PAS COMME UNE ÉCHÉANCE DE L'EXPLOITANT (C64, 2026-10-08) :
+ * retenue par prudence, OU « pour information » — la visite de la commission
+ * de sécurité, à l'initiative de l'administration (`conformite/initiative.ts`).
+ * Pour les widgets, qui reçoivent la ligne et non la carte des marques.
+ * `obligationId` est requis : un widget qui ne le projetterait pas ne
+ * compilerait pas, au lieu de compter la visite en retard en silence.
+ */
+export function horsDesComptesDeLExploitant(v: {
+  aConfirmer?: readonly string[];
+  prescriptionId: string | null;
+  obligationId: string;
+}): boolean {
+  return estLignePourInformation(v) || retenueParSaMarque(v);
+}
+
+/**
  * Le retard qui COMPTE : ce que lisent les compteurs, l'indice, les widgets et
  * les documents. Une ligne archivée ne compte déjà pas
  * (`estVerificationEnRetard`) ; une ligne retenue par prudence non plus.
@@ -99,7 +116,8 @@ export function estEnRetardQuiCompte(
   now: Date,
   prudence: RetenueParPrudence,
 ): boolean {
-  return estVerificationEnRetard(v, now) && !prudence(v);
+  // C64 : une ligne « pour information » n'est jamais un retard qui compte.
+  return estVerificationEnRetard(v, now) && !prudence(v) && !estLignePourInformation(v);
 }
 
 /**
@@ -124,6 +142,8 @@ export function statutAffichePrudent(
   now: Date,
   prudence: RetenueParPrudence,
 ): StatutPeint | undefined {
+  // « Pour information » (C64) n'a rien à faire ici : `statutAffiche` le peint
+  // déjà, par le classement (`classerVerification` → `pourInformation`).
   const s = statutAffiche(v, now);
   return s === "en_retard" && prudence(v) ? "a_confirmer" : s;
 }

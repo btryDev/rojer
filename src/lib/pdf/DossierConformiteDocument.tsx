@@ -1,4 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
 import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
 import { faitRetards } from "./fait-retards";
 import type { LignePlanActions } from "./PlanActionsDocument";
@@ -105,6 +106,12 @@ export type DossierData = {
    * document qui les omettrait les tairait à qui le lit.
    */
   verifsAConfirmer: LigneVerif[];
+  /**
+   * Les visites de la commission de sécurité (C64) : imprimées à part, « pour
+   * information », jamais parmi les retards. Requis, pour la même raison que
+   * `verifsAConfirmer`.
+   */
+  verifsPourInformation: LigneVerif[];
   actionsEnCours: LignePlanActions[]; // toutes
 };
 
@@ -591,6 +598,29 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                 </View>
                 <Text style={[s.td, { width: "26%" }]}>
                   {v.equipementLibelle}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* C64 : la visite de la commission de sécurité, à l'initiative de
+            l'administration — montrée avec sa date, sans compter. */}
+        {data.verifsPourInformation.length > 0 && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={s.h2}>Pour information</Text>
+            <Text style={s.small}>
+              {MENTION_POUR_INFORMATION}. Ces visites ne sont comptées ni en
+              retard ni dans l&apos;indice ; leur procès-verbal se dépose au
+              registre.
+            </Text>
+            {data.verifsPourInformation.map((v) => (
+              <View key={v.id} style={s.row} wrap={false}>
+                <View style={{ width: "74%", paddingRight: 4 }}>
+                  <Text style={s.td}>{v.libelleObligation}</Text>
+                </View>
+                <Text style={[s.td, { width: "26%" }]}>
+                  {v.echeanceConnue ? formatDateCourte(v.datePrevue) : LIBELLE_SANS_ECHEANCE}
                 </Text>
               </View>
             ))}
