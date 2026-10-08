@@ -138,6 +138,15 @@ est amendée. La ligne naît « à planifier » à l'origine de son suivi (ADR-0
 règles 4 et 5) : **aucun retard rétroactif**, la date de déclaration « en
 place » antérieure n'est pas réinterprétée comme une réalisation.
 
+> **Amendé le 2026-10-08 — ADR-040.** La promesse n'était tenue qu'à moitié :
+> daté de l'origine, un « à planifier » est en retard dès le lendemain
+> (ADR-011 § 5), si bien que chaque ligne née de ce lot passait au rouge à J+1
+> chez tout client existant. Une ligne née d'un changement du référentiel
+> n'est désormais comptée en retard qu'après origine + 3 mois
+> (`Verification.graceJusquAu`, `delaiDeGrace`) ; l'échéance affichée ne bouge
+> pas. Voir l'ADR-040, et ses limites (une ligne EXISTANTE qui devient « à
+> planifier » n'a pas de grâce).
+
 C'est vrai pour un état permanent (« maintenus en bon état ») comme pour une
 échéance récurrente sans rythme (« répétée périodiquement ») : la décision (b)
 nomme les deux.

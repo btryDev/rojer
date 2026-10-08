@@ -584,6 +584,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     de `periodicite`, `periodiciteEffective(o)`, mention « Rythme de la norme … »
     / « Rythme retenu par défaut ». Amende les ADR-003, 023 § 6, 026 § 2, 027
     et 032
+40. **040** — Une ligne « à planifier » née d'un changement du référentiel
+    (passe de reprise : sceau du calendrier changé) n'est comptée en retard
+    qu'après origine + 3 mois (**acceptée le 2026-10-08**, décision de la
+    propriétaire). `Verification.graceJusquAu` écrit à la naissance,
+    `delaiDeGrace` seule lecture, « délai jusqu'au … » à l'écran ; l'échéance
+    ne bouge pas. Amende les ADR-011 § 5, 036 (règles 4-5) et 039 § 3
 
 **Sept ADR ont été déplacées le 2026-09-01** (« six » disait la phrase, qui en
 énumère sept), chacune portant en tête le renvoi

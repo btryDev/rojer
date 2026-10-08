@@ -5121,6 +5121,43 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     propriétaire ; la décision 3 (widgets) est faite par C61, exigée par
     l'ADR-039 § 5.
 
+### C63 · 2026-10-08 — Délai de grâce des lignes nées d'un changement du référentiel (ADR-040)
+
+- **Quand · par quoi** : 2026-10-08, branche `fix/relecture-jc-grace` (base
+  `integration/relecture-jc` `32de8b76`), sur un constat de la revue et la
+  décision de la propriétaire du même jour. Aucun texte ouvert : c'est une
+  règle de lecture du retard, pas une obligation. Référentiel inchangé
+  (`2026-10-07.5`, 173 obligations, **173 + 0 − 0 = 173**).
+- **Le constat** : daté de l'origine de son suivi (ADR-036, règles 4-5), un
+  « à planifier » était en retard dès J+1 (ADR-011 § 5, `estEnRetard`).
+  Au lendemain du déploiement de la relecture, chaque ligne nouvellement
+  applicable chez un client existant (rythmes retenus, extincteurs hors ERP,
+  EPI, RIA, désenfumage, AS 9…) passait au rouge — l'ADR-039 § 3 promettait
+  « aucun retard rétroactif ».
+- **Ce qui en sort** :
+  - ADR-040 ; renvois datés en tête des ADR-011 et 036, amendement daté au
+    § 3 de l'ADR-039, CLAUDE.md (liste des ADR).
+  - Migration additive `20261008120000_verification_grace_jusqu_au` :
+    `Verification.graceJusquAu`, nullable, écrite au `createMany` par la passe
+    dont le repère lu est présent et différent de `SCEAU_CALENDRIER`
+    (`graceANaissance`). Création d'établissement et mutations : `null`.
+  - `delaiDeGrace` (`lib/dates/retard.ts`) seule lecture ;
+    `estVerificationEnRetard`, `estVerificationAPlanifier`, `urgenceSeule`
+    (`horsGrace`) la respectent. Mention « délai jusqu'au JJ/MM/AAAA » au
+    calendrier et sur la fiche. Moteur : empreinte recopiée sans incrément.
+  - Éprouvé en cassant : neuf mutations (branche du prédicat retirée,
+    `horsGrace` retiré ou écrit en négation, grâce écrite `null` ou omise,
+    grâce accordée aux mutations, `===` au lieu de `==`, grâce lue sur une
+    ligne planifiée, dernier jour exclu) — toutes rouges.
+- **Ce qui reste ouvert, et qui le porte** :
+  - Une ligne EXISTANTE que le référentiel fait passer « à planifier » n'a
+    pas de grâce (ADR-040, limite 3) — **à la propriétaire** : étendre la
+    grâce aux réalignements d'une passe de reprise, ou l'accepter comme D3.
+  - L'alternative recommandée (grâce pour tout « à planifier », déclaration
+    d'équipement comprise) — **à la propriétaire**.
+  - Le serveur MCP dit « à planifier » sans le délai — **à faire** si
+    l'assistant doit le citer.
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états
