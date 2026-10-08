@@ -130,7 +130,7 @@ export type EtablissementMatching = {
   chiffonsImpregnes: boolean | null;
   /**
    * Les faits d'activité (ADR-041, `etablissements/faits-activite.ts`) et la
-   * présence d'EPI. Même régime que `chiffonsImpregnes` : `null` retient la
+   * présence d'EPI. Règle du non-renseigné (ADR-022) : `null` retient la
    * ligne « à confirmer », seul un « non » déclaré la retire. Requis pour la
    * même raison : un champ optionnel s'omet dans une projection sans bruit.
    */

@@ -347,8 +347,7 @@ function evaluerChiffonsImpregnes(
  * des charges, travaillent sur écran, opèrent sur l'installation électrique,
  * conduisent des engins, sont exposés à des CMR, portent des EPI.
  *
- * La règle de `evaluerChiffonsImpregnes`, à l'identique et pour la même
- * raison : seul un « non » DÉCLARÉ retire l'obligation ; le silence la retient,
+ * La règle du non-renseigné (ADR-022), pour la raison qui la fonde : seul un « non » DÉCLARÉ retire l'obligation ; le silence la retient,
  * et la raison dit « à confirmer » avec la question qui la tranche. La table
  * `POLITIQUE_ABSENCE` porte la question de chaque fait.
  *

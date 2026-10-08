@@ -544,7 +544,7 @@ export type TypologieApplication = {
    * des travailleurs portent des charges à la main, travaillent sur écran,
    * opèrent sur l'installation électrique, conduisent des engins, sont exposés
    * à des CMR, ou portent des EPI. Évalué sur la colonne d'`Etablissement` du
-   * même nom, avec la règle du non-renseigné de `chiffonsImpregnes` : seul un
+   * même nom, avec la règle du non-renseigné (ADR-022) : seul un
    * « non » déclaré retire la ligne, le silence la retient « à confirmer ».
    *
    * Un critère, pas six : l'évaluation est la même pour tous, et la table de

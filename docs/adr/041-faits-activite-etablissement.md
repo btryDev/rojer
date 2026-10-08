@@ -28,7 +28,7 @@ une vue spécifique sur cette donnée. »
 ## 2. La décision
 
 1. **Cinq faits d'activité sur l'établissement**, colonnes à trois états comme
-   `chiffonsImpregnes` : `manutentionManuelle`, `travailSurEcran`,
+   la règle du non-renseigné (ADR-022) : `manutentionManuelle`, `travailSurEcran`,
    `operationsElectriques`, `conduiteEngins`, `expositionCMR`. Un registre
    unique (`faits-activite.ts`) dit, pour chacun, sa question, sa raison
    (article cité) et les titres salarié qu'il déclenche.

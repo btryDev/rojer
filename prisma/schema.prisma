@@ -137,7 +137,7 @@ model Etablissement {
 
   // Les faits d'activité qui rendent dues des formations ou un suivi
   // (ADR-041, `etablissements/faits-activite.ts`). Même régime que
-  // `chiffonsImpregnes` : trois états, `null` = pas encore répondu, et seul
+  // la règle du non-renseigné (ADR-022) : trois états, `null` = pas encore répondu, et seul
   // un « non » déclaré retire une obligation. Ils vivent sur l'établissement
   // et non dans le DUERP : le document unique les affiche et les modifie (ses
   // questions transverses q-charges, q-ecran, q-operations-electriques,

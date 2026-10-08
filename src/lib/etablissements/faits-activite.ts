@@ -6,7 +6,7 @@
 // L'ADR-038 avait rangé la réponse dans le DUERP ; un dirigeant qui n'avait pas
 // commencé son DUERP ne pouvait donc pas dire qu'un salarié conduit un chariot,
 // et la conformité ne lisait pas la réponse. Ici, une colonne d'établissement
-// par fait (`schema.prisma`, même régime que `chiffonsImpregnes`), et trois
+// par fait (`schema.prisma`, règle du non-renseigné de l'ADR-022), et trois
 // lecteurs :
 //   - le moteur (`matching/`), qui retire sur un « non » déclaré les
 //     obligations que le fait conditionne (`TypologieApplication.activite`) ;
