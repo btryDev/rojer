@@ -1733,7 +1733,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // le même numéro. (1) GC 22 « idem code du travail » :
     // `cuisson-travail-appareils-entretien-verification` entre (R. 4224-17,
     // défaut annuel, travail hors ERP). 171 + 1 − 0 = 172.
-    { version: "2026-10-08.2", empreinte: "172-bd7554bd80c9845b" },
+    // ~~172-bd7554bd80c9845b~~ : empreinte après (1), jamais scellée.
+    // (4) « on s'en tient à ce que dit Julien » : la maintenance approfondie
+    // des extincteurs sort (`OBLIGATIONS_RETIREES`, `absorbePar: null`), la
+    // question `typeExtincteur` et sa condition halon sur la décennale hors
+    // ERP quittent le produit. 172 + 0 − 1 = 171.
+    { version: "2026-10-08.2", empreinte: "171-12fb701f5fcff721" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1893,8 +1898,9 @@ describe("référentiel conformité — version et empreinte", () => {
       // ~~173~~ — 2026-10-08 (C64) : 173 + 0 − 2 (AS 9 aux hôtels de 5ᵉ,
       // supprimées avant d'avoir été servies) = 171.
       // ~~171~~ — 2026-10-08 (C66) : 171 + 1 (appareils de cuisson hors ERP,
-      // R. 4224-17) − 0 = 172.
-    ).toBe(172);
+      // R. 4224-17) − 0 = 172 ; ~~172~~ puis 172 + 0 − 1 (maintenance
+      // approfondie des extincteurs, retirée) = 171.
+    ).toBe(171);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

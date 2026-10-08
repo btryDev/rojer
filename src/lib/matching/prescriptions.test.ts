@@ -540,7 +540,9 @@ describe("prescription visant une obligation retirée (revue du 2026-10-07)", ()
 
 describe("motif d'une prescription non retenue (revue du 2026-10-07)", () => {
   it("face à un rythme retenu, ne dit pas « le référentiel impose »", () => {
-    const retenue = obligationParId("incendie-travail-extincteurs-maintenance-approfondie")!;
+    // 2026-10-08 (C66) : la maintenance approfondie est retirée ; la révision
+    // en atelier hors ERP garde un rythme de la norme.
+    const retenue = obligationParId("incendie-travail-extincteurs-revision-atelier-decennale")!;
     const m = motifPrescriptionNonRetenue(retenue);
     expect(m).toContain("Rojer retient déjà « decennale »");
     expect(m).toContain("(rythme de la norme NF S 61-919 ; le texte n'écrit pas de rythme)");

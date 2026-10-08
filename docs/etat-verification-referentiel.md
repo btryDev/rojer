@@ -83,18 +83,18 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**172 obligations**, **336 références** — 96 obligations en citent plus d'une.
+**171 obligations**, **333 références** — 95 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 82 | 48 % | 88 | 196 | 58 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 87 | 51 % | 84 | 136 | 40 % |
+| 5 · lu à la source, verbatim relevé | 81 | 47 % | 87 | 193 | 58 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 87 | 51 % | 84 | 136 | 41 % |
 | 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
 | 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**169 obligations sur 172 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**168 obligations sur 171 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **3 obligations (2 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 312 | 93 % |
+| ancrée | 310 | 93 % |
 | divergente | 1 | 0 % |
-| jamais constatée | 23 | 7 % |
+| jamais constatée | 22 | 7 % |
 
-**9 obligations sur 172 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 171 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -133,7 +133,7 @@ repose sur un texte que personne n'a ouvert.
 | `equipement_sous_pression` | 1 | 1 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 1 | 2026-09-01 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
-| `incendie` | 43 | 91 | 31 | 11 | 1 | · | · | · | 42 / 43 — 98 % | 5 / 91 | 2026-08-26 → 2026-10-07 |
+| `incendie` | 42 | 88 | 30 | 11 | 1 | · | · | · | 41 / 42 — 98 % | 4 / 88 | 2026-08-26 → 2026-10-07 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -156,7 +156,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 88 | 171 | 55 | 32 | 1 | · | · | · | 87 / 88 — 99 % | 23 / 171 | 2026-08-26 → 2026-10-07 |
+| `equipement` | 87 | 168 | 54 | 32 | 1 | · | · | · | 86 / 87 — 99 % | 22 / 168 | 2026-08-26 → 2026-10-07 |
 | `etablissement` | 70 | 133 | 27 | 41 | 2 | · | · | · | 68 / 70 — 97 % | 0 / 133 | 2026-08-26 → 2026-10-07 |
 | `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
 
@@ -168,18 +168,18 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 
 | date de lecture | références | part | obligations concernées |
 | --- | --- | --- | --- |
-| 2026-08-26 | 25 | 7 % | 25 |
+| 2026-08-26 | 25 | 8 % | 25 |
 | 2026-08-27 | 7 | 2 % | 4 |
 | 2026-08-31 | 59 | 18 % | 29 |
-| 2026-09-01 | 121 | 36 % | 75 |
+| 2026-09-01 | 119 | 36 % | 74 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 10 | 3 % | 5 |
 | 2026-09-20 | 3 | 1 % | 2 |
-| 2026-09-26 | 25 | 7 % | 20 |
+| 2026-09-26 | 25 | 8 % | 20 |
 | 2026-09-27 | 36 | 11 % | 34 |
-| 2026-10-07 | 32 | 10 % | 21 |
+| 2026-10-07 | 31 | 9 % | 20 |
 
-336 des 336 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
+333 des 333 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -195,7 +195,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**342 articles dépouillés ne sont cités par aucune obligation**, répartis sur 50 corpus.
+**343 articles dépouillés ne sont cités par aucune obligation**, répartis sur 50 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -221,11 +221,11 @@ une relecture déjà faite.
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `esp-suivi-en-service` | 5 | 6 | 2026-09-01 → 2026-09-27 |
+| `normes` | 5 | 7 | 2026-10-07 |
 | `code-travail-manutention-ecran` | 5 | 7 | 2026-09-26 |
 | `code-travail-matieres-inflammables` | 5 | 6 | 2026-09-02 → 2026-09-27 |
 | `cch-classement-erp-igh` | 5 | 5 | 2026-09-03 → 2026-09-27 |
 | `icpe-stockage` | 4 | 4 | 2026-09-01 |
-| `normes` | 4 | 7 | 2026-10-07 |
 | `code-travail-co-activite` | 4 | 11 | 2026-08-31 → 2026-09-02 |
 | `code-travail-travail-dissimule` | 4 | 4 | 2026-09-02 |
 | `arrete-2017-04-19-registre-accessibilite` | 4 | 4 | 2026-09-03 → 2026-09-27 |
@@ -256,7 +256,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 172 obligations
+## 8. Les 171 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -409,7 +409,6 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-travail-eclairage-securite-essai-mensuel` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
 | `incendie-travail-exercice-semestriel` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `incendie-travail-extincteurs-dotation` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
-| `incendie-travail-extincteurs-maintenance-approfondie` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
 | `incendie-travail-extincteurs-revision-atelier-decennale` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
 | `incendie-travail-instructions-evacuation` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `incendie-travail-moyens-lutte` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
@@ -438,7 +437,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 336 références, une par une
+## 9. Les 333 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -479,9 +478,6 @@ refaire pour la contredire.
 | `incendie-travail-extincteurs-revision-atelier-decennale` | fondement | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-extincteurs-revision-atelier-decennale` | contexte 1 | R. 4227-28 | R. 4227-28 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-extincteurs-revision-atelier-decennale` | contexte 2 | NF S 61-919 (août 2001), § 10.1 et annexe A, tableau A.1 (révision en atelier : 10 ans) | NF S 61-919 § 10.1 | normes | norme | 2026-10-07 | premiere_main | ✓ | ✓ | 2001-08-20 | — | 5 · première main | jamais constatée |
-| `incendie-travail-extincteurs-maintenance-approfondie` | fondement | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `incendie-travail-extincteurs-maintenance-approfondie` | contexte 1 | R. 4227-28 | R. 4227-28 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `incendie-travail-extincteurs-maintenance-approfondie` | contexte 2 | NF S 61-919 (août 2001), annexe A, tableau A.1 (maintenance additionnelle approfondie : à 5 et 15 ans) | NF S 61-919 annexe A | normes | norme | 2026-10-07 | premiere_main | ✓ | ✓ | 2001-08-20 | — | 5 · première main | jamais constatée |
 | `incendie-travail-ria-entretien-verification` | fondement | R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée) | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-travail-desenfumage-entretien-verification` | fondement | R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée) | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-travail-extincteurs-dotation` | fondement | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |

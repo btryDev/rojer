@@ -301,8 +301,13 @@ describe("la mention", () => {
   it("dit le premier pas quand il diffère du rythme (revue du 2026-10-07)", () => {
     // « tous les 10 ans » seul annonçait la première maintenance approfondie
     // à dix ans ; la norme la place à cinq, puis quinze.
-    const o = obligationParId("incendie-travail-extincteurs-maintenance-approfondie")!;
-    expect(o.premierDelai).toBe("quinquennale");
+    // [2026-10-08, C66 : l'obligation est retirée et plus aucune ne porte
+    // `premierDelai` ; la branche s'éprouve sur une ligne synthétique.]
+    const o = {
+      ...extincteursNorme(),
+      premierDelai: "quinquennale" as const,
+      rythmeRetenu: { ...extincteursNorme().rythmeRetenu!, periodicite: "decennale" as const },
+    } as Obligation;
     const m = mentionRythmeRetenu(o)!;
     expect(m.long).toContain("première échéance à 5 ans, puis tous les 10 ans");
     expect(m.long).not.toMatch(/périodicité tous/);

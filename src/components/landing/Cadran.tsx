@@ -45,8 +45,9 @@ const DOCUMENTS: Document[] = [
     // 173 → 171 le 2026-10-08 (C64) : 173 + 0 − 2 (AS 9 aux hôtels de 5ᵉ,
     // supprimées) = 171, compté en appelant le référentiel.
     // 171 → 172 le 2026-10-08 (C66) : 171 + 1 (appareils de cuisson hors
-    // ERP, R. 4224-17) − 0 = 172, compté en appelant `obligationsConformite`.
-    reperes: ["172 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
+    // ERP, R. 4224-17) − 0 = 172 ; puis 172 + 0 − 1 (maintenance approfondie
+    // des extincteurs, retirée) = 171, compté en appelant le référentiel.
+    reperes: ["171 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
   },
   {
     numero: "02",

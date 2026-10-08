@@ -300,7 +300,8 @@ export const obligationsConformite: Obligation[] = [
 // reçoit le défaut. L'alarme reste à la semestrielle écrite du même article.
 // Maintenance additionnelle approfondie à 5 et 15 ans (NF S 61-919, annexe
 // A), selon la question neuve `typeExtincteur` : entre
-// `incendie-travail-extincteurs-maintenance-approfondie`.
+// `incendie-travail-extincteurs-maintenance-approfondie`. [Retirée le
+// 2026-10-08, version 2026-10-08.2, voir plus bas.]
 // Compte : 166 + 5 − 0 = 171.
 // C60, même version (jamais servie), revue indépendante de la relecture :
 // ~~AS 9 s'applique aux hôtels de 5ᵉ catégorie par le renvoi exprès de PO 1 § 3
@@ -338,6 +339,14 @@ export const obligationsConformite: Obligation[] = [
 // `cuisson-travail-appareils-entretien-verification` (R. 4224-17, défaut
 // annuel, lieu de travail hors ERP, partition avec `cuisson-erp-appareils-
 // annuelle`). 171 + 1 − 0 = 172.
+// (4) « on s'en tient à ce que dit Julien » (décision de la propriétaire du
+// 2026-10-08 : la NF S 61-919 a été fournie pour l'annuelle et la décennale
+// des extincteurs, rien d'autre) : sort
+// `incendie-travail-extincteurs-maintenance-approfondie`
+// (`OBLIGATIONS_RETIREES`, `absorbePar: null`) ; la question `typeExtincteur`
+// quitte le produit, avec la condition halon de
+// `incendie-travail-extincteurs-revision-atelier-decennale`, qui vaut
+// désormais pour tout extincteur. 172 + 0 − 1 = 171.
 export const REFERENTIEL_VERSION = "2026-10-08.2";
 
 /**
@@ -512,6 +521,13 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
     porteur: "equipement",
     motif:
       "Formation du personnel manipulant des matières dangereuses (R. 4412-38), portée par chaque stockage déclaré : une ligne PAR stockage. Retirée le 2026-10-08 (C64) au profit de `stockage-dangereux-etablissement-formation-personnel`, une ligne pour l'établissement, due dès qu'au moins un stockage est déclaré, au défaut annuel de L. 4141-2 (préventeur : « obligation annuelle de formation » ; décision de la propriétaire du 08/10). En production l'identifiant était `autre`, sans rythme ni ligne de calendrier ; la version 2026-10-07.5, qui lui donnait un défaut annuel, n'a jamais été servie.",
+  },
+  // 2026-10-08 (C66, item 4) — « on s'en tient à ce que dit Julien ».
+  "incendie-travail-extincteurs-maintenance-approfondie": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Maintenance additionnelle approfondie de l'extincteur à 5 et 15 ans (NF S 61-919, annexe A, tableau A.1), lieu de travail, servie depuis la version 2026-10-07.5. Retirée le 2026-10-08 : non demandé par le préventeur (il a fourni la NF S 61-919 pour l'annuelle et la décennale seulement) ; décision de la propriétaire. Aucune obligation ne reprend ce contenu, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
   },
 };
 

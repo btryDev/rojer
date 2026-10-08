@@ -15,6 +15,8 @@ import type {
 
 // Dérivé d'`Obligation` (garde des lectures brutes, `periodicite-brute.test.ts`).
 // `premierDelai` : le premier pas, quand il diffère du rythme (« à 5 et 15 ans »).
+// [2026-10-08, C66 : plus aucune obligation vivante ne le porte — la
+// maintenance approfondie est retirée ; la branche reste, éprouvée en test.]
 type AvecRythme = Pick<Obligation, "periodicite" | "rythmeRetenu" | "premierDelai">;
 
 /**
