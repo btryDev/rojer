@@ -27,6 +27,9 @@ import { renderToFile } from "@react-pdf/renderer";
 import { Document, Link, Page, Text, View } from "@react-pdf/renderer";
 import path from "node:path";
 import {
+  estNiveauAudit,
+  EXPLICATION_NIVEAU_AUDIT,
+  MENTION_NIVEAU_AUDIT,
   obligationsConformite,
   REFERENTIEL_VERSION,
 } from "@/lib/referentiels/conformite";
@@ -319,6 +322,12 @@ function LigneObligation({ o }: { o: Obligation }) {
   return (
     <View style={s.row} wrap={false}>
       <View style={[cell, { width: C.obligation }]}>
+        {/* ADR-042 : au référentiel, hors du quotidien — marquée, jamais tue. */}
+        {estNiveauAudit(o) && (
+          <Text style={[s.small, { fontFamily: "Helvetica-Bold" }]}>
+            {MENTION_NIVEAU_AUDIT} — hors du suivi quotidien
+          </Text>
+        )}
         <Text style={s.td}>{t(o.libelle)}</Text>
         <Text style={[s.small, { marginTop: 1 }]}>
           criticité {o.criticite}/5 · {LABEL_DOMAINE[o.domaine]} ·{" "}
@@ -410,6 +419,11 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
             Le périmètre du référentiel n&apos;est pas celui du droit :
             l&apos;absence d&apos;une obligation n&apos;emporte aucune
             conclusion. Rojer calcule, il n&apos;avise pas.
+          </Text>
+          <Text style={{ marginTop: 6 }}>
+            Les lignes marquées « {MENTION_NIVEAU_AUDIT} » (
+            {obligationsConformite.filter(estNiveauAudit).length} sur {total}) :{" "}
+            {t(EXPLICATION_NIVEAU_AUDIT)}
           </Text>
           <Text style={{ marginTop: 6 }}>
             Le document couvre les {total} obligations, rangées par ce qui les

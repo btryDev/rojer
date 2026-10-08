@@ -26,6 +26,8 @@
 // d'avoir lu le texte, ce qu'un script ne sait pas faire.
 
 import {
+  estNiveauAudit,
+  MENTION_NIVEAU_AUDIT,
   obligationsConformite,
   REFERENTIEL_VERSION,
 } from "../src/lib/referentiels/conformite";
@@ -228,6 +230,9 @@ function rendreTransmission(t: Transmission): string {
 
 type Ligne = {
   obligation: string;
+  /** ADR-042 : « Audit » quand l'obligation est au niveau audit — au
+   *  référentiel, hors du quotidien de Rojer ; vide sinon. */
+  niveau: string;
   domaine: string;
   libelle: string;
   periodicite: string;
@@ -267,6 +272,7 @@ function lignes(): Ligne[] {
       const art = e?.article;
       out.push({
         obligation: o.id,
+        niveau: estNiveauAudit(o) ? MENTION_NIVEAU_AUDIT : "",
         domaine: o.domaine,
         libelle: o.libelle,
         periodicite: o.periodicite,
@@ -305,7 +311,7 @@ function lignes(): Ligne[] {
 // -----------------------------------------------------------------------------
 
 const COLONNES: (keyof Ligne)[] = [
-  "obligation", "domaine", "libelle", "periodicite", "rythmeRetenu", "realisateurs",
+  "obligation", "niveau", "domaine", "libelle", "periodicite", "rythmeRetenu", "realisateurs",
   "criticite", "champ", "conditions", "transmet", "rang", "source", "reference",
   "article", "url", "versionConstatee", "corpus", "statutCorpus", "lecture",
   "luLe", "versionEnVigueur", "prescrit", "verbatim", "note", "alertes",
@@ -324,7 +330,7 @@ function csv(rows: Ligne[]): string {
 
 function md(rows: Ligne[]): string {
   const cols: (keyof Ligne)[] = [
-    "obligation", "rang", "reference", "article", "periodicite", "rythmeRetenu",
+    "obligation", "niveau", "rang", "reference", "article", "periodicite", "rythmeRetenu",
     "statutCorpus", "lecture", "transmet", "verbatim", "alertes",
   ];
   const cell = (v: string | number) =>
@@ -353,7 +359,9 @@ function resume(rows: Ligne[]): string {
   const l: string[] = [];
   l.push(`Référentiel ${REFERENTIEL_VERSION}`);
   l.push("");
-  l.push(`${nbObl} obligations · ${rows.length} lignes de référence`);
+  l.push(
+    `${nbObl} obligations, dont ${obligationsConformite.filter(estNiveauAudit).length} au niveau audit (ADR-042) · ${rows.length} lignes de référence`,
+  );
   l.push(
     `  ${fondements} fondements · ${contextes} références de contexte — ` +
       `celles que le PDF replie dans un « + N réf. »`,
