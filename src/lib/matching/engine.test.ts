@@ -1209,7 +1209,10 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // calculée », alors que ses échéances existent, ailleurs, portées par
         // l'établissement. La catégorie reste citée par les trois obligations
         // en `equipementsEnContexte`, à titre indicatif.
-        "ALARME_INCENDIE",
+        // [2026-10-08, C66 : ALARME_INCENDIE SORT DE CETTE LISTE —
+        // `incendie-travail-alarme-entretien-verification`, défaut annuel de
+        // R. 4224-17, demandé par le préventeur (« si présent maintenance
+        // vérification annuelle »). L'appareil a désormais sa propre échéance.]
         // BAES : question ouverte. Les deux obligations de l'arrêté du
         // 14 décembre 2011 (essai mensuel, autonomie semestrielle) portent
         // `erp: false` et ne visent donc pas non plus l'ERP. Chez un

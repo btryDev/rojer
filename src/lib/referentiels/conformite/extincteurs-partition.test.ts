@@ -158,6 +158,36 @@ describe("appareil de cuisson : une annuelle de l'appareil et une seule, quel qu
 });
 
 /**
+ * Équipement d'alarme (C66, 2026-10-08) : en ERP, MS 73 § 2 écrit la
+ * vérification annuelle du SSI et de l'équipement d'alarme ; en lieu de
+ * travail hors ERP, Rojer retient le défaut annuel de `R. 4224-17` (le
+ * préventeur : « si présent maintenance vérification annuelle »). Le même
+ * acte, une seule fois par alarme, quel que soit le régime. Compté sur l'ACTE
+ * (fondement MS 73 ou R. 4224-17, rythme annuel) : l'essai semestriel des
+ * signaux (arrêté du 4 novembre 1993, art. 15) est porté par l'établissement,
+ * et la triennale ou l'hebdomadaire du SSI ne sont pas annuelles.
+ */
+describe("alarme : une annuelle de l'appareil et une seule, quel que soit le régime", () => {
+  for (const { nom, e } of PROFILS) {
+    it(nom, () => {
+      const applicables = determineObligationsApplicables(e, [
+        { id: "eq", libelle: "Alarme", categorie: "ALARME_INCENDIE", caracteristiques: null },
+      ]);
+      const fondements = new Map(
+        applicables.map((a) => [a.obligation.id, a.obligation.referencesLegales[0].article]),
+      );
+      const lignes = genererProchainesVerifications(applicables).filter(
+        (l) =>
+          l.equipementId === "eq" &&
+          l.periodicite === "annuelle" &&
+          ["MS 73", "R. 4224-17"].includes(fondements.get(l.obligationId) ?? ""),
+      );
+      expect(lignes, nom).toHaveLength(1);
+    });
+  }
+});
+
+/**
  * Le retrait de la maintenance approfondie (C66, 2026-10-08) suit le chemin
  * du lot 5 : l'id est inscrit à `OBLIGATIONS_RETIREES`, sans absorbant, et la
  * réconciliation archive la ligne qui porte une trace, supprime l'autre.

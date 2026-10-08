@@ -411,6 +411,42 @@ export const obligationsIncendie: Obligation[] = [
       "CRÉÉE LE 2026-10-07 (C59 lot 3, item 6 c ; relecture du préventeur, ADR-039). Le préventeur, p. 10 du référentiel annoté, en marge de la vérification annuelle du désenfumage en ERP : « idem code du travail : préco ». Avant ce lot, un employeur non-ERP qui déclarait un désenfumage ne recevait RIEN (`hors-referentiel.test.ts` : `aucune_obligation_applicable`). `R. 4224-17` vise « les installations et dispositifs techniques et de sécurité des lieux de travail » sans en nommer aucun — le désenfumage en est un par LECTURE. Les articles du Code du travail qui imposent le désenfumage à la construction (R. 4216-13 et suivants, maître d'ouvrage) n'ont pas été rouverts ici : ils ne portent pas l'entretien.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`. En ERP, `incendie-erp-desenfumage-annuelle` (DF 10 § 2, « La périodicité des vérifications est de un an ») porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ catégorie comprise, par sur-application assumée. Le désenfumage reçoit donc une annuelle et une seule, quel que soit le régime. La triennale de DF 10 § 3 (lot 4) ne concerne que l'ERP.\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17` ; `periodicite: \"autre\"` reste le rythme du texte, `rythmeRetenu` porte l'annuelle PAR DÉFAUT (ADR-039 (b)), affichée comme défaut. Un rythme plus serré (contrat, assureur) se saisit en prescription et l'emporte dès qu'il est au moins aussi strict.\n\nNATURE ÉCHÉANCE RÉCURRENTE : « entretenus et vérifiés » sont des actes qui reviennent, pas un état. La ligne naît « à planifier » (ADR-036), sans retard rétroactif.\n\nRÉALISATEURS : le texte n'en nomme aucun ; le préventeur dit « entretien et vérification ». `personne_competente` et `personne_qualifiee`, comme l'annuelle du même acte ailleurs. Criticité 4, celle de la ligne ERP.",
   },
   {
+    id: "incendie-travail-alarme-entretien-verification",
+    domaine: "incendie",
+    libelle:
+      "Entretien et vérification de l'équipement d'alarme incendie, annuels par défaut (travail, hors ERP)",
+    description:
+      "Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée (R. 4224-17). Le texte ne fixe pas cette périodicité : Rojer retient par défaut au moins une fois par an pour l'équipement d'alarme — sa maintenance et sa vérification par une personne compétente —, un plancher, pas un rythme lu dans un texte. Elle vaut pour toute alarme présente, quel que soit l'effectif. L'essai semestriel du bon fonctionnement des signaux, que l'exploitant fait lui-même, est un autre acte et garde sa propre ligne. En ERP, la vérification annuelle du système de sécurité incendie et de l'alarme est écrite par le règlement de sécurité (MS 73) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée)",
+        article: "R. 4224-17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197",
+        note: "« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (LEGIARTI000018532197, en vigueur depuis le 2008-05-01). Le texte ne nomme aucun équipement : y ranger l'équipement d'alarme est une LECTURE, celle du préventeur (texte collé sur la ligne « Alarme sonore », annotation du 2026-10-05).",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "defaut_annuel",
+      periodicite: "annuelle",
+      texteVague: "périodicité appropriée",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    // Partition avec `incendie-erp-ssi-annuelle` (MS 73, rythme écrit) : une
+    // alarme n'a pas deux annuelles du même acte, quel que soit le régime.
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["ALARME_INCENDIE"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-08 (C66). Demandée par le préventeur, deux fois. Grille du 30/09, p. 34, en face de l'installation de l'alarme sonore (`incendie-travail-alarme-sonore`, R. 4227-34) : « pas d'obligation moins de 51 personnes si présent maintenance vérification annuelle ». Réponse du 2026-10-05, p. 2, en face de la ligne « Alarme sonore » : le texte de R. 4224-17 collé en note (« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. […] »). Décision de la propriétaire du 2026-10-08 : « on s'en tient à ce que dit Julien ». Lecture : l'équipement d'alarme est un dispositif de sécurité du lieu de travail au sens de R. 4224-17 ; le seuil de 51 personnes vaut pour l'obligation d'ÊTRE ÉQUIPÉ, pas pour l'entretien d'une alarme présente — la ligne naît de l'appareil déclaré, sans seuil.\n\nLE MOTIF DE NON-ENCODAGE DE C59 (lot 3, item 6 a) EST ÉCARTÉ, rayé et daté sur `signalisation-etablissement-entretien` et dans la réserve de R. 4224-17 au corpus. Il disait : la semestrielle de l'arrêté du 4 novembre 1993, art. 15, écrite, l'emporte sur ce qu'elle couvre, l'alarme sonore comprise. CE N'EST PAS LE MÊME ACTE, et c'est ce qui permet la ligne sans doublon. L'article 15 fait vérifier, au moins chaque semestre, « le bon fonctionnement et la réelle efficacité » des SIGNAUX lumineux et acoustiques : un ESSAI du signal, par l'exploitant, une ligne pour l'établissement (`signalisation-etablissement-signaux-lumineux-acoustiques-semestrielle`). Le préventeur demande la MAINTENANCE de l'équipement d'alarme, et sa vérification annuelle — entretien de la centrale, des déclencheurs, des diffuseurs et de leur alimentation, par une personne compétente : l'acte de R. 4224-17 (« entretenus et vérifiés »), sur l'appareil déclaré. Les deux coexistent comme l'autonomie et l'efficacité d'un BAES (arrêté du 14 décembre 2011 / art. 15) : deux objets, deux fondements, deux porteurs. Recouvrement partiel assumé sur le mot « vérifiés » ; le semestre écrit garde sa ligne, le défaut annuel ne la remplace pas. Vérifié en appelant le référentiel le 2026-10-08 : avant cette ligne, aucune obligation ne datait l'entretien de l'appareil `ALARME_INCENDIE` chez un employeur hors ERP (la catégorie figurait aux « catégories vides » du bureau, `engine.test.ts`). L'alimentation de secours des signalisations a sa propre annuelle écrite (art. 15, seconde phrase) : elle reste à elle.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`, comme `incendie-travail-ria-entretien-verification`, `incendie-travail-desenfumage-entretien-verification` et `cuisson-travail-appareils-entretien-verification`. En ERP, `incendie-erp-ssi-annuelle` (MS 73 § 2, « SSI et équipement d'alarme incendie ») porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ comprise, par sur-application assumée ; un rythme écrit l'emporte toujours. Une alarme reçoit donc une annuelle et une seule, quel que soit le régime (`extincteurs-partition.test.ts`).\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17` ; `periodicite: \"autre\"` reste le rythme du texte, `rythmeRetenu` porte l'annuelle PAR DÉFAUT (ADR-039 (b)), affichée comme défaut. NATURE ÉCHÉANCE RÉCURRENTE : la ligne naît « à planifier » (ADR-036), avec le délai de grâce de l'ADR-040 chez un dossier existant. RÉALISATEURS : le texte n'en nomme aucun ; ceux des sœurs (`personne_competente`, `personne_qualifiee`). Criticité 4, celle de l'installation de l'alarme (`incendie-travail-alarme-sonore`) et de la semestrielle des signaux.",
+  },
+  {
     // 2026-09-27, lot 2 (7 bis G2, M1). L'objet de R. 4227-29 — être DOTÉ
     // d'extincteurs — n'était porté que par une obligation d'appareil : un
     // établissement qui n'a déclaré aucun extincteur ne recevait rien.

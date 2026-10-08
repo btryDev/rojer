@@ -184,6 +184,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-igh-charge-calorifique-quinquennale": "etablissement",
   "incendie-igh-moyens-secours-annuelle": "equipement",
   "incendie-registre-securite": "etablissement",
+  "incendie-travail-alarme-entretien-verification": "equipement",
   "incendie-travail-alarme-sonore": "etablissement",
   "incendie-travail-chiffons-impregnes-recipients-clos": "etablissement",
   "incendie-travail-consigne-affichee": "etablissement",

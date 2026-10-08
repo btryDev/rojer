@@ -294,9 +294,10 @@ normes (R. 4544-10) », qui s'efface d'elle-même devant un rythme retenu.
 nominatif, `etat_permanent`, `periodicite: "autre"`, rythme retenu
 triennal). Pas `elec-travail-habilitation-personnel` : une échéance par
 installation doublerait celle des personnes. Rythmes retenus remesurés en
-appelant le 2026-10-08 : ~~neuf~~ dix — trois de norme (dont celui-ci),
-sept par défaut annuel ; la maintenance approfondie des extincteurs est
-retirée et les appareils de cuisson hors ERP entrés le même jour (C66).
+appelant le 2026-10-08 : ~~neuf~~ ~~dix~~ onze — trois de norme (dont
+celui-ci), ~~sept~~ huit par défaut annuel ; la maintenance approfondie des
+extincteurs est retirée, les appareils de cuisson hors ERP et l'entretien de
+l'alarme hors ERP entrés le même jour (C66).
 
 **Effet en production.** Un titre sans date de fin reçoit l'échéance
 délivrance + 3 ans (`echeanceDuTitre`) ; délivré il y a plus de trois ans, il

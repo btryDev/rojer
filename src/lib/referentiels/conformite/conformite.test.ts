@@ -1742,7 +1742,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // (3) habilitation électrique : `elec-salarie-habilitation` reçoit le
     // rythme triennal de la NF C 18-510 relevé par le préventeur (ADR-039
     // § 8). 171 + 0 − 0 = 171.
-    { version: "2026-10-08.2", empreinte: "171-5916acceca368348" },
+    // ~~171-5916acceca368348~~ : empreinte après (3), jamais servie — ligne
+    // réécrite le 2026-10-08 (C66, dernière passe ; version non servie).
+    // (5) alarme : `incendie-travail-alarme-entretien-verification` entre
+    // (R. 4224-17, défaut annuel, travail hors ERP ; le préventeur : « si
+    // présent maintenance vérification annuelle »). 171 + 1 − 0 = 172.
+    { version: "2026-10-08.2", empreinte: "172-ea7623eb617ce82" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1903,8 +1908,11 @@ describe("référentiel conformité — version et empreinte", () => {
       // supprimées avant d'avoir été servies) = 171.
       // ~~171~~ — 2026-10-08 (C66) : 171 + 1 (appareils de cuisson hors ERP,
       // R. 4224-17) − 0 = 172 ; ~~172~~ puis 172 + 0 − 1 (maintenance
-      // approfondie des extincteurs, retirée) = 171.
-    ).toBe(171);
+      // approfondie des extincteurs, retirée) = 171 ; ~~171~~ puis 171 + 1
+      // (`incendie-travail-alarme-entretien-verification`, entretien et
+      // vérification de l'alarme hors ERP, R. 4224-17, demandé par le
+      // préventeur) − 0 = 172.
+    ).toBe(172);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
