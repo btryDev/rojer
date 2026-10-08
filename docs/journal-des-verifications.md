@@ -5205,9 +5205,18 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   - **D — hotte** : rien. Julien n'a pas annoté le contrôle semestriel du
     recyclage ; la hotte le garde (décision 14 de la synthèse).
 - **Ce qui reste ouvert, et qui le porte** :
-  - Une `DeclarationEtatPermanent` ou une prescription posée en production sur
+  - ~~Une `DeclarationEtatPermanent` ou une prescription posée en production sur
     `stockage-dangereux-formation-personnel` ne suit pas le nouvel id —
-    **à compter en production** avant la mise en service (propriétaire).
+    **à compter en production** avant la mise en service (propriétaire).~~
+    [2026-10-08, compté en production par la propriétaire (éditeur SQL
+    Supabase, lecture seule) : **0** `DeclarationEtatPermanent`, **0**
+    `PrescriptionParticuliere`, **0** `Verification` sur les quatre ids qui
+    passent d'`autre` à un rythme retenu — `incendie-travail-moyens-lutte`,
+    `formation-securite-etablissement-organisation`,
+    `signalisation-etablissement-entretien`,
+    `stockage-dangereux-formation-personnel`. Aucune date déclarée à reprendre,
+    aucune prescription orpheline : la limite 3 de l'ADR-040 et l'angle mort
+    des déclarations (revue du 2026-10-08) n'atteignent aucun dossier.]
   - `sansQualification` : la mention « pour information » ne qualifie rien
     (test vert). Le guide « Comprendre » n'affiche pas la commission comme
     réalisateur : il agrège par domaine, et l'organisme agréé de la visite
