@@ -118,7 +118,14 @@ export const ARRETE_1993_03_19_EPI: Corpus = {
       citationCle:
         "Sans préjudice de la vérification à chaque utilisation du maintien en état de conformité des équipements de protection individuelle faite en application de l'article R. 233-1-1 du code du travail, les équipements de protection individuelle suivants, en service ou en stock, doivent avoir fait l'objet, depuis moins de douze mois au moment de leur utilisation, de la vérification générale périodique prévue à l'article R. 233-42-2 du code du travail : - appareils de protection respiratoire autonomes destinés à l'évacuation ; - appareils de protection respiratoire et équipements complets destinés à des interventions accidentelles en milieu hostile ; - gilets de sauvetage gonflables ; - systèmes de protection individuelle contre les chutes de hauteur ; - stocks de cartouches filtrantes antigaz pour appareils de protection respiratoire.",
       statut: "retenu",
-      obligations: ["epi-verification-generale-periodique"],
+      // 2026-10-08 (ADR-042) : la vérification se scinde par famille ; le
+      // respiratoire et le gilet sont au niveau audit, l'article les fonde
+      // toujours.
+      obligations: [
+        "epi-verification-generale-periodique",
+        "epi-verification-generale-periodique-respiratoire",
+        "epi-verification-generale-periodique-gilet-sauvetage",
+      ],
       reserve:
         "UNE SEULE EXIGENCE DE L'ARTICLE QUE L'OBLIGATION NE PORTE PAS : « EN SERVICE OU EN STOCK ». L'article soumet au même régime l'équipement rangé et l'équipement utilisé, et compte les douze mois « au moment de leur utilisation » — un harnais qui dort au placard n'a donc rien à subir tant qu'on n'y touche pas, mais il ne peut pas être mis en service sans vérification récente. Le produit ne distingue pas le stock du service : un équipement déclaré porte son échéance.\n\nL'ÉCART SUR-APPLIQUE, ET C'EST LE SENS QU'ON A CHOISI. Il réclame une vérification annuelle d'un équipement qu'on n'utilise pas ; l'écart inverse aurait dispensé du contrôle un équipement dont la défaillance se découvre le jour où l'on en a besoin. Il est de surcroît VISIBLE par celui qui le subit, qui voit l'échéance et peut la traiter.\n\nLA PÉREMPTION A QUITTÉ CETTE RÉSERVE LE 2026-09-04. Le 3° de l'article 2 fait constater l'élimination des équipements arrivés à la date fixée par le fabricant ; aucun champ ne la stockait. `Equipement.datePeremption` existe désormais, la fiche l'affiche et signale « Périmé depuis » quand elle est passée. Elle n'ouvre aucune échéance — c'est une fin de vie, pas un rythme, et la conséquence est portée par la vérification elle-même. Inscrite aux exclusions de l'ADR-010.",
 

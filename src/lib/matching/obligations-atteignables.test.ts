@@ -16,7 +16,12 @@ import {
   estPorteeParSalarie,
   type Obligation,
 } from "@/lib/referentiels/conformite";
-import { evaluerObligation, matchTypologie } from "@/lib/matching";
+import {
+  determineObligationsNiveauAudit,
+  evaluerObligation,
+  matchTypologie,
+} from "@/lib/matching";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import type { EquipementMatching, EtablissementMatching } from "@/lib/matching";
 import { onboardingSchema } from "@/lib/onboarding/schema";
 import { CATEGORIES_ERP, TYPE_ERP } from "@/lib/etablissements/schema";
@@ -112,8 +117,14 @@ function obligationsMortes(source: Obligation[]): string[] {
   const eqs = { true: equipementsDuFormulaire(true), false: equipementsDuFormulaire(false) };
   return source
     .filter((o) => porteurDe(o) !== "salarie")
+    // Une obligation au NIVEAU AUDIT (ADR-042) n'est jamais servie : elle
+    // vit si la rubrique « Niveau audit » la nomme à un dossier possible —
+    // même champ, sans la porte du niveau.
     .filter((o) => !profils.some((e) =>
-      matchTypologie(o.typologies, e).ok && evaluerObligation(o, e, eqs[`${e.estERP}`]) !== null))
+      matchTypologie(o.typologies, e).ok &&
+      (estNiveauAudit(o)
+        ? determineObligationsNiveauAudit(e, eqs[`${e.estERP}`], { obligations: [o] }).length > 0
+        : evaluerObligation(o, e, eqs[`${e.estERP}`]) !== null)))
     .map((o) => o.id);
 }
 
@@ -124,7 +135,11 @@ describe("aucune obligation morte (maillon 2)", () => {
 
   it("salarié : chaque obligation portée par un salarié est un titre déclarable", () => {
     const catalogue = new Set(cataloguerTitres().map((o) => o.id));
-    const hors = obligationsConformite.filter(estPorteeParSalarie).filter((o) => !catalogue.has(o.id));
+    // Hors niveau audit (ADR-042) : un titre audit ne se propose pas.
+    const hors = obligationsConformite
+      .filter(estPorteeParSalarie)
+      .filter((o) => !estNiveauAudit(o))
+      .filter((o) => !catalogue.has(o.id));
     expect(hors.map((o) => o.id)).toEqual([]);
   });
 

@@ -147,17 +147,30 @@ describe("EPI — une famille, pas un régime", () => {
     ).toEqual([]);
   });
 
-  it("l'obligation vise exactement les catégories du rangement", () => {
-    const obligation = obligationsConformite.find((o) => o.id === OBLIGATION);
-    expect(obligation, `${OBLIGATION} a disparu du référentiel.`).toBeDefined();
-    if (!obligation || !estPorteeParEquipement(obligation)) {
-      throw new Error(`${OBLIGATION} n'est plus portée par un équipement.`);
-    }
+  // ~~« l'obligation vise exactement les catégories du rangement »~~ —
+  // 2026-10-08 (ADR-042) : la vérification de l'arrêté se scinde par famille
+  // (antichute servie ; respiratoire et gilet au niveau audit). La garde porte
+  // désormais sur les obligations FONDÉES sur l'article 1er, ensemble : leurs
+  // catégories forment exactement le rangement, sans recouvrement.
+  it("les obligations fondées sur l'article 1er visent ensemble exactement les catégories du rangement", () => {
+    const fondees = obligationsConformite.filter(
+      (o) => o.referencesLegales[0].article === "Arrêté 1993-03-19 (EPI) art. 1er",
+    );
+    expect(
+      fondees.map((o) => o.id),
+      `${OBLIGATION} a disparu du référentiel.`,
+    ).toContain(OBLIGATION);
+    const categories = fondees.flatMap((o) => {
+      if (!estPorteeParEquipement(o)) {
+        throw new Error(`${o.id} n'est plus portée par un équipement.`);
+      }
+      return [...o.categoriesEquipement];
+    });
     const attendues = [...new Set(Object.values(RANGEMENT))].sort();
     expect(
-      [...obligation.categoriesEquipement].sort(),
-      "Les catégories visées par l'obligation ne sont plus celles où les " +
-        "familles de l'arrêté se rangent.",
+      [...categories].sort(),
+      "Les catégories visées par les obligations de l'arrêté ne sont plus " +
+        "celles où ses familles se rangent — ou deux lignes visent la même.",
     ).toEqual(attendues);
   });
 

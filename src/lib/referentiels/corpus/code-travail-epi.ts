@@ -297,7 +297,14 @@ export const CODE_TRAVAIL_EPI: Corpus = {
       citationCle:
         "Les vérifications périodiques sont réalisées par des personnes qualifiées, appartenant ou non à l'établissement, dont la liste est tenue à la disposition de l'inspection du travail. Ces personnes ont la compétence nécessaire pour exercer leur mission en ce qui concerne les équipements de protection individuelle soumis à vérification et connaître les dispositions réglementaires correspondantes.",
       statut: "retenu",
-      obligations: ["epi-verification-generale-periodique"],
+      // 2026-10-08 (ADR-042) : la vérification se scinde par famille ; le
+      // respiratoire et le gilet sont au niveau audit, l'article les fonde
+      // toujours.
+      obligations: [
+        "epi-verification-generale-periodique",
+        "epi-verification-generale-periodique-respiratoire",
+        "epi-verification-generale-periodique-gilet-sauvetage",
+      ],
       reserve:
         "L'ARTICLE PRESCRIT AUSSI UNE PIÈCE, ET ELLE N'EST PAS PORTÉE ICI. Outre la qualification du vérificateur — qui fonde `personne_qualifiee` sur `epi-verification-generale-periodique` —, il exige que la LISTE des personnes qualifiées « soit tenue à la disposition de l'inspection du travail ». Cette liste EST portée par le référentiel, sous `prevention-etablissement-liste-personnes-qualifiees`, mais fondée sur R. 4323-23 et R. 4323-24 — les équipements de TRAVAIL. R. 4323-100 en est le jumeau pour les EPI, et aucune référence ne le nomme.\n\nCe n'est pas une obligation manquante : la pièce attendue est la même, et une seconde ligne « tenir une liste » ferait doublon à l'écran. C'est une citation manquante, qui se solde en ajoutant R. 4323-100 aux `referencesLegales` de cette obligation-là. Le dépouillement du matin l'avait diagnostiquée et renvoyée hors périmètre ; le périmètre a changé l'après-midi même, et la correction n'a pas suivi.",
     },

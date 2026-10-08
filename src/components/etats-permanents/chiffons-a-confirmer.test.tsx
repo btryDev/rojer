@@ -21,6 +21,7 @@ vi.mock("@/lib/etats-permanents/actions", () => ({
 }));
 
 const { listerEtatsPermanents } = await import("@/lib/etats-permanents/queries");
+const { obligationsNiveauAuditDuDossier } = await import("@/lib/perimetre/niveau-audit");
 const { LigneEtat } = await import("./LigneEtat");
 const { PHRASE_SANS_REPONSE } = await import("@/lib/matching/sans-reponse");
 
@@ -55,49 +56,58 @@ async function ligne(chiffons: boolean | null) {
   );
 }
 
-/** Rendue comme la page la rend (`etats-permanents/page.tsx`). */
-function rendre(l: NonNullable<Awaited<ReturnType<typeof ligne>>>) {
-  return render(
-    <LigneEtat
-      etablissementId="etab-1"
-      obligationId={l.obligation.id}
-      libelle={l.obligation.libelle}
-      mode={l.mode}
-      pieceAttendue={l.pieceAttendue}
-      declareLe={null}
-      aConfirmer={null}
-      questionsSansReponse={
-        l.questionsSansReponse.length > 0
-          ? { phrases: l.questionsSansReponse, hrefFiche: "/etablissements/etab-1/modifier" }
-          : null
-      }
-      fondement={l.fondement}
-    />,
+// ~~Les deux premiers cas ci-dessous gardaient la ligne « à confirmer » sur
+// l'écran.~~ [2026-10-08, ADR-042 : les chiffons imprégnés passent au NIVEAU
+// AUDIT — légaux, au référentiel, hors du quotidien. L'écran ne les porte plus,
+// quelle que soit la réponse ; la question décide désormais de la rubrique
+// « Niveau audit » de la page « Ce que Rojer ne couvre pas »
+// (`perimetre/niveau-audit.ts`), gardée ici dans les trois cas. Le rendu
+// « à confirmer » d'une question muette est gardé ci-dessous par la question
+// des matières de R. 4227-22, dont le silence retient encore des lignes.]
+describe("« Ce qui doit être en place » — les chiffons, oui / silence / non (niveau audit)", () => {
+  it.each([null, true, false])(
+    "réponse %s : pas de ligne sur l'écran",
+    async (reponse) => {
+      expect(await ligne(reponse)).toBeUndefined();
+    },
   );
-}
 
-describe("« Ce qui doit être en place » — les chiffons, oui / silence / non", () => {
-  it("silence : la ligne est là, « à confirmer », avec la phrase et le lien vers la fiche", async () => {
-    const l = await ligne(null);
-    expect(l).toBeDefined();
-    expect(l!.questionsSansReponse).toEqual([PHRASE_SANS_REPONSE.chiffons_impregnes]);
-    const { container, getByRole } = rendre(l!);
-    expect(container.textContent).toContain("À confirmer.");
-    expect(container.textContent).toContain(PHRASE_SANS_REPONSE.chiffons_impregnes);
-    expect(getByRole("link", { name: /fiche de l'établissement/ }).getAttribute("href")).toBe(
-      "/etablissements/etab-1/modifier",
+  it("silence et oui : nommés dans la rubrique « Niveau audit » ; non : absents", () => {
+    const ids = (r: boolean | null) =>
+      obligationsNiveauAuditDuDossier(etab(r), []).map((l) => l.id);
+    expect(ids(null)).toContain(OBLIGATION);
+    expect(ids(true)).toContain(OBLIGATION);
+    expect(ids(false)).not.toContain(OBLIGATION);
+  });
+});
+
+describe("« Ce qui doit être en place » — le rendu « à confirmer », par la question des matières", () => {
+  it("silence : une ligne retenue dit « À confirmer », sa phrase et le lien vers la fiche", async () => {
+    const d = await listerEtatsPermanents(etab(null), []);
+    const l = [...d.groupes.flatMap((g) => g.lignes), ...d.faits].find((x) =>
+      x.questionsSansReponse.includes(PHRASE_SANS_REPONSE.matieres_r4227_22),
     );
-  });
-
-  it("oui : la ligne est là, sans « à confirmer »", async () => {
-    const l = await ligne(true);
     expect(l).toBeDefined();
-    expect(l!.questionsSansReponse).toEqual([]);
-    const { container } = rendre(l!);
-    expect(container.textContent).not.toContain("À confirmer");
-  });
-
-  it("non : pas de ligne", async () => {
-    expect(await ligne(false)).toBeUndefined();
+    const { container, getByRole } = render(
+      <LigneEtat
+        etablissementId="etab-1"
+        obligationId={l!.obligation.id}
+        libelle={l!.obligation.libelle}
+        mode={l!.mode}
+        pieceAttendue={l!.pieceAttendue}
+        declareLe={null}
+        aConfirmer={null}
+        questionsSansReponse={{
+          phrases: l!.questionsSansReponse,
+          hrefFiche: "/etablissements/etab-1/modifier",
+        }}
+        fondement={l!.fondement}
+      />,
+    );
+    expect(container.textContent).toContain("À confirmer.");
+    expect(container.textContent).toContain(PHRASE_SANS_REPONSE.matieres_r4227_22);
+    expect(
+      getByRole("link", { name: /fiche de l'établissement/ }).getAttribute("href"),
+    ).toBe("/etablissements/etab-1/modifier");
   });
 });

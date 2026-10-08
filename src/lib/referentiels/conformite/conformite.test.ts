@@ -1748,6 +1748,16 @@ describe("référentiel conformité — version et empreinte", () => {
     // (R. 4224-17, défaut annuel, travail hors ERP ; le préventeur : « si
     // présent maintenance vérification annuelle »). 171 + 1 − 0 = 172.
     { version: "2026-10-08.2", empreinte: "172-ea7623eb617ce82" },
+    // 2026-10-08 (ADR-042, NIVEAU AUDIT, décision de la propriétaire du même
+    // jour). `.3` est pris par `lot/formations-faits-etablissement` (ADR-041,
+    // rebasée sur C66) : ce lot prend `.4`, pour que deux contenus ne soient
+    // jamais servis sous le même numéro. Le champ `niveau` entre à
+    // l'empreinte (segment ajouté). Les chiffons imprégnés (R. 4227-26)
+    // passent au niveau audit ; la vérification de l'arrêté du 19 mars 1993
+    // se scinde — l'antichute garde son id, le respiratoire et le gilet en
+    // prennent un neuf chacun (`succedeA`), au niveau audit.
+    // 172 + 2 − 0 = 174, dont 3 au niveau audit.
+    { version: "2026-10-08.4", empreinte: "174-5f46dea89bed4c54" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1912,7 +1922,11 @@ describe("référentiel conformité — version et empreinte", () => {
       // (`incendie-travail-alarme-entretien-verification`, entretien et
       // vérification de l'alarme hors ERP, R. 4224-17, demandé par le
       // préventeur) − 0 = 172.
-    ).toBe(172);
+      // ~~172~~ — 2026-10-08 (ADR-042, niveau audit) : 172 + 2
+      // (`epi-verification-generale-periodique-respiratoire` et
+      // `-gilet-sauvetage`, scindées de la vérification de l'arrêté du
+      // 19 mars 1993, au niveau audit) − 0 = 174, dont 3 au niveau audit.
+    ).toBe(174);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

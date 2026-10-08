@@ -131,10 +131,14 @@ describe("PDF : la ligne de vérification porte sa marque", () => {
 });
 
 describe("la relance ne pose que les questions dont le silence retient une ligne", () => {
-  it("bureau muet : matières et chiffons ; répondus : aucune", () => {
+  // ~~« bureau muet : matières et chiffons »~~ — 2026-10-08 (ADR-042) : les
+  // chiffons imprégnés sont au niveau audit, le moteur ne les rend plus ; leur
+  // silence ne retient plus aucune ligne, la relance ne pose donc plus la
+  // question (elle reste à la fiche, pour la rubrique « Niveau audit »).
+  it("bureau muet : matières seules (chiffons au niveau audit) ; répondus : aucune", () => {
     const muet = questionsQuiRetiennent(determineObligationsApplicables(etab(), []));
     expect(muet).toContain("matieres_r4227_22");
-    expect(muet).toContain("chiffons_impregnes");
+    expect(muet).not.toContain("chiffons_impregnes");
     const repondu = questionsQuiRetiennent(
       determineObligationsApplicables(
         etab({ manipuleMatieresR422722: false, chiffonsImpregnes: true }),

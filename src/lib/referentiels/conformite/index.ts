@@ -352,7 +352,16 @@ export const obligationsConformite: Obligation[] = [
 // triennal de la NF C 18-510, relevé par le préventeur (ADR-039 § 8,
 // `releveParPreventeur`), norme non relue. 171 + 0 − 0 = 171. Les titres
 // sans date de fin prennent une échéance : délivrance + 3 ans.
-export const REFERENTIEL_VERSION = "2026-10-08.2";
+// `2026-10-08.4` (ADR-042, niveau audit, décision de la propriétaire du
+// 2026-10-08 ; `.3` est pris par `lot/formations-faits-etablissement`,
+// ADR-041, et n'est pas réemployé ici). Le champ `niveau` entre à
+// l'empreinte. `incendie-travail-chiffons-impregnes-recipients-clos`
+// (R. 4227-26) passe au niveau audit. `epi-verification-generale-periodique`
+// se scinde : l'antichute garde l'identifiant ; entrent
+// `epi-verification-generale-periodique-respiratoire` et
+// `epi-verification-generale-periodique-gilet-sauvetage`, au niveau audit,
+// `succedeA` vers l'ancien. 172 + 2 − 0 = 174, dont 3 au niveau audit.
+export const REFERENTIEL_VERSION = "2026-10-08.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
@@ -639,6 +648,11 @@ export function empreinteReferentiel(
         ...(o.porteur === "etablissement" && o.siEquipementDeclare
           ? [`si:${canonique(o.siEquipementDeclare)}`]
           : []),
+        // Le niveau audit (ADR-042) décide de l'EXISTENCE de toutes les
+        // lignes de l'obligation : il entre, en segment ajouté et seulement
+        // quand il est présent. Le lever la réactive — et fait bouger
+        // l'empreinte, donc réconcilier tous les calendriers.
+        ...(o.niveau ? [`niveau:${o.niveau}`] : []),
         ...(o.rythmeRetenu
           ? [
               `rythme:${o.rythmeRetenu.periodicite}:${o.rythmeRetenu.motif}:${
@@ -684,3 +698,4 @@ export function obligationsParDomaine(
   return obligationsConformite.filter((o) => o.domaine === domaine);
 }
 export * from "./rythme-retenu";
+export * from "./niveau-audit";
