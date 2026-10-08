@@ -71,6 +71,12 @@ function rythmeEnPhrase(p: PeriodiciteRetenue, premierDelai?: Periodicite): stri
     : RYTHME_EN_PHRASE[p];
 }
 
+/** « 2026-10-05 » → « 05/10/2026 », sans horloge ni fuseau : une clé de jour. */
+function dateFr(cle: string): string {
+  const [a, m, j] = cle.split("-");
+  return `${j}/${m}/${a}`;
+}
+
 // -----------------------------------------------------------------------------
 // La mention
 // -----------------------------------------------------------------------------
@@ -104,6 +110,16 @@ export function mentionRythmeRetenu(o: AvecRythme): MentionRythme | null {
   if (!r) return null;
   if (r.motif === "norme") {
     const vague = r.texteVague ? `Le texte dit « ${r.texteVague} » ; ` : "";
+    // ADR-039 § 8 (2026-10-08, C66) : une norme que Rojer n'a pas lue, dont
+    // le préventeur a relevé le rythme. La mention le dit, et cite ses mots.
+    const releve = r.releveParPreventeur;
+    if (releve) {
+      return {
+        motif: "norme",
+        court: `${pastilleNorme(r.norme)}, relevé par le préventeur`,
+        long: `${vague}Rythme de la norme ${r.norme} (${rythmeEnPhrase(r.periodicite, o.premierDelai)}), relevé par le préventeur le ${dateFr(releve.date)} : « ${releve.citation.replace(/\s*\n\s*/g, " ")} » — norme non relue par Rojer. C'est une norme, citée comme norme, pas un article de loi.`,
+      };
+    }
     return {
       motif: "norme",
       court: pastilleNorme(r.norme),

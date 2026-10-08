@@ -243,6 +243,25 @@ suppression, et aucun test du générateur ne peut attraper l'oubli.
 > cite a été lu), son paragraphe de recyclage est « à préciser », et un rythme
 > retenu ne peut pas citer une norme lue indirectement. Le rétablir est une
 > décision de contenu (lot 3), après lecture de la norme à la source.
+>
+> **Amendé le 2026-10-08 (C66, ADR-039 § 8).** ~~Le triennal de la NF C 18-510
+> ne revient pas pour autant ici~~ : il revient, **sur le titre nominatif**
+> `elec-salarie-habilitation`, sans attendre la lecture de la norme. Décision
+> de la propriétaire, sur la parole du préventeur — annotation du 2026-10-05 :
+> « Fréquence et validité recommandées (Norme NF C 18-510) • Cas général : Un
+> recyclage (Maintien et Actualisation des Compétences - MAC) est conseillé
+> tous les 3 ans », et « il faut appliquer mes recommandations comme des
+> obligations par défaut ». `periodicite` reste `autre` ; `rythmeRetenu` est
+> triennal, motif `norme`, avec un `releveParPreventeur` (date et mots de
+> l'annotation) recopié du corpus — seule voie par laquelle une norme lue
+> `indirect` donne un rythme. La mention le dit : « relevé par le préventeur
+> — norme non relue par Rojer ». Une date de fin saisie sur le titre prime.
+> La ligne d'établissement `elec-travail-habilitation-personnel` reste un état
+> permanent sans rythme (une échéance par installation doublerait celle des
+> personnes). **Effet sur les titres existants** : sans date de fin saisie,
+> l'échéance devient délivrance + 3 ans, et un titre délivré il y a plus de
+> trois ans est en retard dès la passe suivante, sans délai de grâce (la grâce
+> de l'ADR-040 ne couvre que les lignes nées « à planifier »).
 
 C'est la décision de contenu de ce lot, et elle repose sur une relecture en
 première main du 2026-08-27.

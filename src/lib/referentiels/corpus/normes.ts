@@ -18,7 +18,23 @@
 // Ces entrées ne passent pas par `pnpm legifrance:verifier` : une norme est
 // hors du fonds de l'API Légifrance (`resoudreCible`, branche « NF »).
 
-import type { Corpus } from "./types";
+import type { Corpus, ReleveParPreventeur } from "./types";
+
+/**
+ * NF C 18-510 : ce que le préventeur en a relevé (ADR-039 § 8). Annotation du
+ * 2026-10-05 sur « Rojer-reponse-referentiel JC.pdf », p. 2, en face de la
+ * question sur l'habilitation électrique — mots recopiés tels quels, retour à
+ * la ligne compris. L'obligation qui s'en sert (`elec-salarie-habilitation`)
+ * en porte une COPIE — un fichier de données du référentiel n'importe aucune
+ * valeur (`version-moteur.test.ts`) — et `controlerRythmeRetenu` exige que
+ * les deux soient égales.
+ */
+export const RELEVE_NF_C_18_510: ReleveParPreventeur = {
+  date: "2026-10-05",
+  citation:
+    "Fréquence et validité recommandées (Norme NF C 18-510)\n• Cas général : Un recyclage (Maintien et Actualisation des Compétences - MAC) est conseillé tous les 3 ans.",
+  ou: "relecture-jc-2026-10/Rojer-reponse-referentiel JC.pdf, p. 2, annotation du préventeur (Julien Chantoin), 2026-10-05",
+};
 
 export const NORMES: Corpus = {
   id: "normes",
@@ -144,8 +160,9 @@ export const NORMES: Corpus = {
         "Non lue. Connue par l'arrêté du 5 juillet 2024, art. 1 (LEGIARTI000049922372), qui la désigne comme norme « recommandée » au titre de `R. 4544-3` et `R. 4544-32` ; `R. 4544-10` fait délivrer, maintenir ou renouveler l'habilitation « selon les modalités contenues dans les normes mentionnées à l'article R. 4544-3 ».",
       statut: "norme",
       motif:
-        "Entrée pour être comptée, pas pour fonder. Le recyclage triennal de l'habilitation électrique lui est couramment attribué — c'est le « triennal » retiré par l'ADR-023 § 6 — mais le texte de la norme N'A PAS ÉTÉ OUVERT : aucun paragraphe n'est cité, aucune durée n'est relevée ici. Lecture `indirect` : `controlerRythmeRetenu` refuse qu'un rythme retenu la cite tant qu'elle n'a pas été lue à la source. « février 2020 » est porté au 1er du mois faute de jour. Arrêté relu par l'API Légifrance sandbox le 2026-10-07 (`relecture-jc-2026-10/reponses.md` Q7) : « Les référence des normes recommandées conformément aux articles R. 4544-3 et R. 4544-32 du code du travail sont les suivantes : 1° NF C 18-510 : janvier 2012 […] ; 2° NF C 18-510 /A1 : février 2020 […] ».",
-      obligations: [],
+        "~~Entrée pour être comptée, pas pour fonder.~~ [2026-10-08, C66 — ADR-039 § 8 : elle fonde désormais le rythme triennal de `elec-salarie-habilitation`, sur le RELEVÉ DU PRÉVENTEUR (`releveParPreventeur`), et sur lui seul. Décision de la propriétaire : appliquer les 3 ans sur la parole du préventeur, sans attendre le texte de la norme (« il faut appliquer mes recommandations comme des obligations par défaut », annotation du 2026-10-05). La lecture reste `indirect` : Rojer n'a toujours pas ouvert la norme, et la mention le dit — « norme non relue par Rojer ».] Le recyclage triennal de l'habilitation électrique lui est couramment attribué — c'est le « triennal » retiré par l'ADR-023 § 6 — mais le texte de la norme N'A PAS ÉTÉ OUVERT : aucun paragraphe n'est cité, aucune durée n'est relevée ici. Lecture `indirect` : `controlerRythmeRetenu` refuse qu'un rythme retenu la cite tant qu'elle n'a pas été lue à la source. « février 2020 » est porté au 1er du mois faute de jour. Arrêté relu par l'API Légifrance sandbox le 2026-10-07 (`relecture-jc-2026-10/reponses.md` Q7) : « Les référence des normes recommandées conformément aux articles R. 4544-3 et R. 4544-32 du code du travail sont les suivantes : 1° NF C 18-510 : janvier 2012 […] ; 2° NF C 18-510 /A1 : février 2020 […] ».",
+      obligations: ["elec-salarie-habilitation"],
+      releveParPreventeur: RELEVE_NF_C_18_510,
     },
   ],
 };

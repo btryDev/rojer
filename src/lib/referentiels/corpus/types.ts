@@ -221,11 +221,37 @@ export type StatutArticle =
    *
    * Une norme lue `indirect` — par un texte qui la cite, sans son texte à
    * elle — peut figurer ici pour être comptée, mais ne fonde aucun rythme
-   * (`controlerRythmeRetenu`).
+   * (`controlerRythmeRetenu`) — SAUF si `releveParPreventeur` porte le rythme
+   * que le préventeur en a relevé (2026-10-08, C66, ADR-039 § 8).
    */
-  | { statut: "norme"; motif: string; obligations: string[] }
+  | {
+      statut: "norme";
+      motif: string;
+      obligations: string[];
+      releveParPreventeur?: ReleveParPreventeur;
+    }
   /** Présent au corpus, pas encore lu. */
   | { statut: "non_depouille" };
+
+/**
+ * Ce que le préventeur a relevé d'une norme que Rojer n'a pas lue
+ * (ADR-039 § 8, 2026-10-08, C66).
+ *
+ * La propriétaire a décidé d'appliquer « comme des obligations par défaut »
+ * les recommandations du préventeur, y compris un rythme qu'il tire d'une
+ * norme dont le texte n'est pas entre nos mains (NF C 18-510). Le relevé est
+ * une PROVENANCE, pas une lecture : `lecture` reste `indirect`. Il porte la
+ * date et les mots de l'annotation, recopiés tels quels ; la même valeur doit
+ * figurer sur le `rythmeRetenu` qui s'en sert (`controlerRythmeRetenu`).
+ */
+export type ReleveParPreventeur = {
+  /** Date de l'annotation, en clé de jour civil. */
+  date: string;
+  /** Les mots de l'annotation, verbatim (les retours à la ligne gardés). */
+  citation: string;
+  /** Où l'annotation se lit. */
+  ou: string;
+};
 
 /**
  * Comment l'article a été lu. Le degré de confiance est une donnée, pas un

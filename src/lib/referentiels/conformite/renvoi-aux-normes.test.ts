@@ -18,13 +18,16 @@ describe("rythme renvoyé aux normes", () => {
     }
   });
 
-  it("le titre d'habilitation la porte", () => {
-    const r = renvoiAuxNormes(obligationParId("elec-salarie-habilitation")!)!;
+  it("le titre d'habilitation ne la porte plus : la mention du rythme retenu la remplace (C66)", () => {
+    // ~~« le titre d'habilitation la porte »~~ — 2026-10-08 : il porte le
+    // rythme de la NF C 18-510 relevé par le préventeur (ADR-039 § 8).
+    const o = obligationParId("elec-salarie-habilitation")!;
+    expect(renvoiAuxNormes(o)).toBeNull();
+    expect(libelleRythme(o)).toBe(LABEL_PERIODICITE.triennale);
+    // La règle elle-même tient toujours : sans rythme retenu, le renvoi revient.
+    const r = renvoiAuxNormes({ ...o, rythmeRetenu: undefined })!;
     expect(r.court).toBe("Rythme renvoyé aux normes (R. 4544-10)");
     expect(r.long).toContain("« selon les modalités contenues dans les normes mentionnées à l'article R. 4544-3 »");
-    expect(libelleRythme(obligationParId("elec-salarie-habilitation")!)).toBe(
-      "renvoyé aux normes (R. 4544-10)",
-    );
   });
 
   it("pas ce qui cite le même article pour autre chose", () => {
@@ -40,10 +43,11 @@ describe("rythme renvoyé aux normes", () => {
     }
   });
 
-  it("borne haute : une seule obligation livrée la porte aujourd'hui", () => {
-    // Pas une liste : si une autre la reçoit, ce test dit de vérifier qu'elle
-    // relève bien d'un renvoi aux normes.
-    expect(obligationsConformite.filter((o) => renvoiAuxNormes(o) !== null)).toHaveLength(1);
+  it("borne haute : aucune obligation livrée ne la porte aujourd'hui", () => {
+    // ~~une seule~~ — 2026-10-08 (C66). Pas une liste : si une obligation la
+    // reçoit, ce test dit de vérifier qu'elle relève bien d'un renvoi aux
+    // normes que personne n'a relevé.
+    expect(obligationsConformite.filter((o) => renvoiAuxNormes(o) !== null)).toHaveLength(0);
   });
 
   it("ailleurs, le libellé de la périodicité effective", () => {

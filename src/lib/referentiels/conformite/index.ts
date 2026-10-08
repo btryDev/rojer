@@ -347,6 +347,10 @@ export const obligationsConformite: Obligation[] = [
 // quitte le produit, avec la condition halon de
 // `incendie-travail-extincteurs-revision-atelier-decennale`, qui vaut
 // désormais pour tout extincteur. 172 + 0 − 1 = 171.
+// (3) Habilitation électrique : `elec-salarie-habilitation` reçoit le rythme
+// triennal de la NF C 18-510, relevé par le préventeur (ADR-039 § 8,
+// `releveParPreventeur`), norme non relue. 171 + 0 − 0 = 171. Les titres
+// sans date de fin prennent une échéance : délivrance + 3 ans.
 export const REFERENTIEL_VERSION = "2026-10-08.2";
 
 /**

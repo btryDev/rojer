@@ -291,7 +291,15 @@ const RELEVE = {
   // délai de grâce : `5d02a6094169844b` sur sa branche) et de C64
   // (`8113bee280b53454` sur la sienne) : chacune recopiait sans incrément,
   // chacune avec son motif ; la réunion des deux ne change rien d'autre.
-  empreinte: "4b75258a15263110",
+  // Recopiée SANS incrément le 2026-10-08 (C66, ADR-039 § 8) :
+  // `rythme-retenu.ts` (`controlerRythmeRetenu`, règle 3 bis — le relevé du
+  // préventeur) et `mention-rythme.ts` (la mention du relevé). NON : le
+  // contrôle n'est appelé que par les tests, la mention n'est qu'affichée ;
+  // le générateur lit toujours `periodiciteEffective`, inchangée. Ce qui
+  // change les lignes — le rythme triennal du titre d'habilitation — est une
+  // DONNÉE du référentiel, qui déplace son empreinte, donc le sceau.
+  // ~~4b75258a15263110~~.
+  empreinte: "ff1c3cda346da10d",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

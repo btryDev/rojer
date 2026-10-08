@@ -131,10 +131,39 @@ export function controlerRythmeRetenu(
           `${ici} : « ${cle} » est au corpus « ${lu.corpusId} » (${lu.article.statut}), pas au corpus des normes.`,
         );
       }
+      // 3 bis (ADR-039 § 8, 2026-10-08, C66). Une norme lue `indirect` ne
+      // donne un rythme que s'il a été RELEVÉ PAR LE PRÉVENTEUR : la même
+      // date et les mêmes mots au corpus et sur l'obligation. Sans relevé,
+      // la règle d'origine tient entière.
+      const releveCorpus =
+        lu.article.statut === "norme" ? lu.article.releveParPreventeur : undefined;
+      const releve = r.releveParPreventeur;
       if (!lu.article.lecture || lu.article.lecture === "indirect") {
-        v.push(
-          `${ici} : « ${cle} » n'a été lue qu'indirectement — une norme qu'on n'a pas ouverte ne donne pas de rythme.`,
-        );
+        if (!releve) {
+          v.push(
+            `${ici} : « ${cle} » n'a été lue qu'indirectement — une norme qu'on n'a pas ouverte ne donne pas de rythme, sauf relevé du préventeur (\`releveParPreventeur\`).`,
+          );
+        }
+      }
+      if (releve) {
+        if (!releveCorpus) {
+          v.push(
+            `${ici} : relevé du préventeur sur l'obligation, absent de l'entrée « ${cle} » du corpus des normes.`,
+          );
+        } else if (
+          releveCorpus.date !== releve.date ||
+          releveCorpus.citation !== releve.citation
+        ) {
+          v.push(
+            `${ici} : le relevé du préventeur diffère de celui du corpus (« ${cle} ») — une seule source, recopiée.`,
+          );
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(releve.date)) {
+          v.push(`${ici} : date du relevé « ${releve.date} » hors format AAAA-MM-JJ.`);
+        }
+        if (releve.citation.trim().length === 0) {
+          v.push(`${ici} : citation du relevé vide.`);
+        }
       }
     }
   }

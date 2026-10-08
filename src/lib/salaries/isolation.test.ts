@@ -384,7 +384,7 @@ describe("le propriétaire lit son propre dossier", () => {
     // null }` : une visite quinquennale délivrée le 1er juin 2020, sans
     // « valable jusqu'au », sortait de la requête avant d'être classée, et le
     // badge du rail valait 0 quand le calendrier la comptait en retard depuis
-    // le 1er juin 2025. L'habilitation voisine, sans durée écrite, doit rester
+    // le 1er juin 2025. Le titre voisin, sans durée écrite, doit rester
     // hors du compte : c'est la contre-épreuve qui empêche de « réparer » en
     // comptant tout titre sans date.
     h.db.titres.push(
@@ -399,7 +399,10 @@ describe("le propriétaire lit son propre dossier", () => {
       {
         id: "titre-a-habilitation",
         salarieId: "sal-a",
-        obligationId: "elec-salarie-habilitation",
+        // ~~"elec-salarie-habilitation"~~ — 2026-10-08 (C66) : triennale
+        // retenue désormais ; le titre sans durée est l'autorisation de
+        // conduite (R. 4323-56).
+        obligationId: "conduite-salarie-autorisation",
         delivreLe: new Date("2020-06-01T12:00:00.000Z"),
         echeanceLe: null,
         note: null,

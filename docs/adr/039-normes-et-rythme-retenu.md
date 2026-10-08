@@ -62,7 +62,8 @@ texte ne la rend obligatoire. Elle est citée **comme norme** — intitulé,
   corpus parce que l'arrêté du 5 juillet 2024 la cite comme norme
   « recommandée » au titre de `R. 4544-3` ; son texte n'a pas été lu, son
   paragraphe de recyclage est « à préciser », et sa lecture est `indirect`. Un
-  rythme retenu ne peut pas la citer tant qu'elle n'a pas été lue à la source.
+  rythme retenu ne peut pas la citer tant qu'elle n'a pas été lue à la source. [Amendé le
+  2026-10-08 — § 8 : sauf rythme relevé par le préventeur.]
 - APSAD, CACES, recommandations CNAM : **inchangé**. Ce ne sont pas des normes
   au sens de cette décision ; la ligne de l'ADR-032 tient pour elles.
 
@@ -251,3 +252,59 @@ Ce que cette section ne tranche pas : si un acte d'autorité moins strict
 devrait l'emporter sur un DÉFAUT (et non sur une norme). C'est la décision 2
 de la synthèse de revue, laissée à la propriétaire ; tant qu'elle n'est pas
 prise, le plancher tient.
+
+## 8. Un rythme relevé par le préventeur dans une norme non lue — 2026-10-08
+
+[Ajouté le 2026-10-08, décision de la propriétaire ; journal, C66.]
+
+Le § 2 (a) disait : « Une norme lue indirectement ne fonde rien. » ~~Un rythme
+retenu ne peut pas la citer tant qu'elle n'a pas été lue à la source.~~ Il
+reste vrai, **sauf** quand le rythme a été **relevé par le préventeur**. La
+propriétaire a décidé de respecter les décisions du préventeur, qui écrit
+« il faut appliquer mes recommandations comme des obligations par défaut »
+et, sur l'habilitation électrique (annotation du 2026-10-05) : « Fréquence et
+validité recommandées (Norme NF C 18-510) • Cas général : Un recyclage
+(Maintien et Actualisation des Compétences - MAC) est conseillé tous les 3
+ans. » Les 3 ans s'appliquent sur sa parole, sans attendre le texte de la
+norme.
+
+**Le modèle, au plus petit.** Un champ, pas un motif : le rythme reste
+`motif: "norme"` (c'est bien le rythme d'une norme), et il porte une
+provenance, `releveParPreventeur: { date, citation, ou }`. La même valeur est
+posée sur l'entrée du corpus `normes` (statut `norme`, lecture toujours
+`indirect`). `controlerRythmeRetenu`, règle 3 bis :
+
+- une norme lue `indirect` ne donne un rythme que si l'obligation porte un
+  relevé ;
+- le relevé de l'obligation doit être celui du corpus — même date, mêmes mots
+  (une seule source, recopiée : un fichier de données n'importe aucune
+  valeur) ;
+- la date est une clé de jour, la citation n'est pas vide.
+
+Le test vérifie en outre que la citation est l'annotation mot pour mot, et
+qu'elle contient « tous les 3 ans » face à `triennale`.
+
+**La mention** ne qualifie pas et ne lisse pas : « Rythme de la norme
+NF C 18-510, relevé par le préventeur » (court) ; en long, le mot du texte de
+renvoi (`R. 4544-10`), le rythme, la date et les mots du relevé, puis « —
+norme non relue par Rojer ». Elle remplace la mention « Rythme renvoyé aux
+normes (R. 4544-10) », qui s'efface d'elle-même devant un rythme retenu.
+
+**Portée.** Une seule obligation : `elec-salarie-habilitation` (titre
+nominatif, `etat_permanent`, `periodicite: "autre"`, rythme retenu
+triennal). Pas `elec-travail-habilitation-personnel` : une échéance par
+installation doublerait celle des personnes. Rythmes retenus remesurés en
+appelant le 2026-10-08 : ~~neuf~~ dix — trois de norme (dont celui-ci),
+sept par défaut annuel ; la maintenance approfondie des extincteurs est
+retirée et les appareils de cuisson hors ERP entrés le même jour (C66).
+
+**Effet en production.** Un titre sans date de fin reçoit l'échéance
+délivrance + 3 ans (`echeanceDuTitre`) ; délivré il y a plus de trois ans, il
+est **en retard dès la passe suivante**. La grâce de l'ADR-040 ne s'applique
+pas : elle ne couvre que les lignes nées « à planifier », et la ligne d'un
+titre naît datée de sa pièce. Le risque est écrit ici et au journal, pas
+corrigé par un mécanisme neuf.
+
+**Ce que cela n'autorise pas.** Un relevé sans annotation datée et citée mot
+pour mot ; un relevé sur une norme qui n'est pas au corpus ; un rythme que le
+préventeur n'a pas écrit.

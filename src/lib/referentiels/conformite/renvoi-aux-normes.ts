@@ -10,6 +10,14 @@
  * dans une norme que Rojer n'a pas lue (NF C 18-510, lecture `indirect` au
  * corpus `normes` : elle ne fonde aucun rythme retenu, ADR-039 § 2 (a)).
  *
+ * [2026-10-08, C66 — ADR-039 § 8 : l'habilitation reçoit le rythme de la
+ * NF C 18-510 relevé par le préventeur (triennal), et la mention du rythme
+ * retenu prend la place de celle-ci — « Rythme de la norme NF C 18-510 (tous
+ * les 3 ans), relevé par le préventeur … — norme non relue par Rojer ». La
+ * règle ci-dessous s'efface d'elle-même devant un `rythmeRetenu` : AUCUNE
+ * obligation livrée ne la porte plus (borne haute à zéro, test). Le module
+ * reste pour un prochain renvoi aux normes que personne n'aurait relevé.]
+ *
  * Ce module ne pose donc AUCUNE échéance. Il dit d'où le rythme est absent :
  * renvoyé, pas inexistant. Il ne modifie aucune obligation ; il lit ce
  * qu'elles portent déjà — `periodicite: "autre"`, pas de rythme retenu, un

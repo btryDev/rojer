@@ -83,22 +83,22 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**171 obligations**, **333 références** — 95 obligations en citent plus d'une.
+**171 obligations**, **334 références** — 96 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
 | 5 · lu à la source, verbatim relevé | 81 | 47 % | 87 | 193 | 58 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 87 | 51 % | 84 | 136 | 41 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 86 | 50 % | 84 | 136 | 41 % |
 | 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
-| 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
+| 2 · lu ailleurs qu'à la source | 1 | 1 % | 0 | 1 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**168 obligations sur 171 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**167 obligations sur 171 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **3 obligations (2 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
-**8 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `sante-travail-etablissement-adhesion-spst`.
+**9 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-habilitation`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `sante-travail-etablissement-adhesion-spst`.
 
 **Aucune référence n'est au bas de l'échelle** : les 2 degrés « au corpus, aucune trace de lecture » et « rien à ouvrir » sont vides. Toute référence du référentiel porte une clé d'article, cette clé est connue d'un corpus, et cet article porte une date et un moyen de lecture. Ces degrés restent dans l'échelle parce que leur disparition ne se verrait pas si l'échelle ne les nommait plus.
 
@@ -110,7 +110,7 @@ repose sur un texte que personne n'a ouvert.
 | --- | --- | --- |
 | ancrée | 310 | 93 % |
 | divergente | 1 | 0 % |
-| jamais constatée | 22 | 7 % |
+| jamais constatée | 23 | 7 % |
 
 **9 obligations sur 171 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
@@ -128,7 +128,7 @@ repose sur un texte que personne n'a ouvert.
 | `compactage_dechets` | 1 | 5 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-09-01 → 2026-09-02 |
 | `cuisson_hotte` | 7 | 10 | 3 | 4 | · | · | · | · | 7 / 7 — 100 % | 1 / 10 | 2026-08-27 → 2026-10-07 |
 | `eclairage` | 1 | 2 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 2 | 2026-09-01 → 2026-09-02 |
-| `electricite` | 14 | 23 | 5 | 8 | 1 | · | · | · | 13 / 14 — 93 % | 1 / 23 | 2026-08-26 → 2026-10-07 |
+| `electricite` | 14 | 24 | 5 | 7 | 1 | 1 | · | · | 12 / 14 — 86 % | 2 / 24 | 2026-08-26 → 2026-10-07 |
 | `epi` | 3 | 8 | 3 | · | · | · | · | · | 3 / 3 — 100 % | 0 / 8 | 2026-09-04 |
 | `equipement_sous_pression` | 1 | 1 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 1 | 2026-09-01 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
@@ -158,7 +158,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `equipement` | 87 | 168 | 54 | 32 | 1 | · | · | · | 86 / 87 — 99 % | 22 / 168 | 2026-08-26 → 2026-10-07 |
 | `etablissement` | 70 | 133 | 27 | 41 | 2 | · | · | · | 68 / 70 — 97 % | 0 / 133 | 2026-08-26 → 2026-10-07 |
-| `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
+| `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
@@ -168,18 +168,18 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 
 | date de lecture | références | part | obligations concernées |
 | --- | --- | --- | --- |
-| 2026-08-26 | 25 | 8 % | 25 |
+| 2026-08-26 | 25 | 7 % | 25 |
 | 2026-08-27 | 7 | 2 % | 4 |
 | 2026-08-31 | 59 | 18 % | 29 |
 | 2026-09-01 | 119 | 36 % | 74 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 10 | 3 % | 5 |
 | 2026-09-20 | 3 | 1 % | 2 |
-| 2026-09-26 | 25 | 8 % | 20 |
+| 2026-09-26 | 25 | 7 % | 20 |
 | 2026-09-27 | 36 | 11 % | 34 |
-| 2026-10-07 | 31 | 9 % | 20 |
+| 2026-10-07 | 32 | 10 % | 21 |
 
-333 des 333 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
+334 des 334 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-10-07.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -195,7 +195,7 @@ que rien ne cite n'apparaît donc dans aucun degré ci-dessus — et le prendre
 pour du travail restant est exactement l'erreur qui a failli faire relancer
 une relecture déjà faite.
 
-**343 articles dépouillés ne sont cités par aucune obligation**, répartis sur 50 corpus.
+**342 articles dépouillés ne sont cités par aucune obligation**, répartis sur 50 corpus.
 
 | corpus | articles non cités | sur | lus |
 | --- | --- | --- | --- |
@@ -221,11 +221,11 @@ une relecture déjà faite.
 | `code-travail-duerp-principes` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `code-travail-bruit-vibrations` | 6 | 6 | 2026-09-02 → 2026-09-27 |
 | `esp-suivi-en-service` | 5 | 6 | 2026-09-01 → 2026-09-27 |
-| `normes` | 5 | 7 | 2026-10-07 |
 | `code-travail-manutention-ecran` | 5 | 7 | 2026-09-26 |
 | `code-travail-matieres-inflammables` | 5 | 6 | 2026-09-02 → 2026-09-27 |
 | `cch-classement-erp-igh` | 5 | 5 | 2026-09-03 → 2026-09-27 |
 | `icpe-stockage` | 4 | 4 | 2026-09-01 |
+| `normes` | 4 | 7 | 2026-10-07 |
 | `code-travail-co-activite` | 4 | 11 | 2026-08-31 → 2026-09-02 |
 | `code-travail-travail-dissimule` | 4 | 4 | 2026-09-02 |
 | `arrete-2017-04-19-registre-accessibilite` | 4 | 4 | 2026-09-03 → 2026-09-27 |
@@ -260,6 +260,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `elec-salarie-habilitation` | electricite | salarie | 2 | 4 · agent + verbatim | 2 · indirect | 1 / 2 | 2026-09-01 → 2026-10-07 |
 | `elec-travail-habilitation-personnel` | electricite | equipement | 2 | 4 · agent + verbatim | 3 · lu sans verbatim | 1 / 2 | 2026-08-26 → 2026-09-01 |
 | `incendie-erp-pe4-entretien-installations-techniques` | incendie | etablissement | 3 | 5 · première main | 3 · lu sans verbatim | 0 / 3 | 2026-08-26 → 2026-09-27 |
 | `sante-travail-etablissement-adhesion-spst` | sante_travail | etablissement | 3 | 4 · agent + verbatim | 3 · lu sans verbatim | 0 / 3 | 2026-08-31 |
@@ -282,7 +283,6 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `eclairage-etablissement-regles-entretien` | eclairage | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-02 |
 | `elec-erp-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `elec-salarie-attestation-medicale-voisinage` | electricite | salarie | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
-| `elec-salarie-habilitation` | electricite | salarie | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-travail-carnet-prescriptions` | electricite | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-travail-consignation-registre` | electricite | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-31 → 2026-09-01 |
 | `elec-travail-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
@@ -437,7 +437,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 333 références, une par une
+## 9. Les 334 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -456,6 +456,7 @@ refaire pour la contredire.
 | `elec-travail-habilitation-personnel` | contexte 1 | INRS ED 6127 « Habilitation électrique » | INRS ED 6127 | inrs-documentaire | sans_objet | 2026-08-26 | premiere_main | — | — | — | — | 3 · lu sans verbatim | jamais constatée |
 | `elec-travail-carnet-prescriptions` | fondement | R. 4544-10, quatrième alinéa (carnet de prescriptions remis à chaque travailleur) | R. 4544-10 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2025-10-01 | 2025-10-01 | 4 · agent + verbatim | ancrée |
 | `elec-salarie-habilitation` | fondement | R. 4544-10 (habilitation délivrée à un travailleur désigné) | R. 4544-10 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2025-10-01 | 2025-10-01 | 4 · agent + verbatim | ancrée |
+| `elec-salarie-habilitation` | contexte 1 | NF C 18-510 (janvier 2012) et NF C 18-510/A1 (février 2020) — recyclage de l'habilitation (MAC), paragraphe non relevé | NF C 18-510 | normes | norme | 2026-10-07 | indirect | ✓ | — | 2020-02-01 | — | 2 · indirect | jamais constatée |
 | `elec-salarie-attestation-medicale-voisinage` | fondement | R. 4544-11-1 | R. 4544-11-1 | code-travail-electricite | retenu | 2026-08-27 | premiere_main | — | ✓ | 2025-10-01 | 2025-10-01 | 5 · première main | ancrée |
 | `elec-salarie-attestation-medicale-voisinage` | contexte 1 | R. 4544-10 (habilitation délivrée à un travailleur désigné) | R. 4544-10 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2025-10-01 | 2025-10-01 | 4 · agent + verbatim | ancrée |
 | `elec-erp-mise-en-service` | fondement | Arrêté du 25 juin 1980, art. GE 6 à GE 8 (vérifications par organismes agréés, rapport RVRAT) — livre II, établissements des quatre premières catégories | GE 6 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2007-11-19 | 2007-11-19 | 4 · agent + verbatim | ancrée |

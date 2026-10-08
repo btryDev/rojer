@@ -1738,7 +1738,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // des extincteurs sort (`OBLIGATIONS_RETIREES`, `absorbePar: null`), la
     // question `typeExtincteur` et sa condition halon sur la décennale hors
     // ERP quittent le produit. 172 + 0 − 1 = 171.
-    { version: "2026-10-08.2", empreinte: "171-12fb701f5fcff721" },
+    // ~~171-12fb701f5fcff721~~ : empreinte après (4), jamais scellée.
+    // (3) habilitation électrique : `elec-salarie-habilitation` reçoit le
+    // rythme triennal de la NF C 18-510 relevé par le préventeur (ADR-039
+    // § 8). 171 + 0 − 0 = 171.
+    { version: "2026-10-08.2", empreinte: "171-5916acceca368348" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

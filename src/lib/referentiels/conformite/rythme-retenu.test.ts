@@ -150,6 +150,51 @@ describe("controlerRythmeRetenu — chaque règle rougit quand on la casse", () 
     expect(varier(r.reference, "NF S 61-920")).toMatch(/ne commence pas/);
   });
 
+  it("3 bis. une norme lue indirectement ne donne un rythme que relevé par le préventeur, le même au corpus (C66)", () => {
+    const habil = obligationParId("elec-salarie-habilitation")!;
+    const r = habil.rythmeRetenu as Extract<RythmeRetenu, { motif: "norme" }>;
+    const avecReleve = (releveParPreventeur: unknown) =>
+      controlerRythmeRetenu(
+        { ...habil, rythmeRetenu: { ...r, releveParPreventeur } } as Obligation,
+        articleDe,
+      ).join();
+    // L'obligation livrée tient.
+    expect(controlerRythmeRetenu(habil, articleDe)).toEqual([]);
+    // Sans relevé, la règle d'origine revient.
+    expect(avecReleve(undefined)).toMatch(/indirectement/);
+    // Un relevé qui n'est pas celui du corpus : un mot changé, une date changée.
+    expect(
+      avecReleve({ ...r.releveParPreventeur!, citation: r.releveParPreventeur!.citation.replace("3 ans", "5 ans") }),
+    ).toMatch(/diffère de celui du corpus/);
+    expect(avecReleve({ ...r.releveParPreventeur!, date: "2026-10-06" })).toMatch(/diffère de celui du corpus/);
+    expect(avecReleve({ ...r.releveParPreventeur!, date: "05/10/2026" })).toMatch(/hors format/);
+    // Un relevé posé sur une norme dont le corpus n'en porte aucun.
+    const n = extincteursNorme();
+    const rn = n.rythmeRetenu as Extract<RythmeRetenu, { motif: "norme" }>;
+    expect(
+      controlerRythmeRetenu(
+        { ...n, rythmeRetenu: { ...rn, releveParPreventeur: r.releveParPreventeur } } as Obligation,
+        articleDe,
+      ).join(),
+    ).toMatch(/absent de l'entrée « NF S 61-919 § 5.1.1 »/);
+  });
+
+  it("3 bis. le relevé est l'annotation du préventeur, mot pour mot, et dit le rythme retenu", () => {
+    const habil = obligationParId("elec-salarie-habilitation")!;
+    const r = habil.rythmeRetenu as Extract<RythmeRetenu, { motif: "norme" }>;
+    // Relevé le 2026-10-08 dans « Rojer-reponse-referentiel JC.pdf », p. 2
+    // (annotation /Text du 2026-10-05 18:26:53), retour chariot compris.
+    expect(r.releveParPreventeur).toEqual({
+      date: "2026-10-05",
+      citation:
+        "Fréquence et validité recommandées (Norme NF C 18-510)\n• Cas général : Un recyclage (Maintien et Actualisation des Compétences - MAC) est conseillé tous les 3 ans.",
+      ou: expect.stringContaining("Rojer-reponse-referentiel JC.pdf, p. 2"),
+    });
+    expect(r.periodicite).toBe("triennale");
+    expect(r.releveParPreventeur!.citation).toContain("tous les 3 ans");
+    expect(articleDe("NF C 18-510")?.article.lecture).toBe("indirect");
+  });
+
   it("4. le texte vague est recopié mot pour mot d'une citation lue", () => {
     const o = formationDefaut();
     const paraphrase = {
@@ -313,6 +358,17 @@ describe("la mention", () => {
     expect(m.long).not.toMatch(/périodicité tous/);
     // Sans premier délai, le rythme seul.
     expect(mentionRythmeRetenu(extincteursNorme())!.long).toContain(" : tous les ans.");
+  });
+
+  it("dit le relevé du préventeur et que Rojer n'a pas relu la norme (C66)", () => {
+    const m = mentionRythmeRetenu(obligationParId("elec-salarie-habilitation")!)!;
+    expect(m.court).toBe("Rythme de la norme NF C 18-510, relevé par le préventeur");
+    expect(m.long).toBe(
+      "Le texte dit « selon les modalités contenues dans les normes mentionnées à l'article R. 4544-3 » ; " +
+        "Rythme de la norme NF C 18-510 (tous les 3 ans), relevé par le préventeur le 05/10/2026 : " +
+        "« Fréquence et validité recommandées (Norme NF C 18-510) • Cas général : Un recyclage (Maintien et Actualisation des Compétences - MAC) est conseillé tous les 3 ans. » " +
+        "— norme non relue par Rojer. C'est une norme, citée comme norme, pas un article de loi.",
+    );
   });
 
   it("ne qualifie rien", () => {

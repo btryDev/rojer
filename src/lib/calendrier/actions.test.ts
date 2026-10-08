@@ -85,7 +85,10 @@ const AERATION_ABSORBANTE = "aeration-controle-installations-r4222-20";
  *  et ciblable par une prescription qui lui donne un rythme (NB4). */
 const PORTAIL_MAINTIEN = "porte-auto-maintien-en-etat";
 /** Portée par un SALARIÉ, passée de triennale à `autre` (ADR-023 § 6). */
-const HABILITATION_SALARIE = "elec-salarie-habilitation";
+// ~~"elec-salarie-habilitation"~~ — 2026-10-08 (C66) : l'habilitation reçoit
+// un rythme triennal retenu (ADR-039 § 8) ; le titre SANS durée de ces tests
+// devient l'autorisation de conduite (R. 4323-56, aucune durée écrite).
+const HABILITATION_SALARIE = "conduite-salarie-autorisation";
 
 // ---------------------------------------------------------------------------
 // Fixtures — elles rendent le monde tel qu'il est, sans pré-filtrer
@@ -1081,7 +1084,7 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
         id: "v-habilitation",
         salarieId: "sal-1",
         obligationId: HABILITATION_SALARIE,
-        libelleObligation: "Habilitation électrique",
+        libelleObligation: "Autorisation de conduite",
         periodicite: "triennale",
         datePrevue: new Date("2023-03-01T00:00:00Z"),
         statut: "planifiee",

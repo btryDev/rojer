@@ -330,7 +330,10 @@ qui détient quel titre (`Salarie`, `TitreSalarie`), et le référentiel fournit
 **Quatorze obligations salarié sont livrées** : treize aux lots 7 et 8 (2026-08-31),
 la quatorzième le 2026-09-01 — l'habilitation électrique de `R. 4544-10`, en
 `periodicite: "autre"` faute de toute durée écrite, le recyclage triennal venant
-de la NF C 18-510 et non du Code. C'est elle qui vide le dernier `titre: null` du
+de la NF C 18-510 et non du Code. [2026-10-08, C66 : le titre porte désormais
+ce triennal en `rythmeRetenu` (motif `norme`), sur le relevé du préventeur —
+la norme reste non lue (ADR-039 § 8) ; échéance = délivrance + 3 ans, une date
+de fin saisie prime.] C'est elle qui vide le dernier `titre: null` du
 référentiel : `elec-travail-habilitation-personnel` annonçait qu'une personne
 nommée était requise sans laisser en déclarer une. Le catalogue n'en
 comptait qu'une avant les lots 7 et 8, l'attestation médicale quinquennale de `R. 4544-11-1` :
@@ -585,7 +588,8 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     de la propriétaire). Source `NORME`, corpus `normes`, `rythmeRetenu` à côté
     de `periodicite`, `periodiciteEffective(o)`, mention « Rythme de la norme … »
     / « Rythme retenu par défaut ». Amende les ADR-003, 023 § 6, 026 § 2, 027
-    et 032
+    et 032. § 8 (2026-10-08) : une norme non lue donne un rythme s'il est
+    relevé par le préventeur (`releveParPreventeur`) — NF C 18-510, 3 ans
 40. **040** — Une ligne « à planifier » née d'un changement du référentiel
     (passe de reprise : sceau du calendrier changé) n'est comptée en retard
     qu'après origine + 3 mois (**acceptée le 2026-10-08**, décision de la

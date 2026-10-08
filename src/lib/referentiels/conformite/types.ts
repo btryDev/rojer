@@ -1,4 +1,5 @@
 import type { InitiativeObligation } from "./initiative";
+import type { ReleveParPreventeur } from "../corpus/types";
 import type {
   CategorieEquipement,
   Periodicite,
@@ -852,6 +853,14 @@ export type RythmeRetenu =
       reference: ReferenceNorme;
       /** Le mot vague du texte, s'il y en a un — affiché en complément. */
       texteVague?: string;
+      /**
+       * Le rythme a été relevé par le préventeur dans une norme que Rojer n'a
+       * pas lue (ADR-039 § 8, 2026-10-08). Seule voie par laquelle une norme
+       * lue `indirect` peut donner un rythme : la même valeur doit être au
+       * corpus des normes, et la mention le dit (« relevé par le préventeur —
+       * norme non relue par Rojer »).
+       */
+      releveParPreventeur?: ReleveParPreventeur;
     }
   | {
       motif: "defaut_annuel";
