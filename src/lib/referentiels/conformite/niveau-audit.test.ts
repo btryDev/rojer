@@ -26,7 +26,7 @@ import { genererVerificationsDepuisTitres } from "@/lib/calendrier/generateur";
 import { obligationsNiveauAuditDuDossier } from "@/lib/perimetre/niveau-audit";
 import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
 import { cataloguerTitres } from "@/lib/salaries/catalogue";
-import { CORPUS } from "@/lib/referentiels/corpus";
+import { indexArticlesParRef } from "@/lib/referentiels/corpus";
 import {
   empreinteReferentiel,
   estNiveauAudit,
@@ -183,22 +183,22 @@ describe("niveau audit — (b) nommée dans la rubrique « Niveau audit »", () 
 });
 
 describe("niveau audit — (c) la référence légale reste", () => {
-  const retenus = new Map<string, string[]>();
-  for (const c of CORPUS) {
-    for (const a of c.articles) {
-      if (a.statut !== "retenu") continue;
-      for (const id of a.obligations) {
-        retenus.set(id, [...(retenus.get(id) ?? []), a.ref]);
-      }
-    }
-  }
+  const parRef = indexArticlesParRef();
 
-  it("chaque obligation audit cite un texte, et un article retenu au corpus la nomme", () => {
+  // Le FONDEMENT, pas n'importe quel article : un article de contexte qui
+  // nomme l'obligation (R. 4323-100 pour les EPI) laissait passer un
+  // fondement vidé — éprouvé en retirant le gilet des renvois de l'art. 1er.
+  it("chaque obligation audit cite un fondement, lu au corpus, retenu, qui la nomme", () => {
     for (const o of AUDIT) {
       const [fondement] = o.referencesLegales;
       expect(fondement.reference.trim(), o.id).not.toBe("");
       expect(fondement.article, o.id).toBeTruthy();
-      expect(retenus.get(o.id) ?? [], o.id).not.toEqual([]);
+      const art = parRef.get(fondement.article!)?.article;
+      expect(art?.statut, `${o.id} : ${fondement.article}`).toBe("retenu");
+      expect(
+        art?.statut === "retenu" ? art.obligations : [],
+        `${o.id} : ${fondement.article} ne la nomme plus`,
+      ).toContain(o.id);
     }
   });
 
