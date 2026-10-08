@@ -3,9 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { FaitActiviteRow } from "@/components/salaries/FaitActiviteRow";
 import { requireEtablissement } from "@/lib/auth/scope";
-import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
+import { FAITS_ACTIVITE, intituleDuFait } from "@/lib/etablissements/faits-activite";
 import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
-import { intituleDuFait } from "@/lib/salaries/titres-du-duerp";
 
 /**
  * « Évaluer les risques de vos salariés » — les seules questions qui rendent

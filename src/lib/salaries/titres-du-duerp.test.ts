@@ -39,8 +39,13 @@ describe("titresDuDuerpPourUnePersonne", () => {
     const r = titresDuDuerpPourUnePersonne(AUCUN, []);
     expect(r.length).toBeGreaterThan(0);
     expect(r.every((x) => x.reponse === "sans_reponse")).toBe(true);
-    // Un fait sans titre (la manutention) n'a rien à faire sur la fiche.
-    expect(r.some((x) => x.champ === "manutentionManuelle")).toBe(false);
+    // La manutention n'a pas de titre, mais une formation (R. 4541-8) : elle
+    // est sur la fiche, sinon elle ne servirait à rien.
+    const manutention = r.find((x) => x.champ === "manutentionManuelle");
+    expect(manutention?.titres).toEqual([]);
+    expect(manutention?.formations.map((o) => o.id)).toContain(
+      "formation-securite-etablissement-manutention",
+    );
   });
 
   it("« oui » porte les titres, avec la dernière délivrance de cette personne", () => {

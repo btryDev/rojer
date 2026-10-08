@@ -18,10 +18,14 @@
  * concerné, il ne peut donc pas dire que quelqu'un l'est sans son titre.
  */
 
-import type { ObligationPorteeParSalarie } from "@/lib/referentiels/conformite";
-import { questionsDetectionTransverses } from "@/lib/referentiels";
+import {
+  obligationsConformite,
+  type Obligation,
+  type ObligationPorteeParSalarie,
+} from "@/lib/referentiels/conformite";
 import {
   FAITS_ACTIVITE,
+  intituleDuFait,
   type ChampFaitActivite,
   type ReponsesFaitsActivite,
 } from "@/lib/etablissements/faits-activite";
@@ -48,30 +52,46 @@ export type QuestionDeLaFiche = {
   intitule: string;
   reponse: ReponseTransverse;
   titres: TitreDuDuerp[];
+  /**
+   * Les FORMATIONS que l'établissement organise pour les travailleurs exposés
+   * au fait — gestes et postures (R. 4541-8), formation écran (R. 4542-16).
+   * Ce ne sont pas des titres nominatifs : l'obligation est portée par
+   * l'établissement et suivie dans « Ce qui doit être en place ». Elles
+   * s'affichent quand même sur la fiche, parce qu'un salarié concerné doit les
+   * recevoir et que ce qu'on ne voit pas ne sert à rien (la propriétaire, le
+   * 2026-10-08).
+   *
+   * Dérivées du référentiel, jamais listées : les obligations du domaine
+   * formation que le même fait conditionne (`typologies.activite`).
+   */
+  formations: Obligation[];
+  /** Les autres fondements des mêmes titres, à dire quelle que soit la réponse. */
+  autresFondements: string | null;
 };
 
-/** L'intitulé d'un fait : celui de sa question transverse, sinon le sien. */
-export function intituleDuFait(f: (typeof FAITS_ACTIVITE)[number]): string {
-  const q = f.questionTransverse
-    ? questionsDetectionTransverses.find((x) => x.id === f.questionTransverse)
-    : undefined;
-  const intitule = q?.intitule ?? f.question;
-  if (!intitule) throw new Error(`Fait sans intitulé : ${f.champ}`);
-  return intitule;
+/** Les formations d'établissement qu'un fait d'activité conditionne. */
+export function formationsDuFait(champ: ChampFaitActivite): Obligation[] {
+  return obligationsConformite.filter(
+    (o) => o.typologies.activite === champ && o.domaine === "formation_securite",
+  );
 }
 
 /**
- * Les faits d'activité qui déclenchent au moins un titre, avec la réponse de
- * l'établissement et les titres de la personne.
+ * Les faits d'activité qui rendent dû au moins un titre ou une formation, avec
+ * la réponse de l'établissement et les titres de la personne.
  */
 export function titresDuDuerpPourUnePersonne(
   faits: ReponsesFaitsActivite,
   titres: readonly TitreLu[],
 ): QuestionDeLaFiche[] {
-  return FAITS_ACTIVITE.filter((f) => f.declencheTitres.length > 0).map((f) => ({
+  return FAITS_ACTIVITE.filter(
+    (f) => f.declencheTitres.length > 0 || formationsDuFait(f.champ).length > 0,
+  ).map((f) => ({
     champ: f.champ,
     intitule: intituleDuFait(f),
     reponse: reponseDuFait(faits[f.champ]),
+    formations: formationsDuFait(f.champ),
+    autresFondements: f.autresFondements ?? null,
     titres: f.declencheTitres.flatMap((id) => {
       const obligation = titreParId(id);
       // Un identifiant mort est interdit au registre par

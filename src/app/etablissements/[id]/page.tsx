@@ -14,10 +14,8 @@ import {
   repondreSommeil,
   type ReponseParametrage,
 } from "@/lib/etablissements/parametrage";
-import {
-  relancesDuDossier,
-  type QuestionOuiNon,
-} from "@/lib/etablissements/relance";
+import { relancesDuDossier, type Relance } from "@/lib/etablissements/relance";
+import { estChampFaitActivite } from "@/lib/etablissements/faits-activite";
 import { DashboardGrid } from "@/components/dashboard/widgets/DashboardGrid";
 import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
@@ -292,22 +290,25 @@ export default async function EtablissementPage({
   // cochée ; une question à nombre renvoie à la fiche et s'efface quand le
   // silence cesse.
   const questionsMuettes = marquesDuDossier.questions;
-  const ACTIONS_OUI_NON: Record<
-    QuestionOuiNon,
+  // Les relances des questions propres à la fiche ont chacune leur action
+  // serveur ; celles des faits d'activité (ADR-041) passent par l'écrivain
+  // unique, qui pose aussi le risque du DUERP. Toutes sont des RÉFÉRENCES
+  // d'actions serveur liées par `.bind` : une fermeture écrite ici ne se
+  // sérialise pas vers `QuestionParametrage`, composant client (relecture du
+  // 2026-10-08, B1 — la fiche plantait dès qu'une relance de fait s'affichait).
+  const ACTIONS_DE_LA_FICHE: Record<
+    "matieres_r4227_22" | "chiffons_impregnes" | "locaux_sommeil_public" | "epi_presents",
     (id: string, prev: ReponseParametrage, fd: FormData) => Promise<ReponseParametrage>
   > = {
     matieres_r4227_22: repondreMatieres,
     chiffons_impregnes: repondreChiffons,
     locaux_sommeil_public: repondreSommeil,
-    // Les faits d'activité passent par leur écrivain unique (ADR-041), qui
-    // pose aussi le risque du DUERP.
-    manutention_manuelle: (eid, p, fd) => repondreFaitActiviteFormulaire(eid, "manutentionManuelle", p, fd),
-    travail_ecran: (eid, p, fd) => repondreFaitActiviteFormulaire(eid, "travailSurEcran", p, fd),
-    operations_electriques: (eid, p, fd) => repondreFaitActiviteFormulaire(eid, "operationsElectriques", p, fd),
-    conduite_engins: (eid, p, fd) => repondreFaitActiviteFormulaire(eid, "conduiteEngins", p, fd),
-    exposition_cmr: (eid, p, fd) => repondreFaitActiviteFormulaire(eid, "expositionCMR", p, fd),
     epi_presents: repondreEpiPresents,
   };
+  const actionDeRelance = (relance: Extract<Relance, { mode: "oui_non" }>) =>
+    estChampFaitActivite(relance.champ)
+      ? repondreFaitActiviteFormulaire.bind(null, id, relance.champ)
+      : ACTIONS_DE_LA_FICHE[relance.question as keyof typeof ACTIONS_DE_LA_FICHE].bind(null, id);
   for (const { question, relance, faite } of relancesDuDossier(questionsMuettes, {
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
     chiffonsImpregnes: etab.chiffonsImpregnes,
@@ -331,7 +332,7 @@ export default async function EtablissementPage({
             faite,
             question: (
               <QuestionParametrage
-                action={ACTIONS_OUI_NON[relance.question].bind(null, id)}
+                action={actionDeRelance(relance)}
                 labelOui="Oui"
                 labelNon="Non"
               />

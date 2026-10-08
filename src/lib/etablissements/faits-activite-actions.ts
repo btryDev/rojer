@@ -29,9 +29,15 @@ export async function repondreFaitActivite(
   await assertEtablissementOwnership(etablissementId);
   // Le champ vient du client : une colonne arbitraire n'entre pas en base.
   if (!CHAMPS.has(champ)) return { status: "error", message: "Question inconnue." };
+  // `boolean | null` n'est qu'un type : la valeur vient aussi du client.
+  if (valeur !== true && valeur !== false && valeur !== null) {
+    return { status: "error", message: "Répondez oui ou non." };
+  }
   const { conserve } = await ecrireFaitActivite(etablissementId, champ, valeur, "si_vierge");
   const regenere = await regenererApresMutation(etablissementId, `faits-activite/${champ}`);
   revalidatePath(`/etablissements/${etablissementId}`, "layout");
+  // L'étape transverse du DUERP lit le même fait.
+  revalidatePath("/duerp/[id]/transverses", "page");
   const base: ReponseParametrage = regenere
     ? { status: "success" }
     : { status: "success_avec_avertissement", message: MESSAGE_REGEN_ECHEC };

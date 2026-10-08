@@ -518,12 +518,13 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
     // norme ou d'une recommandation CACES. Le préventeur (annotation du
     // 2026-10-05, « attention aux équipements, manuel, automatique, semi
     // automatique, transport de charges ou de personnes ») : la question dit
-    // désormais charges OU personnes, et écarte en clair le transpalette
-    // manuel, que « automoteur » exclut. Le fait vit sur l'établissement
+    // désormais charges OU personnes. Elle N'ÉCARTE PAS le transpalette manuel :
+    // il n'est pas automoteur, mais « servant au levage » pourrait le viser, et
+    // aucun texte lu ne tranche (relecture du 2026-10-08). Le fait vit sur l'établissement
     // (`etablissements/faits-activite.ts`, ADR-041).
     id: "q-conduite-engins",
     intitule:
-      "Des travailleurs conduisent-ils des équipements de travail mobiles automoteurs ou servant au levage de charges ou de personnes (chariot élévateur, transpalette à moteur, nacelle, grue, pont roulant) ? Un transpalette manuel n'en fait pas partie.",
+      "Des travailleurs conduisent-ils des équipements de travail mobiles automoteurs ou servant au levage de charges ou de personnes (chariot élévateur, transpalette à moteur, nacelle, grue, pont roulant) ?",
     risqueIdAssocie: "trv-conduite-engins",
   },
 ];

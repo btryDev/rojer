@@ -23,7 +23,7 @@ export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
   exposition_cmr:
     "Rojer ne sait pas si des travailleurs sont exposés à des agents cancérogènes, mutagènes ou toxiques pour la reproduction : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   epi_presents:
-    "La fiche de l'établissement ne dit pas si des équipements de protection individuelle y sont portés : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+    "La fiche de l'établissement ne dit pas si vous fournissez des équipements de protection individuelle : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   locaux_sommeil_public:
     "La fiche de l'établissement ne dit pas s'il comporte des locaux à sommeil pour le public : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   // Inatteignable en production depuis la contrainte CHECK

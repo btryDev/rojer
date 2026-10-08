@@ -1,8 +1,8 @@
 // Ce qu'un DUERP a répondu à chaque question transverse — oui, non, ou rien.
 //
-// La règle vit ici une fois, pour trois lecteurs : l'écran des questions,
-// l'action qui y répond, et la fiche d'un salarié qui en tire ses titres
-// (ADR-038). Avant elle, l'écran lisait « oui » sur la présence d'un risque et
+// La règle vit ici une fois, pour l'écran des questions et l'action qui y
+// répond (ADR-038). La fiche salarié et le tableau de bord lisent depuis
+// l'ADR-041 les faits d'activité de l'établissement, plus le DUERP. Avant elle, l'écran lisait « oui » sur la présence d'un risque et
 // ne pouvait rien lire d'autre : un « non » et une question jamais lue étaient
 // le même état, et `QuestionTransverseRow` le disait lui-même.
 //
@@ -88,9 +88,9 @@ export function questionTransverseParId(
 /**
  * Les `referentielId` des risques portés par les unités transverses d'un
  * DUERP — TOUTES, pas la première : le schéma n'interdit pas d'en avoir deux.
- * Un seul chemin pour l'écran des questions, la fiche salarié et le tableau
- * de bord : trois copies de cette ligne avaient fini par lire des unités
- * différentes (relecture du 2026-10-05, C2).
+ * Lu par l'écran des questions transverses. Trois copies de cette ligne
+ * avaient fini par lire des unités différentes (relecture du 2026-10-05, C2) ;
+ * depuis l'ADR-041, la fiche et le tableau de bord ne lisent plus le DUERP.
  */
 export function risquesTransversesActifs(
   unites: readonly {

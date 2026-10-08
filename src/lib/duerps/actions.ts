@@ -5,9 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
-import { questionTransverseParId } from "@/lib/transverses/etat";
-import { poserRisqueTransverse } from "@/lib/transverses/risque-transverse";
+import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
 import {
   requireDuerp,
   requireEtablissement,
@@ -70,14 +68,7 @@ export async function creerDuerp(etablissementId: string): Promise<void> {
         },
         select: { id: true },
       });
-      for (const f of FAITS_ACTIVITE) {
-        const question = f.questionTransverse
-          ? questionTransverseParId(f.questionTransverse)
-          : undefined;
-        if (question && etablissement[f.champ] === true) {
-          await poserRisqueTransverse(tx, cree.id, question, true, "si_vierge");
-        }
-      }
+      await reprendreFaitsDansDuerp(tx, cree.id, etablissement);
       return cree;
     });
   }

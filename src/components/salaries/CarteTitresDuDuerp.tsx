@@ -46,7 +46,7 @@ export function CarteTitresDuDuerp({
         il est dû, et vous seul savez si cette personne la remplit.
       </p>
       <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
-        {questions.map(({ champ, intitule, reponse, titres }) => (
+        {questions.map(({ champ, intitule, reponse, titres, formations, autresFondements }) => (
           <li
             key={champ}
             id={champ}
@@ -64,7 +64,29 @@ export function CarteTitresDuDuerp({
                 {reponse === "sans_reponse" ? "Répondre →" : "Modifier la réponse →"}
               </Link>
             </p>
+            {autresFondements && (
+              <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                {autresFondements}
+              </p>
+            )}
             <ul className="m-0 mt-3 flex list-none flex-col gap-3 p-0">
+              {formations.map((obligation) => (
+                <li key={obligation.id}>
+                  <p className="m-0 text-[13px] font-semibold leading-tight text-[color:var(--board-slate-ink)]">
+                    {obligation.libelle}
+                  </p>
+                  <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
+                    Formation que l&apos;établissement organise pour les
+                    travailleurs concernés — à faire suivre à cette personne si
+                    elle l&apos;est. Suivie dans «{" "}
+                    {obligation.nature === "evenementielle"
+                      ? "Quand ça arrive"
+                      : "Ce qui doit être en place"}{" "}
+                    ».
+                  </p>
+                  <ReferenceFondatrice obligation={obligation} />
+                </li>
+              ))}
               {titres.map(({ obligation, condition, dernierTitreLe }) => (
                 <li key={obligation.id}>
                   <p className="m-0 text-[13px] font-semibold leading-tight text-[color:var(--board-slate-ink)]">

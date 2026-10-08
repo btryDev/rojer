@@ -15,7 +15,7 @@
 // Module pur.
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
-import { faitParChamp, type ChampFaitActivite } from "./faits-activite";
+import { faitParChamp, intituleDuFait, type ChampFaitActivite } from "./faits-activite";
 
 export type QuestionOuiNon =
   | "matieres_r4227_22"
@@ -52,12 +52,20 @@ export type Relance = {
 const RAPPEL =
   "Tant que la question n'a pas de réponse, ces lignes s'affichent « à confirmer ».";
 
-function relanceDuFait(
-  question: QuestionOuiNon,
-  champ: ChampFaitActivite,
-  titre: string,
-): Relance {
-  return { mode: "oui_non", question, champ, titre, pourquoi: `${faitParChamp(champ).pourquoi} ${RAPPEL}` };
+/**
+ * La relance d'un fait d'activité : son titre EST la question, mot pour mot
+ * (`intituleDuFait`), et sa raison celle du registre. Une reformulation à part
+ * avait rétréci deux questions (relecture du 2026-10-08, R1).
+ */
+function relanceDuFait(question: QuestionOuiNon, champ: ChampFaitActivite): Relance {
+  const fait = faitParChamp(champ);
+  return {
+    mode: "oui_non",
+    question,
+    champ,
+    titre: intituleDuFait(fait),
+    pourquoi: `${fait.pourquoi} ${RAPPEL}`,
+  };
 }
 
 export const RELANCES: Record<QuestionSansReponse, Relance> = {
@@ -84,21 +92,19 @@ export const RELANCES: Record<QuestionSansReponse, Relance> = {
   },
   // Les faits d'activité (ADR-041) : le texte de la question et sa raison sont
   // ceux du registre, une seule rédaction pour Équipe, la fiche et le DUERP.
-  manutention_manuelle: relanceDuFait("manutention_manuelle", "manutentionManuelle",
-    "Dire si des travailleurs portent des charges à la main"),
-  travail_ecran: relanceDuFait("travail_ecran", "travailSurEcran",
-    "Dire si des travailleurs travaillent sur écran"),
-  operations_electriques: relanceDuFait("operations_electriques", "operationsElectriques",
-    "Dire si des travailleurs interviennent sur l'installation électrique"),
-  conduite_engins: relanceDuFait("conduite_engins", "conduiteEngins",
-    "Dire si des travailleurs conduisent des engins ou des appareils de levage"),
-  exposition_cmr: relanceDuFait("exposition_cmr", "expositionCMR",
-    "Dire si des travailleurs sont exposés à des agents CMR"),
+  manutention_manuelle: relanceDuFait("manutention_manuelle", "manutentionManuelle"),
+  travail_ecran: relanceDuFait("travail_ecran", "travailSurEcran"),
+  operations_electriques: relanceDuFait("operations_electriques", "operationsElectriques"),
+  conduite_engins: relanceDuFait("conduite_engins", "conduiteEngins"),
+  exposition_cmr: relanceDuFait("exposition_cmr", "expositionCMR"),
   epi_presents: {
     mode: "oui_non",
     question: "epi_presents",
     champ: "epiPresents",
-    titre: "Dire si des équipements de protection individuelle sont portés",
+    // Jamais affichée : la fiche a déjà son étape EPI, avec le détail
+    // (`etablissements/[id]/page.tsx`). Le typage exhaustif l'exige ; son
+    // texte reprend celui de l'étape.
+    titre: "Dire si vous fournissez des équipements de protection",
     pourquoi: `Gants, chaussures de sécurité, lunettes, protections auditives… Si oui, l'employeur élabore une consigne d'utilisation de ces équipements (art. R. 4323-105 du Code du travail). ${RAPPEL}`,
   },
   personnes_presentes: {

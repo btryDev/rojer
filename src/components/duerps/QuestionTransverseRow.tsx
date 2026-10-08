@@ -10,8 +10,9 @@ import type { ReponseTransverse } from "@/lib/transverses/etat";
  * Une question transverse, et son couple Oui / Non.
  *
  * Trois états depuis l'ADR-038, comme `QuestionActiviteRow` dont le geste est
- * repris : le « non » est persisté (`Duerp.reponsesTransverses`), donc il peut
- * enfin s'afficher sélectionné ; tant que rien n'a été répondu, **aucun** des
+ * repris : le « non » est persisté — dans `Duerp.reponsesTransverses`, ou sur
+ * l'établissement pour une question qui pose un fait d'activité (ADR-041) —,
+ * donc il peut s'afficher sélectionné ; tant que rien n'a été répondu, **aucun** des
  * deux boutons n'est mis en avant — mettre « Non » en évidence par défaut
  * afficherait une réponse que personne n'a donnée, sur un document à valeur
  * légale. « Retirer ma réponse » ramène au silence.
@@ -28,6 +29,8 @@ type Props = {
   reponse: ReponseTransverse;
   /** Un risque travaillé reste au DUERP alors que la réponse n'est pas « oui ». */
   risqueConserve?: boolean;
+  /** La réponse est « oui » mais le risque n'est pas au document. */
+  risqueManquant?: boolean;
 };
 
 const VALEUR: Record<ReponseTransverse, boolean | null> = {
@@ -43,6 +46,7 @@ export function QuestionTransverseRow({
   libelleRisque,
   reponse,
   risqueConserve = false,
+  risqueManquant = false,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [echec, setEchec] = useState(false);
@@ -66,7 +70,8 @@ export function QuestionTransverseRow({
     // Répondre la même chose ne fait rien — sauf un « Non » quand un risque
     // travaillé est resté au document : c'est le geste qui le retire.
     const retireLeRisqueConserve = risqueConserve && valeur !== true;
-    if (valeur === VALEUR[reponse] && !retireLeRisqueConserve) return;
+    const poseLeRisqueManquant = risqueManquant && valeur === true;
+    if (valeur === VALEUR[reponse] && !retireLeRisqueConserve && !poseLeRisqueManquant) return;
     // Quitter un « oui » supprime le risque, sa cotation et ses actions
     // (cascade). Le « Non » le faisait déjà sans prévenir ; « retirer ma
     // réponse », lien d'apparence anodine, en est devenu une seconde porte
@@ -126,6 +131,13 @@ export function QuestionTransverseRow({
           </button>
         )}
       </div>
+      {risqueManquant && (
+        <p className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          Vous avez répondu oui depuis Équipe, mais le risque « {libelleRisque} »
+          n&apos;est pas encore dans ce document. Cliquez « Oui » pour l&apos;y
+          ajouter.
+        </p>
+      )}
       {risqueConserve && (
         <p className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Le risque « {libelleRisque} » est encore au document, avec sa cotation

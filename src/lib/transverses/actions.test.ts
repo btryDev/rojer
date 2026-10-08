@@ -37,6 +37,7 @@ const h = vi.hoisted(() => {
     lignesTouchees: 1,
     horsTransaction: 0,
     regenerations: 0,
+    risquesCMR: 0,
   };
   let n = 0;
   const tx = {
@@ -68,7 +69,7 @@ const h = vi.hoisted(() => {
             x.uniteId === where.uniteId_referentielId.uniteId &&
             x.referentielId === where.uniteId_referentielId.referentielId,
         );
-        return r ? { id: r.id, cotationSaisie: r.cotationSaisie, _count: { actions: r.actions } } : null;
+        return r ? { id: r.id, cotationSaisie: r.cotationSaisie, _count: { actions: r.actions, interventions: 0 } } : null;
       },
       // `createMany` + `skipDuplicates` : un doublon est ignoré, comme
       // ON CONFLICT DO NOTHING.
@@ -93,6 +94,7 @@ const h = vi.hoisted(() => {
       delete: async ({ where }: { where: { id: string } }) => {
         db.risques = db.risques.filter((r) => r.id !== where.id);
       },
+      count: async () => db.risquesCMR,
     },
     $executeRaw: async (requete: { strings: readonly string[]; values: unknown[] }) => {
       if (db.lignesTouchees === 0) return 0;
@@ -184,6 +186,7 @@ beforeEach(() => {
   h.db.lignesTouchees = 1;
   h.db.horsTransaction = 0;
   h.db.regenerations = 0;
+  h.db.risquesCMR = 0;
 });
 
 describe("question sans fait d'activité (ADR-038)", () => {
@@ -266,6 +269,15 @@ describe("ecrireFaitActivite depuis Équipe ou la fiche (`si_vierge`)", () => {
     expect(h.db.faits.manutentionManuelle).toBe(true);
     expect(h.db.risques).toHaveLength(0);
     expect(h.db.unites).toHaveLength(0);
+  });
+
+  it("un « non » au CMR alors qu'un risque du DUERP est coché CMR : enregistré, et signalé", async () => {
+    h.db.risquesCMR = 1;
+    const r = await ecrireFaitActivite("e1", "expositionCMR", false, "si_vierge");
+    expect(h.db.faits.expositionCMR).toBe(false);
+    expect(r.conserve).toBe(true);
+    h.db.risquesCMR = 0;
+    expect((await ecrireFaitActivite("e1", "expositionCMR", false, "si_vierge")).conserve).toBe(false);
   });
 
   it("un fait sans question transverse (CMR) ne touche aucun risque", async () => {

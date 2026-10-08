@@ -1,10 +1,16 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { questionTransverseParId } from "@/lib/transverses/etat";
 import {
   poserRisqueTransverse,
   type RetraitDuRisque,
 } from "@/lib/transverses/risque-transverse";
-import { faitParChamp, type ChampFaitActivite } from "./faits-activite";
+import {
+  FAITS_ACTIVITE,
+  faitParChamp,
+  type ChampFaitActivite,
+  type ReponsesFaitsActivite,
+} from "./faits-activite";
 
 /**
  * Écrit un fait d'activité sur l'établissement et, si le fait a une question
@@ -19,8 +25,9 @@ import { faitParChamp, type ChampFaitActivite } from "./faits-activite";
  * L'appartenance est vérifiée par l'appelant (action serveur) ; ce module ne
  * reçoit qu'un identifiant déjà contrôlé.
  *
- * Rend `conserve: true` quand un risque travaillé (coté ou avec des actions)
- * a été laissé au DUERP malgré une réponse « non » donnée hors du DUERP.
+ * Rend `conserve: true` quand le DUERP garde une trace contraire à la réponse :
+ * un risque travaillé (coté ou avec des actions) laissé malgré un « non »
+ * donné hors du DUERP, ou un risque encore coché « exposition CMR ».
  */
 export async function ecrireFaitActivite(
   etablissementId: string,
@@ -37,12 +44,23 @@ export async function ecrireFaitActivite(
       where: { id: etablissementId },
       data: { [champ]: valeur },
     });
-    if (!question) return { conserve: false };
     const duerp = await tx.duerp.findUnique({
       where: { etablissementId },
       select: { id: true },
     });
     if (!duerp) return { conserve: false };
+    // L'exposition CMR a une seconde trace au DUERP : la case de chaque risque
+    // (`Risque.exposeCMR`), qu'imprime le document. Un « non » donné ici ne la
+    // décoche pas — c'est le travail du dirigeant sur un risque précis — mais
+    // il le dit (relecture du 2026-10-08, C3).
+    if (champ === "expositionCMR") {
+      if (valeur === true) return { conserve: false };
+      const coches = await tx.risque.count({
+        where: { exposeCMR: true, unite: { duerpId: duerp.id } },
+      });
+      return { conserve: coches > 0 };
+    }
+    if (!question) return { conserve: false };
     const conserve = await poserRisqueTransverse(
       tx,
       duerp.id,
@@ -52,4 +70,26 @@ export async function ecrireFaitActivite(
     );
     return { conserve };
   });
+}
+
+/**
+ * Pose dans un DUERP neuf les risques des faits déjà déclarés « oui » sur
+ * l'établissement (ADR-041). Un dirigeant qui a répondu depuis Équipe retrouve
+ * la question répondue ET son risque, qu'il crée son DUERP ou qu'il l'importe.
+ * Partagé par `creerDuerp` et par l'import : une seule reprise (relecture du
+ * 2026-10-08, C2 — l'import ne la faisait pas).
+ */
+export async function reprendreFaitsDansDuerp(
+  tx: Prisma.TransactionClient,
+  duerpId: string,
+  faits: ReponsesFaitsActivite,
+): Promise<void> {
+  for (const f of FAITS_ACTIVITE) {
+    const question = f.questionTransverse
+      ? questionTransverseParId(f.questionTransverse)
+      : undefined;
+    if (question && faits[f.champ] === true) {
+      await poserRisqueTransverse(tx, duerpId, question, true, "si_vierge");
+    }
+  }
 }

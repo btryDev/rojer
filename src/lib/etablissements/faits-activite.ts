@@ -22,6 +22,7 @@
 //
 // Module pur.
 
+import { questionsDetectionTransverses } from "@/lib/referentiels";
 import type { ActiviteDeclaree } from "@/lib/referentiels/types-communs";
 
 /**
@@ -47,10 +48,21 @@ export type FaitActivite = {
    * Les titres du catalogue salarié que ce fait rend dus à une partie de
    * l'effectif. Repris de `QuestionDetection.declencheTitres` (ADR-038), qui a
    * quitté les questions : le lien part du fait, la question n'en est qu'une
-   * entrée. `titres-du-duerp.test.ts` exige que chacun existe et soit fondé
+   * entrée. `faits-activite.test.ts` exige que chacun existe et soit fondé
    * sur un article que le fait cite.
    */
   declencheTitres: readonly string[];
+  /**
+   * D'autres faits que le produit ne demande pas rendent les MÊMES titres
+   * dus. Le suivi individuel renforcé (R. 4624-23, I) vise sept expositions,
+   * dont le CMR n'est qu'une : un « non » au CMR ne dit rien de l'amiante ou du
+   * plomb. Quand ce champ est présent :
+   *   - un « non » n'écarte pas les titres (`titresEcartesParLesFaits`) —
+   *     sinon le tableau de bord tairait un signal encore dû ;
+   *   - la fiche affiche la phrase, quelle que soit la réponse.
+   * Relecture du 2026-10-08, C1.
+   */
+  autresFondements?: string;
 };
 
 export const FAITS_ACTIVITE: readonly FaitActivite[] = [
@@ -96,8 +108,30 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
     pourquoi:
       "Si oui, leurs postes présentent des risques particuliers et ouvrent droit au suivi individuel renforcé de leur état de santé (art. R. 4624-22 et R. 4624-23 du Code du travail).",
     declencheTitres: ["sante-travail-salarie-sir"],
+    autresFondements:
+      "Le suivi individuel renforcé est dû aussi aux postes exposés à l'amiante, au plomb, aux agents biologiques des groupes 3 et 4, aux rayonnements ionisants, au risque hyperbare ou au montage et démontage d'échafaudages (art. R. 4624-23 du Code du travail), que cette question ne couvre pas.",
   },
 ];
+
+/**
+ * L'intitulé d'un fait : celui de sa question transverse, sinon le sien. C'est
+ * le SEUL texte de la question, affiché par Équipe, la relance de la fiche et
+ * le DUERP — une reformulation par écran avait rétréci la manutention à
+ * « portent des charges » (relecture du 2026-10-08, R1).
+ */
+export function intituleDuFait(f: FaitActivite): string {
+  const q = f.questionTransverse
+    ? questionsDetectionTransverses.find((x) => x.id === f.questionTransverse)
+    : undefined;
+  const intitule = q?.intitule ?? f.question;
+  if (!intitule) throw new Error(`Fait sans intitulé : ${f.champ}`);
+  return intitule;
+}
+
+/** Une colonne d'établissement est-elle un fait d'activité de ce registre ? */
+export function estChampFaitActivite(champ: string): champ is ChampFaitActivite {
+  return FAITS_ACTIVITE.some((f) => f.champ === champ);
+}
 
 export function faitParChamp(champ: ChampFaitActivite): FaitActivite {
   const f = FAITS_ACTIVITE.find((x) => x.champ === champ);
@@ -113,7 +147,12 @@ export function faitDeLaQuestion(questionId: string): FaitActivite | undefined {
 /** Les réponses d'un établissement, telles que la base les porte. */
 export type ReponsesFaitsActivite = Record<ChampFaitActivite, boolean | null>;
 
-/** Le `select` Prisma qui les lit — un seul, pour qu'aucun lecteur n'en oublie. */
+/**
+ * Le `select` Prisma des faits, pour les lectures qui ne veulent qu'eux
+ * (`chargerFaitsActivite`, l'import d'un DUERP). Les projections du moteur
+ * énumèrent leurs champs à la main : c'est le typage requis
+ * d'`EtablissementMatching` qui les empêche d'en oublier un, pas ce select.
+ */
 export const SELECT_FAITS_ACTIVITE = {
   manutentionManuelle: true,
   travailSurEcran: true,
@@ -133,7 +172,7 @@ export function titresEcartesParLesFaits(
   faits: ReponsesFaitsActivite,
 ): ReadonlySet<string> {
   return new Set(
-    FAITS_ACTIVITE.filter((f) => faits[f.champ] === false).flatMap(
+    FAITS_ACTIVITE.filter((f) => faits[f.champ] === false && !f.autresFondements).flatMap(
       (f) => f.declencheTitres,
     ),
   );

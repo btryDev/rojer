@@ -29,15 +29,20 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, va
   const [pending, startTransition] = useTransition();
   const [echec, setEchec] = useState(false);
   const [risqueConserve, setRisqueConserve] = useState(false);
+  const [avertissement, setAvertissement] = useState<string | null>(null);
 
   const repondre = (v: boolean | null) => {
     if (v === valeur) return;
     setEchec(false);
     setRisqueConserve(false);
+    setAvertissement(null);
     startTransition(async () => {
       try {
         const r = await repondreFaitActivite(etablissementId, champ, v);
         if (r.status === "error") setEchec(true);
+        // La réponse est acquise mais le calendrier n'a pas suivi : le dire,
+        // comme la fiche établissement (`MESSAGE_REGEN_ECHEC`).
+        if (r.status === "success_avec_avertissement") setAvertissement(r.message);
         if ("risqueConserve" in r && r.risqueConserve) setRisqueConserve(true);
       } catch {
         setEchec(true);
@@ -87,10 +92,15 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, va
       </div>
       {risqueConserve && (
         <p className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Votre réponse est enregistrée. Le risque correspondant reste dans votre
-          DUERP, parce qu&apos;il a déjà une cotation ou des actions : retirez-le
-          depuis l&apos;étape « Questions transverses » du DUERP si vous le
-          souhaitez.
+          Votre réponse est enregistrée. Votre DUERP garde un risque qui dit le
+          contraire — déjà coté, avec des actions, ou coché « exposition CMR ».
+          Rojer ne modifie pas ce travail sans vous : corrigez-le dans le DUERP
+          si besoin.
+        </p>
+      )}
+      {avertissement && (
+        <p role="status" className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          {avertissement}
         </p>
       )}
       {echec && (

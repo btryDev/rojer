@@ -129,7 +129,7 @@ export function rapprocher(
    * alors la fiche du salarié (relecture du 2026-10-05). Le silence et le
    * « oui » ne changent rien : seul un refus déclaré fait taire.
    */
-  titresEcartesParLeDuerp: ReadonlySet<string> = new Set(),
+  titresEcartesParLesFaits: ReadonlySet<string> = new Set(),
 ): Transmissions {
   const domaines = domainesSansPrestataire(
     applicables,
@@ -154,7 +154,7 @@ export function rapprocher(
           (t.titre === null
             ? !domainesDesTitresDeclares.has(o.domaine)
             : !titresDeclares.has(t.titre) &&
-              !titresEcartesParLeDuerp.has(t.titre)),
+              !titresEcartesParLesFaits.has(t.titre)),
       ),
     )
     .map((o) => ({ id: o.id, libelle: o.libelle }));

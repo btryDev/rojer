@@ -230,10 +230,13 @@ export async function enregistrerCotation(
 
   // Une exposition CMR cochée vaut « oui » pour l'établissement (ADR-041) :
   // le suivi individuel renforcé (R. 4624-23, I, 3°) est alors proposé sur les
-  // fiches salarié. Décocher ne vaut pas « non » — un autre risque peut porter
-  // l'exposition, et une case vide n'a jamais été une réponse.
+  // fiches salarié. Elle l'emporte sur un « non » antérieur : cocher la case
+  // d'un risque précis est une déclaration plus récente et plus précise que la
+  // réponse générale. Décocher ne vaut pas « non » — un autre risque peut
+  // porter l'exposition, et une case vide n'a jamais été une réponse.
   if (risque.exposeCMR) {
     await ecrireFaitActivite(etablissementId, "expositionCMR", true, "si_vierge");
+    revalidatePath(`/etablissements/${etablissementId}`, "layout");
   }
 
   // Alerte de sous-évaluation : on compare la gravité et la probabilité

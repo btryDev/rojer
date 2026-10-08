@@ -204,6 +204,18 @@ describe("rapprochement des transmissions (ADR-024)", () => {
     expect(signal({ conduiteEngins: false })).toHaveLength(1);
   });
 
+  it("un « non » au CMR ne fait PAS taire le suivi renforcé — six autres expositions le fondent", () => {
+    // R. 4624-23, I : amiante, plomb, CMR, biologiques 3/4, rayonnements,
+    // hyperbare, échafaudages. Répondre « non » au CMR ne dit rien du plomb.
+    const liste = obligationsConformite.find(
+      (o) => o.id === "sante-travail-etablissement-liste-postes-risques",
+    )!;
+    const signal = (faits: Partial<ReponsesFaitsActivite>) =>
+      rapprocher([liste], [], new Set(), titresEcartesParLesFaits({ ...FAITS, ...faits }))
+        .obligationsSupposantUnePersonne;
+    expect(signal({ expositionCMR: false })).toHaveLength(signal({}).length);
+  });
+
   it("vaut aussi pour le levage : le « non » à la conduite fait taire, le silence non", () => {
     const versGouverne = obligationsConformite.filter((o) =>
       o.transmet.some(

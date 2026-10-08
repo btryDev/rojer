@@ -110,6 +110,16 @@ describe("le moteur lit le fait — la règle du non-renseigné", () => {
     }
   });
 
+  it("la consigne EPI, conditionnée par `epiPresents` (hors registre), est fondée sur R. 4323-105", () => {
+    // `epiPresents` n'est pas au registre (sa question vit sur la fiche) : la
+    // garde de fondement du registre ne le voit pas, celle-ci si.
+    const epi = conditionnees.filter((o) => o.typologies.activite === "epiPresents");
+    expect(epi.length).toBeGreaterThan(0);
+    for (const o of epi) {
+      expect(o.referencesLegales.map((r) => r.article), o.id).toContain("R. 4323-105");
+    }
+  });
+
   for (const o of conditionnees) {
     const champ = o.typologies.activite!;
     it(`${o.id} : retirée sur « non », retenue sur « oui », « à confirmer » sur le silence`, () => {

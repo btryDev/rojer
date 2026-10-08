@@ -2,6 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { SELECT_FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
+import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
@@ -191,6 +193,19 @@ export async function commitImport(
     operations.push(prisma.action.createMany({ data: ecritures.actions }));
   }
   await prisma.$transaction(operations);
+
+  // Un DUERP NÉ de l'import reprend les faits d'activité déjà déclarés, comme
+  // `creerDuerp` (ADR-041). Après les écritures du fichier, qui ne portent
+  // jamais l'unité transverse : la reprise la crée si besoin.
+  if (!duerpExistant) {
+    const faits = await prisma.etablissement.findUnique({
+      where: { id: etablissementId },
+      select: SELECT_FAITS_ACTIVITE,
+    });
+    if (faits) {
+      await prisma.$transaction((tx) => reprendreFaitsDansDuerp(tx, duerpId, faits));
+    }
+  }
 
   revalidatePath(`/etablissements/${etablissementId}`);
   revalidatePath(`/duerp/${duerpId}/risques`);

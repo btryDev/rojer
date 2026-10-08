@@ -46,8 +46,9 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
         expect(q.reponse).toBe(etat);
         expect(html).toContain(q.intitule);
         expect(html).toContain(`/q#${q.champ}`);
-        expect(q.titres.length).toBeGreaterThan(0);
+        expect(q.titres.length + q.formations.length).toBeGreaterThan(0);
         for (const t of q.titres) expect(html, t.obligation.id).toContain(t.obligation.libelle);
+        for (const o of q.formations) expect(html, o.id).toContain(o.libelle);
       }
       expect(html).toContain(PHRASE_REPONSE[etat as keyof typeof PHRASE_REPONSE]);
     });
@@ -72,5 +73,13 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
 
   it("écrit « s'il », jamais « si il »", () => {
     expect(ETATS.oui().html).not.toMatch(/\bsi ils?\b/i);
+  });
+
+  it("nomme la formation gestes et postures et la formation écran — ce qu'on ne voit pas ne sert à rien", () => {
+    // Ni l'une ni l'autre n'est un titre : avant le 2026-10-08, la fiche les
+    // taisait, alors qu'un salarié qui porte des charges doit les recevoir.
+    const { html } = ETATS.oui();
+    expect(html).toContain("gestes et postures");
+    expect(html).toMatch(/écran/);
   });
 });

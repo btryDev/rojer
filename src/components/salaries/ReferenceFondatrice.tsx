@@ -1,5 +1,5 @@
 import { LegalBadge } from "@/components/ui-kit";
-import type { ObligationPorteeParSalarie } from "@/lib/referentiels/conformite";
+import type { Obligation } from "@/lib/referentiels/conformite";
 
 /**
  * Le premier article que le référentiel cite pour une obligation, en badge
@@ -9,7 +9,7 @@ import type { ObligationPorteeParSalarie } from "@/lib/referentiels/conformite";
 export function ReferenceFondatrice({
   obligation,
 }: {
-  obligation: ObligationPorteeParSalarie;
+  obligation: Pick<Obligation, "referencesLegales">;
 }) {
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-3">

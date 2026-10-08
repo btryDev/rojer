@@ -30,7 +30,7 @@ export async function obtenirUniteTransverse(
  *   lui a dit que la cotation et les actions partent avec le risque ;
  * - `si_vierge` : il répond ailleurs (Équipe, fiche établissement), sans voir
  *   le DUERP. On ne retire alors qu'un risque que personne n'a touché — pas de
- *   cotation saisie, aucune action. Un risque travaillé reste au document, et
+ *   cotation saisie, aucune action, aucune intervention. Un risque travaillé reste au document, et
  *   l'étape transverse le signale : supprimer le travail du dirigeant depuis
  *   un écran qui ne le lui montre pas serait le perdre sans qu'il le sache.
  */
@@ -49,7 +49,11 @@ export async function poserRisqueTransverse(
   const unite = await obtenirUniteTransverse(tx, duerpId);
   const existant = await tx.risque.findUnique({
     where: { uniteId_referentielId: { uniteId: unite.id, referentielId: ref.id } },
-    select: { id: true, cotationSaisie: true, _count: { select: { actions: true } } },
+    select: {
+      id: true,
+      cotationSaisie: true,
+      _count: { select: { actions: true, interventions: true } },
+    },
   });
 
   if (present) {
@@ -80,7 +84,12 @@ export async function poserRisqueTransverse(
   }
 
   if (!existant) return false;
-  const vierge = !existant.cotationSaisie && existant._count.actions === 0;
+  // Les interventions comptent aussi : leur lien au risque passe à `NULL` à sa
+  // suppression (`onDelete: SetNull`), et on les détacherait en silence.
+  const vierge =
+    !existant.cotationSaisie &&
+    existant._count.actions === 0 &&
+    existant._count.interventions === 0;
   if (retrait === "si_vierge" && !vierge) return true;
   await tx.risque.delete({ where: { id: existant.id } });
   return false;
