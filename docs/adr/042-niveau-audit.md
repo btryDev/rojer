@@ -61,7 +61,11 @@ obligation légale sortie du quotidien reste VISIBLE.
 6. **Réactivable.** Lever le marqueur et monter la version. Rien d'autre n'a
    bougé : source, notes, lecture du corpus restent en place.
 7. **Le compte du référentiel inclut les obligations audit** ; CLAUDE.md dit
-   « dont N au niveau audit ».
+   « dont N au niveau audit ». **Le compte AFFICHÉ les exclut** (décision de
+   la propriétaire, 2026-10-08, ajoutée le même jour) : la page publique et
+   l'app annoncent les obligations suivies au quotidien,
+   `nombreObligationsSuivies()` = total − niveau audit, calculé à côté
+   d'`estNiveauAudit` (`referentiels/conformite/index.ts`), jamais écrit.
 
 ### Appliqué le 2026-10-08 à trois obligations
 
@@ -112,7 +116,13 @@ obligation légale sortie du quotidien reste VISIBLE.
 - `VERSION_MOTEUR_CALENDRIER` n'est pas incrémentée : sans le champ, le code
   rend ce qu'il rendait ; c'est la donnée, hachée par l'empreinte, qui
   resynchronise.
-- Le chiffre public de la page d'accueil passe de 172 à 174 — c'est le compte
+- ~~Le chiffre public de la page d'accueil passe de 172 à 174 — c'est le compte
   du référentiel, que `chiffres-publics.test.ts` lie à la page ; il INCLUT les
   obligations audit, comme le § 7. Les distinguer à l'écran public (« 171
-  suivies au quotidien ») est une question posée à la propriétaire.
+  suivies au quotidien ») est une question posée à la propriétaire.~~
+  [2026-10-08 : tranché par la propriétaire — « dans nos documents vitrine on
+  reste sur 171, mais dans l'app il faudra soustraire les obligations dites
+  d'audit ». La page publique annonce 171, calculé par
+  `chiffresReferentielSuivi()` dans `app/page.tsx` et passé en props
+  (`Cadran` est un composant client, qui n'importe pas le référentiel) ;
+  `chiffres-publics.test.ts` lie le texte rendu au compte suivi.]

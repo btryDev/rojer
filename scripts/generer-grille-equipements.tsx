@@ -47,6 +47,7 @@ import {
 } from "@/lib/pdf/entrees-grille-relecture";
 import {
   estNiveauAudit,
+  nombreObligationsSuivies,
   obligationsConformite,
   REFERENTIEL_VERSION,
 } from "@/lib/referentiels/conformite";
@@ -549,8 +550,11 @@ function GrilleDocument({
           Grille de relecture du référentiel
         </Text>
         <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
-          {total} obligations · {CATEGORIES_EQUIPEMENT.length} catégories
-          d&apos;équipement · document généré le {genereLe}
+          {total} obligations, dont {total - nombreObligationsSuivies()} au
+          niveau audit ({nombreObligationsSuivies()} suivies au quotidien,
+          chiffre affiché au public et dans l&apos;app) ·{" "}
+          {CATEGORIES_EQUIPEMENT.length} catégories d&apos;équipement ·
+          document généré le {genereLe}
         </Text>
 
         <View style={s.mentionsLegalesBloc}>
@@ -811,7 +815,10 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
         </Text>
         <Text style={[s.h1, { marginTop: 4 }]}>Dossier de relecture détaillé</Text>
         <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
-          {obligationsConformite.length} obligations · document généré le{" "}
+          {obligationsConformite.length} obligations, dont{" "}
+          {obligationsConformite.length - nombreObligationsSuivies()} au niveau
+          audit ({nombreObligationsSuivies()} suivies au quotidien, chiffre
+          affiché au public et dans l&apos;app) · document généré le{" "}
           {genereLe}
         </Text>
         <View style={s.mentionsLegalesBloc}>

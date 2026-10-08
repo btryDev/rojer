@@ -14,6 +14,11 @@
 // est le même, écrit une seule fois.
 
 import { useEffect, useRef, useState } from "react";
+// Le TYPE seul : un composant client qui importerait le référentiel en
+// embarquerait le référentiel entier — notes internes comprises — dans le
+// paquet envoyé au navigateur. Les chiffres sont calculés côté serveur
+// (`app/page.tsx`, `chiffresReferentielSuivi`) et arrivent ici en props.
+import type { ChiffresReferentielSuivi } from "@/lib/referentiels/conformite";
 
 type Document = {
   numero: string;
@@ -21,7 +26,18 @@ type Document = {
   titre: string;
   corps: string;
   reperes: string[];
+  /** Le cran porte, en tête de ses repères, le compte du référentiel suivi. */
+  annonceLeReferentiel?: true;
 };
+
+/** Le repère chiffré : obligations suivies au quotidien, domaines suivis. */
+function repereReferentiel(c: ChiffresReferentielSuivi): string {
+  return `${c.obligations} obligations · ${c.domaines} domaines`;
+}
+
+function reperesDe(d: Document, c: ChiffresReferentielSuivi): string[] {
+  return d.annonceLeReferentiel ? [repereReferentiel(c), ...d.reperes] : d.reperes;
+}
 
 // L'ORDRE EST UN PROPOS, et il a changé le 2026-09-01. Le DUERP ouvrait la
 // liste ; c'est le calendrier qui l'ouvre désormais. Le DUERP reste le
@@ -36,9 +52,13 @@ const DOCUMENTS: Document[] = [
     famille: "Échéances",
     titre: "Le calendrier des vérifications",
     corps: "Vous déclarez vos équipements une fois. Rojer en déduit les vérifications qui les concernent ; quand le texte fixe un rythme, il pose les dates et les repousse à mesure que les rapports arrivent.",
-    // Compté sur `obligationsConformite` (src/lib/referentiels/conformite).
-    // À recompter quand le référentiel s'étend — un chiffre faux sur une
-    // page publique se paie plus cher que pas de chiffre du tout.
+    // ~~Compté sur `obligationsConformite` (src/lib/referentiels/conformite).
+    // À recompter quand le référentiel s'étend~~ — 2026-10-08 : CALCULÉ, plus
+    // recompté. Le chiffre est `chiffresReferentielSuivi()` (total − niveau
+    // audit), décision de la propriétaire du même jour : « dans nos documents
+    // vitrine on reste sur 171, mais dans l'app il faudra soustraire les
+    // obligations dites d'audit ». Un chiffre faux sur une page publique se
+    // paie plus cher que pas de chiffre du tout. Historique du chiffre écrit :
     // ~~« Sources Légifrance et INRS »~~ : huit références citent le
     // règlement (UE) 2024/573 (EUR-Lex), une seule l'INRS (compté en
     // appelant le référentiel, relecture du 2026-09-26).
@@ -53,10 +73,12 @@ const DOCUMENTS: Document[] = [
     // 172 → 174 le 2026-10-08 (ADR-042) : 172 + 2 (vérification des
     // appareils de protection respiratoire et des gilets de sauvetage,
     // scindées de celle de l'arrêté du 19 mars 1993) − 0 = 174, compté en
-    // appelant le référentiel. Le compte INCLUT les trois obligations au
+    // appelant le référentiel. ~~Le compte INCLUT les trois obligations au
     // niveau audit (au référentiel, hors du quotidien) : les distinguer ici
-    // est une question posée à la propriétaire, pas tranchée.
-    reperes: ["174 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
+    // est une question posée à la propriétaire, pas tranchée.~~ Tranchée le
+    // 2026-10-08 : ce que la page annonce, ce sont les SUIVIES, 174 − 3 = 171.
+    annonceLeReferentiel: true,
+    reperes: ["Sources Légifrance et EUR-Lex"],
   },
   {
     numero: "02",
@@ -122,7 +144,7 @@ const CARTE_REF_PX = 780;
  *  panneau du cadran se cale juste en dessous. Cf. `LandingHeader`. */
 const ENTETE_PX = 68;
 
-export function Cadran() {
+export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
   const piste = useRef<HTMLDivElement | null>(null);
   const carte = useRef<HTMLDivElement | null>(null);
   // Position continue sur la roue : 0 = premier cran, 5 = dernier.
@@ -180,7 +202,7 @@ export function Cadran() {
     };
   }, [simple]);
 
-  if (simple) return <CadranListe />;
+  if (simple) return <CadranListe chiffres={chiffres} />;
 
   const actif = Math.round(pos);
   const avancement = pos / (DOCUMENTS.length - 1);
@@ -338,7 +360,7 @@ export function Cadran() {
                         <h3 className="lp-titre lp-h2 mt-3">{d.titre}</h3>
                         <p className="lp-lede mt-3 max-w-[42ch]">{d.corps}</p>
                         <div className="mt-6 flex flex-wrap gap-2">
-                          {d.reperes.map((r) => (
+                          {reperesDe(d, chiffres).map((r) => (
                             <span
                               key={r}
                               className="lp-pill bg-[color:var(--board-card)] text-[color:var(--board-blue-ink)]"
@@ -383,7 +405,7 @@ export function Cadran() {
 
 /* ─── Rendu sobre — petit écran, ou mouvement réduit ─────────── */
 
-function CadranListe() {
+function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
   return (
     <section
       id="documents"
@@ -421,7 +443,7 @@ function CadranListe() {
                 <h3 className="lp-titre lp-h3 mt-2">{d.titre}</h3>
                 <p className="lp-texte mt-2 max-w-[52ch]">{d.corps}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {d.reperes.map((r) => (
+                  {reperesDe(d, chiffres).map((r) => (
                     <span
                       key={r}
                       className="lp-pill bg-[color:var(--board-card)] text-[color:var(--board-blue-ink)]"

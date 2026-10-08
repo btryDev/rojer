@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { TableauDeBord } from "@/components/landing/TableauDeBord";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
+import { chiffresReferentielSuivi } from "@/lib/referentiels/conformite";
 import { RecoveryHashRedirect } from "./RecoveryHashRedirect";
 
 export default async function Home({
@@ -47,6 +48,12 @@ export default async function Home({
     : etab
       ? "Reprendre mon dossier"
       : "Terminer la mise en place";
+
+  // Les chiffres du référentiel, calculés ICI — côté serveur — et passés en
+  // props : `Cadran` est un composant client, qui ne doit pas embarquer le
+  // référentiel. Ce sont les obligations SUIVIES au quotidien (total − niveau
+  // audit), décision de la propriétaire du 2026-10-08.
+  const chiffres = chiffresReferentielSuivi();
 
   return (
     <main className="bg-[color:var(--board-card)]">
@@ -105,9 +112,10 @@ export default async function Home({
       </section>
 
       <Manifeste />
-      <Cadran />
+      <Cadran chiffres={chiffres} />
       <TableauDeBord />
       <Etapes
+        chiffres={chiffres}
         ctaHref={ctaHref}
         ctaLabel={ctaLabel}
         connecte={Boolean(user)}
