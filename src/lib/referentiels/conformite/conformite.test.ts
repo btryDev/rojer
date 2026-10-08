@@ -1713,8 +1713,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // préventeur borne AS 9 aux N1–N4 —, sans `OBLIGATIONS_RETIREES` : nées
     // et retirées sous cette version, aucune ligne en base ne porte leur id.
     // 173 + 0 − 2 = 171. ~~173-2543b2a5149c8d07~~ : empreinte après C62,
-    // jamais scellée.
-    { version: "2026-10-07.5", empreinte: "171-b161063e19bd746" },
+    // jamais scellée. (C) `esp-requalification-decennale` bornée aux
+    // compresseurs — quatre conditions `enum_differente` sur `familleEsp` ;
+    // le silence et « je ne sais pas » gardent la ligne. 171 + 0 − 0 = 171.
+    // ~~171-b161063e19bd746~~ : empreinte après (B), jamais scellée.
+    { version: "2026-10-07.5", empreinte: "171-59b93c7c5781b6c8" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

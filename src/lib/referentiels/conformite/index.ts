@@ -321,6 +321,11 @@ export const obligationsConformite: Obligation[] = [
 // (B) les deux lignes AS 9 des hôtels de 5ᵉ sont supprimées, sans
 // `OBLIGATIONS_RETIREES` (nées et retirées sous cette version) ; le renvoi de
 // PO 1 § 3 reste lu, en réserve de PO 1 et PO 8. Compte : 173 + 0 − 2 = 171.
+// (C) `esp-requalification-decennale` bornée aux compresseurs (« à exclure
+// sauf pour compresseur : requalification tous les 10 ans ») : quatre
+// conditions `enum_differente` sur `familleEsp` écartent les familles
+// déclarées autres que `recipient_gaz_groupe2` ; le silence et « Autre / je
+// ne sais pas » gardent la ligne. Compte : 171 + 0 − 0 = 171.
 export const REFERENTIEL_VERSION = "2026-10-07.5";
 
 /**

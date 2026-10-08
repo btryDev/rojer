@@ -368,9 +368,12 @@ export const equipementSchema = z
     // Conséquence pratique : sa valeur n'est plus un simple confort de saisie,
     // et en changer une modifie une échéance de criticité 5.
     // [2026-10-07 : PÉRIMÉ. Les deux inspections sont retirées (relecture
-    // préventeur du 30/09, décision de la propriétaire du 07/10) ; plus aucune
+    // préventeur du 30/09, décision de la propriétaire du 07/10) ; ~~plus aucune
     // obligation ne lit `familleEsp`. Elle ne sert de nouveau qu'au verdict
-    // indicatif `verdictSuiviEnService`.]
+    // indicatif `verdictSuiviEnService`.~~] [2026-10-08, C64 : de nouveau LUE
+    // par le moteur — `esp-requalification-decennale` est bornée aux
+    // compresseurs par quatre conditions `enum_differente` ; déclarer une
+    // autre famille retire la requalification décennale.]
     // `pressionMaxAdmissibleBar` et `volumeLitres`, eux, ne sont toujours pas
     // lus par le moteur.
     familleEsp: z.preprocess(
