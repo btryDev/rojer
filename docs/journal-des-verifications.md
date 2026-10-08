@@ -6056,3 +6056,33 @@ délibéré.
 
 Ce journal porte ce que le code ne sait pas dire : **qui a lu quoi, quand,
 comment — et ce qu'on en a fait.**
+
+### C65 · 2026-10-08 — Faits d'activité de l'établissement, lus par le moteur (ADR-041)
+
+- **Quand · par quoi** : 2026-10-08, branche `lot/formations-faits-etablissement`
+  (base `cb68c367`). Décisions de la propriétaire des 2026-10-07 et
+  2026-10-08 : « tout ce qui peut engendrer une formation » se répond depuis
+  Équipe, sans remplir le DUERP, et s'y retrouve rempli ; « déclenché par le DU
+  et dans la législation → répercuté ». Référentiel `2026-10-07.5` →
+  `2026-10-08.1` : `171-9bfaadbae946dc7c` → `171-ad093776135f4092`, relevé en
+  appelant `empreinteReferentiel()`.
+- **Relu sur l'API Légifrance (sandbox)** : R. 4541-2, R. 4541-8, R. 4542-1,
+  R. 4542-16, R. 4412-38, R. 4412-87, R. 4544-9, R. 4544-10, R. 4323-55,
+  R. 4323-56, R. 4624-10, R. 4624-22, R. 4624-23, R. 4141-20, R. 4433-2,
+  R. 4323-106 — 16 OK (`legifrance:verifier`, citations et versions
+  identiques au corpus). R. 4624-23 lu en entier (`getArticleWithIdAndNum`,
+  LEGIARTI000053786012, en vigueur) : le I, 3° range parmi les postes à risques
+  particuliers ceux qui exposent « aux agents cancérogènes, mutagènes ou
+  toxiques pour la reproduction mentionnés à l'article R. 4412-60 » — fondement
+  du suivi individuel renforcé proposé sur une exposition CMR.
+- **Ce qui change** : le critère `activite` conditionne cinq obligations
+  existantes (gestes et postures, formation écran, habilitation du personnel,
+  carnet de prescriptions, consigne EPI). Aucune obligation n'entre ni ne
+  sort : 171 + 0 − 0 = 171. Moteur de calendrier recopié SANS incrément : les
+  cinq sont à `periodicite: "autre"` sans rythme retenu, le générateur n'en
+  produit aucune ligne.
+- **Ce qui n'est pas fait** : la formation et les FDS du risque chimique
+  restent déclenchées par l'équipement de stockage (C64) — R. 4412-38 vise la
+  présence d'agents chimiques ; reporté, à instruire avec le préventeur.
+  R. 4323-106 (formation au port des EPI) reste `non_couvert` : l'encodage
+  est clos.

@@ -49,10 +49,12 @@ export async function repondreFaitActiviteFormulaire(
 ): Promise<ReponseParametrage> {
   const parsed = reponseBooleenne.safeParse(formData.get("reponse"));
   if (!parsed.success) return { status: "error", message: "Répondez oui ou non." };
-  const { risqueConserve: _, ...r } = await repondreFaitActivite(
-    etablissementId,
-    champ,
-    parsed.data === "oui",
-  );
-  return r;
+  // La relance de la fiche n'affiche pas l'avertissement du risque conservé :
+  // l'étape transverse du DUERP le dit, à l'endroit où l'on peut agir.
+  const r = await repondreFaitActivite(etablissementId, champ, parsed.data === "oui");
+  return r.status === "success_avec_avertissement"
+    ? { status: r.status, message: r.message }
+    : r.status === "error"
+      ? { status: "error", message: r.message }
+      : { status: r.status };
 }
