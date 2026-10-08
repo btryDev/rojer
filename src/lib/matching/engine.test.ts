@@ -1174,7 +1174,9 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // [2026-10-07, C59 lot 3 : DESENFUMAGE SORT DE CETTE LISTE —
         // `incendie-travail-desenfumage-entretien-verification`, défaut annuel
         // de R. 4224-17 (ADR-039), lieu de travail hors ERP.]
-        "APPAREIL_CUISSON_ERP",
+        // [2026-10-08, C66 : APPAREIL_CUISSON_ERP SORT DE CETTE LISTE —
+        // `cuisson-travail-appareils-entretien-verification`, défaut annuel de
+        // R. 4224-17, demandé par le préventeur (« idem code du travail »).]
         "HOTTE_PRO",
         // RIA A QUITTÉ CETTE LISTE LE 2026-09-02, et le trou qu'elle notait
         // est comblé, pas contourné. La note disait : « la seule obligation

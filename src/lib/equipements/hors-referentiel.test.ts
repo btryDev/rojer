@@ -99,8 +99,12 @@ describe("reperterSansEcheance — le référentiel réel", () => {
     // [2026-10-07, C59 lot 3 : le désenfumage d'un lieu de travail hors ERP
     // reçoit le défaut annuel de R. 4224-17 (ADR-039). L'exemple passe à la
     // cuisson ERP, que rien ne vise chez un employeur seul.]
+    // [2026-10-08, C66 : l'appareil de cuisson reçoit à son tour le défaut
+    // annuel de R. 4224-17 hors ERP. L'exemple passe à la hotte, que rien ne
+    // vise chez un employeur seul (la ventilation est portée par
+    // l'établissement, R. 4222-20).]
     const m = reperterSansEcheance(etablissement({ estERP: false }), [
-      equipement("eq1", "APPAREIL_CUISSON_ERP"),
+      equipement("eq1", "HOTTE_PRO"),
       equipement("eq2", "AUTRE"),
     ]);
 
