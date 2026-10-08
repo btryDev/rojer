@@ -73,6 +73,7 @@
 // tant qu'elle ne l'est pas ce module sous-estime la couverture — il alerte
 // donc trop, jamais trop peu, ce qui est le bon sens de l'erreur.
 
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import {
   obligationsConformite,
   type Obligation,
@@ -114,7 +115,7 @@ export type Surface = (typeof SURFACES)[number];
  */
 export function surfacesDe(o: Obligation): Surface[] {
   const atteintes: Surface[] = [];
-  if (!estSansRendezVous(o.periodicite)) atteintes.push("calendrier");
+  if (!estSansRendezVous(periodiciteEffective(o))) atteintes.push("calendrier");
   // ~~`modeDeclaration(o) !== null`~~ (2026-09-27, lot 2, maillon 6) : la règle
   // nue attribuait l'écran à deux titres salarié que l'écran écarte. On compte
   // l'écran comme l'écran se compte.
@@ -174,7 +175,10 @@ export type InscriptionSansSurface = {
 // appellent un autre mécanisme — question Q2 de l'ADR, non tranchée.
 // → 1 le 2026-09-27 (lot 2, maillon 6) : deux des trois sont des titres
 // salarié, listés sur l'écran Équipe. Reste `stockage-dangereux-declaration-icpe`.
-export const PLAFOND_SANS_SURFACE = 1;
+// → 0 le 2026-10-07 : `stockage-dangereux-declaration-icpe` est retirée du
+// référentiel (périmètre, relecture préventeur du 30/09, décision de la
+// propriétaire du 07/10). Le registre est vide ; il garde sa garde.
+export const PLAFOND_SANS_SURFACE = 0;
 
 /**
  * Les obligations dont l'absence de surface est constatée, datée et assumée.
@@ -198,11 +202,9 @@ export const PLAFOND_SANS_SURFACE = 1;
  * laisser se perdre.
  */
 export const SANS_SURFACE: Readonly<Record<string, InscriptionSansSurface>> = {
-  "stockage-dangereux-declaration-icpe": {
-    inscriteLe: "2026-09-04",
-    motif:
-      "Nature `ponctuelle` : la qualification ICPE est faite une fois, avant exploitation, et ne se refait qu'au changement des quantités stockées — fait que le produit n'observe pas. Aucune surface ne sert les obligations ponctuelles : l'écran des états permanents les écarte parce qu'une case cochée à vie y serait juste mais sans rappel de la pièce, et le calendrier n'a pas de rendez-vous à leur donner. Décision de conception, non tranchée.",
-  },
+  // ~~"stockage-dangereux-declaration-icpe"~~ (inscrite le 2026-09-04, nature
+  // `ponctuelle`, sans surface) — sortie le 2026-10-07 avec l'obligation,
+  // retirée du référentiel.
 };
 
 /**

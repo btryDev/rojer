@@ -1,3 +1,4 @@
+import type { InitiativeObligation } from "./initiative";
 import type {
   CategorieEquipement,
   Periodicite,
@@ -8,10 +9,17 @@ import type {
 /**
  * Référentiel d'obligations réglementaires (ADR-003).
  *
- * Règle absolue : chaque `Obligation` cite **au moins une** référence primaire
- * vérifiable sur Légifrance (Code du travail, CCH, arrêté) ou sur une source
- * institutionnelle reconnue (INRS). Pas de normes privées (APSAD, NF),
- * pas de recommandations sans force opposable.
+ * Règle absolue : chaque `Obligation` cite **au moins une** référence
+ * vérifiable : un texte sur Légifrance (Code du travail, CCH, arrêté), une
+ * source institutionnelle reconnue (INRS), ou — depuis l'ADR-039, 2026-10-07 —
+ * une norme homologuée (NF, EN) lue et entrée au corpus `normes`, citée comme
+ * norme et jamais comme un article de loi. ~~Pas de normes privées (APSAD,
+ * NF)~~ ; toujours pas d'APSAD, de CACES ni de recommandation sans force.
+ *
+ * Le rythme du TEXTE est `periodicite`. Quand le texte ne le chiffre pas mais
+ * impose de refaire l'acte, `rythmeRetenu` porte le rythme d'une norme lue ou
+ * le défaut annuel, déclaré comme tel ; `periodiciteEffective(o)` est la seule
+ * lecture qui date une ligne (ADR-039).
  *
  * Les obligations vivent en TypeScript versionné avec le code (pas en base),
  * ce qui garantit l'auditabilité via l'historique Git (ADR-003).
@@ -284,6 +292,15 @@ export const SOURCES_LEGALES = [
   // qu'on soit tenté de ranger ces obligations sous CODE_TRAVAIL, qui ne les
   // porte pas (ADR-022).
   "CSS",
+  // Une norme homologuée — NF, EN —, depuis l'ADR-039 (2026-10-07). Elle peut
+  // fonder une obligation ou un rythme même si aucun texte ne la rend
+  // obligatoire, et elle se cite COMME NORME : intitulé, édition, paragraphe
+  // ou annexe. Jamais comme un article de loi — c'est pourquoi elle a sa
+  // source et son libellé, et ne se range sous aucune des sources de droit
+  // ci-dessus. Toute référence `NORME` porte une clé `article` présente au
+  // corpus `corpus/normes.ts` (test). APSAD, CACES, recommandations CNAM ne
+  // sont pas des normes au sens de cette source et restent dehors.
+  "NORME",
 ] as const;
 
 export type SourceLegale = (typeof SOURCES_LEGALES)[number];
@@ -306,6 +323,7 @@ export const LIBELLE_SOURCE: Record<SourceLegale, string> = {
   REGLEMENT_UE: "Règlement européen",
   CSP: "Code de la santé publique",
   CSS: "Code de la sécurité sociale",
+  NORME: "Norme",
 };
 
 export type ReferenceLegale = {
@@ -440,6 +458,13 @@ export type RelectureDue = {
  *  - `equipement_propriete_enum_egale` : propriété absente ⇒ condition NON
  *    satisfaite. C'est l'« opt-in » du couple d'énumération : la ligne
  *    spécifique n'apparaît qu'une fois la valeur explicitement choisie.
+ *    [2026-10-07, C62 : AUCUNE obligation vivante ne porte plus cette forme —
+ *    ses seules lignes, les inspections ESP par famille, sont retirées
+ *    (périmètre, décision de la propriétaire du 07/10), et le lot 3 ne
+ *    réemploie que `enum_differente` (compté en appelant
+ *    `obligationsConformite`). Le moteur la lit toujours, et
+ *    `engine.test.ts` (« le couple d'énumération ») l'éprouve sur des lignes
+ *    synthétiques.]
  *  - `equipement_propriete_enum_differente` : propriété absente ⇒ condition
  *    SATISFAITE. C'est le miroir, et il est le seul des deux à pouvoir porter
  *    la règle générale : tant que la famille n'a pas été renseignée, c'est
@@ -756,6 +781,86 @@ export type ExclusionMutuelle = {
   motif: string;
 };
 
+/**
+ * Un rythme qu'on peut retenir : une durée. `autre` n'en est pas un, et
+ * `mise_en_service_uniquement` est un acte unique (ADR-039 § 3, règle 1). Le
+ * type le tient ; `controlerRythmeRetenu` le redit pour un `as` ou un JSON.
+ */
+export type PeriodiciteRetenue = Exclude<
+  Periodicite,
+  "autre" | "mise_en_service_uniquement"
+>;
+
+/**
+ * Une référence de norme qui peut donner un rythme : citée sous `NORME`, et
+ * avec sa clé au corpus `normes` (`article`), sans laquelle
+ * `controlerRythmeRetenu` ne peut pas vérifier qu'elle a été lue. Le type
+ * tient ces deux règles ; le contrôle les redit pour un `as` ou un JSON.
+ * (2026-10-07, C62 : `RythmeRetenu.reference` acceptait toute référence.)
+ */
+export type ReferenceNorme = ReferenceLegale & {
+  source: "NORME";
+  article: string;
+};
+
+/**
+ * Le rythme que Rojer RETIENT là où le texte impose de refaire l'acte sans
+ * chiffrer le rythme (ADR-039).
+ *
+ * `periodicite` reste le rythme du TEXTE — `autre` pour « périodicité
+ * appropriée », « répétée périodiquement », « maintenus en bon état ». Ce champ
+ * se pose à côté, et seulement là : un rythme écrit l'emporte toujours, d'abord
+ * celui du texte, puis celui d'une norme. Deux motifs, et deux seulement :
+ *
+ *  - `norme` : une norme homologuée lue (corpus `normes`) écrit le rythme. La
+ *    référence est de source `NORME` ; `norme` est l'intitulé court qui
+ *    s'affiche (« NF S 61-919 ») et par lequel `reference.reference` commence.
+ *  - `defaut_annuel` : rien n'écrit le rythme. Rojer retient AU MOINS UNE FOIS
+ *    PAR AN, et l'affiche comme un défaut. `texteVague` est le mot du texte,
+ *    recopié tel quel d'une citation du corpus — c'est lui qui s'affiche
+ *    (« Le texte dit « périodicité appropriée » »), et un test vérifie qu'il y
+ *    est.
+ *
+ * Les règles que le type ne peut pas porter sont tenues par
+ * `controlerRythmeRetenu` (`rythme-retenu.ts`) et ses tests : `periodicite`
+ * doit être `autre`, la nature ni `evenementielle` ni `ponctuelle`, la norme
+ * lue autrement qu'indirectement, le texte vague présent dans une citation.
+ *
+ * **Entre dans `empreinteReferentiel()`** : il décide de l'existence et de la
+ * date d'une ligne.
+ */
+export type RythmeRetenu =
+  | {
+      motif: "norme";
+      /** Le rythme que la norme écrit. */
+      periodicite: PeriodiciteRetenue;
+      /**
+       * L'intitulé court, tel qu'il s'affiche : « NF S 61-919 ».
+       *
+       * Gardé à côté de `reference.reference`, qui commence par lui
+       * (`controlerRythmeRetenu` le vérifie) : l'en déduire demanderait de
+       * découper une chaîne libre — « NF S 61-919 (août 2001), § 5.1.1 … » —,
+       * la reconnaissance par motif que C61 a retirée au profit du statut de
+       * corpus. Il n'entre pas dans l'empreinte (seule la clé
+       * `reference.article` y entre) : c'est un libellé, pas une donnée qui
+       * date une ligne.
+       */
+      norme: string;
+      /** La citation de la norme : source `NORME`, clé au corpus `normes`. */
+      reference: ReferenceNorme;
+      /** Le mot vague du texte, s'il y en a un — affiché en complément. */
+      texteVague?: string;
+    }
+  | {
+      motif: "defaut_annuel";
+      /** Le défaut est un plancher, « au moins une fois par an » : rien d'autre. */
+      periodicite: "annuelle";
+      /** Le mot du texte, recopié d'une citation lue : « périodicité appropriée ». */
+      texteVague: string;
+    };
+
+export type MotifRythmeRetenu = RythmeRetenu["motif"];
+
 /** Champs communs à toutes les obligations, quel que soit leur porteur. */
 type ObligationCommune = {
   /** Identifiant stable, versionné avec le code. Jamais réutilisé. */
@@ -766,7 +871,8 @@ type ObligationCommune = {
   /** Texte long optionnel pour la fiche détaillée et le registre. */
   description?: string;
   /**
-   * Liste non vide de références. Au moins une source primaire opposable.
+   * Liste non vide de références. Au moins une source primaire — texte, ou
+   * norme citée comme norme (ADR-039).
    *
    * Convention d'ordre : `referencesLegales[0]` est l'article qui **fonde**
    * l'obligation — celui qu'on citerait seul devant un inspecteur. Les
@@ -776,7 +882,15 @@ type ObligationCommune = {
    * catégorie d'équipement et la même périodicité, sont un doublon.
    */
   referencesLegales: [ReferenceLegale, ...ReferenceLegale[]];
+  /** Le rythme du TEXTE. Pour le rythme qui date une ligne, lire
+   *  `periodiciteEffective(o)` (`rythme-retenu.ts`), jamais ce champ seul. */
   periodicite: Periodicite;
+  /**
+   * Le rythme retenu là où le texte n'en chiffre pas (ADR-039). Absent presque
+   * partout : seul un `periodicite: "autre"` sur une obligation qui revient
+   * (récurrente, ou état à maintenir) peut le porter. Voir `RythmeRetenu`.
+   */
+  rythmeRetenu?: RythmeRetenu;
   /**
    * Le plafond du PREMIER cycle, quand le texte en fixe un distinct du rythme.
    *
@@ -797,6 +911,13 @@ type ObligationCommune = {
    * échangeant une sur-application visible contre une sous-application que
    * personne ne peut voir, sur une ligne de criticité 5. Le modèle n'avait
    * simplement pas de place pour les deux valeurs.
+   * [2026-10-07 : `esp-inspection-periodique` est retirée (périmètre,
+   * relecture préventeur du 30/09, décision de la propriétaire du 07/10).
+   * ~~AUCUNE obligation vivante ne porte plus ce champ~~ ; le générateur le lit
+   * toujours, et ses tests l'éprouvent sur des lignes synthétiques.
+   * [Intégration du 2026-10-07 : le lot 3 (ADR-039) le réemploie —
+   * `incendie-travail-extincteurs-maintenance-approfondie`, premier pas à cinq ans, puis
+   * le rythme retenu décennal (NF S 61-919, annexe A).]]
    *
    * **Ce n'est pas une exception ESP.** `PE 4` porte aussi un premier délai
    * distinct de son rythme, et le règlement des chaufferies un troisième.
@@ -881,6 +1002,31 @@ type ObligationCommune = {
   faitGenerateur?: string;
   /** Réalisateurs acceptés. Au moins un. En général 1, parfois 2 (ex. "personne qualifiée OU organisme agréé"). */
   realisateurs: [Realisateur, ...Realisateur[]];
+  /**
+   * Qui DÉCLENCHE l'acte, quand ce n'est pas l'exploitant (2026-10-08, C64).
+   *
+   * `"administration"` : la visite périodique de la commission de sécurité.
+   * La ligne reste visible avec son rythme, se peint « Pour information —
+   * visite à l'initiative de l'administration », et n'est comptée nulle part
+   * comme une échéance de l'exploitant — ni retard, ni « à faire », ni indice.
+   * L'exploitant peut y déposer le procès-verbal. Une seule fonction le lit,
+   * `estPourInformation` (`./initiative`), et sa projection client
+   * `estLignePourInformation`.
+   *
+   * `realisateurs` reste `organisme_agree` sur ces lignes : l'enum Prisma
+   * `Realisateur` n'a pas de valeur pour la commission, et la colonne
+   * `Verification.realisateurRequis` le recopie. Le marqueur décide de ce qui
+   * s'affiche (« Commission de sécurité ») ; le champ ne change pas, et
+   * aucune migration n'est faite.
+   *
+   * **N'entre pas dans `empreinteReferentiel()`** : il ne change ni
+   * l'existence, ni le nombre, ni la date, ni le statut stocké d'une ligne —
+   * le générateur et le réconciliateur ne le lisent pas. Il change ce que les
+   * surfaces en COMPTENT et en affichent, au rendu, sur les lignes telles
+   * qu'elles sont : une réconciliation forcée de tous les dossiers ne
+   * produirait rien de différent.
+   */
+  initiative?: InitiativeObligation;
   /** 1 = informatif, 5 = vital (mise en danger directe si manquement). */
   criticite: 1 | 2 | 3 | 4 | 5;
   /** Régimes auxquels l'obligation s'applique. */
@@ -957,6 +1103,8 @@ export type ObligationPorteeParEquipement = ObligationCommune & {
   conditions?: ConditionApplication[];
   /** Interdit ici : le contexte n'a de sens que pour un porteur établissement. */
   equipementsEnContexte?: never;
+  /** Interdit ici : un équipement déclenche déjà, une ligne par équipement. */
+  siEquipementDeclare?: never;
 };
 
 /**
@@ -981,6 +1129,31 @@ export type ObligationPorteeParEtablissement = ObligationCommune & {
    * par « etc. », le produit ne doit pas prétendre le contraire.
    */
   equipementsEnContexte?: CategorieEquipement[];
+  /**
+   * L'obligation n'existe que si l'établissement a déclaré AU MOINS UN
+   * équipement de l'une de ces catégories — et elle produit alors UNE ligne,
+   * pas une par équipement (2026-10-08, C64 ; ADR-022, amendement du même
+   * jour).
+   *
+   * Le cas qui l'a fait naître : la formation du personnel au risque chimique
+   * (`stockage-dangereux-etablissement-formation-personnel`). Portée par le
+   * stockage déclaré, elle donnait une ligne PAR stockage — trois armoires,
+   * trois formations annuelles —, alors que l'acte est dû aux travailleurs de
+   * l'établissement, une fois. Le stockage n'est pas son porteur, c'est son
+   * DÉCLENCHEUR : la présence d'agents chimiques dangereux (R. 4412-38) que
+   * le produit ne lit qu'à travers lui.
+   *
+   * À distinguer d'`equipementsEnContexte`, qui n'est qu'indicatif : la ligne
+   * existe même si aucun équipement n'est déclaré. Ici, sans équipement de la
+   * catégorie, le moteur rend `null`. Absent = la règle de l'ADR-022 (due
+   * même si rien n'est déclaré).
+   *
+   * **Entre dans `empreinteReferentiel()`** : il décide de l'existence d'une
+   * ligne. En segment ajouté, et seulement quand il est présent, comme
+   * `rythmeRetenu` — les obligations qui n'en portent pas gardent leur
+   * chaîne.
+   */
+  siEquipementDeclare?: [CategorieEquipement, ...CategorieEquipement[]];
 };
 
 /**
@@ -1003,6 +1176,8 @@ export type ObligationPorteeParSalarie = ObligationCommune & {
   conditions?: never;
   /** Interdit : le contexte d'équipement n'a de sens que pour l'établissement. */
   equipementsEnContexte?: never;
+  /** Interdit : un titre naît d'une déclaration de l'employeur (ADR-023). */
+  siEquipementDeclare?: never;
   /**
    * Les titres que le droit interdit de cumuler avec celui-ci. **Requis, et
    * c'est le point** — troisième champ de ce type après `transmet` et

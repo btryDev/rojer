@@ -52,6 +52,8 @@ import type {
 } from "@/lib/matching";
 import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
 import { estSansRendezVous } from "@/lib/etats-permanents/regle";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import type { RythmeRetenu } from "@/lib/referentiels/conformite/types";
 import {
   estPorteeParSalarie,
   type Obligation,
@@ -160,7 +162,7 @@ export function clesApplicabilite(
 }
 
 type ApplicableAIndexer = {
-  obligation: { id: string; periodicite?: Periodicite };
+  obligation: { id: string; periodicite?: Periodicite; rythmeRetenu?: RythmeRetenu };
   porteur: string;
   equipementsConcernes: ReadonlyArray<{ id: string }>;
   surcharges?: Readonly<Record<string, { periodicite: Periodicite }>>;
@@ -192,7 +194,14 @@ export function periodicitesEffectives(
 ): Map<string, Periodicite | undefined> {
   const table = new Map<string, Periodicite | undefined>();
   for (const oa of obligations) {
-    const referentiel = oa.obligation.periodicite;
+    // Le rythme du référentiel est l'EFFECTIF (ADR-039) : celui du texte,
+    // sinon le rythme retenu. Sans quoi une ligne née d'un rythme retenu
+    // serait réalignée sur `autre` par le réconciliateur.
+    const p = oa.obligation.periodicite;
+    const referentiel =
+      p === undefined
+        ? undefined
+        : periodiciteEffective({ periodicite: p, rythmeRetenu: oa.obligation.rythmeRetenu });
     if (oa.porteur === "equipement") {
       for (const eq of oa.equipementsConcernes) {
         table.set(
@@ -484,10 +493,11 @@ export function genererProchainesVerifications(
     })();
 
     for (const eq of porteurs) {
-      // Périodicité effective : celle du référentiel, sauf surcharge d'une
-      // prescription particulière (ADR-035) sur cet équipement.
+      // Périodicité effective : celle du référentiel — texte, sinon rythme
+      // retenu (ADR-039) —, sauf surcharge d'une prescription particulière
+      // (ADR-035) sur cet équipement.
       const surcharge = eq.id === null ? undefined : oa.surcharges?.[eq.id];
-      const periodicite = surcharge?.periodicite ?? o.periodicite;
+      const periodicite = surcharge?.periodicite ?? periodiciteEffective(o);
       const prescriptionId = surcharge?.prescriptionId ?? null;
       const raisons = surcharge ? [...oa.raisons, surcharge.raison] : oa.raisons;
 
@@ -534,7 +544,7 @@ export function genererProchainesVerifications(
           // réalisée fait repartir le rythme (règle 3), jamais lui.
           premierPas: premierPas(
             o.premierDelai,
-            o.periodicite,
+            periodiciteEffective(o),
             surcharge?.periodicite ?? null,
           ),
           // Une ligne d'établissement n'a pas de mise en service : il n'y a pas
@@ -609,7 +619,10 @@ export function genererVerificationsDepuisTitres(
       // Équipe en tenait une autre — `echeanceLe` seul — : une VIP sans date de
       // fin était en retard au calendrier et « sans terme écrit » sur la fiche
       // de la personne (relecture système du 2026-09-14).
-      const echeance = echeanceDuTitre(t, o.periodicite);
+      // Le rythme effectif (ADR-039) : un titre dont le texte ne chiffre pas
+      // la durée mais qui reçoit un rythme retenu en a une.
+      const rythme = periodiciteEffective(o);
+      const echeance = echeanceDuTitre(t, rythme);
       // Pas d'échéance calculable : l'obligation n'en porte pas (état
       // permanent). Le titre existe, il n'y a simplement pas de rendez-vous à
       // inscrire — inventer une date serait pire que n'en afficher aucune.
@@ -626,7 +639,7 @@ export function genererVerificationsDepuisTitres(
         libelleObligation: o.libelle,
         equipementId: null,
         salarieId: t.salarieId,
-        periodicite: o.periodicite,
+        periodicite: rythme,
         realisateurRequis: o.realisateurs,
         criticiteObligation: o.criticite,
         succedeA: o.succedeA,
@@ -638,7 +651,7 @@ export function genererVerificationsDepuisTitres(
         // Le premier pas est le rythme, faute d'autre chose à y mettre ; la
         // règle 1 ne le lit jamais.
         sources: {
-          premierPas: o.periodicite,
+          premierPas: rythme,
           miseEnService: null,
           dateDuTitre: echeance,
         },

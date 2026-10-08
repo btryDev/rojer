@@ -4,8 +4,7 @@ import {
   CORPUS,
   couverture,
   EXCLUSIONS,
-  liensRetenusRompus,
-  renvoisManquants,
+  liensRompus,
   articlesNonCouverts,
   obligationsManquantes,
   obligationsSurTextesNonDepouilles,
@@ -172,7 +171,7 @@ describe("corpus — forme des dépouillements", () => {
     // ne s'améliore.
     //
     // « LES DEUX SENS » N'EN COUVRE QU'UN, mesuré le 2026-09-01 par le lot A en
-    // réinjectant les défauts qu'il venait de corriger. `liensRetenusRompus()`
+    // réinjectant les défauts qu'il venait de corriger. `liensRetenusRompus()` (`liensRompus("retenu")`, sens « nomme », depuis le 2026-10-07)
     // part du CORPUS : un article « retenu » qui nomme une obligation qui ne le
     // cite pas est une rupture. L'autre sens ne l'est pas — une obligation peut
     // citer un article dont l'entrée de corpus ne la nomme plus, et rien ne
@@ -191,13 +190,13 @@ describe("corpus — forme des dépouillements", () => {
     // lui, pas ici : un test qui naît rouge se désarme.~~ [2026-09-28 : fermé
     // par le test suivant, après rattachement des treize écarts restants
     // (audit de bout en bout, D15).]
-    expect(liensRetenusRompus()).toEqual([]);
+    expect(liensRompus("retenu").filter((l) => l.sens === "nomme_sans_citer")).toEqual([]);
   });
 
   it("l'autre sens : une obligation qui cite un article retenu y est nommée", () => {
     // Fondement OU contexte : la liste d'un article retenu nomme tout ce qui
-    // s'y appuie (`renvoisManquants`, politique écrite à sa définition).
-    expect(renvoisManquants()).toEqual([]);
+    // s'y appuie (ex-`renvoisManquants`, `liensRompus("retenu")` sens « cite » ; politique écrite à sa définition).
+    expect(liensRompus("retenu").filter((l) => l.sens === "cite_sans_nommer")).toEqual([]);
   });
 
   it("l'autre sens est gardé : retirer un nom d'un article retenu rougit", () => {
@@ -232,9 +231,10 @@ describe("corpus — forme des dépouillements", () => {
                 ),
               },
         ) as Corpus[];
-        expect(renvoisManquants(mute), `${a.ref} sans ${id}`).toContainEqual({
+        expect(liensRompus("retenu", mute), `${a.ref} sans ${id}`).toContainEqual({
           article: a.ref,
           obligation: id,
+          sens: "cite_sans_nommer",
         });
         eprouves++;
       }
@@ -259,6 +259,7 @@ describe("corpus — forme des dépouillements", () => {
           cv.horsPerimetre +
           cv.nonCouverts +
           cv.obligationsManquantes +
+          cv.normes +
           cv.nonDepouilles,
         `${c.id} : la somme des statuts ne fait pas le total — un statut manque au compte`,
       ).toBe(cv.total);
@@ -693,6 +694,12 @@ describe("corpus — Livre III du règlement de sécurité ERP", () => {
       // Ce qu'il faut retenir pour les entrées suivantes : une entrée de cette
       // liste que rien ne bloque au modèle n'attend pas un ADR, elle attend une
       // heure de travail. Celle-ci en a demandé une.
+      //
+      // [2026-10-07] L'obligation est RETIRÉE avec tout l'IGH (périmètre,
+      // relecture préventeur du 30/09, décision de la propriétaire du 07/10) :
+      // GH 61 est désormais `non_couvert`, annoncé sur la page « Ce que Rojer
+      // ne couvre pas ». Il ne revient pas dans cette liste : le manque est
+      // choisi et dit, il n'attend plus d'encodage.
       // ── Lot « les sept articles du Livre II », 2026-09-04. Quatre entrées
       // pour sept articles lus, et c'est le résultat qu'il faut lire dans les
       // deux sens : trois des sept étaient encodables et le sont

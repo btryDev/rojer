@@ -103,6 +103,8 @@ export type LigneSondee = {
   /** `null` = ligne ouverte (ADR-034). Une sonde archivée ne serait comptée
    *  par aucune agrégation, et la mesure ne dirait plus rien du porteur. */
   archiveLe: Date | null;
+  /** Délai de grâce (ADR-040). Une sonde n'en porte pas. */
+  graceJusquAu: Date | null;
   derniereRealisation: Date | null;
   periodicite: Periodicite;
 };
@@ -126,6 +128,7 @@ export function sondes(now: Date): {
     statut: "planifiee",
     datePrevue: hier,
     archiveLe: null,
+    graceJusquAu: null,
     derniereRealisation: null,
     periodicite: "annuelle" as Periodicite,
   };

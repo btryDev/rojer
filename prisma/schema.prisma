@@ -677,6 +677,22 @@ model Verification {
   // stratégie qui s'en sert (`deciderParFaits`) n'est branchée qu'au lot 4.
   suiviDepuis DateTime @default(now())
 
+  // Délai de grâce (ADR-040, décision de la propriétaire du 2026-10-08) : le
+  // jour jusqu'auquel une ligne « à planifier » N'EST PAS comptée en retard.
+  //
+  // Écrit une fois, à la création, et seulement par la passe qui reprend un
+  // dossier dont le sceau du calendrier a changé — la ligne naît d'un
+  // changement du RÉFÉRENTIEL (ou du moteur), pas d'un geste du dirigeant :
+  // `suiviDepuis` + 3 mois civils (`graceANaissance`, `calendrier/grace.ts`).
+  // `null` partout ailleurs : création d'établissement, déclaration
+  // d'équipement, titre, prescription — et toutes les lignes antérieures à la
+  // colonne. Aucun `update` n'y touche.
+  //
+  // La grâce ne déplace aucune échéance : `datePrevue` reste l'origine. Elle
+  // n'est lue que par `delaiDeGrace` (`lib/dates/retard.ts`) et son pendant
+  // SQL `urgenceSeule` (`calendrier/portee.ts`).
+  graceJusquAu DateTime?
+
   rapports RapportVerification[]
   actions  Action[]
 

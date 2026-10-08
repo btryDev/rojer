@@ -20,6 +20,8 @@
 //
 // Lecture seule : aucune fonction d'écriture n'a sa place dans ce fichier.
 
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import { trierParCategorie } from "@/lib/equipements/labels";
 import type { CategorieEquipement, StatutAction } from "@prisma/client";
 import { evaluerEtatDuerp, type EtatDuerp } from "@/lib/dashboard/duerp";
@@ -397,9 +399,15 @@ export type EtatVerification =
    * (a), 2026-09-28). Pas « en retard » : rien n'établit que l'obligation est
    * due, et l'assistant le répéterait au dirigeant.
    */
-  | "a_confirmer";
+  | "a_confirmer"
+  /**
+   * La visite de la commission de sécurité, à l'initiative de l'administration
+   * (C64, 2026-10-08) : ni en retard, ni à planifier, ni à venir pour
+   * l'exploitant. L'assistant la rend « pour information ».
+   */
+  | "pour_information";
 
-function etatDe(
+export function etatDe(
   v: VerificationDatee & LignePrudence,
   now: Date,
   prudence: RetenueParPrudence,
@@ -415,6 +423,8 @@ function etatDe(
   // en retard ». Relevé en relecture le 2026-09-12.
   if (estVerificationRealisee(v)) return "realisee";
   if (lignePortantSansRendezVous(v)) return "sans_rendez_vous";
+  // C64 : avant tout prédicat d'échéance — ce n'est pas celle de l'exploitant.
+  if (estLignePourInformation(v)) return "pour_information";
   if (estVerificationEnRetard(v, now)) {
     return prudence(v) ? "a_confirmer" : "en_retard";
   }
@@ -474,6 +484,7 @@ export async function listerEquipements(
           datePrevue: true,
           periodicite: true,
           archiveLe: true,
+          graceJusquAu: true,
           libelleObligation: true,
         },
       },
@@ -521,6 +532,8 @@ export type VerificationLue = {
    * champ une ligne éteinte à date passée ressort « en retard » à perpétuité.
    */
   archiveLe: Date | null;
+  /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
+  graceJusquAu: Date | null;
   /** La date du dernier rapport réalisé (ADR-034). La ligne ne porte plus que
    *  l'échéance ouverte : c'est ici que l'assistant lit ce qui a été fait. */
   derniereRealisation: Date | null;
@@ -551,6 +564,13 @@ export type VerificationLue = {
    * Elle n'élargit pas le `select` minimal au sens RGPD.
    */
   contractuelle: boolean;
+  /**
+   * La mention de rythme retenu (ADR-039), ou `null` : le rythme que le texte
+   * n'écrit pas et que Rojer retient — celui d'une norme, ou le défaut annuel.
+   * Même raison que `contractuelle` : l'assistant ne peut pas deviner qu'une
+   * périodicité ne vient pas du texte, et la phrase doit voyager avec la ligne.
+   */
+  rythmeRetenu: string | null;
   /**
    * Les phrases « à confirmer » de la ligne (`matching/marques.ts`), vide si
    * rien ne la retient par prudence.
@@ -599,6 +619,7 @@ export async function listerVerifications(
       // En clair, et non par une constante partagée, pour la même raison que
       // `rapports` plus bas — la garde RGPD relit le source de ce serveur.
       archiveLe: true,
+      graceJusquAu: true,
       statut: true,
       equipement: { select: { libelle: true, categorie: true } },
       // La source de la prescription, et rien d'autre d'elle : de quoi dire
@@ -642,6 +663,7 @@ export async function listerVerifications(
     // ci-dessous aussi.
     datePrevue: v.datePrevue,
     archiveLe: v.archiveLe,
+    graceJusquAu: v.graceJusquAu,
     derniereRealisation: derniereRealisation(v.rapports),
     statut: v.statut,
     etat: etatDe(v, now, prudence),
@@ -660,6 +682,7 @@ export async function listerVerifications(
         ? 0
         : joursDeRetard(v.datePrevue, now),
     contractuelle: estEcheanceContractuelle(v),
+    rythmeRetenu: mentionRythmeDeVerification(v)?.long ?? null,
     aConfirmer: marques.parObligation.get(v.obligationId)?.phrases ?? [],
   }));
 

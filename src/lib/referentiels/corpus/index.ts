@@ -36,6 +36,8 @@ import { CODE_TRAVAIL_EQUIPEMENTS_INFORMATION } from "./code-travail-equipements
 import { ESP_SUIVI_EN_SERVICE } from "./esp-suivi-en-service";
 import { ICPE_STOCKAGE } from "./icpe-stockage";
 import { INRS_DOCUMENTAIRE } from "./inrs-documentaire";
+import { NORMES } from "./normes";
+import { referencesCitees } from "../conformite/rythme-retenu";
 import { CODE_TRAVAIL_LEVAGE } from "./code-travail-levage";
 import { FROID_FLUIDES } from "./froid-fluides";
 import { CODE_TRAVAIL_FORMATION_SECURITE } from "./code-travail-formation-securite";
@@ -124,6 +126,9 @@ export const CORPUS: readonly Corpus[] = [
   ARRETE_1980_LIVRE_4_PARCS,
   ARRETE_2018_02_23_GAZ_HABITATION,
   INRS_DOCUMENTAIRE,
+  // ADR-039, 2026-10-07 — les normes homologuées lues, dont un rythme peut
+  // être retenu. Ni droit ni brochure : statut `norme`.
+  NORMES,
   ARRETES_MODIFICATIFS_ERP,
   // Lot 7 — les textes qui portent les obligations de salarié.
   CODE_TRAVAIL_FORMATION_SECURITE,
@@ -416,7 +421,7 @@ export function obligationsSurTextesNonDepouilles(): string[] {
   const lues = referencesDepouillees();
   return obligationsConformite
     .filter((o) =>
-      o.referencesLegales.some((r) => !r.article || !lues.has(r.article)),
+      referencesCitees(o).some((r) => !r.article || !lues.has(r.article)),
     )
     .map((o) => o.id);
 }
@@ -435,7 +440,7 @@ export function articlesCitesNonDepouilles(): {
   const lues = referencesDepouillees();
   const par = new Map<string, string[]>();
   for (const o of obligationsConformite) {
-    for (const r of o.referencesLegales) {
+    for (const r of referencesCitees(o)) {
       if (!r.article || lues.has(r.article)) continue;
       par.set(r.article, [...(par.get(r.article) ?? []), o.id]);
     }
@@ -443,73 +448,85 @@ export function articlesCitesNonDepouilles(): {
   return [...par].map(([article, obligations]) => ({ article, obligations }));
 }
 
-/**
- * Les articles déclarés « retenus » par un corpus alors que l'obligation
- * nommée ne les cite pas.
- *
- * C'est le sens inverse du lien, et il doit être vérifié aussi : sans cela un
- * corpus pourrait s'attribuer une couverture qu'aucune obligation ne confirme,
- * et le compte de dette descendrait sans que rien ne s'améliore.
- */
-export function liensRetenusRompus(): {
-  corpus: string;
-  ref: string;
+/** Un lien rompu entre un article (ou une norme) du corpus et une obligation. */
+export type LienRompu = {
+  /** Le corpus de l'entrée, quand c'est elle qui nomme (sens « nomme »). */
+  corpus?: string;
+  /** La clé d'article, « (sans clé) » pour une référence qui n'en a pas. */
+  article: string;
   obligation: string;
-}[] {
-  const parId = new Map(obligationsConformite.map((o) => [o.id, o]));
-  const rompus: { corpus: string; ref: string; obligation: string }[] = [];
-  for (const c of CORPUS) {
+  /**
+   * `nomme_sans_citer` : l'entrée nomme une obligation qui ne la cite pas.
+   * `cite_sans_nommer` : l'obligation cite l'entrée, qui ne la nomme pas.
+   */
+  sens: "nomme_sans_citer" | "cite_sans_nommer";
+};
+
+/**
+ * Le lien entre les entrées d'un statut (`retenu`, `norme`) et les obligations
+ * qui les citent, DANS LES DEUX SENS. Une seule fonction pour le droit et pour
+ * les normes (revue du 2026-10-07 : `liensNormesRompus` recopiait
+ * `liensRetenusRompus` et `renvoisManquants`).
+ *
+ * 1. **L'entrée nomme une obligation qui ne la cite pas** — sans ce contrôle,
+ *    un corpus pourrait s'attribuer une couverture qu'aucune obligation ne
+ *    confirme, et le compte de dette descendrait sans que rien ne s'améliore.
+ * 2. **L'obligation cite l'entrée sans y être nommée** — fermé le 2026-09-28
+ *    pour le droit (audit de bout en bout, D15 ; ex-`CORPUS_NE_RENVOIE_PAS` de
+ *    `pnpm relecture`). La liste `obligations` d'un article retenu nomme
+ *    TOUTES les obligations qui le citent, en fondement comme en contexte ; ce
+ *    qu'une citation est pour l'obligation se lit dans la `note` de la
+ *    référence, pas dans le corpus. Sans ce sens, retirer ou reclasser un
+ *    article ne signale pas toutes les obligations qui s'y appuient.
+ *
+ * Les deux sens lisent `referencesCitees(o)` — la norme d'un rythme retenu
+ * comprise (ADR-039) : une référence que l'on ne compte pas est une référence
+ * que l'on ne relit pas. Pour le droit, cela ne change rien aujourd'hui (aucune
+ * clé de norme n'est un article retenu) ; c'est la même lecture partout.
+ *
+ * Ce qui diffère d'un statut à l'autre tient en une ligne : quelles références
+ * le sens 2 concerne. Pour le droit, celles dont la clé est un article
+ * retenu — une clé absente de tout corpus relève d'un autre contrôle
+ * (`articlesCitesNonDepouilles`). Pour une norme, toute référence de source
+ * `NORME` : une norme n'a pas d'autre lien au référentiel que celui-ci.
+ *
+ * Paramétrée pour être éprouvée sur une copie mutée.
+ */
+export function liensRompus(
+  statut: "retenu" | "norme",
+  corpus: readonly Corpus[] = CORPUS,
+  obligations: readonly Obligation[] = obligationsConformite,
+): LienRompu[] {
+  const parId = new Map(obligations.map((o) => [o.id, o]));
+  const nommees = new Map<string, Set<string>>();
+  const rompus: LienRompu[] = [];
+  for (const c of corpus) {
     for (const a of c.articles) {
-      if (a.statut !== "retenu") continue;
+      if (a.statut !== statut) continue;
+      const s = nommees.get(a.ref) ?? new Set<string>();
       for (const id of a.obligations) {
+        s.add(id);
         const o = parId.get(id);
-        if (!o || !o.referencesLegales.some((r) => r.article === a.ref)) {
-          rompus.push({ corpus: c.id, ref: a.ref, obligation: id });
+        if (!o || !referencesCitees(o).some((r) => r.article === a.ref)) {
+          rompus.push({ corpus: c.id, article: a.ref, obligation: id, sens: "nomme_sans_citer" });
         }
+      }
+      nommees.set(a.ref, s);
+    }
+  }
+  for (const o of obligations) {
+    for (const r of referencesCitees(o)) {
+      const concernee =
+        statut === "norme"
+          ? r.source === "NORME"
+          : r.article !== undefined && nommees.has(r.article);
+      if (!concernee) continue;
+      if (!r.article || !nommees.get(r.article)?.has(o.id)) {
+        rompus.push({ article: r.article ?? "(sans clé)", obligation: o.id, sens: "cite_sans_nommer" });
       }
     }
   }
   return rompus;
-}
-
-/**
- * L'AUTRE SENS du lien : les obligations qui citent un article « retenu » sans
- * que son entrée de corpus les nomme (`CORPUS_NE_RENVOIE_PAS` de
- * `pnpm relecture`, qui n'échoue pas).
- *
- * Fermé le 2026-09-28 (audit de bout en bout, D15) : treize écarts rattachés.
- * La liste `obligations` d'un article retenu nomme TOUTES les obligations qui
- * le citent, en fondement comme en contexte — c'est la politique déjà suivie
- * par L. 1311-2, R. 4463-3, R. 4227-39 et l'art. 7 de l'arrêté du 4 novembre
- * 1993, cités « en contexte » et nommés. Ce qu'une citation est pour
- * l'obligation se lit dans la `note` de la référence, pas dans le corpus.
- * Sans ce sens, retirer ou reclasser un article ne signale pas toutes les
- * obligations qui s'y appuient.
- *
- * Paramétrée pour que le test puisse l'éprouver sur une copie mutée.
- */
-export function renvoisManquants(
-  corpus: readonly Corpus[] = CORPUS,
-  obligations: readonly Obligation[] = obligationsConformite,
-): { article: string; obligation: string }[] {
-  const nommees = new Map<string, Set<string>>();
-  for (const c of corpus) {
-    for (const a of c.articles) {
-      if (a.statut !== "retenu") continue;
-      const s = nommees.get(a.ref) ?? new Set<string>();
-      for (const id of a.obligations) s.add(id);
-      nommees.set(a.ref, s);
-    }
-  }
-  const manquants: { article: string; obligation: string }[] = [];
-  for (const o of obligations) {
-    for (const r of o.referencesLegales) {
-      if (r.article && nommees.has(r.article) && !nommees.get(r.article)!.has(o.id)) {
-        manquants.push({ article: r.article, obligation: o.id });
-      }
-    }
-  }
-  return manquants;
 }
 
 /**
@@ -576,7 +593,7 @@ export function referencesSansCle(): {
   reference: string;
 }[] {
   return obligationsConformite.flatMap((o) =>
-    o.referencesLegales
+    referencesCitees(o)
       .filter((r) => !r.article)
       .map((r) => ({ obligation: o.id, reference: r.reference })),
   );

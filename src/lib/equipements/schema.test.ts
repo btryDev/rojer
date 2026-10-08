@@ -156,6 +156,41 @@ describe("serialiserCaracteristiques", () => {
 // Questions à trois états (amendement 2026-08)
 // =============================================================================
 
+describe("typeExtincteur (NF S 61-919, tableau A.1)", () => {
+  it("se saisit sur un extincteur, se sérialise, et se relit", () => {
+    const fd = new FormData();
+    fd.set("libelle", "Extincteur du hall");
+    fd.set("categorie", "EXTINCTEUR");
+    fd.set("typeExtincteur", "co2");
+    const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(serialiserCaracteristiques(res.data)?.typeExtincteur).toBe("co2");
+    }
+  });
+
+  it("vide, il n'est pas stocké : le silence reste un silence", () => {
+    const fd = new FormData();
+    fd.set("libelle", "Extincteur du hall");
+    fd.set("categorie", "EXTINCTEUR");
+    fd.set("typeExtincteur", "");
+    const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(serialiserCaracteristiques(res.data) ?? {}).not.toHaveProperty("typeExtincteur");
+    }
+  });
+
+  it("refuse une valeur hors du tableau, et hors d'un extincteur", () => {
+    expect(
+      equipementSchema.safeParse({ libelle: "E", categorie: "EXTINCTEUR", typeExtincteur: "inconnu" }).success,
+    ).toBe(false);
+    expect(
+      equipementSchema.safeParse({ libelle: "R", categorie: "RIA", typeExtincteur: "co2" }).success,
+    ).toBe(false);
+  });
+});
+
 describe("normaliserTriEtat", () => {
   it("reconnaît les formes affirmatives", () => {
     for (const v of ["oui", "true", "on", "1", "  OUI  ", true]) {
@@ -399,6 +434,10 @@ describe("cohérence schéma ↔ référentiel d'obligations", () => {
       // condition ne s'en servait ; elle entre ici parce qu'elle en porte une
       // désormais, pas parce que la collecte aurait changé.
       "familleEsp",
+      // Ajoutée le 2026-10-07 (C59 lot 3) : `<select name="typeExtincteur">`,
+      // affiché pour la catégorie EXTINCTEUR. Elle décide de la maintenance
+      // additionnelle approfondie (NF S 61-919, tableau A.1).
+      "typeExtincteur",
     ]);
     for (const o of obligationsConformite) {
       for (const c of o.conditions ?? []) {

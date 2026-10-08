@@ -20,9 +20,51 @@
  *   que tels. L'obligation opposable vient de l'arrêté du 25 juin 1980 (art.
  *   MS 38) et du Code du travail R. 4227-29. On cite les deux, sans les normes
  *   privées.
+ *   [2026-10-07, ADR-039 : une norme NF peut désormais donner le RYTHME d'une
+ *   obligation dont le texte ne le chiffre pas — `rythmeRetenu`, motif
+ *   « norme ». NF S 61-919 est au corpus `normes` ; l'appliquer aux
+ *   extincteurs hors ERP est le lot 3. APSAD R4 reste exclue.]
  */
 
-import type { Obligation, ReferenceLegale } from "./types";
+import type { Obligation, ReferenceLegale, ReferenceNorme, RythmeRetenu } from "./types";
+
+// -----------------------------------------------------------------------------
+// NF S 61-919 — le rythme des extincteurs hors ERP (ADR-039, C59 lot 3)
+//
+// Le Code du travail fait maintenir les extincteurs « en bon état de
+// fonctionnement » (R. 4227-29) sans dire à quel rythme. La norme NF S 61-919
+// (août 2001), lue sur le scan remis par le préventeur, l'écrit. Elle se cite
+// comme norme : source `NORME`, clé au corpus `normes`.
+// -----------------------------------------------------------------------------
+
+/** NF S 61-919 § 5.1.1 : la maintenance annuelle par la personne compétente. */
+const REFERENCE_NF_S_61_919_ANNUELLE: ReferenceNorme = {
+  source: "NORME",
+  reference:
+    "NF S 61-919 (août 2001), § 5.1.1 (maintenance annuelle par la personne compétente)",
+  article: "NF S 61-919 § 5.1.1",
+  note:
+    "« La personne compétente doit effectuer tous les ans, avec une tolérance de plus ou moins deux mois, la maintenance, conformément au présent document. » Norme homologuée, citée comme norme : aucun texte en vigueur ne la rend obligatoire (ADR-039).",
+};
+
+/** NF S 61-919 § 10.1 et annexe A : la révision en atelier, dix ans au plus. */
+const REFERENCE_NF_S_61_919_REVISION: ReferenceNorme = {
+  source: "NORME",
+  reference:
+    "NF S 61-919 (août 2001), § 10.1 et annexe A, tableau A.1 (révision en atelier : 10 ans)",
+  article: "NF S 61-919 § 10.1",
+  note:
+    "« Tous les extincteurs portatifs doivent être soumis à une révision en atelier effectuée par le fabricant ou un centre de révision à intervalles ne dépassant pas ceux donnés à l'annexe A. » Le tableau A.1 donne dix ans pour tous les types, sauf le halon. Norme homologuée, citée comme norme (ADR-039).",
+};
+
+/** Le rythme annuel que la norme écrit et que `R. 4227-29` ne chiffre pas. */
+const RYTHME_NF_S_61_919_ANNUEL: RythmeRetenu = {
+  motif: "norme",
+  periodicite: "annuelle",
+  norme: "NF S 61-919",
+  reference: REFERENCE_NF_S_61_919_ANNUELLE,
+  texteVague: "maintenus en bon état de fonctionnement",
+};
 
 // -----------------------------------------------------------------------------
 // GE 4 § 1 — le tableau des visites périodiques de commission, case par case
@@ -83,6 +125,17 @@ const DESCRIPTION_GE4_RESERVES =
  * contrôlé, pourquoi six lignes, et ce qui reste non encodé.
  */
 const NOTE_GE4_TABLEAU =
+  "POUR INFORMATION DEPUIS LE 2026-10-08 (C64 ; décision 2 de la synthèse de " +
+  "revue, option A, sans migration). La visite est déclenchée par " +
+  "l'administration — le préventeur : « une information ». La ligne porte " +
+  "`initiative: \"administration\"` : elle reste visible avec son rythme, se " +
+  "peint « Pour information — visite à l'initiative de l'administration », et " +
+  "n'est plus comptée comme une échéance de l'exploitant (ni retard, ni « à " +
+  "faire », ni indice) ; le procès-verbal de visite se dépose et se trace au " +
+  "registre. ~~Réalisateur affiché : « Organisme agréé »~~ — le champ " +
+  "`realisateurs` garde `organisme_agree` (l'enum Prisma n'a pas de valeur pour " +
+  "la commission ; aucune migration), mais l'affichage dit « Commission de " +
+  "sécurité » par le marqueur (`conformite/initiative.ts`).\n\n" +
   "— — — NOTE COMMUNE AUX SEPT LIGNES DE GE 4 § 1 — — —\n\n" +
   "LE TABLEAU, TEL QU'IL EST ENCODÉ (types × catégories, en années) :\n" +
   "  J, O, R (1) avec hébergement, U .......... 3 | 3 | 3 | 3\n" +
@@ -201,9 +254,10 @@ export const obligationsIncendie: Obligation[] = [
   {
     id: "incendie-travail-moyens-lutte",
     domaine: "incendie",
-    libelle: "Maintien en bon état de fonctionnement de l'extincteur (travail)",
+    libelle:
+      "Maintenance annuelle de l'extincteur, pour le maintenir en bon état de fonctionnement (travail, hors ERP)",
     description:
-      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29), pour que tout commencement d'incendie puisse être rapidement et efficacement combattu (R. 4227-28). Le nombre d'extincteurs dont l'établissement doit être doté fait l'objet d'une ligne d'établissement distincte.",
+      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29), pour que tout commencement d'incendie puisse être rapidement et efficacement combattu (R. 4227-28). Le Code du travail ne fixe pas le rythme de cet entretien ; la norme NF S 61-919 (août 2001) le fixe : « La personne compétente doit effectuer tous les ans, avec une tolérance de plus ou moins deux mois, la maintenance » (§ 5.1.1). C'est une norme, citée comme norme. La même norme dit ce que porte l'étiquette de maintenance, qui « ne cache aucun des marquages du fabricant » — notamment la « date (année et mois) de réalisation de la maintenance ou des vérifications » et la « marque identifiant clairement la personne compétente » (§ 9) —, et comment cette personne est formée : un examen supervisé par un organisme indépendant, puis « des stages de recyclage au moins tous les cinq ans » (annexe E). Ces deux points décrivent le prestataire et sa preuve ; ils ne créent pas d'échéance pour l'établissement. En ERP, la vérification annuelle est écrite par le règlement de sécurité (MS 38 § 4) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas. Le nombre d'extincteurs dont l'établissement doit être doté fait l'objet d'une ligne d'établissement distincte.",
     referencesLegales: [
       {
         source: "CODE_TRAVAIL",
@@ -223,15 +277,213 @@ export const obligationsIncendie: Obligation[] = [
       },
     ],
     periodicite: "autre",
+    rythmeRetenu: RYTHME_NF_S_61_919_ANNUEL,
     nature: "etat_permanent",
     pieceAttendue: null,
     realisateurs: ["personne_qualifiee", "personne_competente"],
     criticite: 5,
     transmet: [],
-    typologies: { travail: true },
+    // `erp: false` : la partition avec `incendie-erp-extincteurs-annuelle`
+    // (ADR-039, « un rythme écrit l'emporte toujours »). Voir les notes.
+    typologies: { travail: true, erp: false },
     categoriesEquipement: ["EXTINCTEUR"],
     notesInternes:
-      "RÉDUITE AU MAINTIEN EN ÉTAT LE 2026-09-28 (D25, option (a), revue indépendante du lot 2) : la dotation de R. 4227-29 est portée par `incendie-travail-extincteurs-dotation` ; le libellé « Présence et maintien en état des moyens de lutte » et la description « doivent être dotés » la faisaient lire une fois par extincteur en plus de la ligne d'établissement. « Accessibles » retiré : le mot n'est ni dans R. 4227-28 ni dans R. 4227-29.\n\nAMENDEMENT 2026-08-27, audit systématique des périodicités sans source porteuse. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-28 et R. 4227-29. Section R. 4227-28 à R. 4227-41 relue à la source : AUCUN de ces articles ne fixe de périodicité annuelle, pour quoi que ce soit. La seule périodicité de toute la section est celle de R. 4227-39, « au moins tous les six mois », et elle porte sur les exercices et essais, pas sur les extincteurs. R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme.\n\nLa vérification annuelle des extincteurs existe bien, mais elle vient de la norme NF S 61-919 et des contrats de maintenance, pas du Code du travail. Une norme n'est pas opposable par elle-même. C'est le même motif que la règle APSAD R4 retirée en août.\n\n`periodicite` passe à `autre` : l'obligation reste, parce que doter l'établissement de moyens de lutte et les maintenir en état est bien exigé, mais le produit cesse d'afficher une date que le droit ne donne pas. Les ERP ne perdent rien : `incendie-erp-extincteurs-annuelle` porte l'annuelle pour eux, fondée sur MS 73.\n\nNATURE : ÉTAT PERMANENT (ADR-026). C'est la lecture que l'amendement du 2026-08-27 avait faite du texte — « R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme » — sans qu'aucun champ ne puisse la porter. Elle l'est désormais, et `periodicite: \"autre\"` cesse d'être le seul indice.",
+      "RYTHME DE LA NORME NF S 61-919, LE 2026-10-07 (C59 lot 3, relecture du préventeur, ADR-039). Le préventeur : « Préco annuelle » ; la propriétaire a tranché le 07/10 que les normes sont admises. `R. 4227-29` dit « maintenus en bon état de fonctionnement » sans rythme ; la NF S 61-919 (août 2001) l'écrit, § 5.1.1 : « La personne compétente doit effectuer tous les ans, avec une tolérance de plus ou moins deux mois, la maintenance, conformément au présent document. » `periodicite` reste `autre` (le rythme du TEXTE) ; `rythmeRetenu` porte l'annuelle de la norme, et la ligne passe de l'écran « en place » au calendrier, née « à planifier » (ADR-036, aucun retard rétroactif). L'amendement du 2026-08-27 ci-dessous (« une norme n'est pas opposable par elle-même ») est AMENDÉ par l'ADR-039 : il reste vrai qu'aucun texte ne rend la norme obligatoire, mais une norme lue peut désormais donner le rythme, affiché « Rythme de la norme NF S 61-919 ».\n\nPARTITION AVEC L'ERP — `typologies: { travail: true, erp: false }`. Un établissement ERP ET de travail recevait cette ligne ET `incendie-erp-extincteurs-annuelle` : deux annuelles pour le même extincteur. L'annuelle ERP est écrite par le TEXTE (MS 38 § 4, « une vérification annuelle ») ; un rythme écrit l'emporte toujours, donc c'est celle-ci qui se retire chez un ERP. `ExclusionMutuelle` n'était pas l'outil : elle ne vaut qu'entre titres de salarié (`exclusion.test.ts`). L'ERP ne perd rien de `R. 4227-29` : la dotation (`incendie-travail-extincteurs-dotation`, établissement, `travail: true`) le cite toujours en entier, « maintenus en bon état de fonctionnement » compris, et l'annuelle ERP porte l'acte. Elle est servie à TOUT ERP, 5ᵉ catégorie comprise (sur-application assumée, notes de `incendie-erp-extincteurs-annuelle`) : chaque établissement de travail qui déclare un extincteur reçoit donc exactement UNE annuelle — `extincteurs-partition.test.ts` le tient sur la catégorie inconnue et les cinq catégories. SI L'ANNUELLE ERP EST UN JOUR RESTREINTE AUX QUATRE PREMIÈRES CATÉGORIES, CETTE PARTITION DOIT L'ÊTRE DU MÊME MOUVEMENT — le test rougira.\n\nLIBELLÉ : « maintenance annuelle », le mot de la norme (§ 5.1.1), et « hors ERP ». Réalisateurs inchangés : la norme dit « la personne compétente ».\n\nRÉDUITE AU MAINTIEN EN ÉTAT LE 2026-09-28 (D25, option (a), revue indépendante du lot 2) : la dotation de R. 4227-29 est portée par `incendie-travail-extincteurs-dotation` ; le libellé « Présence et maintien en état des moyens de lutte » et la description « doivent être dotés » la faisaient lire une fois par extincteur en plus de la ligne d'établissement. « Accessibles » retiré : le mot n'est ni dans R. 4227-28 ni dans R. 4227-29.\n\nAMENDEMENT 2026-08-27, audit systématique des périodicités sans source porteuse. L'obligation affichait une échéance ANNUELLE en ne citant que R. 4227-28 et R. 4227-29. Section R. 4227-28 à R. 4227-41 relue à la source : AUCUN de ces articles ne fixe de périodicité annuelle, pour quoi que ce soit. La seule périodicité de toute la section est celle de R. 4227-39, « au moins tous les six mois », et elle porte sur les exercices et essais, pas sur les extincteurs. R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme.\n\nLa vérification annuelle des extincteurs existe bien, mais elle vient de la norme NF S 61-919 et des contrats de maintenance, pas du Code du travail. ~~Une norme n'est pas opposable par elle-même. C'est le même motif que la règle APSAD R4 retirée en août.~~ [2026-10-07, ADR-039 : une norme lue peut donner le rythme ; APSAD R4 reste exclue — ce n'est pas une norme homologuée.]\n\n`periodicite` passe à `autre` : l'obligation reste, parce que doter l'établissement de moyens de lutte et les maintenir en état est bien exigé, ~~mais le produit cesse d'afficher une date que le droit ne donne pas~~ [2026-10-07 : la date revient, par `rythmeRetenu` et marquée « Rythme de la norme NF S 61-919 » ; `periodicite` reste `autre`]. Les ERP ne perdent rien : `incendie-erp-extincteurs-annuelle` porte l'annuelle pour eux, fondée sur ~~MS 73~~ MS 38 § 4 [2026-10-07, C60 : MS 38 § 4 est son fondateur, « une vérification annuelle » ; MS 73 § 2 n'y est cité qu'en seconde référence].\n\nNATURE : ÉTAT PERMANENT (ADR-026). C'est la lecture que l'amendement du 2026-08-27 avait faite du texte — « R. 4227-29 dit « maintenus en bon état de fonctionnement » — une obligation d'ÉTAT, sans rythme » — sans qu'aucun champ ne puisse la porter. Elle l'est désormais, et `periodicite: \"autre\"` cesse d'être le seul indice.",
+  },
+  {
+    id: "incendie-travail-extincteurs-revision-atelier-decennale",
+    domaine: "incendie",
+    libelle:
+      "Révision en atelier de l'extincteur, tous les dix ans au plus (travail, hors ERP)",
+    description:
+      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29). Outre sa maintenance annuelle, la norme NF S 61-919 (août 2001) le soumet à une révision en atelier, par le fabricant ou un centre de révision, à intervalles ne dépassant pas ceux de son annexe A : dix ans (§ 10.1, tableau A.1). C'est une norme, citée comme norme. La norme compte cet intervalle « de la date de fabrication ou de la dernière recharge effective ou de la révision en atelier » (§ 10.1) ; Rojer, qui ne connaît ni la fabrication ni la recharge, le compte de la mise en service déclarée de l'appareil, puis du dernier rapport déposé. Une révision datée par la norme peut donc tomber plus tôt que celle du calendrier : la date de fabrication est marquée sur le corps de l'appareil. Pour un extincteur au halon, la norme ne donne pas d'intervalle de révision (« Voir note 3 ») : la ligne ne s'applique pas s'il est déclaré comme tel. En ERP, la révision tous les dix ans est écrite par le règlement de sécurité (MS 38 § 4) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-29",
+        article: "R. 4227-29",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532079/",
+        note: "« Le premier secours contre l'incendie est assuré par des extincteurs en nombre suffisant et maintenus en bon état de fonctionnement. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (`relecture-jc-2026-10/textes.md`) : aucun rythme.",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-28",
+        article: "R. 4227-28",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532081/",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "norme",
+      periodicite: "decennale",
+      norme: "NF S 61-919",
+      reference: REFERENCE_NF_S_61_919_REVISION,
+      texteVague: "maintenus en bon état de fonctionnement",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_qualifiee", "fabricant"],
+    criticite: 4,
+    transmet: [],
+    // Même partition que l'annuelle : en ERP, MS 38 § 4 écrit la décennale.
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["EXTINCTEUR"],
+    // 2026-10-07 (C60) : pour le halon, le tableau A.1 écrit « Voir note 3 »
+    // en révision, et la note 3 ne donne aucun intervalle. Au silence du
+    // type, la ligne reste.
+    conditions: [
+      {
+        type: "equipement_propriete_enum_differente",
+        categorie: "EXTINCTEUR",
+        propriete: "typeExtincteur",
+        valeur: "halon",
+      },
+    ],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C59 lot 3, item 2 ; relecture du préventeur, ADR-039). Le préventeur, p. 6 du référentiel annoté, sur la révision décennale ERP : « valable pour tous les établissements » ; à la question « sur quel texte repose son application hors ERP ? », sa réponse renvoie à la norme. Le Code du travail ne fixe aucune révision (`R. 4227-28` à `R. 4227-41` relus, aucune périodicité hors `R. 4227-39`). La NF S 61-919, lue sur le scan p. 10 et p. 12 le 2026-10-07 : § 10.1 « Tous les extincteurs portatifs doivent être soumis à une révision en atelier effectuée par le fabricant ou un centre de révision à intervalles ne dépassant pas ceux donnés à l'annexe A » ; tableau A.1, colonne « Révision en atelier et renouvellement de la charge (annexe D) » : 10 ans pour l'eau, la mousse, la poudre (avec ou sans opercule) et le CO2 ; « Voir note 3 » pour le halon ~~(vidé et récupéré, plus rechargé)~~ [2026-10-07, C60 : la note 3 ne dit rien de la recharge ; elle dit : « Les extincteurs portatifs à halon ne doivent pas être déchargés mais vidés selon une méthode permettant de récupérer le halon (voir annexe G). »]. Aucun intervalle de révision n'est donc écrit pour le halon : la ligne s'en retire par `enum_differente` sur la valeur `halon` du type, entrée le même jour.\n\nPOURQUOI UNE LIGNE À PART : même motif que la jumelle ERP `incendie-erp-extincteurs-revision-decennale` — deux actes, deux dates, deux preuves. Le modèle ne porte qu'un rythme par obligation.\n\nNATURE ÉCHÉANCE RÉCURRENTE et non état permanent comme l'annuelle : la révision est un ACTE daté (démontage en atelier), que la norme répète à intervalle maximal. `periodicite: \"autre\"` reste le rythme du TEXTE (`R. 4227-29` n'en chiffre aucun) ; le décennal est `rythmeRetenu`, motif « norme ». `texteVague` = « maintenus en bon état de fonctionnement », mot pour mot de `R. 4227-29` : il s'affiche en complément de la norme.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`, la même partition que `incendie-travail-moyens-lutte`. Chez un ERP, la décennale de MS 38 § 4 est écrite par le texte et l'emporte ; elle est servie à tout ERP, 5ᵉ catégorie comprise (sur-application assumée). `extincteurs-partition.test.ts` tient « une décennale et une seule » par extincteur sur six profils.\n\nORIGINE DES INTERVALLES : § 10.1 les fait partir « de la date de fabrication ou de la dernière recharge effective ou de la révision en atelier » ; l'annexe A, « de la date d'installation […] mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps ». [2026-10-07, C60, revue indépendante : L'ÉCART EST NOMMÉ, et désormais dit au dirigeant dans la description.] Le générateur compte depuis la mise en service déclarée (`premierPas` / ADR-036), jamais depuis la fabrication ni la dernière recharge : pour un appareil fabriqué plus d'un an avant son installation, ou rechargé depuis, la révision de la norme tombe plus tôt que celle du calendrier. Le sens d'erreur est celui de l'échéance en retard sur la norme ; il n'est pas corrigé ici, faute de champ « date de fabrication » ou « dernière recharge » (décision en attente, comme la coïncidence ci-dessous).\n\nCOÏNCIDENCE AVEC LA MAINTENANCE APPROFONDIE À LA NAISSANCE, nommée sans changer le comportement (décision en attente de la propriétaire, synthèse de la revue, point 12) : pour un extincteur ancien — mis en service il y a plus de dix ans — ou dont la mise en service n'est pas dite, cette ligne et `incendie-travail-extincteurs-maintenance-approfondie` naissent toutes deux « à planifier » à l'origine du suivi, donc ensemble, alors que la norme les place à des années différentes (10 et 5, 15). Le produit ne connaît que la mise en service déclarée de l'appareil : la première échéance part d'elle (ADR-036, règle 4) — elle ne vaut que si elle tombe à l'origine du suivi ou après ; sinon la ligne naît « à planifier ». Un dirigeant qui connaît la date de la dernière révision la saisit par un rapport, et le rythme repart de là.\n\nRÉALISATEURS : « le fabricant ou un centre de révision » (§ 10.1). `fabricant` existe ; le centre de révision est un prestataire qualifié, `personne_qualifiee`. Criticité 4, comme la jumelle ERP : un extincteur non révisé depuis onze ans reste un extincteur maintenu dans l'année.",
+  },
+  {
+    id: "incendie-travail-extincteurs-maintenance-approfondie",
+    domaine: "incendie",
+    libelle:
+      "Maintenance additionnelle approfondie de l'extincteur, à 5 et 15 ans (travail ; eau, mousse, poudre)",
+    description:
+      "L'extincteur est maintenu en bon état de fonctionnement (R. 4227-29). Pour les extincteurs à eau, à mousse et à poudre, la norme NF S 61-919 (août 2001) prévoit, en plus de la maintenance annuelle et de la révision en atelier à dix ans, une maintenance additionnelle approfondie avec renouvellement de la charge si nécessaire, à 5 et à 15 ans (annexe A, tableau A.1). Les intervalles partent de la date d'installation. C'est une norme, citée comme norme. La première tombe donc cinq ans après l'installation, la seconde dix ans plus tard : le rythme de dix ans que le calendrier affiche est l'écart entre les deux, pas le délai de la première. Elle ne vise pas les extincteurs au CO2 ni au halon, ni ceux à poudre à opercule scellé et pression permanente, dont l'unique maintenance approfondie tombe à 15 ans et que Rojer ne date pas. Les années 5 et 10, la maintenance approfondie et la révision incluent la maintenance annuelle. Pour un extincteur mis en service il y a plus de dix ans, ou dont la date de mise en service n'est pas dite, cette maintenance et la révision en atelier apparaissent ensemble « à planifier », tant qu'aucun rapport n'est déposé : Rojer ne sait pas laquelle a déjà été faite.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-29",
+        article: "R. 4227-29",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532079/",
+        versionConstatee: "2008-05-01",
+      },
+      {
+        source: "CODE_TRAVAIL",
+        reference: "R. 4227-28",
+        article: "R. 4227-28",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532081/",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    // « à 5 et 15 ans » : premier pas de cinq ans depuis la mise en service,
+    // puis dix ans — 5, 15 (puis 25, au-delà de la durée de vie prévue).
+    premierDelai: "quinquennale",
+    rythmeRetenu: {
+      motif: "norme",
+      periodicite: "decennale",
+      norme: "NF S 61-919",
+      reference: {
+        source: "NORME",
+        reference:
+          "NF S 61-919 (août 2001), annexe A, tableau A.1 (maintenance additionnelle approfondie : à 5 et 15 ans)",
+        article: "NF S 61-919 annexe A",
+      },
+      texteVague: "maintenus en bon état de fonctionnement",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 3,
+    transmet: [],
+    typologies: { travail: true },
+    categoriesEquipement: ["EXTINCTEUR"],
+    conditions: [
+      {
+        type: "equipement_propriete_enum_differente",
+        categorie: "EXTINCTEUR",
+        propriete: "typeExtincteur",
+        valeur: "co2",
+      },
+      {
+        type: "equipement_propriete_enum_differente",
+        categorie: "EXTINCTEUR",
+        propriete: "typeExtincteur",
+        valeur: "poudre_opercule_pression_permanente",
+      },
+      // 2026-10-07 (C60) : le tableau A.1 donne « — » au halon dans cette
+      // colonne.
+      {
+        type: "equipement_propriete_enum_differente",
+        categorie: "EXTINCTEUR",
+        propriete: "typeExtincteur",
+        valeur: "halon",
+      },
+    ],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C59 lot 3, item 3 ; ADR-039, normes admises par décision de la propriétaire du 07/10). NF S 61-919, annexe A (normative), tableau A.1, lu p. 12 du scan : colonne « Maintenance additionnelle approfondie et renouvellement de la charge, si nécessaire (annexe C) » — « à 5 et 15 ans » pour les types à mousse, eau et à base d'eau, et à poudre ; « 15 ans » pour la poudre à opercule scellé et pression permanente ; « — » pour le halon et le CO2. Sous le tableau : « Les intervalles partent de la date d'installation de l'extincteur d'incendie mais ne doivent pas dépasser un an après la date de fabrication marquée sur le corps. La maintenance n'est effectuée que les années 1, 2, 3, 4, 6, 7, 8, 9, 11 et ainsi de suite. L'année 5, la maintenance étendue, et l'année 10, la révision, incluent la maintenance et la maintenance supplémentaire. »\n\nCE QUE LE MODÈLE EXPRIME, ET COMMENT. « À 5 et 15 ans » n'est pas un rythme quinquennal (pas de MAA à 10 ans : la révision en atelier l'inclut) mais un PREMIER PAS de cinq ans suivi d'un pas de dix : `premierDelai: \"quinquennale\"` + `rythmeRetenu` décennal (motif « norme »). Le générateur lit le premier pas (`premierPas(premierDelai, periodiciteEffective(o), surcharge)`) sur la mise en service de l'appareil — la date d'installation que la norme prend pour origine —, puis la réalisation fait repartir le rythme de dix ans : 5, 15. La troisième occurrence (25 ans) tombe au-delà de la durée de vie prévue (§ 11, 20 ans) : l'appareil devrait être sorti du parc avant. Aucune extension de `rythmeRetenu` n'a été nécessaire : `premierDelai` est un champ commun, que le lot 2 laissait libre.\n\nLE TYPE. Question énumérée `typeExtincteur` (`lib/equipements/extincteur.ts`, sans migration : JSON `caracteristiques`), sur le modèle de `familleEsp`. Deux conditions `enum_differente` (CO2, poudre à opercule) : satisfaites au SILENCE — un extincteur dont le type n'est pas dit garde la maintenance approfondie, la règle la plus exigeante, du côté que le dirigeant voit.\n\nCE QUI N'EST PAS ENCODÉ. (1) La poudre à opercule scellé et pression permanente : une seule maintenance approfondie, à 15 ans. Aucune `Periodicite` ne vaut quinze ans, et en ajouter une toucherait l'énumération Prisma (`Verification.periodicite`) — hors mandat (pas de migration). Nommé dans la description. (2) La durée de vie (§ 11, « ne devrait pas dépasser 20 ans », sauf CO2) : CONDITIONNEL, ce n'est pas une échéance — l'aide du champ « Type d'extincteur » la dit, et renvoie à la date de péremption de la fiche (affichée « Périmé depuis », jamais réclamée). (3) La coïncidence des années 5 et 10 avec la maintenance annuelle, que la norme fait inclure : deux lignes au calendrier pour une visite ; un seul rapport peut être déposé sur les deux. (4) [2026-10-07, C60, revue indépendante] LA COÏNCIDENCE AVEC LA RÉVISION À LA NAISSANCE — nommée, comportement inchangé, décision en attente de la propriétaire (synthèse de la revue, point 12) : pour un extincteur mis en service il y a plus de cinq ans, la première échéance tombe avant l'origine du suivi et cette ligne naît « à planifier » ; au-delà de dix ans, ou sans date de mise en service, `incendie-travail-extincteurs-revision-atelier-decennale` naît « à planifier » elle aussi, à la même origine. Deux lignes « à planifier » le même jour, quand la norme les espace (5 et 15 ans ; 10 ans). La description le dit. (5) Le libellé et la description disent « à 5 et 15 ans » ; la PÉRIODICITÉ affichée par les surfaces est le rythme effectif, décennal, sans le premier pas — la description dit désormais que les dix ans sont l'écart entre les deux. ~~L'affichage de la mention (`mention-rythme.ts`) est hors de ce lot.~~ [2026-10-07, C62 : fait par C61 — la mention dit « première échéance à 5 ans, puis tous les 10 ans » (`rythmeEnPhrase`, `mention-rythme.ts`).]\n\nPAS DE PARTITION AVEC L'ERP : aucun texte ERP n'écrit de maintenance approfondie (MS 38 § 4 ne connaît que l'annuelle et la décennale). Un ERP employeur la reçoit par sa typologie de travail ; un ERP sans salarié ne la reçoit pas — la ligne se fonde sur `R. 4227-29`, qui ne vise que l'employeur. RÉALISATEURS : la norme confie la maintenance à « la personne compétente » ; `personne_qualifiee` pour le prestataire. Criticité 3 : moins que la révision (4) et l'annuelle (5).",
+  },
+  {
+    id: "incendie-travail-ria-entretien-verification",
+    domaine: "incendie",
+    libelle:
+      "Entretien et vérification du robinet d'incendie armé, annuels par défaut (travail, hors ERP)",
+    description:
+      "Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée (R. 4224-17). Le texte ne fixe pas cette périodicité : Rojer retient par défaut au moins une fois par an pour le robinet d'incendie armé — un plancher, pas un rythme lu dans un texte. En ERP, la vérification annuelle des RIA est écrite par le règlement de sécurité (MS 73 § 2) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée)",
+        article: "R. 4224-17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197",
+        note: "« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (LEGIARTI000018532197, en vigueur depuis le 2008-05-01). Le texte ne nomme aucun équipement : y ranger cet équipement est une LECTURE (`relecture-jc-2026-10/reponses.md` Q1), celle du préventeur.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "defaut_annuel",
+      periodicite: "annuelle",
+      texteVague: "périodicité appropriée",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    // Partition avec la ligne ERP, dont le rythme est écrit (ADR-039).
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["RIA"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C59 lot 3, item 6 b ; relecture du préventeur, ADR-039). Le préventeur, sur l'identification des RIA en lieu de travail : « entretien et vérification annuelle ». Avant ce lot, un employeur non-ERP qui déclarait un RIA ne recevait que l'état permanent d'identification (`signalisation-incendie-moyens-lutte`, arrêté du 4 novembre 1993, art. 10) : aucune échéance. Aucun article de la section R. 4227-28 à R. 4227-41 ne nomme le RIA ; `R. 4224-17` vise « les installations et dispositifs techniques et de sécurité des lieux de travail » sans en nommer aucun — un RIA en est un par LECTURE.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`. En ERP, `incendie-erp-ria-annuelle` (MS 73 § 2, « au moins une fois par an ») porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ catégorie comprise, par sur-application assumée ; un rythme écrit l'emporte toujours. Un RIA reçoit donc une annuelle et une seule, quel que soit le régime.\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17` ; `periodicite: \"autre\"` reste le rythme du texte, `rythmeRetenu` porte l'annuelle PAR DÉFAUT (ADR-039 (b)), affichée comme défaut. Un rythme plus serré (contrat, assureur) se saisit en prescription et l'emporte dès qu'il est au moins aussi strict.\n\nNATURE ÉCHÉANCE RÉCURRENTE : « entretenus et vérifiés » sont des actes qui reviennent, pas un état. La ligne naît « à planifier » (ADR-036), sans retard rétroactif.\n\nRÉALISATEURS : le texte n'en nomme aucun ; le préventeur dit « entretien et vérification ». `personne_competente` et `personne_qualifiee`, comme l'annuelle du même acte ailleurs. Criticité 4, celle de la ligne ERP.",
+  },
+  {
+    id: "incendie-travail-desenfumage-entretien-verification",
+    domaine: "incendie",
+    libelle:
+      "Entretien et vérification des installations de désenfumage, annuels par défaut (travail, hors ERP)",
+    description:
+      "Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée (R. 4224-17). Le texte ne fixe pas cette périodicité : Rojer retient par défaut au moins une fois par an pour les installations de désenfumage — un plancher, pas un rythme lu dans un texte. En ERP, la vérification annuelle du désenfumage est écrite par le règlement de sécurité (DF 10) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée)",
+        article: "R. 4224-17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197",
+        note: "« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (LEGIARTI000018532197, en vigueur depuis le 2008-05-01). Le texte ne nomme aucun équipement : y ranger cet équipement est une LECTURE (`relecture-jc-2026-10/reponses.md` Q1), celle du préventeur.",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "defaut_annuel",
+      periodicite: "annuelle",
+      texteVague: "périodicité appropriée",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_competente", "personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    // Partition avec la ligne ERP, dont le rythme est écrit (ADR-039).
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["DESENFUMAGE"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (C59 lot 3, item 6 c ; relecture du préventeur, ADR-039). Le préventeur, p. 10 du référentiel annoté, en marge de la vérification annuelle du désenfumage en ERP : « idem code du travail : préco ». Avant ce lot, un employeur non-ERP qui déclarait un désenfumage ne recevait RIEN (`hors-referentiel.test.ts` : `aucune_obligation_applicable`). `R. 4224-17` vise « les installations et dispositifs techniques et de sécurité des lieux de travail » sans en nommer aucun — le désenfumage en est un par LECTURE. Les articles du Code du travail qui imposent le désenfumage à la construction (R. 4216-13 et suivants, maître d'ouvrage) n'ont pas été rouverts ici : ils ne portent pas l'entretien.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`. En ERP, `incendie-erp-desenfumage-annuelle` (DF 10 § 2, « La périodicité des vérifications est de un an ») porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ catégorie comprise, par sur-application assumée. Le désenfumage reçoit donc une annuelle et une seule, quel que soit le régime. La triennale de DF 10 § 3 (lot 4) ne concerne que l'ERP.\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17` ; `periodicite: \"autre\"` reste le rythme du texte, `rythmeRetenu` porte l'annuelle PAR DÉFAUT (ADR-039 (b)), affichée comme défaut. Un rythme plus serré (contrat, assureur) se saisit en prescription et l'emporte dès qu'il est au moins aussi strict.\n\nNATURE ÉCHÉANCE RÉCURRENTE : « entretenus et vérifiés » sont des actes qui reviennent, pas un état. La ligne naît « à planifier » (ADR-036), sans retard rétroactif.\n\nRÉALISATEURS : le texte n'en nomme aucun ; le préventeur dit « entretien et vérification ». `personne_competente` et `personne_qualifiee`, comme l'annuelle du même acte ailleurs. Criticité 4, celle de la ligne ERP.",
   },
   {
     // 2026-09-27, lot 2 (7 bis G2, M1). L'objet de R. 4227-29 — être DOTÉ
@@ -839,17 +1091,23 @@ export const obligationsIncendie: Obligation[] = [
           "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317755/",
         versionConstatee: "1980-08-15",
       },
+      // C59 lot 3 : la norme en seconde référence — le rythme reste celui de
+      // MS 38 § 4, écrit par le texte ; la norme dit comment la maintenance se fait.
+      REFERENCE_NF_S_61_919_ANNUELLE,
     ],
     periodicite: "annuelle",
     nature: "echeance_recurrente",
     pieceAttendue: null,
-    realisateurs: ["personne_qualifiee", "organisme_agree"],
+    // 2026-10-07 (relecture du préventeur) : ~~["personne_qualifiee",
+    // "organisme_agree"]~~. MS 38 § 4 dit « par une personne ou un organisme
+    // compétent » : aucun agrément n'est exigé. Voir les notes.
+    realisateurs: ["personne_competente"],
     criticite: 5,
     transmet: [],
     typologies: { erp: true },
     categoriesEquipement: ["EXTINCTEUR"],
     notesInternes:
-      "Sur-application assumée en 5ᵉ catégorie (constatée 2026-08-26, dépouillement du Livre III). L'article cité relève du Livre II du règlement de sécurité — « Dispositions applicables aux établissements des quatre premières catégories » — et PE 1 § 1 dispose que « les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre ». Le Livre III a été dépouillé article par article : PE 26 n'ouvre le Livre II que sur MS 39, PE 27 que sur MS 70, ni l'un ni l'autre n'étant un article de vérification. L'article cité ne fonde donc PAS cette obligation en N5. Ce qui la fonde en N5 est PE 4 § 2 — « tous les trois ans au plus », par techniciens compétents — et, chez un employeur, le Code du travail, qui s'applique indépendamment du classement ERP. La ligne est MAINTENUE volontairement : la retirer créerait un faux négatif muet chez 100 % des utilisateurs, alors qu'une sur-application visible et documentée reste corrigeable. À reprendre lorsque le référentiel saura porter PE 4 § 2, dont le porteur est l'établissement et non un équipement.\n\nÉtat au 2026-08-27 (ADR-022) : le référentiel sait désormais le porter — `incendie-erp-pe4-entretien-installations-techniques` existe, portée par l'établissement, triennale, et elle atteint tous les ERP y compris ceux qui n'ont rien déclaré. La condition annoncée ci-dessus est donc à moitié levée, et à moitié seulement. Ce qui manque est un point de DROIT, pas de modèle : cette ligne-ci n'est pas seulement fondée sur le Livre II, sa note dit qu'elle l'est aussi, chez un employeur, sur le Code du travail — lequel s'applique indépendamment du classement ERP. Tant que cela n'a pas été vérifié article par article sur Légifrance, retirer la ligne supprimerait chez l'utilisateur une échéance dont on n'a PAS établi qu'elle n'est pas due, et le ferait en silence : sans rapport ni action attachés, la réconciliation la supprime physiquement (ADR-012). La relecture réglementaire de ces six lignes est un chantier distinct, à mener avec la skill de veille ; ce n'est pas un effet de bord du chantier du porteur.\n\nCE QUE L'ÉCRAN DIT DE LA 5ᵉ CATÉGORIE — 2026-09-26 (C39). La sur-application est MAINTENUE, comportement inchangé (politique des sœurs du livre II : désenfumage, SSI, BAES, groupe électrogène, RIA, CH 58). Mais « visible et documentée » ne l'était qu'à moitié : la documentation vivait ici, dans une note que personne ne lit, et tout ce qu'un exploitant de 5ᵉ voyait — « Ce qui fonde cette obligation » sur la fiche, la référence du guide « Par métier » (commerce, restauration), la raison du pré-remplissage des équipements — citait « MS 38 § 4 » sans dire que cet article ne vaut, au titre du texte, que pour les quatre premières catégories. La `reference` le dit désormais (« — livre II, établissements des quatre premières catégories »), et la description nomme PE 4 § 2, « tous les trois ans au plus », et le fait que le calendrier maintient l'échéance en 5ᵉ. Textes relus le 2026-09-26 : chemin de MS 38 sur Légifrance (« Livre II : Dispositions applicables aux établissements des quatre premières catégories »), PE 1 § 1 (« Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre », en vigueur depuis le 27/08/1990). Libellé, typologies, périodicité : inchangés, empreinte inchangée."
+      "Sur-application assumée en 5ᵉ catégorie (constatée 2026-08-26, dépouillement du Livre III). L'article cité relève du Livre II du règlement de sécurité — « Dispositions applicables aux établissements des quatre premières catégories » — et PE 1 § 1 dispose que « les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre ». Le Livre III a été dépouillé article par article : PE 26 n'ouvre le Livre II que sur MS 39, PE 27 que sur MS 70, ni l'un ni l'autre n'étant un article de vérification. L'article cité ne fonde donc PAS cette obligation en N5. Ce qui la fonde en N5 est PE 4 § 2 — « tous les trois ans au plus », par techniciens compétents — et, chez un employeur, le Code du travail, qui s'applique indépendamment du classement ERP. La ligne est MAINTENUE volontairement : la retirer créerait un faux négatif muet chez 100 % des utilisateurs, alors qu'une sur-application visible et documentée reste corrigeable. À reprendre lorsque le référentiel saura porter PE 4 § 2, dont le porteur est l'établissement et non un équipement.\n\nÉtat au 2026-08-27 (ADR-022) : le référentiel sait désormais le porter — `incendie-erp-pe4-entretien-installations-techniques` existe, portée par l'établissement, triennale, et elle atteint tous les ERP y compris ceux qui n'ont rien déclaré. La condition annoncée ci-dessus est donc à moitié levée, et à moitié seulement. Ce qui manque est un point de DROIT, pas de modèle : cette ligne-ci n'est pas seulement fondée sur le Livre II, sa note dit qu'elle l'est aussi, chez un employeur, sur le Code du travail — lequel s'applique indépendamment du classement ERP. Tant que cela n'a pas été vérifié article par article sur Légifrance, retirer la ligne supprimerait chez l'utilisateur une échéance dont on n'a PAS établi qu'elle n'est pas due, et le ferait en silence : sans rapport ni action attachés, la réconciliation la supprime physiquement (ADR-012). La relecture réglementaire de ces six lignes est un chantier distinct, à mener avec la skill de veille ; ce n'est pas un effet de bord du chantier du porteur.\n\nCE QUE L'ÉCRAN DIT DE LA 5ᵉ CATÉGORIE — 2026-09-26 (C39). La sur-application est MAINTENUE, comportement inchangé (politique des sœurs du livre II : désenfumage, SSI, BAES, groupe électrogène, RIA, CH 58). Mais « visible et documentée » ne l'était qu'à moitié : la documentation vivait ici, dans une note que personne ne lit, et tout ce qu'un exploitant de 5ᵉ voyait — « Ce qui fonde cette obligation » sur la fiche, la référence du guide « Par métier » (commerce, restauration), la raison du pré-remplissage des équipements — citait « MS 38 § 4 » sans dire que cet article ne vaut, au titre du texte, que pour les quatre premières catégories. La `reference` le dit désormais (« — livre II, établissements des quatre premières catégories »), et la description nomme PE 4 § 2, « tous les trois ans au plus », et le fait que le calendrier maintient l'échéance en 5ᵉ. Textes relus le 2026-09-26 : chemin de MS 38 sur Légifrance (« Livre II : Dispositions applicables aux établissements des quatre premières catégories »), PE 1 § 1 (« Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre », en vigueur depuis le 27/08/1990). Libellé, typologies, périodicité : inchangés, empreinte inchangée.\n\nRÉALISATEUR CORRIGÉ LE 2026-10-07 (relecture du préventeur, plan du lot 1, item 2). La ligne portait `[\"personne_qualifiee\", \"organisme_agree\"]` ; MS 38 § 4 écrit « par une personne ou un organisme compétent », relu le 2026-10-07 par l'API PISTE en BAC À SABLE (LEGIARTI000020382888, version du 2008-10-08, aucune version future). L'agrément n'est pas exigé : `organisme_agree` est retiré, et `personne_qualifiee` avec lui, le texte ne disant pas « qualifiée ». Reste `personne_competente`, le mot du texte. AUCUNE VALEUR NE DIT « ORGANISME COMPÉTENT » : `Realisateur` n'a pas de valeur pour un organisme sans agrément ni accréditation ; le libellé affiché est « Personne compétente », et la description garde « par une personne ou un organisme compétent ». Ajouter une valeur à l'énumération supposerait une migration Prisma (enum `Realisateur`) : non fait."
   },
   {
     id: "incendie-erp-ssi-annuelle",
@@ -895,24 +1153,30 @@ export const obligationsIncendie: Obligation[] = [
         note: "« Un extincteur doit faire l'objet d'une vérification annuelle et d'une révision tous les dix ans par une personne ou un organisme compétent. Il doit être marqué d'une étiquette clairement identifiable apposée par la personne ou l'organisme ayant réalisé CETTE DERNIÈRE. » Article rouvert à la source le 2026-09-01 avant l'encodage, version en vigueur du 08/10/2008 : le § 4 porte DEUX rythmes dans une seule phrase, et l'étiquette se rattache grammaticalement à la révision — « cette dernière » —, pas à la vérification annuelle.",
         versionConstatee: "2008-10-08",
       },
+      // C59 lot 3 : la norme en seconde référence — le rythme reste celui de
+      // MS 38 § 4, écrit par le texte ; la norme dit comment la révision se fait.
+      REFERENCE_NF_S_61_919_REVISION,
     ],
     periodicite: "decennale",
     nature: "echeance_recurrente",
     pieceAttendue: null,
-    realisateurs: ["personne_qualifiee", "organisme_agree"],
+    // 2026-10-07 (relecture du préventeur) : ~~["personne_qualifiee",
+    // "organisme_agree"]~~. MS 38 § 4 dit « par une personne ou un organisme
+    // compétent » : aucun agrément n'est exigé. Voir les notes.
+    realisateurs: ["personne_competente"],
     criticite: 4,
     transmet: [],
     typologies: { erp: true },
     categoriesEquipement: ["EXTINCTEUR"],
     notesInternes:
-      "AJOUTÉE LE 2026-09-01 (lot C). Le § 4 de MS 38 porte deux rythmes — « une vérification annuelle ET une révision tous les dix ans » — et le référentiel n'en portait qu'un : `incendie-erp-extincteurs-annuelle` prend l'annuelle, sa description NOMMAIT la décennale, et aucune échéance ne la datait. Le corpus le déclarait en réserve depuis le relevé du même jour.\n\nPOURQUOI UNE LIGNE À PART ET NON UN CHAMP SUR L'AUTRE. Ce sont deux actes, à deux dates, avec deux preuves : la vérification annuelle laisse une ligne sur l'étiquette, la révision décennale est un démontage de l'appareil, et un extincteur qui l'a subie porte une étiquette apposée par celui qui l'a faite. Le modèle n'a d'ailleurs aucun moyen de porter deux rythmes sur une obligation — c'est la limite que le cadrage du 2026-09-01 nomme en section B, et elle vaut ici aussi ; la différence est qu'ici les deux rythmes portent sur deux actes distincts, ce qui rend la scission juste plutôt que palliative.\n\nCRITICITÉ 4 ET NON 5, à la différence de l'annuelle : un extincteur non révisé depuis onze ans reste un extincteur vérifié il y a moins d'un an. Le risque immédiat est celui que porte l'annuelle.\n\nSUR-APPLICATION EN 5ᵉ CATÉGORIE, la même que l'annuelle et pour la même raison — MS 38 relève du Livre II, écarté par PE 1 § 1, et le Livre III n'y renvoie pas. Elle est héritée telle quelle et non aggravée : la ligne suit exactement le périmètre de `incendie-erp-extincteurs-annuelle`, dont les notes portent l'analyse complète. Si cette dernière est un jour restreinte, celle-ci doit l'être du même mouvement.\n\nCE QUE LE DIRIGEANT VERRA : rien avant dix ans après la première révision déclarée, et une échéance « à planifier » tant qu'aucune date n'est connue. C'est le comportement ordinaire d'une périodicité longue, pas un défaut.\n\nCE QUE L'ÉCRAN DIT DE LA 5ᵉ CATÉGORIE — 2026-09-26 (C39). Même mouvement que `incendie-erp-extincteurs-annuelle`, dont c'est la jumelle sur le même § 4. La sur-application est MAINTENUE, comportement inchangé (politique des sœurs du livre II : désenfumage, SSI, BAES, groupe électrogène, RIA, CH 58). Mais « visible et documentée » ne l'était qu'à moitié : la documentation vivait ici, dans une note que personne ne lit, et tout ce qu'un exploitant de 5ᵉ voyait — « Ce qui fonde cette obligation » sur la fiche, la référence du guide « Par métier » (commerce, restauration), la raison du pré-remplissage des équipements — citait « MS 38 § 4 » sans dire que cet article ne vaut, au titre du texte, que pour les quatre premières catégories. La `reference` le dit désormais (« — livre II, établissements des quatre premières catégories »), et la description nomme PE 4 § 2, « tous les trois ans au plus », et le fait que le calendrier maintient l'échéance en 5ᵉ. Textes relus le 2026-09-26 : chemin de MS 38 sur Légifrance (« Livre II : Dispositions applicables aux établissements des quatre premières catégories »), PE 1 § 1 (« Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre », en vigueur depuis le 27/08/1990). Libellé, typologies, périodicité : inchangés, empreinte inchangée.",
+      "AJOUTÉE LE 2026-09-01 (lot C). Le § 4 de MS 38 porte deux rythmes — « une vérification annuelle ET une révision tous les dix ans » — et le référentiel n'en portait qu'un : `incendie-erp-extincteurs-annuelle` prend l'annuelle, sa description NOMMAIT la décennale, et aucune échéance ne la datait. Le corpus le déclarait en réserve depuis le relevé du même jour.\n\nPOURQUOI UNE LIGNE À PART ET NON UN CHAMP SUR L'AUTRE. Ce sont deux actes, à deux dates, avec deux preuves : la vérification annuelle laisse une ligne sur l'étiquette, la révision décennale est un démontage de l'appareil, et un extincteur qui l'a subie porte une étiquette apposée par celui qui l'a faite. Le modèle n'a d'ailleurs aucun moyen de porter deux rythmes sur une obligation — c'est la limite que le cadrage du 2026-09-01 nomme en section B, et elle vaut ici aussi ; la différence est qu'ici les deux rythmes portent sur deux actes distincts, ce qui rend la scission juste plutôt que palliative.\n\nCRITICITÉ 4 ET NON 5, à la différence de l'annuelle : un extincteur non révisé depuis onze ans reste un extincteur vérifié il y a moins d'un an. Le risque immédiat est celui que porte l'annuelle.\n\nSUR-APPLICATION EN 5ᵉ CATÉGORIE, la même que l'annuelle et pour la même raison — MS 38 relève du Livre II, écarté par PE 1 § 1, et le Livre III n'y renvoie pas. Elle est héritée telle quelle et non aggravée : la ligne suit exactement le périmètre de `incendie-erp-extincteurs-annuelle`, dont les notes portent l'analyse complète. Si cette dernière est un jour restreinte, celle-ci doit l'être du même mouvement.\n\nCE QUE LE DIRIGEANT VERRA : rien avant dix ans après la première révision déclarée, et une échéance « à planifier » tant qu'aucune date n'est connue. C'est le comportement ordinaire d'une périodicité longue, pas un défaut.\n\nCE QUE L'ÉCRAN DIT DE LA 5ᵉ CATÉGORIE — 2026-09-26 (C39). Même mouvement que `incendie-erp-extincteurs-annuelle`, dont c'est la jumelle sur le même § 4. La sur-application est MAINTENUE, comportement inchangé (politique des sœurs du livre II : désenfumage, SSI, BAES, groupe électrogène, RIA, CH 58). Mais « visible et documentée » ne l'était qu'à moitié : la documentation vivait ici, dans une note que personne ne lit, et tout ce qu'un exploitant de 5ᵉ voyait — « Ce qui fonde cette obligation » sur la fiche, la référence du guide « Par métier » (commerce, restauration), la raison du pré-remplissage des équipements — citait « MS 38 § 4 » sans dire que cet article ne vaut, au titre du texte, que pour les quatre premières catégories. La `reference` le dit désormais (« — livre II, établissements des quatre premières catégories »), et la description nomme PE 4 § 2, « tous les trois ans au plus », et le fait que le calendrier maintient l'échéance en 5ᵉ. Textes relus le 2026-09-26 : chemin de MS 38 sur Légifrance (« Livre II : Dispositions applicables aux établissements des quatre premières catégories »), PE 1 § 1 (« Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre », en vigueur depuis le 27/08/1990). Libellé, typologies, périodicité : inchangés, empreinte inchangée.\n\nRÉALISATEUR CORRIGÉ LE 2026-10-07 (relecture du préventeur, plan du lot 1, item 2). La ligne portait `[\"personne_qualifiee\", \"organisme_agree\"]` ; MS 38 § 4 écrit « par une personne ou un organisme compétent », relu le 2026-10-07 par l'API PISTE en BAC À SABLE (LEGIARTI000020382888, version du 2008-10-08, aucune version future). L'agrément n'est pas exigé : `organisme_agree` est retiré, et `personne_qualifiee` avec lui, le texte ne disant pas « qualifiée ». Reste `personne_competente`, le mot du texte. AUCUNE VALEUR NE DIT « ORGANISME COMPÉTENT » : `Realisateur` n'a pas de valeur pour un organisme sans agrément ni accréditation ; le libellé affiché est « Personne compétente », et la description garde « par une personne ou un organisme compétent ». Ajouter une valeur à l'énumération supposerait une migration Prisma (enum `Realisateur`) : non fait.",
   },
   {
     id: "incendie-erp-ssi-triennale",
     domaine: "incendie",
-    libelle: "Vérification triennale approfondie des SSI de catégorie A ou B (ERP)",
+    libelle: "Vérification triennale des SSI de catégorie A ou B (ERP)",
     description:
-      "En complément du contrôle annuel, les SSI de catégorie A ou B sont soumis à une vérification triennale approfondie par un organisme agréé.",
+      "En plus de la vérification annuelle, les systèmes de sécurité incendie de catégories A et B doivent être vérifiés tous les trois ans par une personne ou un organisme agréé (MS 73 § 2). Cette ligne est servie à tout système d'alarme déclaré tant que la question « Ce SSI est-il de catégorie A ou B ? » n'a pas reçu de réponse : elle reste au calendrier au silence, et disparaît sur un « non ».",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -920,6 +1184,7 @@ export const obligationsIncendie: Obligation[] = [
         article: "MS 73",
         url:
           "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317755/",
+        note: "« De plus, les systèmes de sécurité incendie de catégories A et B et les systèmes d'extinction automatique du type sprinkleur doivent être vérifiés tous les trois ans par une personne ou un organisme agréé. » (§ 2, seconde phrase). Relu le 2026-10-07 sur l'API Légifrance (PISTE, bac à sable), LEGIARTI000020317755, en vigueur depuis le 15/08/1980.",
         versionConstatee: "1980-08-15",
       },
     ],
@@ -933,6 +1198,15 @@ export const obligationsIncendie: Obligation[] = [
       erp: { categories: ["N1", "N2", "N3", "N4"] },
     },
     categoriesEquipement: ["ALARME_INCENDIE"],
+    conditions: [
+      {
+        type: "equipement_propriete_non_infirmee",
+        categorie: "ALARME_INCENDIE",
+        propriete: "estSsiCategorieAouB",
+      },
+    ],
+    notesInternes:
+      "CONDITION A/B AJOUTÉE LE 2026-10-07 (lot 4, relecture du préventeur du 05/10). Le libellé disait « SSI de catégorie A ou B » depuis l'origine et la ligne n'en portait aucune condition : elle tombait sur toute ALARME_INCENDIE déclarée en ERP des quatre premières catégories, quelle que soit la catégorie du SSI — la sur-application que la réserve de `DF 10` au corpus citait en preuve depuis le 2026-09-01. `MS 73 § 2`, relu le 2026-10-07 : « les systèmes de sécurité incendie de catégories A et B et les systèmes d'extinction automatique du type sprinkleur doivent être vérifiés tous les trois ans par une personne ou un organisme agréé ».\n\nFORME `non_infirmee`, ET CE N'EST PAS UN CHOIX. Ligne déjà publiée, criticité 4 : la règle du dépôt (`conformite.test.ts`) impose une forme qui survit au silence. Toutes les alarmes déjà déclarées gardent donc la triennale tant que le dirigeant n'a pas répondu « non » à « Ce SSI est-il de catégorie A ou B ? » ; la sur-application ne disparaît qu'à la réponse, et elle est désormais corrigeable par lui.\n\nCE QUE LA LIGNE NE PORTE TOUJOURS PAS : les SPRINKLEURS, que le même § 2 soumet à la même triennale. Aucune catégorie d'équipement ne les déclare ; ce n'est pas l'objet de ce lot.\n\nRÉALISATEUR : le texte écrit « par une personne ou un organisme agréé » ; la ligne dit `organisme_agree` seul. Relevé, non modifié ici. [2026-10-07, C60, revue indépendante — RÉSERVE ÉCRITE] Le réalisateur reste `organisme_agree` FAUTE DE VALEUR : l'énumération `Realisateur` n'a pas de « personne agréée » (`personne_qualifiee` et `personne_competente` ne disent pas l'agrément, et les y ranger élargirait ce que le texte permet). La description, elle, dit le texte entier. Même défaut que celui corrigé pour MS 38 § 4 au lot 1, où « une personne ou un organisme compétent » avait sa valeur, `personne_competente`.\n\nLIBELLÉ, 2026-10-07 (C60) : ~~« Vérification triennale approfondie des SSI de catégorie A ou B (ERP) »~~ — « approfondie » n'est pas dans MS 73 § 2, qui dit « vérifiés tous les trois ans ». La description dit désormais ce qui se passe au silence de la question A/B (ligne servie, forme `non_infirmee`)."
   },
   {
     id: "incendie-erp-alarme-verification-hebdomadaire",
@@ -1011,10 +1285,11 @@ export const obligationsIncendie: Obligation[] = [
     referencesLegales: [
       {
         source: "ARRETE",
-        reference: "Arrêté du 25 juin 1980, art. DF 10 — livre II, établissements des quatre premières catégories",
+        reference: "Arrêté du 25 juin 1980, art. DF 10 § 2 (la périodicité des vérifications est de un an) — livre II, établissements des quatre premières catégories",
         article: "DF 10",
         url:
-          "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000020303557/",
+          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000020382687",
+        note: "« § 2. La périodicité des vérifications est de un an. » Relu le 2026-10-07 sur l'API Légifrance (PISTE, bac à sable), LEGIARTI000020382687, en vigueur depuis le 28/10/2007, sans version future. Le § 3 — triennale par organisme agréé quand existent un désenfumage mécanique et un SSI de catégorie A ou B — est porté par `incendie-erp-desenfumage-triennale-mecanique-ssi`.",
         versionConstatee: "2007-10-28",
       },
     ],
@@ -1027,7 +1302,51 @@ export const obligationsIncendie: Obligation[] = [
     typologies: { erp: true },
     categoriesEquipement: ["DESENFUMAGE"],
     notesInternes:
-      "Sur-application assumée en 5ᵉ catégorie (constatée 2026-08-26, dépouillement du Livre III). L'article cité relève du Livre II du règlement de sécurité — « Dispositions applicables aux établissements des quatre premières catégories » — et PE 1 § 1 dispose que « les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre ». Le Livre III a été dépouillé article par article : PE 26 n'ouvre le Livre II que sur MS 39, PE 27 que sur MS 70, ni l'un ni l'autre n'étant un article de vérification. L'article cité ne fonde donc PAS cette obligation en N5. Ce qui la fonde en N5 est PE 4 § 2 — « tous les trois ans au plus », par techniciens compétents — et, chez un employeur, le Code du travail, qui s'applique indépendamment du classement ERP. La ligne est MAINTENUE volontairement : la retirer créerait un faux négatif muet chez 100 % des utilisateurs, alors qu'une sur-application visible et documentée reste corrigeable. À reprendre lorsque le référentiel saura porter PE 4 § 2, dont le porteur est l'établissement et non un équipement.\n\nÉtat au 2026-08-27 (ADR-022) : le référentiel sait désormais le porter — `incendie-erp-pe4-entretien-installations-techniques` existe, portée par l'établissement, triennale, et elle atteint tous les ERP y compris ceux qui n'ont rien déclaré. La condition annoncée ci-dessus est donc à moitié levée, et à moitié seulement. Ce qui manque est un point de DROIT, pas de modèle : cette ligne-ci n'est pas seulement fondée sur le Livre II, sa note dit qu'elle l'est aussi, chez un employeur, sur le Code du travail — lequel s'applique indépendamment du classement ERP. Tant que cela n'a pas été vérifié article par article sur Légifrance, retirer la ligne supprimerait chez l'utilisateur une échéance dont on n'a PAS établi qu'elle n'est pas due, et le ferait en silence : sans rapport ni action attachés, la réconciliation la supprime physiquement (ADR-012). La relecture réglementaire de ces six lignes est un chantier distinct, à mener avec la skill de veille ; ce n'est pas un effet de bord du chantier du porteur.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ »."
+      "Sur-application assumée en 5ᵉ catégorie (constatée 2026-08-26, dépouillement du Livre III). L'article cité relève du Livre II du règlement de sécurité — « Dispositions applicables aux établissements des quatre premières catégories » — et PE 1 § 1 dispose que « les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre ». Le Livre III a été dépouillé article par article : PE 26 n'ouvre le Livre II que sur MS 39, PE 27 que sur MS 70, ni l'un ni l'autre n'étant un article de vérification. L'article cité ne fonde donc PAS cette obligation en N5. Ce qui la fonde en N5 est PE 4 § 2 — « tous les trois ans au plus », par techniciens compétents — et, chez un employeur, le Code du travail, qui s'applique indépendamment du classement ERP. La ligne est MAINTENUE volontairement : la retirer créerait un faux négatif muet chez 100 % des utilisateurs, alors qu'une sur-application visible et documentée reste corrigeable. À reprendre lorsque le référentiel saura porter PE 4 § 2, dont le porteur est l'établissement et non un équipement.\n\nÉtat au 2026-08-27 (ADR-022) : le référentiel sait désormais le porter — `incendie-erp-pe4-entretien-installations-techniques` existe, portée par l'établissement, triennale, et elle atteint tous les ERP y compris ceux qui n'ont rien déclaré. La condition annoncée ci-dessus est donc à moitié levée, et à moitié seulement. Ce qui manque est un point de DROIT, pas de modèle : cette ligne-ci n'est pas seulement fondée sur le Livre II, sa note dit qu'elle l'est aussi, chez un employeur, sur le Code du travail — lequel s'applique indépendamment du classement ERP. Tant que cela n'a pas été vérifié article par article sur Légifrance, retirer la ligne supprimerait chez l'utilisateur une échéance dont on n'a PAS établi qu'elle n'est pas due, et le ferait en silence : sans rapport ni action attachés, la réconciliation la supprime physiquement (ADR-012). La relecture réglementaire de ces six lignes est un chantier distinct, à mener avec la skill de veille ; ce n'est pas un effet de bord du chantier du porteur.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ ».\n\nPRÉCISÉE AU § 2 LE 2026-10-07 (lot 4, relecture du préventeur du 05/10). La référence citait « DF 10 » sans paragraphe, et l'URL pointait le texte entier. Elle désigne désormais le § 2, qui porte seul l'annuelle (« La périodicité des vérifications est de un an. »), et l'article lui-même. Rythme, réalisateur, périmètre : inchangés. Le § 3 a désormais sa ligne, `incendie-erp-desenfumage-triennale-mecanique-ssi` ; cette annuelle n'est PAS conditionnée par lui — voir les notes de la triennale sur le cumul, que le texte n'écrit pas."
+  },
+  {
+    id: "incendie-erp-desenfumage-triennale-mecanique-ssi",
+    domaine: "incendie",
+    libelle:
+      "Vérification triennale par organisme agréé du désenfumage mécanique, en présence d'un SSI de catégorie A ou B (ERP des 4 premières catégories)",
+    description:
+      "Lorsque l'établissement dispose à la fois d'une installation de désenfumage mécanique et d'un système de sécurité incendie (SSI) de catégorie A ou B, les vérifications du désenfumage sont effectuées tous les trois ans par un organisme agréé. Cette vérification triennale s'ajoute à la vérification annuelle, qui reste au calendrier : le texte n'écrit pas ce cumul, c'est la lecture retenue. L'article relève du livre II du règlement de sécurité, qui vise les établissements des quatre premières catégories. La ligne n'apparaît qu'après la réponse « oui » à la question « désenfumage mécanique » ; la réponse « non » à la question sur le SSI la retire.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. DF 10 § 3 (désenfumage mécanique et SSI de catégorie A ou B : vérifications tous les trois ans par un organisme agréé) — livre II, établissements des quatre premières catégories",
+        article: "DF 10",
+        url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000020382687",
+        note: "« § 3. Lorsque existent une installation de désenfumage mécanique et un système de sécurité incendie de catégorie A ou B, les vérifications sont effectuées tous les trois ans par un organisme agréé. » Relu le 2026-10-07 sur l'API Légifrance (PISTE, bac à sable), LEGIARTI000020382687, en vigueur depuis le 28/10/2007, sans version future.",
+        versionConstatee: "2007-10-28",
+      },
+    ],
+    periodicite: "triennale",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["organisme_agree"],
+    criticite: 4,
+    transmet: [],
+    typologies: {
+      erp: { categories: ["N1", "N2", "N3", "N4"] },
+    },
+    categoriesEquipement: ["DESENFUMAGE"],
+    conditions: [
+      {
+        type: "equipement_propriete_booleenne",
+        categorie: "DESENFUMAGE",
+        propriete: "estDesenfumageMecanique",
+        valeur: true,
+      },
+      {
+        type: "equipement_propriete_non_infirmee",
+        categorie: "DESENFUMAGE",
+        propriete: "etablissementASsiCategorieAouB",
+      },
+    ],
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 (lot 4, relecture du préventeur du 05/10). Le corpus portait `DF 10 § 3` en réserve depuis le 2026-09-01, avec trois causes de non-encodage : (1) le moteur ne sait pas faire un ET entre deux catégories d'équipement, (2) rien ne dit la catégorie d'un SSI, (3) le cumul avec l'annuelle n'était pas tranché. Les trois sont levées ou contournées, et chacune l'est par un choix écrit ici.\n\nLE CUMUL N'EST PAS DANS LE TEXTE. `DF 10 § 3` écrit « les vérifications sont effectuées tous les trois ans par un organisme agréé » et ne dit ni qu'il remplace le § 2, ni qu'il s'y ajoute. À la question posée le 30/09 (« la triennale par organisme agréé remplace-t-elle l'annuelle du § 2, ou s'y ajoute-t-elle ? »), le préventeur a répondu, à la relecture du 05/10 : « elle s'y ajoute ». C'est SA LECTURE, retenue par la propriétaire ; le référentiel l'encode donc en ligne distincte, sans toucher à `incendie-erp-desenfumage-annuelle`, et la description dit au dirigeant que c'est une lecture. Si une source contraire était produite, c'est l'annuelle qu'il faudrait borner par `infirmee` sur les mêmes deux questions, pas cette ligne qu'il faudrait retirer.\n\n(1) LE « ET » ENTRE DEUX INSTALLATIONS : QUESTION POSÉE AU DÉSENFUMAGE LUI-MÊME. `matchEquipements` évalue les conditions sur l'équipement déclencheur et lui seul ; une condition portant sur un AUTRE équipement du parc (« l'établissement a-t-il une ALARME_INCENDIE répondant oui à `estSsiCategorieAouB` ? ») demanderait une variante neuve de `ConditionApplication`, une branche au moteur, sa sémantique du silence à inventer (aucune alarme déclarée ? une alarme sans réponse ?), et sa répercussion sur la grille, la fiche et `reponses-exigees`. Le lot ne l'a pas fait : la question « l'établissement dispose-t-il d'un SSI de catégorie A ou B ? » est posée sur le désenfumage (`etablissementASsiCategorieAouB`). Elle a aussi un mérite propre : le SSI n'a pas à être déclaré au parc pour que la ligne naisse, alors qu'une condition sur le parc l'aurait exigé. Son coût, écrit pour être repris : la réponse se donne deux fois, ici et sur l'alarme, et rien ne vérifie qu'elles concordent.\n\n(2) LA CATÉGORIE DU SSI : UN BOOLÉEN SUFFIT. La réserve disait que la catégorie est une énumération (A à E) et que le trois-états ne suffisait pas. Pour ce que les textes en font — `DF 10 § 3` et `MS 73 § 2` ne distinguent que « A ou B » du reste —, la question fermée « de catégorie A ou B ? » porte exactement l'information utile, sans migration ni énumération.\n\nLE SILENCE, ET POURQUOI LES DEUX QUESTIONS NE LE TRAITENT PAS PAREIL. Ligne NEUVE : personne ne peut la perdre, et l'annuelle — qui reste due quoi qu'on réponde — couvre l'appareil par défaut. La règle du dépôt (`conformite.test.ts`, « une obligation criticité ≥ 4 ne se conditionne pas sur le silence ») ne l'oblige donc à rien, et le choix se fait sur « qui verrait l'erreur » :\n— `estDesenfumageMecanique` en opt-in (`booleenne`). Servir la triennale au silence la ferait tomber sur tout désenfumage d'ERP des quatre premières catégories, naturel compris, soit un faux positif de masse sur une visite d'organisme agréé ; c'est le précédent de `aeration-travail-recyclage-semestriel`. Le prix : un désenfumage mécanique jamais qualifié n'a pas la triennale. La question reste « Pas encore répondu » sur la fiche de l'appareil.\n— `etablissementASsiCategorieAouB` en opt-out (`non_infirmee`). Une fois le mécanique déclaré, la population est petite et la sur-application est visible et se corrige par un « non » ; la sous-application, elle, ne se verrait qu'au passage de la commission. C'est le même sens que la condition A/B posée le même jour sur `incendie-erp-ssi-triennale`.\n\nPÉRIMÈTRE N1 À N4, par lecture du champ : `DF 10` est au Livre II, que `PE 1 § 1` écarte en 5ᵉ catégorie, et le Livre III ne le rouvre pas (PE 4 § 1 ne vise que la vérification à la construction et avant l'ouverture, en locaux à sommeil). Ligne neuve, donc sans l'héritage de sur-application de l'annuelle — même raisonnement que `incendie-erp-alarme-verification-hebdomadaire`.\n\n`realisateurs: [\"organisme_agree\"]` : le texte écrit « par un organisme agréé », sans alternative. Criticité 4, celle de l'annuelle dont elle complète l'objet."
   },
   {
     id: "incendie-erp-ria-annuelle",
@@ -1096,6 +1415,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     porteur: "etablissement",
@@ -1104,7 +1424,7 @@ export const obligationsIncendie: Obligation[] = [
       locauxSommeilPublic: true,
     },
     notesInternes:
-      "Visite commissionnelle : n'est pas à la charge de l'exploitant au sens opérationnel (initiée par l'administration) mais est à tracer dans le registre. Échéance quinquennale en première approche.\n\nAmendement 2026-08 : la restriction « locaux à sommeil » figurait dans le libellé et la description mais n'était encodée nulle part — l'obligation tombait donc sur tout ERP de 5ᵉ catégorie déclarant une alarme, restaurants et commerces compris. Elle est désormais bornée par la propriété `dessertLocauxSommeil`.\n\nPourquoi une condition d'équipement et non une restriction `types` : la présence de locaux à sommeil est une caractéristique de l'établissement qui traverse les types (un bâtiment de type W peut comporter un logement de fonction, un type O n'est pas nécessairement de 5ᵉ catégorie). Encoder une liste de types équivaudrait à trancher, sans source article par article, quels types d'exploitation comportent des locaux à sommeil — ce que la règle n°6 interdit. Le libellé de l'obligation mentionne aussi les « installations spécifiques », second cas de visite périodique qui n'est pas modélisé : la condition ne couvre que la branche « locaux à sommeil ».\n\nForme `non_infirmee` (criticité 4, obligation déjà publiée) : les établissements existants gardent la ligne jusqu'à une réponse « non » explicite, plutôt que de la perdre en silence à la prochaine régénération.\n\nAmendement 2026-08-26 : l'obligation portait une périodicité QUINQUENNALE qu'aucun texte ne fonde, et deux références dont aucune ne l'établissait. Trois lectures indépendantes le confirment. R. 143-34 traite des vérifications techniques à la charge de l'exploitant, pas des visites de commission — il est remplacé par R. 143-41, qui les fonde. GE 4 fixe bien des périodicités, mais pour les 1ʳᵉ à 4ᵉ catégories seulement : son tableau ne comporte aucune ligne de 5ᵉ catégorie, et il relève du Livre II, écarté par PE 1 § 1. Il est conservé en référence pour montrer précisément cela. Aucun article du Livre III n'organise de visite périodique de commission. La règle des cinq ans circule dans les guides préfectoraux et remonterait à la circulaire du 22 juin 1995 relative aux CCDSA — non lue au verbatim, et de toute façon non opposable. `periodicite` passe donc à `autre` : la ligne subsiste, parce que les visites existent et se tracent au registre, mais le produit cesse d'afficher une échéance que le droit ne donne pas.\n\nRECTIFIÉ LE 2026-08-26, quelques heures après l'amendement ci-dessus, qui était FAUX sur un point. Il affirmait qu'« aucun article du Livre III n'organise de visite périodique de commission ». PE 37 le fait, et fixe cinq ans. La quinquennale n'était donc pas sans fondement : elle en avait un, que je n'avais pas trouvé, et la description d'origine le disait presque — elle liait déjà la visite aux locaux à sommeil. Je l'ai remplacée par une affirmation d'absence au lieu de chercher plus loin. Ne pas avoir trouvé la source n'est pas la preuve qu'il n'y en a pas.\n\n`periodicite` reste `autre`, mais cette fois pour une raison nommée : PE 37 ne vise QUE les établissements comportant, pour le public, des locaux à sommeil. Le modèle n'a aucun attribut d'établissement pour cette distinction. Poser `quinquennale` sur tous les ERP de 5ᵉ catégorie sur-appliquerait à la boutique et au bureau ; laisser `autre` sous-applique à l'hôtel et à la chambre d'hôtes. Le manque est déclaré sur PE 37 dans le corpus, et l'attribut reste à créer.\n\nEXAMINÉE ET NON REBRANCHÉE — 2026-08-31, lot « faux négatifs d'ancrage ». Le brief de ce lot attendait un passage au porteur établissement. Il ne peut pas se faire, et voici ce qui l'en empêche.\n\nLe faux négatif est RÉEL : R. 143-41, relu au verbatim ce jour (version en vigueur depuis le 2021-07-01), dit « CES ÉTABLISSEMENTS doivent faire l'objet [...] de visites périodiques de contrôle et de visites inopinées effectuées par la commission de sécurité compétente », l'antécédent étant les établissements soumis au chapitre. Aucun équipement n'y figure. Un hôtel qui n'a pas déclaré d'alarme ne reçoit donc aucune ligne, alors qu'il est visité tous les cinq ans.\n\nMais le rebranchement produirait le faux positif symétrique, et plus large. PE 37, relu au verbatim ce jour, est intitulé « Contrôle des établissements de 5e catégorie comportant des locaux à sommeil » et ne vise que « les établissements comportant, POUR LE PUBLIC, des locaux à sommeil ». C'est le SEUL article du Livre III qui organise une visite périodique en 5ᵉ catégorie — GE 4 ne couvre que les 1ʳᵉ à 4ᵉ, et relève du Livre II écarté par PE 1 § 1. La restriction « locaux à sommeil » ne module donc pas un rythme : elle décide de l'EXISTENCE de la visite périodique. La retirer ferait naître une échéance chez chaque restaurant et chaque boutique de 5ᵉ catégorie.\n\nOr `ObligationPorteeParEtablissement` interdit `conditions` — à raison : une condition porte sur une propriété d'équipement, et il n'y aurait plus d'équipement pour la porter. Aujourd'hui la caractéristique `dessertLocauxSommeil` vit sur l'ALARME_INCENDIE, ce qui est un pis-aller : les locaux à sommeil sont un attribut de l'ÉTABLISSEMENT, pas de son alarme.\n\nLe déblocage est donc un attribut d'établissement — quelque chose comme `comporteLocauxSommeilPublic` — c'est-à-dire une migration de schéma. Ce lot n'y touche pas : `prisma/schema.prisma` est explicitement hors de son périmètre. La question est remontée à la session qui l'a délégué, avec ce constat.\n\nEn attendant, l'ancrage d'origine est CONSERVÉ tel quel. Entre un faux négatif borné aux établissements à locaux à sommeil sans alarme déclarée et un faux positif sur tous les ERP de 5ᵉ catégorie, on garde le premier — et on l'écrit ici plutôt que de le corriger de travers.\n\nNATURE : ÉCHÉANCE RÉCURRENTE (ADR-026), ET LE COUPLE AVEC `periodicite: \"autre\"` EST ICI UN MANQUE, PAS UNE DESCRIPTION. Troisième cas d'école de l'audit du 2026-08-31. La description ci-dessus est explicite : PE 37 fixe CINQ ANS pour les établissements de 5ᵉ catégorie comportant des locaux à sommeil, et la condition `dessertLocauxSommeil` restreint déjà cette ligne à ceux-là. Le rythme est donc écrit, et la périodicité devrait pouvoir être `quinquennale`. Elle ne l'est pas encore, et ce lot ne la change pas : PE 37 n'a pas été relu à la source dans ce lot, et une périodicité se pose sur un verbatim, jamais sur une description. À reprendre avec la relecture réglementaire, en gardant que le maire ou le préfet peut augmenter la fréquence par arrêté — ce qui relève d'une prescription particulière (ADR-035), pas du référentiel.\n\nSECONDE RÉSERVE, indépendante : la visite est initiée par l'administration, pas par l'exploitant. Une déclaration « en place » n'aurait aucun sens sur cette ligne ; ce qui se trace est la visite quand elle a eu lieu.\n\n⚠ AMENDEMENT 2026-08-31, SOIR — `periodicite` PASSE À `quinquennale`. CE QUI SUIT REMPLACE LES DEUX JUSTIFICATIONS CI-DESSUS (« reste `autre` » du 2026-08-26, et la réserve ADR-026). Elles sont conservées parce qu'elles racontent comment on s'est trompé deux fois de suite sur cet article, pas parce qu'elles décrivent encore le choix fait.\n\nLE FONDEMENT. PE 37, version en vigueur depuis le 2004-11-24 : « Ces établissements doivent être visités TOUS LES CINQ ANS par la commission de sécurité compétente ; la fréquence de ces visites peut être augmentée, s'il est jugé nécessaire, par arrêté du maire ou du préfet, après avis de la commission. » C'est un rythme, pas un plafond — le texte n'écrit pas « au moins ». La seconde phrase ouvre un raccourcissement par acte administratif individuel : c'est une prescription particulière (ADR-035), qui surcharge la périodicité sur un dossier donné, et non une raison de n'en poser aucune au référentiel.\n\nTROIS RELEVÉS INDÉPENDANTS ET CONCORDANTS, tous en première main : celui du 2026-08-26 porté par `referencesLegales[2].note` ci-dessus, celui du corpus (`arrete-1980-livre-3.ts`, PE 37), et celui de la session de coordination le 2026-08-31 au soir. La date de version — 24 novembre 2004 — a été recoupée une quatrième fois sur Légifrance ce jour ; le CORPS de l'article n'a pas pu l'être, la page rendant sa table des matières sans le texte et l'URL d'article répondant 403. C'est dit ici plutôt que passé sous silence : la valeur repose sur trois lectures humaines concordantes, pas sur une quatrième vérification automatique.\n\nPOURQUOI LA JUSTIFICATION DU 2026-08-26 NE TIENT PLUS — ET POURQUOI CE N'EST PAS POUR LA RAISON QU'ON CROIT. Elle disait : « Poser `quinquennale` sur tous les ERP de 5ᵉ catégorie sur-appliquerait à la boutique et au bureau. » On serait tenté de répondre que la condition `dessertLocauxSommeil` restreint déjà la ligne aux établissements que PE 37 vise. **C'est faux, et il faut le dire précisément.** La condition est de forme `equipement_propriete_non_infirmee` : elle est satisfaite TANT QUE l'utilisateur n'a pas répondu « non ». La ligne tombe donc sur tout ERP de 5ᵉ catégorie ayant déclaré une alarme et n'ayant pas encore répondu à la question — c'est-à-dire, aujourd'hui, sur la boutique et le bureau exactement comme le craignait la note.\n\nCE QUI CHANGE VRAIMENT, c'est la NATURE de cette sur-application, et c'est une règle que ce dépôt a déjà écrite. Avec `autre`, elle était MUETTE : le générateur sautait la ligne, aucun écran ne la montrait, et personne ne pouvait la corriger puisque personne ne la voyait. Avec `quinquennale`, elle devient une échéance datée, visible au calendrier, et **corrigeable par une réponse « non »** — la question est posée au formulaire d'équipement, avec cette aide : « Un restaurant, un commerce ou un bureau sans hébergement : répondez « non ». » C'est mot pour mot la doctrine que `ConditionApplication` énonce pour la forme `non_infirmee` : « sur une obligation de criticité élevée, une sur-application visible et corrigeable par une réponse « non » est toujours préférable à un faux négatif muet ». La valeur est posée sur ce fondement-là, pas sur l'idée que la condition suffirait.\n\nCE QUE CELA PRODUIT, SANS ENJOLIVER : à la prochaine régénération, tout établissement de 5ᵉ catégorie ayant déclaré une alarme sans répondre à la question voit apparaître une ligne « Visite périodique de la commission de sécurité », criticité 4, « à planifier » et urgente — y compris s'il n'a aucun local à sommeil. Répondre « non » à la question la fait disparaître. C'est assumé ; ce n'est pas indolore.\n\nL'AMPLEUR, MESURÉE PLUTÔT QU'ESTIMÉE — DEUX SUR DEUX. Le 2026-09-01, sur le jeu de démonstration : les deux dossiers sont des restaurants ERP de type N, 5ᵉ catégorie, chacun avec une ALARME_INCENDIE déclarée et `dessertLocauxSommeil` **vide** — pas « non », vide. `determineObligationsApplicables` rend la ligne pour les deux. Ce n'est pas un cas limite, c'est le cas NORMAL : rien n'oblige un dirigeant à répondre à cette question, et un parc repris ou importé n'y aura jamais répondu. Le taux à attendre sur le parc réel est donc proche de 100 % des ERP de 5ᵉ catégorie ayant déclaré une alarme, jusqu'à ce que chacun réponde « non ».\n\nLe chiffre est écrit ici, et pas seulement la réserve, pour une raison précise : une sur-application assumée qui ne dit pas son ampleur se redécouvre plus tard et se prend pour un bug. Quelqu'un verra deux restaurants sur deux porter une échéance de visite commissionnelle et croira à un défaut d'ancrage. C'en est un — il est nommé au (1) et au (2) ci-dessous —, mais il est CHOISI, et il se corrige d'un clic du côté de l'utilisateur, pas d'un correctif du côté du produit.\n\nDEUX RÉSERVES D'ANCRAGE, INCHANGÉES PAR CET AMENDEMENT — elles existaient à l'identique avant, et ne sont pas corrigées ici.\n\n(1) FAUX NÉGATIF, déjà documenté plus haut : un hôtel qui n'a déclaré aucune ALARME_INCENDIE ne reçoit rien, alors que PE 37 le vise. Le déblocage est un attribut d'établissement (`comporteLocauxSommeilPublic`), donc une migration et une donnée à collecter.\n\n(2) FAUX POSITIF, NON DOCUMENTÉ JUSQU'ICI, et c'est l'apport de cet amendement : PE 37 écrit « des locaux à sommeil POUR LE PUBLIC ». `dessertLocauxSommeil` ne distingue pas le sommeil du public de celui du personnel — et la note du 2026-08 invoque justement un logement de fonction pour justifier le choix d'une condition d'équipement plutôt qu'une restriction par type. Or un logement de fonction occupé par le personnel n'est pas un local à sommeil pour le public. **La condition est donc plus large que l'article**, dans un second sens, indépendant du précédent. L'aide du formulaire dit « logement de fonction ouvert au public », ce qui est plus juste que le nom du champ ; le nom, lui, reste trompeur. Nommé, non corrigé : le resserrer suppose de reposer la question à des utilisateurs qui y ont déjà répondu.\n\n⚠ AMENDEMENT 2026-09-01, LOT A11 — L'ATTRIBUT EXISTE, ET LES DEUX RÉSERVES CI-DESSUS SONT LEVÉES. Tout ce qui précède décrit un état révolu ; c'est conservé parce que la note dit comment on s'est trompé quatre fois sur cet article, pas parce qu'elle décrit encore le choix fait.\n\nCE QUI CHANGE. `Etablissement.comporteLocauxSommeilPublic` existe (migration 20260901180000). L'obligation passe au PORTEUR ÉTABLISSEMENT ; `categoriesEquipement: [ALARME_INCENDIE]` et la condition `equipement_propriete_non_infirmee` sur `dessertLocauxSommeil` sont retirées, remplacées par `typologies.locauxSommeilPublic: true`.\n\n(1) LE FAUX NÉGATIF EST CORRIGÉ. R. 143-41 et PE 37 visent l'établissement ; aucun des deux ne nomme d'équipement. Un hôtel qui n'a déclaré aucune alarme reçoit désormais la ligne. C'est exactement la correction que le lot « faux négatifs d'ancrage » a faite le 2026-08-31 sur le registre de sécurité, les exercices d'évacuation et la consigne incendie — celle-ci était la quatrième, et elle avait été EXAMINÉE ET REFUSÉE ce jour-là faute de colonne. La colonne est là.\n\n(2) LE FAUX POSITIF « POUR LE PUBLIC » EST CORRIGÉ AUSSI. `dessertLocauxSommeil` ne distinguait pas le sommeil du public de celui du personnel ; la question posée à la fiche établissement le dit en toutes lettres — « Un logement de fonction occupé par vous ou par un salarié ne compte pas : le texte vise le sommeil du public. » PE 37 écrit « comportant, POUR LE PUBLIC, des locaux à sommeil » : la condition n'est plus plus large que l'article.\n\nCE QUE LA SUR-APPLICATION DEVIENT, sans enjoliver. Elle ne disparaît pas, elle change d'assiette et de public. Avant : tout ERP de 5ᵉ catégorie AYANT DÉCLARÉ UNE ALARME et n'ayant pas répondu. Après : tout ERP de 5ᵉ catégorie n'ayant pas répondu, alarme ou non — donc davantage de dossiers, jusqu'à ce que chacun réponde « non ». C'est le prix assumé de la règle du non-renseigné, et c'est le bon sens d'erreur : la ligne est visible au calendrier et se retire d'une réponse, là où l'oubli d'un hôtel ne se voyait de nulle part.\n\nLA CARACTÉRISTIQUE D'ÉQUIPEMENT `dessertLocauxSommeil` EST RETIRÉE, elle ne survit pas en dormant. Elle n'existait que pour cette obligation — `equipements/schema.ts` le disait en tête de fichier — et une question qui ne décide plus de rien est pire qu'absente : le dirigeant y répond en croyant que ça compte. Les réponses déjà données ne sont PAS reprises dans la nouvelle colonne : les deux questions ne sont pas la même, et recopier l'une dans l'autre fabriquerait une réponse que personne n'a donnée.\n\nLA PÉRIODICITÉ NE BOUGE PAS. `quinquennale`, sur le fondement de l'amendement du 2026-08-31 au soir. PE 37 a été relu à la source le 2026-09-01 pour ce lot : le corps de l'article est cette fois rendu par Légifrance, et il dit bien « Ces établissements doivent être visités tous les cinq ans par la commission de sécurité compétente », version en vigueur du 24 novembre 2004. La seconde phrase — « la fréquence de ces visites peut être augmentée [...] par arrêté du maire ou du préfet » — n'a PAS été rendue par cette lecture-ci ; elle reste établie par les trois relevés antérieurs concordants, et rien dans la lecture du jour ne la contredit. Elle relève de toute façon d'une prescription particulière (ADR-035), pas du référentiel.",
+      "POUR INFORMATION DEPUIS LE 2026-10-08 (C64 ; décision 2 de la synthèse de revue, option A, sans migration ; le préventeur : « une information »). `initiative: \"administration\"` : la ligne reste visible avec son rythme quinquennal, se peint « Pour information — visite à l'initiative de l'administration », et n'est plus comptée comme une échéance de l'exploitant — ni retard, ni « à faire », ni indice. Le procès-verbal se dépose et se trace au registre. ~~Réalisateur affiché : « Organisme agréé »~~ : `realisateurs` garde `organisme_agree` faute de valeur dans l'enum Prisma, l'affichage dit « Commission de sécurité ». La phrase suivante disait déjà tout cela en 2026-08 ; elle restait sans effet sur aucun compteur.\n\nVisite commissionnelle : n'est pas à la charge de l'exploitant au sens opérationnel (initiée par l'administration) mais est à tracer dans le registre. Échéance quinquennale en première approche.\n\nAmendement 2026-08 : la restriction « locaux à sommeil » figurait dans le libellé et la description mais n'était encodée nulle part — l'obligation tombait donc sur tout ERP de 5ᵉ catégorie déclarant une alarme, restaurants et commerces compris. Elle est désormais bornée par la propriété `dessertLocauxSommeil`.\n\nPourquoi une condition d'équipement et non une restriction `types` : la présence de locaux à sommeil est une caractéristique de l'établissement qui traverse les types (un bâtiment de type W peut comporter un logement de fonction, un type O n'est pas nécessairement de 5ᵉ catégorie). Encoder une liste de types équivaudrait à trancher, sans source article par article, quels types d'exploitation comportent des locaux à sommeil — ce que la règle n°6 interdit. Le libellé de l'obligation mentionne aussi les « installations spécifiques », second cas de visite périodique qui n'est pas modélisé : la condition ne couvre que la branche « locaux à sommeil ».\n\nForme `non_infirmee` (criticité 4, obligation déjà publiée) : les établissements existants gardent la ligne jusqu'à une réponse « non » explicite, plutôt que de la perdre en silence à la prochaine régénération.\n\nAmendement 2026-08-26 : l'obligation portait une périodicité QUINQUENNALE qu'aucun texte ne fonde, et deux références dont aucune ne l'établissait. Trois lectures indépendantes le confirment. R. 143-34 traite des vérifications techniques à la charge de l'exploitant, pas des visites de commission — il est remplacé par R. 143-41, qui les fonde. GE 4 fixe bien des périodicités, mais pour les 1ʳᵉ à 4ᵉ catégories seulement : son tableau ne comporte aucune ligne de 5ᵉ catégorie, et il relève du Livre II, écarté par PE 1 § 1. Il est conservé en référence pour montrer précisément cela. Aucun article du Livre III n'organise de visite périodique de commission. La règle des cinq ans circule dans les guides préfectoraux et remonterait à la circulaire du 22 juin 1995 relative aux CCDSA — non lue au verbatim, et de toute façon non opposable. `periodicite` passe donc à `autre` : la ligne subsiste, parce que les visites existent et se tracent au registre, mais le produit cesse d'afficher une échéance que le droit ne donne pas.\n\nRECTIFIÉ LE 2026-08-26, quelques heures après l'amendement ci-dessus, qui était FAUX sur un point. Il affirmait qu'« aucun article du Livre III n'organise de visite périodique de commission ». PE 37 le fait, et fixe cinq ans. La quinquennale n'était donc pas sans fondement : elle en avait un, que je n'avais pas trouvé, et la description d'origine le disait presque — elle liait déjà la visite aux locaux à sommeil. Je l'ai remplacée par une affirmation d'absence au lieu de chercher plus loin. Ne pas avoir trouvé la source n'est pas la preuve qu'il n'y en a pas.\n\n`periodicite` reste `autre`, mais cette fois pour une raison nommée : PE 37 ne vise QUE les établissements comportant, pour le public, des locaux à sommeil. Le modèle n'a aucun attribut d'établissement pour cette distinction. Poser `quinquennale` sur tous les ERP de 5ᵉ catégorie sur-appliquerait à la boutique et au bureau ; laisser `autre` sous-applique à l'hôtel et à la chambre d'hôtes. Le manque est déclaré sur PE 37 dans le corpus, et l'attribut reste à créer.\n\nEXAMINÉE ET NON REBRANCHÉE — 2026-08-31, lot « faux négatifs d'ancrage ». Le brief de ce lot attendait un passage au porteur établissement. Il ne peut pas se faire, et voici ce qui l'en empêche.\n\nLe faux négatif est RÉEL : R. 143-41, relu au verbatim ce jour (version en vigueur depuis le 2021-07-01), dit « CES ÉTABLISSEMENTS doivent faire l'objet [...] de visites périodiques de contrôle et de visites inopinées effectuées par la commission de sécurité compétente », l'antécédent étant les établissements soumis au chapitre. Aucun équipement n'y figure. Un hôtel qui n'a pas déclaré d'alarme ne reçoit donc aucune ligne, alors qu'il est visité tous les cinq ans.\n\nMais le rebranchement produirait le faux positif symétrique, et plus large. PE 37, relu au verbatim ce jour, est intitulé « Contrôle des établissements de 5e catégorie comportant des locaux à sommeil » et ne vise que « les établissements comportant, POUR LE PUBLIC, des locaux à sommeil ». C'est le SEUL article du Livre III qui organise une visite périodique en 5ᵉ catégorie — GE 4 ne couvre que les 1ʳᵉ à 4ᵉ, et relève du Livre II écarté par PE 1 § 1. La restriction « locaux à sommeil » ne module donc pas un rythme : elle décide de l'EXISTENCE de la visite périodique. La retirer ferait naître une échéance chez chaque restaurant et chaque boutique de 5ᵉ catégorie.\n\nOr `ObligationPorteeParEtablissement` interdit `conditions` — à raison : une condition porte sur une propriété d'équipement, et il n'y aurait plus d'équipement pour la porter. Aujourd'hui la caractéristique `dessertLocauxSommeil` vit sur l'ALARME_INCENDIE, ce qui est un pis-aller : les locaux à sommeil sont un attribut de l'ÉTABLISSEMENT, pas de son alarme.\n\nLe déblocage est donc un attribut d'établissement — quelque chose comme `comporteLocauxSommeilPublic` — c'est-à-dire une migration de schéma. Ce lot n'y touche pas : `prisma/schema.prisma` est explicitement hors de son périmètre. La question est remontée à la session qui l'a délégué, avec ce constat.\n\nEn attendant, l'ancrage d'origine est CONSERVÉ tel quel. Entre un faux négatif borné aux établissements à locaux à sommeil sans alarme déclarée et un faux positif sur tous les ERP de 5ᵉ catégorie, on garde le premier — et on l'écrit ici plutôt que de le corriger de travers.\n\nNATURE : ÉCHÉANCE RÉCURRENTE (ADR-026), ET LE COUPLE AVEC `periodicite: \"autre\"` EST ICI UN MANQUE, PAS UNE DESCRIPTION. Troisième cas d'école de l'audit du 2026-08-31. La description ci-dessus est explicite : PE 37 fixe CINQ ANS pour les établissements de 5ᵉ catégorie comportant des locaux à sommeil, et la condition `dessertLocauxSommeil` restreint déjà cette ligne à ceux-là. Le rythme est donc écrit, et la périodicité devrait pouvoir être `quinquennale`. Elle ne l'est pas encore, et ce lot ne la change pas : PE 37 n'a pas été relu à la source dans ce lot, et une périodicité se pose sur un verbatim, jamais sur une description. À reprendre avec la relecture réglementaire, en gardant que le maire ou le préfet peut augmenter la fréquence par arrêté — ce qui relève d'une prescription particulière (ADR-035), pas du référentiel.\n\nSECONDE RÉSERVE, indépendante : la visite est initiée par l'administration, pas par l'exploitant. Une déclaration « en place » n'aurait aucun sens sur cette ligne ; ce qui se trace est la visite quand elle a eu lieu.\n\n⚠ AMENDEMENT 2026-08-31, SOIR — `periodicite` PASSE À `quinquennale`. CE QUI SUIT REMPLACE LES DEUX JUSTIFICATIONS CI-DESSUS (« reste `autre` » du 2026-08-26, et la réserve ADR-026). Elles sont conservées parce qu'elles racontent comment on s'est trompé deux fois de suite sur cet article, pas parce qu'elles décrivent encore le choix fait.\n\nLE FONDEMENT. PE 37, version en vigueur depuis le 2004-11-24 : « Ces établissements doivent être visités TOUS LES CINQ ANS par la commission de sécurité compétente ; la fréquence de ces visites peut être augmentée, s'il est jugé nécessaire, par arrêté du maire ou du préfet, après avis de la commission. » C'est un rythme, pas un plafond — le texte n'écrit pas « au moins ». La seconde phrase ouvre un raccourcissement par acte administratif individuel : c'est une prescription particulière (ADR-035), qui surcharge la périodicité sur un dossier donné, et non une raison de n'en poser aucune au référentiel.\n\nTROIS RELEVÉS INDÉPENDANTS ET CONCORDANTS, tous en première main : celui du 2026-08-26 porté par `referencesLegales[2].note` ci-dessus, celui du corpus (`arrete-1980-livre-3.ts`, PE 37), et celui de la session de coordination le 2026-08-31 au soir. La date de version — 24 novembre 2004 — a été recoupée une quatrième fois sur Légifrance ce jour ; le CORPS de l'article n'a pas pu l'être, la page rendant sa table des matières sans le texte et l'URL d'article répondant 403. C'est dit ici plutôt que passé sous silence : la valeur repose sur trois lectures humaines concordantes, pas sur une quatrième vérification automatique.\n\nPOURQUOI LA JUSTIFICATION DU 2026-08-26 NE TIENT PLUS — ET POURQUOI CE N'EST PAS POUR LA RAISON QU'ON CROIT. Elle disait : « Poser `quinquennale` sur tous les ERP de 5ᵉ catégorie sur-appliquerait à la boutique et au bureau. » On serait tenté de répondre que la condition `dessertLocauxSommeil` restreint déjà la ligne aux établissements que PE 37 vise. **C'est faux, et il faut le dire précisément.** La condition est de forme `equipement_propriete_non_infirmee` : elle est satisfaite TANT QUE l'utilisateur n'a pas répondu « non ». La ligne tombe donc sur tout ERP de 5ᵉ catégorie ayant déclaré une alarme et n'ayant pas encore répondu à la question — c'est-à-dire, aujourd'hui, sur la boutique et le bureau exactement comme le craignait la note.\n\nCE QUI CHANGE VRAIMENT, c'est la NATURE de cette sur-application, et c'est une règle que ce dépôt a déjà écrite. Avec `autre`, elle était MUETTE : le générateur sautait la ligne, aucun écran ne la montrait, et personne ne pouvait la corriger puisque personne ne la voyait. Avec `quinquennale`, elle devient une échéance datée, visible au calendrier, et **corrigeable par une réponse « non »** — la question est posée au formulaire d'équipement, avec cette aide : « Un restaurant, un commerce ou un bureau sans hébergement : répondez « non ». » C'est mot pour mot la doctrine que `ConditionApplication` énonce pour la forme `non_infirmee` : « sur une obligation de criticité élevée, une sur-application visible et corrigeable par une réponse « non » est toujours préférable à un faux négatif muet ». La valeur est posée sur ce fondement-là, pas sur l'idée que la condition suffirait.\n\nCE QUE CELA PRODUIT, SANS ENJOLIVER : à la prochaine régénération, tout établissement de 5ᵉ catégorie ayant déclaré une alarme sans répondre à la question voit apparaître une ligne « Visite périodique de la commission de sécurité », criticité 4, « à planifier » et urgente — y compris s'il n'a aucun local à sommeil. Répondre « non » à la question la fait disparaître. C'est assumé ; ce n'est pas indolore.\n\nL'AMPLEUR, MESURÉE PLUTÔT QU'ESTIMÉE — DEUX SUR DEUX. Le 2026-09-01, sur le jeu de démonstration : les deux dossiers sont des restaurants ERP de type N, 5ᵉ catégorie, chacun avec une ALARME_INCENDIE déclarée et `dessertLocauxSommeil` **vide** — pas « non », vide. `determineObligationsApplicables` rend la ligne pour les deux. Ce n'est pas un cas limite, c'est le cas NORMAL : rien n'oblige un dirigeant à répondre à cette question, et un parc repris ou importé n'y aura jamais répondu. Le taux à attendre sur le parc réel est donc proche de 100 % des ERP de 5ᵉ catégorie ayant déclaré une alarme, jusqu'à ce que chacun réponde « non ».\n\nLe chiffre est écrit ici, et pas seulement la réserve, pour une raison précise : une sur-application assumée qui ne dit pas son ampleur se redécouvre plus tard et se prend pour un bug. Quelqu'un verra deux restaurants sur deux porter une échéance de visite commissionnelle et croira à un défaut d'ancrage. C'en est un — il est nommé au (1) et au (2) ci-dessous —, mais il est CHOISI, et il se corrige d'un clic du côté de l'utilisateur, pas d'un correctif du côté du produit.\n\nDEUX RÉSERVES D'ANCRAGE, INCHANGÉES PAR CET AMENDEMENT — elles existaient à l'identique avant, et ne sont pas corrigées ici.\n\n(1) FAUX NÉGATIF, déjà documenté plus haut : un hôtel qui n'a déclaré aucune ALARME_INCENDIE ne reçoit rien, alors que PE 37 le vise. Le déblocage est un attribut d'établissement (`comporteLocauxSommeilPublic`), donc une migration et une donnée à collecter.\n\n(2) FAUX POSITIF, NON DOCUMENTÉ JUSQU'ICI, et c'est l'apport de cet amendement : PE 37 écrit « des locaux à sommeil POUR LE PUBLIC ». `dessertLocauxSommeil` ne distingue pas le sommeil du public de celui du personnel — et la note du 2026-08 invoque justement un logement de fonction pour justifier le choix d'une condition d'équipement plutôt qu'une restriction par type. Or un logement de fonction occupé par le personnel n'est pas un local à sommeil pour le public. **La condition est donc plus large que l'article**, dans un second sens, indépendant du précédent. L'aide du formulaire dit « logement de fonction ouvert au public », ce qui est plus juste que le nom du champ ; le nom, lui, reste trompeur. Nommé, non corrigé : le resserrer suppose de reposer la question à des utilisateurs qui y ont déjà répondu.\n\n⚠ AMENDEMENT 2026-09-01, LOT A11 — L'ATTRIBUT EXISTE, ET LES DEUX RÉSERVES CI-DESSUS SONT LEVÉES. Tout ce qui précède décrit un état révolu ; c'est conservé parce que la note dit comment on s'est trompé quatre fois sur cet article, pas parce qu'elle décrit encore le choix fait.\n\nCE QUI CHANGE. `Etablissement.comporteLocauxSommeilPublic` existe (migration 20260901180000). L'obligation passe au PORTEUR ÉTABLISSEMENT ; `categoriesEquipement: [ALARME_INCENDIE]` et la condition `equipement_propriete_non_infirmee` sur `dessertLocauxSommeil` sont retirées, remplacées par `typologies.locauxSommeilPublic: true`.\n\n(1) LE FAUX NÉGATIF EST CORRIGÉ. R. 143-41 et PE 37 visent l'établissement ; aucun des deux ne nomme d'équipement. Un hôtel qui n'a déclaré aucune alarme reçoit désormais la ligne. C'est exactement la correction que le lot « faux négatifs d'ancrage » a faite le 2026-08-31 sur le registre de sécurité, les exercices d'évacuation et la consigne incendie — celle-ci était la quatrième, et elle avait été EXAMINÉE ET REFUSÉE ce jour-là faute de colonne. La colonne est là.\n\n(2) LE FAUX POSITIF « POUR LE PUBLIC » EST CORRIGÉ AUSSI. `dessertLocauxSommeil` ne distinguait pas le sommeil du public de celui du personnel ; la question posée à la fiche établissement le dit en toutes lettres — « Un logement de fonction occupé par vous ou par un salarié ne compte pas : le texte vise le sommeil du public. » PE 37 écrit « comportant, POUR LE PUBLIC, des locaux à sommeil » : la condition n'est plus plus large que l'article.\n\nCE QUE LA SUR-APPLICATION DEVIENT, sans enjoliver. Elle ne disparaît pas, elle change d'assiette et de public. Avant : tout ERP de 5ᵉ catégorie AYANT DÉCLARÉ UNE ALARME et n'ayant pas répondu. Après : tout ERP de 5ᵉ catégorie n'ayant pas répondu, alarme ou non — donc davantage de dossiers, jusqu'à ce que chacun réponde « non ». C'est le prix assumé de la règle du non-renseigné, et c'est le bon sens d'erreur : la ligne est visible au calendrier et se retire d'une réponse, là où l'oubli d'un hôtel ne se voyait de nulle part.\n\nLA CARACTÉRISTIQUE D'ÉQUIPEMENT `dessertLocauxSommeil` EST RETIRÉE, elle ne survit pas en dormant. Elle n'existait que pour cette obligation — `equipements/schema.ts` le disait en tête de fichier — et une question qui ne décide plus de rien est pire qu'absente : le dirigeant y répond en croyant que ça compte. Les réponses déjà données ne sont PAS reprises dans la nouvelle colonne : les deux questions ne sont pas la même, et recopier l'une dans l'autre fabriquerait une réponse que personne n'a donnée.\n\nLA PÉRIODICITÉ NE BOUGE PAS. `quinquennale`, sur le fondement de l'amendement du 2026-08-31 au soir. PE 37 a été relu à la source le 2026-09-01 pour ce lot : le corps de l'article est cette fois rendu par Légifrance, et il dit bien « Ces établissements doivent être visités tous les cinq ans par la commission de sécurité compétente », version en vigueur du 24 novembre 2004. La seconde phrase — « la fréquence de ces visites peut être augmentée [...] par arrêté du maire ou du préfet » — n'a PAS été rendue par cette lecture-ci ; elle reste établie par les trois relevés antérieurs concordants, et rien dans la lecture du jour ne la contredit. Elle relève de toute façon d'une prescription particulière (ADR-035), pas du référentiel.",
   },
 
   // ---------------------------------------------------------------------------
@@ -1285,6 +1605,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     typologies: { erp: { categories: ["N1", "N2"], typesExclus: ["V"] } },
@@ -1306,6 +1627,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     typologies: { erp: { categories: ["N1", "N2"], types: ["V"] } },
@@ -1327,6 +1649,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     typologies: {
@@ -1353,6 +1676,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     typologies: {
@@ -1379,6 +1703,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     typologies: {
@@ -1412,6 +1737,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     typologies: {
@@ -1437,6 +1763,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     typologies: {
@@ -1461,6 +1788,7 @@ export const obligationsIncendie: Obligation[] = [
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["organisme_agree"],
+    initiative: "administration",
     criticite: 4,
     transmet: [],
     typologies: {
@@ -1476,75 +1804,11 @@ export const obligationsIncendie: Obligation[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // IGH
+  // IGH — retiré le 2026-10-07 (périmètre, relecture préventeur du 30/09,
+  // décision de la propriétaire du 07/10) : `incendie-igh-moyens-secours-annuelle`
+  // et `incendie-igh-charge-calorifique-quinquennale` sont dans
+  // `OBLIGATIONS_RETIREES`. Leurs identifiants ne doivent jamais être réemployés.
   // ---------------------------------------------------------------------------
-  {
-    id: "incendie-igh-moyens-secours-annuelle",
-    domaine: "incendie",
-    libelle: "Vérification annuelle des moyens de secours et SSI (IGH)",
-    description:
-      "Dans les immeubles de grande hauteur, le propriétaire fait vérifier annuellement par un organisme agréé les moyens de secours (art. GH 51 à GH 55), les scénarios et le fonctionnement du SSI, les dispositifs de sécurité, les interphones et télécommunications de sécurité. Le désenfumage mécanique est vérifié par cinquième chaque année (100 % en cinq ans).",
-    referencesLegales: [
-      {
-        source: "ARRETE",
-        reference: "Arrêté du 30 décembre 2011 (règlement IGH), art. GH 5 (vérifications techniques par organismes agréés)",
-        article: "GH 5",
-        url:
-          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000025169258",
-        versionConstatee: "2026-01-01",
-      },
-    ],
-    periodicite: "annuelle",
-    nature: "echeance_recurrente",
-    pieceAttendue: null,
-    realisateurs: ["organisme_agree"],
-    criticite: 5,
-    transmet: [],
-    typologies: { igh: true },
-    categoriesEquipement: ["ALARME_INCENDIE", "EXTINCTEUR", "DESENFUMAGE"],
-    notesInternes:
-      "Corrigé à l'audit 2026-08 : l'ancienne version citait « GH 60 à GH 63 ». GH 60 traite de la surveillance, des exercices et de l'information des locataires. Les vérifications techniques périodiques sont à l'article GH 5.",
-  },
-  {
-    id: "incendie-igh-charge-calorifique-quinquennale",
-    domaine: "incendie",
-    libelle:
-      "Rapport de vérification de la charge calorifique (occupant d'un IGH)",
-    description:
-      "Dans un immeuble de grande hauteur, l'occupant de locaux autres que d'habitation — l'employeur qui y loue des bureaux ou un commerce — fait établir par un organisme agréé un rapport de vérification de conformité de la charge calorifique, puis le fait renouveler tous les cinq ans. Le locataire doit en outre pouvoir justifier au propriétaire ou au mandataire de sécurité que les locaux qu'il occupe ne dépassent pas les charges calorifiques autorisées.",
-    referencesLegales: [
-      {
-        source: "ARRETE",
-        reference:
-          "Arrêté du 30 décembre 2011 (règlement IGH), art. GH 61 § 5 (rapport de vérification de la charge calorifique, à la charge des occupants)",
-        article: "GH 61",
-        url:
-          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000025170361",
-        note: "« Dans les locaux autres que les locaux d'habitation, LES OCCUPANTS sont tenus de faire établir, par un ORGANISME AGRÉÉ, un rapport de vérification de conformité de la charge calorifique. Ce rapport est établi dans l'année qui suit l'installation dans les lieux ou toute modification importante de l'aménagement, PUIS PÉRIODIQUEMENT TOUS LES CINQ ANS. » Le § 7 ajoute : « Les locataires autres que ceux occupant des locaux d'habitation doivent pouvoir justifier au propriétaire ou au mandataire de sécurité que les locaux qu'ils occupent ne dépassent pas les charges calorifiques autorisées. » Article lu en entier le 2026-09-04 : sept paragraphes, dont aucun autre ne porte de périodicité ni ne nomme l'occupant (§ 1 à § 4 et § 6 fixent des plafonds en MJ/m²). Relevé quatre fois, sur trois URL distinctes ; le premier appel de la veille avait rendu le § 5 amputé de sa seconde phrase, celle qui porte les cinq ans.",
-        versionConstatee: "2012-04-01",
-      },
-      {
-        source: "ARRETE",
-        reference:
-          "Arrêté du 30 décembre 2011 (règlement IGH), art. GH 5 § 3.1.4 (la quinquennale au tableau des vérifications techniques)",
-        article: "GH 5",
-        url:
-          "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000052234026",
-        note: "Contexte, et surtout CONTRE-VÉRIFICATION PAR UN SECOND ARTICLE : « 3.1.4. Tous les cinq ans : les évaluations de la charge calorifique visée à l'article GH 61. » Lu le 2026-09-04 sur deux URL distinctes. Le même article porte la phrase qui articule les deux régimes et qui n'avait jamais été relevée : « Les vérifications techniques concernant un même type d'installation, HORMIS LES VÉRIFICATIONS DE LA CHARGE CALORIFIQUE, sont exécutées dans l'ensemble de l'immeuble sous la responsabilité d'un même organisme agréé. » L'exception dit pourquoi : la charge calorifique est la seule vérification que GH 5 ne fait pas passer par le propriétaire, parce que GH 61 § 5 la met à la charge de chaque occupant, local par local.",
-        versionConstatee: "2026-01-01",
-      },
-    ],
-    periodicite: "quinquennale",
-    nature: "echeance_recurrente",
-    pieceAttendue: null,
-    realisateurs: ["organisme_agree"],
-    criticite: 4,
-    transmet: [],
-    porteur: "etablissement",
-    typologies: { igh: true },
-    notesInternes:
-      "ENTRÉE LE 2026-09-04. C'est la PREMIÈRE obligation IGH du référentiel qui vise l'OCCUPANT, et c'est tout son intérêt : les deux autres (`elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`) sont fondées sur GH 5, dont la phrase d'attaque est « LES PROPRIÉTAIRES font effectuer… ». Le produit sert un employeur locataire de bureaux dans une tour (ADR-031) et ne lui devait, du règlement IGH, que des lignes dont il n'est pas le débiteur.\n\nLA RAISON DE NON-ENCODAGE QUI TENAIT LA PLACE ÉTAIT FAUSSE, et c'est le motif de ce lot. Le corpus rangeait cette quinquennale avec les paratonnerres, « faute de catégorie d'équipement ». Elle n'en a jamais eu besoin : son porteur est l'établissement (ADR-022), et ce porteur existe depuis le 2026-08-31. Un motif faux fait plus de mal qu'un manque nu, parce qu'il clôt la question — celui-ci l'a close du 2026-08-27, jour où il a été écrit, au 2026-09-03, jour où le lot suivant a rouvert GH 61 et vu qu'il était faux.\n\nPAS DE RESTRICTION DE CLASSE, ET C'EST UNE LECTURE, PAS UN OUBLI. `typologies: { igh: true }` sans `classes`. GH 61 est au titre Ier (dispositions générales), chapitre III « obligations des propriétaires et des occupants » : il s'applique quelle que soit la classe. Et le lot du 2026-09-03 a établi que la classe n'est pas le bon objet — GH 66 fait du classement l'affaire de « l'usage principal de l'immeuble », si bien qu'un plateau de bureaux dans une tour classée GH U relève des dispositions GH W. La question a été retirée du produit le même jour.\n\nCE QUI N'EST PAS PORTÉ, ET IL FAUT LE LIRE AVANT DE CROIRE LA LIGNE COMPLÈTE. Le § 5 porte DEUX délais, et un seul est encodable. « Dans l'année qui suit l'installation dans les lieux ou toute modification importante de l'aménagement » est un plafond de PREMIER CYCLE, déclenché par un événement — emménagement, réaménagement. Le champ `premierDelai` existe pour ça, mais le générateur ne le lit que sur la branche `misesEnService`, qui est indexée par équipement (`generateur.ts`) : sur un porteur établissement, `eq.id` est `null` et le champ ne serait jamais lu. L'écrire quand même donnerait une donnée juste et un comportement inexistant. Faute d'une date d'installation dans les lieux au modèle, la ligne sans historique tombe en `a_planifier` immédiat — le sens d'erreur voulu, celui que l'occupant voit et peut corriger, jamais celui qui se tait.\n\nCRITICITÉ 4 ET NON 5. La mise en danger directe est portée par les plafonds eux-mêmes (§ 1 à § 4 : 480 MJ/m², 680 sous sprinkleur), qui sont des états de l'aménagement ; le § 5 impose d'en faire ÉTABLIR la preuve. Un manquement se paie d'abord devant le propriétaire ou le mandataire de sécurité (§ 7), pas en flamme.\n\n`pieceAttendue: null` : l'obligation porte sur un ACTE — faire établir une vérification —, et le rapport en est la trace. Même traitement que les vérifications annuelles ; ce n'est pas `R. 4226-19`, où l'écrit EST l'obligation.\n\nRÉALISATEUR SUR LE MOT DU TEXTE : « par un organisme agréé », donc `organisme_agree` seul. Ni `personne_qualifiee` ni `bureau_controle` — l'arrêté du 31 janvier 1986 se contente d'« organismes ou techniciens compétents » à son article 103, celui-ci exige l'agrément, et confondre les deux enverrait un occupant vers la mauvaise prestation dans un sens comme dans l'autre.",
-  },
 
   // ---------------------------------------------------------------------------
   // Habitation — arrêté du 31 janvier 1986 (titre VIII, obligations des

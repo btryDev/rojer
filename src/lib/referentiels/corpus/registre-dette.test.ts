@@ -123,7 +123,33 @@ describe("registre de dette — les réserves de lecture", () => {
     // 89 → 90 le 2026-09-21 : `PE 27`, encodé pour ses § 4 et § 5, garde
     // dehors ses § 1, § 2, § 3 — et son § 6, que la première écriture de cette
     // réserve avait oublié (l'article a SIX paragraphes, pas cinq).
-    expect(n).toBe(90);
+    // 90 → 92 le 2026-10-07 (relecture du préventeur, lot 1) : `MS 39` entre
+    // au corpus et `PE 26` passe de `sans_objet` à `retenu` pour
+    // l'identification des extincteurs ; chacun garde dehors la dotation
+    // (MS 39 § 2, PE 26 § 1), et PE 26 son § 2 (colonnes sèches).
+    // 90 → 88 le 2026-10-07 (lot 5, compté depuis 90) : `GH 5` et `GH 61` cessent d'être retenus (IGH
+    // retiré, relecture préventeur du 30/09, décision de la propriétaire du
+    // 07/10). Leurs réserves passent dans `historique`, barrées ; le manque
+    // est désormais `non_couvert`, compté ailleurs.
+    // 88 → 87 le même jour : `R. 4323-1` cesse d'être retenu avec
+    // `esp-personnel-formation` ; sa réserve passe dans `historique`.
+    // 87 → 83 le même jour : `C. env. L. 512-7`, `L. 512-8`, l'arrêté du
+    // 1er juin 2015 art. 22 et `R. 4412-11` cessent d'être retenus (stockage
+    // « sauf 3 derniers points ») ; leurs réserves passent dans `historique`.
+    // 90 → 91 le 2026-10-07 (compté depuis 90) (lot 3, C59) : `R. 4322-1` passe de `sans_objet` à
+    // `retenu` pour les seuls EPI ; les équipements de travail et moyens de
+    // protection collective qu'il vise aussi restent dehors.
+    // Intégration des cinq lots (2026-10-07) : 90 + 2 (lot 1) − 7 (lot 5)
+    // + 1 (lot 3) = 86.
+    // 86 → 87 le même jour (C60, revue indépendante de la relecture) :
+    // `MS 15` entre au corpus, retenu pour son § 4 (armoires de RIA
+    // signalées) ; ses § 1 à § 3, règles d'implantation, restent dehors.
+    // 86 + 1 − 0 = 87.
+    // 87 → 89 le 2026-10-08 (C64) : `PO 1` et `PO 8` restent retenus (le
+    // contrôle électrique annuel de l'hôtel) et gagnent chacun une réserve —
+    // le renvoi à AS 9, question posée au préventeur, qui borne AS 9 aux
+    // N1–N4 ; les deux lignes N5/O sont supprimées. 87 + 2 − 0 = 89.
+    expect(n).toBe(89);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronDown, FileText } from "lucide-react";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
+import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { BadgeResultat } from "@/components/rapports/BadgeResultat";
 import { SupprimerRapportButton } from "@/components/rapports/SupprimerRapportButton";
 import { UploadRapportForm } from "@/components/rapports/UploadRapportForm";
@@ -9,6 +10,15 @@ import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { CreerActionVerifForm } from "@/components/actions/CreerActionVerifForm";
 import { getVerification } from "@/lib/calendrier/queries";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import {
+  estLignePourInformation,
+  libelleRealisateurs,
+  MENTION_POUR_INFORMATION,
+} from "@/lib/referentiels/conformite/initiative";
+import { MentionPourInformation } from "@/components/calendrier/MentionPourInformation";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
+import { referencesCitees } from "@/lib/referentiels/conformite/rythme-retenu";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
 import { marquesAConfirmerDuDossier } from "@/lib/etablissements/marques-a-confirmer";
@@ -197,10 +207,14 @@ export default async function VerificationDetailPage({
   // (`uploadRapport`) — l'écran ne fait que ne pas le proposer.
   const depotOuvert = !archivee;
 
+  // C64 : la visite de la commission de sécurité n'est pas un rendez-vous de
+  // l'exploitant — ni retard (`estEnRetardQuiCompte`), ni « Dans N jours ».
+  const pourInformation = etat === "pourInformation";
   const urgent =
     !archivee &&
     !sansRendezVous &&
     !enRetard &&
+    !pourInformation &&
     // Une obligation sans rendez-vous suivant, déjà faite, garde son statut
     // réalisé mais plus de date à attendre : pas de « Dans N jours » à côté du
     // badge « Conforme ». Sur une obligation périodique, en revanche, un
@@ -245,6 +259,9 @@ export default async function VerificationDetailPage({
   // engage : c'est le dernier endroit où elle peut encore se lire comme une
   // obligation légale, et le premier où on ira vérifier.
   const contractuelle = estEcheanceContractuelle(v);
+  // ADR-039. Le rythme que Rojer retient là où le texte n'en écrit pas : la
+  // fiche dit d'où il vient, à côté de la date qu'il produit.
+  const rythmeRetenu = mentionRythmeDeVerification(v);
 
   const faits: FaitFiche[] = [
     // L'extinction d'abord, et elle prend la place de l'échéance : une
@@ -322,9 +339,16 @@ export default async function VerificationDetailPage({
           },
     {
       cle: "Réalisateur requis",
-      valeur: v.realisateurRequis
-        .map((r) => LABEL_REALISATEUR[r])
-        .join(", "),
+      // C64 : « Commission de sécurité » sur la visite à l'initiative de
+      // l'administration — `realisateurRequis` garde `organisme_agree`, faute
+      // de valeur dans l'enum Prisma.
+      valeur: libelleRealisateurs(
+        v,
+        v.realisateurRequis.map((r) => LABEL_REALISATEUR[r]),
+      ).join(", "),
+      ...(estLignePourInformation(v)
+        ? { note: MENTION_POUR_INFORMATION + "." }
+        : {}),
     },
   ];
 
@@ -339,6 +363,13 @@ export default async function VerificationDetailPage({
         ? `Demande de votre assureur — ${v.prescription.reference}`
         : "Demande de votre assureur",
       note: MARQUAGE_CONTRACTUEL_LONG,
+    });
+  }
+  if (rythmeRetenu) {
+    faits.push({
+      cle: "Rythme",
+      valeur: rythmeRetenu.court,
+      note: rythmeRetenu.long,
     });
   }
 
@@ -372,7 +403,9 @@ export default async function VerificationDetailPage({
         pastilles={
           <>
             {contractuelle && <MentionContractuelle />}
+            <MentionRythmeRetenu mention={rythmeRetenu} />
             <MentionAConfirmer phrases={marque?.phrases ?? []} />
+            {pourInformation && <MentionPourInformation />}
             {/* En retard, la pastille d'état dit déjà « En retard » : une
                 seconde pastille rose aurait dit la même chose. Le compte de
                 jours la remplace alors, plutôt que de s'y ajouter — un retard
@@ -388,6 +421,14 @@ export default async function VerificationDetailPage({
             {statutJour === undefined || statutJour === "en_retard" ? null : (
               <BadgeStatut statut={statutJour} />
             )}
+            {/* Le délai de grâce d'une ligne née d'un changement du
+                référentiel (ADR-040) : il s'ajoute à « À planifier », il ne
+                date rien. */}
+            {mentionDelaiDeGrace(v, aujourdhui) ? (
+              <PastilleFiche>
+                {mentionDelaiDeGrace(v, aujourdhui, { enTete: true })}
+              </PastilleFiche>
+            ) : null}
             {enRetard && sansRendezVous ? (
               // Dû et jamais fait, SANS échéance connue : compter des jours
               // depuis la date de génération mesurerait l'âge du dossier, pas
@@ -443,8 +484,8 @@ export default async function VerificationDetailPage({
             </span>
             <span className="flex items-center gap-3">
               <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
-                {obligation.referencesLegales.length} référence
-                {obligation.referencesLegales.length > 1 ? "s" : ""}
+                {referencesCitees(obligation).length} référence
+                {referencesCitees(obligation).length > 1 ? "s" : ""}
               </span>
               <span
                 aria-hidden
@@ -455,7 +496,9 @@ export default async function VerificationDetailPage({
             </span>
           </summary>
           <ul className="m-0 list-none border-t border-[color:var(--board-slate-line)] p-0">
-            {obligation.referencesLegales.map((ref, idx) => (
+            {/* La norme d'un rythme retenu y figure, sous son libellé
+                « Norme » (ADR-039) : citée comme norme, jamais comme un article. */}
+            {referencesCitees(obligation).map((ref, idx) => (
               <li
                 key={idx}
                 className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--board-slate-line)] px-7 py-4 first:border-t-0 sm:px-8"

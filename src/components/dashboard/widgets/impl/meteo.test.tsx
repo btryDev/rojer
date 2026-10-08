@@ -26,6 +26,7 @@ const evenement = (
   sansEcheance,
   type: "verification" as const,
   contractuelle: false,
+  rythmeRetenu: null,
   equipement: "Tableau électrique",
   batiment: null,
 });

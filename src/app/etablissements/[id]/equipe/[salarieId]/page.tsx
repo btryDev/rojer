@@ -1,3 +1,7 @@
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import { renvoiAuxNormes } from "@/lib/referentiels/conformite/renvoi-aux-normes";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { notFound } from "next/navigation";
 import {
   CarteFiche,
@@ -66,6 +70,8 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   // Un TITRE n'est jamais classé ainsi (`classerTitre`) : la table est fermée
   // sur les états d'une ligne, et le mot est le même que celui du calendrier.
   sansRendezVous: LIBELLE_SANS_RENDEZ_VOUS,
+  // Un titre ne l'est jamais non plus — la table est fermée (C64).
+  pourInformation: "Pour information",
 };
 
 /**
@@ -289,6 +295,18 @@ export default async function SalarieDetailPage({
                               ? ` · pas de date de fin sur la pièce · échéance calculée au ${formaterDateLongueFr(t.echeance)} (délivrance + ${LABEL_PERIODICITE[t.periodicite].toLowerCase()})`
                               : " · aucune date de fin portée sur le titre"}
                         </p>
+                        {/* ADR-039 : un rythme que le texte n'écrit pas se
+                            dit comme tel, à côté de l'échéance qu'il calcule. */}
+                        {t.renvoiAuxNormes && !t.echeanceLe && (
+                          <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                            {t.renvoiAuxNormes.long}
+                          </p>
+                        )}
+                        {t.rythmeRetenu && (
+                          <p className="m-0 mt-1.5">
+                            <MentionRythmeRetenu mention={t.rythmeRetenu} />
+                          </p>
+                        )}
                         {t.note && (
                           <p className="m-0 mt-1 text-[12px] leading-[1.5] text-[color:var(--board-slate-soft)]">
                             {t.note}
@@ -348,7 +366,12 @@ export default async function SalarieDetailPage({
                         {t.echeanceLe === null &&
                         (t.etat === "enRetard" || t.etat === "proche")
                           ? MOT_DE_L_ECHEANCE_CALCULEE[t.etat]
-                          : MOT_DE_L_ETAT[t.etat]}
+                          : t.etat === "aPlanifier" && t.renvoiAuxNormes
+                            ? // « Sans terme écrit » est vrai du Code et
+                              // incomplet : il renvoie le rythme aux normes
+                              // (revue de fidélité du 2026-10-07).
+                              t.renvoiAuxNormes.court
+                            : MOT_DE_L_ETAT[t.etat]}
                       </span>
                     </li>
                   ))}
@@ -442,7 +465,9 @@ export default async function SalarieDetailPage({
                       libelle: o.libelle,
                       description: o.description,
                       pieceMedicale: o.pieceMedicale,
-                      periodicite: o.periodicite,
+                      periodicite: periodiciteEffective(o),
+                      rythmeRetenu: mentionRythmeRetenu(o)?.long ?? null,
+                      renvoiAuxNormes: renvoiAuxNormes(o)?.long ?? null,
                       bloquePar: bloquant
                         ? { libelle: bloquant.titre.libelle, motif: bloquant.motif }
                         : undefined,

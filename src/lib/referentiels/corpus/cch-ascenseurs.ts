@@ -119,8 +119,12 @@ export const CCH_ASCENSEURS: Corpus = {
       ref: "CCH R. 134-11",
       versionEnVigueur: "2026-05-15",
       modifiePar: { texte: "Décret n° 2026-166 du 4 mars 2026 - art. 1" },
-      luLe: "2026-09-01",
-      lecture: "premiere_main",
+      // ~~luLe: "2026-09-01", lecture: "premiere_main"~~ — relu le 2026-10-07
+      // par l'API PISTE en BAC À SABLE (relecture du préventeur) : version
+      // LEGIARTI000053629116 du 2026-05-15, aucune version future, verbatim
+      // identique à la citation ci-dessous.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: ["ascenseur-controle-technique-quinquennal"],      prescrit:
         "Version réécrite par le décret n° 2026-166 du 4 mars 2026, en vigueur au 15 mai 2026. Impose au propriétaire de faire réaliser TOUS LES CINQ ANS un contrôle technique de son installation. Échéance fixe et non plafond : le texte écrit « tous les cinq ans », à la différence des régimes ESP en « au maximum ». Deux objets : a) vérifier que l'ascenseur est équipé des dispositifs permettant d'atteindre les objectifs de sécurité de R. 134-2, qu'ils sont en bon état, ET que les moyens d'alerte et de communication avec un service d'intervention sont compatibles avec les systèmes de communication autres que le réseau téléphonique commuté fixe ou un réseau mobile de troisième génération ou antérieur ; b) repérer tout défaut présentant un danger pour la sécurité des personnes ou portant atteinte au bon fonctionnement. Le a) est la nouveauté de mai 2026 : la compatibilité de la téléalarme avec la fin de la 2G/3G et du RTC entre dans l'objet du contrôle quinquennal.",

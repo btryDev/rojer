@@ -4717,6 +4717,511 @@ sont désormais éprouvées (`454fb2fa`). Trois tests D8 comparaient la date au
 ouverture ; seules les lignes ponctuelles antérieures au suivi et les VGP de levage
 en double changent, sans perte (réconciliateur, cas D7 et D8).
 
+### C55 · 2026-10-07 — Relecture du préventeur, lot 1 : corrections sans changement de modèle
+
+*Branche `lot/relecture-jc-1`, sur `origin/main` = `0299e288`. Retour du préventeur
+(Julien Chantoin) du 2026-10-05 ; plan validé et verbatim dans
+`relecture-jc-2026-10/` (hors dépôt). **Textes relus le 2026-10-07 par l'API PISTE
+en environnement BAC À SABLE** : versions de 2026 présentes, mais l'égalité avec la
+production n'a pas été vérifiée. Référentiel `2026-10-07.1` sur la branche, jamais
+servi : le lot est livré sous `2026-10-07.5`, version de l'intégration des cinq lots
+(C55 à C59).*
+
+| Item | Ce qui a été lu | Ce qui change |
+|---|---|---|
+| 1 · Ascenseur | CCH R. 134-11 (LEGIARTI000053629116, 2026-05-15), R. 134-12, R. 134-13 ; AS 9 ; GE 7 § 1 ; GN 1 § 2 | AS 9 sort de la ligne CCH et prend deux lignes, bornées aux ERP N1–N4 : quinquennale par organisme agréé, et remise en service après transformation importante (événementielle). La ligne CCH garde son id, tous régimes. Pas de `succedeA`. GE 7 entre au corpus. 174 → 176 |
+| 2 · MS 38 § 4 | MS 38 (LEGIARTI000020382888, 2008-10-08) | « par une personne ou un organisme compétent » : les deux lignes d'extincteurs d'ERP (annuelle, décennale) passent de `personne_qualifiee` + `organisme_agree` à `personne_competente`. Aucune valeur de `Realisateur` ne dit « organisme compétent » (enum Prisma) : écrit dans les notes |
+| 3 · Identification en ERP | MS 38 § 3, MS 39 (LEGIARTI000020382896), PE 26 § 1 à § 3 (LEGIARTI000024766855, relu par `src/lib/legifrance/client.ts`, bac à sable) | Deux états permanents d'équipement, sœurs de l'art. 10 de l'arrêté du 4 novembre 1993 : `signalisation-erp-extincteurs-identification` (N1–N4 : rouge, emplacement repéré) et `signalisation-erp-5-extincteurs-identification` (N5 : MS 39 par renvoi, panneau si non apparent ; RIA inclus pour le § 3). MS 39 entre au corpus, PE 26 passe de `sans_objet` à `retenu` ; dotation (MS 39 § 2, PE 26 § 1) et colonnes sèches (PE 26 § 2) en réserve. 176 → 178 |
+| 4 · EL 18 § 4 | EL 18 (LEGIARTI000038485456, 2019-07-01) | Libellé de `elec-erp-groupe-electrogene-quinzaine` : tout l'objet du premier tiret (« vérification du niveau d'huile, d'eau et de combustible, du dispositif de réchauffage du moteur et de l'état de la source utilisée pour le démarrage ») au lieu des seuls « niveaux ». « Examen visuel » (le préventeur) n'est pas un mot du texte : consigné en note, pas affiché |
+| 5 · Catégorie | — | Affichage de `ALARME_INCENDIE` : « SSI et équipement d'alarme incendie » (`equipements/labels.ts`, `mcp/tools.ts`), enum inchangé. Le libellé d'équipement proposé par le pré-remplissage du bureau (« Alarme incendie », motif R. 4227-34) n'est pas un libellé de catégorie : inchangé |
+| 6 · Visites de la commission | — (aucun texte relu : question de modèle) | **NON IMPLÉMENTÉ, EN ATTENTE DE DÉCISION.** Le préventeur répond « une information » : la visite est déclenchée par l'administration (CCH R. 143-41, GE 4, PE 37), et les neuf lignes (`incendie-erp-5-visite-commission`, les huit `incendie-erp-visite-commission-cat*`) portent `organisme_agree` et une échéance récurrente comptée comme celle de l'exploitant. Aucun mécanisme existant ne la présente comme une information sans changer le modèle : pas de valeur `Realisateur` pour l'administration (enum Prisma) ; `nature` est une propriété du texte, qui fixe bien un rythme ; `estSansRendezVous` effacerait le rythme ; `EXCLUES_DU_FAIT_DATE` (`etats-permanents/regle.ts`) ne vaut que sans rendez-vous. Deux options remises au délégant : (A) champ TS `initiative: "administration"` lu par le calendrier, l'indice et l'affichage, sans migration ; (B) valeur `commission_securite` ajoutée à l'enum `Realisateur` (migration additive) et dont se déduit la présentation « pour information » |
+
+### C56 · 2026-10-07 — Relecture du préventeur, lot 5 : périmètre
+
+*Branche `lot/relecture-jc-5`, sur `origin/main` = `0299e288`. Entrées : la grille
+annotée du référentiel `2026-09-28.3` (relecture du 30/09) ; décision de la
+propriétaire du 07/10 : appliquer les retraits demandés. Aucun texte rouvert : ce
+sont des décisions de périmètre, pas des lectures. Référentiel `2026-10-07.2` sur la
+branche, jamais servi : le lot est livré sous `2026-10-07.5` (intégration, C55 à C59).*
+
+**IGH — « IGH non traité par Rojer » (p. 4, 6, 9, 10, 34).** Retirées, sans
+absorbant : `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
+`incendie-igh-charge-calorifique-quinquennale`. `GH 5` et `GH 61` passent
+`non_couvert`, annoncés sur l'axe `igh` de la page « Ce que Rojer ne couvre pas »,
+la charge calorifique de l'occupant (GH 61 § 5) nommée en premier : le texte
+l'impose toujours à l'employeur locataire, c'est le produit qui ne la porte plus.
+La typologie `igh` reste au modèle et sur les huit lignes d'ascenseur ; la
+question IGH reste à l'onboarding (refus de l'ERP en IGH, annonce). 174 → 171.
+Garde neuve éprouvée : `typologies: { igh: true }` posé sur une ligne vivante →
+« 2 failed | 1 passed | 105 skipped (108) ».
+
+**Équipements sous pression — « à exclure sauf pour compresseur : requalification
+tous les 10 ans » (p. 20).** Seule `esp-requalification-decennale` reste. Retirées,
+sans absorbant : `esp-declaration-mise-en-service`, `esp-inspection-periodique`,
+`esp-inspection-periodique-generateur-vapeur`, `esp-dossier-suivi`,
+`esp-intervention-reparation`, `esp-personnel-formation`. Corpus : arrêté du
+20 novembre 2017 art. 6, 7-11, 15, 26-28 → `non_couvert` (adresse : l'aide de la
+catégorie au formulaire d'équipement) ; `R. 4323-1` → `non_couvert`, annoncé à tout
+employeur (domaine « Formation ») ; `C. env. R. 557-14-1` → `sans_objet` (article de
+champ, toujours lu par le verdict de suivi en service). La requalification n'est PAS
+bornée aux compresseurs : décision ouverte. Plus aucune obligation ne porte les formes
+`enum_egale` / `enum_differente` ni `premierDelai` ; leurs tests passent sur des
+lignes synthétiques (éprouvé : générale sans sa différence → « 2 failed | 5 passed »).
+[Intégration du 2026-10-07 : le lot 3 (C59) réemploie `enum_differente` et
+`premierDelai` sur `incendie-travail-extincteurs-maintenance-approfondie` ; les tests
+synthétiques du lot 5 passent inchangés.]
+171 → 165.
+
+**Stockage de matières dangereuses — « à exclure sauf 3 derniers points » (p. 21).**
+La page lue (`pdftotext -layout -f 21`) range sept lignes ; les trois dernières sont
+bien les fiches de données de sécurité, la formation du personnel et la
+signalisation des aires de stockage — elles restent. Retirées, sans absorbant :
+`stockage-dangereux-retention`, `stockage-dangereux-ventilation-locaux`,
+`stockage-dangereux-declaration-icpe`, `stockage-dangereux-verification-etancheite`.
+Corpus : `C. env. L. 512-1`, `L. 512-7`, `L. 512-8`, arrêté du 1er juin 2015 art. 22,
+`R. 4412-11`, `R. 4412-17` → `non_couvert` (adresse : l'aide de la catégorie au
+formulaire d'équipement) ; `R. 4222-20` et l'arrêté du 8 octobre 1987 art. 4 restent
+retenus par l'aération. Le registre des obligations sans surface se vide
+(`PLAFOND_SANS_SURFACE` 1 → 0) ; le domaine prestataire `stockage_dangereux` devient
+inatteignable. **À croiser avec le lot 3** du plan, qui prévoyait un « défaut annuel »
+pour l'étanchéité des stockages (R. 4412-11) : la ligne qu'il visait n'existe plus.
+165 → 161.
+
+**Hotte — « traité dans le VMC : à supprimer dans les hottes » (p. 14).** La page
+lue range quatre lignes sous la hotte ; l'annotation tombe sur le « Contrôle annuel
+des installations en locaux à pollution spécifique »
+(`aeration-travail-locaux-pollution-specifique`), la même ligne que sous la VMC et la
+CTA. Ce n'est pas une ligne sœur : c'est la même obligation, déclenchée par trois
+catégories. `HOTTE_PRO` sort de ses catégories et de ses conditions ; aucun id
+retiré. Une ligne portée par une hotte est archivée si elle porte une trace,
+supprimée sinon. Ce que le retrait laisse passer, écrit à la ligne : une hotte seule,
+sans VMC ni CTA déclarée, ne porte plus ce contrôle. Le semestriel des gaines de
+recyclage garde la hotte (non annoté) : question ouverte. 161 → 161.
+
+### C57 · 2026-10-07 — Relecture du préventeur, lot 4 : `DF 10 § 3` encodé, la triennale SSI bornée aux catégories A et B
+
+*Branche `lot/relecture-jc-4`, sur `origin/main` = `0299e288`. Entrées :
+`relecture-jc-2026-10/` (plan, annotations du préventeur du 05/10, `textes.md`).*
+
+**Lu.** `DF 10` (LEGIARTI000020382687, en vigueur depuis le 28/10/2007, sans
+version future) et `MS 73` (LEGIARTI000020317755, version unique depuis le
+15/08/1980), par `getArticleWithIdAndNum` du client du dépôt, en **bac à sable**
+PISTE, le 2026-10-07. `MS 73` manquait à `textes.md` : relu à part, son § 2
+verbatim est au corpus.
+
+**Appliqué.**
+- `incendie-erp-desenfumage-triennale-mecanique-ssi` (neuve) : `DF 10 § 3`,
+  triennale, organisme agréé, ERP N1-N4, sur le désenfumage. Deux questions à
+  trois états posées sur l'appareil : `estDesenfumageMecanique` (opt-in) et
+  `etablissementASsiCategorieAouB` (`non_infirmee`).
+- `incendie-erp-ssi-triennale` : condition `estSsiCategorieAouB` (`non_infirmee`,
+  ligne publiée de criticité 4) — la sur-application que la réserve de `DF 10`
+  citait en preuve devient corrigeable par le dirigeant.
+- `incendie-erp-desenfumage-annuelle` : référence précisée au § 2.
+- Référentiel `2026-10-07.3` sur la branche, 174 + 1 − 0 = 175 ; jamais servi :
+  livré sous `2026-10-07.5` (intégration des cinq lots, C55 à C59).
+
+**Le cumul est une lecture, pas le texte.** `DF 10 § 3` n'écrit ni « en
+remplacement » ni « en outre ». Le préventeur a répondu « elle s'y ajoute » à la
+relecture du 05/10, lecture retenue par la propriétaire : l'annuelle reste, la
+triennale s'y ajoute. Dit dans les `notesInternes` de la triennale et dans sa
+description.
+
+**Contourné, pas résolu.** Le moteur n'évalue que l'appareil déclencheur : la
+présence d'un SSI A/B se demande au désenfumage, pas à l'alarme. La réponse se
+donne donc deux fois et rien ne vérifie qu'elles concordent ; un test le fixe
+comme limite assumée.
+
+**Restent dehors (réserve `MS 73`).** Les sprinkleurs, soumis à la même
+triennale, sans catégorie d'équipement ; « par une personne ou un organisme
+agréé », que la ligne SSI rend par `organisme_agree` seul.
+
+**Éprouvé** (`df10-ssi-categorie-ab.test.ts`) : condition A/B retirée →
+« 1 failed | 16 passed (17) » ; « mécanique » retirée → « 2 failed | 15 passed
+(17) » ; SSI A/B du désenfumage retirée → « 2 failed | 15 passed (17) » ;
+« mécanique » en `non_infirmee` → « 1 failed | 16 passed (17) » ; A/B de la
+triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
+`conformite.test.ts`, « 2 failed | 107 passed (109) ».
+
+### C58 · 2026-10-07 — Relecture du préventeur, lot 2 : NF S 61-919 lue, NF C 18-510 entrée sans être lue (ADR-039)
+
+- **Quand · par quoi** : 2026-10-07, lot 2 de la relecture du préventeur
+  (`lot/relecture-jc-2`), après les décisions (a) et (b) de la propriétaire.
+- **Sur quoi** : NF S 61-919 (août 2001, homologuée le 20 juillet 2001, effet
+  au 20 août 2001), scan remis par le préventeur, pages 1 à 12 ; arrêté du
+  5 juillet 2024, art. 1 (relu par l'API Légifrance sandbox, `reponses.md` Q7).
+- **Comment lu** : NF S 61-919 en première main sur le scan (recoupé par la
+  session qui encode) ; NF C 18-510 **non ouverte** — connue par l'arrêté qui
+  la cite, lecture `indirect`.
+- **Ce qui en sort** : corpus `normes` (statut `norme`) — § 5.1.1 (maintenance
+  « tous les ans, avec une tolérance de plus ou moins deux mois »), annexe A
+  tableau A.1 (1 an ; 5 et 15 ans ; révision 10 ans ; vie 20 ans, non fixée
+  CO2), § 11 (« ne devrait pas dépasser 20 ans », non retenu comme rythme).
+  Le § 4 recommande à l'utilisateur des inspections trimestrielles : relevé,
+  non retenu (« Il est recommandé »).
+- **Ce qui reste** : ~~aucune obligation ne retient encore ces rythmes (lot 3).~~
+  [2026-10-07 : voir C59 ci-dessous.]
+  NF C 18-510 ne peut fonder aucun rythme tant que son texte n'est pas lu —
+  `controlerRythmeRetenu` le refuse.
+
+### C59 · 2026-10-07 — Relecture du préventeur, lot 3 : les rythmes retenus posés : NF S 61-919 hors ERP, défaut annuel là où rien n'est écrit
+
+- **Quand · par quoi** : 2026-10-07, lot 3 de la relecture du préventeur
+  (`lot/relecture-jc-3`, sur `lot/relecture-jc-2`), décisions de la
+  propriétaire du même jour : normes admises ; rythme vague = au moins
+  annuel ; EPI : vérification annuelle sur tous les EPI ; formation :
+  annuelle. Référentiel `2026-10-07.4` sur la branche, jamais servi : livré sous
+  `2026-10-07.5` (intégration des cinq lots, C55 à C59).
+- **Sur quoi** : NF S 61-919 § 10.1 (scan p. 10, nouveau au corpus) et
+  tableau A.1 / § 11 (p. 11-12, relus) ; API Légifrance **sandbox** (client
+  du dépôt) : R. 4412-38, R. 4412-87, **R. 4412-88** (nouveau au corpus),
+  R. 4412-89, R. 4412-39 ; `relecture-jc-2026-10/textes.md` pour R. 4224-17,
+  R. 4322-1, R. 4141-2/-3/-4/-13, R. 4227-28/-29.
+- **Comment lu** : norme en première main sur le scan ; articles par l'API
+  (bac à sable — l'égalité avec la production n'est pas vérifiée,
+  `reponses.md`).
+- **Ce qui en sort** (9 obligations à rythme retenu, 5 neuves ; 174 + 5 − 0 =
+  179) :
+  - **Norme** — `incendie-travail-moyens-lutte` (annuelle, § 5.1.1) ;
+    `incendie-travail-extincteurs-revision-atelier-decennale` (neuve, § 10.1) ;
+    `incendie-travail-extincteurs-maintenance-approfondie` (neuve, annexe A :
+    `premierDelai` quinquennal + décennal = 5 et 15 ans ; question neuve
+    `typeExtincteur`, CO2 et poudre à opercule exclus). Les deux lignes ERP
+    (MS 38 § 4) citent la norme en seconde référence, leur rythme reste écrit.
+  - **Défaut annuel** — `formation-securite-etablissement-organisation`
+    (« répétée périodiquement », L. 4141-2) ; `stockage-dangereux-formation-
+    personnel` (« Elles sont répétées régulièrement », **R. 4412-88**, champ
+    CMR : sur-application assumée) ; `epi-maintien-etat-conformite` (neuve,
+    « maintenus en état de conformité », R. 4322-1, catégorie `EPI` seule) ;
+    `incendie-travail-ria-entretien-verification` et
+    `incendie-travail-desenfumage-entretien-verification` (neuves,
+    « périodicité appropriée », R. 4224-17) ; `signalisation-etablissement-
+    entretien` (« régulièrement nettoyés, entretenus, vérifiés », art. 15).
+  - **Anti-doublon par partition de typologie** (`erp: false`) : partout où
+    l'ERP a un rythme ÉCRIT pour le même acte (MS 38 § 4, MS 73, DF 10), la
+    ligne de lieu de travail se retire chez un ERP. `ExclusionMutuelle` ne vaut
+    qu'entre titres de salarié. Garde : `extincteurs-partition.test.ts` (une
+    annuelle et une seule par extincteur, RIA, désenfumage, six profils).
+  - **Écartés, avec la raison** : alarme (semestrielle écrite de l'art. 15,
+    signaux acoustiques) ; `porte-auto-maintien-en-etat` (semestrielle écrite,
+    arrêté du 21 décembre 1993 art. 9) ; `eclairage-etablissement-regles-
+    entretien` (R. 4223-11 : l'employeur fixe le rythme) ;
+    `ascenseur-entretien-contrat` (rythmes écrits) ;
+    `incendie-travail-extincteurs-dotation` (doublon avec la maintenance par
+    appareil) ; habilitation (NF C 18-510 `indirect`, paragraphe « à
+    préciser » : aucun rythme posé).
+  - **Corrigé au passage** : trois tests lisaient `o.periodicite` là où le
+    rythme effectif décide (anti-doublon de `conformite.test.ts`, frontière
+    calendrier / écran de `regle.test.ts`) ; R. 4322-1 `sans_objet` → `retenu`.
+- **Ce qui reste** : poudre à opercule (une MAA à 15 ans) non datée — aucune
+  `Periodicite` de quinze ans sans toucher l'énumération Prisma ; durée de vie
+  (§ 11, conditionnel) dite dans l'aide du formulaire, pas une échéance ;
+  formation stockage bornée aux CMR faute d'attribut « présence de CMR » ;
+  R. 4322-1 ne porte que les EPI, pas les équipements de travail ni la
+  protection collective (réserve au corpus).
+
+### C60 · 2026-10-07 — Revue indépendante de la relecture du préventeur : corrections de contenu
+
+- **Quand · par quoi** : 2026-10-07, branche `fix/relecture-jc-contenu` sur
+  `integration/relecture-jc` (`2b7c8bcf`), après les six revues indépendantes en
+  lecture seule (`relecture-jc-2026-10/synthese-revue.md`). Référentiel toujours
+  `2026-10-07.5`, jamais servi : sa ligne d'empreinte est réécrite, pas
+  doublée. **171 + 2 − 0 = 173.** Les corrections d'interface et de type
+  (mention, grille, prescriptions, annonces) sont une passe parallèle,
+  `fix/relecture-jc-code`.
+- **Sur quoi** : API Légifrance **sandbox** par le client du dépôt
+  (`src/lib/legifrance/client.ts`, identifiants lus dans `.env.local` du dépôt
+  principal, rien n'y est écrit) : PO 1 (LEGIARTI000024770707), PO 8
+  (LEGIARTI000024771000), PE 1 (LEGIARTI000020374786), GC 22
+  (LEGIARTI000020317599), PE 26, GN 10, MS 38, MS 39, MS 73, MS 14 à MS 17 ;
+  plan du texte (titre du livre II, au jour et au 2027-06-15). NF S 61-919 sur
+  le scan : p. 10 (§ 9, § 10.1), p. 11 (§ 11), p. 12 (tableau A.1 et ses
+  notes), p. 18 (annexe E). Annotations des deux PDF du préventeur, par pypdf.
+- **Comment lu** : API (bac à sable — égalité avec la production non
+  vérifiée) ; norme en première main ; annotations extraites du PDF, pas
+  retapées.
+- **Ce qui en sort** :
+  - ~~**AS 9 aux hôtels de 5ᵉ — tranché sur le texte.** PE 1 § 1 n'ouvre le
+    livre II en 5ᵉ que sur renvoi exprès ; PO 1 § 3 (« Le contrôle des
+    ascenseurs relève des dispositions particulières précisées dans le cadre
+    de l'article AS 9 du règlement ») en est un, et PO 8 § 1 le réimporte pour
+    les hôtels existants. AS 9 n'a qu'une prescription : le renvoi l'importe
+    entière. Lecture dite comme telle en description. Deux lignes N5 / type O,
+    fondées sur PO 1 : `ascenseur-hotel-5-verification-quinquennale-as9`,
+    `ascenseur-hotel-5-verification-remise-en-service-as9` (organisme agréé).~~
+    [2026-10-08, C64 : les deux lignes sont supprimées avant d'avoir été
+    servies — le préventeur borne AS 9 aux N1–N4 ; la lecture du renvoi reste
+    en réserve de PO 1 et PO 8 (`72145395`).]
+  - **Borne N1–N4 des lignes AS 9** : PE 1 § 1 et le titre du livre II
+    (« Dispositions applicables aux établissements des quatre premières
+    catégories », inchangé au plan du 2027-06-15) en premier fondement, PE 1
+    cité en référence ; GE 7 § 1 et GN 1 § 2 en appui. Motif de
+    `relectureDue` réécrit : le GE 7 du 2027-06-01 vise « les établissements
+    soumis aux dispositions du présent livre ».
+  - **MS 38** : § 1 et § 3 à la citation, relu ce jour. « MS 38 § 1 énumère »
+    rayé (« tels que » : liste indicative). **RIA en N1–N4** : MS 39 est dans
+    la sous-section « Appareils mobiles et moyens divers », les RIA ont la
+    leur (MS 14 à MS 17) ; c'est MS 15 § 4 (« ceux-ci doivent être signalés »)
+    qui porte la signalisation de leurs armoires — entré au corpus, RIA
+    rattaché à `signalisation-erp-extincteurs-identification`. PE 26 : § 2
+    sauté marqué « […] ».
+  - **Citations du préventeur** : recopiées des annotations, fautes comprises
+    (« défférents [sic] », « 7 aout 2012 », « ( personne certifiée) ») ; les
+    versions précédentes étaient reconstituées.
+  - **GN 10** : une constante de référence (`texte-gn10.ts`), confrontée au
+    corpus ; les six descriptions la recopient en littéral — un fichier de
+    données n'importe pas de valeur (`version-moteur.test.ts`), forme de
+    `texte-r4121-2.ts` — et la garde exige la phrase entière, étendue aux
+    états permanents fondés sur MS 39.
+    Éprouvée : constante retirée de la ligne N1–N4 → « 1 failed » ; citation
+    du corpus altérée → `texte-gn10.test.ts` « 1 failed ».
+  - **Extincteurs** : halon — la note 3 dit « vidés selon une méthode
+    permettant de récupérer le halon », pas « jamais rechargé » ; l'annuelle
+    vaut pour lui (A.1 : 1 an). Valeur `halon` ajoutée à `typeExtincteur` :
+    `enum_differente` sur la maintenance approfondie (« — ») et sur la
+    révision hors ERP (« Voir note 3 », aucun intervalle) ; la décennale ERP
+    (MS 38 § 4) reste. Éprouvée : condition de la révision neutralisée →
+    « 1 failed ». § 9 (étiquette) et annexe E (formation de la personne
+    compétente, recyclage « au moins tous les cinq ans » — rythme du
+    prestataire, pas de l'établissement) entrés au corpus `normes`, statut
+    `norme`, sans obligation ; cités par la description de l'annuelle hors
+    ERP. Origine des intervalles de révision (§ 10.1 : fabrication, recharge,
+    révision) contre mise en service : nommée en description et note.
+    Coïncidence révision / maintenance approfondie à la naissance d'un
+    extincteur de plus de dix ans ou sans date : nommée, comportement
+    inchangé (décision 12 de la synthèse). Maintenance approfondie : la
+    description dit que dix ans est l'écart entre 5 et 15.
+  - **Libellés des défauts annuels** : RIA, désenfumage (« annuels par
+    défaut »), EPI (« vérification annuelle par défaut ») ; les six
+    descriptions disent « Rojer retient par défaut ». Note héritée de
+    `incendie-travail-moyens-lutte` : MS 38 § 4, pas MS 73.
+  - **SSI triennale** : « approfondie » retiré (absent de MS 73 § 2) ; la
+    description dit le silence de la question A/B (ligne servie) ; réserve
+    écrite sur « par une personne ou un organisme agréé » (réalisateur
+    `organisme_agree` inchangé, faute de valeur).
+  - **Commentaires périmés du lot 5** rayés : `esp.ts`, `hors-referentiel.ts`,
+    `aeration.ts`, `equipement-sous-pression.ts`, `signalisation.ts`,
+    `.claude/CLAUDE.md` (comptes remesurés : 90 / 69 / 14 = 173).
+- **GC 22 « idem code du travail » (p. 15) — NON ENCODÉ, écart et motif.**
+  GC 22 § 2 fait vérifier tous les ans les grandes cuisines pour quatre
+  objets : entretien des installations et appareils, ventilation et
+  évacuation des buées et graisses, signalisation des dispositifs de sécurité,
+  manœuvre des arrêts d'urgence. Lu en lieu de travail : (1) la ventilation et
+  l'extraction ont déjà un rythme ÉCRIT — `R. 4222-20` et l'arrêté du
+  8 octobre 1987 (`aeration-controle-installations-r4222-20`, annuelle,
+  porteur établissement, `HOTTE_PRO` en contexte) ; un défaut annuel de
+  `R. 4224-17` y ferait doublon. (2) Le reste porte sur les APPAREILS de
+  cuisson et leurs dispositifs : ce sont des équipements de travail (livre
+  III, `R. 4322-1` « maintenus en état de conformité »), et `R. 4224-17`
+  (livre II, « installations et dispositifs techniques et de sécurité des
+  lieux de travail ») ne les vise pas par son texte — les y ranger serait une
+  lecture plus large que celle retenue pour le RIA et le désenfumage, qui sont
+  des installations du lieu. (3) La catégorie `APPAREIL_CUISSON_ERP` se
+  définit par l'ERP (« situés en cuisine d'un ERP ») : une ligne
+  `erp: false` sur elle ne naîtrait presque jamais. Question remise : faut-il
+  un défaut annuel de `R. 4322-1` sur les appareils de cuisson ?
+- **Ce qui reste** : ~~affichage de la mention et des périodicités avec
+  `premierDelai` (« décennale » pour 5 puis 15), aide du champ type
+  (« 20 ans au plus », halon), commentaire d'`engine.ts` — passe « code ».~~
+  [2026-10-07, C62 : faits depuis — la mention avec `premierDelai` et l'aide
+  « ne devrait pas dépasser 20 ans » par C61 (`fix/relecture-jc-code`), le
+  halon dans l'aide du type par `710a8f3c`, le commentaire d'`engine.ts`
+  (`enum_egale` sans ligne vivante) par C62 `1fd93cd8`.] Lectures en bac à
+  sable.
+
+### C61 · 2026-10-07 — Revue indépendante de la relecture du préventeur : corrections de code
+
+- **Quand · par quoi** : 2026-10-07, branche `fix/relecture-jc-code` (sur
+  `integration/relecture-jc`, 2b7c8bcf), d'après
+  `relecture-jc-2026-10/synthese-revue.md`. Aucun texte rouvert : les
+  citations utilisées (R. 4544-10, NF S 61-919 § 11) sont celles déjà au
+  corpus. Aucune obligation modifiée, aucune empreinte déplacée ; le contenu
+  du référentiel est corrigé à part (C60).
+- **Ce qui en sort** :
+  - Mention de rythme retenu (ADR-039 § 5) posée sur le tableau de bord
+    (échéances, prochaine échéance, semaine), le registre web et le guide ;
+    test de rendu par surface.
+  - Mention d'une norme : « première échéance à 5 ans, puis tous les 10 ans »
+    pour la maintenance approfondie (`premierDelai`), au lieu de « périodicité
+    tous les 10 ans ».
+  - `RythmeRetenu` (norme) : `periodicite` restreinte à une durée ;
+    `aUnRythmeRetenu` (mort) et le faux `prescriptionId` de `mention-de-ligne`
+    retirés ; `liensRompus(statut)` remplace trois fonctions recopiées ; une
+    norme se reconnaît à son statut de corpus, plus à `/^NF\s/`.
+  - Grille : « Type d'extincteur » et ses libellés. Aide : la durée de vie
+    « ne devrait pas dépasser 20 ans » (§ 11, conditionnel).
+  - DF 10 § 3 : la question du SSI A/B n'est posée qu'après « mécanique :
+    oui » ; aides alignées sur le code ; test « LIMITE ASSUMÉE » commenté à
+    inverser.
+  - Prescriptions : face à un rythme retenu, « Rojer retient déjà… » au lieu
+    de « le référentiel impose » ; plancher annuel écrit à l'ADR-039 § 7 ;
+    obligation retirée : « Rojer ne suit plus cette obligation », libellé
+    lisible, renvoi vers l'obligation sur mesure.
+  - Annonces : la phrase citée par un `declareA` est retrouvée dans
+    `DESCRIPTION_CATEGORIE` (test).
+  - Habilitation : « Rythme renvoyé aux normes (R. 4544-10) » au lieu de
+    « Sans terme écrit », sur la fiche salarié, l'aide du titre et la grille.
+- **Ce qui reste, côté contenu ~~(lot C60 ou suivant)~~** [2026-10-07, C62 :
+  C60 et C61 tournaient en parallèle et ne se voyaient pas ; C60 n'a fait
+  aucun des trois points ci-dessous. Le premier est fait par C62
+  (`61a697e3`) ; les deux autres restent ouverts, avec leur responsable, en
+  C62] :
+  - `incendie.ts` : annoter `REFERENCE_NF_S_61_919_ANNUELLE` et
+    `_REVISION` en `ReferenceLegale & { source: "NORME"; article: string }`
+    pour que `RythmeRetenu.reference` se resserre ; le champ `norme` ne peut
+    être retiré qu'avec les trois `norme:` de ce fichier.
+  - `corpus/code-travail-risque-chimique.ts` : R. 4412-11 et R. 4412-17 ne
+    peuvent entrer dans `ANNONCES` que si leur `declareA` devient
+    `ADRESSE_MANQUES_ANNONCES` (le test des deux sens l'exige) ; l'aide du
+    stockage cesserait alors d'être leur adresse.
+  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
+    dirigeant, remplaceraient la lecture du motif de relecteur (date, tête).
+
+### C62 · 2026-10-07 — Fusion des corrections de la revue (C60 + C61) : dernière passe
+
+- **Quand · par quoi** : 2026-10-07, branche `integration/relecture-jc`, après
+  la fusion de `fix/relecture-jc-contenu` (C60) et `fix/relecture-jc-code`
+  (C61), deux passes parallèles qui ne se voyaient pas, et la revue finale de
+  l'ensemble. Aucun texte rouvert. Référentiel toujours `2026-10-07.5`, jamais
+  servi : ligne d'empreinte réécrite, en appelant `empreinteReferentiel()`,
+  `173-7324273780278b5f` → `173-2543b2a5149c8d07`. **173 + 0 − 0 = 173.**
+- **Ce qui en sort** :
+  - Journal réconcilié : C61 remis à sa place, à la suite de C60 (il était
+    tombé après la clôture de la Partie 3) ; « ce qui reste » de C60 rayé ;
+    l'attribution à C60 des trois points de C61 corrigée.
+  - `RythmeRetenu` (norme) : `reference` typée `ReferenceNorme` (source
+    `NORME`, clé `article` requise), références NF S 61-919 annotées. Le champ
+    `norme` est gardé : c'est l'intitulé affiché, qu'on ne déduirait de
+    `reference.reference` qu'en découpant une chaîne libre (`61a697e3`).
+  - `enum_egale` : aucune obligation ne la porte plus (compté en appelant) ;
+    dit à la définition et au moteur. Le couple synthétique d'`engine.test.ts`
+    l'exerce — éprouvé : branche faussée (silence ⇒ satisfaite) → « 3 failed »
+    (`1fd93cd8`).
+  - Libellé de `signalisation-erp-extincteurs-identification` neutre : la
+    ligne est portée par l'extincteur comme par le RIA, chacun lisait
+    l'exigence de l'autre (`0c160371`). Seul changement de contenu.
+  - Formulaire d'équipement : la réponse SSI masquée part avec la valeur
+    choisie pendant la saisie, plus l'initiale ; test du scénario, rouge avant
+    (`6c27ffa0`).
+  - Prescriptions : dernier libellé des obligations retirées lu en parallèle
+    des preuves ; périodicité du motif affiché par la page en clair
+    (`LABEL_PERIODICITE`). Commentaire « types seulement » de
+    `renvoi-aux-normes.ts` barré.
+- **Ce qui reste ouvert, et qui le porte** :
+  - `R. 4412-11` et `R. 4412-17` dans `ANNONCES` — **en attente de la
+    propriétaire** : la rubrique de non-couverture où les annoncer est à
+    choisir (leur `declareA` devrait devenir `ADRESSE_MANQUES_ANNONCES`, et
+    l'aide du stockage cesserait d'être leur adresse).
+  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
+    dirigeant — **à faire**, passe de code suivante.
+  - Le motif de surcharge écrit par le moteur (`matching/prescriptions.ts`,
+    « Périodicité portée à « semestrielle » ») garde le code brut —
+    **à faire** : `LABEL_PERIODICITE` vit dans `calendrier/labels.ts`, dont
+    l'import de type vers `echeances.ts` fait entrer Prisma dans la fermeture
+    du passage à blanc (`passage-a-blanc.test.ts`, qui suit aussi les
+    `import type`) ; il faut d'abord sortir la table dans un module feuille.
+  - Les décisions de la synthèse de la revue (1, 2, 4 à 14) restent à la
+    propriétaire ; la décision 3 (widgets) est faite par C61, exigée par
+    l'ADR-039 § 5.
+
+### C63 · 2026-10-08 — Délai de grâce des lignes nées d'un changement du référentiel (ADR-040)
+
+- **Quand · par quoi** : 2026-10-08, branche `fix/relecture-jc-grace` (base
+  `integration/relecture-jc` `32de8b76`), sur un constat de la revue et la
+  décision de la propriétaire du même jour. Aucun texte ouvert : c'est une
+  règle de lecture du retard, pas une obligation. Référentiel inchangé
+  (`2026-10-07.5`, 173 obligations, **173 + 0 − 0 = 173**).
+- **Le constat** : daté de l'origine de son suivi (ADR-036, règles 4-5), un
+  « à planifier » était en retard dès J+1 (ADR-011 § 5, `estEnRetard`).
+  Au lendemain du déploiement de la relecture, chaque ligne nouvellement
+  applicable chez un client existant (rythmes retenus, extincteurs hors ERP,
+  EPI, RIA, désenfumage, AS 9…) passait au rouge — l'ADR-039 § 3 promettait
+  « aucun retard rétroactif ».
+- **Ce qui en sort** :
+  - ADR-040 ; renvois datés en tête des ADR-011 et 036, amendement daté au
+    § 3 de l'ADR-039, CLAUDE.md (liste des ADR).
+  - Migration additive `20261008120000_verification_grace_jusqu_au` :
+    `Verification.graceJusquAu`, nullable, écrite au `createMany` par la passe
+    dont le repère lu est présent et différent de `SCEAU_CALENDRIER`
+    (`graceANaissance`). Création d'établissement et mutations : `null`.
+  - `delaiDeGrace` (`lib/dates/retard.ts`) seule lecture ;
+    `estVerificationEnRetard`, `estVerificationAPlanifier`, `urgenceSeule`
+    (`horsGrace`) la respectent. Mention « délai jusqu'au JJ/MM/AAAA » au
+    calendrier et sur la fiche. Moteur : empreinte recopiée sans incrément.
+  - Éprouvé en cassant : neuf mutations (branche du prédicat retirée,
+    `horsGrace` retiré ou écrit en négation, grâce écrite `null` ou omise,
+    grâce accordée aux mutations, `===` au lieu de `==`, grâce lue sur une
+    ligne planifiée, dernier jour exclu) — toutes rouges.
+- **Ce qui reste ouvert, et qui le porte** :
+  - Une ligne EXISTANTE que le référentiel fait passer « à planifier » n'a
+    pas de grâce (ADR-040, limite 3) — **à la propriétaire** : étendre la
+    grâce aux réalignements d'une passe de reprise, ou l'accepter comme D3.
+  - L'alternative recommandée (grâce pour tout « à planifier », déclaration
+    d'équipement comprise) — **à la propriétaire**.
+  - Le serveur MCP dit « à planifier » sans le délai — **à faire** si
+    l'assistant doit le citer.
+
+### C64 · 2026-10-08 — « On respecte les décisions de Julien » : commission pour information, AS 9, ESP, formation stockage
+
+- **Quand · par quoi** : 2026-10-08, branche `fix/relecture-jc-commission`
+  (base `integration/relecture-jc`, `32de8b76`). Décisions de la propriétaire
+  du même jour : la décision 2 de la synthèse de revue (option A, sans
+  migration), puis « on respecte les décisions de Julien » (le préventeur).
+  Aucun texte rouvert sur Légifrance : les verbatims utilisés étaient au
+  corpus (L. 4141-2, R. 4412-38/-87/-88, PO 1, PO 8, AS 9). Référentiel
+  toujours `2026-10-07.5`, jamais servi : ligne d'empreinte réécrite en
+  appelant `empreinteReferentiel()`, `173-2543b2a5149c8d07` →
+  `171-b161063e19bd746` (B) → `171-59b93c7c5781b6c8` (C) →
+  `171-9bfaadbae946dc7c` (A ; la décision 2 ne la déplace pas).
+  **173 − 2 (B) + 0 (C) + 1 − 1 (A) + 0 (décision 2) = 171** — 87 équipement,
+  70 établissement, 14 salarié.
+- **Ce qui en sort** :
+  - **Commission de sécurité « pour information »** (`b5e104ea`). Champ
+    `initiative: "administration"` sur les neuf lignes de visite (PE 37 et
+    GE 4 § 1) ; `estPourInformation` et sa projection client. La ligne reste
+    au calendrier avec son rythme, peinte « Pour information — visite à
+    l'initiative de l'administration » ; elle sort des retards, des « à
+    faire », de l'indice et des urgences ; réalisateur affiché « Commission
+    de sécurité » (`realisateurs` et l'enum Prisma inchangés). Hors
+    empreinte : rien de ce que le moteur écrit ne change. Gardes éprouvées :
+    répartition et classement faussés → 5 rouges ; champ retiré d'une ligne
+    → 2 rouges.
+  - **B — AS 9 aux hôtels de 5ᵉ supprimées** (`72145395`) sans
+    `OBLIGATIONS_RETIREES` (nées et retirées sous `.5`). Réserves à PO 1 et
+    PO 8 : « question posée au préventeur ; il borne AS 9 aux N1-N4 ».
+  - **C — ESP : requalification bornée aux compresseurs** (`18d17e2b`,
+    `9c4092aa`) par quatre `enum_differente` sur `familleEsp` ; silence et
+    « je ne sais pas » gardent la ligne. Éprouvé : conditions retirées → 2
+    rouges.
+  - **A — formation au risque chimique : une ligne par établissement**
+    (`e2734066`). Champ neuf `siEquipementDeclare` (ADR-022 amendée) ; nouvel
+    id `stockage-dangereux-etablissement-formation-personnel`, l'ancien retiré
+    avec `absorbePar` ; `texteVague` pris dans L. 4141-2 (« répétée
+    périodiquement ») au lieu de R. 4412-88 (CMR seuls) — lecture écrite en
+    notesInternes, ADR-039 § 6 amendée. Calendriers : aucune ligne annuelle
+    par stockage n'est jamais née (`.5` jamais servie) ; en production l'ancien
+    id était `autre`, sans ligne. Sceau du moteur recopié sans incrément.
+    Éprouvé : garde du moteur retirée → 2 rouges.
+  - **D — hotte** : rien. Julien n'a pas annoté le contrôle semestriel du
+    recyclage ; la hotte le garde (décision 14 de la synthèse).
+- **Ce qui reste ouvert, et qui le porte** :
+  - ~~Une `DeclarationEtatPermanent` ou une prescription posée en production sur
+    `stockage-dangereux-formation-personnel` ne suit pas le nouvel id —
+    **à compter en production** avant la mise en service (propriétaire).~~
+    [2026-10-08, compté en production par la propriétaire (éditeur SQL
+    Supabase, lecture seule) : **0** `DeclarationEtatPermanent`, **0**
+    `PrescriptionParticuliere`, **0** `Verification` sur les quatre ids qui
+    passent d'`autre` à un rythme retenu — `incendie-travail-moyens-lutte`,
+    `formation-securite-etablissement-organisation`,
+    `signalisation-etablissement-entretien`,
+    `stockage-dangereux-formation-personnel`. Aucune date déclarée à reprendre,
+    aucune prescription orpheline : la limite 3 de l'ADR-040 et l'angle mort
+    des déclarations (revue du 2026-10-08) n'atteignent aucun dossier.]
+  - `sansQualification` : la mention « pour information » ne qualifie rien
+    (test vert). Le guide « Comprendre » n'affiche pas la commission comme
+    réalisateur : il agrège par domaine, et l'organisme agréé de la visite
+    n'y est simplement plus apporté.
+
 ## Partie 2 — Registre des constats en suspens
 
 ### Comment lire les états

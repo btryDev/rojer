@@ -36,6 +36,7 @@ const verif = (
   datePrevue: jour(datePrevue),
   periodicite: "annuelle",
   archiveLe: null,
+  graceJusquAu: null,
   libelleObligation: "Vérification périodique des installations électriques",
   derniereRealisation: derniereRealisation ? jour(derniereRealisation) : null,
 });

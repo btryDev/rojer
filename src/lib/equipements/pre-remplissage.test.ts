@@ -144,17 +144,20 @@ describe("suggererEquipements — secteurs cibles V2", () => {
     expect(extincteurs.length).toBe(1);
   });
 
-  it("IGH ajoute désenfumage et ascenseur", () => {
-    const r = suggererEquipements({
+  it("IGH ajoute l'ascenseur, plus le désenfumage (IGH retiré le 2026-10-07)", () => {
+    const base = {
       codeNaf: "70.10Z",
       estEtablissementTravail: true,
       estERP: false,
-      estIGH: true,
       estHabitation: false,
-    });
-    const cats = categories(r);
-    expect(cats).toContain("DESENFUMAGE");
+    };
+    const cats = categories(suggererEquipements({ ...base, estIGH: true }));
     expect(cats).toContain("ASCENSEUR");
+    expect(cats).not.toContain("DESENFUMAGE");
+    // Borne basse : hors IGH, un bureau ne se voit pas suggérer d'ascenseur.
+    expect(
+      categories(suggererEquipements({ ...base, estIGH: false })),
+    ).not.toContain("ASCENSEUR");
   });
 
   it("habitation seule — suggère la VMC (cas VMC-Gaz)", () => {

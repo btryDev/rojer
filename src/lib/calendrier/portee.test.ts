@@ -233,8 +233,11 @@ describe("urgenceSeule — le pendant SQL d'`estVerificationEnRetard`", () => {
       if (attendu === null) return valeur === null;
       if (typeof attendu === "object" && !(attendu instanceof Date)) {
         const f = attendu as Record<string, unknown>;
-        const inconnus = Object.keys(f).filter((k) => !["in", "notIn", "lt"].includes(k));
+        const inconnus = Object.keys(f).filter((k) => !["in", "notIn", "lt", "not"].includes(k));
         if (inconnus.length > 0) throw new Error(`opérateur non évalué : ${inconnus}`);
+        // `lt` sur NULL est NULL en SQL : la ligne ne passe pas.
+        if ("lt" in f && valeur === null) return false;
+        if ("not" in f && valeur === f.not) return false;
         if ("in" in f && !(f.in as unknown[]).includes(valeur)) return false;
         if ("notIn" in f && (f.notIn as unknown[]).includes(valeur)) return false;
         if ("lt" in f && !((valeur as Date).getTime() < (f.lt as Date).getTime())) return false;
@@ -266,21 +269,62 @@ describe("urgenceSeule — le pendant SQL d'`estVerificationEnRetard`", () => {
       for (const periodicite of ["mensuelle", "annuelle", "mise_en_service_uniquement", "autre"]) {
         for (const datePrevue of [passee, future]) {
           for (const archiveLe of [null, passee]) {
-            const ligne = {
-              statut,
-              periodicite,
-              datePrevue,
-              archiveLe,
-              libelleObligation: "x",
-            };
-            expect(
-              evaluer(clause, ligne),
-              `${statut} × ${periodicite} × ${datePrevue === passee ? "passée" : "future"} × ${archiveLe ? "archivée" : "ouverte"}`,
-            ).toBe(estVerificationEnRetard(ligne, NOW));
+            // Le délai de grâce (ADR-040) : aucun, échu, dernier jour
+            // aujourd'hui (DEBUT même — encore en grâce), à venir.
+            for (const graceJusquAu of [null, passee, DEBUT, future]) {
+              const ligne = {
+                statut,
+                periodicite,
+                datePrevue,
+                archiveLe,
+                graceJusquAu,
+                libelleObligation: "x",
+              };
+              expect(
+                evaluer(clause, ligne),
+                `${statut} × ${periodicite} × ${datePrevue === passee ? "passée" : "future"} × ${archiveLe ? "archivée" : "ouverte"} × grâce ${graceJusquAu?.toISOString() ?? "aucune"}`,
+              ).toBe(estVerificationEnRetard(ligne, NOW));
+            }
           }
         }
       }
     }
+  });
+
+  it("juge la grâce au jour passé en `graceAu`, pas à la borne d'une année (barres-mois)", () => {
+    // Revue du 2026-10-08 sur C63 : `compterObligationsParMois` borne `debut`
+    // au 1er janvier de l'année affichée. Une ligne née à l'automne avec une
+    // grâce expirée en janvier est en retard aujourd'hui ; jugée au
+    // 1er janvier, sa grâce courait encore et la clause l'écartait.
+    const NOW = new Date("2027-01-20T10:00:00.000Z");
+    const AUJOURDHUI = new Date("2027-01-19T23:00:00.000Z");
+    const PREMIER_JANVIER = new Date("2026-12-31T23:00:00.000Z");
+    const ligne = {
+      statut: "a_planifier",
+      periodicite: "annuelle",
+      datePrevue: new Date("2026-10-14T22:00:00.000Z"),
+      archiveLe: null,
+      graceJusquAu: new Date("2027-01-14T23:00:00.000Z"),
+      libelleObligation: "x",
+    };
+    expect(estVerificationEnRetard(ligne, NOW)).toBe(true);
+    expect(
+      evaluer(urgenceSeule(PREMIER_JANVIER, AUJOURDHUI) as Record<string, unknown>, ligne),
+    ).toBe(true);
+    // Le défaut relevé, gardé visible : sans `graceAu`, la borne de l'année
+    // juge la grâce et la ligne disparaît.
+    expect(evaluer(urgenceSeule(PREMIER_JANVIER) as Record<string, unknown>, ligne)).toBe(false);
+  });
+
+  it("les barres de l'année passent aujourd'hui en `graceAu`", () => {
+    // La garde de l'appelant : le test ci-dessus prouve la clause, celui-ci
+    // que `compterObligationsParMois` s'en sert avec le jour courant.
+    const source = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "../dashboard/queries.ts"),
+      "utf-8",
+    );
+    expect(source).toMatch(/urgenceSeule\(debut,\s*debutDuJour\(new Date\(\)\)\)/);
+    expect(source).not.toMatch(/urgenceSeule\(debut\)/);
   });
 });
 

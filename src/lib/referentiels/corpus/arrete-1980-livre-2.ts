@@ -27,7 +27,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
   url: "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000020303557/",
   etendue: "articles_cites",
   portee:
-    "TITRE IER SEUL — dispositions générales, dix des onze chapitres : GE (généralités), CO (construction), DF (désenfumage), CH (chauffage-ventilation), GZ (gaz), EL (électricité), EC (éclairage de sécurité), AS (ascenseurs, escaliers mécaniques, trottoirs roulants), GC (appareils de cuisson), MS (moyens de secours). Seul AM (aménagements intérieurs) n'a aucune entrée. AUCUN ARTICLE DU TITRE II — les 482 articles des quatorze chapitres de type (L, M, N, O, P, R, S, T, U, V, W, X, Y, J) ne sont pas ouverts, et pas davantage cités par le référentiel. PE 1 § 1 écarte ce livre en 5ᵉ catégorie sauf renvoi exprès : le Livre III n'en ouvre que MS 39 et MS 70. Les articles listés ici sont cités par le référentiel malgré cette exclusion — la sur-application est documentée obligation par obligation.",
+    "TITRE IER SEUL — dispositions générales, dix des onze chapitres : GE (généralités), CO (construction), DF (désenfumage), CH (chauffage-ventilation), GZ (gaz), EL (électricité), EC (éclairage de sécurité), AS (ascenseurs, escaliers mécaniques, trottoirs roulants), GC (appareils de cuisson), MS (moyens de secours). Seul AM (aménagements intérieurs) n'a aucune entrée. AUCUN ARTICLE DU TITRE II — les 482 articles des quatorze chapitres de type (L, M, N, O, P, R, S, T, U, V, W, X, Y, J) ne sont pas ouverts, et pas davantage cités par le référentiel. PE 1 § 1 écarte ce livre en 5ᵉ catégorie sauf renvoi exprès : le Livre III n'en ouvre que MS 39 et MS 70 [2026-10-07, C60 : et AS 9, pour les hôtels, par PO 1 § 3 que PO 8 § 1 réimporte ; PE 37 ouvre en outre GE 2, GE 3, GE 5 et GE 6 aux établissements à locaux à sommeil — ces renvois ne sont pas ceux de PE 26 et PE 27 que la phrase comptait]. Les articles listés ici sont cités par le référentiel malgré cette exclusion — la sur-application est documentée obligation par obligation.",
   articles: [
     {
       ref: "CH 57",
@@ -236,6 +236,26 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         "RENVOI VERS UNE NUMÉROTATION ABROGÉE, à ne pas recopier. LE RENVOI MORT EST DANS LE TEXTE OFFICIEL, pas dans le référentiel : c'est GE 6 lui-même, tel que Légifrance le publie aujourd'hui, qui fonde tout le régime sur « les vérifications techniques prévues par l'article R. 123-43 du code de la construction et de l'habitation » — numéro disparu à la recodification du CCH par le décret n° 2021-872 du 30 juin 2021. Relevé le 2026-09-01, verbatim relu à la source. Il n'y a rien à corriger dans le corpus : le corriger consisterait à réécrire l'arrêté.\n\nAUCUNE CORRESPONDANCE N'EST POSÉE ICI, et c'est délibéré. La piste la plus proche est le CCH R. 143-34, ouvert le 2026-09-01 : « Les constructeurs, installateurs et exploitants sont tenus [...] de s'assurer que les installations ou équipements sont établis, maintenus et entretenus en conformité [...] A cet effet, ils font respectivement procéder pendant la construction et périodiquement en cours d'exploitation aux vérifications nécessaires par les organismes ou personnes agréés dans les conditions fixées par les articles R. 141-15, R. * 141-16 et R. 141-17. » Le contenu concorde, mais AUCUNE source lue n'établit la concordance de numérotation : ni la page de R. 143-34, qui ne mentionne aucun ancien numéro, ni une table de concordance. C'est donc une piste, pas un constat, et elle ne se recopie pas comme si elle en était un. L'article n'a pas été rafraîchi depuis, et une version future est programmée au 1er juin 2027 : c'est là qu'il faudra vérifier si le renvoi est corrigé. Depuis le 2026-09-01, ce rendez-vous n'est plus une phrase : `elec-erp-mise-en-service` porte une `relectureDue` au 2027-06-01, et un test échouera ce jour-là.\n\nCE QUE L'ARTICLE NE DIT PAS. `elec-erp-mise-en-service` le cite avec un réalisateur « organisme agréé », ce qui n'est vrai que par le § 2 — donc seulement quand un autre article l'impose ; GE 6 pris seul admet aussi le technicien compétent. Le caractère agréé vient de GE 7 et GE 8, cités dans la même `reference` mais absents du corpus.",
     },
     {
+      // ENTRÉ LE 2026-10-07 (relecture du préventeur) : il fonde la restriction
+      // aux catégories 1 à 4 des deux lignes d'AS 9, qu'AS 9 n'écrit pas.
+      ref: "GE 7",
+      intitule: "Conditions d'application (vérifications techniques)",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020380174",
+      versionEnVigueur: "2007-11-19",
+      versionFuture: "2027-06-01",
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
+      prescrit:
+        "Article de RÉGIME : il dit dans quels cas les vérifications techniques sont faites par des organismes agréés par le ministre de l'intérieur — dans les établissements des 1re, 2e, 3e et 4e catégories pour les travaux soumis à permis de construire ou à l'autorisation de R. 123-23 CCH, dans tous les établissements de ces catégories lorsque le règlement l'impose, et sur prescription de R. 123-44 CCH. Le § 2 fait communiquer aux vérificateurs, sur support papier, la notice de sécurité, les plans et les renseignements de détail des installations techniques — accessoire des vérifications portées, sans ligne propre. Version lue le 2026-10-07 par l'API PISTE en BAC À SABLE : LEGIARTI000020380174, ABROGE_DIFF au 2027-06-01 ; la version suivante (LEGIARTI000053564573, arrêté du 19 février 2026) ne mentionne plus les catégories, d'où le `relectureDue` des deux lignes d'AS 9.",
+      citationCle:
+        "§ 1. Les vérifications techniques doivent être effectuées par des organismes agréés par le ministre de l'intérieur : -dans les établissements des 1re, 2e, 3e et 4e catégories, pour tous travaux soumis à permis de construire, ainsi que pour les travaux soumis à l'autorisation prévue à l'article R. 123-23 du code de la construction et de l'habitation ; -dans tous les établissements des 1re, 2e, 3e et 4e catégories, lorsque les dispositions du présent règlement l'imposent ;",
+      statut: "retenu",
+      obligations: [
+        "ascenseur-erp-verification-quinquennale-as9",
+        "ascenseur-erp-verification-remise-en-service-as9",
+      ],
+    },
+    {
       ref: "GE 8",
       intitule: "Types de vérifications (travaux, exploitation, mise en demeure)",
       url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000020380178",
@@ -255,8 +275,11 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       intitule: "Maintenance, exploitation",
       url: "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020314182/",
       versionEnVigueur: "2019-07-01",
-      luLe: "2026-09-01",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-01", lecture: "agent_verbatim"~~ — relu le 2026-10-07
+      // par l'API PISTE en BAC À SABLE (relecture du préventeur, § 4) :
+      // LEGIARTI000038485456, même version, citation ci-dessous identique.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
       prescrit:
         "Quatre paragraphes, dont trois que le référentiel ne porte pas. § 1 : entretien et réparation des défectuosités dès leur constatation. § 2 : PRÉSENCE PHYSIQUE d'une personne qualifiée pendant la présence du public en 1re et 2e catégorie, imposable en 3e et 4e après avis de la commission de sécurité. § 3 : renvoi de l'éclairage de sécurité à EC 13 et EC 14. § 4 : entretien et essais des groupes électrogènes de sécurité, quinzaine et mois, consignés dans un registre d'entretien.",
       citationCle:
@@ -277,13 +300,19 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       intitule: "Appareils mobiles — caractéristiques et vérification des extincteurs",
       url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000020303557/LEGISCTA000020317639/",
       prescrit:
-        "§ 4 : un extincteur fait l'objet d'une vérification ANNUELLE et d'une révision TOUS LES DIX ANS par une personne ou un organisme compétent, avec étiquette d'identification portant les années et les mois des vérifications ; le plan d'implantation et le relevé des vérifications sont portés au registre de sécurité. Les § 1 à § 3 portent la dotation, le marquage et les caractéristiques de l'appareil, pas sa vérification. Chemin : Livre II > Titre Ier > Chapitre XI > Section 2 > Sous-section 9 — donc écarté en 5ᵉ catégorie par PE 1 § 1.",
+        "§ 4 : un extincteur fait l'objet d'une vérification ANNUELLE et d'une révision TOUS LES DIX ANS par une personne ou un organisme compétent, avec étiquette d'identification portant les années et les mois des vérifications ; le plan d'implantation et le relevé des vérifications sont portés au registre de sécurité. Les § 1 à § 3 portent la dotation, le marquage et les caractéristiques de l'appareil, pas sa vérification. § 1 : dotation en moyens d'extinction « tels que » extincteurs portatifs, extincteurs sur roues, seaux et seaux pompes — une liste indicative. § 3 : manipulation facile, six litres au moins pour les extincteurs à eau, COULEUR ROUGE « afin de faciliter sa localisation tant par le personnel que par le public », efficacité justifiée par un essai en laboratoire indépendant. Chemin : Livre II > Titre Ier > Chapitre XI > Section 2 > Sous-section 9 — donc écarté en 5ᵉ catégorie par PE 1 § 1.",
       citationCle:
-        "Un extincteur doit faire l'objet d'une vérification annuelle et d'une révision tous les dix ans par une personne ou un organisme compétent. Il doit être marqué d'une étiquette clairement identifiable apposée par la personne ou l'organisme ayant réalisé cette dernière. Les années et les mois des vérifications doivent apparaître sur l'étiquette. Un plan d'implantation des extincteurs et un relevé des vérifications doivent être portés au registre de sécurité.",
+        "§ 1. Les établissements doivent être dotés de moyens d'extinction tels que : - extincteurs portatifs ; - extincteurs sur roues ; - seaux et seaux pompes d'incendie, pour permettre au personnel et éventuellement au public d'intervenir sur un début d'incendie. […] § 3. Un extincteur doit être de manipulation facile et avoir une contenance minimale de six litres pour les extincteurs à eau. Afin de faciliter sa localisation tant par le personnel que par le public, il doit être de couleur rouge. Il doit justifier de son efficacité au moyen d'un essai réalisé par un laboratoire spécialisé indépendant. § 4. Un extincteur doit faire l'objet d'une vérification annuelle et d'une révision tous les dix ans par une personne ou un organisme compétent. Il doit être marqué d'une étiquette clairement identifiable apposée par la personne ou l'organisme ayant réalisé cette dernière. Les années et les mois des vérifications doivent apparaître sur l'étiquette. Un plan d'implantation des extincteurs et un relevé des vérifications doivent être portés au registre de sécurité.",
       versionEnVigueur: "2008-10-08",
       modifiePar: { texte: "Arrêté du 26 juin 2008 - art. 2, v. init." },
-      luLe: "2026-09-01",
-      lecture: "premiere_main",
+      // ~~luLe: "2026-09-01", lecture: "premiere_main"~~ — relu le 2026-10-07
+      // par l'API PISTE en BAC À SABLE (LEGIARTI000020382888, en vigueur
+      // depuis le 2008-10-08, aucune version future) ; § 1 et § 3 ajoutés à la
+      // citation (C60) : le § 3 fonde la couleur rouge de
+      // `signalisation-erp-extincteurs-identification`, le § 1 est la liste
+      // indicative (« tels que ») des moyens d'extinction.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
       statut: "retenu",
       obligations: [
         "incendie-erp-extincteurs-annuelle",
@@ -292,15 +321,62 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         // obligation du référentiel » ; elle l'est désormais, par une ligne
         // distincte. Article rouvert à la source avant l'encodage.
         "incendie-erp-extincteurs-revision-decennale",
+        // Ajoutée le 2026-10-07 (relecture du préventeur) : le § 3 — « il doit
+        // être de couleur rouge » — fonde, avec MS 39, l'identification des
+        // extincteurs en ERP des quatre premières catégories.
+        "signalisation-erp-extincteurs-identification",
       ],
       reserve:
         "LA SUR-APPLICATION EN 5ᵉ CATÉGORIE RESTE, et elle vaut pour les deux lignes. Le chemin le dit — Livre II > Titre Ier > Chapitre XI > Section 2 > Sous-section 9 —, et PE 1 § 1 écarte le Livre II en 5ᵉ catégorie sans que le Livre III rouvre MS 38. Les deux obligations sont maintenues au même périmètre, sur l'analyse portée par les `notesInternes` de `incendie-erp-extincteurs-annuelle` ; restreindre l'une sans l'autre serait incohérent.",
     },
     {
+      // ENTRÉ LE 2026-10-07 (C60, revue indépendante de la relecture du
+      // préventeur) : la signalisation des armoires de RIA, en ERP N1–N4.
+      ref: "MS 15",
+      intitule: "Emplacements (robinets d'incendie armés)",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317685",
+      versionEnVigueur: "1980-08-15",
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
+      prescrit:
+        "Quatre paragraphes sur l'emplacement des robinets d'incendie armés. § 1 : à l'intérieur des bâtiments, sauf impossibilité, le plus près possible et à l'extérieur des locaux à protéger. § 2 : nombre et emplacements tels que toute la surface des locaux puisse être efficacement atteinte. § 3 : dans les locaux à risques importants, tout point battu par au moins deux jets de lance. § 4 : les armoires ou coffrets qui les abritent sont signalés et sans dispositif de condamnation. Livre II > Titre Ier > Chapitre XI > Section 2 « Moyens d'extinction » > Sous-section 3 « Robinets d'incendie armés » (MS 14 à MS 17). Lu le 2026-10-07 par l'API PISTE en BAC À SABLE : LEGIARTI000020317685, seule version.",
+      citationCle:
+        "§ 4. Si les robinets d'incendie armés sont placés dans des armoires ou coffrets, ceux-ci doivent être signalés et ne pas comporter de dispositif de condamnation.",
+      statut: "retenu",
+      obligations: ["signalisation-erp-extincteurs-identification"],
+      reserve:
+        "LES § 1 À § 3 SONT DES RÈGLES D'IMPLANTATION, sans ligne : elles se constatent à la construction ou aux travaux (GN 10), et aucune propriété d'équipement ne dit où un RIA est placé. Le § 4 est porté par la ligne d'identification des moyens d'extinction N1–N4, dont la condition — un RIA « placé dans des armoires ou coffrets » — n'est pas observée : sur-application de cette moitié, dite dans la description. MS 14, MS 16 et MS 17 ont été lus le même jour pour situer le § 4 (composition et numérotation en série unique, alimentation, pression) ; ils ne sont pas entrés au corpus — aucun ne porte une signalisation ni un rythme. Lecture en BAC À SABLE PISTE : égalité avec la production non vérifiée.",
+    },
+    {
+      // ENTRÉ LE 2026-10-07 (relecture du préventeur : « Idem ERP cat N1 à N5
+      // MS39 PE26 »). Cité jusque-là dans des notes, jamais dépouillé.
+      ref: "MS 39",
+      intitule: "Emplacement (moyens d'extinction)",
+      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382896",
+      versionEnVigueur: "2008-10-08",
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
+      prescrit:
+        "Deux paragraphes sur l'implantation des moyens d'extinction. § 1 : répartis de préférence dans les dégagements, en des endroits visibles et facilement accessibles ; protégés seulement s'ils font l'objet d'une signalisation claire ; sans gêne à la circulation ; emplacement repéré par une signalisation durable et tel que leur efficacité ne soit pas compromise par les variations de température. § 2 : extincteurs portatifs répartis et appropriés aux risques, au minimum un appareil pour 200 m² et par niveau, deux par établissement, accrochés à un élément fixe, avec une signalisation durable, poignée à 1,20 m du sol au plus. Applicable en 5ᵉ catégorie par le renvoi de PE 26 § 1. Lu le 2026-10-07 par l'API PISTE en BAC À SABLE : LEGIARTI000020382896, aucune version future. [2026-10-07, C60] « Les moyens d'extinction » du § 1 ne sont pas limités par le texte ; l'article est dans la sous-section 9 « Appareils mobiles et moyens divers », les RIA ont leur sous-section 3 (MS 14 à MS 17) — d'où la signalisation de leurs armoires portée par MS 15 § 4, pas par cet article.",
+      citationCle:
+        "§ 1. Les moyens d'extinction doivent être répartis de préférence dans les dégagements, en des endroits visibles et facilement accessibles. Ils peuvent être protégés à condition de faire l'objet d'une signalisation claire. Ils ne doivent pas apporter de gêne à la circulation des personnes et leur emplacement, repéré par une signalisation durable, doit être tel que leur efficacité ne risque pas d'être compromise par les variations éventuelles de température survenant dans l'établissement.",
+      statut: "retenu",
+      obligations: [
+        "signalisation-erp-extincteurs-identification",
+        "signalisation-erp-5-extincteurs-identification",
+      ],
+      reserve:
+        "LA DOTATION DU § 2 N'EST PORTÉE PAR AUCUNE LIGNE D'ERP : « un minimum d'un appareil pour 200 m² et par niveau, avec un minimum de deux par établissement » (en 5ᵉ, PE 26 § 1 l'atténue à un pour 300 m² et un par niveau). Le Code du travail a sa ligne de dotation (`incendie-travail-extincteurs-dotation`, R. 4227-29), pas le règlement de sécurité. Non encodé le 2026-10-07 : hors du lot de la relecture, qui ne portait que l'identification.",
+    },
+    {
       ref: "MS 73",
       versionEnVigueur: "1980-08-15",
-      luLe: "2026-08-26",
-      lecture: "agent_verbatim",
+      // Relu le 2026-10-07 sur l'API Légifrance, en BAC À SABLE (PISTE),
+      // LEGIARTI000020317755, version unique en vigueur depuis le 15/08/1980.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
+      citationCle:
+        "§ 2. En cours d'exploitation, ces mêmes appareils ou installations ainsi que les appareils mobiles doivent être vérifiés, au moins une fois par an, dans les conditions prévues à la section II précitée. De plus, les systèmes de sécurité incendie de catégories A et B et les systèmes d'extinction automatique du type sprinkleur doivent être vérifiés tous les trois ans par une personne ou un organisme agréé.",
       statut: "retenu",
       obligations: [
         "incendie-erp-extincteurs-annuelle",
@@ -310,7 +386,11 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         "cuisson-erp-extinction-automatique-annuelle",
       ],
       prescrit:
-        "La triennale du § 2 ne vise QUE les systèmes de sécurité incendie de catégories A et B et les sprinkleurs, par personne ou organisme agréé — relu le 2026-08-27. Une obligation qui l'appliquerait aux SSI sans distinction de catégorie sur-couvrirait. Le § 2 fonde par ailleurs l'annuelle des dispositifs d'extinction automatique de cuisine, que GC 22 ne fonde pas.",
+        "La triennale du § 2 ne vise QUE les systèmes de sécurité incendie de catégories A et B et les sprinkleurs, par personne ou organisme agréé — relu le 2026-08-27, puis le 2026-10-07. Une obligation qui l'appliquerait aux SSI sans distinction de catégorie sur-couvrirait. Le § 2 fonde par ailleurs l'annuelle des dispositifs d'extinction automatique de cuisine, que GC 22 ne fonde pas.",
+      reserve:
+        "DEUX POINTS DU § 2 RESTENT DEHORS.\n\n(1) LES SPRINKLEURS. « les systèmes d'extinction automatique du type sprinkleur doivent être vérifiés tous les trois ans par une personne ou un organisme agréé » : aucune catégorie d'équipement ne les déclare, aucune ligne ne porte cette triennale.\n\n(2) « PAR UNE PERSONNE OU UN ORGANISME AGRÉÉ » : `incendie-erp-ssi-triennale` ne dit que `organisme_agree`.",
+      historique:
+        "~~La triennale SSI s'applique à toute ALARME_INCENDIE, quelle que soit la catégorie du SSI~~ — CORRIGÉ LE 2026-10-07 (lot 4, relecture du préventeur) : `incendie-erp-ssi-triennale` porte la condition `estSsiCategorieAouB` en `non_infirmee` (ligne publiée, criticité 4 : seul un « non » la retire). La sur-application demeure au silence, mais elle est désormais corrigeable par le dirigeant.",
     },
     {
       ref: "EC 14",
@@ -379,19 +459,25 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
     {
       ref: "DF 10",
       intitule: "Vérifications techniques des installations de désenfumage (ERP)",
-      url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000020303557/LEGISCTA000020304211/",
+      url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000020382687",
       prescrit:
-        "§ 2 : la périodicité des vérifications de désenfumage est de UN AN, sur six points énumérés (commandes manuelles et automatiques, volets/exutoires/ouvrants, fermeture des éléments mobiles de compartimentage, arrêt de la ventilation de confort, ventilateurs de désenfumage, mesures de pression, débit et vitesse en désenfumage mécanique). § 3 : lorsque coexistent un désenfumage MÉCANIQUE et un SSI de catégorie A ou B, les vérifications sont faites TOUS LES TROIS ANS par un organisme agréé.",
+        "§ 1 : renvoi aux conditions de GE 6 à GE 10. § 2 : la périodicité des vérifications de désenfumage est de UN AN, sur six points énumérés (commandes manuelles et automatiques, volets/exutoires/ouvrants, fermeture des éléments mobiles de compartimentage, arrêt de la ventilation de confort, ventilateurs de désenfumage, mesures de pression, débit et vitesse en désenfumage mécanique). § 3 : lorsque existent un désenfumage MÉCANIQUE et un SSI de catégorie A ou B, les vérifications sont faites TOUS LES TROIS ANS par un organisme agréé. Le texte ne dit pas si le § 3 remplace le § 2 ou s'y ajoute.",
       citationCle:
-        "§ 2. La périodicité des vérifications est de un an. Elles concernent : le fonctionnement des commandes manuelles et automatiques ; le fonctionnement des volets, exutoires et ouvrants de désenfumage ; la fermeture des éléments mobiles de compartimentage participant à la fonction désenfumage ; l'arrêt de la ventilation de confort mentionné à l'article DF 3, § 5 ; le fonctionnement des ventilateurs de désenfumage ; les mesures de pression, de débit et de vitesse, dans le cas du désenfumage mécanique. § 3. Lorsque existent une installation de désenfumage mécanique et un système de sécurité incendie de catégorie A ou B, les vérifications sont effectuées tous les trois ans par un organisme agréé.",
+        "§ 2. La périodicité des vérifications est de un an. Elles concernent : - le fonctionnement des commandes manuelles et automatiques ; - le fonctionnement des volets, exutoires et ouvrants de désenfumage ; - la fermeture des éléments mobiles de compartimentage participant à la fonction désenfumage ; - l'arrêt de la ventilation de confort mentionné à l'article DF 3, § 5 ; - le fonctionnement des ventilateurs de désenfumage ; - les mesures de pression, de débit et de vitesse, dans le cas du désenfumage mécanique. § 3. Lorsque existent une installation de désenfumage mécanique et un système de sécurité incendie de catégorie A ou B, les vérifications sont effectuées tous les trois ans par un organisme agréé.",
       versionEnVigueur: "2007-10-28",
       modifiePar: { texte: "Arrêté du 4 juillet 2007 - art. Annexe, v. init." },
-      luLe: "2026-09-01",
-      lecture: "premiere_main",
+      luLe: "2026-10-07",
+      // Relu le 2026-10-07 sur l'API Légifrance, en BAC À SABLE (PISTE),
+      // LEGIARTI000020382687 : en vigueur depuis le 28/10/2007, aucune version
+      // future. Première lecture le 2026-09-01, à la main.
+      lecture: "api_legifrance",
       statut: "retenu",
-      obligations: ["incendie-erp-desenfumage-annuelle"],      reserve:
-        "Le § 3 — triennale par organisme agréé quand désenfumage mécanique ET SSI de catégorie A ou B — n'est porté par aucune obligation : `incendie-erp-desenfumage-annuelle` porte l'annuelle du § 2 et rien d'autre. Article reconstaté à la source le 2026-09-01, puis RÉEXAMINÉ le même jour par le lot C, le modèle ayant bougé. LA CAUSE TIENT TOUJOURS, et elle est triple.\n\n(1) LE MODÈLE NE SAIT PAS FAIRE UN « ET » ENTRE DEUX CATÉGORIES, et ce n'est pas une lacune de rédaction mais la forme du moteur. `matchEquipements` (`lib/matching/engine.ts`) groupe les `conditions[]` par catégorie et retient l'obligation dès qu'il existe UN équipement satisfaisant les conditions de SA propre catégorie. Écrire `categoriesEquipement: [\"DESENFUMAGE\", \"ALARME_INCENDIE\"]` produit donc un OU : un désenfumage mécanique seul déclencherait la triennale, sans aucun SSI. Ce qui manque est une variante de `ConditionApplication` qui interroge le PARC de l'établissement et non l'équipement déclencheur — quelque chose comme `etablissement_possede_equipement { categorie, propriete }`. Coût : une variante au type, une branche au moteur, la mise à jour de `docs/regles-matching.md`, et l'empreinte qui bouge sur toutes les obligations conditionnées.\n\n(2) RIEN NE PORTE LA CATÉGORIE D'UN SSI. La seule caractéristique d'ALARME_INCENDIE est `dessertLocauxSommeil` ; la catégorie d'un SSI est une énumération (A, B, C, D, E) et non un booléen, donc la mécanique des questions à trois états ne suffit pas. LA PREUVE QUE LE TROU EST DÉJÀ LÀ, et elle est dans le référentiel : `incendie-erp-ssi-triennale` s'intitule « Vérification triennale approfondie des SSI DE CATÉGORIE A OU B » et ne porte AUCUNE condition — elle tombe sur toute ALARME_INCENDIE déclarée en ERP de 1ʳᵉ à 4ᵉ catégorie, quelle que soit la catégorie du SSI. Encoder DF 10 § 3 sur ce modèle reproduirait cette sur-application au lieu de la corriger.\n\n(3) UN POINT DE DROIT N'EST PAS TRANCHÉ, et il décide de la forme. « Les vérifications sont effectuées tous les trois ans par un organisme agréé » — se substitue-t-il à l'annuelle du § 2, ou s'y ajoute-t-il ? L'article ne le dit pas, et le § 1 renvoie les modalités à GE 6 à GE 10, qui distinguent l'organisme agréé du technicien compétent et n'ont pas été lus sous cet angle. Encoder sans trancher donnerait soit deux échéances pour un acte, soit la suppression silencieuse de l'annuelle. À instruire AVANT d'encoder, et pas après.\n\nTANT QUE (1) ET (2) TIENNENT, LE MANQUE EST UNE SOUS-APPLICATION MUETTE et c'est ce qu'on garde : un établissement à désenfumage mécanique et SSI de catégorie A ou B reçoit l'annuelle du § 2 et pas la triennale par organisme agréé. Il fait donc trop peu, pas trop — mais il fait quelque chose, et rien ne lui ment.",
-
+      obligations: [
+        "incendie-erp-desenfumage-annuelle",
+        "incendie-erp-desenfumage-triennale-mecanique-ssi",
+      ],
+      historique:
+        "RÉSERVE LEVÉE LE 2026-10-07 (lot 4, relecture du préventeur du 05/10). Le § 3 est porté par `incendie-erp-desenfumage-triennale-mecanique-ssi`, et `incendie-erp-desenfumage-annuelle` cite désormais le § 2. Les trois causes ci-dessous, une par une :\n(1) le « ET » entre deux catégories : CONTOURNÉ, pas résolu au moteur — la présence d'un SSI de catégorie A ou B se demande au désenfumage lui-même (`etablissementASsiCategorieAouB`), puisque `matchEquipements` n'évalue que l'appareil déclencheur. La variante `etablissement_possede_equipement` reste à écrire si l'on veut que la réponse donnée sur l'alarme suffise ;\n(2) la catégorie du SSI : LEVÉE — `DF 10 § 3` et `MS 73 § 2` ne distinguent que « A ou B » du reste, une question à trois états suffit (`estSsiCategorieAouB` sur l'alarme, `etablissementASsiCategorieAouB` sur le désenfumage) ; le désenfumage mécanique a la sienne (`estDesenfumageMecanique`) ;\n(3) le cumul : TRANCHÉ PAR UNE LECTURE, pas par le texte — le préventeur a répondu « elle s'y ajoute » (relecture du 05/10), lecture retenue par la propriétaire. L'annuelle reste, la triennale s'y ajoute. Le texte n'écrit pas le cumul ; les `notesInternes` de la triennale le disent.\n\nCE QUE DISAIT LA RÉSERVE, RAYÉE :\n\n~~Le § 3 — triennale par organisme agréé quand désenfumage mécanique ET SSI de catégorie A ou B — n'est porté par aucune obligation : `incendie-erp-desenfumage-annuelle` porte l'annuelle du § 2 et rien d'autre. Article reconstaté à la source le 2026-09-01, puis RÉEXAMINÉ le même jour par le lot C, le modèle ayant bougé. LA CAUSE TIENT TOUJOURS, et elle est triple.~~\n\n~~(1) LE MODÈLE NE SAIT PAS FAIRE UN « ET » ENTRE DEUX CATÉGORIES, et ce n'est pas une lacune de rédaction mais la forme du moteur. `matchEquipements` (`lib/matching/engine.ts`) groupe les `conditions[]` par catégorie et retient l'obligation dès qu'il existe UN équipement satisfaisant les conditions de SA propre catégorie. Écrire `categoriesEquipement: [\"DESENFUMAGE\", \"ALARME_INCENDIE\"]` produit donc un OU : un désenfumage mécanique seul déclencherait la triennale, sans aucun SSI. Ce qui manque est une variante de `ConditionApplication` qui interroge le PARC de l'établissement et non l'équipement déclencheur — quelque chose comme `etablissement_possede_equipement { categorie, propriete }`. Coût : une variante au type, une branche au moteur, la mise à jour de `docs/regles-matching.md`, et l'empreinte qui bouge sur toutes les obligations conditionnées.~~\n\n~~(2) RIEN NE PORTE LA CATÉGORIE D'UN SSI. La seule caractéristique d'ALARME_INCENDIE est `dessertLocauxSommeil` ; la catégorie d'un SSI est une énumération (A, B, C, D, E) et non un booléen, donc la mécanique des questions à trois états ne suffit pas. LA PREUVE QUE LE TROU EST DÉJÀ LÀ, et elle est dans le référentiel : `incendie-erp-ssi-triennale` s'intitule « Vérification triennale approfondie des SSI DE CATÉGORIE A OU B » et ne porte AUCUNE condition — elle tombe sur toute ALARME_INCENDIE déclarée en ERP de 1ʳᵉ à 4ᵉ catégorie, quelle que soit la catégorie du SSI. Encoder DF 10 § 3 sur ce modèle reproduirait cette sur-application au lieu de la corriger.~~\n\n~~(3) UN POINT DE DROIT N'EST PAS TRANCHÉ, et il décide de la forme. « Les vérifications sont effectuées tous les trois ans par un organisme agréé » — se substitue-t-il à l'annuelle du § 2, ou s'y ajoute-t-il ? L'article ne le dit pas, et le § 1 renvoie les modalités à GE 6 à GE 10, qui distinguent l'organisme agréé du technicien compétent et n'ont pas été lus sous cet angle. Encoder sans trancher donnerait soit deux échéances pour un acte, soit la suppression silencieuse de l'annuelle. À instruire AVANT d'encoder, et pas après.~~\n\n~~TANT QUE (1) ET (2) TIENNENT, LE MANQUE EST UNE SOUS-APPLICATION MUETTE et c'est ce qu'on garde : un établissement à désenfumage mécanique et SSI de catégorie A ou B reçoit l'annuelle du § 2 et pas la triennale par organisme agréé. Il fait donc trop peu, pas trop — mais il fait quelque chose, et rien ne lui ment.~~",
     },
     {
       ref: "GE 4",
@@ -502,16 +588,31 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       modifiePar: {
         texte: "Arrêté du 26 juin 2008 - art. 1, v. init.",
       },
-      luLe: "2026-09-04",
-      lecture: "agent_verbatim",
+      // Relu le 2026-10-07 par l'API PISTE en BAC À SABLE (relecture du
+      // préventeur) : même version, même verbatim.
+      luLe: "2026-10-07",
+      lecture: "api_legifrance",
       prescrit:
         "Deux titres dans une seule phrase : les ascenseurs sont vérifiés par un ORGANISME AGRÉÉ, dans les conditions de la section II du chapitre Ier (donc GE 6 et suivants), TOUS LES CINQ ANS et avant leur remise en service faisant suite à une transformation importante. La vérification porte sur le respect des dispositions de la section applicables aux ascenseurs. Chemin : Livre II > Titre Ier > Chapitre IX « Ascenseurs, escaliers mécaniques et trottoirs roulants » (AS 1 à AS 11).",
       citationCle:
         "Les ascenseurs doivent faire l'objet d'une vérification, fonctionnement compris, par un organisme agréé, dans les conditions prévues à la section II du chapitre Ier du présent titre tous les cinq ans et avant leur remise en service faisant suite à une transformation importante. Ces vérifications portent sur le respect des dispositions de la présente section applicables aux ascenseurs.",
       statut: "retenu",
-      obligations: ["ascenseur-controle-technique-quinquennal"],
+      // 2026-10-07 : ~~"ascenseur-controle-technique-quinquennal"~~ — la ligne
+      // CCH ne cite plus AS 9 ; les deux titres d'AS 9 ont chacun leur ligne.
+      obligations: [
+        "ascenseur-erp-verification-quinquennale-as9",
+        "ascenseur-erp-verification-remise-en-service-as9",
+        // ~~2026-10-07 (C60) : les hôtels de 5ᵉ catégorie, par le renvoi exprès
+        // de PO 1 § 3 (réimporté par PO 8 § 1 ; PE 1 § 1) —
+        // `ascenseur-hotel-5-verification-quinquennale-as9`,
+        // `ascenseur-hotel-5-verification-remise-en-service-as9`~~ — 2026-10-08
+        // (C64) : supprimées avant d'avoir été servies ; le préventeur borne
+        // AS 9 aux N1–N4. Réserve à PO 1 (`arrete-1980-livre-3.ts`).
+      ],
       reserve:
-        "OUVERT AVANT D'ENCODER QUOI QUE CE SOIT, ET C'EST LE RÉSULTAT : IL N'Y AVAIT RIEN À ENCODER. Le contrôle quinquennal qu'il impose est le MÊME ACTE que celui de `ascenseur-controle-technique-quinquennal`, fondé sur `CCH R. 134-11` : même objet, même rythme de cinq ans, même appareil. Créer une seconde ligne aurait donné deux rendez-vous quinquennaux pour un seul contrôle — le doublon exact que le test anti-doublon cherche, et qu'il n'aurait PAS vu, les articles fondateurs étant différents. AS 9 est donc ajouté en CONTEXTE sur l'obligation existante, jamais en fondement d'une nouvelle.\n\nUN SECOND ARTICLE LE CITE, ET IL EST DÉJÀ AU CORPUS. `PO 1 § 3` (Livre III, hôtels de 5ᵉ catégorie) écrit : « Le contrôle des ascenseurs relève des dispositions particulières précisées dans le cadre de l'article AS 9 du règlement. » Le renvoi vient d'un autre livre, et il confirme qu'AS 9 est bien l'article du contrôle des ascenseurs — un recoupement qui ne partage pas l'angle mort de la lecture d'AS 9 elle-même.\n\nDEUX ÉCARTS RESTENT, ET AUCUN N'EST COMBLÉ ICI.\n\n(1) LE RÉALISATEUR. AS 9 exige un ORGANISME AGRÉÉ au sens de GE 6 ; `ascenseur-controle-technique-quinquennal` accepte `bureau_controle` ou `personne_qualifiee`, ce que `CCH R. 134-12` autorise (contrôleur technique agréé, organisme habilité, personne certifiée). Dans un ERP des quatre premières catégories, le règlement de sécurité est donc plus étroit que le CCH. Resserrer la ligne ferait perdre l'obligation aux ERP de 5ᵉ catégorie, aux immeubles d'habitation et aux locaux de travail, qui suivent le CCH seul : il faudrait deux lignes, donc un doublon d'acte. Non fait ; l'écart est nommé.\n\n(2) LA VÉRIFICATION AVANT REMISE EN SERVICE APRÈS TRANSFORMATION IMPORTANTE n'est portée par rien. C'est une obligation ÉVÉNEMENTIELLE au sens de l'ADR-026 — le fait déclencheur est la transformation, que le produit n'observe pas —, et cette nature n'a aujourd'hui AUCUNE surface (`src/lib/surfaces/obligations-sans-surface.ts`). L'encoder ajouterait une dixième ligne au registre daté qui existe pour les compter ; c'est une décision de conception, pas une correction.",
+        "CE QUI RESTE OUVERT, AU 2026-10-07. (1) « Transformation importante » n'est défini ni par AS 9 ni par les articles lus avec lui : la ligne événementielle reprend les mots du texte sans les préciser, et le produit n'observe pas le fait. (2) ~~La restriction aux catégories 1 à 4 repose sur GE 7 § 1, réécrit au 1er juin 2027 sans mention des catégories (LEGIARTI000053564573) : `relectureDue` posé sur les deux lignes.~~ [2026-10-07, C60 : la restriction repose d'abord sur PE 1 § 1 et le titre du livre II (« Dispositions applicables aux établissements des quatre premières catégories »), inchangé au plan du 2027-06-15 ; GE 7 § 1 l'appuie, et sa rédaction du 1er juin 2027 vise « les établissements soumis aux dispositions du présent livre » ; `relectureDue` reste posé pour le vérifier à la date. ~~En 5ᵉ catégorie, AS 9 s'applique à l'hôtel par le renvoi exprès de PO 1 § 3, réimporté par PO 8 § 1 : deux lignes N5/type O.~~] [2026-10-08, C64 : les deux lignes N5/type O sont supprimées avant d'avoir été servies — question posée au préventeur ; il borne AS 9 aux N1-N4. La lecture du renvoi est en réserve à PO 1.] (3) La lecture du 2026-10-07 vient de l'environnement BAC À SABLE de PISTE ; son égalité avec la production n'a pas été vérifiée.",
+      historique:
+        "2026-10-07 — RÉSERVE DU 2026-09-04 RAYÉE, à la demande du préventeur (« il y a deux vérifications quinquennales défférents [sic] : AS9 et 7 aout 2012 » ; « AS9 applicable qu'au ERP N1 à N4 (organisme agréé) » / « obligation CT s'applique à tous les ascenseurs ( personne certifiée) » — recopiées des annotations des deux PDF le 2026-10-07, C60, fautes comprises ; la première rédaction les avait reconstituées). AS 9 a désormais deux lignes à lui, bornées aux catégories 1 à 4 (GE 7 § 1, GN 1 § 2) : `ascenseur-erp-verification-quinquennale-as9`, par organisme agréé, et `ascenseur-erp-verification-remise-en-service-as9`, événementielle. Les deux écarts que la réserve nommait sont levés — le réalisateur, parce que la ligne AS 9 exige l'organisme agréé sans resserrer la ligne CCH ; la remise en service, parce qu'une obligation événementielle d'équipement a une surface depuis l'ADR-037 (fiche de l'appareil). Texte de la réserve rayée :\n\n~~OUVERT AVANT D'ENCODER QUOI QUE CE SOIT, ET C'EST LE RÉSULTAT : IL N'Y AVAIT RIEN À ENCODER. Le contrôle quinquennal qu'il impose est le MÊME ACTE que celui de `ascenseur-controle-technique-quinquennal`, fondé sur `CCH R. 134-11` : même objet, même rythme de cinq ans, même appareil. Créer une seconde ligne aurait donné deux rendez-vous quinquennaux pour un seul contrôle — le doublon exact que le test anti-doublon cherche, et qu'il n'aurait PAS vu, les articles fondateurs étant différents. AS 9 est donc ajouté en CONTEXTE sur l'obligation existante, jamais en fondement d'une nouvelle.\n\nUN SECOND ARTICLE LE CITE, ET IL EST DÉJÀ AU CORPUS. `PO 1 § 3` (Livre III, hôtels de 5ᵉ catégorie) écrit : « Le contrôle des ascenseurs relève des dispositions particulières précisées dans le cadre de l'article AS 9 du règlement. » Le renvoi vient d'un autre livre, et il confirme qu'AS 9 est bien l'article du contrôle des ascenseurs — un recoupement qui ne partage pas l'angle mort de la lecture d'AS 9 elle-même.\n\nDEUX ÉCARTS RESTENT, ET AUCUN N'EST COMBLÉ ICI.\n\n(1) LE RÉALISATEUR. AS 9 exige un ORGANISME AGRÉÉ au sens de GE 6 ; `ascenseur-controle-technique-quinquennal` accepte `bureau_controle` ou `personne_qualifiee`, ce que `CCH R. 134-12` autorise (contrôleur technique agréé, organisme habilité, personne certifiée). Dans un ERP des quatre premières catégories, le règlement de sécurité est donc plus étroit que le CCH. Resserrer la ligne ferait perdre l'obligation aux ERP de 5ᵉ catégorie, aux immeubles d'habitation et aux locaux de travail, qui suivent le CCH seul : il faudrait deux lignes, donc un doublon d'acte. Non fait ; l'écart est nommé.\n\n(2) LA VÉRIFICATION AVANT REMISE EN SERVICE APRÈS TRANSFORMATION IMPORTANTE n'est portée par rien. C'est une obligation ÉVÉNEMENTIELLE au sens de l'ADR-026 — le fait déclencheur est la transformation, que le produit n'observe pas —, et cette nature n'a aujourd'hui AUCUNE surface (`src/lib/surfaces/obligations-sans-surface.ts`). L'encoder ajouterait une dixième ligne au registre daté qui existe pour les compter ; c'est une décision de conception, pas une correction.~~",
     },
     {
       ref: "AS 10",

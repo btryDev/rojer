@@ -194,14 +194,20 @@ export const obligationsAscenseurs: Obligation[] = [
     domaine: "ascenseur",
     libelle: "Contrôle technique quinquennal (ascenseur)",
     description:
-      "Tous les cinq ans, le propriétaire fait réaliser un contrôle technique de l'ascenseur (R. 134-11) par un contrôleur technique agréé, un organisme habilité ou une personne certifiée (R. 134-12). Le rapport, remis au propriétaire dans le mois suivant la fin de l'intervention, est transmis par lui à l'entreprise d'entretien (R. 134-13) ; toute personne disposant d'un titre d'occupation dans l'immeuble peut en obtenir communication (L. 134-4). Pour le contrôle, le propriétaire met à la disposition du contrôleur technique les informations et documents en sa possession, nécessaires à la bonne exécution des contrôles, que liste l'arrêté du 7 août 2012 (art. 1er) — la notice d'instructions et la déclaration CE de conformité pour un ascenseur installé après le 27 août 2000, ou avant cette date en conformité avec la directive 2014/33/UE (1°), le dossier technique pour les autres (2°) ; et, pour tous (3°), la dernière étude spécifique de sécurité, le rapport de vérification établi le cas échéant après une transformation ou une modification importante, le carnet d'entretien et le dernier rapport annuel d'activité, le rapport du précédent contrôle technique, la typologie et la nature des moyens d'alerte et de communication avec le service d'intervention.",
+      "Tous les cinq ans, le propriétaire fait réaliser un contrôle technique de l'ascenseur (R. 134-11). Il fait appel, à son choix, à un contrôleur technique agréé pour intervenir sur les ascenseurs, à un organisme habilité dans un État de l'Union européenne ou de l'Espace économique européen, à une personne morale employant des salariés dont les compétences ont été certifiées, ou à une personne physique titulaire d'une certification (R. 134-12, I). Ce contrôle vaut pour tout ascenseur, quel que soit le régime du bâtiment. Dans un établissement recevant du public des quatre premières catégories, la vérification par un organisme agréé du règlement de sécurité (AS 9) s'y ajoute : elle a sa propre ligne. Le rapport, remis au propriétaire dans le mois suivant la fin de l'intervention, est transmis par lui à l'entreprise d'entretien (R. 134-13) ; toute personne disposant d'un titre d'occupation dans l'immeuble peut en obtenir communication (L. 134-4). Pour le contrôle, le propriétaire met à la disposition du contrôleur technique les informations et documents en sa possession, nécessaires à la bonne exécution des contrôles, que liste l'arrêté du 7 août 2012 (art. 1er) — la notice d'instructions et la déclaration CE de conformité pour un ascenseur installé après le 27 août 2000, ou avant cette date en conformité avec la directive 2014/33/UE (1°), le dossier technique pour les autres (2°) ; et, pour tous (3°), la dernière étude spécifique de sécurité, le rapport de vérification établi le cas échéant après une transformation ou une modification importante, le carnet d'entretien et le dernier rapport annuel d'activité, le rapport du précédent contrôle technique, la typologie et la nature des moyens d'alerte et de communication avec le service d'intervention.",
     referencesLegales: [
       {
         source: "CCH",
-        reference: "CCH, art. R. 134-11 à R. 134-13 (ex R. 125-2-4 et s.)",
+        reference:
+          "CCH, art. R. 134-11 (contrôle technique tous les cinq ans), R. 134-12 (contrôleur au choix du propriétaire) et R. 134-13 (rapport) — ex R. 125-2-4 et s.",
         article: "CCH R. 134-11",
+        // URL RECALÉE LE 2026-10-07 : elle pointait l'identifiant de la
+        // version du 2021-07-01, alors que `versionConstatee` disait déjà
+        // 2026-05-15. La version en vigueur est LEGIARTI000053629116 (relue
+        // par l'API PISTE en bac à sable, voir la note).
         url:
-          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043818747/",
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053629116/",
+        note: "« Le propriétaire d'un ascenseur est tenu de faire réaliser tous les cinq ans un contrôle technique de son installation. » R. 134-12, I : « le propriétaire fait appel, à son choix : a) A un contrôleur technique au sens de l'article L. 125-1 qui bénéficie d'un agrément l'habilitant à intervenir sur les ascenseurs ; b) A un organisme habilité dans un des Etats membres de l'Union européenne […] ; c) A une personne morale employant des salariés dont les compétences ont été certifiées […] ; d) A une personne physique titulaire d'une certification délivrée dans les conditions prévues au c. » Relu le 2026-10-07 par l'API Légifrance (PISTE) en environnement BAC À SABLE — version LEGIARTI000053629116 en vigueur depuis le 2026-05-15 (décret n° 2026-166 du 4 mars 2026), aucune version future ; R. 134-12 inchangé depuis le 2021-07-01. L'égalité du bac à sable avec la production n'a pas été vérifiée.",
         versionConstatee: "2026-05-15",
       },
       {
@@ -212,32 +218,133 @@ export const obligationsAscenseurs: Obligation[] = [
           "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000026286347",
         versionConstatee: "2026-05-15",
       },
-      {
-        // AJOUTÉE LE 2026-09-04 : le règlement de sécurité ERP impose le MÊME
-        // contrôle quinquennal, et le référentiel ne le citait pas. C'est un
-        // ajout de CONTEXTE, pas un second fondement — créer une ligne pour
-        // AS 9 aurait donné deux rendez-vous quinquennaux pour un seul acte,
-        // et le test anti-doublon ne l'aurait pas vu, les articles fondateurs
-        // étant différents.
-        source: "ARRETE",
-        reference:
-          "Arrêté du 25 juin 1980, art. AS 9 (ERP des 4 premières catégories : vérification par un organisme agréé tous les cinq ans)",
-        article: "AS 9",
-        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382882",
-        note: "« Les ascenseurs doivent faire l'objet d'une vérification, fonctionnement compris, par un organisme agréé, dans les conditions prévues à la section II du chapitre Ier du présent titre tous les cinq ans et avant leur remise en service faisant suite à une transformation importante. » Article ouvert à la source le 2026-09-04. DEUX ÉCARTS AVEC LE RÉGIME DU CCH ENCODÉ ICI, tous deux relevés et non corrigés : (1) AS 9 exige un ORGANISME AGRÉÉ au sens de GE 6, là où R. 134-12 admet aussi une personne certifiée — dans un ERP des quatre premières catégories, le règlement est plus étroit que le CCH ; (2) la vérification avant remise en service après TRANSFORMATION IMPORTANTE n'est portée par aucune obligation, sa nature étant événementielle et cette nature n'ayant aucune surface. Le détail est dans la réserve d'AS 9 au corpus `arrete-1980-livre-2`.",
-        versionConstatee: "2008-10-08",
-      },
     ],
     periodicite: "quinquennale",
     nature: "echeance_recurrente",
     pieceAttendue: null,
+    // `bureau_controle` porte le a) de R. 134-12 (contrôleur technique agréé),
+    // `personne_qualifiee` ses c) et d) (personne morale à salariés certifiés,
+    // personne physique certifiée). Inchangés le 2026-10-07 : le préventeur
+    // relève que le « bureau de contrôle uniquement » ne vaut qu'en ERP N1–N4
+    // (AS 9), et c'est la ligne AS 9 qui le porte, pas celle-ci.
     realisateurs: ["bureau_controle", "personne_qualifiee"],
     criticite: 5,
     transmet: [],
     typologies: { travail: true, erp: true, igh: true, habitation: true },
     categoriesEquipement: ["ASCENSEUR"],
     notesInternes:
-      "Corrigé à l'audit 2026-08 : l'ancienne version citait un « arrêté du 13 août 2008 » introuvable. Le texte en vigueur est l'arrêté du 7 août 2012, qui abroge l'arrêté du 18 novembre 2004 relatif aux contrôles techniques.\n\nAmendement 2026-08-25 : R. 134-12 (https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043818749/) énumère les contrôleurs admis — contrôleur technique agréé au sens de L. 125-1, organisme habilité d'un État de l'UE/EEE, personne morale à salariés certifiés, personne physique certifiée. Aucune notion d'« organisme accrédité » : `organisme_accredite` est remplacé par `bureau_controle` (contrôleur technique agréé), `personne_qualifiee` couvrant les personnes certifiées.\n\nFAMILLE D'HABITATION — EXAMINÉE LE 2026-09-01, AUCUNE RESTRICTION POSÉE. L'arrêté du 31 janvier 1986, qui définit les familles, a été dépouillé ce jour (`corpus/arrete-1986-habitation.ts`). Son SEUL article traitant des ascenseurs est le 97, et il ne prescrit que des degrés coupe-feu de parois de cages par famille, plus un dispositif d'appel prioritaire des pompiers en 4ᵉ famille : des règles de construction, dont aucune ne conditionne l'entretien, la visite ni le contrôle technique. Le régime de cette ligne vient du CCH, et L. 134-1, relu le même jour, énumère huit exclusions de champ — installations à câbles, ascenseurs militaires, puits de mine, machinerie de théâtre, moyens de transport, accès au poste de travail d'une machine, ascenseurs de chantier, appareils à 0,15 m/s au plus — dont AUCUNE ne vise les maisons individuelles. Poser `habitation: { familles }` ici serait une restriction inventée : la typologie reste inchangée.",
+      "SCINDÉE LE 2026-10-07 (relecture du préventeur, Julien Chantoin, retour du 2026-10-05). Cette ligne portait aussi, en référence de contexte, l'article AS 9 du règlement de sécurité ERP, avec une note qui refusait d'en faire une seconde ligne : « deux rendez-vous quinquennaux pour un seul acte ». ~~Créer une ligne pour AS 9 aurait donné deux rendez-vous quinquennaux pour un seul acte~~ [2026-10-07 : refus levé]. Le préventeur annote la p. 16 du référentiel : « il y a deux vérifications quinquennales défférents [sic] : AS9 et 7 aout 2012 », et répond, p. 3 de la réponse : « AS9 applicable qu'au ERP N1 à N4 (organisme agréé) » / « obligation CT s'applique à tous les ascenseurs ( personne certifiée) » (deux lignes d'une même annotation ; citations recopiées des annotations des deux PDF le 2026-10-07, C60, fautes comprises — la version précédente de cette note les avait reconstituées). Les textes le confirment : R. 134-11 vise le propriétaire de tout ascenseur, et R. 134-12 lui laisse le choix du contrôleur ; AS 9 impose une vérification « par un organisme agréé, dans les conditions prévues à la section II du chapitre Ier », et ne porte que « sur le respect des dispositions de la présente section applicables aux ascenseurs » — l'objet n'est donc pas le même que celui du contrôle technique de R. 134-11 a) et b). L'id est CONSERVÉ ici, avec toute sa population (tous régimes) : rien ne change d'identifiant, donc aucun `succedeA` n'est déclaré sur les deux lignes nouvelles (`types.ts` le réserve au cas où « une part de sa population change d'identifiant » ; le déclarer ici ferait adopter la rangée de cette ligne-ci par la ligne AS 9 pendant que celle-ci continue de s'engendrer). Les deux lignes nouvelles : `ascenseur-erp-verification-quinquennale-as9` (cinq ans) et `ascenseur-erp-verification-remise-en-service-as9` (avant remise en service après transformation importante). Version de R. 134-11 relue en bac à sable PISTE le 2026-10-07 (LEGIARTI000053629116, en vigueur depuis le 2026-05-15) ; l'URL est recalée sur elle.\n\nCorrigé à l'audit 2026-08 : l'ancienne version citait un « arrêté du 13 août 2008 » introuvable. Le texte en vigueur est l'arrêté du 7 août 2012, qui abroge l'arrêté du 18 novembre 2004 relatif aux contrôles techniques.\n\nAmendement 2026-08-25 : R. 134-12 (https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043818749/) énumère les contrôleurs admis — contrôleur technique agréé au sens de L. 125-1, organisme habilité d'un État de l'UE/EEE, personne morale à salariés certifiés, personne physique certifiée. Aucune notion d'« organisme accrédité » : `organisme_accredite` est remplacé par `bureau_controle` (contrôleur technique agréé), `personne_qualifiee` couvrant les personnes certifiées.\n\nFAMILLE D'HABITATION — EXAMINÉE LE 2026-09-01, AUCUNE RESTRICTION POSÉE. L'arrêté du 31 janvier 1986, qui définit les familles, a été dépouillé ce jour (`corpus/arrete-1986-habitation.ts`). Son SEUL article traitant des ascenseurs est le 97, et il ne prescrit que des degrés coupe-feu de parois de cages par famille, plus un dispositif d'appel prioritaire des pompiers en 4ᵉ famille : des règles de construction, dont aucune ne conditionne l'entretien, la visite ni le contrôle technique. Le régime de cette ligne vient du CCH, et L. 134-1, relu le même jour, énumère huit exclusions de champ — installations à câbles, ascenseurs militaires, puits de mine, machinerie de théâtre, moyens de transport, accès au poste de travail d'une machine, ascenseurs de chantier, appareils à 0,15 m/s au plus — dont AUCUNE ne vise les maisons individuelles. Poser `habitation: { familles }` ici serait une restriction inventée : la typologie reste inchangée.",
+  },
+  {
+    // CRÉÉE LE 2026-10-07 — scission de `ascenseur-controle-technique-quinquennal`
+    // (relecture du préventeur). Pas de `succedeA` : voir les notes.
+    id: "ascenseur-erp-verification-quinquennale-as9",
+    domaine: "ascenseur",
+    libelle:
+      "Vérification quinquennale de l'ascenseur par un organisme agréé (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des 1re, 2e, 3e ou 4e catégories, les ascenseurs font l'objet d'une vérification, fonctionnement compris, par un organisme agréé, tous les cinq ans. Elle porte sur le respect des dispositions du règlement de sécurité applicables aux ascenseurs. Elle s'ajoute au contrôle technique quinquennal du Code de la construction et de l'habitation (R. 134-11), qui vaut pour tout ascenseur et a sa propre ligne.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. AS 9 (vérification par un organisme agréé tous les cinq ans)",
+        article: "AS 9",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382882",
+        note: "« Les ascenseurs doivent faire l'objet d'une vérification, fonctionnement compris, par un organisme agréé, dans les conditions prévues à la section II du chapitre Ier du présent titre tous les cinq ans et avant leur remise en service faisant suite à une transformation importante. Ces vérifications portent sur le respect des dispositions de la présente section applicables aux ascenseurs. » Relu le 2026-10-07 par l'API Légifrance (PISTE) en environnement BAC À SABLE : version LEGIARTI000020382882 en vigueur depuis le 2008-10-08, aucune version future.",
+        versionConstatee: "2008-10-08",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PE 1 § 1 (le livre II, « Dispositions applicables aux établissements des quatre premières catégories », n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) — livre III",
+        article: "PE 1",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020374786",
+        note: "« Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre. » (§ 1, second alinéa). AS 9 est au livre II, dont le titre est « Livre II : Dispositions applicables aux établissements des quatre premières catégories. » : c'est le premier fondement de la restriction aux catégories 1 à 4. Relu le 2026-10-07 par l'API Légifrance (PISTE) en BAC À SABLE : LEGIARTI000020374786, en vigueur depuis le 1990-08-27, aucune version future ; le titre du livre relu le même jour sur le plan du texte (LEGISCTA000020303869), inchangé dans le plan au 2027-06-15.",
+        versionConstatee: "1990-08-27",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. GE 7 § 1 (organismes agréés dans les établissements des 1re, 2e, 3e et 4e catégories)",
+        article: "GE 7",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020380174",
+        note: "Appuie la restriction aux quatre premières catégories, qu'AS 9 n'écrit pas et que PE 1 § 1 fonde d'abord : « § 1. Les vérifications techniques doivent être effectuées par des organismes agréés par le ministre de l'intérieur : […] -dans tous les établissements des 1re, 2e, 3e et 4e catégories, lorsque les dispositions du présent règlement l'imposent ». GN 1 § 2 a) range ces quatre catégories dans le premier groupe : « le premier groupe comprend les établissements de 1re, 2e, 3e et 4e catégories ; - le deuxième groupe comprend les établissements de la 5e catégorie. » Relu le 2026-10-07 en bac à sable PISTE : version LEGIARTI000020380174 (2007-11-19), à abrogation différée au 2027-06-01 — la version suivante (LEGIARTI000053564573, arrêté du 19 février 2026) ne mentionne plus les catégories.",
+        versionConstatee: "2007-11-19",
+      },
+    ],
+    periodicite: "quinquennale",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["organisme_agree"],
+    criticite: 5,
+    transmet: [],
+    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    categoriesEquipement: ["ASCENSEUR"],
+    relectureDue: {
+      le: "2027-06-01",
+      motif:
+        "La restriction aux catégories 1 à 4 tient d'abord à PE 1 § 1 (le livre II n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) et au titre du livre II (« Dispositions applicables aux établissements des quatre premières catégories »), inchangé dans le plan du texte au 2027-06-15. GE 7 § 1, qui l'appuie en nommant les catégories, est réécrit au 1er juin 2027 (arrêté du 19 février 2026, LEGIARTI000053564573) : la nouvelle rédaction vise « les établissements soumis aux dispositions du présent livre » — le livre II — et garde la borne par ce renvoi. Relire GE 7, AS 9 et le titre du livre II en vigueur à cette date pour le confirmer.",
+    },
+    notesInternes:
+      "CRÉÉE LE 2026-10-07, à la demande du préventeur (Julien Chantoin, retour du 2026-10-05) : « il y a deux vérifications quinquennales défférents [sic] : AS9 et 7 aout 2012 » (annotation, p. 16 du référentiel) ; « AS9 applicable qu'au ERP N1 à N4 (organisme agréé) » / « obligation CT s'applique à tous les ascenseurs ( personne certifiée) » (annotation, p. 3 de la réponse). Citations recopiées des annotations le 2026-10-07 (C60), fautes comprises ; la première rédaction de cette note les avait reconstituées. AS 9 était jusque-là cité en CONTEXTE de `ascenseur-controle-technique-quinquennal`, avec une note qui refusait la seconde ligne pour ne pas créer « deux rendez-vous quinquennaux pour un seul acte ». Le refus est levé : AS 9 exige un organisme agréé et vérifie « le respect des dispositions de la présente section applicables aux ascenseurs », là où R. 134-11 laisse le choix du contrôleur et définit un autre objet (a et b). Deux régimes, deux lignes.\n\nRESTRICTION N1–N4. AS 9 ne nomme aucune catégorie. ~~Elle vient de GE 7 § 1 (« dans tous les établissements des 1re, 2e, 3e et 4e catégories, lorsque les dispositions du présent règlement l'imposent ») et de GN 1 § 2 (premier groupe = catégories 1 à 4)~~ [2026-10-07, C60, revue indépendante : fondement réordonné]. Elle vient D'ABORD de la place de l'article : AS 9 est au livre II, intitulé « Dispositions applicables aux établissements des quatre premières catégories », et PE 1 § 1 dispose que « les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre » (PE 1 relu le 2026-10-07 par l'API PISTE, bac à sable). GE 7 § 1 (« dans tous les établissements des 1re, 2e, 3e et 4e catégories, lorsque les dispositions du présent règlement l'imposent ») et GN 1 § 2 (premier groupe = catégories 1 à 4) l'appuient, comme pour les autres lignes du Livre II bornées à `categories: [\"N1\", \"N2\", \"N3\", \"N4\"]`. GE 7 change au 2027-06-01 : sa nouvelle version ne nomme plus les catégories mais vise « les établissements soumis aux dispositions du présent livre », c'est-à-dire le livre II — la borne tient par PE 1 § 1 et par ce renvoi ; `relectureDue` posé pour le vérifier à la date. RENVOI EXPRÈS EN 5ᵉ : PO 1 § 3, réimporté pour les hôtels existants par PO 8 § 1, renvoie le contrôle des ascenseurs à AS 9 — l'hôtel de 5ᵉ catégorie (type O) a sa ligne, `ascenseur-hotel-5-verification-quinquennale-as9`. En 5ᵉ catégorie, PE 4 § 2 nomme les « ascenseurs » dans l'entretien triennal par des techniciens compétents (`incendie-erp-pe4-entretien-installations-techniques`) — constat annexe du plan, non instruit ici.\n\nPAS DE `succedeA`. La ligne CCH garde son id et toute sa population ; aucune part de population ne change d'identifiant. Déclarer la succession ferait reprendre par cette ligne la rangée existante du contrôle CCH (`calendrier/generateur.ts`, `adopter`) pendant que la ligne CCH continuerait de s'engendrer. Conséquence assumée : pour un ERP N1–N4 qui suivait déjà son contrôle quinquennal, cette ligne naît « à planifier », et le dernier rapport reste sur la ligne CCH.\n\nRÉALISATEUR `organisme_agree` : « par un organisme agréé » (AS 9), au sens de GE 6 et GE 7.\n\nLa remise en service après transformation importante, second titre de la même phrase, a sa ligne : `ascenseur-erp-verification-remise-en-service-as9`.",
+  },
+  {
+    // CRÉÉE LE 2026-10-07 — second titre d'AS 9, événementiel.
+    id: "ascenseur-erp-verification-remise-en-service-as9",
+    domaine: "ascenseur",
+    libelle:
+      "Vérification de l'ascenseur par un organisme agréé avant sa remise en service après une transformation importante (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des 1re, 2e, 3e ou 4e catégories, un ascenseur qui a subi une transformation importante est vérifié, fonctionnement compris, par un organisme agréé avant sa remise en service. La vérification porte sur le respect des dispositions du règlement de sécurité applicables aux ascenseurs.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. AS 9 (vérification avant remise en service faisant suite à une transformation importante)",
+        article: "AS 9",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382882",
+        note: "« […] par un organisme agréé, dans les conditions prévues à la section II du chapitre Ier du présent titre tous les cinq ans et avant leur remise en service faisant suite à une transformation importante. » Relu le 2026-10-07 en bac à sable PISTE (LEGIARTI000020382882, 2008-10-08).",
+        versionConstatee: "2008-10-08",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PE 1 § 1 (le livre II, « Dispositions applicables aux établissements des quatre premières catégories », n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) — livre III",
+        article: "PE 1",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020374786",
+        note: "« Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre. » (§ 1, second alinéa). AS 9 est au livre II, dont le titre est « Livre II : Dispositions applicables aux établissements des quatre premières catégories. » : c'est le premier fondement de la restriction aux catégories 1 à 4. Relu le 2026-10-07 par l'API Légifrance (PISTE) en BAC À SABLE : LEGIARTI000020374786, en vigueur depuis le 1990-08-27, aucune version future ; le titre du livre relu le même jour sur le plan du texte (LEGISCTA000020303869), inchangé dans le plan au 2027-06-15.",
+        versionConstatee: "1990-08-27",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. GE 7 § 1 (organismes agréés dans les établissements des 1re, 2e, 3e et 4e catégories)",
+        article: "GE 7",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020380174",
+        note: "Appuie la restriction aux quatre premières catégories, que PE 1 § 1 fonde d'abord : « dans tous les établissements des 1re, 2e, 3e et 4e catégories, lorsque les dispositions du présent règlement l'imposent ». Version à abrogation différée au 2027-06-01.",
+        versionConstatee: "2007-11-19",
+      },
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    // Pas de `faitGenerateur` (facultatif hors établissement) : la seule
+    // proposition complète d'AS 9 qui porte le fait commence à « dans les
+    // conditions prévues » et contient « tous les cinq ans » — un extrait
+    // complet aurait mêlé les deux titres. Le fait est dit par la description.
+    realisateurs: ["organisme_agree"],
+    criticite: 5,
+    transmet: [],
+    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    categoriesEquipement: ["ASCENSEUR"],
+    relectureDue: {
+      le: "2027-06-01",
+      motif:
+        "La restriction aux catégories 1 à 4 tient d'abord à PE 1 § 1 (le livre II n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) et au titre du livre II (« Dispositions applicables aux établissements des quatre premières catégories »), inchangé dans le plan du texte au 2027-06-15. GE 7 § 1, qui l'appuie en nommant les catégories, est réécrit au 1er juin 2027 (arrêté du 19 février 2026, LEGIARTI000053564573) : la nouvelle rédaction vise « les établissements soumis aux dispositions du présent livre » — le livre II — et garde la borne par ce renvoi. Relire GE 7, AS 9 et le titre du livre II en vigueur à cette date pour le confirmer.",
+    },
+    notesInternes:
+      "CRÉÉE LE 2026-10-07 avec `ascenseur-erp-verification-quinquennale-as9`. Le corpus d'AS 9 disait depuis le 2026-09-04 que ce second titre « n'est porté par rien » parce que la nature événementielle n'avait « AUCUNE surface ». ~~aucune surface~~ [2026-10-07 : faux depuis l'ADR-037 (2026-09-21) — une obligation événementielle portée par un équipement se montre sur la fiche de l'appareil, `estDeclencheeParUnFait`, surface `faits` de `surfaces/obligations-sans-surface.ts`]. Le blocage étant levé, la ligne est encodée.\n\nNATURE : ÉVÉNEMENTIELLE (ADR-026), `periodicite: \"autre\"`. Le fait — une transformation importante — n'est pas observé par le produit : il ne date ni ne solde l'échéance, comme `froid-controle-etancheite-apres-modification`. Ce qu'est une « transformation importante » n'est pas défini par AS 9 ; le libellé reprend les mots du texte sans les préciser.\n\nUne seule phrase d'AS 9 porte deux titres ; la règle de résolution de `types.ts` (encoder celui qui oblige à refaire l'acte) aurait rangé la phrase entière en échéance récurrente et fait disparaître celui-ci. Deux lignes, chacune avec son titre, ne se recouvrent pas : même article, même appareil, périodicités différentes.",
   },
   {
     id: "ascenseur-carnet-entretien",

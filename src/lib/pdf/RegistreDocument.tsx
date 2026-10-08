@@ -1,3 +1,4 @@
+import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
 import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
@@ -60,6 +61,18 @@ export type LigneVerif = {
    * seul un silence de la fiche fait exister (analyse du 2026-09-27).
    */
   aConfirmer: readonly string[];
+  /**
+   * La phrase de la mention de rythme retenu (ADR-039), ou `null` : un
+   * rythme que le texte n'écrit pas s'imprime avec son origine — la norme
+   * citée comme norme, ou le défaut annuel et le mot du texte.
+   */
+  rythmeRetenu: string | null;
+  /**
+   * La visite de la commission de sécurité, à l'initiative de l'administration
+   * (C64) : imprimée « Pour information », jamais en retard. Requis, comme
+   * `contractuelle` : le README du ZIP l'annonce d'après ce champ.
+   */
+  pourInformation: boolean;
 };
 
 /**
@@ -145,6 +158,9 @@ const LIBELLE_STATUT_VERIF: Record<StatutPeint, string> = {
   en_retard: "En retard",
   // D1 (a) : une échéance que seul le silence de la fiche retient.
   a_confirmer: "À confirmer",
+  // C64 : la visite de la commission de sécurité, à l'initiative de
+  // l'administration — la phrase longue, écrite une fois (`initiative.ts`).
+  pour_information: MENTION_POUR_INFORMATION,
   realisee_conforme: "Conforme",
   realisee_observations: "Observations",
   realisee_ecart_majeur: "Écart majeur",
@@ -735,6 +751,11 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                       {MARQUAGE_CONTRACTUEL}
                     </Text>
                   )}
+                  {v.rythmeRetenu && (
+                    <Text style={[s.small, { marginTop: 2 }]}>
+                      {v.rythmeRetenu}
+                    </Text>
+                  )}
                   {v.aConfirmer.length > 0 && (
                     <Text style={[s.small, { marginTop: 2 }]}>
                       {`À confirmer. ${v.aConfirmer.join(" ")}`}
@@ -784,6 +805,11 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
               (`elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
               `incendie-igh-charge-calorifique-quinquennale`) et huit
               d'ascenseur, ouvertes à tous les régimes.
+
+              2026-10-07 : les trois lignes propres à l'IGH sont RETIRÉES
+              (périmètre, relecture préventeur du 30/09, décision de la
+              propriétaire du 07/10). Restent les huit d'ascenseur ; la phrase
+              du registre IGH (`phraseRegistreIgh`) ne dépend d'aucune d'elles.
 
               TRANCHÉ LE 2026-09-26, par le texte. R. 146-35, relu sur sa page
               Légifrance : « Il doit être tenu, par le propriétaire, un registre

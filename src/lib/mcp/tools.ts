@@ -388,7 +388,8 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
   EPI_RESPIRATOIRE: "appareil de protection respiratoire",
   EPI_GILET_SAUVETAGE: "gilet de sauvetage gonflable",
   BAES: "bloc autonome d'éclairage de sécurité",
-  ALARME_INCENDIE: "alarme incendie",
+  // Aligné le 2026-10-07 sur `LABEL_CATEGORIE_EQUIPEMENT` (préventeur).
+  ALARME_INCENDIE: "SSI et équipement d'alarme incendie",
   DESENFUMAGE: "désenfumage",
   VMC: "ventilation mécanique",
   CTA: "centrale de traitement d'air",
@@ -459,6 +460,8 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   // D1 (a) : ni « en retard » ni un verdict — la ligne tient à une question
   // restée sans réponse, que la mention « à confirmer » nomme.
   a_confirmer: "à confirmer",
+  // C64 : la phrase même des autres surfaces, en minuscule d'attaque.
+  pour_information: "pour information — visite à l'initiative de l'administration",
 };
 
 function formaterVerifications(verifs: VerificationLue[], filtre = true): string {
@@ -517,6 +520,8 @@ function formaterVerifications(verifs: VerificationLue[], filtre = true): string
       v.contractuelle
         ? "engagement d'assurance, pas une obligation légale"
         : null,
+      // ADR-039 : un rythme que le texte n'écrit pas se dit comme tel.
+      v.rythmeRetenu,
       // Même raison : une ligne que seul le silence de la fiche retient ne
       // se restitue pas comme due.
       v.aConfirmer.length > 0

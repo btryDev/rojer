@@ -66,7 +66,8 @@ export const ARRETE_1987_10_08_AERATION: Corpus = {
       statut: "retenu",
       obligations: [
         "aeration-travail-locaux-pollution-specifique",
-        "stockage-dangereux-ventilation-locaux",
+        // ~~"stockage-dangereux-ventilation-locaux"~~ — retirée le 2026-10-07
+        // (périmètre, relecture préventeur du 30/09, décision du 07/10).
         "aeration-travail-recyclage-semestriel",
       ],
       prescrit:

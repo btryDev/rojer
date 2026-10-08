@@ -113,7 +113,7 @@ const h = vi.hoisted(() => {
         // FANTÔME : `notIn` était ignoré jusqu'au 2026-09-13, et toute ligne le
         // passait. Refusé plutôt que deviné, comme `rapports` plus haut.
         const inconnus = Object.keys(filtre).filter(
-          (k) => !["in", "notIn", "gte", "gt", "lte", "lt"].includes(k),
+          (k) => !["in", "notIn", "gte", "gt", "lte", "lt", "not"].includes(k),
         );
         if (inconnus.length > 0) {
           throw new Error(`opérateur non interprété sur ${cle} : ${inconnus.join(", ")}`);
@@ -123,6 +123,10 @@ const h = vi.hoisted(() => {
         }
         if ("notIn" in filtre) {
           if ((filtre.notIn as unknown[]).includes(valeur)) return false;
+        }
+        // `not` (ADR-040, `horsGrace` de `urgenceSeule`) : une égalité niée.
+        if ("not" in filtre) {
+          if (valeur === filtre.not) return false;
         }
         for (const borne of ["gte", "gt", "lte", "lt"] as const) {
           if (!(borne in filtre)) continue;

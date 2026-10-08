@@ -206,6 +206,24 @@ export type StatutArticle =
    * `non_couvert`.
    */
   | { statut: "hors_perimetre"; exclusion: MotifExclusion; motif?: string }
+  /**
+   * Une NORME homologuée (NF, EN), lue — ADR-039, 2026-10-07.
+   *
+   * Ni `retenu` — qui dit qu'un article de DROIT fonde une obligation —, ni
+   * `sans_objet` : une norme qui écrit un rythme n'est pas sans objet, elle
+   * peut le donner à une obligation dont le texte ne le chiffre pas. Le statut
+   * dit « lue ; c'est une norme ; Rojer peut en retenir le rythme ».
+   *
+   * `obligations` nomme celles dont le `rythmeRetenu` (ou une référence) la
+   * cite. Vide est une réponse : la norme est lue, aucune obligation ne la
+   * retient encore. Le lien est tenu dans les deux sens par
+   * `liensRompus("norme")`.
+   *
+   * Une norme lue `indirect` — par un texte qui la cite, sans son texte à
+   * elle — peut figurer ici pour être comptée, mais ne fonde aucun rythme
+   * (`controlerRythmeRetenu`).
+   */
+  | { statut: "norme"; motif: string; obligations: string[] }
   /** Présent au corpus, pas encore lu. */
   | { statut: "non_depouille" };
 
@@ -353,6 +371,8 @@ export type CouvertureCorpus = {
   obligationsManquantes: number;
   /** Articles qui imposent quelque chose que le produit choisit de ne pas couvrir. */
   nonCouverts: number;
+  /** Normes lues (ADR-039) : ni droit retenu, ni sans objet. */
+  normes: number;
   nonDepouilles: number;
   /**
    * Vrai seulement si le corpus est intégral ET qu'aucun article n'est resté
@@ -376,6 +396,7 @@ export function couverture(c: Corpus): CouvertureCorpus {
     horsPerimetre: par("hors_perimetre"),
     obligationsManquantes: par("obligation_manquante"),
     nonCouverts: par("non_couvert"),
+    normes: par("norme"),
     nonDepouilles,
     complet: c.etendue === "integral" && nonDepouilles === 0,
   };

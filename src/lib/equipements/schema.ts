@@ -3,6 +3,7 @@ import { z } from "zod";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { FAMILLES_ESP } from "./esp";
+import { TYPES_EXTINCTEUR } from "./extincteur";
 
 /**
  * Schéma de validation d'un équipement. Les propriétés spécifiques à une
@@ -34,10 +35,26 @@ import { FAMILLES_ESP } from "./esp";
  *     (l'intervalle entre deux contrôles d'étanchéité est doublé)
  *   - `estChargeSuperieure50TCo2`   → règlement (UE) 2024/573, art. 5 (palier)
  *   - `estChargeSuperieure500TCo2`  → règlement (UE) 2024/573, art. 5 (palier)
+ *   - `estSsiCategorieAouB`         → ERP N1-N4, art. MS 73 § 2 : triennale
+ *     des SSI « de catégories A et B » (sur l'ALARME_INCENDIE ; trois états,
+ *     seul un « non » retire la triennale — 2026-10-07, lot 4 relecture JC)
+ *   - `estDesenfumageMecanique`     → ERP N1-N4, art. DF 10 § 3 (sur le
+ *     DESENFUMAGE ; trois états, seul un « oui » fait naître la triennale)
+ *   - `etablissementASsiCategorieAouB` → ERP N1-N4, art. DF 10 § 3 (sur le
+ *     DESENFUMAGE : le moteur ne lit que l'appareil déclencheur, la présence
+ *     d'un SSI A/B dans l'établissement se demande donc au désenfumage
+ *     lui-même ; seul un « non » l'éteint)
  *   - `familleEsp`                  → arrêté du 20 novembre 2017, art. 15 :
  *     inspection périodique biennale des générateurs de vapeur, distinguée du
- *     régime général. Seule propriété d'ÉNUMÉRATION de cette liste ; les
- *     autres sont des booléens ou des nombres.
+ *     régime général. ~~Seule propriété d'ÉNUMÉRATION de cette liste ; les
+ *     autres sont des booléens ou des nombres.~~ [2026-10-07 : elle a une sœur,
+ *     `typeExtincteur`, ci-dessous.]
+ *   - `typeExtincteur`              → NF S 61-919 (août 2001), annexe A,
+ *     tableau A.1 : la maintenance additionnelle approfondie à 5 et 15 ans ne
+ *     vise ni le CO2 ni la poudre à opercule scellé (C59 lot 3, ADR-039), ni
+ *     le halon, à qui le tableau ne donne pas non plus de révision à dix ans
+ *     (« Voir note 3 ») — valeur `halon` entrée le 2026-10-07 (C60).
+ *     Seconde propriété d'ÉNUMÉRATION, lue par `enum_differente`.
  *
  * `dessertLocauxSommeil` a été RETIRÉ le 2026-09-01 (lot A11). Il portait à lui
  * seul la restriction « locaux à sommeil » de PE 37, faute d'attribut
@@ -151,6 +168,9 @@ export const CHAMPS_TRI_ETAT = [
   "estChargeSuperieure500TCo2",
   "aDetectionDeFuites",
   "estMuParForceHumaine",
+  "estSsiCategorieAouB",
+  "estDesenfumageMecanique",
+  "etablissementASsiCategorieAouB",
 ] as const;
 
 export type ChampTriEtat = (typeof CHAMPS_TRI_ETAT)[number];
@@ -235,6 +255,26 @@ export const CATEGORIES_TRI_ETAT: readonly {
     champ: "aDetectionDeFuites",
     categories: ["INSTALLATION_FRIGORIFIQUE"],
     message: "Spécifique aux installations frigorifiques",
+  },
+  // 2026-10-07 (lot 4, relecture du préventeur) : MS 73 § 2 et DF 10 § 3. Les
+  // trois ne gouvernent que des lignes ERP des quatre premières catégories.
+  {
+    champ: "estSsiCategorieAouB",
+    categories: ["ALARME_INCENDIE"],
+    message: "Spécifique aux systèmes de sécurité incendie",
+    erpSeulement: true,
+  },
+  {
+    champ: "estDesenfumageMecanique",
+    categories: ["DESENFUMAGE"],
+    message: "Spécifique aux installations de désenfumage",
+    erpSeulement: true,
+  },
+  {
+    champ: "etablissementASsiCategorieAouB",
+    categories: ["DESENFUMAGE"],
+    message: "Spécifique aux installations de désenfumage",
+    erpSeulement: true,
   },
 ];
 
@@ -327,11 +367,25 @@ export const equipementSchema = z
     // via les formes `enum_differente` et `enum_egale` de `ConditionApplication`.
     // Conséquence pratique : sa valeur n'est plus un simple confort de saisie,
     // et en changer une modifie une échéance de criticité 5.
+    // [2026-10-07 : PÉRIMÉ. Les deux inspections sont retirées (relecture
+    // préventeur du 30/09, décision de la propriétaire du 07/10) ; ~~plus aucune
+    // obligation ne lit `familleEsp`. Elle ne sert de nouveau qu'au verdict
+    // indicatif `verdictSuiviEnService`.~~] [2026-10-08, C64 : de nouveau LUE
+    // par le moteur — `esp-requalification-decennale` est bornée aux
+    // compresseurs par quatre conditions `enum_differente` ; déclarer une
+    // autre famille retire la requalification décennale.]
     // `pressionMaxAdmissibleBar` et `volumeLitres`, eux, ne sont toujours pas
     // lus par le moteur.
     familleEsp: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
       z.enum(FAMILLES_ESP).optional(),
+    ),
+    // Type d'extincteur portatif (NF S 61-919, tableau A.1) — lu par le
+    // moteur depuis le 2026-10-07 : il décide de la maintenance additionnelle
+    // approfondie (`incendie-travail-extincteurs-maintenance-approfondie`).
+    typeExtincteur: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.enum(TYPES_EXTINCTEUR).optional(),
     ),
     pressionMaxAdmissibleBar: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
@@ -355,6 +409,9 @@ export const equipementSchema = z
     estChargeSuperieure50TCo2: triEtat,
     estChargeSuperieure500TCo2: triEtat,
     aDetectionDeFuites: triEtat,
+    estSsiCategorieAouB: triEtat,
+    estDesenfumageMecanique: triEtat,
+    etablissementASsiCategorieAouB: triEtat,
     notes: z.preprocess(
       (v) => (typeof v === "string" ? v.trim() || undefined : v),
       z.string().max(1000).optional(),
@@ -397,6 +454,17 @@ export const equipementSchema = z
         code: "custom",
         path: ["nbVehiculesParkingCouvert"],
         message: "Applicable uniquement à une VMC de parking couvert",
+      });
+    }
+
+    // Le type d'extincteur (NF S 61-919, tableau A.1) ne se dit que d'un
+    // extincteur : ailleurs, il éteindrait ou allumerait une maintenance
+    // approfondie sur un appareil qui n'en a pas.
+    if (val.typeExtincteur !== undefined && val.categorie !== "EXTINCTEUR") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["typeExtincteur"],
+        message: "Applicable uniquement à un extincteur",
       });
     }
 
@@ -443,6 +511,8 @@ export function normaliserFormDataEquipement(
     nbVehiculesParkingCouvert: raw.nbVehiculesParkingCouvert,
     // Plaque constructeur d'un équipement sous pression (cf. `esp.ts`).
     familleEsp: raw.familleEsp,
+    // Type d'extincteur (cf. `extincteur.ts`).
+    typeExtincteur: raw.typeExtincteur,
     pressionMaxAdmissibleBar: raw.pressionMaxAdmissibleBar,
     volumeLitres: raw.volumeLitres,
     notes: raw.notes,
@@ -471,6 +541,7 @@ export function serialiserCaracteristiques(
   if (val.nbVehiculesParkingCouvert !== undefined)
     out.nbVehiculesParkingCouvert = val.nbVehiculesParkingCouvert;
   if (val.familleEsp !== undefined) out.familleEsp = val.familleEsp;
+  if (val.typeExtincteur !== undefined) out.typeExtincteur = val.typeExtincteur;
   if (val.pressionMaxAdmissibleBar !== undefined)
     out.pressionMaxAdmissibleBar = val.pressionMaxAdmissibleBar;
   if (val.volumeLitres !== undefined) out.volumeLitres = val.volumeLitres;

@@ -242,7 +242,7 @@ describe("d — un appareil désactivé puis réactivé", () => {
     ];
     await genererCalendrier(ETAB_ID);
     const avant = lue("d2")!;
-    expect(estVerificationEnRetard({ ...avant, archiveLe: avant.archiveLe ?? null }, new Date())).toBe(true);
+    expect(estVerificationEnRetard({ ...avant, archiveLe: avant.archiveLe ?? null, graceJusquAu: avant.graceJusquAu ?? null }, new Date())).toBe(true);
 
     db.etablissements[0].equipements[0].actif = false;
     await genererCalendrier(ETAB_ID);
@@ -252,7 +252,7 @@ describe("d — un appareil désactivé puis réactivé", () => {
     await genererCalendrier(ETAB_ID);
     const neuve = db.verifications.find((v) => v.obligationId === ELEC_ANNUELLE && v.equipementId === "eq-1")!;
     expect(neuve.id).not.toBe("d2");
-    expect(estVerificationEnRetard({ ...neuve, archiveLe: neuve.archiveLe ?? null }, new Date())).toBe(false);
+    expect(estVerificationEnRetard({ ...neuve, archiveLe: neuve.archiveLe ?? null, graceJusquAu: neuve.graceJusquAu ?? null }, new Date())).toBe(false);
   });
 });
 

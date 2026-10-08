@@ -357,24 +357,20 @@ describe("moteur matching — typologie ERP", () => {
   });
 });
 
+// ~~GH 5 : `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`~~ —
+// retirées le 2026-10-07 (périmètre, relecture préventeur du 30/09, décision
+// de la propriétaire du 07/10). Le régime IGH ne déclenche plus rien en propre ;
+// la typologie reste lue par les lignes d'ascenseur (bloc suivant).
 describe("moteur matching — typologie IGH", () => {
-  it("IGH avec élec → déclenche GH 50 annuelle", () => {
-    const res = determineObligationsApplicables(etabIgh(), [elec()]);
-    expect(idsObligations(res)).toContain("elec-igh-annuelle");
-  });
-
-  it("IGH avec alarme + extincteur + désenfumage → moyens de secours annuels GH 60 s.", () => {
-    const res = determineObligationsApplicables(etabIgh(), [
-      alarme(),
-      extincteur(),
-      desenfumage(),
-    ]);
-    expect(idsObligations(res)).toContain("incendie-igh-moyens-secours-annuelle");
-  });
-
-  it("bureau non-IGH → pas de GH 50", () => {
-    const res = determineObligationsApplicables(etabBureau(), [elec()]);
-    expect(idsObligations(res)).not.toContain("elec-igh-annuelle");
+  it("IGH avec élec, alarme, extincteur, désenfumage → rien de plus que hors IGH", () => {
+    const parc = [elec(), alarme(), extincteur(), desenfumage()];
+    const enIgh = idsObligations(determineObligationsApplicables(etabIgh(), parc));
+    const horsIgh = idsObligations(
+      determineObligationsApplicables({ ...etabIgh(), estIGH: false }, parc),
+    );
+    expect([...enIgh].sort()).toEqual([...horsIgh].sort());
+    expect(enIgh).not.toContain("elec-igh-annuelle");
+    expect(enIgh).not.toContain("incendie-igh-moyens-secours-annuelle");
   });
 });
 
@@ -632,13 +628,24 @@ describe("moteur matching — conditions booléennes (local pollution spécifiqu
     expect(ids).toContain("aeration-travail-locaux-pollution-specifique");
   });
 
-  it("travail avec hotte pollution spécifique → contrôle annuel applicable (VMC/CTA/HOTTE_PRO)", () => {
-    const res = determineObligationsApplicables(etabBureau(), [
-      { ...hotte(), caracteristiques: { estLocalPollutionSpecifique: true } },
-    ]);
-    expect(idsObligations(res)).toContain(
-      "aeration-travail-locaux-pollution-specifique",
-    );
+  // ~~« travail avec hotte pollution spécifique → contrôle annuel applicable
+  // (VMC/CTA/HOTTE_PRO) »~~ — 2026-10-07 : la hotte ne porte plus ce contrôle
+  // (relecture préventeur du 30/09, « traité dans le VMC : à supprimer dans
+  // les hottes » ; décision de la propriétaire du 07/10).
+  it("hotte pollution spécifique → l'annuel n'est porté que par la VMC", () => {
+    const hottePs = {
+      ...hotte(),
+      caracteristiques: { estLocalPollutionSpecifique: true },
+    };
+    const declencheurs = (eqs: EquipementMatching[]) =>
+      determineObligationsApplicables(etabBureau(), eqs)
+        .filter((a) => a.obligation.id === "aeration-travail-locaux-pollution-specifique")
+        .flatMap((a) => a.equipementsConcernes.map((e) => e.id));
+    // Hotte seule : la ligne ne naît pas.
+    expect(declencheurs([hottePs])).toEqual([]);
+    // Hotte et VMC du même local : une seule ligne, portée par la VMC.
+    const vmcPs = vmc({ caracteristiques: { estLocalPollutionSpecifique: true } });
+    expect(declencheurs([hottePs, vmcPs])).toEqual([vmcPs.id]);
   });
 });
 
@@ -701,7 +708,12 @@ describe("moteur matching — scénarios intégrés", () => {
     expect(ids).toContain("elec-erp-mise-en-service");
     expect(ids).toContain("elec-travail-consignation-registre");
     // Incendie
-    expect(ids).toContain("incendie-travail-moyens-lutte");
+    // 2026-10-07 (C59 lot 3) : la maintenance annuelle de la norme NF S 61-919
+    // ne vise plus que le lieu de travail HORS ERP — l'annuelle de MS 38 § 4,
+    // écrite par le texte, l'emporte chez un ERP (une seule annuelle par
+    // extincteur, `extincteurs-partition.test.ts`).
+    expect(ids).not.toContain("incendie-travail-moyens-lutte");
+    expect(ids).toContain("incendie-travail-extincteurs-dotation");
     expect(ids).toContain("incendie-erp-extincteurs-annuelle");
     expect(ids).toContain("incendie-erp-ssi-annuelle");
     expect(ids).toContain("incendie-erp-baes-annuelle");
@@ -736,10 +748,10 @@ describe("moteur matching — scénarios intégrés", () => {
     }
   });
 
-  it("IGH + ERP cat 1 — cumul des deux régimes (élec)", () => {
+  it("IGH + ERP cat 1 — cumul des régimes servis (élec)", () => {
+    // ~~`elec-igh-annuelle`~~ retirée le 2026-10-07 : l'IGH ne s'y ajoute plus.
     const res = determineObligationsApplicables(etabIgh(), [elec()]);
     const ids = idsObligations(res);
-    expect(ids).toContain("elec-igh-annuelle");
     expect(ids).toContain("elec-erp-cat1-4-annuelle");
     expect(ids).toContain("elec-travail-periodique-annuelle");
   });
@@ -881,7 +893,8 @@ describe("moteur matching — cohérence avec le référentiel", () => {
 
   it("evaluerObligation en direct renvoie null si typologie incompatible", () => {
     const res = evaluerObligation(
-      obligationsElectricite.find((o) => o.id === "elec-igh-annuelle")!,
+      // ~~`elec-igh-annuelle`~~ (retirée le 2026-10-07) : une ligne ERP seule.
+      obligationsElectricite.find((o) => o.id === "elec-erp-cat1-4-annuelle")!,
       etabBureau(),
       [elec()],
     );
@@ -1076,9 +1089,22 @@ describe("moteur matching — faux positifs structurels corrigés", () => {
     ]);
     const ids = idsObligations(res);
     expect(ids).not.toContain("esp-requalification-decennale");
-    expect(ids).not.toContain("esp-inspection-periodique");
-    // La formation des opérateurs relève du Code du travail : elle demeure.
-    expect(ids).toContain("esp-personnel-formation");
+    // ~~La formation des opérateurs relève du Code du travail : elle demeure.~~
+    // `esp-personnel-formation` et `esp-inspection-periodique` sont retirées le
+    // 2026-10-07 (périmètre, relecture préventeur du 30/09). Borne haute : le
+    // même compresseur, SANS la réponse « non », garde la requalification.
+    expect(
+      idsObligations(
+        determineObligationsApplicables(etabBureau(), [
+          {
+            id: "eq-compresseur",
+            libelle: "Compresseur d'atelier",
+            categorie: "EQUIPEMENT_SOUS_PRESSION",
+            caracteristiques: {},
+          },
+        ]),
+      ),
+    ).toContain("esp-requalification-decennale");
   });
 
   it("une VMC d'habitation non raccordée au gaz perd l'obligation VMC-Gaz", () => {
@@ -1139,17 +1165,24 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // rendez-vous annuel à qui a déclaré des gants, le défaut même que la
         // catégorie du compacteur a été écrite pour éviter. La lecture de
         // l'arrêté décidera peut-être de la scinder en deux.
-        "EPI",
+        // [2026-10-07, C59 lot 3 : SORTIE DE CETTE LISTE. Sur décision de la
+        // propriétaire (« vérification annuelle sur TOUS les EPI »),
+        // `epi-maintien-etat-conformite` vise `EPI` (R. 4322-1, rythme retenu
+        // par défaut, ADR-039). La scission du 2026-09-04 tient : la
+        // vérification de l'arrêté ne vise que les trois catégories nommées.]
         // Réglementations ERP pures : rien ne les vise chez un employeur seul.
-        "DESENFUMAGE",
+        // [2026-10-07, C59 lot 3 : DESENFUMAGE SORT DE CETTE LISTE —
+        // `incendie-travail-desenfumage-entretien-verification`, défaut annuel
+        // de R. 4224-17 (ADR-039), lieu de travail hors ERP.]
         "APPAREIL_CUISSON_ERP",
         "HOTTE_PRO",
         // RIA A QUITTÉ CETTE LISTE LE 2026-09-02, et le trou qu'elle notait
         // est comblé, pas contourné. La note disait : « la seule obligation
         // qui vise la catégorie est `incendie-erp-ria-annuelle`, fondée sur
         // MS 73 — donc `erp: true` [...] aucun texte du référentiel ne pose de
-        // périodicité propre aux RIA hors ERP ». C'est toujours vrai des
-        // PÉRIODICITÉS, et ce n'est plus vrai de la couverture : l'article 10
+        // périodicité propre aux RIA hors ERP ». ~~C'est toujours vrai des
+        // PÉRIODICITÉS~~ [2026-10-07, C59 lot 3 : plus vrai — le défaut annuel
+        // de R. 4224-17 (ADR-039) date l'entretien du RIA hors ERP], et ce n'est plus vrai de la couverture : l'article 10
         // de l'arrêté du 4 novembre 1993 impose d'identifier les équipements
         // de lutte contre l'incendie par une coloration rouge et un panneau de
         // localisation, sans condition de régime — `signalisation-incendie-
@@ -1202,7 +1235,11 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // rendez-vous annuel à qui a déclaré des gants, le défaut même que la
         // catégorie du compacteur a été écrite pour éviter. La lecture de
         // l'arrêté décidera peut-être de la scinder en deux.
-        "EPI",
+        // [2026-10-07, C59 lot 3 : SORTIE DE CETTE LISTE. Sur décision de la
+        // propriétaire (« vérification annuelle sur TOUS les EPI »),
+        // `epi-maintien-etat-conformite` vise `EPI` (R. 4322-1, rythme retenu
+        // par défaut, ADR-039). La scission du 2026-09-04 tient : la
+        // vérification de l'arrêté ne vise que les trois catégories nommées.]
       ],
     },
   ];
@@ -1335,12 +1372,9 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       // S'AJOUTE à cet annuel, qui reste dû tant que la question n'a pas reçu
       // « oui ». Aucun équipement en base ne peut donc rien perdre.
       "aeration-travail-recyclage-semestriel",
-      // Obligation neuve du 2026-09-01 (arrêté du 20 novembre 2017, art. 15 :
-      // deux ans pour les générateurs de vapeur). Elle porte l'égalité
-      // `familleEsp = generateur_vapeur`, qui est stricte ; sa jumelle
-      // `esp-inspection-periodique` porte la différence, satisfaite au silence,
-      // et couvre donc l'équipement tant que la famille n'est pas saisie.
-      "esp-inspection-periodique-generateur-vapeur",
+      // ~~"esp-inspection-periodique-generateur-vapeur"~~ — retirée le
+      // 2026-10-07 (périmètre, relecture préventeur du 30/09, décision de la
+      // propriétaire du 07/10), avec sa jumelle générale.
       // Cinq paliers non nominaux du contrôle d'étanchéité : obligations
       // neuves, et `froid-controle-etancheite-annuel` couvre l'installation
       // tant qu'aucune question n'a reçu « oui ».
@@ -1349,6 +1383,10 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       "froid-controle-etancheite-semestriel-500t-detection",
       "froid-controle-etancheite-semestriel-50t",
       "froid-controle-etancheite-trimestriel-500t",
+      // Obligation neuve du 2026-10-07 (DF 10 § 3) : la triennale par
+      // organisme agréé S'AJOUTE à `incendie-erp-desenfumage-annuelle`, qui
+      // reste due quoi qu'on réponde. Stricte sur « mécanique » seulement.
+      "incendie-erp-desenfumage-triennale-mecanique-ssi",
       // D7, option (a) (2026-09-28) : l'annuelle s'éteint au silence sur le
       // levage de personnes, par dessein — la semestrielle « personnes » couvre
       // l'appareil (`matching/levage-un-rythme.test.ts`, 27 combinaisons).
@@ -2279,9 +2317,51 @@ describe("les raisons se lisent, elles ne se décodent pas", () => {
 // y compris aucune — il doit s'appliquer EXACTEMENT une des deux lignes, jamais
 // zéro (faux négatif muet) et jamais deux (deux inspections pour un seul acte).
 // -----------------------------------------------------------------------------
+// [2026-10-07] Les deux inspections réelles sont RETIRÉES du référentiel
+// (périmètre, relecture préventeur du 30/09, décision de la propriétaire du
+// 07/10) : plus aucune obligation ne porte les formes `enum_egale` /
+// `enum_differente` [intégration du 2026-10-07 : le lot 3 réemploie
+// `enum_differente`, deux fois, sur `incendie-travail-extincteurs-maintenance-approfondie`
+// (`typeExtincteur`) ; `enum_egale` reste sans ligne vivante]. Le couple est rejoué ici sur deux obligations
+// SYNTHÉTIQUES, clones de la requalification décennale qui reste, avec les
+// conditions exactes des lignes retirées : c'est la forme du moteur qu'on
+// garde, pas une ligne du référentiel. `evaluerObligation` remplace
+// `determineObligationsApplicables`, qui ne lit que le référentiel vivant.
 describe("moteur matching — inspection périodique ESP : le couple d'énumération", () => {
-  const GENERALE = "esp-inspection-periodique";
-  const BIENNALE = "esp-inspection-periodique-generateur-vapeur";
+  const GENERALE = "synthetique-esp-generale";
+  const BIENNALE = "synthetique-esp-generateur-vapeur";
+  const MODELE = obligationsConformite.find(
+    (o) => o.id === "esp-requalification-decennale",
+  )!;
+  const SUIVI = {
+    type: "equipement_propriete_non_infirmee",
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "estSoumisSuiviEnService",
+  } as const;
+  const ENUM = {
+    categorie: "EQUIPEMENT_SOUS_PRESSION",
+    propriete: "familleEsp",
+    valeur: "generateur_vapeur",
+  } as const;
+  const SYNTHETIQUES = [
+    {
+      ...MODELE,
+      id: GENERALE,
+      conditions: [SUIVI, { ...ENUM, type: "equipement_propriete_enum_differente" }],
+    },
+    {
+      ...MODELE,
+      id: BIENNALE,
+      conditions: [SUIVI, { ...ENUM, type: "equipement_propriete_enum_egale" }],
+    },
+  ] as Obligation[];
+  const applicables = (
+    etab: EtablissementMatching,
+    eqs: EquipementMatching[],
+  ): string[] =>
+    SYNTHETIQUES.filter((o) => evaluerObligation(o, etab, eqs) !== null).map(
+      (o) => o.id,
+    );
 
   function esp(caracteristiques: Record<string, unknown> | null) {
     return {
@@ -2294,9 +2374,7 @@ describe("moteur matching — inspection périodique ESP : le couple d'énuméra
 
   /** Les deux lignes du couple qui s'appliquent, dans l'ordre. */
   function couple(caracteristiques: Record<string, unknown> | null): string[] {
-    const ids = idsObligations(
-      determineObligationsApplicables(etabBureau(), [esp(caracteristiques)]),
-    );
+    const ids = applicables(etabBureau(), [esp(caracteristiques)]);
     return [GENERALE, BIENNALE].filter((id) => ids.includes(id));
   }
 
@@ -2355,16 +2433,14 @@ describe("moteur matching — inspection périodique ESP : le couple d'énuméra
     // `familleEsp` n'est contraint à aucune catégorie côté schéma : rien
     // n'empêche d'écrire la clé sur une hotte. C'est la `categorie` portée par
     // la condition qui doit l'empêcher de mordre, pas la discipline de saisie.
-    const ids = idsObligations(
-      determineObligationsApplicables(etabBureau(), [
-        {
-          id: "eq-hotte",
-          libelle: "Hotte de cuisson",
-          categorie: "HOTTE_PRO" as const,
-          caracteristiques: { familleEsp: "generateur_vapeur" },
-        },
-      ]),
-    );
+    const ids = applicables(etabBureau(), [
+      {
+        id: "eq-hotte",
+        libelle: "Hotte de cuisson",
+        categorie: "HOTTE_PRO" as const,
+        caracteristiques: { familleEsp: "generateur_vapeur" },
+      },
+    ]);
     expect(ids).not.toContain(BIENNALE);
     expect(ids).not.toContain(GENERALE);
   });

@@ -9,6 +9,13 @@
 - Dépend de : ADR-003 (référentiel en TypeScript), ADR-010 (registre des sources
   d'échéances), ADR-012 (conservation et idempotence), ADR-035 (prescriptions
   particulières), ADR-016 (nature d'échéance), ADR-019 (le bâtiment est un lieu)
+- **Amendée le 2026-10-08 (C64)** : une obligation d'établissement peut porter
+  `siEquipementDeclare` — elle n'existe que si au moins un équipement de la
+  catégorie est déclaré, et produit alors UNE ligne, jamais une par équipement.
+  C'est un déclencheur, pas un porteur : la formation au risque chimique
+  (`stockage-dangereux-etablissement-formation-personnel`) en est le premier
+  cas — portée par chaque stockage, elle donnait une formation annuelle par
+  armoire. Sans le champ, la règle du § 4 reste : due même sans équipement.
 
 ## Contexte
 

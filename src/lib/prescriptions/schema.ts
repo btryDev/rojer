@@ -5,7 +5,10 @@ import {
   REALISATEURS,
 } from "@/lib/referentiels/types-communs";
 import { obligationParId } from "@/lib/referentiels/conformite";
-import { estPeriodicitePlusStricte } from "@/lib/matching/prescriptions";
+import {
+  motifPrescriptionNonRetenue,
+  prescriptionRenforce,
+} from "@/lib/matching/prescriptions";
 import { SOURCES_PRESCRIPTION } from "./sources";
 import { cleJourCivil } from "@/lib/dates";
 
@@ -87,13 +90,11 @@ export const prescriptionRenforceSchema = base
       });
       return;
     }
-    if (
-      !estPeriodicitePlusStricte(val.periodicite, o.periodicite)
-    ) {
+    if (!prescriptionRenforce(val.periodicite, o)) {
       ctx.addIssue({
         code: "custom",
         path: ["periodicite"],
-        message: `Le référentiel impose déjà « ${o.periodicite} » : Rojer n'enregistre qu'une prescription qui renforce vos obligations. Un allègement se conserve en pièce, mais n'est pas pris en compte.`,
+        message: `${motifPrescriptionNonRetenue(o)} Rojer n'enregistre qu'une prescription qui renforce vos obligations. Un allègement se conserve en pièce, mais n'est pas pris en compte.`,
       });
     }
   });

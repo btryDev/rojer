@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CORPUS, articlesNonCouverts } from "@/lib/referentiels/corpus";
 import { ADRESSE_MANQUES_ANNONCES } from "@/lib/referentiels/corpus/adresses";
+import { DESCRIPTION_CATEGORIE } from "@/lib/equipements/labels";
 import {
   ANNONCES,
   manquesAnnoncesDuDossier,
@@ -155,5 +156,38 @@ describe("aucun score, aucune qualification", () => {
 
   it("ne compte rien", () => {
     expect(textes()).not.toMatch(/%|\bscore\b|\bsur \d+\b/);
+  });
+});
+
+describe("un declareA qui cite l'aide d'une catégorie la cite mot pour mot (revue du 2026-10-07)", () => {
+  // Les articles retirés du référentiel le 2026-10-07 (équipements sous
+  // pression, stockage de matières dangereuses) donnent pour adresse l'aide de
+  // la catégorie au formulaire, et en recopient la phrase. Rien ne vérifiait
+  // que la phrase y était encore : changer l'aide, c'était couper l'annonce en
+  // silence. Éprouvé en retouchant un mot de l'aide du stockage.
+  const MOTIF = /DESCRIPTION_CATEGORIE\.([A-Z_]+)`?\)?\s*:\s*«\s*([\s\S]+?)\s*»\s*$/;
+
+  const citant = CORPUS.flatMap((c) =>
+    c.articles.flatMap((a) =>
+      a.statut === "non_couvert" && a.declareA?.includes("DESCRIPTION_CATEGORIE")
+        ? [{ ref: `${c.id} ${a.ref}`, declareA: a.declareA }]
+        : [],
+    ),
+  );
+
+  it("chaque phrase citée figure dans DESCRIPTION_CATEGORIE de la catégorie nommée", () => {
+    for (const { ref, declareA } of citant) {
+      const m = MOTIF.exec(declareA);
+      expect(m, `${ref} : citation illisible`).not.toBeNull();
+      const [, categorie, phrase] = m!;
+      const aide = DESCRIPTION_CATEGORIE[categorie as keyof typeof DESCRIPTION_CATEGORIE];
+      expect(aide, `${ref} : catégorie ${categorie} inconnue`).toBeDefined();
+      expect(aide, ref).toContain(phrase);
+    }
+  });
+
+  it("borne basse : la garde porte sur des cas réels", () => {
+    // Dix au 2026-10-07 (quatre ESP, six stockage) ; on n'en fige pas la liste.
+    expect(citant.length).toBeGreaterThan(0);
   });
 });

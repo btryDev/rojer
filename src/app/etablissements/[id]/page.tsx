@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
 import {
   OnboardingChecklist,
   type EtapeOnboarding,
@@ -430,6 +431,8 @@ export default async function EtablissementPage({
     // cacher une vraie échéance (`echeancesDuTableauDeBord`).
     ...echeancesDuTableauDeBord(prochainesVerifs.map((v) => ({
       id: v.id,
+      // C64 : la visite de la commission se reconnaît par lui, « pour information ».
+      obligationId: v.obligationId,
       libelleObligation: v.libelleObligation,
       // L'échéance OUVERTE : les widgets trient, comptent à rebours et
       // classent sur cette date.
@@ -444,6 +447,7 @@ export default async function EtablissementPage({
       // non sur la confiance qu'ils font à une clause située trois cents
       // lignes plus haut (ADR-034).
       archiveLe: v.archiveLe,
+      graceJusquAu: v.graceJusquAu,
       // La source de la prescription traverse jusqu'au board, sans quoi le
       // marquage contractuel n'y paraît jamais (ADR-032). La requête la
       // chargeait déjà et le type l'acceptait : c'est cette projection, entre
@@ -455,6 +459,9 @@ export default async function EtablissementPage({
         libelle: libellePorteur(v),
       },
       aConfirmer: marquesDuDossier.parObligation.get(v.obligationId)?.phrases ?? [],
+      // ADR-039 § 5 : le rythme retenu se dit sur le board comme ailleurs. Lu
+      // au référentiel par `obligationId`, déjà chargé — aucune requête.
+      rythmeRetenu: mentionRythmeDeVerification(v),
     })), aujourdhui),
     rapportsRecents: rapportsRecents.map((r) => ({
       id: r.id,

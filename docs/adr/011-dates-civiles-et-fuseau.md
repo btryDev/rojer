@@ -6,6 +6,9 @@
 - **Relatif à** : ADR-002 (Action unifiée), ADR-010 (Registre de sources
   d'échéances), modules Calendrier / Tableau de bord / Plan d'actions /
   Vérifications / Prestataires / Carnet sanitaire
+- **Amendée le 2026-10-08 par l'ADR-040** (§ 5) : une ligne « à planifier »
+  née d'un changement du référentiel n'est comptée en retard qu'après
+  origine + 3 mois (`delaiDeGrace`). Le reste du § 5 tient.
 
 ## Contexte
 

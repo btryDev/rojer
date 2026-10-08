@@ -14,6 +14,8 @@ const base: Parameters<typeof genererReadme>[0] = {
   nbPlansPrevention: 0,
   aCarnetSanitaire: false,
   nbEcheancesContractuelles: 0,
+  rythmesRetenus: new Map<string, string>(),
+  visitesPourInformation: new Set<string>(),
   etatDuerp: null,
   retards: { nbEnRetard: 0, calendrier: { etat: "a_jour" }, inventaire: null },
   avertissementCalendrier: null,
@@ -105,6 +107,24 @@ describe("le README ne décrit que ce que le ZIP contient (relecture du 2026-09-
     // Le registre porte l'INDEX des rapports ; les fichiers sont dans Rapports/
     // (2026-09-27) — le README ne doit pas laisser croire qu'ils sont au 03.
     expect(t).toMatch(/03_Registre_securite\.pdf\s+Registre des vérifications, index des rapports/);
+  });
+
+  it("annonce les rythmes retenus avec la mention même des lignes, et se tait sans eux (ADR-039)", () => {
+    expect(genererReadme(base)).not.toMatch(/RYTHMES RETENUS/);
+    const defaut = "Le texte dit « périodicité appropriée » ; rythme retenu par défaut : annuel.";
+    const t = genererReadme({
+      ...base,
+      rythmesRetenus: new Map([
+        ["v1", defaut],
+        ["v2", defaut],
+        ["v3", "Rythme de la norme NF S 61-919 (août 2001), § 5.1.1 — périodicité annuelle."],
+      ]),
+    });
+    expect(t).toMatch(/RYTHMES RETENUS PAR ROJER/);
+    expect(t).toMatch(/3 échéances de ce dossier ont un rythme/);
+    // Dédoublonnée : la phrase du défaut n'apparaît qu'une fois.
+    expect(t.split(defaut).length - 1).toBe(1);
+    expect(t).toContain("NF S 61-919 (août 2001), § 5.1.1");
   });
 
   it("Rapports/ et les rapports d'analyse : ce qui est joint, ce qui manque, jamais un déposé compté joint", () => {

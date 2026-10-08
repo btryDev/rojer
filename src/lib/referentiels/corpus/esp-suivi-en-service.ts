@@ -11,7 +11,7 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
   url: "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000036128632",
   etendue: "articles_cites",
   portee:
-    "Déclaration et contrôle de mise en service, inspection périodique, requalification, interventions. ATTENTION : les articles 4, 26 et 28 ont été modifiés par l'arrêté du 5 septembre 2025, en vigueur depuis le 8 septembre 2025.",
+    "[2026-10-07 : seule la requalification périodique (art. 18-19) fonde encore une obligation — `esp-requalification-decennale` ; le reste est `non_couvert`, relecture préventeur du 30/09, décision de la propriétaire du 07/10.] ~~Déclaration et contrôle de mise en service, inspection périodique, requalification, interventions.~~ ATTENTION : les articles 4, 26 et 28 ont été modifiés par l'arrêté du 5 septembre 2025, en vigueur depuis le 8 septembre 2025.",
   articles: [
     {
       ref: "C. env. R. 557-14-1",
@@ -22,8 +22,12 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       modifiePar: null,
       luLe: "2026-09-01",
       lecture: "premiere_main",
-      statut: "retenu",
-      obligations: ["esp-declaration-mise-en-service"],      prescrit:
+      // ~~statut: "retenu", obligations: ["esp-declaration-mise-en-service"]~~
+      // — 2026-10-07 : `sans_objet`.
+      statut: "sans_objet",
+      motif:
+        "Article de CHAMP, non de prescription (voir `prescrit`). Il fondait `esp-declaration-mise-en-service`, retirée le 2026-10-07 (périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10). Il ne fonde plus aucune ligne, mais il reste LU : c'est son I qui décide de la réponse « soumis au suivi en service », dont le verdict indicatif (`src/lib/equipements/esp.ts`) pré-remplit la question qui borne `esp-requalification-decennale`.",
+      prescrit:
         "Article de CHAMP, non de prescription : il dit à quels équipements s'applique la section « suivi en service » du code de l'environnement — récipients sous pression de gaz des groupes 1 et 2, équipements contenant de la vapeur d'eau ou de l'eau surchauffée, générateurs de vapeur, tuyauteries, avec leurs seuils ; puis les équipements sous pression nucléaires (hors enceintes de confinement et gaines de combustible), les accessoires sous pression et les accessoires de sécurité. Le IV pose la convention de vocabulaire reprise par tout l'arrêté du 20 novembre 2017. Le V renvoie à un arrêté distinct le suivi des équipements de véhicules (R. 321-6 à R. 321-19 du code de la route). Aucune échéance ne s'en déduit : les seuils opérationnels sont à l'article 7 de l'arrêté.",
       citationCle:
         "I. - Les dispositions de la présente section s'appliquent au suivi en service des équipements sous pression […] IV. - Les équipements sous pression, les récipients à pression simples et les équipements sous pression nucléaires mentionnés aux I, II et III sont appelés « équipements » dans la suite de la présente section.",
@@ -36,8 +40,13 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       modifiePar: null,
       luLe: "2026-09-01",
       lecture: "premiere_main",
-      statut: "retenu",
-      obligations: ["esp-dossier-suivi"],      prescrit:
+      // ~~statut: "retenu", obligations: ["esp-dossier-suivi"]~~ — 2026-10-07 : `non_couvert`.
+      statut: "non_couvert",
+      motif:
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf pour compresseur : requalification tous les 10 ans »), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-dossier-suivi` (dossier d'exploitation et liste des récipients fixes, état permanent).",
+      declareA:
+        "Formulaire de déclaration d'un équipement, aide de la catégorie « Équipement sous pression » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.EQUIPEMENT_SOUS_PRESSION`) : « Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention. »",
+      prescrit:
         "Impose à l'exploitant de constituer, pour tout équipement fixe relevant de L. 557-30 du code de l'environnement, un DOSSIER D'EXPLOITATION : documentation de fabrication (notice, plans, schémas), identification des accessoires de sécurité, preuve de dépôt de la déclaration de mise en service, registre daté de toutes les opérations et interventions, attestations conservées au moins au-delà de l'intervalle maximal entre deux requalifications, et le plan d'inspection quand il en existe un. Il impose en outre la transmission du dossier au nouvel exploitant en cas de changement, et la tenue à jour d'une LISTE des récipients fixes, générateurs de vapeur et tuyauteries soumis — y compris les équipements au chômage — portant pour chacun le type, le régime de surveillance et les dates de la dernière et de la prochaine inspection ainsi que de la dernière et de la prochaine requalification. Aucune périodicité propre : c'est une obligation permanente de tenue, pas une échéance.",
       citationCle:
         "L'exploitant établit pour tout équipement fixe entrant dans le champ d'application de l'article L. 557-30 du code de l'environnement un dossier d'exploitation qui comporte les informations nécessaires à la sécurité de son exploitation, à son entretien, à son contrôle et aux éventuelles interventions : […] L'exploitant tient à jour une liste des récipients fixes, des générateurs de vapeur et des tuyauteries soumis aux dispositions du présent arrêté, y compris les équipements ou installations au chômage. Cette liste indique, pour chaque équipement, le type, le régime de surveillance, les dates de réalisation de la dernière et de la prochaine inspection et de la dernière et de la prochaine requalification périodique.",
@@ -51,8 +60,14 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       modifiePar: null,
       luLe: "2026-09-01",
       lecture: "premiere_main",
-      statut: "retenu",
-      obligations: ["esp-declaration-mise-en-service"],      prescrit:
+      // ~~statut: "retenu", obligations: ["esp-declaration-mise-en-service"]~~
+      // — 2026-10-07 : `non_couvert`.
+      statut: "non_couvert",
+      motif:
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf pour compresseur : requalification tous les 10 ans »), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-declaration-mise-en-service` (déclaration et contrôle de mise en service).",
+      declareA:
+        "Formulaire de déclaration d'un équipement, aide de la catégorie « Équipement sous pression » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.EQUIPEMENT_SOUS_PRESSION`) : « Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention. »",
+      prescrit:
         "Intervalle lu article par article. L'ART. 7 fixe le CHAMP par seuils — récipients de gaz PS > 4 bar et PS.V > 10 000 bar.l ; tuyauteries PS > 4 bar selon DN et PS.DN par groupe de gaz ; générateurs de vapeur PS > 32 bar OU V > 2 400 l OU PS.V > 6 000 bar ; appareils à couvercle amovible à fermeture rapide fixes — et définit l'objet du contrôle de mise en service. L'ART. 8 pose l'échéance de la déclaration : avant la première mise en service. L'ART. 9 en fixe la forme : téléservice LUNE, liste des pièces, preuve de dépôt. L'ART. 10 énumère les trois faits générateurs du CONTRÔLE de mise en service : première mise en service, nouvelle évaluation de conformité après intervention importante au sens de l'art. 27, remise en service après réinstallation hors de l'établissement précédent. L'ART. 11 dit qui contrôle : organisme habilité pour les générateurs de vapeur et les appareils à couvercle amovible à fermeture rapide, personne compétente pour les autres. Aucun de ces cinq articles ne porte de récurrence : déclaration et contrôle sont des actes de mise en service.",
       citationCle:
         "Sont soumis à la déclaration et au contrôle de mise en service : 1. Les récipients sous pression de gaz dont la pression maximale admissible PS est supérieure à 4 bar et dont le produit pression maximale admissible par le volume est supérieur à 10 000 bar.l ; […] 4. Les appareils à couvercle amovible à fermeture rapide fixes. […] (art. 8) La déclaration de mise en service est requise avant la première mise en service de l'équipement. […] (art. 10) Le contrôle de mise en service est requis avant : - la première mise en service de l'équipement ou après une évaluation de conformité liée à une intervention importante définie à l'article 27 du présent arrêté ; - la remise en service en cas de nouvelle installation en dehors de l'établissement dans lequel l'équipement était précédemment utilisé.",
@@ -74,11 +89,13 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       // « regardé », et ce qui a été regardé ici est la date de version, pas
       // l'historique complet de l'arrêté.
       modifiePar: null,
-      statut: "retenu",
-      obligations: [
-        "esp-inspection-periodique",
-        "esp-inspection-periodique-generateur-vapeur",
-      ],
+      // ~~statut: "retenu", obligations: ["esp-inspection-periodique",
+      // "esp-inspection-periodique-generateur-vapeur"]~~ — 2026-10-07 : `non_couvert`.
+      statut: "non_couvert",
+      motif:
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf pour compresseur : requalification tous les 10 ans »), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-inspection-periodique` (quatre ans) et `esp-inspection-periodique-generateur-vapeur` (deux ans).",
+      declareA:
+        "Formulaire de déclaration d'un équipement, aide de la catégorie « Équipement sous pression » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.EQUIPEMENT_SOUS_PRESSION`) : « Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention. »",
       prescrit:
         "STRUCTURE MAL RENDUE, relevée le 2026-08-27, RELUE EN PREMIÈRE MAIN LE 2026-09-01. L'article porte plusieurs régimes, tous en « période maximale » et non en échéance fixe : 1 an (bouteilles de plongée, récipients mobiles non métalliques), porté à 4 ans au plus pour ceux ayant subi l'essai de vieillissement de l'annexe 1 ; 2 ans (générateurs de vapeur, appareils à couvercle amovible à fermeture rapide) ; 4 ans au maximum pour tous les autres hors tuyauteries, avec une PREMIÈRE inspection à 3 ans au maximum. S'y ajoutent l'obligation faite à l'exploitant de réduire ces périodes si l'état de l'équipement le justifie (I, dernier alinéa), une vérification extérieure avant chaque remplissage des récipients mobiles (II) et un programme de contrôle propre aux tuyauteries, établi par l'exploitant dans l'année qui suit leur mise en service (III). Le référentiel encode `triennale` : or le 3 ans n'est ni le régime général ni récurrent, c'est le plafond du premier cycle.\n\nLE PLAFOND DE PREMIER CYCLE EST CONDITIONNEL, ET CELA N'AVAIT PAS ÉTÉ RELEVÉ — lecture en première main du 2026-09-01, lot B. Le texte écrit : « Toutefois, la première inspection périodique suivant la mise en service ou une modification notable d'un équipement est fixée au maximum à 3 ans, EXCEPTÉ POUR LES ÉQUIPEMENTS QUI ONT FAIT L'OBJET D'UN CONTRÔLE DE MISE EN SERVICE CONFORME À L'ARTICLE 11, QUE CE CONTRÔLE SOIT OU NON OBLIGATOIRE. » Le 3 ans ne vaut donc PAS pour un équipement dont le contrôle de mise en service a été fait et conforme — celui-là relève des 4 ans dès la première inspection. Un premier délai de 3 ans appliqué sans distinction sur-applique d'un an à tous ces équipements. Le fait générateur est aussi plus large que la seule mise en service : « la mise en service OU UNE MODIFICATION NOTABLE » rouvre le premier cycle. Le 40 mois est bien transitoire et réservé aux équipements déclarés avant l'entrée en vigueur de l'arrêté.\n\nCE QUE LE MODÈLE NE SAIT PAS DISTINGUER, nommé et non corrigé (2026-09-01, lot B) : le 2 ans des générateurs de vapeur et des appareils à couvercle amovible à fermeture rapide. `familleEsp` porte déjà la valeur `generateur_vapeur`, collectée au formulaire d'équipement et sérialisée dans `caracteristiques` — mais `schema.ts` l'annote « jamais lus par le moteur », et `ConditionApplication` n'a aucune forme d'égalité sur une valeur d'énumération (ses quatre formes portent sur un nombre ou sur un booléen). L'appareil à couvercle amovible à fermeture rapide, lui, n'est collecté nulle part : `couvercleAmovible` n'est qu'un paramètre de `verdictSuiviEnService`, pas un champ du schéma. La moitié de la famille est donc déjà en base, l'autre moitié demanderait une question de plus au formulaire.",
       historique:
@@ -108,8 +125,13 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       modifiePar: { texte: "Arrêté du 5 septembre 2025 - art. 1" },
       luLe: "2026-09-01",
       lecture: "premiere_main",
-      statut: "retenu",
-      obligations: ["esp-intervention-reparation"],      prescrit:
+      // ~~statut: "retenu", obligations: ["esp-intervention-reparation"]~~ — 2026-10-07 : `non_couvert`.
+      statut: "non_couvert",
+      motif:
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf pour compresseur : requalification tous les 10 ans »), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-intervention-reparation` (contrôle après intervention notable, événementiel).",
+      declareA:
+        "Formulaire de déclaration d'un équipement, aide de la catégorie « Équipement sous pression » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.EQUIPEMENT_SOUS_PRESSION`) : « Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention. »",
+      prescrit:
         "Intervalle lu article par article. L'ART. 26 (version du 8 septembre 2025, arrêté du 5 septembre 2025) pose la typologie : une intervention en cours d'exploitation est une réparation ou une modification, et elle est importante, notable ou non notable ; les critères de classement ne sont PAS dans l'arrêté mais dans un guide professionnel approuvé par décision ministérielle publiée au Bulletin officiel. L'ART. 27 définit l'intervention IMPORTANTE — celle qui modifie la destination, le type original ou les performances au-delà des limites du fabricant — et la soumet à une nouvelle évaluation de conformité (R. 557-9-5 ou R. 557-10-5 du code de l'environnement). L'ART. 28 (également modifié au 8 septembre 2025) définit l'intervention NOTABLE : celle qui ne relève pas de l'article 27 et qui est susceptible d'avoir une incidence sur la conformité aux exigences essentielles de sécurité. Aucune périodicité : le fait générateur est l'intervention. Le classement dépend d'un guide professionnel que le référentiel ne porte pas et ne peut pas porter.",
       citationCle:
         "(art. 26) Au cours de son exploitation, un équipement peut faire l'objet d'interventions. Il peut s'agir de réparations ou de modifications. Une intervention peut être importante, notable ou non notable. Les critères permettant de classer les interventions sont précisés dans un guide professionnel approuvé par décision du ministre chargé de la sécurité industrielle […] (art. 27) I. - Une intervention est considérée comme importante lorsqu'elle conduit à modifier la destination d'un équipement, son type original ou ses performances, de sorte qu'elles ne s'inscrivent plus dans les limites prévues par le fabricant. […] (art. 28) Une intervention est considérée comme notable lorsqu'elle ne relève pas de l'article 27 et qu'elle est susceptible d'avoir une incidence sur la conformité de l'équipement aux exigences essentielles de sécurité qui lui sont applicables.",

@@ -19,6 +19,7 @@ const ligne = (o: {
   datePrevue: o.datePrevue,
   periodicite: o.periodicite ?? "trimestrielle",
   archiveLe: o.archiveLe ?? null,
+  graceJusquAu: null,
   libelleObligation: "Vérification trimestrielle",
   obligationId: "o-trimestrielle",
   prescriptionId: null as string | null,

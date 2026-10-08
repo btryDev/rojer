@@ -63,6 +63,7 @@ function lignesEchues(e: EtablissementMatching) {
       datePrevue: new Date("2026-03-01T00:00:00Z"),
       periodicite: "semestrielle",
       archiveLe: null as Date | null,
+      graceJusquAu: null,
       derniereRealisation: null as Date | null,
     }));
 }
@@ -124,6 +125,7 @@ describe("D1 (a) : la ligne retenue par prudence ne compte ni en retard ni dans 
     const archivee = {
       ...l,
       archiveLe: new Date("2026-06-01T00:00:00Z"),
+      graceJusquAu: null,
       derniereRealisation: new Date("2026-05-01T00:00:00Z"),
     };
     const etat = repartirVerifications([archivee], NOW, retenueParPrudence(marques));

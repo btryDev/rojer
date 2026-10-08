@@ -24,6 +24,10 @@ import {
   verdictSuiviEnService,
   type FamilleEsp,
 } from "@/lib/equipements/esp";
+import {
+  LABEL_TYPE_EXTINCTEUR,
+  TYPES_EXTINCTEUR,
+} from "@/lib/equipements/extincteur";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import type { EquipementActionState } from "@/lib/equipements/actions";
 
@@ -63,6 +67,7 @@ type Valeurs = {
   datePeremption?: Date | null;
   nombre?: number | null;
   familleEsp?: string | null;
+  typeExtincteur?: string | null;
   pressionMaxAdmissibleBar?: number | null;
   volumeLitres?: number | null;
   estLocalPollutionSpecifique?: boolean;
@@ -185,6 +190,33 @@ const QUESTIONS_TRI_ETAT: Record<
       "Un système fixe de détection des fuites est-il installé sur cette installation ?",
     aide: "Un détecteur permanent, relié à une alarme, qui signale une fuite de fluide frigorigène sans intervention humaine — à ne pas confondre avec le contrôle d'étanchéité lui-même, ni avec une sonde de température. S'il y en a un, le règlement double l'intervalle entre deux contrôles. En cas de doute, laissez « Je ne sais pas encore » : c'est l'intervalle le plus court qui reste affiché.",
   },
+  // 2026-10-07 (lot 4, relecture du préventeur). MS 73 § 2 ne vise que les
+  // « systèmes de sécurité incendie de catégories A et B » ; la triennale
+  // tombait jusqu'ici sur toute alarme d'ERP des quatre premières catégories.
+  // Ligne déjà publiée : le silence la garde, seul un « non » la retire.
+  estSsiCategorieAouB: {
+    question:
+      "Ce système de sécurité incendie (SSI) est-il de catégorie A ou B ?",
+    aide: "Les SSI sont classés en cinq catégories, de A à E. La catégorie figure dans les documents de l'installation ou sur le rapport de vérification ; votre installateur ou votre vérificateur la connaît. Avec « Oui » ou « Je ne sais pas encore », le calendrier garde la vérification tous les trois ans par une personne ou un organisme agréé (règlement de sécurité, art. MS 73 § 2 — établissements des quatre premières catégories). Avec « Non », elle est retirée ; la vérification annuelle reste.",
+  },
+  // DF 10 § 3 : « Lorsque existent une installation de désenfumage mécanique
+  // et un système de sécurité incendie de catégorie A ou B ». Ligne neuve,
+  // qui s'AJOUTE à l'annuelle : le silence sur le mécanique ne la fait pas
+  // naître (voir `incendie-erp-desenfumage-triennale-mecanique-ssi`).
+  estDesenfumageMecanique: {
+    question:
+      "Ce désenfumage est-il mécanique (fumées extraites par des ventilateurs) ?",
+    // Revue du 2026-10-07 : l'aide disait « et si l'établissement dispose aussi
+    // d'un SSI de catégorie A ou B » — plus restrictive que le code, qui sert
+    // la triennale tant que la question SSI n'a pas reçu « Non »
+    // (`equipement_propriete_non_infirmee`).
+    aide: "Un désenfumage mécanique évacue les fumées par des ventilateurs ; un désenfumage naturel, par des ouvrants, exutoires ou trappes en façade ou en toiture. Avec « Oui », le calendrier ajoute une vérification tous les trois ans par un organisme agréé (règlement de sécurité, art. DF 10 § 3 — établissements des quatre premières catégories), sauf si vous répondez « Non » à la question sur le système de sécurité incendie qui s'affiche alors ; la vérification annuelle reste. Tant que vous n'avez pas répondu « Oui », elle n'apparaît pas.",
+  },
+  etablissementASsiCategorieAouB: {
+    question:
+      "L'établissement dispose-t-il d'un système de sécurité incendie (SSI) de catégorie A ou B ?",
+    aide: "La vérification tous les trois ans du désenfumage dépend des deux installations à la fois (art. DF 10 § 3) : la question est donc posée ici, même si votre SSI a sa propre fiche — répondez de la même façon. Pour un désenfumage mécanique, « Oui » ou « Je ne sais pas encore » fait apparaître la vérification triennale au calendrier ; « Non » la retire.",
+  },
 };
 
 type Props = {
@@ -239,11 +271,33 @@ export function EquipementForm({
   const estAeration = CATEGORIES_AERATION.includes(categorie);
   const estVmc = categorie === "VMC";
   const estEsp = categorie === "EQUIPEMENT_SOUS_PRESSION";
+  const estExtincteur = categorie === "EXTINCTEUR";
 
   // Questions à trois états applicables à la catégorie sélectionnée.
   const questions = questionsTriEtatPour(categorie, estERP);
+
+  // DF 10 § 3 (lot 4, revue du 2026-10-07) : la question du SSI A ou B ne
+  // décide de rien tant que le désenfumage n'est pas déclaré mécanique — la
+  // triennale exige les deux. Elle n'est donc montrée qu'après un « Oui ».
+  // Masquée, sa valeur part quand même, en champ caché : le serveur l'accepte
+  // toujours, et une réponse déjà donnée ne s'efface pas parce qu'on a changé
+  // l'autre.
+  // Lue comme les autres questions à trois états (`valeursInitiales?.[champ]`) :
+  // la page les repasse en bloc (`reponsesTriEtat`).
+  const champMecanique: ChampTriEtat = "estDesenfumageMecanique";
+  const [desenfumageMecanique, setDesenfumageMecanique] = useState(
+    valeurTriEtat(valeursInitiales?.[champMecanique]),
+  );
+  // La réponse SSI est tenue en état, contrôlée : masquée, c'est elle qui part
+  // en champ caché, et reposée, c'est elle qui revient. [2026-10-07, C62 :
+  // le champ caché renvoyait `valeursInitiales` — un « non » donné pendant la
+  // saisie se perdait si l'on repassait le mécanique à « je ne sais pas ».]
+  const champSsi: ChampTriEtat = "etablissementASsiCategorieAouB";
+  const [ssiAouB, setSsiAouB] = useState(
+    valeurTriEtat(valeursInitiales?.[champSsi]),
+  );
   const afficherCaracteristiques =
-    estAeration || estEsp || questions.length > 0;
+    estAeration || estEsp || estExtincteur || questions.length > 0;
 
   return (
     <form action={formAction} className="flex flex-col gap-8">
@@ -445,6 +499,56 @@ export function EquipementForm({
               />
             )}
 
+            {estExtincteur && (
+              /* Le type décide de la maintenance additionnelle approfondie
+                 (NF S 61-919, tableau A.1). Sans réponse, Rojer la garde : la
+                 règle la plus exigeante survit au silence. */
+              <div className="flex flex-col gap-2 sm:w-[28rem]">
+                <label className="label-board" htmlFor="typeExtincteur">
+                  Type d&apos;extincteur
+                </label>
+                <select
+                  id="typeExtincteur"
+                  name="typeExtincteur"
+                  defaultValue={valeursInitiales?.typeExtincteur ?? ""}
+                  aria-describedby="typeExtincteur-aide"
+                  className="champ-board"
+                >
+                  <option value="">Je ne sais pas encore</option>
+                  {TYPES_EXTINCTEUR.map((t) => (
+                    <option key={t} value={t}>
+                      {LABEL_TYPE_EXTINCTEUR[t]}
+                    </option>
+                  ))}
+                </select>
+                <p
+                  id="typeExtincteur-aide"
+                  className="m-0 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]"
+                >
+                  Indiqué sur l&apos;étiquette de l&apos;appareil. La norme NF S
+                  61-919 prévoit, en plus de la maintenance annuelle et de la
+                  révision à dix ans, une maintenance additionnelle approfondie
+                  à 5 et 15 ans pour les extincteurs à eau, à mousse et à
+                  poudre — à 15 ans seulement pour la poudre à opercule scellé,
+                  aucune pour le CO₂ ni pour le halon. Pour un extincteur au
+                  halon, la norme ne fixe pas d&apos;intervalle de révision en
+                  atelier (« Voir note 3 ») : elle demande qu&apos;il soit vidé
+                  selon une méthode permettant de récupérer le halon.
+                  Elle indique aussi que la durée de vie prévue ne devrait pas
+                  dépasser 20 ans, sauf pour le CO₂ et le halon : vous pouvez
+                  la reporter en date de péremption ci-dessus.
+                </p>
+                {err("typeExtincteur") && (
+                  <p
+                    id="typeExtincteur-erreur"
+                    className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]"
+                  >
+                    {err("typeExtincteur")}
+                  </p>
+                )}
+              </div>
+            )}
+
             {estEsp && (
               <ChampsEsp
                 initiales={{
@@ -460,15 +564,32 @@ export function EquipementForm({
               />
             )}
 
-            {questions.map(({ champ }) => (
-              <QuestionTriEtat
-                key={champ}
-                champ={champ}
-                defaut={valeurTriEtat(valeursInitiales?.[champ])}
-                erreur={err(champ)}
-                exigee={(questionsExigees[categorie] ?? []).includes(champ)}
-              />
-            ))}
+            {questions.map(({ champ }) =>
+              champ === champSsi && desenfumageMecanique !== "oui" ? (
+                <input
+                  key={champ}
+                  type="hidden"
+                  name={champ}
+                  value={ssiAouB}
+                />
+              ) : (
+                <QuestionTriEtat
+                  key={champ}
+                  champ={champ}
+                  defaut={valeurTriEtat(valeursInitiales?.[champ])}
+                  valeur={champ === champSsi ? ssiAouB : undefined}
+                  erreur={err(champ)}
+                  exigee={(questionsExigees[categorie] ?? []).includes(champ)}
+                  onChange={
+                    champ === champMecanique
+                      ? setDesenfumageMecanique
+                      : champ === champSsi
+                        ? setSsiAouB
+                        : undefined
+                  }
+                />
+              ),
+            )}
           </div>
         </section>
       )}
@@ -529,10 +650,17 @@ function QuestionTriEtat({
   defaut,
   erreur,
   exigee = false,
+  onChange,
+  valeur,
 }: {
   champ: ChampTriEtat;
   defaut: string;
+  /** La valeur, quand le formulaire la tient (champ contrôlé) ; sinon
+   *  `defaut` sert de valeur initiale et le `<select>` se tient seul. */
+  valeur?: string;
   erreur?: string;
+  /** La valeur choisie, pour une question dont dépend l'affichage d'une autre. */
+  onChange?: (valeur: string) => void;
   /** D29 (a) : « Je ne sais pas encore » n'est pas offert, et aucune réponse
    *  n'est présélectionnée — le serveur refuse l'absence (comme A2). */
   exigee?: boolean;
@@ -551,7 +679,8 @@ function QuestionTriEtat({
       <select
         id={champ}
         name={champ}
-        defaultValue={defaut}
+        {...(valeur !== undefined ? { value: valeur } : { defaultValue: defaut })}
+        onChange={onChange ? (e) => onChange(e.currentTarget.value) : undefined}
         className="champ-board mt-2 sm:w-64"
         aria-describedby={`${champ}-aide`}
         aria-invalid={Boolean(erreur)}

@@ -1,3 +1,4 @@
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
 import { cleJourCivil } from "@/lib/dates";
@@ -9,7 +10,10 @@ import {
   estPrescriptionLevee,
   type PrescriptionMatching,
 } from "@/lib/matching";
-import { obligationParId } from "@/lib/referentiels/conformite";
+import { obligationParId, OBLIGATIONS_RETIREES } from "@/lib/referentiels/conformite";
+import { libelleObligationRetiree } from "@/lib/matching/obligation-retiree";
+import { derniersLibellesConnus } from "./libelles-retires";
+import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 
 export type EtatPrescription =
   | { etat: "active"; detail: string }
@@ -85,8 +89,20 @@ export async function chargerPagePrescriptions(
   // prescription, sur ses seules lignes visées — un dossier en porte peu.
   // L'ancien `_count` par `prescriptionId` suivait l'effet, pas l'histoire
   // (2026-09-15).
-  const preuves = new Map<string, number>(
-    await Promise.all(
+  //
+  // Une prescription peut viser une obligation que Rojer ne suit plus
+  // (`OBLIGATIONS_RETIREES`) : la page affichait son id brut. Le dernier
+  // libellé connu se lit en même temps que les preuves, dont il ne dépend pas
+  // (2026-10-07, C62).
+  const retireesVisees = [
+    ...new Set(
+      etab.prescriptionsParticulieres.flatMap((p) =>
+        p.obligationId && OBLIGATIONS_RETIREES[p.obligationId] ? [p.obligationId] : [],
+      ),
+    ),
+  ];
+  const [comptesPreuves, derniersLibelles] = await Promise.all([
+    Promise.all(
       etab.prescriptionsParticulieres.map(
         async (p) =>
           [
@@ -95,7 +111,9 @@ export async function chargerPagePrescriptions(
           ] as const,
       ),
     ),
-  );
+    derniersLibellesConnus(etab.id, retireesVisees),
+  ]);
+  const preuves = new Map<string, number>(comptesPreuves);
 
   const equipements = etab.equipements.map((eq) => ({
     id: eq.id,
@@ -152,8 +170,8 @@ export async function chargerPagePrescriptions(
         etat: "active",
         detail:
           p.effet === "renforce_periodicite"
-            ? `Périodicité portée à « ${p.periodicite} ».`
-            : `Obligation propre à votre établissement, ${p.periodicite}.`,
+            ? `Périodicité portée à « ${LABEL_PERIODICITE[p.periodicite]} ».`
+            : `Obligation propre à votre établissement, ${LABEL_PERIODICITE[p.periodicite]}.`,
       };
     }
     return {
@@ -161,7 +179,8 @@ export async function chargerPagePrescriptions(
       etat,
       lignesAvecPreuve: preuves.get(p.id) ?? 0,
       libelleObligationCiblee: p.obligationId
-        ? (obligationParId(p.obligationId)?.libelle ?? p.obligationId)
+        ? (obligationParId(p.obligationId)?.libelle ??
+          libelleObligationRetiree(p.obligationId, derniersLibelles.get(p.obligationId)))
         : null,
     };
   });
@@ -171,7 +190,7 @@ export async function chargerPagePrescriptions(
     obligations: applicables.map((a) => ({
       id: a.obligation.id,
       libelle: a.obligation.libelle,
-      periodicite: a.obligation.periodicite,
+      periodicite: periodiciteEffective(a.obligation),
     })),
     equipements: etab.equipements.map((e) => ({
       id: e.id,

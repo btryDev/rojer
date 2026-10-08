@@ -1,3 +1,4 @@
+import { OBLIGATIONS_A_L_INITIATIVE_DE_L_ADMINISTRATION } from "@/lib/referentiels/conformite/initiative";
 import type { Prisma } from "@prisma/client";
 import { STATUTS_REALISES_PERSISTES } from "@/lib/dates/retard";
 import { PERIODICITES_SANS_SUITE } from "./periodicite";
@@ -109,7 +110,21 @@ export function portantUnePreuve(): Prisma.VerificationWhereInput {
   };
 }
 
-export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
+/**
+ * Ce qui attend, ouvert, daté avant `debut`, hors délai de grâce et hors
+ * lignes « pour information » — le pendant SQL d'`estEnRetardQuiCompte`.
+ *
+ * `graceAu` est le JOUR où la grâce se juge (ADR-040) ; il vaut `debut` par
+ * défaut, ce qui est juste quand `debut` est le jour courant. Un appelant qui
+ * passe une autre borne — les barres d'une année, bornées au 1er janvier —
+ * doit passer aujourd'hui : juger la grâce au 1er janvier écarterait une ligne
+ * dont la grâce court encore ce jour-là et a expiré depuis (revue du
+ * 2026-10-08 sur C63, `compterObligationsParMois`).
+ */
+export function urgenceSeule(
+  debut: Date,
+  graceAu: Date = debut,
+): Prisma.VerificationWhereInput {
   return {
     // Une ligne éteinte n'est jamais urgente, quel que soit son statut gelé.
     archiveLe: null,
@@ -117,7 +132,41 @@ export function urgenceSeule(debut: Date): Prisma.VerificationWhereInput {
     // 2026-09-13 a réduit la troisième branche recopiée ici à un seul statut
     // réalisé, et rien n'a rougi. Ce qui attend, ET dont la DATE est passée —
     // la date seule, comme `estVerificationEnRetard` (retrait de `depassee`).
-    AND: [echeanceAttendue(), { datePrevue: { lt: debut } }],
+    AND: [
+      echeanceAttendue(),
+      { datePrevue: { lt: debut } },
+      // C64 (2026-10-08) : la visite de la commission de sécurité, « pour
+      // information », n'est jamais une urgence de l'exploitant — le pendant
+      // SQL de `classerVerification` → `pourInformation`.
+      {
+        obligationId: {
+          notIn: [...OBLIGATIONS_A_L_INITIATIVE_DE_L_ADMINISTRATION],
+        },
+      },
+      horsGrace(graceAu),
+    ],
+  };
+}
+
+/**
+ * Hors délai de grâce (ADR-040) : le pendant SQL de `delaiDeGrace`
+ * (`lib/dates/retard`), tel que `estVerificationEnRetard` le lit — une ligne
+ * « à planifier » dont la grâce court encore (dernier jour à `debut` ou après)
+ * n'est pas en retard.
+ *
+ * ÉCRITE EN POSITIF, trois branches, et non `NOT { statut, graceJusquAu: {
+ * gte } }` : en SQL, `NOT (… AND NULL >= …)` vaut NULL, et la négation aurait
+ * écarté de l'urgence TOUTE ligne « à planifier » sans grâce — c'est-à-dire
+ * tous les retards d'avant la colonne. `portee.test.ts` mesure l'accord avec
+ * le prédicat, `null` compris.
+ */
+function horsGrace(debut: Date): Prisma.VerificationWhereInput {
+  return {
+    OR: [
+      { statut: { not: "a_planifier" } },
+      { graceJusquAu: null },
+      { graceJusquAu: { lt: debut } },
+    ],
   };
 }
 

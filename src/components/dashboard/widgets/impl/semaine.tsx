@@ -4,6 +4,7 @@
 // Mini-agenda 7 jours : jour courant + 6 suivants, groupés par jour,
 // avec les vérifications planifiées dans cette fenêtre.
 
+import { MentionPourInformation } from "@/components/calendrier/MentionPourInformation";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import Link from "next/link";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
@@ -12,6 +13,8 @@ import { cleJourCivil } from "@/lib/dates";
 import { colonnesJours } from "../temps";
 import type { DashboardBundle } from "../types";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 
 export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
   const { evenementsSemaine = [], etablissementId } = bundle;
@@ -32,7 +35,10 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
       libelle: string;
       tone: "alerte" | "warn" | "ok";
       contractuelle: boolean;
+      rythmeRetenu: MentionRythme | null;
       aConfirmer: readonly string[];
+      /** C64 : la visite de la commission de sécurité, « pour information ». */
+      pourInformation: boolean;
       equipement: string;
     }[]
   >();
@@ -49,7 +55,9 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
       libelle: e.libelle,
       tone: e.tone,
       contractuelle: e.contractuelle,
+      rythmeRetenu: e.rythmeRetenu,
       aConfirmer: e.aConfirmer,
+      pourInformation: e.pourInformation,
       equipement: e.equipement,
     });
     eventsParJour.set(key, arr);
@@ -120,7 +128,11 @@ export function WidgetSemaine({ bundle }: { bundle: DashboardBundle }) {
                       {e.contractuelle ? (
                         <MentionContractuelle className="ml-1.5 align-middle" />
                       ) : null}
+                      <MentionRythmeRetenu mention={e.rythmeRetenu} className="ml-1.5 align-middle" />
                       <MentionAConfirmer phrases={e.aConfirmer} className="ml-1.5 align-middle" />
+                      {e.pourInformation ? (
+                        <MentionPourInformation className="ml-1.5 align-middle" />
+                      ) : null}
                     </LienProvenance>
                   </li>
                 ))}

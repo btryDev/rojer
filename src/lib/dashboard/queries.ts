@@ -62,6 +62,9 @@ import {
 } from "@/lib/calendrier/portee";
 import { libellePorteur } from "@/lib/calendrier/labels";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 import {
   genererRecommandations,
   type Recommandation,
@@ -133,6 +136,18 @@ export type EvenementFenetre = {
    *  affichent des libellés d'échéance comme les autres surfaces : sans ce
    *  drapeau, elles présentent une exigence d'assurance comme du droit. */
   contractuelle: boolean;
+  /** D'où vient le rythme quand Rojer le retient (ADR-039), `null` sinon.
+   *  Requis, comme `contractuelle` : l'ADR-039 § 5 interdit un rythme retenu
+   *  sans marquage « sur quelque surface que ce soit », et le board est la
+   *  plus lue. Lu au référentiel par `obligationId` — aucune requête. */
+  rythmeRetenu: MentionRythme | null;
+  /**
+   * La visite de la commission de sécurité, à l'initiative de l'administration
+   * (C64) : le widget la marque « Pour information ». Requis, comme
+   * `contractuelle` : un événement qui l'omettrait la montrerait comme une
+   * échéance de l'exploitant.
+   */
+  pourInformation: boolean;
   /** Les phrases « à confirmer » de la ligne, vide sinon (revue du lot 1). */
   aConfirmer: readonly string[];
   /** L'appareil, ou « Tout l'établissement » (ADR-022). */
@@ -254,6 +269,8 @@ export async function listerEvenementsFenetre(
         sansEcheance: !aUnRendezVous(v, now),
         type: typeDeVerification(v),
         contractuelle: estEcheanceContractuelle(v),
+        rythmeRetenu: mentionRythmeDeVerification(v),
+        pourInformation: estLignePourInformation(v),
         aConfirmer: marques.parObligation.get(v.obligationId)?.phrases ?? [],
         equipement: libellePorteur(v),
         // Pas d'équipement, pas de bâtiment : la ligne reste visible sous
@@ -315,6 +332,7 @@ export async function compterVerifsParEquipement(
         // où l'archivage l'a laissée. Le fait se lisait dans le libellé, il a
         // maintenant sa colonne — et son absence du `select` ne compile plus.
         archiveLe: true,
+        graceJusquAu: true,
         libelleObligation: true,
       },
     }),
@@ -430,7 +448,10 @@ export async function compterObligationsParMois(
         // taisait ce que le bandeau annonçait. La clause partagée « attendue,
         // ouverte, datée avant » (`urgenceSeule`), composée et non recopiée ;
         // un sur-ensemble, que `repartirParMois` trie.
-        urgenceSeule(debut),
+        // La grâce (ADR-040) se juge AUJOURD'HUI, pas au 1er janvier de
+        // l'année affichée : sinon une ligne dont la grâce a expiré en cours
+        // d'année est écartée ici et comptée par le bandeau.
+        urgenceSeule(debut, debutDuJour(new Date())),
         // Une ligne couverte dans l'année : un rapport réalisé y est daté
         // (ADR-034 — la réalisation vit sur le rapport, plus sur la ligne).
         {
@@ -451,6 +472,7 @@ export async function compterObligationsParMois(
       // Cf. ci-dessus : l'archivage est un champ (ADR-034). Sans lui, une
       // obligation éteinte continue de peindre des barres.
       archiveLe: true,
+      graceJusquAu: true,
       libelleObligation: true,
       obligationId: true,
       prescriptionId: true,
@@ -756,6 +778,7 @@ export const getDashboardData = cache(async function getDashboardData(
         // de la file de propositions : une ligne éteinte gelée sur `depassee`
         // les faussait tous les trois d'un coup.
         archiveLe: true,
+        graceJusquAu: true,
         libelleObligation: true,
         // L'obligation, pour le prédicat « retenue par prudence » (D1 (a)) :
         // une ligne que seul le silence de la fiche retient ne compte ni en
@@ -900,6 +923,7 @@ export const getDashboardData = cache(async function getDashboardData(
           datePrevue: v.datePrevue,
           periodicite: v.periodicite,
           archiveLe: v.archiveLe,
+          graceJusquAu: v.graceJusquAu,
           libelleObligation: v.libelleObligation,
           equipementLibelle: libellePorteur(v),
         })),

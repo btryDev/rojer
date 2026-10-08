@@ -9,6 +9,7 @@
 //
 // Module **pur** : la route lui passe ce qu'elle a lu.
 
+import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
 import type { CompteFichiers } from "@/lib/controle/fichiers-zip";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
 import {
@@ -87,6 +88,13 @@ export function genererReadme(args: {
   /** Échéances nées d'une demande d'assureur et imprimées dans ce dossier
    *  (ADR-032). Zéro = rien à annoncer, et rien n'est écrit. */
   nbEcheancesContractuelles: number;
+  /** Les mentions de rythme retenu (ADR-039) des échéances imprimées dans ce
+   *  dossier, par identifiant de ligne. Vide = rien à annoncer. */
+  rythmesRetenus: ReadonlyMap<string, string>;
+  /** Les visites de la commission de sécurité imprimées dans ce dossier,
+   *  « pour information » (C64), par identifiant de ligne. Vide = rien à
+   *  annoncer. */
+  visitesPourInformation: ReadonlySet<string>;
   /** L'état du DUERP tel que `evaluerEtatDuerp` le rend — la seule règle du
    *  dépôt qui connaisse le seuil d'effectif de R. 4121-2. `null` quand aucune
    *  version n'est figée, ou que sa lecture a échoué. */
@@ -378,6 +386,45 @@ export function genererReadme(args: {
       ` « ${MARQUAGE_CONTRACTUEL} »`,
       " là où elle apparaît. Aucune référence légale ne leur est",
       " attachée.",
+      "",
+    );
+  }
+  // ADR-039 : une échéance dont le texte n'écrit pas le rythme, et dont Rojer
+  // a RETENU un — celui d'une norme, ou au moins une fois par an par défaut.
+  // Même règle que ci-dessus : rien n'est écrit quand il n'y en a pas, et
+  // chaque phrase est la mention même que porte la ligne, pas un résumé.
+  // C64 : la visite de la commission de sécurité est à l'initiative de
+  // l'administration. Le dossier la montre avec son rythme, sans la compter
+  // comme une échéance de l'exploitant ; la phrase est celle des lignes.
+  if (args.visitesPourInformation.size > 0) {
+    const n = args.visitesPourInformation.size;
+    lignes.push(
+      "────────────────────────────────────────────────────────────",
+      " VISITES DE LA COMMISSION DE SÉCURITÉ",
+      "────────────────────────────────────────────────────────────",
+      "",
+      ` ${n} ligne${n > 1 ? "s" : ""} de ce dossier ${n > 1 ? "portent" : "porte"} la mention`,
+      ` « ${MENTION_POUR_INFORMATION} ».`,
+      " La visite est déclenchée par l'administration : elle figure",
+      " avec son rythme, n'est comptée ni dans les retards ni dans",
+      " l'indice, et son procès-verbal se dépose au registre.",
+      "",
+    );
+  }
+  if (args.rythmesRetenus.size > 0) {
+    const n = args.rythmesRetenus.size;
+    const phrases = [...new Set(args.rythmesRetenus.values())].sort();
+    lignes.push(
+      "────────────────────────────────────────────────────────────",
+      " RYTHMES RETENUS PAR ROJER, NON ÉCRITS PAR LE TEXTE",
+      "────────────────────────────────────────────────────────────",
+      "",
+      ` ${n} échéance${n > 1 ? "s" : ""} de ce dossier ${n > 1 ? "ont" : "a"} un rythme que le texte`,
+      " n'écrit pas. Rojer l'a retenu : celui d'une norme, citée comme",
+      " norme, ou au moins une fois par an quand le texte dit seulement",
+      " de refaire l'acte. Chacune porte sa mention :",
+      "",
+      ...phrases.map((p) => ` - ${p}`),
       "",
     );
   }

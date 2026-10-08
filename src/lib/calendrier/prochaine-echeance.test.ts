@@ -18,6 +18,7 @@ const ligne = (
   datePrevue: jour(datePrevue),
   periodicite: o.periodicite ?? "annuelle",
   archiveLe: o.archiveLe ? jour(o.archiveLe) : null,
+  graceJusquAu: null,
   libelleObligation: `Obligation ${id}`,
 });
 

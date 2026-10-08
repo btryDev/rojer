@@ -5,7 +5,11 @@ import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
+import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import {
@@ -142,6 +146,7 @@ function LigneEcheance({
   titre,
   meta,
   contractuelle,
+  rythmeRetenu,
   aConfirmer = [],
   pastille,
   registre,
@@ -169,6 +174,9 @@ function LigneEcheance({
    * exactement là où il compte.
    */
   contractuelle?: boolean;
+  /** Le rythme que Rojer retient là où le texte n'en écrit pas (ADR-039) —
+   *  un champ, pour la même raison que `contractuelle` : `meta` est tronqué. */
+  rythmeRetenu?: MentionRythme | null;
   /**
    * Les phrases « à confirmer » de la ligne (`matching/marques.ts`) : la
    * fiche ne dit pas, et c'est ce silence qui la retient. Vide sinon. Même
@@ -223,6 +231,7 @@ function LigneEcheance({
         <p className="m-0 flex items-baseline gap-2 text-[14.5px] font-semibold leading-[1.3] tracking-[-0.015em] text-[color:var(--board-ink)]">
           <span className="min-w-0 truncate">{titre}</span>
           {contractuelle && <MentionContractuelle />}
+          <MentionRythmeRetenu mention={rythmeRetenu} />
           <MentionAConfirmer phrases={aConfirmer} />
         </p>
         {/* Nature puis complément. Le mot est visible : une icône seule
@@ -476,6 +485,10 @@ export default async function CalendrierPage({
         e.aPlanifier += 1;
         continue;
       }
+      // C64 : la visite de la commission, « pour information », ne compte
+      // dans aucune pilule de la vue par porteur ; la liste mensuelle la
+      // montre, peinte « Pour information ».
+      if (lec.registre === "pourInformation") continue;
       const etat = lec.registre;
       // SANS ÉCHÉANCE CONNUE, EN RETARD : elle compte, et n'occupe aucune
       // date (`aUnRendezVous`). Posée sur sa date de génération, elle peignait
@@ -526,6 +539,7 @@ export default async function CalendrierPage({
             LABEL_PERIODICITE[v.periodicite] +
             (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : ""),
           contractuelle: estEcheanceContractuelle(v),
+          rythmeRetenu: mentionRythmeDeVerification(v),
           aConfirmer:
             marquesAConfirmer.parObligation.get(v.obligationId)?.phrases ?? [],
           etat,
@@ -1235,9 +1249,15 @@ export default async function CalendrierPage({
                                   : "") +
                                 `${libellePorteur(v)} · ` +
                                 LABEL_PERIODICITE[v.periodicite] +
-                                (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "")
+                                (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "") +
+                                // Le délai de grâce (ADR-040) : à côté de « à
+                                // planifier », jamais à la place d'une date.
+                                (mentionDelaiDeGrace(v, aujourdhui)
+                                  ? ` · ${mentionDelaiDeGrace(v, aujourdhui)}`
+                                  : "")
                               }
                               contractuelle={estEcheanceContractuelle(v)}
+                              rythmeRetenu={mentionRythmeDeVerification(v)}
                               aConfirmer={
                                 marquesAConfirmer.parObligation.get(
                                   v.obligationId,

@@ -37,6 +37,7 @@ function verif(partial: Partial<VerificationTenue> = {}): VerificationTenue {
     /** `null` = ligne OUVERTE. Requis depuis le N3 : c'est ce champ, et non
      *  plus un préfixe de libellé, qui dit qu'une obligation est éteinte. */
     archiveLe: null,
+    graceJusquAu: null,
     statut: "a_planifier",
     equipement: { libelle: "Extincteurs RDC", categorie: "EXTINCTEUR" },
     prescription: null,
@@ -180,6 +181,7 @@ describe("registre — une obligation éteinte ne se présente pas en retard", (
       statut: "planifiee",
       datePrevue: new Date("2025-03-01T00:00:00Z"),
       archiveLe: new Date("2026-02-01T00:00:00Z"),
+      graceJusquAu: null,
       derniereRealisation: new Date("2024-03-01T00:00:00Z"),
     });
 

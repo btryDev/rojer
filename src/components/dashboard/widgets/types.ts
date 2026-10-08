@@ -16,6 +16,7 @@ import type { EvenementGrille } from "@/lib/calendrier/grille";
 import type { EtatEcheances } from "@/lib/calendrier/retards";
 import type { ModulesMatrice } from "@/lib/dashboard/obligations";
 import type { StatsRetardActions } from "@/lib/actions/queries";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 
 export type Taille = "small" | "medium" | "large";
 // small = 2 col · medium = 3 col · large = 6 col (grille à 6 colonnes)
@@ -105,6 +106,13 @@ type EquipementLite = {
 
 type VerificationLite = {
   id: string;
+  /**
+   * L'obligation de la ligne. REQUIS depuis le C64 (2026-10-08) : c'est par
+   * lui que le widget reconnaît la visite de la commission de sécurité, « pour
+   * information » (`estLignePourInformation`) — un champ facultatif oublié la
+   * ferait compter en retard en silence.
+   */
+  obligationId: string;
   libelleObligation: string;
   datePrevue: Date;
   statut: string;
@@ -120,6 +128,8 @@ type VerificationLite = {
    * C'est exactement ce qui s'est produit avec le préfixe de libellé.
    */
   archiveLe: Date | null;
+  /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
+  graceJusquAu: Date | null;
   equipement: { libelle: string };
   /**
    * La source de la prescription dont la ligne est née, quand elle en a une.
@@ -142,6 +152,13 @@ type VerificationLite = {
    * remplit toujours.
    */
   aConfirmer?: readonly string[];
+  /**
+   * D'où vient le rythme quand Rojer le retient (ADR-039 § 5 : jamais sans
+   * marquage), `null` sinon — calculé au serveur
+   * (`mentionRythmeDeVerification`), le board est un composant client.
+   * Optionnel pour les fixtures ; la page le remplit toujours.
+   */
+  rythmeRetenu?: MentionRythme | null;
 };
 
 type RapportLite = {

@@ -52,7 +52,9 @@ import {
 } from "@/lib/dashboard/frise";
 import { composantesCiviles } from "@/lib/dates";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
-import { retenueParSaMarque } from "@/lib/calendrier/prudence";
+import { horsDesComptesDeLExploitant } from "@/lib/calendrier/prudence";
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
+import { MentionPourInformation } from "@/components/calendrier/MentionPourInformation";
 import {
   badgeEcart,
   compteARebours,
@@ -77,6 +79,7 @@ import {
 import type { DashboardBundle } from "../types";
 import { estEcheanceContractuelle } from "@/lib/prescriptions/sources";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 
 /* ─── Primitives partagées ──────────────────────────────────── */
 
@@ -1735,8 +1738,11 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
   // tri — s'affichait ici en compte à rebours rouge.
   // D1 (a) : une ligne que seul le silence de la fiche retient ne vire pas
   // au rouge ; sa mention « à confirmer » dit pourquoi elle est là.
+  // C64 : la visite de la commission de sécurité non plus (« pour
+  // information ») — elle n'arrive d'ailleurs pas ici, `prochaineEcheanceConnue`
+  // l'écartant par son classement ; la garde tient si une autre voie l'amène.
   const enRetard =
-    estVerificationEnRetard(v, aujourdhui) && !retenueParSaMarque(v);
+    estVerificationEnRetard(v, aujourdhui) && !horsDesComptesDeLExploitant(v);
 
   return (
     <CarteBoard
@@ -1761,7 +1767,9 @@ export function BlocProchaineEcheance({ bundle }: { bundle: DashboardBundle }) {
           {/* La ligne la plus mise en avant du board ne peut pas être celle
               qui tait ce qu'elle est (ADR-032). */}
           {estEcheanceContractuelle(v) ? <MentionContractuelle /> : null}
+          <MentionRythmeRetenu mention={v.rythmeRetenu} />
           <MentionAConfirmer phrases={v.aConfirmer ?? []} />
+          {estLignePourInformation(v) ? <MentionPourInformation /> : null}
         </span>
       </div>
       {/* Le compte à rebours est la seule surface claire de la carte :

@@ -254,7 +254,85 @@ export const obligationsConformite: Obligation[] = [
 // `2026-09-28.3` (contre-revue des corrections du lot 3) : les libellés de
 // quatre VGP de levage — servies au silence sur une réponse — disent le rythme
 // et son fondement, plus un fait non déclaré. Libellés seuls : 174 + 0 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-09-28.3";
+// `2026-10-07.5` (relecture du préventeur du 30/09, intégration des cinq lots
+// `lot/relecture-jc-1` à `-5` ; chaque branche portait sa propre version,
+// `.1` à `.4`, qu'aucun calendrier n'a scellée — elles ne sont pas servies).
+// Lot 1 : (1) ascenseur, AS 9 sort de la ligne CCH et prend deux lignes à
+// lui, bornées aux ERP N1–N4 — `ascenseur-erp-verification-quinquennale-as9`
+// et `ascenseur-erp-verification-remise-en-service-as9` (événementielle).
+// 174 + 2 − 0 = 176. (2) MS 38 § 4 : extincteurs d'ERP, annuelle et décennale,
+// par `personne_competente` au lieu de personne qualifiée ou organisme agréé.
+// 176 + 0 − 0 = 176. (3) Identification des extincteurs en ERP :
+// `signalisation-erp-extincteurs-identification` (N1–N4, MS 38 § 3, MS 39) et
+// `signalisation-erp-5-extincteurs-identification` (N5, PE 26). 176 + 2 − 0 =
+// 178. États permanents : aucune ligne de calendrier. (4) EL 18 § 4 : libellé
+// de `elec-erp-groupe-electrogene-quinzaine` dans les mots du tiret. 178 + 0 −
+// 0 = 178.
+// Lot 5 (périmètre ; décision de la propriétaire du 07/10) : l'IGH sort du
+// référentiel — `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
+// `incendie-igh-charge-calorifique-quinquennale` (`OBLIGATIONS_RETIREES`).
+// 178 + 0 − 3 = 175. Équipements sous pression : seule la requalification
+// décennale reste — six lignes `esp-*` retirées. 175 − 6 = 169. Stockage de
+// matières dangereuses : « sauf les 3 derniers points » — quatre lignes
+// `stockage-dangereux-*` retirées. 169 − 4 = 165. Hotte : le contrôle annuel
+// des locaux à pollution spécifique ne naît plus que d'une VMC ou d'une CTA
+// (« traité dans le VMC : à supprimer dans les hottes »). 165 + 0 − 0 = 165.
+// Lot 4 : DF 10 § 3 entre (`incendie-erp-desenfumage-triennale-mecanique-ssi`),
+// et la triennale SSI de MS 73 § 2 reçoit sa condition A/B en `non_infirmee`.
+// 165 + 1 − 0 = 166. Au silence, rien ne sort ; la ligne neuve n'apparaît
+// qu'au « oui » sur le désenfumage mécanique.
+// Lot 2 (ADR-039) : source NORME, `rythmeRetenu`, mention ; aucune obligation
+// touchée. Lot 3 (C59, ADR-039) : les rythmes retenus entrent. Extincteurs hors ERP : maintenance annuelle de la norme
+// NF S 61-919 (`incendie-travail-moyens-lutte`, désormais `erp: false` — la
+// partition avec l'annuelle de MS 38 § 4). Révision en atelier à dix ans
+// (NF S 61-919 § 10.1), même partition : entre
+// `incendie-travail-extincteurs-revision-atelier-decennale`.
+// EPI : `epi-maintien-etat-conformite` (R. 4322-1, défaut annuel, catégorie
+// `EPI` seule — l'arrêté du 19 mars 1993 garde ses trois catégories).
+// Formation : défaut annuel sur `formation-securite-etablissement-organisation`
+// (L. 4141-2, « répétée périodiquement ») et `stockage-dangereux-formation-
+// personnel` (R. 4412-88, « Elles sont répétées régulièrement »).
+// Défaut annuel de R. 4224-17 en lieu de travail hors ERP, partition avec
+// les annuelles ERP écrites (MS 73, DF 10) : entrent
+// `incendie-travail-ria-entretien-verification` et
+// `incendie-travail-desenfumage-entretien-verification` ; l'entretien de la
+// signalisation (arrêté du 4 novembre 1993, art. 15, « régulièrement »)
+// reçoit le défaut. L'alarme reste à la semestrielle écrite du même article.
+// Maintenance additionnelle approfondie à 5 et 15 ans (NF S 61-919, annexe
+// A), selon la question neuve `typeExtincteur` : entre
+// `incendie-travail-extincteurs-maintenance-approfondie`.
+// Compte : 166 + 5 − 0 = 171.
+// C60, même version (jamais servie), revue indépendante de la relecture :
+// ~~AS 9 s'applique aux hôtels de 5ᵉ catégorie par le renvoi exprès de PO 1 § 3
+// (PO 8 § 1, PE 1 § 1) — entrent `ascenseur-hotel-5-verification-quinquennale-as9`
+// et `ascenseur-hotel-5-verification-remise-en-service-as9` (N5, type O).~~
+// [2026-10-08, C64 : supprimées, voir plus bas.]
+// Lignes AS 9 N1–N4 fondées d'abord sur PE 1 § 1 ; identification des
+// extincteurs N1–N4 étendue au RIA (MS 15 § 4) ; libellés des défauts annuels
+// (RIA, désenfumage, EPI) et de la triennale SSI ramenés au texte ; valeur
+// `halon` de `typeExtincteur`, qui retire la maintenance approfondie et la
+// révision hors ERP. Compte : 171 + 2 − 0 = 173.
+// C62, même version (jamais servie), revue finale : le libellé de
+// `signalisation-erp-extincteurs-identification` devient neutre — la ligne est
+// portée par l'extincteur comme par le RIA, et chacun lisait l'exigence de
+// l'autre. Compte : 173 + 0 − 0 = 173.
+// C64, même version (jamais servie), 2026-10-08 — « on respecte les décisions
+// de Julien » (décision de la propriétaire) :
+// (B) les deux lignes AS 9 des hôtels de 5ᵉ sont supprimées, sans
+// `OBLIGATIONS_RETIREES` (nées et retirées sous cette version) ; le renvoi de
+// PO 1 § 3 reste lu, en réserve de PO 1 et PO 8. Compte : 173 + 0 − 2 = 171.
+// (C) `esp-requalification-decennale` bornée aux compresseurs (« à exclure
+// sauf pour compresseur : requalification tous les 10 ans ») : quatre
+// conditions `enum_differente` sur `familleEsp` écartent les familles
+// déclarées autres que `recipient_gaz_groupe2` ; le silence et « Autre / je
+// ne sais pas » gardent la ligne. Compte : 171 + 0 − 0 = 171.
+// (A) La formation au risque chimique : une ligne d'établissement, due dès
+// qu'un stockage de matières dangereuses est déclaré (champ neuf
+// `siEquipementDeclare`, qui entre à l'empreinte), au défaut annuel de
+// L. 4141-2 — entre `stockage-dangereux-etablissement-formation-personnel`,
+// sort `stockage-dangereux-formation-personnel` (`OBLIGATIONS_RETIREES`,
+// `absorbePar`). Compte : 171 + 1 − 1 = 171.
+export const REFERENTIEL_VERSION = "2026-10-07.5";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
@@ -333,6 +411,101 @@ export const OBLIGATIONS_RETIREES: Record<string, ObligationRetiree> = {
     porteur: "etablissement",
     motif:
       "Retirée le 2026-09-02, créée le 2026-09-01. Elle portait GE 4 § 1 en UNE ligne `triennale` bornée à N1–N4, faute d'avoir pu lire le corps du tableau à la source. Le tableau a depuis été relevé et vérifié case par case sur le fac-similé du Journal officiel : il croise le type et la catégorie, et donne trois OU cinq ans. `periodicite` étant un scalaire, il faut une ligne par bloc — six, qui forment une partition. `absorbePar` désigne celle des six qui hérite du plus grand nombre d'établissements, mais aucune ne la reprend à elle seule : un dossier de 3ᵉ ou 4ᵉ catégorie bascule sur une autre, et un établissement de culte passe de trois à cinq ans. L'id ne doit jamais être réemployé — c'est ce que ce registre garantit.\n\nCE CHAMP EST LU DEPUIS LE 2026-09-10, et cette entrée-ci est la seule des cinq à ne pas se laisser lire entièrement. La réconciliation reporte l'historique d'une ligne retirée vers son absorbant DÉCLARÉ, à la condition que celui-ci s'applique au dossier. Or `absorbePar` est un pointeur unique là où il faudrait une partition : pour un ERP de 3ᵉ ou 4ᵉ catégorie, l'absorbant nommé ici n'est pas applicable — c'est une autre des six qui l'est —, donc AUCUN report n'a lieu et la ligne d'origine est archivée seule. Le dossier perd la continuité de sa visite de commission, précisément pour la population que le motif ci-dessus signale comme mal servie. Le mécanisme couvre donc cette entrée EN PARTIE, et il faut le savoir avant de s'y fier. Ce qui manque n'est pas du code : c'est une déclaration capable de dire « selon la catégorie, l'un OU l'autre ». Les quatre autres entrées ne posent pas ce problème, leur absorbant étant porté par l'établissement, donc applicable à tout dossier.",
+  },
+  // Relecture du préventeur du 30/09, lot 5 (périmètre) — décision de la
+  // propriétaire du 07/10 d'appliquer les retraits demandés. La réconciliation
+  // ne connaît plus ces identifiants : une ligne qui porte une trace (rapport,
+  // action, réalisation) est ARCHIVÉE avec sa preuve, une ligne sans trace est
+  // supprimée (`generateur.ts`, boucle des lignes non générées). Rien n'est
+  // repris ailleurs : `absorbePar` est `null`.
+  "elec-igh-annuelle": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la grille « IGH non traité par Rojer » : la vérification annuelle des installations électriques d'un IGH (arrêté du 30 décembre 2011, art. GH 5) incombe au PROPRIÉTAIRE de l'immeuble, pas à l'employeur locataire que le produit sert. Aucun absorbant : le régime IGH sort du référentiel, et la page « Ce que Rojer ne couvre pas » (axe `igh`) le dit. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "incendie-igh-moyens-secours-annuelle": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Annotée « IGH non traité » sur chacune des pages de la grille où elle paraissait (alarme, extincteurs, désenfumage) : la vérification annuelle des moyens de secours et du SSI d'un IGH (GH 5) incombe au propriétaire de l'immeuble. Aucun absorbant ; la page « Ce que Rojer ne couvre pas » (axe `igh`) annonce le régime comme non traité. Les lignes qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "incendie-igh-charge-calorifique-quinquennale": {
+    absorbePar: null,
+    porteur: "etablissement",
+    motif:
+      "Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Annotée « non traité » par le préventeur. C'était la seule ligne IGH dont l'OCCUPANT est le débiteur (GH 61 § 5, rapport quinquennal de conformité de la charge calorifique par organisme agréé) : la retirer est une décision de périmètre, pas une lecture du texte, qui continue de l'imposer. La page « Ce que Rojer ne couvre pas » (axe `igh`) le dit nommément à l'occupant. Aucun absorbant ; la ligne d'établissement est archivée si elle porte une trace, supprimée sinon.",
+  },
+  "esp-declaration-mise-en-service": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Déclaration et contrôle de mise en service (arrêté du 20 novembre 2017, art. 7 à 11). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-inspection-periodique": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Inspection périodique quadriennale (arrêté du 20 novembre 2017, art. 15). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-inspection-periodique-generateur-vapeur": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Inspection périodique biennale des générateurs de vapeur (arrêté du 20 novembre 2017, art. 15, I). Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-dossier-suivi": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Tenue du dossier de suivi (arrêté du 20 novembre 2017, art. 6) — état permanent. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-intervention-reparation": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Contrôle après intervention notable (arrêté du 20 novembre 2017, art. 26 à 28) — événementielle. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "esp-personnel-formation": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Formation et information des opérateurs (Code du travail, R. 4323-1 à R. 4323-5) — état permanent. Le Code du travail continue de s'appliquer à tout équipement de travail : c'est la ligne propre aux ESP qui sort, pas l'article. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Équipement sous pression » de la grille : « à exclure sauf pour compresseur : requalification tous les 10 ans ». Seule `esp-requalification-decennale` reste au domaine ; elle ne reprend pas ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "stockage-dangereux-declaration-icpe": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Vérification du régime ICPE applicable (C. env., L. 512-1, L. 512-7, L. 512-8) — obligation ponctuelle, seule inscrite au registre des obligations sans surface, qui se vide. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "stockage-dangereux-retention": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Capacité de rétention (R. 4412-11, R. 4412-17 ; arrêté du 1er juin 2015, art. 22) — état permanent. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "stockage-dangereux-verification-etancheite": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Vérification régulière de l'état du stockage (R. 4412-11, 2°) — échéance récurrente sans rythme écrit. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  "stockage-dangereux-ventilation-locaux": {
+    absorbePar: null,
+    porteur: "equipement",
+    motif:
+      "Ventilation des locaux de stockage et contrôle annuel (R. 4222-20 ; arrêté du 8 octobre 1987, art. 4) — les deux textes continuent de fonder les lignes d'aération. Retirée le 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la page « Stockage de matières dangereuses » de la grille : « à exclure sauf 3 derniers points » — restent les fiches de données de sécurité, la formation du personnel et la signalisation des aires de stockage. Aucune d'elles ne reprend ce contenu-ci, d'où `absorbePar: null`. Les lignes de calendrier qui portaient une trace sont archivées, les autres supprimées.",
+  },
+  // 2026-10-08 (C64) — « on respecte les décisions de Julien » : la formation
+  // au risque chimique devient UNE ligne d'établissement, due dès qu'un
+  // stockage est déclaré (`siEquipementDeclare`). Nouvel identifiant, et
+  // celui-ci inscrit ici : le report d'échéance équipement → établissement
+  // n'est servi qu'à une obligation retirée (`succession-porteurs.test.ts`).
+  "stockage-dangereux-formation-personnel": {
+    absorbePar: "stockage-dangereux-etablissement-formation-personnel",
+    porteur: "equipement",
+    motif:
+      "Formation du personnel manipulant des matières dangereuses (R. 4412-38), portée par chaque stockage déclaré : une ligne PAR stockage. Retirée le 2026-10-08 (C64) au profit de `stockage-dangereux-etablissement-formation-personnel`, une ligne pour l'établissement, due dès qu'au moins un stockage est déclaré, au défaut annuel de L. 4141-2 (préventeur : « obligation annuelle de formation » ; décision de la propriétaire du 08/10). En production l'identifiant était `autre`, sans rythme ni ligne de calendrier ; la version 2026-10-07.5, qui lui donnait un défaut annuel, n'a jamais été servie.",
   },
 };
 
@@ -427,6 +600,27 @@ export function empreinteReferentiel(
         // sans effet, ce qui est le défaut qu'on vient de corriger sur
         // `absorbePar`.
         canonique(o.succedeA ?? []),
+        // Le rythme retenu (ADR-039) décide de l'existence et de la date
+        // d'une ligne : il entre. Mais EN SEGMENT AJOUTÉ, et seulement quand il
+        // est présent — une obligation qui n'en porte pas produit exactement la
+        // chaîne d'avant, donc l'ADR-039 seul ne déplace ni l'empreinte ni
+        // `REFERENTIEL_VERSION`. Le motif y entre avec le rythme : passer d'un
+        // défaut à une norme change ce que la ligne affiche de son origine.
+        // `siEquipementDeclare` (2026-10-08, C64) décide de l'EXISTENCE de
+        // la ligne d'établissement : il entre, en segment ajouté et seulement
+        // quand il est présent, comme le rythme retenu ci-dessous.
+        ...(o.porteur === "etablissement" && o.siEquipementDeclare
+          ? [`si:${canonique(o.siEquipementDeclare)}`]
+          : []),
+        ...(o.rythmeRetenu
+          ? [
+              `rythme:${o.rythmeRetenu.periodicite}:${o.rythmeRetenu.motif}:${
+                o.rythmeRetenu.motif === "norme"
+                  ? (o.rythmeRetenu.reference.article ?? "")
+                  : ""
+              }`,
+            ]
+          : []),
       ].join("|"),
     )
     .sort()
@@ -462,3 +656,4 @@ export function obligationsParDomaine(
 ): Obligation[] {
   return obligationsConformite.filter((o) => o.domaine === domaine);
 }
+export * from "./rythme-retenu";

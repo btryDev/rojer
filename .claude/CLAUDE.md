@@ -65,6 +65,21 @@ Sources primaires libres d'accès uniquement :
 - **Arrêtés sectoriels** (Légifrance, Journal Officiel)
 - **INRS** : fiches techniques, guides sectoriels
 - **Ministère du Travail** : guides de l'employeur, fiches ED
+- **Normes homologuées** (NF, EN) — depuis l'ADR-039 (2026-10-07) : une norme
+  peut fonder une obligation ou un rythme, même si aucun texte ne la rend
+  obligatoire. Elle se cite **comme norme** (source `NORME`, intitulé, édition,
+  paragraphe), lue et entrée au corpus `normes`, jamais comme un article de loi.
+  APSAD, CACES, recommandations CNAM : toujours exclus
+
+**Rythme vague → annuel, déclaré comme défaut (ADR-039).** Quand un texte
+impose une vérification, un entretien ou une action récurrente avec un rythme
+vague (« périodicité appropriée », « régulièrement », « répétée
+périodiquement », « maintenus en bon état »), Rojer retient **au moins une fois
+par an** — `rythmeRetenu: { motif: "defaut_annuel" }`, avec la citation vague
+mot pour mot. Un rythme écrit (texte, puis norme) l'emporte toujours. Le défaut
+s'affiche comme défaut, jamais comme cité. « Chaque fois que nécessaire » est un
+déclencheur événementiel, hors règle. `periodicite` reste le rythme du texte ;
+`periodiciteEffective(o)` est la seule lecture qui date une ligne.
 
 **Attention** : aucune base de données commerciale ne doit être recopiée. Le référentiel est reconstruit depuis les textes officiels, avec traçabilité de la source pour chaque obligation. La fiche AOCR dans `spec/` est une base de travail, pas une source citable.
 
@@ -94,10 +109,10 @@ On refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement.
 3. **Bureau / services tertiaires**
 
 ### Référentiel de conformité (vérifications)
-Livré : **~~170~~ ~~172~~ 173 obligations sur 21 domaines** (169 + 1 le 2026-09-27, C45 : `R. 4227-26` ; 170 + 2 le même jour, `lot/couverture-reponse-absente` : `R. 4227-34`, installation de l'alarme, et `R. 4227-37` al. 2, instructions d'évacuation) — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
+Livré : **~~170~~ ~~172~~ ~~173~~ ~~174~~ ~~171~~ ~~173~~ 171 obligations sur 21 domaines** (171 remesuré en appelant le 2026-10-08, C64, décisions du préventeur suivies : 173 − 2 (AS 9 aux hôtels de 5ᵉ, supprimées avant d'avoir été servies) + 1 − 1 (la formation au risque chimique devient une ligne d'établissement, `stockage-dangereux-etablissement-formation-personnel`, l'ancien id retiré) = 171 ; 173 remesuré en appelant le 2026-10-07, C60, revue indépendante de la relecture du préventeur : 171 + 2 (AS 9 appliqué aux hôtels de 5ᵉ catégorie par le renvoi exprès de `PO 1 § 3` — quinquennale par organisme agréé et remise en service après transformation importante) − 0 = 173 ; 171 remesuré en appelant le même jour, intégration de la relecture du préventeur : 174 + 4 (lot 1 — AS 9 en deux lignes d'ascenseur bornées aux ERP N1–N4, identification des extincteurs en ERP, N1–N4 et N5) − 13 (lot 5 — l'IGH sort du référentiel : `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`, `incendie-igh-charge-calorifique-quinquennale` ; les équipements sous pression ne gardent que la requalification décennale, six `esp-*` retirées ; le stockage de matières dangereuses ne garde que les fiches de données de sécurité, la formation et la signalisation, quatre `stockage-dangereux-*` retirées ; décision de la propriétaire du 07/10) + 1 (lot 4 — `DF 10 § 3`, `incendie-erp-desenfumage-triennale-mecanique-ssi`) + 5 (lot 3, ADR-039 — révision en atelier et maintenance approfondie des extincteurs hors ERP (NF S 61-919), maintien en état des EPI (`R. 4322-1`), entretien du RIA et du désenfumage en lieu de travail hors ERP (`R. 4224-17`)) = 171 ; 174 le 2026-09-28 avec `levage-vgp-semestrielle-force-humaine` ; 169 + 1 le 2026-09-27, C45 : `R. 4227-26` ; 170 + 2 le même jour, `lot/couverture-reponse-absente` : `R. 4227-34`, installation de l'alarme, et `R. 4227-37` al. 2, instructions d'évacuation) — électricité, incendie, aération/ventilation, cuisson/hottes, ascenseurs, portes/portails automatiques, équipements sous pression, stockage de matières dangereuses, levage, froid (contrôle d'étanchéité des fluides frigorigènes), et depuis le 2026-08-31 formation à la sécurité, santé au travail, premiers secours, organisation de la prévention, information des travailleurs, locaux sociaux, co-activité, depuis le 2026-09-02 signalisation de sécurité et compactage des déchets, et depuis le 2026-09-04 éclairage des lieux de travail et protection individuelle. Le référentiel vit en **TypeScript versionné** (`src/lib/referentiels/conformite/`), pas en base (ADR-003).
 
-**89 d'entre elles sont déclenchées par un équipement déclaré, ~~soixante-six~~
-~~soixante-sept~~ ~~soixante-neuf~~ soixante-dix (2026-09-27, C45 : `R. 4227-26`, 169 + 1 = 170 ; puis `R. 4227-34` et `R. 4227-37` al. 2, 170 + 2 = 172 ; puis la dotation de `R. 4227-29`, 172 + 1 = 173) sont portées par l'établissement, quatorze par un salarié** — remesuré en
+**~~89~~ ~~88~~ ~~90~~ 87 (remesuré en appelant `porteurDe` le 2026-10-08, C64 : 90 − 2 (AS 9 aux hôtels de 5ᵉ) − 1 (formation au risque chimique, passée à l'établissement) ; 90 le 2026-10-07, C60 : 88 + 2, les deux lignes d'AS 9 des hôtels de 5ᵉ) d'entre elles sont déclenchées par un équipement déclaré, ~~soixante-six~~
+~~soixante-sept~~ ~~soixante-neuf~~ ~~soixante-dix~~ ~~soixante-neuf~~ soixante-dix (2026-10-08, C64 : + 1, la formation au risque chimique, due dès qu'un stockage est déclaré ; 2026-10-07 : l'IGH retiré, `incendie-igh-charge-calorifique-quinquennale` ; 2026-09-27, C45 : `R. 4227-26`, 169 + 1 = 170 ; puis `R. 4227-34` et `R. 4227-37` al. 2, 170 + 2 = 172 ; puis la dotation de `R. 4227-29`, 172 + 1 = 173) sont portées par l'établissement, quatorze par un salarié** — 87 + 70 + 14 = 171, remesuré en appelant le 2026-10-08 (C64) ; ~~90 + 69 + 14 = 173~~ le 2026-10-07 (C60). [La revue indépendante du 2026-10-07 relevait que cette phrase disait « 89 » et « soixante-dix » ; les deux étaient barrés au profit de 88 et soixante-neuf, mais les sommes entre parenthèses comptent le TOTAL du référentiel (169, 170, 172, 173), pas les lignes d'établissement — elles ne s'additionnent pas au nombre qu'elles suivent. Le compte qui fait foi est celui de la fin de phrase.] — remesuré en
 appelant `obligationsConformite` et `porteurDe` le 2026-09-21 (lot chaleur
 intense : deux états permanents d'établissement, `R. 4463-2` et `R. 4463-6` ;
 registre de dette : un troisième, `R. 4222-21` ; puis `PE 27` § 4 et § 5,
@@ -121,7 +136,9 @@ incendie étaient accrochés à un extincteur ou une alarme déclarés, alors qu
 ne les y conditionne.
 
 Les obligations d'établissement s'appliquent **même si aucun équipement n'est
-déclaré**, et produisent **une seule ligne** chacune, jamais une par installation
+déclaré** — sauf celles qui portent `siEquipementDeclare` (depuis le 2026-10-08 :
+une seule, la formation au risque chimique, due dès qu'un stockage de matières
+dangereuses est déclaré) —, et produisent **une seule ligne** chacune, jamais une par installation
 (ADR-022) : `PE 4 § 2` (entretien triennal des installations techniques en ERP de
 5ᵉ catégorie), `R. 4222-20` (contrôle annuel des installations d'aération), les cinq
 entrées du lot 7 — organiser la formation à la sécurité (`L. 4141-2`), informer les
@@ -204,7 +221,7 @@ Rojer couvre les obligations de **santé-sécurité au travail et de sécurité 
 — Code du travail, CCH, et Code de l'environnement quand il porte sur la sécurité des
 installations ou des personnes. Une obligation y naît de cinq déclencheurs possibles :
 
-1. **Équipement déclaré** — 89 obligations livrées (mesuré le 2026-09-11)
+1. **Équipement déclaré** — ~~89~~ ~~88~~ ~~90~~ 87 obligations livrées (87 remesuré en appelant le 2026-10-08, C64 : − 2 AS 9 aux hôtels de 5ᵉ, − 1 formation au risque chimique passée à l'établissement ; mesuré le 2026-09-11 ; 88 remesuré en appelant le 2026-10-07 : + 1 le 2026-09-28, puis la relecture du préventeur : + 4 au lot 1, − 12 au lot 5, + 1 au lot 4, + 5 au lot 3 ; 90 le même jour, C60 : + 2, AS 9 aux hôtels de 5ᵉ)
 2. **Statut d'employeur** — dès un salarié. **15 obligations livrées au lot 7**
    (2026-08-31) : formation à la sécurité, information et accès au DUERP, VIP, suivi
    individuel renforcé et sa visite intermédiaire, liste des postes à risques, matériel
@@ -242,8 +259,8 @@ l'ADR-022, sans mécanisme.
 
 Répartition remesurée le 2026-09-20 (~~le 2026-09-11, inchangée depuis la
 scission de la colonne R de `GE 4 § 1`, le 2026-09-08~~) :
-**89 équipement, ~~66~~ ~~67~~ ~~69~~ 70 établissement, 14 salarié**
-(total ~~169~~ ~~170~~ ~~172~~ 173, remesuré en appelant le 2026-09-27 — la dotation de `R. 4227-29` ; 172 le même jour — `R. 4227-34` et `R. 4227-37` al. 2 ; 170 le même jour — C45, `R. 4227-26` ; 169 le 2026-09-26 — `R. 4624-33`, `L. 4624-2-4` ; 167 le 2026-09-21 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
+**~~89~~ ~~90~~ ~~88~~ ~~90~~ 87 équipement, ~~66~~ ~~67~~ ~~69~~ ~~70~~ ~~69~~ 70 établissement, 14 salarié**
+(total ~~169~~ ~~170~~ ~~172~~ ~~173~~ ~~174~~ ~~171~~ ~~173~~ 171, remesuré en appelant le 2026-10-08, C64 — 90/69/14 = 173 avant ; − 2 équipement (AS 9 aux hôtels de 5ᵉ, supprimées) ; − 1 équipement + 1 établissement (formation au risque chimique, `siEquipementDeclare`) ; 173 remesuré en appelant le 2026-10-07, C60 — 88/69/14 = 171 avant, + 2 équipement : AS 9 aux hôtels de 5ᵉ par `PO 1 § 3` ; 171 remesuré le même jour — 90/70/14 = 174 avant ; lot 1 : +4 équipement (deux lignes d'AS 9, deux d'identification des extincteurs en ERP) ; lot 5 : l'IGH retiré, −2 équipement, −1 établissement ; six lignes `esp-*` retirées : −6 équipement ; quatre lignes `stockage-dangereux-*` : −4 équipement ; lot 4 : +1 équipement, `DF 10 § 3` ; lot 3 : +5 équipement, rythmes retenus (ADR-039) ; 174 le 2026-09-28 avec la VGP semestrielle de levage, équipement ; 173, remesuré en appelant le 2026-09-27 — la dotation de `R. 4227-29` ; 172 le même jour — `R. 4227-34` et `R. 4227-37` al. 2 ; 170 le même jour — C45, `R. 4227-26` ; 169 le 2026-09-26 — `R. 4624-33`, `L. 4624-2-4` ; 167 le 2026-09-21 ; 51 et 154 jusqu'au lot chaleur intense) — en appelant `obligationsConformite` et
 `porteurDe`, pas au grep. Les quatre entrées du lot sont, dans l'ordre où elles
 apparaissent au référentiel : `aeration-erp-filtres-visite-periodique`
 (`CH 39 § 3`, visite TRIMESTRIELLE des filtres de ventilation par l'utilisateur,
@@ -264,7 +281,8 @@ comptes du 2026-09-04 sont périmés — 51 en 3ᵉ catégorie, 50 en 5ᵉ, rest
 salariés, alarme et CTA déclarées. La 3ᵉ passe désormais devant la 5ᵉ.] La quarante-sixième obligation
 d'établissement était entrée le même jour : `incendie-igh-charge-calorifique-quinquennale`,
 le rapport quinquennal de conformité de la charge calorifique que `GH 61 § 5` met à la
-charge des **occupants** d'un IGH. La dernière est entrée le
+charge des **occupants** d'un IGH *(retirée le 2026-10-07 avec tout l'IGH — périmètre,
+relecture préventeur du 30/09, décision de la propriétaire du 07/10)*. La dernière est entrée le
 même jour avec le dépouillement intégral de l'arrêté du 5 mars 1993 : le domaine
 `compactage_dechets`, une seule ligne, la vérification générale périodique
 TRIMESTRIELLE des presses à balles et des compacteurs à déchets
@@ -429,8 +447,17 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
   équipements sportifs, piscines. La CLASSE d'IGH n'est plus demandée depuis le
   2026-09-03 (`GH 5` s'adresse aux « propriétaires » sans varier par classe,
   `GH 66` fait du classement l'affaire de l'usage principal de l'immeuble).
-  L'**IGH seul est servi** : **onze obligations portent la typologie `igh`**,
-  remesuré en appelant le 2026-09-04 — le « neuf » qui figurait ici était périmé
+  ~~L'**IGH seul est servi** : **onze obligations portent la typologie `igh`**,~~
+  **[2026-10-07 — le règlement IGH n'est plus traité.** Relecture préventeur du
+  30/09 (« IGH non traité par Rojer »), décision de la propriétaire du 07/10 :
+  les trois lignes propres à l'IGH sont dans `OBLIGATIONS_RETIREES`, `GH 5` et
+  `GH 61` passent `non_couvert`, et la page « Ce que Rojer ne couvre pas » (axe
+  `igh`) le dit, charge calorifique de l'occupant en tête. **Huit obligations
+  portent encore la typologie `igh`, toutes d'ascenseur et ouvertes à tous les
+  régimes** — remesuré en appelant. La question IGH reste posée à l'onboarding
+  et dans la fiche établissement : elle sert encore au refus d'un ERP en IGH et
+  à l'annonce de non-couverture.] Ce qui suit est l'état antérieur, barré :
+  ~~remesuré en appelant le 2026-09-04 — le « neuf » qui figurait ici était périmé
   avant même le lot qui l'a corrigé. **Dix d'entre elles pèsent sur l'exploitant
   ou le propriétaire de l'immeuble, pas sur l'employeur qui y loue des bureaux.
   La onzième est l'exception, et elle est entrée le 2026-09-04** :
@@ -441,7 +468,7 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
   locataire est lui-même le débiteur. Le corpus la portait en
   `obligation_manquante` depuis le 2026-09-03 avec une raison de non-encodage
   fausse — « faute de catégorie d'équipement » —, alors que son porteur est
-  l'établissement depuis l'ADR-022
+  l'établissement depuis l'ADR-022~~
 - **ATEX, rayonnements ionisants, amiante, plomb, radon, CMR** : non couverts,
   mais **déclarés** et non refusés — le dossier se crée et la page
   « Ce que Rojer ne couvre pas » le dit en permanence
@@ -553,6 +580,18 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     premier pas, sinon « à planifier » à l'origine du suivi (`suiviDepuis`) ;
     la fonction ne lit aucune horloge, et le réconciliateur ne garde que ses
     protections. La bascule est en production depuis le 2026-09-19 (moteur 3)
+39. **039** — Une norme peut donner le rythme, et un rythme vague devient
+    annuel, déclaré comme tel (**acceptée le 2026-10-07**, décisions (a) et (b)
+    de la propriétaire). Source `NORME`, corpus `normes`, `rythmeRetenu` à côté
+    de `periodicite`, `periodiciteEffective(o)`, mention « Rythme de la norme … »
+    / « Rythme retenu par défaut ». Amende les ADR-003, 023 § 6, 026 § 2, 027
+    et 032
+40. **040** — Une ligne « à planifier » née d'un changement du référentiel
+    (passe de reprise : sceau du calendrier changé) n'est comptée en retard
+    qu'après origine + 3 mois (**acceptée le 2026-10-08**, décision de la
+    propriétaire). `Verification.graceJusquAu` écrit à la naissance,
+    `delaiDeGrace` seule lecture, « délai jusqu'au … » à l'écran ; l'échéance
+    ne bouge pas. Amende les ADR-011 § 5, 036 (règles 4-5) et 039 § 3
 
 **Sept ADR ont été déplacées le 2026-09-01** (« six » disait la phrase, qui en
 énumère sept), chacune portant en tête le renvoi
@@ -664,7 +703,7 @@ Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse 
 3. **Écrire des ADR** pour chaque décision qui engage l'architecture.
 4. **Commits atomiques** et messages explicites.
 5. **Tests écrits en même temps que le code.** Les règles métier critiques (matching, cotation, calendrier, vigilance, boucle DUERP) ont une couverture renforcée.
-6. **Ne jamais inventer une référence réglementaire.** Si la source n'est pas vérifiable sur Légifrance ou INRS, l'obligation n'entre pas dans le référentiel.
+6. **Ne jamais inventer une référence réglementaire.** Si la source n'est pas vérifiable sur Légifrance ou INRS — ou, depuis l'ADR-039, dans une norme homologuée lue et entrée au corpus `normes` —, l'obligation n'entre pas dans le référentiel. Un rythme que ni le texte ni une norme n'écrivent n'est pas inventé : c'est le **défaut annuel** de l'ADR-039, déclaré comme tel et affiché comme défaut, et seulement là où le texte impose de refaire l'acte.
 7. **Pas de LLM** pour traiter, reformuler, classer ou analyser du contenu utilisateur.
 8. **Pas de conseil juridique automatisé.** L'outil aide à structurer et rappelle les obligations, il ne dit jamais « vous êtes conforme ».
 9. **RGPD** : hébergement UE, politique de rétention explicite, export et suppression possibles à tout moment.

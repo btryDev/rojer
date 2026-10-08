@@ -85,7 +85,14 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "ascenseur-carnet-entretien": "equipement",
   "ascenseur-controle-technique-quinquennal": "equipement",
   "ascenseur-entretien-contrat": "equipement",
+  "ascenseur-erp-verification-quinquennale-as9": "equipement",
+  "ascenseur-erp-verification-remise-en-service-as9": "equipement",
   "ascenseur-examen-annuel-securite": "equipement",
+  // ~~"ascenseur-hotel-5-verification-quinquennale-as9": "equipement",~~
+  // ~~"ascenseur-hotel-5-verification-remise-en-service-as9": "equipement",~~
+  // 2026-10-08 (C64) : les deux lignes C60 sont supprimées SANS
+  // `OBLIGATIONS_RETIREES` — nées et retirées sous la même version
+  // `2026-10-07.5`, jamais servie : aucune ligne en base ne porte leur id.
   "ascenseur-examen-semestriel-secours": "equipement",
   "ascenseur-rapport-annuel-activite": "equipement",
   "ascenseur-telealarme-liaison": "equipement",
@@ -117,6 +124,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "elec-travail-periodique-annuelle": "equipement",
   "elec-travail-rapport-quadriennal": "equipement",
   "epi-etablissement-consigne-utilisation": "etablissement",
+  "epi-maintien-etat-conformite": "equipement",
   "epi-verification-generale-periodique": "equipement",
   "esp-declaration-mise-en-service": "equipement",
   "esp-dossier-suivi": "equipement",
@@ -154,6 +162,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-erp-alarme-verification-hebdomadaire": "equipement",
   "incendie-erp-baes-annuelle": "equipement",
   "incendie-erp-desenfumage-annuelle": "equipement",
+  "incendie-erp-desenfumage-triennale-mecanique-ssi": "equipement",
   "incendie-erp-eclairage-securite-autonomie-semestrielle": "equipement",
   "incendie-erp-eclairage-securite-essai-mensuel": "equipement",
   "incendie-erp-extincteurs-annuelle": "equipement",
@@ -177,12 +186,16 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-travail-alarme-sonore": "etablissement",
   "incendie-travail-chiffons-impregnes-recipients-clos": "etablissement",
   "incendie-travail-consigne-affichee": "etablissement",
+  "incendie-travail-desenfumage-entretien-verification": "equipement",
   "incendie-travail-eclairage-securite-autonomie-semestrielle": "equipement",
   "incendie-travail-eclairage-securite-essai-mensuel": "equipement",
   "incendie-travail-exercice-semestriel": "etablissement",
   "incendie-travail-extincteurs-dotation": "etablissement",
+  "incendie-travail-extincteurs-maintenance-approfondie": "equipement",
+  "incendie-travail-extincteurs-revision-atelier-decennale": "equipement",
   "incendie-travail-instructions-evacuation": "etablissement",
   "incendie-travail-moyens-lutte": "equipement",
+  "incendie-travail-ria-entretien-verification": "equipement",
   "information-etablissement-affichages-obligatoires": "etablissement",
   "information-etablissement-avis-acces-duerp": "etablissement",
   "levage-epreuve-initiale-fonctionnement": "equipement",
@@ -230,6 +243,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "secours-etablissement-mesures": "etablissement",
   "secours-etablissement-signalement-chaleur-intense": "etablissement",
   "secours-salarie-secouriste": "salarie",
+  "signalisation-erp-5-extincteurs-identification": "equipement",
+  "signalisation-erp-extincteurs-identification": "equipement",
   "signalisation-etablissement-alimentation-secours-presence": "etablissement",
   "signalisation-etablissement-alimentations-secours-annuelle": "etablissement",
   "signalisation-etablissement-cheminements-evacuation": "etablissement",
@@ -241,7 +256,10 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "signalisation-stockage-substances-dangereuses": "equipement",
   "stockage-dangereux-declaration-icpe": "equipement",
   "stockage-dangereux-fiches-donnees": "equipement",
-  "stockage-dangereux-formation-personnel": "equipement",
+  // 2026-10-08 (C64) : succède à `stockage-dangereux-formation-personnel`
+  // (équipement, retirée avec `absorbePar` — report d'échéance servi).
+  "stockage-dangereux-etablissement-formation-personnel": "etablissement",
+  "stockage-dangereux-formation-personnel": "equipement",  // retirée le 2026-10-08 (C64), absorbée
   "stockage-dangereux-retention": "equipement",
   "stockage-dangereux-ventilation-locaux": "equipement",
   "stockage-dangereux-verification-etancheite": "equipement",

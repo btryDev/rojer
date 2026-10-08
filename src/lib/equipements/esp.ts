@@ -13,7 +13,10 @@
  * famille, de PS (pression maximale admissible, bar) et de V (volume,
  * litres) lus sur la plaque constructeur, que l'interface propose au
  * dirigeant pour pré-remplir la question à trois états
- * `estSoumisSuiviEnService`. Les cinq obligations ESP restent bornées par
+ * `estSoumisSuiviEnService`. ~~Les cinq obligations ESP restent bornées~~
+ * [2026-10-07, C60 : une seule depuis le lot 5 de la relecture du préventeur,
+ * `esp-requalification-decennale` ; les six autres `esp-*` sont dans
+ * `OBLIGATIONS_RETIREES`.] L'obligation ESP reste bornée par
  * cette réponse explicite (forme opt-out, criticité élevée) : aucune
  * échéance ne s'éteint sur la seule foi d'un chiffre saisi.
  *

@@ -42,7 +42,9 @@ const DOCUMENTS: Document[] = [
     // ~~« Sources Légifrance et INRS »~~ : huit références citent le
     // règlement (UE) 2024/573 (EUR-Lex), une seule l'INRS (compté en
     // appelant le référentiel, relecture du 2026-09-26).
-    reperes: ["174 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
+    // 173 → 171 le 2026-10-08 (C64) : 173 + 0 − 2 (AS 9 aux hôtels de 5ᵉ,
+    // supprimées) = 171, compté en appelant `obligationsConformite`.
+    reperes: ["171 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
   },
   {
     numero: "02",

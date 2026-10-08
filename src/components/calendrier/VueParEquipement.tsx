@@ -45,6 +45,8 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import type { StatutPeint } from "@/lib/calendrier/etats";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import type { MentionRythme } from "@/lib/referentiels/conformite/mention-rythme";
 import { MOIS_FR, MOIS_FR_COURT } from "@/lib/calendrier/labels";
 import {
   CHAMP_ETAT,
@@ -131,6 +133,8 @@ export type OccurrenceEquipement = {
    * le libellé est long manque là où il compte.
    */
   contractuelle?: boolean;
+  /** Le rythme retenu par Rojer (ADR-039), calculé côté serveur. */
+  rythmeRetenu?: MentionRythme | null;
   /** Les phrases « à confirmer » de l'occurrence (revue du lot 1). */
   aConfirmer?: readonly string[];
   etat: RegistreLigne;
@@ -507,6 +511,7 @@ function CarteEquipement({
                       <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
                         <span className="min-w-0 truncate">{o.meta}</span>
                         {o.contractuelle && <MentionContractuelle />}
+                        <MentionRythmeRetenu mention={o.rythmeRetenu} />
                         <MentionAConfirmer phrases={o.aConfirmer ?? []} />
                       </span>
                     </span>

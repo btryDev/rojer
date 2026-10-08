@@ -1,3 +1,6 @@
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
+import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
@@ -343,8 +346,13 @@ export default async function EquipementDetailPage({
                         <p className="m-0 mt-1.5 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                           {o.referencesLegales[0].reference}
                         </p>
-                        <span className="pastille-board mt-3 bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]">
-                          {LABEL_PERIODICITE[o.periodicite]}
+                        <span className="mt-3 flex flex-wrap items-center gap-1.5">
+                          <span className="pastille-board bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]">
+                            {LABEL_PERIODICITE[periodiciteEffective(o)]}
+                          </span>
+                          {/* ADR-039 : d'où vient ce rythme, quand le texte
+                              n'en écrit pas. */}
+                          <MentionRythmeRetenu mention={mentionRythmeRetenu(o)} />
                         </span>
                       </div>
                     ))}

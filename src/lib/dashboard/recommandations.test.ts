@@ -69,6 +69,7 @@ describe("genererRecommandations — tri par urgence", () => {
           equipementLibelle: "TGBT",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
       actions: [
@@ -97,6 +98,7 @@ describe("genererRecommandations — tri par urgence", () => {
           equipementLibelle: "CTA",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
         {
           id: "v-ancien",
@@ -106,6 +108,7 @@ describe("genererRecommandations — tri par urgence", () => {
           equipementLibelle: "Extincteurs",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -122,6 +125,7 @@ describe("genererRecommandations — tri par urgence", () => {
       equipementLibelle: "X",
       periodicite: "annuelle",
       archiveLe: null,
+      graceJusquAu: null,
     }));
     const e: EntreeRecos = { ...baseEntree(), verifications: verifs };
     const recs = genererRecommandations(e, { now: NOW });
@@ -154,6 +158,7 @@ describe("genererRecommandations — catégories", () => {
           equipementLibelle: "SSI",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -173,6 +178,7 @@ describe("genererRecommandations — catégories", () => {
           equipementLibelle: "X",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -286,6 +292,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           equipementLibelle: "TGBT",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -306,6 +313,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           equipementLibelle: "Extincteurs",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -330,6 +338,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           equipementLibelle: "Extincteurs",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -352,6 +361,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           equipementLibelle: "TGBT",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -376,6 +386,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           equipementLibelle: "Extincteurs",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -398,6 +409,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
       equipementLibelle: "TGBT",
       periodicite,
       archiveLe: null,
+      graceJusquAu: null,
     });
     expect(
       genererRecommandations(
@@ -437,6 +449,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           equipementLibelle: "TGBT",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -457,6 +470,7 @@ describe("genererRecommandations — définition du retard (ADR-011)", () => {
           equipementLibelle: "SSI",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -522,6 +536,7 @@ describe("genererRecommandations — amorçage (règles 6-8)", () => {
           equipementLibelle: "TGBT",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -544,6 +559,7 @@ describe("genererRecommandations — amorçage (règles 6-8)", () => {
           equipementLibelle: "TGBT",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };
@@ -582,6 +598,7 @@ describe("genererRecommandations — href", () => {
           equipementLibelle: "E",
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
         },
       ],
     };

@@ -26,6 +26,7 @@ function verif(
     // plus un préfixe de libellé : le cas archivé a son propre test, qui pose
     // une date ici et laisse le libellé intact.
     archiveLe: null as Date | null,
+    graceJusquAu: null,
     periodicite,
     libelleObligation: "Vérification périodique",
   };
@@ -168,6 +169,7 @@ describe("repartirVerifications", () => {
     const archivee = {
       ...verif("planifiee", "2026-02-01T00:00:00Z"),
       archiveLe: new Date("2026-03-15T00:00:00Z"),
+      graceJusquAu: null,
       derniereRealisation: new Date("2026-01-20T00:00:00Z"),
     };
 
@@ -187,6 +189,7 @@ describe("repartirVerifications", () => {
     const archivee = {
       ...verif("planifiee", "2026-02-01T00:00:00Z"),
       archiveLe: new Date("2026-03-15T00:00:00Z"),
+      graceJusquAu: null,
     };
 
     expect(repartirVerifications([archivee], NOW, AUCUNE_PRUDENCE).total).toBe(0);

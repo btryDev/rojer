@@ -103,6 +103,12 @@ export function resoudreCible(a: ArticleDepouille, c: Pick<Corpus, "id" | "url">
   if (/^INRS\b/.test(a.ref) || /inrs\.fr/.test(url)) {
     return { par: "aucun", raison: "brochure INRS : hors Légifrance" };
   }
+  // Le statut de corpus, pas un motif sur la clé (revue du 2026-10-07) : une
+  // norme EN, ISO ou une clé réécrite échappait à `/^NF\s/`, et un article de
+  // droit dont la clé commencerait par « NF » y serait tombé.
+  if (a.statut === "norme") {
+    return { par: "aucun", raison: "norme homologuée : hors Légifrance (AFNOR, ADR-039)" };
+  }
   if (/^Règlement\s+UE\b/i.test(a.ref)) {
     return { par: "aucun", raison: "règlement européen : hors fonds de l'API Légifrance (EUR-Lex)" };
   }

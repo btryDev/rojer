@@ -81,10 +81,17 @@ describe("nature d'obligation (ADR-026)", () => {
     // récurrente sans rythme écrit garde au test sa discrimination. Le champ
     // `nature` a fait ce qu'il devait : nommer un désaccord jusqu'à ce qu'il
     // soit tranché.
+    //
+    // [2026-10-07] Les deux lignes de stockage d'origine sont retirées
+    // (périmètre, relecture préventeur du 30/09, décision de la propriétaire
+    // du 07/10) — ~~`stockage-dangereux-declaration-icpe`~~ (ponctuelle),
+    // ~~`stockage-dangereux-verification-etancheite`~~ (récurrente). Leurs
+    // remplaçantes portent la même nature et la même `periodicite: "autre"`.
     const cas = {
-      "stockage-dangereux-declaration-icpe": "ponctuelle",
+      "secours-salarie-secouriste": "ponctuelle",
       "froid-controle-etancheite-apres-modification": "evenementielle",
-      "stockage-dangereux-verification-etancheite": "echeance_recurrente",
+      // ~~"stockage-dangereux-formation-personnel"~~ — 2026-10-08 (C64).
+      "stockage-dangereux-etablissement-formation-personnel": "echeance_recurrente",
     } as const;
 
     for (const [id, attendue] of Object.entries(cas)) {

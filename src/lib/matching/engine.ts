@@ -867,6 +867,9 @@ function lireProprieteEnum(
  *     été posée, c'est la règle générale qui s'applique — jamais aucune.
  *   - `enum_egale` : non renseignée ⇒ NON satisfaite (opt-in). L'égalité sur
  *     une valeur d'énumération, pour la ligne SPÉCIFIQUE d'un couple.
+ *     [2026-10-07, C62 : aucune obligation vivante ne la porte plus ; la
+ *     branche reste, éprouvée sur des lignes synthétiques (`engine.test.ts`,
+ *     « le couple d'énumération »).]
  *   - `enum_differente` : non renseignée ⇒ SATISFAITE. La différence, pour la
  *     ligne GÉNÉRALE du même couple. Le silence ne l'éteint pas : un
  *     équipement dont la famille n'a jamais été saisie garde le régime
@@ -1034,13 +1037,27 @@ export function evaluerObligation(
   // C'est tout l'objet de la branche — `PE 4 § 2` reste dû, via `PE 2 § 3`,
   // par les établissements qui n'ont rien déclaré.
   if (porteur === "etablissement") {
+    // Sauf `siEquipementDeclare` (2026-10-08, C64) : une ligne pour
+    // l'établissement, qui n'existe que si au moins un équipement de ces
+    // catégories est déclaré. Le porteur reste l'établissement — une ligne,
+    // jamais une par équipement.
+    const declencheurs =
+      o.porteur === "etablissement" && o.siEquipementDeclare
+        ? o.siEquipementDeclare.filter((c) =>
+            equipements.some((e) => e.categorie === c),
+          )
+        : null;
+    if (declencheurs !== null && declencheurs.length === 0) return null;
     const enContexte = (o.equipementsEnContexte ?? []).filter((c) =>
       equipements.some((e) => e.categorie === c),
     );
     const raisons = [...typo.raisons];
     raisons.push(
-      "l'obligation porte sur l'établissement lui-même : elle ne dépend " +
-        "d'aucun appareil déclaré",
+      declencheurs !== null
+        ? "l'obligation porte sur l'établissement, une seule fois : elle est " +
+            `due dès qu'au moins un de ces équipements est déclaré (${declencheurs.join(", ")})`
+        : "l'obligation porte sur l'établissement lui-même : elle ne dépend " +
+            "d'aucun appareil déclaré",
     );
     if (enContexte.length > 0) {
       raisons.push(

@@ -124,6 +124,31 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-08 (ADR-040, délai de grâce) :
+  // `calendrier/grace.ts` entre au relevé, et `actions.ts` écrit
+  // `graceJusquAu` dans le `createMany`. NON, la régénération n'écrit pas
+  // autrement CE QUE CE RELEVÉ GARDE : mêmes lignes, mêmes dates, même statut,
+  // même archivage — la colonne neuve n'est posée qu'à la naissance d'une
+  // ligne, et aucun `update` n'y touche. Un incrément ne la rétro-remplirait
+  // pas (les lignes existantes ne sont pas recréées) ; il ferait seulement de
+  // la prochaine passe de chaque dossier une « reprise », ce que le passage du
+  // référentiel de la relecture du préventeur fait déjà. La grâce est lue par
+  // `delaiDeGrace` (`lib/dates/retard.ts`), une lecture, hors moteur.
+  // Recopiée SANS incrément le 2026-10-07 (revue de la relecture du
+  // préventeur, C61) : `matching/prescriptions.ts` écrit autrement le motif
+  // d'une prescription écartée (face à un rythme retenu ; obligation retirée,
+  // `matching/obligation-retiree.ts`) et lit pour cela `mention-rythme.ts`.
+  // NON : `ignorees` n'est lu que par la page des prescriptions, aucune
+  // ligne ni date n'est écrite autrement ; `PeriodiciteRetenue` est un type.
+  // Recopiée SANS incrément le 2026-10-07 (ADR-039, lot relecture-jc-2) : le
+  // générateur, le réconciliateur, les états permanents et les prescriptions
+  // lisent désormais `periodiciteEffective(o)` au lieu de `o.periodicite`.
+  // NON : aucune obligation livrée ne porte de `rythmeRetenu`, la fonction rend
+  // donc partout `o.periodicite` — mêmes lignes, mêmes dates. Le lot 3, qui en
+  // posera, déplacera l'empreinte du RÉFÉRENTIEL, donc le sceau. Une seule
+  // règle écrit autrement dès aujourd'hui, et seulement face à un rythme
+  // retenu : une prescription ÉGALE à lui s'applique (`prescriptionRenforce`) —
+  // sans objet tant qu'aucun n'existe.
   // INCRÉMENTÉ le 2026-09-28 (D8, décision de la propriétaire) : le ponctuel
   // ouvert dont la mise en service précède l'origine est daté de l'origine.
   // OUI, cela écrit autrement : les lignes posées à une mise en service
@@ -255,7 +280,18 @@ const RELEVE = {
   // change, et `raisons` n'est ni écrite par `calendrier/actions.ts` ni lue par
   // `reconciliation.ts` (grep du 2026-09-26 : le générateur la porte, rien ne
   // la persiste).
-  empreinte: "a5f5118cd730b18c",
+  // Recopiée SANS incrément le 2026-10-08 (C64, item A) : `engine.ts` lit
+  // `siEquipementDeclare` (une obligation d'établissement qui n'existe que si
+  // une catégorie est déclarée) et `index.ts` le fait entrer à l'empreinte du
+  // référentiel. NON au sens de la question : sur le référentiel tel qu'il
+  // était, le moteur rend exactement les mêmes lignes — la branche ne mord que
+  // sur une obligation qui porte le champ, et la seule qui le porte est NEUVE,
+  // ce qui déplace déjà l'empreinte du référentiel, donc le sceau. ~~b4984136384610af~~.
+  // Recalculée SANS incrément le 2026-10-08 à la réunion de C63 (ADR-040,
+  // délai de grâce : `5d02a6094169844b` sur sa branche) et de C64
+  // (`8113bee280b53454` sur la sienne) : chacune recopiait sans incrément,
+  // chacune avec son motif ; la réunion des deux ne change rien d'autre.
+  empreinte: "4b75258a15263110",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

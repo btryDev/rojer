@@ -7,6 +7,7 @@ import {
   LABEL_REALISATEUR,
 } from "@/lib/calendrier/labels";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
+import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import {
   SEUIL_MAJ_ANNUELLE_DUERP,
   type ChezVous as ChezVousData,
@@ -195,6 +196,18 @@ export function ChezVous({
                   {d.periodicites
                     .map((p) => LABEL_PERIODICITE[p])
                     .join(" · ")}
+                  {/* ADR-039 § 5 : un rythme que Rojer retient se dit comme
+                      tel, ici comme sur le calendrier — sinon le guide
+                      présenterait un défaut ou une norme comme le texte. */}
+                  {d.rythmesRetenus.map((r) => (
+                    <span
+                      key={`${r.periodicite}|${r.mention.court}`}
+                      className="mt-1.5 flex flex-wrap items-center gap-1.5"
+                    >
+                      dont {LABEL_PERIODICITE[r.periodicite]} :
+                      <MentionRythmeRetenu mention={r.mention} />
+                    </span>
+                  ))}
                   {d.realisateurs.length > 0 && (
                     <>
                       <br />

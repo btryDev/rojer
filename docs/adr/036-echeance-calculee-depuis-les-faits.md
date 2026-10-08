@@ -18,6 +18,10 @@
   `datePrevue` ne bouge pas »), l'ADR-034 (le constat B de son § 3, le lot N2,
   la « limite écrite » de la phase A) et l'en-tête de doctrine de
   `generateur.ts`
+- **Amendée le 2026-10-08 par l'ADR-040** (règles 4-5, lecture seulement) :
+  le « retard dès le lendemain » d'un « à planifier » attend origine + 3 mois
+  quand la ligne naît d'un changement du référentiel. `echeanceDeLigne` ne
+  change pas et ne lit toujours aucune horloge.
 - **Dépend de** l'ADR-011 (jour civil de Paris, retard dès le lendemain),
   l'ADR-022 et l'ADR-023 (porteurs), l'ADR-034 (la ligne ne porte que l'échéance
   ouverte, la réalisation se lit sur les rapports), l'ADR-035 (rythme effectif)
