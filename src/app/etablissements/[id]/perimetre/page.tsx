@@ -245,9 +245,13 @@ export default async function PerimetrePage({
           <section className="flex flex-col gap-4">
             <div>
               <SurTitre>§ Niveau audit</SurTitre>
+              {/* ~~« obligations légales suivies hors du quotidien de
+                  Rojer »~~ [2026-10-09, C67 : « suivies » contredisait
+                  l'explication juste dessous, « Rojer ne la suit pas au
+                  quotidien ».] */}
               <h2 className="board-titre m-0 mt-2 text-[22px]">
-                Niveau audit — obligations légales suivies hors du quotidien
-                de Rojer
+                Niveau audit — obligations légales que Rojer ne suit pas au
+                quotidien
               </h2>
               <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 {EXPLICATION_NIVEAU_AUDIT}{" "}

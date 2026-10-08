@@ -585,7 +585,7 @@ function GrilleDocument({
               Audit
             </Text>{" "}
             : obligation légale que nous proposons de garder au référentiel
-            mais de suivre hors du quotidien de Rojer — ni calendrier, ni
+            sans que Rojer la suive au quotidien — ni calendrier, ni
             alertes —, listée sur la page « Ce que Rojer ne couvre pas ».
             Votre avis ?
           </Text>

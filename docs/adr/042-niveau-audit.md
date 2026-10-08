@@ -41,7 +41,9 @@ obligation légale sortie du quotidien reste VISIBLE.
    (ADR-023), porte la même lecture : `genererVerificationsDepuisTitres`, le
    garde-fou d'applicabilité de la passe, et le catalogue de l'écran Équipe.
 3. **Visible.** La page « Ce que Rojer ne couvre pas » gagne une rubrique
-   « Niveau audit — obligations légales suivies hors du quotidien de Rojer »,
+   ~~« Niveau audit — obligations légales suivies hors du quotidien de Rojer »~~
+   « Niveau audit — obligations légales que Rojer ne suit pas au quotidien »
+   [2026-10-09, C67 : « suivies » contredisait l'explication de la rubrique],
    calculée **par établissement** : même champ que le moteur, sans la porte
    (`determineObligationsNiveauAudit`). Le calcul coûte un appel au moteur ;
    le faire à tous aurait nommé la vérification des masques respiratoires à un
