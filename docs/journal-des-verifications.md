@@ -5002,7 +5002,7 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   - **Commentaires périmés du lot 5** rayés : `esp.ts`, `hors-referentiel.ts`,
     `aeration.ts`, `equipement-sous-pression.ts`, `signalisation.ts`,
     `.claude/CLAUDE.md` (comptes remesurés : 90 / 69 / 14 = 173).
-- **GC 22 « idem code du travail » (p. 15) — NON ENCODÉ, écart et motif.**
+- ~~**GC 22 « idem code du travail » (p. 15) — NON ENCODÉ, écart et motif.**
   GC 22 § 2 fait vérifier tous les ans les grandes cuisines pour quatre
   objets : entretien des installations et appareils, ventilation et
   évacuation des buées et graisses, signalisation des dispositifs de sécurité,
@@ -5019,7 +5019,14 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   des installations du lieu. (3) La catégorie `APPAREIL_CUISSON_ERP` se
   définit par l'ERP (« situés en cuisine d'un ERP ») : une ligne
   `erp: false` sur elle ne naîtrait presque jamais. Question remise : faut-il
-  un défaut annuel de `R. 4322-1` sur les appareils de cuisson ?
+  un défaut annuel de `R. 4322-1` sur les appareils de cuisson ?~~
+  [2026-10-08, C66 : motif ÉCARTÉ par décision de la propriétaire (« on respecte
+  les décisions de Julien »). Encodé : `cuisson-travail-appareils-entretien-verification`
+  (`R. 4224-17`, défaut annuel, travail hors ERP, partition avec GC 22). Vérifié en
+  appelant le référentiel : aucune ligne de lieu de travail ne portait cet acte sur
+  `APPAREIL_CUISSON_ERP` ; le point (1) reste vrai de la ventilation, que la ligne
+  neuve ne reprend pas ; le point (3) est faux — la catégorie se déclare sans
+  condition de régime.]
 - **Ce qui reste** : ~~affichage de la mention et des périodicités avec
   `premierDelai` (« décennale » pour 5 puis 15), aide du champ type
   (« 20 ans au plus », halon), commentaire d'`engine.ts` — passe « code ».~~

@@ -144,6 +144,42 @@ export const obligationsCuissonHotte: Obligation[] = [
   //
   // L'id ne doit jamais être réemployé : il est dans `OBLIGATIONS_RETIREES`.
   {
+    id: "cuisson-travail-appareils-entretien-verification",
+    domaine: "cuisson_hotte",
+    libelle:
+      "Entretien et vérification des appareils de cuisson et de leurs dispositifs de sécurité, annuels par défaut (travail, hors ERP)",
+    description:
+      "Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée (R. 4224-17). Le texte ne fixe pas cette périodicité : Rojer retient par défaut au moins une fois par an pour les appareils de cuisson et leurs dispositifs de sécurité (thermocouples, arrêts d'urgence, commandes à distance) — un plancher, pas un rythme lu dans un texte. En ERP, la vérification annuelle des appareils de cuisson est écrite par le règlement de sécurité (GC 22) et fait l'objet de sa propre ligne : celle-ci ne s'y ajoute pas.",
+    referencesLegales: [
+      {
+        source: "CODE_TRAVAIL",
+        reference:
+          "R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée)",
+        article: "R. 4224-17",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018532197",
+        note: "« Les installations et dispositifs techniques et de sécurité des lieux de travail sont entretenus et vérifiés suivant une périodicité appropriée. » Relu sur l'API Légifrance (sandbox) le 2026-10-07 (LEGIARTI000018532197, en vigueur depuis le 2008-05-01). Le texte ne nomme aucun équipement : y ranger les appareils de cuisson est une LECTURE, celle du préventeur (« idem code du travail », relecture du 30/09).",
+        versionConstatee: "2008-05-01",
+      },
+    ],
+    periodicite: "autre",
+    rythmeRetenu: {
+      motif: "defaut_annuel",
+      periodicite: "annuelle",
+      texteVague: "périodicité appropriée",
+    },
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    // Partition avec `cuisson-erp-appareils-annuelle` (GC 22, rythme écrit) :
+    // un ERP employeur n'a pas deux annuelles du même acte sur le même appareil.
+    typologies: { travail: true, erp: false },
+    categoriesEquipement: ["APPAREIL_CUISSON_ERP"],
+    notesInternes:
+      "CRÉÉE LE 2026-10-08 (C66). Demandé par le préventeur (« idem code du travail », relecture du 30/09, p. 15, en face de la vérification annuelle des appareils de cuisson des grandes cuisines ERP ; et, en réponse, surligné sur R. 4224-17 : « a defaut annuellement », annotation du 2026-10-05) ; lecture : R. 4224-17 couvre ces installations. Décision de la propriétaire du 2026-10-08 : « on respecte les décisions de Julien ».\n\nLE MOTIF DE NON-ENCODAGE DE C60 EST ÉCARTÉ par décision de la propriétaire (journal C60, rayé et daté). Ce qui en reste vrai, vérifié en appelant le référentiel le 2026-10-08 : aucune ligne de lieu de travail ne portait cet acte sur cet appareil — sur `APPAREIL_CUISSON_ERP`, les quatre lignes existantes sont toutes ERP (`cuisson-erp-verification-initiale`, `cuisson-erp-appareils-annuelle`, `cuisson-gaz-installations-annuelle`, `cuisson-erp-extinction-automatique-annuelle`). Le contrôle annuel de `R. 4222-20` (`aeration-controle-installations-r4222-20`, établissement) vise les installations d'aération — la hotte, pas l'appareil : la ventilation des buées et graisses, second objet de GC 22 § 2, reste à lui et cette ligne ne la reprend pas.\n\nANTI-DOUBLON : `typologies: { travail: true, erp: false }`, comme `incendie-travail-ria-entretien-verification`. En ERP, `cuisson-erp-appareils-annuelle` (GC 22) porte un rythme ÉCRIT, servi à tout ERP — 5ᵉ comprise, par sur-application assumée ; un rythme écrit l'emporte toujours. Un appareil de cuisson reçoit donc une annuelle et une seule, quel que soit le régime.\n\nLA CATÉGORIE s'appelle `APPAREIL_CUISSON_ERP` et son aide dit « situés en cuisine d'un ERP (art. GC) » ; elle se déclare pourtant sans condition de régime, et le pré-remplissage la propose à la restauration. Un établissement de travail seul qui la déclare (cuisine centrale, laboratoire de traiteur) reçoit cette ligne. Le nom de la catégorie n'est pas changé ici (enum Prisma).\n\nTEXTE VAGUE : « périodicité appropriée », mot pour mot de `R. 4224-17`. RÉALISATEURS : ceux de la ligne ERP (`personne_qualifiee`). Criticité 4, celle de la ligne ERP. NATURE ÉCHÉANCE RÉCURRENTE : la ligne naît « à planifier » (ADR-036), avec le délai de grâce de l'ADR-040 chez un dossier existant.",
+  },
+  {
     id: "cuisson-gaz-installations-annuelle",
     domaine: "cuisson_hotte",
     libelle: "Vérification annuelle des installations de gaz combustible (ERP 1ʳᵉ à 4ᵉ catégorie)",

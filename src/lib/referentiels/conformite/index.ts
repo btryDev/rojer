@@ -332,7 +332,13 @@ export const obligationsConformite: Obligation[] = [
 // L. 4141-2 — entre `stockage-dangereux-etablissement-formation-personnel`,
 // sort `stockage-dangereux-formation-personnel` (`OBLIGATIONS_RETIREES`,
 // `absorbePar`). Compte : 171 + 1 − 1 = 171.
-export const REFERENTIEL_VERSION = "2026-10-07.5";
+// `2026-10-08.2` (C66, dernières corrections du préventeur ; `.1` est pris
+// par `lot/formations-faits-etablissement`, ADR-041, et n'est pas réemployé
+// ici) : (1) GC 22 « idem code du travail » — entre
+// `cuisson-travail-appareils-entretien-verification` (R. 4224-17, défaut
+// annuel, lieu de travail hors ERP, partition avec `cuisson-erp-appareils-
+// annuelle`). 171 + 1 − 0 = 172.
+export const REFERENTIEL_VERSION = "2026-10-08.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

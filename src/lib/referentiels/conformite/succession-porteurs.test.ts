@@ -108,6 +108,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "cuisson-erp-filtres-hebdomadaire": "equipement",
   "cuisson-erp-verification-initiale": "equipement",
   "cuisson-gaz-installations-annuelle": "equipement",
+  "cuisson-travail-appareils-entretien-verification": "equipement",
   "eclairage-etablissement-regles-entretien": "etablissement",
   "elec-erp-cat1-4-annuelle": "equipement",
   "elec-erp-groupe-electrogene-annuel": "equipement",
