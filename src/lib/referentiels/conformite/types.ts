@@ -1,4 +1,5 @@
 import type { InitiativeObligation } from "./initiative";
+import type { ReleveParPreventeur } from "../corpus/types";
 import type {
   CategorieEquipement,
   Periodicite,
@@ -464,7 +465,9 @@ export type RelectureDue = {
  *    réemploie que `enum_differente` (compté en appelant
  *    `obligationsConformite`). Le moteur la lit toujours, et
  *    `engine.test.ts` (« le couple d'énumération ») l'éprouve sur des lignes
- *    synthétiques.]
+ *    synthétiques.] [2026-10-08, C66 : `enum_differente` perd ses usages sur
+ *    `typeExtincteur`, retiré du produit ; il ne lui reste que les quatre
+ *    conditions `familleEsp` de `esp-requalification-decennale`.]
  *  - `equipement_propriete_enum_differente` : propriété absente ⇒ condition
  *    SATISFAITE. C'est le miroir, et il est le seul des deux à pouvoir porter
  *    la règle générale : tant que la famille n'a pas été renseignée, c'est
@@ -850,6 +853,14 @@ export type RythmeRetenu =
       reference: ReferenceNorme;
       /** Le mot vague du texte, s'il y en a un — affiché en complément. */
       texteVague?: string;
+      /**
+       * Le rythme a été relevé par le préventeur dans une norme que Rojer n'a
+       * pas lue (ADR-039 § 8, 2026-10-08). Seule voie par laquelle une norme
+       * lue `indirect` peut donner un rythme : la même valeur doit être au
+       * corpus des normes, et la mention le dit (« relevé par le préventeur —
+       * norme non relue par Rojer »).
+       */
+      releveParPreventeur?: ReleveParPreventeur;
     }
   | {
       motif: "defaut_annuel";
@@ -916,8 +927,13 @@ type ObligationCommune = {
    * ~~AUCUNE obligation vivante ne porte plus ce champ~~ ; le générateur le lit
    * toujours, et ses tests l'éprouvent sur des lignes synthétiques.
    * [Intégration du 2026-10-07 : le lot 3 (ADR-039) le réemploie —
-   * `incendie-travail-extincteurs-maintenance-approfondie`, premier pas à cinq ans, puis
-   * le rythme retenu décennal (NF S 61-919, annexe A).]]
+   * ~~`incendie-travail-extincteurs-maintenance-approfondie`, premier pas à cinq ans, puis
+   * le rythme retenu décennal (NF S 61-919, annexe A).~~]
+   * [2026-10-08, C66 : cette obligation est retirée (non demandée par le
+   * préventeur, décision de la propriétaire). AUCUNE obligation vivante ne
+   * porte plus ce champ — compté en appelant `obligationsConformite` ; le
+   * générateur et la mention le lisent toujours, et leurs tests l'éprouvent
+   * sur des lignes synthétiques.]]
    *
    * **Ce n'est pas une exception ESP.** `PE 4` porte aussi un premier délai
    * distinct de son rythme, et le règlement des chaufferies un troisième.

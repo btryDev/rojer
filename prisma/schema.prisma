@@ -1800,8 +1800,10 @@ model TitreSalarie {
   /// échéance » : l'échéance du titre est `echeanceDuTitre`
   /// (`lib/salaries/echeance.ts`), cette date si elle existe, sinon la
   /// délivrance plus la durée du texte (une VIP a une échéance même sans
-  /// date saisie). Sans l'une ni l'autre — l'habilitation électrique, dont le
-  /// Code renvoie à des modalités recommandées (ADR-023 § 6) —, aucune.
+  /// date saisie). Sans l'une ni l'autre, aucune — ce qui ne vaut plus pour
+  /// l'habilitation électrique depuis le 2026-10-08 (ADR-039 § 8 : rythme
+  /// retenu triennal, relevé par le préventeur) ; exemple restant :
+  /// l'autorisation de conduite (`conduite-salarie-autorisation`).
   echeanceLe DateTime?
 
   /// Note libre de l'employeur (organisme, niveau d'habilitation).

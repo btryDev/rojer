@@ -1174,7 +1174,9 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // [2026-10-07, C59 lot 3 : DESENFUMAGE SORT DE CETTE LISTE —
         // `incendie-travail-desenfumage-entretien-verification`, défaut annuel
         // de R. 4224-17 (ADR-039), lieu de travail hors ERP.]
-        "APPAREIL_CUISSON_ERP",
+        // [2026-10-08, C66 : APPAREIL_CUISSON_ERP SORT DE CETTE LISTE —
+        // `cuisson-travail-appareils-entretien-verification`, défaut annuel de
+        // R. 4224-17, demandé par le préventeur (« idem code du travail »).]
         "HOTTE_PRO",
         // RIA A QUITTÉ CETTE LISTE LE 2026-09-02, et le trou qu'elle notait
         // est comblé, pas contourné. La note disait : « la seule obligation
@@ -1207,7 +1209,10 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // calculée », alors que ses échéances existent, ailleurs, portées par
         // l'établissement. La catégorie reste citée par les trois obligations
         // en `equipementsEnContexte`, à titre indicatif.
-        "ALARME_INCENDIE",
+        // [2026-10-08, C66 : ALARME_INCENDIE SORT DE CETTE LISTE —
+        // `incendie-travail-alarme-entretien-verification`, défaut annuel de
+        // R. 4224-17, demandé par le préventeur (« si présent maintenance
+        // vérification annuelle »). L'appareil a désormais sa propre échéance.]
         // BAES : question ouverte. Les deux obligations de l'arrêté du
         // 14 décembre 2011 (essai mensuel, autonomie semestrielle) portent
         // `erp: false` et ne visent donc pas non plus l'ERP. Chez un
@@ -2320,9 +2325,12 @@ describe("les raisons se lisent, elles ne se décodent pas", () => {
 // [2026-10-07] Les deux inspections réelles sont RETIRÉES du référentiel
 // (périmètre, relecture préventeur du 30/09, décision de la propriétaire du
 // 07/10) : plus aucune obligation ne porte les formes `enum_egale` /
-// `enum_differente` [intégration du 2026-10-07 : le lot 3 réemploie
+// `enum_differente` ~~[intégration du 2026-10-07 : le lot 3 réemploie
 // `enum_differente`, deux fois, sur `incendie-travail-extincteurs-maintenance-approfondie`
-// (`typeExtincteur`) ; `enum_egale` reste sans ligne vivante]. Le couple est rejoué ici sur deux obligations
+// (`typeExtincteur`) ; `enum_egale` reste sans ligne vivante]~~ [2026-10-08,
+// C66 : la maintenance approfondie est retirée ; `enum_differente` ne sert plus
+// que les quatre conditions `familleEsp` de `esp-requalification-decennale`,
+// `enum_egale` reste sans ligne vivante]. Le couple est rejoué ici sur deux obligations
 // SYNTHÉTIQUES, clones de la requalification décennale qui reste, avec les
 // conditions exactes des lignes retirées : c'est la forme du moteur qu'on
 // garde, pas une ligne du référentiel. `evaluerObligation` remplace

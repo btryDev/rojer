@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-10-08
-**Référentiel** : `2026-10-07.5`
+**Référentiel** : `2026-10-08.2`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,22 +83,22 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**171 obligations**, **335 références** — 96 obligations en citent plus d'une.
+**172 obligations**, **335 références** — 96 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 82 | 48 % | 88 | 196 | 59 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 86 | 50 % | 83 | 135 | 40 % |
+| 5 · lu à la source, verbatim relevé | 81 | 47 % | 87 | 193 | 58 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 87 | 51 % | 85 | 137 | 41 % |
 | 3 · lu et daté, aucun verbatim | 3 | 2 % | 0 | 4 | 1 % |
-| 2 · lu ailleurs qu'à la source | 0 | 0 % | 0 | 0 | 0 % |
+| 2 · lu ailleurs qu'à la source | 1 | 1 % | 0 | 1 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**168 obligations sur 171 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**168 obligations sur 172 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **3 obligations (2 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
-**8 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `sante-travail-etablissement-adhesion-spst`.
+**9 obligations sont mieux vérifiées sur leur fondement que sur l'ensemble de leurs références** — leur point faible est une référence de contexte, celle que le dossier de relecture replie dans un « + N réf. » : `elec-travail-consignation-registre`, `elec-travail-habilitation-personnel`, `elec-salarie-habilitation`, `elec-salarie-attestation-medicale-voisinage`, `elec-travail-rapport-quadriennal`, `incendie-erp-pe4-entretien-installations-techniques`, `incendie-travail-alarme-sonore`, `incendie-registre-securite`, `sante-travail-etablissement-adhesion-spst`.
 
 **Aucune référence n'est au bas de l'échelle** : les 2 degrés « au corpus, aucune trace de lecture » et « rien à ouvrir » sont vides. Toute référence du référentiel porte une clé d'article, cette clé est connue d'un corpus, et cet article porte une date et un moyen de lecture. Ces degrés restent dans l'échelle parce que leur disparition ne se verrait pas si l'échelle ne les nommait plus.
 
@@ -112,7 +112,7 @@ repose sur un texte que personne n'a ouvert.
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 7 % |
 
-**9 obligations sur 171 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 172 (5 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -126,14 +126,14 @@ repose sur un texte que personne n'a ouvert.
 | `ascenseur` | 10 | 22 | 7 | 3 | · | · | · | · | 10 / 10 — 100 % | 0 / 22 | 2026-08-26 → 2026-10-07 |
 | `co_activite` | 1 | 7 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 7 | 2026-08-31 → 2026-09-26 |
 | `compactage_dechets` | 1 | 5 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 5 | 2026-09-01 → 2026-09-02 |
-| `cuisson_hotte` | 6 | 9 | 3 | 3 | · | · | · | · | 6 / 6 — 100 % | 1 / 9 | 2026-08-27 → 2026-10-07 |
+| `cuisson_hotte` | 7 | 10 | 3 | 4 | · | · | · | · | 7 / 7 — 100 % | 1 / 10 | 2026-08-27 → 2026-10-07 |
 | `eclairage` | 1 | 2 | · | 1 | · | · | · | · | 1 / 1 — 100 % | 0 / 2 | 2026-09-01 → 2026-09-02 |
-| `electricite` | 14 | 23 | 5 | 8 | 1 | · | · | · | 13 / 14 — 93 % | 1 / 23 | 2026-08-26 → 2026-10-07 |
+| `electricite` | 14 | 24 | 5 | 7 | 1 | 1 | · | · | 12 / 14 — 86 % | 2 / 24 | 2026-08-26 → 2026-10-07 |
 | `epi` | 3 | 8 | 3 | · | · | · | · | · | 3 / 3 — 100 % | 0 / 8 | 2026-09-04 |
 | `equipement_sous_pression` | 1 | 1 | 1 | · | · | · | · | · | 1 / 1 — 100 % | 0 / 1 | 2026-09-01 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
-| `incendie` | 43 | 91 | 31 | 11 | 1 | · | · | · | 42 / 43 — 98 % | 5 / 91 | 2026-08-26 → 2026-10-07 |
+| `incendie` | 43 | 89 | 30 | 12 | 1 | · | · | · | 42 / 43 — 98 % | 4 / 89 | 2026-08-26 → 2026-10-07 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -146,7 +146,7 @@ repose sur un texte que personne n'a ouvert.
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
-**18 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (10), `co_activite` (1), `compactage_dechets` (1), `cuisson_hotte` (6), `eclairage` (1), `epi` (3), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (11), `stockage_dangereux` (2).
+**18 domaines ont toutes leurs obligations adossées à des textes lus à la source avec verbatim relevé** : `aeration` (11), `ascenseur` (10), `co_activite` (1), `compactage_dechets` (1), `cuisson_hotte` (7), `eclairage` (1), `epi` (3), `equipement_sous_pression` (1), `formation_securite` (11), `froid` (8), `information_travailleurs` (2), `levage` (11), `locaux_sociaux` (4), `organisation_prevention` (9), `porte_portail` (5), `secours` (4), `signalisation` (11), `stockage_dangereux` (2).
 
 Aucun domaine n'est entièrement dépourvu de verbatim.
 
@@ -156,9 +156,9 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 87 | 170 | 55 | 31 | 1 | · | · | · | 86 / 87 — 99 % | 23 / 170 | 2026-08-26 → 2026-10-07 |
+| `equipement` | 88 | 169 | 54 | 33 | 1 | · | · | · | 87 / 88 — 99 % | 22 / 169 | 2026-08-26 → 2026-10-07 |
 | `etablissement` | 70 | 133 | 27 | 41 | 2 | · | · | · | 68 / 70 — 97 % | 0 / 133 | 2026-08-26 → 2026-10-07 |
-| `salarie` | 14 | 32 | · | 14 | · | · | · | · | 14 / 14 — 100 % | 0 / 32 | 2026-08-27 → 2026-09-27 |
+| `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
 
@@ -171,7 +171,7 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-08-26 | 25 | 7 % | 25 |
 | 2026-08-27 | 7 | 2 % | 4 |
 | 2026-08-31 | 59 | 18 % | 29 |
-| 2026-09-01 | 120 | 36 % | 74 |
+| 2026-09-01 | 120 | 36 % | 75 |
 | 2026-09-02 | 18 | 5 % | 15 |
 | 2026-09-04 | 10 | 3 % | 5 |
 | 2026-09-20 | 3 | 1 % | 2 |
@@ -256,10 +256,11 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 171 obligations
+## 8. Les 172 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `elec-salarie-habilitation` | electricite | salarie | 2 | 4 · agent + verbatim | 2 · indirect | 1 / 2 | 2026-09-01 → 2026-10-07 |
 | `elec-travail-habilitation-personnel` | electricite | equipement | 2 | 4 · agent + verbatim | 3 · lu sans verbatim | 1 / 2 | 2026-08-26 → 2026-09-01 |
 | `incendie-erp-pe4-entretien-installations-techniques` | incendie | etablissement | 3 | 5 · première main | 3 · lu sans verbatim | 0 / 3 | 2026-08-26 → 2026-09-27 |
 | `sante-travail-etablissement-adhesion-spst` | sante_travail | etablissement | 3 | 4 · agent + verbatim | 3 · lu sans verbatim | 0 / 3 | 2026-08-31 |
@@ -278,10 +279,10 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `cuisson-erp-appareils-annuelle` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `cuisson-erp-verification-initiale` | cuisson_hotte | equipement | 3 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 3 | 2026-09-01 → 2026-09-27 |
 | `cuisson-gaz-installations-annuelle` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
+| `cuisson-travail-appareils-entretien-verification` | cuisson_hotte | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `eclairage-etablissement-regles-entretien` | eclairage | etablissement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-02 |
 | `elec-erp-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `elec-salarie-attestation-medicale-voisinage` | electricite | salarie | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-27 → 2026-09-01 |
-| `elec-salarie-habilitation` | electricite | salarie | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-travail-carnet-prescriptions` | electricite | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `elec-travail-consignation-registre` | electricite | equipement | 2 | 5 · première main | 4 · agent + verbatim | 0 / 2 | 2026-08-31 → 2026-09-01 |
 | `elec-travail-mise-en-service` | electricite | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 |
@@ -305,6 +306,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-5-sommeil-plans-affiches` | incendie | etablissement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-erp-alarme-verification-hebdomadaire` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-04 |
 | `incendie-registre-securite` | incendie | etablissement | 10 | 5 · première main | 4 · agent + verbatim | 0 / 10 | 2026-08-31 → 2026-09-26 |
+| `incendie-travail-alarme-entretien-verification` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-travail-alarme-sonore` | incendie | etablissement | 4 | 5 · première main | 4 · agent + verbatim | 0 / 4 | 2026-09-01 → 2026-09-27 |
 | `incendie-travail-desenfumage-entretien-verification` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
 | `incendie-travail-ria-entretien-verification` | incendie | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
@@ -408,7 +410,6 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-travail-eclairage-securite-essai-mensuel` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |
 | `incendie-travail-exercice-semestriel` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 |
 | `incendie-travail-extincteurs-dotation` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
-| `incendie-travail-extincteurs-maintenance-approfondie` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
 | `incendie-travail-extincteurs-revision-atelier-decennale` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
 | `incendie-travail-instructions-evacuation` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `incendie-travail-moyens-lutte` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
@@ -456,6 +457,7 @@ refaire pour la contredire.
 | `elec-travail-habilitation-personnel` | contexte 1 | INRS ED 6127 « Habilitation électrique » | INRS ED 6127 | inrs-documentaire | sans_objet | 2026-08-26 | premiere_main | — | — | — | — | 3 · lu sans verbatim | jamais constatée |
 | `elec-travail-carnet-prescriptions` | fondement | R. 4544-10, quatrième alinéa (carnet de prescriptions remis à chaque travailleur) | R. 4544-10 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2025-10-01 | 2025-10-01 | 4 · agent + verbatim | ancrée |
 | `elec-salarie-habilitation` | fondement | R. 4544-10 (habilitation délivrée à un travailleur désigné) | R. 4544-10 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2025-10-01 | 2025-10-01 | 4 · agent + verbatim | ancrée |
+| `elec-salarie-habilitation` | contexte 1 | NF C 18-510 (janvier 2012) et NF C 18-510/A1 (février 2020) — recyclage de l'habilitation (MAC), paragraphe non relevé | NF C 18-510 | normes | norme | 2026-10-07 | indirect | ✓ | — | 2020-02-01 | — | 2 · indirect | jamais constatée |
 | `elec-salarie-attestation-medicale-voisinage` | fondement | R. 4544-11-1 | R. 4544-11-1 | code-travail-electricite | retenu | 2026-08-27 | premiere_main | — | ✓ | 2025-10-01 | 2025-10-01 | 5 · première main | ancrée |
 | `elec-salarie-attestation-medicale-voisinage` | contexte 1 | R. 4544-10 (habilitation délivrée à un travailleur désigné) | R. 4544-10 | code-travail-electricite | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2025-10-01 | 2025-10-01 | 4 · agent + verbatim | ancrée |
 | `elec-erp-mise-en-service` | fondement | Arrêté du 25 juin 1980, art. GE 6 à GE 8 (vérifications par organismes agréés, rapport RVRAT) — livre II, établissements des quatre premières catégories | GE 6 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2007-11-19 | 2007-11-19 | 4 · agent + verbatim | ancrée |
@@ -478,11 +480,9 @@ refaire pour la contredire.
 | `incendie-travail-extincteurs-revision-atelier-decennale` | fondement | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-extincteurs-revision-atelier-decennale` | contexte 1 | R. 4227-28 | R. 4227-28 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-extincteurs-revision-atelier-decennale` | contexte 2 | NF S 61-919 (août 2001), § 10.1 et annexe A, tableau A.1 (révision en atelier : 10 ans) | NF S 61-919 § 10.1 | normes | norme | 2026-10-07 | premiere_main | ✓ | ✓ | 2001-08-20 | — | 5 · première main | jamais constatée |
-| `incendie-travail-extincteurs-maintenance-approfondie` | fondement | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `incendie-travail-extincteurs-maintenance-approfondie` | contexte 1 | R. 4227-28 | R. 4227-28 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
-| `incendie-travail-extincteurs-maintenance-approfondie` | contexte 2 | NF S 61-919 (août 2001), annexe A, tableau A.1 (maintenance additionnelle approfondie : à 5 et 15 ans) | NF S 61-919 annexe A | normes | norme | 2026-10-07 | premiere_main | ✓ | ✓ | 2001-08-20 | — | 5 · première main | jamais constatée |
 | `incendie-travail-ria-entretien-verification` | fondement | R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée) | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-travail-desenfumage-entretien-verification` | fondement | R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée) | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
+| `incendie-travail-alarme-entretien-verification` | fondement | R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée) | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `incendie-travail-extincteurs-dotation` | fondement | R. 4227-29 | R. 4227-29 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 5 · première main | ancrée |
 | `incendie-travail-consigne-affichee` | fondement | R. 4227-37 | R. 4227-37 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
 | `incendie-travail-consigne-affichee` | contexte 1 | R. 4227-38 | R. 4227-38 | code-travail-incendie | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2011-11-10 | 2011-11-10 | 5 · première main | ancrée |
@@ -581,6 +581,7 @@ refaire pour la contredire.
 | `cuisson-erp-verification-initiale` | contexte 1 | Arrêté du 25 juin 1980, art. GE 6 à GE 8 (vérifications par organismes agréés) — livre II, établissements des quatre premières catégories | GE 6 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2007-11-19 | 2007-11-19 | 4 · agent + verbatim | ancrée |
 | `cuisson-erp-verification-initiale` | contexte 2 | Arrêté du 25 juin 1980, art. GC 1 § 3 (définition de la « grande cuisine ») — livre II, établissements des quatre premières catégories | GC 1 | arrete-1980-livre-2 | retenu | 2026-09-27 | api_legifrance | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
 | `cuisson-erp-appareils-annuelle` | fondement | Arrêté du 25 juin 1980, art. GC 22 — livre II, établissements des quatre premières catégories | GC 22 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 4 · agent + verbatim | ancrée |
+| `cuisson-travail-appareils-entretien-verification` | fondement | R. 4224-17 (installations et dispositifs techniques et de sécurité des lieux de travail, entretenus et vérifiés suivant une périodicité appropriée) | R. 4224-17 | code-travail-portes | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2008-05-01 | 2008-05-01 | 4 · agent + verbatim | ancrée |
 | `cuisson-gaz-installations-annuelle` | fondement | Arrêté du 25 juin 1980, art. GZ 15 (vérifications techniques périodiques, ex GZ 30) | GZ 15 | arrete-1980-livre-2 | retenu | 2026-09-01 | agent_verbatim | ✓ | ✓ | 2026-01-01 | 2026-01-01 | 4 · agent + verbatim | ancrée |
 | `cuisson-erp-circuits-extraction-nettoyage` | fondement | Arrêté du 25 juin 1980, art. GC 21 § 2 (ramonage annuel, nettoyage des circuits, filtres hebdomadaires) — livre II, établissements des quatre premières catégories | GC 21 | arrete-1980-livre-2 | retenu | 2026-09-27 | premiere_main | ✓ | ✓ | 1980-08-15 | — | 5 · première main | jamais constatée |
 | `cuisson-erp-extinction-automatique-annuelle` | fondement | Arrêté du 25 juin 1980, art. MS 73 § 2 (vérification annuelle des moyens de secours) — livre II, établissements des quatre premières catégories | MS 73 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |

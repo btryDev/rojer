@@ -28,7 +28,6 @@ type Caracteristiques = Partial<
     | "aSystemeDeRecyclage"
     | "nbVehiculesParkingCouvert"
     | "familleEsp"
-    | "typeExtincteur"
     | "pressionMaxAdmissibleBar"
     | "volumeLitres"
     | "notes"
@@ -138,7 +137,6 @@ export default async function ModifierEquipementPage({
               nbVehiculesParkingCouvert:
                 caracs.nbVehiculesParkingCouvert ?? null,
               familleEsp: caracs.familleEsp ?? null,
-              typeExtincteur: caracs.typeExtincteur ?? null,
               pressionMaxAdmissibleBar: caracs.pressionMaxAdmissibleBar ?? null,
               volumeLitres: caracs.volumeLitres ?? null,
               // Les questions à trois états (`CHAMPS_TRI_ETAT`) doivent être repassées au

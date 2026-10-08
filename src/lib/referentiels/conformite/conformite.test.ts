@@ -1727,6 +1727,27 @@ describe("référentiel conformité — version et empreinte", () => {
     // 171 + 1 − 1 = 171. ~~171-59b93c7c5781b6c8~~ : empreinte après (C),
     // jamais scellée.
     { version: "2026-10-07.5", empreinte: "171-9bfaadbae946dc7c" },
+    // 2026-10-08 (C66, dernières corrections du préventeur). `.1` est pris
+    // par une autre branche (`lot/formations-faits-etablissement`, ADR-041) :
+    // ce lot prend `.2` pour que les deux ne servent jamais deux contenus sous
+    // le même numéro. (1) GC 22 « idem code du travail » :
+    // `cuisson-travail-appareils-entretien-verification` entre (R. 4224-17,
+    // défaut annuel, travail hors ERP). 171 + 1 − 0 = 172.
+    // ~~172-bd7554bd80c9845b~~ : empreinte après (1), jamais scellée.
+    // (4) « on s'en tient à ce que dit Julien » : la maintenance approfondie
+    // des extincteurs sort (`OBLIGATIONS_RETIREES`, `absorbePar: null`), la
+    // question `typeExtincteur` et sa condition halon sur la décennale hors
+    // ERP quittent le produit. 172 + 0 − 1 = 171.
+    // ~~171-12fb701f5fcff721~~ : empreinte après (4), jamais scellée.
+    // (3) habilitation électrique : `elec-salarie-habilitation` reçoit le
+    // rythme triennal de la NF C 18-510 relevé par le préventeur (ADR-039
+    // § 8). 171 + 0 − 0 = 171.
+    // ~~171-5916acceca368348~~ : empreinte après (3), jamais servie — ligne
+    // réécrite le 2026-10-08 (C66, dernière passe ; version non servie).
+    // (5) alarme : `incendie-travail-alarme-entretien-verification` entre
+    // (R. 4224-17, défaut annuel, travail hors ERP ; le préventeur : « si
+    // présent maintenance vérification annuelle »). 171 + 1 − 0 = 172.
+    { version: "2026-10-08.2", empreinte: "172-ea7623eb617ce82" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1885,7 +1906,13 @@ describe("référentiel conformité — version et empreinte", () => {
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
       // ~~173~~ — 2026-10-08 (C64) : 173 + 0 − 2 (AS 9 aux hôtels de 5ᵉ,
       // supprimées avant d'avoir été servies) = 171.
-    ).toBe(171);
+      // ~~171~~ — 2026-10-08 (C66) : 171 + 1 (appareils de cuisson hors ERP,
+      // R. 4224-17) − 0 = 172 ; ~~172~~ puis 172 + 0 − 1 (maintenance
+      // approfondie des extincteurs, retirée) = 171 ; ~~171~~ puis 171 + 1
+      // (`incendie-travail-alarme-entretien-verification`, entretien et
+      // vérification de l'alarme hors ERP, R. 4224-17, demandé par le
+      // préventeur) − 0 = 172.
+    ).toBe(172);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

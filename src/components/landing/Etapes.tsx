@@ -132,12 +132,14 @@ export function Etapes({
               elle répond à la question que les trois posent ensemble —
               « sur quoi vous vous basez pour me dire tout ça ? ». Les
               chiffres sont comptés sur `obligationsConformite`, à
-              recompter quand le référentiel s'étend. */}
+              recompter quand le référentiel s'étend. 171 → 172 le
+              2026-10-08 (C66) : + 1, l'entretien et la vérification de
+              l'alarme hors ERP, compté en appelant le référentiel. */}
           {/* Calée à gauche, sous la colonne des crans et non dans leur
               retrait : à l'aplomb du corps de texte, elle se lisait comme
               une quatrième ligne de l'étape 3. */}
           <p className="mt-9 font-mono text-[0.68rem] uppercase leading-[1.8] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
-            Référentiel construit depuis Légifrance et EUR-Lex · 171
+            Référentiel construit depuis Légifrance et EUR-Lex · 172
             obligations sur 21 domaines · source citée pour chacune
           </p>
 

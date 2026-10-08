@@ -9,7 +9,7 @@ import ts from "typescript";
  * `Obligation.periodicite` est le rythme DU TEXTE. Le rythme qui date une
  * ligne est `periodiciteEffective(o)` : celui du texte, sinon le rythme retenu
  * (norme ou défaut annuel). Un lecteur qui lit `o.periodicite` voit « autre »
- * sur les neuf obligations à rythme retenu — et l'échéance DISPARAÎT de sa
+ * sur les obligations à rythme retenu (~~dix~~ onze le 2026-10-08, C66, remesuré en appelant) — et l'échéance DISPARAÎT de sa
  * surface, sans que personne ne la voie manquer. C'est l'argument qui a fait
  * proposer d'inverser l'ADR-039 ; la propriétaire a choisi cette garde à la
  * place.

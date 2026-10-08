@@ -43,7 +43,7 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       // ~~statut: "retenu", obligations: ["esp-dossier-suivi"]~~ — 2026-10-07 : `non_couvert`.
       statut: "non_couvert",
       motif:
-        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf pour compresseur : requalification tous les 10 ans »), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-dossier-suivi` (dossier d'exploitation et liste des récipients fixes, état permanent).",
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (le préventeur demande d'exclure ces lignes, sauf la requalification décennale des compresseurs), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-dossier-suivi` (dossier d'exploitation et liste des récipients fixes, état permanent).",
       declareA:
         "Formulaire de déclaration d'un équipement, aide de la catégorie « Équipement sous pression » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.EQUIPEMENT_SOUS_PRESSION`) : « Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention. »",
       prescrit:
@@ -64,7 +64,7 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       // — 2026-10-07 : `non_couvert`.
       statut: "non_couvert",
       motif:
-        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf pour compresseur : requalification tous les 10 ans »), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-declaration-mise-en-service` (déclaration et contrôle de mise en service).",
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (le préventeur demande d'exclure ces lignes, sauf la requalification décennale des compresseurs), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-declaration-mise-en-service` (déclaration et contrôle de mise en service).",
       declareA:
         "Formulaire de déclaration d'un équipement, aide de la catégorie « Équipement sous pression » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.EQUIPEMENT_SOUS_PRESSION`) : « Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention. »",
       prescrit:
@@ -93,7 +93,7 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       // "esp-inspection-periodique-generateur-vapeur"]~~ — 2026-10-07 : `non_couvert`.
       statut: "non_couvert",
       motif:
-        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf pour compresseur : requalification tous les 10 ans »), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-inspection-periodique` (quatre ans) et `esp-inspection-periodique-generateur-vapeur` (deux ans).",
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (le préventeur demande d'exclure ces lignes, sauf la requalification décennale des compresseurs), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-inspection-periodique` (quatre ans) et `esp-inspection-periodique-generateur-vapeur` (deux ans).",
       declareA:
         "Formulaire de déclaration d'un équipement, aide de la catégorie « Équipement sous pression » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.EQUIPEMENT_SOUS_PRESSION`) : « Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention. »",
       prescrit:
@@ -128,7 +128,7 @@ export const ESP_SUIVI_EN_SERVICE: Corpus = {
       // ~~statut: "retenu", obligations: ["esp-intervention-reparation"]~~ — 2026-10-07 : `non_couvert`.
       statut: "non_couvert",
       motif:
-        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (« à exclure sauf pour compresseur : requalification tous les 10 ans »), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-intervention-reparation` (contrôle après intervention notable, événementiel).",
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09 (le préventeur demande d'exclure ces lignes, sauf la requalification décennale des compresseurs), décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le produit a choisi de ne pas le porter, et le dit à la déclaration de l'équipement. Fondait `esp-intervention-reparation` (contrôle après intervention notable, événementiel).",
       declareA:
         "Formulaire de déclaration d'un équipement, aide de la catégorie « Équipement sous pression » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.EQUIPEMENT_SOUS_PRESSION`) : « Rojer ne suit, pour ces équipements, que la requalification périodique des compresseurs (récipients d'air comprimé ou d'un autre gaz non dangereux) ; il ne suit ni la déclaration et le contrôle de mise en service, ni l'inspection périodique, ni le dossier d'exploitation, ni le contrôle après intervention. »",
       prescrit:

@@ -874,6 +874,11 @@ function lireProprieteEnum(
  *     ligne GÉNÉRALE du même couple. Le silence ne l'éteint pas : un
  *     équipement dont la famille n'a jamais été saisie garde le régime
  *     général, il ne tombe pas hors des deux.
+ *     [2026-10-08, C66 : ses usages sur `typeExtincteur` (maintenance
+ *     approfondie, révision hors ERP du halon) sont retirés avec la question ;
+ *     il n'en reste qu'un réel, les quatre conditions `familleEsp` de
+ *     `esp-requalification-decennale` (C64), compté en appelant
+ *     `obligationsConformite`. Les tests synthétiques restent.]
  *
  * Le motif est le même dans les quatre derniers cas, et c'est le point à ne pas
  * perdre : la forme qui porte la règle générale est TOUJOURS celle qui survit à

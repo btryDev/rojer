@@ -117,8 +117,8 @@
 // AMENDEMENT DU 2026-10-07 — L'IGH SORT DU RÉFÉRENTIEL
 // ---------------------------------------------------------------------------
 //
-// Relecture du préventeur du 30/09 : « IGH non traité par Rojer », sur les
-// trois lignes. Décision de la propriétaire du 07/10 : appliquer le retrait.
+// Relecture du préventeur du 30/09 : l'IGH n'est pas traité par Rojer, noté
+// sur les trois lignes. Décision de la propriétaire du 07/10 : appliquer le retrait.
 // `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle` et
 // `incendie-igh-charge-calorifique-quinquennale` sont dans
 // `OBLIGATIONS_RETIREES` ; GH 5 et GH 61 passent `non_couvert`, avec leur
@@ -179,7 +179,7 @@ export const ARRETE_2011_12_30_IGH: Corpus = {
       // du 07/10). La réserve de lecture passe dans `historique`.
       statut: "non_couvert",
       motif:
-        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a annoté la grille « IGH non traité par Rojer » sur chaque ligne fondée ici. L'article impose bien des vérifications périodiques, mais à « LES PROPRIÉTAIRES » de l'immeuble : le produit a choisi de ne pas les porter, et le dit. Ce n'est pas `hors_perimetre` : l'obligation existe et un dossier IGH peut entrer dans l'outil (ADR-031).",
+        "RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09, décision de la propriétaire du 07/10. Le préventeur a noté, sur chaque ligne fondée ici, que l'IGH n'est pas traité par Rojer. L'article impose bien des vérifications périodiques, mais à « LES PROPRIÉTAIRES » de l'immeuble : le produit a choisi de ne pas les porter, et le dit. Ce n'est pas `hors_perimetre` : l'obligation existe et un dossier IGH peut entrer dans l'outil (ADR-031).",
       declareA:
         "Page « Ce que Rojer ne couvre pas » (`src/lib/perimetre/couverture.ts`, axe `igh`) : « Le règlement de sécurité des immeubles de grande hauteur n'est pas traité par cet outil : ni le rapport quinquennal de conformité de la charge calorifique de son article GH 61, […] ni les vérifications périodiques de son article GH 5, qui incombent au propriétaire de l'immeuble […]. »",
       url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000052234026/",

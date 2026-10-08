@@ -242,11 +242,11 @@ couverture.
 
 **Le mouvement du 2026-10-07 : 53 + 2 + 5 + 6 − 0 = 66.** `GH 5` et `GH 61` passent de
 `retenu` à `non_couvert` : les trois obligations IGH qu'ils fondaient sont
-retirées du référentiel (relecture préventeur du 30/09, « IGH non traité par
-Rojer » ; décision de la propriétaire du 07/10). Les deux ont une adresse
+retirées du référentiel (relecture préventeur du 30/09 : l'IGH n'est pas traité par
+Rojer ; décision de la propriétaire du 07/10). Les deux ont une adresse
 visible : la page « Ce que Rojer ne couvre pas », axe `igh`. Voir leur famille
-au § 3. Puis cinq articles avec le retrait de six lignes `esp-*` (« à exclure
-sauf pour compresseur : requalification tous les 10 ans ») : `Arrêté 2017-11-20 art. 6`,
+au § 3. Puis cinq articles avec le retrait de six lignes `esp-*` (le préventeur demande
+d'exclure ces lignes, sauf la requalification décennale des compresseurs) : `Arrêté 2017-11-20 art. 6`,
 `Arrêté 2017-11-20 art. 7-11`, `Arrêté 2017-11-20 art. 15`, `Arrêté 2017-11-20 art. 26-28`
 — adresse : l'aide de la catégorie « Équipement sous pression » du formulaire
 d'équipement — et `R. 4323-1`, qui ne fondait que la formation des opérateurs
@@ -364,8 +364,8 @@ pas été ouvert.
 `GH 5`
 
 > RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09,
-> décision de la propriétaire du 07/10. Le préventeur a annoté la grille « IGH non
-> traité par Rojer » sur chaque ligne fondée ici. L'article impose bien des
+> décision de la propriétaire du 07/10. Le préventeur a noté, sur chaque ligne
+> fondée ici, que l'IGH n'est pas traité par Rojer. L'article impose bien des
 > vérifications périodiques, mais à « LES PROPRIÉTAIRES » de l'immeuble : le
 > produit a choisi de ne pas les porter, et le dit. Ce n'est pas
 > `hors_perimetre` : l'obligation existe et un dossier IGH peut entrer dans
@@ -548,7 +548,7 @@ plus ; son adresse est l'axe `effectif` de la page, décision E2.
 `Arrêté 2017-11-20 art. 15`, `Arrêté 2017-11-20 art. 26-28`
 
 > RETIRÉ DU RÉFÉRENTIEL LE 2026-10-07 — périmètre, relecture préventeur du 30/09
-> (« à exclure sauf pour compresseur : requalification tous les 10 ans »),
+> (le préventeur demande d'exclure ces lignes, sauf la requalification décennale des compresseurs),
 > décision de la propriétaire du 07/10. L'article impose toujours à l'exploitant
 > d'un équipement soumis au suivi en service ce qui est relevé ci-dessus ; le
 > produit a choisi de ne pas le porter, et le dit à la déclaration de

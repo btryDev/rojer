@@ -156,8 +156,13 @@ describe("serialiserCaracteristiques", () => {
 // Questions à trois états (amendement 2026-08)
 // =============================================================================
 
-describe("typeExtincteur (NF S 61-919, tableau A.1)", () => {
-  it("se saisit sur un extincteur, se sérialise, et se relit", () => {
+// 2026-10-08 (C66) : la question `typeExtincteur` est retirée du produit
+// (maintenance approfondie non demandée par le préventeur, décision de la
+// propriétaire). Les valeurs déjà saisies restent dans le JSON en base,
+// inertes : une clé que le schéma ne connaît plus ne fait pas échouer la
+// saisie, et elle n'est plus réécrite.
+describe("typeExtincteur, retiré : une clé inconnue ne casse rien", () => {
+  it("postée, elle est ignorée — la saisie passe et rien n'est stocké", () => {
     const fd = new FormData();
     fd.set("libelle", "Extincteur du hall");
     fd.set("categorie", "EXTINCTEUR");
@@ -165,29 +170,11 @@ describe("typeExtincteur (NF S 61-919, tableau A.1)", () => {
     const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
     expect(res.success).toBe(true);
     if (res.success) {
-      expect(serialiserCaracteristiques(res.data)?.typeExtincteur).toBe("co2");
-    }
-  });
-
-  it("vide, il n'est pas stocké : le silence reste un silence", () => {
-    const fd = new FormData();
-    fd.set("libelle", "Extincteur du hall");
-    fd.set("categorie", "EXTINCTEUR");
-    fd.set("typeExtincteur", "");
-    const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
-    expect(res.success).toBe(true);
-    if (res.success) {
       expect(serialiserCaracteristiques(res.data) ?? {}).not.toHaveProperty("typeExtincteur");
     }
-  });
-
-  it("refuse une valeur hors du tableau, et hors d'un extincteur", () => {
     expect(
       equipementSchema.safeParse({ libelle: "E", categorie: "EXTINCTEUR", typeExtincteur: "inconnu" }).success,
-    ).toBe(false);
-    expect(
-      equipementSchema.safeParse({ libelle: "R", categorie: "RIA", typeExtincteur: "co2" }).success,
-    ).toBe(false);
+    ).toBe(true);
   });
 });
 
@@ -434,10 +421,8 @@ describe("cohérence schéma ↔ référentiel d'obligations", () => {
       // condition ne s'en servait ; elle entre ici parce qu'elle en porte une
       // désormais, pas parce que la collecte aurait changé.
       "familleEsp",
-      // Ajoutée le 2026-10-07 (C59 lot 3) : `<select name="typeExtincteur">`,
-      // affiché pour la catégorie EXTINCTEUR. Elle décide de la maintenance
-      // additionnelle approfondie (NF S 61-919, tableau A.1).
-      "typeExtincteur",
+      // ~~Ajoutée le 2026-10-07 (C59 lot 3) : `<select name="typeExtincteur">`~~
+      // — retirée le 2026-10-08 (C66) avec la question et ses conditions.
     ]);
     for (const o of obligationsConformite) {
       for (const c of o.conditions ?? []) {

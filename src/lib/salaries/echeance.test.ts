@@ -8,6 +8,7 @@ import {
 } from "@/lib/calendrier/generateur";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import type { Obligation } from "@/lib/referentiels/conformite";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 
 /**
  * Une seule échéance pour un titre, et les deux lecteurs d'accord sur elle.
@@ -26,6 +27,11 @@ import type { Obligation } from "@/lib/referentiels/conformite";
 
 const VIP = titreParId("sante-travail-salarie-vip");
 const HABILITATION = titreParId("elec-salarie-habilitation");
+// Le titre SANS durée, depuis que l'habilitation a reçu la sienne (C66,
+// 2026-10-08 : triennale, relevée par le préventeur, ADR-039 § 8).
+// L'autorisation de conduite : R. 4323-56 n'écrit aucune durée.
+const SANS_DUREE_ID = "conduite-salarie-autorisation";
+const SANS_DUREE = titreParId(SANS_DUREE_ID);
 
 /** Dates civiles à midi UTC, comme `titreSchema` les écrit. */
 const civile = (jour: string) => new Date(`${jour}T12:00:00.000Z`);
@@ -51,13 +57,17 @@ function ligneDuCalendrier(
 }
 
 describe("garde : le référentiel porte encore les deux cas", () => {
-  it("la VIP est quinquennale et l'habilitation sans durée écrite", () => {
+  it("la VIP est quinquennale, l'autorisation de conduite sans durée, l'habilitation triennale retenue", () => {
     expect(VIP?.periodicite, "la VIP a changé de rythme : relire ce fichier").toBe(
       "quinquennale",
     );
+    // ~~l'habilitation sans durée écrite~~ — 2026-10-08 (C66) : le TEXTE
+    // reste sans durée, le rythme retenu est triennal.
+    expect(HABILITATION?.periodicite).toBe("autre");
+    expect(HABILITATION && periodiciteEffective(HABILITATION)).toBe("triennale");
     expect(
-      HABILITATION?.periodicite,
-      "l'habilitation a reçu une durée : relire le cas « pas de périodicité »",
+      SANS_DUREE && periodiciteEffective(SANS_DUREE),
+      "l'autorisation de conduite a reçu une durée : relire le cas « pas de périodicité »",
     ).toBe("autre");
   });
 });
@@ -128,12 +138,14 @@ describe("pas de périodicité, pas d'échéance", () => {
   const titre = { delivreLe: civile("2020-06-01"), echeanceLe: null };
   const NOW = new Date("2026-09-14T10:00:00+02:00");
 
-  it("l'habilitation électrique sans date de fin n'a pas de rendez-vous", () => {
-    // `R. 4544-10` n'écrit aucune durée : un rouge ici serait une
-    // non-conformité inventée (ADR-023 § 6).
-    expect(echeanceDuTitre(titre, HABILITATION?.periodicite)).toBeNull();
-    expect(classerTitre(titre, HABILITATION?.periodicite, NOW)).toBe("aPlanifier");
-    expect(ligneDuCalendrier("elec-salarie-habilitation", titre)).toEqual([]);
+  it("un titre sans durée ni date de fin n'a pas de rendez-vous", () => {
+    // ~~L'habilitation électrique~~ (jusqu'au 2026-10-08, C66) : l'exemple
+    // passe à l'autorisation de conduite, dont R. 4323-56 n'écrit aucune
+    // durée — un rouge ici serait une non-conformité inventée.
+    const p = SANS_DUREE && periodiciteEffective(SANS_DUREE);
+    expect(echeanceDuTitre(titre, p)).toBeNull();
+    expect(classerTitre(titre, p, NOW)).toBe("aPlanifier");
+    expect(ligneDuCalendrier(SANS_DUREE_ID, titre)).toEqual([]);
   });
 
   it("une mise en service seule n'en produit pas davantage", () => {
@@ -143,5 +155,42 @@ describe("pas de périodicité, pas d'échéance", () => {
   it("une obligation introuvable ne fait rien inventer", () => {
     expect(echeanceDuTitre(titre, undefined)).toBeNull();
     expect(classerTitre(titre, undefined, NOW)).toBe("aPlanifier");
+  });
+});
+
+/**
+ * L'EFFET SUR LES TITRES D'HABILITATION EXISTANTS (C66, 2026-10-08). Le rythme
+ * triennal relevé par le préventeur (ADR-039 § 8) donne une échéance à tout
+ * titre sans date de fin : délivrance + 3 ans. Un titre délivré il y a plus de
+ * trois ans passe EN RETARD à la passe suivante, sans délai de grâce : la
+ * grâce de l'ADR-040 ne vaut que pour une ligne née « à planifier », et la
+ * ligne d'un titre naît datée (`sources.dateDuTitre`, règle 1). Une date de
+ * fin saisie prime, comme avant.
+ */
+describe("habilitation électrique : délivrance + 3 ans (C66)", () => {
+  const NOW = new Date("2026-10-08T10:00:00+02:00");
+
+  it("délivrée le 1er juin 2020 sans date de fin : échéance le 1er juin 2023, en retard, sans grâce", () => {
+    const titre = { delivreLe: civile("2020-06-01"), echeanceLe: null };
+    const p = HABILITATION && periodiciteEffective(HABILITATION);
+    expect(echeanceDuTitre(titre, p)).toEqual(civile("2023-06-01"));
+    expect(classerTitre(titre, p, NOW)).toBe("enRetard");
+    const [ligne] = ligneDuCalendrier("elec-salarie-habilitation", titre);
+    expect(ligne.datePrevue).toEqual(civile("2023-06-01"));
+    expect(ligne.statut).toBe("planifiee");
+    expect(estVerificationEnRetard({ ...ligne, archiveLe: null, graceJusquAu: null }, NOW)).toBe(true);
+  });
+
+  it("délivrée le 1er décembre 2023 : échéance le 1er décembre 2026, pas encore due", () => {
+    const titre = { delivreLe: civile("2023-12-01"), echeanceLe: null };
+    const p = HABILITATION && periodiciteEffective(HABILITATION);
+    expect(echeanceDuTitre(titre, p)).toEqual(civile("2026-12-01"));
+    expect(classerTitre(titre, p, NOW)).not.toBe("enRetard");
+  });
+
+  it("une date de fin saisie prime sur les 3 ans", () => {
+    const titre = { delivreLe: civile("2020-06-01"), echeanceLe: civile("2027-01-01") };
+    const p = HABILITATION && periodiciteEffective(HABILITATION);
+    expect(echeanceDuTitre(titre, p)).toEqual(civile("2027-01-01"));
   });
 });
