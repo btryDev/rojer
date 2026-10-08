@@ -30,6 +30,7 @@ import { joursCivilsEntre } from "@/lib/dates";
 import {
   estActionEnRetard,
   estActionOuverte,
+  estVerificationArchivee,
 } from "@/lib/dates/retard";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
@@ -504,11 +505,25 @@ export function lignesHistoire(
  * référentiel depuis la génération n'a plus de fiche : elle est écartée
  * plutôt qu'affichée sans sa source, puisqu'une référence réglementaire
  * ne s'invente pas.
+ *
+ * ## Une ligne archivée ne fonde plus rien (C67, 2026-10-09)
+ *
+ * Seules les lignes VIVANTES comptent. Une ligne archivée dit qu'une
+ * obligation a cessé de s'appliquer à cet appareil ; la compter ici faisait
+ * dire à la fiche le contraire. Le cas qui l'a montré : la scission EPI de
+ * C67. L'id `epi-verification-generale-periodique` portait les cinq familles,
+ * il ne porte plus que l'antichute. La fiche d'un masque respiratoire ou d'un
+ * gilet dont la ligne a été archivée sous cet id annonçait « Une obligation
+ * du référentiel s'applique à cet appareil » avec le libellé… de l'antichute.
+ * L'id est relu au référentiel d'AUJOURD'HUI, la ligne date d'hier : seule
+ * une ligne ouverte garantit que les deux parlent encore de la même chose.
+ * L'historique de la fiche (`lignesHistoire`) garde, lui, les contrôles faits.
  */
 export function obligationsDeLEquipement(eq: FicheEquipement): Obligation[] {
   const vues = new Set<string>();
   const out: Obligation[] = [];
   for (const v of eq.verifications) {
+    if (estVerificationArchivee(v)) continue;
     if (vues.has(v.obligationId)) continue;
     vues.add(v.obligationId);
     const o = obligationParId(v.obligationId);
