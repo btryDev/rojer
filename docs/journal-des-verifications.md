@@ -5244,10 +5244,14 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   JC.pdf` et `Rojer-referentiel-complet_copy(1).pdf` (objets `/Annots`, texte
   intégral et date `/M`). Référentiel `2026-10-07.5` → **`2026-10-08.2`**,
   empreinte `171-9bfaadbae946dc7c` → `172-bd7554bd80c9845b` (1) →
-  `171-12fb701f5fcff721` (4) → `171-5916acceca368348` (3), toutes en appelant
-  `empreinteReferentiel()`. **171 + 1 (1) − 1 (4) + 0 (3) = 171** — 87
-  équipement, 70 établissement, 14 salarié (`porteurDe`). Rythmes retenus :
-  ~~neuf~~ dix (trois de norme, sept par défaut annuel).
+  `171-12fb701f5fcff721` (4) → ~~`171-5916acceca368348`~~ (3) →
+  `172-ea7623eb617ce82` (5), toutes en appelant `empreinteReferentiel()` ;
+  la version n'étant pas servie, sa ligne d'`HISTORIQUE_EMPREINTES` est
+  réécrite, l'ancienne valeur barrée. **171 + 1 (1) − 1 (4) + 0 (3) + 1 (5)
+  = 172** — ~~87~~ 88 équipement, 70 établissement, 14 salarié
+  (`porteurDe`, remesuré en appelant). Rythmes retenus : ~~neuf~~ ~~dix~~
+  onze (trois de norme, ~~sept~~ huit par défaut annuel), remesuré en
+  appelant.
 - **(1) GC 22 « idem code du travail »** (p. 15 ; en réponse, surligné sur
   R. 4224-17 : « a defaut annuellement », 2026-10-05) — `d832bee6`,
   `d89cb68e`, `d93cf240`. Entre `cuisson-travail-appareils-entretien-verification`
@@ -5286,7 +5290,10 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   — norme non relue par Rojer ». `renvoiAuxNormes` ne vise plus aucune
   obligation. `elec-travail-habilitation-personnel` inchangée (raison écrite).
   Gardes éprouvées : un mot du relevé changé au corpus → 2 rouges ; relevé
-  retiré de l'obligation → 4 rouges.
+  retiré de l'obligation → 4 rouges. [Dernière passe, `05a9ec30` : le
+  préventeur a annoté CETTE ligne (p. 5) ; la description de
+  `elec-travail-habilitation-personnel` renvoie désormais au recyclage
+  triennal porté par le titre de chaque personne, sans lui donner de rythme.]
 - **Effet sur les titres d'habilitation en production — mesuré sur la
   logique, pas sur la base** : un titre sans date de fin prend l'échéance
   délivrance + 3 ans ; délivré le 2023-10-07 ou avant (au 2026-10-08), il passe **« Échéance
@@ -5294,17 +5301,103 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   score, au badge du rail et sur Équipe. **Aucune grâce** : l'ADR-040 ne vaut
   que pour une ligne née « à planifier », et une ligne de titre naît datée
   (`planifiee`, règle 1) — test « délivrée le 1er juin 2020 ». Un titre avec
-  date de fin saisie ne bouge pas. Le nombre de titres concernés n'a pas été
-  compté (aucun accès à la base de production dans ce lot).
+  date de fin saisie ne bouge pas. ~~Le nombre de titres concernés n'a pas été
+  compté (aucun accès à la base de production dans ce lot).~~ [2026-10-08 :
+  comptage en production le 2026-10-08 (propriétaire, éditeur SQL Supabase,
+  lecture seule) : 0 titre `elec-salarie-habilitation` sans date de fin
+  délivré avant le 2023-10-09, 0 pour des salariés actifs — aucun titre ne
+  passe en retard au déploiement. La grâce n'est pas modifiée.]
 - **Moteur** : empreinte recopiée sans incrément (`ff1c3cda346da10d`) — le
   contrôle et la mention seuls ont changé dans les modules relevés ; ce qui
   change les lignes est une donnée du référentiel, qui déplace le sceau.
-- **Comptes** : test (171), `CLAUDE.md`, `Cadran.tsx`, `Etapes.tsx` —
-  171 + 1 − 1 = 171. `pnpm verification --ecrire` rejoué.
-- **Ce qui reste ouvert** : le compte des titres d'habilitation en
-  production qui passent en retard ; le module `renvoi-aux-normes.ts`, sans
+- **Comptes** : test (~~171~~ 172), `CLAUDE.md`, `Cadran.tsx`, `Etapes.tsx`
+  — 171 + 1 − 1 = 171, puis 171 + 1 (5) − 0 = 172, remesuré en appelant.
+  `pnpm verification --ecrire` rejoué.
+- **Ce qui reste ouvert** : ~~le compte des titres d'habilitation en
+  production qui passent en retard~~ [2026-10-08 : compté, 0 — voir
+  l'effet ci-dessus] ; le module `renvoi-aux-normes.ts`, sans
   usage, gardé ; le nom de la catégorie `APPAREIL_CUISSON_ERP`, qui dit
   « ERP » et sert désormais aussi hors ERP.
+- **Dernière passe (même jour, même branche)** — consignes du délégant et
+  de la propriétaire ; aucun texte rouvert, annotations relues par `pypdf`
+  sur les deux PDF.
+  - **Citations inexactes** — `b281e5c3`. La grille porte, p. 20, une
+    faute de frappe pour « requalification » et, p. 4, une pour « Rojer » ;
+    le dépôt les citait entre guillemets sous la forme correcte. Consigne de
+    la propriétaire : ne pas recopier les fautes, pas de [sic] — la forme
+    correcte, hors guillemets, comme ce que dit le préventeur (« le
+    préventeur demande d'exclure ces lignes, sauf la requalification
+    décennale des compresseurs » ; « il note que l'IGH n'est pas traité par
+    Rojer »). Motifs d'`OBLIGATIONS_RETIREES` (six `esp-*`,
+    `elec-igh-annuelle`), corpus (arrêté du 20/11/2017 ×4, `GH 5`), notes,
+    test, `CLAUDE.md`, couverture déclarée, entrée du lot 5 (C55 à C59) de ce journal. Les
+    citations exactes (« IGH non traité », p. 6 et 9 ; « non traité »,
+    p. 34) restent entre guillemets.
+  - **Zèle Z1/Z2** — `a15ac469`. La description de
+    `incendie-travail-moyens-lutte` ne cite plus la NF S 61-919 § 9
+    (étiquette) ni son annexe E (formation de la personne compétente) : le
+    préventeur ne l'a pas demandé, la revue du 07/10 l'avait ajouté. Au
+    corpus `normes`, § 9 et annexe E restent comme trace (statut `norme`,
+    `obligations: []`), leur « citée dans la description » barré et daté ;
+    § 11 et § 4 datés : trace, sans affichage.
+  - **Motif périmé** — `ac3734f6`. Le motif de retrait de
+    `stockage-dangereux-formation-personnel` (et la note de l'absorbante)
+    disaient que la version `2026-10-07.5` « n'a jamais été servie » : faux
+    depuis la PR #14 (mergée et déployée le 2026-10-08). Barré, daté ;
+    ils disent désormais que la version servie était l'état final, où
+    l'identifiant est déjà retiré, ce que fait la réconciliation pour une
+    ligne restante (réalisation la plus ancienne reprise par la ligne
+    d'établissement, ligne archivée si elle porte une trace, supprimée
+    sinon ; déclaration et prescription ne suivent pas), et le comptage de
+    production du 2026-10-08 : 0 déclaration, 0 prescription, 0 ligne.
+  - **(5) Alarme** — `113c76b4`. Le préventeur, p. 34 : « pas d'obligation
+    moins de 51 personnes si présent maintenance vérification annuelle » ;
+    réponse du 2026-10-05 : R. 4224-17 collé sur la ligne « Alarme
+    sonore ». Entre `incendie-travail-alarme-entretien-verification`
+    (R. 4224-17, `defaut_annuel`, « périodicité appropriée » ; `{ travail,
+    erp: false }` ; `ALARME_INCENDIE` ; personne compétente / qualifiée ;
+    criticité 4). Pas un doublon de la semestrielle de l'arrêté du
+    4 novembre 1993, art. 15 (`signalisation-etablissement-signaux-
+    lumineux-acoustiques-semestrielle`) : celle-ci est l'ESSAI du signal par
+    l'exploitant, une ligne d'établissement ; celle-là la MAINTENANCE et la
+    vérification de l'appareil par une personne compétente. Le motif de
+    non-encodage de C59 (item 6 a) est rayé et daté (`signalisation.ts`,
+    réserve de R. 4224-17). En ERP, `incendie-erp-ssi-annuelle` (MS 73)
+    l'emporte. Garde neuve : « une annuelle MS 73 / R. 4224-17 et une seule
+    par alarme » sur les sept profils — éprouvée en retirant `erp: false`
+    (5 rouges, N1 à N5), restaurée par `git checkout 113c76b4 --`.
+    `ALARME_INCENDIE` sort des catégories vides du bureau (`engine.test.ts`).
+  - **Levage — RIEN N'EST ENCODÉ.** Réponse du préventeur du 2026-10-05,
+    p. 3, sous la question 10 : « attention aux équipements, manuel,
+    automatique, semi automatique, transport de charges ou de personnes » ;
+    grille du 30/09, p. 22 : « attention identification des équipements ».
+    Ce que le modèle distingue déjà, vérifié dans
+    `src/lib/equipements/schema.ts` et `conformite/levage.ts` : quatre
+    questions à trois états sur `EQUIPEMENT_LEVAGE` — `estMuParForceHumaine`
+    (VGP trimestrielle ou semestrielle, arrêté du 1er mars 2004, art. 23),
+    `sertAuLevageDePersonnes` (VGP semestrielle, arrêté du 2 mars 2004),
+    `estChariotOuGerbeur` (art. 20-II et 23, semestrielle),
+    `aAccessoiresDeLevage` (annuelle des accessoires) ; « transport de
+    charges ou de personnes » est donc déjà distingué, « manuel » l'est par
+    la force humaine. Question à poser au préventeur : « que change pour
+    vous manuel / automatique / semi-automatique au-delà de ces
+    distinctions ? ».
+  - **Écarts ouverts — questions au préventeur sans réponse depuis le
+    30/09** : p. 35, « a supprimer » — quelle ligne (la note est entre
+    « Instructions d'évacuation » et « Chiffons, cotons et papiers
+    imprégnés », R. 4227-26, en vigueur et sans seuil) ? ; p. 24, 29, 30,
+    « voir les limites » / « limite rojer » (installation frigorifique,
+    protection respiratoire, gilet gonflable) — sortir ces catégories du
+    périmètre ou revoir leur bornage ? ; PO 1 § 3 — son renvoi applique-t-il
+    AS 9 aux hôtels de 5ᵉ catégorie (lignes retirées en C64 sur sa note
+    « AS9 applicable qu'au ERP N1 à N4 ») ? ; la formation au risque
+    chimique fondée sur L. 4141-2 (lecture de Rojer, C64) — la valide-t-il ?
+    ; l'édition de la NF S 61-919 qu'il applique (Rojer a lu celle d'août
+    2001, fournie par lui) ; le texte de la NF C 18-510 (paragraphe et
+    édition du recyclage triennal, que Rojer n'a pas lus).
+  - **Comptes de la passe** : 171 + 1 − 0 = 172 (88 / 70 / 14) ; empreinte
+    `172-ea7623eb617ce82` ; moteur inchangé (`ff1c3cda346da10d`, aucun module
+    relevé touché).
 
 ## Partie 2 — Registre des constats en suspens
 
