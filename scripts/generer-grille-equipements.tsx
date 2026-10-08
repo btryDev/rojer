@@ -47,7 +47,6 @@ import {
 } from "@/lib/pdf/entrees-grille-relecture";
 import {
   estNiveauAudit,
-  MENTION_NIVEAU_AUDIT,
   obligationsConformite,
   REFERENTIEL_VERSION,
 } from "@/lib/referentiels/conformite";
@@ -405,24 +404,18 @@ function LigneObligation({
         )}
       </View>
       {/* ADR-042 : au référentiel, hors du quotidien — marquée, jamais tue. */}
+      {/* 2026-10-08 (propriétaire) : une seule mention, en couleur, sur les
+          lignes au niveau audit et sur celles proposées au préventeur — sans
+          motif ni statut dans la grille qu'on lui renvoie. */}
       <Text
-        style={[s.td, { width: C.audit, fontFamily: "Helvetica-Bold" }]}
+        style={[
+          s.td,
+          { width: C.audit, fontFamily: "Helvetica-Bold", color: BOARD.ambreEncre },
+        ]}
       >
-        {estNiveauAudit(o)
-          ? MENTION_NIVEAU_AUDIT
-          : proposition
-            ? "Proposé"
-            : ""}
+        {estNiveauAudit(o) || proposition ? "Audit" : ""}
       </Text>
     </View>
-      {proposition && (
-        <Text style={[s.small, { marginTop: 3, color: BOARD.ardoiseEncre }]}>
-          <Text style={{ fontFamily: "Helvetica-Bold" }}>
-            Proposé au niveau audit —{" "}
-          </Text>
-          {t(proposition.motif)}
-        </Text>
-      )}
     </View>
   );
 }
@@ -574,22 +567,14 @@ function GrilleDocument({
             conclusion. Rojer calcule, il n&apos;avise pas.
           </Text>
           <Text style={{ marginTop: 6 }}>
-            Colonne « Audit ».{" "}
-            <Text style={{ fontFamily: "Helvetica-Bold" }}>
-              {MENTION_NIVEAU_AUDIT}
+            Colonne{" "}
+            <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.ambreEncre }}>
+              Audit
             </Text>{" "}
-            ({obligationsConformite.filter(estNiveauAudit).length} sur {total})
-            : obligation légale gardée au référentiel, suivie hors du quotidien
-            de Rojer (ni calendrier, ni alertes) ; listée sur la page « Ce que
-            Rojer ne couvre pas ».
-            {propositions.size > 0 && (
-              <>
-                {" "}
-                <Text style={{ fontFamily: "Helvetica-Bold" }}>Proposé</Text> (
-                {propositions.size}) : nous proposons de la passer au niveau
-                audit — votre avis ? Le motif figure sous la ligne.
-              </>
-            )}
+            : obligation légale que nous proposons de garder au référentiel
+            mais de suivre hors du quotidien de Rojer — ni calendrier, ni
+            alertes —, listée sur la page « Ce que Rojer ne couvre pas ».
+            Votre avis ?
           </Text>
           <Text style={{ marginTop: 6 }}>
             Le document couvre les {total} obligations, rangées par ce qui les
