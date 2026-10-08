@@ -57,6 +57,18 @@ export type EtablissementFaux = {
   manipuleMatieresR422722: boolean | null;
   comporteLocauxSommeilPublic: boolean | null;
   chiffonsImpregnes: boolean | null;
+  /**
+   * Les faits d'activité (ADR-041). OPTIONNELS ici, et c'est dit : absents, ils
+   * valent le silence (« à confirmer »), ce qui ne change aucune ligne de
+   * calendrier tant que les obligations qu'ils conditionnent n'ont pas de
+   * rendez-vous. Un test qui veut éprouver un « non » les pose.
+   */
+  manutentionManuelle?: boolean | null;
+  travailSurEcran?: boolean | null;
+  operationsElectriques?: boolean | null;
+  conduiteEngins?: boolean | null;
+  expositionCMR?: boolean | null;
+  epiPresents?: boolean | null;
   referentielVersionCalendrier?: string | null;
   equipements: EquipementFaux[];
   prescriptionsParticulieres: { id: string; actif: boolean }[];

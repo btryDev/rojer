@@ -41,6 +41,16 @@ function bureau(over: Partial<EtablissementMatching> = {}): EtablissementMatchin
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     chiffonsImpregnes: false,
+    // Les faits d'activité (ADR-041) sont RÉPONDUS ici : le test porte sur le
+    // silence d'une seule question, celle des matières de R. 4227-22. Muets,
+    // ils marqueraient eux aussi des lignes que la réponse aux matières ne
+    // lève pas — la formation écran est événementielle, donc dans les lignes.
+    manutentionManuelle: true,
+    travailSurEcran: true,
+    operationsElectriques: true,
+    conduiteEngins: true,
+    expositionCMR: true,
+    epiPresents: true,
     ...over,
   };
 }

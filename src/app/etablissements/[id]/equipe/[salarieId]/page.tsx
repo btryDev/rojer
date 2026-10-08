@@ -30,7 +30,7 @@ import {
 import { declarerTitre } from "@/lib/salaries/actions";
 import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-evenementielles";
 import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
-import { chargerReponsesTransverses } from "@/lib/transverses/queries";
+import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
 import { CarteTitresDuDuerp } from "@/components/salaries/CarteTitresDuDuerp";
 import { ReferenceFondatrice } from "@/components/salaries/ReferenceFondatrice";
 import {
@@ -146,18 +146,14 @@ export default async function SalarieDetailPage({
   // du dernier titre déclaré, pas la liste.
   const declenchees = obligationsDeclencheesParUnFait(s.titres);
 
-  // Ce que la réponse du DUERP aux questions transverses rend dû à une partie
-  // de l'effectif (ADR-038). `null` : pas de DUERP — la carte le dit et mène à
-  // sa création, au lieu de se taire.
-  const transverses = await chargerReponsesTransverses(id);
-  const duerpDeLaFiche = titresDuDuerpPourUnePersonne(
-    transverses?.repondues ?? null,
-    s.titres,
-  );
-  const lienVersLaQuestion = (questionId: string) =>
-    transverses
-      ? `/duerp/${transverses.duerpId}/transverses#${questionId}`
-      : `/etablissements/${id}/duerp`;
+  // Ce que les faits d'activité de l'établissement rendent dû à une partie de
+  // l'effectif (ADR-038, ADR-041). Lus sur l'établissement : un dossier sans
+  // DUERP y répond depuis Équipe, et la carte mène à cet écran.
+  const faits = await chargerFaitsActivite(id);
+  if (!faits) notFound();
+  const duerpDeLaFiche = titresDuDuerpPourUnePersonne(faits, s.titres);
+  const lienVersLaQuestion = (champ: string) =>
+    `/etablissements/${id}/equipe/risques#${champ}`;
 
   const action = declarerTitre.bind(null, id, salarieId);
   const provenance = lireProvenance(de, id);

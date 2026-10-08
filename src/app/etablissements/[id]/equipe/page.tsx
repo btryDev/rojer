@@ -9,6 +9,8 @@ import { cataloguerTitres } from "@/lib/salaries/catalogue";
 import { texteInformation } from "@/lib/salaries/droits";
 import { TexteInformation } from "@/components/salaries/TexteInformation";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
+import { FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
+import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
 
 /**
  * L'annuaire de l'équipe — le troisième porteur d'échéance (ADR-023).
@@ -16,10 +18,11 @@ import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
  * Cet écran a une particularité que les deux autres annuaires n'ont pas, et
  * elle commande sa rédaction : **rien ici n'est déduit**. Le moteur sait qu'un
  * ascenseur déclaré appelle une vérification annuelle ; il ne sait pas qui,
- * dans l'effectif, opère au voisinage de pièces nues sous tension. Ce serait le
- * cinquième déclencheur — l'activité réellement exercée — et il n'est pas
- * implémenté. L'écran doit donc dire clairement que la couverture vient de ce
- * que l'employeur déclare, sans quoi une page vide se lirait « rien à faire ».
+ * dans l'effectif, opère au voisinage de pièces nues sous tension. Depuis
+ * l'ADR-041, l'établissement déclare QUE des travailleurs le font (faits
+ * d'activité, écran `equipe/risques`) ; qui, c'est le titre déclaré sur la
+ * fiche de chacun. L'écran doit donc dire clairement que la couverture vient de
+ * ce que l'employeur déclare, sans quoi une page vide se lirait « rien à faire ».
  */
 export default async function EquipePage({
   params,
@@ -32,6 +35,18 @@ export default async function EquipePage({
   const equipe = await listerEquipe(id, now);
   const titresDeclares = await libellesTitresDeclares(id);
   const catalogue = cataloguerTitres();
+  const faits = await chargerFaitsActivite(id);
+  // Les faits sans réponse, NOMMÉS : la passe Chrome du 2026-10-08 a vu le
+  // bandeau compter juste et lister les cinq, réponses comprises.
+  const NOM_COURT: Record<(typeof FAITS_ACTIVITE)[number]["champ"], string> = {
+    manutentionManuelle: "manutention",
+    travailSurEcran: "écran",
+    operationsElectriques: "électricité",
+    conduiteEngins: "engins",
+    expositionCMR: "CMR",
+  };
+  const muets = faits ? FAITS_ACTIVITE.filter((f) => faits[f.champ] === null) : [];
+  const sansReponse = muets.length;
 
   const enRetard = equipe
     .filter((s) => s.actif)
@@ -90,6 +105,33 @@ export default async function EquipePage({
       </header>
 
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
+        {/* La porte d'entrée unique des faits d'activité (ADR-041) : tant
+            qu'une question reste sans réponse, les formations qu'elle
+            conditionne s'affichent « à confirmer ». */}
+        <section className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-5 sm:px-8">
+          <div className="min-w-0 max-w-[64ch]">
+            <p className="m-0 text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
+              {sansReponse > 0
+                ? "Évaluez les risques de vos salariés"
+                : "Risques de vos salariés : répondu"}
+            </p>
+            <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              {sansReponse > 0
+                ? `${sansReponse} question${sansReponse > 1 ? "s" : ""} sans réponse : ${muets.map((f) => NOM_COURT[f.champ]).join(", ")}. Elles décident des formations et du suivi dus à une partie de l'effectif.`
+                : "Les formations et le suivi dus à une partie de l'effectif s'affichent sur la fiche de chaque personne."}
+            </p>
+          </div>
+          <Link
+            href={`/etablissements/${id}/equipe/risques`}
+            className={buttonVariants({
+              variant: sansReponse > 0 ? "board" : "boardClair",
+              size: "boardSm",
+            })}
+          >
+            {sansReponse > 0 ? "Évaluer les risques →" : "Revoir les réponses"}
+          </Link>
+        </section>
+
         {equipe.length === 0 ? (
           <section className="carte-board px-7 py-8 sm:px-8">
             <div className="flex max-w-[600px] flex-col gap-3">

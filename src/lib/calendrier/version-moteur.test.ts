@@ -124,6 +124,13 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-08 (ADR-041, faits d'activité, livrée
+  // après C66) : `matching/engine.ts` lit le critère `activite`, `absence.ts`
+  // et `projection.ts` portent six attributs neufs. NON, la régénération
+  // n'écrit pas autrement : les cinq obligations conditionnées sont à
+  // `periodicite: "autre"` sans rythme retenu — le générateur n'en produit
+  // aucune ligne. Précédent C37. Le critère déplace l'empreinte du
+  // référentiel, donc le sceau.
   // Recopiée SANS incrément le 2026-10-08 (ADR-040, délai de grâce) :
   // `calendrier/grace.ts` entre au relevé, et `actions.ts` écrit
   // `graceJusquAu` dans le `createMany`. NON, la régénération n'écrit pas
@@ -299,7 +306,8 @@ const RELEVE = {
   // change les lignes — le rythme triennal du titre d'habilitation — est une
   // DONNÉE du référentiel, qui déplace son empreinte, donc le sceau.
   // ~~4b75258a15263110~~.
-  empreinte: "ff1c3cda346da10d",
+  // ~~ff1c3cda346da10d~~ (C66).
+  empreinte: "34b84ee9a3627974",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

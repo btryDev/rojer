@@ -13,21 +13,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { prismaMock, requireUserMock, redirectMock } = vi.hoisted(() => {
   const modele = () => ({
     findFirst: vi.fn().mockResolvedValue(null),
+    findUnique: vi.fn().mockResolvedValue(null),
     findMany: vi.fn().mockResolvedValue([]),
     create: vi.fn().mockResolvedValue({ id: "cree" }),
+    createMany: vi.fn().mockResolvedValue({ count: 1 }),
     update: vi.fn(),
     delete: vi.fn(),
   });
+  const prismaMock = {
+    etablissement: modele(),
+    duerp: modele(),
+    uniteTravail: modele(),
+    risque: modele(),
+    // La transaction rend ce qu'on lui donne (tableau d'opérations) ou exécute
+    // son corps contre le même faux client : ce sont les appels enregistrés
+    // par les mocks qui font foi.
+    $transaction: vi.fn(async (ops: unknown): Promise<unknown> =>
+      typeof ops === "function" ? (ops as (t: unknown) => unknown)(prismaMock) : ops,
+    ),
+  };
   return {
-    prismaMock: {
-      etablissement: modele(),
-      duerp: modele(),
-      uniteTravail: modele(),
-      risque: modele(),
-      // La transaction rend simplement ce qu'on lui donne : ici, ce sont les
-      // appels enregistrés par les mocks qui font foi.
-      $transaction: vi.fn(async (ops: unknown[]) => ops),
-    },
+    prismaMock,
     requireUserMock: vi.fn(),
     redirectMock: vi.fn(() => {
       // `redirect` lève en production ; on l'imite pour que le code après
@@ -92,6 +98,33 @@ describe("creerDuerp — l'unité transverse ne consomme aucune place", () => {
       nom: "Risques transverses",
       estTransverse: true,
     });
+  });
+});
+
+describe("creerDuerp — reprend les faits d'activité déjà déclarés (ADR-041)", () => {
+  it("naît avec le risque d'un fait déclaré « oui », et avec lui seul", async () => {
+    prismaMock.duerp.findFirst.mockResolvedValue(null);
+    prismaMock.duerp.create.mockResolvedValue({ id: "d-neuf" });
+    prismaMock.etablissement.findFirst.mockResolvedValue({
+      id: "e1",
+      entrepriseId: "ent1",
+      entreprise: { id: "ent1" },
+      conduiteEngins: true,
+      manutentionManuelle: false,
+      travailSurEcran: null,
+      operationsElectriques: null,
+      expositionCMR: true,
+    });
+    prismaMock.uniteTravail.findFirst.mockResolvedValue({ id: "u-transverse" });
+    prismaMock.risque.createMany.mockClear();
+
+    await expect(creerDuerp("e1")).rejects.toThrow("REDIRECT");
+
+    const crees = prismaMock.risque.createMany.mock.calls.map(
+      (c) => (c[0] as { data: { referentielId: string }[] }).data[0].referentielId,
+    );
+    // Le CMR n'a pas de question transverse : aucun risque de plus.
+    expect(crees).toEqual(["trv-conduite-engins"]);
   });
 });
 

@@ -56,6 +56,12 @@ function bureauSansRien(
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     chiffonsImpregnes: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     ...over,
   };
 }
@@ -80,6 +86,12 @@ function restoErpCat5SansRien(
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     chiffonsImpregnes: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     ...over,
   };
 }
@@ -141,6 +153,12 @@ describe("faux négatif — tenue du registre de sécurité", () => {
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
       chiffonsImpregnes: null,
+      manutentionManuelle: null,
+      travailSurEcran: null,
+      operationsElectriques: null,
+      conduiteEngins: null,
+      expositionCMR: null,
+      epiPresents: null,
     };
     expect(idsSansAucunEquipement(habitation)).not.toContain(
       "incendie-registre-securite",

@@ -96,6 +96,12 @@ export async function getFicheEquipement(id: string) {
           manipuleMatieresR422722: true,
           comporteLocauxSommeilPublic: true,
           chiffonsImpregnes: true,
+          manutentionManuelle: true,
+          travailSurEcran: true,
+          operationsElectriques: true,
+          conduiteEngins: true,
+          expositionCMR: true,
+          epiPresents: true,
         },
       },
       // Le lieu de l'appareil. Le parc renvoie ici en disant qu'un appareil

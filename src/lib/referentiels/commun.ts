@@ -437,7 +437,8 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
     intitule:
       "Des salariés travaillent-ils habituellement entre minuit et 5 heures ?",
     risqueIdAssocie: "trv-travail-nuit",
-    // PAS DE `declencheTitres`, et c'est délibéré (relecture du 2026-10-05).
+    // AUCUN FAIT D'ACTIVITÉ ni titre déclenché, et c'est délibéré (relecture du
+    // 2026-10-05 ; registre `etablissements/faits-activite.ts`, ADR-041).
     // La VIP adaptée est fondée sur R. 4624-17 et R. 4624-18, qui la rendent
     // due aussi au travailleur handicapé, au pensionné d'invalidité et au
     // moins de dix-huit ans : un « non » à cette question aurait fait dire à
@@ -510,23 +511,20 @@ export const questionsDetectionTransverses: QuestionDetection[] = [
     intitule:
       "Des travailleurs effectuent-ils des opérations sur les installations électriques ou dans leur voisinage (intervention, dépannage, raccordement, travaux près de pièces nues sous tension) ?",
     risqueIdAssocie: "trv-operations-electriques",
-    declencheTitres: [
-      "elec-salarie-habilitation",
-      "elec-salarie-attestation-medicale-voisinage",
-    ],
   },
   {
     // Les termes sont ceux de R. 4323-55. Les exemples nomment des
     // équipements que le texte vise par catégorie ; aucun ne vient d'une
-    // norme ou d'une recommandation CACES.
+    // norme ou d'une recommandation CACES. Le préventeur (annotation du
+    // 2026-10-05, « attention aux équipements, manuel, automatique, semi
+    // automatique, transport de charges ou de personnes ») : la question dit
+    // désormais charges OU personnes. Elle N'ÉCARTE PAS le transpalette manuel :
+    // il n'est pas automoteur, mais « servant au levage » pourrait le viser, et
+    // aucun texte lu ne tranche (relecture du 2026-10-08). Le fait vit sur l'établissement
+    // (`etablissements/faits-activite.ts`, ADR-041).
     id: "q-conduite-engins",
     intitule:
-      "Des travailleurs conduisent-ils des équipements de travail mobiles automoteurs ou servant au levage (chariot élévateur, transpalette électrique, nacelle, grue) ?",
+      "Des travailleurs conduisent-ils des équipements de travail mobiles automoteurs ou servant au levage de charges ou de personnes (chariot élévateur, transpalette à moteur, nacelle, grue, pont roulant) ?",
     risqueIdAssocie: "trv-conduite-engins",
-    declencheTitres: [
-      "conduite-salarie-formation",
-      "conduite-salarie-autorisation",
-      "conduite-salarie-attestation-medicale",
-    ],
   },
 ];

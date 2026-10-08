@@ -14,10 +14,8 @@ import {
   repondreSommeil,
   type ReponseParametrage,
 } from "@/lib/etablissements/parametrage";
-import {
-  relancesDuDossier,
-  type QuestionOuiNon,
-} from "@/lib/etablissements/relance";
+import { relancesDuDossier, type Relance } from "@/lib/etablissements/relance";
+import { estChampFaitActivite, type ChampFaitActivite } from "@/lib/etablissements/faits-activite";
 import { DashboardGrid } from "@/components/dashboard/widgets/DashboardGrid";
 import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
@@ -26,6 +24,7 @@ import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { appareilsMuets } from "@/lib/equipements/reponses-exigees";
 import { LIBELLE_CARACTERISTIQUE } from "@/lib/equipements/caracteristiques";
 import { repondreQuestionEquipement } from "@/lib/equipements/actions";
+import { repondreFaitActiviteFormulaire } from "@/lib/etablissements/faits-activite-actions";
 import {
   listerBatimentsAvecCharge,
   porteursDeLaPlaqueZones,
@@ -266,7 +265,7 @@ export default async function EtablissementPage({
       id: "epi",
       titre: "Dire si vous fournissez des équipements de protection",
       pourquoi:
-        "Harnais, casques, gants, chaussures de sécurité, protections auditives. Depuis le 4 septembre 2026, vous pouvez aussi les déclarer un par un dans vos équipements, avec leur marque et leur lieu. Rojer ne calcule encore aucune échéance à partir d'eux, et ne vous en annoncera aucune tant que les textes qui la fonderaient n'auront pas été dépouillés : ce que vous déclarez ici est conservé, pas interprété.",
+        "Harnais, casques, gants, chaussures de sécurité, protections auditives. Si oui, l'employeur élabore une consigne d'utilisation de ces équipements (art. R. 4323-105 du Code du travail) : elle s'affiche tant que la réponse n'est pas « non ». Vous pouvez aussi les déclarer un par un dans vos équipements, avec leur marque et leur lieu.",
       faite: questionRepondue(etab.epiPresents),
       question: (
         <QuestionParametrage
@@ -291,19 +290,45 @@ export default async function EtablissementPage({
   // cochée ; une question à nombre renvoie à la fiche et s'efface quand le
   // silence cesse.
   const questionsMuettes = marquesDuDossier.questions;
-  const ACTIONS_OUI_NON: Record<
-    QuestionOuiNon,
+  // Les relances des questions propres à la fiche ont chacune leur action
+  // serveur ; celles des faits d'activité (ADR-041) passent par l'écrivain
+  // unique, qui pose aussi le risque du DUERP. Toutes sont des RÉFÉRENCES
+  // d'actions serveur liées par `.bind` : une fermeture écrite ici ne se
+  // sérialise pas vers `QuestionParametrage`, composant client (relecture du
+  // 2026-10-08, B1 — la fiche plantait dès qu'une relance de fait s'affichait).
+  // Indexée par la COLONNE, et non par la question : le garde de type
+  // `estChampFaitActivite` réduit l'autre branche aux colonnes propres à la
+  // fiche, si bien qu'une question oubliée ici ne compile pas (contre-relecture
+  // du 2026-10-08 : un `as keyof` aurait planté au rendu).
+  const ACTIONS_DE_LA_FICHE: Record<
+    Exclude<Extract<Relance, { mode: "oui_non" }>["champ"], ChampFaitActivite>,
     (id: string, prev: ReponseParametrage, fd: FormData) => Promise<ReponseParametrage>
   > = {
-    matieres_r4227_22: repondreMatieres,
-    chiffons_impregnes: repondreChiffons,
-    locaux_sommeil_public: repondreSommeil,
+    manipuleMatieresR422722: repondreMatieres,
+    chiffonsImpregnes: repondreChiffons,
+    comporteLocauxSommeilPublic: repondreSommeil,
+    epiPresents: repondreEpiPresents,
+  };
+  const actionDeRelance = (relance: Extract<Relance, { mode: "oui_non" }>) => {
+    const champ = relance.champ;
+    return estChampFaitActivite(champ)
+      ? repondreFaitActiviteFormulaire.bind(null, id, champ)
+      : ACTIONS_DE_LA_FICHE[champ].bind(null, id);
   };
   for (const { question, relance, faite } of relancesDuDossier(questionsMuettes, {
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
     chiffonsImpregnes: etab.chiffonsImpregnes,
     comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
+    manutentionManuelle: etab.manutentionManuelle,
+    travailSurEcran: etab.travailSurEcran,
+    operationsElectriques: etab.operationsElectriques,
+    conduiteEngins: etab.conduiteEngins,
+    expositionCMR: etab.expositionCMR,
+    epiPresents: etab.epiPresents,
   })) {
+    // La présence d'EPI a déjà son étape, ci-dessus, avec le détail : la
+    // relance la doublerait.
+    if (question === "epi_presents") continue;
     etapesOnboarding.push(
       relance.mode === "oui_non"
         ? {
@@ -313,7 +338,7 @@ export default async function EtablissementPage({
             faite,
             question: (
               <QuestionParametrage
-                action={ACTIONS_OUI_NON[relance.question].bind(null, id)}
+                action={actionDeRelance(relance)}
                 labelOui="Oui"
                 labelNon="Non"
               />

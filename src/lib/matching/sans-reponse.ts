@@ -12,6 +12,18 @@ import type { QuestionSansReponse } from "./types";
 export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
   chiffons_impregnes:
     "La fiche de l'établissement ne dit pas si des chiffons, cotons ou papiers imprégnés y sont utilisés : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+  manutention_manuelle:
+    "Rojer ne sait pas si des travailleurs portent, poussent ou tirent des charges à la main : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+  travail_ecran:
+    "Rojer ne sait pas si des travailleurs utilisent un écran de façon habituelle : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+  operations_electriques:
+    "Rojer ne sait pas si des travailleurs effectuent des opérations sur les installations électriques ou dans leur voisinage : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+  conduite_engins:
+    "Rojer ne sait pas si des travailleurs conduisent des équipements de travail mobiles automoteurs ou servant au levage : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+  exposition_cmr:
+    "Rojer ne sait pas si des travailleurs sont exposés à des agents cancérogènes, mutagènes ou toxiques pour la reproduction : cette ligne s'affiche tant que la réponse n'est pas « non ».",
+  epi_presents:
+    "La fiche de l'établissement ne dit pas si vous fournissez des équipements de protection individuelle : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   locaux_sommeil_public:
     "La fiche de l'établissement ne dit pas s'il comporte des locaux à sommeil pour le public : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   // Inatteignable en production depuis la contrainte CHECK

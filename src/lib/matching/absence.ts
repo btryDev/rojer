@@ -166,6 +166,42 @@ export const POLITIQUE_ABSENCE = {
     sens: "retient_a_confirmer",
     question: "chiffons_impregnes",
   },
+  // Les faits d'activité (ADR-041) : la règle du non-renseigné, sans
+  // aménagement. Une formation qu'on lit en trop se voit ; une formation
+  // retirée sur un silence ne se voit pas. `conduiteEngins` et `expositionCMR`
+  // n'ont à ce jour AUCUNE obligation conditionnée : ils déclenchent des titres
+  // salarié, pas des lignes d'établissement. Leur entrée est exigée par le
+  // typage exhaustif et resterait juste le jour où une obligation les lirait.
+  manutentionManuelle: {
+    valeurs: [true, false],
+    sens: "retient_a_confirmer",
+    question: "manutention_manuelle",
+  },
+  travailSurEcran: {
+    valeurs: [true, false],
+    sens: "retient_a_confirmer",
+    question: "travail_ecran",
+  },
+  operationsElectriques: {
+    valeurs: [true, false],
+    sens: "retient_a_confirmer",
+    question: "operations_electriques",
+  },
+  conduiteEngins: {
+    valeurs: [true, false],
+    sens: "retient_a_confirmer",
+    question: "conduite_engins",
+  },
+  expositionCMR: {
+    valeurs: [true, false],
+    sens: "retient_a_confirmer",
+    question: "exposition_cmr",
+  },
+  epiPresents: {
+    valeurs: [true, false],
+    sens: "retient_a_confirmer",
+    question: "epi_presents",
+  },
 } as const satisfies {
   [K in AttributNullable]: PolitiqueAbsence<
     NonNullable<EtablissementMatching[K]>
