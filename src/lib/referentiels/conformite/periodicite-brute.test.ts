@@ -41,6 +41,8 @@ const LECTURES_AUTORISEES: Readonly<Record<string, string>> = {
     "le renvoi aux normes ne vaut que si le texte n'écrit aucun rythme",
   "scripts/export-relecture.ts#lignes":
     "la colonne « rythme du texte » de l'export ; le rythme retenu est à côté",
+  "src/lib/calendrier/generateur.ts#periodicitesEffectives":
+    "teste si le rythme du texte est CONNU (fixtures sans périodicité), puis passe par periodiciteEffective",
 };
 
 type Constat = { cle: string; ou: string; quoi: string };
@@ -62,8 +64,8 @@ function nomEnglobant(n: ts.Node): string {
   return "(module)";
 }
 
-let lectures: Constat[] = [];
-let passages: Constat[] = [];
+const lectures: Constat[] = [];
+const passages: Constat[] = [];
 
 beforeAll(() => {
   const chemin = ts.findConfigFile(RACINE, ts.sys.fileExists, "tsconfig.json");
@@ -114,22 +116,27 @@ beforeAll(() => {
       ) {
         lectures.push({ cle: `${fichier}#${nomEnglobant(n)}`, ou: ou(n), quoi: "{ periodicite }" });
       }
-      if (ts.isCallExpression(n)) {
-        const sig = checker.getResolvedSignature(n);
-        n.arguments.forEach((arg, i) => {
-          if (!vientDObligation(checker.getTypeAtLocation(arg).getProperty("periodicite"))) return;
-          const params = sig?.parameters ?? [];
-          const param = params[Math.min(i, params.length - 1)];
-          if (!param) return;
-          const prop = checker.getTypeOfSymbolAtLocation(param, n).getProperty("periodicite");
-          if (prop && !vientDObligation(prop)) {
-            passages.push({
-              cle: `${fichier}#${nomEnglobant(n)}`,
-              ou: ou(n),
-              quoi: `${n.expression.getText()}(…)`,
-            });
-          }
-        });
+      // Passage : une expression typée Obligation, posée là où le contexte
+      // attend un type qui déclare SA propre `periodicite` — argument, attribut
+      // ou spread JSX, propriété d'objet, retour, initialiseur annoté. Les deux
+      // côtés débarrassés d'`undefined` : `X | undefined` n'a pas de propriété
+      // (revue du 2026-10-08, `etatDuTitre`).
+      if (
+        (ts.isIdentifier(n) || ts.isPropertyAccessExpression(n) || ts.isCallExpression(n)) &&
+        !(ts.isPropertyAccessExpression(n.parent) && n.parent.expression === n) &&
+        vientDObligation(
+          checker.getNonNullableType(checker.getTypeAtLocation(n)).getProperty("periodicite"),
+        )
+      ) {
+        const attendu = checker.getContextualType(n as ts.Expression);
+        const prop = attendu && checker.getNonNullableType(attendu).getProperty("periodicite");
+        if (prop && !vientDObligation(prop)) {
+          passages.push({
+            cle: `${fichier}#${nomEnglobant(n)}`,
+            ou: ou(n),
+            quoi: n.getText().slice(0, 60),
+          });
+        }
       }
       ts.forEachChild(n, visiter);
     };
@@ -149,6 +156,10 @@ describe("garde des lectures brutes de `periodicite` (ADR-039)", () => {
     expect(
       passages.map((p) => `${p.ou}  ${p.quoi}  — typer le paramètre Pick<Obligation, …>`),
     ).toEqual([]);
+  });
+
+  it("aucune entrée anonyme : `#(module)` autoriserait toutes les lectures anonymes du fichier", () => {
+    expect(Object.keys(LECTURES_AUTORISEES).filter((k) => k.endsWith("#(module)"))).toEqual([]);
   });
 
   it("chaque entrée de la liste sert encore (une liste périmée cache une lecture)", () => {
