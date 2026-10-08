@@ -133,12 +133,18 @@ const QUESTIONS_TRI_ETAT: Record<
     aide: "Nacelle, plate-forme élévatrice, ou tout appareil utilisé même occasionnellement pour élever quelqu'un. Si oui, la vérification générale a lieu tous les six mois — tous les trois mois pour un appareil mû par la force humaine qui élève un poste de travail (arrêté du 1er mars 2004, art. 23). Un transpalette ou un monte-charge de marchandises : répondez « non ».",
   },
   estMuParForceHumaine: {
+    // 2026-10-08 (relecture du préventeur, réponse du 05/10 : « attention aux
+    // équipements, manuel, automatique, semi automatique ») : ses mots, avec la
+    // frontière du texte — « mus par la force humaine employée directement »
+    // (art. 20-III, 23) contre « mus par une énergie autre » (art. 23 a). Un
+    // appareil électrique commandé à la main est MOTORISÉ : c'est le cas que
+    // « manuel » seul laisserait mal classer.
     question:
-      "Cet appareil est-il mû par la force humaine employée directement ?",
+      "Cet appareil est-il manuel, c'est-à-dire mû par la seule force humaine employée directement ?",
     // 2026-09-28 (revue indépendante du lot 3) : l'aide ne disait que le
     // 23 b) ; le 23 a) met aussi à six mois l'appareil manuel qui ne lève pas
     // de personnes (art. 20-III).
-    aide: "Un treuil à manivelle, un palan à chaîne actionné à la main, une nacelle poussée et montée à la force du bras — par opposition à un appareil motorisé, électrique, hydraulique ou thermique. Si oui, la vérification générale a lieu tous les six mois — tous les trois mois s'il sert à élever un poste de travail — et non tous les douze.",
+    aide: "Manuel : un treuil à manivelle, un palan à chaîne tiré à la main, une nacelle poussée et montée à la force du bras. Motorisé (répondez « non ») : électrique, hydraulique ou thermique, même commandé à la main ou par télécommande — un appareil automatique ou semi-automatique est motorisé. Si oui, la vérification générale a lieu tous les six mois — tous les trois mois s'il sert à élever un poste de travail — et non tous les douze.",
   },
   estChariotOuGerbeur: {
     // 2026-09-28 (revue indépendante du lot 3) : la question ne nommait que
