@@ -127,12 +127,20 @@ model Etablissement {
   personnesPresentesHabituellement Int?
   manipuleMatieresR422722          Boolean?
 
-  // R. 4227-26 CT (C45, 2026-09-27) : « Les chiffons, cotons et papiers
+  // INERTE DEPUIS LE 2026-10-08 — décision de la propriétaire : la question
+  // des chiffons imprégnés est retirée de toutes les surfaces (parcours, fiche,
+  // relance), et plus aucun code ne lit ni n'écrit cette colonne. Elle ne
+  // servait qu'à `incendie-travail-chiffons-impregnes-recipients-clos`, passée
+  // au niveau audit (ADR-042) et devenue sans condition — l'article ne pose
+  // aucun seuil. Gardée sans migration : les réponses déjà données restent en
+  // base, et la retirer serait une migration destructive pour rien. Ne pas la
+  // relire sans rouvrir la décision.
+  // ~~R. 4227-26 CT (C45, 2026-09-27) : « Les chiffons, cotons et papiers
   // imprégnés de liquides inflammables ou de matières grasses sont, après
   // usage, enfermés dans des récipients métalliques clos et étanches. »
   // Question posée une fois, à trois états. `null` = « je ne sais pas » ou pas
   // encore répondu : l'état permanent s'affiche (règle du non-renseigné) ;
-  // `false` le retire. Cf. migration 20260927140000.
+  // `false` le retire.~~ Cf. migration 20260927140000.
   chiffonsImpregnes                Boolean?
 
   // Renseignements portés par la fiche « Renseignements généraux » du registre

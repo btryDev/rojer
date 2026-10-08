@@ -16,10 +16,7 @@
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
 
-export type QuestionOuiNon =
-  | "matieres_r4227_22"
-  | "chiffons_impregnes"
-  | "locaux_sommeil_public";
+export type QuestionOuiNon = "matieres_r4227_22" | "locaux_sommeil_public";
 
 export type Relance = {
   titre: string;
@@ -29,10 +26,7 @@ export type Relance = {
       mode: "oui_non";
       question: QuestionOuiNon;
       /** La colonne dont la réponse coche l'étape. */
-      champ:
-        | "manipuleMatieresR422722"
-        | "chiffonsImpregnes"
-        | "comporteLocauxSommeilPublic";
+      champ: "manipuleMatieresR422722" | "comporteLocauxSommeilPublic";
     }
   | { mode: "fiche" }
 );
@@ -48,13 +42,9 @@ export const RELANCES: Record<QuestionSansReponse, Relance> = {
     titre: "Dire si vous manipulez des matières explosives ou inflammables",
     pourquoi: `Matières classées explosives, comburantes ou extrêmement inflammables, manipulées et mises en œuvre chez vous. Si oui, l'alarme sonore, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34 du Code du travail). ${RAPPEL}`,
   },
-  chiffons_impregnes: {
-    mode: "oui_non",
-    question: "chiffons_impregnes",
-    champ: "chiffonsImpregnes",
-    titre: "Dire si vous utilisez des chiffons imprégnés",
-    pourquoi: `Chiffons, cotons ou papiers imprégnés d'huile, de graisse ou de liquides inflammables — un torchon de cuisine imbibé d'huile en est un. Si oui, ils se rangent après usage dans des récipients métalliques clos et étanches (art. R. 4227-26 du Code du travail). ${RAPPEL}`,
-  },
+  // ~~`chiffons_impregnes`~~ — retirée le 2026-10-08 avec la question
+  // (décision de la propriétaire) : la ligne des chiffons est au niveau audit
+  // (ADR-042) et ne dépend plus d'aucune réponse.
   locaux_sommeil_public: {
     mode: "oui_non",
     question: "locaux_sommeil_public",
@@ -86,7 +76,7 @@ export const RELANCES: Record<QuestionSansReponse, Relance> = {
 export function relancesDuDossier(
   questionsMuettes: readonly QuestionSansReponse[],
   reponses: Record<
-    "manipuleMatieresR422722" | "chiffonsImpregnes" | "comporteLocauxSommeilPublic",
+    "manipuleMatieresR422722" | "comporteLocauxSommeilPublic",
     boolean | null
   >,
 ): { question: QuestionSansReponse; relance: Relance; faite: boolean }[] {

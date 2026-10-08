@@ -223,13 +223,9 @@ export const etablissementSchema = z
       (v) => (v === "oui" ? true : v === "non" ? false : v === true || v === false ? v : null),
       z.boolean().nullable(),
     ),
-    // R. 4227-26 CT (C45) : chiffons, cotons, papiers imprégnés. Trois états,
-    // même règle : vide (« je ne sais pas ») = `null`, jamais « non ». Le moteur
-    // retient l'état permanent sur `null` et ne le retire que sur `false`.
-    chiffonsImpregnes: z.preprocess(
-      (v) => (v === "oui" ? true : v === "non" ? false : v === true || v === false ? v : null),
-      z.boolean().nullable(),
-    ),
+    // ~~`chiffonsImpregnes`~~ (R. 4227-26, C45) — retiré le 2026-10-08
+    // (décision de la propriétaire) : la question n'est plus posée ; la ligne
+    // des chiffons est au niveau audit (ADR-042), sans condition.
     estEtablissementTravail: z.coerce.boolean().default(true),
     estERP: z.coerce.boolean().default(false),
     estIGH: z.coerce.boolean().default(false),

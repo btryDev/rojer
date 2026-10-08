@@ -5443,13 +5443,42 @@ ce lot sert **`2026-10-08.4`**.]
   titre marqué → 1. **La garde (c) passait au vert sur un fondement vidé**
   (le gilet retiré des renvois de l'art. 1er : `R. 4323-100`, article de
   contexte, le nommait encore) ; resserrée sur le FONDEMENT, elle rougit.
-- **En suspens** : le chiffre public de la page d'accueil passe de 172 à 174
+- **En suspens** : ~~le chiffre public de la page d'accueil passe de 172 à 174
   (compte du référentiel, lié à la page par `chiffres-publics.test.ts`, qui
   interdit de le laisser faux) ; il inclut les trois obligations audit — les
   distinguer à l'écran public est une décision de la propriétaire. La
-  question `chiffonsImpregnes` reste posée et ne décide plus d'aucune ligne.
+  question `chiffonsImpregnes` reste posée et ne décide plus d'aucune ligne.~~
+  [2026-10-08 : les deux tranchés, voir ci-dessous.]
   Relevé du moteur repris : `df2b06b8dd0dd531` (imports directs de
   `estNiveauAudit`).
+- **Deux décisions de la propriétaire, le même jour, après le lot** :
+  1. *Compteurs* — « dans nos documents vitrine on reste sur 171, mais dans
+     l'app il faudra soustraire les obligations dites d'audit ». Le compte
+     du référentiel reste **174, dont 3 au niveau audit** ; **171 suivies au
+     quotidien, chiffre affiché au public et dans l'app**.
+     `nombreObligationsSuivies()` (total − `estNiveauAudit`, à côté du
+     réexport dans `referentiels/conformite/index.ts`) et
+     `chiffresReferentielSuivi()` ; la page d'accueil calcule côté serveur et
+     passe en props à `Cadran` (client : n'importe pas le référentiel) et à
+     `Etapes`. `chiffres-publics.test.ts` rend les deux composants et compare
+     au compte recalculé à la main. Grille et dossier de relecture : « 174
+     obligations, dont 3 au niveau audit (171 suivies…) ». Aucune autre
+     surface de l'app n'affiche un compte calculé sur le référentiel brut
+     (balayage : composants, guide, MCP, PDF, onboarding) — les comptes par
+     dossier passent déjà par la porte du moteur.
+  2. *Question des chiffons supprimée* — parcours, fiche
+     (`EtablissementForm`), relance de la checklist, action
+     `repondreChiffons`, schémas Zod de création et de modification, champs
+     structurants. Le critère du moteur sort avec elle
+     (`evaluerChiffonsImpregnes`, `TypologieApplication.chiffonsImpregnes`,
+     `EtablissementMatching.chiffonsImpregnes`, `POLITIQUE_ABSENCE`,
+     marque `chiffons_impregnes`). La ligne passe à `typologies: { travail:
+     true }` : la rubrique « Niveau audit » la nomme à tout lieu de travail.
+     Colonne Prisma gardée, inerte, commentée (pas de migration). Empreinte
+     de `2026-10-08.4`, non servie, réécrite : ~~`174-5f46dea89bed4c54`~~ →
+     `174-e2d28b70856335ac`, en appelant. Relevé du moteur ~~`df2b06b8dd0dd531`~~
+     → `9ea22cc6ca8d74f9`, recopié sans incrément (porte audit en amont,
+     état permanent). Les réponses déjà en base restent sans lecteur.
 
 ## Partie 2 — Registre des constats en suspens
 

@@ -55,7 +55,6 @@ function etabLarge(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: true,
   };
 }
 
@@ -171,12 +170,18 @@ describe("niveau audit — (b) nommée dans la rubrique « Niveau audit »", () 
     for (const o of AUDIT) expect(rubrique, o.id).toContain(o.id);
   });
 
-  it("la rubrique suit le dossier : un « non » aux chiffons et aucun appareil n'y laissent rien", () => {
-    const rubrique = obligationsNiveauAuditDuDossier(
-      { ...etabLarge(), chiffonsImpregnes: false },
-      [],
-    );
-    expect(rubrique.filter((l) => obligationParId(l.id)?.porteur !== "salarie")).toEqual([]);
+  // ~~« un « non » aux chiffons et aucun appareil n'y laissent rien »~~ —
+  // 2026-10-08 : la question des chiffons est retirée (décision de la
+  // propriétaire) ; la ligne, sans seuil, est nommée à tout lieu de travail.
+  it("la rubrique suit le dossier : sans appareil, les seuls chiffons ; hors lieu de travail, rien", () => {
+    const horsSalarie = (etab: EtablissementMatching) =>
+      obligationsNiveauAuditDuDossier(etab, [])
+        .map((l) => l.id)
+        .filter((id) => obligationParId(id)?.porteur !== "salarie");
+    expect(horsSalarie(etabLarge())).toEqual([
+      "incendie-travail-chiffons-impregnes-recipients-clos",
+    ]);
+    expect(horsSalarie({ ...etabLarge(), estEtablissementTravail: false })).toEqual([]);
   });
 
   it("sa seule surface est la rubrique, jamais une surface du quotidien", () => {

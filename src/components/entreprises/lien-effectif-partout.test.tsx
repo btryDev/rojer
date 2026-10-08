@@ -86,7 +86,6 @@ function etab(site: number, entreprise: number) {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
   };
 }
 
@@ -135,7 +134,6 @@ describe("la consigne « fiche de l'entreprise » porte son lien", () => {
         classeIgh: null,
         familleHabitation: null,
         comporteLocauxSommeilPublic: null,
-        chiffonsImpregnes: null,
       },
       duerp: null,
       equipements: { nbSansObligation: 0, nbEquipements: 1, nbRetires: 0 },

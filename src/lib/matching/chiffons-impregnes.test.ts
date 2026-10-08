@@ -3,8 +3,10 @@ import { matchTypologie, type EtablissementMatching } from "./index";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 
 /**
- * R. 4227-26 dans le moteur (C45, 2026-09-27) — la règle du non-renseigné,
- * sans aménagement : seul un « non » DÉCLARÉ retire la ligne. Chaque sens est
+ * R. 4227-26 dans le moteur (C45, 2026-09-27) — ~~la règle du non-renseigné,
+ * sans aménagement : seul un « non » DÉCLARÉ retire la ligne.~~ [2026-10-08 :
+ * plus de question, plus de critère ; la ligne vaut pour tout lieu de travail
+ * et la porte du niveau audit la tient hors du quotidien.] Chaque sens est
  * éprouvé : le cas qui passe ET le cas rejeté — un test qui n'affirme que le
  * premier se répare en supprimant la condition.
  */
@@ -27,7 +29,6 @@ function bureau(over: Partial<EtablissementMatching> = {}): EtablissementMatchin
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     ...over,
   };
 }
@@ -39,34 +40,29 @@ const typologie = () => {
 };
 
 describe("R. 4227-26 — chiffons, cotons et papiers imprégnés", () => {
-  it("« oui » retient l'état permanent, et le dit", () => {
-    const r = matchTypologie(typologie(), bureau({ chiffonsImpregnes: true }));
-    expect(r.ok).toBe(true);
-    expect(r.ok && r.raisons.join(" ")).toContain("imprégnés déclarés");
+  // ~~« oui » retient, « non » retire, « je ne sais pas » retient « à
+  // confirmer »~~ — 2026-10-08, décision de la propriétaire : la question est
+  // retirée de toutes les surfaces et le critère du moteur avec elle. La ligne
+  // (niveau audit, ADR-042) vaut pour tout lieu de travail : l'article ne pose
+  // aucun seuil. Le typage ne relit plus de réponse : `chiffonsImpregnes` n'est
+  // plus un champ de `EtablissementMatching`, ni un critère de typologie.
+  it("la typologie ne pose que le lieu de travail — aucune question", () => {
+    expect(typologie()).toEqual({ travail: true });
   });
 
-  it("« non » le retire", () => {
-    expect(matchTypologie(typologie(), bureau({ chiffonsImpregnes: false })).ok).toBe(false);
-  });
-
-  it("« je ne sais pas » le retient « à confirmer » — l'incertitude ne réduit rien", () => {
-    const r = matchTypologie(typologie(), bureau({ chiffonsImpregnes: null }));
-    expect(r.ok).toBe(true);
-    expect(r.ok && r.raisons.join(" ")).toContain("à confirmer");
-  });
-
-  it("ni NAF, ni effectif, ni ERP : un bureau d'une personne le lit aussi", () => {
+  it("ni NAF, ni effectif, ni ERP, ni réponse : un bureau d'une personne la lit", () => {
     const r = matchTypologie(
       typologie(),
-      bureau({ effectifSurSite: 1, effectifEntreprise: 1, chiffonsImpregnes: true }),
+      bureau({ effectifSurSite: 1, effectifEntreprise: 1 }),
     );
     expect(r.ok).toBe(true);
+    expect(r.ok && r.sansReponse).toBeUndefined();
   });
 
   it("sans travailleur, rien : l'article est au Code du travail", () => {
     const r = matchTypologie(
       typologie(),
-      bureau({ estEtablissementTravail: false, estERP: true, typeErp: "M", categorieErp: "N5", chiffonsImpregnes: true }),
+      bureau({ estEtablissementTravail: false, estERP: true, typeErp: "M", categorieErp: "N5" }),
     );
     expect(r.ok).toBe(false);
   });
@@ -81,13 +77,8 @@ describe("R. 4227-26 — chiffons, cotons et papiers imprégnés", () => {
 });
 
 describe("C45, M1 — le silence d'une question à trois états se porte à côté de la ligne", () => {
-  it("chiffons : silence ⇒ `sansReponse`, oui ⇒ rien", () => {
-    const silence = matchTypologie(typologie(), bureau({ chiffonsImpregnes: null }));
-    expect(silence.ok && silence.sansReponse).toEqual(["chiffons_impregnes"]);
-    const oui = matchTypologie(typologie(), bureau({ chiffonsImpregnes: true }));
-    expect(oui.ok && oui.sansReponse).toBeUndefined();
-  });
-
+  // ~~« chiffons : silence ⇒ `sansReponse`, oui ⇒ rien »~~ — question retirée
+  // le 2026-10-08 ; la marque `chiffons_impregnes` n'existe plus.
   // ~~« sans type, la raison seule »~~ — 2026-09-27 : sans type, la marque
   // renvoie à la question que la fiche pose bel et bien, le type d'ERP.
   it("locaux à sommeil : silence d'un type qui pose la question ⇒ `sansReponse` ; sans type, `type_erp`", () => {

@@ -26,7 +26,6 @@ const ETAB: EtablissementMatching = {
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: null,
   comporteLocauxSommeilPublic: null,
-  chiffonsImpregnes: null,
 };
 
 function avec(caracteristiques: Record<string, unknown> | null): boolean {

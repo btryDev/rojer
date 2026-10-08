@@ -32,7 +32,6 @@ const ETAB: EtablissementMatching = {
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: null,
   comporteLocauxSommeilPublic: null,
-  chiffonsImpregnes: null,
 };
 
 const stockage = (id: string): EquipementMatching => ({

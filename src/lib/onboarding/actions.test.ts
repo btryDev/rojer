@@ -208,7 +208,7 @@ describe("finaliserOnboarding — un régime sans réponse ne vaut pas « non »
   );
 });
 
-describe("finaliserOnboarding — matières et chiffons au parcours (2026-09-27)", () => {
+describe("finaliserOnboarding — matières au parcours (2026-09-27) ; ~~et chiffons~~ (retirés le 2026-10-08)", () => {
   // Leur silence fait afficher des lignes « à confirmer » : la question est
   // posée là où l'on répond. « Je ne sais pas encore » n'écrit rien — la
   // colonne reste `null`, jamais un `false` que personne n'a déclaré.
@@ -216,7 +216,9 @@ describe("finaliserOnboarding — matières et chiffons au parcours (2026-09-27)
   const ecrit = () =>
     h.tx.etablissement.create.mock.calls.at(-1)?.[0].data as Record<string, unknown>;
 
-  it("« oui » et « non » atteignent la base", async () => {
+  it("« oui » atteint la base ; un champ chiffons posté n'y atteint plus", async () => {
+    // 2026-10-08 : la question des chiffons est retirée (décision de la
+    // propriétaire) ; la colonne reste en base, inerte — rien ne l'écrit.
     await expect(
       finaliserOnboarding(
         { status: "idle" },
@@ -224,7 +226,7 @@ describe("finaliserOnboarding — matières et chiffons au parcours (2026-09-27)
       ),
     ).rejects.toThrow("NEXT_REDIRECT");
     expect(ecrit().manipuleMatieresR422722).toBe(true);
-    expect(ecrit().chiffonsImpregnes).toBe(false);
+    expect(ecrit()).not.toHaveProperty("chiffonsImpregnes");
   });
 
   it("« je ne sais pas encore » n'écrit rien", async () => {

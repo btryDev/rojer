@@ -101,7 +101,6 @@ export async function faitsDeCouverture(
     personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
     comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-    chiffonsImpregnes: etab.chiffonsImpregnes,
   });
 
   const sansEcheance = reperterSansEcheance(etabMatching, equipementsMatching);

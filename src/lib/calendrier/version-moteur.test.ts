@@ -124,6 +124,17 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-08 (décisions de la propriétaire du
+  // même jour, après ADR-042) : (1) `referentiels/conformite/index.ts` gagne
+  // `nombreObligationsSuivies` et ses sœurs — des comptes d'affichage, que ni
+  // le générateur ni le réconciliateur ne lisent ; (2) le moteur perd le
+  // critère `chiffonsImpregnes` (`evaluerChiffonsImpregnes`), la projection et
+  // `POLITIQUE_ABSENCE` le champ, `QuestionSansReponse` la marque. NON, la
+  // régénération n'écrit pas autrement : la seule obligation qui portait le
+  // critère est au niveau audit, que la porte de `evaluerObligation` écarte
+  // avant toute typologie, et c'est un état permanent que le générateur saute.
+  // Sa typologie neuve (`{ travail: true }`) est une DONNÉE, hachée par
+  // l'empreinte du référentiel (`2026-10-08.4`, ligne réécrite, non servie).
   // Recopiée SANS incrément le 2026-10-08 (ADR-042, niveau audit) :
   // `evaluerObligation` écarte une obligation qui porte `niveau: "audit"`, le
   // générateur de titres aussi, et la passe ne la garde pas applicable par un
@@ -310,7 +321,7 @@ const RELEVE = {
   // change les lignes — le rythme triennal du titre d'habilitation — est une
   // DONNÉE du référentiel, qui déplace son empreinte, donc le sceau.
   // ~~4b75258a15263110~~.
-  empreinte: "df2b06b8dd0dd531",
+  empreinte: "9ea22cc6ca8d74f9",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

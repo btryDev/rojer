@@ -56,7 +56,6 @@ export async function marquesAConfirmerDuDossier(
       personnesPresentesHabituellement: true,
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
-      chiffonsImpregnes: true,
       entreprise: { select: { effectif: true } },
       equipements: {
         where: { actif: true },

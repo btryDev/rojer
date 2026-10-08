@@ -114,10 +114,7 @@ export async function repondreEpiPresents(
  */
 async function repondreQuestionDeLaFiche(
   etablissementId: string,
-  champ:
-    | "manipuleMatieresR422722"
-    | "chiffonsImpregnes"
-    | "comporteLocauxSommeilPublic",
+  champ: "manipuleMatieresR422722" | "comporteLocauxSommeilPublic",
   formData: FormData,
   /** Refuse une réponse que la fiche n'aurait pas gardée ; rend le message. */
   garde?: (oui: boolean) => Promise<string | null>,
@@ -152,14 +149,6 @@ export async function repondreMatieres(
   formData: FormData,
 ): Promise<ReponseParametrage> {
   return repondreQuestionDeLaFiche(etablissementId, "manipuleMatieresR422722", formData);
-}
-
-export async function repondreChiffons(
-  etablissementId: string,
-  _prev: ReponseParametrage,
-  formData: FormData,
-): Promise<ReponseParametrage> {
-  return repondreQuestionDeLaFiche(etablissementId, "chiffonsImpregnes", formData);
 }
 
 export async function repondreSommeil(

@@ -775,7 +775,6 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     entreprise: { effectif: 3 },
     equipements: [],
   };

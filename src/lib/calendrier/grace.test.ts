@@ -176,7 +176,6 @@ describe("genererCalendrier — qui naît avec une grâce", () => {
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
-      chiffonsImpregnes: null,
       referentielVersionCalendrier: repere,
       prescriptionsParticulieres: [],
       equipements: equipements.map((e) => ({

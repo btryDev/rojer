@@ -7,7 +7,6 @@ import {
 import { QuestionParametrage } from "@/components/layout/QuestionParametrage";
 import { questionRepondue } from "@/lib/etablissements/questions";
 import {
-  repondreChiffons,
   repondreDemandesAssureur,
   repondreEpiPresents,
   repondreMatieres,
@@ -296,12 +295,10 @@ export default async function EtablissementPage({
     (id: string, prev: ReponseParametrage, fd: FormData) => Promise<ReponseParametrage>
   > = {
     matieres_r4227_22: repondreMatieres,
-    chiffons_impregnes: repondreChiffons,
     locaux_sommeil_public: repondreSommeil,
   };
   for (const { question, relance, faite } of relancesDuDossier(questionsMuettes, {
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
-    chiffonsImpregnes: etab.chiffonsImpregnes,
     comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
   })) {
     etapesOnboarding.push(

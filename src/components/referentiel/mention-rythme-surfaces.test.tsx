@@ -214,7 +214,6 @@ describe("guide « Comprendre » — chez vous", () => {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
   };
   const extincteur = {
     id: "eq-ext",

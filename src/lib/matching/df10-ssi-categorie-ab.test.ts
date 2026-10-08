@@ -37,7 +37,6 @@ function erp(categorieErp: EtablissementMatching["categorieErp"]): Etablissement
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
   };
 }
 

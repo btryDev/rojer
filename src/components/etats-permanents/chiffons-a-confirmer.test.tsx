@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// C45, contre-lecture M1 : le silence de la question des chiffons retient la
+// ~~C45, contre-lecture M1 : le silence de la question des chiffons retient la~~ [question retirée le 2026-10-08]
 // ligne de `R. 4227-26` « à confirmer » — et « Ce qui doit être en place »
 // doit le DIRE, pas seulement la raison du moteur, que personne ne lit.
 // Chaîne entière : le moteur, la lecture de l'écran (`listerEtatsPermanents`),
@@ -29,12 +29,12 @@ afterEach(cleanup);
 
 const OBLIGATION = "incendie-travail-chiffons-impregnes-recipients-clos";
 
-function etab(chiffonsImpregnes: boolean | null) {
+function etab(estEtablissementTravail = true) {
   return {
     id: "etab-1",
     effectifSurSite: 4,
     effectifEntreprise: 4,
-    estEtablissementTravail: true,
+    estEtablissementTravail,
     estERP: false,
     estIGH: false,
     estHabitation: false,
@@ -45,12 +45,11 @@ function etab(chiffonsImpregnes: boolean | null) {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes,
   };
 }
 
-async function ligne(chiffons: boolean | null) {
-  const d = await listerEtatsPermanents(etab(chiffons), []);
+async function ligne() {
+  const d = await listerEtatsPermanents(etab(), []);
   return [...d.groupes.flatMap((g) => g.lignes), ...d.faits].find(
     (l) => l.obligation.id === OBLIGATION,
   );
@@ -64,18 +63,19 @@ async function ligne(chiffons: boolean | null) {
 // (`perimetre/niveau-audit.ts`), gardée ici dans les trois cas. Le rendu
 // « à confirmer » d'une question muette est gardé ci-dessous par la question
 // des matières de R. 4227-22, dont le silence retient encore des lignes.]
-describe("« Ce qui doit être en place » — les chiffons, oui / silence / non (niveau audit)", () => {
-  it.each([null, true, false])(
-    "réponse %s : pas de ligne sur l'écran",
-    async (reponse) => {
-      expect(await ligne(reponse)).toBeUndefined();
-    },
-  );
+// [2026-10-08, décision de la propriétaire : la QUESTION des chiffons est
+// retirée de toutes les surfaces, et la ligne perd sa condition. ~~Les trois
+// réponses oui / silence / non~~ n'existent plus : l'obligation, sans seuil
+// (R. 4227-26), est nommée à tout lieu de travail dans la rubrique « Niveau
+// audit », sans dépendre d'aucune réponse.]
+describe("« Ce qui doit être en place » — les chiffons (niveau audit, sans question)", () => {
+  it("pas de ligne sur l'écran", async () => {
+    expect(await ligne()).toBeUndefined();
+  });
 
-  it("silence et oui : nommés dans la rubrique « Niveau audit » ; non : absents", () => {
-    const ids = (r: boolean | null) =>
-      obligationsNiveauAuditDuDossier(etab(r), []).map((l) => l.id);
-    expect(ids(null)).toContain(OBLIGATION);
+  it("nommés dans la rubrique « Niveau audit » à tout lieu de travail ; pas hors travail", () => {
+    const ids = (travail: boolean) =>
+      obligationsNiveauAuditDuDossier(etab(travail), []).map((l) => l.id);
     expect(ids(true)).toContain(OBLIGATION);
     expect(ids(false)).not.toContain(OBLIGATION);
   });
@@ -83,7 +83,7 @@ describe("« Ce qui doit être en place » — les chiffons, oui / silence / non
 
 describe("« Ce qui doit être en place » — le rendu « à confirmer », par la question des matières", () => {
   it("silence : une ligne retenue dit « À confirmer », sa phrase et le lien vers la fiche", async () => {
-    const d = await listerEtatsPermanents(etab(null), []);
+    const d = await listerEtatsPermanents(etab(), []);
     const l = [...d.groupes.flatMap((g) => g.lignes), ...d.faits].find((x) =>
       x.questionsSansReponse.includes(PHRASE_SANS_REPONSE.matieres_r4227_22),
     );

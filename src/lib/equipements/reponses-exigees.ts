@@ -55,7 +55,6 @@ const TRAVAIL: EtablissementMatching = {
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: false,
   comporteLocauxSommeilPublic: null,
-  chiffonsImpregnes: null,
 };
 
 type Reponses = Partial<Record<ChampTriEtat, boolean>>;

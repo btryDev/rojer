@@ -161,11 +161,6 @@ export const POLITIQUE_ABSENCE = {
         "un allègement conditionné à l'absence de locaux à sommeil ne se donne pas sur le silence (ADR-022 § 7)",
     },
   },
-  chiffonsImpregnes: {
-    valeurs: [true, false],
-    sens: "retient_a_confirmer",
-    question: "chiffons_impregnes",
-  },
 } as const satisfies {
   [K in AttributNullable]: PolitiqueAbsence<
     NonNullable<EtablissementMatching[K]>

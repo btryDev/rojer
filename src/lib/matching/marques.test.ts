@@ -37,7 +37,6 @@ function etab(over: Partial<EtablissementMatching> = {}): EtablissementMatching 
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     ...over,
   };
 }
@@ -92,7 +91,7 @@ describe("registre de sécurité : la fiche due par le seul silence le dit", () 
 
   it("muet ⇒ au moins une fiche marquée ; « non » ⇒ aucune", () => {
     expect(duesAvecMarque(etab())).not.toHaveLength(0);
-    expect(duesAvecMarque(etab({ manipuleMatieresR422722: false, chiffonsImpregnes: false }))).toHaveLength(0);
+    expect(duesAvecMarque(etab({ manipuleMatieresR422722: false }))).toHaveLength(0);
   });
 });
 
@@ -134,18 +133,20 @@ describe("la relance ne pose que les questions dont le silence retient une ligne
   // ~~« bureau muet : matières et chiffons »~~ — 2026-10-08 (ADR-042) : les
   // chiffons imprégnés sont au niveau audit, le moteur ne les rend plus ; leur
   // silence ne retient plus aucune ligne, la relance ne pose donc plus la
-  // question (elle reste à la fiche, pour la rubrique « Niveau audit »).
-  it("bureau muet : matières seules (chiffons au niveau audit) ; répondus : aucune", () => {
+  // question ~~(elle reste à la fiche, pour la rubrique « Niveau audit »)~~
+  // [2026-10-08 : retirée de toutes les surfaces, et la marque
+  // `chiffons_impregnes` avec elle — rien à garder ici].
+  // ~~bureau muet : matières seules (chiffons au niveau audit)~~
+  it("bureau muet : matières seules ; répondues : aucune", () => {
     const muet = questionsQuiRetiennent(determineObligationsApplicables(etab(), []));
     expect(muet).toContain("matieres_r4227_22");
-    expect(muet).not.toContain("chiffons_impregnes");
+    expect(muet).toEqual(["matieres_r4227_22"]);
     const repondu = questionsQuiRetiennent(
       determineObligationsApplicables(
-        etab({ manipuleMatieresR422722: false, chiffonsImpregnes: true }),
+        etab({ manipuleMatieresR422722: false }),
         [],
       ),
     );
     expect(repondu).not.toContain("matieres_r4227_22");
-    expect(repondu).not.toContain("chiffons_impregnes");
   });
 });

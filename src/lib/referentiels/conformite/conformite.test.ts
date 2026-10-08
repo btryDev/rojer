@@ -469,7 +469,6 @@ describe("référentiel conformité — anti-doublon", () => {
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic,
-      chiffonsImpregnes: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     });
@@ -1232,7 +1231,6 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic: null,
-      chiffonsImpregnes: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };
@@ -1757,7 +1755,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // se scinde — l'antichute garde son id, le respiratoire et le gilet en
     // prennent un neuf chacun (`succedeA`), au niveau audit.
     // 172 + 2 − 0 = 174, dont 3 au niveau audit.
-    { version: "2026-10-08.4", empreinte: "174-5f46dea89bed4c54" },
+    // ~~174-5f46dea89bed4c54~~ : empreinte avant la seconde décision du même
+    // jour, jamais servie — ligne réécrite le 2026-10-08 (version non servie) :
+    // la question des chiffons est retirée et la ligne perd sa condition
+    // (`typologies: { travail: true }`, critère `chiffonsImpregnes` retiré).
+    // 174 + 0 − 0 = 174, dont 3 au niveau audit ; 171 suivies au quotidien.
+    { version: "2026-10-08.4", empreinte: "174-e2d28b70856335ac" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2431,7 +2434,6 @@ describe("IGH — aucune obligation ne naît plus du seul régime IGH", () => {
     classeIgh: null,
     familleHabitation: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
   };
@@ -2563,7 +2565,6 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic,
-      chiffonsImpregnes: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };

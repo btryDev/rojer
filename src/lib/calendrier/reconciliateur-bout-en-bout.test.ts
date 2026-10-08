@@ -85,7 +85,6 @@ function poserEtablissement(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     referentielVersionCalendrier: sceau,
     prescriptionsParticulieres: [],
     equipements: equipements.map((e) => ({

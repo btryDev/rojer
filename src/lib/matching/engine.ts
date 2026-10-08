@@ -307,42 +307,6 @@ type EvalLocauxSommeil =
       sansReponse?: QuestionSansReponse;
     };
 
-/**
- * R. 4227-26 CT — des chiffons, cotons ou papiers imprégnés sont-ils utilisés ?
- * (C45, 2026-09-27)
- *
- * La règle du non-renseigné, sans aménagement : seul un « non » DÉCLARÉ
- * retire l'obligation. « Je ne sais pas » et le silence d'un dossier antérieur
- * à la question la retiennent, et la raison dit « à confirmer ». Un dirigeant
- * qui lit une ligne qu'il ne doit pas a une chance de s'en apercevoir ;
- * l'inverse n'en a aucune.
- *
- * Aucune condition de type d'ERP, de NAF ni d'effectif : l'article n'en pose
- * pas. C'est la question, et elle seule, qui borne.
- *
- * `null` (critère absent de l'obligation) ⇒ cette fonction ne se prononce pas.
- */
-function evaluerChiffonsImpregnes(
-  critere: TypologieApplication["chiffonsImpregnes"],
-  etab: EtablissementMatching,
-): EvalLocauxSommeil | null {
-  if (critere === undefined) return null;
-  const declare = etab.chiffonsImpregnes;
-  if (declare === false) return { ok: false };
-  if (declare === true) {
-    return {
-      ok: true,
-      raison: "chiffons, cotons ou papiers imprégnés déclarés",
-    };
-  }
-  return {
-    ok: true,
-    raison:
-      "usage de chiffons, cotons ou papiers imprégnés non renseigné — obligation retenue par prudence, à confirmer",
-    sansReponse: POLITIQUE_ABSENCE.chiffonsImpregnes.question,
-  };
-}
-
 function evaluerLocauxSommeil(
   critere: TypologieApplication["locauxSommeilPublic"],
   etab: EtablissementMatching,
@@ -689,7 +653,8 @@ export function matchTypologie(
   // semestriels que le même bureau reçoit en répondant « oui ».
   //
   // Le silence suit donc la règle du non-renseigné, comme les chiffons
-  // (R. 4227-26) : seul un « non » DÉCLARÉ ferme la branche. Quand rien d'autre
+  // (R. 4227-26) ~~le faisaient~~ [2026-10-08 : critère retiré, la ligne est
+  // au niveau audit et sans condition] : seul un « non » DÉCLARÉ ferme la branche. Quand rien d'autre
   // n'ouvre le champ, la ligne est retenue « à confirmer » et le dit.
   //
   // Le critère est évalué dès que **l'une** des deux branches est déclarée :
@@ -786,13 +751,10 @@ export function matchTypologie(
     if (sommeil.sansReponse) sansReponse.push(sommeil.sansReponse);
   }
 
-  // 3 quater. Chiffons imprégnés, R. 4227-26 (ET).
-  const chiffons = evaluerChiffonsImpregnes(t.chiffonsImpregnes, etab);
-  if (chiffons !== null) {
-    if (!chiffons.ok) return { ok: false };
-    raisons.push(chiffons.raison);
-    if (chiffons.sansReponse) sansReponse.push(chiffons.sansReponse);
-  }
+  // ~~3 quater. Chiffons imprégnés, R. 4227-26 (ET).~~ Critère retiré le
+  // 2026-10-08 avec la question de la fiche (décision de la propriétaire) :
+  // la seule obligation qui le portait est au niveau audit (ADR-042), et elle
+  // est due à tout lieu de travail — l'article ne pose aucun seuil.
 
   // Si aucune contrainte de typologie n'a été posée ET aucune raison n'a
   // été ajoutée, l'obligation est considérée comme non applicable (garde-fou :

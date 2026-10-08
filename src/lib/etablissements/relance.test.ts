@@ -25,10 +25,9 @@ const etab = (over: Partial<EtablissementMatching>): EtablissementMatching => ({
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: false,
   comporteLocauxSommeilPublic: null,
-  chiffonsImpregnes: false,
   ...over,
 });
-const sansReponse = { manipuleMatieresR422722: null, chiffonsImpregnes: null, comporteLocauxSommeilPublic: null };
+const sansReponse = { manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null };
 
 describe("relance des questions muettes", () => {
   it("chaque question que le moteur sait marquer a une relance (et une phrase)", () => {
@@ -54,7 +53,9 @@ describe("relance des questions muettes", () => {
   });
 
   it("une question répondue et qui ne retient plus rien : cochée si oui/non, absente si « fiche »", () => {
-    const r = relancesDuDossier([], { ...sansReponse, chiffonsImpregnes: false });
-    expect(r.map((x) => [x.question, x.faite])).toEqual([["chiffons_impregnes", true]]);
+    // ~~Éprouvé sur les chiffons~~ — question retirée le 2026-10-08 ; même
+    // garde, portée par les matières.
+    const r = relancesDuDossier([], { ...sansReponse, manipuleMatieresR422722: false });
+    expect(r.map((x) => [x.question, x.faite])).toEqual([["matieres_r4227_22", true]]);
   });
 });

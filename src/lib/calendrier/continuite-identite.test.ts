@@ -58,7 +58,6 @@ function internat(
     classeIgh: null,
     familleHabitation: null,
     comporteLocauxSommeilPublic,
-    chiffonsImpregnes: null,
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
   };

@@ -40,7 +40,6 @@ function bureau(over: Partial<EtablissementMatching> = {}): EtablissementMatchin
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: false,
     ...over,
   };
 }

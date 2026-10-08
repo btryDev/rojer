@@ -61,7 +61,7 @@ function profilsInscription(): EtablissementMatching[] {
   const out: EtablissementMatching[] = [];
   for (const trav of [true, false]) for (const erp of erps) for (const igh of [true, false])
   for (const hab of [true, false]) for (const es of eff) for (const ee of eff) for (const p of pers)
-  for (const m of tri) for (const ch of tri) {
+  for (const m of tri) {
     const plausible = erp !== null && (TYPES_ERP_A_SOMMEIL_PLAUSIBLE as readonly string[]).includes(erp.t);
     for (const so of plausible ? tri : [undefined]) {
       const r = onboardingSchema.safeParse({
@@ -70,7 +70,7 @@ function profilsInscription(): EtablissementMatching[] {
         estEtablissementTravail: trav, estERP: erp !== null, estIGH: igh, estHabitation: hab,
         typeErp: erp?.t, categorieErp: erp?.c,
         comporteLocauxSommeilPublic: form(so), manipuleMatieresR422722: form(m),
-        chiffonsImpregnes: form(ch), personnesPresentesHabituellement: p ?? "",
+        personnesPresentesHabituellement: p ?? "",
       });
       if (!r.success) continue;
       const d = r.data;
@@ -83,7 +83,6 @@ function profilsInscription(): EtablissementMatching[] {
         personnesPresentesHabituellement: d.personnesPresentesHabituellement ?? null,
         manipuleMatieresR422722: d.manipuleMatieresR422722 ?? null,
         comporteLocauxSommeilPublic: d.comporteLocauxSommeilPublic ?? null,
-        chiffonsImpregnes: d.chiffonsImpregnes ?? null,
       });
     }
   }

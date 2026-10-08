@@ -554,21 +554,15 @@ function ChampsCaches({ state }: { state: OnboardingState }) {
           value={state.comporteLocauxSommeilPublic}
         />
       ) : null}
-      {/* Matières et chiffons (2026-09-27) : postés seulement s'ils ont une
+      {/* Matières (2026-09-27) : postées seulement si elles ont une
           réponse, comme le sommeil — « je ne sais pas encore » ne devient
-          jamais un `false` en base. */}
+          jamais un `false` en base. ~~Et chiffons~~ : question retirée le
+          2026-10-08. */}
       {state.manipuleMatieresR422722 ? (
         <input
           type="hidden"
           name="manipuleMatieresR422722"
           value={state.manipuleMatieresR422722}
-        />
-      ) : null}
-      {state.chiffonsImpregnes ? (
-        <input
-          type="hidden"
-          name="chiffonsImpregnes"
-          value={state.chiffonsImpregnes}
         />
       ) : null}
       {/* Le nombre de personnes n'est posté que si la question est À L'ÉCRAN

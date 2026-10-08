@@ -116,18 +116,10 @@ export type EtablissementMatching = {
    * un allègement de régime, ce qui est le même choix vu de l'autre côté.
    */
   comporteLocauxSommeilPublic: boolean | null;
-  /**
-   * Des chiffons, cotons ou papiers imprégnés de liquides inflammables ou de
-   * matières grasses sont-ils utilisés dans l'établissement (R. 4227-26 CT) ?
-   * Question à trois états, posée une fois (C45).
-   *
-   * Requis pour la même raison que les trois champs ci-dessus : un champ
-   * optionnel s'omet dans une projection sans que rien ne le signale.
-   *
-   * `null` ne retire rien : l'état permanent est retenu « à confirmer »
-   * (cf. `evaluerChiffonsImpregnes`). Seul un « non » déclaré le retire.
-   */
-  chiffonsImpregnes: boolean | null;
+  // ~~`chiffonsImpregnes: boolean | null`~~ — retiré le 2026-10-08 (décision
+  // de la propriétaire) : la question ne servait qu'à la ligne des chiffons
+  // de R. 4227-26, passée au niveau audit (ADR-042) et devenue sans condition.
+  // La colonne `Etablissement.chiffonsImpregnes` reste en base, inerte.
 };
 
 export type EquipementMatching = {
@@ -189,7 +181,6 @@ export type ObligationApplicable = {
  * compile.
  */
 export type QuestionSansReponse =
-  | "chiffons_impregnes"
   | "locaux_sommeil_public"
   | "matieres_r4227_22"
   | "type_erp"

@@ -10,8 +10,6 @@
 import type { QuestionSansReponse } from "./types";
 
 export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
-  chiffons_impregnes:
-    "La fiche de l'établissement ne dit pas si des chiffons, cotons ou papiers imprégnés y sont utilisés : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   locaux_sommeil_public:
     "La fiche de l'établissement ne dit pas s'il comporte des locaux à sommeil pour le public : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   // Inatteignable en production depuis la contrainte CHECK

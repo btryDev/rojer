@@ -81,7 +81,6 @@ export const composerRegistreDeLEtablissement = cache(
         personnesPresentesHabituellement: true,
         manipuleMatieresR422722: true,
         comporteLocauxSommeilPublic: true,
-        chiffonsImpregnes: true,
         // Seul le parc en service compte (ADR-012) : un appareil retiré ne fait
         // plus apparaître sa fiche d'inventaire ni sa fiche de vérification.
         // Les colonnes que les fiches « Renseignements généraux » et
@@ -126,7 +125,6 @@ export const composerRegistreDeLEtablissement = cache(
         personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
         manipuleMatieresR422722: etab.manipuleMatieresR422722,
         comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-        chiffonsImpregnes: etab.chiffonsImpregnes,
       },
       trierParCategorie(etab.equipements).map((eq) => ({
         id: eq.id,

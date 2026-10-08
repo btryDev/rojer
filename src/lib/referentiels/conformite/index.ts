@@ -362,6 +362,9 @@ export const obligationsConformite: Obligation[] = [
 // `epi-verification-generale-periodique-respiratoire` et
 // `epi-verification-generale-periodique-gilet-sauvetage`, au niveau audit,
 // `succedeA` vers l'ancien. 172 + 2 − 0 = 174, dont 3 au niveau audit.
+// Même version, non servie, seconde décision du même jour : la question des
+// chiffons est retirée, la ligne perd sa condition (`{ travail: true }`).
+// 174 + 0 − 0 = 174 ; 171 suivies au quotidien (`nombreObligationsSuivies`).
 export const REFERENTIEL_VERSION = "2026-10-08.4";
 
 /**
