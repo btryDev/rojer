@@ -1,3 +1,4 @@
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   obligationsConformite,
   estPorteeParSalarie,
@@ -32,8 +33,12 @@ import { questionsDetectionTransverses } from "@/lib/referentiels";
  * Lui laisser croire l'inverse serait le tromper sur sa propre couverture.
  */
 export function cataloguerTitres(): ObligationPorteeParSalarie[] {
+  // Un titre au niveau audit (ADR-042) ne se propose pas à la saisie : il ne
+  // produirait aucune ligne (`genererVerificationsDepuisTitres`), et la page
+  // « Ce que Rojer ne couvre pas » le nomme.
   return obligationsConformite
     .filter(estPorteeParSalarie)
+    .filter((o) => !estNiveauAudit(o))
     .sort((a, b) => a.libelle.localeCompare(b.libelle, "fr"));
 }
 

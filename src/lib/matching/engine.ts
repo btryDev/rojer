@@ -41,6 +41,7 @@
  */
 
 import { obligationsConformite } from "@/lib/referentiels/conformite";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   estPorteeParEquipement,
   porteurDe,
@@ -1002,7 +1003,33 @@ function matchEquipements(
 // API publique
 // -----------------------------------------------------------------------------
 
+/**
+ * L'obligation s'applique-t-elle à cet établissement, et sur quels porteurs ?
+ *
+ * **LA PORTE DU NIVEAU AUDIT (ADR-042).** Une obligation au niveau audit
+ * n'est JAMAIS applicable : tout ce qui sert le quotidien — calendrier,
+ * « Ce qui doit être en place », « Quand ça arrive », indice, tableau de bord,
+ * MCP, registre, dossier — descend de cette fonction, et aucun ne la voit.
+ * C'est le seul filtre du moteur ; aucune surface n'en recopie un. La page
+ * « Ce que Rojer ne couvre pas » lit son champ par une autre entrée,
+ * `determineObligationsNiveauAudit`, qui ne sert rien.
+ */
 export function evaluerObligation(
+  o: Obligation,
+  etab: EtablissementMatching,
+  equipements: EquipementMatching[],
+): ObligationApplicable | null {
+  if (estNiveauAudit(o)) return null;
+  return evaluerChamp(o, etab, equipements);
+}
+
+/**
+ * Le champ d'application seul — typologie, porteur, équipements —, sans la
+ * porte du niveau audit. Privée : la seule autre lectrice est
+ * `determineObligationsNiveauAudit`, qui dit à quel établissement une
+ * obligation audit s'appliquerait, sans la servir.
+ */
+function evaluerChamp(
   o: Obligation,
   etab: EtablissementMatching,
   equipements: EquipementMatching[],
@@ -1120,6 +1147,33 @@ export function determineObligationsApplicables(
   const out: ObligationApplicable[] = [];
   for (const o of source) {
     const res = evaluerObligation(o, etab, equipements);
+    if (res) out.push(res);
+  }
+  return out;
+}
+
+/**
+ * Les obligations au NIVEAU AUDIT (ADR-042) qui s'appliqueraient à cet
+ * établissement si Rojer les servait — même champ, mêmes porteurs, même
+ * règle du non-renseigné que `determineObligationsApplicables`.
+ *
+ * Ne nourrit AUCUNE surface du quotidien : sa seule lectrice est la rubrique
+ * « Niveau audit » de la page « Ce que Rojer ne couvre pas »
+ * (`perimetre/niveau-audit.ts`), qui nomme l'obligation et sa référence sans
+ * la dater ni la compter. Une obligation audit portée par un salarié n'y
+ * passe pas — le moteur ne sait pas qui la détient (ADR-023) — : la rubrique
+ * la nomme sans ce calcul.
+ */
+export function determineObligationsNiveauAudit(
+  etab: EtablissementMatching,
+  equipements: EquipementMatching[],
+  options?: DetermineOptions,
+): ObligationApplicable[] {
+  const source = options?.obligations ?? obligationsConformite;
+  const out: ObligationApplicable[] = [];
+  for (const o of source) {
+    if (!estNiveauAudit(o)) continue;
+    const res = evaluerChamp(o, etab, equipements);
     if (res) out.push(res);
   }
   return out;

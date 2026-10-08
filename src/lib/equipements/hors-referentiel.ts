@@ -37,7 +37,10 @@
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/require-user";
-import { determineObligationsApplicables } from "@/lib/matching";
+import {
+  determineObligationsApplicables,
+  determineObligationsNiveauAudit,
+} from "@/lib/matching";
 import type {
   EquipementMatching,
   EtablissementMatching,
@@ -74,7 +77,13 @@ export type MotifSansEcheance =
    *  comprennent une vérification d'étanchéité qui REVIENT et des fiches de
    *  données qui se refont à chaque produit nouveau. Les appeler
    *  « permanentes » attribuait au droit un régime qu'il ne donne pas. */
-  | "aucune_echeance_datable";
+  | "aucune_echeance_datable"
+  /** La seule obligation qui viserait cet appareil est tenue au NIVEAU
+   *  AUDIT (ADR-042) : légale, au référentiel, mais hors du quotidien de
+   *  Rojer. Ce n'est pas « aucune obligation » — dire cela serait faux dans
+   *  le sens qui rassure —, et ce n'est pas une échéance non plus. La page
+   *  « Ce que Rojer ne couvre pas » la nomme. */
+  | "niveau_audit";
 
 /**
  * Ce qui s'affiche, par motif. Descriptif, jamais prescriptif : on nomme un
@@ -93,6 +102,7 @@ export const LIBELLE_SANS_ECHEANCE: Record<MotifSansEcheance, string> = {
   categorie_hors_referentiel: "Hors référentiel",
   aucune_obligation_applicable: "Aucune échéance calculée",
   aucune_echeance_datable: "Obligation sans rythme écrit",
+  niveau_audit: "Obligation au niveau audit",
 };
 
 /** La phrase longue, celle qui dit le fait complet. */
@@ -103,6 +113,8 @@ export const EXPLICATION_SANS_ECHEANCE: Record<MotifSansEcheance, string> = {
     "Aucune échéance n'est calculée pour cet équipement : aucune obligation du référentiel ne s'applique à lui compte tenu de la typologie de l'établissement et de ses caractéristiques. Cela ne veut pas dire qu'aucune vérification ne lui est due.",
   aucune_echeance_datable:
     "Aucun texte n'écrit de rythme pour les obligations qui visent cet équipement : le référentiel n'en tire aucune date, il n'y a donc rien à poser sur le calendrier. Elles s'appliquent malgré tout.",
+  niveau_audit:
+    "Une obligation légale vise cet équipement, mais Rojer la tient au niveau audit : il ne la suit pas au quotidien et ne pose aucune date. Elle s'applique malgré tout — la page « Ce que Rojer ne couvre pas » la nomme, avec son texte.",
 };
 
 /**
@@ -126,7 +138,10 @@ export function compterSansObligation(
 ): number {
   let n = 0;
   for (const motif of motifs.values()) {
-    if (motif !== "aucune_echeance_datable") n += 1;
+    // `niveau_audit` non plus (ADR-042) : une obligation s'applique, Rojer
+    // ne la suit pas au quotidien. La compter ici dirait « rien ne
+    // s'applique » d'un appareil que le droit vise.
+    if (motif !== "aucune_echeance_datable" && motif !== "niveau_audit") n += 1;
   }
   return n;
 }
@@ -195,10 +210,22 @@ export function reperterSansEcheance(
     }
   }
 
+  // Les appareils qu'une obligation au NIVEAU AUDIT viserait (ADR-042) : ils
+  // ne portent aucune ligne, mais « aucune obligation » serait faux.
+  const visesParAudit = new Set(
+    determineObligationsNiveauAudit(etab, equipements, {
+      obligations: [...obligations],
+    }).flatMap((a) => a.equipementsConcernes.map((e) => e.id)),
+  );
+
   const out = new Map<string, MotifSansEcheance>();
   for (const eq of equipements) {
     const c = declenchees.get(eq.id);
     if (!c || c.total === 0) {
+      if (visesParAudit.has(eq.id)) {
+        out.set(eq.id, "niveau_audit");
+        continue;
+      }
       out.set(
         eq.id,
         couvertes.has(eq.categorie)

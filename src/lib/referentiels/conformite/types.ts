@@ -1,4 +1,5 @@
 import type { InitiativeObligation } from "./initiative";
+import type { NiveauObligation } from "./niveau-audit";
 import type { ReleveParPreventeur } from "../corpus/types";
 import type {
   CategorieEquipement,
@@ -1043,6 +1044,28 @@ type ObligationCommune = {
    * produirait rien de différent.
    */
   initiative?: InitiativeObligation;
+  /**
+   * `"audit"` : l'obligation est légale, elle reste au référentiel avec sa
+   * source, mais Rojer ne la sert pas au quotidien (ADR-042, décision de la
+   * propriétaire du 2026-10-08, sur la remarque du préventeur — « il ne veut
+   * pas qu'on tombe dans l'audit »).
+   *
+   * Le moteur ne la rend jamais applicable : ni calendrier, ni « Ce qui doit
+   * être en place », ni indice, ni tableau de bord, ni MCP, ni registre. Elle
+   * reste VISIBLE — la page « Ce que Rojer ne couvre pas » la nomme, avec sa
+   * référence, à l'établissement qu'elle concernerait. Lever le marqueur la
+   * réactive telle quelle : rien d'autre n'a bougé.
+   *
+   * À distinguer de `OBLIGATIONS_RETIREES` (l'obligation n'est plus au
+   * référentiel) et du hors-périmètre déclaré (aucune obligation d'exploitant
+   * ne découle de l'article) : ici l'obligation existe, est due, et est lue.
+   *
+   * Une seule lecture, `estNiveauAudit` (`./niveau-audit`). **Entre dans
+   * `empreinteReferentiel()`** : il décide de l'existence des lignes. En
+   * segment ajouté, et seulement quand il est présent — les obligations qui
+   * n'en portent pas gardent leur chaîne.
+   */
+  niveau?: NiveauObligation;
   /** 1 = informatif, 5 = vital (mise en danger directe si manquement). */
   criticite: 1 | 2 | 3 | 4 | 5;
   /** Régimes auxquels l'obligation s'applique. */

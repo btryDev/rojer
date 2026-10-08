@@ -1,3 +1,4 @@
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import { CORPUS } from "@/lib/referentiels/corpus";
 import { describe, expect, it } from "vitest";
 
@@ -209,7 +210,11 @@ describe("l'écran en place compté comme l'écran le compte (2026-09-27, lot 2)
   // rétablissant `modeDeclaration(o) !== null` : ce test rougit sur
   // `elec-salarie-habilitation` et `conduite-salarie-autorisation`.
   it("n'attribue l'écran « en place » qu'aux obligations que l'écran liste", () => {
+    // Hors niveau audit (ADR-042) : l'écran ne les reçoit jamais — le moteur
+    // les écarte en amont —, et `surfacesDe` leur rend la seule rubrique
+    // « Niveau audit » (gardé dans `niveau-audit.test.ts`).
     const faux = obligationsConformite
+      .filter((o) => !estNiveauAudit(o))
       .filter(
         (o) =>
           surfacesDe(o).includes("etats_permanents") !==

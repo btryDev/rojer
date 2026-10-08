@@ -34,6 +34,7 @@ import {
   determineObligationsApplicables,
   projeterEtablissement,
 } from "@/lib/matching";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   estPorteeParSalarie,
   obligationParId,
@@ -322,7 +323,9 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
       cleDeLigne(t.obligationId, { equipementId: null, salarieId: t.salarieId }),
     );
     const o = obligationParId(t.obligationId);
-    if (o !== undefined && estPorteeParSalarie(o)) {
+    // Un titre déclaré sur une obligation au niveau audit (ADR-042) ne la
+    // garde pas applicable : sa ligne sort, archivée avec sa trace.
+    if (o !== undefined && estPorteeParSalarie(o) && !estNiveauAudit(o)) {
       obligationsEncoreApplicables.add(t.obligationId);
       // Aucune surcharge ne vise un titre : le rythme est celui du référentiel.
       periodicites.set(t.obligationId, periodiciteEffective(o));

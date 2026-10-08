@@ -124,6 +124,15 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-08 (ADR-042, niveau audit) :
+  // `evaluerObligation` écarte une obligation qui porte `niveau: "audit"`, le
+  // générateur de titres aussi, et la passe ne la garde pas applicable par un
+  // titre. NON, le CODE seul n'écrit pas autrement : sans le champ, chaque
+  // branche rend ce qu'elle rendait. Ce qui écrit autrement, ce sont les trois
+  // obligations qui le portent — une DONNÉE, que l'empreinte hache (segment
+  // `niveau:audit`) : le passage du référentiel à `2026-10-08.4` déplace le
+  // sceau et resynchronise déjà le parc (lignes archivées si elles portent une
+  // trace, supprimées sinon — `niveau-audit.test.ts`).
   // Recopiée SANS incrément le 2026-10-08 (ADR-040, délai de grâce) :
   // `calendrier/grace.ts` entre au relevé, et `actions.ts` écrit
   // `graceJusquAu` dans le `createMany`. NON, la régénération n'écrit pas
@@ -299,7 +308,7 @@ const RELEVE = {
   // change les lignes — le rythme triennal du titre d'habilitation — est une
   // DONNÉE du référentiel, qui déplace son empreinte, donc le sceau.
   // ~~4b75258a15263110~~.
-  empreinte: "ff1c3cda346da10d",
+  empreinte: "3e1e00bd9148bbbb",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
