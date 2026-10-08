@@ -233,8 +233,11 @@ describe("urgenceSeule — le pendant SQL d'`estVerificationEnRetard`", () => {
       if (attendu === null) return valeur === null;
       if (typeof attendu === "object" && !(attendu instanceof Date)) {
         const f = attendu as Record<string, unknown>;
-        const inconnus = Object.keys(f).filter((k) => !["in", "notIn", "lt"].includes(k));
+        const inconnus = Object.keys(f).filter((k) => !["in", "notIn", "lt", "not"].includes(k));
         if (inconnus.length > 0) throw new Error(`opérateur non évalué : ${inconnus}`);
+        // `lt` sur NULL est NULL en SQL : la ligne ne passe pas.
+        if ("lt" in f && valeur === null) return false;
+        if ("not" in f && valeur === f.not) return false;
         if ("in" in f && !(f.in as unknown[]).includes(valeur)) return false;
         if ("notIn" in f && (f.notIn as unknown[]).includes(valeur)) return false;
         if ("lt" in f && !((valeur as Date).getTime() < (f.lt as Date).getTime())) return false;
@@ -266,17 +269,22 @@ describe("urgenceSeule — le pendant SQL d'`estVerificationEnRetard`", () => {
       for (const periodicite of ["mensuelle", "annuelle", "mise_en_service_uniquement", "autre"]) {
         for (const datePrevue of [passee, future]) {
           for (const archiveLe of [null, passee]) {
-            const ligne = {
-              statut,
-              periodicite,
-              datePrevue,
-              archiveLe,
-              libelleObligation: "x",
-            };
-            expect(
-              evaluer(clause, ligne),
-              `${statut} × ${periodicite} × ${datePrevue === passee ? "passée" : "future"} × ${archiveLe ? "archivée" : "ouverte"}`,
-            ).toBe(estVerificationEnRetard(ligne, NOW));
+            // Le délai de grâce (ADR-040) : aucun, échu, dernier jour
+            // aujourd'hui (DEBUT même — encore en grâce), à venir.
+            for (const graceJusquAu of [null, passee, DEBUT, future]) {
+              const ligne = {
+                statut,
+                periodicite,
+                datePrevue,
+                archiveLe,
+                graceJusquAu,
+                libelleObligation: "x",
+              };
+              expect(
+                evaluer(clause, ligne),
+                `${statut} × ${periodicite} × ${datePrevue === passee ? "passée" : "future"} × ${archiveLe ? "archivée" : "ouverte"} × grâce ${graceJusquAu?.toISOString() ?? "aucune"}`,
+              ).toBe(estVerificationEnRetard(ligne, NOW));
+            }
           }
         }
       }

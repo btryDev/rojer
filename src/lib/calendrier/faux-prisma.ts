@@ -111,6 +111,9 @@ export type LigneFausse = {
   /** Depuis quand Rojer suit la ligne (ADR-036, D2). `NOT NULL` en base, donc
    *  requis ici : une ligne sans origine n'existe pas. */
   suiviDepuis: Date;
+  /** Délai de grâce (ADR-040). Nullable en base ; `undefined` ici = ligne
+   *  posée par une fixture d'avant la colonne, lue comme `null`. */
+  graceJusquAu?: Date | null;
   /** Les rapports attachés à la ligne, avec leur résultat — ce que la
    *  réconciliation lit pour connaître la dernière réalisation (ADR-034).
    *  Indépendant de `nbRapports`, qui est le compte brut. */
@@ -139,6 +142,7 @@ const COLONNES_LIGNE: ReadonlySet<string> = new Set([
   "prescriptionId",
   "archiveLe",
   "suiviDepuis",
+  "graceJusquAu",
 ]);
 
 export type Magasin = {
@@ -566,6 +570,13 @@ export function fauxPrisma(db: Magasin) {
           // production fasse rougir un test au lieu de prendre le défaut.
           if (!(candidat.suiviDepuis instanceof Date)) {
             inconnu("verification.createMany", ["suiviDepuis absent"]);
+          }
+          // Même raison pour la grâce (ADR-040) : nullable en base, une
+          // insertion qui l'omet passerait sans bruit et la ligne naîtrait
+          // sans grâce. Le `createMany` de production doit la NOMMER, `null`
+          // compris.
+          if (!("graceJusquAu" in (d as object))) {
+            inconnu("verification.createMany", ["graceJusquAu absent"]);
           }
           const doublon = db.verifications.some(
             (v) => cle(v) === cle(candidat),

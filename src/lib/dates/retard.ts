@@ -118,6 +118,14 @@ export type VerificationDatee = {
   /** Le libellé recopié du référentiel. Il ne porte plus aucun marqueur
    *  depuis le N3 : c'est du texte d'affichage, rien d'autre. */
   libelleObligation: string;
+  /**
+   * **Requis, pour la même raison qu'`archiveLe`.** Le dernier jour de grâce
+   * d'une ligne née d'un changement du référentiel (ADR-040), `null` sinon.
+   * Seul `delaiDeGrace` le lit. Un lecteur qui l'omettrait de son `select` ne
+   * compile pas ; une valeur `undefined` passée par un `as` se lit « pas de
+   * grâce » — la ligne compte un retard de trop, et ça se voit.
+   */
+  graceJusquAu: Date | null;
 };
 
 /**
@@ -261,6 +269,40 @@ export function lignePortantSansRendezVous(
 }
 
 /**
+ * Le DÉLAI DE GRÂCE d'une ligne, s'il court aujourd'hui : son dernier jour, ou
+ * `null`. LA fonction, et la seule, qui dise si une ligne est en grâce et
+ * jusqu'à quand (ADR-040, décision de la propriétaire du 2026-10-08).
+ *
+ * Une ligne née d'un changement du référentiel chez un dossier existant porte
+ * `graceJusquAu` (écrit à sa naissance, `calendrier/grace.ts`). Tant qu'elle
+ * reste « à planifier » — aucune échéance connue, datée de l'origine de son
+ * suivi —, elle n'est pas comptée en retard jusqu'à ce jour INCLUS : la règle
+ * de l'ADR-011 § 4, « une échéance du jour n'est jamais en retard », appliquée
+ * au dernier jour de grâce. Le lendemain, la grâce tombe et la ligne se lit
+ * comme toute autre : en retard depuis son origine.
+ *
+ * Ce qu'elle NE fait PAS : déplacer l'échéance. `datePrevue` reste l'origine,
+ * et c'est elle que les écrans affichent ; la grâce s'affiche à côté (« délai
+ * jusqu'au … »), jamais à la place.
+ *
+ * Hors grâce, quoi que porte la colonne : une ligne archivée, soldée, sans
+ * rendez-vous, ou qui a quitté « à planifier » — un rapport déposé la fait
+ * rouler sur une vraie échéance, une mise en service la date. La grâce ne
+ * couvre que l'absence de date, jamais une échéance connue.
+ */
+export function delaiDeGrace(v: VerificationDatee, now: Date): Date | null {
+  // `== null` ET NON `=== null` : le sens de l'erreur d'`estVerificationArchivee`
+  // — un champ oublié se lit « pas de grâce », du côté visible.
+  if (v.graceJusquAu == null) return null;
+  if (estVerificationArchivee(v)) return null;
+  if (estVerificationRealisee(v)) return null;
+  if (lignePortantSansRendezVous(v)) return null;
+  if (statutLu(v) !== "a_planifier") return null;
+  if (estEnRetard(v.graceJusquAu, now)) return null;
+  return v.graceJusquAu;
+}
+
+/**
  * Une vérification est **en retard** quand son échéance réglementaire est
  * passée sans qu'elle ait été réalisée : sa `datePrevue` est en retard, que
  * la date ait été arrêtée (`planifiee`) ou non (`a_planifier`). Aucun statut
@@ -300,7 +342,12 @@ export function estVerificationEnRetard(
   // la génération devait réécrire la ligne le jour où sa date passait pour que
   // les deux restent d'accord. Aucun rythme ne le fait plus.
   const statut = statutLu(v);
-  if (statut === "planifiee" || statut === "a_planifier") {
+  if (statut === "planifiee") return estEnRetard(v.datePrevue, now);
+  if (statut === "a_planifier") {
+    // LA GRÂCE (ADR-040) : une ligne née d'un changement du référentiel n'est
+    // pas en retard avant le terme de son délai, quoique sa date — l'origine
+    // de son suivi — soit passée.
+    if (delaiDeGrace(v, now) !== null) return false;
     return estEnRetard(v.datePrevue, now);
   }
   return false;
@@ -318,7 +365,8 @@ export function estVerificationEnRetard(
  * Une vérification est **à planifier** quand elle attend une date de
  * rendez-vous sans être encore en retard : statut `a_planifier` (aucune
  * échéance connue), et une date de GÉNÉRATION qui n'est pas encore dépassée —
- * en pratique, le jour de sa création. Dès le lendemain, elle est en retard.
+ * en pratique, le jour de sa création. Dès le lendemain, elle est en retard —
+ * sauf délai de grâce en cours (`delaiDeGrace`, ADR-040).
  *
  * Volontairement disjoint de `estVerificationEnRetard` : les deux prédicats
  * ne sont jamais vrais ensemble, un compteur « en retard » et un compteur
@@ -333,6 +381,10 @@ export function estVerificationAPlanifier(
   // Rien à planifier : l'obligation n'a pas de rythme (limite 1).
   if (lignePortantSansRendezVous(v)) return false;
   if (statutLu(v) !== "a_planifier") return false;
+  // En grâce (ADR-040) : « à planifier », date passée ou non — le pendant
+  // exact de la branche d'`estVerificationEnRetard`, qui garde les deux
+  // prédicats disjoints.
+  if (delaiDeGrace(v, now) !== null) return true;
   return !estEnRetard(v.datePrevue, now);
 }
 

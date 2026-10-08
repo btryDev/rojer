@@ -140,6 +140,7 @@ function poserLigne(partiel: Partial<LigneFausse> = {}): LigneFausse {
     statut: "a_planifier",
     prescriptionId: null,
     archiveLe: null,
+    graceJusquAu: null,
     suiviDepuis: ORIGINE,
     rapports: [],
     nbRapports: 0,
@@ -185,7 +186,7 @@ const retirer = (rapportId: string) =>
 
 function enRetard(id = "v-1"): boolean {
   const v = ligne(id);
-  return estVerificationEnRetard({ ...v, archiveLe: v.archiveLe ?? null }, new Date());
+  return estVerificationEnRetard({ ...v, archiveLe: v.archiveLe ?? null, graceJusquAu: null }, new Date());
 }
 
 /**
@@ -649,6 +650,7 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
       datePrevue: d("2026-01-05"),
       statut: "realisee_conforme",
       archiveLe: d("2026-07-01"),
+      graceJusquAu: null,
       rapports: [rapport({ id: "rap-mes", dateRapport: d("2026-02-01") })],
     });
 
@@ -669,6 +671,7 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
       datePrevue: d("2026-01-05"),
       statut: "realisee_conforme",
       archiveLe: d("2026-07-01"),
+      graceJusquAu: null,
       rapports: [
         rapport({ id: "rap-ancien", dateRapport: d("2026-02-01") }),
         rapport({ id: "rap-recent", dateRapport: d("2026-03-01") }),

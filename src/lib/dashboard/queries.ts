@@ -332,6 +332,7 @@ export async function compterVerifsParEquipement(
         // où l'archivage l'a laissée. Le fait se lisait dans le libellé, il a
         // maintenant sa colonne — et son absence du `select` ne compile plus.
         archiveLe: true,
+        graceJusquAu: true,
         libelleObligation: true,
       },
     }),
@@ -468,6 +469,7 @@ export async function compterObligationsParMois(
       // Cf. ci-dessus : l'archivage est un champ (ADR-034). Sans lui, une
       // obligation éteinte continue de peindre des barres.
       archiveLe: true,
+      graceJusquAu: true,
       libelleObligation: true,
       obligationId: true,
       prescriptionId: true,
@@ -773,6 +775,7 @@ export const getDashboardData = cache(async function getDashboardData(
         // de la file de propositions : une ligne éteinte gelée sur `depassee`
         // les faussait tous les trois d'un coup.
         archiveLe: true,
+        graceJusquAu: true,
         libelleObligation: true,
         // L'obligation, pour le prédicat « retenue par prudence » (D1 (a)) :
         // une ligne que seul le silence de la fiche retient ne compte ni en
@@ -917,6 +920,7 @@ export const getDashboardData = cache(async function getDashboardData(
           datePrevue: v.datePrevue,
           periodicite: v.periodicite,
           archiveLe: v.archiveLe,
+          graceJusquAu: v.graceJusquAu,
           libelleObligation: v.libelleObligation,
           equipementLibelle: libellePorteur(v),
         })),

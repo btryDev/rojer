@@ -78,7 +78,7 @@ describe("le scénario de la relecture : une VIP délivrée le 1er juin 2020, sa
     const lignes = ligneDuCalendrier("sante-travail-salarie-vip", titre);
     expect(lignes).toHaveLength(1);
     expect(lignes[0].datePrevue).toEqual(echeanceDuTitre(titre, VIP?.periodicite));
-    expect(estVerificationEnRetard({ ...lignes[0], archiveLe: null }, NOW)).toBe(true);
+    expect(estVerificationEnRetard({ ...lignes[0], archiveLe: null, graceJusquAu: null }, NOW)).toBe(true);
   });
 
   it("le jour de l'échéance, ni l'un ni l'autre ne la dit en retard (ADR-011)", () => {
@@ -89,7 +89,7 @@ describe("le scénario de la relecture : une VIP délivrée le 1er juin 2020, sa
     const leJourMeme = new Date("2025-06-01T22:00:00+02:00");
     expect(classerTitre(titre, VIP?.periodicite, leJourMeme)).toBe("proche");
     const [ligne] = ligneDuCalendrier("sante-travail-salarie-vip", titre);
-    expect(estVerificationEnRetard({ ...ligne, archiveLe: null }, leJourMeme)).toBe(false);
+    expect(estVerificationEnRetard({ ...ligne, archiveLe: null, graceJusquAu: null }, leJourMeme)).toBe(false);
   });
 });
 

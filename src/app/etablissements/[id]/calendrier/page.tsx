@@ -5,6 +5,7 @@ import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { LienProvenance } from "@/components/navigation/LienProvenance";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
+import { mentionDelaiDeGrace } from "@/lib/calendrier/grace";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
@@ -1248,7 +1249,12 @@ export default async function CalendrierPage({
                                   : "") +
                                 `${libellePorteur(v)} · ` +
                                 LABEL_PERIODICITE[v.periodicite] +
-                                (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "")
+                                (o ? ` · ${LABEL_DOMAINE[o.domaine]}` : "") +
+                                // Le délai de grâce (ADR-040) : à côté de « à
+                                // planifier », jamais à la place d'une date.
+                                (mentionDelaiDeGrace(v, aujourdhui)
+                                  ? ` · ${mentionDelaiDeGrace(v, aujourdhui)}`
+                                  : "")
                               }
                               contractuelle={estEcheanceContractuelle(v)}
                               rythmeRetenu={mentionRythmeDeVerification(v)}

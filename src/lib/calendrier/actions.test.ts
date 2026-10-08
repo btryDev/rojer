@@ -280,6 +280,7 @@ describe("genererCalendrier — conservation des actions correctives", () => {
         obligationId: ELEC_ANNUELLE,
         libelleObligation: "Vérification électrique",
         archiveLe: new Date("2026-01-01T00:00:00Z"),
+        graceJusquAu: null,
         nbRapports: 1,
       }),
     ];
@@ -436,6 +437,7 @@ describe("genererCalendrier — écriture concurrente entre la lecture et le pla
         // à jour de statut, et ce test ne mesurait plus la réouverture.
         statut: "a_planifier",
         archiveLe: new Date("2026-02-01T00:00:00Z"),
+        graceJusquAu: null,
         nbRapports: 1,
       }),
     ];
@@ -615,6 +617,7 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
         libelleObligation: "Registre de sécurité",
         periodicite: "autre",
         archiveLe: new Date("2026-02-01T00:00:00Z"),
+        graceJusquAu: null,
         nbRapports: 1,
       }),
     ];
@@ -666,7 +669,7 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
     expect(l.datePrevue).toEqual(new Date("2021-03-01T00:00:00Z"));
     expect(l.archiveLe ?? null).toBeNull();
     expect(
-      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null }, new Date()),
+      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null, graceJusquAu: l.graceJusquAu ?? null }, new Date()),
     ).toBe(false);
   });
 
@@ -936,7 +939,7 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
     });
     const lue = (id: string) => {
       const l = db.verifications.find((v) => v.id === id)!;
-      return { ...l, archiveLe: l.archiveLe ?? null };
+      return { ...l, archiveLe: l.archiveLe ?? null, graceJusquAu: l.graceJusquAu ?? null };
     };
 
     it("sa ligne qui porte une action est archivée, et n'est plus en retard nulle part", async () => {
@@ -1027,7 +1030,7 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
       expect(recreees[0].datePrevue).toEqual(new Date("2020-03-01T00:00:00Z"));
       expect(
         estVerificationEnRetard(
-          { ...recreees[0], archiveLe: recreees[0].archiveLe ?? null },
+          { ...recreees[0], archiveLe: recreees[0].archiveLe ?? null, graceJusquAu: recreees[0].graceJusquAu ?? null },
           new Date(),
         ),
       ).toBe(true);
@@ -1093,7 +1096,7 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
     expect(l.statut).toBe("a_planifier");
     expect(l.datePrevue).toEqual(new Date("2023-03-01T00:00:00Z"));
     expect(
-      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null }, new Date()),
+      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null, graceJusquAu: l.graceJusquAu ?? null }, new Date()),
     ).toBe(false);
   });
 
@@ -1119,7 +1122,7 @@ describe("genererCalendrier — titres de salariés (ADR-023)", () => {
     expect(l.periodicite).toBe("autre");
     expect(l.statut).toBe("planifiee");
     expect(
-      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null }, new Date()),
+      estVerificationEnRetard({ ...l, archiveLe: l.archiveLe ?? null, graceJusquAu: l.graceJusquAu ?? null }, new Date()),
     ).toBe(true);
   });
 

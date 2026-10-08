@@ -298,7 +298,7 @@ describe("câblage — le dernier rapport réalisé, lu par le réconciliateur (
     // Plus de statut « dépassée » (phase A) : la date calculée depuis le
     // contrôle réel est arrêtée, et c'est elle qui dit le retard.
     expect(p.aMettreAJour[0].statut).toBe("planifiee");
-    expect(estVerificationEnRetard({ ...p.aMettreAJour[0], archiveLe: null }, now)).toBe(true);
+    expect(estVerificationEnRetard({ ...p.aMettreAJour[0], archiveLe: null, graceJusquAu: null }, now)).toBe(true);
   });
 
   it("quinquennale → prochaine date le même jour, cinq ans plus tard", () => {
@@ -859,6 +859,7 @@ describe("réconciliation — survie des actions correctives", () => {
           datePrevue,
           periodicite: "annuelle",
           archiveLe: null,
+          graceJusquAu: null,
           libelleObligation: "Obligation elec",
         },
         NOW,
@@ -1039,7 +1040,7 @@ describe("réconciliation — un placeholder cède devant une vraie date", () =>
     );
     expect(plan.aMettreAJour).toEqual([]);
     expect(plan.inchangees).toBe(1);
-    expect(estVerificationEnRetard({ ...existante, archiveLe: null }, NOW)).toBe(true);
+    expect(estVerificationEnRetard({ ...existante, archiveLe: null, graceJusquAu: null }, NOW)).toBe(true);
   });
 });
 
@@ -1321,7 +1322,7 @@ describe("réconciliation — cycles de vérification", () => {
       const m = plan.aMettreAJour[0]!;
       expect(
         estVerificationEnRetard(
-          { ...m, archiveLe: null },
+          { ...m, archiveLe: null, graceJusquAu: null },
           NOW,
         ),
       ).toBe(false);
@@ -1372,7 +1373,7 @@ describe("réconciliation — cycles de vérification", () => {
       expect(m.prescriptionId).toBeNull();
       expect(m.statut).toBe("a_planifier");
       expect(m.datePrevue).toEqual(new Date("2026-03-01T00:00:00Z"));
-      const lue = { ...m, archiveLe: null };
+      const lue = { ...m, archiveLe: null, graceJusquAu: null };
       expect(estVerificationEnRetard(lue, NOW)).toBe(false);
       expect(estVerificationAPlanifier(lue, NOW)).toBe(false);
     });
@@ -1916,7 +1917,7 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
     );
     // Le retard se lit sur la date adoptée, plus sur un statut.
     expect(
-      estVerificationEnRetard({ ...plan.aMettreAJour[0]!, archiveLe: null }, NOW),
+      estVerificationEnRetard({ ...plan.aMettreAJour[0]!, archiveLe: null, graceJusquAu: null }, NOW),
     ).toBe(true);
   });
 
@@ -1964,7 +1965,7 @@ describe("réconciliation — la date d'un titre est un fait, pas un calcul", ()
     expect(plan.inchangees).toBe(1);
     expect(
       estVerificationEnRetard(
-        { statut: "a_planifier", datePrevue: origine, periodicite: "annuelle", archiveLe: null, libelleObligation: "x" },
+        { statut: "a_planifier", datePrevue: origine, periodicite: "annuelle", archiveLe: null, graceJusquAu: null, libelleObligation: "x" },
         NOW,
       ),
     ).toBe(true);
@@ -2093,7 +2094,7 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     expect(plan.aCreer[0].datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
     // Datée d'un contrôle réel : arrêtée, et en retard par sa date.
     expect(plan.aCreer[0].statut).toBe("planifiee");
-    expect(estVerificationEnRetard({ ...plan.aCreer[0], archiveLe: null }, NOW)).toBe(true);
+    expect(estVerificationEnRetard({ ...plan.aCreer[0], archiveLe: null, graceJusquAu: null }, NOW)).toBe(true);
 
     // Le fragment, lui, est archivé avec sa preuve — jamais supprimé.
     expect(plan.aArchiver).toHaveLength(1);
@@ -2119,7 +2120,7 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     expect(plan.aCreer[0].datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
     // Datée d'un contrôle réel : arrêtée, et en retard par sa date.
     expect(plan.aCreer[0].statut).toBe("planifiee");
-    expect(estVerificationEnRetard({ ...plan.aCreer[0], archiveLe: null }, NOW)).toBe(true);
+    expect(estVerificationEnRetard({ ...plan.aCreer[0], archiveLe: null, graceJusquAu: null }, NOW)).toBe(true);
   });
 
   it("un fragment sans réalisation ne lègue rien et ne bloque rien", () => {
@@ -2355,7 +2356,7 @@ describe("réconciliation — report d'historique vers l'obligation absorbante",
     const maj = plan.aMettreAJour.find((m) => m.id === "v-tout");
     expect(maj?.datePrevue).toEqual(new Date("2026-06-01T00:00:00Z"));
     expect(maj?.statut).toBe("planifiee");
-    expect(estVerificationEnRetard({ ...maj!, archiveLe: null }, NOW)).toBe(true);
+    expect(estVerificationEnRetard({ ...maj!, archiveLe: null, graceJusquAu: null }, NOW)).toBe(true);
   });
 
   it("une absorbante déjà en base, datée par l'héritage À VENIR, passe « planifiée »", () => {

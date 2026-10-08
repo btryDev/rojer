@@ -82,6 +82,7 @@ describe("classerVerification", () => {
     // plus un préfixe de libellé, que `classerVerification` lit en premier —
     // d'où le fait qu'il soit requis. Le libellé n'est plus qu'un affichage.
     archiveLe: null,
+    graceJusquAu: null,
     periodicite: "annuelle",
     libelleObligation: "Vérification périodique",
   });
@@ -100,7 +101,7 @@ describe("classerVerification", () => {
     // ça ne revienne pas.
     expect(
       classerVerification(
-        { statut: "a_planifier", datePrevue: jours(-40), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: jours(-40), archiveLe: null, graceJusquAu: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe("enRetard");
@@ -108,7 +109,7 @@ describe("classerVerification", () => {
     // de génération ne la classe ni proche ni lointaine.
     expect(
       classerVerification(
-        { statut: "a_planifier", datePrevue: jours(10), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: jours(10), archiveLe: null, graceJusquAu: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe("aPlanifier");
@@ -132,6 +133,7 @@ describe("classerVerification", () => {
       statut: "realisee_conforme",
       datePrevue,
       archiveLe: null,
+      graceJusquAu: null,
       periodicite,
       libelleObligation: "Vérification périodique",
     });
@@ -166,7 +168,7 @@ describe("aUnRendezVous", () => {
     // Sa `datePrevue` est la date de GÉNÉRATION — ici, aujourd'hui même.
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: NOW, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: NOW, archiveLe: null, graceJusquAu: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe(false);
@@ -177,7 +179,7 @@ describe("aUnRendezVous", () => {
     // la fiche se trompait, et pas seulement sur la date du jour.
     expect(
       aUnRendezVous(
-        { statut: "a_planifier", datePrevue: jours(10), archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+        { statut: "a_planifier", datePrevue: jours(10), archiveLe: null, graceJusquAu: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
         NOW,
       ),
     ).toBe(false);
@@ -188,7 +190,7 @@ describe("aUnRendezVous", () => {
     for (const d of [jours(1), jours(10), jours(200)]) {
       expect(
         aUnRendezVous(
-          { statut: "planifiee", datePrevue: d, archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
+          { statut: "planifiee", datePrevue: d, archiveLe: null, graceJusquAu: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" },
           NOW,
         ),
       ).toBe(true);
@@ -206,6 +208,7 @@ describe("aUnRendezVous", () => {
       statut: "a_planifier",
       datePrevue: jours(-3),
       archiveLe: null,
+      graceJusquAu: null,
       periodicite: "annuelle",
       libelleObligation: "Vérification périodique",
     };
@@ -217,7 +220,7 @@ describe("aUnRendezVous", () => {
   it("l'accorde à une ligne réalisée : sa date n'est pas une date de génération", () => {
     // Relecture du lot C : une mutation `statut === "planifiee"` aurait
     // masqué les dates des lignes réalisées sans qu'aucun test ne rougisse.
-    const base = { archiveLe: null, libelleObligation: "Vérification périodique" };
+    const base = { archiveLe: null, graceJusquAu: null, libelleObligation: "Vérification périodique" };
     expect(
       aUnRendezVous(
         { ...base, statut: "realisee_conforme", periodicite: "annuelle", datePrevue: jours(40) },
@@ -238,11 +241,11 @@ describe("aUnRendezVous", () => {
   });
 
   it("l'accorde à une échéance connue passée, et à une ligne archivée jamais", () => {
-    const base = { archiveLe: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" };
+    const base = { archiveLe: null, graceJusquAu: null, periodicite: "annuelle", libelleObligation: "Vérification périodique" };
     expect(aUnRendezVous({ ...base, statut: "planifiee", datePrevue: jours(-3) }, NOW)).toBe(true);
     expect(
       aUnRendezVous(
-        { ...base, statut: "planifiee", datePrevue: jours(10), archiveLe: jours(-1) },
+        { ...base, statut: "planifiee", datePrevue: jours(10), archiveLe: jours(-1), graceJusquAu: null },
         NOW,
       ),
     ).toBe(false);
@@ -257,6 +260,7 @@ describe("lecturesCalendrier", () => {
           statut: "planifiee",
           datePrevue: jours(10),
           archiveLe: null,
+          graceJusquAu: null,
           derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
@@ -272,6 +276,7 @@ describe("lecturesCalendrier", () => {
           statut: "a_planifier",
           datePrevue: jours(60),
           archiveLe: null,
+          graceJusquAu: null,
           derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
@@ -308,6 +313,7 @@ describe("lecturesCalendrier", () => {
         statut: "planifiee",
         datePrevue: jours(20),
         archiveLe: null,
+        graceJusquAu: null,
         derniereRealisation: jours(-345),
         libelleObligation: "Vérification périodique",
         periodicite: "annuelle",
@@ -330,6 +336,7 @@ describe("lecturesCalendrier", () => {
           statut: "realisee_conforme",
           datePrevue: jours(30),
           archiveLe: null,
+          graceJusquAu: null,
           derniereRealisation: jours(-3),
           libelleObligation: "Vérification périodique",
           periodicite: "mise_en_service_uniquement",
@@ -354,6 +361,7 @@ describe("lecturesCalendrier", () => {
           statut: "planifiee",
           datePrevue: jours(300),
           archiveLe: null,
+          graceJusquAu: null,
           derniereRealisation: jours(-65),
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",
@@ -376,6 +384,7 @@ describe("lecturesCalendrier", () => {
         statut: "planifiee",
         datePrevue: jours(-10),
         archiveLe: null,
+        graceJusquAu: null,
         derniereRealisation: jours(-375),
         libelleObligation: "Vérification périodique",
         periodicite: "annuelle",
@@ -394,6 +403,7 @@ describe("lecturesCalendrier", () => {
       statut: "realisee_observations",
       datePrevue: jours(-40),
       archiveLe: null,
+      graceJusquAu: null,
       derniereRealisation: null,
       libelleObligation: "Vérification périodique",
       periodicite,
@@ -464,6 +474,7 @@ describe("la date des lectures est l'échéance OUVERTE", () => {
     statut,
     periodicite: "annuelle",
     archiveLe: null,
+    graceJusquAu: null,
     libelleObligation: `Obligation ${id}`,
   });
 
@@ -507,6 +518,7 @@ describe("statutAffiche — le statut à peindre est celui de l'état du jour", 
     statut: "planifiee",
     datePrevue: jours(10),
     archiveLe: null,
+    graceJusquAu: null,
     periodicite: "annuelle",
     libelleObligation: "Vérification périodique",
     ...over,
@@ -558,6 +570,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
           statut: "realisee_conforme",
           datePrevue: jours(120),
           archiveLe: ARCHIVE_LE,
+          graceJusquAu: null,
           derniereRealisation: jours(-245),
           periodicite: "annuelle",
           libelleObligation: "Vérification annuelle du désenfumage",
@@ -578,6 +591,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
           statut: "planifiee",
           datePrevue: jours(-30),
           archiveLe: ARCHIVE_LE,
+          graceJusquAu: null,
           derniereRealisation: null,
           periodicite: "annuelle",
           libelleObligation: "Vérification annuelle du désenfumage",
@@ -593,6 +607,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
         statut: "planifiee",
         datePrevue: jours(120),
         archiveLe: null,
+        graceJusquAu: null,
         derniereRealisation: jours(-245),
         periodicite: "annuelle",
         libelleObligation: "Vérification annuelle du désenfumage",
@@ -617,6 +632,7 @@ describe("lecturesCalendrier — lignes archivées (ADR-012)", () => {
           statut: "planifiee",
           datePrevue: jours(10),
           archiveLe: null,
+          graceJusquAu: null,
           derniereRealisation: null,
           libelleObligation: "Vérification périodique",
           periodicite: "annuelle",

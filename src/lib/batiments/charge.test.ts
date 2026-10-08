@@ -63,6 +63,7 @@ function verif(datePrevue: string, statut = "planifiee") {
     // se lisait dans un préfixe de libellé ; il a sa colonne depuis l'ADR-034,
     // et les prédicats ne regardent plus qu'elle.
     archiveLe: null,
+    graceJusquAu: null,
     libelleObligation: "Vérification périodique",
   };
 }
@@ -93,6 +94,7 @@ describe("charge d'un bâtiment", () => {
           derniereRealisation: null,
           periodicite: "mise_en_service_uniquement",
           archiveLe: null,
+          graceJusquAu: null,
           libelleObligation: "Vérification périodique",
         },
       ],
@@ -173,6 +175,7 @@ describe("listerBatimentsAvecCharge", () => {
     statut: o.statut ?? "planifiee",
     datePrevue: new Date(datePrevue),
     archiveLe: o.archiveLe ? new Date(o.archiveLe) : null,
+    graceJusquAu: null,
     libelleObligation: "Vérification annuelle",
     equipement: { batimentId, actif: o.actif ?? true },
   });
@@ -183,6 +186,7 @@ describe("listerBatimentsAvecCharge", () => {
     statut: "planifiee",
     datePrevue: new Date(datePrevue),
     archiveLe: null,
+    graceJusquAu: null,
     libelleObligation: "Contrôle annuel des installations d'aération",
     equipement: null,
   });
@@ -235,6 +239,7 @@ describe("listerBatimentsAvecCharge", () => {
       datePrevue: Date;
       periodicite: string;
       archiveLe: Date | null;
+      graceJusquAu: Date | null;
       libelleObligation: string;
     }>;
     expect(somme).toBe(

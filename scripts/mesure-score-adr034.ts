@@ -76,6 +76,7 @@ function ligneApres(f: Fait): Ligne {
     // qu'à dater l'échéance ci-dessus.
     periodicite: "annuelle",
     archiveLe: f.archivee ? moisAvant(2) : null,
+    graceJusquAu: null,
     derniereRealisation: controle,
     libelleObligation: "Vérification périodique",
   };

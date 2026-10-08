@@ -200,6 +200,7 @@ export async function compterEtatCalendrier(
         // que sur une obligation sans rendez-vous suivant.
         periodicite: true,
         archiveLe: true,
+        graceJusquAu: true,
         libelleObligation: true,
         // Le porteur, pour ventiler par famille (ADR-016) : une ligne à
         // porteur salarié est un titre, pas un contrôle d'appareil.

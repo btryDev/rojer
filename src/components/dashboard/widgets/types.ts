@@ -128,6 +128,8 @@ type VerificationLite = {
    * C'est exactement ce qui s'est produit avec le préfixe de libellé.
    */
   archiveLe: Date | null;
+  /** Délai de grâce (ADR-040) — lu par `delaiDeGrace`. */
+  graceJusquAu: Date | null;
   equipement: { libelle: string };
   /**
    * La source de la prescription dont la ligne est née, quand elle en a une.
