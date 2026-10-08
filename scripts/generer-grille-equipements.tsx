@@ -551,8 +551,8 @@ function GrilleDocument({
         </Text>
         <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
           {total} obligations, dont {total - nombreObligationsSuivies()} au
-          niveau audit ({nombreObligationsSuivies()} suivies au quotidien,
-          chiffre affiché au public et dans l&apos;app) ·{" "}
+          niveau audit ({nombreObligationsSuivies()} suivies au quotidien)
+          ·{" "}
           {CATEGORIES_EQUIPEMENT.length} catégories d&apos;équipement ·
           document généré le {genereLe}
         </Text>
