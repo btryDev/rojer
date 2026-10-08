@@ -158,3 +158,32 @@ describe("extincteur au halon : l'annuelle reste, la révision suit le régime",
     });
   }
 });
+
+/**
+ * Appareils de cuisson (C66, 2026-10-08) : en ERP, GC 22 écrit l'annuelle des
+ * appareils et de leurs dispositifs de sécurité ; en lieu de travail hors
+ * ERP, Rojer retient le défaut annuel de `R. 4224-17` (« idem code du
+ * travail », le préventeur). Le même acte, une seule fois par appareil, quel
+ * que soit le régime. Compté sur l'ACTE (fondement GC 22 ou R. 4224-17, rythme
+ * annuel) : les autres annuelles de l'appareil — GZ 15, MS 73 — sont d'autres
+ * actes.
+ */
+describe("appareil de cuisson : une annuelle de l'appareil et une seule, quel que soit le régime", () => {
+  for (const { nom, e } of PROFILS) {
+    it(nom, () => {
+      const applicables = determineObligationsApplicables(e, [
+        { id: "eq", libelle: "Four", categorie: "APPAREIL_CUISSON_ERP", caracteristiques: null },
+      ]);
+      const fondements = new Map(
+        applicables.map((a) => [a.obligation.id, a.obligation.referencesLegales[0].article]),
+      );
+      const lignes = genererProchainesVerifications(applicables).filter(
+        (l) =>
+          l.equipementId === "eq" &&
+          l.periodicite === "annuelle" &&
+          ["GC 22", "R. 4224-17"].includes(fondements.get(l.obligationId) ?? ""),
+      );
+      expect(lignes, nom).toHaveLength(1);
+    });
+  }
+});
