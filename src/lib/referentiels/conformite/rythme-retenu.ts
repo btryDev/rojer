@@ -16,11 +16,13 @@ import type { Periodicite } from "../types-communs";
 import type {
   Obligation,
   ReferenceLegale,
-  RythmeRetenu,
 } from "./types";
 
 /** Ce qu'il faut d'une obligation pour en dire le rythme. */
-type AvecRythme = { periodicite: Periodicite; rythmeRetenu?: RythmeRetenu };
+// Dérivé d'`Obligation`, jamais réécrit à la main : la garde des lectures
+// brutes (`periodicite-brute.test.ts`) suit la propriété jusqu'à sa
+// déclaration, et un type structurel la lui cacherait.
+type AvecRythme = Pick<Obligation, "periodicite" | "rythmeRetenu">;
 
 /**
  * LE rythme d'une obligation : celui du texte, sinon celui que Rojer retient.

@@ -26,8 +26,7 @@
  */
 
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
-import type { Periodicite } from "../types-communs";
-import type { ReferenceLegale, RythmeRetenu } from "./types";
+import type { Obligation } from "./types";
 import { periodiciteEffective } from "./rythme-retenu";
 
 /** Les articles qui renvoient le rythme à des normes, et les mots du renvoi. */
@@ -44,12 +43,8 @@ export type RenvoiAuxNormes = {
   long: string;
 };
 
-type Lue = {
-  periodicite: Periodicite;
-  rythmeRetenu?: RythmeRetenu;
-  porteur?: string;
-  referencesLegales: readonly ReferenceLegale[];
-};
+// Dérivé d'`Obligation` (garde des lectures brutes, `periodicite-brute.test.ts`).
+type Lue = Pick<Obligation, "periodicite" | "rythmeRetenu" | "porteur" | "referencesLegales">;
 
 export function renvoiAuxNormes(o: Lue): RenvoiAuxNormes | null {
   if (o.periodicite !== "autre" || o.rythmeRetenu || o.porteur !== "salarie") {

@@ -53,7 +53,6 @@ import type {
 import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
 import { estSansRendezVous } from "@/lib/etats-permanents/regle";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import type { RythmeRetenu } from "@/lib/referentiels/conformite/types";
 import {
   estPorteeParSalarie,
   type Obligation,
@@ -162,7 +161,9 @@ export function clesApplicabilite(
 }
 
 type ApplicableAIndexer = {
-  obligation: { id: string; periodicite?: Periodicite; rythmeRetenu?: RythmeRetenu };
+  // Dérivé d'`Obligation` (garde des lectures brutes, `periodicite-brute.test.ts`) ;
+  // `periodicite` reste optionnel pour les fixtures qui ne testent que les clés.
+  obligation: Pick<Obligation, "id" | "rythmeRetenu"> & Partial<Pick<Obligation, "periodicite">>;
   porteur: string;
   equipementsConcernes: ReadonlyArray<{ id: string }>;
   surcharges?: Readonly<Record<string, { periodicite: Periodicite }>>;

@@ -9,16 +9,13 @@
 import type { Periodicite } from "../types-communs";
 import type {
   MotifRythmeRetenu,
+  Obligation,
   PeriodiciteRetenue,
-  RythmeRetenu,
 } from "./types";
 
-type AvecRythme = {
-  periodicite: Periodicite;
-  rythmeRetenu?: RythmeRetenu;
-  /** Le premier pas, quand il diffère du rythme (« à 5 et 15 ans »). */
-  premierDelai?: Periodicite;
-};
+// Dérivé d'`Obligation` (garde des lectures brutes, `periodicite-brute.test.ts`).
+// `premierDelai` : le premier pas, quand il diffère du rythme (« à 5 et 15 ans »).
+type AvecRythme = Pick<Obligation, "periodicite" | "rythmeRetenu" | "premierDelai">;
 
 /**
  * Le rythme d'une norme, en phrase. Pas `LABEL_PERIODICITE` : ses valeurs sont

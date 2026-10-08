@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
 import { estEnRetard } from "@/lib/dates/retard";
 import type { Periodicite } from "@/lib/referentiels/types-communs";
+import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { titreParId } from "./catalogue";
 import { echeanceDuTitre, type DatesDuTitre } from "./echeance";
 
@@ -88,7 +89,7 @@ export function classerTitre(
  */
 export function etatDuTitre(
   titre: DatesDuTitre,
-  obligation: { periodicite: Periodicite } | undefined,
+  obligation: Pick<Obligation, "periodicite" | "rythmeRetenu"> | undefined,
   salarieActif: boolean,
   now: Date,
 ): EtatTitre {
