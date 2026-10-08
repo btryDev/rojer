@@ -31,6 +31,20 @@ export const PHRASE_REPONSE: Record<ReponseTransverse, string> = {
     "Vous n'avez pas encore répondu à cette question.",
 };
 
+/**
+ * Ce qu'on dit d'une formation d'établissement sur la fiche. Après un « non »,
+ * le moteur l'a retirée : la renvoyer à « Ce qui doit être en place » serait
+ * pointer une ligne qui n'existe pas (contre-relecture du 2026-10-08, N3).
+ */
+export function phraseFormation(reponse: ReponseTransverse, nature: string): string {
+  if (reponse === "non") {
+    return "Retirée de vos obligations : vous avez répondu non. Si cette personne est pourtant concernée, corrigez la réponse.";
+  }
+  const ecran = nature === "evenementielle" ? "Quand ça arrive" : "Ce qui doit être en place";
+  const suivi = reponse === "oui" ? `Suivie dans « ${ecran} ».` : `Affichée « à confirmer » dans « ${ecran} » tant que vous n'avez pas répondu.`;
+  return `Formation que l'établissement organise pour les travailleurs concernés — à faire suivre à cette personne si elle l'est. ${suivi}`;
+}
+
 export function CarteTitresDuDuerp({
   questions,
   lienVersLaQuestion,
@@ -76,13 +90,7 @@ export function CarteTitresDuDuerp({
                     {obligation.libelle}
                   </p>
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                    Formation que l&apos;établissement organise pour les
-                    travailleurs concernés — à faire suivre à cette personne si
-                    elle l&apos;est. Suivie dans «{" "}
-                    {obligation.nature === "evenementielle"
-                      ? "Quand ça arrive"
-                      : "Ce qui doit être en place"}{" "}
-                    ».
+                    {phraseFormation(reponse, obligation.nature)}
                   </p>
                   <ReferenceFondatrice obligation={obligation} />
                 </li>

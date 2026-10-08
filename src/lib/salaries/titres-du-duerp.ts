@@ -84,13 +84,13 @@ export function titresDuDuerpPourUnePersonne(
   faits: ReponsesFaitsActivite,
   titres: readonly TitreLu[],
 ): QuestionDeLaFiche[] {
-  return FAITS_ACTIVITE.filter(
-    (f) => f.declencheTitres.length > 0 || formationsDuFait(f.champ).length > 0,
-  ).map((f) => ({
+  return FAITS_ACTIVITE.map((f) => ({ f, formations: formationsDuFait(f.champ) }))
+    .filter(({ f, formations }) => f.declencheTitres.length > 0 || formations.length > 0)
+    .map(({ f, formations }) => ({
     champ: f.champ,
     intitule: intituleDuFait(f),
     reponse: reponseDuFait(faits[f.champ]),
-    formations: formationsDuFait(f.champ),
+    formations,
     autresFondements: f.autresFondements ?? null,
     titres: f.declencheTitres.flatMap((id) => {
       const obligation = titreParId(id);

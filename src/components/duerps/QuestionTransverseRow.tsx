@@ -78,7 +78,10 @@ export function QuestionTransverseRow({
     // (relecture du 2026-10-05). On demande, sur les deux — dans la page, par
     // le kit : un `confirm()` natif peut être neutralisé par le navigateur et
     // rendre le bouton inerte (`interface/confirmations-natives.ts`).
-    if (reponse === "oui" || retireLeRisqueConserve) {
+    // On ne demande que pour un geste qui RETIRE : quitter un « oui », ou
+    // retirer un risque conservé. Reposer un risque manquant ajoute, il ne
+    // demande rien (contre-relecture du 2026-10-08, N1).
+    if ((reponse === "oui" && valeur !== true) || retireLeRisqueConserve) {
       demander({
         titre: `Retirer le risque « ${libelleRisque} » de votre DUERP ?`,
         detail:
@@ -133,9 +136,7 @@ export function QuestionTransverseRow({
       </div>
       {risqueManquant && (
         <p className="m-0 mt-3 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Vous avez répondu oui depuis Équipe, mais le risque « {libelleRisque} »
-          n&apos;est pas encore dans ce document. Cliquez « Oui » pour l&apos;y
-          ajouter.
+          {`Vous avez répondu oui depuis Équipe, mais le risque « ${libelleRisque} » n'est pas encore dans ce document. Cliquez « Oui » pour l'y ajouter.`}
         </p>
       )}
       {risqueConserve && (

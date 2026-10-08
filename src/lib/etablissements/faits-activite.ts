@@ -109,7 +109,7 @@ export const FAITS_ACTIVITE: readonly FaitActivite[] = [
       "Si oui, leurs postes présentent des risques particuliers et ouvrent droit au suivi individuel renforcé de leur état de santé (art. R. 4624-22 et R. 4624-23 du Code du travail).",
     declencheTitres: ["sante-travail-salarie-sir"],
     autresFondements:
-      "Le suivi individuel renforcé est dû aussi aux postes exposés à l'amiante, au plomb, aux agents biologiques des groupes 3 et 4, aux rayonnements ionisants, au risque hyperbare ou au montage et démontage d'échafaudages (art. R. 4624-23 du Code du travail), que cette question ne couvre pas.",
+      "Cette question ne couvre pas les autres postes à risques particuliers, qui ouvrent aussi droit au suivi individuel renforcé : postes exposant à l'amiante, au plomb, aux agents biologiques des groupes 3 et 4, aux rayonnements ionisants, au risque hyperbare ou au risque de chute de hauteur lors des opérations de montage et de démontage d'échafaudages ; tout poste dont l'affectation est conditionnée à un examen d'aptitude spécifique ; et ceux que l'employeur ajoute à la liste (art. R. 4624-23 du Code du travail).",
   },
 ];
 

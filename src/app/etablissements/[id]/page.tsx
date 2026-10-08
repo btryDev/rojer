@@ -15,7 +15,7 @@ import {
   type ReponseParametrage,
 } from "@/lib/etablissements/parametrage";
 import { relancesDuDossier, type Relance } from "@/lib/etablissements/relance";
-import { estChampFaitActivite } from "@/lib/etablissements/faits-activite";
+import { estChampFaitActivite, type ChampFaitActivite } from "@/lib/etablissements/faits-activite";
 import { DashboardGrid } from "@/components/dashboard/widgets/DashboardGrid";
 import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
@@ -296,19 +296,25 @@ export default async function EtablissementPage({
   // d'actions serveur liées par `.bind` : une fermeture écrite ici ne se
   // sérialise pas vers `QuestionParametrage`, composant client (relecture du
   // 2026-10-08, B1 — la fiche plantait dès qu'une relance de fait s'affichait).
+  // Indexée par la COLONNE, et non par la question : le garde de type
+  // `estChampFaitActivite` réduit l'autre branche aux colonnes propres à la
+  // fiche, si bien qu'une question oubliée ici ne compile pas (contre-relecture
+  // du 2026-10-08 : un `as keyof` aurait planté au rendu).
   const ACTIONS_DE_LA_FICHE: Record<
-    "matieres_r4227_22" | "chiffons_impregnes" | "locaux_sommeil_public" | "epi_presents",
+    Exclude<Extract<Relance, { mode: "oui_non" }>["champ"], ChampFaitActivite>,
     (id: string, prev: ReponseParametrage, fd: FormData) => Promise<ReponseParametrage>
   > = {
-    matieres_r4227_22: repondreMatieres,
-    chiffons_impregnes: repondreChiffons,
-    locaux_sommeil_public: repondreSommeil,
-    epi_presents: repondreEpiPresents,
+    manipuleMatieresR422722: repondreMatieres,
+    chiffonsImpregnes: repondreChiffons,
+    comporteLocauxSommeilPublic: repondreSommeil,
+    epiPresents: repondreEpiPresents,
   };
-  const actionDeRelance = (relance: Extract<Relance, { mode: "oui_non" }>) =>
-    estChampFaitActivite(relance.champ)
-      ? repondreFaitActiviteFormulaire.bind(null, id, relance.champ)
-      : ACTIONS_DE_LA_FICHE[relance.question as keyof typeof ACTIONS_DE_LA_FICHE].bind(null, id);
+  const actionDeRelance = (relance: Extract<Relance, { mode: "oui_non" }>) => {
+    const champ = relance.champ;
+    return estChampFaitActivite(champ)
+      ? repondreFaitActiviteFormulaire.bind(null, id, champ)
+      : ACTIONS_DE_LA_FICHE[champ].bind(null, id);
+  };
   for (const { question, relance, faite } of relancesDuDossier(questionsMuettes, {
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
     chiffonsImpregnes: etab.chiffonsImpregnes,

@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
 import type { ReponsesFaitsActivite } from "@/lib/etablissements/faits-activite";
-import { CarteTitresDuDuerp, PHRASE_REPONSE } from "./CarteTitresDuDuerp";
+import { CarteTitresDuDuerp, PHRASE_REPONSE, phraseFormation } from "./CarteTitresDuDuerp";
 
 const tous = (v: boolean | null): ReponsesFaitsActivite => ({
   manutentionManuelle: v,
@@ -81,5 +81,12 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
     const { html } = ETATS.oui();
     expect(html).toContain("gestes et postures");
     expect(html).toMatch(/écran/);
+  });
+
+  it("après un « non », ne renvoie pas à une ligne que le moteur a retirée", () => {
+    for (const nature of ["etat_permanent", "evenementielle"]) {
+      expect(phraseFormation("non", nature)).not.toMatch(/Ce qui doit être en place|Quand ça arrive/);
+      expect(phraseFormation("oui", nature)).toMatch(/Ce qui doit être en place|Quand ça arrive/);
+    }
   });
 });
