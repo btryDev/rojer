@@ -152,6 +152,17 @@ describe("niveau audit — (a) aucune ligne", () => {
 
   it("le catalogue de l'écran Équipe ne propose aucun titre audit", () => {
     expect(cataloguerTitres().filter(estNiveauAudit)).toEqual([]);
+    // ~~La seule assertion ci-dessus~~ [2026-10-09, C67 : décorative —
+    // aucun titre n'est au niveau audit, elle passait sans le filtre.] Comme
+    // la garde des titres plus haut : une obligation salarié réelle, marquée
+    // pour l'occasion, doit sortir du catalogue, et elle seule.
+    const titre = cataloguerTitres()[0];
+    const referentiel = obligationsConformite.map((o) =>
+      o.id === titre.id ? ({ ...o, niveau: "audit" } as Obligation) : o,
+    );
+    const ids = cataloguerTitres(referentiel).map((o) => o.id);
+    expect(ids).not.toContain(titre.id);
+    expect(ids).toHaveLength(cataloguerTitres().length - 1);
   });
 
   it("l'empreinte bouge quand on lève le marqueur (réconciliation de tous les dossiers)", () => {

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EtablissementFaux, LigneFausse } from "./faux-prisma";
 import { lireEntrees, planifier, type ClientLecture } from "./passe";
+import { obligationsConformite } from "@/lib/referentiels/conformite";
 
 // ADR-042 — ce que la passe de régénération fait des lignes DÉJÀ POSÉES d'une
 // obligation passée au niveau audit : elle les traite comme une obligation
@@ -17,6 +18,23 @@ const h = vi.hoisted(async () => {
 });
 
 vi.mock("@/lib/prisma", async () => ({ prisma: (await h).prisma }));
+
+// Les obligations marquées au niveau audit POUR L'OCCASION. Aucun titre
+// salarié n'y est aujourd'hui : sans ce marquage, le `!estNiveauAudit(o)` de
+// la boucle des titres de `passe.ts` ne serait couvert par rien (C67,
+// 2026-10-09). `obligationParId` est la seule lecture que la passe fait d'une
+// obligation de titre ; on la double, le reste du module est le vrai.
+const marquees = vi.hoisted(() => new Set<string>());
+vi.mock("@/lib/referentiels/conformite", async (importOriginal) => {
+  const vrai = await importOriginal<typeof import("@/lib/referentiels/conformite")>();
+  return {
+    ...vrai,
+    obligationParId: (id: string) => {
+      const o = vrai.obligationParId(id);
+      return o && marquees.has(id) ? { ...o, niveau: "audit" as const } : o;
+    },
+  };
+});
 
 const USER_ID = "user-1";
 const ETAB_ID = "etab-1";
@@ -79,6 +97,7 @@ function ligne(partiel: Partial<LigneFausse> & { id: string }): LigneFausse {
 }
 
 beforeEach(() => {
+  marquees.clear();
   db.etablissements = [];
   db.salaries = [];
   db.titres = [];
@@ -145,5 +164,52 @@ describe("passe de régénération — une obligation passée au niveau audit ce
     expect(plan.aDesarchiver.map((a) => a.id)).toEqual([]);
     expect(plan.aMettreAJour.map((m) => m.id)).not.toContain("v-masque");
     expect(plan.aSupprimer).not.toContain("v-masque");
+  });
+});
+
+describe("passe de régénération — un titre salarié au niveau audit ne garde pas sa ligne", () => {
+  // Une obligation salarié réelle, servie aujourd'hui, marquée pour l'occasion.
+  const TITRE = obligationsConformite.find(
+    (o) => o.porteur === "salarie" && o.niveau !== "audit",
+  )!.id;
+
+  function poserTitre() {
+    poserEtablissement();
+    db.salaries = [
+      { id: "s-1", etablissementId: ETAB_ID, actif: true, nom: "Durand", prenom: "Ana" },
+    ];
+    db.titres = [
+      {
+        obligationId: TITRE,
+        salarieId: "s-1",
+        delivreLe: new Date("2025-01-01T00:00:00Z"),
+        echeanceLe: new Date("2027-06-01T00:00:00Z"),
+      },
+    ];
+    db.verifications = [
+      ligne({
+        id: "v-titre",
+        obligationId: TITRE,
+        salarieId: "s-1",
+        datePrevue: new Date("2027-06-01T00:00:00Z"),
+        nbRapports: 1,
+      }),
+    ];
+  }
+
+  it("témoin : servi, le titre en vigueur garde sa ligne", async () => {
+    poserTitre();
+    const plan = planifier(await lireEntrees(client, ETAB_ID), MAINTENANT);
+    expect([...plan.aArchiver.map((a) => a.id), ...plan.aSupprimer]).not.toContain(
+      "v-titre",
+    );
+  });
+
+  it("marqué au niveau audit, le titre en vigueur ne la garde plus : archivée avec sa trace", async () => {
+    poserTitre();
+    marquees.add(TITRE);
+    const plan = planifier(await lireEntrees(client, ETAB_ID), MAINTENANT);
+    expect(plan.aArchiver.map((a) => a.id)).toContain("v-titre");
+    expect(plan.aCreer.filter((c) => c.obligationId === TITRE)).toEqual([]);
   });
 });

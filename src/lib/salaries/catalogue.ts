@@ -2,6 +2,7 @@ import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   obligationsConformite,
   estPorteeParSalarie,
+  type Obligation,
   type ObligationPorteeParSalarie,
 } from "@/lib/referentiels/conformite";
 import { questionsDetectionTransverses } from "@/lib/referentiels";
@@ -32,11 +33,17 @@ import { questionsDetectionTransverses } from "@/lib/referentiels";
  * pas dépouillé est absent — et son absence ne veut pas dire qu'il n'est pas dû.
  * Lui laisser croire l'inverse serait le tromper sur sa propre couverture.
  */
-export function cataloguerTitres(): ObligationPorteeParSalarie[] {
+export function cataloguerTitres(
+  // Le référentiel, par défaut. Le paramètre n'existe que pour éprouver le
+  // filtre du niveau audit : aucun titre n'y est aujourd'hui, et la garde ne
+  // mord que sur un référentiel où l'un d'eux est marqué pour l'occasion
+  // (C67, 2026-10-09 ; même porte que `determineObligationsApplicables`).
+  obligations: readonly Obligation[] = obligationsConformite,
+): ObligationPorteeParSalarie[] {
   // Un titre au niveau audit (ADR-042) ne se propose pas à la saisie : il ne
   // produirait aucune ligne (`genererVerificationsDepuisTitres`), et la page
   // « Ce que Rojer ne couvre pas » le nomme.
-  return obligationsConformite
+  return obligations
     .filter(estPorteeParSalarie)
     .filter((o) => !estNiveauAudit(o))
     .sort((a, b) => a.libelle.localeCompare(b.libelle, "fr"));
