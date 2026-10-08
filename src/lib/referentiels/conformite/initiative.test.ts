@@ -45,6 +45,7 @@ function ligne(obligationId: string, datePrevue: Date, statut = "planifiee") {
     datePrevue,
     periodicite: "quinquennale",
     archiveLe: null as Date | null,
+    graceJusquAu: null as Date | null,
     libelleObligation: "Visite",
     derniereRealisation: null as Date | null,
   };

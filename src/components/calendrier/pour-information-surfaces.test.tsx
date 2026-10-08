@@ -59,6 +59,7 @@ const verif = (obligationId: string) => ({
   statut: "planifiee",
   periodicite: "quinquennale",
   archiveLe: null,
+  graceJusquAu: null,
   equipement: { libelle: "Tout l'établissement" },
   prescription: null,
   prescriptionId: null as string | null,
