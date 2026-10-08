@@ -5383,11 +5383,14 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     vous manuel / automatique / semi-automatique au-delà de ces
     distinctions ? ».
   - **Écarts ouverts — questions au préventeur sans réponse depuis le
-    30/09** : p. 35, « a supprimer » — quelle ligne (la note est entre
+    30/09** : ~~p. 35, « a supprimer » — quelle ligne (la note est entre
     « Instructions d'évacuation » et « Chiffons, cotons et papiers
-    imprégnés », R. 4227-26, en vigueur et sans seuil) ? ; p. 24, 29, 30,
+    imprégnés », R. 4227-26, en vigueur et sans seuil) ?~~ [2026-10-08, C67 :
+    tranché par la propriétaire — les chiffons, passés au niveau audit,
+    ADR-042] ; p. 24, 29, 30,
     « voir les limites » / « limite rojer » (installation frigorifique,
-    protection respiratoire, gilet gonflable) — sortir ces catégories du
+    ~~protection respiratoire, gilet gonflable~~ [2026-10-08, C67 : au niveau
+    audit, ADR-042 — reste l'installation frigorifique]) — sortir ces catégories du
     périmètre ou revoir leur bornage ? ; PO 1 § 3 — son renvoi applique-t-il
     AS 9 aux hôtels de 5ᵉ catégorie (lignes retirées en C64 sur sa note
     « AS9 applicable qu'au ERP N1 à N4 ») ? ; la formation au risque
@@ -5398,6 +5401,52 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   - **Comptes de la passe** : 171 + 1 − 0 = 172 (88 / 70 / 14) ; empreinte
     `172-ea7623eb617ce82` ; moteur inchangé (`ff1c3cda346da10d`, aucun module
     relevé touché).
+
+### C67 · 2026-10-08 — Niveau audit : chiffons, protection respiratoire et gilets hors du quotidien (ADR-042)
+
+[Numéro : C65 est pris par `lot/formations-faits-etablissement` (ADR-041) et
+C66 est sur `main` ; ce lot prend C67. Version : `2026-10-08.2` est servie,
+`2026-10-08.3` est prise par la même branche après son rebase (`b17ee602`) ;
+ce lot sert **`2026-10-08.4`**.]
+
+- **Quand · par quoi** : 2026-10-08, branche `lot/niveau-audit` (base
+  `origin/main` `befe3141`). Décision de la propriétaire du même jour, sur la
+  remarque du préventeur (p. 35, « à supprimer » ; il « ne veut pas qu'on
+  tombe dans l'audit ») : « on garde dans le référentiel mais avec une
+  mention audit et qu'il ne soit plus actif dans l'app ». **Aucun texte
+  rouvert** : R. 4227-26 (C45) et l'arrêté du 19 mars 1993 (2026-09-04) sont
+  au corpus, lus en première main ; rien n'est relu, rien n'est changé à
+  leur lecture.
+- **Ce qui est appliqué** : champ `niveau: "audit"` (ADR-042), porte unique
+  au moteur. `incendie-travail-chiffons-impregnes-recipients-clos` au niveau
+  audit. `epi-verification-generale-periodique` scindée : l'antichute garde
+  l'identifiant et reste servie ; entrent
+  `epi-verification-generale-periodique-respiratoire` et
+  `-gilet-sauvetage`, au niveau audit, `succedeA` vers l'ancien ; le corpus
+  (art. 1er de l'arrêté, `R. 4323-100`) les nomme. Empreinte
+  `172-ea7623eb617ce82` → `174-5f46dea89bed4c54`, en appelant
+  `empreinteReferentiel()`. **172 + 2 − 0 = 174**, dont 3 au niveau audit —
+  90 équipement, 70 établissement, 14 salarié (`porteurDe`, en appelant).
+  Relevé du moteur `ff1c3cda346da10d` → `3e1e00bd9148bbbb`, recopié sans
+  incrément (sans le champ, même sortie).
+- **Effet en base, à la première passe** : les lignes d'un appareil
+  respiratoire ou d'un gilet sous l'ancien identifiant, et la ligne des
+  chiffons, sont archivées si elles portent une trace, supprimées sinon
+  (`calendrier/niveau-audit.test.ts`, passe entière sur le faux client). Les
+  déclarations d'état permanent des chiffons restent en base, sans ligne. La
+  relance « à confirmer » de la question des chiffons disparaît. Comptage en
+  production non fait (lecture seule à demander à la propriétaire).
+- **Gardes, éprouvées en les cassant** : porte du moteur retirée → 5 rouges
+  (moteur, passe, écran en place) ; porte des titres retirée → 1 ; rubrique
+  vidée → 2 ; marqueur retiré des chiffons → 5 ; segment d'empreinte retiré →
+  1 ; `surfacesDe` sans le niveau → 1 ; filtre du catalogue retiré avec un
+  titre marqué → 1. **La garde (c) passait au vert sur un fondement vidé**
+  (le gilet retiré des renvois de l'art. 1er : `R. 4323-100`, article de
+  contexte, le nommait encore) ; resserrée sur le FONDEMENT, elle rougit.
+- **En suspens** : le chiffre public de la page d'accueil (172) n'est pas
+  touché — distinguer les obligations audit est une décision de la
+  propriétaire ; il est faux de deux depuis ce lot. La question
+  `chiffonsImpregnes` reste posée et ne décide plus d'aucune ligne.
 
 ## Partie 2 — Registre des constats en suspens
 
