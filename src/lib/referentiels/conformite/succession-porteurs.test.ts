@@ -88,8 +88,11 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "ascenseur-erp-verification-quinquennale-as9": "equipement",
   "ascenseur-erp-verification-remise-en-service-as9": "equipement",
   "ascenseur-examen-annuel-securite": "equipement",
-  "ascenseur-hotel-5-verification-quinquennale-as9": "equipement",
-  "ascenseur-hotel-5-verification-remise-en-service-as9": "equipement",
+  // ~~"ascenseur-hotel-5-verification-quinquennale-as9": "equipement",~~
+  // ~~"ascenseur-hotel-5-verification-remise-en-service-as9": "equipement",~~
+  // 2026-10-08 (C64) : les deux lignes C60 sont supprimées SANS
+  // `OBLIGATIONS_RETIREES` — nées et retirées sous la même version
+  // `2026-10-07.5`, jamais servie : aucune ligne en base ne porte leur id.
   "ascenseur-examen-semestriel-secours": "equipement",
   "ascenseur-rapport-annuel-activite": "equipement",
   "ascenseur-telealarme-liaison": "equipement",

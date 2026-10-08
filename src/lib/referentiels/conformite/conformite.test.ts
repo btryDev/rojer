@@ -1707,7 +1707,14 @@ describe("référentiel conformité — version et empreinte", () => {
     // `signalisation-erp-extincteurs-identification`, portée par l'extincteur
     // comme par le RIA. 173 + 0 − 0 = 173. ~~173-7324273780278b5f~~ :
     // empreinte après C60, jamais scellée.
-    { version: "2026-10-07.5", empreinte: "173-2543b2a5149c8d07" },
+    // Puis C64 (2026-10-08, décisions de la propriétaire « on respecte les
+    // décisions de Julien », même version jamais servie) : (B) les deux
+    // lignes AS 9 des hôtels de 5ᵉ entrées au C60 sont supprimées — le
+    // préventeur borne AS 9 aux N1–N4 —, sans `OBLIGATIONS_RETIREES` : nées
+    // et retirées sous cette version, aucune ligne en base ne porte leur id.
+    // 173 + 0 − 2 = 171. ~~173-2543b2a5149c8d07~~ : empreinte après C62,
+    // jamais scellée.
+    { version: "2026-10-07.5", empreinte: "171-b161063e19bd746" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1864,7 +1871,9 @@ describe("référentiel conformité — version et empreinte", () => {
       "Le nombre d'obligations a changé. Si c'est voulu, mettez ce compte à " +
         "jour, AJOUTEZ une ligne à `HISTORIQUE_EMPREINTES` — ne réécrivez pas " +
         "la dernière — et mettez à jour `.claude/CLAUDE.md`, qui l'annonce.",
-    ).toBe(173);
+      // ~~173~~ — 2026-10-08 (C64) : 173 + 0 − 2 (AS 9 aux hôtels de 5ᵉ,
+      // supprimées avant d'avoir été servies) = 171.
+    ).toBe(171);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

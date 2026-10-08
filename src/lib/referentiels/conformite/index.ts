@@ -303,9 +303,10 @@ export const obligationsConformite: Obligation[] = [
 // `incendie-travail-extincteurs-maintenance-approfondie`.
 // Compte : 166 + 5 − 0 = 171.
 // C60, même version (jamais servie), revue indépendante de la relecture :
-// AS 9 s'applique aux hôtels de 5ᵉ catégorie par le renvoi exprès de PO 1 § 3
+// ~~AS 9 s'applique aux hôtels de 5ᵉ catégorie par le renvoi exprès de PO 1 § 3
 // (PO 8 § 1, PE 1 § 1) — entrent `ascenseur-hotel-5-verification-quinquennale-as9`
-// et `ascenseur-hotel-5-verification-remise-en-service-as9` (N5, type O).
+// et `ascenseur-hotel-5-verification-remise-en-service-as9` (N5, type O).~~
+// [2026-10-08, C64 : supprimées, voir plus bas.]
 // Lignes AS 9 N1–N4 fondées d'abord sur PE 1 § 1 ; identification des
 // extincteurs N1–N4 étendue au RIA (MS 15 § 4) ; libellés des défauts annuels
 // (RIA, désenfumage, EPI) et de la triennale SSI ramenés au texte ; valeur
@@ -315,6 +316,11 @@ export const obligationsConformite: Obligation[] = [
 // `signalisation-erp-extincteurs-identification` devient neutre — la ligne est
 // portée par l'extincteur comme par le RIA, et chacun lisait l'exigence de
 // l'autre. Compte : 173 + 0 − 0 = 173.
+// C64, même version (jamais servie), 2026-10-08 — « on respecte les décisions
+// de Julien » (décision de la propriétaire) :
+// (B) les deux lignes AS 9 des hôtels de 5ᵉ sont supprimées, sans
+// `OBLIGATIONS_RETIREES` (nées et retirées sous cette version) ; le renvoi de
+// PO 1 § 3 reste lu, en réserve de PO 1 et PO 8. Compte : 173 + 0 − 2 = 171.
 export const REFERENTIEL_VERSION = "2026-10-07.5";
 
 /**

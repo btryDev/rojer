@@ -145,7 +145,11 @@ describe("registre de dette — les réserves de lecture", () => {
     // `MS 15` entre au corpus, retenu pour son § 4 (armoires de RIA
     // signalées) ; ses § 1 à § 3, règles d'implantation, restent dehors.
     // 86 + 1 − 0 = 87.
-    expect(n).toBe(87);
+    // 87 → 89 le 2026-10-08 (C64) : `PO 1` et `PO 8` restent retenus (le
+    // contrôle électrique annuel de l'hôtel) et gagnent chacun une réserve —
+    // le renvoi à AS 9, question posée au préventeur, qui borne AS 9 aux
+    // N1–N4 ; les deux lignes N5/O sont supprimées. 87 + 2 − 0 = 89.
+    expect(n).toBe(89);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

@@ -516,16 +516,20 @@ export const CORPUS_PE: Corpus = {
       statut: "retenu",
       obligations: [
         "incendie-hotel-po-controle-annuel-electricite",
-        // 2026-10-07 (C60) : le renvoi du § 3 à AS 9 pour les ascenseurs.
-        "ascenseur-hotel-5-verification-quinquennale-as9",
-        "ascenseur-hotel-5-verification-remise-en-service-as9",
+        // ~~2026-10-07 (C60) : le renvoi du § 3 à AS 9 pour les ascenseurs —
+        // `ascenseur-hotel-5-verification-quinquennale-as9`,
+        // `ascenseur-hotel-5-verification-remise-en-service-as9`~~ — 2026-10-08
+        // (C64) : lignes supprimées avant d'avoir été servies, le préventeur
+        // borne AS 9 aux N1–N4. La lecture du renvoi reste en `reserve`.
       ],
+      reserve:
+        "RENVOI DU § 3 À AS 9 POUR LES ASCENSEURS — QUESTION POSÉE AU PRÉVENTEUR ; IL BORNE AS 9 AUX N1-N4 (2026-10-08, C64 ; « AS9 applicable qu'au ERP N1 à N4 (organisme agréé) », annotation recopiée au C60). La lecture du texte, faite au C60 et non reniée : PE 1 § 1 écarte le livre II en 5ᵉ catégorie « sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre », et PO 1 § 3 mentionne AS 9 expressément (« Le contrôle des ascenseurs relève des dispositions particulières précisées dans le cadre de l'article AS 9 du règlement »). Rojer suit le préventeur : aucune ligne AS 9 pour l'hôtel de 5ᵉ catégorie ; ses ascenseurs restent suivis par les lignes du CCH (contrôle technique quinquennal, entretien), qui valent pour tout ascenseur. Décision de la propriétaire du 2026-10-08 (« on respecte les décisions de Julien »).",
       historique:
         "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
       citationCle:
         "« § 3. L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans, à l'exception des installations électriques et des systèmes de détection incendie qui doivent être contrôlés annuellement. Le contrôle des ascenseurs relève des dispositions particulières précisées dans le cadre de l'article AS 9 du règlement. »",
       prescrit:
-        "Chapitre IV — hôtels (type O) de 5ᵉ catégorie. Trois rythmes : biennal sur l'ensemble des installations techniques, annuel sur les installations électriques et les systèmes de détection incendie, renvoi à AS 9 pour les ascenseurs. Le volet électrique est porté depuis le 2026-08-26 : il comblait un vrai trou, `elec-erp-cat1-4-annuelle` s'arrêtant aux quatre premières catégories. Le volet détection est déjà couvert par `incendie-erp-ssi-annuelle`, qui vaut pour tous les ERP. Le volet biennal est déclaré à part. Lu en première main le 2026-08-26. [2026-10-07, C60] Le renvoi aux ascenseurs est porté : `ascenseur-hotel-5-verification-quinquennale-as9` et sa jumelle de remise en service. PE 1 § 1 n'ouvre le livre II en 5ᵉ que sur renvoi exprès ; celui-ci en est un.",
+        "Chapitre IV — hôtels (type O) de 5ᵉ catégorie. Trois rythmes : biennal sur l'ensemble des installations techniques, annuel sur les installations électriques et les systèmes de détection incendie, renvoi à AS 9 pour les ascenseurs. Le volet électrique est porté depuis le 2026-08-26 : il comblait un vrai trou, `elec-erp-cat1-4-annuelle` s'arrêtant aux quatre premières catégories. Le volet détection est déjà couvert par `incendie-erp-ssi-annuelle`, qui vaut pour tous les ERP. Le volet biennal est déclaré à part. Lu en première main le 2026-08-26. ~~[2026-10-07, C60] Le renvoi aux ascenseurs est porté : `ascenseur-hotel-5-verification-quinquennale-as9` et sa jumelle de remise en service. PE 1 § 1 n'ouvre le livre II en 5ᵉ que sur renvoi exprès ; celui-ci en est un.~~ [2026-10-08, C64 : les deux lignes sont supprimées avant d'avoir été servies — le préventeur borne AS 9 aux N1-N4 ; la lecture du renvoi reste en `reserve`.]",
     },
     {
       ref: "PO 1 § 3 — contrôle biennal des installations techniques",
@@ -631,10 +635,12 @@ export const CORPUS_PE: Corpus = {
       statut: "retenu",
       obligations: [
         "incendie-hotel-po-controle-annuel-electricite",
-        // 2026-10-07 (C60) : PO 1 (§ 3) réimporté, renvoi à AS 9 compris.
-        "ascenseur-hotel-5-verification-quinquennale-as9",
-        "ascenseur-hotel-5-verification-remise-en-service-as9",
+        // ~~2026-10-07 (C60) : PO 1 (§ 3) réimporté, renvoi à AS 9 compris —
+        // les deux lignes `ascenseur-hotel-5-*-as9`~~ — 2026-10-08 (C64) :
+        // supprimées avant d'avoir été servies (réserve ci-dessous).
       ],
+      reserve:
+        "PO 1 (§ 3) EST RÉIMPORTÉ POUR LES HÔTELS EXISTANTS, RENVOI À AS 9 COMPRIS — QUESTION POSÉE AU PRÉVENTEUR ; IL BORNE AS 9 AUX N1-N4 (2026-10-08, C64). Rojer ne porte aucune ligne AS 9 pour l'hôtel de 5ᵉ catégorie, existant ou neuf ; la lecture du renvoi est consignée à PO 1.",
       citationCle:
         "« § 1. Les prescriptions définies dans la présente section sont applicables en complément des articles PE 4, PE 24, PE 26, PE 27, PE 32, PE 36, PO 1 (§ 3) et PO 5. »",
       prescrit:
