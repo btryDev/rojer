@@ -5427,7 +5427,7 @@ ce lot sert **`2026-10-08.4`**.]
   `172-ea7623eb617ce82` → `174-5f46dea89bed4c54`, en appelant
   `empreinteReferentiel()`. **172 + 2 − 0 = 174**, dont 3 au niveau audit —
   90 équipement, 70 établissement, 14 salarié (`porteurDe`, en appelant).
-  Relevé du moteur `ff1c3cda346da10d` → `3e1e00bd9148bbbb`, recopié sans
+  Relevé du moteur `ff1c3cda346da10d` → ~~`3e1e00bd9148bbbb`~~ `df2b06b8dd0dd531`, recopié sans
   incrément (sans le champ, même sortie).
 - **Effet en base, à la première passe** : les lignes d'un appareil
   respiratoire ou d'un gilet sous l'ancien identifiant, et la ligne des
@@ -5443,10 +5443,13 @@ ce lot sert **`2026-10-08.4`**.]
   titre marqué → 1. **La garde (c) passait au vert sur un fondement vidé**
   (le gilet retiré des renvois de l'art. 1er : `R. 4323-100`, article de
   contexte, le nommait encore) ; resserrée sur le FONDEMENT, elle rougit.
-- **En suspens** : le chiffre public de la page d'accueil (172) n'est pas
-  touché — distinguer les obligations audit est une décision de la
-  propriétaire ; il est faux de deux depuis ce lot. La question
-  `chiffonsImpregnes` reste posée et ne décide plus d'aucune ligne.
+- **En suspens** : le chiffre public de la page d'accueil passe de 172 à 174
+  (compte du référentiel, lié à la page par `chiffres-publics.test.ts`, qui
+  interdit de le laisser faux) ; il inclut les trois obligations audit — les
+  distinguer à l'écran public est une décision de la propriétaire. La
+  question `chiffonsImpregnes` reste posée et ne décide plus d'aucune ligne.
+  Relevé du moteur repris : `df2b06b8dd0dd531` (imports directs de
+  `estNiveauAudit`).
 
 ## Partie 2 — Registre des constats en suspens
 

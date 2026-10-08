@@ -132,7 +132,9 @@ const RELEVE = {
   // obligations qui le portent — une DONNÉE, que l'empreinte hache (segment
   // `niveau:audit`) : le passage du référentiel à `2026-10-08.4` déplace le
   // sceau et resynchronise déjà le parc (lignes archivées si elles portent une
-  // trace, supprimées sinon — `niveau-audit.test.ts`).
+  // trace, supprimées sinon — `niveau-audit.test.ts`). Relevé repris le même
+  // jour : `passe.ts` et `salaries/catalogue.ts` importent `estNiveauAudit`
+  // de son module plutôt que de l'index — même sortie.
   // Recopiée SANS incrément le 2026-10-08 (ADR-040, délai de grâce) :
   // `calendrier/grace.ts` entre au relevé, et `actions.ts` écrit
   // `graceJusquAu` dans le `createMany`. NON, la régénération n'écrit pas
@@ -308,7 +310,7 @@ const RELEVE = {
   // change les lignes — le rythme triennal du titre d'habilitation — est une
   // DONNÉE du référentiel, qui déplace son empreinte, donc le sceau.
   // ~~4b75258a15263110~~.
-  empreinte: "3e1e00bd9148bbbb",
+  empreinte: "df2b06b8dd0dd531",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

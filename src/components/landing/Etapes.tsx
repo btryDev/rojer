@@ -134,12 +134,16 @@ export function Etapes({
               chiffres sont comptés sur `obligationsConformite`, à
               recompter quand le référentiel s'étend. 171 → 172 le
               2026-10-08 (C66) : + 1, l'entretien et la vérification de
-              l'alarme hors ERP, compté en appelant le référentiel. */}
+              l'alarme hors ERP, compté en appelant le référentiel. 172 → 174
+              le 2026-10-08 (ADR-042) : + 2, respiratoire et gilet scindés de
+              la vérification de l'arrêté du 19 mars 1993 ; le compte inclut
+              les trois obligations au niveau audit — les distinguer est une
+              question à la propriétaire. */}
           {/* Calée à gauche, sous la colonne des crans et non dans leur
               retrait : à l'aplomb du corps de texte, elle se lisait comme
               une quatrième ligne de l'étape 3. */}
           <p className="mt-9 font-mono text-[0.68rem] uppercase leading-[1.8] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
-            Référentiel construit depuis Légifrance et EUR-Lex · 172
+            Référentiel construit depuis Légifrance et EUR-Lex · 174
             obligations sur 21 domaines · source citée pour chacune
           </p>
 

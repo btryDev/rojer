@@ -250,7 +250,8 @@ export default async function PerimetrePage({
                 de Rojer
               </h2>
               <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                {EXPLICATION_NIVEAU_AUDIT} Rojer les garde dans son
+                {EXPLICATION_NIVEAU_AUDIT}{" "}
+                Rojer les garde dans son
                 référentiel, avec leur texte, pour le jour où un audit les
                 reprendra ; elles sont nommées ici parce qu&apos;elles peuvent
                 concerner votre établissement.

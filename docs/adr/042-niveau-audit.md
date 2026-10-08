@@ -112,5 +112,7 @@ obligation légale sortie du quotidien reste VISIBLE.
 - `VERSION_MOTEUR_CALENDRIER` n'est pas incrémentée : sans le champ, le code
   rend ce qu'il rendait ; c'est la donnée, hachée par l'empreinte, qui
   resynchronise.
-- Le chiffre public de la page d'accueil (172) n'est pas touché : la question
-  de le distinguer est posée à la propriétaire.
+- Le chiffre public de la page d'accueil passe de 172 à 174 — c'est le compte
+  du référentiel, que `chiffres-publics.test.ts` lie à la page ; il INCLUT les
+  obligations audit, comme le § 7. Les distinguer à l'écran public (« 171
+  suivies au quotidien ») est une question posée à la propriétaire.

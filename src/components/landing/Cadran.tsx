@@ -50,7 +50,13 @@ const DOCUMENTS: Document[] = [
     // 171 → 172 le 2026-10-08 (C66, dernière passe) : 171 + 1 (entretien et
     // vérification de l'alarme hors ERP, R. 4224-17) − 0 = 172, compté en
     // appelant le référentiel.
-    reperes: ["172 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
+    // 172 → 174 le 2026-10-08 (ADR-042) : 172 + 2 (vérification des
+    // appareils de protection respiratoire et des gilets de sauvetage,
+    // scindées de celle de l'arrêté du 19 mars 1993) − 0 = 174, compté en
+    // appelant le référentiel. Le compte INCLUT les trois obligations au
+    // niveau audit (au référentiel, hors du quotidien) : les distinguer ici
+    // est une question posée à la propriétaire, pas tranchée.
+    reperes: ["174 obligations · 21 domaines", "Sources Légifrance et EUR-Lex"],
   },
   {
     numero: "02",
