@@ -4744,7 +4744,7 @@ propriétaire du 07/10 : appliquer les retraits demandés. Aucun texte rouvert :
 sont des décisions de périmètre, pas des lectures. Référentiel `2026-10-07.2` sur la
 branche, jamais servi : le lot est livré sous `2026-10-07.5` (intégration, C55 à C59).*
 
-**IGH — « IGH non traité par Rojer » (p. 4, 6, 9, 10, 34).** Retirées, sans
+**IGH — le préventeur note que l'IGH n'est pas traité par Rojer (p. 4, 6, 9, 10, 34).** Retirées, sans
 absorbant : `elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
 `incendie-igh-charge-calorifique-quinquennale`. `GH 5` et `GH 61` passent
 `non_couvert`, annoncés sur l'axe `igh` de la page « Ce que Rojer ne couvre pas »,
@@ -4755,8 +4755,8 @@ question IGH reste à l'onboarding (refus de l'ERP en IGH, annonce). 174 → 171
 Garde neuve éprouvée : `typologies: { igh: true }` posé sur une ligne vivante →
 « 2 failed | 1 passed | 105 skipped (108) ».
 
-**Équipements sous pression — « à exclure sauf pour compresseur : requalification
-tous les 10 ans » (p. 20).** Seule `esp-requalification-decennale` reste. Retirées,
+**Équipements sous pression — le préventeur demande d'exclure ces lignes, sauf la
+requalification décennale des compresseurs (p. 20).** Seule `esp-requalification-decennale` reste. Retirées,
 sans absorbant : `esp-declaration-mise-en-service`, `esp-inspection-periodique`,
 `esp-inspection-periodique-generateur-vapeur`, `esp-dossier-suivi`,
 `esp-intervention-reparation`, `esp-personnel-formation`. Corpus : arrêté du

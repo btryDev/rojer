@@ -6,8 +6,8 @@ import { FAMILLES_ESP_NON_COMPRESSEUR } from "./equipement-sous-pression";
 
 /**
  * La requalification décennale des équipements sous pression est bornée aux
- * compresseurs (2026-10-08, C64 ; préventeur : « à exclure sauf pour
- * compresseur : requalification tous les 10 ans »). Le silence la garde.
+ * compresseurs (2026-10-08, C64 ; le préventeur demande d'exclure les ESP,
+ * sauf la requalification décennale des compresseurs). Le silence la garde.
  */
 const ID = "esp-requalification-decennale";
 

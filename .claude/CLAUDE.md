@@ -452,7 +452,7 @@ est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
   `GH 66` fait du classement l'affaire de l'usage principal de l'immeuble).
   ~~L'**IGH seul est servi** : **onze obligations portent la typologie `igh`**,~~
   **[2026-10-07 — le règlement IGH n'est plus traité.** Relecture préventeur du
-  30/09 (« IGH non traité par Rojer »), décision de la propriétaire du 07/10 :
+  30/09 (le préventeur note que l'IGH n'est pas traité par Rojer), décision de la propriétaire du 07/10 :
   les trois lignes propres à l'IGH sont dans `OBLIGATIONS_RETIREES`, `GH 5` et
   `GH 61` passent `non_couvert`, et la page « Ce que Rojer ne couvre pas » (axe
   `igh`) le dit, charge calorifique de l'occupant en tête. **Huit obligations
