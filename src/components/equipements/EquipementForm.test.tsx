@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, render } from "@testing-library/react";
 import { EquipementForm } from "./EquipementForm";
 import {
   CATEGORIES_A_REPONSE_EXIGEE,
