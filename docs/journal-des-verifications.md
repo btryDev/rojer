@@ -5424,11 +5424,19 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     audit, ADR-042 — reste l'installation frigorifique]) — sortir ces catégories du
     périmètre ou revoir leur bornage ? ; PO 1 § 3 — son renvoi applique-t-il
     AS 9 aux hôtels de 5ᵉ catégorie (lignes retirées en C64 sur sa note
-    « AS9 applicable qu'au ERP N1 à N4 ») ? ; la formation au risque
-    chimique fondée sur L. 4141-2 (lecture de Rojer, C64) — la valide-t-il ?
-    ; l'édition de la NF S 61-919 qu'il applique (Rojer a lu celle d'août
-    2001, fournie par lui) ; le texte de la NF C 18-510 (paragraphe et
-    édition du recyclage triennal, que Rojer n'a pas lus).
+    « AS9 applicable qu'au ERP N1 à N4 ») ? ; ~~la formation au risque
+    chimique fondée sur L. 4141-2 (lecture de Rojer, C64) — la valide-t-il ?~~
+    [2026-10-12 : réglé par la propriétaire — la règle du préventeur « rythme
+    vague → au moins annuel » (ADR-039, qui cite L. 4141-2) la fonde. Vérifié
+    sur Légifrance le 12/10 : L. 4141-2 « répétée périodiquement » ;
+    R. 4412-88 limité aux CMR ; R. 4141-15 2° « manipulation ou utilisation de
+    produits chimiques ».]
+    ; ~~l'édition de la NF S 61-919 qu'il applique (Rojer a lu celle d'août
+    2001, fournie par lui)~~ [2026-10-12 : réglé par la propriétaire — on
+    retient l'édition d'août 2001 fournie par le préventeur] ; ~~le texte de la
+    NF C 18-510 (paragraphe et édition du recyclage triennal, que Rojer n'a pas
+    lus)~~ [2026-10-12 : réglé par la propriétaire — on retient le recyclage de
+    3 ans tel que le préventeur l'a relevé].
   - **Comptes de la passe** : 171 + 1 − 0 = 172 (88 / 70 / 14) ; empreinte
     `172-ea7623eb617ce82` ; moteur inchangé (`ff1c3cda346da10d`, aucun module
     relevé touché).
