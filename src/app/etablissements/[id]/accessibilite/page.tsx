@@ -14,17 +14,23 @@ import {
 } from "@/lib/accessibilite/queries";
 import { genererQrCodeDataUrl } from "@/lib/accessibilite/qrcode";
 import { publicAppUrl } from "@/lib/email";
+import {
+  CONTENU_REGISTRE,
+  libelleProgression,
+} from "@/components/accessibilite/textes";
 
 export const metadata = {
   title: "Registre d'accessibilité ERP",
 };
 
 /**
- * Les quatre rubriques de l'arrêté du 19 avril 2017, chacune dépliable.
+ * ~~Les quatre rubriques de l'arrêté du 19 avril 2017~~ — les quatre
+ * sections du module (rayé le 2026-10-12 : l'arrêté énumère neuf pièces,
+ * `components/accessibilite/textes.ts`), chacune dépliable.
  *
- * La numérotation reste : ici l'ordre porte une information — ce sont les
+ * La numérotation reste : ~~ici l'ordre porte une information — ce sont les
  * quatre rubriques que le texte énumère, et un contrôleur les cherche dans
- * cet ordre. C'est l'exception que la règle du kit prévoit
+ * cet ordre~~ (même rature, même date). C'est l'exception que la règle du kit prévoit
  * (`SectionChamps` ne numérote pas, faute d'ordre signifiant).
  *
  * Le liseré de tête coloré du papier disparaît : le board ne peint pas un
@@ -87,6 +93,10 @@ export default async function AccessibilitePage({
   const { etablissement } = await requireEtablissement(id);
 
   if (!etablissement.estERP) {
+    // Un registre tenu quand l'établissement était ERP reste en base ; sa
+    // page publique ne répond plus (`registreServiAuPublic`, 2026-10-12).
+    // Le dire ici, où le bouton de retrait n'est plus proposé.
+    const registreAncien = await getRegistreAccessibilite(id);
     return (
       <>
         <AppTopbar
@@ -111,6 +121,14 @@ export default async function AccessibilitePage({
               modifier le régime de votre établissement si celui-ci doit être
               déclaré ERP.
             </p>
+            {registreAncien?.publie && (
+              <p className="m-0 mt-3 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                Le registre publié quand l&apos;établissement était déclaré ERP
+                reste enregistré, mais sa page publique et son affiche ne sont
+                plus servies. Elles reviennent si l&apos;établissement est de
+                nouveau déclaré ERP.
+              </p>
+            )}
             <div className="mt-5">
               <Link
                 href={`/etablissements/${id}/modifier`}
@@ -191,11 +209,7 @@ export default async function AccessibilitePage({
             href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043819305"
             extrait="L'exploitant de tout établissement recevant du public au sens de l'article R. 143-2 élabore le registre public d'accessibilité prévu à l'article L. 164-1. Celui-ci précise les dispositions prises pour permettre à tous, notamment aux personnes handicapées, quel que soit leur handicap, de bénéficier des prestations en vue desquelles cet établissement a été conçu."
           >
-            L&apos;arrêté du 19 avril 2017 définit{" "}
-            <strong>4 rubriques obligatoires</strong>{" "}
-            : prestations fournies,
-            pièces administratives d&apos;accessibilité, formation du
-            personnel, et modalités de maintenance.
+            {CONTENU_REGISTRE}
           </LegalBadge>
         </WhyCard>
 
@@ -236,16 +250,10 @@ export default async function AccessibilitePage({
           </div>
           <div className="min-w-0 flex-1">
             <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
-              {progression === 0
-                ? "Registre vide"
-                : progression === 100
-                  ? "Registre complet"
-                  : "En cours de remplissage"}
+              {libelleProgression(progression).titre}
             </p>
             <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              {progression < 100
-                ? "Remplissez chaque section en plusieurs passes — rien n'est bloquant."
-                : "Toutes les rubriques de l'arrêté sont renseignées."}
+              {libelleProgression(progression).phrase}
             </p>
           </div>
         </div>

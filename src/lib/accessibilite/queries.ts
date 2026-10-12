@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireEtablissement } from "@/lib/auth/scope";
+import { registreServiAuPublic } from "./publication";
 
 export async function getRegistreAccessibilite(etablissementId: string) {
   const { etablissement } = await requireEtablissement(etablissementId);
@@ -27,6 +28,7 @@ export async function getRegistrePublicParSlug(slug: string) {
       etablissement: {
         select: {
           raisonDisplay: true,
+          estERP: true,
           adresse: true,
           typeErp: true,
           categorieErp: true,
@@ -37,7 +39,11 @@ export async function getRegistrePublicParSlug(slug: string) {
       },
     },
   });
-  if (!r || !r.publie) return null;
+  // ~~`!r.publie`~~ seul jusqu'au 2026-10-12 : un établissement repassé
+  // non-ERP gardait sa page publique (`registreServiAuPublic`).
+  if (!r || !registreServiAuPublic({ publie: r.publie, estERP: r.etablissement.estERP })) {
+    return null;
+  }
   return r;
 }
 

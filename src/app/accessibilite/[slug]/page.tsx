@@ -174,14 +174,31 @@ export default async function RegistrePublicPage({
         )}
 
         {/* Section 4 — Équipements */}
-        {r.equipementsAccessibilite && (
-          <section className="carte-board px-7 py-6 sm:px-8">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              02 · Équipements d&apos;accessibilité
-            </p>
-            <p className="m-0 mt-2.5 whitespace-pre-wrap text-[14.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-              {r.equipementsAccessibilite}
-            </p>
+        {/* Les modalités de maintenance sont le 9° de l'arrêté (art. 1er I) :
+            saisies à la section 4, elles n'étaient pas publiées jusqu'au
+            2026-10-12 (audit des modules). */}
+        {(r.equipementsAccessibilite || r.modalitesMaintenance) && (
+          <section className="carte-board flex flex-col gap-6 px-7 py-6 sm:px-8">
+            {r.equipementsAccessibilite && (
+              <div>
+                <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+                  02 · Équipements d&apos;accessibilité
+                </p>
+                <p className="m-0 mt-2.5 whitespace-pre-wrap text-[14.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                  {r.equipementsAccessibilite}
+                </p>
+              </div>
+            )}
+            {r.modalitesMaintenance && (
+              <div>
+                <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+                  Modalités de maintenance des équipements
+                </p>
+                <p className="m-0 mt-2.5 whitespace-pre-wrap text-[14.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                  {r.modalitesMaintenance}
+                </p>
+              </div>
+            )}
           </section>
         )}
 
@@ -209,6 +226,13 @@ export default async function RegistrePublicPage({
               {r.dateConformite && (
                 <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-slate-mid)]">
                   Effective depuis le {formatDate(r.dateConformite)}
+                </p>
+              )}
+              {/* Saisie à la section 2, non publiée jusqu'au 2026-10-12. */}
+              {r.dateDepotAdap && (
+                <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-slate-mid)]">
+                  Agenda d&apos;accessibilité programmée déposé le{" "}
+                  {formatDate(r.dateDepotAdap)}
                 </p>
               )}
               {r.numeroAttestationAccess && (

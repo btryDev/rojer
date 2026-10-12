@@ -57,6 +57,7 @@ import {
 } from "@/lib/pdf/readme-controle";
 import { attestationUrssafPresente } from "@/lib/prestataires/vigilance";
 import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
+import { registreServiAuPublic } from "@/lib/accessibilite/publication";
 
 /** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
 function datesAttestationZip(p: {
@@ -317,9 +318,17 @@ export async function GET(
   const registreAccess = await lire("05_Accessibilite_URL.txt", null, () =>
     prisma.registreAccessibilite.findUnique({
     where: { etablissementId: id },
-    select: { slugPublic: true, publie: true },
+    select: { slugPublic: true, publie: true, etablissement: { select: { estERP: true } } },
   }));
-  if (registreAccess?.publie) {
+  // La même règle que la page publique (`registreServiAuPublic`) : le ZIP ne
+  // donne pas une adresse qui répondrait 404 (2026-10-12).
+  if (
+    registreAccess &&
+    registreServiAuPublic({
+      publie: registreAccess.publie,
+      estERP: registreAccess.etablissement.estERP,
+    })
+  ) {
     const url = `${publicAppUrl()}/accessibilite/${registreAccess.slugPublic}`;
     zip.file(
       "05_Accessibilite_URL.txt",

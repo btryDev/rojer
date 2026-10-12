@@ -8,6 +8,7 @@ import { HandicapAccessible } from "@prisma/client";
 import {
   HANDICAPS,
   genererSlug,
+  slugLibre,
   section1Schema,
   section2Schema,
   section3Schema,
@@ -38,11 +39,16 @@ async function obtenirOuCreer(etablissementId: string) {
   });
   if (!etab) throw new Error("Établissement introuvable");
 
+  const base = genererSlug(etab.raisonDisplay, etab.entreprise.siret);
+  const pris = await prisma.registreAccessibilite.findMany({
+    where: { slugPublic: { startsWith: base } },
+    select: { slugPublic: true },
+  });
   return prisma.registreAccessibilite.create({
     data: {
       id: `reg_${randomUUID()}`,
       etablissementId,
-      slugPublic: genererSlug(etab.raisonDisplay, etab.entreprise.siret),
+      slugPublic: slugLibre(base, pris.map((r) => r.slugPublic)),
     },
   });
 }
