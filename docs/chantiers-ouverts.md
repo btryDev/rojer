@@ -184,8 +184,13 @@ il n'est pas « la moitié du problème ».
 `toucheLaCible` suit `CATEGORIES_COUVERTES = ["N5"]` : le gaz d'un restaurant de
 4ᵉ catégorie (`GZ 13`, `GZ 14`) est compté HORS cible. L'ADR-031 écrit pourtant
 qu'un restaurant de huit salariés en 3ᵉ catégorie « reste dans la cible ». Les
-deux définitions cohabitent dans le dépôt ; la réponse appartient à la
-propriétaire (lot 6b), et elle déplacerait quatre lignes de colonne.
+deux définitions cohabitent dans le dépôt ; ~~la réponse appartient à la
+propriétaire (lot 6b), et elle déplacerait quatre lignes de colonne.~~
+[**TRANCHÉ le 2026-10-12** par la propriétaire : la cible est ce que
+l'onboarding ne refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH
+(ADR-031) ; au sens large, TPE/PME. Le restaurant de 4ᵉ catégorie EST dans la
+cible. Reste à faire : aligner `toucheLaCible` sur cette définition plutôt que
+sur `CATEGORIES_COUVERTES`, ce qui déplace les quatre lignes annoncées ici.]
 
 **Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le

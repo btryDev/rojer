@@ -31,7 +31,11 @@ function phraseDuManque(m: Manque): string {
     // sinistre) — on le dit, au lieu de dater l'obligation entière (C1).
     const fonde = m.obligation.premierDelaiFonde;
     const sujet = fonde?.vise ? `Le texte date ${fonde.vise} : ` : "Due ";
-    const reste = fonde?.vise && fonde.reste ? ` ${fonde.reste}` : "";
+    const reste =
+      (fonde?.vise && fonde.reste ? ` ${fonde.reste}` : "") +
+      // Le délai général ne vaut pas pour tous : la phrase le dit, puisque
+      // Rojer ne sait pas qui relève des régimes qui l'avancent.
+      (fonde?.exception ? ` ${fonde.exception}` : "");
     if (o.entreLe === null || m.echeance === null) {
       return `${sujet}${quand}. La date d'entrée de cette personne n'est pas renseignée : Rojer ne peut pas dater l'échéance.${reste}`;
     }

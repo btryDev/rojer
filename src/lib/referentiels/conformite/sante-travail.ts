@@ -71,7 +71,11 @@ export const obligationsSanteTravail: Obligation[] = [
     periodicite: "quinquennale",
     // ADR-043 : le délai d'entrée de R. 4624-10, compté depuis `Salarie.entreLe`.
     premierDelai: "trimestrielle",
-    premierDelaiFonde: { article: "R. 4624-10" },
+    premierDelaiFonde: {
+      article: "R. 4624-10",
+      exception:
+        "Pour un travailleur de nuit ou de moins de dix-huit ans, la visite a lieu avant l'affectation sur le poste (R. 4624-18) ; pour un poste à risques particuliers, c'est l'examen d'aptitude du suivi renforcé, avant l'affectation (R. 4624-24).",
+    },
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["professionnel_sante_travail"],
