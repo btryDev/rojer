@@ -323,7 +323,15 @@ export const DOCUMENTS_OBLIGATOIRES: readonly DocumentObligatoire[] = [
       "Pour les seuls équipements que les arrêtés du ministre chargé du travail ou de l'agriculture désignent — les autres ne sont pas soumis à vérification périodique. L'arrêté du 19 mars 1993, lu à la source le 4 septembre 2026, en nomme cinq et cinq seulement : appareils de protection respiratoire autonomes destinés à l'évacuation ; appareils de protection respiratoire et équipements complets destinés à des interventions accidentelles en milieu hostile ; gilets de sauvetage gonflables ; systèmes de protection individuelle contre les chutes de hauteur ; stocks de cartouches filtrantes antigaz pour appareils de protection respiratoire. Un casque, des gants, des chaussures de sécurité, des lunettes, des protections auditives n'y figurent pas : aucun rendez-vous périodique ne leur est demandé. Le rythme n'est pas « une fois par an » mais « depuis moins de douze mois au moment de leur utilisation », en service comme en stock — il se compte à l'instant de l'usage, pas à la date de la dernière visite.",
     produitParRojer: false,
     ouLeTrouver:
-      "Déclarez l'équipement dans votre parc sous la catégorie qui lui correspond — « Harnais antichute et systèmes d'arrêt de chute », « Appareil de protection respiratoire », « Gilet de sauvetage gonflable » — et Rojer pose l'échéance des douze mois. Elle apparaît dans votre calendrier comme les autres. Les rapports du vérificateur s'annexent au registre de sécurité. Un équipement de protection déclaré sous la catégorie générale « Équipement de protection individuelle » ne reçoit AUCUNE échéance : c'est celle du casque, des gants et des chaussures, que l'arrêté ne soumet à aucune vérification.",
+      // ~~« — « Harnais antichute […] », « Appareil de protection
+      // respiratoire », « Gilet de sauvetage gonflable » — et Rojer pose
+      // l'échéance des douze mois »~~ — faux depuis l'ADR-042 (2026-10-08) :
+      // respiratoire et gilet sont au niveau audit, sans ligne au calendrier.
+      // Corrigé le 2026-10-12 (audit). « AUCUNE échéance » pour la catégorie
+      // générale devient « aucune échéance de vérification générale
+      // périodique » : depuis le 2026-10-07, elle porte le maintien en état de
+      // R. 4322-1, au rythme retenu par défaut.
+      "Déclarez un harnais dans votre parc sous la catégorie « Harnais antichute et systèmes d'arrêt de chute », et Rojer pose l'échéance des douze mois. Elle apparaît dans votre calendrier comme les autres, et les rapports du vérificateur s'annexent au registre de sécurité. Les appareils de protection respiratoire et les gilets de sauvetage gonflables se déclarent sous leur propre catégorie, mais Rojer ne suit pas leur vérification au quotidien : elle est nommée, pour votre dossier, sur la page « Ce que Rojer ne couvre pas », et se tient hors de l'outil. Un équipement de protection déclaré sous la catégorie générale « Équipement de protection individuelle » ne reçoit aucune échéance de vérification générale périodique : c'est celle du casque, des gants et des chaussures, que l'arrêté ne soumet à aucune vérification.",
     fondements: [
       {
         source: "CODE_TRAVAIL",
