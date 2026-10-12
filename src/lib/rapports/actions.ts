@@ -336,10 +336,19 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
       etablissementId: true,
       verificationId: true,
       fichierCle: true,
+      verification: { select: { equipement: { select: { actif: true } } } },
     },
   });
   if (!rap) return;
   await assertEtablissementOwnership(rap.etablissementId);
+  // L'ARCHIVE D'UN APPAREIL RETIRÉ EST EN LECTURE SEULE (décision du
+  // 2026-10-12, `equipements/retrait.ts`) : ses rapports sont la preuve au
+  // registre, ils ne se suppriment plus. L'écran n'offre pas le bouton ; le
+  // refus tient ici pour un appel direct.
+  const equipement = rap.verification?.equipement;
+  if (equipement && estAppareilRetire(equipement)) {
+    throw new Error(MESSAGE_APPAREIL_RETIRE);
+  }
 
   await prisma.$transaction(async (tx) => {
     // LA LIGNE EST VERROUILLÉE AVANT TOUTE LECTURE, et c'est ce qui rend le

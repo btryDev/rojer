@@ -689,7 +689,8 @@ export default async function VerificationDetailPage({
                           objetId={r.id}
                         />
                       </div>
-                      <SupprimerRapportButton id={r.id} />
+                      {/* Archive d'un appareil retiré : lecture seule. */}
+                      {!appareilRetire && <SupprimerRapportButton id={r.id} />}
                     </div>
 
                     {sigs.length > 0 && (

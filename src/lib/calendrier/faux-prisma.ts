@@ -793,10 +793,16 @@ export function fauxPrisma(db: Magasin) {
         : { dateRapport: premier.r.dateRapport, resultat: premier.r.resultat };
     },
 
-    findUnique: async ({ where }: { where: { id: string }; select?: unknown }) => {
+    findUnique: async ({ where, select }: { where: { id: string }; select?: unknown }) => {
       const trouve = tousLesRapports().find(({ r }) => r.id === where.id);
       if (!trouve) return null;
+      // La ligne du rapport, projetée comme `verification.findUnique` la
+      // projette : la suppression lit l'état de service de l'appareil
+      // (`equipements/retrait.ts`, 2026-10-12).
+      const sousLigne = (select as { verification?: { select?: Record<string, unknown> } } | undefined)
+        ?.verification?.select;
       return {
+        ...(sousLigne ? { verification: projeter(trouve.v, sousLigne) } : {}),
         id: trouve.r.id,
         etablissementId: trouve.v.etablissementId,
         verificationId: trouve.v.id,
