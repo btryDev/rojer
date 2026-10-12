@@ -18,6 +18,7 @@ import {
   SignaturesSansPartie,
 } from "@/components/signatures/SignaturesParties";
 import { repartirSignatures } from "@/lib/signatures/parties";
+import { SignerDepuisMonCompte } from "@/components/signatures/SignerDepuisMonCompte";
 import { InformationInspectionForm } from "@/components/plan-prevention/InformationInspectionForm";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import {
@@ -515,13 +516,21 @@ export default async function PlanPreventionDetailPage({
           ) : (
             <BlocCreux>
               {planSignable ? (
-                <DemanderSignatureForm
-                  etablissementId={id}
-                  objetType="plan_prevention"
-                  objetId={plan.id}
-                  nomDefaut={plan.euChefNom}
-                  partie="entreprise_utilisatrice"
-                />
+                <div className="flex flex-col items-start gap-3">
+                  <SignerDepuisMonCompte
+                    etablissementId={id}
+                    objetType="plan_prevention"
+                    objetId={plan.id}
+                    auNomDe="l'entreprise utilisatrice"
+                  />
+                  <DemanderSignatureForm
+                    etablissementId={id}
+                    objetType="plan_prevention"
+                    objetId={plan.id}
+                    nomDefaut={plan.euChefNom}
+                    partie="entreprise_utilisatrice"
+                  />
+                </div>
               ) : (
                 <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
                   Plus de signature à recueillir : le document est clos ou annulé.

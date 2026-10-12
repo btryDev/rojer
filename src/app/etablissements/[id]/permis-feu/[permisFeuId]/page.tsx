@@ -20,6 +20,7 @@ import {
   SignaturesSansPartie,
 } from "@/components/signatures/SignaturesParties";
 import { partiesAttendues, repartirSignatures } from "@/lib/signatures/parties";
+import { SignerDepuisMonCompte } from "@/components/signatures/SignerDepuisMonCompte";
 import { statutPermisSignable } from "@/lib/signatures/etat-signable";
 import {
   BoutonDemarrer,
@@ -376,14 +377,22 @@ export default async function PermisFeuDetailPage({
               </p>
               <div className="mt-3">
                 {permisSignable ? (
-                  <DemanderSignatureForm
-                    etablissementId={id}
-                    objetType="permis_feu"
-                    objetId={permis.id}
-                    emailDefaut={undefined}
-                    nomDefaut={permis.donneurOrdreNom}
-                    partie="entreprise_utilisatrice"
-                  />
+                  <div className="flex flex-col items-start gap-3">
+                    <SignerDepuisMonCompte
+                      etablissementId={id}
+                      objetType="permis_feu"
+                      objetId={permis.id}
+                      auNomDe="le donneur d'ordre"
+                    />
+                    <DemanderSignatureForm
+                      etablissementId={id}
+                      objetType="permis_feu"
+                      objetId={permis.id}
+                      emailDefaut={undefined}
+                      nomDefaut={permis.donneurOrdreNom}
+                      partie="entreprise_utilisatrice"
+                    />
+                  </div>
                 ) : (
                   <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
                     Plus de signature à recueillir : le document est clos ou annulé.
