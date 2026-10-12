@@ -21,6 +21,7 @@ import {
   construireRegistreData,
 } from "@/lib/pdf/builders";
 import { DossierConformiteDocument } from "@/lib/pdf/DossierConformiteDocument";
+import { historiqueJusqua } from "@/lib/versions/historique";
 import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
 import { PlanActionsDocument } from "@/lib/pdf/PlanActionsDocument";
 import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
@@ -240,11 +241,7 @@ export async function GET(
       // L'historique imprimé en fin de document liste toutes les versions
       // du DUERP. (~~« la traçabilité exigée par l'art. R. 4121-2 »~~ :
       // l'article n'exige aucune traçabilité — rayé le 2026-09-26.)
-      const historique = versions.map((v) => ({
-        numero: v.numero,
-        genereLe: v.createdAt.toISOString(),
-        motif: v.motif,
-      }));
+      const historique = historiqueJusqua(versions, versionCourante.numero);
       // LES FAITS AVANT LE RENDU, qui peut jeter. Affectés après, une panne
       // de `renderToBuffer` laissait `duerpNumeroVersion` à `null` et la
       // checklist imprimait « aucune version figée — à créer avant le
