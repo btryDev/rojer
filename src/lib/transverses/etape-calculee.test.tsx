@@ -77,9 +77,11 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
     const etat = etatEtapeTransverses(ANCIEN);
     expect(etat.faite).toBe(false);
     expect(etat.sansReponse).toEqual(["q-operations-electriques", "q-conduite-engins"]);
-    // La synthèse n'est plus « atteinte » : c'est ce que l'avancement lisait
-    // de la colonne.
-    expect(etape(ANCIEN, "synthese")?.atteinte).toBe(false);
+    // ~~La synthèse n'est plus « atteinte » : c'est ce que l'avancement lisait
+    // de la colonne.~~ [2026-10-12, relecture indépendante : la synthèse ne
+    // se verrouille plus sur cette étape — la page reste atteignable et une
+    // version se valide sans condition ; c'est le signal qui le dit.]
+    expect(etape(ANCIEN, "synthese")?.atteinte).toBe(true);
   });
 
   it("le signale : « 2 questions sans réponse », vers la première question sans réponse", () => {

@@ -50,7 +50,12 @@ export function construireEtapes(
     // l'évaluation conclut à l'absence de risque significatif — on laisse
     // passer et on affiche simplement un avertissement dans l'UI.
     if (id === "transverses") return progression.unitesOk;
-    if (id === "synthese") return progression.transverses.faite;
+    // ~~`synthese ⇐ transverses.faite`~~ (relecture indépendante du
+    // 2026-10-12) : un DUERP déjà validé dont une question transverse est
+    // sans réponse voyait « Synthèse » grisée et « À venir », alors que la
+    // page reste atteignable et qu'une version se valide sans condition.
+    // L'étape transverses garde son signal ; elle ne verrouille plus rien.
+    if (id === "synthese") return progression.unitesOk;
     return false;
   };
   const liste: { id: EtapeId; libelle: string }[] = [
@@ -74,7 +79,8 @@ export function construireEtapes(
   });
   // L'étape transverse non faite le DIT, avec le compte et le chemin : sans
   // ce signal, une étape qui se décoche d'elle-même (une question ajoutée au
-  // référentiel) ne se verrait que par la synthèse devenue « À venir ». Le
+  // référentiel) ~~ne se verrait que par la synthèse devenue « À venir »~~
+  // [2026-10-12 : la synthèse ne se verrouille plus] ne se verrait pas. Le
   // lien mène à la première question sans réponse, sur l'écran du DUERP qui
   // les pose TOUTES — Équipe (`equipe/risques`) ne pose que les faits
   // d'activité, pas les questions sans fait (`q-routier`, `q-public`…).
