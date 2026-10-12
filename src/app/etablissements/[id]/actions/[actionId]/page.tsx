@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import {
   CarteFiche,
   ChampFiche,
@@ -15,6 +16,7 @@ import {
 import { BadgeOrigine } from "@/components/actions/BadgeOrigine";
 import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { CloturerActionForm } from "@/components/actions/CloturerActionForm";
+import { GesteStatutActionButton } from "@/components/actions/GesteStatutActionButton";
 import { SupprimerActionButton } from "@/components/actions/SupprimerActionButton";
 import { LigneTitreDeLaMesure } from "@/components/salaries/LigneTitreDeLaMesure";
 import { cloturerAction } from "@/lib/actions/plan";
@@ -24,7 +26,7 @@ import { CRITICITE_ACTION_MAX } from "@/lib/actions/schema";
 import { LABEL_RESULTAT } from "@/lib/rapports/schema";
 import { classerDate, type RegistreLigne } from "@/lib/calendrier/etats";
 import { formaterDateFr, formaterDateLongueFr } from "@/lib/dates";
-import { estActionEnRetard } from "@/lib/dates/retard";
+import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
 import { libellePorteur } from "@/lib/calendrier/labels";
 
@@ -61,7 +63,10 @@ export default async function ActionDetailPage({
     a.verification?.datePrevue ??
     null;
   const boundCloture = cloturerAction.bind(null, actionId);
-  const estOuverte = a.statut === "ouverte" || a.statut === "en_cours";
+  const estOuverte = estActionOuverte(a);
+  // Une mesure du DUERP se corrige dans le DUERP (`modifierActionPlan`), et ne
+  // s'abandonne pas d'ici : la version figée l'imprimerait « prévue ».
+  const corrigeableIci = estOuverte && !a.risqueId;
   // Page serveur : l'horloge est lue une fois par requête. Deux `new Date()`
   // séparés par un `await` peuvent tomber de part et d'autre de minuit.
   const maintenant = new Date();
@@ -123,10 +128,33 @@ export default async function ActionDetailPage({
           </>
         }
         actions={
-          <SupprimerActionButton
-            id={a.id}
-            redirectTo={(provenance ?? planActions).href}
-          />
+          <>
+            {corrigeableIci ? (
+              <>
+                <Link
+                  href={`/etablissements/${id}/actions/${actionId}/modifier`}
+                  className={buttonVariants({
+                    variant: "boardClair",
+                    size: "boardSm",
+                  })}
+                >
+                  Modifier
+                </Link>
+                <GesteStatutActionButton id={a.id} geste="abandonner" />
+              </>
+            ) : null}
+            {!estOuverte ? (
+              <GesteStatutActionButton
+                id={a.id}
+                geste="rouvrir"
+                avecJustificatif={a.statut === "levee"}
+              />
+            ) : null}
+            <SupprimerActionButton
+              id={a.id}
+              redirectTo={(provenance ?? planActions).href}
+            />
+          </>
         }
       />
 
@@ -242,6 +270,27 @@ export default async function ActionDetailPage({
                       <span className="whitespace-pre-wrap">
                         {a.leveeCommentaire}
                       </span>
+                    </ChampFiche>
+                  ) : null}
+                  {/* Le rapport choisi à la clôture était enregistré et
+                      montré nulle part (audit du 2026-10-12). */}
+                  {a.leveeRapportId ? (
+                    <ChampFiche cle="Rapport de levée">
+                      {a.leveeRapport ? (
+                        <a
+                          href={`/api/rapports/${a.leveeRapport.id}/fichier`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                        >
+                          {`${formaterDateFr(a.leveeRapport.dateRapport)} — ${a.leveeRapport.fichierNomOriginal}`}
+                          <ArrowUpRight className="size-3.5" />
+                        </a>
+                      ) : (
+                        <span className="font-normal text-[color:var(--board-slate-soft)]">
+                          Le rapport choisi à la clôture a été supprimé depuis.
+                        </span>
+                      )}
                     </ChampFiche>
                   ) : null}
                 </ChampsFiche>

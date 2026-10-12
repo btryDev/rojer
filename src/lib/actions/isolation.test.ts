@@ -51,6 +51,7 @@ import {
   toggleMesureReferentiel,
 } from "./actions";
 import {
+  abandonnerAction,
   cloturerAction,
   creerActionDepuisVerification,
   modifierActionPlan,
@@ -150,8 +151,19 @@ describe("plan d'actions — identifiant d'un autre client", () => {
 
   it("modifierActionPlan refuse et n'écrit rien", async () => {
     await expect(
-      modifierActionPlan("action-autre-client", { statut: "levee" }),
+      modifierActionPlan(
+        "action-autre-client",
+        { status: "idle" },
+        formulaireActionVerif(),
+      ),
     ).rejects.toSatisfy(estNotFound);
+    aucuneEcriture();
+  });
+
+  it("abandonnerAction refuse et n'écrit rien", async () => {
+    await expect(abandonnerAction("action-autre-client")).rejects.toSatisfy(
+      estNotFound,
+    );
     aucuneEcriture();
   });
 

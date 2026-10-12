@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   actionVerificationSchema,
   cloturerActionSchema,
-  modifierActionSchema,
 } from "./schema";
 
 describe("actionVerificationSchema", () => {
@@ -90,29 +89,5 @@ describe("cloturerActionSchema", () => {
     });
     expect(res.success).toBe(true);
     if (res.success) expect(res.data.rapportId).toBeUndefined();
-  });
-});
-
-describe("modifierActionSchema", () => {
-  it("accepte un patch vide", () => {
-    expect(modifierActionSchema.safeParse({}).success).toBe(true);
-  });
-
-  it("permet de forcer l'échéance à null pour l'effacer", () => {
-    const res = modifierActionSchema.safeParse({ echeance: "" });
-    expect(res.success).toBe(true);
-    if (res.success) expect(res.data.echeance).toBeNull();
-  });
-
-  it("refuse un statut inconnu", () => {
-    const res = modifierActionSchema.safeParse({ statut: "inexistante" });
-    expect(res.success).toBe(false);
-  });
-
-  it("accepte un statut valide (ouverte / levee…)", () => {
-    for (const s of ["ouverte", "en_cours", "levee", "abandonnee"]) {
-      const res = modifierActionSchema.safeParse({ statut: s });
-      expect(res.success).toBe(true);
-    }
   });
 });
