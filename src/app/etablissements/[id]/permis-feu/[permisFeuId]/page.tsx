@@ -23,6 +23,7 @@ import {
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
 import {
   SceauSignature,
+  DEMARRER_ATTEND_LES_PARTIES,
   SignaturesSansPartie,
 } from "@/components/signatures/SignaturesParties";
 import { partiesAttendues, repartirSignatures } from "@/lib/signatures/parties";
@@ -349,6 +350,14 @@ export default async function PermisFeuDetailPage({
               {permis.statut === "valide" && (
                 <BoutonDemarrer permisFeuId={permis.id} />
               )}
+              {/* Co-signé avant le 2026-10-12 : repassé « en attente »,
+                  sans « Démarrer » — la fiche dit pourquoi. */}
+              {permis.statut === "attente_signatures" &&
+                signatures.sansPartie.length > 0 && (
+                  <p className="m-0 w-full text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                    {DEMARRER_ATTEND_LES_PARTIES}
+                  </p>
+                )}
               {permis.statut === "en_cours" && (
                 <>
                   <p className="m-0 w-full text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
