@@ -12,9 +12,16 @@
  * formation en 1ʳᵉ à 4ᵉ catégorie (II), et aucune ne se dépose dans Rojer.
  * Les quatre sections sont celles du module. Déposer les pièces est une
  * décision de la propriétaire (audit, § 4.3), non prise ici.
+ *
+ * ~~« Le registre contient une information sur les prestations, la liste des
+ * pièces relatives à l'accessibilité et la description des actions de
+ * formation du personnel d'accueil (art. R. 164-6 CCH). »~~ — 2026-10-12,
+ * relecture indépendante : le résumé retirait « complète » (1°) et « et leurs
+ * justificatifs » (3°), deux exigences du texte. Les trois contenus sont
+ * repris mot pour mot du verbatim (`textes.test.ts`).
  */
 export const CONTENU_REGISTRE =
-  "Le registre contient une information sur les prestations, la liste des pièces relatives à l'accessibilité et la description des actions de formation du personnel d'accueil (art. R. 164-6 CCH). L'arrêté du 19 avril 2017 (art. 1er) en énumère les pièces : neuf pour tout ERP, la plupart selon la situation de l'établissement — attestations, calendrier et bilan de l'Ad'AP, arrêtés de dérogation, notice d'accessibilité, document d'aide à l'accueil, modalités de maintenance des équipements —, plus, en 1ʳᵉ à 4ᵉ catégorie, une attestation annuelle de formation. Rojer en saisit des informations, dont les modalités de maintenance ; les pièces elles-mêmes ne s'y déposent pas et se tiennent à côté.";
+  "Le registre contient une information complète sur les prestations fournies dans l'établissement, la liste des pièces administratives et techniques relatives à l'accessibilité de l'établissement aux personnes handicapées et la description des actions de formation des personnels chargés de l'accueil des personnes handicapées et leurs justificatifs (art. R. 164-6 CCH). L'arrêté du 19 avril 2017 (art. 1er) en énumère les pièces : neuf pour tout ERP, la plupart selon la situation de l'établissement — attestations, calendrier et bilan de l'Ad'AP, arrêtés de dérogation, notice d'accessibilité, document d'aide à l'accueil, modalités de maintenance des équipements —, plus, en 1ʳᵉ à 4ᵉ catégorie, une attestation annuelle de formation. Rojer en saisit des informations, dont les modalités de maintenance ; les pièces elles-mêmes ne s'y déposent pas et se tiennent à côté.";
 
 /** Le titre et la phrase de la jauge des quatre sections du module. */
 export function libelleProgression(progression: number): {
