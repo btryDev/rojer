@@ -73,7 +73,7 @@ export function estDuALEntree(
 type VersSalarie = Extract<Transmission, { vers: "salarie_designe" }>;
 
 /** Une transmission vers un titre nommé, qui dit quand il est exigible. */
-export type TransmissionDatee = VersSalarie & {
+type TransmissionDatee = VersSalarie & {
   titre: string;
   delai: NonNullable<VersSalarie["delai"]>;
 };
@@ -84,7 +84,7 @@ export type TransmissionDatee = VersSalarie & {
  * la fonction la saute — le test du module exige qu'aucune transmission
  * salarié → salarié n'en manque, donc ce saut ne tait rien aujourd'hui.
  */
-export function transmissionsDatees(source: Obligation): TransmissionDatee[] {
+function transmissionsDatees(source: Obligation): TransmissionDatee[] {
   return source.transmet.filter(
     (t): t is TransmissionDatee =>
       t.vers === "salarie_designe" && t.titre !== null && t.delai !== undefined,
@@ -106,18 +106,36 @@ export function transmissionsDatees(source: Obligation): TransmissionDatee[] {
 export function titresLusParLaFiche(
   catalogueFourni: readonly ObligationPorteeParSalarie[] = cataloguerTitres(),
 ): ReadonlySet<string> {
-  // Même porte du niveau audit que `ceQuiManqueALaPersonne` (ADR-042).
+  const { dusALEntree, liens } = regleDeLaFiche(catalogueFourni);
+  return new Set([
+    ...dusALEntree.map((o) => o.id),
+    ...liens.map((l) => l.cible.id),
+  ]);
+}
+
+/**
+ * LA règle, une fois : ce qui peut manquer, avant toute personne. Lue par
+ * `ceQuiManqueALaPersonne` et par `titresLusParLaFiche` — la seconde n'en
+ * est plus une paraphrase (relecture indépendante du 2026-10-12, R7).
+ */
+function regleDeLaFiche(catalogueFourni: readonly ObligationPorteeParSalarie[]) {
+  // Le défaut l'écarte déjà ; un catalogue fourni aussi, ici, pour que la
+  // porte du niveau audit (ADR-042) ne dépende pas de l'appelant.
   const catalogue = catalogueFourni.filter((o) => !estNiveauAudit(o));
-  const parId = new Set(catalogue.map((o) => o.id));
-  const ids = new Set<string>();
-  for (const o of catalogue) {
-    if (estDuALEntree(o)) ids.add(o.id);
-    for (const t of transmissionsDatees(o)) {
-      // La fonction ne rend une cible que si elle est au catalogue.
-      if (parId.has(t.titre)) ids.add(t.titre);
+  const parId = new Map(catalogue.map((o) => [o.id, o]));
+  const dusALEntree = catalogue.filter(estDuALEntree);
+  const liens: {
+    source: ObligationPorteeParSalarie;
+    transmission: TransmissionDatee;
+    cible: ObligationPorteeParSalarie;
+  }[] = [];
+  for (const source of catalogue) {
+    for (const transmission of transmissionsDatees(source)) {
+      const cible = parId.get(transmission.titre);
+      if (cible) liens.push({ source, transmission, cible });
     }
   }
-  return ids;
+  return { dusALEntree, liens };
 }
 
 /** Ce que le module lit d'une personne. */
@@ -131,7 +149,7 @@ export type PersonneLue = {
 export type TitreDeclareLu = { obligationId: string; delivreLe: Date };
 
 /** Pourquoi un titre manque. */
-export type OrigineDuManque =
+type OrigineDuManque =
   | {
       type: "entree";
       /** `null` : la date d'entrée n'est pas renseignée, rien n'est daté. */
@@ -180,15 +198,12 @@ export function ceQuiManqueALaPersonne(
   titres: readonly TitreDeclareLu[],
   catalogueFourni: readonly ObligationPorteeParSalarie[] = cataloguerTitres(),
 ): Manque[] {
-  // Le défaut l'écarte déjà ; un catalogue fourni aussi, ici, pour que la
-  // porte du niveau audit (ADR-042) ne dépende pas de l'appelant.
-  const catalogue = catalogueFourni.filter((o) => !estNiveauAudit(o));
   // Une personne sortie de l'effectif ne réclame plus rien — même règle que
   // `etatDuTitre` et que le badge du rail.
   if (!personne.actif) return [];
 
+  const { dusALEntree, liens } = regleDeLaFiche(catalogueFourni);
   const detenus = new Set(titres.map((t) => t.obligationId));
-  const parId = new Map(catalogue.map((o) => [o.id, o]));
   // Ce que les titres détenus écartent, au sens du droit (R. 4624-24,
   // R. 4451-82…). Fermé par symétrie dans `exclusionsDuTitre`.
   const ecartes = new Set<string>();
@@ -199,8 +214,8 @@ export function ceQuiManqueALaPersonne(
 
   const rendus = new Map<string, Manque>();
 
-  for (const o of catalogue) {
-    if (!estDuALEntree(o) || !manque(o.id)) continue;
+  for (const o of dusALEntree) {
+    if (!manque(o.id)) continue;
     rendus.set(o.id, {
       obligation: o,
       origine: { type: "entree", entreLe: personne.entreLe },
@@ -214,24 +229,19 @@ export function ceQuiManqueALaPersonne(
     });
   }
 
-  for (const source of catalogue) {
+  // Sans `delai`, une transmission ne date rien : `transmissionsDatees` la
+  // laisse de côté (voir sa note).
+  for (const { source, transmission: t, cible } of liens) {
     const delivreLe = derniere(titres, source.id);
-    if (delivreLe === null) continue;
-    // Sans `delai`, la transmission ne date rien : `transmissionsDatees` la
-    // laisse de côté (voir sa note).
-    for (const t of transmissionsDatees(source)) {
-      const cible = parId.get(t.titre);
-      if (!cible || !manque(cible.id)) continue;
-      if (rendus.has(cible.id)) continue;
-      rendus.set(cible.id, {
-        obligation: cible,
-        origine: { type: "transmis", par: source, delivreLe, motif: t.motif },
-        echeance:
-          t.delai === "aucun"
-            ? delivreLe
-            : echeanceDuTitre({ delivreLe, echeanceLe: null }, periodiciteEffective(cible)),
-      });
-    }
+    if (delivreLe === null || !manque(cible.id) || rendus.has(cible.id)) continue;
+    rendus.set(cible.id, {
+      obligation: cible,
+      origine: { type: "transmis", par: source, delivreLe, motif: t.motif },
+      echeance:
+        t.delai === "aucun"
+          ? delivreLe
+          : echeanceDuTitre({ delivreLe, echeanceLe: null }, periodiciteEffective(cible)),
+    });
   }
 
   return [...rendus.values()];

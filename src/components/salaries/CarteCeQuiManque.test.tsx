@@ -50,6 +50,18 @@ describe("la carte de ce qui manque", () => {
     expect(html).not.toContain("Visite d'information et de prévention");
   });
 
+  it("ne date que le volet que R. 4141-20 date, pas la formation entière (relecture C1)", () => {
+    const html = rendre("2026-01-05", [
+      { obligationId: "sante-travail-salarie-vip", delivreLe: jour("2026-02-01") },
+    ]);
+    expect(html).toContain("Le texte date le volet « dispositions à prendre en cas d'accident ou de sinistre »");
+    expect(html).toContain("Le reste de la formation se donne à l'embauche, sans délai chiffré.");
+  });
+
+  it("dit que c'est l'employeur qui doit (relecture R2)", () => {
+    expect(rendre("2026-01-05")).toContain("Ce que l'employeur doit à cette personne");
+  });
+
   it("ne rend rien quand rien ne manque", () => {
     expect(
       renderToStaticMarkup(<CarteCeQuiManque manques={[]} now={NOW} lienModifier="/m" />),

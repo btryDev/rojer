@@ -96,3 +96,14 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
     expect(phraseTitre("non", new Date("2025-01-02"))).toMatch(/délivré le .*Non dû/);
   });
 });
+
+describe("un titre appelé par un titre détenu (ADR-043, relecture C3)", () => {
+  it("ne dit jamais « pas un retard » quand « À déclarer » le date", () => {
+    const phrase = phraseTitre("oui", null, true);
+    expect(phrase).not.toContain("pas un retard");
+    expect(phrase).toContain("À déclarer pour cette personne");
+  });
+  it("garde la phrase d'avant pour un titre qui ne manque pas", () => {
+    expect(phraseTitre("oui", null, false)).toContain("pas un retard");
+  });
+});

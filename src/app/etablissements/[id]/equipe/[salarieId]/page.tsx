@@ -429,11 +429,15 @@ export default async function SalarieDetailPage({
                     — une embauche, un changement de poste ou de technique.{" "}
                     {/* ~~Rojer ne voit aucun de ces faits~~ [2026-10-12,
                         ADR-043 : il voit l'embauche, par la date d'entrée.] */}
+                    {/* Vrai sur toute fiche, y compris d'une personne sortie
+                        ou déjà formée, où rien n'est daté plus haut
+                        (relecture R4) : la phrase dit la règle, pas l'état. */}
                     Rojer ne voit que l&apos;embauche, par la date
-                    d&apos;entrée : la première formation est datée plus haut
-                    tant qu&apos;aucun titre n&apos;est déclaré. Les suivantes
-                    n&apos;ont ni échéance ni retard ici ; vous seul savez quand
-                    le poste change.
+                    d&apos;entrée : tant qu&apos;aucun titre n&apos;est déclaré
+                    pour une personne présente, la première formation est datée
+                    dans « À déclarer pour cette personne ». Les suivantes
+                    n&apos;ont ni échéance ni retard ; vous seul savez quand le
+                    poste change.
                   </p>
                   <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
                     {declenchees.map(({ obligation, dernierTitreLe }) => (

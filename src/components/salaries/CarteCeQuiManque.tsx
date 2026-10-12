@@ -20,19 +20,27 @@ import { ReferenceFondatrice } from "./ReferenceFondatrice";
  * Composant à part, sans état, pour être RENDU en test
  * (`CarteCeQuiManque.test.tsx`).
  */
-export function phraseDuManque(m: Manque): string {
+function phraseDuManque(m: Manque): string {
   const o = m.origine;
   if (o.type === "entree") {
     const delai = m.obligation.premierDelai
       ? delaiEnPhrase(m.obligation.premierDelai)
       : null;
     const quand = delai ? `${delai} après l'entrée au plus tard` : "dès l'entrée";
+    // Le texte peut ne dater qu'une partie (R. 4141-20 : le volet accident ou
+    // sinistre) — on le dit, au lieu de dater l'obligation entière (C1).
+    const vise = m.obligation.premierDelaiVise;
+    const sujet = vise ? `Le texte date ${vise} : ` : "Due ";
+    const reste = vise
+      ? " Le reste de la formation se donne à l'embauche, sans délai chiffré."
+      : "";
     if (o.entreLe === null || m.echeance === null) {
-      return `Due ${quand}. La date d'entrée de cette personne n'est pas renseignée : Rojer ne peut pas dater l'échéance.`;
+      return `${sujet}${quand}. La date d'entrée de cette personne n'est pas renseignée : Rojer ne peut pas dater l'échéance.${reste}`;
     }
-    return `Due ${quand} : entrée le ${formaterDateLongueFr(o.entreLe)}, donc au plus tard le ${formaterDateLongueFr(m.echeance)}. Aucun titre n'est déclaré.`;
+    return `${sujet}${quand} — entrée le ${formaterDateLongueFr(o.entreLe)}, donc au plus tard le ${formaterDateLongueFr(m.echeance)}.${reste} Aucun titre n'est déclaré.`;
   }
-  const source = `« ${o.par.libelle} », délivré le ${formaterDateLongueFr(o.delivreLe)}`;
+  // « (délivrance le …) » : sans accord, le libellé cité peut être féminin (R3).
+  const source = `« ${o.par.libelle} » (délivrance le ${formaterDateLongueFr(o.delivreLe)})`;
   if (m.echeance === null) {
     return `Appelée par ${source}. Aucun titre n'est déclaré.`;
   }
@@ -67,8 +75,8 @@ export function CarteCeQuiManque({
   return (
     <CarteFiche titreFort="À déclarer pour cette personne">
       <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-        Ce que le Code du travail doit à cette personne et qu&apos;aucun titre
-        déclaré ne porte encore. Une fois le titre déclaré ci-dessous, il suit
+        Ce que l&apos;employeur doit à cette personne au titre du Code du
+        travail, et qu&apos;aucun titre déclaré ne porte encore. Une fois le titre déclaré ci-dessous, il suit
         son propre rythme.
         {sansDate && (
           <>

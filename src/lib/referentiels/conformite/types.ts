@@ -971,6 +971,14 @@ type ObligationCommune = {
    */
   premierDelai?: Periodicite;
   /**
+   * Ce que `premierDelai` date, quand le texte ne le pose que sur une PARTIE
+   * de l'obligation (ADR-043, relecture indépendante du 2026-10-12, C1) :
+   * `R. 4141-20` ne date que le volet « accident ou sinistre » de la
+   * formation à la sécurité. L'écran le nomme au lieu de dater la formation
+   * entière. Affichage seul : n'entre pas à l'empreinte.
+   */
+  premierDelaiVise?: string;
+  /**
    * Le régime temporel que le texte impose (ADR-026). **Requis, et c'est le
    * point** — même raisonnement que `transmet` et `pieceMedicale` : optionnel,
    * le champ se serait tu, et l'oubli aurait été la faute naturelle.

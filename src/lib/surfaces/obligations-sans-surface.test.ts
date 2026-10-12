@@ -152,10 +152,15 @@ describe("toute obligation atteint une surface, ou elle est inscrite", () => {
     //    filtré : la liste des obligations événementielles de la fiche
     //    (`salaries/obligations-evenementielles.ts`) montre la formation à la
     //    sécurité que le titre soit déclaré ou non, et la carte « Ce qui
-    //    manque » la montre aussi, datée, tant qu'il ne l'est pas. Les deux
+    //    manque » la montre aussi, datée, tant qu'il ne l'est pas. ~~Les deux
     //    disent la même chose sans se contredire aujourd'hui (« rien de
     //    déclaré » d'un côté, une échéance de l'autre), mais c'est la forme qui
-    //    diverge. Les fusionner relève de la fiche, que ce lot ne touche pas.
+    //    diverge. Les fusionner relève de la fiche, que ce lot ne touche pas.~~
+    //    [2026-10-12, à l'intégration (996e3358) : les deux cartes de la fiche
+    //    se relaient — la liste événementielle écarte ce qui manque. Deux
+    //    surfaces au référentiel, jamais deux lignes sur une même fiche ; le
+    //    double reste inscrit parce que la garde compte les surfaces, pas les
+    //    lignes.]
     const estDouble = (s: Surface[]) => {
       const autres = s.filter((x) => x !== "fiche_salarie");
       if (autres.length > 1) return true;

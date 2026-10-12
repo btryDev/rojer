@@ -111,7 +111,12 @@ export default async function EquipePage({
                   {manquesEnRetard}
                 </span>
                 <span className="board-eyebrow text-[9.5px] tracking-[0.12em]">
-                  {manquesEnRetard > 1 ? "titres dus non déclarés" : "titre dû non déclaré"}
+                  {/* « en retard » dit : la pastille ne compte que les retards — un
+                      manque « bientôt dû » ou non daté est aussi dû, et n'y
+                      est pas (relecture C4). */}
+                  {manquesEnRetard > 1
+                    ? "titres non déclarés, en retard"
+                    : "titre non déclaré, en retard"}
                 </span>
               </span>
             )}

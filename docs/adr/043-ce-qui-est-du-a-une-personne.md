@@ -57,9 +57,11 @@ Mesuré le 2026-10-12, en lisant le code de `main` (54cbb45f) :
    propre cycle, comme avant : la fonction ne le recompte pas.
 4. **Sans date d'entrée, l'échéance n'est pas calculée** et l'écran le dit.
    Jamais « en retard » sur une date que le produit n'a pas.
-5. **Les surfaces lisent la même fonction** : la carte « Ce qui manque » de la
-   fiche, le compteur d'Équipe et du rail, le tableau de bord (compte par
-   personne).
+5. **Les surfaces lisent la même fonction** : la carte « À déclarer pour
+   cette personne » de la fiche, les cartes et l'en-tête d'Équipe, le compteur
+   du rail, le tableau de bord (compte par personne : par la transmission
+   quand une obligation d'établissement en porte une, sinon par la carte
+   « Titres dus à vos salariés, non déclarés » — la VIP, relecture B1).
 
 ## 3. Les trois décisions de la propriétaire (2026-10-12)
 
@@ -83,6 +85,21 @@ Mesuré le 2026-10-12, en lisant le code de `main` (54cbb45f) :
   `R. 4624-27` (examen d'aptitude récent) ne sont pas calculées : l'employeur
   qui en bénéficie déclare la visite antérieure, avec sa date, et le titre est
   alors détenu.
+- **Les visites AVANT l'affectation ne sont pas calculées** (relecture
+  indépendante du 2026-10-12, R1) : `R. 4624-18` (travailleur de nuit, moins
+  de dix-huit ans… — visite préalable) et l'examen d'aptitude du suivi
+  renforcé (`R. 4624-24`), pour une personne dont le titre n'est pas encore
+  déclaré. La fiche annonce les trois mois du régime général : pour ces
+  personnes, c'est PLUS TARD que le texte. Sens permissif, assumé faute de
+  savoir qui relève de ces régimes (ADR-023) ; la VIP adaptée et le suivi
+  renforcé, une fois déclarés, écartent la VIP.
+- **La formation à la sécurité n'est datée qu'en son volet « accident ou
+  sinistre »** (relecture C1) : c'est le seul que `R. 4141-20` date.
+  `premierDelaiVise` le nomme à l'écran.
+- **La décision (c) ne change aujourd'hui aucun compte** (relecture R6) :
+  tous les titres que la fiche lit atteignaient déjà le calendrier ou les
+  faits. La surface `fiche_salarie` est nommée pour que la garde reste juste
+  le jour où un titre dû à l'entrée n'aurait que la fiche.
 - `entreLe` est la date d'entrée dans l'effectif ; les textes parlent de
   « prise effective du poste » et d'« affectation à l'emploi ». À l'embauche,
   elles coïncident ; un changement de poste (qui redéclenche la formation à
