@@ -87,6 +87,7 @@ export const composerRegistreDeLEtablissement = cache(
         conduiteEngins: true,
         expositionCMR: true,
         epiPresents: true,
+        ssiCategorieAouB: true,
         // Seul le parc en service compte (ADR-012) : un appareil retiré ne fait
         // plus apparaître sa fiche d'inventaire ni sa fiche de vérification.
         // Les colonnes que les fiches « Renseignements généraux » et
@@ -137,6 +138,7 @@ export const composerRegistreDeLEtablissement = cache(
         conduiteEngins: etab.conduiteEngins,
         expositionCMR: etab.expositionCMR,
         epiPresents: etab.epiPresents,
+        ssiCategorieAouB: etab.ssiCategorieAouB,
       },
       trierParCategorie(etab.equipements).map((eq) => ({
         id: eq.id,

@@ -75,6 +75,7 @@ describe("catégorie et type d'ERP : l'absence écarte parce que la base l'inter
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
     };
     expect(matchTypologie({ erp: { categories: ["N5"] } }, erpSansCategorie).ok).toBe(false);
     expect(

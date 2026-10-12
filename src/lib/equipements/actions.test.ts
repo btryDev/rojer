@@ -16,6 +16,12 @@ const h = vi.hoisted(() => {
     /** La réponse à « Fournissez-vous des EPI ? », et l'ordre des écritures. */
     etablissement: { id: "etab-1", epiPresents: false as boolean | null },
     journal: [] as string[],
+    regime: {
+      estERP: false,
+      typeErp: null as string | null,
+      categorieErp: null as string | null,
+      ssiCategorieAouB: null as boolean | null,
+    },
   };
 
   const prisma = {
@@ -67,6 +73,8 @@ const h = vi.hoisted(() => {
         }
         return { count: vise ? 1 : 0 };
       },
+      // Le régime que l'exigence des réponses lit (2026-10-12).
+      findUnique: async () => db.regime,
     },
   };
 
@@ -106,7 +114,7 @@ const {
   repondreQuestionEquipement,
   supprimerEquipement,
 } = await import("./actions");
-const { questionsExigeesPour, CATEGORIES_A_REPONSE_EXIGEE } = await import(
+const { questionsExigeesPour, CATEGORIES_A_REPONSE_EXIGEE, REGIME_TRAVAIL } = await import(
   "./reponses-exigees"
 );
 const { MESSAGE_APPAREIL_RETIRE } = await import("./retrait");
@@ -118,6 +126,7 @@ beforeEach(() => {
   h.db.crees = [];
   h.db.etablissement = { id: "etab-1", epiPresents: false };
   h.db.journal = [];
+  h.db.regime = { estERP: false, typeErp: null, categorieErp: null, ssiCategorieAouB: null };
   h.assertOwnership.mockClear();
   h.genererCalendrier.mockClear();
   h.genererCalendrier.mockImplementation(async () => {
@@ -234,7 +243,7 @@ describe("un appareil retiré du parc est en lecture seule (décision du 2026-10
       categorie: CATEGORIES_A_REPONSE_EXIGEE[0],
       caracteristiques: {},
     });
-    const [champ] = questionsExigeesPour(CATEGORIES_A_REPONSE_EXIGEE[0]);
+    const [champ] = questionsExigeesPour(CATEGORIES_A_REPONSE_EXIGEE[0], REGIME_TRAVAIL);
     const fd = new FormData();
     fd.set("reponse", "non");
     const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, fd);
@@ -295,7 +304,7 @@ describe("D29 (a) : les réponses exigées d'un appareil de levage", () => {
   // dérivation (`questionsExigeesPour`), pas d'une liste. Éprouvé en retirant
   // la porte (`reponsesExigeesManquantes`) des deux actions.
   const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
-  const exigees = questionsExigeesPour(LEVAGE);
+  const exigees = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
   function formulaire(reponses: Record<string, string>, categorie: string = LEVAGE) {
     const fd = new FormData();
     fd.set("libelle", "Palan");
@@ -342,7 +351,7 @@ describe("D29 (a) : les réponses exigées d'un appareil de levage", () => {
 
 describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))", () => {
   const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
-  const [champ] = questionsExigeesPour(LEVAGE);
+  const [champ] = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
   const reponse = (v: string) => {
     const fd = new FormData();
     fd.set("reponse", v);
@@ -422,5 +431,44 @@ describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendan
     await modifierEquipement("eq-1", { status: "idle" }, epi("EXTINCTEUR"));
     expect(h.db.etablissement.epiPresents).toBe(false);
     expect(h.db.journal).toEqual(["régénération"]);
+  });
+});
+
+describe("décision du 2026-10-08 : « désenfumage mécanique » exigé là où il fait naître DF 10 § 3", () => {
+  // La porte est au serveur, et elle lit le régime de l'établissement.
+  // Éprouvé en retirant l'entrée de `QUESTIONS_EXIGEES_PAR_DECISION`.
+  function desenfumage(mecanique?: string) {
+    const fd = new FormData();
+    fd.set("libelle", "Désenfumage");
+    fd.set("categorie", "DESENFUMAGE");
+    if (mecanique !== undefined) fd.set("estDesenfumageMecanique", mecanique);
+    return fd;
+  }
+
+  it("ERP N3 : sans réponse, refusé et rien n'est créé ; avec, créé", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N3", ssiCategorieAouB: null };
+    const r = await creerEquipement("etab-1", { status: "idle" }, desenfumage());
+    expect(r.status).toBe("error");
+    expect(Object.keys((r as { fieldErrors?: object }).fieldErrors ?? {})).toEqual(["estDesenfumageMecanique"]);
+    expect(h.db.crees).toHaveLength(0);
+    await expect(creerEquipement("etab-1", { status: "idle" }, desenfumage("non"))).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.db.crees).toHaveLength(1);
+  });
+
+  it("ERP N5 : la question reste facultative", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N5", ssiCategorieAouB: null };
+    await expect(creerEquipement("etab-1", { status: "idle" }, desenfumage())).rejects.toThrow("NEXT_REDIRECT");
+  });
+
+  it("la relance du tableau de bord accepte la question là où elle est exigée", async () => {
+    h.db.regime = { estERP: true, typeErp: "M", categorieErp: "N2", ssiCategorieAouB: null };
+    Object.assign(h.db.equipements[0], { categorie: "DESENFUMAGE", caracteristiques: null });
+    const fd = new FormData();
+    fd.set("reponse", "oui");
+    const r = await repondreQuestionEquipement("eq-1", "estDesenfumageMecanique", { status: "idle" }, fd);
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      estDesenfumageMecanique: true,
+    });
   });
 });

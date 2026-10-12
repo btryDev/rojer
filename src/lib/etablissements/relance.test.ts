@@ -31,6 +31,7 @@ const etab = (over: Partial<EtablissementMatching>): EtablissementMatching => ({
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
   ...over,
 });
 const sansReponse = {
@@ -42,6 +43,7 @@ const sansReponse = {
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
 };
 
 describe("relance des questions muettes", () => {
@@ -72,6 +74,27 @@ describe("relance des questions muettes", () => {
     // garde, portée par les matières.
     const r = relancesDuDossier([], { ...sansReponse, manipuleMatieresR422722: false });
     expect(r.map((x) => [x.question, x.faite])).toEqual([["matieres_r4227_22", true]]);
+  });
+
+  it("ERP N2 à désenfumage mécanique, muet sur le SSI A/B : relancé en oui/non, sur la colonne de la fiche (DF 10 § 3)", () => {
+    const muettes = questionsQuiRetiennent(
+      determineObligationsApplicables(etab({ categorieErp: "N2", personnesPresentesHabituellement: 400 }), [
+        { id: "d", libelle: "Désenfumage", categorie: "DESENFUMAGE", caracteristiques: { estDesenfumageMecanique: true } },
+      ]),
+    );
+    expect(muettes).toContain("ssi_categorie_ab");
+    const r = relancesDuDossier(muettes, sansReponse).find((x) => x.question === "ssi_categorie_ab");
+    expect(r?.relance.mode === "oui_non" && r.relance.champ).toBe("ssiCategorieAouB");
+    expect(r?.faite).toBe(false);
+  });
+
+  it("sans désenfumage mécanique, le silence sur le SSI ne retient rien : pas de relance", () => {
+    const muettes = questionsQuiRetiennent(
+      determineObligationsApplicables(etab({ categorieErp: "N2", personnesPresentesHabituellement: 400 }), [
+        { id: "d", libelle: "Désenfumage", categorie: "DESENFUMAGE", caracteristiques: { estDesenfumageMecanique: false } },
+      ]),
+    );
+    expect(muettes).not.toContain("ssi_categorie_ab");
   });
 
   it("un fait d'activité muet qui retient une formation se relance en oui/non (ADR-041)", () => {

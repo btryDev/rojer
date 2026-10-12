@@ -115,6 +115,17 @@ model Etablissement {
   // desservir des chambres qui existent. Cf. migration 20260901180000.
   comporteLocauxSommeilPublic Boolean?
 
+  // L'établissement dispose-t-il d'un système de sécurité incendie de
+  // catégorie A ou B ? Lu par la triennale du désenfumage mécanique
+  // (arrêté du 25 juin 1980, DF 10 § 3 : « Lorsque existent une installation
+  // de désenfumage mécanique et un système de sécurité incendie de catégorie
+  // A ou B »), ERP des quatre premières catégories. Posé une fois sur la
+  // fiche (décision de la propriétaire du 2026-10-08), au lieu d'une fois par
+  // désenfumage. `null` = pas encore répondu : le moteur retient la ligne
+  // « à confirmer », seul un « non » la retire (ADR-022). Migration
+  // 20261012140000, qui reprend les réponses déjà données au désenfumage.
+  ssiCategorieAouB Boolean?
+
   batiments                        Batiment[]
   // Champ d'application de R. 4227-34 CT (alarme sonore → consigne R. 4227-37
   // → exercices semestriels R. 4227-39) : « plus de cinquante personnes

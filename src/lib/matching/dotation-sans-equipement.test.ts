@@ -28,6 +28,7 @@ const etab = (over: Partial<EtablissementMatching> = {}): EtablissementMatching 
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
   ...over,
 });
 const ids = (e: EtablissementMatching) => determineObligationsApplicables(e, []).map((o) => o.obligation.id);

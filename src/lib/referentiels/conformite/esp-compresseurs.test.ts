@@ -32,6 +32,7 @@ const ETAB: EtablissementMatching = {
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
 };
 
 function avec(caracteristiques: Record<string, unknown> | null): boolean {

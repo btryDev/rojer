@@ -30,6 +30,7 @@ const etablissement = (
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
   ...o,
 });
 

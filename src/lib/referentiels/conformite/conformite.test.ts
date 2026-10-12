@@ -475,6 +475,7 @@ describe("référentiel conformité — anti-doublon", () => {
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     });
@@ -1243,6 +1244,7 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };
@@ -1789,6 +1791,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // aucune ligne de calendrier ne change. 174 + 0 − 0 = 174, dont 3 au
     // niveau audit, 171 suivies.
     { version: "2026-10-12.1", empreinte: "174-f655345dc157316b" },
+    // `lot/suites-0810` : DF 10 § 3 lit le SSI A/B sur la fiche de
+    // l'établissement (critère `ssiCategorieAouB`), plus sur le désenfumage.
+    // 174 + 0 − 0 = 174, relevé en appelant `empreinteReferentiel()`.
+    { version: "2026-10-12.2", empreinte: "174-12f96465dba4ff5d" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2470,6 +2476,7 @@ describe("IGH — aucune obligation ne naît plus du seul régime IGH", () => {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
   };
@@ -2607,6 +2614,7 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };

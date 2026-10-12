@@ -132,6 +132,27 @@ const RELEVE = {
   // réconciliateur, ni le moteur ne les appellent ; c'est la RÉPONSE écrite
   // sur l'établissement qui change ensuite le calendrier, par la règle
   // existante. ~~e0d35b3f39ef01c3~~.
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, SSI A/B sur la
+  // fiche) : `matching/engine.ts` lit le critère `ssiCategorieAouB` par
+  // l'évaluateur des faits d'activité, `absence.ts` et `projection.ts`
+  // portent l'attribut. NON, au sens de cette question : ce qui change les
+  // lignes est une DONNÉE du référentiel (la triennale DF 10 § 3 change de
+  // condition), et elle déplace l'empreinte (`2026-10-12.2`), donc le sceau —
+  // chaque dossier sera réconcilié à sa prochaine ouverture. Précédent :
+  // ADR-041 (C65). ~~25373a159ab4f97b~~.
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, libellés des
+  // obligations retirées) : `OBLIGATIONS_RETIREES` gagne un `libelle` par
+  // entrée, lu par `libelleObligationRetiree` (page des prescriptions) ; le
+  // motif d'une prescription non retenue dit son rythme en clair. NON : le
+  // générateur ne lit d'une obligation retirée que `absorbePar` et `porteur`,
+  // inchangés. ~~6688d9fbaa6ff949~~.
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, suite de C62) :
+  // `LABEL_PERIODICITE` sort de `labels.ts` vers le module feuille
+  // `label-periodicite.ts`, que `matching/prescriptions.ts` lit pour dire en
+  // clair le rythme de son motif de surcharge (« toutes les 6 semaines » au
+  // lieu de « six_semaines »). NON, la régénération n'écrit pas autrement :
+  // `surcharge.raison` rejoint `raisons`, qu'aucune colonne ne stocke ; la
+  // périodicité écrite reste `surcharge.periodicite`. ~~e0d35b3f39ef01c3~~.
   // Recopiée SANS incrément le 2026-10-12 (ADR-043, ce qui manque à une
   // personne) : `mention-rythme.ts` exporte `delaiEnPhrase` (« 3 mois »),
   // lu par la seule fiche salarié. NON, la régénération n'écrit pas

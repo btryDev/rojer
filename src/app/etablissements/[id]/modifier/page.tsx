@@ -66,6 +66,7 @@ export default async function ModifierEtablissementPage({
               comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
               epiPresents: etab.epiPresents,
               epiPresentsDetail: etab.epiPresentsDetail,
+              ssiCategorieAouB: etab.ssiCategorieAouB,
               natureActivite: etab.natureActivite,
               effectifPublicAdmis: etab.effectifPublicAdmis,
               // `<input type="date">` attend une clé de jour civil. La produire

@@ -51,6 +51,7 @@ function etab(estEtablissementTravail = true) {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 }
 

@@ -68,6 +68,10 @@ export type EtablissementFaux = {
   conduiteEngins?: boolean | null;
   expositionCMR?: boolean | null;
   epiPresents?: boolean | null;
+  // DF 10 § 3 (2026-10-12) : absent, il vaut le silence, qui RETIENT la
+  // triennale du désenfumage mécanique — comme la condition d'appareil
+  // qu'il remplace (`non_infirmee`).
+  ssiCategorieAouB?: boolean | null;
   referentielVersionCalendrier?: string | null;
   equipements: EquipementFaux[];
   prescriptionsParticulieres: { id: string; actif: boolean }[];

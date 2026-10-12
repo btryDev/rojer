@@ -28,7 +28,9 @@ import {
 } from "@/lib/referentiels/types-communs";
 import {
   questionsExigeesPour,
+  REGIME_TRAVAIL,
   reponsesExigeesManquantes,
+  type RegimeExigence,
 } from "./reponses-exigees";
 import type { ReponseParametrage } from "@/lib/etablissements/parametrage";
 import { MESSAGE_APPAREIL_RETIRE, estAppareilRetire } from "./retrait";
@@ -88,6 +90,19 @@ async function constaterEpiDeclare(
 }
 
 /**
+ * Ce que l'exigence des réponses lit de l'établissement (`RegimeExigence`) :
+ * le régime ERP et la réponse au SSI A/B (DF 10 § 3, décision du
+ * 2026-10-08). Lu après le contrôle d'appartenance.
+ */
+async function regimeDe(etablissementId: string): Promise<RegimeExigence> {
+  const r = await prisma.etablissement.findUnique({
+    where: { id: etablissementId },
+    select: { estERP: true, typeErp: true, categorieErp: true, ssiCategorieAouB: true },
+  });
+  return r ?? REGIME_TRAVAIL;
+}
+
+/**
  * L'établissement de l'appareil, pour le contrôle d'appartenance, et son état
  * de service : un appareil retiré du parc n'accepte plus aucune écriture
  * (`retrait.ts`, décision du 2026-10-12).
@@ -126,7 +141,7 @@ export async function creerEquipement(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const exigees = reponsesExigeesManquantes(parsed.data);
+  const exigees = reponsesExigeesManquantes(parsed.data, await regimeDe(etablissementId));
   if (exigees) {
     return { status: "error", message: "Formulaire invalide", fieldErrors: exigees };
   }
@@ -203,7 +218,7 @@ export async function modifierEquipement(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const exigees = reponsesExigeesManquantes(parsed.data);
+  const exigees = reponsesExigeesManquantes(parsed.data, await regimeDe(appareil.etablissementId));
   if (exigees) {
     return { status: "error", message: "Formulaire invalide", fieldErrors: exigees };
   }
@@ -423,7 +438,7 @@ export async function repondreQuestionEquipement(
   // n'écrit pas n'importe quelle clé qu'on lui poste.
   if (
     !(CHAMPS_TRI_ETAT as readonly string[]).includes(champ) ||
-    !questionsExigeesPour(eq.categorie as CategorieEquipement).includes(champ)
+    !questionsExigeesPour(eq.categorie as CategorieEquipement, await regimeDe(eq.etablissementId)).includes(champ)
   ) {
     return { status: "error", message: "Question inconnue pour cet appareil." };
   }
