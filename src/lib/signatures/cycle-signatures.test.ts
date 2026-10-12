@@ -20,6 +20,10 @@ function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
     if (typeof attendu === "object") {
       const a = attendu as Ligne;
       if ("gte" in a) return valeur instanceof Date && valeur >= (a.gte as Date);
+      // La réservation d'un essai de code (2026-10-12) est conditionnelle.
+      if ("gt" in a) return (valeur as number) > (a.gt as number);
+      if ("lte" in a) return (valeur as number) <= (a.lte as number);
+      if ("in" in a) return (a.in as unknown[]).includes(valeur);
       return correspond(valeur as Ligne, a);
     }
     return valeur === attendu;
@@ -48,7 +52,15 @@ function table(lignes: Ligne[]) {
     }),
     updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
       const touchees = lignes.filter((x) => correspond(x, where));
-      for (const l of touchees) Object.assign(l, data);
+      for (const l of touchees) {
+        for (const [k, v] of Object.entries(data)) {
+          const op = v as { decrement?: number } | null;
+          l[k] =
+            op && typeof op === "object" && "decrement" in op
+              ? (l[k] as number) - (op.decrement as number)
+              : v;
+        }
+      }
       return { count: touchees.length };
     }),
     delete: vi.fn(async ({ where }: { where: Ligne }) => {
@@ -60,7 +72,9 @@ function table(lignes: Ligne[]) {
 }
 
 const { prismaMock } = vi.hoisted(() => ({
-  prismaMock: {} as Record<string, ReturnType<typeof table>>,
+  prismaMock: {} as Record<string, ReturnType<typeof table>> & {
+    $transaction?: (fn: (tx: unknown) => Promise<unknown>) => Promise<unknown>;
+  },
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
@@ -159,6 +173,7 @@ beforeEach(() => {
   prismaMock.permisFeu = table([]);
   prismaMock.signature = table([]);
   prismaMock.accessToken = table([]);
+  prismaMock.$transaction = async (fn) => fn(prismaMock);
   mailsEnvoyes.length = 0;
 });
 

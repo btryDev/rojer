@@ -11,9 +11,10 @@ import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
 import { envoiEnService } from "@/lib/email";
 import {
-  decrementOtpEssais,
-  marquerUtilise,
+  consommerJeton,
   renouvelerOtp,
+  reserverEssaiOtp,
+  revoquerOtpEpuise,
   verifierAccessToken,
 } from "@/lib/access-tokens/verify";
 import {
@@ -243,9 +244,20 @@ export async function poserSignatureAvecToken(
     };
   }
 
+  // L'essai se RÉSERVE avant que le code soit comparé (`reserverEssaiOtp`) :
+  // une rafale de soumissions parallèles n'éprouve jamais plus de codes que
+  // le compteur n'en accorde. Celle qui n'obtient pas d'essai ne compare rien.
+  const essai = await reserverEssaiOtp(token.id);
+  if (!essai.ok) {
+    return {
+      status: "error",
+      message:
+        "Ce lien n'accepte plus de code : ses essais sont épuisés, ou il vient de servir.",
+    };
+  }
   if (!verifyOtp(otp, token.otpHash)) {
-    const dec = await decrementOtpEssais(token.id);
-    if (dec.revoque) {
+    if (essai.restants === 0) {
+      await revoquerOtpEpuise(token.id);
       return {
         status: "error",
         message: "Trop d'essais OTP. Ce lien est révoqué.",
@@ -253,8 +265,8 @@ export async function poserSignatureAvecToken(
     }
     return {
       status: "error",
-      message: `Code incorrect. Il vous reste ${dec.restants} essai${dec.restants > 1 ? "s" : ""}.`,
-      restants: dec.restants,
+      message: `Code incorrect. Il vous reste ${essai.restants} essai${essai.restants > 1 ? "s" : ""}.`,
+      restants: essai.restants,
     };
   }
 
@@ -284,25 +296,40 @@ export async function poserSignatureAvecToken(
   const ip = hh.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const ua = hh.get("user-agent");
 
-  const signature = await prisma.signature.create({
-    data: {
-      id: `sig_${randomUUID()}`,
-      etablissementId: token.etablissementId,
-      objetType: token.objetType as ObjetSignable,
-      objetId: token.objetId,
-      signataireNom: token.nomDestinataire ?? token.emailDestinataire,
-      signataireEmail: token.emailDestinataire,
-      signataireRole: signataireRole || null,
-      userId: null,
-      hashDocument: hash,
-      nomDocument,
-      methode: "otp_email",
-      ipAddress: ip,
-      userAgent: ua?.slice(0, 500) ?? null,
-    },
+  // Le jeton se CONSOMME avant que la signature s'écrive, dans la même
+  // transaction et sous condition (`consommerJeton`) : de deux soumissions
+  // simultanées du bon code, une seule obtient le jeton, la seconde ne crée
+  // rien. Si l'écriture de la signature échoue, la consommation est défaite.
+  const signature = await prisma.$transaction(async (tx) => {
+    const consomme = await consommerJeton(tx, token.id, {
+      ip: ip ?? undefined,
+      userAgent: ua ?? undefined,
+    });
+    if (!consomme) return null;
+    return tx.signature.create({
+      data: {
+        id: `sig_${randomUUID()}`,
+        etablissementId: token.etablissementId,
+        objetType: token.objetType as ObjetSignable,
+        objetId: token.objetId,
+        signataireNom: token.nomDestinataire ?? token.emailDestinataire,
+        signataireEmail: token.emailDestinataire,
+        signataireRole: signataireRole || null,
+        userId: null,
+        hashDocument: hash,
+        nomDocument,
+        methode: "otp_email",
+        ipAddress: ip,
+        userAgent: ua?.slice(0, 500) ?? null,
+      },
+    });
   });
-
-  await marquerUtilise(token.id, { ip: ip ?? undefined, userAgent: ua ?? undefined });
+  if (!signature) {
+    return {
+      status: "error",
+      message: "Ce lien a déjà servi à signer ce document.",
+    };
+  }
 
   return { status: "success", signatureId: signature.id };
 }
