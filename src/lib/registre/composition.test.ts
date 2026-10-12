@@ -246,6 +246,26 @@ describe("catalogue — exercices : deux fondements lus en OU", () => {
     expect(ids).toContain("exercices-comptes-rendus");
   });
 
+  // Audit du 2026-10-12 : un ERP de travail muet sur les matières de
+  // R. 4227-22 matchait d'abord la branche travail, retenue par prudence, et la
+  // fiche se lisait « à confirmer » — alors que `{ erp: true }` (R. 143-44 5°)
+  // la rend due avec certitude.
+  it("un ERP muet sur les matières : la fiche est certaine, pas « à confirmer »", () => {
+    const due = composerRegistre(etabErp({ effectifSurSite: 8 }), []).find(
+      (d) => d.section.id === "exercices-themes",
+    );
+    expect(due).toBeDefined();
+    expect(due!.aConfirmer).toEqual([]);
+  });
+
+  it("hors ERP, la seule branche prudente garde sa marque", () => {
+    const due = composerRegistre(etabBureau({ effectifSurSite: 8 }), []).find(
+      (d) => d.section.id === "exercices-themes",
+    );
+    expect(due).toBeDefined();
+    expect(due!.aConfirmer.length).toBeGreaterThan(0);
+  });
+
   it("ni l'un ni l'autre : un petit bureau non-ERP n'a pas la fiche", () => {
     const ids = composerRegistre(etabBureau({ effectifSurSite: 8, manipuleMatieresR422722: false }), []).map(
       (d) => d.section.id,
