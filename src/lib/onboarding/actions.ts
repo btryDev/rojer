@@ -113,8 +113,9 @@ export async function finaliserOnboarding(
         effectifSurSite: d.effectifSurSite,
         // ~~`personnesPresentesHabituellement` et `manipuleMatieresR422722`
         // n'est plus demandé à l'onboarding (2026-09-01)~~ [2026-09-27 : les
-        // matières et les chiffons y reviennent, en trois états — écrits
-        // seulement s'ils ont une réponse, ci-dessous] : question de
+        // matières ~~et les chiffons~~ y reviennent, en trois états — écrits
+        // seulement s'ils ont une réponse, ci-dessous ; 2026-10-12 : les
+        // chiffons rayés, critère et question retirés le 2026-10-08 (C66)] : question de
         // technicien au tout début d'un parcours. La colonne reste à `null` —
         // on ne sait pas encore — et la fiche établissement la porte.
         //

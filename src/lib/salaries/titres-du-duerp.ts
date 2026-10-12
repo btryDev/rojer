@@ -18,6 +18,7 @@
  * concerné, il ne peut donc pas dire que quelqu'un l'est sans son titre.
  */
 
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   obligationsConformite,
   type Obligation,
@@ -70,9 +71,23 @@ export type QuestionDeLaFiche = {
 };
 
 /** Les formations d'établissement qu'un fait d'activité conditionne. */
-export function formationsDuFait(champ: ChampFaitActivite): Obligation[] {
-  return obligationsConformite.filter(
-    (o) => o.typologies.activite === champ && o.domaine === "formation_securite",
+export function formationsDuFait(
+  champ: ChampFaitActivite,
+  // Le référentiel, par défaut. Le paramètre n'existe que pour éprouver le
+  // filtre du niveau audit, comme `cataloguerTitres(obligations)` : aucune
+  // formation gouvernée par un fait n'y est aujourd'hui (2026-10-12).
+  obligations: readonly Obligation[] = obligationsConformite,
+): Obligation[] {
+  // Une formation au niveau audit (ADR-042) ne s'affiche pas sur la fiche :
+  // le moteur ne la sert nulle part, et la page « Ce que Rojer ne couvre
+  // pas » la nomme. Le filtre manquait jusqu'au 2026-10-12 (relecture de
+  // l'ADR-042) : cette lecture directe du référentiel contournait la porte
+  // du matching, comme les titres que `cataloguerTitres` filtre déjà.
+  return obligations.filter(
+    (o) =>
+      o.typologies.activite === champ &&
+      o.domaine === "formation_securite" &&
+      !estNiveauAudit(o),
   );
 }
 

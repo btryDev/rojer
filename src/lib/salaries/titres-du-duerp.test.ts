@@ -8,7 +8,8 @@ import {
   type ReponsesFaitsActivite,
 } from "@/lib/etablissements/faits-activite";
 import { obligationsDeclencheesParUnFait } from "./obligations-evenementielles";
-import { titresDuDuerpPourUnePersonne } from "./titres-du-duerp";
+import { obligationsConformite, type Obligation } from "@/lib/referentiels/conformite";
+import { formationsDuFait, titresDuDuerpPourUnePersonne } from "./titres-du-duerp";
 
 const AUCUN: ReponsesFaitsActivite = {
   manutentionManuelle: null,
@@ -71,5 +72,23 @@ describe("titresDuDuerpPourUnePersonne", () => {
   it("le CMR déclaré fait apparaître le suivi individuel renforcé (R. 4624-23, I, 3°)", () => {
     const q = trouver(titresDuDuerpPourUnePersonne({ ...AUCUN, expositionCMR: true }, []), "expositionCMR");
     expect(q.titres.map((t) => t.obligation.id)).toContain("sante-travail-salarie-sir");
+  });
+});
+
+describe("formationsDuFait — le niveau audit (ADR-042)", () => {
+  it("une formation gouvernée par un fait, marquée audit, sort de la fiche — et elle seule", () => {
+    // Aucune formation de fait n'est au niveau audit aujourd'hui : un test sur
+    // le référentiel livré passerait sans le filtre. Comme la garde de
+    // `cataloguerTitres` (C67) : une obligation réelle, marquée pour
+    // l'occasion, doit disparaître, et rien d'autre ne doit bouger.
+    const avant = formationsDuFait("manutentionManuelle");
+    expect(avant.length).toBeGreaterThan(0);
+    const cible = avant[0];
+    const referentiel = obligationsConformite.map((o) =>
+      o.id === cible.id ? ({ ...o, niveau: "audit" } as Obligation) : o,
+    );
+    const apres = formationsDuFait("manutentionManuelle", referentiel).map((o) => o.id);
+    expect(apres).not.toContain(cible.id);
+    expect(apres).toHaveLength(avant.length - 1);
   });
 });

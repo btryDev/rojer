@@ -689,9 +689,11 @@ export function matchTypologie(
   // salariés muet sur la question perdait la consigne et les exercices
   // semestriels que le même bureau reçoit en répondant « oui ».
   //
-  // Le silence suit donc la règle du non-renseigné, comme les chiffons
-  // (R. 4227-26) ~~le faisaient~~ [2026-10-08 : critère retiré, la ligne est
-  // au niveau audit et sans condition] : seul un « non » DÉCLARÉ ferme la branche. Quand rien d'autre
+  // Le silence suit donc la règle du non-renseigné~~, comme les chiffons
+  // (R. 4227-26)~~ ~~le faisaient~~ [2026-10-08 : critère retiré, la ligne est
+  // au niveau audit et sans condition] [2026-10-12 : comparaison rayée en
+  // entier — sans critère ni question, les chiffons ne sont plus le précédent
+  // de rien] : seul un « non » DÉCLARÉ ferme la branche. Quand rien d'autre
   // n'ouvre le champ, la ligne est retenue « à confirmer » et le dit.
   //
   // Le critère est évalué dès que **l'une** des deux branches est déclarée :
