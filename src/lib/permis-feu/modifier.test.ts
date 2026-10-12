@@ -45,7 +45,10 @@ vi.mock("@/lib/prisma", () => {
       }),
     },
     prestataire: {
-      findFirst: vi.fn(async ({ where }: { where: Ligne }) => db.prestataires.find((x) => correspond(x, where)) ?? null),
+      // La portée par le compte (`etablissement: { entreprise: { userId } }`)
+      // est celle du compte connecté du test : seul l'établissement compte ici.
+      findFirst: vi.fn(async ({ where: { etablissement: _portee, ...where } }: { where: Ligne }) =>
+        db.prestataires.find((x) => correspond(x, where)) ?? null),
     },
     accessToken: {
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
@@ -75,7 +78,7 @@ vi.mock("@/lib/auth/scope", () => ({
 vi.mock("@/lib/batiments/queries", () => ({
   resoudreBatimentOptionnel: vi.fn(async (_e: string, id?: string) => ({ ok: true, id: id ?? null })),
 }));
-vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn() }));
+vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "u1" })) }));
 vi.mock("./queries", () => ({ nextNumeroPermisFeu: vi.fn(async () => 2) }));
 
 import { creerPermisFeu, modifierPermisFeu } from "./actions";

@@ -57,7 +57,10 @@ vi.mock("@/lib/prisma", () => {
       }),
     },
     prestataire: {
-      findFirst: vi.fn(async ({ where }: { where: Ligne }) => db.prestataires.find((x) => correspond(x, where)) ?? null),
+      // La portée par le compte (`etablissement: { entreprise: { userId } }`)
+      // est celle du compte connecté du test : seul l'établissement compte ici.
+      findFirst: vi.fn(async ({ where: { etablissement: _portee, ...where } }: { where: Ligne }) =>
+        db.prestataires.find((x) => correspond(x, where)) ?? null),
     },
     accessToken: {
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
@@ -92,7 +95,7 @@ vi.mock("@/lib/batiments/queries", () => ({
     id === "zone-inconnue" ? { ok: false } : { ok: true, id: id ?? null },
   ),
 }));
-vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn() }));
+vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "u1" })) }));
 vi.mock("./queries", () => ({ nextNumeroPlan: vi.fn(async () => 2) }));
 
 import { creerPlanPrevention, modifierPlanPrevention } from "./actions";
