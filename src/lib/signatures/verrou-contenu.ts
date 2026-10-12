@@ -29,6 +29,19 @@ export async function compterSignatures(
 }
 
 /**
+ * Une saisie porte-t-elle un champ que l'empreinte couvre ? Sur le plan comme
+ * sur le permis, le seul champ du formulaire hors empreinte est la zone
+ * (`batimentId`). Les clés internes de Next (`$ACTION_…`) n'en sont pas.
+ */
+export function porteUnChampScelle(formData: FormData): boolean {
+  for (const cle of formData.keys()) {
+    if (cle.startsWith("$")) continue;
+    if (cle !== "batimentId") return true;
+  }
+  return false;
+}
+
+/**
  * La phrase que l'écran « Modifier » affiche, et que le serveur rend s'il
  * reçoit malgré tout une modification — la même. `null` : rien n'est scellé.
  */

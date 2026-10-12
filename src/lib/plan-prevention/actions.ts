@@ -19,6 +19,7 @@ import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import {
   compterSignatures,
   motifContenuScelle,
+  porteUnChampScelle,
 } from "@/lib/signatures/verrou-contenu";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 
@@ -301,19 +302,6 @@ export async function modifierPlanPrevention(
   revalidatePath(`/etablissements/${etablissementId}/plan-prevention`);
   revalidatePath(`/etablissements/${etablissementId}/plan-prevention/${planId}`);
   return { status: "success", planId, numero: plan.numero };
-}
-
-/** Les champs de la saisie hors de l'empreinte : seuls admis sur un plan signé. */
-const CHAMPS_HORS_EMPREINTE = new Set(["batimentId"]);
-
-/** La saisie porte-t-elle un champ que l'empreinte couvre ? Les clés
- *  internes de Next (`$ACTION_…`) n'en sont pas. */
-function porteUnChampScelle(formData: FormData): boolean {
-  for (const cle of formData.keys()) {
-    if (cle.startsWith("$")) continue;
-    if (!CHAMPS_HORS_EMPREINTE.has(cle)) return true;
-  }
-  return false;
 }
 
 function lireChampOptionnel(v: FormDataEntryValue | null): string | undefined {

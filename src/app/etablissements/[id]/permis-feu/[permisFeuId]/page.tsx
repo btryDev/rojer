@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
 import type { StatutPermisFeu } from "@prisma/client";
 import {
   ETAT_PERMIS,
@@ -330,6 +332,16 @@ export default async function PermisFeuDetailPage({
         cote={
           <CarteFiche titre="Cycle de vie">
             <div className="flex flex-wrap items-center gap-3">
+              {/* Corriger la saisie (2026-10-12) : tant que le permis vit.
+                  Signé, l'écran de modification dit ce qui reste ouvert. */}
+              {permisSignable && (
+                <Link
+                  href={`/etablissements/${id}/permis-feu/${permis.id}/modifier`}
+                  className={buttonVariants({ variant: "boardClair", size: "board" })}
+                >
+                  Modifier
+                </Link>
+              )}
               {/* ~~« attente_signatures » et deux signatures : Démarrer~~ —
                   retiré le 2026-10-12 : la seconde signature fait passer le
                   permis « valide », et le serveur ne démarre que depuis

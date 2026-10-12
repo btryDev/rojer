@@ -8,9 +8,16 @@ import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { NatureTravauxPointChaud } from "@prisma/client";
 import type { StatutPermisFeu } from "@prisma/client";
-import { NATURES_TRAVAUX, permisFeuSchema } from "./schema";
+import { NATURES_TRAVAUX, permisFeuSchema, type PermisFeuInput } from "./schema";
 import { nextNumeroPermisFeu } from "./queries";
+import { MESURES_RETIREES } from "./referentiel";
 import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
+import { statutPermisSignable } from "@/lib/signatures/etat-signable";
+import {
+  compterSignatures,
+  motifContenuScelle,
+  porteUnChampScelle,
+} from "@/lib/signatures/verrou-contenu";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 
 export type PermisFeuActionState =
@@ -35,14 +42,12 @@ function extraireMesures(formData: FormData): string[] {
   return formData.getAll("mesuresValidees").map(String);
 }
 
-export async function creerPermisFeu(
-  etablissementId: string,
-  _prev: PermisFeuActionState,
-  formData: FormData,
-): Promise<PermisFeuActionState> {
-  await assertEtablissementOwnership(etablissementId);
-
-  const parsed = permisFeuSchema.safeParse({
+/**
+ * La saisie du formulaire, validée — UNE lecture pour la création et la
+ * modification (2026-10-12).
+ */
+function lirePermisFeu(formData: FormData) {
+  return permisFeuSchema.safeParse({
     prestataireId: formData.get("prestataireId"),
     prestataireRaison: formData.get("prestataireRaison"),
     prestataireContact: formData.get("prestataireContact"),
@@ -59,6 +64,42 @@ export async function creerPermisFeu(
     mesuresNotes: formData.get("mesuresNotes"),
     dureeSurveillanceMinutes: formData.get("dureeSurveillanceMinutes"),
   });
+}
+
+/** Les colonnes du permis tirées d'une saisie valide. */
+function colonnesPermis(d: PermisFeuInput) {
+  return {
+    prestataireId: d.prestataireId ?? null,
+    prestataireRaison: d.prestataireRaison,
+    prestataireContact: d.prestataireContact,
+    prestataireEmail: d.prestataireEmail,
+    donneurOrdreNom: d.donneurOrdreNom,
+    donneurOrdreFonction: d.donneurOrdreFonction ?? null,
+    dateDebut: d.dateDebut,
+    dateFin: d.dateFin,
+    lieu: d.lieu,
+    naturesTravaux: d.naturesTravaux,
+    descriptionTravaux: d.descriptionTravaux,
+    mesuresValidees: d.mesuresValidees,
+    mesuresNotes: d.mesuresNotes ?? null,
+    dureeSurveillanceMinutes: d.dureeSurveillanceMinutes,
+  };
+}
+
+const ZONE_INTROUVABLE: PermisFeuActionState = {
+  status: "error",
+  message: "Zone introuvable",
+  fieldErrors: { batimentId: ["Zone introuvable"] },
+};
+
+export async function creerPermisFeu(
+  etablissementId: string,
+  _prev: PermisFeuActionState,
+  formData: FormData,
+): Promise<PermisFeuActionState> {
+  await assertEtablissementOwnership(etablissementId);
+
+  const parsed = lirePermisFeu(formData);
   if (!parsed.success) {
     return {
       status: "error",
@@ -71,13 +112,7 @@ export async function creerPermisFeu(
     etablissementId,
     parsed.data.batimentId,
   );
-  if (!batiment.ok) {
-    return {
-      status: "error",
-      message: "Zone introuvable",
-      fieldErrors: { batimentId: ["Zone introuvable"] },
-    };
-  }
+  if (!batiment.ok) return ZONE_INTROUVABLE;
 
   const numero = await nextNumeroPermisFeu(etablissementId);
   const id = `pf_${randomUUID()}`;
@@ -87,27 +122,90 @@ export async function creerPermisFeu(
       id,
       etablissementId,
       numero,
-      prestataireId: parsed.data.prestataireId,
-      prestataireRaison: parsed.data.prestataireRaison,
-      prestataireContact: parsed.data.prestataireContact,
-      prestataireEmail: parsed.data.prestataireEmail,
-      donneurOrdreNom: parsed.data.donneurOrdreNom,
-      donneurOrdreFonction: parsed.data.donneurOrdreFonction,
-      dateDebut: parsed.data.dateDebut,
-      dateFin: parsed.data.dateFin,
-      lieu: parsed.data.lieu,
+      ...colonnesPermis(parsed.data),
       batimentId: batiment.id,
-      naturesTravaux: parsed.data.naturesTravaux,
-      descriptionTravaux: parsed.data.descriptionTravaux,
-      mesuresValidees: parsed.data.mesuresValidees,
-      mesuresNotes: parsed.data.mesuresNotes,
-      dureeSurveillanceMinutes: parsed.data.dureeSurveillanceMinutes,
       statut: "attente_signatures",
     },
   });
 
   revalidatePath(`/etablissements/${etablissementId}/permis-feu`);
   return { status: "success", permisFeuId: permis.id, numero: permis.numero };
+}
+
+/**
+ * Corriger un permis (audit du 2026-10-12, constat 4) — même règle que le plan
+ * de prévention (`verrou-contenu.ts`) : sans signature tout se corrige, avec
+ * les validations de la création ; signé, seule la zone (hors empreinte) se
+ * modifie, et une saisie qui porte un champ couvert est refusée. Un permis
+ * terminé ou annulé ne se modifie plus.
+ *
+ * Les mesures d'une liste antérieure (`MESURES_RETIREES`) que le permis porte
+ * ne sont plus proposées par le formulaire, et le schéma les refuse : elles
+ * sont CONSERVÉES ici plutôt que perdues en silence à la première correction.
+ */
+export async function modifierPermisFeu(
+  permisFeuId: string,
+  _prev: PermisFeuActionState,
+  formData: FormData,
+): Promise<PermisFeuActionState> {
+  const permis = await prisma.permisFeu.findUnique({
+    where: { id: permisFeuId },
+    select: { etablissementId: true, statut: true, numero: true, mesuresValidees: true },
+  });
+  if (!permis) return { status: "error", message: "Permis introuvable" };
+  await assertEtablissementOwnership(permis.etablissementId);
+  const etablissementId = permis.etablissementId;
+  if (!statutPermisSignable(permis.statut)) {
+    return { status: "error", message: "Ce permis est terminé ou annulé : il ne se modifie plus." };
+  }
+
+  const scelle = motifContenuScelle(
+    "permis",
+    await compterSignatures("permis_feu", permisFeuId, etablissementId),
+  );
+  if (scelle) {
+    if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
+    const v = formData.get("batimentId");
+    const batiment = await resoudreBatimentOptionnel(
+      etablissementId,
+      typeof v === "string" && v.trim() ? v : undefined,
+    );
+    if (!batiment.ok) return ZONE_INTROUVABLE;
+    await prisma.permisFeu.updateMany({
+      where: { id: permisFeuId, etablissementId },
+      data: { batimentId: batiment.id },
+    });
+  } else {
+    const parsed = lirePermisFeu(formData);
+    if (!parsed.success) {
+      return {
+        status: "error",
+        message: "Formulaire invalide",
+        fieldErrors: parsed.error.flatten().fieldErrors,
+      };
+    }
+    const batiment = await resoudreBatimentOptionnel(
+      etablissementId,
+      parsed.data.batimentId,
+    );
+    if (!batiment.ok) return ZONE_INTROUVABLE;
+    const retirees = permis.mesuresValidees.filter((id) =>
+      MESURES_RETIREES.some((m) => m.id === id),
+    );
+    const colonnes = colonnesPermis(parsed.data);
+    await prisma.permisFeu.updateMany({
+      where: { id: permisFeuId, etablissementId },
+      data: {
+        ...colonnes,
+        mesuresValidees: [...colonnes.mesuresValidees, ...retirees],
+        batimentId: batiment.id,
+      },
+    });
+  }
+
+  revalidatePath(`/etablissements/${etablissementId}/permis-feu`);
+  revalidatePath(`/etablissements/${etablissementId}/permis-feu/${permisFeuId}`);
+  return { status: "success", permisFeuId, numero: permis.numero };
 }
 
 /**
