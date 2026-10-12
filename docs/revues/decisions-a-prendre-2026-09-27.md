@@ -423,6 +423,15 @@ rouvrirait la décision C45. Le type 3 de l'alarme au-delà de 50 personnes quan
 matières sont entreposées est désormais dit dans la description de l'alarme
 (`f67f56d5`).
 
+[2026-10-12 — vérifié, NON RAYÉ. Le code suit la recommandation : la question
+(`EtablissementForm.tsx`, `manipuleMatieresR422722`) dit « Manipulez-vous *et*
+mettez-vous en œuvre », son aide écarte le simple entreposage, et
+`perimetre/manques-annonces.ts` annonce `R. 4227-22` à `-25` à tout employeur
+(`condition: "travail"`). Rien à faire au code. Mais « garder telle quelle » est
+une recommandation, et rien au dépôt ne trace que la propriétaire l'a retenue :
+l'audit du 2026-10-12 la range à la fois parmi les décisions ouvertes (§ 4, point
+12) et parmi les lignes à rayer (§ 5). Se raye au jour où elle est entérinée.]
+
 ## D25 — Merger `lot/audit-obligations-nouvelles` ? (la dotation en extincteurs, R. 4227-29)
 
 **Ce que fait la branche.** Elle crée `incendie-travail-extincteurs-dotation`, état

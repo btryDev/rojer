@@ -1,7 +1,7 @@
 # ADR-043 — Ce qui est dû à une personne se lit sur sa fiche, depuis son entrée
 
-- **Statut** : **EN COURS sur sa branche le 2026-10-12** (`lot/du-a-la-personne`),
-  non fusionnée. Périmètre et trois décisions validés par la propriétaire le
+- **Statut** : ~~**EN COURS sur sa branche le 2026-10-12** (`lot/du-a-la-personne`),
+  non fusionnée.~~ **FUSIONNÉE le 2026-10-12** — PR #20, `4f6de986`. Périmètre et trois décisions validés par la propriétaire le
   2026-10-12 (« ok vas-y avec tes recommandations »).
 - **Amende** : l'ADR-023 (le salarié porte ses titres) sur un point — un titre
   **dû à tout l'effectif** et jamais déclaré se montre comme dû, daté depuis

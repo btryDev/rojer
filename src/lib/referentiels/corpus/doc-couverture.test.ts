@@ -30,12 +30,23 @@ function documentCouverture(): string {
  */
 const HORS_CADRE = "## 7. Hors cadre — couvert par la clause générale des mentions légales (à rédiger)";
 
-/** Le document sans sa section hors cadre, et la section seule. */
-function decoupe(doc: string): { avant: string; horsCadre: string } {
+/**
+ * La section des manques entrés dans la cible le 2026-10-12, quand elle a cessé
+ * d'être `CATEGORIES_COUVERTES` pour devenir ce que l'onboarding ne refuse pas.
+ * Ouverts, non classés : ni hors cadre, ni annoncés.
+ */
+const A_EVALUER = "## 8. À évaluer — entrés dans la cible le 2026-10-12";
+
+/** Le document sans ses sections hors cadre et à évaluer, et chacune seule. */
+function decoupe(doc: string): { avant: string; horsCadre: string; aEvaluer: string } {
   const i = doc.indexOf(HORS_CADRE);
-  return i < 0
-    ? { avant: doc, horsCadre: "" }
-    : { avant: doc.slice(0, i), horsCadre: doc.slice(i) };
+  const j = doc.indexOf(A_EVALUER);
+  const finHorsCadre = j < 0 ? doc.length : j;
+  return {
+    avant: i < 0 ? doc : doc.slice(0, i),
+    horsCadre: i < 0 ? "" : doc.slice(i, finHorsCadre),
+    aEvaluer: j < 0 ? "" : doc.slice(j),
+  };
 }
 
 /**
@@ -117,16 +128,25 @@ describe(`${CHEMIN} — la liste ne se périme pas en silence`, () => {
     ).toBe(true);
   });
 
-  it("C45 — la section hors cadre liste exactement les obligations manquantes qui touchent la cible", () => {
+  it("C45 — hors cadre et à évaluer, disjoints, listent exactement les obligations manquantes qui touchent la cible", () => {
+    // ~~La section hors cadre seule~~ jusqu'au 2026-10-12 : la cible redéfinie
+    // (ce que l'onboarding ne refuse pas) y a fait entrer quinze manques que
+    // la grille C45 n'a pas encore classés. Ils vivent au § 8, pas au § 7 :
+    // les y mettre les déclarerait hors cadre sans décision.
     // Décision de la propriétaire du 2026-09-27 : sur les quarante-deux, quinze
     // relèvent de la clause générale des mentions légales, et restent
     // `obligation_manquante`. La liste du document et celle du corpus ne
     // doivent diverger dans aucun sens : un article encodé ou annoncé depuis
     // qui y resterait promettrait une exclusion qui n'est plus ; un manque
     // de la cible entré depuis et absent d'ici ne serait couvert par rien.
-    const { horsCadre } = decoupe(documentCouverture());
+    const { horsCadre, aEvaluer } = decoupe(documentCouverture());
     expect(horsCadre, `${CHEMIN} n'a plus de section « ${HORS_CADRE} ».`).not.toBe("");
-    const listees = [...horsCadre.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]).sort();
+    expect(aEvaluer, `${CHEMIN} n'a plus de section « ${A_EVALUER} ».`).not.toBe("");
+    const refs = (section: string) =>
+      [...section.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]);
+    const dansLesDeux = refs(horsCadre).filter((r) => refs(aEvaluer).includes(r));
+    expect(dansLesDeux, "Un manque ne peut pas être à la fois hors cadre et à évaluer.").toEqual([]);
+    const listees = [...refs(horsCadre), ...refs(aEvaluer)].sort();
     const duCorpus = CORPUS.flatMap((c) =>
       c.articles.flatMap((a) =>
         a.statut === "obligation_manquante" && a.toucheLaCible ? [a.ref] : [],

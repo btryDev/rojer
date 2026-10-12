@@ -540,12 +540,19 @@ export const CORPUS_PE: Corpus = {
       historique:
         "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
       statut: "obligation_manquante",
-      cause: "perimetre",
-      toucheLaCible: false,
+      // ~~perimetre~~ → a_trancher le 2026-10-12 : la cible est ce que
+      // l'onboarding ne refuse pas (≤ 50 travailleurs, pas d'ERP en IGH), et
+      // l'hôtel y entre. Rien ne s'encode (encodage terminé) : à classer selon
+      // la grille C45 — encoder, annoncer ou hors cadre —, par la propriétaire.
+      cause: "a_trancher",
+      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
+      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      toucheLaCible: true,
       motif:
         "« L'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans. » Le référentiel ne sait pas porter « l'ensemble » : une obligation s'accroche à des catégories d'équipement énumérées, et énumérer reviendrait à décider à la place du texte ce qu'est une installation technique d'hôtel. Deux catégories plausibles — VMC et installation frigorifique — portent déjà une obligation BIENNALE valant pour tous les ERP : une ligne supplémentaire y ferait doublon. Cinquième occurrence du motif PE 4 § 2. Les ascenseurs sont explicitement exclus par le renvoi à AS 9.",
       bloquePar:
-        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]",
     },
     {
       ref: "PO 7",
@@ -556,12 +563,19 @@ export const CORPUS_PE: Corpus = {
       historique:
         "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : versionEnVigueur 2018-01-01 → 2011-10-30 : la version en vigueur date du 30 octobre 2011 (arrêté du 26 octobre 2011, lien MODIFICATION « (V) ») ; l'API ne connaît aucune version du 1er janvier 2018 pour cet article. Texte inchangé.",
       statut: "obligation_manquante",
-      cause: "perimetre",
-      toucheLaCible: false,
+      // ~~perimetre~~ → a_trancher le 2026-10-12 : la cible est ce que
+      // l'onboarding ne refuse pas (≤ 50 travailleurs, pas d'ERP en IGH), et
+      // l'hôtel y entre. Rien ne s'encode (encodage terminé) : à classer selon
+      // la grille C45 — encoder, annoncer ou hors cadre —, par la propriétaire.
+      cause: "a_trancher",
+      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
+      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      toucheLaCible: true,
       motif:
         "« Le personnel doit participer deux fois par an à des séances d'instruction et d'entraînement de façon compatible avec les conditions d'exploitation, compte tenu, le cas échéant, de son rythme saisonnier. » Périodicité chiffrée, donc encodable — mais l'obligation ne porte sur AUCUN équipement, et toute obligation du référentiel s'accroche aujourd'hui à une catégorie d'équipement. C'est le même blocage que PE 27 § 5 et R. 4544-11-1. Verbatim relevé en première main le 2026-08-26.",
       bloquePar:
-        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]",
     },
     {
       ref: "PO 2",
@@ -689,12 +703,19 @@ export const CORPUS_PE: Corpus = {
       luLe: "2026-08-26",
       lecture: "premiere_main",
       statut: "obligation_manquante",
-      cause: "perimetre",
-      toucheLaCible: false,
+      // ~~perimetre~~ → a_trancher le 2026-10-12 : la cible est ce que
+      // l'onboarding ne refuse pas (≤ 50 travailleurs, pas d'ERP en IGH), et
+      // l'hôtel y entre. Rien ne s'encode (encodage terminé) : à classer selon
+      // la grille C45 — encoder, annoncer ou hors cadre —, par la propriétaire.
+      cause: "a_trancher",
+      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
+      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      toucheLaCible: true,
       motif:
         "« Les dispositions des articles PE 27 (§ 5) et PO 7 sont applicables. » Symétrique de PO 8 § 1 pour la formation : PO 7 — deux séances d'instruction et d'entraînement du personnel par an — est réimporté nommément dans le régime des établissements EXISTANTS. La périodicité vaut donc pour tous les hôtels, pas seulement les neufs. Même blocage que PO 7 lui-même : l'obligation ne porte sur aucun équipement.",
       bloquePar:
-        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`).",
+        "~~porteur-d-echeance-hors-equipement~~ — LEVÉ depuis le 2026-08-27 : l'ADR-022 a donné à l'établissement le rôle de porteur, et `PE 4 § 2` s'en sert. Ce qui retient cette ligne n'est plus technique : elle vise les HÔTELS (chapitre PO), hors de la cible du produit — d'où `cause: \"perimetre\"`. Rayé le 2026-09-20 ; la raison de non-encodage était restée écrite trois semaines après avoir cessé d'être vraie (règle 11 de `CLAUDE.md`). [2026-10-12 : ~~hors de la cible du produit~~ — la cible est désormais ce que l'onboarding ne refuse pas, et un hôtel de cinquante travailleurs au plus y entre. La cause passe de `perimetre` à `a_trancher` : la ligne rejoint les manques à classer selon la grille C45, sans être encodée.]",
     },
     {
       ref: "PO 13",

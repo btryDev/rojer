@@ -70,18 +70,24 @@ describe("registre de dette — les obligations manquantes", () => {
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
       // `L. 8222-5`, passe en `a_trancher` — ce qui la retient est la décision
       // sur le module de vigilance, plus l'absence de surface.
-      evenement: [0, 1],
-      categorie_equipement: [5, 6],
+      // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 102.
+      evenement: [1, 0],
+      // [5, 6] → [11, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `GZ 13`, `GZ 14`, `CO 61`,
+      // `AS 10`, `GC 18`, arrêté 2018-02-23 art. 26 § 3.
+      categorie_equipement: [11, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
-      attribut_etablissement: [1, 2],
+      // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
+      attribut_etablissement: [3, 0],
       // 5 → 0 le 2026-09-27 (C45) : `R. 1321-60` et les art. 4, 9, 10, 12 de
       // l'arrêté du 10 septembre 2021, annoncés (`non_couvert`).
-      destinataire: [0, 1],
+      // [0, 1] → [1, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : arrêté 1986 art. 78-1.
+      destinataire: [1, 0],
       // 6 → 4 le 2026-09-27 (C45) : `R. 4227-26` encodé (retenu), `R. 4225-3`
       // annoncé. Restent quatre HORS CADRE (`R. 4323-61`, `-69`, arrêté 1993
       // art. 8 et annexe III).
-      activite_exercee: [4, 1],
+      // [4, 1] → [5, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `R. 4323-89`.
+      activite_exercee: [5, 0],
       // 3 → 0 le 2026-09-27 (C45) : `L. 8222-1`, `D. 8222-5`, `D. 8222-7`
       // annoncés.
       relation_tiers: [0, 0],
@@ -99,13 +105,25 @@ describe("registre de dette — les obligations manquantes", () => {
       // 9 → 3 le 2026-09-27 (C45) : `L. 4141-5`, `L. 4121-3`, `L. 8222-5`,
       // `R. 4227-22`, `R. 4227-25`, `R. 4323-106` annoncés. Restent trois HORS
       // CADRE (`R. 4224-3`, `R. 4223-4`, arrêté 1993-11-04 art. 4).
-      a_trancher: [3, 1],
-      perimetre: [0, 3],
+      // [3, 1] → [7, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `R. 4544-11` entre dans la
+      // cible ; `PO 1 § 3`, `PO 7`, `PO 12` y entrent aussi et passent de
+      // `perimetre` à `a_trancher` — à classer selon la grille C45, rien ne
+      // s'encode. 3 + 1 + 3 = 7.
+      a_trancher: [7, 0],
+      // [0, 3] → [0, 0] le 2026-10-12 : les trois hôtels, voir `a_trancher`.
+      perimetre: [0, 0],
     });
     // 42 → 15 et 57 → 30 le 2026-09-27 (C45) : 42 − 1 encodé (`R. 4227-26`)
     // − 2 tracés au module (`L. 4121-3-1`, `R. 4512-12`) − 24 annoncés = 15,
     // les quinze HORS CADRE de `docs/couverture-declaree-du-produit.md`.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(15);
+    // 15 → 30 le 2026-10-12 : la cible est ce que l'onboarding ne refuse pas
+    // (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031), et non plus
+    // `CATEGORIES_COUVERTES = ["N5"]`. 15 + 3 hôtels + 6 ERP des quatre
+    // premières catégories + 4 habitation + 2 activités (`R. 4544-11`,
+    // `R. 4323-89`) − 0 = 30. Le total ne bouge pas (30) : c'est une mesure,
+    // pas une dette nouvelle. Les quinze entrées sont OUVERTES, à évaluer
+    // selon la grille C45 (encoder / annoncer / hors cadre).
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(30);
     expect(manquantes.length).toBe(30);
   });
 });

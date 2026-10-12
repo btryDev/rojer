@@ -66,3 +66,49 @@ Slug d'accessibilité en double ; SIRET en double ; portées « dépôt »/« co
 ## 5. Suivi de l'audit du 27/09 (extraits)
 CLOS : maillons 2, 6, 7 ; A2 ; D1, D2, D8, D12 ; § 8 ; R. 4412-5. CHANGÉ : D3 (10 au lieu de 11), D24 (non rayé), § 12 et § 15 MCP (non rayés). OUVERTS : D4, D5, D6, D9, D14, D17, D18, D21, D26, D27, D28 ; § 6 bis carnet (vert à 34 j, unités) ; § 16 (1) et (3).
 Lignes closes et non rayées à rayer : § 2 vigilance, § 4 périmètre vigilance, § 6 bis « 80 % », § 12, § 15, D24.
+
+## Suivi au 2026-10-12 (soir)
+
+Ce que les lots **polir** (`lot/polir-integration`, `ed8b248e` : sept
+branches fusionnées — `polir-entree-controle`, `polir-calendrier-registre`,
+`polir-prestataires-carnet-accessibilite`, `polir-plans-permis-signatures`,
+`polir-duerp-actions`, `etape-transverses-calculee`, `duerp-non-imprimes`)
+et **polir-relecture** (`ed8b248e..712f9ef1`, seize commits) ont fermé,
+constat par constat. Lu sur les commits et leurs diffs ; rouvert dans le code
+pour B1, B3 et § 12/§ 15 des chantiers. `762c5033` (appareil retiré, sur
+`lot/polir-relecture` après `712f9ef1`) n'est pas compté ici. Rien n'est
+réécrit plus haut : « clos » dit ce qui est fait, « en partie » ce qui reste.
+
+### Bloquants
+
+| # | État | Par |
+|---|---|---|
+| B1 | Clos — l'aide cite R. 146-3 (28 m / 50 m, dernier plancher), écrite une fois (`aides-regimes.ts`) ; refus et couverture disent la même chose | `712619a7`, `1b33effe` |
+| B2 | Clos — la réponse EPI se corrige à la fiche, le calendrier suit ; un EPI déclaré passe la réponse à « oui » | `d4b6366c`, `768826a6` |
+| B3 | Clos — « Préparer un contrôle » dit ce que dit le ZIP ; le sens de « À jour » reste une décision (§ 4.7) | `2ec54a70` |
+| B4 | Clos — « Modifier » la fiche prestataire (identité, contacts, validités, dates D. 8222-5, pièces) ; pastille et phrase accordées ; la pièce remplacée n'est plus effacée ; rattachement scopé | `955227d2`, `e70eed0f`, `8a380186` |
+| B5 | En partie — un plan non signé se modifie, inspection commune comprise ; signé, la date ne s'enregistre plus et l'écran dit l'issue réelle (supprimer, refaire signer) | `644d6428`, `945c3d5e` |
+| B6 | Clos — point, relevé et analyse se corrigent et se suppriment ; le calendrier, la matrice et le ZIP se relisent | `630855ed` |
+| B7 | Clos côté code — plus de repli silencieux sur `localhost`, refus visible en production. La variable Vercel reste à poser par la propriétaire | `3baf0d81` |
+
+### Importants
+
+- **Corriger une saisie** — clos : action du plan (corriger, rouvrir, abandonner ; `ca2a03fb`, `cec83f7f`) ; permis de feu (`7bcb444f`) ; champ d'accessibilité vidé (`64cdbdd6`) ; risque décoché au DUERP, désormais confirmé (`69758b4e`). Ouvert : rapport de vérification seulement supprimable (décision § 4.8).
+- **Écrans qui se contredisent** — clos : en-têtes de mois et « à confirmer » hors retard (D26, `7ef1be62`, `61ca6473`) ; permis « co-signé » sous « en attente » (`f43d254e`) ; signature attribuée par adresse (`798c6579`) ; registre d'accessibilité, neuf pièces et R. 164-6 entier (`64cdbdd6`, `5eff6bc1`) ; ERP repassé non-ERP plus publié (`64cdbdd6`) ; phrases IGH (`1b33effe`) ; registre PDF périmé (`fd7d4a94`) ; « Exercices » ERP à tort « à confirmer » (`d2068dcd`) ; fiche appareil et états permanents (`7078dee0`) ; « Quand ça arrive » marqué (`8677e3a8`) ; fil d'étapes du DUERP (`9db44bc0`, `3b249226`). En partie : manque en retard ADR-043 (d) — le bandeau le nomme, compté personne par personne (`d3a80f66`, `7be9d9aa`) ; le relevé « Dépassées », le rail et l'indice ne le comptent toujours pas (décision § 4.6).
+- **Dire faux ou trop** — clos : échéance EPI respiratoire et gilet (`2132661f`) ; aide habitation (`712619a7`) ; carnet sur-annoncé (`630855ed`). En partie : « Préparer un contrôle » et « documents obligatoires » ne promettent plus l'exhaustivité (`2132661f`, `2ec54a70`) ; la liste complète reste une décision (§ 4.7). Ouvert : score « satisfaisante » sans DUERP (§ 4.5).
+- **DUERP** — clos : CSV UTF-8 sans BOM, mesures à venir jamais « en place » (`c950ad76`, `fdb45f84`) ; PDF d'une version sans les versions postérieures (`4dc0ab5c`) ; motif du 1° de R. 4121-2 sous onze salariés (`202399e8`) ; expositions déclarées absentes gravées et imprimées (`f2acc3ee`). Ouvert : PDF figé, mesures « en place » comptées levées, écart majeur sans action, motif « première version » (§ 4.5).
+- **Moteur et calendrier** — ouverts : décocher « travail » avec des salariés ; prescription qui renforce une obligation d'établissement.
+- **Tiers** — clos : OTP, essai réservé avant comparaison, jeton consommé sous condition (`107b14da`) ; le dirigeant signe depuis son compte (`6b3ce9f8`) ; la modification révoque les liens en vol (`9d86bb16`) ; prestataire rattaché vérifié contre l'établissement (`de31ac78`). Ouverts : contre-signature § 10, Kbis et RC Pro (§ 4.1, § 4.2).
+- **Périmètre annoncé** — ouverts, tous : lien après refus, PO/PU/PX, niveau audit dans PDF/ZIP/MCP (`lot/niveau-audit` non intégrée ici), MCP 7 sur 46 (D4).
+
+### Peut attendre
+
+Clos : slug d'accessibilité en double (`64cdbdd6`) ; SIRET en double (`955227d2`) ; statut du permis contrôlé côté serveur (`766419ef`) ; dates futures au carnet (`630855ed`) ; plan d'actions PDF « aucune action » sous trois levées (`ee862c23`). Ouverts : portées dépôt/consultation, « À jour » carnet à 7 jours, titre « registre incendie », filtres du registre, organisme facultatif, 4ᵉ refus, somme des effectifs, code mort `deduction-erp.ts`, motif « première version », titre redéclaré, export RGPD, conservation des sortis, notes « locaux à sommeil ».
+
+### Hors liste, fermé en passant
+
+Seuil des 400 h atteint en cours de chantier (R. 4512-7, 1° ; `137272c3`, `5a05e847`) — point 11 du § 4, en partie. Tenancy de `creerVersion` (`c5168bbc`). Version du moteur recopiée sans incrément, deux fois (`222e5def`, `712f9ef1`).
+
+### § 5, lignes « closes et non rayées »
+
+Rayées le 2026-10-12 sur `lot/docs-maj` : § 2 vigilance, § 6 bis « 80 % ». **Non rayées, parce qu'elles ne sont pas closes** : § 4 périmètre de la vigilance (B1 non tranchée, `EXCLUSIONS` inchangé ; seule l'annonce C45 a bougé) ; § 12 (MCP et registre PDF faits, la page ouverte par lien direct non — rayé en partie) ; § 15 MCP (l'axe `inventaire` n'atteint pas le MCP) ; D24 (le code suit la recommandation, la décision n'est pas tracée). Chacune porte une note datée.

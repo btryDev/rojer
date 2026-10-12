@@ -45,27 +45,38 @@ permanents en découlent que le référentiel ne porte pas.
 question posée au dirigeant — l'élargir à l'entreposage ferait entrer dans les
 obligations de `R. 4227-34` des établissements que ce texte-là ne vise pas.
 
-## 2. La date de remise de l'attestation de vigilance
+## ~~2. La date de remise de l'attestation de vigilance~~ — CLOS LE 2026-09-27, RAYÉ LE 2026-10-12
 
-**Recommandé par le lot du 2026-09-02, non fait** : c'est un champ, donc une
-migration.
+> **Clos par la décision B2** (`2c5672b2`, `801d2f74`, migration
+> `20260927130000_prestataire_dates_attestation_vigilance`) : deux colonnes
+> nullables, `attestationUrssafRemiseLe` et `attestationUrssafEmiseLe`.
+> `echeanceAttestationUrssaf` compte six mois depuis la remise saisie,
+> `emiseMoinsDeSixMoisAvantRemise` compare l'émission à la remise ; vide, l'écran
+> dit « non renseignée », jamais « à jour ». `updatedAt` ne sert plus qu'à
+> aggraver (`prestataires/vigilance.ts`). La question « remise ou émission » est
+> tranchée par les deux : la remise pilote l'échéance, l'émission l'ancienneté.
+> Reste écrit au corpus (`D. 8222-5`) : une remise tardive décale la grille, la
+> date de conclusion n'étant pas au modèle.
 
-`opposabiliteUrssaf()` compte les six mois de `D. 8222-5` depuis
+~~**Recommandé par le lot du 2026-09-02, non fait** : c'est un champ, donc une
+migration.~~
+
+~~`opposabiliteUrssaf()` compte les six mois de `D. 8222-5` depuis
 `prestataire.updatedAt`. Ce n'est pas un décalage borné, c'est **une remise à
 zéro à chaque écriture** : la fiche d'un prestataire actif est retouchée plus
 souvent que tous les six mois, donc la borne n'arrive jamais. L'écran reste vert
-indéfiniment, et rien dans le calcul ne peut le rattraper.
+indéfiniment, et rien dans le calcul ne peut le rattraper.~~
 
-Depuis le 2026-09-02, l'écran **le dit** — c'est le palliatif, pas le remède.
+~~Depuis le 2026-09-02, l'écran **le dit** — c'est le palliatif, pas le remède.~~
 
-La même migration servirait la seconde exigence de `D. 8222-5`, aujourd'hui
+~~La même migration servirait la seconde exigence de `D. 8222-5`, aujourd'hui
 impossible à porter : l'attestation doit **dater de moins de six mois** à la
 remise, et le produit ne stocke qu'une fin de validité, jamais une date
 d'émission. Un `DateTime?` nullable suffit, la borne actuelle servant de repli
-tant qu'il est vide.
+tant qu'il est vide.~~
 
-**À trancher avec** : est-ce la date de remise ou la date d'émission qui pilote
-quoi. Les deux sont exigées et ne servent pas la même règle.
+~~**À trancher avec** : est-ce la date de remise ou la date d'émission qui pilote
+quoi. Les deux sont exigées et ne servent pas la même règle.~~
 
 ---
 
@@ -189,8 +200,19 @@ propriétaire (lot 6b), et elle déplacerait quatre lignes de colonne.~~
 [**TRANCHÉ le 2026-10-12** par la propriétaire : la cible est ce que
 l'onboarding ne refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH
 (ADR-031) ; au sens large, TPE/PME. Le restaurant de 4ᵉ catégorie EST dans la
-cible. Reste à faire : aligner `toucheLaCible` sur cette définition plutôt que
-sur `CATEGORIES_COUVERTES`, ce qui déplace les quatre lignes annoncées ici.]
+cible. ~~Reste à faire : aligner `toucheLaCible` sur cette définition plutôt que
+sur `CATEGORIES_COUVERTES`, ce qui déplace les quatre lignes annoncées ici.~~]
+[**FAIT le 2026-10-12** (`lot/docs-maj`) — et ce ne sont pas quatre lignes,
+c'est quinze. Mesuré en appelant le corpus : les quinze manquantes « hors
+cible » l'étaient toutes au titre de l'ancienne définition — trois hôtels, six
+ERP des quatre premières catégories, quatre d'habitation, deux d'activité
+(`R. 4544-11`, `R. 4323-89`) ; aucune ne vise seulement plus de cinquante
+travailleurs ou un ERP en IGH. Cible 15 → **30** (15 + 15 − 0), hors cible
+15 → 0, total 30 inchangé. Les trois hôtels passent de `perimetre` à
+`a_trancher` : rien ne s'encode. Les quinze sont OUVERTES, à évaluer selon la
+grille C45 (encoder / annoncer / hors cadre), listées au § 8 de
+`couverture-declaree-du-produit.md` ; `registre-dette.test.ts` et
+`doc-couverture.test.ts` portent le mouvement.]
 
 **Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le
@@ -223,6 +245,16 @@ choisir « ne pas lire les articles ».
 est un ensemble fermé de quatre motifs, et **aucun ne dit « RH non-SST »**.
 `L. 8221-5` a dû être classé `sans_objet`, qui dit autre chose. Son commentaire
 prévoit qu'une exclusion « se discute et s'ajoute là ».
+
+> **[2026-10-12 — NON RAYÉ, À MOITIÉ CHANGÉ.]** Le « hors du périmètre déclaré »
+> ne tient plus : depuis C45 (2026-09-27), `L. 8222-1`, `D. 8222-5` et
+> `D. 8222-7` sont `non_couvert` et nommés sur la page « Ce que Rojer ne couvre
+> pas », domaine « Vigilance à l'égard des cocontractants », à tout dossier.
+> Le reste est intact : la décision B1 (`decisions-en-attente-2026-09-20.md`)
+> n'est pas prise — le corpus l'écrit encore pour `D. 8222-5` (« périmètre non
+> tranché ») et `L. 8222-5` (« attend toujours la décision B1 ») —, et
+> `EXCLUSIONS` (`corpus/perimetre.ts`) a toujours ses quatre motifs, sans
+> « RH non-SST ». L'audit du 2026-10-12 (§ 5) le classait clos : il ne l'est pas.
 
 ~~**Le type ERP `J` n'existe pas dans l'enum**, et `R` n'est pas subdivisé en
 `R(1)` / `R(2)`. Un EHPAD ne peut pas se déclarer pour ce qu'il est.~~ Origine
@@ -511,9 +543,12 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   « 100 % » — et le produit écrit « 5 % » et « 80 % » ailleurs : la convention
   existe, elle n'est pas tenue ici.
 
-- **La même statistique écrite de deux façons** : « 80 % des incendies »
+- ~~**La même statistique écrite de deux façons** : « 80 % des incendies »
   (`permis-feu/page.tsx:120`) contre « 80% des incendies »
-  (`lib/permis-feu/referentiel.ts:140`).
+  (`lib/permis-feu/referentiel.ts:140`).~~ **DISPARU le 2026-09-26** (C32,
+  `2fbd230d` puis `153232ea`) : le « 80 % » sans source est remplacé par le
+  chiffre de l'INRS ; « des incendies » ne se lit plus nulle part dans `src`.
+  Rayé le 2026-10-12.
 
 - **Deux idiomes de navigation pour trois registres frères** : retour
   (« ← LE COMPTOIR DES HALLES ») sur `/permis-feu` et `/plan-prevention`, fil
@@ -2122,8 +2157,15 @@ jour au plus, déclenchée dans l'heure prévue — suffisant pour ce besoin
 ### À faire sans attendre les alertes
 
 Trois lecteurs contournent la réparation et servent en silence un dossier
-périmé : le **serveur MCP**, le **registre PDF**, et une page ouverte par lien
-direct avant le tableau de bord ou le calendrier. Le moins coûteux : qu'ils
+périmé : ~~le **serveur MCP**, le **registre PDF**, et~~ une page ouverte par lien
+direct avant le tableau de bord ou le calendrier.
+
+> **[2026-10-12 — rayé en partie.]** Le serveur MCP signale la fraîcheur depuis
+> `87f5e830` (2026-09-20, `avecFraicheur`, `mcp/tools.ts`), le registre PDF
+> depuis `87f5e830` puis `fd7d4a94` (2026-10-12 : la phrase dès que le
+> calendrier n'est pas à jour). **La page ouverte par lien direct reste
+> ouverte** : hors tableau de bord, calendrier, « Préparer un contrôle », ZIP,
+> PDF et MCP, aucun écran ne lit `fraicheur.ts`. Le moins coûteux : qu'ils
 **signalent** un calendrier non recalculé (une lecture du repère, aucune
 écriture) plutôt que de le servir comme juste. La tâche quotidienne, une fois
 en place, rend ce cas rare sans le rendre impossible — un déploiement peut
@@ -2333,6 +2375,14 @@ rien : à supprimer, pas à fusionner.
 > ces critères. » sur une liste vide, sans le fait. Il passe par ses propres
 > requêtes (`ctx.scope`, sans `requireUser`), et ce lot s'est borné aux pièces
 > remises à un tiers — ZIP, deux PDF, « Préparer un contrôle ». Reste ouvert.
+>
+> **[2026-10-12 — vérifié, toujours ouvert, NON RAYÉ.]** Ce qui a bougé :
+> `e26c9bb7` (2026-09-26, après cette note) distingue la liste filtrée
+> (« Aucune vérification ne correspond à ces critères. ») de la liste entière
+> (« Le calendrier ne contient aucune vérification. »), et la fiche MCP donne
+> « Équipements déclarés : N » depuis le 2026-08-12. Ce qui manque : l'axe
+> `inventaire` de `perimetre/couverture.ts` n'est lu par aucun fichier de
+> `src/lib/mcp/`, et un parc entièrement retiré y compte comme déclaré.
 
 ~~Relevé le 2026-09-20 par la contre-lecture du lot « fraîcheur des sorties ».~~
 
