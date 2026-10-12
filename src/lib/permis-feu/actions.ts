@@ -154,8 +154,9 @@ export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
   await assertEtablissementOwnership(permis.etablissementId);
   // On ne supprime pas un permis déjà signé : on l'annule à la place pour
   // conserver la piste d'audit. LE STATUT NE LE DISAIT PAS : un permis est
-  // créé en `attente_signatures` et y reste une fois signé, rien n'écrivant
-  // `valide`. Le critère est donc le fait en base — une signature posée ou un
+  // créé en `attente_signatures` et y reste ~~une fois signé, rien n'écrivant
+  // `valide`~~ [2026-10-12 : tant qu'une partie manque — `validerSiCoSigne`
+  // écrit `valide` à la seconde signature]. Le critère est donc le fait en base — une signature posée ou un
   // lien émis (`porteUneTraceDeSignature`) —, et seul un permis vierge
   // s'efface.
   const etabId = permis.etablissementId;

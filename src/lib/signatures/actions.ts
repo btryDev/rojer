@@ -27,6 +27,7 @@ import {
 } from "./otp";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
 import { objetEstSignable } from "./etat-signable";
+import { validerSiCoSigne } from "./statut-objet";
 import { ObjetSignable, PartieSignataire } from "@prisma/client";
 import type { MethodeSignature } from "@prisma/client";
 import {
@@ -382,6 +383,13 @@ export async function poserSignatureAvecToken(
       message: "Ce lien a déjà servi à signer ce document.",
     };
   }
+  // Le statut suit les signatures : les deux parties signées, l'acte passe
+  // « valide » (`validerSiCoSigne`, 2026-10-12).
+  await validerSiCoSigne(
+    token.objetType as ObjetSignable,
+    token.objetId,
+    token.etablissementId,
+  );
 
   return { status: "success", signatureId: signature.id };
 }
@@ -563,6 +571,7 @@ export async function signerEnCompteConnecte(params: {
     if (estPartieDejaSignee(e)) return { ok: false, raison: "deja_signee" };
     throw e;
   }
+  await validerSiCoSigne(params.objetType, params.objetId, params.etablissementId);
   return { ok: true, signatureId: signature.id };
 }
 

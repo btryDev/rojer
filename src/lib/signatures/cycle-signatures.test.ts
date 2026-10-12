@@ -652,3 +652,58 @@ describe("garantie 3 — la partie qui signe est enregistrée, jamais devinée",
     expect(prismaMock.signature.lignes).toHaveLength(1);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────
+// Défaut 4 (audit du 2026-10-12, constats 3 et 5) — rien n'écrivait `valide` :
+// un plan ou un permis signé des deux parties restait « En attente de
+// signatures ».
+// ─────────────────────────────────────────────────────────────────────────
+
+const signerCommeDirigeant = (objetType: "plan_prevention" | "permis_feu", objetId: string) =>
+  signerEnCompteConnecte({ etablissementId: "etab-a-moi", objetType, objetId });
+
+describe("garantie 4 — le statut suit les signatures", () => {
+  it("plan : la seconde partie signe, le plan passe « valide »", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-1"));
+
+    await signerCommeDirigeant("plan_prevention", "pp-1");
+    expect(prismaMock.planPrevention.lignes[0].statut).toBe("attente_signatures");
+
+    expect((await signer()).status).toBe("success");
+    expect(prismaMock.planPrevention.lignes[0].statut).toBe("valide");
+  });
+
+  it("permis : signé des deux parties, il passe « valide »", async () => {
+    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.accessToken.lignes.push(lienValide("permis_feu", "pf-1"));
+
+    expect((await signer()).status).toBe("success");
+    await signerCommeDirigeant("permis_feu", "pf-1");
+
+    expect(prismaMock.permisFeu.lignes[0].statut).toBe("valide");
+  });
+
+  it("deux signatures sans partie (d'avant le 2026-10-12) ne valident rien", async () => {
+    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.signature.lignes.push(
+      { ...signature("permis_feu", "pf-1", "etab-a-moi"), id: "s1", partie: null },
+      { ...signature("permis_feu", "pf-1", "etab-a-moi"), id: "s2", partie: null },
+    );
+    prismaMock.accessToken.lignes.push(lienValide("permis_feu", "pf-1"));
+
+    await signer();
+
+    expect(prismaMock.permisFeu.lignes[0].statut).toBe("attente_signatures");
+  });
+
+  it("un permis déjà démarré ne revient pas à « valide »", async () => {
+    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "en_cours"));
+    prismaMock.accessToken.lignes.push(lienValide("permis_feu", "pf-1"));
+
+    await signerCommeDirigeant("permis_feu", "pf-1");
+    await signer();
+
+    expect(prismaMock.permisFeu.lignes[0].statut).toBe("en_cours");
+  });
+});

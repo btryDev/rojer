@@ -236,8 +236,9 @@ export async function supprimerPlan(planId: string): Promise<void> {
   await assertEtablissementOwnership(plan.etablissementId);
   const etabId = plan.etablissementId;
   // LE STATUT NE DIT PAS SI LE PLAN A ÉTÉ SIGNÉ. `attente_signatures` est
-  // l'état de création ET celui où les signatures se recueillent, et rien
-  // n'écrit jamais `valide` : s'y fier effaçait des plans signés, laissant
+  // l'état de création ET celui où les signatures se recueillent, ~~et rien
+  // n'écrit jamais `valide`~~ [2026-10-12 : `valide` n'est écrit qu'à la
+  // seconde signature, `validerSiCoSigne`] : s'y fier effaçait des plans signés, laissant
   // leurs signatures orphelines. Un plan ne s'efface que VIERGE — ni
   // signature, ni lien émis (`porteUneTraceDeSignature`) ; sinon il passe
   // « annulé » et rien n'est détruit.

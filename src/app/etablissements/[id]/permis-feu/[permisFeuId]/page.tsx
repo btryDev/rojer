@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
 import type { StatutPermisFeu } from "@prisma/client";
-import { ETAT_PERMIS, libellePastillePermis } from "@/lib/permis-feu/etats";
+import {
+  ETAT_PERMIS,
+  libellePastillePermis,
+  titreSignaturesPermis,
+} from "@/lib/permis-feu/etats";
 import { Check } from "lucide-react";
 import { lireProvenance } from "@/lib/navigation/provenance";
 import {
@@ -356,11 +360,7 @@ export default async function PermisFeuDetailPage({
 
       <TitreSection
         surtitre="Signatures électroniques"
-        titre={
-          manquantes > 0
-            ? `${manquantes} signature${manquantes > 1 ? "s" : ""} manquante${manquantes > 1 ? "s" : ""}`
-            : "Permis co-signé et valide"
-        }
+        titre={titreSignaturesPermis(manquantes)}
       />
 
       <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2">
