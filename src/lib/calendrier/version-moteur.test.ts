@@ -124,6 +124,14 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-12 (relecture indépendante, B2) :
+  // `referentiels/types-communs.ts` exporte `CATEGORIES_EPI` et
+  // `estCategorieEpi`, lus par la seule `equipements/actions.ts` pour faire
+  // passer `epiPresents` à vrai quand un EPI est déclaré. NON, la
+  // régénération n'écrit pas autrement : ni le générateur, ni le
+  // réconciliateur, ni le moteur ne les appellent ; c'est la RÉPONSE écrite
+  // sur l'établissement qui change ensuite le calendrier, par la règle
+  // existante. ~~e0d35b3f39ef01c3~~.
   // Recopiée SANS incrément le 2026-10-12 (ADR-043, ce qui manque à une
   // personne) : `mention-rythme.ts` exporte `delaiEnPhrase` (« 3 mois »),
   // lu par la seule fiche salarié. NON, la régénération n'écrit pas
@@ -350,7 +358,7 @@ const RELEVE = {
   // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
   // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
   // ~~005b4fafbfab216a~~.
-  empreinte: "e0d35b3f39ef01c3",
+  empreinte: "6a4d02a8f770c62b",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
