@@ -49,14 +49,10 @@ function revalidateAction(etablissementId: string): void {
   revalidatePath(`/etablissements/${etablissementId}/calendrier`);
 }
 
-export async function creerActionDepuisVerification(
-  verificationId: string,
-  _prev: ActionPlanState,
-  formData: FormData,
-): Promise<ActionPlanState> {
-  const { verification: verif } = await requireVerification(verificationId);
-
-  const parsed = actionVerificationSchema.safeParse({
+/** Le formulaire d'une action, lu par la création et par la correction :
+ *  une seule lecture, un seul schéma. */
+function lireFormulaireAction(formData: FormData) {
+  return actionVerificationSchema.safeParse({
     libelle: formData.get("libelle"),
     description: formData.get("description"),
     type: formData.get("type"),
@@ -64,6 +60,16 @@ export async function creerActionDepuisVerification(
     echeance: formData.get("echeance"),
     responsable: formData.get("responsable"),
   });
+}
+
+export async function creerActionDepuisVerification(
+  verificationId: string,
+  _prev: ActionPlanState,
+  formData: FormData,
+): Promise<ActionPlanState> {
+  const { verification: verif } = await requireVerification(verificationId);
+
+  const parsed = lireFormulaireAction(formData);
   if (!parsed.success) {
     return {
       status: "error",
@@ -143,14 +149,7 @@ export async function modifierActionPlan(
     };
   }
 
-  const parsed = actionVerificationSchema.safeParse({
-    libelle: formData.get("libelle"),
-    description: formData.get("description"),
-    type: formData.get("type"),
-    criticite: formData.get("criticite"),
-    echeance: formData.get("echeance"),
-    responsable: formData.get("responsable"),
-  });
+  const parsed = lireFormulaireAction(formData);
   if (!parsed.success) {
     return {
       status: "error",
