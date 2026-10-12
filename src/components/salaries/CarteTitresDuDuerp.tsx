@@ -72,7 +72,13 @@ export function phraseTitre(
     return "Aucun titre déclaré pour cette personne, alors qu'un titre qu'elle détient l'appelle — voir « À déclarer pour cette personne ».";
   }
   if (reponse === "non") {
-    return `${declare ? `${declare} ` : ""}Non dû tant que vous répondez non. Si cette personne est pourtant concernée, corrigez la réponse.`;
+    // Titre DÉTENU sous un « non » : la réponse est contredite par la
+    // déclaration, et « Non dû » à côté d'un titre détenu se lisait comme
+    // deux affirmations contraires (passage visuel du 2026-10-12).
+    if (declare) {
+      return `${declare} Vous avez pourtant répondu non à la question : si cette personne est concernée, corrigez la réponse.`;
+    }
+    return "Non dû tant que vous répondez non. Si cette personne est pourtant concernée, corrigez la réponse.";
   }
   if (declare) return declare;
   return "Aucun titre déclaré pour cette personne. Ce n'est pas un retard : Rojer ne sait pas si elle est concernée.";

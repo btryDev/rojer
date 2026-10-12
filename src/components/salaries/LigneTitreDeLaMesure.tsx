@@ -31,7 +31,7 @@ export function LigneTitreDeLaMesure({
       </span>{" "}
       <Link
         href={`/etablissements/${etablissementId}/equipe`}
-        className="font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
+        className="whitespace-nowrap font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
       >
         Ouvrir Équipe →
       </Link>

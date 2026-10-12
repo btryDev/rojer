@@ -237,6 +237,17 @@ export default async function SalarieDetailPage({
               )}
             </section>
 
+            {/* Au-dessus de tout, « Titres détenus » compris : ce que le droit
+                doit à cette personne et qu'aucun titre ne porte — le geste à
+                faire avant l'inventaire (passage visuel du 2026-10-12, la
+                carte venait après une liste « Rien de déclaré »). Daté quand
+                Rojer a de quoi le dater. */}
+            <CarteCeQuiManque
+              manques={manques}
+              now={now}
+              lienModifier={`/etablissements/${id}/equipe/${s.id}/modifier`}
+            />
+
             <CarteFiche titreFort="Titres détenus">
               {conflits.length > 0 && (
                 <div className="mb-4 flex flex-col gap-3">
@@ -403,14 +414,6 @@ export default async function SalarieDetailPage({
                 sujet, et le sujet est la personne. Elles sont donc ici, sur sa
                 fiche, et **au-dessus** du formulaire : on lit ce qui est dû
                 avant de lire ce qu'on peut saisir. */}
-            {/* Au-dessus de tout : ce que le droit doit à cette personne et
-                qu'aucun titre ne porte. Daté quand Rojer a de quoi le dater. */}
-            <CarteCeQuiManque
-              manques={manques}
-              now={now}
-              lienModifier={`/etablissements/${id}/equipe/${s.id}/modifier`}
-            />
-
             {/* Masquée quand tout ce qu'elle listerait est daté plus haut (« À
                 déclarer ») : la carte vide dirait « rien n'est encodé », ce qui
                 est faux. */}
