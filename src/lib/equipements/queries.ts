@@ -24,7 +24,18 @@ export async function getEquipement(id: string) {
   return prisma.equipement.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
     include: {
-      etablissement: { select: { id: true, raisonDisplay: true, estERP: true } },
+      // Le régime et la réponse au SSI A/B : la fiche de modification en tire
+      // les réponses exigées (DF 10 § 3, décision du 2026-10-08).
+      etablissement: {
+        select: {
+          id: true,
+          raisonDisplay: true,
+          estERP: true,
+          typeErp: true,
+          categorieErp: true,
+          ssiCategorieAouB: true,
+        },
+      },
     },
   });
 }

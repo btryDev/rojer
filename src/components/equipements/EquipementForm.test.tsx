@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import { EquipementForm } from "./EquipementForm";
 import {
   CATEGORIES_A_REPONSE_EXIGEE,
+  REGIME_TRAVAIL,
   questionsExigeesParCategorie,
   questionsExigeesPour,
 } from "@/lib/equipements/reponses-exigees";
@@ -27,10 +28,10 @@ describe("EquipementForm : les questions exigées (D29 (a))", () => {
         action={action}
         libelleSubmit="Créer"
         valeursInitiales={{ categorie: LEVAGE }}
-        questionsExigees={questionsExigeesParCategorie()}
+        questionsExigees={questionsExigeesParCategorie(REGIME_TRAVAIL)}
       />,
     );
-    const exigees = questionsExigeesPour(LEVAGE);
+    const exigees = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
     for (const { champ } of questionsTriEtatPour(LEVAGE)) {
       const select = container.querySelector<HTMLSelectElement>(`select[name="${champ}"]`)!;
       expect(select, champ).not.toBeNull();
@@ -47,13 +48,13 @@ describe("EquipementForm : les questions exigées (D29 (a))", () => {
   });
 
   it("appareil ancien déjà répondu : la réponse revient présélectionnée", () => {
-    const [champ] = questionsExigeesPour(LEVAGE);
+    const [champ] = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
     const { container } = render(
       <EquipementForm
         action={action}
         libelleSubmit="Enregistrer"
         valeursInitiales={{ categorie: LEVAGE, [champ]: false }}
-        questionsExigees={questionsExigeesParCategorie()}
+        questionsExigees={questionsExigeesParCategorie(REGIME_TRAVAIL)}
       />,
     );
     expect(container.querySelector<HTMLSelectElement>(`select[name="${champ}"]`)!.value).toBe("non");
@@ -77,5 +78,27 @@ describe("EquipementForm : le désenfumage ne pose plus la question du SSI A ou 
     );
     expect(container.querySelector('select[name="estDesenfumageMecanique"]')).not.toBeNull();
     expect(container.querySelector('[name="etablissementASsiCategorieAouB"]')).toBeNull();
+  });
+});
+
+describe("EquipementForm : « désenfumage mécanique » exigé en ERP des quatre premières catégories (décision du 2026-10-08)", () => {
+  const regime = { estERP: true, typeErp: "M" as const, ssiCategorieAouB: null };
+  it("N2 : pas de « Je ne sais pas encore », champ requis ; N5 : trois états", () => {
+    const rendre = (categorieErp: "N2" | "N5") =>
+      render(
+        <EquipementForm
+          action={action}
+          libelleSubmit="Créer"
+          estERP
+          valeursInitiales={{ categorie: "DESENFUMAGE" }}
+          questionsExigees={questionsExigeesParCategorie({ ...regime, categorieErp })}
+        />,
+      ).container.querySelector<HTMLSelectElement>('select[name="estDesenfumageMecanique"]')!;
+    const n2 = rendre("N2");
+    expect(n2.required).toBe(true);
+    expect([...n2.options].map((o) => o.textContent)).not.toContain("Je ne sais pas encore");
+    cleanup();
+    const n5 = rendre("N5");
+    expect(n5.required).toBe(false);
   });
 });

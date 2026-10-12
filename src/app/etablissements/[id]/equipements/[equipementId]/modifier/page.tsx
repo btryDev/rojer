@@ -153,7 +153,7 @@ export default async function ModifierEquipementPage({
               ...reponsesTriEtat(caracs),
             }}
             estERP={eq.etablissement.estERP}
-            questionsExigees={questionsExigeesParCategorie()}
+            questionsExigees={questionsExigeesParCategorie(eq.etablissement)}
             libelleSubmit="Enregistrer"
             labelAnnuler={{
               libelle: "Annuler",
