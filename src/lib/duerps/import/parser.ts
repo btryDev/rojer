@@ -11,7 +11,7 @@ import * as XLSX from "xlsx";
  *   - Probabilité (1-4) (obligatoire)
  *   - Maîtrise (1-4) (obligatoire)
  *   - Mesures existantes (optionnel, séparées par | ou ;)
- *   - Mesures à mettre en œuvre (optionnel, séparées par | ou ;) — depuis le
+ *   - Mesures à mettre en œuvre / en place (optionnel, séparées par | ou ;) — depuis le
  *     2026-10-12 : une colonne de mesures prévues, proposées ou à mettre en
  *     œuvre n'est jamais lue comme des mesures en place. Elle était prise par
  *     inclusion du mot « mesures », et ses lignes devenaient des actions
@@ -95,9 +95,11 @@ const ALIASES: Record<ColonneAttendue, readonly string[]> = {
   mesuresPrevues: [
     "mesures prevues",
     "mesures a mettre en oeuvre",
+    "mesures a mettre en place",
     "mesures proposees",
     "actions prevues",
     "actions a mettre en oeuvre",
+    "actions a mettre en place",
   ],
 };
 
@@ -112,6 +114,15 @@ const MARQUEURS_A_VENIR = [
   "prevue",
   "prevues",
   "a mettre en oeuvre",
+  // ~~Absents~~ jusqu'au 2026-10-12 (relecture indépendante) : « Mesures à
+  // mettre en place » était lue comme des mesures EN PLACE — l'erreur que
+  // cette liste existe pour empêcher — et, à côté de « Mesures existantes »,
+  // n'était pas importée du tout. Avec les tournures de même sens.
+  "a mettre en place",
+  "a faire",
+  "a planifier",
+  "a engager",
+  "a envisager",
   "a prevoir",
   "propose",
   "proposee",

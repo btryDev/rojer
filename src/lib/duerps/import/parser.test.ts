@@ -184,6 +184,37 @@ describe("parserFichierDuerp — colonnes de mesures et de cotation", () => {
     expect(res.lignes[0].mesuresExistantes).toEqual([]);
   });
 
+  // Relecture indépendante du 2026-10-12 : « à mettre en place » n'était pas
+  // un marqueur ; seule, la colonne devenait des mesures EN PLACE, et à côté
+  // des mesures existantes elle n'était pas importée.
+  it.each(["Mesures à mettre en place", "Actions à mettre en place", "Mesures à planifier"])(
+    "« %s » seule n'est jamais lue comme des mesures en place",
+    (colonne) => {
+      const res = parserFichierDuerp(excel([{ ...base, Risque: "Brûlure", [colonne]: "Hotte" }]));
+      expect(res.mappingDetecte.mesures).toBeNull();
+      expect(res.mappingDetecte.mesuresPrevues).toBe(colonne);
+      expect(res.lignes[0].mesuresExistantes).toEqual([]);
+      expect(res.lignes[0].mesuresPrevues).toEqual(["Hotte"]);
+    },
+  );
+
+  it("« Mesures existantes » et « Mesures à mettre en place » : les deux colonnes s'importent", () => {
+    const res = parserFichierDuerp(
+      excel([
+        {
+          ...base,
+          Risque: "Brûlure",
+          "Mesures existantes": "Gants",
+          "Mesures à mettre en place": "Hotte",
+        },
+      ]),
+    );
+    expect(res.mappingDetecte.mesures).toBe("Mesures existantes");
+    expect(res.mappingDetecte.mesuresPrevues).toBe("Mesures à mettre en place");
+    expect(res.lignes[0].mesuresExistantes).toEqual(["Gants"]);
+    expect(res.lignes[0].mesuresPrevues).toEqual(["Hotte"]);
+  });
+
   it("« Niveau de risque » n'est pas le libellé du risque", () => {
     const res = parserFichierDuerp(
       excel([{ ...base, "Niveau de risque": "Élevé", "Risques identifiés": "Brûlure" }]),
