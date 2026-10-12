@@ -60,6 +60,11 @@ vi.mock("@/lib/plan-prevention/actions", () => ({
   cloturerPlan: async () => {},
   supprimerPlan: async () => {},
   noterInformationInspection: async () => ({ status: "idle" }),
+  noterHeuresRevisees: async () => ({ status: "idle" }),
+  modifierPlanPrevention: async () => ({ status: "idle" }),
+}));
+vi.mock("@/components/signatures/SignerDepuisMonCompte", () => ({
+  SignerDepuisMonCompte: () => null,
 }));
 vi.mock("@/components/signatures/DemanderSignatureForm", () => ({
   DemanderSignatureForm: () => null,

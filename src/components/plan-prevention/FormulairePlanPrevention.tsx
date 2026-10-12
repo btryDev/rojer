@@ -18,6 +18,7 @@ import {
   URL_R4512_8,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import {
+  AIDE_DUREE_HEURES,
   CHAPITRE_R4512,
   CONSTAT_R4512_1,
   CONSTAT_R4512_9,
@@ -511,10 +512,12 @@ export function FormulairePlanPrevention({
           // entreprises sous-traitantes auxquelles elles peuvent faire
           // appel », et le seuil se déclenche aussi « dès lors qu'il apparaît,
           // en cours d'exécution des travaux, que le nombre d'heures doit
-          // atteindre 400 heures ». Le module ne recalcule rien après
+          // atteindre 400 heures ». ~~Le module ne recalcule rien après
           // validation — c'est une limite, et l'aide la nomme plutôt que de
-          // la taire.
-          aide="Seuil R. 4512-7 : l'écrit est obligatoire dès 400 h atteintes sur une période d'au plus 12 mois. Comptez les heures de tous les intervenants, sous-traitants de l'entreprise extérieure compris. Le seuil vaut aussi s'il apparaît en cours de chantier que les 400 h seront atteintes : Rojer ne refait pas ce diagnostic après validation du plan."
+          // la taire.~~ [2026-10-12 : la fiche du plan note les heures
+          // prévisibles revues en cours de chantier, et le diagnostic en tire
+          // l'écrit (`seuil400EnCours`) ; l'aide le dit.]
+          aide={AIDE_DUREE_HEURES}
           erreur={err("dureeHeuresEstimee")}
           onChange={(e) => {
             const n = Number.parseInt(e.target.value, 10);

@@ -1480,6 +1480,17 @@ model PlanPrevention {
   // facultative, déclarée ; aucun délai n'est affiché, le texte n'en fixe pas.
   inspectionTravailInformeeLe DateTime?
 
+  // R. 4512-7, 1°, seconde phrase : « Il en est de même dès lors qu'il
+  // apparaît, en cours d'exécution des travaux, que le nombre d'heures de
+  // travail doit atteindre 400 heures » (2026-10-12). Le nombre d'heures
+  // prévisible revu en cours de chantier, et la date où il l'a été — la
+  // dernière valeur seulement. Hors de l'empreinte de signature, comme
+  // `inspectionTravailInformeeLe` : un fait constaté après l'accord, qui ne
+  // réécrit pas ce que les parties ont signé. `dureeHeuresEstimee` reste
+  // l'estimation initiale.
+  heuresPrevisiblesRevisees   Int?
+  heuresPrevisiblesReviseesLe DateTime?
+
   // ── Contenu minimal du plan — art. R. 4512-8 ────────────────────────
   // « Les mesures prévues par le plan de prévention comportent AU MOINS les
   // dispositions suivantes », suivi de cinq rubriques. Le modèle n'en portait

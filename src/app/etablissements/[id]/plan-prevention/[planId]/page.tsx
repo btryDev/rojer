@@ -35,8 +35,12 @@ import {
   URL_R4512_8,
   rubriquesManquantes,
 } from "@/lib/plan-prevention/contenu-r4512-8";
+import { HeuresReviseesForm } from "@/components/plan-prevention/HeuresReviseesForm";
 import {
   CHAPITRE_R4512,
+  CONSTAT_HEURES_REVISEES,
+  R4512_7_1_EN_COURS,
+  ligneHeuresRevisees,
   CONSTAT_R4512_1,
   CONSTAT_R4512_9,
   CONSTAT_R4512_11,
@@ -63,6 +67,7 @@ import {
   cleJourCivil,
   FUSEAU_REFERENCE,
   formaterDateCourteFr,
+  formaterDateFr,
   formaterDateLongueFr,
 } from "@/lib/dates";
 
@@ -95,10 +100,9 @@ export default async function PlanPreventionDetailPage({
   const plan = await getPlanPrevention(id, planId);
   if (!plan) notFound();
 
-  const diag = diagnostiquerPlan({
-    dureeHeuresEstimee: plan.dureeHeuresEstimee,
-    travauxDangereux: plan.travauxDangereux,
-  });
+  // Le plan entier, révision en cours de chantier comprise : le diagnostic lit
+  // les champs dont il a besoin (`diagnostiquerPlan`), comme le ZIP.
+  const diag = diagnostiquerPlan(plan);
 
   // Les cinq rubriques de `R. 4512-8`, et celles que CE plan ne porte pas.
   // Le calcul vit dans `contenu-r4512-8.ts` : la fiche et le ZIP de contrôle
@@ -242,6 +246,24 @@ export default async function PlanPreventionDetailPage({
                 />
               </CarteFiche>
             )}
+            {/* R. 4512-7, 1°, seconde phrase (2026-10-12) : le seuil vaut aussi
+                quand il apparaît en cours de chantier. Hors empreinte : se
+                note sur un plan signé. */}
+            <CarteFiche titre="Heures prévisibles en cours de chantier">
+              <p className="m-0 text-[14px] leading-[1.6]">
+                {plan.heuresPrevisiblesRevisees != null && plan.heuresPrevisiblesReviseesLe
+                  ? `${ligneHeuresRevisees(
+                      plan.heuresPrevisiblesRevisees,
+                      formaterDateFr(plan.heuresPrevisiblesReviseesLe),
+                    )}.`
+                  : "Aucune révision notée."}
+              </p>
+              <p className="m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                Art. R. 4512-7, 1° : « {R4512_7_1_EN_COURS} ». {CONSTAT_HEURES_REVISEES}
+              </p>
+              {planSignable && <HeuresReviseesForm planId={plan.id} />}
+            </CarteFiche>
+
             <CarteFiche titre="Nature des travaux">
               <p className="m-0 whitespace-pre-wrap text-[14.5px] leading-[1.6]">
                 {plan.naturesTravaux}

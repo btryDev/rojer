@@ -7,7 +7,9 @@ import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { lireDateDeclaree } from "@/lib/traces/date-declaree";
+import { z } from "zod";
 import {
+  diagnostiquerPlan,
   ligneSchema,
   planPreventionSchema,
   type LigneInput,
@@ -407,5 +409,79 @@ export async function noterInformationInspection(
   revalidatePath(
     `/etablissements/${plan.etablissementId}/plan-prevention/${planId}`,
   );
+  return { status: "success" };
+}
+
+const heuresSchema = z.coerce
+  .number({ error: "Nombre d'heures attendu" })
+  .int("Nombre d'heures entier attendu")
+  .min(1, "Au moins 1 heure")
+  .max(99999, "99 999 heures au plus");
+
+/**
+ * Note le nombre d'heures prévisible revu en cours de chantier — R. 4512-7,
+ * 1°, seconde phrase (2026-10-12). Le diagnostic en tire l'écrit dès 400 h
+ * (`seuil400EnCours`).
+ *
+ * - Propriétaire de l'établissement seulement ; plan clos ou annulé : refusé.
+ * - Un entier de 1 à 99 999, et la date où il a été revu, jamais future —
+ *   les deux sont requis : un nombre sans date ne dit pas quand l'obligation
+ *   est née.
+ * - La dernière valeur seulement. Mais une révision à la baisse ne retire
+ *   jamais une obligation déjà née : si les 400 h ont été notées, une valeur
+ *   inférieure est refusée. L'estimation initiale, elle, n'est pas touchée.
+ * - Hors de l'empreinte de signature : se note sur un plan signé.
+ */
+export async function noterHeuresRevisees(
+  planId: string,
+  _prev: TraceInspectionState,
+  formData: FormData,
+): Promise<TraceInspectionState> {
+  const plan = await prisma.planPrevention.findUnique({
+    where: { id: planId },
+    select: {
+      etablissementId: true,
+      statut: true,
+      heuresPrevisiblesRevisees: true,
+      heuresPrevisiblesReviseesLe: true,
+    },
+  });
+  if (!plan) return { status: "error", message: "Plan introuvable" };
+  await assertEtablissementOwnership(plan.etablissementId);
+  if (!statutPlanSignable(plan.statut)) {
+    return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
+  }
+
+  const heures = heuresSchema.safeParse(formData.get("heuresPrevisiblesRevisees"));
+  if (!heures.success) {
+    return { status: "error", message: heures.error.issues[0]?.message ?? "Nombre d'heures invalide" };
+  }
+  const le = lireDateDeclaree(formData.get("heuresPrevisiblesReviseesLe"), new Date());
+  if (!le.ok) return { status: "error", message: le.message };
+  if (!le.date) return { status: "error", message: "Date de la révision requise" };
+
+  const deja = diagnostiquerPlan({
+    dureeHeuresEstimee: null,
+    travauxDangereux: false,
+    heuresPrevisiblesRevisees: plan.heuresPrevisiblesRevisees,
+    heuresPrevisiblesReviseesLe: plan.heuresPrevisiblesReviseesLe,
+  });
+  if (deja.seuil400EnCours && heures.data < 400) {
+    return {
+      status: "error",
+      message:
+        "Les 400 heures ont déjà été notées : l'écrit est dû depuis, et une révision à la baisse ne le retire pas.",
+    };
+  }
+
+  await prisma.planPrevention.updateMany({
+    where: { id: planId, etablissementId: plan.etablissementId },
+    data: {
+      heuresPrevisiblesRevisees: heures.data,
+      heuresPrevisiblesReviseesLe: le.date,
+    },
+  });
+  revalidatePath(`/etablissements/${plan.etablissementId}/plan-prevention`);
+  revalidatePath(`/etablissements/${plan.etablissementId}/plan-prevention/${planId}`);
   return { status: "success" };
 }
