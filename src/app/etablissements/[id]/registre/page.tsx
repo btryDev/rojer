@@ -10,16 +10,14 @@ import { SupprimerRapportButton } from "@/components/rapports/SupprimerRapportBu
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
-import { saisiePourSection } from "@/lib/registre/champs";
 import {
   JaugeRegistre,
   LigneRegistre,
   PartieRegistre,
 } from "@/components/registre";
-import { alimentationDeLaPartie } from "@/lib/registre/alimentation";
 import {
   bilanDuRegistre,
-  completudeDeLaFiche,
+  completudesDuRegistre,
 } from "@/lib/registre/completude";
 import { BandeauCouverture } from "@/components/perimetre/BandeauCouverture";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
@@ -75,22 +73,9 @@ export default async function RegistrePage({
   // troisième argument dit quelles fiches se tiennent ailleurs — sans lui, la
   // jauge compte comme « pas encore outillé » tout ce qui n'a pas de
   // formulaire ici, c'est-à-dire l'inventaire et les vérifications, qui sont
-  // tenus depuis toujours.
-  const completudes = new Map(
-    (registre?.parties ?? []).flatMap((partie) =>
-      partie.sections.map(
-        (due) =>
-          [
-            due.section.id,
-            completudeDeLaFiche(
-              saisiePourSection(due.section.id),
-              registre?.contenus[due.section.id] ?? {},
-              alimentationDeLaPartie(partie.id, base),
-            ),
-          ] as const,
-      ),
-    ),
-  );
+  // tenus depuis toujours. Le calcul est celui de « Préparer un contrôle »
+  // (`completudesDuRegistre`, 2026-10-12).
+  const completudes = completudesDuRegistre(registre, base);
   const bilan = bilanDuRegistre([...completudes.values()]);
 
   // Le registre n'est pas le parent d'une vérification — le calendrier

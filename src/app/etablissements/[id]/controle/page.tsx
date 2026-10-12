@@ -13,6 +13,21 @@ import {
   etatSelonCalendrier,
   type EtatPiece,
 } from "@/lib/calendrier/etat-affiche";
+import {
+  etatDuerpDuDossier,
+  faitDuerp,
+  pastilleDuFait,
+} from "@/lib/pdf/checklist-controle";
+import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
+import { bilanDuRegistre, completudesDuRegistre } from "@/lib/registre/completude";
+import {
+  NB_ANALYSES_DU_DOSSIER,
+  PIECES_A_L_ECRAN,
+  PIECES_ZIP,
+  filtreActesDuDossier,
+  filtreRapportsDuDossier,
+  type ClePiece,
+} from "@/lib/controle/pieces-zip";
 
 export const metadata = {
   title: "Préparer un contrôle — Dossier 1 clic",
@@ -45,6 +60,9 @@ export default async function ControlePage({
 }) {
   const { id } = await params;
   const { etablissement } = await requireEtablissement(id);
+  // Une horloge, lue une fois : l'âge du DUERP et la fenêtre de douze mois
+  // décrivent le même instant.
+  const maintenant = new Date();
 
   const [
     dashboard,
@@ -55,6 +73,11 @@ export default async function ControlePage({
     registreAccessibilite,
     fraicheur,
     couverture,
+    registre,
+    nbRapportsDuDossier,
+    nbPermisFeu,
+    nbPlansPrevention,
+    carnet,
   ] = await Promise.all([
     getDashboardData(id),
     compterVigilanceParGravite(id),
@@ -76,6 +99,27 @@ export default async function ControlePage({
     // que cet écran fait télécharger : l'écran et les pièces disent le même
     // fait de l'inventaire (`docs/chantiers-ouverts.md` § 15).
     couvertureDuDossier(id),
+    // Les fiches du registre, comptées comme l'écran du registre les compte
+    // (`completudesDuRegistre`, audit du 2026-10-12, B3).
+    composerRegistreDeLEtablissement(id),
+    // Ce que le ZIP met dans ses autres pièces, par les filtres de la route
+    // (`controle/pieces-zip.ts`) : l'écran annonce ce que le ZIP contient.
+    prisma.rapportVerification.count({ where: filtreRapportsDuDossier(id) }),
+    prisma.permisFeu.count({ where: filtreActesDuDossier(id, maintenant) }),
+    prisma.planPrevention.count({ where: filtreActesDuDossier(id, maintenant) }),
+    prisma.carnetSanitaire.findUnique({
+      where: { etablissementId: id },
+      select: {
+        _count: {
+          select: { pointsReleve: { where: { actif: true } }, analyses: true },
+        },
+        analyses: {
+          orderBy: { dateAnalyse: "desc" },
+          take: NB_ANALYSES_DU_DOSSIER,
+          select: { rapportCle: true },
+        },
+      },
+    }),
   ]);
 
   // LE PATRON `etat-charge.ts`, APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
@@ -94,9 +138,36 @@ export default async function ControlePage({
   const selonCalendrier = (etat: EtatPiece): EtatPiece =>
     etatSelonCalendrier(fraicheur, etat);
 
-  const elements: ElementDossier[] = [
-    {
-      titre: "Dossier de conformité consolidé",
+  // LE DUERP SE LIT COMME LE README LE LIT (audit du 2026-10-12, B3). La
+  // pastille disait ~~« À jour » dès qu'une version existait~~, et le README
+  // du ZIP téléchargé ici écrivait « mise à jour annuelle échue » sur le même
+  // dossier. Même entrée, même fait, même texte : la coche du README décide
+  // de la pastille.
+  const etatDuerp = etatDuerpDuDossier(duerpVersion, etablissement, maintenant);
+  const faitDuDuerp = faitDuerp(etatDuerp);
+
+  // LE REGISTRE SE COMPTE COMME SON ÉCRAN LE COMPTE (même audit). La pastille
+  // disait « À jour » pendant que l'écran du registre annonçait des fiches à
+  // remplir — dont des journaux sans aucune ligne consignée. Une fiche à
+  // remplir retient désormais la pastille sur « à planifier ». C'est la règle
+  // la plus prudente déjà présente au dépôt (la jauge du registre) ; le sens
+  // même de « À jour » sur cet écran reste une décision de la propriétaire
+  // (audit, § 4.7).
+  const bilanRegistre = bilanDuRegistre([
+    ...completudesDuRegistre(registre, `/etablissements/${id}`).values(),
+  ]);
+  const aRemplir = bilanRegistre.aRemplir;
+
+  const analysesAvecRapport = (carnet?.analyses ?? []).filter((a) => a.rapportCle).length;
+  const carnetRenseigne =
+    carnet !== null &&
+    (carnet._count.pointsReleve > 0 || carnet._count.analyses > 0);
+
+  // LA LISTE SUIT LE ZIP (audit du 2026-10-12). Elle comptait six pièces quand
+  // le ZIP en contient onze. Indexée par les clés de `PIECES_ZIP` : une pièce
+  // que la route ajouterait sans la décrire ici ne compile pas.
+  const pieces: Record<Exclude<ClePiece, "readme">, Omit<ElementDossier, "titre">> = {
+    dossier: {
       description: "Synthèse globale de votre posture santé-sécurité.",
       present: true,
       // PAS D'ÉTAT, et c'est une correction : cette ligne portait
@@ -107,27 +178,29 @@ export default async function ControlePage({
       // existence n'est l'état de conformité de rien, et `etat` est optionnel
       // précisément pour ce cas.
     },
-    {
-      titre: "DUERP versionné",
+    duerp: {
       description: duerpVersion
-        ? `Version v${duerpVersion.numero} figée le ${formaterDateFr(duerpVersion.createdAt)}.`
+        ? `Version v${duerpVersion.numero} figée le ${formaterDateFr(duerpVersion.createdAt)} — ${faitDuDuerp.texte}.`
         : "Aucune version figée. Créez-en une depuis le DUERP.",
       present: !!duerpVersion,
-      etat: duerpVersion ? "a_jour" : "a_planifier",
+      etat: pastilleDuFait(faitDuDuerp),
       reference: "Art. R. 4121-1 CT",
     },
-    {
-      titre: "Registre de sécurité",
-      description: `${nbRapports} rapport${nbRapports > 1 ? "s" : ""} de vérification archivé${nbRapports > 1 ? "s" : ""}.`,
+    registre: {
+      description:
+        `${nbRapports} rapport${nbRapports > 1 ? "s" : ""} de vérification archivé${nbRapports > 1 ? "s" : ""}` +
+        (aRemplir > 0
+          ? ` · ${aRemplir} ${aRemplir > 1 ? "fiches à remplir" : "fiche à remplir"} à l'écran du registre.`
+          : "."),
       present: true,
       // Zéro rapport archivé n'est pas « à jour » : c'est un registre qui
       // n'atteste encore de rien. Le compteur de retard ne le disait pas —
       // il ne compte que des lignes dépassées, et un dossier sans ligne n'en
-      // a aucune.
+      // a aucune. Une fiche à remplir non plus (2026-10-12, ci-dessus).
       etat:
         dashboard.compteurs.verifsEnRetard > 0
           ? "en_retard"
-          : nbRapports === 0
+          : nbRapports === 0 || aRemplir > 0
             ? "a_planifier"
             : selonCalendrier("a_jour"),
       // R. 4323-25 fonde la consignation des vérifications, R. 4323-26
@@ -136,8 +209,14 @@ export default async function ControlePage({
       // registres en un seul (verbatim relevé le 2026-08-28).
       reference: "Art. R. 4323-25 et R. 4323-26 CT",
     },
-    {
-      titre: "Plan d'actions correctives",
+    rapports: {
+      description:
+        nbRapportsDuDossier > 0
+          ? `${nbRapportsDuDossier} rapport${nbRapportsDuDossier > 1 ? "s" : ""} déposé${nbRapportsDuDossier > 1 ? "s" : ""}, joint${nbRapportsDuDossier > 1 ? "s" : ""} dans le dossier ${PIECES_ZIP.rapports}. Ceux déposés sur le titre d'un salarié ne sont jamais joints.`
+          : "Aucun rapport déposé.",
+      present: nbRapportsDuDossier > 0,
+    },
+    plan: {
       description:
         dashboard.compteurs.actionsOuvertes +
           dashboard.compteurs.actionsEnCours >
@@ -150,8 +229,7 @@ export default async function ControlePage({
       ),
       reference: "Art. L. 4121-2 CT",
     },
-    {
-      titre: "Registre d'accessibilité ERP",
+    accessibilite: {
       description: etablissement.estERP
         ? registreAccessibilite?.publie
           ? "Publié et consultable en ligne."
@@ -165,8 +243,38 @@ export default async function ControlePage({
           : "a_planifier",
       reference: "Arrêté 19-04-2017",
     },
-    {
-      titre: "Attestations prestataires",
+    // Les quatre pièces que l'écran taisait. Pas de pastille : leur présence
+    // dit ce qui part dans le ZIP, pas un état de conformité — même partage
+    // que le dossier consolidé.
+    permisFeu: {
+      description:
+        nbPermisFeu > 0
+          ? `${nbPermisFeu} permis émis sur les 12 derniers mois.`
+          : "Aucun permis émis sur les 12 derniers mois.",
+      present: nbPermisFeu > 0,
+    },
+    plansPrevention: {
+      description:
+        nbPlansPrevention > 0
+          ? `${nbPlansPrevention} plan${nbPlansPrevention > 1 ? "s" : ""} sur les 12 derniers mois.`
+          : "Aucun plan sur les 12 derniers mois.",
+      present: nbPlansPrevention > 0,
+      reference: "Art. R. 4512-6 CT",
+    },
+    carnet: {
+      description: carnetRenseigne
+        ? "Relevés de température et analyses de légionelles."
+        : "Carnet non configuré.",
+      present: carnetRenseigne,
+    },
+    analyses: {
+      description:
+        analysesAvecRapport > 0
+          ? `${analysesAvecRapport} rapport${analysesAvecRapport > 1 ? "s" : ""} de laboratoire, parmi les ${NB_ANALYSES_DU_DOSSIER} dernières analyses.`
+          : `Aucun rapport de laboratoire déposé parmi les ${NB_ANALYSES_DU_DOSSIER} dernières analyses.`,
+      present: analysesAvecRapport > 0,
+    },
+    prestataires: {
       // ~~« N attestations URSSAF/RC Pro expirées ou expirant », état « en
       // retard »~~ pour TOUT prestataire qui appelait un geste — pièce non
       // fournie et date non renseignée comprises (contre-lecture du
@@ -192,7 +300,11 @@ export default async function ControlePage({
               : "a_jour",
       reference: "Art. L. 8222-1 CT",
     },
-  ];
+  };
+  const elements: ElementDossier[] = PIECES_A_L_ECRAN.map((p) => ({
+    titre: p.titre,
+    ...pieces[p.cle],
+  }));
 
   // ~~`pourcentPret` : part des pièces « à jour » sur leur nombre, rendue en
   // anneau coloré, et titre « Vous êtes prêt à passer un contrôle. » dès 90 %.~~
@@ -229,10 +341,23 @@ export default async function ControlePage({
                 Préparer votre dossier
               </h1>
               <p className="mt-4 max-w-prose text-[0.95rem] leading-relaxed text-[color:var(--board-ink)]/80">
-                Cette page rassemble, en un seul dossier ZIP, tout ce qu&apos;un
-                inspecteur du travail, une commission de sécurité, un assureur
-                ou un bailleur peut demander. Vérifiez l&apos;état de chaque pièce,
-                puis téléchargez le dossier.
+                {/* ~~« tout ce qu'un inspecteur du travail, une commission de
+                    sécurité, un assureur ou un bailleur peut demander »~~ —
+                    faux, rayé le 2026-10-12 (audit) : ce que Rojer ne tient
+                    pas n'est pas au ZIP. */}
+                Cette page rassemble, en un seul dossier ZIP, les pièces que
+                Rojer tient pour votre établissement — celles listées
+                ci-dessous. Un inspecteur du travail, une commission de
+                sécurité, un assureur ou un bailleur peut en demander
+                d&apos;autres : celles que vous tenez hors de Rojer, et ce que{" "}
+                <Link
+                  href={`/etablissements/${id}/perimetre`}
+                  className="text-[color:var(--board-blue-ink)] hover:underline"
+                >
+                  Rojer ne couvre pas
+                </Link>
+                . Vérifiez l&apos;état de chaque pièce, puis téléchargez le
+                dossier.
               </p>
               {/* ~~« Vous êtes prêt à passer un contrôle. » dès 90 %~~ — retiré
                   le 2026-09-20 avec l&apos;anneau qui le calculait. Ce n&apos;est pas
@@ -283,7 +408,7 @@ export default async function ControlePage({
             </h2>
             <p className="mt-1 text-[0.85rem] text-[color:var(--board-slate-mid)]">
               Le ZIP contient ce qui a pu être généré&nbsp;; ce qui a échoué
-              est dit dans son fichier 00_README.txt. Statut des données à
+              est dit dans son fichier {PIECES_ZIP.readme}. Statut des données à
               l&apos;instant de la génération.
             </p>
             {/* Les deux signaux d'une ligne ne disent pas la même chose, et

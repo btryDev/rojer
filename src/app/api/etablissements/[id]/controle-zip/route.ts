@@ -8,13 +8,18 @@ import { prisma } from "@/lib/prisma";
 import { getStorage, type FileStorage } from "@/lib/storage";
 import { publicAppUrl } from "@/lib/email";
 import {
-  MOIS_FENETRE_HISTORIQUE,
-  ajouterMois,
   cleJourCivil,
-  debutDuJour,
   formaterDateFr,
   formaterDateHeureFr,
 } from "@/lib/dates";
+import {
+  NB_ANALYSES_DU_DOSSIER,
+  PIECES_ZIP,
+  fichierDuerp,
+  filtreActesDuDossier,
+  filtreRapportsDuDossier,
+  nomDeDossier,
+} from "@/lib/controle/pieces-zip";
 import {
   construireDossierConformiteData,
   construirePlanActionsData,
@@ -45,7 +50,7 @@ import {
   fraicheurCalendrier,
   phraseFraicheur,
 } from "@/lib/calendrier/fraicheur";
-import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
+import { etatDuerpDuDossier, type EtatDuerpLu } from "@/lib/pdf/checklist-controle";
 import {
   faitInventaire,
   type ManqueCouverture,
@@ -75,11 +80,13 @@ function datesAttestationZip(p: {
 }
 
 /**
- * Assemble en un ZIP **tous** les documents qu'un inspecteur, un assureur,
- * un bailleur ou un acquéreur pourrait demander à voir. C'est le livrable
+ * ~~Assemble en un ZIP **tous** les documents qu'un inspecteur, un assureur,
+ * un bailleur ou un acquéreur pourrait demander à voir.~~ [2026-10-12, audit :
+ * pas tous — ce que l'outil ne tient pas n'y est pas.] Assemble en un ZIP les
+ * pièces que Rojer tient pour l'établissement. C'est le livrable
  * « panic button » du dirigeant : 1 clic, 1 ZIP, dossier présentable.
  *
- * Contenu :
+ * Contenu (les noms vivent dans `controle/pieces-zip.ts`, que l'écran lit) :
  *   00_README.txt                — sommaire, checklist pré-contrôle, astuces
  *   01_Dossier_conformite.pdf    — synthèse globale (existant)
  *   02_DUERP.pdf                 — dernière version figée si présente
@@ -137,7 +144,7 @@ export async function GET(
   // remis à l'inspecteur. C'est exactement le faux vert que `etat-affiche.ts`
   // a été écrit pour fermer, le même jour — « un comptage n'a de sens que sur
   // un ensemble qu'on sait complet » — et ce README ne l'appelait pas.
-  let etatDuerp: ReturnType<typeof evaluerEtatDuerp> | null = null;
+  let etatDuerp: EtatDuerpLu | null = null;
   let nbVerifsEnRetard: number | null = null;
   // Le fait « aucun équipement déclaré » (§ 15), lu dans la couverture que le
   // dossier de conformité vient de calculer — pas recalculé : le README et le
@@ -199,11 +206,11 @@ export async function GET(
       nbVerifsEnRetard = data.verifsEnRetard.length;
       inventaire = data.couverture ? faitInventaire(data.couverture) : null;
       const buf = await renderToBuffer(DossierConformiteDocument({ data }));
-      zip.file("01_Dossier_conformite.pdf", new Uint8Array(buf));
+      zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
     }
   } catch (e) {
     // On continue même si une brique échoue — et on le dit.
-    noterEchec("01_Dossier_conformite.pdf", e);
+    noterEchec(PIECES_ZIP.dossier, e);
   }
 
   // ── 02 DUERP (dernière version figée) ───────────────────────────────
@@ -258,24 +265,16 @@ export async function GET(
       // SANS l'effectif — un restaurant de six salariés se voyait imputer un
       // manquement que le texte réserve aux entreprises d'au moins onze
       // salariés, dans le ZIP même dont le PDF applique la bonne règle.
-      etatDuerp = evaluerEtatDuerp(
-        {
-          ouvert: true,
-          dateDerniereVersion: versionCourante.createdAt,
-          effectifs: {
-            entreprise: etablissement.entreprise.effectif,
-            site: etablissement.effectifSurSite,
-          },
-        },
-        maintenant,
-      );
+      // Les entrées non plus (2026-10-12) : l'écran « Préparer un contrôle »
+      // passe par la même fonction, avec les mêmes.
+      etatDuerp = etatDuerpDuDossier(versionCourante, etablissement, maintenant);
       const buf = await renderToBuffer(
         DuerpDocument({
           snapshot: versionCourante.snapshot as unknown as DuerpSnapshot,
           historique,
         }),
       );
-      zip.file(`02_DUERP_v${versionCourante.numero}.pdf`, new Uint8Array(buf));
+      zip.file(fichierDuerp(versionCourante.numero), new Uint8Array(buf));
     }
   } catch (e) {
     // On continue même si une brique échoue : le README dira que le DUERP
@@ -283,7 +282,7 @@ export async function GET(
     // ~~Toujours « la génération a échoué »~~ : une panne de LECTURE n'est pas
     // une panne de rendu, et la checklist disait déjà « lecture » (contre-
     // lecture du 2026-09-26).
-    noterEchec("02_DUERP", e, duerpLu ? "la génération a échoué" : "lecture des versions en échec");
+    noterEchec(PIECES_ZIP.duerp, e, duerpLu ? "la génération a échoué" : "lecture des versions en échec");
   }
 
   // ── 03 Registre de sécurité ─────────────────────────────────────────
@@ -296,10 +295,10 @@ export async function GET(
         if (v.pourInformation) visitesPourInformation.add(v.id);
       }
       const buf = await renderToBuffer(RegistreDocument({ data }));
-      zip.file("03_Registre_securite.pdf", new Uint8Array(buf));
+      zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
     }
   } catch (e) {
-    noterEchec("03_Registre_securite.pdf", e);
+    noterEchec(PIECES_ZIP.registre, e);
   }
 
   // ── 04 Plan d'actions ───────────────────────────────────────────────
@@ -307,14 +306,14 @@ export async function GET(
     const data = await construirePlanActionsData(id);
     if (data) {
       const buf = await renderToBuffer(PlanActionsDocument({ data }));
-      zip.file("04_Plan_actions.pdf", new Uint8Array(buf));
+      zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
     }
   } catch (e) {
-    noterEchec("04_Plan_actions.pdf", e);
+    noterEchec(PIECES_ZIP.plan, e);
   }
 
   // ── 05 Accessibilité (URL publique + QR si publié) ──────────────────
-  const registreAccess = await lire("05_Accessibilite_URL.txt", null, () =>
+  const registreAccess = await lire(PIECES_ZIP.accessibilite, null, () =>
     prisma.registreAccessibilite.findUnique({
     where: { etablissementId: id },
     select: { slugPublic: true, publie: true },
@@ -322,7 +321,7 @@ export async function GET(
   if (registreAccess?.publie) {
     const url = `${publicAppUrl()}/accessibilite/${registreAccess.slugPublic}`;
     zip.file(
-      "05_Accessibilite_URL.txt",
+      PIECES_ZIP.accessibilite,
       `Registre d'accessibilité publique\n` +
         `Art. R. 164-6 CCH · arrêté du 19 avril 2017\n\n` +
         `URL consultable par le public : ${url}\n\n` +
@@ -331,13 +330,13 @@ export async function GET(
   }
 
   // ── Prestataires : attestations URSSAF, RC Pro, Kbis ────────────────
-  const prestataires = await lire("Prestataires/", [], () =>
+  const prestataires = await lire(PIECES_ZIP.prestataires, [], () =>
     prisma.prestataire.findMany({
     where: { etablissementId: id },
     orderBy: { raisonSociale: "asc" },
   }));
   if (prestataires.length > 0) {
-    const dossierPrestataires = zip.folder("Prestataires") ?? zip;
+    const dossierPrestataires = zip.folder(nomDeDossier(PIECES_ZIP.prestataires)) ?? zip;
     // Stockage partagé, lu à la première pièce (`stockage()`, plus haut).
     const storage = stockage();
     for (const p of prestataires) {
@@ -382,13 +381,13 @@ export async function GET(
   // ── Rapports/ — les fichiers des rapports de vérification déposés ────
   // Le registre (03) n'en porte que l'index ; le tiers qui reçoit ce ZIP
   // n'a pas accès à l'application (`controle/fichiers-zip.ts`, 2026-09-27).
-  const rapportsDeposes = await lire("Rapports/", [], () =>
+  const rapportsDeposes = await lire(PIECES_ZIP.rapports, [], () =>
     prisma.rapportVerification.findMany({
       // PAS LES RAPPORTS DES LIGNES DE SALARIÉ (contre-lecture du 2026-09-27,
       // M1). Depuis `bb03cdd` aucun dépôt n'y est possible, mais des rapports
       // antérieurs peuvent exister : documents nominatifs, parfois médicaux,
       // dans un ZIP remis à un tiers. Ils n'y entrent pas ; le README le dit.
-      where: { etablissementId: id, verification: { salarieId: null } },
+      where: filtreRapportsDuDossier(id),
       // Pas d'`orderBy` : l'ordre des rapports vit dans
       // `ORDRE_RAPPORT_PLUS_RECENT` (garde de `derniere-realisation.test.ts`),
       // et les entrées portent leur date en tête de nom — l'archive les range.
@@ -416,7 +415,7 @@ export async function GET(
   }
   const rapportsZip = await joindreFichiers(
     zip,
-    "Rapports",
+    nomDeDossier(PIECES_ZIP.rapports),
     rapportsDeposes.map((r) => ({
       id: r.id,
       cle: r.fichierCle,
@@ -436,15 +435,11 @@ export async function GET(
   // La borne est ramenée à minuit (heure de Paris) : les dates de début de
   // permis et de plan sont des dates civiles, une borne qui garderait
   // l'heure courante ferait disparaître du dossier, l'après-midi, une pièce
-  // encore présente le matin.
-  const ilYaUnAn = debutDuJour(ajouterMois(maintenant, -MOIS_FENETRE_HISTORIQUE));
-  const permisFeuList = await lire("06_Permis_de_feu.txt", [], () =>
+  // encore présente le matin. (La fenêtre et le filtre vivent dans
+  // `controle/pieces-zip.ts` depuis le 2026-10-12 : l'écran les lit aussi.)
+  const permisFeuList = await lire(PIECES_ZIP.permisFeu, [], () =>
     prisma.permisFeu.findMany({
-    where: {
-      etablissementId: id,
-      dateDebut: { gte: ilYaUnAn },
-      statut: { notIn: ["brouillon", "annule"] },
-    },
+    where: filtreActesDuDossier(id, maintenant),
     orderBy: { numero: "desc" },
   }));
   if (permisFeuList.length > 0) {
@@ -478,17 +473,13 @@ export async function GET(
         "",
       ]),
     ].join("\n");
-    zip.file("06_Permis_de_feu.txt", txt);
+    zip.file(PIECES_ZIP.permisFeu, txt);
   }
 
   // ── 07 Plans de prévention (actifs 12 derniers mois) ────────────────
-  const plansList = await lire("07_Plans_de_prevention.txt", [], () =>
+  const plansList = await lire(PIECES_ZIP.plansPrevention, [], () =>
     prisma.planPrevention.findMany({
-    where: {
-      etablissementId: id,
-      dateDebut: { gte: ilYaUnAn },
-      statut: { notIn: ["brouillon", "annule"] },
-    },
+    where: filtreActesDuDossier(id, maintenant),
     include: {
       lignes: { orderBy: { ordre: "asc" } },
       phasesDangereuses: { orderBy: { ordre: "asc" } },
@@ -540,11 +531,11 @@ export async function GET(
         "",
       ]),
     ].join("\n");
-    zip.file("07_Plans_de_prevention.txt", txt);
+    zip.file(PIECES_ZIP.plansPrevention, txt);
   }
 
   // ── 08 Carnet sanitaire (résumé) ─────────────────────────────────────
-  const carnetSan = await lire("08_Carnet_sanitaire.txt", null, () =>
+  const carnetSan = await lire(PIECES_ZIP.carnet, null, () =>
     prisma.carnetSanitaire.findUnique({
     where: { etablissementId: id },
     include: {
@@ -587,7 +578,7 @@ export async function GET(
           },
         },
       },
-      analyses: { orderBy: { dateAnalyse: "desc" }, take: 5 },
+      analyses: { orderBy: { dateAnalyse: "desc" }, take: NB_ANALYSES_DU_DOSSIER },
     },
   }));
   if (carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0)) {
@@ -623,7 +614,7 @@ export async function GET(
     ]
       .filter((l) => l !== "")
       .join("\n");
-    zip.file("08_Carnet_sanitaire.txt", txt);
+    zip.file(PIECES_ZIP.carnet, txt);
   }
   // Les rapports de laboratoire des analyses listées au 08, quand ils ont
   // été déposés : ils vont avec (2026-09-27).
@@ -632,7 +623,7 @@ export async function GET(
   );
   const analysesZip = await joindreFichiers(
     zip,
-    "08_Carnet_sanitaire_analyses",
+    nomDeDossier(PIECES_ZIP.analyses),
     analysesAvecRapport.map((a) => ({
       id: a.id,
       cle: a.rapportCle,
@@ -654,7 +645,7 @@ export async function GET(
     // ~~`duerpNumeroVersion !== null`~~ : une version existante dont le rendu
     // a échoué était annoncée présente.
     aDuerpPdf:
-      duerpNumeroVersion !== null && `02_DUERP_v${duerpNumeroVersion}.pdf` in zip.files,
+      duerpNumeroVersion !== null && fichierDuerp(duerpNumeroVersion) in zip.files,
     presents: new Set(Object.keys(zip.files)),
     regime: { estERP: etablissement.estERP, estIGH: etablissement.estIGH },
     duerpLu,
@@ -666,7 +657,7 @@ export async function GET(
     analysesZip,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
-    datesAttestations: echecs.has("Prestataires/")
+    datesAttestations: echecs.has(PIECES_ZIP.prestataires)
       ? []
       : prestataires.map(datesAttestationZip),
     nbPermisFeu: permisFeuList.length,
@@ -686,7 +677,7 @@ export async function GET(
     avertissementCalendrier: phraseFraicheur(fraicheur),
     inventaire,
   });
-  zip.file("00_README.txt", readme);
+  zip.file(PIECES_ZIP.readme, readme);
 
   // ── Génération ──────────────────────────────────────────────────────
   // En flux : au-delà de 4,5 Mo, une réponse d'un bloc est refusée par Vercel

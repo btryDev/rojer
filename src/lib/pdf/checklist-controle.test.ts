@@ -2,10 +2,51 @@ import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
 import { describe, expect, it } from "vitest";
 import { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import {
+  etatDuerpDuDossier,
+  faitDuerp,
   ligneDuerp,
   ligneVerifsEnRetard,
+  pastilleDuFait,
   type EtatDuerpLu,
 } from "./checklist-controle";
+
+describe("l'écran « Préparer un contrôle » lit le DUERP comme le README (audit du 2026-10-12, B3)", () => {
+  const LE_JOUR_B3 = new Date("2026-09-20T10:00:00Z");
+  const etab = (effectif: number) => ({
+    effectifSurSite: effectif,
+    entreprise: { effectif },
+  });
+
+  it("une version de 14 mois à onze salariés n'est pas « à jour » à l'écran", () => {
+    // L'écran disait « À jour » dès qu'une version existait ; le README du
+    // même dossier écrivait « mise à jour annuelle échue ».
+    const e = etatDuerpDuDossier(
+      { createdAt: new Date("2025-07-20T10:00:00Z") },
+      etab(11),
+      LE_JOUR_B3,
+    );
+    const f = faitDuerp(e);
+    expect(pastilleDuFait(f)).toBe("en_retard");
+    expect(ligneDuerp(e)).toBe(` [${f.coche}] ${f.texte}`);
+    expect(f.texte).toContain("mise à jour annuelle échue");
+  });
+
+  it("une version de 2 mois est à jour, aux deux endroits", () => {
+    const e = etatDuerpDuDossier(
+      { createdAt: new Date("2026-07-20T10:00:00Z") },
+      etab(11),
+      LE_JOUR_B3,
+    );
+    expect(pastilleDuFait(faitDuerp(e))).toBe("a_jour");
+    expect(ligneDuerp(e)).toContain("[x]");
+  });
+
+  it("sans version, rien à l'écran ne se dit à jour", () => {
+    const e = etatDuerpDuDossier(null, etab(11), LE_JOUR_B3);
+    expect(e).toBeNull();
+    expect(pastilleDuFait(faitDuerp(e))).toBe("a_planifier");
+  });
+});
 
 /**
  * Ces deux lignes partent dans le ZIP remis à un inspecteur. Elles ont été

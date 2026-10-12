@@ -15,14 +15,17 @@ describe("branchements des fichiers déposés", () => {
   const zip = lire("src/app/api/etablissements/[id]/controle-zip/route.ts");
 
   it("le ZIP joint les rapports et les rapports d'analyse, et le README les compte", () => {
-    expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*"Rapports",/);
-    expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*"08_Carnet_sanitaire_analyses",/);
+    // ~~`"Rapports"`, `"08_Carnet_sanitaire_analyses"` en dur~~ — les noms
+    // vivent dans `pieces-zip.ts` depuis le 2026-10-12 (l'écran les lit).
+    expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*nomDeDossier\(PIECES_ZIP\.rapports\),/);
+    expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*nomDeDossier\(PIECES_ZIP\.analyses\),/);
     expect(zip).toMatch(/rapportsZip,\s*rapportsSalariesEcartes,\s*analysesZip,/);
   });
 
   it("le ZIP lit les rapports de CET établissement, et jamais ceux d'une ligne de salarié (M1)", () => {
+    // Le filtre lui-même est éprouvé dans `pieces-zip.test.ts`.
     expect(zip).toMatch(
-      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: \{ etablissementId: id, verification: \{ salarieId: null \} \}/,
+      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: filtreRapportsDuDossier\(id\),/,
     );
   });
 
