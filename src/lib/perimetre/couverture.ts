@@ -303,6 +303,18 @@ const LIBELLE_CATEGORIE: Record<CategorieErp, string> = {
   N5: "5ᵉ catégorie",
 };
 
+/**
+ * Ce que le règlement IGH laisse hors de l'outil, dit UNE fois — ici, pour
+ * l'établissement servi dans une tour, et au refus d'un ERP en IGH
+ * (`exclusions.ts`), sur la même page « Ce que Rojer ne couvre pas ».
+ * L'audit du 2026-10-12 y a lu deux phrases contradictoires : celle du refus
+ * disait « seul l'article GH 5 a été lu » (le corpus en lit six) et faisait
+ * peser tout le règlement « sur l'exploitant de l'immeuble, pas sur » le
+ * locataire, quand celle-ci nomme GH 61, qui « vous incombe en tant
+ * qu'occupant ». Celle-ci était la vraie ; l'autre la reprend désormais.
+ */
+export const REGLEMENT_IGH_NON_TRAITE = `Le règlement de sécurité des immeubles de grande hauteur n'est pas traité par cet outil : ni ${nonPorte("le rapport quinquennal de conformité de la charge calorifique de son article GH 61")}, qui vous incombe en tant qu'occupant, ni ${nonPorte("les vérifications périodiques de son article GH 5")}, qui incombent au propriétaire de l'immeuble, ni ${nonPorte("le service de sécurité permanent")}, ni ${nonPorte("les dispositions propres à la classe de l'immeuble")}.`;
+
 function axeRegime(
   regime: RegimeEtablissement,
   manques: ManqueCouverture[],
@@ -344,7 +356,7 @@ function axeRegime(
       // du 07/10 ; `OBLIGATIONS_RETIREES`). La phrase dit donc que le régime
       // n'est pas traité, et nomme en premier ce qui pèse sur l'occupant
       // lui-même : c'est la ligne que ce retrait lui ôte.
-      consequence: `Le règlement de sécurité des immeubles de grande hauteur n'est pas traité par cet outil : ni ${nonPorte("le rapport quinquennal de conformité de la charge calorifique de son article GH 61")}, qui vous incombe en tant qu'occupant, ni ${nonPorte("les vérifications périodiques de son article GH 5")}, qui incombent au propriétaire de l'immeuble, ni ${nonPorte("le service de sécurité permanent")}, ni ${nonPorte("les dispositions propres à la classe de l'immeuble")}. Ce que vous lisez ici ne couvre pas votre régime.`,
+      consequence: `${REGLEMENT_IGH_NON_TRAITE} Ce que vous lisez ici ne couvre pas votre régime.`,
     });
     return;
   }

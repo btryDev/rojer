@@ -218,6 +218,10 @@ export async function emettreAccessToken(
   }
 
   const token = generateToken();
+  // L'URL avant toute écriture (2026-10-12, audit B7) : en production sans
+  // adresse publique, `publicAppUrl` lève — avant qu'un jeton soit créé pour
+  // un lien qui pointerait vers localhost.
+  const urlAcces = urlAccesPourToken(token);
   const tokenHash = hashToken(token);
   const ttl = ttlHoursFor(params.scope);
   // Horloge lue une seule fois : l'expiration du lien et celle du code
@@ -254,7 +258,6 @@ export async function emettreAccessToken(
     },
   });
 
-  const urlAcces = urlAccesPourToken(token);
   await envoyerMailAcces({
     to: params.emailDestinataire,
     nom: params.nomDestinataire,

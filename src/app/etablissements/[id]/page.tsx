@@ -5,7 +5,12 @@ import {
   type EtapeOnboarding,
 } from "@/components/layout/OnboardingChecklist";
 import { QuestionParametrage } from "@/components/layout/QuestionParametrage";
-import { questionRepondue } from "@/lib/etablissements/questions";
+import {
+  AIDE_EPI,
+  EXEMPLE_DETAIL_EPI,
+  LIBELLE_DETAIL_EPI,
+  questionRepondue,
+} from "@/lib/etablissements/questions";
 import {
   repondreDemandesAssureur,
   repondreEpiPresents,
@@ -263,8 +268,9 @@ export default async function EtablissementPage({
     {
       id: "epi",
       titre: "Dire si vous fournissez des équipements de protection",
-      pourquoi:
-        "Harnais, casques, gants, chaussures de sécurité, protections auditives. Si oui, l'employeur élabore une consigne d'utilisation de ces équipements (art. R. 4323-105 du Code du travail) : elle s'affiche tant que la réponse n'est pas « non ». Vous pouvez aussi les déclarer un par un dans vos équipements, avec leur marque et leur lieu.",
+      // Les mots sont ceux de la fiche, qui corrige la réponse une fois
+      // cette étape effacée (2026-10-12, audit B2).
+      pourquoi: AIDE_EPI,
       faite: questionRepondue(etab.epiPresents),
       question: (
         <QuestionParametrage
@@ -272,8 +278,8 @@ export default async function EtablissementPage({
           labelOui="Oui, nous en fournissons"
           labelNon="Non, aucun"
           detailSiOui={{
-            label: "Lesquels ? (facultatif)",
-            placeholder: "Harnais antichute, gants anti-coupure, chaussures…",
+            label: LIBELLE_DETAIL_EPI,
+            placeholder: EXEMPLE_DETAIL_EPI,
           }}
         />
       ),

@@ -20,10 +20,9 @@
 // `route.test.ts` sous `controle-zip/`. Ces deux règles vivent donc ici, où
 // elles peuvent être éprouvées.
 
-import { EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
+import { EFFECTIF_MAJ_ANNUELLE, evaluerEtatDuerp } from "@/lib/dashboard/duerp";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
-import type { evaluerEtatDuerp } from "@/lib/dashboard/duerp";
-import { faitRetards, type LectureRetards } from "./fait-retards";
+import { faitRetards, type FaitRetards, type LectureRetards } from "./fait-retards";
 
 export type EtatDuerpLu = ReturnType<typeof evaluerEtatDuerp>;
 
@@ -45,29 +44,88 @@ export type EtatDuerpLu = ReturnType<typeof evaluerEtatDuerp>;
  * AILLEURS »).
  */
 export function ligneDuerp(etat: EtatDuerpLu | null, lu = true): string {
+  const f = faitDuerp(etat, lu);
+  return ` [${f.coche}] ${f.texte}`;
+}
+
+/** Même forme que `FaitRetards` : la coche, et le texte. */
+export type FaitDuerp = FaitRetards;
+
+/**
+ * Le fait DUERP, avant sa mise en case — la même forme que `faitRetards`.
+ *
+ * SORTI DE `ligneDuerp` LE 2026-10-12 (audit B3) : l'écran « Préparer un
+ * contrôle » disait le DUERP « À jour » dès qu'une version existait, quand le
+ * README du ZIP qu'il fait télécharger écrivait « mise à jour annuelle
+ * échue » sur le même dossier. L'écran lit désormais ce fait-ci : la coche
+ * décide de sa pastille, le texte est le même.
+ */
+export function faitDuerp(etat: EtatDuerpLu | null, lu = true): FaitDuerp {
   // Une lecture en échec n'est pas « aucune version » (contre-lecture du
   // 2026-09-26) : la case reste vide, et dit pourquoi.
-  if (!lu) return " [ ] DUERP : non déterminé (lecture des versions en échec)";
+  if (!lu) return { coche: " ", texte: "DUERP : non déterminé (lecture des versions en échec)" };
   if (etat === null || !etat.aVersionValidee) {
-    return " [ ] DUERP : aucune version figée — à créer avant le contrôle";
+    return { coche: " ", texte: "DUERP : aucune version figée — à créer avant le contrôle" };
   }
   if (!etat.soumisMajAnnuelle) {
     return etat.versionRecente
-      ? " [x] DUERP : version de moins de 12 mois"
-      : " [ ] DUERP : version de plus de 12 mois — la mise à jour annuelle" +
-          " ne vous est pas exigée (moins de 11 salariés)";
+      ? { coche: "x", texte: "DUERP : version de moins de 12 mois" }
+      : {
+          coche: " ",
+          texte:
+            "DUERP : version de plus de 12 mois — la mise à jour annuelle" +
+            " ne vous est pas exigée (moins de 11 salariés)",
+        };
   }
   if (etat.majAnnuelleAConfirmer) {
     // Soumis par la seule prudence commune aux seuils d'entreprise (C37) :
     // la pièce remise au contrôleur n'affirme pas une échéance échue — ni
     // « [!] » ni « [x] » sur un seuil qu'on ne sait pas atteint.
     return etat.estAJour
-      ? " [x] DUERP à jour depuis moins de 12 mois"
-      : ` [ ] DUERP : version de plus de 12 mois — mise à jour annuelle (art. R. 4121-2) ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}`;
+      ? { coche: "x", texte: "DUERP à jour depuis moins de 12 mois" }
+      : {
+          coche: " ",
+          texte: `DUERP : version de plus de 12 mois — mise à jour annuelle (art. R. 4121-2) ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}`,
+        };
   }
   return etat.estAJour
-    ? " [x] DUERP à jour depuis moins de 12 mois"
-    : " [!] DUERP : mise à jour annuelle échue (art. R. 4121-2)";
+    ? { coche: "x", texte: "DUERP à jour depuis moins de 12 mois" }
+    : { coche: "!", texte: "DUERP : mise à jour annuelle échue (art. R. 4121-2)" };
+}
+
+/**
+ * La pastille d'écran d'un fait de la checklist : la même lecture que la case
+ * qu'il coche — « [x] » à jour, « [!] » en retard, « [ ] » à planifier.
+ * « Préparer un contrôle » la lit pour le DUERP (2026-10-12, audit B3).
+ */
+export function pastilleDuFait(
+  f: FaitDuerp,
+): "a_jour" | "en_retard" | "a_planifier" {
+  return f.coche === "x" ? "a_jour" : f.coche === "!" ? "en_retard" : "a_planifier";
+}
+
+/**
+ * L'état du DUERP d'un dossier, lu par le ZIP et par l'écran avec les mêmes
+ * entrées : la dernière version figée et les deux effectifs déclarés. `null`
+ * sans version — `faitDuerp` dit alors « aucune version figée ».
+ */
+export function etatDuerpDuDossier(
+  derniereVersion: { createdAt: Date } | null,
+  etablissement: { effectifSurSite: number; entreprise: { effectif: number } },
+  maintenant: Date,
+): EtatDuerpLu | null {
+  if (!derniereVersion) return null;
+  return evaluerEtatDuerp(
+    {
+      ouvert: true,
+      dateDerniereVersion: derniereVersion.createdAt,
+      effectifs: {
+        entreprise: etablissement.entreprise.effectif,
+        site: etablissement.effectifSurSite,
+      },
+    },
+    maintenant,
+  );
 }
 
 /**

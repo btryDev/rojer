@@ -19,6 +19,13 @@ import {
   LABEL_TYPE_ERP,
 } from "@/lib/etablissements/labels";
 import type { EtablissementActionState } from "@/lib/etablissements/actions";
+import { AIDE_HABITATION, AIDE_IGH } from "@/lib/etablissements/aides-regimes";
+import {
+  AIDE_EPI,
+  EXEMPLE_DETAIL_EPI,
+  LIBELLE_DETAIL_EPI,
+  QUESTION_EPI,
+} from "@/lib/etablissements/questions";
 
 
 /** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
@@ -53,6 +60,8 @@ type Valeurs = {
   dateAutorisationOuverture?: string | null;
   dateCertificatConformite?: string | null;
   comporteLocauxSommeilPublic?: boolean | null;
+  epiPresents?: boolean | null;
+  epiPresentsDetail?: string | null;
 };
 
 type Props = {
@@ -108,6 +117,14 @@ export function EtablissementForm({
   );
   const [estIGH, setEstIGH] = useState<boolean | null>(
     valeursInitiales?.estIGH ?? (enCreation ? null : false),
+  );
+  // Suivi en état : le champ « lesquels » n'apparaît que sous un « oui ».
+  const [epiPresents, setEpiPresents] = useState<"" | "oui" | "non">(
+    valeursInitiales?.epiPresents === true
+      ? "oui"
+      : valeursInitiales?.epiPresents === false
+        ? "non"
+        : "",
   );
 
   const err = (champ: string) =>
@@ -290,6 +307,61 @@ export function EtablissementForm({
               servait qu'à la ligne des chiffons, passée au niveau audit
               (ADR-042) et due à tout lieu de travail, sans réponse à donner.
               La colonne reste en base, inerte. */}
+
+          {/* LA PRÉSENCE D'EPI, CORRIGEABLE ICI DEPUIS LE 2026-10-12 (audit
+              B2). La checklist du tableau de bord la pose et s'efface une fois
+              répondue : un « non » ne se corrigeait plus nulle part, et la
+              consigne d'utilisation de R. 4323-105 (ADR-041) restait retirée.
+              En modification seulement — la création ne la pose pas, et le
+              champ non posté n'écrit rien (`normaliserFormData`). Mots
+              partagés avec la checklist (`etablissements/questions.ts`). */}
+          {!enCreation && (
+            <div className="sm:col-span-2">
+              <label className="label-board" htmlFor="epiPresents">
+                {QUESTION_EPI}
+              </label>
+              <select
+                id="epiPresents"
+                name="epiPresents"
+                className="champ-board"
+                aria-describedby="epiPresents-aide"
+                value={epiPresents}
+                onChange={(e) =>
+                  setEpiPresents(e.currentTarget.value as "" | "oui" | "non")
+                }
+              >
+                <option value="">Je ne sais pas encore</option>
+                <option value="oui">Oui</option>
+                <option value="non">Non</option>
+              </select>
+              <p
+                id="epiPresents-aide"
+                className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+              >
+                {AIDE_EPI}
+              </p>
+              <Erreur message={err("epiPresents")} />
+              {/* Le détail n'existe que sous un « oui » : un « non » l'efface
+                  à l'écriture (`reponseEpiCoherente`). */}
+              {epiPresents === "oui" && (
+                <div className="mt-3">
+                  <label className="label-board" htmlFor="epiPresentsDetail">
+                    {LIBELLE_DETAIL_EPI}
+                  </label>
+                  <input
+                    id="epiPresentsDetail"
+                    name="epiPresentsDetail"
+                    type="text"
+                    maxLength={1000}
+                    defaultValue={valeursInitiales?.epiPresentsDetail ?? ""}
+                    placeholder={EXEMPLE_DETAIL_EPI}
+                    className="champ-board"
+                  />
+                  <Erreur message={err("epiPresentsDetail")} />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -556,9 +628,12 @@ export function EtablissementForm({
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Immeuble de Grande Hauteur (IGH)
                   </p>
+                  {/* ~~« Hauteur > 28 m (habitation) ou > 50 m (autres
+                      activités) »~~ — l'inverse de R. 146-3, corrigé le
+                      2026-10-12 (audit B1). L'aide est celle du parcours,
+                      écrite une fois (`etablissements/aides-regimes.ts`). */}
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                    Hauteur &gt; 28 m (habitation) ou &gt; 50 m (autres
-                    activités). Arrêté du 30 décembre 2011 — rare en TPE/PME.
+                    {AIDE_IGH}
                   </p>
                 </div>
               </label>
@@ -610,9 +685,12 @@ export function EtablissementForm({
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Immeuble d&apos;habitation
                   </p>
+                  {/* ~~« paratonnerres, ramonage, ascenseurs »~~ — aucune de
+                      ces lignes ne naît de la réponse (2026-10-12, audit).
+                      L'aide dit ce que « oui » déclenche, confronté au
+                      référentiel par son test (`aides-regimes.ts`). */}
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                    Logements collectifs. Code de la construction et de
-                    l&apos;habitation — paratonnerres, ramonage, ascenseurs.
+                    {AIDE_HABITATION}
                   </p>
                 </div>
               </label>

@@ -14,6 +14,11 @@ import {
   LIBELLE_NOMBRE_DE_PERSONNES,
   QUESTION_NOMBRE_DE_PERSONNES,
 } from "@/lib/matching/personnes-presentes";
+import {
+  AIDE_HABITATION,
+  AIDE_IGH,
+  QUESTION_IGH,
+} from "@/lib/etablissements/aides-regimes";
 import type { StepProps } from "./types";
 import { nombreDePersonnesDemande } from "./validation";
 
@@ -337,13 +342,14 @@ export function StepTypologie({
           {/* ─── IGH ─────────────────────────────────────────── */}
           <section className="carte-board flex flex-col gap-6 px-7 py-6 sm:px-8">
             <div>
-              <h3 className="board-titre m-0 text-[22px]">
-                Votre bâtiment fait-il plus de 28 mètres de hauteur ?
-              </h3>
+              {/* ~~« Votre bâtiment fait-il plus de 28 mètres de hauteur ?
+                  Environ 9 étages et plus »~~ — corrigé le 2026-10-12 (audit
+                  B1) : R. 146-3 mesure le plancher bas du dernier niveau, pas
+                  le bâtiment, et place l'habitation à 50 mètres. Question et
+                  aide sont celles de la fiche (`aides-regimes.ts`). */}
+              <h3 className="board-titre m-0 text-[22px]">{QUESTION_IGH}</h3>
               <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Environ 9 étages et plus. Ce cas (IGH) est très rare en
-                TPE/PME — si vous êtes au rez-de-chaussée ou dans un
-                immeuble de quelques étages, répondez « Non ».
+                {AIDE_IGH}
               </p>
             </div>
 
@@ -382,10 +388,10 @@ export function StepTypologie({
               <h3 className="board-titre m-0 text-[22px]">
                 Gérez-vous un immeuble d&apos;habitation ?
               </h3>
+              {/* ~~« (ramonage, VMC-Gaz…) »~~ — le ramonage n'a aucune
+                  ligne (2026-10-12, audit). Aide partagée avec la fiche. */}
               <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Uniquement si vous êtes propriétaire ou syndic d&apos;un
-                logement collectif (ramonage, VMC-Gaz…). Rare pour les
-                commerces et restaurants.
+                {AIDE_HABITATION}
               </p>
             </div>
             <div className="flex flex-wrap gap-3">

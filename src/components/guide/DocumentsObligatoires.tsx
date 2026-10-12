@@ -44,7 +44,11 @@ export function DocumentsObligatoires() {
           § Les documents obligatoires
         </p>
         <h2 className="board-titre mt-3 max-w-[20ch] text-[clamp(22px,2.2vw,27px)]">
-          Ce que vous devez tenir,
+          {/* ~~« Ce que vous devez tenir »~~ — promettait la liste complète
+              sur neuf documents ; la liste est une décision de la
+              propriétaire (audit du 2026-10-12, § 4.7). Le titre ne promet
+              plus l'exhaustivité. */}
+          Des documents que vous devez tenir,
           <br />
           <span className="text-[color:var(--board-blue-ink)]">
             y compris ailleurs qu&apos;ici.

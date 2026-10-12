@@ -371,6 +371,9 @@ export async function renvoyerCodeOtp(
     };
   }
 
+  // L'URL avant le renouvellement (2026-10-12, audit B7) : sans adresse
+  // publique en production, `publicAppUrl` lève avant d'invalider l'ancien code.
+  const urlAcces = urlAccesPourToken(tokenClair);
   const otp = generateOtp();
   await renouvelerOtp(token.id, {
     otpHash: hashOtp(otp),
@@ -384,7 +387,7 @@ export async function renvoyerCodeOtp(
     message:
       "Voici un nouveau code de confirmation pour l'action qui vous a été demandée. " +
       "Le précédent n'est plus valable.",
-    urlAcces: urlAccesPourToken(tokenClair),
+    urlAcces,
     otp,
     expireLe: token.expireLe,
   });

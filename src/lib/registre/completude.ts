@@ -19,9 +19,9 @@
 // aucun des deux. Le métier voisin — quelles fiches sont dues — est dans
 // `composition.ts`.
 
-import type { FormeSaisie } from "./champs";
-import type { ContenuLu } from "./queries";
-import type { Alimentation } from "./alimentation";
+import { saisiePourSection, type FormeSaisie } from "./champs";
+import type { ContenuLu, RegistreDeLEtablissement } from "./queries";
+import { alimentationDeLaPartie, type Alimentation } from "./alimentation";
 
 // Ce que la page a lu en base pour une fiche : champs XOR lignes, jamais les
 // deux. La définition vit côté lib, avec la requête qui la produit — deux
@@ -158,6 +158,39 @@ export function libelleCompletude(c: Completude): string {
   if (c.repondues >= repondables) return "Toutes les réponses";
   const s = c.repondues > 1 ? "s" : "";
   return `${c.repondues} réponse${s} sur ${repondables}`;
+}
+
+/**
+ * La complétude de chaque fiche due, par identifiant de fiche — ce que l'écran
+ * du registre, son PDF et l'écran « Préparer un contrôle » comptent.
+ *
+ * Écrite une fois le 2026-10-12 (audit B3) : l'écran du registre la calculait
+ * en ligne, le PDF aussi, et « Préparer un contrôle » ne la calculait pas du
+ * tout — il disait le registre « À jour » pendant que l'écran du registre
+ * comptait des fiches sans ligne consignée.
+ *
+ * `base` est le chemin de l'établissement (`/etablissements/<id>`), d'où
+ * partent les renvois des fiches tenues ailleurs.
+ */
+export function completudesDuRegistre(
+  registre: Pick<RegistreDeLEtablissement, "parties" | "contenus"> | null,
+  base: string,
+): Map<string, Completude> {
+  return new Map(
+    (registre?.parties ?? []).flatMap((partie) =>
+      partie.sections.map(
+        (due) =>
+          [
+            due.section.id,
+            completudeDeLaFiche(
+              saisiePourSection(due.section.id),
+              registre?.contenus[due.section.id] ?? {},
+              alimentationDeLaPartie(partie.id, base),
+            ),
+          ] as const,
+      ),
+    ),
+  );
 }
 
 /** Le compte du registre entier, tel que la jauge l'annonce. */

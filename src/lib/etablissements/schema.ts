@@ -154,6 +154,42 @@ export const EFFECTIF_MAX = 50;
 const nafRegex = /^\d{2}\.?\d{2}[A-Z]?$/;
 
 /**
+ * Une réponse oui / non / « je ne sais pas encore » d'un `<select>` de la
+ * fiche. `undefined` TRAVERSE — « le champ n'a pas été posté » n'écrit rien —,
+ * là où le vide devient `null`, « pas encore répondu ».
+ */
+const reponseTroisEtats = (v: unknown) =>
+  v === "oui"
+    ? true
+    : v === "non"
+      ? false
+      : v === true || v === false
+        ? v
+        : v === undefined
+          ? undefined
+          : null;
+
+/** Le détail des EPI : borné comme les autres textes libres du modèle. Lu
+ *  par la fiche et par la question de la checklist (`parametrage.ts`). */
+export const DETAIL_EPI = z
+  .string()
+  .trim()
+  .max(1000, "1000 caractères au maximum");
+
+/**
+ * Un « non » (ou un « je ne sais pas ») efface le détail laissé par un « oui »
+ * précédent : le garder ferait subsister une liste d'EPI sous une déclaration
+ * d'absence d'EPI, et c'est la contradiction qu'un contrôleur relèverait.
+ * Règle unique de la checklist et de la fiche (2026-10-12, audit B2).
+ */
+export function reponseEpiCoherente<
+  T extends { epiPresents?: boolean | null; epiPresentsDetail?: string | null },
+>(d: T): T {
+  if (d.epiPresents === undefined) return d;
+  return d.epiPresents === true ? d : { ...d, epiPresentsDetail: null };
+}
+
+/**
  * Schéma de validation d'un établissement. La typologie est faite de flags
  * cumulables (ADR-004). Les précisions (typeErp, categorieErp, classeIgh)
  * ne sont requises que si le flag correspondant est vrai — on impose la
@@ -257,17 +293,27 @@ export const etablissementSchema = z
     // « l'utilisateur a remis « je ne sais pas ». Sans lui, décocher l'ERP
     // effacerait un « non » déjà donné et ferait réapparaître quatre lignes.
     comporteLocauxSommeilPublic: z.preprocess(
-      (v) =>
-        v === "oui"
-          ? true
-          : v === "non"
-            ? false
-            : v === true || v === false
-              ? v
-              : v === undefined
-                ? undefined
-                : null,
+      reponseTroisEtats,
       z.boolean().nullable().optional(),
+    ),
+    // Présence d'EPI (ADR-041 : elle conditionne la consigne d'utilisation de
+    // R. 4323-105). Posée d'abord par la checklist, qui s'efface une fois
+    // répondue : un « non » ne se corrigeait plus nulle part (audit du
+    // 2026-10-12, B2). La fiche la pose désormais en modification, comme les
+    // matières et le sommeil. La fiche de CRÉATION ne la pose pas : le champ
+    // n'est pas posté et `undefined` n'écrit rien.
+    epiPresents: z.preprocess(
+      reponseTroisEtats,
+      z.boolean().nullable().optional(),
+    ),
+    epiPresentsDetail: z.preprocess(
+      (v) =>
+        v === undefined
+          ? undefined
+          : typeof v === "string"
+            ? v.trim() || null
+            : (v ?? null),
+      DETAIL_EPI.nullable().optional(),
     ),
 
     // Renseignements de la fiche « Renseignements généraux » du registre de

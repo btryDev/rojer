@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
-import { reponseSommeilSuivantLeType } from "./schema";
+import {
+  DETAIL_EPI,
+  reponseEpiCoherente,
+  reponseSommeilSuivantLeType,
+} from "./schema";
 import {
   MESSAGE_REGEN_ECHEC,
   regenererApresMutation,
@@ -13,7 +17,12 @@ import {
 /**
  * Les deux questions de paramétrage — ADR-025 § 7, ADR-032.
  *
- * Elles n'ont pas d'écran : « Paramètres » pointe la page de connexion d'un
+ * ~~Elles n'ont pas d'écran~~ [2026-10-12 : celle des EPI se corrige aussi à
+ * la fiche (`etablissements/[id]/modifier`), audit B2 — la checklist
+ * s'effaçant une fois répondue, un « non » ne se corrigeait plus nulle part.
+ * Celle de l'assureur n'en a pas besoin : elle n'ouvre qu'une porte de
+ * saisie, que la page Prescriptions laisse ouverte quelle que soit la
+ * réponse] : « Paramètres » pointe la page de connexion d'un
  * assistant, et le lot A8 refera la navigation. En attendant, elles se posent
  * et se répondent **dans la checklist du tableau de bord**, en place. Un écran
  * de paramétrage créé ici serait à défaire dans deux semaines, et un écran à
@@ -46,12 +55,8 @@ export type ReponseParametrage =
 /** `"oui"`/`"non"` et rien d'autre — pas de repli silencieux sur « non ». */
 const reponseBooleenne = z.enum(["oui", "non"]);
 
-/** Le détail EPI : borné comme les autres textes libres du modèle. */
-const detailEpi = z
-  .string()
-  .trim()
-  .max(1000, "1000 caractères au maximum")
-  .optional();
+/** Le détail EPI : la règle de la fiche (`schema.ts`), pas une seconde. */
+const detailEpi = DETAIL_EPI.optional();
 
 export async function repondreDemandesAssureur(
   etablissementId: string,
@@ -92,13 +97,12 @@ export async function repondreEpiPresents(
   const oui = parsed.data === "oui";
   await prisma.etablissement.update({
     where: { id: etablissementId },
-    data: {
+    // Répondre « non » efface un détail laissé par une réponse précédente —
+    // la règle est celle de la fiche, qui corrige la même réponse.
+    data: reponseEpiCoherente({
       epiPresents: oui,
-      // Répondre « non » efface un détail laissé par une réponse précédente :
-      // le garder ferait subsister une liste d'EPI sous une déclaration
-      // d'absence d'EPI, et c'est la contradiction qu'un contrôleur relèverait.
-      epiPresentsDetail: oui ? (detail.data || null) : null,
-    },
+      epiPresentsDetail: detail.data || null,
+    }),
   });
   // Depuis l'ADR-041, la réponse conditionne la consigne d'utilisation des EPI
   // (R. 4323-105) : le calendrier suit, comme après une question de la fiche.
