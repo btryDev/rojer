@@ -78,16 +78,33 @@ export function porteUnChampScelle(formData: FormData): boolean {
 export function motifContenuScelle(
   document: "plan" | "permis",
   nbSignatures: number,
+  /** Plan seulement : la date de l'inspection commune manque-t-elle ? */
+  sansInspection = false,
 ): string | null {
   if (nbSignatures === 0) return null;
   const sujet = document === "plan" ? "Ce plan" : "Ce permis";
   const signatures =
     nbSignatures > 1 ? `${nbSignatures} signatures` : "une signature";
-  return (
+  const motif =
     `${sujet} porte déjà ${signatures}. Son contenu ne se modifie plus : ` +
-    "le changer rendrait la signature invalide. Seule la zone reste modifiable."
-  );
+    "le changer rendrait la signature invalide. Seule la zone reste modifiable.";
+  return document === "plan" && sansInspection
+    ? `${motif} ${INSPECTION_SUR_PLAN_SIGNE}`
+    : motif;
 }
+
+/**
+ * L'issue réelle d'un plan signé sans date d'inspection commune (audit B5,
+ * relecture indépendante du 2026-10-12). `inspectionDate` est dans l'empreinte
+ * (`hash-objet.ts`) : la date ne s'ajoute plus, et « Seule la zone reste
+ * modifiable » laissait le dirigeant chercher où l'enregistrer. Aucun champ
+ * hors empreinte ne la porte : la seule voie est un nouveau plan. La règle
+ * d'empreinte n'est pas changée ici.
+ */
+export const INSPECTION_SUR_PLAN_SIGNE =
+  "Signé, ce plan ne peut plus recevoir la date de l'inspection commune : pour " +
+  "l'enregistrer, supprimez-le — il passe alors « annulé » et reste au " +
+  "dossier — puis établissez-en un nouveau, à faire signer.";
 
 /**
  * Le motif écrit sur un lien révoqué parce que le contenu a changé — celui

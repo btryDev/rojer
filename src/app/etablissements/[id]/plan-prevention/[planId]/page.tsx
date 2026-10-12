@@ -23,6 +23,7 @@ import { repartirSignatures } from "@/lib/signatures/parties";
 import { SignerDepuisMonCompte } from "@/components/signatures/SignerDepuisMonCompte";
 import { InformationInspectionForm } from "@/components/plan-prevention/InformationInspectionForm";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
+import { INSPECTION_SUR_PLAN_SIGNE } from "@/lib/signatures/verrou-contenu";
 import {
   BoutonCloturer,
   BoutonSupprimerPlan,
@@ -308,6 +309,11 @@ export default async function PlanPreventionDetailPage({
                 <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   Aucune date d&apos;inspection commune enregistrée.{" "}
                   {PHRASE_R4512_2}
+                  {/* Signé, le plan ne la prend plus (B5) : la fiche dit la
+                      même issue que l'écran « Modifier ». */}
+                  {planSignable && plan.signatures.length > 0 && (
+                    <> {INSPECTION_SUR_PLAN_SIGNE}</>
+                  )}
                 </p>
               )}
             </CarteFiche>

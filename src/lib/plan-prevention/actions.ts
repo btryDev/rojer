@@ -272,7 +272,7 @@ export async function modifierPlanPrevention(
 ): Promise<PlanActionState> {
   const plan = await prisma.planPrevention.findUnique({
     where: { id: planId },
-    select: { etablissementId: true, statut: true, numero: true },
+    select: { etablissementId: true, statut: true, numero: true, inspectionDate: true },
   });
   if (!plan) return { status: "error", message: "Plan introuvable" };
   await assertEtablissementOwnership(plan.etablissementId);
@@ -286,6 +286,7 @@ export async function modifierPlanPrevention(
     const scelle = motifContenuScelle(
       "plan",
       await compterSignatures("plan_prevention", planId, etablissementId, tx),
+      plan.inspectionDate === null,
     );
     if (scelle) {
       if (porteUnChampScelle(formData)) return { status: "error", message: scelle };

@@ -63,7 +63,11 @@ export default async function ModifierPlanPreventionPage({
               siret: p.siret,
             }))}
             batiments={batiments}
-            scelle={motifContenuScelle("plan", plan.signatures.length)}
+            scelle={motifContenuScelle(
+              "plan",
+              plan.signatures.length,
+              plan.inspectionDate === null,
+            )}
             avisLiens={avisLiensEnVol(liensEnVol)}
             plan={{
               id: plan.id,

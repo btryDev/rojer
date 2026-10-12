@@ -199,7 +199,8 @@ describe("un plan non signé se corrige, avec les validations de la création", 
 
 describe("un plan signé : ce que l'empreinte couvre ne se réécrit pas", () => {
   it("une saisie qui porte un champ couvert est refusée, avec la phrase de l'écran", async () => {
-    db.plans.push(planEnBase());
+    // Inspection datée : la phrase de B5 ne s'ajoute pas (voir plus bas).
+    db.plans.push(planEnBase({ inspectionDate: new Date("2026-10-01") }));
     db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi" });
 
     const r = await modifier(saisie());
@@ -209,7 +210,7 @@ describe("un plan signé : ce que l'empreinte couvre ne se réécrit pas", () =>
       message:
         "Ce plan porte déjà une signature. Son contenu ne se modifie plus : le changer rendrait la signature invalide. Seule la zone reste modifiable.",
     });
-    expect(db.plans[0].inspectionDate).toBeNull();
+    expect(db.plans[0].inspectionDate).toEqual(new Date("2026-10-01"));
   });
 
   it("la zone, hors de l'empreinte, se modifie encore", async () => {
@@ -314,5 +315,29 @@ describe("le prestataire de l'annuaire est celui de l'établissement (relecture 
 
     expect((await modifier(saisie({ prestataireId: "presta-a-moi" }))).status).toBe("success");
     expect(db.plans[0].prestataireId).toBe("presta-a-moi");
+  });
+});
+
+describe("un plan signé sans date d'inspection commune (B5)", () => {
+  it("l'écran et le serveur disent l'issue réelle, pas seulement « la zone »", async () => {
+    db.plans.push(planEnBase());
+    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi" });
+
+    const r = await modifier(saisie());
+
+    expect(r).toEqual({
+      status: "error",
+      message:
+        "Ce plan porte déjà une signature. Son contenu ne se modifie plus : le changer rendrait la signature invalide. Seule la zone reste modifiable. Signé, ce plan ne peut plus recevoir la date de l'inspection commune : pour l'enregistrer, supprimez-le — il passe alors « annulé » et reste au dossier — puis établissez-en un nouveau, à faire signer.",
+    });
+  });
+
+  it("une inspection déjà datée ne fait pas ajouter la phrase", async () => {
+    db.plans.push(planEnBase({ inspectionDate: new Date("2026-10-01") }));
+    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi" });
+
+    const r = await modifier(saisie());
+
+    expect(r.status === "error" && r.message).not.toContain("inspection commune");
   });
 });
