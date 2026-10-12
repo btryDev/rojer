@@ -88,7 +88,12 @@ export const R4512_7_1_EN_COURS =
  * le ZIP l'écrivent — une seule forme.
  */
 export function ligneHeuresRevisees(heures: number, leTexte: string): string {
-  return `Heures prévisibles revues le ${leTexte} : ${heures} h`;
+  // À 400 h et au-delà, la date gardée est la PREMIÈRE où elles ont été
+  // notées (`noterHeuresRevisees`, 2026-10-12), pas celle de la dernière
+  // révision : la phrase dit laquelle.
+  return heures >= 400
+    ? `Heures prévisibles revues : ${heures} h, seuil de 400 h noté le ${leTexte}`
+    : `Heures prévisibles revues le ${leTexte} : ${heures} h`;
 }
 
 /** Constat sur le produit : ce que Rojer tient, et ce qu'il ne compte pas. */

@@ -11,7 +11,14 @@ import {
   type TraceInspectionState,
 } from "@/lib/plan-prevention/actions";
 
-export function HeuresReviseesForm({ planId }: { planId: string }) {
+export function HeuresReviseesForm({
+  planId,
+  dejaNotees,
+}: {
+  planId: string;
+  /** Une valeur est déjà notée : elle peut se corriger (`noterHeuresRevisees`). */
+  dejaNotees: boolean;
+}) {
   const action = noterHeuresRevisees.bind(null, planId);
   const [state, formAction, pending] = useActionState<
     TraceInspectionState,
@@ -52,6 +59,18 @@ export function HeuresReviseesForm({ planId }: { planId: string }) {
           className="champ-board mt-1 max-w-[12rem]"
         />
       </div>
+      {/* Une baisse sous 400 h, une fois les 400 h notées, n'est reçue que
+          comme correction d'une erreur de saisie, déclarée (2026-10-12). */}
+      {dejaNotees && (
+        <label className="flex w-full items-center gap-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+          <input
+            type="checkbox"
+            name="correctionSaisie"
+            className="accent-[color:var(--board-ink)]"
+          />
+          Je corrige une erreur de saisie
+        </label>
+      )}
       <Button type="submit" variant="boardClair" size="boardSm" disabled={pending}>
         {pending ? "Enregistrement…" : "Noter"}
       </Button>

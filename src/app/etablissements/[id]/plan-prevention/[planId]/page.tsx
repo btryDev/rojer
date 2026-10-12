@@ -262,7 +262,12 @@ export default async function PlanPreventionDetailPage({
               <p className="m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Art. R. 4512-7, 1° : « {R4512_7_1_EN_COURS} ». {CONSTAT_HEURES_REVISEES}
               </p>
-              {planSignable && <HeuresReviseesForm planId={plan.id} />}
+              {planSignable && (
+                <HeuresReviseesForm
+                  planId={plan.id}
+                  dejaNotees={plan.heuresPrevisiblesRevisees !== null}
+                />
+              )}
             </CarteFiche>
 
             <CarteFiche titre="Nature des travaux">

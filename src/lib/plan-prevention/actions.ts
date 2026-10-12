@@ -473,10 +473,23 @@ const heuresSchema = z.coerce
  * - Un entier de 1 à 99 999, et la date où il a été revu, jamais future —
  *   les deux sont requis : un nombre sans date ne dit pas quand l'obligation
  *   est née.
- * - La dernière valeur seulement. Mais une révision à la baisse ne retire
+ * - La dernière valeur seulement. ~~Mais une révision à la baisse ne retire
  *   jamais une obligation déjà née : si les 400 h ont été notées, une valeur
- *   inférieure est refusée. L'estimation initiale, elle, n'est pas touchée.
+ *   inférieure est refusée.~~ [2026-10-12, relecture indépendante : refusée
+ *   SANS EXCEPTION, une faute de frappe (4000 pour 400… ou 450 pour 45) ne se
+ *   corrigeait plus, et le ZIP disait « Plan écrit obligatoire » pour
+ *   toujours. Et la date était réécrite à chaque saisie.] Désormais :
+ *   - la date retenue est la PREMIÈRE où 400 h ou plus ont été notées, et elle
+ *     ne bouge plus tant que la valeur reste à 400 ou au-dessus — c'est le
+ *     jour où l'obligation est née ;
+ *   - une valeur sous 400, une fois les 400 h notées, reste refusée comme
+ *     révision — une révision à la baisse ne retire pas l'obligation née —,
+ *     et n'est acceptée que comme CORRECTION DE SAISIE déclarée (case
+ *     « Je corrige une erreur de saisie »), qui remplace valeur et date.
+ *   L'estimation initiale, elle, n'est pas touchée.
  * - Hors de l'empreinte de signature : se note sur un plan signé.
+ * - Sans migration : la colonne de date porte la première date ≥ 400 h dès
+ *   qu'elles sont atteintes, la date de la révision sinon.
  */
 export async function noterHeuresRevisees(
   planId: string,
@@ -505,6 +518,7 @@ export async function noterHeuresRevisees(
   const le = lireDateDeclaree(formData.get("heuresPrevisiblesReviseesLe"), new Date());
   if (!le.ok) return { status: "error", message: le.message };
   if (!le.date) return { status: "error", message: "Date de la révision requise" };
+  const correction = formData.get("correctionSaisie") === "on";
 
   const deja = diagnostiquerPlan({
     dureeHeuresEstimee: null,
@@ -512,19 +526,22 @@ export async function noterHeuresRevisees(
     heuresPrevisiblesRevisees: plan.heuresPrevisiblesRevisees,
     heuresPrevisiblesReviseesLe: plan.heuresPrevisiblesReviseesLe,
   });
-  if (deja.seuil400EnCours && heures.data < 400) {
+  if (deja.seuil400EnCours && heures.data < 400 && !correction) {
     return {
       status: "error",
       message:
-        "Les 400 heures ont déjà été notées : l'écrit est dû depuis, et une révision à la baisse ne le retire pas.",
+        "Les 400 heures ont déjà été notées : l'écrit est dû depuis, et une révision à la baisse ne le retire pas. " +
+        "S'il s'agissait d'une erreur de saisie, cochez « Je corrige une erreur de saisie ».",
     };
   }
+  // La première date où 400 h ont été notées reste celle de l'obligation.
+  const garderLaDate = deja.seuil400EnCours && heures.data >= 400 && !correction;
 
   await prisma.planPrevention.updateMany({
     where: { id: planId, etablissementId: plan.etablissementId },
     data: {
       heuresPrevisiblesRevisees: heures.data,
-      heuresPrevisiblesReviseesLe: le.date,
+      heuresPrevisiblesReviseesLe: garderLaDate ? plan.heuresPrevisiblesReviseesLe : le.date,
     },
   });
   revalidatePath(`/etablissements/${plan.etablissementId}/plan-prevention`);

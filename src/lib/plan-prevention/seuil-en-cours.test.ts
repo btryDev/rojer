@@ -50,7 +50,7 @@ describe("diagnostiquerPlan — la révision en cours de chantier", () => {
     expect(d.seuil400).toBe(false);
     expect(d.seuil400EnCours).toBe(true);
     expect(d.raisons).toEqual([
-      "Heures prévisibles revues le 05/10/2026 : 450 h. Art. R. 4512-7, 1° : « Il en est de même dès lors qu'il apparaît, en cours d'exécution des travaux, que le nombre d'heures de travail doit atteindre 400 heures ».",
+      "Heures prévisibles revues : 450 h, seuil de 400 h noté le 05/10/2026. Art. R. 4512-7, 1° : « Il en est de même dès lors qu'il apparaît, en cours d'exécution des travaux, que le nombre d'heures de travail doit atteindre 400 heures ».",
     ]);
   });
 
@@ -103,10 +103,11 @@ function plan(extra: Ligne = {}): Ligne {
   };
 }
 
-const noter = (heures: string, le: string) => {
+const noter = (heures: string, le: string, correction = false) => {
   const fd = new FormData();
   fd.set("heuresPrevisiblesRevisees", heures);
   fd.set("heuresPrevisiblesReviseesLe", le);
+  if (correction) fd.set("correctionSaisie", "on");
   return noterHeuresRevisees("pp-1", { status: "idle" }, fd);
 };
 
@@ -128,15 +129,45 @@ describe("noterHeuresRevisees", () => {
     expect(db.plans[0].heuresPrevisiblesRevisees).toBe(350);
   });
 
-  it("une baisse sous 400 h, une fois les 400 h notées, est refusée", async () => {
+  it("une baisse sous 400 h, une fois les 400 h notées, est refusée comme révision", async () => {
     db.plans.push(plan({ heuresPrevisiblesRevisees: 420, heuresPrevisiblesReviseesLe: LE }));
     const r = await noter("390", "2026-10-06");
     expect(r).toEqual({
       status: "error",
       message:
-        "Les 400 heures ont déjà été notées : l'écrit est dû depuis, et une révision à la baisse ne le retire pas.",
+        "Les 400 heures ont déjà été notées : l'écrit est dû depuis, et une révision à la baisse ne le retire pas. S'il s'agissait d'une erreur de saisie, cochez « Je corrige une erreur de saisie ».",
     });
     expect(db.plans[0].heuresPrevisiblesRevisees).toBe(420);
+  });
+
+  // Relecture indépendante du 2026-10-12 : la faute de frappe était
+  // incorrigible, et la date réécrite à chaque saisie.
+  it("la correction de saisie déclarée remplace la valeur ET la date", async () => {
+    db.plans.push(plan({ heuresPrevisiblesRevisees: 4500, heuresPrevisiblesReviseesLe: LE }));
+    const r = await noter("450", "2026-10-06", true);
+    expect(r).toEqual({ status: "success" });
+    expect(db.plans[0].heuresPrevisiblesRevisees).toBe(450);
+    expect(db.plans[0].heuresPrevisiblesReviseesLe).toEqual(depuisCleJourCivil("2026-10-06"));
+
+    db.plans[0].heuresPrevisiblesRevisees = 4500;
+    expect(await noter("45", "2026-10-07", true)).toEqual({ status: "success" });
+    expect(db.plans[0].heuresPrevisiblesRevisees).toBe(45);
+  });
+
+  it("la date retenue est la PREMIÈRE où 400 h ont été notées, et ne bouge plus au-dessus", async () => {
+    db.plans.push(plan({ heuresPrevisiblesRevisees: 200, heuresPrevisiblesReviseesLe: LE }));
+    await noter("420", "2026-10-06");
+    expect(db.plans[0].heuresPrevisiblesReviseesLe).toEqual(depuisCleJourCivil("2026-10-06"));
+
+    await noter("600", "2026-10-09");
+    expect(db.plans[0].heuresPrevisiblesRevisees).toBe(600);
+    expect(db.plans[0].heuresPrevisiblesReviseesLe).toEqual(depuisCleJourCivil("2026-10-06"));
+  });
+
+  it("sous 400 h, la date suit la révision", async () => {
+    db.plans.push(plan({ heuresPrevisiblesRevisees: 200, heuresPrevisiblesReviseesLe: LE }));
+    await noter("300", "2026-10-08");
+    expect(db.plans[0].heuresPrevisiblesReviseesLe).toEqual(depuisCleJourCivil("2026-10-08"));
   });
 
   it.each([
