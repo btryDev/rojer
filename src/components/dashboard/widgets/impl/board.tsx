@@ -540,6 +540,8 @@ export function BlocBrief({ bundle }: { bundle: DashboardBundle }) {
     sous30j,
     verifsAPlanifier: echeancesEtablissement.verifsAPlanifier,
     verifsEnRetardSansEcheance: echeancesEtablissement.verifsEnRetardSansEcheance,
+    // Nommés, pas comptés (ADR-043 § 3 (a)) : lus sur les comptes des cartes.
+    titresDusEnRetard: dashboard.titresDusEnRetard,
     // `etat` transmis : sans lui le brief se rabattait sur sa formulation de
     // repli et n'annonçait jamais « aucune version validée » — il disait
     // « votre DUERP a plus de douze mois » à quelqu'un qui venait de l'ouvrir.

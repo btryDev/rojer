@@ -4,6 +4,7 @@ import { echeancesPrestataire } from "./echeances";
 import { repartirRetards, repartirSous30j } from "./retards";
 import { fusionnerEvenements } from "./evenements";
 import { lignesDuCalendrier, rangerParMois, regleDeLAnnee } from "./regle-annee";
+import { AUCUNE_PRUDENCE } from "./prudence";
 import { computeVigilance, ventilerVigilance } from "@/lib/prestataires/vigilance";
 
 /**
@@ -51,7 +52,7 @@ function fiche(id: string, p: Partial<Prestataire> = {}): Prestataire {
 
 function lire(prestataires: Prestataire[]) {
   const autres = prestataires.flatMap((p) => echeancesPrestataire(p, NOW, "e1"));
-  const lignes = lignesDuCalendrier([], autres, NOW);
+  const lignes = lignesDuCalendrier([], autres, NOW, AUCUNE_PRUDENCE);
   const regle = regleDeLAnnee(rangerParMois(lignes), 2026, NOW);
   return {
     autres,

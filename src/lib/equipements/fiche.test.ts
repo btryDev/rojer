@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { porteurDe } from "@/lib/referentiels/conformite/types";
+import { AUCUNE_PRUDENCE } from "@/lib/calendrier/prudence";
 
 /**
  * Une obligation FABRIQUÉE pour le second verbe (« à déclarer faite »).
@@ -29,6 +31,7 @@ vi.mock("@/lib/referentiels/conformite", async (importOriginal) => {
   };
 });
 import {
+  obligationsApplicablesALAppareil,
   chapeauAFaire,
   libelleDelai,
   lignesAFaire,
@@ -124,7 +127,7 @@ describe("lignesAFaire", () => {
         },
       ]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
 
     expect(lignes).toHaveLength(1);
@@ -150,7 +153,7 @@ describe("lignesAFaire", () => {
         },
       ]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
 
     expect(lignes).toHaveLength(1);
@@ -165,7 +168,7 @@ describe("lignesAFaire", () => {
     const [ligne] = lignesAFaire(
       fiche([{ id: "v-generee", datePrevue: "2026-06-01", statut: "a_planifier" }]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
     expect(ligne.etat).toBe("enRetard");
     expect(ligne.date).toBeNull();
@@ -190,7 +193,7 @@ describe("lignesAFaire", () => {
         },
       ]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
     expect(ligne.etat).toBe("sansRendezVous");
     expect(ligne.date).toBeNull();
@@ -206,7 +209,7 @@ describe("lignesAFaire", () => {
           { id: "v", obligationId, datePrevue: "2026-03-01", statut: "a_planifier", periodicite: "autre" },
         ]),
         "/etablissements/e1",
-        AUJOURDHUI,
+        AUJOURDHUI, AUCUNE_PRUDENCE
       )[0].detail;
     // Événementielle : pas sur l'écran, pas de verbe.
     expect(detail("froid-controle-etancheite-apres-modification")).toBe("Sans rendez-vous");
@@ -234,7 +237,7 @@ describe("lignesAFaire", () => {
         },
       ]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
     expect(ligne.etat).toBe("sansRendezVous");
     expect(ligne.href).toBe("/etablissements/e1/verifications/v-apres-modification");
@@ -253,7 +256,7 @@ describe("lignesAFaire", () => {
         { id: "v-a-venir", datePrevue: "2026-12-01", statut: "a_planifier" },
       ]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
     // Le retard DATÉ d'abord, puis le retard sans date : la même règle que la
     // vue par équipement du calendrier (alignement du 2026-09-14).
@@ -297,7 +300,7 @@ describe("lignesAFaire", () => {
         },
       ]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
     expect(lignes).toEqual([]);
   });
@@ -315,7 +318,7 @@ describe("lignesAFaire", () => {
         },
       ]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
 
     expect(lignes).toEqual([]);
@@ -329,7 +332,7 @@ describe("lignesAFaire", () => {
         { id: "v3", datePrevue: "2028-01-01", statut: "a_planifier" },
       ]),
       "/etablissements/e1",
-      AUJOURDHUI,
+      AUJOURDHUI, AUCUNE_PRUDENCE
     );
 
     expect(lignes.map((l) => l.etat)).toEqual([
@@ -659,6 +662,8 @@ describe("obligationsDeLEquipement", () => {
 function ficheAuMoteur(opts: {
   categorie: string;
   caracteristiques?: Record<string, unknown> | null;
+  /** Le dossier, s'il n'est pas le bureau de six par défaut. */
+  etablissement?: Record<string, unknown>;
 }): FicheEquipement {
   return {
     id: "eq-1",
@@ -681,6 +686,7 @@ function ficheAuMoteur(opts: {
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
+      ...opts.etablissement,
     },
   } as unknown as FicheEquipement;
 }
@@ -738,5 +744,69 @@ describe("obligationsDeclencheesParUnFait", () => {
     expect(
       obligationsDeclencheesParUnFait(scelle).map((d) => d.obligation.id),
     ).not.toContain("froid-controle-etancheite-apres-modification");
+  });
+});
+
+describe("obligationsApplicablesALAppareil — ce que comptent la pastille et le panneau « ? »", () => {
+  // Audit du 2026-10-12 : la fiche comptait les obligations à ligne de suivi
+  // plus les événementielles, et laissait dehors les états permanents — ni
+  // ligne, ni fait déclencheur. Une porte automatique en ERP en annonçait 2
+  // sur 4.
+  const porteEnErp = ficheAuMoteur({
+    categorie: "PORTE_AUTO",
+    etablissement: { estERP: true, typeErp: "N", categorieErp: "N5" },
+  });
+
+  it("compte les états permanents de l'appareil, sans aucune ligne de suivi", () => {
+    const natures = obligationsApplicablesALAppareil(porteEnErp).map(
+      (a) => a.obligation.nature,
+    );
+    expect(natures).toContain("etat_permanent");
+    expect(natures).toContain("echeance_recurrente");
+    // La fiche n'a aucune `Verification` : l'ancienne lecture n'en voyait rien.
+    expect(obligationsDeLEquipement(porteEnErp)).toEqual([]);
+  });
+
+  it("ne prend que ce que porte l'appareil, jamais l'établissement", () => {
+    for (const { obligation } of obligationsApplicablesALAppareil(porteEnErp)) {
+      expect(porteurDe(obligation), obligation.id).toBe("equipement");
+    }
+  });
+
+  it("les événementielles en sont une partie, pas une autre lecture", () => {
+    const eq = ficheAuMoteur({ categorie: "INSTALLATION_FRIGORIFIQUE" });
+    const toutes = obligationsApplicablesALAppareil(eq).map((a) => a.obligation.id);
+    for (const d of obligationsDeclencheesParUnFait(eq)) {
+      expect(toutes).toContain(d.obligation.id);
+    }
+  });
+});
+
+describe("lignesAFaire — une échéance retenue par prudence (D26, 2026-10-12)", () => {
+  // La fiche peignait « en retard de N jours » et comptait dans « N
+  // vérifications en retard » une échéance que le bandeau, le rail et le parc
+  // ne comptent plus (D1 (a)).
+  const prudente = () => true;
+  const eq = fiche([{ id: "v1", datePrevue: "2026-06-01" }]);
+
+  it("se dit « à confirmer », ni en retard ni « depuis N jours »", () => {
+    const [ligne] = lignesAFaire(eq, "/base", AUJOURDHUI, prudente);
+    expect(ligne.etat).toBe("aConfirmer");
+    expect(libelleDelai(ligne, AUJOURDHUI, "ligne")).toBe("à confirmer");
+    expect(chapeauAFaire([ligne], null, AUJOURDHUI)).toMatch(/^Une vérification est à confirmer/);
+  });
+
+  it("sans prudence, la même ligne reste en retard", () => {
+    const [ligne] = lignesAFaire(eq, "/base", AUJOURDHUI, AUCUNE_PRUDENCE);
+    expect(ligne.etat).toBe("enRetard");
+  });
+
+  it("se range après une échéance datée à venir", () => {
+    const deux = fiche([
+      { id: "v1", datePrevue: "2026-06-01", obligationId: "a" },
+      { id: "v2", datePrevue: "2026-12-01", obligationId: "b" },
+    ]);
+    const lignes = lignesAFaire(deux, "/base", AUJOURDHUI, (v) => v.obligationId === "a");
+    expect(lignes.map((l) => l.etat)).toEqual(["lointain", "aConfirmer"]);
   });
 });

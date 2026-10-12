@@ -30,6 +30,7 @@ import {
   getFicheEquipement,
   lignesAFaire,
   lignesHistoire,
+  obligationsApplicablesALAppareil,
   obligationsDeclencheesParUnFait,
   libelleDelai,
   obligationsDeLEquipement,
@@ -53,6 +54,8 @@ import {
   formaterMoisAnneeFr,
 } from "@/lib/dates";
 import { avecProvenance, lireProvenance } from "@/lib/navigation/provenance";
+import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
+import { retenueParPrudence } from "@/lib/calendrier/prudence";
 
 // Le délai d'une ligne se dit en jours plutôt qu'en date (`libelleDelai`,
 // `lib/equipements/fiche`) : un retard d'un jour et un retard de six mois
@@ -86,7 +89,14 @@ export default async function EquipementDetailPage({
   // séparés par un `await` peuvent tomber de part et d'autre de minuit.
   const maintenant = new Date();
 
-  const aFaire = lignesAFaire(eq, base, maintenant);
+  // D26 : la prudence du dossier, la même que le bandeau et le calendrier.
+  const marques = await marquesAConfirmerDuRendu(id);
+  const aFaire = lignesAFaire(
+    eq,
+    base,
+    maintenant,
+    retenueParPrudence(marques.parObligation),
+  );
   // Plus d'horloge : l'historique ne classe plus, il constate. Depuis que
   // l'archivage prend le pas dans `classerVerification`, cette liste teste le
   // FAIT (`estRealisee`) et non l'état du jour.
@@ -102,17 +112,16 @@ export default async function EquipementDetailPage({
   // POURQUOI LE COMPTE DU BANDEAU CHANGE. La pastille « N obligations » se
   // calculait sur les seules obligations qui ont produit une ligne de suivi.
   // Le corps de la fiche en nomme désormais d'autres, et « un en-tête ne doit
-  // jamais contredire ce qu'il coiffe » (charte, § 5). Le dédoublonnage n'a
-  // aujourd'hui rien à retirer — une événementielle ne peut pas avoir de
-  // `Verification` — mais il coûte une ligne et évite le double compte le jour
-  // où une prescription particulière en engendrera une.
-  const idsAvecSuivi = new Set(obligations.map((o) => o.id));
-  const obligationsCitees = [
-    ...obligations,
-    ...declenchees
-      .filter((d) => !idsAvecSuivi.has(d.obligation.id))
-      .map((d) => d.obligation),
-  ];
+  // jamais contredire ce qu'il coiffe » (charte, § 5). ~~Le dédoublonnage n'a
+  // aujourd'hui rien à retirer~~ [2026-10-12, audit : l'union « lignes de
+  // suivi + événementielles » laissait dehors les états permanents de
+  // l'appareil — ni ligne, ni fait déclencheur —, si bien qu'une porte
+  // automatique en ERP annonçait 2 obligations sur 4. La pastille et le
+  // panneau « ? » lisent désormais le MOTEUR, toutes natures, comme la carte
+  // des événementielles dont c'est la source (`obligationsApplicablesALAppareil`).]
+  const obligationsCitees = obligationsApplicablesALAppareil(eq).map(
+    (a) => a.obligation,
+  );
 
   const caracteristiques = caracteristiquesLisibles(
     eq.categorie,
@@ -127,10 +136,12 @@ export default async function EquipementDetailPage({
   // range en tête, le daté d'abord). Le chercher parmi les seules lignes
   // datées faisait annoncer « attendue dans 182 jours » à côté de la
   // pastille « 1 vérification en retard » (relecture du lot C, 2026-09-14).
+  // D26 : une échéance « à confirmer » n'est pas le rendez-vous de tête — sa
+  // date passée y annonçait « attendue depuis N jours ».
   const tete =
     aFaire[0]?.etat === "enRetard"
       ? aFaire[0]
-      : (aFaire.find((l) => l.date !== null) ?? null);
+      : (aFaire.find((l) => l.date !== null && l.etat !== "aConfirmer") ?? null);
   // Une ligne sans rendez-vous n'est pas « à planifier » : si elle est seule
   // ouverte, la tuile le dit (limite 1, 2026-09-15).
   const etatTete: RegistreLigne =

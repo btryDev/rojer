@@ -281,7 +281,9 @@ vi.mock("./transmissions", () => ({
   chargerTransmissions: async () => ({
     domainesSansPrestataire: [],
     obligationsSupposantUnePersonne: [],
+    titresDusNonDeclares: [],
   }),
+  titresDusEnRetard: () => 0,
 }));
 // Les états permanents sont testés chez eux — leur module a son propre
 // passage de matching et ses propres gardes d'appartenance. Ici on ne veut

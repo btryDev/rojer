@@ -11,7 +11,7 @@ const jour = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 const ligne = (
   id: string,
   datePrevue: string,
-  o: { statut?: string; periodicite?: string; archiveLe?: string } = {},
+  o: { statut?: string; periodicite?: string; archiveLe?: string; aConfirmer?: string[] } = {},
 ) => ({
   id,
   statut: o.statut ?? "planifiee",
@@ -20,6 +20,8 @@ const ligne = (
   archiveLe: o.archiveLe ? jour(o.archiveLe) : null,
   graceJusquAu: null,
   libelleObligation: `Obligation ${id}`,
+  prescriptionId: null as string | null,
+  aConfirmer: o.aConfirmer ?? [],
 });
 
 describe("prochaineEcheanceConnue — une définition pour tous les écrans", () => {
@@ -124,5 +126,25 @@ describe("echeancesDuTableauDeBord — la prochaine se choisit avant la coupe à
     expect(
       echeancesDuTableauDeBord(lignes.slice(1), NOW).prochaineEcheance,
     ).toBeNull();
+  });
+});
+
+describe("echeancesDuTableauDeBord — la prudence dans le choix de la carte (D26, 2026-10-12)", () => {
+  // Une échéance passée que seul le silence de la fiche retient passait devant
+  // un vrai rendez-vous, au seul motif de sa date.
+  it("une ligne retenue par prudence n'est pas « la prochaine échéance »", () => {
+    const lignes = [
+      ligne("a-confirmer", "2026-06-01", { aConfirmer: ["La fiche ne dit pas…"] }),
+      ligne("vraie", "2026-10-15"),
+    ];
+    expect(echeancesDuTableauDeBord(lignes, NOW).prochaineEcheance?.id).toBe("vraie");
+  });
+
+  it("prescrite, elle n'est pas prudente et reste la prochaine (ADR-035)", () => {
+    const lignes = [
+      { ...ligne("prescrite", "2026-06-01", { aConfirmer: ["…"] }), prescriptionId: "p" },
+      ligne("vraie", "2026-10-15"),
+    ];
+    expect(echeancesDuTableauDeBord(lignes, NOW).prochaineEcheance?.id).toBe("prescrite");
   });
 });

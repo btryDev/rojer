@@ -74,6 +74,8 @@ const MOT_DE_L_ETAT: Record<RegistreLigne, string> = {
   sansRendezVous: LIBELLE_SANS_RENDEZ_VOUS,
   // Un titre ne l'est jamais non plus — la table est fermée (C64).
   pourInformation: "Pour information",
+  // Ni celui-là : la prudence ne vise que les lignes du calendrier (D26).
+  aConfirmer: "À confirmer",
 };
 
 /**

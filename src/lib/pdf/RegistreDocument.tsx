@@ -1,7 +1,7 @@
 import { MENTION_POUR_INFORMATION } from "@/lib/referentiels/conformite/initiative";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
-import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
+import { phraseFraicheur, type FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
 import { faitAttenteVide } from "./fait-retards";
 import {
   destinatairesRegistre,
@@ -532,6 +532,9 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
     data.parties.slice(0, moitie),
     data.parties.slice(moitie),
   ];
+  // `null` à jour, et quand l'état n'a pas pu être lu (`faitAttenteVide` dit
+  // alors « non déterminé ») : le document n'affirme pas un âge qu'il ignore.
+  const avertissementCalendrier = data.calendrier ? phraseFraicheur(data.calendrier) : null;
 
   return (
     <Document>
@@ -611,6 +614,17 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             renseignée peut l&apos;être avec une réponse fausse, et une fiche
             que l&apos;outil ne recueille pas reste due.
           </Text>
+          {/* L'ÂGE DU CALENDRIER, DÈS QU'IL N'EST PAS À JOUR (audit du
+              2026-10-12). La phrase n'était lue que par `faitAttenteVide`,
+              donc seulement sous un tableau « en attente » vide : un
+              calendrier périmé imprimait ses lignes sans un mot, quand le
+              README du même ZIP l'avertissait en tête. Même phrase, même
+              source (`phraseFraicheur`), avant les fiches et le tableau. */}
+          {avertissementCalendrier && (
+            <Text style={{ marginTop: 6, fontFamily: "Helvetica-Bold" }}>
+              {avertissementCalendrier}
+            </Text>
+          )}
           {/* Sous le décompte, qui dit « compte tenu […] des équipements
               déclarés » : c'est là qu'un inventaire vide change ce qu'on lit.
               Un fait, pas un verdict (`docs/chantiers-ouverts.md` § 15). */}

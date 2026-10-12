@@ -21,9 +21,10 @@ latérale, bandeau, tableau de bord), le score, le dossier PDF (bloc « Retenues
 confirmer »), le registre (écran et PDF : « À confirmer »), la fiche de
 vérification, le parc, les zones, le MCP (`a_confirmer`), et depuis `2ec8e224` les
 barres et l'anneau du tableau de bord. Restent sans la marque,
-nommés : la fiche équipement, les tuiles du calendrier et les compteurs de la vue
-par équipement (`RegistreLigne` n'a pas d'état « à confirmer »), le filtre « en
-retard seulement », le choix de la carte « Prochaine échéance » — D26.]
+nommés : ~~la fiche équipement, les tuiles du calendrier et les compteurs de la vue
+par équipement (`RegistreLigne` n'a pas d'état « à confirmer »),~~ le filtre « en
+retard seulement »~~, le choix de la carte « Prochaine échéance »~~ — D26. [2026-10-12 :
+D26 fait ; seul le filtre reste, voulu.]]
 
 **Constat** (contre-lecture du lot 1). Avec `VERSION_MOTEUR_CALENDRIER` à 5, un
 établissement de travail de moins de cinquante et une personnes, muet sur les
@@ -461,7 +462,17 @@ fondement (R. 4227-28 contre R. 4227-29).
 aucun extincteur ne reçoit rien de R. 4227-29 ; avec elle mais sans (a), il lit la
 dotation deux fois.
 
-## D26 — Les lecteurs de retard que D1 n'atteint pas encore
+## ~~D26 — Les lecteurs de retard que D1 n'atteint pas encore~~ — fait le 2026-10-12, option (a), `lot/polir-calendrier-registre`
+
+[2026-10-12, audit par module : la recommandation (a) est la règle de D1, déjà
+tranchée — appliquée sans nouvelle décision. Un registre `aConfirmer`
+(`RegistreLigne`), posé par `registrePrudent` (`calendrier/prudence.ts`) et lu
+par l'en-tête des mois, la règle de l'année, le mois déplié à l'arrivée, les
+tuiles et le tiroir de la vue par équipement, la fiche d'un appareil
+(`lignesAFaire`) et la fenêtre du board ; la carte « Prochaine échéance » ne
+choisit plus une ligne retenue par prudence (`echeancesDuTableauDeBord`). Le
+filtre « en retard seulement » reste tel quel, comme la recommandation le
+dit. `statutPeintPrudent` est retirée, rendue morte par le registre.]
 
 **Constat** (lot 3). Une ligne retenue par prudence sort des retards et de l'indice,
 mais des lecteurs la peignent encore comme un retard ou peuvent la choisir
