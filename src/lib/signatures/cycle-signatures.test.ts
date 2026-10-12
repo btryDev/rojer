@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Prisma } from "@prisma/client";
 
 /**
  * Le cycle de vie d'un objet signable face à ses signatures.
@@ -37,6 +38,9 @@ function table(lignes: Ligne[]) {
     lignes,
     findUnique: vi.fn(trouver),
     findFirst: vi.fn(trouver),
+    findMany: vi.fn(async ({ where }: { where: Ligne }) =>
+      lignes.filter((l) => correspond(l, where)),
+    ),
     count: vi.fn(async ({ where }: { where: Ligne }) =>
       lignes.filter((l) => correspond(l, where)).length,
     ),
@@ -352,6 +356,7 @@ function lienValide(objetType: string, objetId: string): Ligne {
     expireLe: new Date(Date.now() + 24 * 3_600_000),
     emailDestinataire: "signataire@exemple-externe.fr",
     nomDestinataire: "Jean Dupond",
+    partie: "entreprise_exterieure",
   });
 }
 
@@ -448,9 +453,13 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
       objetId: "pp-1",
       signataireEmail: "signataire@exemple-externe.fr",
       signataireNom: "Jean Dupond",
+      partie: "entreprise_exterieure",
     });
 
-    expect(r.ok).toBe(false);
+    expect(r).toEqual({
+      ok: false,
+      message: "Ce document n'est plus à signer : il a été clos ou annulé.",
+    });
     expect(prismaMock.accessToken.create).not.toHaveBeenCalled();
     expect(mailsEnvoyes).toHaveLength(0);
   });
@@ -504,5 +513,142 @@ describe("renvoi du code, envoi hors service (C38, 2026-09-26)", () => {
     expect(r.status).toBe("success");
     expect(lien.otpHash).not.toBe(avant);
     expect(mailsEnvoyes).toHaveLength(1);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// Défaut 3 (audit du 2026-10-12, constat 7) — la partie d'une signature était
+// devinée par l'adresse. Elle est désormais enregistrée : choisie par le
+// demandeur sur le jeton, recopiée sur la signature, forcée à l'entreprise
+// utilisatrice pour le compte connecté.
+// ─────────────────────────────────────────────────────────────────────────
+
+/** L'unicité `(objetType, objetId, partie)` de la base, que le faux client
+ *  n'a pas d'office : un doublon non nul lève la P2002 de Prisma. */
+function unicitePartie() {
+  const creer = prismaMock.signature.create.getMockImplementation()!;
+  prismaMock.signature.create.mockImplementation(async (args: { data: Ligne }) => {
+    const { objetType, objetId, partie } = args.data;
+    if (
+      partie != null &&
+      prismaMock.signature.lignes.some(
+        (s) => s.objetType === objetType && s.objetId === objetId && s.partie === partie,
+      )
+    ) {
+      throw new Prisma.PrismaClientKnownRequestError("Unique constraint", {
+        code: "P2002",
+        clientVersion: "test",
+      });
+    }
+    return creer(args);
+  });
+}
+
+const DEMANDE_PLAN = {
+  etablissementId: "etab-a-moi",
+  objetType: "plan_prevention" as const,
+  objetId: "pp-1",
+  signataireEmail: "chef@exterieure.fr",
+  signataireNom: "Jean Dupond",
+};
+
+describe("garantie 3 — la partie qui signe est enregistrée, jamais devinée", () => {
+  it("une demande de signature d'un plan sans partie est refusée, aucun lien ne part", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+
+    const r = await demanderSignature(DEMANDE_PLAN);
+
+    expect(r).toEqual({ ok: false, message: "Partie signataire invalide pour ce document." });
+    expect(prismaMock.accessToken.create).not.toHaveBeenCalled();
+  });
+
+  it("le lien émis porte la partie choisie par le demandeur", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(prismaMock.accessToken.lignes[0].partie).toBe("entreprise_exterieure");
+  });
+
+  it("aucun lien ne part vers une partie qui a déjà signé", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.signature.lignes.push({
+      ...signature("plan_prevention", "pp-1", "etab-a-moi"),
+      partie: "entreprise_exterieure",
+    });
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: false, message: "Cette partie a déjà signé ce document." });
+    expect(prismaMock.accessToken.create).not.toHaveBeenCalled();
+  });
+
+  it("la signature reprend la partie du JETON, quelle que soit l'adresse du signataire", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    // Le lien de l'entreprise utilisatrice part à une adresse quelconque : la
+    // fiche attribuait la signature selon que cette adresse était ou non
+    // celle du chef de l'entreprise extérieure.
+    prismaMock.accessToken.lignes.push({
+      ...lienValide("plan_prevention", "pp-1"),
+      partie: "entreprise_utilisatrice",
+    });
+
+    expect((await signer()).status).toBe("success");
+    expect(prismaMock.signature.lignes[0].partie).toBe("entreprise_utilisatrice");
+  });
+
+  it("un lien sans partie sur un plan ne signe pas, et ne consomme aucun essai", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.accessToken.lignes.push({ ...lienValide("plan_prevention", "pp-1"), partie: null });
+
+    const r = await signer();
+
+    expect(r.status).toBe("error");
+    expect(prismaMock.signature.create).not.toHaveBeenCalled();
+    expect(prismaMock.accessToken.lignes[0].otpEssaisRestants).toBe(3);
+  });
+
+  it("la même partie ne signe pas deux fois : le second lien est refusé", async () => {
+    unicitePartie();
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.signature.lignes.push({
+      ...signature("plan_prevention", "pp-1", "etab-a-moi"),
+      partie: "entreprise_exterieure",
+    });
+    prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-1"));
+
+    const r = await signer();
+
+    expect(r).toEqual({ status: "error", message: "Cette partie a déjà signé ce document." });
+    expect(prismaMock.signature.lignes).toHaveLength(1);
+  });
+
+  it("le compte connecté signe toujours au nom de l'entreprise utilisatrice", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+
+    const r = await signerEnCompteConnecte({
+      etablissementId: "etab-a-moi",
+      objetType: "plan_prevention",
+      objetId: "pp-1",
+    });
+
+    expect(r.ok).toBe(true);
+    expect(prismaMock.signature.lignes[0].partie).toBe("entreprise_utilisatrice");
+  });
+
+  it("le compte connecté ne signe pas deux fois", async () => {
+    unicitePartie();
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const signerMoi = () =>
+      signerEnCompteConnecte({
+        etablissementId: "etab-a-moi",
+        objetType: "plan_prevention",
+        objetId: "pp-1",
+      });
+
+    expect((await signerMoi()).ok).toBe(true);
+    expect(await signerMoi()).toEqual({ ok: false, raison: "deja_signee" });
+    expect(prismaMock.signature.lignes).toHaveLength(1);
   });
 });

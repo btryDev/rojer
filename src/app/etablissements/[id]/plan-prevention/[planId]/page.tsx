@@ -9,11 +9,15 @@ import {
   HeroFiche,
   LegalBadge,
   PastilleFiche,
-  SignatureBlock,
   TitreSection,
   type FaitFiche,
 } from "@/components/ui-kit";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
+import {
+  SceauSignature,
+  SignaturesSansPartie,
+} from "@/components/signatures/SignaturesParties";
+import { repartirSignatures } from "@/lib/signatures/parties";
 import { InformationInspectionForm } from "@/components/plan-prevention/InformationInspectionForm";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import {
@@ -108,12 +112,13 @@ export default async function PlanPreventionDetailPage({
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
   // serveur la refuserait de toute façon (`etat-signable.ts`).
   const planSignable = statutPlanSignable(plan.statut);
-  const signatureEU = plan.signatures.find(
-    (s) => s.signataireEmail !== plan.efChefEmail,
-  );
-  const signatureEF = plan.signatures.find(
-    (s) => s.signataireEmail === plan.efChefEmail,
-  );
+  // La partie est un fait enregistré, pas une déduction de l'adresse
+  // (`repartirSignatures`, 2026-10-12) : la fiche comparait l'adresse du
+  // signataire à `efChefEmail`, et toute autre adresse valait « entreprise
+  // utilisatrice ».
+  const signatures = repartirSignatures("plan_prevention", plan.signatures);
+  const signatureEU = signatures.parPartie.entreprise_utilisatrice;
+  const signatureEF = signatures.parPartie.entreprise_exterieure;
 
   const aujourdhui = new Date();
   // Annulé : ardoise, comme la tuile « Annulé » de la liste (voir la fiche du
@@ -506,18 +511,7 @@ export default async function PlanPreventionDetailPage({
             Entreprise utilisatrice · {plan.euChefNom}
           </p>
           {signatureEU ? (
-            <SignatureBlock
-              charte="board"
-              signataireNom={signatureEU.signataireNom}
-              signataireRole={signatureEU.signataireRole}
-              signataireEmail={signatureEU.signataireEmail}
-              horodatageIso={signatureEU.horodatageIso}
-              methode={signatureEU.methode}
-              hashDocument={signatureEU.hashDocument}
-              nomDocument={signatureEU.nomDocument}
-              signatureId={signatureEU.id}
-              verifierHref={`/verifier/${signatureEU.id}`}
-            />
+            <SceauSignature s={signatureEU} />
           ) : (
             <BlocCreux>
               {planSignable ? (
@@ -526,6 +520,7 @@ export default async function PlanPreventionDetailPage({
                   objetType="plan_prevention"
                   objetId={plan.id}
                   nomDefaut={plan.euChefNom}
+                  partie="entreprise_utilisatrice"
                 />
               ) : (
                 <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -541,18 +536,7 @@ export default async function PlanPreventionDetailPage({
             Entreprise extérieure · {plan.efChefNom}
           </p>
           {signatureEF ? (
-            <SignatureBlock
-              charte="board"
-              signataireNom={signatureEF.signataireNom}
-              signataireRole={signatureEF.signataireRole}
-              signataireEmail={signatureEF.signataireEmail}
-              horodatageIso={signatureEF.horodatageIso}
-              methode={signatureEF.methode}
-              hashDocument={signatureEF.hashDocument}
-              nomDocument={signatureEF.nomDocument}
-              signatureId={signatureEF.id}
-              verifierHref={`/verifier/${signatureEF.id}`}
-            />
+            <SceauSignature s={signatureEF} />
           ) : (
             <BlocCreux>
               {planSignable ? (
@@ -562,6 +546,7 @@ export default async function PlanPreventionDetailPage({
                   objetId={plan.id}
                   emailDefaut={plan.efChefEmail}
                   nomDefaut={plan.efChefNom}
+                  partie="entreprise_exterieure"
                 />
               ) : (
                 <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -572,6 +557,8 @@ export default async function PlanPreventionDetailPage({
           )}
         </div>
       </div>
+
+      <SignaturesSansPartie signatures={signatures.sansPartie} />
 
       <div className="pt-2">
         <LegalBadge

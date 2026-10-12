@@ -11,11 +11,15 @@ import {
   HeroFiche,
   LegalBadge,
   PastilleFiche,
-  SignatureBlock,
   TitreSection,
   type FaitFiche,
 } from "@/components/ui-kit";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
+import {
+  SceauSignature,
+  SignaturesSansPartie,
+} from "@/components/signatures/SignaturesParties";
+import { partiesAttendues, repartirSignatures } from "@/lib/signatures/parties";
 import { statutPermisSignable } from "@/lib/signatures/etat-signable";
 import {
   BoutonDemarrer,
@@ -103,13 +107,16 @@ export default async function PermisFeuDetailPage({
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
   // serveur la refuserait de toute façon (`etat-signable.ts`).
   const permisSignable = statutPermisSignable(permis.statut);
-  const signatureDonneur = permis.signatures.find(
-    (s) => s.signataireEmail !== permis.prestataireEmail,
-  );
-  const signaturePrestataire = permis.signatures.find(
-    (s) => s.signataireEmail === permis.prestataireEmail,
-  );
-  const manquantes = 2 - permis.signatures.length;
+  // La partie est un fait enregistré, pas une déduction de l'adresse
+  // (`repartirSignatures`, 2026-10-12). La fiche comparait l'adresse du
+  // signataire à `prestataireEmail` et comptait `2 - signatures.length` : deux
+  // signatures du prestataire rendaient « Permis co-signé et valide » au-dessus
+  // d'un bloc donneur d'ordre vide.
+  const signatures = repartirSignatures("permis_feu", permis.signatures);
+  const signatureDonneur = signatures.parPartie.entreprise_utilisatrice;
+  const signaturePrestataire = signatures.parPartie.entreprise_exterieure;
+  const attendues = partiesAttendues("permis_feu").length;
+  const manquantes = signatures.manquantes.length;
 
   const aujourdhui = new Date();
   // La tuile-date porte la date d'ouverture des travaux : c'est le
@@ -143,7 +150,7 @@ export default async function PermisFeuDetailPage({
     },
     {
       cle: "Signatures",
-      valeur: `${permis.signatures.length} sur 2`,
+      valeur: `${attendues - manquantes} sur ${attendues}`,
       alerte: manquantes > 0,
     },
   ];
@@ -319,7 +326,7 @@ export default async function PermisFeuDetailPage({
           <CarteFiche titre="Cycle de vie">
             <div className="flex flex-wrap items-center gap-3">
               {permis.statut === "attente_signatures" &&
-                permis.signatures.length >= 2 && (
+                manquantes === 0 && (
                   <BoutonDemarrer permisFeuId={permis.id} />
                 )}
               {permis.statut === "valide" && (
@@ -361,18 +368,7 @@ export default async function PermisFeuDetailPage({
             Donneur d&apos;ordre · {permis.donneurOrdreNom}
           </p>
           {signatureDonneur ? (
-            <SignatureBlock
-              charte="board"
-              signataireNom={signatureDonneur.signataireNom}
-              signataireRole={signatureDonneur.signataireRole}
-              signataireEmail={signatureDonneur.signataireEmail}
-              horodatageIso={signatureDonneur.horodatageIso}
-              methode={signatureDonneur.methode}
-              hashDocument={signatureDonneur.hashDocument}
-              nomDocument={signatureDonneur.nomDocument}
-              signatureId={signatureDonneur.id}
-              verifierHref={`/verifier/${signatureDonneur.id}`}
-            />
+            <SceauSignature s={signatureDonneur} />
           ) : (
             <BlocCreux>
               <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -386,6 +382,7 @@ export default async function PermisFeuDetailPage({
                     objetId={permis.id}
                     emailDefaut={undefined}
                     nomDefaut={permis.donneurOrdreNom}
+                    partie="entreprise_utilisatrice"
                   />
                 ) : (
                   <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -402,18 +399,7 @@ export default async function PermisFeuDetailPage({
             Prestataire · {permis.prestataireContact}
           </p>
           {signaturePrestataire ? (
-            <SignatureBlock
-              charte="board"
-              signataireNom={signaturePrestataire.signataireNom}
-              signataireRole={signaturePrestataire.signataireRole}
-              signataireEmail={signaturePrestataire.signataireEmail}
-              horodatageIso={signaturePrestataire.horodatageIso}
-              methode={signaturePrestataire.methode}
-              hashDocument={signaturePrestataire.hashDocument}
-              nomDocument={signaturePrestataire.nomDocument}
-              signatureId={signaturePrestataire.id}
-              verifierHref={`/verifier/${signaturePrestataire.id}`}
-            />
+            <SceauSignature s={signaturePrestataire} />
           ) : (
             <BlocCreux>
               <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -431,6 +417,7 @@ export default async function PermisFeuDetailPage({
                     objetId={permis.id}
                     emailDefaut={permis.prestataireEmail}
                     nomDefaut={permis.prestataireContact}
+                    partie="entreprise_exterieure"
                   />
                 ) : (
                   <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
@@ -442,6 +429,8 @@ export default async function PermisFeuDetailPage({
           )}
         </div>
       </div>
+
+      <SignaturesSansPartie signatures={signatures.sansPartie} />
 
       <div className="pt-2">
         {/* APSAD R43 partageait cette pastille avec un article du Code du

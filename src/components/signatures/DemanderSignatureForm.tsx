@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { demanderSignature } from "@/lib/signatures/actions";
-import type { ObjetSignable } from "@prisma/client";
+import type { ObjetSignable, PartieSignataire } from "@prisma/client";
 
 /**
  * Déclencheur côté admin : demande à un tiers (prestataire / contrôleur /
@@ -41,12 +41,16 @@ export function DemanderSignatureForm({
   objetId,
   emailDefaut,
   nomDefaut,
+  partie,
 }: {
   etablissementId: string;
   objetType: ObjetSignable;
   objetId: string;
   emailDefaut?: string;
   nomDefaut?: string;
+  /** La partie au nom de laquelle le destinataire signera : c'est le bloc où
+   *  le formulaire est posé qui la décide, pas l'adresse saisie (2026-10-12). */
+  partie?: PartieSignataire;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -75,6 +79,7 @@ export function DemanderSignatureForm({
           signataireEmail: email,
           signataireNom: nom,
           signataireRole: role || undefined,
+          partie,
         });
         setResult(r.ok ? { ok: true } : { ok: false, message: r.message });
       } catch (e) {

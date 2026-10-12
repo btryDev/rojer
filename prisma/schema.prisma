@@ -1126,6 +1126,17 @@ model Signature {
   signataireRole  String?
   userId          String? @db.Uuid // non-null si compte_connecte
 
+  // La partie AU NOM DE LAQUELLE la signature est donnée (audit du
+  // 2026-10-12). Les fiches attribuaient une signature à une partie en
+  // comparant son adresse à celle du chef de l'entreprise extérieure : deux
+  // signatures de la même personne, ou un lien envoyé à une autre adresse,
+  // rendaient « co-signé » avec le bloc du donneur d'ordre vide. La partie
+  // vient du jeton (choisie par le demandeur, jamais par le signataire) ou du
+  // compte connecté (toujours l'entreprise utilisatrice). Nullable : le
+  // rapport de vérification ne la renseigne pas, et une signature d'avant le
+  // 2026-10-12 n'en a pas — elle n'est attribuée à personne plutôt qu'à tort.
+  partie PartieSignataire?
+
   hashDocument String // SHA-256 hex (64 car.)
   nomDocument  String?
 
@@ -1138,8 +1149,21 @@ model Signature {
 
   createdAt DateTime @default(now())
 
+  // Une partie signe une fois : deux liens envoyés à la même partie ne
+  // produisent pas deux signatures, même posés au même instant. Les `NULL` ne
+  // se comparent pas — le rapport de vérification et l'historique n'y sont
+  // pas soumis.
+  @@unique([objetType, objetId, partie])
   @@index([etablissementId, objetType, objetId])
   @@index([userId])
+}
+
+/// Les deux parties d'un acte co-signé, dans les mots des fiches du plan de
+/// prévention. Pour le permis de feu, le donneur d'ordre (le site) signe en
+/// `entreprise_utilisatrice`, le prestataire en `entreprise_exterieure`.
+enum PartieSignataire {
+  entreprise_utilisatrice
+  entreprise_exterieure
 }
 
 enum ObjetSignable {
@@ -1176,6 +1200,9 @@ model AccessToken {
 
   emailDestinataire String
   nomDestinataire   String?
+  // Pour un jeton de signature d'un plan ou d'un permis : la partie que le
+  // demandeur invite à signer. Recopiée sur la `Signature` (2026-10-12).
+  partie            PartieSignataire?
 
   otpHash           String?
   otpEssaisRestants Int       @default(3)
