@@ -34,7 +34,6 @@ function etabBureau(over: Partial<EtablissementMatching> = {}): EtablissementMat
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     manutentionManuelle: null,
     travailSurEcran: null,
     operationsElectriques: null,
@@ -63,7 +62,6 @@ function etabRestoErpCat5(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     manutentionManuelle: null,
     travailSurEcran: null,
     operationsElectriques: null,
@@ -90,7 +88,6 @@ function etabErpCat3(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     manutentionManuelle: null,
     travailSurEcran: null,
     operationsElectriques: null,
@@ -116,7 +113,6 @@ function etabIgh(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     manutentionManuelle: null,
     travailSurEcran: null,
     operationsElectriques: null,
@@ -142,7 +138,6 @@ function etabHabitationPure(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     manutentionManuelle: null,
     travailSurEcran: null,
     operationsElectriques: null,
@@ -869,7 +864,6 @@ describe("moteur matching — cohérence avec le référentiel", () => {
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
-      chiffonsImpregnes: null,
       manutentionManuelle: null,
       travailSurEcran: null,
       operationsElectriques: null,
@@ -1213,6 +1207,14 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // [2026-10-08, C66 : APPAREIL_CUISSON_ERP SORT DE CETTE LISTE —
         // `cuisson-travail-appareils-entretien-verification`, défaut annuel de
         // R. 4224-17, demandé par le préventeur (« idem code du travail »).]
+        // EPI_RESPIRATOIRE et EPI_GILET_SAUVETAGE, ajoutées le 2026-10-08
+        // (ADR-042) : leur vérification de l'arrêté du 19 mars 1993 est au
+        // NIVEAU AUDIT — légale, au référentiel, hors du quotidien. Ce n'est
+        // pas un trou de typologie : l'appareil porte le motif `niveau_audit`
+        // (`equipements/hors-referentiel.ts`), jamais « aucune obligation », et
+        // la page « Ce que Rojer ne couvre pas » nomme l'obligation.
+        "EPI_GILET_SAUVETAGE",
+        "EPI_RESPIRATOIRE",
         "HOTTE_PRO",
         // RIA A QUITTÉ CETTE LISTE LE 2026-09-02, et le trou qu'elle notait
         // est comblé, pas contourné. La note disait : « la seule obligation
@@ -1281,6 +1283,14 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // `epi-maintien-etat-conformite` vise `EPI` (R. 4322-1, rythme retenu
         // par défaut, ADR-039). La scission du 2026-09-04 tient : la
         // vérification de l'arrêté ne vise que les trois catégories nommées.]
+        // EPI_RESPIRATOIRE et EPI_GILET_SAUVETAGE, ajoutées le 2026-10-08
+        // (ADR-042) : leur vérification de l'arrêté du 19 mars 1993 est au
+        // NIVEAU AUDIT — légale, au référentiel, hors du quotidien. Ce n'est
+        // pas un trou de typologie : l'appareil porte le motif `niveau_audit`
+        // (`equipements/hors-referentiel.ts`), jamais « aucune obligation », et
+        // la page « Ce que Rojer ne couvre pas » nomme l'obligation.
+        "EPI_GILET_SAUVETAGE",
+        "EPI_RESPIRATOIRE",
       ],
     },
   ];
@@ -1337,7 +1347,6 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     manutentionManuelle: null,
     travailSurEcran: null,
     operationsElectriques: null,

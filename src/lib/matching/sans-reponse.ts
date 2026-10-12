@@ -10,8 +10,6 @@
 import type { QuestionSansReponse } from "./types";
 
 export const PHRASE_SANS_REPONSE: Record<QuestionSansReponse, string> = {
-  chiffons_impregnes:
-    "La fiche de l'établissement ne dit pas si des chiffons, cotons ou papiers imprégnés y sont utilisés : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   manutention_manuelle:
     "Rojer ne sait pas si des travailleurs portent, poussent ou tirent des charges à la main : cette ligne s'affiche tant que la réponse n'est pas « non ».",
   travail_ecran:

@@ -69,7 +69,6 @@ describe("catégorie et type d'ERP : l'absence écarte parce que la base l'inter
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
-      chiffonsImpregnes: null,
       manutentionManuelle: null,
       travailSurEcran: null,
       operationsElectriques: null,

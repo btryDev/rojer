@@ -41,6 +41,7 @@ import { obligationsCoActivite } from "./co-activite";
 import { obligationsSignalisation } from "./signalisation";
 import { obligationsCompactageDechets } from "./compactage-dechets";
 import { obligationsEclairage } from "./eclairage";
+import { estNiveauAudit } from "./niveau-audit";
 
 export {
   obligationsElectricite,
@@ -361,7 +362,19 @@ export const obligationsConformite: Obligation[] = [
 // (operationsElectriques), `epi-etablissement-consigne-utilisation`
 // (epiPresents). Il entre à l'empreinte par `typologies`. Aucune obligation
 // n'entre ni ne sort. Compte : 172 + 0 − 0 = 172.
-export const REFERENTIEL_VERSION = "2026-10-08.3";
+// `2026-10-08.4` (ADR-042, niveau audit, décision de la propriétaire du
+// 2026-10-08 ; `.3` est pris par `lot/formations-faits-etablissement`,
+// ADR-041, et n'est pas réemployé ici). Le champ `niveau` entre à
+// l'empreinte. `incendie-travail-chiffons-impregnes-recipients-clos`
+// (R. 4227-26) passe au niveau audit. `epi-verification-generale-periodique`
+// se scinde : l'antichute garde l'identifiant ; entrent
+// `epi-verification-generale-periodique-respiratoire` et
+// `epi-verification-generale-periodique-gilet-sauvetage`, au niveau audit,
+// `succedeA` vers l'ancien. 172 + 2 − 0 = 174, dont 3 au niveau audit.
+// Même version, non servie, seconde décision du même jour : la question des
+// chiffons est retirée, la ligne perd sa condition (`{ travail: true }`).
+// 174 + 0 − 0 = 174 ; 171 suivies au quotidien (`nombreObligationsSuivies`).
+export const REFERENTIEL_VERSION = "2026-10-08.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
@@ -648,6 +661,11 @@ export function empreinteReferentiel(
         ...(o.porteur === "etablissement" && o.siEquipementDeclare
           ? [`si:${canonique(o.siEquipementDeclare)}`]
           : []),
+        // Le niveau audit (ADR-042) décide de l'EXISTENCE de toutes les
+        // lignes de l'obligation : il entre, en segment ajouté et seulement
+        // quand il est présent. Le lever la réactive — et fait bouger
+        // l'empreinte, donc réconcilier tous les calendriers.
+        ...(o.niveau ? [`niveau:${o.niveau}`] : []),
         ...(o.rythmeRetenu
           ? [
               `rythme:${o.rythmeRetenu.periodicite}:${o.rythmeRetenu.motif}:${
@@ -693,3 +711,53 @@ export function obligationsParDomaine(
   return obligationsConformite.filter((o) => o.domaine === domaine);
 }
 export * from "./rythme-retenu";
+export * from "./niveau-audit";
+
+/**
+ * LE COMPTE AFFICHÉ — décision de la propriétaire du 2026-10-08 : « dans nos
+ * documents vitrine on reste sur 171, mais dans l'app il faudra soustraire les
+ * obligations dites d'audit ».
+ *
+ * Deux comptes coexistent, et ils ne disent pas la même chose :
+ * - `obligationsConformite.length` est le compte du RÉFÉRENTIEL — ce que les
+ *   documents internes citent (« 174 dont 3 au niveau audit », ADR-042 § 7),
+ *   ce que hache l'empreinte, ce que la veille relit ;
+ * - `nombreObligationsSuivies()` est le compte SUIVI AU QUOTIDIEN — le
+ *   référentiel moins le niveau audit. C'est le seul chiffre montré au public
+ *   et dans l'app : une obligation que Rojer ne suit pas ne se compte pas parmi
+ *   celles qu'il suit.
+ *
+ * Calculé, jamais écrit : la page publique le reçoit d'ici
+ * (`chiffres-publics.test.ts`). La lecture du niveau passe par
+ * `estNiveauAudit`, comme partout.
+ */
+export function obligationsSuivies(): Obligation[] {
+  return obligationsConformite.filter((o) => !estNiveauAudit(o));
+}
+
+/** Le nombre d'obligations suivies au quotidien : total − niveau audit. */
+export function nombreObligationsSuivies(): number {
+  return obligationsSuivies().length;
+}
+
+/**
+ * Le nombre de domaines où Rojer suit au moins une obligation. Mesuré sur les
+ * mêmes obligations que le compte qu'il accompagne : un domaine dont toutes les
+ * lignes passeraient au niveau audit cesserait d'être annoncé.
+ */
+export function nombreDomainesSuivis(): number {
+  return new Set(obligationsSuivies().map((o) => o.domaine)).size;
+}
+
+/** Les deux chiffres que la page publique annonce, calculés ensemble. */
+export type ChiffresReferentielSuivi = {
+  obligations: number;
+  domaines: number;
+};
+
+export function chiffresReferentielSuivi(): ChiffresReferentielSuivi {
+  return {
+    obligations: nombreObligationsSuivies(),
+    domaines: nombreDomainesSuivis(),
+  };
+}

@@ -115,7 +115,6 @@ function poserEtablissement(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: null,
     referentielVersionCalendrier: null,
     prescriptionsParticulieres: [],
     // LA LISTE COMPLÈTE, actifs ET inactifs. C'est au code sous test de

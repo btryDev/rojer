@@ -5229,6 +5229,37 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     réalisateur : il agrège par domaine, et l'organisme agréé de la visite
     n'y est simplement plus apporté.
 
+### C65 · 2026-10-08 — Faits d'activité de l'établissement, lus par le moteur (ADR-041)
+
+- **Quand · par quoi** : 2026-10-08, branche `lot/formations-faits-etablissement`
+  (base `cb68c367`). Décisions de la propriétaire des 2026-10-07 et
+  2026-10-08 : « tout ce qui peut engendrer une formation » se répond depuis
+  Équipe, sans remplir le DUERP, et s'y retrouve rempli ; « déclenché par le DU
+  et dans la législation → répercuté ». Livrée APRÈS C66 (rebase sur `f2ea34ac`) : référentiel `2026-10-08.2` →
+  `2026-10-08.3`, `172-ea7623eb617ce82` → `172-f59cb53a644d6458`, relevé en
+  appelant `empreinteReferentiel()` (la `.1` de la branche, sur `.5`, n'a
+  jamais été servie).
+- **Relu sur l'API Légifrance (sandbox)** : R. 4541-2, R. 4541-8, R. 4542-1,
+  R. 4542-16, R. 4412-38, R. 4412-87, R. 4544-9, R. 4544-10, R. 4323-55,
+  R. 4323-56, R. 4624-10, R. 4624-22, R. 4624-23, R. 4141-20, R. 4433-2,
+  R. 4323-106 — 16 OK (`legifrance:verifier`, citations et versions
+  identiques au corpus). R. 4624-23 lu en entier (`getArticleWithIdAndNum`,
+  LEGIARTI000053786012, en vigueur) : le I, 3° range parmi les postes à risques
+  particuliers ceux qui exposent « aux agents cancérogènes, mutagènes ou
+  toxiques pour la reproduction mentionnés à l'article R. 4412-60 » — fondement
+  du suivi individuel renforcé proposé sur une exposition CMR.
+- **Ce qui change** : le critère `activite` conditionne cinq obligations
+  existantes (gestes et postures, formation écran, habilitation du personnel,
+  carnet de prescriptions, consigne EPI). Aucune obligation n'entre ni ne
+  sort : 172 + 0 − 0 = 172. Moteur de calendrier recopié SANS incrément : les
+  cinq sont à `periodicite: "autre"` sans rythme retenu, le générateur n'en
+  produit aucune ligne.
+- **Ce qui n'est pas fait** : la formation et les FDS du risque chimique
+  restent déclenchées par l'équipement de stockage (C64) — R. 4412-38 vise la
+  présence d'agents chimiques ; reporté, à instruire avec le préventeur.
+  R. 4323-106 (formation au port des EPI) reste `non_couvert` : l'encodage
+  est clos.
+
 ### C66 · 2026-10-08 — Dernières corrections du préventeur : appareils de cuisson hors ERP, maintenance approfondie retirée, habilitation à 3 ans
 
 [Numéro : C65 est libre sur `main` mais pris par `lot/formations-faits-etablissement`
@@ -5383,11 +5414,14 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     vous manuel / automatique / semi-automatique au-delà de ces
     distinctions ? ».
   - **Écarts ouverts — questions au préventeur sans réponse depuis le
-    30/09** : p. 35, « a supprimer » — quelle ligne (la note est entre
+    30/09** : ~~p. 35, « a supprimer » — quelle ligne (la note est entre
     « Instructions d'évacuation » et « Chiffons, cotons et papiers
-    imprégnés », R. 4227-26, en vigueur et sans seuil) ? ; p. 24, 29, 30,
+    imprégnés », R. 4227-26, en vigueur et sans seuil) ?~~ [2026-10-08, C67 :
+    tranché par la propriétaire — les chiffons, passés au niveau audit,
+    ADR-042] ; p. 24, 29, 30,
     « voir les limites » / « limite rojer » (installation frigorifique,
-    protection respiratoire, gilet gonflable) — sortir ces catégories du
+    ~~protection respiratoire, gilet gonflable~~ [2026-10-08, C67 : au niveau
+    audit, ADR-042 — reste l'installation frigorifique]) — sortir ces catégories du
     périmètre ou revoir leur bornage ? ; PO 1 § 3 — son renvoi applique-t-il
     AS 9 aux hôtels de 5ᵉ catégorie (lignes retirées en C64 sur sa note
     « AS9 applicable qu'au ERP N1 à N4 ») ? ; la formation au risque
@@ -5398,6 +5432,123 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   - **Comptes de la passe** : 171 + 1 − 0 = 172 (88 / 70 / 14) ; empreinte
     `172-ea7623eb617ce82` ; moteur inchangé (`ff1c3cda346da10d`, aucun module
     relevé touché).
+
+### C67 · 2026-10-08 — Niveau audit : chiffons, protection respiratoire et gilets hors du quotidien (ADR-042)
+
+[Numéro : C65 est pris par `lot/formations-faits-etablissement` (ADR-041) et
+C66 est sur `main` ; ce lot prend C67. Version : `2026-10-08.2` est servie,
+`2026-10-08.3` est prise par la même branche après son rebase (`b17ee602`) ;
+ce lot sert **`2026-10-08.4`**.]
+
+- **Quand · par quoi** : 2026-10-08, branche `lot/niveau-audit` (base
+  `origin/main` `befe3141`). Décision de la propriétaire du même jour, sur la
+  remarque du préventeur (p. 35, « à supprimer » ; il « ne veut pas qu'on
+  tombe dans l'audit ») : « on garde dans le référentiel mais avec une
+  mention audit et qu'il ne soit plus actif dans l'app ». **Aucun texte
+  rouvert** : R. 4227-26 (C45) et l'arrêté du 19 mars 1993 (2026-09-04) sont
+  au corpus, lus en première main ; rien n'est relu, rien n'est changé à
+  leur lecture.
+- **Ce qui est appliqué** : champ `niveau: "audit"` (ADR-042), porte unique
+  au moteur. `incendie-travail-chiffons-impregnes-recipients-clos` au niveau
+  audit. `epi-verification-generale-periodique` scindée : l'antichute garde
+  l'identifiant et reste servie ; entrent
+  `epi-verification-generale-periodique-respiratoire` et
+  `-gilet-sauvetage`, au niveau audit, `succedeA` vers l'ancien ; le corpus
+  (art. 1er de l'arrêté, `R. 4323-100`) les nomme. Empreinte
+  `172-ea7623eb617ce82` → `174-5f46dea89bed4c54`, en appelant
+  `empreinteReferentiel()`. **172 + 2 − 0 = 174**, dont 3 au niveau audit —
+  90 équipement, 70 établissement, 14 salarié (`porteurDe`, en appelant).
+  Relevé du moteur `ff1c3cda346da10d` → ~~`3e1e00bd9148bbbb`~~ `df2b06b8dd0dd531`, recopié sans
+  incrément (sans le champ, même sortie).
+- **Effet en base, à la première passe** : les lignes d'un appareil
+  respiratoire ou d'un gilet sous l'ancien identifiant, et la ligne des
+  chiffons, sont archivées si elles portent une trace, supprimées sinon
+  (`calendrier/niveau-audit.test.ts`, passe entière sur le faux client). Les
+  déclarations d'état permanent des chiffons restent en base, sans ligne. La
+  relance « à confirmer » de la question des chiffons disparaît. Comptage en
+  production non fait (lecture seule à demander à la propriétaire).
+- **Gardes, éprouvées en les cassant** : porte du moteur retirée → 5 rouges
+  (moteur, passe, écran en place) ; porte des titres retirée → 1 ; rubrique
+  vidée → 2 ; marqueur retiré des chiffons → 5 ; segment d'empreinte retiré →
+  1 ; `surfacesDe` sans le niveau → 1 ; filtre du catalogue retiré avec un
+  titre marqué → 1. **La garde (c) passait au vert sur un fondement vidé**
+  (le gilet retiré des renvois de l'art. 1er : `R. 4323-100`, article de
+  contexte, le nommait encore) ; resserrée sur le FONDEMENT, elle rougit.
+- **En suspens** : ~~le chiffre public de la page d'accueil passe de 172 à 174
+  (compte du référentiel, lié à la page par `chiffres-publics.test.ts`, qui
+  interdit de le laisser faux) ; il inclut les trois obligations audit — les
+  distinguer à l'écran public est une décision de la propriétaire. La
+  question `chiffonsImpregnes` reste posée et ne décide plus d'aucune ligne.~~
+  [2026-10-08 : les deux tranchés, voir ci-dessous.]
+  Relevé du moteur repris : `df2b06b8dd0dd531` (imports directs de
+  `estNiveauAudit`).
+- **Deux décisions de la propriétaire, le même jour, après le lot** :
+  1. *Compteurs* — « dans nos documents vitrine on reste sur 171, mais dans
+     l'app il faudra soustraire les obligations dites d'audit ». Le compte
+     du référentiel reste **174, dont 3 au niveau audit** ; **171 suivies au
+     quotidien, chiffre affiché au public et dans l'app**.
+     `nombreObligationsSuivies()` (total − `estNiveauAudit`, à côté du
+     réexport dans `referentiels/conformite/index.ts`) et
+     `chiffresReferentielSuivi()` ; la page d'accueil calcule côté serveur et
+     passe en props à `Cadran` (client : n'importe pas le référentiel) et à
+     `Etapes`. `chiffres-publics.test.ts` rend les deux composants et compare
+     au compte recalculé à la main. Grille et dossier de relecture : « 174
+     obligations, dont 3 au niveau audit (171 suivies…) ». Aucune autre
+     surface de l'app n'affiche un compte calculé sur le référentiel brut
+     (balayage : composants, guide, MCP, PDF, onboarding) — les comptes par
+     dossier passent déjà par la porte du moteur.
+  2. *Question des chiffons supprimée* — parcours, fiche
+     (`EtablissementForm`), relance de la checklist, action
+     `repondreChiffons`, schémas Zod de création et de modification, champs
+     structurants. Le critère du moteur sort avec elle
+     (`evaluerChiffonsImpregnes`, `TypologieApplication.chiffonsImpregnes`,
+     `EtablissementMatching.chiffonsImpregnes`, `POLITIQUE_ABSENCE`,
+     marque `chiffons_impregnes`). La ligne passe à `typologies: { travail:
+     true }` : la rubrique « Niveau audit » la nomme à tout lieu de travail.
+     Colonne Prisma gardée, inerte, commentée (pas de migration). Empreinte
+     de `2026-10-08.4`, non servie, réécrite : ~~`174-5f46dea89bed4c54`~~ →
+     `174-e2d28b70856335ac`, en appelant. Relevé du moteur ~~`df2b06b8dd0dd531`~~
+     → `9ea22cc6ca8d74f9`, recopié sans incrément (porte audit en amont,
+     état permanent). Les réponses déjà en base restent sans lecteur.
+- **Mineurs d'une revue, 2026-10-09** (aucun texte rouvert, empreinte et
+  relevé du moteur inchangés) :
+  1. *Fiche d'un masque ou d'un gilet* (`0ba94bb6`) — une ligne archivée sous
+     l'ancien id `epi-verification-generale-periodique` faisait annoncer
+     « Une obligation du référentiel s'applique à cet appareil » avec le
+     libellé de l'antichute. `obligationsDeLEquipement` saute les lignes
+     archivées ; deux tests (`fiche.test.ts`), le premier rouge filtre retiré.
+  2. *Portées de corpus* (`c807e6f2`) — `code-travail-epi` et
+     `arrete-1993-03-19-epi` disaient les cinq familles portées par l'ancien
+     id : rayé, daté, nouvelle répartition (antichute servie ; respiratoire
+     et gilet au niveau audit).
+  3. *Commentaires de la grille* (`a22d2ef8`) — « Proposé » avec son motif
+     rayé : une seule mention, `MENTION_NIVEAU_AUDIT` (« Audit »), en
+     couleur, pour l'audit et les propositions ; le littéral cède à la
+     constante. Le `motif` reste exigé dans le JSON, il n'est plus imprimé.
+  4. *Deux gardes décoratives rendues réelles* (`cf8bce47`) — le catalogue
+     sans titre audit passait sans le filtre ; le `!estNiveauAudit(o)` de la
+     boucle des titres de `passe.ts` n'était couvert par rien. Une obligation
+     salarié réelle est marquée pour l'occasion (`cataloguerTitres` prend le
+     référentiel en paramètre ; `obligationParId` doublé dans
+     `calendrier/niveau-audit.test.ts`). Éprouvées : filtre du catalogue
+     retiré → 1 rouge ; filtre de la passe retiré → 1 rouge ; restaurées par
+     `git checkout cf8bce47 --`.
+  5. *Titre de la rubrique* (`e0c425fb`) — ~~« obligations légales suivies
+     hors du quotidien de Rojer »~~ → « obligations légales que Rojer ne
+     suit pas au quotidien » ; légende de la grille et ADR-042 alignés.
+- **Fusion de `main` (ADR-041, #16, `0a4be567`), 2026-10-12** (aucun texte
+  rouvert) : les faits d'activité gardés tels quels, règle « à confirmer »
+  comprise ; ce que `main` portait encore des chiffons (entrée de
+  `POLITIQUE_ABSENCE`, `evaluerChiffonsImpregnes`, marque, relance de la
+  fiche, champs de fixtures) retiré. `2026-10-08.3` de `main` gardée telle
+  quelle (servie) ; `2026-10-08.4`, non servie, réécrite :
+  ~~`174-e2d28b70856335ac`~~ → `174-4e43df4448e844aa`, en appelant
+  `empreinteReferentiel()`. Compte : 172 (`.3`) + 2 − 0 = 174, dont 3 au
+  niveau audit, 171 suivies ; 90 / 70 / 14 par `porteurDe`. Relevé du moteur
+  ~~`9ea22cc6ca8d74f9`~~ (cette branche) et ~~`34b84ee9a3627974`~~ (`main`)
+  → `1d73fe41eeb7c14c`, recopié sans incrément : chacun des deux lots
+  recopiait sans incrément avec son motif, la réunion n'ajoute rien. Entrée
+  C65, que `main` avait posée après la Partie 3, replacée entre C64 et C66.
 
 ## Partie 2 — Registre des constats en suspens
 
@@ -6056,34 +6207,3 @@ délibéré.
 
 Ce journal porte ce que le code ne sait pas dire : **qui a lu quoi, quand,
 comment — et ce qu'on en a fait.**
-
-### C65 · 2026-10-08 — Faits d'activité de l'établissement, lus par le moteur (ADR-041)
-
-- **Quand · par quoi** : 2026-10-08, branche `lot/formations-faits-etablissement`
-  (base `cb68c367`). Décisions de la propriétaire des 2026-10-07 et
-  2026-10-08 : « tout ce qui peut engendrer une formation » se répond depuis
-  Équipe, sans remplir le DUERP, et s'y retrouve rempli ; « déclenché par le DU
-  et dans la législation → répercuté ». Livrée APRÈS C66 (rebase sur `f2ea34ac`) : référentiel `2026-10-08.2` →
-  `2026-10-08.3`, `172-ea7623eb617ce82` → `172-f59cb53a644d6458`, relevé en
-  appelant `empreinteReferentiel()` (la `.1` de la branche, sur `.5`, n'a
-  jamais été servie).
-- **Relu sur l'API Légifrance (sandbox)** : R. 4541-2, R. 4541-8, R. 4542-1,
-  R. 4542-16, R. 4412-38, R. 4412-87, R. 4544-9, R. 4544-10, R. 4323-55,
-  R. 4323-56, R. 4624-10, R. 4624-22, R. 4624-23, R. 4141-20, R. 4433-2,
-  R. 4323-106 — 16 OK (`legifrance:verifier`, citations et versions
-  identiques au corpus). R. 4624-23 lu en entier (`getArticleWithIdAndNum`,
-  LEGIARTI000053786012, en vigueur) : le I, 3° range parmi les postes à risques
-  particuliers ceux qui exposent « aux agents cancérogènes, mutagènes ou
-  toxiques pour la reproduction mentionnés à l'article R. 4412-60 » — fondement
-  du suivi individuel renforcé proposé sur une exposition CMR.
-- **Ce qui change** : le critère `activite` conditionne cinq obligations
-  existantes (gestes et postures, formation écran, habilitation du personnel,
-  carnet de prescriptions, consigne EPI). Aucune obligation n'entre ni ne
-  sort : 172 + 0 − 0 = 172. Moteur de calendrier recopié SANS incrément : les
-  cinq sont à `periodicite: "autre"` sans rythme retenu, le générateur n'en
-  produit aucune ligne.
-- **Ce qui n'est pas fait** : la formation et les FDS du risque chimique
-  restent déclenchées par l'équipement de stockage (C64) — R. 4412-38 vise la
-  présence d'agents chimiques ; reporté, à instruire avec le préventeur.
-  R. 4323-106 (formation au port des EPI) reste `non_couvert` : l'encodage
-  est clos.

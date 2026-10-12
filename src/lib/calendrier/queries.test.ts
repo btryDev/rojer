@@ -355,7 +355,6 @@ describe("compterEtatCalendrier — D1 (a), la prudence (2026-09-28)", () => {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: matieres,
     comporteLocauxSommeilPublic: null,
-    chiffonsImpregnes: false,
     entreprise: { effectif: 3 },
     equipements: [],
   });

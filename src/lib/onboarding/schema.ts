@@ -162,14 +162,15 @@ export const onboardingSchema = z
     // est en attente, et le silence n'y retire rien à personne.~~ [2026-09-27 :
     // prémisse fausse depuis le 2026-09-03 — le silence retirait R. 4227-37 et
     // -39 au travail seul sous le seuil. La question revient, voir plus bas.]
-    // ─── Matières de R. 4227-22 et chiffons imprégnés (2026-09-27) ──
+    // ─── Matières de R. 4227-22 ~~et chiffons imprégnés~~ (2026-09-27) ──
+    // [2026-10-08 : la question des chiffons est retirée — décision de la
+    // propriétaire ; la ligne de R. 4227-26 est au niveau audit, sans condition.]
     //
     // Posées au parcours, en trois états, parce que leur silence fait afficher
     // des lignes « à confirmer » (analyse de la réponse absente, étape 3).
     // `undefined` — « je ne sais pas encore » — traverse sans rien écrire : la
     // colonne reste `null`, comme pour le sommeil.
     manipuleMatieresR422722: z.preprocess(ouiNonOuSilence, z.boolean().optional()),
-    chiffonsImpregnes: z.preprocess(ouiNonOuSilence, z.boolean().optional()),
     personnesPresentesHabituellement: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
       z.coerce
@@ -368,5 +369,4 @@ export const onboardingValeursInitiales = {
   comporteLocauxSommeilPublic: "" as string,
   personnesPresentesHabituellement: "" as string,
   manipuleMatieresR422722: "" as string,
-  chiffonsImpregnes: "" as string,
 };

@@ -75,7 +75,6 @@ export function projeterEtablissement(
     personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
     comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
-    chiffonsImpregnes: etab.chiffonsImpregnes,
     manutentionManuelle: etab.manutentionManuelle,
     travailSurEcran: etab.travailSurEcran,
     operationsElectriques: etab.operationsElectriques,

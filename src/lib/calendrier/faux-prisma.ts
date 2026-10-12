@@ -56,7 +56,6 @@ export type EtablissementFaux = {
   personnesPresentesHabituellement: number | null;
   manipuleMatieresR422722: boolean | null;
   comporteLocauxSommeilPublic: boolean | null;
-  chiffonsImpregnes: boolean | null;
   /**
    * Les faits d'activité (ADR-041). OPTIONNELS ici, et c'est dit : absents, ils
    * valent le silence (« à confirmer »), ce qui ne change aucune ligne de

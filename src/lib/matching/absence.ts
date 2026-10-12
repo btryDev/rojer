@@ -161,11 +161,6 @@ export const POLITIQUE_ABSENCE = {
         "un allègement conditionné à l'absence de locaux à sommeil ne se donne pas sur le silence (ADR-022 § 7)",
     },
   },
-  chiffonsImpregnes: {
-    valeurs: [true, false],
-    sens: "retient_a_confirmer",
-    question: "chiffons_impregnes",
-  },
   // Les faits d'activité (ADR-041) : la règle du non-renseigné, sans
   // aménagement. Une formation qu'on lit en trop se voit ; une formation
   // retirée sur un silence ne se voit pas. `conduiteEngins` et `expositionCMR`

@@ -825,8 +825,10 @@ par une autre : dès la 3ᵉ catégorie d'ERP, le public dépasse 301, donc les 
 > checklist du tableau de bord les relance, question par question, pour chaque
 > question que le moteur marque — la table `RELANCES` (`etablissements/relance.ts`)
 > en est indexée : nombre de personnes et type d'ERP par un renvoi à la fiche (le
-> type est inatteignable depuis la contrainte CHECK), matières, chiffons et locaux
-> à sommeil par un oui/non en place. La première version (`ec9917c`) ne relançait
+> type est inatteignable depuis la contrainte CHECK), matières, ~~chiffons~~ et locaux
+> à sommeil par un oui/non en place [2026-10-08 : la question des chiffons est
+> retirée de toutes les surfaces, relance comprise — décision de la propriétaire,
+> la ligne de R. 4227-26 est au niveau audit et sans condition (ADR-042)]. La première version (`ec9917c`) ne relançait
 > que les matières et les chiffons ; relevé par la revue indépendante du lot 1,
 > corrigé le même jour] ; et
 > ~~`manipuleMatieresR422722` (§ 1) n'est toujours posée qu'à la fiche~~ [2026-09-27 :

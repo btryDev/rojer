@@ -16,7 +16,12 @@ import {
   estPorteeParSalarie,
   type Obligation,
 } from "@/lib/referentiels/conformite";
-import { evaluerObligation, matchTypologie } from "@/lib/matching";
+import {
+  determineObligationsNiveauAudit,
+  evaluerObligation,
+  matchTypologie,
+} from "@/lib/matching";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import type { EquipementMatching, EtablissementMatching } from "@/lib/matching";
 import { onboardingSchema } from "@/lib/onboarding/schema";
 import { CATEGORIES_ERP, TYPE_ERP } from "@/lib/etablissements/schema";
@@ -56,7 +61,7 @@ function profilsInscription(): EtablissementMatching[] {
   const out: EtablissementMatching[] = [];
   for (const trav of [true, false]) for (const erp of erps) for (const igh of [true, false])
   for (const hab of [true, false]) for (const es of eff) for (const ee of eff) for (const p of pers)
-  for (const m of tri) for (const ch of tri) {
+  for (const m of tri) {
     const plausible = erp !== null && (TYPES_ERP_A_SOMMEIL_PLAUSIBLE as readonly string[]).includes(erp.t);
     for (const so of plausible ? tri : [undefined]) {
       const r = onboardingSchema.safeParse({
@@ -65,7 +70,7 @@ function profilsInscription(): EtablissementMatching[] {
         estEtablissementTravail: trav, estERP: erp !== null, estIGH: igh, estHabitation: hab,
         typeErp: erp?.t, categorieErp: erp?.c,
         comporteLocauxSommeilPublic: form(so), manipuleMatieresR422722: form(m),
-        chiffonsImpregnes: form(ch), personnesPresentesHabituellement: p ?? "",
+ personnesPresentesHabituellement: p ?? "",
         manutentionManuelle: null,
         travailSurEcran: null,
         operationsElectriques: null,
@@ -84,7 +89,6 @@ function profilsInscription(): EtablissementMatching[] {
         personnesPresentesHabituellement: d.personnesPresentesHabituellement ?? null,
         manipuleMatieresR422722: d.manipuleMatieresR422722 ?? null,
         comporteLocauxSommeilPublic: d.comporteLocauxSommeilPublic ?? null,
-        chiffonsImpregnes: d.chiffonsImpregnes ?? null,
         manutentionManuelle: null,
         travailSurEcran: null,
         operationsElectriques: null,
@@ -124,8 +128,14 @@ function obligationsMortes(source: Obligation[]): string[] {
   const eqs = { true: equipementsDuFormulaire(true), false: equipementsDuFormulaire(false) };
   return source
     .filter((o) => porteurDe(o) !== "salarie")
+    // Une obligation au NIVEAU AUDIT (ADR-042) n'est jamais servie : elle
+    // vit si la rubrique « Niveau audit » la nomme à un dossier possible —
+    // même champ, sans la porte du niveau.
     .filter((o) => !profils.some((e) =>
-      matchTypologie(o.typologies, e).ok && evaluerObligation(o, e, eqs[`${e.estERP}`]) !== null))
+      matchTypologie(o.typologies, e).ok &&
+      (estNiveauAudit(o)
+        ? determineObligationsNiveauAudit(e, eqs[`${e.estERP}`], { obligations: [o] }).length > 0
+        : evaluerObligation(o, e, eqs[`${e.estERP}`]) !== null)))
     .map((o) => o.id);
 }
 
@@ -136,7 +146,11 @@ describe("aucune obligation morte (maillon 2)", () => {
 
   it("salarié : chaque obligation portée par un salarié est un titre déclarable", () => {
     const catalogue = new Set(cataloguerTitres().map((o) => o.id));
-    const hors = obligationsConformite.filter(estPorteeParSalarie).filter((o) => !catalogue.has(o.id));
+    // Hors niveau audit (ADR-042) : un titre audit ne se propose pas.
+    const hors = obligationsConformite
+      .filter(estPorteeParSalarie)
+      .filter((o) => !estNiveauAudit(o))
+      .filter((o) => !catalogue.has(o.id));
     expect(hors.map((o) => o.id)).toEqual([]);
   });
 

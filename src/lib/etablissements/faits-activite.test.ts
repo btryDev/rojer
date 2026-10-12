@@ -96,7 +96,7 @@ describe("le moteur lit le fait — la règle du non-renseigné", () => {
     id: "e", effectifSurSite: 4, effectifEntreprise: 4, estEtablissementTravail: true,
     estERP: false, estIGH: false, estHabitation: false, typeErp: null, categorieErp: null,
     classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
-    manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null, chiffonsImpregnes: null,
+    manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null,
     manutentionManuelle: null, travailSurEcran: null, operationsElectriques: null,
     conduiteEngins: null, expositionCMR: null, epiPresents: null,
     ...over,

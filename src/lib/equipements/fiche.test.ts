@@ -356,6 +356,7 @@ function ficheRiche(o: {
     obligationId?: string;
     datePrevue: string;
     statut?: string;
+    archiveLe?: string;
     rapports?: Array<{ id: string; date: string; resultat?: string; organisme?: string }>;
     actions?: number;
   }>;
@@ -369,7 +370,7 @@ function ficheRiche(o: {
       statut: v.statut ?? "planifiee",
       datePrevue: jour(v.datePrevue),
       // Cf. `fiche()` ci-dessus : le cast masque l'omission au compilateur.
-      archiveLe: null,
+      archiveLe: v.archiveLe ? jour(v.archiveLe) : null,
       periodicite: "annuelle",
       rapports: (v.rapports ?? []).map((r) => ({
         id: r.id,
@@ -601,6 +602,52 @@ describe("obligationsDeLEquipement", () => {
       }),
     );
     expect(obligations).toEqual([]);
+  });
+
+  it("ne compte pas une ligne archivée comme obligation applicable (C67)", () => {
+    // LE CAS DE LA SCISSION EPI. Un masque respiratoire dont la ligne a été
+    // archivée sous l'ancien id `epi-verification-generale-periodique` —
+    // devenu l'antichute seul. La compter faisait annoncer à sa fiche « Une
+    // obligation du référentiel s'applique » avec le libellé de l'antichute.
+    expect(
+      obligationsDeLEquipement(
+        ficheRiche({
+          verifs: [
+            {
+              id: "v1",
+              obligationId: "epi-verification-generale-periodique",
+              datePrevue: "2026-09-01",
+              archiveLe: "2026-10-08",
+            },
+          ],
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("garde la ligne vivante d'une obligation dont une autre ligne est archivée", () => {
+    // L'ordre compte : l'archivée vient en premier, et le dédoublonnage ne
+    // doit pas l'avoir « vue » avant la vivante.
+    const obligations = obligationsDeLEquipement(
+      ficheRiche({
+        verifs: [
+          {
+            id: "v1",
+            obligationId: "epi-verification-generale-periodique",
+            datePrevue: "2025-09-01",
+            archiveLe: "2026-01-01",
+          },
+          {
+            id: "v2",
+            obligationId: "epi-verification-generale-periodique",
+            datePrevue: "2026-09-01",
+          },
+        ],
+      }),
+    );
+    expect(obligations.map((o) => o.id)).toEqual([
+      "epi-verification-generale-periodique",
+    ]);
   });
 });
 

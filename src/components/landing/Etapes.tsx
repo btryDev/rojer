@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ChiffresReferentielSuivi } from "@/lib/referentiels/conformite";
 import { Reveal } from "./Reveal";
 
 // Le sujet de cette section, c'est la prise en main : combien de temps
@@ -75,10 +76,13 @@ export function Etapes({
   ctaHref,
   ctaLabel,
   connecte,
+  chiffres,
 }: {
   ctaHref: string;
   ctaLabel: string;
   connecte: boolean;
+  /** Calculés par `chiffresReferentielSuivi()`, jamais écrits ici. */
+  chiffres: ChiffresReferentielSuivi;
 }) {
   return (
     <section className="bg-[color:var(--board-card)] py-20 sm:py-28">
@@ -130,17 +134,28 @@ export function Etapes({
           {/* La provenance du référentiel. Elle est en note de bas de
               liste plutôt que dans un cran : elle ne décrit pas une étape,
               elle répond à la question que les trois posent ensemble —
-              « sur quoi vous vous basez pour me dire tout ça ? ». Les
+              « sur quoi vous vous basez pour me dire tout ça ? ». ~~Les
               chiffres sont comptés sur `obligationsConformite`, à
-              recompter quand le référentiel s'étend. 171 → 172 le
-              2026-10-08 (C66) : + 1, l'entretien et la vérification de
-              l'alarme hors ERP, compté en appelant le référentiel. */}
+              recompter quand le référentiel s'étend.~~ Depuis le
+              2026-10-08 ils sont CALCULÉS (`chiffresReferentielSuivi`,
+              passés en props par `app/page.tsx`) : les obligations suivies
+              au quotidien, total moins niveau audit — décision de la
+              propriétaire du même jour. Historique du chiffre écrit :
+              171 → 172 le 2026-10-08 (C66) : + 1, l'entretien et la
+              vérification de l'alarme hors ERP, compté en appelant le
+              référentiel. 172 → 174 le 2026-10-08 (ADR-042) : + 2,
+              respiratoire et gilet scindés de la vérification de l'arrêté
+              du 19 mars 1993 ; ~~le compte inclut les trois lignes au
+              niveau audit — les distinguer est une question à la
+              propriétaire~~ — tranchée le 2026-10-08 : 174 − 3 = 171
+              suivies. */}
           {/* Calée à gauche, sous la colonne des crans et non dans leur
               retrait : à l'aplomb du corps de texte, elle se lisait comme
               une quatrième ligne de l'étape 3. */}
           <p className="mt-9 font-mono text-[0.68rem] uppercase leading-[1.8] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
-            Référentiel construit depuis Légifrance et EUR-Lex · 172
-            obligations sur 21 domaines · source citée pour chacune
+            Référentiel construit depuis Légifrance et EUR-Lex ·{" "}
+            {chiffres.obligations} obligations sur {chiffres.domaines} domaines
+            · source citée pour chacune
           </p>
 
           <Reveal delai={300}>

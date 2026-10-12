@@ -127,6 +127,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "epi-etablissement-consigne-utilisation": "etablissement",
   "epi-maintien-etat-conformite": "equipement",
   "epi-verification-generale-periodique": "equipement",
+  "epi-verification-generale-periodique-gilet-sauvetage": "equipement",
+  "epi-verification-generale-periodique-respiratoire": "equipement",
   "esp-declaration-mise-en-service": "equipement",
   "esp-dossier-suivi": "equipement",
   "esp-inspection-periodique": "equipement",

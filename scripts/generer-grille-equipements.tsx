@@ -21,12 +21,42 @@
 // Document de relecture, pas un document remis à un tiers : il décrit ce que
 // l'outil calcule, à une version donnée du référentiel.
 //
-//   npx tsx scripts/generer-grille-equipements.tsx [chemin.pdf]
+//   pnpm exec tsx scripts/generer-grille-equipements.tsx [chemin.pdf]
+//     [--propositions-audit propositions.json] [--annexe-relecture remarques.json]
+//
+// Les deux options lisent des données de RELECTURE, tenues hors du dépôt
+// (`src/lib/pdf/entrees-grille-relecture.ts`) :
+//   --propositions-audit  [{ id, motif }] : lignes que nous proposons de passer
+//                         au niveau audit. ~~Marquées « Proposé » avec leur
+//                         motif.~~ [2026-10-09, C67 : depuis la décision de la
+//                         propriétaire du 2026-10-08, elles portent la MÊME
+//                         mention que les lignes déjà au niveau audit —
+//                         `MENTION_NIVEAU_AUDIT`, « Audit », en couleur —, sans
+//                         motif ni statut.] Le `motif` reste exigé dans le JSON
+//                         (`lirePropositionsAudit` le refuse vide) : c'est la
+//                         trace, pour nous, de pourquoi la ligne est proposée.
+//                         Il n'est plus imprimé. Elles n'entrent pas au
+//                         référentiel ;
+//   --annexe-relecture    { intro?, remarques: [{ page, objet?, remarque, fait,
+//                         statut }], questions: [] } : la réponse aux remarques
+//                         du relecteur, imprimée en tête du document.
 
 import { renderToFile } from "@react-pdf/renderer";
 import { Document, Link, Page, Text, View } from "@react-pdf/renderer";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
+  decompteStatuts,
+  lireAnnexeRelecture,
+  lireArguments,
+  lirePropositionsAudit,
+  type AnnexeRelecture,
+  type PropositionAudit,
+} from "@/lib/pdf/entrees-grille-relecture";
+import {
+  estNiveauAudit,
+  MENTION_NIVEAU_AUDIT,
+  nombreObligationsSuivies,
   obligationsConformite,
   REFERENTIEL_VERSION,
 } from "@/lib/referentiels/conformite";
@@ -99,6 +129,9 @@ const SUBSTITUTIONS: [RegExp, string][] = [
   [/₂/g, "2"],
   [/₃/g, "3"],
   [/₄/g, "4"],
+  // Un guillemet ne se retrouve jamais seul en début ou en fin de ligne.
+  [/« /g, "«\u00a0"],
+  [/ »/g, "\u00a0»"],
 ];
 
 function t(s: string): string {
@@ -150,6 +183,10 @@ const LIBELLE_CASE: Record<string, string> = {
   aGroupeElectrogene: "Groupe électrogène de sécurité",
   estLocalPollutionSpecifique: "Local à pollution spécifique",
   nbVehiculesParkingCouvert: "Véhicules en parking couvert",
+  // Les deux suivants s'imprimaient en clé brute depuis la grille du 28/09
+  // (relevé le 2026-10-08) ; libellés de la fiche équipement et du formulaire.
+  aSystemeDeRecyclage: "Système de recyclage d'air",
+  familleEsp: "Famille d'équipement sous pression",
   // ~~`typeExtincteur`~~ : question retirée le 2026-10-08 (C66).
 };
 
@@ -278,12 +315,13 @@ const OBLIGATIONS_SALARIE = obligationsConformite.filter(estPorteeParSalarie);
 // ── Mise en page ───────────────────────────────────────────────────────────
 
 const C = {
-  obligation: "27%",
+  obligation: "26%",
   periodicite: "10%",
-  realisateur: "13%",
-  regime: "16%",
-  condition: "14%",
-  reference: "20%",
+  realisateur: "12%",
+  regime: "15%",
+  condition: "13%",
+  reference: "18%",
+  audit: "6%",
 } as const;
 
 const cell = { paddingRight: 6 } as const;
@@ -309,15 +347,33 @@ function EnTeteTableau() {
       <Text style={[s.th, cell, { width: C.reference }]}>
         Texte fondateur
       </Text>
+      <Text style={[s.th, { width: C.audit }]}>Audit</Text>
     </View>
   );
 }
 
-function LigneObligation({ o }: { o: Obligation }) {
+/**
+ * Les propositions de passage au niveau audit, par id — vide sans l'option.
+ * Données de relecture : elles ne touchent pas au référentiel.
+ */
+type Propositions = ReadonlyMap<string, PropositionAudit>;
+
+function LigneObligation({
+  o,
+  propositions,
+}: {
+  o: Obligation;
+  propositions: Propositions;
+}) {
   const [fondatrice, ...autres] = o.referencesLegales;
   const refTexte = texteReference(fondatrice);
+  const proposition = propositions.get(o.id);
   return (
-    <View style={s.row} wrap={false}>
+    <View
+      style={[s.row, { flexDirection: "column" }]}
+      wrap={false}
+    >
+    <View style={{ flexDirection: "row" }}>
       <View style={[cell, { width: C.obligation }]}>
         <Text style={s.td}>{t(o.libelle)}</Text>
         <Text style={[s.small, { marginTop: 1 }]}>
@@ -357,6 +413,19 @@ function LigneObligation({ o }: { o: Obligation }) {
           </Text>
         )}
       </View>
+      {/* ADR-042 : au référentiel, hors du quotidien — marquée, jamais tue. */}
+      {/* 2026-10-08 (propriétaire) : une seule mention, en couleur, sur les
+          lignes au niveau audit et sur celles proposées au préventeur — sans
+          motif ni statut dans la grille qu'on lui renvoie. */}
+      <Text
+        style={[
+          s.td,
+          { width: C.audit, fontFamily: "Helvetica-Bold", color: BOARD.ambreEncre },
+        ]}
+      >
+        {estNiveauAudit(o) || proposition ? MENTION_NIVEAU_AUDIT : ""}
+      </Text>
+    </View>
     </View>
   );
 }
@@ -373,7 +442,101 @@ function PiedDePage({ document }: { document?: string }) {
   );
 }
 
-function GrilleDocument({ genereLe }: { genereLe: string }) {
+/**
+ * « Vos remarques et ce qui en a été fait » — en tête du document, quand
+ * `--annexe-relecture` est passé. Une ligne par remarque du relecteur, puis
+ * les questions qui restent posées.
+ */
+const R = {
+  page: "13%",
+  remarque: "35%",
+  fait: "40%",
+  statut: "12%",
+} as const;
+
+function PageRemarques({
+  annexe,
+  genereLe,
+}: {
+  annexe: AnnexeRelecture;
+  genereLe: string;
+}) {
+  return (
+    <Page size="A4" orientation="landscape" style={stylePage}>
+      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
+        Rojer — référentiel de conformité {REFERENTIEL_VERSION}
+      </Text>
+      <Text style={[s.h1, { marginTop: 4 }]}>
+        Vos remarques et ce qui en a été fait
+      </Text>
+      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
+        {annexe.remarques.length} remarques ·{" "}
+        {decompteStatuts(annexe.remarques)
+          .map(([statut, n]) => `${statut} : ${n}`)
+          .join(" · ")}{" "}
+        · document généré le {genereLe}
+      </Text>
+      {annexe.intro && (
+        <Text style={[s.small, { marginTop: 6 }]}>{t(annexe.intro)}</Text>
+      )}
+      <View style={s.thead} fixed>
+        <Text style={[s.th, cell, { width: R.page }]}>Page</Text>
+        <Text style={[s.th, cell, { width: R.remarque }]}>Votre remarque</Text>
+        <Text style={[s.th, cell, { width: R.fait }]}>
+          Ce qui a été fait
+        </Text>
+        <Text style={[s.th, { width: R.statut }]}>Statut</Text>
+      </View>
+      {annexe.remarques.map((r, i) => (
+        <View key={i} style={s.row} wrap={false}>
+          <View style={[cell, { width: R.page }]}>
+            <Text style={s.td}>{r.page}</Text>
+            {r.objet && <Text style={s.small}>{t(r.objet)}</Text>}
+          </View>
+          <Text
+            style={[s.td, cell, { width: R.remarque, fontFamily: "Helvetica-Oblique" }]}
+          >
+            {"«\u00a0"}
+            {t(r.remarque)}
+            {"\u00a0»"}
+          </Text>
+          <Text style={[s.td, cell, { width: R.fait }]}>{t(r.fait)}</Text>
+          <Text
+            style={[s.td, { width: R.statut, fontFamily: "Helvetica-Bold" }]}
+          >
+            {r.statut}
+          </Text>
+        </View>
+      ))}
+      {annexe.questions.length > 0 && (
+        <View wrap={false}>
+          <Text style={s.h2}>
+            {annexe.questions.length > 1
+              ? "Les questions qui restent"
+              : "La question qui reste"}
+          </Text>
+          {annexe.questions.map((q, i) => (
+            <Text key={i} style={[s.td, { marginBottom: 6 }]}>
+              {annexe.questions.length > 1 ? `${i + 1}. ` : ""}
+              {t(q)}
+            </Text>
+          ))}
+        </View>
+      )}
+      <PiedDePage />
+    </Page>
+  );
+}
+
+function GrilleDocument({
+  genereLe,
+  propositions,
+  annexe,
+}: {
+  genereLe: string;
+  propositions: Propositions;
+  annexe?: AnnexeRelecture;
+}) {
   const lignes = CATEGORIES_EQUIPEMENT.map((c) => ({
     categorie: c,
     obligations: obligationsDe(c),
@@ -385,6 +548,8 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
       title="Rojer — grille de relecture du référentiel"
       author="Rojer"
     >
+      {annexe && <PageRemarques annexe={annexe} genereLe={genereLe} />}
+
       {/* Récapitulatif */}
       <Page size="A4" orientation="landscape" style={stylePage}>
         <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
@@ -394,8 +559,11 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
           Grille de relecture du référentiel
         </Text>
         <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
-          {total} obligations · {CATEGORIES_EQUIPEMENT.length} catégories
-          d&apos;équipement · document généré le {genereLe}
+          {total} obligations, dont {total - nombreObligationsSuivies()} au
+          niveau audit ({nombreObligationsSuivies()} suivies au quotidien)
+          ·{" "}
+          {CATEGORIES_EQUIPEMENT.length} catégories d&apos;équipement ·
+          document généré le {genereLe}
         </Text>
 
         <View style={s.mentionsLegalesBloc}>
@@ -410,6 +578,16 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
             Le périmètre du référentiel n&apos;est pas celui du droit :
             l&apos;absence d&apos;une obligation n&apos;emporte aucune
             conclusion. Rojer calcule, il n&apos;avise pas.
+          </Text>
+          <Text style={{ marginTop: 6 }}>
+            Colonne{" "}
+            <Text style={{ fontFamily: "Helvetica-Bold", color: BOARD.ambreEncre }}>
+              Audit
+            </Text>{" "}
+            : obligation légale que nous proposons de garder au référentiel
+            sans que Rojer la suive au quotidien — ni calendrier, ni
+            alertes —, listée sur la page « Ce que Rojer ne couvre pas ».
+            Votre avis ?
           </Text>
           <Text style={{ marginTop: 6 }}>
             Le document couvre les {total} obligations, rangées par ce qui les
@@ -540,7 +718,7 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
             <EnTeteTableau />
           )}
           {obligations.map((o) => (
-            <LigneObligation key={o.id} o={o} />
+            <LigneObligation key={o.id} o={o} propositions={propositions} />
           ))}
           <PiedDePage />
         </Page>
@@ -567,7 +745,7 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
           </Text>
           <EnTeteTableau />
           {liste.map((o) => (
-            <LigneObligation key={o.id} o={o} />
+            <LigneObligation key={o.id} o={o} propositions={propositions} />
           ))}
           <PiedDePage />
         </Page>
@@ -594,7 +772,7 @@ function GrilleDocument({ genereLe }: { genereLe: string }) {
           </Text>
           <EnTeteTableau />
           {liste.map((o) => (
-            <LigneObligation key={o.id} o={o} />
+            <LigneObligation key={o.id} o={o} propositions={propositions} />
           ))}
           <PiedDePage />
         </Page>
@@ -646,7 +824,10 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
         </Text>
         <Text style={[s.h1, { marginTop: 4 }]}>Dossier de relecture détaillé</Text>
         <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
-          {obligationsConformite.length} obligations · document généré le{" "}
+          {obligationsConformite.length} obligations, dont{" "}
+          {obligationsConformite.length - nombreObligationsSuivies()} au niveau
+          audit ({nombreObligationsSuivies()} suivies au quotidien, chiffre
+          affiché au public et dans l&apos;app) · document généré le{" "}
           {genereLe}
         </Text>
         <View style={s.mentionsLegalesBloc}>
@@ -746,8 +927,31 @@ function DossierDetaille({ genereLe }: { genereLe: string }) {
   );
 }
 
-const detaille = process.argv.includes("--detail");
-const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const { options, drapeaux, positionnels: args } = lireArguments(
+  process.argv.slice(2),
+  ["propositions-audit", "annexe-relecture"],
+);
+const detaille = drapeaux.has("detail");
+
+function lireJson(chemin: string): unknown {
+  return JSON.parse(readFileSync(path.resolve(chemin), "utf8"));
+}
+
+const propositions = options.has("propositions-audit")
+  ? lirePropositionsAudit(
+      lireJson(options.get("propositions-audit")!),
+      new Set(obligationsConformite.map((o) => o.id)),
+      new Set(obligationsConformite.filter(estNiveauAudit).map((o) => o.id)),
+    )
+  : new Map<string, PropositionAudit>();
+const annexe = options.has("annexe-relecture")
+  ? lireAnnexeRelecture(lireJson(options.get("annexe-relecture")!))
+  : undefined;
+if (detaille && (propositions.size > 0 || annexe)) {
+  throw new Error(
+    "--propositions-audit et --annexe-relecture s'impriment dans la grille, pas dans le dossier détaillé (--detail)",
+  );
+}
 
 const sortie =
   args[0] ??
@@ -766,7 +970,11 @@ renderToFile(
   detaille ? (
     <DossierDetaille genereLe={genereLe} />
   ) : (
-    <GrilleDocument genereLe={genereLe} />
+    <GrilleDocument
+      genereLe={genereLe}
+      propositions={propositions}
+      annexe={annexe}
+    />
   ),
   sortie,
 ).then(

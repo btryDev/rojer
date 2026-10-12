@@ -418,11 +418,13 @@ export function StepTypologie({
                 `corpus/arrete-1986-habitation.ts`. */}
           </section>
 
-          {/* ─── Deux questions sur ce qui se fait chez vous (2026-09-27) ──
-              Posées ici parce que leur silence fait afficher des lignes « à
+          {/* ─── ~~Deux questions~~ Une question sur ce qui se fait chez vous
+              (2026-09-27 ; la seconde, les chiffons gras de R. 4227-26, est
+              retirée le 2026-10-08 — décision de la propriétaire, la ligne
+              est au niveau audit et sans condition) ──
+              Posée ici parce que son silence fait afficher des lignes « à
               confirmer » — la consigne incendie et l'exercice semestriel
-              (R. 4227-34, -37, -39) pour les matières, le rangement des
-              chiffons gras (R. 4227-26). Le critère est celui qui a ramené le
+              (R. 4227-34, -37, -39) pour les matières. Le critère est celui qui a ramené le
               nombre de personnes au parcours le 2026-09-20 : poser la question
               là où la réponse change des lignes. Trois états : « je ne sais
               pas encore » est une réponse, qui laisse la ligne affichée. */}
@@ -432,7 +434,7 @@ export function StepTypologie({
                 Ce qui se fait dans vos locaux
               </h3>
               <p className="m-0 mt-2 max-w-[62ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Deux questions dont la réponse ajoute ou retire des
+                Une question dont la réponse ajoute ou retire des
                 obligations. Si vous hésitez, laissez « Je ne sais pas encore » :
                 les lignes concernées s&apos;afficheront « à confirmer », et vous
                 pourrez répondre plus tard sur la fiche de l&apos;établissement.
@@ -449,25 +451,6 @@ export function StepTypologie({
                 value={state.manipuleMatieresR422722}
                 onChange={(e) =>
                   update({ manipuleMatieresR422722: e.currentTarget.value })
-                }
-                className="champ-board"
-              >
-                <option value="">Je ne sais pas encore</option>
-                <option value="oui">Oui</option>
-                <option value="non">Non</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-3">
-              <SousQuestion
-                question="Utilisez-vous des chiffons, cotons ou papiers imprégnés d'huile, de graisse ou de liquides inflammables ?"
-                aide="Un torchon de cuisine imbibé d'huile en est un. Si oui, ils doivent être enfermés après usage dans des récipients métalliques clos et étanches (art. R. 4227-26 du Code du travail)."
-              />
-              <select
-                id="chiffonsImpregnes"
-                aria-label="Chiffons, cotons ou papiers imprégnés"
-                value={state.chiffonsImpregnes}
-                onChange={(e) =>
-                  update({ chiffonsImpregnes: e.currentTarget.value })
                 }
                 className="champ-board"
               >

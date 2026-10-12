@@ -53,6 +53,7 @@ import type {
 import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
 import { estSansRendezVous } from "@/lib/etats-permanents/regle";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   estPorteeParSalarie,
   type Obligation,
@@ -613,6 +614,13 @@ export function genererVerificationsDepuisTitres(
     // pour une obligation qui n'en veut pas, et la contrainte `porteur_xor`
     // ne dirait rien (elle interdit deux porteurs, pas le mauvais).
     if (!estPorteeParSalarie(o)) continue;
+
+    // Ni sur une obligation au NIVEAU AUDIT (ADR-042). Un titre ne passe pas
+    // par le moteur de matching, dont `evaluerObligation` est la porte du
+    // niveau : c'est la seconde porte, et la seule autre. La ligne n'est pas
+    // produite, et la réconciliation traite l'ancienne comme une obligation
+    // qui cesse de s'appliquer — archivée si elle porte une trace.
+    if (estNiveauAudit(o)) continue;
 
     for (const t of liste) {
       // LA définition de l'échéance d'un titre, partagée avec l'écran Équipe

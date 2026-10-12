@@ -84,6 +84,7 @@ import {
   modeSurLEcranEnPlace,
 } from "@/lib/etats-permanents/regle";
 import { estPorteeParSalarie } from "@/lib/referentiels/conformite/types";
+import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 
 /**
  * `faits` est entrée le 2026-09-21 (ADR-037), et elle RATTRAPE un angle mort de
@@ -95,7 +96,17 @@ import { estPorteeParSalarie } from "@/lib/referentiels/conformite/types";
  * d'obligations qui en avaient une. Le troisième porteur n'avait pas de fiche ;
  * la page « Quand ça arrive » (`quand-ca-arrive/lignes.ts`) est la sienne.
  */
-export const SURFACES = ["calendrier", "etats_permanents", "faits"] as const;
+export const SURFACES = [
+  "calendrier",
+  "etats_permanents",
+  "faits",
+  // ADR-042 (2026-10-08) : une obligation au niveau audit n'atteint AUCUNE des
+  // trois surfaces de décision — le moteur ne la rend jamais applicable — et
+  // sa seule surface est la rubrique « Niveau audit » de la page « Ce que
+  // Rojer ne couvre pas ». La compter sous `calendrier` sur la foi de son
+  // rythme dirait qu'elle y est, ce qui est faux.
+  "niveau_audit",
+] as const;
 
 export type Surface = (typeof SURFACES)[number];
 
@@ -114,6 +125,7 @@ export type Surface = (typeof SURFACES)[number];
  * module mesure le plancher — ce que l'obligation atteint chez tout le monde.
  */
 export function surfacesDe(o: Obligation): Surface[] {
+  if (estNiveauAudit(o)) return ["niveau_audit"];
   const atteintes: Surface[] = [];
   if (!estSansRendezVous(periodiciteEffective(o))) atteintes.push("calendrier");
   // ~~`modeDeclaration(o) !== null`~~ (2026-09-27, lot 2, maillon 6) : la règle

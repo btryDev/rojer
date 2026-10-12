@@ -2,7 +2,10 @@
  * Domaine « protection individuelle » — `R. 4323-91` à `R. 4323-106`, arrêté du
  * 19 mars 1993.
  *
- * ~~DEUX~~ TROIS OBLIGATIONS depuis le 2026-10-07 (voir plus bas). LES DEUX
+ * ~~DEUX~~ ~~TROIS~~ CINQ OBLIGATIONS depuis le 2026-10-08 (trois le 2026-10-07 ;
+ * le 2026-10-08, ADR-042, la vérification de l'arrêté du 19 mars 1993 se
+ * scinde : l'antichute reste servie, le respiratoire et le gilet passent au
+ * NIVEAU AUDIT, une ligne chacun — voir plus bas). LES DEUX
  * PREMIÈRES NE SE RESSEMBLENT PAS. L'une est un écrit que
  * l'employeur produit une fois et tient à jour, due dès qu'un travailleur porte
  * un équipement de protection — gants compris. L'autre est un contrôle d'objet
@@ -43,6 +46,57 @@
  */
 
 import type { Obligation } from "./types";
+
+/**
+ * Les textes de la vérification générale périodique de l'arrêté du 19 mars
+ * 1993, partagés par ses trois lignes depuis la scission du 2026-10-08
+ * (ADR-042) : antichute servi, respiratoire et gilet au niveau audit. Le
+ * fondement ne change pas d'une famille à l'autre — un seul article 1er,
+ * une seule liste fermée.
+ */
+const REFERENCES_VGP_EPI: Obligation["referencesLegales"] = [
+  {
+    source: "ARRETE",
+    reference:
+      "Arrêté du 19 mars 1993, art. 1er (liste des EPI soumis à vérification et périodicité de douze mois)",
+    article: "Arrêté 1993-03-19 (EPI) art. 1er",
+    url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006930405",
+    note: "C'est LUI qui nomme les équipements et pose les douze mois ; le Code ne chiffre rien. Liste nominative et fermée de cinq familles : appareils de protection respiratoire autonomes destinés à l'évacuation ; appareils de protection respiratoire et équipements complets destinés à des interventions accidentelles en milieu hostile ; gilets de sauvetage gonflables ; systèmes de protection individuelle contre les chutes de hauteur ; stocks de cartouches filtrantes antigaz pour appareils de protection respiratoire.",
+    versionConstatee: "1993-12-01",
+  },
+  {
+    source: "CODE_TRAVAIL",
+    reference: "R. 4323-99 (article habilitant)",
+    article: "R. 4323-99",
+    url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531296",
+    note: "L'article qui renvoie à des arrêtés le soin de désigner les EPI soumis à vérification générale périodique et d'en fixer la périodicité, la nature et le contenu. Il n'écrit lui-même aucun rythme, mais il donne l'OBJET de la vérification, et il est double : déceler toute défectuosité susceptible d'être à l'origine de situations dangereuses, ET tout défaut d'accessibilité contraire aux conditions déterminées en application de R. 4323-97. Jumeau exact de R. 4323-23 pour les équipements de travail.",
+    versionConstatee: "2008-05-01",
+  },
+  {
+    source: "ARRETE",
+    reference: "Arrêté du 19 mars 1993, art. 2 (contenu de la vérification)",
+    article: "Arrêté 1993-03-19 (EPI) art. 2",
+    url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006930406",
+    note: "Article de CONTENU, cité en contexte et non en fondement : il dit sur quoi porte la vérification, jamais qui la doit ni quand. Il l'indexe sur la NOTICE DU FABRICANT, et son 3° demande l'élimination des équipements arrivés à péremption — une date que le produit ne connaît pas.",
+    versionConstatee: "1993-12-01",
+  },
+  {
+    source: "CODE_TRAVAIL",
+    reference: "R. 4323-100 (qualification du vérificateur)",
+    article: "R. 4323-100",
+    url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531294",
+    note: "« Les vérifications périodiques sont réalisées par des personnes qualifiées, appartenant ou non à l'établissement, dont la liste est tenue à la disposition de l'inspection du travail. » C'est cet article qui fonde `personne_qualifiee`, et le fait qu'aucun organisme accrédité ne soit exigé. Il restreint lui-même sa portée aux « équipements de protection individuelle soumis à vérification ». — Relevé le 2026-09-04. Une première rédaction citait « vérifications GÉNÉRALES périodiques » et « l'INSPECTEUR du travail » : deux mots ajoutés ou changés À L'INTÉRIEUR DES GUILLEMETS, écrits de mémoire alors que le corpus portait le verbatim exact au même moment. Un verbatim ne se cite pas de tête.",
+    versionConstatee: "2008-05-01",
+  },
+  {
+    source: "CODE_TRAVAIL",
+    reference: "R. 4323-101 à R. 4323-103 (consignation et conservation)",
+    article: "R. 4323-101",
+    url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531292",
+    note: "Le résultat est consigné sur le registre de sécurité de L. 4711-5 (R. 4323-101). L'annexion des rapports au registre n'est exigée par R. 4323-102 que « lorsque les vérifications périodiques sont réalisées par des personnes n'appartenant pas à l'établissement », et l'article ouvre lui-même un « à défaut » — une première rédaction de cette note affirmait l'annexion sans condition ni repli. R. 4323-103 admet tout support. Traçabilité sans périodicité propre : elle suit celle de la vérification.",
+    versionConstatee: "2008-05-01",
+  },
+];
 
 export const obligationsEpi: Obligation[] = [
   {
@@ -89,50 +143,8 @@ export const obligationsEpi: Obligation[] = [
     libelle:
       "Vérification générale périodique des équipements de protection individuelle",
     description:
-      "Cinq familles d'équipements, et cinq seulement, doivent avoir été vérifiées depuis moins de douze mois au moment où on les utilise : les systèmes de protection individuelle contre les chutes de hauteur, les appareils de protection respiratoire autonomes destinés à l'évacuation, ceux destinés aux interventions en milieu hostile, les gilets de sauvetage gonflables et les stocks de cartouches filtrantes antigaz — en service comme en stock. La vérification est faite par une personne qualifiée, qui peut appartenir à l'établissement.",
-    referencesLegales: [
-      {
-        source: "ARRETE",
-        reference:
-          "Arrêté du 19 mars 1993, art. 1er (liste des EPI soumis à vérification et périodicité de douze mois)",
-        article: "Arrêté 1993-03-19 (EPI) art. 1er",
-        url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006930405",
-        note: "C'est LUI qui nomme les équipements et pose les douze mois ; le Code ne chiffre rien. Liste nominative et fermée de cinq familles : appareils de protection respiratoire autonomes destinés à l'évacuation ; appareils de protection respiratoire et équipements complets destinés à des interventions accidentelles en milieu hostile ; gilets de sauvetage gonflables ; systèmes de protection individuelle contre les chutes de hauteur ; stocks de cartouches filtrantes antigaz pour appareils de protection respiratoire.",
-        versionConstatee: "1993-12-01",
-      },
-      {
-        source: "CODE_TRAVAIL",
-        reference: "R. 4323-99 (article habilitant)",
-        article: "R. 4323-99",
-        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531296",
-        note: "L'article qui renvoie à des arrêtés le soin de désigner les EPI soumis à vérification générale périodique et d'en fixer la périodicité, la nature et le contenu. Il n'écrit lui-même aucun rythme, mais il donne l'OBJET de la vérification, et il est double : déceler toute défectuosité susceptible d'être à l'origine de situations dangereuses, ET tout défaut d'accessibilité contraire aux conditions déterminées en application de R. 4323-97. Jumeau exact de R. 4323-23 pour les équipements de travail.",
-        versionConstatee: "2008-05-01",
-      },
-      {
-        source: "ARRETE",
-        reference: "Arrêté du 19 mars 1993, art. 2 (contenu de la vérification)",
-        article: "Arrêté 1993-03-19 (EPI) art. 2",
-        url: "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006930406",
-        note: "Article de CONTENU, cité en contexte et non en fondement : il dit sur quoi porte la vérification, jamais qui la doit ni quand. Il l'indexe sur la NOTICE DU FABRICANT, et son 3° demande l'élimination des équipements arrivés à péremption — une date que le produit ne connaît pas.",
-        versionConstatee: "1993-12-01",
-      },
-      {
-        source: "CODE_TRAVAIL",
-        reference: "R. 4323-100 (qualification du vérificateur)",
-        article: "R. 4323-100",
-        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531294",
-        note: "« Les vérifications périodiques sont réalisées par des personnes qualifiées, appartenant ou non à l'établissement, dont la liste est tenue à la disposition de l'inspection du travail. » C'est cet article qui fonde `personne_qualifiee`, et le fait qu'aucun organisme accrédité ne soit exigé. Il restreint lui-même sa portée aux « équipements de protection individuelle soumis à vérification ». — Relevé le 2026-09-04. Une première rédaction citait « vérifications GÉNÉRALES périodiques » et « l'INSPECTEUR du travail » : deux mots ajoutés ou changés À L'INTÉRIEUR DES GUILLEMETS, écrits de mémoire alors que le corpus portait le verbatim exact au même moment. Un verbatim ne se cite pas de tête.",
-        versionConstatee: "2008-05-01",
-      },
-      {
-        source: "CODE_TRAVAIL",
-        reference: "R. 4323-101 à R. 4323-103 (consignation et conservation)",
-        article: "R. 4323-101",
-        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000018531292",
-        note: "Le résultat est consigné sur le registre de sécurité de L. 4711-5 (R. 4323-101). L'annexion des rapports au registre n'est exigée par R. 4323-102 que « lorsque les vérifications périodiques sont réalisées par des personnes n'appartenant pas à l'établissement », et l'article ouvre lui-même un « à défaut » — une première rédaction de cette note affirmait l'annexion sans condition ni repli. R. 4323-103 admet tout support. Traçabilité sans périodicité propre : elle suit celle de la vérification.",
-        versionConstatee: "2008-05-01",
-      },
-    ],
+      "Les systèmes de protection individuelle contre les chutes de hauteur — harnais, longe, antichute — doivent avoir été vérifiés depuis moins de douze mois au moment où on les utilise, en service comme en stock. La vérification est faite par une personne qualifiée, qui peut appartenir à l'établissement. L'arrêté du 19 mars 1993 nomme quatre autres familles — appareils de protection respiratoire (évacuation, interventions en milieu hostile), cartouches filtrantes antigaz, gilets de sauvetage gonflables — : Rojer les tient au niveau audit, hors de son suivi quotidien.",
+    referencesLegales: REFERENCES_VGP_EPI,
     periodicite: "annuelle",
     nature: "echeance_recurrente",
     pieceAttendue: null,
@@ -140,13 +152,56 @@ export const obligationsEpi: Obligation[] = [
     criticite: 5,
     transmet: [],
     typologies: { travail: true },
-    categoriesEquipement: [
-      "EPI_ANTICHUTE",
-      "EPI_RESPIRATOIRE",
-      "EPI_GILET_SAUVETAGE",
-    ],
+    // ~~`EPI_RESPIRATOIRE`, `EPI_GILET_SAUVETAGE`~~ — sortis le 2026-10-08
+    // (ADR-042) vers deux lignes au niveau audit, plus bas.
+    categoriesEquipement: ["EPI_ANTICHUTE"],
     notesInternes:
-      "Créée le 2026-09-04 avec le dépouillement de l'arrêté du 19 mars 1993 (corpus `arrete-1993-03-19-epi`), dont l'article 1er était `obligation_manquante` depuis sa lecture le jour même — bloqué par une seule chose : la catégorie `EPI` mélangeait les deux côtés de la liste.\n\nUNE LIGNE POUR CINQ ENTRÉES, RANGÉES EN TROIS CATÉGORIES. Les cinq familles de l'article 1er portent le même acte, la même périodicité, le même réalisateur et le même contenu (art. 2). Les deux entrées respiratoires et les cartouches qui les alimentent tiennent en une catégorie parce que leur détenteur est le même et que rien ne les distingue au regard du texte — le précédent est `COMPACTEUR_PRESSE_DECHETS_MOTORISE`, qui réunit deux entrées de l'arrêté du 5 mars 1993.\n\nPOURQUOI DES CATÉGORIES ET NON UNE PROPRIÉTÉ D'ÉQUIPEMENT. L'arrêté n'écrit AUCUN critère technique : ni « antichute », ni « respiratoire », ni un seuil de hauteur. Il écrit des NOMS D'OBJETS. Il n'y a rien à dériver d'un attribut, et une case « soumis à vérification » aurait fait déclarer au dirigeant la conclusion juridique que l'outil doit calculer pour lui.\n\nPOURQUOI PAS UNE OBLIGATION SUR `EPI` [2026-10-07 : pas CETTE obligation — la vérification de l'arrêté, criticité 5, par personne qualifiée. Une autre vise désormais `EPI` : `epi-maintien-etat-conformite`, `R. 4322-1`, rythme retenu par défaut, sur décision de la propriétaire du 07/10]. La catégorie couvre « harnais antichute et sa longe, casque, gants, chaussures de sécurité, protections auditives, masque ». Y poser cette ligne aurait réclamé une vérification annuelle par personne qualifiée — criticité 5, coût de tiers réel — au commerçant qui a déclaré une boîte de gants. C'est la sur-application que `epi-famille.test.ts` interdisait, et cette garde s'ouvre d'elle-même maintenant que l'article de corpus est `retenu`.\n\nCE QUE LA PÉRIODICITÉ ENCODE, ET CE QU'ELLE PERD. Le texte n'écrit pas « tous les ans » mais « avoir fait l'objet, DEPUIS MOINS DE DOUZE MOIS AU MOMENT DE LEUR UTILISATION » : l'échéance se mesure à l'instant de l'usage. `periodicite: \"annuelle\"` rend le rythme, pas cette conséquence — le produit ne sait pas interdire l'usage d'un équipement. Le sens de l'écart est le bon : le calendrier réclame la vérification à la date, ce qui maintient la condition d'usage satisfaite. Même partage que la trimestrielle du compacteur.\n\n« EN SERVICE OU EN STOCK » N'EST PAS ENCODÉ, ET IL FAUT LE SAVOIR. L'arrêté soumet les équipements en stock au même régime que ceux en service : un harnais neuf rangé au placard depuis treize mois ne peut pas être utilisé sans vérification. Le produit ne distingue pas le stock du service — un équipement déclaré est un équipement, et il porte son échéance. C'est le sens qui sur-applique légèrement, et l'écart est VISIBLE par celui qui le subit : il voit une échéance sur un équipement qu'il n'utilise pas, et peut la traiter. L'inverse aurait dispensé du contrôle un équipement dont la défaillance se découvre le jour où l'on en a besoin.\n\nRÉALISATEUR : `personne_qualifiee` SEUL. R. 4323-100 dit « des personnes qualifiées, APPARTENANT OU NON À L'ÉTABLISSEMENT » : aucun organisme accrédité n'est exigé, à la différence du régime des équipements sous pression. Ajouter `organisme_agree` aurait fait croire à une exigence que le texte ne porte pas.\n\nPAS DE `pieceAttendue`. Le rapport est la TRACE de l'acte, pas l'obligation : ce qui est dû est la vérification, et sa consignation relève de R. 4323-101 à -103, cités en contexte. Même partage que sur les VGP de levage et de compactage.\n\nLA PÉREMPTION EST ENREGISTRÉE DEPUIS LE MÊME JOUR, ET CE QUE LE PRODUIT EN FAIT EST PLUS ÉTROIT QUE LE TEXTE. Le 3° de l'article 2 de l'arrêté du 19 mars 1993 impose de « PRENDRE LES MESURES NÉCESSAIRES pour qu'à l'expiration de la durée de vie ou de la date de péremption […] ceux-ci soient éliminés EN TEMPS UTILE ». C'est une action, et une exigence de moment — pas un constat annuel : une péremption qui tombe entre deux visites n'est pas traitée « en temps utile » par la visite suivante. `Equipement.datePeremption` existe désormais — aucun champ ne la stockait —, la fiche l'affiche et signale « Périmé depuis » quand elle est passée, ce qui met le fait sous les yeux du dirigeant à chaque ouverture. Mais l'outil ne RÉCLAME rien : il ne pose pas d'échéance « éliminer cet équipement », parce qu'une péremption est une fin de vie et non un rythme — l'objet part, il n'a pas de rendez-vous suivant — et parce que le produit ne sait pas constater qu'une élimination a eu lieu. UNE PREMIÈRE RÉDACTION DISAIT QUE « LA CONSÉQUENCE DE DROIT EST DÉJÀ PORTÉE PAR LA VÉRIFICATION » : c'était plus court que le texte, le 3° prescrivant à l'employeur d'agir en temps utile et non au vérificateur de constater une fois l'an. L'écart subsiste, il est nommé, et il est du côté que le dirigeant voit. Inscrite aux exclusions de l'ADR-010.\n\nL'ÉNUMÉRATION DES ARRÊTÉS EST ÉTABLIE, ET LE DOUTE EST LEVÉ (2026-09-04, second passage). Il n'existe qu'UN arrêté d'application de R. 4323-99, celui du 19 mars 1993, et la raison est STRUCTURELLE et non accidentelle : il est COSIGNÉ par le ministre du travail ET le ministre de l'agriculture, ses visas portant les deux avis consultatifs — Conseil supérieur de la prévention des risques professionnels du 25 janvier 1993, Commission nationale d'hygiène et de sécurité du travail en agriculture du 25 février 1993. Le « travail OU agriculture » de l'article est donc satisfait par un texte unique, là où R. 4323-23 a reçu deux arrêtés mono-signés. Le jumeau agricole soupçonné, l'arrêté du 24 juin 1993, a été lu : il ne vise que les équipements de TRAVAIL et l'article R. 233-11 ; R. 233-42-2 n'y figure nulle part et sa liste ne contient aucun EPI.\n\nCOMMENT LE NÉGATIF A ÉTÉ RENDU DÉFENDABLE. Le panneau « textes d'application » de Légifrance reste illisible — chargé en JavaScript. La liste a été reconstituée par la recherche plein texte de Légifrance, dont les pages de RÉSULTATS sont rendues côté serveur et se lisent, elles : `/search/all?...&query=...`. C'est un déblocage qui vaut pour toute la veille. Une recherche sur « R. 233-42-2 » — la numérotation d'avant 2008 — rend six résultats, un seul arrêté. Et le TEST DE CONTRÔLE est ce qui rend l'absence concluante : la même recherche sur « R. 233-11 » rend 69 résultats et y trouve LES DEUX arrêtés de 1993, dont l'agricole. Le moteur sait donc voir ce qu'on cherche ; il n'y a rien à voir ici.\n\nCE QUI RESTE HORS DE PORTÉE, ET C'EST ÉTROIT : un arrêté pris puis abrogé avant d'entrer au fonds consolidé, ou un texte agricole imposant la même chose sur une base du code rural — qui ne serait alors pas un arrêté d'application de R. 4323-99. Si le panneau devient lisible, recouper.\n\nUN TEXTE CONNEXE À NE PAS COMPTER : l'arrêté du 22 octobre 2009 (EPI d'occasion loués ou mis à disposition de façon réitérée) VISE R. 4323-99 et remonte donc dans toute recherche, mais il est pris sur R. 4313-16, ne désigne aucun EPI et ne fixe aucune périodicité.",
+      "SCINDÉE LE 2026-10-08 (ADR-042, NIVEAU AUDIT), PAR DÉCISION DE LA PROPRIÉTAIRE DU MÊME JOUR : « Rojer est un outil de gestion au quotidien […] on garde dans le référentiel mais avec une mention audit et qu'il ne soit plus actif dans l'app ». La vérification des appareils de protection respiratoire et celle des gilets de sauvetage gonflables passent au niveau audit ; l'ANTICHUTE NE BOUGE PAS — c'est l'EPI courant de la cible, et sa défaillance tue. La ligne gardait les trois catégories : passer l'obligation entière en audit aurait sorti l'antichute du quotidien. Convention du dépôt pour une scission (`succedeA`, GE 4 § 1 du 2026-09-08) : l'identifiant reste à la population qui reste servie — l'antichute garde `epi-verification-generale-periodique`, son historique et ses rapports ; les deux autres familles prennent un identifiant neuf chacune, `epi-verification-generale-periodique-respiratoire` et `epi-verification-generale-periodique-gilet-sauvetage`, qui déclarent `succedeA` vers celui-ci. Au niveau audit elles n'engendrent aucune ligne : les lignes existantes d'un masque ou d'un gilet sont traitées comme une obligation qui cesse de s'appliquer à cet appareil — archivées si elles portent une trace, supprimées sinon. Le jour où le marqueur se lève, `succedeA` les fait reprendre leur ligne au lieu d'en ouvrir une neuve. Le fondement, le rythme, le réalisateur et le contenu sont les mêmes pour les trois (`REFERENCES_VGP_EPI`).\n\nCréée le 2026-09-04 avec le dépouillement de l'arrêté du 19 mars 1993 (corpus `arrete-1993-03-19-epi`), dont l'article 1er était `obligation_manquante` depuis sa lecture le jour même — bloqué par une seule chose : la catégorie `EPI` mélangeait les deux côtés de la liste.\n\n~~UNE LIGNE POUR CINQ ENTRÉES, RANGÉES EN TROIS CATÉGORIES.~~ [2026-10-08, ADR-042 : trois lignes, une par catégorie — voir la scission en tête ; le paragraphe reste vrai de l'acte, du rythme, du réalisateur et du contenu, qu'elles partagent.] Les cinq familles de l'article 1er portent le même acte, la même périodicité, le même réalisateur et le même contenu (art. 2). Les deux entrées respiratoires et les cartouches qui les alimentent tiennent en une catégorie parce que leur détenteur est le même et que rien ne les distingue au regard du texte — le précédent est `COMPACTEUR_PRESSE_DECHETS_MOTORISE`, qui réunit deux entrées de l'arrêté du 5 mars 1993.\n\nPOURQUOI DES CATÉGORIES ET NON UNE PROPRIÉTÉ D'ÉQUIPEMENT. L'arrêté n'écrit AUCUN critère technique : ni « antichute », ni « respiratoire », ni un seuil de hauteur. Il écrit des NOMS D'OBJETS. Il n'y a rien à dériver d'un attribut, et une case « soumis à vérification » aurait fait déclarer au dirigeant la conclusion juridique que l'outil doit calculer pour lui.\n\nPOURQUOI PAS UNE OBLIGATION SUR `EPI` [2026-10-07 : pas CETTE obligation — la vérification de l'arrêté, criticité 5, par personne qualifiée. Une autre vise désormais `EPI` : `epi-maintien-etat-conformite`, `R. 4322-1`, rythme retenu par défaut, sur décision de la propriétaire du 07/10]. La catégorie couvre « harnais antichute et sa longe, casque, gants, chaussures de sécurité, protections auditives, masque ». Y poser cette ligne aurait réclamé une vérification annuelle par personne qualifiée — criticité 5, coût de tiers réel — au commerçant qui a déclaré une boîte de gants. C'est la sur-application que `epi-famille.test.ts` interdisait, et cette garde s'ouvre d'elle-même maintenant que l'article de corpus est `retenu`.\n\nCE QUE LA PÉRIODICITÉ ENCODE, ET CE QU'ELLE PERD. Le texte n'écrit pas « tous les ans » mais « avoir fait l'objet, DEPUIS MOINS DE DOUZE MOIS AU MOMENT DE LEUR UTILISATION » : l'échéance se mesure à l'instant de l'usage. `periodicite: \"annuelle\"` rend le rythme, pas cette conséquence — le produit ne sait pas interdire l'usage d'un équipement. Le sens de l'écart est le bon : le calendrier réclame la vérification à la date, ce qui maintient la condition d'usage satisfaite. Même partage que la trimestrielle du compacteur.\n\n« EN SERVICE OU EN STOCK » N'EST PAS ENCODÉ, ET IL FAUT LE SAVOIR. L'arrêté soumet les équipements en stock au même régime que ceux en service : un harnais neuf rangé au placard depuis treize mois ne peut pas être utilisé sans vérification. Le produit ne distingue pas le stock du service — un équipement déclaré est un équipement, et il porte son échéance. C'est le sens qui sur-applique légèrement, et l'écart est VISIBLE par celui qui le subit : il voit une échéance sur un équipement qu'il n'utilise pas, et peut la traiter. L'inverse aurait dispensé du contrôle un équipement dont la défaillance se découvre le jour où l'on en a besoin.\n\nRÉALISATEUR : `personne_qualifiee` SEUL. R. 4323-100 dit « des personnes qualifiées, APPARTENANT OU NON À L'ÉTABLISSEMENT » : aucun organisme accrédité n'est exigé, à la différence du régime des équipements sous pression. Ajouter `organisme_agree` aurait fait croire à une exigence que le texte ne porte pas.\n\nPAS DE `pieceAttendue`. Le rapport est la TRACE de l'acte, pas l'obligation : ce qui est dû est la vérification, et sa consignation relève de R. 4323-101 à -103, cités en contexte. Même partage que sur les VGP de levage et de compactage.\n\nLA PÉREMPTION EST ENREGISTRÉE DEPUIS LE MÊME JOUR, ET CE QUE LE PRODUIT EN FAIT EST PLUS ÉTROIT QUE LE TEXTE. Le 3° de l'article 2 de l'arrêté du 19 mars 1993 impose de « PRENDRE LES MESURES NÉCESSAIRES pour qu'à l'expiration de la durée de vie ou de la date de péremption […] ceux-ci soient éliminés EN TEMPS UTILE ». C'est une action, et une exigence de moment — pas un constat annuel : une péremption qui tombe entre deux visites n'est pas traitée « en temps utile » par la visite suivante. `Equipement.datePeremption` existe désormais — aucun champ ne la stockait —, la fiche l'affiche et signale « Périmé depuis » quand elle est passée, ce qui met le fait sous les yeux du dirigeant à chaque ouverture. Mais l'outil ne RÉCLAME rien : il ne pose pas d'échéance « éliminer cet équipement », parce qu'une péremption est une fin de vie et non un rythme — l'objet part, il n'a pas de rendez-vous suivant — et parce que le produit ne sait pas constater qu'une élimination a eu lieu. UNE PREMIÈRE RÉDACTION DISAIT QUE « LA CONSÉQUENCE DE DROIT EST DÉJÀ PORTÉE PAR LA VÉRIFICATION » : c'était plus court que le texte, le 3° prescrivant à l'employeur d'agir en temps utile et non au vérificateur de constater une fois l'an. L'écart subsiste, il est nommé, et il est du côté que le dirigeant voit. Inscrite aux exclusions de l'ADR-010.\n\nL'ÉNUMÉRATION DES ARRÊTÉS EST ÉTABLIE, ET LE DOUTE EST LEVÉ (2026-09-04, second passage). Il n'existe qu'UN arrêté d'application de R. 4323-99, celui du 19 mars 1993, et la raison est STRUCTURELLE et non accidentelle : il est COSIGNÉ par le ministre du travail ET le ministre de l'agriculture, ses visas portant les deux avis consultatifs — Conseil supérieur de la prévention des risques professionnels du 25 janvier 1993, Commission nationale d'hygiène et de sécurité du travail en agriculture du 25 février 1993. Le « travail OU agriculture » de l'article est donc satisfait par un texte unique, là où R. 4323-23 a reçu deux arrêtés mono-signés. Le jumeau agricole soupçonné, l'arrêté du 24 juin 1993, a été lu : il ne vise que les équipements de TRAVAIL et l'article R. 233-11 ; R. 233-42-2 n'y figure nulle part et sa liste ne contient aucun EPI.\n\nCOMMENT LE NÉGATIF A ÉTÉ RENDU DÉFENDABLE. Le panneau « textes d'application » de Légifrance reste illisible — chargé en JavaScript. La liste a été reconstituée par la recherche plein texte de Légifrance, dont les pages de RÉSULTATS sont rendues côté serveur et se lisent, elles : `/search/all?...&query=...`. C'est un déblocage qui vaut pour toute la veille. Une recherche sur « R. 233-42-2 » — la numérotation d'avant 2008 — rend six résultats, un seul arrêté. Et le TEST DE CONTRÔLE est ce qui rend l'absence concluante : la même recherche sur « R. 233-11 » rend 69 résultats et y trouve LES DEUX arrêtés de 1993, dont l'agricole. Le moteur sait donc voir ce qu'on cherche ; il n'y a rien à voir ici.\n\nCE QUI RESTE HORS DE PORTÉE, ET C'EST ÉTROIT : un arrêté pris puis abrogé avant d'entrer au fonds consolidé, ou un texte agricole imposant la même chose sur une base du code rural — qui ne serait alors pas un arrêté d'application de R. 4323-99. Si le panneau devient lisible, recouper.\n\nUN TEXTE CONNEXE À NE PAS COMPTER : l'arrêté du 22 octobre 2009 (EPI d'occasion loués ou mis à disposition de façon réitérée) VISE R. 4323-99 et remonte donc dans toute recherche, mais il est pris sur R. 4313-16, ne désigne aucun EPI et ne fixe aucune périodicité.",
+  },
+  // 2026-10-08 (ADR-042) — les deux familles de l'arrêté du 19 mars 1993 que
+  // Rojer tient au NIVEAU AUDIT : légales, au référentiel avec leur source,
+  // jamais servies au quotidien. Nommées sur la page « Ce que Rojer ne couvre
+  // pas » à l'établissement qui a déclaré l'équipement.
+  {
+    id: "epi-verification-generale-periodique-respiratoire",
+    succedeA: ["epi-verification-generale-periodique"],
+    niveau: "audit",
+    domaine: "epi",
+    libelle:
+      "Vérification générale périodique des appareils de protection respiratoire et des cartouches filtrantes antigaz",
+    description:
+      "Les appareils de protection respiratoire autonomes destinés à l'évacuation, ceux destinés aux interventions accidentelles en milieu hostile et les stocks de cartouches filtrantes antigaz doivent avoir été vérifiés depuis moins de douze mois au moment où on les utilise, en service comme en stock. La vérification est faite par une personne qualifiée, qui peut appartenir à l'établissement.",
+    referencesLegales: REFERENCES_VGP_EPI,
+    periodicite: "annuelle",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_qualifiee"],
+    criticite: 5,
+    transmet: [],
+    typologies: { travail: true },
+    categoriesEquipement: ["EPI_RESPIRATOIRE"],
+    notesInternes:
+      "NIVEAU AUDIT DEPUIS SA CRÉATION, LE 2026-10-08 (ADR-042). Décision de la propriétaire du même jour, sur la remarque du préventeur (« il ne veut pas qu'on tombe dans l'audit ») : « certes c'est une obligation mais Rojer est un outil de gestion au quotidien […] on garde dans le référentiel mais avec une mention audit et qu'il ne soit plus actif dans l'app ; le label audit aura son sens le jour où on poussera plus loin Rojer ». L'OBLIGATION EST LÉGALE ET LE RESTE : arrêté du 19 mars 1993, art. 1er, deux entrées respiratoires et les cartouches qui les alimentent, réunies en une catégorie depuis le 2026-09-04 (notes de `epi-verification-generale-periodique`). NÉE D'UNE SCISSION : jusqu'au 2026-10-08 la catégorie `EPI_RESPIRATOIRE` portait `epi-verification-generale-periodique` avec l'antichute et le gilet. L'identifiant neuf et `succedeA` suivent la convention du dépôt (GE 4 § 1, 2026-09-08) : l'antichute, qui reste servie, garde l'ancien. Effet en base : les lignes d'un appareil respiratoire sous l'ancien identifiant cessent de s'appliquer — archivées si elles portent une trace, supprimées sinon. RÉACTIVER : retirer `niveau`, monter la version ; `succedeA` reprendra la ligne archivée de chaque appareil.",
+  },
+  {
+    id: "epi-verification-generale-periodique-gilet-sauvetage",
+    succedeA: ["epi-verification-generale-periodique"],
+    niveau: "audit",
+    domaine: "epi",
+    libelle: "Vérification générale périodique des gilets de sauvetage gonflables",
+    description:
+      "Les gilets de sauvetage gonflables doivent avoir été vérifiés depuis moins de douze mois au moment où on les utilise, en service comme en stock. La vérification est faite par une personne qualifiée, qui peut appartenir à l'établissement.",
+    referencesLegales: REFERENCES_VGP_EPI,
+    periodicite: "annuelle",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    realisateurs: ["personne_qualifiee"],
+    criticite: 5,
+    transmet: [],
+    typologies: { travail: true },
+    categoriesEquipement: ["EPI_GILET_SAUVETAGE"],
+    notesInternes:
+      "NIVEAU AUDIT DEPUIS SA CRÉATION, LE 2026-10-08 (ADR-042). Décision de la propriétaire du même jour, sur la remarque du préventeur (« il ne veut pas qu'on tombe dans l'audit ») : « certes c'est une obligation mais Rojer est un outil de gestion au quotidien […] on garde dans le référentiel mais avec une mention audit et qu'il ne soit plus actif dans l'app ; le label audit aura son sens le jour où on poussera plus loin Rojer ». L'OBLIGATION EST LÉGALE ET LE RESTE : arrêté du 19 mars 1993, art. 1er, entrée « gilets de sauvetage gonflables ». NÉE D'UNE SCISSION : jusqu'au 2026-10-08 la catégorie `EPI_GILET_SAUVETAGE` portait `epi-verification-generale-periodique` avec l'antichute et le respiratoire. L'identifiant neuf et `succedeA` suivent la convention du dépôt (GE 4 § 1, 2026-09-08) : l'antichute, qui reste servie, garde l'ancien. Effet en base : les lignes d'un gilet sous l'ancien identifiant cessent de s'appliquer — archivées si elles portent une trace, supprimées sinon. RÉACTIVER : retirer `niveau`, monter la version ; `succedeA` reprendra la ligne archivée de chaque gilet.",
   },
   {
     id: "epi-maintien-etat-conformite",

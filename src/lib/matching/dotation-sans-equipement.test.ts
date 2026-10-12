@@ -22,7 +22,6 @@ const etab = (over: Partial<EtablissementMatching> = {}): EtablissementMatching 
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: false,
   comporteLocauxSommeilPublic: null,
-  chiffonsImpregnes: false,
   manutentionManuelle: null,
   travailSurEcran: null,
   operationsElectriques: null,

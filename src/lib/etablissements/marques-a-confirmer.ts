@@ -56,7 +56,6 @@ export async function marquesAConfirmerDuDossier(
       personnesPresentesHabituellement: true,
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
-      chiffonsImpregnes: true,
       manutentionManuelle: true,
       travailSurEcran: true,
       operationsElectriques: true,

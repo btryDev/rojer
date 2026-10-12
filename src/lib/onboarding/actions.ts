@@ -72,7 +72,6 @@ export async function finaliserOnboarding(
     comporteLocauxSommeilPublic: raw.comporteLocauxSommeilPublic,
     personnesPresentesHabituellement: raw.personnesPresentesHabituellement,
     manipuleMatieresR422722: raw.manipuleMatieresR422722,
-    chiffonsImpregnes: raw.chiffonsImpregnes,
   };
 
   const parsed = onboardingSchema.safeParse(input);
@@ -133,9 +132,6 @@ export async function finaliserOnboarding(
         ...(d.manipuleMatieresR422722 === undefined
           ? {}
           : { manipuleMatieresR422722: d.manipuleMatieresR422722 }),
-        ...(d.chiffonsImpregnes === undefined
-          ? {}
-          : { chiffonsImpregnes: d.chiffonsImpregnes }),
         estEtablissementTravail: d.estEtablissementTravail,
         estERP: d.estERP,
         estIGH: d.estIGH,

@@ -13,6 +13,12 @@
 //   3. **Hors périmètre déclaré** — les articles lus dont aucune obligation
 //      d'exploitant ne découle, avec le motif qui les écarte.
 //
+//   1 ter. **Niveau audit** (ADR-042, décision de la propriétaire du
+//      2026-10-08) — les obligations légales que Rojer garde au référentiel
+//      mais ne suit plus au quotidien, nommées au dossier qu'elles peuvent
+//      concerner (`perimetre/niveau-audit.ts`). Sortir une obligation du
+//      quotidien sans la nommer ici ferait mentir l'outil par omission.
+//
 //   1 bis. **Ce que l'outil ne suit pas, et qui peut concerner ce dossier**
 //      (C45, décision de la propriétaire du 2026-09-27) — vingt-cinq articles
 //      `non_couvert` du corpus, groupés par domaine, chacun projeté au seul
@@ -43,6 +49,10 @@ import {
   faitsManquesAnnonces,
 } from "@/lib/perimetre/faits";
 import { manquesAnnoncesDuDossier } from "@/lib/perimetre/manques-annonces";
+import { obligationsNiveauAuditDuDossier } from "@/lib/perimetre/niveau-audit";
+import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
+import { projeterEtablissement } from "@/lib/matching";
+import { EXPLICATION_NIVEAU_AUDIT } from "@/lib/referentiels/conformite/niveau-audit";
 import { CORPUS } from "@/lib/referentiels/corpus";
 import { riensASignaler } from "@/lib/perimetre/couverture";
 import { porte } from "@/lib/perimetre/non-couverture";
@@ -77,6 +87,19 @@ export default async function PerimetrePage({
   const manques = faitsManques
     ? manquesAnnoncesDuDossier(CORPUS, faitsManques)
     : [];
+  const equipements = await listerEquipementsDeLEtablissement(id);
+  const niveauAudit = obligationsNiveauAuditDuDossier(
+    projeterEtablissement(etablissement),
+    equipements.map((eq) => ({
+      id: eq.id,
+      libelle: eq.libelle,
+      categorie: eq.categorie,
+      caracteristiques: (eq.caracteristiques ?? null) as Record<
+        string,
+        unknown
+      > | null,
+    })),
+  );
   const refus = refusAlEntree();
   const exclusions = exclusionsDeclarees();
 
@@ -99,9 +122,10 @@ export default async function PerimetrePage({
             Ce que Rojer ne couvre pas
           </h1>
           <p className="m-0 mt-[11px] max-w-[62ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Quatre choses différentes, dites séparément : ce qui manque à ce
+            Cinq choses différentes, dites séparément : ce qui manque à ce
             dossier, les obligations que l&apos;outil ne suit pas et qui
-            peuvent vous concerner, les régimes qu&apos;il refuse d&apos;ouvrir,
+            peuvent vous concerner, celles qu&apos;il garde au niveau audit,
+            les régimes qu&apos;il refuse d&apos;ouvrir,
             et les textes lus dont il ne tire aucune obligation. Rien ici n&apos;est
             compté ni additionné — une obligation que cet outil ne traite pas
             reste due si un texte l&apos;impose.
@@ -207,6 +231,65 @@ export default async function PerimetrePage({
                       ))}
                     </ul>
                   </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* ─── 1 ter. Niveau audit ──────────────────────────────────── */}
+        {/* ADR-042. Des obligations légales, au référentiel avec leur texte,
+            que Rojer ne suit plus au quotidien. Ni compte ni date : le
+            libellé, ce qui la ferait s'appliquer ici, et la référence. */}
+        {niveauAudit.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div>
+              <SurTitre>§ Niveau audit</SurTitre>
+              {/* ~~« obligations légales suivies hors du quotidien de
+                  Rojer »~~ [2026-10-09, C67 : « suivies » contredisait
+                  l'explication juste dessous, « Rojer ne la suit pas au
+                  quotidien ».] */}
+              <h2 className="board-titre m-0 mt-2 text-[22px]">
+                Niveau audit — obligations légales que Rojer ne suit pas au
+                quotidien
+              </h2>
+              <p className="m-0 mt-2 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                {EXPLICATION_NIVEAU_AUDIT}{" "}
+                Rojer les garde dans son
+                référentiel, avec leur texte, pour le jour où un audit les
+                reprendra ; elles sont nommées ici parce qu&apos;elles peuvent
+                concerner votre établissement.
+              </p>
+            </div>
+
+            <ul className="m-0 flex list-none flex-col gap-4 p-0">
+              {niveauAudit.map((o) => (
+                <li key={o.id} className="carte-board px-7 py-6 sm:px-8">
+                  <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+                    Audit
+                  </p>
+                  <h3 className="m-0 mt-2 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
+                    {o.libelle}
+                  </h3>
+                  <p className="m-0 mt-3 max-w-[68ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                    {o.porteePar}
+                  </p>
+                  <p className="m-0 mt-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+                    {o.url ? (
+                      <a
+                        href={o.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-mono tabular-nums text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                      >
+                        {o.reference}
+                      </a>
+                    ) : (
+                      <span className="font-mono tabular-nums">
+                        {o.reference}
+                      </span>
+                    )}
+                  </p>
                 </li>
               ))}
             </ul>

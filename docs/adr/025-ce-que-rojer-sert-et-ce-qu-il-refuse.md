@@ -269,6 +269,11 @@ Cette page distingue **trois statuts**, et la distinction est le fond du sujet :
 refusé à l'entrée / servi partiellement et prévenu (les ERP de 1re à 4e
 catégorie) / hors périmètre déclaré.
 
+> **Amendé le 2026-10-08 (ADR-042)** — un statut de plus, distinct des trois :
+> le **niveau audit**. Une obligation légale, au référentiel avec sa source,
+> que Rojer ne sert pas au quotidien ; la page la nomme au dossier qu'elle
+> peut concerner. Ni refusée, ni hors périmètre, ni un manque du corpus.
+
 C'est le point où le produit était le plus avancé : le bandeau de périmètre du
 calendrier dit déjà ce qui n'est pas couvert, sur six axes au 2026-09-03
 (`AxeCouverture` : `igh`, `categorie_erp`, `secteur_duerp`,
