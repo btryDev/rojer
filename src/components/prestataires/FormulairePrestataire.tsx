@@ -49,13 +49,16 @@ type Props = {
 };
 
 /** Ce qu'une pièce déjà déposée devient si l'on en joint une autre. Le modèle
- *  garde une pièce par type, pas leur suite (`modifierPrestataire`). */
+ *  affiche une pièce par type, pas leur suite ; l'ancienne n'est plus effacée
+ *  (`modifierPrestataire`, 2026-10-12). ~~« Un nouveau fichier la remplace, et
+ *  l'ancienne n'est pas conservée. »~~ */
 function PieceActuelle({ nom }: { nom: string | null }) {
   if (!nom) return null;
   return (
     <p className="m-0 text-[11.5px] leading-[1.45] text-[color:var(--board-slate-soft)]">
-      Pièce actuelle : {nom}. Un nouveau fichier la remplace, et
-      l&apos;ancienne n&apos;est pas conservée.
+      Pièce actuelle : {nom}. Un nouveau fichier la remplace sur cette fiche ;
+      l&apos;ancienne n&apos;est pas effacée, mais Rojer ne l&apos;affiche
+      plus : gardez-en une copie.
     </p>
   );
 }

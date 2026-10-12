@@ -214,11 +214,18 @@ export async function creerPrestataire(
  * établissement).
  *
  * L'HISTORIQUE QUE LE MODÈLE PERMET : AUCUN. `Prestataire` porte une colonne
- * par pièce, pas une liste. Une pièce remplacée n'est plus référencée par
+ * par pièce, pas une liste. ~~Une pièce remplacée n'est plus référencée par
  * aucune ligne ; la garder au stockage ferait un fichier que plus rien ne
  * relit ni ne purge (`suppression/fichiers.ts`). Elle est donc libérée APRÈS
- * l'écriture en base, et l'écran le dit avant l'envoi. Garder les
- * attestations successives demanderait un modèle de pièces : non fait ici.
+ * l'écriture en base, et l'écran le dit avant l'envoi.~~ [2026-10-12,
+ * relecture indépendante : l'attestation d'un semestre passé est la seule
+ * preuve que la vigilance a été faite À CE MOMENT-LÀ, si la solidarité de
+ * L. 8222-2 est recherchée ; la détruire au remplacement détruisait la
+ * preuve. Elle N'EST PLUS LIBÉRÉE : elle reste au stockage, sans ligne qui la
+ * référence — donc ni affichée, ni jointe au ZIP, ni emportée par la purge
+ * d'une suppression (`suppression/fichiers.ts`). L'écran dit ce qui est vrai.]
+ * Lister les attestations successives — et les purger avec le reste —
+ * demande un modèle de pièces (migration additive) : non fait ici.
  *
  * Aucun champ de la fiche n'entre dans une empreinte de signature
  * (`signatures/hash-objet.ts` ne connaît pas le prestataire). Aucun calendrier
@@ -235,7 +242,7 @@ export async function modifierPrestataire(
 
   const existant = await prisma.prestataire.findFirst({
     where: { id: prestataireId, etablissementId },
-    select: { id: true, attestationUrssafCle: true, assuranceRcProCle: true, kbisCle: true },
+    select: { id: true },
   });
   if (!existant) return { status: "error", message: "Prestataire introuvable" };
 
@@ -268,13 +275,7 @@ export async function modifierPrestataire(
     throw err;
   }
 
-  // Les pièces remplacées, une fois la base écrite.
-  await libererFichiers(
-    CHAMPS_PIECES.filter((p) => depot.colonnes[p.cle])
-      .map((p) => existant[p.cle])
-      .filter((c): c is string => typeof c === "string" && c.length > 0),
-    "prestataires/remplacement",
-  );
+  // Les pièces remplacées ne sont PAS libérées (2026-10-12) : voir plus haut.
 
   revalidatePath(`/etablissements/${etablissementId}/prestataires/${existant.id}`);
   revalidatePath(`/etablissements/${etablissementId}/prestataires`);

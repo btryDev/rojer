@@ -119,7 +119,10 @@ describe("modifierPrestataire", () => {
     expect(h.stockage.liberes).toEqual([]);
   });
 
-  it("une pièce jointe remplace la précédente, qui est libérée après l'écriture ; les autres restent", async () => {
+  // ~~« … qui est libérée après l'écriture »~~ — 2026-10-12, relecture
+  // indépendante : l'attestation d'un semestre passé prouve la vigilance
+  // (L. 8222-2) ; elle n'est plus effacée.
+  it("une pièce jointe remplace la précédente à la fiche, et la précédente n'est pas effacée", async () => {
     const r = await modifierPrestataire(
       "e1",
       "pre_1",
@@ -131,7 +134,7 @@ describe("modifierPrestataire", () => {
     expect(data.attestationUrssafCle).toBe(h.stockage.ecrits[0]);
     expect(data.attestationUrssafNom).toBe("nouvelle.pdf");
     expect("assuranceRcProCle" in data).toBe(false);
-    expect(h.stockage.liberes).toEqual([FICHE.attestationUrssafCle]);
+    expect(h.stockage.liberes).toEqual([]);
   });
 
   it("reprend les validations de la création : une remise future est refusée sur son champ", async () => {
