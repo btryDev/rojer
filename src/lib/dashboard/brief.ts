@@ -71,6 +71,13 @@ export type EntreeBrief = {
    * `retards`, mais sans date dépassée à annoncer (`construireTitre`).
    */
   verifsEnRetardSansEcheance: number;
+  /**
+   * Les titres dus à vos salariés qui manquent en retard (ADR-043 (d)) — HORS
+   * de `retards`, qui ne les compte pas (ADR-043 § 3 (a)). Le bandeau les
+   * nomme sans les additionner : sans eux, il disait « 0 dépassées » et « Rien
+   * ne presse » au-dessus d'une carte en retard (audit du 2026-10-12).
+   */
+  titresDusEnRetard: number;
   duerp: DuerpBrief;
   recommandations: RecoBrief[];
   nbRapports: number;
@@ -272,6 +279,14 @@ function construireTitre(e: EntreeBrief): string {
       sansEcheance,
     ).toLowerCase()} sans date connue`;
   }
+  // Aucun retard compté, mais des titres dus en retard : le bandeau ne dit
+  // ni « dans les trente jours » ni « rien ne presse » au-dessus de leur
+  // carte. Il les nomme, sans les fondre dans « Dépassées » (ADR-043 § 3 (a)).
+  if (e.titresDusEnRetard > 0) {
+    return e.titresDusEnRetard > 1
+      ? `${enLettres(e.titresDusEnRetard)} titres dus à vos salariés sont en retard`
+      : `${enLettres(e.titresDusEnRetard)} titre dû à vos salariés est en retard`;
+  }
   const proche = e.sous30j.total;
   if (proche > 0) {
     return `${enLettres(proche)} ${
@@ -442,20 +457,30 @@ export function construireBrief(e: EntreeBrief): Brief {
   }
 
   const sansDate = retardsSansDate(e);
+  // « toutes » quand aucune n'est datée : « DÉPASSÉES 5, dont 5 sans date
+  // connue » se lisait comme deux ensembles (relecture, 2026-09-15). Et pour
+  // une seule, ni « toutes » ni « dont 1 » : « sans date connue ».
+  const precisionSansDate =
+    sansDate === 0
+      ? null
+      : sansDate < e.retards.total
+        ? `dont ${sansDate} sans date connue`
+        : sansDate > 1
+          ? "toutes sans date connue"
+          : "sans date connue";
+  // « hors » : le relevé ne les compte pas (ADR-043 § 3 (a)), il dit qu'ils
+  // existent (audit du 2026-10-12).
+  const n = e.titresDusEnRetard;
+  const precisionTitres =
+    n === 0
+      ? null
+      : `hors ${n} titre${n > 1 ? "s dus" : " dû"} à vos salariés, en retard`;
   return {
     datePill: formaterDate(e.aujourdhui),
     titre,
-    // « toutes » quand aucune n'est datée : « DÉPASSÉES 5, dont 5 sans date
-    // connue » se lisait comme deux ensembles (relecture, 2026-09-15). Et pour
-    // une seule, ni « toutes » ni « dont 1 » : « sans date connue ».
     precisionReleveRetard:
-      sansDate === 0
-        ? null
-        : sansDate < e.retards.total
-          ? `dont ${sansDate} sans date connue`
-          : sansDate > 1
-            ? "toutes sans date connue"
-            : "sans date connue",
+      [precisionSansDate, precisionTitres].filter((p) => p !== null).join(" · ") ||
+      null,
     paragraphe: construireParagraphe(e),
     gestes,
   };

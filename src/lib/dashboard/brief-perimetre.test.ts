@@ -97,6 +97,7 @@ const CALME: EntreeBrief = {
   sous30j: ventil(),
   verifsAPlanifier: 0,
   verifsEnRetardSansEcheance: 0,
+  titresDusEnRetard: 0,
   duerp: { existe: true, estAJour: true },
   recommandations: [],
   nbRapports: 0,
