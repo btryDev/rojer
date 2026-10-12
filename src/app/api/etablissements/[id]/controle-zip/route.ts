@@ -168,6 +168,8 @@ export async function GET(
   // Les pièces de prestataires réellement mises au ZIP, par type : le README
   // ne nomme que les types présents (contre-lecture du 2026-09-26).
   const piecesPrestataires = { attestation: 0, rcPro: 0, kbis: 0 };
+  // Les pièces remplacées réellement mises au ZIP (2026-10-12).
+  let piecesPrestatairesPrecedentes = 0;
   // Une LECTURE en panne pour 05 à 08 et les prestataires donnait une
   // réponse 500 : tout le dossier tombait pour une brique. Elle se note
   // comme les autres échecs, et la brique est dite « Non incluse ».
@@ -348,6 +350,15 @@ export async function GET(
     prisma.prestataire.findMany({
     where: { etablissementId: id },
     orderBy: { raisonSociale: "asc" },
+    // Les pièces remplacées (2026-10-12) : le ZIP joint les pièces en cours,
+    // il joint donc aussi celles qu'elles ont remplacées — l'attestation d'un
+    // semestre passé est la preuve de la vigilance à ce moment-là.
+    include: {
+      piecesPrecedentes: {
+        orderBy: { remplaceeLe: "asc" },
+        select: { id: true, type: true, fichierCle: true, fichierNom: true },
+      },
+    },
   }));
   if (prestataires.length > 0) {
     const dossierPrestataires = zip.folder(nomDeDossier(PIECES_ZIP.prestataires)) ?? zip;
@@ -387,6 +398,24 @@ export async function GET(
           // annoncée par le README au lieu d'être ignorée.
           piecesPrestatairesManquantes++;
           console.error(`controle-zip : pièce prestataire non récupérée (${nom})`, e);
+        }
+      }
+      // Les pièces précédentes, à part : le tiers ne doit pas prendre une
+      // attestation remplacée pour la pièce en cours. Préfixées de leur
+      // identifiant, deux « attestation.pdf » successives ne s'écrasent pas.
+      if (p.piecesPrecedentes.length > 0) {
+        const dossierPrecedentes = sousDossier.folder("Pieces_precedentes") ?? sousDossier;
+        for (const pp of p.piecesPrecedentes) {
+          const nom = `${pp.id}-${nomEntreeArchive(pp.fichierNom, `${pp.type}.pdf`)}`;
+          try {
+            if (!storage) throw new Error("stockage indisponible");
+            const buf = await storage.get(pp.fichierCle);
+            dossierPrecedentes.file(nom, new Uint8Array(buf));
+            piecesPrestatairesPrecedentes++;
+          } catch (e) {
+            piecesPrestatairesManquantes++;
+            console.error(`controle-zip : pièce prestataire précédente non récupérée (${nom})`, e);
+          }
         }
       }
     }
@@ -676,6 +705,7 @@ export async function GET(
     echecs,
     piecesPrestatairesManquantes,
     piecesPrestataires,
+    piecesPrestatairesPrecedentes,
     rapportsZip,
     rapportsSalariesEcartes,
     analysesZip,

@@ -31,13 +31,31 @@ const h = vi.hoisted(() => {
   ];
   const prestataires = [
     { id: "pre-a", etablissementId: "etab-a", attestationUrssafCle: "presta/etab-a/u.pdf", attestationUrssafNom: "urssaf-a.pdf", assuranceRcProCle: null, assuranceRcProNom: null, kbisCle: "presta/etab-a/k.png", kbisNom: "kbis-a.png" },
+    { id: "pre-a2", etablissementId: "etab-a", attestationUrssafCle: null, attestationUrssafNom: null, assuranceRcProCle: null, assuranceRcProNom: null, kbisCle: null, kbisNom: null },
     { id: "pre-b", etablissementId: "etab-b", attestationUrssafCle: "presta/etab-b/u.pdf", attestationUrssafNom: "urssaf-b.pdf", assuranceRcProCle: null, assuranceRcProNom: null, kbisCle: null, kbisNom: null },
   ];
   const trouver = <T extends { id: string; etablissementId: string }>(l: T[], userOf: (w: W) => string | undefined) =>
     async ({ where }: { where: W }) =>
       l.find((x) => ok(where.id, x.id) && ok(userOf(where), userDe(x.etablissementId))) ?? null;
 
+  // Les pièces remplacées (2026-10-12), rattachées à un prestataire.
+  const precedentes = [
+    { id: "pp-a", prestataireId: "pre-a", type: "urssaf", fichierCle: "presta/etab-a/u-ancienne.pdf", fichierNom: "urssaf-2025.pdf" },
+    { id: "pp-b", prestataireId: "pre-b", type: "urssaf", fichierCle: "presta/etab-b/u-ancienne.pdf", fichierNom: "urssaf-b-2025.pdf" },
+  ];
+  type WP = { id?: string; prestataireId?: string; prestataire?: { etablissement?: { entreprise?: { userId?: string } } } };
+  const trouverPrecedente = async ({ where }: { where: WP }) =>
+    precedentes.find((x) => {
+      const etab = prestataires.find((p) => p.id === x.prestataireId)?.etablissementId ?? "";
+      return (
+        ok(where.id, x.id) &&
+        ok(where.prestataireId, x.prestataireId) &&
+        ok(where.prestataire?.etablissement?.entreprise?.userId, userDe(etab))
+      );
+    }) ?? null;
+
   const prisma = {
+    piecePrestataire: { findFirst: trouverPrecedente },
     rapportVerification: { findFirst: trouver(rapports, (w) => w.etablissement?.entreprise?.userId) },
     prestataire: { findFirst: vi.fn(trouver(prestataires, (w) => w.etablissement?.entreprise?.userId)) },
     analyseLegionelle: { findFirst: trouver(analyses, (w) => w.carnet?.etablissement?.entreprise?.userId) },
@@ -56,6 +74,7 @@ vi.mock("@/lib/storage", async (original) => ({
 const rapport = await import("./rapports/[id]/fichier/route");
 const analyse = await import("./analyses-legionelles/[id]/rapport/route");
 const piece = await import("./prestataires/[id]/pieces/[piece]/route");
+const precedente = await import("./prestataires/[id]/pieces-precedentes/[pieceId]/route");
 const { FichierIntrouvable, StockageNonConfigure } = await import("@/lib/storage");
 
 const req = {} as never;
@@ -63,6 +82,8 @@ const appel = {
   rapport: (id: string) => rapport.GET(req, { params: Promise.resolve({ id }) }),
   analyse: (id: string) => analyse.GET(req, { params: Promise.resolve({ id }) }),
   piece: (id: string, p: string) => piece.GET(req, { params: Promise.resolve({ id, piece: p }) }),
+  precedente: (id: string, pieceId: string) =>
+    precedente.GET(req, { params: Promise.resolve({ id, pieceId }) }),
 };
 
 beforeEach(() => {
@@ -77,6 +98,7 @@ describe("chaque route sert le fichier de son propriétaire, et seulement lui", 
     ["analyse", () => appel.analyse("ana-a"), "legio/etab-a/a.pdf", "application/pdf"],
     ["pièce URSSAF", () => appel.piece("pre-a", "urssaf"), "presta/etab-a/u.pdf", "application/pdf"],
     ["pièce Kbis", () => appel.piece("pre-a", "kbis"), "presta/etab-a/k.png", "image/png"],
+    ["pièce précédente", () => appel.precedente("pre-a", "pp-a"), "presta/etab-a/u-ancienne.pdf", "application/pdf"],
   ])("%s à soi : 200, le contenu, le bon type", async (_n, f, cle, mime) => {
     const r = await f();
     expect(r.status).toBe(200);
@@ -88,8 +110,15 @@ describe("chaque route sert le fichier de son propriétaire, et seulement lui", 
     ["rapport", () => appel.rapport("rap-b")],
     ["analyse", () => appel.analyse("ana-b")],
     ["pièce", () => appel.piece("pre-b", "urssaf")],
+    ["pièce précédente", () => appel.precedente("pre-b", "pp-b")],
   ])("%s d'un autre utilisateur : 403, et le stockage n'est pas lu", async (_n, f) => {
     const r = await f();
+    expect(r.status).toBe(403);
+    expect(h.get).not.toHaveBeenCalled();
+  });
+
+  it("pièce précédente sous un AUTRE de ses prestataires : 403 — elle doit être de CE prestataire", async () => {
+    const r = await appel.precedente("pre-a2", "pp-a");
     expect(r.status).toBe(403);
     expect(h.get).not.toHaveBeenCalled();
   });

@@ -122,6 +122,9 @@ export function genererReadme(args: {
   piecesPrestatairesManquantes: number;
   /** Pièces de prestataires RÉELLEMENT mises au ZIP, par type. */
   piecesPrestataires: { attestation: number; rcPro: number; kbis: number };
+  /** Pièces de prestataire REMPLACÉES jointes au ZIP (`Pieces_precedentes/`,
+   *  2026-10-12). Absent = aucune. */
+  piecesPrestatairesPrecedentes?: number;
   /** Fichiers des rapports de vérification : déposés, mis au ZIP, non récupérés. */
   rapportsZip?: CompteFichiers;
   /** Rapports de lignes de salarié, écartés du ZIP (documents nominatifs) ;
@@ -244,6 +247,9 @@ export function genererReadme(args: {
         pp.attestation > 0 ? `${pp.attestation} attestation(s) de vigilance` : null,
         pp.rcPro > 0 ? `${pp.rcPro} attestation(s) RC Pro` : null,
         pp.kbis > 0 ? `${pp.kbis} Kbis` : null,
+        (args.piecesPrestatairesPrecedentes ?? 0) > 0
+          ? `${args.piecesPrestatairesPrecedentes} pièce(s) précédente(s) remplacée(s)`
+          : null,
       ].filter(Boolean);
       const manquantes =
         args.piecesPrestatairesManquantes > 0

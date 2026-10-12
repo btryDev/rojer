@@ -26,6 +26,7 @@ import {
   type TypePiecePrestataire,
 } from "./storage";
 import { estSiretEnDouble, MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
+import { piecesRemplacees } from "./pieces";
 
 export type PrestataireActionState =
   | { status: "idle" }
@@ -213,7 +214,8 @@ export async function creerPrestataire(
  * même périmètre (`etablissementId` vérifié, puis la fiche cherchée DANS cet
  * établissement).
  *
- * L'HISTORIQUE QUE LE MODÈLE PERMET : AUCUN. `Prestataire` porte une colonne
+ * ~~L'HISTORIQUE QUE LE MODÈLE PERMET : AUCUN.~~ [2026-10-12 : `PiecePrestataire`,
+ * voir la fin de ce paragraphe.] `Prestataire` porte une colonne
  * par pièce, pas une liste. ~~Une pièce remplacée n'est plus référencée par
  * aucune ligne ; la garder au stockage ferait un fichier que plus rien ne
  * relit ni ne purge (`suppression/fichiers.ts`). Elle est donc libérée APRÈS
@@ -224,8 +226,13 @@ export async function creerPrestataire(
  * preuve. Elle N'EST PLUS LIBÉRÉE : elle reste au stockage, sans ligne qui la
  * référence — donc ni affichée, ni jointe au ZIP, ni emportée par la purge
  * d'une suppression (`suppression/fichiers.ts`). L'écran dit ce qui est vrai.]
- * Lister les attestations successives — et les purger avec le reste —
- * demande un modèle de pièces (migration additive) : non fait ici.
+ * ~~Lister les attestations successives — et les purger avec le reste —
+ * demande un modèle de pièces (migration additive) : non fait ici.~~
+ * [2026-10-12, fait : la pièce remplacée s'inscrit en `PiecePrestataire`,
+ * DANS LA MÊME TRANSACTION que l'écriture de la fiche — jamais une fiche à
+ * jour dont l'ancienne clé ne serait plus référencée nulle part. Elle est
+ * listée sur la fiche, jointe au ZIP de contrôle, et purgée avec le reste
+ * (`CLES_STOCKEES`).]
  *
  * Aucun champ de la fiche n'entre dans une empreinte de signature
  * (`signatures/hash-objet.ts` ne connaît pas le prestataire). Aucun calendrier
@@ -242,7 +249,19 @@ export async function modifierPrestataire(
 
   const existant = await prisma.prestataire.findFirst({
     where: { id: prestataireId, etablissementId },
-    select: { id: true },
+    select: {
+      id: true,
+      // Ce que la fiche dit des pièces AVANT l'écriture : c'est ce qui
+      // s'inscrit en `PiecePrestataire` si l'une est remplacée.
+      attestationUrssafCle: true,
+      attestationUrssafNom: true,
+      attestationUrssafValableJusquA: true,
+      assuranceRcProCle: true,
+      assuranceRcProNom: true,
+      assuranceRcProValableJusquA: true,
+      kbisCle: true,
+      kbisNom: true,
+    },
   });
   if (!existant) return { status: "error", message: "Prestataire introuvable" };
 
@@ -264,18 +283,25 @@ export async function modifierPrestataire(
     };
   }
 
+  const remplacees = piecesRemplacees(existant, depot.colonnes);
   try {
-    await prisma.prestataire.update({
-      where: { id: existant.id },
-      data: { ...colonnesDeLaSaisie(parsed.data), ...depot.colonnes },
-    });
+    await prisma.$transaction([
+      prisma.prestataire.update({
+        where: { id: existant.id },
+        data: { ...colonnesDeLaSaisie(parsed.data), ...depot.colonnes },
+      }),
+      prisma.piecePrestataire.createMany({
+        data: remplacees.map((r) => ({ prestataireId: existant.id, ...r })),
+      }),
+    ]);
   } catch (err) {
     await libererFichiers(depot.cles, "prestataires/modification");
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
   }
 
-  // Les pièces remplacées ne sont PAS libérées (2026-10-12) : voir plus haut.
+  // Les pièces remplacées ne sont PAS libérées (2026-10-12) : elles sont
+  // inscrites en `PiecePrestataire`, voir plus haut.
 
   revalidatePath(`/etablissements/${etablissementId}/prestataires/${existant.id}`);
   revalidatePath(`/etablissements/${etablissementId}/prestataires`);
@@ -344,6 +370,9 @@ export async function supprimerPrestataire(
       attestationUrssafCle: true,
       assuranceRcProCle: true,
       kbisCle: true,
+      // Lues AVANT la suppression : la cascade emporte les lignes, pas les
+      // fichiers (2026-10-12).
+      piecesPrecedentes: { select: { fichierCle: true } },
     },
   });
   if (!prestataire) return;
