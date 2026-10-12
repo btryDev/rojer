@@ -58,6 +58,12 @@ export type CompteParPersonne = {
   enRetard: number;
   /** Parmi elles, celles dont la date d'entrée n'est pas renseignée : non datées. */
   nonDatees: number;
+  /**
+   * La plus ancienne échéance dépassée, ou `null` sans retard. C'est elle qui
+   * range la carte parmi les retards du tableau de bord (décision de la
+   * propriétaire du 2026-10-12 : un manque en retard compte comme un retard).
+   */
+  plusAncienRetard: Date | null;
 };
 
 export type Transmissions = {
@@ -240,13 +246,19 @@ export function rapprocher(
       sansLeTitre: 0,
       enRetard: 0,
       nonDatees: 0,
+      plusAncienRetard: null,
     };
     for (const m of manques.flat()) {
       if (m.obligation.id !== titre.id) continue;
       compte.sansLeTitre += 1;
       const etat = etatDuManque(m, now);
       if (etat === null) compte.nonDatees += 1;
-      else if (etat === "enRetard") compte.enRetard += 1;
+      else if (etat === "enRetard") {
+        compte.enRetard += 1;
+        if (m.echeance && (!compte.plusAncienRetard || m.echeance < compte.plusAncienRetard)) {
+          compte.plusAncienRetard = m.echeance;
+        }
+      }
     }
     return compte;
   };

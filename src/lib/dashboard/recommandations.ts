@@ -96,6 +96,32 @@ export function phraseParPersonne(c: CompteParPersonne): string {
   return precisions.length > 0 ? `${base} — ${precisions.join(", ")}` : base;
 }
 
+/**
+ * Le rang d'une carte de titres dus (décision de la propriétaire du
+ * 2026-10-12, option 1). Un manque EN RETARD compte comme un retard : même
+ * priorité qu'une vérification dépassée, classé par sa plus ancienne échéance
+ * — une VIP due en juillet passe devant une vérification dépassée en
+ * septembre. Sans retard, la carte garde le rang des transmissions (10).
+ *
+ * Le passage visuel du même jour l'a rendu nécessaire : à priorité 10, sur un
+ * dossier de quarante vérifications en retard, les deux cartes tombaient
+ * au-delà du cinquantième rang et la limite de cinq les coupait — la surface
+ * promise par l'ADR-043 § 2.5 n'existait pas à l'écran.
+ */
+function rangDesManques(comptes: readonly CompteParPersonne[]): {
+  priorite: number;
+  date?: Date;
+} {
+  const retards = comptes
+    .map((c) => c.plusAncienRetard)
+    .filter((d): d is Date => d !== null);
+  if (retards.length === 0) return { priorite: 10 };
+  return {
+    priorite: 1,
+    date: new Date(Math.min(...retards.map((d) => d.getTime()))),
+  };
+}
+
 /** Fenêtre « ça arrive » pour une vérification déjà planifiée. Plus courte
  *  que l'horizon proche du produit (30 j) : la file de travail du board dit
  *  ce qu'il faut faire *cette semaine*. */
@@ -506,7 +532,7 @@ export function genererRecommandations(
           ? o.parPersonne.map(phraseParPersonne).join(" ; ")
           : "Suppose un titre nominatif — rien de ce qui est déclaré n'y répond",
       href: `/etablissements/${etab}/equipe`,
-      priorite: 10,
+      ...rangDesManques(o.parPersonne ?? []),
     });
   }
 
@@ -521,7 +547,7 @@ export function genererRecommandations(
       titre: "Titres dus à vos salariés, non déclarés",
       sousTitre: dus.map(phraseParPersonne).join(" ; "),
       href: `/etablissements/${etab}/equipe`,
-      priorite: 10,
+      ...rangDesManques(dus),
     });
   }
 

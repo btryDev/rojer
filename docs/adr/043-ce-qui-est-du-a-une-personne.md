@@ -78,6 +78,15 @@ Mesuré le 2026-10-12, en lisant le code de `main` (54cbb45f) :
   retirée.** Les titres sous condition restent listés dans Équipe (catalogue) ;
   les titres dus à l'entrée ont désormais une surface de décision réelle.
 
+- **(d) Un manque en retard compte comme un retard** (2026-10-12, après le
+  passage visuel : option 1). Au tableau de bord, une carte de titres dus
+  dont au moins une personne est en retard prend la priorité d'une
+  vérification dépassée, classée par sa plus ancienne échéance ; sans retard,
+  elle garde le rang des transmissions. Rien n'est réservé : le rang suit la
+  date. À priorité fixe, sur un dossier de quarante vérifications en retard,
+  la carte tombait au-delà du cinquantième rang et la limite de cinq la
+  coupait.
+
 ## 4. Ce qui n'est pas fait
 
 - Aucune obligation nouvelle n'est encodée.

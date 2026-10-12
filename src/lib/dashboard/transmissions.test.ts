@@ -566,6 +566,7 @@ describe("le signal compte par personne pour un titre dû à l'entrée (ADR-043 
         sansLeTitre: 1,
         enRetard: 0,
         nonDatees: 0,
+        plusAncienRetard: null,
       },
     ]);
   });
@@ -611,6 +612,8 @@ describe("le signal compte par personne pour un titre dû à l'entrée (ADR-043 
         sansLeTitre: 3,
         enRetard: 1,
         nonDatees: 1,
+        // L'échéance de la personne entrée le 1er juin : un mois plus tard.
+        plusAncienRetard: expect.any(Date),
       },
     ]);
   });
@@ -765,5 +768,55 @@ describe("un titre déclaré l'emporte sur un « non » au fait, partout (contre
     expect(phraseTitre("non", null, true)).not.toContain("Non dû");
     const t = rapprocher([], [], [claire], NOW, ecartes);
     expect(t.titresDusNonDeclares.map((c) => c.titre)).toContain(ATTESTATION);
+  });
+});
+
+describe("un manque en retard compte comme un retard (décision du 2026-10-12, option 1)", () => {
+  // Le passage visuel du même jour : à priorité 10, la carte tombait derrière
+  // quarante vérifications en retard et la limite de cinq la coupait.
+  const organisation = obligationsConformite.find(
+    (o) => o.id === "formation-securite-etablissement-organisation",
+  )!;
+  const verifsEnRetard = (iso: string, n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `v${i}`,
+      statut: "planifiee" as const,
+      datePrevue: new Date(`${iso}T12:00:00Z`),
+      periodicite: "annuelle" as const,
+      libelleObligation: `Vérification ${i}`,
+      equipementLibelle: "Tableau",
+      archiveLe: null,
+      graceJusquAu: null,
+    }));
+  const recos = (verifs: ReturnType<typeof verifsEnRetard>, entreLe: string) =>
+    genererRecommandations(
+      {
+        etablissementId: "etab-x",
+        verifications: verifs,
+        actions: [],
+        nbEquipements: 3,
+        duerpSecteurChoisi: true,
+        nbRapports: 2,
+        transmissions: rapprocher([organisation], [], [personne(entreLe)], NOW),
+      },
+      { now: NOW },
+    ).map((r) => r.cle);
+
+  it("une VIP due en avril passe devant six vérifications dépassées en juillet", () => {
+    // Entrée le 2026-01-01 : VIP due le 2026-04-01, formation le 2026-02-01.
+    const cles = recos(verifsEnRetard("2026-07-01", 6), "2026-01-01");
+    expect(cles).toContain("titres-dus-non-declares");
+    expect(cles).toContain("transmission-salarie:formation-securite-etablissement-organisation");
+  });
+
+  it("des vérifications plus anciennes passent devant : le rang suit la date, rien n'est réservé", () => {
+    const cles = recos(verifsEnRetard("2025-01-01", 6), "2026-01-01");
+    expect(cles).not.toContain("titres-dus-non-declares");
+  });
+
+  it("sans retard, la carte garde le rang des transmissions", () => {
+    // Entrée récente : rien n'est encore en retard.
+    const cles = recos(verifsEnRetard("2026-07-01", 6), "2026-08-20");
+    expect(cles).not.toContain("titres-dus-non-declares");
   });
 });
