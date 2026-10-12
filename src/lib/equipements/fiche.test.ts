@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { porteurDe } from "@/lib/referentiels/conformite/types";
 
 /**
  * Une obligation FABRIQUÉE pour le second verbe (« à déclarer faite »).
@@ -29,6 +30,7 @@ vi.mock("@/lib/referentiels/conformite", async (importOriginal) => {
   };
 });
 import {
+  obligationsApplicablesALAppareil,
   chapeauAFaire,
   libelleDelai,
   lignesAFaire,
@@ -659,6 +661,8 @@ describe("obligationsDeLEquipement", () => {
 function ficheAuMoteur(opts: {
   categorie: string;
   caracteristiques?: Record<string, unknown> | null;
+  /** Le dossier, s'il n'est pas le bureau de six par défaut. */
+  etablissement?: Record<string, unknown>;
 }): FicheEquipement {
   return {
     id: "eq-1",
@@ -681,6 +685,7 @@ function ficheAuMoteur(opts: {
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
+      ...opts.etablissement,
     },
   } as unknown as FicheEquipement;
 }
@@ -738,5 +743,40 @@ describe("obligationsDeclencheesParUnFait", () => {
     expect(
       obligationsDeclencheesParUnFait(scelle).map((d) => d.obligation.id),
     ).not.toContain("froid-controle-etancheite-apres-modification");
+  });
+});
+
+describe("obligationsApplicablesALAppareil — ce que comptent la pastille et le panneau « ? »", () => {
+  // Audit du 2026-10-12 : la fiche comptait les obligations à ligne de suivi
+  // plus les événementielles, et laissait dehors les états permanents — ni
+  // ligne, ni fait déclencheur. Une porte automatique en ERP en annonçait 2
+  // sur 4.
+  const porteEnErp = ficheAuMoteur({
+    categorie: "PORTE_AUTO",
+    etablissement: { estERP: true, typeErp: "N", categorieErp: "N5" },
+  });
+
+  it("compte les états permanents de l'appareil, sans aucune ligne de suivi", () => {
+    const natures = obligationsApplicablesALAppareil(porteEnErp).map(
+      (a) => a.obligation.nature,
+    );
+    expect(natures).toContain("etat_permanent");
+    expect(natures).toContain("echeance_recurrente");
+    // La fiche n'a aucune `Verification` : l'ancienne lecture n'en voyait rien.
+    expect(obligationsDeLEquipement(porteEnErp)).toEqual([]);
+  });
+
+  it("ne prend que ce que porte l'appareil, jamais l'établissement", () => {
+    for (const { obligation } of obligationsApplicablesALAppareil(porteEnErp)) {
+      expect(porteurDe(obligation), obligation.id).toBe("equipement");
+    }
+  });
+
+  it("les événementielles en sont une partie, pas une autre lecture", () => {
+    const eq = ficheAuMoteur({ categorie: "INSTALLATION_FRIGORIFIQUE" });
+    const toutes = obligationsApplicablesALAppareil(eq).map((a) => a.obligation.id);
+    for (const d of obligationsDeclencheesParUnFait(eq)) {
+      expect(toutes).toContain(d.obligation.id);
+    }
   });
 });

@@ -579,7 +579,27 @@ export function obligationsDeLEquipement(eq: FicheEquipement): Obligation[] {
  */
 export function obligationsDeclencheesParUnFait(
   eq: FicheEquipement,
-): ObligationDeclencheeParUnFait[] {
+): ObligationDeLAppareil[] {
+  return obligationsApplicablesALAppareil(eq).filter((a) =>
+    estDeclencheeParUnFait(a.obligation),
+  );
+}
+
+/**
+ * Ce que le MOTEUR rend applicable à cet appareil, toutes natures : échéances
+ * récurrentes, états permanents, ponctuelles, événementielles.
+ *
+ * C'est ce que comptent la pastille « N obligations » et le panneau « ? » de
+ * la fiche (audit du 2026-10-12). ~~Ils comptaient les obligations à ligne de
+ * suivi, plus les événementielles~~ : un état permanent n'a ni ligne (le
+ * générateur le saute) ni fait déclencheur, et tombait entre les deux — une
+ * porte automatique en ERP en déclarait 2 sur 4, un extincteur 2 sur 4. Même
+ * passage au moteur que les événementielles ci-dessus, dont c'est la source ;
+ * même lacune sur les surcharges de prescription, et pour la même raison.
+ */
+export function obligationsApplicablesALAppareil(
+  eq: FicheEquipement,
+): ObligationDeLAppareil[] {
   const applicables = determineObligationsApplicables(
     projeterEtablissement(eq.etablissement),
     [
@@ -597,19 +617,20 @@ export function obligationsDeclencheesParUnFait(
 
   return applicables
     .filter((a) => a.porteur === "equipement")
-    .filter((a) => estDeclencheeParUnFait(a.obligation))
     .map((a) => ({ obligation: a.obligation, raisons: a.raisons }));
 }
 
 /**
- * Une obligation événementielle qui vise cet appareil, avec le mode *explain*
- * du moteur — ce qui, dans ce dossier-ci, la fait porter sur lui.
+ * Une obligation qui vise cet appareil, avec le mode *explain* du moteur — ce
+ * qui, dans ce dossier-ci, la fait porter sur lui. ~~Une obligation
+ * événementielle~~ : le type sert aussi la lecture toutes natures
+ * (`obligationsApplicablesALAppareil`, 2026-10-12).
  *
  * Les `raisons` sont reprises telles que le moteur les écrit, jamais
  * reformulées : une phrase réécrite à côté finit par dire autre chose que le
  * calcul qu'elle prétend expliquer.
  */
-export type ObligationDeclencheeParUnFait = {
+export type ObligationDeLAppareil = {
   obligation: Obligation;
   raisons: string[];
 };

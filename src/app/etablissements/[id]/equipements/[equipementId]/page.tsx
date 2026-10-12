@@ -30,6 +30,7 @@ import {
   getFicheEquipement,
   lignesAFaire,
   lignesHistoire,
+  obligationsApplicablesALAppareil,
   obligationsDeclencheesParUnFait,
   libelleDelai,
   obligationsDeLEquipement,
@@ -102,17 +103,16 @@ export default async function EquipementDetailPage({
   // POURQUOI LE COMPTE DU BANDEAU CHANGE. La pastille « N obligations » se
   // calculait sur les seules obligations qui ont produit une ligne de suivi.
   // Le corps de la fiche en nomme désormais d'autres, et « un en-tête ne doit
-  // jamais contredire ce qu'il coiffe » (charte, § 5). Le dédoublonnage n'a
-  // aujourd'hui rien à retirer — une événementielle ne peut pas avoir de
-  // `Verification` — mais il coûte une ligne et évite le double compte le jour
-  // où une prescription particulière en engendrera une.
-  const idsAvecSuivi = new Set(obligations.map((o) => o.id));
-  const obligationsCitees = [
-    ...obligations,
-    ...declenchees
-      .filter((d) => !idsAvecSuivi.has(d.obligation.id))
-      .map((d) => d.obligation),
-  ];
+  // jamais contredire ce qu'il coiffe » (charte, § 5). ~~Le dédoublonnage n'a
+  // aujourd'hui rien à retirer~~ [2026-10-12, audit : l'union « lignes de
+  // suivi + événementielles » laissait dehors les états permanents de
+  // l'appareil — ni ligne, ni fait déclencheur —, si bien qu'une porte
+  // automatique en ERP annonçait 2 obligations sur 4. La pastille et le
+  // panneau « ? » lisent désormais le MOTEUR, toutes natures, comme la carte
+  // des événementielles dont c'est la source (`obligationsApplicablesALAppareil`).]
+  const obligationsCitees = obligationsApplicablesALAppareil(eq).map(
+    (a) => a.obligation,
+  );
 
   const caracteristiques = caracteristiquesLisibles(
     eq.categorie,
