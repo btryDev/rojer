@@ -5077,10 +5077,12 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     `_REVISION` en `ReferenceLegale & { source: "NORME"; article: string }`
     pour que `RythmeRetenu.reference` se resserre ; le champ `norme` ne peut
     être retiré qu'avec les trois `norme:` de ce fichier.
-  - `corpus/code-travail-risque-chimique.ts` : R. 4412-11 et R. 4412-17 ne
+  - ~~`corpus/code-travail-risque-chimique.ts` : R. 4412-11 et R. 4412-17 ne
     peuvent entrer dans `ANNONCES` que si leur `declareA` devient
     `ADRESSE_MANQUES_ANNONCES` (le test des deux sens l'exige) ; l'aide du
-    stockage cesserait alors d'être leur adresse.
+    stockage cesserait alors d'être leur adresse.~~ [2026-10-12,
+    `lot/suites-0810` : fait — rubrique « Risque chimique », décision de la
+    propriétaire du 2026-10-08.]
   - `OBLIGATIONS_RETIREES` : ~~un libellé et~~ un motif court~~s~~, écrit~~s~~ pour le
     dirigeant, remplacerai~~en~~t la lecture du motif de relecteur (date~~, tête~~).
     [2026-10-12, `lot/suites-0810` : le libellé est fait — champ `libelle`
@@ -5119,10 +5121,12 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     (`LABEL_PERIODICITE`). Commentaire « types seulement » de
     `renvoi-aux-normes.ts` barré.
 - **Ce qui reste ouvert, et qui le porte** :
-  - `R. 4412-11` et `R. 4412-17` dans `ANNONCES` — **en attente de la
+  - ~~`R. 4412-11` et `R. 4412-17` dans `ANNONCES` — **en attente de la
     propriétaire** : la rubrique de non-couverture où les annoncer est à
     choisir (leur `declareA` devrait devenir `ADRESSE_MANQUES_ANNONCES`, et
-    l'aide du stockage cesserait d'être leur adresse).
+    l'aide du stockage cesserait d'être leur adresse).~~ [2026-10-12, `lot/suites-0810` : la propriétaire a choisi
+    « une rubrique « Risque chimique » » le 2026-10-08 ; faite, `declareA`
+    passé à `ADRESSE_MANQUES_ANNONCES`, condition « travail ».]
   - `OBLIGATIONS_RETIREES` : ~~un libellé et~~ un motif court~~s~~, écrit~~s~~ pour le
     dirigeant — **à faire**, passe de code suivante. [2026-10-12,
     `lot/suites-0810` : libellé fait (`ObligationRetiree.libelle`, lu par

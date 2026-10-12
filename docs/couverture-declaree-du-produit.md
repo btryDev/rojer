@@ -256,7 +256,10 @@ Puis six articles avec le retrait de quatre lignes `stockage-dangereux-*`
 (« à exclure sauf 3 derniers points ») : `C. env. L. 512-1`, `C. env. L. 512-7`,
 `C. env. L. 512-8`, `Arrêté 2015-06-01 art. 22`, `R. 4412-11`, `R. 4412-17` —
 adresse : l'aide de la catégorie « Stockage de matières dangereuses » du
-formulaire d'équipement.
+formulaire d'équipement. [2026-10-12, `lot/suites-0810` : `R. 4412-11` et
+`R. 4412-17` passent à `ADRESSE_MANQUES_ANNONCES`, rubrique « Risque
+chimique » (décision de la propriétaire du 2026-10-08) ; les quatre autres
+gardent l'aide du stockage.]
 
 ---
 
@@ -574,7 +577,10 @@ la requalification périodique, seule restée — et ce qu'il ne suit pas.
 **Adresse visible** : l'aide de la catégorie « Stockage de matières
 dangereuses » du formulaire d'équipement (`DESCRIPTION_CATEGORIE`), qui dit ce
 que Rojer suit — fiches de données de sécurité, formation, signalisation — et ce
-qu'il ne suit pas.
+qu'il ne suit pas. [2026-10-12 : pour `R. 4412-11` et `R. 4412-17`, l'adresse
+est désormais la page « Ce que Rojer ne couvre pas », rubrique « Risque
+chimique », annoncée à tout employeur ; l'aide du stockage continue de le dire
+à la déclaration.]
 
 ### Information sur les équipements de travail, tous employeurs — 1 article (2026-10-07)
 
