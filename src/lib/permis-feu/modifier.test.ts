@@ -13,6 +13,7 @@ const { db } = vi.hoisted(() => ({
     permis: [] as Ligne[],
     signatures: [] as Ligne[],
     jetons: [] as Ligne[],
+    prestataires: [] as Ligne[],
     journal: [] as string[],
   },
 }));
@@ -25,6 +26,10 @@ vi.mock("@/lib/prisma", () => {
       return [];
     },
     permisFeu: {
+      create: vi.fn(async ({ data }: { data: Ligne }) => {
+        db.permis.push(data);
+        return data;
+      }),
       findUnique: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
       findFirst: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
@@ -38,6 +43,9 @@ vi.mock("@/lib/prisma", () => {
         db.journal.push("compte des signatures");
         return db.signatures.filter((s) => correspond(s, where)).length;
       }),
+    },
+    prestataire: {
+      findFirst: vi.fn(async ({ where }: { where: Ligne }) => db.prestataires.find((x) => correspond(x, where)) ?? null),
     },
     accessToken: {
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
@@ -68,8 +76,9 @@ vi.mock("@/lib/batiments/queries", () => ({
   resoudreBatimentOptionnel: vi.fn(async (_e: string, id?: string) => ({ ok: true, id: id ?? null })),
 }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn() }));
+vi.mock("./queries", () => ({ nextNumeroPermisFeu: vi.fn(async () => 2) }));
 
-import { modifierPermisFeu } from "./actions";
+import { creerPermisFeu, modifierPermisFeu } from "./actions";
 import { MESURES_PERMIS_FEU, MESURES_RETIREES } from "./referentiel";
 import { NATURES_TRAVAUX } from "./schema";
 
@@ -119,6 +128,10 @@ beforeEach(() => {
   db.permis = [];
   db.signatures = [];
   db.jetons = [];
+  db.prestataires = [
+    { id: "presta-a-moi", etablissementId: "etab-a-moi" },
+    { id: "presta-voisin", etablissementId: "etab-voisin" },
+  ];
   db.journal = [];
 });
 
@@ -218,5 +231,36 @@ describe("les liens de signature en vol (relecture indépendante du 2026-10-12)"
       'verrou SELECT 1 FROM "PermisFeu" WHERE "id" = ? FOR UPDATE pf-1',
       "compte des signatures",
     ]);
+  });
+});
+
+describe("le prestataire de l'annuaire est celui de l'établissement (relecture indépendante du 2026-10-12)", () => {
+  const REFUS = {
+    status: "error",
+    message: "Prestataire introuvable",
+    fieldErrors: { prestataireId: ["Prestataire introuvable dans votre annuaire"] },
+  };
+
+  it("à la création, la fiche d'un autre client est refusée et rien ne s'écrit", async () => {
+    const r = await creerPermisFeu("etab-a-moi", { status: "idle" }, saisie({ prestataireId: "presta-voisin" }));
+
+    expect(r).toEqual(REFUS);
+    expect(db.permis).toHaveLength(0);
+  });
+
+  it("à la modification, de même", async () => {
+    db.permis.push(permisEnBase());
+
+    const r = await modifier(saisie({ prestataireId: "presta-voisin" }));
+
+    expect(r).toEqual(REFUS);
+    expect(db.permis[0].prestataireId).toBeUndefined();
+  });
+
+  it("la fiche de son propre annuaire se rattache", async () => {
+    db.permis.push(permisEnBase());
+
+    expect((await modifier(saisie({ prestataireId: "presta-a-moi" }))).status).toBe("success");
+    expect(db.permis[0].prestataireId).toBe("presta-a-moi");
   });
 });

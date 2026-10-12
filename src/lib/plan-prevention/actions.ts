@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
+import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { lireDateDeclaree } from "@/lib/traces/date-declaree";
 import { z } from "zod";
@@ -183,6 +184,12 @@ const lignesACreer = (d: PlanPreventionInput) =>
     mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
   }));
 
+const PRESTATAIRE_INTROUVABLE: PlanActionState = {
+  status: "error",
+  message: "Prestataire introuvable",
+  fieldErrors: { prestataireId: ["Prestataire introuvable dans votre annuaire"] },
+};
+
 const ZONE_INTROUVABLE: PlanActionState = {
   status: "error",
   message: "Zone introuvable",
@@ -210,6 +217,11 @@ export async function creerPlanPrevention(
     parsed.data.batimentId,
   );
   if (!batiment.ok) return ZONE_INTROUVABLE;
+  const prestataire = await resoudrePrestataireOptionnel(
+    etablissementId,
+    parsed.data.prestataireId,
+  );
+  if (!prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
   const numero = await nextNumeroPlan(etablissementId);
   const id = `pp_${randomUUID()}`;
@@ -301,6 +313,11 @@ export async function modifierPlanPrevention(
       parsed.data.batimentId,
     );
     if (!batiment.ok) return ZONE_INTROUVABLE;
+    const prestataire = await resoudrePrestataireOptionnel(
+      etablissementId,
+      parsed.data.prestataireId,
+    );
+    if (!prestataire.ok) return PRESTATAIRE_INTROUVABLE;
     const avant = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
     await tx.planPrevention.update({
       where: { id: planId, etablissementId },

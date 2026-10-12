@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
+import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { NatureTravauxPointChaud } from "@prisma/client";
 import type { StatutPermisFeu } from "@prisma/client";
@@ -89,6 +90,12 @@ function colonnesPermis(d: PermisFeuInput) {
   };
 }
 
+const PRESTATAIRE_INTROUVABLE: PermisFeuActionState = {
+  status: "error",
+  message: "Prestataire introuvable",
+  fieldErrors: { prestataireId: ["Prestataire introuvable dans votre annuaire"] },
+};
+
 const ZONE_INTROUVABLE: PermisFeuActionState = {
   status: "error",
   message: "Zone introuvable",
@@ -116,6 +123,11 @@ export async function creerPermisFeu(
     parsed.data.batimentId,
   );
   if (!batiment.ok) return ZONE_INTROUVABLE;
+  const prestataire = await resoudrePrestataireOptionnel(
+    etablissementId,
+    parsed.data.prestataireId,
+  );
+  if (!prestataire.ok) return PRESTATAIRE_INTROUVABLE;
 
   const numero = await nextNumeroPermisFeu(etablissementId);
   const id = `pf_${randomUUID()}`;
@@ -198,6 +210,11 @@ export async function modifierPermisFeu(
       parsed.data.batimentId,
     );
     if (!batiment.ok) return ZONE_INTROUVABLE;
+    const prestataire = await resoudrePrestataireOptionnel(
+      etablissementId,
+      parsed.data.prestataireId,
+    );
+    if (!prestataire.ok) return PRESTATAIRE_INTROUVABLE;
     // Relues sous le verrou : ce sont elles que l'écriture conserve.
     const enBase = await tx.permisFeu.findFirst({
       where: { id: permisFeuId, etablissementId },

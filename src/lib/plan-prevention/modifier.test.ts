@@ -15,6 +15,7 @@ const { db } = vi.hoisted(() => ({
     plans: [] as Ligne[],
     signatures: [] as Ligne[],
     jetons: [] as Ligne[],
+    prestataires: [] as Ligne[],
     /** Le journal, dans l'ordre : verrous pris et comptes de signatures. */
     journal: [] as string[],
   },
@@ -29,6 +30,10 @@ vi.mock("@/lib/prisma", () => {
       return [];
     },
     planPrevention: {
+      create: vi.fn(async ({ data }: { data: Ligne }) => {
+        db.plans.push(data);
+        return data;
+      }),
       findUnique: vi.fn(async ({ where }: { where: Ligne }) => db.plans.find((p) => correspond(p, where)) ?? null),
       update: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
         const p = db.plans.find((x) => correspond(x, where));
@@ -50,6 +55,9 @@ vi.mock("@/lib/prisma", () => {
         db.journal.push("compte des signatures");
         return db.signatures.filter((s) => correspond(s, where)).length;
       }),
+    },
+    prestataire: {
+      findFirst: vi.fn(async ({ where }: { where: Ligne }) => db.prestataires.find((x) => correspond(x, where)) ?? null),
     },
     accessToken: {
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
@@ -85,8 +93,9 @@ vi.mock("@/lib/batiments/queries", () => ({
   ),
 }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn() }));
+vi.mock("./queries", () => ({ nextNumeroPlan: vi.fn(async () => 2) }));
 
-import { modifierPlanPrevention } from "./actions";
+import { creerPlanPrevention, modifierPlanPrevention } from "./actions";
 
 function planEnBase(extra: Ligne = {}): Ligne {
   return {
@@ -143,6 +152,10 @@ beforeEach(() => {
   db.plans = [];
   db.signatures = [];
   db.jetons = [];
+  db.prestataires = [
+    { id: "presta-a-moi", etablissementId: "etab-a-moi" },
+    { id: "presta-voisin", etablissementId: "etab-voisin" },
+  ];
   db.journal = [];
 });
 
@@ -270,5 +283,36 @@ describe("les liens de signature en vol (relecture indépendante du 2026-10-12)"
 
     expect(db.journal[0]).toMatch(/^verrou SELECT 1 FROM "PlanPrevention" WHERE "id" = \? FOR UPDATE pp-1$/);
     expect(db.journal[1]).toBe("compte des signatures");
+  });
+});
+
+describe("le prestataire de l'annuaire est celui de l'établissement (relecture indépendante du 2026-10-12)", () => {
+  const REFUS = {
+    status: "error",
+    message: "Prestataire introuvable",
+    fieldErrors: { prestataireId: ["Prestataire introuvable dans votre annuaire"] },
+  };
+
+  it("à la création, la fiche d'un autre client est refusée et rien ne s'écrit", async () => {
+    const r = await creerPlanPrevention("etab-a-moi", { status: "idle" }, saisie({ prestataireId: "presta-voisin" }));
+
+    expect(r).toEqual(REFUS);
+    expect(db.plans).toHaveLength(0);
+  });
+
+  it("à la modification, de même", async () => {
+    db.plans.push(planEnBase());
+
+    const r = await modifier(saisie({ prestataireId: "presta-voisin" }));
+
+    expect(r).toEqual(REFUS);
+    expect(db.plans[0].prestataireId).toBeUndefined();
+  });
+
+  it("la fiche de son propre annuaire se rattache", async () => {
+    db.plans.push(planEnBase());
+
+    expect((await modifier(saisie({ prestataireId: "presta-a-moi" }))).status).toBe("success");
+    expect(db.plans[0].prestataireId).toBe("presta-a-moi");
   });
 });

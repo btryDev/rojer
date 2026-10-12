@@ -31,6 +31,26 @@ export async function getPrestataire(
 }
 
 /**
+ * Le prestataire de l'annuaire qu'une saisie désigne, s'il est de CET
+ * établissement (relecture indépendante du 2026-10-12). Le plan de prévention
+ * et le permis de feu écrivaient `prestataireId` tel que le formulaire
+ * l'envoyait : un identifiant de l'annuaire d'un autre client s'y
+ * rattachait. Même patron que `resoudreBatimentOptionnel` ; les appelants ont
+ * déjà établi la propriété de l'établissement.
+ */
+export async function resoudrePrestataireOptionnel(
+  etablissementId: string,
+  prestataireId: string | null | undefined,
+): Promise<{ ok: true; id: string | null } | { ok: false }> {
+  if (!prestataireId) return { ok: true, id: null };
+  const p = await prisma.prestataire.findFirst({
+    where: { id: prestataireId, etablissementId },
+    select: { id: true },
+  });
+  return p ? { ok: true, id: p.id } : { ok: false };
+}
+
+/**
  * Les prestataires dont une pièce appelle une action, comptés SUR LA GRAVITÉ.
  *
  * ~~Comptait `alertesOuvertes > 0`.~~ Corrigé le 2026-09-20. Le module qu'il
