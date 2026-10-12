@@ -2458,7 +2458,8 @@ bloquante pour la branche :
    propriétaire : l'étape est **calculée**, plus stockée
    (`etatEtapeTransverses`, `transverses/etat.ts`) — faite quand chaque
    question a une réponse, oui ou non, le silence n'en étant pas une. Sinon
-   le fil d'étapes affiche « N question(s) nouvelle(s) à répondre → », vers
+   le fil d'étapes affiche ~~« N question(s) nouvelle(s) à répondre → »~~
+   « N questions sans réponse → » (`signalQuestionsARepondre`, 2026-10-12), vers
    la première question sans réponse de `/duerp/[id]/transverses`, seul écran
    qui les pose toutes. `transversesRepondues` est inerte (commentaire daté au
    schéma, sans migration) ; `validerTransverses` et son bouton sont retirés.
