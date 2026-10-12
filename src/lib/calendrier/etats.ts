@@ -67,7 +67,14 @@ export type RegistreLigne =
   // (`conformite/initiative.ts`). Elle garde sa date et son rythme, elle se
   // pose au calendrier, mais n'est ni en retard, ni proche, ni à planifier
   // pour l'exploitant — aucun compteur d'état ne la compte.
-  | "pourInformation";
+  | "pourInformation"
+  // UNE ÉCHÉANCE PASSÉE QUE SEUL LE SILENCE DE LA FICHE RETIENT (D26, audit du
+  // 2026-10-12). Le bandeau et le rail la sortaient déjà des retards (D1 (a),
+  // `repartirVerifications`) ; l'en-tête rouge des mois, la règle de l'année,
+  // les tuiles par équipement et la fiche d'un appareil la peignaient encore
+  // « en retard ». Aucune fonction de ce module ne la produit : elle ne sort
+  // que de `registrePrudent` (`./prudence`), qui reçoit les marques du dossier.
+  | "aConfirmer";
 
 /**
  * Urgence relative, pour trancher quand une case ne peut porter qu'un
@@ -96,6 +103,9 @@ export const TON_REGISTRE: Record<RegistreLigne, "alerte" | "warn" | "ok"> = {
   sansRendezVous: "ok",
   // Pour information : rien à signaler à l'exploitant (C64).
   pourInformation: "ok",
+  // À confirmer : l'attention, comme « à planifier » — ni une alerte, ni rien
+  // (D1 (a), la fenêtre du board le disait déjà ainsi).
+  aConfirmer: "warn",
   proche: "ok",
   lointain: "ok",
   faite: "ok",
@@ -115,6 +125,9 @@ export const CHAMP_ETAT: Record<RegistreLigne, string> = {
   sansRendezVous: "var(--board-slate-pale)",
   // L'ardoise : une information, ni une alerte ni un acquis (C64).
   pourInformation: "var(--board-slate-pale)",
+  // L'ardoise encore, comme `MentionAConfirmer` : une question sans réponse
+  // n'est ni un retard (rose) ni un engagement (ambre).
+  aConfirmer: "var(--board-slate-pale)",
 };
 
 /** Encre lisible sur le champ correspondant. Jamais de blanc sur le rose. */
@@ -127,6 +140,7 @@ export const ENCRE_ETAT: Record<RegistreLigne, string> = {
   archivee: "var(--board-slate-mid)",
   sansRendezVous: "var(--board-slate-mid)",
   pourInformation: "var(--board-slate-mid)",
+  aConfirmer: "var(--board-slate-mid)",
 };
 
 /**
@@ -207,6 +221,7 @@ export const LIBELLE_ETAT: Record<
   },
   sansRendezVous: { un: "sans rendez-vous", plusieurs: "sans rendez-vous" },
   pourInformation: { un: "pour information", plusieurs: "pour information" },
+  aConfirmer: { un: "à confirmer", plusieurs: "à confirmer" },
 };
 
 /**
@@ -225,6 +240,7 @@ export const LIBELLE_ETAT_COURT: Record<RegistreLigne, string> = {
   archivee: "sans objet",
   sansRendezVous: "sans rendez-vous",
   pourInformation: "pour information",
+  aConfirmer: "à confirmer",
 };
 
 /** « 1 dépassée », « 5 dépassées » — le compte et son mot, accordés. */
@@ -405,15 +421,19 @@ export function classerVerification(
 /**
  * `a_confirmer` (D1 (a), 2026-09-28) : une échéance passée que seul le silence
  * de la fiche retient — peinte « à confirmer », jamais « en retard ». Aucune
- * fonction de ce module ne la produit : elle ne sort que de
- * `statutAffichePrudent` (`./prudence`), qui reçoit les marques du dossier.
+ * fonction de ce module ne la produit ~~: elle ne sort que de
+ * `statutAffichePrudent` (`./prudence`)~~ [2026-10-12, D26 : seule, sur une
+ * ligne ; sur une LECTURE, `statutDeLaLecture` la peint depuis le registre
+ * `aConfirmer`, que pose `registrePrudent`] — toutes deux dans `./prudence`,
+ * qui reçoit les marques du dossier.
  */
 /**
  * `pour_information` (C64, 2026-10-08) : une ligne à l'initiative de
  * l'administration — la visite de la commission de sécurité. Ni en retard, ni
  * à planifier, ni planifiée par l'exploitant : peinte « Pour information ».
  * Elle ne sort, elle aussi, que de `./prudence` (`statutAffichePrudent`,
- * `statutPeintPrudent`), qui lit `estLignePourInformation`.
+ * ~~`statutPeintPrudent`~~ — retirée le 2026-10-12, D26), qui lit
+ * `estLignePourInformation`.
  */
 export type StatutPeint =
   | StatutVerification
@@ -462,6 +482,9 @@ function statutDuRegistre(
     // planifier, ni planifiée par l'exploitant.
     case "pourInformation":
       return "pour_information";
+    // D26 : peinte « à confirmer », jamais « en retard » (`registrePrudent`).
+    case "aConfirmer":
+      return "a_confirmer";
   }
 }
 

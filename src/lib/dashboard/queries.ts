@@ -14,7 +14,7 @@
 // moyenner un retard sur une liste coupée).
 
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
-import { retenueParPrudence } from "@/lib/calendrier/prudence";
+import { registrePrudent, retenueParPrudence } from "@/lib/calendrier/prudence";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
@@ -262,10 +262,8 @@ export async function listerEvenementsFenetre(
         date: lec.date,
         // D1 (a) : une échéance passée que seul le silence de la fiche
         // retient n'est pas une alerte — l'attention, comme « à planifier ».
-        tone:
-          lec.registre === "enRetard" && prudence(v)
-            ? "warn"
-            : TON_REGISTRE[lec.registre],
+        // Lu sur le registre prudent (D26), plus redit ici.
+        tone: TON_REGISTRE[registrePrudent(lec.registre, v, prudence)],
         sansEcheance: !aUnRendezVous(v, now),
         type: typeDeVerification(v),
         contractuelle: estEcheanceContractuelle(v),

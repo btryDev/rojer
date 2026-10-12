@@ -30,6 +30,7 @@ const ligne = (id: string, iso: string, statut = "planifiee") => ({
   graceJusquAu: null,
   equipement: { libelle: `Appareil ${id}` },
   prescription: null,
+  prescriptionId: null,
 });
 
 /** Le bundle réduit à ce que lit le widget : le reste n'est pas consulté. */

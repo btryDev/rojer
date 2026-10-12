@@ -13,6 +13,7 @@
 
 import { aUnRendezVous, classerVerification, cinqProchaines } from "./etats";
 import type { VerificationDatee } from "@/lib/dates/retard";
+import { retenueParSaMarque } from "./prudence";
 
 /** Les seuls états qu'une échéance connue non réalisée peut porter. */
 export type RegistreEcheanceConnue = "enRetard" | "proche" | "lointain";
@@ -90,12 +91,24 @@ export function prochaineEcheanceConnue<T extends VerificationDatee>(
  * (`cinqProchaines`) : elles restent une information pour le widget, sans plus
  * cacher les vraies échéances (2026-09-15).
  */
-export function echeancesDuTableauDeBord<T extends VerificationDatee>(
+export function echeancesDuTableauDeBord<
+  T extends VerificationDatee & {
+    aConfirmer?: readonly string[];
+    prescriptionId: string | null;
+  },
+>(
   lignes: T[],
   now: Date,
 ): { prochainesVerifs: T[]; prochaineEcheance: T | null } {
   return {
     prochainesVerifs: cinqProchaines(lignes, now),
-    prochaineEcheance: prochaineEcheanceConnue(lignes, now)?.ligne ?? null,
+    // D26 (audit du 2026-10-12) : une ligne retenue par prudence n'est pas
+    // « la prochaine échéance » — sa date passée passait devant un vrai
+    // rendez-vous. Même règle que la vue du parc (`repartirParEquipement`).
+    prochaineEcheance:
+      prochaineEcheanceConnue(
+        lignes.filter((l) => !retenueParSaMarque(l)),
+        now,
+      )?.ligne ?? null,
   };
 }

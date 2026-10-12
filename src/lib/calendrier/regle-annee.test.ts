@@ -5,6 +5,7 @@ import {
   rangerParMois,
   regleDeLAnnee,
 } from "./regle-annee";
+import { AUCUNE_PRUDENCE, type RetenueParPrudence } from "./prudence";
 
 /** Le 15 septembre 2026, à midi à Paris. */
 const AUJOURDHUI = new Date("2026-09-15T10:00:00.000Z");
@@ -39,14 +40,17 @@ const verif = (
   graceJusquAu: null,
   libelleObligation: "Vérification périodique des installations électriques",
   derniereRealisation: derniereRealisation ? jour(derniereRealisation) : null,
+  obligationId: "elec-travail-periodique-annuelle",
+  prescriptionId: null as string | null,
 });
 
 const regle = (
   autres: EcheanceCalendrier[],
   verifs: ReturnType<typeof verif>[] = [],
   annee = 2026,
+  prudence: RetenueParPrudence = AUCUNE_PRUDENCE,
 ) => {
-  const lignes = lignesDuCalendrier(verifs, autres, AUJOURDHUI);
+  const lignes = lignesDuCalendrier(verifs, autres, AUJOURDHUI, prudence);
   const parMois = rangerParMois(lignes);
   return { lignes, parMois, mois: regleDeLAnnee(parMois, annee, AUJOURDHUI) };
 };
@@ -127,5 +131,37 @@ describe("règle annuelle — les vérifications", () => {
       faite: 0,
       lointain: 1,
     });
+  });
+});
+
+describe("règle annuelle — une échéance retenue par prudence (D26, 2026-10-12)", () => {
+  // Le bandeau et le rail la sortent des retards (D1 (a)) ; l'en-tête rouge du
+  // mois, la règle et le mois déplié à l'arrivée lisaient `registre ===
+  // "enRetard"` et la comptaient encore. Le registre dit « à confirmer ».
+  const toutEstPrudent: RetenueParPrudence = () => true;
+
+  it("ne compte pas en retard une échéance passée que seul le silence retient", () => {
+    const { lignes, mois } = regle([], [verif("2026-06-01", "planifiee")], 2026, toutEstPrudent);
+    expect(lignes.map((l) => l.genre === "verif" && l.registre)).toEqual(["aConfirmer"]);
+    expect(mois[5].enRetard).toBe(0);
+    // Elle n'a pas d'état de barre : ni rouge, ni un autre.
+    expect(mois[5].proche + mois[5].lointain + mois[5].faite).toBe(0);
+  });
+
+  it("la même échéance, sans prudence, reste en retard", () => {
+    const { lignes, mois } = regle([], [verif("2026-06-01", "planifiee")]);
+    expect(lignes.map((l) => l.genre === "verif" && l.registre)).toEqual(["enRetard"]);
+    expect(mois[5].enRetard).toBe(1);
+  });
+
+  it("sans échéance connue, elle reste « sans date » mais pas un retard sans date", () => {
+    const { mois } = regle([], [verif("2026-06-01", "a_planifier")], 2026, toutEstPrudent);
+    expect(mois[5].sansDate).toBe(1);
+    expect(mois[5].retardSansDate).toBe(0);
+  });
+
+  it("une échéance à venir n'est pas touchée : la prudence ne vise que le retard", () => {
+    const { lignes } = regle([], [verif("2026-12-01", "planifiee")], 2026, toutEstPrudent);
+    expect(lignes.map((l) => l.genre === "verif" && l.registre)).toEqual(["lointain"]);
   });
 });

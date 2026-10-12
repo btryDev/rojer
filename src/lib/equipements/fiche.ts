@@ -22,11 +22,13 @@ import {
   classerVerification,
   estStatutRealise,
   LIBELLE_AUCUNE_VERIFICATION,
+  LIBELLE_ETAT,
   LIBELLE_SANS_ECHEANCE,
   LIBELLE_SANS_RENDEZ_VOUS,
   type RegistreLigne,
 } from "@/lib/calendrier/etats";
 import { joursCivilsEntre } from "@/lib/dates";
+import { registrePrudent, type RetenueParPrudence } from "@/lib/calendrier/prudence";
 import {
   estActionEnRetard,
   estActionOuverte,
@@ -168,6 +170,13 @@ export function lignesAFaire(
   eq: FicheEquipement,
   base: string,
   maintenant: Date,
+  /**
+   * **Requise** (D26, audit du 2026-10-12) : le prédicat du dossier
+   * (`retenueParPrudence`). La fiche peignait « en retard de N jours », et
+   * comptait dans « N vérifications en retard », une échéance que le bandeau,
+   * le rail et la vue du parc ne comptent plus (D1 (a)).
+   */
+  prudence: RetenueParPrudence,
 ): LigneAFaire[] {
   const lignes: LigneAFaire[] = [];
 
@@ -178,7 +187,7 @@ export function lignesAFaire(
     // que le dépôt fait rouler la ligne, `classerVerification` suffit : ce qui
     // reste à faire, c'est son échéance ouverte. Les contrôles faits, eux, sont
     // l'historique de la fiche, quelques lignes plus bas.
-    const etat = classerVerification(v, maintenant);
+    const etat = registrePrudent(classerVerification(v, maintenant), v, prudence);
     // Une ligne éteinte ne réclame rien : elle n'a pas sa place dans « à faire ».
     if (etat !== "archivee" && etat !== "faite") {
       lignes.push({
@@ -261,8 +270,18 @@ function comparerParUrgence(
   // vérifications les deux écrans désignent la même ; la fiche, elle, mêle
   // les corrections, et l'en-tête dit alors « Un écart reste à lever »
   // (relecture, 2026-09-14).
+  // D26 : « à confirmer » après les échéances datées — sa date passée la
+  // mettait en tête des datées, donc en tête de la fiche.
   const rang = (l: { date: Date | null; etat: RegistreLigne }) =>
-    l.etat === "enRetard" ? (l.date ? 0 : 1) : l.date ? 2 : 3;
+    l.etat === "enRetard"
+      ? l.date
+        ? 0
+        : 1
+      : l.etat === "aConfirmer"
+        ? 3
+        : l.date
+          ? 2
+          : 3;
   const ecart = rang(a) - rang(b);
   if (ecart !== 0) return ecart;
   if (a.date && b.date) return a.date.getTime() - b.date.getTime();
@@ -285,6 +304,9 @@ export function libelleDelai(
   maintenant: Date,
   forme: "ligne" | "phrase",
 ): string {
+  // D26 : ni « en retard de », ni « depuis » — la fiche ne sait pas si elle
+  // est due. Le mot de la table d'états.
+  if (l.etat === "aConfirmer") return LIBELLE_ETAT.aConfirmer.un;
   if (!l.date) {
     return (
       l.etat === "enRetard"
@@ -370,6 +392,14 @@ export function chapeauAFaire(
       sansDate.filter((l) => l.genre === "verification").length,
       sansDate.filter((l) => l.genre === "action").length,
     );
+  }
+  // D26 : une échéance retenue par prudence est ouverte ; « aucune échéance
+  // n'est ouverte » serait faux, « en retard » aussi.
+  const aConfirmer = aFaire.filter((l) => l.etat === "aConfirmer").length;
+  if (aConfirmer > 0) {
+    return aConfirmer > 1
+      ? `${aConfirmer} vérifications sont à confirmer sur cet appareil : la fiche de l'établissement ne dit pas encore si elles s'appliquent`
+      : "Une vérification est à confirmer sur cet appareil : la fiche de l'établissement ne dit pas encore si elle s'applique";
   }
   const sansRendezVous = aFaire.filter((l) => l.etat === "sansRendezVous").length;
   if (sansRendezVous > 0) {
