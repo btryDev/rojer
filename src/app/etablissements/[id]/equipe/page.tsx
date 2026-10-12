@@ -51,6 +51,12 @@ export default async function EquipePage({
   const enRetard = equipe
     .filter((s) => s.actif)
     .reduce((n, s) => n + s.titres.filter((t) => t.etat === "enRetard").length, 0);
+  // Les titres jamais déclarés et dus, en retard (ADR-043) : comptés à part,
+  // parce que le geste n'est pas le même — déclarer, pas renouveler.
+  const manquesEnRetard = equipe.reduce(
+    (n, s) => n + s.manques.filter((m) => m.etat === "enRetard").length,
+    0,
+  );
   const actifs = equipe.filter((s) => s.actif).length;
 
   return (
@@ -90,6 +96,22 @@ export default async function EquipePage({
                 </span>
                 <span className="board-eyebrow text-[9.5px] tracking-[0.12em]">
                   {enRetard > 1 ? "titres à renouveler" : "titre à renouveler"}
+                </span>
+              </span>
+            )}
+            {manquesEnRetard > 0 && (
+              <span
+                className="inline-flex items-center gap-2 rounded-full px-4 py-[9px]"
+                style={{
+                  background: CHAMP_ETAT.enRetard,
+                  color: ENCRE_ETAT.enRetard,
+                }}
+              >
+                <span className="board-titre text-[20px] tabular-nums leading-none">
+                  {manquesEnRetard}
+                </span>
+                <span className="board-eyebrow text-[9.5px] tracking-[0.12em]">
+                  {manquesEnRetard > 1 ? "titres dus non déclarés" : "titre dû non déclaré"}
                 </span>
               </span>
             )}

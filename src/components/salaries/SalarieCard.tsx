@@ -8,11 +8,15 @@ import type { SalarieDeLaListe } from "@/lib/salaries/queries";
  *
  * La carte suit l'idiome de `VitrineEquipement` et de `PrestataireCard` — champ
  * coloré en tête, corps sur fond carte — avec une différence assumée : ce qui
- * colore la tête n'est pas le nombre de titres, c'est leur état. Une personne
+ * colore la tête n'est pas le nombre de titres, c'est leur état. ~~Une personne
  * sans titre déclaré n'est pas « en défaut » : l'outil ne sait pas ce qu'elle
- * fait, il ne peut donc rien réclamer (le cinquième déclencheur — l'activité
- * réellement exercée — n'est pas implémenté). La tête reste ardoise, et le
- * corps le dit en toutes lettres.
+ * fait, il ne peut donc rien réclamer~~ [2026-10-12, ADR-043 : il réclame ce
+ * que le texte doit à TOUT travailleur — la VIP et la formation à la sécurité,
+ * datées depuis l'entrée — et ce qu'un titre déclaré appelle. Ces manques
+ * colorent la tête comme un titre échu, et seulement quand ils sont datés.]
+ * Pour le reste, l'outil ne sait pas ce qu'elle fait (le cinquième
+ * déclencheur — l'activité réellement exercée — n'est pas implémenté) et ne
+ * réclame rien.
  */
 export function SalarieCard({
   etablissementId,
@@ -21,8 +25,12 @@ export function SalarieCard({
   etablissementId: string;
   salarie: SalarieDeLaListe;
 }) {
-  const enRetard = salarie.titres.filter((t) => t.etat === "enRetard").length;
-  const proches = salarie.titres.filter((t) => t.etat === "proche").length;
+  const etats = [
+    ...salarie.titres.map((t) => t.etat),
+    ...salarie.manques.map((m) => m.etat),
+  ];
+  const enRetard = etats.filter((e) => e === "enRetard").length;
+  const proches = etats.filter((e) => e === "proche").length;
 
   const etatDeLaTete =
     enRetard > 0 ? "enRetard" : proches > 0 ? "proche" : null;
@@ -98,7 +106,26 @@ export function SalarieCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-2.5 px-5 py-4">
-        {salarie.titres.length === 0 ? (
+        {/* Ce qui manque, AVANT ce qui est détenu : c'est le geste à faire. Un
+            manque sans date garde la puce ardoise — rien n'est en retard sur
+            une date que Rojer n'a pas. */}
+        {salarie.manques.length > 0 && (
+          <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+            {salarie.manques.map((m) => (
+              <li key={m.obligationId} className="flex items-start gap-2">
+                <span
+                  aria-hidden
+                  className="mt-[5px] size-[7px] flex-none rounded-full"
+                  style={{ background: CHAMP_ETAT[m.etat ?? "aPlanifier"] }}
+                />
+                <span className="min-w-0 flex-1 text-[12.5px] leading-[1.35] text-[color:var(--board-slate-ink)] line-clamp-2">
+                  À déclarer : {m.libelle}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {salarie.titres.length === 0 && salarie.manques.length > 0 ? null : salarie.titres.length === 0 ? (
           <p className="m-0 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             Aucun titre déclaré. Rojer ne devine pas ce que fait une personne :
             c&apos;est vous qui déclarez ce qu&apos;elle détient.

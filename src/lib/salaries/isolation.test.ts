@@ -408,7 +408,12 @@ describe("le propriétaire lit son propre dossier", () => {
         note: null,
       },
     );
-    expect(await compterTitresEnRetard(ETAB_A, NOW)).toBe(2);
+    // ~~2~~ [2026-10-12, ADR-043 : 3. L'autorisation de conduite sans durée
+    // reste hors du compte comme TITRE — la contre-épreuve tient —, mais elle
+    // appelle l'attestation médicale, jamais déclarée pour Claire, et exigible
+    // dès 2020 (R. 4323-56) : un manque en retard, que le badge compte. Les
+    // deux autres : l'attestation de voisinage échue et la VIP de 2020.]
+    expect(await compterTitresEnRetard(ETAB_A, NOW)).toBe(3);
 
     // Et la fiche dit la même chose que le badge, sur la même personne.
     const fiche = await getSalarie(ETAB_A, "sal-a", NOW);

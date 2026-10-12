@@ -55,6 +55,16 @@ const DELAI_EN_PHRASE: Record<PeriodiciteRetenue, string> = {
   decennale: "10 ans",
 };
 
+/**
+ * Un délai en durée — « 3 mois », « un mois ». Exporté pour la fiche salarié
+ * (ADR-043), qui dit le délai d'entrée d'un titre : la même table que la
+ * mention, plutôt qu'une seconde écrite à côté. `null` pour une périodicité
+ * sans durée.
+ */
+export function delaiEnPhrase(p: Periodicite): string | null {
+  return estRetenue(p) ? DELAI_EN_PHRASE[p] : null;
+}
+
 function estRetenue(p: Periodicite | undefined): p is PeriodiciteRetenue {
   return p !== undefined && p !== "autre" && p !== "mise_en_service_uniquement";
 }

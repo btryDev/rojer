@@ -32,6 +32,8 @@ import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-even
 import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
 import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
 import { CarteTitresDuDuerp } from "@/components/salaries/CarteTitresDuDuerp";
+import { CarteCeQuiManque } from "@/components/salaries/CarteCeQuiManque";
+import { ceQuiManqueALaPersonne } from "@/lib/salaries/du-a-la-personne";
 import { ReferenceFondatrice } from "@/components/salaries/ReferenceFondatrice";
 import {
   CHAMP_ETAT,
@@ -145,6 +147,12 @@ export default async function SalarieDetailPage({
   // due à TOUS les travailleurs. Ce qui varie d'une fiche à l'autre est la date
   // du dernier titre déclaré, pas la liste.
   const declenchees = obligationsDeclencheesParUnFait(s.titres);
+
+  // Ce qui manque à cette personne (ADR-043) : les titres dus à l'entrée et
+  // ceux qu'un titre déclaré appelle, jamais déclarés. La même fonction que le
+  // badge d'Équipe ; les autres cartes la lisent pour ne pas se contredire.
+  const manques = ceQuiManqueALaPersonne(s, s.titres);
+  const manquants = new Set(manques.map((m) => m.obligation.id));
 
   // Ce que les faits d'activité de l'établissement rendent dû à une partie de
   // l'effectif (ADR-038, ADR-041). Lus sur l'établissement : un dossier sans
@@ -388,6 +396,14 @@ export default async function SalarieDetailPage({
                 sujet, et le sujet est la personne. Elles sont donc ici, sur sa
                 fiche, et **au-dessus** du formulaire : on lit ce qui est dû
                 avant de lire ce qu'on peut saisir. */}
+            {/* Au-dessus de tout : ce que le droit doit à cette personne et
+                qu'aucun titre ne porte. Daté quand Rojer a de quoi le dater. */}
+            <CarteCeQuiManque
+              manques={manques}
+              now={now}
+              lienModifier={`/etablissements/${id}/equipe/${s.id}/modifier`}
+            />
+
             <CarteFiche titreFort="Ce qui se déclenche pour cette personne">
               {declenchees.length === 0 ? (
                 <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
@@ -400,10 +416,13 @@ export default async function SalarieDetailPage({
                     Ces obligations ne tombent à aucune date : elles sont dues à
                     un <strong className="font-semibold">fait</strong>{" "}
                     — une embauche, un changement de poste ou de technique.
-                    Rojer ne voit aucun de ces faits, donc il
-                    n&apos;ouvre ici ni échéance ni retard. Chaque ligne dit à
-                    quoi elle se déclenche ; vous seul savez quand le fait
-                    arrive.
+                    {/* ~~Rojer ne voit aucun de ces faits~~ [2026-10-12,
+                        ADR-043 : il voit l'embauche, par la date d'entrée.] */}
+                    Rojer ne voit que l&apos;embauche, par la date
+                    d&apos;entrée : la première formation est datée plus haut
+                    tant qu&apos;aucun titre n&apos;est déclaré. Les suivantes
+                    n&apos;ont ni échéance ni retard ici ; vous seul savez quand
+                    le poste change.
                   </p>
                   <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
                     {declenchees.map(({ obligation, dernierTitreLe }) => (
@@ -425,7 +444,9 @@ export default async function SalarieDetailPage({
                         <p className="m-0 mt-2 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
                           {dernierTitreLe
                             ? `Un titre est déclaré pour cette obligation, délivré le ${formaterDateLongueFr(dernierTitreLe)}. Il ne la referme pas : elle redevient due au fait suivant.`
-                            : "Aucun titre n'est déclaré pour cette obligation. Ce n'est pas un retard : aucune date ne dit quand elle était due."}
+                            : manquants.has(obligation.id)
+                              ? "Aucun titre n'est déclaré pour cette obligation : elle est due depuis l'entrée — voir « À déclarer pour cette personne »."
+                              : "Aucun titre n'est déclaré pour cette obligation. Ce n'est pas un retard : aucune date ne dit quand elle était due."}
                         </p>
                         <ReferenceFondatrice obligation={obligation} />
                       </li>
@@ -441,6 +462,7 @@ export default async function SalarieDetailPage({
             <CarteTitresDuDuerp
               questions={duerpDeLaFiche}
               lienVersLaQuestion={lienVersLaQuestion}
+              manquants={manquants}
             />
 
             <CarteFiche titreFort="Déclarer un titre">

@@ -9,6 +9,7 @@ import type { Periodicite } from "@/lib/referentiels/types-communs";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import { titreParId } from "./catalogue";
 import { echeanceDuTitre, type DatesDuTitre } from "./echeance";
+import { ceQuiManqueALaPersonne, etatDuManque } from "./du-a-la-personne";
 
 /**
  * Le prédicat d'appartenance des lectures de ce module (ADR-005).
@@ -136,6 +137,14 @@ export async function listerEquipe(etablissementId: string, now: Date) {
         etat: etatDuTitre(t, o, s.actif, now),
       };
     }),
+    // Ce qui lui manque (ADR-043) — la même fonction que sa fiche. `etat`
+    // vaut `null` quand rien n'est daté (date d'entrée absente) : la carte ne
+    // le peint pas en retard.
+    manques: ceQuiManqueALaPersonne(s, s.titres).map((m) => ({
+      obligationId: m.obligation.id,
+      libelle: m.obligation.libelle,
+      etat: etatDuManque(m, now),
+    })),
   }));
 }
 
@@ -214,13 +223,22 @@ export async function compterTitresEnRetard(
   now: Date,
 ): Promise<number> {
   const etablissement = await portee();
-  const titres = await prisma.titreSalarie.findMany({
-    where: {
-      salarie: { etablissementId, actif: true, etablissement },
+  const salaries = await prisma.salarie.findMany({
+    where: { etablissementId, actif: true, etablissement },
+    select: {
+      actif: true,
+      entreLe: true,
+      titres: { select: { obligationId: true, delivreLe: true, echeanceLe: true } },
     },
-    select: { obligationId: true, delivreLe: true, echeanceLe: true },
   });
-  return titres.filter((t) => {
+  // Un titre jamais déclaré et dû — en retard — appelle un geste autant qu'un
+  // titre échu (ADR-043). Même fonction que la fiche et Équipe ; un manque
+  // sans date n'est jamais compté.
+  const manquesEnRetard = salaries
+    .flatMap((s) => ceQuiManqueALaPersonne(s, s.titres))
+    .filter((m) => etatDuManque(m, now) === "enRetard").length;
+  const titres = salaries.flatMap((s) => s.titres);
+  return manquesEnRetard + titres.filter((t) => {
     // Un titre dont l'obligation a quitté le référentiel ne réclame plus rien,
     // comme au calendrier et sur Équipe (`etatDuTitre`) : sa date de fin
     // saisie le comptait encore au badge (2026-09-15).
