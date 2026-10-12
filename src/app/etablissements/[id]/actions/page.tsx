@@ -20,6 +20,7 @@ import { formaterDateCourteFr } from "@/lib/dates";
 import { estActionEnRetard } from "@/lib/dates/retard";
 import { avecProvenance, origineDepuis } from "@/lib/navigation/provenance";
 import { ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
+import { LigneTitreDeLaMesure } from "@/components/salaries/LigneTitreDeLaMesure";
 
 function formatDate(d: Date | null): string {
   if (!d) return "—";
@@ -362,6 +363,11 @@ export default async function PlanActionsPage({
                         {a.description}
                       </p>
                     )}
+                    <LigneTitreDeLaMesure
+                      referentielMesureId={a.referentielMesureId}
+                      etablissementId={id}
+                      className="mt-1.5"
+                    />
                   </div>
                   <div className="flex flex-none flex-col items-end gap-2">
                     <div className="flex flex-wrap items-center justify-end gap-2">

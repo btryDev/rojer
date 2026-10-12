@@ -6,6 +6,7 @@ import { AjouterMesureCustomForm } from "@/components/duerps/AjouterMesureCustom
 import { EvaluationProgression } from "@/components/duerps/EvaluationProgression";
 import { MesureReferentielToggle } from "@/components/duerps/MesureReferentielToggle";
 import { MesureRow } from "@/components/duerps/MesureRow";
+import { LigneTitreDeLaMesure } from "@/components/salaries/LigneTitreDeLaMesure";
 import { mesuresUniquementBasNiveau, trierParHierarchie } from "@/lib/prevention";
 import { tousRisquesConnus } from "@/lib/referentiels";
 import { getRisque } from "@/lib/risques/queries";
@@ -259,6 +260,11 @@ export default async function MesuresPage({
                       echeance={m.echeance}
                       responsable={m.responsable}
                       origine={m.referentielMesureId ? "referentiel" : "custom"}
+                    />
+                    <LigneTitreDeLaMesure
+                      referentielMesureId={m.referentielMesureId}
+                      etablissementId={risque.unite.duerp.etablissementId}
+                      className="mt-2"
                     />
                   </li>
                 ))}
