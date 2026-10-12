@@ -374,7 +374,13 @@ export const obligationsConformite: Obligation[] = [
 // Même version, non servie, seconde décision du même jour : la question des
 // chiffons est retirée, la ligne perd sa condition (`{ travail: true }`).
 // 174 + 0 − 0 = 174 ; 171 suivies au quotidien (`nombreObligationsSuivies`).
-export const REFERENTIEL_VERSION = "2026-10-08.4";
+// `2026-10-12.1` (ADR-043, ce qui est dû à une personne) : `premierDelai`
+// sur `sante-travail-salarie-vip` (trimestrielle) et
+// `formation-securite-salarie-accueil` (mensuelle), comptés depuis
+// `Salarie.entreLe` par `salaries/du-a-la-personne.ts`. Le générateur des
+// titres ne lit pas le champ : aucune ligne ne change, la réconciliation
+// rend un calendrier identique. 174 + 0 − 0 = 174.
+export const REFERENTIEL_VERSION = "2026-10-12.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

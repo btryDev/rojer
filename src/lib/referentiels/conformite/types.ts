@@ -690,6 +690,25 @@ export type Transmission =
       titre: string | null;
       /** Ce que le texte dit, qui fonde la transmission. Une phrase. */
       motif: string;
+      /**
+       * Quand le titre transmis devient exigible, lorsque la SOURCE est
+       * elle-même un titre de salarié (ADR-043) — la même personne détient
+       * l'un, donc doit l'autre.
+       *
+       * - `"rythme_du_titre"` : au plus tard à la délivrance de la source plus
+       *   le rythme du titre transmis — la visite intermédiaire, « au plus
+       *   tard deux ans après la visite avec le médecin du travail »
+       *   (`R. 4624-28`).
+       * - `"aucun"` : dès la délivrance de la source — l'attestation médicale,
+       *   sans laquelle l'autorisation de conduite n'est pas valide
+       *   (`R. 4323-56`).
+       *
+       * Optionnel au type parce qu'une transmission depuis l'établissement ne
+       * date rien (le produit ne sait pas QUI). Requis en test pour toute
+       * transmission d'un titre salarié vers un titre salarié
+       * (`du-a-la-personne.test.ts`) : absent, le délai se serait tu.
+       */
+      delai?: "rythme_du_titre" | "aucun";
     }
   | {
       /**
@@ -940,6 +959,15 @@ type ObligationCommune = {
    * distinct de son rythme, et le règlement des chaufferies un troisième.
    * Encoder le premier délai à la place du rythme est une faute qui se
    * reproduira partout où le modèle n'a pas de place pour lui.
+   */
+  /*
+   * [2026-10-12, ADR-043 : DEUX TITRES SALARIÉ le portent, et pour eux le
+   * point de départ n'est pas une mise en service mais `Salarie.entreLe` —
+   * la VIP (trois mois, `R. 4624-10`) et la formation à la sécurité (un mois,
+   * `R. 4141-20`). Le générateur des titres ne le lit pas : il n'engendre
+   * aucune ligne ; seul `salaries/du-a-la-personne.ts` le lit, pour dater ce
+   * qui manque à une personne jamais pourvue du titre. Un titre salarié qui
+   * porte ce champ est, par là même, dû à tout l'effectif dès l'entrée.]
    */
   premierDelai?: Periodicite;
   /**
