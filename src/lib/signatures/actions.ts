@@ -11,9 +11,10 @@ import { emettreAccessToken } from "@/lib/access-tokens/emission";
 import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
 import { envoiEnService } from "@/lib/email";
 import {
-  decrementOtpEssais,
-  marquerUtilise,
+  consommerJeton,
   renouvelerOtp,
+  reserverEssaiOtp,
+  revoquerOtpEpuise,
   verifierAccessToken,
 } from "@/lib/access-tokens/verify";
 import {
@@ -26,8 +27,15 @@ import {
 } from "./otp";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
 import { objetEstSignable } from "./etat-signable";
-import { ObjetSignable } from "@prisma/client";
+import { validerSiCoSigne } from "./statut-objet";
+import { ObjetSignable, PartieSignataire } from "@prisma/client";
 import type { MethodeSignature } from "@prisma/client";
+import {
+  MESSAGE_PARTIE_DEJA_SIGNEE,
+  estPartieDejaSignee,
+  partieRecevable,
+  partiesAttendues,
+} from "./parties";
 import { libelleDocumentSignable } from "./libelle-document";
 import { notFound } from "next/navigation";
 
@@ -87,6 +95,10 @@ const demandeSignatureSchema = z.object({
     .max(120)
     .regex(/^[^\p{Cc}]*$/u)
     .optional(),
+  // La partie au nom de laquelle le destinataire signera (2026-10-12) :
+  // choisie ici, par le demandeur, et non par le signataire. Requise pour un
+  // acte co-signé, refusée ailleurs (`partieRecevable`).
+  partie: z.enum(PartieSignataire).optional(),
 });
 
 export type DemandeSignature = z.input<typeof demandeSignatureSchema>;
@@ -122,6 +134,9 @@ export async function demanderSignature(
     };
   }
   const params = parsed.data;
+  if (!partieRecevable(params.objetType, params.partie)) {
+    return { ok: false, message: "Partie signataire invalide pour ce document." };
+  }
 
   await assertEtablissementOwnership(params.etablissementId);
   // Aucun lien ne part pour un objet clos ou annulé : il serait refusé au
@@ -135,6 +150,21 @@ export async function demanderSignature(
     ))
   ) {
     return { ok: false, message: MESSAGE_NON_SIGNABLE };
+  }
+  // Aucun lien ne part vers une partie qui a déjà signé : la signature serait
+  // refusée (unicité `objetType, objetId, partie`).
+  if (
+    params.partie &&
+    (await prisma.signature.count({
+      where: {
+        etablissementId: params.etablissementId,
+        objetType: params.objetType,
+        objetId: params.objetId,
+        partie: params.partie,
+      },
+    })) > 0
+  ) {
+    return { ok: false, message: MESSAGE_PARTIE_DEJA_SIGNEE };
   }
 
   const libelle = await libelleDocumentSignable(
@@ -151,6 +181,7 @@ export async function demanderSignature(
     objetId: params.objetId,
     emailDestinataire: params.signataireEmail,
     nomDestinataire: params.signataireNom,
+    partie: params.partie,
     sujetMail: `Signature à apporter : ${libelle}`,
     messageMail:
       // ~~« la même valeur probatoire qu'une signature manuscrite (art.
@@ -230,6 +261,16 @@ export async function poserSignatureAvecToken(
   ) {
     return { status: "error", message: MESSAGE_NON_SIGNABLE };
   }
+  // Un acte co-signé ne reçoit que des signatures attribuées à une partie. Un
+  // lien émis avant le 2026-10-12 n'en porte pas : la signature qu'il
+  // produirait ne compterait pour personne. Avant le code, sans essai consommé.
+  if (!partieRecevable(token.objetType, token.partie)) {
+    return {
+      status: "error",
+      message:
+        "Ce lien ne dit pas au nom de quelle partie vous signez. Demandez-en un nouveau à la personne qui vous l'a envoyé.",
+    };
+  }
 
   // Expiration du **code**, distincte de celle du lien. Elle se vérifie
   // avant le hash : un code périmé n'a pas à consommer un essai, et le
@@ -243,9 +284,20 @@ export async function poserSignatureAvecToken(
     };
   }
 
+  // L'essai se RÉSERVE avant que le code soit comparé (`reserverEssaiOtp`) :
+  // une rafale de soumissions parallèles n'éprouve jamais plus de codes que
+  // le compteur n'en accorde. Celle qui n'obtient pas d'essai ne compare rien.
+  const essai = await reserverEssaiOtp(token.id);
+  if (!essai.ok) {
+    return {
+      status: "error",
+      message:
+        "Ce lien n'accepte plus de code : ses essais sont épuisés, ou il vient de servir.",
+    };
+  }
   if (!verifyOtp(otp, token.otpHash)) {
-    const dec = await decrementOtpEssais(token.id);
-    if (dec.revoque) {
+    if (essai.restants === 0) {
+      await revoquerOtpEpuise(token.id);
       return {
         status: "error",
         message: "Trop d'essais OTP. Ce lien est révoqué.",
@@ -253,8 +305,8 @@ export async function poserSignatureAvecToken(
     }
     return {
       status: "error",
-      message: `Code incorrect. Il vous reste ${dec.restants} essai${dec.restants > 1 ? "s" : ""}.`,
-      restants: dec.restants,
+      message: `Code incorrect. Il vous reste ${essai.restants} essai${essai.restants > 1 ? "s" : ""}.`,
+      restants: essai.restants,
     };
   }
 
@@ -284,25 +336,60 @@ export async function poserSignatureAvecToken(
   const ip = hh.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const ua = hh.get("user-agent");
 
-  const signature = await prisma.signature.create({
-    data: {
-      id: `sig_${randomUUID()}`,
-      etablissementId: token.etablissementId,
-      objetType: token.objetType as ObjetSignable,
-      objetId: token.objetId,
-      signataireNom: token.nomDestinataire ?? token.emailDestinataire,
-      signataireEmail: token.emailDestinataire,
-      signataireRole: signataireRole || null,
-      userId: null,
-      hashDocument: hash,
-      nomDocument,
-      methode: "otp_email",
-      ipAddress: ip,
-      userAgent: ua?.slice(0, 500) ?? null,
-    },
-  });
-
-  await marquerUtilise(token.id, { ip: ip ?? undefined, userAgent: ua ?? undefined });
+  // Le jeton se CONSOMME avant que la signature s'écrive, dans la même
+  // transaction et sous condition (`consommerJeton`) : de deux soumissions
+  // simultanées du bon code, une seule obtient le jeton, la seconde ne crée
+  // rien. Si l'écriture de la signature échoue, la consommation est défaite.
+  let signature;
+  try {
+    signature = await prisma.$transaction(async (tx) => {
+      const consomme = await consommerJeton(tx, token.id, {
+        ip: ip ?? undefined,
+        userAgent: ua ?? undefined,
+      });
+      if (!consomme) return null;
+      return tx.signature.create({
+        data: {
+          id: `sig_${randomUUID()}`,
+          etablissementId: token.etablissementId,
+          objetType: token.objetType as ObjetSignable,
+          objetId: token.objetId,
+          // La partie vient du JETON, que le demandeur a émis pour elle —
+          // jamais du formulaire du signataire.
+          partie: token.partie,
+          signataireNom: token.nomDestinataire ?? token.emailDestinataire,
+          signataireEmail: token.emailDestinataire,
+          signataireRole: signataireRole || null,
+          userId: null,
+          hashDocument: hash,
+          nomDocument,
+          methode: "otp_email",
+          ipAddress: ip,
+          userAgent: ua?.slice(0, 500) ?? null,
+        },
+      });
+    });
+  } catch (e) {
+    // Un autre lien de la même partie a signé entre-temps : la transaction
+    // est défaite, ce jeton n'est pas consommé.
+    if (estPartieDejaSignee(e)) {
+      return { status: "error", message: MESSAGE_PARTIE_DEJA_SIGNEE };
+    }
+    throw e;
+  }
+  if (!signature) {
+    return {
+      status: "error",
+      message: "Ce lien a déjà servi à signer ce document.",
+    };
+  }
+  // Le statut suit les signatures : les deux parties signées, l'acte passe
+  // « valide » (`validerSiCoSigne`, 2026-10-12).
+  await validerSiCoSigne(
+    token.objetType as ObjetSignable,
+    token.objetId,
+    token.etablissementId,
+  );
 
   return { status: "success", signatureId: signature.id };
 }
@@ -421,7 +508,8 @@ export async function signerEnCompteConnecte(params: {
         | "fichier_introuvable"
         | "stockage_non_configure"
         | "non_implemente"
-        | "non_signable";
+        | "non_signable"
+        | "deja_signee";
     }
 > {
   const user = await requireUser();
@@ -452,23 +540,41 @@ export async function signerEnCompteConnecte(params: {
   const ip = hh.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const ua = hh.get("user-agent");
 
-  const signature = await prisma.signature.create({
-    data: {
-      id: `sig_${randomUUID()}`,
-      etablissementId: params.etablissementId,
-      objetType: params.objetType,
-      objetId: params.objetId,
-      signataireNom: user.email ?? "Utilisateur",
-      signataireEmail: user.email ?? "",
-      signataireRole: params.role ?? null,
-      userId: user.id,
-      hashDocument: hash,
-      nomDocument,
-      methode: "compte_connecte",
-      ipAddress: ip,
-      userAgent: ua?.slice(0, 500) ?? null,
-    },
-  });
+  // Le titulaire du compte tient l'établissement : sur un acte co-signé, il
+  // ne signe jamais qu'au nom de l'entreprise utilisatrice — le donneur
+  // d'ordre du permis. La partie n'est pas un paramètre : un appel qui la
+  // choisirait pourrait signer à la place de l'entreprise extérieure.
+  const partie: PartieSignataire | null = partiesAttendues(
+    params.objetType,
+  ).includes("entreprise_utilisatrice")
+    ? "entreprise_utilisatrice"
+    : null;
+
+  let signature;
+  try {
+    signature = await prisma.signature.create({
+      data: {
+        id: `sig_${randomUUID()}`,
+        etablissementId: params.etablissementId,
+        objetType: params.objetType,
+        objetId: params.objetId,
+        partie,
+        signataireNom: user.email ?? "Utilisateur",
+        signataireEmail: user.email ?? "",
+        signataireRole: params.role ?? null,
+        userId: user.id,
+        hashDocument: hash,
+        nomDocument,
+        methode: "compte_connecte",
+        ipAddress: ip,
+        userAgent: ua?.slice(0, 500) ?? null,
+      },
+    });
+  } catch (e) {
+    if (estPartieDejaSignee(e)) return { ok: false, raison: "deja_signee" };
+    throw e;
+  }
+  await validerSiCoSigne(params.objetType, params.objetId, params.etablissementId);
   return { ok: true, signatureId: signature.id };
 }
 

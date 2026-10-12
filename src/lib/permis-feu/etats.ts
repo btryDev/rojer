@@ -68,6 +68,23 @@ export function libellePastillePermis(
 ): string {
   if (statut !== "attente_signatures") return ETAT_PERMIS[statut].mot;
   if (manquantes <= 0) return ETAT_PERMIS.attente_signatures.mot;
+  return signaturesManquantes(manquantes);
+}
+
+function signaturesManquantes(manquantes: number): string {
   const s = manquantes > 1 ? "s" : "";
   return `${manquantes} signature${s} manquante${s}`;
+}
+
+/**
+ * Le titre de la section « Signatures » de la fiche, depuis le MÊME décompte
+ * que la pastille (audit du 2026-10-12, constat 5). Le titre comptait
+ * `2 - signatures.length` dans la page, la pastille lisait le statut — jamais
+ * écrit `valide` : un permis signé deux fois portait « En attente de
+ * signatures » au-dessus de « Permis co-signé et valide ». Le décompte vient
+ * désormais des parties (`repartirSignatures`), et le statut passe `valide`
+ * quand elles ont toutes signé (`validerSiCoSigne`).
+ */
+export function titreSignaturesPermis(manquantes: number): string {
+  return manquantes > 0 ? signaturesManquantes(manquantes) : "Permis co-signé et valide";
 }

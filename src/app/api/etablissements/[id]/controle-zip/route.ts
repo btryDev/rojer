@@ -31,7 +31,7 @@ import { PlanActionsDocument } from "@/lib/pdf/PlanActionsDocument";
 import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
-import { annoncesZip } from "@/lib/plan-prevention/annonces-plan";
+import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
 import {
   ligneInspectionZip,
   lignesR4512_12Zip,
@@ -522,6 +522,16 @@ export async function GET(
         `  Effectif EE : ${p.efEffectifIntervenant}`,
         `  Chef EU : ${p.euChefNom}${p.euChefFonction ? ` (${p.euChefFonction})` : ""}`,
         `  Période : ${formaterDateFr(p.dateDebut)} → ${formaterDateFr(p.dateFin)}${p.dureeHeuresEstimee ? ` · ${p.dureeHeuresEstimee} h` : ""}`,
+        // R. 4512-7, 1°, seconde phrase (2026-10-12) : la révision notée en
+        // cours de chantier, dans les mots de la fiche.
+        ...(p.heuresPrevisiblesRevisees != null && p.heuresPrevisiblesReviseesLe
+          ? [
+              `  ${ligneHeuresRevisees(
+                p.heuresPrevisiblesRevisees,
+                formaterDateFr(p.heuresPrevisiblesReviseesLe),
+              )}`,
+            ]
+          : []),
         `  Lieux : ${p.lieux}`,
         `  Travaux dangereux : ${p.travauxDangereux ? "OUI" : "non"}`,
         // « date non renseignée », pas « NON RÉALISÉE » : Rojer ne tient

@@ -16,6 +16,9 @@ export function lignesR4512_12Zip(
     travauxDangereux: boolean;
     /** R. 4512-12, 2° (C45) : la date déclarée, ou `null`. */
     inspectionTravailInformeeLe: Date | null;
+    /** R. 4512-7, 1°, seconde phrase (2026-10-12) : la révision notée. */
+    heuresPrevisiblesRevisees?: number | null;
+    heuresPrevisiblesReviseesLe?: Date | null;
   },
   formater: (d: Date) => string,
 ): string[] {

@@ -1,12 +1,18 @@
 import { z } from "zod";
-import { depuisCleJourCivil, depuisSaisieDateHeure } from "@/lib/dates";
+import {
+  depuisCleJourCivil,
+  depuisSaisieDateHeure,
+  formaterDateFr,
+} from "@/lib/dates";
 import {
   EXTRAIT_R4512_12,
   FAIT_DUREE_NON_RENSEIGNEE,
   PHRASE_R4512_2,
   PHRASE_R4512_6,
   PHRASE_R4512_7,
+  R4512_7_1_EN_COURS,
   R4512_7_1_SEUIL,
+  ligneHeuresRevisees,
   R4512_7_2_DUREE,
   R4512_7_2_LISTE,
   R4512_7_ECRIT,
@@ -202,6 +208,13 @@ export type ResultatDiagnostic = {
    * jamais d'un agrégat qui le contient.**
    */
   seuil400: boolean;
+  /**
+   * Le seuil atteint EN COURS de chantier — R. 4512-7, 1°, seconde phrase
+   * (2026-10-12) : le nombre d'heures prévisible revu et noté sur la fiche
+   * atteint 400. À part de `seuil400`, qui ne lit que l'estimation initiale,
+   * pour la même règle : ce qui annote un fait se déduit de ce fait-là.
+   */
+  seuil400EnCours: boolean;
   raisons: string[];
   recommandation: string;
 };
@@ -209,7 +222,19 @@ export type ResultatDiagnostic = {
 export function diagnostiquerPlan(params: {
   dureeHeuresEstimee: number | null;
   travauxDangereux: boolean;
+  /** La dernière révision notée en cours de chantier, s'il y en a une. */
+  heuresPrevisiblesRevisees?: number | null;
+  heuresPrevisiblesReviseesLe?: Date | null;
 }): ResultatDiagnostic {
+  const revisees =
+    params.heuresPrevisiblesRevisees != null && params.heuresPrevisiblesReviseesLe
+      ? ligneHeuresRevisees(
+          params.heuresPrevisiblesRevisees,
+          formaterDateFr(params.heuresPrevisiblesReviseesLe),
+        )
+      : null;
+  const seuil400EnCours =
+    revisees !== null && (params.heuresPrevisiblesRevisees as number) >= 400;
   const raisons: string[] = [];
   // `>=` et non `>`. R. 4512-7 dit « un nombre total d'heures de travail
   // prévisible **égal au moins à** 400 heures », et ajoute « dès lors qu'il
@@ -241,6 +266,9 @@ export function diagnostiquerPlan(params: {
         `un nombre total d'heures de travail prévisible « ${R4512_7_1_SEUIL} ».`,
     );
   }
+  if (seuil400EnCours) {
+    raisons.push(`${revisees}. Art. R. 4512-7, 1° : « ${R4512_7_1_EN_COURS} ».`);
+  }
   if (params.travauxDangereux) {
     raisons.push(
       "Travaux déclarés dangereux. Art. R. 4512-7, 2° : " +
@@ -250,10 +278,15 @@ export function diagnostiquerPlan(params: {
         "pour les travaux agricoles, arrêté du ministre chargé de l'agriculture).",
     );
   }
-  const ecritObligatoire = seuil400 || params.travauxDangereux;
+  // Un OU : l'estimation initiale, la révision en cours de chantier, la liste
+  // dangereuse. Une révision à la baisse ne retire donc jamais ce que
+  // l'estimation initiale a fait naître — `seuil400` ne la lit pas.
+  const ecritObligatoire = seuil400 || seuil400EnCours || params.travauxDangereux;
+  // Une révision notée est un nombre d'heures connu : Rojer n'est plus dans
+  // l'indéterminé, même sans estimation initiale.
   const ecrit: EtatEcrit = ecritObligatoire
     ? "obligatoire"
-    : params.dureeHeuresEstimee === null
+    : params.dureeHeuresEstimee === null && revisees === null
       ? "indetermine"
       : "non_impose";
   // `R. 4512-12` s'ouvre sur « Lorsque l'établissement d'un plan de
@@ -271,12 +304,13 @@ export function diagnostiquerPlan(params: {
     ecrit,
     ecritObligatoire,
     seuil400,
+    seuil400EnCours,
     raisons,
     recommandation:
       ecrit === "obligatoire"
         ? `${TEXTES} ${r4512_12}`
         : ecrit === "indetermine"
           ? `${FAIT_DUREE_NON_RENSEIGNEE} ${TEXTES} ${r4512_12}`
-          : `Durée saisie : ${params.dureeHeuresEstimee} heures ; travaux non déclarés dangereux. ${TEXTES}`,
+          : `${revisees ?? `Durée saisie : ${params.dureeHeuresEstimee} heures`} ; travaux non déclarés dangereux. ${TEXTES}`,
   };
 }

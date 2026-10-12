@@ -439,10 +439,15 @@ en tête du fichier.
   > plans (§ 6 bis, états morts). Et le 4° ne se pré-remplit pas : aucun champ
   > d'`Etablissement` ne décrit le dispositif de secours, `R. 4224-16` est
   > détenu par le dirigeant et pas par la base.
-- **Le seuil des 400 heures ne se recalcule pas en cours d'exécution**, alors que
+- ~~**Le seuil des 400 heures ne se recalcule pas en cours d'exécution**, alors que
   `R. 4512-7` le déclenche « dès lors qu'il apparaît » qu'elles seront atteintes.
   Depuis le 2026-09-02, l'aide de saisie le dit au dirigeant ; le module ne le
-  fait toujours pas.
+  fait toujours pas.~~ **FAIT le 2026-10-12** (`lot/polir-plans-permis-signatures`) :
+  la fiche note les heures prévisibles revues et leur date
+  (`heuresPrevisiblesRevisees`, migration additive `20261012130000`, hors
+  empreinte), `diagnostiquerPlan` en tire `seuil400EnCours` ; liste, ZIP et page
+  du lien les montrent. Restent des DÉCISIONS : le nouvel accord après
+  franchissement, la fenêtre de douze mois.
 - **Comptes de test en production — à la main de la propriétaire, pas à
   supprimer d'office.** Un compte de contrôle visuel (`contact+…@`, adresse gardée hors du dépôt public) et « Bistrot de la
   Verification SARL » (identifiant gardé hors du dépôt public) sont **gardés
@@ -487,6 +492,10 @@ constat qui ne rejoint pas cette liste se perd** — c'est la leçon du § 7.
   que la branche `en_cours` du permis, elle, explique son attente. Un titre qui
   promet un cycle et ne propose que le geste destructif.
   (`plan-prevention/[planId]/page.tsx:236`, `permis-feu/[permisFeuId]/page.tsx:266`)
+  [2026-10-12 : la carte offre aussi « Modifier » tant que l'objet vit ; le
+  permis passe « valide » à la seconde signature, d'où « Démarrer ». Ce qui
+  débloque un plan en `inspection_faite` reste non dit — cet état n'est
+  toujours écrit par rien, et son sens est une décision.]
 
 - **Le carnet sanitaire affiche du vert sur une donnée de 34 jours** : « Dans la
   plage » et « 100% dans la plage » sur un relevé du 4 août, sans que rien ne
@@ -1349,7 +1358,9 @@ ce dépôt-là, sous aucun prétexte.**
   ouvre des données d'entreprise sans mot de passe : c'est la surface la plus
   exposée du produit.
 - **L'ordre de bataille.** Ce chantier suppose un chemin de modification d'un plan,
-  qui n'existe pas non plus (§ 6 bis). Les deux se tiennent : une contre-signature
+  ~~qui n'existe pas non plus (§ 6 bis)~~ [2026-10-12 : il existe — « Modifier »
+  sur le plan et le permis ; signés, ils ne modifient que la zone, et la
+  révocation datée reste à faire ici]. Les deux se tiennent : une contre-signature
   sans modification possible n'a rien à corriger, et une modification sans
   révocation des signatures est précisément le défaut qu'on cherche à éviter.
 

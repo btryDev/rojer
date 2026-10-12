@@ -26,6 +26,7 @@ import {
   R4463_8,
   R4512_2_MOMENT,
   R4512_6_MOMENT,
+  R4512_7_1_EN_COURS,
   R4512_7_1_SEUIL,
   R4512_7_2_DUREE,
   R4512_7_2_LISTE,
@@ -89,6 +90,7 @@ describe("le diagnostic : R. 4512-2, -6 et -7 dans leurs mots", () => {
     ["R. 4512-6", R4512_6_MOMENT],
     ["R. 4512-7", R4512_7_ECRIT],
     ["R. 4512-7", R4512_7_1_SEUIL],
+    ["R. 4512-7", R4512_7_1_EN_COURS],
     ["R. 4512-7", R4512_7_2_LISTE],
     ["R. 4512-7", R4512_7_2_DUREE],
   ])("%s : « %s » est dans le verbatim de CET article", (ref, fragment) => {

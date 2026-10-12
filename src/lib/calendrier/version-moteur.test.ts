@@ -344,7 +344,13 @@ const RELEVE = {
   // ~~4b75258a15263110~~.
   // ~~ff1c3cda346da10d~~ (C66) ; ~~34b84ee9a3627974~~ (ADR-041, main) ;
   // ~~9ea22cc6ca8d74f9~~ (ADR-042, sa branche).
-  empreinte: "005b4fafbfab216a",
+  // Recopiée SANS incrément le 2026-10-12 (`lot/polir-plans-permis-signatures`) :
+  // `dates/index.ts` gagne `versSaisieDateHeure`, la réciproque de
+  // `depuisSaisieDateHeure` qui remplit les écrans « Modifier » du plan et du
+  // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
+  // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
+  // ~~005b4fafbfab216a~~.
+  empreinte: "e0d35b3f39ef01c3",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
