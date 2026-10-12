@@ -170,7 +170,9 @@ describe("onboardingSchema", () => {
   // La moitié qu'on oublierait volontiers, et sans laquelle le test ci-dessus
   // se réparerait en refusant l'IGH tout court. Un employeur locataire d'une
   // tour de bureaux relève du Code du travail, que le produit sert en entier ;
-  // les obligations du règlement IGH pèsent sur l'exploitant de l'immeuble.
+  // ~~les obligations du règlement IGH pèsent sur l'exploitant de l'immeuble~~
+  // [2026-10-12 : pas toutes — GH 61 § 5 et GH W 5 § 2 visent les occupants ;
+  // le produit ne les porte pas et le dit (`REGLEMENT_IGH_NON_TRAITE`)].
   it("accepte l'IGH seul", () => {
     const res = onboardingSchema.safeParse({
       ...base,

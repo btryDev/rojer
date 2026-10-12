@@ -197,8 +197,10 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
   //
   // L'IGH SEUL n'est pas refusé, et la nuance a été tranchée en séance le
   // 2026-09-01 : un employeur locataire de bureaux dans une tour relève du
-  // Code du travail, que le produit sert entièrement. Les obligations du
-  // règlement IGH pèsent sur l'exploitant de l'immeuble, pas sur lui.
+  // Code du travail, que le produit sert entièrement. ~~Les obligations du
+  // règlement IGH pèsent sur l'exploitant de l'immeuble, pas sur lui.~~
+  // [2026-10-12 : pas toutes — GH 61 § 5 et GH W 5 § 2 visent les occupants ;
+  // le produit ne les porte pas et le dit (`REGLEMENT_IGH_NON_TRAITE`).]
   if (s.estERP && s.estIGH)
     return {
       perimetre: true,

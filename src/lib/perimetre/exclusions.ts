@@ -43,6 +43,7 @@ import { entrepriseCreationSchema } from "@/lib/entreprises/schema";
 import { CORPUS, EXCLUSIONS } from "@/lib/referentiels/corpus";
 import type { MotifExclusion } from "@/lib/referentiels/corpus";
 import { nonPorte } from "./non-couverture";
+import { REGLEMENT_IGH_NON_TRAITE } from "./couverture";
 
 /* ─── 1. Ce qui est refusé à l'entrée ─────────────────────────────────── */
 
@@ -172,7 +173,13 @@ export function refusAlEntree(): RefusAlEntree[] {
       regime:
         "Un établissement recevant du public situé dans un immeuble de grande hauteur",
       message: erpEnIgh,
-      indication: `Du règlement de sécurité des immeubles de grande hauteur — arrêté du 30 décembre 2011 — seul l'article GH 5 a été lu, celui des vérifications périodiques. Le reste ne l'a pas été : ${nonPorte("le service de sécurité permanent")}, ${nonPorte("le compartimentage des immeubles de grande hauteur")}, ${nonPorte("les dispositions propres à la classe de l'immeuble")}. L'IGH seul, lui, n'est pas refusé : un employeur locataire de bureaux dans une tour relève du Code du travail, que le produit sert, et les obligations du règlement IGH pèsent sur l'exploitant de l'immeuble, pas sur lui. C'est le cumul avec l'accueil du public qui ferme la porte.`,
+      // ~~« seul l'article GH 5 a été lu […] les obligations du règlement IGH
+      // pèsent sur l'exploitant de l'immeuble, pas sur lui »~~ — faux des
+      // deux bouts, rayé le 2026-10-12 (audit) : le corpus lit six articles
+      // (GH 4, GH 5, GH 61, GH 66, GH U 16, GH W 5), et GH 61 § 5 comme
+      // GH W 5 § 2 visent les OCCUPANTS. La même page le disait plus bas, à
+      // l'établissement servi dans une tour. La phrase est désormais la sienne.
+      indication: `${REGLEMENT_IGH_NON_TRAITE} L'IGH seul, lui, n'est pas refusé : un employeur installé dans une tour relève du Code du travail, que le produit sert, hormis ce qui précède. C'est le cumul avec l'accueil du public qui ferme la porte.`,
     });
   }
 

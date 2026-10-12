@@ -6,6 +6,7 @@ import {
 } from "@/lib/etablissements/schema";
 import { CORPUS, EXCLUSIONS, articlesNonCouverts } from "@/lib/referentiels/corpus";
 import { manquesAnnoncesDuDossier } from "./manques-annonces";
+import { couvertureDuRegime, REGLEMENT_IGH_NON_TRAITE } from "./couverture";
 
 /**
  * Un dossier que la porte accepte. Recopié depuis le module — délibérément :
@@ -88,6 +89,23 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
       expect(r.regime.length, r.cle).toBeGreaterThan(0);
       expect(r.indication.length, r.cle).toBeGreaterThan(80);
     }
+  });
+
+  it("IGH : le refus et la couverture d'un dossier en tour disent la même chose du règlement", () => {
+    // Audit du 2026-10-12 : la même page portait « seul l'article GH 5 a été
+    // lu […] pèsent sur l'exploitant de l'immeuble, pas sur lui » au refus,
+    // et « GH 61 […] vous incombe en tant qu'occupant » à la couverture.
+    const igh = refusAlEntree().find((r) => r.cle === "erp_en_igh")!;
+    const enTour = couvertureDuRegime({
+      estERP: false,
+      estIGH: true,
+      categorieErp: null,
+      estHabitation: false,
+    }).manques.find((m) => m.axe === "igh")!;
+    expect(igh.indication).toContain(REGLEMENT_IGH_NON_TRAITE);
+    expect(enTour.consequence).toContain(REGLEMENT_IGH_NON_TRAITE);
+    expect(REGLEMENT_IGH_NON_TRAITE).toMatch(/GH 61.*en tant qu'occupant/);
+    expect(igh.indication).not.toMatch(/seul l'article|pas sur lui/);
   });
 
   it("ne qualifie jamais la situation au regard du droit", () => {
