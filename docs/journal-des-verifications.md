@@ -5186,7 +5186,10 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
   - L'alternative recommandée (grâce pour tout « à planifier », déclaration
     d'équipement comprise) — **à la propriétaire**.
   - Le serveur MCP dit « à planifier » sans le délai — **à faire** si
-    l'assistant doit le citer.
+    l'assistant doit le citer. [2026-10-12, C68 : toujours ouvert — le
+    serveur classe la ligne par `delaiDeGrace` (`mcp/queries.ts` lit
+    `graceJusquAu`), aucun outil n'en écrit la date ; la question n'a pas été
+    tranchée.]
 
 ### C64 · 2026-10-08 — « On respecte les décisions de Julien » : commission pour information, AS 9, ESP, formation stockage
 
@@ -5569,6 +5572,56 @@ ce lot sert **`2026-10-08.4`**.]
   → `1d73fe41eeb7c14c`, recopié sans incrément : chacun des deux lots
   recopiait sans incrément avec son motif, la réunion n'ajoute rien. Entrée
   C65, que `main` avait posée après la Partie 3, replacée entre C64 et C66.
+
+### C68 · 2026-10-12 — Suites de la relecture du préventeur décidées le 2026-10-08
+
+- **Quand · par quoi** : 2026-10-12, branche `lot/suites-0810` (base
+  `lot/polir-integration`, `ed8b248e`). Décisions de la propriétaire du
+  2026-10-08 (« ok pour tes recos », points 5, 9, 11 et 13 de la liste de ce
+  jour ; décisions 4, 9 et 13 de la synthèse de revue) et restes de C62/C63.
+  Aucun texte rouvert : DF 10 § 3, MS 73 § 2, R. 4412-11 et R. 4412-17 sont
+  au corpus. Confronté aux annotations du préventeur : le SSI A/B et la
+  fusion des extincteurs, il n'en parle pas (choix de produit, sans conflit) ;
+  « elle s'y ajoute » (DF 10 § 3) — la réponse exigée le renforce ; la
+  rubrique « Risque chimique » suit son exclusion du stockage (« à exclure
+  sauf 3 derniers points »).
+- **Ce qui en sort** :
+  - **SSI A ou B sur la fiche** — migration additive `20261012140000`
+    (`Etablissement.ssiCategorieAouB`, reprise des réponses données au
+    désenfumage, le « oui » primant), critère de typologie
+    `ssiCategorieAouB` évalué par l'évaluateur des faits d'activité (seul un
+    « non » retire, le silence retient « à confirmer », marque
+    `ssi_categorie_ab`), lu par `incendie-erp-desenfumage-triennale-mecanique-ssi`
+    à la place de la condition sur le désenfumage ; question posée sur la
+    fiche aux ERP N1 à N4 (liste confrontée au référentiel), relance oui/non.
+    Référentiel `2026-10-12.2`, `174-12f96465dba4ff5d`, 174 + 0 − 0 = 174.
+    La question de l'alarme (MS 73 § 2, `incendie-erp-ssi-triennale`) reste
+    par appareil : sa note ne dit pas attendre ce champ, et la décision ne
+    visait que le désenfumage (« au lieu d'une par désenfumage »). Les deux
+    réponses, fiche et alarme, ne sont toujours pas rapprochées.
+  - **Désenfumage mécanique : réponse exigée** (« comme D29 pour le
+    levage ») — `QUESTIONS_EXIGEES_PAR_DECISION`, exigée là où « oui » fait
+    servir une ligne que le silence ne sert pas (ERP N1 à N4, sauf « non »
+    au SSI A/B) ; porte au serveur, formulaire, relance.
+  - **Rubrique « Risque chimique »** de « Ce que Rojer ne couvre pas » :
+    R. 4412-11 et R. 4412-17 passent à `ADRESSE_MANQUES_ANNONCES`, condition
+    « travail ».
+  - **Libellés des obligations retirées** (`ObligationRetiree.libelle`,
+    relevés dans l'historique) ; **rythme en clair** dans les motifs du
+    moteur (`calendrier/label-periodicite.ts`, module feuille).
+  - Moteur recopié sans incrément à chaque pas (`a1418967cc88cc4f` au
+    dernier) : raisons non stockées, ou empreinte du référentiel déplacée.
+- **Ce qui reste ouvert, et qui le porte** :
+  - **Fusion des visites d'extincteurs** — « fusionner plus tard » (décision
+    du 2026-10-08), aucune règle écrite depuis. L'année 5 et la maintenance
+    approfondie née avec la révision sont sans objet depuis C66 (ligne
+    retirée) ; l'année 10 garde deux lignes, l'annuelle et la décennale
+    (ERP : MS 38 § 4 ; travail : NF S 61-919). **À la propriétaire** : la
+    règle de fusion.
+  - **Délai de grâce dans le MCP** (C63) — le serveur lit `graceJusquAu`
+    pour classer la ligne, il ne dit pas la date. Question non tranchée,
+    **à la propriétaire**.
+  - Le motif court des obligations retirées (C61/C62) : rien ne l'a décidé.
 
 ## Partie 2 — Registre des constats en suspens
 
