@@ -22,7 +22,10 @@ import {
   serialiserCaracteristiques,
   type ChampTriEtat,
 } from "./schema";
-import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import {
+  estCategorieEpi,
+  type CategorieEquipement,
+} from "@/lib/referentiels/types-communs";
 import {
   questionsExigeesPour,
   reponsesExigeesManquantes,
@@ -58,6 +61,29 @@ async function regenererCalendrier(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const ok = await regenererApresMutation(etablissementId, "equipements");
   return ok ? { ok: true } : { ok: false, message: MESSAGE_REGEN_ECHEC };
+}
+
+/**
+ * Un équipement de protection individuelle déclaré contredit un « non » (ou un
+ * silence) à « Fournissez-vous des équipements de protection individuelle ? »
+ * (relecture indépendante du 2026-10-12, audit B2). Le « non » laissait
+ * `R. 4323-105` retiré alors qu'un harnais était déclaré, et `AIDE_EPI`
+ * invite justement à les déclarer un par un. La déclaration vaut « oui » :
+ * `epiPresents` passe à vrai, AVANT la régénération que l'appelant fait déjà.
+ * Une seule règle, `estCategorieEpi`.
+ */
+async function constaterEpiDeclare(
+  etablissementId: string,
+  categories: readonly string[],
+): Promise<void> {
+  if (!categories.some(estCategorieEpi)) return;
+  await prisma.etablissement.updateMany({
+    where: {
+      id: etablissementId,
+      OR: [{ epiPresents: false }, { epiPresents: null }],
+    },
+    data: { epiPresents: true },
+  });
 }
 
 async function resoudreEtablissementId(equipementId: string): Promise<string> {
@@ -128,6 +154,7 @@ export async function creerEquipement(
       caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   });
+  await constaterEpiDeclare(etablissementId, [parsed.data.categorie]);
 
   const regen = await regenererCalendrier(etablissementId);
 
@@ -198,6 +225,7 @@ export async function modifierEquipement(
     },
   });
 
+  await constaterEpiDeclare(eq.etablissementId, [parsed.data.categorie]);
   const regen = await regenererCalendrier(eq.etablissementId);
 
   revalidatePath(`/etablissements/${eq.etablissementId}`);
@@ -307,7 +335,12 @@ export async function reactiverEquipement(
   const etablissementId = await resoudreEtablissementId(id);
   await assertEtablissementOwnership(etablissementId);
 
-  await prisma.equipement.update({ where: { id }, data: { actif: true } });
+  const eq = await prisma.equipement.update({
+    where: { id },
+    data: { actif: true },
+    select: { categorie: true },
+  });
+  await constaterEpiDeclare(etablissementId, [eq.categorie]);
   const regen = await regenererCalendrier(etablissementId);
 
   revalidatePath(`/etablissements/${etablissementId}`);
@@ -338,6 +371,10 @@ export async function creerEquipementsDepuisPreRemplissage(
       libelle: e.libelle,
     })),
   });
+  await constaterEpiDeclare(
+    etablissementId,
+    entrees.map((e) => e.categorie),
+  );
 
   const regen = await regenererCalendrier(etablissementId);
 

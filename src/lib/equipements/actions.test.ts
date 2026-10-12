@@ -13,6 +13,9 @@ const h = vi.hoisted(() => {
     nbTraces: 0,
     supprimesPhysiquement: [] as string[],
     crees: [] as Record<string, unknown>[],
+    /** La réponse à « Fournissez-vous des EPI ? », et l'ordre des écritures. */
+    etablissement: { id: "etab-1", epiPresents: false as boolean | null },
+    journal: [] as string[],
   };
 
   const prisma = {
@@ -47,6 +50,24 @@ const h = vi.hoisted(() => {
     verification: {
       count: async () => db.nbTraces,
     },
+    etablissement: {
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: { id: string; OR: { epiPresents: boolean | null }[] };
+        data: { epiPresents: boolean };
+      }) => {
+        const e = db.etablissement;
+        const vise =
+          e.id === where.id && where.OR.some((c) => c.epiPresents === e.epiPresents);
+        if (vise) {
+          e.epiPresents = data.epiPresents;
+          db.journal.push("epiPresents");
+        }
+        return { count: vise ? 1 : 0 };
+      },
+    },
   };
 
   return {
@@ -80,6 +101,7 @@ vi.mock("@/lib/calendrier/reconciliation", () => ({
 
 const {
   creerEquipement,
+  creerEquipementsDepuisPreRemplissage,
   modifierEquipement,
   reactiverEquipement,
   repondreQuestionEquipement,
@@ -94,9 +116,14 @@ beforeEach(() => {
   h.db.nbTraces = 0;
   h.db.supprimesPhysiquement = [];
   h.db.crees = [];
+  h.db.etablissement = { id: "etab-1", epiPresents: false };
+  h.db.journal = [];
   h.assertOwnership.mockClear();
   h.genererCalendrier.mockClear();
-  h.genererCalendrier.mockImplementation(async () => ({}));
+  h.genererCalendrier.mockImplementation(async () => {
+    h.db.journal.push("régénération");
+    return {};
+  });
   h.marquerCalendrierPerime.mockClear();
 });
 
@@ -323,5 +350,41 @@ describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))",
     });
     const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
     expect(r.status).toBe("success_avec_avertissement");
+  });
+});
+
+describe("un EPI déclaré contredit un « non » aux EPI (relecture indépendante du 2026-10-12, B2)", () => {
+  function epi(categorie: string): FormData {
+    const fd = new FormData();
+    fd.set("libelle", "Harnais");
+    fd.set("categorie", categorie);
+    return fd;
+  }
+
+  it("déclarer un EPI fait passer la réponse à « oui », AVANT la régénération", async () => {
+    await expect(creerEquipement("etab-1", { status: "idle" }, epi("EPI"))).rejects.toThrow("NEXT_REDIRECT");
+
+    expect(h.db.etablissement.epiPresents).toBe(true);
+    expect(h.db.journal).toEqual(["epiPresents", "régénération"]);
+  });
+
+  it("une réponse muette aussi : la déclaration vaut « oui »", async () => {
+    h.db.etablissement.epiPresents = null;
+    await modifierEquipement("eq-1", { status: "idle" }, epi("EPI"));
+    expect(h.db.etablissement.epiPresents).toBe(true);
+  });
+
+  it("le pré-remplissage, de même", async () => {
+    await creerEquipementsDepuisPreRemplissage("etab-1", [
+      { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+      { categorie: "EPI", libelle: "Gants" },
+    ]);
+    expect(h.db.etablissement.epiPresents).toBe(true);
+  });
+
+  it("un équipement qui n'est pas un EPI ne touche pas à la réponse", async () => {
+    await modifierEquipement("eq-1", { status: "idle" }, epi("EXTINCTEUR"));
+    expect(h.db.etablissement.epiPresents).toBe(false);
+    expect(h.db.journal).toEqual(["régénération"]);
   });
 });

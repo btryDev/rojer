@@ -680,3 +680,21 @@ export const CATEGORIES_EQUIPEMENT = [
 ] as const;
 
 export type CategorieEquipement = (typeof CATEGORIES_EQUIPEMENT)[number];
+
+/**
+ * Les catégories d'équipements de protection individuelle : la famille `EPI`
+ * et les trois catégories vérifiables qui en ont été scindées (2026-09-04).
+ * Déclarer un équipement de l'une d'elles, c'est déclarer qu'on fournit des
+ * EPI — la réponse à `epiPresents` (relecture indépendante du 2026-10-12,
+ * `equipements/actions.ts`).
+ */
+export const CATEGORIES_EPI = [
+  "EPI",
+  "EPI_ANTICHUTE",
+  "EPI_RESPIRATOIRE",
+  "EPI_GILET_SAUVETAGE",
+] as const satisfies readonly CategorieEquipement[];
+
+export function estCategorieEpi(c: string): boolean {
+  return (CATEGORIES_EPI as readonly string[]).includes(c);
+}
