@@ -64,7 +64,9 @@
 // qu'il mesure : quelle surface une obligation atteint.
 //
 // SA SECONDE LIMITE EST LE DÉNOMINATEUR DES SURFACES. Il en connaît ~~deux~~
-// TROIS depuis le 2026-09-21 (`faits`, ADR-037), parce
+// ~~TROIS depuis le 2026-09-21 (`faits`, ADR-037)~~ QUATRE de décision depuis le
+// 2026-10-12 (`fiche_salarie`, ADR-043 (c)) — plus la rubrique « Niveau
+// audit » (ADR-042), qui n'en est pas une —, parce
 // que ce sont celles qui décident du sort d'une obligation à partir du
 // référentiel seul. Le PDF du DUERP, le registre de sécurité et l'écran de
 // périmètre en citent d'autres, mais ils affichent ce que ces deux-là ont
@@ -85,6 +87,18 @@ import {
 } from "@/lib/etats-permanents/regle";
 import { estPorteeParSalarie } from "@/lib/referentiels/conformite/types";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
+import { cataloguerTitres } from "@/lib/salaries/catalogue";
+import { titresLusParLaFiche } from "@/lib/salaries/du-a-la-personne";
+
+/**
+ * Les titres que la fiche salarié montre comme manquants, sur le référentiel
+ * livré. Calculé une fois : le référentiel est figé à la compilation (ADR-003).
+ */
+let LUS_PAR_LA_FICHE: ReadonlySet<string> | null = null;
+function lusParLaFicheDuReferentiel(): ReadonlySet<string> {
+  LUS_PAR_LA_FICHE ??= titresLusParLaFiche();
+  return LUS_PAR_LA_FICHE;
+}
 
 /**
  * `faits` est entrée le 2026-09-21 (ADR-037), et elle RATTRAPE un angle mort de
@@ -106,6 +120,13 @@ export const SURFACES = [
   // Rojer ne couvre pas ». La compter sous `calendrier` sur la foi de son
   // rythme dirait qu'elle y est, ce qui est faux.
   "niveau_audit",
+  // ADR-043 (c), 2026-10-12 : la carte « Ce qui manque » de la fiche salarié
+  // DATE et CLASSE un titre jamais déclaré — dû à l'entrée (VIP, formation à
+  // la sécurité), ou appelé par un titre détenu avec un délai. C'est une
+  // surface de décision, et non une liste comme Équipe : elle dit quand et si
+  // c'est en retard. Attribuée par `titresLusParLaFiche`, le prédicat que
+  // `ceQuiManqueALaPersonne` applique — jamais sa paraphrase.
+  "fiche_salarie",
 ] as const;
 
 export type Surface = (typeof SURFACES)[number];
@@ -123,8 +144,15 @@ export type Surface = (typeof SURFACES)[number];
  * particulière (ADR-035). C'est le bon choix ici : une surcharge ne peut
  * qu'AJOUTER un rendez-vous à un dossier donné, donc qu'ajouter une surface. Ce
  * module mesure le plancher — ce que l'obligation atteint chez tout le monde.
+ *
+ * `lusParLaFiche` n'existe que pour éprouver la garde sur un référentiel
+ * augmenté (la fiche lit le catalogue, et un titre fabriqué n'y est pas) ; il
+ * vaut le référentiel livré partout ailleurs.
  */
-export function surfacesDe(o: Obligation): Surface[] {
+export function surfacesDe(
+  o: Obligation,
+  lusParLaFiche: ReadonlySet<string> = lusParLaFicheDuReferentiel(),
+): Surface[] {
   if (estNiveauAudit(o)) return ["niveau_audit"];
   const atteintes: Surface[] = [];
   if (!estSansRendezVous(periodiciteEffective(o))) atteintes.push("calendrier");
@@ -134,21 +162,45 @@ export function surfacesDe(o: Obligation): Surface[] {
   if (modeSurLEcranEnPlace(o) !== null) atteintes.push("etats_permanents");
   // Le MÊME prédicat que les trois fiches appellent — jamais sa paraphrase.
   if (estDeclencheeParUnFait(o)) atteintes.push("faits");
+  // ADR-043 (c) : le prédicat de `ceQuiManqueALaPersonne`, pas sa paraphrase.
+  if (lusParLaFiche.has(o.id)) atteintes.push("fiche_salarie");
   return atteintes;
+}
+
+/**
+ * Un titre SOUS CONDITION — porté par un salarié, et que la fiche ne date pas :
+ * le produit ne sait pas qui y est soumis (ADR-043 (b)). C'est le seul cas
+ * que l'exemption d'Équipe couvre encore (ADR-043 (c)).
+ */
+export function estTitreSousCondition(
+  o: Obligation,
+  lusParLaFiche: ReadonlySet<string> = lusParLaFicheDuReferentiel(),
+): boolean {
+  return estPorteeParSalarie(o) && !lusParLaFiche.has(o.id);
 }
 
 /** Les obligations qu'aucune surface ne montre, dérivées du référentiel. */
 export function obligationsSansSurface(
   obligations: readonly Obligation[] = obligationsConformite,
 ): Obligation[] {
-  // Un titre porté par un salarié est LISTÉ sur l'écran Équipe
+  // ~~Un titre porté par un salarié est LISTÉ sur l'écran Équipe
   // (`cataloguerTitres`, même prédicat) : un dirigeant l'y voit, même quand
   // aucune des trois surfaces de décision ne le date (2026-09-27, lot 2,
   // maillon 6 — la garde disait « sans surface » deux titres ponctuels
-  // qu'Équipe montre). Équipe n'est pas une surface de décision : elle ne
-  // décide du sort d'aucune ligne, d'où son absence de `SURFACES`.
+  // qu'Équipe montre).~~ [2026-10-12, ADR-043 (c) : l'exemption est
+  // resserrée, pas retirée. Un titre dû à l'entrée ou appelé avec un délai
+  // a désormais une surface de décision réelle, `fiche_salarie` ; il ne passe
+  // plus par ici. Seuls les titres SOUS CONDITION (`estTitreSousCondition`)
+  // restent exemptés, par le motif d'origine : Équipe les LISTE au catalogue,
+  // un dirigeant les y voit, sans qu'aucune surface ne les date.] Équipe n'est
+  // pas une surface de décision : elle ne décide du sort d'aucune ligne, d'où
+  // son absence de `SURFACES`.
+  //
+  // Le catalogue est celui des obligations passées, pour que la garde
+  // s'éprouve sur un référentiel augmenté comme sur le livré.
+  const lus = titresLusParLaFiche(cataloguerTitres(obligations));
   return obligations.filter(
-    (o) => surfacesDe(o).length === 0 && !estPorteeParSalarie(o),
+    (o) => surfacesDe(o, lus).length === 0 && !estTitreSousCondition(o, lus),
   );
 }
 

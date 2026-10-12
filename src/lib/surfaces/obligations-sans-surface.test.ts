@@ -9,13 +9,22 @@ import {
 import {
   PLAFOND_SANS_SURFACE,
   SANS_SURFACE,
+  estTitreSousCondition,
   inscriptionsFantomes,
   inscriptionsPerimees,
   obligationsSansSurface,
   orphelinesNonInscrites,
   surfacesDe,
+  type Surface,
 } from "./obligations-sans-surface";
 import { modeSurLEcranEnPlace } from "@/lib/etats-permanents/regle";
+import { estPorteeParSalarie } from "@/lib/referentiels/conformite/types";
+import { cataloguerTitres } from "@/lib/salaries/catalogue";
+import {
+  ceQuiManqueALaPersonne,
+  estDuALEntree,
+  titresLusParLaFiche,
+} from "@/lib/salaries/du-a-la-personne";
 
 /**
  * Une obligation orpheline FABRIQUÉE, pour éprouver la garde en la cassant.
@@ -50,6 +59,17 @@ const ORPHELINE_FABRIQUEE = {
   transmet: [],
   notesInternes: "Sonde de test, jamais livrée.",
 } as unknown as Obligation;
+
+/**
+ * Les obligations montrées DEUX fois sur la fiche salarié — par la liste des
+ * obligations événementielles (`faits`) et par la carte « Ce qui manque »
+ * (`fiche_salarie`). Inscrites et datées, comme `SANS_SURFACE` : un double
+ * filtré en silence ne se verrait plus.
+ */
+const DOUBLES_INSCRITS: Readonly<Record<string, string>> = {
+  "formation-securite-salarie-accueil":
+    "2026-10-12, ADR-043 — événementielle (R. 4141-20, redue au changement de poste) ET due à l'entrée (premier délai d'un mois) : la fiche la liste comme fait et la date comme manque. Fusion à décider côté fiche.",
+};
 
 describe("toute obligation atteint une surface, ou elle est inscrite", () => {
   it("aucune obligation sans surface n'échappe au registre", () => {
@@ -119,10 +139,121 @@ describe("toute obligation atteint une surface, ou elle est inscrite", () => {
     // états permanents donne deux états qui divergent à la première
     // correction. `estSansRendezVous` l'interdit aujourd'hui par construction ;
     // ce test le tient le jour où une troisième surface sera branchée ici.
+    //
+    // [2026-10-12, ADR-043 (c)] Deux exceptions, et seulement deux, chacune
+    // avec sa raison :
+    //
+    //  - `calendrier + fiche_salarie` n'est pas un double, et c'est prouvé au
+    //    test suivant, pas supposé : la fiche ne montre un titre que tant qu'il
+    //    n'a JAMAIS été déclaré pour la personne, et la ligne de calendrier
+    //    d'un titre ne naît que de sa déclaration
+    //    (`genererVerificationsDepuisTitres`). Les deux se succèdent ;
+    //  - `faits + fiche_salarie` EST un double, et il est inscrit plutôt que
+    //    filtré : la liste des obligations événementielles de la fiche
+    //    (`salaries/obligations-evenementielles.ts`) montre la formation à la
+    //    sécurité que le titre soit déclaré ou non, et la carte « Ce qui
+    //    manque » la montre aussi, datée, tant qu'il ne l'est pas. Les deux
+    //    disent la même chose sans se contredire aujourd'hui (« rien de
+    //    déclaré » d'un côté, une échéance de l'autre), mais c'est la forme qui
+    //    diverge. Les fusionner relève de la fiche, que ce lot ne touche pas.
+    const estDouble = (s: Surface[]) => {
+      const autres = s.filter((x) => x !== "fiche_salarie");
+      if (autres.length > 1) return true;
+      return s.includes("fiche_salarie") && autres[0] === "faits";
+    };
     const doubles = obligationsConformite
-      .filter((o) => surfacesDe(o).length > 1)
+      .filter((o) => estDouble(surfacesDe(o)) && !(o.id in DOUBLES_INSCRITS))
       .map((o) => `${o.id} → ${surfacesDe(o).join(" + ")}`);
     expect(doubles).toEqual([]);
+    // Le registre ne garde aucune inscription qui n'est plus un double.
+    for (const id of Object.keys(DOUBLES_INSCRITS)) {
+      const o = obligationsConformite.find((x) => x.id === id);
+      expect(surfacesDe(o!), id).toEqual(["faits", "fiche_salarie"]);
+    }
+  });
+
+  it("la fiche ne montre jamais un titre déjà déclaré — elle précède la ligne, elle ne la double pas", () => {
+    // La prémisse dont dépend l'exception du test précédent. Elle est tenue
+    // par `ceQuiManqueALaPersonne` lui-même, appelé ici sur chaque titre que
+    // la surface `fiche_salarie` revendique : déclaré, il ne manque plus.
+    const lus = [...titresLusParLaFiche()];
+    expect(lus.length).toBeGreaterThan(0);
+    const present = { actif: true, entreLe: new Date("2026-01-01T12:00:00Z") };
+    for (const id of lus) {
+      const manques = ceQuiManqueALaPersonne(present, [
+        { obligationId: id, delivreLe: new Date("2026-01-02T12:00:00Z") },
+      ]).map((m) => m.obligation.id);
+      expect(manques, id).not.toContain(id);
+    }
+  });
+});
+
+describe("l'exemption « sans surface » des titres salarié, resserrée (ADR-043 (c))", () => {
+  const VIP = "sante-travail-salarie-vip";
+  const ACCUEIL = "formation-securite-salarie-accueil";
+  const SECOURISTE = "secours-salarie-secouriste";
+  const parId = (id: string) => obligationsConformite.find((o) => o.id === id)!;
+
+  it("borne basse : la VIP et la formation à la sécurité ont la surface de la fiche", () => {
+    expect(surfacesDe(parId(VIP))).toContain("fiche_salarie");
+    expect(surfacesDe(parId(ACCUEIL))).toContain("fiche_salarie");
+  });
+
+  it("tout titre dû à l'entrée a la surface de la fiche — par le prédicat de la fiche", () => {
+    const dus = obligationsConformite.filter(estDuALEntree);
+    expect(dus.length).toBeGreaterThanOrEqual(2);
+    for (const o of dus) expect(surfacesDe(o), o.id).toContain("fiche_salarie");
+  });
+
+  it("borne haute : un titre sous condition n'a pas la fiche, et reste exempté", () => {
+    // Le secouriste : le produit ne sait pas qui doit l'être (ADR-043 (b)).
+    expect(surfacesDe(parId(SECOURISTE))).not.toContain("fiche_salarie");
+    expect(estTitreSousCondition(parId(SECOURISTE))).toBe(true);
+  });
+
+  it("l'exemption ne couvre plus les titres que la fiche date", () => {
+    expect(estTitreSousCondition(parId(VIP))).toBe(false);
+    expect(estTitreSousCondition(parId(ACCUEIL))).toBe(false);
+    // Et elle ne couvre rien d'autre qu'un titre salarié.
+    expect(
+      obligationsConformite
+        .filter((o) => estTitreSousCondition(o))
+        .every(estPorteeParSalarie),
+    ).toBe(true);
+  });
+
+  it("propriété : aucun titre salarié n'est sans surface ni exemption", () => {
+    const orphelins = obligationsConformite
+      .filter(estPorteeParSalarie)
+      .filter((o) => surfacesDe(o).length === 0 && !estTitreSousCondition(o))
+      .map((o) => o.id);
+    expect(orphelins).toEqual([]);
+  });
+
+  it("éprouvé : un titre fabriqué, dû à l'entrée et sans autre surface, n'atteint que la fiche", () => {
+    // La combinaison qui n'aurait aucune autre surface : `autre` (pas de
+    // calendrier), `ponctuelle` (ni l'écran « en place », ni les faits).
+    const titre = {
+      ...ORPHELINE_FABRIQUEE,
+      id: "sonde-titre-du-a-l-entree",
+      porteur: "salarie",
+      exclut: [],
+      pieceMedicale: false,
+      premierDelai: "mensuelle",
+    } as unknown as Obligation;
+    const augmente = [...obligationsConformite, titre];
+    const lus = titresLusParLaFiche(cataloguerTitres(augmente));
+    expect(surfacesDe(titre, lus)).toEqual(["fiche_salarie"]);
+    expect(orphelinesNonInscrites(augmente)).toEqual([]);
+
+    // Le même sans `premierDelai` : sous condition, sans surface, exempté —
+    // le motif d'Équipe, qui reste.
+    const sousCondition = { ...titre, premierDelai: undefined } as Obligation;
+    const augmente2 = [...obligationsConformite, sousCondition];
+    const lus2 = titresLusParLaFiche(cataloguerTitres(augmente2));
+    expect(surfacesDe(sousCondition, lus2)).toEqual([]);
+    expect(estTitreSousCondition(sousCondition, lus2)).toBe(true);
+    expect(orphelinesNonInscrites(augmente2)).toEqual([]);
   });
 });
 
