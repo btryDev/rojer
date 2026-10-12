@@ -419,6 +419,22 @@ export function mentionUrssaf(v: VigilanceSnapshot): string | undefined {
       `Remise suivante le ${d(v.urssafRemiseSuivante)} : Rojer compte six mois depuis la dernière remise (art. D. 8222-5 : « tous les six mois »).`,
     );
   }
+  // LA DATE QUI FIXE LE STATUT, DITE QUAND CE N'EST PAS LA REMISE SUIVANTE
+  // (2026-10-12, audit des modules). Le statut se calcule sur la plus proche
+  // des deux (`echeanceAttestationUrssaf`) ; la phrase ne nommait que la
+  // remise suivante. Une nouvelle remise saisie sur une fiche qui gardait la
+  // validité de l'attestation précédente rendait donc « Expirée » sous
+  // « Remise suivante le 01 avril 2027 » : la pastille et la phrase se
+  // contredisaient, et rien ne disait laquelle croire.
+  if (
+    v.urssafARedemanderLe &&
+    v.urssafRemiseSuivante &&
+    joursCivilsEntre(v.urssafARedemanderLe, v.urssafRemiseSuivante) > 0
+  ) {
+    phrases.push(
+      `Validité saisie jusqu'au ${d(v.urssafARedemanderLe)}, avant la remise suivante : c'est cette date qui fixe le statut.`,
+    );
+  }
   const manque = v.urssafDatesNonRenseignees;
   if (manque.length === 2) {
     phrases.push("Dates de remise et d'émission non renseignées.");

@@ -341,6 +341,31 @@ describe("attestation URSSAF — dates vides : jamais « à jour »", () => {
     expect(mentionUrssaf(v)).toContain("Remise suivante le");
   });
 
+  it("nouvelle remise sur une validité ancienne : la phrase nomme la date qui fixe le statut (audit 2026-10-12)", () => {
+    // La sonde de l'audit : « expiree | etat: enRetard » sous « Remise
+    // suivante le 01 avril 2027 ». Remise du 1er octobre, validité de
+    // l'attestation précédente au 30 juin.
+    const v = computeVigilance(
+      prestataireFake({
+        attestationUrssafRemiseLe: jour("2026-10-01"),
+        attestationUrssafEmiseLe: jour("2026-09-28"),
+        attestationUrssafValableJusquA: jour("2026-06-30"),
+      }),
+      new Date("2026-10-12T07:00:00Z"),
+    );
+    expect(v.urssaf).toBe("expiree");
+    const m = mentionUrssaf(v) ?? "";
+    expect(m).toContain("Remise suivante le 01 avril 2027");
+    expect(m).toContain("Validité saisie jusqu'au 30 juin 2026,");
+    // Validité postérieure à la remise suivante : c'est la remise qui fixe,
+    // et la phrase n'ajoute rien.
+    const sansConflit = computeVigilance(
+      prestataireFake({ ...DATES_OK, attestationUrssafValableJusquA: jour("2027-06-30") }),
+      NOW,
+    );
+    expect(mentionUrssaf(sansConflit)).not.toContain("Validité saisie");
+  });
+
   it("une pièce déposée sans aucune date n'a pas d'échéance, et n'est pas à jour", () => {
     const v = computeVigilance(prestataireFake({ attestationUrssafCle: "urssaf/key" }), NOW);
     expect(v.urssaf).toBe("a_dater");

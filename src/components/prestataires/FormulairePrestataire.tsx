@@ -14,15 +14,53 @@ import {
   LABEL_DOMAINE,
 } from "@/lib/prestataires/schema";
 
+/**
+ * Les valeurs d'une fiche existante, pour « Modifier » (2026-10-12). Les
+ * dates en « AAAA-MM-JJ », le format d'un `<input type="date">`. Les pièces
+ * déjà déposées ne se pré-remplissent pas — un champ fichier ne le peut pas —
+ * : leur nom est rappelé, et un nouveau fichier les remplace.
+ */
+export type ValeursPrestataire = {
+  prestataireId: string;
+  raisonSociale: string;
+  siret: string | null;
+  estOrganismeAgree: boolean;
+  domaines: string[];
+  contactNom: string;
+  contactEmail: string;
+  contactTelephone: string | null;
+  attestationUrssafValableJusquA?: string;
+  attestationUrssafRemiseLe?: string;
+  attestationUrssafEmiseLe?: string;
+  assuranceRcProValableJusquA?: string;
+  kbisDateEmission?: string;
+  notesInternes: string | null;
+  pieces: { urssaf: string | null; rcpro: string | null; kbis: string | null };
+};
+
 type Props = {
   etablissementId: string;
   action: (
     prev: PrestataireActionState,
     formData: FormData,
   ) => Promise<PrestataireActionState>;
+  /** Absent : création. Présent : modification de cette fiche. */
+  initial?: ValeursPrestataire;
 };
 
-export function FormulairePrestataire({ etablissementId, action }: Props) {
+/** Ce qu'une pièce déjà déposée devient si l'on en joint une autre. Le modèle
+ *  garde une pièce par type, pas leur suite (`modifierPrestataire`). */
+function PieceActuelle({ nom }: { nom: string | null }) {
+  if (!nom) return null;
+  return (
+    <p className="m-0 text-[11.5px] leading-[1.45] text-[color:var(--board-slate-soft)]">
+      Pièce actuelle : {nom}. Un nouveau fichier la remplace, et
+      l&apos;ancienne n&apos;est pas conservée.
+    </p>
+  );
+}
+
+export function FormulairePrestataire({ etablissementId, action, initial }: Props) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<
     PrestataireActionState,
@@ -59,6 +97,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
             name="raisonSociale"
             required
             maxLength={200}
+            defaultValue={initial?.raisonSociale}
             placeholder="Ex : APAVE SAS, Electricité Dupond, Ascensys…"
             aria-invalid={Boolean(err("raisonSociale"))}
           />
@@ -80,6 +119,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
               name="siret"
               inputMode="numeric"
               maxLength={17}
+              defaultValue={initial?.siret ?? undefined}
               placeholder="123 456 789 00012"
               aria-invalid={Boolean(err("siret"))}
             />
@@ -90,6 +130,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
             <input
               type="checkbox"
               name="estOrganismeAgree"
+              defaultChecked={initial?.estOrganismeAgree}
               className="size-4 rounded border-[color:var(--board-slate)] accent-[color:var(--board-ink)]"
             />
             <span className="text-[12.5px] font-semibold text-[color:var(--board-slate-ink)]">
@@ -120,6 +161,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
                   type="checkbox"
                   name="domaines"
                   value={d}
+                  defaultChecked={initial?.domaines.includes(d)}
                   className="sr-only"
                 />
                 {LABEL_DOMAINE[d]}
@@ -147,6 +189,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
             name="contactNom"
             required
             maxLength={200}
+            defaultValue={initial?.contactNom}
             placeholder="Jean Dupond"
             aria-invalid={Boolean(err("contactNom"))}
           />
@@ -164,6 +207,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
               type="email"
               required
               maxLength={200}
+              defaultValue={initial?.contactEmail}
               placeholder="jean.dupond@apave.fr"
               aria-invalid={Boolean(err("contactEmail"))}
             />
@@ -177,6 +221,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
               id="contactTelephone"
               name="contactTelephone"
               type="tel"
+              defaultValue={initial?.contactTelephone ?? undefined}
               placeholder="01 23 45 67 89"
               aria-invalid={Boolean(err("contactTelephone"))}
             />
@@ -223,6 +268,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
               label="Attestation URSSAF"
               hint="Renouvellement tous les 6 mois"
             />
+            <PieceActuelle nom={initial?.pieces.urssaf ?? null} />
             <div className="space-y-1">
               <label
                 className="label-board font-normal text-[color:var(--board-slate-soft)]"
@@ -234,12 +280,17 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
                 id="attestationUrssafValableJusquA"
                 name="attestationUrssafValableJusquA"
                 type="date"
+                defaultValue={initial?.attestationUrssafValableJusquA}
               />
             </div>
             {/* Les deux dates que D. 8222-5 fait compter : la remise, d'où
                 part la suivante « tous les six mois », et l'émission, qui
                 doit précéder la remise de moins de six mois. */}
-            <ChampsDatesAttestation erreur={err} />
+            <ChampsDatesAttestation
+              erreur={err}
+              remiseLe={initial?.attestationUrssafRemiseLe}
+              emiseLe={initial?.attestationUrssafEmiseLe}
+            />
           </div>
 
           <div className="space-y-2">
@@ -249,6 +300,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
               label="Attestation RC Pro"
               hint="Renouvellement annuel chez votre assureur"
             />
+            <PieceActuelle nom={initial?.pieces.rcpro ?? null} />
             <div className="space-y-1">
               <label
                 className="label-board font-normal text-[color:var(--board-slate-soft)]"
@@ -260,6 +312,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
                 id="assuranceRcProValableJusquA"
                 name="assuranceRcProValableJusquA"
                 type="date"
+                defaultValue={initial?.assuranceRcProValableJusquA}
               />
             </div>
           </div>
@@ -271,6 +324,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
               label="Extrait Kbis"
               hint="Extrait K ou K bis (art. D. 8222-5, 2° a)"
             />
+            <PieceActuelle nom={initial?.pieces.kbis ?? null} />
             <div className="space-y-1">
               <label
                 className="label-board font-normal text-[color:var(--board-slate-soft)]"
@@ -278,7 +332,13 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
               >
                 Date d&apos;émission
               </label>
-              <input className="champ-board" id="kbisDateEmission" name="kbisDateEmission" type="date" />
+              <input
+                className="champ-board"
+                id="kbisDateEmission"
+                name="kbisDateEmission"
+                type="date"
+                defaultValue={initial?.kbisDateEmission}
+              />
             </div>
           </div>
         </div>
@@ -299,6 +359,7 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
           rows={3}
           maxLength={1000}
           className="champ-board min-h-[92px] resize-y"
+          defaultValue={initial?.notesInternes ?? undefined}
           placeholder="Ex : interlocuteur historique, contrat cadre signé en 2023, remise de 15%…"
         />
       </section>
@@ -309,10 +370,18 @@ export function FormulairePrestataire({ etablissementId, action }: Props) {
 
       <div className="flex flex-wrap items-center gap-3 pt-4">
         <Button variant="board" size="board" type="submit" disabled={pending}>
-          {pending ? "Enregistrement…" : "Ajouter ce prestataire"}
+          {pending
+            ? "Enregistrement…"
+            : initial
+              ? "Enregistrer les modifications"
+              : "Ajouter ce prestataire"}
         </Button>
         <Link
-          href={`/etablissements/${etablissementId}/prestataires`}
+          href={
+            initial
+              ? `/etablissements/${etablissementId}/prestataires/${initial.prestataireId}`
+              : `/etablissements/${etablissementId}/prestataires`
+          }
           className={buttonVariants({ variant: "boardClair", size: "board" })}
         >
           Annuler
