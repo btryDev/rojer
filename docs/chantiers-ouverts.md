@@ -2419,11 +2419,18 @@ bloquante pour la branche :
 
 1. **Migration prod** `20261005120000_duerp_reponses_transverses` (additive,
    une colonne `JSONB` nullable) : à appliquer par la propriétaire au merge.
-2. **Les « non » transverses n'entrent pas dans le document imprimé.** Le
+2. ~~**Les « non » transverses n'entrent pas dans le document imprimé.** Le
    snapshot d'une version fige les risques, pas les refus. Un DUERP qui part
    chez un tiers ne dit donc pas « le dirigeant a déclaré qu'aucun salarié ne
    conduit d'engin ». À décider : l'imprimer, comme les activités de
-   l'ADR-020, ou non.
+   l'ADR-020, ou non.~~ **[2026-10-12, `lot/duerp-non-imprimes`]** Décidé
+   par la propriétaire le 2026-10-12 : imprimé. Le snapshot grave
+   `expositionsDeclareesAbsentes` (questions transverses et faits d'activité
+   répondus « non », texte de la question recopié —
+   `versions/expositions-absentes.ts`) ; la méthode du PDF porte la section
+   « Expositions examinées et déclarées absentes ». Le silence n'y entre pas ;
+   un « non » dont le risque reste au document non plus. Une version d'avant
+   le champ s'imprime sans la section.
 3. **Gestes et postures, écran, chimique** : la question ou le risque existe
    au DUERP, l'obligation est portée par l'établissement, aucun titre n'est au
    catalogue. Les y faire entrer relève du filtre à trois conditions, article

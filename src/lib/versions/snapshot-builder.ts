@@ -7,6 +7,7 @@ import type {
 } from "./snapshot";
 import { questionsActivites } from "@/lib/activites/reponses";
 import { figerCouverture } from "@/lib/activites/snapshot";
+import { figerExpositionsAbsentes } from "./expositions-absentes";
 import type { TypeMesure } from "@/lib/referentiels/types";
 
 /**
@@ -103,6 +104,15 @@ export async function construireSnapshot(
     ),
   );
 
+  // Les « non » transverses et les faits d'activité déclarés absents
+  // (§ 17.2) : lus maintenant, sur l'établissement et le DUERP, puis recopiés.
+  // Jugés contre `unitesSnap` — le document qui part —, pas contre la base.
+  const expositionsDeclareesAbsentes = figerExpositionsAbsentes(
+    unitesSnap,
+    duerp.reponsesTransverses,
+    etab,
+  );
+
   return {
     version: options.numero,
     genereLe: new Date().toISOString(),
@@ -118,5 +128,6 @@ export async function construireSnapshot(
     },
     unites: unitesSnap,
     couverture,
+    expositionsDeclareesAbsentes,
   };
 }

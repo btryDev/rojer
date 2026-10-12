@@ -122,3 +122,59 @@ describe("construireSnapshot — la couverture qui part dans la version", () => 
     ).toBeNull();
   });
 });
+
+// § 17.2 : les « non » partent dans la version, lus sur l'établissement (les
+// faits, ADR-041) et sur le DUERP (`reponsesTransverses`). Le raccord se teste
+// ici pour la même raison que la couverture : c'est là qu'une réponse devient
+// une pièce conservée quarante ans.
+describe("construireSnapshot — les expositions déclarées absentes", () => {
+  function avecReponses(reponsesTransverses: unknown, faits: Record<string, boolean | null>, unites: unknown[] = []) {
+    const d = duerpAvec("bureau", null) as {
+      etablissement: Record<string, unknown>;
+    } & Record<string, unknown>;
+    return {
+      ...d,
+      reponsesTransverses,
+      unites,
+      etablissement: { ...d.etablissement, ...faits },
+    };
+  }
+
+  it("grave un « non » transverse et un fait « non », pas un « oui » ni un silence", async () => {
+    h.db.duerp = avecReponses(
+      { "q-routier": false },
+      { conduiteEngins: false, travailSurEcran: true, manutentionManuelle: null },
+      [
+        {
+          id: "u-trv",
+          nom: "Risques transverses",
+          description: null,
+          estTransverse: true,
+          referentielUniteId: null,
+          aucunRisqueJustif: null,
+          risques: [
+            {
+              id: "r1", referentielId: "trv-rps-public", libelle: "Public", description: null,
+              gravite: 2, probabilite: 2, maitrise: 2, criticite: 2, cotationSaisie: false,
+              nombreSalariesExposes: null, dateMesuresPhysiques: null, exposeCMR: false, actions: [],
+            },
+          ],
+        },
+      ],
+    );
+
+    const snap = await construireSnapshot("duerp-1", { numero: 1, motif: null });
+
+    expect(snap!.expositionsDeclareesAbsentes!.map((e) => e.id)).toEqual([
+      "q-routier",
+      "q-conduite-engins",
+    ]);
+    expect(snap!.expositionsDeclareesAbsentes!.every((e) => e.reponse === false)).toBe(true);
+  });
+
+  it("un DUERP sans aucun « non » grave une liste vide", async () => {
+    h.db.duerp = avecReponses(null, {});
+    const snap = await construireSnapshot("duerp-1", { numero: 1, motif: null });
+    expect(snap!.expositionsDeclareesAbsentes).toEqual([]);
+  });
+});
