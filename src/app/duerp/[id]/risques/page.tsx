@@ -6,6 +6,7 @@ import { LigneHorsReferentiel } from "@/components/duerps/MentionHorsReferentiel
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { activitesDuSecteur } from "@/lib/activites/reponses";
 import { construireEtapes } from "@/lib/duerps/etapes";
+import { etatEtapeTransverses } from "@/lib/transverses/etat";
 import { getDuerp } from "@/lib/duerps/queries";
 import { estHorsReferentiel, unitesHorsReferentiel } from "@/lib/risques/helpers";
 
@@ -51,7 +52,7 @@ export default async function RisquesOverviewPage({
     secteurOk: Boolean(duerp.referentielSecteurId),
     unitesOk,
     risquesOk: true,
-    transversesOk: duerp.transversesRepondues,
+    transverses: etatEtapeTransverses(duerp),
     activitesPosees: activitesDuSecteur(duerp.referentielSecteurId).length > 0,
   });
 

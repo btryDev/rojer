@@ -2439,10 +2439,19 @@ bloquante pour la branche :
    ses titres sur toutes les fiches, avec « si elle est concernée, déclarez son
    titre ». Le refus nominatif demanderait de stocker l'exposition d'une
    personne — une donnée à instruire au regard du RGPD avant d'être un champ.
-5. **L'étape « questions transverses » reste cochée** sur les DUERP validés
+5. ~~**L'étape « questions transverses » reste cochée** sur les DUERP validés
    avant l'ADR-038 (`transversesRepondues`), alors que deux questions y sont
    neuves et sans réponse. Seule la fiche salarié le signale. Rouvrir l'étape
-   changerait l'avancement de tous les dossiers existants : à décider.
+   changerait l'avancement de tous les dossiers existants : à décider.~~
+   [2026-10-12, `lot/etape-transverses-calculee` — décision de la
+   propriétaire : l'étape est **calculée**, plus stockée
+   (`etatEtapeTransverses`, `transverses/etat.ts`) — faite quand chaque
+   question a une réponse, oui ou non, le silence n'en étant pas une. Sinon
+   le fil d'étapes affiche « N question(s) nouvelle(s) à répondre → », vers
+   la première question sans réponse de `/duerp/[id]/transverses`, seul écran
+   qui les pose toutes. `transversesRepondues` est inerte (commentaire daté au
+   schéma, sans migration) ; `validerTransverses` et son bouton sont retirés.
+   Prod sans clients : le changement d'avancement est accepté.]
 6. **« Formations liées aux risques du poste »** regroupe aussi des
    attestations médicales et une autorisation, qui ne sont pas des
    formations. Titre validé par la propriétaire ; signalé par la relecture.

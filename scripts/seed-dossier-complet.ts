@@ -1022,7 +1022,8 @@ async function main(): Promise<void> {
     data: {
       etablissementId: etablissement.id,
       referentielSecteurId: restauration.id,
-      transversesRepondues: true,
+      // `transversesRepondues` n'est plus écrite (inerte depuis le 2026-10-12,
+      // § 17.5) : l'étape se calcule sur les réponses aux questions.
       reponsesActivitesNonCouvertes: ACTIVITES as Prisma.InputJsonValue,
       unites: {
         create: [

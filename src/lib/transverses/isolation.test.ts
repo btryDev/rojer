@@ -43,7 +43,7 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { repondreQuestionTransverse, validerTransverses } from "./actions";
+import { repondreQuestionTransverse } from "./actions";
 import { questionsDetectionTransverses } from "@/lib/referentiels";
 
 const USER = { id: "user-legitime", email: "dirigeant@exemple.fr" };
@@ -91,27 +91,8 @@ describe("risques transverses — DUERP d'un autre client", () => {
     expect(transactionMock).not.toHaveBeenCalled();
   });
 
-  it("validerTransverses refuse et n'écrit rien", async () => {
-    await expect(
-      validerTransverses("duerp-autre-client"),
-    ).rejects.toSatisfy(estNotFound);
-    expect(prismaMock.duerp.update).not.toHaveBeenCalled();
-    aucuneEcriture();
-  });
-});
-
-describe("risques transverses — chemin nominal", () => {
-  it("validerTransverses marque le DUERP du user", async () => {
-    prismaMock.duerp.findFirst.mockResolvedValue({
-      id: "d1",
-      etablissement: { id: "e1", entreprise: { id: "ent1" } },
-    });
-
-    await validerTransverses("d1");
-
-    expect(prismaMock.duerp.update).toHaveBeenCalledWith({
-      where: { id: "d1" },
-      data: { transversesRepondues: true },
-    });
-  });
+  // `validerTransverses` et ses deux cas (refus chez un autre client, chemin
+  // nominal) sont retirés le 2026-10-12 avec l'action : elle n'écrivait que
+  // `transversesRepondues`, devenue inerte quand l'étape a été calculée
+  // (chantiers-ouverts § 17.5). Plus d'écriture, plus de porte à garder.
 });

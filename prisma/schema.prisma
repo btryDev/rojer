@@ -389,6 +389,15 @@ model Duerp {
   versions                      DuerpVersion[]
   unites                        UniteTravail[]
   referentielSecteurId          String?
+  // INERTE DEPUIS LE 2026-10-12 — décision de la propriétaire
+  // (chantiers-ouverts § 17.5) : l'étape « Questions transverses » est
+  // CALCULÉE sur les réponses (`etatEtapeTransverses`, `transverses/etat.ts`),
+  // plus stockée. La colonne disait « Terminer a été cliqué un jour » et
+  // restait vraie sur les DUERP validés avant l'ADR-038, alors que deux
+  // questions y étaient neuves et sans réponse. Plus aucun code ne la lit ni
+  // ne l'écrit (`validerTransverses` est retirée). Gardée sans migration : la
+  // retirer serait une migration destructive pour rien. Ne pas la relire sans
+  // rouvrir la décision.
   transversesRepondues          Boolean        @default(false)
   // Réponses aux questions d'activités que le référentiel sectoriel retenu ne
   // couvre pas (ADR-020). Forme : `Record<string, boolean>`, la clé étant l'id
