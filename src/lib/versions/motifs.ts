@@ -30,3 +30,17 @@ export const MOTIFS_VERSION = {
 } as const;
 
 export type MotifVersion = keyof typeof MOTIFS_VERSION;
+
+/**
+ * Les motifs proposés à cette entreprise. Le 1° de R. 4121-2 ne vaut que
+ * « dans les entreprises d'au moins onze salariés » : il n'est proposé qu'à
+ * celles que `seuilMajAnnuelle` y soumet — y compris par prudence, quand le
+ * site atteint onze sous une entreprise déclarée en dessous. Le 2° et le 3°
+ * valent quel que soit l'effectif. Le formulaire et l'action serveur lisent
+ * cette liste (audit du 2026-10-12).
+ */
+export function motifsProposes(soumisMajAnnuelle: boolean): MotifVersion[] {
+  return (Object.keys(MOTIFS_VERSION) as MotifVersion[]).filter(
+    (cle) => cle !== "annuelle" || soumisMajAnnuelle,
+  );
+}

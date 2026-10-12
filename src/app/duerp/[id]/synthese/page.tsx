@@ -652,6 +652,7 @@ export default async function SynthesePage({
           <CreerVersionForm
             duerpId={id}
             aucunRisqueNonCote={synthese.nbRisquesNonCotes === 0}
+            soumisMajAnnuelle={etatDuerp.soumisMajAnnuelle}
           />
         </div>
       </section>

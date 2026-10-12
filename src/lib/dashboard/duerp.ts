@@ -99,8 +99,21 @@ export type EtatDuerp = {
   estAJour: boolean;
 };
 
+/**
+ * L'entreprise est-elle soumise à la mise à jour annuelle (R. 4121-2, 1°) ?
+ * Lue par `evaluerEtatDuerp` et par les motifs de version proposés
+ * (`motifsProposes`) : le motif « au moins chaque année » était offert à une
+ * entreprise de quatre salariés (audit du 2026-10-12).
+ */
+export function seuilMajAnnuelle(effectifs: EffectifsDeclares): {
+  atteint: boolean;
+  aConfirmer: boolean;
+} {
+  return seuilEntrepriseAtteint(EFFECTIF_MAJ_ANNUELLE, effectifs);
+}
+
 export function evaluerEtatDuerp(e: EntreeEtatDuerp, now: Date): EtatDuerp {
-  const seuilMaj = seuilEntrepriseAtteint(EFFECTIF_MAJ_ANNUELLE, e.effectifs);
+  const seuilMaj = seuilMajAnnuelle(e.effectifs);
   const soumisMajAnnuelle = seuilMaj.atteint;
   const aVersionValidee = e.ouvert && e.dateDerniereVersion !== null;
 
