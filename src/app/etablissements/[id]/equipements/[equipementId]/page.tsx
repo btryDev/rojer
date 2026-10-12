@@ -24,6 +24,10 @@ import {
   CartePhotos,
 } from "@/components/equipements/PiecesEquipement";
 import { SupprimerEquipementButton } from "@/components/equipements/SupprimerEquipementButton";
+import {
+  MESSAGE_APPAREIL_RETIRE,
+  estAppareilRetire,
+} from "@/lib/equipements/retrait";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -77,6 +81,11 @@ export default async function EquipementDetailPage({
   // Un seul bâtiment : le nommer n'apprend rien, et l'ADR-019 veut que le
   // mono-bâtiment ne paie pas la complexité du multi.
   const multiBatiments = eq.etablissement._count.batiments > 1;
+
+  // RETIRÉ DU PARC = LECTURE SEULE (décision du 2026-10-12) : la fiche et ses
+  // rapports restent lisibles, aucun bouton d'écriture ne se pose. Le serveur
+  // refuse de toute façon (`retrait.ts`) ; l'écran ne fait que ne pas proposer.
+  const retire = estAppareilRetire(eq);
 
   const base = `/etablissements/${id}`;
   const provenance = lireProvenance(de, id);
@@ -376,14 +385,16 @@ export default async function EquipementDetailPage({
                   </>
                 )}
               </AideEcran>
-              <Link
-                href={`${base}/equipements/${equipementId}/modifier`}
-                className={cn(
-                  buttonVariants({ variant: "boardClair", size: "board" }),
-                )}
-              >
-                Modifier
-              </Link>
+              {retire ? null : (
+                <Link
+                  href={`${base}/equipements/${equipementId}/modifier`}
+                  className={cn(
+                    buttonVariants({ variant: "boardClair", size: "board" }),
+                  )}
+                >
+                  Modifier
+                </Link>
+              )}
             </>
           }
         />
@@ -395,12 +406,14 @@ export default async function EquipementDetailPage({
             <CarteFiche
               titreFort="L'appareil"
               droite={
-                <Link
-                  href={`${base}/equipements/${equipementId}/modifier`}
-                  className="text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
-                >
-                  Modifier →
-                </Link>
+                retire ? undefined : (
+                  <Link
+                    href={`${base}/equipements/${equipementId}/modifier`}
+                    className="text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                  >
+                    Modifier →
+                  </Link>
+                )
               }
               corpsClassName="px-7 pb-7 pt-5 sm:px-8"
             >
@@ -660,21 +673,33 @@ export default async function EquipementDetailPage({
               )}
             </CarteFiche>
 
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[22px] border border-dashed border-[color:var(--board-slate)] px-6 py-5">
-              <div className="min-w-[200px] flex-1">
+            {retire ? (
+              <div className="rounded-[22px] border border-dashed border-[color:var(--board-slate)] px-6 py-5">
                 <p className="m-0 text-[13.5px] font-semibold text-[color:var(--board-ink)]">
-                  Cet équipement n&apos;est plus là&nbsp;?
+                  Retiré du parc · lecture seule
                 </p>
                 <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                  Le retirer supprime ses vérifications à venir. Ses rapports et
-                  ses actions restent au dossier.
+                  {MESSAGE_APPAREIL_RETIRE}
                 </p>
               </div>
-              <SupprimerEquipementButton
-                id={eq.id}
-                redirectTo={(provenance ?? parc).href}
-              />
-            </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-[22px] border border-dashed border-[color:var(--board-slate)] px-6 py-5">
+                <div className="min-w-[200px] flex-1">
+                  <p className="m-0 text-[13.5px] font-semibold text-[color:var(--board-ink)]">
+                    Cet équipement n&apos;est plus là&nbsp;?
+                  </p>
+                  <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                    Le retrait est définitif&nbsp;: ses vérifications à venir
+                    disparaissent, ses rapports et ses actions restent au
+                    dossier.
+                  </p>
+                </div>
+                <SupprimerEquipementButton
+                  id={eq.id}
+                  redirectTo={(provenance ?? parc).href}
+                />
+              </div>
+            )}
           </>
         }
       />

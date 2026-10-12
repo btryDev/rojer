@@ -206,6 +206,11 @@ describe("c — une périodicité changée au référentiel réaligne la ligne o
 // d — disparition puis retour d'un porteur (équipement)
 // ---------------------------------------------------------------------------
 
+// [2026-10-12] Le produit ne réactive plus un appareil : le retrait est
+// définitif (`equipements/retrait.ts`, chantiers-ouverts § 11 fermé par
+// décision). Ces deux cas gardent ce que le GÉNÉRATEUR fait d'un porteur qui
+// revient — le salarié réactivé suit le même chemin —, pas un parcours de
+// l'interface.
 describe("d — un appareil désactivé puis réactivé", () => {
   it("avec trace : archivée puis rouverte, même identifiant, rapport et action intacts", async () => {
     poserEtablissement([{ id: "eq-1" }]);
@@ -234,7 +239,8 @@ describe("d — un appareil désactivé puis réactivé", () => {
   });
 
   it("LIMITE ÉCRITE (chantiers-ouverts § 11) — sans trace, le retard ne survit pas à l'aller-retour", async () => {
-    // Caractérise le comportement actuel ; ne le valide pas.
+    // Caractérise le comportement actuel ; ne le valide pas. [2026-10-12 :
+    // plus atteignable pour un appareil, la réactivation ayant disparu.]
     poserEtablissement([{ id: "eq-1" }]);
     db.verifications = [
       ligne({ id: "d2", equipementId: "eq-1", statut: "a_planifier", datePrevue: d("2020-01-01"), suiviDepuis: d("2020-01-01") }),

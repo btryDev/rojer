@@ -76,6 +76,7 @@ vi.mock("@/lib/storage", async () => {
 const { db, prisma, stockage, regenerer } = await h;
 const client = prisma as unknown as ClientLecture;
 const { supprimerRapport, uploadRapport } = await import("./actions");
+const { MESSAGE_APPAREIL_RETIRE } = await import("@/lib/equipements/retrait");
 
 const ETAB = "etab-1";
 const d = (cle: string) => depuisCleJourCivil(cle);
@@ -450,6 +451,27 @@ describe("uploadRapport — une obligation éteinte ne reçoit pas de rapport", 
     expect(rapports()).toEqual([]);
     expect(ligne().datePrevue).toEqual(ORIGINE);
     expect(stockage.fichiers.size).toBe(0);
+  });
+});
+
+describe("uploadRapport — un appareil retiré du parc ne reçoit pas de rapport (2026-10-12)", () => {
+  it("refuse, avant tout stockage, même si la ligne est restée ouverte (régénération ratée au retrait)", async () => {
+    poserEtablissement([{ id: "eq-1", actif: false }]);
+    poserLigne({ archiveLe: null });
+
+    const res = await deposer("conforme", "2026-06-01");
+
+    expect(res).toEqual({ status: "error", message: MESSAGE_APPAREIL_RETIRE });
+    expect(stockage.fichiers.size).toBe(0);
+    expect(rapports()).toEqual([]);
+    expect(ligne().datePrevue).toEqual(ORIGINE);
+  });
+
+  it("un appareil en service, lui, reçoit son rapport", async () => {
+    poserEtablissement([{ id: "eq-1" }]);
+    poserLigne({ archiveLe: null });
+    await deposer("conforme", "2026-06-01").catch(() => undefined);
+    expect(rapports()).toHaveLength(1);
   });
 });
 

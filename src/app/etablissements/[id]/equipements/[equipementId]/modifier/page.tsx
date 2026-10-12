@@ -19,6 +19,10 @@ import {
 import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { lireProvenance } from "@/lib/navigation/provenance";
+import {
+  MESSAGE_APPAREIL_RETIRE,
+  estAppareilRetire,
+} from "@/lib/equipements/retrait";
 
 type Caracteristiques = Partial<
   Pick<
@@ -120,6 +124,16 @@ export default async function ModifierEquipementPage({
           </div>
         )}
 
+        {estAppareilRetire(eq) ? (
+          // Lecture seule (décision du 2026-10-12) : le formulaire ne se pose
+          // pas, et `modifierEquipement` refuse de toute façon. Le lien de la
+          // fiche d'une vérification mène encore ici.
+          <div className="carte-board max-w-[880px] px-7 py-6 sm:px-8">
+            <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              {MESSAGE_APPAREIL_RETIRE}
+            </p>
+          </div>
+        ) : (
         <div className="carte-board max-w-[880px] px-7 py-7 sm:px-8">
           <EquipementForm
             action={action}
@@ -161,6 +175,7 @@ export default async function ModifierEquipementPage({
             }}
           />
         </div>
+        )}
       </div>
     </main>
   );

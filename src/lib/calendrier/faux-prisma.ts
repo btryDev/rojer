@@ -385,6 +385,27 @@ export function fauxPrisma(db: Magasin) {
         sortie._count = compte;
         continue;
       }
+      // La relation vers l'appareil : le dépôt d'un rapport lit son état de
+      // service (`equipements/retrait.ts`, 2026-10-12). Seules les colonnes
+      // demandées sortent, `null` sans appareil, comme en base.
+      if (cle === "equipement") {
+        const sous = (demande as { select?: Record<string, boolean> }).select ?? {};
+        const eq =
+          v.equipementId === null
+            ? undefined
+            : db.etablissements
+                .flatMap((e) => e.equipements)
+                .find((e) => e.id === v.equipementId);
+        sortie.equipement =
+          eq === undefined
+            ? null
+            : Object.fromEntries(
+                Object.entries(sous)
+                  .filter(([, voulu]) => voulu)
+                  .map(([c]) => [c, (eq as unknown as Record<string, unknown>)[c]]),
+              );
+        continue;
+      }
       if (!COLONNES_LIGNE.has(cle)) {
         inconnu("verification.findMany", [`select.${cle}`]);
       }

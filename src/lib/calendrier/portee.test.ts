@@ -491,7 +491,9 @@ describe("les pages emploient bien ce que `portee.ts` leur tient", () => {
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/^\s*\/\/.*$/gm, "");
     expect(code).toContain('const archivee = etat === "archivee";');
-    expect(code).toContain("const depotOuvert = !archivee;");
+    // 2026-10-12 : un appareil retiré du parc ferme aussi le dépôt
+    // (`equipements/retrait.ts`) — l'extinction reste la première condition.
+    expect(code).toContain("const depotOuvert = !archivee && !appareilRetire;");
     // `statutAffichePrudent` (D1 (a), 2026-09-28) enveloppe `statutAffiche` :
     // l'extinction se lit toujours par elle, et la prudence s'y ajoute.
     expect(code).toContain(

@@ -103,13 +103,13 @@ const {
   creerEquipement,
   creerEquipementsDepuisPreRemplissage,
   modifierEquipement,
-  reactiverEquipement,
   repondreQuestionEquipement,
   supprimerEquipement,
 } = await import("./actions");
 const { questionsExigeesPour, CATEGORIES_A_REPONSE_EXIGEE } = await import(
   "./reponses-exigees"
 );
+const { MESSAGE_APPAREIL_RETIRE } = await import("./retrait");
 
 beforeEach(() => {
   h.db.equipements = [{ id: "eq-1", etablissementId: "etab-1", actif: true }];
@@ -207,15 +207,51 @@ describe("supprimerEquipement", () => {
   });
 });
 
-describe("reactiverEquipement", () => {
-  it("remet l'équipement en service et régénère les obligations", async () => {
+describe("un appareil retiré du parc est en lecture seule (décision du 2026-10-12)", () => {
+  // Plus de réactivation : le retrait est définitif, et toute écriture sur
+  // l'appareil retiré est refusée avec la même phrase (`retrait.ts`).
+  beforeEach(() => {
     h.db.equipements[0].actif = false;
+  });
+  const formulaire = () => {
+    const fd = new FormData();
+    fd.set("libelle", "Extincteur");
+    fd.set("categorie", "EXTINCTEUR");
+    return fd;
+  };
 
-    const res = await reactiverEquipement("eq-1");
+  it("modifier : refusé, rien n'est écrit, rien n'est régénéré", async () => {
+    const r = await modifierEquipement("eq-1", { status: "idle" }, formulaire());
+    expect(r).toEqual({ status: "error", message: MESSAGE_APPAREIL_RETIRE });
+    expect(h.db.equipements[0]).not.toHaveProperty("libelle");
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+    // L'appartenance est contrôlée avant le refus.
+    expect(h.assertOwnership).toHaveBeenCalledWith("etab-1");
+  });
 
-    expect(res).toEqual({ ok: true });
-    expect(h.db.equipements[0].actif).toBe(true);
-    expect(h.genererCalendrier).toHaveBeenCalledWith("etab-1");
+  it("répondre à une question : refusé", async () => {
+    Object.assign(h.db.equipements[0], {
+      categorie: CATEGORIES_A_REPONSE_EXIGEE[0],
+      caracteristiques: {},
+    });
+    const [champ] = questionsExigeesPour(CATEGORIES_A_REPONSE_EXIGEE[0]);
+    const fd = new FormData();
+    fd.set("reponse", "non");
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, fd);
+    expect(r).toEqual({ status: "error", message: MESSAGE_APPAREIL_RETIRE });
+    expect(h.db.equipements[0]).toMatchObject({ caracteristiques: {} });
+  });
+
+  it("retirer à nouveau : refusé, même sans trace — l'appareil n'est jamais détruit après coup", async () => {
+    h.db.nbTraces = 0;
+    const r = await supprimerEquipement("eq-1");
+    expect(r).toEqual({ statut: "erreur", message: MESSAGE_APPAREIL_RETIRE });
+    expect(h.db.supprimesPhysiquement).toEqual([]);
+  });
+
+  it("la phrase dit l'issue : lecture seule, pas de remise en service, un nouvel appareil s'il revient", () => {
+    expect(MESSAGE_APPAREIL_RETIRE).toContain("ne peut plus être modifié ni remis en service");
+    expect(MESSAGE_APPAREIL_RETIRE).toContain("nouvel appareil");
   });
 });
 

@@ -1990,11 +1990,17 @@ Chacun donne l'illusion d'une garantie. À retirer ou à brancher, pas à laisse
   (zéro legs en production, mesuré le 2026-09-19 par le contrôle de santé sur
   toutes les lignes, générées ou non), sans effet sur ce que la régénération écrit ;
   l'ADR est « terminée », la puce 036 du `CLAUDE.md` dit la bascule au présent.
-- **Désactiver puis réactiver un appareil efface le retard de ses lignes sans
+- ~~**Désactiver puis réactiver un appareil efface le retard de ses lignes sans
   preuve** : supprimées à la désactivation, recréées à la réactivation depuis la
   mise en service ou maintenant (`generateur.ts`, « CE QUE CETTE SUPPRESSION
   LAISSE PASSER »). Écrit dans le code, non corrigé : le fermer voudrait
-  archiver une ligne qui n'atteste de rien. **Le salarié n'est pas concerné** :
+  archiver une ligne qui n'atteste de rien.~~ **Fermé par décision le
+  2026-10-12 (`lot/polir-relecture`) : plus de réactivation.** La propriétaire
+  a rendu le retrait définitif : `reactiverEquipement` est supprimée, un
+  appareil retiré est en lecture seule (modifier, répondre à une question,
+  retirer à nouveau, déposer un rapport : refusés côté serveur,
+  `equipements/retrait.ts`), et un appareil qui revient se déclare comme un
+  nouvel appareil. **Le salarié n'est pas concerné** :
   sa ligne sans trace, supprimée au départ, est recréée à la réactivation avec
   la date du titre, donc en retard si le titre est échu — aucun retard n'est
   effacé (rejoué à la relecture du 2026-09-17, test dans
