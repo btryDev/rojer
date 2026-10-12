@@ -6,6 +6,7 @@ import {
   regleDeLAnnee,
 } from "./regle-annee";
 import { AUCUNE_PRUDENCE, type RetenueParPrudence } from "./prudence";
+import { repartirVerifications } from "@/lib/pdf/etat-verifications";
 
 /** Le 15 septembre 2026, à midi à Paris. */
 const AUJOURDHUI = new Date("2026-09-15T10:00:00.000Z");
@@ -163,5 +164,29 @@ describe("règle annuelle — une échéance retenue par prudence (D26, 2026-10-
   it("une échéance à venir n'est pas touchée : la prudence ne vise que le retard", () => {
     const { lignes } = regle([], [verif("2026-12-01", "planifiee")], 2026, toutEstPrudent);
     expect(lignes.map((l) => l.genre === "verif" && l.registre)).toEqual(["lointain"]);
+  });
+});
+
+describe("pas de double compte : l'en-tête des mois dit le retard du bandeau (D26)", () => {
+  // Le bandeau du calendrier, le rail et le tableau de bord lisent
+  // `repartirVerifications` (`compterEtatCalendrier` → `repartirRetards`). Les
+  // en-têtes rouges des mois lisent le registre des lignes : la somme des
+  // seconds doit valoir le premier, prudence comprise.
+  it("somme des « en retard » des mois = retards de repartirVerifications", () => {
+    const verifs = [
+      { ...verif("2026-03-01", "planifiee"), obligationId: "prudente" },
+      { ...verif("2026-04-01", "planifiee"), obligationId: "certaine" },
+      { ...verif("2026-05-01", "a_planifier"), obligationId: "prudente" },
+      { ...verif("2026-06-01", "a_planifier"), obligationId: "certaine" },
+      { ...verif("2026-11-01", "planifiee"), obligationId: "prudente" },
+      { ...verif("2026-07-01", "planifiee"), obligationId: "prudente", prescriptionId: "p" },
+    ];
+    const prudence: RetenueParPrudence = (v) =>
+      v.prescriptionId === null && v.obligationId === "prudente";
+    const { lignes } = regle([], verifs, 2026, prudence);
+    const enTetes = lignes.filter((l) => l.genre === "verif" && l.registre === "enRetard").length;
+    const bandeau = repartirVerifications(verifs, AUJOURDHUI, prudence).enRetard.length;
+    expect(enTetes).toBe(bandeau);
+    expect(bandeau).toBe(3);
   });
 });
