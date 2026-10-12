@@ -125,6 +125,28 @@ describe("prescriptions — renforce_periodicite", () => {
     expect(s["eq-ext"].raison).toContain("arrêté municipal AM 2026-12");
   });
 
+  // 2026-10-12 (suite de C62) : le motif écrivait le code brut du rythme
+  // (« six_semaines », « decennale ») — il le dit désormais en clair, par la
+  // table de la page des prescriptions.
+  it("le motif de surcharge dit le rythme en clair, pas son code", () => {
+    const res = appliquerPrescriptions(
+      [applicable(extincteursAnnuelle, [extincteur])],
+      [
+        prescription({
+          id: "p1",
+          effet: "renforce_periodicite",
+          obligationId: extincteursAnnuelle.id,
+          periodicite: "six_semaines",
+        }),
+      ],
+      [extincteur],
+      NOW,
+    );
+    const raison = res.applicables[0].surcharges!["eq-ext"].raison;
+    expect(raison).toContain("Périodicité portée à « toutes les 6 semaines »");
+    expect(raison).not.toContain("six_semaines");
+  });
+
   it("ne surcharge qu'un seul équipement quand `equipementId` est renseigné", () => {
     const res = appliquerPrescriptions(
       [applicable(extincteursAnnuelle, [extincteur, extincteur2])],

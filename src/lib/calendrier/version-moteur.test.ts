@@ -124,6 +124,13 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, suite de C62) :
+  // `LABEL_PERIODICITE` sort de `labels.ts` vers le module feuille
+  // `label-periodicite.ts`, que `matching/prescriptions.ts` lit pour dire en
+  // clair le rythme de son motif de surcharge (« toutes les 6 semaines » au
+  // lieu de « six_semaines »). NON, la régénération n'écrit pas autrement :
+  // `surcharge.raison` rejoint `raisons`, qu'aucune colonne ne stocke ; la
+  // périodicité écrite reste `surcharge.periodicite`. ~~e0d35b3f39ef01c3~~.
   // Recopiée SANS incrément le 2026-10-12 (ADR-043, ce qui manque à une
   // personne) : `mention-rythme.ts` exporte `delaiEnPhrase` (« 3 mois »),
   // lu par la seule fiche salarié. NON, la régénération n'écrit pas
@@ -350,7 +357,7 @@ const RELEVE = {
   // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
   // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
   // ~~005b4fafbfab216a~~.
-  empreinte: "e0d35b3f39ef01c3",
+  empreinte: "6688d9fbaa6ff949",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

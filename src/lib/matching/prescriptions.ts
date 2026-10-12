@@ -1,4 +1,7 @@
 import { cleJourCivil } from "@/lib/dates";
+// Le module feuille, pas `calendrier/labels.ts` : celui-ci importe un type
+// d'`echeances.ts`, qui ouvre la base (passage à blanc, C62).
+import { LABEL_PERIODICITE } from "@/lib/calendrier/label-periodicite";
 // Depuis le module feuille, pas depuis `prescriptions/schema.ts` : celui-ci
 // importe `estPeriodicitePlusStricte` d'ici, et passer par lui refermerait le
 // cycle que `sources.ts` a été créé pour ouvrir.
@@ -284,7 +287,7 @@ export function appliquerPrescriptions(
         surcharges[eq.id] = {
           periodicite: p.periodicite,
           prescriptionId: p.id,
-          raison: `Périodicité portée à « ${p.periodicite} » par ${libelleSource(p)}.${suffixeMarquage(p)}`,
+          raison: `Périodicité portée à « ${LABEL_PERIODICITE[p.periodicite]} » par ${libelleSource(p)}.${suffixeMarquage(p)}`,
         };
         appliquee = true;
       }

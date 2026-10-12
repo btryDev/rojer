@@ -5121,12 +5121,16 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     l'aide du stockage cesserait d'être leur adresse).
   - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
     dirigeant — **à faire**, passe de code suivante.
-  - Le motif de surcharge écrit par le moteur (`matching/prescriptions.ts`,
+  - ~~Le motif de surcharge écrit par le moteur (`matching/prescriptions.ts`,
     « Périodicité portée à « semestrielle » ») garde le code brut —
     **à faire** : `LABEL_PERIODICITE` vit dans `calendrier/labels.ts`, dont
     l'import de type vers `echeances.ts` fait entrer Prisma dans la fermeture
     du passage à blanc (`passage-a-blanc.test.ts`, qui suit aussi les
-    `import type`) ; il faut d'abord sortir la table dans un module feuille.
+    `import type`) ; il faut d'abord sortir la table dans un module feuille.~~
+    [2026-10-12, `lot/suites-0810` : table sortie dans
+    `calendrier/label-periodicite.ts`, réexportée par `labels.ts` ; le motif
+    dit « toutes les 6 semaines » (test dans `matching/prescriptions.test.ts`).
+    Moteur recopié sans incrément — la raison n'est stockée nulle part.]
   - Les décisions de la synthèse de la revue (1, 2, 4 à 14) restent à la
     propriétaire ; la décision 3 (widgets) est faite par C61, exigée par
     l'ADR-039 § 5.
