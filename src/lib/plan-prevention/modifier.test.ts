@@ -24,7 +24,14 @@ const { db } = vi.hoisted(() => ({
 // Le faux client se passe lui-même à la transaction ; le verrou est journalisé.
 vi.mock("@/lib/prisma", () => {
   const client: Record<string, unknown> = {
-    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => fn(client),
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+      db.journal.push("transaction ouverte");
+      try {
+        return await fn(client);
+      } finally {
+        db.journal.push("transaction fermée");
+      }
+    },
     $queryRaw: async (q: TemplateStringsArray, ...v: unknown[]) => {
       db.journal.push(`verrou ${q.join("?")} ${v.join(",")}`);
       return [];
@@ -91,9 +98,10 @@ vi.mock("@/lib/auth/scope", () => ({
   }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({
-  resoudreBatimentOptionnel: vi.fn(async (_e: string, id?: string) =>
-    id === "zone-inconnue" ? { ok: false } : { ok: true, id: id ?? null },
-  ),
+  resoudreBatimentOptionnel: vi.fn(async (_e: string, id?: string) => {
+    db.journal.push("lecture zone");
+    return id === "zone-inconnue" ? { ok: false } : { ok: true, id: id ?? null };
+  }),
 }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "u1" })) }));
 vi.mock("./queries", () => ({ nextNumeroPlan: vi.fn(async () => 2) }));
@@ -285,8 +293,11 @@ describe("les liens de signature en vol (relecture indépendante du 2026-10-12)"
 
     await modifier(saisie());
 
-    expect(db.journal[0]).toMatch(/^verrou SELECT 1 FROM "PlanPrevention" WHERE "id" = \? FOR UPDATE pp-1$/);
-    expect(db.journal[1]).toBe("compte des signatures");
+    // Le journal porte aussi l'ouverture de la transaction et la lecture de
+    // zone (B1, plus haut) : l'ordre éprouvé ici est verrou → compte.
+    const ordre = db.journal.filter((e) => e.startsWith("verrou") || e === "compte des signatures");
+    expect(ordre[0]).toMatch(/^verrou SELECT 1 FROM "PlanPrevention" WHERE "id" = \? FOR UPDATE pp-1$/);
+    expect(ordre[1]).toBe("compte des signatures");
   });
 });
 
@@ -318,6 +329,21 @@ describe("le prestataire de l'annuaire est celui de l'établissement (relecture 
 
     expect((await modifier(saisie({ prestataireId: "presta-a-moi" }))).status).toBe("success");
     expect(db.plans[0].prestataireId).toBe("presta-a-moi");
+  });
+});
+
+describe("les lectures de propriété se font hors transaction (relecture finale du 2026-10-12, B1)", () => {
+  // En prod, `connection_limit=1` : une lecture par le client global DANS la
+  // transaction attend la connexion que la transaction tient, et l'action
+  // échoue au délai. Le faux client ne bloque pas ; l'ordre journalisé, si.
+  it("la zone est résolue avant l'ouverture de la transaction", async () => {
+    db.plans.push(planEnBase());
+    await modifierPlanPrevention("pp-1", { status: "idle" }, saisie({ batimentId: "zone-2" }));
+    const zone = db.journal.indexOf("lecture zone");
+    const ouverture = db.journal.indexOf("transaction ouverte");
+    expect(zone).toBeGreaterThanOrEqual(0);
+    expect(zone).toBeLessThan(ouverture);
+    expect(db.journal.slice(ouverture)).not.toContain("lecture zone");
   });
 });
 
