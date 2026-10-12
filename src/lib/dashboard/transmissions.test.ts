@@ -696,3 +696,46 @@ describe("le signal compte par personne pour un titre dû à l'entrée (ADR-043 
     );
   });
 });
+
+describe("la VIP manquante atteint le tableau de bord (relecture du 2026-10-12, B1)", () => {
+  // Sur le RÉFÉRENTIEL LIVRÉ, pas sur une sonde : la relecture avait vu le
+  // test du compte par personne passer grâce à une obligation fabriquée qui
+  // transmettait vers la VIP — aucune obligation réelle ne le fait.
+  const organisation = obligationsConformite.find(
+    (o) => o.id === "formation-securite-etablissement-organisation",
+  )!;
+
+  it("compte la VIP qui manque, hors de toute transmission", () => {
+    const t = rapprocher([organisation], [], [personne("2026-01-01")], NOW);
+    const dus = t.titresDusNonDeclares.map((c) => c.titre);
+    expect(dus).toContain("sante-travail-salarie-vip");
+    // La formation à la sécurité est comptée par la transmission, pas deux fois.
+    expect(dus).not.toContain("formation-securite-salarie-accueil");
+    const vip = t.titresDusNonDeclares.find((c) => c.titre === "sante-travail-salarie-vip")!;
+    expect(vip).toMatchObject({ sansLeTitre: 1, enRetard: 1, nonDatees: 0 });
+  });
+
+  it("se tait quand la VIP est déclarée", () => {
+    const t = rapprocher([organisation], [], [personne("2026-01-01", ["sante-travail-salarie-vip"])], NOW);
+    expect(t.titresDusNonDeclares.map((c) => c.titre)).not.toContain("sante-travail-salarie-vip");
+  });
+
+  it("la carte du tableau de bord la nomme", () => {
+    const t = rapprocher([organisation], [], [personne("2026-01-01")], NOW);
+    const recos = genererRecommandations(
+      {
+        etablissementId: "etab-x",
+        verifications: [],
+        actions: [],
+        nbEquipements: 3,
+        duerpSecteurChoisi: true,
+        nbRapports: 2,
+        transmissions: t,
+      },
+      { now: NOW, limite: 50 },
+    );
+    const carte = recos.find((r) => r.cle === "titres-dus-non-declares");
+    expect(carte?.sousTitre).toContain("Visite d'information et de prévention");
+    expect(carte?.sousTitre).toContain("dont 1 en retard");
+  });
+});

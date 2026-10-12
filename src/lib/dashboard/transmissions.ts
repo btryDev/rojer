@@ -73,11 +73,21 @@ export type Transmissions = {
      */
     parPersonne?: CompteParPersonne[];
   }>;
+  /**
+   * Les titres qui manquent à au moins une personne active (ADR-043) et
+   * qu'aucune transmission ci-dessus ne compte déjà — la VIP au premier chef :
+   * aucune obligation d'établissement ne transmet vers elle, et sans ce champ
+   * le tableau de bord la taisait quand la fiche et le badge la comptaient en
+   * retard (relecture indépendante du 2026-10-12, B1). Même fonction, même
+   * compte.
+   */
+  titresDusNonDeclares: CompteParPersonne[];
 };
 
 export const AUCUNE_TRANSMISSION: Transmissions = {
   domainesSansPrestataire: [],
   obligationsSupposantUnePersonne: [],
+  titresDusNonDeclares: [],
 };
 
 /**
@@ -275,9 +285,23 @@ export function rapprocher(
     );
   }
 
+  // Tout le reste de ce qui manque, compté par titre. Lu depuis les manques
+  // eux-mêmes, pas depuis les transmissions : c'est ce qui fait entrer la VIP,
+  // la visite intermédiaire et l'attestation de conduite.
+  const dejaComptes = new Set(
+    personnes.flatMap((p) => (p.parPersonne ?? []).map((c) => c.titre)),
+  );
+  const restants = new Map<string, Obligation>();
+  for (const m of manques.flat()) {
+    const id = m.obligation.id;
+    if (dejaComptes.has(id) || titresEcartesParLesFaits.has(id)) continue;
+    restants.set(id, m.obligation);
+  }
+
   return {
     domainesSansPrestataire: domaines,
     obligationsSupposantUnePersonne: personnes,
+    titresDusNonDeclares: [...restants.values()].map(compter),
   };
 }
 

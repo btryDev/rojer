@@ -221,6 +221,8 @@ export type EntreeRecos = {
      * `parPersonne` dit alors à combien.
      */
     obligationsSupposantUnePersonne: Transmissions["obligationsSupposantUnePersonne"];
+    /** Les autres titres dus non déclarés, comptés par personne (ADR-043). */
+    titresDusNonDeclares?: Transmissions["titresDusNonDeclares"];
   };
 };
 
@@ -503,6 +505,21 @@ export function genererRecommandations(
         o.parPersonne && o.parPersonne.length > 0
           ? o.parPersonne.map(phraseParPersonne).join(" ; ")
           : "Suppose un titre nominatif — rien de ce qui est déclaré n'y répond",
+      href: `/etablissements/${etab}/equipe`,
+      priorite: 10,
+    });
+  }
+
+  // Ce qui manque aux salariés hors de toute transmission — la VIP d'abord
+  // (relecture du 2026-10-12, B1). Une carte, pas une par titre : le geste est
+  // le même, aller déclarer dans Équipe.
+  const dus = e.transmissions.titresDusNonDeclares ?? [];
+  if (dus.length > 0) {
+    acc.push({
+      kind: "transmission_salarie",
+      cle: "titres-dus-non-declares",
+      titre: "Titres dus à vos salariés, non déclarés",
+      sousTitre: dus.map(phraseParPersonne).join(" ; "),
       href: `/etablissements/${etab}/equipe`,
       priorite: 10,
     });
