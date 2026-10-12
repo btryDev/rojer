@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
 import { ETAT_PLAN } from "@/lib/plan-prevention/etats";
 import { lireProvenance } from "@/lib/navigation/provenance";
 import {
@@ -486,6 +488,16 @@ export default async function PlanPreventionDetailPage({
         cote={
           <CarteFiche titre="Cycle de vie">
             <div className="flex flex-wrap items-center gap-3">
+              {/* Corriger la saisie (2026-10-12) : tant que le plan vit. Signé,
+                  l'écran de modification dit ce qui reste ouvert. */}
+              {planSignable && (
+                <Link
+                  href={`/etablissements/${id}/plan-prevention/${plan.id}/modifier`}
+                  className={buttonVariants({ variant: "boardClair", size: "board" })}
+                >
+                  Modifier
+                </Link>
+              )}
               {(plan.statut === "valide" ||
                 plan.statut === "attente_signatures") && (
                 <BoutonCloturer planId={plan.id} />

@@ -233,6 +233,17 @@ export function depuisSaisieDateHeure(valeur: string): Date {
 }
 
 /**
+ * Réciproque de `depuisSaisieDateHeure` : la valeur « AAAA-MM-JJTHH:MM » qu'un
+ * `<input type="datetime-local">` affiche pour un instant, en heure de Paris.
+ * Sert aux écrans « Modifier », qui rouvrent une saisie (2026-10-12).
+ */
+export function versSaisieDateHeure(d: Date): string {
+  const c = composantesCiviles(d);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${cleJourCivil(d)}T${pad(c.heure)}:${pad(c.minute)}`;
+}
+
+/**
  * Différence en **jours civils** entre deux instants : le nombre de
  * minuits de Paris franchis, sans tenir compte des heures.
  *

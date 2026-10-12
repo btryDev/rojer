@@ -11,9 +11,15 @@ import {
   ligneSchema,
   planPreventionSchema,
   type LigneInput,
+  type PlanPreventionInput,
 } from "./schema";
 import { nextNumeroPlan } from "./queries";
 import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
+import { statutPlanSignable } from "@/lib/signatures/etat-signable";
+import {
+  compterSignatures,
+  motifContenuScelle,
+} from "@/lib/signatures/verrou-contenu";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 
 export type PlanActionState =
@@ -94,17 +100,13 @@ function extrairePhases(formData: FormData): unknown[] {
   return out;
 }
 
-export async function creerPlanPrevention(
-  etablissementId: string,
-  _prev: PlanActionState,
-  formData: FormData,
-): Promise<PlanActionState> {
-  await assertEtablissementOwnership(etablissementId);
-
-  const lignes = extraireLignes(formData);
-  const phases = extrairePhases(formData);
-
-  const parsed = planPreventionSchema.safeParse({
+/**
+ * La saisie du formulaire, validée — UNE lecture pour la création et la
+ * modification (2026-10-12) : l'écran « Modifier » réutilise le formulaire
+ * de création, et le serveur reprend les mêmes validations.
+ */
+function lirePlanPrevention(formData: FormData) {
+  return planPreventionSchema.safeParse({
     prestataireId: formData.get("prestataireId"),
     entrepriseExterieureRaison: formData.get("entrepriseExterieureRaison"),
     entrepriseExterieureSiret: formData.get("entrepriseExterieureSiret"),
@@ -122,15 +124,73 @@ export async function creerPlanPrevention(
     travauxDangereux: formData.get("travauxDangereux") === "on",
     inspectionDate: formData.get("inspectionDate"),
     inspectionParticipants: formData.get("inspectionParticipants"),
-    lignes,
+    lignes: extraireLignes(formData),
     // Les cinq rubriques de `R. 4512-8` — cf. `contenu-r4512-8.ts`.
-    phases,
+    phases: extrairePhases(formData),
     adaptationMateriels: formData.get("adaptationMateriels"),
     instructionsTravailleurs: formData.get("instructionsTravailleurs"),
     organisationSecours: formData.get("organisationSecours"),
     participationCroisee: formData.get("participationCroisee"),
   });
+}
 
+/** Les colonnes du plan tirées d'une saisie valide (hors lignes et phases). */
+function colonnesPlan(d: PlanPreventionInput) {
+  return {
+    prestataireId: d.prestataireId ?? null,
+    entrepriseExterieureRaison: d.entrepriseExterieureRaison,
+    entrepriseExterieureSiret: d.entrepriseExterieureSiret ?? null,
+    efChefNom: d.efChefNom,
+    efChefEmail: d.efChefEmail,
+    efEffectifIntervenant: d.efEffectifIntervenant,
+    euChefNom: d.euChefNom,
+    euChefFonction: d.euChefFonction ?? null,
+    dateDebut: d.dateDebut,
+    dateFin: d.dateFin,
+    dureeHeuresEstimee: d.dureeHeuresEstimee ?? null,
+    lieux: d.lieux,
+    naturesTravaux: d.naturesTravaux,
+    travauxDangereux: d.travauxDangereux,
+    inspectionDate: d.inspectionDate ?? null,
+    inspectionParticipants: d.inspectionParticipants ?? null,
+    adaptationMateriels: d.adaptationMateriels ?? null,
+    instructionsTravailleurs: d.instructionsTravailleurs ?? null,
+    organisationSecours: d.organisationSecours ?? null,
+    participationCroisee: d.participationCroisee ?? null,
+  };
+}
+
+const phasesACreer = (d: PlanPreventionInput) =>
+  d.phases.map((f, ordre) => ({
+    id: `pha_${randomUUID()}`,
+    ordre,
+    phase: f.phase,
+    moyensPrevention: f.moyensPrevention,
+  }));
+
+const lignesACreer = (d: PlanPreventionInput) =>
+  d.lignes.map((l, ordre) => ({
+    id: `lig_${randomUUID()}`,
+    ordre,
+    risque: l.risque,
+    mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
+    mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
+  }));
+
+const ZONE_INTROUVABLE: PlanActionState = {
+  status: "error",
+  message: "Zone introuvable",
+  fieldErrors: { batimentId: ["Zone introuvable"] },
+};
+
+export async function creerPlanPrevention(
+  etablissementId: string,
+  _prev: PlanActionState,
+  formData: FormData,
+): Promise<PlanActionState> {
+  await assertEtablissementOwnership(etablissementId);
+
+  const parsed = lirePlanPrevention(formData);
   if (!parsed.success) {
     return {
       status: "error",
@@ -143,13 +203,7 @@ export async function creerPlanPrevention(
     etablissementId,
     parsed.data.batimentId,
   );
-  if (!batiment.ok) {
-    return {
-      status: "error",
-      message: "Zone introuvable",
-      fieldErrors: { batimentId: ["Zone introuvable"] },
-    };
-  }
+  if (!batiment.ok) return ZONE_INTROUVABLE;
 
   const numero = await nextNumeroPlan(etablissementId);
   const id = `pp_${randomUUID()}`;
@@ -159,51 +213,113 @@ export async function creerPlanPrevention(
       id,
       etablissementId,
       numero,
-      prestataireId: parsed.data.prestataireId,
-      entrepriseExterieureRaison: parsed.data.entrepriseExterieureRaison,
-      entrepriseExterieureSiret: parsed.data.entrepriseExterieureSiret,
-      efChefNom: parsed.data.efChefNom,
-      efChefEmail: parsed.data.efChefEmail,
-      efEffectifIntervenant: parsed.data.efEffectifIntervenant,
-      euChefNom: parsed.data.euChefNom,
-      euChefFonction: parsed.data.euChefFonction,
-      dateDebut: parsed.data.dateDebut,
-      dateFin: parsed.data.dateFin,
-      dureeHeuresEstimee: parsed.data.dureeHeuresEstimee,
-      lieux: parsed.data.lieux,
+      ...colonnesPlan(parsed.data),
       batimentId: batiment.id,
-      naturesTravaux: parsed.data.naturesTravaux,
-      travauxDangereux: parsed.data.travauxDangereux,
-      inspectionDate: parsed.data.inspectionDate,
-      inspectionParticipants: parsed.data.inspectionParticipants,
-      adaptationMateriels: parsed.data.adaptationMateriels,
-      instructionsTravailleurs: parsed.data.instructionsTravailleurs,
-      organisationSecours: parsed.data.organisationSecours,
-      participationCroisee: parsed.data.participationCroisee,
       statut: "attente_signatures",
-      phasesDangereuses: {
-        create: parsed.data.phases.map((f, ordre) => ({
-          id: `pha_${randomUUID()}`,
-          ordre,
-          phase: f.phase,
-          moyensPrevention: f.moyensPrevention,
-        })),
-      },
-      lignes: {
-        create: parsed.data.lignes.map((l, ordre) => ({
-          id: `lig_${randomUUID()}`,
-          ordre,
-          risque: l.risque,
-          mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
-          mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
-        })),
-      },
+      phasesDangereuses: { create: phasesACreer(parsed.data) },
+      lignes: { create: lignesACreer(parsed.data) },
     },
   });
 
   revalidatePath(`/etablissements/${etablissementId}/plan-prevention`);
   return { status: "success", planId: id, numero };
 }
+
+/**
+ * Corriger un plan (audit du 2026-10-12, constat 1). Le plan ne se modifiait
+ * pas : créé sans date d'inspection commune, il ne pouvait jamais l'enregistrer
+ * et restait en alerte au calendrier jusqu'à sa clôture.
+ *
+ * La règle de `verrou-contenu.ts` : tant qu'aucune signature n'existe, tout se
+ * corrige, avec les validations de la création ; dès qu'une signature existe,
+ * seul ce qui est hors de l'empreinte (`hash-objet.ts`) se modifie — la zone.
+ * Le reste n'est pas réécrit en silence : une saisie qui le porte quand même
+ * est refusée, avec la phrase que l'écran affiche.
+ *
+ * Un plan clos ou annulé ne se modifie plus, comme il ne se signe plus. Le
+ * calendrier lit le plan en direct (`sourcePlansPrevention`) : rien à
+ * régénérer, la création n'en régénère pas non plus.
+ */
+export async function modifierPlanPrevention(
+  planId: string,
+  _prev: PlanActionState,
+  formData: FormData,
+): Promise<PlanActionState> {
+  const plan = await prisma.planPrevention.findUnique({
+    where: { id: planId },
+    select: { etablissementId: true, statut: true, numero: true },
+  });
+  if (!plan) return { status: "error", message: "Plan introuvable" };
+  await assertEtablissementOwnership(plan.etablissementId);
+  const etablissementId = plan.etablissementId;
+  if (!statutPlanSignable(plan.statut)) {
+    return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
+  }
+
+  const scelle = motifContenuScelle(
+    "plan",
+    await compterSignatures("plan_prevention", planId, etablissementId),
+  );
+  if (scelle) {
+    if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
+    const batiment = await resoudreBatimentOptionnel(
+      etablissementId,
+      lireChampOptionnel(formData.get("batimentId")),
+    );
+    if (!batiment.ok) return ZONE_INTROUVABLE;
+    await prisma.planPrevention.updateMany({
+      where: { id: planId, etablissementId },
+      data: { batimentId: batiment.id },
+    });
+  } else {
+    const parsed = lirePlanPrevention(formData);
+    if (!parsed.success) {
+      return {
+        status: "error",
+        message: "Formulaire invalide",
+        fieldErrors: parsed.error.flatten().fieldErrors,
+      };
+    }
+    const batiment = await resoudreBatimentOptionnel(
+      etablissementId,
+      parsed.data.batimentId,
+    );
+    if (!batiment.ok) return ZONE_INTROUVABLE;
+    await prisma.planPrevention.update({
+      where: { id: planId, etablissementId },
+      data: {
+        ...colonnesPlan(parsed.data),
+        batimentId: batiment.id,
+        // Remplacées en bloc : l'ordre est celui de la saisie, et c'est lui
+        // que l'empreinte lit.
+        phasesDangereuses: { deleteMany: {}, create: phasesACreer(parsed.data) },
+        lignes: { deleteMany: {}, create: lignesACreer(parsed.data) },
+      },
+    });
+  }
+
+  revalidatePath(`/etablissements/${etablissementId}/plan-prevention`);
+  revalidatePath(`/etablissements/${etablissementId}/plan-prevention/${planId}`);
+  return { status: "success", planId, numero: plan.numero };
+}
+
+/** Les champs de la saisie hors de l'empreinte : seuls admis sur un plan signé. */
+const CHAMPS_HORS_EMPREINTE = new Set(["batimentId"]);
+
+/** La saisie porte-t-elle un champ que l'empreinte couvre ? Les clés
+ *  internes de Next (`$ACTION_…`) n'en sont pas. */
+function porteUnChampScelle(formData: FormData): boolean {
+  for (const cle of formData.keys()) {
+    if (cle.startsWith("$")) continue;
+    if (!CHAMPS_HORS_EMPREINTE.has(cle)) return true;
+  }
+  return false;
+}
+
+function lireChampOptionnel(v: FormDataEntryValue | null): string | undefined {
+  return typeof v === "string" && v.trim() ? v : undefined;
+}
+
 
 export async function cloturerPlan(planId: string): Promise<void> {
   const plan = await prisma.planPrevention.findUnique({
