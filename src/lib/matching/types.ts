@@ -128,6 +128,18 @@ export type EtablissementMatching = {
    * (cf. `evaluerChiffonsImpregnes`). Seul un « non » déclaré le retire.
    */
   chiffonsImpregnes: boolean | null;
+  /**
+   * Les faits d'activité (ADR-041, `etablissements/faits-activite.ts`) et la
+   * présence d'EPI. Règle du non-renseigné (ADR-022) : `null` retient la
+   * ligne « à confirmer », seul un « non » déclaré la retire. Requis pour la
+   * même raison : un champ optionnel s'omet dans une projection sans bruit.
+   */
+  manutentionManuelle: boolean | null;
+  travailSurEcran: boolean | null;
+  operationsElectriques: boolean | null;
+  conduiteEngins: boolean | null;
+  expositionCMR: boolean | null;
+  epiPresents: boolean | null;
 };
 
 export type EquipementMatching = {
@@ -190,6 +202,12 @@ export type ObligationApplicable = {
  */
 export type QuestionSansReponse =
   | "chiffons_impregnes"
+  | "manutention_manuelle"
+  | "travail_ecran"
+  | "operations_electriques"
+  | "conduite_engins"
+  | "exposition_cmr"
+  | "epi_presents"
   | "locaux_sommeil_public"
   | "matieres_r4227_22"
   | "type_erp"

@@ -458,6 +458,19 @@ export type FamilleHabitation = (typeof FAMILLES_HABITATION)[number];
  * purement déclarative, sans fonction TS arbitraire — condition nécessaire à
  * l'auditabilité du système.
  */
+/**
+ * Les colonnes d'`Etablissement` qu'un critère `activite` peut lire (ADR-041).
+ * Déclaré ici, au plus bas, pour que le référentiel ne dépende pas d'un module
+ * d'écran ; `etablissements/faits-activite.ts` en tire ses questions.
+ */
+export type ActiviteDeclaree =
+  | "manutentionManuelle"
+  | "travailSurEcran"
+  | "operationsElectriques"
+  | "conduiteEngins"
+  | "expositionCMR"
+  | "epiPresents";
+
 export type TypologieApplication = {
   travail?: boolean;
   erp?:
@@ -526,6 +539,18 @@ export type TypologieApplication = {
    * retiennent « à confirmer ». Ni NAF ni effectif : l'article n'en pose pas.
    */
   chiffonsImpregnes?: true;
+  /**
+   * L'obligation ne vaut que là où ce fait d'activité est vrai (ADR-041) :
+   * des travailleurs portent des charges à la main, travaillent sur écran,
+   * opèrent sur l'installation électrique, conduisent des engins, sont exposés
+   * à des CMR, ou portent des EPI. Évalué sur la colonne d'`Etablissement` du
+   * même nom, avec la règle du non-renseigné (ADR-022) : seul un
+   * « non » déclaré retire la ligne, le silence la retient « à confirmer ».
+   *
+   * Un critère, pas six : l'évaluation est la même pour tous, et la table de
+   * `matching/absence.ts` dit pour chacun ce que vaut son silence.
+   */
+  activite?: ActiviteDeclaree;
   effectifMin?: number;
   effectifMax?: number;
   /**

@@ -25,15 +25,15 @@ import {
  * écrit `false`, ce qui est une réponse — et c'est ce que le prédicat `faite`
  * de la checklist observe, jamais la valeur elle-même.
  *
- * Aucune des deux ne touche le calendrier :
+ * Ce qu'elles touchent au calendrier :
  *  - `aDemandesAssureur` n'ouvre aucune obligation, il ouvre une porte de
  *    saisie ; ce sont les `PrescriptionParticuliere` créées ensuite qui font
  *    naître des échéances, par le mécanisme inchangé de l'ADR-035.
- *  - `epiPresents` est une **consignation**. R. 4323-95 à R. 4323-106 CT et
- *    l'arrêté du 19 mars 1993 n'ont jamais été ouverts dans ce dépôt, et un
- *    guide commercial a déjà fait croire à une périodicité annuelle générale
- *    des EPI qui n'existe pas. Lire avant d'encoder : rien ne dérive de cette
- *    réponse, et rien ne doit en dériver avant cette lecture.
+ *  - `epiPresents` ~~est une consignation~~ : depuis l'ADR-041 (2026-10-08),
+ *    il conditionne la consigne d'utilisation des EPI (R. 4323-105, lu au
+ *    corpus `code-travail-epi` le 2026-09-04) — la lecture que cette note
+ *    attendait est faite. Seul un « non » déclaré retire la consigne. Aucune
+ *    périodicité n'en dérive.
  */
 
 export type ReponseParametrage =
@@ -100,8 +100,14 @@ export async function repondreEpiPresents(
       epiPresentsDetail: oui ? (detail.data || null) : null,
     },
   });
+  // Depuis l'ADR-041, la réponse conditionne la consigne d'utilisation des EPI
+  // (R. 4323-105) : le calendrier suit, comme après une question de la fiche.
+  const regenere = await regenererApresMutation(etablissementId, "parametrage/epiPresents");
   revalidatePath(`/etablissements/${etablissementId}`);
-  return { status: "success" };
+  revalidatePath(`/etablissements/${etablissementId}/calendrier`);
+  return regenere
+    ? { status: "success" }
+    : { status: "success_avec_avertissement", message: MESSAGE_REGEN_ECHEC };
 }
 
 /**

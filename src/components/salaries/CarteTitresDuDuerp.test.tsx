@@ -9,36 +9,32 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
-import { repondreAuxQuestionsTransverses } from "@/lib/transverses/etat";
-import { CarteTitresDuDuerp, PHRASE_REPONSE } from "./CarteTitresDuDuerp";
+import type { ReponsesFaitsActivite } from "@/lib/etablissements/faits-activite";
+import { CarteTitresDuDuerp, PHRASE_REPONSE, phraseFormation, phraseTitre } from "./CarteTitresDuDuerp";
 
-const rendre = (actifs: string[], brut: unknown) => {
-  const questions = titresDuDuerpPourUnePersonne(
-    repondreAuxQuestionsTransverses(actifs, brut),
-    [],
-  );
+const tous = (v: boolean | null): ReponsesFaitsActivite => ({
+  manutentionManuelle: v,
+  travailSurEcran: v,
+  operationsElectriques: v,
+  conduiteEngins: v,
+  expositionCMR: v,
+});
+
+const rendre = (faits: ReponsesFaitsActivite) => {
+  const questions = titresDuDuerpPourUnePersonne(faits, []);
   const html = renderToStaticMarkup(
-    <CarteTitresDuDuerp questions={questions} lienVersLaQuestion={(id) => `/q#${id}`} />,
+    <CarteTitresDuDuerp questions={questions} lienVersLaQuestion={(c) => `/q#${c}`} />,
   )
     .replace(/&#x27;/g, "'")
     .replace(/&quot;/g, '"');
   return { questions, html };
 };
 
-// Les trois états, sur toutes les questions qui déclenchent un titre :
-// « oui » partout, « non » partout, rien nulle part.
-const tousOui = () => {
-  const { questions } = rendre([], null);
-  return questions.map((q) => q.question.risqueIdAssocie);
-};
-const tousNon = () => {
-  const { questions } = rendre([], null);
-  return Object.fromEntries(questions.map((q) => [q.question.id, false]));
-};
+// Les trois états, sur tous les faits qui déclenchent un titre.
 const ETATS = {
-  oui: () => rendre(tousOui(), null),
-  non: () => rendre([], tousNon()),
-  sans_reponse: () => rendre([], null),
+  oui: () => rendre(tous(true)),
+  non: () => rendre(tous(false)),
+  sans_reponse: () => rendre(tous(null)),
 } as const;
 
 describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
@@ -48,10 +44,11 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
       expect(questions.length).toBeGreaterThan(0);
       for (const q of questions) {
         expect(q.reponse).toBe(etat);
-        expect(html).toContain(q.question.intitule);
-        expect(html).toContain(`/q#${q.question.id}`);
-        expect(q.titres.length).toBeGreaterThan(0);
+        expect(html).toContain(q.intitule);
+        expect(html).toContain(`/q#${q.champ}`);
+        expect(q.titres.length + q.formations.length).toBeGreaterThan(0);
         for (const t of q.titres) expect(html, t.obligation.id).toContain(t.obligation.libelle);
+        for (const o of q.formations) expect(html, o.id).toContain(o.libelle);
       }
       expect(html).toContain(PHRASE_REPONSE[etat as keyof typeof PHRASE_REPONSE]);
     });
@@ -76,5 +73,26 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
 
   it("écrit « s'il », jamais « si il »", () => {
     expect(ETATS.oui().html).not.toMatch(/\bsi ils?\b/i);
+  });
+
+  it("nomme la formation gestes et postures et la formation écran — ce qu'on ne voit pas ne sert à rien", () => {
+    // Ni l'une ni l'autre n'est un titre : avant le 2026-10-08, la fiche les
+    // taisait, alors qu'un salarié qui porte des charges doit les recevoir.
+    const { html } = ETATS.oui();
+    expect(html).toContain("gestes et postures");
+    expect(html).toMatch(/écran/);
+  });
+
+  it("après un « non », ne renvoie pas à une ligne que le moteur a retirée", () => {
+    for (const nature of ["etat_permanent", "evenementielle"]) {
+      expect(phraseFormation("non", nature)).not.toMatch(/Ce qui doit être en place|Quand ça arrive/);
+      expect(phraseFormation("oui", nature)).toMatch(/Ce qui doit être en place|Quand ça arrive/);
+    }
+  });
+
+  it("après un « non », un titre est dit non dû — pas « aucun titre déclaré » comme s'il l'était", () => {
+    expect(phraseTitre("non", null)).toMatch(/Non dû/);
+    expect(phraseTitre("oui", null)).not.toMatch(/Non dû/);
+    expect(phraseTitre("non", new Date("2025-01-02"))).toMatch(/délivré le .*Non dû/);
   });
 });

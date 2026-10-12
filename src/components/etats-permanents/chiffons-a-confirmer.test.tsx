@@ -45,6 +45,12 @@ function etab(chiffonsImpregnes: boolean | null) {
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     chiffonsImpregnes,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
   };
 }
 

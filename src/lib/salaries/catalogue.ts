@@ -3,7 +3,6 @@ import {
   estPorteeParSalarie,
   type ObligationPorteeParSalarie,
 } from "@/lib/referentiels/conformite";
-import { questionsDetectionTransverses } from "@/lib/referentiels";
 
 /**
  * Les titres que l'employeur peut déclarer.
@@ -51,20 +50,6 @@ export function titreParId(
 ): ObligationPorteeParSalarie | undefined {
   INDEX_TITRES ??= new Map(cataloguerTitres().map((o) => [o.id, o]));
   return INDEX_TITRES.get(obligationId);
-}
-
-/**
- * Les titres qu'une question transverse du DUERP gouverne (ADR-038).
- *
- * Un titre gouverné n'est dû qu'à la partie de l'effectif que le fait de la
- * question atteint — qui conduit un engin, qui opère sur l'installation
- * électrique. Il ne s'affiche donc sur une fiche qu'au travers de la réponse
- * du DUERP (`titres-du-duerp.ts`), et nulle part comme dû à tous : c'est ce
- * qui retire la formation à la conduite des fiches de ceux qui ne conduisent
- * pas. Dérivé du référentiel, comme le catalogue.
- */
-export function titresGouvernesParUneQuestion(): ReadonlySet<string> {
-  return new Set(questionsDetectionTransverses.flatMap((q) => q.declencheTitres ?? []));
 }
 
 /**

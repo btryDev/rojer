@@ -57,6 +57,12 @@ export async function marquesAConfirmerDuDossier(
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
       chiffonsImpregnes: true,
+      manutentionManuelle: true,
+      travailSurEcran: true,
+      operationsElectriques: true,
+      conduiteEngins: true,
+      expositionCMR: true,
+      epiPresents: true,
       entreprise: { select: { effectif: true } },
       equipements: {
         where: { actif: true },

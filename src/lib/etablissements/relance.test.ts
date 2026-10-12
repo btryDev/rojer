@@ -26,9 +26,25 @@ const etab = (over: Partial<EtablissementMatching>): EtablissementMatching => ({
   manipuleMatieresR422722: false,
   comporteLocauxSommeilPublic: null,
   chiffonsImpregnes: false,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
   ...over,
 });
-const sansReponse = { manipuleMatieresR422722: null, chiffonsImpregnes: null, comporteLocauxSommeilPublic: null };
+const sansReponse = {
+  manipuleMatieresR422722: null,
+  chiffonsImpregnes: null,
+  comporteLocauxSommeilPublic: null,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
+};
 
 describe("relance des questions muettes", () => {
   it("chaque question que le moteur sait marquer a une relance (et une phrase)", () => {
@@ -56,5 +72,13 @@ describe("relance des questions muettes", () => {
   it("une question répondue et qui ne retient plus rien : cochée si oui/non, absente si « fiche »", () => {
     const r = relancesDuDossier([], { ...sansReponse, chiffonsImpregnes: false });
     expect(r.map((x) => [x.question, x.faite])).toEqual([["chiffons_impregnes", true]]);
+  });
+
+  it("un fait d'activité muet qui retient une formation se relance en oui/non (ADR-041)", () => {
+    const muettes = questionsQuiRetiennent(determineObligationsApplicables(etab({}), []));
+    expect(muettes).toContain("manutention_manuelle");
+    const r = relancesDuDossier(muettes, sansReponse).find((x) => x.question === "manutention_manuelle");
+    expect(r?.relance.mode).toBe("oui_non");
+    expect(r?.relance.mode === "oui_non" && r.relance.champ).toBe("manutentionManuelle");
   });
 });

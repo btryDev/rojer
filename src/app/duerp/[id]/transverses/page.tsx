@@ -24,15 +24,17 @@ export default async function TransversesPage({
 
   const unitesSaisies = duerp.unites.filter((u) => !u.estTransverse);
   const uniteTransverse = duerp.unites.find((u) => u.estTransverse);
-  // Trois états — oui, non, sans réponse — lus par la règle partagée avec la
-  // fiche salarié (ADR-038) : l'écran ne relit pas les risques à sa façon.
+  // Trois états — oui, non, sans réponse — lus par la règle de
+  // `transverses/etat.ts` : l'écran ne relit pas les risques à sa façon.
   // TOUTES les unités transverses, pas la première : le schéma n'interdit pas
-  // d'en avoir deux (création concurrente), et la fiche salarié
-  // (`transverses/queries.ts`) les lit toutes — les deux écrans ne doivent pas
-  // pouvoir répondre différemment à la même question.
+  // d'en avoir deux (création concurrente).
+  const actifs = risquesTransversesActifs(duerp.unites);
+  // Les questions qui posent un fait d'activité se lisent sur l'établissement
+  // (ADR-041) : la même réponse qu'Équipe et la fiche.
   const repondues = repondreAuxQuestionsTransverses(
-    risquesTransversesActifs(duerp.unites),
+    actifs,
     duerp.reponsesTransverses,
+    duerp.etablissement,
   );
 
   const unitesOk = unitesSaisies.length > 0;
@@ -76,6 +78,12 @@ export default async function TransversesPage({
               intitule={q.intitule}
               libelleRisque={risque.libelle}
               reponse={reponse}
+              // Un « non » donné hors du DUERP laisse un risque déjà travaillé
+              // au document (`risque-transverse.ts`) : la ligne le dit.
+              risqueConserve={reponse !== "oui" && actifs.includes(q.risqueIdAssocie)}
+              // L'inverse : le fait vaut « oui » (répondu depuis Équipe) mais le
+              // document n'a pas le risque — un DUERP d'avant la réponse.
+              risqueManquant={reponse === "oui" && !actifs.includes(q.risqueIdAssocie)}
             />
           );
         })}

@@ -25,11 +25,7 @@ import { determineObligationsApplicables } from "@/lib/matching";
 import { LABEL_DOMAINE as LABEL_DOMAINE_OBLIGATION } from "@/lib/calendrier/labels";
 import { domainesSansPrestataire } from "@/lib/prestataires/domaines";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
-import {
-  repondreAuxQuestionsTransverses,
-  risquesTransversesActifs,
-  titresDontLaQuestionRepondNon,
-} from "@/lib/transverses/etat";
+import { titresEcartesParLesFaits } from "@/lib/etablissements/faits-activite";
 import type {
   DomaineObligation,
   Obligation,
@@ -126,14 +122,14 @@ export function rapprocher(
   domainesPrestatairesDeclares: readonly DomainePrestataire[],
   titresDeclares: ReadonlySet<string>,
   /**
-   * Les titres dont la question transverse du DUERP répond « non » (ADR-038).
+   * Les titres dont le fait d'activité est déclaré « non » (ADR-038, ADR-041).
    * Une transmission qui NOMME un de ces titres se tait : le dirigeant a
    * déclaré, dans les mots de l'article, qu'aucun salarié n'est exposé au fait
    * qui le rend dû. Le signal « suppose un titre nominatif » contredisait
    * alors la fiche du salarié (relecture du 2026-10-05). Le silence et le
    * « oui » ne changent rien : seul un refus déclaré fait taire.
    */
-  titresEcartesParLeDuerp: ReadonlySet<string> = new Set(),
+  titresEcartesParLesFaits: ReadonlySet<string> = new Set(),
 ): Transmissions {
   const domaines = domainesSansPrestataire(
     applicables,
@@ -158,7 +154,7 @@ export function rapprocher(
           (t.titre === null
             ? !domainesDesTitresDeclares.has(o.domaine)
             : !titresDeclares.has(t.titre) &&
-              !titresEcartesParLeDuerp.has(t.titre)),
+              !titresEcartesParLesFaits.has(t.titre)),
       ),
     )
     .map((o) => ({ id: o.id, libelle: o.libelle }));
@@ -183,7 +179,7 @@ export async function chargerTransmissions(
   });
   if (!etab) return AUCUNE_TRANSMISSION;
 
-  const [prestataires, titresDeclares, duerp] = await Promise.all([
+  const [prestataires, titresDeclares] = await Promise.all([
     // `etab.id` et non le paramètre : l'appartenance vient d'être établie
     // par la lecture ci-dessus, et c'est SON identifiant qu'on propage — pas
     // celui reçu de l'appelant. La garantie ne dépend donc pas de ce que
@@ -197,18 +193,6 @@ export async function chargerTransmissions(
     prisma.titreSalarie.groupBy({
       by: ["obligationId"],
       where: { salarie: { etablissementId: etab.id, actif: true } },
-    }),
-    // Les réponses du DUERP aux questions transverses (ADR-038). `etab.id`,
-    // pour la même raison que plus haut : l'appartenance vient d'être établie.
-    prisma.duerp.findUnique({
-      where: { etablissementId: etab.id },
-      select: {
-        reponsesTransverses: true,
-        unites: {
-          where: { estTransverse: true },
-          select: { risques: { select: { referentielId: true } } },
-        },
-      },
     }),
   ]);
 
@@ -238,6 +222,12 @@ export async function chargerTransmissions(
       manipuleMatieresR422722: etab.manipuleMatieresR422722,
       comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
       chiffonsImpregnes: etab.chiffonsImpregnes,
+      manutentionManuelle: etab.manutentionManuelle,
+      travailSurEcran: etab.travailSurEcran,
+      operationsElectriques: etab.operationsElectriques,
+      conduiteEngins: etab.conduiteEngins,
+      expositionCMR: etab.expositionCMR,
+      epiPresents: etab.epiPresents,
     },
     etab.equipements.map((eq) => ({
       id: eq.id,
@@ -254,13 +244,8 @@ export async function chargerTransmissions(
     applicables,
     prestataires.flatMap((p) => p.domaines),
     new Set(titresDeclares.map((t) => t.obligationId)),
-    duerp
-      ? titresDontLaQuestionRepondNon(
-          repondreAuxQuestionsTransverses(
-            risquesTransversesActifs(duerp.unites),
-            duerp.reponsesTransverses,
-          ),
-        )
-      : new Set(),
+    // Les faits d'activité déclarés « non » (ADR-041) : lus sur
+    // l'établissement, déjà chargé et déjà vérifié ci-dessus.
+    titresEcartesParLesFaits(etab),
   );
 }

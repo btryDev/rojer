@@ -56,6 +56,12 @@ const TRAVAIL: EtablissementMatching = {
   manipuleMatieresR422722: false,
   comporteLocauxSommeilPublic: null,
   chiffonsImpregnes: null,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
 };
 
 type Reponses = Partial<Record<ChampTriEtat, boolean>>;

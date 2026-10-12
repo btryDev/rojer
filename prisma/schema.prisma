@@ -135,6 +135,20 @@ model Etablissement {
   // `false` le retire. Cf. migration 20260927140000.
   chiffonsImpregnes                Boolean?
 
+  // Les faits d'activité qui rendent dues des formations ou un suivi
+  // (ADR-041, `etablissements/faits-activite.ts`). Même régime que
+  // la règle du non-renseigné (ADR-022) : trois états, `null` = pas encore répondu, et seul
+  // un « non » déclaré retire une obligation. Ils vivent sur l'établissement
+  // et non dans le DUERP : le document unique les affiche et les modifie (ses
+  // questions transverses q-charges, q-ecran, q-operations-electriques,
+  // q-conduite-engins), il n'en est pas la source. Repris des DUERP existants
+  // par la migration 20261008150000.
+  manutentionManuelle              Boolean?
+  travailSurEcran                  Boolean?
+  operationsElectriques            Boolean?
+  conduiteEngins                   Boolean?
+  expositionCMR                    Boolean?
+
   // Renseignements portés par la fiche « Renseignements généraux » du registre
   // de sécurité (CCH R. 143-44). Ils vivent ici et non dans `FicheRegistre` :
   // ce sont des faits d'établissement, et la fiche établissement les montre
@@ -160,8 +174,10 @@ model Etablissement {
   // saisie vers une prescription particulière de source `demande_assureur`,
   // et ce sont les prescriptions saisies qui font naître des échéances.
   //
-  // `epiPresents` / `epiPresentsDetail` sont une consignation, et rien n'en
-  // dérive. R. 4323-95 à R. 4323-106 CT et l'arrêté du 19 mars 1993 n'ont
+  // `epiPresents` conditionne depuis l'ADR-041 la consigne d'utilisation des
+  // EPI (R. 4323-105) : seul un « non » déclaré la retire. Ce qui suit est
+  // l'état d'avant, gardé pour l'historique de la décision : « sont une
+  // consignation, et rien n'en dérive ». R. 4323-95 à R. 4323-106 CT et l'arrêté du 19 mars 1993 n'ont
   // jamais été ouverts dans ce dépôt, et c'est un guide commercial — non une
   // source — qui a fait croire à une périodicité annuelle générale des EPI.
   // Lire avant d'encoder : aucune obligation, aucune périodicité ici.

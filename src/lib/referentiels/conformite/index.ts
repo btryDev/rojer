@@ -352,7 +352,16 @@ export const obligationsConformite: Obligation[] = [
 // triennal de la NF C 18-510, relevé par le préventeur (ADR-039 § 8,
 // `releveParPreventeur`), norme non relue. 171 + 0 − 0 = 171. Les titres
 // sans date de fin prennent une échéance : délivrance + 3 ans.
-export const REFERENTIEL_VERSION = "2026-10-08.2";
+// C65, 2026-10-08.3 — ADR-041, faits d'activité de l'établissement (livrée
+// après C66 ; sa `.1` de branche n'a jamais été servie) : le critère de
+// typologie `activite` (seul un « non » déclaré retire, le silence retient
+// « à confirmer ») conditionne `formation-securite-etablissement-
+// manutention` (manutentionManuelle), `-travail-sur-ecran` (travailSurEcran),
+// `elec-travail-habilitation-personnel` et `elec-travail-carnet-prescriptions`
+// (operationsElectriques), `epi-etablissement-consigne-utilisation`
+// (epiPresents). Il entre à l'empreinte par `typologies`. Aucune obligation
+// n'entre ni ne sort. Compte : 172 + 0 − 0 = 172.
+export const REFERENTIEL_VERSION = "2026-10-08.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

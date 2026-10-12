@@ -391,7 +391,7 @@ export const obligationsFormationSecurite: Obligation[] = [
     pieceAttendue: null,
     realisateurs: ["exploitant"],
     criticite: 3,
-    typologies: { travail: true },
+    typologies: { travail: true, activite: "manutentionManuelle" },
     porteur: "etablissement",
     transmet: [],
     notesInternes:
@@ -422,7 +422,7 @@ export const obligationsFormationSecurite: Obligation[] = [
       "Chaque travailleur en bénéficie avant sa première affectation à un travail sur écran de visualisation et chaque fois que l'organisation du poste de travail est modifiée de manière substantielle",
     realisateurs: ["exploitant"],
     criticite: 2,
-    typologies: { travail: true },
+    typologies: { travail: true, activite: "travailSurEcran" },
     porteur: "etablissement",
     transmet: [],
     notesInternes:

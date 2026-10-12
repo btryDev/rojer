@@ -59,6 +59,12 @@ function etab(site: number, entreprise: number) {
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     chiffonsImpregnes: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
   };
 }
 
@@ -126,6 +132,12 @@ describe("tous les lecteurs d'un seuil d'entreprise lisent la même règle", () 
         familleHabitation: null,
         comporteLocauxSommeilPublic: null,
         chiffonsImpregnes: null,
+        manutentionManuelle: null,
+        travailSurEcran: null,
+        operationsElectriques: null,
+        conduiteEngins: null,
+        expositionCMR: null,
+        epiPresents: null,
       },
       duerp: null,
       equipements: { nbSansObligation: 0, nbEquipements: 1, nbRetires: 0 },

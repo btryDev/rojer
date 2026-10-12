@@ -18,8 +18,9 @@
  *
  * ~~Deux obligations~~ — depuis l'ADR-038 (2026-10-05), seules celles qu'AUCUNE
  * question transverse du DUERP ne gouverne : la formation à la conduite a
- * quitté cette liste pour `titres-du-duerp.ts`, où elle n'apparaît que si le
- * DUERP déclare que des salariés conduisent des engins. Ce qui reste ici est
+ * quitté cette liste pour `titres-du-duerp.ts`, où elle n'apparaît que si
+ * l'établissement déclare que des travailleurs conduisent des engins (fait
+ * d'activité, ADR-041). Ce qui reste ici est
  * dû à tout l'effectif.
  *
  * Elle est la même pour tout le monde, et c'est exact plutôt que grossier.
@@ -41,7 +42,8 @@
 
 import { estDeclencheeParUnFait } from "@/lib/etats-permanents/regle";
 import type { ObligationPorteeParSalarie } from "@/lib/referentiels/conformite";
-import { cataloguerTitres, titresGouvernesParUneQuestion } from "./catalogue";
+import { titresGouvernesParUnFait } from "@/lib/etablissements/faits-activite";
+import { cataloguerTitres } from "./catalogue";
 
 /**
  * Une obligation que le poste d'une personne rend due, avec ce que le dossier
@@ -75,7 +77,7 @@ export type TitreLu = { obligationId: string; delivreLe: Date };
 export function obligationsDeclencheesParUnFait(
   titres: readonly TitreLu[] = [],
 ): ObligationDeclenchee[] {
-  const gouvernes = titresGouvernesParUneQuestion();
+  const gouvernes = titresGouvernesParUnFait();
   return cataloguerTitres()
     .filter((o) => estDeclencheeParUnFait(o) && !gouvernes.has(o.id))
     .map((obligation) => ({

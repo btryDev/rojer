@@ -26,6 +26,12 @@ function etabBureau(
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
     chiffonsImpregnes: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     ...over,
   };
 }

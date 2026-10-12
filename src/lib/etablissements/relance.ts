@@ -15,11 +15,26 @@
 // Module pur.
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
+import { faitParChamp, intituleDuFait, type ChampFaitActivite } from "./faits-activite";
 
 export type QuestionOuiNon =
   | "matieres_r4227_22"
   | "chiffons_impregnes"
-  | "locaux_sommeil_public";
+  | "locaux_sommeil_public"
+  | "manutention_manuelle"
+  | "travail_ecran"
+  | "operations_electriques"
+  | "conduite_engins"
+  | "exposition_cmr"
+  | "epi_presents";
+
+/** Les colonnes d'`Etablissement` qu'une relance oui/non écrit. */
+export type ChampOuiNon =
+  | "manipuleMatieresR422722"
+  | "chiffonsImpregnes"
+  | "comporteLocauxSommeilPublic"
+  | ChampFaitActivite
+  | "epiPresents";
 
 export type Relance = {
   titre: string;
@@ -29,16 +44,29 @@ export type Relance = {
       mode: "oui_non";
       question: QuestionOuiNon;
       /** La colonne dont la réponse coche l'étape. */
-      champ:
-        | "manipuleMatieresR422722"
-        | "chiffonsImpregnes"
-        | "comporteLocauxSommeilPublic";
+      champ: ChampOuiNon;
     }
   | { mode: "fiche" }
 );
 
 const RAPPEL =
   "Tant que la question n'a pas de réponse, ces lignes s'affichent « à confirmer ».";
+
+/**
+ * La relance d'un fait d'activité : son titre EST la question, mot pour mot
+ * (`intituleDuFait`), et sa raison celle du registre. Une reformulation à part
+ * avait rétréci deux questions (relecture du 2026-10-08, R1).
+ */
+function relanceDuFait(question: QuestionOuiNon, champ: ChampFaitActivite): Relance {
+  const fait = faitParChamp(champ);
+  return {
+    mode: "oui_non",
+    question,
+    champ,
+    titre: intituleDuFait(fait),
+    pourquoi: `${fait.pourquoi} ${RAPPEL}`,
+  };
+}
 
 export const RELANCES: Record<QuestionSansReponse, Relance> = {
   matieres_r4227_22: {
@@ -61,6 +89,23 @@ export const RELANCES: Record<QuestionSansReponse, Relance> = {
     champ: "comporteLocauxSommeilPublic",
     titre: "Dire si votre établissement héberge du public pour la nuit",
     pourquoi: `Chambres d'hôtel, chambres d'hôtes, gîte, hébergement — des locaux où le public dort. Si oui, en 5ᵉ catégorie, s'ajoutent un contrat d'entretien de la détection incendie, des consignes et des plans affichés, et une visite de la commission de sécurité (arrêté du 25 juin 1980, art. PE 4, PE 33, PE 35 et PE 37). ${RAPPEL}`,
+  },
+  // Les faits d'activité (ADR-041) : le texte de la question et sa raison sont
+  // ceux du registre, une seule rédaction pour Équipe, la fiche et le DUERP.
+  manutention_manuelle: relanceDuFait("manutention_manuelle", "manutentionManuelle"),
+  travail_ecran: relanceDuFait("travail_ecran", "travailSurEcran"),
+  operations_electriques: relanceDuFait("operations_electriques", "operationsElectriques"),
+  conduite_engins: relanceDuFait("conduite_engins", "conduiteEngins"),
+  exposition_cmr: relanceDuFait("exposition_cmr", "expositionCMR"),
+  epi_presents: {
+    mode: "oui_non",
+    question: "epi_presents",
+    champ: "epiPresents",
+    // Jamais affichée : la fiche a déjà son étape EPI, avec le détail
+    // (`etablissements/[id]/page.tsx`). Le typage exhaustif l'exige ; son
+    // texte reprend celui de l'étape.
+    titre: "Dire si vous fournissez des équipements de protection",
+    pourquoi: `Gants, chaussures de sécurité, lunettes, protections auditives… Si oui, l'employeur élabore une consigne d'utilisation de ces équipements (art. R. 4323-105 du Code du travail). ${RAPPEL}`,
   },
   personnes_presentes: {
     mode: "fiche",
@@ -85,10 +130,7 @@ export const RELANCES: Record<QuestionSansReponse, Relance> = {
  */
 export function relancesDuDossier(
   questionsMuettes: readonly QuestionSansReponse[],
-  reponses: Record<
-    "manipuleMatieresR422722" | "chiffonsImpregnes" | "comporteLocauxSommeilPublic",
-    boolean | null
-  >,
+  reponses: Record<ChampOuiNon, boolean | null>,
 ): { question: QuestionSansReponse; relance: Relance; faite: boolean }[] {
   const out: { question: QuestionSansReponse; relance: Relance; faite: boolean }[] = [];
   for (const q of Object.keys(RELANCES) as QuestionSansReponse[]) {

@@ -1,13 +1,14 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireDuerp } from "@/lib/auth/scope";
-import { calculerCriticite } from "@/lib/cotation";
+import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import { ecrireReponseFermee } from "@/lib/duerps/ecrire-reponse-fermee";
-import { risquesTransverses } from "@/lib/referentiels";
+import { faitDeLaQuestion } from "@/lib/etablissements/faits-activite";
+import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture";
 import { questionTransverseParId } from "./etat";
+import { poserRisqueTransverse } from "./risque-transverse";
 
 /**
  * Cloisonnement : `duerpId` vient du client. Sans garde, `validerTransverses`
@@ -15,23 +16,6 @@ import { questionTransverseParId } from "./etat";
  * créait/supprimait des risques chez un autre client. `requireDuerp` remonte
  * jusqu'à `Entreprise.userId` et répond 404 sinon.
  */
-
-async function obtenirUniteTransverse(
-  tx: Prisma.TransactionClient,
-  duerpId: string,
-) {
-  const existante = await tx.uniteTravail.findFirst({
-    where: { duerpId, estTransverse: true },
-  });
-  if (existante) return existante;
-  return tx.uniteTravail.create({
-    data: {
-      duerpId,
-      nom: "Risques transverses",
-      estTransverse: true,
-    },
-  });
-}
 
 /**
  * Enregistre la réponse d'un DUERP à une question transverse : oui, non, ou
@@ -44,10 +28,14 @@ async function obtenirUniteTransverse(
  * - « non » supprime le risque s'il existe et écrit `false` ;
  * - `null` supprime le risque s'il existe et retire la clé : sans réponse.
  *
- * Le risque reste la seule vérité du « oui » (`transverses/etat.ts`). Les deux
- * écritures — le risque et la colonne — partent dans une même transaction :
- * une réponse à moitié écrite laisserait un « non » à côté d'un risque, ou un
- * risque supprimé sans son « non ».
+ * Deux régimes depuis l'ADR-041 (`transverses/etat.ts`) :
+ * - une question qui pose un FAIT D'ACTIVITÉ (`etablissements/faits-activite.ts`)
+ *   écrit la colonne de l'établissement, par son écrivain unique ;
+ * - les autres gardent la règle de l'ADR-038 : le risque est la vérité du
+ *   « oui », `Duerp.reponsesTransverses` porte le « non ».
+ * Dans les deux cas, le risque et la réponse partent dans une même
+ * transaction : une réponse à moitié écrite laisserait un « non » à côté d'un
+ * risque, ou un risque supprimé sans son « non ».
  *
  * Supprimer le risque emporte sa cotation et ses actions (cascade) : c'était
  * déjà le cas du « Non » de `toggleRisqueTransverse`, rien ne change ici.
@@ -60,66 +48,35 @@ export async function repondreQuestionTransverse(
   const { duerp } = await requireDuerp(duerpId);
   const question = questionTransverseParId(questionId);
   if (!question) throw new Error(`Question transverse inconnue : ${questionId}`);
-  const ref = risquesTransverses.find((r) => r.id === question.risqueIdAssocie);
-  if (!ref) {
-    throw new Error(`Risque transverse inconnu : ${question.risqueIdAssocie}`);
-  }
-  const referentielId = ref.id;
-
-  await prisma.$transaction(async (tx) => {
-    const unite = await obtenirUniteTransverse(tx, duerpId);
-    const existant = await tx.risque.findUnique({
-      where: { uniteId_referentielId: { uniteId: unite.id, referentielId } },
+  // Une question qui pose un FAIT D'ACTIVITÉ (ADR-041) : la réponse vit sur
+  // l'établissement, et c'est son écrivain unique qui pose ou retire le
+  // risque. Le « Non » donné ICI retire le risque même travaillé : l'écran a
+  // demandé confirmation (`QuestionTransverseRow`).
+  const fait = faitDeLaQuestion(question.id);
+  if (fait) {
+    // La clé de la question dans `Duerp.reponsesTransverses` n'est plus écrite
+    // ni lue (`etat.ts` lit le fait) : la migration 20261008150000 a repris
+    // les « non » qu'elle portait.
+    await ecrireFaitActivite(duerp.etablissementId, fait.champ, reponse, "toujours");
+    // Le fait ajoute ou retire des obligations : le calendrier suit.
+    await regenererApresMutation(duerp.etablissementId, `transverses/${question.id}`);
+  } else {
+    await prisma.$transaction(async (tx) => {
+      await poserRisqueTransverse(tx, duerpId, question, reponse === true, "toujours");
+      // « oui » efface la clé : il se lit sur le risque, et un `false` resté là
+      // contredirait le document le jour où le risque serait retiré ailleurs.
+      const lignes = await ecrireReponseFermee(
+        tx,
+        "reponsesTransverses",
+        duerpId,
+        question.id,
+        reponse === false ? false : null,
+      );
+      // `requireDuerp` vient de garantir la ligne : zéro veut dire qu'elle a
+      // disparu entre-temps, et l'écran afficherait une réponse non enregistrée.
+      if (lignes === 0) throw new Error(`DUERP introuvable à l'écriture : ${duerpId}`);
     });
-
-    if (reponse === true) {
-      // Deux « oui » simultanés (deux onglets) lisent tous deux « absent » et
-      // créent tous deux : le second se heurte à l'unicité
-      // (uniteId, referentielId). C'est la réponse qu'il voulait écrire — le
-      // risque existe —, donc on ne lève pas.
-      //
-      // `createMany` + `skipDuplicates`, et non `upsert` : relevé sur la base
-      // locale le 2026-10-05, l'`upsert` à `update: {}` sur cette clé composée
-      // est ÉMULÉ par Prisma 6 — un SELECT puis un INSERT, sans ON CONFLICT —,
-      // donc la course restait entière. `skipDuplicates` émet
-      // `INSERT … ON CONFLICT DO NOTHING`, que PostgreSQL arbitre.
-      if (!existant) {
-        const gravite = ref.graviteParDefaut;
-        const probabilite = ref.probabiliteParDefaut;
-        const maitrise = ref.maitriseParDefaut ?? 2;
-        await tx.risque.createMany({
-          data: [
-            {
-              uniteId: unite.id,
-              referentielId,
-              libelle: ref.libelle,
-              description: ref.description,
-              gravite,
-              probabilite,
-              maitrise,
-              criticite: calculerCriticite({ gravite, probabilite, maitrise }),
-            },
-          ],
-          skipDuplicates: true,
-        });
-      }
-    } else if (existant) {
-      await tx.risque.delete({ where: { id: existant.id } });
-    }
-
-    // « oui » efface la clé : il se lit sur le risque, et un `false` resté là
-    // contredirait le document le jour où le risque serait retiré ailleurs.
-    const lignes = await ecrireReponseFermee(
-      tx,
-      "reponsesTransverses",
-      duerpId,
-      question.id,
-      reponse === false ? false : null,
-    );
-    // `requireDuerp` vient de garantir la ligne : zéro veut dire qu'elle a
-    // disparu entre-temps, et l'écran afficherait une réponse non enregistrée.
-    if (lignes === 0) throw new Error(`DUERP introuvable à l'écriture : ${duerpId}`);
-  });
+  }
 
   revalidatePath(`/duerp/${duerpId}/transverses`);
   revalidatePath(`/duerp/${duerpId}/synthese`);

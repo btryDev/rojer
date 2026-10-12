@@ -342,6 +342,43 @@ function evaluerChiffonsImpregnes(
   };
 }
 
+/**
+ * Un fait d'activité de l'établissement (ADR-041) : des travailleurs portent
+ * des charges, travaillent sur écran, opèrent sur l'installation électrique,
+ * conduisent des engins, sont exposés à des CMR, portent des EPI.
+ *
+ * La règle du non-renseigné (ADR-022), pour la raison qui la fonde : seul un « non » DÉCLARÉ retire l'obligation ; le silence la retient,
+ * et la raison dit « à confirmer » avec la question qui la tranche. La table
+ * `POLITIQUE_ABSENCE` porte la question de chaque fait.
+ *
+ * `null` (critère absent de l'obligation) ⇒ cette fonction ne se prononce pas.
+ */
+const LIBELLE_ACTIVITE: Record<NonNullable<TypologieApplication["activite"]>, string> = {
+  manutentionManuelle: "manutention manuelle de charges",
+  travailSurEcran: "travail habituel sur écran",
+  operationsElectriques: "opérations sur les installations électriques ou dans leur voisinage",
+  conduiteEngins: "conduite d'équipements de travail mobiles automoteurs ou servant au levage",
+  expositionCMR: "exposition à des agents cancérogènes, mutagènes ou toxiques pour la reproduction",
+  epiPresents: "port d'équipements de protection individuelle",
+};
+
+function evaluerActivite(
+  critere: TypologieApplication["activite"],
+  etab: EtablissementMatching,
+): EvalLocauxSommeil | null {
+  if (critere === undefined) return null;
+  const declare = etab[critere];
+  if (declare === false) return { ok: false };
+  if (declare === true) {
+    return { ok: true, raison: `${LIBELLE_ACTIVITE[critere]} déclarée` };
+  }
+  return {
+    ok: true,
+    raison: `${LIBELLE_ACTIVITE[critere]} non renseignée — obligation retenue par prudence, à confirmer`,
+    sansReponse: POLITIQUE_ABSENCE[critere].question,
+  };
+}
+
 function evaluerLocauxSommeil(
   critere: TypologieApplication["locauxSommeilPublic"],
   etab: EtablissementMatching,
@@ -791,6 +828,14 @@ export function matchTypologie(
     if (!chiffons.ok) return { ok: false };
     raisons.push(chiffons.raison);
     if (chiffons.sansReponse) sansReponse.push(chiffons.sansReponse);
+  }
+
+  // 3 quinquies. Fait d'activité de l'établissement, ADR-041 (ET).
+  const activite = evaluerActivite(t.activite, etab);
+  if (activite !== null) {
+    if (!activite.ok) return { ok: false };
+    raisons.push(activite.raison);
+    if (activite.sansReponse) sansReponse.push(activite.sansReponse);
   }
 
   // Si aucune contrainte de typologie n'a été posée ET aucune raison n'a

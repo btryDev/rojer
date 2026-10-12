@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
 import {
   requireDuerp,
   requireEtablissement,
@@ -47,19 +48,28 @@ export async function creerDuerp(etablissementId: string): Promise<void> {
     // L'unité transverse est créée sans regarder le plafond, et c'est voulu :
     // elle ne compte pas dans les cinq (ADR-033). Le DUERP naît donc toujours
     // avec ses cinq places entières.
-    duerp = await prisma.duerp.create({
-      data: {
-        etablissementId,
-        unites: {
-          create: {
-            nom: "Risques transverses",
-            description:
-              "Risques transverses à l'entreprise (routier, RPS, TMS, écrans). Gérés via les questions détecteurs.",
-            estTransverse: true,
+    //
+    // Il naît aussi avec les risques des faits d'activité déjà déclarés
+    // (ADR-041) : un dirigeant qui a répondu « oui, des travailleurs
+    // conduisent des engins » depuis Équipe retrouve la question répondue ET
+    // son risque dans le document, sans la reposer.
+    duerp = await prisma.$transaction(async (tx) => {
+      const cree = await tx.duerp.create({
+        data: {
+          etablissementId,
+          unites: {
+            create: {
+              nom: "Risques transverses",
+              description:
+                "Risques transverses à l'entreprise (routier, RPS, TMS, écrans). Gérés via les questions détecteurs.",
+              estTransverse: true,
+            },
           },
         },
-      },
-      select: { id: true },
+        select: { id: true },
+      });
+      await reprendreFaitsDansDuerp(tx, cree.id, etablissement);
+      return cree;
     });
   }
 

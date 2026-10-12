@@ -2,7 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
+import { SELECT_FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
+import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { construireEcrituresImport } from "./ecritures";
@@ -175,22 +176,36 @@ export async function commitImport(
 
   const nbRisquesCrees = ecritures.risques.length;
 
-  // Transaction unique : toutes les écritures ou rien. L'ordre du tableau est
-  // celui de l'exécution — les unités avant les risques qui les référencent,
-  // les risques avant leurs actions.
-  const operations: Prisma.PrismaPromise<unknown>[] = [];
-  if (ecritures.unitesACreer.length > 0) {
-    operations.push(
-      prisma.uniteTravail.createMany({ data: ecritures.unitesACreer }),
-    );
-  }
-  if (ecritures.risques.length > 0) {
-    operations.push(prisma.risque.createMany({ data: ecritures.risques }));
-  }
-  if (ecritures.actions.length > 0) {
-    operations.push(prisma.action.createMany({ data: ecritures.actions }));
-  }
-  await prisma.$transaction(operations);
+  // Un DUERP NÉ de l'import reprend les faits d'activité déjà déclarés, comme
+  // `creerDuerp` (ADR-041). Lus avant la transaction, écrits DANS elle : un
+  // échec de la reprise annule aussi le fichier, sinon le dirigeant
+  // réimporterait sur un DUERP déjà rempli (contre-relecture du 2026-10-08).
+  const faits = duerpExistant
+    ? null
+    : await prisma.etablissement.findUnique({
+        where: { id: etablissementId },
+        select: SELECT_FAITS_ACTIVITE,
+      });
+
+  // Transaction unique : toutes les écritures ou rien. L'ordre est celui de
+  // l'exécution — les unités avant les risques qui les référencent, les
+  // risques avant leurs actions, puis la reprise, qui crée l'unité
+  // transverse que le fichier ne porte jamais.
+  await prisma.$transaction(async (tx) => {
+    if (ecritures.unitesACreer.length > 0) {
+      await tx.uniteTravail.createMany({ data: ecritures.unitesACreer });
+    }
+    if (ecritures.risques.length > 0) {
+      await tx.risque.createMany({ data: ecritures.risques });
+    }
+    if (ecritures.actions.length > 0) {
+      await tx.action.createMany({ data: ecritures.actions });
+    }
+    if (faits) await reprendreFaitsDansDuerp(tx, duerpId, faits);
+  },
+  // Une transaction interactive a 5 s par défaut ; un DUERP importé peut
+  // porter des centaines de risques et d'actions (relecture du 2026-10-08).
+  { timeout: 30_000 });
 
   revalidatePath(`/etablissements/${etablissementId}`);
   revalidatePath(`/duerp/${duerpId}/risques`);
