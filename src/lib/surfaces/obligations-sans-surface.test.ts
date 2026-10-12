@@ -248,8 +248,10 @@ describe("l'exemption « sans surface » des titres salarié, resserrée (ADR-04
     } as unknown as Obligation;
     const augmente = [...obligationsConformite, titre];
     const lus = titresLusParLaFiche(cataloguerTitres(augmente));
-    expect(surfacesDe(titre, lus)).toEqual(["fiche_salarie"]);
+    // La garde d'abord : privé de sa surface, ce titre n'est plus couvert par
+    // l'exemption resserrée, et c'est elle qui le NOMME.
     expect(orphelinesNonInscrites(augmente)).toEqual([]);
+    expect(surfacesDe(titre, lus)).toEqual(["fiche_salarie"]);
 
     // Le même sans `premierDelai` : sous condition, sans surface, exempté —
     // le motif d'Équipe, qui reste.
