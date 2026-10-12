@@ -200,8 +200,19 @@ propriétaire (lot 6b), et elle déplacerait quatre lignes de colonne.~~
 [**TRANCHÉ le 2026-10-12** par la propriétaire : la cible est ce que
 l'onboarding ne refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH
 (ADR-031) ; au sens large, TPE/PME. Le restaurant de 4ᵉ catégorie EST dans la
-cible. Reste à faire : aligner `toucheLaCible` sur cette définition plutôt que
-sur `CATEGORIES_COUVERTES`, ce qui déplace les quatre lignes annoncées ici.]
+cible. ~~Reste à faire : aligner `toucheLaCible` sur cette définition plutôt que
+sur `CATEGORIES_COUVERTES`, ce qui déplace les quatre lignes annoncées ici.~~]
+[**FAIT le 2026-10-12** (`lot/docs-maj`) — et ce ne sont pas quatre lignes,
+c'est quinze. Mesuré en appelant le corpus : les quinze manquantes « hors
+cible » l'étaient toutes au titre de l'ancienne définition — trois hôtels, six
+ERP des quatre premières catégories, quatre d'habitation, deux d'activité
+(`R. 4544-11`, `R. 4323-89`) ; aucune ne vise seulement plus de cinquante
+travailleurs ou un ERP en IGH. Cible 15 → **30** (15 + 15 − 0), hors cible
+15 → 0, total 30 inchangé. Les trois hôtels passent de `perimetre` à
+`a_trancher` : rien ne s'encode. Les quinze sont OUVERTES, à évaluer selon la
+grille C45 (encoder / annoncer / hors cadre), listées au § 8 de
+`couverture-declaree-du-produit.md` ; `registre-dette.test.ts` et
+`doc-couverture.test.ts` portent le mouvement.]
 
 **Trois dettes sans blocage, et non encodées : les hôtels.** `perimetre` veut
 dire « encodable, hors cible ». `PO 7` est chiffré (deux séances par an) et le

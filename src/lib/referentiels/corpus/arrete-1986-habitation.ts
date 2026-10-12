@@ -279,7 +279,10 @@ export const ARRETE_1986_HABITATION: Corpus = {
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
       cause: "attribut_etablissement",
-      toucheLaCible: false,
+      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
+      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      toucheLaCible: true,
       citationCle:
         "Si l'une des conditions suivantes est respectée, le système de ventilation est soumis aux seules prescriptions de l'article 59 relatives aux conduits.\n" +
         "1. Le fonctionnement du ventilateur est réputé assuré en permanence. Cette condition est réalisée quand : L'alimentation électrique du ventilateur est protégée de façon à ne pas être affectée par un incident survenant sur les autres circuits et ne traverse pas de locaux présentant des risques particuliers d'incendie, ou assurée par un groupe électrogène de secours dont la mise en marche est asservie à la coupure de l'alimentation électrique normale. Le fonctionnement du groupe électrogène et du dispositif de mise en marche automatique doit être vérifié au moins une fois par mois.",
@@ -302,7 +305,10 @@ export const ARRETE_1986_HABITATION: Corpus = {
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
       cause: "destinataire",
-      toucheLaCible: false,
+      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
+      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      toucheLaCible: true,
       historique:
         "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : URL de modifiePar : l'URL du texte porteur (arrêté de 1986) remplacée par celle de l'arrêté du 27 juillet 2026 que l'API rend (JORFTEXT000054596627). La citation (2° puis 7°, sur deux lignes) est exacte : l'écart du premier passage venait du script, qui ne coupait pas aux sauts de ligne.",
       citationCle:
@@ -407,7 +413,10 @@ export const ARRETE_1986_HABITATION: Corpus = {
       lecture: "agent_verbatim",
       statut: "obligation_manquante",
       cause: "evenement",
-      toucheLaCible: false,
+      // ~~false~~ → true le 2026-10-12 : la cible est ce que l'onboarding ne
+      // refuse pas (≤ 50 travailleurs, pas d'ERP en IGH ; ADR-031). Ouverte, à
+      // évaluer selon la grille C45 (encoder / annoncer / hors cadre).
+      toucheLaCible: true,
       citationCle:
         "Le propriétaire doit s'assurer que les transformations apportées aux immeubles en ce qui concerne l'affectation des locaux, les matériaux constitutifs des revêtements des couvertures ou des façades, les revêtements de sols et des parois des circulations communes, des celliers ainsi que des parcs, la constitution de ces parois ne soient pas de nature à diminuer les caractéristiques de réaction et de résistance au feu exigées pour ces divers éléments par le présent arrêté. Le propriétaire est tenu de s'assurer du respect des dispositions de l'article 1er, en identifiant les places de stationnement utilisées effectivement par des personnes non résidentes du bâtiment d'habitation pour une durée inférieure à 30 jours consécutifs.",
       motif:

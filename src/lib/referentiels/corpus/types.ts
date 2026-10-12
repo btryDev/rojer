@@ -95,7 +95,10 @@ export const CAUSES_BLOCAGE = [
   "texte_a_lire",
   /** Rien de technique : une décision de conception ou de périmètre, qui appartient à la propriétaire. */
   "a_trancher",
-  /** Encodable, mais hors de la cible : ni priorité ni blocage. */
+  /**
+   * Encodable, mais hors de la cible : ni priorité ni blocage. Vide depuis le
+   * 2026-10-12 : ses trois entrées (hôtels) sont entrées dans la cible redéfinie.
+   */
   "perimetre",
 ] as const;
 export type CauseBlocage = (typeof CAUSES_BLOCAGE)[number];
@@ -170,14 +173,18 @@ export type StatutArticle =
       /** Pourquoi elle n'est pas encodée, dans un vocabulaire FERMÉ. */
       cause: CauseBlocage;
       /**
-       * Touche-t-elle la cible du produit — restaurant, commerce de détail,
-       * bureau, 5ᵉ catégorie d'ERP, cinquante salariés au plus ?
+       * Touche-t-elle la cible du produit — ~~restaurant, commerce de détail,
+       * bureau, 5ᵉ catégorie d'ERP, cinquante salariés au plus~~ ce que
+       * l'onboarding ne refuse pas : cinquante travailleurs au plus, pas d'ERP
+       * en IGH (ADR-031 ; tranché par la propriétaire le 2026-10-12) ?
        *
-       * `false` ne dit pas « sans importance » : il dit qu'un hôtel, un
+       * `false` ne dit pas « sans importance » : il dit ~~qu'un hôtel, un
        * immeuble d'habitation, un ERP des quatre premières catégories ou un
        * chantier d'échafaudage y sont soumis, et que le produit les SERT sans
-       * les viser (ADR-031). Dans le doute, `true` : entre sur- et sous-compter
-       * une dette, on sur-compte.
+       * les viser (ADR-031)~~ que seuls y sont soumis des établissements que
+       * l'onboarding refuse. Au 2026-10-12, aucune entrée n'est dans ce cas.
+       * Dans le doute, `true` : entre sur- et sous-compter une dette, on
+       * sur-compte.
        */
       toucheLaCible: boolean;
     }

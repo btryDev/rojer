@@ -779,8 +779,12 @@ générale, et de rien d'autre. Rien au produit — ni écran, ni annonce, ni li
 Elles restent `obligation_manquante` au corpus : ce sont des obligations
 réelles, et le compte les garde. La clause reste à rédiger ; sa formulation à
 tenir est celle des écrans : « une obligation que cet outil ne traite pas reste
-due si un texte l'impose ». `doc-couverture.test.ts` tient l'égalité entre
-cette liste et les `obligation_manquante` qui touchent la cible.
+due si un texte l'impose ». ~~`doc-couverture.test.ts` tient l'égalité entre
+cette liste et les `obligation_manquante` qui touchent la cible.~~
+[2026-10-12 : plus vrai depuis que la cible est redéfinie — quinze manques
+entrent dans la cible sans avoir été classés, voir § 8. Le test tient
+désormais que ce § 7 et le § 8, disjoints, font ensemble les
+`obligation_manquante` qui touchent la cible.]
 
 | Article | Motif, en une ligne |
 |---|---|
@@ -799,3 +803,38 @@ cette liste et les `obligation_manquante` qui touchent la cible.
 | `R. 4223-4` | Niveaux d'éclairement minimaux : un résultat que le dirigeant ne mesure pas ; une case serait une fausse preuve. |
 | `R. 4434-9` | Vérification de l'efficacité des mesures de prévention du bruit : son champ tient à `R. 4434-1` à `R. 4434-8`, non lus ; l'annoncer serait affirmer. |
 | `Arrêté 1993-03-05 art. 2` | Vérification annuelle des centrifugeuses et engins de terrassement : quasi jamais dans la cible, et « centrifugeuse » n'est pas défini. |
+
+---
+
+## 8. À évaluer — entrés dans la cible le 2026-10-12
+
+La propriétaire a tranché le 2026-10-12 : la cible est ce que l'onboarding ne
+refuse pas — au plus cinquante travailleurs, pas d'ERP en IGH (ADR-031). Elle
+n'est plus `CATEGORIES_COUVERTES = ["N5"]`. Mesuré en appelant le corpus, les
+quinze `obligation_manquante` qui étaient « hors cible » y entrent toutes :
+aucune ne vise seulement plus de cinquante travailleurs ou un ERP en IGH.
+Cible : 15 + 15 − 0 = **30** ; total inchangé (30).
+
+**Elles sont OUVERTES, et non classées.** Aucune n'a passé la grille C45
+(encoder / annoncer / hors cadre) : elles ne sont ni annoncées, ni sous la
+clause générale du § 7. Rien ne s'encode d'office — l'encodage est terminé ;
+les trois hôtels passent de `perimetre` à `a_trancher` pour le dire. La
+cause de chaque ligne est celle du corpus, inchangée sauf pour eux.
+
+| Article | Ce qui la met dans la cible | Cause au corpus |
+|---|---|---|
+| `PO 1 § 3 — contrôle biennal des installations techniques` | Hôtel (type O), toutes catégories | `a_trancher` (était perimetre) |
+| `PO 7` | Hôtel (type O) | `a_trancher` (était perimetre) |
+| `PO 12` | Hôtel (type O) | `a_trancher` (était perimetre) |
+| `GZ 13` | ERP des quatre premières catégories | `categorie_equipement` |
+| `GZ 14` | ERP des quatre premières catégories | `categorie_equipement` |
+| `CO 61` | ERP des quatre premières catégories | `categorie_equipement` |
+| `AS 10` | ERP des quatre premières catégories | `categorie_equipement` |
+| `GC 18` | ERP des quatre premières catégories | `categorie_equipement` |
+| `MS 71` | ERP des quatre premières catégories | `attribut_etablissement` |
+| `Arrêté 23-02-2018 art. 26 § 3` | Habitation collective | `categorie_equipement` |
+| `Arrêté 1986-01-31 art. 60` | Habitation | `attribut_etablissement` |
+| `Arrêté 1986-01-31 art. 78-1` | Habitation | `destinataire` |
+| `Arrêté 1986-01-31 art. 102` | Habitation | `evenement` |
+| `R. 4544-11` | Employeur, travaux sous tension | `a_trancher` |
+| `R. 4323-89` | Employeur, travail sur cordes | `activite_exercee` |
