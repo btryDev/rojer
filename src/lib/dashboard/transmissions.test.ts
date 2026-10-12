@@ -649,6 +649,14 @@ describe("le signal compte par personne pour un titre dû à l'entrée (ADR-043 
     expect(
       signal([SECOURS], [personne("2026-01-01"), personne("2026-08-20")]),
     ).toEqual([{ id: SECOURS.id, libelle: SECOURS.libelle }]);
+    // Le titre d'une personne SORTIE ne répond plus pour l'établissement —
+    // le `groupBy` d'avant filtrait déjà `actif: true`.
+    expect(
+      signal(
+        [SECOURS],
+        [personne("2026-01-01"), personne("2024-01-01", [SECOURISTE], false)],
+      ),
+    ).toHaveLength(1);
   });
 
   it("un effectif vide garde la forme d'avant : rien à compter, rien de déclaré", () => {
