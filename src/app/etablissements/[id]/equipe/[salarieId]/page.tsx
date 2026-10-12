@@ -146,13 +146,20 @@ export default async function SalarieDetailPage({
   // porteur salarié (ADR-023), et la formation à la sécurité de `L. 4141-2` est
   // due à TOUS les travailleurs. Ce qui varie d'une fiche à l'autre est la date
   // du dernier titre déclaré, pas la liste.
-  const declenchees = obligationsDeclencheesParUnFait(s.titres);
+  const toutesDeclenchees = obligationsDeclencheesParUnFait(s.titres);
 
   // Ce qui manque à cette personne (ADR-043) : les titres dus à l'entrée et
   // ceux qu'un titre déclaré appelle, jamais déclarés. La même fonction que le
   // badge d'Équipe ; les autres cartes la lisent pour ne pas se contredire.
   const manques = ceQuiManqueALaPersonne(s, s.titres);
   const manquants = new Set(manques.map((m) => m.obligation.id));
+  // UNE carte par obligation, jamais deux (relevé de l'intégration du
+  // 2026-10-12) : la formation à la sécurité jamais déclarée est datée dans
+  // « À déclarer » ; une fois déclarée, elle revient ici comme fait qui la
+  // redéclenchera. Les deux cartes se relaient, elles ne se doublent pas.
+  const declenchees = toutesDeclenchees.filter(
+    (d) => !manquants.has(d.obligation.id),
+  );
 
   // Ce que les faits d'activité de l'établissement rendent dû à une partie de
   // l'effectif (ADR-038, ADR-041). Lus sur l'établissement : un dossier sans
@@ -404,6 +411,10 @@ export default async function SalarieDetailPage({
               lienModifier={`/etablissements/${id}/equipe/${s.id}/modifier`}
             />
 
+            {/* Masquée quand tout ce qu'elle listerait est daté plus haut (« À
+                déclarer ») : la carte vide dirait « rien n'est encodé », ce qui
+                est faux. */}
+            {(declenchees.length > 0 || toutesDeclenchees.length === 0) && (
             <CarteFiche titreFort="Ce qui se déclenche pour cette personne">
               {declenchees.length === 0 ? (
                 <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
@@ -444,9 +455,7 @@ export default async function SalarieDetailPage({
                         <p className="m-0 mt-2 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
                           {dernierTitreLe
                             ? `Un titre est déclaré pour cette obligation, délivré le ${formaterDateLongueFr(dernierTitreLe)}. Il ne la referme pas : elle redevient due au fait suivant.`
-                            : manquants.has(obligation.id)
-                              ? "Aucun titre n'est déclaré pour cette obligation : elle est due depuis l'entrée — voir « À déclarer pour cette personne »."
-                              : "Aucun titre n'est déclaré pour cette obligation. Ce n'est pas un retard : aucune date ne dit quand elle était due."}
+                            : "Aucun titre n'est déclaré pour cette obligation. Ce n'est pas un retard : aucune date ne dit quand elle était due."}
                         </p>
                         <ReferenceFondatrice obligation={obligation} />
                       </li>
@@ -455,6 +464,7 @@ export default async function SalarieDetailPage({
                 </>
               )}
             </CarteFiche>
+            )}
 
             {/* Ce que le DUERP rend dû à une partie de l'effectif (ADR-038) :
                 au-dessus du formulaire, comme la carte précédente — on lit ce

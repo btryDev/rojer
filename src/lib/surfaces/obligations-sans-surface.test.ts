@@ -68,7 +68,7 @@ const ORPHELINE_FABRIQUEE = {
  */
 const DOUBLES_INSCRITS: Readonly<Record<string, string>> = {
   "formation-securite-salarie-accueil":
-    "2026-10-12, ADR-043 — événementielle (R. 4141-20, redue au changement de poste) ET due à l'entrée (premier délai d'un mois) : la fiche la liste comme fait et la date comme manque. Fusion à décider côté fiche.",
+    "2026-10-12, ADR-043 — événementielle (R. 4141-20, redue au changement de poste) ET due à l'entrée (premier délai d'un mois). ~~Fusion à décider côté fiche.~~ [Même jour, à l'intégration : les deux cartes de la fiche se relaient — « À déclarer » tant qu'aucun titre n'est déclaré, « Ce qui se déclenche » ensuite (`manquants` filtre la seconde). Deux surfaces au référentiel, jamais deux lignes sur une même fiche.]",
 };
 
 describe("toute obligation atteint une surface, ou elle est inscrite", () => {
