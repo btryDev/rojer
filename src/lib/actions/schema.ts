@@ -1,6 +1,6 @@
 import { depuisCleJourCivil } from "@/lib/dates";
 import { z } from "zod";
-import type { TypeAction, StatutAction } from "@prisma/client";
+import type { TypeAction } from "@prisma/client";
 
 /**
  * Schémas Zod du plan d'actions unifié (étape 8, ADR-002).
@@ -10,6 +10,10 @@ import type { TypeAction, StatutAction } from "@prisma/client";
  * Les schémas ci-dessous couvrent les parcours "depuis vérif" (création,
  * édition, clôture) — les mesures DUERP utilisent toujours `ajouterMesureCustom`
  * et `modifierMesure` dans `actions.ts` pour préserver le wizard existant.
+ *
+ * Depuis le 2026-10-12, l'édition reprend le schéma de la création
+ * (`actionVerificationSchema`). `modifierActionSchema` — un patch que nul
+ * écran n'envoyait — est retiré, avec `STATUTS_ACTION` qu'il était seul à lire.
  */
 
 export const TYPES_ACTION = [
@@ -20,13 +24,6 @@ export const TYPES_ACTION = [
   "formation",
   "organisationnelle",
 ] as const satisfies readonly TypeAction[];
-
-export const STATUTS_ACTION = [
-  "ouverte",
-  "en_cours",
-  "levee",
-  "abandonnee",
-] as const satisfies readonly StatutAction[];
 
 /**
  * L'échelle de `Action.criticite` — **1 à 5, et ce n'est pas celle du DUERP**.
@@ -116,35 +113,3 @@ export const cloturerActionSchema = z.object({
 });
 
 export type CloturerActionInput = z.infer<typeof cloturerActionSchema>;
-
-/**
- * Schéma de modification partielle — toutes les propriétés optionnelles.
- */
-export const modifierActionSchema = z.object({
-  statut: z.enum(STATUTS_ACTION).optional(),
-  type: z.enum(TYPES_ACTION).optional(),
-  criticite: z.coerce
-    .number()
-    .int()
-    .min(CRITICITE_ACTION_MIN)
-    .max(CRITICITE_ACTION_MAX)
-    .optional()
-    .nullable(),
-  echeance: z.preprocess(
-    (v) => {
-      if (v === undefined) return undefined;
-      if (v === "" || v === null) return null;
-      return v;
-    },
-    z
-      .union([
-        z.null(),
-        z
-          .string()
-          .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
-          .transform((v) => depuisCleJourCivil(v)),
-      ])
-      .optional(),
-  ),
-  responsable: z.string().trim().max(200).optional().nullable(),
-});

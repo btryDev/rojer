@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireDuerp } from "@/lib/auth/scope";
+import { seuilMajAnnuelle } from "@/lib/dashboard/duerp";
 import { lireDateDeclaree } from "@/lib/traces/date-declaree";
 import { construireSnapshot } from "./snapshot-builder";
 import {
@@ -12,6 +13,7 @@ import {
 } from "./numerotation";
 import {
   MOTIFS_VERSION,
+  motifsProposes,
   type MotifVersion,
   type VersionActionState,
 } from "./motifs";
@@ -45,6 +47,20 @@ export async function creerVersion(
   const precision = precisionParsed.success ? precisionParsed.data : undefined;
 
   const cle = cleParsed.data;
+  // Le formulaire ne propose le 1° qu'au-dessus du seuil ; l'action le
+  // vérifie aussi, un formulaire se contourne. `requireDuerp` borne au user.
+  const { duerp } = await requireDuerp(duerpId);
+  const soumis = seuilMajAnnuelle({
+    entreprise: duerp.etablissement.entreprise.effectif,
+    site: duerp.etablissement.effectifSurSite,
+  }).atteint;
+  if (!motifsProposes(soumis).includes(cle)) {
+    return {
+      status: "error",
+      message:
+        "Ce motif ne vaut que dans les entreprises d'au moins onze salariés (art. R. 4121-2, 1°).",
+    };
+  }
   // « Autre » exige une précision libre, sinon le motif n'est pas traçable.
   if (cle === "autre" && !precision) {
     return {

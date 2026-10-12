@@ -8,6 +8,22 @@ import { TYPES_ACTION } from "@/lib/actions/schema";
 import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
 import type { ActionPlanState } from "@/lib/actions/plan";
 import { ORDRE_SELON_L4121_2 } from "@/lib/verbatim/l4121-2-ordre";
+import type { TypeAction } from "@prisma/client";
+
+/**
+ * Valeurs de départ, pour corriger une action existante avec le formulaire
+ * qui l'a créée (audit du 2026-10-12 : `modifierActionPlan` n'avait pas
+ * d'écran). L'échéance arrive en clé « AAAA-MM-JJ » (`cleJourCivil`), la
+ * forme que lit un `<input type="date">`.
+ */
+export type DefautsAction = {
+  libelle: string;
+  description: string | null;
+  type: TypeAction;
+  criticite: number | null;
+  echeance: string | null;
+  responsable: string | null;
+};
 
 type Props = {
   action: (
@@ -15,9 +31,12 @@ type Props = {
     formData: FormData,
   ) => Promise<ActionPlanState>;
   labelAnnuler?: { libelle: string; href: string };
+  /** Présent : le formulaire corrige l'action au lieu d'en créer une. */
+  defauts?: DefautsAction;
 };
 
-export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
+export function CreerActionVerifForm({ action, labelAnnuler, defauts }: Props) {
+  const correction = defauts !== undefined;
   const [state, formAction, pending] = useActionState<
     ActionPlanState,
     FormData
@@ -34,6 +53,7 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
         label="Libellé de l'action"
         requis
         placeholder="Ex : Remettre en état le BAES de l'entrée principale"
+        defaultValue={defauts?.libelle}
         erreur={err("libelle")}
       />
 
@@ -47,6 +67,7 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
           rows={3}
           className="champ-board"
           placeholder="Détails : référence, localisation, étapes prévues…"
+          defaultValue={defauts?.description ?? undefined}
         />
       </div>
 
@@ -59,7 +80,7 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
             id="type"
             name="type"
             required
-            defaultValue="reduction_source"
+            defaultValue={defauts?.type ?? "reduction_source"}
             className="champ-board"
             aria-describedby="type-aide"
           >
@@ -90,6 +111,7 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
           type="text"
           inputMode="numeric"
           placeholder="3"
+          defaultValue={defauts?.criticite ?? undefined}
           aide="1 = correctif mineur, 5 = priorité vitale. Sert au tri du plan d'actions. Facultatif."
           erreur={err("criticite")}
         />
@@ -101,6 +123,7 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
           name="echeance"
           label="Échéance prévue"
           type="date"
+          defaultValue={defauts?.echeance ?? undefined}
           erreur={err("echeance")}
         />
 
@@ -109,6 +132,7 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
           name="responsable"
           label="Responsable"
           placeholder="Ex : DAF, prestataire"
+          defaultValue={defauts?.responsable ?? undefined}
           erreur={err("responsable")}
         />
       </div>
@@ -118,7 +142,9 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
           {state.message}
         </p>
       )}
-      {state.status === "success" && (
+      {/* Une correction réussie rouvre la fiche (`redirect`) : pas de
+          message de succès à poser ici. */}
+      {state.status === "success" && !correction && (
         <p className="m-0 text-[12.5px] text-[color:var(--board-green-ink)]">
           Action créée.
         </p>
@@ -126,7 +152,13 @@ export function CreerActionVerifForm({ action, labelAnnuler }: Props) {
 
       <div className="flex items-center gap-3">
         <Button type="submit" variant="board" size="board" disabled={pending}>
-          {pending ? "Création…" : "Créer l'action"}
+          {correction
+            ? pending
+              ? "Enregistrement…"
+              : "Enregistrer la correction"
+            : pending
+              ? "Création…"
+              : "Créer l'action"}
         </Button>
         {labelAnnuler && (
           <Link

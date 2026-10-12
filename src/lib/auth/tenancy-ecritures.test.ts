@@ -112,16 +112,10 @@ const EXEMPTIONS = new Map<string, Exemption>([
         "enregistrée SUR le jeton, jamais à une adresse fournie par l'appelant.",
     },
   ],
-  [
-    "lib/versions/actions.ts:creerVersion",
-    {
-      garde: "construireSnapshot",
-      raison:
-        "`construireSnapshot` filtre le DUERP sur `entreprise: { userId }` et " +
-        "rend `null` pour celui d'un tiers — l'action s'arrête là, avant la " +
-        "transaction. Garde d'un autre module, donc nommé ici.",
-    },
-  ],
+  // ~~`lib/versions/actions.ts:creerVersion`, gardée par `construireSnapshot`~~
+  // — exemption retirée le 2026-10-12 : `creerVersion` appelle désormais
+  // `requireDuerp` (il lit l'effectif pour le motif du 1° de R. 4121-2), et
+  // le balayage le reconnaît seul.
 ]);
 
 /**

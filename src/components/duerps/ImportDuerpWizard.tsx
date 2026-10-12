@@ -178,15 +178,47 @@ export function ImportDuerpWizard({
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 border-y border-[color:var(--board-slate-line)] sm:grid-cols-4">
+          <div className="grid grid-cols-2 border-y border-[color:var(--board-slate-line)] sm:grid-cols-5">
             <Stat label="Unités de travail" value={previewState.nbUnites} />
             <Stat label="Risques valides" value={previewState.nbRisques} />
-            <Stat label="Mesures existantes" value={previewState.nbMesures} />
+            <Stat label="Mesures en place" value={previewState.nbMesures} />
+            <Stat
+              label="Mesures à mettre en œuvre"
+              value={previewState.nbMesuresPrevues}
+            />
             <Stat
               label="Lignes en erreur"
               value={previewState.nbErreurs}
               attention={previewState.nbErreurs > 0}
             />
+          </div>
+
+          {/* La colonne lue pour chaque champ (audit du 2026-10-12) : une
+              colonne « Mesures à mettre en œuvre » prise pour des mesures en
+              place, ou « Niveau de risque » pour le libellé, ne se voyait
+              qu'après l'import. */}
+          <div className="border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
+            <p className="board-eyebrow m-0 mb-3 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+              Colonnes lues
+            </p>
+            <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-1.5 text-[12.5px] sm:grid-cols-2">
+              {previewState.colonnes.map((c) => (
+                <div key={c.champ} className="flex min-w-0 gap-2">
+                  <dt className="shrink-0 text-[color:var(--board-slate-mid)]">
+                    {c.champ}
+                  </dt>
+                  <dd className="m-0 min-w-0 truncate font-medium text-[color:var(--board-ink)]">
+                    {c.colonne ? (
+                      `« ${c.colonne} »`
+                    ) : (
+                      <span className="font-normal text-[color:var(--board-slate-soft)]">
+                        aucune colonne
+                      </span>
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
           {/* Résumé par unité */}

@@ -44,6 +44,11 @@ const COULEUR_STATUT: Record<StatutAction, string> = {
   abandonnee: "#6b7280",
 };
 
+/** Ce que la table dit quand elle est vide : rien n'est ouvert ni en cours à
+ *  la date d'édition. */
+const PLAN_ACTIONS_AUCUNE_EN_COURS =
+  "Aucune action ouverte ou en cours à la date d'édition.";
+
 const LIBELLE_ORIGINE: Record<OrigineAction, string> = {
   duerp: "DUERP",
   verification: "Vérification",
@@ -76,8 +81,12 @@ export function PlanActionsDocument({ data }: { data: PlanActionsData }) {
 
         <Text style={s.h2}>Fiches</Text>
 
+        {/* La table ne porte que les actions ouvertes et en cours
+            (`construirePlanActionsData`) : vide, elle ne dit rien des levées,
+            que la synthèse vient de compter. « Aucune action enregistrée »
+            s'imprimait sous « Levées (30 j) : 3 » (audit du 2026-10-12). */}
         {data.actions.length === 0 ? (
-          <Text style={s.small}>Aucune action enregistrée.</Text>
+          <Text style={s.small}>{PLAN_ACTIONS_AUCUNE_EN_COURS}</Text>
         ) : (
           <View>
             <View style={s.thead}>

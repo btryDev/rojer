@@ -1,6 +1,7 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
 import { getVersion, listerVersions } from "@/lib/versions/queries";
+import { historiqueJusqua } from "@/lib/versions/historique";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 
 export async function GET(
@@ -19,12 +20,9 @@ export async function GET(
   }
   const snapshot = version.snapshot as DuerpSnapshot;
 
-  const toutes = await listerVersions(id);
-  const historique = toutes.map((v) => ({
-    numero: v.numero,
-    genereLe: v.createdAt.toISOString(),
-    motif: v.motif,
-  }));
+  // Les versions postérieures n'appartiennent pas à ce document (audit du
+  // 2026-10-12) : il se rouvre tel qu'il était, sans ce qui l'a suivi.
+  const historique = historiqueJusqua(await listerVersions(id), numeroInt);
 
   const buffer = await renderToBuffer(
     DuerpDocument({ snapshot, historique }),

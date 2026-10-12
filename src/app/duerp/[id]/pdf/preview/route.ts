@@ -1,6 +1,7 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
 import { listerVersions } from "@/lib/versions/queries";
+import { historiqueJusqua } from "@/lib/versions/historique";
 import { construireSnapshot } from "@/lib/versions/snapshot-builder";
 
 /**
@@ -35,11 +36,7 @@ export async function GET(
     return new Response("DUERP introuvable", { status: 404 });
   }
 
-  const historique = versions.map((v) => ({
-    numero: v.numero,
-    genereLe: v.createdAt.toISOString(),
-    motif: v.motif,
-  }));
+  const historique = historiqueJusqua(versions, numeroProvisoire);
 
   const buffer = await renderToBuffer(
     DuerpDocument({ snapshot, historique, brouillon: true }),
