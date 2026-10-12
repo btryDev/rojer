@@ -197,6 +197,11 @@ describe("l'exemption « sans surface » des titres salarié, resserrée (ADR-04
   it("borne basse : la VIP et la formation à la sécurité ont la surface de la fiche", () => {
     expect(surfacesDe(parId(VIP))).toContain("fiche_salarie");
     expect(surfacesDe(parId(ACCUEIL))).toContain("fiche_salarie");
+    // Et un titre appelé par un titre détenu, avec un délai (R. 4624-28) :
+    // la seconde branche du prédicat.
+    expect(
+      surfacesDe(parId("sante-travail-salarie-sir-visite-intermediaire")),
+    ).toContain("fiche_salarie");
   });
 
   it("tout titre dû à l'entrée a la surface de la fiche — par le prédicat de la fiche", () => {
