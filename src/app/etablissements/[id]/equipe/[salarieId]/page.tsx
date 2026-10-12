@@ -415,7 +415,7 @@ export default async function SalarieDetailPage({
                   <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                     Ces obligations ne tombent à aucune date : elles sont dues à
                     un <strong className="font-semibold">fait</strong>{" "}
-                    — une embauche, un changement de poste ou de technique.
+                    — une embauche, un changement de poste ou de technique.{" "}
                     {/* ~~Rojer ne voit aucun de ces faits~~ [2026-10-12,
                         ADR-043 : il voit l'embauche, par la date d'entrée.] */}
                     Rojer ne voit que l&apos;embauche, par la date

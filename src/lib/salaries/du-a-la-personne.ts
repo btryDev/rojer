@@ -40,11 +40,11 @@
  * horloge : l'état se classe à part, par `etatDuManque`.
  */
 import { classerDate } from "@/lib/calendrier/etats";
-import { prochaineEcheance } from "@/lib/calendrier/periodicite";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import type { ObligationPorteeParSalarie } from "@/lib/referentiels/conformite";
 import { cataloguerTitres, exclusionsDuTitre } from "./catalogue";
+import { echeanceDuTitre } from "./echeance";
 
 /** Ce que le module lit d'une personne. */
 export type PersonneLue = {
@@ -130,10 +130,13 @@ export function ceQuiManqueALaPersonne(
     rendus.set(o.id, {
       obligation: o,
       origine: { type: "entree", entreLe: personne.entreLe },
+      // `echeanceDuTitre`, la seule date d'un titre (ADR-036, garde de
+      // convergence) : le premier cycle d'un titre jamais délivré part de
+      // l'entrée, et son pas est le premier délai.
       echeance:
         personne.entreLe === null
           ? null
-          : prochaineEcheance(personne.entreLe, o.premierDelai),
+          : echeanceDuTitre({ delivreLe: personne.entreLe, echeanceLe: null }, o.premierDelai),
     });
   }
 
@@ -154,7 +157,7 @@ export function ceQuiManqueALaPersonne(
         echeance:
           t.delai === "aucun"
             ? delivreLe
-            : prochaineEcheance(delivreLe, periodiciteEffective(cible)),
+            : echeanceDuTitre({ delivreLe, echeanceLe: null }, periodiciteEffective(cible)),
       });
     }
   }
