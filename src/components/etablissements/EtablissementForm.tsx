@@ -19,6 +19,7 @@ import {
   LABEL_TYPE_ERP,
 } from "@/lib/etablissements/labels";
 import type { EtablissementActionState } from "@/lib/etablissements/actions";
+import { AIDE_HABITATION, AIDE_IGH } from "@/lib/etablissements/aides-regimes";
 
 
 /** La case à cocher du board : encre pleine à l'état coché, filet d'ardoise. */
@@ -556,9 +557,12 @@ export function EtablissementForm({
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Immeuble de Grande Hauteur (IGH)
                   </p>
+                  {/* ~~« Hauteur > 28 m (habitation) ou > 50 m (autres
+                      activités) »~~ — l'inverse de R. 146-3, corrigé le
+                      2026-10-12 (audit B1). L'aide est celle du parcours,
+                      écrite une fois (`etablissements/aides-regimes.ts`). */}
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                    Hauteur &gt; 28 m (habitation) ou &gt; 50 m (autres
-                    activités). Arrêté du 30 décembre 2011 — rare en TPE/PME.
+                    {AIDE_IGH}
                   </p>
                 </div>
               </label>
@@ -610,9 +614,12 @@ export function EtablissementForm({
                   <p className="m-0 text-[14px] font-semibold leading-[1.35] text-[color:var(--board-ink)]">
                     Immeuble d&apos;habitation
                   </p>
+                  {/* ~~« paratonnerres, ramonage, ascenseurs »~~ — aucune de
+                      ces lignes ne naît de la réponse (2026-10-12, audit).
+                      L'aide dit ce que « oui » déclenche, confronté au
+                      référentiel par son test (`aides-regimes.ts`). */}
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                    Logements collectifs. Code de la construction et de
-                    l&apos;habitation — paratonnerres, ramonage, ascenseurs.
+                    {AIDE_HABITATION}
                   </p>
                 </div>
               </label>
