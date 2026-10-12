@@ -8,7 +8,12 @@ import { prisma } from "@/lib/prisma";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { construireEcrituresImport } from "./ecritures";
 import { verifierPlafondImport } from "../plafond-unites";
-import { parserFichierDuerp, planifierImport } from "./parser";
+import {
+  LIBELLE_CHAMP_IMPORT,
+  parserFichierDuerp,
+  planifierImport,
+  type ColonneAttendue,
+} from "./parser";
 import { validerFichierImport } from "./format";
 
 /**
@@ -18,7 +23,9 @@ import { validerFichierImport } from "./format";
  * ligne devient :
  *   - une `UniteTravail` (créée ou réutilisée par nom),
  *   - un `Risque` avec cotation gravité/probabilité/maîtrise,
- *   - une `Action` par mesure listée (statut « levee » — déjà en place).
+ *   - une `Action` par mesure listée (statut « levee » — déjà en place) ;
+ *   - une `Action` ouverte par mesure listée dans une colonne de mesures
+ *     prévues ou à mettre en œuvre (depuis le 2026-10-12).
  *
  * L'import est transactionnel : en cas d'erreur, rien n'est créé. Une
  * étape de preview (sans écriture) précède l'import pour que l'utilisateur
@@ -37,7 +44,10 @@ export type PreviewImportState =
       nbLignes: number;
       nbRisques: number;
       nbMesures: number;
+      nbMesuresPrevues: number;
       nbUnites: number;
+      /** La colonne retenue pour chaque champ, `null` si aucune. */
+      colonnes: Array<{ champ: string; colonne: string | null }>;
       nbErreurs: number;
       resume: Array<{ unite: string; nbRisques: number; exemples: string[] }>;
     };
@@ -70,7 +80,14 @@ export async function previewImport(
     nbLignes: res.totalLignes,
     nbRisques: plan.nbRisques,
     nbMesures: plan.nbMesures,
+    nbMesuresPrevues: plan.nbMesuresPrevues,
     nbUnites: plan.unites.length,
+    colonnes: (Object.keys(LIBELLE_CHAMP_IMPORT) as ColonneAttendue[]).map(
+      (c) => ({
+        champ: LIBELLE_CHAMP_IMPORT[c],
+        colonne: res.mappingDetecte[c] ?? null,
+      }),
+    ),
     nbErreurs: res.erreurs.length,
     resume: plan.unites.slice(0, 30).map((u) => ({
       unite: u.nom,

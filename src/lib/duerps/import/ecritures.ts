@@ -44,9 +44,10 @@ export type EcrituresImport = {
     risqueId: string;
     libelle: string;
     type: "organisationnelle";
-    statut: "levee";
-    leveeLe: Date;
-    leveeCommentaire: string;
+    /** « levee » : mesure en place ; « ouverte » : mesure à mettre en œuvre. */
+    statut: "levee" | "ouverte";
+    leveeLe: Date | null;
+    leveeCommentaire: string | null;
   }>;
 };
 
@@ -161,6 +162,22 @@ export function construireEcrituresImport({
           statut: "levee",
           leveeLe: maintenant,
           leveeCommentaire: "Importé depuis le DUERP initial",
+        });
+      }
+
+      // Une colonne de mesures prévues ou à mettre en œuvre → actions
+      // OUVERTES, sans échéance : le fichier ne dit pas quand (audit du
+      // 2026-10-12 — elles devenaient des mesures en place).
+      for (const libelle of r.mesuresPrevues) {
+        ecritures.actions.push({
+          id: genererId("act"),
+          etablissementId,
+          risqueId,
+          libelle,
+          type: "organisationnelle",
+          statut: "ouverte",
+          leveeLe: null,
+          leveeCommentaire: null,
         });
       }
     }

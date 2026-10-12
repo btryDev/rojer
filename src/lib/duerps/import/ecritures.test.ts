@@ -18,6 +18,7 @@ function ligne(over: Partial<LigneParsee> = {}): LigneParsee {
     probabilite: 2,
     maitrise: 1,
     mesuresExistantes: [],
+    mesuresPrevues: [],
     ...over,
   };
 }
@@ -28,7 +29,11 @@ function plan(unites: PlanImport["unites"]): PlanImport {
     (n, u) => n + u.risques.reduce((m, r) => m + r.mesuresExistantes.length, 0),
     0,
   );
-  return { unites, nbRisques, nbMesures };
+  const nbMesuresPrevues = unites.reduce(
+    (n, u) => n + u.risques.reduce((m, r) => m + r.mesuresPrevues.length, 0),
+    0,
+  );
+  return { unites, nbRisques, nbMesures, nbMesuresPrevues };
 }
 
 /** Générateur déterministe : `unit-1`, `risq-1`, `risq-2`… */
@@ -167,6 +172,23 @@ describe("construireEcrituresImport — risques et mesures", () => {
       statut: "levee",
       leveeLe: MAINTENANT,
     });
+  });
+
+  it("une mesure à mettre en œuvre devient une action OUVERTE, jamais levée", () => {
+    const e = construire([
+      {
+        nom: "Cuisine",
+        risques: [
+          ligne({
+            mesuresExistantes: ["Gants"],
+            mesuresPrevues: ["Hotte à remplacer"],
+          }),
+        ],
+      },
+    ]);
+    const prevue = e.actions.find((a) => a.libelle === "Hotte à remplacer");
+    expect(prevue).toMatchObject({ statut: "ouverte", leveeLe: null });
+    expect(e.actions.find((a) => a.libelle === "Gants")?.statut).toBe("levee");
   });
 
   it("un risque sans mesure ne produit aucune action", () => {
