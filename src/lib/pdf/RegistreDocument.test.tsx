@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import { elementsDansLOrdre, texteDirect } from "./arbre-rendu.test-utils";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { RegistreDocument, type RegistreData } from "./RegistreDocument";
+import { phraseFraicheur } from "@/lib/calendrier/fraicheur";
 
 const data: RegistreData = {
   entreprise: "Btry",
@@ -137,6 +138,40 @@ describe("RegistreDocument", () => {
     });
     expect(avec).toBeGreaterThan(sans);
   }, 30000);
+
+  // Audit du 2026-10-12 : la phrase de fraîcheur n'était lue que par
+  // `faitAttenteVide`, donc seulement sous un tableau « en attente » VIDE. Un
+  // calendrier périmé dont le tableau portait des lignes les imprimait sans un
+  // mot, quand le README du même ZIP l'avertissait en tête.
+  it("avertit d'un calendrier périmé même quand le tableau « en attente » a des lignes", () => {
+    const perime: RegistreData = {
+      ...data,
+      calendrier: { etat: "perime", sceauPose: "ancien", sceauAttendu: "courant" },
+      verifsEnAttente: [
+        {
+          id: "v1",
+          libelleObligation: "Vérification des extincteurs",
+          equipementLibelle: "Extincteur hall",
+          datePrevue: new Date("2026-09-01T00:00:00Z"),
+          echeanceConnue: true,
+          statut: "planifiee",
+          domaine: "incendie",
+          contractuelle: false,
+          aConfirmer: [],
+          rythmeRetenu: null,
+          pourInformation: false,
+        },
+      ],
+    };
+    const textes = (d: RegistreData) =>
+      elementsDansLOrdre(RegistreDocument({ data: d })).map(texteDirect).join("\n");
+    const phrase = phraseFraicheur(perime.calendrier!)!;
+    expect(textes(perime)).toContain(phrase);
+    // Un calendrier à jour ne dit rien.
+    expect(textes({ ...perime, calendrier: { etat: "a_jour" } })).not.toContain(
+      "depuis le dernier calcul du calendrier",
+    );
+  });
 
   it("cite R. 143-44 à l'ERP seul, et R. 146-35 à l'IGH seul", () => {
     // ~~Par la taille du PDF~~ (2026-09-27, `lot/relire-fichiers-deposes`) :
