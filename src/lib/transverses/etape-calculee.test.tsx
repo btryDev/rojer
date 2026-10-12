@@ -82,9 +82,9 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
     expect(etape(ANCIEN, "synthese")?.atteinte).toBe(false);
   });
 
-  it("le signale : « 2 questions nouvelles à répondre », vers la première question sans réponse", () => {
+  it("le signale : « 2 questions sans réponse », vers la première question sans réponse", () => {
     expect(etape(ANCIEN, "transverses")?.signal).toEqual({
-      texte: "2 questions nouvelles à répondre",
+      texte: "2 questions sans réponse",
       href: "/duerp/d1/transverses#q-operations-electriques",
     });
   });
@@ -92,7 +92,7 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
   it("le signal est RENDU dans le fil d'étapes, en lien", () => {
     const html = renderToStaticMarkup(<WizardSteps etapes={etapes(ANCIEN)} />);
     expect(html).toContain(
-      '<a class="mt-1.5 inline-block text-[12.5px] leading-[1.4] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline" href="/duerp/d1/transverses#q-operations-electriques">2 questions nouvelles à répondre →</a>',
+      '<a class="mt-1.5 inline-block text-[12.5px] leading-[1.4] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline" href="/duerp/d1/transverses#q-operations-electriques">2 questions sans réponse →</a>',
     );
   });
 
@@ -121,7 +121,7 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
     const etat = etatEtapeTransverses(duerp({ reponsesTransverses: reponses }));
     expect(etat).toEqual({ faite: false, sansReponse: [q.id] });
     expect(signalQuestionsARepondre(etat.sansReponse.length)).toBe(
-      "1 question nouvelle à répondre",
+      "1 question sans réponse",
     );
   });
 

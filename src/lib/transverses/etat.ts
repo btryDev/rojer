@@ -144,8 +144,13 @@ export function etatEtapeTransverses(duerp: {
   return { faite: sansReponse.length === 0, sansReponse };
 }
 
-/** Le signal de l'étape, mot pour mot celui de la décision du 2026-10-12. */
+/**
+ * Le signal de l'étape. ~~« N questions nouvelles à répondre »~~ (2026-10-12,
+ * à l'intégration) : l'état stocké qui distinguait un DUERP ancien d'un neuf
+ * n'est plus lu, et « nouvelles » était faux sur un DUERP neuf (« 11 questions
+ * nouvelles »). Le signal dit ce qui est vrai dans les deux cas.
+ */
 export function signalQuestionsARepondre(n: number): string {
   const s = n > 1 ? "s" : "";
-  return `${n} question${s} nouvelle${s} à répondre`;
+  return `${n} question${s} sans réponse`;
 }
