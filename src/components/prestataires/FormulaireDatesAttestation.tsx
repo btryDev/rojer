@@ -8,8 +8,9 @@ import { ChampsDatesAttestation } from "./ChampsDatesAttestation";
 /**
  * Sur la fiche du prestataire : saisir la remise et l'émission de
  * l'attestation de vigilance. C'est là que l'écran invite à les renseigner
- * (« À saisir sur la fiche du prestataire »), et le seul endroit où une
- * fiche existante peut les recevoir.
+ * (« À saisir sur la fiche du prestataire »)~~, et le seul endroit où une
+ * fiche existante peut les recevoir~~ — plus le seul depuis le 2026-10-12 :
+ * « Modifier » les reçoit avec la pièce et sa validité.
  */
 export function FormulaireDatesAttestation({
   action,

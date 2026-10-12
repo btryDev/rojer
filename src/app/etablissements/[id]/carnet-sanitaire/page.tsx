@@ -17,7 +17,14 @@ import {
   SEUIL_LEGIONELLE_UFC_PAR_L,
   resultatAnalyse,
 } from "@/lib/carnet-sanitaire/schema";
-import { formaterDateCourteFr } from "@/lib/dates";
+import { cleJourCivil, formaterDateCourteFr } from "@/lib/dates";
+import { BoutonRetirer } from "@/components/carnet-sanitaire/BoutonRetirer";
+import { ENJEU_CARNET, quiEstVise } from "@/components/carnet-sanitaire/textes";
+import {
+  supprimerAnalyseLegionelle,
+  supprimerPointReleve,
+  supprimerReleve,
+} from "@/lib/carnet-sanitaire/actions";
 
 export const metadata = {
   title: "Carnet sanitaire eau",
@@ -65,7 +72,7 @@ export default async function CarnetSanitairePage({
           charte="board"
           kicker="Pourquoi ce carnet"
           titre="Légionellose — risque mortel, risque contrôlable."
-          enjeu="Les légionelles se développent dans les réseaux d'eau chaude sanitaire mal tenus en température. Ce carnet garde la trace de vos relevés et de vos analyses : c'est le « fichier sanitaire des installations » que l'arrêté fait tenir à la disposition de l'agence régionale de santé."
+          enjeu={ENJEU_CARNET}
           tonalite="info"
         >
           {/* « Obligatoire pour tout établissement avec ECS » A VÉCU ICI JUSQU'AU
@@ -93,11 +100,10 @@ export default async function CarnetSanitairePage({
             remous ou à jets » (art. 2). Pour les établissements autres que de
             santé, son annexe 2 fixe au minimum un relevé de température par
             mois et une analyse de légionelles par an, à chaque point de
-            surveillance. Rojer ne sait pas si c&apos;est votre cas, et ne le
-            décide pas à votre place : il n&apos;inscrit rien à votre
-            calendrier tant que vous n&apos;avez pas ouvert de carnet, puis
-            y inscrit l&apos;analyse suivante un an après la dernière saisie
-            — sans rappel par e-mail.
+            surveillance. {quiEstVise(etablissement.estERP)}{" "}
+            n&apos;inscrit rien à votre calendrier tant que vous n&apos;avez
+            pas ouvert de carnet, puis y inscrit l&apos;analyse suivante un an
+            après la dernière saisie — sans rappel par e-mail.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {/* L'extrait affiché ici était FABRIQUÉ : ni « bonne
@@ -301,6 +307,72 @@ export default async function CarnetSanitairePage({
                         typeReseau={p.typeReseau}
                       />
                     </div>
+
+                    {/* Corriger (2026-10-12, audit des modules, B6) : aucune
+                        saisie du carnet ne se corrigeait, et un point jamais
+                        relevé bloquait « À jour » au tableau de bord pour
+                        toujours. Les relevés listés sont ceux du graphique. */}
+                    {p.releves.length > 0 && (
+                      <details className="border-t border-[color:var(--board-slate-line)] px-7 py-4 sm:px-8">
+                        <summary className="cursor-pointer text-[12.5px] font-medium text-[color:var(--board-slate-mid)]">
+                          Relevés du graphique ({p.releves.length}) : corriger, supprimer
+                        </summary>
+                        <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
+                          {p.releves.map((r) => (
+                            <li
+                              key={r.id}
+                              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12.5px] text-[color:var(--board-slate-ink)]"
+                            >
+                              <span className="font-mono tabular-nums">
+                                {formatDate(r.dateReleve)} · {r.temperatureCelsius.toFixed(1)} °C
+                              </span>
+                              <AjoutReleveForm
+                                etablissementId={id}
+                                pointReleveId={p.id}
+                                seuilMinCelsius={p.seuilMinCelsius}
+                                typeReseau={p.typeReseau}
+                                releve={{
+                                  id: r.id,
+                                  dateReleve: cleJourCivil(r.dateReleve),
+                                  temperatureCelsius: r.temperatureCelsius,
+                                  operateur: r.operateur,
+                                  commentaire: r.commentaire,
+                                }}
+                              />
+                              <BoutonRetirer
+                                libelle="Supprimer"
+                                titre={`Supprimer le relevé du ${formatDate(r.dateReleve)} ?`}
+                                detail="La mesure quitte le carnet, le graphique, le tableau de bord et l'export de contrôle. Les autres relevés du point restent."
+                                agir="Supprimer le relevé"
+                                action={supprimerReleve.bind(null, id, r.id)}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+
+                    <div className="flex flex-wrap items-start gap-x-5 gap-y-2 border-t border-[color:var(--board-slate-line)] px-7 py-4 sm:px-8">
+                      <AjoutPointReleveForm
+                        etablissementId={id}
+                        batiments={batiments}
+                        point={{
+                          id: p.id,
+                          nom: p.nom,
+                          localisation: p.localisation,
+                          batimentId: p.batimentId,
+                          typeReseau: p.typeReseau,
+                          seuilMinCelsius: p.seuilMinCelsius,
+                        }}
+                      />
+                      <BoutonRetirer
+                        libelle="Retirer ce point"
+                        titre={`Retirer le point « ${p.nom} » du carnet ?`}
+                        detail="Le point ne compte plus au tableau de bord ni dans l'export de contrôle, et ses relevés ne s'affichent plus. Ils restent enregistrés en base."
+                        agir="Retirer le point"
+                        action={supprimerPointReleve.bind(null, id, p.id)}
+                      />
+                    </div>
                   </li>
                 );
               })}
@@ -404,6 +476,26 @@ export default async function CarnetSanitairePage({
                         }
                       />
                     </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-start gap-x-5 gap-y-2 border-t border-[color:var(--board-slate-line)] pt-4">
+                    <AjoutAnalyseForm
+                      etablissementId={id}
+                      analyse={{
+                        id: a.id,
+                        dateAnalyse: cleJourCivil(a.dateAnalyse),
+                        laboratoire: a.laboratoire,
+                        valeurUfcParL: a.valeurUfcParL,
+                        commentaire: a.commentaire,
+                        rapportNom: a.rapportCle ? (a.rapportNom ?? "déposé") : null,
+                      }}
+                    />
+                    <BoutonRetirer
+                      libelle="Supprimer"
+                      titre={`Supprimer l'analyse du ${formatDate(a.dateAnalyse)} ?`}
+                      detail="L'analyse quitte le carnet, le tableau de bord et l'export de contrôle, avec son rapport de laboratoire s'il a été déposé. L'analyse suivante du calendrier se recompte sur la précédente."
+                      agir="Supprimer l'analyse"
+                      action={supprimerAnalyseLegionelle.bind(null, id, a.id)}
+                    />
                   </div>
                 </li>
               ))}

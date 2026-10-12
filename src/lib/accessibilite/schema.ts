@@ -8,7 +8,12 @@ import {
 /**
  * Validation du registre d'accessibilité ERP.
  *
- * Les 4 sections correspondent au contenu imposé par l'arrêté du
+ * ~~Les 4 sections correspondent au contenu imposé par l'arrêté~~ —
+ * faux, rayé le 2026-10-12 (audit des modules) : l'arrêté (art. 1er I)
+ * énumère NEUF pièces, plus une attestation annuelle de formation en 1ʳᵉ à
+ * 4ᵉ catégorie (II), et aucune ne se dépose dans Rojer. Les quatre sections
+ * sont celles du module ; seul le 9° (modalités de maintenance) y est
+ * saisi tel quel. Texte d'origine : les 4 sections « correspondent » à l'arrêté du
  * 19 avril 2017 (NOR: LHAL1702706A, publié au JO), pris en application de
  * l'article R. 111-19-60 du code de la construction et de l'habitation —
  * devenu **R. 164-6** à la recodification du 1er juillet 2021. Le module
@@ -31,19 +36,26 @@ import {
 
 const DATE_FMT = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * UN CHAMP VIDÉ S'EFFACE (2026-10-12, audit des modules). Ces deux
+ * aides rendaient `undefined` pour un champ vide, et Prisma laisse une
+ * colonne inchangée quand on lui passe `undefined` : un champ rempli ne se
+ * vidait plus jamais, et le registre public gardait une phrase que
+ * l'exploitant avait retirée. Elles rendent `null`, que Prisma écrit.
+ */
 const optionalTrimmed = (max = 2000) =>
   z.preprocess(
-    (v) => (typeof v === "string" ? v.trim() || undefined : v),
-    z.string().max(max).optional(),
+    (v) => (typeof v === "string" ? v.trim() || null : v ?? null),
+    z.string().max(max).nullable(),
   );
 
 const optionalDate = z.preprocess(
-  (v) => (v === "" || v === null ? undefined : v),
+  (v) => (v === "" || v === undefined ? null : v),
   z
     .string()
     .regex(DATE_FMT, "Format attendu : AAAA-MM-JJ")
-    .optional()
-    .transform((v) => (v ? depuisCleJourCivil(v) : undefined)),
+    .nullable()
+    .transform((v) => (v ? depuisCleJourCivil(v) : null)),
 );
 
 /**
@@ -151,8 +163,8 @@ export const section1Schema = z.object({
 
 export const section2Schema = z.object({
   conformiteRegime: z.preprocess(
-    (v) => (v === "" || v == null ? undefined : v),
-    z.enum(REGIMES).optional(),
+    (v) => (v === "" || v == null ? null : v),
+    z.enum(REGIMES).nullable(),
   ),
   dateConformite: optionalDate,
   numeroAttestationAccess: optionalTrimmed(120),
@@ -164,8 +176,8 @@ export const section3Schema = z.object({
   dateDerniereFormation: optionalDate,
   organismeFormation: optionalTrimmed(200),
   effectifForme: z.preprocess(
-    (v) => (v === "" || v == null ? undefined : v),
-    z.coerce.number().int().min(0).max(99999).optional(),
+    (v) => (v === "" || v == null ? null : v),
+    z.coerce.number().int().min(0).max(99999).nullable(),
   ),
 });
 
@@ -194,4 +206,19 @@ export function genererSlug(raison: string, siret: string | null): string {
     .slice(0, 40);
   const suffix = siret ? siret.slice(-6) : Math.random().toString(36).slice(2, 8);
   return `${base || "etablissement"}-${suffix}`;
+}
+
+/**
+ * Le premier slug libre à partir de `base` : `base`, puis `base-2`,
+ * `base-3`… (2026-10-12, audit des modules). Deux sites d'une même
+ * entreprise portant le même nom recevaient le même slug — même raison
+ * sociale, même SIRET d'entreprise — et la création du second registre
+ * échouait sur `slugPublic @unique`.
+ */
+export function slugLibre(base: string, pris: readonly string[]): string {
+  const occupes = new Set(pris);
+  if (!occupes.has(base)) return base;
+  let n = 2;
+  while (occupes.has(`${base}-${n}`)) n += 1;
+  return `${base}-${n}`;
 }

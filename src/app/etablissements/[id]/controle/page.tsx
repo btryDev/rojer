@@ -6,6 +6,7 @@ import { getDashboardData } from "@/lib/dashboard/queries";
 import { compterVigilanceParGravite } from "@/lib/prestataires/queries";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
+import { registreServiAuPublic } from "@/lib/accessibilite/publication";
 import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { faitInventaire } from "@/lib/perimetre/couverture";
@@ -135,6 +136,11 @@ export default async function ControlePage({
   // réponse, devant la personne même à qui l'on remet le dossier. `null`
   // aussi quand la couverture n'a pu être lue : on n'affirme rien.
   const inventaire = couverture ? faitInventaire(couverture) : null;
+  // La règle de la page publique, pas une paraphrase (2026-10-12).
+  const registreEnLigne = registreServiAuPublic({
+    publie: registreAccessibilite?.publie ?? false,
+    estERP: etablissement.estERP,
+  });
   const selonCalendrier = (etat: EtatPiece): EtatPiece =>
     etatSelonCalendrier(fraicheur, etat);
 
@@ -231,14 +237,14 @@ export default async function ControlePage({
     },
     accessibilite: {
       description: etablissement.estERP
-        ? registreAccessibilite?.publie
+        ? registreEnLigne
           ? "Publié et consultable en ligne."
           : "Registre non publié. À rendre public."
         : "Non applicable — votre établissement n'est pas un ERP.",
-      present: etablissement.estERP ? Boolean(registreAccessibilite?.publie) : false,
+      present: registreEnLigne,
       etat: !etablissement.estERP
         ? "non_applicable"
-        : registreAccessibilite?.publie
+        : registreEnLigne
           ? "a_jour"
           : "a_planifier",
       reference: "Arrêté 19-04-2017",

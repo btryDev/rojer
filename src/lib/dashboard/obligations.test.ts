@@ -307,6 +307,14 @@ describe("construireMatrice — accessibilité", () => {
     });
     expect(ligne(m, "accessibilite")).toBeDefined();
   });
+
+  it("hors ERP, ses cellules sont « non applicable », comme l'entrée de la barre latérale (2026-10-12)", () => {
+    const m = avecModules({
+      estERP: false,
+      accessibilite: { existe: true, publie: true },
+    });
+    expect(ligne(m, "accessibilite").cellules).toEqual(["na", "na", "na"]);
+  });
 });
 
 describe("construireMatrice — permis de feu", () => {

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
 import {
   CarteFiche,
   ChampFiche,
@@ -136,10 +138,21 @@ export default async function PrestataireDetailPage({
                     ))}
                   </div>
                 </div>
-                <SupprimerPrestataireButton
-                  etablissementId={id}
-                  prestataireId={p.id}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* La fiche se corrige (2026-10-12) : nouvelle attestation,
+                      RC Pro, Kbis, contacts. Avant, seules les deux dates
+                      de remise et d'émission se saisissaient après coup. */}
+                  <Link
+                    href={`/etablissements/${id}/prestataires/${p.id}/modifier`}
+                    className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
+                  >
+                    Modifier
+                  </Link>
+                  <SupprimerPrestataireButton
+                    etablissementId={id}
+                    prestataireId={p.id}
+                  />
+                </div>
               </div>
             </section>
 

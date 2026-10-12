@@ -14,6 +14,8 @@
 // où l'on ne mesure rien : un tableau tout vert qui ment est pire qu'un
 // tableau troué.
 
+import { registreServiAuPublic } from "@/lib/accessibilite/publication";
+
 export type EtatCellule = "ok" | "todo" | "na";
 
 export const COLONNES_MATRICE = ["En place", "À jour", "Sans retard"] as const;
@@ -138,17 +140,24 @@ function lignesModules(
   // Tout ERP doit tenir le registre — la ligne apparaît donc dès que le
   // régime est déclaré. Un registre déjà créé reste visible même si le
   // régime ERP a été décoché depuis : on ne cache pas une donnée existante.
+  //
+  // Hors ERP, la ligne suit la barre latérale, qui dit l'entrée « non
+  // applicable » (`sidebar-nav.ts`) : ses cellules le sont aussi. Elle était
+  // verte jusqu'au 2026-10-12 — « en place », « publié » — pour un registre
+  // que la page publique ne sert plus (`registreServiAuPublic`).
   if (m.estERP || m.accessibilite.existe) {
     lignes.push({
       id: "accessibilite",
       libelle: "Accessibilité",
       href: `${base}/accessibilite`,
-      cellules: [
-        oui(m.accessibilite.existe),
-        // Le registre n'a de valeur que consultable par le public.
-        oui(m.accessibilite.publie),
-        "na",
-      ],
+      cellules: m.estERP
+        ? [
+            oui(m.accessibilite.existe),
+            // Le registre n'a de valeur que consultable par le public.
+            oui(registreServiAuPublic({ publie: m.accessibilite.publie, estERP: m.estERP })),
+            "na",
+          ]
+        : ["na", "na", "na"],
     });
   }
 
