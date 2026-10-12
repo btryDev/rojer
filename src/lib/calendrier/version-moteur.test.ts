@@ -124,6 +124,11 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recalculée SANS incrément le 2026-10-12 à la réunion de
+  // `lot/polir-relecture` (EPI déclaré, `6a4d02a8f770c62b`) et de
+  // `lot/suites-0810` (SSI A/B, libellés, rythme en clair,
+  // `a1418967cc88cc4f`) : chacune recopiait sans incrément, avec son motif
+  // ci-dessous ; leur réunion ne change rien d'autre. ~~6a4d02a8f770c62b~~.
   // Recopiée SANS incrément le 2026-10-12 (relecture indépendante, B2) :
   // `referentiels/types-communs.ts` exporte `CATEGORIES_EPI` et
   // `estCategorieEpi`, lus par la seule `equipements/actions.ts` pour faire
@@ -379,7 +384,7 @@ const RELEVE = {
   // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
   // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
   // ~~005b4fafbfab216a~~.
-  empreinte: "6a4d02a8f770c62b",
+  empreinte: "7d1d30ef2861a9a2",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");
