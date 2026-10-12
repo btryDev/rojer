@@ -42,9 +42,83 @@
 import { classerDate } from "@/lib/calendrier/etats";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import type { ObligationPorteeParSalarie } from "@/lib/referentiels/conformite";
+import {
+  estPorteeParSalarie,
+  type Obligation,
+  type ObligationPorteeParSalarie,
+} from "@/lib/referentiels/conformite";
+import type { Transmission } from "@/lib/referentiels/conformite/types";
+import type { Periodicite } from "@/lib/referentiels/types-communs";
 import { cataloguerTitres, exclusionsDuTitre } from "./catalogue";
 import { echeanceDuTitre } from "./echeance";
+
+/**
+ * Un titre DÛ À L'ENTRÉE : un titre salarié auquel le référentiel donne un
+ * `premierDelai`, compté depuis `Salarie.entreLe` (ADR-043 § 2.1) — la VIP,
+ * la formation à la sécurité. C'est le cas « dû à chaque salarié actif » de
+ * la décision (b) de la propriétaire.
+ *
+ * Exporté le 2026-10-12 pour que le tableau de bord (`dashboard/transmissions.ts`,
+ * compte par personne) et la garde des surfaces
+ * (`surfaces/obligations-sans-surface.ts`, surface `fiche_salarie`) lisent
+ * CETTE règle et non une phrase qui la redirait : `ceQuiManqueALaPersonne`
+ * l'appelle elle-même.
+ */
+export function estDuALEntree(
+  o: Obligation,
+): o is ObligationPorteeParSalarie & { premierDelai: Periodicite } {
+  return estPorteeParSalarie(o) && o.premierDelai !== undefined;
+}
+
+type VersSalarie = Extract<Transmission, { vers: "salarie_designe" }>;
+
+/** Une transmission vers un titre nommé, qui dit quand il est exigible. */
+export type TransmissionDatee = VersSalarie & {
+  titre: string;
+  delai: NonNullable<VersSalarie["delai"]>;
+};
+
+/**
+ * Les transmissions d'un titre que `ceQuiManqueALaPersonne` LIT : vers un
+ * titre nommé, avec un `delai`. Sans `delai`, la transmission ne date rien et
+ * la fonction la saute — le test du module exige qu'aucune transmission
+ * salarié → salarié n'en manque, donc ce saut ne tait rien aujourd'hui.
+ */
+export function transmissionsDatees(source: Obligation): TransmissionDatee[] {
+  return source.transmet.filter(
+    (t): t is TransmissionDatee =>
+      t.vers === "salarie_designe" && t.titre !== null && t.delai !== undefined,
+  );
+}
+
+/**
+ * Les titres que la fiche d'une personne peut montrer comme MANQUANTS — ceux
+ * que `ceQuiManqueALaPersonne` sait rendre : dus à l'entrée, ou appelés par un
+ * autre titre du catalogue avec un délai.
+ *
+ * C'est la surface de décision que l'ADR-043 (c) donne à ces titres : la fiche
+ * les date et les classe. Les titres SOUS CONDITION (secouriste, membre du
+ * CSE, salarié désigné, autorisation de conduite…) n'y sont pas : le produit ne
+ * sait pas qui y est soumis (décision (b)). Un titre qui n'est la cible que
+ * d'une transmission sans délai n'y est pas non plus — la fonction ne le
+ * rendrait jamais.
+ */
+export function titresLusParLaFiche(
+  catalogueFourni: readonly ObligationPorteeParSalarie[] = cataloguerTitres(),
+): ReadonlySet<string> {
+  // Même porte du niveau audit que `ceQuiManqueALaPersonne` (ADR-042).
+  const catalogue = catalogueFourni.filter((o) => !estNiveauAudit(o));
+  const parId = new Set(catalogue.map((o) => o.id));
+  const ids = new Set<string>();
+  for (const o of catalogue) {
+    if (estDuALEntree(o)) ids.add(o.id);
+    for (const t of transmissionsDatees(o)) {
+      // La fonction ne rend une cible que si elle est au catalogue.
+      if (parId.has(t.titre)) ids.add(t.titre);
+    }
+  }
+  return ids;
+}
 
 /** Ce que le module lit d'une personne. */
 export type PersonneLue = {
@@ -126,7 +200,7 @@ export function ceQuiManqueALaPersonne(
   const rendus = new Map<string, Manque>();
 
   for (const o of catalogue) {
-    if (o.premierDelai === undefined || !manque(o.id)) continue;
+    if (!estDuALEntree(o) || !manque(o.id)) continue;
     rendus.set(o.id, {
       obligation: o,
       origine: { type: "entree", entreLe: personne.entreLe },
@@ -143,13 +217,11 @@ export function ceQuiManqueALaPersonne(
   for (const source of catalogue) {
     const delivreLe = derniere(titres, source.id);
     if (delivreLe === null) continue;
-    for (const t of source.transmet) {
-      if (t.vers !== "salarie_designe" || t.titre === null) continue;
+    // Sans `delai`, la transmission ne date rien : `transmissionsDatees` la
+    // laisse de côté (voir sa note).
+    for (const t of transmissionsDatees(source)) {
       const cible = parId.get(t.titre);
-      // Sans `delai`, la transmission ne date rien : le test du module exige
-      // qu'aucune transmission salarié → salarié n'en manque, donc ce saut ne
-      // tait rien aujourd'hui.
-      if (!cible || t.delai === undefined || !manque(cible.id)) continue;
+      if (!cible || !manque(cible.id)) continue;
       if (rendus.has(cible.id)) continue;
       rendus.set(cible.id, {
         obligation: cible,

@@ -18,7 +18,9 @@
  *   9. Transmission : un domaine d'obligation qu'aucun prestataire déclaré
  *      ne couvre (ADR-024)
  *  10. Transmission : une obligation qui suppose une personne nommée, alors
- *      qu'aucun titre n'est déclaré (ADR-024)
+ *      qu'aucun titre n'est déclaré (ADR-024) — [2026-10-12, ADR-043 : ou,
+ *      pour un titre dû à l'entrée, qu'il manque à au moins une personne
+ *      active ; la carte dit alors à combien]
  *
  * Les huit premières règles sont fondées sur des DATES. Les deux dernières
  * sont fondées sur une **incohérence entre deux modules**, et c'est la
@@ -66,6 +68,33 @@ import { ageEnMois, EFFECTIF_MAJ_ANNUELLE, type EtatDuerp } from "./duerp";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import { TIERS_LUI_MEME_OBLIGATOIRE } from "@/lib/prestataires/domaines";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
+// Type seul : ce module reste pur, sans base ni horloge.
+import type { CompteParPersonne, Transmissions } from "./transmissions";
+
+/**
+ * La phrase d'un compte par personne (ADR-043) : « 3 salariés sans
+ * « Formation à la sécurité reçue par le salarié » — dont 1 en retard ».
+ *
+ * Le titre est nommé par son libellé au référentiel, entre guillemets, et non
+ * par un nom court tenu à la main : une table de noms courts est une seconde
+ * liste des titres, qui divergerait du catalogue au premier ajout.
+ *
+ * Le retard est compté par `classerDate` (ADR-011) dans le rapprochement ; une
+ * personne sans date d'entrée n'est jamais « en retard » (ADR-043 § 2.4) et se
+ * dit à part, pour que le nombre en retard ne se lise pas comme un plancher.
+ */
+export function phraseParPersonne(c: CompteParPersonne): string {
+  const qui = `${c.sansLeTitre} salarié${c.sansLeTitre > 1 ? "s" : ""}`;
+  const precisions: string[] = [];
+  if (c.enRetard > 0) precisions.push(`dont ${c.enRetard} en retard`);
+  if (c.nonDatees > 0) {
+    precisions.push(
+      `${c.nonDatees} sans date d'entrée, donc sans échéance calculée`,
+    );
+  }
+  const base = `${qui} sans « ${c.libelleTitre} »`;
+  return precisions.length > 0 ? `${base} — ${precisions.join(", ")}` : base;
+}
 
 /** Fenêtre « ça arrive » pour une vérification déjà planifiée. Plus courte
  *  que l'horizon proche du produit (30 j) : la file de travail du board dit
@@ -187,9 +216,11 @@ export type EntreeRecos = {
     domainesSansPrestataire: Array<{ domaine: string; libelle: string }>;
     /**
      * Obligations applicables qui supposent une personne nommée, alors
-     * qu'aucun titre n'est déclaré à l'équipe.
+     * qu'aucun titre n'est déclaré à l'équipe — ou, pour un titre dû à
+     * l'entrée (ADR-043), qu'il manque à au moins une personne active :
+     * `parPersonne` dit alors à combien.
      */
-    obligationsSupposantUnePersonne: Array<{ id: string; libelle: string }>;
+    obligationsSupposantUnePersonne: Transmissions["obligationsSupposantUnePersonne"];
   };
 };
 
@@ -464,8 +495,14 @@ export function genererRecommandations(
       // formulation doit donc rester générique SANS être fausse, ce qui est
       // plus étroit qu'il n'y paraît : « rien de ce qui est déclaré n'y
       // répond » est vrai que le dossier porte zéro titre ou douze.
+      //
+      // [2026-10-12, ADR-043] Pour un titre dû à l'entrée, la transmission
+      // NOMME le titre et le rapprochement sait à combien de personnes il
+      // manque : la carte le dit, au lieu de la phrase générique.
       sousTitre:
-        "Suppose un titre nominatif — rien de ce qui est déclaré n'y répond",
+        o.parPersonne && o.parPersonne.length > 0
+          ? o.parPersonne.map(phraseParPersonne).join(" ; ")
+          : "Suppose un titre nominatif — rien de ce qui est déclaré n'y répond",
       href: `/etablissements/${etab}/equipe`,
       priorite: 10,
     });
