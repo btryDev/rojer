@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { getRegistrePublicParSlug } from "@/lib/accessibilite/queries";
 import { genererQrCodeDataUrl } from "@/lib/accessibilite/qrcode";
 import { identitePublique } from "@/lib/accessibilite/identite";
-import { publicAppUrl } from "@/lib/email";
+import {
+  MESSAGE_URL_PUBLIQUE_ABSENTE,
+  publicAppUrl,
+  refusUrlPublique,
+} from "@/lib/email";
 
 /**
  * Route publique qui renvoie une affiche HTML prête à imprimer (A4) avec
@@ -33,6 +37,17 @@ export async function GET(
     return NextResponse.json({ error: "introuvable" }, { status: 404 });
   }
 
+  // Une affiche dont le QR mène à localhost ne s'imprime pas (audit du
+  // 2026-10-12, B7) : en production sans adresse publique, refus dit et
+  // journalisé.
+  const refus = refusUrlPublique();
+  if (refus) {
+    console.error(`affiche accessibilité : ${refus}`);
+    return new NextResponse(MESSAGE_URL_PUBLIQUE_ABSENTE, {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
   const url = `${publicAppUrl()}/accessibilite/${registre.slugPublic}`;
   const qrDataUrl = await genererQrCodeDataUrl(url);
   const identite = identitePublique(registre.etablissement);

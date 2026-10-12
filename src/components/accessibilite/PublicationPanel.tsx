@@ -15,12 +15,16 @@ export function PublicationPanel({
   publie,
   urlPublique,
   qrDataUrl,
+  urlIndisponible = null,
 }: {
   etablissementId: string;
   slugPublic: string;
   publie: boolean;
   urlPublique: string;
   qrDataUrl: string;
+  /** Le message à montrer quand l'adresse publique est inconnue en production
+   *  (`MESSAGE_URL_PUBLIQUE_ABSENTE`) ; `null` sinon. */
+  urlIndisponible?: string | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [erreur, setErreur] = useState<string | null>(null);
@@ -91,6 +95,24 @@ export function PublicationPanel({
             {pending ? "Publication…" : "Publier le registre"}
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // L'ADRESSE PUBLIQUE INCONNUE SE DIT (audit du 2026-10-12, B7). Sans elle,
+  // le QR code et l'URL pointaient sur localhost : une affiche imprimée qui
+  // ne mène nulle part. Ni QR, ni URL, ni affiche — le message, et rien qui
+  // puisse s'imprimer faux.
+  if (urlIndisponible) {
+    return (
+      <div className="carte-board px-7 py-6 sm:px-8">
+        <PastilleFiche ton="fait">Publié</PastilleFiche>
+        <p
+          role="alert"
+          className="m-0 mt-3 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-signal-ink)]"
+        >
+          {urlIndisponible}
+        </p>
       </div>
     );
   }

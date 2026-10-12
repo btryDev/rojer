@@ -13,7 +13,11 @@ import {
   getRegistreAccessibilite,
 } from "@/lib/accessibilite/queries";
 import { genererQrCodeDataUrl } from "@/lib/accessibilite/qrcode";
-import { publicAppUrl } from "@/lib/email";
+import {
+  MESSAGE_URL_PUBLIQUE_ABSENTE,
+  publicAppUrl,
+  refusUrlPublique,
+} from "@/lib/email";
 
 export const metadata = {
   title: "Registre d'accessibilité ERP",
@@ -134,7 +138,12 @@ export default async function AccessibilitePage({
   // Génération du QR code — seulement si un slug existe déjà.
   let qrDataUrl = "";
   let urlPublique = "";
-  if (registre?.slugPublic) {
+  // En production sans `PUBLIC_APP_URL`, ni URL ni QR : le refus est dit à
+  // l'écran et journalisé côté serveur, jamais replié sur localhost
+  // (audit du 2026-10-12, B7).
+  const refusUrl = refusUrlPublique();
+  if (refusUrl) console.error(`accessibilite : ${refusUrl}`);
+  if (registre?.slugPublic && !refusUrl) {
     urlPublique = `${publicAppUrl()}/accessibilite/${registre.slugPublic}`;
     qrDataUrl = await genererQrCodeDataUrl(urlPublique);
   }
@@ -258,6 +267,7 @@ export default async function AccessibilitePage({
             publie={registre.publie}
             urlPublique={urlPublique}
             qrDataUrl={qrDataUrl}
+            urlIndisponible={refusUrl ? MESSAGE_URL_PUBLIQUE_ABSENTE : null}
           />
         )}
 

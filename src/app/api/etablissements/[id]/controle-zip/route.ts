@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { prisma } from "@/lib/prisma";
 import { getStorage, type FileStorage } from "@/lib/storage";
-import { publicAppUrl } from "@/lib/email";
+import { publicAppUrl, refusUrlPublique } from "@/lib/email";
 import {
   cleJourCivil,
   formaterDateFr,
@@ -318,7 +318,17 @@ export async function GET(
     where: { etablissementId: id },
     select: { slugPublic: true, publie: true },
   }));
-  if (registreAccess?.publie) {
+  // Sans adresse publique en production, pas d'URL localhost dans un dossier
+  // remis à un tiers (audit du 2026-10-12, B7) : la pièce manque, et le README
+  // dit pourquoi.
+  const refusUrl = registreAccess?.publie ? refusUrlPublique() : null;
+  if (refusUrl) {
+    noterEchec(
+      PIECES_ZIP.accessibilite,
+      new Error(refusUrl),
+      "adresse publique de l'application non configurée",
+    );
+  } else if (registreAccess?.publie) {
     const url = `${publicAppUrl()}/accessibilite/${registreAccess.slugPublic}`;
     zip.file(
       PIECES_ZIP.accessibilite,

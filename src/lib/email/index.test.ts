@@ -54,3 +54,29 @@ describe("envoiEnService — l'envoi se sait hors service avant d'écrire", () =
     log.mockRestore();
   });
 });
+
+describe("publicAppUrl — pas de localhost en production (audit du 2026-10-12, B7)", () => {
+  it("en production sans PUBLIC_APP_URL : refus nommé, et la lecture lève", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("PUBLIC_APP_URL", "");
+    const m = await charger();
+    expect(m.refusUrlPublique()).toMatch(/PUBLIC_APP_URL/);
+    expect(() => m.publicAppUrl()).toThrow(/PUBLIC_APP_URL/);
+  });
+
+  it("en production avec PUBLIC_APP_URL : l'adresse, sans refus", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.exemple.test");
+    const m = await charger();
+    expect(m.refusUrlPublique()).toBeNull();
+    expect(m.publicAppUrl()).toBe("https://app.exemple.test");
+  });
+
+  it("en développement, le repli sur localhost reste", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("PUBLIC_APP_URL", "");
+    const m = await charger();
+    expect(m.refusUrlPublique()).toBeNull();
+    expect(m.publicAppUrl()).toBe("http://localhost:3000");
+  });
+});
