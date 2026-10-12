@@ -189,7 +189,7 @@ ADR-042, remesuré en appelant le moteur, question des chiffons muette : **quara
 **quarante-six**, **quarante-sept** tant que les matières restent muettes, **quarante-trois**,
 **quarante-quatre**, **quarante-sept** après un « non » — moins une partout, les chiffons
 imprégnés passant au niveau audit. Les chiffres de la veille, marqueur levé, étaient 46,
-47, 48 et 44, 45, 48 : ceux écrits juste avant ce crochet étaient déjà périmés] (remesuré en appelant le moteur le
+47, 48 et 44, 45, 48 : ceux écrits juste avant ce crochet étaient déjà périmés] [2026-10-12 : la question des chiffons n'existe plus (ADR-042) et l'ADR-041 ajoute des faits d'activité « à confirmer » ; ces chiffres sont À REMESURER en appelant le moteur, non relevés à la fusion] (remesuré en appelant le moteur le
 2026-09-21 : 31, 32, 35 la veille, + 3 événementielles de la chaleur intense, + 5
 autres événementielles ; les ~~vingt-sept, vingt-huit, trente et une~~ écrits ici étaient
 déjà périmés d'une unité avant que le lot chaleur intense n'en ajoute deux) : le règlement intérieur s'ajoute, le local de
