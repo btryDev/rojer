@@ -145,6 +145,8 @@ beforeEach(() => {
     },
   ]);
   prismaMock.$transaction = async (fn: (tx: unknown) => Promise<unknown>) => fn(prismaMock);
+  // Le verrou de ligne de l'objet (`verrouillerObjetSigne`) : sans effet ici.
+  prismaMock.$queryRaw = async () => [];
 });
 
 describe("trois essais, même en rafale", () => {

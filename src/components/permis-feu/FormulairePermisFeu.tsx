@@ -84,6 +84,7 @@ export function FormulairePermisFeu({
   batiments = [],
   permis,
   scelle = null,
+  avisLiens = null,
 }: {
   etablissementId: string;
   prestataires: PrestataireLite[];
@@ -94,6 +95,9 @@ export function FormulairePermisFeu({
   /** Le motif qui scelle le contenu (`motifContenuScelle`) : ce qu'une
    *  signature couvre est rendu non modifiable, seule la zone reste ouverte. */
   scelle?: string | null;
+  /** Des liens de signature attendent une réponse (`avisLiensEnVol`) : changer
+   *  le contenu les annule, et l'écran le dit avant l'envoi. */
+  avisLiens?: string | null;
 }) {
   const router = useRouter();
   const boundAction = permis
@@ -146,6 +150,11 @@ export function FormulairePermisFeu({
             />
           </div>
         </section>
+      )}
+      {!scelle && avisLiens && (
+        <p className="m-0 max-w-[66ch] rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+          {avisLiens}
+        </p>
       )}
       <fieldset
         disabled={Boolean(scelle)}

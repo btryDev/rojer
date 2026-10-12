@@ -78,6 +78,7 @@ function table(lignes: Ligne[]) {
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {} as Record<string, ReturnType<typeof table>> & {
     $transaction?: (fn: (tx: unknown) => Promise<unknown>) => Promise<unknown>;
+    $queryRaw?: (q: TemplateStringsArray, ...v: unknown[]) => Promise<unknown>;
   },
 }));
 
@@ -113,6 +114,9 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 vi.mock("@/lib/storage", () => ({ getStorage: vi.fn() }));
 vi.mock("next/headers", () => ({ headers: async () => new Map() }));
+/** Les verrous de ligne pris (`SELECT … FOR UPDATE`), dans l'ordre. */
+const verrous: string[] = [];
+
 const { mailsEnvoyes } = vi.hoisted(() => ({
   mailsEnvoyes: [] as { to: string; subject: string; text: string }[],
 }));
@@ -178,6 +182,11 @@ beforeEach(() => {
   prismaMock.signature = table([]);
   prismaMock.accessToken = table([]);
   prismaMock.$transaction = async (fn) => fn(prismaMock);
+  verrous.length = 0;
+  prismaMock.$queryRaw = async (q, ...v) => {
+    verrous.push(`${q.join("?")} ${v.join(",")}`);
+    return [];
+  };
   mailsEnvoyes.length = 0;
 });
 
@@ -726,5 +735,36 @@ describe("garantie 4 — le statut suit les signatures", () => {
     await signer();
 
     expect(prismaMock.permisFeu.lignes[0].statut).toBe("en_cours");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// Relecture indépendante du 2026-10-12 — compter puis écrire sous un verrou.
+// `modifier*` verrouille la ligne de l'objet avant de compter les signatures ;
+// la pose d'une signature prend le même verrou AVANT de consommer le jeton.
+
+describe("garantie 5 — la signature prend le verrou de l'objet que prend la modification", () => {
+  it("par lien : le verrou du plan est pris avant que le jeton se consomme", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-1"));
+    const verrouAvantConsommation: boolean[] = [];
+    const ecrire = prismaMock.accessToken.updateMany.getMockImplementation()!;
+    prismaMock.accessToken.updateMany.mockImplementation(async (a: { where: Ligne; data: Ligne }) => {
+      if (a.data.utiliseLe) verrouAvantConsommation.push(verrous.length > 0);
+      return ecrire(a);
+    });
+
+    expect((await signer()).status).toBe("success");
+
+    expect(verrouAvantConsommation).toEqual([true]);
+    expect(verrous[0]).toBe('SELECT 1 FROM "PlanPrevention" WHERE "id" = ? FOR UPDATE pp-1');
+  });
+
+  it("en compte connecté : le verrou du permis est pris avant la signature", async () => {
+    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
+
+    expect((await signerCommeDirigeant("permis_feu", "pf-1")).ok).toBe(true);
+
+    expect(verrous).toEqual(['SELECT 1 FROM "PermisFeu" WHERE "id" = ? FOR UPDATE pf-1']);
   });
 });

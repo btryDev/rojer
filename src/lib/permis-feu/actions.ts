@@ -15,9 +15,12 @@ import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
 import { statutPermisSignable } from "@/lib/signatures/etat-signable";
 import {
   compterSignatures,
+  MOTIF_CONTENU_MODIFIE,
   motifContenuScelle,
   porteUnChampScelle,
+  verrouillerObjetSigne,
 } from "@/lib/signatures/verrou-contenu";
+import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 
 export type PermisFeuActionState =
@@ -137,7 +140,10 @@ export async function creerPermisFeu(
  * de prévention (`verrou-contenu.ts`) : sans signature tout se corrige, avec
  * les validations de la création ; signé, seule la zone (hors empreinte) se
  * modifie, et une saisie qui porte un champ couvert est refusée. Un permis
- * terminé ou annulé ne se modifie plus.
+ * terminé ou annulé ne se modifie plus. Compter puis écrire se fait sous le
+ * verrou de la ligne, et un contenu dont l'empreinte change révoque les liens
+ * de signature en vol, dans la même transaction (relecture indépendante du
+ * 2026-10-12 — voir `modifierPlanPrevention`).
  *
  * Les mesures d'une liste antérieure (`MESURES_RETIREES`) que le permis porte
  * ne sont plus proposées par le formulaire, et le schéma les refuse : elles
@@ -150,7 +156,7 @@ export async function modifierPermisFeu(
 ): Promise<PermisFeuActionState> {
   const permis = await prisma.permisFeu.findUnique({
     where: { id: permisFeuId },
-    select: { etablissementId: true, statut: true, numero: true, mesuresValidees: true },
+    select: { etablissementId: true, statut: true, numero: true },
   });
   if (!permis) return { status: "error", message: "Permis introuvable" };
   await assertEtablissementOwnership(permis.etablissementId);
@@ -159,23 +165,26 @@ export async function modifierPermisFeu(
     return { status: "error", message: "Ce permis est terminé ou annulé : il ne se modifie plus." };
   }
 
-  const scelle = motifContenuScelle(
-    "permis",
-    await compterSignatures("permis_feu", permisFeuId, etablissementId),
-  );
-  if (scelle) {
-    if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
-    const v = formData.get("batimentId");
-    const batiment = await resoudreBatimentOptionnel(
-      etablissementId,
-      typeof v === "string" && v.trim() ? v : undefined,
+  const resultat = await prisma.$transaction(async (tx): Promise<PermisFeuActionState | null> => {
+    await verrouillerObjetSigne(tx, "permis_feu", permisFeuId);
+    const scelle = motifContenuScelle(
+      "permis",
+      await compterSignatures("permis_feu", permisFeuId, etablissementId, tx),
     );
-    if (!batiment.ok) return ZONE_INTROUVABLE;
-    await prisma.permisFeu.updateMany({
-      where: { id: permisFeuId, etablissementId },
-      data: { batimentId: batiment.id },
-    });
-  } else {
+    if (scelle) {
+      if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
+      const v = formData.get("batimentId");
+      const batiment = await resoudreBatimentOptionnel(
+        etablissementId,
+        typeof v === "string" && v.trim() ? v : undefined,
+      );
+      if (!batiment.ok) return ZONE_INTROUVABLE;
+      await tx.permisFeu.updateMany({
+        where: { id: permisFeuId, etablissementId },
+        data: { batimentId: batiment.id },
+      });
+      return null;
+    }
     const parsed = lirePermisFeu(formData);
     if (!parsed.success) {
       return {
@@ -189,11 +198,17 @@ export async function modifierPermisFeu(
       parsed.data.batimentId,
     );
     if (!batiment.ok) return ZONE_INTROUVABLE;
-    const retirees = permis.mesuresValidees.filter((id) =>
+    // Relues sous le verrou : ce sont elles que l'écriture conserve.
+    const enBase = await tx.permisFeu.findFirst({
+      where: { id: permisFeuId, etablissementId },
+      select: { mesuresValidees: true },
+    });
+    const retirees = (enBase?.mesuresValidees ?? []).filter((id) =>
       MESURES_RETIREES.some((m) => m.id === id),
     );
     const colonnes = colonnesPermis(parsed.data);
-    await prisma.permisFeu.updateMany({
+    const avant = await calculerHashObjet("permis_feu", permisFeuId, etablissementId, tx);
+    await tx.permisFeu.updateMany({
       where: { id: permisFeuId, etablissementId },
       data: {
         ...colonnes,
@@ -201,7 +216,21 @@ export async function modifierPermisFeu(
         batimentId: batiment.id,
       },
     });
-  }
+    const apres = await calculerHashObjet("permis_feu", permisFeuId, etablissementId, tx);
+    if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
+      await revoquerLiensEnVol(
+        {
+          etablissementId,
+          objetType: "permis_feu",
+          objetId: permisFeuId,
+          motif: MOTIF_CONTENU_MODIFIE.permis,
+        },
+        tx,
+      );
+    }
+    return null;
+  });
+  if (resultat) return resultat;
 
   revalidatePath(`/etablissements/${etablissementId}/permis-feu`);
   revalidatePath(`/etablissements/${etablissementId}/permis-feu/${permisFeuId}`);

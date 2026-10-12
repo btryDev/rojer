@@ -11,11 +11,23 @@ const correspond = (l: Ligne, w: Ligne) =>
   Object.entries(w).every(([k, v]) => l[k] === v);
 
 const { db } = vi.hoisted(() => ({
-  db: { plans: [] as Ligne[], signatures: [] as Ligne[] },
+  db: {
+    plans: [] as Ligne[],
+    signatures: [] as Ligne[],
+    jetons: [] as Ligne[],
+    /** Le journal, dans l'ordre : verrous pris et comptes de signatures. */
+    journal: [] as string[],
+  },
 }));
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
+// Le faux client se passe lui-même à la transaction ; le verrou est journalisé.
+vi.mock("@/lib/prisma", () => {
+  const client: Record<string, unknown> = {
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => fn(client),
+    $queryRaw: async (q: TemplateStringsArray, ...v: unknown[]) => {
+      db.journal.push(`verrou ${q.join("?")} ${v.join(",")}`);
+      return [];
+    },
     planPrevention: {
       findUnique: vi.fn(async ({ where }: { where: Ligne }) => db.plans.find((p) => correspond(p, where)) ?? null),
       update: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
@@ -34,9 +46,32 @@ vi.mock("@/lib/prisma", () => ({
       }),
     },
     signature: {
-      count: vi.fn(async ({ where }: { where: Ligne }) => db.signatures.filter((s) => correspond(s, where)).length),
+      count: vi.fn(async ({ where }: { where: Ligne }) => {
+        db.journal.push("compte des signatures");
+        return db.signatures.filter((s) => correspond(s, where)).length;
+      }),
     },
-  },
+    accessToken: {
+      updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
+        const t = db.jetons.filter((x) => correspond(x, where));
+        t.forEach((j) => Object.assign(j, data));
+        return { count: t.length };
+      }),
+    },
+  };
+  return { prisma: client };
+});
+// L'empreinte : tout le plan sauf la zone, hors empreinte, et sans les
+// identifiants des lignes, recréés à chaque enregistrement — la règle de
+// `hash-objet.ts`, que ses propres tests éprouvent.
+vi.mock("@/lib/signatures/hash-objet", () => ({
+  calculerHashObjet: vi.fn(async (_t: string, id: string) => {
+    const p = db.plans.find((x) => x.id === id);
+    if (!p) return { ok: false, raison: "objet_introuvable" };
+    const { batimentId: _zone, ...couvert } = p;
+    const hash = JSON.stringify(couvert, (k, v) => (k === "id" ? undefined : v));
+    return { ok: true, hash, nomDocument: null };
+  }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/scope", () => ({
@@ -107,6 +142,8 @@ const modifier = (fd: FormData, planId = "pp-1") =>
 beforeEach(() => {
   db.plans = [];
   db.signatures = [];
+  db.jetons = [];
+  db.journal = [];
 });
 
 describe("un plan non signé se corrige, avec les validations de la création", () => {
@@ -180,5 +217,58 @@ describe("un plan signé : ce que l'empreinte couvre ne se réécrit pas", () =>
     db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-voisin" });
 
     expect((await modifier(saisie())).status).toBe("success");
+  });
+});
+
+describe("les liens de signature en vol (relecture indépendante du 2026-10-12)", () => {
+  const jeton = (extra: Ligne = {}): Ligne => ({
+    id: "atk-1",
+    etablissementId: "etab-a-moi",
+    objetType: "plan_prevention",
+    objetId: "pp-1",
+    utiliseLe: null,
+    revoqueLe: null,
+    revoqueMotif: null,
+    ...extra,
+  });
+
+  it("un contenu changé révoque le lien envoyé : on ne signe pas une version qu'on n'a pas vue", async () => {
+    db.plans.push(planEnBase());
+    db.jetons.push(jeton());
+
+    expect((await modifier(saisie())).status).toBe("success");
+
+    expect(db.jetons[0].revoqueLe).toBeInstanceOf(Date);
+    expect(db.jetons[0].revoqueMotif).toBe(
+      "le plan de prévention a été modifié depuis l'envoi de ce lien",
+    );
+  });
+
+  it("un enregistrement qui ne change pas l'empreinte ne révoque rien", async () => {
+    db.plans.push(planEnBase());
+    await modifier(saisie());
+    db.jetons.push(jeton());
+
+    expect((await modifier(saisie())).status).toBe("success");
+
+    expect(db.jetons[0].revoqueLe).toBeNull();
+  });
+
+  it("le lien d'un autre plan n'est pas touché", async () => {
+    db.plans.push(planEnBase());
+    db.jetons.push(jeton({ objetId: "pp-2" }));
+
+    await modifier(saisie());
+
+    expect(db.jetons[0].revoqueLe).toBeNull();
+  });
+
+  it("le verrou de la ligne est pris AVANT de compter les signatures", async () => {
+    db.plans.push(planEnBase());
+
+    await modifier(saisie());
+
+    expect(db.journal[0]).toMatch(/^verrou SELECT 1 FROM "PlanPrevention" WHERE "id" = \? FOR UPDATE pp-1$/);
+    expect(db.journal[1]).toBe("compte des signatures");
   });
 });

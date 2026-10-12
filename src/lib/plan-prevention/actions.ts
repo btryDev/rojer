@@ -20,9 +20,12 @@ import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import {
   compterSignatures,
+  MOTIF_CONTENU_MODIFIE,
   motifContenuScelle,
   porteUnChampScelle,
+  verrouillerObjetSigne,
 } from "@/lib/signatures/verrou-contenu";
+import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 
 export type PlanActionState =
@@ -239,6 +242,13 @@ export async function creerPlanPrevention(
  * Le reste n'est pas réécrit en silence : une saisie qui le porte quand même
  * est refusée, avec la phrase que l'écran affiche.
  *
+ * Compter les signatures puis écrire se fait SOUS LE VERROU DE LA LIGNE, dans
+ * une transaction (relecture indépendante du 2026-10-12) : une signature posée
+ * entre les deux laissait réécrire ce qu'elle venait de sceller. Et si
+ * l'empreinte change, les liens de signature en vol sont révoqués dans la même
+ * transaction : sans cela, l'entreprise extérieure lisait une version sur la
+ * page du lien et en signait une autre, l'empreinte étant calculée au code.
+ *
  * Un plan clos ou annulé ne se modifie plus, comme il ne se signe plus. Le
  * calendrier lit le plan en direct (`sourcePlansPrevention`) : rien à
  * régénérer, la création n'en régénère pas non plus.
@@ -259,22 +269,25 @@ export async function modifierPlanPrevention(
     return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
   }
 
-  const scelle = motifContenuScelle(
-    "plan",
-    await compterSignatures("plan_prevention", planId, etablissementId),
-  );
-  if (scelle) {
-    if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
-    const batiment = await resoudreBatimentOptionnel(
-      etablissementId,
-      lireChampOptionnel(formData.get("batimentId")),
+  const resultat = await prisma.$transaction(async (tx): Promise<PlanActionState | null> => {
+    await verrouillerObjetSigne(tx, "plan_prevention", planId);
+    const scelle = motifContenuScelle(
+      "plan",
+      await compterSignatures("plan_prevention", planId, etablissementId, tx),
     );
-    if (!batiment.ok) return ZONE_INTROUVABLE;
-    await prisma.planPrevention.updateMany({
-      where: { id: planId, etablissementId },
-      data: { batimentId: batiment.id },
-    });
-  } else {
+    if (scelle) {
+      if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
+      const batiment = await resoudreBatimentOptionnel(
+        etablissementId,
+        lireChampOptionnel(formData.get("batimentId")),
+      );
+      if (!batiment.ok) return ZONE_INTROUVABLE;
+      await tx.planPrevention.updateMany({
+        where: { id: planId, etablissementId },
+        data: { batimentId: batiment.id },
+      });
+      return null;
+    }
     const parsed = lirePlanPrevention(formData);
     if (!parsed.success) {
       return {
@@ -288,7 +301,8 @@ export async function modifierPlanPrevention(
       parsed.data.batimentId,
     );
     if (!batiment.ok) return ZONE_INTROUVABLE;
-    await prisma.planPrevention.update({
+    const avant = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
+    await tx.planPrevention.update({
       where: { id: planId, etablissementId },
       data: {
         ...colonnesPlan(parsed.data),
@@ -299,7 +313,21 @@ export async function modifierPlanPrevention(
         lignes: { deleteMany: {}, create: lignesACreer(parsed.data) },
       },
     });
-  }
+    const apres = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
+    if (!avant.ok || !apres.ok || avant.hash !== apres.hash) {
+      await revoquerLiensEnVol(
+        {
+          etablissementId,
+          objetType: "plan_prevention",
+          objetId: planId,
+          motif: MOTIF_CONTENU_MODIFIE.plan,
+        },
+        tx,
+      );
+    }
+    return null;
+  });
+  if (resultat) return resultat;
 
   revalidatePath(`/etablissements/${etablissementId}/plan-prevention`);
   revalidatePath(`/etablissements/${etablissementId}/plan-prevention/${planId}`);

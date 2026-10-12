@@ -1,8 +1,12 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
  * Révoque les liens encore ouverts sur un objet — à sa clôture, son
- * annulation ou sa suppression.
+ * annulation ou sa suppression, et (2026-10-12, relecture indépendante) quand
+ * le contenu qu'une signature scellerait change : un lien envoyé montre une
+ * version, l'empreinte est calculée au moment du code — sans révocation,
+ * l'entreprise extérieure signait une version qu'elle n'avait pas vue.
  *
  * **Ce module n'est volontairement pas `"use server"`** : exporté comme
  * server action, il révoquerait les liens de n'importe quel objet sur simple
@@ -18,22 +22,45 @@ import { prisma } from "@/lib/prisma";
  * Ne touche qu'aux jetons **non consommés et non révoqués** : un lien qui a
  * déjà servi à signer garde sa trace « utilisé le … », et une révocation
  * antérieure garde son motif. La clause est bornée à `etablissementId`.
+ *
+ * `db` : le client de la transaction de l'appelant, quand la révocation doit
+ * tomber avec l'écriture qui la motive (`modifierPlanPrevention`).
  */
-export async function revoquerLiensEnVol(params: {
-  etablissementId: string;
-  objetType: string;
-  objetId: string;
-  motif: string;
-}): Promise<number> {
-  const r = await prisma.accessToken.updateMany({
-    where: {
-      etablissementId: params.etablissementId,
-      objetType: params.objetType,
-      objetId: params.objetId,
-      utiliseLe: null,
-      revoqueLe: null,
-    },
+export async function revoquerLiensEnVol(
+  params: LiensDeLObjet & { motif: string },
+  db: Prisma.TransactionClient = prisma,
+): Promise<number> {
+  const r = await db.accessToken.updateMany({
+    where: whereLiensEnVol(params),
     data: { revoqueLe: new Date(), revoqueMotif: params.motif },
   });
   return r.count;
+}
+
+type LiensDeLObjet = {
+  etablissementId: string;
+  objetType: string;
+  objetId: string;
+};
+
+/** Les liens qu'une révocation emporterait — la même clause pour les deux. */
+function whereLiensEnVol(p: LiensDeLObjet) {
+  return {
+    etablissementId: p.etablissementId,
+    objetType: p.objetType,
+    objetId: p.objetId,
+    utiliseLe: null,
+    revoqueLe: null,
+  };
+}
+
+/**
+ * Combien de liens encore utilisables une révocation emporterait — ce que
+ * l'écran « Modifier » annonce avant l'envoi. Un lien expiré n'y compte pas :
+ * il ne mène déjà plus nulle part, rien n'est à renvoyer pour lui.
+ */
+export async function compterLiensEnVol(p: LiensDeLObjet): Promise<number> {
+  return prisma.accessToken.count({
+    where: { ...whereLiensEnVol(p), expireLe: { gt: new Date() } },
+  });
 }

@@ -9,13 +9,24 @@ const correspond = (l: Ligne, w: Ligne) =>
   Object.entries(w).every(([k, v]) => l[k] === v);
 
 const { db } = vi.hoisted(() => ({
-  db: { permis: [] as Ligne[], signatures: [] as Ligne[] },
+  db: {
+    permis: [] as Ligne[],
+    signatures: [] as Ligne[],
+    jetons: [] as Ligne[],
+    journal: [] as string[],
+  },
 }));
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
+vi.mock("@/lib/prisma", () => {
+  const client: Record<string, unknown> = {
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => fn(client),
+    $queryRaw: async (q: TemplateStringsArray, ...v: unknown[]) => {
+      db.journal.push(`verrou ${q.join("?")} ${v.join(",")}`);
+      return [];
+    },
     permisFeu: {
       findUnique: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
+      findFirst: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
         const t = db.permis.filter((x) => correspond(x, where));
         t.forEach((p) => Object.assign(p, data));
@@ -23,9 +34,29 @@ vi.mock("@/lib/prisma", () => ({
       }),
     },
     signature: {
-      count: vi.fn(async ({ where }: { where: Ligne }) => db.signatures.filter((s) => correspond(s, where)).length),
+      count: vi.fn(async ({ where }: { where: Ligne }) => {
+        db.journal.push("compte des signatures");
+        return db.signatures.filter((s) => correspond(s, where)).length;
+      }),
     },
-  },
+    accessToken: {
+      updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
+        const t = db.jetons.filter((x) => correspond(x, where));
+        t.forEach((j) => Object.assign(j, data));
+        return { count: t.length };
+      }),
+    },
+  };
+  return { prisma: client };
+});
+// L'empreinte : tout le permis sauf la zone, hors empreinte (`hash-objet.ts`).
+vi.mock("@/lib/signatures/hash-objet", () => ({
+  calculerHashObjet: vi.fn(async (_t: string, id: string) => {
+    const p = db.permis.find((x) => x.id === id);
+    if (!p) return { ok: false, raison: "objet_introuvable" };
+    const { batimentId: _zone, ...couvert } = p;
+    return { ok: true, hash: JSON.stringify(couvert), nomDocument: null };
+  }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/scope", () => ({
@@ -87,6 +118,8 @@ const modifier = (fd: FormData) => modifierPermisFeu("pf-1", { status: "idle" },
 beforeEach(() => {
   db.permis = [];
   db.signatures = [];
+  db.jetons = [];
+  db.journal = [];
 });
 
 describe("un permis non signé se corrige", () => {
@@ -141,5 +174,49 @@ describe("un permis signé : ce que l'empreinte couvre ne se réécrit pas", () 
     expect((await modifier(fd)).status).toBe("success");
     expect(db.permis[0].batimentId).toBe("zone-2");
     expect(db.permis[0].lieu).toBe("Cuisine");
+  });
+});
+
+describe("les liens de signature en vol (relecture indépendante du 2026-10-12)", () => {
+  const jeton = (): Ligne => ({
+    id: "atk-1",
+    etablissementId: "etab-a-moi",
+    objetType: "permis_feu",
+    objetId: "pf-1",
+    utiliseLe: null,
+    revoqueLe: null,
+    revoqueMotif: null,
+  });
+
+  it("un contenu changé révoque le lien envoyé", async () => {
+    db.permis.push(permisEnBase());
+    db.jetons.push(jeton());
+
+    expect((await modifier(saisie())).status).toBe("success");
+
+    expect(db.jetons[0].revoqueMotif).toBe(
+      "le permis de feu a été modifié depuis l'envoi de ce lien",
+    );
+  });
+
+  it("un enregistrement qui ne change pas l'empreinte ne révoque rien", async () => {
+    db.permis.push(permisEnBase());
+    await modifier(saisie());
+    db.jetons.push(jeton());
+
+    await modifier(saisie());
+
+    expect(db.jetons[0].revoqueLe).toBeNull();
+  });
+
+  it("le verrou de la ligne est pris AVANT de compter les signatures", async () => {
+    db.permis.push(permisEnBase());
+
+    await modifier(saisie());
+
+    expect(db.journal.slice(0, 2)).toEqual([
+      'verrou SELECT 1 FROM "PermisFeu" WHERE "id" = ? FOR UPDATE pf-1',
+      "compte des signatures",
+    ]);
   });
 });

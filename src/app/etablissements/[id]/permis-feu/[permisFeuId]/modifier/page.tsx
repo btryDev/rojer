@@ -6,7 +6,8 @@ import { getPermisFeu } from "@/lib/permis-feu/queries";
 import { listPrestataires } from "@/lib/prestataires/queries";
 import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import { statutPermisSignable } from "@/lib/signatures/etat-signable";
-import { motifContenuScelle } from "@/lib/signatures/verrou-contenu";
+import { avisLiensEnVol, motifContenuScelle } from "@/lib/signatures/verrou-contenu";
+import { compterLiensEnVol } from "@/lib/access-tokens/revocation";
 import { versSaisieDateHeure } from "@/lib/dates";
 
 export const metadata = {
@@ -27,9 +28,10 @@ export default async function ModifierPermisFeuPage({
   const { id, permisFeuId } = await params;
   const permis = await getPermisFeu(id, permisFeuId);
   if (!permis || !statutPermisSignable(permis.statut)) notFound();
-  const [prestatairesAnnuaire, batiments] = await Promise.all([
+  const [prestatairesAnnuaire, batiments, liensEnVol] = await Promise.all([
     listPrestataires(id),
     listerBatimentsDeLEtablissement(id),
+    compterLiensEnVol({ etablissementId: id, objetType: "permis_feu", objetId: permis.id }),
   ]);
 
   const numero = `PF-${String(permis.numero).padStart(3, "0")}`;
@@ -61,6 +63,7 @@ export default async function ModifierPermisFeuPage({
             }))}
             batiments={batiments}
             scelle={motifContenuScelle("permis", permis.signatures.length)}
+            avisLiens={avisLiensEnVol(liensEnVol)}
             permis={{
               id: permis.id,
               prestataireId: permis.prestataireId,

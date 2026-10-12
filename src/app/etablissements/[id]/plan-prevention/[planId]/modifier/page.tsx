@@ -6,7 +6,8 @@ import { getPlanPrevention } from "@/lib/plan-prevention/queries";
 import { listPrestataires } from "@/lib/prestataires/queries";
 import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
-import { motifContenuScelle } from "@/lib/signatures/verrou-contenu";
+import { avisLiensEnVol, motifContenuScelle } from "@/lib/signatures/verrou-contenu";
+import { compterLiensEnVol } from "@/lib/access-tokens/revocation";
 import { cleJourCivil, versSaisieDateHeure } from "@/lib/dates";
 
 export const metadata = {
@@ -26,9 +27,10 @@ export default async function ModifierPlanPreventionPage({
   const { id, planId } = await params;
   const plan = await getPlanPrevention(id, planId);
   if (!plan || !statutPlanSignable(plan.statut)) notFound();
-  const [prestatairesAnnuaire, batiments] = await Promise.all([
+  const [prestatairesAnnuaire, batiments, liensEnVol] = await Promise.all([
     listPrestataires(id),
     listerBatimentsDeLEtablissement(id),
+    compterLiensEnVol({ etablissementId: id, objetType: "plan_prevention", objetId: plan.id }),
   ]);
 
   const numero = `PP-${String(plan.numero).padStart(3, "0")}`;
@@ -62,6 +64,7 @@ export default async function ModifierPlanPreventionPage({
             }))}
             batiments={batiments}
             scelle={motifContenuScelle("plan", plan.signatures.length)}
+            avisLiens={avisLiensEnVol(liensEnVol)}
             plan={{
               id: plan.id,
               prestataireId: plan.prestataireId,

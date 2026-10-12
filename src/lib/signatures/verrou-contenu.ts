@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { ObjetSignable } from "@prisma/client";
+import type { ObjetSignable, Prisma } from "@prisma/client";
 
 /**
  * Ce qu'une signature scelle ne se modifie plus (audit du 2026-10-12,
@@ -16,16 +16,46 @@ import type { ObjetSignable } from "@prisma/client";
  * issue — c'est la contre-signature du § 10 de `chantiers-ouverts.md`, une
  * décision qui n'est pas prise ici.
  *
- * Un lien émis mais pas encore signé ne verrouille rien : la signature porte
+ * ~~Un lien émis mais pas encore signé ne verrouille rien : la signature porte
  * sur le contenu tel qu'il est au moment de signer, et la page du lien le
- * montre en entier.
+ * montre en entier.~~ [2026-10-12, relecture indépendante : vrai du contenu,
+ * faux de ce que le signataire a vu — l'empreinte est calculée au moment du
+ * code, la page a été lue avant. Un lien émis ne verrouille toujours rien,
+ * mais une modification qui change l'empreinte le RÉVOQUE
+ * (`revoquerLiensEnVol`, dans la transaction de l'écriture), et l'écran
+ * « Modifier » le dit avant l'envoi.]
+ *
+ * COMPTER PUIS ÉCRIRE, SOUS LE MÊME VERROU. Le compte et l'écriture se
+ * faisaient en deux requêtes libres : une signature posée entre les deux
+ * laissait réécrire un contenu qu'elle venait de sceller. Les deux
+ * `modifier*` et la pose d'une signature (`poserSignatureAvecToken`) prennent
+ * d'abord le verrou de la ligne (`verrouillerObjetSigne`) : l'un attend que
+ * l'autre ait fini, et le second relit ce que le premier a écrit.
  */
 export async function compterSignatures(
   objetType: ObjetSignable,
   objetId: string,
   etablissementId: string,
+  db: Prisma.TransactionClient = prisma,
 ): Promise<number> {
-  return prisma.signature.count({ where: { objetType, objetId, etablissementId } });
+  return db.signature.count({ where: { objetType, objetId, etablissementId } });
+}
+
+/**
+ * Le verrou de ligne (`SELECT … FOR UPDATE`) de l'objet dont une signature
+ * scelle le contenu — le plan et le permis, dont le contenu se corrige. Les
+ * autres objets signables ne se modifient pas : rien à verrouiller.
+ */
+export async function verrouillerObjetSigne(
+  tx: Prisma.TransactionClient,
+  objetType: ObjetSignable,
+  objetId: string,
+): Promise<void> {
+  if (objetType === "plan_prevention") {
+    await tx.$queryRaw`SELECT 1 FROM "PlanPrevention" WHERE "id" = ${objetId} FOR UPDATE`;
+  } else if (objetType === "permis_feu") {
+    await tx.$queryRaw`SELECT 1 FROM "PermisFeu" WHERE "id" = ${objetId} FOR UPDATE`;
+  }
 }
 
 /**
@@ -56,5 +86,31 @@ export function motifContenuScelle(
   return (
     `${sujet} porte déjà ${signatures}. Son contenu ne se modifie plus : ` +
     "le changer rendrait la signature invalide. Seule la zone reste modifiable."
+  );
+}
+
+/**
+ * Le motif écrit sur un lien révoqué parce que le contenu a changé — celui
+ * que le signataire lit s'il ouvre le lien ensuite (« Ce lien a été révoqué :
+ * … »).
+ */
+export const MOTIF_CONTENU_MODIFIE = {
+  plan: "le plan de prévention a été modifié depuis l'envoi de ce lien",
+  permis: "le permis de feu a été modifié depuis l'envoi de ce lien",
+} as const;
+
+/**
+ * Ce que l'écran « Modifier » dit avant l'envoi quand des liens attendent une
+ * signature et que rien n'est encore scellé. `null` : aucun lien en vol.
+ */
+export function avisLiensEnVol(nbLiens: number): string | null {
+  if (nbLiens === 0) return null;
+  const envoyes =
+    nbLiens > 1
+      ? `${nbLiens} liens de signature attendent une réponse.`
+      : "Un lien de signature attend une réponse.";
+  return (
+    `${envoyes} Si vous changez le contenu, les liens de signature envoyés ` +
+    "sont annulés : renvoyez-les."
   );
 }

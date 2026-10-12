@@ -26,6 +26,7 @@ import {
   verifyOtp,
 } from "./otp";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
+import { verrouillerObjetSigne } from "./verrou-contenu";
 import { objetEstSignable } from "./etat-signable";
 import { validerSiCoSigne } from "./statut-objet";
 import { ObjetSignable, PartieSignataire } from "@prisma/client";
@@ -343,6 +344,12 @@ export async function poserSignatureAvecToken(
   let signature;
   try {
     signature = await prisma.$transaction(async (tx) => {
+      // Le verrou de l'objet d'abord, celui que prend `modifier*` (2026-10-12,
+      // relecture indépendante) : une modification en cours finit avant, et
+      // si elle a changé l'empreinte, elle a révoqué ce jeton — qui ne se
+      // consomme plus. Sinon, elle attend que cette signature soit écrite, et
+      // la compte.
+      await verrouillerObjetSigne(tx, token.objetType as ObjetSignable, token.objetId);
       const consomme = await consommerJeton(tx, token.id, {
         ip: ip ?? undefined,
         userAgent: ua ?? undefined,
@@ -527,15 +534,6 @@ export async function signerEnCompteConnecte(params: {
     return { ok: false, raison: "non_signable" };
   }
 
-  // L'objet est cherché dans ce seul établissement : un objetId d'un autre
-  // périmètre ressort « introuvable ».
-  const h = await calculerHashObjet(
-    params.objetType,
-    params.objetId,
-    params.etablissementId,
-  );
-  if (!h.ok) return { ok: false, raison: h.raison };
-  const { hash, nomDocument } = h;
   const hh = await headers();
   const ip = hh.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const ua = hh.get("user-agent");
@@ -550,30 +548,48 @@ export async function signerEnCompteConnecte(params: {
     ? "entreprise_utilisatrice"
     : null;
 
-  let signature;
+  // L'empreinte se calcule SOUS LE VERROU de l'objet, celui que prend
+  // `modifier*` (2026-10-12, relecture indépendante) : une correction en
+  // cours dans un autre onglet finit avant, et la signature porte sur ce
+  // qu'elle a écrit. L'objet est cherché dans ce seul établissement : un
+  // objetId d'un autre périmètre ressort « introuvable ».
+  let resultat;
   try {
-    signature = await prisma.signature.create({
-      data: {
-        id: `sig_${randomUUID()}`,
-        etablissementId: params.etablissementId,
-        objetType: params.objetType,
-        objetId: params.objetId,
-        partie,
-        signataireNom: user.email ?? "Utilisateur",
-        signataireEmail: user.email ?? "",
-        signataireRole: params.role ?? null,
-        userId: user.id,
-        hashDocument: hash,
-        nomDocument,
-        methode: "compte_connecte",
-        ipAddress: ip,
-        userAgent: ua?.slice(0, 500) ?? null,
-      },
+    resultat = await prisma.$transaction(async (tx) => {
+      await verrouillerObjetSigne(tx, params.objetType, params.objetId);
+      const h = await calculerHashObjet(
+        params.objetType,
+        params.objetId,
+        params.etablissementId,
+        tx,
+      );
+      if (!h.ok) return h;
+      const signature = await tx.signature.create({
+        data: {
+          id: `sig_${randomUUID()}`,
+          etablissementId: params.etablissementId,
+          objetType: params.objetType,
+          objetId: params.objetId,
+          partie,
+          signataireNom: user.email ?? "Utilisateur",
+          signataireEmail: user.email ?? "",
+          signataireRole: params.role ?? null,
+          userId: user.id,
+          hashDocument: h.hash,
+          nomDocument: h.nomDocument,
+          methode: "compte_connecte",
+          ipAddress: ip,
+          userAgent: ua?.slice(0, 500) ?? null,
+        },
+      });
+      return { ok: true as const, signature };
     });
   } catch (e) {
     if (estPartieDejaSignee(e)) return { ok: false, raison: "deja_signee" };
     throw e;
   }
+  if (!resultat.ok) return { ok: false, raison: resultat.raison };
+  const { signature } = resultat;
   await validerSiCoSigne(params.objetType, params.objetId, params.etablissementId);
   return { ok: true, signatureId: signature.id };
 }

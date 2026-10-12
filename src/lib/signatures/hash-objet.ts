@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { StockageNonConfigure, getStorage } from "@/lib/storage";
 import { sha256Hex } from "./hash";
@@ -82,11 +83,14 @@ export async function calculerHashObjet(
   objetType: ObjetSignable,
   objetId: string,
   etablissementId: string,
+  /** Le client d'une transaction en cours, pour lire ce qu'elle vient
+   *  d'écrire (`modifierPlanPrevention`, 2026-10-12). */
+  db: Prisma.TransactionClient = prisma,
 ): Promise<HashResult> {
   if (objetType === "rapport_verification") {
     // Pour un rapport de vérification, l'objet signé est le fichier déposé
     // par l'organisme : on hashe le binaire lui-même.
-    const rapport = await prisma.rapportVerification.findFirst({
+    const rapport = await db.rapportVerification.findFirst({
       where: { id: objetId, etablissementId },
       select: { fichierCle: true, fichierNomOriginal: true },
     });
@@ -110,7 +114,7 @@ export async function calculerHashObjet(
   }
 
   if (objetType === "plan_prevention") {
-    const plan = await prisma.planPrevention.findFirst({
+    const plan = await db.planPrevention.findFirst({
       where: { id: objetId, etablissementId },
       include: {
         lignes: { orderBy: { ordre: "asc" } },
@@ -182,7 +186,7 @@ export async function calculerHashObjet(
     // immuables juridiquement. Les champs de cycle de vie (statut, signatures
     // elles-mêmes) sont exclus — ils évoluent après signature sans invalider
     // l'accord initial.
-    const permis = await prisma.permisFeu.findFirst({
+    const permis = await db.permisFeu.findFirst({
       where: { id: objetId, etablissementId },
       select: {
         numero: true,
