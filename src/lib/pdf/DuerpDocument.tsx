@@ -16,6 +16,12 @@ import { LABEL_STATUT, LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
 import { estHorsReferentiel } from "@/lib/risques/helpers";
 import { phrasesMethodologie, quandSansReponse } from "./mentions-couverture";
 import { TEXTE_R4121_4 } from "./mentions-r4121-4";
+import {
+  CHAPEAU_EXPOSITIONS_ABSENTES,
+  TITRE_EXPOSITIONS_ABSENTES,
+  reponseDatee,
+} from "./mentions-expositions-absentes";
+import { expositionsAbsentesSnapshot } from "@/lib/versions/expositions-absentes";
 import { ORDRE_SELON_L4121_2, TEXTE_L4121_2 } from "./mentions-l4121-2";
 import {
   CHAPEAU_ANNEXE_EXPOSITION,
@@ -174,6 +180,8 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
   // champ : rien n'est dit, ni dans un sens ni dans l'autre.
   const activitesDeclarees = activitesDeclareesSnapshot(snapshot.couverture);
   const activitesSansReponse = activitesSansReponseSnapshot(snapshot.couverture);
+  // Les « non » gravés à la validation (§ 17.2) ; `[]` sur une version d'avant.
+  const expositionsAbsentes = expositionsAbsentesSnapshot(snapshot);
 
   const lignes = unites.flatMap((u) =>
     u.risques.map((r) => ({
@@ -298,6 +306,26 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
           l&apos;employeur complète et ajuste à sa réalité.
           {mentions.map((phrase) => `\n${phrase}`).join("")}
         </Text>
+
+        {/* Ce qui a été examiné et écarté (§ 17.2). Dans la méthode, juste
+            après l'inventaire qu'elle complète : elle dit ce que le document
+            a demandé, pas ce qu'il a évalué. Une version figée avant le champ
+            n'a rien à lister et s'imprime sans la section. */}
+        {expositionsAbsentes.length > 0 && (
+          <View>
+            <Text style={s.h3}>{TITRE_EXPOSITIONS_ABSENTES}</Text>
+            <Text style={s.small}>{CHAPEAU_EXPOSITIONS_ABSENTES}</Text>
+            {expositionsAbsentes.map((e) => (
+              // Une question et sa réponse d'un seul tenant.
+              <View key={e.id} wrap={false} style={{ marginTop: 4, marginLeft: 12 }}>
+                <Text style={s.small}>• {e.question}</Text>
+                <Text style={[s.small, { marginLeft: 8 }]}>
+                  {reponseDatee({ version, genereLe, brouillon })}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         <Text style={s.h3}>Appréciation</Text>
         <Text>
