@@ -5,6 +5,7 @@ import { QuestionActiviteRow } from "@/components/duerps/QuestionActiviteRow";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { questionsActivites } from "@/lib/activites/reponses";
 import { construireEtapes } from "@/lib/duerps/etapes";
+import { etatEtapeTransverses } from "@/lib/transverses/etat";
 import { getDuerp } from "@/lib/duerps/queries";
 import { trouverReferentielParId } from "@/lib/referentiels";
 
@@ -48,7 +49,7 @@ export default async function ActivitesPage({
     secteurOk: Boolean(duerp.referentielSecteurId),
     unitesOk: unitesVisibles.length > 0,
     risquesOk: false,
-    transversesOk: duerp.transversesRepondues,
+    transverses: etatEtapeTransverses(duerp),
     activitesPosees: true,
   });
 

@@ -12,8 +12,8 @@ import { poserRisqueTransverse } from "./risque-transverse";
 
 /**
  * Cloisonnement : `duerpId` vient du client. Sans garde, `validerTransverses`
- * marquait n'importe quel DUERP comme « transverses répondues » et le toggle
- * créait/supprimait des risques chez un autre client. `requireDuerp` remonte
+ * (retirée le 2026-10-12) marquait n'importe quel DUERP comme « transverses
+ * répondues » et le toggle créait/supprimait des risques chez un autre client. `requireDuerp` remonte
  * jusqu'à `Entreprise.userId` et répond 404 sinon.
  */
 
@@ -85,13 +85,7 @@ export async function repondreQuestionTransverse(
   revalidatePath(`/etablissements/${duerp.etablissementId}`, "layout");
 }
 
-export async function validerTransverses(duerpId: string): Promise<void> {
-  await requireDuerp(duerpId);
-
-  await prisma.duerp.update({
-    where: { id: duerpId },
-    data: { transversesRepondues: true },
-  });
-  revalidatePath(`/duerp/${duerpId}/transverses`);
-  revalidatePath(`/duerp/${duerpId}/synthese`);
-}
+// `validerTransverses` est retirée le 2026-10-12 : elle cochait
+// `Duerp.transversesRepondues`, et l'étape se calcule désormais sur les
+// réponses (`etatEtapeTransverses`, chantiers-ouverts § 17.5). Un écrivain
+// sans lecteur aurait gardé vivante une colonne inerte.

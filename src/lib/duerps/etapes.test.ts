@@ -5,7 +5,7 @@ const progression = {
   secteurOk: true,
   unitesOk: true,
   risquesOk: true,
-  transversesOk: true,
+  transverses: { faite: true, sansReponse: [] },
   activitesPosees: false,
 };
 
@@ -50,7 +50,7 @@ describe("construireEtapes — étape périmètre", () => {
       secteurOk: true,
       unitesOk: true,
       risquesOk: true,
-      transversesOk: true,
+      transverses: { faite: true, sansReponse: [] },
       activitesPosees: true,
     });
     expect(etapes.find((e) => e.id === "unites")?.atteinte).toBe(true);

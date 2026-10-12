@@ -1,4 +1,8 @@
 import type { Etape } from "@/components/duerps/WizardSteps";
+import {
+  signalQuestionsARepondre,
+  type EtatEtapeTransverses,
+} from "@/lib/transverses/etat";
 
 export type EtapeId =
   | "secteur"
@@ -15,7 +19,14 @@ export function construireEtapes(
     secteurOk: boolean;
     unitesOk: boolean;
     risquesOk: boolean;
-    transversesOk: boolean;
+    /**
+     * CALCULÉ par `etatEtapeTransverses` (`transverses/etat.ts`), plus lu sur
+     * `Duerp.transversesRepondues` depuis le 2026-10-12 (chantiers-ouverts
+     * § 17.5) : un DUERP validé avant l'ADR-038 restait coché avec deux
+     * questions neuves sans réponse. Pas d'autre source possible — un booléen
+     * ici laisserait un appelant repasser la colonne.
+     */
+    transverses: EtatEtapeTransverses;
     /**
      * Le secteur retenu déclare-t-il des activités hors couverture (ADR-020) ?
      * Une liste vide n'est pas « ce secteur couvre tout » — c'est « la liste
@@ -39,7 +50,7 @@ export function construireEtapes(
     // l'évaluation conclut à l'absence de risque significatif — on laisse
     // passer et on affiche simplement un avertissement dans l'UI.
     if (id === "transverses") return progression.unitesOk;
-    if (id === "synthese") return progression.transversesOk;
+    if (id === "synthese") return progression.transverses.faite;
     return false;
   };
   const liste: { id: EtapeId; libelle: string }[] = [
@@ -61,11 +72,31 @@ export function construireEtapes(
       return progression.activitesPosees || etapeActuelle === "activites";
     return true;
   });
+  // L'étape transverse non faite le DIT, avec le compte et le chemin : sans
+  // ce signal, une étape qui se décoche d'elle-même (une question ajoutée au
+  // référentiel) ne se verrait que par la synthèse devenue « À venir ». Le
+  // lien mène à la première question sans réponse, sur l'écran du DUERP qui
+  // les pose TOUTES — Équipe (`equipe/risques`) ne pose que les faits
+  // d'activité, pas les questions sans fait (`q-routier`, `q-public`…).
+  // Pas de signal sur une étape « À venir » : le lien ouvrirait par le côté
+  // une étape que le fil tient fermée tant qu'aucune unité n'existe.
+  const { sansReponse } = progression.transverses;
+  const signaler =
+    sansReponse.length > 0 &&
+    (atteinte("transverses") || etapeActuelle === "transverses");
   return visibles.map((e) => ({
     id: e.id,
     libelle: e.libelle,
     href: `/duerp/${duerpId}/${e.id}`,
     atteinte: atteinte(e.id),
     actuelle: e.id === etapeActuelle,
+    ...(e.id === "transverses" && signaler
+      ? {
+          signal: {
+            texte: signalQuestionsARepondre(sansReponse.length),
+            href: `/duerp/${duerpId}/transverses#${sansReponse[0]}`,
+          },
+        }
+      : {}),
   }));
 }

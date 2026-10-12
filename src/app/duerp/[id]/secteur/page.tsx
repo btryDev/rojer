@@ -6,6 +6,7 @@ import { ConfirmerSecteurButton } from "@/components/duerps/ConfirmerSecteurButt
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { activitesDuSecteur } from "@/lib/activites/reponses";
 import { construireEtapes } from "@/lib/duerps/etapes";
+import { etatEtapeTransverses } from "@/lib/transverses/etat";
 import { getDuerp } from "@/lib/duerps/queries";
 import {
   referentielsSectoriels,
@@ -28,7 +29,7 @@ export default async function SecteurPage({
     secteurOk: Boolean(secteurChoisi),
     unitesOk: false,
     risquesOk: false,
-    transversesOk: false,
+    transverses: etatEtapeTransverses(duerp),
     // Les questions de périmètre dépendent du secteur **retenu**, pas du
     // secteur suggéré par le NAF : tant que rien n'est confirmé, il n'y a rien
     // à annoncer, et l'étape n'apparaît pas dans le fil.
