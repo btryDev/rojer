@@ -5229,6 +5229,37 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     réalisateur : il agrège par domaine, et l'organisme agréé de la visite
     n'y est simplement plus apporté.
 
+### C65 · 2026-10-08 — Faits d'activité de l'établissement, lus par le moteur (ADR-041)
+
+- **Quand · par quoi** : 2026-10-08, branche `lot/formations-faits-etablissement`
+  (base `cb68c367`). Décisions de la propriétaire des 2026-10-07 et
+  2026-10-08 : « tout ce qui peut engendrer une formation » se répond depuis
+  Équipe, sans remplir le DUERP, et s'y retrouve rempli ; « déclenché par le DU
+  et dans la législation → répercuté ». Livrée APRÈS C66 (rebase sur `f2ea34ac`) : référentiel `2026-10-08.2` →
+  `2026-10-08.3`, `172-ea7623eb617ce82` → `172-f59cb53a644d6458`, relevé en
+  appelant `empreinteReferentiel()` (la `.1` de la branche, sur `.5`, n'a
+  jamais été servie).
+- **Relu sur l'API Légifrance (sandbox)** : R. 4541-2, R. 4541-8, R. 4542-1,
+  R. 4542-16, R. 4412-38, R. 4412-87, R. 4544-9, R. 4544-10, R. 4323-55,
+  R. 4323-56, R. 4624-10, R. 4624-22, R. 4624-23, R. 4141-20, R. 4433-2,
+  R. 4323-106 — 16 OK (`legifrance:verifier`, citations et versions
+  identiques au corpus). R. 4624-23 lu en entier (`getArticleWithIdAndNum`,
+  LEGIARTI000053786012, en vigueur) : le I, 3° range parmi les postes à risques
+  particuliers ceux qui exposent « aux agents cancérogènes, mutagènes ou
+  toxiques pour la reproduction mentionnés à l'article R. 4412-60 » — fondement
+  du suivi individuel renforcé proposé sur une exposition CMR.
+- **Ce qui change** : le critère `activite` conditionne cinq obligations
+  existantes (gestes et postures, formation écran, habilitation du personnel,
+  carnet de prescriptions, consigne EPI). Aucune obligation n'entre ni ne
+  sort : 172 + 0 − 0 = 172. Moteur de calendrier recopié SANS incrément : les
+  cinq sont à `periodicite: "autre"` sans rythme retenu, le générateur n'en
+  produit aucune ligne.
+- **Ce qui n'est pas fait** : la formation et les FDS du risque chimique
+  restent déclenchées par l'équipement de stockage (C64) — R. 4412-38 vise la
+  présence d'agents chimiques ; reporté, à instruire avec le préventeur.
+  R. 4323-106 (formation au port des EPI) reste `non_couvert` : l'encodage
+  est clos.
+
 ### C66 · 2026-10-08 — Dernières corrections du préventeur : appareils de cuisson hors ERP, maintenance approfondie retirée, habilitation à 3 ans
 
 [Numéro : C65 est libre sur `main` mais pris par `lot/formations-faits-etablissement`
@@ -5505,6 +5536,19 @@ ce lot sert **`2026-10-08.4`**.]
   5. *Titre de la rubrique* (`e0c425fb`) — ~~« obligations légales suivies
      hors du quotidien de Rojer »~~ → « obligations légales que Rojer ne
      suit pas au quotidien » ; légende de la grille et ADR-042 alignés.
+- **Fusion de `main` (ADR-041, #16, `0a4be567`), 2026-10-12** (aucun texte
+  rouvert) : les faits d'activité gardés tels quels, règle « à confirmer »
+  comprise ; ce que `main` portait encore des chiffons (entrée de
+  `POLITIQUE_ABSENCE`, `evaluerChiffonsImpregnes`, marque, relance de la
+  fiche, champs de fixtures) retiré. `2026-10-08.3` de `main` gardée telle
+  quelle (servie) ; `2026-10-08.4`, non servie, réécrite :
+  ~~`174-e2d28b70856335ac`~~ → `174-4e43df4448e844aa`, en appelant
+  `empreinteReferentiel()`. Compte : 172 (`.3`) + 2 − 0 = 174, dont 3 au
+  niveau audit, 171 suivies ; 90 / 70 / 14 par `porteurDe`. Relevé du moteur
+  ~~`9ea22cc6ca8d74f9`~~ (cette branche) et ~~`34b84ee9a3627974`~~ (`main`)
+  → `1d73fe41eeb7c14c`, recopié sans incrément : chacun des deux lots
+  recopiait sans incrément avec son motif, la réunion n'ajoute rien. Entrée
+  C65, que `main` avait posée après la Partie 3, replacée entre C64 et C66.
 
 ## Partie 2 — Registre des constats en suspens
 

@@ -70,7 +70,13 @@ function profilsInscription(): EtablissementMatching[] {
         estEtablissementTravail: trav, estERP: erp !== null, estIGH: igh, estHabitation: hab,
         typeErp: erp?.t, categorieErp: erp?.c,
         comporteLocauxSommeilPublic: form(so), manipuleMatieresR422722: form(m),
-        personnesPresentesHabituellement: p ?? "",
+ personnesPresentesHabituellement: p ?? "",
+        manutentionManuelle: null,
+        travailSurEcran: null,
+        operationsElectriques: null,
+        conduiteEngins: null,
+        expositionCMR: null,
+        epiPresents: null,
       });
       if (!r.success) continue;
       const d = r.data;
@@ -83,6 +89,12 @@ function profilsInscription(): EtablissementMatching[] {
         personnesPresentesHabituellement: d.personnesPresentesHabituellement ?? null,
         manipuleMatieresR422722: d.manipuleMatieresR422722 ?? null,
         comporteLocauxSommeilPublic: d.comporteLocauxSommeilPublic ?? null,
+        manutentionManuelle: null,
+        travailSurEcran: null,
+        operationsElectriques: null,
+        conduiteEngins: null,
+        expositionCMR: null,
+        epiPresents: null,
       });
     }
   }

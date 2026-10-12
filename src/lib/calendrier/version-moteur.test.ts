@@ -124,6 +124,13 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recalculée SANS incrément le 2026-10-12 à la réunion d'ADR-041 (#16,
+  // faits d'activité, `34b84ee9a3627974` sur main) et d'ADR-042 (niveau
+  // audit, `9ea22cc6ca8d74f9` sur sa branche) : chacune recopiait sans
+  // incrément, chacune avec son motif ci-dessous ; la réunion des deux ne
+  // change rien d'autre — `evaluerActivite` garde sa règle, la porte du
+  // niveau audit passe avant toute typologie, et le critère des chiffons
+  // que la réunion retire n'avait plus de porteuse.
   // Recopiée SANS incrément le 2026-10-08 (décisions de la propriétaire du
   // même jour, après ADR-042) : (1) `referentiels/conformite/index.ts` gagne
   // `nombreObligationsSuivies` et ses sœurs — des comptes d'affichage, que ni
@@ -146,6 +153,13 @@ const RELEVE = {
   // trace, supprimées sinon — `niveau-audit.test.ts`). Relevé repris le même
   // jour : `passe.ts` et `salaries/catalogue.ts` importent `estNiveauAudit`
   // de son module plutôt que de l'index — même sortie.
+  // Recopiée SANS incrément le 2026-10-08 (ADR-041, faits d'activité, livrée
+  // après C66) : `matching/engine.ts` lit le critère `activite`, `absence.ts`
+  // et `projection.ts` portent six attributs neufs. NON, la régénération
+  // n'écrit pas autrement : les cinq obligations conditionnées sont à
+  // `periodicite: "autre"` sans rythme retenu — le générateur n'en produit
+  // aucune ligne. Précédent C37. Le critère déplace l'empreinte du
+  // référentiel, donc le sceau.
   // Recopiée SANS incrément le 2026-10-08 (ADR-040, délai de grâce) :
   // `calendrier/grace.ts` entre au relevé, et `actions.ts` écrit
   // `graceJusquAu` dans le `createMany`. NON, la régénération n'écrit pas
@@ -321,7 +335,9 @@ const RELEVE = {
   // change les lignes — le rythme triennal du titre d'habilitation — est une
   // DONNÉE du référentiel, qui déplace son empreinte, donc le sceau.
   // ~~4b75258a15263110~~.
-  empreinte: "9ea22cc6ca8d74f9",
+  // ~~ff1c3cda346da10d~~ (C66) ; ~~34b84ee9a3627974~~ (ADR-041, main) ;
+  // ~~9ea22cc6ca8d74f9~~ (ADR-042, sa branche).
+  empreinte: "1d73fe41eeb7c14c",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -25,9 +25,24 @@ const etab = (over: Partial<EtablissementMatching>): EtablissementMatching => ({
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: false,
   comporteLocauxSommeilPublic: null,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
   ...over,
 });
-const sansReponse = { manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null };
+const sansReponse = {
+  manipuleMatieresR422722: null,
+  comporteLocauxSommeilPublic: null,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
+};
 
 describe("relance des questions muettes", () => {
   it("chaque question que le moteur sait marquer a une relance (et une phrase)", () => {
@@ -57,5 +72,13 @@ describe("relance des questions muettes", () => {
     // garde, portée par les matières.
     const r = relancesDuDossier([], { ...sansReponse, manipuleMatieresR422722: false });
     expect(r.map((x) => [x.question, x.faite])).toEqual([["matieres_r4227_22", true]]);
+  });
+
+  it("un fait d'activité muet qui retient une formation se relance en oui/non (ADR-041)", () => {
+    const muettes = questionsQuiRetiennent(determineObligationsApplicables(etab({}), []));
+    expect(muettes).toContain("manutention_manuelle");
+    const r = relancesDuDossier(muettes, sansReponse).find((x) => x.question === "manutention_manuelle");
+    expect(r?.relance.mode).toBe("oui_non");
+    expect(r?.relance.mode === "oui_non" && r.relance.champ).toBe("manutentionManuelle");
   });
 });

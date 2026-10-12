@@ -4,7 +4,7 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-10-08
+**Généré le** : 2026-10-12
 **Référentiel** : `2026-10-08.4`
 **Régénérer** : `pnpm verification --ecrire`
 

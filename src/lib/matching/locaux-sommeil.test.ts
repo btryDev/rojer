@@ -40,6 +40,12 @@ function etabErp5(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     ...over,
   };
 }

@@ -32,6 +32,12 @@ const ETAB: EtablissementMatching = {
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: null,
   comporteLocauxSommeilPublic: null,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
 };
 
 const stockage = (id: string): EquipementMatching => ({

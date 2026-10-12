@@ -125,6 +125,11 @@ obligation légale sortie du quotidien reste VISIBLE.
   seuil. La colonne `Etablissement.chiffonsImpregnes` reste en base, inerte,
   sans migration (`schema.prisma`). L'empreinte de `2026-10-08.4`, non servie,
   est réécrite : `174-5f46dea89bed4c54` → `174-e2d28b70856335ac`.]
+  [2026-10-12, fusion de `main` (ADR-041, #16) : la `.3` de `main` est gardée
+  telle quelle, servie ; la `.4`, non servie, hache aussi le critère
+  `activite` et est réécrite en appelant `empreinteReferentiel()` :
+  ~~`174-e2d28b70856335ac`~~ → `174-4e43df4448e844aa`. Compte remesuré en
+  appelant : 172 (`.3`) + 2 − 0 = 174, dont 3 au niveau audit, 171 suivies.]
 - `VERSION_MOTEUR_CALENDRIER` n'est pas incrémentée : sans le champ, le code
   rend ce qu'il rendait ; c'est la donnée, hachée par l'empreinte, qui
   resynchronise.

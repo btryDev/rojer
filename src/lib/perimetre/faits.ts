@@ -101,6 +101,12 @@ export async function faitsDeCouverture(
     personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
     manipuleMatieresR422722: etab.manipuleMatieresR422722,
     comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
+    manutentionManuelle: etab.manutentionManuelle,
+    travailSurEcran: etab.travailSurEcran,
+    operationsElectriques: etab.operationsElectriques,
+    conduiteEngins: etab.conduiteEngins,
+    expositionCMR: etab.expositionCMR,
+    epiPresents: etab.epiPresents,
   });
 
   const sansEcheance = reperterSansEcheance(etabMatching, equipementsMatching);

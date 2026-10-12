@@ -275,6 +275,12 @@ export async function equipementsSansEcheance(
       personnesPresentesHabituellement: etab.personnesPresentesHabituellement,
       manipuleMatieresR422722: etab.manipuleMatieresR422722,
       comporteLocauxSommeilPublic: etab.comporteLocauxSommeilPublic,
+      manutentionManuelle: etab.manutentionManuelle,
+      travailSurEcran: etab.travailSurEcran,
+      operationsElectriques: etab.operationsElectriques,
+      conduiteEngins: etab.conduiteEngins,
+      expositionCMR: etab.expositionCMR,
+      epiPresents: etab.epiPresents,
     },
     etab.equipements.map((eq) => ({
       id: eq.id,

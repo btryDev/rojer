@@ -22,6 +22,12 @@ const etab = (over: Partial<EtablissementMatching> = {}): EtablissementMatching 
   personnesPresentesHabituellement: null,
   manipuleMatieresR422722: false,
   comporteLocauxSommeilPublic: null,
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+  epiPresents: null,
   ...over,
 });
 const ids = (e: EtablissementMatching) => determineObligationsApplicables(e, []).map((o) => o.obligation.id);

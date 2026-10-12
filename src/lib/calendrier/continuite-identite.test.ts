@@ -58,6 +58,12 @@ function internat(
     classeIgh: null,
     familleHabitation: null,
     comporteLocauxSommeilPublic,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
   };

@@ -55,6 +55,14 @@ function etabLarge(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    // Faits d'activité (ADR-041) muets : le silence retient « à confirmer »,
+    // il n'écarte aucune ligne — le champ le plus large.
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
   };
 }
 

@@ -37,6 +37,12 @@ function etab(over: Partial<EtablissementMatching> = {}): EtablissementMatching 
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     ...over,
   };
 }
@@ -137,10 +143,18 @@ describe("la relance ne pose que les questions dont le silence retient une ligne
   // [2026-10-08 : retirée de toutes les surfaces, et la marque
   // `chiffons_impregnes` avec elle — rien à garder ici].
   // ~~bureau muet : matières seules (chiffons au niveau audit)~~
-  it("bureau muet : matières seules ; répondues : aucune", () => {
+  // ~~bureau muet : matières seules ; répondues : aucune~~ — 2026-10-12, fusion
+  // de `main` (ADR-041) : les faits d'activité muets retiennent eux aussi leurs
+  // lignes « à confirmer » (manutention, écran, consigne EPI). L'égalité
+  // exacte qui disait « matières seules » devient : les questions qui
+  // retiennent sont là, et celle des chiffons n'existe plus.
+  it("bureau muet : matières et faits d'activité, jamais les chiffons", () => {
     const muet = questionsQuiRetiennent(determineObligationsApplicables(etab(), []));
     expect(muet).toContain("matieres_r4227_22");
-    expect(muet).toEqual(["matieres_r4227_22"]);
+    expect(muet).toEqual(
+      expect.arrayContaining(["manutention_manuelle", "travail_ecran", "epi_presents"]),
+    );
+    expect(muet as readonly string[]).not.toContain("chiffons_impregnes");
     const repondu = questionsQuiRetiennent(
       determineObligationsApplicables(
         etab({ manipuleMatieresR422722: false }),

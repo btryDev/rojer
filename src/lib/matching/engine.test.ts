@@ -34,6 +34,12 @@ function etabBureau(over: Partial<EtablissementMatching> = {}): EtablissementMat
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     ...over,
   };
 }
@@ -56,6 +62,12 @@ function etabRestoErpCat5(
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     ...over,
   };
 }
@@ -76,6 +88,12 @@ function etabErpCat3(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
   };
 }
 
@@ -95,6 +113,12 @@ function etabIgh(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
   };
 }
 
@@ -114,6 +138,12 @@ function etabHabitationPure(): EtablissementMatching {
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
   };
 }
 
@@ -834,6 +864,12 @@ describe("moteur matching — cohérence avec le référentiel", () => {
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
       comporteLocauxSommeilPublic: null,
+      manutentionManuelle: null,
+      travailSurEcran: null,
+      operationsElectriques: null,
+      conduiteEngins: null,
+      expositionCMR: null,
+      epiPresents: null,
     };
     const eqComplet: EquipementMatching[] = [
       elec({ caracteristiques: { aGroupeElectrogene: true } }),
@@ -1311,6 +1347,12 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
   };
 
   /** Un équipement sans caractéristiques pour chacune des catégories. */

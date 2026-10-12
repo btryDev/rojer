@@ -469,6 +469,12 @@ describe("référentiel conformité — anti-doublon", () => {
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic,
+      manutentionManuelle: null,
+      travailSurEcran: null,
+      operationsElectriques: null,
+      conduiteEngins: null,
+      expositionCMR: null,
+      epiPresents: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     });
@@ -1231,6 +1237,12 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic: null,
+      manutentionManuelle: null,
+      travailSurEcran: null,
+      operationsElectriques: null,
+      conduiteEngins: null,
+      expositionCMR: null,
+      epiPresents: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };
@@ -1746,6 +1758,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // (R. 4224-17, défaut annuel, travail hors ERP ; le préventeur : « si
     // présent maintenance vérification annuelle »). 171 + 1 − 0 = 172.
     { version: "2026-10-08.2", empreinte: "172-ea7623eb617ce82" },
+    // ADR-041 (C65, livrée après C66) : le critère `activite` conditionne cinq
+    // obligations existantes à un fait d'activité de l'établissement. Aucune
+    // entrée, aucune sortie — 172. La `.1` de sa branche n'a jamais été servie.
+    { version: "2026-10-08.3", empreinte: "172-f59cb53a644d6458" },
     // 2026-10-08 (ADR-042, NIVEAU AUDIT, décision de la propriétaire du même
     // jour). `.3` est pris par `lot/formations-faits-etablissement` (ADR-041,
     // rebasée sur C66) : ce lot prend `.4`, pour que deux contenus ne soient
@@ -1760,7 +1776,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // la question des chiffons est retirée et la ligne perd sa condition
     // (`typologies: { travail: true }`, critère `chiffonsImpregnes` retiré).
     // 174 + 0 − 0 = 174, dont 3 au niveau audit ; 171 suivies au quotidien.
-    { version: "2026-10-08.4", empreinte: "174-e2d28b70856335ac" },
+    // ~~174-e2d28b70856335ac~~ : empreinte de la branche avant la fusion de
+    // main (ADR-041, #16), jamais servie — ligne réécrite le 2026-10-12 : la
+    // `.4` hache désormais aussi le critère `activite` des cinq obligations
+    // conditionnées par la `.3`. 172 (`.3`) + 2 − 0 = 174, mesuré en appelant
+    // `empreinteReferentiel()` après la fusion ; 3 au niveau audit, 171 suivies.
+    { version: "2026-10-08.4", empreinte: "174-4e43df4448e844aa" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -1929,6 +1950,8 @@ describe("référentiel conformité — version et empreinte", () => {
       // (`epi-verification-generale-periodique-respiratoire` et
       // `-gilet-sauvetage`, scindées de la vérification de l'arrêté du
       // 19 mars 1993, au niveau audit) − 0 = 174, dont 3 au niveau audit.
+      // 2026-10-12, fusion de `main` (ADR-041, `.3`, 172 + 0 − 0 = 172) :
+      // remesuré en appelant, 172 + 2 − 0 = 174, inchangé.
     ).toBe(174);
   });
 
@@ -2434,6 +2457,12 @@ describe("IGH — aucune obligation ne naît plus du seul régime IGH", () => {
     classeIgh: null,
     familleHabitation: null,
     comporteLocauxSommeilPublic: null,
+    manutentionManuelle: null,
+    travailSurEcran: null,
+    operationsElectriques: null,
+    conduiteEngins: null,
+    expositionCMR: null,
+    epiPresents: null,
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
   };
@@ -2565,6 +2594,12 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       classeIgh: null,
       familleHabitation: null,
       comporteLocauxSommeilPublic,
+      manutentionManuelle: null,
+      travailSurEcran: null,
+      operationsElectriques: null,
+      conduiteEngins: null,
+      expositionCMR: null,
+      epiPresents: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };

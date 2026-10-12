@@ -120,6 +120,18 @@ export type EtablissementMatching = {
   // de la propriétaire) : la question ne servait qu'à la ligne des chiffons
   // de R. 4227-26, passée au niveau audit (ADR-042) et devenue sans condition.
   // La colonne `Etablissement.chiffonsImpregnes` reste en base, inerte.
+  /**
+   * Les faits d'activité (ADR-041, `etablissements/faits-activite.ts`) et la
+   * présence d'EPI. Règle du non-renseigné (ADR-022) : `null` retient la
+   * ligne « à confirmer », seul un « non » déclaré la retire. Requis pour la
+   * même raison : un champ optionnel s'omet dans une projection sans bruit.
+   */
+  manutentionManuelle: boolean | null;
+  travailSurEcran: boolean | null;
+  operationsElectriques: boolean | null;
+  conduiteEngins: boolean | null;
+  expositionCMR: boolean | null;
+  epiPresents: boolean | null;
 };
 
 export type EquipementMatching = {
@@ -181,6 +193,12 @@ export type ObligationApplicable = {
  * compile.
  */
 export type QuestionSansReponse =
+  | "manutention_manuelle"
+  | "travail_ecran"
+  | "operations_electriques"
+  | "conduite_engins"
+  | "exposition_cmr"
+  | "epi_presents"
   | "locaux_sommeil_public"
   | "matieres_r4227_22"
   | "type_erp"

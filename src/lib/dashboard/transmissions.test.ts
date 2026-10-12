@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { rapprocher } from "./transmissions";
 import {
-  repondreAuxQuestionsTransverses,
-  titresDontLaQuestionRepondNon,
-} from "@/lib/transverses/etat";
+  titresEcartesParLesFaits,
+  type ReponsesFaitsActivite,
+} from "@/lib/etablissements/faits-activite";
+
+const FAITS: ReponsesFaitsActivite = {
+  manutentionManuelle: null,
+  travailSurEcran: null,
+  operationsElectriques: null,
+  conduiteEngins: null,
+  expositionCMR: null,
+};
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { supposeUnTiers } from "@/lib/prestataires/domaines";
 import { genererRecommandations, type EntreeRecos } from "./recommandations";
@@ -178,46 +186,48 @@ describe("rapprochement des transmissions (ADR-024)", () => {
     ).toEqual([]);
   });
 
-  it("se tait sur le « non » du DUERP au fait qui rend le titre dû — et sur lui seul (ADR-038)", () => {
+  it("se tait sur le « non » déclaré au fait qui rend le titre dû — et sur lui seul (ADR-041)", () => {
     // Sur le référentiel réel : l'obligation d'établissement qui transmet
-    // vers l'habilitation, et la réponse du DUERP lue par la règle partagée.
+    // vers l'habilitation, et le fait d'activité de l'établissement.
     const elec = obligationsConformite.find(
       (o) => o.id === "elec-travail-habilitation-personnel",
     )!;
-    const signal = (actifs: string[], brut: unknown) =>
-      rapprocher(
-        [elec],
-        ["electricite"],
-        new Set(),
-        titresDontLaQuestionRepondNon(repondreAuxQuestionsTransverses(actifs, brut)),
-      ).obligationsSupposantUnePersonne;
-    expect(signal([], { "q-operations-electriques": false })).toEqual([]);
-    // Le silence ne fait pas taire : un DUERP qui n'a pas répondu n'a rien déclaré.
-    expect(signal([], null)).toHaveLength(1);
+    const signal = (faits: Partial<ReponsesFaitsActivite>) =>
+      rapprocher([elec], ["electricite"], new Set(), titresEcartesParLesFaits({ ...FAITS, ...faits }))
+        .obligationsSupposantUnePersonne;
+    expect(signal({ operationsElectriques: false })).toEqual([]);
+    // Le silence ne fait pas taire : un fait non déclaré n'a rien déclaré.
+    expect(signal({})).toHaveLength(1);
     // Le « oui » non plus.
-    expect(signal(["trv-operations-electriques"], null)).toHaveLength(1);
-    // Un « non » à une autre question non plus.
-    expect(signal([], { "q-conduite-engins": false })).toHaveLength(1);
+    expect(signal({ operationsElectriques: true })).toHaveLength(1);
+    // Un « non » à un autre fait non plus.
+    expect(signal({ conduiteEngins: false })).toHaveLength(1);
+  });
+
+  it("un « non » au CMR ne fait PAS taire le suivi renforcé — six autres expositions le fondent", () => {
+    // R. 4624-23, I : amiante, plomb, CMR, biologiques 3/4, rayonnements,
+    // hyperbare, échafaudages. Répondre « non » au CMR ne dit rien du plomb.
+    const liste = obligationsConformite.find(
+      (o) => o.id === "sante-travail-etablissement-liste-postes-risques",
+    )!;
+    const signal = (faits: Partial<ReponsesFaitsActivite>) =>
+      rapprocher([liste], [], new Set(), titresEcartesParLesFaits({ ...FAITS, ...faits }))
+        .obligationsSupposantUnePersonne;
+    expect(signal({ expositionCMR: false })).toHaveLength(signal({}).length);
   });
 
   it("vaut aussi pour le levage : le « non » à la conduite fait taire, le silence non", () => {
-    // Toutes les obligations d'établissement qui transmettent vers un titre
-    // gouverné, pas la seule électricité : c'est la réunion qui est garantie.
     const versGouverne = obligationsConformite.filter((o) =>
       o.transmet.some(
         (t) => t.vers === "salarie_designe" && t.titre === "conduite-salarie-formation",
       ),
     );
     expect(versGouverne.length).toBeGreaterThan(0);
-    const signal = (brut: unknown) =>
-      rapprocher(
-        versGouverne,
-        ["levage"],
-        new Set(),
-        titresDontLaQuestionRepondNon(repondreAuxQuestionsTransverses([], brut)),
-      ).obligationsSupposantUnePersonne;
-    expect(signal({ "q-conduite-engins": false })).toEqual([]);
-    expect(signal(null)).toHaveLength(versGouverne.length);
+    const signal = (faits: Partial<ReponsesFaitsActivite>) =>
+      rapprocher(versGouverne, ["levage"], new Set(), titresEcartesParLesFaits({ ...FAITS, ...faits }))
+        .obligationsSupposantUnePersonne;
+    expect(signal({ conduiteEngins: false })).toEqual([]);
+    expect(signal({})).toHaveLength(versGouverne.length);
   });
 });
 
