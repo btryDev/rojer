@@ -127,7 +127,7 @@ vi.mock("@/lib/email", () => ({
 }));
 
 import { cloturerPlan, supprimerPlan } from "@/lib/plan-prevention/actions";
-import { marquerTermine, supprimerPermisFeu } from "@/lib/permis-feu/actions";
+import { marquerEnCours, marquerTermine, supprimerPermisFeu } from "@/lib/permis-feu/actions";
 import {
   demanderSignature,
   poserSignatureAvecToken,
@@ -695,6 +695,27 @@ describe("garantie 4 — le statut suit les signatures", () => {
     await signer();
 
     expect(prismaMock.permisFeu.lignes[0].statut).toBe("attente_signatures");
+  });
+
+  it("démarrer et terminer ne partent que de leur statut (constat 6)", async () => {
+    for (const statut of ["attente_signatures", "brouillon", "annule", "termine"]) {
+      prismaMock.permisFeu = table([plan("pf-1", "etab-a-moi", statut)]);
+      await marquerEnCours("pf-1");
+      expect(prismaMock.permisFeu.lignes[0].statut, statut).toBe(statut);
+    }
+    for (const statut of ["valide", "attente_signatures", "annule"]) {
+      prismaMock.permisFeu = table([plan("pf-1", "etab-a-moi", statut)]);
+      prismaMock.accessToken = table([jeton("permis_feu", "pf-1", "etab-a-moi")]);
+      await marquerTermine("pf-1");
+      expect(prismaMock.permisFeu.lignes[0].statut, statut).toBe(statut);
+      // Rien n'est terminé : aucun lien n'est révoqué.
+      expect(prismaMock.accessToken.lignes[0].revoqueLe, statut).toBeNull();
+    }
+    prismaMock.permisFeu = table([plan("pf-1", "etab-a-moi", "valide")]);
+    await marquerEnCours("pf-1");
+    expect(prismaMock.permisFeu.lignes[0].statut).toBe("en_cours");
+    await marquerTermine("pf-1");
+    expect(prismaMock.permisFeu.lignes[0].statut).toBe("termine");
   });
 
   it("un permis déjà démarré ne revient pas à « valide »", async () => {

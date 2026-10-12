@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
 import { NatureTravauxPointChaud } from "@prisma/client";
+import type { StatutPermisFeu } from "@prisma/client";
 import { NATURES_TRAVAUX, permisFeuSchema } from "./schema";
 import { nextNumeroPermisFeu } from "./queries";
 import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
@@ -109,40 +110,58 @@ export async function creerPermisFeu(
   return { status: "success", permisFeuId: permis.id, numero: permis.numero };
 }
 
-export async function marquerEnCours(permisFeuId: string): Promise<void> {
+/**
+ * Les deux transitions du chantier, CONTRÔLÉES CÔTÉ SERVEUR (audit du
+ * 2026-10-12, constat 6). Elles écrivaient sans lire l'état : un appel direct
+ * démarrait un permis annulé, terminé ou non signé, et terminait un permis
+ * jamais démarré. La fiche n'offrait pas ces gestes, le serveur les acceptait.
+ *
+ * Chaque transition part d'UN statut, porté par la clause de l'écriture :
+ * `valide` (les deux parties ont signé, `validerSiCoSigne`) → `en_cours` →
+ * `termine`. Hors de ce statut, rien ne s'écrit.
+ */
+const TRANSITIONS_CHANTIER = {
+  en_cours: "valide",
+  termine: "en_cours",
+} as const satisfies Partial<Record<StatutPermisFeu, StatutPermisFeu>>;
+
+async function franchir(
+  permisFeuId: string,
+  vers: keyof typeof TRANSITIONS_CHANTIER,
+): Promise<{ etablissementId: string; fait: boolean } | null> {
   const permis = await prisma.permisFeu.findUnique({
     where: { id: permisFeuId },
     select: { etablissementId: true },
   });
-  if (!permis) return;
+  if (!permis) return null;
   await assertEtablissementOwnership(permis.etablissementId);
-  await prisma.permisFeu.update({
-    where: { id: permisFeuId },
-    data: { statut: "en_cours" },
+  const r = await prisma.permisFeu.updateMany({
+    where: {
+      id: permisFeuId,
+      etablissementId: permis.etablissementId,
+      statut: TRANSITIONS_CHANTIER[vers],
+    },
+    data: { statut: vers },
   });
   revalidatePath(`/etablissements/${permis.etablissementId}/permis-feu/${permisFeuId}`);
+  return { etablissementId: permis.etablissementId, fait: r.count === 1 };
+}
+
+export async function marquerEnCours(permisFeuId: string): Promise<void> {
+  await franchir(permisFeuId, "en_cours");
 }
 
 export async function marquerTermine(permisFeuId: string): Promise<void> {
-  const permis = await prisma.permisFeu.findUnique({
-    where: { id: permisFeuId },
-    select: { etablissementId: true },
-  });
-  if (!permis) return;
-  await assertEtablissementOwnership(permis.etablissementId);
-  await prisma.permisFeu.update({
-    where: { id: permisFeuId },
-    data: { statut: "termine" },
-  });
+  const r = await franchir(permisFeuId, "termine");
+  if (!r?.fait) return;
   // Un permis terminé ne se signe plus (`etat-signable.ts`) : ses liens
   // encore ouverts tombent avec lui.
   await revoquerLiensEnVol({
-    etablissementId: permis.etablissementId,
+    etablissementId: r.etablissementId,
     objetType: "permis_feu",
     objetId: permisFeuId,
     motif: "Permis de feu terminé",
   });
-  revalidatePath(`/etablissements/${permis.etablissementId}/permis-feu/${permisFeuId}`);
 }
 
 export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {

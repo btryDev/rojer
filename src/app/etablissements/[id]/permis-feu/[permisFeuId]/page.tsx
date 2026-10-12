@@ -330,10 +330,10 @@ export default async function PermisFeuDetailPage({
         cote={
           <CarteFiche titre="Cycle de vie">
             <div className="flex flex-wrap items-center gap-3">
-              {permis.statut === "attente_signatures" &&
-                manquantes === 0 && (
-                  <BoutonDemarrer permisFeuId={permis.id} />
-                )}
+              {/* ~~« attente_signatures » et deux signatures : Démarrer~~ —
+                  retiré le 2026-10-12 : la seconde signature fait passer le
+                  permis « valide », et le serveur ne démarre que depuis
+                  « valide » (`marquerEnCours`). */}
               {permis.statut === "valide" && (
                 <BoutonDemarrer permisFeuId={permis.id} />
               )}
