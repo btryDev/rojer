@@ -1782,6 +1782,13 @@ describe("référentiel conformité — version et empreinte", () => {
     // conditionnées par la `.3`. 172 (`.3`) + 2 − 0 = 174, mesuré en appelant
     // `empreinteReferentiel()` après la fusion ; 3 au niveau audit, 171 suivies.
     { version: "2026-10-08.4", empreinte: "174-4e43df4448e844aa" },
+    // 2026-10-12, ADR-043 : `premierDelai` posé sur deux titres salarié — la
+    // VIP (trimestrielle, `R. 4624-10`) et la formation à la sécurité
+    // (mensuelle, `R. 4141-20`), comptés depuis `Salarie.entreLe`. Le champ
+    // entre à l'empreinte, mais le générateur des titres ne le lit pas :
+    // aucune ligne de calendrier ne change. 174 + 0 − 0 = 174, dont 3 au
+    // niveau audit, 171 suivies.
+    { version: "2026-10-12.1", empreinte: "174-f655345dc157316b" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

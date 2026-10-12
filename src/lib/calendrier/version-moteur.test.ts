@@ -124,6 +124,13 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-12 (ADR-043, ce qui manque à une
+  // personne) : `mention-rythme.ts` exporte `delaiEnPhrase` (« 3 mois »),
+  // lu par la seule fiche salarié. NON, la régénération n'écrit pas
+  // autrement : la fonction n'est appelée ni par le générateur ni par le
+  // réconciliateur, et le `premierDelai` posé sur deux titres salarié est une
+  // DONNÉE, hachée par l'empreinte du référentiel (`2026-10-12.1`), que le
+  // générateur des titres ne lit pas. ~~1d73fe41eeb7c14c~~.
   // Recalculée SANS incrément le 2026-10-12 à la réunion d'ADR-041 (#16,
   // faits d'activité, `34b84ee9a3627974` sur main) et d'ADR-042 (niveau
   // audit, `9ea22cc6ca8d74f9` sur sa branche) : chacune recopiait sans
@@ -337,7 +344,7 @@ const RELEVE = {
   // ~~4b75258a15263110~~.
   // ~~ff1c3cda346da10d~~ (C66) ; ~~34b84ee9a3627974~~ (ADR-041, main) ;
   // ~~9ea22cc6ca8d74f9~~ (ADR-042, sa branche).
-  empreinte: "1d73fe41eeb7c14c",
+  empreinte: "005b4fafbfab216a",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -93,6 +93,22 @@ describe("CarteTitresDuDuerp — ce que l'écran nomme", () => {
   it("après un « non », un titre est dit non dû — pas « aucun titre déclaré » comme s'il l'était", () => {
     expect(phraseTitre("non", null)).toMatch(/Non dû/);
     expect(phraseTitre("oui", null)).not.toMatch(/Non dû/);
-    expect(phraseTitre("non", new Date("2025-01-02"))).toMatch(/délivré le .*Non dû/);
+    // ~~`/délivré le .*Non dû/`~~ [2026-10-12, passage visuel : un titre
+    // DÉTENU sous un « non » ne se dit plus « Non dû » — la déclaration
+    // contredit la réponse, et la phrase le dit.]
+    const detenu = phraseTitre("non", new Date("2025-01-02"));
+    expect(detenu).toMatch(/délivré le .*pourtant répondu non/);
+    expect(detenu).not.toMatch(/Non dû/);
+  });
+});
+
+describe("un titre appelé par un titre détenu (ADR-043, relecture C3)", () => {
+  it("ne dit jamais « pas un retard » quand « À déclarer » le date", () => {
+    const phrase = phraseTitre("oui", null, true);
+    expect(phrase).not.toContain("pas un retard");
+    expect(phrase).toContain("À déclarer pour cette personne");
+  });
+  it("garde la phrase d'avant pour un titre qui ne manque pas", () => {
+    expect(phraseTitre("oui", null, false)).toContain("pas un retard");
   });
 });

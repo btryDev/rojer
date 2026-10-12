@@ -379,6 +379,22 @@ describe("le propriétaire lit son propre dossier", () => {
     expect(fiche?.titres.every((t) => t.etat === "archivee")).toBe(true);
   });
 
+  it("listerEquipe porte ce qui manque à chacun, daté depuis l'entrée (ADR-043, relecture C2)", async () => {
+    // Claire entre le 2 janvier 2026, sans VIP déclarée : trois mois plus
+    // tard, au 28 août, la VIP manque et elle est en retard. Sans date
+    // d'entrée, le même manque n'aurait aucun état — testé dans le module.
+    h.db.salaries[0] = { ...h.db.salaries[0], entreLe: new Date("2026-01-02T12:00:00.000Z") };
+    const equipe = await listerEquipe(ETAB_A, NOW);
+    const claire = equipe.find((s) => s.id === "sal-a");
+    expect(claire?.manques).toEqual(
+      expect.arrayContaining([
+        { obligationId: "sante-travail-salarie-vip", libelle: expect.any(String), etat: "enRetard" },
+      ]),
+    );
+    // La personne sortie ne réclame rien.
+    expect(equipe.find((s) => s.id === "sal-a-partie")?.manques).toEqual([]);
+  });
+
   it("compterTitresEnRetard voit une VIP échue sans date de fin saisie", async () => {
     // Relecture système du 2026-09-14. Le `where` portait `echeanceLe: { not:
     // null }` : une visite quinquennale délivrée le 1er juin 2020, sans
@@ -408,7 +424,12 @@ describe("le propriétaire lit son propre dossier", () => {
         note: null,
       },
     );
-    expect(await compterTitresEnRetard(ETAB_A, NOW)).toBe(2);
+    // ~~2~~ [2026-10-12, ADR-043 : 3. L'autorisation de conduite sans durée
+    // reste hors du compte comme TITRE — la contre-épreuve tient —, mais elle
+    // appelle l'attestation médicale, jamais déclarée pour Claire, et exigible
+    // dès 2020 (R. 4323-56) : un manque en retard, que le badge compte. Les
+    // deux autres : l'attestation de voisinage échue et la VIP de 2020.]
+    expect(await compterTitresEnRetard(ETAB_A, NOW)).toBe(3);
 
     // Et la fiche dit la même chose que le badge, sur la même personne.
     const fiche = await getSalarie(ETAB_A, "sal-a", NOW);

@@ -26,26 +26,86 @@ import { LABEL_DOMAINE as LABEL_DOMAINE_OBLIGATION } from "@/lib/calendrier/labe
 import { domainesSansPrestataire } from "@/lib/prestataires/domaines";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { titresEcartesParLesFaits } from "@/lib/etablissements/faits-activite";
+import {
+  ceQuiManqueALaPersonne,
+  estDuALEntree,
+  etatDuManque,
+  type PersonneLue,
+  type TitreDeclareLu,
+} from "@/lib/salaries/du-a-la-personne";
 import type {
   DomaineObligation,
   Obligation,
 } from "@/lib/referentiels/conformite/types";
 
+/** Une personne de l'effectif, telle que le rapprochement la lit. */
+export type PersonneDeclaree = PersonneLue & {
+  titres: readonly TitreDeclareLu[];
+};
+
+/**
+ * Pour un titre DÛ À L'ENTRÉE (ADR-043 (b)) : combien de personnes actives il
+ * manque, au sens de `ceQuiManqueALaPersonne` — jamais d'une seconde règle.
+ */
+export type CompteParPersonne = {
+  /** L'identifiant du titre attendu. */
+  titre: string;
+  /** Son libellé au référentiel, pour le nommer à l'écran. */
+  libelleTitre: string;
+  /** Personnes actives à qui il manque. Toujours ≥ 1 quand le compte existe. */
+  sansLeTitre: number;
+  /** Parmi elles, celles dont l'échéance est dépassée (`classerDate`, ADR-011). */
+  enRetard: number;
+  /** Parmi elles, celles dont la date d'entrée n'est pas renseignée : non datées. */
+  nonDatees: number;
+  /**
+   * La plus ancienne échéance dépassée, ou `null` sans retard. C'est elle qui
+   * range la carte parmi les retards du tableau de bord (décision de la
+   * propriétaire du 2026-10-12 : un manque en retard compte comme un retard).
+   */
+  plusAncienRetard: Date | null;
+};
+
 export type Transmissions = {
   domainesSansPrestataire: Array<{ domaine: string; libelle: string }>;
-  obligationsSupposantUnePersonne: Array<{ id: string; libelle: string }>;
+  obligationsSupposantUnePersonne: Array<{
+    id: string;
+    libelle: string;
+    /**
+     * Présent quand le signal porte sur un titre dû à l'entrée et que
+     * l'effectif compte au moins une personne active : il dit À COMBIEN il
+     * manque. Absent, le signal garde sa forme d'avant — un titre qu'aucune
+     * déclaration ne porte.
+     */
+    parPersonne?: CompteParPersonne[];
+  }>;
+  /**
+   * Les titres qui manquent à au moins une personne active (ADR-043) et
+   * qu'aucune transmission ci-dessus ne compte déjà — la VIP au premier chef :
+   * aucune obligation d'établissement ne transmet vers elle, et sans ce champ
+   * le tableau de bord la taisait quand la fiche et le badge la comptaient en
+   * retard (relecture indépendante du 2026-10-12, B1). Même fonction, même
+   * compte.
+   */
+  titresDusNonDeclares: CompteParPersonne[];
 };
 
 export const AUCUNE_TRANSMISSION: Transmissions = {
   domainesSansPrestataire: [],
   obligationsSupposantUnePersonne: [],
+  titresDusNonDeclares: [],
 };
 
 /**
  * Le calcul, sans la base : la partie testable.
  *
- * `titresDeclares` porte les **identifiants d'obligation** des titres saisis,
- * pas leur nombre. La distinction n'est pas cosmétique :
+ * ~~`titresDeclares` porte les **identifiants d'obligation** des titres saisis,
+ * pas leur nombre.~~ [2026-10-12, ADR-043 : `rapprocher` reçoit l'EFFECTIF
+ * — chaque personne avec ses titres — et en dérive l'ensemble des titres
+ * déclarés par les personnes actives, ce que faisait le `groupBy` de
+ * `chargerTransmissions`. Ce qui suit vaut pour cet ensemble dérivé, donc pour
+ * les titres sous condition ; le troisième cran, plus bas, dit ce qui change
+ * pour les titres dus à l'entrée.] La distinction n'est pas cosmétique :
  *
  *  - une transmission qui **nomme** le titre attendu (`titre` non nul) se tait
  *    dès que CE titre est déclaré, et pas avant. Un compte global aurait fait
@@ -83,7 +143,8 @@ export const AUCUNE_TRANSMISSION: Transmissions = {
  * de résoudre la cause, le `titre: null` lui-même, plutôt que d'affiner encore
  * le repli.
  *
- * ## Le grain de ce signal a été resserré deux fois, et il reste un cran
+ * ## Le grain de ce signal a été resserré ~~deux fois, et il reste un cran~~
+ * trois fois (2026-10-12, ADR-043)
  *
  * Ce n'est pas une suite de bugs, c'est **un même défaut de modèle** qui
  * réapparaît un cran plus bas à chaque correction — et qui n'était visible, à
@@ -96,7 +157,9 @@ export const AUCUNE_TRANSMISSION: Transmissions = {
  *  2. **Un titre du même domaine.** L'état ci-dessus. Il tombera le jour où
  *     deux titres coexisteront dans un domaine — le paragraphe précédent le
  *     dit et le date.
- *  3. **Il ignore les personnes**, et c'est le cran qui reste. `titresDeclares`
+ *  3. ~~**Il ignore les personnes**, et c'est le cran qui reste.~~ [2026-10-12,
+ *     ADR-043 : fermé pour les titres dus à l'entrée — voir la rature datée du
+ *     paragraphe suivant.] `titresDeclares`
  *     est un ensemble d'**identifiants d'obligation** : il dit *qu'un* titre
  *     existe, jamais *combien de personnes* le détiennent ni *lesquelles*. Un
  *     restaurateur qui déclare la formation à la sécurité de sa plongeuse
@@ -107,20 +170,36 @@ export const AUCUNE_TRANSMISSION: Transmissions = {
  * **Le troisième cran ne se corrige pas en affinant celui-ci.** Les deux
  * premiers étaient des questions de granularité — quel ensemble consulter. Le
  * troisième est une question de **modèle** : que veut dire « déclaré » quand
- * l'obligation est due par personne ? Trois réponses possibles, et le choix
- * n'est pas fait — chaque salarié actif doit détenir le titre ; chaque salarié
+ * l'obligation est due par personne ? Trois réponses possibles, ~~et le choix
+ * n'est pas fait~~ — chaque salarié actif doit détenir le titre ; chaque salarié
  * entré depuis moins d'un mois ; ou seulement ceux dont le poste l'appelle, ce
  * que le produit ne sait pas déduire et refuse de deviner (ADR-023).
+ * [2026-10-12, ADR-043 (b), décision de la propriétaire : la PREMIÈRE pour les
+ * titres dus à l'entrée (`estDuALEntree` — la VIP, la formation à la
+ * sécurité), la TROISIÈME pour les titres sous condition. Pour les premiers,
+ * le signal compte les personnes actives à qui le titre manque, par
+ * `ceQuiManqueALaPersonne` — la règle de la fiche, pas une seconde —, et se
+ * tait quand il ne manque à personne ; il nomme le nombre et, parmi eux, ceux
+ * en retard. Pour les seconds, rien ne change : un titre déclaré suffit, le
+ * produit ne sait pas qui est concerné. Un effectif vide garde aussi l'ancienne
+ * forme : personne à compter, et aucun titre déclaré.]
  *
- * La brique du deuxième cas existe et ne sert à rien : `Salarie.entreLe`, dont
+ * ~~La brique du deuxième cas existe et ne sert à rien : `Salarie.entreLe`, dont
  * le schéma écrit qu'il est le « point de départ des obligations à
- * l'embauche », a quatre usages — saisie, affichage, export RGPD. Aucun calcul.
- * Voir `docs/revues/rapport-surface-des-quatorze.md` § 4.1.
+ * l'embauche », a quatre usages — saisie, affichage, export RGPD. Aucun calcul.~~
+ * [2026-10-12, ADR-043 : `entreLe` est lu par `ceQuiManqueALaPersonne`, donc
+ * par ce signal.] Voir `docs/revues/rapport-surface-des-quatorze.md` § 4.1.
  */
 export function rapprocher(
   applicables: readonly Obligation[],
   domainesPrestatairesDeclares: readonly DomainePrestataire[],
-  titresDeclares: ReadonlySet<string>,
+  /**
+   * L'effectif de l'établissement, personnes sorties comprises ou non : seules
+   * les actives comptent, ici comme dans `ceQuiManqueALaPersonne`.
+   */
+  effectif: readonly PersonneDeclaree[],
+  /** L'horloge du retard, injectée : la fonction n'en lit aucune. */
+  now: Date,
   /**
    * Les titres dont le fait d'activité est déclaré « non » (ADR-038, ADR-041).
    * Une transmission qui NOMME un de ces titres se tait : le dirigeant a
@@ -139,29 +218,109 @@ export function rapprocher(
     libelle: LABEL_DOMAINE_OBLIGATION[d],
   }));
 
+  // Seules les personnes actives : une personne sortie ne réclame rien
+  // (`ceQuiManqueALaPersonne`), et ses titres ne répondent plus pour
+  // l'établissement — le `groupBy` d'avant filtrait déjà `actif: true`.
+  const actifs = effectif.filter((p) => p.actif);
+  const titresDeclares = new Set(
+    actifs.flatMap((p) => p.titres.map((t) => t.obligationId)),
+  );
+
   // Les domaines dans lesquels au moins un titre est déclaré. Construit une
   // fois : `rapprocher` est appelée par le tableau de bord à chaque rendu.
   const domainesDesTitresDeclares = new Set<DomaineObligation>();
+  const parId = new Map<string, Obligation>();
   for (const o of obligationsConformite) {
+    parId.set(o.id, o);
     if (titresDeclares.has(o.id)) domainesDesTitresDeclares.add(o.domaine);
   }
 
-  const personnes = applicables
-    .filter((o) =>
-      o.transmet.some(
-        (t) =>
-          t.vers === "salarie_designe" &&
-          (t.titre === null
-            ? !domainesDesTitresDeclares.has(o.domaine)
-            : !titresDeclares.has(t.titre) &&
-              !titresEcartesParLesFaits.has(t.titre)),
-      ),
-    )
-    .map((o) => ({ id: o.id, libelle: o.libelle }));
+  // Ce qui manque à chaque personne active, calculé une fois et par LA
+  // fonction de la fiche (ADR-043 § 2.5) : le tableau de bord ne redit pas la
+  // règle, il compte ce qu'elle rend.
+  const manques = actifs.map((p) => ceQuiManqueALaPersonne(p, p.titres));
+  const compter = (titre: Obligation): CompteParPersonne => {
+    const compte: CompteParPersonne = {
+      titre: titre.id,
+      libelleTitre: titre.libelle,
+      sansLeTitre: 0,
+      enRetard: 0,
+      nonDatees: 0,
+      plusAncienRetard: null,
+    };
+    for (const m of manques.flat()) {
+      if (m.obligation.id !== titre.id) continue;
+      compte.sansLeTitre += 1;
+      const etat = etatDuManque(m, now);
+      if (etat === null) compte.nonDatees += 1;
+      else if (etat === "enRetard") {
+        compte.enRetard += 1;
+        if (m.echeance && (!compte.plusAncienRetard || m.echeance < compte.plusAncienRetard)) {
+          compte.plusAncienRetard = m.echeance;
+        }
+      }
+    }
+    return compte;
+  };
+
+  const personnes: Transmissions["obligationsSupposantUnePersonne"] = [];
+  for (const o of applicables) {
+    let signale = false;
+    const parPersonne: CompteParPersonne[] = [];
+    for (const t of o.transmet) {
+      if (t.vers !== "salarie_designe") continue;
+      if (t.titre === null) {
+        if (!domainesDesTitresDeclares.has(o.domaine)) signale = true;
+        continue;
+      }
+      if (titresEcartesParLesFaits.has(t.titre)) continue;
+      const attendu = parId.get(t.titre);
+      // Dû à l'entrée, et quelqu'un à compter : le signal compte par
+      // personne. Un effectif vide retombe sur la règle d'avant — il n'y a
+      // personne à qui le titre manque, et aucun titre n'est déclaré.
+      if (attendu && estDuALEntree(attendu) && actifs.length > 0) {
+        const compte = compter(attendu);
+        if (compte.sansLeTitre > 0) {
+          signale = true;
+          parPersonne.push(compte);
+        }
+        continue;
+      }
+      // Sous condition (ADR-043 (b)) : un titre déclaré suffit.
+      if (!titresDeclares.has(t.titre)) signale = true;
+    }
+    if (!signale) continue;
+    personnes.push(
+      parPersonne.length > 0
+        ? { id: o.id, libelle: o.libelle, parPersonne }
+        : { id: o.id, libelle: o.libelle },
+    );
+  }
+
+  // Tout le reste de ce qui manque, compté par titre. Lu depuis les manques
+  // eux-mêmes, pas depuis les transmissions : c'est ce qui fait entrer la VIP,
+  // la visite intermédiaire et l'attestation de conduite.
+  const dejaComptes = new Set(
+    personnes.flatMap((p) => (p.parPersonne ?? []).map((c) => c.titre)),
+  );
+  const restants = new Map<string, Obligation>();
+  for (const m of manques.flat()) {
+    const id = m.obligation.id;
+    // ~~`|| titresEcartesParLesFaits.has(id)`~~ (contre-relecture du
+    // 2026-10-12) : un manque n'existe ici que s'il est dû à l'entrée — que
+    // nul fait ne gouverne — ou APPELÉ PAR UN TITRE DÉCLARÉ. Le titre déclaré
+    // l'emporte sur un « non » au fait : une autorisation de conduite sans
+    // attestation n'est pas valide (R. 4323-56), quelle que soit la réponse
+    // d'établissement. Le filtre faisait taire le tableau de bord quand la
+    // fiche et le badge comptaient le manque.
+    if (dejaComptes.has(id)) continue;
+    restants.set(id, m.obligation);
+  }
 
   return {
     domainesSansPrestataire: domaines,
     obligationsSupposantUnePersonne: personnes,
+    titresDusNonDeclares: [...restants.values()].map(compter),
   };
 }
 
@@ -169,6 +328,8 @@ export function rapprocher(
 export async function chargerTransmissions(
   etablissementId: string,
   userId: string,
+  /** L'horloge du tableau de bord, pour que ses cartes lisent la même. */
+  now: Date,
 ): Promise<Transmissions> {
   const etab = await prisma.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { userId } },
@@ -179,7 +340,7 @@ export async function chargerTransmissions(
   });
   if (!etab) return AUCUNE_TRANSMISSION;
 
-  const [prestataires, titresDeclares] = await Promise.all([
+  const [prestataires, effectif] = await Promise.all([
     // `etab.id` et non le paramètre : l'appartenance vient d'être établie
     // par la lecture ci-dessus, et c'est SON identifiant qu'on propage — pas
     // celui reçu de l'appelant. La garantie ne dépend donc pas de ce que
@@ -188,11 +349,24 @@ export async function chargerTransmissions(
       where: { etablissementId: etab.id },
       select: { domaines: true },
     }),
-    // `groupBy` et non `count` : on a besoin de SAVOIR lesquels sont
-    // déclarés, pas combien. Cf. `rapprocher`.
-    prisma.titreSalarie.groupBy({
-      by: ["obligationId"],
-      where: { salarie: { etablissementId: etab.id, actif: true } },
+    // ~~`groupBy` et non `count` : on a besoin de SAVOIR lesquels sont
+    // déclarés, pas combien.~~ [2026-10-12, ADR-043 : on a besoin de savoir
+    // lesquels, ET à qui. Les personnes actives avec leurs titres ; l'ensemble
+    // des titres déclarés s'en dérive dans `rapprocher`.] La portée de tenancy
+    // est redite sur la relation (ADR-005, même forme que `salaries/queries.ts`)
+    // alors que `etab.id` vient d'être établi : la garantie ne doit pas tenir
+    // à l'ordre des lectures.
+    prisma.salarie.findMany({
+      where: {
+        etablissementId: etab.id,
+        etablissement: { entreprise: { userId } },
+        actif: true,
+      },
+      select: {
+        actif: true,
+        entreLe: true,
+        titres: { select: { obligationId: true, delivreLe: true } },
+      },
     }),
   ]);
 
@@ -242,7 +416,8 @@ export async function chargerTransmissions(
   return rapprocher(
     applicables,
     prestataires.flatMap((p) => p.domaines),
-    new Set(titresDeclares.map((t) => t.obligationId)),
+    effectif,
+    now,
     // Les faits d'activité déclarés « non » (ADR-041) : lus sur
     // l'établissement, déjà chargé et déjà vérifié ci-dessus.
     titresEcartesParLesFaits(etab),

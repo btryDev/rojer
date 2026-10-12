@@ -839,7 +839,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // que de `etablissementId` et `user.id`, tous deux disponibles avant.
     // Placé après, il ajoutait trois requêtes sérialisées derrière tout le
     // reste du tableau de bord (ADR-024).
-    chargerTransmissions(etablissementId, user.id),
+    chargerTransmissions(etablissementId, user.id, now),
     prisma.rapportVerification.count({
       where: { verification: scope },
     }),

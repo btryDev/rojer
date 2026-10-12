@@ -16,6 +16,7 @@ import { BadgeOrigine } from "@/components/actions/BadgeOrigine";
 import { BadgeStatutAction } from "@/components/actions/BadgeStatutAction";
 import { CloturerActionForm } from "@/components/actions/CloturerActionForm";
 import { SupprimerActionButton } from "@/components/actions/SupprimerActionButton";
+import { LigneTitreDeLaMesure } from "@/components/salaries/LigneTitreDeLaMesure";
 import { cloturerAction } from "@/lib/actions/plan";
 import { getAction, origineDeLAction } from "@/lib/actions/queries";
 import { LABEL_TYPE_ACTION } from "@/lib/actions/labels";
@@ -142,6 +143,12 @@ export default async function ActionDetailPage({
                   Aucune description n&apos;a été saisie pour cette action.
                 </p>
               )}
+
+              <LigneTitreDeLaMesure
+                referentielMesureId={a.referentielMesureId}
+                etablissementId={id}
+                className="mt-3"
+              />
 
               {/* Le rattachement vit dans la même carte que la consigne :
                   « d'où ça sort » et « ce qu'il faut faire » se lisent

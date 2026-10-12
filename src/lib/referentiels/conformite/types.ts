@@ -690,6 +690,25 @@ export type Transmission =
       titre: string | null;
       /** Ce que le texte dit, qui fonde la transmission. Une phrase. */
       motif: string;
+      /**
+       * Quand le titre transmis devient exigible, lorsque la SOURCE est
+       * elle-même un titre de salarié (ADR-043) — la même personne détient
+       * l'un, donc doit l'autre.
+       *
+       * - `"rythme_du_titre"` : au plus tard à la délivrance de la source plus
+       *   le rythme du titre transmis — la visite intermédiaire, « au plus
+       *   tard deux ans après la visite avec le médecin du travail »
+       *   (`R. 4624-28`).
+       * - `"aucun"` : dès la délivrance de la source — l'attestation médicale,
+       *   sans laquelle l'autorisation de conduite n'est pas valide
+       *   (`R. 4323-56`).
+       *
+       * Optionnel au type parce qu'une transmission depuis l'établissement ne
+       * date rien (le produit ne sait pas QUI). Requis en test pour toute
+       * transmission d'un titre salarié vers un titre salarié
+       * (`du-a-la-personne.test.ts`) : absent, le délai se serait tu.
+       */
+      delai?: "rythme_du_titre" | "aucun";
     }
   | {
       /**
@@ -941,7 +960,33 @@ type ObligationCommune = {
    * Encoder le premier délai à la place du rythme est une faute qui se
    * reproduira partout où le modèle n'a pas de place pour lui.
    */
+  /*
+   * [2026-10-12, ADR-043 : DEUX TITRES SALARIÉ le portent, et pour eux le
+   * point de départ n'est pas une mise en service mais `Salarie.entreLe` —
+   * la VIP (trois mois, `R. 4624-10`) et la formation à la sécurité (un mois,
+   * `R. 4141-20`). Le générateur des titres ne le lit pas : il n'engendre
+   * aucune ligne ; seul `salaries/du-a-la-personne.ts` le lit, pour dater ce
+   * qui manque à une personne jamais pourvue du titre. Un titre salarié qui
+   * porte ce champ est, par là même, dû à tout l'effectif dès l'entrée.]
+   */
   premierDelai?: Periodicite;
+  /**
+   * Ce qui FONDE `premierDelai`, pour l'écran (ADR-043). Affichage seul :
+   * n'entre pas à l'empreinte. Requis en test pour tout titre salarié qui
+   * porte un premier délai (`du-a-la-personne.test.ts`).
+   *
+   * - `article` : l'article qui pose le délai, cité sous la phrase — pas le
+   *   premier de `referencesLegales`, qui pour la VIP est le renouvellement
+   *   (`R. 4624-16`) et non la visite initiale (`R. 4624-10`) (contre-relecture
+   *   du 2026-10-12). Doit figurer parmi `referencesLegales`.
+   * - `vise` : ce que le délai date, quand le texte ne le pose que sur une
+   *   PARTIE de l'obligation — `R. 4141-20` ne date que le volet « accident
+   *   ou sinistre » de la formation à la sécurité (relecture C1).
+   * - `reste` : ce que le texte dit du reste, en une phrase, quand `vise` est
+   *   posé. Au référentiel plutôt qu'au composant : la phrase est propre à
+   *   l'obligation (contre-relecture, remarque 1).
+   */
+  premierDelaiFonde?: { article: string; vise?: string; reste?: string };
   /**
    * Le régime temporel que le texte impose (ADR-026). **Requis, et c'est le
    * point** — même raisonnement que `transmet` et `pieceMedicale` : optionnel,

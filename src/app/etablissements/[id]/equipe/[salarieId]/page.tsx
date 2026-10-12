@@ -32,6 +32,8 @@ import { obligationsDeclencheesParUnFait } from "@/lib/salaries/obligations-even
 import { titresDuDuerpPourUnePersonne } from "@/lib/salaries/titres-du-duerp";
 import { chargerFaitsActivite } from "@/lib/etablissements/faits-activite-queries";
 import { CarteTitresDuDuerp } from "@/components/salaries/CarteTitresDuDuerp";
+import { CarteCeQuiManque } from "@/components/salaries/CarteCeQuiManque";
+import { ceQuiManqueALaPersonne } from "@/lib/salaries/du-a-la-personne";
 import { ReferenceFondatrice } from "@/components/salaries/ReferenceFondatrice";
 import {
   CHAMP_ETAT,
@@ -144,7 +146,20 @@ export default async function SalarieDetailPage({
   // porteur salarié (ADR-023), et la formation à la sécurité de `L. 4141-2` est
   // due à TOUS les travailleurs. Ce qui varie d'une fiche à l'autre est la date
   // du dernier titre déclaré, pas la liste.
-  const declenchees = obligationsDeclencheesParUnFait(s.titres);
+  const toutesDeclenchees = obligationsDeclencheesParUnFait(s.titres);
+
+  // Ce qui manque à cette personne (ADR-043) : les titres dus à l'entrée et
+  // ceux qu'un titre déclaré appelle, jamais déclarés. La même fonction que le
+  // badge d'Équipe ; les autres cartes la lisent pour ne pas se contredire.
+  const manques = ceQuiManqueALaPersonne(s, s.titres);
+  const manquants = new Set(manques.map((m) => m.obligation.id));
+  // UNE carte par obligation, jamais deux (relevé de l'intégration du
+  // 2026-10-12) : la formation à la sécurité jamais déclarée est datée dans
+  // « À déclarer » ; une fois déclarée, elle revient ici comme fait qui la
+  // redéclenchera. Les deux cartes se relaient, elles ne se doublent pas.
+  const declenchees = toutesDeclenchees.filter(
+    (d) => !manquants.has(d.obligation.id),
+  );
 
   // Ce que les faits d'activité de l'établissement rendent dû à une partie de
   // l'effectif (ADR-038, ADR-041). Lus sur l'établissement : un dossier sans
@@ -221,6 +236,17 @@ export default async function SalarieDetailPage({
                 </p>
               )}
             </section>
+
+            {/* Au-dessus de tout, « Titres détenus » compris : ce que le droit
+                doit à cette personne et qu'aucun titre ne porte — le geste à
+                faire avant l'inventaire (passage visuel du 2026-10-12, la
+                carte venait après une liste « Rien de déclaré »). Daté quand
+                Rojer a de quoi le dater. */}
+            <CarteCeQuiManque
+              manques={manques}
+              now={now}
+              lienModifier={`/etablissements/${id}/equipe/${s.id}/modifier`}
+            />
 
             <CarteFiche titreFort="Titres détenus">
               {conflits.length > 0 && (
@@ -388,6 +414,10 @@ export default async function SalarieDetailPage({
                 sujet, et le sujet est la personne. Elles sont donc ici, sur sa
                 fiche, et **au-dessus** du formulaire : on lit ce qui est dû
                 avant de lire ce qu'on peut saisir. */}
+            {/* Masquée quand tout ce qu'elle listerait est daté plus haut (« À
+                déclarer ») : la carte vide dirait « rien n'est encodé », ce qui
+                est faux. */}
+            {(declenchees.length > 0 || toutesDeclenchees.length === 0) && (
             <CarteFiche titreFort="Ce qui se déclenche pour cette personne">
               {declenchees.length === 0 ? (
                 <p className="m-0 max-w-[64ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
@@ -399,11 +429,18 @@ export default async function SalarieDetailPage({
                   <p className="m-0 max-w-[66ch] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                     Ces obligations ne tombent à aucune date : elles sont dues à
                     un <strong className="font-semibold">fait</strong>{" "}
-                    — une embauche, un changement de poste ou de technique.
-                    Rojer ne voit aucun de ces faits, donc il
-                    n&apos;ouvre ici ni échéance ni retard. Chaque ligne dit à
-                    quoi elle se déclenche ; vous seul savez quand le fait
-                    arrive.
+                    — une embauche, un changement de poste ou de technique.{" "}
+                    {/* ~~Rojer ne voit aucun de ces faits~~ [2026-10-12,
+                        ADR-043 : il voit l'embauche, par la date d'entrée.] */}
+                    {/* Vrai sur toute fiche, y compris d'une personne sortie
+                        ou déjà formée, où rien n'est daté plus haut
+                        (relecture R4) : la phrase dit la règle, pas l'état. */}
+                    Rojer ne voit que l&apos;embauche, par la date
+                    d&apos;entrée : tant qu&apos;aucun titre n&apos;est déclaré
+                    pour une personne présente, la première formation est datée
+                    dans « À déclarer pour cette personne ». Les suivantes
+                    n&apos;ont ni échéance ni retard ; vous seul savez quand le
+                    poste change.
                   </p>
                   <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0">
                     {declenchees.map(({ obligation, dernierTitreLe }) => (
@@ -434,6 +471,7 @@ export default async function SalarieDetailPage({
                 </>
               )}
             </CarteFiche>
+            )}
 
             {/* Ce que le DUERP rend dû à une partie de l'effectif (ADR-038) :
                 au-dessus du formulaire, comme la carte précédente — on lit ce
@@ -441,6 +479,7 @@ export default async function SalarieDetailPage({
             <CarteTitresDuDuerp
               questions={duerpDeLaFiche}
               lienVersLaQuestion={lienVersLaQuestion}
+              manquants={manquants}
             />
 
             <CarteFiche titreFort="Déclarer un titre">

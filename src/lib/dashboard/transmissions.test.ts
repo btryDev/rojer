@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { rapprocher } from "./transmissions";
+import { rapprocher, type PersonneDeclaree } from "./transmissions";
+import { ceQuiManqueALaPersonne } from "@/lib/salaries/du-a-la-personne";
+import { phraseTitre } from "@/components/salaries/CarteTitresDuDuerp";
 import {
   titresEcartesParLesFaits,
   type ReponsesFaitsActivite,
@@ -18,6 +20,32 @@ import { genererRecommandations, type EntreeRecos } from "./recommandations";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 
 const NOW = new Date("2026-08-28T10:00:00Z");
+
+// Une date civile à midi UTC, comme `du-a-la-personne.test.ts` (ADR-011).
+const jour = (iso: string) => new Date(`${iso}T12:00:00.000Z`);
+
+/** Une personne active, entrée à une date donnée, avec ses titres. */
+const personne = (
+  entreLe: string | null,
+  titres: string[] = [],
+  actif = true,
+): PersonneDeclaree => ({
+  actif,
+  entreLe: entreLe === null ? null : jour(entreLe),
+  titres: titres.map((obligationId) => ({
+    obligationId,
+    delivreLe: jour("2026-01-02"),
+  })),
+});
+
+/**
+ * L'effectif d'avant l'ADR-043, quand `rapprocher` recevait un ensemble de
+ * titres : une seule personne active qui les détient tous. Les tests de
+ * grain (domaine, titre nommé, faits) n'ont rien à dire des personnes.
+ */
+const detenant = (...titres: string[]): PersonneDeclaree[] => [
+  personne(null, titres),
+];
 
 const obligation = (o: Partial<Obligation> = {}): Obligation =>
   ({
@@ -52,7 +80,7 @@ const habilitation = () =>
 
 describe("rapprochement des transmissions (ADR-024)", () => {
   it("signale un domaine qu'aucun prestataire déclaré ne couvre", () => {
-    const t = rapprocher([obligation()], [], new Set());
+    const t = rapprocher([obligation()], [], [], NOW);
     expect(t.domainesSansPrestataire).toEqual([
       { domaine: "electricite", libelle: "Électricité" },
     ]);
@@ -60,12 +88,12 @@ describe("rapprochement des transmissions (ADR-024)", () => {
 
   it("se tait dès qu'un prestataire couvre le domaine", () => {
     expect(
-      rapprocher([obligation()], ["electricite"], new Set()).domainesSansPrestataire,
+      rapprocher([obligation()], ["electricite"], [], NOW).domainesSansPrestataire,
     ).toEqual([]);
   });
 
   it("signale une obligation qui suppose une personne, quand aucun titre n'est déclaré", () => {
-    const t = rapprocher([habilitation()], ["electricite"], new Set());
+    const t = rapprocher([habilitation()], ["electricite"], [], NOW);
     expect(t.obligationsSupposantUnePersonne).toEqual([
       { id: "habilitation", libelle: "Habilitation électrique du personnel" },
     ]);
@@ -80,7 +108,8 @@ describe("rapprochement des transmissions (ADR-024)", () => {
       rapprocher(
         [habilitation()],
         ["electricite"],
-        new Set(["elec-salarie-attestation-medicale-voisinage"]),
+        detenant("elec-salarie-attestation-medicale-voisinage"),
+        NOW,
       ).obligationsSupposantUnePersonne,
     ).toEqual([]);
   });
@@ -108,7 +137,8 @@ describe("rapprochement des transmissions (ADR-024)", () => {
       rapprocher(
         [habilitation()],
         ["electricite"],
-        new Set(["formation-securite-salarie-accueil"]),
+        detenant("formation-securite-salarie-accueil"),
+        NOW,
       ).obligationsSupposantUnePersonne,
     ).toEqual([
       { id: "habilitation", libelle: "Habilitation électrique du personnel" },
@@ -119,7 +149,7 @@ describe("rapprochement des transmissions (ADR-024)", () => {
     // Contre-épreuve : sans elle, une implémentation qui signalerait TOUTE
     // obligation passerait les tests précédents.
     expect(
-      rapprocher([obligation()], ["electricite"], new Set())
+      rapprocher([obligation()], ["electricite"], [], NOW)
         .obligationsSupposantUnePersonne,
     ).toEqual([]);
   });
@@ -127,7 +157,7 @@ describe("rapprochement des transmissions (ADR-024)", () => {
   it("une obligation réalisée par l'exploitant ne réclame aucun prestataire", () => {
     // Le faux positif à ne jamais produire : envoyer chercher un tiers pour
     // une obligation que le dirigeant réalise lui-même.
-    const t = rapprocher([obligation({ realisateurs: ["exploitant"] })], [], new Set());
+    const t = rapprocher([obligation({ realisateurs: ["exploitant"] })], [], [], NOW);
     expect(t.domainesSansPrestataire).toEqual([]);
   });
 
@@ -143,7 +173,7 @@ describe("rapprochement des transmissions (ADR-024)", () => {
       realisateurs: ["personne_qualifiee", "exploitant"],
     });
     expect(supposeUnTiers(o)).toBe(false);
-    expect(rapprocher([o], [], new Set()).domainesSansPrestataire).toEqual([]);
+    expect(rapprocher([o], [], [], NOW).domainesSansPrestataire).toEqual([]);
   });
 
   it("une disjonction entièrement composée de tiers en réclame bien un", () => {
@@ -153,7 +183,7 @@ describe("rapprochement des transmissions (ADR-024)", () => {
       realisateurs: ["personne_qualifiee", "organisme_agree"],
     });
     expect(supposeUnTiers(o)).toBe(true);
-    expect(rapprocher([o], [], new Set()).domainesSansPrestataire).toEqual([
+    expect(rapprocher([o], [], [], NOW).domainesSansPrestataire).toEqual([
       { domaine: "electricite", libelle: "Électricité" },
     ]);
   });
@@ -176,12 +206,12 @@ describe("rapprochement des transmissions (ADR-024)", () => {
     });
     // Un autre titre déclaré ne doit rien éteindre.
     expect(
-      rapprocher([o], ["electricite"], new Set(["sst"]))
+      rapprocher([o], ["electricite"], detenant("sst"), NOW)
         .obligationsSupposantUnePersonne,
     ).toHaveLength(1);
     // Le titre nommé, lui, éteint.
     expect(
-      rapprocher([o], ["electricite"], new Set(["levage-caces-titre"]))
+      rapprocher([o], ["electricite"], detenant("levage-caces-titre"), NOW)
         .obligationsSupposantUnePersonne,
     ).toEqual([]);
   });
@@ -193,7 +223,7 @@ describe("rapprochement des transmissions (ADR-024)", () => {
       (o) => o.id === "elec-travail-habilitation-personnel",
     )!;
     const signal = (faits: Partial<ReponsesFaitsActivite>) =>
-      rapprocher([elec], ["electricite"], new Set(), titresEcartesParLesFaits({ ...FAITS, ...faits }))
+      rapprocher([elec], ["electricite"], [], NOW, titresEcartesParLesFaits({ ...FAITS, ...faits }))
         .obligationsSupposantUnePersonne;
     expect(signal({ operationsElectriques: false })).toEqual([]);
     // Le silence ne fait pas taire : un fait non déclaré n'a rien déclaré.
@@ -211,7 +241,7 @@ describe("rapprochement des transmissions (ADR-024)", () => {
       (o) => o.id === "sante-travail-etablissement-liste-postes-risques",
     )!;
     const signal = (faits: Partial<ReponsesFaitsActivite>) =>
-      rapprocher([liste], [], new Set(), titresEcartesParLesFaits({ ...FAITS, ...faits }))
+      rapprocher([liste], [], [], NOW, titresEcartesParLesFaits({ ...FAITS, ...faits }))
         .obligationsSupposantUnePersonne;
     expect(signal({ expositionCMR: false })).toHaveLength(signal({}).length);
   });
@@ -224,7 +254,7 @@ describe("rapprochement des transmissions (ADR-024)", () => {
     );
     expect(versGouverne.length).toBeGreaterThan(0);
     const signal = (faits: Partial<ReponsesFaitsActivite>) =>
-      rapprocher(versGouverne, ["levage"], new Set(), titresEcartesParLesFaits({ ...FAITS, ...faits }))
+      rapprocher(versGouverne, ["levage"], [], NOW, titresEcartesParLesFaits({ ...FAITS, ...faits }))
         .obligationsSupposantUnePersonne;
     expect(signal({ conduiteEngins: false })).toEqual([]);
     expect(signal({})).toHaveLength(versGouverne.length);
@@ -466,7 +496,7 @@ describe("le parc de levage nomme la conduite (revue du lot 7)", () => {
       (o) => o.id === "levage-vgp-semestrielle-chariot-gerbeur",
     )!;
     expect(
-      rapprocher([vgp], [], new Set()).obligationsSupposantUnePersonne.map(
+      rapprocher([vgp], [], [], NOW).obligationsSupposantUnePersonne.map(
         (o) => o.id,
       ),
     ).toContain("levage-vgp-semestrielle-chariot-gerbeur");
@@ -480,8 +510,313 @@ describe("le parc de levage nomme la conduite (revue du lot 7)", () => {
       (o) => o.id === "levage-vgp-semestrielle-chariot-gerbeur",
     )!;
     expect(
-      rapprocher([vgp], [], new Set(["conduite-salarie-formation"]))
+      rapprocher([vgp], [], detenant("conduite-salarie-formation"), NOW)
         .obligationsSupposantUnePersonne,
     ).toEqual([]);
+  });
+});
+
+describe("le signal compte par personne pour un titre dû à l'entrée (ADR-043 (b))", () => {
+  // Les obligations sont prises au référentiel réel : une copie de test
+  // passerait le jour où la transmission ou le `premierDelai` serait retiré.
+  const ORGANISER = obligationsConformite.find(
+    (o) => o.id === "formation-securite-etablissement-organisation",
+  )!;
+  const ACCUEIL = "formation-securite-salarie-accueil";
+  const SECOURS = obligationsConformite.find(
+    (o) => o.id === "secours-etablissement-mesures",
+  )!;
+  const SECOURISTE = "secours-salarie-secouriste";
+  const signal = (applicables: Obligation[], effectif: PersonneDeclaree[]) =>
+    rapprocher(applicables, [], effectif, NOW)
+      .obligationsSupposantUnePersonne;
+
+  it("les références du référentiel sont bien celles que le test croit", () => {
+    // Sans ces prémisses, les tests suivants passeraient pour une autre raison.
+    expect(
+      ORGANISER.transmet.some(
+        (t) => t.vers === "salarie_designe" && t.titre === ACCUEIL,
+      ),
+    ).toBe(true);
+    expect(
+      obligationsConformite.find((o) => o.id === ACCUEIL)?.premierDelai,
+    ).toBe("mensuelle");
+    expect(
+      SECOURS.transmet.some(
+        (t) => t.vers === "salarie_designe" && t.titre === SECOURISTE,
+      ),
+    ).toBe(true);
+    expect(
+      obligationsConformite.find((o) => o.id === SECOURISTE)?.premierDelai,
+    ).toBeUndefined();
+  });
+
+  it("ne se tait PLUS quand une personne sur deux détient le titre", () => {
+    // LE troisième cran. Avant l'ADR-043, la formation déclarée de la
+    // plongeuse éteignait le signal pour la personne embauchée après elle.
+    const s = signal(
+      [ORGANISER],
+      [personne("2026-01-01", [ACCUEIL]), personne("2026-08-20")],
+    );
+    expect(s).toHaveLength(1);
+    expect(s[0].parPersonne).toEqual([
+      {
+        titre: ACCUEIL,
+        libelleTitre: "Formation à la sécurité reçue par le salarié",
+        sansLeTitre: 1,
+        enRetard: 0,
+        nonDatees: 0,
+        plusAncienRetard: null,
+      },
+    ]);
+  });
+
+  it("se tait quand toutes les personnes actives le détiennent", () => {
+    expect(
+      signal(
+        [ORGANISER],
+        [personne("2026-01-01", [ACCUEIL]), personne("2026-08-20", [ACCUEIL])],
+      ),
+    ).toEqual([]);
+  });
+
+  it("une personne sortie ne compte pas — ni pour réclamer, ni pour répondre", () => {
+    // Sortie sans le titre : ne réclame rien.
+    expect(
+      signal(
+        [ORGANISER],
+        [personne("2026-01-01", [ACCUEIL]), personne("2025-01-01", [], false)],
+      ),
+    ).toEqual([]);
+    // Sortie AVEC le titre, une active sans : le signal reste.
+    expect(
+      signal(
+        [ORGANISER],
+        [personne("2026-08-01"), personne("2025-01-01", [ACCUEIL], false)],
+      )[0]?.parPersonne?.[0].sansLeTitre,
+    ).toBe(1);
+  });
+
+  it("nomme le nombre en retard, et ne date pas qui n'a pas de date d'entrée", () => {
+    // NOW = 2026-08-28. Entrée le 1er juin : un mois → 1er juillet, dépassé.
+    // Entrée le 20 août : 20 septembre, pas encore. Sans date : non datée,
+    // jamais « en retard » (ADR-043 § 2.4).
+    const s = signal(
+      [ORGANISER],
+      [personne("2026-06-01"), personne("2026-08-20"), personne(null)],
+    );
+    expect(s[0].parPersonne).toEqual([
+      {
+        titre: ACCUEIL,
+        libelleTitre: "Formation à la sécurité reçue par le salarié",
+        sansLeTitre: 3,
+        enRetard: 1,
+        nonDatees: 1,
+        // L'échéance de la personne entrée le 1er juin : un mois plus tard.
+        plusAncienRetard: expect.any(Date),
+      },
+    ]);
+  });
+
+  it("compte par LA règle de la fiche : la VIP ne manque pas à qui détient le suivi renforcé", () => {
+    // `ceQuiManqueALaPersonne` écarte la VIP pour un titulaire du SIR
+    // (R. 4624-24). Une seconde règle — « le titre est-il détenu ? » —
+    // compterait cette personne ; la règle partagée ne la compte pas.
+    const versVip = obligation({
+      id: "sonde-vers-vip",
+      libelle: "Sonde — transmet vers la VIP",
+      transmet: [
+        {
+          vers: "salarie_designe",
+          titre: "sante-travail-salarie-vip",
+          motif: "Motif de sonde, assez long pour tenir un contrôle de substance.",
+        },
+      ],
+    });
+    expect(
+      signal([versVip], [personne("2026-01-01", ["sante-travail-salarie-sir"])]),
+    ).toEqual([]);
+    expect(signal([versVip], [personne("2026-01-01")])).toHaveLength(1);
+  });
+
+  it("un titre SOUS CONDITION garde l'ancien comportement : un titre déclaré suffit", () => {
+    // Décision (b) : le produit ne sait pas qui doit être secouriste.
+    // Une personne sur deux le détient → silence, comme avant.
+    expect(
+      signal(
+        [SECOURS],
+        [personne("2026-01-01", [SECOURISTE]), personne("2026-08-20")],
+      ),
+    ).toEqual([]);
+    // Personne ne le détient → le signal générique, SANS compte par personne :
+    // il ne manque à personne au sens de la fiche, et pourtant aucun titre ne
+    // répond à l'obligation.
+    expect(
+      signal([SECOURS], [personne("2026-01-01"), personne("2026-08-20")]),
+    ).toEqual([{ id: SECOURS.id, libelle: SECOURS.libelle }]);
+    // Le titre d'une personne SORTIE ne répond plus pour l'établissement —
+    // le `groupBy` d'avant filtrait déjà `actif: true`.
+    expect(
+      signal(
+        [SECOURS],
+        [personne("2026-01-01"), personne("2024-01-01", [SECOURISTE], false)],
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("un effectif vide garde la forme d'avant : rien à compter, rien de déclaré", () => {
+    expect(signal([ORGANISER], [])).toEqual([
+      { id: ORGANISER.id, libelle: ORGANISER.libelle },
+    ]);
+  });
+
+  it("la carte du tableau de bord dit le nombre, mot pour mot", () => {
+    const transmissions = rapprocher(
+      [ORGANISER],
+      [],
+      [
+        personne("2026-06-01"),
+        personne("2026-08-20"),
+        personne("2026-07-15", [ACCUEIL]),
+      ],
+      NOW,
+    );
+    const reco = genererRecommandations(
+      {
+        etablissementId: "etab-x",
+        verifications: [],
+        actions: [],
+        nbEquipements: 3,
+        duerpSecteurChoisi: true,
+        nbRapports: 2,
+        transmissions,
+      },
+      { now: NOW },
+    ).find((r) => r.kind === "transmission_salarie");
+    expect(reco?.titre).toBe(
+      "Organiser la formation à la sécurité des salariés",
+    );
+    expect(reco?.sousTitre).toBe(
+      "2 salariés sans « Formation à la sécurité reçue par le salarié » — dont 1 en retard",
+    );
+  });
+});
+
+describe("la VIP manquante atteint le tableau de bord (relecture du 2026-10-12, B1)", () => {
+  // Sur le RÉFÉRENTIEL LIVRÉ, pas sur une sonde : la relecture avait vu le
+  // test du compte par personne passer grâce à une obligation fabriquée qui
+  // transmettait vers la VIP — aucune obligation réelle ne le fait.
+  const organisation = obligationsConformite.find(
+    (o) => o.id === "formation-securite-etablissement-organisation",
+  )!;
+
+  it("compte la VIP qui manque, hors de toute transmission", () => {
+    const t = rapprocher([organisation], [], [personne("2026-01-01")], NOW);
+    const dus = t.titresDusNonDeclares.map((c) => c.titre);
+    expect(dus).toContain("sante-travail-salarie-vip");
+    // La formation à la sécurité est comptée par la transmission, pas deux fois.
+    expect(dus).not.toContain("formation-securite-salarie-accueil");
+    const vip = t.titresDusNonDeclares.find((c) => c.titre === "sante-travail-salarie-vip")!;
+    expect(vip).toMatchObject({ sansLeTitre: 1, enRetard: 1, nonDatees: 0 });
+  });
+
+  it("se tait quand la VIP est déclarée", () => {
+    const t = rapprocher([organisation], [], [personne("2026-01-01", ["sante-travail-salarie-vip"])], NOW);
+    expect(t.titresDusNonDeclares.map((c) => c.titre)).not.toContain("sante-travail-salarie-vip");
+  });
+
+  it("la carte du tableau de bord la nomme", () => {
+    const t = rapprocher([organisation], [], [personne("2026-01-01")], NOW);
+    const recos = genererRecommandations(
+      {
+        etablissementId: "etab-x",
+        verifications: [],
+        actions: [],
+        nbEquipements: 3,
+        duerpSecteurChoisi: true,
+        nbRapports: 2,
+        transmissions: t,
+      },
+      { now: NOW, limite: 50 },
+    );
+    const carte = recos.find((r) => r.cle === "titres-dus-non-declares");
+    expect(carte?.sousTitre).toContain("Visite d'information et de prévention");
+    expect(carte?.sousTitre).toContain("dont 1 en retard");
+  });
+});
+
+describe("un titre déclaré l'emporte sur un « non » au fait, partout (contre-relecture du 2026-10-12)", () => {
+  // Une autorisation de conduite est déclarée, le fait « conduite d'engins »
+  // est à « non ». L'attestation médicale conditionne la validité de
+  // l'autorisation (R. 4323-56) : la fiche la date, la carte DUERP ne dit pas
+  // « Non dû », le tableau de bord la compte. Trois surfaces, une réponse.
+  const claire = personne("2026-01-01", [
+    "conduite-salarie-autorisation",
+    "sante-travail-salarie-vip",
+    "formation-securite-salarie-accueil",
+  ]);
+  const ATTESTATION = "conduite-salarie-attestation-medicale";
+  const ecartes = titresEcartesParLesFaits({ ...FAITS, conduiteEngins: false });
+
+  it("le fait écarte bien l'attestation — sinon ce test ne prouverait rien", () => {
+    expect(ecartes.has(ATTESTATION)).toBe(true);
+  });
+
+  it("fiche, carte DUERP et tableau de bord disent la même chose", () => {
+    const fiche = ceQuiManqueALaPersonne(claire, claire.titres).map((m) => m.obligation.id);
+    expect(fiche).toContain(ATTESTATION);
+    expect(phraseTitre("non", null, true)).not.toContain("Non dû");
+    const t = rapprocher([], [], [claire], NOW, ecartes);
+    expect(t.titresDusNonDeclares.map((c) => c.titre)).toContain(ATTESTATION);
+  });
+});
+
+describe("un manque en retard compte comme un retard (décision du 2026-10-12, option 1)", () => {
+  // Le passage visuel du même jour : à priorité 10, la carte tombait derrière
+  // quarante vérifications en retard et la limite de cinq la coupait.
+  const organisation = obligationsConformite.find(
+    (o) => o.id === "formation-securite-etablissement-organisation",
+  )!;
+  const verifsEnRetard = (iso: string, n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `v${i}`,
+      statut: "planifiee" as const,
+      datePrevue: new Date(`${iso}T12:00:00Z`),
+      periodicite: "annuelle" as const,
+      libelleObligation: `Vérification ${i}`,
+      equipementLibelle: "Tableau",
+      archiveLe: null,
+      graceJusquAu: null,
+    }));
+  const recos = (verifs: ReturnType<typeof verifsEnRetard>, entreLe: string) =>
+    genererRecommandations(
+      {
+        etablissementId: "etab-x",
+        verifications: verifs,
+        actions: [],
+        nbEquipements: 3,
+        duerpSecteurChoisi: true,
+        nbRapports: 2,
+        transmissions: rapprocher([organisation], [], [personne(entreLe)], NOW),
+      },
+      { now: NOW },
+    ).map((r) => r.cle);
+
+  it("une VIP due en avril passe devant six vérifications dépassées en juillet", () => {
+    // Entrée le 2026-01-01 : VIP due le 2026-04-01, formation le 2026-02-01.
+    const cles = recos(verifsEnRetard("2026-07-01", 6), "2026-01-01");
+    expect(cles).toContain("titres-dus-non-declares");
+    expect(cles).toContain("transmission-salarie:formation-securite-etablissement-organisation");
+  });
+
+  it("des vérifications plus anciennes passent devant : le rang suit la date, rien n'est réservé", () => {
+    const cles = recos(verifsEnRetard("2025-01-01", 6), "2026-01-01");
+    expect(cles).not.toContain("titres-dus-non-declares");
+  });
+
+  it("sans retard, la carte garde le rang des transmissions", () => {
+    // Entrée récente : rien n'est encore en retard.
+    const cles = recos(verifsEnRetard("2026-07-01", 6), "2026-08-20");
+    expect(cles).not.toContain("titres-dus-non-declares");
   });
 });

@@ -171,7 +171,10 @@ export type SidebarCounts = {
   prestatairesEnRetard?: number;
   /** Titres de salariés dont l'échéance est dépassée, effectif actif
    *  seulement. Un titre sans terme écrit n'y entre pas : il n'est pas en
-   *  attente, il n'a simplement pas de rendez-vous (ADR-023 § 6). */
+   *  attente, il n'a simplement pas de rendez-vous (ADR-023 § 6).
+   *  [2026-10-12, ADR-043] S'y ajoutent les titres DUS ET JAMAIS DÉCLARÉS
+   *  dont le délai est dépassé (VIP, formation à la sécurité depuis l'entrée ;
+   *  ce qu'un titre détenu appelle) — jamais un manque sans date. */
   titresEnRetard?: number;
 };
 

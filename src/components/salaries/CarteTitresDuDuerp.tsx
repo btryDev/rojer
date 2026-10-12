@@ -50,22 +50,49 @@ export function phraseFormation(reponse: ReponseTransverse, nature: string): str
  * le dire, comme pour les formations — la passe Chrome du 2026-10-08 a vu
  * l'habilitation listée sous un « non » sans que rien ne le précise.
  */
-export function phraseTitre(reponse: ReponseTransverse, dernierTitreLe: Date | null): string {
+export function phraseTitre(
+  reponse: ReponseTransverse,
+  dernierTitreLe: Date | null,
+  /**
+   * Le titre manque à cette personne au sens de l'ADR-043 — un titre qu'elle
+   * détient l'appelle (l'autorisation de conduite appelle l'attestation). La
+   * carte « À déclarer » le date ; dire ici « ce n'est pas un retard » la
+   * contredirait.
+   */
+  manquant = false,
+): string {
   const declare = dernierTitreLe
     ? `Titre déclaré pour cette personne, délivré le ${formaterDateLongueFr(dernierTitreLe)}.`
     : null;
-  if (reponse === "non") {
-    return `${declare ? `${declare} ` : ""}Non dû tant que vous répondez non. Si cette personne est pourtant concernée, corrigez la réponse.`;
+  // Le manque d'abord (contre-relecture du 2026-10-12) : un titre qu'un titre
+  // DÉCLARÉ appelle est dû même sous un « non » — la personne détient
+  // l'autorisation de conduite, l'attestation en conditionne la validité
+  // (R. 4323-56). Dire « Non dû » ici contredisait « À déclarer ».
+  if (!declare && manquant) {
+    return "Aucun titre déclaré pour cette personne, alors qu'un titre qu'elle détient l'appelle — voir « À déclarer pour cette personne ».";
   }
-  return declare ?? "Aucun titre déclaré pour cette personne. Ce n'est pas un retard : Rojer ne sait pas si elle est concernée.";
+  if (reponse === "non") {
+    // Titre DÉTENU sous un « non » : la réponse est contredite par la
+    // déclaration, et « Non dû » à côté d'un titre détenu se lisait comme
+    // deux affirmations contraires (passage visuel du 2026-10-12).
+    if (declare) {
+      return `${declare} Vous avez pourtant répondu non à la question : si cette personne est concernée, corrigez la réponse.`;
+    }
+    return "Non dû tant que vous répondez non. Si cette personne est pourtant concernée, corrigez la réponse.";
+  }
+  if (declare) return declare;
+  return "Aucun titre déclaré pour cette personne. Ce n'est pas un retard : Rojer ne sait pas si elle est concernée.";
 }
 
 export function CarteTitresDuDuerp({
   questions,
   lienVersLaQuestion,
+  manquants = new Set(),
 }: {
   questions: readonly QuestionDeLaFiche[];
   lienVersLaQuestion: (questionId: string) => string;
+  /** Les titres qui manquent à cette personne (ADR-043). */
+  manquants?: ReadonlySet<string>;
 }) {
   return (
     <CarteFiche titreFort="Formations liées aux risques du poste">
@@ -122,7 +149,7 @@ export function CarteTitresDuDuerp({
                     </p>
                   )}
                   <p className="m-0 mt-1 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-soft)]">
-                    {phraseTitre(reponse, dernierTitreLe)}
+                    {phraseTitre(reponse, dernierTitreLe, manquants.has(obligation.id))}
                   </p>
                   <ReferenceFondatrice obligation={obligation} />
                 </li>
