@@ -42,19 +42,18 @@ export function raisonObligationRetiree(obligationId: string): string | null {
 
 /**
  * Un libellé lisible pour une obligation retirée : le dernier libellé connu
- * (celui que portaient ses lignes de suivi), sinon l'objet que le motif nomme
- * en tête quand il en nomme un (« Déclaration et contrôle de mise en service
- * (arrêté du 20 novembre 2017, art. 7 à 11) »), sinon l'identifiant.
+ * (celui que portaient ses lignes de suivi), sinon celui que le registre des
+ * retraits a relevé à la sortie de l'obligation (`ObligationRetiree.libelle`).
+ * L'identifiant ne s'affiche plus que pour un id inconnu des deux.
+ *
+ * ~~Sinon l'objet que le motif nomme en tête quand il en nomme un, sinon
+ * l'identifiant.~~ [2026-10-12, `lot/suites-0810` : la tête du motif était
+ * une lecture du texte du relecteur, et un motif ouvert par sa date rendait
+ * l'id brut (« elec-igh-annuelle »). Le registre porte désormais le libellé.]
  */
 export function libelleObligationRetiree(
   obligationId: string,
   dernierLibelleConnu?: string | null,
 ): string {
-  if (dernierLibelleConnu) return dernierLibelleConnu;
-  const motif = OBLIGATIONS_RETIREES[obligationId]?.motif;
-  if (motif && !/^Retirée?\b/.test(motif)) {
-    const tete = motif.split(/\.\s+(?=Retirée?\b)| — /)[0].trim();
-    if (tete) return tete;
-  }
-  return obligationId;
+  return dernierLibelleConnu || OBLIGATIONS_RETIREES[obligationId]?.libelle || obligationId;
 }

@@ -112,8 +112,8 @@ export function motifPrescriptionNonRetenue(
   const p = periodiciteEffective(o);
   const mention = mentionRythmeRetenu(o);
   return mention
-    ? `Rojer retient déjà « ${p} » pour cette obligation (${mention.court.charAt(0).toLowerCase()}${mention.court.slice(1)} ; le texte n'écrit pas de rythme) et garde ce rythme face à une prescription moins stricte.`
-    : `Le référentiel impose déjà un rythme au moins aussi strict (« ${p} »).`;
+    ? `Rojer retient déjà « ${LABEL_PERIODICITE[p]} » pour cette obligation (${mention.court.charAt(0).toLowerCase()}${mention.court.slice(1)} ; le texte n'écrit pas de rythme) et garde ce rythme face à une prescription moins stricte.`
+    : `Le référentiel impose déjà un rythme au moins aussi strict (« ${LABEL_PERIODICITE[p]} »).`;
 }
 
 export type ResultatPrescriptions = {

@@ -124,6 +124,12 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, libellés des
+  // obligations retirées) : `OBLIGATIONS_RETIREES` gagne un `libelle` par
+  // entrée, lu par `libelleObligationRetiree` (page des prescriptions) ; le
+  // motif d'une prescription non retenue dit son rythme en clair. NON : le
+  // générateur ne lit d'une obligation retirée que `absorbePar` et `porteur`,
+  // inchangés. ~~6688d9fbaa6ff949~~.
   // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, suite de C62) :
   // `LABEL_PERIODICITE` sort de `labels.ts` vers le module feuille
   // `label-periodicite.ts`, que `matching/prescriptions.ts` lit pour dire en
@@ -357,7 +363,7 @@ const RELEVE = {
   // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
   // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
   // ~~005b4fafbfab216a~~.
-  empreinte: "6688d9fbaa6ff949",
+  empreinte: "25373a159ab4f97b",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

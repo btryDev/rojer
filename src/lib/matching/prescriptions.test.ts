@@ -5,7 +5,7 @@ import {
   porteurDe,
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
-import { obligationParId } from "@/lib/referentiels/conformite";
+import { OBLIGATIONS_RETIREES, obligationParId } from "@/lib/referentiels/conformite";
 import {
   libelleObligationRetiree,
   raisonObligationRetiree,
@@ -550,13 +550,30 @@ describe("prescription visant une obligation retirée (revue du 2026-10-07)", ()
     expect(res.ignorees[0].raison).toContain("ne s'applique pas (ou plus)");
   });
 
-  it("un libellé lisible : le dernier connu, sinon l'objet du motif, sinon l'id", () => {
+  it("un libellé lisible : le dernier connu, sinon celui du registre des retraits, sinon l'id", () => {
     expect(libelleObligationRetiree("esp-inspection-periodique", "Inspection ESP")).toBe("Inspection ESP");
     expect(libelleObligationRetiree("esp-declaration-mise-en-service")).toBe(
-      "Déclaration et contrôle de mise en service (arrêté du 20 novembre 2017, art. 7 à 11)",
+      "Déclaration et contrôle de mise en service (équipement sous pression)",
     );
-    // Un motif qui commence par la date ne nomme pas d'objet.
-    expect(libelleObligationRetiree("elec-igh-annuelle")).toBe("elec-igh-annuelle");
+    // 2026-10-12 : un motif ouvert par sa date rendait l'id brut ; le
+    // registre porte désormais le libellé.
+    expect(libelleObligationRetiree("elec-igh-annuelle")).toBe(
+      "Vérification annuelle des installations électriques (IGH)",
+    );
+    expect(libelleObligationRetiree("id-jamais-vu")).toBe("id-jamais-vu");
+  });
+
+  it("aucun retrait ne s'affiche par son identifiant ni par un texte de relecteur", () => {
+    // Sur tout le registre, sans recopier de liste : un libellé est une phrase
+    // (majuscule initiale) et ne porte ni date de retrait, ni renvoi à une
+    // décision ou à du code.
+    for (const [id, r] of Object.entries(OBLIGATIONS_RETIREES)) {
+      const l = libelleObligationRetiree(id);
+      expect(l, id).not.toBe(id);
+      expect(l, id).toMatch(/^\p{Lu}/u);
+      expect(l, id).not.toMatch(/Retirée?|\d{4}-\d{2}-\d{2}|décision|`/);
+      expect(l, id).toBe(r.libelle);
+    }
   });
 });
 
@@ -566,12 +583,16 @@ describe("motif d'une prescription non retenue (revue du 2026-10-07)", () => {
     // en atelier hors ERP garde un rythme de la norme.
     const retenue = obligationParId("incendie-travail-extincteurs-revision-atelier-decennale")!;
     const m = motifPrescriptionNonRetenue(retenue);
-    expect(m).toContain("Rojer retient déjà « decennale »");
+    expect(m).toContain("Rojer retient déjà « tous les 10 ans »");
     expect(m).toContain("(rythme de la norme NF S 61-919 ; le texte n'écrit pas de rythme)");
     expect(m).not.toMatch(/impose/);
   });
 
   it("face à un rythme du texte, le dit", () => {
     expect(motifPrescriptionNonRetenue(extincteursAnnuelle)).toContain("Le référentiel impose déjà");
+    // 2026-10-12 : le rythme en clair, jamais son code (« decennale » sans accent).
+    expect(motifPrescriptionNonRetenue({ periodicite: "six_semaines" })).toContain(
+      "(« toutes les 6 semaines »)",
+    );
   });
 });

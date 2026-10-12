@@ -5081,8 +5081,12 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     peuvent entrer dans `ANNONCES` que si leur `declareA` devient
     `ADRESSE_MANQUES_ANNONCES` (le test des deux sens l'exige) ; l'aide du
     stockage cesserait alors d'être leur adresse.
-  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
-    dirigeant, remplaceraient la lecture du motif de relecteur (date, tête).
+  - `OBLIGATIONS_RETIREES` : ~~un libellé et~~ un motif court~~s~~, écrit~~s~~ pour le
+    dirigeant, remplacerai~~en~~t la lecture du motif de relecteur (date~~, tête~~).
+    [2026-10-12, `lot/suites-0810` : le libellé est fait — champ `libelle`
+    requis, relevé dans l'historique du dépôt pour les vingt retraits. Le
+    motif court ne l'est pas : la propriétaire a validé « libellés lisibles »
+    (2026-10-08) ; la date de retrait se lit toujours en tête du motif.]
 
 ### C62 · 2026-10-07 — Fusion des corrections de la revue (C60 + C61) : dernière passe
 
@@ -5119,8 +5123,11 @@ triennale SSI en `booleenne` → « 1 failed | 16 passed (17) » et, dans
     propriétaire** : la rubrique de non-couverture où les annoncer est à
     choisir (leur `declareA` devrait devenir `ADRESSE_MANQUES_ANNONCES`, et
     l'aide du stockage cesserait d'être leur adresse).
-  - `OBLIGATIONS_RETIREES` : un libellé et un motif courts, écrits pour le
-    dirigeant — **à faire**, passe de code suivante.
+  - `OBLIGATIONS_RETIREES` : ~~un libellé et~~ un motif court~~s~~, écrit~~s~~ pour le
+    dirigeant — **à faire**, passe de code suivante. [2026-10-12,
+    `lot/suites-0810` : libellé fait (`ObligationRetiree.libelle`, lu par
+    `libelleObligationRetiree` ; l'identifiant brut ne s'affiche plus). Le
+    motif court reste ouvert — rien ne l'a décidé.]
   - ~~Le motif de surcharge écrit par le moteur (`matching/prescriptions.ts`,
     « Périodicité portée à « semestrielle » ») garde le code brut —
     **à faire** : `LABEL_PERIODICITE` vit dans `calendrier/labels.ts`, dont
