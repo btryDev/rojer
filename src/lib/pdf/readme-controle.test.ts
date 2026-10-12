@@ -302,3 +302,17 @@ describe("contre-lecture du 2026-09-26 : ce que le README affirmait sans l'avoir
     expect(t).toMatch(/06_Permis_de_feu\.txt Non inclus — la lecture a échoué/);
   });
 });
+
+// Relecture indépendante du 2026-10-12 : un registre publié puis repassé
+// non-ERP s'annonçait « non publié ».
+describe("le README dit pourquoi le registre d'accessibilité manque", () => {
+  it("établissement non ERP : non applicable, pas « non publié »", () => {
+    const t = genererReadme({ ...base, regime: { estERP: false, estIGH: false } });
+    expect(t).toContain("Non applicable (l'établissement n'est pas un ERP)");
+    expect(t).not.toContain("registre non publié");
+  });
+
+  it("ERP au registre non publié : non publié", () => {
+    expect(genererReadme(base)).toContain("Non inclus (registre non publié)");
+  });
+});

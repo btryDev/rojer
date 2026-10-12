@@ -215,7 +215,17 @@ export function genererReadme(args: {
     ligne(PIECES_ZIP.plan, "Actions ouvertes puis en cours, chacune par échéance puis criticité", "Non inclus"),
     // Tous sur `zip.files` (contre-lecture du 2026-09-26 : 05 à 08 et
     // Prestataires/ restaient calculés sur des compteurs).
-    ligne(PIECES_ZIP.accessibilite, "URL publique du registre d'accessibilité", "Non inclus (registre non publié)"),
+    // ~~« Non inclus (registre non publié) »~~ pour tout absent : un registre
+    // publié dont l'établissement n'est plus un ERP s'annonçait « non publié »
+    // (relecture indépendante du 2026-10-12). Même ordre que
+    // `registreAuDossier` ; l'adresse publique absente passe par `echecs`.
+    ligne(
+      PIECES_ZIP.accessibilite,
+      "URL publique du registre d'accessibilité",
+      args.regime.estERP
+        ? "Non inclus (registre non publié)"
+        : "Non applicable (l'établissement n'est pas un ERP)",
+    ),
     ligne(PIECES_ZIP.permisFeu, `${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`, "Aucun permis émis sur 12 mois"),
     ligne(PIECES_ZIP.plansPrevention, `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
     ligne(PIECES_ZIP.carnet, "Relevés ECS + analyses légionelles (arrêté 01-02-2010)", "Non configuré"),

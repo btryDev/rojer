@@ -63,7 +63,7 @@ import {
 } from "@/lib/pdf/readme-controle";
 import { attestationUrssafPresente } from "@/lib/prestataires/vigilance";
 import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
-import { registreServiAuPublic } from "@/lib/accessibilite/publication";
+import { registreAuDossier } from "@/lib/accessibilite/publication";
 
 /** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
 function datesAttestationZip(p: {
@@ -314,27 +314,25 @@ export async function GET(
   const registreAccess = await lire(PIECES_ZIP.accessibilite, null, () =>
     prisma.registreAccessibilite.findUnique({
     where: { etablissementId: id },
-    select: { slugPublic: true, publie: true, etablissement: { select: { estERP: true } } },
+    select: { slugPublic: true, publie: true },
   }));
   // La même règle que la page publique (`registreServiAuPublic`) : le ZIP ne
   // donne pas une adresse qui répondrait 404 (2026-10-12). Et sans adresse
   // publique en production, pas d'URL localhost dans un dossier remis à un
   // tiers (audit du 2026-10-12, B7) : la pièce manque, et le README dit
-  // pourquoi.
-  const serviAuPublic =
-    registreAccess !== null &&
-    registreServiAuPublic({
-      publie: registreAccess.publie,
-      estERP: registreAccess.etablissement.estERP,
-    });
-  const refusUrl = serviAuPublic ? refusUrlPublique() : null;
-  if (refusUrl) {
+  // pourquoi. Une seule règle avec « Préparer un contrôle »,
+  // `registreAuDossier` (relecture indépendante du 2026-10-12).
+  const auDossier = registreAuDossier({
+    publie: registreAccess?.publie ?? false,
+    estERP: etablissement.estERP,
+  });
+  if (!auDossier.joint && auDossier.raison === "adresse_absente") {
     noterEchec(
       PIECES_ZIP.accessibilite,
-      new Error(refusUrl),
+      new Error(refusUrlPublique() ?? "adresse publique absente"),
       "adresse publique de l'application non configurée",
     );
-  } else if (registreAccess && serviAuPublic) {
+  } else if (registreAccess && auDossier.joint) {
     const url = `${publicAppUrl()}/accessibilite/${registreAccess.slugPublic}`;
     zip.file(
       PIECES_ZIP.accessibilite,

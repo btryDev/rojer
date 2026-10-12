@@ -6,7 +6,7 @@ import { getDashboardData } from "@/lib/dashboard/queries";
 import { compterVigilanceParGravite } from "@/lib/prestataires/queries";
 import { prisma } from "@/lib/prisma";
 import { formaterDateFr } from "@/lib/dates";
-import { registreServiAuPublic } from "@/lib/accessibilite/publication";
+import { registreAuDossier } from "@/lib/accessibilite/publication";
 import { fraicheurCalendrier, phraseFraicheur } from "@/lib/calendrier/fraicheur";
 import { couvertureDuDossier } from "@/lib/perimetre/faits";
 import { faitInventaire } from "@/lib/perimetre/couverture";
@@ -136,8 +136,9 @@ export default async function ControlePage({
   // réponse, devant la personne même à qui l'on remet le dossier. `null`
   // aussi quand la couverture n'a pu être lue : on n'affirme rien.
   const inventaire = couverture ? faitInventaire(couverture) : null;
-  // La règle de la page publique, pas une paraphrase (2026-10-12).
-  const registreEnLigne = registreServiAuPublic({
+  // La règle du ZIP, pas une paraphrase (2026-10-12) : ce que la ligne dit
+  // joint est ce que le ZIP joint (`registreAuDossier`).
+  const registreDossier = registreAuDossier({
     publie: registreAccessibilite?.publie ?? false,
     estERP: etablissement.estERP,
   });
@@ -235,18 +236,25 @@ export default async function ControlePage({
       ),
       reference: "Art. L. 4121-2 CT",
     },
+    // ~~« Publié et consultable en ligne. » dès le registre servi~~ — le ZIP
+    // écartait la pièce quand l'adresse publique manque en production
+    // (relecture indépendante du 2026-10-12). Le registre reste servi : la
+    // pastille ne change pas, la phrase dit qu'il ne part pas au dossier.
     accessibilite: {
-      description: etablissement.estERP
-        ? registreEnLigne
-          ? "Publié et consultable en ligne."
-          : "Registre non publié. À rendre public."
-        : "Non applicable — votre établissement n'est pas un ERP.",
-      present: registreEnLigne,
-      etat: !etablissement.estERP
-        ? "non_applicable"
-        : registreEnLigne
-          ? "a_jour"
-          : "a_planifier",
+      description: registreDossier.joint
+        ? "Publié et consultable en ligne."
+        : registreDossier.raison === "non_erp"
+          ? "Non applicable — votre établissement n'est pas un ERP."
+          : registreDossier.raison === "non_publie"
+            ? "Registre non publié. À rendre public."
+            : "Publié, mais non joint au dossier : l'adresse publique de l'application n'est pas configurée sur ce serveur.",
+      present: registreDossier.joint,
+      etat:
+        !registreDossier.joint && registreDossier.raison === "non_erp"
+          ? "non_applicable"
+          : !registreDossier.joint && registreDossier.raison === "non_publie"
+            ? "a_planifier"
+            : "a_jour",
       reference: "Arrêté 19-04-2017",
     },
     // Les quatre pièces que l'écran taisait. Pas de pastille : leur présence
