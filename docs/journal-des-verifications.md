@@ -4827,10 +4827,15 @@ relecture du 05/10, lecture retenue par la propriétaire : l'annuelle reste, la
 triennale s'y ajoute. Dit dans les `notesInternes` de la triennale et dans sa
 description.
 
-**Contourné, pas résolu.** Le moteur n'évalue que l'appareil déclencheur : la
+~~**Contourné, pas résolu.** Le moteur n'évalue que l'appareil déclencheur : la
 présence d'un SSI A/B se demande au désenfumage, pas à l'alarme. La réponse se
 donne donc deux fois et rien ne vérifie qu'elles concordent ; un test le fixe
-comme limite assumée.
+comme limite assumée.~~ [2026-10-12, `lot/suites-0810` : la présence d'un SSI
+A/B est sur la fiche de l'établissement (`Etablissement.ssiCategorieAouB`,
+migration additive `20261012140000`, décision de la propriétaire du
+2026-10-08) ; le désenfumage ne la pose plus, le test « limite assumée » est
+inversé. La question de l'alarme (MS 73 § 2) reste par appareil : elle se
+donne encore deux fois, fiche et alarme, sans contrôle de concordance.]
 
 **Restent dehors (réserve `MS 73`).** Les sprinkleurs, soumis à la même
 triennale, sans catégorie d'équipement ; « par une personne ou un organisme

@@ -380,7 +380,15 @@ export const obligationsConformite: Obligation[] = [
 // `Salarie.entreLe` par `salaries/du-a-la-personne.ts`. Le générateur des
 // titres ne lit pas le champ : aucune ligne ne change, la réconciliation
 // rend un calendrier identique. 174 + 0 − 0 = 174.
-export const REFERENTIEL_VERSION = "2026-10-12.1";
+// `2026-10-12.2` (`lot/suites-0810`, décision de la propriétaire du
+// 2026-10-08, point 9) : `incendie-erp-desenfumage-triennale-mecanique-ssi`
+// lit la présence d'un SSI de catégorie A ou B sur la fiche de
+// l'établissement — critère de typologie `ssiCategorieAouB` (seul un « non »
+// retire, le silence retient « à confirmer ») — au lieu de la condition
+// `equipement_propriete_non_infirmee` sur `etablissementASsiCategorieAouB`,
+// posée à chaque désenfumage. Il entre à l'empreinte par `typologies` et
+// `conditions`. Aucune obligation n'entre ni ne sort : 174 + 0 − 0 = 174.
+export const REFERENTIEL_VERSION = "2026-10-12.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

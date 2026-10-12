@@ -43,6 +43,7 @@ function etab(over: Partial<EtablissementMatching> = {}): EtablissementMatching 
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     ...over,
   };
 }

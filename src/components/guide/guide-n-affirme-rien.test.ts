@@ -36,6 +36,7 @@ function bureauSansRien(): EtablissementMatching {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 }
 

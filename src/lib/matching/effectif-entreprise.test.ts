@@ -64,6 +64,7 @@ function etab(site: number, entreprise: number) {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 }
 
@@ -136,6 +137,7 @@ describe("tous les lecteurs d'un seuil d'entreprise lisent la même règle", () 
         conduiteEngins: null,
         expositionCMR: null,
         epiPresents: null,
+        ssiCategorieAouB: null,
       },
       duerp: null,
       equipements: { nbSansObligation: 0, nbEquipements: 1, nbRetires: 0 },

@@ -60,69 +60,22 @@ describe("EquipementForm : les questions exigées (D29 (a))", () => {
   });
 });
 
-describe("EquipementForm : la question du SSI A ou B suit le désenfumage mécanique (DF 10 § 3)", () => {
-  // Revue du 2026-10-07. La triennale exige les deux installations : tant que
-  // le désenfumage n'est pas déclaré mécanique, la question du SSI ne décide
-  // de rien et n'est pas posée. Sa valeur part en champ caché : le serveur
-  // l'accepte toujours. Éprouvé en rendant la question inconditionnelle.
-  const SSI = "etablissementASsiCategorieAouB";
-  const MECA = "estDesenfumageMecanique";
-
-  it("masquée tant que « mécanique » ne vaut pas « oui », montrée après", () => {
+// ~~« EquipementForm : la question du SSI A ou B suit le désenfumage mécanique
+// (DF 10 § 3) »~~ — 2026-10-12 : la question est passée sur la fiche de
+// l'établissement (décision de la propriétaire du 2026-10-08). Les deux tests
+// qui la montraient après « mécanique : Oui » et gardaient sa valeur en champ
+// caché (C62) n'ont plus d'objet ; celui-ci tient qu'elle ne revient pas.
+describe("EquipementForm : le désenfumage ne pose plus la question du SSI A ou B (DF 10 § 3)", () => {
+  it("ni question, ni champ caché, quelle que soit la réponse « mécanique »", () => {
     const { container } = render(
       <EquipementForm
         action={action}
         libelleSubmit="Créer"
         estERP
-        valeursInitiales={{ categorie: "DESENFUMAGE", [SSI]: false }}
+        valeursInitiales={{ categorie: "DESENFUMAGE", estDesenfumageMecanique: true }}
       />,
     );
-    expect(container.querySelector(`select[name="${SSI}"]`)).toBeNull();
-    const cache = container.querySelector<HTMLInputElement>(`input[type="hidden"][name="${SSI}"]`);
-    expect(cache?.value).toBe("non");
-    fireEvent.change(container.querySelector<HTMLSelectElement>(`select[name="${MECA}"]`)!, {
-      target: { value: "oui" },
-    });
-    expect(container.querySelector(`select[name="${SSI}"]`)).not.toBeNull();
-    expect(container.querySelector(`input[type="hidden"][name="${SSI}"]`)).toBeNull();
-  });
-
-  it("masquée APRÈS une réponse : c'est la réponse choisie qui part, pas la valeur initiale", () => {
-    // Revue finale du 2026-10-07 (C62). Le champ caché renvoyait
-    // `valeursInitiales` : mécanique « oui », SSI « non », puis mécanique
-    // « je ne sais pas » — et le « non » qu'on venait de donner était perdu.
-    const { container } = render(
-      <EquipementForm
-        action={action}
-        libelleSubmit="Créer"
-        estERP
-        valeursInitiales={{ categorie: "DESENFUMAGE" }}
-      />,
-    );
-    const choisir = (champ: string, value: string) =>
-      fireEvent.change(container.querySelector<HTMLSelectElement>(`select[name="${champ}"]`)!, {
-        target: { value },
-      });
-    choisir(MECA, "oui");
-    choisir(SSI, "non");
-    choisir(MECA, "");
-    expect(container.querySelector(`select[name="${SSI}"]`)).toBeNull();
-    const envoye = new FormData(container.querySelector("form")!);
-    expect(envoye.get(SSI)).toBe("non");
-    // Et la question, reposée, la montre toujours.
-    choisir(MECA, "oui");
-    expect(container.querySelector<HTMLSelectElement>(`select[name="${SSI}"]`)!.value).toBe("non");
-  });
-
-  it("déjà « oui » : posée d'emblée", () => {
-    const { container } = render(
-      <EquipementForm
-        action={action}
-        libelleSubmit="Enregistrer"
-        estERP
-        valeursInitiales={{ categorie: "DESENFUMAGE", [MECA]: true }}
-      />,
-    );
-    expect(container.querySelector(`select[name="${SSI}"]`)).not.toBeNull();
+    expect(container.querySelector('select[name="estDesenfumageMecanique"]')).not.toBeNull();
+    expect(container.querySelector('[name="etablissementASsiCategorieAouB"]')).toBeNull();
   });
 });

@@ -59,6 +59,7 @@ const base = (over: Partial<Etab>): Etab => ({
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
   ...over,
 });
 
@@ -81,6 +82,7 @@ const CONTEXTES: Partial<Etab>[] = [
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     comporteLocauxSommeilPublic: false,
     personnesPresentesHabituellement: 30,
   },

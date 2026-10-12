@@ -124,7 +124,7 @@ export async function repondreEpiPresents(
  */
 async function repondreQuestionDeLaFiche(
   etablissementId: string,
-  champ: "manipuleMatieresR422722" | "comporteLocauxSommeilPublic",
+  champ: "manipuleMatieresR422722" | "comporteLocauxSommeilPublic" | "ssiCategorieAouB",
   formData: FormData,
   /** Refuse une réponse que la fiche n'aurait pas gardée ; rend le message. */
   garde?: (oui: boolean) => Promise<string | null>,
@@ -159,6 +159,15 @@ export async function repondreMatieres(
   formData: FormData,
 ): Promise<ReponseParametrage> {
   return repondreQuestionDeLaFiche(etablissementId, "manipuleMatieresR422722", formData);
+}
+
+/** DF 10 § 3 (2026-10-12) : la relance du SSI de catégorie A ou B. */
+export async function repondreSsi(
+  etablissementId: string,
+  _prev: ReponseParametrage,
+  formData: FormData,
+): Promise<ReponseParametrage> {
+  return repondreQuestionDeLaFiche(etablissementId, "ssiCategorieAouB", formData);
 }
 
 export async function repondreSommeil(

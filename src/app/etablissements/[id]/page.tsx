@@ -16,6 +16,7 @@ import {
   repondreEpiPresents,
   repondreMatieres,
   repondreSommeil,
+  repondreSsi,
   type ReponseParametrage,
 } from "@/lib/etablissements/parametrage";
 import { relancesDuDossier, type Relance } from "@/lib/etablissements/relance";
@@ -312,6 +313,7 @@ export default async function EtablissementPage({
     manipuleMatieresR422722: repondreMatieres,
     comporteLocauxSommeilPublic: repondreSommeil,
     epiPresents: repondreEpiPresents,
+    ssiCategorieAouB: repondreSsi,
   };
   const actionDeRelance = (relance: Extract<Relance, { mode: "oui_non" }>) => {
     const champ = relance.champ;
@@ -328,6 +330,7 @@ export default async function EtablissementPage({
     conduiteEngins: etab.conduiteEngins,
     expositionCMR: etab.expositionCMR,
     epiPresents: etab.epiPresents,
+    ssiCategorieAouB: etab.ssiCategorieAouB,
   })) {
     // La présence d'EPI a déjà son étape, ci-dessus, avec le détail : la
     // relance la doublerait.

@@ -61,6 +61,7 @@ const TRAVAIL: EtablissementMatching = {
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
 };
 
 type Reponses = Partial<Record<ChampTriEtat, boolean>>;

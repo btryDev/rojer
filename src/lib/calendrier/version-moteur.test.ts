@@ -124,6 +124,14 @@ function estHorsReleve(chemin: string): boolean {
  */
 const RELEVE = {
   version: 6,
+  // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, SSI A/B sur la
+  // fiche) : `matching/engine.ts` lit le critère `ssiCategorieAouB` par
+  // l'évaluateur des faits d'activité, `absence.ts` et `projection.ts`
+  // portent l'attribut. NON, au sens de cette question : ce qui change les
+  // lignes est une DONNÉE du référentiel (la triennale DF 10 § 3 change de
+  // condition), et elle déplace l'empreinte (`2026-10-12.2`), donc le sceau —
+  // chaque dossier sera réconcilié à sa prochaine ouverture. Précédent :
+  // ADR-041 (C65). ~~25373a159ab4f97b~~.
   // Recopiée SANS incrément le 2026-10-12 (`lot/suites-0810`, libellés des
   // obligations retirées) : `OBLIGATIONS_RETIREES` gagne un `libelle` par
   // entrée, lu par `libelleObligationRetiree` (page des prescriptions) ; le
@@ -363,7 +371,7 @@ const RELEVE = {
   // permis. NON : fonction AJOUTÉE, appelée par deux pages seulement, aucune
   // fonction existante n'est touchée — la régénération n'écrit rien d'autre.
   // ~~005b4fafbfab216a~~.
-  empreinte: "25373a159ab4f97b",
+  empreinte: "a1418967cc88cc4f",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

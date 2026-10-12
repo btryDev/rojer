@@ -419,6 +419,7 @@ export async function chargerTransmissions(
       conduiteEngins: etab.conduiteEngins,
       expositionCMR: etab.expositionCMR,
       epiPresents: etab.epiPresents,
+      ssiCategorieAouB: etab.ssiCategorieAouB,
     },
     etab.equipements.map((eq) => ({
       id: eq.id,

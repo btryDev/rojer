@@ -306,6 +306,15 @@ export const etablissementSchema = z
       reponseTroisEtats,
       z.boolean().nullable().optional(),
     ),
+    // SSI de catégorie A ou B (DF 10 § 3), 2026-10-12. Trois états, et la
+    // réponse n'est PAS exigée : le silence retient la triennale du
+    // désenfumage mécanique « à confirmer » (ADR-022). `undefined` traverse —
+    // la question n'est rendue qu'aux ERP des quatre premières catégories, et
+    // un champ non posté n'écrit rien.
+    ssiCategorieAouB: z.preprocess(
+      reponseTroisEtats,
+      z.boolean().nullable().optional(),
+    ),
     epiPresentsDetail: z.preprocess(
       (v) =>
         v === undefined

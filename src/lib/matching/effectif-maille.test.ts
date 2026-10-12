@@ -50,6 +50,7 @@ function etab(
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 }
 

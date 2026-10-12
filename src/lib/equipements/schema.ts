@@ -39,10 +39,13 @@ import { FAMILLES_ESP } from "./esp";
  *     seul un « non » retire la triennale — 2026-10-07, lot 4 relecture JC)
  *   - `estDesenfumageMecanique`     → ERP N1-N4, art. DF 10 § 3 (sur le
  *     DESENFUMAGE ; trois états, seul un « oui » fait naître la triennale)
- *   - `etablissementASsiCategorieAouB` → ERP N1-N4, art. DF 10 § 3 (sur le
+ *   - ~~`etablissementASsiCategorieAouB` → ERP N1-N4, art. DF 10 § 3 (sur le
  *     DESENFUMAGE : le moteur ne lit que l'appareil déclencheur, la présence
  *     d'un SSI A/B dans l'établissement se demande donc au désenfumage
- *     lui-même ; seul un « non » l'éteint)
+ *     lui-même ; seul un « non » l'éteint)~~ [2026-10-12 : RETIRÉE — la
+ *     question est sur la fiche de l'établissement, `ssiCategorieAouB`,
+ *     décision de la propriétaire du 2026-10-08 ; réponses reprises par la
+ *     migration 20261012140000, la clé reste inerte dans le JSON]
  *   - `familleEsp`                  → arrêté du 20 novembre 2017, art. 15 :
  *     inspection périodique biennale des générateurs de vapeur, distinguée du
  *     régime général. ~~Seule propriété d'ÉNUMÉRATION de cette liste ; les
@@ -180,7 +183,8 @@ export const CHAMPS_TRI_ETAT = [
   "estMuParForceHumaine",
   "estSsiCategorieAouB",
   "estDesenfumageMecanique",
-  "etablissementASsiCategorieAouB",
+  // ~~"etablissementASsiCategorieAouB"~~ — 2026-10-12 : sur la fiche de
+  // l'établissement (`Etablissement.ssiCategorieAouB`).
 ] as const;
 
 export type ChampTriEtat = (typeof CHAMPS_TRI_ETAT)[number];
@@ -276,12 +280,6 @@ export const CATEGORIES_TRI_ETAT: readonly {
   },
   {
     champ: "estDesenfumageMecanique",
-    categories: ["DESENFUMAGE"],
-    message: "Spécifique aux installations de désenfumage",
-    erpSeulement: true,
-  },
-  {
-    champ: "etablissementASsiCategorieAouB",
     categories: ["DESENFUMAGE"],
     message: "Spécifique aux installations de désenfumage",
     erpSeulement: true,
@@ -415,7 +413,6 @@ export const equipementSchema = z
     aDetectionDeFuites: triEtat,
     estSsiCategorieAouB: triEtat,
     estDesenfumageMecanique: triEtat,
-    etablissementASsiCategorieAouB: triEtat,
     notes: z.preprocess(
       (v) => (typeof v === "string" ? v.trim() || undefined : v),
       z.string().max(1000).optional(),

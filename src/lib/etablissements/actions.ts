@@ -71,6 +71,9 @@ const CHAMPS_STRUCTURANTS = [
   // (R. 4323-105) ; la fiche la corrige depuis le 2026-10-12 (audit B2), et la
   // checklist régénérait déjà après sa réponse.
   "epiPresents",
+  // DF 10 § 3 (2026-10-12) : la réponse retire ou fixe la triennale du
+  // désenfumage mécanique.
+  "ssiCategorieAouB",
 ] as const;
 
 type ChampStructurant = (typeof CHAMPS_STRUCTURANTS)[number];
@@ -148,6 +151,11 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     ...(raw.epiPresentsDetail === undefined
       ? {}
       : { epiPresentsDetail: raw.epiPresentsDetail }),
+    // Même protection : la question n'est rendue qu'aux ERP des quatre
+    // premières catégories ; ailleurs, rien n'est posté et rien ne s'écrit.
+    ...(raw.ssiCategorieAouB === undefined
+      ? {}
+      : { ssiCategorieAouB: raw.ssiCategorieAouB }),
   };
 }
 
@@ -292,6 +300,7 @@ export async function modifierEtablissement(
       manipuleMatieresR422722: true,
       comporteLocauxSommeilPublic: true,
       epiPresents: true,
+      ssiCategorieAouB: true,
     },
   });
   if (!avant) {
