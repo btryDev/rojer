@@ -62,6 +62,12 @@ describe("la carte de ce qui manque", () => {
     expect(rendre("2026-01-05")).toContain("Ce que l'employeur doit à cette personne");
   });
 
+  it("la VIP cite l'article de la visite initiale, pas celui du renouvellement", () => {
+    const html = rendre("2026-01-05");
+    expect(html).toContain("R. 4624-10");
+    expect(html).not.toContain("R. 4624-16");
+  });
+
   it("ne rend rien quand rien ne manque", () => {
     expect(
       renderToStaticMarkup(<CarteCeQuiManque manques={[]} now={NOW} lienModifier="/m" />),

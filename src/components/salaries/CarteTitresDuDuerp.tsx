@@ -64,13 +64,17 @@ export function phraseTitre(
   const declare = dernierTitreLe
     ? `Titre déclaré pour cette personne, délivré le ${formaterDateLongueFr(dernierTitreLe)}.`
     : null;
+  // Le manque d'abord (contre-relecture du 2026-10-12) : un titre qu'un titre
+  // DÉCLARÉ appelle est dû même sous un « non » — la personne détient
+  // l'autorisation de conduite, l'attestation en conditionne la validité
+  // (R. 4323-56). Dire « Non dû » ici contredisait « À déclarer ».
+  if (!declare && manquant) {
+    return "Aucun titre déclaré pour cette personne, alors qu'un titre qu'elle détient l'appelle — voir « À déclarer pour cette personne ».";
+  }
   if (reponse === "non") {
     return `${declare ? `${declare} ` : ""}Non dû tant que vous répondez non. Si cette personne est pourtant concernée, corrigez la réponse.`;
   }
   if (declare) return declare;
-  if (manquant) {
-    return "Aucun titre déclaré pour cette personne, alors qu'un titre qu'elle détient l'appelle — voir « À déclarer pour cette personne ».";
-  }
   return "Aucun titre déclaré pour cette personne. Ce n'est pas un retard : Rojer ne sait pas si elle est concernée.";
 }
 

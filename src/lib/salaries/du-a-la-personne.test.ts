@@ -154,6 +154,21 @@ describe("dû à l'entrée = dû à tout l'effectif, deux sources qui doivent s'
     expect(enDesaccord).toEqual([]);
   });
 
+  it("tout titre dû à l'entrée dit l'article qui pose son délai, cité parmi ses références", () => {
+    // La carte cite cet article sous le délai ; sans lui, la VIP citait son
+    // renouvellement (R. 4624-16) sous « 3 mois après l'entrée »
+    // (contre-relecture du 2026-10-12).
+    const fautes = catalogue
+      .filter((o) => o.premierDelai !== undefined)
+      .filter(
+        (o) =>
+          !o.premierDelaiFonde ||
+          !o.referencesLegales.some((r) => r.article === o.premierDelaiFonde!.article),
+      )
+      .map((o) => o.id);
+    expect(fautes).toEqual([]);
+  });
+
   it("au moins la VIP et la formation à la sécurité sont dues à l'entrée (borne basse)", () => {
     const dus = catalogue.filter((o) => o.premierDelai !== undefined).map((o) => o.id);
     expect(dus).toEqual(expect.arrayContaining([VIP, ACCUEIL]));

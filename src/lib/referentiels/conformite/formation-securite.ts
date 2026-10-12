@@ -219,8 +219,11 @@ export const obligationsFormationSecurite: Obligation[] = [
     // ADR-043 : le mois de R. 4141-20, compté depuis `Salarie.entreLe`.
     premierDelai: "mensuelle",
     // R. 4141-20 ne date que ce volet ; le reste suit l'embauche sans délai chiffré.
-    premierDelaiVise:
-      "le volet « dispositions à prendre en cas d'accident ou de sinistre »",
+    premierDelaiFonde: {
+      article: "R. 4141-20",
+      vise: "le volet « dispositions à prendre en cas d'accident ou de sinistre »",
+      reste: "Le reste de la formation se donne à l'embauche, sans délai chiffré.",
+    },
     nature: "evenementielle",
     pieceAttendue: null,
     realisateurs: ["exploitant"],

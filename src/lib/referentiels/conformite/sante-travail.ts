@@ -71,6 +71,7 @@ export const obligationsSanteTravail: Obligation[] = [
     periodicite: "quinquennale",
     // ADR-043 : le délai d'entrée de R. 4624-10, compté depuis `Salarie.entreLe`.
     premierDelai: "trimestrielle",
+    premierDelaiFonde: { article: "R. 4624-10" },
     nature: "echeance_recurrente",
     pieceAttendue: null,
     realisateurs: ["professionnel_sante_travail"],

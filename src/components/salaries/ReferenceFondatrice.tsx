@@ -8,12 +8,21 @@ import type { Obligation } from "@/lib/referentiels/conformite";
  */
 export function ReferenceFondatrice({
   obligation,
+  article,
 }: {
   obligation: Pick<Obligation, "referencesLegales">;
+  /**
+   * L'article à citer quand ce n'est pas le premier (ADR-043) : le délai
+   * d'entrée de la VIP est fondé par `R. 4624-10`, cité second. Introuvable,
+   * on retombe sur le premier.
+   */
+  article?: string;
 }) {
+  const refs = obligation.referencesLegales;
+  const choisie = refs.find((r) => article !== undefined && r.article === article) ?? refs[0];
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-3">
-      {obligation.referencesLegales.slice(0, 1).map((r) =>
+      {[choisie].map((r) =>
         r.url ? (
           <LegalBadge
             key={r.article ?? r.reference}

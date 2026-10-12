@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { rapprocher, type PersonneDeclaree } from "./transmissions";
+import { ceQuiManqueALaPersonne } from "@/lib/salaries/du-a-la-personne";
+import { phraseTitre } from "@/components/salaries/CarteTitresDuDuerp";
 import {
   titresEcartesParLesFaits,
   type ReponsesFaitsActivite,
@@ -737,5 +739,31 @@ describe("la VIP manquante atteint le tableau de bord (relecture du 2026-10-12, 
     const carte = recos.find((r) => r.cle === "titres-dus-non-declares");
     expect(carte?.sousTitre).toContain("Visite d'information et de prévention");
     expect(carte?.sousTitre).toContain("dont 1 en retard");
+  });
+});
+
+describe("un titre déclaré l'emporte sur un « non » au fait, partout (contre-relecture du 2026-10-12)", () => {
+  // Une autorisation de conduite est déclarée, le fait « conduite d'engins »
+  // est à « non ». L'attestation médicale conditionne la validité de
+  // l'autorisation (R. 4323-56) : la fiche la date, la carte DUERP ne dit pas
+  // « Non dû », le tableau de bord la compte. Trois surfaces, une réponse.
+  const claire = personne("2026-01-01", [
+    "conduite-salarie-autorisation",
+    "sante-travail-salarie-vip",
+    "formation-securite-salarie-accueil",
+  ]);
+  const ATTESTATION = "conduite-salarie-attestation-medicale";
+  const ecartes = titresEcartesParLesFaits({ ...FAITS, conduiteEngins: false });
+
+  it("le fait écarte bien l'attestation — sinon ce test ne prouverait rien", () => {
+    expect(ecartes.has(ATTESTATION)).toBe(true);
+  });
+
+  it("fiche, carte DUERP et tableau de bord disent la même chose", () => {
+    const fiche = ceQuiManqueALaPersonne(claire, claire.titres).map((m) => m.obligation.id);
+    expect(fiche).toContain(ATTESTATION);
+    expect(phraseTitre("non", null, true)).not.toContain("Non dû");
+    const t = rapprocher([], [], [claire], NOW, ecartes);
+    expect(t.titresDusNonDeclares.map((c) => c.titre)).toContain(ATTESTATION);
   });
 });

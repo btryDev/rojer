@@ -294,7 +294,14 @@ export function rapprocher(
   const restants = new Map<string, Obligation>();
   for (const m of manques.flat()) {
     const id = m.obligation.id;
-    if (dejaComptes.has(id) || titresEcartesParLesFaits.has(id)) continue;
+    // ~~`|| titresEcartesParLesFaits.has(id)`~~ (contre-relecture du
+    // 2026-10-12) : un manque n'existe ici que s'il est dû à l'entrée — que
+    // nul fait ne gouverne — ou APPELÉ PAR UN TITRE DÉCLARÉ. Le titre déclaré
+    // l'emporte sur un « non » au fait : une autorisation de conduite sans
+    // attestation n'est pas valide (R. 4323-56), quelle que soit la réponse
+    // d'établissement. Le filtre faisait taire le tableau de bord quand la
+    // fiche et le badge comptaient le manque.
+    if (dejaComptes.has(id)) continue;
     restants.set(id, m.obligation);
   }
 

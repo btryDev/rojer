@@ -29,11 +29,9 @@ function phraseDuManque(m: Manque): string {
     const quand = delai ? `${delai} après l'entrée au plus tard` : "dès l'entrée";
     // Le texte peut ne dater qu'une partie (R. 4141-20 : le volet accident ou
     // sinistre) — on le dit, au lieu de dater l'obligation entière (C1).
-    const vise = m.obligation.premierDelaiVise;
-    const sujet = vise ? `Le texte date ${vise} : ` : "Due ";
-    const reste = vise
-      ? " Le reste de la formation se donne à l'embauche, sans délai chiffré."
-      : "";
+    const fonde = m.obligation.premierDelaiFonde;
+    const sujet = fonde?.vise ? `Le texte date ${fonde.vise} : ` : "Due ";
+    const reste = fonde?.vise && fonde.reste ? ` ${fonde.reste}` : "";
     if (o.entreLe === null || m.echeance === null) {
       return `${sujet}${quand}. La date d'entrée de cette personne n'est pas renseignée : Rojer ne peut pas dater l'échéance.${reste}`;
     }
@@ -105,7 +103,17 @@ export function CarteCeQuiManque({
             <p className="m-0 mt-1.5 max-w-[66ch] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               {phraseDuManque(m)}
             </p>
-            <ReferenceFondatrice obligation={m.obligation} />
+            {/* Le délai d'entrée cite l'article qui le pose (R. 4624-10 pour
+                la VIP, pas le renouvellement) ; un titre appelé cite son
+                propre fondement. */}
+            <ReferenceFondatrice
+              obligation={m.obligation}
+              article={
+                m.origine.type === "entree"
+                  ? m.obligation.premierDelaiFonde?.article
+                  : undefined
+              }
+            />
           </li>
         ))}
       </ul>

@@ -971,13 +971,22 @@ type ObligationCommune = {
    */
   premierDelai?: Periodicite;
   /**
-   * Ce que `premierDelai` date, quand le texte ne le pose que sur une PARTIE
-   * de l'obligation (ADR-043, relecture indépendante du 2026-10-12, C1) :
-   * `R. 4141-20` ne date que le volet « accident ou sinistre » de la
-   * formation à la sécurité. L'écran le nomme au lieu de dater la formation
-   * entière. Affichage seul : n'entre pas à l'empreinte.
+   * Ce qui FONDE `premierDelai`, pour l'écran (ADR-043). Affichage seul :
+   * n'entre pas à l'empreinte. Requis en test pour tout titre salarié qui
+   * porte un premier délai (`du-a-la-personne.test.ts`).
+   *
+   * - `article` : l'article qui pose le délai, cité sous la phrase — pas le
+   *   premier de `referencesLegales`, qui pour la VIP est le renouvellement
+   *   (`R. 4624-16`) et non la visite initiale (`R. 4624-10`) (contre-relecture
+   *   du 2026-10-12). Doit figurer parmi `referencesLegales`.
+   * - `vise` : ce que le délai date, quand le texte ne le pose que sur une
+   *   PARTIE de l'obligation — `R. 4141-20` ne date que le volet « accident
+   *   ou sinistre » de la formation à la sécurité (relecture C1).
+   * - `reste` : ce que le texte dit du reste, en une phrase, quand `vise` est
+   *   posé. Au référentiel plutôt qu'au composant : la phrase est propre à
+   *   l'obligation (contre-relecture, remarque 1).
    */
-  premierDelaiVise?: string;
+  premierDelaiFonde?: { article: string; vise?: string; reste?: string };
   /**
    * Le régime temporel que le texte impose (ADR-026). **Requis, et c'est le
    * point** — même raisonnement que `transmet` et `pieceMedicale` : optionnel,
