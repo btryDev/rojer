@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import { listerQuandCaArrive } from "@/lib/quand-ca-arrive/lignes";
+import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 
 export const metadata = {
   title: "Quand ça arrive — Rojer",
@@ -113,6 +114,13 @@ export default async function QuandCaArrivePage({
                     <p className="m-0 mt-1 max-w-[72ch] text-[14px] leading-[1.5] text-[color:var(--board-ink)]">
                       {l.obligation.libelle}
                     </p>
+                    {/* La marque des autres surfaces (D1) : la ligne est là
+                        parce que la fiche se tait, pas parce qu'elle est due
+                        à coup sûr (audit du 2026-10-12). */}
+                    <MentionAConfirmer
+                      phrases={l.aConfirmer}
+                      className="mt-1.5"
+                    />
                     {l.description && (
                       <p className="m-0 mt-1.5 max-w-[72ch] text-[13px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                         {l.description}

@@ -54,6 +54,24 @@ describe("« Quand ça arrive » — ce que la page présente", () => {
     expect(info?.articles[0]).toBe("L. 4141-1");
   });
 
+  // Audit du 2026-10-12 : `lignesDepuis` ignorait `sansReponse`. Un dossier
+  // muet sur le travail sur écran lisait « Former au travail sur écran »
+  // affirmé comme dû, quand toutes les autres surfaces le disent « à
+  // confirmer » (D1). La phrase est celle de `phrasesAConfirmer`, la même.
+  it("porte la marque « à confirmer » d'une ligne que seul le silence de la fiche retient", () => {
+    const ecran = (e: EtablissementMatching) =>
+      lignes(e).find(
+        (l) => l.obligation.id === "formation-securite-etablissement-travail-sur-ecran",
+      );
+    const muet = ecran(etab({ travailSurEcran: null }));
+    expect(muet).toBeDefined();
+    expect(muet!.aConfirmer.length).toBeGreaterThan(0);
+    // Un « oui » déclaré lève la marque, la ligne reste.
+    const oui = ecran(etab({ travailSurEcran: true }));
+    expect(oui).toBeDefined();
+    expect(oui!.aConfirmer).toEqual([]);
+  });
+
   it("passe par le moteur : un immeuble d'habitation seul, sans employeur, n'y voit rien", () => {
     // La page ne liste pas le référentiel, elle liste ce qui s'APPLIQUE.
     expect(
