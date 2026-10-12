@@ -429,8 +429,13 @@ describe("brief — les titres dus en retard (ADR-043 (d), audit du 2026-10-12)"
   // le bandeau disait « Rien ne presse » au-dessus d'une carte en retard.
   it("sans autre retard, le titre les nomme au lieu du calme", () => {
     const b = construireBrief({ ...CALME, titresDusEnRetard: 2 });
-    expect(b.titre).toBe("Deux titres dus à vos salariés sont en retard");
-    expect(b.precisionReleveRetard).toBe("hors 2 titres dus à vos salariés, en retard");
+    // Des couples personne × titre, et la phrase le dit (2026-10-12).
+    expect(b.titre).toBe(
+      "Deux titres dus à vos salariés, non déclarés, sont en retard — comptés personne par personne",
+    );
+    expect(b.precisionReleveRetard).toBe(
+      "hors 2 titres dus non déclarés, en retard, comptés personne par personne",
+    );
   });
 
   it("le relevé ne change pas de nombre : il les dit à part", () => {
@@ -440,7 +445,7 @@ describe("brief — les titres dus en retard (ADR-043 (d), audit du 2026-10-12)"
       titresDusEnRetard: 1,
     });
     expect(b.titre).toBe("Trois échéances ont dépassé leur date");
-    expect(b.precisionReleveRetard).toBe("hors 1 titre dû à vos salariés, en retard");
+    expect(b.precisionReleveRetard).toBe("hors 1 titre dû non déclaré, en retard");
   });
 
   it("aucun titre en retard : rien ne change", () => {
