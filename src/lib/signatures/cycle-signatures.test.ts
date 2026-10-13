@@ -24,6 +24,8 @@ function correspond(ligne: Ligne | undefined, where: Ligne): boolean {
       // La réservation d'un essai de code (2026-10-12) est conditionnelle.
       if ("gt" in a) return (valeur as number) > (a.gt as number);
       if ("lte" in a) return (valeur as number) <= (a.lte as number);
+      // Le plafond des envois de code (2026-10-13) : `envois < plafond`.
+      if ("lt" in a) return (valeur as number) < (a.lt as number);
       if ("in" in a) return (a.in as unknown[]).includes(valeur);
       return correspond(valeur as Ligne, a);
     }
@@ -48,6 +50,12 @@ function table(lignes: Ligne[]) {
       lignes.push(data);
       return data;
     }),
+    createMany: vi.fn(async ({ data }: { data: Ligne[] }) => {
+      // `skipDuplicates` sur la clé `empreinteAdresse` du quota d'envois.
+      const neuves = data.filter((d) => !lignes.some((l) => l.empreinteAdresse === d.empreinteAdresse));
+      lignes.push(...neuves);
+      return { count: neuves.length };
+    }),
     update: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
       const l = lignes.find((x) => correspond(x, where));
       if (!l) throw new Error("P2025");
@@ -58,11 +66,13 @@ function table(lignes: Ligne[]) {
       const touchees = lignes.filter((x) => correspond(x, where));
       for (const l of touchees) {
         for (const [k, v] of Object.entries(data)) {
-          const op = v as { decrement?: number } | null;
+          const op = v as { decrement?: number; increment?: number } | null;
           l[k] =
             op && typeof op === "object" && "decrement" in op
               ? (l[k] as number) - (op.decrement as number)
-              : v;
+              : op && typeof op === "object" && "increment" in op
+                ? (l[k] as number) + (op.increment as number)
+                : v;
         }
       }
       return { count: touchees.length };
@@ -181,6 +191,7 @@ beforeEach(() => {
   prismaMock.permisFeu = table([]);
   prismaMock.signature = table([]);
   prismaMock.accessToken = table([]);
+  prismaMock.quotaEnvoiOtp = table([]);
   prismaMock.$transaction = async (fn) => fn(prismaMock);
   verrous.length = 0;
   prismaMock.$queryRaw = async (q, ...v) => {
