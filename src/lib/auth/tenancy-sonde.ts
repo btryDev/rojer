@@ -131,17 +131,19 @@ export type Fonction = { nom: string; exportee: boolean; corps: string };
  * privé placé après une fonction exportée n'est pas absorbé dans son corps.
  *
  * `export default function` compris : c'est la forme des pages, que
- * `lecturesAvantAppartenance` balaie aussi.
+ * `lecturesAvantAppartenance` balaie aussi. Et, depuis la revue du 2026-10-13 :
+ * `const f: Type = async (…) =>` (V4b), `const f = async function (…)` (V4c),
+ * les génériques `function f<T>(` et `const f = async <T,>(` (V11).
  *
- * NE VOIT PAS : les méthodes d'objet ou de classe, `const f = function`, les
- * fonctions génériques `const f = async <T>(`. Le corps de la dernière fonction
+ * NE VOIT PAS : les méthodes d'objet ou de classe, une déclaration étalée
+ * sur plusieurs lignes avant sa parenthèse, `const f = g(async () => …)`. Le corps de la dernière fonction
  * s'étend jusqu'à la fin du fichier.
  */
 export function fonctions(source: string): Fonction[] {
   const src = sansCommentairesNiChaines(source);
   const decl = [
     ...src.matchAll(
-      /^(export (?:default )?)?(?:async )?function (\w+)\(|^(export )?const (\w+) = (?:async )?\(/gm,
+      /^(export (?:default )?)?(?:async )?function\s*(\w+)\s*(?:<[^>\n]*>)?\s*\(|^(export )?const (\w+)(?:\s*:[^\n]*?)?\s*=\s*(?:async\s+)?(?:function\b[^(\n]*\(|(?:<[^>\n]*>\s*)?\()/gm,
     ),
   ];
   return decl.map((m, i) => ({
@@ -393,12 +395,31 @@ function equilibre(src: string, ouvre: number, o: string, f: string): string {
  */
 function whereLitteral(corps: string, ouvre: number): string | null {
   const args = equilibre(corps, ouvre, "(", ")");
-  const m = /\bwhere\s*:\s*\{/.exec(args);
-  if (!m) return null;
-  return equilibre(args, m.index + m[0].length - 1, "{", "}");
+  // La clé `where` DE PREMIER NIVEAU de l'objet d'arguments — profondeur 2 :
+  // la parenthèse, puis l'accolade. Le premier `where:` venu pouvait être
+  // celui d'un `include: { rel: { where: { userId } } }` placé avant : la
+  // sonde y lisait un contrôle qui ne bornait pas la ligne lue (revue du
+  // 2026-10-13, V10).
+  let profondeur = 0;
+  for (let i = 0; i < args.length; i++) {
+    const c = args[i];
+    if (c === "(" || c === "{" || c === "[") profondeur++;
+    else if (c === ")" || c === "}" || c === "]") profondeur--;
+    else if (profondeur === 2) {
+      const m = /^\bwhere\s*:\s*\{/.exec(args.slice(i));
+      if (m && !/[\w$]/.test(args[i - 1] ?? "")) {
+        return equilibre(args, i + m[0].length - 1, "{", "}");
+      }
+    }
+  }
+  return null;
 }
 
-const LECTURE_UNITAIRE = /\b\w+\.(\w+)\.(findUnique|findFirst)(?:OrThrow)?\(/g;
+/**
+ * Une lecture qui répond sur UNE ligne désignée : `findUnique`, `findFirst`
+ * — et `count`, qui dit 0 ou 1 aussi bien (revue du 2026-10-13, V9).
+ */
+const LECTURE_UNITAIRE = /\b\w+\.(\w+)\.(findUnique|findFirst|count)(?:OrThrow)?\(/g;
 
 type Evenement = { pos: number; quoi: "lecture_nue" | "appartenance"; libelle: string };
 
@@ -420,7 +441,10 @@ function evenements(
   const out: Evenement[] = [];
   for (const m of fn.corps.matchAll(LECTURE_UNITAIRE)) {
     const where = whereLitteral(fn.corps, m.index + m[0].length - 1);
-    if (where === null) continue;
+    // Un `where` qui étale une variable (`{ ...scope, dateFin }`) n'est pas
+    // jugé, comme `where: scope` : la portée peut venir de la variable
+    // (`getModulesMatrice`), et la sonde ne suit pas les variables.
+    if (where === null || where.includes("...")) continue;
     out.push({
       pos: m.index,
       // Une lecture bornée au compte EST un contrôle : ce qu'elle ne trouve

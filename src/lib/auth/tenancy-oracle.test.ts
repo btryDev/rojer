@@ -36,7 +36,17 @@ import {
  *
  * ## Ce qu'elle ne voit pas
  *
- * - un `where` qui n'est pas un littéral (`where: scope`) : non jugé ;
+ * - un `where` qui n'est pas un littéral (`where: scope`) ou qui étale une
+ *   variable (`where: { ...scope, statut }`) : non jugé — la portée peut
+ *   venir de la variable, et la sonde ne suit pas les variables ;
+ * - un `userId` qui ne borne pas au compte : n'importe quel `userId` dans le
+ *   `where` vaut contrôle, y compris celui d'une autre relation
+ *   (`where: { id, signataire: { userId } }`) ou une valeur qui ne vient pas
+ *   de la session (V15, revue du 2026-10-13). Le dernier cas est fermé par
+ *   `tenancy-ecritures` (aucune action ne reçoit `userId` de l'appelant) ;
+ *   le premier reste à la relecture ;
+ * - `findMany`, `aggregate`, `groupBy` : seules les lectures qui désignent
+ *   une ligne (`findUnique`, `findFirst`, `count`) sont jugées ;
  * - une lecture nue suivie d'une COMPARAISON à la main
  *   (`point.carnet.etablissementId !== etablissementId`) plutôt que d'un
  *   helper : elle n'est pas un contrôle reconnu. Elle n'est un oracle que si
@@ -89,11 +99,80 @@ describe("une lecture par identifiant", () => {
 describe("la sonde elle-même", () => {
   const juge = (src: string, nom: string) => {
     const fns = fonctions(src);
-    return lectureAvantAppartenance(
-      new Map(fns.map((f) => [f.nom, f])),
-      fns.find((f) => f.nom === nom)!,
-    );
+    const fn = fns.find((f) => f.nom === nom);
+    // Une fonction que le découpage ne voit pas n'est jamais jugée : c'est un
+    // faux négatif, et il doit se lire comme tel.
+    if (!fn) return "fonction non découpée";
+    return lectureAvantAppartenance(new Map(fns.map((f) => [f.nom, f])), fn);
   };
+
+  // Les faux négatifs relevés par la revue indépendante du 2026-10-13 : chaque
+  // cas rougissait avant la correction de la sonde.
+  const DEFAUT = `const p = await prisma.plan.findUnique({ where: { id } });
+  await assertEtablissementOwnership(p.etablissementId);`;
+
+  it("V4b — découpe `export const f: Type = async (…) =>`", () => {
+    expect(juge(`export const f: Action = async (id) => {\n  ${DEFAUT}\n};`, "f")).toBe(
+      "plan.findUnique",
+    );
+  });
+
+  it("V4c — découpe `export const f = async function (…)`", () => {
+    expect(juge(`export const f = async function (id) {\n  ${DEFAUT}\n};`, "f")).toBe(
+      "plan.findUnique",
+    );
+  });
+
+  it("V11 — découpe une fonction générique `function f<T>(`", () => {
+    expect(juge(`export async function f<T>(id: T) {\n  ${DEFAUT}\n}`, "f")).toBe(
+      "plan.findUnique",
+    );
+    expect(juge(`export const f = async <T,>(id: T) => {\n  ${DEFAUT}\n};`, "f")).toBe(
+      "plan.findUnique",
+    );
+  });
+
+  it("V9 — relève un `count` par identifiant avant le contrôle", () => {
+    expect(
+      juge(
+        `export async function f(id) {
+  const n = await prisma.plan.count({ where: { id } });
+  if (n === 0) return { status: "error" };
+  await assertEtablissementOwnership(etab);
+}`,
+        "f",
+      ),
+    ).toBe("plan.count");
+  });
+
+  it("V10 — juge le `where` de la requête, pas celui d'un `include` qui le précède", () => {
+    expect(
+      juge(
+        `export async function f(id) {
+  const p = await prisma.plan.findUnique({
+    include: { signatures: { where: { userId: "x" } } },
+    where: { id },
+  });
+  await assertEtablissementOwnership(p.etablissementId);
+}`,
+        "f",
+      ),
+    ).toBe("plan.findUnique");
+    // Et la lecture bornée reste reconnue quand un `include` la précède.
+    expect(
+      juge(
+        `export async function f(id) {
+  const user = await requireUser();
+  const p = await prisma.plan.findFirst({
+    include: { lignes: { where: { actif: true } } },
+    where: { id, etablissement: { entreprise: { userId: user.id } } },
+  });
+  await assertEtablissementOwnership(p.etablissementId);
+}`,
+        "f",
+      ),
+    ).toBeNull();
+  });
 
   it("relève la lecture nue suivie du contrôle", () => {
     expect(
