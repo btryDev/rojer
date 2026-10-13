@@ -15,6 +15,10 @@ const h = vi.hoisted(() => {
     crees: [] as Record<string, unknown>[],
     /** Lignes reçues par `createMany`, pour prouver qu'un refus n'écrit rien. */
     creesEnLot: [] as unknown[],
+    /** Les UPDATE reçus par le faux `$executeRaw`, tels qu'émis. */
+    requetes: [] as { sql: string; valeurs: unknown[] }[],
+    /** Une écriture concurrente, jouée APRÈS la lecture de l'appareil. */
+    apresLecture: null as null | (() => void),
     /** La réponse à « Fournissez-vous des EPI ? », et l'ordre des écritures. */
     etablissement: { id: "etab-1", epiPresents: false as boolean | null },
     journal: [] as string[],
@@ -28,8 +32,14 @@ const h = vi.hoisted(() => {
 
   const prisma = {
     equipement: {
-      findUnique: async ({ where }: { where: { id: string } }) =>
-        db.equipements.find((e) => e.id === where.id) ?? null,
+      // Une PHOTO, comme la base en rend une : la modifier après coup ne
+      // change pas ce que l'appelant a lu.
+      findUnique: async ({ where }: { where: { id: string } }) => {
+        const e = db.equipements.find((x) => x.id === where.id);
+        const photo = e ? structuredClone(e) : null;
+        db.apresLecture?.();
+        return photo;
+      },
       update: async ({
         where,
         data,
@@ -55,6 +65,25 @@ const h = vi.hoisted(() => {
         db.creesEnLot.push(...data);
         return { count: data.length };
       },
+    },
+    // Le faux `$executeRaw` applique la fusion CLÉ À CLÉ que la base applique
+    // à un `jsonb_set` d'une seule ligne. Il reproduit cette sémantique, il ne
+    // la démontre pas : ce que le test prouve, c'est que l'action la délègue
+    // à la base au lieu de fusionner tout l'objet elle-même (même limite que
+    // `activites/actions.test.ts`).
+    $executeRaw: async (strings: TemplateStringsArray, ...valeurs: unknown[]) => {
+      db.requetes.push({ sql: strings.join("?"), valeurs });
+      const [cle, valeur, id, etablissementId] = valeurs as [string, boolean, string, string];
+      const e = db.equipements.find((x) => x.id === id && x.etablissementId === etablissementId) as
+        | (Record<string, unknown> & { caracteristiques?: unknown })
+        | undefined;
+      if (!e) return 0;
+      const base =
+        e.caracteristiques !== null && typeof e.caracteristiques === "object" && !Array.isArray(e.caracteristiques)
+          ? (e.caracteristiques as Record<string, unknown>)
+          : {};
+      e.caracteristiques = { ...base, [cle]: valeur };
+      return 1;
     },
     verification: {
       count: async () => db.nbTraces,
@@ -128,6 +157,8 @@ beforeEach(() => {
   h.db.supprimesPhysiquement = [];
   h.db.crees = [];
   h.db.creesEnLot = [];
+  h.db.requetes = [];
+  h.db.apresLecture = null;
   h.db.etablissement = { id: "etab-1", epiPresents: false };
   h.db.journal = [];
   h.db.regime = { estERP: false, typeErp: null, categorieErp: null, ssiCategorieAouB: null };
@@ -399,6 +430,61 @@ describe("repondreQuestionEquipement : la relance d'un appareil muet (D29 (a))",
     });
     const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
     expect(r.status).toBe("success_avec_avertissement");
+  });
+});
+
+describe("relance d'un appareil muet : une clé écrite par la base (reprise des suites du lot 3)", () => {
+  // La fusion lecture-puis-écriture de tout l'objet JSON écrasait une
+  // écriture concurrente. Éprouvé en remettant la fusion naïve
+  // (`equipement.update` avec `{ ...avant, [champ]: reponse }`).
+  const LEVAGE = CATEGORIES_A_REPONSE_EXIGEE[0];
+  const [champ, autre] = questionsExigeesPour(LEVAGE, REGIME_TRAVAIL);
+  const reponse = (v: string) => {
+    const fd = new FormData();
+    fd.set("reponse", v);
+    return fd;
+  };
+  beforeEach(() => {
+    Object.assign(h.db.equipements[0], {
+      etablissementId: "etab-1",
+      categorie: LEVAGE,
+      caracteristiques: { notes: "garder" },
+    });
+  });
+
+  it("deux réponses simultanées : celle écrite entre la lecture et l'écriture survit", async () => {
+    // La seconde relance du même appareil, répondue pendant que la première
+    // est entre sa lecture et son écriture.
+    h.db.apresLecture = () => {
+      const e = h.db.equipements[0] as { caracteristiques?: Record<string, unknown> };
+      e.caracteristiques = { ...(e.caracteristiques ?? {}), [autre]: true };
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("non"));
+    expect(r.status).toBe("success");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      notes: "garder",
+      [autre]: true,
+      [champ]: false,
+    });
+  });
+
+  it("lie la clé, le booléen et les deux identifiants, sans les concaténer dans le SQL", async () => {
+    await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(h.db.requetes).toHaveLength(1);
+    const [{ sql, valeurs }] = h.db.requetes;
+    expect(valeurs).toEqual([champ, true, "eq-1", "etab-1"]);
+    expect(sql).not.toContain(champ);
+    expect(sql).toContain("jsonb_set");
+    expect(sql).toContain('"updatedAt" = NOW()');
+  });
+
+  it("aucune ligne touchée : l'erreur est dite, rien n'est régénéré", async () => {
+    h.db.apresLecture = () => {
+      h.db.equipements = [];
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(r.status).toBe("error");
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 });
 

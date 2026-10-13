@@ -473,18 +473,40 @@ export async function repondreQuestionEquipement(
     return { status: "error", message: "Répondez oui ou non." };
   }
 
-  const avant =
-    eq.caracteristiques !== null &&
-    typeof eq.caracteristiques === "object" &&
-    !Array.isArray(eq.caracteristiques)
-      ? (eq.caracteristiques as Record<string, unknown>)
-      : {};
-  await prisma.equipement.update({
-    where: { id: equipementId },
-    data: {
-      caracteristiques: { ...avant, [champ]: reponse } as Prisma.InputJsonValue,
-    },
-  });
+  // UNE CLÉ, ÉCRITE PAR LA BASE (reprise des suites du lot 3, 2026-10-13). La
+  // fusion lecture-puis-écriture de tout l'objet JSON écrasait une écriture
+  // concurrente : deux relances répondues ensemble (deux onglets, deux
+  // questions du même appareil), ou une fiche enregistrée entre la lecture
+  // ci-dessus et l'écriture, et l'une des deux réponses redevenait un silence.
+  // Même contrat que `ecrireReponseFermee` (`duerps/ecrire-reponse-fermee.ts`),
+  // la politique sœur du dépôt : un seul UPDATE pose UNE clé par `jsonb_set`
+  // (`create_missing` à vrai), repart d'un objet vide si la colonne n'en est
+  // pas un (NULL tant que rien n'est déclaré), garde un booléen JSON, lie la
+  // clé, la valeur et les identifiants sans les concaténer, et horodate la
+  // ligne — le `@updatedAt` de Prisma est appliqué par le client, pas par la
+  // base. Scopé par l'appareil ET l'établissement dont l'appartenance vient
+  // d'être contrôlée. `champ` est une clé fermée : elle a passé le filtre de
+  // `questionsExigeesPour` plus haut.
+  const lignes = await prisma.$executeRaw`
+    UPDATE "Equipement"
+       SET "caracteristiques" = jsonb_set(
+             CASE
+               WHEN jsonb_typeof("caracteristiques") = 'object'
+               THEN "caracteristiques"
+               ELSE '{}'::jsonb
+             END,
+             ARRAY[${champ}]::text[],
+             to_jsonb(${reponse}::boolean),
+             true
+           ),
+           "updatedAt" = NOW()
+     WHERE "id" = ${equipementId}
+       AND "etablissementId" = ${eq.etablissementId}`;
+  // L'appareil vient d'être lu : zéro ligne veut dire qu'il a disparu
+  // entre-temps. Se taire afficherait une réponse que rien n'a enregistrée.
+  if (lignes === 0) {
+    return { status: "error", message: "Équipement introuvable." };
+  }
 
   const regen = await regenererCalendrier(eq.etablissementId);
   revalidatePath(`/etablissements/${eq.etablissementId}`);
