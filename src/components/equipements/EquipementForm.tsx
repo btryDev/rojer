@@ -91,8 +91,10 @@ const QUESTIONS_TRI_ETAT: Record<
   // Une case à cocher jusqu'au 2026-09-27 (C41) : décochée par défaut, elle
   // écrivait « non » sur toute installation électrique, réponse ou pas, et ce
   // « non » ne pouvait rien éteindre sans éteindre aussi les silences. En trois
-  // états, « Je ne sais pas encore » garde les deux lignes d'EL 18 § 4 ; seul
-  // un « non » choisi les retire.
+  // états, ~~« Je ne sais pas encore » garde les deux lignes d'EL 18 § 4 ; seul
+  // un « non » choisi les retire~~ [2026-10-13, décision de la propriétaire :
+  // seul un « oui » fait naître les deux lignes ; « Non » et « Je ne sais pas
+  // encore » n'en donnent aucune — un groupe électrogène est un appareil].
   aGroupeElectrogene: {
     question: "Un groupe électrogène de sécurité est-il présent ?",
     aide: AIDE_GROUPE_ELECTROGENE,

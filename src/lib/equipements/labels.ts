@@ -198,12 +198,17 @@ export function trierParCategorie<T extends { categorie: CategorieEquipement }>(
  *
  * C41 (2026-09-27) : la case à cocher devient une question à trois états
  * (`CHAMPS_TRI_ETAT`), et les deux lignes d'EL 18 § 4 — la quinzaine des
- * niveaux et l'essai mensuel — portent la même condition `non_infirmee`. Le
+ * niveaux et l'essai mensuel — portent la même condition ~~`non_infirmee`~~
+ * [2026-10-13 : `booleenne` à `true`]. Le
  * texte dit donc ce que fait chacune des trois réponses, avec les libellés
- * mêmes du `<select>` (`VALEURS_TRI_ETAT`) : « Oui » et « Je ne sais pas
- * encore » gardent les deux, « Non » les retire. Il ne dit rien de plus que
+ * mêmes du `<select>` (`VALEURS_TRI_ETAT`) : ~~« Oui » et « Je ne sais pas
+ * encore » gardent les deux, « Non » les retire~~ [2026-10-13, décision de la
+ * propriétaire : « Oui » seul les fait naître ; « Non » et « Je ne sais pas
+ * encore » n'en donnent aucune. L'ancienne fin, « En cas de doute, laissez
+ * “Je ne sais pas encore” », est retirée : elle conseillait la réponse qui,
+ * désormais, n'ajoute rien au calendrier]. Il ne dit rien de plus que
  * ce que le calendrier fait ; `labels.test.ts` tient l'accord avec le
  * référentiel et avec les libellés.
  */
 export const AIDE_GROUPE_ELECTROGENE =
-  "Pour un établissement recevant du public seulement. Avec « Oui » ou « Je ne sais pas encore », le calendrier suit la vérification des niveaux toutes les deux semaines et l'entretien avec essai chaque mois (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéances maintenues par sur-application assumée). Avec « Non », les deux sont retirées. En cas de doute, laissez « Je ne sais pas encore ».";
+  "Pour un établissement recevant du public seulement. Un groupe électrogène de sécurité est un appareil : répondez « Oui » s'il y en a un. Avec « Oui », le calendrier suit la vérification des niveaux toutes les deux semaines et l'entretien avec essai chaque mois (art. EL 18 § 4 du règlement de sécurité — livre II, établissements des quatre premières catégories ; en 5ᵉ catégorie, échéances maintenues par sur-application assumée). Avec « Non » ou « Je ne sais pas encore », aucune des deux n'est suivie.";

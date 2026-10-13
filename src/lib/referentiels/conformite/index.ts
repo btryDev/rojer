@@ -392,7 +392,17 @@ export const obligationsConformite: Obligation[] = [
 // — le contrôle biennal de PO 1 § 3 et les deux séances annuelles de PO 7 —,
 // et le type O exclu des lignes de PE 4 § 2 et PE 27 § 5 qu'elles remplacent
 // pour l'hôtel. 174 + 2 − 0 = 176 ; 173 suivies au quotidien.
-export const REFERENTIEL_VERSION = "2026-10-13.1";
+// `2026-10-13.2` (`lot/conditions-equipement`, décisions de la propriétaire
+// du 2026-10-13) : deux conditions changent, aucune obligation n'entre ni ne
+// sort — 176 + 0 − 0 = 176. (1) Les deux lignes d'EL 18 § 4
+// (`elec-erp-groupe-electrogene-quinzaine` et `-annuel`) passent de
+// `non_infirmee` à `booleenne` à `true` : servies sur un « oui » seulement,
+// plus au silence (le `.12` du 2026-09-27 ci-dessus est ainsi renversé).
+// (2) `signalisation-etablissement-alimentations-secours-annuelle` reçoit
+// `siEquipementDeclare: ["ALARME_INCENDIE", "BAES"]` : due seulement si une
+// signalisation alimentée est déclarée (arrêté du 4 novembre 1993, art. 7).
+// Un bureau de six salariés sans appareil passe de 45 à 44 lignes.
+export const REFERENTIEL_VERSION = "2026-10-13.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

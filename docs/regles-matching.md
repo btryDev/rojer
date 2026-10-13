@@ -273,8 +273,13 @@ antérieures à cette règle et explicitement tolérées
 été appliquées sans réponse, donc personne ne peut les perdre. Une
 troisième, `elec-erp-groupe-electrogene-annuel`, en est sortie le
 2026-09-27 (C41) : la case est devenue une question à trois états, et les
-deux lignes d'EL 18 § 4 portent une condition `non_infirmee`. La liste
-est figée dans les tests ; toute nouvelle entrée doit être justifiée.
+deux lignes d'EL 18 § 4 ~~portent une condition `non_infirmee`~~
+[rayé le 2026-10-13 : elles y sont revenues, les deux, par décision de la
+propriétaire — condition `booleenne` à `true`, servies sur un « oui »
+déclaré seulement. Un groupe électrogène est un appareil, le dirigeant sait
+s'il en a un : règle des propriétés d'équipement, référentiel
+`2026-10-13.2`]. La liste est figée dans les tests ; toute nouvelle entrée
+doit être justifiée.
 
 ### Exclusivité PS 32
 

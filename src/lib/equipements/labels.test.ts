@@ -27,7 +27,9 @@ describe("aide de la question groupe électrogène", () => {
     expect(CHAMPS_TRI_ETAT).toContain("aGroupeElectrogene");
   });
 
-  it("gouverne les deux lignes d'EL 18 § 4, par une condition qui survit au silence", () => {
+  // ~~« par une condition qui survit au silence »~~ (C41, `non_infirmee`) —
+  // rayé le 2026-10-13, décision de la propriétaire : un « oui » est exigé.
+  it("gouverne les deux lignes d'EL 18 § 4, par une condition qui exige « oui » (2026-10-13)", () => {
     const gouvernees = obligationsConformite.filter((o) =>
       (o.conditions ?? []).some(
         (c) => "propriete" in c && c.propriete === "aGroupeElectrogene",
@@ -37,9 +39,11 @@ describe("aide de la question groupe électrogène", () => {
     for (const o of gouvernees) {
       expect(o.conditions, o.id).toEqual([
         {
-          type: "equipement_propriete_non_infirmee",
+          // ~~type: "equipement_propriete_non_infirmee"~~ — 2026-10-13.
+          type: "equipement_propriete_booleenne",
           categorie: "INSTALLATION_ELECTRIQUE",
           propriete: "aGroupeElectrogene",
+          valeur: true,
         },
       ]);
       expect(o.referencesLegales[0].reference, o.id).toContain("EL 18 § 4");
@@ -61,6 +65,17 @@ describe("aide de la question groupe électrogène", () => {
     expect(AIDE_GROUPE_ELECTROGENE).toContain("recevant du public seulement");
     // Plus de case : le texte ne peut plus parler de « cochée ».
     expect(AIDE_GROUPE_ELECTROGENE).not.toMatch(/coch/i);
+  });
+
+  it("ne promet rien sans « oui » et ne conseille pas de laisser la question en suspens (2026-10-13)", () => {
+    // L'aide disait « Avec « Oui » ou « Je ne sais pas encore », le calendrier
+    // suit… » et finissait par « En cas de doute, laissez « Je ne sais pas
+    // encore » » : vrai sous `non_infirmee`, faux sous `booleenne`.
+    expect(AIDE_GROUPE_ELECTROGENE).not.toMatch(/« Oui » ou « Je ne sais pas encore »/);
+    expect(AIDE_GROUPE_ELECTROGENE).not.toMatch(/laissez/i);
+    expect(AIDE_GROUPE_ELECTROGENE).toContain(
+      "Avec « Non » ou « Je ne sais pas encore », aucune des deux n'est suivie.",
+    );
   });
 
   it("nomme les trois réponses par les libellés mêmes du menu", () => {

@@ -144,8 +144,13 @@ ne les y conditionne.
 
 Les obligations d'établissement s'appliquent **même si aucun équipement n'est
 déclaré** — sauf celles qui portent `siEquipementDeclare` (depuis le 2026-10-08 :
-une seule, la formation au risque chimique, due dès qu'un stockage de matières
-dangereuses est déclaré) —, et produisent **une seule ligne** chacune, jamais une par installation
+~~une seule, la formation au risque chimique, due dès qu'un stockage de matières
+dangereuses est déclaré~~ [2026-10-13, remesuré en appelant `obligationsConformite` :
+deux — la formation au risque chimique, due dès qu'un stockage de matières
+dangereuses est déclaré, et l'annuelle des alimentations de secours de
+signalisation, due dès qu'une `ALARME_INCENDIE` ou un `BAES` est déclaré
+(arrêté du 4 novembre 1993, art. 7 et 15 ; décision de la propriétaire,
+référentiel `2026-10-13.2`)]) —, et produisent **une seule ligne** chacune, jamais une par installation
 (ADR-022) : `PE 4 § 2` (entretien triennal des installations techniques en ERP de
 5ᵉ catégorie), `R. 4222-20` (contrôle annuel des installations d'aération), les cinq
 entrées du lot 7 — organiser la formation à la sécurité (`L. 4141-2`), informer les
@@ -196,7 +201,7 @@ ADR-042, remesuré en appelant le moteur, question des chiffons muette : **quara
 **quarante-six**, **quarante-sept** tant que les matières restent muettes, **quarante-trois**,
 **quarante-quatre**, **quarante-sept** après un « non » — moins une partout, les chiffons
 imprégnés passant au niveau audit. Les chiffres de la veille, marqueur levé, étaient 46,
-47, 48 et 44, 45, 48 : ceux écrits juste avant ce crochet étaient déjà périmés] [2026-10-12 : la question des chiffons n'existe plus (ADR-042) et l'ADR-041 ajoute des faits d'activité « à confirmer » ; ~~ces chiffres sont À REMESURER en appelant le moteur, non relevés à la fusion~~] [2026-10-12 (soir), remesuré en appelant `determineObligationsApplicables` sur `712f9ef1`, entreprise = site, aucun appareil : **quarante-cinq**, **quarante-six**, **quarante-sept** tout muet (dont 6, 6, 3 « à confirmer ») ; **quarante-trois**, **quarante-quatre**, **quarante-sept** après un « non » aux matières, le reste muet — 45, 46, 47 − 0 et 43, 44, 47 − 0 : inchangés depuis le 2026-10-08, les trois faits d'activité de l'ADR-041 étant retenus « à confirmer » tant qu'ils sont muets. Cas nouveau, tous les faits à « non » : **quarante**, **quarante et un**, **quarante-quatre** — 43 − 3 (`formation-securite-etablissement-manutention`, `formation-securite-etablissement-travail-sur-ecran`, `epi-etablissement-consigne-utilisation`), 44 − 3, 47 − 3. Le « non » aux matières retire `incendie-travail-consigne-affichee`, `-alarme-sonore` et `-exercice-semestriel` à 6 et 12, rien à 55 (cinquante et une personnes présentes)] (remesuré en appelant le moteur le
+47, 48 et 44, 45, 48 : ceux écrits juste avant ce crochet étaient déjà périmés] [2026-10-12 : la question des chiffons n'existe plus (ADR-042) et l'ADR-041 ajoute des faits d'activité « à confirmer » ; ~~ces chiffres sont À REMESURER en appelant le moteur, non relevés à la fusion~~] [2026-10-12 (soir), remesuré en appelant `determineObligationsApplicables` sur `712f9ef1`, entreprise = site, aucun appareil : ~~**quarante-cinq**, **quarante-six**, **quarante-sept**~~ tout muet (dont 6, 6, 3 « à confirmer ») ; ~~**quarante-trois**, **quarante-quatre**, **quarante-sept**~~ après un « non » aux matières, le reste muet — 45, 46, 47 − 0 et 43, 44, 47 − 0 : inchangés depuis le 2026-10-08, les trois faits d'activité de l'ADR-041 étant retenus « à confirmer » tant qu'ils sont muets. Cas nouveau, tous les faits à « non » : ~~**quarante**, **quarante et un**, **quarante-quatre**~~ — 43 − 3 (`formation-securite-etablissement-manutention`, `formation-securite-etablissement-travail-sur-ecran`, `epi-etablissement-consigne-utilisation`), 44 − 3, 47 − 3. Le « non » aux matières retire `incendie-travail-consigne-affichee`, `-alarme-sonore` et `-exercice-semestriel` à 6 et 12, rien à 55 (cinquante et une personnes présentes)] [2026-10-13, remesuré en appelant `determineObligationsApplicables` sur `lot/conditions-equipement` (référentiel `2026-10-13.2`), mêmes profils, aucun appareil : **quarante-quatre**, **quarante-cinq**, **quarante-six** tout muet (dont 6, 6, 3 « à confirmer ») ; **quarante-deux**, **quarante-trois**, **quarante-six** après un « non » aux matières ; **trente-neuf**, **quarante**, **quarante-trois** tous les faits à « non ». Moins une partout — 45 − 1, 46 − 1, 47 − 1 ; 43 − 1, 44 − 1, 47 − 1 ; 40 − 1, 41 − 1, 44 − 1 — et c'est la même : `signalisation-etablissement-alimentations-secours-annuelle`, désormais due seulement si une `ALARME_INCENDIE` ou un `BAES` est déclaré (`siEquipementDeclare`, décision de la propriétaire). Les chiffres barrés du crochet précédent sont ceux d'avant ce lot] (remesuré en appelant le moteur le
 2026-09-21 : 31, 32, 35 la veille, + 3 événementielles de la chaleur intense, + 5
 autres événementielles ; les ~~vingt-sept, vingt-huit, trente et une~~ écrits ici étaient
 déjà périmés d'une unité avant que le lot chaleur intense n'en ajoute deux) : le règlement intérieur s'ajoute, le local de
@@ -211,7 +216,8 @@ vérification hebdomadaire de l'alarme et la visite trimestrielle des filtres �
 d'un équipement et d'un classement ERP des quatre premières catégories : un bureau n'en
 voit rien, ce qui est la réponse juste. Le 2026-09-02 ils avaient
 gagné sept unités d'un coup : le domaine `signalisation` porte sept lignes que rien ne
-conditionne à un équipement. **Remesurés le même jour après le lot machines : ils n'ont
+conditionne à un équipement [2026-10-13, remesuré en appelant le moteur sur un bureau de six salariés sans appareil : ~~sept~~ six — l'annuelle des
+alimentations de secours ne naît plus que d'une alarme ou d'un BAES déclaré]. **Remesurés le même jour après le lot machines : ils n'ont
 pas bougé**, et c'est la réponse juste — `compactage_dechets` est portée par un
 équipement, donc invisible à un établissement qui n'en déclare aucun. Une remesure qui
 ne déplace rien vaut d'être écrite : sans elle, le prochain lecteur ne saura pas si le

@@ -897,7 +897,18 @@ describe("référentiel conformité — non-régression des obligations critique
   const CONDITIONS_STRICTES_JUSTIFIEES = new Set([
     // ~~"elec-erp-groupe-electrogene-annuel"~~ — retirée le 2026-09-27 (C41) :
     // la question est passée en trois états et la condition en `non_infirmee`,
-    // elle n'est plus stricte.
+    // ~~elle n'est plus stricte~~ [rayé le 2026-10-13 : elle l'est redevenue,
+    // avec sa jumelle, ci-dessous].
+    // 2026-10-13, décision de la propriétaire (référentiel `2026-10-13.2`) :
+    // les deux lignes d'EL 18 § 4 ne sont servies que sur un « oui » déclaré
+    // (`booleenne` à `true`). Lignes DÉJÀ PUBLIÉES qui s'éteignent au silence,
+    // en connaissance de cause : un groupe électrogène de sécurité est un
+    // appareil, le dirigeant sait s'il en a un, et une propriété d'équipement
+    // absente dit « cet appareil ne l'a pas » (règle du non-renseigné,
+    // `.claude/CLAUDE.md`). Le C41 servait deux échéances (quinzaine et mois)
+    // à toute installation électrique d'ERP sans réponse.
+    "elec-erp-groupe-electrogene-annuel",
+    "elec-erp-groupe-electrogene-quinzaine",
     // ~~"levage-vgp-trimestrielle-force-humaine"~~ — retirée le 2026-09-28
     // (revue indépendante du lot 3) : ses deux conditions sont `non_infirmee`,
     // elle est servie au silence et n'est plus stricte.
@@ -1826,6 +1837,14 @@ describe("référentiel conformité — version et empreinte", () => {
     // `ssiCategorieAouB` de la `.12.2`. 174 (`.12.2`) + 2 − 0 = 176, mesuré en
     // appelant `empreinteReferentiel()` après la réunion.
     { version: "2026-10-13.1", empreinte: "176-8239ab60d548b72a" },
+    // 2026-10-13, `lot/conditions-equipement`, décisions de la propriétaire :
+    // deux conditions changent. Les deux lignes d'EL 18 § 4 passent de
+    // `non_infirmee` à `booleenne` à `true` (servies sur un « oui »
+    // seulement) ; l'annuelle des alimentations de secours de signalisation
+    // reçoit `siEquipementDeclare: ["ALARME_INCENDIE", "BAES"]` (art. 7 de
+    // l'arrêté du 4 novembre 1993). 176 + 0 − 0 = 176, deux conditions
+    // changées ; empreinte relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-10-13.2", empreinte: "176-a0fd14fb84a3b2bb" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

@@ -13,7 +13,7 @@ import { FAMILLES_ESP } from "./esp";
  *
  * Les propriétés qui alimentent les conditions d'obligations du référentiel
  * (cf. `src/lib/referentiels/conformite/`) sont :
- *   - `aGroupeElectrogene`          → ERP, art. EL 18 § 4, ses deux périodicités (niveaux tous les quinze jours, essai mensuel ; ~~EL 20~~, installations temporaires, cité à tort — corrigé le 2026-09-27). Trois états depuis le 2026-09-27 (C41) : seul un « non » explicite éteint les deux lignes.
+ *   - `aGroupeElectrogene`          → ERP, art. EL 18 § 4, ses deux périodicités (niveaux tous les quinze jours, essai mensuel ; ~~EL 20~~, installations temporaires, cité à tort — corrigé le 2026-09-27). Trois états depuis le 2026-09-27 (C41) : ~~seul un « non » explicite éteint les deux lignes~~ [2026-10-13, décision de la propriétaire : seul un « oui » les fait naître, condition `booleenne` — la question reste à trois états, comme `estDesenfumageMecanique`].
  *   - `estLocalPollutionSpecifique` → travail, arrêté 08-10-1987 art. 4 § 2
  *   - `aSystemeDeRecyclage`         → travail, arrêté 08-10-1987 art. 4 b)
  *     (contrôle semestriel des gaines de recyclage, en SUS de l'annuel)
@@ -108,7 +108,10 @@ import { FAMILLES_ESP } from "./esp";
  * — aucun n'était une réponse.
  *
  * Celles de `CHAMPS_TRI_ETAT` bornent au contraire des obligations **déjà publiées**, de
- * criticité élevée, en « opt-out » : elles restent applicables tant que le
+ * criticité élevée, en « opt-out » [2026-10-13 : pas toutes — `estDesenfumageMecanique`
+ * (2026-10-07) et `aGroupeElectrogene` (2026-10-13, décision de la propriétaire)
+ * gouvernent un opt-in ; le trois-états y garde la différence entre « Non » et
+ * « pas encore répondu » à l'écran, sans rien ajouter au calendrier] : elles restent applicables tant que le
  * dirigeant n'a pas répondu « non ». Une case à cocher ne convient donc pas —
  * elle ne distingue pas « j'ai répondu non » de « je n'ai pas encore répondu »,
  * et le silence d'un formulaire éteindrait une obligation vitale. Elles sont
