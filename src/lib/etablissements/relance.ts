@@ -16,7 +16,7 @@
 
 import type { QuestionSansReponse } from "@/lib/matching/types";
 import { faitParChamp, intituleDuFait, type ChampFaitActivite } from "./faits-activite";
-import { AIDE_SSI } from "./questions";
+import { AIDE_MATIERES, AIDE_SSI, LIEN_TABLEAU_CLP, QUESTION_MATIERES } from "./questions";
 
 export type QuestionOuiNon =
   | "matieres_r4227_22"
@@ -40,6 +40,8 @@ export type ChampOuiNon =
 export type Relance = {
   titre: string;
   pourquoi: string;
+  /** Un lien affiché sous la raison — le tableau CLP de la question des matières. */
+  lien?: { intro: string; libelle: string; url: string };
 } & (
   | {
       mode: "oui_non";
@@ -74,8 +76,17 @@ export const RELANCES: Record<QuestionSansReponse, Relance> = {
     mode: "oui_non",
     question: "matieres_r4227_22",
     champ: "manipuleMatieresR422722",
-    titre: "Dire si vous manipulez des matières explosives ou inflammables",
-    pourquoi: `Matières classées explosives, comburantes ou extrêmement inflammables, manipulées et mises en œuvre chez vous. Si oui, l'alarme sonore, la consigne incendie et les exercices semestriels sont dus quel que soit l'effectif (art. R. 4227-34 du Code du travail). ${RAPPEL}`,
+    // ~~titre : « Dire si vous manipulez des matières explosives ou
+    // inflammables », raison : « Matières classées explosives, comburantes ou
+    // extrêmement inflammables, manipulées et mises en œuvre chez vous. […] »~~
+    // [2026-10-13, `lot/question-matieres`, décision de la propriétaire : la
+    // question est reformulée pour se répondre étiquette en main. Le titre EST
+    // la question, comme pour les faits d'activité, et la raison est l'aide de
+    // la fiche, mot pour mot — elle dit déjà ce que vaut le silence, le
+    // rappel la doublerait.]
+    titre: QUESTION_MATIERES,
+    pourquoi: AIDE_MATIERES.join(" "),
+    lien: LIEN_TABLEAU_CLP,
   },
   // ~~`chiffons_impregnes`~~ — retirée le 2026-10-08 avec la question
   // (décision de la propriétaire) : la ligne des chiffons est au niveau audit

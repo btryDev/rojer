@@ -45,6 +45,15 @@ permanents en découlent que le référentiel ne porte pas.
 question posée au dirigeant — l'élargir à l'entreposage ferait entrer dans les
 obligations de `R. 4227-34` des établissements que ce texte-là ne vise pas.
 
+[2026-10-13, `lot/question-matieres` : les MOTS de la question ont changé, pas
+son champ. Décision de la propriétaire : elle reste posée à tout employeur et
+se répond désormais étiquette en main (flamme sur un cercle, bombe qui explose,
+mention « extrêmement inflammable »), texte unique dans
+`etablissements/questions.ts`. L'entreposage reste hors de la question, et ce
+paragraphe reste ouvert. Ouvert aussi : des aérosols pulvérisés dans la journée
+suffisent-ils à « manipulées et mises en œuvre » ? — question n° 1 au
+préventeur, `docs/questions-preventeur.md` sur `lot/tri-chantiers`.]
+
 ## ~~2. La date de remise de l'attestation de vigilance~~ — CLOS LE 2026-09-27, RAYÉ LE 2026-10-12
 
 > **Clos par la décision B2** (`2c5672b2`, `801d2f74`, migration
