@@ -7,6 +7,7 @@ import {
   StockageNonConfigure,
 } from "./erreurs";
 import { getStorage } from "./index";
+import { CSP_FICHIER_DEPOSE } from "@/lib/securite/entetes";
 
 /**
  * Sert un fichier stocké, APRÈS que l'appelant a vérifié l'appartenance.
@@ -72,7 +73,10 @@ export async function servirFichier(opts: {
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
       // Même servi `inline`, le document n'exécute rien dans notre origine.
-      "Content-Security-Policy": "sandbox",
+      // Sous Next, c'est la règle de `next.config.ts` qui sort (elle passe
+      // avant la route, cf. `SOURCES_FICHIERS_DEPOSES`) : on pose ici la même
+      // valeur, pour qu'aucun des deux ne contredise l'autre.
+      "Content-Security-Policy": CSP_FICHIER_DEPOSE,
     },
   });
 }

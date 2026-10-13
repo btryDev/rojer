@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { entetesSecurite } from "./src/lib/securite/entetes";
+import { reglesEntetes } from "./src/lib/securite/entetes";
 
 /**
  * Routes réservées au développement.
@@ -31,18 +31,14 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "25mb",
     },
   },
-  // En-têtes de sécurité sur toutes les réponses — le détail et ce que la
-  // CSP laisse en Report-Only sont dans `src/lib/securite/entetes.ts`.
+  // En-têtes de sécurité sur toutes les réponses — le détail, ce que la CSP
+  // laisse en Report-Only et la CSP propre aux fichiers déposés sont dans
+  // `src/lib/securite/entetes.ts`.
   async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: entetesSecurite({
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-          developpement: process.env.NODE_ENV !== "production",
-        }),
-      },
-    ];
+    return reglesEntetes({
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      developpement: process.env.NODE_ENV !== "production",
+    });
   },
 };
 
