@@ -54,8 +54,11 @@ vi.mock("@/lib/prisma", () => {
     prestataire: {
       // La portée par le compte (`etablissement: { entreprise: { userId } }`)
       // est celle du compte connecté du test : seul l'établissement compte ici.
-      findFirst: vi.fn(async ({ where: { etablissement: _portee, ...where } }: { where: Ligne }) =>
-        db.prestataires.find((x) => correspond(x, where)) ?? null),
+      findFirst: vi.fn(async ({ where }: { where: Ligne }) => {
+        const sansPortee = { ...where };
+        delete sansPortee.etablissement;
+        return db.prestataires.find((x) => correspond(x, sansPortee)) ?? null;
+      }),
     },
     accessToken: {
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
@@ -72,7 +75,8 @@ vi.mock("@/lib/signatures/hash-objet", () => ({
   calculerHashObjet: vi.fn(async (_t: string, id: string) => {
     const p = db.permis.find((x) => x.id === id);
     if (!p) return { ok: false, raison: "objet_introuvable" };
-    const { batimentId: _zone, ...couvert } = p;
+    const couvert = { ...p };
+    delete couvert.batimentId;
     return { ok: true, hash: JSON.stringify(couvert), nomDocument: null };
   }),
 }));
