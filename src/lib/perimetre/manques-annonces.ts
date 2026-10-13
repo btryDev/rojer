@@ -185,10 +185,13 @@ type Annonce = {
 };
 
 /**
- * Les ~~vingt-cinq~~ ~~vingt-neuf~~ trente et un articles annoncés, par
- * référence (2026-10-13 : + 4, `GZ 13`, `GZ 14`, `AS 10`, arrêté du
- * 23 février 2018 art. 26 § 3 ; puis + 2 après revue, arrêté du 31 janvier
- * 1986 art. 78-1 et 102 ; puis + 1, `R. 4544-11` : trente-deux).
+ * Les ~~vingt-cinq~~ ~~vingt-neuf~~ ~~trente et un~~ trente-trois articles
+ * annoncés, par référence (2026-10-13 : + 4, `GZ 13`, `GZ 14`, `AS 10`,
+ * arrêté du 23 février 2018 art. 26 § 3 ; puis + 2 après revue, arrêté du
+ * 31 janvier 1986 art. 78-1 et 102 ; puis + 1, `R. 4544-11`). [2026-10-13,
+ * revue : ~~trente-deux~~ — trente-trois, mesuré en appelant
+ * (`Object.keys(ANNONCES).length`) ; le « vingt-cinq » de départ valait déjà
+ * vingt-six depuis l'ajout de `R. 4323-1` le 2026-10-07.]
  *
  * LA CLÉ EST LA RÉFÉRENCE DU CORPUS, ET RIEN N'EST RECOPIÉ D'AUTRE : ni
  * intitulé, ni texte. `manques-annonces.test.ts` tient l'égalité entre ces
@@ -278,7 +281,7 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   "Arrêté 1986-01-31 art. 102": {
     domaine: "habitation",
     condition: "habitation",
-    phrase: `Rojer ne suit pas ${nonPorte("la vérification que les transformations de l'immeuble ne diminuent pas la réaction et la résistance au feu")}, à la charge du propriétaire, ni ${nonPorte("l'identification des places de stationnement utilisées par des personnes non résidentes")}.`,
+    phrase: `Rojer ne suit pas ${nonPorte("la vérification que les transformations de l'immeuble ne diminuent pas la réaction et la résistance au feu")}, à la charge du propriétaire, ni ${nonPorte("l'identification des places de stationnement utilisées par des personnes non résidentes")} pour une durée inférieure à trente jours consécutifs.`,
   },
   // 2026-10-13 : « hors cadre et on l'annonce », décision de la propriétaire.
   "R. 4544-11": {

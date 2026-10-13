@@ -306,6 +306,12 @@ export const ARRETE_1986_HABITATION: Corpus = {
       },
       luLe: "2026-09-03",
       lecture: "agent_verbatim",
+      // 2026-10-13, revue : rétablis — le passage à `non_couvert` les avait emportés.
+      historique:
+        "C51 (2026-09-27), relu par l'API Légifrance (pnpm legifrance:verifier) : URL de modifiePar : l'URL du texte porteur (arrêté de 1986) remplacée par celle de l'arrêté du 27 juillet 2026 que l'API rend (JORFTEXT000054596627). La citation (2° puis 7°, sur deux lignes) est exacte : l'écart du premier passage venait du script, qui ne coupait pas aux sauts de ligne.",
+      citationCle:
+        "2° Le parc de stationnement relève d'un propriétaire unique. Le propriétaire unique ou la personne qu'il désigne expressément pour assurer la gestion du parc est dénommée, pour l'application du présent article, le gestionnaire.\n" +
+        "7° Le gestionnaire assure le suivi et le contrôle des boxes affectés au stockage. Il procède à un contrôle visuel de chaque box affecté au stockage au moins une fois par an et à chaque changement d'utilisateur. Ce contrôle a pour but de s'assurer du respect des dispositions prévues au 4° et de la déclaration mentionnée au 6°. Les résultats du contrôle sont consignés dans le registre mentionné à l'article 101 et tenus à la disposition de l'autorité compétente. Les boxes affectés au stockage sont identifiés dans un document tenu à jour par le gestionnaire et annexé au registre mentionné à l'article 101.",
       statut: "non_couvert",
       declareA: ADRESSE_MANQUES_ANNONCES,
       motif:
@@ -403,6 +409,9 @@ export const ARRETE_1986_HABITATION: Corpus = {
       modifiePar: ARRETE_2020_12_07,
       luLe: "2026-09-01",
       lecture: "agent_verbatim",
+      // 2026-10-13, revue : rétablis — le passage à `non_couvert` les avait emportés.
+      citationCle:
+        "Le propriétaire doit s'assurer que les transformations apportées aux immeubles en ce qui concerne l'affectation des locaux, les matériaux constitutifs des revêtements des couvertures ou des façades, les revêtements de sols et des parois des circulations communes, des celliers ainsi que des parcs, la constitution de ces parois ne soient pas de nature à diminuer les caractéristiques de réaction et de résistance au feu exigées pour ces divers éléments par le présent arrêté. Le propriétaire est tenu de s'assurer du respect des dispositions de l'article 1er, en identifiant les places de stationnement utilisées effectivement par des personnes non résidentes du bâtiment d'habitation pour une durée inférieure à 30 jours consécutifs.",
       statut: "non_couvert",
       declareA: ADRESSE_MANQUES_ANNONCES,
       motif:

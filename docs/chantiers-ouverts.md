@@ -218,7 +218,7 @@ grille C45 (encoder / annoncer / hors cadre),~~ listées au § 8 de
 encodées — le chapitre hôtels, exception à « encodage terminé »
 (`incendie-hotel-po-controle-biennal-installations`,
 `incendie-hotel-po-instruction-personnel-semestrielle`, référentiel
-`2026-10-13.1`, 174 + 2 = 176) ; ~~quatre~~ six annoncées (`GZ 13`, `GZ 14`, `AS 10`,
+`2026-10-13.1`, 174 + 2 = 176) ; ~~quatre~~ ~~six~~ sept annoncées (`GZ 13`, `GZ 14`, `AS 10`,
 arrêté 2018-02-23 art. 26 § 3 ; puis, après revue, arrêté 1986 art. 78-1 et
 102, puis `R. 4544-11`) ; ~~huit~~ ~~six~~ cinq hors cadre (§ 7). Manquantes
 30 → ~~23~~ ~~21~~ 20, toutes hors cadre ; `non_couvert` 66 → 73. La revue indépendante du même jour a aussi fait
@@ -1069,8 +1069,9 @@ l'argument pour ne jamais retirer une question sans ouvrir son texte :
 ~~Les deux sont au corpus en `obligation_manquante`, aucune n'est encodée~~
 [2026-10-13, vérifié dans le code : `GH 61 § 5` a été encodé le 2026-09-04
 (`incendie-igh-charge-calorifique-quinquennale`), puis retiré le 2026-10-07
-avec tout l'IGH ; `GH 61` est `non_couvert`. L'art. 78-1 est classé HORS
-CADRE le 2026-10-13.] : une
+avec tout l'IGH ; `GH 61` est `non_couvert`. ~~L'art. 78-1 est classé HORS
+CADRE le 2026-10-13.~~ L'art. 78-1, classé hors cadre puis annoncé le même jour,
+est `non_couvert`.] : une
 obligation ne s'encode pas en effet de bord d'une question à laquelle elle ne
 répond pas.
 

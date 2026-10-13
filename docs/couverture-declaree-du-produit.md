@@ -154,8 +154,9 @@ retrait de la carte.
 
 ~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
-restreint aux établissements que leur chapitre vise** — sauf les vingt-cinq
-annoncés le 2026-09-27, que la page « Ce que Rojer ne couvre pas » projette au
+restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
+annoncés le 2026-09-27~~ trente-trois annoncés (vingt-cinq le 2026-09-27, un le
+2026-10-07, sept le 2026-10-13 — mesuré en appelant), que la page « Ce que Rojer ne couvre pas » projette au
 seul dossier qu'ils peuvent concerner (§ 3 ter). Un bureau tertiaire les
 voyait tous, y compris les onze articles propres aux hôtels.
 
@@ -888,8 +889,9 @@ cause de chaque ligne est celle du corpus, inchangée sauf pour eux.~~
 **[2026-10-13 : CLASSÉES, décision de la propriétaire.]** Trois encodées —
 le chapitre hôtels, seule exception à « encodage terminé » : un petit hôtel est
 en plein dans la cible, le déclencheur (type O) est déjà demandé, et les deux
-lignes suivent un patron existant (`PE 4 § 2`, `PE 27 § 5`). Quatre annoncées
-(§ 3, « Annoncés le 2026-10-13 »). Huit hors cadre (§ 7). Obligations
+lignes suivent un patron existant (`PE 4 § 2`, `PE 27 § 5`). ~~Quatre annoncées~~
+(§ 3, « Annoncés le 2026-10-13 »). ~~Huit hors cadre~~ (§ 7) [décompte final
+ci-dessous : sept annoncées, cinq hors cadre]. Obligations
 manquantes : 30 − 3 − 4 = ~~**23**~~, toutes dans la cible et toutes au § 7 ;
 `non_couvert` 66 + 4 = ~~70~~ ; référentiel 174 + 2 = 176. [Le même jour,
 après la revue indépendante : 78-1 et 102 de l'arrêté de 1986 passent de hors

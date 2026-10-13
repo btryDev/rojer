@@ -1811,8 +1811,9 @@ describe("référentiel conformité — version et empreinte", () => {
     // ~~176-c21296118ba6a213~~ : empreinte avant la revue indépendante du même
     // jour, jamais servie — ligne réécrite le 2026-10-13 (version non servie) :
     // la ligne biennale déclare `succedeA` la triennale (l'hôtel garde sa
-    // rangée et son dernier rapport) et retire ALARME_INCENDIE de son
-    // contexte. 176 + 0 − 0 = 176.
+    // rangée et son dernier rapport), retire ALARME_INCENDIE de son
+    // contexte et prend le libellé « Entretien et contrôle… » (PE 4 § 2 dit
+    // entretien). 176 + 0 − 0 = 176.
     { version: "2026-10-13.1", empreinte: "176-df8284f8efebaad8" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
