@@ -14,6 +14,10 @@ passent de constat à décision — ils se règlent avant les premiers clients.]
 
 ### Défauts réels
 
+[2026-10-13, décision de la propriétaire : n° 2, 3 et 4 corrigés avant la
+release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
+(seuils du carnet sanitaire) APRÈS LA RELEASE** — ils restent ouverts ici.]
+
 1. **Gaz sans cuisine** ([§ 3 bis](#3-bis-le-registre-de-dette-compté--2026-09-20))
    — la vérification annuelle de `GZ 15` n'atteint que l'ERP 1-4 qui déclare
    un appareil de cuisson ; preuve : `categoriesEquipement:
