@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { cheminDeRetour } from "./chemin-de-retour";
 
 const emailSchema = z.string().email("Adresse e-mail invalide");
 const passwordSchema = z
@@ -41,9 +42,8 @@ export async function signInAction(
     return { error: "Identifiants invalides" };
   }
 
-  const next = (formData.get("next") as string) || "/entreprises";
   revalidatePath("/", "layout");
-  redirect(next);
+  redirect(cheminDeRetour(formData.get("next")));
 }
 
 export async function signUpAction(
