@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cheminPublic, refreshTokenPerime } from "./middleware";
 
 /**
- * Chemins que le proxy (`proxy.ts`, ex-`middleware.ts`) laisse passer sans
+ * Chemins que le proxy (`src/proxy.ts`, ex-`middleware.ts`) laisse passer sans
  * session Supabase.
  *
  * Cette liste est à double tranchant et mérite d'être tenue par des tests

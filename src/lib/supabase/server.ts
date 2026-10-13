@@ -1,7 +1,7 @@
 // Client Supabase côté serveur (RSC, Server Actions, Route Handlers).
 // `cookies()` de next/headers est lu en readonly dans un RSC : set/remove
 // peuvent throw, on les try/catch comme recommandé par la doc @supabase/ssr.
-// Le refresh effectif de la session se fait dans proxy.ts.
+// Le refresh effectif de la session se fait dans src/proxy.ts.
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";

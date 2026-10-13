@@ -1,6 +1,6 @@
 // Helper du proxy : rafraîchit la session Supabase à chaque requête et
 // redirige vers /login si aucun user et que la route n'est pas whitelistée.
-// Appelé depuis proxy.ts à la racine (ex-middleware.ts, renommé pour Next 16).
+// Appelé depuis src/proxy.ts (ex-middleware.ts racine, renommé pour Next 16).
 // Le fichier garde son nom : il disparaîtra avec Supabase Auth.
 
 import { createServerClient } from "@supabase/ssr";
