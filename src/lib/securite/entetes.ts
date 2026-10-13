@@ -65,6 +65,54 @@ export function politiqueContenu(options: {
     .join("; ");
 }
 
+/**
+ * Les routes qui servent un fichier déposé (`storage/servir.ts`), en syntaxe
+ * `source` de Next.
+ *
+ * Pourquoi la politique des fichiers vit ICI et pas seulement dans la route
+ * (ASVS V3.2.1, audit du 2026-10-13) : Next pose les en-têtes de
+ * `next.config.ts` avant que la route réponde, et n'ajoute ceux de la route
+ * que s'ils sont absents (`server/send-response.js`). La CSP `sandbox` posée
+ * par `servirFichier` était donc écrasée par la `frame-ancestors 'none'` de la
+ * règle `/:path*`, et n'avait jamais atteint un navigateur.
+ *
+ * Choix : une seconde règle, plus bas que `/:path*`, qui porte la politique
+ * FUSIONNÉE (la dernière règle qui correspond l'emporte). Écartée : exclure
+ * ces chemins de la règle globale et laisser la route poser sa CSP — un 401,
+ * un 404 ou une erreur rendus avant `servirFichier` sortiraient alors sans
+ * aucune CSP, `frame-ancestors` compris. Ici, tout ce que sert le chemin
+ * reçoit les deux directives, quel que soit le chemin de code.
+ *
+ * Une route ajoutée plus tard qui appelle `servirFichier` sans figurer ici
+ * fait tomber `entetes-servis.test.ts` : la liste n'est pas tenue à la main
+ * sans garde.
+ */
+export const SOURCES_FICHIERS_DEPOSES = [
+  "/api/rapports/:id/fichier",
+  "/api/analyses-legionelles/:id/rapport",
+  "/api/prestataires/:id/pieces/:piece",
+  "/api/prestataires/:id/pieces-precedentes/:pieceId",
+] as const;
+
+/** La CSP d'un fichier déposé : n'exécute rien dans notre origine, ne s'encadre pas. */
+export const CSP_FICHIER_DEPOSE = "sandbox; frame-ancestors 'none'";
+
+type RegleEntetes = { source: string; headers: Entete[] };
+
+/** Ce que `next.config.ts` rend dans `headers()` — l'ordre compte. */
+export function reglesEntetes(options: {
+  supabaseUrl: string | undefined;
+  developpement: boolean;
+}): RegleEntetes[] {
+  return [
+    { source: "/:path*", headers: entetesSecurite(options) },
+    ...SOURCES_FICHIERS_DEPOSES.map((source) => ({
+      source,
+      headers: [{ key: "Content-Security-Policy", value: CSP_FICHIER_DEPOSE }],
+    })),
+  ];
+}
+
 export function entetesSecurite(options: {
   supabaseUrl: string | undefined;
   developpement: boolean;
