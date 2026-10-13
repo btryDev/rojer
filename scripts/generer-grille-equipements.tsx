@@ -283,7 +283,9 @@ const C = {
   audit: "6%",
 } as const;
 
-const cell = { paddingRight: 6 } as const;
+// 2026-10-13, retour de la propriétaire : 6 → 12, plus d'air entre les
+// colonnes qui passent à la ligne.
+const cell = { paddingRight: 12 } as const;
 
 /**
  * `stylesCommuns.page` porte `lineHeight: 1.4`. Dans cette version de
@@ -297,7 +299,7 @@ const stylePage = { ...s.page, lineHeight: undefined } as const;
 
 function EnTeteTableau() {
   return (
-    <View style={s.thead}>
+    <View style={[s.thead, { marginTop: 14 }]}>
       <Text style={[s.th, cell, { width: C.obligation }]}>Obligation</Text>
       <Text style={[s.th, cell, { width: C.periodicite }]}>Échéance</Text>
       <Text style={[s.th, cell, { width: C.realisateur }]}>Par qui</Text>
@@ -871,7 +873,7 @@ function GrilleDocument({
           <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>
             Équipement déclarable
           </Text>
-          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 4 }]}>
+          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 8 }]}>
             {LABEL_CATEGORIE_EQUIPEMENT[categorie]}
           </Text>
           {DESCRIPTION_CATEGORIE[categorie] && (
@@ -913,7 +915,7 @@ function GrilleDocument({
           <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>
             Portée par l&apos;établissement · aucun équipement requis
           </Text>
-          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 4 }]}>
+          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 8 }]}>
             {LABEL_DOMAINE[domaine as keyof typeof LABEL_DOMAINE]}
           </Text>
           <Text style={s.small}>
@@ -940,7 +942,7 @@ function GrilleDocument({
           <Text style={{ fontSize: 9, color: BOARD.ardoiseMoyenne }}>
             Portée par un salarié · déclarée par l&apos;employeur
           </Text>
-          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 4 }]}>
+          <Text style={[s.h1, { fontSize: 16, marginTop: 2, marginBottom: 8 }]}>
             {LABEL_DOMAINE[domaine as keyof typeof LABEL_DOMAINE]}
           </Text>
           <Text style={s.small}>
