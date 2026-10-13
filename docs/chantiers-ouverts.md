@@ -2279,9 +2279,15 @@ tomber entre deux passages.
 > la page lirait les anciennes lignes pendant leur réécriture.
 > `fraicheur-sorties.test.ts` tient les deux : toute page qui lit une échéance
 > dit son âge, et la réparation reste hors des layouts, une fois par rendu,
-> avant les lectures. **Reste** : la pastille « en retard » de la barre
+> avant les lectures. **Reste** : ~~la pastille « en retard » de la barre
 > latérale (rendue par le layout) peut garder l'ancien compte jusqu'à
-> l'ouverture du tableau de bord ou du calendrier ; la fiche d'une action née
+> l'ouverture du tableau de bord ou du calendrier ;~~ [2026-10-13, rayé, même
+> lot : sur un calendrier qui n'est pas à jour, `chargerSidebarCounts` ne rend
+> plus de nombre et la pastille devient neutre, libellée « Calendrier à mettre
+> à jour » — lecture du repère seule, aucune réparation dans le layout. Le
+> layout ne se rendant pas à chaque navigation, la pastille neutre peut
+> survivre à la réparation jusqu'au rechargement suivant : jamais un compte
+> faux, au pire un silence.] la fiche d'une action née
 > d'une échéance sans rapport prend `datePrevue` pour date de constat, sans
 > phrase.
 
