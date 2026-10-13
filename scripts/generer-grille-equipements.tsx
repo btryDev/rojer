@@ -184,8 +184,17 @@ function libelleValeurEnum(propriete: string, valeur: string): string {
 }
 
 function conditionsTexte(o: Obligation): string {
-  if (!o.conditions?.length) return "—";
-  return o.conditions.map(texteCondition).join(" ; ");
+  const parts = (o.conditions ?? []).map(texteCondition);
+  // 2026-10-13 : une obligation d'établissement peut naître d'un appareil
+  // déclaré (`siEquipementDeclare`) — la grille le taisait.
+  const si = (o as { siEquipementDeclare?: readonly CategorieEquipement[] })
+    .siEquipementDeclare;
+  if (si?.length) {
+    parts.push(
+      `si déclaré au parc : ${si.map((c) => LABEL_CATEGORIE_EQUIPEMENT[c]).join(" ou ")}`,
+    );
+  }
+  return parts.length ? parts.join(" ; ") : "—";
 }
 
 /** Les questions du formulaire qui bornent les obligations de la catégorie. */
