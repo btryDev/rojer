@@ -141,6 +141,20 @@ describe("EquipementForm : l'aide au-dessus des questions exigées du levage (re
     ]) {
       expect(puces, regle).toContain(regle);
     }
+    // BORNE HAUTE (revue du 2026-10-13) : la boucle ci-dessus exige que
+    // chaque règle soit là, elle ne voit pas une puce de trop qui dirait le
+    // contraire. Deux rattachements que l'art. 23 et le III de l'art. 20
+    // excluent, quelle que soit la puce qui les porterait : trois mois pour
+    // un appareil motorisé (le b) ne vise que la force humaine), et six mois
+    // pour un appareil manuel sans la réserve « non conçus spécialement pour
+    // lever des personnes ». Éprouvé en ajoutant une puce
+    // « tous les trois mois s'il est motorisé … ».
+    for (const puce of puces) {
+      if (puce.includes("trois mois")) expect(puce, puce).not.toContain("motorisé");
+      if (puce.includes("six mois") && puce.includes("manuel")) {
+        expect(puce, puce).toContain("n'est pas conçu spécialement pour lever des personnes");
+      }
+    }
   });
 
   // C2 : l'aide de la question « manuel » (7f8a6433) disait « six mois » sans

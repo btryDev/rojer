@@ -41,13 +41,18 @@ function Erreur({ message }: { message?: string }) {
   );
 }
 
+/** Le gabarit d'une aide : partagé par la phrase d'aide d'un champ et par
+ *  l'aide en plusieurs blocs au-dessus des questions exigées du levage. */
+const CLASSE_AIDE =
+  "m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]";
+
 /** La phrase d'aide d'un champ : en clair sous le champ, jamais en infobulle
  *  — une infobulle n'existe pas au doigt. */
 function Aide({ id, children }: { id?: string; children: ReactNode }) {
   return (
     <p
       id={id}
-      className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+      className={CLASSE_AIDE}
     >
       {children}
     </p>
@@ -527,7 +532,7 @@ export function EquipementForm({
               (questionsExigees[categorie] ?? []).length > 0 && (
                 <div
                   id="aide-reponses-exigees"
-                  className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+                  className={CLASSE_AIDE}
                 >
                   <p className="m-0">
                     La vérification générale périodique de cet appareil a lieu
