@@ -60,6 +60,7 @@ import {
   LABEL_REALISATEUR,
   LABEL_TOUT_ETABLISSEMENT,
 } from "@/lib/calendrier/labels";
+import { estAppareilRetire } from "@/lib/equipements/retrait";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { modeSurLEcranEnPlace } from "@/lib/etats-permanents/regle";
@@ -205,7 +206,10 @@ export default async function VerificationDetailPage({
   // On ne dépose pas sur une obligation qui ne s'applique plus : le dépôt
   // ferait rouler une ligne éteinte. Le serveur le refuse aussi
   // (`uploadRapport`) — l'écran ne fait que ne pas le proposer.
-  const depotOuvert = !archivee;
+  // Un appareil retiré du parc est en lecture seule (2026-10-12,
+  // `equipements/retrait.ts`) : ni dépôt, ni lien « Modifier l'équipement ».
+  const appareilRetire = v.equipement ? estAppareilRetire(v.equipement) : false;
+  const depotOuvert = !archivee && !appareilRetire;
 
   // C64 : la visite de la commission de sécurité n'est pas un rendez-vous de
   // l'exploitant — ni retard (`estEnRetardQuiCompte`), ni « Dans N jours ».
@@ -452,7 +456,7 @@ export default async function VerificationDetailPage({
           // Pas d'appareil à modifier quand l'échéance porte sur
           // l'établissement (ADR-022) : un lien vers une fiche qui n'existe
           // pas vaut moins que pas de lien.
-          v.equipement ? (
+          v.equipement && !appareilRetire ? (
             <Link
               href={`/etablissements/${id}/equipements/${v.equipement.id}/modifier`}
               className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
@@ -685,7 +689,8 @@ export default async function VerificationDetailPage({
                           objetId={r.id}
                         />
                       </div>
-                      <SupprimerRapportButton id={r.id} />
+                      {/* Archive d'un appareil retiré : lecture seule. */}
+                      {!appareilRetire && <SupprimerRapportButton id={r.id} />}
                     </div>
 
                     {sigs.length > 0 && (

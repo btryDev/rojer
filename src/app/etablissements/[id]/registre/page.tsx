@@ -1,3 +1,4 @@
+import { estAppareilRetire } from "@/lib/equipements/retrait";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -435,7 +436,11 @@ export default async function RegistrePage({
                         >
                           Vérification
                         </Link>
-                        <SupprimerRapportButton id={r.id} />
+                        {/* Archive d'un appareil retiré : lecture seule. */}
+                        {!(
+                          r.verification.equipement &&
+                          estAppareilRetire(r.verification.equipement)
+                        ) && <SupprimerRapportButton id={r.id} />}
                       </div>
                     </li>
                   );

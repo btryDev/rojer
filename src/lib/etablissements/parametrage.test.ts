@@ -15,7 +15,7 @@ vi.mock("@/lib/auth/scope", () => ({ assertEtablissementOwnership: vi.fn() }));
 vi.mock("@/lib/calendrier/regeneration-sure", () => ({ regenererApresMutation: h.regen, MESSAGE_REGEN_ECHEC: "calendrier pas recalculé" }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { repondreMatieres, repondreSommeil } = await import("./parametrage");
+const { repondreMatieres, repondreSommeil, repondreSsi } = await import("./parametrage");
 
 const reponse = (v: string) => {
   const fd = new FormData();
@@ -32,6 +32,8 @@ describe("relance des questions muettes", () => {
   it.each([
     ["manipuleMatieresR422722", repondreMatieres],
     ["comporteLocauxSommeilPublic", repondreSommeil],
+    // DF 10 § 3, 2026-10-12.
+    ["ssiCategorieAouB", repondreSsi],
   ] as const)("%s : « non » s'écrit false, et le calendrier est régénéré", async (champ, action) => {
     const r = await action("etab-1", { status: "idle" }, reponse("non"));
     expect(r.status).toBe("success");

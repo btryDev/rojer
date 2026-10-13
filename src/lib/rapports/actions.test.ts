@@ -76,6 +76,7 @@ vi.mock("@/lib/storage", async () => {
 const { db, prisma, stockage, regenerer } = await h;
 const client = prisma as unknown as ClientLecture;
 const { supprimerRapport, uploadRapport } = await import("./actions");
+const { MESSAGE_APPAREIL_RETIRE } = await import("@/lib/equipements/retrait");
 
 const ETAB = "etab-1";
 const d = (cle: string) => depuisCleJourCivil(cle);
@@ -453,6 +454,27 @@ describe("uploadRapport — une obligation éteinte ne reçoit pas de rapport", 
   });
 });
 
+describe("uploadRapport — un appareil retiré du parc ne reçoit pas de rapport (2026-10-12)", () => {
+  it("refuse, avant tout stockage, même si la ligne est restée ouverte (régénération ratée au retrait)", async () => {
+    poserEtablissement([{ id: "eq-1", actif: false }]);
+    poserLigne({ archiveLe: null });
+
+    const res = await deposer("conforme", "2026-06-01");
+
+    expect(res).toEqual({ status: "error", message: MESSAGE_APPAREIL_RETIRE });
+    expect(stockage.fichiers.size).toBe(0);
+    expect(rapports()).toEqual([]);
+    expect(ligne().datePrevue).toEqual(ORIGINE);
+  });
+
+  it("un appareil en service, lui, reçoit son rapport", async () => {
+    poserEtablissement([{ id: "eq-1" }]);
+    poserLigne({ archiveLe: null });
+    await deposer("conforme", "2026-06-01").catch(() => undefined);
+    expect(rapports()).toHaveLength(1);
+  });
+});
+
 describe("uploadRapport — la frontière médicale, tenue côté serveur", () => {
   // D'un titre de salarié, l'outil ne garde que l'existence, la date et
   // l'échéance — jamais le document (ADR-023 § 2, `docs/rgpd.md` § 2.3).
@@ -494,6 +516,22 @@ describe("uploadRapport — la date du rapport", () => {
 // ---------------------------------------------------------------------------
 // Le retrait
 // ---------------------------------------------------------------------------
+
+describe("supprimerRapport — l'archive d'un appareil retiré est en lecture seule (2026-10-12)", () => {
+  it("refuse : le rapport reste, le fichier reste", async () => {
+    poserEtablissement([{ id: "eq-1", actif: false }]);
+    poserLigne({
+      datePrevue: d("2027-06-01"),
+      statut: "planifiee",
+      rapports: [rapport({ id: "rap-1", dateRapport: d("2026-06-01"), echeanceHonoree: ORIGINE })],
+    });
+    stockage.fichiers.add(`rapports/${ETAB}/rap-1-x.pdf`);
+
+    await expect(supprimerRapport("rap-1")).rejects.toThrow(MESSAGE_APPAREIL_RETIRE);
+    expect(rapports()).toHaveLength(1);
+    expect(stockage.fichiers.size).toBe(1);
+  });
+});
 
 describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)", () => {
   /** Une ligne dont le contrôle de juin 2026 a fait courir l'échéance. */
@@ -639,11 +677,14 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     expect(suite?.datePrevue).toEqual(d("2021-03-01"));
   });
 
-  it("une ligne ARCHIVÉE dont on retire le seul rapport réalisé perd son statut réalisé, date inchangée", async () => {
-    // Le cas voisin : l'appareil est retiré, la ligne archivée avec sa preuve.
-    // Le plan ne la met pas à jour ; sans la règle de `recalculerLigne`, elle
-    // restait « réalisée » sans aucune pièce.
-    poserEtablissement([{ id: "eq-1", actif: false, dateMiseEnService: d("2026-01-05") }]);
+  it("une ligne ARCHIVÉE dont on retire le seul rapport réalisé perd son statut réalisé", async () => {
+    // Le cas voisin : la ligne archivée avec sa preuve. ~~L'appareil est
+    // retiré~~ [2026-10-12 : l'archive d'un appareil retiré est en lecture
+    // seule, ses rapports ne se suppriment plus ; une ligne s'archive aussi
+    // quand son obligation quitte l'appareil en service, et c'est ce cas que
+    // le test tient désormais.] Le plan ne la met pas à jour ; sans la règle
+    // de `recalculerLigne`, elle restait « réalisée » sans aucune pièce.
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2026-01-05") }]);
     poserLigne({
       obligationId: ELEC_MISE_EN_SERVICE,
       datePrevue: d("2026-01-05"),
@@ -656,7 +697,11 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     await retirer("rap-mes");
 
     expect(ligne().statut).toBe("a_planifier");
-    expect(ligne().datePrevue).toEqual(d("2026-01-05"));
+    // ~~date inchangée (2026-01-05)~~ [2026-10-12 : appareil en service, la
+    // règle D8 de l'ADR-036 s'applique — la mise en service (05/01) précède
+    // l'origine du suivi (15/01), la ligne « à planifier » est datée de
+    // l'origine.]
+    expect(ligne().datePrevue).toEqual(ORIGINE);
     expect(ligne().archiveLe).toEqual(d("2026-07-01"));
   });
 
@@ -664,7 +709,8 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     // La borne de la règle précédente : elle ne rouvre une ligne hors du plan
     // que s'il NE RESTE AUCUN rapport réalisé. Ici un contrôle reste : le
     // statut réalisé a encore sa pièce.
-    poserEtablissement([{ id: "eq-1", actif: false, dateMiseEnService: d("2026-01-05") }]);
+    // Appareil en service, ligne archivée (même motif que le test précédent).
+    poserEtablissement([{ id: "eq-1", dateMiseEnService: d("2026-01-05") }]);
     poserLigne({
       obligationId: ELEC_MISE_EN_SERVICE,
       datePrevue: d("2026-01-05"),

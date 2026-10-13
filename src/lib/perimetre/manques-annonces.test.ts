@@ -117,6 +117,17 @@ describe("n'annonce à un dossier que ce qui peut le concerner", () => {
     );
   });
 
+  it("rubrique « Risque chimique » (décision du 2026-10-08) : R. 4412-11 et R. 4412-17, à l'employeur seul", () => {
+    const rubrique = manquesAnnoncesDuDossier(CORPUS, EMPLOYEUR).find(
+      (d) => d.cle === "risque_chimique",
+    );
+    expect(rubrique?.titre).toBe("Risque chimique");
+    expect(rubrique?.articles.map((a) => a.ref).sort()).toEqual(["R. 4412-11", "R. 4412-17"]);
+    const sansTravailleur = refsProjetees({ travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null });
+    expect(sansTravailleur).not.toContain("R. 4412-11");
+    expect(sansTravailleur).not.toContain("R. 4412-17");
+  });
+
   it("un domaine sans article pour ce dossier n'est pas rendu", () => {
     const f = { travail: false, epiPresents: null, categorieErp: null, habitation: false, operationsElectriques: null };
     const cles = manquesAnnoncesDuDossier(CORPUS, f).map((d) => d.cle);

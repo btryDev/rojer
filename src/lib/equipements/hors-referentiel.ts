@@ -281,6 +281,7 @@ export async function equipementsSansEcheance(
       conduiteEngins: etab.conduiteEngins,
       expositionCMR: etab.expositionCMR,
       epiPresents: etab.epiPresents,
+      ssiCategorieAouB: etab.ssiCategorieAouB,
     },
     etab.equipements.map((eq) => ({
       id: eq.id,

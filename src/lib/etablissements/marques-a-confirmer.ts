@@ -62,6 +62,7 @@ export async function marquesAConfirmerDuDossier(
       conduiteEngins: true,
       expositionCMR: true,
       epiPresents: true,
+      ssiCategorieAouB: true,
       entreprise: { select: { effectif: true } },
       equipements: {
         where: { actif: true },

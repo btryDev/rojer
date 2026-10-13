@@ -385,6 +385,22 @@ export async function poserSignatureAvecToken(
     throw e;
   }
   if (!signature) {
+    // Le jeton n'a pas été consommé : soit il a déjà servi, soit une
+    // modification de l'acte vient de le révoquer (relecture finale du
+    // 2026-10-12, C1). La phrase dit laquelle — « déjà servi » mentait au
+    // signataire dont le lien venait d'être annulé.
+    const etat = await prisma.accessToken.findUnique({
+      where: { id: token.id },
+      select: { revoqueLe: true, revoqueMotif: true },
+    });
+    if (etat?.revoqueLe) {
+      return {
+        status: "error",
+        message: etat.revoqueMotif
+          ? `Ce lien a été révoqué : ${etat.revoqueMotif}`
+          : "Ce lien a été révoqué.",
+      };
+    }
     return {
       status: "error",
       message: "Ce lien a déjà servi à signer ce document.",

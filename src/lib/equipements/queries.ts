@@ -16,15 +16,28 @@ import { trierParCategorie } from "./labels";
 
 /**
  * Fiche d'un équipement, actif ou non : la page de détail et le formulaire de
- * modification doivent rester atteignables pour un équipement désactivé, ne
- * serait-ce que pour le remettre en service.
+ * modification doivent rester atteignables pour un équipement désactivé,
+ * ~~ne serait-ce que pour le remettre en service~~ [2026-10-12 : il ne se
+ * remet plus en service ; l'écran de modification d'un appareil retiré dit
+ * pourquoi il ne propose rien (`retrait.ts`)].
  */
 export async function getEquipement(id: string) {
   const user = await requireUser();
   return prisma.equipement.findFirst({
     where: { id, etablissement: { entreprise: { userId: user.id } } },
     include: {
-      etablissement: { select: { id: true, raisonDisplay: true, estERP: true } },
+      // Le régime et la réponse au SSI A/B : la fiche de modification en tire
+      // les réponses exigées (DF 10 § 3, décision du 2026-10-08).
+      etablissement: {
+        select: {
+          id: true,
+          raisonDisplay: true,
+          estERP: true,
+          typeErp: true,
+          categorieErp: true,
+          ssiCategorieAouB: true,
+        },
+      },
     },
   });
 }
@@ -49,25 +62,6 @@ export async function listerEquipementsDeLEtablissement(
     // et le tableau de bord en ont besoin pour regrouper ou filtrer, sans
     // refaire une jointure chacun de leur côté.
     include: { batiment: { select: { id: true, nom: true, ordre: true } } },
-    }),
-  );
-}
-
-/**
- * Les équipements retirés du parc. Séparés volontairement : ils ne comptent
- * dans aucun indicateur de conformité, mais l'utilisateur doit pouvoir les
- * retrouver — pour consulter leur historique ou les remettre en service.
- */
-export async function listerEquipementsDesactives(etablissementId: string) {
-  const user = await requireUser();
-  return trierParCategorie(
-    await prisma.equipement.findMany({
-      where: {
-        etablissementId,
-        actif: false,
-        etablissement: { entreprise: { userId: user.id } },
-      },
-      orderBy: [{ updatedAt: "desc" }],
     }),
   );
 }

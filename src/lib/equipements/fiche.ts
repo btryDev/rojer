@@ -104,6 +104,7 @@ export async function getFicheEquipement(id: string) {
           conduiteEngins: true,
           expositionCMR: true,
           epiPresents: true,
+          ssiCategorieAouB: true,
         },
       },
       // Le lieu de l'appareil. Le parc renvoie ici en disant qu'un appareil

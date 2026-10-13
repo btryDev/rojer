@@ -146,6 +146,7 @@ export async function chargerPagePrescriptions(
       conduiteEngins: etab.conduiteEngins,
       expositionCMR: etab.expositionCMR,
       epiPresents: etab.epiPresents,
+      ssiCategorieAouB: etab.ssiCategorieAouB,
     },
     equipements,
   );

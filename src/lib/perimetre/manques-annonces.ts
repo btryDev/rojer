@@ -105,6 +105,7 @@ export type CleDomaine =
   | "bruit"
   | "formation"
   | "boissons"
+  | "risque_chimique"
   | "gaz"
   | "escaliers_mecaniques"
   | "habitation"
@@ -153,6 +154,17 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
     titre: "Boissons",
     phrase: `Rojer ne suit pas ${nonPorte("la mise à disposition gratuite d'une boisson non alcoolisée")} lorsque des conditions particulières de travail conduisent à se désaltérer fréquemment, ni la liste des postes de travail concernés.`,
   },
+  // 2026-10-12 (`lot/suites-0810`) — décision de la propriétaire du
+  // 2026-10-08 (« ok pour tes recos », point 13 : « une rubrique « Risque
+  // chimique » »), après le retrait des lignes de rétention et d'état du
+  // stockage (relecture du préventeur du 30/09 : « à exclure sauf 3 derniers
+  // points »). Entrée après l'évaluation du 2026-09-27, donc en dernier. Les
+  // deux sujets sont les objets des deux articles, tels que le corpus les
+  // relève (`prescrit`, `citationCle`) — rien de plus.
+  risque_chimique: {
+    titre: "Risque chimique",
+    phrase: `Rojer ne suit pas ${nonPorte("les mesures de prévention du risque d'exposition aux agents chimiques dangereux")} que l'employeur définit et applique, ni ${nonPorte("les mesures contre le débordement, les éclaboussures et le déversement par rupture des parois des récipients de produits chimiques")}.`,
+  },
   // 2026-10-13 : décision de la propriétaire sur les quinze manques entrés
   // dans la cible le 2026-10-12. Les articles disent chacun ce qu'ils ne
   // suivent pas : ils ne visent pas les mêmes dossiers.
@@ -185,13 +197,14 @@ type Annonce = {
 };
 
 /**
- * Les ~~vingt-cinq~~ ~~vingt-neuf~~ ~~trente et un~~ trente-trois articles
- * annoncés, par référence (2026-10-13 : + 4, `GZ 13`, `GZ 14`, `AS 10`,
- * arrêté du 23 février 2018 art. 26 § 3 ; puis + 2 après revue, arrêté du
- * 31 janvier 1986 art. 78-1 et 102 ; puis + 1, `R. 4544-11`). [2026-10-13,
- * revue : ~~trente-deux~~ — trente-trois, mesuré en appelant
- * (`Object.keys(ANNONCES).length`) ; le « vingt-cinq » de départ valait déjà
- * vingt-six depuis l'ajout de `R. 4323-1` le 2026-10-07.]
+ * Les articles annoncés, par référence (vingt-cinq au 2026-09-27, vingt-huit
+ * au 2026-10-12 : `R. 4323-1` le 2026-10-07, `R. 4412-11` et `R. 4412-17`).
+ * 2026-10-13 : + 4, `GZ 13`, `GZ 14`, `AS 10`, arrêté du 23 février 2018
+ * art. 26 § 3 ; puis + 2 après revue, arrêté du 31 janvier 1986 art. 78-1 et
+ * 102 ; puis + 1, `R. 4544-11`. Trente-cinq à la réunion avec `main` —
+ * compté en appelant (`Object.keys(ANNONCES).length`), jamais au grep. [La
+ * branche disait « trente-trois » : elle ne voyait pas les deux du risque
+ * chimique, entrés sur `main` par `lot/suites-0810`.]
  *
  * LA CLÉ EST LA RÉFÉRENCE DU CORPUS, ET RIEN N'EST RECOPIÉ D'AUTRE : ni
  * intitulé, ni texte. `manques-annonces.test.ts` tient l'égalité entre ces
@@ -248,6 +261,11 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   // 2026-10-07 : l'obligation qui le citait pour les seuls équipements sous
   // pression est retirée (relecture préventeur du 30/09, décision de la
   // propriétaire du 07/10). L'article vise tout employeur.
+  // 2026-10-12 : rubrique « Risque chimique » (décision du 2026-10-08). Les
+  // deux articles visent l'employeur dont les travailleurs sont exposés à des
+  // agents chimiques dangereux : la condition est celle du Code du travail.
+  "R. 4412-11": { domaine: "risque_chimique", condition: "travail" },
+  "R. 4412-17": { domaine: "risque_chimique", condition: "travail" },
   "R. 4323-1": {
     domaine: "formation",
     condition: "travail",

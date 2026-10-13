@@ -40,6 +40,7 @@ function etabBureau(over: Partial<EtablissementMatching> = {}): EtablissementMat
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     ...over,
   };
 }
@@ -68,6 +69,7 @@ function etabRestoErpCat5(
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     ...over,
   };
 }
@@ -94,6 +96,7 @@ function etabErpCat3(): EtablissementMatching {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 }
 
@@ -119,6 +122,7 @@ function etabIgh(): EtablissementMatching {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 }
 
@@ -144,6 +148,7 @@ function etabHabitationPure(): EtablissementMatching {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 }
 
@@ -870,6 +875,7 @@ describe("moteur matching — cohérence avec le référentiel", () => {
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
     };
     const eqComplet: EquipementMatching[] = [
       elec({ caracteristiques: { aGroupeElectrogene: true } }),
@@ -1353,6 +1359,7 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
 
   /** Un équipement sans caractéristiques pour chacune des catégories. */

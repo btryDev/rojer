@@ -177,27 +177,48 @@ export async function modifierPermisFeu(
     return { status: "error", message: "Ce permis est terminé ou annulé : il ne se modifie plus." };
   }
 
+  // Les lectures de propriété AVANT la transaction (relecture finale du
+  // 2026-10-12, B1) : elles lisent par le client global, et la prod est en
+  // `connection_limit=1` — dans la transaction, elles attendaient la
+  // connexion qu'elle tient. Même règle que `modifierPlanPrevention`.
+  const parsed = lirePermisFeu(formData);
+  const brut = formData.get("batimentId");
+  const batiment = await resoudreBatimentOptionnel(
+    etablissementId,
+    parsed.success
+      ? parsed.data.batimentId
+      : typeof brut === "string" && brut.trim()
+        ? brut
+        : undefined,
+  );
+  if (!batiment.ok) return ZONE_INTROUVABLE;
+  const prestataire = parsed.success
+    ? await resoudrePrestataireOptionnel(etablissementId, parsed.data.prestataireId)
+    : null;
+  if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
+
   const resultat = await prisma.$transaction(async (tx): Promise<PermisFeuActionState | null> => {
     await verrouillerObjetSigne(tx, "permis_feu", permisFeuId);
+    // Le statut relu sous le verrou (relecture finale, R1).
+    const statut = await tx.permisFeu.findUnique({
+      where: { id: permisFeuId },
+      select: { statut: true },
+    });
+    if (!statut || !statutPermisSignable(statut.statut)) {
+      return { status: "error", message: "Ce permis est terminé ou annulé : il ne se modifie plus." };
+    }
     const scelle = motifContenuScelle(
       "permis",
       await compterSignatures("permis_feu", permisFeuId, etablissementId, tx),
     );
     if (scelle) {
       if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
-      const v = formData.get("batimentId");
-      const batiment = await resoudreBatimentOptionnel(
-        etablissementId,
-        typeof v === "string" && v.trim() ? v : undefined,
-      );
-      if (!batiment.ok) return ZONE_INTROUVABLE;
       await tx.permisFeu.updateMany({
         where: { id: permisFeuId, etablissementId },
         data: { batimentId: batiment.id },
       });
       return null;
     }
-    const parsed = lirePermisFeu(formData);
     if (!parsed.success) {
       return {
         status: "error",
@@ -205,16 +226,6 @@ export async function modifierPermisFeu(
         fieldErrors: parsed.error.flatten().fieldErrors,
       };
     }
-    const batiment = await resoudreBatimentOptionnel(
-      etablissementId,
-      parsed.data.batimentId,
-    );
-    if (!batiment.ok) return ZONE_INTROUVABLE;
-    const prestataire = await resoudrePrestataireOptionnel(
-      etablissementId,
-      parsed.data.prestataireId,
-    );
-    if (!prestataire.ok) return PRESTATAIRE_INTROUVABLE;
     // Relues sous le verrou : ce sont elles que l'écriture conserve.
     const enBase = await tx.permisFeu.findFirst({
       where: { id: permisFeuId, etablissementId },

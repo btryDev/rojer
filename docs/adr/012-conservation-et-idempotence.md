@@ -194,9 +194,13 @@ repousse pas l'échéance d'une période entière.
   (`genererCalendrier` charge `equipements: { where: { actif: true } }`), il ne
   génère donc plus d'échéance. Son historique reste consultable et opposable.
 
-`reactiverEquipement` fait le chemin inverse : les obligations réapparaissent,
+~~`reactiverEquipement` fait le chemin inverse : les obligations réapparaissent,
 et les lignes archivées reprennent leur libellé normal puisque celui-ci est
-réécrit depuis le référentiel.
+réécrit depuis le référentiel.~~ [2026-10-12, décision de la propriétaire : le
+retrait est définitif. `reactiverEquipement` est supprimée ; un appareil retiré
+est en lecture seule (`equipements/retrait.ts`), et un appareil qui revient se
+déclare comme un nouvel appareil. La réactivation blanchissait le retard des
+lignes sans preuve (`chantiers-ouverts.md` § 11).]
 
 ### C. La suppression d'un établissement ou d'une entreprise est refusée, avec explication
 
@@ -259,9 +263,11 @@ pour un échec une mutation qui a réussi.
   affichée « réalisée ». `estVerificationEnRetard` (`src/lib/dates/retard.ts`)
   court-circuite sur `dateRealisee !== null` : sous la nouvelle sémantique, ce
   prédicat gagnerait à tenir compte aussi de `datePrevue`.
-- Un équipement désactivé n'est plus atteignable depuis l'interface tant que
+- ~~Un équipement désactivé n'est plus atteignable depuis l'interface tant que
   celle-ci n'expose pas `listerEquipementsDesactives` et
-  `reactiverEquipement`.
+  `reactiverEquipement`.~~ [2026-10-12 : les deux fonctions sont supprimées,
+  aucune n'avait d'appelant. La fiche d'un appareil retiré reste atteignable
+  par ses lignes au registre et au calendrier ; elle est en lecture seule.]
 
 ### E. Le calendrier sait avec quelle version du référentiel il a été généré
 

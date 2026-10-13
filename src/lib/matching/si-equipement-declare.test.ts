@@ -38,6 +38,7 @@ const ETAB: EtablissementMatching = {
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
 };
 
 const stockage = (id: string): EquipementMatching => ({

@@ -33,6 +33,8 @@ export const CLES_STOCKEES = {
   RapportVerification: ["fichierCle"],
   Prestataire: ["attestationUrssafCle", "assuranceRcProCle", "kbisCle"],
   AnalyseLegionelle: ["rapportCle"],
+  // Les pièces de prestataire remplacées (2026-10-12).
+  PiecePrestataire: ["fichierCle"],
 } as const;
 
 /**
@@ -69,6 +71,10 @@ export const COLONNES_ECARTEES: Record<
     motif: "Métadonnée du fichier (son nom d'origine), pas une clé de stockage.",
     jamaisEcrite: false,
   },
+  "PiecePrestataire.fichierNom": {
+    motif: "Métadonnée du fichier (son nom d'origine), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
   "RapportVerification.fichierMime": {
     motif: "Métadonnée du fichier (son type), pas une clé de stockage.",
     jamaisEcrite: false,
@@ -91,7 +97,7 @@ export async function clesDesEtablissements(
 ): Promise<string[]> {
   if (etablissementIds.length === 0) return [];
   const dans = { in: etablissementIds };
-  const [rapports, prestataires, analyses] = await Promise.all([
+  const [rapports, prestataires, analyses, piecesPrecedentes] = await Promise.all([
     tx.rapportVerification.findMany({
       where: { etablissementId: dans },
       select: { fichierCle: true },
@@ -104,11 +110,16 @@ export async function clesDesEtablissements(
       where: { carnet: { etablissementId: dans } },
       select: { rapportCle: true },
     }),
+    tx.piecePrestataire.findMany({
+      where: { prestataire: { etablissementId: dans } },
+      select: { fichierCle: true },
+    }),
   ]);
   return nonNulles([
     ...rapports.map((r) => r.fichierCle),
     ...prestataires.flatMap((p) => [p.attestationUrssafCle, p.assuranceRcProCle, p.kbisCle]),
     ...analyses.map((a) => a.rapportCle),
+    ...piecesPrecedentes.map((p) => p.fichierCle),
   ]);
 }
 

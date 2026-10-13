@@ -61,6 +61,7 @@ function bureauSansRien(
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     ...over,
   };
 }
@@ -90,6 +91,7 @@ function restoErpCat5SansRien(
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     ...over,
   };
 }
@@ -156,6 +158,7 @@ describe("faux négatif — tenue du registre de sécurité", () => {
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
     };
     expect(idsSansAucunEquipement(habitation)).not.toContain(
       "incendie-registre-securite",

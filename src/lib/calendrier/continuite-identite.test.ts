@@ -64,6 +64,7 @@ function internat(
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
   };

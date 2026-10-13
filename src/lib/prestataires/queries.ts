@@ -26,6 +26,20 @@ export async function getPrestataire(
   const { etablissement } = await requireEtablissement(etablissementId);
   const prestataire = await prisma.prestataire.findFirst({
     where: { id: prestataireId, etablissementId: etablissement.id },
+    // Les pièces remplacées (2026-10-12), la plus récemment remplacée d'abord.
+    include: {
+      piecesPrecedentes: {
+        orderBy: { remplaceeLe: "desc" },
+        select: {
+          id: true,
+          type: true,
+          fichierNom: true,
+          deposeeLe: true,
+          valableJusquA: true,
+          remplaceeLe: true,
+        },
+      },
+    },
   });
   if (!prestataire) return null;
   return { ...prestataire, vigilance: computeVigilance(prestataire) };

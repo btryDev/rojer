@@ -98,7 +98,7 @@ describe("le moteur lit le fait — la règle du non-renseigné", () => {
     classeIgh: null, familleHabitation: null, personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null, comporteLocauxSommeilPublic: null,
     manutentionManuelle: null, travailSurEcran: null, operationsElectriques: null,
-    conduiteEngins: null, expositionCMR: null, epiPresents: null,
+    conduiteEngins: null, expositionCMR: null, epiPresents: null, ssiCategorieAouB: null,
     ...over,
   });
   const conditionnees = obligationsConformite.filter((o) => o.typologies.activite !== undefined);

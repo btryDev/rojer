@@ -22,9 +22,12 @@ import type { EtablissementActionState } from "@/lib/etablissements/actions";
 import { AIDE_HABITATION, AIDE_IGH } from "@/lib/etablissements/aides-regimes";
 import {
   AIDE_EPI,
+  AIDE_SSI,
+  CATEGORIES_ERP_QUESTION_SSI,
   EXEMPLE_DETAIL_EPI,
   LIBELLE_DETAIL_EPI,
   QUESTION_EPI,
+  QUESTION_SSI,
 } from "@/lib/etablissements/questions";
 
 
@@ -62,6 +65,7 @@ type Valeurs = {
   comporteLocauxSommeilPublic?: boolean | null;
   epiPresents?: boolean | null;
   epiPresentsDetail?: string | null;
+  ssiCategorieAouB?: boolean | null;
 };
 
 type Props = {
@@ -112,6 +116,14 @@ export function EtablissementForm({
   const poseLocauxSommeil =
     estERP &&
     (TYPES_ERP_QUESTION_LOCAUX_SOMMEIL as readonly string[]).includes(typeErp);
+  // La catégorie aussi, depuis le 2026-10-12 : la question du SSI A/B n'est
+  // posée qu'aux quatre premières catégories (DF 10, livre II).
+  const [categorieErp, setCategorieErp] = useState<string>(
+    valeursInitiales?.categorieErp ?? "",
+  );
+  const poseSsi =
+    estERP === true &&
+    (CATEGORIES_ERP_QUESTION_SSI as readonly string[]).includes(categorieErp);
   const [estHabitation, setEstHabitation] = useState<boolean | null>(
     valeursInitiales?.estHabitation ?? (enCreation ? null : false),
   );
@@ -481,7 +493,8 @@ export function EtablissementForm({
                     <select
                       id="categorieErp"
                       name="categorieErp"
-                      defaultValue={valeursInitiales?.categorieErp ?? ""}
+                      value={categorieErp}
+                      onChange={(e) => setCategorieErp(e.currentTarget.value)}
                       required={estERP === true}
                       className="champ-board"
                       aria-invalid={Boolean(err("categorieErp"))}
@@ -549,6 +562,44 @@ export function EtablissementForm({
                     }
                     erreur={err("dateCertificatConformite")}
                   />
+
+                  {/* LE SSI DE CATÉGORIE A OU B (DF 10 § 3) — une question de la
+                      fiche depuis le 2026-10-12, au lieu d'une par désenfumage
+                      (décision de la propriétaire du 2026-10-08). Posée aux
+                      quatre premières catégories seules ; « Je ne sais pas
+                      encore » est offert, la règle du non-renseigné retenant
+                      la ligne « à confirmer ». */}
+                  {poseSsi && (
+                  <div className="sm:col-span-2">
+                    <label className="label-board" htmlFor="ssiCategorieAouB">
+                      {QUESTION_SSI}
+                    </label>
+                    <select
+                      id="ssiCategorieAouB"
+                      name="ssiCategorieAouB"
+                      className="champ-board"
+                      aria-describedby="ssiCategorieAouB-aide"
+                      defaultValue={
+                        valeursInitiales?.ssiCategorieAouB === true
+                          ? "oui"
+                          : valeursInitiales?.ssiCategorieAouB === false
+                            ? "non"
+                            : ""
+                      }
+                    >
+                      <option value="">Je ne sais pas encore</option>
+                      <option value="oui">Oui</option>
+                      <option value="non">Non</option>
+                    </select>
+                    <p
+                      id="ssiCategorieAouB-aide"
+                      className="m-0 mt-1.5 max-w-[66ch] text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+                    >
+                      {AIDE_SSI}
+                    </p>
+                    <Erreur message={err("ssiCategorieAouB")} />
+                  </div>
+                  )}
 
                   {/* LA QUESTION DU SOMMEIL — posée aux seuls types où il est plausible
                       (`TYPES_ERP_A_SOMMEIL_PLAUSIBLE`), ici comme au parcours

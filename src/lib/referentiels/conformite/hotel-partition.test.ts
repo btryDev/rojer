@@ -57,6 +57,7 @@ const etab = (o: Partial<EtablissementMatching>): EtablissementMatching => ({
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
   ...o,
 });
 

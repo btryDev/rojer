@@ -281,8 +281,36 @@ export async function modifierPlanPrevention(
     return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
   }
 
+  // LES LECTURES DE PROPRIÉTÉ AVANT LA TRANSACTION (relecture finale du
+  // 2026-10-12, B1) : `resoudreBatimentOptionnel` et `resoudrePrestataireOptionnel`
+  // lisent par le client global, pas par `tx`. Appelées dans la transaction,
+  // elles attendaient une connexion que la transaction tient — et la prod est
+  // en `connection_limit=1` : l'action échouait au délai de transaction. Elles
+  // n'ont pas besoin du verrou (elles vérifient l'appartenance d'une zone et
+  // d'un prestataire, pas l'état du plan).
+  const parsed = lirePlanPrevention(formData);
+  const batiment = await resoudreBatimentOptionnel(
+    etablissementId,
+    parsed.success ? parsed.data.batimentId : lireChampOptionnel(formData.get("batimentId")),
+  );
+  if (!batiment.ok) return ZONE_INTROUVABLE;
+  const prestataire = parsed.success
+    ? await resoudrePrestataireOptionnel(etablissementId, parsed.data.prestataireId)
+    : null;
+  if (prestataire && !prestataire.ok) return PRESTATAIRE_INTROUVABLE;
+
   const resultat = await prisma.$transaction(async (tx): Promise<PlanActionState | null> => {
     await verrouillerObjetSigne(tx, "plan_prevention", planId);
+    // Le statut relu SOUS LE VERROU (relecture finale, R1) : une annulation
+    // glissée entre la première lecture et le verrou ne laisse pas modifier
+    // un plan annulé.
+    const statut = await tx.planPrevention.findUnique({
+      where: { id: planId },
+      select: { statut: true },
+    });
+    if (!statut || !statutPlanSignable(statut.statut)) {
+      return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
+    }
     const scelle = motifContenuScelle(
       "plan",
       await compterSignatures("plan_prevention", planId, etablissementId, tx),
@@ -290,18 +318,12 @@ export async function modifierPlanPrevention(
     );
     if (scelle) {
       if (porteUnChampScelle(formData)) return { status: "error", message: scelle };
-      const batiment = await resoudreBatimentOptionnel(
-        etablissementId,
-        lireChampOptionnel(formData.get("batimentId")),
-      );
-      if (!batiment.ok) return ZONE_INTROUVABLE;
       await tx.planPrevention.updateMany({
         where: { id: planId, etablissementId },
         data: { batimentId: batiment.id },
       });
       return null;
     }
-    const parsed = lirePlanPrevention(formData);
     if (!parsed.success) {
       return {
         status: "error",
@@ -309,16 +331,6 @@ export async function modifierPlanPrevention(
         fieldErrors: parsed.error.flatten().fieldErrors,
       };
     }
-    const batiment = await resoudreBatimentOptionnel(
-      etablissementId,
-      parsed.data.batimentId,
-    );
-    if (!batiment.ok) return ZONE_INTROUVABLE;
-    const prestataire = await resoudrePrestataireOptionnel(
-      etablissementId,
-      parsed.data.prestataireId,
-    );
-    if (!prestataire.ok) return PRESTATAIRE_INTROUVABLE;
     const avant = await calculerHashObjet("plan_prevention", planId, etablissementId, tx);
     await tx.planPrevention.update({
       where: { id: planId, etablissementId },

@@ -18,6 +18,20 @@
 // côté d'une VGP qui l'est au plus) n'est pas exigée : son silence ne fait pas
 // vérifier plus souvent.
 //
+// SECONDE DÉCISION, AUTRE FORME (2026-10-12, `lot/suites-0810`). La
+// propriétaire a validé le 2026-10-08 (« ok pour tes recos », point 5 ;
+// décision 4 de la synthèse de revue du 2026-10-07) de rendre EXIGÉE la
+// réponse « désenfumage mécanique » (DF 10 § 3), « comme D29 pour le
+// levage » : son silence ne fait pas naître la triennale par organisme agréé,
+// et personne ne verrait qu'elle manque. La dérivation de D29 ne la trouverait
+// pas — la réponse AJOUTE une ligne sans changer le rythme le plus court de
+// l'appareil, que l'annuelle tient. La décision NOMME donc la question
+// (`QUESTIONS_EXIGEES_PAR_DECISION`) ; le LIEU, lui, reste dérivé du moteur :
+// elle n'est exigée que dans un établissement où la réponse « oui » fait
+// naître une ligne que le silence ne sert pas — un ERP des quatre premières
+// catégories qui n'a pas dit « non » au SSI de catégorie A ou B. Ailleurs, la
+// question ne décide de rien et reste facultative (C41).
+//
 // Module serveur : il appelle le moteur, donc charge le référentiel. Le
 // formulaire reçoit le résultat en propriété, il ne l'importe pas.
 
@@ -38,6 +52,48 @@ import {
 export const CATEGORIES_A_REPONSE_EXIGEE: readonly CategorieEquipement[] = [
   "EQUIPEMENT_LEVAGE",
 ];
+
+/**
+ * Les questions qu'une décision nomme elle-même, avec ce que le refus dit au
+ * dirigeant. Exigées là où la réponse « oui » ajoute une ligne
+ * (`exigeeDansCeRegime`), facultatives ailleurs.
+ */
+export const QUESTIONS_EXIGEES_PAR_DECISION: readonly {
+  categorie: CategorieEquipement;
+  champ: ChampTriEtat;
+  /** Le refus du formulaire. */
+  message: string;
+  /** La raison de la relance du tableau de bord. */
+  pourquoi: string;
+}[] = [
+  // Décision du 2026-10-08, point 5 : « Désenfumage mécanique : réponse
+  // exigée ».
+  {
+    categorie: "DESENFUMAGE",
+    champ: "estDesenfumageMecanique",
+    message:
+      "Répondez oui ou non : la réponse décide de la vérification tous les trois ans par un organisme agréé (arrêté du 25 juin 1980, art. DF 10 § 3).",
+    pourquoi:
+      "Un désenfumage mécanique est vérifié tous les trois ans par un organisme agréé quand l'établissement dispose aussi d'un système de sécurité incendie de catégorie A ou B (arrêté du 25 juin 1980, art. DF 10 § 3). Tant que la réponse manque, cette vérification n'apparaît pas au calendrier.",
+  },
+];
+
+/**
+ * Ce que l'exigence lit de l'établissement : son régime ERP et sa réponse au
+ * SSI A/B. Le reste de la sonde est neutre.
+ */
+export type RegimeExigence = Pick<
+  EtablissementMatching,
+  "estERP" | "typeErp" | "categorieErp" | "ssiCategorieAouB"
+>;
+
+/** Un lieu de travail sans public : aucune question de décision n'y est exigée. */
+export const REGIME_TRAVAIL: RegimeExigence = {
+  estERP: false,
+  typeErp: null,
+  categorieErp: null,
+  ssiCategorieAouB: null,
+};
 
 /** Un établissement de travail neutre : le rythme d'un appareil n'y dépend que de lui. */
 const TRAVAIL: EtablissementMatching = {
@@ -61,9 +117,38 @@ const TRAVAIL: EtablissementMatching = {
   conduiteEngins: null,
   expositionCMR: null,
   epiPresents: null,
+  ssiCategorieAouB: null,
 };
 
 type Reponses = Partial<Record<ChampTriEtat, boolean>>;
+
+/** Les obligations que le moteur sert à un appareil seul, dans ce régime. */
+function lignesServies(
+  categorie: CategorieEquipement,
+  reponses: Reponses,
+  regime: RegimeExigence,
+): string[] {
+  return determineObligationsApplicables({ ...TRAVAIL, ...regime }, [
+    { id: "sonde", libelle: "sonde", categorie, caracteristiques: { ...reponses } },
+  ])
+    .filter((a) => a.porteur === "equipement")
+    .map((a) => a.obligation.id)
+    .sort();
+}
+
+/**
+ * La question nommée par une décision est-elle exigée dans ce régime ? Oui si
+ * la réponse « oui » fait servir à l'appareil une ligne que son silence ne
+ * sert pas — sinon elle ne décide de rien ici.
+ */
+function exigeeDansCeRegime(
+  categorie: CategorieEquipement,
+  champ: ChampTriEtat,
+  regime: RegimeExigence,
+): boolean {
+  const auSilence = new Set(lignesServies(categorie, {}, regime));
+  return lignesServies(categorie, { [champ]: true }, regime).some((id) => !auSilence.has(id));
+}
 
 /** Le rythme, en jours, que le moteur sert à un appareil — ses lignes propres ; `null` s'il n'a rien de cyclique. */
 export function rythmeServi(categorie: CategorieEquipement, reponses: Reponses): number | null {
@@ -105,33 +190,72 @@ function deriver(categorie: CategorieEquipement): ChampTriEtat[] {
 
 const CACHE = new Map<CategorieEquipement, ChampTriEtat[]>();
 
-/** Les questions dont la réponse est exigée pour cette catégorie (vide hors D29). */
-export function questionsExigeesPour(categorie: CategorieEquipement): readonly ChampTriEtat[] {
+/**
+ * Les questions dont la réponse est exigée pour cette catégorie, dans le
+ * régime de l'établissement : celles de D29 (dérivées, sans régime), et
+ * celles qu'une décision nomme, là où elles décident d'une ligne.
+ */
+export function questionsExigeesPour(
+  categorie: CategorieEquipement,
+  regime: RegimeExigence,
+): readonly ChampTriEtat[] {
   let q = CACHE.get(categorie);
   if (!q) {
     q = deriver(categorie);
     CACHE.set(categorie, q);
   }
-  return q;
+  const parDecision = QUESTIONS_EXIGEES_PAR_DECISION.filter(
+    (d) => d.categorie === categorie && exigeeDansCeRegime(categorie, d.champ, regime),
+  ).map((d) => d.champ);
+  return parDecision.length === 0 ? q : [...q, ...parDecision];
 }
 
 /** La carte complète, sérialisable, pour le formulaire (qui change de catégorie côté client). */
-export function questionsExigeesParCategorie(): Partial<Record<CategorieEquipement, readonly ChampTriEtat[]>> {
+export function questionsExigeesParCategorie(
+  regime: RegimeExigence,
+): Partial<Record<CategorieEquipement, readonly ChampTriEtat[]>> {
   const out: Partial<Record<CategorieEquipement, readonly ChampTriEtat[]>> = {};
-  for (const c of CATEGORIES_A_REPONSE_EXIGEE) out[c] = questionsExigeesPour(c);
+  const categories = new Set([
+    ...CATEGORIES_A_REPONSE_EXIGEE,
+    ...QUESTIONS_EXIGEES_PAR_DECISION.map((d) => d.categorie),
+  ]);
+  for (const c of categories) {
+    const q = questionsExigeesPour(c, regime);
+    if (q.length > 0) out[c] = q;
+  }
   return out;
+}
+
+/**
+ * La raison de la relance d'un appareil muet. Celle de D29 était écrite dans
+ * la page ; elle vit ici depuis que deux décisions relancent (2026-10-12).
+ */
+export function pourquoiRelanceAppareil(champ: ChampTriEtat): string {
+  return (
+    QUESTIONS_EXIGEES_PAR_DECISION.find((d) => d.champ === champ)?.pourquoi ??
+    "La réponse décide du rythme de sa vérification générale périodique — trois, six ou douze mois (arrêté du 1er mars 2004, art. 23). Tant qu'elle manque, Rojer retient le rythme le plus court."
+  );
+}
+
+/** Ce que le refus dit au dirigeant, pour une question exigée. */
+export function messageReponseExigee(champ: ChampTriEtat): string {
+  return (
+    QUESTIONS_EXIGEES_PAR_DECISION.find((d) => d.champ === champ)?.message ??
+    MESSAGE_REPONSE_EXIGEE
+  );
 }
 
 /** Les questions exigées restées sans réponse, lues sur le JSON de l'appareil. */
 export function reponsesManquantes(
   categorie: CategorieEquipement,
   caracteristiques: unknown,
+  regime: RegimeExigence,
 ): ChampTriEtat[] {
   const c =
     caracteristiques !== null && typeof caracteristiques === "object" && !Array.isArray(caracteristiques)
       ? (caracteristiques as Record<string, unknown>)
       : {};
-  return questionsExigeesPour(categorie).filter((champ) => typeof c[champ] !== "boolean");
+  return questionsExigeesPour(categorie, regime).filter((champ) => typeof c[champ] !== "boolean");
 }
 
 /**
@@ -152,13 +276,14 @@ export const MESSAGE_REPONSE_EXIGEE =
 
 export function reponsesExigeesManquantes(
   val: EquipementInput,
+  regime: RegimeExigence,
 ): Record<string, string[]> | null {
-  const manque = questionsExigeesPour(val.categorie).filter(
+  const manque = questionsExigeesPour(val.categorie, regime).filter(
     (champ) => val[champ] === undefined,
   );
   return manque.length === 0
     ? null
-    : Object.fromEntries(manque.map((c) => [c, [MESSAGE_REPONSE_EXIGEE]]));
+    : Object.fromEntries(manque.map((c) => [c, [messageReponseExigee(c)]]));
 }
 
 
@@ -175,9 +300,10 @@ export function appareilsMuets(
     categorie: string;
     caracteristiques: unknown;
   }[],
+  regime: RegimeExigence,
 ): { equipementId: string; libelle: string; champ: ChampTriEtat }[] {
   return equipements.flatMap((e) =>
-    reponsesManquantes(e.categorie as CategorieEquipement, e.caracteristiques).map(
+    reponsesManquantes(e.categorie as CategorieEquipement, e.caracteristiques, regime).map(
       (champ) => ({ equipementId: e.id, libelle: e.libelle, champ }),
     ),
   );

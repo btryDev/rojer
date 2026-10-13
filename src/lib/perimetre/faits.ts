@@ -107,6 +107,7 @@ export async function faitsDeCouverture(
     conduiteEngins: etab.conduiteEngins,
     expositionCMR: etab.expositionCMR,
     epiPresents: etab.epiPresents,
+    ssiCategorieAouB: etab.ssiCategorieAouB,
   });
 
   const sansEcheance = reperterSansEcheance(etabMatching, equipementsMatching);

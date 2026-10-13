@@ -74,6 +74,10 @@ const h = vi.hoisted(() => {
     analyseLegionelle: {
       findMany: async () => [{ rapportCle: "leg/analyse.pdf" }],
     },
+    // Une pièce de prestataire remplacée (2026-10-12) : elle part aussi.
+    piecePrestataire: {
+      findMany: async () => [{ fichierCle: "presta/urssaf-ancienne.pdf" }],
+    },
     // Transaction sans isolation : le corps reçoit le même client. Suffisant
     // pour l'ordre des écritures, qui est ce que ces tests regardent.
     $transaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn(prisma),
@@ -344,6 +348,7 @@ describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09
   const TOUTES = [
     "leg/analyse.pdf",
     "presta/kbis.pdf",
+    "presta/urssaf-ancienne.pdf",
     "presta/urssaf.pdf",
     "rap/1.pdf",
     "rap/2.pdf",
@@ -384,7 +389,7 @@ describe("supprimerEtablissement — les fichiers stockés partent avec (2026-09
     const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(supprimerEtablissement("etab-1")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.supprimes).toEqual(["etab-1"]);
-    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(5);
+    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(TOUTES.length);
     erreur.mockRestore();
   });
 });

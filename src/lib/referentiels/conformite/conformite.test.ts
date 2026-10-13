@@ -475,6 +475,7 @@ describe("référentiel conformité — anti-doublon", () => {
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     });
@@ -1254,6 +1255,7 @@ describe("référentiel conformité — éclairage de sécurité en lieu de trav
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };
@@ -1800,6 +1802,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // aucune ligne de calendrier ne change. 174 + 0 − 0 = 174, dont 3 au
     // niveau audit, 171 suivies.
     { version: "2026-10-12.1", empreinte: "174-f655345dc157316b" },
+    // `lot/suites-0810` : DF 10 § 3 lit le SSI A/B sur la fiche de
+    // l'établissement (critère `ssiCategorieAouB`), plus sur le désenfumage.
+    // 174 + 0 − 0 = 174, relevé en appelant `empreinteReferentiel()`.
+    { version: "2026-10-12.2", empreinte: "174-12f96465dba4ff5d" },
     // 2026-10-13, décision de la propriétaire sur les quinze manques entrés
     // dans la cible le 2026-10-12 : le chapitre hôtels est encodé.
     // `incendie-hotel-po-controle-biennal-installations` (PO 1 § 3, avec PE 4
@@ -1814,7 +1820,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // rangée et son dernier rapport), retire ALARME_INCENDIE de son
     // contexte et prend le libellé « Entretien et contrôle… » (PE 4 § 2 dit
     // entretien). 176 + 0 − 0 = 176.
-    { version: "2026-10-13.1", empreinte: "176-df8284f8efebaad8" },
+    // ~~176-df8284f8efebaad8~~ : empreinte de la branche avant la réunion avec
+    // `main` (PR #21, `2026-10-12.2`), jamais servie — ligne réécrite le
+    // 2026-10-13 : la `.13.1` hache désormais aussi le critère
+    // `ssiCategorieAouB` de la `.12.2`. 174 (`.12.2`) + 2 − 0 = 176, mesuré en
+    // appelant `empreinteReferentiel()` après la réunion.
+    { version: "2026-10-13.1", empreinte: "176-8239ab60d548b72a" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2499,6 +2510,7 @@ describe("IGH — aucune obligation ne naît plus du seul régime IGH", () => {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
     personnesPresentesHabituellement: null,
     manipuleMatieresR422722: null,
   };
@@ -2636,6 +2648,7 @@ describe("GE 4 § 1 — le tableau, case par case", () => {
       conduiteEngins: null,
       expositionCMR: null,
       epiPresents: null,
+      ssiCategorieAouB: null,
       personnesPresentesHabituellement: null,
       manipuleMatieresR422722: null,
     };

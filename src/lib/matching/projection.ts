@@ -81,5 +81,6 @@ export function projeterEtablissement(
     conduiteEngins: etab.conduiteEngins,
     expositionCMR: etab.expositionCMR,
     epiPresents: etab.epiPresents,
+    ssiCategorieAouB: etab.ssiCategorieAouB,
   };
 }

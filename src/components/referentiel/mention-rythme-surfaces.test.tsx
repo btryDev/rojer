@@ -220,6 +220,7 @@ describe("guide « Comprendre » — chez vous", () => {
     conduiteEngins: null,
     expositionCMR: null,
     epiPresents: null,
+    ssiCategorieAouB: null,
   };
   const extincteur = {
     id: "eq-ext",

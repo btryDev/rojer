@@ -43,7 +43,6 @@ export const LIBELLE_CARACTERISTIQUE: Record<ChampTriEtat, string> = {
   aDetectionDeFuites: "Détection fixe des fuites",
   estSsiCategorieAouB: "SSI de catégorie A ou B",
   estDesenfumageMecanique: "Désenfumage mécanique",
-  etablissementASsiCategorieAouB: "SSI de catégorie A ou B dans l'établissement",
 };
 
 export type CaracteristiqueLisible = {

@@ -391,13 +391,13 @@ describe("fusible — une obligation ne change pas de porteur sans le dire", () 
     const vivants = new Set(["vivante"]);
     expect(
       fautesDeRetrait(table, vivants, {
-        retiree: { absorbePar: null, porteur: "salarie", motif: "" },
+        retiree: { libelle: "", absorbePar: null, porteur: "salarie", motif: "" },
       }),
     ).toEqual(["perdue — disparu sans être inscrit à `OBLIGATIONS_RETIREES`"]);
     expect(
       fautesDeRetrait(table, vivants, {
-        retiree: { absorbePar: null, porteur: "equipement", motif: "" },
-        perdue: { absorbePar: null, porteur: "etablissement", motif: "" },
+        retiree: { libelle: "", absorbePar: null, porteur: "equipement", motif: "" },
+        perdue: { libelle: "", absorbePar: null, porteur: "etablissement", motif: "" },
       }),
     ).toEqual([
       "retiree — retiré en se déclarant « equipement », la table le connaissait « salarie »",

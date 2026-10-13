@@ -77,6 +77,7 @@ function profilsInscription(): EtablissementMatching[] {
         conduiteEngins: null,
         expositionCMR: null,
         epiPresents: null,
+        ssiCategorieAouB: null,
       });
       if (!r.success) continue;
       const d = r.data;
@@ -95,6 +96,7 @@ function profilsInscription(): EtablissementMatching[] {
         conduiteEngins: null,
         expositionCMR: null,
         epiPresents: null,
+        ssiCategorieAouB: null,
       });
     }
   }

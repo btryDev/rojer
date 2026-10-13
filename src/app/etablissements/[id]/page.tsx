@@ -16,6 +16,7 @@ import {
   repondreEpiPresents,
   repondreMatieres,
   repondreSommeil,
+  repondreSsi,
   type ReponseParametrage,
 } from "@/lib/etablissements/parametrage";
 import { relancesDuDossier, type Relance } from "@/lib/etablissements/relance";
@@ -25,7 +26,7 @@ import { BlocBrief } from "@/components/dashboard/widgets/impl/board";
 import type { DashboardBundle } from "@/components/dashboard/widgets/types";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
-import { appareilsMuets } from "@/lib/equipements/reponses-exigees";
+import { appareilsMuets, pourquoiRelanceAppareil } from "@/lib/equipements/reponses-exigees";
 import { LIBELLE_CARACTERISTIQUE } from "@/lib/equipements/caracteristiques";
 import { repondreQuestionEquipement } from "@/lib/equipements/actions";
 import { repondreFaitActiviteFormulaire } from "@/lib/etablissements/faits-activite-actions";
@@ -312,6 +313,7 @@ export default async function EtablissementPage({
     manipuleMatieresR422722: repondreMatieres,
     comporteLocauxSommeilPublic: repondreSommeil,
     epiPresents: repondreEpiPresents,
+    ssiCategorieAouB: repondreSsi,
   };
   const actionDeRelance = (relance: Extract<Relance, { mode: "oui_non" }>) => {
     const champ = relance.champ;
@@ -328,6 +330,7 @@ export default async function EtablissementPage({
     conduiteEngins: etab.conduiteEngins,
     expositionCMR: etab.expositionCMR,
     epiPresents: etab.epiPresents,
+    ssiCategorieAouB: etab.ssiCategorieAouB,
   })) {
     // La présence d'EPI a déjà son étape, ci-dessus, avec le détail : la
     // relance la doublerait.
@@ -363,12 +366,15 @@ export default async function EtablissementPage({
   // le rythme de sa VGP : le moteur retient le rythme le plus court, et la
   // question se répond ici, appareil par appareil. Les appareils nés du
   // pré-remplissage, sans caractéristiques, arrivent tous par ici.
-  for (const { equipementId, libelle, champ } of appareilsMuets(equipements)) {
+  // [2026-10-12 : et un désenfumage d'ERP des quatre premières catégories
+  // muet sur « mécanique » — la décision du 2026-10-08 rend la réponse
+  // exigée là où elle fait naître la triennale de DF 10 § 3. Le régime de
+  // l'établissement en décide, d'où `etab`.]
+  for (const { equipementId, libelle, champ } of appareilsMuets(equipements, etab)) {
     etapesOnboarding.push({
       id: `relance-equipement-${equipementId}-${champ}`,
       titre: `« ${libelle} » — ${LIBELLE_CARACTERISTIQUE[champ]} ?`,
-      pourquoi:
-        "La réponse décide du rythme de sa vérification générale périodique — trois, six ou douze mois (arrêté du 1er mars 2004, art. 23). Tant qu'elle manque, Rojer retient le rythme le plus court.",
+      pourquoi: pourquoiRelanceAppareil(champ),
       faite: false,
       question: (
         <QuestionParametrage

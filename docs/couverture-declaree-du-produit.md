@@ -155,8 +155,10 @@ retrait de la carte.
 ~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
-annoncés le 2026-09-27~~ trente-trois annoncés (vingt-cinq le 2026-09-27, un le
-2026-10-07, sept le 2026-10-13 — mesuré en appelant), que la page « Ce que Rojer ne couvre pas » projette au
+annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
+2026-09-27, un le 2026-10-07, deux le 2026-10-12 — le risque chimique, entré par
+`lot/suites-0810` —, sept le 2026-10-13 ; mesuré en appelant à la réunion avec
+`main`), que la page « Ce que Rojer ne couvre pas » projette au
 seul dossier qu'ils peuvent concerner (§ 3 ter). Un bureau tertiaire les
 voyait tous, y compris les onze articles propres aux hôtels.
 
@@ -257,7 +259,10 @@ Puis six articles avec le retrait de quatre lignes `stockage-dangereux-*`
 (« à exclure sauf 3 derniers points ») : `C. env. L. 512-1`, `C. env. L. 512-7`,
 `C. env. L. 512-8`, `Arrêté 2015-06-01 art. 22`, `R. 4412-11`, `R. 4412-17` —
 adresse : l'aide de la catégorie « Stockage de matières dangereuses » du
-formulaire d'équipement.
+formulaire d'équipement. [2026-10-12, `lot/suites-0810` : `R. 4412-11` et
+`R. 4412-17` passent à `ADRESSE_MANQUES_ANNONCES`, rubrique « Risque
+chimique » (décision de la propriétaire du 2026-10-08) ; les quatre autres
+gardent l'aide du stockage.]
 
 **Le mouvement du 2026-10-13 : 66 + 4 − 0 = 70.** `GZ 13`, `GZ 14`, `AS 10` et
 `Arrêté 23-02-2018 art. 26 § 3` passent d'`obligation_manquante` à
@@ -626,7 +631,10 @@ la requalification périodique, seule restée — et ce qu'il ne suit pas.
 **Adresse visible** : l'aide de la catégorie « Stockage de matières
 dangereuses » du formulaire d'équipement (`DESCRIPTION_CATEGORIE`), qui dit ce
 que Rojer suit — fiches de données de sécurité, formation, signalisation — et ce
-qu'il ne suit pas.
+qu'il ne suit pas. [2026-10-12 : pour `R. 4412-11` et `R. 4412-17`, l'adresse
+est désormais la page « Ce que Rojer ne couvre pas », rubrique « Risque
+chimique », annoncée à tout employeur ; l'aide du stockage continue de le dire
+à la déclaration.]
 
 ### Information sur les équipements de travail, tous employeurs — 1 article (2026-10-07)
 

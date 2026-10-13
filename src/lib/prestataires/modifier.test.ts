@@ -11,7 +11,11 @@ const h = vi.hoisted(() => {
     {},
     {
       get: (_t, nom: string) =>
-        new Proxy(
+        // La forme tableau de `$transaction` : les écritures sont déjà
+        // relevées à leur création, on rend leurs résultats.
+        nom === "$transaction"
+          ? async (ops: Promise<unknown>[]) => Promise.all(ops)
+          : new Proxy(
           {},
           {
             get: (_u, op: string) => async (args: unknown) => {
@@ -44,7 +48,9 @@ vi.mock("@/lib/storage", async (original) => ({
   getStorage: () => h.stockage,
 }));
 
-import { creerPrestataire, modifierPrestataire } from "./actions";
+import { creerPrestataire, modifierPrestataire, supprimerPrestataire } from "./actions";
+import { dateDeDepotDeLaCle } from "./pieces";
+import { clePiecePrestataire } from "./storage";
 import { MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
 
 const pdf = () =>
@@ -70,11 +76,17 @@ function saisie(champs: Record<string, string | File> = {}): FormData {
 }
 
 const ecritures = (op: string) => h.appels.filter((a) => a.op === op);
+const DEPOT_ANCIENNE = Date.UTC(2026, 3, 2, 9, 30);
 const FICHE = {
   id: "pre_1",
-  attestationUrssafCle: "prestataires/e1/pre_1/urssaf-ancienne.pdf",
+  attestationUrssafCle: `prestataires/e1/pre_1/urssaf-${DEPOT_ANCIENNE}-ancienne.pdf`,
+  attestationUrssafNom: "ancienne.pdf",
+  attestationUrssafValableJusquA: new Date("2026-09-30T00:00:00Z"),
   assuranceRcProCle: "prestataires/e1/pre_1/rcpro.pdf",
+  assuranceRcProNom: "rcpro.pdf",
+  assuranceRcProValableJusquA: null,
   kbisCle: null,
+  kbisNom: null,
 };
 
 beforeEach(() => {
@@ -135,6 +147,25 @@ describe("modifierPrestataire", () => {
     expect(data.attestationUrssafNom).toBe("nouvelle.pdf");
     expect("assuranceRcProCle" in data).toBe(false);
     expect(h.stockage.liberes).toEqual([]);
+    // 2026-10-12 : l'ancienne s'inscrit en `PiecePrestataire`, avec ce que la
+    // fiche disait d'elle AVANT l'écriture.
+    const [inscription] = ecritures("piecePrestataire.createMany");
+    expect((inscription.args as { data: unknown[] }).data).toEqual([
+      {
+        prestataireId: "pre_1",
+        type: "urssaf",
+        fichierCle: FICHE.attestationUrssafCle,
+        fichierNom: "ancienne.pdf",
+        deposeeLe: new Date(DEPOT_ANCIENNE),
+        valableJusquA: FICHE.attestationUrssafValableJusquA,
+      },
+    ]);
+  });
+
+  it("une pièce jointe là où il n'y en avait pas n'inscrit rien", async () => {
+    await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie({ kbis: pdf() }));
+    const [inscription] = ecritures("piecePrestataire.createMany");
+    expect((inscription.args as { data: unknown[] }).data).toEqual([]);
   });
 
   it("reprend les validations de la création : une remise future est refusée sur son champ", async () => {
@@ -189,5 +220,35 @@ describe("SIRET déjà présent dans l'annuaire", () => {
     await expect(creerPrestataire("e1", { status: "idle" }, saisie())).rejects.toThrow(
       "connexion perdue",
     );
+  });
+});
+
+describe("supprimerPrestataire — les pièces précédentes partent avec (2026-10-12)", () => {
+  it("libère les pièces en cours ET les pièces remplacées, après la suppression en base", async () => {
+    h.reponses["prestataire.findFirst"] = () => ({
+      ...FICHE,
+      piecesPrecedentes: [{ fichierCle: "prestataires/e1/pre_1/urssaf-1-2025.pdf" }],
+    });
+    await supprimerPrestataire("e1", "pre_1");
+    expect(ecritures("prestataire.delete")).toHaveLength(1);
+    expect([...h.stockage.liberes].sort()).toEqual(
+      [
+        FICHE.attestationUrssafCle,
+        FICHE.assuranceRcProCle,
+        "prestataires/e1/pre_1/urssaf-1-2025.pdf",
+      ].sort(),
+    );
+  });
+});
+
+describe("dateDeDepotDeLaCle", () => {
+  it("lit les millisecondes que `clePiecePrestataire` écrit", () => {
+    const cle = clePiecePrestataire("e1", "pre_1", "rcpro", "a b.pdf");
+    const d = dateDeDepotDeLaCle(cle);
+    expect(d).toBeInstanceOf(Date);
+    expect(Math.abs(d!.getTime() - Date.now())).toBeLessThan(5_000);
+  });
+  it("rend null plutôt que deviner sur une clé d'une autre forme", () => {
+    expect(dateDeDepotDeLaCle("prestataires/e1/pre_1/rcpro.pdf")).toBeNull();
   });
 });
