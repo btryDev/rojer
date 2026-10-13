@@ -84,6 +84,16 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
     Hobby) : raccourcir la rétention des déploiements annulés, en erreur et de
     pré-production ([§ 13](#13-les-previews-vercel-sont-abandonnées--2026-09-18)).
 
+### À vérifier après la release
+
+1. **Alarme de chambre froide** (2026-10-13). La vérification annuelle des
+   alimentations de secours des signalisations (arrêté du 4 novembre 1993,
+   art. 15) n'est servie que si une alarme incendie ou des BAES sont déclarés
+   (`lot/conditions-equipement`). Si un texte impose un dispositif d'alarme
+   dans les chambres froides, voir s'il est couvert par le domaine « Froid ».
+   Texte non ouvert : ni manque ni non-manque établi. L'alarme de cabine
+   d'ascenseur, elle, suit l'ascenseur (entretien, contrôle quinquennal CCH).
+
 ### Feuille de route
 
 1. La protection collective comme famille d'objet ([§ 7 bis](#7-bis-les-équipements-de-protection--ce-quon-ne-sait-pas-déclarer--clos-le-2026-09-04-rayé-le-2026-09-20)).
