@@ -74,9 +74,15 @@ const h = vi.hoisted(() => {
     $executeRaw: async (strings: TemplateStringsArray, ...valeurs: unknown[]) => {
       db.requetes.push({ sql: strings.join("?"), valeurs });
       const [cle, valeur, id, etablissementId] = valeurs as [string, boolean, string, string];
-      const e = db.equipements.find((x) => x.id === id && x.etablissementId === etablissementId) as
-        | (Record<string, unknown> & { caracteristiques?: unknown })
-        | undefined;
+      // La garde « actif » (revue du 2026-10-13, R2) n'est appliquée que si le
+      // SQL la porte : le faux joue ce que la requête dit, pas ce qu'on espère.
+      const exigeActif = /"actif"\s*=\s*true/.test(strings.join("?"));
+      const e = db.equipements.find(
+        (x) =>
+          x.id === id &&
+          x.etablissementId === etablissementId &&
+          (!exigeActif || x.actif === true),
+      ) as (Record<string, unknown> & { caracteristiques?: unknown }) | undefined;
       if (!e) return 0;
       const base =
         e.caracteristiques !== null && typeof e.caracteristiques === "object" && !Array.isArray(e.caracteristiques)
@@ -475,7 +481,7 @@ describe("relance d'un appareil muet : une clé écrite par la base (reprise des
     expect(valeurs).toEqual([champ, true, "eq-1", "etab-1"]);
     expect(sql).not.toContain(champ);
     expect(sql).toContain("jsonb_set");
-    expect(sql).toContain('"updatedAt" = NOW()');
+    expect(sql).toContain("\"updatedAt\" = NOW() AT TIME ZONE 'UTC'");
   });
 
   it("aucune ligne touchée : l'erreur est dite, rien n'est régénéré", async () => {
@@ -484,6 +490,22 @@ describe("relance d'un appareil muet : une clé écrite par la base (reprise des
     };
     const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
     expect(r.status).toBe("error");
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  // Revue du 2026-10-13, R2 : la garde `estAppareilRetire` lit la photo ;
+  // un retrait entre la lecture et l'écriture passait. Éprouvé en retirant
+  // `AND "actif" = true` du WHERE.
+  it("appareil retiré entre la lecture et l'écriture : zéro ligne, l'erreur est dite, rien n'est écrit ni régénéré", async () => {
+    h.db.apresLecture = () => {
+      h.db.equipements[0].actif = false;
+    };
+    const r = await repondreQuestionEquipement("eq-1", champ, { status: "idle" }, reponse("oui"));
+    expect(r.status).toBe("error");
+    expect((r as { message?: string }).message).toContain("retiré du parc");
+    expect((h.db.equipements[0] as { caracteristiques?: unknown }).caracteristiques).toEqual({
+      notes: "garder",
+    });
     expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 });
@@ -606,5 +628,30 @@ describe("pré-remplissage : la porte des réponses exigées tient aussi pour un
     ]);
     expect(r.created).toBe(2);
     expect(h.db.creesEnLot).toHaveLength(2);
+  });
+
+  // Revue du 2026-10-13, R1 : une catégorie forgée n'atteint ni le cache de
+  // `questionsExigeesPour` ni la base. Éprouvé en retirant le filtre sur
+  // `CATEGORIES_EQUIPEMENT`.
+  it("catégorie inconnue : refusée en bloc, avant de lire le régime, rien n'est écrit", async () => {
+    let regimeLu = false;
+    const lire = h.prisma.etablissement.findUnique;
+    h.prisma.etablissement.findUnique = async () => {
+      regimeLu = true;
+      return h.db.regime;
+    };
+    try {
+      await expect(
+        creerEquipementsDepuisPreRemplissage("etab-1", [
+          { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+          { categorie: "PAS_UNE_CATEGORIE" as never, libelle: "Forgé" },
+        ]),
+      ).rejects.toThrow("PAS_UNE_CATEGORIE");
+    } finally {
+      h.prisma.etablissement.findUnique = lire;
+    }
+    expect(regimeLu).toBe(false);
+    expect(h.db.creesEnLot).toHaveLength(0);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 });

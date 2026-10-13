@@ -23,6 +23,7 @@ import {
   type ChampTriEtat,
 } from "./schema";
 import {
+  CATEGORIES_EQUIPEMENT,
   estCategorieEpi,
   type CategorieEquipement,
 } from "@/lib/referentiels/types-communs";
@@ -372,6 +373,13 @@ export async function supprimerEquipement(
  * Attend un tableau `categories` de catégories validées par l'utilisateur.
  * Chaque catégorie donne lieu à un `Equipement` minimal (libellé générique,
  * pas de caractéristiques) que l'utilisateur pourra enrichir ensuite.
+ *
+ * Deux refus, en bloc et avant toute écriture (reprise des suites du lot 3,
+ * 2026-10-13) : une catégorie qui n'est pas dans `CATEGORIES_EQUIPEMENT`, et
+ * une catégorie dont une réponse est exigée dans le régime de l'établissement
+ * (`questionsExigeesPour`) — celle-là se déclare par le formulaire, qui pose
+ * la question. L'écran n'envoie ni l'une ni l'autre : seul un POST forgé les
+ * fait lever.
  */
 export async function creerEquipementsDepuisPreRemplissage(
   etablissementId: string,
@@ -391,6 +399,22 @@ export async function creerEquipementsDepuisPreRemplissage(
   // quatre premières catégories —, et non la seule liste de D29. Une ligne
   // créée ici n'a aucune caractéristique : toute question exigée y manque.
   // Refusé en bloc, avant toute écriture.
+  //
+  // La catégorie d'abord (revue du 2026-10-13, R1) : le type ne tient rien à
+  // l'exécution, et `questionsExigeesPour` met en cache, sans condition, ce
+  // qu'on lui passe — une valeur forgée y aurait laissé une entrée par appel.
+  const inconnues = [
+    ...new Set(
+      entrees
+        .map((e) => e.categorie as string)
+        .filter((c) => !(CATEGORIES_EQUIPEMENT as readonly string[]).includes(c)),
+    ),
+  ];
+  if (inconnues.length > 0) {
+    throw new Error(
+      `Catégorie d'équipement inconnue (${inconnues.join(", ")}) : rien n'a été créé.`,
+    );
+  }
   const regime = await regimeDe(etablissementId);
   const exigees = [
     ...new Set(
@@ -450,7 +474,8 @@ export async function repondreQuestionEquipement(
       etablissementId: true,
       actif: true,
       categorie: true,
-      caracteristiques: true,
+      // ~~`caracteristiques: true`~~ — 2026-10-13 (revue, R4) : la réponse
+      // s'écrit par la base (`jsonb_set`, plus bas), le JSON n'est plus lu.
     },
   });
   if (!eq) return { status: "error", message: "Équipement introuvable." };
@@ -487,6 +512,13 @@ export async function repondreQuestionEquipement(
   // base. Scopé par l'appareil ET l'établissement dont l'appartenance vient
   // d'être contrôlée. `champ` est une clé fermée : elle a passé le filtre de
   // `questionsExigeesPour` plus haut.
+  //
+  // Revue du 2026-10-13 : `AND "actif" = true` (R2) — un appareil retiré
+  // entre la lecture et l'écriture est en lecture seule (`retrait.ts`), la
+  // garde de plus haut ne voyait que la photo. `NOW() AT TIME ZONE 'UTC'`
+  // (R3) — `updatedAt` est un TIMESTAMP(3) sans fuseau où Prisma range des
+  // instants UTC (ADR-011 § 1) ; `NOW()` seul y écrirait l'heure locale de la
+  // session.
   const lignes = await prisma.$executeRaw`
     UPDATE "Equipement"
        SET "caracteristiques" = jsonb_set(
@@ -499,13 +531,19 @@ export async function repondreQuestionEquipement(
              to_jsonb(${reponse}::boolean),
              true
            ),
-           "updatedAt" = NOW()
+           "updatedAt" = NOW() AT TIME ZONE 'UTC'
      WHERE "id" = ${equipementId}
-       AND "etablissementId" = ${eq.etablissementId}`;
-  // L'appareil vient d'être lu : zéro ligne veut dire qu'il a disparu
-  // entre-temps. Se taire afficherait une réponse que rien n'a enregistrée.
+       AND "etablissementId" = ${eq.etablissementId}
+       AND "actif" = true`;
+  // L'appareil vient d'être lu : zéro ligne veut dire qu'il a disparu ou
+  // quitté le parc entre-temps. Se taire afficherait une réponse que rien
+  // n'a enregistrée.
   if (lignes === 0) {
-    return { status: "error", message: "Équipement introuvable." };
+    return {
+      status: "error",
+      message:
+        "Cet équipement a été supprimé ou retiré du parc entre-temps : la réponse n'a pas été enregistrée.",
+    };
   }
 
   const regen = await regenererCalendrier(eq.etablissementId);
