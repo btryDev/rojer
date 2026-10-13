@@ -21,10 +21,10 @@ import { helpersDAppartenance } from "./tenancy-sonde";
  * (`helpersDAppartenance`, même relevé que les balayages de portée). Un helper
  * ajouté demain est éprouvé sans qu'on y pense.
  *
- * Prisma est remplacé par un faux qui ÉVALUE le `where` contre une base d'une
- * seule ligne appartenant au compte A, ligne dont toute relation remonte à A.
- * Un `where` qui ne porte pas `userId` ramène la ligne quel que soit le
- * demandeur — c'est exactement ce que ferait PostgreSQL. L'assertion porte
+ * Prisma est remplacé par un faux qui ÉVALUE le `where` contre une base dont
+ * toute ligne appartient au compte A, relations comprises. Un `where` qui ne
+ * porte pas `userId` ramène la ligne quel que soit le demandeur — c'est
+ * exactement ce que ferait PostgreSQL. L'assertion porte
  * donc sur ce que le helper REND au compte B, pas sur la forme de sa requête.
  */
 
@@ -36,37 +36,34 @@ const h = vi.hoisted(() => {
   const etat = { proprietaire: "user-a", appels: [] as { modele: string; where: Where }[] };
 
   /**
-   * Une ligne dont chaque champ est son propre identifiant, `userId` vaut le
-   * propriétaire, et toute relation est une ligne de même nature : quelle que
-   * soit la profondeur de la chaîne (`risque → unite → duerp → établissement →
-   * entreprise`), elle remonte au propriétaire.
+   * Toute ligne de la base appartient au propriétaire : chaque relation, à
+   * quelque profondeur qu'elle soit (`risque → unite → duerp → établissement →
+   * entreprise`), remonte à lui. Évaluer un `where` revient donc à vérifier
+   * que chaque `userId` qu'il pose est celui du propriétaire ; les autres
+   * scalaires (identifiants, clés de jointure) sont satisfaits par la ligne
+   * demandée.
    */
-  function ligne(id: string): Record<string, unknown> {
-    return new Proxy(
-      {},
-      {
-        get(_, cle) {
-          if (cle === "then") return undefined; // pas une promesse
-          if (cle === "id") return id;
-          if (cle === "userId") return etat.proprietaire;
-          if (typeof cle === "string" && cle.endsWith("Id")) return `${cle}-1`;
-          return ligne(`${String(cle)}-1`);
-        },
-      },
+  function correspond(where: Where): boolean {
+    return Object.entries(where).every(([cle, attendu]) =>
+      attendu !== null && typeof attendu === "object"
+        ? correspond(attendu as Where)
+        : cle !== "userId" || attendu === etat.proprietaire,
     );
   }
 
-  /** Évalue un `where` : égalité sur les scalaires, descente sur les relations. */
-  function correspond(l: Record<string, unknown>, where: Where): boolean {
-    for (const [cle, attendu] of Object.entries(where)) {
-      if (attendu !== null && typeof attendu === "object") {
-        if (!correspond(l[cle] as Record<string, unknown>, attendu as Where)) return false;
-      } else if (cle !== "id" && l[cle] !== attendu) {
-        // `id` : la ligne existe pour tout identifiant demandé.
-        return false;
-      }
-    }
-    return true;
+  /** Une ligne FINIE (un objet récursif ferait boucler l'affichage d'un échec). */
+  function ligne(id: string): Record<string, unknown> {
+    return {
+      id,
+      userId: etat.proprietaire,
+      raisonDisplay: "Établissement",
+      entrepriseId: "entreprise-1",
+      etablissementId: "etab-1",
+      duerpId: "duerp-1",
+      uniteId: "unite-1",
+      duerp: { id: "duerp-1", etablissementId: "etab-1" },
+      unite: { id: "unite-1", duerpId: "duerp-1", duerp: { etablissementId: "etab-1" } },
+    };
   }
 
   const prisma = new Proxy(
@@ -77,8 +74,7 @@ const h = vi.hoisted(() => {
           const where = args.where ?? {};
           etat.appels.push({ modele, where });
           const id = typeof where.id === "string" ? where.id : "x";
-          const l = ligne(id);
-          return correspond(l, where) ? l : null;
+          return correspond(where) ? ligne(id) : null;
         };
         return { findFirst: lire, findUnique: lire };
       },
