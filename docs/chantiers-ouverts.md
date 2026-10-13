@@ -42,8 +42,13 @@ passent de constat à décision — ils se règlent avant les premiers clients.]
 
 ### Décisions attendues
 
-1. **Champ de la question `R. 4227-22`** : manipulation seule, ou entreposage
-   aussi ([§ 1](#1-ce-qui-reste-du-champ-de-r-4227-34--manipulematieresr422722)).
+1. ~~**Champ de la question `R. 4227-22`** : manipulation seule, ou entreposage
+   aussi~~ ([§ 1](#1-ce-qui-reste-du-champ-de-r-4227-34--manipulematieresr422722)).
+   [2026-10-13 : TRANCHÉ — le libellé « pas seulement stockés » est fidèle à
+   `R. 4227-34` (« manipulées et mises en œuvre ») ; la question reste posée à
+   tout employeur et sera reformulée pour se répondre étiquette en main
+   (pictogrammes, H220/H222/H224, exemples). Question d'interprétation posée au
+   préventeur : `docs/questions-preventeur.md`, n° 1.]
 2. **Livret d'entretien de la filtration (`CH 39 § 1`) et stock de rechange de
    l'alarme (`MS 69`)** : encoder, annoncer ou hors cadre — obligations d'ERP
    1-4, dans la cible depuis le 2026-10-12
