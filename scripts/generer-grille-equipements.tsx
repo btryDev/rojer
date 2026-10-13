@@ -497,34 +497,88 @@ function referenceCourte(o: Obligation): string {
   return r.article ?? r.reference;
 }
 
+/** Primitives de la charte board, transposées au PDF (docs/charte-board.md). */
+const BOARD_PDF = {
+  /** `.board-eyebrow` : mono, capitales, espacé. Courier tient lieu de JetBrains Mono, non embarquée. */
+  eyebrow: {
+    fontFamily: "Courier",
+    fontSize: 8,
+    letterSpacing: 1.6,
+    color: BOARD.ardoiseDouce,
+    textTransform: "uppercase" as const,
+  },
+  /** `.carte-board` : blanc, rayon 30 px (≈ 22 pt), filet très léger. */
+  carte: {
+    backgroundColor: BOARD.carte,
+    borderRadius: 18,
+    borderWidth: 0.6,
+    borderColor: BOARD.ardoiseFilet,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginBottom: 10,
+  },
+  /** `.pastille-board` : pilule, champ bleu pâle, encre bleue. */
+  pastille: {
+    backgroundColor: BOARD.cielPale,
+    color: BOARD.bleuEncre,
+    borderRadius: 999,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    fontSize: 8.5,
+    fontFamily: "Helvetica-Bold",
+    marginRight: 5,
+  },
+} as const;
+
+function Pastille({ children, ton }: { children: string; ton?: "ambre" }) {
+  return (
+    <Text
+      style={[
+        BOARD_PDF.pastille,
+        ton === "ambre" ? { backgroundColor: "#fdecc8", color: BOARD.ambreEncre } : {},
+      ]}
+    >
+      {t(children)}
+    </Text>
+  );
+}
+
 function CarteProposition({ o, motif }: { o: Obligation; motif: string }) {
   return (
-    <View
-      wrap={false}
-      style={{
-        marginBottom: 14,
-        paddingBottom: 12,
-        borderBottomWidth: 0.5,
-        borderBottomColor: "#d9dde3",
-      }}
-    >
-      <Text style={{ fontSize: 12.5, fontFamily: "Helvetica-Bold", lineHeight: 1.35 }}>
+    <View wrap={false} style={BOARD_PDF.carte}>
+      <View style={{ flexDirection: "row", marginBottom: 7 }}>
+        <Pastille>{referenceCourte(o)}</Pastille>
+        <Pastille>{LABEL_DOMAINE[o.domaine]}</Pastille>
+      </View>
+      <Text
+        style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: BOARD.encre, lineHeight: 1.35 }}
+      >
         {t(o.libelle)}
       </Text>
-      <Text style={{ fontSize: 9.5, color: BOARD.ardoiseMoyenne, marginTop: 3 }}>
-        {t(`${referenceCourte(o)} · ${LABEL_DOMAINE[o.domaine]}`)}
+      <Text style={{ fontSize: 10.5, lineHeight: 1.55, marginTop: 6, color: BOARD.ardoiseEncre }}>
+        {t(motif)}
       </Text>
-      <Text style={{ fontSize: 11, lineHeight: 1.5, marginTop: 6 }}>{t(motif)}</Text>
     </View>
   );
 }
 
-function TitrePartie({ titre, sousTitre }: { titre: string; sousTitre: string }) {
+function TitrePartie({
+  sousTitre,
+  titre,
+  explication,
+}: {
+  sousTitre: string;
+  titre: string;
+  explication: string;
+}) {
   return (
-    <View style={{ marginTop: 22, marginBottom: 12 }}>
-      <Text style={{ fontSize: 15, fontFamily: "Helvetica-Bold" }}>{t(titre)}</Text>
-      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne, marginTop: 3 }}>
-        {t(sousTitre)}
+    <View style={{ marginTop: 20, marginBottom: 10 }} wrap={false}>
+      <Text style={BOARD_PDF.eyebrow}>{t(sousTitre)}</Text>
+      <Text style={{ fontSize: 16, fontFamily: "Helvetica-Bold", color: BOARD.encre, marginTop: 4 }}>
+        {t(titre)}
+      </Text>
+      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne, marginTop: 3, lineHeight: 1.45 }}>
+        {t(explication)}
       </Text>
     </View>
   );
@@ -547,55 +601,78 @@ function PagePropositions({
   const fermes = toutes.filter((o) => !aDiscuter(o));
   const ouvertes = toutes.filter(aDiscuter);
   const dejaAudit = obligationsConformite.filter((o) => estNiveauAudit(o));
-  const pagePortrait = { ...stylePage, paddingHorizontal: 56, paddingTop: 48 };
   return (
-    <Page size="A4" style={pagePortrait}>
-      <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
-        Rojer — référentiel {REFERENTIEL_VERSION} · {genereLe}
+    <Page
+      size="A4"
+      style={{
+        ...stylePage,
+        backgroundColor: BOARD.canevas,
+        paddingHorizontal: 48,
+        paddingTop: 44,
+        paddingBottom: 56,
+      }}
+    >
+      <Text style={BOARD_PDF.eyebrow}>
+        {t(`Rojer · référentiel ${REFERENTIEL_VERSION} · ${genereLe}`)}
       </Text>
-      <Text style={{ fontSize: 22, fontFamily: "Helvetica-Bold", marginTop: 8 }}>
+      <Text
+        style={{ fontSize: 24, fontFamily: "Helvetica-Bold", color: BOARD.encre, marginTop: 10, lineHeight: 1.2 }}
+      >
         Passer des obligations au niveau audit
       </Text>
-      <Text style={{ fontSize: 11, lineHeight: 1.55, marginTop: 10 }}>
-        {t(
-          "Le niveau audit garde une obligation dans le référentiel, avec sa source, mais ne la suit plus au quotidien : pas d'échéance au calendrier, pas de ligne au tableau de bord. Elle reste nommée sur la page « Ce que Rojer ne couvre pas ». Rien n'est retiré.",
-        )}
-      </Text>
-      <Text style={{ fontSize: 11, lineHeight: 1.55, marginTop: 6 }}>
-        {t(
-          `Ce qui suit est une proposition, rien n'est décidé. ${fermes.length} lignes que nous proposons de passer au niveau audit, ${ouvertes.length} sur lesquelles nous voulons votre avis.`,
-        )}
-      </Text>
+      <View style={[BOARD_PDF.carte, { marginTop: 14, backgroundColor: BOARD.cielPale, borderColor: BOARD.cielPale }]}>
+        <Text style={{ fontSize: 10.5, lineHeight: 1.55, color: BOARD.ardoiseEncre }}>
+          {t(
+            "Le niveau audit garde une obligation dans le référentiel, avec sa source, mais ne la suit plus au quotidien : pas d'échéance au calendrier, pas de ligne au tableau de bord. Elle reste nommée sur la page « Ce que Rojer ne couvre pas ». Rien n'est retiré.",
+          )}
+        </Text>
+        <Text style={{ fontSize: 10.5, lineHeight: 1.55, marginTop: 5, color: BOARD.ardoiseEncre, fontFamily: "Helvetica-Bold" }}>
+          {t(
+            `Ce sont des propositions, rien n'est décidé : ${fermes.length} que nous soutenons, ${ouvertes.length} sur lesquelles votre avis tranchera.`,
+          )}
+        </Text>
+      </View>
 
+      {dejaAudit.length > 0 && (
+        <View wrap={false}>
+          <TitrePartie
+            sousTitre={`${dejaAudit.length} obligations`}
+            titre={`Déjà au niveau audit (${dejaAudit.length})`}
+            explication="Décidé le 8 octobre 2026, sur vos remarques."
+          />
+          <View style={BOARD_PDF.carte}>
+            {dejaAudit.map((o, i) => (
+              <View
+                key={o.id}
+                style={{ flexDirection: "row", alignItems: "center", marginTop: i === 0 ? 0 : 7 }}
+              >
+                <Pastille>{referenceCourte(o)}</Pastille>
+                <Text style={{ fontSize: 10.5, color: BOARD.ardoiseEncre, flex: 1 }}>
+                  {t(o.libelle)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
       <TitrePartie
-        titre={`Nous proposons (${fermes.length})`}
-        sousTitre="Ce sont des documents faits une fois ou des exigences d'installation, que le dirigeant n'a pas à piloter."
+        sousTitre={`${fermes.length} propositions`}
+        titre="Nous proposons"
+        explication="Des documents faits une fois ou des exigences d'installation, que le dirigeant n'a pas à piloter au quotidien."
       />
       {fermes.map((o) => (
         <CarteProposition key={o.id} o={o} motif={motifDe(o)} />
       ))}
 
       <TitrePartie
-        titre={`À discuter avec vous (${ouvertes.length})`}
-        sousTitre="Nous hésitons : votre avis tranchera."
+        sousTitre={`${ouvertes.length} questions`}
+        titre="À discuter avec vous"
+        explication="Nous hésitons : votre avis tranchera."
       />
       {ouvertes.map((o) => (
         <CarteProposition key={o.id} o={o} motif={sansPrefixe(motifDe(o))} />
       ))}
 
-      {dejaAudit.length > 0 && (
-        <View wrap={false}>
-          <TitrePartie
-            titre={`Déjà au niveau audit (${dejaAudit.length})`}
-            sousTitre="Décidé le 8 octobre 2026, pour rappel."
-          />
-          {dejaAudit.map((o) => (
-            <Text key={o.id} style={{ fontSize: 11, lineHeight: 1.6 }}>
-              {t(`·  ${o.libelle} — ${referenceCourte(o)}`)}
-            </Text>
-          ))}
-        </View>
-      )}
       <PiedDePage />
     </Page>
   );
