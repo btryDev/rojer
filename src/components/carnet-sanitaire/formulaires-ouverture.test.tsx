@@ -7,22 +7,31 @@ import type { CarnetActionState } from "@/lib/carnet-sanitaire/actions";
 /**
  * Quand les trois formulaires du carnet sanitaire se referment.
  *
- * Le contrat, inchangé depuis le 2026-10-12 :
+ * Le contrat du 2026-10-12, gardé :
  *   - une CORRECTION réussie referme le formulaire — la carte montre le
- *     résultat ;
+ *     résultat —, et la suivante aussi ;
  *   - une correction refusée le laisse ouvert, avec son message ;
  *   - une SAISIE réussie ne le referme pas (on enchaîne les relevés) ;
  *   - rouvert après une correction réussie, le formulaire reste ouvert : le
  *     succès déjà vu ne le referme pas une seconde fois.
  *
- * Ce dernier cas est le piège d'une dérivation naïve (« ouvert tant que
- * l'état n'est pas un succès ») : elle refermerait le formulaire dès sa
- * réouverture.
+ * Et un défaut corrigé le 2026-10-13 : l'ancien `useEffect` dépendait de
+ * l'objet corrigé ; un parent re-rendu avec un nouvel objet (revalidation)
+ * refermait seul un formulaire rouvert. Le rendu du parent ne le referme
+ * plus.
+ *
+ * Le faux serveur rend une copie NEUVE à chaque appel, comme une vraie
+ * action serveur : c'est l'identité de l'état qui dit qu'une réponse est
+ * nouvelle. Un faux qui rendrait toujours le même objet laisserait passer
+ * un hook qui compare `status` au lieu de l'état.
  */
 
 const { action, reglage } = vi.hoisted(() => {
   const reglage: { reponse: unknown } = { reponse: { status: "success" } };
-  return { reglage, action: vi.fn(async () => reglage.reponse) };
+  return {
+    reglage,
+    action: vi.fn(async () => ({ ...(reglage.reponse as object) })),
+  };
 });
 
 vi.mock("@/lib/carnet-sanitaire/actions", () => ({
@@ -177,6 +186,38 @@ describe.each(CAS)("formulaire du carnet — $nom", (c) => {
 
     screen.getByRole("button", { name: c.ouvrirCorrection }).click();
     await souffler();
+    expect(formulaire()).not.toBeNull();
+  });
+
+  it("une seconde correction réussie referme encore le formulaire", async () => {
+    render(c.correction());
+    screen.getByRole("button", { name: c.ouvrirCorrection }).click();
+    await souffler();
+    await soumettre(c);
+    expect(formulaire()).toBeNull();
+
+    screen.getByRole("button", { name: c.ouvrirCorrection }).click();
+    await souffler();
+    await soumettre(c);
+
+    expect(action).toHaveBeenCalledTimes(2);
+    expect(formulaire()).toBeNull();
+  });
+
+  it("rouvert, il ne se referme pas quand le parent se re-rend avec un nouvel objet", async () => {
+    const { rerender } = render(c.correction());
+    screen.getByRole("button", { name: c.ouvrirCorrection }).click();
+    await souffler();
+    await soumettre(c);
+    screen.getByRole("button", { name: c.ouvrirCorrection }).click();
+    await souffler();
+    expect(formulaire()).not.toBeNull();
+
+    // `c.correction()` construit un objet neuf : c'est ce que fait une
+    // revalidation de la page.
+    rerender(c.correction());
+    await souffler();
+
     expect(formulaire()).not.toBeNull();
   });
 
