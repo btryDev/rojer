@@ -9,11 +9,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 type Ligne = Record<string, unknown>;
 const { db } = vi.hoisted(() => ({ db: { plans: [] as Ligne[] } }));
 const correspond = (l: Ligne, w: Ligne) => Object.entries(w).every(([k, v]) => l[k] === v);
+/** `etablissement: { entreprise: { userId } }` : seul « etab-a-moi » est à « u1 ». */
+const auCompte = (l: Ligne, portee: unknown) => {
+  const userId = (portee as { entreprise?: { userId?: string } } | undefined)?.entreprise?.userId;
+  return userId === undefined || (l.etablissementId === "etab-a-moi" ? "u1" : "u-voisin") === userId;
+};
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     planPrevention: {
-      findUnique: vi.fn(async ({ where }: { where: Ligne }) => db.plans.find((p) => correspond(p, where)) ?? null),
+      // La lecture porte le compte (`planDuCompte`) : le faux l'applique.
+      findFirst: vi.fn(async ({ where: { etablissement, ...where } }: { where: Ligne }) =>
+        db.plans.find((p) => correspond(p, where) && auCompte(p, etablissement)) ?? null),
       updateMany: vi.fn(async ({ where, data }: { where: Ligne; data: Ligne }) => {
         const t = db.plans.filter((x) => correspond(x, where));
         t.forEach((p) => Object.assign(p, data));
@@ -29,7 +36,12 @@ vi.mock("@/lib/auth/scope", () => ({
   }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({ resoudreBatimentOptionnel: vi.fn() }));
-vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn() }));
+vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(async () => ({ id: "u1" })) }));
+vi.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
+}));
 
 import { diagnostiquerPlan } from "./schema";
 import { noterHeuresRevisees } from "./actions";

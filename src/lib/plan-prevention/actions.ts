@@ -2,11 +2,12 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
 import { assertEtablissementOwnership } from "@/lib/auth/scope";
+import { requireUser } from "@/lib/auth/require-user";
 import { lireDateDeclaree } from "@/lib/traces/date-declaree";
 import { z } from "zod";
 import {
@@ -244,6 +245,34 @@ export async function creerPlanPrevention(
 }
 
 /**
+ * Le plan, lu DANS le périmètre du compte connecté — ou 404.
+ *
+ * Même correctif que `permisDuCompte` (permis de feu) : les actions lisaient
+ * le plan par son seul `id`, puis vérifiaient son établissement. Un id absent
+ * rendait « Plan introuvable » (ou rien), le plan d'un autre client le 404 du
+ * contrôle : l'écart suffisait à sonder l'existence d'un plan chez autrui
+ * (audit du 2026-10-13). La lecture porte désormais le périmètre, et les deux
+ * cas tombent sur le même `notFound()`. Garde de la classe :
+ * `auth/tenancy-oracle.test.ts`.
+ */
+async function planDuCompte(planId: string) {
+  const user = await requireUser();
+  const plan = await prisma.planPrevention.findFirst({
+    where: { id: planId, etablissement: { entreprise: { userId: user.id } } },
+    select: {
+      etablissementId: true,
+      statut: true,
+      numero: true,
+      inspectionDate: true,
+      heuresPrevisiblesRevisees: true,
+      heuresPrevisiblesReviseesLe: true,
+    },
+  });
+  if (!plan) notFound();
+  return plan;
+}
+
+/**
  * Corriger un plan (audit du 2026-10-12, constat 1). Le plan ne se modifiait
  * pas : créé sans date d'inspection commune, il ne pouvait jamais l'enregistrer
  * et restait en alerte au calendrier jusqu'à sa clôture.
@@ -270,12 +299,7 @@ export async function modifierPlanPrevention(
   _prev: PlanActionState,
   formData: FormData,
 ): Promise<PlanActionState> {
-  const plan = await prisma.planPrevention.findUnique({
-    where: { id: planId },
-    select: { etablissementId: true, statut: true, numero: true, inspectionDate: true },
-  });
-  if (!plan) return { status: "error", message: "Plan introuvable" };
-  await assertEtablissementOwnership(plan.etablissementId);
+  const plan = await planDuCompte(planId);
   const etablissementId = plan.etablissementId;
   if (!statutPlanSignable(plan.statut)) {
     return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
@@ -370,12 +394,7 @@ function lireChampOptionnel(v: FormDataEntryValue | null): string | undefined {
 
 
 export async function cloturerPlan(planId: string): Promise<void> {
-  const plan = await prisma.planPrevention.findUnique({
-    where: { id: planId },
-    select: { etablissementId: true },
-  });
-  if (!plan) return;
-  await assertEtablissementOwnership(plan.etablissementId);
+  const plan = await planDuCompte(planId);
   await prisma.planPrevention.update({
     where: { id: planId },
     data: { statut: "clos" },
@@ -392,12 +411,7 @@ export async function cloturerPlan(planId: string): Promise<void> {
 }
 
 export async function supprimerPlan(planId: string): Promise<void> {
-  const plan = await prisma.planPrevention.findUnique({
-    where: { id: planId },
-    select: { etablissementId: true, statut: true },
-  });
-  if (!plan) return;
-  await assertEtablissementOwnership(plan.etablissementId);
+  const plan = await planDuCompte(planId);
   const etabId = plan.etablissementId;
   // LE STATUT NE DIT PAS SI LE PLAN A ÉTÉ SIGNÉ. `attente_signatures` est
   // l'état de création ET celui où les signatures se recueillent, ~~et rien
@@ -447,12 +461,7 @@ export async function noterInformationInspection(
   _prev: TraceInspectionState,
   formData: FormData,
 ): Promise<TraceInspectionState> {
-  const plan = await prisma.planPrevention.findUnique({
-    where: { id: planId },
-    select: { etablissementId: true },
-  });
-  if (!plan) return { status: "error", message: "Plan introuvable" };
-  await assertEtablissementOwnership(plan.etablissementId);
+  const plan = await planDuCompte(planId);
 
   const lu = lireDateDeclaree(
     formData.get("inspectionTravailInformeeLe"),
@@ -508,17 +517,7 @@ export async function noterHeuresRevisees(
   _prev: TraceInspectionState,
   formData: FormData,
 ): Promise<TraceInspectionState> {
-  const plan = await prisma.planPrevention.findUnique({
-    where: { id: planId },
-    select: {
-      etablissementId: true,
-      statut: true,
-      heuresPrevisiblesRevisees: true,
-      heuresPrevisiblesReviseesLe: true,
-    },
-  });
-  if (!plan) return { status: "error", message: "Plan introuvable" };
-  await assertEtablissementOwnership(plan.etablissementId);
+  const plan = await planDuCompte(planId);
   if (!statutPlanSignable(plan.statut)) {
     return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };
   }
